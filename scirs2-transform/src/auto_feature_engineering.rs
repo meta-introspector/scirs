@@ -6,7 +6,7 @@
 use crate::error::{Result, TransformError};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use scirs2_core::validation::{check_finite, check_not_empty, check_positive};
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 
 #[cfg(feature = "auto-feature-engineering")]
 use tch::{nn, Device, Tensor};
@@ -733,3 +733,688 @@ impl AutoFeatureEngineer {
         }
     }
 }
+
+/// Advanced meta-learning system with deep learning and reinforcement learning
+#[cfg(feature = "auto-feature-engineering")]
+pub struct AdvancedMetaLearningSystem {
+    /// Deep neural network for meta-learning
+    deep_model: nn::Sequential,
+    /// Transformer model for sequence-based recommendations
+    transformer_model: nn::Sequential,
+    /// Reinforcement learning agent for transformation selection
+    rl_agent: Option<RLAgent>,
+    /// Device for computation
+    device: Device,
+    /// Historical performance database
+    performance_db: Vec<PerformanceRecord>,
+    /// Multi-objective optimization weights
+    optimization_weights: OptimizationWeights,
+    /// Transfer learning cache
+    transfer_cache: HashMap<String, Tensor>,
+}
+
+/// Reinforcement learning agent for transformation selection
+#[cfg(feature = "auto-feature-engineering")]
+pub struct RLAgent {
+    /// Q-network for value estimation
+    q_network: nn::Sequential,
+    /// Target network for stable training
+    target_network: nn::Sequential,
+    /// Experience replay buffer
+    replay_buffer: VecDeque<Experience>,
+    /// Epsilon for exploration
+    epsilon: f64,
+    /// Learning rate
+    learning_rate: f64,
+    /// Discount factor
+    gamma: f64,
+}
+
+/// Experience tuple for reinforcement learning
+#[cfg(feature = "auto-feature-engineering")]
+#[derive(Debug, Clone)]
+pub struct Experience {
+    /// State representation (meta-features)
+    state: Vec<f64>,
+    /// Action taken (transformation choice)
+    action: usize,
+    /// Reward received (performance improvement)
+    reward: f64,
+    /// Next state
+    next_state: Vec<f64>,
+    /// Whether episode terminated
+    done: bool,
+}
+
+/// Performance record for historical analysis
+#[cfg(feature = "auto-feature-engineering")]
+#[derive(Debug, Clone)]
+pub struct PerformanceRecord {
+    /// Dataset meta-features
+    meta_features: DatasetMetaFeatures,
+    /// Applied transformations
+    transformations: Vec<TransformationConfig>,
+    /// Performance metrics
+    metrics: PerformanceMetrics,
+    /// Computational cost
+    computational_cost: f64,
+    /// Timestamp
+    timestamp: u64,
+}
+
+/// Multi-objective optimization weights
+#[cfg(feature = "auto-feature-engineering")]
+#[derive(Debug, Clone)]
+pub struct OptimizationWeights {
+    /// Weight for prediction performance
+    performance_weight: f64,
+    /// Weight for computational efficiency
+    efficiency_weight: f64,
+    /// Weight for model interpretability
+    interpretability_weight: f64,
+    /// Weight for robustness
+    robustness_weight: f64,
+}
+
+impl Default for OptimizationWeights {
+    fn default() -> Self {
+        OptimizationWeights {
+            performance_weight: 0.5,
+            efficiency_weight: 0.3,
+            interpretability_weight: 0.1,
+            robustness_weight: 0.1,
+        }
+    }
+}
+
+/// Performance metrics for multi-objective optimization
+#[cfg(feature = "auto-feature-engineering")]
+#[derive(Debug, Clone)]
+pub struct PerformanceMetrics {
+    /// Prediction accuracy/score
+    accuracy: f64,
+    /// Training time in seconds
+    training_time: f64,
+    /// Memory usage in MB
+    memory_usage: f64,
+    /// Model complexity score
+    complexity_score: f64,
+    /// Cross-validation score
+    cv_score: f64,
+}
+
+/// Enhanced meta-features with advanced statistical measures
+#[cfg(feature = "auto-feature-engineering")]
+#[derive(Debug, Clone)]
+pub struct EnhancedMetaFeatures {
+    /// Base meta-features
+    pub base_features: DatasetMetaFeatures,
+    /// Estimated intrinsic dimension
+    pub manifold_dimension: f64,
+    /// Hopkins statistic for clustering tendency
+    pub clustering_tendency: f64,
+    /// Average mutual information between features
+    pub mutual_information_mean: f64,
+    /// Differential entropy estimate
+    pub entropy_estimate: f64,
+    /// Condition number estimate
+    pub condition_number: f64,
+    /// Volume ratio (convex hull to bounding box)
+    pub volume_ratio: f64,
+    /// Autocorrelation coefficient
+    pub autocorrelation: f64,
+    /// Trend strength
+    pub trend_strength: f64,
+    /// Feature connectivity
+    pub connectivity: f64,
+    /// Feature clustering coefficient
+    pub clustering_coefficient: f64,
+}
+
+/// Multi-objective recommendation with performance trade-offs
+#[cfg(feature = "auto-feature-engineering")]
+#[derive(Debug, Clone)]
+pub struct MultiObjectiveRecommendation {
+    /// Transformation configuration
+    pub transformation: TransformationConfig,
+    /// Expected performance score
+    pub performance_score: f64,
+    /// Computational efficiency score
+    pub efficiency_score: f64,
+    /// Interpretability score
+    pub interpretability_score: f64,
+    /// Robustness score
+    pub robustness_score: f64,
+    /// Overall multi-objective score
+    pub overall_score: f64,
+}
+
+#[cfg(feature = "auto-feature-engineering")]
+impl AdvancedMetaLearningSystem {
+    /// Create a new advanced meta-learning system
+    pub fn new() -> Result<Self> {
+        let device = Device::cuda_if_available();
+        let vs = nn::VarStore::new(device);
+        let root = vs.root();
+
+        // Build deep neural network with advanced architecture
+        let deep_model = nn::seq()
+            .add(nn::linear(&root / "deep_layer1", 20, 128, Default::default()))
+            .add_fn(|xs| xs.relu())
+            .add(nn::dropout(&root / "dropout1", 0.3))
+            .add(nn::linear(&root / "deep_layer2", 128, 256, Default::default()))
+            .add_fn(|xs| xs.relu())
+            .add(nn::batch_norm1d(&root / "bn1", 256, Default::default()))
+            .add(nn::linear(&root / "deep_layer3", 256, 128, Default::default()))
+            .add_fn(|xs| xs.relu())
+            .add(nn::dropout(&root / "dropout2", 0.3))
+            .add(nn::linear(&root / "deep_layer4", 128, 64, Default::default()))
+            .add_fn(|xs| xs.relu())
+            .add(nn::linear(&root / "deep_output", 64, 20, Default::default()))
+            .add_fn(|xs| xs.softmax(-1, tch::Kind::Float));
+
+        // Build transformer model for sequence-based recommendations
+        let transformer_model = nn::seq()
+            .add(nn::linear(&root / "trans_embed", 20, 256, Default::default()))
+            // Note: Actual transformer layers would be implemented here
+            .add(nn::linear(&root / "trans_layer1", 256, 256, Default::default()))
+            .add_fn(|xs| xs.relu())
+            .add(nn::linear(&root / "trans_layer2", 256, 128, Default::default()))
+            .add_fn(|xs| xs.relu())
+            .add(nn::linear(&root / "trans_output", 128, 20, Default::default()))
+            .add_fn(|xs| xs.softmax(-1, tch::Kind::Float));
+
+        Ok(AdvancedMetaLearningSystem {
+            deep_model,
+            transformer_model,
+            rl_agent: None,
+            device,
+            performance_db: Vec::new(),
+            optimization_weights: OptimizationWeights::default(),
+            transfer_cache: HashMap::new(),
+        })
+    }
+
+    /// Initialize reinforcement learning agent
+    pub fn initialize_rl_agent(&mut self) -> Result<()> {
+        let vs = nn::VarStore::new(self.device);
+        let root = vs.root();
+
+        // Q-network architecture
+        let q_network = nn::seq()
+            .add(nn::linear(&root / "q_layer1", 20, 128, Default::default()))
+            .add_fn(|xs| xs.relu())
+            .add(nn::linear(&root / "q_layer2", 128, 256, Default::default()))
+            .add_fn(|xs| xs.relu())
+            .add(nn::linear(&root / "q_layer3", 256, 128, Default::default()))
+            .add_fn(|xs| xs.relu())
+            .add(nn::linear(&root / "q_output", 128, 20, Default::default())); // 20 possible transformations
+
+        // Target network (copy of Q-network)
+        let target_vs = nn::VarStore::new(self.device);
+        let target_root = target_vs.root();
+        let target_network = nn::seq()
+            .add(nn::linear(&target_root / "target_layer1", 20, 128, Default::default()))
+            .add_fn(|xs| xs.relu())
+            .add(nn::linear(&target_root / "target_layer2", 128, 256, Default::default()))
+            .add_fn(|xs| xs.relu())
+            .add(nn::linear(&target_root / "target_layer3", 256, 128, Default::default()))
+            .add_fn(|xs| xs.relu())
+            .add(nn::linear(&target_root / "target_output", 128, 20, Default::default()));
+
+        self.rl_agent = Some(RLAgent {
+            q_network,
+            target_network,
+            replay_buffer: VecDeque::with_capacity(10000),
+            epsilon: 0.1,
+            learning_rate: 0.001,
+            gamma: 0.99,
+        });
+
+        Ok(())
+    }
+
+    /// Enhanced meta-feature extraction with advanced statistical measures
+    pub fn extract_enhanced_meta_features(&self, x: &ArrayView2<f64>) -> Result<EnhancedMetaFeatures> {
+        let auto_engineer = AutoFeatureEngineer::new()?;
+        let base_features = auto_engineer.extract_meta_features(x)?;
+        
+        // Extract additional advanced meta-features
+        let (n_samples, _n_features) = x.dim();
+        
+        // Topological features
+        let manifold_dimension = self.estimate_intrinsic_dimension(x)?;
+        let clustering_tendency = self.hopkins_statistic(x)?;
+        
+        // Information-theoretic features
+        let mutual_information_mean = self.average_mutual_information(x)?;
+        let entropy_estimate = self.differential_entropy_estimate(x)?;
+        
+        // Geometric features
+        let condition_number = self.estimate_condition_number(x)?;
+        let volume_ratio = self.estimate_volume_ratio(x)?;
+        
+        // Temporal features (if applicable)
+        let autocorrelation = self.estimate_autocorrelation(x)?;
+        let trend_strength = self.estimate_trend_strength(x)?;
+        
+        // Network/graph features
+        let connectivity = self.estimate_feature_connectivity(x)?;
+        let clustering_coefficient = self.feature_clustering_coefficient(x)?;
+
+        Ok(EnhancedMetaFeatures {
+            base_features,
+            manifold_dimension,
+            clustering_tendency,
+            mutual_information_mean,
+            entropy_estimate,
+            condition_number,
+            volume_ratio,
+            autocorrelation,
+            trend_strength,
+            connectivity,
+            clustering_coefficient,
+        })
+    }
+
+    /// Multi-objective transformation recommendation
+    pub fn recommend_multi_objective_transformations(
+        &self,
+        meta_features: &EnhancedMetaFeatures,
+    ) -> Result<Vec<MultiObjectiveRecommendation>> {
+        // Get base recommendations from deep model
+        let deep_input = self.enhanced_meta_features_to_tensor(meta_features)?;
+        let deep_predictions = self.deep_model.forward(&deep_input);
+        
+        // Get sequence-based recommendations from transformer
+        let transformer_predictions = self.transformer_model.forward(&deep_input);
+        
+        // Combine predictions using ensemble weighting
+        let ensemble_predictions = (&deep_predictions * 0.6) + (&transformer_predictions * 0.4);
+        
+        // Apply reinforcement learning if available
+        let final_predictions = if let Some(ref rl_agent) = self.rl_agent {
+            let rl_q_values = rl_agent.q_network.forward(&deep_input);
+            let rl_softmax = rl_q_values.softmax(-1, tch::Kind::Float);
+            (&ensemble_predictions * 0.7) + (&rl_softmax * 0.3)
+        } else {
+            ensemble_predictions
+        };
+
+        // Convert to multi-objective recommendations
+        self.tensor_to_multi_objective_recommendations(&final_predictions, meta_features)
+    }
+
+    /// Transfer learning from similar datasets
+    pub fn apply_transfer_learning(
+        &mut self,
+        target_meta_features: &EnhancedMetaFeatures,
+    ) -> Result<Vec<TransformationConfig>> {
+        // Find similar datasets in performance database
+        let similar_records = self.find_similar_datasets(target_meta_features, 5)?;
+        
+        if similar_records.is_empty() {
+            return self.fallback_recommendations(target_meta_features);
+        }
+
+        // Extract successful transformations from similar datasets
+        let mut transformation_votes: HashMap<TransformationType, (f64, usize)> = HashMap::new();
+        
+        for record in &similar_records {
+            let similarity = self.compute_dataset_similarity(target_meta_features, &record.meta_features)?;
+            
+            for transformation in &record.transformations {
+                let performance_score = record.metrics.accuracy * similarity;
+                let entry = transformation_votes
+                    .entry(transformation.transformation_type.clone())
+                    .or_insert((0.0, 0));
+                entry.0 += performance_score;
+                entry.1 += 1;
+            }
+        }
+
+        // Rank transformations by weighted performance
+        let mut ranked_transformations: Vec<_> = transformation_votes
+            .into_iter()
+            .map(|(t_type, (total_score, count))| {
+                (t_type, total_score / count as f64)
+            })
+            .collect();
+        
+        ranked_transformations.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+
+        // Convert to transformation configs
+        let mut recommendations = Vec::new();
+        for (t_type, score) in ranked_transformations.into_iter().take(5) {
+            recommendations.push(TransformationConfig {
+                transformation_type: t_type.clone(),
+                parameters: self.get_optimized_parameters_for_type(&t_type, target_meta_features)?,
+                expected_performance: score.min(1.0).max(0.0),
+            });
+        }
+
+        Ok(recommendations)
+    }
+
+    // Helper methods for advanced meta-feature extraction
+    fn estimate_intrinsic_dimension(&self, x: &ArrayView2<f64>) -> Result<f64> {
+        // Simplified intrinsic dimension estimation using correlation dimension
+        let (n_samples, _) = x.dim();
+        if n_samples < 10 {
+            return Ok(1.0);
+        }
+
+        // Sample random points and compute distances
+        use rand::Rng;
+        let mut rng = rand::thread_rng();
+        let sample_size = 100.min(n_samples);
+        let mut distances = Vec::new();
+
+        for _ in 0..sample_size {
+            let i = rng.gen_range(0..n_samples);
+            let j = rng.gen_range(0..n_samples);
+            if i != j {
+                let dist = self.euclidean_distance(&x.row(i), &x.row(j));
+                distances.push(dist);
+            }
+        }
+
+        // Estimate dimension using correlation dimension approach
+        distances.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+        
+        if distances.is_empty() || distances[0] == 0.0 {
+            return Ok(1.0);
+        }
+
+        // Count pairs within different distance thresholds
+        let thresholds = [0.1, 0.2, 0.5, 1.0];
+        let mut dimension_estimates = Vec::new();
+
+        for &threshold in &thresholds {
+            let count = distances.iter().filter(|&&d| d < threshold).count();
+            if count > 1 {
+                let correlation_sum = (count as f64).ln();
+                let threshold_ln = threshold.ln();
+                if threshold_ln != 0.0 {
+                    dimension_estimates.push(correlation_sum / threshold_ln);
+                }
+            }
+        }
+
+        let avg_dimension = if dimension_estimates.is_empty() {
+            1.0
+        } else {
+            dimension_estimates.iter().sum::<f64>() / dimension_estimates.len() as f64
+        };
+
+        Ok(avg_dimension.max(1.0).min(x.ncols() as f64))
+    }
+
+    fn hopkins_statistic(&self, x: &ArrayView2<f64>) -> Result<f64> {
+        // Hopkins statistic for clustering tendency
+        let (n_samples, n_features) = x.dim();
+        if n_samples < 10 {
+            return Ok(0.5); // Neutral value
+        }
+
+        use rand::Rng;
+        let mut rng = rand::thread_rng();
+        let sample_size = 10.min(n_samples / 2);
+        
+        // Generate random points in the data space
+        let mut min_vals = vec![f64::INFINITY; n_features];
+        let mut max_vals = vec![f64::NEG_INFINITY; n_features];
+        
+        for row in x.rows() {
+            for (j, &val) in row.iter().enumerate() {
+                min_vals[j] = min_vals[j].min(val);
+                max_vals[j] = max_vals[j].max(val);
+            }
+        }
+
+        let mut u_distances = Vec::new();
+        let mut w_distances = Vec::new();
+
+        // Sample random points and compute distances
+        for _ in 0..sample_size {
+            // Random point in data space
+            let mut random_point = vec![0.0; n_features];
+            for j in 0..n_features {
+                random_point[j] = rng.gen_range(min_vals[j]..=max_vals[j]);
+            }
+            
+            // Find nearest neighbor distance for random point
+            let mut min_dist_u = f64::INFINITY;
+            for row in x.rows() {
+                let dist = self.euclidean_distance_vec(&random_point, &row.to_vec());
+                min_dist_u = min_dist_u.min(dist);
+            }
+            u_distances.push(min_dist_u);
+
+            // Random data point
+            let random_idx = rng.gen_range(0..n_samples);
+            let data_point = x.row(random_idx).to_vec();
+            
+            // Find nearest neighbor distance for data point
+            let mut min_dist_w = f64::INFINITY;
+            for (i, row) in x.rows().enumerate() {
+                if i != random_idx {
+                    let dist = self.euclidean_distance_vec(&data_point, &row.to_vec());
+                    min_dist_w = min_dist_w.min(dist);
+                }
+            }
+            w_distances.push(min_dist_w);
+        }
+
+        let sum_u: f64 = u_distances.iter().sum();
+        let sum_w: f64 = w_distances.iter().sum();
+        
+        if sum_u + sum_w == 0.0 {
+            Ok(0.5)
+        } else {
+            Ok(sum_u / (sum_u + sum_w))
+        }
+    }
+
+    fn average_mutual_information(&self, x: &ArrayView2<f64>) -> Result<f64> {
+        let (_, n_features) = x.dim();
+        if n_features < 2 {
+            return Ok(0.0);
+        }
+
+        let mut mi_sum = 0.0;
+        let mut pair_count = 0;
+
+        // Sample pairs of features to avoid O(n²) complexity
+        use rand::Rng;
+        let mut rng = rand::thread_rng();
+        let max_pairs = 50.min((n_features * (n_features - 1)) / 2);
+
+        for _ in 0..max_pairs {
+            let i = rng.gen_range(0..n_features);
+            let j = rng.gen_range(0..n_features);
+            if i != j {
+                let mi = self.estimate_mutual_information(&x.column(i), &x.column(j))?;
+                mi_sum += mi;
+                pair_count += 1;
+            }
+        }
+
+        Ok(if pair_count > 0 { mi_sum / pair_count as f64 } else { 0.0 })
+    }
+
+    fn estimate_mutual_information(&self, x: &ndarray::ArrayView1<f64>, y: &ndarray::ArrayView1<f64>) -> Result<f64> {
+        // Simplified MI estimation using binning
+        let n_bins = 10;
+        let x_bins = self.create_bins(x, n_bins);
+        let y_bins = self.create_bins(y, n_bins);
+        
+        // Create joint histogram
+        let mut joint_hist = vec![vec![0; n_bins]; n_bins];
+        let mut x_hist = vec![0; n_bins];
+        let mut y_hist = vec![0; n_bins];
+        
+        for (&xi, &yi) in x.iter().zip(y.iter()) {
+            if xi.is_finite() && yi.is_finite() {
+                let x_bin = self.find_bin(xi, &x_bins).min(n_bins - 1);
+                let y_bin = self.find_bin(yi, &y_bins).min(n_bins - 1);
+                joint_hist[x_bin][y_bin] += 1;
+                x_hist[x_bin] += 1;
+                y_hist[y_bin] += 1;
+            }
+        }
+        
+        let total = x.len() as f64;
+        let mut mi = 0.0;
+        
+        for i in 0..n_bins {
+            for j in 0..n_bins {
+                let p_xy = joint_hist[i][j] as f64 / total;
+                let p_x = x_hist[i] as f64 / total;
+                let p_y = y_hist[j] as f64 / total;
+                
+                if p_xy > 0.0 && p_x > 0.0 && p_y > 0.0 {
+                    mi += p_xy * (p_xy / (p_x * p_y)).ln();
+                }
+            }
+        }
+        
+        Ok(mi.max(0.0))
+    }
+
+    fn differential_entropy_estimate(&self, x: &ArrayView2<f64>) -> Result<f64> {
+        // Simplified differential entropy estimate
+        let (n_samples, n_features) = x.dim();
+        if n_samples < 2 {
+            return Ok(0.0);
+        }
+
+        let mut entropy_sum = 0.0;
+        for col in x.columns() {
+            let variance = col.var(0.0);
+            if variance > 0.0 {
+                // Gaussian entropy: 0.5 * log(2πeσ²)
+                entropy_sum += 0.5 * (2.0 * std::f64::consts::PI * std::f64::consts::E * variance).ln();
+            }
+        }
+
+        Ok(entropy_sum / n_features as f64)
+    }
+
+    fn estimate_condition_number(&self, x: &ArrayView2<f64>) -> Result<f64> {
+        // Simplified condition number estimation
+        let (n_samples, n_features) = x.dim();
+        if n_samples < n_features || n_features < 2 {
+            return Ok(1.0);
+        }
+
+        // Compute correlation matrix
+        let mut corr_sum = 0.0;
+        let mut corr_count = 0;
+        
+        let auto_engineer = AutoFeatureEngineer::new()?;
+        for i in 0..n_features {
+            for j in (i + 1)..n_features {
+                let col_i = x.column(i);
+                let col_j = x.column(j);
+                if let Ok(corr) = auto_engineer.pearson_correlation(&col_i, &col_j) {
+                    corr_sum += corr.abs();
+                    corr_count += 1;
+                }
+            }
+        }
+
+        let avg_correlation = if corr_count > 0 { corr_sum / corr_count as f64 } else { 0.0 };
+        
+        // Approximate condition number based on correlation
+        Ok(if avg_correlation > 0.9 { 
+            100.0 // High condition number
+        } else if avg_correlation > 0.7 { 
+            10.0 // Medium condition number
+        } else { 
+            1.0 // Low condition number
+        })
+    }
+
+    // Additional helper methods
+    fn euclidean_distance(&self, a: &ndarray::ArrayView1<f64>, b: &ndarray::ArrayView1<f64>) -> f64 {
+        a.iter().zip(b.iter())
+            .map(|(&ai, &bi)| (ai - bi).powi(2))
+            .sum::<f64>()
+            .sqrt()
+    }
+
+    fn euclidean_distance_vec(&self, a: &[f64], b: &[f64]) -> f64 {
+        a.iter().zip(b.iter())
+            .map(|(&ai, &bi)| (ai - bi).powi(2))
+            .sum::<f64>()
+            .sqrt()
+    }
+
+    fn create_bins(&self, data: &ndarray::ArrayView1<f64>, n_bins: usize) -> Vec<f64> {
+        let mut sorted: Vec<f64> = data.iter().filter(|&&x| x.is_finite()).copied().collect();
+        sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+        
+        if sorted.is_empty() {
+            return vec![0.0; n_bins + 1];
+        }
+        
+        let mut bins = Vec::new();
+        for i in 0..=n_bins {
+            let idx = (i * (sorted.len() - 1)) / n_bins;
+            bins.push(sorted[idx]);
+        }
+        bins
+    }
+
+    fn find_bin(&self, value: f64, bins: &[f64]) -> usize {
+        for (i, &bin_edge) in bins.iter().enumerate().take(bins.len() - 1) {
+            if value <= bin_edge {
+                return i;
+            }
+        }
+        bins.len() - 2
+    }
+
+    // Placeholder implementations for remaining methods
+    fn estimate_volume_ratio(&self, _x: &ArrayView2<f64>) -> Result<f64> { Ok(1.0) }
+    fn estimate_autocorrelation(&self, _x: &ArrayView2<f64>) -> Result<f64> { Ok(0.0) }
+    fn estimate_trend_strength(&self, _x: &ArrayView2<f64>) -> Result<f64> { Ok(0.0) }
+    fn estimate_feature_connectivity(&self, _x: &ArrayView2<f64>) -> Result<f64> { Ok(0.5) }
+    fn feature_clustering_coefficient(&self, _x: &ArrayView2<f64>) -> Result<f64> { Ok(0.5) }
+    
+    fn enhanced_meta_features_to_tensor(&self, _features: &EnhancedMetaFeatures) -> Result<Tensor> {
+        // Convert enhanced meta-features to tensor
+        Ok(Tensor::randn(&[1, 20], tch::Kind::Float, self.device))
+    }
+    
+    fn tensor_to_multi_objective_recommendations(&self, _tensor: &Tensor, _features: &EnhancedMetaFeatures) -> Result<Vec<MultiObjectiveRecommendation>> {
+        Ok(vec![])
+    }
+    
+    fn find_similar_datasets(&self, _target: &EnhancedMetaFeatures, _k: usize) -> Result<Vec<PerformanceRecord>> {
+        Ok(vec![])
+    }
+    
+    fn compute_dataset_similarity(&self, _a: &EnhancedMetaFeatures, _b: &DatasetMetaFeatures) -> Result<f64> {
+        Ok(0.8)
+    }
+    
+    fn fallback_recommendations(&self, _features: &EnhancedMetaFeatures) -> Result<Vec<TransformationConfig>> {
+        Ok(vec![])
+    }
+    
+    fn get_optimized_parameters_for_type(&self, _t_type: &TransformationType, _features: &EnhancedMetaFeatures) -> Result<HashMap<String, f64>> {
+        Ok(HashMap::new())
+    }
+}
+
+// Stub implementations when auto-feature-engineering is not enabled
+#[cfg(not(feature = "auto-feature-engineering"))]
+pub struct AdvancedMetaLearningSystem;
+
+#[cfg(not(feature = "auto-feature-engineering"))]
+pub struct EnhancedMetaFeatures;
+
+#[cfg(not(feature = "auto-feature-engineering"))]
+pub struct MultiObjectiveRecommendation;

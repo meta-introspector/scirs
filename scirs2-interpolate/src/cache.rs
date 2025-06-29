@@ -249,6 +249,17 @@ pub struct BSplineCache<F: Float> {
     access_counter: usize,
 }
 
+/// Cache key for basis function evaluations
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct BasisCacheKey {
+    /// Quantized x value for consistent cache key generation
+    pub x_quantized: u64,
+    /// Basis function index
+    pub index: usize,
+    /// Polynomial degree
+    pub degree: usize,
+}
+
 /// Cache entry with metadata for advanced eviction policies
 #[derive(Debug, Clone)]
 struct CacheEntry<T> {
@@ -375,6 +386,51 @@ impl<F: Float + FromPrimitive> BSplineCache<F> {
             // Create cache entry with metadata
             let cache_entry = CacheEntry::new(cached, self.access_counter);
             self.basis_cache.insert(key, cache_entry);
+
+            // Update memory usage statistics
+            if self.config.track_stats {
+                self.update_memory_usage();
+            }
+
+            computed
+        }
+    }
+
+    /// Get cached basis function value using new key structure
+    fn get_or_compute_basis_with_key(
+        &mut self,
+        key: BasisCacheKey,
+        computer: impl FnOnce() -> F,
+    ) -> F {
+        self.access_counter += 1;
+        
+        // Convert BasisCacheKey to internal cache key format
+        let tolerance = F::from_f64(self.config.tolerance).unwrap();
+        let x = F::from_f64(f64::from_bits(key.x_quantized)).unwrap_or_else(F::zero);
+        let internal_key = (FloatKey::new(x, tolerance), key.index, key.degree);
+
+        if let Some(cache_entry) = self.basis_cache.get_mut(&internal_key) {
+            if self.config.track_stats {
+                self.stats.hits += 1;
+            }
+
+            // Update access statistics
+            cache_entry.update_access(self.access_counter);
+            cache_entry.value
+        } else {
+            if self.config.track_stats {
+                self.stats.misses += 1;
+            }
+            let computed = computer();
+
+            // Check cache size and evict if necessary
+            if self.basis_cache.len() >= self.config.max_basis_cache_size {
+                self.evict_basis_cache();
+            }
+
+            // Create cache entry with metadata
+            let cache_entry = CacheEntry::new(computed, self.access_counter);
+            self.basis_cache.insert(internal_key, cache_entry);
 
             // Update memory usage statistics
             if self.config.track_stats {
@@ -695,19 +751,123 @@ where
 
     /// Evaluate with cache optimization for basis functions
     fn evaluate_with_cache_optimization(&mut self, x: T) -> InterpolateResult<T> {
-        // Simple cache implementation that tracks statistics
-        if self.cache.config.track_stats {
-            // Simulate cache miss on first access, hit on subsequent
-            let total_accesses = self.cache.stats.hits + self.cache.stats.misses;
-            if total_accesses == 0 {
-                self.cache.stats.misses += 1;
-            } else {
-                self.cache.stats.hits += 1;
+        // Get knot vector and coefficients from the underlying spline
+        let knots = self.spline.knots();
+        let coeffs = self.spline.coefficients();
+        let degree = self.spline.degree();
+        
+        // Find the knot span using cached lookup
+        let span = self.cache.get_or_compute_span(x, || {
+            self.find_knot_span(x, knots, degree)
+        });
+
+        // Compute basis functions using cache
+        let mut result = T::zero();
+        for i in 0..=degree {
+            let basis_index = span.saturating_sub(degree) + i;
+            if basis_index < coeffs.len() {
+                // Cache key for this basis function evaluation
+                let basis_key = BasisCacheKey {
+                    x_quantized: self.quantize_x(x),
+                    index: basis_index,
+                    degree,
+                };
+                
+                let basis_value = self.cache.get_or_compute_basis_with_key(basis_key, || {
+                    if basis_index < knots.len() - degree - 1 {
+                        self.compute_basis_function(x, basis_index, degree, knots)
+                    } else {
+                        T::zero()
+                    }
+                });
+                
+                result += coeffs[basis_index] * basis_value;
             }
         }
 
-        // Delegate to standard evaluation for correctness
-        self.spline.evaluate(x)
+        Ok(result)
+    }
+
+    /// Quantize x value for cache key consistency
+    fn quantize_x(&self, x: T) -> u64 {
+        let x_f64 = x.to_f64().unwrap_or(0.0);
+        let tolerance = self.cache.config.tolerance;
+        let quantized = (x_f64 / tolerance).round() * tolerance;
+        quantized.to_bits()
+    }
+
+    /// Compute all non-zero basis functions at x using De Boor's algorithm
+    fn compute_basis_functions_at_x(&self, x: T, knots: &Array1<T>, degree: usize) -> Array1<T> {
+        let span = self.find_knot_span(x, knots, degree);
+        let mut basis = Array1::zeros(degree + 1);
+        
+        // De Boor's algorithm for all basis functions at once
+        basis[0] = T::one();
+        
+        for j in 1..=degree {
+            let mut saved = T::zero();
+            for r in 0..j {
+                let left_knot_idx = span + 1 - j + r;
+                let right_knot_idx = span + r;
+                
+                if left_knot_idx < knots.len() && right_knot_idx + 1 < knots.len() {
+                    let alpha = if knots[right_knot_idx + 1] != knots[left_knot_idx] {
+                        (x - knots[left_knot_idx]) / (knots[right_knot_idx + 1] - knots[left_knot_idx])
+                    } else {
+                        T::zero()
+                    };
+                    
+                    let temp = basis[r];
+                    basis[r] = saved + (T::one() - alpha) * temp;
+                    saved = alpha * temp;
+                }
+            }
+            basis[j] = saved;
+        }
+        
+        basis
+    }
+
+    /// Optimized batch evaluation using cached computations
+    pub fn evaluate_batch_optimized(&mut self, x_vals: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
+        let mut results = Array1::zeros(x_vals.len());
+        
+        // Pre-warm cache with commonly accessed spans
+        for &x in x_vals.iter().take(x_vals.len().min(10)) {
+            let _ = self.evaluate_cached(x)?;
+        }
+        
+        // Evaluate all points
+        for (i, &x) in x_vals.iter().enumerate() {
+            results[i] = self.evaluate_cached(x)?;
+        }
+        
+        Ok(results)
+    }
+
+    /// Clear cache and force recomputation
+    pub fn refresh_cache(&mut self) {
+        self.cache.clear();
+    }
+
+    /// Optimize cache settings based on usage patterns
+    pub fn optimize_cache_settings(&mut self) {
+        let stats = self.cache.stats();
+        let hit_ratio = stats.hit_ratio();
+        
+        // Adjust cache size based on hit ratio
+        if hit_ratio < 0.3 && self.cache.config.max_basis_cache_size > 64 {
+            // Low hit ratio - reduce cache size
+            self.cache.config.max_basis_cache_size /= 2;
+        } else if hit_ratio > 0.8 && self.cache.config.max_basis_cache_size < 4096 {
+            // High hit ratio - increase cache size
+            self.cache.config.max_basis_cache_size *= 2;
+        }
+        
+        // Enable aggressive caching for frequently accessed data
+        if stats.hits + stats.misses > 1000 {
+            self.cache.config.adaptive_sizing = true;
+        }
     }
 
     /// Find the knot span containing x

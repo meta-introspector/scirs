@@ -19,6 +19,7 @@ use std::io::{BufReader, BufWriter, Read, Write};
 use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::convert::TryInto;
+use std::hash::{Hash, Hasher, DefaultHasher};
 
 /// Trait for clustering models that can be serialized
 pub trait SerializableModel: Serialize + for<'de> Deserialize<'de> {
@@ -63,6 +64,225 @@ pub trait SerializableModel: Serialize + for<'de> Deserialize<'de> {
         serde_json::from_reader(reader).map_err(|e| {
             ClusteringError::InvalidInput(format!("Failed to deserialize model: {}", e))
         })
+    }
+}
+
+/// Enhanced model metadata with versioning and performance metrics
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct EnhancedModelMetadata {
+    /// Model format version for backward compatibility
+    pub format_version: String,
+    /// scirs2-cluster library version
+    pub library_version: String,
+    /// Timestamp when model was created (Unix epoch)
+    pub created_timestamp: u64,
+    /// Algorithm name and configuration hash
+    pub algorithm_signature: String,
+    /// Performance metrics during training
+    pub training_metrics: TrainingMetrics,
+    /// Data characteristics
+    pub data_characteristics: DataCharacteristics,
+    /// Model integrity hash
+    pub integrity_hash: String,
+    /// Platform information
+    pub platform_info: PlatformInfo,
+}
+
+/// Training performance metrics
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct TrainingMetrics {
+    /// Total training time in milliseconds
+    pub training_time_ms: u64,
+    /// Number of iterations/epochs
+    pub iterations: usize,
+    /// Final convergence metric (e.g., inertia, log-likelihood)
+    pub final_convergence_metric: f64,
+    /// Peak memory usage in bytes
+    pub peak_memory_bytes: usize,
+    /// CPU utilization during training (0.0 to 100.0)
+    pub avg_cpu_utilization: f64,
+}
+
+/// Data characteristics for validation
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct DataCharacteristics {
+    /// Number of samples in training data
+    pub n_samples: usize,
+    /// Number of features
+    pub n_features: usize,
+    /// Data type fingerprint
+    pub data_type_fingerprint: String,
+    /// Feature range summaries (min, max for each feature)
+    pub feature_ranges: Option<Vec<(f64, f64)>>,
+    /// Whether data was normalized/standardized
+    pub preprocessing_applied: Vec<String>,
+}
+
+/// Platform information for cross-platform compatibility
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct PlatformInfo {
+    /// Operating system
+    pub os: String,
+    /// Architecture (x86_64, aarch64, etc.)
+    pub arch: String,
+    /// Rust compiler version
+    pub rust_version: String,
+    /// CPU features used (SIMD, etc.)
+    pub cpu_features: Vec<String>,
+}
+
+impl Default for EnhancedModelMetadata {
+    fn default() -> Self {
+        Self {
+            format_version: "1.0.0".to_string(),
+            library_version: env!("CARGO_PKG_VERSION").to_string(),
+            created_timestamp: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs(),
+            algorithm_signature: "unknown".to_string(),
+            training_metrics: TrainingMetrics::default(),
+            data_characteristics: DataCharacteristics::default(),
+            integrity_hash: String::new(),
+            platform_info: PlatformInfo::detect(),
+        }
+    }
+}
+
+impl Default for TrainingMetrics {
+    fn default() -> Self {
+        Self {
+            training_time_ms: 0,
+            iterations: 0,
+            final_convergence_metric: 0.0,
+            peak_memory_bytes: 0,
+            avg_cpu_utilization: 0.0,
+        }
+    }
+}
+
+impl Default for DataCharacteristics {
+    fn default() -> Self {
+        Self {
+            n_samples: 0,
+            n_features: 0,
+            data_type_fingerprint: "unknown".to_string(),
+            feature_ranges: None,
+            preprocessing_applied: Vec::new(),
+        }
+    }
+}
+
+impl PlatformInfo {
+    /// Detect current platform information
+    pub fn detect() -> Self {
+        Self {
+            os: std::env::consts::OS.to_string(),
+            arch: std::env::consts::ARCH.to_string(),
+            rust_version: env!("RUSTC_VERSION").to_string(),
+            cpu_features: Self::detect_cpu_features(),
+        }
+    }
+    
+    /// Detect available CPU features
+    fn detect_cpu_features() -> Vec<String> {
+        let mut features = Vec::new();
+        
+        #[cfg(target_arch = "x86_64")]
+        {
+            if std::arch::is_x86_feature_detected!("avx2") {
+                features.push("avx2".to_string());
+            }
+            if std::arch::is_x86_feature_detected!("sse4.1") {
+                features.push("sse4.1".to_string());
+            }
+            if std::arch::is_x86_feature_detected!("fma") {
+                features.push("fma".to_string());
+            }
+        }
+        
+        #[cfg(target_arch = "aarch64")]
+        {
+            if std::arch::is_aarch64_feature_detected!("neon") {
+                features.push("neon".to_string());
+            }
+        }
+        
+        features
+    }
+}
+
+/// Enhanced model wrapper with integrity checking and versioning
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct EnhancedModel<T: SerializableModel> {
+    /// The actual model data
+    pub model: T,
+    /// Enhanced metadata
+    pub metadata: EnhancedModelMetadata,
+}
+
+impl<T: SerializableModel> EnhancedModel<T> {
+    /// Create a new enhanced model wrapper
+    pub fn new(model: T, metadata: EnhancedModelMetadata) -> Self {
+        let mut enhanced = Self { model, metadata };
+        enhanced.update_integrity_hash();
+        enhanced
+    }
+    
+    /// Update the integrity hash based on model contents
+    pub fn update_integrity_hash(&mut self) {
+        let model_json = serde_json::to_string(&self.model).unwrap_or_default();
+        let mut hasher = DefaultHasher::new();
+        model_json.hash(&mut hasher);
+        self.metadata.integrity_hash = format!("{:x}", hasher.finish());
+    }
+    
+    /// Validate model integrity
+    pub fn validate_integrity(&self) -> Result<bool> {
+        let model_json = serde_json::to_string(&self.model)
+            .map_err(|e| ClusteringError::InvalidInput(format!("Failed to serialize for validation: {}", e)))?;
+        let mut hasher = DefaultHasher::new();
+        model_json.hash(&mut hasher);
+        let computed_hash = format!("{:x}", hasher.finish());
+        
+        Ok(computed_hash == self.metadata.integrity_hash)
+    }
+    
+    /// Check version compatibility
+    pub fn check_version_compatibility(&self) -> Result<bool> {
+        let current_version = env!("CARGO_PKG_VERSION");
+        // Simple version compatibility check - can be enhanced with semantic versioning
+        Ok(self.metadata.library_version == current_version || 
+           self.metadata.format_version.starts_with("1."))
+    }
+    
+    /// Export model with enhanced metadata to file
+    pub fn export_with_metadata<P: AsRef<Path>>(&self, path: P) -> Result<()> {
+        let file = File::create(path)
+            .map_err(|e| ClusteringError::InvalidInput(format!("Failed to create file: {}", e)))?;
+        let writer = BufWriter::new(file);
+        serde_json::to_writer_pretty(writer, self)
+            .map_err(|e| ClusteringError::InvalidInput(format!("Failed to export model: {}", e)))
+    }
+    
+    /// Import model with enhanced metadata from file
+    pub fn import_with_metadata<P: AsRef<Path>>(path: P) -> Result<Self> {
+        let file = File::open(path)
+            .map_err(|e| ClusteringError::InvalidInput(format!("Failed to open file: {}", e)))?;
+        let reader = BufReader::new(file);
+        let enhanced_model: Self = serde_json::from_reader(reader)
+            .map_err(|e| ClusteringError::InvalidInput(format!("Failed to import model: {}", e)))?;
+        
+        // Validate integrity and compatibility
+        if !enhanced_model.validate_integrity()? {
+            return Err(ClusteringError::InvalidInput("Model integrity validation failed".to_string()));
+        }
+        
+        if !enhanced_model.check_version_compatibility()? {
+            return Err(ClusteringError::InvalidInput("Model version incompatible".to_string()));
+        }
+        
+        Ok(enhanced_model)
     }
 }
 
@@ -2051,6 +2271,185 @@ pub mod compatibility {
             }
         }))
     }
+
+    /// Create a joblib-compatible model dump
+    pub fn to_joblib_format<T: SerializableModel + AdvancedExport>(
+        model: &T,
+        compress: bool,
+    ) -> Result<Vec<u8>> {
+        let sklearn_data = to_sklearn_format(model)?;
+        
+        if compress {
+            enhanced::serialize_with_format(&sklearn_data, ExportFormat::CompressedJson)
+        } else {
+            enhanced::serialize_with_format(&sklearn_data, ExportFormat::Json)
+        }
+    }
+
+    /// Load from joblib-compatible format
+    pub fn from_joblib_format<T: SerializableModel>(
+        data: &[u8],
+        compressed: bool,
+    ) -> Result<T> {
+        let format = if compressed {
+            ExportFormat::CompressedJson
+        } else {
+            ExportFormat::Json
+        };
+        
+        let sklearn_data: serde_json::Value = enhanced::deserialize_with_format(data, format)?;
+        from_sklearn_format(&sklearn_data)
+    }
+
+    /// Convert clustering results to scikit-learn's standard clustering result format
+    pub fn to_sklearn_clustering_result(
+        labels: &Array1<i32>,
+        cluster_centers: Option<&Array2<f64>>,
+        n_clusters: Option<usize>,
+    ) -> Result<serde_json::Value> {
+        use serde_json::json;
+
+        let mut result = json!({
+            "labels_": labels.iter().cloned().collect::<Vec<_>>(),
+            "n_clusters_": n_clusters.unwrap_or_else(|| {
+                labels.iter().map(|&x| x).max().unwrap_or(-1) as usize + 1
+            })
+        });
+
+        if let Some(centers) = cluster_centers {
+            result["cluster_centers_"] = to_numpy_format(centers)?;
+        }
+
+        Ok(result)
+    }
+
+    /// Convert to SciPy's cluster.hierarchy.dendrogram compatible format
+    pub fn to_scipy_dendrogram_format(
+        linkage_matrix: &Array2<f64>,
+        labels: Option<&[String]>,
+    ) -> Result<serde_json::Value> {
+        use serde_json::json;
+
+        let n_obs = linkage_matrix.nrows() + 1;
+        
+        // Create coordinate arrays for dendrogram plotting
+        let mut icoord = Vec::new();
+        let mut dcoord = Vec::new();
+        
+        for (i, row) in linkage_matrix.rows().into_iter().enumerate() {
+            let left = row[0] as usize;
+            let right = row[1] as usize;
+            let distance = row[2];
+            
+            // Calculate x-coordinates (simplified)
+            let x_left = if left < n_obs { left as f64 * 10.0 } else { (left - n_obs) as f64 * 10.0 + 5.0 };
+            let x_right = if right < n_obs { right as f64 * 10.0 } else { (right - n_obs) as f64 * 10.0 + 5.0 };
+            let x_center = (x_left + x_right) / 2.0;
+            
+            icoord.push(vec![x_left, x_left, x_right, x_right]);
+            dcoord.push(vec![0.0, distance, distance, 0.0]);
+        }
+
+        Ok(json!({
+            "icoord": icoord,
+            "dcoord": dcoord,
+            "ivl": labels.unwrap_or(&(0..n_obs).map(|i| i.to_string()).collect::<Vec<_>>()),
+            "leaves": (0..n_obs).collect::<Vec<_>>(),
+            "color_list": (0..linkage_matrix.nrows()).map(|_| "b").collect::<Vec<_>>()
+        }))
+    }
+
+    /// Create a pickle-compatible byte representation (simplified)
+    pub fn to_pickle_like_format<T: SerializableModel + AdvancedExport>(
+        model: &T,
+    ) -> Result<Vec<u8>> {
+        // Create a pickle-like format using binary serialization
+        // This is a simplified version - real pickle compatibility would need more work
+        let sklearn_data = to_sklearn_format(model)?;
+        enhanced::serialize_with_format(&sklearn_data, ExportFormat::Binary)
+    }
+
+    /// Generate model summary in scikit-learn style
+    pub fn generate_sklearn_model_summary<T: SerializableModel + AdvancedExport>(
+        model: &T,
+    ) -> Result<String> {
+        let metadata = model.get_metadata();
+        
+        let mut summary = String::new();
+        summary.push_str(&format!("{}(\n", metadata.model_type));
+        
+        for (key, value) in &metadata.parameters {
+            summary.push_str(&format!("    {}={},\n", key, value));
+        }
+        
+        if let Some(config) = &metadata.algorithm_config {
+            for (key, value) in &config.hyperparameters {
+                summary.push_str(&format!("    {}={},\n", key, value));
+            }
+        }
+        
+        summary.push_str(")");
+        Ok(summary)
+    }
+
+    /// Convert model to pandas-compatible clustering report
+    pub fn to_pandas_clustering_report(
+        labels: &Array1<i32>,
+        data: &Array2<f64>,
+        feature_names: Option<&[String]>,
+    ) -> Result<serde_json::Value> {
+        use serde_json::json;
+        
+        let n_clusters = labels.iter().map(|&x| x).max().unwrap_or(-1) as usize + 1;
+        let mut cluster_stats = Vec::new();
+        
+        for cluster_id in 0..n_clusters {
+            let cluster_indices: Vec<usize> = labels
+                .iter()
+                .enumerate()
+                .filter_map(|(i, &label)| if label == cluster_id as i32 { Some(i) } else { None })
+                .collect();
+            
+            let cluster_size = cluster_indices.len();
+            let mut cluster_data = json!({
+                "cluster_id": cluster_id,
+                "size": cluster_size,
+                "percentage": cluster_size as f64 / labels.len() as f64 * 100.0
+            });
+            
+            if cluster_size > 0 {
+                // Calculate centroid
+                let mut centroid = vec![0.0; data.ncols()];
+                for &idx in &cluster_indices {
+                    for (j, &val) in data.row(idx).iter().enumerate() {
+                        centroid[j] += val;
+                    }
+                }
+                for val in &mut centroid {
+                    *val /= cluster_size as f64;
+                }
+                
+                cluster_data["centroid"] = json!(centroid);
+                
+                if let Some(names) = feature_names {
+                    let centroid_dict: std::collections::HashMap<_, _> = names
+                        .iter()
+                        .zip(centroid.iter())
+                        .map(|(name, &val)| (name.clone(), val))
+                        .collect();
+                    cluster_data["centroid_named"] = json!(centroid_dict);
+                }
+            }
+            
+            cluster_stats.push(cluster_data);
+        }
+        
+        Ok(json!({
+            "n_clusters": n_clusters,
+            "n_samples": labels.len(),
+            "clusters": cluster_stats
+        }))
+    }
 }
 
 /// Advanced persistence features for production clustering systems
@@ -2773,6 +3172,609 @@ pub mod compression {
     }
 }
 
+/// Unified clustering workflow state that can be serialized
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ClusteringWorkflow {
+    /// Workflow identifier
+    pub id: String,
+    /// Workflow name/description
+    pub name: String,
+    /// Current algorithm state
+    pub algorithm_state: AlgorithmState,
+    /// Training data hash for validation
+    pub data_hash: String,
+    /// Complete training history
+    pub training_history: Vec<TrainingStep>,
+    /// Current model (if training completed)
+    pub current_model: Option<serde_json::Value>,
+    /// Workflow configuration
+    pub config: WorkflowConfig,
+    /// Creation and last update timestamps
+    pub created_at: u64,
+    pub updated_at: u64,
+}
+
+/// Algorithm state for resumable training
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub enum AlgorithmState {
+    /// K-means algorithm state
+    KMeans {
+        centroids: Array2<f64>,
+        iteration: usize,
+        inertia: f64,
+        converged: bool,
+        labels: Option<Array1<usize>>,
+    },
+    /// Hierarchical clustering state
+    Hierarchical {
+        linkage_matrix: Option<Array2<f64>>,
+        merge_step: usize,
+        completed: bool,
+    },
+    /// DBSCAN state
+    DBSCAN {
+        visited_points: Vec<bool>,
+        cluster_labels: Array1<i32>,
+        core_samples: Vec<bool>,
+        eps: f64,
+        min_samples: usize,
+        completed: bool,
+    },
+    /// Generic state for other algorithms
+    Generic {
+        algorithm_name: String,
+        parameters: HashMap<String, serde_json::Value>,
+        iteration: usize,
+        completed: bool,
+        state_data: serde_json::Value,
+    },
+}
+
+/// Individual training step for history tracking
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct TrainingStep {
+    /// Step number
+    pub step: usize,
+    /// Timestamp
+    pub timestamp: u64,
+    /// Algorithm-specific metrics at this step
+    pub metrics: HashMap<String, f64>,
+    /// Convergence status
+    pub converged: bool,
+    /// Memory usage at this step (optional)
+    pub memory_usage: Option<usize>,
+    /// Processing time for this step
+    pub step_duration_ms: u64,
+}
+
+/// Workflow configuration
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct WorkflowConfig {
+    /// Algorithm name
+    pub algorithm: String,
+    /// Hyperparameters
+    pub hyperparameters: HashMap<String, serde_json::Value>,
+    /// Auto-save interval (in steps, 0 = disabled)
+    pub auto_save_interval: usize,
+    /// Maximum history length to keep
+    pub max_history_length: usize,
+    /// Enable detailed logging
+    pub enable_detailed_logging: bool,
+}
+
+impl ClusteringWorkflow {
+    /// Create a new clustering workflow
+    pub fn new(id: String, name: String, algorithm: String) -> Self {
+        let timestamp = current_timestamp();
+        Self {
+            id,
+            name,
+            algorithm_state: AlgorithmState::Generic {
+                algorithm_name: algorithm.clone(),
+                parameters: HashMap::new(),
+                iteration: 0,
+                completed: false,
+                state_data: serde_json::Value::Null,
+            },
+            data_hash: String::new(),
+            training_history: Vec::new(),
+            current_model: None,
+            config: WorkflowConfig {
+                algorithm,
+                hyperparameters: HashMap::new(),
+                auto_save_interval: 10,
+                max_history_length: 1000,
+                enable_detailed_logging: true,
+            },
+            created_at: timestamp,
+            updated_at: timestamp,
+        }
+    }
+
+    /// Update algorithm state
+    pub fn update_state(&mut self, new_state: AlgorithmState) {
+        self.algorithm_state = new_state;
+        self.updated_at = current_timestamp();
+    }
+
+    /// Add a training step to history
+    pub fn add_training_step(&mut self, step: TrainingStep) {
+        self.training_history.push(step);
+        
+        // Limit history length
+        if self.training_history.len() > self.config.max_history_length {
+            self.training_history.remove(0);
+        }
+        
+        self.updated_at = current_timestamp();
+    }
+
+    /// Set the final model
+    pub fn set_model<T: SerializableModel>(&mut self, model: &T) -> Result<()> {
+        let model_json = serde_json::to_value(model)
+            .map_err(|e| ClusteringError::InvalidInput(format!("Failed to serialize model: {}", e)))?;
+        self.current_model = Some(model_json);
+        self.updated_at = current_timestamp();
+        Ok(())
+    }
+
+    /// Get the final model
+    pub fn get_model<T: SerializableModel>(&self) -> Result<Option<T>> {
+        if let Some(ref model_json) = self.current_model {
+            let model: T = serde_json::from_value(model_json.clone())
+                .map_err(|e| ClusteringError::InvalidInput(format!("Failed to deserialize model: {}", e)))?;
+            Ok(Some(model))
+        } else {
+            Ok(None)
+        }
+    }
+
+    /// Check if training is completed
+    pub fn is_completed(&self) -> bool {
+        match &self.algorithm_state {
+            AlgorithmState::KMeans { converged, .. } => *converged,
+            AlgorithmState::Hierarchical { completed, .. } => *completed,
+            AlgorithmState::DBSCAN { completed, .. } => *completed,
+            AlgorithmState::Generic { completed, .. } => *completed,
+        }
+    }
+
+    /// Get current iteration number
+    pub fn current_iteration(&self) -> usize {
+        match &self.algorithm_state {
+            AlgorithmState::KMeans { iteration, .. } => *iteration,
+            AlgorithmState::Hierarchical { merge_step, .. } => *merge_step,
+            AlgorithmState::DBSCAN { .. } => 0, // DBSCAN doesn't have iterations
+            AlgorithmState::Generic { iteration, .. } => *iteration,
+        }
+    }
+}
+
+impl SerializableModel for ClusteringWorkflow {}
+
+/// Unified save/load system for clustering workflows
+pub struct ClusteringWorkflowManager {
+    /// Base directory for saving workflows
+    base_dir: PathBuf,
+    /// Auto-save configuration
+    auto_save_config: AutoSaveConfig,
+}
+
+/// Auto-save configuration
+#[derive(Debug, Clone)]
+pub struct AutoSaveConfig {
+    /// Enable auto-save
+    pub enabled: bool,
+    /// Save interval in training steps
+    pub save_interval: usize,
+    /// Keep backup copies
+    pub keep_backups: bool,
+    /// Maximum number of backups
+    pub max_backups: usize,
+}
+
+impl Default for AutoSaveConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            save_interval: 10,
+            keep_backups: true,
+            max_backups: 5,
+        }
+    }
+}
+
+impl ClusteringWorkflowManager {
+    /// Create a new workflow manager
+    pub fn new<P: Into<PathBuf>>(base_dir: P) -> Self {
+        Self {
+            base_dir: base_dir.into(),
+            auto_save_config: AutoSaveConfig::default(),
+        }
+    }
+
+    /// Save a clustering workflow
+    pub fn save_workflow(&self, workflow: &ClusteringWorkflow) -> Result<PathBuf> {
+        std::fs::create_dir_all(&self.base_dir)
+            .map_err(|e| ClusteringError::InvalidInput(format!("Failed to create directory: {}", e)))?;
+        
+        let file_path = self.base_dir.join(format!("{}.workflow.json", workflow.id));
+        workflow.save_to_file(&file_path)?;
+        
+        // Create backup if enabled
+        if self.auto_save_config.keep_backups {
+            self.create_backup(&file_path, &workflow.id)?;
+        }
+        
+        Ok(file_path)
+    }
+
+    /// Load a clustering workflow
+    pub fn load_workflow(&self, workflow_id: &str) -> Result<ClusteringWorkflow> {
+        let file_path = self.base_dir.join(format!("{}.workflow.json", workflow_id));
+        ClusteringWorkflow::load_from_file(file_path)
+    }
+
+    /// Resume training from a saved workflow
+    pub fn resume_workflow(&self, workflow_id: &str) -> Result<ClusteringWorkflow> {
+        let mut workflow = self.load_workflow(workflow_id)?;
+        
+        // Validate data consistency if needed
+        if !workflow.data_hash.is_empty() {
+            // In a real implementation, you would validate against the current training data
+            // For now, we just update the timestamp
+            workflow.updated_at = current_timestamp();
+        }
+        
+        Ok(workflow)
+    }
+
+    /// List all saved workflows
+    pub fn list_workflows(&self) -> Result<Vec<String>> {
+        let mut workflows = Vec::new();
+        
+        if self.base_dir.exists() {
+            for entry in std::fs::read_dir(&self.base_dir)
+                .map_err(|e| ClusteringError::InvalidInput(format!("Failed to read directory: {}", e)))? {
+                let entry = entry
+                    .map_err(|e| ClusteringError::InvalidInput(format!("Failed to read entry: {}", e)))?;
+                let path = entry.path();
+                
+                if let Some(file_name) = path.file_name().and_then(|n| n.to_str()) {
+                    if file_name.ends_with(".workflow.json") {
+                        if let Some(workflow_id) = file_name.strip_suffix(".workflow.json") {
+                            workflows.push(workflow_id.to_string());
+                        }
+                    }
+                }
+            }
+        }
+        
+        Ok(workflows)
+    }
+
+    /// Create a backup of a workflow file
+    fn create_backup(&self, original_path: &Path, workflow_id: &str) -> Result<()> {
+        let backup_dir = self.base_dir.join("backups");
+        std::fs::create_dir_all(&backup_dir)
+            .map_err(|e| ClusteringError::InvalidInput(format!("Failed to create backup directory: {}", e)))?;
+        
+        let timestamp = current_timestamp();
+        let backup_path = backup_dir.join(format!("{}.{}.backup.json", workflow_id, timestamp));
+        
+        std::fs::copy(original_path, &backup_path)
+            .map_err(|e| ClusteringError::InvalidInput(format!("Failed to create backup: {}", e)))?;
+        
+        // Clean up old backups
+        self.cleanup_old_backups(workflow_id)?;
+        
+        Ok(())
+    }
+
+    /// Clean up old backup files
+    fn cleanup_old_backups(&self, workflow_id: &str) -> Result<()> {
+        let backup_dir = self.base_dir.join("backups");
+        if !backup_dir.exists() {
+            return Ok(());
+        }
+        
+        let prefix = format!("{}.", workflow_id);
+        let mut backups = Vec::new();
+        
+        for entry in std::fs::read_dir(&backup_dir)
+            .map_err(|e| ClusteringError::InvalidInput(format!("Failed to read backup directory: {}", e)))? {
+            let entry = entry
+                .map_err(|e| ClusteringError::InvalidInput(format!("Failed to read backup entry: {}", e)))?;
+            let path = entry.path();
+            
+            if let Some(file_name) = path.file_name().and_then(|n| n.to_str()) {
+                if file_name.starts_with(&prefix) && file_name.ends_with(".backup.json") {
+                    backups.push(path);
+                }
+            }
+        }
+        
+        // Sort by modification time and keep only the latest ones
+        backups.sort_by_key(|path| {
+            path.metadata().and_then(|m| m.modified()).unwrap_or(SystemTime::UNIX_EPOCH)
+        });
+        
+        // Remove excess backups
+        while backups.len() > self.auto_save_config.max_backups {
+            if let Some(old_backup) = backups.remove(0) {
+                let _ = std::fs::remove_file(old_backup); // Ignore errors
+            }
+        }
+        
+        Ok(())
+    }
+}
+
+/// Enhanced dendrogram export with JSON support
+impl HierarchicalModel {
+    /// Export dendrogram to JSON format
+    pub fn to_json_dendrogram(&self) -> Result<String> {
+        let dendrogram_data = self.build_json_tree_structure()?;
+        serde_json::to_string_pretty(&dendrogram_data)
+            .map_err(|e| ClusteringError::InvalidInput(format!("JSON serialization failed: {}", e)))
+    }
+
+    /// Build JSON tree structure for dendrogram
+    fn build_json_tree_structure(&self) -> Result<serde_json::Value> {
+        use serde_json::{json, Value};
+        
+        let n_samples = self.n_observations;
+        let linkage = &self.linkage;
+        
+        if linkage.nrows() == 0 {
+            return Ok(json!({
+                "type": "dendrogram",
+                "n_samples": n_samples,
+                "tree": null,
+                "metadata": {
+                    "method": self.method,
+                    "created_at": current_timestamp()
+                }
+            }));
+        }
+        
+        // Build the tree recursively
+        let root_node = self.build_node_recursive(linkage.nrows() - 1, linkage, n_samples)?;
+        
+        Ok(json!({
+            "type": "dendrogram",
+            "n_samples": n_samples,
+            "method": self.method,
+            "tree": root_node,
+            "metadata": {
+                "linkage_method": self.method,
+                "created_at": current_timestamp(),
+                "format_version": "1.0",
+                "total_nodes": linkage.nrows() + n_samples
+            }
+        }))
+    }
+
+    /// Build a node recursively for JSON export
+    fn build_node_recursive(
+        &self,
+        merge_idx: usize,
+        linkage: &Array2<f64>,
+        n_samples: usize,
+    ) -> Result<serde_json::Value> {
+        use serde_json::json;
+        
+        if merge_idx >= linkage.nrows() {
+            return Err(ClusteringError::InvalidInput(format!(
+                "Invalid merge index: {} >= {}",
+                merge_idx,
+                linkage.nrows()
+            )));
+        }
+        
+        let row = linkage.row(merge_idx);
+        let left_id = row[0] as usize;
+        let right_id = row[1] as usize;
+        let distance = row[2];
+        let count = row[3] as usize;
+        
+        // Determine if children are leaves or internal nodes
+        let left_child = if left_id < n_samples {
+            // Leaf node
+            json!({
+                "type": "leaf",
+                "id": left_id,
+                "label": self.labels.as_ref()
+                    .and_then(|labels| labels.get(left_id))
+                    .map(|s| s.as_str())
+                    .unwrap_or(&format!("sample_{}", left_id)),
+                "sample_id": left_id
+            })
+        } else {
+            // Internal node
+            let internal_idx = left_id - n_samples;
+            self.build_node_recursive(internal_idx, linkage, n_samples)?
+        };
+        
+        let right_child = if right_id < n_samples {
+            // Leaf node
+            json!({
+                "type": "leaf",
+                "id": right_id,
+                "label": self.labels.as_ref()
+                    .and_then(|labels| labels.get(right_id))
+                    .map(|s| s.as_str())
+                    .unwrap_or(&format!("sample_{}", right_id)),
+                "sample_id": right_id
+            })
+        } else {
+            // Internal node
+            let internal_idx = right_id - n_samples;
+            self.build_node_recursive(internal_idx, linkage, n_samples)?
+        };
+        
+        Ok(json!({
+            "type": "internal",
+            "id": n_samples + merge_idx,
+            "distance": distance,
+            "count": count,
+            "merge_order": merge_idx,
+            "left": left_child,
+            "right": right_child
+        }))
+    }
+}
+
+/// Import functions for scikit-learn and SciPy models
+impl compatibility {
+    /// Import K-means model from scikit-learn JSON format
+    pub fn import_sklearn_kmeans<P: AsRef<Path>>(path: P) -> Result<KMeansModel> {
+        let content = std::fs::read_to_string(path)
+            .map_err(|e| ClusteringError::InvalidInput(format!("Failed to read file: {}", e)))?;
+        
+        let json_value: serde_json::Value = serde_json::from_str(&content)
+            .map_err(|e| ClusteringError::InvalidInput(format!("Failed to parse JSON: {}", e)))?;
+        
+        parse_sklearn_json_format(&json_value)
+    }
+    
+    /// Import hierarchical clustering from SciPy JSON format
+    pub fn import_scipy_hierarchy<P: AsRef<Path>>(path: P) -> Result<HierarchicalModel> {
+        let content = std::fs::read_to_string(path)
+            .map_err(|e| ClusteringError::InvalidInput(format!("Failed to read file: {}", e)))?;
+        
+        let json_value: serde_json::Value = serde_json::from_str(&content)
+            .map_err(|e| ClusteringError::InvalidInput(format!("Failed to parse JSON: {}", e)))?;
+        
+        parse_scipy_json_format(&json_value)
+    }
+    
+    /// Export model to scikit-learn compatible JSON format
+    pub fn export_to_sklearn_json<T: SerializableModel + AdvancedExport>(
+        model: &T,
+        path: &Path,
+    ) -> Result<()> {
+        let sklearn_format = to_sklearn_format(model)?;
+        let json_string = serde_json::to_string_pretty(&sklearn_format)
+            .map_err(|e| ClusteringError::InvalidInput(format!("JSON serialization failed: {}", e)))?;
+        
+        std::fs::write(path, json_string)
+            .map_err(|e| ClusteringError::InvalidInput(format!("Failed to write file: {}", e)))
+    }
+    
+    /// Export model to SciPy compatible JSON format
+    pub fn export_to_scipy_json<T: SerializableModel + AdvancedExport>(
+        model: &T,
+        path: &Path,
+    ) -> Result<()> {
+        let scipy_format = to_scipy_format(model)?;
+        let json_string = serde_json::to_string_pretty(&scipy_format)
+            .map_err(|e| ClusteringError::InvalidInput(format!("JSON serialization failed: {}", e)))?;
+        
+        std::fs::write(path, json_string)
+            .map_err(|e| ClusteringError::InvalidInput(format!("Failed to write file: {}", e)))
+    }
+}
+
+/// Parse scikit-learn JSON format
+fn parse_sklearn_json_format(json: &serde_json::Value) -> Result<KMeansModel> {
+    let cluster_centers = json.get("cluster_centers_")
+        .ok_or_else(|| ClusteringError::InvalidInput("Missing cluster_centers_".to_string()))?;
+    
+    let n_clusters = json.get("n_clusters")
+        .and_then(|v| v.as_u64())
+        .ok_or_else(|| ClusteringError::InvalidInput("Missing or invalid n_clusters".to_string()))? as usize;
+    
+    let n_iter = json.get("n_iter_")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(0) as usize;
+    
+    let inertia = json.get("inertia_")
+        .and_then(|v| v.as_f64())
+        .unwrap_or(0.0);
+    
+    // Parse centroids array
+    let centroids_data = cluster_centers.as_array()
+        .ok_or_else(|| ClusteringError::InvalidInput("Invalid cluster_centers_ format".to_string()))?;
+    
+    let mut centroid_values = Vec::new();
+    let mut n_features = 0;
+    
+    for centroid in centroids_data {
+        let centroid_array = centroid.as_array()
+            .ok_or_else(|| ClusteringError::InvalidInput("Invalid centroid format".to_string()))?;
+        
+        if n_features == 0 {
+            n_features = centroid_array.len();
+        } else if n_features != centroid_array.len() {
+            return Err(ClusteringError::InvalidInput("Inconsistent centroid dimensions".to_string()));
+        }
+        
+        for value in centroid_array {
+            let v = value.as_f64()
+                .ok_or_else(|| ClusteringError::InvalidInput("Invalid centroid value".to_string()))?;
+            centroid_values.push(v);
+        }
+    }
+    
+    let centroids = Array2::from_shape_vec((n_clusters, n_features), centroid_values)
+        .map_err(|e| ClusteringError::InvalidInput(format!("Failed to create centroids array: {}", e)))?;
+    
+    Ok(KMeansModel::new(centroids, n_clusters, n_iter, inertia, None))
+}
+
+/// Parse SciPy JSON format
+fn parse_scipy_json_format(json: &serde_json::Value) -> Result<HierarchicalModel> {
+    let linkage_data = json.get("linkage")
+        .ok_or_else(|| ClusteringError::InvalidInput("Missing linkage matrix".to_string()))?;
+    
+    let n_observations = json.get("n_observations")
+        .and_then(|v| v.as_u64())
+        .ok_or_else(|| ClusteringError::InvalidInput("Missing n_observations".to_string()))? as usize;
+    
+    let method = json.get("method")
+        .and_then(|v| v.as_str())
+        .unwrap_or("ward")
+        .to_string();
+    
+    // Parse linkage matrix
+    let linkage_array = linkage_data.as_array()
+        .ok_or_else(|| ClusteringError::InvalidInput("Invalid linkage format".to_string()))?;
+    
+    let mut linkage_values = Vec::new();
+    let n_merges = linkage_array.len();
+    
+    for row in linkage_array {
+        let row_array = row.as_array()
+            .ok_or_else(|| ClusteringError::InvalidInput("Invalid linkage row format".to_string()))?;
+        
+        if row_array.len() != 4 {
+            return Err(ClusteringError::InvalidInput("Linkage matrix must have 4 columns".to_string()));
+        }
+        
+        for value in row_array {
+            let v = value.as_f64()
+                .ok_or_else(|| ClusteringError::InvalidInput("Invalid linkage value".to_string()))?;
+            linkage_values.push(v);
+        }
+    }
+    
+    let linkage = Array2::from_shape_vec((n_merges, 4), linkage_values)
+        .map_err(|e| ClusteringError::InvalidInput(format!("Failed to create linkage matrix: {}", e)))?;
+    
+    // Parse labels if present
+    let labels = json.get("labels")
+        .and_then(|v| v.as_array())
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|v| v.as_str())
+                .map(|s| s.to_string())
+                .collect::<Vec<String>>()
+        });
+    
+    Ok(HierarchicalModel::new(linkage, n_observations, method, labels))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -2849,5 +3851,92 @@ mod tests {
         let predictions = model.predict(test_data.view()).unwrap();
 
         assert_eq!(predictions, array![0, 1, 0, 1]);
+    }
+
+    #[test]
+    fn test_enhanced_model_metadata() {
+        let metadata = EnhancedModelMetadata::default();
+        
+        assert_eq!(metadata.format_version, "1.0.0");
+        assert_eq!(metadata.library_version, env!("CARGO_PKG_VERSION"));
+        assert!(metadata.created_timestamp > 0);
+        assert_eq!(metadata.platform_info.os, std::env::consts::OS);
+        assert_eq!(metadata.platform_info.arch, std::env::consts::ARCH);
+    }
+
+    #[test]
+    fn test_enhanced_model_integrity() {
+        let centroids = array![[1.0, 2.0], [3.0, 4.0]];
+        let model = KMeansModel::new(centroids, 2, 10, 5.0, None);
+        let metadata = EnhancedModelMetadata::default();
+        
+        let enhanced_model = EnhancedModel::new(model, metadata);
+        
+        // Integrity should be valid after creation
+        assert!(enhanced_model.validate_integrity().unwrap());
+        assert!(enhanced_model.check_version_compatibility().unwrap());
+        assert!(!enhanced_model.metadata.integrity_hash.is_empty());
+    }
+
+    #[test]
+    fn test_enhanced_model_serialization() {
+        let centroids = array![[1.0, 2.0], [3.0, 4.0]];
+        let kmeans_model = KMeansModel::new(centroids, 2, 10, 5.0, None);
+        
+        let mut metadata = EnhancedModelMetadata::default();
+        metadata.algorithm_signature = "kmeans-test".to_string();
+        metadata.training_metrics.training_time_ms = 1000;
+        metadata.training_metrics.iterations = 10;
+        metadata.data_characteristics.n_samples = 100;
+        metadata.data_characteristics.n_features = 2;
+        
+        let enhanced_model = EnhancedModel::new(kmeans_model, metadata);
+        
+        // Test JSON serialization
+        let json = serde_json::to_string(&enhanced_model).unwrap();
+        let deserialized: EnhancedModel<KMeansModel> = serde_json::from_str(&json).unwrap();
+        
+        assert_eq!(deserialized.model.n_clusters, 2);
+        assert_eq!(deserialized.metadata.algorithm_signature, "kmeans-test");
+        assert_eq!(deserialized.metadata.training_metrics.training_time_ms, 1000);
+        assert!(deserialized.validate_integrity().unwrap());
+    }
+
+    #[test]
+    fn test_platform_info_detection() {
+        let platform_info = PlatformInfo::detect();
+        
+        assert!(!platform_info.os.is_empty());
+        assert!(!platform_info.arch.is_empty());
+        assert!(!platform_info.rust_version.is_empty());
+        
+        // CPU features detection should work on supported architectures
+        #[cfg(any(target_arch = "x86_64", target_arch = "aarch64"))]
+        {
+            // Features may or may not be present, but the detection should not crash
+            assert!(platform_info.cpu_features.len() >= 0);
+        }
+    }
+
+    #[test]
+    fn test_training_metrics_defaults() {
+        let metrics = TrainingMetrics::default();
+        
+        assert_eq!(metrics.training_time_ms, 0);
+        assert_eq!(metrics.iterations, 0);
+        assert_eq!(metrics.final_convergence_metric, 0.0);
+        assert_eq!(metrics.peak_memory_bytes, 0);
+        assert_eq!(metrics.avg_cpu_utilization, 0.0);
+    }
+
+    #[test]
+    fn test_data_characteristics_defaults() {
+        let data_chars = DataCharacteristics::default();
+        
+        assert_eq!(data_chars.n_samples, 0);
+        assert_eq!(data_chars.n_features, 0);
+        assert_eq!(data_chars.data_type_fingerprint, "unknown");
+        assert!(data_chars.feature_ranges.is_none());
+        assert!(data_chars.preprocessing_applied.is_empty());
     }
 }

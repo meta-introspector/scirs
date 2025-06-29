@@ -6,15 +6,13 @@
 
 use crate::error::{Result, TextError};
 use crate::model_registry::{
-    ModelMetadata, ModelRegistry, ModelType, SerializableModelData,
+    ModelMetadata, ModelRegistry,
 };
-use crate::tokenize::{Tokenizer, WordTokenizer};
+use crate::tokenize::Tokenizer;
 use crate::transformer::{TransformerConfig, TransformerModel};
-use crate::vectorize::{CountVectorizer, TfidfVectorizer};
-use ndarray::{Array1, Array2};
+use ndarray::Array2;
 use std::collections::HashMap;
 use std::fs;
-use std::io::{BufReader, BufWriter};
 use std::path::{Path, PathBuf};
 
 #[cfg(feature = "serde-support")]
@@ -91,6 +89,7 @@ impl HfConfig {
             num_hidden_layers: Some(config.n_encoder_layers),
             vocab_size: Some(config.vocab_size),
             max_position_embeddings: Some(config.max_seq_len),
+            #[cfg(feature = "serde-support")]
             extra_config: HashMap::new(),
         }
     }
@@ -180,7 +179,7 @@ impl HfTokenizer {
 
     /// Tokenize text with HF-compatible output
     pub fn encode(&self, text: &str, add_special_tokens: bool) -> Result<HfEncodedInput> {
-        let mut tokens = self.tokenizer.tokenize(text);
+        let mut tokens = self.tokenizer.tokenize(text)?;
 
         // Add special tokens if requested
         if add_special_tokens {
@@ -1026,7 +1025,9 @@ impl TextGenerationPipeline {
         let mut generated = prompt.to_string();
 
         for _ in 0..10 {
-            if let Some(word) = words.get(rand::random::<usize>() % words.len()) {
+            use rand::Rng;
+            let mut rng = rand::rng();
+            if let Some(word) = words.get(rng.random_range(0..words.len())) {
                 generated.push_str(" ");
                 generated.push_str(word);
             }
@@ -1247,14 +1248,14 @@ impl HfModelManager {
         output_path: P,
         model_id: &str,
     ) -> Result<()> {
-        let config = HfConfig::from_transformer_config(model.config());
+        let config = HfConfig::from_transformer_config(&model.config);
         let adapter = HfModelAdapter::new(config);
         adapter.save_to_hf_directory(model, output_path)
     }
 
     /// Convert SciRS2 model to HF format
     pub fn convert_to_hf(&self, model: &TransformerModel) -> Result<HfConfig> {
-        Ok(HfConfig::from_transformer_config(model.config()))
+        Ok(HfConfig::from_transformer_config(&model.config))
     }
 
     /// Get available models

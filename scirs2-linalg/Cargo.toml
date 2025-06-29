@@ -49,7 +49,7 @@ default = ["linalg", "simd"]
 # BLAS backend features - these delegate to workspace-level platform configuration
 accelerate = ["scirs2-core/accelerate"]  # macOS Accelerate framework
 openblas-backend = ["scirs2-core/openblas"]  # OpenBLAS (Linux/Windows)
-intel-mkl = ["scirs2-core/intel-mkl"]  # Intel MKL
+# intel-mkl = ["scirs2-core/intel-mkl"]  # Intel MKL - removed from scirs2-core
 netlib = ["scirs2-core/netlib"]  # Reference Netlib
 
 # Core functionality features

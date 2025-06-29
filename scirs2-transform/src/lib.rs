@@ -67,6 +67,15 @@ pub mod text;
 /// Image processing transformers
 pub mod image;
 
+/// Utility functions and helpers for data transformation
+pub mod utils;
+
+/// Performance optimizations and enhanced implementations
+pub mod performance;
+
+/// Optimization configuration and auto-tuning system
+pub mod optimization_config;
+
 /// Graph embedding transformers
 pub mod graph;
 
@@ -143,20 +152,30 @@ pub use streaming::{
     WindowedStreamingTransformer,
 };
 pub use text::{CountVectorizer, HashingVectorizer, StreamingCountVectorizer, TfidfVectorizer};
+pub use utils::{
+    ArrayMemoryPool, DataChunker, PerfUtils, ProcessingStrategy, StatUtils, TypeConverter,
+    ValidationUtils,
+};
+pub use performance::{EnhancedPCA, EnhancedStandardScaler};\npub use optimization_config::{\n    AutoTuner, DataCharacteristics, OptimizationConfig, OptimizationReport, SystemResources,\n    TransformationRecommendation,\n};
 
 // GPU acceleration exports
 #[cfg(feature = "gpu")]
-pub use gpu::{GpuMatrixOps, GpuPCA, GpuTSNE};
+pub use gpu::{
+    AdvancedGpuPCA, GpuMatrixOps, GpuMemoryPool, GpuPCA, GpuTSNE, MultiGpuCoordinator,
+};
 
 // Distributed processing exports
 #[cfg(feature = "distributed")]
 pub use distributed::{
-    DistributedConfig, DistributedCoordinator, DistributedPCA, NodeInfo, PartitioningStrategy,
+    AutoScalingConfig, CircuitBreaker, ClusterHealthSummary, DistributedConfig,
+    DistributedCoordinator, DistributedPCA, EnhancedDistributedCoordinator, NodeHealth,
+    NodeInfo, NodeStatus, PartitioningStrategy,
 };
 
 // Automated feature engineering exports
 pub use auto_feature_engineering::{
-    AutoFeatureEngineer, DatasetMetaFeatures, TransformationConfig, TransformationType,
+    AdvancedMetaLearningSystem, AutoFeatureEngineer, DatasetMetaFeatures, EnhancedMetaFeatures,
+    MultiObjectiveRecommendation, TransformationConfig, TransformationType,
 };
 
 // Production monitoring exports

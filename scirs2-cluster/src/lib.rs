@@ -250,6 +250,23 @@ pub use serialization::{
     AffinityPropagationModel, BirchModel, DBSCANModel, ExportFormat, GMMModel, HierarchicalModel,
     KMeansModel, LeaderModel, LeaderNodeModel, LeaderTreeModel, MeanShiftModel, ModelMetadata,
     SerializableModel, SpectralClusteringModel,
+    // Enhanced serialization with metadata and versioning
+    EnhancedModel, EnhancedModelMetadata, TrainingMetrics, DataCharacteristics, PlatformInfo,
+    // Unified workflow management
+    ClusteringWorkflow, ClusteringWorkflowManager, AlgorithmState, TrainingStep, WorkflowConfig,
+    AutoSaveConfig,
+};
+
+// Re-export compatibility utilities for scikit-learn and SciPy integration
+pub use serialization::compatibility::{
+    create_sklearn_param_grid, from_joblib_format, from_numpy_format, from_sklearn_format,
+    generate_sklearn_model_summary, to_arrow_schema, to_huggingface_card, to_joblib_format,
+    to_mlflow_format, to_numpy_format, to_onnx_metadata, to_pandas_clustering_report,
+    to_pandas_format, to_pickle_like_format, to_pytorch_checkpoint, to_r_format,
+    to_scipy_dendrogram_format, to_scipy_linkage_format, to_sklearn_clustering_result,
+    to_sklearn_format,
+    // Import functions for external model formats
+    import_sklearn_kmeans, import_scipy_hierarchy, export_to_sklearn_json, export_to_scipy_json,
 };
 pub use sparse::{
     sparse_epsilon_graph, sparse_knn_graph, SparseDistanceMatrix, SparseHierarchicalClustering,

@@ -526,6 +526,130 @@ where
     Ok(result)
 }
 
+/// Compute SmoothGrad attribution by adding noise and averaging
+pub fn compute_smoothgrad_attribution<F>(
+    interpreter: &ModelInterpreter<F>,
+    input: &ArrayD<F>,
+    base_method: &AttributionMethod,
+    num_samples: usize,
+    noise_std: f64,
+    target_class: Option<usize>,
+) -> Result<ArrayD<F>>
+where
+    F: Float
+        + Debug
+        + 'static
+        + ndarray::ScalarOperand
+        + num_traits::FromPrimitive
+        + Sum
+        + Clone
+        + Copy,
+{
+    use rand::prelude::*;
+    let mut rng = rand::rng();
+    let noise_std_f = F::from(noise_std).unwrap();
+    
+    let mut accumulated_attribution = ArrayD::zeros(input.raw_dim());
+    
+    for _ in 0..num_samples {
+        // Add Gaussian noise to input
+        let noise: ArrayD<F> = input.mapv(|_| {
+            let gaussian: f64 = rng.sample(rand_distr::StandardNormal);
+            F::from(gaussian * noise_std).unwrap()
+        });
+        let noisy_input = input + &noise;
+        
+        // Compute attribution for noisy input
+        let attribution = match base_method {
+            AttributionMethod::Saliency => {
+                compute_saliency_attribution(interpreter, &noisy_input, target_class)?
+            }
+            AttributionMethod::IntegratedGradients { baseline, num_steps } => {
+                compute_integrated_gradients(interpreter, &noisy_input, baseline, *num_steps, target_class)?
+            }
+            _ => {
+                // For other methods, fall back to saliency
+                compute_saliency_attribution(interpreter, &noisy_input, target_class)?
+            }
+        };
+        
+        accumulated_attribution = accumulated_attribution + attribution;
+    }
+    
+    // Average the attributions
+    let num_samples_f = F::from(num_samples).unwrap();
+    Ok(accumulated_attribution / num_samples_f)
+}
+
+/// Compute Input x Gradient attribution
+pub fn compute_input_x_gradient_attribution<F>(
+    interpreter: &ModelInterpreter<F>,
+    input: &ArrayD<F>,
+    target_class: Option<usize>,
+) -> Result<ArrayD<F>>
+where
+    F: Float
+        + Debug
+        + 'static
+        + ndarray::ScalarOperand
+        + num_traits::FromPrimitive
+        + Sum
+        + Clone
+        + Copy,
+{
+    // First compute the gradient
+    let gradient = compute_saliency_attribution(interpreter, input, target_class)?;
+    
+    // Then multiply by input (element-wise)
+    Ok(input * &gradient)
+}
+
+/// Compute Expected Gradients attribution
+pub fn compute_expected_gradients_attribution<F>(
+    interpreter: &ModelInterpreter<F>,
+    input: &ArrayD<F>,
+    num_references: usize,
+    num_steps: usize,
+    target_class: Option<usize>,
+) -> Result<ArrayD<F>>
+where
+    F: Float
+        + Debug
+        + 'static
+        + ndarray::ScalarOperand
+        + num_traits::FromPrimitive
+        + Sum
+        + Clone
+        + Copy,
+{
+    use rand::prelude::*;
+    let mut rng = rand::rng();
+    
+    let mut accumulated_attribution = ArrayD::zeros(input.raw_dim());
+    
+    for _ in 0..num_references {
+        // Create a random reference (baseline)
+        let reference: ArrayD<F> = input.mapv(|_| {
+            F::from(rng.gen::<f64>()).unwrap()
+        });
+        
+        // Compute integrated gradients with respect to this reference
+        let attribution = compute_integrated_gradients(
+            interpreter,
+            input,
+            &BaselineMethod::Custom(reference.mapv(|x| x.to_f32().unwrap_or(0.0))),
+            num_steps,
+            target_class,
+        )?;
+        
+        accumulated_attribution = accumulated_attribution + attribution;
+    }
+    
+    // Average over all references
+    let num_references_f = F::from(num_references).unwrap();
+    Ok(accumulated_attribution / num_references_f)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

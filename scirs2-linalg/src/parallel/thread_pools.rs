@@ -896,6 +896,302 @@ impl Drop for ScopedThreadPool {
     }
 }
 
+// ============================================================================
+// ULTRATHINK MODE: Enhanced Thread Pool Profiling and Analytics
+// ============================================================================
+
+/// Advanced thread pool performance profiler
+#[derive(Debug)]
+pub struct ThreadPoolProfiler {
+    /// Performance metrics per profile
+    metrics: Arc<RwLock<HashMap<ThreadPoolProfile, ProfileMetrics>>>,
+    /// Real-time monitoring data
+    monitoring: Arc<Mutex<MonitoringData>>,
+    /// Adaptive configuration recommendations
+    recommendations: Arc<RwLock<HashMap<ThreadPoolProfile, ThreadPoolConfig>>>,
+}
+
+/// Performance metrics for a thread pool profile
+#[derive(Debug, Clone, Default)]
+pub struct ProfileMetrics {
+    /// Total tasks executed
+    pub total_tasks: u64,
+    /// Total execution time (seconds)
+    pub total_execution_time: f64,
+    /// Average task execution time (seconds)
+    pub avg_execution_time: f64,
+    /// Peak throughput (tasks/second)
+    pub peak_throughput: f64,
+    /// Current throughput (tasks/second)
+    pub current_throughput: f64,
+    /// Thread utilization percentage
+    pub thread_utilization: f64,
+    /// Queue wait times
+    pub avg_queue_wait_time: f64,
+    /// Memory usage metrics
+    pub memory_usage: MemoryMetrics,
+    /// CPU usage per thread
+    pub cpu_usage_per_thread: Vec<f64>,
+    /// NUMA locality efficiency
+    pub numa_efficiency: f64,
+}
+
+/// Memory usage metrics
+#[derive(Debug, Clone, Default)]
+pub struct MemoryMetrics {
+    /// Current memory usage (bytes)
+    pub current_usage: u64,
+    /// Peak memory usage (bytes)
+    pub peak_usage: u64,
+    /// Memory allocations per second
+    pub allocations_per_sec: f64,
+    /// Cache miss rate
+    pub cache_miss_rate: f64,
+}
+
+/// Real-time monitoring data
+#[derive(Debug, Default)]
+struct MonitoringData {
+    /// Active tasks per profile
+    active_tasks: HashMap<ThreadPoolProfile, u32>,
+    /// Recent performance samples
+    recent_samples: HashMap<ThreadPoolProfile, Vec<PerformanceSample>>,
+    /// Thread health status
+    thread_health: HashMap<ThreadPoolProfile, Vec<ThreadHealth>>,
+}
+
+/// Performance sample for trend analysis
+#[derive(Debug, Clone)]
+struct PerformanceSample {
+    timestamp: std::time::Instant,
+    throughput: f64,
+    latency: f64,
+    cpu_usage: f64,
+    memory_usage: u64,
+}
+
+/// Thread health metrics
+#[derive(Debug, Clone)]
+struct ThreadHealth {
+    thread_id: usize,
+    cpu_usage: f64,
+    memory_usage: u64,
+    task_completion_rate: f64,
+    error_count: u32,
+    last_activity: std::time::Instant,
+}
+
+impl ThreadPoolProfiler {
+    /// Create a new thread pool profiler
+    pub fn new() -> Self {
+        Self {
+            metrics: Arc::new(RwLock::new(HashMap::new())),
+            monitoring: Arc::new(Mutex::new(MonitoringData::default())),
+            recommendations: Arc::new(RwLock::new(HashMap::new())),
+        }
+    }
+    
+    /// Record task execution metrics
+    pub fn record_task_execution(
+        &self,
+        profile: ThreadPoolProfile,
+        execution_time: f64,
+        queue_wait_time: f64,
+        memory_delta: i64,
+    ) -> LinalgResult<()> {
+        let mut metrics_guard = self.metrics.write().map_err(|_| {
+            LinalgError::ComputationError("Failed to acquire metrics lock".to_string())
+        })?;
+        
+        let metrics = metrics_guard.entry(profile.clone()).or_default();
+        
+        // Update basic metrics
+        metrics.total_tasks += 1;
+        metrics.total_execution_time += execution_time;
+        metrics.avg_execution_time = metrics.total_execution_time / metrics.total_tasks as f64;
+        metrics.avg_queue_wait_time = (metrics.avg_queue_wait_time * (metrics.total_tasks - 1) as f64 + queue_wait_time) / metrics.total_tasks as f64;
+        
+        // Update memory metrics
+        if memory_delta > 0 {
+            metrics.memory_usage.current_usage = (metrics.memory_usage.current_usage as i64 + memory_delta) as u64;
+            metrics.memory_usage.peak_usage = metrics.memory_usage.peak_usage.max(metrics.memory_usage.current_usage);
+        }
+        
+        // Calculate current throughput (tasks in last second)
+        let now = std::time::Instant::now();
+        let mut monitoring = self.monitoring.lock().map_err(|_| {
+            LinalgError::ComputationError("Failed to acquire monitoring lock".to_string())
+        })?;
+        
+        let samples = monitoring.recent_samples.entry(profile.clone()).or_default();
+        samples.push(PerformanceSample {
+            timestamp: now,
+            throughput: 1.0 / execution_time, // Tasks per second for this task
+            latency: execution_time,
+            cpu_usage: 0.0, // Would be measured in real implementation
+            memory_usage: metrics.memory_usage.current_usage,
+        });
+        
+        // Keep only samples from last 10 seconds
+        samples.retain(|sample| now.duration_since(sample.timestamp).as_secs() < 10);
+        
+        // Calculate current throughput
+        if !samples.is_empty() {
+            metrics.current_throughput = samples.len() as f64 / 10.0;
+            metrics.peak_throughput = metrics.peak_throughput.max(metrics.current_throughput);
+        }
+        
+        Ok(())
+    }
+    
+    /// Get performance metrics for a profile
+    pub fn get_metrics(&self, profile: &ThreadPoolProfile) -> Option<ProfileMetrics> {
+        self.metrics.read().ok()?.get(profile).cloned()
+    }
+    
+    /// Generate adaptive configuration recommendation
+    pub fn recommend_configuration(&self, profile: &ThreadPoolProfile) -> LinalgResult<ThreadPoolConfig> {
+        let metrics = self.get_metrics(profile).unwrap_or_default();
+        
+        let mut config = ThreadPoolConfig::default();
+        config.profile = profile.clone();
+        
+        // Adaptive thread count based on utilization
+        if metrics.thread_utilization > 0.9 {
+            // High utilization - increase threads
+            config.max_threads = (config.max_threads * 3 / 2).min(num_cpus::get() * 2);
+        } else if metrics.thread_utilization < 0.5 {
+            // Low utilization - decrease threads
+            config.max_threads = (config.max_threads * 2 / 3).max(1);
+        }
+        
+        // Adaptive queue capacity based on wait times
+        if metrics.avg_queue_wait_time > 0.01 {
+            // High wait times - increase capacity
+            config.queue_capacity = (config.queue_capacity * 3 / 2).min(10000);
+        } else if metrics.avg_queue_wait_time < 0.001 {
+            // Low wait times - decrease capacity to save memory
+            config.queue_capacity = (config.queue_capacity * 2 / 3).max(64);
+        }
+        
+        // NUMA awareness based on efficiency
+        config.numa_aware = metrics.numa_efficiency > 0.8 || metrics.numa_efficiency == 0.0;
+        
+        // Work stealing based on load balancing efficiency
+        config.work_stealing = metrics.thread_utilization > 0.7;
+        
+        // Cache the recommendation
+        let mut recommendations = self.recommendations.write().map_err(|_| {
+            LinalgError::ComputationError("Failed to acquire recommendations lock".to_string())
+        })?;
+        recommendations.insert(profile.clone(), config.clone());
+        
+        Ok(config)
+    }
+    
+    /// Get comprehensive performance report
+    pub fn generate_performance_report(&self) -> LinalgResult<String> {
+        let metrics_guard = self.metrics.read().map_err(|_| {
+            LinalgError::ComputationError("Failed to acquire metrics lock".to_string())
+        })?;
+        
+        let mut report = String::from("Thread Pool Performance Report\n");
+        report.push_str("=====================================\n\n");
+        
+        for (profile, metrics) in metrics_guard.iter() {
+            report.push_str(&format!("Profile: {:?}\n", profile));
+            report.push_str(&format!("  Total Tasks: {}\n", metrics.total_tasks));
+            report.push_str(&format!("  Avg Execution Time: {:.6}s\n", metrics.avg_execution_time));
+            report.push_str(&format!("  Current Throughput: {:.2} tasks/sec\n", metrics.current_throughput));
+            report.push_str(&format!("  Peak Throughput: {:.2} tasks/sec\n", metrics.peak_throughput));
+            report.push_str(&format!("  Thread Utilization: {:.1}%\n", metrics.thread_utilization * 100.0));
+            report.push_str(&format!("  Avg Queue Wait: {:.6}s\n", metrics.avg_queue_wait_time));
+            report.push_str(&format!("  Memory Usage: {:.2} MB\n", metrics.memory_usage.current_usage as f64 / 1_000_000.0));
+            report.push_str(&format!("  NUMA Efficiency: {:.1}%\n", metrics.numa_efficiency * 100.0));
+            report.push_str("\n");
+        }
+        
+        Ok(report)
+    }
+    
+    /// Detect performance anomalies
+    pub fn detect_anomalies(&self) -> LinalgResult<Vec<PerformanceAnomaly>> {
+        let mut anomalies = Vec::new();
+        let metrics_guard = self.metrics.read().map_err(|_| {
+            LinalgError::ComputationError("Failed to acquire metrics lock".to_string())
+        })?;
+        
+        for (profile, metrics) in metrics_guard.iter() {
+            // High memory usage anomaly
+            if metrics.memory_usage.current_usage > 1_000_000_000 { // 1GB
+                anomalies.push(PerformanceAnomaly {
+                    profile: profile.clone(),
+                    anomaly_type: AnomalyType::HighMemoryUsage,
+                    severity: AnomalySeverity::High,
+                    description: format!("Memory usage: {:.2} GB", metrics.memory_usage.current_usage as f64 / 1_000_000_000.0),
+                });
+            }
+            
+            // Low throughput anomaly
+            if metrics.current_throughput < metrics.peak_throughput * 0.1 && metrics.peak_throughput > 0.0 {
+                anomalies.push(PerformanceAnomaly {
+                    profile: profile.clone(),
+                    anomaly_type: AnomalyType::LowThroughput,
+                    severity: AnomalySeverity::Medium,
+                    description: format!("Throughput dropped to {:.2} tasks/sec from peak of {:.2}", 
+                                       metrics.current_throughput, metrics.peak_throughput),
+                });
+            }
+            
+            // High queue wait times
+            if metrics.avg_queue_wait_time > 0.1 {
+                anomalies.push(PerformanceAnomaly {
+                    profile: profile.clone(),
+                    anomaly_type: AnomalyType::HighLatency,
+                    severity: AnomalySeverity::Medium,
+                    description: format!("Average queue wait time: {:.3}s", metrics.avg_queue_wait_time),
+                });
+            }
+        }
+        
+        Ok(anomalies)
+    }
+}
+
+/// Performance anomaly detection
+#[derive(Debug, Clone)]
+pub struct PerformanceAnomaly {
+    pub profile: ThreadPoolProfile,
+    pub anomaly_type: AnomalyType,
+    pub severity: AnomalySeverity,
+    pub description: String,
+}
+
+/// Types of performance anomalies
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum AnomalyType {
+    HighMemoryUsage,
+    LowThroughput,
+    HighLatency,
+    ThreadStarvation,
+    ResourceContention,
+}
+
+/// Anomaly severity levels
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub enum AnomalySeverity {
+    Low,
+    Medium,
+    High,
+    Critical,
+}
+
+impl Default for ThreadPoolProfiler {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

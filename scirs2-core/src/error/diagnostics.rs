@@ -117,8 +117,7 @@ impl EnvironmentInfo {
         #[cfg(feature = "openblas")]
         features.push("openblas".to_string());
 
-        #[cfg(feature = "intel-mkl")]
-        features.push("intel-mkl".to_string());
+        // Note: intel-mkl feature removed to avoid conflicts with openblas
 
         #[cfg(feature = "profiling")]
         features.push("profiling".to_string());

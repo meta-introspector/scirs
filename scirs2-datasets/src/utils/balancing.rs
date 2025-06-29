@@ -12,7 +12,7 @@ use rand::rngs::StdRng;
 use std::collections::HashMap;
 
 /// Balancing strategies for handling imbalanced datasets
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub enum BalancingStrategy {
     /// Random oversampling - duplicates minority class samples
     RandomOversample,

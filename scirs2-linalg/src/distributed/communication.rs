@@ -26,6 +26,40 @@ pub enum CommunicationBackend {
     Custom,
 }
 
+/// TCP message header for reliable communication
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct TcpMessageHeader {
+    /// Source node rank
+    source: usize,
+    /// Destination node rank
+    destination: usize,
+    /// Message tag
+    tag: u32,
+    /// Data size in bytes
+    data_size: usize,
+    /// Sequence number
+    sequence: u64,
+    /// Timestamp
+    timestamp: u64,
+    /// Data checksum for integrity
+    checksum: u64,
+}
+
+/// Connection pool for TCP connections
+struct TcpConnectionPool {
+    connections: HashMap<usize, std::net::TcpStream>,
+    listener: Option<std::net::TcpListener>,
+}
+
+impl TcpConnectionPool {
+    fn new() -> Self {
+        Self {
+            connections: HashMap::new(),
+            listener: None,
+        }
+    }
+}
+
 /// Message tags for different operation types
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum MessageTag {
@@ -113,11 +147,22 @@ pub struct DistributedCommunicator {
     message_buffer: Arc<Mutex<HashMap<(usize, MessageTag), Vec<u8>>>>,
     /// Communication statistics
     stats: Arc<Mutex<CommunicationStats>>,
+    /// TCP connection pool (for TCP backend)
+    tcp_pool: Arc<Mutex<TcpConnectionPool>>,
+    /// Node address mapping (rank -> address)
+    node_addresses: HashMap<usize, String>,
 }
 
 impl DistributedCommunicator {
     /// Create a new distributed communicator
     pub fn new(config: &super::DistributedConfig) -> LinalgResult<Self> {
+        // Create node address mapping (simplified - in practice would use discovery service)
+        let mut node_addresses = HashMap::new();
+        for rank in 0..config.num_nodes {
+            let port = 7000 + rank; // Base port + rank
+            node_addresses.insert(rank, format!("127.0.0.1:{}", port));
+        }
+
         Ok(Self {
             rank: config.node_rank,
             size: config.num_nodes,
@@ -125,6 +170,8 @@ impl DistributedCommunicator {
             sequence_counter: Arc::new(Mutex::new(0)),
             message_buffer: Arc::new(Mutex::new(HashMap::new())),
             stats: Arc::new(Mutex::new(CommunicationStats::default())),
+            tcp_pool: Arc::new(Mutex::new(TcpConnectionPool::new())),
+            node_addresses,
         })
     }
     
@@ -406,14 +453,134 @@ impl DistributedCommunicator {
         }
     }
     
-    fn send_tcp(&self, _message: Message<Vec<u8>>) -> LinalgResult<()> {
-        // TCP implementation would go here
-        Err(LinalgError::NotImplemented("TCP backend not implemented".to_string()))
+    fn send_tcp(&self, message: Message<Vec<u8>>) -> LinalgResult<()> {
+        use std::net::TcpStream;
+        use std::io::Write;
+        
+        // Get connection info for destination node
+        let dest_address = self.get_node_address(message.metadata.destination)?;
+        
+        // Establish TCP connection
+        let mut stream = TcpStream::connect(&dest_address)
+            .map_err(|e| LinalgError::CommunicationError(
+                format!("Failed to connect to {}: {}", dest_address, e)
+            ))?;
+        
+        // Send message header first
+        let header = TcpMessageHeader {
+            source: message.metadata.source,
+            destination: message.metadata.destination,
+            tag: message.metadata.tag as u32,
+            data_size: message.data.len(),
+            sequence: message.metadata.sequence,
+            timestamp: message.metadata.timestamp,
+            checksum: self.calculate_checksum(&message.data),
+        };
+        
+        let header_bytes = bincode::serialize(&header)
+            .map_err(|e| LinalgError::SerializationError(format!("Header serialization failed: {}", e)))?;
+        
+        // Send header size first (4 bytes)
+        let header_size = header_bytes.len() as u32;
+        stream.write_all(&header_size.to_be_bytes())
+            .map_err(|e| LinalgError::CommunicationError(format!("Failed to send header size: {}", e)))?;
+        
+        // Send header
+        stream.write_all(&header_bytes)
+            .map_err(|e| LinalgError::CommunicationError(format!("Failed to send header: {}", e)))?;
+        
+        // Send data in chunks for large messages
+        const CHUNK_SIZE: usize = 64 * 1024; // 64KB chunks
+        for chunk in message.data.chunks(CHUNK_SIZE) {
+            stream.write_all(chunk)
+                .map_err(|e| LinalgError::CommunicationError(format!("Failed to send data chunk: {}", e)))?;
+        }
+        
+        // Ensure all data is sent
+        stream.flush()
+            .map_err(|e| LinalgError::CommunicationError(format!("Failed to flush TCP stream: {}", e)))?;
+        
+        Ok(())
     }
     
-    fn recv_tcp(&self, _source: usize, _tag: MessageTag) -> LinalgResult<Message<Vec<u8>>> {
-        // TCP implementation would go here
-        Err(LinalgError::NotImplemented("TCP backend not implemented".to_string()))
+    fn recv_tcp(&self, source: usize, tag: MessageTag) -> LinalgResult<Message<Vec<u8>>> {
+        use std::net::{TcpListener, TcpStream};
+        use std::io::Read;
+        
+        // Listen for incoming connections on our port
+        let listen_address = self.get_node_address(self.rank)?;
+        let listener = TcpListener::bind(&listen_address)
+            .map_err(|e| LinalgError::CommunicationError(
+                format!("Failed to bind to {}: {}", listen_address, e)
+            ))?;
+        
+        // Accept connection (in practice, would have connection pooling)
+        let (mut stream, remote_addr) = listener.accept()
+            .map_err(|e| LinalgError::CommunicationError(format!("Failed to accept connection: {}", e)))?;
+        
+        // Read header size
+        let mut header_size_bytes = [0u8; 4];
+        stream.read_exact(&mut header_size_bytes)
+            .map_err(|e| LinalgError::CommunicationError(format!("Failed to read header size: {}", e)))?;
+        let header_size = u32::from_be_bytes(header_size_bytes) as usize;
+        
+        // Read header
+        let mut header_bytes = vec![0u8; header_size];
+        stream.read_exact(&mut header_bytes)
+            .map_err(|e| LinalgError::CommunicationError(format!("Failed to read header: {}", e)))?;
+        
+        let header: TcpMessageHeader = bincode::deserialize(&header_bytes)
+            .map_err(|e| LinalgError::SerializationError(format!("Header deserialization failed: {}", e)))?;
+        
+        // Validate header
+        if header.source != source {
+            return Err(LinalgError::CommunicationError(format!(
+                "Expected message from node {}, got from node {}",
+                source, header.source
+            )));
+        }
+        
+        if header.tag != tag as u32 {
+            return Err(LinalgError::CommunicationError(format!(
+                "Expected message with tag {:?}, got tag {}",
+                tag, header.tag
+            )));
+        }
+        
+        // Read data
+        let mut data = vec![0u8; header.data_size];
+        let mut bytes_read = 0;
+        while bytes_read < header.data_size {
+            let chunk_size = std::cmp::min(header.data_size - bytes_read, 64 * 1024);
+            let mut chunk = vec![0u8; chunk_size];
+            stream.read_exact(&mut chunk)
+                .map_err(|e| LinalgError::CommunicationError(format!("Failed to read data chunk: {}", e)))?;
+            
+            data[bytes_read..bytes_read + chunk_size].copy_from_slice(&chunk);
+            bytes_read += chunk_size;
+        }
+        
+        // Verify checksum
+        let received_checksum = self.calculate_checksum(&data);
+        if received_checksum != header.checksum {
+            return Err(LinalgError::CommunicationError(format!(
+                "Checksum mismatch: expected {}, got {}",
+                header.checksum, received_checksum
+            )));
+        }
+        
+        // Create message
+        let metadata = MessageMetadata {
+            source: header.source,
+            destination: header.destination,
+            tag,
+            size_bytes: data.len(),
+            sequence: header.sequence,
+            timestamp: header.timestamp,
+            compressed: false,
+        };
+        
+        Ok(Message { metadata, data })
     }
     
     fn send_mpi(&self, _message: Message<Vec<u8>>) -> LinalgResult<()> {
@@ -448,6 +615,39 @@ impl DistributedCommunicator {
         stats.messages_received += 1;
         stats.bytes_received += bytes;
         stats.total_recv_time += duration;
+    }
+    
+    /// Get node address for TCP communication
+    fn get_node_address(&self, rank: usize) -> LinalgResult<String> {
+        self.node_addresses.get(&rank)
+            .cloned()
+            .ok_or_else(|| LinalgError::CommunicationError(
+                format!("No address found for node rank {}", rank)
+            ))
+    }
+    
+    /// Calculate checksum for data integrity
+    fn calculate_checksum(&self, data: &[u8]) -> u64 {
+        use std::collections::hash_map::DefaultHasher;
+        use std::hash::{Hash, Hasher};
+        
+        let mut hasher = DefaultHasher::new();
+        data.hash(&mut hasher);
+        hasher.finish()
+    }
+    
+    /// Compress data using LZ4 algorithm (mock implementation)
+    fn compress_data(&self, data: &[u8]) -> LinalgResult<Vec<u8>> {
+        // In a real implementation, this would use lz4 compression
+        // For now, just return the original data
+        Ok(data.to_vec())
+    }
+    
+    /// Decompress data (mock implementation)
+    fn decompress_data(&self, compressed_data: &[u8]) -> LinalgResult<Vec<u8>> {
+        // In a real implementation, this would decompress LZ4 data
+        // For now, just return the original data
+        Ok(compressed_data.to_vec())
     }
 }
 

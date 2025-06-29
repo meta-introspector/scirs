@@ -703,6 +703,7 @@ impl<F: Float + NumAssign> ChainOperator<F> {
         }
 
         // Check dimension compatibility
+        #[allow(clippy::needless_range_loop)]
         for i in 0..operators.len() - 1 {
             let (_, a_cols) = operators[i].shape();
             let (b_rows, _) = operators[i + 1].shape();

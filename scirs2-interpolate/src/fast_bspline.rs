@@ -40,6 +40,7 @@ use ndarray::{Array1, Array2, ArrayView1};
 use num_traits::{Float, FromPrimitive, Zero};
 use std::fmt::{Debug, Display};
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, RemAssign, Sub, SubAssign};
+use std::cell::RefCell;
 use std::sync::Arc;
 
 /// Fast B-spline evaluator with optimized recursive algorithms
@@ -68,7 +69,7 @@ where
     #[allow(dead_code)]
     knot_diffs: Array2<T>,
     /// Cache for basis functions
-    cache: Option<BSplineCache<T>>,
+    cache: Option<RefCell<BSplineCache<T>>>,
     /// Chunk size for vectorized evaluation
     chunk_size: usize,
 }
@@ -175,7 +176,7 @@ where
         Self {
             spline: Arc::new(spline.clone()),
             knot_diffs,
-            cache: Some(cache),
+            cache: Some(RefCell::new(cache)),
             chunk_size: 64,
         }
     }
@@ -225,18 +226,93 @@ where
     ///
     /// The value of the spline at x
     pub fn evaluate_fast(&self, x: T) -> InterpolateResult<T> {
-        let _knots = self.spline.knot_vector();
-        let _coeffs = self.spline.coefficients();
-        let _degree = self.spline.degree();
-
         // Handle extrapolation
         let x_eval = self.handle_extrapolation(x)?;
 
-        // Fast knot span finding using binary search
-        let span = self.find_knot_span_fast(x_eval);
+        // Use cached evaluation if cache is available
+        if let Some(ref cache_cell) = self.cache {
+            return self.evaluate_with_cache(x_eval, cache_cell);
+        }
 
-        // Fast basis function evaluation using recursive algorithm
+        // Fall back to standard fast evaluation without cache
+        let span = self.find_knot_span_fast(x_eval);
         self.evaluate_at_span_fast(x_eval, span)
+    }
+
+    /// Evaluate using cache optimization with basis function caching
+    fn evaluate_with_cache(&self, x: T, cache_cell: &RefCell<BSplineCache<T>>) -> InterpolateResult<T> {
+        let knots = self.spline.knot_vector();
+        let coeffs = self.spline.coefficients();
+        let degree = self.spline.degree();
+        
+        // Find the knot span using cached lookup if available
+        let span = self.find_knot_span_fast(x);
+
+        // Compute result using cached basis functions
+        let mut result = T::zero();
+        for i in 0..=degree {
+            let basis_index = span.saturating_sub(degree) + i;
+            if basis_index < coeffs.len() {
+                // Create cache key for this basis function evaluation
+                let basis_key = crate::cache::BasisCacheKey {
+                    x_quantized: self.quantize_x_for_cache(x),
+                    index: basis_index,
+                    degree,
+                };
+                
+                // Get basis function value from cache or compute
+                let basis_value = {
+                    let mut cache = cache_cell.borrow_mut();
+                    cache.get_or_compute_basis_with_key(basis_key, || {
+                        if basis_index < knots.len() - degree - 1 {
+                            self.compute_basis_function_recursive(x, basis_index, degree, knots)
+                        } else {
+                            T::zero()
+                        }
+                    })
+                };
+                
+                result += coeffs[basis_index] * basis_value;
+            }
+        }
+
+        Ok(result)
+    }
+
+    /// Quantize x value for consistent cache key generation
+    fn quantize_x_for_cache(&self, x: T) -> u64 {
+        let x_f64 = x.to_f64().unwrap_or(0.0);
+        let tolerance = 1e-12; // Default tolerance for cache quantization
+        let quantized = (x_f64 / tolerance).round() * tolerance;
+        quantized.to_bits()
+    }
+
+    /// Compute a single basis function using Cox-de Boor recursion
+    fn compute_basis_function_recursive(&self, x: T, i: usize, degree: usize, knots: &Array1<T>) -> T {
+        if degree == 0 {
+            if i < knots.len() - 1 && x >= knots[i] && x < knots[i + 1] {
+                T::one()
+            } else {
+                T::zero()
+            }
+        } else {
+            let mut left = T::zero();
+            let mut right = T::zero();
+
+            // Left term: (x - t_i) / (t_{i+p} - t_i) * N_{i,p-1}(x)
+            if i < knots.len() - degree - 1 && knots[i + degree] != knots[i] {
+                let basis_left = self.compute_basis_function_recursive(x, i, degree - 1, knots);
+                left = (x - knots[i]) / (knots[i + degree] - knots[i]) * basis_left;
+            }
+
+            // Right term: (t_{i+p+1} - x) / (t_{i+p+1} - t_{i+1}) * N_{i+1,p-1}(x)
+            if i + 1 < knots.len() - degree - 1 && knots[i + degree + 1] != knots[i + 1] {
+                let basis_right = self.compute_basis_function_recursive(x, i + 1, degree - 1, knots);
+                right = (knots[i + degree + 1] - x) / (knots[i + degree + 1] - knots[i + 1]) * basis_right;
+            }
+
+            left + right
+        }
     }
 
     /// Fast evaluation at multiple points using vectorized operations
@@ -457,6 +533,141 @@ where
     /// Check if caching is enabled
     pub fn has_cache(&self) -> bool {
         self.cache.is_some()
+    }
+
+    /// Get cache statistics for performance monitoring
+    pub fn cache_stats(&self) -> Option<crate::cache::CacheStats> {
+        if let Some(ref cache_cell) = self.cache {
+            let cache = cache_cell.borrow();
+            Some(cache.stats().clone())
+        } else {
+            None
+        }
+    }
+
+    /// Clear the cache and reset statistics
+    pub fn clear_cache(&self) {
+        if let Some(ref cache_cell) = self.cache {
+            let mut cache = cache_cell.borrow_mut();
+            cache.clear();
+            cache.reset_stats();
+        }
+    }
+
+    /// Enable caching on an existing evaluator
+    pub fn enable_cache(&mut self, cache: BSplineCache<T>) {
+        self.cache = Some(RefCell::new(cache));
+    }
+
+    /// Disable caching on an existing evaluator
+    pub fn disable_cache(&mut self) {
+        self.cache = None;
+    }
+
+    /// Optimized batch evaluation with cache pre-warming
+    ///
+    /// This method pre-warms the cache with commonly accessed basis functions
+    /// before performing batch evaluation, which can improve performance
+    /// for repeated evaluations.
+    ///
+    /// # Arguments
+    ///
+    /// * `x_vals` - Array of points at which to evaluate the spline
+    ///
+    /// # Returns
+    ///
+    /// Array of spline values at the given points
+    pub fn evaluate_batch_cached(&self, x_vals: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
+        if self.cache.is_none() {
+            // Fall back to standard vectorized evaluation if no cache
+            return self.evaluate_array_fast(x_vals);
+        }
+
+        let mut results = Array1::zeros(x_vals.len());
+
+        // Pre-warm cache with a sampling of evaluation points
+        let sample_size = (x_vals.len() / 10).max(1).min(10);
+        for i in (0..x_vals.len()).step_by(x_vals.len() / sample_size) {
+            let _ = self.evaluate_fast(x_vals[i]);
+        }
+
+        // Process in chunks with better cache utilization
+        for chunk_start in (0..x_vals.len()).step_by(self.chunk_size) {
+            let chunk_end = (chunk_start + self.chunk_size).min(x_vals.len());
+
+            for i in chunk_start..chunk_end {
+                results[i] = self.evaluate_fast(x_vals[i])?;
+            }
+        }
+
+        Ok(results)
+    }
+
+    /// Adaptive chunk size optimization based on problem size
+    ///
+    /// This method automatically adjusts the chunk size based on the
+    /// problem size and cache performance to optimize throughput.
+    ///
+    /// # Arguments
+    ///
+    /// * `problem_size` - Expected number of evaluation points
+    pub fn optimize_chunk_size(&mut self, problem_size: usize) {
+        // Adaptive chunk sizing based on problem size and cache performance
+        if let Some(cache_stats) = self.cache_stats() {
+            let hit_ratio = cache_stats.hit_ratio();
+            
+            if hit_ratio > 0.8 {
+                // High hit ratio - can use larger chunks
+                self.chunk_size = (problem_size / 16).max(128).min(1024);
+            } else if hit_ratio > 0.5 {
+                // Medium hit ratio - use moderate chunks
+                self.chunk_size = (problem_size / 32).max(64).min(512);
+            } else {
+                // Low hit ratio - use smaller chunks for better locality
+                self.chunk_size = (problem_size / 64).max(32).min(256);
+            }
+        } else {
+            // No cache - optimize for memory bandwidth
+            self.chunk_size = (problem_size / 20).max(64).min(512);
+        }
+    }
+
+    /// Parallel batch evaluation (when rayon feature is available)
+    ///
+    /// This method leverages parallel processing for large batch evaluations
+    /// while maintaining cache coherence through chunk-based processing.
+    ///
+    /// # Arguments
+    ///
+    /// * `x_vals` - Array of points at which to evaluate the spline
+    ///
+    /// # Returns
+    ///
+    /// Array of spline values at the given points
+    #[cfg(feature = "parallel")]
+    pub fn evaluate_batch_parallel(&self, x_vals: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
+        use rayon::prelude::*;
+
+        let chunk_size = self.chunk_size;
+        let chunks: Vec<_> = x_vals.as_slice()
+            .unwrap()
+            .chunks(chunk_size)
+            .collect();
+
+        let results: Result<Vec<_>, _> = chunks
+            .into_par_iter()
+            .map(|chunk| {
+                let mut chunk_results = Vec::with_capacity(chunk.len());
+                for &x in chunk {
+                    chunk_results.push(self.evaluate_fast(x)?);
+                }
+                Ok(chunk_results)
+            })
+            .collect();
+
+        let results = results?;
+        let flattened: Vec<T> = results.into_iter().flatten().collect();
+        Ok(Array1::from_vec(flattened))
     }
 }
 

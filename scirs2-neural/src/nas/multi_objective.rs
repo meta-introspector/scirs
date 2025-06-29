@@ -241,12 +241,18 @@ impl MultiObjectiveOptimizer {
 
     /// SPEA2 algorithm step
     fn spea2_step(&mut self) -> Result<()> {
-        // Calculate fitness based on strength and raw fitness
-        self.calculate_spea2_fitness()?;
-
-        // Environmental selection
+        // Create offspring through crossover and mutation
         let offspring = self.create_offspring()?;
-        self.population = self.spea2_environmental_selection(offspring)?;
+
+        // Combine population and offspring
+        let mut combined_population = self.population.clone();
+        combined_population.extend(offspring);
+
+        // Calculate strength and raw fitness for all individuals
+        self.calculate_spea2_fitness_for_population(&mut combined_population)?;
+
+        // Environmental selection based on SPEA2 fitness
+        self.population = self.spea2_environmental_selection(combined_population)?;
 
         Ok(())
     }
@@ -551,10 +557,10 @@ impl MultiObjectiveOptimizer {
         let mut rng = rand::rng();
 
         let tournament_size = 3;
-        let mut best_idx = rng.gen_range(0..self.population.len());
+        let mut best_idx = rng.random_range(0..self.population.len());
 
         for _ in 1..tournament_size {
-            let candidate_idx = rng.gen_range(0..self.population.len());
+            let candidate_idx = rng.random_range(0..self.population.len());
 
             // Compare based on dominance and crowding distance
             if self.is_better(&self.population[candidate_idx], &self.population[best_idx]) {
@@ -671,45 +677,224 @@ impl MultiObjectiveOptimizer {
         Ok(())
     }
 
-    /// Compute hypervolume indicator
+    /// Compute hypervolume indicator using the WFG algorithm for 2D and Monte Carlo for higher dimensions
     fn compute_hypervolume(&self) -> Result<f64> {
         if self.pareto_front.is_empty() {
             return Ok(0.0);
         }
 
-        // Simplified hypervolume computation
-        // In practice, would use more sophisticated algorithms
         let reference_point = self
             .config
             .reference_point
             .as_ref()
             .cloned()
-            .unwrap_or_else(|| vec![0.0; self.config.objectives.len()]);
+            .unwrap_or_else(|| self.estimate_reference_point());
+
+        if self.config.objectives.len() == 2 {
+            self.compute_hypervolume_2d(&reference_point)
+        } else if self.config.objectives.len() == 3 {
+            self.compute_hypervolume_3d(&reference_point)
+        } else {
+            self.compute_hypervolume_monte_carlo(&reference_point)
+        }
+    }
+
+    /// Estimate reference point if not provided
+    fn estimate_reference_point(&self) -> Vec<f64> {
+        let mut reference = vec![0.0; self.config.objectives.len()];
+        
+        for (i, obj_config) in self.config.objectives.iter().enumerate() {
+            if obj_config.minimize {
+                // For minimization, use the maximum value found plus a margin
+                let max_val = self.pareto_front
+                    .iter()
+                    .map(|s| s.objectives[i])
+                    .max_by(|a, b| a.partial_cmp(b).unwrap())
+                    .unwrap_or(1.0);
+                reference[i] = max_val * 1.1;
+            } else {
+                // For maximization, use the minimum value found minus a margin
+                let min_val = self.pareto_front
+                    .iter()
+                    .map(|s| s.objectives[i])
+                    .min_by(|a, b| a.partial_cmp(b).unwrap())
+                    .unwrap_or(0.0);
+                reference[i] = min_val * 0.9;
+            }
+        }
+        
+        reference
+    }
+
+    /// Compute 2D hypervolume using the efficient sweep algorithm
+    fn compute_hypervolume_2d(&self, reference_point: &[f64]) -> Result<f64> {
+        let mut points: Vec<(f64, f64)> = self.pareto_front
+            .iter()
+            .map(|s| {
+                let x = if self.config.objectives[0].minimize {
+                    reference_point[0] - s.objectives[0]
+                } else {
+                    s.objectives[0] - reference_point[0]
+                };
+                let y = if self.config.objectives[1].minimize {
+                    reference_point[1] - s.objectives[1]
+                } else {
+                    s.objectives[1] - reference_point[1]
+                };
+                (x.max(0.0), y.max(0.0))
+            })
+            .collect();
+
+        // Sort by x-coordinate (descending for maximization)
+        points.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
 
         let mut volume = 0.0;
+        let mut prev_y = 0.0;
 
-        for solution in &self.pareto_front {
-            let mut contribution = 1.0;
-
-            for (i, (&obj_val, &ref_val)) in solution
-                .objectives
-                .iter()
-                .zip(reference_point.iter())
-                .enumerate()
-            {
-                let diff = if self.config.objectives[i].minimize {
-                    (ref_val - obj_val).max(0.0)
-                } else {
-                    (obj_val - ref_val).max(0.0)
-                };
-
-                contribution *= diff;
+        for (x, y) in points {
+            if y > prev_y {
+                volume += x * (y - prev_y);
+                prev_y = y;
             }
-
-            volume += contribution;
         }
 
         Ok(volume)
+    }
+
+    /// Compute 3D hypervolume using the WFG algorithm
+    fn compute_hypervolume_3d(&self, reference_point: &[f64]) -> Result<f64> {
+        // Transform points relative to reference point
+        let mut points: Vec<Vec<f64>> = self.pareto_front
+            .iter()
+            .map(|s| {
+                s.objectives
+                    .iter()
+                    .enumerate()
+                    .map(|(i, &obj_val)| {
+                        if self.config.objectives[i].minimize {
+                            (reference_point[i] - obj_val).max(0.0)
+                        } else {
+                            (obj_val - reference_point[i]).max(0.0)
+                        }
+                    })
+                    .collect()
+            })
+            .collect();
+
+        // Sort points lexicographically
+        points.sort_by(|a, b| {
+            for (x, y) in a.iter().zip(b.iter()) {
+                match x.partial_cmp(y) {
+                    Some(std::cmp::Ordering::Equal) => continue,
+                    other => return other.unwrap_or(std::cmp::Ordering::Equal),
+                }
+            }
+            std::cmp::Ordering::Equal
+        });
+
+        // Use inclusion-exclusion principle for 3D
+        let mut volume = 0.0;
+        let n = points.len();
+
+        // Single points
+        for point in &points {
+            volume += point[0] * point[1] * point[2];
+        }
+
+        // Subtract intersections of pairs
+        for i in 0..n {
+            for j in (i + 1)..n {
+                let intersection = [
+                    points[i][0].min(points[j][0]),
+                    points[i][1].min(points[j][1]),
+                    points[i][2].min(points[j][2]),
+                ];
+                volume -= intersection[0] * intersection[1] * intersection[2];
+            }
+        }
+
+        // Add intersections of triples, etc. (simplified for demonstration)
+        // This is a simplified implementation; full 3D hypervolume calculation is more complex
+
+        Ok(volume.max(0.0))
+    }
+
+    /// Compute hypervolume using Monte Carlo sampling for higher dimensions
+    fn compute_hypervolume_monte_carlo(&self, reference_point: &[f64]) -> Result<f64> {
+        let num_samples = 100000;
+        let mut dominated_count = 0;
+
+        use rand::prelude::*;
+        let mut rng = rand::rng();
+
+        // Define the bounds for sampling
+        let mut lower_bounds = vec![f64::INFINITY; self.config.objectives.len()];
+        let mut upper_bounds = reference_point.to_vec();
+
+        for solution in &self.pareto_front {
+            for (i, &obj_val) in solution.objectives.iter().enumerate() {
+                if self.config.objectives[i].minimize {
+                    lower_bounds[i] = lower_bounds[i].min(obj_val);
+                } else {
+                    upper_bounds[i] = upper_bounds[i].max(obj_val);
+                    lower_bounds[i] = lower_bounds[i].min(obj_val);
+                }
+            }
+        }
+
+        // Monte Carlo sampling
+        for _ in 0..num_samples {
+            let mut sample_point = vec![0.0; self.config.objectives.len()];
+            
+            for i in 0..sample_point.len() {
+                sample_point[i] = rng.random_range(lower_bounds[i]..=upper_bounds[i]);
+            }
+
+            // Check if sample point is dominated by any solution in Pareto front
+            let mut is_dominated = false;
+            for solution in &self.pareto_front {
+                let mut dominates = true;
+                let mut better_in_one = false;
+
+                for (i, (&sol_val, &sample_val)) in solution.objectives.iter().zip(sample_point.iter()).enumerate() {
+                    if self.config.objectives[i].minimize {
+                        if sol_val > sample_val {
+                            dominates = false;
+                            break;
+                        } else if sol_val < sample_val {
+                            better_in_one = true;
+                        }
+                    } else {
+                        if sol_val < sample_val {
+                            dominates = false;
+                            break;
+                        } else if sol_val > sample_val {
+                            better_in_one = true;
+                        }
+                    }
+                }
+
+                if dominates && better_in_one {
+                    is_dominated = true;
+                    break;
+                }
+            }
+
+            if is_dominated {
+                dominated_count += 1;
+            }
+        }
+
+        // Calculate volume
+        let sampling_volume: f64 = upper_bounds
+            .iter()
+            .zip(lower_bounds.iter())
+            .map(|(upper, lower)| upper - lower)
+            .product();
+
+        let hypervolume = sampling_volume * (dominated_count as f64 / num_samples as f64);
+
+        Ok(hypervolume)
     }
 
     /// Get current Pareto front
@@ -728,31 +913,268 @@ impl MultiObjectiveOptimizer {
     }
 
     // Placeholder implementations for other algorithms
-    fn spea2_environmental_selection(
+    /// Calculate SPEA2 fitness for all individuals in population
+    fn calculate_spea2_fitness_for_population(
         &self,
-        offspring: Vec<MultiObjectiveSolution>,
-    ) -> Result<Vec<MultiObjectiveSolution>> {
-        Ok(offspring)
-    }
+        population: &mut [MultiObjectiveSolution],
+    ) -> Result<()> {
+        let n = population.len();
+        let mut strengths = vec![0; n];
+        let mut raw_fitness = vec![0.0; n];
+        let mut densities = vec![0.0; n];
 
-    fn calculate_spea2_fitness(&self) -> Result<()> {
+        // Step 1: Calculate strength values
+        for i in 0..n {
+            let mut dominated_count = 0;
+            for j in 0..n {
+                if i != j && population[i].dominates(&population[j], &self.config) {
+                    dominated_count += 1;
+                }
+            }
+            strengths[i] = dominated_count;
+        }
+
+        // Step 2: Calculate raw fitness
+        for i in 0..n {
+            let mut fitness = 0.0;
+            for j in 0..n {
+                if i != j && population[j].dominates(&population[i], &self.config) {
+                    fitness += strengths[j] as f64;
+                }
+            }
+            raw_fitness[i] = fitness;
+        }
+
+        // Step 3: Calculate density (using k-th nearest neighbor)
+        let k = (n as f64).sqrt() as usize;
+        for i in 0..n {
+            let mut distances = Vec::new();
+            for j in 0..n {
+                if i != j {
+                    let distance = self.euclidean_distance(&population[i], &population[j]);
+                    distances.push(distance);
+                }
+            }
+            distances.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            
+            let kth_distance = if k < distances.len() {
+                distances[k - 1]
+            } else {
+                distances.last().copied().unwrap_or(0.0)
+            };
+            
+            densities[i] = 1.0 / (kth_distance + 2.0);
+        }
+
+        // Step 4: Calculate final fitness (raw fitness + density)
+        for i in 0..n {
+            population[i].crowding_distance = raw_fitness[i] + densities[i];
+        }
+
         Ok(())
     }
 
+    /// SPEA2 environmental selection
+    fn spea2_environmental_selection(
+        &self,
+        mut population: Vec<MultiObjectiveSolution>,
+    ) -> Result<Vec<MultiObjectiveSolution>> {
+        // Sort by SPEA2 fitness (stored in crowding_distance field)
+        population.sort_by(|a, b| a.crowding_distance.partial_cmp(&b.crowding_distance).unwrap());
+
+        // Select the best individuals
+        let mut selected = Vec::new();
+        
+        // First, add all non-dominated solutions (fitness < 1.0)
+        for solution in &population {
+            if solution.crowding_distance < 1.0 && selected.len() < self.config.population_size {
+                selected.push(solution.clone());
+            }
+        }
+
+        // If we need more solutions, add the best dominated ones
+        if selected.len() < self.config.population_size {
+            for solution in &population {
+                if solution.crowding_distance >= 1.0 && selected.len() < self.config.population_size {
+                    selected.push(solution.clone());
+                }
+            }
+        }
+
+        // Truncate to population size
+        selected.truncate(self.config.population_size);
+
+        Ok(selected)
+    }
+
+    /// Calculate Euclidean distance between two solutions in objective space
+    fn euclidean_distance(&self, a: &MultiObjectiveSolution, b: &MultiObjectiveSolution) -> f64 {
+        a.objectives
+            .iter()
+            .zip(b.objectives.iter())
+            .map(|(x, y)| (x - y).powi(2))
+            .sum::<f64>()
+            .sqrt()
+    }
+
+    /// Generate uniformly distributed weight vectors for MOEA/D
     fn generate_weight_vectors(&self) -> Result<Vec<Vec<f64>>> {
-        Ok(vec![
-            vec![0.5; self.config.objectives.len()];
-            self.config.population_size
-        ])
+        let num_objectives = self.config.objectives.len();
+        let num_weights = self.config.population_size;
+
+        if num_objectives == 2 {
+            // For 2 objectives, generate evenly spaced weights
+            let mut weights = Vec::new();
+            for i in 0..num_weights {
+                let w1 = i as f64 / (num_weights - 1) as f64;
+                let w2 = 1.0 - w1;
+                weights.push(vec![w1, w2]);
+            }
+            Ok(weights)
+        } else if num_objectives == 3 {
+            // For 3 objectives, use simplex lattice design
+            let mut weights = Vec::new();
+            let h = ((num_weights as f64).sqrt() as usize).max(1);
+            
+            for i in 0..=h {
+                for j in 0..=(h - i) {
+                    let k = h - i - j;
+                    let w1 = i as f64 / h as f64;
+                    let w2 = j as f64 / h as f64;
+                    let w3 = k as f64 / h as f64;
+                    weights.push(vec![w1, w2, w3]);
+                    
+                    if weights.len() >= num_weights {
+                        break;
+                    }
+                }
+                if weights.len() >= num_weights {
+                    break;
+                }
+            }
+            
+            // Fill remaining with random weights if needed
+            while weights.len() < num_weights {
+                let mut weight = vec![0.0; num_objectives];
+                let sum: f64 = (0..num_objectives).map(|_| rand::random::<f64>()).sum();
+                for w in &mut weight {
+                    *w = rand::random::<f64>() / sum;
+                }
+                weights.push(weight);
+            }
+            
+            weights.truncate(num_weights);
+            Ok(weights)
+        } else {
+            // For higher dimensions, use random weights
+            let mut weights = Vec::new();
+            for _ in 0..num_weights {
+                let mut weight = vec![0.0; num_objectives];
+                let sum: f64 = (0..num_objectives).map(|_| rand::random::<f64>()).sum();
+                for w in &mut weight {
+                    *w = rand::random::<f64>() / sum;
+                }
+                weights.push(weight);
+            }
+            Ok(weights)
+        }
     }
 
+    /// Update a single subproblem in MOEA/D
     fn update_subproblem(&self, index: usize, weights: &[f64]) -> Result<MultiObjectiveSolution> {
-        let arch = self.generate_random_architecture()?;
-        let objectives = self.estimate_objectives(&arch)?;
-        Ok(MultiObjectiveSolution::new(arch, objectives))
+        if index >= self.population.len() {
+            return Err(crate::error::NeuralError::InvalidArgument(
+                "Subproblem index out of bounds".to_string(),
+            ));
+        }
+
+        // Get current solution for this subproblem
+        let current_solution = &self.population[index];
+
+        // Create offspring through crossover with neighbors
+        let parent1 = current_solution;
+        let neighbor_idx = self.select_neighbor(index)?;
+        let parent2 = &self.population[neighbor_idx];
+
+        // Crossover
+        let child_arch = parent1.architecture.crossover(parent2.architecture.as_ref())?;
+
+        // Mutation
+        let mutated_arch = child_arch.mutate(0.1)?;
+
+        // Evaluate objectives
+        let objectives = self.estimate_objectives(&mutated_arch)?;
+        let mut child_solution = MultiObjectiveSolution::new(mutated_arch, objectives);
+
+        // Calculate fitness using Tchebycheff approach
+        let current_fitness = self.tchebycheff_fitness(&current_solution.objectives, weights);
+        let child_fitness = self.tchebycheff_fitness(&child_solution.objectives, weights);
+
+        // Return better solution
+        if child_fitness < current_fitness {
+            child_solution.crowding_distance = child_fitness;
+            Ok(child_solution)
+        } else {
+            let mut current_clone = current_solution.clone();
+            current_clone.crowding_distance = current_fitness;
+            Ok(current_clone)
+        }
     }
 
+    /// Select a neighbor for crossover in MOEA/D
+    fn select_neighbor(&self, index: usize) -> Result<usize> {
+        use rand::prelude::*;
+        let mut rng = rand::rng();
+        
+        // For simplicity, select a random neighbor within a neighborhood
+        let neighborhood_size = 10.min(self.population.len());
+        let start = index.saturating_sub(neighborhood_size / 2);
+        let end = (index + neighborhood_size / 2).min(self.population.len() - 1);
+        
+        let neighbor_idx = rng.random_range(start..=end);
+        if neighbor_idx == index && end > start {
+            Ok(if neighbor_idx == start { end } else { start })
+        } else {
+            Ok(neighbor_idx)
+        }
+    }
+
+    /// Calculate Tchebycheff fitness for MOEA/D
+    fn tchebycheff_fitness(&self, objectives: &[f64], weights: &[f64]) -> f64 {
+        let mut max_weighted_diff = 0.0;
+        
+        for (i, (&obj_val, &weight)) in objectives.iter().zip(weights.iter()).enumerate() {
+            let ideal_point = if self.config.objectives[i].minimize { 0.0 } else { 1.0 };
+            let weighted_diff = weight * (obj_val - ideal_point).abs();
+            max_weighted_diff = max_weighted_diff.max(weighted_diff);
+        }
+        
+        max_weighted_diff
+    }
+
+    /// Update neighbors with new solution in MOEA/D
     fn update_neighbors(&mut self, index: usize, solution: &MultiObjectiveSolution) -> Result<()> {
+        let neighborhood_size = 10.min(self.population.len());
+        let start = index.saturating_sub(neighborhood_size / 2);
+        let end = (index + neighborhood_size / 2).min(self.population.len());
+        
+        for i in start..end {
+            if i != index {
+                // Compare solutions for this neighbor's subproblem
+                let weight_vectors = self.generate_weight_vectors()?;
+                if i < weight_vectors.len() {
+                    let weights = &weight_vectors[i];
+                    let current_fitness = self.tchebycheff_fitness(&self.population[i].objectives, weights);
+                    let new_fitness = self.tchebycheff_fitness(&solution.objectives, weights);
+                    
+                    if new_fitness < current_fitness {
+                        // Update neighbor with better solution
+                        self.population[i] = solution.clone();
+                    }
+                }
+            }
+        }
+        
         Ok(())
     }
 

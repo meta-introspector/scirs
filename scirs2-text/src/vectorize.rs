@@ -70,6 +70,20 @@ impl CountVectorizer {
     pub fn vocabulary_size(&self) -> usize {
         self.vocabulary.len()
     }
+
+    /// Get feature count for a specific document and feature index from a matrix
+    pub fn get_feature_count(&self, matrix: &Array2<f64>, document_index: usize, feature_index: usize) -> Option<f64> {
+        if document_index < matrix.nrows() && feature_index < matrix.ncols() {
+            Some(matrix[[document_index, feature_index]])
+        } else {
+            None
+        }
+    }
+
+    /// Get vocabulary as HashMap for compatibility with visualization
+    pub fn vocabulary_map(&self) -> HashMap<String, usize> {
+        self.vocabulary.token_to_index().clone()
+    }
 }
 
 impl Default for CountVectorizer {
@@ -213,6 +227,20 @@ impl TfidfVectorizer {
     /// Get the vocabulary size
     pub fn vocabulary_size(&self) -> usize {
         self.count_vectorizer.vocabulary_size()
+    }
+
+    /// Get TF-IDF score for a specific document and feature index from a matrix
+    pub fn get_feature_score(&self, matrix: &Array2<f64>, document_index: usize, feature_index: usize) -> Option<f64> {
+        if document_index < matrix.nrows() && feature_index < matrix.ncols() {
+            Some(matrix[[document_index, feature_index]])
+        } else {
+            None
+        }
+    }
+
+    /// Get vocabulary as HashMap for compatibility with visualization
+    pub fn vocabulary_map(&self) -> HashMap<String, usize> {
+        self.count_vectorizer.vocabulary_map()
     }
 
     /// Compute IDF values from document frequencies

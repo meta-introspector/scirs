@@ -394,7 +394,7 @@ where
                                           residual: &Array1<F>,
                                           jacobian: &Array2<F>,
                                           a_coeff: F,
-                                          k_prime: &Array1<F>|
+                                          _k_prime: &Array1<F>|
                  -> IntegrateResult<Array1<F>> {
                     match mass_mat {
                         Some(m) => {

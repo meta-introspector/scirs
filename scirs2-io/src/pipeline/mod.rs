@@ -116,9 +116,9 @@ impl PipelineContext {
     }
 
     /// Retrieve a value from the context
-    pub fn get<T: Any + Send + Sync + 'static>(&self, key: &str) -> Option<T>
+    pub fn get<T>(&self, key: &str) -> Option<T>
     where
-        T: Clone,
+        T: Any + Send + Sync + Clone + 'static,
     {
         let state = self.state.lock().unwrap();
         state.get(key).and_then(|v| v.downcast_ref::<T>()).cloned()

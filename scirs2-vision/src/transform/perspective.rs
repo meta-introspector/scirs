@@ -485,8 +485,7 @@ impl PerspectiveTransform {
         let mut rng = if let Some(seed) = params.seed {
             StdRng::seed_from_u64(seed)
         } else {
-            let mut thread_rng = rand::rng();
-            StdRng::from_rng(&mut thread_rng)
+            StdRng::from_entropy()
         };
 
         let mut best_transform: Option<PerspectiveTransform> = None;
@@ -1679,7 +1678,7 @@ fn calculate_perimeter_simd(points: &[(f64, f64)]) -> f64 {
     let dist_sq = f64::simd_add(&dx_sq.view(), &dy_sq.view());
     let distances = dist_sq.mapv(|d| d.sqrt());
     
-    f64::simd_horizontal_sum(&distances.view())
+    distances.sum()
 }
 
 /// SIMD-accelerated quadrilateral area calculation
@@ -1707,7 +1706,7 @@ fn calculate_quad_area_simd(quad: &[(f64, f64); 4]) -> f64 {
     let cross2 = f64::simd_mul(&next_x.view(), &y_coords.view());
     let cross_diff = f64::simd_sub(&cross1.view(), &cross2.view());
     
-    let area = f64::simd_horizontal_sum(&cross_diff.view()).abs() / 2.0;
+    let area = cross_diff.sum().abs() / 2.0;
     area
 }
 
@@ -1728,8 +1727,8 @@ fn order_quad_points_simd(quad: [(f64, f64); 4]) -> [(f64, f64); 4] {
     // Find centroid using SIMD
     let x_coords = Array1::from_vec(points.iter().map(|p| p.0).collect());
     let y_coords = Array1::from_vec(points.iter().map(|p| p.1).collect());
-    let cx = f64::simd_horizontal_sum(&x_coords.view()) / 4.0;
-    let cy = f64::simd_horizontal_sum(&y_coords.view()) / 4.0;
+    let cx = x_coords.sum() / 4.0;
+    let cy = y_coords.sum() / 4.0;
 
     // Sort points by angle from centroid using SIMD-computed angles
     let centered_x = f64::simd_sub(&x_coords.view(), &Array1::from_elem(4, cx).view());

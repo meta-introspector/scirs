@@ -410,8 +410,10 @@ mod tests {
 
         let b = Array1::from_vec(vec![1.0, 0.0, 1.0]);
 
-        let mut options = GCROTOptions::default();
-        options.truncation_size = 2; // Small truncation
+        let options = GCROTOptions { 
+            truncation_size: 2, // Small truncation
+            ..Default::default() 
+        };
 
         let result = gcrot(&matrix, &b.view(), None, options).unwrap();
 

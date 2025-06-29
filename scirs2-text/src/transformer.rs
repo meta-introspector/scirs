@@ -4,10 +4,8 @@
 //! including attention mechanisms, position encodings, and transformer blocks.
 
 use crate::error::{Result, TextError};
-use ndarray::{s, Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
-use num_traits::Float;
+use ndarray::{s, Array1, Array2, Array3, ArrayView2};
 use rand::{rng, Rng};
-use scirs2_core::parallel_ops::*;
 use std::collections::HashMap;
 
 /// Configuration for transformer models
@@ -225,7 +223,7 @@ impl MultiHeadAttention {
         let (seq_len, _d_model) = x.dim();
         let reshaped = x
             .clone()
-            .into_shape((seq_len, self.n_heads, self.d_k))
+            .into_shape_with_order((seq_len, self.n_heads, self.d_k))
             .map_err(|e| TextError::InvalidInput(format!("Reshape error: {}", e)))?;
 
         // Transpose to (n_heads, seq_len, d_k)

@@ -14,6 +14,11 @@ pub mod device_info;
 pub mod memory;
 pub mod operations;
 
+// Re-export operations
+pub use operations::{
+    AdvancedGpuOperations, BatchSizeOptimizer, GpuOperationDispatcher, DEFAULT_GPU_THRESHOLD,
+};
+
 /// GPU device types supported by the library
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum GpuDeviceType {

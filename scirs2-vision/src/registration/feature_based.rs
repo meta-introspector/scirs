@@ -10,6 +10,7 @@ use crate::registration::{
     RegistrationResult, TransformType,
 };
 use image::{DynamicImage, GrayImage};
+use ndarray::Array1;
 
 /// Feature-based registration configuration
 #[derive(Debug, Clone)]
@@ -878,8 +879,8 @@ fn compute_hamming_simd_optimized(desc1: &[u8], descriptors: &[&Vec<u8>]) -> Vec
         // SIMD XOR and popcount
         let distance = if desc1_u32.len() == desc2_u32.len() && desc1_u32.len() >= 4 {
             // Use SIMD operations for XOR and population count
-            let desc1_arr = Array1::from_vec(desc1_u32.iter().map(|&x| x as f32).collect());
-            let desc2_arr = Array1::from_vec(desc2_u32.iter().map(|&x| x as f32).collect());
+            let _desc1_arr = Array1::from_vec(desc1_u32.iter().map(|&x| x as f32).collect());
+            let _desc2_arr = Array1::from_vec(desc2_u32.iter().map(|&x| x as f32).collect());
             
             // Convert back to u32 for bit operations (approximation for SIMD)
             let mut hamming_dist = 0u32;

@@ -3,8 +3,7 @@
 //! This module provides comprehensive error handling with intelligent recovery
 //! suggestions, detailed diagnostics, and context-aware error reporting.
 
-use crate::error::{StatsError, StatsResult};
-use ndarray::{ArrayView1, ArrayView2};
+use crate::error::StatsError;
 use std::collections::HashMap;
 use std::fmt;
 

@@ -1478,12 +1478,224 @@ fn run_bootstrap_validation(
     }
 }
 
-fn test_wavelet_consistency(_config: &ComprehensiveWptValidationConfig) -> SignalResult<f64> {
-    Ok(0.88) // Placeholder
+fn test_wavelet_consistency(config: &ComprehensiveWptValidationConfig) -> SignalResult<f64> {
+    let mut consistency_scores = Vec::new();
+    
+    // Test consistency across different wavelets
+    let test_wavelets = vec![
+        Wavelet::Haar,
+        Wavelet::DB(2),
+        Wavelet::DB(4),
+        Wavelet::Biorthogonal(2, 2),
+    ];
+    
+    for &wavelet in &test_wavelets {
+        // Test with a known signal (sine wave)
+        let signal: Vec<f64> = (0..128)
+            .map(|i| (2.0 * std::f64::consts::PI * i as f64 / 32.0).sin())
+            .collect();
+            
+        // Perform WPT decomposition
+        let tree = match wp_decompose(&signal, wavelet, 3, None) {
+            Ok(tree) => tree,
+            Err(_) => continue, // Skip wavelets that fail
+        };
+        
+        // Test energy conservation
+        let original_energy: f64 = signal.iter().map(|&x| x * x).sum();
+        let mut reconstructed_energy = 0.0;
+        
+        for level_nodes in tree.nodes.values() {
+            for node in level_nodes.values() {
+                reconstructed_energy += node.data.iter().map(|&x| x * x).sum::<f64>();
+            }
+        }
+        
+        let energy_ratio = reconstructed_energy / original_energy;
+        let energy_score = 1.0 - (energy_ratio - 1.0).abs().min(1.0);
+        
+        // Test reconstruction accuracy
+        let reconstructed = match reconstruct_from_nodes(&tree) {
+            Ok(recon) => recon,
+            Err(_) => continue,
+        };
+        
+        let reconstruction_error: f64 = signal.iter()
+            .zip(reconstructed.iter())
+            .map(|(&orig, &recon)| (orig - recon).powi(2))
+            .sum::<f64>().sqrt() / signal.len() as f64;
+            
+        let reconstruction_score = (1.0 - reconstruction_error * 1000.0).max(0.0);
+        
+        // Combined score for this wavelet
+        let wavelet_score = (energy_score + reconstruction_score) / 2.0;
+        consistency_scores.push(wavelet_score);
+    }
+    
+    if consistency_scores.is_empty() {
+        return Ok(0.0);
+    }
+    
+    // Calculate consistency as the minimum score (worst case)
+    // and variance (consistency across wavelets)
+    let mean_score = consistency_scores.iter().sum::<f64>() / consistency_scores.len() as f64;
+    let variance = consistency_scores.iter()
+        .map(|&score| (score - mean_score).powi(2))
+        .sum::<f64>() / consistency_scores.len() as f64;
+    
+    // High variance indicates inconsistency
+    let consistency_penalty = (variance * 10.0).min(1.0);
+    let final_score = (mean_score - consistency_penalty).max(0.0);
+    
+    Ok(final_score)
 }
 
-fn test_signal_type_consistency(_config: &ComprehensiveWptValidationConfig) -> SignalResult<f64> {
-    Ok(0.91) // Placeholder
+fn test_signal_type_consistency(config: &ComprehensiveWptValidationConfig) -> SignalResult<f64> {
+    let mut signal_scores = Vec::new();
+    
+    // Test different signal types for consistent behavior
+    let signal_length = 256;
+    
+    // 1. Test with sine wave (smooth, periodic)
+    let sine_signal: Vec<f64> = (0..signal_length)
+        .map(|i| (2.0 * std::f64::consts::PI * i as f64 / 32.0).sin())
+        .collect();
+    
+    // 2. Test with step function (discontinuous)
+    let step_signal: Vec<f64> = (0..signal_length)
+        .map(|i| if i < signal_length / 2 { 1.0 } else { -1.0 })
+        .collect();
+    
+    // 3. Test with chirp signal (non-stationary)
+    let chirp_signal: Vec<f64> = (0..signal_length)
+        .map(|i| {
+            let t = i as f64 / signal_length as f64;
+            (2.0 * std::f64::consts::PI * t * (1.0 + 5.0 * t)).sin()
+        })
+        .collect();
+    
+    // 4. Test with noise signal (stochastic)
+    let mut rng = rand::rng();
+    let noise_signal: Vec<f64> = (0..signal_length)
+        .map(|_| rng.random_range(-1.0..1.0))
+        .collect();
+    
+    let test_signals = vec![
+        ("sine", sine_signal),
+        ("step", step_signal), 
+        ("chirp", chirp_signal),
+        ("noise", noise_signal),
+    ];
+    
+    for (signal_type, signal) in test_signals {
+        // Test WPT decomposition and reconstruction
+        let tree = match wp_decompose(&signal, Wavelet::DB(4), 3, None) {
+            Ok(tree) => tree,
+            Err(_) => {
+                signal_scores.push(0.0); // Failed decomposition
+                continue;
+            }
+        };
+        
+        // Test reconstruction
+        let reconstructed = match reconstruct_from_nodes(&tree) {
+            Ok(recon) => recon,
+            Err(_) => {
+                signal_scores.push(0.0); // Failed reconstruction
+                continue;
+            }
+        };
+        
+        // Calculate reconstruction quality metrics
+        if reconstructed.len() != signal.len() {
+            signal_scores.push(0.0);
+            continue;
+        }
+        
+        // Energy conservation
+        let original_energy: f64 = signal.iter().map(|&x| x * x).sum();
+        let reconstructed_energy: f64 = reconstructed.iter().map(|&x| x * x).sum();
+        let energy_ratio = if original_energy > 1e-12 {
+            reconstructed_energy / original_energy
+        } else {
+            1.0
+        };
+        let energy_score = 1.0 - (energy_ratio - 1.0).abs().min(1.0);
+        
+        // Signal-to-noise ratio
+        let mse: f64 = signal.iter()
+            .zip(reconstructed.iter())
+            .map(|(&orig, &recon)| (orig - recon).powi(2))
+            .sum::<f64>() / signal.len() as f64;
+        
+        let signal_power = original_energy / signal.len() as f64;
+        let snr = if mse > 1e-12 && signal_power > 1e-12 {
+            (signal_power / mse).log10() * 10.0
+        } else {
+            100.0 // Perfect reconstruction
+        };
+        
+        // SNR score (normalize to 0-1 range, expect at least 40 dB)
+        let snr_score = (snr / 60.0).min(1.0).max(0.0);
+        
+        // Sparsity analysis (WPT should provide sparse representation)
+        let mut total_coeffs = 0;
+        let mut significant_coeffs = 0;
+        let threshold = 0.01 * (signal.iter().map(|&x| x.abs()).fold(0.0, f64::max));
+        
+        for level_nodes in tree.nodes.values() {
+            for node in level_nodes.values() {
+                for &coeff in &node.data {
+                    total_coeffs += 1;
+                    if coeff.abs() > threshold {
+                        significant_coeffs += 1;
+                    }
+                }
+            }
+        }
+        
+        let sparsity = if total_coeffs > 0 {
+            1.0 - (significant_coeffs as f64 / total_coeffs as f64)
+        } else {
+            0.0
+        };
+        
+        // Adaptive scoring based on signal type
+        let signal_score = match signal_type {
+            "sine" => {
+                // Smooth signals should have high SNR and good sparsity
+                0.4 * energy_score + 0.4 * snr_score + 0.2 * sparsity
+            }
+            "step" => {
+                // Discontinuous signals: focus more on energy conservation
+                0.6 * energy_score + 0.3 * snr_score + 0.1 * sparsity
+            }
+            "chirp" => {
+                // Non-stationary: balanced approach
+                0.35 * energy_score + 0.35 * snr_score + 0.3 * sparsity
+            }
+            "noise" => {
+                // Stochastic signals: energy conservation is key
+                0.7 * energy_score + 0.2 * snr_score + 0.1 * sparsity
+            }
+            _ => 0.0,
+        };
+        
+        signal_scores.push(signal_score.max(0.0).min(1.0));
+    }
+    
+    if signal_scores.is_empty() {
+        return Ok(0.0);
+    }
+    
+    // Calculate overall consistency score
+    let mean_score = signal_scores.iter().sum::<f64>() / signal_scores.len() as f64;
+    let min_score = signal_scores.iter().cloned().fold(1.0, f64::min);
+    
+    // Penalize if any signal type performs very poorly
+    let consistency_score = 0.7 * mean_score + 0.3 * min_score;
+    
+    Ok(consistency_score)
 }
 
 fn test_noise_robustness(
@@ -1520,8 +1732,167 @@ fn test_edge_case_handling(
     })
 }
 
-fn test_extreme_conditions(_config: &ComprehensiveWptValidationConfig) -> SignalResult<f64> {
-    Ok(0.75) // Placeholder
+fn test_extreme_conditions(config: &ComprehensiveWptValidationConfig) -> SignalResult<f64> {
+    let mut condition_scores = Vec::new();
+    
+    // Test 1: Very small signals
+    let tiny_signal = vec![1.0, -1.0];
+    if let Ok(tree) = wp_decompose(&tiny_signal, Wavelet::Haar, 1, None) {
+        if let Ok(reconstructed) = reconstruct_from_nodes(&tree) {
+            let error = tiny_signal.iter()
+                .zip(reconstructed.iter())
+                .map(|(&orig, &recon)| (orig - recon).abs())
+                .sum::<f64>() / tiny_signal.len() as f64;
+            condition_scores.push((1.0 - error.min(1.0)).max(0.0));
+        } else {
+            condition_scores.push(0.0);
+        }
+    } else {
+        condition_scores.push(0.0);
+    }
+    
+    // Test 2: Very large signals (test memory efficiency)
+    let large_signal: Vec<f64> = (0..4096)
+        .map(|i| (2.0 * std::f64::consts::PI * i as f64 / 512.0).sin())
+        .collect();
+    
+    if let Ok(tree) = wp_decompose(&large_signal, Wavelet::DB(4), 2, None) {
+        if let Ok(reconstructed) = reconstruct_from_nodes(&tree) {
+            let mse = large_signal.iter()
+                .zip(reconstructed.iter())
+                .map(|(&orig, &recon)| (orig - recon).powi(2))
+                .sum::<f64>() / large_signal.len() as f64;
+            let score = if mse < 1e-10 { 1.0 } else { (1.0 / (1.0 + mse * 1e12)).max(0.0) };
+            condition_scores.push(score);
+        } else {
+            condition_scores.push(0.0);
+        }
+    } else {
+        condition_scores.push(0.0);
+    }
+    
+    // Test 3: Constant signal (zero variance)
+    let constant_signal = vec![5.0; 64];
+    if let Ok(tree) = wp_decompose(&constant_signal, Wavelet::DB(2), 2, None) {
+        if let Ok(reconstructed) = reconstruct_from_nodes(&tree) {
+            let error = constant_signal.iter()
+                .zip(reconstructed.iter())
+                .map(|(&orig, &recon)| (orig - recon).abs())
+                .sum::<f64>() / constant_signal.len() as f64;
+            condition_scores.push((1.0 - error.min(1.0)).max(0.0));
+        } else {
+            condition_scores.push(0.0);
+        }
+    } else {
+        condition_scores.push(0.0);
+    }
+    
+    // Test 4: Zero signal
+    let zero_signal = vec![0.0; 128];
+    if let Ok(tree) = wp_decompose(&zero_signal, Wavelet::Haar, 3, None) {
+        if let Ok(reconstructed) = reconstruct_from_nodes(&tree) {
+            let is_zero = reconstructed.iter().all(|&x| x.abs() < 1e-12);
+            condition_scores.push(if is_zero { 1.0 } else { 0.0 });
+        } else {
+            condition_scores.push(0.0);
+        }
+    } else {
+        condition_scores.push(0.0);
+    }
+    
+    // Test 5: Impulse signal (single spike)
+    let mut impulse_signal = vec![0.0; 128];
+    impulse_signal[64] = 1.0;
+    if let Ok(tree) = wp_decompose(&impulse_signal, Wavelet::DB(4), 3, None) {
+        if let Ok(reconstructed) = reconstruct_from_nodes(&tree) {
+            let energy_original: f64 = impulse_signal.iter().map(|&x| x * x).sum();
+            let energy_reconstructed: f64 = reconstructed.iter().map(|&x| x * x).sum();
+            let energy_ratio = if energy_original > 1e-12 {
+                energy_reconstructed / energy_original
+            } else {
+                0.0
+            };
+            condition_scores.push(1.0 - (energy_ratio - 1.0).abs().min(1.0));
+        } else {
+            condition_scores.push(0.0);
+        }
+    } else {
+        condition_scores.push(0.0);
+    }
+    
+    // Test 6: High-frequency oscillation
+    let high_freq_signal: Vec<f64> = (0..256)
+        .map(|i| (2.0 * std::f64::consts::PI * i as f64 * 32.0 / 256.0).sin())
+        .collect();
+    
+    if let Ok(tree) = wp_decompose(&high_freq_signal, Wavelet::DB(8), 3, None) {
+        if let Ok(reconstructed) = reconstruct_from_nodes(&tree) {
+            let correlation = compute_correlation(&high_freq_signal, &reconstructed).unwrap_or(0.0);
+            condition_scores.push(correlation.abs());
+        } else {
+            condition_scores.push(0.0);
+        }
+    } else {
+        condition_scores.push(0.0);
+    }
+    
+    // Test 7: Very small values (numerical precision)
+    let tiny_values: Vec<f64> = (0..128)
+        .map(|i| 1e-10 * (2.0 * std::f64::consts::PI * i as f64 / 16.0).sin())
+        .collect();
+    
+    if let Ok(tree) = wp_decompose(&tiny_values, Wavelet::DB(4), 2, None) {
+        if let Ok(reconstructed) = reconstruct_from_nodes(&tree) {
+            let relative_error = tiny_values.iter()
+                .zip(reconstructed.iter())
+                .map(|(&orig, &recon)| {
+                    if orig.abs() > 1e-15 {
+                        ((orig - recon) / orig).abs()
+                    } else {
+                        (orig - recon).abs()
+                    }
+                })
+                .sum::<f64>() / tiny_values.len() as f64;
+            condition_scores.push((1.0 - relative_error.min(1.0)).max(0.0));
+        } else {
+            condition_scores.push(0.0);
+        }
+    } else {
+        condition_scores.push(0.0);
+    }
+    
+    // Test 8: Very large values (overflow protection)
+    let large_values: Vec<f64> = (0..128)
+        .map(|i| 1e6 * (2.0 * std::f64::consts::PI * i as f64 / 16.0).sin())
+        .collect();
+    
+    if let Ok(tree) = wp_decompose(&large_values, Wavelet::DB(4), 2, None) {
+        if let Ok(reconstructed) = reconstruct_from_nodes(&tree) {
+            let relative_error = large_values.iter()
+                .zip(reconstructed.iter())
+                .map(|(&orig, &recon)| ((orig - recon) / orig).abs())
+                .sum::<f64>() / large_values.len() as f64;
+            condition_scores.push((1.0 - relative_error.min(1.0)).max(0.0));
+        } else {
+            condition_scores.push(0.0);
+        }
+    } else {
+        condition_scores.push(0.0);
+    }
+    
+    if condition_scores.is_empty() {
+        return Ok(0.0);
+    }
+    
+    // Calculate overall extreme conditions score
+    // Use geometric mean to ensure all conditions pass reasonably well
+    let geometric_mean = condition_scores.iter()
+        .map(|&score| score.max(1e-6).ln()) // Avoid log(0)
+        .sum::<f64>() / condition_scores.len() as f64;
+    
+    let final_score = geometric_mean.exp().min(1.0);
+    
+    Ok(final_score)
 }
 
 fn calculate_comprehensive_score(

@@ -6,7 +6,6 @@ use crate::base::{EdgeWeight, Graph, IndexType, Node};
 use crate::error::{GraphError, Result};
 use ndarray::{Array1, Array2};
 use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::collections::HashMap;
 use std::hash::Hash;
 

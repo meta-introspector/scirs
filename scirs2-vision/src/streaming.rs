@@ -14,7 +14,7 @@
 use crate::error::Result;
 use crossbeam_channel::{bounded, Receiver};
 use image::GenericImageView;
-use ndarray::Array2;
+use ndarray::{Array1, Array2};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
@@ -709,7 +709,8 @@ impl FeatureDetectionStage {
                 let min_consecutive = Array1::from_elem(center_array.len(), 9.0);
                 let corner_mask_bright = f32::simd_gte(&brighter_counts.view(), &min_consecutive.view());
                 let corner_mask_dark = f32::simd_gte(&darker_counts.view(), &min_consecutive.view());
-                let corner_mask = f32::simd_or(&corner_mask_bright.view(), &corner_mask_dark.view());
+                // Implement logical OR using arithmetic: max(a, b) for boolean values (0.0 or 1.0)
+                let corner_mask = f32::simd_max(&corner_mask_bright.view(), &corner_mask_dark.view());
 
                 // Store results
                 for (i, &is_corner) in corner_mask.iter().enumerate() {
@@ -793,7 +794,7 @@ impl FeatureDetectionStage {
                         .map(|xi| image[[y, xi]])
                         .collect();
                     let window_array = Array1::from_vec(window_data);
-                    let sum = f32::simd_horizontal_sum(&window_array.view());
+                    let sum = f32::simd_sum(&window_array.view());
                     horizontal_pass[[y, x]] = sum * kernel_weight;
                 } else {
                     // Fallback for small windows
@@ -815,7 +816,7 @@ impl FeatureDetectionStage {
                         .map(|yi| horizontal_pass[[yi, x]])
                         .collect();
                     let window_array = Array1::from_vec(window_data);
-                    let sum = f32::simd_horizontal_sum(&window_array.view());
+                    let sum = f32::simd_sum(&window_array.view());
                     result[[y, x]] = sum * kernel_weight;
                 } else {
                     // Fallback for small windows
@@ -1577,7 +1578,9 @@ impl AdaptivePerformanceMonitor {
             metrics.thread_utilization = (metrics.avg_processing_time.as_secs_f32() / required_processing_rate * 100.0).min(100.0);
 
             // Calculate bottleneck score
-            metrics.bottleneck_score = self.calculate_bottleneck_score(metrics);
+            let metrics_clone = metrics.clone();
+            let bottleneck_score = self.calculate_bottleneck_score(&metrics_clone);
+            metrics.bottleneck_score = bottleneck_score;
         }
 
         // Check if adaptation is needed

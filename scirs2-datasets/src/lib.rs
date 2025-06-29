@@ -113,6 +113,12 @@ pub mod toy;
 /// manipulating and transforming datasets.
 pub mod utils;
 
+/// API stability guarantees and compatibility documentation
+///
+/// This module defines the API stability levels and compatibility guarantees
+/// for the scirs2-datasets crate.
+pub mod stability;
+
 // Temporary module to test method resolution conflict
 mod method_resolution_test;
 

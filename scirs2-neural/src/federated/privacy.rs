@@ -146,7 +146,7 @@ impl SecureAggregation {
             let mut rng = StdRng::seed_from_u64(seed);
 
             for elem in mask.iter_mut() {
-                *elem = rng.gen_range(-1.0..1.0);
+                *elem = rng.random_range(-1.0..1.0);
             }
 
             masked.push(update + &mask);
@@ -173,7 +173,7 @@ impl SecureAggregation {
                 let mut rng = StdRng::seed_from_u64(seed);
 
                 for elem in total_mask.iter_mut() {
-                    *elem += rng.gen_range(-1.0..1.0);
+                    *elem += rng.random_range(-1.0..1.0);
                 }
             }
 

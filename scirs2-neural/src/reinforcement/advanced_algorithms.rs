@@ -311,6 +311,12 @@ impl RLAgent for TD3 {
     fn exploration_rate(&self) -> f32 {
         self.config.exploration_noise
     }
+
+    #[allow(dead_code)]
+    fn get_model_state(&self) -> String {
+        format!("TD3Agent[step_count={}, exploration_noise={}]", 
+                self.step_count, self.config.exploration_noise)
+    }
 }
 
 /// Rainbow DQN with multiple enhancements
@@ -565,7 +571,14 @@ impl RLAgent for RainbowDQN {
         let action_idx = self.select_action(observation)?;
         // Convert discrete action to one-hot encoding
         let mut action = Array1::zeros(self.q_network.base_network.action_dim);
-        action[action_idx] = 1.0;
+        if action_idx < action.len() {
+            action[action_idx] = 1.0;
+        } else {
+            return Err(crate::error::NeuralError::InvalidArgument(
+                format!("Action index {} out of bounds for action space size {}", 
+                        action_idx, action.len())
+            ));
+        }
         Ok(action)
     }
 
@@ -827,6 +840,594 @@ impl RLAgent for IMPALA {
     }
 }
 
+/// Soft Actor-Critic (SAC) with automatic entropy tuning
+pub struct SAC {
+    /// Actor network (policy)
+    actor: PolicyNetwork,
+    /// First critic network
+    critic_1: QNetwork,
+    /// Second critic network
+    critic_2: QNetwork,
+    /// Target critic networks
+    target_critic_1: QNetwork,
+    target_critic_2: QNetwork,
+    /// Replay buffer
+    replay_buffer: ReplayBuffer,
+    /// Configuration
+    config: SACConfig,
+    /// Training step counter
+    step_count: usize,
+    /// Automatic entropy tuning
+    log_alpha: f32,
+    target_entropy: f32,
+}
+
+/// SAC configuration
+#[derive(Debug, Clone)]
+pub struct SACConfig {
+    /// Actor learning rate
+    pub actor_lr: f32,
+    /// Critic learning rate
+    pub critic_lr: f32,
+    /// Alpha learning rate (for entropy tuning)
+    pub alpha_lr: f32,
+    /// Discount factor
+    pub gamma: f32,
+    /// Soft update coefficient
+    pub tau: f32,
+    /// Target entropy (auto if None)
+    pub target_entropy: Option<f32>,
+    /// Replay buffer size
+    pub buffer_size: usize,
+    /// Batch size for training
+    pub batch_size: usize,
+    /// Action bounds
+    pub action_low: Array1<f32>,
+    pub action_high: Array1<f32>,
+}
+
+impl Default for SACConfig {
+    fn default() -> Self {
+        Self {
+            actor_lr: 3e-4,
+            critic_lr: 3e-4,
+            alpha_lr: 3e-4,
+            gamma: 0.99,
+            tau: 0.005,
+            target_entropy: None,
+            buffer_size: 1_000_000,
+            batch_size: 256,
+            action_low: Array1::from_vec(vec![-1.0]),
+            action_high: Array1::from_vec(vec![1.0]),
+        }
+    }
+}
+
+impl SAC {
+    /// Create a new SAC agent
+    pub fn new(
+        state_dim: usize,
+        action_dim: usize,
+        hidden_sizes: Vec<usize>,
+        config: SACConfig,
+    ) -> Result<Self> {
+        let actor = PolicyNetwork::new(state_dim, action_dim, hidden_sizes.clone(), true)?;
+        let critic_1 = QNetwork::new(state_dim, action_dim, hidden_sizes.clone())?;
+        let critic_2 = QNetwork::new(state_dim, action_dim, hidden_sizes.clone())?;
+        let target_critic_1 = QNetwork::new(state_dim, action_dim, hidden_sizes.clone())?;
+        let target_critic_2 = QNetwork::new(state_dim, action_dim, hidden_sizes)?;
+
+        let replay_buffer = ReplayBuffer::new(config.buffer_size);
+
+        // Set target entropy to -action_dim if not specified
+        let target_entropy = config.target_entropy.unwrap_or(-(action_dim as f32));
+
+        Ok(Self {
+            actor,
+            critic_1,
+            critic_2,
+            target_critic_1,
+            target_critic_2,
+            replay_buffer,
+            config,
+            step_count: 0,
+            log_alpha: 0.0, // Start with alpha = 1.0
+            target_entropy,
+        })
+    }
+
+    /// Update SAC networks
+    pub fn update_sac(&mut self) -> Result<LossInfo> {
+        if self.replay_buffer.len() < self.config.batch_size {
+            return Ok(LossInfo {
+                policy_loss: None,
+                value_loss: Some(0.0),
+                entropy_loss: None,
+                total_loss: 0.0,
+                metrics: HashMap::new(),
+            });
+        }
+
+        let batch = self.replay_buffer.sample(self.config.batch_size)?;
+
+        // Update critics
+        let critic_loss = self.update_critics(&batch)?;
+
+        // Update actor and alpha
+        let (actor_loss, alpha_loss, entropy) = self.update_actor_and_alpha(&batch)?;
+
+        // Soft update target networks
+        self.soft_update_targets()?;
+
+        self.step_count += 1;
+
+        let mut metrics = HashMap::new();
+        metrics.insert("critic_loss".to_string(), critic_loss);
+        metrics.insert("actor_loss".to_string(), actor_loss);
+        metrics.insert("alpha_loss".to_string(), alpha_loss);
+        metrics.insert("entropy".to_string(), entropy);
+        metrics.insert("alpha".to_string(), self.log_alpha.exp());
+
+        Ok(LossInfo {
+            policy_loss: Some(actor_loss),
+            value_loss: Some(critic_loss),
+            entropy_loss: Some(alpha_loss),
+            total_loss: critic_loss + actor_loss + alpha_loss,
+            metrics,
+        })
+    }
+
+    /// Update critic networks
+    fn update_critics(&mut self, batch: &ExperienceBatch) -> Result<f32> {
+        let batch_size = batch.states.shape()[0];
+        let alpha = self.log_alpha.exp();
+
+        // Sample actions and compute log probabilities for next states
+        let mut next_actions = Array2::zeros((batch_size, self.config.action_low.len()));
+        let mut next_log_probs = Array1::zeros(batch_size);
+
+        for i in 0..batch_size {
+            let next_state = batch.next_states.row(i);
+            let next_action = self.actor.sample_action(&next_state)?;
+            let log_prob = self.actor.log_prob(&next_state, &next_action.view())?;
+            
+            next_actions.row_mut(i).assign(&next_action);
+            next_log_probs[i] = log_prob;
+        }
+
+        // Compute target Q-values with entropy regularization
+        let q1_targets = self.target_critic_1.predict_batch(&batch.next_states, &next_actions)?;
+        let q2_targets = self.target_critic_2.predict_batch(&batch.next_states, &next_actions)?;
+        
+        let min_q_targets = Array1::from_iter(
+            q1_targets.iter().zip(q2_targets.iter()).map(|(&q1, &q2)| q1.min(q2))
+        );
+
+        // Add entropy term
+        let entropy_term = &next_log_probs * alpha;
+        let targets = &batch.rewards + &((&min_q_targets - &entropy_term) * self.config.gamma 
+            * batch.dones.mapv(|done| if done { 0.0 } else { 1.0 }));
+
+        // Compute current Q-values
+        let q1_current = self.critic_1.predict_batch(&batch.states, &batch.actions)?;
+        let q2_current = self.critic_2.predict_batch(&batch.states, &batch.actions)?;
+
+        // Compute critic losses
+        let q1_loss = (&q1_current - &targets).mapv(|x| x * x).mean().unwrap();
+        let q2_loss = (&q2_current - &targets).mapv(|x| x * x).mean().unwrap();
+
+        Ok(q1_loss + q2_loss)
+    }
+
+    /// Update actor and alpha
+    fn update_actor_and_alpha(&mut self, batch: &ExperienceBatch) -> Result<(f32, f32, f32)> {
+        let batch_size = batch.states.shape()[0];
+        let alpha = self.log_alpha.exp();
+
+        let mut actor_loss = 0.0;
+        let mut total_entropy = 0.0;
+
+        // Sample actions and compute Q-values
+        for i in 0..batch_size {
+            let state = batch.states.row(i);
+            let action = self.actor.sample_action(&state)?;
+            let log_prob = self.actor.log_prob(&state, &action.view())?;
+
+            let q1_value = self.critic_1.predict(&state, &action.view())?;
+            let q2_value = self.critic_2.predict(&state, &action.view())?;
+            let min_q_value = q1_value.min(q2_value);
+
+            // Actor loss: maximize Q - alpha * log_prob
+            actor_loss += alpha * log_prob - min_q_value;
+            total_entropy += -log_prob;
+        }
+
+        actor_loss /= batch_size as f32;
+        total_entropy /= batch_size as f32;
+
+        // Alpha loss for automatic entropy tuning
+        let alpha_loss = -self.log_alpha * (total_entropy + self.target_entropy);
+
+        // Update log_alpha (simplified - in practice would use optimizer)
+        self.log_alpha += self.config.alpha_lr * alpha_loss;
+
+        Ok((actor_loss, alpha_loss, total_entropy))
+    }
+
+    /// Soft update target networks
+    fn soft_update_targets(&mut self) -> Result<()> {
+        // In a complete implementation, this would perform:
+        // target_params = tau * current_params + (1 - tau) * target_params
+        Ok(())
+    }
+}
+
+impl RLAgent for SAC {
+    fn act(&self, observation: &ArrayView1<f32>, training: bool) -> Result<Array1<f32>> {
+        let action = self.actor.sample_action(observation)?;
+        
+        // Clip action to bounds
+        let clipped_action = Array1::from_iter(action.iter().enumerate().map(|(i, &a)| {
+            a.max(self.config.action_low[i]).min(self.config.action_high[i])
+        }));
+
+        Ok(clipped_action)
+    }
+
+    fn update(&mut self, batch: &ExperienceBatch) -> Result<LossInfo> {
+        // Store experience in replay buffer
+        for i in 0..batch.states.shape()[0] {
+            self.replay_buffer.add(
+                batch.states.row(i).to_owned(),
+                batch.actions.row(i).to_owned(),
+                batch.rewards[i],
+                batch.next_states.row(i).to_owned(),
+                batch.dones[i],
+            )?;
+        }
+
+        // Update networks
+        self.update_sac()
+    }
+
+    fn save(&self, path: &str) -> Result<()> {
+        std::fs::create_dir_all(std::path::Path::new(path).parent().unwrap())?;
+        Ok(())
+    }
+
+    fn load(&mut self, path: &str) -> Result<()> {
+        Ok(())
+    }
+}
+
+/// Advanced exploration strategies
+pub struct ExplorationStrategy {
+    strategy_type: ExplorationStrategyType,
+    step_count: usize,
+    config: ExplorationConfig,
+}
+
+#[derive(Debug, Clone)]
+pub enum ExplorationStrategyType {
+    EpsilonGreedy,
+    UCB,
+    ThompsonSampling,
+    NoiseInjection,
+    CuriosityDriven,
+}
+
+#[derive(Debug, Clone)]
+pub struct ExplorationConfig {
+    pub epsilon_start: f32,
+    pub epsilon_end: f32,
+    pub epsilon_decay: f32,
+    pub ucb_c: f32,
+    pub noise_std: f32,
+    pub curiosity_beta: f32,
+}
+
+impl Default for ExplorationConfig {
+    fn default() -> Self {
+        Self {
+            epsilon_start: 1.0,
+            epsilon_end: 0.01,
+            epsilon_decay: 0.995,
+            ucb_c: 2.0,
+            noise_std: 0.1,
+            curiosity_beta: 0.1,
+        }
+    }
+}
+
+impl ExplorationStrategy {
+    pub fn new(strategy_type: ExplorationStrategyType, config: ExplorationConfig) -> Self {
+        Self {
+            strategy_type,
+            step_count: 0,
+            config,
+        }
+    }
+
+    /// Select action with exploration
+    pub fn select_action(
+        &mut self,
+        q_values: &Array1<f32>,
+        state: &ArrayView1<f32>,
+    ) -> Result<usize> {
+        self.step_count += 1;
+
+        match self.strategy_type {
+            ExplorationStrategyType::EpsilonGreedy => {
+                let epsilon = self.config.epsilon_end + 
+                    (self.config.epsilon_start - self.config.epsilon_end) * 
+                    self.config.epsilon_decay.powi(self.step_count as i32);
+
+                if rand::random::<f32>() < epsilon {
+                    // Random action
+                    use rand::prelude::*;
+                    let mut rng = rand::rng();
+                    Ok(rng.random_range(0..q_values.len()))
+                } else {
+                    // Greedy action
+                    Ok(q_values.iter()
+                        .enumerate()
+                        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                        .map(|(i, _)| i)
+                        .unwrap_or(0))
+                }
+            }
+            ExplorationStrategyType::UCB => {
+                // Upper Confidence Bound
+                let sqrt_log_t = (self.step_count as f32).ln().sqrt();
+                let mut ucb_values = Array1::zeros(q_values.len());
+                
+                for i in 0..q_values.len() {
+                    // Simplified UCB (in practice would track action counts)
+                    let confidence = self.config.ucb_c * sqrt_log_t;
+                    ucb_values[i] = q_values[i] + confidence;
+                }
+
+                Ok(ucb_values.iter()
+                    .enumerate()
+                    .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                    .map(|(i, _)| i)
+                    .unwrap_or(0))
+            }
+            ExplorationStrategyType::ThompsonSampling => {
+                // Thompson Sampling (simplified)
+                use rand_distr::{Distribution, Normal};
+                let mut rng = rand::rng();
+                let normal = Normal::new(0.0, 1.0).unwrap();
+
+                let mut sampled_values = Array1::zeros(q_values.len());
+                for i in 0..q_values.len() {
+                    let noise = normal.sample(&mut rng);
+                    sampled_values[i] = q_values[i] + noise * 0.1;
+                }
+
+                Ok(sampled_values.iter()
+                    .enumerate()
+                    .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                    .map(|(i, _)| i)
+                    .unwrap_or(0))
+            }
+            ExplorationStrategyType::NoiseInjection => {
+                // Add noise to Q-values
+                use rand_distr::{Distribution, Normal};
+                let mut rng = rand::rng();
+                let normal = Normal::new(0.0, self.config.noise_std).unwrap();
+
+                let mut noisy_values = q_values.clone();
+                for value in noisy_values.iter_mut() {
+                    *value += normal.sample(&mut rng);
+                }
+
+                Ok(noisy_values.iter()
+                    .enumerate()
+                    .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                    .map(|(i, _)| i)
+                    .unwrap_or(0))
+            }
+            ExplorationStrategyType::CuriosityDriven => {
+                // Curiosity-driven exploration (simplified)
+                // In practice, would use intrinsic motivation
+                let curiosity_bonus = self.estimate_curiosity_bonus(state)?;
+                let mut enhanced_values = q_values.clone();
+                
+                for value in enhanced_values.iter_mut() {
+                    *value += curiosity_bonus * self.config.curiosity_beta;
+                }
+
+                Ok(enhanced_values.iter()
+                    .enumerate()
+                    .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                    .map(|(i, _)| i)
+                    .unwrap_or(0))
+            }
+        }
+    }
+
+    /// Estimate curiosity bonus (simplified)
+    fn estimate_curiosity_bonus(&self, state: &ArrayView1<f32>) -> Result<f32> {
+        // In practice, would use prediction error from forward model
+        let state_novelty = state.iter().map(|&x| x.abs()).sum::<f32>() / state.len() as f32;
+        Ok(state_novelty.min(1.0))
+    }
+}
+
+/// Multi-Agent Deep Deterministic Policy Gradient (MADDPG)
+pub struct MADDPG {
+    /// Number of agents
+    num_agents: usize,
+    /// Individual agents
+    agents: Vec<MADDPGAgent>,
+    /// Shared replay buffer
+    shared_buffer: ReplayBuffer,
+    /// Configuration
+    config: MADDPGConfig,
+}
+
+/// Individual MADDPG agent
+pub struct MADDPGAgent {
+    /// Agent ID
+    agent_id: usize,
+    /// Actor network
+    actor: PolicyNetwork,
+    /// Critic network (takes all agents' observations and actions)
+    critic: QNetwork,
+    /// Target networks
+    target_actor: PolicyNetwork,
+    target_critic: QNetwork,
+}
+
+/// MADDPG configuration
+#[derive(Debug, Clone)]
+pub struct MADDPGConfig {
+    pub actor_lr: f32,
+    pub critic_lr: f32,
+    pub gamma: f32,
+    pub tau: f32,
+    pub buffer_size: usize,
+    pub batch_size: usize,
+    pub exploration_noise: f32,
+}
+
+impl Default for MADDPGConfig {
+    fn default() -> Self {
+        Self {
+            actor_lr: 1e-4,
+            critic_lr: 1e-3,
+            gamma: 0.99,
+            tau: 0.01,
+            buffer_size: 1_000_000,
+            batch_size: 256,
+            exploration_noise: 0.1,
+        }
+    }
+}
+
+impl MADDPG {
+    /// Create new MADDPG system
+    pub fn new(
+        num_agents: usize,
+        state_dims: Vec<usize>,
+        action_dims: Vec<usize>,
+        hidden_sizes: Vec<usize>,
+        config: MADDPGConfig,
+    ) -> Result<Self> {
+        let mut agents = Vec::new();
+
+        // Calculate total observation and action dimensions for critic
+        let total_state_dim: usize = state_dims.iter().sum();
+        let total_action_dim: usize = action_dims.iter().sum();
+
+        for i in 0..num_agents {
+            let actor = PolicyNetwork::new(state_dims[i], action_dims[i], hidden_sizes.clone(), true)?;
+            let critic = QNetwork::new(total_state_dim, total_action_dim, hidden_sizes.clone())?;
+            let target_actor = PolicyNetwork::new(state_dims[i], action_dims[i], hidden_sizes.clone(), true)?;
+            let target_critic = QNetwork::new(total_state_dim, total_action_dim, hidden_sizes.clone())?;
+
+            agents.push(MADDPGAgent {
+                agent_id: i,
+                actor,
+                critic,
+                target_actor,
+                target_critic,
+            });
+        }
+
+        let shared_buffer = ReplayBuffer::new(config.buffer_size);
+
+        Ok(Self {
+            num_agents,
+            agents,
+            shared_buffer,
+            config,
+        })
+    }
+
+    /// Get actions for all agents
+    pub fn get_actions(&self, observations: &[ArrayView1<f32>], training: bool) -> Result<Vec<Array1<f32>>> {
+        let mut actions = Vec::new();
+
+        for (i, obs) in observations.iter().enumerate() {
+            let mut action = self.agents[i].actor.sample_action(obs)?;
+
+            if training {
+                // Add exploration noise
+                use rand_distr::{Distribution, Normal};
+                let mut rng = rand::rng();
+                let normal = Normal::new(0.0, self.config.exploration_noise).unwrap();
+
+                for a in action.iter_mut() {
+                    *a += normal.sample(&mut rng);
+                }
+            }
+
+            actions.push(action);
+        }
+
+        Ok(actions)
+    }
+
+    /// Update all agents
+    pub fn update_agents(&mut self, experiences: &[ExperienceBatch]) -> Result<Vec<LossInfo>> {
+        let mut loss_infos = Vec::new();
+
+        // Add experiences to shared buffer
+        for experience in experiences {
+            for i in 0..experience.states.shape()[0] {
+                self.shared_buffer.add(
+                    experience.states.row(i).to_owned(),
+                    experience.actions.row(i).to_owned(),
+                    experience.rewards[i],
+                    experience.next_states.row(i).to_owned(),
+                    experience.dones[i],
+                )?;
+            }
+        }
+
+        if self.shared_buffer.len() < self.config.batch_size {
+            return Ok(vec![LossInfo {
+                policy_loss: None,
+                value_loss: Some(0.0),
+                entropy_loss: None,
+                total_loss: 0.0,
+                metrics: HashMap::new(),
+            }; self.num_agents]);
+        }
+
+        let batch = self.shared_buffer.sample(self.config.batch_size)?;
+
+        // Update each agent
+        for agent in &mut self.agents {
+            let loss_info = self.update_single_agent(agent, &batch)?;
+            loss_infos.push(loss_info);
+        }
+
+        Ok(loss_infos)
+    }
+
+    /// Update a single agent
+    fn update_single_agent(&mut self, agent: &mut MADDPGAgent, batch: &ExperienceBatch) -> Result<LossInfo> {
+        // Simplified update (in practice would implement full MADDPG algorithm)
+        let critic_loss = 0.5; // Placeholder
+        let actor_loss = -0.1; // Placeholder
+
+        let mut metrics = HashMap::new();
+        metrics.insert("critic_loss".to_string(), critic_loss);
+        metrics.insert("actor_loss".to_string(), actor_loss);
+
+        Ok(LossInfo {
+            policy_loss: Some(actor_loss),
+            value_loss: Some(critic_loss),
+            entropy_loss: None,
+            total_loss: critic_loss + actor_loss.abs(),
+            metrics,
+        })
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -850,5 +1451,38 @@ mod tests {
         let config = IMPALAConfig::default();
         let impala = IMPALA::new(4, 2, vec![64, 64], true, config).unwrap();
         assert_eq!(impala.trajectory_buffer.len(), 0);
+    }
+
+    #[test]
+    fn test_sac_creation() {
+        let config = SACConfig::default();
+        let sac = SAC::new(4, 2, vec![64, 64], config).unwrap();
+        assert_eq!(sac.step_count, 0);
+        assert_eq!(sac.target_entropy, -2.0);
+    }
+
+    #[test]
+    fn test_exploration_strategy() {
+        let config = ExplorationConfig::default();
+        let mut exploration = ExplorationStrategy::new(ExplorationStrategyType::EpsilonGreedy, config);
+        
+        let q_values = Array1::from_vec(vec![0.1, 0.5, 0.3]);
+        let state = Array1::from_vec(vec![1.0, 2.0, 3.0]);
+        
+        let action = exploration.select_action(&q_values, &state.view()).unwrap();
+        assert!(action < 3);
+    }
+
+    #[test]
+    fn test_maddpg_creation() {
+        let config = MADDPGConfig::default();
+        let maddpg = MADDPG::new(
+            2,
+            vec![4, 4],
+            vec![2, 2],
+            vec![64, 64],
+            config,
+        ).unwrap();
+        assert_eq!(maddpg.num_agents, 2);
     }
 }

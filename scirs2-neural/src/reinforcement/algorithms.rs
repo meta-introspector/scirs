@@ -2,7 +2,7 @@
 
 use crate::error::Result;
 use crate::reinforcement::environments::Environment;
-use crate::reinforcement::replay_buffer::{PrioritizedReplayBuffer, ReplayBuffer};
+use crate::reinforcement::replay_buffer::{PrioritizedReplayBuffer, ReplayBuffer, ReplayBufferTrait};
 use crate::reinforcement::{ExperienceBatch, LossInfo, RLAgent};
 use ndarray::prelude::*;
 use rand::Rng;
@@ -661,6 +661,122 @@ impl RLAgent for PPOWrapper {
     }
 }
 
+/// Generic RL algorithm implementation
+pub struct RLAlgorithmImpl {
+    pub agent: Box<dyn RLAgent>,
+    pub replay_buffer: Option<Box<dyn ReplayBufferTrait>>,
+}
+
+impl RLAlgorithm for RLAlgorithmImpl {
+    fn train(
+        &mut self,
+        env: &mut dyn Environment,
+        config: &TrainingConfig,
+    ) -> Result<TrainingResults> {
+        // Basic training loop - this is a simplified implementation
+        let start_time = std::time::Instant::now();
+        let mut total_steps = 0;
+        let mut episode_rewards = Vec::new();
+        let mut episode_lengths = Vec::new();
+
+        let mut state = env.reset()?;
+        let mut episode_reward = 0.0;
+        let mut episode_length = 0;
+
+        while total_steps < config.total_timesteps {
+            // Select action
+            let action = self.agent.act(&state.view(), true)?;
+            
+            // Step environment
+            let (next_state, reward, done, _info) = env.step(&action)?;
+            
+            // Store experience in replay buffer if available
+            if let Some(buffer) = &mut self.replay_buffer {
+                buffer.add(state.clone(), action, reward, next_state.clone(), done)?;
+            }
+            
+            episode_reward += reward;
+            episode_length += 1;
+            total_steps += 1;
+            
+            if done {
+                episode_rewards.push(episode_reward);
+                episode_lengths.push(episode_length);
+                
+                // Reset for next episode
+                state = env.reset()?;
+                episode_reward = 0.0;
+                episode_length = 0;
+            } else {
+                state = next_state;
+            }
+        }
+
+        let training_time = start_time.elapsed();
+        
+        Ok(TrainingResults {
+            total_timesteps: total_steps,
+            episode_rewards,
+            episode_lengths,
+            losses: vec![], // Simplified - no loss tracking in this basic implementation
+            eval_results: vec![],
+            training_time,
+            final_performance: episode_rewards.last().copied().unwrap_or(0.0),
+        })
+    }
+
+    fn evaluate(&self, env: &mut dyn Environment, n_episodes: usize) -> Result<EvaluationResults> {
+        let mut episode_rewards = Vec::new();
+        let mut episode_lengths = Vec::new();
+
+        for _ in 0..n_episodes {
+            let mut state = env.reset()?;
+            let mut episode_reward = 0.0;
+            let mut episode_length = 0;
+
+            loop {
+                let action = self.agent.act(&state.view(), false)?; // Not training mode
+                let (next_state, reward, done, _info) = env.step(&action)?;
+
+                episode_reward += reward;
+                episode_length += 1;
+
+                if done {
+                    break;
+                }
+                state = next_state;
+            }
+
+            episode_rewards.push(episode_reward);
+            episode_lengths.push(episode_length);
+        }
+
+        Ok(EvaluationResults {
+            episode_rewards,
+            episode_lengths,
+            mean_reward: episode_rewards.iter().sum::<f32>() / episode_rewards.len() as f32,
+            std_reward: {
+                let mean = episode_rewards.iter().sum::<f32>() / episode_rewards.len() as f32;
+                let variance = episode_rewards.iter()
+                    .map(|&x| (x - mean).powi(2))
+                    .sum::<f32>() / episode_rewards.len() as f32;
+                variance.sqrt()
+            },
+            mean_length: episode_lengths.iter().sum::<usize>() as f32 / episode_lengths.len() as f32,
+        })
+    }
+
+    fn save(&self, _path: &str) -> Result<()> {
+        // Simplified - no saving implementation
+        Ok(())
+    }
+
+    fn load(&mut self, _path: &str) -> Result<()> {
+        // Simplified - no loading implementation
+        Ok(())
+    }
+}
+
 /// Helper function to create common RL algorithms
 pub fn create_algorithm(
     algorithm_name: &str,
@@ -686,13 +802,13 @@ pub fn create_algorithm(
                     config.buffer_size,
                     config.prioritized_replay_alpha,
                     config.prioritized_replay_beta0,
-                )) as Box<dyn ReplayBuffer>
+                )) as Box<dyn ReplayBufferTrait>
             } else {
                 Box::new(
                     crate::reinforcement::replay_buffer::SimpleReplayBuffer::new(
                         config.buffer_size,
                     ),
-                ) as Box<dyn ReplayBuffer>
+                ) as Box<dyn ReplayBufferTrait>
             };
 
             Ok(Box::new(RLAlgorithmImpl {

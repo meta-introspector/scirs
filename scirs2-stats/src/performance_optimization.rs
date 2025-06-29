@@ -4,7 +4,6 @@
 //! SIMD vectorization and parallel processing for the advanced statistical
 //! methods implemented in scirs2-stats.
 
-use crate::bayesian::{BayesianLinearRegression, BayesianRegressionResult};
 use crate::error::{StatsError, StatsResult as Result};
 use crate::error_handling_v2::ErrorCode;
 use crate::mcmc::{

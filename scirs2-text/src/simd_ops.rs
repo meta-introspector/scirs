@@ -1235,7 +1235,7 @@ impl SimdTextSimilarity {
         let ngram_sim = SimdNgramGenerator::ngram_similarity(text1, text2, 3);
 
         // Weighted combination
-        (cosine * 0.4 + jaccard * 0.3 + ngram_sim * 0.3)
+        cosine * 0.4 + jaccard * 0.3 + ngram_sim * 0.3
     }
 }
 
@@ -1399,7 +1399,7 @@ impl SimdParallelProcessor {
         }
 
         // Use parallel processing with SIMD-optimized chunks
-        scirs2_core::parallel_ops::parallel_map(texts, processor)
+        scirs2_core::parallel_ops::parallel_map(texts, |text: &String| processor(text.as_str()))
     }
 
     /// Calculate similarity matrix for multiple texts using SIMD

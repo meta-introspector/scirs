@@ -375,8 +375,8 @@ pub use unified_error_handling::{
 // API improvements for v1.0.0
 pub mod api_improvements;
 pub use api_improvements::{
-    CorrelationExt, CorrelationMethod, CorrelationResult, OptimizationHint, StatsBuilder,
-    StatsConfig, TestResult,
+    CorrelationExt, OptimizationHint, StatsBuilder,
+    StatsConfig,
 };
 
 // Advanced integration workflows
@@ -399,7 +399,7 @@ pub use advanced_bootstrap::{
 };
 pub use api_consistency_validation::{
     validate_api_consistency, APIConsistencyValidator, ValidationConfig, ValidationResults,
-    ValidationStatus, ValidationCheck, CheckCategory, Severity, APIInconsistency, InconsistencyType,
+    ValidationStatus, ValidationCheck as APIValidationCheck, CheckCategory, Severity as APISeverity, APIInconsistency, InconsistencyType,
     ValidationWarning, ValidationSummary, FunctionRegistry, FunctionSignature, ParameterInfo,
     ReturnTypeInfo, DocumentationStatus, ParameterUsage, ValidationReport, FunctionCategory,
     NamingConventions, FunctionPattern,
@@ -458,7 +458,16 @@ mod simd_enhanced_v5;
 mod simd_enhanced_v6;
 mod simd_optimized_v2;
 mod ultra_simd_advanced;
+mod ultra_simd_comprehensive;
+mod ultra_parallel_advanced;
+mod bayesian_advanced;
+mod mcmc_ultra_advanced;
+mod multivariate_ultra_advanced;
 mod survival_enhanced;
+mod survival_ultra_advanced;
+mod spectral_ultra_advanced;
+mod topological_ultra_advanced;
+mod quantum_ultra_advanced;
 pub use descriptive::*;
 pub use descriptive_simd::{descriptive_stats_simd, mean_simd, std_simd, variance_simd};
 pub use dispersion_simd::{
@@ -486,16 +495,16 @@ pub use memory_profiler_v3::{
 };
 pub use memory_profiling::{
     cache_friendly, memory_mapped, zero_copy, AlgorithmChoice, LazyStatComputation,
-    MemoryAdaptiveAlgorithm, MemoryProfile, MemoryTracker, RingBufferStats,
+    MemoryAdaptiveAlgorithm, MemoryTracker, RingBufferStats,
 };
 pub use mixture_models::{
     gaussian_mixture_model, kernel_density_estimation, gmm_model_selection, hierarchical_gmm_init,
     gmm_cross_validation, benchmark_mixture_models, BandwidthMethod, CovarianceType, CovarianceConstraint,
     GMMConfig, GMMParameters, ComponentDiagnostics, ModelSelectionCriteria, ConvergenceReason,
     ParameterSnapshot, GaussianMixtureModel, InitializationMethod, KDEConfig, KernelDensityEstimator,
-    KernelType, RobustGMM, StreamingGMM, DirichletProcessGMM, VariationalBayesianGMM,
-    VBPriorParameters, VBPosteriorParameters, Either,
+    KernelType, RobustGMM, StreamingGMM,
 };
+pub use either::Either;
 pub use parallel_advanced_v3::{
     AdvancedParallelConfig, ParallelBatchProcessor, ParallelCrossValidator, ParallelMatrixOps,
     ParallelMonteCarlo,
@@ -554,9 +563,56 @@ pub use ultra_simd_advanced::{
     ultra_mean_f64, ultra_mean_f32, UltraSimdProcessor, UltraSimdConfig, UltraStatsResult,
     VectorStrategy, MemoryPattern, CacheAwareVectorProcessor,
 };
+pub use ultra_simd_comprehensive::{
+    UltraComprehensiveSimdProcessor, UltraComprehensiveSimdConfig, ComprehensiveStatsResult,
+    MatrixStatsResult as UltraMatrixStatsResult,
+};
+pub use ultra_parallel_advanced::{
+    UltraParallelProcessor, UltraParallelConfig, ParallelStrategy, HardwareConfig,
+    MemoryConfig as UltraMemoryConfig, OptimizationConfig, PerformanceMetrics as UltraPerformanceMetrics, MemoryUsageStats,
+};
+pub use bayesian_advanced::{
+    BayesianModelComparison, BayesianModel, AdvancedPrior, ModelType,
+    BayesianGaussianProcess, BayesianNeuralNetwork, ModelComparisonResult,
+    AdvancedBayesianResult, ModelSelectionCriterion, ActivationType,
+};
+pub use mcmc_ultra_advanced::{
+    UltraAdvancedMCMC, UltraTarget, UltraAdvancedConfig, SamplingMethod,
+    UltraAdvancedResults, ConvergenceDiagnostics, PerformanceMetrics as MCMCPerformanceMetrics,
+    AdaptationConfig, TemperingConfig,
+};
+pub use multivariate_ultra_advanced::{
+    UltraMultivariateAnalysis, UltraMultivariateConfig, DimensionalityReductionMethod,
+    ManifoldConfig, TensorConfig, ClusteringConfig, MultiViewConfig, UltraMultivariateResults,
+    PCAVariant, ICAAlgorithm, ActivationFunction, TensorDecomposition, ClusteringAlgorithm,
+};
 pub use survival_enhanced::{
     cox_regression, kaplan_meier, log_rank_test, CoxConfig, CoxConvergenceInfo,
     CoxProportionalHazards, EnhancedKaplanMeier,
+};
+pub use survival_ultra_advanced::{
+    UltraSurvivalAnalysis, UltraSurvivalConfig, SurvivalModelType, UltraSurvivalResults,
+    SurvivalModel, SurvivalPrediction, AFTDistribution, ActivationFunction as SurvivalActivationFunction,
+    CausalSurvivalConfig, CompetingRisksConfig, EnsembleConfig as SurvivalEnsembleConfig,
+};
+pub use spectral_ultra_advanced::{
+    UltraSpectralAnalyzer, UltraSpectralConfig, UltraSpectralResults, SpectralPeak,
+    MultiTaperConfig, WaveletConfig, HigherOrderSpectralConfig, CoherenceConfig,
+    NonStationaryConfig, MLSpectralConfig, WindowFunction, WaveletType, SpectrogramType,
+    ActivationFunction as SpectralActivationFunction, CoherenceResults, HigherOrderResults, 
+    WaveletResults, MLSpectralResults, SpectralPerformanceMetrics,
+};
+pub use topological_ultra_advanced::{
+    UltraTopologicalAnalyzer, TopologicalConfig, TopologicalResults, PersistenceDiagram,
+    MapperGraph, MapperNode, MapperEdge, MultiscaleResults, TopologicalInferenceResults,
+    FiltrationType, DistanceMetric, PersistenceAlgorithm, CoeffientField, FilterFunction,
+    SimplicialComplex, Filtration, Simplex, SimplicialChain, TopologicalPerformanceMetrics,
+};
+pub use quantum_ultra_advanced::{
+    UltraQuantumAnalyzer, QuantumConfig, QuantumResults, QAEResults, QPCAResults, QSVMResults,
+    QClusteringResults, VQEResults, TensorNetworkResults, QNNResults, QuantumKernelType,
+    QuantumFeatureMap, QuantumClusteringAlgorithm, VQEAnsatz, TensorNetworkType, DataEncodingMethod,
+    QuantumPerformanceMetrics, QuantumAdvantageMetrics,
 };
 
 // MCMC module
@@ -569,7 +625,7 @@ pub use tests::chi2_test::{chi2_gof, chi2_independence, chi2_yates};
 pub use tests::nonparametric::{friedman, kruskal_wallis, mann_whitney, wilcoxon};
 pub use tests::normality::{anderson_darling, dagostino_k2, ks_2samp, shapiro_wilk};
 pub use tests::ttest::{
-    ttest_1samp, ttest_ind, ttest_ind_from_stats, ttest_rel, Alternative, TTestResult,
+    ttest_1samp, ttest_ind, ttest_ind_from_stats, ttest_rel, TTestResult,
 };
 pub use tests::*;
 

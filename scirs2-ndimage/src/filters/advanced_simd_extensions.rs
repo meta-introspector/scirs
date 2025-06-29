@@ -737,7 +737,7 @@ where
 
 // Conditional compilation for parallel iterator
 #[cfg(feature = "parallel")]
-use rayon::prelude::*;
+use scirs2_core::parallel_ops::*;
 
 #[cfg(not(feature = "parallel"))]
 trait IntoParallelIterator {

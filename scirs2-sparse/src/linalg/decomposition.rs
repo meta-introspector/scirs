@@ -174,6 +174,7 @@ where
         }
 
         // Eliminate below pivot
+        #[allow(clippy::needless_range_loop)]
         for i in (k + 1)..n {
             let actual_row_i = p[i];
             let factor = working_matrix.get(actual_row_i, k) / pivot_value;
@@ -664,6 +665,7 @@ where
     let mut max_val = T::zero();
     let mut pivot_row = k;
 
+    #[allow(clippy::needless_range_loop)]
     for i in k..matrix.n {
         let actual_row = p[i];
         let val = matrix.get(actual_row, k).abs();
@@ -677,18 +679,20 @@ where
 }
 
 /// Extract L and U factors from working matrix
+type LuFactors<T> = (
+    Vec<usize>,  // L row pointers
+    Vec<usize>,  // L column indices
+    Vec<T>,      // L values
+    Vec<usize>,  // U row pointers
+    Vec<usize>,  // U column indices
+    Vec<T>,      // U values
+);
+
 fn extract_lu_factors<T>(
     matrix: &SparseWorkingMatrix<T>,
     p: &[usize],
     n: usize,
-) -> (
-    Vec<usize>,
-    Vec<usize>,
-    Vec<T>,
-    Vec<usize>,
-    Vec<usize>,
-    Vec<T>,
-)
+) -> LuFactors<T>
 where
     T: Float + Debug + Copy,
 {
@@ -699,6 +703,7 @@ where
     let mut u_cols = Vec::new();
     let mut u_vals = Vec::new();
 
+    #[allow(clippy::needless_range_loop)]
     for i in 0..n {
         let actual_row = p[i];
 

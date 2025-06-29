@@ -6,6 +6,7 @@
 use num_traits::{Float, Num, NumCast, One, Zero};
 use std::fmt::Debug;
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use crate::error::{CoreError, CoreResult, ErrorContext};
 
 /// A trait for numeric types that can be used in scientific calculations
 ///
@@ -240,8 +241,7 @@ pub trait ScientificInteger: ScientificNumber + Eq {
     fn mod_pow(self, exp: Self, modulus: Self) -> Self;
 
     /// Factorial
-    #[must_use]
-    fn factorial(self) -> Self;
+    fn factorial(self) -> CoreResult<Self>;
 
     /// Binomial coefficient (n choose k)
     #[must_use]
@@ -673,9 +673,11 @@ impl ScientificInteger for i32 {
         result
     }
 
-    fn factorial(self) -> Self {
+    fn factorial(self) -> CoreResult<Self> {
         if self < 0 {
-            panic!("Factorial not defined for negative numbers");
+            return Err(CoreError::ValueError(ErrorContext::new(
+                "Factorial not defined for negative numbers".to_string(),
+            )));
         }
 
         let mut result = 1;
@@ -683,7 +685,7 @@ impl ScientificInteger for i32 {
             result *= i;
         }
 
-        result
+        Ok(result)
     }
 
     fn binomial(self, k: Self) -> Self {
@@ -734,34 +736,42 @@ where
 }
 
 /// Trait for converting between degrees and radians
-pub trait AngleConversion {
+pub trait AngleConversion: Sized {
     /// Convert from degrees to radians
-    fn to_radians(self) -> Self;
+    fn to_radians(&self) -> CoreResult<Self> where Self: std::marker::Sized;
 
     /// Convert from radians to degrees
-    fn to_degrees(self) -> Self;
+    fn to_degrees(&self) -> CoreResult<Self> where Self: std::marker::Sized;
 }
 
 /// Implement AngleConversion for all RealNumber types
 impl<T: RealNumber> AngleConversion for T {
-    fn to_radians(self) -> Self {
-        let pi = T::from_f64(std::f64::consts::PI).unwrap_or_else(|| {
-            // This should never fail for valid RealNumber types
-            panic!("Failed to convert PI constant to target type")
-        });
-        let one_eighty =
-            T::from_f64(180.0).unwrap_or_else(|| panic!("Failed to convert 180.0 to target type"));
-        self * pi / one_eighty
+    fn to_radians(&self) -> CoreResult<Self> {
+        let pi = T::from_f64(std::f64::consts::PI).ok_or_else(|| {
+            CoreError::ValueError(ErrorContext::new(
+                "Failed to convert PI constant to target type".to_string(),
+            ))
+        })?;
+        let one_eighty = T::from_f64(180.0).ok_or_else(|| {
+            CoreError::ValueError(ErrorContext::new(
+                "Failed to convert 180.0 to target type".to_string(),
+            ))
+        })?;
+        Ok(*self * pi / one_eighty)
     }
 
-    fn to_degrees(self) -> Self {
-        let pi = T::from_f64(std::f64::consts::PI).unwrap_or_else(|| {
-            // This should never fail for valid RealNumber types
-            panic!("Failed to convert PI constant to target type")
-        });
-        let one_eighty =
-            T::from_f64(180.0).unwrap_or_else(|| panic!("Failed to convert 180.0 to target type"));
-        self * one_eighty / pi
+    fn to_degrees(&self) -> CoreResult<Self> {
+        let pi = T::from_f64(std::f64::consts::PI).ok_or_else(|| {
+            CoreError::ValueError(ErrorContext::new(
+                "Failed to convert PI constant to target type".to_string(),
+            ))
+        })?;
+        let one_eighty = T::from_f64(180.0).ok_or_else(|| {
+            CoreError::ValueError(ErrorContext::new(
+                "Failed to convert 180.0 to target type".to_string(),
+            ))
+        })?;
+        Ok(*self * one_eighty / pi)
     }
 }
 
@@ -913,7 +923,7 @@ mod tests {
         assert!(a.is_even());
         assert!(!a.is_odd());
         assert_eq!(a.mod_pow(2, 10), 4); // 12^2 mod 10 = 4
-        assert_eq!(5_i32.factorial(), 120);
+        assert_eq!(5_i32.factorial().unwrap(), 120);
         assert_eq!(5_i32.binomial(2), 10); // 5 choose 2 = 10
     }
 
@@ -935,12 +945,12 @@ mod tests {
     #[test]
     fn test_angle_conversion() {
         let degrees: f64 = 180.0;
-        let radians = degrees.to_radians();
-        assert_eq!(radians, std::f64::consts::PI);
+        let radians = degrees.to_radians().unwrap();
+        assert!((radians - std::f64::consts::PI).abs() < 1e-10);
 
         let radians: f64 = std::f64::consts::PI / 2.0;
-        let degrees = radians.to_degrees();
-        assert_eq!(degrees, 90.0);
+        let degrees = radians.to_degrees().unwrap();
+        assert!((degrees - 90.0).abs() < 1e-10);
     }
 
     #[test]

@@ -549,7 +549,7 @@ impl SimdIoAccelerator {
     }
 
     /// Batch process multiple arrays using SIMD
-    pub fn batch_process<T: Send + Sync>(
+    pub fn batch_process<T>(
         arrays: &[ArrayView1<T>],
         processor: impl Fn(&ArrayView1<T>) -> Array1<T> + Send + Sync,
     ) -> Vec<Array1<T>>

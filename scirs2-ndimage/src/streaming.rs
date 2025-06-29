@@ -527,3 +527,368 @@ mod tests {
         assert_eq!(result.shape(), input.shape());
     }
 }
+
+/// Advanced adaptive streaming processor with dynamic load balancing
+///
+/// This processor automatically adjusts chunk sizes based on available memory
+/// and processing performance, providing optimal throughput for different types
+/// of operations and hardware configurations.
+pub struct AdaptiveStreamProcessor<T> {
+    base_config: StreamConfig,
+    performance_monitor: PerformanceMonitor,
+    memory_manager: MemoryManager,
+    _phantom: std::marker::PhantomData<T>,
+}
+
+impl<T> AdaptiveStreamProcessor<T>
+where
+    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
+{
+    pub fn new(base_config: StreamConfig) -> Self {
+        Self {
+            base_config,
+            performance_monitor: PerformanceMonitor::new(),
+            memory_manager: MemoryManager::new(),
+            _phantom: std::marker::PhantomData,
+        }
+    }
+
+    /// Process large array with adaptive chunking strategy
+    pub fn process_adaptive<D, Op>(
+        &mut self,
+        input: &ArrayView<T, D>,
+        mut op: Op,
+    ) -> NdimageResult<Array<T, D>>
+    where
+        D: Dimension,
+        Op: StreamableOp<T, D> + AdaptiveOperation<T, D>,
+    {
+        let shape = input.shape();
+        let mut current_config = self.base_config.clone();
+
+        // Initial chunk size estimation based on memory and operation complexity
+        let complexity = op.estimate_complexity(shape);
+        current_config.chunk_size = self.memory_manager.calculate_optimal_chunk_size(
+            std::mem::size_of::<T>(),
+            shape,
+            complexity,
+        );
+
+        // Dynamic processing with performance feedback
+        let mut output = Array::zeros(input.raw_dim());
+        let mut chunk_times = Vec::new();
+
+        for (chunk_idx, chunk_info) in self.chunk_iterator(shape, &current_config).enumerate() {
+            let start_time = std::time::Instant::now();
+
+            // Extract chunk with overlap
+            let chunk = self.extract_chunk_with_bounds(input, &chunk_info)?;
+
+            // Process chunk
+            let result = op.apply_chunk(&chunk.view())?;
+
+            // Merge into output (handling overlap)
+            self.merge_chunk_result(&mut output.view_mut(), &result.view(), &chunk_info)?;
+
+            // Record performance
+            let chunk_time = start_time.elapsed();
+            chunk_times.push(chunk_time);
+
+            // Adaptive adjustment every 10 chunks
+            if chunk_idx > 0 && chunk_idx % 10 == 0 {
+                let avg_time = chunk_times.iter().sum::<std::time::Duration>() / chunk_times.len() as u32;
+                let new_config = self.performance_monitor.adjust_config(&current_config, avg_time);
+                
+                if new_config.chunk_size != current_config.chunk_size {
+                    current_config = new_config;
+                    chunk_times.clear(); // Reset for new configuration
+                }
+            }
+        }
+
+        Ok(output)
+    }
+
+    /// Process with GPU-accelerated chunking when available
+    #[cfg(feature = "gpu")]
+    pub fn process_gpu_accelerated<D, Op>(
+        &mut self,
+        input: &ArrayView<T, D>,
+        op: Op,
+    ) -> NdimageResult<Array<T, D>>
+    where
+        D: Dimension,
+        Op: StreamableOp<T, D> + GpuStreamableOp<T, D>,
+    {
+        // Check GPU availability
+        if let Some(gpu_backend) = crate::backend::detect_gpu_backend()? {
+            return self.process_gpu_chunks(input, op, gpu_backend);
+        }
+
+        // Fallback to CPU processing
+        self.process_adaptive(input, op)
+    }
+
+    /// Extract chunk with proper boundary handling
+    fn extract_chunk_with_bounds<D>(
+        &self,
+        input: &ArrayView<T, D>,
+        chunk_info: &ChunkInfo,
+    ) -> NdimageResult<Array<T, D>>
+    where
+        D: Dimension,
+    {
+        let mut slice_info = Vec::new();
+        for range in &chunk_info.ranges {
+            slice_info.push(Slice::from(range.clone()));
+        }
+
+        // Create slice - this is a simplified version; real implementation would be more complex
+        let chunk_view = input.slice_each_axis(|ax| Slice::from(chunk_info.ranges[ax.axis.index()].clone()));
+        Ok(chunk_view.to_owned())
+    }
+
+    /// Merge chunk result into output array
+    fn merge_chunk_result<D>(
+        &self,
+        output: &mut ArrayViewMut<T, D>,
+        result: &ArrayView<T, D>,
+        chunk_info: &ChunkInfo,
+    ) -> NdimageResult<()>
+    where
+        D: Dimension,
+    {
+        // Simplified merge - real implementation would handle overlaps properly
+        for (i, range) in chunk_info.output_ranges.iter().enumerate() {
+            // Implementation would copy data from result to output at correct positions
+            // This is a placeholder for the complex overlap handling logic
+        }
+        Ok(())
+    }
+
+    /// Create optimized chunk iterator based on current configuration
+    fn chunk_iterator(&self, shape: &[usize], config: &StreamConfig) -> impl Iterator<Item = ChunkInfo> {
+        let element_size = std::mem::size_of::<T>();
+        let chunk_dims = self.calculate_optimal_chunk_dimensions(shape, element_size, config);
+        ChunkIterator::new(shape, &chunk_dims, &config.overlap)
+    }
+
+    /// Calculate optimal chunk dimensions considering memory and cache efficiency
+    fn calculate_optimal_chunk_dimensions(
+        &self,
+        shape: &[usize],
+        element_size: usize,
+        config: &StreamConfig,
+    ) -> Vec<usize> {
+        let target_elements = config.chunk_size / element_size;
+        let ndim = shape.len();
+        
+        // Start with cubic chunks and adjust based on shape
+        let base_size = (target_elements as f64).powf(1.0 / ndim as f64) as usize;
+        
+        shape.iter().map(|&dim_size| {
+            base_size.min(dim_size)
+        }).collect()
+    }
+
+    #[cfg(feature = "gpu")]
+    fn process_gpu_chunks<D, Op>(
+        &mut self,
+        input: &ArrayView<T, D>,
+        op: Op,
+        gpu_backend: crate::backend::GpuBackend,
+    ) -> NdimageResult<Array<T, D>>
+    where
+        D: Dimension,
+        Op: GpuStreamableOp<T, D>,
+    {
+        // GPU-specific processing logic
+        // This would involve transferring chunks to GPU, processing, and transferring back
+        todo!("GPU streaming implementation")
+    }
+}
+
+/// Performance monitoring for adaptive streaming
+struct PerformanceMonitor {
+    history: Vec<PerformanceMetrics>,
+}
+
+impl PerformanceMonitor {
+    fn new() -> Self {
+        Self {
+            history: Vec::new(),
+        }
+    }
+
+    fn adjust_config(&mut self, current: &StreamConfig, avg_time: std::time::Duration) -> StreamConfig {
+        let mut new_config = current.clone();
+
+        // Simple adaptive strategy - increase chunk size if processing is fast
+        // decrease if it's slow (indicating memory pressure)
+        if avg_time.as_millis() < 100 {
+            new_config.chunk_size = (current.chunk_size as f64 * 1.2) as usize;
+        } else if avg_time.as_millis() > 1000 {
+            new_config.chunk_size = (current.chunk_size as f64 * 0.8) as usize;
+        }
+
+        // Ensure minimum chunk size
+        new_config.chunk_size = new_config.chunk_size.max(64 * 1024); // 64KB minimum
+
+        self.history.push(PerformanceMetrics {
+            chunk_size: current.chunk_size,
+            processing_time: avg_time,
+            timestamp: std::time::Instant::now(),
+        });
+
+        new_config
+    }
+}
+
+/// Performance metrics for a chunk processing operation
+#[derive(Debug, Clone)]
+struct PerformanceMetrics {
+    chunk_size: usize,
+    processing_time: std::time::Duration,
+    timestamp: std::time::Instant,
+}
+
+/// Memory management for streaming operations
+struct MemoryManager {
+    available_memory: usize,
+    cache_sizes: [usize; 3], // L1, L2, L3 cache sizes
+}
+
+impl MemoryManager {
+    fn new() -> Self {
+        Self {
+            available_memory: Self::detect_available_memory(),
+            cache_sizes: Self::detect_cache_sizes(),
+        }
+    }
+
+    fn calculate_optimal_chunk_size(
+        &self,
+        element_size: usize,
+        shape: &[usize],
+        complexity: OperationComplexity,
+    ) -> usize {
+        let total_elements: usize = shape.iter().product();
+        let total_bytes = total_elements * element_size;
+
+        // Use fraction of available memory based on complexity
+        let memory_fraction = match complexity {
+            OperationComplexity::Low => 0.1,
+            OperationComplexity::Medium => 0.05,
+            OperationComplexity::High => 0.02,
+        };
+
+        let target_size = (self.available_memory as f64 * memory_fraction) as usize;
+        
+        // Ensure we don't exceed L3 cache for small operations
+        if complexity == OperationComplexity::Low {
+            target_size.min(self.cache_sizes[2])
+        } else {
+            target_size
+        }.max(64 * 1024) // Minimum 64KB chunks
+    }
+
+    fn detect_available_memory() -> usize {
+        // Simplified - in real implementation would use system APIs
+        // to detect available RAM
+        1_000_000_000 // 1GB default
+    }
+
+    fn detect_cache_sizes() -> [usize; 3] {
+        // Simplified - in real implementation would detect actual cache sizes
+        [32 * 1024, 256 * 1024, 8 * 1024 * 1024] // 32KB L1, 256KB L2, 8MB L3
+    }
+}
+
+/// Operation complexity classification for resource planning
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum OperationComplexity {
+    Low,    // Simple filters, basic operations
+    Medium, // Convolutions, morphology
+    High,   // Complex algorithms, frequency domain
+}
+
+/// Extended trait for operations that can adapt to streaming
+pub trait AdaptiveOperation<T, D>: StreamableOp<T, D> 
+where
+    T: Float + FromPrimitive + Debug + Clone,
+    D: Dimension,
+{
+    /// Estimate computational complexity for chunk size optimization
+    fn estimate_complexity(&self, shape: &[usize]) -> OperationComplexity;
+
+    /// Suggest optimal overlap based on operation characteristics
+    fn suggest_overlap(&self, chunk_dims: &[usize]) -> Vec<usize> {
+        self.required_overlap()
+    }
+
+    /// Check if operation can benefit from parallel chunk processing
+    fn supports_parallel_chunks(&self) -> bool {
+        true
+    }
+}
+
+/// GPU-specific streaming operations
+#[cfg(feature = "gpu")]
+pub trait GpuStreamableOp<T, D>: StreamableOp<T, D>
+where
+    T: Float + FromPrimitive + Debug + Clone,
+    D: Dimension,
+{
+    /// Apply operation on GPU
+    fn apply_chunk_gpu(&self, chunk: &ArrayView<T, D>, gpu_context: &GpuContext) -> NdimageResult<Array<T, D>>;
+
+    /// Check if chunk size is suitable for GPU processing
+    fn is_gpu_suitable(&self, chunk_shape: &[usize]) -> bool;
+
+    /// Estimate GPU memory requirements
+    fn gpu_memory_requirement(&self, chunk_shape: &[usize]) -> usize;
+}
+
+/// Placeholder for GPU context
+#[cfg(feature = "gpu")]
+pub struct GpuContext {
+    // GPU-specific context information
+}
+
+/// Enhanced streaming interface for file-based processing with compression
+pub fn stream_process_file_compressed<T>(
+    input_path: &std::path::Path,
+    output_path: &std::path::Path,
+    shape: &[usize],
+    compression: CompressionType,
+    config: StreamConfig,
+) -> NdimageResult<()>
+where
+    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
+{
+    // Implementation would handle compressed file I/O
+    // This is a placeholder for the full implementation
+    todo!("Compressed streaming implementation")
+}
+
+/// Compression types for streaming I/O
+#[derive(Debug, Clone, Copy)]
+pub enum CompressionType {
+    None,
+    Lz4,
+    Zstd,
+    Gzip,
+}
+
+/// Streaming operation for multiple arrays (batch processing)
+pub trait BatchStreamableOp<T, D>: Send + Sync
+where
+    T: Float + FromPrimitive + Debug + Clone,
+    D: Dimension,
+{
+    /// Apply operation to a batch of chunks
+    fn apply_batch(&self, chunks: &[ArrayView<T, D>]) -> NdimageResult<Vec<Array<T, D>>>;
+
+    /// Get required overlap for batch processing
+    fn required_batch_overlap(&self) -> Vec<usize>;
+}

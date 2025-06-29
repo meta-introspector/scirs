@@ -198,6 +198,7 @@ mod tests {
 
         let result = qmr(&identity, &b, options).unwrap();
         assert!(result.converged);
+        #[allow(clippy::needless_range_loop)]
         for i in 0..3 {
             assert!((result.x[i] - b[i]).abs() < 1e-10);
         }
@@ -209,7 +210,7 @@ mod tests {
         let diag = vec![2.0, 3.0, 4.0];
         let diagonal = DiagonalOperator::new(diag.clone());
         let b = vec![2.0, 6.0, 8.0];
-        let expected = vec![1.0, 2.0, 2.0];
+        let expected = [1.0, 2.0, 2.0];
 
         let options = QMROptions {
             rtol: 1e-10,
@@ -219,6 +220,7 @@ mod tests {
 
         let result = qmr(&diagonal, &b, options).unwrap();
         assert!(result.converged);
+        #[allow(clippy::needless_range_loop)]
         for i in 0..3 {
             assert!(
                 (result.x[i] - expected[i]).abs() < 1e-9,

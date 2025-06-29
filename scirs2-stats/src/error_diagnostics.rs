@@ -3,11 +3,8 @@
 //! This module provides comprehensive error diagnostics, monitoring, and intelligent
 //! recovery strategies for production statistical computing environments.
 
-use crate::error::{StatsError, StatsResult};
-use crate::error_handling_v2::{
-    EnhancedError, ErrorCode, ErrorContext, PerformanceImpact, RecoverySuggestion,
-};
-use crate::error_standardization::{ErrorMessages, RecoverySuggestions};
+use crate::error_handling_v2::ErrorCode;
+use crate::error_standardization::ErrorValidator;
 use std::collections::{HashMap, VecDeque};
 use std::sync::{
     atomic::{AtomicUsize, Ordering},

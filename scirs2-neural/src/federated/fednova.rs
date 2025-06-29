@@ -68,7 +68,7 @@ impl FedNova {
 }
 
 impl AggregationStrategy for FedNova {
-    fn aggregate(&mut self, updates: &[ClientUpdate]) -> Result<Vec<Array2<f32>>> {
+    fn aggregate(&mut self, updates: &[ClientUpdate], weights: &[f32]) -> Result<Vec<Array2<f32>>> {
         if updates.is_empty() {
             return Err(NeuralError::InvalidArgument(
                 "No updates to aggregate".to_string(),

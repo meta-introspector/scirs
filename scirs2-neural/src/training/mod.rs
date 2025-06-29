@@ -107,12 +107,14 @@
 pub mod gradient_accumulation;
 pub mod gradient_checkpointing;
 pub mod mixed_precision;
+pub mod progress_monitor;
 pub mod quantization_aware;
 pub mod sparse_training;
 
 pub use gradient_accumulation::*;
 pub use gradient_checkpointing::*;
 pub use mixed_precision::*;
+pub use progress_monitor::*;
 pub use quantization_aware::*;
 pub use sparse_training::*;
 

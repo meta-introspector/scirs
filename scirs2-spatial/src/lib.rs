@@ -322,6 +322,142 @@
 //! println!("Nearest neighbor indices: {:?}", indices);
 //! ```
 //!
+//! ### Ultra-Optimized SIMD Clustering
+//!
+//! ```
+//! use scirs2_spatial::{UltraSimdKMeans, UltraSimdNearestNeighbors};
+//! use ndarray::array;
+//!
+//! // Ultra-fast SIMD K-means clustering
+//! let points = array![
+//!     [0.0, 0.0], [0.1, 0.1], [0.0, 0.1],  // Cluster 1
+//!     [5.0, 5.0], [5.1, 5.1], [5.0, 5.1],  // Cluster 2
+//! ];
+//!
+//! let ultra_kmeans = UltraSimdKMeans::new(2)
+//!     .with_mixed_precision(true)
+//!     .with_block_size(256);
+//!
+//! let (centroids, assignments) = ultra_kmeans.fit(&points.view()).unwrap();
+//! println!("Centroids: {:?}", centroids);
+//! println!("Assignments: {:?}", assignments);
+//!
+//! // Ultra-fast SIMD nearest neighbors
+//! let nn_searcher = UltraSimdNearestNeighbors::new();
+//! let query_points = array![[0.05, 0.05], [5.05, 5.05]];
+//! let (indices, distances) = nn_searcher.simd_knn_ultra_fast(
+//!     &query_points.view(), &points.view(), 2
+//! ).unwrap();
+//! println!("NN indices: {:?}", indices);
+//! ```
+//!
+//! ### Memory Pool Optimization
+//!
+//! ```
+//! use scirs2_spatial::{DistancePool, ClusteringArena, global_distance_pool};
+//!
+//! // Use global memory pool for frequent allocations
+//! let pool = global_distance_pool();
+//! 
+//! // Get a reusable distance buffer
+//! let mut buffer = pool.get_distance_buffer(1000);
+//! 
+//! // Use buffer for computations...
+//! let data = buffer.as_mut_slice();
+//! data[0] = 42.0;
+//! 
+//! // Buffer automatically returns to pool on drop
+//! drop(buffer);
+//! 
+//! // Check pool performance
+//! let stats = pool.statistics();
+//! println!("Pool hit rate: {:.1}%", stats.hit_rate());
+//! 
+//! // Use arena for temporary objects
+//! use scirs2_spatial::ClusteringArena;
+//! let arena = ClusteringArena::new();
+//! let temp_vec = arena.alloc_temp_vec::<f64>(500);
+//! // Temporary objects are freed when arena is reset
+//! arena.reset();
+//! ```
+//!
+//! ### GPU-Accelerated Massive-Scale Computing
+//!
+//! ```
+//! use scirs2_spatial::{GpuDistanceMatrix, GpuKMeans, report_gpu_status};
+//! use ndarray::array;
+//!
+//! // Check GPU acceleration availability
+//! report_gpu_status();
+//!
+//! // GPU-accelerated distance matrix for massive datasets
+//! let points = array![
+//!     [0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0],
+//!     [2.0, 2.0], [3.0, 3.0], [4.0, 4.0], [5.0, 5.0],
+//! ];
+//!
+//! let gpu_matrix = GpuDistanceMatrix::new()?;
+//! let distances = gpu_matrix.compute_parallel(&points.view()).await?;
+//! println!("GPU distance matrix computed: {:?}", distances.shape());
+//!
+//! // GPU-accelerated K-means for massive clusters
+//! let gpu_kmeans = GpuKMeans::new(3)?
+//!     .with_batch_size(1024)
+//!     .with_tolerance(1e-6);
+//!
+//! let (centroids, assignments) = gpu_kmeans.fit(&points.view()).await?;
+//! println!("GPU K-means completed: {} centroids", centroids.nrows());
+//!
+//! // Hybrid CPU-GPU processing
+//! use scirs2_spatial::HybridProcessor;
+//! let processor = HybridProcessor::new()?;
+//! let strategy = processor.choose_strategy(points.nrows());
+//! println!("Optimal strategy: {:?}", strategy);
+//! ```
+//!
+//! ### Ultra-Optimized KD-Tree for Maximum Performance
+//!
+//! ```
+//! use scirs2_spatial::{UltraKDTree, KDTreeConfig};
+//! use ndarray::array;
+//!
+//! // Create points dataset
+//! let points = array![
+//!     [0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0],
+//!     [2.0, 2.0], [3.0, 3.0], [4.0, 4.0], [5.0, 5.0],
+//! ];
+//!
+//! // Configure ultra-optimized KD-Tree
+//! let config = KDTreeConfig::new()
+//!     .with_cache_aware_layout(true)    // Optimize for CPU cache
+//!     .with_vectorized_search(true)     // Use SIMD acceleration
+//!     .with_numa_aware(true)            // NUMA-aware construction
+//!     .with_parallel_construction(true, 1000);  // Parallel for large datasets
+//!
+//! // Build ultra-optimized tree
+//! let ultra_kdtree = UltraKDTree::new(&points.view(), config)?;
+//!
+//! // Ultra-fast k-nearest neighbors
+//! let query = array![2.1, 2.1];
+//! let (indices, distances) = ultra_kdtree.knn_search_ultra(&query.view(), 3)?;
+//! println!("Ultra-fast k-NN: indices={:?}, distances={:?}", indices, distances);
+//!
+//! // Batch processing for multiple queries
+//! let queries = array![[0.5, 0.5], [2.5, 2.5], [4.5, 4.5]];
+//! let (batch_indices, batch_distances) = ultra_kdtree.batch_knn_search(&queries.view(), 2)?;
+//! println!("Batch k-NN shape: {:?}", batch_indices.shape());
+//!
+//! // Range search with radius
+//! let range_results = ultra_kdtree.range_search(&query.view(), 1.0)?;
+//! println!("Points within radius 1.0: {} found", range_results.len());
+//!
+//! // Performance statistics
+//! let stats = ultra_kdtree.statistics();
+//! println!("Tree depth: {}, Construction time: {:.2}ms", 
+//!          stats.depth, stats.construction_time_ms);
+//! println!("Memory usage: {:.1} KB", stats.memory_usage_bytes as f64 / 1024.0);
+//! ```
+//!
 //! ### RRT Pathfinding
 //!
 //! ```
@@ -419,6 +555,12 @@ pub use kdtree::{KDTree, Rectangle};
 pub mod kdtree_optimized;
 pub use kdtree_optimized::KDTreeOptimized;
 
+// Ultra-optimized KD-Tree with advanced performance features
+pub mod kdtree_ultra;
+pub use kdtree_ultra::{
+    UltraKDTree, KDTreeConfig, TreeStatistics, BoundingBox as KDTreeBoundingBox,
+};
+
 // Ball-Tree for efficient nearest neighbor searches in high dimensions
 pub mod balltree;
 pub use balltree::BallTree;
@@ -491,7 +633,7 @@ pub use rtree::{RTree, Rectangle as RTreeRectangle};
 
 // Octree for 3D spatial searches
 pub mod octree;
-pub use octree::{BoundingBox, Octree};
+pub use octree::{BoundingBox as OctreeBoundingBox, Octree};
 
 // Quadtree for 2D spatial searches
 pub mod quadtree;
@@ -553,6 +695,36 @@ pub mod simd_distance;
 pub use simd_distance::{
     parallel_cdist, parallel_pdist, simd_euclidean_distance, simd_euclidean_distance_batch,
     simd_knn_search, simd_manhattan_distance, SimdMetric,
+};
+
+// Ultra-optimized SIMD clustering and distance operations
+pub use simd_distance::ultra_simd_clustering::{UltraSimdKMeans, UltraSimdNearestNeighbors};
+pub use simd_distance::mixed_precision_simd::{
+    simd_euclidean_distance_f32, simd_euclidean_distance_batch_f32,
+};
+pub use simd_distance::bench::{benchmark_distance_computation, report_simd_features, BenchmarkResults};
+
+// Ultra-optimized memory pool system for spatial algorithms
+pub mod memory_pool;
+pub use memory_pool::{
+    ArenaStatistics, ClusteringArena, DistanceBuffer, DistancePool, IndexBuffer, MatrixBuffer,
+    MemoryPoolConfig, PoolStatistics, global_clustering_arena, global_distance_pool,
+};
+
+// GPU acceleration for massive-scale spatial computations
+pub mod gpu_accel;
+pub use gpu_accel::{
+    GpuCapabilities, GpuDevice, GpuDistanceMatrix, GpuKMeans, GpuNearestNeighbors,
+    HybridProcessor, ProcessingStrategy, global_gpu_device, is_gpu_acceleration_available,
+    get_gpu_capabilities, report_gpu_status,
+};
+
+// Ultra-parallel algorithms with work-stealing and NUMA-aware optimizations
+pub mod ultra_parallel;
+pub use ultra_parallel::{
+    WorkStealingConfig, WorkStealingPool, UltraParallelDistanceMatrix, UltraParallelKMeans,
+    NumaTopology, ThreadAffinityStrategy, MemoryStrategy, PoolStatistics as UltraPoolStatistics,
+    initialize_global_pool, get_numa_topology, report_ultra_parallel_capabilities,
 };
 
 // Utility functions

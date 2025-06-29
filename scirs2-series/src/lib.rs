@@ -85,12 +85,33 @@
 //!   - Wrapper methods (forward selection, backward elimination, recursive elimination)
 //!   - Embedded methods (LASSO, Ridge, tree-based importance)
 //!   - Time series specific methods (lag-based, seasonal, cross-correlation, Granger causality)
+//! - Environmental and climate data analysis
+//!   - Temperature analysis (heat waves, growing degree days, climate normals)
+//!   - Precipitation analysis (drought detection, SPI, rainfall classification)
+//!   - Atmospheric analysis (storm detection, wind power, wind rose statistics)
+//!   - Climate indices (SOI, NAO, PDSI)
+//!   - Environmental stress index calculation
+//! - Biomedical signal processing
+//!   - ECG analysis (R-peak detection, HRV, arrhythmia detection)
+//!   - EEG analysis (seizure detection, frequency bands, connectivity)
+//!   - EMG analysis (muscle activation, fatigue detection, onset detection)
+//!   - Cross-signal synchronization and health assessment
+//! - Comprehensive visualization capabilities
+//!   - Interactive time series plotting with zoom and pan
+//!   - Forecasting visualization with confidence intervals
+//!   - Decomposition result visualization (trend, seasonal, residual components)
+//!   - Multi-series plotting and comparison
+//!   - Seasonal pattern visualization
+//!   - Anomaly and change point highlighting
+//!   - Dashboard generation utilities
+//!   - Export capabilities (PNG, SVG, HTML)
 //! - Utility functions for time series operations
 
 #![warn(missing_docs)]
 
 pub mod anomaly;
 pub mod arima_models;
+pub mod biomedical;
 pub mod causality;
 pub mod change_point;
 pub mod clustering;
@@ -102,6 +123,7 @@ pub mod diagnostics;
 pub mod dimensionality_reduction;
 pub mod enhanced_arma;
 pub mod ensemble_automl;
+pub mod environmental;
 pub mod error;
 pub mod feature_selection;
 pub mod features;
@@ -121,3 +143,4 @@ pub mod trends;
 pub mod utils;
 pub mod validation;
 pub mod var_models;
+pub mod visualization;

@@ -113,7 +113,7 @@ pub struct GradientCheckpointingManager<F: Float + Debug + Clone + Send + Sync +
     stats: CheckpointingStats,
 }
 
-impl<F: Float + Debug + Clone + Send + Sync + FromPrimitive> GradientCheckpointingManager<F> {
+impl<F: Float + Debug + Clone + Send + Sync + FromPrimitive + ndarray::ScalarOperand> GradientCheckpointingManager<F> {
     /// Create a new gradient checkpointing manager
     pub fn new(config: GradientCheckpointingConfig) -> Self {
         Self {
@@ -517,6 +517,18 @@ impl<F: Float + Debug + Clone + Send + Sync + FromPrimitive> GradientCheckpointi
     /// Get checkpointing statistics
     pub fn get_checkpointing_stats(&self) -> &CheckpointingStats {
         &self.stats
+    }
+
+    /// Get configuration
+    #[allow(dead_code)]
+    pub fn get_config(&self) -> &GradientCheckpointingConfig {
+        &self.config
+    }
+
+    /// Get number of checkpoints currently stored
+    #[allow(dead_code)]
+    pub fn num_checkpoints(&self) -> usize {
+        self.checkpoints.lock().unwrap().len()
     }
 
     /// Get current segments

@@ -976,3 +976,752 @@ fn current_timestamp() -> u64 {
         .unwrap_or_else(|_| Duration::from_secs(0))
         .as_secs()
 }
+
+/// Advanced anomaly detection system
+#[cfg(feature = "monitoring")]
+pub struct AdvancedAnomalyDetector {
+    /// Statistical anomaly detectors
+    statistical_detectors: HashMap<String, StatisticalDetector>,
+    /// Machine learning anomaly detectors
+    ml_detectors: HashMap<String, MLAnomalyDetector>,
+    /// Time series anomaly detectors
+    time_series_detectors: HashMap<String, TimeSeriesAnomalyDetector>,
+    /// Ensemble anomaly detector
+    ensemble_detector: Option<EnsembleAnomalyDetector>,
+    /// Anomaly history for learning
+    anomaly_history: VecDeque<AnomalyRecord>,
+    /// Alert thresholds
+    thresholds: AnomalyThresholds,
+}
+
+/// Statistical anomaly detector using multiple statistical methods
+#[cfg(feature = "monitoring")]
+#[derive(Debug, Clone)]
+pub struct StatisticalDetector {
+    /// Z-score threshold
+    z_score_threshold: f64,
+    /// IQR multiplier
+    iqr_multiplier: f64,
+    /// Modified Z-score threshold
+    modified_z_threshold: f64,
+    /// Historical data window
+    data_window: VecDeque<f64>,
+    /// Maximum window size
+    max_window_size: usize,
+}
+
+/// Machine learning anomaly detector
+#[cfg(feature = "monitoring")]
+pub struct MLAnomalyDetector {
+    /// Isolation forest parameters
+    isolation_forest_config: IsolationForestConfig,
+    /// One-class SVM parameters
+    svm_config: OneClassSVMConfig,
+    /// Local outlier factor parameters
+    lof_config: LOFConfig,
+    /// Training data for ML models
+    training_data: VecDeque<Vec<f64>>,
+    /// Model state
+    model_trained: bool,
+}
+
+/// Time series anomaly detector
+#[cfg(feature = "monitoring")]
+pub struct TimeSeriesAnomalyDetector {
+    /// ARIMA parameters
+    arima_config: ARIMAConfig,
+    /// Seasonal decomposition parameters
+    seasonal_config: SeasonalConfig,
+    /// Change point detection parameters
+    change_point_config: ChangePointConfig,
+    /// Historical time series data
+    time_series_data: VecDeque<TimeSeriesPoint>,
+    /// Forecast model
+    forecast_model: Option<ForecastModel>,
+}
+
+/// Ensemble anomaly detector combining multiple methods
+#[cfg(feature = "monitoring")]
+pub struct EnsembleAnomalyDetector {
+    /// Detector weights
+    detector_weights: HashMap<String, f64>,
+    /// Voting threshold
+    voting_threshold: f64,
+    /// Confidence threshold
+    confidence_threshold: f64,
+}
+
+#[cfg(feature = "monitoring")]
+impl EnsembleAnomalyDetector {
+    /// Create a new ensemble anomaly detector
+    pub fn new(detector_weights: HashMap<String, f64>, voting_threshold: f64, confidence_threshold: f64) -> Self {
+        EnsembleAnomalyDetector {
+            detector_weights,
+            voting_threshold,
+            confidence_threshold,
+        }
+    }
+
+    /// Detect ensemble anomalies by combining multiple detector results
+    pub fn detect_ensemble_anomalies(
+        &self,
+        _metrics: &HashMap<String, f64>,
+        timestamp: u64,
+    ) -> Result<Vec<AnomalyRecord>> {
+        // Placeholder ensemble detection logic
+        // In a full implementation, this would combine results from multiple detectors
+        // using voting, weighted averaging, or other ensemble methods
+        
+        // For now, return empty results
+        Ok(vec![])
+    }
+}
+
+/// Anomaly record for historical analysis
+#[cfg(feature = "monitoring")]
+#[derive(Debug, Clone)]
+pub struct AnomalyRecord {
+    /// Timestamp
+    pub timestamp: u64,
+    /// Metric name
+    pub metric_name: String,
+    /// Anomaly value
+    pub value: f64,
+    /// Anomaly score
+    pub anomaly_score: f64,
+    /// Detection method
+    pub detection_method: String,
+    /// Severity level
+    pub severity: AnomalySeverity,
+    /// Context information
+    pub context: HashMap<String, String>,
+}
+
+/// Anomaly severity levels
+#[cfg(feature = "monitoring")]
+#[derive(Debug, Clone, PartialEq)]
+pub enum AnomalySeverity {
+    Low,
+    Medium,
+    High,
+    Critical,
+}
+
+/// Anomaly detection thresholds
+#[cfg(feature = "monitoring")]
+#[derive(Debug, Clone)]
+pub struct AnomalyThresholds {
+    /// Low severity threshold
+    pub low_threshold: f64,
+    /// Medium severity threshold
+    pub medium_threshold: f64,
+    /// High severity threshold
+    pub high_threshold: f64,
+    /// Critical severity threshold
+    pub critical_threshold: f64,
+}
+
+impl Default for AnomalyThresholds {
+    fn default() -> Self {
+        AnomalyThresholds {
+            low_threshold: 2.0,      // 2 sigma
+            medium_threshold: 2.5,   // 2.5 sigma
+            high_threshold: 3.0,     // 3 sigma
+            critical_threshold: 4.0, // 4 sigma
+        }
+    }
+}
+
+/// Time series data point
+#[cfg(feature = "monitoring")]
+#[derive(Debug, Clone)]
+pub struct TimeSeriesPoint {
+    pub timestamp: u64,
+    pub value: f64,
+    pub metadata: HashMap<String, String>,
+}
+
+/// Configuration structures for various anomaly detection methods
+#[cfg(feature = "monitoring")]
+#[derive(Debug, Clone)]
+pub struct IsolationForestConfig {
+    pub n_trees: usize,
+    pub contamination: f64,
+    pub max_samples: usize,
+}
+
+#[cfg(feature = "monitoring")]
+#[derive(Debug, Clone)]
+pub struct OneClassSVMConfig {
+    pub nu: f64,
+    pub gamma: f64,
+    pub kernel: String,
+}
+
+#[cfg(feature = "monitoring")]
+#[derive(Debug, Clone)]
+pub struct LOFConfig {
+    pub n_neighbors: usize,
+    pub contamination: f64,
+}
+
+#[cfg(feature = "monitoring")]
+#[derive(Debug, Clone)]
+pub struct ARIMAConfig {
+    pub p: usize, // AR order
+    pub d: usize, // Differencing order
+    pub q: usize, // MA order
+}
+
+#[cfg(feature = "monitoring")]
+#[derive(Debug, Clone)]
+pub struct SeasonalConfig {
+    pub seasonal_period: usize,
+    pub trend_component: bool,
+    pub seasonal_component: bool,
+}
+
+#[cfg(feature = "monitoring")]
+#[derive(Debug, Clone)]
+pub struct ChangePointConfig {
+    pub window_size: usize,
+    pub significance_level: f64,
+}
+
+#[cfg(feature = "monitoring")]
+#[derive(Debug, Clone)]
+pub struct ForecastModel {
+    pub coefficients: Vec<f64>,
+    pub forecast_horizon: usize,
+    pub confidence_interval: f64,
+}
+
+#[cfg(feature = "monitoring")]
+impl AdvancedAnomalyDetector {
+    /// Create a new advanced anomaly detector
+    pub fn new() -> Self {
+        AdvancedAnomalyDetector {
+            statistical_detectors: HashMap::new(),
+            ml_detectors: HashMap::new(),
+            time_series_detectors: HashMap::new(),
+            ensemble_detector: None,
+            anomaly_history: VecDeque::with_capacity(10000),
+            thresholds: AnomalyThresholds::default(),
+        }
+    }
+
+    /// Add a statistical detector for a metric
+    pub fn add_statistical_detector(&mut self, metric_name: String, detector: StatisticalDetector) {
+        self.statistical_detectors.insert(metric_name, detector);
+    }
+
+    /// Add a machine learning detector for a metric
+    pub fn add_ml_detector(&mut self, metric_name: String, detector: MLAnomalyDetector) {
+        self.ml_detectors.insert(metric_name, detector);
+    }
+
+    /// Add a time series detector for a metric
+    pub fn add_time_series_detector(&mut self, metric_name: String, detector: TimeSeriesAnomalyDetector) {
+        self.time_series_detectors.insert(metric_name, detector);
+    }
+
+    /// Configure ensemble detector
+    pub fn configure_ensemble(&mut self, detector: EnsembleAnomalyDetector) {
+        self.ensemble_detector = Some(detector);
+    }
+
+    /// Detect anomalies in new data
+    pub fn detect_anomalies(&mut self, metrics: &HashMap<String, f64>) -> Result<Vec<AnomalyRecord>> {
+        let mut anomalies = Vec::new();
+        let timestamp = current_timestamp();
+
+        for (metric_name, &value) in metrics {
+            // Statistical detection
+            if let Some(detector) = self.statistical_detectors.get_mut(metric_name) {
+                if let Some(anomaly) = detector.detect_anomaly(value, metric_name, timestamp)? {
+                    anomalies.push(anomaly);
+                }
+            }
+
+            // ML detection
+            if let Some(detector) = self.ml_detectors.get_mut(metric_name) {
+                if let Some(anomaly) = detector.detect_anomaly(value, metric_name, timestamp)? {
+                    anomalies.push(anomaly);
+                }
+            }
+
+            // Time series detection
+            if let Some(detector) = self.time_series_detectors.get_mut(metric_name) {
+                if let Some(anomaly) = detector.detect_anomaly(value, metric_name, timestamp)? {
+                    anomalies.push(anomaly);
+                }
+            }
+        }
+
+        // Ensemble detection
+        if let Some(ref ensemble) = self.ensemble_detector {
+            let ensemble_anomalies = ensemble.detect_ensemble_anomalies(metrics, timestamp)?;
+            anomalies.extend(ensemble_anomalies);
+        }
+
+        // Update anomaly history
+        for anomaly in &anomalies {
+            self.anomaly_history.push_back(anomaly.clone());
+            if self.anomaly_history.len() > 10000 {
+                self.anomaly_history.pop_front();
+            }
+        }
+
+        Ok(anomalies)
+    }
+
+    /// Get anomaly patterns and insights
+    pub fn get_anomaly_insights(&self, lookback_hours: u64) -> AnomalyInsights {
+        let cutoff_time = current_timestamp() - (lookback_hours * 3600);
+        let recent_anomalies: Vec<_> = self.anomaly_history
+            .iter()
+            .filter(|a| a.timestamp >= cutoff_time)
+            .collect();
+
+        let total_anomalies = recent_anomalies.len();
+        let critical_anomalies = recent_anomalies.iter()
+            .filter(|a| a.severity == AnomalySeverity::Critical)
+            .count();
+        
+        // Calculate anomaly frequency by metric
+        let mut metric_frequencies = HashMap::new();
+        for anomaly in &recent_anomalies {
+            *metric_frequencies.entry(anomaly.metric_name.clone()).or_insert(0) += 1;
+        }
+
+        // Calculate anomaly frequency by detection method
+        let mut method_frequencies = HashMap::new();
+        for anomaly in &recent_anomalies {
+            *method_frequencies.entry(anomaly.detection_method.clone()).or_insert(0) += 1;
+        }
+
+        // Identify trending anomalies
+        let trending_metrics = self.identify_trending_anomalies(&recent_anomalies);
+
+        AnomalyInsights {
+            total_anomalies,
+            critical_anomalies,
+            anomaly_rate: total_anomalies as f64 / lookback_hours as f64,
+            metric_frequencies,
+            method_frequencies,
+            trending_metrics,
+            most_anomalous_metric: metric_frequencies
+                .iter()
+                .max_by_key(|(_, &count)| count)
+                .map(|(metric, _)| metric.clone()),
+        }
+    }
+
+    /// Identify trending anomalies
+    fn identify_trending_anomalies(&self, anomalies: &[&AnomalyRecord]) -> Vec<String> {
+        // Simple trending detection based on recent frequency
+        let mut recent_counts = HashMap::new();
+        let current_time = current_timestamp();
+        let recent_threshold = 3600; // 1 hour
+
+        for anomaly in anomalies {
+            if current_time - anomaly.timestamp <= recent_threshold {
+                *recent_counts.entry(anomaly.metric_name.clone()).or_insert(0) += 1;
+            }
+        }
+
+        recent_counts
+            .into_iter()
+            .filter(|(_, count)| *count >= 3) // At least 3 anomalies in recent period
+            .map(|(metric, _)| metric)
+            .collect()
+    }
+
+    /// Update detector configurations based on feedback
+    pub fn update_detector_configurations(&mut self, feedback: AnomalyFeedback) -> Result<()> {
+        match feedback.feedback_type {
+            FeedbackType::FalsePositive => {
+                // Increase thresholds for the detector that generated this anomaly
+                self.adjust_thresholds_for_detector(&feedback.detection_method, 0.1)?;
+            },
+            FeedbackType::FalseNegative => {
+                // Decrease thresholds for the detector
+                self.adjust_thresholds_for_detector(&feedback.detection_method, -0.1)?;
+            },
+            FeedbackType::ConfirmedAnomaly => {
+                // No adjustment needed, but can be used for retraining
+            }
+        }
+        Ok(())
+    }
+
+    fn adjust_thresholds_for_detector(&mut self, detection_method: &str, adjustment: f64) -> Result<()> {
+        // Adjust thresholds based on feedback
+        match detection_method {
+            "statistical" => {
+                for detector in self.statistical_detectors.values_mut() {
+                    detector.z_score_threshold += adjustment;
+                    detector.z_score_threshold = detector.z_score_threshold.max(1.5).min(5.0);
+                }
+            },
+            "ml" => {
+                // Adjust ML detector parameters
+                for detector in self.ml_detectors.values_mut() {
+                    detector.isolation_forest_config.contamination += adjustment * 0.01;
+                    detector.isolation_forest_config.contamination = 
+                        detector.isolation_forest_config.contamination.max(0.01).min(0.5);
+                }
+            },
+            _ => {}
+        }
+        Ok(())
+    }
+}
+
+#[cfg(feature = "monitoring")]
+impl StatisticalDetector {
+    /// Create a new statistical detector
+    pub fn new(z_score_threshold: f64, iqr_multiplier: f64, max_window_size: usize) -> Self {
+        StatisticalDetector {
+            z_score_threshold,
+            iqr_multiplier,
+            modified_z_threshold: z_score_threshold * 0.6745, // Median-based
+            data_window: VecDeque::with_capacity(max_window_size),
+            max_window_size,
+        }
+    }
+
+    /// Detect anomaly using statistical methods
+    pub fn detect_anomaly(&mut self, value: f64, metric_name: &str, timestamp: u64) -> Result<Option<AnomalyRecord>> {
+        // Add value to window
+        self.data_window.push_back(value);
+        if self.data_window.len() > self.max_window_size {
+            self.data_window.pop_front();
+        }
+
+        // Need sufficient data for meaningful statistics
+        if self.data_window.len() < 10 {
+            return Ok(None);
+        }
+
+        let values: Vec<f64> = self.data_window.iter().copied().collect();
+        
+        // Z-score based detection
+        let mean = values.iter().sum::<f64>() / values.len() as f64;
+        let variance = values.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / values.len() as f64;
+        let std_dev = variance.sqrt();
+        
+        if std_dev > 0.0 {
+            let z_score = (value - mean) / std_dev;
+            
+            if z_score.abs() > self.z_score_threshold {
+                let severity = if z_score.abs() > 4.0 {
+                    AnomalySeverity::Critical
+                } else if z_score.abs() > 3.0 {
+                    AnomalySeverity::High
+                } else if z_score.abs() > 2.5 {
+                    AnomalySeverity::Medium
+                } else {
+                    AnomalySeverity::Low
+                };
+
+                return Ok(Some(AnomalyRecord {
+                    timestamp,
+                    metric_name: metric_name.to_string(),
+                    value,
+                    anomaly_score: z_score.abs(),
+                    detection_method: "statistical_zscore".to_string(),
+                    severity,
+                    context: [
+                        ("mean".to_string(), mean.to_string()),
+                        ("std_dev".to_string(), std_dev.to_string()),
+                        ("z_score".to_string(), z_score.to_string()),
+                    ].iter().cloned().collect(),
+                }));
+            }
+        }
+
+        // IQR based detection
+        let mut sorted_values = values.clone();
+        sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+        
+        let q1_idx = sorted_values.len() / 4;
+        let q3_idx = (3 * sorted_values.len()) / 4;
+        let q1 = sorted_values[q1_idx];
+        let q3 = sorted_values[q3_idx];
+        let iqr = q3 - q1;
+        
+        if iqr > 0.0 {
+            let lower_bound = q1 - self.iqr_multiplier * iqr;
+            let upper_bound = q3 + self.iqr_multiplier * iqr;
+            
+            if value < lower_bound || value > upper_bound {
+                let distance_from_bounds = if value < lower_bound {
+                    lower_bound - value
+                } else {
+                    value - upper_bound
+                };
+                
+                let severity = if distance_from_bounds > 3.0 * iqr {
+                    AnomalySeverity::Critical
+                } else if distance_from_bounds > 2.0 * iqr {
+                    AnomalySeverity::High
+                } else if distance_from_bounds > 1.5 * iqr {
+                    AnomalySeverity::Medium
+                } else {
+                    AnomalySeverity::Low
+                };
+
+                return Ok(Some(AnomalyRecord {
+                    timestamp,
+                    metric_name: metric_name.to_string(),
+                    value,
+                    anomaly_score: distance_from_bounds / iqr,
+                    detection_method: "statistical_iqr".to_string(),
+                    severity,
+                    context: [
+                        ("q1".to_string(), q1.to_string()),
+                        ("q3".to_string(), q3.to_string()),
+                        ("iqr".to_string(), iqr.to_string()),
+                        ("distance_from_bounds".to_string(), distance_from_bounds.to_string()),
+                    ].iter().cloned().collect(),
+                }));
+            }
+        }
+
+        Ok(None)
+    }
+}
+
+#[cfg(feature = "monitoring")]
+impl MLAnomalyDetector {
+    /// Create a new ML anomaly detector
+    pub fn new() -> Self {
+        MLAnomalyDetector {
+            isolation_forest_config: IsolationForestConfig {
+                n_trees: 100,
+                contamination: 0.1,
+                max_samples: 256,
+            },
+            svm_config: OneClassSVMConfig {
+                nu: 0.1,
+                gamma: 0.1,
+                kernel: "rbf".to_string(),
+            },
+            lof_config: LOFConfig {
+                n_neighbors: 20,
+                contamination: 0.1,
+            },
+            training_data: VecDeque::with_capacity(1000),
+            model_trained: false,
+        }
+    }
+
+    /// Detect anomaly using ML methods
+    pub fn detect_anomaly(&mut self, value: f64, metric_name: &str, timestamp: u64) -> Result<Option<AnomalyRecord>> {
+        // Add to training data
+        self.training_data.push_back(vec![value]);
+        if self.training_data.len() > 1000 {
+            self.training_data.pop_front();
+        }
+
+        // Need sufficient data to train models
+        if self.training_data.len() < 50 {
+            return Ok(None);
+        }
+
+        // Simplified isolation forest implementation
+        let anomaly_score = self.simplified_isolation_forest_score(value)?;
+        
+        if anomaly_score > 0.6 { // Threshold for anomaly
+            let severity = if anomaly_score > 0.9 {
+                AnomalySeverity::Critical
+            } else if anomaly_score > 0.8 {
+                AnomalySeverity::High
+            } else if anomaly_score > 0.7 {
+                AnomalySeverity::Medium
+            } else {
+                AnomalySeverity::Low
+            };
+
+            return Ok(Some(AnomalyRecord {
+                timestamp,
+                metric_name: metric_name.to_string(),
+                value,
+                anomaly_score,
+                detection_method: "ml_isolation_forest".to_string(),
+                severity,
+                context: [
+                    ("isolation_score".to_string(), anomaly_score.to_string()),
+                    ("training_samples".to_string(), self.training_data.len().to_string()),
+                ].iter().cloned().collect(),
+            }));
+        }
+
+        Ok(None)
+    }
+
+    /// Simplified isolation forest scoring
+    fn simplified_isolation_forest_score(&self, value: f64) -> Result<f64> {
+        let data: Vec<f64> = self.training_data.iter().map(|v| v[0]).collect();
+        
+        // Calculate percentile rank as a simple anomaly score
+        let mut sorted_data = data.clone();
+        sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+        
+        let position = sorted_data.iter().position(|&x| x >= value).unwrap_or(sorted_data.len());
+        let percentile = position as f64 / sorted_data.len() as f64;
+        
+        // Anomaly score based on distance from median
+        let distance_from_median = (percentile - 0.5).abs() * 2.0;
+        
+        Ok(distance_from_median)
+    }
+}
+
+#[cfg(feature = "monitoring")]
+impl TimeSeriesAnomalyDetector {
+    /// Create a new time series anomaly detector
+    pub fn new() -> Self {
+        TimeSeriesAnomalyDetector {
+            arima_config: ARIMAConfig { p: 1, d: 1, q: 1 },
+            seasonal_config: SeasonalConfig {
+                seasonal_period: 24, // 24 hours
+                trend_component: true,
+                seasonal_component: true,
+            },
+            change_point_config: ChangePointConfig {
+                window_size: 50,
+                significance_level: 0.05,
+            },
+            time_series_data: VecDeque::with_capacity(1000),
+            forecast_model: None,
+        }
+    }
+
+    /// Detect anomaly using time series methods
+    pub fn detect_anomaly(&mut self, value: f64, metric_name: &str, timestamp: u64) -> Result<Option<AnomalyRecord>> {
+        // Add to time series data
+        self.time_series_data.push_back(TimeSeriesPoint {
+            timestamp,
+            value,
+            metadata: HashMap::new(),
+        });
+        
+        if self.time_series_data.len() > 1000 {
+            self.time_series_data.pop_front();
+        }
+
+        // Need sufficient data for time series analysis
+        if self.time_series_data.len() < 50 {
+            return Ok(None);
+        }
+
+        // Simple change point detection
+        let anomaly_score = self.detect_change_point(value)?;
+        
+        if anomaly_score > 2.0 { // Threshold for anomaly
+            let severity = if anomaly_score > 5.0 {
+                AnomalySeverity::Critical
+            } else if anomaly_score > 4.0 {
+                AnomalySeverity::High
+            } else if anomaly_score > 3.0 {
+                AnomalySeverity::Medium
+            } else {
+                AnomalySeverity::Low
+            };
+
+            return Ok(Some(AnomalyRecord {
+                timestamp,
+                metric_name: metric_name.to_string(),
+                value,
+                anomaly_score,
+                detection_method: "time_series_change_point".to_string(),
+                severity,
+                context: [
+                    ("change_point_score".to_string(), anomaly_score.to_string()),
+                    ("window_size".to_string(), self.change_point_config.window_size.to_string()),
+                ].iter().cloned().collect(),
+            }));
+        }
+
+        Ok(None)
+    }
+
+    /// Simple change point detection
+    fn detect_change_point(&self, current_value: f64) -> Result<f64> {
+        let window_size = self.change_point_config.window_size.min(self.time_series_data.len());
+        if window_size < 10 {
+            return Ok(0.0);
+        }
+
+        let recent_data: Vec<f64> = self.time_series_data
+            .iter()
+            .rev()
+            .take(window_size)
+            .map(|p| p.value)
+            .collect();
+
+        let half_window = window_size / 2;
+        let first_half: Vec<f64> = recent_data.iter().take(half_window).copied().collect();
+        let second_half: Vec<f64> = recent_data.iter().skip(half_window).copied().collect();
+
+        if first_half.is_empty() || second_half.is_empty() {
+            return Ok(0.0);
+        }
+
+        let mean1 = first_half.iter().sum::<f64>() / first_half.len() as f64;
+        let mean2 = second_half.iter().sum::<f64>() / second_half.len() as f64;
+        
+        let var1 = first_half.iter().map(|x| (x - mean1).powi(2)).sum::<f64>() / first_half.len() as f64;
+        let var2 = second_half.iter().map(|x| (x - mean2).powi(2)).sum::<f64>() / second_half.len() as f64;
+        
+        let pooled_std = ((var1 + var2) / 2.0).sqrt();
+        
+        if pooled_std > 0.0 {
+            let t_statistic = (mean2 - mean1).abs() / (pooled_std * (2.0 / window_size as f64).sqrt());
+            Ok(t_statistic)
+        } else {
+            Ok(0.0)
+        }
+    }
+}
+
+/// Anomaly insights summary
+#[cfg(feature = "monitoring")]
+#[derive(Debug, Clone)]
+pub struct AnomalyInsights {
+    pub total_anomalies: usize,
+    pub critical_anomalies: usize,
+    pub anomaly_rate: f64,
+    pub metric_frequencies: HashMap<String, usize>,
+    pub method_frequencies: HashMap<String, usize>,
+    pub trending_metrics: Vec<String>,
+    pub most_anomalous_metric: Option<String>,
+}
+
+/// Feedback for anomaly detection tuning
+#[cfg(feature = "monitoring")]
+#[derive(Debug, Clone)]
+pub struct AnomalyFeedback {
+    pub anomaly_id: String,
+    pub feedback_type: FeedbackType,
+    pub detection_method: String,
+    pub metric_name: String,
+    pub timestamp: u64,
+}
+
+#[cfg(feature = "monitoring")]
+#[derive(Debug, Clone)]
+pub enum FeedbackType {
+    FalsePositive,
+    FalseNegative,
+    ConfirmedAnomaly,
+}
+
+// Stub implementations when monitoring feature is not enabled
+#[cfg(not(feature = "monitoring"))]
+pub struct AdvancedAnomalyDetector;
+
+#[cfg(not(feature = "monitoring"))]
+pub struct AnomalyInsights;

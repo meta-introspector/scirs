@@ -42,8 +42,8 @@ default = []
 blas = ["scirs2-core/linalg"]
 openblas = ["scirs2-core/openblas"] 
 netlib = ["scirs2-core/netlib"]
-intel-mkl = ["scirs2-core/intel-mkl"]  # Legacy feature compatibility
-mkl = ["intel-mkl"]  # Legacy feature compatibility
+# intel-mkl feature removed from scirs2-core to avoid conflicts
+# mkl = ["intel-mkl"]  # Legacy feature compatibility removed
 simd = ["scirs2-core/simd"]
 
 [[example]]

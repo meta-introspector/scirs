@@ -191,9 +191,11 @@ impl<
     ) -> Result<ArrayD<F>> {
         // Import attribution computation functions
         use super::attribution::{
-            compute_deeplift_attribution, compute_gradcam_attribution,
-            compute_guided_backprop_attribution, compute_integrated_gradients,
-            compute_saliency_attribution, compute_shap_attribution,
+            compute_deeplift_attribution, compute_expected_gradients_attribution,
+            compute_gradcam_attribution, compute_guided_backprop_attribution,
+            compute_input_x_gradient_attribution, compute_integrated_gradients,
+            compute_lrp_attribution, compute_saliency_attribution,
+            compute_shap_attribution, compute_smoothgrad_attribution,
         };
 
         match method {
@@ -221,10 +223,34 @@ impl<
                 *num_samples,
                 target_class,
             ),
-            _ => Err(NeuralError::NotImplementedError(format!(
-                "Attribution method {:?} not yet implemented",
-                method
-            ))),
+            AttributionMethod::LayerWiseRelevancePropagation { rule, epsilon } => {
+                compute_lrp_attribution(self, input, rule, *epsilon, target_class)
+            }
+            AttributionMethod::SmoothGrad {
+                base_method,
+                num_samples,
+                noise_std,
+            } => compute_smoothgrad_attribution(
+                self,
+                input,
+                base_method,
+                *num_samples,
+                *noise_std,
+                target_class,
+            ),
+            AttributionMethod::InputXGradient => {
+                compute_input_x_gradient_attribution(self, input, target_class)
+            }
+            AttributionMethod::ExpectedGradients {
+                num_references,
+                num_steps,
+            } => compute_expected_gradients_attribution(
+                self,
+                input,
+                *num_references,
+                *num_steps,
+                target_class,
+            ),
         }
     }
 

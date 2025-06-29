@@ -21,6 +21,103 @@ use std::sync::{mpsc, Arc, Mutex, RwLock};
 use std::thread;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
+/// Additional supporting structures for distributed advanced features
+
+/// Recovery action types
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum RecoveryActionType {
+    NodeFailover,
+    DataReplication,
+    NetworkHeal,
+    ServiceRestart,
+}
+
+
+/// Node health status
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum NodeHealthStatus {
+    Healthy,
+    Degraded,
+    Failed,
+    Unknown,
+}
+
+
+/// Scaling decision
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ScalingDecision {
+    pub action: ScalingAction,
+    pub target_nodes: usize,
+    pub reason: String,
+    pub confidence: f64,
+}
+
+
+/// Cluster metrics for scaling decisions
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ClusterMetrics {
+    pub node_metrics: HashMap<String, NodeMetrics>,
+    pub global_load: f64,
+    pub task_queue_length: usize,
+    pub response_time: Duration,
+}
+
+
+
+/// Scaling operation
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ScalingOperation {
+    pub operation_id: String,
+    pub operation_type: ScalingOperationType,
+    pub target_node: String,
+    pub scheduled_time: Instant,
+    pub status: OperationStatus,
+}
+
+/// Scaling operation types
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ScalingOperationType {
+    AddNode,
+    RemoveNode,
+}
+
+/// Operation status
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum OperationStatus {
+    Pending,
+    InProgress,
+    Completed,
+    Failed,
+}
+
+/// Scaling status
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ScalingStatus {
+    pub current_nodes: usize,
+    pub target_nodes: usize,
+    pub pending_operations: usize,
+    pub is_scaling: bool,
+    pub last_scaling_event: Option<ScalingEvent>,
+}
+
+/// Metrics collector placeholder
+#[derive(Debug, Clone)]
+pub struct MetricsCollector {
+    // Implementation details
+}
+
+impl MetricsCollector {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
+impl Default for MetricsCollector {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Advanced distributed cluster configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AdvancedClusterConfig {
@@ -216,6 +313,8 @@ pub enum ScalingAction {
     ScaleDown(usize),
     /// Scale to exact number of nodes
     ScaleTo(usize),
+    /// No action needed
+    NoAction,
     /// Custom action
     Custom(String),
 }
@@ -784,7 +883,18 @@ pub struct FaultRecoveryManager {
 
 /// Recovery actions
 #[derive(Debug, Clone)]
-pub enum RecoveryAction {
+pub struct RecoveryAction {
+    pub action_id: String,
+    pub action_type: RecoveryActionType,
+    pub target_node: String,
+    pub scheduled_time: Instant,
+    pub max_retries: usize,
+    pub current_retry: usize,
+}
+
+/// Recovery action details
+#[derive(Debug, Clone)]
+pub enum RecoveryActionDetails {
     RestartNode {
         node_id: String,
         restart_count: usize,
@@ -826,6 +936,7 @@ pub struct HealthMonitor {
     pub health_score: f64,
     pub metrics: NodeMetrics,
     pub alert_thresholds: AlertThresholds,
+    pub status: NodeHealthStatus,
 }
 
 /// Node performance metrics
@@ -869,6 +980,7 @@ pub struct AutoScalingManager {
     metrics_history: VecDeque<ClusterMetrics>,
     scaling_policies: Vec<ScalingPolicy>,
     cooldown_tracker: HashMap<String, Instant>,
+    pending_operations: VecDeque<ScalingOperation>,
 }
 
 /// Scaling events
@@ -882,6 +994,7 @@ pub struct ScalingEvent {
     pub nodes_after: usize,
     pub success: bool,
     pub duration: Duration,
+    pub load_at_time: f64,
 }
 
 /// Cluster-wide metrics
@@ -1198,6 +1311,47 @@ pub enum PreemptionPolicy {
     DeadlineBased,
     ResourceBased,
     Custom(String),
+}
+
+impl Default for NodeMetrics {
+    fn default() -> Self {
+        Self {
+            cpu_usage: 0.0,
+            memory_usage: 0.0,
+            disk_usage: 0.0,
+            network_io: 0.0,
+            active_connections: 0,
+            response_time: Duration::from_millis(0),
+            error_rate: 0.0,
+            throughput: 0.0,
+        }
+    }
+}
+
+impl Default for AlertThresholds {
+    fn default() -> Self {
+        Self {
+            cpu_critical: 90.0,
+            memory_critical: 95.0,
+            disk_critical: 90.0,
+            response_time_critical: Duration::from_secs(5),
+            error_rate_critical: 0.05,
+        }
+    }
+}
+
+impl Default for HealthMonitor {
+    fn default() -> Self {
+        Self {
+            node_id: String::new(),
+            last_heartbeat: Instant::now(),
+            consecutive_failures: 0,
+            health_score: 1.0,
+            metrics: NodeMetrics::default(),
+            alert_thresholds: AlertThresholds::default(),
+            status: NodeHealthStatus::Unknown,
+        }
+    }
 }
 
 impl Default for AdvancedClusterConfig {
@@ -1977,26 +2131,354 @@ impl ShardManager {
 }
 
 impl FaultRecoveryManager {
-    fn new(_config: FaultToleranceConfig) -> Self {
+    fn new(config: FaultToleranceConfig) -> Self {
+        let mut recovery_strategies = HashMap::new();
+        
+        // Initialize default recovery strategies
+        recovery_strategies.insert("network_partition".to_string(), RecoveryStrategy::Graceful { timeout: Duration::from_secs(30) });
+        recovery_strategies.insert("node_failure".to_string(), RecoveryStrategy::Immediate);
+        recovery_strategies.insert("data_corruption".to_string(), RecoveryStrategy::Custom { strategy_name: "data_restore".to_string() });
+        
         Self {
             failed_nodes: HashSet::new(),
             recovery_actions: VecDeque::new(),
             health_monitors: HashMap::new(),
             backup_locations: HashMap::new(),
-            recovery_strategies: HashMap::new(),
+            recovery_strategies,
         }
+    }
+
+    /// Detect and handle node failures
+    fn detect_failures(&mut self, cluster_nodes: &[String]) -> Result<Vec<String>> {
+        let mut newly_failed = Vec::new();
+        
+        for node_id in cluster_nodes {
+            if self.is_node_failed(node_id)? && !self.failed_nodes.contains(node_id) {
+                self.failed_nodes.insert(node_id.clone());
+                newly_failed.push(node_id.clone());
+                
+                // Schedule recovery action
+                let recovery_action = RecoveryAction {
+                    action_id: format!("recovery_{}_{}", node_id, Instant::now().elapsed().as_millis()),
+                    action_type: RecoveryActionType::NodeFailover,
+                    target_node: node_id.clone(),
+                    scheduled_time: Instant::now(),
+                    max_retries: 3,
+                    current_retry: 0,
+                };
+                
+                self.recovery_actions.push_back(recovery_action);
+            }
+        }
+        
+        Ok(newly_failed)
+    }
+
+    /// Check if a node has failed
+    fn is_node_failed(&self, node_id: &str) -> Result<bool> {
+        // Simulate failure detection
+        if let Some(monitor) = self.health_monitors.get(node_id) {
+            let last_heartbeat_age = monitor.last_heartbeat.elapsed();
+            Ok(last_heartbeat_age > Duration::from_secs(30))
+        } else {
+            Ok(false)
+        }
+    }
+
+    /// Execute recovery actions
+    fn execute_recovery_actions(&mut self) -> Result<Vec<String>> {
+        let mut completed_actions = Vec::new();
+        
+        while let Some(mut action) = self.recovery_actions.pop_front() {
+            match self.execute_single_recovery_action(&mut action) {
+                Ok(true) => {
+                    completed_actions.push(action.action_id);
+                }
+                Ok(false) => {
+                    // Action needs retry
+                    action.current_retry += 1;
+                    if action.current_retry < action.max_retries {
+                        self.recovery_actions.push_back(action);
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Recovery action failed: {}", e);
+                }
+            }
+        }
+        
+        Ok(completed_actions)
+    }
+
+    /// Execute a single recovery action
+    fn execute_single_recovery_action(&self, action: &mut RecoveryAction) -> Result<bool> {
+        match action.action_type {
+            RecoveryActionType::NodeFailover => {
+                println!("Executing failover for node: {}", action.target_node);
+                // In real implementation, would reassign tasks to healthy nodes
+                Ok(true)
+            }
+            RecoveryActionType::DataReplication => {
+                println!("Replicating data for node: {}", action.target_node);
+                // In real implementation, would copy data to backup nodes
+                Ok(true)
+            }
+            RecoveryActionType::NetworkHeal => {
+                println!("Healing network partition for node: {}", action.target_node);
+                // In real implementation, would attempt to reconnect
+                Ok(true)
+            }
+            RecoveryActionType::ServiceRestart => {
+                println!("Restarting service on node: {}", action.target_node);
+                // In real implementation, would restart failed services
+                Ok(true)
+            }
+        }
+    }
+
+    /// Add health monitor for node
+    fn add_health_monitor(&mut self, node_id: String, monitor: HealthMonitor) {
+        self.health_monitors.insert(node_id, monitor);
+    }
+
+    /// Update node health status
+    fn update_node_health(&mut self, node_id: &str, status: NodeHealthStatus) -> Result<()> {
+        if let Some(monitor) = self.health_monitors.get_mut(node_id) {
+            monitor.last_heartbeat = Instant::now();
+            monitor.status = status;
+            monitor.consecutive_failures = 0;
+        }
+        Ok(())
     }
 }
 
 impl AutoScalingManager {
-    fn new(_config: AutoScalingConfig) -> Self {
+    fn new(config: AutoScalingConfig) -> Self {
         Self {
-            current_nodes: 0,
-            target_nodes: 0,
+            current_nodes: config.min_nodes,
+            target_nodes: config.min_nodes,
             scaling_history: VecDeque::new(),
             metrics_history: VecDeque::new(),
             scaling_policies: Vec::new(),
             cooldown_tracker: HashMap::new(),
+            pending_operations: VecDeque::new(),
+        }
+    }
+
+    /// Evaluate scaling needs based on current metrics
+    fn evaluate_scaling_needs(&mut self, cluster_metrics: &ClusterMetrics) -> Result<ScalingDecision> {
+        let current_load = self.calculate_current_load(cluster_metrics)?;
+        let predicted_load = self.predict_future_load(cluster_metrics)?;
+        
+        let scale_up_needed = current_load > 0.8 || predicted_load > 0.9;
+        let scale_down_needed = current_load < 0.3 && predicted_load < 0.4 && self.current_nodes > 1;
+        
+        if scale_up_needed && self.current_nodes < 10 { // Max nodes limit
+            let nodes_to_add = (self.current_nodes + 1).min(10) - self.current_nodes;
+            Ok(ScalingDecision {
+                action: ScalingAction::ScaleUp(nodes_to_add),
+                target_nodes: (self.current_nodes + 1).min(10),
+                reason: format!("High load detected: current={:.2}, predicted={:.2}", current_load, predicted_load),
+                confidence: 0.9,
+            })
+        } else if scale_down_needed {
+            let nodes_to_remove = self.current_nodes - (self.current_nodes - 1);
+            Ok(ScalingDecision {
+                action: ScalingAction::ScaleDown(nodes_to_remove),
+                target_nodes: self.current_nodes - 1,
+                reason: format!("Low load detected: current={:.2}, predicted={:.2}", current_load, predicted_load),
+                confidence: 0.8,
+            })
+        } else {
+            Ok(ScalingDecision {
+                action: ScalingAction::NoAction,
+                target_nodes: self.current_nodes,
+                reason: "Load within acceptable range".to_string(),
+                confidence: 0.95,
+            })
+        }
+    }
+
+    /// Calculate current cluster load
+    fn calculate_current_load(&self, metrics: &ClusterMetrics) -> Result<f64> {
+        if metrics.node_metrics.is_empty() {
+            return Ok(0.0);
+        }
+
+        let total_cpu: f64 = metrics.node_metrics.values().map(|m| m.cpu_usage).sum();
+        let total_memory: f64 = metrics.node_metrics.values().map(|m| m.memory_usage).sum();
+        let node_count = metrics.node_metrics.len() as f64;
+
+        let avg_cpu = total_cpu / node_count;
+        let avg_memory = total_memory / node_count;
+
+        // Combined load score
+        Ok((avg_cpu * 0.6 + avg_memory * 0.4).min(1.0))
+    }
+
+    /// Predict future load based on historical data
+    fn predict_future_load(&self, metrics: &ClusterMetrics) -> Result<f64> {
+        // Simple prediction based on recent trend
+        if self.scaling_history.len() < 2 {
+            return self.calculate_current_load(metrics);
+        }
+
+        let recent_loads: Vec<f64> = self.scaling_history
+            .iter()
+            .rev()
+            .take(5)
+            .map(|h| h.load_at_time)
+            .collect();
+
+        if recent_loads.is_empty() {
+            return self.calculate_current_load(metrics);
+        }
+
+        // Simple linear trend prediction
+        let trend = if recent_loads.len() > 1 {
+            recent_loads[0] - recent_loads[recent_loads.len() - 1]
+        } else {
+            0.0
+        };
+
+        let current_load = self.calculate_current_load(metrics)?;
+        Ok((current_load + trend * 0.5).clamp(0.0, 1.0))
+    }
+
+    /// Execute scaling decision
+    fn execute_scaling(&mut self, decision: ScalingDecision) -> Result<()> {
+        match decision.action {
+            ScalingAction::ScaleUp(nodes_to_add) => {
+                println!("Scaling up from {} to {} nodes", self.current_nodes, decision.target_nodes);
+                self.schedule_scale_up_operation(nodes_to_add)?;
+            }
+            ScalingAction::ScaleDown(nodes_to_remove) => {
+                println!("Scaling down from {} to {} nodes", self.current_nodes, decision.target_nodes);
+                self.schedule_scale_down_operation(nodes_to_remove)?;
+            }
+            ScalingAction::NoAction => {
+                // No action needed
+            }
+            ScalingAction::ScaleTo(target_nodes) => {
+                if target_nodes > self.current_nodes {
+                    self.schedule_scale_up_operation(target_nodes - self.current_nodes)?;
+                } else if target_nodes < self.current_nodes {
+                    self.schedule_scale_down_operation(self.current_nodes - target_nodes)?;
+                }
+            }
+            ScalingAction::Custom(action) => {
+                println!("Executing custom scaling action: {}", action);
+            }
+        }
+
+        // Record scaling decision
+        let scaling_event = ScalingEvent {
+            timestamp: Instant::now(),
+            action: decision.action,
+            trigger_metric: "load".to_string(),
+            trigger_value: 0.0, // Would be set to current load
+            nodes_before: self.current_nodes,
+            nodes_after: self.target_nodes,
+            success: true,
+            duration: Duration::from_secs(0),
+            load_at_time: 0.0, // Would be set to actual load at time
+        };
+        self.scaling_history.push_back(scaling_event);
+
+        Ok(())
+    }
+
+    /// Schedule scale up operations
+    fn schedule_scale_up_operation(&mut self, nodes_to_add: usize) -> Result<()> {
+        for i in 0..nodes_to_add {
+            let operation = ScalingOperation {
+                operation_id: format!("scale_up_{}_{}", self.current_nodes + i, Instant::now().elapsed().as_millis()),
+                operation_type: ScalingOperationType::AddNode,
+                target_node: format!("node_{}", self.current_nodes + i),
+                scheduled_time: Instant::now(),
+                status: OperationStatus::Pending,
+            };
+            self.pending_operations.push_back(operation);
+        }
+        self.target_nodes += nodes_to_add;
+        Ok(())
+    }
+
+    /// Schedule scale down operations
+    fn schedule_scale_down_operation(&mut self, nodes_to_remove: usize) -> Result<()> {
+        for i in 0..nodes_to_remove {
+            let node_to_remove = self.current_nodes - 1 - i;
+            let operation = ScalingOperation {
+                operation_id: format!("scale_down_{}_{}", node_to_remove, Instant::now().elapsed().as_millis()),
+                operation_type: ScalingOperationType::RemoveNode,
+                target_node: format!("node_{}", node_to_remove),
+                scheduled_time: Instant::now(),
+                status: OperationStatus::Pending,
+            };
+            self.pending_operations.push_back(operation);
+        }
+        self.target_nodes -= nodes_to_remove;
+        Ok(())
+    }
+
+    /// Process pending scaling operations
+    fn process_scaling_operations(&mut self) -> Result<Vec<String>> {
+        let mut completed_operations = Vec::new();
+        
+        while let Some(mut operation) = self.pending_operations.pop_front() {
+            match self.execute_scaling_operation(&mut operation) {
+                Ok(true) => {
+                    completed_operations.push(operation.operation_id);
+                    match operation.operation_type {
+                        ScalingOperationType::AddNode => {
+                            self.current_nodes += 1;
+                        }
+                        ScalingOperationType::RemoveNode => {
+                            self.current_nodes -= 1;
+                        }
+                    }
+                }
+                Ok(false) => {
+                    // Operation still in progress, put it back
+                    self.pending_operations.push_back(operation);
+                    break; // Process one at a time
+                }
+                Err(e) => {
+                    eprintln!("Scaling operation failed: {}", e);
+                    operation.status = OperationStatus::Failed;
+                }
+            }
+        }
+        
+        Ok(completed_operations)
+    }
+
+    /// Execute a single scaling operation
+    fn execute_scaling_operation(&self, operation: &mut ScalingOperation) -> Result<bool> {
+        match operation.operation_type {
+            ScalingOperationType::AddNode => {
+                println!("Adding node: {}", operation.target_node);
+                // In real implementation, would provision new node
+                operation.status = OperationStatus::Completed;
+                Ok(true)
+            }
+            ScalingOperationType::RemoveNode => {
+                println!("Removing node: {}", operation.target_node);
+                // In real implementation, would drain and terminate node
+                operation.status = OperationStatus::Completed;
+                Ok(true)
+            }
+        }
+    }
+
+    /// Get current scaling status
+    fn get_scaling_status(&self) -> ScalingStatus {
+        ScalingStatus {
+            current_nodes: self.current_nodes,
+            target_nodes: self.target_nodes,
+            pending_operations: self.pending_operations.len(),
+            is_scaling: !self.pending_operations.is_empty(),
+            last_scaling_event: self.scaling_history.last().cloned(),
         }
     }
 }

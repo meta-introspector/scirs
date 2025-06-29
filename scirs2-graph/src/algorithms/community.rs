@@ -8,7 +8,6 @@ use rand::seq::SliceRandom;
 use scirs2_core::parallel_ops::*;
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
-use std::sync::{Arc, Mutex};
 
 /// Represents a community structure in a graph
 #[derive(Debug, Clone)]

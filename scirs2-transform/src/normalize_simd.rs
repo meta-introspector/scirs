@@ -123,7 +123,7 @@ where
     Ok(result)
 }
 
-/// SIMD-accelerated normalization for 2D arrays along a specified axis
+/// Advanced SIMD-accelerated normalization for 2D arrays with optimized memory access patterns
 pub fn simd_normalize_array<S, F>(
     array: &ArrayBase<S, Ix2>,
     method: NormalizationMethod,
@@ -158,100 +158,16 @@ where
 
     match method {
         NormalizationMethod::MinMax => {
-            // Process along the specified axis
-            if axis == 0 {
-                // Normalize each column
-                for j in 0..shape[1] {
-                    let col = array.column(j);
-                    let col_array = col.to_owned();
-                    let norm_col = simd_minmax_normalize_1d(&col_array)?;
-                    for i in 0..shape[0] {
-                        normalized[[i, j]] = norm_col[i];
-                    }
-                }
-            } else {
-                // Normalize each row
-                for i in 0..shape[0] {
-                    let row = array.row(i);
-                    let row_array = row.to_owned();
-                    let norm_row = simd_minmax_normalize_1d(&row_array)?;
-                    for j in 0..shape[1] {
-                        normalized[[i, j]] = norm_row[j];
-                    }
-                }
-            }
+            simd_normalize_block_minmax(array, &mut normalized, axis)?
         }
         NormalizationMethod::ZScore => {
-            // Process along the specified axis
-            if axis == 0 {
-                // Normalize each column
-                for j in 0..shape[1] {
-                    let col = array.column(j);
-                    let col_array = col.to_owned();
-                    let norm_col = simd_zscore_normalize_1d(&col_array)?;
-                    for i in 0..shape[0] {
-                        normalized[[i, j]] = norm_col[i];
-                    }
-                }
-            } else {
-                // Normalize each row
-                for i in 0..shape[0] {
-                    let row = array.row(i);
-                    let row_array = row.to_owned();
-                    let norm_row = simd_zscore_normalize_1d(&row_array)?;
-                    for j in 0..shape[1] {
-                        normalized[[i, j]] = norm_row[j];
-                    }
-                }
-            }
+            simd_normalize_block_zscore(array, &mut normalized, axis)?
         }
         NormalizationMethod::L2 => {
-            // Process along the specified axis
-            if axis == 0 {
-                // Normalize each column
-                for j in 0..shape[1] {
-                    let col = array.column(j);
-                    let col_array = col.to_owned();
-                    let norm_col = simd_l2_normalize_1d(&col_array)?;
-                    for i in 0..shape[0] {
-                        normalized[[i, j]] = norm_col[i];
-                    }
-                }
-            } else {
-                // Normalize each row
-                for i in 0..shape[0] {
-                    let row = array.row(i);
-                    let row_array = row.to_owned();
-                    let norm_row = simd_l2_normalize_1d(&row_array)?;
-                    for j in 0..shape[1] {
-                        normalized[[i, j]] = norm_row[j];
-                    }
-                }
-            }
+            simd_normalize_block_l2(array, &mut normalized, axis)?
         }
         NormalizationMethod::MaxAbs => {
-            // Process along the specified axis
-            if axis == 0 {
-                // Normalize each column
-                for j in 0..shape[1] {
-                    let col = array.column(j);
-                    let col_array = col.to_owned();
-                    let norm_col = simd_maxabs_normalize_1d(&col_array)?;
-                    for i in 0..shape[0] {
-                        normalized[[i, j]] = norm_col[i];
-                    }
-                }
-            } else {
-                // Normalize each row
-                for i in 0..shape[0] {
-                    let row = array.row(i);
-                    let row_array = row.to_owned();
-                    let norm_row = simd_maxabs_normalize_1d(&row_array)?;
-                    for j in 0..shape[1] {
-                        normalized[[i, j]] = norm_row[j];
-                    }
-                }
-            }
+            simd_normalize_block_maxabs(array, &mut normalized, axis)?
         }
         _ => {
             // Fall back to non-SIMD implementation for other methods
@@ -262,4 +178,286 @@ where
     }
 
     Ok(normalized)
+}
+
+/// Block-wise SIMD min-max normalization with optimized memory access
+fn simd_normalize_block_minmax<S, F>(
+    array: &ArrayBase<S, Ix2>,
+    normalized: &mut Array2<F>,
+    axis: usize,
+) -> Result<()>
+where
+    S: Data<Elem = F>,
+    F: Float + NumCast + SimdUnifiedOps,
+{
+    const BLOCK_SIZE: usize = 64;
+    let shape = array.shape();
+
+    if axis == 0 {
+        // Column-wise normalization with block processing
+        let mut global_mins = Array1::zeros(shape[1]);
+        let mut global_maxs = Array1::zeros(shape[1]);
+
+        // First pass: compute global min/max for each column in blocks
+        for block_start in (0..shape[1]).step_by(BLOCK_SIZE) {
+            let block_end = (block_start + BLOCK_SIZE).min(shape[1]);
+            
+            for j in block_start..block_end {
+                let col = array.column(j);
+                let col_array = col.to_owned();
+                global_mins[j] = F::simd_min_element(&col_array.view());
+                global_maxs[j] = F::simd_max_element(&col_array.view());
+            }
+        }
+
+        // Second pass: normalize using pre-computed min/max
+        for block_start in (0..shape[1]).step_by(BLOCK_SIZE) {
+            let block_end = (block_start + BLOCK_SIZE).min(shape[1]);
+            
+            for j in block_start..block_end {
+                let col = array.column(j);
+                let col_array = col.to_owned();
+                let range = global_maxs[j] - global_mins[j];
+                
+                if range.abs() <= F::from(EPSILON).unwrap() {
+                    // Constant feature
+                    for i in 0..shape[0] {
+                        normalized[[i, j]] = F::from(0.5).unwrap();
+                    }
+                } else {
+                    // Vectorized normalization
+                    let min_array = Array1::from_elem(shape[0], global_mins[j]);
+                    let range_array = Array1::from_elem(shape[0], range);
+                    let centered = F::simd_sub(&col_array.view(), &min_array.view());
+                    let norm_col = F::simd_div(&centered.view(), &range_array.view());
+                    
+                    for i in 0..shape[0] {
+                        normalized[[i, j]] = norm_col[i];
+                    }
+                }
+            }
+        }
+    } else {
+        // Row-wise normalization with block processing
+        for block_start in (0..shape[0]).step_by(BLOCK_SIZE) {
+            let block_end = (block_start + BLOCK_SIZE).min(shape[0]);
+            
+            for i in block_start..block_end {
+                let row = array.row(i);
+                let row_array = row.to_owned();
+                let norm_row = simd_minmax_normalize_1d(&row_array)?;
+                
+                for j in 0..shape[1] {
+                    normalized[[i, j]] = norm_row[j];
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Block-wise SIMD Z-score normalization with optimized memory access
+fn simd_normalize_block_zscore<S, F>(
+    array: &ArrayBase<S, Ix2>,
+    normalized: &mut Array2<F>,
+    axis: usize,
+) -> Result<()>
+where
+    S: Data<Elem = F>,
+    F: Float + NumCast + SimdUnifiedOps,
+{
+    const BLOCK_SIZE: usize = 64;
+    let shape = array.shape();
+
+    if axis == 0 {
+        // Column-wise normalization
+        let mut global_means = Array1::zeros(shape[1]);
+        let mut global_stds = Array1::zeros(shape[1]);
+        let n_samples_f = F::from(shape[0]).unwrap();
+
+        // First pass: compute means and standard deviations
+        for block_start in (0..shape[1]).step_by(BLOCK_SIZE) {
+            let block_end = (block_start + BLOCK_SIZE).min(shape[1]);
+            
+            for j in block_start..block_end {
+                let col = array.column(j);
+                let col_array = col.to_owned();
+                
+                // Compute mean
+                global_means[j] = F::simd_sum(&col_array.view()) / n_samples_f;
+                
+                // Compute standard deviation
+                let mean_array = Array1::from_elem(shape[0], global_means[j]);
+                let centered = F::simd_sub(&col_array.view(), &mean_array.view());
+                let squared = F::simd_mul(&centered.view(), &centered.view());
+                let variance = F::simd_sum(&squared.view()) / n_samples_f;
+                global_stds[j] = variance.sqrt();
+                
+                // Avoid division by zero
+                if global_stds[j] <= F::from(EPSILON).unwrap() {
+                    global_stds[j] = F::one();
+                }
+            }
+        }
+
+        // Second pass: normalize using pre-computed statistics
+        for block_start in (0..shape[1]).step_by(BLOCK_SIZE) {
+            let block_end = (block_start + BLOCK_SIZE).min(shape[1]);
+            
+            for j in block_start..block_end {
+                let col = array.column(j);
+                let col_array = col.to_owned();
+                
+                if global_stds[j] <= F::from(EPSILON).unwrap() {
+                    // Constant feature
+                    for i in 0..shape[0] {
+                        normalized[[i, j]] = F::zero();
+                    }
+                } else {
+                    // Vectorized normalization
+                    let mean_array = Array1::from_elem(shape[0], global_means[j]);
+                    let std_array = Array1::from_elem(shape[0], global_stds[j]);
+                    let centered = F::simd_sub(&col_array.view(), &mean_array.view());
+                    let norm_col = F::simd_div(&centered.view(), &std_array.view());
+                    
+                    for i in 0..shape[0] {
+                        normalized[[i, j]] = norm_col[i];
+                    }
+                }
+            }
+        }
+    } else {
+        // Row-wise normalization with block processing
+        for block_start in (0..shape[0]).step_by(BLOCK_SIZE) {
+            let block_end = (block_start + BLOCK_SIZE).min(shape[0]);
+            
+            for i in block_start..block_end {
+                let row = array.row(i);
+                let row_array = row.to_owned();
+                let norm_row = simd_zscore_normalize_1d(&row_array)?;
+                
+                for j in 0..shape[1] {
+                    normalized[[i, j]] = norm_row[j];
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Block-wise SIMD L2 normalization with optimized memory access
+fn simd_normalize_block_l2<S, F>(
+    array: &ArrayBase<S, Ix2>,
+    normalized: &mut Array2<F>,
+    axis: usize,
+) -> Result<()>
+where
+    S: Data<Elem = F>,
+    F: Float + NumCast + SimdUnifiedOps,
+{
+    const BLOCK_SIZE: usize = 64;
+    let shape = array.shape();
+
+    if axis == 0 {
+        // Column-wise L2 normalization
+        for block_start in (0..shape[1]).step_by(BLOCK_SIZE) {
+            let block_end = (block_start + BLOCK_SIZE).min(shape[1]);
+            
+            for j in block_start..block_end {
+                let col = array.column(j);
+                let col_array = col.to_owned();
+                let norm_col = simd_l2_normalize_1d(&col_array)?;
+                
+                for i in 0..shape[0] {
+                    normalized[[i, j]] = norm_col[i];
+                }
+            }
+        }
+    } else {
+        // Row-wise L2 normalization with SIMD optimization
+        for block_start in (0..shape[0]).step_by(BLOCK_SIZE) {
+            let block_end = (block_start + BLOCK_SIZE).min(shape[0]);
+            
+            for i in block_start..block_end {
+                let row = array.row(i);
+                let row_array = row.to_owned();
+                let l2_norm = F::simd_norm(&row_array.view());
+                
+                if l2_norm <= F::from(EPSILON).unwrap() {
+                    // Zero vector
+                    for j in 0..shape[1] {
+                        normalized[[i, j]] = F::zero();
+                    }
+                } else {
+                    // Vectorized division
+                    let norm_array = Array1::from_elem(shape[1], l2_norm);
+                    let norm_row = F::simd_div(&row_array.view(), &norm_array.view());
+                    
+                    for j in 0..shape[1] {
+                        normalized[[i, j]] = norm_row[j];
+                    }
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Block-wise SIMD max-absolute normalization with optimized memory access
+fn simd_normalize_block_maxabs<S, F>(
+    array: &ArrayBase<S, Ix2>,
+    normalized: &mut Array2<F>,
+    axis: usize,
+) -> Result<()>
+where
+    S: Data<Elem = F>,
+    F: Float + NumCast + SimdUnifiedOps,
+{
+    const BLOCK_SIZE: usize = 64;
+    let shape = array.shape();
+
+    if axis == 0 {
+        // Column-wise max-abs normalization
+        for block_start in (0..shape[1]).step_by(BLOCK_SIZE) {
+            let block_end = (block_start + BLOCK_SIZE).min(shape[1]);
+            
+            for j in block_start..block_end {
+                let col = array.column(j);
+                let col_array = col.to_owned();
+                let norm_col = simd_maxabs_normalize_1d(&col_array)?;
+                
+                for i in 0..shape[0] {
+                    normalized[[i, j]] = norm_col[i];
+                }
+            }
+        }
+    } else {
+        // Row-wise max-abs normalization with SIMD optimization
+        for block_start in (0..shape[0]).step_by(BLOCK_SIZE) {
+            let block_end = (block_start + BLOCK_SIZE).min(shape[0]);
+            
+            for i in block_start..block_end {
+                let row = array.row(i);
+                let row_array = row.to_owned();
+                let abs_array = F::simd_abs(&row_array.view());
+                let max_abs = F::simd_max_element(&abs_array.view());
+                
+                if max_abs <= F::from(EPSILON).unwrap() {
+                    // All zeros
+                    for j in 0..shape[1] {
+                        normalized[[i, j]] = F::zero();
+                    }
+                } else {
+                    // Vectorized division
+                    let max_abs_array = Array1::from_elem(shape[1], max_abs);
+                    let norm_row = F::simd_div(&row_array.view(), &max_abs_array.view());
+                    
+                    for j in 0..shape[1] {
+                        normalized[[i, j]] = norm_row[j];
+                    }
+                }
+            }
+        }
+    }
+    Ok(())
 }

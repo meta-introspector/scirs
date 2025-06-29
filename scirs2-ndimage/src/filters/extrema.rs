@@ -499,7 +499,7 @@ where
     // Use parallel iteration if the array is large enough
     #[cfg(feature = "parallel")]
     {
-        use rayon::prelude::*;
+        use scirs2_core::parallel_ops::*;
 
         if total_elements > 10000 {
             return extrema_filter_nd_parallel(
@@ -619,7 +619,7 @@ where
     T: Float + FromPrimitive + Debug + PartialOrd + Clone + Send + Sync,
     D: Dimension + 'static,
 {
-    use rayon::prelude::*;
+    use scirs2_core::parallel_ops::*;
 
     let ndim = input.ndim();
     let total_elements = input.len();

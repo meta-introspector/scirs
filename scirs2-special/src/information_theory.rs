@@ -2,6 +2,156 @@
 //!
 //! This module provides functions related to information theory, including
 //! entropy, Kullback-Leibler divergence, and Huber loss functions.
+//!
+//! # Mathematical Background
+//!
+//! ## Shannon Entropy
+//!
+//! The Shannon entropy H(X) of a discrete random variable X with probability mass
+//! function P(X = xᵢ) = pᵢ is defined as:
+//!
+//! ```text
+//! H(X) = -∑ᵢ pᵢ log₂(pᵢ)
+//! ```
+//!
+//! The base of the logarithm determines the unit of measurement:
+//! - Base 2: bits (binary digits)
+//! - Base e: nats (natural units)
+//! - Base 10: dits (decimal digits)
+//!
+//! ### Properties of Shannon Entropy
+//!
+//! 1. **Non-negativity**: H(X) ≥ 0, with equality if and only if X is deterministic
+//! 2. **Maximum entropy**: H(X) ≤ log n for n possible outcomes, achieved by uniform distribution
+//! 3. **Concavity**: H is a concave function of the probability distribution
+//! 4. **Continuity**: H is continuous in the probabilities
+//!
+//! ### Differential Entropy
+//!
+//! For continuous random variables with probability density function f(x):
+//!
+//! ```text
+//! h(X) = -∫ f(x) log f(x) dx
+//! ```
+//!
+//! Note: Unlike discrete entropy, differential entropy can be negative.
+//!
+//! ## Kullback-Leibler Divergence
+//!
+//! The Kullback-Leibler (KL) divergence D_KL(P||Q) measures the difference between
+//! two probability distributions P and Q:
+//!
+//! ```text
+//! D_KL(P||Q) = ∑ᵢ P(i) log(P(i)/Q(i))
+//! ```
+//!
+//! For continuous distributions:
+//!
+//! ```text
+//! D_KL(P||Q) = ∫ p(x) log(p(x)/q(x)) dx
+//! ```
+//!
+//! ### Properties of KL Divergence
+//!
+//! 1. **Non-negativity**: D_KL(P||Q) ≥ 0 (Gibbs' inequality)
+//! 2. **Zero if and only if identical**: D_KL(P||Q) = 0 ⟺ P = Q almost everywhere
+//! 3. **Asymmetry**: D_KL(P||Q) ≠ D_KL(Q||P) in general
+//! 4. **Convexity**: D_KL(·||Q) is convex in the first argument
+//!
+//! ### Mathematical Proof of Non-negativity (Gibbs' Inequality)
+//!
+//! **Theorem**: For probability distributions P and Q, D_KL(P||Q) ≥ 0.
+//!
+//! **Proof**: By Jensen's inequality, since log is concave:
+//!
+//! ```text
+//! -D_KL(P||Q) = ∑ᵢ P(i) log(Q(i)/P(i))
+//!               ≤ log(∑ᵢ P(i) · Q(i)/P(i))  [Jensen's inequality]
+//!               = log(∑ᵢ Q(i))
+//!               = log(1) = 0
+//! ```
+//!
+//! Therefore, D_KL(P||Q) ≥ 0, with equality if and only if P(i) = Q(i) for all i.
+//!
+//! ## Cross-Entropy
+//!
+//! The cross-entropy H(P,Q) between distributions P and Q is:
+//!
+//! ```text
+//! H(P,Q) = -∑ᵢ P(i) log Q(i) = H(P) + D_KL(P||Q)
+//! ```
+//!
+//! This decomposition shows that cross-entropy equals the entropy of P plus
+//! the additional "cost" of using Q instead of P.
+//!
+//! ## Mutual Information
+//!
+//! The mutual information I(X;Y) between random variables X and Y quantifies
+//! the amount of information obtained about one variable through the other:
+//!
+//! ```text
+//! I(X;Y) = D_KL(P(X,Y)||P(X)⊗P(Y)) = ∑ᵢⱼ P(x,y) log(P(x,y)/(P(x)P(y)))
+//! ```
+//!
+//! ### Properties of Mutual Information
+//!
+//! 1. **Symmetry**: I(X;Y) = I(Y;X)
+//! 2. **Non-negativity**: I(X;Y) ≥ 0
+//! 3. **Bounds**: 0 ≤ I(X;Y) ≤ min(H(X), H(Y))
+//! 4. **Chain rule**: I(X;Y,Z) = I(X;Y) + I(X;Z|Y)
+//!
+//! ## Information-Theoretic Inequalities
+//!
+//! ### Fano's Inequality
+//!
+//! For a Markov chain X → Y → X̂ where X̂ is an estimate of X:
+//!
+//! ```text
+//! H(P_e) + P_e log(|𝒳| - 1) ≥ H(X|X̂)
+//! ```
+//!
+//! where P_e = Pr(X ≠ X̂) is the error probability.
+//!
+//! ### Data Processing Inequality
+//!
+//! For a Markov chain X → Y → Z:
+//!
+//! ```text
+//! I(X;Z) ≤ I(X;Y) and I(X;Z) ≤ I(Y;Z)
+//! ```
+//!
+//! This states that processing cannot increase information.
+//!
+//! ## Applications
+//!
+//! ### Machine Learning
+//! - **Loss functions**: Cross-entropy loss for classification
+//! - **Feature selection**: Mutual information for feature ranking
+//! - **Model selection**: Information criteria (AIC, BIC)
+//!
+//! ### Statistics
+//! - **Hypothesis testing**: Likelihood ratio tests
+//! - **Estimation**: Maximum likelihood estimation
+//! - **Model comparison**: Information criteria
+//!
+//! ### Physics
+//! - **Statistical mechanics**: Connection to thermodynamic entropy
+//! - **Quantum information**: Von Neumann entropy
+//! - **Black hole physics**: Bekenstein-Hawking entropy
+//!
+//! ## Computational Considerations
+//!
+//! ### Numerical Stability
+//!
+//! The computation of x log(x) for small x requires careful handling:
+//! - For x = 0: Define 0 log(0) = 0 (by continuity)
+//! - For small x: Use series expansion x log(x) ≈ x(log(x₀) + (x-x₀)/x₀) near x₀
+//!
+//! ### Algorithmic Complexity
+//!
+//! - **Entropy computation**: O(n) for n probability values
+//! - **KL divergence**: O(n) for discrete distributions
+//! - **Mutual information estimation**: O(n log n) with k-NN methods
 
 use crate::error::{SpecialError, SpecialResult};
 use crate::validation::{check_finite, check_non_negative};

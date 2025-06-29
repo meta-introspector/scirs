@@ -70,6 +70,7 @@ pub mod learned_optimizers;
 pub mod memory_efficient;
 pub mod meta_learning;
 pub mod metrics;
+pub mod neural_architecture_search;
 pub mod neural_integration;
 pub mod online_learning;
 pub mod optimizer_composition;
@@ -77,6 +78,7 @@ pub mod optimizers;
 pub mod parameter_groups;
 pub mod privacy;
 pub mod regularizers;
+pub mod reinforcement_learning;
 pub mod schedulers;
 pub mod second_order;
 pub mod self_tuning;
@@ -164,6 +166,10 @@ pub use neural_integration::forward_backward::{BackwardHook, ForwardHook, Neural
 pub use neural_integration::{
     LayerArchitecture, LayerId, OptimizationConfig, ParamId, ParameterManager, ParameterMetadata,
     ParameterOptimizer, ParameterType,
+};
+pub use neural_architecture_search::{
+    NASConfig, NeuralArchitectureSearch, SearchResults, SearchStrategyType, OptimizerArchitecture,
+    PerformanceEvaluator, MultiObjectiveConfig, ArchitectureEncodingStrategy, EvaluationMetric,
 };
 pub use online_learning::{
     ColumnGrowthStrategy, LearningRateAdaptation, LifelongOptimizer, LifelongStats,

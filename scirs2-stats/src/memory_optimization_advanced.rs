@@ -8,7 +8,7 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, NumCast, Zero, One};
-use scirs2_core::{memory::*, parallel_ops::*};
+use scirs2_core::parallel_ops::*;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex, RwLock};
@@ -450,7 +450,7 @@ where
         let target_block_elements = (32 * 1024) / element_size; // Target 32KB blocks
         let max_dimension = rows.max(cols);
         
-        (target_block_elements as f64).sqrt() as usize
+        ((target_block_elements as f64).sqrt() as usize)
             .min(max_dimension)
             .max(elements_per_cache_line)
     }

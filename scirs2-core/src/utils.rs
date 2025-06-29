@@ -5,6 +5,7 @@
 use ndarray::{Array, Array1, Array2, ArrayBase, Data, Dimension};
 use num_traits::{Float, FromPrimitive, Num, NumCast};
 use std::fmt::Debug;
+use crate::error::{CoreError, CoreResult, ErrorContext};
 
 /// Checks if two floating-point values are approximately equal
 ///
@@ -66,12 +67,23 @@ pub fn points_equal<T>(point1: &[T], point2: &[T], tol: Option<T>) -> bool
 where
     T: PartialOrd + std::ops::Sub<Output = T> + Copy + FromPrimitive,
 {
+    // Check for empty arrays first
+    if point1.is_empty() || point2.is_empty() {
+        return point1.is_empty() && point2.is_empty();
+    }
+
     // Default tolerance as 1e-8 converted to type T
     let tol = match tol {
         Some(t) => t,
         None => match T::from_f64(1e-8) {
             Some(t) => t,
-            None => panic!("Could not convert 1e-8 to generic type"),
+            None => {
+                // Fall back to zero tolerance if conversion fails
+                T::from_f64(0.0).unwrap_or_else(|| {
+                    // If even zero conversion fails, use zero trait method
+                    T::zero()
+                })
+            },
         },
     };
 
@@ -183,10 +195,11 @@ where
 /// # Returns
 ///
 /// * Vector of values
-#[must_use]
-pub fn arange<F: Float + std::iter::Sum>(start: F, end: F, step: F) -> Vec<F> {
+pub fn arange<F: Float + std::iter::Sum>(start: F, end: F, step: F) -> CoreResult<Vec<F>> {
     if step == F::zero() {
-        panic!("Step size cannot be zero");
+        return Err(CoreError::ValueError(ErrorContext::new(
+            "Step size cannot be zero".to_string(),
+        )));
     }
 
     let mut result = Vec::new();
@@ -204,7 +217,13 @@ pub fn arange<F: Float + std::iter::Sum>(start: F, end: F, step: F) -> Vec<F> {
         }
     }
 
-    result
+    Ok(result)
+}
+
+/// Convenience function that provides the old behavior (panics on error)
+#[must_use]
+pub fn arange_unchecked<F: Float + std::iter::Sum>(start: F, end: F, step: F) -> Vec<F> {
+    arange(start, end, step).unwrap()
 }
 
 /// Checks if all elements in an iterable satisfy a predicate
@@ -1027,17 +1046,17 @@ mod tests {
 
     #[test]
     fn test_arange() {
-        let result = arange(0.0, 5.0, 1.0);
+        let result = arange(0.0, 5.0, 1.0).unwrap();
         assert_eq!(result, vec![0.0, 1.0, 2.0, 3.0, 4.0]);
 
-        let result = arange(5.0, 0.0, -1.0);
+        let result = arange(5.0, 0.0, -1.0).unwrap();
         assert_eq!(result, vec![5.0, 4.0, 3.0, 2.0, 1.0]);
     }
 
     #[test]
-    #[should_panic]
     fn test_arange_zero_step() {
-        let _result = arange(0.0, 5.0, 0.0);
+        let result = arange(0.0, 5.0, 0.0);
+        assert!(result.is_err());
     }
 
     #[test]

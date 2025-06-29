@@ -330,8 +330,7 @@ where
                     return a_csr.mul(&*b_csr).and_then(|boxed| {
                         boxed
                             .as_any()
-                            .downcast_ref::<CsrArray<T>>()
-                            .map(|csr| csr.clone())
+                            .downcast_ref::<CsrArray<T>>().cloned()
                             .ok_or_else(|| {
                                 SparseError::ValueError(
                                     "Failed to convert result to CsrArray".to_string(),
@@ -350,8 +349,7 @@ where
                     return a_csr.div(&*b_csr).and_then(|boxed| {
                         boxed
                             .as_any()
-                            .downcast_ref::<CsrArray<T>>()
-                            .map(|csr| csr.clone())
+                            .downcast_ref::<CsrArray<T>>().cloned()
                             .ok_or_else(|| {
                                 SparseError::ValueError(
                                     "Failed to convert result to CsrArray".to_string(),
@@ -374,8 +372,7 @@ where
         // Convert the result back to CsrArray
         result_box
             .as_any()
-            .downcast_ref::<CsrArray<T>>()
-            .map(|csr| csr.clone())
+            .downcast_ref::<CsrArray<T>>().cloned()
             .ok_or_else(|| {
                 SparseError::ValueError("Failed to convert result to CsrArray".to_string())
             })

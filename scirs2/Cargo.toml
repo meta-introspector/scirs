@@ -64,7 +64,7 @@ memory_management = []
 # These allow users to override platform defaults when needed
 accelerate = ["linalg", "scirs2-linalg/accelerate"]  # Force use of macOS Accelerate framework
 openblas = ["linalg", "scirs2-linalg/openblas-backend"]  # Force use of OpenBLAS
-intel-mkl = ["linalg", "scirs2-linalg/intel-mkl"]  # Force use of Intel MKL
+# intel-mkl = ["linalg", "scirs2-linalg/intel-mkl"]  # Force use of Intel MKL - removed due to conflicts
 netlib = ["linalg", "scirs2-linalg/netlib"]  # Force use of reference Netlib
 
 # Functional groupings

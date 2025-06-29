@@ -360,6 +360,142 @@ where
     Ok(integral)
 }
 
+/// Find roots using bisection method
+///
+/// This function uses the bisection method to find all roots of a function within a given interval.
+///
+/// # Arguments
+///
+/// * `a` - Left boundary of search interval
+/// * `b` - Right boundary of search interval  
+/// * `tolerance` - Tolerance for root finding accuracy
+/// * `eval_fn` - Function to evaluate
+///
+/// # Returns
+///
+/// Vector of roots found in the interval
+///
+pub fn find_roots_bisection<F, Func>(
+    a: F,
+    b: F,
+    tolerance: F,
+    eval_fn: Func,
+) -> InterpolateResult<Vec<F>>
+where
+    F: Float + FromPrimitive + Debug + Display,
+    Func: Fn(F) -> InterpolateResult<F>,
+{
+    let mut roots = Vec::new();
+    
+    if a >= b {
+        return Ok(roots);
+    }
+    
+    // Evaluate at endpoints
+    let fa = eval_fn(a)?;
+    let fb = eval_fn(b)?;
+    
+    // If either endpoint is close to zero, it's a root
+    if fa.abs() < tolerance {
+        roots.push(a);
+    }
+    if fb.abs() < tolerance && (b - a).abs() > tolerance {
+        roots.push(b);
+    }
+    
+    // If signs are the same, no root in interval by intermediate value theorem
+    if fa * fb > F::zero() {
+        return Ok(roots);
+    }
+    
+    // Binary search for root
+    let mut left = a;
+    let mut right = b;
+    let mut f_left = fa;
+    let mut f_right = fb;
+    
+    while (right - left).abs() > tolerance {
+        let mid = left + (right - left) / F::from_f64(2.0).unwrap();
+        let f_mid = eval_fn(mid)?;
+        
+        if f_mid.abs() < tolerance {
+            roots.push(mid);
+            break;
+        }
+        
+        if f_left * f_mid < F::zero() {
+            right = mid;
+            f_right = f_mid;
+        } else {
+            left = mid;
+            f_left = f_mid;
+        }
+    }
+    
+    // If we didn't find exact root, add the midpoint
+    if roots.is_empty() {
+        let root = left + (right - left) / F::from_f64(2.0).unwrap();
+        let f_root = eval_fn(root)?;
+        if f_root.abs() < tolerance * F::from_f64(10.0).unwrap() {
+            roots.push(root);
+        }
+    }
+    
+    Ok(roots)
+}
+
+/// Find multiple roots by subdividing interval
+///
+/// This function subdivides the interval and searches for roots in each subdivision.
+///
+/// # Arguments
+///
+/// * `a` - Left boundary of search interval
+/// * `b` - Right boundary of search interval
+/// * `tolerance` - Tolerance for root finding accuracy
+/// * `subdivisions` - Number of subdivisions to search
+/// * `eval_fn` - Function to evaluate
+///
+/// # Returns
+///
+/// Vector of roots found in the interval
+///
+pub fn find_multiple_roots<F, Func>(
+    a: F,
+    b: F,
+    tolerance: F,
+    subdivisions: usize,
+    eval_fn: Func,
+) -> InterpolateResult<Vec<F>>
+where
+    F: Float + FromPrimitive + Debug + Display,
+    Func: Fn(F) -> InterpolateResult<F> + Copy,
+{
+    let mut all_roots = Vec::new();
+    
+    if subdivisions == 0 {
+        return Ok(all_roots);
+    }
+    
+    let step = (b - a) / F::from_usize(subdivisions).unwrap();
+    
+    for i in 0..subdivisions {
+        let left = a + F::from_usize(i).unwrap() * step;
+        let right = a + F::from_usize(i + 1).unwrap() * step;
+        
+        match find_roots_bisection(left, right, tolerance, eval_fn) {
+            Ok(mut roots) => all_roots.append(&mut roots),
+            Err(_) => continue,
+        }
+    }
+    
+    // Sort and remove duplicates
+    all_roots.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    all_roots.dedup_by(|a, b| (*a - *b).abs() < tolerance);
+    
+    Ok(all_roots)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

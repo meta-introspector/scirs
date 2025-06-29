@@ -82,6 +82,10 @@ pub enum NumericConversionError {
     #[error("NaN or infinite value cannot be converted to the target type")]
     NanOrInfinite,
 
+    /// Division by zero error
+    #[error("Division by zero is not allowed")]
+    DivisionByZero,
+
     /// Generic conversion error
     #[error("Failed to convert value: {0}")]
     Other(String),
@@ -1220,9 +1224,9 @@ pub mod scientific {
 
     impl Rational {
         /// Create new rational number
-        pub fn new(numerator: i64, denominator: i64) -> Self {
+        pub fn new(numerator: i64, denominator: i64) -> Result<Self, NumericConversionError> {
             if denominator == 0 {
-                panic!("Denominator cannot be zero");
+                return Err(NumericConversionError::DivisionByZero);
             }
 
             let mut result = Self {
@@ -1230,12 +1234,13 @@ pub mod scientific {
                 denominator,
             };
             result.simplify();
-            result
+            Ok(result)
         }
 
         /// Create from integer
         pub fn from_int(value: i64) -> Self {
-            Self::new(value, 1)
+            // We know denominator is 1, so this will never fail
+            Self::new(value, 1).unwrap()
         }
 
         /// Create approximation from float
@@ -1271,7 +1276,8 @@ pub mod scientific {
                 q_curr = q_next;
             }
 
-            Self::new(p_curr, q_curr)
+            // We know q_curr > 0 from the loop logic, so this should not fail
+            Self::new(p_curr, q_curr).unwrap_or_else(|_| Self::from_int(p_curr))
         }
 
         /// Simplify the rational number
@@ -1312,7 +1318,7 @@ pub mod scientific {
         }
 
         /// Add rational numbers
-        pub fn add(&self, other: &Self) -> Self {
+        pub fn add(&self, other: &Self) -> Result<Self, NumericConversionError> {
             Self::new(
                 self.numerator * other.denominator + other.numerator * self.denominator,
                 self.denominator * other.denominator,
@@ -1320,7 +1326,7 @@ pub mod scientific {
         }
 
         /// Subtract rational numbers
-        pub fn subtract(&self, other: &Self) -> Self {
+        pub fn subtract(&self, other: &Self) -> Result<Self, NumericConversionError> {
             Self::new(
                 self.numerator * other.denominator - other.numerator * self.denominator,
                 self.denominator * other.denominator,
@@ -1328,7 +1334,7 @@ pub mod scientific {
         }
 
         /// Multiply rational numbers
-        pub fn multiply(&self, other: &Self) -> Self {
+        pub fn multiply(&self, other: &Self) -> Result<Self, NumericConversionError> {
             Self::new(
                 self.numerator * other.numerator,
                 self.denominator * other.denominator,
@@ -1336,7 +1342,10 @@ pub mod scientific {
         }
 
         /// Divide rational numbers
-        pub fn divide(&self, other: &Self) -> Self {
+        pub fn divide(&self, other: &Self) -> Result<Self, NumericConversionError> {
+            if other.numerator == 0 {
+                return Err(NumericConversionError::DivisionByZero);
+            }
             Self::new(
                 self.numerator * other.denominator,
                 self.denominator * other.numerator,

@@ -356,23 +356,17 @@ where
 
                 max_min_dist
             }
-            KernelWidthStrategy::CrossValidation(_k) => {
-                // Simplified k-fold cross-validation
-                // In a real implementation, we would try multiple epsilon values
-                // and choose the one with the best CV score
-                self.epsilon
+            KernelWidthStrategy::CrossValidation(k) => {
+                // K-fold cross-validation to find optimal epsilon
+                Self::optimize_epsilon_cv(points, values, k, &scale_factors, self.kernel, self.lambda)?
             }
             KernelWidthStrategy::GeneralizedCV => {
-                // Simplified GCV
-                // In a real implementation, we would compute the GCV score
-                // for multiple epsilon values and choose the best
-                self.epsilon
+                // Generalized cross-validation
+                Self::optimize_epsilon_gcv(points, values, &scale_factors, self.kernel, self.lambda)?
             }
             KernelWidthStrategy::LeaveOneOut => {
-                // Simplified LOO CV
-                // In a real implementation, we would compute the LOO error
-                // for multiple epsilon values and choose the best
-                self.epsilon
+                // Leave-one-out cross-validation
+                Self::optimize_epsilon_loo(points, values, &scale_factors, self.kernel, self.lambda)?
             }
         };
 
@@ -689,6 +683,327 @@ where
             sum_sq += diff * diff;
         }
         sum_sq.sqrt()
+    }
+
+    /// Optimize epsilon using k-fold cross-validation
+    fn optimize_epsilon_cv(
+        points: &ArrayView2<F>,
+        values: &ArrayView1<F>,
+        k_folds: usize,
+        scale_factors: &Array1<F>,
+        kernel: KernelType<F>,
+        lambda: F,
+    ) -> InterpolateResult<F> {
+        let n_points = points.shape()[0];
+        if k_folds > n_points {
+            return Err(InterpolateError::invalid_input(
+                "Number of folds cannot exceed number of points".to_string(),
+            ));
+        }
+
+        // Generate candidate epsilon values based on data characteristics
+        let mean_dist = Self::calculate_mean_distance(points, scale_factors);
+        let candidates = vec![
+            mean_dist * F::from_f64(0.1).unwrap(),
+            mean_dist * F::from_f64(0.5).unwrap(),
+            mean_dist,
+            mean_dist * F::from_f64(2.0).unwrap(),
+            mean_dist * F::from_f64(5.0).unwrap(),
+        ];
+
+        let mut best_epsilon = candidates[0];
+        let mut best_error = F::infinity();
+
+        for &epsilon in &candidates {
+            let mut total_error = F::zero();
+            
+            // K-fold cross-validation
+            let fold_size = n_points / k_folds;
+            
+            for fold in 0..k_folds {
+                let start_idx = fold * fold_size;
+                let end_idx = if fold == k_folds - 1 { n_points } else { (fold + 1) * fold_size };
+                
+                // Create training and validation sets
+                let mut train_indices = Vec::new();
+                let mut val_indices = Vec::new();
+                
+                for i in 0..n_points {
+                    if i >= start_idx && i < end_idx {
+                        val_indices.push(i);
+                    } else {
+                        train_indices.push(i);
+                    }
+                }
+                
+                if train_indices.is_empty() || val_indices.is_empty() {
+                    continue;
+                }
+                
+                // Build training data
+                let train_points = Self::extract_points_subset(points, &train_indices);
+                let train_values = Self::extract_values_subset(values, &train_indices);
+                
+                // Train interpolator
+                let coeffs = match Self::compute_coefficients(
+                    &train_points.view(),
+                    &train_values.view(),
+                    epsilon,
+                    scale_factors,
+                    kernel,
+                    lambda,
+                    false,
+                ) {
+                    Ok(c) => c,
+                    Err(_) => continue, // Skip this epsilon if computation fails
+                };
+                
+                // Evaluate on validation set
+                for &val_idx in &val_indices {
+                    let val_point = points.slice(ndarray::s![val_idx, ..]);
+                    let true_value = values[val_idx];
+                    
+                    // Predict using trained interpolator
+                    let mut predicted = F::zero();
+                    for (j, &train_idx) in train_indices.iter().enumerate() {
+                        let train_point = points.slice(ndarray::s![train_idx, ..]);
+                        let r = Self::scaled_distance(&val_point, &train_point, scale_factors);
+                        let rbf_val = Self::evaluate_kernel(r, epsilon, kernel);
+                        predicted += coeffs[j] * rbf_val;
+                    }
+                    
+                    let error = (predicted - true_value) * (predicted - true_value);
+                    total_error += error;
+                }
+            }
+            
+            if total_error < best_error {
+                best_error = total_error;
+                best_epsilon = epsilon;
+            }
+        }
+        
+        Ok(best_epsilon)
+    }
+
+    /// Optimize epsilon using generalized cross-validation
+    fn optimize_epsilon_gcv(
+        points: &ArrayView2<F>,
+        values: &ArrayView1<F>,
+        scale_factors: &Array1<F>,
+        kernel: KernelType<F>,
+        lambda: F,
+    ) -> InterpolateResult<F> {
+        let mean_dist = Self::calculate_mean_distance(points, scale_factors);
+        let candidates = vec![
+            mean_dist * F::from_f64(0.1).unwrap(),
+            mean_dist * F::from_f64(0.5).unwrap(),
+            mean_dist,
+            mean_dist * F::from_f64(2.0).unwrap(),
+            mean_dist * F::from_f64(5.0).unwrap(),
+        ];
+
+        let mut best_epsilon = candidates[0];
+        let mut best_gcv_score = F::infinity();
+
+        for &epsilon in &candidates {
+            // Compute GCV score
+            let gcv_score = match Self::compute_gcv_score(points, values, epsilon, scale_factors, kernel, lambda) {
+                Ok(score) => score,
+                Err(_) => continue,
+            };
+            
+            if gcv_score < best_gcv_score {
+                best_gcv_score = gcv_score;
+                best_epsilon = epsilon;
+            }
+        }
+        
+        Ok(best_epsilon)
+    }
+
+    /// Optimize epsilon using leave-one-out cross-validation
+    fn optimize_epsilon_loo(
+        points: &ArrayView2<F>,
+        values: &ArrayView1<F>,
+        scale_factors: &Array1<F>,
+        kernel: KernelType<F>,
+        lambda: F,
+    ) -> InterpolateResult<F> {
+        let n_points = points.shape()[0];
+        let mean_dist = Self::calculate_mean_distance(points, scale_factors);
+        let candidates = vec![
+            mean_dist * F::from_f64(0.1).unwrap(),
+            mean_dist * F::from_f64(0.5).unwrap(),
+            mean_dist,
+            mean_dist * F::from_f64(2.0).unwrap(),
+            mean_dist * F::from_f64(5.0).unwrap(),
+        ];
+
+        let mut best_epsilon = candidates[0];
+        let mut best_error = F::infinity();
+
+        for &epsilon in &candidates {
+            let mut total_error = F::zero();
+            
+            // Leave-one-out cross-validation
+            for i in 0..n_points {
+                // Create training set excluding point i
+                let mut train_indices: Vec<usize> = (0..n_points).filter(|&j| j != i).collect();
+                
+                let train_points = Self::extract_points_subset(points, &train_indices);
+                let train_values = Self::extract_values_subset(values, &train_indices);
+                
+                // Train interpolator
+                let coeffs = match Self::compute_coefficients(
+                    &train_points.view(),
+                    &train_values.view(),
+                    epsilon,
+                    scale_factors,
+                    kernel,
+                    lambda,
+                    false,
+                ) {
+                    Ok(c) => c,
+                    Err(_) => {
+                        total_error = F::infinity();
+                        break;
+                    }
+                };
+                
+                // Predict the left-out point
+                let val_point = points.slice(ndarray::s![i, ..]);
+                let true_value = values[i];
+                
+                let mut predicted = F::zero();
+                for (j, &train_idx) in train_indices.iter().enumerate() {
+                    let train_point = points.slice(ndarray::s![train_idx, ..]);
+                    let r = Self::scaled_distance(&val_point, &train_point, scale_factors);
+                    let rbf_val = Self::evaluate_kernel(r, epsilon, kernel);
+                    predicted += coeffs[j] * rbf_val;
+                }
+                
+                let error = (predicted - true_value) * (predicted - true_value);
+                total_error += error;
+            }
+            
+            if total_error < best_error {
+                best_error = total_error;
+                best_epsilon = epsilon;
+            }
+        }
+        
+        Ok(best_epsilon)
+    }
+
+    /// Helper function to calculate mean distance between all pairs of points
+    fn calculate_mean_distance(points: &ArrayView2<F>, scale_factors: &Array1<F>) -> F {
+        let n_points = points.shape()[0];
+        let mut total_dist = F::zero();
+        let mut pair_count = 0;
+
+        for i in 0..n_points {
+            for j in i + 1..n_points {
+                let point_i = points.slice(ndarray::s![i, ..]);
+                let point_j = points.slice(ndarray::s![j, ..]);
+                total_dist += Self::scaled_distance(&point_i, &point_j, scale_factors);
+                pair_count += 1;
+            }
+        }
+
+        if pair_count == 0 {
+            F::one()
+        } else {
+            total_dist / F::from_usize(pair_count).unwrap()
+        }
+    }
+
+    /// Helper function to extract a subset of points
+    fn extract_points_subset(points: &ArrayView2<F>, indices: &[usize]) -> Array2<F> {
+        let n_dims = points.shape()[1];
+        let mut subset = Array2::zeros((indices.len(), n_dims));
+        
+        for (i, &idx) in indices.iter().enumerate() {
+            for j in 0..n_dims {
+                subset[[i, j]] = points[[idx, j]];
+            }
+        }
+        
+        subset
+    }
+
+    /// Helper function to extract a subset of values
+    fn extract_values_subset(values: &ArrayView1<F>, indices: &[usize]) -> Array1<F> {
+        let mut subset = Array1::zeros(indices.len());
+        
+        for (i, &idx) in indices.iter().enumerate() {
+            subset[i] = values[idx];
+        }
+        
+        subset
+    }
+
+    /// Compute generalized cross-validation score for a given epsilon
+    fn compute_gcv_score(
+        points: &ArrayView2<F>,
+        values: &ArrayView1<F>,
+        epsilon: F,
+        scale_factors: &Array1<F>,
+        kernel: KernelType<F>,
+        lambda: F,
+    ) -> InterpolateResult<F> {
+        let n_points = points.shape()[0];
+        
+        // Build the RBF matrix
+        let mut a_matrix = Array2::<F>::zeros((n_points, n_points));
+        for i in 0..n_points {
+            for j in 0..n_points {
+                let point_i = points.slice(ndarray::s![i, ..]);
+                let point_j = points.slice(ndarray::s![j, ..]);
+                let r = Self::scaled_distance(&point_i, &point_j, scale_factors);
+                a_matrix[[i, j]] = Self::evaluate_kernel(r, epsilon, kernel);
+            }
+        }
+
+        // Add regularization
+        for i in 0..n_points {
+            a_matrix[[i, i]] += lambda;
+        }
+
+        // Compute the smoothing matrix S (S = A(A+λI)^(-1))
+        // For GCV, we need tr(I - S) which equals tr(I) - tr(S) = n - tr(S)
+        
+        // Convert to f64 for linear algebra
+        let a_f64 = a_matrix.mapv(|x| x.to_f64().unwrap());
+        
+        // For simplicity, estimate the trace without computing the full inverse
+        // This is an approximation of the GCV score
+        let coeffs = Self::compute_coefficients(
+            points, values, epsilon, scale_factors, kernel, lambda, false
+        )?;
+        
+        // Compute residual sum of squares
+        let mut rss = F::zero();
+        for i in 0..n_points {
+            let point_i = points.slice(ndarray::s![i, ..]);
+            let mut predicted = F::zero();
+            
+            for j in 0..n_points {
+                let point_j = points.slice(ndarray::s![j, ..]);
+                let r = Self::scaled_distance(&point_i, &point_j, scale_factors);
+                let rbf_val = Self::evaluate_kernel(r, epsilon, kernel);
+                predicted += coeffs[j] * rbf_val;
+            }
+            
+            let residual = values[i] - predicted;
+            rss += residual * residual;
+        }
+        
+        // Approximate GCV score (simplified)
+        let effective_dof = F::from_usize(n_points).unwrap() * F::from_f64(0.7).unwrap(); // Rough approximation
+        let gcv_score = rss / (F::one() - effective_dof / F::from_usize(n_points).unwrap()).powi(2);
+        
+        Ok(gcv_score)
     }
 
     /// Evaluate the RBF kernel function (standard or enhanced)

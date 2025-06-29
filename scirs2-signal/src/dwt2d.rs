@@ -266,11 +266,16 @@ where
     // Get dimensions
     let (rows, cols) = data.dim();
 
-    // Convert input to f64
-    let data_f64 = data.mapv(|val| {
-        num_traits::cast::cast::<T, f64>(val)
-            .unwrap_or_else(|| panic!("Could not convert {:?} to f64", val))
-    });
+    // Convert input to f64 with proper error handling
+    let mut data_f64 = Array2::zeros(data.dim());
+    for ((i, j), &val) in data.indexed_iter() {
+        match num_traits::cast::cast::<T, f64>(val) {
+            Some(converted) => data_f64[[i, j]] = converted,
+            None => return Err(SignalError::ValueError(
+                "Failed to convert input data to f64".to_string()
+            )),
+        }
+    }
 
     // Calculate output dimensions (ceiling division for half the size)
     // Use integer division that rounds up

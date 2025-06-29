@@ -1,6 +1,6 @@
 //! Rank-based filtering functions for n-dimensional arrays
 
-use ndarray::{Array, Array1, Array2, Dimension};
+use ndarray::{Array, Array1, Array2, ArrayView, Dimension};
 use num_traits::{Float, FromPrimitive, Zero};
 use scirs2_core::{parallel_ops, simd, CoreError};
 use std::fmt::Debug;

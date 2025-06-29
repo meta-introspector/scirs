@@ -367,19 +367,80 @@ where
         "json" => export_to_json(report),
         "summary" => Ok(format_summary_report(report)),
         "csv" => export_to_csv(report),
+        "yaml" => export_to_yaml(report),
+        "xml" => export_to_xml(report),
+        "toml" => export_to_toml(report),
         _ => Err(NeuralError::NotImplementedError(format!(
-            "Export format '{}' not supported",
+            "Export format '{}' not supported. Supported formats: json, summary, csv, yaml, xml, toml",
             format
         ))),
     }
 }
 
-fn export_to_json<F>(_report: &ComprehensiveInterpretationReport<F>) -> Result<String>
+fn export_to_json<F>(report: &ComprehensiveInterpretationReport<F>) -> Result<String>
 where
     F: Float + Debug,
 {
-    // Simplified JSON export
-    Ok("{\"status\": \"exported\", \"format\": \"json\"}".to_string())
+    use serde_json::{json, Map, Value};
+    
+    // Build JSON object with report data
+    let mut json_obj = Map::new();
+    
+    // Basic report information
+    json_obj.insert("input_shape".to_string(), json!(report.basic_report.input_shape));
+    json_obj.insert("target_class".to_string(), json!(report.basic_report.target_class));
+    json_obj.insert("attribution_method".to_string(), json!(format!("{:?}", report.basic_report.attribution_method)));
+    
+    // Attribution data (convert to vector for JSON serialization)
+    let attribution_vec: Vec<f64> = report.basic_report.attribution
+        .iter()
+        .map(|&x| x.to_f64().unwrap_or(0.0))
+        .collect();
+    json_obj.insert("attribution".to_string(), json!(attribution_vec));
+    
+    // Concept activations
+    json_obj.insert("concept_activations".to_string(), json!(report.concept_activations));
+    
+    // Confidence estimates
+    let mut confidence_obj = Map::new();
+    confidence_obj.insert("overall_confidence".to_string(), json!(report.confidence_estimates.overall_confidence));
+    confidence_obj.insert("uncertainty_estimate".to_string(), json!(report.confidence_estimates.uncertainty_estimate));
+    
+    // Method confidence scores
+    let mut method_confidence = Map::new();
+    for (method, confidence) in &report.confidence_estimates.method_confidence {
+        method_confidence.insert(method.clone(), json!(confidence));
+    }
+    confidence_obj.insert("method_confidence".to_string(), json!(method_confidence));
+    
+    json_obj.insert("confidence_estimates".to_string(), json!(confidence_obj));
+    
+    // Feature visualizations (metadata only, as arrays are too large for JSON)
+    let mut viz_metadata = Map::new();
+    for (name, _) in &report.feature_visualizations {
+        viz_metadata.insert(name.clone(), json!("available"));
+    }
+    json_obj.insert("feature_visualizations".to_string(), json!(viz_metadata));
+    
+    // Attention visualizations metadata
+    let mut attention_metadata = Map::new();
+    for (name, _) in &report.attention_visualizations {
+        attention_metadata.insert(name.clone(), json!("available"));
+    }
+    json_obj.insert("attention_visualizations".to_string(), json!(attention_metadata));
+    
+    // Robustness analysis
+    if let Some(ref robustness) = report.robustness_analysis {
+        let mut robustness_obj = Map::new();
+        robustness_obj.insert("adversarial_accuracy".to_string(), json!(robustness.adversarial_accuracy));
+        robustness_obj.insert("attack_success_rate".to_string(), json!(robustness.attack_success_rate));
+        robustness_obj.insert("average_perturbation".to_string(), json!(robustness.average_perturbation));
+        json_obj.insert("robustness_analysis".to_string(), json!(robustness_obj));
+    }
+    
+    // Serialize to JSON string
+    serde_json::to_string_pretty(&json_obj)
+        .map_err(|e| NeuralError::ConfigError(format!("JSON serialization error: {}", e)))
 }
 
 fn format_summary_report<F>(report: &ComprehensiveInterpretationReport<F>) -> String
@@ -403,15 +464,228 @@ where
     output
 }
 
-fn export_to_csv<F>(_report: &ComprehensiveInterpretationReport<F>) -> Result<String>
+fn export_to_csv<F>(report: &ComprehensiveInterpretationReport<F>) -> Result<String>
 where
     F: Float + Debug,
 {
-    // Simplified CSV export
-    Ok(
-        "method,confidence,uncertainty\nsaliency,0.8,0.2\nintegrated_gradients,0.85,0.15"
-            .to_string(),
-    )
+    let mut csv_content = String::new();
+    
+    // Header for method confidence data
+    csv_content.push_str("section,key,value\n");
+    
+    // Basic report information
+    csv_content.push_str(&format!("basic_info,input_shape,\"{:?}\"\n", report.basic_report.input_shape));
+    if let Some(target_class) = report.basic_report.target_class {
+        csv_content.push_str(&format!("basic_info,target_class,{}\n", target_class));
+    }
+    csv_content.push_str(&format!("basic_info,attribution_method,\"{:?}\"\n", report.basic_report.attribution_method));
+    
+    // Confidence estimates
+    csv_content.push_str(&format!("confidence,overall_confidence,{}\n", report.confidence_estimates.overall_confidence));
+    csv_content.push_str(&format!("confidence,uncertainty_estimate,{}\n", report.confidence_estimates.uncertainty_estimate));
+    
+    // Method confidence scores
+    for (method, confidence) in &report.confidence_estimates.method_confidence {
+        csv_content.push_str(&format!("method_confidence,{},{}\n", method, confidence));
+    }
+    
+    // Concept activations
+    for (concept, activation) in &report.concept_activations {
+        csv_content.push_str(&format!("concept_activation,{},{}\n", concept, activation));
+    }
+    
+    // Feature visualizations (just names/availability)
+    for (name, _) in &report.feature_visualizations {
+        csv_content.push_str(&format!("feature_visualization,{},available\n", name));
+    }
+    
+    // Attention visualizations (just names/availability) 
+    for (name, _) in &report.attention_visualizations {
+        csv_content.push_str(&format!("attention_visualization,{},available\n", name));
+    }
+    
+    // Robustness analysis
+    if let Some(ref robustness) = report.robustness_analysis {
+        csv_content.push_str(&format!("robustness,adversarial_accuracy,{}\n", robustness.adversarial_accuracy));
+        csv_content.push_str(&format!("robustness,attack_success_rate,{}\n", robustness.attack_success_rate));
+        csv_content.push_str(&format!("robustness,average_perturbation,{}\n", robustness.average_perturbation));
+    }
+    
+    // Attribution data summary (statistics instead of full array)
+    let attribution_stats = compute_attribution_statistics(&report.basic_report.attribution);
+    csv_content.push_str(&format!("attribution_stats,min,{}\n", attribution_stats.min));
+    csv_content.push_str(&format!("attribution_stats,max,{}\n", attribution_stats.max));
+    csv_content.push_str(&format!("attribution_stats,mean,{}\n", attribution_stats.mean));
+    csv_content.push_str(&format!("attribution_stats,std,{}\n", attribution_stats.std));
+    
+    Ok(csv_content)
+}
+
+/// Helper function to compute attribution statistics
+fn compute_attribution_statistics<F>(attribution: &ArrayD<F>) -> AttributionStats
+where
+    F: Float + Debug + Copy,
+{
+    let data: Vec<f64> = attribution.iter().map(|&x| x.to_f64().unwrap_or(0.0)).collect();
+    
+    let min = data.iter().cloned().fold(f64::INFINITY, f64::min);
+    let max = data.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+    let mean = data.iter().sum::<f64>() / data.len() as f64;
+    let variance = data.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / data.len() as f64;
+    let std = variance.sqrt();
+    
+    AttributionStats { min, max, mean, std }
+}
+
+/// Simple statistics for attribution data
+struct AttributionStats {
+    min: f64,
+    max: f64,
+    mean: f64,
+    std: f64,
+}
+
+/// Export report to YAML format
+fn export_to_yaml<F>(report: &ComprehensiveInterpretationReport<F>) -> Result<String>
+where
+    F: Float + Debug,
+{
+    use serde_yaml;
+    use serde_json::{json, Map, Value};
+    
+    // Reuse the JSON structure but serialize to YAML
+    let mut yaml_obj = Map::new();
+    
+    // Basic report information
+    yaml_obj.insert("input_shape".to_string(), json!(report.basic_report.input_shape));
+    yaml_obj.insert("target_class".to_string(), json!(report.basic_report.target_class));
+    yaml_obj.insert("attribution_method".to_string(), json!(format!("{:?}", report.basic_report.attribution_method)));
+    
+    // Concept activations
+    yaml_obj.insert("concept_activations".to_string(), json!(report.concept_activations));
+    
+    // Confidence estimates
+    let mut confidence_obj = Map::new();
+    confidence_obj.insert("overall_confidence".to_string(), json!(report.confidence_estimates.overall_confidence));
+    confidence_obj.insert("uncertainty_estimate".to_string(), json!(report.confidence_estimates.uncertainty_estimate));
+    
+    let mut method_confidence = Map::new();
+    for (method, confidence) in &report.confidence_estimates.method_confidence {
+        method_confidence.insert(method.clone(), json!(confidence));
+    }
+    confidence_obj.insert("method_confidence".to_string(), json!(method_confidence));
+    yaml_obj.insert("confidence_estimates".to_string(), json!(confidence_obj));
+    
+    // Attribution statistics
+    let attribution_stats = compute_attribution_statistics(&report.basic_report.attribution);
+    let mut stats_obj = Map::new();
+    stats_obj.insert("min".to_string(), json!(attribution_stats.min));
+    stats_obj.insert("max".to_string(), json!(attribution_stats.max));
+    stats_obj.insert("mean".to_string(), json!(attribution_stats.mean));
+    stats_obj.insert("std".to_string(), json!(attribution_stats.std));
+    yaml_obj.insert("attribution_statistics".to_string(), json!(stats_obj));
+    
+    // Serialize to YAML string
+    serde_yaml::to_string(&json!(yaml_obj))
+        .map_err(|e| NeuralError::ConfigError(format!("YAML serialization error: {}", e)))
+}
+
+/// Export report to XML format
+fn export_to_xml<F>(report: &ComprehensiveInterpretationReport<F>) -> Result<String>
+where
+    F: Float + Debug,
+{
+    let mut xml_content = String::new();
+    xml_content.push_str("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+    xml_content.push_str("<interpretation_report>\n");
+    
+    // Basic information
+    xml_content.push_str("  <basic_info>\n");
+    xml_content.push_str(&format!("    <input_shape>{:?}</input_shape>\n", report.basic_report.input_shape));
+    if let Some(target_class) = report.basic_report.target_class {
+        xml_content.push_str(&format!("    <target_class>{}</target_class>\n", target_class));
+    }
+    xml_content.push_str(&format!("    <attribution_method>{:?}</attribution_method>\n", report.basic_report.attribution_method));
+    xml_content.push_str("  </basic_info>\n");
+    
+    // Confidence estimates
+    xml_content.push_str("  <confidence_estimates>\n");
+    xml_content.push_str(&format!("    <overall_confidence>{}</overall_confidence>\n", report.confidence_estimates.overall_confidence));
+    xml_content.push_str(&format!("    <uncertainty_estimate>{}</uncertainty_estimate>\n", report.confidence_estimates.uncertainty_estimate));
+    
+    xml_content.push_str("    <method_confidence>\n");
+    for (method, confidence) in &report.confidence_estimates.method_confidence {
+        xml_content.push_str(&format!("      <method name=\"{}\">{}</method>\n", method, confidence));
+    }
+    xml_content.push_str("    </method_confidence>\n");
+    xml_content.push_str("  </confidence_estimates>\n");
+    
+    // Concept activations
+    xml_content.push_str("  <concept_activations>\n");
+    for (concept, activation) in &report.concept_activations {
+        xml_content.push_str(&format!("    <concept name=\"{}\">{}</concept>\n", concept, activation));
+    }
+    xml_content.push_str("  </concept_activations>\n");
+    
+    // Attribution statistics
+    let attribution_stats = compute_attribution_statistics(&report.basic_report.attribution);
+    xml_content.push_str("  <attribution_statistics>\n");
+    xml_content.push_str(&format!("    <min>{}</min>\n", attribution_stats.min));
+    xml_content.push_str(&format!("    <max>{}</max>\n", attribution_stats.max));
+    xml_content.push_str(&format!("    <mean>{}</mean>\n", attribution_stats.mean));
+    xml_content.push_str(&format!("    <std>{}</std>\n", attribution_stats.std));
+    xml_content.push_str("  </attribution_statistics>\n");
+    
+    xml_content.push_str("</interpretation_report>\n");
+    
+    Ok(xml_content)
+}
+
+/// Export report to TOML format
+fn export_to_toml<F>(report: &ComprehensiveInterpretationReport<F>) -> Result<String>
+where
+    F: Float + Debug,
+{
+    let mut toml_content = String::new();
+    
+    // Basic information
+    toml_content.push_str("[basic_info]\n");
+    toml_content.push_str(&format!("input_shape = \"{:?}\"\n", report.basic_report.input_shape));
+    if let Some(target_class) = report.basic_report.target_class {
+        toml_content.push_str(&format!("target_class = {}\n", target_class));
+    }
+    toml_content.push_str(&format!("attribution_method = \"{:?}\"\n", report.basic_report.attribution_method));
+    toml_content.push_str("\n");
+    
+    // Confidence estimates
+    toml_content.push_str("[confidence_estimates]\n");
+    toml_content.push_str(&format!("overall_confidence = {}\n", report.confidence_estimates.overall_confidence));
+    toml_content.push_str(&format!("uncertainty_estimate = {}\n", report.confidence_estimates.uncertainty_estimate));
+    toml_content.push_str("\n");
+    
+    // Method confidence
+    toml_content.push_str("[method_confidence]\n");
+    for (method, confidence) in &report.confidence_estimates.method_confidence {
+        toml_content.push_str(&format!("{} = {}\n", method.replace(" ", "_"), confidence));
+    }
+    toml_content.push_str("\n");
+    
+    // Concept activations
+    toml_content.push_str("[concept_activations]\n");
+    for (concept, activation) in &report.concept_activations {
+        toml_content.push_str(&format!("{} = {}\n", concept.replace(" ", "_"), activation));
+    }
+    toml_content.push_str("\n");
+    
+    // Attribution statistics
+    let attribution_stats = compute_attribution_statistics(&report.basic_report.attribution);
+    toml_content.push_str("[attribution_statistics]\n");
+    toml_content.push_str(&format!("min = {}\n", attribution_stats.min));
+    toml_content.push_str(&format!("max = {}\n", attribution_stats.max));
+    toml_content.push_str(&format!("mean = {}\n", attribution_stats.mean));
+    toml_content.push_str(&format!("std = {}\n", attribution_stats.std));
+    
+    Ok(toml_content)
 }
 
 // Display implementation for reports

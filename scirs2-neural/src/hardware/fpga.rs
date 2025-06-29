@@ -41,16 +41,31 @@ pub struct FPGADevice {
     bitstream_loaded: bool,
     allocated_resources: ResourceAllocation,
     kernel_cache: HashMap<String, FPGAKernel>,
+    /// Dynamic partial reconfiguration manager
+    dpr_manager: Option<DPRManager>,
+    /// Resource scheduler for temporal multiplexing
+    resource_scheduler: ResourceScheduler,
+    /// Performance profiler
+    profiler: PerformanceProfiler,
 }
 
 impl FPGADevice {
     /// Create a new FPGA device
     pub fn new(config: FPGAConfig) -> Result<Self> {
+        let dpr_manager = if config.vendor == FPGAVendor::Xilinx {
+            Some(DPRManager::new()?)
+        } else {
+            None
+        };
+
         Ok(Self {
             config,
             bitstream_loaded: false,
             allocated_resources: ResourceAllocation::default(),
             kernel_cache: HashMap::new(),
+            dpr_manager,
+            resource_scheduler: ResourceScheduler::new(),
+            profiler: PerformanceProfiler::new(),
         })
     }
 
@@ -407,6 +422,434 @@ pub enum OptimizationLevel {
     O1, // Basic optimization
     O2, // Standard optimization
     O3, // Aggressive optimization
+}
+
+/// Dynamic Partial Reconfiguration Manager
+pub struct DPRManager {
+    /// Available partial regions
+    partial_regions: Vec<PartialRegion>,
+    /// Currently loaded modules
+    loaded_modules: HashMap<String, PartialBitstream>,
+    /// Reconfiguration queue
+    reconfig_queue: Vec<ReconfigRequest>,
+}
+
+impl DPRManager {
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            partial_regions: vec![
+                PartialRegion {
+                    id: 0,
+                    location: (0, 0, 100, 100),
+                    status: RegionStatus::Available,
+                },
+                PartialRegion {
+                    id: 1,
+                    location: (0, 100, 100, 200),
+                    status: RegionStatus::Available,
+                },
+            ],
+            loaded_modules: HashMap::new(),
+            reconfig_queue: Vec::new(),
+        })
+    }
+
+    /// Schedule a partial reconfiguration
+    pub fn schedule_reconfiguration(
+        &mut self,
+        module_name: String,
+        bitstream: PartialBitstream,
+        priority: ReconfigPriority,
+    ) -> Result<u32> {
+        let request_id = self.reconfig_queue.len() as u32;
+        self.reconfig_queue.push(ReconfigRequest {
+            id: request_id,
+            module_name,
+            bitstream,
+            priority,
+            timestamp: std::time::Instant::now(),
+        });
+
+        // Sort by priority
+        self.reconfig_queue
+            .sort_by(|a, b| b.priority.cmp(&a.priority));
+
+        Ok(request_id)
+    }
+
+    /// Execute pending reconfigurations
+    pub fn execute_reconfigurations(&mut self) -> Result<Vec<ReconfigResult>> {
+        let mut results = Vec::new();
+
+        while let Some(request) = self.reconfig_queue.pop() {
+            let start_time = std::time::Instant::now();
+
+            // Find available region
+            if let Some(region) = self
+                .partial_regions
+                .iter_mut()
+                .find(|r| r.status == RegionStatus::Available)
+            {
+                region.status = RegionStatus::Reconfiguring;
+
+                // Simulate reconfiguration time
+                std::thread::sleep(std::time::Duration::from_millis(100));
+
+                // Load the module
+                self.loaded_modules
+                    .insert(request.module_name.clone(), request.bitstream.clone());
+                region.status = RegionStatus::Loaded(request.module_name.clone());
+
+                results.push(ReconfigResult {
+                    request_id: request.id,
+                    success: true,
+                    duration: start_time.elapsed(),
+                    region_id: Some(region.id),
+                    error_message: None,
+                });
+            } else {
+                results.push(ReconfigResult {
+                    request_id: request.id,
+                    success: false,
+                    duration: start_time.elapsed(),
+                    region_id: None,
+                    error_message: Some("No available regions".to_string()),
+                });
+            }
+        }
+
+        Ok(results)
+    }
+}
+
+/// Partial region in FPGA
+#[derive(Debug, Clone)]
+pub struct PartialRegion {
+    pub id: u32,
+    pub location: (u32, u32, u32, u32), // (x, y, width, height)
+    pub status: RegionStatus,
+}
+
+/// Status of a partial region
+#[derive(Debug, Clone, PartialEq)]
+pub enum RegionStatus {
+    Available,
+    Reconfiguring,
+    Loaded(String),
+    Error(String),
+}
+
+/// Partial bitstream
+#[derive(Debug, Clone)]
+pub struct PartialBitstream {
+    pub data: Vec<u8>,
+    pub size: usize,
+    pub module_name: String,
+    pub resource_requirements: ResourceAllocation,
+}
+
+/// Reconfiguration request
+#[derive(Debug, Clone)]
+pub struct ReconfigRequest {
+    pub id: u32,
+    pub module_name: String,
+    pub bitstream: PartialBitstream,
+    pub priority: ReconfigPriority,
+    pub timestamp: std::time::Instant,
+}
+
+/// Reconfiguration priority
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum ReconfigPriority {
+    Low = 1,
+    Medium = 2,
+    High = 3,
+    Critical = 4,
+}
+
+/// Reconfiguration result
+#[derive(Debug, Clone)]
+pub struct ReconfigResult {
+    pub request_id: u32,
+    pub success: bool,
+    pub duration: std::time::Duration,
+    pub region_id: Option<u32>,
+    pub error_message: Option<String>,
+}
+
+/// Resource scheduler for temporal multiplexing
+pub struct ResourceScheduler {
+    /// Scheduled tasks
+    task_queue: Vec<ScheduledTask>,
+    /// Currently executing tasks
+    executing_tasks: Vec<ExecutingTask>,
+    /// Scheduler strategy
+    strategy: SchedulingStrategy,
+}
+
+impl ResourceScheduler {
+    pub fn new() -> Self {
+        Self {
+            task_queue: Vec::new(),
+            executing_tasks: Vec::new(),
+            strategy: SchedulingStrategy::RoundRobin,
+        }
+    }
+
+    /// Schedule a kernel execution
+    pub fn schedule_kernel(
+        &mut self,
+        kernel: FPGAKernel,
+        input_data: Array2<f32>,
+        priority: TaskPriority,
+    ) -> Result<u32> {
+        let task_id = self.task_queue.len() as u32;
+        let task = ScheduledTask {
+            id: task_id,
+            kernel,
+            input_data,
+            priority,
+            submission_time: std::time::Instant::now(),
+            estimated_duration: std::time::Duration::from_millis(100),
+        };
+
+        self.task_queue.push(task);
+        self.sort_task_queue();
+
+        Ok(task_id)
+    }
+
+    /// Sort task queue based on scheduling strategy
+    fn sort_task_queue(&mut self) {
+        match self.strategy {
+            SchedulingStrategy::Priority => {
+                self.task_queue
+                    .sort_by(|a, b| b.priority.cmp(&a.priority));
+            }
+            SchedulingStrategy::ShortestJobFirst => {
+                self.task_queue
+                    .sort_by(|a, b| a.estimated_duration.cmp(&b.estimated_duration));
+            }
+            SchedulingStrategy::EarliestDeadlineFirst => {
+                // Would implement deadline-based sorting
+                self.task_queue
+                    .sort_by(|a, b| a.submission_time.cmp(&b.submission_time));
+            }
+            SchedulingStrategy::RoundRobin => {
+                // FIFO for round-robin
+            }
+        }
+    }
+
+    /// Execute next scheduled task
+    pub fn execute_next_task(&mut self) -> Result<Option<TaskResult>> {
+        if let Some(task) = self.task_queue.pop() {
+            let start_time = std::time::Instant::now();
+
+            // Simulate task execution
+            let executing_task = ExecutingTask {
+                id: task.id,
+                kernel: task.kernel.clone(),
+                start_time,
+                estimated_completion: start_time + task.estimated_duration,
+            };
+
+            self.executing_tasks.push(executing_task);
+
+            // For simulation, complete immediately
+            let duration = std::time::Duration::from_millis(50);
+            let output_shape = task.kernel.compute_output_shape(&[32, 32]);
+            let output = Array2::zeros(output_shape);
+
+            Ok(Some(TaskResult {
+                task_id: task.id,
+                output,
+                execution_time: duration,
+                success: true,
+                error_message: None,
+            }))
+        } else {
+            Ok(None)
+        }
+    }
+}
+
+/// Scheduled task
+#[derive(Debug, Clone)]
+pub struct ScheduledTask {
+    pub id: u32,
+    pub kernel: FPGAKernel,
+    pub input_data: Array2<f32>,
+    pub priority: TaskPriority,
+    pub submission_time: std::time::Instant,
+    pub estimated_duration: std::time::Duration,
+}
+
+/// Currently executing task
+#[derive(Debug, Clone)]
+pub struct ExecutingTask {
+    pub id: u32,
+    pub kernel: FPGAKernel,
+    pub start_time: std::time::Instant,
+    pub estimated_completion: std::time::Instant,
+}
+
+/// Task execution result
+#[derive(Debug, Clone)]
+pub struct TaskResult {
+    pub task_id: u32,
+    pub output: Array2<f32>,
+    pub execution_time: std::time::Duration,
+    pub success: bool,
+    pub error_message: Option<String>,
+}
+
+/// Task priority
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum TaskPriority {
+    Low = 1,
+    Medium = 2,
+    High = 3,
+    Critical = 4,
+}
+
+/// Scheduling strategy
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum SchedulingStrategy {
+    Priority,
+    RoundRobin,
+    ShortestJobFirst,
+    EarliestDeadlineFirst,
+}
+
+/// Performance profiler for FPGA operations
+pub struct PerformanceProfiler {
+    /// Execution history
+    execution_history: Vec<ProfileEntry>,
+    /// Performance metrics
+    metrics: PerformanceMetrics,
+}
+
+impl PerformanceProfiler {
+    pub fn new() -> Self {
+        Self {
+            execution_history: Vec::new(),
+            metrics: PerformanceMetrics::default(),
+        }
+    }
+
+    /// Record kernel execution
+    pub fn record_execution(
+        &mut self,
+        kernel_name: String,
+        execution_time: std::time::Duration,
+        throughput: f32,
+        resource_usage: ResourceUtilization,
+    ) {
+        let entry = ProfileEntry {
+            timestamp: std::time::Instant::now(),
+            kernel_name: kernel_name.clone(),
+            execution_time,
+            throughput,
+            resource_usage,
+        };
+
+        self.execution_history.push(entry);
+        self.update_metrics(&kernel_name, execution_time, throughput);
+    }
+
+    /// Update performance metrics
+    fn update_metrics(&mut self, kernel_name: &str, time: std::time::Duration, throughput: f32) {
+        self.metrics.total_executions += 1;
+        self.metrics.total_time += time;
+        
+        if throughput > self.metrics.peak_throughput {
+            self.metrics.peak_throughput = throughput;
+            self.metrics.best_kernel = Some(kernel_name.to_string());
+        }
+
+        // Update per-kernel statistics
+        let stats = self.metrics.per_kernel_stats
+            .entry(kernel_name.to_string())
+            .or_insert_with(KernelStats::default);
+        
+        stats.execution_count += 1;
+        stats.total_time += time;
+        stats.avg_time = stats.total_time / stats.execution_count as u32;
+        stats.max_throughput = stats.max_throughput.max(throughput);
+    }
+
+    /// Get performance report
+    pub fn generate_report(&self) -> PerformanceReport {
+        PerformanceReport {
+            total_kernels: self.metrics.per_kernel_stats.len(),
+            total_executions: self.metrics.total_executions,
+            avg_execution_time: if self.metrics.total_executions > 0 {
+                self.metrics.total_time / self.metrics.total_executions as u32
+            } else {
+                std::time::Duration::ZERO
+            },
+            peak_throughput: self.metrics.peak_throughput,
+            best_performing_kernel: self.metrics.best_kernel.clone(),
+            bottlenecks: self.identify_bottlenecks(),
+        }
+    }
+
+    /// Identify performance bottlenecks
+    fn identify_bottlenecks(&self) -> Vec<String> {
+        let mut bottlenecks = Vec::new();
+
+        for (kernel_name, stats) in &self.metrics.per_kernel_stats {
+            if stats.avg_time > std::time::Duration::from_millis(100) {
+                bottlenecks.push(format!("Kernel {} has high average execution time", kernel_name));
+            }
+            if stats.max_throughput < 1000.0 {
+                bottlenecks.push(format!("Kernel {} has low throughput", kernel_name));
+            }
+        }
+
+        bottlenecks
+    }
+}
+
+/// Profile entry
+#[derive(Debug, Clone)]
+pub struct ProfileEntry {
+    pub timestamp: std::time::Instant,
+    pub kernel_name: String,
+    pub execution_time: std::time::Duration,
+    pub throughput: f32,
+    pub resource_usage: ResourceUtilization,
+}
+
+/// Performance metrics
+#[derive(Debug, Clone, Default)]
+pub struct PerformanceMetrics {
+    pub total_executions: usize,
+    pub total_time: std::time::Duration,
+    pub peak_throughput: f32,
+    pub best_kernel: Option<String>,
+    pub per_kernel_stats: HashMap<String, KernelStats>,
+}
+
+/// Per-kernel statistics
+#[derive(Debug, Clone, Default)]
+pub struct KernelStats {
+    pub execution_count: usize,
+    pub total_time: std::time::Duration,
+    pub avg_time: std::time::Duration,
+    pub max_throughput: f32,
+}
+
+/// Performance report
+#[derive(Debug, Clone)]
+pub struct PerformanceReport {
+    pub total_kernels: usize,
+    pub total_executions: usize,
+    pub avg_execution_time: std::time::Duration,
+    pub peak_throughput: f32,
+    pub best_performing_kernel: Option<String>,
+    pub bottlenecks: Vec<String>,
 }
 
 #[cfg(test)]

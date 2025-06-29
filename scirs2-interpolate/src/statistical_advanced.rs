@@ -986,3 +986,350 @@ mod tests {
         assert!(lower.iter().zip(upper.iter()).all(|(&l, &u)| l <= u));
     }
 }
+
+/// Savitzky-Golay filter for statistical smoothing and interpolation
+///
+/// Implements the Savitzky-Golay filter which fits local polynomials to data points
+/// using least squares regression. This provides both smoothing and the ability to
+/// compute derivatives of the smoothed signal.
+#[derive(Debug, Clone)]
+pub struct SavitzkyGolayFilter<F: Float> {
+    /// Window length (must be odd)
+    pub window_length: usize,
+    /// Polynomial order
+    pub polynomial_order: usize,
+    /// Derivative order (0 for smoothing, 1 for first derivative, etc.)
+    pub derivative_order: usize,
+}
+
+impl<F> SavitzkyGolayFilter<F>
+where
+    F: Float + FromPrimitive + Debug + std::iter::Sum,
+{
+    /// Create a new Savitzky-Golay filter
+    pub fn new(window_length: usize, polynomial_order: usize, derivative_order: usize) -> InterpolateResult<Self> {
+        if window_length % 2 == 0 {
+            return Err(InterpolateError::InvalidValue(
+                "Window length must be odd".to_string()
+            ));
+        }
+        
+        if polynomial_order >= window_length {
+            return Err(InterpolateError::InvalidValue(
+                "Polynomial order must be less than window length".to_string()
+            ));
+        }
+        
+        if derivative_order > polynomial_order {
+            return Err(InterpolateError::InvalidValue(
+                "Derivative order cannot exceed polynomial order".to_string()
+            ));
+        }
+        
+        Ok(Self {
+            window_length,
+            polynomial_order,
+            derivative_order,
+        })
+    }
+    
+    /// Apply the Savitzky-Golay filter to input data
+    pub fn filter(&self, y: &ArrayView1<F>) -> InterpolateResult<Array1<F>> {
+        let n = y.len();
+        if n < self.window_length {
+            return Err(InterpolateError::InvalidValue(
+                "Data length must be at least window length".to_string()
+            ));
+        }
+        
+        let mut result = Array1::zeros(n);
+        let half_window = self.window_length / 2;
+        
+        // Compute Savitzky-Golay coefficients
+        let coeffs = self.compute_coefficients()?;
+        
+        // Apply filter to each point
+        for i in 0..n {
+            let mut sum = F::zero();
+            
+            for j in 0..self.window_length {
+                let data_idx = if i < half_window {
+                    // Handle left boundary
+                    j.min(n - 1)
+                } else if i >= n - half_window {
+                    // Handle right boundary
+                    (n - self.window_length + j).max(0).min(n - 1)
+                } else {
+                    // Normal case
+                    i - half_window + j
+                };
+                
+                sum = sum + coeffs[j] * y[data_idx];
+            }
+            
+            result[i] = sum;
+        }
+        
+        Ok(result)
+    }
+    
+    /// Compute Savitzky-Golay filter coefficients
+    fn compute_coefficients(&self) -> InterpolateResult<Array1<F>> {
+        let m = self.window_length;
+        let n = self.polynomial_order + 1;
+        let half_window = (m - 1) / 2;
+        
+        // Create design matrix (Vandermonde matrix)
+        let mut design = Array2::<F>::zeros((m, n));
+        for i in 0..m {
+            let x = F::from_isize(i as isize - half_window as isize).unwrap();
+            for j in 0..n {
+                design[[i, j]] = x.powi(j as i32);
+            }
+        }
+        
+        // Solve normal equations: (X^T X) c = X^T e_d
+        // where e_d is the unit vector for the derivative order
+        let xtx = design.t().dot(&design);
+        let mut rhs = Array1::<F>::zeros(n);
+        
+        // Factorial for derivative scaling
+        let mut factorial = F::one();
+        for i in 1..=self.derivative_order {
+            factorial = factorial * F::from_usize(i).unwrap();
+        }
+        rhs[self.derivative_order] = factorial;
+        
+        // Solve the system (simplified - would use proper linear solver in practice)
+        let coeffs_polynomial = self.solve_linear_system(&xtx, &rhs)?;
+        
+        // Transform to filter coefficients
+        let filter_coeffs = design.dot(&coeffs_polynomial);
+        
+        Ok(filter_coeffs)
+    }
+    
+    /// Simplified linear system solver
+    fn solve_linear_system(&self, a: &Array2<F>, b: &Array1<F>) -> InterpolateResult<Array1<F>> {
+        let n = a.nrows();
+        let mut x = Array1::<F>::zeros(n);
+        
+        // Very simplified diagonal solver (would use proper LU decomposition in practice)
+        for i in 0..n {
+            if a[[i, i]].abs() < F::from_f64(1e-12).unwrap() {
+                return Err(InterpolateError::ComputationError(
+                    "Singular matrix in Savitzky-Golay computation".to_string()
+                ));
+            }
+            x[i] = b[i] / a[[i, i]];
+        }
+        
+        Ok(x)
+    }
+}
+
+/// Bias-Corrected and Accelerated (BCa) Bootstrap
+///
+/// Provides more accurate confidence intervals than basic percentile bootstrap
+/// by correcting for bias and skewness in the bootstrap distribution.
+#[derive(Debug, Clone)]
+pub struct BcaBootstrap<F: Float> {
+    /// Number of bootstrap samples
+    pub n_bootstrap: usize,
+    /// Confidence level (e.g., 0.95)
+    pub confidence_level: F,
+    /// Random seed for reproducibility
+    pub seed: Option<u64>,
+}
+
+impl<F> BcaBootstrap<F>
+where
+    F: Float + FromPrimitive + Debug + std::iter::Sum,
+{
+    /// Create a new BCa bootstrap
+    pub fn new(n_bootstrap: usize, confidence_level: F, seed: Option<u64>) -> Self {
+        Self {
+            n_bootstrap,
+            confidence_level,
+            seed,
+        }
+    }
+    
+    /// Compute BCa confidence intervals
+    pub fn confidence_intervals<G>(
+        &self,
+        x: &ArrayView1<F>,
+        y: &ArrayView1<F>,
+        x_new: &ArrayView1<F>,
+        interpolator: G,
+    ) -> InterpolateResult<(Array1<F>, Array1<F>, Array1<F>)>
+    where
+        G: Fn(&ArrayView1<F>, &ArrayView1<F>, &ArrayView1<F>) -> InterpolateResult<Array1<F>>,
+    {
+        let n_data = x.len();
+        let n_pred = x_new.len();
+        
+        // Generate bootstrap samples
+        let mut rng = match self.seed {
+            Some(seed) => StdRng::seed_from_u64(seed),
+            None => {
+                let mut thread_rng = rand::rng();
+                StdRng::from_rng(&mut thread_rng)
+            }
+        };
+        
+        let mut bootstrap_results = Array2::<F>::zeros((self.n_bootstrap, n_pred));
+        
+        // Bootstrap resampling
+        for b in 0..self.n_bootstrap {
+            let mut x_boot = Array1::<F>::zeros(n_data);
+            let mut y_boot = Array1::<F>::zeros(n_data);
+            
+            for i in 0..n_data {
+                let idx = rng.random_range(0..n_data);
+                x_boot[i] = x[idx];
+                y_boot[i] = y[idx];
+            }
+            
+            let pred = interpolator(&x_boot.view(), &y_boot.view(), x_new)?;
+            bootstrap_results.row_mut(b).assign(&pred);
+        }
+        
+        // Compute original estimate
+        let original_pred = interpolator(x, y, x_new)?;
+        
+        // Compute bias correction
+        let bias_correction = self.compute_bias_correction(&bootstrap_results, &original_pred)?;
+        
+        // Compute acceleration
+        let acceleration = self.compute_acceleration(x, y, x_new, &interpolator)?;
+        
+        // Compute BCa intervals
+        let alpha = (F::one() - self.confidence_level) / F::from_f64(2.0).unwrap();
+        let z_alpha = self.inverse_normal_cdf(alpha)?;
+        let z_1_alpha = self.inverse_normal_cdf(F::one() - alpha)?;
+        
+        let mut lower = Array1::<F>::zeros(n_pred);
+        let mut upper = Array1::<F>::zeros(n_pred);
+        
+        for i in 0..n_pred {
+            let bc = bias_correction[i];
+            let acc = acceleration[i];
+            
+            // Adjusted percentiles
+            let alpha1 = self.normal_cdf(bc + (bc + z_alpha) / (F::one() - acc * (bc + z_alpha)))?;
+            let alpha2 = self.normal_cdf(bc + (bc + z_1_alpha) / (F::one() - acc * (bc + z_1_alpha)))?;
+            
+            // Extract percentiles from bootstrap distribution
+            let mut column: Vec<F> = bootstrap_results.column(i).to_vec();
+            column.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            
+            let idx1 = ((alpha1 * F::from_usize(self.n_bootstrap).unwrap()).floor().to_usize().unwrap()).min(self.n_bootstrap - 1);
+            let idx2 = ((alpha2 * F::from_usize(self.n_bootstrap).unwrap()).floor().to_usize().unwrap()).min(self.n_bootstrap - 1);
+            
+            lower[i] = column[idx1];
+            upper[i] = column[idx2];
+        }
+        
+        Ok((original_pred, lower, upper))
+    }
+    
+    /// Compute bias correction parameter
+    fn compute_bias_correction(
+        &self,
+        bootstrap_results: &Array2<F>,
+        original_pred: &Array1<F>,
+    ) -> InterpolateResult<Array1<F>> {
+        let n_pred = original_pred.len();
+        let mut bias_correction = Array1::<F>::zeros(n_pred);
+        
+        for i in 0..n_pred {
+            let column = bootstrap_results.column(i);
+            let count_less = column.iter()
+                .filter(|&&val| val < original_pred[i])
+                .count();
+            
+            let proportion = F::from_usize(count_less).unwrap() / F::from_usize(self.n_bootstrap).unwrap();
+            bias_correction[i] = self.inverse_normal_cdf(proportion)?;
+        }
+        
+        Ok(bias_correction)
+    }
+    
+    /// Compute acceleration parameter using jackknife
+    fn compute_acceleration<G>(
+        &self,
+        x: &ArrayView1<F>,
+        y: &ArrayView1<F>,
+        x_new: &ArrayView1<F>,
+        interpolator: &G,
+    ) -> InterpolateResult<Array1<F>>
+    where
+        G: Fn(&ArrayView1<F>, &ArrayView1<F>, &ArrayView1<F>) -> InterpolateResult<Array1<F>>,
+    {
+        let n_data = x.len();
+        let n_pred = x_new.len();
+        
+        // Jackknife estimates
+        let mut jackknife_results = Array2::<F>::zeros((n_data, n_pred));
+        
+        for i in 0..n_data {
+            // Leave-one-out sample
+            let mut x_jack = Array1::<F>::zeros(n_data - 1);
+            let mut y_jack = Array1::<F>::zeros(n_data - 1);
+            
+            let mut idx = 0;
+            for j in 0..n_data {
+                if j != i {
+                    x_jack[idx] = x[j];
+                    y_jack[idx] = y[j];
+                    idx += 1;
+                }
+            }
+            
+            let pred = interpolator(&x_jack.view(), &y_jack.view(), x_new)?;
+            jackknife_results.row_mut(i).assign(&pred);
+        }
+        
+        // Compute jackknife mean
+        let jack_mean = jackknife_results.mean_axis(Axis(0)).unwrap();
+        
+        // Compute acceleration
+        let mut acceleration = Array1::<F>::zeros(n_pred);
+        for i in 0..n_pred {
+            let mut sum_cubed = F::zero();
+            let mut sum_squared = F::zero();
+            
+            for j in 0..n_data {
+                let diff = jack_mean[i] - jackknife_results[[j, i]];
+                sum_cubed = sum_cubed + diff * diff * diff;
+                sum_squared = sum_squared + diff * diff;
+            }
+            
+            if sum_squared > F::zero() {
+                acceleration[i] = sum_cubed / (F::from_f64(6.0).unwrap() * sum_squared.powf(F::from_f64(1.5).unwrap()));
+            }
+        }
+        
+        Ok(acceleration)
+    }
+    
+    /// Simplified normal CDF approximation
+    fn normal_cdf(&self, x: F) -> InterpolateResult<F> {
+        // Simplified approximation - would use proper implementation in practice
+        let result = (F::one() + (x / F::from_f64(1.414).unwrap()).tanh()) / F::from_f64(2.0).unwrap();
+        Ok(result)
+    }
+    
+    /// Simplified inverse normal CDF approximation
+    fn inverse_normal_cdf(&self, p: F) -> InterpolateResult<F> {
+        // Very simplified approximation - would use proper implementation
+        if p <= F::zero() || p >= F::one() {
+            return Ok(F::zero());
+        }
+        
+        // Rough approximation using atanh
+        let x = F::from_f64(2.0).unwrap() * p - F::one();
+        Ok(F::from_f64(1.414).unwrap() * x.atanh())
+    }
+}

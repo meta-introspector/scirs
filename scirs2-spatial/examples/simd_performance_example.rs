@@ -128,19 +128,19 @@ fn batch_distance_performance_example() -> Result<(), Box<dyn std::error::Error>
         let points2 = generate_random_points(n_points, dim);
 
         // Measure performance
-        let (scalar_time, simd_time) = bench::benchmark_distance_computation(
+        let results = bench::benchmark_distance_computation(
             &points1.view(),
             &points2.view(),
             1, // Single iteration since we have many points
         );
 
-        let speedup = scalar_time / simd_time;
+        let speedup = results.scalar_time / results.simd_time;
 
         println!(
             "{:>8} {:>12.1} {:>12.1} {:>12.2}x",
             dim,
-            scalar_time * 1000.0,
-            simd_time * 1000.0,
+            results.scalar_time * 1000.0,
+            results.simd_time * 1000.0,
             speedup
         );
     }

@@ -32,19 +32,111 @@ pub struct GpuVisionContext {
 impl GpuVisionContext {
     /// Create a new GPU vision context with the preferred backend
     pub fn new() -> Result<Self> {
-        let backend = GpuBackend::preferred();
-        let context = GpuContext::new(backend)
-            .map_err(|e| VisionError::Other(format!("Failed to create GPU context: {}", e)))?;
-
-        Ok(Self { context, backend })
+        let preferred_backend = GpuBackend::preferred();
+        
+        // Try preferred backend first
+        match GpuContext::new(preferred_backend) {
+            Ok(context) => {
+                eprintln!("Successfully created GPU context with backend: {:?}", preferred_backend);
+                Ok(Self { 
+                    context, 
+                    backend: preferred_backend 
+                })
+            }
+            Err(preferred_error) => {
+                eprintln!(
+                    "Failed to create GPU context with preferred backend {:?}: {}",
+                    preferred_backend, preferred_error
+                );
+                
+                // Try fallback backends in order of preference
+                let fallback_backends = [
+                    GpuBackend::Cpu,  // Always available as final fallback
+                    GpuBackend::Wgpu, // Cross-platform
+                    GpuBackend::OpenCl, // Widely supported
+                    GpuBackend::Cuda,   // NVIDIA specific
+                    GpuBackend::Metal,  // Apple specific
+                ];
+                
+                for &fallback_backend in &fallback_backends {
+                    if fallback_backend == preferred_backend {
+                        continue; // Skip already tried backend
+                    }
+                    
+                    match GpuContext::new(fallback_backend) {
+                        Ok(context) => {
+                            eprintln!(
+                                "Successfully created GPU context with fallback backend: {:?}",
+                                fallback_backend
+                            );
+                            return Ok(Self { 
+                                context, 
+                                backend: fallback_backend 
+                            });
+                        }
+                        Err(fallback_error) => {
+                            eprintln!(
+                                "Fallback backend {:?} also failed: {}",
+                                fallback_backend, fallback_error
+                            );
+                        }
+                    }
+                }
+                
+                // If all backends fail, return the original error with helpful context
+                Err(VisionError::Other(format!(
+                    "Failed to create GPU context with any backend. Preferred backend {:?} failed with: {}. All fallback backends also failed. Check GPU drivers and compute capabilities.",
+                    preferred_backend, preferred_error
+                )))
+            }
+        }
     }
 
     /// Create a new GPU vision context with a specific backend
     pub fn with_backend(backend: GpuBackend) -> Result<Self> {
-        let context = GpuContext::new(backend)
-            .map_err(|e| VisionError::Other(format!("Failed to create GPU context: {}", e)))?;
-
-        Ok(Self { context, backend })
+        match GpuContext::new(backend) {
+            Ok(context) => {
+                eprintln!("Successfully created GPU context with requested backend: {:?}", backend);
+                Ok(Self { context, backend })
+            }
+            Err(error) => {
+                let detailed_error = match backend {
+                    GpuBackend::Cuda => {
+                        format!(
+                            "CUDA backend failed: {}. Ensure NVIDIA drivers are installed and CUDA-capable GPU is available.", 
+                            error
+                        )
+                    }
+                    GpuBackend::Metal => {
+                        format!(
+                            "Metal backend failed: {}. Metal is only available on macOS with compatible hardware.", 
+                            error
+                        )
+                    }
+                    GpuBackend::OpenCl => {
+                        format!(
+                            "OpenCL backend failed: {}. Check OpenCL runtime installation and driver support.", 
+                            error
+                        )
+                    }
+                    GpuBackend::Wgpu => {
+                        format!(
+                            "WebGPU backend failed: {}. Check GPU drivers and WebGPU support.", 
+                            error
+                        )
+                    }
+                    GpuBackend::Cpu => {
+                        format!(
+                            "CPU backend failed: {}. This should not happen as CPU backend should always be available.", 
+                            error
+                        )
+                    }
+                };
+                
+                eprintln!("GPU context creation failed: {}", detailed_error);
+                Err(VisionError::Other(detailed_error))
+            }
+        }
     }
 
     /// Get the backend being used
@@ -297,8 +389,36 @@ fn conv2d_vision(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 Array2::from_shape_vec((height, width), result_flat)
                     .map_err(|e| VisionError::Other(format!("Failed to reshape output: {}", e)))
             }
-            Err(_) => {
-                // Fall back to SIMD if compilation fails
+            Err(compile_error) => {
+                // Log compilation error for debugging
+                eprintln!(
+                    "GPU kernel compilation failed for backend {:?}: {}. Falling back to SIMD.",
+                    ctx.backend(),
+                    compile_error
+                );
+                
+                // Attempt to provide more specific error information
+                let error_details = match ctx.backend() {
+                    GpuBackend::Cuda => {
+                        "CUDA kernel compilation failed. Check CUDA installation and driver version."
+                    }
+                    GpuBackend::Wgpu => {
+                        "WebGPU/WGSL kernel compilation failed. Check shader syntax and GPU support."
+                    }
+                    GpuBackend::Metal => {
+                        "Metal kernel compilation failed. Check macOS version and Metal support."
+                    }
+                    GpuBackend::OpenCl => {
+                        "OpenCL kernel compilation failed. Check OpenCL runtime and drivers."
+                    }
+                    GpuBackend::Cpu => {
+                        "CPU backend should not reach kernel compilation. This is a logic error."
+                    }
+                };
+                
+                eprintln!("GPU Error Details: {}", error_details);
+                
+                // Fall back to SIMD implementation
                 crate::simd_ops::simd_convolve_2d(image, kernel)
             }
         }
@@ -430,8 +550,15 @@ fn gradient_magnitude(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 Array2::from_shape_vec((height, width), result_flat)
                     .map_err(|e| VisionError::Other(format!("Failed to reshape output: {}", e)))
             }
-            Err(_) => {
-                // Fall back to CPU
+            Err(compile_error) => {
+                // Log compilation error and fall back to CPU
+                eprintln!(
+                    "GPU gradient magnitude kernel compilation failed for backend {:?}: {}. Using CPU fallback.",
+                    ctx.backend(),
+                    compile_error
+                );
+                
+                // CPU fallback implementation
                 let mut magnitude = Array2::zeros((height, width));
                 for ((m, gx), gy) in magnitude.iter_mut().zip(grad_x.iter()).zip(grad_y.iter()) {
                     *m = (gx * gx + gy * gy).sqrt();
@@ -588,6 +715,57 @@ extern "C" __global__ void separable_conv_1d(
 }
 "#
         .to_string(),
+        GpuBackend::Wgpu => r#"
+struct SeparableParams {
+    height: u32,
+    width: u32,
+    kernel_size: u32,
+    horizontal: u32,
+};
+
+@group(0) @binding(0) var<storage, read> input: array<f32>;
+@group(0) @binding(1) var<storage, read> kernel: array<f32>;
+@group(0) @binding(2) var<storage, write> output: array<f32>;
+@group(0) @binding(3) var<uniform> params: SeparableParams;
+
+@compute @workgroup_size(256)
+fn separable_conv_1d(@builtin(global_invocation_id) global_id: vec3<u32>) {
+    let idx = global_id.x;
+    let total_size = params.height * params.width;
+    
+    if (idx >= total_size) {
+        return;
+    }
+    
+    let y = idx / params.width;
+    let x = idx % params.width;
+    let half_kernel = i32(params.kernel_size / 2u);
+    var sum = 0.0;
+    
+    if (params.horizontal != 0u) {
+        // Horizontal pass
+        for (var k = 0u; k < params.kernel_size; k = k + 1u) {
+            let src_x = i32(x) + i32(k) - half_kernel;
+            if (src_x >= 0 && src_x < i32(params.width)) {
+                let input_idx = y * params.width + u32(src_x);
+                sum += input[input_idx] * kernel[k];
+            }
+        }
+    } else {
+        // Vertical pass
+        for (var k = 0u; k < params.kernel_size; k = k + 1u) {
+            let src_y = i32(y) + i32(k) - half_kernel;
+            if (src_y >= 0 && src_y < i32(params.height)) {
+                let input_idx = u32(src_y) * params.width + x;
+                sum += input[input_idx] * kernel[k];
+            }
+        }
+    }
+    
+    output[idx] = sum;
+}
+"#
+        .to_string(),
         _ => {
             // Fall back for unsupported backends
             return Ok(input.to_vec());
@@ -600,10 +778,24 @@ extern "C" __global__ void separable_conv_1d(
                 kernel_handle.set_buffer("input", &input_buffer);
                 kernel_handle.set_buffer("kernel", &kernel_buffer);
                 kernel_handle.set_buffer("output", &output_buffer);
-                kernel_handle.set_i32("height", height as i32);
-                kernel_handle.set_i32("width", width as i32);
-                kernel_handle.set_i32("kernel_size", kernel.len() as i32);
-                kernel_handle.set_i32("horizontal", if horizontal { 1 } else { 0 });
+                
+                // Set parameters based on backend type
+                match ctx.backend() {
+                    GpuBackend::Wgpu => {
+                        // For WebGPU, parameters are passed as a uniform struct
+                        kernel_handle.set_u32("height", height as u32);
+                        kernel_handle.set_u32("width", width as u32);
+                        kernel_handle.set_u32("kernel_size", kernel.len() as u32);
+                        kernel_handle.set_u32("horizontal", if horizontal { 1 } else { 0 });
+                    }
+                    _ => {
+                        // For CUDA and other backends, use individual parameters
+                        kernel_handle.set_i32("height", height as i32);
+                        kernel_handle.set_i32("width", width as i32);
+                        kernel_handle.set_i32("kernel_size", kernel.len() as i32);
+                        kernel_handle.set_i32("horizontal", if horizontal { 1 } else { 0 });
+                    }
+                }
 
                 let workgroup_size = 256;
                 let work_groups = (height * width).div_ceil(workgroup_size);
@@ -614,7 +806,14 @@ extern "C" __global__ void separable_conv_1d(
                 output_buffer.copy_to_host(&mut result);
                 Ok(result)
             }
-            Err(_) => Ok(input.to_vec()),
+            Err(compile_error) => {
+                eprintln!(
+                    "GPU separable convolution kernel compilation failed for backend {:?}: {}. Using CPU fallback.",
+                    ctx.backend(),
+                    compile_error
+                );
+                Ok(input.to_vec())
+            },
         })
 }
 
@@ -730,7 +929,14 @@ fn element_wise_multiply(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 Array2::from_shape_vec((height, width), result_flat)
                     .map_err(|e| VisionError::Other(format!("Failed to reshape output: {}", e)))
             }
-            Err(_) => Ok(a * b),
+            Err(compile_error) => {
+                eprintln!(
+                    "GPU element-wise multiplication kernel compilation failed for backend {:?}: {}. Using CPU fallback.",
+                    ctx.backend(),
+                    compile_error
+                );
+                Ok(a * b)
+            },
         })
 }
 
@@ -850,8 +1056,14 @@ fn harris_response(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 Array2::from_shape_vec((height, width), result_flat)
                     .map_err(|e| VisionError::Other(format!("Failed to reshape output: {}", e)))
             }
-            Err(_) => {
-                // CPU fallback
+            Err(compile_error) => {
+                eprintln!(
+                    "GPU Harris response kernel compilation failed for backend {:?}: {}. Using CPU fallback.",
+                    ctx.backend(),
+                    compile_error
+                );
+                
+                // CPU fallback implementation
                 let mut response = Array2::zeros((height, width));
                 for y in 0..height {
                     for x in 0..width {

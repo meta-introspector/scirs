@@ -711,9 +711,23 @@ impl CacheManager {
     pub fn get(&self, key: &CacheKey) -> Result<Option<crate::utils::Dataset>> {
         let name = key.as_string();
         if self.cache.is_cached(&name) {
-            // For now, return None since we need to implement proper Dataset deserialization
-            // This is a placeholder that will need proper implementation
-            Ok(None)
+            match self.cache.read_cached(&name) {
+                Ok(cached_data) => {
+                    match serde_json::from_slice::<crate::utils::Dataset>(&cached_data) {
+                        Ok(dataset) => Ok(Some(dataset)),
+                        Err(e) => {
+                            // If deserialization fails, consider the cache entry invalid
+                            let _ = self.mem_cache.borrow_mut().remove(&FileCacheKey(name.clone()));
+                            Err(DatasetsError::CacheError(format!(
+                                "Failed to deserialize cached dataset: {}", e
+                            )))
+                        }
+                    }
+                }
+                Err(e) => Err(DatasetsError::CacheError(format!(
+                    "Failed to read cached data: {}", e
+                )))
+            }
         } else {
             Ok(None)
         }
@@ -722,13 +736,16 @@ impl CacheManager {
     /// Put a dataset into cache using CacheKey
     pub fn put(&self, key: &CacheKey, dataset: &crate::utils::Dataset) -> Result<()> {
         let name = key.as_string();
-        // For now, this is a placeholder that will need proper Dataset serialization
-        // We would serialize the dataset to bytes and store it
-        // This is a simplified implementation
+        
+        // Serialize the dataset to JSON bytes for caching
         let serialized = serde_json::to_vec(dataset).map_err(|e| {
             DatasetsError::CacheError(format!("Failed to serialize dataset: {}", e))
         })?;
-        self.cache.write_cached(&name, &serialized)
+        
+        // Write the serialized data to cache
+        self.cache.write_cached(&name, &serialized).map_err(|e| {
+            DatasetsError::CacheError(format!("Failed to write to cache: {}", e))
+        })
     }
 
     /// Create a cache manager with comprehensive configuration

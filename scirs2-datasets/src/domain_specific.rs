@@ -111,7 +111,7 @@ pub mod astronomy {
         }
 
         fn load_synthetic_stellar_data(&self, catalog: &str, n_stars: usize) -> Result<Dataset> {
-            use rand::{rng, Rng};
+            use rand::rng;
             use rand_distr::{Distribution, Normal};
 
             let mut rng = rng();
@@ -207,7 +207,7 @@ pub mod astronomy {
         }
 
         fn load_synthetic_exoplanet_data(&self, n_planets: usize) -> Result<Dataset> {
-            use rand::{rng, Rng};
+            use rand::rng;
             use rand_distr::{Distribution, LogNormal, Normal};
 
             let mut rng = rng();
@@ -290,7 +290,7 @@ pub mod astronomy {
         }
 
         fn load_synthetic_supernova_data(&self, n_supernovae: usize) -> Result<Dataset> {
-            use rand::{rng, Rng};
+            use rand::rng;
             use rand_distr::{Distribution, Normal};
 
             let mut rng = rng();
@@ -300,7 +300,7 @@ pub mod astronomy {
             let mut sn_types = Vec::with_capacity(n_supernovae);
 
             // Different supernova types have different characteristics
-            let type_probs = [0.7, 0.15, 0.10, 0.05]; // Ia, Ib/c, II-P, II-L
+            let _type_probs = [0.7, 0.15, 0.10, 0.05]; // Ia, Ib/c, II-P, II-L
 
             for _ in 0..n_supernovae {
                 let sn_type = rng.random_range(0..4);
@@ -490,7 +490,7 @@ pub mod genomics {
             n_sequences: usize,
             sequence_length: usize,
         ) -> Result<Dataset> {
-            use rand::{rng, Rng};
+            use rand::rng;
 
             let mut rng = rng();
             let nucleotides = ['A', 'T', 'G', 'C'];
@@ -504,7 +504,7 @@ pub mod genomics {
                 // Generate sequence with some patterns
                 let seq_type = seq_idx % 3; // 3 different types
 
-                for pos in 0..sequence_length {
+                for _pos in 0..sequence_length {
                     let nucleotide = match seq_type {
                         0 => {
                             // GC-rich sequences
@@ -670,7 +670,7 @@ pub mod climate {
             n_stations: usize,
             n_years: usize,
         ) -> Result<Dataset> {
-            use rand::{rng, Rng};
+            use rand::rng;
             use rand_distr::{Distribution, Normal};
 
             let mut rng = rng();
@@ -801,7 +801,7 @@ pub mod climate {
 
         /// Load atmospheric chemistry data
         pub fn load_atmospheric_chemistry(&self, n_measurements: usize) -> Result<Dataset> {
-            use rand::{rng, Rng};
+            use rand::rng;
             use rand_distr::{Distribution, LogNormal, Normal};
 
             let mut rng = rng();

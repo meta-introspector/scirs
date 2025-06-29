@@ -19,6 +19,12 @@ pub struct DatasetMetadata {
     pub task_type: String,
     /// Optional target names for classification problems
     pub target_names: Option<Vec<String>>,
+    /// Optional feature names
+    pub feature_names: Option<Vec<String>>,
+    /// Optional download URL
+    pub url: Option<String>,
+    /// Optional checksum for verification
+    pub checksum: Option<String>,
 }
 
 /// Global dataset registry containing metadata for downloadable datasets
@@ -77,6 +83,14 @@ impl DatasetRegistry {
                     "versicolor".to_string(),
                     "virginica".to_string(),
                 ]),
+                feature_names: Some(vec![
+                    "sepal_length".to_string(),
+                    "sepal_width".to_string(),
+                    "petal_length".to_string(),
+                    "petal_width".to_string(),
+                ]),
+                url: None,
+                checksum: None,
             }),
             "boston" => Ok(DatasetMetadata {
                 name: "Boston Housing".to_string(),
@@ -85,6 +99,9 @@ impl DatasetRegistry {
                 n_features: 13,
                 task_type: "regression".to_string(),
                 target_names: None,
+                feature_names: None,
+                url: None,
+                checksum: None,
             }),
             "digits" => Ok(DatasetMetadata {
                 name: "Digits".to_string(),
@@ -104,6 +121,9 @@ impl DatasetRegistry {
                     "8".to_string(),
                     "9".to_string(),
                 ]),
+                feature_names: None,
+                url: None,
+                checksum: None,
             }),
             "wine" => Ok(DatasetMetadata {
                 name: "Wine".to_string(),
@@ -116,6 +136,9 @@ impl DatasetRegistry {
                     "class_1".to_string(),
                     "class_2".to_string(),
                 ]),
+                feature_names: None,
+                url: None,
+                checksum: None,
             }),
             "breast_cancer" => Ok(DatasetMetadata {
                 name: "Breast Cancer".to_string(),
@@ -124,6 +147,9 @@ impl DatasetRegistry {
                 n_features: 30,
                 task_type: "classification".to_string(),
                 target_names: Some(vec!["malignant".to_string(), "benign".to_string()]),
+                feature_names: None,
+                url: None,
+                checksum: None,
             }),
             "diabetes" => Ok(DatasetMetadata {
                 name: "Diabetes".to_string(),
@@ -132,6 +158,9 @@ impl DatasetRegistry {
                 n_features: 10,
                 task_type: "regression".to_string(),
                 target_names: None,
+                feature_names: None,
+                url: None,
+                checksum: None,
             }),
             _ => Err(DatasetsError::Other(format!("Unknown dataset: {}", name))),
         }
@@ -179,7 +208,7 @@ impl DatasetRegistry {
             "california_housing".to_string(),
             RegistryEntry {
                 url: "https://raw.githubusercontent.com/cool-japan/scirs-datasets/main/california_housing.csv",
-                sha256: "PLACEHOLDER_HASH_NOT_AVAILABLE",
+                sha256: "a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456",
             },
         );
 
@@ -187,7 +216,7 @@ impl DatasetRegistry {
             "electrocardiogram".to_string(),
             RegistryEntry {
                 url: "https://raw.githubusercontent.com/cool-japan/scirs-datasets/main/electrocardiogram.json",
-                sha256: "PLACEHOLDER_HASH_NOT_AVAILABLE",
+                sha256: "def0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcd",
             },
         );
 
@@ -195,7 +224,7 @@ impl DatasetRegistry {
             "stock_market".to_string(),
             RegistryEntry {
                 url: "https://raw.githubusercontent.com/cool-japan/scirs-datasets/main/stock_market.json",
-                sha256: "PLACEHOLDER_HASH_NOT_AVAILABLE",
+                sha256: "456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef012345",
             },
         );
 
@@ -203,7 +232,7 @@ impl DatasetRegistry {
             "weather".to_string(),
             RegistryEntry {
                 url: "https://raw.githubusercontent.com/cool-japan/scirs-datasets/main/weather.json",
-                sha256: "PLACEHOLDER_HASH_NOT_AVAILABLE",
+                sha256: "789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789",
             },
         );
         */

@@ -169,6 +169,250 @@ __kernel void sobel_filter_2d(
 }
 "#;
 
+const HISTOGRAM_KERNEL: &str = r#"
+__kernel void compute_histogram(
+    __global const float* input,
+    __global int* histogram,
+    const float min_val,
+    const float max_val,
+    const int num_bins,
+    const int total_pixels
+) {
+    int idx = get_global_id(0);
+    
+    if (idx >= total_pixels) return;
+    
+    float val = input[idx];
+    if (val >= min_val && val <= max_val) {
+        float normalized = (val - min_val) / (max_val - min_val);
+        int bin = (int)(normalized * (num_bins - 1));
+        bin = clamp(bin, 0, num_bins - 1);
+        atomic_inc(&histogram[bin]);
+    }
+}
+"#;
+
+const MORPHOLOGY_EROSION_KERNEL: &str = r#"
+__kernel void morphology_erosion_2d(
+    __global const float* input,
+    __global float* output,
+    __global const int* structure,
+    const int struct_width,
+    const int struct_height,
+    const int width,
+    const int height
+) {
+    int x = get_global_id(0);
+    int y = get_global_id(1);
+    
+    if (x >= width || y >= height) return;
+    
+    float min_val = INFINITY;
+    int struct_center_x = struct_width / 2;
+    int struct_center_y = struct_height / 2;
+    
+    for (int sy = 0; sy < struct_height; sy++) {
+        for (int sx = 0; sx < struct_width; sx++) {
+            if (structure[sy * struct_width + sx]) {
+                int px = x + sx - struct_center_x;
+                int py = y + sy - struct_center_y;
+                px = clamp(px, 0, width - 1);
+                py = clamp(py, 0, height - 1);
+                
+                float val = input[py * width + px];
+                min_val = fmin(min_val, val);
+            }
+        }
+    }
+    
+    output[y * width + x] = min_val;
+}
+"#;
+
+const WAVELET_TRANSFORM_KERNEL: &str = r#"
+__kernel void wavelet_transform_2d(
+    __global const float* input,
+    __global float* ll_output,
+    __global float* lh_output,
+    __global float* hl_output,
+    __global float* hh_output,
+    __global const float* low_filter,
+    __global const float* high_filter,
+    const int filter_length,
+    const int width,
+    const int height
+) {
+    int x = get_global_id(0);
+    int y = get_global_id(1);
+    
+    if (x >= width/2 || y >= height/2) return;
+    
+    int filter_radius = filter_length / 2;
+    
+    // Apply row filters first
+    float ll_row = 0.0f, lh_row = 0.0f;
+    for (int i = 0; i < filter_length; i++) {
+        int px = clamp(x * 2 + i - filter_radius, 0, width - 1);
+        ll_row += input[y * 2 * width + px] * low_filter[i];
+        lh_row += input[y * 2 * width + px] * high_filter[i];
+    }
+    
+    // Apply column filters to row results
+    float ll = 0.0f, lh = 0.0f, hl = 0.0f, hh = 0.0f;
+    for (int i = 0; i < filter_length; i++) {
+        int py = clamp(y * 2 + i - filter_radius, 0, height - 1);
+        // This is simplified - full implementation would need temporary storage
+        ll += ll_row * low_filter[i];
+        lh += lh_row * low_filter[i];
+        hl += ll_row * high_filter[i];
+        hh += lh_row * high_filter[i];
+    }
+    
+    ll_output[y * (width/2) + x] = ll;
+    lh_output[y * (width/2) + x] = lh;
+    hl_output[y * (width/2) + x] = hl;
+    hh_output[y * (width/2) + x] = hh;
+}
+"#;
+
+const TEMPLATE_MATCHING_KERNEL: &str = r#"
+__kernel void template_matching_ncc(
+    __global const float* image,
+    __global const float* template,
+    __global float* output,
+    const int image_width,
+    const int image_height,
+    const int template_width,
+    const int template_height,
+    const float template_mean,
+    const float template_norm
+) {
+    int x = get_global_id(0);
+    int y = get_global_id(1);
+    
+    int output_width = image_width - template_width + 1;
+    int output_height = image_height - template_height + 1;
+    
+    if (x >= output_width || y >= output_height) return;
+    
+    // Compute image patch mean
+    float image_sum = 0.0f;
+    for (int ty = 0; ty < template_height; ty++) {
+        for (int tx = 0; tx < template_width; tx++) {
+            image_sum += image[(y + ty) * image_width + (x + tx)];
+        }
+    }
+    float image_mean = image_sum / (template_width * template_height);
+    
+    // Compute normalized cross-correlation
+    float correlation = 0.0f;
+    float image_variance = 0.0f;
+    
+    for (int ty = 0; ty < template_height; ty++) {
+        for (int tx = 0; tx < template_width; tx++) {
+            float image_val = image[(y + ty) * image_width + (x + tx)];
+            float template_val = template[ty * template_width + tx];
+            
+            float image_centered = image_val - image_mean;
+            float template_centered = template_val - template_mean;
+            
+            correlation += image_centered * template_centered;
+            image_variance += image_centered * image_centered;
+        }
+    }
+    
+    float image_norm = sqrt(image_variance);
+    float ncc = (image_norm > 0.0f) ? correlation / (image_norm * template_norm) : 0.0f;
+    
+    output[y * output_width + x] = ncc;
+}
+"#;
+
+const DISTANCE_TRANSFORM_KERNEL: &str = r#"
+__kernel void distance_transform_edt(
+    __global const int* binary_image,
+    __global float* distance,
+    const int width,
+    const int height
+) {
+    int x = get_global_id(0);
+    int y = get_global_id(1);
+    
+    if (x >= width || y >= height) return;
+    
+    int idx = y * width + x;
+    
+    if (binary_image[idx] == 0) {
+        distance[idx] = 0.0f;
+        return;
+    }
+    
+    float min_dist = INFINITY;
+    
+    // Brute force approach - can be optimized with separable algorithm
+    for (int py = 0; py < height; py++) {
+        for (int px = 0; px < width; px++) {
+            if (binary_image[py * width + px] == 0) {
+                float dx = px - x;
+                float dy = py - y;
+                float dist = sqrt(dx * dx + dy * dy);
+                min_dist = fmin(min_dist, dist);
+            }
+        }
+    }
+    
+    distance[idx] = min_dist;
+}
+"#;
+
+const GABOR_FILTER_KERNEL: &str = r#"
+__kernel void gabor_filter_2d(
+    __global const float* input,
+    __global float* output,
+    const float sigma_x,
+    const float sigma_y,
+    const float theta,
+    const float lambda,
+    const float gamma,
+    const float psi,
+    const int kernel_size,
+    const int width,
+    const int height
+) {
+    int x = get_global_id(0);
+    int y = get_global_id(1);
+    
+    if (x >= width || y >= height) return;
+    
+    float sum = 0.0f;
+    int half_size = kernel_size / 2;
+    
+    float cos_theta = cos(theta);
+    float sin_theta = sin(theta);
+    
+    for (int ky = -half_size; ky <= half_size; ky++) {
+        for (int kx = -half_size; kx <= half_size; kx++) {
+            // Rotate coordinates
+            float x_rot = kx * cos_theta + ky * sin_theta;
+            float y_rot = -kx * sin_theta + ky * cos_theta;
+            
+            // Gabor function
+            float envelope = exp(-0.5f * (x_rot * x_rot / (sigma_x * sigma_x) + 
+                                         gamma * gamma * y_rot * y_rot / (sigma_y * sigma_y)));
+            float wave = cos(2.0f * M_PI * x_rot / lambda + psi);
+            float gabor_val = envelope * wave;
+            
+            // Apply to image
+            int px = clamp(x + kx, 0, width - 1);
+            int py = clamp(y + ky, 0, height - 1);
+            sum += input[py * width + px] * gabor_val;
+        }
+    }
+    
+    output[y * width + x] = sum;
+}
+"#;
+
 const LAPLACIAN_KERNEL: &str = r#"
 __kernel void laplacian_filter_2d(
     __global const float* input,
@@ -486,6 +730,109 @@ pub trait GpuKernelExecutor<T>: Send + Sync {
         work_size: &[usize],
         params: &[T],
     ) -> NdimageResult<()>;
+}
+
+/// CPU fallback buffer that implements the GpuBuffer trait
+/// This allows the GPU functions to work even when CUDA is not available
+pub struct CpuFallbackBuffer<T> {
+    data: Vec<T>,
+}
+
+impl<T> CpuFallbackBuffer<T>
+where
+    T: Clone + Default,
+{
+    /// Create a buffer from existing data
+    pub fn from_slice(data: &[T]) -> NdimageResult<Self> {
+        Ok(Self {
+            data: data.to_vec(),
+        })
+    }
+
+    /// Create an empty buffer of given size
+    pub fn empty(size: usize) -> NdimageResult<Self> {
+        Ok(Self {
+            data: vec![T::default(); size],
+        })
+    }
+}
+
+impl<T> GpuBuffer<T> for CpuFallbackBuffer<T>
+where
+    T: Clone + Default + 'static,
+{
+    fn size(&self) -> usize {
+        self.data.len()
+    }
+
+    fn copy_from_host(&mut self, data: &[T]) -> NdimageResult<()> {
+        if data.len() != self.data.len() {
+            return Err(NdimageError::InvalidInput(format!(
+                "Data size mismatch: expected {}, got {}",
+                self.data.len(),
+                data.len()
+            )));
+        }
+        self.data.copy_from_slice(data);
+        Ok(())
+    }
+
+    fn copy_to_host(&self, data: &mut [T]) -> NdimageResult<()> {
+        if data.len() != self.data.len() {
+            return Err(NdimageError::InvalidInput(format!(
+                "Data size mismatch: expected {}, got {}",
+                self.data.len(),
+                data.len()
+            )));
+        }
+        data.copy_from_slice(&self.data);
+        Ok(())
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
+}
+
+/// CPU fallback kernel executor that implements GPU operations on CPU
+/// This provides a way to run "GPU" kernels on CPU when CUDA is not available
+pub struct CpuFallbackExecutor;
+
+impl CpuFallbackExecutor {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+impl<T> GpuKernelExecutor<T> for CpuFallbackExecutor
+where
+    T: Float + FromPrimitive + Clone + Send + Sync + 'static,
+{
+    fn execute_kernel(
+        &self,
+        kernel: &KernelInfo,
+        inputs: &[&dyn GpuBuffer<T>],
+        outputs: &[&mut dyn GpuBuffer<T>],
+        work_size: &[usize],
+        _params: &[T],
+    ) -> NdimageResult<()> {
+        // This is a basic CPU fallback that returns an error indicating
+        // that GPU kernel execution on CPU is not fully implemented.
+        // A full implementation would need to emulate each GPU kernel
+        // with equivalent CPU operations.
+        
+        Err(NdimageError::NotImplementedError(format!(
+            "CPU fallback execution for GPU kernel '{}' is not fully implemented. Work size: {:?}, {} inputs, {} outputs",
+            kernel.name,
+            work_size,
+            inputs.len(),
+            outputs.len()
+        )))
+    }
 }
 
 /// GPU-accelerated Gaussian filter implementation
@@ -941,9 +1288,8 @@ where
 
     #[cfg(not(feature = "cuda"))]
     {
-        Err(NdimageError::NotImplementedError(
-            "GPU buffer allocation not implemented (enable cuda feature)".into(),
-        ))
+        // CPU fallback: create a CPU buffer that implements the GpuBuffer trait
+        Ok(Box::new(CpuFallbackBuffer::from_slice(data)?))
     }
 }
 
@@ -958,9 +1304,8 @@ where
 
     #[cfg(not(feature = "cuda"))]
     {
-        Err(NdimageError::NotImplementedError(
-            "GPU buffer allocation not implemented (enable cuda feature)".into(),
-        ))
+        // CPU fallback: create an empty CPU buffer that implements the GpuBuffer trait
+        Ok(Box::new(CpuFallbackBuffer::empty(size)?))
     }
 }
 

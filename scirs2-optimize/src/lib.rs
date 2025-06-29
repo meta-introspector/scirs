@@ -208,7 +208,9 @@ pub mod least_squares;
 pub mod ml_optimizers;
 pub mod multi_objective;
 pub mod neural_integration;
+pub mod neuromorphic;
 pub mod parallel;
+pub mod reinforcement_learning;
 pub mod roots;
 pub mod roots_anderson;
 pub mod roots_krylov;
@@ -217,9 +219,11 @@ pub mod self_tuning;
 pub mod simd_ops;
 pub mod sparse_numdiff; // Refactored into a module with submodules
 pub mod stochastic;
+pub mod streaming;
 pub mod unconstrained;
 pub mod unified_pipeline;
 pub mod visualization;
+pub mod quantum_inspired;
 
 // Common optimization result structure
 pub mod result;
@@ -276,6 +280,16 @@ pub use multi_objective::{
     NSGAIII,
 };
 pub use neural_integration::{optimizers, NeuralOptimizer, NeuralParameters, NeuralTrainer};
+pub use neuromorphic::{
+    neuromorphic_optimize, BasicNeuromorphicOptimizer, NeuromorphicConfig, NeuromorphicNetwork,
+    NeuromorphicOptimizer, NeuronState, SpikeEvent,
+};
+pub use reinforcement_learning::{
+    policy_gradient_optimize, bandit_optimize, evolutionary_optimize, meta_learning_optimize,
+    PolicyGradientOptimizer, QLearningOptimizer, ActorCriticOptimizer, BanditOptimizer,
+    EvolutionaryStrategy, MetaLearningOptimizer, RLOptimizationConfig, OptimizationState,
+    OptimizationAction, Experience, RLOptimizer,
+};
 pub use roots::root;
 pub use scalar::minimize_scalar;
 pub use self_tuning::{
@@ -289,6 +303,16 @@ pub use stochastic::{
     LearningRateSchedule, MomentumOptions, RMSPropOptions, SGDOptions, StochasticGradientFunction,
     StochasticMethod, StochasticOptions,
 };
+pub use streaming::{
+    exponentially_weighted_rls, incremental_bfgs, incremental_lbfgs, incremental_lbfgs_linear_regression,
+    kalman_filter_estimator, online_linear_regression, online_logistic_regression, real_time_linear_regression,
+    recursive_least_squares, rolling_window_gradient_descent, rolling_window_least_squares,
+    rolling_window_linear_regression, rolling_window_weighted_least_squares, streaming_trust_region_linear_regression,
+    streaming_trust_region_logistic_regression, IncrementalNewton, IncrementalNewtonMethod,
+    LinearRegressionObjective, LogisticRegressionObjective, OnlineGradientDescent, RealTimeEstimator,
+    RealTimeMethod, RollingWindowOptimizer, StreamingConfig, StreamingDataPoint, StreamingObjective,
+    StreamingOptimizer, StreamingStats, StreamingTrustRegion,
+};
 pub use unconstrained::{minimize, Bounds};
 pub use unified_pipeline::{
     presets as unified_presets, UnifiedOptimizationConfig, UnifiedOptimizationResults,
@@ -297,6 +321,10 @@ pub use unified_pipeline::{
 pub use visualization::{
     tracking::TrajectoryTracker, ColorScheme, OptimizationTrajectory, OptimizationVisualizer,
     OutputFormat, VisualizationConfig,
+};
+pub use quantum_inspired::{
+    quantum_optimize, quantum_particle_swarm_optimize, QuantumInspiredOptimizer, QuantumState,
+    QuantumAnnealingSchedule, QuantumOptimizationStats, Complex, CoolingSchedule,
 };
 
 // Prelude module for convenient imports
@@ -363,8 +391,18 @@ pub mod prelude {
     pub use crate::neural_integration::{
         optimizers, NeuralOptimizer, NeuralParameters, NeuralTrainer,
     };
+    pub use crate::neuromorphic::{
+        neuromorphic_optimize, BasicNeuromorphicOptimizer, NeuromorphicConfig, NeuromorphicNetwork,
+        NeuromorphicOptimizer, NeuronState, SpikeEvent,
+    };
     pub use crate::parallel::{
         parallel_evaluate_batch, parallel_finite_diff_gradient, ParallelOptions,
+    };
+    pub use crate::reinforcement_learning::{
+        policy_gradient_optimize, bandit_optimize, evolutionary_optimize, meta_learning_optimize,
+        PolicyGradientOptimizer, QLearningOptimizer, ActorCriticOptimizer, BanditOptimizer,
+        EvolutionaryStrategy, MetaLearningOptimizer, RLOptimizationConfig, OptimizationState,
+        OptimizationAction, Experience, RLOptimizer,
     };
     pub use crate::result::OptimizeResults;
     pub use crate::roots::{root, Method as RootMethod};
@@ -376,6 +414,16 @@ pub mod prelude {
         PerformanceMetrics, SelfTuningConfig, SelfTuningOptimizer, TunableParameter,
     };
     pub use crate::sparse_numdiff::{sparse_hessian, sparse_jacobian, SparseFiniteDiffOptions};
+    pub use crate::streaming::{
+        exponentially_weighted_rls, incremental_bfgs, incremental_lbfgs, incremental_lbfgs_linear_regression,
+        kalman_filter_estimator, online_linear_regression, online_logistic_regression, real_time_linear_regression,
+        recursive_least_squares, rolling_window_gradient_descent, rolling_window_least_squares,
+        rolling_window_linear_regression, rolling_window_weighted_least_squares, streaming_trust_region_linear_regression,
+        streaming_trust_region_logistic_regression, IncrementalNewton, IncrementalNewtonMethod,
+        LinearRegressionObjective, LogisticRegressionObjective, OnlineGradientDescent, RealTimeEstimator,
+        RealTimeMethod, RollingWindowOptimizer, StreamingConfig, StreamingDataPoint, StreamingObjective,
+        StreamingOptimizer, StreamingStats, StreamingTrustRegion,
+    };
     pub use crate::unconstrained::{minimize, Bounds, Method as UnconstrainedMethod, Options};
     pub use crate::unified_pipeline::{
         presets as unified_presets, UnifiedOptimizationConfig, UnifiedOptimizationResults,
@@ -384,6 +432,10 @@ pub mod prelude {
     pub use crate::visualization::{
         tracking::TrajectoryTracker, ColorScheme, OptimizationTrajectory, OptimizationVisualizer,
         OutputFormat, VisualizationConfig,
+    };
+    pub use crate::quantum_inspired::{
+        quantum_optimize, quantum_particle_swarm_optimize, QuantumInspiredOptimizer, QuantumState,
+        QuantumAnnealingSchedule, QuantumOptimizationStats, Complex, CoolingSchedule,
     };
 }
 

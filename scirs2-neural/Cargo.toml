@@ -32,6 +32,8 @@ rand = { workspace = true }
 rand_distr = { workspace = true }
 rand_chacha = { workspace = true }
 log = { workspace = true }
+libc = { workspace = true }
+num_cpus = { workspace = true }
 # BLAS dependencies handled through scirs2-core
 
 # AI/ML specific dependencies
@@ -70,7 +72,7 @@ parallel = ["core"]  # Parallel processing through core
 optim = [] # Empty feature for compatibility with existing code
 openblas = ["scirs2-core/openblas"]
 netlib = ["scirs2-core/netlib"]
-intel-mkl = ["scirs2-core/intel-mkl"]
+# intel-mkl = ["scirs2-core/intel-mkl"]  # Removed due to conflicts with openblas
 # Integration with other modules
 metrics_integration = ["dep:scirs2-metrics"]
 

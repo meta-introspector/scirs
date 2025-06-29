@@ -174,6 +174,8 @@ pub struct BayesianConfig<T: Float> {
     pub prior_variance: T,
     /// Measurement noise variance
     pub noise_variance: T,
+    /// RBF kernel length scale parameter
+    pub length_scale: T,
     /// Number of posterior samples to draw
     pub n_posterior_samples: usize,
 }
@@ -184,8 +186,35 @@ impl<T: Float + FromPrimitive> Default for BayesianConfig<T> {
             prior_mean: Box::new(|_| T::zero()),
             prior_variance: T::one(),
             noise_variance: T::from(0.01).unwrap(),
+            length_scale: T::one(),
             n_posterior_samples: 100,
         }
+    }
+}
+
+impl<T: Float + FromPrimitive> BayesianConfig<T> {
+    /// Set the RBF kernel length scale parameter
+    pub fn with_length_scale(mut self, length_scale: T) -> Self {
+        self.length_scale = length_scale;
+        self
+    }
+
+    /// Set the prior variance
+    pub fn with_prior_variance(mut self, variance: T) -> Self {
+        self.prior_variance = variance;
+        self
+    }
+
+    /// Set the noise variance
+    pub fn with_noise_variance(mut self, variance: T) -> Self {
+        self.noise_variance = variance;
+        self
+    }
+
+    /// Set the number of posterior samples
+    pub fn with_n_posterior_samples(mut self, n_samples: usize) -> Self {
+        self.n_posterior_samples = n_samples;
+        self
     }
 }
 
@@ -232,7 +261,7 @@ impl<T: Float + FromPrimitive + Debug + Display> BayesianInterpolator<T> {
 
         // Compute covariance matrix K(X, X) + σ²I
         let mut k_xx = Array2::<T>::zeros((n, n));
-        let length_scale = T::one(); // TODO: Make this configurable
+        let length_scale = self.config.length_scale;
 
         // Build covariance matrix with RBF kernel
         for i in 0..n {

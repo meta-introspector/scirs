@@ -1196,9 +1196,173 @@ impl NodeLevelMetrics {
     where
         F: Float,
     {
-        // Simplified embedding quality calculation
-        // In practice, would use silhouette score, modularity, etc.
-        Ok(0.75) // Placeholder
+        // Calculate embedding quality using multiple metrics
+        let silhouette_score = self.calculate_silhouette_score(features, labels)?;
+        let modularity_score = self.calculate_modularity(adjacency, labels)?;
+        let cluster_cohesion = self.calculate_cluster_cohesion(features, labels)?;
+        
+        // Weighted combination of metrics
+        Ok(0.4 * silhouette_score + 0.3 * modularity_score + 0.3 * cluster_cohesion)
+    }
+
+    /// Calculate silhouette score for node embeddings
+    fn calculate_silhouette_score<F>(&self, features: &ArrayView2<F>, labels: &ArrayView1<i32>) -> Result<f64>
+    where
+        F: Float,
+    {
+        let n_samples = features.nrows();
+        let unique_labels: HashSet<i32> = labels.iter().cloned().collect();
+        
+        if unique_labels.len() < 2 {
+            return Ok(0.0); // No meaningful silhouette for single cluster
+        }
+        
+        let mut silhouette_scores = Vec::new();
+        
+        for i in 0..n_samples {
+            let label_i = labels[i];
+            let feature_i = features.row(i);
+            
+            // Calculate a(i) - mean distance to points in same cluster
+            let same_cluster_distances: Vec<f64> = (0..n_samples)
+                .filter(|&j| j != i && labels[j] == label_i)
+                .map(|j| self.euclidean_distance(&feature_i, &features.row(j)))
+                .collect();
+            
+            let a_i = if same_cluster_distances.is_empty() {
+                0.0
+            } else {
+                same_cluster_distances.iter().sum::<f64>() / same_cluster_distances.len() as f64
+            };
+            
+            // Calculate b(i) - mean distance to nearest cluster
+            let mut min_cluster_distance = f64::INFINITY;
+            
+            for &other_label in &unique_labels {
+                if other_label != label_i {
+                    let other_cluster_distances: Vec<f64> = (0..n_samples)
+                        .filter(|&j| labels[j] == other_label)
+                        .map(|j| self.euclidean_distance(&feature_i, &features.row(j)))
+                        .collect();
+                    
+                    if !other_cluster_distances.is_empty() {
+                        let mean_distance = other_cluster_distances.iter().sum::<f64>() / other_cluster_distances.len() as f64;
+                        min_cluster_distance = min_cluster_distance.min(mean_distance);
+                    }
+                }
+            }
+            
+            let b_i = min_cluster_distance;
+            
+            // Calculate silhouette score for this point
+            if a_i == 0.0 && b_i == 0.0 {
+                silhouette_scores.push(0.0);
+            } else {
+                silhouette_scores.push((b_i - a_i) / a_i.max(b_i));
+            }
+        }
+        
+        Ok(silhouette_scores.iter().sum::<f64>() / silhouette_scores.len() as f64)
+    }
+
+    /// Calculate modularity score for graph clustering
+    fn calculate_modularity(&self, adjacency: &ArrayView2<i32>, labels: &ArrayView1<i32>) -> Result<f64> {
+        let n_nodes = adjacency.nrows();
+        let total_edges = adjacency.iter().filter(|&&x| x > 0).count() as f64 / 2.0; // Undirected graph
+        
+        if total_edges == 0.0 {
+            return Ok(0.0);
+        }
+        
+        let mut modularity = 0.0;
+        
+        for i in 0..n_nodes {
+            let degree_i = adjacency.row(i).iter().sum::<i32>() as f64;
+            
+            for j in 0..n_nodes {
+                let degree_j = adjacency.row(j).iter().sum::<i32>() as f64;
+                let edge_ij = adjacency[[i, j]] as f64;
+                
+                let expected_edge = (degree_i * degree_j) / (2.0 * total_edges);
+                
+                if labels[i] == labels[j] {
+                    modularity += edge_ij - expected_edge;
+                }
+            }
+        }
+        
+        Ok(modularity / (2.0 * total_edges))
+    }
+
+    /// Calculate cluster cohesion
+    fn calculate_cluster_cohesion<F>(&self, features: &ArrayView2<F>, labels: &ArrayView1<i32>) -> Result<f64>
+    where
+        F: Float,
+    {
+        let unique_labels: HashSet<i32> = labels.iter().cloned().collect();
+        let mut total_cohesion = 0.0;
+        let mut cluster_count = 0;
+        
+        for &label in &unique_labels {
+            let cluster_indices: Vec<usize> = labels
+                .iter()
+                .enumerate()
+                .filter(|(_, &l)| l == label)
+                .map(|(i, _)| i)
+                .collect();
+            
+            if cluster_indices.len() < 2 {
+                continue;
+            }
+            
+            // Calculate centroid
+            let mut centroid = vec![F::zero(); features.ncols()];
+            for &idx in &cluster_indices {
+                for (j, &val) in features.row(idx).iter().enumerate() {
+                    centroid[j] = centroid[j] + val;
+                }
+            }
+            
+            for cent in &mut centroid {
+                *cent = *cent / F::from(cluster_indices.len()).unwrap();
+            }
+            
+            // Calculate average distance to centroid
+            let mut avg_distance = 0.0;
+            for &idx in &cluster_indices {
+                let mut distance = 0.0;
+                for (j, &val) in features.row(idx).iter().enumerate() {
+                    let diff = val - centroid[j];
+                    distance += (diff * diff).to_f64().unwrap();
+                }
+                avg_distance += distance.sqrt();
+            }
+            
+            avg_distance /= cluster_indices.len() as f64;
+            total_cohesion += 1.0 / (1.0 + avg_distance); // Higher cohesion for smaller distances
+            cluster_count += 1;
+        }
+        
+        if cluster_count > 0 {
+            Ok(total_cohesion / cluster_count as f64)
+        } else {
+            Ok(0.0)
+        }
+    }
+
+    /// Calculate Euclidean distance between two feature vectors
+    fn euclidean_distance<F>(&self, a: &ArrayView1<F>, b: &ArrayView1<F>) -> f64
+    where
+        F: Float,
+    {
+        a.iter()
+            .zip(b.iter())
+            .map(|(&x, &y)| {
+                let diff = x - y;
+                (diff * diff).to_f64().unwrap()
+            })
+            .sum::<f64>()
+            .sqrt()
     }
 
     fn calculate_homophily_ratio(
@@ -1318,8 +1482,45 @@ impl EdgeLevelMetrics {
     where
         F: Float,
     {
-        // Simplified MRR calculation
-        Ok(0.7) // Placeholder
+        if edge_index_true.is_empty() || edge_scores.is_empty() {
+            return Ok(0.0);
+        }
+        
+        // Create score-edge pairs and sort by score (descending)
+        let mut scored_edges: Vec<(f64, (usize, usize))> = edge_scores
+            .iter()
+            .enumerate()
+            .filter_map(|(i, &score)| {
+                if i < edge_index_true.len() {
+                    Some((score.to_f64().unwrap_or(0.0), edge_index_true[i]))
+                } else {
+                    None
+                }
+            })
+            .collect();
+        
+        scored_edges.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
+        
+        // Convert true edges to set for fast lookup
+        let true_edges_set: HashSet<(usize, usize)> = edge_index_true.iter().cloned().collect();
+        
+        let mut reciprocal_ranks = Vec::new();
+        
+        // For each true edge, find its rank in the sorted list
+        for &true_edge in edge_index_true {
+            for (rank, &(_, edge)) in scored_edges.iter().enumerate() {
+                if edge == true_edge || edge == (true_edge.1, true_edge.0) {
+                    reciprocal_ranks.push(1.0 / (rank + 1) as f64);
+                    break;
+                }
+            }
+        }
+        
+        if reciprocal_ranks.is_empty() {
+            Ok(0.0)
+        } else {
+            Ok(reciprocal_ranks.iter().sum::<f64>() / reciprocal_ranks.len() as f64)
+        }
     }
 
     fn calculate_hits_at_k<F>(
@@ -1331,8 +1532,48 @@ impl EdgeLevelMetrics {
     where
         F: Float,
     {
-        // Simplified Hits@K calculation
-        Ok(0.6) // Placeholder
+        if edge_index_true.is_empty() || edge_scores.is_empty() || k == 0 {
+            return Ok(0.0);
+        }
+        
+        // Create score-edge pairs and sort by score (descending)
+        let mut scored_edges: Vec<(f64, (usize, usize))> = edge_scores
+            .iter()
+            .enumerate()
+            .filter_map(|(i, &score)| {
+                if i < edge_index_true.len() {
+                    Some((score.to_f64().unwrap_or(0.0), edge_index_true[i]))
+                } else {
+                    None
+                }
+            })
+            .collect();
+        
+        scored_edges.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
+        
+        // Convert true edges to set for fast lookup
+        let true_edges_set: HashSet<(usize, usize)> = edge_index_true
+            .iter()
+            .flat_map(|&(u, v)| vec![(u, v), (v, u)]) // Handle undirected edges
+            .collect();
+        
+        // Count hits in top-k predictions
+        let mut hits = 0;
+        let k_limit = k.min(scored_edges.len());
+        
+        for i in 0..k_limit {
+            let (_, edge) = scored_edges[i];
+            if true_edges_set.contains(&edge) {
+                hits += 1;
+            }
+        }
+        
+        let total_true_edges = edge_index_true.len();
+        if total_true_edges == 0 {
+            Ok(0.0)
+        } else {
+            Ok(hits as f64 / total_true_edges as f64)
+        }
     }
 
     fn calculate_edge_classification_accuracy(
@@ -1372,8 +1613,56 @@ impl GraphLevelMetrics {
     where
         F: Float,
     {
-        // Simplified property prediction accuracy
-        Ok(0.8) // Placeholder
+        if features.is_empty() || labels.is_empty() {
+            return Ok(0.0);
+        }
+        
+        let n_samples = features.nrows();
+        if n_samples != labels.len() {
+            return Err(MetricsError::InvalidInput(
+                "Features and labels must have same number of samples".to_string()
+            ));
+        }
+        
+        // Calculate basic structural properties from features
+        let mut correct_predictions = 0;
+        
+        for i in 0..n_samples {
+            let feature_vector = features.row(i);
+            let true_label = labels[i];
+            
+            // Simple property prediction based on feature statistics
+            // This is a simplified implementation - in practice, you'd use a trained model
+            let feature_mean = feature_vector.iter()
+                .map(|&x| x.to_f64().unwrap_or(0.0))
+                .sum::<f64>() / feature_vector.len() as f64;
+            
+            let feature_std = {
+                let mean = feature_mean;
+                let variance = feature_vector.iter()
+                    .map(|&x| {
+                        let diff = x.to_f64().unwrap_or(0.0) - mean;
+                        diff * diff
+                    })
+                    .sum::<f64>() / feature_vector.len() as f64;
+                variance.sqrt()
+            };
+            
+            // Predict based on feature statistics (simplified heuristic)
+            let predicted_label = if feature_mean > 0.5 && feature_std > 0.2 {
+                1
+            } else if feature_mean < -0.5 {
+                -1
+            } else {
+                0
+            };
+            
+            if predicted_label == true_label {
+                correct_predictions += 1;
+            }
+        }
+        
+        Ok(correct_predictions as f64 / n_samples as f64)
     }
 }
 
@@ -1395,8 +1684,41 @@ impl CommunityDetectionMetrics {
         communities: &[HashSet<usize>],
         adjacency: &ArrayView2<i32>,
     ) -> Result<f64> {
-        // Simplified modularity calculation
-        Ok(0.5) // Placeholder
+        let n_nodes = adjacency.nrows();
+        let total_edges = adjacency.iter().filter(|&&x| x > 0).count() as f64 / 2.0; // Undirected graph
+        
+        if total_edges == 0.0 {
+            return Ok(0.0);
+        }
+        
+        let mut modularity = 0.0;
+        
+        // Create community membership map
+        let mut node_to_community = vec![0; n_nodes];
+        for (comm_id, community) in communities.iter().enumerate() {
+            for &node in community {
+                if node < n_nodes {
+                    node_to_community[node] = comm_id;
+                }
+            }
+        }
+        
+        for i in 0..n_nodes {
+            let degree_i = adjacency.row(i).iter().sum::<i32>() as f64;
+            
+            for j in 0..n_nodes {
+                let degree_j = adjacency.row(j).iter().sum::<i32>() as f64;
+                let edge_ij = adjacency[[i, j]] as f64;
+                
+                let expected_edge = (degree_i * degree_j) / (2.0 * total_edges);
+                
+                if node_to_community[i] == node_to_community[j] {
+                    modularity += edge_ij - expected_edge;
+                }
+            }
+        }
+        
+        Ok(modularity / (2.0 * total_edges))
     }
 
     fn calculate_nmi(
@@ -1404,8 +1726,70 @@ impl CommunityDetectionMetrics {
         true_communities: &[HashSet<usize>],
         pred_communities: &[HashSet<usize>],
     ) -> Result<f64> {
-        // Simplified NMI calculation
-        Ok(0.6) // Placeholder
+        // Collect all unique nodes
+        let mut all_nodes = HashSet::new();
+        for community in true_communities.iter().chain(pred_communities.iter()) {
+            all_nodes.extend(community);
+        }
+        let n_nodes = all_nodes.len();
+        
+        if n_nodes == 0 {
+            return Ok(1.0);
+        }
+        
+        // Create confusion matrix
+        let mut confusion_matrix = vec![vec![0; pred_communities.len()]; true_communities.len()];
+        
+        for &node in &all_nodes {
+            let true_community = true_communities.iter().position(|c| c.contains(&node));
+            let pred_community = pred_communities.iter().position(|c| c.contains(&node));
+            
+            if let (Some(true_idx), Some(pred_idx)) = (true_community, pred_community) {
+                confusion_matrix[true_idx][pred_idx] += 1;
+            }
+        }
+        
+        // Calculate mutual information
+        let mut mutual_info = 0.0;
+        let mut entropy_true = 0.0;
+        let mut entropy_pred = 0.0;
+        
+        // Calculate entropies and mutual information
+        for i in 0..true_communities.len() {
+            let ni_sum: i32 = confusion_matrix[i].iter().sum();
+            if ni_sum > 0 {
+                let pi = ni_sum as f64 / n_nodes as f64;
+                entropy_true -= pi * pi.ln();
+            }
+        }
+        
+        for j in 0..pred_communities.len() {
+            let nj_sum: i32 = confusion_matrix.iter().map(|row| row[j]).sum();
+            if nj_sum > 0 {
+                let pj = nj_sum as f64 / n_nodes as f64;
+                entropy_pred -= pj * pj.ln();
+            }
+        }
+        
+        for i in 0..true_communities.len() {
+            for j in 0..pred_communities.len() {
+                let nij = confusion_matrix[i][j] as f64;
+                if nij > 0.0 {
+                    let ni_sum: i32 = confusion_matrix[i].iter().sum();
+                    let nj_sum: i32 = confusion_matrix.iter().map(|row| row[j]).sum();
+                    
+                    let pij = nij / n_nodes as f64;
+                    let pi = ni_sum as f64 / n_nodes as f64;
+                    let pj = nj_sum as f64 / n_nodes as f64;
+                    
+                    mutual_info += pij * (pij / (pi * pj)).ln();
+                }
+            }
+        }
+        
+        // Calculate NMI
+        let normalizing_factor = ((entropy_true + entropy_pred) / 2.0).max(1e-10);
+        Ok(mutual_info / normalizing_factor)
     }
 
     fn calculate_ari(
@@ -1413,8 +1797,103 @@ impl CommunityDetectionMetrics {
         true_communities: &[HashSet<usize>],
         pred_communities: &[HashSet<usize>],
     ) -> Result<f64> {
-        // Simplified ARI calculation
-        Ok(0.7) // Placeholder
+        // Collect all unique nodes
+        let mut all_nodes = HashSet::new();
+        for community in true_communities.iter().chain(pred_communities.iter()) {
+            all_nodes.extend(community);
+        }
+        let n_nodes = all_nodes.len();
+        
+        if n_nodes <= 1 {
+            return Ok(1.0);
+        }
+        
+        // Create confusion matrix
+        let mut confusion_matrix = vec![vec![0; pred_communities.len()]; true_communities.len()];
+        
+        for &node in &all_nodes {
+            let true_community = true_communities.iter().position(|c| c.contains(&node));
+            let pred_community = pred_communities.iter().position(|c| c.contains(&node));
+            
+            if let (Some(true_idx), Some(pred_idx)) = (true_community, pred_community) {
+                confusion_matrix[true_idx][pred_idx] += 1;
+            }
+        }
+        
+        // Calculate sum of combinations of pairs in each cell
+        let mut sum_comb_c = 0.0;
+        for i in 0..true_communities.len() {
+            for j in 0..pred_communities.len() {
+                let nij = confusion_matrix[i][j];
+                if nij >= 2 {
+                    sum_comb_c += Self::combinations(nij as u64, 2) as f64;
+                }
+            }
+        }
+        
+        // Calculate marginal sums
+        let mut a_marginals = vec![0; true_communities.len()];
+        let mut b_marginals = vec![0; pred_communities.len()];
+        
+        for i in 0..true_communities.len() {
+            a_marginals[i] = confusion_matrix[i].iter().sum();
+        }
+        
+        for j in 0..pred_communities.len() {
+            b_marginals[j] = confusion_matrix.iter().map(|row| row[j]).sum();
+        }
+        
+        // Calculate sum of combinations for marginals
+        let mut sum_comb_a = 0.0;
+        for &ai in &a_marginals {
+            if ai >= 2 {
+                sum_comb_a += Self::combinations(ai as u64, 2) as f64;
+            }
+        }
+        
+        let mut sum_comb_b = 0.0;
+        for &bi in &b_marginals {
+            if bi >= 2 {
+                sum_comb_b += Self::combinations(bi as u64, 2) as f64;
+            }
+        }
+        
+        // Total combinations
+        let n_total = n_nodes as u64;
+        let sum_comb_total = if n_total >= 2 {
+            Self::combinations(n_total, 2) as f64
+        } else {
+            1.0
+        };
+        
+        // Calculate expected index
+        let expected_index = (sum_comb_a * sum_comb_b) / sum_comb_total;
+        
+        // Calculate max index
+        let max_index = (sum_comb_a + sum_comb_b) / 2.0;
+        
+        // Calculate ARI
+        if max_index - expected_index == 0.0 {
+            Ok(0.0)
+        } else {
+            Ok((sum_comb_c - expected_index) / (max_index - expected_index))
+        }
+    }
+    
+    /// Calculate combinations (n choose k)
+    fn combinations(n: u64, k: u64) -> u64 {
+        if k > n || k == 0 {
+            return if k == 0 { 1 } else { 0 };
+        }
+        
+        let k = k.min(n - k); // Take advantage of symmetry
+        let mut result = 1;
+        
+        for i in 0..k {
+            result = result * (n - i) / (i + 1);
+        }
+        
+        result
     }
 }
 
@@ -1437,7 +1916,7 @@ impl MolecularGraphMetrics {
     }
 }
 
-// Placeholder implementations for remaining structs
+// Safe default implementations for metrics structs
 macro_rules! impl_new_default {
     ($struct_name:ident) => {
         impl $struct_name {
@@ -1448,7 +1927,9 @@ macro_rules! impl_new_default {
 
         impl Default for $struct_name {
             fn default() -> Self {
-                unsafe { std::mem::zeroed() }
+                Self {
+                    ..Default::default()
+                }
             }
         }
     };

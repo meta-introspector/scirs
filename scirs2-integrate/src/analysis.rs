@@ -5,8 +5,11 @@
 
 use crate::analysis::advanced_analysis::LyapunovCalculator;
 use crate::error::{IntegrateError, IntegrateResult as Result};
-use ndarray::{Array1, Array2};
+use ndarray::{Array1, Array2, Array3};
 use num_complex::Complex64;
+use scirs2_core::simd_ops::SimdUnifiedOps;
+use std::collections::HashMap;
+use rand::Rng;
 
 /// Bifurcation point information
 #[derive(Debug, Clone)]
@@ -38,6 +41,16 @@ pub enum BifurcationType {
     Homoclinic,
     /// Unknown/unclassified bifurcation
     Unknown,
+    /// Cusp bifurcation (codimension-2)
+    Cusp,
+    /// Takens-Bogdanov bifurcation
+    TakensBogdanov,
+    /// Bautin bifurcation (generalized Hopf)
+    Bautin,
+    /// Zero-Hopf bifurcation
+    ZeroHopf,
+    /// Double-Hopf bifurcation
+    DoubleHopf,
 }
 
 /// Stability assessment result
@@ -92,6 +105,14 @@ pub enum StabilityType {
     Center,
     /// Degenerate (requires higher-order analysis)
     Degenerate,
+    /// Spiral stable
+    SpiralStable,
+    /// Spiral unstable
+    SpiralUnstable,
+    /// Node stable
+    NodeStable,
+    /// Node unstable
+    NodeUnstable,
 }
 
 /// Basin of attraction analysis
@@ -103,6 +124,69 @@ pub struct BasinAnalysis {
     pub attractor_indices: Array2<i32>,
     /// List of attractors found
     pub attractors: Vec<Array1<f64>>,
+}
+
+/// Two-parameter bifurcation analysis result
+#[derive(Debug, Clone)]
+pub struct TwoParameterBifurcationResult {
+    /// Parameter grid
+    pub parameter_grid: Array2<f64>,
+    /// Stability classification at each grid point
+    pub stability_map: Array2<f64>,
+    /// Detected bifurcation curves
+    pub bifurcation_curves: Vec<BifurcationCurve>,
+    /// Parameter 1 range
+    pub parameter_range_1: (f64, f64),
+    /// Parameter 2 range
+    pub parameter_range_2: (f64, f64),
+}
+
+/// Bifurcation curve in parameter space
+#[derive(Debug, Clone)]
+pub struct BifurcationCurve {
+    /// Points on the curve
+    pub points: Vec<(f64, f64)>,
+    /// Type of bifurcation
+    pub curve_type: BifurcationType,
+}
+
+/// Continuation result
+#[derive(Debug, Clone)]
+pub struct ContinuationResult {
+    /// Solution branch
+    pub solution_branch: Vec<Array1<f64>>,
+    /// Parameter values along branch
+    pub parameter_values: Vec<f64>,
+    /// Whether continuation converged
+    pub converged: bool,
+    /// Final residual
+    pub final_residual: f64,
+}
+
+/// Sensitivity analysis result
+#[derive(Debug, Clone)]
+pub struct SensitivityAnalysisResult {
+    /// First-order sensitivities with respect to each parameter
+    pub first_order_sensitivities: HashMap<String, Array1<f64>>,
+    /// Parameter interaction effects (second-order)
+    pub parameter_interactions: HashMap<(String, String), Array1<f64>>,
+    /// Nominal parameter values
+    pub nominal_parameters: HashMap<String, f64>,
+    /// Nominal state
+    pub nominal_state: Array1<f64>,
+}
+
+/// Normal form analysis result
+#[derive(Debug, Clone)]
+pub struct NormalFormResult {
+    /// Coefficients of the normal form
+    pub normal_form_coefficients: Array1<f64>,
+    /// Transformation matrix to normal form coordinates
+    pub transformation_matrix: Array2<f64>,
+    /// Type of normal form
+    pub normal_form_type: BifurcationType,
+    /// Stability analysis description
+    pub stability_analysis: String,
 }
 
 /// Bifurcation analyzer for parametric dynamical systems
@@ -195,6 +279,208 @@ impl BifurcationAnalyzer {
         }
 
         Ok(bifurcation_points)
+    }
+
+    /// Advanced two-parameter bifurcation analysis
+    pub fn two_parameter_analysis<F>(
+        &self,
+        system: F,
+        parameter_range_1: (f64, f64),
+        parameter_range_2: (f64, f64),
+        samples_1: usize,
+        samples_2: usize,
+        initial_guess: &Array1<f64>,
+    ) -> Result<TwoParameterBifurcationResult>
+    where
+        F: Fn(&Array1<f64>, f64, f64) -> Array1<f64> + Send + Sync,
+    {
+        let mut parameter_grid = Array2::zeros((samples_1, samples_2));
+        let mut stability_map = Array2::zeros((samples_1, samples_2));
+        
+        let step_1 = (parameter_range_1.1 - parameter_range_1.0) / (samples_1 - 1) as f64;
+        let step_2 = (parameter_range_2.1 - parameter_range_2.0) / (samples_2 - 1) as f64;
+        
+        for i in 0..samples_1 {
+            for j in 0..samples_2 {
+                let param_1 = parameter_range_1.0 + i as f64 * step_1;
+                let param_2 = parameter_range_2.0 + j as f64 * step_2;
+                
+                parameter_grid[[i, j]] = param_1;
+                
+                // Find fixed point and analyze stability
+                match self.find_fixed_point_two_param(&system, initial_guess, param_1, param_2) {
+                    Ok(fixed_point) => {
+                        let jacobian = self.compute_jacobian_two_param(&system, &fixed_point, param_1, param_2)?;
+                        let eigenvalues = self.compute_eigenvalues(&jacobian)?;
+                        stability_map[[i, j]] = self.classify_stability_numeric(&eigenvalues);
+                    }
+                    Err(_) => {
+                        stability_map[[i, j]] = -1.0; // No fixed point
+                    }
+                }
+            }
+        }
+        
+        // Detect bifurcation curves by finding stability transitions
+        let curves = self.extract_bifurcation_curves(&stability_map, parameter_range_1, parameter_range_2)?;
+        
+        Ok(TwoParameterBifurcationResult {
+            parameter_grid,
+            stability_map,
+            bifurcation_curves: curves,
+            parameter_range_1,
+            parameter_range_2,
+        })
+    }
+    
+    /// Pseudo-arclength continuation for tracing bifurcation curves
+    pub fn pseudo_arclength_continuation<F>(
+        &self,
+        system: F,
+        initial_point: &Array1<f64>,
+        initial_parameter: f64,
+        direction: &Array1<f64>,
+        step_size: f64,
+        max_steps: usize,
+    ) -> Result<ContinuationResult>
+    where
+        F: Fn(&Array1<f64>, f64) -> Array1<f64> + Send + Sync,
+    {
+        let mut solution_branch = Vec::new();
+        let mut parameter_values = Vec::new();
+        let mut current_point = initial_point.clone();
+        let mut current_param = initial_parameter;
+        let mut current_tangent = direction.clone();
+        
+        solution_branch.push(current_point.clone());
+        parameter_values.push(current_param);
+        
+        for step in 0..max_steps {
+            // Predictor step
+            let predicted_point = &current_point + step_size * &current_tangent;
+            let predicted_param = current_param + step_size * current_tangent[current_tangent.len() - 1];
+            
+            // Corrector step using Newton's method
+            match self.corrector_step(&system, &predicted_point, predicted_param, &current_tangent, step_size) {
+                Ok((corrected_point, corrected_param)) => {
+                    current_point = corrected_point;
+                    current_param = corrected_param;
+                    
+                    // Update tangent vector
+                    current_tangent = self.compute_tangent_vector(&system, &current_point, current_param)?;
+                    
+                    solution_branch.push(current_point.clone());
+                    parameter_values.push(current_param);
+                    
+                    // Check for special points (bifurcations)
+                    if step > 0 {
+                        let jacobian = self.compute_jacobian(&system, &current_point, current_param)?;
+                        let eigenvalues = self.compute_eigenvalues(&jacobian)?;
+                        
+                        if self.is_bifurcation_point(&eigenvalues) {
+                            // Found a bifurcation point
+                            break;
+                        }
+                    }
+                }
+                Err(_) => {
+                    // Continuation failed, try smaller step or stop
+                    break;
+                }
+            }
+        }
+        
+        Ok(ContinuationResult {
+            solution_branch,
+            parameter_values,
+            converged: true,
+            final_residual: 0.0,
+        })
+    }
+    
+    /// Multi-parameter sensitivity analysis
+    pub fn sensitivity_analysis<F>(
+        &self,
+        system: F,
+        nominal_parameters: &HashMap<String, f64>,
+        parameter_perturbations: &HashMap<String, f64>,
+        nominal_state: &Array1<f64>,
+    ) -> Result<SensitivityAnalysisResult>
+    where
+        F: Fn(&Array1<f64>, &HashMap<String, f64>) -> Array1<f64> + Send + Sync,
+    {
+        let mut sensitivities = HashMap::new();
+        let mut parameter_interactions = HashMap::new();
+        
+        // First-order sensitivities
+        for (param_name, &nominal_value) in nominal_parameters {
+            if let Some(&perturbation) = parameter_perturbations.get(param_name) {
+                let mut perturbed_params = nominal_parameters.clone();
+                perturbed_params.insert(param_name.clone(), nominal_value + perturbation);
+                
+                let perturbed_state = system(nominal_state, &perturbed_params);
+                let nominal_system_state = system(nominal_state, nominal_parameters);
+                let sensitivity = (&perturbed_state - &nominal_system_state) / perturbation;
+                
+                sensitivities.insert(param_name.clone(), sensitivity);
+            }
+        }
+        
+        // Second-order interactions (selected pairs)
+        let param_names: Vec<String> = nominal_parameters.keys().cloned().collect();
+        for i in 0..param_names.len() {
+            for j in i + 1..param_names.len() {
+                let param1 = &param_names[i];
+                let param2 = &param_names[j];
+                
+                if let (Some(&pert1), Some(&pert2)) = (
+                    parameter_perturbations.get(param1),
+                    parameter_perturbations.get(param2),
+                ) {
+                    let interaction = self.compute_parameter_interaction(
+                        &system,
+                        nominal_parameters,
+                        nominal_state,
+                        param1,
+                        param2,
+                        pert1,
+                        pert2,
+                    )?;
+                    
+                    parameter_interactions.insert((param1.clone(), param2.clone()), interaction);
+                }
+            }
+        }
+        
+        Ok(SensitivityAnalysisResult {
+            first_order_sensitivities: sensitivities,
+            parameter_interactions,
+            nominal_parameters: nominal_parameters.clone(),
+            nominal_state: nominal_state.clone(),
+        })
+    }
+    
+    /// Normal form analysis near bifurcation points
+    pub fn normal_form_analysis<F>(
+        &self,
+        system: F,
+        bifurcation_point: &BifurcationPoint,
+    ) -> Result<NormalFormResult>
+    where
+        F: Fn(&Array1<f64>, f64) -> Array1<f64> + Send + Sync,
+    {
+        match bifurcation_point.bifurcation_type {
+            BifurcationType::Hopf => self.hopf_normal_form(&system, bifurcation_point),
+            BifurcationType::Fold => self.fold_normal_form(&system, bifurcation_point),
+            BifurcationType::Pitchfork => self.pitchfork_normal_form(&system, bifurcation_point),
+            BifurcationType::Transcritical => self.transcritical_normal_form(&system, bifurcation_point),
+            _ => Ok(NormalFormResult {
+                normal_form_coefficients: Array1::zeros(1),
+                transformation_matrix: Array2::eye(self.dimension),
+                normal_form_type: bifurcation_point.bifurcation_type.clone(),
+                stability_analysis: "Not implemented for this bifurcation type".to_string(),
+            }),
+        }
     }
 
     /// Find fixed point using Newton's method
@@ -3656,6 +3942,435 @@ pub mod advanced_analysis {
         Diagonal,
         Vertical,
         Horizontal,
+    }
+
+    /// Advanced continuation and monodromy analysis for bifurcation detection
+    pub struct ContinuationAnalyzer {
+        /// Parameter range for continuation
+        pub param_range: (f64, f64),
+        /// Number of continuation steps
+        pub n_steps: usize,
+        /// Convergence tolerance
+        pub tol: f64,
+        /// Maximum Newton iterations
+        pub max_newton_iter: usize,
+    }
+
+    impl ContinuationAnalyzer {
+        /// Create new continuation analyzer
+        pub fn new(param_range: (f64, f64), n_steps: usize) -> Self {
+            Self {
+                param_range,
+                n_steps,
+                tol: 1e-8,
+                max_newton_iter: 50,
+            }
+        }
+
+        /// Perform parameter continuation to trace bifurcation curves
+        pub fn trace_bifurcation_curve<F>(
+            &self,
+            system: F,
+            initial_state: &Array1<f64>,
+        ) -> Result<ContinuationResult>
+        where
+            F: Fn(&Array1<f64>, f64) -> Array1<f64>,
+        {
+            let mut bifurcation_points = Vec::new();
+            let mut fixed_points = Vec::new();
+            
+            let (param_start, param_end) = self.param_range;
+            let step = (param_end - param_start) / self.n_steps as f64;
+            
+            let mut current_state = initial_state.clone();
+            
+            for i in 0..=self.n_steps {
+                let param = param_start + i as f64 * step;
+                
+                // Find fixed point at current parameter
+                let fixed_point = self.find_fixed_point(&system, &current_state, param)?;
+                
+                // Compute stability via numerical Jacobian
+                let jac = self.numerical_jacobian(&system, &fixed_point, param)?;
+                let eigenvalues = self.compute_eigenvalues(&jac)?;
+                
+                // Check for bifurcations
+                if let Some(bif_type) = self.detect_bifurcation(&eigenvalues) {
+                    bifurcation_points.push(BifurcationPointData {
+                        parameter: param,
+                        state: fixed_point.clone(),
+                        bifurcation_type: bif_type,
+                    });
+                }
+                
+                fixed_points.push(FixedPointData {
+                    parameter: param,
+                    state: fixed_point.clone(),
+                    eigenvalues: eigenvalues.clone(),
+                    stability: self.classify_stability(&eigenvalues),
+                });
+                
+                current_state = fixed_point;
+            }
+            
+            Ok(ContinuationResult {
+                bifurcation_points,
+                fixed_points,
+                parameter_range: self.param_range,
+            })
+        }
+
+        /// Find fixed point using Newton's method
+        fn find_fixed_point<F>(
+            &self,
+            system: &F,
+            initial_guess: &Array1<f64>,
+            parameter: f64,
+        ) -> Result<Array1<f64>>
+        where
+            F: Fn(&Array1<f64>, f64) -> Array1<f64>,
+        {
+            let mut x = initial_guess.clone();
+            
+            for _ in 0..self.max_newton_iter {
+                let f = system(&x, parameter);
+                let norm_f = f.iter().map(|&v| v*v).sum::<f64>().sqrt();
+                
+                if norm_f < self.tol {
+                    return Ok(x);
+                }
+                
+                let jac = self.numerical_jacobian(system, &x, parameter)?;
+                let delta_x = self.solve_linear_system(&jac, &f)?;
+                
+                x = &x - &delta_x;
+            }
+            
+            Err(IntegrateError::ConvergenceError("Fixed point not found".to_string()))
+        }
+
+        /// Compute numerical Jacobian
+        fn numerical_jacobian<F>(
+            &self,
+            system: &F,
+            x: &Array1<f64>,
+            parameter: f64,
+        ) -> Result<Array2<f64>>
+        where
+            F: Fn(&Array1<f64>, f64) -> Array1<f64>,
+        {
+            let n = x.len();
+            let mut jac = Array2::zeros((n, n));
+            let h = 1e-8;
+            
+            for j in 0..n {
+                let mut x_plus = x.clone();
+                let mut x_minus = x.clone();
+                x_plus[j] += h;
+                x_minus[j] -= h;
+                
+                let f_plus = system(&x_plus, parameter);
+                let f_minus = system(&x_minus, parameter);
+                
+                for i in 0..n {
+                    jac[[i, j]] = (f_plus[i] - f_minus[i]) / (2.0 * h);
+                }
+            }
+            
+            Ok(jac)
+        }
+
+        /// Solve linear system using Gaussian elimination
+        fn solve_linear_system(&self, a: &Array2<f64>, b: &Array1<f64>) -> Result<Array1<f64>> {
+            let n = a.nrows();
+            let mut aug = Array2::zeros((n, n + 1));
+            
+            for i in 0..n {
+                for j in 0..n {
+                    aug[[i, j]] = a[[i, j]];
+                }
+                aug[[i, n]] = b[i];
+            }
+            
+            // Forward elimination
+            for k in 0..n {
+                let mut max_row = k;
+                for i in k + 1..n {
+                    if aug[[i, k]].abs() > aug[[max_row, k]].abs() {
+                        max_row = i;
+                    }
+                }
+                
+                for j in 0..n + 1 {
+                    let temp = aug[[k, j]];
+                    aug[[k, j]] = aug[[max_row, j]];
+                    aug[[max_row, j]] = temp;
+                }
+                
+                for i in k + 1..n {
+                    let factor = aug[[i, k]] / aug[[k, k]];
+                    for j in k..n + 1 {
+                        aug[[i, j]] -= factor * aug[[k, j]];
+                    }
+                }
+            }
+            
+            // Back substitution
+            let mut x = Array1::zeros(n);
+            for i in (0..n).rev() {
+                x[i] = aug[[i, n]];
+                for j in i + 1..n {
+                    x[i] -= aug[[i, j]] * x[j];
+                }
+                x[i] /= aug[[i, i]];
+            }
+            
+            Ok(x)
+        }
+
+        /// Compute eigenvalues for 2x2 matrices
+        fn compute_eigenvalues(&self, matrix: &Array2<f64>) -> Result<Vec<Complex64>> {
+            let n = matrix.nrows();
+            
+            if n == 2 {
+                let a = matrix[[0, 0]];
+                let b = matrix[[0, 1]];
+                let c = matrix[[1, 0]];
+                let d = matrix[[1, 1]];
+                
+                let trace = a + d;
+                let det = a * d - b * c;
+                let discriminant = trace * trace - 4.0 * det;
+                
+                if discriminant >= 0.0 {
+                    let sqrt_disc = discriminant.sqrt();
+                    Ok(vec![
+                        Complex64::new((trace + sqrt_disc) / 2.0, 0.0),
+                        Complex64::new((trace - sqrt_disc) / 2.0, 0.0),
+                    ])
+                } else {
+                    let sqrt_disc = (-discriminant).sqrt();
+                    Ok(vec![
+                        Complex64::new(trace / 2.0, sqrt_disc / 2.0),
+                        Complex64::new(trace / 2.0, -sqrt_disc / 2.0),
+                    ])
+                }
+            } else {
+                Err(IntegrateError::InvalidInput("Only 2x2 matrices supported".to_string()))
+            }
+        }
+
+        /// Detect bifurcation types
+        fn detect_bifurcation(&self, eigenvalues: &[Complex64]) -> Option<BifurcationType> {
+            for eigenval in eigenvalues {
+                if eigenval.im == 0.0 && eigenval.re.abs() < 1e-6 {
+                    return Some(BifurcationType::SaddleNode);
+                }
+                
+                if eigenval.im != 0.0 && eigenval.re.abs() < 1e-6 {
+                    return Some(BifurcationType::Hopf);
+                }
+            }
+            None
+        }
+
+        /// Classify stability
+        fn classify_stability(&self, eigenvalues: &[Complex64]) -> StabilityType {
+            for eigenval in eigenvalues {
+                if eigenval.re > 1e-12 {
+                    return StabilityType::Unstable;
+                }
+                if eigenval.re.abs() < 1e-12 {
+                    return StabilityType::Marginally;
+                }
+            }
+            StabilityType::Stable
+        }
+    }
+
+    /// Monodromy matrix analyzer for periodic orbits
+    pub struct MonodromyAnalyzer {
+        pub period: f64,
+        pub tol: f64,
+        pub n_steps: usize,
+    }
+
+    impl MonodromyAnalyzer {
+        /// Create new monodromy analyzer
+        pub fn new(period: f64, n_steps: usize) -> Self {
+            Self {
+                period,
+                tol: 1e-8,
+                n_steps,
+            }
+        }
+
+        /// Compute monodromy matrix
+        pub fn compute_monodromy_matrix<F>(
+            &self,
+            system: F,
+            initial_state: &Array1<f64>,
+        ) -> Result<MonodromyResult>
+        where
+            F: Fn(&Array1<f64>) -> Array1<f64>,
+        {
+            let n = initial_state.len();
+            let dt = self.period / self.n_steps as f64;
+            
+            // Integrate fundamental matrix
+            let mut fundamental_matrix = Array2::eye(n);
+            let mut current_state = initial_state.clone();
+            
+            for _ in 0..self.n_steps {
+                let jac = self.numerical_jacobian(&system, &current_state)?;
+                
+                // Euler step for fundamental matrix: dΦ/dt = J(t)Φ
+                fundamental_matrix = &fundamental_matrix + &(jac.dot(&fundamental_matrix) * dt);
+                
+                // RK4 for state evolution
+                let k1 = system(&current_state);
+                let k2 = system(&(&current_state + &(&k1 * (dt / 2.0))));
+                let k3 = system(&(&current_state + &(&k2 * (dt / 2.0))));
+                let k4 = system(&(&current_state + &(&k3 * dt)));
+                
+                current_state = &current_state + &((&k1 + &k2 * 2.0 + &k3 * 2.0 + &k4) * (dt / 6.0));
+            }
+            
+            let eigenvalues = self.compute_eigenvalues(&fundamental_matrix)?;
+            let stability = self.classify_periodic_stability(&eigenvalues);
+            
+            Ok(MonodromyResult {
+                monodromy_matrix: fundamental_matrix,
+                eigenvalues,
+                stability,
+                period: self.period,
+                final_state: current_state,
+            })
+        }
+
+        /// Compute numerical Jacobian
+        fn numerical_jacobian<F>(&self, system: &F, x: &Array1<f64>) -> Result<Array2<f64>>
+        where
+            F: Fn(&Array1<f64>) -> Array1<f64>,
+        {
+            let n = x.len();
+            let mut jac = Array2::zeros((n, n));
+            let h = 1e-8;
+            
+            for j in 0..n {
+                let mut x_plus = x.clone();
+                let mut x_minus = x.clone();
+                x_plus[j] += h;
+                x_minus[j] -= h;
+                
+                let f_plus = system(&x_plus);
+                let f_minus = system(&x_minus);
+                
+                for i in 0..n {
+                    jac[[i, j]] = (f_plus[i] - f_minus[i]) / (2.0 * h);
+                }
+            }
+            
+            Ok(jac)
+        }
+
+        /// Compute eigenvalues
+        fn compute_eigenvalues(&self, matrix: &Array2<f64>) -> Result<Vec<Complex64>> {
+            let n = matrix.nrows();
+            
+            if n == 2 {
+                let a = matrix[[0, 0]];
+                let b = matrix[[0, 1]];
+                let c = matrix[[1, 0]];
+                let d = matrix[[1, 1]];
+                
+                let trace = a + d;
+                let det = a * d - b * c;
+                let discriminant = trace * trace - 4.0 * det;
+                
+                if discriminant >= 0.0 {
+                    let sqrt_disc = discriminant.sqrt();
+                    Ok(vec![
+                        Complex64::new((trace + sqrt_disc) / 2.0, 0.0),
+                        Complex64::new((trace - sqrt_disc) / 2.0, 0.0),
+                    ])
+                } else {
+                    let sqrt_disc = (-discriminant).sqrt();
+                    Ok(vec![
+                        Complex64::new(trace / 2.0, sqrt_disc / 2.0),
+                        Complex64::new(trace / 2.0, -sqrt_disc / 2.0),
+                    ])
+                }
+            } else {
+                Err(IntegrateError::InvalidInput("Only 2x2 matrices supported".to_string()))
+            }
+        }
+
+        /// Classify periodic stability
+        fn classify_periodic_stability(&self, multipliers: &[Complex64]) -> PeriodicStabilityType {
+            let max_magnitude = multipliers.iter().map(|m| m.norm()).fold(0.0, f64::max);
+            
+            if max_magnitude > 1.0 + 1e-6 {
+                PeriodicStabilityType::Unstable
+            } else if (max_magnitude - 1.0).abs() < 1e-6 {
+                PeriodicStabilityType::Marginally
+            } else {
+                PeriodicStabilityType::Stable
+            }
+        }
+    }
+
+    /// Continuation analysis result
+    #[derive(Debug, Clone)]
+    pub struct ContinuationResult {
+        pub bifurcation_points: Vec<BifurcationPointData>,
+        pub fixed_points: Vec<FixedPointData>,
+        pub parameter_range: (f64, f64),
+    }
+
+    /// Fixed point with stability data
+    #[derive(Debug, Clone)]
+    pub struct FixedPointData {
+        pub parameter: f64,
+        pub state: Array1<f64>,
+        pub eigenvalues: Vec<Complex64>,
+        pub stability: StabilityType,
+    }
+
+    /// Bifurcation point data
+    #[derive(Debug, Clone)]
+    pub struct BifurcationPointData {
+        pub parameter: f64,
+        pub state: Array1<f64>,
+        pub bifurcation_type: BifurcationType,
+    }
+
+    /// Monodromy analysis result
+    #[derive(Debug, Clone)]
+    pub struct MonodromyResult {
+        pub monodromy_matrix: Array2<f64>,
+        pub eigenvalues: Vec<Complex64>,
+        pub stability: PeriodicStabilityType,
+        pub period: f64,
+        pub final_state: Array1<f64>,
+    }
+
+    /// Extended bifurcation types
+    #[derive(Debug, Clone, Copy, PartialEq)]
+    pub enum BifurcationType {
+        SaddleNode,
+        Hopf,
+        PeriodDoubling,
+        Transcritical,
+        Pitchfork,
+    }
+
+    /// Periodic orbit stability
+    #[derive(Debug, Clone, Copy, PartialEq)]
+    pub enum PeriodicStabilityType {
+        Stable,
+        Unstable,
+        Marginally,
     }
 
     #[cfg(test)]

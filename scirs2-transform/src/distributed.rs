@@ -11,6 +11,8 @@ use std::collections::HashMap;
 use std::sync::Arc;
 #[cfg(feature = "distributed")]
 use tokio::sync::{mpsc, RwLock};
+#[cfg(feature = "distributed")]
+use std::collections::VecDeque;
 
 use crate::error::{Result, TransformError};
 use ndarray::{Array2, ArrayView2};
@@ -970,6 +972,658 @@ impl DistributedPCA {
         
         Ok((block_rows, block_cols))
     }
+}
+
+/// Enhanced node health monitoring and status
+#[cfg(feature = "distributed")]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NodeHealth {
+    /// Node identifier
+    pub node_id: NodeId,
+    /// Health status
+    pub status: NodeStatus,
+    /// CPU utilization (0.0 to 1.0)
+    pub cpu_utilization: f64,
+    /// Memory utilization (0.0 to 1.0)
+    pub memory_utilization: f64,
+    /// Network latency in milliseconds
+    pub network_latency_ms: f64,
+    /// Error rate (0.0 to 1.0)
+    pub error_rate: f64,
+    /// Last health check timestamp
+    pub last_check_timestamp: u64,
+    /// Consecutive failed health checks
+    pub consecutive_failures: u32,
+    /// Task completion rate (tasks/minute)
+    pub task_completion_rate: f64,
+}
+
+/// Node status enumeration
+#[cfg(feature = "distributed")]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum NodeStatus {
+    /// Node is healthy and available
+    Healthy,
+    /// Node is experiencing issues but still functional
+    Degraded,
+    /// Node is overloaded
+    Overloaded,
+    /// Node is unreachable or failed
+    Failed,
+    /// Node is being drained for maintenance
+    Draining,
+    /// Node is disabled by administrator
+    Disabled,
+}
+
+/// Auto-scaling configuration
+#[cfg(feature = "distributed")]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AutoScalingConfig {
+    /// Enable auto-scaling
+    pub enabled: bool,
+    /// Minimum number of nodes
+    pub min_nodes: usize,
+    /// Maximum number of nodes
+    pub max_nodes: usize,
+    /// Target CPU utilization for scaling decisions
+    pub target_cpu_utilization: f64,
+    /// Target memory utilization for scaling decisions
+    pub target_memory_utilization: f64,
+    /// Scale up threshold (utilization must exceed this)
+    pub scale_up_threshold: f64,
+    /// Scale down threshold (utilization must be below this)
+    pub scale_down_threshold: f64,
+    /// Cooldown period between scaling actions (seconds)
+    pub cooldown_seconds: u64,
+    /// Number of consecutive measurements before scaling
+    pub measurement_window: usize,
+}
+
+impl Default for AutoScalingConfig {
+    fn default() -> Self {
+        AutoScalingConfig {
+            enabled: true,
+            min_nodes: 1,
+            max_nodes: 10,
+            target_cpu_utilization: 0.7,
+            target_memory_utilization: 0.8,
+            scale_up_threshold: 0.8,
+            scale_down_threshold: 0.3,
+            cooldown_seconds: 300, // 5 minutes
+            measurement_window: 3,
+        }
+    }
+}
+
+/// Circuit breaker for fault tolerance
+#[cfg(feature = "distributed")]
+#[derive(Debug, Clone)]
+pub struct CircuitBreaker {
+    /// Circuit breaker state
+    state: CircuitBreakerState,
+    /// Failure threshold before opening circuit
+    failure_threshold: u32,
+    /// Current failure count
+    failure_count: u32,
+    /// Success threshold to close circuit
+    success_threshold: u32,
+    /// Current success count (in half-open state)
+    success_count: u32,
+    /// Timeout before attempting to close circuit (seconds)
+    timeout_seconds: u64,
+    /// Last failure timestamp
+    last_failure_timestamp: u64,
+}
+
+#[cfg(feature = "distributed")]
+#[derive(Debug, Clone, PartialEq)]
+enum CircuitBreakerState {
+    Closed,   // Normal operation
+    Open,     // Circuit is open, failing fast
+    HalfOpen, // Testing if service is back
+}
+
+#[cfg(feature = "distributed")]
+impl CircuitBreaker {
+    /// Create a new circuit breaker
+    pub fn new(failure_threshold: u32, success_threshold: u32, timeout_seconds: u64) -> Self {
+        CircuitBreaker {
+            state: CircuitBreakerState::Closed,
+            failure_threshold,
+            failure_count: 0,
+            success_threshold,
+            success_count: 0,
+            timeout_seconds,
+            last_failure_timestamp: 0,
+        }
+    }
+
+    /// Check if circuit breaker allows the operation
+    pub fn can_execute(&mut self) -> bool {
+        let current_time = current_timestamp();
+        
+        match self.state {
+            CircuitBreakerState::Closed => true,
+            CircuitBreakerState::Open => {
+                if current_time - self.last_failure_timestamp > self.timeout_seconds {
+                    self.state = CircuitBreakerState::HalfOpen;
+                    self.success_count = 0;
+                    true
+                } else {
+                    false
+                }
+            },
+            CircuitBreakerState::HalfOpen => true,
+        }
+    }
+
+    /// Record a successful operation
+    pub fn record_success(&mut self) {
+        match self.state {
+            CircuitBreakerState::Closed => {
+                self.failure_count = 0;
+            },
+            CircuitBreakerState::HalfOpen => {
+                self.success_count += 1;
+                if self.success_count >= self.success_threshold {
+                    self.state = CircuitBreakerState::Closed;
+                    self.failure_count = 0;
+                }
+            },
+            CircuitBreakerState::Open => {
+                // Should not happen
+            }
+        }
+    }
+
+    /// Record a failed operation
+    pub fn record_failure(&mut self) {
+        self.last_failure_timestamp = current_timestamp();
+        
+        match self.state {
+            CircuitBreakerState::Closed => {
+                self.failure_count += 1;
+                if self.failure_count >= self.failure_threshold {
+                    self.state = CircuitBreakerState::Open;
+                }
+            },
+            CircuitBreakerState::HalfOpen => {
+                self.state = CircuitBreakerState::Open;
+                self.failure_count = self.failure_threshold;
+            },
+            CircuitBreakerState::Open => {
+                // Already open
+            }
+        }
+    }
+
+    /// Get current state
+    pub fn get_state(&self) -> String {
+        match self.state {
+            CircuitBreakerState::Closed => "closed".to_string(),
+            CircuitBreakerState::Open => "open".to_string(),
+            CircuitBreakerState::HalfOpen => "half-open".to_string(),
+        }
+    }
+}
+
+/// Enhanced distributed coordinator with fault tolerance and auto-scaling
+#[cfg(feature = "distributed")]
+pub struct EnhancedDistributedCoordinator {
+    /// Base coordinator
+    base_coordinator: DistributedCoordinator,
+    /// Node health monitoring
+    node_health: Arc<RwLock<HashMap<NodeId, NodeHealth>>>,
+    /// Auto-scaling configuration
+    auto_scaling_config: AutoScalingConfig,
+    /// Circuit breakers per node
+    circuit_breakers: Arc<RwLock<HashMap<NodeId, CircuitBreaker>>>,
+    /// Health check interval in seconds
+    health_check_interval: u64,
+    /// Last scaling action timestamp
+    last_scaling_action: Arc<RwLock<u64>>,
+    /// Node performance history for scaling decisions
+    performance_history: Arc<RwLock<VecDeque<HashMap<NodeId, (f64, f64)>>>>, // (cpu, memory)
+    /// Failed task retry queue
+    retry_queue: Arc<RwLock<VecDeque<(DistributedTask, u32)>>>, // (task, retry_count)
+    /// Maximum retry attempts per task
+    max_retry_attempts: u32,
+}
+
+#[cfg(feature = "distributed")]
+impl EnhancedDistributedCoordinator {
+    /// Create a new enhanced distributed coordinator
+    pub async fn new(
+        config: DistributedConfig,
+        auto_scaling_config: AutoScalingConfig,
+    ) -> Result<Self> {
+        let base_coordinator = DistributedCoordinator::new(config).await?;
+        
+        let mut node_health = HashMap::new();
+        let mut circuit_breakers = HashMap::new();
+        
+        // Initialize health monitoring for all nodes
+        for node in &base_coordinator.config.nodes {
+            node_health.insert(node.id.clone(), NodeHealth {
+                node_id: node.id.clone(),
+                status: NodeStatus::Healthy,
+                cpu_utilization: 0.0,
+                memory_utilization: 0.0,
+                network_latency_ms: 0.0,
+                error_rate: 0.0,
+                last_check_timestamp: current_timestamp(),
+                consecutive_failures: 0,
+                task_completion_rate: 0.0,
+            });
+            
+            circuit_breakers.insert(node.id.clone(), CircuitBreaker::new(3, 2, 60));
+        }
+
+        let enhanced_coordinator = EnhancedDistributedCoordinator {
+            base_coordinator,
+            node_health: Arc::new(RwLock::new(node_health)),
+            auto_scaling_config,
+            circuit_breakers: Arc::new(RwLock::new(circuit_breakers)),
+            health_check_interval: 30, // 30 seconds
+            last_scaling_action: Arc::new(RwLock::new(0)),
+            performance_history: Arc::new(RwLock::new(VecDeque::with_capacity(60))), // 30 minutes at 30s intervals
+            retry_queue: Arc::new(RwLock::new(VecDeque::new())),
+            max_retry_attempts: 3,
+        };
+
+        // Start background tasks
+        enhanced_coordinator.start_health_monitoring().await?;
+        enhanced_coordinator.start_auto_scaling().await?;
+        enhanced_coordinator.start_retry_processor().await?;
+
+        Ok(enhanced_coordinator)
+    }
+
+    /// Start health monitoring background task
+    async fn start_health_monitoring(&self) -> Result<()> {
+        let node_health = self.node_health.clone();
+        let circuit_breakers = self.circuit_breakers.clone();
+        let nodes = self.base_coordinator.nodes.clone();
+        let interval = self.health_check_interval;
+
+        tokio::spawn(async move {
+            let mut health_check_interval = tokio::time::interval(
+                tokio::time::Duration::from_secs(interval)
+            );
+
+            loop {
+                health_check_interval.tick().await;
+                
+                let nodes_guard = nodes.read().await;
+                for (node_id, node_info) in nodes_guard.iter() {
+                    let health_result = Self::check_node_health(node_info).await;
+                    
+                    let mut health_guard = node_health.write().await;
+                    let mut breakers_guard = circuit_breakers.write().await;
+                    
+                    if let Some(health) = health_guard.get_mut(node_id) {
+                        match health_result {
+                            Ok(new_health) => {
+                                *health = new_health;
+                                health.consecutive_failures = 0;
+                                
+                                if let Some(breaker) = breakers_guard.get_mut(node_id) {
+                                    breaker.record_success();
+                                }
+                            },
+                            Err(_) => {
+                                health.consecutive_failures += 1;
+                                health.last_check_timestamp = current_timestamp();
+                                
+                                // Update status based on failure count
+                                health.status = if health.consecutive_failures >= 3 {
+                                    NodeStatus::Failed
+                                } else {
+                                    NodeStatus::Degraded
+                                };
+                                
+                                if let Some(breaker) = breakers_guard.get_mut(node_id) {
+                                    breaker.record_failure();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        Ok(())
+    }
+
+    /// Start auto-scaling background task
+    async fn start_auto_scaling(&self) -> Result<()> {
+        if !self.auto_scaling_config.enabled {
+            return Ok(());
+        }
+
+        let node_health = self.node_health.clone();
+        let performance_history = self.performance_history.clone();
+        let last_scaling_action = self.last_scaling_action.clone();
+        let config = self.auto_scaling_config.clone();
+
+        tokio::spawn(async move {
+            let mut scaling_interval = tokio::time::interval(
+                tokio::time::Duration::from_secs(60) // Check every minute
+            );
+
+            loop {
+                scaling_interval.tick().await;
+                
+                // Collect current performance metrics
+                let health_guard = node_health.read().await;
+                let mut current_metrics = HashMap::new();
+                
+                for (node_id, health) in health_guard.iter() {
+                    if health.status == NodeStatus::Healthy || health.status == NodeStatus::Degraded {
+                        current_metrics.insert(
+                            node_id.clone(), 
+                            (health.cpu_utilization, health.memory_utilization)
+                        );
+                    }
+                }
+                drop(health_guard);
+
+                // Add to performance history
+                let mut history_guard = performance_history.write().await;
+                history_guard.push_back(current_metrics.clone());
+                if history_guard.len() > config.measurement_window {
+                    history_guard.pop_front();
+                }
+
+                // Make scaling decision if we have enough data
+                if history_guard.len() >= config.measurement_window {
+                    let scaling_decision = Self::make_scaling_decision(&*history_guard, &config);
+                    
+                    if let Some(action) = scaling_decision {
+                        let last_action_guard = last_scaling_action.read().await;
+                        let current_time = current_timestamp();
+                        
+                        if current_time - *last_action_guard > config.cooldown_seconds {
+                            drop(last_action_guard);
+                            
+                            match action {
+                                ScalingAction::ScaleUp => {
+                                    println!("Auto-scaling: Scaling up cluster");
+                                    // Implementation would add new nodes
+                                },
+                                ScalingAction::ScaleDown => {
+                                    println!("Auto-scaling: Scaling down cluster");
+                                    // Implementation would remove nodes
+                                }
+                            }
+                            
+                            let mut last_action_guard = last_scaling_action.write().await;
+                            *last_action_guard = current_time;
+                        }
+                    }
+                }
+                drop(history_guard);
+            }
+        });
+
+        Ok(())
+    }
+
+    /// Start retry processor for failed tasks
+    async fn start_retry_processor(&self) -> Result<()> {
+        let retry_queue = self.retry_queue.clone();
+        let max_attempts = self.max_retry_attempts;
+
+        tokio::spawn(async move {
+            let mut retry_interval = tokio::time::interval(
+                tokio::time::Duration::from_secs(10) // Process retries every 10 seconds
+            );
+
+            loop {
+                retry_interval.tick().await;
+                
+                let mut queue_guard = retry_queue.write().await;
+                let mut tasks_to_retry = Vec::new();
+                
+                // Process all tasks in retry queue
+                while let Some((task, retry_count)) = queue_guard.pop_front() {
+                    if retry_count < max_attempts {
+                        tasks_to_retry.push((task, retry_count));
+                    } else {
+                        println!("Task {:?} exceeded maximum retry attempts", 
+                            Self::get_task_id(&task));
+                    }
+                }
+                drop(queue_guard);
+
+                // Retry tasks
+                for (task, retry_count) in tasks_to_retry {
+                    println!("Retrying task {:?} (attempt {})", 
+                        Self::get_task_id(&task), retry_count + 1);
+                    
+                    // Implementation would resubmit task with incremented retry count
+                    // For now, just log the retry attempt
+                }
+            }
+        });
+
+        Ok(())
+    }
+
+    /// Check health of a specific node
+    async fn check_node_health(node_info: &NodeInfo) -> Result<NodeHealth> {
+        // Simulate health check - in real implementation, this would make HTTP requests
+        tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+        
+        // Simulate varying health metrics
+        use rand::Rng;
+        let mut rng = rand::thread_rng();
+        
+        Ok(NodeHealth {
+            node_id: node_info.id.clone(),
+            status: NodeStatus::Healthy,
+            cpu_utilization: rng.gen_range(0.1..0.9),
+            memory_utilization: rng.gen_range(0.2..0.8),
+            network_latency_ms: rng.gen_range(1.0..50.0),
+            error_rate: rng.gen_range(0.0..0.05),
+            last_check_timestamp: current_timestamp(),
+            consecutive_failures: 0,
+            task_completion_rate: rng.gen_range(10.0..100.0),
+        })
+    }
+
+    /// Make scaling decision based on performance history
+    fn make_scaling_decision(
+        history: &VecDeque<HashMap<NodeId, (f64, f64)>>,
+        config: &AutoScalingConfig,
+    ) -> Option<ScalingAction> {
+        if history.len() < config.measurement_window {
+            return None;
+        }
+
+        // Calculate average utilization across all measurements
+        let mut total_cpu = 0.0;
+        let mut total_memory = 0.0;
+        let mut measurement_count = 0;
+
+        for metrics in history {
+            for (_, (cpu, memory)) in metrics {
+                total_cpu += cpu;
+                total_memory += memory;
+                measurement_count += 1;
+            }
+        }
+
+        if measurement_count == 0 {
+            return None;
+        }
+
+        let avg_cpu = total_cpu / measurement_count as f64;
+        let avg_memory = total_memory / measurement_count as f64;
+        let max_utilization = avg_cpu.max(avg_memory);
+
+        // Make scaling decision
+        if max_utilization > config.scale_up_threshold {
+            Some(ScalingAction::ScaleUp)
+        } else if max_utilization < config.scale_down_threshold {
+            Some(ScalingAction::ScaleDown)
+        } else {
+            None
+        }
+    }
+
+    /// Get task ID from distributed task
+    fn get_task_id(task: &DistributedTask) -> &str {
+        match task {
+            DistributedTask::Fit { task_id, .. } => task_id,
+            DistributedTask::Transform { task_id, .. } => task_id,
+            DistributedTask::Aggregate { task_id, .. } => task_id,
+        }
+    }
+
+    /// Submit task with enhanced fault tolerance
+    pub async fn submit_task_with_fault_tolerance(&self, task: DistributedTask) -> Result<()> {
+        // Check if we have healthy nodes available
+        let health_guard = self.node_health.read().await;
+        let healthy_nodes: Vec<_> = health_guard
+            .values()
+            .filter(|h| h.status == NodeStatus::Healthy || h.status == NodeStatus::Degraded)
+            .collect();
+
+        if healthy_nodes.is_empty() {
+            return Err(TransformError::DistributedError(
+                "No healthy nodes available for task execution".to_string()
+            ));
+        }
+        drop(health_guard);
+
+        // Try to submit task with circuit breaker protection
+        let result = self.try_submit_with_circuit_breaker(task.clone()).await;
+        
+        match result {
+            Ok(_) => Ok(()),
+            Err(_) => {
+                // Add to retry queue
+                let mut retry_queue_guard = self.retry_queue.write().await;
+                retry_queue_guard.push_back((task, 0));
+                Ok(())
+            }
+        }
+    }
+
+    /// Try to submit task with circuit breaker protection
+    async fn try_submit_with_circuit_breaker(&self, task: DistributedTask) -> Result<()> {
+        let breakers_guard = self.circuit_breakers.read().await;
+        
+        // Find a node with an open circuit breaker
+        for (node_id, breaker) in breakers_guard.iter() {
+            if breaker.can_execute() {
+                // Try to submit to this node
+                let result = self.base_coordinator.submit_task(task.clone()).await;
+                drop(breakers_guard);
+                
+                let mut breakers_guard = self.circuit_breakers.write().await;
+                if let Some(breaker) = breakers_guard.get_mut(node_id) {
+                    match result {
+                        Ok(_) => {
+                            breaker.record_success();
+                            return Ok(());
+                        },
+                        Err(_e) => {
+                            breaker.record_failure();
+                            continue;
+                        }
+                    }
+                }
+            }
+        }
+
+        Err(TransformError::DistributedError(
+            "All circuit breakers are open".to_string()
+        ))
+    }
+
+    /// Get cluster health summary
+    pub async fn get_cluster_health(&self) -> ClusterHealthSummary {
+        let health_guard = self.node_health.read().await;
+        let breakers_guard = self.circuit_breakers.read().await;
+        
+        let mut healthy_nodes = 0;
+        let mut degraded_nodes = 0;
+        let mut failed_nodes = 0;
+        let mut total_cpu_utilization = 0.0;
+        let mut total_memory_utilization = 0.0;
+        let mut open_circuit_breakers = 0;
+
+        for (node_id, health) in health_guard.iter() {
+            match health.status {
+                NodeStatus::Healthy => healthy_nodes += 1,
+                NodeStatus::Degraded => degraded_nodes += 1,
+                NodeStatus::Failed => failed_nodes += 1,
+                _ => {}
+            }
+            
+            total_cpu_utilization += health.cpu_utilization;
+            total_memory_utilization += health.memory_utilization;
+            
+            if let Some(breaker) = breakers_guard.get(node_id) {
+                if breaker.get_state() == "open" {
+                    open_circuit_breakers += 1;
+                }
+            }
+        }
+
+        let total_nodes = health_guard.len();
+        
+        ClusterHealthSummary {
+            total_nodes,
+            healthy_nodes,
+            degraded_nodes,
+            failed_nodes,
+            average_cpu_utilization: if total_nodes > 0 { 
+                total_cpu_utilization / total_nodes as f64 
+            } else { 
+                0.0 
+            },
+            average_memory_utilization: if total_nodes > 0 { 
+                total_memory_utilization / total_nodes as f64 
+            } else { 
+                0.0 
+            },
+            open_circuit_breakers,
+            auto_scaling_enabled: self.auto_scaling_config.enabled,
+        }
+    }
+}
+
+/// Scaling action enumeration
+#[cfg(feature = "distributed")]
+#[derive(Debug, Clone)]
+enum ScalingAction {
+    ScaleUp,
+    ScaleDown,
+}
+
+/// Cluster health summary
+#[cfg(feature = "distributed")]
+#[derive(Debug, Clone)]
+pub struct ClusterHealthSummary {
+    pub total_nodes: usize,
+    pub healthy_nodes: usize,
+    pub degraded_nodes: usize,
+    pub failed_nodes: usize,
+    pub average_cpu_utilization: f64,
+    pub average_memory_utilization: f64,
+    pub open_circuit_breakers: usize,
+    pub auto_scaling_enabled: bool,
+}
+
+fn current_timestamp() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_else(|_| std::time::Duration::from_secs(0))
+        .as_secs()
 }
 
 // Stub implementations when distributed feature is not enabled

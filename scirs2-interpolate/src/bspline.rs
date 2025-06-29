@@ -1782,6 +1782,162 @@ where
     crate::structured_matrix::solve_structured_least_squares(a, b, regularization)
 }
 
+// Implementation of SplineInterpolator trait for BSpline
+impl<T> crate::traits::SplineInterpolator<T> for BSpline<T>
+where
+    T: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + MulAssign + DivAssign + RemAssign + Send + Sync + 'static,
+{
+    fn derivative(
+        &self,
+        query_points: &ArrayView2<T>,
+        order: usize,
+    ) -> crate::InterpolateResult<Vec<T>> {
+        if query_points.ncols() != 1 {
+            return Err(crate::InterpolateError::invalid_input(
+                "BSpline only supports 1D interpolation",
+            ));
+        }
+
+        let mut results = Vec::with_capacity(query_points.nrows());
+        for row in query_points.outer_iter() {
+            let x = row[0];
+            let deriv = self.derivative(x, order)?;
+            results.push(deriv);
+        }
+        Ok(results)
+    }
+
+    fn integrate(&self, bounds: &[(T, T)]) -> crate::InterpolateResult<Vec<T>> {
+        let mut results = Vec::with_capacity(bounds.len());
+        for &(a, b) in bounds {
+            let integral = self.integrate(a, b)?;
+            results.push(integral);
+        }
+        Ok(results)
+    }
+
+    fn antiderivative(&self) -> crate::InterpolateResult<Box<dyn crate::traits::SplineInterpolator<T>>> {
+        let antideriv = self.antiderivative(1)?;
+        Ok(Box::new(antideriv))
+    }
+
+    fn find_roots(&self, bounds: &[(T, T)], tolerance: T) -> crate::InterpolateResult<Vec<T>> {
+        use crate::utils::find_multiple_roots;
+        
+        let mut all_roots = Vec::new();
+        
+        for &(a, b) in bounds {
+            if a >= b {
+                continue;
+            }
+            
+            // Create evaluation function for root finding
+            let eval_fn = |x: T| -> crate::InterpolateResult<T> {
+                self.evaluate(x)
+            };
+            
+            // Use subdivision approach for B-splines which may have multiple roots
+            match find_multiple_roots(a, b, tolerance, 10, eval_fn) {
+                Ok(mut roots) => all_roots.append(&mut roots),
+                Err(_) => continue,
+            }
+        }
+        
+        // Sort and remove duplicates
+        all_roots.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+        all_roots.dedup_by(|a, b| (*a - *b).abs() < tolerance);
+        
+        Ok(all_roots)
+    }
+
+    fn find_extrema(
+        &self,
+        bounds: &[(T, T)],
+        tolerance: T,
+    ) -> crate::InterpolateResult<Vec<(T, T, crate::traits::ExtremaType)>> {
+        use crate::utils::find_multiple_roots;
+        
+        let mut extrema = Vec::new();
+        
+        for &(a, b) in bounds {
+            if a >= b {
+                continue;
+            }
+            
+            // Find roots of the first derivative (critical points)
+            let deriv_fn = |x: T| -> crate::InterpolateResult<T> {
+                self.derivative(x, 1)
+            };
+            
+            let critical_points = match find_multiple_roots(a, b, tolerance, 20, deriv_fn) {
+                Ok(points) => points,
+                Err(_) => continue,
+            };
+            
+            for cp in critical_points {
+                if cp < a || cp > b {
+                    continue;
+                }
+                
+                // Classify using second derivative test
+                let second_deriv = match self.derivative(cp, 2) {
+                    Ok(d2) => d2,
+                    Err(_) => continue,
+                };
+                
+                let f_value = match self.evaluate(cp) {
+                    Ok(val) => val,
+                    Err(_) => continue,
+                };
+                
+                let extrema_type = if second_deriv > T::zero() {
+                    crate::traits::ExtremaType::Minimum
+                } else if second_deriv < T::zero() {
+                    crate::traits::ExtremaType::Maximum
+                } else {
+                    crate::traits::ExtremaType::InflectionPoint
+                };
+                
+                extrema.push((cp, f_value, extrema_type));
+            }
+        }
+        
+        // Sort by x-coordinate
+        extrema.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
+        
+        Ok(extrema)
+    }
+}
+
+impl<T> crate::traits::Interpolator<T> for BSpline<T>
+where
+    T: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + MulAssign + DivAssign + RemAssign + Send + Sync + 'static,
+{
+    fn evaluate(&self, query_points: &ArrayView2<T>) -> crate::InterpolateResult<Vec<T>> {
+        if query_points.ncols() != 1 {
+            return Err(crate::InterpolateError::invalid_input(
+                "BSpline only supports 1D interpolation",
+            ));
+        }
+
+        let mut results = Vec::with_capacity(query_points.nrows());
+        for row in query_points.outer_iter() {
+            let x = row[0];
+            let value = self.evaluate(x)?;
+            results.push(value);
+        }
+        Ok(results)
+    }
+
+    fn dimension(&self) -> usize {
+        1
+    }
+
+    fn len(&self) -> usize {
+        self.c.len()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

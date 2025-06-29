@@ -26,6 +26,7 @@ libc = { workspace = true }
 libm = { workspace = true }
 sobol = { workspace = true }
 halton = { workspace = true }
+num_cpus = "1.0"
 # Note: wide crate is accessed via scirs2-core, not directly
 
 # Optional dependencies

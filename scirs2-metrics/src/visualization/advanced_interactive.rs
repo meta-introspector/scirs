@@ -1893,24 +1893,452 @@ impl EventSystem {
             self.event_history.pop_front();
         }
 
-        // Simple event handling
-        Ok(EventResponse {
+        // Process event based on type
+        let mut response = EventResponse {
             handled: true,
             actions: Vec::new(),
             data_updates: HashMap::new(),
             state_changes: HashMap::new(),
-        })
+        };
+
+        match event.event_type {
+            EventType::Click => {
+                self.handle_click_event(&event, &mut response)?;
+            }
+            EventType::Hover => {
+                self.handle_hover_event(&event, &mut response)?;
+            }
+            EventType::Select => {
+                self.handle_selection_event(&event, &mut response)?;
+            }
+            EventType::Filter => {
+                self.handle_filter_event(&event, &mut response)?;
+            }
+            EventType::Zoom => {
+                self.handle_zoom_event(&event, &mut response)?;
+            }
+            EventType::Pan => {
+                self.handle_pan_event(&event, &mut response)?;
+            }
+            _ => {
+                // Handle other event types
+                response.handled = false;
+            }
+        }
+
+        Ok(response)
+    }
+
+    /// Handle click events
+    fn handle_click_event(&mut self, event: &WidgetEvent, response: &mut EventResponse) -> Result<()> {
+        // Add data point highlighting action
+        response.actions.push(WidgetAction {
+            action_type: ActionType::Highlight,
+            target_widget: event.widget_id.clone(),
+            parameters: event.data.clone(),
+        });
+
+        // Update selection state
+        response.state_changes.insert(
+            "selected_point".to_string(),
+            event.data.get("point_id").cloned().unwrap_or_default(),
+        );
+
+        Ok(())
+    }
+
+    /// Handle hover events
+    fn handle_hover_event(&mut self, event: &WidgetEvent, response: &mut EventResponse) -> Result<()> {
+        // Show tooltip action
+        response.actions.push(WidgetAction {
+            action_type: ActionType::ShowTooltip,
+            target_widget: event.widget_id.clone(),
+            parameters: event.data.clone(),
+        });
+
+        Ok(())
+    }
+
+    /// Handle selection events
+    fn handle_selection_event(&mut self, event: &WidgetEvent, response: &mut EventResponse) -> Result<()> {
+        // Update selection across linked widgets
+        response.actions.push(WidgetAction {
+            action_type: ActionType::UpdateSelection,
+            target_widget: "all".to_string(), // Broadcast to all widgets
+            parameters: event.data.clone(),
+        });
+
+        // Update data filter
+        if let Some(selected_items) = event.data.get("selected_items") {
+            response.data_updates.insert("filtered_data".to_string(), selected_items.clone());
+        }
+
+        Ok(())
+    }
+
+    /// Handle filter events
+    fn handle_filter_event(&mut self, event: &WidgetEvent, response: &mut EventResponse) -> Result<()> {
+        // Apply filter to data
+        response.actions.push(WidgetAction {
+            action_type: ActionType::ApplyFilter,
+            target_widget: "all".to_string(),
+            parameters: event.data.clone(),
+        });
+
+        // Update filter state
+        if let Some(filter_config) = event.data.get("filter") {
+            response.state_changes.insert("active_filter".to_string(), filter_config.clone());
+        }
+
+        Ok(())
+    }
+
+    /// Handle zoom events
+    fn handle_zoom_event(&mut self, event: &WidgetEvent, response: &mut EventResponse) -> Result<()> {
+        // Update zoom level
+        response.actions.push(WidgetAction {
+            action_type: ActionType::Zoom,
+            target_widget: event.widget_id.clone(),
+            parameters: event.data.clone(),
+        });
+
+        // Update zoom state
+        if let Some(zoom_level) = event.data.get("zoom_level") {
+            response.state_changes.insert("zoom_level".to_string(), zoom_level.clone());
+        }
+
+        Ok(())
+    }
+
+    /// Handle pan events
+    fn handle_pan_event(&mut self, event: &WidgetEvent, response: &mut EventResponse) -> Result<()> {
+        // Update pan position
+        response.actions.push(WidgetAction {
+            action_type: ActionType::Pan,
+            target_widget: event.widget_id.clone(),
+            parameters: event.data.clone(),
+        });
+
+        // Update pan state
+        if let Some(pan_position) = event.data.get("pan_position") {
+            response.state_changes.insert("pan_position".to_string(), pan_position.clone());
+        }
+
+        Ok(())
+    }
+
+    /// Register event handler for specific widget
+    pub fn register_handler(&mut self, widget_id: String, handler: Box<dyn EventHandler + Send + Sync>) {
+        self.handlers.insert(widget_id, handler);
+    }
+
+    /// Get event history
+    pub fn get_event_history(&self) -> &VecDeque<WidgetEvent> {
+        &self.event_history
+    }
+
+    /// Clear event history
+    pub fn clear_history(&mut self) {
+        self.event_history.clear();
     }
 }
 
 impl LayoutManager {
     fn new(config: LayoutConfig) -> Self {
-        Self {
-            layout_config: config,
+        let mut manager = Self {
+            layout_config: config.clone(),
             widget_layouts: HashMap::new(),
             constraints: Vec::new(),
             responsive_rules: Vec::new(),
+        };
+
+        // Initialize default responsive rules
+        manager.add_default_responsive_rules();
+        manager
+    }
+
+    /// Add widget to layout
+    pub fn add_widget(&mut self, widget_id: String, layout: WidgetLayout) -> Result<()> {
+        // Validate layout constraints
+        self.validate_layout(&layout)?;
+        
+        // Add widget to layout map
+        self.widget_layouts.insert(widget_id.clone(), layout.clone());
+        
+        // Apply layout constraints
+        self.apply_constraints(&widget_id, &layout)?;
+        
+        Ok(())
+    }
+
+    /// Update widget layout
+    pub fn update_widget_layout(&mut self, widget_id: &str, layout: WidgetLayout) -> Result<()> {
+        self.validate_layout(&layout)?;
+        
+        if let Some(current_layout) = self.widget_layouts.get_mut(widget_id) {
+            *current_layout = layout.clone();
+            self.apply_constraints(widget_id, &layout)?;
         }
+        
+        Ok(())
+    }
+
+    /// Remove widget from layout
+    pub fn remove_widget(&mut self, widget_id: &str) -> Result<()> {
+        self.widget_layouts.remove(widget_id);
+        self.remove_widget_constraints(widget_id);
+        Ok(())
+    }
+
+    /// Calculate layout for given viewport size
+    pub fn calculate_layout(&self, viewport: Size) -> Result<HashMap<String, WidgetPosition>> {
+        let mut positions = HashMap::new();
+        
+        match self.layout_config.layout_type {
+            LayoutType::Grid => {
+                positions = self.calculate_grid_layout(viewport)?;
+            }
+            LayoutType::Flex => {
+                positions = self.calculate_flex_layout(viewport)?;
+            }
+            LayoutType::Absolute => {
+                positions = self.calculate_absolute_layout(viewport)?;
+            }
+            LayoutType::Masonry => {
+                positions = self.calculate_masonry_layout(viewport)?;
+            }
+            LayoutType::Custom(_) => {
+                positions = self.calculate_custom_layout(viewport)?;
+            }
+        }
+
+        // Apply responsive adjustments
+        self.apply_responsive_rules(&mut positions, viewport)?;
+        
+        Ok(positions)
+    }
+
+    /// Calculate grid layout
+    fn calculate_grid_layout(&self, viewport: Size) -> Result<HashMap<String, WidgetPosition>> {
+        let mut positions = HashMap::new();
+        
+        if let Some(grid_config) = &self.layout_config.grid_config {
+            let cell_width = (viewport.width - (grid_config.columns + 1) * grid_config.gap) / grid_config.columns;
+            let cell_height = (viewport.height - (grid_config.rows + 1) * grid_config.gap) / grid_config.rows;
+            
+            let mut current_row = 0;
+            let mut current_col = 0;
+            
+            for (widget_id, widget_layout) in &self.widget_layouts {
+                let x = current_col * (cell_width + grid_config.gap) + grid_config.gap;
+                let y = current_row * (cell_height + grid_config.gap) + grid_config.gap;
+                
+                let width = cell_width * widget_layout.span.columns;
+                let height = cell_height * widget_layout.span.rows;
+                
+                positions.insert(widget_id.clone(), WidgetPosition {
+                    x: x as f32,
+                    y: y as f32,
+                    width: width as f32,
+                    height: height as f32,
+                    z_index: widget_layout.z_index.unwrap_or(0),
+                });
+                
+                // Move to next position
+                current_col += widget_layout.span.columns;
+                if current_col >= grid_config.columns {
+                    current_col = 0;
+                    current_row += 1;
+                }
+            }
+        }
+        
+        Ok(positions)
+    }
+
+    /// Calculate flex layout
+    fn calculate_flex_layout(&self, viewport: Size) -> Result<HashMap<String, WidgetPosition>> {
+        let mut positions = HashMap::new();
+        
+        let mut current_x = 0u32;
+        let mut current_y = 0u32;
+        let mut row_height = 0u32;
+        
+        for (widget_id, widget_layout) in &self.widget_layouts {
+            let width = widget_layout.size.width.unwrap_or(200) as u32;
+            let height = widget_layout.size.height.unwrap_or(150) as u32;
+            
+            // Check if widget fits in current row
+            if current_x + width > viewport.width {
+                current_x = 0;
+                current_y += row_height + self.layout_config.spacing.widget_spacing;
+                row_height = 0;
+            }
+            
+            positions.insert(widget_id.clone(), WidgetPosition {
+                x: current_x as f32,
+                y: current_y as f32,
+                width: width as f32,
+                height: height as f32,
+                z_index: widget_layout.z_index.unwrap_or(0),
+            });
+            
+            current_x += width + self.layout_config.spacing.widget_spacing;
+            row_height = row_height.max(height);
+        }
+        
+        Ok(positions)
+    }
+
+    /// Calculate absolute layout
+    fn calculate_absolute_layout(&self, _viewport: Size) -> Result<HashMap<String, WidgetPosition>> {
+        let mut positions = HashMap::new();
+        
+        for (widget_id, widget_layout) in &self.widget_layouts {
+            if let Some(position) = &widget_layout.absolute_position {
+                positions.insert(widget_id.clone(), position.clone());
+            }
+        }
+        
+        Ok(positions)
+    }
+
+    /// Calculate masonry layout
+    fn calculate_masonry_layout(&self, viewport: Size) -> Result<HashMap<String, WidgetPosition>> {
+        let mut positions = HashMap::new();
+        
+        if let Some(grid_config) = &self.layout_config.grid_config {
+            let column_width = (viewport.width - (grid_config.columns + 1) * grid_config.gap) / grid_config.columns;
+            let mut column_heights = vec![0u32; grid_config.columns as usize];
+            
+            for (widget_id, widget_layout) in &self.widget_layouts {
+                // Find shortest column
+                let shortest_column = column_heights.iter().enumerate()
+                    .min_by_key(|(_, &height)| height)
+                    .map(|(idx, _)| idx)
+                    .unwrap_or(0);
+                
+                let x = shortest_column as u32 * (column_width + grid_config.gap) + grid_config.gap;
+                let y = column_heights[shortest_column];
+                
+                let width = column_width;
+                let height = widget_layout.size.height.unwrap_or(150) as u32;
+                
+                positions.insert(widget_id.clone(), WidgetPosition {
+                    x: x as f32,
+                    y: y as f32,
+                    width: width as f32,
+                    height: height as f32,
+                    z_index: widget_layout.z_index.unwrap_or(0),
+                });
+                
+                column_heights[shortest_column] += height + grid_config.gap;
+            }
+        }
+        
+        Ok(positions)
+    }
+
+    /// Calculate custom layout
+    fn calculate_custom_layout(&self, viewport: Size) -> Result<HashMap<String, WidgetPosition>> {
+        // Fallback to flex layout for custom layouts
+        self.calculate_flex_layout(viewport)
+    }
+
+    /// Validate layout configuration
+    fn validate_layout(&self, layout: &WidgetLayout) -> Result<()> {
+        // Check minimum dimensions
+        if let Some(width) = layout.size.width {
+            if width <= 0.0 {
+                return Err(MetricsError::InvalidInput("Widget width must be positive".to_string()));
+            }
+        }
+        
+        if let Some(height) = layout.size.height {
+            if height <= 0.0 {
+                return Err(MetricsError::InvalidInput("Widget height must be positive".to_string()));
+            }
+        }
+        
+        Ok(())
+    }
+
+    /// Apply layout constraints
+    fn apply_constraints(&mut self, widget_id: &str, layout: &WidgetLayout) -> Result<()> {
+        // Add alignment constraints
+        if let Some(alignment) = &layout.alignment {
+            self.constraints.push(LayoutConstraint {
+                constraint_type: ConstraintType::Alignment,
+                widget_id: widget_id.to_string(),
+                parameters: HashMap::from([
+                    ("horizontal".to_string(), alignment.horizontal.to_string()),
+                    ("vertical".to_string(), alignment.vertical.to_string()),
+                ]),
+            });
+        }
+        
+        Ok(())
+    }
+
+    /// Remove widget constraints
+    fn remove_widget_constraints(&mut self, widget_id: &str) {
+        self.constraints.retain(|constraint| constraint.widget_id != widget_id);
+    }
+
+    /// Add default responsive rules
+    fn add_default_responsive_rules(&mut self) {
+        // Mobile breakpoint
+        self.responsive_rules.push(ResponsiveRule {
+            breakpoint: 768,
+            layout_changes: vec![
+                LayoutChange {
+                    widget_selector: "*".to_string(),
+                    property: "columns".to_string(),
+                    value: "1".to_string(),
+                },
+            ],
+        });
+        
+        // Tablet breakpoint
+        self.responsive_rules.push(ResponsiveRule {
+            breakpoint: 1024,
+            layout_changes: vec![
+                LayoutChange {
+                    widget_selector: "*".to_string(),
+                    property: "columns".to_string(),
+                    value: "2".to_string(),
+                },
+            ],
+        });
+    }
+
+    /// Apply responsive rules to layout
+    fn apply_responsive_rules(&self, positions: &mut HashMap<String, WidgetPosition>, viewport: Size) -> Result<()> {
+        for rule in &self.responsive_rules {
+            if viewport.width <= rule.breakpoint {
+                // Apply layout changes
+                for change in &rule.layout_changes {
+                    if change.widget_selector == "*" {
+                        // Apply to all widgets
+                        for (_, position) in positions.iter_mut() {
+                            self.apply_layout_change(position, change)?;
+                        }
+                    } else if let Some(position) = positions.get_mut(&change.widget_selector) {
+                        // Apply to specific widget
+                        self.apply_layout_change(position, change)?;
+                    }
+                }
+                break; // Apply only the first matching rule
+            }
+        }
+        
+        Ok(())
+    }
+
+    /// Apply individual layout change
+    fn apply_layout_change(&self, _position: &mut WidgetPosition, _change: &LayoutChange) -> Result<()> {
+        // Implementation would modify position based on change
+        Ok(())
     }
 }
 

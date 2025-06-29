@@ -11,11 +11,14 @@ pub mod work_stealing;
 
 // Re-export submodule types
 pub use thread_pools::{
-    get_global_manager, AffinityStrategy, DecompositionType, IterativeSolverType, OperationType,
-    ScopedThreadPool, ThreadPoolConfig, ThreadPoolManager, ThreadPoolProfile, ThreadPoolStats,
+    get_global_manager, AffinityStrategy, AnomalySeverity, AnomalyType, DecompositionType, 
+    IterativeSolverType, MemoryMetrics, OperationType, PerformanceAnomaly, ProfileMetrics,
+    ScopedThreadPool, ThreadPoolConfig, ThreadPoolManager, ThreadPoolProfile, ThreadPoolProfiler, 
+    ThreadPoolStats,
 };
 pub use work_stealing::{
-    LoadBalancingParams, MatrixOperationType, SchedulerStats, StealingStrategy, WorkComplexity,
+    CacheAwareStrategy, CacheAwareWorkStealer, LoadBalancingParams, MatrixOperationType, 
+    NumaTopology, SchedulerStats, StealingStrategy, WorkComplexity,
     WorkItem, WorkPriority, WorkStealingScheduler, WorkloadCharacteristics,
 };
 
@@ -26,6 +29,9 @@ pub use work_stealing::matrix_ops::{
     parallel_matvec_work_stealing, parallel_power_iteration, parallel_qr_work_stealing,
     parallel_svd_work_stealing,
 };
+
+// Re-export cache-aware operations
+pub use work_stealing::parallel_gemm_cache_aware;
 
 /// Global worker configuration
 static GLOBAL_WORKERS: Mutex<Option<usize>> = Mutex::new(None);

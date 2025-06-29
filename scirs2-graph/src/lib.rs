@@ -272,14 +272,14 @@ pub use measures::{
 stable!("graph_memory", "0.1.0-beta.1");
 pub use memory::{
     suggest_optimizations, BitPackedGraph, CSRGraph, CompressedAdjacencyList, FragmentationReport,
-    HybridGraph, MemoryProfiler, MemoryStats, OptimizedGraphBuilder,
+    HybridGraph, MemoryProfiler, MemoryStats, OptimizedGraphBuilder, MemorySample, OptimizationSuggestions,
 };
 
 // Performance monitoring - stable for 1.0
 stable!("graph_performance", "0.1.0-beta.1");
 pub use performance::{
     LargeGraphIterator, LargeGraphOps, MemoryMetrics, ParallelConfig, PerformanceMonitor,
-    PerformanceReport, RealTimeMemoryProfiler, StreamingGraphProcessor,
+    PerformanceReport, StreamingGraphProcessor,
 };
 
 // Spectral analysis - stable for 1.0

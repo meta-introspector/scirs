@@ -17,6 +17,7 @@ use num_traits::{Float, FromPrimitive, One, Zero};
 use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
+use serde_json;
 
 /// API consistency validation framework
 pub struct APIConsistencyValidator {

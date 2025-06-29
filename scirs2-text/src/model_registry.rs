@@ -3,13 +3,10 @@
 //! This module provides a centralized registry for managing pre-trained models,
 //! including transformers, embeddings, and other text processing models.
 
-use crate::embeddings::Word2Vec;
 use crate::error::{Result, TextError};
-use crate::transformer::{TransformerConfig, TransformerModel};
-use ndarray::{Array1, Array2};
+use crate::transformer::TransformerConfig;
 use std::collections::HashMap;
 use std::fs;
-use std::io::{BufReader, BufWriter};
 use std::path::{Path, PathBuf};
 
 #[cfg(feature = "serde-support")]
@@ -398,7 +395,7 @@ impl ModelRegistry {
     }
 
     /// Load model by ID
-    pub fn load_model<M: RegistrableModel + 'static>(&mut self, model_id: &str) -> Result<&M> {
+    pub fn load_model<M: RegistrableModel + Send + Sync + 'static>(&mut self, model_id: &str) -> Result<&M> {
         // Check if model is cached
         if let Some(cached) = self.model_cache.get(model_id) {
             if let Some(model) = cached.downcast_ref::<M>() {

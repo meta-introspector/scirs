@@ -2,6 +2,250 @@
 //!
 //! This module provides special functions commonly used in physics and engineering
 //! applications that extend beyond the standard mathematical special functions.
+//!
+//! # Mathematical Physics Applications
+//!
+//! ## Quantum Mechanics
+//!
+//! ### Hydrogen Atom Wave Functions
+//!
+//! The wave functions of the hydrogen atom are expressed in terms of associated
+//! Laguerre polynomials and spherical harmonics:
+//!
+//! ```text
+//! ψₙₗₘ(r,θ,φ) = Rₙₗ(r) Yₗᵐ(θ,φ)
+//! ```
+//!
+//! where the radial part is:
+//!
+//! ```text
+//! Rₙₗ(r) = √[(2/na₀)³ (n-l-1)!/(2n[(n+l)!])] e^(-r/na₀) (2r/na₀)ˡ Lₙ₊ₗ^(2l+1)(2r/na₀)
+//! ```
+//!
+//! ### Harmonic Oscillator Functions
+//!
+//! The energy eigenfunctions of the quantum harmonic oscillator involve
+//! Hermite polynomials:
+//!
+//! ```text
+//! ψₙ(x) = (mω/πℏ)^(1/4) (1/√(2ⁿn!)) Hₙ(√(mω/ℏ)x) exp(-mωx²/2ℏ)
+//! ```
+//!
+//! ## Statistical Mechanics
+//!
+//! ### Blackbody Radiation Theory
+//!
+//! **Planck's Law Derivation**: The spectral energy density of blackbody radiation
+//! is derived from quantum statistical mechanics:
+//!
+//! Starting with the Rayleigh-Jeans law (classical limit):
+//! ```text
+//! uₒₗₐₛₛᵢₓₐₗ(ν,T) = (8πν²/c³) kT
+//! ```
+//!
+//! **Problem**: This leads to the ultraviolet catastrophe (infinite energy).
+//!
+//! **Planck's Solution**: Quantize energy in discrete packets E = hν:
+//!
+//! The average energy of an oscillator at frequency ν is:
+//! ```text
+//! ⟨E⟩ = hν/(e^(hν/kT) - 1)
+//! ```
+//!
+//! **Derivation**: For a quantum harmonic oscillator with energy levels Eₙ = ℏω(n + 1/2),
+//! the partition function is:
+//!
+//! ```text
+//! Z = ∑ₙ e^(-βEₙ) = e^(-βℏω/2) ∑ₙ e^(-βℏωn) = e^(-βℏω/2)/(1 - e^(-βℏω))
+//! ```
+//!
+//! The average energy becomes:
+//! ```text
+//! ⟨E⟩ = -∂ln(Z)/∂β = ℏω/2 + ℏω/(e^(βℏω) - 1)
+//! ```
+//!
+//! For the radiation field (photons), the zero-point energy is absent, giving Planck's law.
+//!
+//! ### Wien's Displacement Law
+//!
+//! **Mathematical Derivation**: To find the wavelength λₘₐₓ of maximum emission,
+//! differentiate Planck's law with respect to wavelength:
+//!
+//! ```text
+//! d/dλ [8πhc/λ⁵ · 1/(e^(hc/λkT) - 1)] = 0
+//! ```
+//!
+//! This leads to the transcendental equation:
+//! ```text
+//! x = 5(1 - e^(-x))
+//! ```
+//!
+//! where x = hc/(λₘₐₓkT). The solution is x ≈ 4.965, giving:
+//! ```text
+//! λₘₐₓT = hc/(4.965k) = 2.898 × 10⁻³ m⋅K
+//! ```
+//!
+//! ## Electromagnetic Theory
+//!
+//! ### Scattering Theory
+//!
+//! **Mie Scattering**: For spherical particles, the scattering coefficients
+//! are expressed in terms of Bessel functions:
+//!
+//! ```text
+//! aₙ = [ψₙ(mx)ψₙ'(x) - mψₙ(x)ψₙ'(mx)] / [ξₙ(mx)ψₙ'(x) - mψₙ(x)ξₙ'(mx)]
+//! ```
+//!
+//! where ψₙ and ξₙ are Riccati-Bessel functions.
+//!
+//! **Rayleigh Scattering**: For small particles (x ≪ 1), the scattering
+//! cross-section is:
+//!
+//! ```text
+//! σₛcₐₜ = (8π/3) |α|² k⁴
+//! ```
+//!
+//! where α is the polarizability and k = 2π/λ.
+//!
+//! ### Fresnel Integrals in Optics
+//!
+//! **Fresnel Diffraction**: The amplitude at a point behind a straight edge
+//! involves Fresnel integrals:
+//!
+//! ```text
+//! U = U₀/2 [(1/2 + C(v)) + i(1/2 + S(v))]
+//! ```
+//!
+//! where v = √(2/λR) x is the Fresnel parameter.
+//!
+//! ## Solid State Physics
+//!
+//! ### Lattice Dynamics
+//!
+//! **Debye Model**: The heat capacity involves the Debye function:
+//!
+//! ```text
+//! D₃(x) = (3/x³) ∫₀ˣ (t³/(eᵗ-1)) dt
+//! ```
+//!
+//! **Einstein Model**: Uses the Einstein function:
+//!
+//! ```text
+//! E(x) = x²eˣ/(eˣ-1)²
+//! ```
+//!
+//! ### Electronic Properties
+//!
+//! **Fermi-Dirac Distribution**: The probability of occupation at energy E:
+//!
+//! ```text
+//! f(E) = 1/(e^((E-μ)/kT) + 1)
+//! ```
+//!
+//! **Sommerfeld Expansion**: For low temperatures, thermodynamic quantities
+//! can be expanded in powers of (kT/μ):
+//!
+//! ```text
+//! ∫₀^∞ g(E)f(E)dE ≈ ∫₀^μ g(E)dE + (π²/6)(kT)²g'(μ) + O((kT)⁴)
+//! ```
+//!
+//! ## Fluid Mechanics
+//!
+//! ### Boundary Layer Theory
+//!
+//! **Blasius Solution**: For laminar boundary layer over a flat plate,
+//! the velocity profile satisfies:
+//!
+//! ```text
+//! f''' + (1/2)ff'' = 0
+//! ```
+//!
+//! with boundary conditions f(0) = f'(0) = 0 and f'(∞) = 1.
+//!
+//! **Falkner-Skan Solutions**: For wedge flows, the equation becomes:
+//!
+//! ```text
+//! f''' + ff'' + β(1 - (f')²) = 0
+//! ```
+//!
+//! where β is the pressure gradient parameter.
+//!
+//! ## Heat Transfer
+//!
+//! ### Thermal Diffusion
+//!
+//! **Green's Functions**: The temperature response to a point heat source
+//! involves the error function:
+//!
+//! ```text
+//! T(x,t) = (Q/√(4πkt)) exp(-x²/4kt)
+//! ```
+//!
+//! **Bessel Function Solutions**: For cylindrical geometries:
+//!
+//! ```text
+//! T(r,t) = ∑ₙ Aₙ J₀(λₙr) exp(-λₙ²αt)
+//! ```
+//!
+//! where λₙ are roots of the Bessel function satisfying boundary conditions.
+//!
+//! ## Signal Processing
+//!
+//! ### Fourier Analysis
+//!
+//! **Chirp Signals**: Frequency-modulated signals involve Fresnel integrals:
+//!
+//! ```text
+//! s(t) = A cos(ωt + αt²)
+//! ```
+//!
+//! The spectrum involves Fresnel integrals C(t) and S(t).
+//!
+//! **Wavelet Transforms**: Mother wavelets often involve special functions:
+//! - **Morlet wavelet**: Gaussian modulated complex exponential
+//! - **Mexican hat**: Second derivative of Gaussian (Hermite function)
+//! - **Daubechies wavelets**: Constructed using orthogonal polynomials
+//!
+//! ## Numerical Methods
+//!
+//! ### Quadrature Rules
+//!
+//! **Gauss-Laguerre Quadrature**: For integrals over [0,∞) with weight e^(-x):
+//!
+//! ```text
+//! ∫₀^∞ f(x)e^(-x)dx ≈ ∑ᵢ wᵢf(xᵢ)
+//! ```
+//!
+//! where xᵢ are roots of Laguerre polynomials.
+//!
+//! **Gauss-Hermite Quadrature**: For integrals over (-∞,∞) with weight e^(-x²):
+//!
+//! ```text
+//! ∫₋∞^∞ f(x)e^(-x²)dx ≈ ∑ᵢ wᵢf(xᵢ)
+//! ```
+//!
+//! where xᵢ are roots of Hermite polynomials.
+//!
+//! ## Modern Applications
+//!
+//! ### Quantum Information
+//!
+//! **Entanglement Measures**: Von Neumann entropy for bipartite systems:
+//!
+//! ```text
+//! S(ρ) = -Tr(ρ log ρ)
+//! ```
+//!
+//! **Quantum Error Correction**: Involves discrete mathematics and coding theory
+//! with connections to algebraic geometry and special function theory.
+//!
+//! ### Machine Learning in Physics
+//!
+//! **Physics-Informed Neural Networks (PINNs)**: Use special functions as
+//! activation functions or basis functions to encode physical constraints.
+//!
+//! **Gaussian Processes**: Kernel functions often involve special functions
+//! for encoding prior knowledge about physical systems.
 
 #![allow(dead_code)]
 

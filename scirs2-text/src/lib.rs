@@ -40,6 +40,7 @@ pub mod topic_modeling;
 pub mod transformer;
 pub mod utils;
 pub mod vectorize;
+pub mod visualization;
 pub mod vocabulary;
 pub mod weighted_distance;
 
@@ -148,6 +149,10 @@ pub use transformer::{
     TransformerEncoderLayer, TransformerModel,
 };
 pub use vectorize::{CountVectorizer, TfidfVectorizer, Vectorizer};
+pub use visualization::{
+    AttentionVisualizer, Color, ColorScheme, EmbeddingVisualizer, SentimentVisualizer,
+    TextAnalyticsDashboard, TopicVisualizer, VisualizationConfig, WordCloud,
+};
 pub use vocabulary::Vocabulary;
 pub use weighted_distance::{
     DamerauLevenshteinWeights, LevenshteinWeights, WeightedDamerauLevenshtein, WeightedLevenshtein,

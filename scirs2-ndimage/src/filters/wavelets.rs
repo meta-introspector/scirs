@@ -80,9 +80,9 @@ where
             return Self::haar();
         }
 
-        if n > 10 {
+        if n > 15 {
             return Err(NdimageError::InvalidInput(
-                "Daubechies wavelets with more than 10 vanishing moments not supported".into(),
+                "Daubechies wavelets with more than 15 vanishing moments not supported".into(),
             ));
         }
 
@@ -214,9 +214,149 @@ where
                 safe_f64_to_float(0.00009405348846774701)?,
                 safe_f64_to_float(-0.000013264203002354869)?,
             ],
+            11 => vec![
+                safe_f64_to_float(0.018739120728312193)?,
+                safe_f64_to_float(0.14125680978738187)?,
+                safe_f64_to_float(0.44906028370231975)?,
+                safe_f64_to_float(0.6559987246772096)?,
+                safe_f64_to_float(0.38080070249715344)?,
+                safe_f64_to_float(-0.16554680450994717)?,
+                safe_f64_to_float(-0.2601367646540273)?,
+                safe_f64_to_float(0.08917442046362987)?,
+                safe_f64_to_float(0.14507172816327717)?,
+                safe_f64_to_float(-0.05584126984200549)?,
+                safe_f64_to_float(-0.06200322379348169)?,
+                safe_f64_to_float(0.03449768175847296)?,
+                safe_f64_to_float(0.015727790831356044)?,
+                safe_f64_to_float(-0.013593662816166423)?,
+                safe_f64_to_float(-0.0016523264966978706)?,
+                safe_f64_to_float(0.002974033779568442)?,
+                safe_f64_to_float(-0.00022480568175172)?,
+                safe_f64_to_float(-0.00034999502100968525)?,
+                safe_f64_to_float(0.00009208119700928503)?,
+                safe_f64_to_float(0.00001886094431070618)?,
+                safe_f64_to_float(-0.000013894441904523324)?,
+                safe_f64_to_float(0.0000019236393170772043)?,
+            ],
+            12 => vec![
+                safe_f64_to_float(0.013193131813258676)?,
+                safe_f64_to_float(0.10649946321644633)?,
+                safe_f64_to_float(0.379737021074414)?,
+                safe_f64_to_float(0.6081774043830486)?,
+                safe_f64_to_float(0.4372720959502646)?,
+                safe_f64_to_float(-0.05962952549983625)?,
+                safe_f64_to_float(-0.29314103304172173)?,
+                safe_f64_to_float(0.01765631246819756)?,
+                safe_f64_to_float(0.17831883488073926)?,
+                safe_f64_to_float(-0.03104962706297068)?,
+                safe_f64_to_float(-0.0905578968689735)?,
+                safe_f64_to_float(0.030877393261061227)?,
+                safe_f64_to_float(0.032727173073055495)?,
+                safe_f64_to_float(-0.018199093842156943)?,
+                safe_f64_to_float(-0.007330325009006078)?,
+                safe_f64_to_float(0.006395069671570748)?,
+                safe_f64_to_float(0.0006593516736014779)?,
+                safe_f64_to_float(-0.0013188100536080566)?,
+                safe_f64_to_float(0.00008710667976623568)?,
+                safe_f64_to_float(0.00015002863742806733)?,
+                safe_f64_to_float(-0.000037434398018953916)?,
+                safe_f64_to_float(-0.000007900127012550126)?,
+                safe_f64_to_float(0.000005378627127532456)?,
+                safe_f64_to_float(-0.0000007103098569463983)?,
+            ],
+            13 => vec![
+                safe_f64_to_float(0.009296044542244711)?,
+                safe_f64_to_float(0.08025229094475479)?,
+                safe_f64_to_float(0.3201138120925906)?,
+                safe_f64_to_float(0.5486318036403653)?,
+                safe_f64_to_float(0.4603528012810862)?,
+                safe_f64_to_float(0.06962388316845977)?,
+                safe_f64_to_float(-0.296631177071847)?,
+                safe_f64_to_float(-0.08065993094169825)?,
+                safe_f64_to_float(0.18915118026564547)?,
+                safe_f64_to_float(0.005199740015408669)?,
+                safe_f64_to_float(-0.1140710517665774)?,
+                safe_f64_to_float(0.019687914051985394)?,
+                safe_f64_to_float(0.050842914387470264)?,
+                safe_f64_to_float(-0.020142260053266115)?,
+                safe_f64_to_float(-0.01520928885394885)?,
+                safe_f64_to_float(0.010066894331926433)?,
+                safe_f64_to_float(0.003152169076031001)?,
+                safe_f64_to_float(-0.0030493477015893374)?,
+                safe_f64_to_float(-0.00023884490304976308)?,
+                safe_f64_to_float(0.0005506064264983963)?,
+                safe_f64_to_float(-0.000031556734986493014)?,
+                safe_f64_to_float(-0.000060056261928043435)?,
+                safe_f64_to_float(0.000014210948558236523)?,
+                safe_f64_to_float(0.0000030191157645056073)?,
+                safe_f64_to_float(-0.0000019722555077925)?,
+                safe_f64_to_float(0.00000025205432047885806)?,
+            ],
+            14 => vec![
+                safe_f64_to_float(0.006565876898035924)?,
+                safe_f64_to_float(0.06039314026129026)?,
+                safe_f64_to_float(0.2688103616428251)?,
+                safe_f64_to_float(0.48413982616094435)?,
+                safe_f64_to_float(0.46317866536230914)?,
+                safe_f64_to_float(0.1969278823109936)?,
+                safe_f64_to_float(-0.2666323159654994)?,
+                safe_f64_to_float(-0.16943179582950736)?,
+                safe_f64_to_float(0.17632838804127173)?,
+                safe_f64_to_float(0.09042888012166942)?,
+                safe_f64_to_float(-0.1218952088779019)?,
+                safe_f64_to_float(-0.020509821159094503)?,
+                safe_f64_to_float(0.06889419008162671)?,
+                safe_f64_to_float(-0.008978226567899728)?,
+                safe_f64_to_float(-0.027630537459728096)?,
+                safe_f64_to_float(0.010073906434728577)?,
+                safe_f64_to_float(0.007325551193377623)?,
+                safe_f64_to_float(-0.004777214976020679)?,
+                safe_f64_to_float(-0.0011927556568903844)?,
+                safe_f64_to_float(0.0015153806688804067)?,
+                safe_f64_to_float(0.00008523866302851165)?,
+                safe_f64_to_float(-0.00020779990463524476)?,
+                safe_f64_to_float(0.000010688324593166062)?,
+                safe_f64_to_float(0.00002216398310943374)?,
+                safe_f64_to_float(-0.000005034323699883308)?,
+                safe_f64_to_float(-0.000001096049162476226)?,
+                safe_f64_to_float(0.0000007091509421096986)?,
+                safe_f64_to_float(-0.00000008820224936003736)?,
+            ],
+            15 => vec![
+                safe_f64_to_float(0.004648846162387949)?,
+                safe_f64_to_float(0.045496494421439875)?,
+                safe_f64_to_float(0.22577631764506962)?,
+                safe_f64_to_float(0.42277104815502985)?,
+                safe_f64_to_float(0.44745879851847204)?,
+                safe_f64_to_float(0.3000766456179915)?,
+                safe_f64_to_float(-0.20663571618012127)?,
+                safe_f64_to_float(-0.23521468175037773)?,
+                safe_f64_to_float(0.13524829491633426)?,
+                safe_f64_to_float(0.1564096339739734)?,
+                safe_f64_to_float(-0.10473988845988175)?,
+                safe_f64_to_float(-0.060568644473079015)?,
+                safe_f64_to_float(0.07188970152925473)?,
+                safe_f64_to_float(0.012055085500932434)?,
+                safe_f64_to_float(-0.04035725011717636)?,
+                safe_f64_to_float(0.002659087516139743)?,
+                safe_f64_to_float(0.016255226294714977)?,
+                safe_f64_to_float(-0.005128443012318736)?,
+                safe_f64_to_float(-0.004344251796397951)?,
+                safe_f64_to_float(0.0026569302041159306)?,
+                safe_f64_to_float(0.0005834618293265067)?,
+                safe_f64_to_float(-0.0007176945589570982)?,
+                safe_f64_to_float(-0.000029481048693327066)?,
+                safe_f64_to_float(0.00008571167993556883)?,
+                safe_f64_to_float(-0.0000034916049835694046)?,
+                safe_f64_to_float(-0.000008039298577444542)?,
+                safe_f64_to_float(0.0000017442049827151994)?,
+                safe_f64_to_float(0.00000038069313651503825)?,
+                safe_f64_to_float(-0.0000002454719888816509)?,
+                safe_f64_to_float(0.00000003004157056088014)?,
+            ],
             _ => {
                 return Err(NdimageError::NotImplementedError(format!(
-                    "Daubechies wavelet with {} vanishing moments not implemented",
+                    "Daubechies wavelet with {} vanishing moments not implemented. Supported: 1-15",
                     n
                 )));
             }
@@ -1103,4 +1243,327 @@ mod tests {
         assert!(db2.low_dec.iter().all(|&x| x.is_finite()));
         assert!(db2.high_dec.iter().all(|&x| x.is_finite()));
     }
+}
+
+/// Multi-level wavelet decomposition
+///
+/// Performs a multi-level discrete wavelet transform, producing a pyramid
+/// of coefficients at different scales and orientations.
+pub fn wavelet_decompose<T>(
+    image: &ArrayView2<T>,
+    wavelet: &WaveletFilter<T>,
+    levels: usize,
+    mode: BorderMode,
+) -> NdimageResult<WaveletDecomposition<T>>
+where
+    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
+{
+    let mut decomposition = WaveletDecomposition::new();
+    let mut current = image.to_owned();
+
+    for level in 0..levels {
+        let (height, width) = current.dim();
+        
+        // Check minimum size constraint
+        if height < 4 || width < 4 {
+            break;
+        }
+
+        // Perform 2D DWT
+        let (ll, lh, hl, hh) = dwt_2d(&current.view(), wavelet, mode)?;
+        
+        // Store detail coefficients
+        decomposition.add_level(WaveletLevel {
+            lh: lh.clone(),
+            hl: hl.clone(), 
+            hh: hh.clone(),
+        });
+
+        // Continue with approximation coefficients
+        current = ll;
+    }
+
+    // Store final approximation
+    decomposition.approximation = Some(current);
+    
+    Ok(decomposition)
+}
+
+/// Multi-level wavelet reconstruction
+///
+/// Reconstructs an image from its multi-level wavelet decomposition.
+pub fn wavelet_reconstruct<T>(
+    decomposition: &WaveletDecomposition<T>,
+    wavelet: &WaveletFilter<T>,
+) -> NdimageResult<Array2<T>>
+where
+    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
+{
+    let mut result = match &decomposition.approximation {
+        Some(approx) => approx.clone(),
+        None => return Err(NdimageError::InvalidInput(
+            "Decomposition must contain approximation coefficients".into()
+        )),
+    };
+
+    // Reconstruct from coarsest to finest level
+    for level in decomposition.levels.iter().rev() {
+        let ll = result.view();
+        result = idwt_2d(&ll, &level.lh.view(), &level.hl.view(), &level.hh.view(), wavelet)?;
+    }
+
+    Ok(result)
+}
+
+/// Wavelet-based denoising using soft thresholding
+///
+/// This function performs denoising using the following steps:
+/// 1. Multi-level wavelet decomposition
+/// 2. Soft thresholding of detail coefficients
+/// 3. Wavelet reconstruction
+pub fn wavelet_denoise<T>(
+    image: &ArrayView2<T>,
+    wavelet: &WaveletFilter<T>,
+    threshold: T,
+    levels: usize,
+    mode: BorderMode,
+) -> NdimageResult<Array2<T>>
+where
+    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
+{
+    // Decompose
+    let mut decomp = wavelet_decompose(image, wavelet, levels, mode)?;
+
+    // Apply soft thresholding to detail coefficients
+    for level in &mut decomp.levels {
+        soft_threshold_inplace(&mut level.lh, threshold);
+        soft_threshold_inplace(&mut level.hl, threshold);
+        soft_threshold_inplace(&mut level.hh, threshold);
+    }
+
+    // Reconstruct
+    wavelet_reconstruct(&decomp, wavelet)
+}
+
+/// Wavelet decomposition structure for multi-level analysis
+#[derive(Debug, Clone)]
+pub struct WaveletDecomposition<T> {
+    /// Approximation coefficients at the coarsest level
+    pub approximation: Option<Array2<T>>,
+    /// Detail coefficients at each level (from finest to coarsest)
+    pub levels: Vec<WaveletLevel<T>>,
+}
+
+impl<T> WaveletDecomposition<T> {
+    pub fn new() -> Self {
+        Self {
+            approximation: None,
+            levels: Vec::new(),
+        }
+    }
+
+    pub fn add_level(&mut self, level: WaveletLevel<T>) {
+        self.levels.push(level);
+    }
+}
+
+/// Detail coefficients for a single wavelet decomposition level
+#[derive(Debug, Clone)]
+pub struct WaveletLevel<T> {
+    /// Horizontal detail (low-high)
+    pub lh: Array2<T>,
+    /// Vertical detail (high-low)  
+    pub hl: Array2<T>,
+    /// Diagonal detail (high-high)
+    pub hh: Array2<T>,
+}
+
+/// Apply soft thresholding to an array in-place
+fn soft_threshold_inplace<T>(array: &mut Array2<T>, threshold: T)
+where
+    T: Float + FromPrimitive + PartialOrd,
+{
+    for elem in array.iter_mut() {
+        let abs_val = elem.abs();
+        if abs_val <= threshold {
+            *elem = T::zero();
+        } else {
+            let sign = if *elem >= T::zero() { T::one() } else { -T::one() };
+            *elem = sign * (abs_val - threshold);
+        }
+    }
+}
+
+/// Advanced stationary wavelet transform (undecimated)
+///
+/// Unlike the standard DWT, the stationary WT doesn't downsample,
+/// preserving translation invariance and producing redundant representations
+/// that are often better for denoising and feature detection.
+pub fn stationary_wavelet_transform<T>(
+    image: &ArrayView2<T>,
+    wavelet: &WaveletFilter<T>,
+    levels: usize,
+    mode: BorderMode,
+) -> NdimageResult<StationaryWaveletDecomposition<T>>
+where
+    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
+{
+    let mut decomposition = StationaryWaveletDecomposition::new();
+    let mut current = image.to_owned();
+
+    for level in 0..levels {
+        // Create upsampled filters for this level
+        let upsample_factor = 2_usize.pow(level as u32);
+        let low_upsampled = upsample_filter(&wavelet.low_dec, upsample_factor);
+        let high_upsampled = upsample_filter(&wavelet.high_dec, upsample_factor);
+
+        // Apply separable filtering without downsampling
+        let (ll, lh, hl, hh) = stationary_dwt_2d(&current.view(), &low_upsampled, &high_upsampled, mode)?;
+        
+        decomposition.add_level(StationaryWaveletLevel {
+            lh: lh.clone(),
+            hl: hl.clone(),
+            hh: hh.clone(),
+        });
+
+        // Continue with approximation for next level
+        current = ll;
+    }
+
+    decomposition.approximation = Some(current);
+    Ok(decomposition)
+}
+
+/// Stationary wavelet decomposition structure
+#[derive(Debug, Clone)]
+pub struct StationaryWaveletDecomposition<T> {
+    pub approximation: Option<Array2<T>>,
+    pub levels: Vec<StationaryWaveletLevel<T>>,
+}
+
+impl<T> StationaryWaveletDecomposition<T> {
+    pub fn new() -> Self {
+        Self {
+            approximation: None,
+            levels: Vec::new(),
+        }
+    }
+
+    pub fn add_level(&mut self, level: StationaryWaveletLevel<T>) {
+        self.levels.push(level);
+    }
+}
+
+/// Stationary wavelet level (no downsampling)
+#[derive(Debug, Clone)]
+pub struct StationaryWaveletLevel<T> {
+    pub lh: Array2<T>,
+    pub hl: Array2<T>,
+    pub hh: Array2<T>,
+}
+
+/// Upsample a filter by inserting zeros
+fn upsample_filter<T>(filter: &[T], factor: usize) -> Vec<T>
+where
+    T: Float + FromPrimitive + Clone,
+{
+    let mut upsampled = Vec::with_capacity(filter.len() * factor);
+    
+    for &coeff in filter {
+        upsampled.push(coeff);
+        for _ in 1..factor {
+            upsampled.push(T::zero());
+        }
+    }
+    
+    upsampled
+}
+
+/// Stationary 2D DWT without downsampling
+fn stationary_dwt_2d<T>(
+    image: &ArrayView2<T>,
+    low_filter: &[T],
+    high_filter: &[T],
+    mode: BorderMode,
+) -> NdimageResult<(Array2<T>, Array2<T>, Array2<T>, Array2<T>)>
+where
+    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
+{
+    let (height, width) = image.dim();
+
+    // Row-wise filtering
+    let mut ll_rows = Array2::zeros((height, width));
+    let mut lh_rows = Array2::zeros((height, width));
+
+    for i in 0..height {
+        let row = image.row(i);
+        let padded = pad_signal_1d(&row, low_filter, mode)?;
+        
+        let low_filtered = convolve_1d(&padded.view(), low_filter)?;
+        let high_filtered = convolve_1d(&padded.view(), high_filter)?;
+        
+        // Extract relevant portion (accounting for padding)
+        let start_idx = (padded.len() - width) / 2;
+        for j in 0..width {
+            ll_rows[[i, j]] = low_filtered[start_idx + j];
+            lh_rows[[i, j]] = high_filtered[start_idx + j];
+        }
+    }
+
+    // Column-wise filtering of the row results
+    let mut ll = Array2::zeros((height, width));
+    let mut lh = Array2::zeros((height, width));
+    let mut hl = Array2::zeros((height, width));
+    let mut hh = Array2::zeros((height, width));
+
+    for j in 0..width {
+        let ll_col = ll_rows.column(j);
+        let lh_col = lh_rows.column(j);
+        
+        let ll_padded = pad_signal_1d(&ll_col, low_filter, mode)?;
+        let lh_padded = pad_signal_1d(&lh_col, low_filter, mode)?;
+        
+        let ll_low = convolve_1d(&ll_padded.view(), low_filter)?;
+        let ll_high = convolve_1d(&ll_padded.view(), high_filter)?;
+        let lh_low = convolve_1d(&lh_padded.view(), low_filter)?;
+        let lh_high = convolve_1d(&lh_padded.view(), high_filter)?;
+        
+        let start_idx = (ll_padded.len() - height) / 2;
+        for i in 0..height {
+            ll[[i, j]] = ll_low[start_idx + i];
+            hl[[i, j]] = ll_high[start_idx + i];
+            lh[[i, j]] = lh_low[start_idx + i];
+            hh[[i, j]] = lh_high[start_idx + i];
+        }
+    }
+
+    Ok((ll, lh, hl, hh))
+}
+
+/// Simple 1D convolution
+fn convolve_1d<T>(signal: &ArrayView1<T>, filter: &[T]) -> NdimageResult<Array1<T>>
+where
+    T: Float + FromPrimitive + Clone,
+{
+    let signal_len = signal.len();
+    let filter_len = filter.len();
+    
+    if signal_len < filter_len {
+        return Err(NdimageError::InvalidInput(
+            "Signal must be at least as long as filter".into()
+        ));
+    }
+
+    let output_len = signal_len - filter_len + 1;
+    let mut output = Array1::zeros(output_len);
+
+    for i in 0..output_len {
+        let mut sum = T::zero();
+        for j in 0..filter_len {
+            sum = sum + signal[i + j] * filter[filter_len - 1 - j];
+        }
+        output[i] = sum;
+    }
+
+    Ok(output)
 }

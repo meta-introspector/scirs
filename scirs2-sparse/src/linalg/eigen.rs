@@ -585,6 +585,7 @@ where
 
     // Allocate space for eigenvectors
     let mut z = vec![vec![T::zero(); n]; n];
+    #[allow(clippy::needless_range_loop)]
     for i in 0..n {
         z[i][i] = T::one(); // Initialize with identity matrix
     }
@@ -650,6 +651,7 @@ where
                 g = c * s - b;
 
                 // Update eigenvectors
+                #[allow(clippy::needless_range_loop)]
                 for k in 0..n {
                     let t = z[k][i + 1];
                     z[k][i + 1] = s * z[k][i] + c * t;
@@ -688,11 +690,13 @@ where
     let mut sorted_eigenvalues = Vec::with_capacity(num_eigenvalues);
     let mut sorted_eigenvectors = Vec::with_capacity(num_eigenvalues);
 
+    #[allow(clippy::needless_range_loop)]
     for k in 0..num_eigenvalues.min(n) {
         let idx = indices[k];
         sorted_eigenvalues.push(d[idx]);
 
         let mut eigenvector = Vec::with_capacity(n);
+        #[allow(clippy::needless_range_loop)]
         for i in 0..n {
             eigenvector.push(z[i][idx]);
         }
@@ -1028,7 +1032,7 @@ pub enum EigenvalueMethod {
 }
 
 impl EigenvalueMethod {
-    pub fn from_str(s: &str) -> SparseResult<Self> {
+    pub fn parse(s: &str) -> SparseResult<Self> {
         match s.to_lowercase().as_str() {
             "lanczos" => Ok(Self::Lanczos),
             "arnoldi" => Ok(Self::Arnoldi),
@@ -1310,11 +1314,7 @@ where
     sorted_indices.truncate(num_eigenvalues);
 
     let mut new_eigenvalues = Array1::zeros(sorted_indices.len());
-    let mut new_eigenvectors = if let Some(ref vecs) = result.eigenvectors {
-        Some(Array2::zeros((n, sorted_indices.len())))
-    } else {
-        None
-    };
+    let mut new_eigenvectors = result.eigenvectors.as_ref().map(|vecs| Array2::zeros((n, sorted_indices.len())));
     let mut new_residuals = Array1::zeros(sorted_indices.len());
 
     for (new_idx, &old_idx) in sorted_indices.iter().enumerate() {
@@ -1646,9 +1646,9 @@ mod tests {
         assert_relative_eq!(v_norm, 1.0, epsilon = 1e-8);
 
         // Verify Av = λv
-        let Av = crate::sym_ops::sym_csr_matvec(&matrix, &v.column(0).into_owned().view()).unwrap();
+        let av = crate::sym_ops::sym_csr_matvec(&matrix, &v.column(0).into_owned().view()).unwrap();
         for i in 0..3 {
-            assert_relative_eq!(Av[i], result.eigenvalues[0] * v[[i, 0]], epsilon = 1e-8);
+            assert_relative_eq!(av[i], result.eigenvalues[0] * v[[i, 0]], epsilon = 1e-8);
         }
     }
 
@@ -1681,10 +1681,10 @@ mod tests {
             assert_relative_eq!(v_norm, 1.0, epsilon = 1e-8);
 
             // Verify Av = λv
-            let Av =
+            let av =
                 crate::sym_ops::sym_csr_matvec(&matrix, &v.column(k).into_owned().view()).unwrap();
             for i in 0..3 {
-                assert_relative_eq!(Av[i], result.eigenvalues[k] * v[[i, k]], epsilon = 1e-8);
+                assert_relative_eq!(av[i], result.eigenvalues[k] * v[[i, k]], epsilon = 1e-8);
             }
         }
     }
@@ -1702,9 +1702,9 @@ mod tests {
         assert_relative_eq!(eigenvalues[1], 0.381966011250105, epsilon = 1e-8);
 
         // Verify eigenvectors are normalized
-        for k in 0..2 {
+        for eigenvec in eigenvectors.iter().take(2) {
             let v_norm = (0..2)
-                .map(|i| eigenvectors[k][i] * eigenvectors[k][i])
+                .map(|i| eigenvec[i] * eigenvec[i])
                 .sum::<f64>()
                 .sqrt();
             assert_relative_eq!(v_norm, 1.0, epsilon = 1e-8);

@@ -452,7 +452,7 @@ where
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
-    if !graph.has_node(start) || !graph.has_node(goal) {
+    if !graph.has_node(source) || !graph.has_node(goal) {
         return Err(GraphError::InvalidGraph(
             "Source or goal node not found".to_string(),
         ));
@@ -501,7 +501,7 @@ where
             if backward_visited.contains(&current) {
                 return Ok(Some(reconstruct_bidirectional_path(
                     graph,
-                    source_idx,
+                    start_idx,
                     goal_idx,
                     current,
                     &forward_parent,
@@ -526,7 +526,7 @@ where
             if forward_visited.contains(&current) {
                 return Ok(Some(reconstruct_bidirectional_path(
                     graph,
-                    source_idx,
+                    start_idx,
                     goal_idx,
                     current,
                     &forward_parent,
@@ -558,7 +558,7 @@ where
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
-    if !graph.has_node(start) || !graph.has_node(goal) {
+    if !graph.has_node(source) || !graph.has_node(goal) {
         return Err(GraphError::InvalidGraph(
             "Source or goal node not found".to_string(),
         ));
@@ -607,7 +607,7 @@ where
             if backward_visited.contains(&current) {
                 return Ok(Some(reconstruct_bidirectional_path_digraph(
                     graph,
-                    source_idx,
+                    start_idx,
                     goal_idx,
                     current,
                     &forward_parent,
@@ -635,7 +635,7 @@ where
             if forward_visited.contains(&current) {
                 return Ok(Some(reconstruct_bidirectional_path_digraph(
                     graph,
-                    source_idx,
+                    start_idx,
                     goal_idx,
                     current,
                     &forward_parent,

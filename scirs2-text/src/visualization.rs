@@ -5,12 +5,10 @@
 //! text analysis charts.
 
 use crate::error::{Result, TextError};
-use crate::vectorize::{TfidfVectorizer, CountVectorizer};
-use crate::embeddings::Word2Vec;
+use crate::vectorize::{TfidfVectorizer, CountVectorizer, Vectorizer};
 use crate::sentiment::SentimentResult;
 use crate::topic_modeling::Topic;
-use crate::transformer::MultiHeadAttention;
-use ndarray::{Array1, Array2, ArrayView2};
+use ndarray::{Array1, Array2, ArrayView2, Axis};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -39,7 +37,7 @@ impl Default for VisualizationConfig {
             height: 600,
             color_scheme: ColorScheme::Viridis,
             font_size_range: (10, 100),
-            background_color: Color::White,
+            background_color: Color::WHITE,
             high_dpi: false,
         }
     }
@@ -99,16 +97,16 @@ pub struct WordCloud {
 impl WordCloud {
     /// Create new word cloud from text
     pub fn from_text(text: &str, config: VisualizationConfig) -> Result<Self> {
-        let mut vectorizer = CountVectorizer::new();
+        let mut vectorizer = CountVectorizer::new(false);
         let documents = vec![text];
         let matrix = vectorizer.fit_transform(&documents)?;
         
-        let vocabulary = vectorizer.vocabulary();
+        let vocabulary_map = vectorizer.vocabulary_map();
         let mut word_frequencies = HashMap::new();
         
-        // Extract word frequencies from the sparse matrix
-        for (word, &idx) in vocabulary.iter() {
-            if let Some(count) = matrix.get_feature_count(0, idx) {
+        // Extract word frequencies from the matrix
+        for (word, &idx) in vocabulary_map.iter() {
+            if let Some(count) = vectorizer.get_feature_count(&matrix, 0, idx) {
                 if count > 0.0 {
                     word_frequencies.insert(word.clone(), count);
                 }
@@ -121,14 +119,14 @@ impl WordCloud {
         })
     }
     
-    /// Create word cloud from TF-IDF vectorizer
-    pub fn from_tfidf(vectorizer: &TfidfVectorizer, document_index: usize) -> Result<Self> {
-        let vocabulary = vectorizer.vocabulary();
+    /// Create word cloud from TF-IDF vectorizer and matrix
+    pub fn from_tfidf(vectorizer: &TfidfVectorizer, matrix: &Array2<f64>, document_index: usize) -> Result<Self> {
+        let vocabulary_map = vectorizer.vocabulary_map();
         let mut word_frequencies = HashMap::new();
         
         // Get TF-IDF scores for the document
-        for (word, &idx) in vocabulary.iter() {
-            if let Some(score) = vectorizer.get_feature_score(document_index, idx) {
+        for (word, &idx) in vocabulary_map.iter() {
+            if let Some(score) = vectorizer.get_feature_score(matrix, document_index, idx) {
                 if score > 0.0 {
                     word_frequencies.insert(word.clone(), score);
                 }
@@ -343,7 +341,7 @@ impl AttentionVisualizer {
         // Calculate dimensions
         let cell_width = self.config.width / (n_source + 1);
         let cell_height = self.config.height / (n_target + 1);
-        let matrix_width = n_source * cell_width;
+        let _matrix_width = n_source * cell_width;
         let matrix_height = n_target * cell_height;
         
         // SVG header
@@ -566,7 +564,7 @@ impl EmbeddingVisualizer {
         }
         
         // Simplified SVD (using covariance matrix approach)
-        let cov_matrix = data_matrix.t().dot(&data_matrix) / (n_samples - 1) as f64;
+        let _cov_matrix = data_matrix.t().dot(&data_matrix) / (n_samples - 1) as f64;
         
         // Find first two principal components (simplified eigenvalue decomposition)
         // This is a very simplified approach - in practice would use proper SVD/eigendecomposition
@@ -782,9 +780,9 @@ impl SentimentVisualizer {
         start_angle: f64,
         end_angle: f64,
         color: Color,
-        label: &str,
-        count: usize,
-        total: usize,
+        _label: &str,
+        _count: usize,
+        _total: usize,
     ) -> String {
         let x1 = center_x + radius * start_angle.cos();
         let y1 = center_y + radius * start_angle.sin();
@@ -869,8 +867,8 @@ impl TopicVisualizer {
             ));
             
             // Get top words for this topic
-            let mut topic_words: Vec<_> = topic.word_probabilities.iter().collect();
-            topic_words.sort_by(|a, b| b.1.partial_cmp(a.1).unwrap());
+            let mut topic_words: Vec<_> = topic.top_words.iter().collect();
+            topic_words.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
             let top_words: Vec<_> = topic_words.into_iter().take(top_n).collect();
             
             if !top_words.is_empty() {
@@ -878,9 +876,9 @@ impl TopicVisualizer {
                 let bar_area_width = chart_width - 200;
                 
                 // Draw bars for top words
-                for (word_idx, (word, &prob)) in top_words.iter().enumerate() {
+                for (word_idx, (word, prob)) in top_words.iter().enumerate() {
                     let bar_y = y_offset + 30 + word_idx * 15;
-                    let bar_width = (prob / max_prob * bar_area_width as f64) as usize;
+                    let bar_width = (*prob / max_prob * bar_area_width as f64) as usize;
                     
                     // Word bar
                     svg.push_str(&format!(
@@ -897,7 +895,7 @@ impl TopicVisualizer {
                     // Probability value
                     svg.push_str(&format!(
                         r#"<text x="{}" y="{}" font-family="Arial, sans-serif" font-size="10">{:.3}</text>"#,
-                        125 + bar_width, bar_y + 9, prob
+                        125 + bar_width, bar_y + 9, *prob
                     ));
                 }
             }

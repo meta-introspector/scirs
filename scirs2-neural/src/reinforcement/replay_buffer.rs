@@ -6,6 +6,33 @@ use ndarray::prelude::*;
 use rand::seq::SliceRandom;
 use std::collections::VecDeque;
 
+/// Trait for experience replay buffers
+pub trait ReplayBufferTrait: Send + Sync {
+    /// Add an experience to the buffer
+    fn add(
+        &mut self,
+        state: Array1<f32>,
+        action: Array1<f32>,
+        reward: f32,
+        next_state: Array1<f32>,
+        done: bool,
+    ) -> Result<()>;
+
+    /// Sample a batch of experiences (returns basic batch for common interface)
+    fn sample_batch(&self, batch_size: usize) -> Result<ExperienceBatch>;
+
+    /// Get the current size of the buffer
+    fn len(&self) -> usize;
+
+    /// Check if the buffer is empty
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    /// Get the capacity of the buffer
+    fn capacity(&self) -> usize;
+}
+
 /// Experience tuple for storage
 #[derive(Clone, Debug)]
 pub struct Experience {
@@ -165,6 +192,31 @@ impl ReplayBuffer {
     /// Clear the buffer
     pub fn clear(&mut self) {
         self.buffer.clear();
+    }
+}
+
+impl ReplayBufferTrait for ReplayBuffer {
+    fn add(
+        &mut self,
+        state: Array1<f32>,
+        action: Array1<f32>,
+        reward: f32,
+        next_state: Array1<f32>,
+        done: bool,
+    ) -> Result<()> {
+        self.add(state, action, reward, next_state, done)
+    }
+
+    fn sample_batch(&self, batch_size: usize) -> Result<ExperienceBatch> {
+        self.sample(batch_size)
+    }
+
+    fn len(&self) -> usize {
+        self.buffer.len()
+    }
+
+    fn capacity(&self) -> usize {
+        self.capacity
     }
 }
 
@@ -364,6 +416,33 @@ impl PrioritizedReplayBuffer {
     /// Check if buffer is empty
     pub fn is_empty(&self) -> bool {
         self.buffer.is_empty()
+    }
+}
+
+impl ReplayBufferTrait for PrioritizedReplayBuffer {
+    fn add(
+        &mut self,
+        state: Array1<f32>,
+        action: Array1<f32>,
+        reward: f32,
+        next_state: Array1<f32>,
+        done: bool,
+    ) -> Result<()> {
+        self.add(state, action, reward, next_state, done)
+    }
+
+    fn sample_batch(&self, batch_size: usize) -> Result<ExperienceBatch> {
+        // For common interface, just return the batch part of the prioritized sample
+        let (batch, _weights, _indices) = self.sample(batch_size)?;
+        Ok(batch)
+    }
+
+    fn len(&self) -> usize {
+        self.buffer.len()
+    }
+
+    fn capacity(&self) -> usize {
+        self.capacity
     }
 }
 

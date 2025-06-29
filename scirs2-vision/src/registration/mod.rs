@@ -228,7 +228,8 @@ pub fn ransac_estimate_transform(
     let mut best_cost = f64::INFINITY;
 
     use rand::prelude::*;
-    let mut rng = rand::rng();
+    use rand::rngs::StdRng;
+    let mut rng = StdRng::from_entropy();
 
     for _iteration in 0..params.ransac_iterations {
         // Sample minimum required points

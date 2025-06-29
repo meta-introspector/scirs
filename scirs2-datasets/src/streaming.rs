@@ -547,33 +547,44 @@ where
     {
         use std::sync::mpsc;
 
-        let (tx, rx) = mpsc::channel();
-        let rx = Arc::new(Mutex::new(rx));
+        // Create channels for work distribution and result collection
+        let (work_tx, work_rx) = mpsc::channel();
+        let work_rx = Arc::new(Mutex::new(work_rx));
+        
+        let (result_tx, result_rx) = mpsc::channel();
         let mut worker_handles = Vec::new();
 
         // Start worker threads
         for worker_id in 0..self.config.num_workers {
-            let _tx_clone = tx.clone();
-            let rx_clone = Arc::clone(&rx);
+            let work_rx_clone = Arc::clone(&work_rx);
+            let result_tx_clone = result_tx.clone();
             let processor_clone = processor.clone();
 
             let handle = thread::spawn(move || {
                 loop {
+                    // Receive work chunk
                     let chunk = {
-                        let rx = rx_clone.lock().unwrap();
+                        let rx = work_rx_clone.lock().unwrap();
                         rx.recv().ok()
                     };
 
                     match chunk {
-                        Some(Some(chunk)) => {
+                        Some(Some((chunk_id, chunk))) => {
+                            // Process the chunk
                             match processor_clone(chunk) {
-                                Ok(_result) => {
-                                    // Send result back (simplified for this example)
-                                    // In a real implementation, you'd have a result channel
+                                Ok(result) => {
+                                    // Send result back with chunk ID to maintain order
+                                    if result_tx_clone.send((chunk_id, Ok(result))).is_err() {
+                                        eprintln!("Worker {} failed to send result", worker_id);
+                                        break;
+                                    }
                                 }
                                 Err(e) => {
-                                    eprintln!("Worker {} error: {}", worker_id, e);
-                                    break;
+                                    eprintln!("Worker {} processing error: {}", worker_id, e);
+                                    // Send error result
+                                    if result_tx_clone.send((chunk_id, Err(e))).is_err() {
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -586,27 +597,66 @@ where
             worker_handles.push(handle);
         }
 
-        // Send chunks to workers
-        let results = Vec::new();
+        // Send chunks to workers with chunk IDs to maintain order
+        let mut chunk_count = 0;
         while let Some(chunk) = iterator.next_chunk()? {
-            tx.send(Some(chunk))
-                .map_err(|e| DatasetsError::Other(format!("Send error: {}", e)))?;
-            // Note: This is a simplified implementation
-            // A complete implementation would collect results properly
+            work_tx.send(Some((chunk_count, chunk)))
+                .map_err(|e| DatasetsError::Other(format!("Work send error: {}", e)))?;
+            chunk_count += 1;
         }
 
-        // Send end signals
+        // Send end signals to all workers
         for _ in 0..self.config.num_workers {
-            tx.send(None)
-                .map_err(|e| DatasetsError::Other(format!("Send error: {}", e)))?;
+            work_tx.send(None)
+                .map_err(|e| DatasetsError::Other(format!("End signal send error: {}", e)))?;
         }
 
-        // Wait for workers to finish
+        // Drop the work sender to signal no more work
+        drop(work_tx);
+
+        // Collect results in order
+        let mut results: Vec<Option<R>> = (0..chunk_count).map(|_| None).collect();
+        let mut received_count = 0;
+
+        // Collect all results
+        while received_count < chunk_count {
+            match result_rx.recv() {
+                Ok((chunk_id, result)) => {
+                    match result {
+                        Ok(value) => {
+                            if chunk_id < results.len() {
+                                results[chunk_id] = Some(value);
+                                received_count += 1;
+                            }
+                        }
+                        Err(e) => {
+                            // Return error if any worker fails
+                            return Err(e);
+                        }
+                    }
+                }
+                Err(_) => {
+                    return Err(DatasetsError::Other(
+                        "Failed to receive results from workers".to_string(),
+                    ));
+                }
+            }
+        }
+
+        // Wait for all workers to finish
         for handle in worker_handles {
-            handle.join().unwrap();
+            if let Err(e) = handle.join() {
+                eprintln!("Worker thread panicked: {:?}", e);
+            }
         }
 
-        Ok(results)
+        // Convert results to final vector (all should be Some at this point)
+        let final_results: Vec<R> = results
+            .into_iter()
+            .collect::<Option<Vec<R>>>()
+            .ok_or_else(|| DatasetsError::Other("Missing results from parallel processing".to_string()))?;
+
+        Ok(final_results)
     }
 }
 

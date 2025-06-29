@@ -3,14 +3,15 @@
 //! This module provides functions for applying uniform filters (also known as box filters)
 //! to n-dimensional arrays.
 
-use ndarray::{Array, Array1, Array2, Dimension};
+use ndarray::{Array, Array1, Array2, Dimension, ArrayView1, ArrayView2, s};
 use num_traits::{Float, FromPrimitive};
 use scirs2_core::validation::{check_1d, check_2d, check_positive};
+use scirs2_core::simd_ops::SimdUnifiedOps;
+use scirs2_core::parallel_ops;
 use std::fmt::Debug;
 
 use super::{pad_array, BorderMode};
 use crate::error::{NdimageError, NdimageResult};
-// use scirs2_core::parallel;
 
 /// Apply a uniform filter to an n-dimensional array
 ///
@@ -162,6 +163,15 @@ fn uniform_filter_1d<T>(
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign,
 {
+    // Check if we can use SIMD optimizations for f32 type
+    if std::any::TypeId::of::<T>() == std::any::TypeId::of::<f32>() && input.len() > 64 && size >= 3 {
+        return uniform_filter_1d_simd_f32(input, size, mode, origin)
+            .map(|result| {
+                // Convert the f32 result back to T
+                result.mapv(|x| T::from_f32(x).unwrap_or_else(T::zero))
+            });
+    }
+
     // Calculate padding required
     let left_pad = origin as usize;
     let right_pad = size - left_pad - 1;
@@ -192,6 +202,116 @@ where
     Ok(output)
 }
 
+/// SIMD-optimized uniform filter for f32 arrays
+#[cfg(feature = "simd")]
+fn uniform_filter_1d_simd_f32<T>(
+    input: &Array1<T>,
+    size: usize,
+    mode: &BorderMode,
+    origin: isize,
+) -> NdimageResult<Array1<f32>>
+where
+    T: Float + FromPrimitive + Debug,
+{
+    // Convert input to f32 for SIMD processing
+    let input_f32: Vec<f32> = input
+        .iter()
+        .map(|&x| x.to_f32().unwrap_or(0.0))
+        .collect();
+    let input_f32_array = Array1::from_vec(input_f32);
+
+    // Calculate padding required
+    let left_pad = origin as usize;
+    let right_pad = size - left_pad - 1;
+
+    // Create output array
+    let mut output = Array1::zeros(input.raw_dim());
+
+    // Pad input for border handling
+    let pad_width = vec![(left_pad, right_pad)];
+    let padded_input = pad_array(&input_f32_array, &pad_width, mode, None)?;
+
+    // Calculate normalization factor (1/size)
+    let norm_factor = 1.0f32 / (size as f32);
+
+    // Use SIMD operations for summing windows
+    let padded_data = padded_input.as_slice().ok_or_else(|| {
+        NdimageError::ComputationError("Failed to get contiguous slice".to_string())
+    })?;
+
+    // Process in chunks for SIMD
+    for i in 0..input.len() {
+        let window_start = i;
+        let window_end = i + size;
+        
+        if window_end <= padded_data.len() {
+            // Use SIMD sum operation for the window
+            let window_slice = &padded_data[window_start..window_end];
+            let sum = f32::simd_sum(window_slice);
+            output[i] = sum * norm_factor;
+        } else {
+            // Fallback for edge cases
+            let mut sum = 0.0f32;
+            for k in 0..size {
+                if window_start + k < padded_data.len() {
+                    sum += padded_data[window_start + k];
+                }
+            }
+            output[i] = sum * norm_factor;
+        }
+    }
+
+    Ok(output)
+}
+
+/// Fallback implementation when SIMD feature is not enabled
+#[cfg(not(feature = "simd"))]
+fn uniform_filter_1d_simd_f32<T>(
+    input: &Array1<T>,
+    size: usize,
+    mode: &BorderMode,
+    origin: isize,
+) -> NdimageResult<Array1<f32>>
+where
+    T: Float + FromPrimitive + Debug,
+{
+    // Convert to f32 and use standard implementation
+    let input_f32: Vec<f32> = input
+        .iter()
+        .map(|&x| x.to_f32().unwrap_or(0.0))
+        .collect();
+    let input_f32_array = Array1::from_vec(input_f32);
+
+    // Calculate padding required
+    let left_pad = origin as usize;
+    let right_pad = size - left_pad - 1;
+
+    // Create output array
+    let mut output = Array1::zeros(input.raw_dim());
+
+    // Pad input for border handling
+    let pad_width = vec![(left_pad, right_pad)];
+    let padded_input = pad_array(&input_f32_array, &pad_width, mode, None)?;
+
+    // Calculate normalization factor (1/size)
+    let norm_factor = 1.0f32 / (size as f32);
+
+    // Apply filter to each position
+    for i in 0..input.len() {
+        let mut sum = 0.0f32;
+
+        // Sum the window
+        for k in 0..size {
+            sum += padded_input[i + k];
+        }
+
+        // Normalize
+        output[i] = sum * norm_factor;
+    }
+
+    Ok(output)
+}
+
 /// Apply a uniform filter to a 2D array
 fn uniform_filter_2d<T>(
     input: &Array2<T>,
@@ -204,6 +324,17 @@ where
 {
     let rows = input.shape()[0];
     let cols = input.shape()[1];
+
+    // Check if we can use SIMD optimizations for f32 type
+    if std::any::TypeId::of::<T>() == std::any::TypeId::of::<f32>() 
+        && rows * cols > 1024 
+        && size[0] >= 3 && size[1] >= 3 {
+        return uniform_filter_2d_simd_f32(input, size, mode, origin)
+            .map(|result| {
+                // Convert the f32 result back to T
+                result.mapv(|x| T::from_f32(x).unwrap_or_else(T::zero))
+            });
+    }
 
     // Calculate padding required
     let top_pad = origin[0] as usize;
@@ -226,6 +357,120 @@ where
     for i in 0..rows {
         for j in 0..cols {
             let mut sum = T::zero();
+
+            // Sum the window
+            for ki in 0..size[0] {
+                for kj in 0..size[1] {
+                    sum += padded_input[[i + ki, j + kj]];
+                }
+            }
+
+            // Normalize
+            output[[i, j]] = sum * norm_factor;
+        }
+    }
+
+    Ok(output)
+}
+
+/// SIMD-optimized uniform filter for 2D f32 arrays
+#[cfg(feature = "simd")]
+fn uniform_filter_2d_simd_f32<T>(
+    input: &Array2<T>,
+    size: &[usize],
+    mode: &BorderMode,
+    origin: &[isize],
+) -> NdimageResult<Array2<f32>>
+where
+    T: Float + FromPrimitive + Debug,
+{
+    let rows = input.shape()[0];
+    let cols = input.shape()[1];
+
+    // Convert input to f32 for SIMD processing
+    let input_f32 = input.mapv(|x| x.to_f32().unwrap_or(0.0));
+
+    // Calculate padding required
+    let top_pad = origin[0] as usize;
+    let bottom_pad = size[0] - top_pad - 1;
+    let left_pad = origin[1] as usize;
+    let right_pad = size[1] - left_pad - 1;
+
+    // Create output array
+    let mut output = Array2::zeros((rows, cols));
+
+    // Pad input for border handling
+    let pad_width = vec![(top_pad, bottom_pad), (left_pad, right_pad)];
+    let padded_input = pad_array(&input_f32, &pad_width, mode, None)?;
+
+    // Calculate normalization factor (1/total_size)
+    let total_size = size[0] * size[1];
+    let norm_factor = 1.0f32 / (total_size as f32);
+
+    // Apply filter to each position with SIMD row processing
+    for i in 0..rows {
+        for j in 0..cols {
+            let mut sum = 0.0f32;
+
+            // Sum the window using SIMD operations where possible
+            for ki in 0..size[0] {
+                let row_start = j;
+                let row_end = j + size[1];
+                
+                // Get the row slice for SIMD processing
+                let padded_row = padded_input.row(i + ki);
+                let window_slice = &padded_row.as_slice().unwrap()[row_start..row_end];
+                
+                // Use SIMD sum for the row segment
+                sum += f32::simd_sum(window_slice);
+            }
+
+            // Normalize
+            output[[i, j]] = sum * norm_factor;
+        }
+    }
+
+    Ok(output)
+}
+
+/// Fallback implementation when SIMD feature is not enabled
+#[cfg(not(feature = "simd"))]
+fn uniform_filter_2d_simd_f32<T>(
+    input: &Array2<T>,
+    size: &[usize],
+    mode: &BorderMode,
+    origin: &[isize],
+) -> NdimageResult<Array2<f32>>
+where
+    T: Float + FromPrimitive + Debug,
+{
+    let rows = input.shape()[0];
+    let cols = input.shape()[1];
+
+    // Convert input to f32
+    let input_f32 = input.mapv(|x| x.to_f32().unwrap_or(0.0));
+
+    // Calculate padding required
+    let top_pad = origin[0] as usize;
+    let bottom_pad = size[0] - top_pad - 1;
+    let left_pad = origin[1] as usize;
+    let right_pad = size[1] - left_pad - 1;
+
+    // Create output array
+    let mut output = Array2::zeros((rows, cols));
+
+    // Pad input for border handling
+    let pad_width = vec![(top_pad, bottom_pad), (left_pad, right_pad)];
+    let padded_input = pad_array(&input_f32, &pad_width, mode, None)?;
+
+    // Calculate normalization factor (1/total_size)
+    let total_size = size[0] * size[1];
+    let norm_factor = 1.0f32 / (total_size as f32);
+
+    // Apply filter to each position
+    for i in 0..rows {
+        for j in 0..cols {
+            let mut sum = 0.0f32;
 
             // Sum the window
             for ki in 0..size[0] {
@@ -379,7 +624,7 @@ where
     // Use parallel iteration if the array is large enough
     #[cfg(feature = "parallel")]
     {
-        use rayon::prelude::*;
+        use scirs2_core::parallel_ops::*;
 
         if total_elements > 10000 {
             return uniform_filter_nd_parallel(
@@ -485,7 +730,7 @@ where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + Send + Sync,
     D: Dimension + 'static,
 {
-    use rayon::prelude::*;
+    use scirs2_core::parallel_ops::*;
 
     let ndim = input.ndim();
     let total_elements = input.len();
@@ -820,6 +1065,129 @@ where
     }
 
     Ok(output)
+}
+
+/// Chunked uniform filter for very large 2D arrays
+/// This function processes the input in chunks to optimize memory usage and cache performance
+#[cfg(feature = "parallel")]
+pub fn uniform_filter_chunked<T>(
+    input: &Array2<T>,
+    size: &[usize],
+    chunk_size: usize,
+    mode: Option<BorderMode>,
+    origin: Option<&[isize]>,
+) -> NdimageResult<Array2<T>>
+where
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + Send + Sync + Clone + 'static,
+{
+    let border_mode = mode.unwrap_or(BorderMode::Reflect);
+    let (rows, cols) = input.dim();
+
+    // Process the origin parameter
+    let origin: Vec<isize> = if let Some(orig) = origin {
+        if orig.len() != 2 {
+            return Err(NdimageError::DimensionError(format!(
+                "Origin must have length 2 for 2D arrays (got {})",
+                orig.len()
+            )));
+        }
+        orig.to_vec()
+    } else {
+        // Default to centered filter
+        vec![(size[0] / 2) as isize, (size[1] / 2) as isize]
+    };
+
+    // Calculate padding for overlap between chunks
+    let pad_rows = size[0];
+    let pad_cols = size[1];
+
+    // Create output array
+    let mut output = Array2::zeros((rows, cols));
+
+    // Calculate number of chunks
+    let num_row_chunks = (rows + chunk_size - 1) / chunk_size;
+    let num_col_chunks = (cols + chunk_size - 1) / chunk_size;
+
+    // Process chunks in parallel using scirs2-core's parallel operations
+    let chunk_indices: Vec<(usize, usize)> = (0..num_row_chunks)
+        .flat_map(|i| (0..num_col_chunks).map(move |j| (i, j)))
+        .collect();
+
+    let process_chunk = |&(chunk_row, chunk_col): &(usize, usize)| -> Result<((usize, usize), Array2<T>), crate::error::NdimageError> {
+        // Calculate chunk boundaries
+        let row_start = chunk_row * chunk_size;
+        let row_end = std::cmp::min(row_start + chunk_size, rows);
+        let col_start = chunk_col * chunk_size;
+        let col_end = std::cmp::min(col_start + chunk_size, cols);
+
+        // Extract chunk with padding for boundary conditions
+        let padded_row_start = row_start.saturating_sub(pad_rows);
+        let padded_row_end = std::cmp::min(row_end + pad_rows, rows);
+        let padded_col_start = col_start.saturating_sub(pad_cols);
+        let padded_col_end = std::cmp::min(col_end + pad_cols, cols);
+
+        // Extract the padded chunk
+        let chunk_slice = input.slice(s![
+            padded_row_start..padded_row_end,
+            padded_col_start..padded_col_end
+        ]);
+        let chunk = chunk_slice.to_owned();
+
+        // Apply uniform filter to the chunk
+        let filtered_chunk = uniform_filter_2d(&chunk, size, &border_mode, &origin)?;
+
+        // Extract the non-padded portion
+        let output_row_offset = row_start.saturating_sub(padded_row_start);
+        let output_col_offset = col_start.saturating_sub(padded_col_start);
+        let output_row_count = row_end - row_start;
+        let output_col_count = col_end - col_start;
+
+        let result_chunk = filtered_chunk.slice(s![
+            output_row_offset..output_row_offset + output_row_count,
+            output_col_offset..output_col_offset + output_col_count
+        ]).to_owned();
+
+        Ok(((chunk_row, chunk_col), result_chunk))
+    };
+
+    // Process chunks in parallel
+    let chunk_results = parallel_ops::parallel_map_result(&chunk_indices, process_chunk)?;
+
+    // Reassemble the results
+    for ((chunk_row, chunk_col), chunk_result) in chunk_results {
+        let row_start = chunk_row * chunk_size;
+        let row_end = std::cmp::min(row_start + chunk_size, rows);
+        let col_start = chunk_col * chunk_size;
+        let col_end = std::cmp::min(col_start + chunk_size, cols);
+
+        let output_slice = output.slice_mut(s![row_start..row_end, col_start..col_end]);
+        output_slice.assign(&chunk_result);
+    }
+
+    Ok(output)
+}
+
+/// Non-parallel version of chunked uniform filter
+#[cfg(not(feature = "parallel"))]
+pub fn uniform_filter_chunked<T>(
+    input: &Array2<T>,
+    size: &[usize],
+    chunk_size: usize,
+    mode: Option<BorderMode>,
+    origin: Option<&[isize]>,
+) -> NdimageResult<Array2<T>>
+where
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + Send + Sync + Clone + 'static,
+{
+    // For non-parallel version, just call the regular uniform filter
+    // This ensures the API is consistent even when parallel feature is disabled
+    uniform_filter_2d(input, size, &mode.unwrap_or(BorderMode::Reflect), &{
+        if let Some(orig) = origin {
+            orig.to_vec()
+        } else {
+            vec![(size[0] / 2) as isize, (size[1] / 2) as isize]
+        }
+    })
 }
 
 #[cfg(test)]

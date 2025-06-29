@@ -10,6 +10,9 @@
 use std::collections::HashMap;
 
 use ndarray::{Array1, Array2, Axis};
+use rand::seq::SliceRandom;
+use rand::{rng, SeedableRng};
+use rand::rngs::StdRng;
 use serde::{Deserialize, Serialize};
 
 use crate::error::{DatasetsError, Result};
@@ -246,12 +249,13 @@ impl MLPipeline {
         let mut transformed_data = dataset.data.clone();
 
         for (col_idx, mut column) in transformed_data.columns_mut().into_iter().enumerate() {
+            let default_name = format!("feature_{}", col_idx);
             let feature_name = dataset
                 .feature_names
                 .as_ref()
                 .and_then(|names| names.get(col_idx))
                 .map(|s| s.as_str())
-                .unwrap_or(&format!("feature_{}", col_idx));
+                .unwrap_or(&default_name);
 
             if let Some(scaler) = scalers.get(feature_name) {
                 Self::apply_scaler_to_column(&mut column, scaler)?;
@@ -348,17 +352,17 @@ impl MLPipeline {
         // Simplified balancing implementation
         // In a full implementation, you'd use the actual balancing utilities
         match strategy {
-            BalancingStrategy::RandomUndersample { random_state } => {
-                self.random_undersample(dataset, *random_state)
+            BalancingStrategy::RandomUndersample => {
+                self.random_undersample(dataset, None)
             }
-            BalancingStrategy::RandomOversample { random_state } => {
-                self.random_oversample(dataset, *random_state)
+            BalancingStrategy::RandomOversample => {
+                self.random_oversample(dataset, None)
             }
             _ => Ok(dataset.clone()), // Placeholder for other strategies
         }
     }
 
-    fn random_undersample(&self, dataset: &Dataset, random_state: Option<u64>) -> Result<Dataset> {
+    fn random_undersample(&self, dataset: &Dataset, _random_state: Option<u64>) -> Result<Dataset> {
         let target = dataset.target.as_ref().ok_or_else(|| {
             DatasetsError::InvalidFormat("Target required for balancing".to_string())
         })?;
@@ -407,9 +411,85 @@ impl MLPipeline {
         })
     }
 
-    fn random_oversample(&self, dataset: &Dataset, _random_state: Option<u64>) -> Result<Dataset> {
-        // Simplified oversampling (in practice, you'd implement proper SMOTE or other techniques)
-        Ok(dataset.clone())
+    fn random_oversample(&self, dataset: &Dataset, random_state: Option<u64>) -> Result<Dataset> {
+        use rand::prelude::*;
+        use scirs2_core::random::{Random, sampling};
+        use rand::{RngCore, SeedableRng, rngs::StdRng};
+        use std::collections::HashMap;
+
+        let target = dataset.target.as_ref().ok_or_else(|| {
+            DatasetsError::InvalidFormat("Random oversampling requires target labels".to_string())
+        })?;
+
+        if target.len() != dataset.data.nrows() {
+            return Err(DatasetsError::InvalidFormat(
+                "Target length must match number of samples".to_string(),
+            ));
+        }
+
+        // Count samples per class
+        let mut class_counts: HashMap<i32, usize> = HashMap::new();
+        let mut class_indices: HashMap<i32, Vec<usize>> = HashMap::new();
+        
+        for (idx, &label) in target.iter().enumerate() {
+            let class = label as i32;
+            *class_counts.entry(class).or_insert(0) += 1;
+            class_indices.entry(class).or_insert_with(Vec::new).push(idx);
+        }
+
+        // Find the majority class size (the maximum count)
+        let max_count = class_counts.values().max().copied().unwrap_or(0);
+        
+        if max_count == 0 {
+            return Err(DatasetsError::InvalidFormat("No samples found in dataset".to_string()));
+        }
+
+        // Create RNG
+        let mut rng: Box<dyn RngCore> = match random_state {
+            Some(seed) => Box::new(StdRng::seed_from_u64(seed)),
+            None => Box::new(rand::thread_rng()),
+        };
+
+        // Collect all indices for the oversampled dataset
+        let mut all_indices = Vec::new();
+        
+        for (class, indices) in class_indices.iter() {
+            let current_count = indices.len();
+            
+            // Add all original samples
+            all_indices.extend(indices.iter().copied());
+            
+            // Add additional samples by random oversampling with replacement
+            let samples_needed = max_count - current_count;
+            
+            if samples_needed > 0 {
+                for _ in 0..samples_needed {
+                    let random_idx = rng.gen_range(0..indices.len());
+                    all_indices.push(indices[random_idx]);
+                }
+            }
+        }
+
+        // Shuffle the final indices to mix classes
+        all_indices.shuffle(&mut *rng);
+
+        // Create the oversampled dataset
+        let oversampled_data = dataset.data.select(Axis(0), &all_indices);
+        let oversampled_target = target.select(Axis(0), &all_indices);
+
+        Ok(Dataset {
+            data: oversampled_data,
+            target: Some(oversampled_target),
+            feature_names: dataset.feature_names.clone(),
+            target_names: dataset.target_names.clone(),
+            feature_descriptions: dataset.feature_descriptions.clone(),
+            description: Some(format!(
+                "Random oversampled dataset (original: {} samples, oversampled: {} samples)",
+                dataset.n_samples(),
+                all_indices.len()
+            )),
+            metadata: dataset.metadata.clone(),
+        })
     }
 
     fn fit_and_transform_scaling(
@@ -428,7 +508,8 @@ impl MLPipeline {
                 .cloned()
                 .unwrap_or_else(|| format!("feature_{}", col_idx));
 
-            let scaler_params = Self::fit_scaler(&column, method)?;
+            let column_view = column.view();
+            let scaler_params = Self::fit_scaler(&column_view, method)?;
             Self::apply_scaler_to_column(&mut column, &scaler_params)?;
 
             scalers.insert(feature_name, scaler_params);
@@ -608,16 +689,74 @@ impl MLPipeline {
     ) -> Result<Vec<usize>> {
         let mut indices: Vec<usize> = (0..n_samples).collect();
 
-        // Simple shuffling (in practice, use proper random number generation)
+        // Use proper random shuffling based on configuration
         if self.config.stratify && target.is_some() {
             // Implement stratified shuffling
-            // For now, just shuffle
-            indices.reverse(); // Simple shuffle placeholder
+            self.stratified_shuffle(&mut indices, target.unwrap())?;
         } else {
-            indices.reverse(); // Simple shuffle placeholder
+            // Regular shuffling with optional random state
+            match self.config.random_state {
+                Some(seed) => {
+                    let mut rng = StdRng::seed_from_u64(seed);
+                    indices.shuffle(&mut rng);
+                }
+                None => {
+                    let mut rng = rand::thread_rng();
+                    indices.shuffle(&mut rng);
+                }
+            }
         }
 
         Ok(indices)
+    }
+
+    /// Perform stratified shuffling to maintain class proportions
+    fn stratified_shuffle(&self, indices: &mut Vec<usize>, target: &Array1<f64>) -> Result<()> {
+        // Group indices by class
+        let mut class_indices: HashMap<i32, Vec<usize>> = HashMap::new();
+        
+        for &idx in indices.iter() {
+            let class = target[idx] as i32;
+            class_indices.entry(class).or_insert_with(Vec::new).push(idx);
+        }
+
+        // Shuffle each class group separately
+        for class_group in class_indices.values_mut() {
+            match self.config.random_state {
+                Some(seed) => {
+                    let mut rng = StdRng::seed_from_u64(seed);
+                    class_group.shuffle(&mut rng);
+                }
+                None => {
+                    let mut rng = rand::thread_rng();
+                    class_group.shuffle(&mut rng);
+                }
+            }
+        }
+
+        // Recombine shuffled class groups while maintaining order
+        indices.clear();
+        let mut class_iterators: HashMap<i32, std::vec::IntoIter<usize>> = class_indices
+            .into_iter()
+            .map(|(class, mut group)| (class, group.into_iter()))
+            .collect();
+
+        // Interleave samples from different classes to maintain distribution
+        while !class_iterators.is_empty() {
+            let mut to_remove = Vec::new();
+            for (&class, iterator) in class_iterators.iter_mut() {
+                if let Some(idx) = iterator.next() {
+                    indices.push(idx);
+                } else {
+                    to_remove.push(class);
+                }
+            }
+            for class in to_remove {
+                class_iterators.remove(&class);
+            }
+        }
+
+        Ok(())
     }
 
     fn extract_dataset_info(&self, dataset: &Dataset) -> DatasetInfo {
@@ -678,9 +817,7 @@ pub mod convenience {
         }
 
         if balance {
-            config.balancing_strategy = Some(BalancingStrategy::RandomUndersample {
-                random_state: Some(42),
-            });
+            config.balancing_strategy = Some(BalancingStrategy::RandomUndersample);
         }
 
         let mut pipeline = MLPipeline::new(config);

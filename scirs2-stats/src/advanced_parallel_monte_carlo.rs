@@ -312,7 +312,11 @@ where
             value: current_estimate,
             standard_error: current_error,
             confidence_interval,
-            relative_error: F::from(relative_error).unwrap(),
+            relative_error: F::from(if current_estimate.abs() > F::zero() {
+                (current_error / current_estimate.abs()).to_f64().unwrap()
+            } else {
+                current_error.to_f64().unwrap()
+            }).unwrap(),
             n_samples: total_samples,
             metrics: self.metrics.lock().unwrap().clone(),
             converged,

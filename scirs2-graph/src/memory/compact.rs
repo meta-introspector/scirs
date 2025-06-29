@@ -351,7 +351,7 @@ impl CompressedAdjacencyList {
         offsets.push(0);
 
         for neighbors in adj_lists {
-            let start_pos = data.len();
+            let _start_pos = data.len();
 
             // Sort neighbors for delta encoding
             let mut sorted_neighbors = neighbors;

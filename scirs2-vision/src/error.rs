@@ -350,7 +350,7 @@ impl ErrorRecoveryManager {
 
         // Attempt recovery strategies
         for strategy in recovery_strategies {
-            if self.attempt_recovery(&mut recoverable_error, strategy) {
+            if self.attempt_recovery(&mut recoverable_error, strategy.clone()) {
                 self.record_successful_recovery(&recoverable_error, start_time.elapsed());
                 return Ok(strategy);
             }

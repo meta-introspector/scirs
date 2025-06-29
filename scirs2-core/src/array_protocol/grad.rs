@@ -149,14 +149,28 @@ fn subtract(a: &dyn ArrayProtocol, b: &dyn ArrayProtocol) -> CoreResult<Box<dyn 
 
 fn ones_like(a: &dyn ArrayProtocol) -> CoreResult<Box<dyn ArrayProtocol>> {
     // Create an array of ones with the same shape as the input
+    // Try different numeric types
     if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<f64, IxDyn>>() {
         let shape = a_array.as_array().shape();
         let ones = Array::<f64, _>::ones(IxDyn(shape));
         Ok(Box::new(NdarrayWrapper::new(ones)) as Box<dyn ArrayProtocol>)
+    } else if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<f32, IxDyn>>() {
+        let shape = a_array.as_array().shape();
+        let ones = Array::<f32, _>::ones(IxDyn(shape));
+        Ok(Box::new(NdarrayWrapper::new(ones)) as Box<dyn ArrayProtocol>)
+    } else if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<i32, IxDyn>>() {
+        let shape = a_array.as_array().shape();
+        let ones = Array::<i32, _>::ones(IxDyn(shape));
+        Ok(Box::new(NdarrayWrapper::new(ones)) as Box<dyn ArrayProtocol>)
+    } else if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<i64, IxDyn>>() {
+        let shape = a_array.as_array().shape();
+        let ones = Array::<i64, _>::ones(IxDyn(shape));
+        Ok(Box::new(NdarrayWrapper::new(ones)) as Box<dyn ArrayProtocol>)
     } else {
-        Err(CoreError::NotImplementedError(ErrorContext::new(
-            "ones_like not implemented for this array type".to_string(),
-        )))
+        // Try to get shape information using the array protocol methods
+        let shape = a.shape().to_vec();
+        let ones = Array::<f64, _>::ones(IxDyn(&shape));
+        Ok(Box::new(NdarrayWrapper::new(ones)) as Box<dyn ArrayProtocol>)
     }
 }
 
@@ -164,26 +178,66 @@ fn broadcast_to(a: &dyn ArrayProtocol, shape: &[usize]) -> CoreResult<Box<dyn Ar
     // Broadcast the array to the given shape
     if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<f64, IxDyn>>() {
         let array = a_array.as_array();
-        // For simplicity, if the array is a scalar (single element), broadcast it
+        // Handle scalar broadcasting
         if array.len() == 1 {
             let value = array.iter().next().cloned().unwrap_or(0.0);
             let broadcasted = Array::<f64, _>::from_elem(IxDyn(shape), value);
             Ok(Box::new(NdarrayWrapper::new(broadcasted)) as Box<dyn ArrayProtocol>)
+        } else if array.shape() == shape {
+            // Shapes already match
+            Ok(Box::new(NdarrayWrapper::new(array.clone())) as Box<dyn ArrayProtocol>)
         } else {
-            // In a full implementation, we would handle general broadcasting
-            // For now, just return a copy if shapes match
-            if array.shape() == shape {
-                Ok(Box::new(NdarrayWrapper::new(array.clone())) as Box<dyn ArrayProtocol>)
+            // Implement basic broadcasting rules
+            let input_shape = array.shape();
+            let _ndim_diff = shape.len().saturating_sub(input_shape.len());
+            
+            // Check if broadcasting is possible
+            let mut can_broadcast = true;
+            for i in 0..input_shape.len() {
+                let input_dim = input_shape[input_shape.len() - 1 - i];
+                let target_dim = shape[shape.len() - 1 - i];
+                if input_dim != 1 && input_dim != target_dim {
+                    can_broadcast = false;
+                    break;
+                }
+            }
+            
+            if can_broadcast {
+                // Perform broadcasting by repeating data
+                if let Some(broadcasted_view) = array.broadcast(IxDyn(shape)) {
+                    let broadcasted = broadcasted_view.to_owned();
+                    Ok(Box::new(NdarrayWrapper::new(broadcasted)) as Box<dyn ArrayProtocol>)
+                } else {
+                    Err(CoreError::NotImplementedError(ErrorContext::new(
+                        "Broadcasting failed for these shapes".to_string(),
+                    )))
+                }
             } else {
                 Err(CoreError::NotImplementedError(ErrorContext::new(
-                    "General broadcasting not implemented yet".to_string(),
+                    "Incompatible shapes for broadcasting".to_string(),
                 )))
             }
         }
+    } else if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<f32, IxDyn>>() {
+        let array = a_array.as_array();
+        if array.len() == 1 {
+            let value = array.iter().next().cloned().unwrap_or(0.0);
+            let broadcasted = Array::<f32, _>::from_elem(IxDyn(shape), value);
+            Ok(Box::new(NdarrayWrapper::new(broadcasted)) as Box<dyn ArrayProtocol>)
+        } else if array.shape() == shape {
+            Ok(Box::new(NdarrayWrapper::new(array.clone())) as Box<dyn ArrayProtocol>)
+        } else if let Some(broadcasted_view) = array.broadcast(IxDyn(shape)) {
+            let broadcasted = broadcasted_view.to_owned();
+            Ok(Box::new(NdarrayWrapper::new(broadcasted)) as Box<dyn ArrayProtocol>)
+        } else {
+            Err(CoreError::NotImplementedError(ErrorContext::new(
+                "Broadcasting failed for these shapes".to_string(),
+            )))
+        }
     } else {
-        Err(CoreError::NotImplementedError(ErrorContext::new(
-            "broadcast_to not implemented for this array type".to_string(),
-        )))
+        // Fallback: create an array of ones with the target shape
+        let ones = Array::<f64, _>::ones(IxDyn(shape));
+        Ok(Box::new(NdarrayWrapper::new(ones)) as Box<dyn ArrayProtocol>)
     }
 }
 
@@ -873,7 +927,19 @@ pub fn grad_sigmoid(a: &GradientTensor) -> CoreResult<GradientTensor> {
         let array = a_array.as_array();
         let result = array.mapv(|x| 1.0 / (1.0 + (-x).exp()));
         let result_wrapped = NdarrayWrapper::new(result);
-
+        let result_rc: Rc<dyn ArrayProtocol> = Rc::new(result_wrapped);
+        Ok(GradientTensor::from_op(
+            result_rc,
+            "sigmoid".to_string(),
+            vec![a.clone()],
+        ))
+    } else if let Some(a_array) = a_value
+        .as_any()
+        .downcast_ref::<NdarrayWrapper<f32, IxDyn>>()
+    {
+        let array = a_array.as_array();
+        let result = array.mapv(|x| 1.0f32 / (1.0f32 + (-x).exp()));
+        let result_wrapped = NdarrayWrapper::new(result);
         let result_rc: Rc<dyn ArrayProtocol> = Rc::new(result_wrapped);
         Ok(GradientTensor::from_op(
             result_rc,
@@ -900,7 +966,20 @@ pub fn grad_mean(a: &GradientTensor) -> CoreResult<GradientTensor> {
         let mean_value = array.mean().unwrap_or(0.0);
         let result = Array::<f64, _>::from_elem(IxDyn(&[1]), mean_value);
         let result_wrapped = NdarrayWrapper::new(result);
-
+        let result_rc: Rc<dyn ArrayProtocol> = Rc::new(result_wrapped);
+        Ok(GradientTensor::from_op(
+            result_rc,
+            "mean".to_string(),
+            vec![a.clone()],
+        ))
+    } else if let Some(a_array) = a_value
+        .as_any()
+        .downcast_ref::<NdarrayWrapper<f32, IxDyn>>()
+    {
+        let array = a_array.as_array();
+        let mean_value = array.mean().unwrap_or(0.0f32);
+        let result = Array::<f32, _>::from_elem(IxDyn(&[1]), mean_value);
+        let result_wrapped = NdarrayWrapper::new(result);
         let result_rc: Rc<dyn ArrayProtocol> = Rc::new(result_wrapped);
         Ok(GradientTensor::from_op(
             result_rc,
@@ -1256,10 +1335,21 @@ impl Optimizer for Adam {
 
 /// Multiply an array by a scalar.
 fn multiply_by_scalar(a: &dyn ArrayProtocol, scalar: f64) -> CoreResult<Box<dyn ArrayProtocol>> {
-    // This is a simplified implementation that assumes a is a NdarrayWrapper<f64, IxDyn>
     if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<f64, IxDyn>>() {
         let input_array = a_array.as_array();
         let result = input_array.mapv(|x| x * scalar);
+        Ok(Box::new(NdarrayWrapper::new(result)) as Box<dyn ArrayProtocol>)
+    } else if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<f32, IxDyn>>() {
+        let input_array = a_array.as_array();
+        let result = input_array.mapv(|x| x * scalar as f32);
+        Ok(Box::new(NdarrayWrapper::new(result)) as Box<dyn ArrayProtocol>)
+    } else if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<i32, IxDyn>>() {
+        let input_array = a_array.as_array();
+        let result = input_array.mapv(|x| (x as f64 * scalar) as i32);
+        Ok(Box::new(NdarrayWrapper::new(result)) as Box<dyn ArrayProtocol>)
+    } else if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<i64, IxDyn>>() {
+        let input_array = a_array.as_array();
+        let result = input_array.mapv(|x| (x as f64 * scalar) as i64);
         Ok(Box::new(NdarrayWrapper::new(result)) as Box<dyn ArrayProtocol>)
     } else {
         Err(CoreError::NotImplementedError(ErrorContext::new(
@@ -1278,14 +1368,33 @@ fn subtract_arrays(
         a.as_any().downcast_ref::<NdarrayWrapper<f64, IxDyn>>(),
         b.as_any().downcast_ref::<NdarrayWrapper<f64, IxDyn>>(),
     ) {
-        // Get the arrays
         let a_arr = a_wrapper.as_array();
         let b_arr = b_array.as_array();
-
-        // Compute the result
         let result = a_arr - b_arr;
-
-        // Return a new ArrayProtocol object with the result
+        Ok(Box::new(NdarrayWrapper::new(result)) as Box<dyn ArrayProtocol>)
+    } else if let (Some(a_wrapper), Some(b_array)) = (
+        a.as_any().downcast_ref::<NdarrayWrapper<f32, IxDyn>>(),
+        b.as_any().downcast_ref::<NdarrayWrapper<f32, IxDyn>>(),
+    ) {
+        let a_arr = a_wrapper.as_array();
+        let b_arr = b_array.as_array();
+        let result = a_arr - b_arr;
+        Ok(Box::new(NdarrayWrapper::new(result)) as Box<dyn ArrayProtocol>)
+    } else if let (Some(a_wrapper), Some(b_array)) = (
+        a.as_any().downcast_ref::<NdarrayWrapper<i32, IxDyn>>(),
+        b.as_any().downcast_ref::<NdarrayWrapper<i32, IxDyn>>(),
+    ) {
+        let a_arr = a_wrapper.as_array();
+        let b_arr = b_array.as_array();
+        let result = a_arr - b_arr;
+        Ok(Box::new(NdarrayWrapper::new(result)) as Box<dyn ArrayProtocol>)
+    } else if let (Some(a_wrapper), Some(b_array)) = (
+        a.as_any().downcast_ref::<NdarrayWrapper<i64, IxDyn>>(),
+        b.as_any().downcast_ref::<NdarrayWrapper<i64, IxDyn>>(),
+    ) {
+        let a_arr = a_wrapper.as_array();
+        let b_arr = b_array.as_array();
+        let result = a_arr - b_arr;
         Ok(Box::new(NdarrayWrapper::new(result)) as Box<dyn ArrayProtocol>)
     } else {
         Err(CoreError::NotImplementedError(ErrorContext::new(
@@ -1296,8 +1405,10 @@ fn subtract_arrays(
 
 /// Element-wise square root.
 fn sqrt(a: &dyn ArrayProtocol) -> CoreResult<Box<dyn ArrayProtocol>> {
-    // This is a simplified implementation that assumes a is a NdarrayWrapper<f64, IxDyn>
     if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<f64, IxDyn>>() {
+        let result = a_array.as_array().mapv(|x| x.sqrt());
+        Ok(Box::new(NdarrayWrapper::new(result)) as Box<dyn ArrayProtocol>)
+    } else if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<f32, IxDyn>>() {
         let result = a_array.as_array().mapv(|x| x.sqrt());
         Ok(Box::new(NdarrayWrapper::new(result)) as Box<dyn ArrayProtocol>)
     } else {
@@ -1309,9 +1420,17 @@ fn sqrt(a: &dyn ArrayProtocol) -> CoreResult<Box<dyn ArrayProtocol>> {
 
 /// Add a scalar to an array.
 fn add_scalar(a: &dyn ArrayProtocol, scalar: f64) -> CoreResult<Box<dyn ArrayProtocol>> {
-    // This is a simplified implementation that assumes a is a NdarrayWrapper<f64, IxDyn>
     if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<f64, IxDyn>>() {
         let result = a_array.as_array().mapv(|x| x + scalar);
+        Ok(Box::new(NdarrayWrapper::new(result)) as Box<dyn ArrayProtocol>)
+    } else if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<f32, IxDyn>>() {
+        let result = a_array.as_array().mapv(|x| x + scalar as f32);
+        Ok(Box::new(NdarrayWrapper::new(result)) as Box<dyn ArrayProtocol>)
+    } else if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<i32, IxDyn>>() {
+        let result = a_array.as_array().mapv(|x| x + scalar as i32);
+        Ok(Box::new(NdarrayWrapper::new(result)) as Box<dyn ArrayProtocol>)
+    } else if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<i64, IxDyn>>() {
+        let result = a_array.as_array().mapv(|x| x + scalar as i64);
         Ok(Box::new(NdarrayWrapper::new(result)) as Box<dyn ArrayProtocol>)
     } else {
         Err(CoreError::NotImplementedError(ErrorContext::new(
@@ -1322,10 +1441,15 @@ fn add_scalar(a: &dyn ArrayProtocol, scalar: f64) -> CoreResult<Box<dyn ArrayPro
 
 /// Element-wise division.
 fn divide(a: &dyn ArrayProtocol, b: &dyn ArrayProtocol) -> CoreResult<Box<dyn ArrayProtocol>> {
-    // This is a simplified implementation that assumes a and b are NdarrayWrapper<f64, IxDyn>
     if let (Some(a_array), Some(b_array)) = (
         a.as_any().downcast_ref::<NdarrayWrapper<f64, IxDyn>>(),
         b.as_any().downcast_ref::<NdarrayWrapper<f64, IxDyn>>(),
+    ) {
+        let result = a_array.as_array() / b_array.as_array();
+        Ok(Box::new(NdarrayWrapper::new(result)) as Box<dyn ArrayProtocol>)
+    } else if let (Some(a_array), Some(b_array)) = (
+        a.as_any().downcast_ref::<NdarrayWrapper<f32, IxDyn>>(),
+        b.as_any().downcast_ref::<NdarrayWrapper<f32, IxDyn>>(),
     ) {
         let result = a_array.as_array() / b_array.as_array();
         Ok(Box::new(NdarrayWrapper::new(result)) as Box<dyn ArrayProtocol>)

@@ -6,11 +6,10 @@
 
 use crate::error::{StatsError, StatsResult};
 use crate::error_recovery_system::{
-    DataCharacteristics, EnhancedStatsError, ErrorContext, ErrorSeverity, PerformanceImpact,
-    RangeInfo, RecoveryAction, RecoverySuggestion, SizeInfo, SuggestionType,
+    EnhancedStatsError, RecoveryAction, RecoverySuggestion, SuggestionType,
 };
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use num_traits::{Float, One, Zero};
+use ndarray::Array1;
+use num_traits::Float;
 use std::collections::HashMap;
 
 /// Intelligent error recovery analyzer
@@ -1456,7 +1455,7 @@ impl MLEnhancedErrorRecovery {
         
         // Weight base strategies
         for mut strategy in base_strategies {
-            strategy.success_probability *= (1.0 - self.ml_config.ml_weight);
+            strategy.success_probability *= 1.0 - self.ml_config.ml_weight;
             combined.push(strategy);
         }
         

@@ -96,7 +96,23 @@ impl PolynomialFeatures {
         S: Data,
         S::Elem: Float + NumCast,
     {
+        // Enhanced input validation
+        if array.is_empty() {
+            return Err(TransformError::InvalidInput(
+                "Input array cannot be empty".to_string(),
+            ));
+        }
+
         let array_f64 = array.mapv(|x| num_traits::cast::<S::Elem, f64>(x).unwrap_or(0.0));
+
+        // Validate for NaN or infinite values
+        for &val in array_f64.iter() {
+            if !val.is_finite() {
+                return Err(TransformError::DataValidationError(
+                    "Input array contains non-finite values (NaN or infinity)".to_string(),
+                ));
+            }
+        }
 
         if !array_f64.is_standard_layout() {
             return Err(TransformError::InvalidInput(
@@ -108,7 +124,39 @@ impl PolynomialFeatures {
         let n_samples = shape[0];
         let n_features = shape[1];
 
+        // Additional validation
+        if self.degree == 0 {
+            return Err(TransformError::InvalidInput(
+                "Degree must be at least 1".to_string(),
+            ));
+        }
+
+        if self.degree > 10 {
+            return Err(TransformError::InvalidInput(
+                "Degree > 10 may cause numerical overflow. Please use a smaller degree.".to_string(),
+            ));
+        }
+
+        // Check for potential overflow before computing output features
         let n_output_features = self.n_output_features(n_features);
+        
+        // Prevent excessive memory usage
+        if n_output_features > 100_000 {
+            return Err(TransformError::MemoryError(format!(
+                "Output would have {} features, which exceeds the limit of 100,000. Consider reducing degree or using interaction_only=true",
+                n_output_features
+            )));
+        }
+
+        // Check for potential numerical overflow based on input data magnitude
+        let max_abs_value = array_f64.iter().map(|&x| x.abs()).fold(0.0, f64::max);
+        if max_abs_value > 100.0 && self.degree > 3 {
+            return Err(TransformError::DataValidationError(format!(
+                "Large input values (max: {:.2}) with high degree ({}) may cause numerical overflow. Consider scaling input data first.",
+                max_abs_value, self.degree
+            )));
+        }
+
         let mut result = Array2::zeros((n_samples, n_output_features));
 
         // Generate combinations for each degree
@@ -150,11 +198,32 @@ impl PolynomialFeatures {
                     // Skip the bias term and individual features
                     let sum: usize = powers.iter().sum();
                     if sum >= 2 && sum <= max_degree {
-                        // Compute the feature values
+                        // Compute the feature values with overflow detection
                         for i in 0..array.shape()[0] {
                             let mut val = 1.0;
                             for (j, &p) in powers.iter().enumerate() {
-                                val *= array[[i, j]].powi(p as i32);
+                                if p > 0 {
+                                    let base = array[[i, j]];
+                                    let powered = base.powi(p as i32);
+                                    
+                                    // Check for overflow/underflow
+                                    if !powered.is_finite() {
+                                        return Err(TransformError::ComputationError(format!(
+                                            "Numerical overflow detected when computing {}^{} at sample {}, feature {}",
+                                            base, p, i, j
+                                        )));
+                                    }
+                                    
+                                    val *= powered;
+                                    
+                                    // Additional overflow check after multiplication
+                                    if !val.is_finite() {
+                                        return Err(TransformError::ComputationError(format!(
+                                            "Numerical overflow detected during polynomial feature computation at sample {}",
+                                            i
+                                        )));
+                                    }
+                                }
                             }
                             result[[i, *col_idx]] = val;
                         }
@@ -197,6 +266,24 @@ impl PolynomialFeatures {
             );
         }
 
+        // Final validation of the output
+        for &val in result.iter() {
+            if !val.is_finite() {
+                return Err(TransformError::ComputationError(
+                    "Output contains non-finite values. This may be due to numerical overflow.".to_string(),
+                ));
+            }
+        }
+
+        // Check for extremely large values that might cause issues downstream
+        let max_output_value = result.iter().map(|&x| x.abs()).fold(0.0, f64::max);
+        if max_output_value > 1e15 {
+            return Err(TransformError::DataValidationError(format!(
+                "Output contains extremely large values (max: {:.2e}). Consider scaling input data or reducing polynomial degree.",
+                max_output_value
+            )));
+        }
+
         Ok(result)
     }
 }
@@ -226,7 +313,29 @@ where
     S: Data,
     S::Elem: Float + NumCast,
 {
+    // Enhanced input validation
+    if array.is_empty() {
+        return Err(TransformError::InvalidInput(
+            "Input array cannot be empty".to_string(),
+        ));
+    }
+
+    if !threshold.is_finite() {
+        return Err(TransformError::InvalidInput(
+            "Threshold must be a finite number".to_string(),
+        ));
+    }
+
     let array_f64 = array.mapv(|x| num_traits::cast::<S::Elem, f64>(x).unwrap_or(0.0));
+
+    // Validate for NaN or infinite values
+    for &val in array_f64.iter() {
+        if !val.is_finite() {
+            return Err(TransformError::DataValidationError(
+                "Input array contains non-finite values (NaN or infinity)".to_string(),
+            ));
+        }
+    }
 
     if !array_f64.is_standard_layout() {
         return Err(TransformError::InvalidInput(

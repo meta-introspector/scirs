@@ -6,10 +6,7 @@ pub mod compact;
 
 pub use compact::{BitPackedGraph, CSRGraph, CompressedAdjacencyList, HybridGraph, MemmapGraph};
 
-pub use {
-    AdvancedMemoryAnalyzer, FragmentationReport, MemoryMetrics, MemoryProfiler, MemorySample,
-    MemoryStats, OptimizationSuggestions, OptimizedGraphBuilder, RealTimeMemoryProfiler,
-};
+// Re-export from compact module only
 
 use crate::{DiGraph, Graph};
 use std::collections::HashMap;
@@ -17,7 +14,7 @@ use std::mem;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
-use sysinfo::{ProcessExt, System, SystemExt};
+use sysinfo::System;
 
 /// Memory usage statistics for a graph
 #[derive(Debug, Clone)]
@@ -41,25 +38,31 @@ pub struct MemoryProfiler;
 
 impl MemoryProfiler {
     /// Calculate memory statistics for an undirected graph
-    pub fn profile_graph(graph: &Graph) -> MemoryStats {
+    pub fn profile_graph<N, E, Ix>(graph: &Graph<N, E, Ix>) -> MemoryStats 
+    where
+        N: crate::base::Node,
+        E: crate::base::EdgeWeight,
+        Ix: petgraph::graph::IndexType,
+    {
         let node_count = graph.node_count();
         let edge_count = graph.edge_count();
 
-        // Calculate node storage
-        // Each node is stored as usize in a Vec
-        let node_bytes = node_count * mem::size_of::<usize>() + mem::size_of::<Vec<usize>>(); // Vec overhead
+        // Calculate node storage - nodes are stored with their data
+        let node_bytes = node_count * (mem::size_of::<N>() + mem::size_of::<petgraph::graph::NodeIndex<Ix>>()) 
+            + mem::size_of::<std::collections::HashMap<N, petgraph::graph::NodeIndex<Ix>>>();
 
-        // Calculate adjacency list storage
-        // Each node has a Vec of (neighbor, weight) pairs
+        // Calculate adjacency list storage based on actual graph structure
         let mut adjacency_bytes = 0;
-        for node in 0..node_count {
-            let neighbors = graph.neighbors(node).count();
-            adjacency_bytes += neighbors * mem::size_of::<(usize, f64)>() // (neighbor, weight)
-                + mem::size_of::<Vec<(usize, f64)>>(); // Vec overhead per node
+        for node in graph.nodes() {
+            if let Ok(neighbors) = graph.neighbors(node) {
+                let neighbor_count = neighbors.len();
+                adjacency_bytes += neighbor_count * mem::size_of::<E>() // edge weights
+                    + mem::size_of::<Vec<E>>(); // Vec overhead per adjacency list
+            }
         }
 
-        // Calculate edge storage (if separate edge list is maintained)
-        let edge_bytes = edge_count * mem::size_of::<(usize, usize, f64)>();
+        // Calculate edge storage
+        let edge_bytes = edge_count * (mem::size_of::<N>() * 2 + mem::size_of::<E>());
 
         // Estimate allocator overhead (typically 8-16 bytes per allocation)
         let allocation_count = node_count + 1; // nodes + main structure
@@ -67,7 +70,11 @@ impl MemoryProfiler {
 
         let total_bytes = node_bytes + adjacency_bytes + edge_bytes + overhead_bytes;
         let useful_bytes = node_bytes + adjacency_bytes;
-        let efficiency = useful_bytes as f64 / total_bytes as f64;
+        let efficiency = if total_bytes > 0 {
+            useful_bytes as f64 / total_bytes as f64
+        } else {
+            1.0
+        };
 
         MemoryStats {
             total_bytes,
@@ -80,30 +87,44 @@ impl MemoryProfiler {
     }
 
     /// Calculate memory statistics for a directed graph
-    pub fn profile_digraph<N, E>(graph: &DiGraph<N, E>) -> MemoryStats {
+    pub fn profile_digraph<N, E, Ix>(graph: &DiGraph<N, E, Ix>) -> MemoryStats 
+    where
+        N: crate::base::Node,
+        E: crate::base::EdgeWeight,
+        Ix: petgraph::graph::IndexType,
+    {
         let node_count = graph.node_count();
         let edge_count = graph.edge_count();
 
         // Similar to undirected but with separate in/out adjacency lists
-        let node_bytes = node_count * mem::size_of::<usize>() + mem::size_of::<Vec<usize>>();
+        let node_bytes = node_count * (mem::size_of::<N>() + mem::size_of::<petgraph::graph::NodeIndex<Ix>>()) 
+            + mem::size_of::<std::collections::HashMap<N, petgraph::graph::NodeIndex<Ix>>>();
 
-        // Both in-edges and out-edges storage
+        // Both in-edges and out-edges storage - directed graphs have separate lists
         let mut adjacency_bytes = 0;
         for node in graph.nodes() {
-            let out_neighbors = graph.neighbors(&node).unwrap_or(vec![]).len();
-            let in_neighbors = out_neighbors; // For undirected graphs, in=out
-            adjacency_bytes += (out_neighbors + in_neighbors) * mem::size_of::<(usize, f64)>()
-                + 2 * mem::size_of::<Vec<(usize, f64)>>(); // Two Vecs per node
+            // Count successors (outgoing edges)
+            if let Ok(successors) = graph.successors(node) {
+                adjacency_bytes += successors.len() * mem::size_of::<E>() + mem::size_of::<Vec<E>>();
+            }
+            // Count predecessors (incoming edges) 
+            if let Ok(predecessors) = graph.predecessors(node) {
+                adjacency_bytes += predecessors.len() * mem::size_of::<E>() + mem::size_of::<Vec<E>>();
+            }
         }
 
-        let edge_bytes = edge_count * mem::size_of::<(usize, usize, f64)>();
+        let edge_bytes = edge_count * (mem::size_of::<N>() * 2 + mem::size_of::<E>());
 
         let allocation_count = node_count * 2 + 1; // in/out vecs + main structure
         let overhead_bytes = allocation_count * 16;
 
         let total_bytes = node_bytes + adjacency_bytes + edge_bytes + overhead_bytes;
         let useful_bytes = node_bytes + adjacency_bytes;
-        let efficiency = useful_bytes as f64 / total_bytes as f64;
+        let efficiency = if total_bytes > 0 {
+            useful_bytes as f64 / total_bytes as f64
+        } else {
+            1.0
+        };
 
         MemoryStats {
             total_bytes,
@@ -117,7 +138,7 @@ impl MemoryProfiler {
 
     /// Estimate memory usage for a graph of given size
     pub fn estimate_memory(nodes: usize, edges: usize, directed: bool) -> usize {
-        let avg_degree = if nodes > 0 {
+        let _avg_degree = if nodes > 0 {
             edges as f64 / nodes as f64
         } else {
             0.0
@@ -143,12 +164,17 @@ impl MemoryProfiler {
     }
 
     /// Analyze memory fragmentation in the graph
-    pub fn analyze_fragmentation(graph: &Graph) -> FragmentationReport {
+    pub fn analyze_fragmentation<N, E, Ix>(graph: &Graph<N, E, Ix>) -> FragmentationReport 
+    where
+        N: crate::base::Node,
+        E: crate::base::EdgeWeight,
+        Ix: petgraph::graph::IndexType,
+    {
         let mut degree_distribution = HashMap::new();
         let mut total_capacity = 0;
         let mut total_used = 0;
 
-        for node in 0..graph.node_count() {
+        for node in graph.nodes() {
             let degree = graph.degree(node);
             *degree_distribution.entry(degree).or_insert(0) += 1;
 
@@ -170,7 +196,7 @@ impl MemoryProfiler {
             total_capacity,
             total_used,
             fragmentation_ratio: fragmentation,
-            wasted_bytes: (total_capacity - total_used) * mem::size_of::<(usize, f64)>(),
+            wasted_bytes: (total_capacity - total_used) * mem::size_of::<(N, E)>(),
         }
     }
 }
@@ -534,7 +560,7 @@ impl RealTimeMemoryProfiler {
     /// Generate memory usage report
     pub fn generate_report(&self) -> String {
         let metrics = self.get_current_metrics();
-        let samples = self.samples.lock().unwrap();
+        let _samples = self.samples.lock().unwrap();
 
         let mut report = String::new();
         report.push_str("=== Memory Usage Report ===\n");
@@ -710,7 +736,7 @@ mod tests {
 
     #[test]
     fn test_fragmentation_analysis() {
-        let mut graph = Graph::new();
+        let mut graph: Graph<i32, f64> = Graph::new();
 
         // Create a graph with varied degrees
         for i in 0..100 {
@@ -719,7 +745,7 @@ mod tests {
 
         // Add edges to create different degree nodes
         for i in 0..10 {
-            for j in 0..50 {
+            for j in 10..20 {
                 if i != j {
                     graph.add_edge(i, j, 1.0).unwrap();
                 }

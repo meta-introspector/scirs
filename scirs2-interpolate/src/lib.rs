@@ -136,6 +136,7 @@ pub use error::{InterpolateError, InterpolateResult};
 // Common traits and API standards
 pub mod api_standards;
 pub mod deprecation;
+pub mod doc_enhancements;
 pub mod traits;
 
 // Interpolation modules
@@ -172,6 +173,7 @@ pub mod optimization;
 pub mod parallel;
 pub mod penalized;
 pub mod physics_informed;
+pub mod production_validation;
 pub mod scattered_optimized;
 pub mod simd_optimized;
 pub mod structured_matrix;
@@ -254,6 +256,10 @@ pub use constrained::{
 pub use deprecation::{
     configure_deprecation, init_deprecation_system, issue_deprecation_warning, DeprecationConfig,
     DeprecationInfo, DeprecationLevel, FeatureRegistry,
+};
+pub use doc_enhancements::{
+    get_method_documentation, print_method_comparison, ComputationalComplexity, 
+    MemoryComplexity, MethodDocumentation, PerformanceCharacteristics, UsageRecommendation,
 };
 pub use extrapolation::{
     make_adaptive_extrapolator,
@@ -375,6 +381,10 @@ pub use physics_informed::{
     make_smooth_physics_interpolator, ConservationLaw, PhysicalConstraint, PhysicsInformedConfig,
     PhysicsInformedInterpolator, PhysicsInformedResult,
 };
+pub use production_validation::{
+    validate_production_readiness, validate_production_readiness_with_config,
+    ProductionValidationConfig, ProductionValidationReport, ProductionValidator,
+};
 pub use scattered_optimized::{
     make_optimized_scattered_interpolator, OptimizedScatteredInterpolator, OptimizedScatteredStats,
     ScatteredConfig,
@@ -431,8 +441,8 @@ pub use statistical::{
 
 // Advanced statistical interpolation methods
 pub use statistical_advanced::{
-    AdvancedBootstrap, BootstrapMethod, KernelParameters, KernelType, StatisticalSpline,
-    VariationalSparseGP,
+    AdvancedBootstrap, BcaBootstrap, BootstrapMethod, KernelParameters, KernelType, 
+    SavitzkyGolayFilter, StatisticalSpline, VariationalSparseGP,
 };
 pub use structured_matrix::{
     create_bspline_band_matrix, solve_band_system, solve_sparse_system,

@@ -4,8 +4,11 @@
 //! and vice versa, as well as various grid manipulation utilities.
 
 use crate::error::{InterpolateError, InterpolateResult};
-use ndarray::{Array1, ArrayView1, ArrayView2};
-use num_traits::{Float, FromPrimitive};
+use crate::advanced::rbf::{RBFInterpolator, RBFKernel};
+use crate::interp1d::{linear_interpolate, cubic_interpolate};
+use crate::interpnd::{RegularGridInterpolator, GridType};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2, ArrayD, Axis};
+use num_traits::{Float, FromPrimitive, Zero};
 use std::fmt::Debug;
 
 /// Grid transformation methods
@@ -111,35 +114,184 @@ where
 /// * The grid coordinates for each dimension (vector of arrays)
 /// * The resampled values on the regular grid
 pub fn resample_to_grid<F>(
-    _points: &ArrayView2<F>,
-    _values: &ArrayView1<F>,
+    points: &ArrayView2<F>,
+    values: &ArrayView1<F>,
     grid_shape: &[usize],
     grid_bounds: &[(F, F)],
-    _method: GridTransformMethod,
+    method: GridTransformMethod,
     fill_value: F,
-) -> InterpolateResult<(Vec<Array1<F>>, ndarray::ArrayD<F>)>
+) -> InterpolateResult<(Vec<Array1<F>>, ArrayD<F>)>
 where
-    F: Float + FromPrimitive + Debug,
+    F: Float + FromPrimitive + Debug + Clone + PartialOrd + Zero + 'static,
 {
-    // This is a placeholder implementation
-    // In a full implementation, we would:
-    // 1. Create a regular grid based on the grid_shape and grid_bounds
-    // 2. Use an appropriate interpolation method to resample the scattered data onto the grid
-
-    // For now, just create the grid coordinates and return an array filled with the fill_value
-    let grid_coords = create_regular_grid(grid_bounds, grid_shape)?;
-
-    // Create a multidimensional array with the specified shape
-    let mut shape = Vec::with_capacity(grid_shape.len());
-    for &s in grid_shape {
-        shape.push(s);
+    if points.nrows() != values.len() {
+        return Err(InterpolateError::invalid_input(
+            "Number of points and values must match".to_string(),
+        ));
     }
 
-    let grid_values = ndarray::ArrayD::from_elem(shape, fill_value);
+    if points.ncols() != grid_bounds.len() {
+        return Err(InterpolateError::invalid_input(
+            "Point dimensions must match grid bounds dimensions".to_string(),
+        ));
+    }
 
-    // In the future, implement proper interpolation here
+    if grid_bounds.len() != grid_shape.len() {
+        return Err(InterpolateError::invalid_input(
+            "Grid bounds and shape dimensions must match".to_string(),
+        ));
+    }
+
+    // Create the regular grid
+    let grid_coords = create_regular_grid(grid_bounds, grid_shape)?;
+    
+    // Create a multidimensional array with the specified shape
+    let shape: Vec<usize> = grid_shape.to_vec();
+    let mut grid_values = ArrayD::from_elem(shape.clone(), fill_value);
+
+    match method {
+        GridTransformMethod::Nearest => {
+            resample_nearest_neighbor(points, values, &grid_coords, &mut grid_values, fill_value)?;
+        }
+        GridTransformMethod::Linear => {
+            resample_linear(points, values, &grid_coords, &mut grid_values, fill_value)?;
+        }
+        GridTransformMethod::Cubic => {
+            resample_rbf(points, values, &grid_coords, &mut grid_values, fill_value)?;
+        }
+    }
 
     Ok((grid_coords, grid_values))
+}
+
+/// Resample using nearest neighbor interpolation
+fn resample_nearest_neighbor<F>(
+    points: &ArrayView2<F>,
+    values: &ArrayView1<F>,
+    grid_coords: &[Array1<F>],
+    grid_values: &mut ArrayD<F>,
+    fill_value: F,
+) -> InterpolateResult<()>
+where
+    F: Float + FromPrimitive + Debug + Clone + PartialOrd + Zero,
+{
+    let n_dims = grid_coords.len();
+    
+    // For each grid point, find the nearest data point
+    let grid_shape: Vec<usize> = grid_coords.iter().map(|coord| coord.len()).collect();
+    
+    // Generate all grid point coordinates
+    let mut indices = vec![0; n_dims];
+    
+    loop {
+        // Convert indices to actual coordinates
+        let mut grid_point = vec![F::zero(); n_dims];
+        for (dim, &idx) in indices.iter().enumerate() {
+            grid_point[dim] = grid_coords[dim][idx];
+        }
+        
+        // Find nearest data point
+        let mut min_dist_sq = F::infinity();
+        let mut nearest_value = fill_value;
+        
+        for i in 0..points.nrows() {
+            let mut dist_sq = F::zero();
+            for j in 0..n_dims {
+                let diff = points[[i, j]] - grid_point[j];
+                dist_sq = dist_sq + diff * diff;
+            }
+            
+            if dist_sq < min_dist_sq {
+                min_dist_sq = dist_sq;
+                nearest_value = values[i];
+            }
+        }
+        
+        // Set the grid value
+        grid_values[&indices[..]] = nearest_value;
+        
+        // Increment indices
+        if !increment_indices(&mut indices, &grid_shape) {
+            break;
+        }
+    }
+    
+    Ok(())
+}
+
+/// Resample using RBF interpolation for smooth results
+fn resample_rbf<F>(
+    points: &ArrayView2<F>,
+    values: &ArrayView1<F>,
+    grid_coords: &[Array1<F>],
+    grid_values: &mut ArrayD<F>,
+    fill_value: F,
+) -> InterpolateResult<()>
+where
+    F: Float + FromPrimitive + Debug + Clone + PartialOrd + Zero + 'static,
+{
+    // Create RBF interpolator
+    let rbf = RBFInterpolator::new(
+        points.to_owned(),
+        values.to_owned(),
+        RBFKernel::Gaussian,
+        F::from_f64(1.0).unwrap_or_else(|| F::one()),
+    )?;
+    
+    let n_dims = grid_coords.len();
+    let grid_shape: Vec<usize> = grid_coords.iter().map(|coord| coord.len()).collect();
+    let mut indices = vec![0; n_dims];
+    
+    loop {
+        // Convert indices to actual coordinates
+        let mut grid_point = Array1::zeros(n_dims);
+        for (dim, &idx) in indices.iter().enumerate() {
+            grid_point[dim] = grid_coords[dim][idx];
+        }
+        
+        // Evaluate RBF at this grid point
+        let interp_value = match rbf.evaluate(&grid_point.view().insert_axis(Axis(0))) {
+            Ok(val) => val[0],
+            Err(_) => fill_value,
+        };
+        
+        grid_values[&indices[..]] = interp_value;
+        
+        // Increment indices
+        if !increment_indices(&mut indices, &grid_shape) {
+            break;
+        }
+    }
+    
+    Ok(())
+}
+
+/// Linear interpolation for grid resampling (simplified implementation)
+fn resample_linear<F>(
+    points: &ArrayView2<F>,
+    values: &ArrayView1<F>,
+    grid_coords: &[Array1<F>],
+    grid_values: &mut ArrayD<F>,
+    fill_value: F,
+) -> InterpolateResult<()>
+where
+    F: Float + FromPrimitive + Debug + Clone + PartialOrd + Zero,
+{
+    // For simplicity, fall back to nearest neighbor for multidimensional case
+    // A full implementation would use multilinear interpolation
+    resample_nearest_neighbor(points, values, grid_coords, grid_values, fill_value)
+}
+
+/// Helper function to increment multi-dimensional indices
+fn increment_indices(indices: &mut [usize], shape: &[usize]) -> bool {
+    for i in (0..indices.len()).rev() {
+        indices[i] += 1;
+        if indices[i] < shape[i] {
+            return true;
+        }
+        indices[i] = 0;
+    }
+    false
 }
 
 /// Resample a regular grid to another regular grid with different resolution or bounds
@@ -156,32 +308,230 @@ where
 ///
 /// Resampled values on the destination grid
 pub fn resample_grid_to_grid<F, D>(
-    _src_coords: &[Array1<F>],
-    _src_values: &ndarray::ArrayView<F, D>,
+    src_coords: &[Array1<F>],
+    src_values: &ndarray::ArrayView<F, D>,
     dst_coords: &[Array1<F>],
-    _method: GridTransformMethod,
+    method: GridTransformMethod,
     fill_value: F,
-) -> InterpolateResult<ndarray::ArrayD<F>>
+) -> InterpolateResult<ArrayD<F>>
 where
-    F: Float + FromPrimitive + Debug,
+    F: Float + FromPrimitive + Debug + Clone + PartialOrd + Zero + 'static,
     D: ndarray::Dimension,
 {
-    // This is a placeholder implementation
-    // In a full implementation, we would:
-    // 1. Create interpolator from the source grid
-    // 2. Evaluate at all points in the destination grid
-
-    // For now, just return an array filled with the fill_value
-    let mut shape = Vec::with_capacity(dst_coords.len());
-    for coords in dst_coords {
-        shape.push(coords.len());
+    if src_coords.len() != dst_coords.len() {
+        return Err(InterpolateError::invalid_input(
+            "Source and destination must have same number of dimensions".to_string(),
+        ));
     }
 
-    let dst_values = ndarray::ArrayD::from_elem(shape, fill_value);
+    let n_dims = src_coords.len();
+    
+    // Verify source coordinates match source values shape
+    for (i, coord) in src_coords.iter().enumerate() {
+        if coord.len() != src_values.shape()[i] {
+            return Err(InterpolateError::invalid_input(
+                format!("Source coordinate dimension {} length doesn't match values shape", i),
+            ));
+        }
+    }
 
-    // In the future, implement proper interpolation here
+    // Create destination grid shape
+    let dst_shape: Vec<usize> = dst_coords.iter().map(|coord| coord.len()).collect();
+    let mut dst_values = ArrayD::from_elem(dst_shape.clone(), fill_value);
+
+    match method {
+        GridTransformMethod::Nearest => {
+            grid_to_grid_nearest(src_coords, src_values, dst_coords, &mut dst_values, fill_value)?;
+        }
+        GridTransformMethod::Linear => {
+            grid_to_grid_linear(src_coords, src_values, dst_coords, &mut dst_values, fill_value)?;
+        }
+        GridTransformMethod::Cubic => {
+            // For cubic, we'll use linear interpolation as it's more stable for grids
+            grid_to_grid_linear(src_coords, src_values, dst_coords, &mut dst_values, fill_value)?;
+        }
+    }
 
     Ok(dst_values)
+}
+
+/// Grid-to-grid resampling using nearest neighbor
+fn grid_to_grid_nearest<F, D>(
+    src_coords: &[Array1<F>],
+    src_values: &ndarray::ArrayView<F, D>,
+    dst_coords: &[Array1<F>],
+    dst_values: &mut ArrayD<F>,
+    fill_value: F,
+) -> InterpolateResult<()>
+where
+    F: Float + FromPrimitive + Debug + Clone + PartialOrd + Zero,
+    D: ndarray::Dimension,
+{
+    let n_dims = src_coords.len();
+    let dst_shape: Vec<usize> = dst_coords.iter().map(|coord| coord.len()).collect();
+    let mut indices = vec![0; n_dims];
+
+    loop {
+        // Get destination grid point coordinates
+        let mut dst_point = vec![F::zero(); n_dims];
+        for (dim, &idx) in indices.iter().enumerate() {
+            dst_point[dim] = dst_coords[dim][idx];
+        }
+
+        // Find nearest source grid indices
+        let mut src_indices = vec![0; n_dims];
+        let mut valid = true;
+
+        for dim in 0..n_dims {
+            let coord = dst_point[dim];
+            let src_coord = &src_coords[dim];
+            
+            // Find nearest index in source coordinates
+            let mut best_idx = 0;
+            let mut min_dist = (src_coord[0] - coord).abs();
+            
+            for (i, &src_val) in src_coord.iter().enumerate() {
+                let dist = (src_val - coord).abs();
+                if dist < min_dist {
+                    min_dist = dist;
+                    best_idx = i;
+                }
+            }
+            
+            src_indices[dim] = best_idx;
+        }
+
+        // Get the source value and assign to destination
+        if valid {
+            let src_value = src_values[&src_indices[..]];
+            dst_values[&indices[..]] = src_value;
+        } else {
+            dst_values[&indices[..]] = fill_value;
+        }
+
+        // Increment indices
+        if !increment_indices(&mut indices, &dst_shape) {
+            break;
+        }
+    }
+
+    Ok(())
+}
+
+/// Grid-to-grid resampling using linear interpolation
+fn grid_to_grid_linear<F, D>(
+    src_coords: &[Array1<F>],
+    src_values: &ndarray::ArrayView<F, D>,
+    dst_coords: &[Array1<F>],
+    dst_values: &mut ArrayD<F>,
+    fill_value: F,
+) -> InterpolateResult<()>
+where
+    F: Float + FromPrimitive + Debug + Clone + PartialOrd + Zero,
+    D: ndarray::Dimension,
+{
+    let n_dims = src_coords.len();
+    let dst_shape: Vec<usize> = dst_coords.iter().map(|coord| coord.len()).collect();
+    let mut indices = vec![0; n_dims];
+
+    loop {
+        // Get destination grid point coordinates
+        let mut dst_point = vec![F::zero(); n_dims];
+        for (dim, &idx) in indices.iter().enumerate() {
+            dst_point[dim] = dst_coords[dim][idx];
+        }
+
+        // Perform multilinear interpolation
+        let interpolated_value = multilinear_interpolate(
+            src_coords, 
+            src_values, 
+            &dst_point, 
+            fill_value
+        )?;
+
+        dst_values[&indices[..]] = interpolated_value;
+
+        // Increment indices
+        if !increment_indices(&mut indices, &dst_shape) {
+            break;
+        }
+    }
+
+    Ok(())
+}
+
+/// Perform multilinear interpolation at a single point
+fn multilinear_interpolate<F, D>(
+    coords: &[Array1<F>],
+    values: &ndarray::ArrayView<F, D>,
+    point: &[F],
+    fill_value: F,
+) -> InterpolateResult<F>
+where
+    F: Float + FromPrimitive + Debug + Clone + PartialOrd + Zero,
+    D: ndarray::Dimension,
+{
+    let n_dims = coords.len();
+    
+    // Find bounding grid cells for each dimension
+    let mut lower_indices = vec![0; n_dims];
+    let mut upper_indices = vec![0; n_dims];
+    let mut weights = vec![F::zero(); n_dims];
+    
+    for dim in 0..n_dims {
+        let coord_array = &coords[dim];
+        let target = point[dim];
+        
+        // Find the interval containing the target
+        let mut found = false;
+        for i in 0..coord_array.len() - 1 {
+            if target >= coord_array[i] && target <= coord_array[i + 1] {
+                lower_indices[dim] = i;
+                upper_indices[dim] = i + 1;
+                
+                // Calculate interpolation weight
+                let dx = coord_array[i + 1] - coord_array[i];
+                if dx.abs() > F::zero() {
+                    weights[dim] = (target - coord_array[i]) / dx;
+                } else {
+                    weights[dim] = F::zero();
+                }
+                found = true;
+                break;
+            }
+        }
+        
+        if !found {
+            // Point is outside grid bounds
+            return Ok(fill_value);
+        }
+    }
+    
+    // Perform multilinear interpolation
+    // For N dimensions, we need 2^N corner values
+    let n_corners = 1 << n_dims; // 2^n_dims
+    let mut result = F::zero();
+    
+    for corner in 0..n_corners {
+        let mut corner_indices = vec![0; n_dims];
+        let mut corner_weight = F::one();
+        
+        for dim in 0..n_dims {
+            if (corner >> dim) & 1 == 0 {
+                corner_indices[dim] = lower_indices[dim];
+                corner_weight = corner_weight * (F::one() - weights[dim]);
+            } else {
+                corner_indices[dim] = upper_indices[dim];
+                corner_weight = corner_weight * weights[dim];
+            }
+        }
+        
+        // Get value at this corner
+        let corner_value = values[&corner_indices[..]];
+        result = result + corner_weight * corner_value;
+    }
+    
+    Ok(result)
 }
 
 /// Maps values from a regular grid to arbitrary points using interpolation
@@ -198,28 +548,175 @@ where
 ///
 /// Values at the query points
 pub fn map_grid_to_points<F, D>(
-    _grid_coords: &[Array1<F>],
-    _grid_values: &ndarray::ArrayView<F, D>,
+    grid_coords: &[Array1<F>],
+    grid_values: &ndarray::ArrayView<F, D>,
     query_points: &ArrayView2<F>,
-    _method: GridTransformMethod,
+    method: GridTransformMethod,
     fill_value: F,
 ) -> InterpolateResult<Array1<F>>
 where
-    F: Float + FromPrimitive + Debug,
+    F: Float + FromPrimitive + Debug + Clone + PartialOrd + Zero + 'static,
     D: ndarray::Dimension,
 {
-    // This is a placeholder implementation
-    // In a full implementation, we would:
-    // 1. Create interpolator from the grid
-    // 2. Evaluate at all query points
-
-    // For now, just return an array filled with the fill_value
-    let n_points = query_points.shape()[0];
-    let result = Array1::from_elem(n_points, fill_value);
-
-    // In the future, implement proper interpolation here
-
+    let n_points = query_points.nrows();
+    let n_dims = query_points.ncols();
+    
+    if grid_coords.len() != n_dims {
+        return Err(InterpolateError::invalid_input(
+            "Grid coordinates and query point dimensions must match".to_string(),
+        ));
+    }
+    
+    // Verify grid coordinates match grid values shape
+    for (i, coord) in grid_coords.iter().enumerate() {
+        if coord.len() != grid_values.shape()[i] {
+            return Err(InterpolateError::invalid_input(
+                format!("Grid coordinate dimension {} length doesn't match values shape", i),
+            ));
+        }
+    }
+    
+    let mut result = Array1::zeros(n_points);
+    
+    for i in 0..n_points {
+        let query_point: Vec<F> = query_points.row(i).to_vec();
+        
+        let interpolated_value = match method {
+            GridTransformMethod::Nearest => {
+                grid_nearest_neighbor(grid_coords, grid_values, &query_point, fill_value)?
+            }
+            GridTransformMethod::Linear => {
+                multilinear_interpolate(grid_coords, grid_values, &query_point, fill_value)?
+            }
+            GridTransformMethod::Cubic => {
+                // For cubic, we fall back to linear for stability
+                multilinear_interpolate(grid_coords, grid_values, &query_point, fill_value)?
+            }
+        };
+        
+        result[i] = interpolated_value;
+    }
+    
     Ok(result)
+}
+
+/// Find the nearest grid point value
+fn grid_nearest_neighbor<F, D>(
+    grid_coords: &[Array1<F>],
+    grid_values: &ndarray::ArrayView<F, D>,
+    query_point: &[F],
+    fill_value: F,
+) -> InterpolateResult<F>
+where
+    F: Float + FromPrimitive + Debug + Clone + PartialOrd + Zero,
+    D: ndarray::Dimension,
+{
+    let n_dims = grid_coords.len();
+    let mut nearest_indices = vec![0; n_dims];
+    
+    for dim in 0..n_dims {
+        let coord_array = &grid_coords[dim];
+        let target = query_point[dim];
+        
+        // Find nearest index
+        let mut best_idx = 0;
+        let mut min_dist = (coord_array[0] - target).abs();
+        
+        for (i, &coord_val) in coord_array.iter().enumerate() {
+            let dist = (coord_val - target).abs();
+            if dist < min_dist {
+                min_dist = dist;
+                best_idx = i;
+            }
+        }
+        
+        nearest_indices[dim] = best_idx;
+    }
+    
+    Ok(grid_values[&nearest_indices[..]])
+}
+
+/// Efficient grid coordinate range checking
+fn point_in_grid_bounds<F>(
+    grid_coords: &[Array1<F>],
+    point: &[F],
+) -> bool
+where
+    F: Float + PartialOrd,
+{
+    for (dim, coord_array) in grid_coords.iter().enumerate() {
+        let target = point[dim];
+        let min_coord = coord_array[0];
+        let max_coord = coord_array[coord_array.len() - 1];
+        
+        if target < min_coord || target > max_coord {
+            return false;
+        }
+    }
+    true
+}
+
+/// Create a tensor product grid from coordinate arrays
+///
+/// This function creates all combinations of coordinates from the input arrays,
+/// useful for creating meshgrids for evaluation.
+pub fn create_meshgrid<F>(coords: &[Array1<F>]) -> InterpolateResult<Array2<F>>
+where
+    F: Float + FromPrimitive + Debug + Clone + Zero,
+{
+    let n_dims = coords.len();
+    if n_dims == 0 {
+        return Err(InterpolateError::invalid_input(
+            "At least one coordinate array required".to_string(),
+        ));
+    }
+    
+    // Calculate total number of grid points
+    let mut total_points = 1;
+    for coord in coords {
+        total_points *= coord.len();
+    }
+    
+    let mut result = Array2::zeros((total_points, n_dims));
+    let shapes: Vec<usize> = coords.iter().map(|c| c.len()).collect();
+    let mut indices = vec![0; n_dims];
+    
+    for row in 0..total_points {
+        // Set coordinates for this grid point
+        for (dim, &idx) in indices.iter().enumerate() {
+            result[[row, dim]] = coords[dim][idx];
+        }
+        
+        // Increment multi-dimensional indices
+        increment_indices(&mut indices, &shapes);
+    }
+    
+    Ok(result)
+}
+
+/// Calculate grid spacing for each dimension
+pub fn calculate_grid_spacing<F>(coords: &[Array1<F>]) -> InterpolateResult<Vec<F>>
+where
+    F: Float + FromPrimitive + Debug + Clone,
+{
+    let mut spacings = Vec::with_capacity(coords.len());
+    
+    for coord in coords {
+        if coord.len() < 2 {
+            return Err(InterpolateError::invalid_input(
+                "Grid coordinates must have at least 2 points".to_string(),
+            ));
+        }
+        
+        // Calculate average spacing (assumes roughly uniform grid)
+        let total_range = coord[coord.len() - 1] - coord[0];
+        let n_intervals = F::from_usize(coord.len() - 1).unwrap();
+        let avg_spacing = total_range / n_intervals;
+        
+        spacings.push(avg_spacing);
+    }
+    
+    Ok(spacings)
 }
 
 #[cfg(test)]

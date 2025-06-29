@@ -16,9 +16,8 @@ use num_traits::Float;
 use std::fmt::Debug;
 
 // Import GPU capabilities from scirs2-core
-// TODO: Re-enable when GPU module is available in scirs2-core
-// use scirs2_core::gpu::kernels::sparse::{SpMSKernel, SpMVKernel};
-// use scirs2_core::gpu::{GpuBackend, GpuBuffer, GpuDevice, GpuError, GpuKernel};
+use scirs2_core::gpu::{GpuContext, GpuOperation, GpuBuffer, AutoDevice};
+use scirs2_core::parallel_ops::*;
 
 // Stub implementations for GPU types when GPU feature is not available
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -344,13 +343,14 @@ fn gpu_sparse_matvec_impl<T, S>(
     matrix: &S,
     x: &ArrayView1<T>,
     options: &GpuOptions,
-) -> Result<Array1<T>, GpuError>
+) -> Result<Array1<T>, String>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + Debug + Copy + 'static + Send + Sync,
     S: SparseArray<T>,
 {
-    // Get GPU device
-    let device = GpuDevice::get_default(options.backend)?;
+    // Try to create GPU context using scirs2-core
+    let gpu_context = GpuContext::new(AutoDevice)
+        .map_err(|e| format!("Failed to create GPU context: {}", e))?;
 
     let (rows, cols) = matrix.shape();
     let (row_indices, col_indices, values) = matrix.find();
@@ -360,7 +360,7 @@ where
     let mut csr_indices = Vec::new();
     let mut csr_data = Vec::new();
 
-    // Build CSR representation
+    // Build CSR representation efficiently
     let mut current_row = 0;
     let mut nnz_count = 0;
 
@@ -379,29 +379,43 @@ where
         current_row += 1;
     }
 
-    // Allocate GPU buffers
-    let indptr_buffer = device.create_buffer(&csr_indptr)?;
-    let indices_buffer = device.create_buffer(&csr_indices)?;
-    let data_buffer = device.create_buffer(&csr_data)?;
-    let x_buffer = device.create_buffer(x.as_slice().unwrap())?;
-    let mut y_buffer = device.create_buffer_zeros::<T>(rows)?;
+    // Convert data to f32 for GPU processing
+    let csr_data_f32: Vec<f32> = csr_data.iter().map(|&v| v.to_f64().unwrap() as f32).collect();
+    let x_f32: Vec<f32> = x.iter().map(|&v| v.to_f64().unwrap() as f32).collect();
 
-    // Create and execute SpMV kernel
-    let spmv_kernel = SpMVKernel::new(&device, options.workgroup_size)?;
+    // Create GPU buffers using scirs2-core
+    let indptr_buffer = gpu_context.create_buffer(&csr_indptr)
+        .map_err(|e| format!("Failed to create indptr buffer: {}", e))?;
+    let indices_buffer = gpu_context.create_buffer(&csr_indices)
+        .map_err(|e| format!("Failed to create indices buffer: {}", e))?;
+    let data_buffer = gpu_context.create_buffer(&csr_data_f32)
+        .map_err(|e| format!("Failed to create data buffer: {}", e))?;
+    let x_buffer = gpu_context.create_buffer(&x_f32)
+        .map_err(|e| format!("Failed to create x buffer: {}", e))?;
+    let y_buffer = gpu_context.create_buffer_zeros::<f32>(rows)
+        .map_err(|e| format!("Failed to create y buffer: {}", e))?;
 
-    spmv_kernel.execute(
-        rows,
-        cols,
-        &indptr_buffer,
-        &indices_buffer,
-        &data_buffer,
-        &x_buffer,
-        &mut y_buffer,
-    )?;
+    // Create SpMV GPU operation
+    let spmv_operation = create_sparse_matvec_operation(rows, cols, options.workgroup_size)?;
 
-    // Copy result back to host
-    let result = y_buffer.to_host()?;
-    Ok(Array1::from_vec(result))
+    // Execute GPU kernel
+    gpu_context.execute_operation(
+        &spmv_operation,
+        &[&indptr_buffer, &indices_buffer, &data_buffer, &x_buffer],
+        &[&y_buffer],
+        (rows, 1, 1)
+    ).map_err(|e| format!("GPU operation failed: {}", e))?;
+
+    // Read back results from GPU
+    let y_f32 = y_buffer.to_host()
+        .map_err(|e| format!("Failed to read GPU results: {}", e))?;
+
+    // Convert back to original type T
+    let y_result: Vec<T> = y_f32.iter()
+        .map(|&v| T::from(v).unwrap())
+        .collect();
+
+    Ok(Array1::from_vec(y_result))
 }
 
 /// GPU implementation for symmetric sparse matrix-vector multiplication
@@ -409,43 +423,60 @@ fn gpu_sym_sparse_matvec_impl<T>(
     matrix: &SymCsrMatrix<T>,
     x: &ArrayView1<T>,
     options: &GpuOptions,
-) -> Result<Array1<T>, GpuError>
+) -> Result<Array1<T>, String>
 where
-    T: Float + Debug + Copy + 'static,
+    T: Float + Debug + Copy + 'static + Send + Sync,
 {
-    // Get GPU device
-    let device = GpuDevice::get_default(options.backend)?;
+    // Try to create GPU context using scirs2-core
+    let gpu_context = GpuContext::new(AutoDevice)
+        .map_err(|e| format!("Failed to create GPU context: {}", e))?;
 
-    let (rows, cols) = matrix.shape();
+    let (rows, _cols) = matrix.shape();
 
-    // For symmetric matrices, we use specialized kernels that can exploit symmetry
-    // Extract the lower triangular part stored in the symmetric CSR format
+    // For symmetric matrices, we exploit symmetry by processing both directions
     let indptr = &matrix.indptr;
     let indices = &matrix.indices;
     let data = &matrix.data;
 
-    // Allocate GPU buffers for symmetric SpMV
-    let indptr_buffer = device.create_buffer(indptr)?;
-    let indices_buffer = device.create_buffer(indices)?;
-    let data_buffer = device.create_buffer(data)?;
-    let x_buffer = device.create_buffer(x.as_slice().unwrap())?;
-    let mut y_buffer = device.create_buffer_zeros::<T>(rows)?;
+    // Convert data to f32 for GPU processing
+    let data_f32: Vec<f32> = data.iter().map(|&v| v.to_f64().unwrap() as f32).collect();
+    let x_f32: Vec<f32> = x.iter().map(|&v| v.to_f64().unwrap() as f32).collect();
+    let indptr_u32: Vec<u32> = indptr.iter().map(|&v| v as u32).collect();
+    let indices_u32: Vec<u32> = indices.iter().map(|&v| v as u32).collect();
 
-    // Create and execute symmetric SpMV kernel
-    let sym_spmv_kernel = SpMSKernel::new(&device, options.workgroup_size)?;
+    // Create GPU buffers using scirs2-core
+    let indptr_buffer = gpu_context.create_buffer(&indptr_u32)
+        .map_err(|e| format!("Failed to create indptr buffer: {}", e))?;
+    let indices_buffer = gpu_context.create_buffer(&indices_u32)
+        .map_err(|e| format!("Failed to create indices buffer: {}", e))?;
+    let data_buffer = gpu_context.create_buffer(&data_f32)
+        .map_err(|e| format!("Failed to create data buffer: {}", e))?;
+    let x_buffer = gpu_context.create_buffer(&x_f32)
+        .map_err(|e| format!("Failed to create x buffer: {}", e))?;
+    let y_buffer = gpu_context.create_buffer_zeros::<f32>(rows)
+        .map_err(|e| format!("Failed to create y buffer: {}", e))?;
 
-    sym_spmv_kernel.execute_symmetric(
-        rows,
-        &indptr_buffer,
-        &indices_buffer,
-        &data_buffer,
-        &x_buffer,
-        &mut y_buffer,
-    )?;
+    // Create symmetric SpMV GPU operation
+    let sym_spmv_operation = create_symmetric_sparse_matvec_operation(rows, options.workgroup_size)?;
 
-    // Copy result back to host
-    let result = y_buffer.to_host()?;
-    Ok(Array1::from_vec(result))
+    // Execute GPU kernel
+    gpu_context.execute_operation(
+        &sym_spmv_operation,
+        &[&indptr_buffer, &indices_buffer, &data_buffer, &x_buffer],
+        &[&y_buffer],
+        (rows, 1, 1)
+    ).map_err(|e| format!("GPU operation failed: {}", e))?;
+
+    // Read back results from GPU
+    let y_f32 = y_buffer.to_host()
+        .map_err(|e| format!("Failed to read GPU results: {}", e))?;
+
+    // Convert back to original type T
+    let y_result: Vec<T> = y_f32.iter()
+        .map(|&v| T::from(v).unwrap())
+        .collect();
+
+    Ok(Array1::from_vec(y_result))
 }
 
 /// CPU fallback implementation
@@ -1511,7 +1542,7 @@ mod tests {
 
         // Check profiling data
         let profiling_data = gpu_ops.get_profiling_data();
-        assert!(profiling_data.len() > 0);
+        assert!(!profiling_data.is_empty());
     }
 
     #[test]
@@ -1562,4 +1593,93 @@ mod tests {
             gpu_ops.gpu_iterative_solve(&matrix, &wrong_size_b.view(), "cg", None, 100, 1e-6);
         assert!(result.is_err());
     }
+}
+
+/// Create a GPU operation for sparse matrix-vector multiplication
+fn create_sparse_matvec_operation(
+    rows: usize,
+    cols: usize,
+    workgroup_size: usize,
+) -> Result<GpuOperation, String> {
+    use scirs2_core::gpu::GpuOperation;
+    
+    // Create a compute shader-based operation for SpMV
+    // This would typically compile OpenCL/CUDA/Metal compute kernels
+    let operation_config = format!(
+        r#"
+        // Sparse Matrix-Vector Multiplication Kernel
+        // workgroup_size: {workgroup_size}
+        // matrix_size: {rows}x{cols}
+        
+        kernel sparse_matvec(
+            global const uint* indptr,
+            global const uint* indices, 
+            global const float* data,
+            global const float* x,
+            global float* y,
+            const uint rows
+        ) {{
+            const uint tid = get_global_id(0);
+            if (tid >= rows) return;
+            
+            float sum = 0.0f;
+            for (uint j = indptr[tid]; j < indptr[tid + 1]; j++) {{
+                sum += data[j] * x[indices[j]];
+            }}
+            y[tid] = sum;
+        }}
+        "#
+    );
+    
+    GpuOperation::from_kernel_source("sparse_matvec", &operation_config, workgroup_size)
+        .map_err(|e| format!("Failed to create SpMV operation: {}", e))
+}
+
+/// Create a GPU operation for symmetric sparse matrix-vector multiplication
+fn create_symmetric_sparse_matvec_operation(
+    rows: usize,
+    workgroup_size: usize,
+) -> Result<GpuOperation, String> {
+    use scirs2_core::gpu::GpuOperation;
+    
+    // Create a compute shader-based operation for symmetric SpMV
+    // This exploits symmetry by processing both upper and lower triangular parts
+    let operation_config = format!(
+        r#"
+        // Symmetric Sparse Matrix-Vector Multiplication Kernel
+        // workgroup_size: {workgroup_size}
+        // matrix_size: {rows}x{rows}
+        
+        kernel symmetric_sparse_matvec(
+            global const uint* indptr,
+            global const uint* indices,
+            global const float* data,
+            global const float* x,
+            global float* y,
+            const uint rows
+        ) {{
+            const uint tid = get_global_id(0);
+            if (tid >= rows) return;
+            
+            float sum = 0.0f;
+            
+            // Process lower triangular part (stored explicitly)
+            for (uint j = indptr[tid]; j < indptr[tid + 1]; j++) {{
+                uint col = indices[j];
+                float val = data[j];
+                sum += val * x[col];
+                
+                // Add symmetric contribution (upper triangular)
+                if (col != tid) {{
+                    atomic_add_global(&y[col], val * x[tid]);
+                }}
+            }}
+            
+            y[tid] = sum;
+        }}
+        "#
+    );
+    
+    GpuOperation::from_kernel_source("symmetric_sparse_matvec", &operation_config, workgroup_size)
+        .map_err(|e| format!("Failed to create symmetric SpMV operation: {}", e))
 }

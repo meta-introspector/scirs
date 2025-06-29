@@ -349,13 +349,13 @@ impl BenchmarkSuite {
                 metrics.push(self.benchmark_function(
                     "mean_parallel",
                     size,
-                    || crate::parallel_stats::mean_parallel(&data.view(), num_threads()),
+                    || crate::parallel_stats::mean_parallel(&data.view()),
                 )?);
 
                 metrics.push(self.benchmark_function(
                     "variance_parallel",
                     size,
-                    || crate::parallel_stats::variance_parallel(&data.view(), 1, num_threads()),
+                    || crate::parallel_stats::variance_parallel(&data.view(), 1),
                 )?);
             }
         }
@@ -865,7 +865,7 @@ impl BenchmarkSuite {
             cpu_cores: num_threads(),
             simd_capabilities: vec!["SSE2".to_string(), "AVX2".to_string()], // Placeholder
             os_info: std::env::consts::OS.to_string(),
-            rust_version: env!("RUSTC_VERSION").to_string(),
+            rust_version: std::env::var("RUSTC_VERSION").unwrap_or_else(|_| "unknown".to_string()),
         }
     }
 

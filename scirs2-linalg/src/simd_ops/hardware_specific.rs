@@ -4,8 +4,9 @@
 //! including Intel AVX/AVX2/AVX-512 and ARM Neon instruction sets.
 
 use crate::error::{LinalgError, LinalgResult};
-use ndarray::{Array1, ArrayView1, ArrayView2};
+use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, NumAssign, One, Zero};
+use scirs2_core::parallel_ops::*;
 
 /// Hardware capabilities detection
 #[derive(Debug, Clone, Copy)]
@@ -39,6 +40,90 @@ impl HardwareCapabilities {
             16 // ARM Neon and SSE both use 128-bit vectors (16 bytes)
         }
     }
+}
+
+/// Hardware-optimized dot product computation
+#[allow(dead_code)]
+pub fn hardware_optimized_dot<F>(
+    x: &ArrayView1<F>,
+    y: &ArrayView1<F>,
+    capabilities: &HardwareCapabilities,
+) -> LinalgResult<F>
+where
+    F: Float + NumAssign + Zero + Send + Sync + 'static,
+{
+    if x.len() != y.len() {
+        return Err(LinalgError::ShapeError(format!(
+            "Vector lengths must match: {} vs {}",
+            x.len(),
+            y.len()
+        )));
+    }
+
+    let n = x.len();
+    let mut result = F::zero();
+
+    // Choose optimization based on available hardware and type
+    if std::any::TypeId::of::<F>() == std::any::TypeId::of::<f64>() {
+        if capabilities.has_avx2 && n >= 16 {
+            unsafe {
+                let raw_result = avx2_dot_f64(
+                    x.as_ptr() as *const f64,
+                    y.as_ptr() as *const f64,
+                    n,
+                )?;
+                result = F::from(raw_result).unwrap_or(F::zero());
+            }
+        } else if capabilities.has_neon && cfg!(target_arch = "aarch64") && n >= 8 {
+            #[cfg(target_arch = "aarch64")]
+            unsafe {
+                let raw_result = neon_dot_f64(
+                    x.as_ptr() as *const f64,
+                    y.as_ptr() as *const f64,
+                    n,
+                )?;
+                result = F::from(raw_result).unwrap_or(F::zero());
+            }
+        } else {
+            // Fallback to standard implementation
+            for i in 0..n {
+                result += x[i] * y[i];
+            }
+        }
+    } else if std::any::TypeId::of::<F>() == std::any::TypeId::of::<f32>() {
+        if capabilities.has_avx2 && n >= 32 {
+            unsafe {
+                let raw_result = avx2_dot_f32(
+                    x.as_ptr() as *const f32,
+                    y.as_ptr() as *const f32,
+                    n,
+                )?;
+                result = F::from(raw_result).unwrap_or(F::zero());
+            }
+        } else if capabilities.has_neon && cfg!(target_arch = "aarch64") && n >= 16 {
+            #[cfg(target_arch = "aarch64")]
+            unsafe {
+                let raw_result = neon_dot_f32(
+                    x.as_ptr() as *const f32,
+                    y.as_ptr() as *const f32,
+                    n,
+                )?;
+                result = F::from(raw_result).unwrap_or(F::zero());
+            }
+        } else {
+            // Fallback to standard implementation
+            for i in 0..n {
+                result += x[i] * y[i];
+            }
+        }
+    } else {
+        // Fallback for other types
+        for i in 0..n {
+            result += x[i] * y[i];
+        }
+    }
+
+    Ok(result)
 }
 
 /// Hardware-optimized matrix-vector multiplication
@@ -328,68 +413,6 @@ unsafe fn neon_matvec_f32(
     Ok(())
 }
 
-/// Hardware-optimized dot product
-#[allow(dead_code)]
-pub fn hardware_optimized_dot<F>(
-    x: &ArrayView1<F>,
-    y: &ArrayView1<F>,
-    capabilities: &HardwareCapabilities,
-) -> LinalgResult<F>
-where
-    F: Float + NumAssign + Zero + One + Send + Sync + 'static,
-{
-    if x.len() != y.len() {
-        return Err(LinalgError::ShapeError(format!(
-            "Vector lengths must match: {} != {}",
-            x.len(),
-            y.len()
-        )));
-    }
-
-    let n = x.len();
-    let mut result = F::zero();
-
-    // Choose optimization based on available hardware and data type
-    if std::any::TypeId::of::<F>() == std::any::TypeId::of::<f64>() {
-        if capabilities.has_avx2 && n >= 4 {
-            unsafe {
-                let avx_result =
-                    avx2_dot_f64(x.as_ptr() as *const f64, y.as_ptr() as *const f64, n)?;
-                result = *(&avx_result as *const f64 as *const F);
-            }
-        } else if capabilities.has_neon && cfg!(target_arch = "aarch64") && n >= 2 {
-            #[cfg(target_arch = "aarch64")]
-            unsafe {
-                let neon_result =
-                    neon_dot_f64(x.as_ptr() as *const f64, y.as_ptr() as *const f64, n)?;
-                result = *(&neon_result as *const f64 as *const F);
-            }
-        } else {
-            return Ok(standard_dot(x, y));
-        }
-    } else if std::any::TypeId::of::<F>() == std::any::TypeId::of::<f32>() {
-        if capabilities.has_avx2 && n >= 8 {
-            unsafe {
-                let avx_result =
-                    avx2_dot_f32(x.as_ptr() as *const f32, y.as_ptr() as *const f32, n)?;
-                result = *(&avx_result as *const f32 as *const F);
-            }
-        } else if capabilities.has_neon && cfg!(target_arch = "aarch64") && n >= 4 {
-            #[cfg(target_arch = "aarch64")]
-            unsafe {
-                let neon_result =
-                    neon_dot_f32(x.as_ptr() as *const f32, y.as_ptr() as *const f32, n)?;
-                result = *(&neon_result as *const f32 as *const F);
-            }
-        } else {
-            return Ok(standard_dot(x, y));
-        }
-    } else {
-        return Ok(standard_dot(x, y));
-    }
-
-    Ok(result)
-}
 
 /// Standard fallback dot product
 fn standard_dot<F>(x: &ArrayView1<F>, y: &ArrayView1<F>) -> F
@@ -529,6 +552,199 @@ unsafe fn neon_dot_f32(x_ptr: *const f32, y_ptr: *const f32, n: usize) -> Linalg
         i += 1;
     }
 
+    Ok(result)
+}
+
+/// ARM Neon-optimized dot product for f64
+#[cfg(target_arch = "aarch64")]
+#[target_feature(enable = "neon")]
+unsafe fn neon_dot_f64(x_ptr: *const f64, y_ptr: *const f64, n: usize) -> LinalgResult<f64> {
+    use std::arch::aarch64::*;
+
+    const BLOCK_SIZE: usize = 2;
+    let mut sum = vdupq_n_f64(0.0);
+
+    // Process 2 elements at a time
+    let mut i = 0;
+    while i + BLOCK_SIZE <= n {
+        let x_vec = vld1q_f64(x_ptr.add(i));
+        let y_vec = vld1q_f64(y_ptr.add(i));
+        sum = vfmaq_f64(sum, x_vec, y_vec);
+        i += BLOCK_SIZE;
+    }
+
+    // Horizontal sum
+    let mut result = vaddvq_f64(sum);
+
+    // Handle remaining elements
+    while i < n {
+        result += *x_ptr.add(i) * *y_ptr.add(i);
+        i += 1;
+    }
+
+    Ok(result)
+}
+
+
+/// SIMD-Parallel hybrid matrix multiplication for large matrices
+/// 
+/// This function combines SIMD vectorization with parallel processing
+/// to achieve optimal performance for large matrix operations.
+pub fn simd_parallel_gemm<F>(
+    a: &ArrayView2<F>,
+    b: &ArrayView2<F>,
+    workers: usize,
+    capabilities: &HardwareCapabilities,
+) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + Zero + One + Send + Sync + 'static,
+{
+    let (m, k) = a.dim();
+    let (k2, n) = b.dim();
+
+    if k != k2 {
+        return Err(LinalgError::ShapeError(format!(
+            "Matrix dimensions incompatible: {}x{} * {}x{}",
+            m, k, k2, n
+        )));
+    }
+
+    // For small matrices, use sequential SIMD
+    if m * n < 10000 || workers == 1 {
+        return hardware_optimized_gemm(a, b, capabilities);
+    }
+
+    let mut result = Array2::zeros((m, n));
+    
+    // Determine optimal block size based on hardware capabilities
+    let simd_width = capabilities.optimal_vector_width();
+    let cache_block_size = if capabilities.has_avx2 {
+        256 // Medium blocks for AVX2
+    } else {
+        128 // Smaller blocks for SSE/Neon
+    };
+
+    // Parallel block processing using scirs2_core parallel operations
+    let chunks: Vec<(usize, usize)> = (0..workers)
+        .map(|worker_id| {
+            let rows_per_worker = (m + workers - 1) / workers;
+            let start_row = worker_id * rows_per_worker;
+            let end_row = ((worker_id + 1) * rows_per_worker).min(m);
+            (start_row, end_row)
+        })
+        .filter(|(start, end)| start < end)
+        .collect();
+
+    let results: Vec<Array2<F>> = parallel_map(chunks, |(start_row, end_row)| {
+        let a_block = a.slice(s![start_row..end_row, ..]);
+        hardware_optimized_gemm_block(
+            &a_block,
+            b,
+            capabilities,
+            cache_block_size,
+            simd_width,
+        ).unwrap()
+    });
+
+    // Assemble results
+    for (i, (start_row, _)) in chunks.iter().enumerate() {
+        let block_result = &results[i];
+        for (row_idx, row) in block_result.axis_iter(ndarray::Axis(0)).enumerate() {
+            for (col_idx, &val) in row.iter().enumerate() {
+                result[[start_row + row_idx, col_idx]] = val;
+            }
+        }
+    }
+
+    Ok(result)
+}
+
+/// Hardware-optimized GEMM for sequential execution
+fn hardware_optimized_gemm<F>(
+    a: &ArrayView2<F>,
+    b: &ArrayView2<F>,
+    capabilities: &HardwareCapabilities,
+) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + Zero + Send + Sync + 'static,
+{
+    let (m, k) = a.dim();
+    let (_, n) = b.dim();
+    
+    let mut result = Array2::zeros((m, n));
+    let cache_block_size = capabilities.optimal_vector_width() * 4;
+    
+    // Blocked GEMM with SIMD optimization
+    for ii in (0..m).step_by(cache_block_size) {
+        for jj in (0..n).step_by(cache_block_size) {
+            for kk in (0..k).step_by(cache_block_size) {
+                let i_end = (ii + cache_block_size).min(m);
+                let j_end = (jj + cache_block_size).min(n);
+                let k_end = (kk + cache_block_size).min(k);
+                
+                // Process each block using SIMD operations
+                for i in ii..i_end {
+                    for j in jj..j_end {
+                        let a_row = a.slice(s![i, kk..k_end]);
+                        let b_col = b.slice(s![kk..k_end, j]);
+                        
+                        // Use hardware-optimized dot product
+                        let dot_result = hardware_optimized_dot(
+                            &a_row,
+                            &b_col,
+                            capabilities,
+                        )?;
+                        result[[i, j]] += dot_result;
+                    }
+                }
+            }
+        }
+    }
+    
+    Ok(result)
+}
+
+/// Hardware-optimized block GEMM for worker threads
+fn hardware_optimized_gemm_block<F>(
+    a: &ArrayView2<F>,
+    b: &ArrayView2<F>,
+    capabilities: &HardwareCapabilities,
+    cache_block_size: usize,
+    _simd_width: usize,
+) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + Zero + Send + Sync + 'static,
+{
+    let (m, k) = a.dim();
+    let (_, n) = b.dim();
+    
+    let mut result = Array2::zeros((m, n));
+    
+    // Optimized block multiplication
+    for ii in (0..m).step_by(cache_block_size) {
+        for jj in (0..n).step_by(cache_block_size) {
+            for kk in (0..k).step_by(cache_block_size) {
+                let i_end = (ii + cache_block_size).min(m);
+                let j_end = (jj + cache_block_size).min(n);
+                let k_end = (kk + cache_block_size).min(k);
+                
+                for i in ii..i_end {
+                    for j in jj..j_end {
+                        let a_row = a.slice(s![i, kk..k_end]);
+                        let b_col = b.slice(s![kk..k_end, j]);
+                        
+                        let dot_result = hardware_optimized_dot(
+                            &a_row,
+                            &b_col,
+                            capabilities,
+                        )?;
+                        result[[i, j]] += dot_result;
+                    }
+                }
+            }
+        }
+    }
+    
     Ok(result)
 }
 

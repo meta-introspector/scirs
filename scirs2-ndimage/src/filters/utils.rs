@@ -5,7 +5,7 @@ use num_traits::{Float, FromPrimitive, Zero};
 use std::fmt::Debug;
 
 #[cfg(feature = "parallel")]
-use rayon::prelude::*;
+use scirs2_core::parallel_ops::*;
 
 use super::BorderMode;
 use crate::error::{NdimageError, NdimageResult};

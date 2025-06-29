@@ -471,7 +471,7 @@ impl PersonalizedFL {
 
         // Initialize cluster assignments randomly
         for &client_id in client_ids {
-            let cluster = rng.gen_range(0..num_clusters);
+            let cluster = rng.random_range(0..num_clusters);
             self.cluster_assignments.insert(client_id, cluster);
         }
 

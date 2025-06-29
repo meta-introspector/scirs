@@ -16,8 +16,12 @@ pub mod replay_buffer;
 pub mod trpo;
 pub mod value;
 
-pub use actor_critic::{ActorCritic, A2C, A3C, PPO, SAC};
-pub use advanced_algorithms::{IMPALAConfig, RainbowConfig, RainbowDQN, TD3Config, IMPALA, TD3};
+pub use actor_critic::{ActorCritic, A2C, A3C, PPO, SAC as ActorCriticSAC};
+pub use advanced_algorithms::{
+    IMPALAConfig, RainbowConfig, RainbowDQN, TD3Config, IMPALA, TD3,
+    SAC, SACConfig, ExplorationStrategy, ExplorationStrategyType, ExplorationConfig,
+    MADDPG, MADDPGConfig, EnhancedQNetwork,
+};
 pub use advanced_environments::{
     MultiAgentEnvironment, MultiAgentGridWorld, MultiAgentWrapper, PursuitEvasion,
 };
@@ -29,7 +33,7 @@ pub use policy::{Policy, PolicyGradient, PolicyNetwork};
 pub use policy_optimization::{
     CuriosityConfig, CuriosityDrivenAgent, MAMLAgent, MAMLConfig, NPGConfig, NaturalPolicyGradient,
 };
-pub use replay_buffer::{PrioritizedReplayBuffer, ReplayBuffer};
+pub use replay_buffer::{PrioritizedReplayBuffer, ReplayBuffer, ReplayBufferTrait};
 pub use trpo::{TRPOConfig, TRPO};
 pub use value::{DoubleDQN, QNetwork, ValueNetwork, DQN};
 

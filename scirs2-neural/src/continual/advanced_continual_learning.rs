@@ -176,7 +176,7 @@ pub struct LateralConnection {
     /// Connection weights
     weights: Array2<f32>,
     /// Adapter layer for dimension matching
-    adapter: Option<Dense>,
+    adapter: Option<Dense<f32>>,
 }
 
 impl LateralConnection {
@@ -190,7 +190,7 @@ impl LateralConnection {
     ) -> Result<Self> {
         let weights = Array2::from_shape_fn((target_dim, source_dim), |_| {
             use rand::Rng;
-            rand::rng().gen_range(-0.1..0.1)
+            rand::rng().random_range(-0.1..0.1)
         });
 
         let adapter = if source_dim != target_dim {
@@ -703,7 +703,24 @@ impl PackNet {
             stats.insert(format!("task_{}", task_id), avg_capacity);
         }
 
+        // Add overall statistics
+        let total_capacity: f32 = stats.values().sum::<f32>() / stats.len().max(1) as f32;
+        stats.insert("average_capacity".to_string(), total_capacity);
+        stats.insert("num_tasks".to_string(), self.task_masks.len() as f32);
+
         stats
+    }
+    
+    /// Get detailed task information
+    #[allow(dead_code)]
+    pub fn get_task_info(&self) -> Vec<(usize, f32)> {
+        self.task_masks.iter()
+            .map(|(task_id, mask)| {
+                let avg_capacity = mask.available_capacity.iter().sum::<f32>() 
+                    / mask.available_capacity.len() as f32;
+                (*task_id, avg_capacity)
+            })
+            .collect()
     }
 }
 

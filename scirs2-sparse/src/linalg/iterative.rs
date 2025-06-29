@@ -986,8 +986,8 @@ where
         });
     }
 
-    for i in 0..u.len() {
-        u[i] = u[i] / alpha;
+    for element in &mut u {
+        *element /= alpha;
     }
 
     let mut v = a.rmatvec(&u)?;
@@ -995,8 +995,8 @@ where
 
     let mut w = v.clone();
     if beta != F::zero() {
-        for i in 0..w.len() {
-            w[i] = w[i] / beta;
+        for element in &mut w {
+            *element /= beta;
         }
     }
 

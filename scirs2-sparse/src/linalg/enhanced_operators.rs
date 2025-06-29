@@ -97,6 +97,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
             result = values;
         } else {
             // Sequential computation for small vectors
+            #[allow(clippy::needless_range_loop)]
             for i in 0..x.len() {
                 result[i] = self.diagonal[i] * x[i];
             }
@@ -430,6 +431,136 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> Convoluti
         }
     }
 
+    /// Parallel optimization for large convolutions
+    fn optimize_convolution_parallel(&self, result: &mut [F], x: &[F]) -> SparseResult<()> {
+        use scirs2_core::parallel_ops::*;
+        
+        // Split the output computation across parallel chunks
+        let chunk_size = self.options.chunk_size.min(self.output_size);
+        let indices: Vec<usize> = (0..self.output_size).collect();
+        let chunks: Vec<&[usize]> = indices.chunks(chunk_size).collect();
+        
+        let parallel_results: Vec<Vec<F>> = parallel_map(&chunks, |chunk| {
+            let mut chunk_result = vec![F::zero(); chunk.len()];
+            
+            for (local_i, &global_i) in chunk.iter().enumerate() {
+                chunk_result[local_i] = self.compute_convolution_at_index(global_i, x);
+            }
+            
+            chunk_result
+        });
+        
+        // Collect results back into the main result vector
+        let mut result_idx = 0;
+        for chunk_result in parallel_results {
+            for val in chunk_result {
+                if result_idx < result.len() {
+                    result[result_idx] = val;
+                    result_idx += 1;
+                }
+            }
+        }
+        
+        Ok(())
+    }
+    
+    /// SIMD optimization for medium-sized convolutions
+    fn optimize_convolution_simd(&self, result: &mut [F], x: &[F]) -> SparseResult<()> {
+        // For SIMD optimization, we can vectorize the inner product computation
+        // when the kernel is sufficiently large
+        
+        #[allow(clippy::needless_range_loop)]
+        for i in 0..self.output_size {
+            // Use SIMD-optimized dot product for kernel computation
+            let convolution_result = self.compute_convolution_at_index_simd(i, x);
+            result[i] = convolution_result;
+        }
+        
+        Ok(())
+    }
+    
+    /// Compute convolution at a specific output index (scalar version)
+    fn compute_convolution_at_index(&self, i: usize, x: &[F]) -> F {
+        let mut sum = F::zero();
+        
+        match self.mode {
+            ConvolutionMode::Full => {
+                for (j, &kernel_val) in self.kernel.iter().enumerate() {
+                    if i >= j && (i - j) < x.len() {
+                        sum += kernel_val * x[i - j];
+                    }
+                }
+            }
+            ConvolutionMode::Same => {
+                let pad = self.kernel.len() / 2;
+                for (j, &kernel_val) in self.kernel.iter().enumerate() {
+                    let idx = i + j;
+                    if idx >= pad && (idx - pad) < x.len() {
+                        sum += kernel_val * x[idx - pad];
+                    }
+                }
+            }
+            ConvolutionMode::Valid => {
+                for (j, &kernel_val) in self.kernel.iter().enumerate() {
+                    let idx = i + j;
+                    if idx < x.len() {
+                        sum += kernel_val * x[idx];
+                    }
+                }
+            }
+        }
+        
+        sum
+    }
+    
+    /// Compute convolution at a specific output index using SIMD optimization
+    fn compute_convolution_at_index_simd(&self, i: usize, x: &[F]) -> F {
+        // Extract relevant portions of kernel and input for this output position
+        let mut x_segment = Vec::new();
+        let mut kernel_segment = Vec::new();
+        
+        match self.mode {
+            ConvolutionMode::Full => {
+                for (j, &kernel_val) in self.kernel.iter().enumerate() {
+                    if i >= j && (i - j) < x.len() {
+                        kernel_segment.push(kernel_val);
+                        x_segment.push(x[i - j]);
+                    }
+                }
+            }
+            ConvolutionMode::Same => {
+                let pad = self.kernel.len() / 2;
+                for (j, &kernel_val) in self.kernel.iter().enumerate() {
+                    let idx = i + j;
+                    if idx >= pad && (idx - pad) < x.len() {
+                        kernel_segment.push(kernel_val);
+                        x_segment.push(x[idx - pad]);
+                    }
+                }
+            }
+            ConvolutionMode::Valid => {
+                for (j, &kernel_val) in self.kernel.iter().enumerate() {
+                    let idx = i + j;
+                    if idx < x.len() {
+                        kernel_segment.push(kernel_val);
+                        x_segment.push(x[idx]);
+                    }
+                }
+            }
+        }
+        
+        // Use SIMD-optimized dot product if segments are large enough
+        if kernel_segment.len() >= self.options.simd_threshold {
+            use ndarray::ArrayView1;
+            let kernel_view = ArrayView1::from(&kernel_segment);
+            let x_view = ArrayView1::from(&x_segment);
+            F::simd_dot(&kernel_view, &x_view)
+        } else {
+            // Fall back to scalar computation for small segments
+            kernel_segment.iter().zip(x_segment.iter()).map(|(&k, &x)| k * x).sum()
+        }
+    }
+
     /// Create with custom options
     pub fn with_options(
         kernel: Vec<F>,
@@ -492,6 +623,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
             }
             ConvolutionMode::Same => {
                 let pad = self.kernel.len() / 2;
+                #[allow(clippy::needless_range_loop)]
                 for i in 0..self.output_size {
                     let mut sum = F::zero();
                     for (j, &kernel_val) in self.kernel.iter().enumerate() {
@@ -504,6 +636,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
                 }
             }
             ConvolutionMode::Valid => {
+                #[allow(clippy::needless_range_loop)]
                 for i in 0..self.output_size {
                     let mut sum = F::zero();
                     for (j, &kernel_val) in self.kernel.iter().enumerate() {
@@ -517,7 +650,13 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
             }
         }
 
-        // TODO: Add parallel/SIMD optimization for large convolutions
+        // Apply parallel/SIMD optimization for large convolutions
+        if self.options.use_parallel && self.output_size >= self.options.parallel_threshold {
+            self.optimize_convolution_parallel(&mut result, x)?;
+        } else if self.options.use_simd && self.kernel.len() >= self.options.simd_threshold {
+            self.optimize_convolution_simd(&mut result, x)?;
+        }
+
         Ok(result)
     }
 
@@ -540,6 +679,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
         // Implement correlation (adjoint of convolution)
         match self.mode {
             ConvolutionMode::Full => {
+                #[allow(clippy::needless_range_loop)]
                 for i in 0..self.input_size {
                     let mut sum = F::zero();
                     for (j, &kernel_val) in flipped_kernel.iter().enumerate() {
@@ -678,6 +818,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
         let coeffs = self.get_coefficients();
         let stencil_radius = coeffs.len() / 2;
 
+        #[allow(clippy::needless_range_loop)]
         for i in 0..self.size {
             let mut sum = F::zero();
             for (j, &coeff) in coeffs.iter().enumerate() {
@@ -867,6 +1008,7 @@ mod tests {
         let y = fd_op.matvec(&x).unwrap();
 
         // First derivative of linear function should be approximately 1
+        #[allow(clippy::needless_range_loop)]
         for i in 1..y.len() - 1 {
             assert_relative_eq!(y[i], 1.0, epsilon = 0.1);
         }
@@ -881,6 +1023,7 @@ mod tests {
         let y = fd_op.matvec(&x).unwrap();
 
         // Second derivative of x^2 should be approximately 2
+        #[allow(clippy::needless_range_loop)]
         for i in 1..y.len() - 1 {
             assert_relative_eq!(y[i], 2.0, epsilon = 0.5);
         }

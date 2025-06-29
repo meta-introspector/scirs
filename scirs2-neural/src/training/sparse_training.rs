@@ -285,7 +285,7 @@ pub struct SparseTrainer<F: Float + Debug + FromPrimitive + Send + Sync + Zero +
     in_recovery: bool,
 }
 
-impl<F: Float + Debug + FromPrimitive + Send + Sync + Zero + PartialOrd> SparseTrainer<F> {
+impl<F: Float + Debug + FromPrimitive + Send + Sync + Zero + PartialOrd + ndarray::ScalarOperand> SparseTrainer<F> {
     /// Create a new sparse trainer
     pub fn new(config: SparseTrainingConfig) -> Self {
         let pruning_schedule = Self::create_pruning_schedule(&config);
@@ -657,35 +657,394 @@ impl<F: Float + Debug + FromPrimitive + Send + Sync + Zero + PartialOrd> SparseT
 
     // Helper functions (simplified implementations)
 
-    fn prune_filters<L: ParamLayer<F>>(&mut self, _model: &mut L) -> Result<()> {
-        // Simplified implementation - would need proper layer analysis
+    fn prune_filters<L: ParamLayer<F>>(&mut self, model: &mut L) -> Result<()> {
+        let params = model.parameters_mut();
+        
+        for (param_name, param) in params.iter_mut() {
+            // Assume weights are 4D for conv layers (out_channels, in_channels, height, width)
+            if param.ndim() == 4 {
+                let shape = param.shape();
+                let out_channels = shape[0];
+                let scores = self.compute_filter_importance(param);
+                
+                // Determine which filters to prune based on importance scores
+                let target_pruned = (out_channels as f64 * self.current_sparsity) as usize;
+                let mut indexed_scores: Vec<(usize, f64)> = scores
+                    .iter()
+                    .enumerate()
+                    .map(|(i, &score)| (i, score))
+                    .collect();
+                
+                // Sort by importance (ascending - prune least important)
+                indexed_scores.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+                
+                // Zero out the least important filters
+                for i in 0..target_pruned.min(out_channels) {
+                    let filter_idx = indexed_scores[i].0;
+                    // Zero out entire filter across all input channels
+                    for in_ch in 0..shape[1] {
+                        for h in 0..shape[2] {
+                            for w in 0..shape[3] {
+                                param[[filter_idx, in_ch, h, w]] = F::zero();
+                            }
+                        }
+                    }
+                }
+                
+                // Update sparsity mask
+                if let Some(mask) = self.masks.get_mut(param_name) {
+                    let mask_shape = mask.mask.shape().to_vec();
+                    for i in 0..target_pruned.min(out_channels) {
+                        let filter_idx = indexed_scores[i].0;
+                        if mask_shape.len() == 4 {
+                            for in_ch in 0..mask_shape[1] {
+                                for h in 0..mask_shape[2] {
+                                    for w in 0..mask_shape[3] {
+                                        if let Some(elem) = mask.mask.get_mut([filter_idx, in_ch, h, w].as_slice()) {
+                                            *elem = false;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    mask.sparsity = self.current_sparsity;
+                }
+            }
+        }
         Ok(())
     }
 
     fn prune_channel_groups<L: ParamLayer<F>>(
         &mut self,
-        _model: &mut L,
-        _group_size: usize,
+        model: &mut L,
+        group_size: usize,
     ) -> Result<()> {
-        // Simplified implementation
+        let params = model.parameters_mut();
+        
+        for (param_name, param) in params.iter_mut() {
+            // Assume weights are 4D for conv layers (out_channels, in_channels, height, width)
+            if param.ndim() == 4 {
+                let shape = param.shape();
+                let in_channels = shape[1];
+                let num_groups = (in_channels + group_size - 1) / group_size; // Ceiling division
+                
+                // Compute importance scores for each channel group
+                let mut group_scores = Vec::with_capacity(num_groups);
+                
+                for group_idx in 0..num_groups {
+                    let start_ch = group_idx * group_size;
+                    let end_ch = (start_ch + group_size).min(in_channels);
+                    
+                    // Compute L2 norm of all weights in this channel group
+                    let mut group_magnitude = F::zero();
+                    for out_ch in 0..shape[0] {
+                        for in_ch in start_ch..end_ch {
+                            for h in 0..shape[2] {
+                                for w in 0..shape[3] {
+                                    let weight = param[[out_ch, in_ch, h, w]];
+                                    group_magnitude = group_magnitude + weight * weight;
+                                }
+                            }
+                        }
+                    }
+                    group_scores.push((group_idx, group_magnitude.to_f64().unwrap_or(0.0)));
+                }
+                
+                // Sort groups by importance (ascending - prune least important)
+                group_scores.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+                
+                // Determine how many groups to prune
+                let target_pruned_groups = (num_groups as f64 * self.current_sparsity) as usize;
+                
+                // Zero out the least important channel groups
+                for i in 0..target_pruned_groups.min(num_groups) {
+                    let group_idx = group_scores[i].0;
+                    let start_ch = group_idx * group_size;
+                    let end_ch = (start_ch + group_size).min(in_channels);
+                    
+                    for out_ch in 0..shape[0] {
+                        for in_ch in start_ch..end_ch {
+                            for h in 0..shape[2] {
+                                for w in 0..shape[3] {
+                                    param[[out_ch, in_ch, h, w]] = F::zero();
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Update sparsity mask
+                if let Some(mask) = self.masks.get_mut(param_name) {
+                    let mask_shape = mask.mask.shape().to_vec();
+                    for i in 0..target_pruned_groups.min(num_groups) {
+                        let group_idx = group_scores[i].0;
+                        let start_ch = group_idx * group_size;
+                        let end_ch = (start_ch + group_size).min(in_channels);
+                        
+                        if mask_shape.len() == 4 {
+                            for out_ch in 0..mask_shape[0] {
+                                for in_ch in start_ch..end_ch.min(mask_shape[1]) {
+                                    for h in 0..mask_shape[2] {
+                                        for w in 0..mask_shape[3] {
+                                            if let Some(elem) = mask.mask.get_mut([out_ch, in_ch, h, w].as_slice()) {
+                                                *elem = false;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    mask.sparsity = self.current_sparsity;
+                }
+            }
+        }
         Ok(())
     }
 
     fn prune_blocks<L: ParamLayer<F>>(
         &mut self,
-        _model: &mut L,
-        _block_h: usize,
-        _block_w: usize,
+        model: &mut L,
+        block_h: usize,
+        block_w: usize,
     ) -> Result<()> {
-        // Simplified implementation
+        let params = model.parameters_mut();
+        
+        for (param_name, param) in params.iter_mut() {
+            // Handle both 2D (dense layers) and 4D (conv layers) weights
+            match param.ndim() {
+                2 => {
+                    // Dense layer: (out_features, in_features)
+                    let shape = param.shape();
+                    let out_features = shape[0];
+                    let in_features = shape[1];
+                    
+                    // Calculate number of blocks
+                    let blocks_h = (out_features + block_h - 1) / block_h;
+                    let blocks_w = (in_features + block_w - 1) / block_w;
+                    let total_blocks = blocks_h * blocks_w;
+                    
+                    // Compute importance score for each block
+                    let mut block_scores = Vec::with_capacity(total_blocks);
+                    
+                    for block_row in 0..blocks_h {
+                        for block_col in 0..blocks_w {
+                            let start_row = block_row * block_h;
+                            let end_row = (start_row + block_h).min(out_features);
+                            let start_col = block_col * block_w;
+                            let end_col = (start_col + block_w).min(in_features);
+                            
+                            // Compute L2 norm of weights in this block
+                            let mut block_magnitude = F::zero();
+                            for row in start_row..end_row {
+                                for col in start_col..end_col {
+                                    let weight = param[[row, col]];
+                                    block_magnitude = block_magnitude + weight * weight;
+                                }
+                            }
+                            
+                            block_scores.push(((block_row, block_col), block_magnitude.to_f64().unwrap_or(0.0)));
+                        }
+                    }
+                    
+                    // Sort blocks by importance (ascending - prune least important)
+                    block_scores.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+                    
+                    // Determine how many blocks to prune
+                    let target_pruned_blocks = (total_blocks as f64 * self.current_sparsity) as usize;
+                    
+                    // Zero out the least important blocks
+                    for i in 0..target_pruned_blocks.min(total_blocks) {
+                        let (block_row, block_col) = block_scores[i].0;
+                        let start_row = block_row * block_h;
+                        let end_row = (start_row + block_h).min(out_features);
+                        let start_col = block_col * block_w;
+                        let end_col = (start_col + block_w).min(in_features);
+                        
+                        for row in start_row..end_row {
+                            for col in start_col..end_col {
+                                param[[row, col]] = F::zero();
+                            }
+                        }
+                    }
+                    
+                    // Update sparsity mask
+                    if let Some(mask) = self.masks.get_mut(param_name) {
+                        let mask_shape = mask.mask.shape().to_vec();
+                        if mask_shape.len() == 2 {
+                            for i in 0..target_pruned_blocks.min(total_blocks) {
+                                let (block_row, block_col) = block_scores[i].0;
+                                let start_row = block_row * block_h;
+                                let end_row = (start_row + block_h).min(mask_shape[0]);
+                                let start_col = block_col * block_w;
+                                let end_col = (start_col + block_w).min(mask_shape[1]);
+                                
+                                for row in start_row..end_row {
+                                    for col in start_col..end_col {
+                                        if let Some(elem) = mask.mask.get_mut([row, col].as_slice()) {
+                                            *elem = false;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        mask.sparsity = self.current_sparsity;
+                    }
+                }
+                4 => {
+                    // Conv layer: (out_channels, in_channels, height, width)
+                    let shape = param.shape();
+                    let out_channels = shape[0];
+                    let in_channels = shape[1];
+                    let kernel_h = shape[2];
+                    let kernel_w = shape[3];
+                    
+                    // For conv layers, apply block pruning to the spatial dimensions
+                    if kernel_h >= block_h && kernel_w >= block_w {
+                        let blocks_h = kernel_h / block_h;
+                        let blocks_w = kernel_w / block_w;
+                        let total_blocks_per_filter = blocks_h * blocks_w;
+                        
+                        // Apply block pruning to each filter independently
+                        for out_ch in 0..out_channels {
+                            for in_ch in 0..in_channels {
+                                let mut block_scores = Vec::with_capacity(total_blocks_per_filter);
+                                
+                                // Compute importance scores for blocks in this filter
+                                for block_row in 0..blocks_h {
+                                    for block_col in 0..blocks_w {
+                                        let start_row = block_row * block_h;
+                                        let end_row = start_row + block_h;
+                                        let start_col = block_col * block_w;
+                                        let end_col = start_col + block_w;
+                                        
+                                        let mut block_magnitude = F::zero();
+                                        for h in start_row..end_row {
+                                            for w in start_col..end_col {
+                                                let weight = param[[out_ch, in_ch, h, w]];
+                                                block_magnitude = block_magnitude + weight * weight;
+                                            }
+                                        }
+                                        
+                                        block_scores.push(((block_row, block_col), block_magnitude.to_f64().unwrap_or(0.0)));
+                                    }
+                                }
+                                
+                                // Sort and prune blocks
+                                block_scores.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+                                let target_pruned = (total_blocks_per_filter as f64 * self.current_sparsity) as usize;
+                                
+                                for i in 0..target_pruned.min(total_blocks_per_filter) {
+                                    let (block_row, block_col) = block_scores[i].0;
+                                    let start_row = block_row * block_h;
+                                    let end_row = start_row + block_h;
+                                    let start_col = block_col * block_w;
+                                    let end_col = start_col + block_w;
+                                    
+                                    for h in start_row..end_row {
+                                        for w in start_col..end_col {
+                                            param[[out_ch, in_ch, h, w]] = F::zero();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                _ => {
+                    // Skip unsupported dimensions
+                    continue;
+                }
+            }
+        }
         Ok(())
     }
 
-    fn convert_to_f32_model<L: ParamLayer<F>>(&self, _model: &L) -> Result<Box<dyn Layer<f32>>> {
-        // Simplified - would need proper model conversion
-        Err(NeuralError::NotImplementedError(
-            "Model conversion not implemented".to_string(),
-        ))
+    fn convert_to_f32_model<L: ParamLayer<F>>(&self, model: &L) -> Result<Box<dyn Layer<f32>>> {
+        // Convert model parameters from generic type F to f32
+        use crate::layers::dense::Dense;
+        
+        let params = model.parameters();
+        
+        // For simplicity, assume we're converting a dense layer
+        // In a full implementation, this would need to handle different layer types
+        if let Some((_, first_param)) = params.iter().next() {
+            match first_param.ndim() {
+                2 => {
+                    // Dense layer
+                    let shape = first_param.shape();
+                    let input_size = shape[1];
+                    let output_size = shape[0];
+                    
+                    // Create a new Dense layer with f32 parameters
+                    let mut dense_layer = Dense::<f32>::new(input_size, output_size)?;
+                    
+                    // Convert and copy weights
+                    if let Some((weight_name, weights)) = params.iter().find(|(name, _)| name.contains("weight")) {
+                        let weight_params = dense_layer.parameters_mut();
+                        if let Some((_, dense_weights)) = weight_params.iter_mut().find(|(name, _)| name.contains("weight")) {
+                            for ((i, j), &val) in weights.indexed_iter() {
+                                dense_weights[[i, j]] = val.to_f32().unwrap_or(0.0);
+                            }
+                        }
+                    }
+                    
+                    // Convert and copy biases if they exist
+                    if let Some((bias_name, biases)) = params.iter().find(|(name, _)| name.contains("bias")) {
+                        let bias_params = dense_layer.parameters_mut();
+                        if let Some((_, dense_biases)) = bias_params.iter_mut().find(|(name, _)| name.contains("bias")) {
+                            for (i, &val) in biases.indexed_iter() {
+                                dense_biases[i] = val.to_f32().unwrap_or(0.0);
+                            }
+                        }
+                    }
+                    
+                    Ok(Box::new(dense_layer))
+                }
+                4 => {
+                    // Convolutional layer - for now return an error as conv layer conversion is more complex
+                    Err(NeuralError::NotImplementedError(
+                        "Convolutional layer conversion not yet implemented".to_string(),
+                    ))
+                }
+                _ => {
+                    Err(NeuralError::NotImplementedError(
+                        format!("Unsupported layer dimension: {}", first_param.ndim()),
+                    ))
+                }
+            }
+        } else {
+            Err(NeuralError::ConfigError(
+                "Model has no parameters to convert".to_string(),
+            ))
+        }
+    }
+
+    fn compute_filter_importance(&self, weights: &Array<F, IxDyn>) -> Vec<f64> {
+        let shape = weights.shape();
+        if shape.len() != 4 {
+            return vec![0.0]; // Not a conv layer
+        }
+        
+        let out_channels = shape[0];
+        let mut importance_scores = Vec::with_capacity(out_channels);
+        
+        for out_ch in 0..out_channels {
+            // Compute L2 norm of the entire filter
+            let mut filter_magnitude = F::zero();
+            for in_ch in 0..shape[1] {
+                for h in 0..shape[2] {
+                    for w in 0..shape[3] {
+                        let weight = weights[[out_ch, in_ch, h, w]];
+                        filter_magnitude = filter_magnitude + weight * weight;
+                    }
+                }
+            }
+            importance_scores.push(filter_magnitude.to_f64().unwrap_or(0.0).sqrt());
+        }
+        
+        importance_scores
     }
 
     fn create_mask_from_scores(&self, mask: &mut SparsityMask, target_sparsity: f64) {

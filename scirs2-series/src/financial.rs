@@ -4104,6 +4104,485 @@ pub mod advanced_technical_indicators {
             senkou_span_b,
         })
     }
+
+    /// Commodity Channel Index (CCI)
+    pub fn cci<F: Float + Clone>(
+        high: &Array1<F>,
+        low: &Array1<F>,
+        close: &Array1<F>,
+        period: usize,
+    ) -> Result<Array1<F>> {
+        if high.len() != low.len() || low.len() != close.len() {
+            return Err(TimeSeriesError::DimensionMismatch {
+                expected: high.len(),
+                actual: close.len(),
+            });
+        }
+
+        if high.len() < period {
+            return Err(TimeSeriesError::InsufficientData {
+                message: "Not enough data for CCI calculation".to_string(),
+                required: period,
+                actual: high.len(),
+            });
+        }
+
+        let n = high.len();
+        let mut typical_prices = Array1::zeros(n);
+        let three = F::from(3.0).unwrap();
+
+        // Calculate typical prices
+        for i in 0..n {
+            typical_prices[i] = (high[i] + low[i] + close[i]) / three;
+        }
+
+        let sma_tp = sma(&typical_prices, period)?;
+        let mut cci = Array1::zeros(sma_tp.len());
+        let constant = F::from(0.015).unwrap();
+
+        for i in 0..cci.len() {
+            let slice = typical_prices.slice(s![i..i + period]);
+            let mean = sma_tp[i];
+            
+            // Calculate mean deviation
+            let mad = slice
+                .iter()
+                .map(|&x| (x - mean).abs())
+                .fold(F::zero(), |acc, x| acc + x) / F::from(period).unwrap();
+
+            if mad > F::zero() {
+                cci[i] = (typical_prices[i + period - 1] - mean) / (constant * mad);
+            } else {
+                cci[i] = F::zero();
+            }
+        }
+
+        Ok(cci)
+    }
+
+    /// Money Flow Index (MFI)
+    pub fn mfi<F: Float + Clone>(
+        high: &Array1<F>,
+        low: &Array1<F>,
+        close: &Array1<F>,
+        volume: &Array1<F>,
+        period: usize,
+    ) -> Result<Array1<F>> {
+        if high.len() != low.len() || low.len() != close.len() || close.len() != volume.len() {
+            return Err(TimeSeriesError::DimensionMismatch {
+                expected: high.len(),
+                actual: volume.len(),
+            });
+        }
+
+        if high.len() < period + 1 {
+            return Err(TimeSeriesError::InsufficientData {
+                message: "Not enough data for MFI calculation".to_string(),
+                required: period + 1,
+                actual: high.len(),
+            });
+        }
+
+        let n = high.len();
+        let mut typical_prices = Array1::zeros(n);
+        let mut money_flows = Array1::zeros(n - 1);
+        let three = F::from(3.0).unwrap();
+
+        // Calculate typical prices
+        for i in 0..n {
+            typical_prices[i] = (high[i] + low[i] + close[i]) / three;
+        }
+
+        // Calculate money flows
+        for i in 1..n {
+            let raw_money_flow = typical_prices[i] * volume[i];
+            money_flows[i - 1] = if typical_prices[i] > typical_prices[i - 1] {
+                raw_money_flow // Positive money flow
+            } else if typical_prices[i] < typical_prices[i - 1] {
+                -raw_money_flow // Negative money flow  
+            } else {
+                F::zero() // Neutral
+            };
+        }
+
+        let mut mfi = Array1::zeros(money_flows.len() - period + 1);
+        let hundred = F::from(100.0).unwrap();
+
+        for i in 0..mfi.len() {
+            let slice = money_flows.slice(s![i..i + period]);
+            let positive_flow = slice.iter().filter(|&&x| x > F::zero()).cloned().sum();
+            let negative_flow = slice.iter().filter(|&&x| x < F::zero()).map(|&x| -x).sum();
+
+            if negative_flow > F::zero() {
+                let money_ratio = positive_flow / negative_flow;
+                mfi[i] = hundred - (hundred / (F::one() + money_ratio));
+            } else {
+                mfi[i] = hundred;
+            }
+        }
+
+        Ok(mfi)
+    }
+
+    /// On-Balance Volume (OBV)
+    pub fn obv<F: Float + Clone>(close: &Array1<F>, volume: &Array1<F>) -> Result<Array1<F>> {
+        if close.len() != volume.len() {
+            return Err(TimeSeriesError::DimensionMismatch {
+                expected: close.len(),
+                actual: volume.len(),
+            });
+        }
+
+        if close.len() < 2 {
+            return Err(TimeSeriesError::InsufficientData {
+                message: "Need at least 2 data points for OBV".to_string(),
+                required: 2,
+                actual: close.len(),
+            });
+        }
+
+        let mut obv = Array1::zeros(close.len());
+        obv[0] = volume[0];
+
+        for i in 1..close.len() {
+            if close[i] > close[i - 1] {
+                obv[i] = obv[i - 1] + volume[i];
+            } else if close[i] < close[i - 1] {
+                obv[i] = obv[i - 1] - volume[i];
+            } else {
+                obv[i] = obv[i - 1];
+            }
+        }
+
+        Ok(obv)
+    }
+
+    /// Parabolic SAR (Stop and Reverse)
+    pub fn parabolic_sar<F: Float + Clone>(
+        high: &Array1<F>,
+        low: &Array1<F>,
+        acceleration_factor: F,
+        max_acceleration: F,
+    ) -> Result<Array1<F>> {
+        if high.len() != low.len() {
+            return Err(TimeSeriesError::DimensionMismatch {
+                expected: high.len(),
+                actual: low.len(),
+            });
+        }
+
+        if high.len() < 3 {
+            return Err(TimeSeriesError::InsufficientData {
+                message: "Need at least 3 data points for Parabolic SAR".to_string(),
+                required: 3,
+                actual: high.len(),
+            });
+        }
+
+        let n = high.len();
+        let mut sar = Array1::zeros(n);
+        let mut ep = high[0]; // Extreme point
+        let mut af = acceleration_factor; // Acceleration factor
+        let mut is_uptrend = true;
+
+        sar[0] = low[0];
+        sar[1] = low[0];
+
+        for i in 2..n {
+            let prev_sar = sar[i - 1];
+
+            if is_uptrend {
+                // Calculate SAR for uptrend
+                sar[i] = prev_sar + af * (ep - prev_sar);
+
+                // Check for trend reversal
+                if low[i] <= sar[i] || low[i - 1] <= sar[i] {
+                    // Trend reversal to downtrend
+                    is_uptrend = false;
+                    sar[i] = ep;
+                    ep = low[i];
+                    af = acceleration_factor;
+                } else {
+                    // Continue uptrend
+                    if high[i] > ep {
+                        ep = high[i];
+                        af = (af + acceleration_factor).min(max_acceleration);
+                    }
+                    
+                    // SAR should not be above previous two lows
+                    sar[i] = sar[i].min(low[i - 1]).min(low[i - 2]);
+                }
+            } else {
+                // Calculate SAR for downtrend
+                sar[i] = prev_sar + af * (ep - prev_sar);
+
+                // Check for trend reversal
+                if high[i] >= sar[i] || high[i - 1] >= sar[i] {
+                    // Trend reversal to uptrend
+                    is_uptrend = true;
+                    sar[i] = ep;
+                    ep = high[i];
+                    af = acceleration_factor;
+                } else {
+                    // Continue downtrend
+                    if low[i] < ep {
+                        ep = low[i];
+                        af = (af + acceleration_factor).min(max_acceleration);
+                    }
+                    
+                    // SAR should not be below previous two highs
+                    sar[i] = sar[i].max(high[i - 1]).max(high[i - 2]);
+                }
+            }
+        }
+
+        Ok(sar)
+    }
+
+    /// Aroon Oscillator
+    pub fn aroon<F: Float + Clone>(
+        high: &Array1<F>,
+        low: &Array1<F>,
+        period: usize,
+    ) -> Result<(Array1<F>, Array1<F>, Array1<F>)> {
+        if high.len() != low.len() {
+            return Err(TimeSeriesError::DimensionMismatch {
+                expected: high.len(),
+                actual: low.len(),
+            });
+        }
+
+        if high.len() < period {
+            return Err(TimeSeriesError::InsufficientData {
+                message: "Not enough data for Aroon calculation".to_string(),
+                required: period,
+                actual: high.len(),
+            });
+        }
+
+        let n = high.len();
+        let result_len = n - period + 1;
+        let mut aroon_up = Array1::zeros(result_len);
+        let mut aroon_down = Array1::zeros(result_len);
+        let hundred = F::from(100.0).unwrap();
+        let period_f = F::from(period).unwrap();
+
+        for i in 0..result_len {
+            let slice_high = high.slice(s![i..i + period]);
+            let slice_low = low.slice(s![i..i + period]);
+
+            // Find highest high and lowest low positions
+            let max_pos = slice_high
+                .iter()
+                .enumerate()
+                .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+                .unwrap()
+                .0;
+
+            let min_pos = slice_low
+                .iter()
+                .enumerate()
+                .min_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+                .unwrap()
+                .0;
+
+            // Calculate Aroon Up and Aroon Down
+            aroon_up[i] = hundred * (period_f - F::from(period - 1 - max_pos).unwrap()) / period_f;
+            aroon_down[i] = hundred * (period_f - F::from(period - 1 - min_pos).unwrap()) / period_f;
+        }
+
+        // Calculate Aroon Oscillator
+        let aroon_oscillator = &aroon_up - &aroon_down;
+
+        Ok((aroon_up, aroon_down, aroon_oscillator))
+    }
+
+    /// Volume Weighted Average Price (VWAP)
+    pub fn vwap<F: Float + Clone>(
+        high: &Array1<F>,
+        low: &Array1<F>,
+        close: &Array1<F>,
+        volume: &Array1<F>,
+    ) -> Result<Array1<F>> {
+        if high.len() != low.len() || low.len() != close.len() || close.len() != volume.len() {
+            return Err(TimeSeriesError::DimensionMismatch {
+                expected: high.len(),
+                actual: volume.len(),
+            });
+        }
+
+        let n = high.len();
+        let mut vwap = Array1::zeros(n);
+        let mut cumulative_pv = F::zero();
+        let mut cumulative_volume = F::zero();
+        let three = F::from(3.0).unwrap();
+
+        for i in 0..n {
+            let typical_price = (high[i] + low[i] + close[i]) / three;
+            let pv = typical_price * volume[i];
+            
+            cumulative_pv = cumulative_pv + pv;
+            cumulative_volume = cumulative_volume + volume[i];
+            
+            if cumulative_volume > F::zero() {
+                vwap[i] = cumulative_pv / cumulative_volume;
+            } else {
+                vwap[i] = typical_price;
+            }
+        }
+
+        Ok(vwap)
+    }
+
+    /// Chaikin Oscillator
+    pub fn chaikin_oscillator<F: Float + Clone>(
+        high: &Array1<F>,
+        low: &Array1<F>,
+        close: &Array1<F>,
+        volume: &Array1<F>,
+        fast_period: usize,
+        slow_period: usize,
+    ) -> Result<Array1<F>> {
+        if high.len() != low.len() || low.len() != close.len() || close.len() != volume.len() {
+            return Err(TimeSeriesError::DimensionMismatch {
+                expected: high.len(),
+                actual: volume.len(),
+            });
+        }
+
+        let n = high.len();
+        let mut ad_line = Array1::zeros(n); // Accumulation/Distribution line
+        let mut cumulative_ad = F::zero();
+
+        // Calculate Accumulation/Distribution line
+        for i in 0..n {
+            let clv = if high[i] != low[i] {
+                ((close[i] - low[i]) - (high[i] - close[i])) / (high[i] - low[i])
+            } else {
+                F::zero()
+            };
+            
+            let money_flow_volume = clv * volume[i];
+            cumulative_ad = cumulative_ad + money_flow_volume;
+            ad_line[i] = cumulative_ad;
+        }
+
+        // Calculate fast and slow EMAs of A/D line
+        let fast_alpha = F::from(2.0).unwrap() / F::from(fast_period + 1).unwrap();
+        let slow_alpha = F::from(2.0).unwrap() / F::from(slow_period + 1).unwrap();
+
+        let fast_ema = ema(&ad_line, fast_alpha)?;
+        let slow_ema = ema(&ad_line, slow_alpha)?;
+
+        // Chaikin Oscillator = Fast EMA - Slow EMA
+        let chaikin_osc = &fast_ema - &slow_ema;
+
+        Ok(chaikin_osc)
+    }
+
+    /// Fibonacci Retracement Levels
+    pub fn fibonacci_retracement<F: Float + Clone>(
+        high_price: F,
+        low_price: F,
+    ) -> Result<FibonacciLevels<F>> {
+        if high_price <= low_price {
+            return Err(TimeSeriesError::InvalidInput(
+                "High price must be greater than low price".to_string(),
+            ));
+        }
+
+        let range = high_price - low_price;
+        let fib_23_6 = F::from(0.236).unwrap();
+        let fib_38_2 = F::from(0.382).unwrap();
+        let fib_50_0 = F::from(0.5).unwrap();
+        let fib_61_8 = F::from(0.618).unwrap();
+        let fib_78_6 = F::from(0.786).unwrap();
+
+        Ok(FibonacciLevels {
+            level_100: high_price,
+            level_78_6: high_price - range * fib_78_6,
+            level_61_8: high_price - range * fib_61_8,
+            level_50_0: high_price - range * fib_50_0,
+            level_38_2: high_price - range * fib_38_2,
+            level_23_6: high_price - range * fib_23_6,
+            level_0: low_price,
+        })
+    }
+
+    /// Fibonacci retracement levels structure
+    #[derive(Debug, Clone)]
+    pub struct FibonacciLevels<F: Float> {
+        pub level_100: F,
+        pub level_78_6: F,
+        pub level_61_8: F,
+        pub level_50_0: F,
+        pub level_38_2: F,
+        pub level_23_6: F,
+        pub level_0: F,
+    }
+
+    /// Commodity Channel Index for multiple timeframes
+    pub fn multi_timeframe_cci<F: Float + Clone>(
+        high: &Array1<F>,
+        low: &Array1<F>,
+        close: &Array1<F>,
+        periods: &[usize],
+    ) -> Result<Vec<Array1<F>>> {
+        let mut results = Vec::with_capacity(periods.len());
+        
+        for &period in periods {
+            let cci_values = cci(high, low, close, period)?;
+            results.push(cci_values);
+        }
+        
+        Ok(results)
+    }
+
+    /// Adaptive Moving Average (AMA) - Kaufman's Adaptive Moving Average
+    pub fn kama<F: Float + Clone>(
+        data: &Array1<F>,
+        period: usize,
+        fast_sc: usize,
+        slow_sc: usize,
+    ) -> Result<Array1<F>> {
+        if data.len() < period {
+            return Err(TimeSeriesError::InsufficientData {
+                message: "Not enough data for KAMA calculation".to_string(),
+                required: period,
+                actual: data.len(),
+            });
+        }
+
+        let n = data.len();
+        let mut kama = Array1::zeros(n);
+        kama[period - 1] = data[period - 1];
+
+        let fast_alpha = F::from(2.0).unwrap() / F::from(fast_sc + 1).unwrap();
+        let slow_alpha = F::from(2.0).unwrap() / F::from(slow_sc + 1).unwrap();
+
+        for i in period..n {
+            // Calculate efficiency ratio
+            let direction = (data[i] - data[i - period]).abs();
+            let volatility = (0..period)
+                .map(|j| (data[i - j] - data[i - j - 1]).abs())
+                .fold(F::zero(), |acc, x| acc + x);
+
+            let efficiency_ratio = if volatility > F::zero() {
+                direction / volatility
+            } else {
+                F::zero()
+            };
+
+            // Calculate smoothing constant
+            let sc = efficiency_ratio * (fast_alpha - slow_alpha) + slow_alpha;
+            let sc_squared = sc * sc;
+
+            // Update KAMA
+            kama[i] = kama[i - 1] + sc_squared * (data[i] - kama[i - 1]);
+        }
+
+        Ok(kama)
+    }
 }
 
 /// Risk Metrics Module for comprehensive financial risk analysis

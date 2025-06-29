@@ -2563,6 +2563,162 @@ pub fn make_interp_spline<F: Float + FromPrimitive + Debug>(
     }
 }
 
+// Implementation of SplineInterpolator trait for CubicSpline
+impl<F> crate::traits::SplineInterpolator<F> for CubicSpline<F>
+where
+    F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + Send + Sync + 'static,
+{
+    fn derivative(
+        &self,
+        query_points: &ArrayView2<F>,
+        order: usize,
+    ) -> crate::InterpolateResult<Vec<F>> {
+        if query_points.ncols() != 1 {
+            return Err(crate::InterpolateError::invalid_input(
+                "CubicSpline only supports 1D interpolation",
+            ));
+        }
+
+        let mut results = Vec::with_capacity(query_points.nrows());
+        for row in query_points.outer_iter() {
+            let x = row[0];
+            let deriv = self.derivative_n(x, order)?;
+            results.push(deriv);
+        }
+        Ok(results)
+    }
+
+    fn integrate(&self, bounds: &[(F, F)]) -> crate::InterpolateResult<Vec<F>> {
+        let mut results = Vec::with_capacity(bounds.len());
+        for &(a, b) in bounds {
+            let integral = self.integrate(a, b)?;
+            results.push(integral);
+        }
+        Ok(results)
+    }
+
+    fn antiderivative(&self) -> crate::InterpolateResult<Box<dyn crate::traits::SplineInterpolator<F>>> {
+        let antideriv = self.antiderivative()?;
+        Ok(Box::new(antideriv))
+    }
+
+    fn find_roots(&self, bounds: &[(F, F)], tolerance: F) -> crate::InterpolateResult<Vec<F>> {
+        use crate::utils::find_roots_bisection;
+        
+        let mut all_roots = Vec::new();
+        
+        for &(a, b) in bounds {
+            if a >= b {
+                continue;
+            }
+            
+            // Create evaluation function for root finding
+            let eval_fn = |x: F| -> crate::InterpolateResult<F> {
+                self.evaluate(x)
+            };
+            
+            // Use bisection method to find roots in this interval
+            match find_roots_bisection(a, b, tolerance, eval_fn) {
+                Ok(mut roots) => all_roots.append(&mut roots),
+                Err(_) => continue, // No roots found in this interval
+            }
+        }
+        
+        // Sort and remove duplicates
+        all_roots.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+        all_roots.dedup_by(|a, b| (*a - *b).abs() < tolerance);
+        
+        Ok(all_roots)
+    }
+
+    fn find_extrema(
+        &self,
+        bounds: &[(F, F)],
+        tolerance: F,
+    ) -> crate::InterpolateResult<Vec<(F, F, crate::traits::ExtremaType)>> {
+        use crate::utils::find_roots_bisection;
+        
+        let mut extrema = Vec::new();
+        
+        for &(a, b) in bounds {
+            if a >= b {
+                continue;
+            }
+            
+            // Find roots of the first derivative (critical points)
+            let deriv_fn = |x: F| -> crate::InterpolateResult<F> {
+                self.derivative_n(x, 1)
+            };
+            
+            let critical_points = match find_roots_bisection(a, b, tolerance, deriv_fn) {
+                Ok(points) => points,
+                Err(_) => continue,
+            };
+            
+            for cp in critical_points {
+                if cp < a || cp > b {
+                    continue;
+                }
+                
+                // Classify using second derivative test
+                let second_deriv = match self.derivative_n(cp, 2) {
+                    Ok(d2) => d2,
+                    Err(_) => continue,
+                };
+                
+                let f_value = match self.evaluate(cp) {
+                    Ok(val) => val,
+                    Err(_) => continue,
+                };
+                
+                let extrema_type = if second_deriv > F::zero() {
+                    crate::traits::ExtremaType::Minimum
+                } else if second_deriv < F::zero() {
+                    crate::traits::ExtremaType::Maximum
+                } else {
+                    crate::traits::ExtremaType::InflectionPoint
+                };
+                
+                extrema.push((cp, f_value, extrema_type));
+            }
+        }
+        
+        // Sort by x-coordinate
+        extrema.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
+        
+        Ok(extrema)
+    }
+}
+
+impl<F> crate::traits::Interpolator<F> for CubicSpline<F>
+where
+    F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + Send + Sync + 'static,
+{
+    fn evaluate(&self, query_points: &ArrayView2<F>) -> crate::InterpolateResult<Vec<F>> {
+        if query_points.ncols() != 1 {
+            return Err(crate::InterpolateError::invalid_input(
+                "CubicSpline only supports 1D interpolation",
+            ));
+        }
+
+        let mut results = Vec::with_capacity(query_points.nrows());
+        for row in query_points.outer_iter() {
+            let x = row[0];
+            let value = self.evaluate(x)?;
+            results.push(value);
+        }
+        Ok(results)
+    }
+
+    fn dimension(&self) -> usize {
+        1
+    }
+
+    fn len(&self) -> usize {
+        self.x.len()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -27,6 +27,10 @@ rand_pcg = { workspace = true }
 statrs = { workspace = true }
 special-11 = { workspace = true }
 num_cpus = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+either = { workspace = true }
+chrono = { workspace = true }
 
 [dev-dependencies]
 approx = { workspace = true }
@@ -39,7 +43,7 @@ quickcheck_macros = "1.0"
 default = []
 # BLAS backends - these are mutually exclusive, managed through scirs2-core
 openblas = ["scirs2-core/openblas"]
-intel-mkl = ["scirs2-core/intel-mkl"]
+# intel-mkl = ["scirs2-core/intel-mkl"]  # Removed due to conflicts with openblas
 netlib = ["scirs2-core/netlib"]
 # Memory mapping support for large files
 memmap = []

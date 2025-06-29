@@ -14,6 +14,10 @@ pub mod lstm_optimizer;
 pub mod meta_learning;
 pub mod neural_architecture_search;
 pub mod transformer_optimizer;
+pub mod adaptive_transformer_enhancement;
+pub mod few_shot_learning_enhancement;
+pub mod few_shot_optimizer;
+pub mod adaptive_nas_system;
 
 use crate::error::{OptimError, OptimizerError};
 use crate::optimizers::Optimizer;

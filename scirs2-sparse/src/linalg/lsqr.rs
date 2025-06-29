@@ -480,8 +480,10 @@ mod tests {
 
         let b = Array1::from_vec(vec![1.0, 1.0, 1.0]);
 
-        let mut options = LSQROptions::default();
-        options.calc_var = true;
+        let options = LSQROptions { 
+            calc_var: true, 
+            ..Default::default() 
+        };
 
         let result = lsqr(&matrix, &b.view(), None, options).unwrap();
 

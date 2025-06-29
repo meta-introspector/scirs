@@ -11,6 +11,7 @@ use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
+use std::hash::Hash;
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Write};
 use std::path::Path;
@@ -93,6 +94,153 @@ impl Default for DeepWalkConfig {
 pub struct RandomWalk<N: Node> {
     /// The sequence of nodes in the walk
     pub nodes: Vec<N>,
+}
+
+/// Advanced optimization techniques for embeddings
+#[derive(Debug, Clone)]
+pub struct OptimizationConfig {
+    /// Learning rate schedule type
+    pub lr_schedule: LearningRateSchedule,
+    /// Initial learning rate
+    pub initial_lr: f64,
+    /// Final learning rate
+    pub final_lr: f64,
+    /// Use momentum optimization
+    pub use_momentum: bool,
+    /// Momentum factor (0.9 is typical)
+    pub momentum: f64,
+    /// Use Adam optimizer
+    pub use_adam: bool,
+    /// Adam beta1 parameter
+    pub adam_beta1: f64,
+    /// Adam beta2 parameter
+    pub adam_beta2: f64,
+    /// Adam epsilon parameter
+    pub adam_epsilon: f64,
+    /// L2 regularization strength
+    pub l2_regularization: f64,
+    /// Gradient clipping threshold
+    pub gradient_clip: Option<f64>,
+    /// Use hierarchical softmax instead of negative sampling
+    pub use_hierarchical_softmax: bool,
+}
+
+impl Default for OptimizationConfig {
+    fn default() -> Self {
+        OptimizationConfig {
+            lr_schedule: LearningRateSchedule::Linear,
+            initial_lr: 0.025,
+            final_lr: 0.0001,
+            use_momentum: false,
+            momentum: 0.9,
+            use_adam: false,
+            adam_beta1: 0.9,
+            adam_beta2: 0.999,
+            adam_epsilon: 1e-8,
+            l2_regularization: 0.0,
+            gradient_clip: Some(1.0),
+            use_hierarchical_softmax: false,
+        }
+    }
+}
+
+/// Learning rate scheduling strategies
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum LearningRateSchedule {
+    /// Constant learning rate
+    Constant,
+    /// Linear decay from initial to final
+    Linear,
+    /// Exponential decay
+    Exponential,
+    /// Cosine annealing
+    Cosine,
+    /// Step decay (reduce by factor at specific epochs)
+    Step,
+}
+
+/// Enhanced training metrics and monitoring
+#[derive(Debug, Clone)]
+pub struct TrainingMetrics {
+    /// Current epoch
+    pub epoch: usize,
+    /// Total training steps
+    pub steps: usize,
+    /// Current learning rate
+    pub learning_rate: f64,
+    /// Training loss (negative log likelihood)
+    pub loss: f64,
+    /// Loss moving average
+    pub loss_avg: f64,
+    /// Gradient norm
+    pub gradient_norm: f64,
+    /// Processing speed (steps per second)
+    pub steps_per_second: f64,
+    /// Memory usage in bytes
+    pub memory_usage: usize,
+    /// Convergence indicator (rate of loss change)
+    pub convergence_rate: f64,
+    /// Training accuracy on positive samples
+    pub positive_accuracy: f64,
+    /// Training accuracy on negative samples  
+    pub negative_accuracy: f64,
+}
+
+impl Default for TrainingMetrics {
+    fn default() -> Self {
+        TrainingMetrics {
+            epoch: 0,
+            steps: 0,
+            learning_rate: 0.025,
+            loss: 0.0,
+            loss_avg: 0.0,
+            gradient_norm: 0.0,
+            steps_per_second: 0.0,
+            memory_usage: 0,
+            convergence_rate: 0.0,
+            positive_accuracy: 0.0,
+            negative_accuracy: 0.0,
+        }
+    }
+}
+
+/// Adaptive negative sampling strategies
+#[derive(Debug, Clone)]
+pub enum NegativeSamplingStrategy {
+    /// Uniform random sampling
+    Uniform,
+    /// Frequency-based sampling (more frequent nodes sampled more often)
+    Frequency,
+    /// Degree-based sampling (higher degree nodes sampled more often)
+    Degree,
+    /// Adaptive sampling based on embedding quality
+    Adaptive,
+    /// Hierarchical sampling using word2vec-style tree
+    Hierarchical,
+}
+
+/// Advanced optimizer state for Adam/momentum
+#[derive(Debug, Clone)]
+pub struct OptimizerState {
+    /// Momentum buffers for each parameter
+    pub momentum_buffers: HashMap<String, Vec<f64>>,
+    /// Adam first moment estimates
+    pub adam_m: HashMap<String, Vec<f64>>,
+    /// Adam second moment estimates  
+    pub adam_v: HashMap<String, Vec<f64>>,
+    /// Time step for bias correction
+    pub time_step: usize,
+}
+
+impl OptimizerState {
+    pub fn new() -> Self {
+        OptimizerState {
+            momentum_buffers: HashMap::new(),
+            adam_m: HashMap::new(),
+            adam_v: HashMap::new(),
+            time_step: 0,
+        }
+    }
 }
 
 /// Skip-gram training context pair
@@ -524,7 +672,6 @@ impl<N: Node> EmbeddingModel<N> {
         N: Clone + Send + Sync,
     {
         use scirs2_core::parallel_ops::*;
-        use std::sync::Mutex;
 
         // Use collect-reduce pattern for thread-safe parallel processing
         let gradient_updates: Vec<(N, Vec<f64>, Vec<f64>)> = pairs
@@ -1492,6 +1639,609 @@ impl<N: Node> DeepWalk<N> {
     /// Get the trained model
     pub fn model(&self) -> &EmbeddingModel<N> {
         &self.model
+    }
+}
+
+/// Enhanced embedding trainer with advanced optimization techniques
+pub struct AdvancedEmbeddingTrainer<N: Node> {
+    /// Optimization configuration
+    pub config: OptimizationConfig,
+    /// Optimizer state
+    pub optimizer_state: OptimizerState,
+    /// Training metrics history
+    pub metrics_history: Vec<TrainingMetrics>,
+    /// Current training metrics
+    pub current_metrics: TrainingMetrics,
+    /// Loss history for convergence checking
+    pub loss_history: Vec<f64>,
+    /// Early stopping patience
+    pub early_stopping_patience: usize,
+    /// Best loss seen so far
+    pub best_loss: f64,
+    /// Steps without improvement
+    pub steps_without_improvement: usize,
+    /// Adaptive negative sampling
+    pub negative_sampling_strategy: NegativeSamplingStrategy,
+    /// Node frequency for sampling
+    pub node_frequencies: HashMap<N, f64>,
+    /// Gradient accumulation buffer
+    pub gradient_accumulator: HashMap<String, Vec<f64>>,
+    /// Training start time
+    pub training_start_time: std::time::Instant,
+}
+
+impl<N: Node + Clone + Hash + Eq> AdvancedEmbeddingTrainer<N> {
+    pub fn new(config: OptimizationConfig) -> Self {
+        AdvancedEmbeddingTrainer {
+            config,
+            optimizer_state: OptimizerState::new(),
+            metrics_history: Vec::new(),
+            current_metrics: TrainingMetrics::default(),
+            loss_history: Vec::new(),
+            early_stopping_patience: 10,
+            best_loss: f64::INFINITY,
+            steps_without_improvement: 0,
+            negative_sampling_strategy: NegativeSamplingStrategy::Frequency,
+            node_frequencies: HashMap::new(),
+            gradient_accumulator: HashMap::new(),
+            training_start_time: std::time::Instant::now(),
+        }
+    }
+
+    /// Compute adaptive learning rate based on schedule
+    pub fn compute_learning_rate(&self, epoch: usize, total_epochs: usize) -> f64 {
+        let progress = epoch as f64 / total_epochs as f64;
+        
+        match self.config.lr_schedule {
+            LearningRateSchedule::Constant => self.config.initial_lr,
+            LearningRateSchedule::Linear => {
+                self.config.initial_lr * (1.0 - progress) + self.config.final_lr * progress
+            }
+            LearningRateSchedule::Exponential => {
+                self.config.initial_lr * (self.config.final_lr / self.config.initial_lr).powf(progress)
+            }
+            LearningRateSchedule::Cosine => {
+                self.config.final_lr + 0.5 * (self.config.initial_lr - self.config.final_lr) 
+                    * (1.0 + (std::f64::consts::PI * progress).cos())
+            }
+            LearningRateSchedule::Step => {
+                // Reduce by factor of 10 every 25% of training
+                let step = (progress * 4.0).floor() as i32;
+                self.config.initial_lr * 0.1_f64.powi(step)
+            }
+        }
+    }
+
+    /// Apply Adam optimization with bias correction
+    pub fn apply_adam_optimizer(
+        &mut self,
+        parameter_name: &str,
+        gradient: &[f64],
+        learning_rate: f64,
+    ) -> Vec<f64> {
+        let dimensions = gradient.len();
+        
+        // Initialize if needed
+        if !self.optimizer_state.adam_m.contains_key(parameter_name) {
+            self.optimizer_state.adam_m.insert(parameter_name.to_string(), vec![0.0; dimensions]);
+            self.optimizer_state.adam_v.insert(parameter_name.to_string(), vec![0.0; dimensions]);
+        }
+
+        self.optimizer_state.time_step += 1;
+        
+        let m = self.optimizer_state.adam_m.get_mut(parameter_name).unwrap();
+        let v = self.optimizer_state.adam_v.get_mut(parameter_name).unwrap();
+        
+        // Update biased first moment estimate
+        for i in 0..dimensions {
+            m[i] = self.config.adam_beta1 * m[i] + (1.0 - self.config.adam_beta1) * gradient[i];
+        }
+        
+        // Update biased second raw moment estimate
+        for i in 0..dimensions {
+            v[i] = self.config.adam_beta2 * v[i] + (1.0 - self.config.adam_beta2) * gradient[i] * gradient[i];
+        }
+        
+        // Compute bias-corrected first moment estimate
+        let bias_correction_1 = 1.0 - self.config.adam_beta1.powi(self.optimizer_state.time_step as i32);
+        let bias_correction_2 = 1.0 - self.config.adam_beta2.powi(self.optimizer_state.time_step as i32);
+        
+        let mut parameter_update = vec![0.0; dimensions];
+        for i in 0..dimensions {
+            let m_hat = m[i] / bias_correction_1;
+            let v_hat = v[i] / bias_correction_2;
+            parameter_update[i] = -learning_rate * m_hat / (v_hat.sqrt() + self.config.adam_epsilon);
+        }
+        
+        parameter_update
+    }
+
+    /// Apply momentum optimization
+    pub fn apply_momentum_optimizer(
+        &mut self,
+        parameter_name: &str,
+        gradient: &[f64],
+        learning_rate: f64,
+    ) -> Vec<f64> {
+        let dimensions = gradient.len();
+        
+        // Initialize momentum buffer if needed
+        if !self.optimizer_state.momentum_buffers.contains_key(parameter_name) {
+            self.optimizer_state.momentum_buffers.insert(parameter_name.to_string(), vec![0.0; dimensions]);
+        }
+
+        let momentum_buffer = self.optimizer_state.momentum_buffers.get_mut(parameter_name).unwrap();
+        
+        // Update momentum buffer
+        for i in 0..dimensions {
+            momentum_buffer[i] = self.config.momentum * momentum_buffer[i] + learning_rate * gradient[i];
+        }
+        
+        // Return negative momentum (for parameter update)
+        momentum_buffer.iter().map(|&x| -x).collect()
+    }
+
+    /// Apply gradient clipping
+    pub fn clip_gradient(&self, gradient: &mut [f64]) {
+        if let Some(clip_value) = self.config.gradient_clip {
+            let grad_norm: f64 = gradient.iter().map(|&x| x * x).sum::<f64>().sqrt();
+            if grad_norm > clip_value {
+                let scale = clip_value / grad_norm;
+                for g in gradient.iter_mut() {
+                    *g *= scale;
+                }
+            }
+        }
+    }
+
+    /// Apply L2 regularization to gradient
+    pub fn apply_l2_regularization(&self, gradient: &mut [f64], parameters: &[f64]) {
+        if self.config.l2_regularization > 0.0 {
+            for (grad, param) in gradient.iter_mut().zip(parameters.iter()) {
+                *grad += self.config.l2_regularization * param;
+            }
+        }
+    }
+
+    /// Update training metrics
+    pub fn update_metrics(
+        &mut self,
+        loss: f64,
+        gradient_norm: f64,
+        positive_accuracy: f64,
+        negative_accuracy: f64,
+    ) {
+        self.current_metrics.steps += 1;
+        self.current_metrics.loss = loss;
+        self.current_metrics.gradient_norm = gradient_norm;
+        self.current_metrics.positive_accuracy = positive_accuracy;
+        self.current_metrics.negative_accuracy = negative_accuracy;
+        
+        // Update moving average loss
+        let alpha = 0.99; // Smoothing factor
+        if self.current_metrics.loss_avg == 0.0 {
+            self.current_metrics.loss_avg = loss;
+        } else {
+            self.current_metrics.loss_avg = alpha * self.current_metrics.loss_avg + (1.0 - alpha) * loss;
+        }
+        
+        // Update convergence rate
+        self.loss_history.push(loss);
+        if self.loss_history.len() > 10 {
+            let recent_losses = &self.loss_history[self.loss_history.len() - 10..];
+            let loss_change = recent_losses[0] - recent_losses[recent_losses.len() - 1];
+            self.current_metrics.convergence_rate = loss_change / 10.0;
+        }
+        
+        // Update steps per second
+        let elapsed = self.training_start_time.elapsed().as_secs_f64();
+        if elapsed > 0.0 {
+            self.current_metrics.steps_per_second = self.current_metrics.steps as f64 / elapsed;
+        }
+        
+        // Check for early stopping
+        if loss < self.best_loss {
+            self.best_loss = loss;
+            self.steps_without_improvement = 0;
+        } else {
+            self.steps_without_improvement += 1;
+        }
+    }
+
+    /// Check if early stopping should be triggered
+    pub fn should_early_stop(&self) -> bool {
+        self.steps_without_improvement >= self.early_stopping_patience
+    }
+
+    /// Reset optimizer state (useful for learning rate scheduling)
+    pub fn reset_optimizer_state(&mut self) {
+        self.optimizer_state = OptimizerState::new();
+    }
+
+    /// Get current training report
+    pub fn get_training_report(&self) -> String {
+        format!(
+            "Epoch: {}, Steps: {}, LR: {:.6}, Loss: {:.6}, Loss Avg: {:.6}, Grad Norm: {:.6}, Steps/sec: {:.2}, Pos Acc: {:.3}, Neg Acc: {:.3}, Convergence: {:.6}",
+            self.current_metrics.epoch,
+            self.current_metrics.steps,
+            self.current_metrics.learning_rate,
+            self.current_metrics.loss,
+            self.current_metrics.loss_avg,
+            self.current_metrics.gradient_norm,
+            self.current_metrics.steps_per_second,
+            self.current_metrics.positive_accuracy,
+            self.current_metrics.negative_accuracy,
+            self.current_metrics.convergence_rate
+        )
+    }
+}
+
+/// Fast approximation-based embeddings for very large graphs
+pub struct FastGraphEmbedding<N: Node> {
+    /// Node embeddings using hash-based approximation
+    pub embeddings: HashMap<N, Vec<f32>>, // Use f32 for memory efficiency
+    /// Embedding dimension
+    pub dimensions: usize,
+    /// Random projection matrix for dimensionality reduction
+    pub projection_matrix: Vec<Vec<f32>>,
+    /// Approximation quality (higher = better quality, slower)
+    pub quality_factor: usize,
+    /// Memory pool for reusing vectors
+    pub memory_pool: Vec<Vec<f32>>,
+    /// Pool index for round-robin allocation
+    pub pool_index: AtomicUsize,
+}
+
+impl<N: Node + Clone + Hash + Eq> FastGraphEmbedding<N> {
+    pub fn new(dimensions: usize, quality_factor: usize) -> Self {
+        let pool_size = 1000; // Preallocate 1000 vectors
+        let mut memory_pool = Vec::with_capacity(pool_size);
+        for _ in 0..pool_size {
+            memory_pool.push(vec![0.0f32; dimensions]);
+        }
+
+        // Initialize random projection matrix
+        let mut rng = rand::rng();
+        let projection_size = dimensions * quality_factor;
+        let mut projection_matrix = Vec::new();
+        for _ in 0..projection_size {
+            let row: Vec<f32> = (0..dimensions)
+                .map(|_| rng.gen_range(-1.0..1.0))
+                .collect();
+            projection_matrix.push(row);
+        }
+
+        FastGraphEmbedding {
+            embeddings: HashMap::new(),
+            dimensions,
+            projection_matrix,
+            quality_factor,
+            memory_pool,
+            pool_index: AtomicUsize::new(0),
+        }
+    }
+
+    /// Fast embedding computation using sketching techniques
+    pub fn compute_fast_embedding<E, Ix>(
+        &mut self,
+        graph: &Graph<N, E, Ix>,
+        node: &N,
+        num_samples: usize,
+    ) -> Result<Vec<f32>>
+    where
+        E: EdgeWeight + Into<f64>,
+        Ix: petgraph::graph::IndexType,
+    {
+        // Use frequency sketching for fast approximation
+        let mut sketch = vec![0.0f32; self.dimensions];
+        let mut rng = rand::rng();
+
+        // Sample random walks and update sketch
+        for _ in 0..num_samples {
+            let walk = self.sample_random_walk(graph, node, 10, &mut rng)?;
+            self.update_sketch(&mut sketch, &walk);
+        }
+
+        // Normalize the sketch
+        let norm: f32 = sketch.iter().map(|&x| x * x).sum::<f32>().sqrt();
+        if norm > 0.0 {
+            for s in sketch.iter_mut() {
+                *s /= norm;
+            }
+        }
+
+        Ok(sketch)
+    }
+
+    fn sample_random_walk<E, Ix>(
+        &self,
+        graph: &Graph<N, E, Ix>,
+        start_node: &N,
+        walk_length: usize,
+        rng: &mut impl Rng,
+    ) -> Result<Vec<N>>
+    where
+        E: EdgeWeight,
+        Ix: petgraph::graph::IndexType,
+    {
+        let mut walk = vec![start_node.clone()];
+        let mut current = start_node.clone();
+
+        for _ in 1..walk_length {
+            if let Ok(neighbors) = graph.neighbors(&current) {
+                if neighbors.is_empty() {
+                    break;
+                }
+                let next_node = neighbors.choose(rng).unwrap().clone();
+                walk.push(next_node.clone());
+                current = next_node;
+            } else {
+                break;
+            }
+        }
+
+        Ok(walk)
+    }
+
+    fn update_sketch(&self, sketch: &mut [f32], walk: &[N]) {
+        // Use hash-based feature extraction from walk
+        for window in walk.windows(2) {
+            let hash1 = self.hash_node(&window[0]);
+            let hash2 = self.hash_node(&window[1]);
+            let combined_hash = hash1.wrapping_mul(31).wrapping_add(hash2);
+            
+            let index = (combined_hash as usize) % self.dimensions;
+            sketch[index] += 1.0;
+        }
+    }
+
+    fn hash_node(&self, node: &N) -> u64 {
+        use std::collections::hash_map::DefaultHasher;
+        use std::hash::{Hash, Hasher};
+        
+        let mut hasher = DefaultHasher::new();
+        node.hash(&mut hasher);
+        hasher.finish()
+    }
+
+    /// Get or compute embedding for a node
+    pub fn get_or_compute_embedding<E, Ix>(
+        &mut self,
+        graph: &Graph<N, E, Ix>,
+        node: &N,
+    ) -> Result<Vec<f32>>
+    where
+        E: EdgeWeight + Into<f64>,
+        Ix: petgraph::graph::IndexType,
+    {
+        if let Some(embedding) = self.embeddings.get(node) {
+            Ok(embedding.clone())
+        } else {
+            let embedding = self.compute_fast_embedding(graph, node, 100)?;
+            self.embeddings.insert(node.clone(), embedding.clone());
+            Ok(embedding)
+        }
+    }
+
+    /// Batch compute embeddings for multiple nodes in parallel
+    pub fn batch_compute_embeddings<E, Ix>(
+        &mut self,
+        graph: &Graph<N, E, Ix>,
+        nodes: &[N],
+    ) -> Result<HashMap<N, Vec<f32>>>
+    where
+        N: Send + Sync,
+        E: EdgeWeight + Into<f64> + Send + Sync,
+        Ix: petgraph::graph::IndexType + Send + Sync,
+    {
+        use std::sync::Mutex;
+        
+        let results = Arc::new(Mutex::new(HashMap::new()));
+        
+        nodes.par_chunks(100).try_for_each(|chunk| -> Result<()> {
+            let mut local_results = HashMap::new();
+            
+            for node in chunk {
+                let embedding = self.compute_fast_embedding(graph, node, 50)?;
+                local_results.insert(node.clone(), embedding);
+            }
+            
+            let mut global_results = results.lock().unwrap();
+            global_results.extend(local_results);
+            Ok(())
+        })?;
+        
+        let final_results = Arc::try_unwrap(results).unwrap().into_inner().unwrap();
+        Ok(final_results)
+    }
+}
+
+/// Graph2Vec: Learn embeddings for entire graphs
+pub struct Graph2Vec<N: Node> {
+    /// Vocabulary of subgraph patterns
+    pub vocabulary: HashMap<String, usize>,
+    /// Document embeddings (one per graph)
+    pub graph_embeddings: HashMap<String, Vec<f64>>,
+    /// Embedding dimensions
+    pub dimensions: usize,
+    /// WL kernel iterations for pattern extraction
+    pub wl_iterations: usize,
+    /// Phantom data for node type
+    _phantom: std::marker::PhantomData<N>,
+    /// Pattern frequency threshold
+    pub min_pattern_freq: usize,
+}
+
+impl<N: Node + Clone + Hash + Eq> Graph2Vec<N> {
+    pub fn new(dimensions: usize, wl_iterations: usize, min_pattern_freq: usize) -> Self {
+        Graph2Vec {
+            vocabulary: HashMap::new(),
+            graph_embeddings: HashMap::new(),
+            dimensions,
+            wl_iterations,
+            min_pattern_freq,
+            _phantom: std::marker::PhantomData,
+        }
+    }
+
+    /// Extract graph-level features using Weisfeiler-Lehman kernel
+    pub fn extract_wl_features<E, Ix>(
+        &mut self,
+        graph: &Graph<N, E, Ix>,
+        graph_id: &str,
+    ) -> Result<Vec<String>>
+    where
+        E: EdgeWeight,
+        Ix: petgraph::graph::IndexType,
+    {
+        let mut node_labels: HashMap<N, String> = HashMap::new();
+        
+        // Initialize node labels (can be based on degree, features, etc.)
+        for node in graph.nodes() {
+            let degree = graph.degree(node);
+            node_labels.insert(node.clone(), degree.to_string());
+        }
+
+        let mut patterns = HashSet::new();
+        
+        // Iterate WL kernel
+        for iteration in 0..self.wl_iterations {
+            let mut new_labels: HashMap<N, String> = HashMap::new();
+            
+            for node in graph.nodes() {
+                let mut neighbor_labels = Vec::new();
+                
+                if let Ok(neighbors) = graph.neighbors(node) {
+                    for neighbor in neighbors {
+                        if let Some(label) = node_labels.get(&neighbor) {
+                            neighbor_labels.push(label.clone());
+                        }
+                    }
+                }
+                
+                neighbor_labels.sort();
+                let empty_string = String::new();
+                let current_label = node_labels.get(node).unwrap_or(&empty_string);
+                let new_label = format!("{}_{}", current_label, neighbor_labels.join("_"));
+                new_labels.insert(node.clone(), new_label.clone());
+                
+                // Add pattern to vocabulary
+                patterns.insert(format!("WL_{}_{}", iteration, new_label));
+            }
+            
+            node_labels = new_labels;
+        }
+
+        Ok(patterns.into_iter().collect())
+    }
+
+    /// Train graph-level embeddings using collected patterns
+    pub fn train_graph_embeddings(
+        &mut self,
+        graph_patterns: &HashMap<String, Vec<String>>,
+        epochs: usize,
+        learning_rate: f64,
+    ) -> Result<()> {
+        // Build vocabulary from all patterns
+        let mut pattern_counts: HashMap<String, usize> = HashMap::new();
+        for patterns in graph_patterns.values() {
+            for pattern in patterns {
+                *pattern_counts.entry(pattern.clone()).or_insert(0) += 1;
+            }
+        }
+
+        // Filter vocabulary by minimum frequency
+        let mut vocab_index = 0;
+        for (pattern, count) in pattern_counts {
+            if count >= self.min_pattern_freq {
+                self.vocabulary.insert(pattern, vocab_index);
+                vocab_index += 1;
+            }
+        }
+
+        // Initialize graph embeddings
+        let mut rng = rand::rng();
+        for graph_id in graph_patterns.keys() {
+            let embedding: Vec<f64> = (0..self.dimensions)
+                .map(|_| rng.gen_range(-0.1..0.1))
+                .collect();
+            self.graph_embeddings.insert(graph_id.clone(), embedding);
+        }
+
+        // Train using skip-gram-like objective on graph "documents"
+        for epoch in 0..epochs {
+            for (graph_id, patterns) in graph_patterns {
+                // Convert patterns to vocabulary indices
+                let pattern_indices: Vec<usize> = patterns
+                    .iter()
+                    .filter_map(|p| self.vocabulary.get(p))
+                    .cloned()
+                    .collect();
+
+                if pattern_indices.len() >= 2 {
+                    // Use patterns as context for each other
+                    for (i, &target_idx) in pattern_indices.iter().enumerate() {
+                        for (j, &context_idx) in pattern_indices.iter().enumerate() {
+                            if i != j {
+                                // Update embeddings based on co-occurrence
+                                self.update_graph_embedding(graph_id, target_idx, context_idx, learning_rate);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Decay learning rate
+            let epoch_lr = learning_rate * (1.0 - epoch as f64 / epochs as f64);
+            if epoch % 10 == 0 {
+                println!("Graph2Vec epoch {}: lr = {:.6}", epoch, epoch_lr);
+            }
+        }
+
+        Ok(())
+    }
+
+    fn update_graph_embedding(
+        &mut self,
+        graph_id: &str,
+        target_idx: usize,
+        context_idx: usize,
+        learning_rate: f64,
+    ) {
+        // Simplified update - in practice would use hierarchical softmax or negative sampling
+        if let Some(embedding) = self.graph_embeddings.get_mut(graph_id) {
+            let update_magnitude = learning_rate * 0.1; // Simplified update
+            if target_idx < self.dimensions && context_idx < self.dimensions {
+                embedding[target_idx] += update_magnitude;
+                embedding[context_idx] += update_magnitude * 0.5;
+            }
+        }
+    }
+
+    /// Get embedding for a graph
+    pub fn get_graph_embedding(&self, graph_id: &str) -> Option<&Vec<f64>> {
+        self.graph_embeddings.get(graph_id)
+    }
+
+    /// Compute similarity between two graphs
+    pub fn graph_similarity(&self, graph_id1: &str, graph_id2: &str) -> f64 {
+        if let (Some(emb1), Some(emb2)) = (
+            self.graph_embeddings.get(graph_id1),
+            self.graph_embeddings.get(graph_id2),
+        ) {
+            // Cosine similarity
+            let dot_product: f64 = emb1.iter().zip(emb2.iter()).map(|(&a, &b)| a * b).sum();
+            let norm1: f64 = emb1.iter().map(|&x| x * x).sum::<f64>().sqrt();
+            let norm2: f64 = emb2.iter().map(|&x| x * x).sum::<f64>().sqrt();
+            
+            if norm1 > 0.0 && norm2 > 0.0 {
+                dot_product / (norm1 * norm2)
+            } else {
+                0.0
+            }
+        } else {
+            0.0
+        }
     }
 }
 

@@ -936,6 +936,522 @@ impl<F: Float + Debug + Clone + FromPrimitive> TransformerForecaster<F> {
     }
 }
 
+/// N-BEATS Block for interpretable time series forecasting
+#[derive(Debug)]
+pub struct NBeatsBlock<F: Float + Debug> {
+    /// Fully connected layers for the block
+    layers: Vec<Array2<F>>,
+    /// Bias terms for each layer
+    biases: Vec<Array1<F>>,
+    /// Backcast size
+    backcast_size: usize,
+    /// Forecast size
+    forecast_size: usize,
+    /// Theta size (parameters for basis functions)
+    theta_size: usize,
+    /// Hidden layer size
+    hidden_size: usize,
+    /// Number of layers
+    num_layers: usize,
+    /// Block type (generic or interpretable)
+    block_type: NBeatsBlockType,
+}
+
+/// N-BEATS block types
+#[derive(Debug, Clone)]
+pub enum NBeatsBlockType {
+    /// Generic block with learnable basis
+    Generic,
+    /// Trend block with polynomial basis
+    Trend,
+    /// Seasonal block with Fourier basis
+    Seasonal,
+}
+
+impl<F: Float + Debug + Clone + FromPrimitive> NBeatsBlock<F> {
+    /// Create new N-BEATS block
+    pub fn new(
+        backcast_size: usize,
+        forecast_size: usize,
+        hidden_size: usize,
+        num_layers: usize,
+        theta_size: usize,
+        block_type: NBeatsBlockType,
+    ) -> Self {
+        let mut layers = Vec::new();
+        let mut biases = Vec::new();
+
+        // Input layer
+        let input_size = backcast_size;
+        let scale = F::from(2.0).unwrap() / F::from(input_size).unwrap();
+        layers.push(LSTMCell::random_matrix(hidden_size, input_size, scale.sqrt()));
+        biases.push(Array1::zeros(hidden_size));
+
+        // Hidden layers
+        for _ in 1..num_layers {
+            let scale = F::from(2.0).unwrap() / F::from(hidden_size).unwrap();
+            layers.push(LSTMCell::random_matrix(hidden_size, hidden_size, scale.sqrt()));
+            biases.push(Array1::zeros(hidden_size));
+        }
+
+        // Output layers (theta generation)
+        let scale = F::from(2.0).unwrap() / F::from(hidden_size).unwrap();
+        layers.push(LSTMCell::random_matrix(theta_size, hidden_size, scale.sqrt()));
+        biases.push(Array1::zeros(theta_size));
+
+        Self {
+            layers,
+            biases,
+            backcast_size,
+            forecast_size,
+            theta_size,
+            hidden_size,
+            num_layers,
+            block_type,
+        }
+    }
+
+    /// Forward pass through the block
+    pub fn forward(&self, input: &Array1<F>) -> Result<(Array1<F>, Array1<F>)> {
+        if input.len() != self.backcast_size {
+            return Err(TimeSeriesError::DimensionMismatch {
+                expected: self.backcast_size,
+                actual: input.len(),
+            });
+        }
+
+        // Forward through fully connected layers
+        let mut x = input.clone();
+
+        // Process through hidden layers with ReLU activation
+        for i in 0..self.num_layers {
+            x = self.linear_layer(&x, &self.layers[i], &self.biases[i]);
+            if i < self.num_layers - 1 {
+                // Apply ReLU activation for hidden layers
+                x = x.mapv(|val| val.max(F::zero()));
+            }
+        }
+
+        // Final layer to generate theta parameters
+        let theta = self.linear_layer(&x, &self.layers[self.num_layers], &self.biases[self.num_layers]);
+
+        // Generate backcast and forecast using basis functions
+        let (backcast, forecast) = self.generate_outputs(&theta)?;
+
+        Ok((backcast, forecast))
+    }
+
+    /// Linear layer transformation
+    fn linear_layer(&self, input: &Array1<F>, weights: &Array2<F>, bias: &Array1<F>) -> Array1<F> {
+        let mut output = bias.clone();
+        let (output_size, input_size) = weights.dim();
+
+        for i in 0..output_size {
+            for j in 0..input_size {
+                output[i] = output[i] + weights[[i, j]] * input[j];
+            }
+        }
+
+        output
+    }
+
+    /// Generate backcast and forecast using basis functions
+    fn generate_outputs(&self, theta: &Array1<F>) -> Result<(Array1<F>, Array1<F>)> {
+        match self.block_type {
+            NBeatsBlockType::Generic => self.generic_basis(theta),
+            NBeatsBlockType::Trend => self.trend_basis(theta),
+            NBeatsBlockType::Seasonal => self.seasonal_basis(theta),
+        }
+    }
+
+    /// Generic basis functions (learnable)
+    fn generic_basis(&self, theta: &Array1<F>) -> Result<(Array1<F>, Array1<F>)> {
+        if theta.len() != self.backcast_size + self.forecast_size {
+            return Err(TimeSeriesError::DimensionMismatch {
+                expected: self.backcast_size + self.forecast_size,
+                actual: theta.len(),
+            });
+        }
+
+        let mut backcast = Array1::zeros(self.backcast_size);
+        let mut forecast = Array1::zeros(self.forecast_size);
+
+        // Split theta into backcast and forecast parameters
+        for i in 0..self.backcast_size {
+            backcast[i] = theta[i];
+        }
+
+        for i in 0..self.forecast_size {
+            forecast[i] = theta[self.backcast_size + i];
+        }
+
+        Ok((backcast, forecast))
+    }
+
+    /// Trend basis functions (polynomial)
+    fn trend_basis(&self, theta: &Array1<F>) -> Result<(Array1<F>, Array1<F>)> {
+        let degree = 3; // Cubic polynomial
+        if theta.len() < degree + 1 {
+            return Err(TimeSeriesError::DimensionMismatch {
+                expected: degree + 1,
+                actual: theta.len(),
+            });
+        }
+
+        let mut backcast = Array1::zeros(self.backcast_size);
+        let mut forecast = Array1::zeros(self.forecast_size);
+
+        // Generate polynomial basis for backcast
+        for t in 0..self.backcast_size {
+            let mut value = F::zero();
+            let time_norm = F::from(t as f64 / self.backcast_size as f64).unwrap();
+            
+            for d in 0..=degree {
+                let power = if d == 0 {
+                    F::one()
+                } else {
+                    let mut result = time_norm;
+                    for _ in 1..d {
+                        result = result * time_norm;
+                    }
+                    result
+                };
+                value = value + theta[d] * power;
+            }
+            backcast[t] = value;
+        }
+
+        // Generate polynomial basis for forecast
+        for t in 0..self.forecast_size {
+            let mut value = F::zero();
+            let time_norm = F::from((self.backcast_size + t) as f64 / self.backcast_size as f64).unwrap();
+            
+            for d in 0..=degree {
+                let power = if d == 0 {
+                    F::one()
+                } else {
+                    let mut result = time_norm;
+                    for _ in 1..d {
+                        result = result * time_norm;
+                    }
+                    result
+                };
+                value = value + theta[d] * power;
+            }
+            forecast[t] = value;
+        }
+
+        Ok((backcast, forecast))
+    }
+
+    /// Seasonal basis functions (Fourier)
+    fn seasonal_basis(&self, theta: &Array1<F>) -> Result<(Array1<F>, Array1<F>)> {
+        let num_harmonics = self.theta_size / 2; // Pairs of cos/sin coefficients
+        
+        let mut backcast = Array1::zeros(self.backcast_size);
+        let mut forecast = Array1::zeros(self.forecast_size);
+
+        let pi = F::from(std::f64::consts::PI).unwrap();
+        let two = F::from(2.0).unwrap();
+
+        // Generate Fourier basis for backcast
+        for t in 0..self.backcast_size {
+            let mut value = F::zero();
+            let time = F::from(t as f64).unwrap();
+            
+            for h in 1..=num_harmonics {
+                if 2 * h <= theta.len() {
+                    let freq = two * pi * F::from(h as f64).unwrap() / F::from(self.backcast_size as f64).unwrap();
+                    let cos_coeff = theta[2 * h - 2];
+                    let sin_coeff = theta[2 * h - 1];
+                    
+                    value = value + cos_coeff * (freq * time).cos() + sin_coeff * (freq * time).sin();
+                }
+            }
+            backcast[t] = value;
+        }
+
+        // Generate Fourier basis for forecast
+        for t in 0..self.forecast_size {
+            let mut value = F::zero();
+            let time = F::from((self.backcast_size + t) as f64).unwrap();
+            
+            for h in 1..=num_harmonics {
+                if 2 * h <= theta.len() {
+                    let freq = two * pi * F::from(h as f64).unwrap() / F::from(self.backcast_size as f64).unwrap();
+                    let cos_coeff = theta[2 * h - 2];
+                    let sin_coeff = theta[2 * h - 1];
+                    
+                    value = value + cos_coeff * (freq * time).cos() + sin_coeff * (freq * time).sin();
+                }
+            }
+            forecast[t] = value;
+        }
+
+        Ok((backcast, forecast))
+    }
+}
+
+/// N-BEATS Stack containing multiple blocks
+#[derive(Debug)]
+pub struct NBeatsStack<F: Float + Debug> {
+    /// Blocks in the stack
+    blocks: Vec<NBeatsBlock<F>>,
+    /// Stack type
+    stack_type: NBeatsStackType,
+}
+
+/// N-BEATS stack types
+#[derive(Debug, Clone)]
+pub enum NBeatsStackType {
+    /// Generic stack with generic blocks
+    Generic,
+    /// Interpretable stack with trend and seasonal blocks
+    Interpretable,
+}
+
+impl<F: Float + Debug + Clone + FromPrimitive> NBeatsStack<F> {
+    /// Create new N-BEATS stack
+    pub fn new(
+        backcast_size: usize,
+        forecast_size: usize,
+        hidden_size: usize,
+        num_layers: usize,
+        num_blocks: usize,
+        stack_type: NBeatsStackType,
+    ) -> Self {
+        let mut blocks = Vec::new();
+
+        match stack_type {
+            NBeatsStackType::Generic => {
+                let theta_size = backcast_size + forecast_size;
+                for _ in 0..num_blocks {
+                    blocks.push(NBeatsBlock::new(
+                        backcast_size,
+                        forecast_size,
+                        hidden_size,
+                        num_layers,
+                        theta_size,
+                        NBeatsBlockType::Generic,
+                    ));
+                }
+            }
+            NBeatsStackType::Interpretable => {
+                // Half trend blocks, half seasonal blocks
+                let trend_blocks = num_blocks / 2;
+                let seasonal_blocks = num_blocks - trend_blocks;
+                
+                // Trend blocks
+                for _ in 0..trend_blocks {
+                    blocks.push(NBeatsBlock::new(
+                        backcast_size,
+                        forecast_size,
+                        hidden_size,
+                        num_layers,
+                        4, // Cubic polynomial has 4 parameters
+                        NBeatsBlockType::Trend,
+                    ));
+                }
+                
+                // Seasonal blocks
+                for _ in 0..seasonal_blocks {
+                    let theta_size = 2 * (backcast_size / 4).max(1); // Number of harmonics * 2
+                    blocks.push(NBeatsBlock::new(
+                        backcast_size,
+                        forecast_size,
+                        hidden_size,
+                        num_layers,
+                        theta_size,
+                        NBeatsBlockType::Seasonal,
+                    ));
+                }
+            }
+        }
+
+        Self {
+            blocks,
+            stack_type,
+        }
+    }
+
+    /// Forward pass through the stack
+    pub fn forward(&self, input: &Array1<F>) -> Result<(Array1<F>, Array1<F>)> {
+        let mut residual = input.clone();
+        let mut total_forecast = Array1::zeros(self.blocks[0].forecast_size);
+
+        for block in &self.blocks {
+            let (backcast, forecast) = block.forward(&residual)?;
+            
+            // Subtract backcast from residual
+            for i in 0..residual.len() {
+                residual[i] = residual[i] - backcast[i];
+            }
+            
+            // Add forecast to total
+            for i in 0..total_forecast.len() {
+                total_forecast[i] = total_forecast[i] + forecast[i];
+            }
+        }
+
+        Ok((residual, total_forecast))
+    }
+}
+
+/// Complete N-BEATS model
+#[derive(Debug)]
+pub struct NBeatsModel<F: Float + Debug> {
+    /// Generic stacks
+    generic_stacks: Vec<NBeatsStack<F>>,
+    /// Interpretable stacks
+    interpretable_stacks: Vec<NBeatsStack<F>>,
+    /// Model parameters
+    backcast_size: usize,
+    forecast_size: usize,
+}
+
+impl<F: Float + Debug + Clone + FromPrimitive> NBeatsModel<F> {
+    /// Create new N-BEATS model
+    pub fn new(
+        backcast_size: usize,
+        forecast_size: usize,
+        hidden_size: usize,
+        num_layers: usize,
+        num_generic_stacks: usize,
+        num_interpretable_stacks: usize,
+        blocks_per_stack: usize,
+    ) -> Self {
+        let mut generic_stacks = Vec::new();
+        let mut interpretable_stacks = Vec::new();
+
+        // Create generic stacks
+        for _ in 0..num_generic_stacks {
+            generic_stacks.push(NBeatsStack::new(
+                backcast_size,
+                forecast_size,
+                hidden_size,
+                num_layers,
+                blocks_per_stack,
+                NBeatsStackType::Generic,
+            ));
+        }
+
+        // Create interpretable stacks
+        for _ in 0..num_interpretable_stacks {
+            interpretable_stacks.push(NBeatsStack::new(
+                backcast_size,
+                forecast_size,
+                hidden_size,
+                num_layers,
+                blocks_per_stack,
+                NBeatsStackType::Interpretable,
+            ));
+        }
+
+        Self {
+            generic_stacks,
+            interpretable_stacks,
+            backcast_size,
+            forecast_size,
+        }
+    }
+
+    /// Forward pass through the complete model
+    pub fn forward(&self, input: &Array1<F>) -> Result<Array1<F>> {
+        if input.len() != self.backcast_size {
+            return Err(TimeSeriesError::DimensionMismatch {
+                expected: self.backcast_size,
+                actual: input.len(),
+            });
+        }
+
+        let mut residual = input.clone();
+        let mut total_forecast = Array1::zeros(self.forecast_size);
+
+        // Process through generic stacks first
+        for stack in &self.generic_stacks {
+            let (new_residual, forecast) = stack.forward(&residual)?;
+            residual = new_residual;
+            
+            for i in 0..total_forecast.len() {
+                total_forecast[i] = total_forecast[i] + forecast[i];
+            }
+        }
+
+        // Process through interpretable stacks
+        for stack in &self.interpretable_stacks {
+            let (new_residual, forecast) = stack.forward(&residual)?;
+            residual = new_residual;
+            
+            for i in 0..total_forecast.len() {
+                total_forecast[i] = total_forecast[i] + forecast[i];
+            }
+        }
+
+        Ok(total_forecast)
+    }
+
+    /// Generate forecast for time series
+    pub fn forecast(&self, input_sequence: &Array1<F>) -> Result<Array1<F>> {
+        if input_sequence.len() < self.backcast_size {
+            return Err(TimeSeriesError::InvalidInput(
+                "Input sequence too short for backcast window".to_string(),
+            ));
+        }
+
+        // Use the last backcast_size points as input
+        let start_idx = input_sequence.len() - self.backcast_size;
+        let mut backcast_input = Array1::zeros(self.backcast_size);
+        for i in 0..self.backcast_size {
+            backcast_input[i] = input_sequence[start_idx + i];
+        }
+
+        self.forward(&backcast_input)
+    }
+
+    /// Multi-step forecasting
+    pub fn forecast_multistep(&self, input_sequence: &Array1<F>, steps: usize) -> Result<Array1<F>> {
+        let mut extended_sequence = input_sequence.clone();
+        let mut all_forecasts = Array1::zeros(steps);
+        let step_size = self.forecast_size;
+
+        let mut current_step = 0;
+        while current_step < steps {
+            // Get forecast for current window
+            let forecast = self.forecast(&extended_sequence)?;
+            
+            // Add forecast to results
+            let remaining_steps = steps - current_step;
+            let copy_steps = remaining_steps.min(step_size);
+            
+            for i in 0..copy_steps {
+                all_forecasts[current_step + i] = forecast[i];
+            }
+
+            // Extend sequence with forecast for next iteration
+            if current_step + step_size < steps {
+                let new_len = extended_sequence.len() + copy_steps;
+                let mut new_sequence = Array1::zeros(new_len);
+                
+                // Copy existing sequence
+                for i in 0..extended_sequence.len() {
+                    new_sequence[i] = extended_sequence[i];
+                }
+                
+                // Add forecasted values
+                for i in 0..copy_steps {
+                    new_sequence[extended_sequence.len() + i] = forecast[i];
+                }
+                
+                extended_sequence = new_sequence;
+            }
+
+            current_step += step_size;
+        }
+
+        Ok(all_forecasts)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1041,5 +1557,104 @@ mod tests {
         
         let output = ffn.forward(&input);
         assert_eq!(output.dim(), (10, 64));
+    }
+
+    #[test]
+    fn test_nbeats_block_generic() {
+        let block = NBeatsBlock::<f64>::new(
+            10, // backcast_size
+            5,  // forecast_size
+            32, // hidden_size
+            4,  // num_layers
+            15, // theta_size (backcast + forecast)
+            NBeatsBlockType::Generic,
+        );
+        
+        let input = Array1::from_vec((0..10).map(|i| i as f64 * 0.1).collect());
+        let (backcast, forecast) = block.forward(&input).unwrap();
+        
+        assert_eq!(backcast.len(), 10);
+        assert_eq!(forecast.len(), 5);
+    }
+
+    #[test]
+    fn test_nbeats_block_trend() {
+        let block = NBeatsBlock::<f64>::new(
+            10, // backcast_size
+            5,  // forecast_size
+            32, // hidden_size
+            4,  // num_layers
+            4,  // theta_size (polynomial degree + 1)
+            NBeatsBlockType::Trend,
+        );
+        
+        let input = Array1::from_vec((0..10).map(|i| i as f64 * 0.1).collect());
+        let (backcast, forecast) = block.forward(&input).unwrap();
+        
+        assert_eq!(backcast.len(), 10);
+        assert_eq!(forecast.len(), 5);
+    }
+
+    #[test]
+    fn test_nbeats_block_seasonal() {
+        let block = NBeatsBlock::<f64>::new(
+            10, // backcast_size
+            5,  // forecast_size
+            32, // hidden_size
+            4,  // num_layers
+            6,  // theta_size (3 harmonics * 2 coefficients)
+            NBeatsBlockType::Seasonal,
+        );
+        
+        let input = Array1::from_vec((0..10).map(|i| i as f64 * 0.1).collect());
+        let (backcast, forecast) = block.forward(&input).unwrap();
+        
+        assert_eq!(backcast.len(), 10);
+        assert_eq!(forecast.len(), 5);
+    }
+
+    #[test]
+    fn test_nbeats_stack() {
+        let stack = NBeatsStack::<f64>::new(
+            10, // backcast_size
+            5,  // forecast_size
+            32, // hidden_size
+            4,  // num_layers
+            3,  // num_blocks
+            NBeatsStackType::Generic,
+        );
+        
+        let input = Array1::from_vec((0..10).map(|i| i as f64 * 0.1).collect());
+        let (residual, forecast) = stack.forward(&input).unwrap();
+        
+        assert_eq!(residual.len(), 10);
+        assert_eq!(forecast.len(), 5);
+    }
+
+    #[test]
+    fn test_nbeats_model() {
+        let model = NBeatsModel::<f64>::new(
+            10, // backcast_size
+            5,  // forecast_size
+            32, // hidden_size
+            4,  // num_layers
+            1,  // num_generic_stacks
+            1,  // num_interpretable_stacks
+            2,  // blocks_per_stack
+        );
+        
+        let input = Array1::from_vec((0..10).map(|i| i as f64 * 0.1).collect());
+        let forecast = model.forward(&input).unwrap();
+        
+        assert_eq!(forecast.len(), 5);
+        
+        // Test with longer sequence
+        let long_sequence = Array1::from_vec((0..20).map(|i| i as f64 * 0.1).collect());
+        let forecast_from_sequence = model.forecast(&long_sequence).unwrap();
+        assert_eq!(forecast_from_sequence.len(), 5);
+        
+        // Test multi-step forecasting
+        let multistep_forecast = model.forecast_multistep(&long_sequence, 12).unwrap();
+        assert_eq!(multistep_forecast.len(), 12);
     }
 }

@@ -42,6 +42,10 @@ pub enum DatasetsError {
     #[error("Serialization error: {0}")]
     SerdeError(String),
 
+    /// GPU acceleration error
+    #[error("GPU error: {0}")]
+    GpuError(String),
+
     /// Other error
     #[error("Error: {0}")]
     Other(String),
@@ -99,6 +103,12 @@ mod tests {
             error.to_string(),
             "Serialization error: serialization failed"
         );
+    }
+
+    #[test]
+    fn test_gpu_error() {
+        let error = DatasetsError::GpuError("CUDA initialization failed".to_string());
+        assert_eq!(error.to_string(), "GPU error: CUDA initialization failed");
     }
 
     #[test]

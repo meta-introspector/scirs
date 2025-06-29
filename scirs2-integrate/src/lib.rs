@@ -290,6 +290,11 @@ pub use specialized::{
     QuantumAnnealer, QuantumPotential, QuantumState, RANSModel, RANSSolver, RANSState, SGSModel,
     SchrodingerMethod, SchrodingerSolver, StochasticPDESolver, VariationalQuantumEigensolver,
     VolatilityModel,
+    // Ultra-performance optimizations
+    AdaptiveAlgorithmSelector, AlgorithmRecommendation, AlertSeverity, GPUMemoryPool,
+    OptionPricingResult, ProblemCharacteristics, QuantumInspiredRNG, RealTimeRiskMonitor,
+    RiskAlert, RiskAlertType, RiskDashboard, RiskSnapshot, StreamingComputeManager,
+    UltraGPUKernel, UltraMonteCarloEngine, VarianceReductionSuite,
 };
 // Export geometric integration methods
 pub use geometric::{
@@ -346,11 +351,17 @@ pub use geometric::{
 pub use analysis::{
     BasinAnalysis, BifurcationAnalyzer, BifurcationPoint, BifurcationType, FixedPoint,
     PeriodicOrbit, StabilityAnalyzer, StabilityResult, StabilityType,
+    // Enhanced bifurcation and stability analysis
+    ContinuationAnalyzer, ContinuationResult, FixedPointData, BifurcationPointData,
+    MonodromyAnalyzer, MonodromyResult, PeriodicStabilityType,
 };
 // Export visualization utilities
 pub use visualization::{
     BifurcationDiagram, ColorScheme, HeatMapPlot, OutputFormat, PhaseSpacePlot, PlotMetadata,
     PlotStatistics, SurfacePlot, VectorFieldPlot, VisualizationEngine,
+    // Enhanced visualization tools
+    ConvergenceVisualizer, ConvergencePlot, MultiMetricConvergencePlot, ConvergenceCurve,
+    StepSizeAnalysisPlot, PhaseDensityPlot, BifurcationDiagramBuilder, EnhancedBifurcationDiagram,
 };
 // Export advanced modules
 pub use amr_advanced::{

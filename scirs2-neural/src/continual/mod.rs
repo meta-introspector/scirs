@@ -330,6 +330,22 @@ impl ContinualLearner {
         Ok(total_loss / batch_size as f32)
     }
 
+    /// Compute task-specific loss for heads (multi-task)
+    fn compute_head_loss(&self, predictions: &ArrayView2<f32>, labels: &ArrayView1<usize>) -> Result<f32> {
+        let mut total_loss = 0.0;
+        let batch_size = predictions.shape()[0];
+
+        for i in 0..batch_size {
+            let true_label = labels[i];
+            if true_label < predictions.shape()[1] {
+                let pred_value = predictions[[i, true_label]].max(1e-7);
+                total_loss -= pred_value.ln();
+            }
+        }
+
+        Ok(total_loss / batch_size as f32)
+    }
+
     /// Compute EWC regularization loss
     fn compute_ewc_loss(&self) -> Result<f32> {
         if self.fisher_information.is_none() || self.optimal_params.is_none() {
@@ -595,7 +611,7 @@ impl MultiTaskLearner {
 
                 if let Some(head) = self.task_heads.get(task_name) {
                     let task_output = head.forward(&shared_features.view())?;
-                    let task_loss = self.compute_task_loss(&task_output.view(), labels)?;
+                    let task_loss = self.compute_head_loss(&task_output.view(), labels)?;
                     epoch_losses.insert(task_name.clone(), task_loss);
                 }
             }
@@ -711,6 +727,684 @@ pub struct MultiTaskTrainingResult {
     pub task_losses: HashMap<String, Vec<f32>>,
     pub task_accuracies: HashMap<String, f32>,
     pub task_weights: HashMap<String, f32>,
+}
+
+/// Advanced Meta-Learning for Continual Learning (MAML-style)
+pub struct MetaContinualLearner {
+    /// Meta-model parameters
+    meta_model: Sequential<f32>,
+    /// Task-specific adaptations
+    task_adaptations: Vec<TaskAdaptation>,
+    /// Meta-learning configuration
+    config: MetaLearningConfig,
+    /// Inner loop optimizer parameters
+    inner_lr: f32,
+    /// Outer loop optimizer parameters
+    outer_lr: f32,
+    /// Support and query sets for meta-learning
+    meta_batch: Option<MetaBatch>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MetaLearningConfig {
+    /// Number of inner gradient steps
+    pub inner_steps: usize,
+    /// Number of tasks per meta-batch
+    pub tasks_per_batch: usize,
+    /// Support set size per task
+    pub support_size: usize,
+    /// Query set size per task
+    pub query_size: usize,
+    /// Enable second-order gradients
+    pub second_order: bool,
+    /// Adaptation learning rate schedule
+    pub adaptive_lr: bool,
+}
+
+impl Default for MetaLearningConfig {
+    fn default() -> Self {
+        Self {
+            inner_steps: 5,
+            tasks_per_batch: 4,
+            support_size: 10,
+            query_size: 15,
+            second_order: true,
+            adaptive_lr: true,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct TaskAdaptation {
+    /// Task identifier
+    pub task_id: usize,
+    /// Adapted parameters
+    pub adapted_params: Vec<Array2<f32>>,
+    /// Adaptation history
+    pub adaptation_steps: Vec<AdaptationStep>,
+    /// Task-specific learning rate
+    pub task_lr: f32,
+}
+
+#[derive(Debug, Clone)]
+pub struct AdaptationStep {
+    /// Step number
+    pub step: usize,
+    /// Loss before step
+    pub loss_before: f32,
+    /// Loss after step
+    pub loss_after: f32,
+    /// Gradient norm
+    pub gradient_norm: f32,
+}
+
+#[derive(Debug, Clone)]
+pub struct MetaBatch {
+    /// Support sets for each task
+    pub support_sets: Vec<(Array2<f32>, Array1<usize>)>,
+    /// Query sets for each task
+    pub query_sets: Vec<(Array2<f32>, Array1<usize>)>,
+    /// Task identifiers
+    pub task_ids: Vec<usize>,
+}
+
+impl MetaContinualLearner {
+    /// Create a new meta-continual learner
+    pub fn new(
+        meta_model: Sequential<f32>,
+        config: MetaLearningConfig,
+        inner_lr: f32,
+        outer_lr: f32,
+    ) -> Self {
+        Self {
+            meta_model,
+            task_adaptations: Vec::new(),
+            config,
+            inner_lr,
+            outer_lr,
+            meta_batch: None,
+        }
+    }
+
+    /// Meta-train on a batch of tasks
+    pub fn meta_train(&mut self, meta_batch: MetaBatch) -> Result<MetaTrainingResult> {
+        let mut total_meta_loss = 0.0;
+        let mut task_losses = Vec::new();
+
+        // For each task in the meta-batch
+        for i in 0..meta_batch.task_ids.len() {
+            let task_id = meta_batch.task_ids[i];
+            let (support_data, support_labels) = &meta_batch.support_sets[i];
+            let (query_data, query_labels) = &meta_batch.query_sets[i];
+
+            // Inner loop: adapt to current task
+            let adapted_params = self.inner_loop_adaptation(
+                support_data,
+                support_labels,
+                task_id,
+            )?;
+
+            // Evaluate adapted model on query set
+            let query_loss = self.evaluate_adapted_model(
+                &adapted_params,
+                query_data,
+                query_labels,
+            )?;
+
+            total_meta_loss += query_loss;
+            task_losses.push(query_loss);
+
+            // Store adaptation for this task
+            let adaptation = TaskAdaptation {
+                task_id,
+                adapted_params,
+                adaptation_steps: Vec::new(), // Would track during adaptation
+                task_lr: self.inner_lr,
+            };
+            self.task_adaptations.push(adaptation);
+        }
+
+        // Outer loop: update meta-parameters
+        self.outer_loop_update(total_meta_loss)?;
+
+        Ok(MetaTrainingResult {
+            meta_loss: total_meta_loss / meta_batch.task_ids.len() as f32,
+            task_losses,
+            adaptation_quality: self.measure_adaptation_quality(),
+        })
+    }
+
+    /// Perform inner loop adaptation for a specific task
+    fn inner_loop_adaptation(
+        &self,
+        support_data: &Array2<f32>,
+        support_labels: &Array1<usize>,
+        task_id: usize,
+    ) -> Result<Vec<Array2<f32>>> {
+        // Start with meta-parameters
+        let mut current_params = self.get_meta_parameters()?;
+
+        // Perform gradient descent steps
+        for step in 0..self.config.inner_steps {
+            // Compute loss on support set
+            let loss = self.compute_task_loss_with_params(
+                &current_params,
+                support_data,
+                support_labels,
+            )?;
+
+            // Compute gradients
+            let gradients = self.compute_gradients(&current_params, loss)?;
+
+            // Update parameters
+            for (param, grad) in current_params.iter_mut().zip(gradients.iter()) {
+                *param = &*param - &(grad * self.inner_lr);
+            }
+
+            // Adaptive learning rate
+            if self.config.adaptive_lr {
+                self.inner_lr *= 0.99; // Simple decay
+            }
+        }
+
+        Ok(current_params)
+    }
+
+    /// Evaluate adapted model on query set
+    fn evaluate_adapted_model(
+        &self,
+        adapted_params: &[Array2<f32>],
+        query_data: &Array2<f32>,
+        query_labels: &Array1<usize>,
+    ) -> Result<f32> {
+        self.compute_task_loss_with_params(adapted_params, query_data, query_labels)
+    }
+
+    /// Update meta-parameters (outer loop)
+    fn outer_loop_update(&mut self, meta_loss: f32) -> Result<()> {
+        // Simplified meta-gradient update
+        // In practice, would compute gradients w.r.t. meta-parameters
+        Ok(())
+    }
+
+    /// Get current meta-parameters
+    fn get_meta_parameters(&self) -> Result<Vec<Array2<f32>>> {
+        // Placeholder - would extract actual model parameters
+        Ok(vec![Array2::from_elem((10, 10), 0.1); 5])
+    }
+
+    /// Compute task loss with specific parameters
+    fn compute_task_loss_with_params(
+        &self,
+        params: &[Array2<f32>],
+        data: &Array2<f32>,
+        labels: &Array1<usize>,
+    ) -> Result<f32> {
+        // Simplified computation - would use params for forward pass
+        Ok(0.5) // Placeholder
+    }
+
+    /// Compute gradients for parameters
+    fn compute_gradients(&self, params: &[Array2<f32>], loss: f32) -> Result<Vec<Array2<f32>>> {
+        // Simplified gradient computation
+        Ok(params.iter().map(|p| Array2::from_elem(p.shape(), 0.01)).collect())
+    }
+
+    /// Measure adaptation quality
+    fn measure_adaptation_quality(&self) -> f32 {
+        // Simple metric: average improvement across tasks
+        0.15 // Placeholder
+    }
+
+    /// Few-shot adaptation to a new task
+    pub fn few_shot_adapt(
+        &mut self,
+        task_data: &Array2<f32>,
+        task_labels: &Array1<usize>,
+        num_shots: usize,
+    ) -> Result<TaskAdaptation> {
+        // Use first few samples for adaptation
+        let adapt_data = task_data.slice(s![..num_shots, ..]);
+        let adapt_labels = task_labels.slice(s![..num_shots]);
+
+        let adapted_params = self.inner_loop_adaptation(
+            &adapt_data.to_owned(),
+            &adapt_labels.to_owned(),
+            self.task_adaptations.len(),
+        )?;
+
+        let adaptation = TaskAdaptation {
+            task_id: self.task_adaptations.len(),
+            adapted_params,
+            adaptation_steps: Vec::new(),
+            task_lr: self.inner_lr,
+        };
+
+        Ok(adaptation)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct MetaTrainingResult {
+    pub meta_loss: f32,
+    pub task_losses: Vec<f32>,
+    pub adaptation_quality: f32,
+}
+
+/// Advanced Memory Management for Continual Learning
+pub struct AdvancedMemoryManager {
+    /// Core memory buffer
+    core_memory: CoreMemoryBuffer,
+    /// Episodic memory for important samples
+    episodic_memory: EpisodicMemoryBuffer,
+    /// Semantic memory for learned concepts
+    semantic_memory: SemanticMemoryBuffer,
+    /// Memory consolidation strategy
+    consolidation_strategy: ConsolidationStrategy,
+}
+
+#[derive(Debug, Clone)]
+pub enum ConsolidationStrategy {
+    /// Gradient-based importance
+    GradientBased,
+    /// Uncertainty-based selection
+    UncertaintyBased,
+    /// Diversity-based selection
+    DiversityBased,
+    /// Hybrid approach
+    Hybrid,
+}
+
+pub struct CoreMemoryBuffer {
+    /// Raw data samples
+    samples: Vec<MemorySample>,
+    /// Capacity limit
+    capacity: usize,
+    /// Current size
+    current_size: usize,
+}
+
+pub struct EpisodicMemoryBuffer {
+    /// Important episodes
+    episodes: Vec<Episode>,
+    /// Selection criteria
+    importance_threshold: f32,
+}
+
+pub struct SemanticMemoryBuffer {
+    /// Learned prototypes
+    prototypes: Vec<Prototype>,
+    /// Concept relationships
+    concept_graph: ConceptGraph,
+}
+
+#[derive(Debug, Clone)]
+pub struct MemorySample {
+    pub data: Array1<f32>,
+    pub label: usize,
+    pub task_id: usize,
+    pub importance_score: f32,
+    pub timestamp: std::time::Instant,
+}
+
+#[derive(Debug, Clone)]
+pub struct Episode {
+    pub samples: Vec<MemorySample>,
+    pub context: EpisodeContext,
+    pub significance: f32,
+}
+
+#[derive(Debug, Clone)]
+pub struct EpisodeContext {
+    pub task_id: usize,
+    pub difficulty: f32,
+    pub novelty: f32,
+    pub success_rate: f32,
+}
+
+#[derive(Debug, Clone)]
+pub struct Prototype {
+    pub feature_vector: Array1<f32>,
+    pub class_id: usize,
+    pub confidence: f32,
+    pub update_count: usize,
+}
+
+pub struct ConceptGraph {
+    nodes: Vec<ConceptNode>,
+    edges: Vec<ConceptEdge>,
+}
+
+#[derive(Debug, Clone)]
+pub struct ConceptNode {
+    pub concept_id: usize,
+    pub representation: Array1<f32>,
+    pub strength: f32,
+}
+
+#[derive(Debug, Clone)]
+pub struct ConceptEdge {
+    pub from_concept: usize,
+    pub to_concept: usize,
+    pub weight: f32,
+    pub edge_type: EdgeType,
+}
+
+#[derive(Debug, Clone)]
+pub enum EdgeType {
+    Similarity,
+    Causality,
+    Hierarchy,
+    Temporal,
+}
+
+impl AdvancedMemoryManager {
+    pub fn new(capacity: usize, consolidation_strategy: ConsolidationStrategy) -> Self {
+        Self {
+            core_memory: CoreMemoryBuffer {
+                samples: Vec::new(),
+                capacity,
+                current_size: 0,
+            },
+            episodic_memory: EpisodicMemoryBuffer {
+                episodes: Vec::new(),
+                importance_threshold: 0.7,
+            },
+            semantic_memory: SemanticMemoryBuffer {
+                prototypes: Vec::new(),
+                concept_graph: ConceptGraph {
+                    nodes: Vec::new(),
+                    edges: Vec::new(),
+                },
+            },
+            consolidation_strategy,
+        }
+    }
+
+    /// Add new samples to memory
+    pub fn add_samples(
+        &mut self,
+        data: &Array2<f32>,
+        labels: &Array1<usize>,
+        task_id: usize,
+    ) -> Result<()> {
+        for i in 0..data.shape()[0] {
+            let sample = MemorySample {
+                data: data.row(i).to_owned(),
+                label: labels[i],
+                task_id,
+                importance_score: self.compute_importance_score(&data.row(i), labels[i])?,
+                timestamp: std::time::Instant::now(),
+            };
+
+            self.add_sample_to_buffers(sample)?;
+        }
+
+        // Periodic consolidation
+        if self.core_memory.current_size >= self.core_memory.capacity {
+            self.consolidate_memory()?;
+        }
+
+        Ok(())
+    }
+
+    /// Compute importance score for a sample
+    fn compute_importance_score(&self, data: &ArrayView1<f32>, label: usize) -> Result<f32> {
+        match self.consolidation_strategy {
+            ConsolidationStrategy::GradientBased => {
+                // Use gradient magnitude as importance
+                Ok(data.iter().map(|&x| x.abs()).sum::<f32>() / data.len() as f32)
+            }
+            ConsolidationStrategy::UncertaintyBased => {
+                // Use prediction uncertainty
+                Ok(0.5 + 0.3 * rand::random::<f32>()) // Placeholder
+            }
+            ConsolidationStrategy::DiversityBased => {
+                // Use distance from existing prototypes
+                self.compute_diversity_score(data)
+            }
+            ConsolidationStrategy::Hybrid => {
+                // Combine multiple criteria
+                let gradient_score = data.iter().map(|&x| x.abs()).sum::<f32>() / data.len() as f32;
+                let diversity_score = self.compute_diversity_score(data)?;
+                Ok(0.5 * gradient_score + 0.5 * diversity_score)
+            }
+        }
+    }
+
+    /// Compute diversity score based on distance from prototypes
+    fn compute_diversity_score(&self, data: &ArrayView1<f32>) -> Result<f32> {
+        if self.semantic_memory.prototypes.is_empty() {
+            return Ok(1.0); // Maximum diversity if no prototypes exist
+        }
+
+        let mut min_distance = f32::INFINITY;
+        for prototype in &self.semantic_memory.prototypes {
+            let distance = self.euclidean_distance(data, &prototype.feature_vector.view());
+            min_distance = min_distance.min(distance);
+        }
+
+        // Normalize distance to [0, 1] range
+        Ok((min_distance / (min_distance + 1.0)).min(1.0))
+    }
+
+    /// Calculate Euclidean distance between two vectors
+    fn euclidean_distance(&self, a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> f32 {
+        a.iter()
+            .zip(b.iter())
+            .map(|(&x, &y)| (x - y).powi(2))
+            .sum::<f32>()
+            .sqrt()
+    }
+
+    /// Add sample to appropriate memory buffers
+    fn add_sample_to_buffers(&mut self, sample: MemorySample) -> Result<()> {
+        // Add to core memory
+        if self.core_memory.current_size < self.core_memory.capacity {
+            self.core_memory.samples.push(sample.clone());
+            self.core_memory.current_size += 1;
+        } else {
+            // Replace least important sample
+            if let Some(min_idx) = self.find_least_important_sample() {
+                self.core_memory.samples[min_idx] = sample.clone();
+            }
+        }
+
+        // Add to episodic memory if important enough
+        if sample.importance_score > self.episodic_memory.importance_threshold {
+            let episode = Episode {
+                samples: vec![sample.clone()],
+                context: EpisodeContext {
+                    task_id: sample.task_id,
+                    difficulty: sample.importance_score,
+                    novelty: self.compute_diversity_score(&sample.data.view())?,
+                    success_rate: 0.8, // Placeholder
+                },
+                significance: sample.importance_score,
+            };
+            self.episodic_memory.episodes.push(episode);
+        }
+
+        // Update semantic memory
+        self.update_prototypes(&sample)?;
+
+        Ok(())
+    }
+
+    /// Find least important sample in core memory
+    fn find_least_important_sample(&self) -> Option<usize> {
+        self.core_memory
+            .samples
+            .iter()
+            .enumerate()
+            .min_by(|(_, a), (_, b)| a.importance_score.partial_cmp(&b.importance_score).unwrap())
+            .map(|(idx, _)| idx)
+    }
+
+    /// Update prototypes in semantic memory
+    fn update_prototypes(&mut self, sample: &MemorySample) -> Result<()> {
+        // Find nearest prototype
+        if let Some(nearest_idx) = self.find_nearest_prototype(&sample.data.view(), sample.label) {
+            // Update existing prototype
+            let prototype = &mut self.semantic_memory.prototypes[nearest_idx];
+            let alpha = 0.1; // Learning rate
+            
+            for (i, &new_val) in sample.data.iter().enumerate() {
+                prototype.feature_vector[i] = 
+                    (1.0 - alpha) * prototype.feature_vector[i] + alpha * new_val;
+            }
+            
+            prototype.update_count += 1;
+            prototype.confidence = (prototype.update_count as f32).min(10.0) / 10.0;
+        } else {
+            // Create new prototype
+            let prototype = Prototype {
+                feature_vector: sample.data.clone(),
+                class_id: sample.label,
+                confidence: 0.1,
+                update_count: 1,
+            };
+            self.semantic_memory.prototypes.push(prototype);
+        }
+
+        Ok(())
+    }
+
+    /// Find nearest prototype for given data and label
+    fn find_nearest_prototype(&self, data: &ArrayView1<f32>, label: usize) -> Option<usize> {
+        let mut min_distance = f32::INFINITY;
+        let mut nearest_idx = None;
+
+        for (idx, prototype) in self.semantic_memory.prototypes.iter().enumerate() {
+            if prototype.class_id == label {
+                let distance = self.euclidean_distance(data, &prototype.feature_vector.view());
+                if distance < min_distance {
+                    min_distance = distance;
+                    nearest_idx = Some(idx);
+                }
+            }
+        }
+
+        nearest_idx
+    }
+
+    /// Consolidate memory by removing redundant samples
+    fn consolidate_memory(&mut self) -> Result<()> {
+        // Remove samples with low importance scores
+        self.core_memory.samples.retain(|sample| sample.importance_score > 0.3);
+        
+        // Update current size
+        self.core_memory.current_size = self.core_memory.samples.len();
+
+        // Merge similar episodes
+        self.merge_similar_episodes()?;
+
+        // Prune weak prototypes
+        self.semantic_memory.prototypes.retain(|p| p.confidence > 0.2);
+
+        Ok(())
+    }
+
+    /// Merge similar episodes to reduce memory usage
+    fn merge_similar_episodes(&mut self) -> Result<()> {
+        let mut merged_episodes = Vec::new();
+        let mut used = vec![false; self.episodic_memory.episodes.len()];
+
+        for i in 0..self.episodic_memory.episodes.len() {
+            if used[i] {
+                continue;
+            }
+
+            let mut merged_episode = self.episodic_memory.episodes[i].clone();
+            used[i] = true;
+
+            // Find similar episodes
+            for j in (i + 1)..self.episodic_memory.episodes.len() {
+                if !used[j] && self.are_episodes_similar(&merged_episode, &self.episodic_memory.episodes[j]) {
+                    // Merge episodes
+                    merged_episode.samples.extend(self.episodic_memory.episodes[j].samples.clone());
+                    merged_episode.significance = merged_episode.significance.max(self.episodic_memory.episodes[j].significance);
+                    used[j] = true;
+                }
+            }
+
+            merged_episodes.push(merged_episode);
+        }
+
+        self.episodic_memory.episodes = merged_episodes;
+        Ok(())
+    }
+
+    /// Check if two episodes are similar enough to merge
+    fn are_episodes_similar(&self, ep1: &Episode, ep2: &Episode) -> bool {
+        ep1.context.task_id == ep2.context.task_id && 
+        (ep1.context.difficulty - ep2.context.difficulty).abs() < 0.2
+    }
+
+    /// Sample from memory for replay
+    pub fn sample_for_replay(&self, num_samples: usize) -> Result<(Array2<f32>, Array1<usize>)> {
+        if self.core_memory.samples.is_empty() {
+            return Ok((Array2::zeros((0, 1)), Array1::zeros(0)));
+        }
+
+        let actual_samples = num_samples.min(self.core_memory.samples.len());
+        
+        // Importance-based sampling
+        let mut sampled_indices = Vec::new();
+        let total_importance: f32 = self.core_memory.samples.iter().map(|s| s.importance_score).sum();
+
+        for _ in 0..actual_samples {
+            let mut cumulative = 0.0;
+            let target = rand::random::<f32>() * total_importance;
+            
+            for (idx, sample) in self.core_memory.samples.iter().enumerate() {
+                cumulative += sample.importance_score;
+                if cumulative >= target {
+                    sampled_indices.push(idx);
+                    break;
+                }
+            }
+        }
+
+        // Construct arrays
+        let data_dim = self.core_memory.samples[0].data.len();
+        let mut data = Array2::zeros((actual_samples, data_dim));
+        let mut labels = Array1::zeros(actual_samples);
+
+        for (i, &idx) in sampled_indices.iter().enumerate() {
+            data.row_mut(i).assign(&self.core_memory.samples[idx].data);
+            labels[i] = self.core_memory.samples[idx].label;
+        }
+
+        Ok((data, labels))
+    }
+
+    /// Get memory statistics
+    pub fn get_memory_statistics(&self) -> MemoryStatistics {
+        MemoryStatistics {
+            core_memory_usage: self.core_memory.current_size,
+            core_memory_capacity: self.core_memory.capacity,
+            episodic_memory_episodes: self.episodic_memory.episodes.len(),
+            semantic_prototypes: self.semantic_memory.prototypes.len(),
+            concept_nodes: self.semantic_memory.concept_graph.nodes.len(),
+            average_importance: if !self.core_memory.samples.is_empty() {
+                self.core_memory.samples.iter().map(|s| s.importance_score).sum::<f32>() 
+                    / self.core_memory.samples.len() as f32
+            } else {
+                0.0
+            },
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct MemoryStatistics {
+    pub core_memory_usage: usize,
+    pub core_memory_capacity: usize,
+    pub episodic_memory_episodes: usize,
+    pub semantic_prototypes: usize,
+    pub concept_nodes: usize,
+    pub average_importance: f32,
 }
 
 #[cfg(test)]

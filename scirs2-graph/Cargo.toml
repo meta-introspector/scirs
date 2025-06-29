@@ -44,6 +44,7 @@ num_cpus = "1.16"
 
 [features]
 default = []
+unstable = []
 
 [[example]]
 name = "graph_demo"

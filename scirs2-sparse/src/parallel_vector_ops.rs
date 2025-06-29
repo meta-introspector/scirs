@@ -328,7 +328,7 @@ where
                 // Use SIMD acceleration for large chunks
                 let x_view = ArrayView1::from(x_chunk);
                 let scaled = T::simd_scalar_mul(&x_view, a);
-                let y_view = ArrayView1::from(y_chunk);
+                let y_view = ArrayView1::from(&y_chunk[..]);
                 let result = T::simd_add(&scaled.view(), &y_view);
                 y_chunk.copy_from_slice(result.as_slice().unwrap());
             } else {
@@ -342,7 +342,7 @@ where
         // Use SIMD without parallelization
         let x_view = ArrayView1::from(x);
         let scaled = T::simd_scalar_mul(&x_view, a);
-        let y_view = ArrayView1::from(y);
+        let y_view = ArrayView1::from(&y[..]);
         let result = T::simd_add(&scaled.view(), &y_view);
         y.copy_from_slice(result.as_slice().unwrap());
     } else {

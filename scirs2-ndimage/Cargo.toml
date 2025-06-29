@@ -60,4 +60,4 @@ name = "streaming_processing"
 name = "gpu_backend"
 
 [[example]]
-name = "comprehensive_analysis"
+name = "ndimage_comprehensive_analysis"

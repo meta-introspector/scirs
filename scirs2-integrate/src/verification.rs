@@ -1396,3 +1396,78 @@ mod tests {
         assert_eq!(named_system.component_names[1], "Trigonometric");
     }
 }
+
+
+/// Advanced verification framework with automatic error estimation
+pub struct AdvancedVerificationFramework {
+    /// Grid refinement strategy
+    pub refinement_strategy: RefinementStrategy,
+    /// Error estimation method
+    pub error_estimation_method: ErrorEstimationMethod,
+    /// Convergence criteria
+    pub convergence_criteria: ConvergenceCriteria,
+    /// Statistical analysis settings
+    pub statistical_analysis: bool,
+}
+
+/// Grid refinement strategies
+#[derive(Debug, Clone, Copy)]
+pub enum RefinementStrategy {
+    /// Uniform refinement (h → h/2)
+    Uniform,
+    /// Adaptive refinement based on error indicators
+    Adaptive,
+    /// Custom refinement ratios
+    Custom(f64),
+}
+
+/// Error estimation methods
+#[derive(Debug, Clone, Copy)]
+pub enum ErrorEstimationMethod {
+    /// Richardson extrapolation
+    Richardson,
+    /// Embedded method comparison
+    Embedded,
+    /// Bootstrap sampling
+    Bootstrap,
+    /// Cross-validation
+    CrossValidation,
+}
+
+/// Convergence criteria for verification
+#[derive(Debug, Clone)]
+pub struct ConvergenceCriteria {
+    /// Minimum number of grid levels
+    pub min_levels: usize,
+    /// Maximum number of grid levels
+    pub max_levels: usize,
+    /// Required R² for order estimation
+    pub min_r_squared: f64,
+    /// Tolerance for order estimation
+    pub order_tolerance: f64,
+    /// Target accuracy
+    pub target_accuracy: f64,
+}
+
+impl Default for ConvergenceCriteria {
+    fn default() -> Self {
+        Self {
+            min_levels: 3,
+            max_levels: 8,
+            min_r_squared: 0.95,
+            order_tolerance: 0.2,
+            target_accuracy: 1e-10,
+        }
+    }
+}
+
+impl Default for AdvancedVerificationFramework {
+    fn default() -> Self {
+        Self {
+            refinement_strategy: RefinementStrategy::Uniform,
+            error_estimation_method: ErrorEstimationMethod::Richardson,
+            convergence_criteria: ConvergenceCriteria::default(),
+            statistical_analysis: true,
+        }
+    }
+}

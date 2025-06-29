@@ -519,8 +519,10 @@ mod tests {
 
         let b = Array1::from_vec(vec![1.0, 1.0, 1.0]);
 
-        let mut options = LSMROptions::default();
-        options.calc_var = true;
+        let options = LSMROptions { 
+            calc_var: true, 
+            ..Default::default() 
+        };
 
         let result = lsmr(&matrix, &b.view(), None, options).unwrap();
 

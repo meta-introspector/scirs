@@ -7,7 +7,7 @@ use ndarray::prelude::*;
 /// Trait for aggregation strategies
 pub trait AggregationStrategy: Send + Sync {
     /// Aggregate client updates
-    fn aggregate(&self, updates: &[ClientUpdate], weights: &[f32]) -> Result<Vec<Array2<f32>>>;
+    fn aggregate(&mut self, updates: &[ClientUpdate], weights: &[f32]) -> Result<Vec<Array2<f32>>>;
 
     /// Get strategy name
     fn name(&self) -> &str;
@@ -40,7 +40,7 @@ impl FedAvg {
 }
 
 impl AggregationStrategy for FedAvg {
-    fn aggregate(&self, updates: &[ClientUpdate], weights: &[f32]) -> Result<Vec<Array2<f32>>> {
+    fn aggregate(&mut self, updates: &[ClientUpdate], weights: &[f32]) -> Result<Vec<Array2<f32>>> {
         if updates.is_empty() {
             return Ok(Vec::new());
         }
@@ -95,10 +95,10 @@ impl FedProx {
 }
 
 impl AggregationStrategy for FedProx {
-    fn aggregate(&self, updates: &[ClientUpdate], weights: &[f32]) -> Result<Vec<Array2<f32>>> {
+    fn aggregate(&mut self, updates: &[ClientUpdate], weights: &[f32]) -> Result<Vec<Array2<f32>>> {
         // FedProx aggregation is similar to FedAvg but with proximal term in client optimization
         // The aggregation step itself is the same as FedAvg
-        let fedavg = FedAvg::new();
+        let mut fedavg = FedAvg::new();
         fedavg.aggregate(updates, weights)
     }
 
@@ -147,7 +147,7 @@ impl FedYogi {
 }
 
 impl AggregationStrategy for FedYogi {
-    fn aggregate(&self, updates: &[ClientUpdate], weights: &[f32]) -> Result<Vec<Array2<f32>>> {
+    fn aggregate(&mut self, updates: &[ClientUpdate], weights: &[f32]) -> Result<Vec<Array2<f32>>> {
         if updates.is_empty() {
             return Ok(Vec::new());
         }
@@ -220,7 +220,7 @@ impl TrimmedMean {
 }
 
 impl AggregationStrategy for TrimmedMean {
-    fn aggregate(&self, updates: &[ClientUpdate], _weights: &[f32]) -> Result<Vec<Array2<f32>>> {
+    fn aggregate(&mut self, updates: &[ClientUpdate], _weights: &[f32]) -> Result<Vec<Array2<f32>>> {
         if updates.is_empty() {
             return Ok(Vec::new());
         }
@@ -289,7 +289,7 @@ impl Krum {
 }
 
 impl AggregationStrategy for Krum {
-    fn aggregate(&self, updates: &[ClientUpdate], _weights: &[f32]) -> Result<Vec<Array2<f32>>> {
+    fn aggregate(&mut self, updates: &[ClientUpdate], _weights: &[f32]) -> Result<Vec<Array2<f32>>> {
         if updates.is_empty() {
             return Ok(Vec::new());
         }
@@ -374,7 +374,7 @@ impl Median {
 }
 
 impl AggregationStrategy for Median {
-    fn aggregate(&self, updates: &[ClientUpdate], _weights: &[f32]) -> Result<Vec<Array2<f32>>> {
+    fn aggregate(&mut self, updates: &[ClientUpdate], _weights: &[f32]) -> Result<Vec<Array2<f32>>> {
         if updates.is_empty() {
             return Ok(Vec::new());
         }

@@ -3,6 +3,27 @@
 use crate::error::Result;
 use crate::nas::search_space::{Architecture, LayerType};
 use std::fmt;
+use std::collections::HashMap;
+
+/// Padding type for convolution layers
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Padding {
+    Valid,
+    Same,
+    Custom(usize),
+}
+
+/// Activation type enumeration
+#[derive(Debug, Clone, PartialEq)]
+pub enum ActivationType {
+    ReLU,
+    Sigmoid,
+    Tanh,
+    Softmax,
+    GELU,
+    Swish,
+    Mish,
+}
 
 /// Trait for architecture encoding schemes
 pub trait ArchitectureEncoding: Send + Sync + fmt::Display {
@@ -50,9 +71,9 @@ pub struct NodeType {
 
 #[derive(Debug, Clone)]
 pub struct NodeAttributes {
-    pub width_multiplier: f32,
-    pub dropout_rate: Option<f32>,
-    pub activation: Option<String>,
+    pub name: String,
+    pub operation_type: String,
+    pub parameters: HashMap<String, f64>,
 }
 
 impl GraphEncoding {
@@ -60,10 +81,11 @@ impl GraphEncoding {
     pub fn new(nodes: Vec<NodeType>, edges: Vec<Vec<bool>>) -> Self {
         let node_attrs = nodes
             .iter()
-            .map(|_| NodeAttributes {
-                width_multiplier: 1.0,
-                dropout_rate: None,
-                activation: None,
+            .enumerate()
+            .map(|(i, _)| NodeAttributes {
+                name: format!("node_{}", i),
+                operation_type: "default".to_string(),
+                parameters: HashMap::new(),
             })
             .collect();
 
@@ -78,7 +100,7 @@ impl GraphEncoding {
     pub fn random(rng: &mut impl rand::Rng) -> Result<Self> {
         use rand::prelude::*;
 
-        let num_nodes = rng.gen_range(5..20);
+        let num_nodes = rng.random_range(5..20);
         let mut nodes = Vec::with_capacity(num_nodes);
 
         // Input node
@@ -90,14 +112,14 @@ impl GraphEncoding {
 
         // Hidden nodes
         for _ in 1..num_nodes - 1 {
-            let layer_type = match rng.gen_range(0..6) {
-                0 => LayerType::Dense(rng.gen_range(1..8) * 64),
+            let layer_type = match rng.random_range(0..6) {
+                0 => LayerType::Dense(rng.random_range(1..8) * 64),
                 1 => LayerType::Conv2D {
-                    filters: rng.gen_range(1..8) * 32,
+                    filters: rng.random_range(1..8) * 32,
                     kernel_size: (3, 3),
                     stride: (1, 1),
                 },
-                2 => LayerType::Dropout(rng.gen_range(1..5) as f32 * 0.1),
+                2 => LayerType::Dropout(rng.random_range(1..5) as f32 * 0.1),
                 3 => LayerType::BatchNorm,
                 4 => LayerType::Activation("relu".to_string()),
                 _ => LayerType::MaxPool2D {
@@ -137,6 +159,9 @@ impl GraphEncoding {
 impl ArchitectureEncoding for GraphEncoding {
     fn to_vector(&self) -> Vec<f64> {
         let mut vec = Vec::new();
+
+        // First element: number of nodes
+        vec.push(self.nodes.len() as f64);
 
         // Encode nodes
         for node in &self.nodes {
@@ -182,15 +207,89 @@ impl ArchitectureEncoding for GraphEncoding {
         vec
     }
 
-    fn from_vector(_vec: &[f64]) -> Result<Self> {
-        // Simplified implementation
-        Err(crate::error::NeuralError::NotImplementedError(
-            "GraphEncoding::from_vector".to_string(),
-        ))
+    fn from_vector(vec: &[f64]) -> Result<Self> {
+        if vec.is_empty() {
+            return Err(crate::error::NeuralError::ConfigError(
+                "Empty vector for GraphEncoding".to_string(),
+            ));
+        }
+
+        // First element is the number of nodes
+        let num_nodes = vec[0] as usize;
+        if num_nodes == 0 {
+            return Err(crate::error::NeuralError::ConfigError(
+                "GraphEncoding must have at least one node".to_string(),
+            ));
+        }
+
+        // Calculate expected vector size
+        let expected_size = 1 + num_nodes * 4 + num_nodes * num_nodes;
+        if vec.len() < expected_size {
+            return Err(crate::error::NeuralError::ConfigError(
+                format!("Vector too short: expected at least {}, got {}", expected_size, vec.len()),
+            ));
+        }
+
+        let mut nodes = Vec::with_capacity(num_nodes);
+        let mut edges = vec![vec![false; num_nodes]; num_nodes];
+        let mut node_attrs = Vec::with_capacity(num_nodes);
+
+        let mut idx = 1;
+
+        // Decode nodes
+        for _ in 0..num_nodes {
+            let is_input = vec[idx] > 0.5;
+            let is_output = vec[idx + 1] > 0.5;
+            let layer_type_code = vec[idx + 2] as i32;
+            let layer_param = vec[idx + 3];
+
+            let layer_type = match layer_type_code {
+                1 => LayerType::Dense(layer_param as usize),
+                2 => LayerType::Conv2D {
+                    filters: layer_param as usize,
+                    kernel_size: (3, 3), // Default kernel size
+                    stride: (1, 1),
+                },
+                3 => LayerType::Dropout(layer_param as f32),
+                4 => LayerType::BatchNorm,
+                5 => LayerType::Activation("relu".to_string()), // Default activation
+                _ => LayerType::Dense(64), // Default fallback
+            };
+
+            nodes.push(NodeType {
+                layer_type,
+                is_input,
+                is_output,
+            });
+
+            node_attrs.push(NodeAttributes {
+                name: format!("node_{}", nodes.len() - 1),
+                operation_type: "default".to_string(),
+                parameters: std::collections::HashMap::new(),
+            });
+
+            idx += 4;
+        }
+
+        // Decode edges
+        for i in 0..num_nodes {
+            for j in 0..num_nodes {
+                if idx < vec.len() {
+                    edges[i][j] = vec[idx] > 0.5;
+                    idx += 1;
+                }
+            }
+        }
+
+        Ok(GraphEncoding {
+            nodes,
+            edges,
+            node_attrs,
+        })
     }
 
     fn dimension(&self) -> usize {
-        self.nodes.len() * 4 + self.edges.len() * self.edges.len()
+        1 + self.nodes.len() * 4 + self.edges.len() * self.edges.len()
     }
 
     fn mutate(&self, mutation_rate: f32) -> Result<Box<dyn ArchitectureEncoding>> {
@@ -202,14 +301,14 @@ impl ArchitectureEncoding for GraphEncoding {
         for node in &mut mutated.nodes {
             if !node.is_input && !node.is_output && rng.gen::<f32>() < mutation_rate {
                 // Change layer type
-                node.layer_type = match rng.gen_range(0..5) {
-                    0 => LayerType::Dense(rng.gen_range(1..8) * 64),
+                node.layer_type = match rng.random_range(0..5) {
+                    0 => LayerType::Dense(rng.random_range(1..8) * 64),
                     1 => LayerType::Conv2D {
-                        filters: rng.gen_range(1..8) * 32,
+                        filters: rng.random_range(1..8) * 32,
                         kernel_size: (3, 3),
                         stride: (1, 1),
                     },
-                    2 => LayerType::Dropout(rng.gen_range(1..5) as f32 * 0.1),
+                    2 => LayerType::Dropout(rng.random_range(1..5) as f32 * 0.1),
                     3 => LayerType::BatchNorm,
                     _ => LayerType::Activation("relu".to_string()),
                 };
@@ -293,6 +392,33 @@ impl ArchitectureEncoding for GraphEncoding {
     fn clone_box(&self) -> Box<dyn ArchitectureEncoding> {
         Box::new(self.clone())
     }
+
+    /// Validate the encoding
+    #[allow(dead_code)]
+    fn validate(&self) -> Result<()> {
+        if self.nodes.is_empty() {
+            return Err(crate::error::NeuralError::InvalidArgument(
+                "GraphEncoding must have at least one node".to_string(),
+            ));
+        }
+
+        // Check for consistent adjacency matrix
+        if self.edges.len() != self.nodes.len() {
+            return Err(crate::error::NeuralError::InvalidShape(
+                "Adjacency matrix size doesn't match number of nodes".to_string(),
+            ));
+        }
+
+        for edge_row in &self.edges {
+            if edge_row.len() != self.nodes.len() {
+                return Err(crate::error::NeuralError::InvalidShape(
+                    "Adjacency matrix is not square".to_string(),
+                ));
+            }
+        }
+
+        Ok(())
+    }
 }
 
 impl fmt::Display for GraphEncoding {
@@ -343,18 +469,18 @@ impl SequentialEncoding {
     pub fn random(rng: &mut impl rand::Rng) -> Result<Self> {
         use rand::prelude::*;
 
-        let num_layers = rng.gen_range(5..20);
+        let num_layers = rng.random_range(5..20);
         let mut layers = Vec::with_capacity(num_layers);
 
         for _ in 0..num_layers {
-            let layer = match rng.gen_range(0..7) {
-                0 => LayerType::Dense(rng.gen_range(1..8) * 64),
+            let layer = match rng.random_range(0..7) {
+                0 => LayerType::Dense(rng.random_range(1..8) * 64),
                 1 => LayerType::Conv2D {
-                    filters: rng.gen_range(1..8) * 32,
+                    filters: rng.random_range(1..8) * 32,
                     kernel_size: (3, 3),
                     stride: (1, 1),
                 },
-                2 => LayerType::Dropout(rng.gen_range(1..5) as f32 * 0.1),
+                2 => LayerType::Dropout(rng.random_range(1..5) as f32 * 0.1),
                 3 => LayerType::BatchNorm,
                 4 => LayerType::Activation("relu".to_string()),
                 5 => LayerType::MaxPool2D {
@@ -427,11 +553,92 @@ impl ArchitectureEncoding for SequentialEncoding {
         vec
     }
 
-    fn from_vector(_vec: &[f64]) -> Result<Self> {
-        // Simplified implementation
-        Err(crate::error::NeuralError::NotImplementedError(
-            "SequentialEncoding::from_vector".to_string(),
-        ))
+    fn from_vector(vec: &[f64]) -> Result<Self> {
+        if vec.is_empty() {
+            return Err(crate::error::NeuralError::ConfigError(
+                "Empty vector for SequentialEncoding".to_string(),
+            ));
+        }
+
+        let mut layers = Vec::new();
+        let mut skip_connections = Vec::new();
+        let mut idx = 0;
+
+        // Decode layers (pairs of values: layer_type_code, parameter)
+        while idx + 1 < vec.len() {
+            let layer_type_code = vec[idx] as i32;
+            let layer_param = vec[idx + 1];
+
+            // Check if this is the skip connections section
+            // We encode the number of skip connections as a special marker
+            if layer_type_code == 0 && layer_param >= 0.0 {
+                // This might be the start of skip connections section
+                let num_skip_connections = layer_param as usize;
+                idx += 2;
+
+                // Decode skip connections
+                for _ in 0..num_skip_connections {
+                    if idx + 1 < vec.len() {
+                        let from_idx = vec[idx] as usize;
+                        let to_idx = vec[idx + 1] as usize;
+                        skip_connections.push((from_idx, to_idx));
+                        idx += 2;
+                    } else {
+                        break;
+                    }
+                }
+                break;
+            }
+
+            let layer_type = match layer_type_code {
+                1 => LayerType::Dense(layer_param as usize),
+                2 => LayerType::Conv2D {
+                    filters: layer_param as usize,
+                    kernel_size: (3, 3), // Default kernel size
+                    stride: (1, 1),
+                },
+                3 => LayerType::Dropout(layer_param as f32),
+                4 => LayerType::BatchNorm,
+                5 => LayerType::Activation("relu".to_string()), // Default activation
+                _ => {
+                    // If we hit an unknown layer type, treat it as end of layers
+                    // and check if the remaining data represents skip connections
+                    if layer_type_code == 0 {
+                        let num_skip_connections = layer_param as usize;
+                        idx += 2;
+
+                        for _ in 0..num_skip_connections {
+                            if idx + 1 < vec.len() {
+                                let from_idx = vec[idx] as usize;
+                                let to_idx = vec[idx + 1] as usize;
+                                skip_connections.push((from_idx, to_idx));
+                                idx += 2;
+                            } else {
+                                break;
+                            }
+                        }
+                        break;
+                    } else {
+                        LayerType::Dense(64) // Default fallback
+                    }
+                }
+            };
+
+            if layer_type_code != 0 || layer_param < 0.0 {
+                layers.push(layer_type);
+            }
+            idx += 2;
+        }
+
+        // Ensure we have at least one layer
+        if layers.is_empty() {
+            layers.push(LayerType::Dense(64)); // Default layer
+        }
+
+        Ok(SequentialEncoding {
+            layers,
+            skip_connections,
+        })
     }
 
     fn dimension(&self) -> usize {
@@ -446,14 +653,14 @@ impl ArchitectureEncoding for SequentialEncoding {
         // Mutate layers
         for layer in &mut mutated.layers {
             if rng.gen::<f32>() < mutation_rate {
-                *layer = match rng.gen_range(0..7) {
-                    0 => LayerType::Dense(rng.gen_range(1..8) * 64),
+                *layer = match rng.random_range(0..7) {
+                    0 => LayerType::Dense(rng.random_range(1..8) * 64),
                     1 => LayerType::Conv2D {
-                        filters: rng.gen_range(1..8) * 32,
+                        filters: rng.random_range(1..8) * 32,
                         kernel_size: (3, 3),
                         stride: (1, 1),
                     },
-                    2 => LayerType::Dropout(rng.gen_range(1..5) as f32 * 0.1),
+                    2 => LayerType::Dropout(rng.random_range(1..5) as f32 * 0.1),
                     3 => LayerType::BatchNorm,
                     4 => LayerType::Activation("relu".to_string()),
                     5 => LayerType::MaxPool2D {
@@ -468,12 +675,12 @@ impl ArchitectureEncoding for SequentialEncoding {
         // Add/remove layers
         if rng.gen::<f32>() < mutation_rate {
             if mutated.layers.len() > 3 && rng.gen_bool(0.5) {
-                let idx = rng.gen_range(0..mutated.layers.len());
+                let idx = rng.random_range(0..mutated.layers.len());
                 mutated.layers.remove(idx);
             } else if mutated.layers.len() < 30 {
-                let idx = rng.gen_range(0..=mutated.layers.len());
-                let layer = match rng.gen_range(0..5) {
-                    0 => LayerType::Dense(rng.gen_range(1..8) * 64),
+                let idx = rng.random_range(0..=mutated.layers.len());
+                let layer = match rng.random_range(0..5) {
+                    0 => LayerType::Dense(rng.random_range(1..8) * 64),
                     1 => LayerType::Dropout(0.2),
                     2 => LayerType::BatchNorm,
                     3 => LayerType::Activation("relu".to_string()),

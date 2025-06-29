@@ -237,6 +237,7 @@ where
         let (n, _) = matrix.shape();
         let mut strong_connections = vec![Vec::new(); n];
 
+        #[allow(clippy::needless_range_loop)]
         for i in 0..n {
             let row_start = matrix.get_indptr()[i];
             let row_end = matrix.get_indptr()[i + 1];
@@ -336,6 +337,7 @@ where
         }
 
         // Assign remaining undecided points as F-points
+        #[allow(clippy::needless_range_loop)]
         for i in 0..n {
             if point_type[i] == 0 {
                 point_type[i] = 2;
@@ -361,6 +363,7 @@ where
         // Detect strong connections for interpolation
         let strong_connections = self.detect_strong_connections(matrix)?;
 
+        #[allow(clippy::needless_range_loop)]
         for i in 0..n {
             if let Some(&coarse_idx) = fine_to_coarse.get(&i) {
                 // Direct injection for coarse points
@@ -777,11 +780,13 @@ mod tests {
 
     #[test]
     fn test_amg_options() {
-        let mut options = AMGOptions::default();
-        options.max_levels = 5;
-        options.theta = 0.5;
-        options.smoother = SmootherType::Jacobi;
-        options.cycle_type = CycleType::W;
+        let options = AMGOptions {
+            max_levels: 5,
+            theta: 0.5,
+            smoother: SmootherType::Jacobi,
+            cycle_type: CycleType::W,
+            ..Default::default()
+        };
 
         assert_eq!(options.max_levels, 5);
         assert_eq!(options.theta, 0.5);
@@ -818,8 +823,10 @@ mod tests {
         ];
         let matrix = CsrArray::from_triplets(&rows, &cols, &data, (5, 5), false).unwrap();
 
-        let mut options = AMGOptions::default();
-        options.theta = 0.25; // Strong connection threshold
+        let options = AMGOptions {
+            theta: 0.25, // Strong connection threshold
+            ..Default::default()
+        };
 
         let amg = AMGPreconditioner::new(&matrix, options).unwrap();
 
@@ -844,8 +851,10 @@ mod tests {
         let data = vec![4.0, -2.0, -2.0, 4.0, -2.0, 4.0];
         let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
 
-        let mut options = AMGOptions::default();
-        options.theta = 0.25;
+        let options = AMGOptions {
+            theta: 0.25,
+            ..Default::default()
+        };
         let amg = AMGPreconditioner::new(&matrix, options).unwrap();
 
         let strong_connections = amg.detect_strong_connections(&matrix).unwrap();

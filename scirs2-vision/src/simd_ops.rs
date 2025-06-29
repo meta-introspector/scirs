@@ -154,9 +154,17 @@ pub fn simd_sobel_gradients(
 /// Uses separable convolution (horizontal then vertical) with SIMD
 /// for 3-5x speedup over naive implementation.
 pub fn simd_gaussian_blur(image: &ArrayView2<f32>, sigma: f32) -> Result<Array2<f32>> {
-    // Generate 1D Gaussian kernel
-    let kernel_size = (6.0 * sigma).ceil() as usize | 1; // Ensure odd
-    let kernel_half = kernel_size / 2;
+    let (height, width) = image.dim();
+    
+    // Handle edge case: very small sigma or image
+    if sigma < 0.1 || height < 3 || width < 3 {
+        return Ok(image.to_owned());
+    }
+
+    // Generate 1D Gaussian kernel with proper odd size calculation
+    let kernel_radius = (3.0 * sigma).ceil() as usize;
+    let kernel_size = 2 * kernel_radius + 1; // Ensures odd size
+    let kernel_half = kernel_radius;
 
     let mut kernel_1d = vec![0.0f32; kernel_size];
     let mut sum = 0.0f32;
@@ -174,15 +182,37 @@ pub fn simd_gaussian_blur(image: &ArrayView2<f32>, sigma: f32) -> Result<Array2<
     }
     let kernel_arr = ndarray::arr1(&kernel_1d);
 
-    let (height, width) = image.dim();
+    // Ensure kernel doesn't exceed image dimensions
+    if kernel_size >= width || kernel_size >= height {
+        // Fall back to simple averaging for very small images
+        let mut output = Array2::zeros((height, width));
+        for y in 0..height {
+            for x in 0..width {
+                let mut sum_val = 0.0f32;
+                let mut count = 0;
+                
+                for dy in -(kernel_half as i32)..=(kernel_half as i32) {
+                    for dx in -(kernel_half as i32)..=(kernel_half as i32) {
+                        let ny = (y as i32 + dy).clamp(0, height as i32 - 1) as usize;
+                        let nx = (x as i32 + dx).clamp(0, width as i32 - 1) as usize;
+                        sum_val += image[[ny, nx]];
+                        count += 1;
+                    }
+                }
+                output[[y, x]] = sum_val / count as f32;
+            }
+        }
+        return Ok(output);
+    }
+
     let mut temp = Array2::zeros((height, width));
 
     // Horizontal pass with SIMD
     for y in 0..height {
         let row = image.row(y);
 
+        // Process interior pixels
         for x in kernel_half..(width - kernel_half) {
-            // Extract window
             let window_start = x - kernel_half;
             let window_end = x + kernel_half + 1;
             let window = row.slice(ndarray::s![window_start..window_end]);
@@ -192,12 +222,22 @@ pub fn simd_gaussian_blur(image: &ArrayView2<f32>, sigma: f32) -> Result<Array2<
             temp[[y, x]] = f32::simd_sum(&products.view());
         }
 
-        // Handle borders with replication
+        // Handle left border with replication
         for x in 0..kernel_half {
-            temp[[y, x]] = temp[[y, kernel_half]];
+            if kernel_half < width {
+                temp[[y, x]] = temp[[y, kernel_half]];
+            } else {
+                temp[[y, x]] = image[[y, x]];
+            }
         }
+        
+        // Handle right border with replication
         for x in (width - kernel_half)..width {
-            temp[[y, x]] = temp[[y, width - kernel_half - 1]];
+            if kernel_half < width {
+                temp[[y, x]] = temp[[y, width - kernel_half - 1]];
+            } else {
+                temp[[y, x]] = image[[y, x]];
+            }
         }
     }
 
@@ -207,8 +247,8 @@ pub fn simd_gaussian_blur(image: &ArrayView2<f32>, sigma: f32) -> Result<Array2<
     for x in 0..width {
         let col = temp.column(x);
 
+        // Process interior pixels
         for y in kernel_half..(height - kernel_half) {
-            // Extract window
             let window_start = y - kernel_half;
             let window_end = y + kernel_half + 1;
             let window = col.slice(ndarray::s![window_start..window_end]);
@@ -218,12 +258,22 @@ pub fn simd_gaussian_blur(image: &ArrayView2<f32>, sigma: f32) -> Result<Array2<
             output[[y, x]] = f32::simd_sum(&products.view());
         }
 
-        // Handle borders
+        // Handle top border with replication
         for y in 0..kernel_half {
-            output[[y, x]] = output[[kernel_half, x]];
+            if kernel_half < height {
+                output[[y, x]] = output[[kernel_half, x]];
+            } else {
+                output[[y, x]] = temp[[y, x]];
+            }
         }
+        
+        // Handle bottom border with replication
         for y in (height - kernel_half)..height {
-            output[[y, x]] = output[[height - kernel_half - 1, x]];
+            if kernel_half < height {
+                output[[y, x]] = output[[height - kernel_half - 1, x]];
+            } else {
+                output[[y, x]] = temp[[y, x]];
+            }
         }
     }
 
@@ -419,7 +469,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // SIMD implementation needs debugging
     fn test_simd_gaussian_blur() {
         let image = arr2(&[
             [1.0, 1.0, 1.0, 1.0],
@@ -434,9 +483,30 @@ mod tests {
         let blurred = result.unwrap();
         assert_eq!(blurred.dim(), (4, 4));
 
-        // Center should be smoothed
+        // Center should be smoothed (values should be between original values)
         assert!(blurred[[1, 1]] < 5.0);
         assert!(blurred[[1, 1]] > 1.0);
+        assert!(blurred[[2, 2]] < 5.0);
+        assert!(blurred[[2, 2]] > 1.0);
+
+        // Test with small sigma (should return original)
+        let small_sigma_result = simd_gaussian_blur(&image.view(), 0.05);
+        assert!(small_sigma_result.is_ok());
+        let small_sigma_blurred = small_sigma_result.unwrap();
+        assert_eq!(small_sigma_blurred, image);
+
+        // Test with very large image to test normal path
+        let large_image = Array2::from_shape_fn((100, 100), |(y, x)| {
+            if y > 45 && y < 55 && x > 45 && x < 55 { 5.0 } else { 1.0 }
+        });
+        let large_result = simd_gaussian_blur(&large_image.view(), 2.0);
+        assert!(large_result.is_ok());
+        let large_blurred = large_result.unwrap();
+        assert_eq!(large_blurred.dim(), (100, 100));
+        
+        // Center area should be smoothed
+        assert!(large_blurred[[50, 50]] < 5.0);
+        assert!(large_blurred[[50, 50]] > 1.0);
     }
 
     #[test]

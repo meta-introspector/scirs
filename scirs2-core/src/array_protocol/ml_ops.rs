@@ -180,11 +180,40 @@ array_function_dispatch!(
                 let out_width = (input_width - filter_width + 2 * padding.1) / stride.1 + 1;
 
                 // Create output array
-                let output: Array<f64, Ix4> =
+                let mut output: Array<f64, Ix4> =
                     Array::zeros((batch_size, out_height, out_width, filter_out_channels));
 
-                // Perform convolution (this is just a placeholder - real convolution is more complex)
-                // In practice, we'd use a proper algorithm like im2col or FFT for this
+                // Perform convolution using basic sliding window approach
+                for b in 0..batch_size {
+                    for out_c in 0..filter_out_channels {
+                        for out_h in 0..out_height {
+                            for out_w in 0..out_width {
+                                let mut sum = 0.0;
+                                
+                                // Convolution over the filter window
+                                for f_h in 0..filter_height {
+                                    for f_w in 0..filter_width {
+                                        for in_c in 0..input_channels {
+                                            // Calculate input coordinates with padding
+                                            let in_h = (out_h * stride.0) as i32 + f_h as i32 - padding.0 as i32;
+                                            let in_w = (out_w * stride.1) as i32 + f_w as i32 - padding.1 as i32;
+                                            
+                                            // Check bounds (zero padding)
+                                            if in_h >= 0 && in_h < input_height as i32 &&
+                                               in_w >= 0 && in_w < input_width as i32 {
+                                                let input_val = input[[b, in_h as usize, in_w as usize, in_c]];
+                                                let filter_val = filters[[f_h, f_w, in_c, out_c]];
+                                                sum += input_val * filter_val;
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                output[[b, out_h, out_w, out_c]] = sum;
+                            }
+                        }
+                    }
+                }
 
                 return Ok(Box::new(NdarrayWrapper::new(output)));
             }
@@ -245,11 +274,40 @@ array_function_dispatch!(
                 let out_width = (input_width - kernel_size.1 + 2 * padding.1) / stride.1 + 1;
 
                 // Create output array
-                let output: Array<f64, Ix4> =
+                let mut output: Array<f64, Ix4> =
                     Array::zeros((batch_size, out_height, out_width, channels));
 
-                // Perform max pooling (this is just a placeholder - real max pooling is more complex)
-                // In practice, we'd use a more efficient algorithm that handles padding properly
+                // Perform max pooling
+                for b in 0..batch_size {
+                    for c in 0..channels {
+                        for out_h in 0..out_height {
+                            for out_w in 0..out_width {
+                                let mut max_val = f64::NEG_INFINITY;
+                                
+                                // Pool over the kernel window
+                                for k_h in 0..kernel_size.0 {
+                                    for k_w in 0..kernel_size.1 {
+                                        // Calculate input coordinates with padding
+                                        let in_h = (out_h * stride.0) as i32 + k_h as i32 - padding.0 as i32;
+                                        let in_w = (out_w * stride.1) as i32 + k_w as i32 - padding.1 as i32;
+                                        
+                                        // Check bounds
+                                        if in_h >= 0 && in_h < input_height as i32 &&
+                                           in_w >= 0 && in_w < input_width as i32 {
+                                            let val = input[[b, in_h as usize, in_w as usize, c]];
+                                            if val > max_val {
+                                                max_val = val;
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                // Use 0.0 if no valid values found (due to padding)
+                                output[[b, out_h, out_w, c]] = if max_val == f64::NEG_INFINITY { 0.0 } else { max_val };
+                            }
+                        }
+                    }
+                }
 
                 return Ok(Box::new(NdarrayWrapper::new(output)));
             }
@@ -349,14 +407,37 @@ array_function_dispatch!(
                 }
 
                 // Create output array with same shape as input
-                let output: Array<f64, Ix4> = Array::zeros(input.raw_dim());
+                let mut output: Array<f64, Ix4> = Array::zeros(input.raw_dim());
 
                 // Perform batch normalization
                 // For each channel, normalize using the formula:
                 // y = scale * (x - mean) / sqrt(variance + epsilon) + offset
-
-                // This is a simplified implementation - in practice, we'd use more efficient
-                // broadcasting and vectorized operations
+                
+                let batch_size = input.shape()[0];
+                let height = input.shape()[1];
+                let width = input.shape()[2];
+                
+                for b in 0..batch_size {
+                    for h in 0..height {
+                        for w in 0..width {
+                            for c in 0..channels {
+                                let x = input[[b, h, w, c]];
+                                let m = mean[[c]];
+                                let v = variance[[c]];
+                                let s = scale[[c]];
+                                let o = offset[[c]];
+                                
+                                // Normalize: (x - mean) / sqrt(variance + epsilon)
+                                let normalized = (x - m) / (v + epsilon).sqrt();
+                                
+                                // Scale and shift: scale * normalized + offset
+                                let result = s * normalized + o;
+                                
+                                output[[b, h, w, c]] = result;
+                            }
+                        }
+                    }
+                }
 
                 return Ok(Box::new(NdarrayWrapper::new(output)));
             }
@@ -644,14 +725,98 @@ array_function_dispatch!(
                     }
                 });
 
-                // For a real implementation, we would compute:
+                // Implement self-attention:
                 // 1. scores = matmul(q, k.transpose) / scale_factor
                 // 2. if mask: scores = scores.masked_fill(mask, -inf)
                 // 3. attention = softmax(scores)
                 // 4. output = matmul(attention, v)
-
-                // This is a placeholder showing the expected result shape
-                let output: Array<f64, Ix3> = Array::zeros((batch_size, q_len, d_k));
+                
+                let scale_factor = scale.unwrap_or(1.0 / (d_k as f64).sqrt());
+                let mut output: Array<f64, Ix3> = Array::zeros((batch_size, q_len, d_k));
+                
+                for b in 0..batch_size {
+                    // Extract batch slices
+                    let q_batch = q.slice(ndarray::s![b, .., .., ..]);
+                    let k_batch = k.slice(ndarray::s![b, .., .., ..]);
+                    let v_batch = v.slice(ndarray::s![b, .., .., ..]);
+                    
+                    // Compute attention scores: Q * K^T for each head
+                    let mut head_outputs = Array::zeros((q_len, num_heads, d_k));
+                    
+                    for h in 0..num_heads {
+                        let mut scores = Array::zeros((q_len, k_len));
+                        for i in 0..q_len {
+                            for j in 0..k_len {
+                                let mut dot_product = 0.0;
+                                for k in 0..d_k {
+                                    dot_product += q_batch[[i, h, k]] * k_batch[[j, h, k]];
+                                }
+                                scores[[i, j]] = dot_product * scale_factor;
+                            }
+                        }
+                    
+                        // Apply mask if provided
+                    if let Some(mask_array) = mask {
+                        if let Some(mask_wrapper) = mask_array.as_any().downcast_ref::<NdarrayWrapper<f64, Ix3>>() {
+                            let mask_batch = mask_wrapper.as_array().slice(ndarray::s![b, .., ..]);
+                            for i in 0..q_len {
+                                for j in 0..k_len {
+                                    if mask_batch[[i, j]] == 0.0 {
+                                        scores[[i, j]] = f64::NEG_INFINITY;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Apply softmax to get attention weights
+                    let mut attention = Array::zeros((q_len, k_len));
+                    for i in 0..q_len {
+                        // Find max for numerical stability
+                        let mut max_score = f64::NEG_INFINITY;
+                        for j in 0..k_len {
+                            if scores[[i, j]] > max_score {
+                                max_score = scores[[i, j]];
+                            }
+                        }
+                        
+                        // Compute exp and sum
+                        let mut exp_sum = 0.0;
+                        for j in 0..k_len {
+                            let exp_val = (scores[[i, j]] - max_score).exp();
+                            attention[[i, j]] = exp_val;
+                            exp_sum += exp_val;
+                        }
+                        
+                        // Normalize
+                        for j in 0..k_len {
+                            attention[[i, j]] /= exp_sum;
+                        }
+                    }
+                    
+                        // Compute output: attention * V
+                        for i in 0..q_len {
+                            for k in 0..d_k {
+                                let mut weighted_sum = 0.0;
+                                for j in 0..k_len {
+                                    weighted_sum += attention[[i, j]] * v_batch[[j, h, k]];
+                                }
+                                head_outputs[[i, h, k]] = weighted_sum;
+                            }
+                        }
+                    }
+                    
+                    // Aggregate outputs from all heads (simple average)
+                    for i in 0..q_len {
+                        for k in 0..d_k {
+                            let mut sum = 0.0;
+                            for h in 0..num_heads {
+                                sum += head_outputs[[i, h, k]];
+                            }
+                            output[[b, i, k]] = sum / num_heads as f64;
+                        }
+                    }
+                }
 
                 return Ok(Box::new(NdarrayWrapper::new(output)));
             }

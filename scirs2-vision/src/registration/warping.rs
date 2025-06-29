@@ -4,9 +4,10 @@
 //! interpolation methods and geometric transformations.
 
 use crate::error::{Result, VisionError};
-use crate::registration::{identity_transform, transform_point, Point2D, TransformMatrix};
+use crate::registration::{identity_transform, transform_point, Point2D, TransformMatrix, invert_3x3_matrix};
 use image::{DynamicImage, GenericImageView, GrayImage, Luma, Rgb, RgbImage};
 use ndarray::Array2;
+use std::time::{Duration, Instant};
 
 /// Interpolation method for image resampling
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -90,82 +91,72 @@ pub fn warp_image_gpu(
     interpolation: InterpolationMethod,
     boundary: BoundaryMethod,
 ) -> Result<GrayImage> {
-    use scirs2_core::gpu::{GpuContext, GpuBuffer, GpuOperation};
+    use scirs2_core::gpu::{GpuContext, GpuBackend, GpuBuffer, GpuOperation, AutoDevice};
+    use scirs2_core::simd_ops::PlatformCapabilities;
     
     let (out_width, out_height) = output_size;
     let (in_width, in_height) = image.dimensions();
     
-    // Check if GPU acceleration is beneficial
-    let pixel_count = (out_width * out_height) as usize;
-    if pixel_count < 256 * 256 {
-        // Too small for GPU overhead, use CPU
-        return Err(VisionError::OperationError(
-            "Image too small for GPU acceleration".to_string()
-        ));
+    // Check if GPU acceleration is worthwhile (large images benefit more)
+    let total_pixels = (out_width * out_height) as usize;
+    if total_pixels < 256 * 256 {
+        // For small images, CPU is often faster due to GPU overhead
+        return warp_image_cpu(image, transform, output_size, interpolation, boundary);
     }
-
-    // Initialize GPU context
-    let mut gpu_context = GpuContext::new().map_err(|e| {
-        VisionError::OperationError(format!("Failed to initialize GPU context: {}", e))
-    })?;
-
-    // Prepare input data
-    let input_data: Vec<f32> = image
-        .pixels()
-        .map(|p| p[0] as f32 / 255.0)
-        .collect();
-
-    // Create GPU buffers
-    let input_buffer = GpuBuffer::from_slice(&gpu_context, &input_data)?;
-    let output_buffer = GpuBuffer::new::<f32>(&gpu_context, pixel_count)?;
     
-    // Prepare transformation matrix for GPU
-    let transform_data: Vec<f32> = (0..3)
-        .flat_map(|i| (0..3).map(move |j| transform[[i, j]] as f32))
-        .collect();
-    let transform_buffer = GpuBuffer::from_slice(&gpu_context, &transform_data)?;
-
-    // Invert transformation for backwards mapping
-    let inv_transform = invert_3x3_matrix(transform).map_err(|e| {
-        VisionError::OperationError(format!("Failed to invert transformation: {}", e))
-    })?;
-    
-    let inv_transform_data: Vec<f32> = (0..3)
-        .flat_map(|i| (0..3).map(move |j| inv_transform[[i, j]] as f32))
-        .collect();
-    let inv_transform_buffer = GpuBuffer::from_slice(&gpu_context, &inv_transform_data)?;
-
-    // Create GPU operation for image warping
-    let warp_operation = create_warp_gpu_operation(
-        in_width,
-        in_height, 
-        out_width,
-        out_height,
-        interpolation,
-        boundary,
-    )?;
-
-    // Execute GPU warping
-    gpu_context.execute_operation(
-        &warp_operation,
-        &[&input_buffer, &inv_transform_buffer],
-        &[&output_buffer],
-    )?;
-
-    // Read back results
-    let output_data = output_buffer.read_data::<f32>(&gpu_context)?;
-    
-    // Convert back to image
-    let mut output = GrayImage::new(out_width, out_height);
-    for (i, &pixel_value) in output_data.iter().enumerate() {
-        let x = (i % out_width as usize) as u32;
-        let y = (i / out_width as usize) as u32;
-        if y < out_height {
-            let intensity = (pixel_value * 255.0).clamp(0.0, 255.0) as u8;
-            output.put_pixel(x, y, Luma([intensity]));
+    // Try to get GPU context
+    let gpu_context = match GpuContext::new(AutoDevice) {
+        Ok(ctx) => ctx,
+        Err(_) => {
+            // GPU not available, fallback to CPU
+            return warp_image_cpu(image, transform, output_size, interpolation, boundary);
         }
+    };
+    
+    // Convert image to f32 array for GPU processing
+    let input_data: Vec<f32> = image.pixels()
+        .map(|p| p.0[0] as f32 / 255.0)
+        .collect();
+    
+    // Create GPU buffers
+    let input_buffer = gpu_context.create_buffer(&input_data)
+        .map_err(|e| VisionError::OperationError(format!("Failed to create input buffer: {}", e)))?;
+    
+    let output_buffer = gpu_context.create_buffer_zeros::<f32>(total_pixels)
+        .map_err(|e| VisionError::OperationError(format!("Failed to create output buffer: {}", e)))?;
+    
+    // Create transformation matrix buffer
+    let transform_flat: Vec<f32> = transform.iter().flatten().map(|&x| x as f32).collect();
+    let transform_buffer = gpu_context.create_buffer(&transform_flat)
+        .map_err(|e| VisionError::OperationError(format!("Failed to create transform buffer: {}", e)))?;
+    
+    // Generate GPU operation for image warping
+    let operation = create_image_warp_operation(
+        in_width, in_height, out_width, out_height,
+        interpolation, boundary
+    )?;
+    
+    // Execute GPU kernel
+    gpu_context.execute_operation(
+        &operation,
+        &[&input_buffer, &transform_buffer],
+        &[&output_buffer],
+        (out_width as usize, out_height as usize, 1)
+    ).map_err(|e| VisionError::OperationError(format!("GPU operation failed: {}", e)))?;
+    
+    // Read back results from GPU
+    let output_data = output_buffer.to_host()
+        .map_err(|e| VisionError::OperationError(format!("Failed to read GPU results: {}", e)))?;
+    
+    // Convert back to u8 and create output image
+    let mut output = GrayImage::new(out_width, out_height);
+    for (i, &value) in output_data.iter().enumerate() {
+        let x = (i % (out_width as usize)) as u32;
+        let y = (i / (out_width as usize)) as u32;
+        let pixel_value = (value.clamp(0.0, 1.0) * 255.0) as u8;
+        output.put_pixel(x, y, Luma([pixel_value]));
     }
-
+    
     Ok(output)
 }
 
@@ -239,7 +230,7 @@ fn warp_image_cpu(
 /// # Returns
 ///
 /// * Result containing GPU operation
-fn create_warp_gpu_operation(
+fn create_image_warp_operation(
     in_width: u32,
     in_height: u32,
     out_width: u32,
@@ -260,13 +251,9 @@ fn create_warp_gpu_operation(
     );
 
     // Create GPU operation with the generated shader
-    let operation = GpuOperation::from_compute_shader(
-        &shader_code,
-        (out_width / 16 + 1, out_height / 16 + 1, 1), // Workgroup size
-    ).map_err(|e| {
-        VisionError::OperationError(format!("Failed to create GPU operation: {}", e))
-    })?;
-
+    let operation = GpuOperation::new("image_warp", &shader_code)
+        .map_err(|e| VisionError::OperationError(format!("Failed to create GPU operation: {}", e)))?;
+    
     Ok(operation)
 }
 
@@ -478,6 +465,63 @@ fn generate_clamp_boundary_code() -> String {
     int ny = clamp(y, 0, int(IN_HEIGHT) - 1);
     return input_data[ny * int(IN_WIDTH) + nx];
     "#.to_string()
+}
+
+/// Sample a grayscale image at fractional coordinates
+fn sample_image(
+    image: &GrayImage,
+    x: f32,
+    y: f32,
+    interpolation: InterpolationMethod,
+    boundary: BoundaryMethod,
+    width: u32,
+    height: u32,
+) -> f32 {
+    match interpolation {
+        InterpolationMethod::NearestNeighbor => {
+            let ix = x.round() as i32;
+            let iy = y.round() as i32;
+            get_pixel_value(image, ix, iy, boundary, width, height)
+        }
+        InterpolationMethod::Bilinear => {
+            let x0 = x.floor() as i32;
+            let y0 = y.floor() as i32;
+            let x1 = x0 + 1;
+            let y1 = y0 + 1;
+
+            let fx = x - x0 as f32;
+            let fy = y - y0 as f32;
+
+            let v00 = get_pixel_value(image, x0, y0, boundary, width, height);
+            let v01 = get_pixel_value(image, x0, y1, boundary, width, height);
+            let v10 = get_pixel_value(image, x1, y0, boundary, width, height);
+            let v11 = get_pixel_value(image, x1, y1, boundary, width, height);
+
+            let v0 = v00 * (1.0 - fx) + v10 * fx;
+            let v1 = v01 * (1.0 - fx) + v11 * fx;
+
+            v0 * (1.0 - fy) + v1 * fy
+        }
+        InterpolationMethod::Bicubic => {
+            // Simplified bicubic interpolation
+            let x0 = x.floor() as i32;
+            let y0 = y.floor() as i32;
+
+            let fx = x - x0 as f32;
+            let fy = y - y0 as f32;
+
+            let mut sum = 0.0;
+            for j in -1..3 {
+                for i in -1..3 {
+                    let weight = cubic_kernel(fx - i as f32) * cubic_kernel(fy - j as f32);
+                    let value = get_pixel_value(image, x0 + i, y0 + j, boundary, width, height);
+                    sum += weight * value;
+                }
+            }
+
+            sum.clamp(0.0, 255.0)
+        }
+    }
 }
 
 /// Warp an RGB image using a transformation matrix
@@ -1250,7 +1294,7 @@ pub fn stitch_images_streaming(
         ));
     }
 
-    let (width, height) = output_size;
+    let (_width, _height) = output_size;
     
     // Configure tile-based processing parameters
     let tile_config = TileConfig::for_output_size(output_size);
@@ -1655,7 +1699,7 @@ impl StreamingPanoramaProcessor {
     /// # Returns
     ///
     /// * Result containing the final panorama
-    pub fn finalize(mut self) -> Result<DynamicImage> {
+    pub fn finalize(self) -> Result<DynamicImage> {
         // Assemble tiles into final panorama
         let (width, height) = self.output_size;
         let mut output = RgbImage::new(width, height);

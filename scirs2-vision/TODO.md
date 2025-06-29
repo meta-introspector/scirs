@@ -117,9 +117,9 @@ The following features are planned for future releases but are **NOT** part of t
 - [ ] Industrial inspection frameworks
 
 ### 🔮 Performance Optimization (Future)
-- [ ] SIMD acceleration for critical paths
-- [ ] GPU acceleration (CUDA/OpenCL)
-- [ ] Streaming processing pipeline
+- [x] SIMD acceleration for critical paths - **COMPLETED** ✓
+- [x] GPU acceleration (CUDA/OpenCL/Metal/WebGPU) - **COMPLETED** ✓  
+- [x] Streaming processing pipeline - **COMPLETED** ✓
 - [ ] Distributed image processing
 
 ### 🔮 Extended Format Support (Future)

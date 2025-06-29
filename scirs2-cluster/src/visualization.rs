@@ -2349,3 +2349,1014 @@ mod tests {
         assert!(visualizer.state.cluster_stats.contains_key(&1));
     }
 }
+
+/// Advanced native plotting capabilities with multiple backends
+pub mod native_plotting {
+    use super::*;
+    use std::collections::BTreeMap;
+    use std::fs::File;
+    use std::io::Write;
+    use std::path::Path;
+    use std::time::{Duration, Instant};
+    
+    /// Native plotting backends
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub enum PlottingBackend {
+        /// SVG-based native plotting
+        NativeSvg,
+        /// ASCII-based terminal plotting
+        Terminal,
+        /// Canvas-based rendering
+        Canvas,
+        /// Custom renderer
+        Custom,
+    }
+    
+    /// Output formats for native plotting
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub enum OutputFormat {
+        /// Scalable Vector Graphics
+        SVG,
+        /// Portable Network Graphics
+        PNG,
+        /// Portable Document Format
+        PDF,
+        /// ASCII text output
+        ASCII,
+        /// HTML with embedded SVG
+        HTML,
+        /// JSON data format
+        JSON,
+    }
+    
+    /// Native plotting configuration
+    #[derive(Debug, Clone)]
+    pub struct NativePlottingConfig {
+        pub backend: PlottingBackend,
+        pub output_format: OutputFormat,
+        pub width: u32,
+        pub height: u32,
+        pub dpi: u32,
+        pub font_family: String,
+        pub font_size: u32,
+        pub background_color: String,
+        pub grid_enabled: bool,
+        pub legend_enabled: bool,
+        pub axis_labels_enabled: bool,
+        pub title: Option<String>,
+        pub subtitle: Option<String>,
+        pub margin: PlotMargin,
+        pub animation_config: Option<AnimationSettings>,
+    }
+    
+    impl Default for NativePlottingConfig {
+        fn default() -> Self {
+            Self {
+                backend: PlottingBackend::NativeSvg,
+                output_format: OutputFormat::SVG,
+                width: 800,
+                height: 600,
+                dpi: 96,
+                font_family: "Arial, sans-serif".to_string(),
+                font_size: 12,
+                background_color: "#ffffff".to_string(),
+                grid_enabled: true,
+                legend_enabled: true,
+                axis_labels_enabled: true,
+                title: None,
+                subtitle: None,
+                margin: PlotMargin::default(),
+                animation_config: None,
+            }
+        }
+    }
+    
+    /// Plot margins
+    #[derive(Debug, Clone)]
+    pub struct PlotMargin {
+        pub top: u32,
+        pub right: u32,
+        pub bottom: u32,
+        pub left: u32,
+    }
+    
+    impl Default for PlotMargin {
+        fn default() -> Self {
+            Self {
+                top: 40,
+                right: 40,
+                bottom: 60,
+                left: 60,
+            }
+        }
+    }
+    
+    /// Animation settings for plots
+    #[derive(Debug, Clone)]
+    pub struct AnimationSettings {
+        pub enabled: bool,
+        pub duration_ms: u64,
+        pub fps: u32,
+        pub easing: AnimationEasing,
+        pub loop_animation: bool,
+    }
+    
+    /// Animation easing functions
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub enum AnimationEasing {
+        Linear,
+        EaseIn,
+        EaseOut,
+        EaseInOut,
+        Bounce,
+        Elastic,
+    }
+    
+    /// Real-time plotting data stream
+    #[derive(Debug)]
+    pub struct RealTimePlotter {
+        pub config: NativePlottingConfig,
+        pub data_buffer: Vec<DataPoint>,
+        pub max_buffer_size: usize,
+        pub update_interval: Duration,
+        pub last_update: Instant,
+        pub auto_scale: bool,
+        pub plot_bounds: Option<PlotBounds>,
+    }
+    
+    /// Data point for real-time plotting
+    #[derive(Debug, Clone)]
+    pub struct DataPoint {
+        pub timestamp: Instant,
+        pub x: f64,
+        pub y: f64,
+        pub label: Option<String>,
+        pub color: Option<String>,
+        pub size: Option<f32>,
+    }
+    
+    /// Plot bounds for automatic scaling
+    #[derive(Debug, Clone)]
+    pub struct PlotBounds {
+        pub min_x: f64,
+        pub max_x: f64,
+        pub min_y: f64,
+        pub max_y: f64,
+    }
+    
+    /// Native SVG plotter implementation
+    pub struct NativeSvgPlotter {
+        pub config: NativePlottingConfig,
+        pub svg_content: String,
+    }
+    
+    impl NativeSvgPlotter {
+        /// Create new SVG plotter
+        pub fn new(config: NativePlottingConfig) -> Self {
+            Self {
+                config,
+                svg_content: String::new(),
+            }
+        }
+        
+        /// Plot 2D scatter plot natively
+        pub fn plot_scatter_2d(&mut self, plot: &ScatterPlot2D) -> Result<()> {
+            self.initialize_svg();
+            self.add_background();
+            
+            if self.config.grid_enabled {
+                self.add_grid(&plot.bounds);
+            }
+            
+            self.add_axes(&plot.bounds);
+            self.add_data_points(plot);
+            
+            if let Some(ref centroids) = plot.centroids {
+                self.add_centroids(centroids, &plot.legend);
+            }
+            
+            if self.config.legend_enabled {
+                self.add_legend(&plot.legend);
+            }
+            
+            if let Some(ref title) = self.config.title {
+                self.add_title(title);
+            }
+            
+            self.finalize_svg();
+            Ok(())
+        }
+        
+        /// Initialize SVG document
+        fn initialize_svg(&mut self) {
+            self.svg_content = format!(
+                r#"<?xml version="1.0" encoding="UTF-8"?>
+<svg width="{}" height="{}" xmlns="http://www.w3.org/2000/svg">
+<defs>
+    <style>
+        .grid-line {{ stroke: #e0e0e0; stroke-width: 1; }}
+        .axis-line {{ stroke: #333; stroke-width: 2; }}
+        .axis-text {{ font-family: {}; font-size: {}px; fill: #333; }}
+        .title-text {{ font-family: {}; font-size: {}px; font-weight: bold; fill: #333; text-anchor: middle; }}
+        .legend-text {{ font-family: {}; font-size: {}px; fill: #333; }}
+        .data-point {{ opacity: 0.8; }}
+        .centroid {{ stroke: #000; stroke-width: 2; opacity: 0.9; }}
+    </style>
+</defs>
+"#,
+                self.config.width,
+                self.config.height,
+                self.config.font_family,
+                self.config.font_size,
+                self.config.font_family,
+                self.config.font_size + 4,
+                self.config.font_family,
+                self.config.font_size - 2,
+            );
+        }
+        
+        /// Add background
+        fn add_background(&mut self) {
+            self.svg_content.push_str(&format!(
+                r#"<rect width="{}" height="{}" fill="{}"/>
+"#,
+                self.config.width, self.config.height, self.config.background_color
+            ));
+        }
+        
+        /// Add grid lines
+        fn add_grid(&mut self, bounds: &(f64, f64, f64, f64)) {
+            let plot_area = self.get_plot_area();
+            let x_ticks = self.calculate_ticks(bounds.0, bounds.1, 10);
+            let y_ticks = self.calculate_ticks(bounds.2, bounds.3, 10);
+            
+            // Vertical grid lines
+            for tick in &x_ticks {
+                let x = self.map_x_to_plot(*tick, bounds, &plot_area);
+                self.svg_content.push_str(&format!(
+                    r#"<line x1="{}" y1="{}" x2="{}" y2="{}" class="grid-line"/>
+"#,
+                    x, plot_area.top, x, plot_area.bottom
+                ));
+            }
+            
+            // Horizontal grid lines
+            for tick in &y_ticks {
+                let y = self.map_y_to_plot(*tick, bounds, &plot_area);
+                self.svg_content.push_str(&format!(
+                    r#"<line x1="{}" y1="{}" x2="{}" y2="{}" class="grid-line"/>
+"#,
+                    plot_area.left, y, plot_area.right, y
+                ));
+            }
+        }
+        
+        /// Add coordinate axes
+        fn add_axes(&mut self, bounds: &(f64, f64, f64, f64)) {
+            let plot_area = self.get_plot_area();
+            
+            // X-axis
+            self.svg_content.push_str(&format!(
+                r#"<line x1="{}" y1="{}" x2="{}" y2="{}" class="axis-line"/>
+"#,
+                plot_area.left, plot_area.bottom, plot_area.right, plot_area.bottom
+            ));
+            
+            // Y-axis
+            self.svg_content.push_str(&format!(
+                r#"<line x1="{}" y1="{}" x2="{}" y2="{}" class="axis-line"/>
+"#,
+                plot_area.left, plot_area.top, plot_area.left, plot_area.bottom
+            ));
+            
+            // Add tick marks and labels
+            self.add_axis_labels(bounds, &plot_area);
+        }
+        
+        /// Add axis labels and tick marks
+        fn add_axis_labels(&mut self, bounds: &(f64, f64, f64, f64), plot_area: &PlotArea) {
+            let x_ticks = self.calculate_ticks(bounds.0, bounds.1, 8);
+            let y_ticks = self.calculate_ticks(bounds.2, bounds.3, 8);
+            
+            // X-axis labels
+            for tick in &x_ticks {
+                let x = self.map_x_to_plot(*tick, bounds, plot_area);
+                let y = plot_area.bottom + 20.0;
+                
+                // Tick mark
+                self.svg_content.push_str(&format!(
+                    r#"<line x1="{}" y1="{}" x2="{}" y2="{}" class="axis-line"/>
+"#,
+                    x, plot_area.bottom, x, plot_area.bottom + 5.0
+                ));
+                
+                // Label
+                self.svg_content.push_str(&format!(
+                    r#"<text x="{}" y="{}" text-anchor="middle" class="axis-text">{:.2}</text>
+"#,
+                    x, y, tick
+                ));
+            }
+            
+            // Y-axis labels
+            for tick in &y_ticks {
+                let x = plot_area.left - 10.0;
+                let y = self.map_y_to_plot(*tick, bounds, plot_area) + 5.0;
+                
+                // Tick mark
+                self.svg_content.push_str(&format!(
+                    r#"<line x1="{}" y1="{}" x2="{}" y2="{}" class="axis-line"/>
+"#,
+                    plot_area.left - 5.0, y - 5.0, plot_area.left, y - 5.0
+                ));
+                
+                // Label
+                self.svg_content.push_str(&format!(
+                    r#"<text x="{}" y="{}" text-anchor="end" class="axis-text">{:.2}</text>
+"#,
+                    x, y, tick
+                ));
+            }
+        }
+        
+        /// Add data points
+        fn add_data_points(&mut self, plot: &ScatterPlot2D) {
+            let plot_area = self.get_plot_area();
+            
+            for (i, point) in plot.points.rows().into_iter().enumerate() {
+                let x = self.map_x_to_plot(point[0], &plot.bounds, &plot_area);
+                let y = self.map_y_to_plot(point[1], &plot.bounds, &plot_area);
+                let color = &plot.colors[i];
+                let size = plot.sizes[i];
+                
+                self.svg_content.push_str(&format!(
+                    r#"<circle cx="{}" cy="{}" r="{}" fill="{}" class="data-point"/>
+"#,
+                    x, y, size, color
+                ));
+            }
+        }
+        
+        /// Add centroids
+        fn add_centroids(&mut self, centroids: &Array2<f64>, legend: &[LegendEntry]) {
+            let plot_area = self.get_plot_area();
+            
+            for (i, centroid) in centroids.rows().into_iter().enumerate() {
+                let x = self.map_x_to_plot(centroid[0], &(0.0, 1.0, 0.0, 1.0), &plot_area);
+                let y = self.map_y_to_plot(centroid[1], &(0.0, 1.0, 0.0, 1.0), &plot_area);
+                
+                let color = if i < legend.len() {
+                    &legend[i].color
+                } else {
+                    "#000000"
+                };
+                
+                // Draw larger circle for centroid
+                self.svg_content.push_str(&format!(
+                    r#"<circle cx="{}" cy="{}" r="8" fill="{}" class="centroid"/>
+"#,
+                    x, y, color
+                ));
+                
+                // Add cross marker
+                self.svg_content.push_str(&format!(
+                    r#"<line x1="{}" y1="{}" x2="{}" y2="{}" stroke="white" stroke-width="2"/>
+"#,
+                    x - 4.0, y, x + 4.0, y
+                ));
+                self.svg_content.push_str(&format!(
+                    r#"<line x1="{}" y1="{}" x2="{}" y2="{}" stroke="white" stroke-width="2"/>
+"#,
+                    x, y - 4.0, x, y + 4.0
+                ));
+            }
+        }
+        
+        /// Add legend
+        fn add_legend(&mut self, legend: &[LegendEntry]) {
+            let legend_x = self.config.width as f64 - self.config.margin.right as f64 + 10.0;
+            let mut legend_y = self.config.margin.top as f64;
+            
+            self.svg_content.push_str(&format!(
+                r#"<text x="{}" y="{}" class="legend-text" font-weight="bold">Clusters</text>
+"#,
+                legend_x, legend_y
+            ));
+            
+            legend_y += 25.0;
+            
+            for entry in legend {
+                // Color square
+                self.svg_content.push_str(&format!(
+                    r#"<rect x="{}" y="{}" width="12" height="12" fill="{}"/>
+"#,
+                    legend_x, legend_y - 10.0, entry.color
+                ));
+                
+                // Label text
+                self.svg_content.push_str(&format!(
+                    r#"<text x="{}" y="{}" class="legend-text">{} ({})</text>
+"#,
+                    legend_x + 18.0, legend_y, entry.label, entry.count
+                ));
+                
+                legend_y += 20.0;
+            }
+        }
+        
+        /// Add title
+        fn add_title(&mut self, title: &str) {
+            let title_x = self.config.width as f64 / 2.0;
+            let title_y = 25.0;
+            
+            self.svg_content.push_str(&format!(
+                r#"<text x="{}" y="{}" class="title-text">{}</text>
+"#,
+                title_x, title_y, title
+            ));
+        }
+        
+        /// Finalize SVG document
+        fn finalize_svg(&mut self) {
+            self.svg_content.push_str("</svg>");
+        }
+        
+        /// Get plot area bounds
+        fn get_plot_area(&self) -> PlotArea {
+            PlotArea {
+                left: self.config.margin.left as f64,
+                right: (self.config.width - self.config.margin.right) as f64,
+                top: self.config.margin.top as f64,
+                bottom: (self.config.height - self.config.margin.bottom) as f64,
+            }
+        }
+        
+        /// Map data x-coordinate to plot coordinate
+        fn map_x_to_plot(&self, x: f64, bounds: &(f64, f64, f64, f64), plot_area: &PlotArea) -> f64 {
+            let range = bounds.1 - bounds.0;
+            if range == 0.0 {
+                plot_area.left + (plot_area.right - plot_area.left) / 2.0
+            } else {
+                plot_area.left + (x - bounds.0) / range * (plot_area.right - plot_area.left)
+            }
+        }
+        
+        /// Map data y-coordinate to plot coordinate
+        fn map_y_to_plot(&self, y: f64, bounds: &(f64, f64, f64, f64), plot_area: &PlotArea) -> f64 {
+            let range = bounds.3 - bounds.2;
+            if range == 0.0 {
+                plot_area.top + (plot_area.bottom - plot_area.top) / 2.0
+            } else {
+                plot_area.bottom - (y - bounds.2) / range * (plot_area.bottom - plot_area.top)
+            }
+        }
+        
+        /// Calculate tick positions
+        fn calculate_ticks(&self, min: f64, max: f64, target_count: usize) -> Vec<f64> {
+            if min >= max {
+                return vec![min];
+            }
+            
+            let range = max - min;
+            let step = range / target_count as f64;
+            let magnitude = 10_f64.powf(step.log10().floor());
+            let normalized_step = step / magnitude;
+            
+            let nice_step = if normalized_step <= 1.0 {
+                1.0
+            } else if normalized_step <= 2.0 {
+                2.0
+            } else if normalized_step <= 5.0 {
+                5.0
+            } else {
+                10.0
+            } * magnitude;
+            
+            let start = (min / nice_step).ceil() * nice_step;
+            let mut ticks = Vec::new();
+            let mut current = start;
+            
+            while current <= max {
+                ticks.push(current);
+                current += nice_step;
+            }
+            
+            ticks
+        }
+        
+        /// Save SVG to file
+        pub fn save_to_file<P: AsRef<Path>>(&self, path: P) -> Result<()> {
+            let mut file = File::create(path).map_err(|e| {
+                ClusteringError::InvalidInput(format!("Failed to create file: {}", e))
+            })?;
+            
+            file.write_all(self.svg_content.as_bytes()).map_err(|e| {
+                ClusteringError::InvalidInput(format!("Failed to write file: {}", e))
+            })?;
+            
+            Ok(())
+        }
+        
+        /// Get SVG content as string
+        pub fn get_svg_content(&self) -> &str {
+            &self.svg_content
+        }
+    }
+    
+    /// Plot area definition
+    #[derive(Debug, Clone)]
+    struct PlotArea {
+        left: f64,
+        right: f64,
+        top: f64,
+        bottom: f64,
+    }
+    
+    /// ASCII terminal plotter for command-line visualization
+    pub struct TerminalPlotter {
+        pub config: NativePlottingConfig,
+        pub canvas: Vec<Vec<char>>,
+    }
+    
+    impl TerminalPlotter {
+        /// Create new terminal plotter
+        pub fn new(config: NativePlottingConfig) -> Self {
+            let width = config.width as usize;
+            let height = config.height as usize;
+            let canvas = vec![vec![' '; width]; height];
+            
+            Self { config, canvas }
+        }
+        
+        /// Plot 2D scatter plot in terminal
+        pub fn plot_scatter_2d_terminal(&mut self, plot: &ScatterPlot2D) -> Result<String> {
+            self.clear_canvas();
+            self.draw_axes(&plot.bounds);
+            self.draw_data_points(plot);
+            
+            if let Some(ref centroids) = plot.centroids {
+                self.draw_centroids_terminal(centroids, &plot.bounds);
+            }
+            
+            Ok(self.canvas_to_string())
+        }
+        
+        /// Clear canvas
+        fn clear_canvas(&mut self) {
+            for row in &mut self.canvas {
+                for cell in row {
+                    *cell = ' ';
+                }
+            }
+        }
+        
+        /// Draw coordinate axes
+        fn draw_axes(&mut self, bounds: &(f64, f64, f64, f64)) {
+            let height = self.canvas.len();
+            let width = self.canvas[0].len();
+            
+            // X-axis
+            for x in 0..width {
+                if height > 0 {
+                    self.canvas[height - 1][x] = '-';
+                }
+            }
+            
+            // Y-axis
+            for y in 0..height {
+                self.canvas[y][0] = '|';
+            }
+            
+            // Origin
+            if height > 0 {
+                self.canvas[height - 1][0] = '+';
+            }
+        }
+        
+        /// Draw data points
+        fn draw_data_points(&mut self, plot: &ScatterPlot2D) {
+            let height = self.canvas.len();
+            let width = self.canvas[0].len();
+            
+            for (i, point) in plot.points.rows().into_iter().enumerate() {
+                let x = self.map_x_to_terminal(point[0], &plot.bounds, width);
+                let y = self.map_y_to_terminal(point[1], &plot.bounds, height);
+                
+                if x < width && y < height {
+                    let cluster_char = self.get_cluster_char(plot.labels[i]);
+                    self.canvas[y][x] = cluster_char;
+                }
+            }
+        }
+        
+        /// Draw centroids
+        fn draw_centroids_terminal(&mut self, centroids: &Array2<f64>, bounds: &(f64, f64, f64, f64)) {
+            let height = self.canvas.len();
+            let width = self.canvas[0].len();
+            
+            for centroid in centroids.rows() {
+                let x = self.map_x_to_terminal(centroid[0], bounds, width);
+                let y = self.map_y_to_terminal(centroid[1], bounds, height);
+                
+                if x < width && y < height {
+                    self.canvas[y][x] = 'X';
+                }
+            }
+        }
+        
+        /// Map x coordinate to terminal
+        fn map_x_to_terminal(&self, x: f64, bounds: &(f64, f64, f64, f64), width: usize) -> usize {
+            let range = bounds.1 - bounds.0;
+            if range == 0.0 {
+                width / 2
+            } else {
+                ((x - bounds.0) / range * (width - 1) as f64).round() as usize
+            }
+        }
+        
+        /// Map y coordinate to terminal (inverted for display)
+        fn map_y_to_terminal(&self, y: f64, bounds: &(f64, f64, f64, f64), height: usize) -> usize {
+            let range = bounds.3 - bounds.2;
+            if range == 0.0 {
+                height / 2
+            } else {
+                let normalized = (y - bounds.2) / range;
+                ((1.0 - normalized) * (height - 1) as f64).round() as usize
+            }
+        }
+        
+        /// Get character for cluster
+        fn get_cluster_char(&self, cluster_id: i32) -> char {
+            match cluster_id {
+                0 => '•',
+                1 => '○',
+                2 => '▲',
+                3 => '▼',
+                4 => '◆',
+                5 => '◇',
+                6 => '■',
+                7 => '□',
+                8 => '★',
+                9 => '☆',
+                _ => '?',
+            }
+        }
+        
+        /// Convert canvas to string
+        fn canvas_to_string(&self) -> String {
+            let mut result = String::new();
+            
+            for row in &self.canvas {
+                for &cell in row {
+                    result.push(cell);
+                }
+                result.push('\n');
+            }
+            
+            result
+        }
+    }
+    
+    /// Real-time plotting implementation
+    impl RealTimePlotter {
+        /// Create new real-time plotter
+        pub fn new(config: NativePlottingConfig, max_buffer_size: usize) -> Self {
+            Self {
+                config,
+                data_buffer: Vec::with_capacity(max_buffer_size),
+                max_buffer_size,
+                update_interval: Duration::from_millis(100),
+                last_update: Instant::now(),
+                auto_scale: true,
+                plot_bounds: None,
+            }
+        }
+        
+        /// Add data point to real-time plot
+        pub fn add_data_point(&mut self, x: f64, y: f64, label: Option<String>) {
+            let point = DataPoint {
+                timestamp: Instant::now(),
+                x,
+                y,
+                label,
+                color: None,
+                size: None,
+            };
+            
+            self.data_buffer.push(point);
+            
+            // Remove old points if buffer is full
+            if self.data_buffer.len() > self.max_buffer_size {
+                self.data_buffer.remove(0);
+            }
+            
+            // Update bounds if auto-scaling
+            if self.auto_scale {
+                self.update_bounds();
+            }
+        }
+        
+        /// Update plot bounds based on current data
+        fn update_bounds(&mut self) {
+            if self.data_buffer.is_empty() {
+                return;
+            }
+            
+            let mut min_x = f64::INFINITY;
+            let mut max_x = f64::NEG_INFINITY;
+            let mut min_y = f64::INFINITY;
+            let mut max_y = f64::NEG_INFINITY;
+            
+            for point in &self.data_buffer {
+                min_x = min_x.min(point.x);
+                max_x = max_x.max(point.x);
+                min_y = min_y.min(point.y);
+                max_y = max_y.max(point.y);
+            }
+            
+            // Add some padding
+            let x_range = max_x - min_x;
+            let y_range = max_y - min_y;
+            let x_padding = x_range * 0.1;
+            let y_padding = y_range * 0.1;
+            
+            self.plot_bounds = Some(PlotBounds {
+                min_x: min_x - x_padding,
+                max_x: max_x + x_padding,
+                min_y: min_y - y_padding,
+                max_y: max_y + y_padding,
+            });
+        }
+        
+        /// Generate real-time plot frame
+        pub fn generate_frame(&mut self) -> Result<String> {
+            if Instant::now().duration_since(self.last_update) < self.update_interval {
+                return Ok(String::new()); // Not time to update yet
+            }
+            
+            self.last_update = Instant::now();
+            
+            let mut svg_plotter = NativeSvgPlotter::new(self.config.clone());
+            
+            // Convert real-time data to scatter plot format
+            let scatter_plot = self.convert_to_scatter_plot()?;
+            
+            svg_plotter.plot_scatter_2d(&scatter_plot)?;
+            Ok(svg_plotter.get_svg_content().to_string())
+        }
+        
+        /// Convert real-time data to scatter plot
+        fn convert_to_scatter_plot(&self) -> Result<ScatterPlot2D> {
+            if self.data_buffer.is_empty() {
+                return Err(ClusteringError::InvalidInput(
+                    "No data points in buffer".to_string(),
+                ));
+            }
+            
+            let n_points = self.data_buffer.len();
+            let mut points = Array2::zeros((n_points, 2));
+            let mut labels = Array1::zeros(n_points);
+            let mut colors = Vec::new();
+            let mut sizes = Vec::new();
+            
+            for (i, point) in self.data_buffer.iter().enumerate() {
+                points[[i, 0]] = point.x;
+                points[[i, 1]] = point.y;
+                labels[i] = 0; // Single cluster for real-time data
+                colors.push(point.color.clone().unwrap_or_else(|| "#3498db".to_string()));
+                sizes.push(point.size.unwrap_or(3.0));
+            }
+            
+            let bounds = if let Some(ref bounds) = self.plot_bounds {
+                (bounds.min_x, bounds.max_x, bounds.min_y, bounds.max_y)
+            } else {
+                (0.0, 1.0, 0.0, 1.0)
+            };
+            
+            Ok(ScatterPlot2D {
+                points,
+                labels,
+                centroids: None,
+                colors,
+                sizes,
+                point_labels: None,
+                bounds,
+                legend: vec![LegendEntry {
+                    cluster_id: 0,
+                    color: "#3498db".to_string(),
+                    label: "Real-time Data".to_string(),
+                    count: n_points,
+                }],
+            })
+        }
+    }
+    
+    /// Advanced dashboard visualization
+    pub struct Dashboard {
+        pub config: NativePlottingConfig,
+        pub plots: Vec<DashboardPlot>,
+        pub layout: DashboardLayout,
+        pub update_callbacks: Vec<Box<dyn Fn() -> Result<ScatterPlot2D> + Send + Sync>>,
+    }
+    
+    /// Dashboard plot configuration
+    #[derive(Debug, Clone)]
+    pub struct DashboardPlot {
+        pub id: String,
+        pub title: String,
+        pub plot_type: DashboardPlotType,
+        pub position: PlotPosition,
+        pub size: PlotSize,
+        pub auto_refresh: bool,
+        pub refresh_interval: Duration,
+    }
+    
+    /// Dashboard plot types
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub enum DashboardPlotType {
+        Scatter2D,
+        Scatter3D,
+        LinePlot,
+        Histogram,
+        Heatmap,
+        Performance,
+    }
+    
+    /// Dashboard layout configuration
+    #[derive(Debug, Clone)]
+    pub struct DashboardLayout {
+        pub grid_rows: u32,
+        pub grid_cols: u32,
+        pub spacing: u32,
+        pub padding: u32,
+    }
+    
+    /// Plot position in dashboard grid
+    #[derive(Debug, Clone)]
+    pub struct PlotPosition {
+        pub row: u32,
+        pub col: u32,
+        pub row_span: u32,
+        pub col_span: u32,
+    }
+    
+    /// Plot size configuration
+    #[derive(Debug, Clone)]
+    pub struct PlotSize {
+        pub width: u32,
+        pub height: u32,
+        pub responsive: bool,
+    }
+    
+    /// Performance metric for monitoring plots
+    #[derive(Debug, Clone)]
+    pub struct PerformanceMetric {
+        pub timestamp: u64,
+        pub value: f64,
+        pub metric_type: String,
+        pub unit: String,
+    }
+    
+    /// High-level plotting functions
+    
+    /// Create and save 2D scatter plot with native plotting
+    pub fn create_native_scatter_plot_2d<F: Float + FromPrimitive + Debug>(
+        data: ArrayView2<F>,
+        labels: &Array1<i32>,
+        centroids: Option<&Array2<F>>,
+        config: &VisualizationConfig,
+        output_path: &str,
+        plotting_config: NativePlottingConfig,
+    ) -> Result<()> {
+        // Create scatter plot data
+        let plot = create_scatter_plot_2d(data, labels, centroids, config)?;
+        
+        match plotting_config.backend {
+            PlottingBackend::NativeSvg => {
+                let mut svg_plotter = NativeSvgPlotter::new(plotting_config);
+                svg_plotter.plot_scatter_2d(&plot)?;
+                svg_plotter.save_to_file(output_path)?;
+            }
+            PlottingBackend::Terminal => {
+                let mut terminal_plotter = TerminalPlotter::new(plotting_config);
+                let ascii_plot = terminal_plotter.plot_scatter_2d_terminal(&plot)?;
+                std::fs::write(output_path, ascii_plot).map_err(|e| {
+                    ClusteringError::InvalidInput(format!("Failed to write file: {}", e))
+                })?;
+            }
+            _ => {
+                return Err(ClusteringError::InvalidInput(
+                    "Backend not implemented yet".to_string(),
+                ));
+            }
+        }
+        
+        Ok(())
+    }
+    
+    /// Create real-time plotting session
+    pub fn create_realtime_session(
+        config: NativePlottingConfig,
+        max_buffer_size: usize,
+        update_interval_ms: u64,
+    ) -> RealTimePlotter {
+        let mut plotter = RealTimePlotter::new(config, max_buffer_size);
+        plotter.update_interval = Duration::from_millis(update_interval_ms);
+        plotter
+    }
+    
+    /// Create performance monitoring plot
+    pub fn create_performance_plot(
+        metrics: &[PerformanceMetric],
+        config: NativePlottingConfig,
+    ) -> Result<String> {
+        let mut svg_plotter = NativeSvgPlotter::new(config);
+        
+        // Convert performance metrics to scatter plot format
+        let n_points = metrics.len();
+        let mut points = Array2::zeros((n_points, 2));
+        let mut labels = Array1::zeros(n_points);
+        
+        for (i, metric) in metrics.iter().enumerate() {
+            points[[i, 0]] = metric.timestamp as f64;
+            points[[i, 1]] = metric.value;
+            labels[i] = 0;
+        }
+        
+        let bounds = if !metrics.is_empty() {
+            let min_time = metrics.iter().map(|m| m.timestamp).min().unwrap_or(0) as f64;
+            let max_time = metrics.iter().map(|m| m.timestamp).max().unwrap_or(0) as f64;
+            let min_value = metrics.iter().map(|m| m.value).fold(f64::INFINITY, |a, b| a.min(b));
+            let max_value = metrics.iter().map(|m| m.value).fold(f64::NEG_INFINITY, |a, b| a.max(b));
+            (min_time, max_time, min_value, max_value)
+        } else {
+            (0.0, 1.0, 0.0, 1.0)
+        };
+        
+        let plot = ScatterPlot2D {
+            points,
+            labels,
+            centroids: None,
+            colors: vec!["#3498db".to_string(); n_points],
+            sizes: vec![3.0; n_points],
+            point_labels: None,
+            bounds,
+            legend: vec![LegendEntry {
+                cluster_id: 0,
+                color: "#3498db".to_string(),
+                label: "Performance".to_string(),
+                count: n_points,
+            }],
+        };
+        
+        svg_plotter.plot_scatter_2d(&plot)?;
+        Ok(svg_plotter.get_svg_content().to_string())
+    }
+    
+    /// Utility functions for advanced plotting features
+    
+    /// Generate color palette for clusters
+    pub fn generate_advanced_color_palette(n_clusters: usize) -> Vec<String> {
+        let base_colors = vec![
+            "#e74c3c", "#3498db", "#2ecc71", "#f39c12", "#9b59b6",
+            "#1abc9c", "#e67e22", "#34495e", "#e91e63", "#00bcd4",
+        ];
+        
+        if n_clusters <= base_colors.len() {
+            base_colors.into_iter().take(n_clusters).map(String::from).collect()
+        } else {
+            // Generate additional colors using HSV color space
+            let mut colors = base_colors.into_iter().map(String::from).collect::<Vec<_>>();
+            
+            for i in colors.len()..n_clusters {
+                let hue = (i as f64 * 360.0 / n_clusters as f64) % 360.0;
+                let color = hsv_to_hex(hue, 0.7, 0.9);
+                colors.push(color);
+            }
+            
+            colors
+        }
+    }
+    
+    /// Convert HSV to hex color
+    fn hsv_to_hex(h: f64, s: f64, v: f64) -> String {
+        let c = v * s;
+        let x = c * (1.0 - ((h / 60.0) % 2.0 - 1.0).abs());
+        let m = v - c;
+        
+        let (r_prime, g_prime, b_prime) = match h as i32 / 60 {
+            0 => (c, x, 0.0),
+            1 => (x, c, 0.0),
+            2 => (0.0, c, x),
+            3 => (0.0, x, c),
+            4 => (x, 0.0, c),
+            _ => (c, 0.0, x),
+        };
+        
+        let r = ((r_prime + m) * 255.0) as u8;
+        let g = ((g_prime + m) * 255.0) as u8;
+        let b = ((b_prime + m) * 255.0) as u8;
+        
+        format!("#{:02x}{:02x}{:02x}", r, g, b)
+    }
+}

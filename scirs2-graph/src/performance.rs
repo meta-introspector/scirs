@@ -503,7 +503,7 @@ pub mod simd_ops {
 /// Lazy evaluation wrapper for expensive graph computations
 pub struct LazyGraphMetric<T> {
     /// The computed value stored in a thread-safe cell
-    value: std::sync::OnceLock<Result<T, GraphError>>,
+    value: std::sync::OnceLock<std::result::Result<T, GraphError>>,
     /// Computation function stored in a mutex for thread safety
     compute_fn: std::sync::Mutex<Option<Box<dyn FnOnce() -> Result<T> + Send + 'static>>>,
 }
@@ -559,7 +559,7 @@ where
     }
 
     /// Get the cached result if available, without triggering computation
-    pub fn try_get(&self) -> Option<Result<&T, &GraphError>> {
+    pub fn try_get(&self) -> Option<std::result::Result<&T, &GraphError>> {
         self.value.get().map(|result| match result {
             Ok(value) => Ok(value),
             Err(error) => Err(error),
@@ -567,7 +567,7 @@ where
     }
 }
 
-/// Advanced memory profiling metrics
+/// Performance-focused memory profiling metrics
 #[derive(Debug, Clone)]
 pub struct MemoryMetrics {
     /// Current memory usage in bytes
