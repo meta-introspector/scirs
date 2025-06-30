@@ -6,9 +6,9 @@
 use ndarray::ScalarOperand;
 use ndarray_rand::rand::distributions::Distribution;
 use ndarray_rand::rand::rngs::ThreadRng;
-use rand::rng;
 use ndarray_rand::rand_distr::{Normal, Uniform};
 use num_traits::{Float, NumCast};
+use rand::rng;
 use std::fmt::Debug;
 
 use super::LearningRateScheduler;

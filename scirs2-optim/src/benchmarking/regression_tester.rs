@@ -4,10 +4,10 @@
 //! including baseline establishment, historical tracking, statistical analysis,
 //! and automated CI/CD integration for continuous performance monitoring.
 
-use crate::error::Result;
 use crate::benchmarking::BenchmarkResult;
+use crate::error::Result;
 use num_traits::Float;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
 use std::fs;
@@ -79,7 +79,7 @@ impl Default for RegressionConfig {
             min_baseline_samples: 10,
             significance_threshold: 0.05,
             degradation_threshold: 5.0, // 5% degradation threshold
-            memory_threshold: 10.0, // 10% memory increase threshold
+            memory_threshold: 10.0,     // 10% memory increase threshold
             enable_ci_integration: true,
             enable_alerts: true,
             outlier_sensitivity: 2.0, // 2 standard deviations
@@ -578,17 +578,30 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
     /// Initialize default regression detectors and analyzers
     fn initialize_default_components(&mut self) -> Result<()> {
         // Add statistical test detector
-        if self.config.detection_algorithms.contains(&"statistical_test".to_string()) {
-            self.detectors.push(Box::new(StatisticalTestDetector::new()));
+        if self
+            .config
+            .detection_algorithms
+            .contains(&"statistical_test".to_string())
+        {
+            self.detectors
+                .push(Box::new(StatisticalTestDetector::new()));
         }
 
         // Add sliding window detector
-        if self.config.detection_algorithms.contains(&"sliding_window".to_string()) {
+        if self
+            .config
+            .detection_algorithms
+            .contains(&"sliding_window".to_string())
+        {
             self.detectors.push(Box::new(SlidingWindowDetector::new()));
         }
 
         // Add change point detector
-        if self.config.detection_algorithms.contains(&"change_point".to_string()) {
+        if self
+            .config
+            .detection_algorithms
+            .contains(&"change_point".to_string())
+        {
             self.detectors.push(Box::new(ChangePointDetector::new()));
         }
 
@@ -677,7 +690,10 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
     }
 
     /// Extract performance metrics from benchmark result
-    fn extract_performance_metrics(&self, result: &BenchmarkResult<A>) -> Result<PerformanceMetrics<A>> {
+    fn extract_performance_metrics(
+        &self,
+        result: &BenchmarkResult<A>,
+    ) -> Result<PerformanceMetrics<A>> {
         Ok(PerformanceMetrics {
             timing: TimingMetrics {
                 mean_time_ns: result.elapsed_time.as_nanos() as u64,
@@ -727,11 +743,8 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
             self.performance_db.history.get(key),
         ) {
             for detector in &self.detectors {
-                let result = detector.detect_regression(
-                    baseline,
-                    &current_record.metrics,
-                    history,
-                )?;
+                let result =
+                    detector.detect_regression(baseline, &current_record.metrics, history)?;
                 results.push(result);
             }
         }
@@ -744,14 +757,15 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
         if let Some(history) = self.performance_db.history.get(key) {
             if history.len() >= self.config.min_baseline_samples {
                 let new_baseline = self.calculate_baseline(history)?;
-                
+
                 // Check if this is a significant update to an existing baseline
-                let is_significant_update = if let Some(existing_baseline) = self.baselines.get(key) {
+                let is_significant_update = if let Some(existing_baseline) = self.baselines.get(key)
+                {
                     self.is_significant_baseline_change(existing_baseline, &new_baseline)
                 } else {
                     true // First baseline is always significant
                 };
-                
+
                 if is_significant_update {
                     self.baselines.insert(key.clone(), new_baseline);
                     return Ok(true);
@@ -762,35 +776,49 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
     }
 
     /// Check if baseline change is significant enough to warrant an update
-    fn is_significant_baseline_change(&self, existing: &PerformanceBaseline<A>, new: &PerformanceBaseline<A>) -> bool {
+    fn is_significant_baseline_change(
+        &self,
+        existing: &PerformanceBaseline<A>,
+        new: &PerformanceBaseline<A>,
+    ) -> bool {
         // Calculate percentage changes in key metrics
         let timing_change = if existing.baseline_stats.timing.mean > 0.0 {
-            ((new.baseline_stats.timing.mean - existing.baseline_stats.timing.mean) / existing.baseline_stats.timing.mean).abs()
+            ((new.baseline_stats.timing.mean - existing.baseline_stats.timing.mean)
+                / existing.baseline_stats.timing.mean)
+                .abs()
         } else {
             0.0
         };
-        
+
         let memory_change = if existing.baseline_stats.memory.mean_memory > 0.0 {
-            ((new.baseline_stats.memory.mean_memory - existing.baseline_stats.memory.mean_memory) / existing.baseline_stats.memory.mean_memory).abs()
+            ((new.baseline_stats.memory.mean_memory - existing.baseline_stats.memory.mean_memory)
+                / existing.baseline_stats.memory.mean_memory)
+                .abs()
         } else {
             0.0
         };
-        
+
         let efficiency_change = if existing.baseline_stats.efficiency.mean_efficiency > 0.0 {
-            ((new.baseline_stats.efficiency.mean_efficiency - existing.baseline_stats.efficiency.mean_efficiency) / existing.baseline_stats.efficiency.mean_efficiency).abs()
+            ((new.baseline_stats.efficiency.mean_efficiency
+                - existing.baseline_stats.efficiency.mean_efficiency)
+                / existing.baseline_stats.efficiency.mean_efficiency)
+                .abs()
         } else {
             0.0
         };
-        
+
         // Consider update significant if any metric changed by more than 5%
         let significance_threshold = 0.05; // 5%
-        timing_change > significance_threshold || 
-        memory_change > significance_threshold || 
-        efficiency_change > significance_threshold
+        timing_change > significance_threshold
+            || memory_change > significance_threshold
+            || efficiency_change > significance_threshold
     }
 
     /// Calculate baseline statistics from historical data
-    fn calculate_baseline(&self, history: &VecDeque<PerformanceRecord<A>>) -> Result<PerformanceBaseline<A>> {
+    fn calculate_baseline(
+        &self,
+        history: &VecDeque<PerformanceRecord<A>>,
+    ) -> Result<PerformanceBaseline<A>> {
         // Take the most recent samples for baseline calculation
         let samples: Vec<_> = history
             .iter()
@@ -841,9 +869,8 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
     /// Calculate timing statistics
     fn calculate_timing_statistics(&self, data: &[f64]) -> TimingStatistics {
         let mean = data.iter().sum::<f64>() / data.len() as f64;
-        let variance = data.iter()
-            .map(|x| (x - mean).powi(2))
-            .sum::<f64>() / (data.len() - 1) as f64;
+        let variance =
+            data.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / (data.len() - 1) as f64;
         let std_dev = variance.sqrt();
 
         let mut sorted_data = data.to_vec();
@@ -871,9 +898,8 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
     /// Calculate memory statistics
     fn calculate_memory_statistics(&self, data: &[f64]) -> MemoryStatistics {
         let mean = data.iter().sum::<f64>() / data.len() as f64;
-        let variance = data.iter()
-            .map(|x| (x - mean).powi(2))
-            .sum::<f64>() / (data.len() - 1) as f64;
+        let variance =
+            data.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / (data.len() - 1) as f64;
 
         let mut percentiles = HashMap::new();
         let mut sorted_data = data.to_vec();
@@ -901,13 +927,13 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
                 trend: 0.0,
             };
         }
-        
+
         // Calculate fragmentation ratios based on memory variance patterns
         let mut fragmentation_ratios = Vec::new();
-        
+
         // Use memory allocation pattern variance as fragmentation indicator
         let mean = data.iter().sum::<f64>() / data.len() as f64;
-        
+
         for &memory_value in data {
             // Simple fragmentation ratio: deviation from mean normalized by mean
             let fragmentation_ratio = if mean > 0.0 {
@@ -917,28 +943,36 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
             };
             fragmentation_ratios.push(fragmentation_ratio);
         }
-        
-        let mean_ratio = fragmentation_ratios.iter().sum::<f64>() / fragmentation_ratios.len() as f64;
-        
-        let variance = fragmentation_ratios.iter()
+
+        let mean_ratio =
+            fragmentation_ratios.iter().sum::<f64>() / fragmentation_ratios.len() as f64;
+
+        let variance = fragmentation_ratios
+            .iter()
             .map(|x| (x - mean_ratio).powi(2))
-            .sum::<f64>() / (fragmentation_ratios.len() - 1) as f64;
+            .sum::<f64>()
+            / (fragmentation_ratios.len() - 1) as f64;
         let std_dev_ratio = variance.sqrt();
-        
+
         // Calculate trend using linear regression on fragmentation ratios
         let n = fragmentation_ratios.len() as f64;
         let x_sum: f64 = (0..fragmentation_ratios.len()).map(|i| i as f64).sum();
         let y_sum: f64 = fragmentation_ratios.iter().sum();
-        let xy_sum: f64 = fragmentation_ratios.iter().enumerate()
-            .map(|(i, &y)| i as f64 * y).sum();
-        let x2_sum: f64 = (0..fragmentation_ratios.len()).map(|i| (i as f64).powi(2)).sum();
-        
+        let xy_sum: f64 = fragmentation_ratios
+            .iter()
+            .enumerate()
+            .map(|(i, &y)| i as f64 * y)
+            .sum();
+        let x2_sum: f64 = (0..fragmentation_ratios.len())
+            .map(|i| (i as f64).powi(2))
+            .sum();
+
         let trend = if n * x2_sum - x_sum.powi(2) != 0.0 {
             (n * xy_sum - x_sum * y_sum) / (n * x2_sum - x_sum.powi(2))
         } else {
             0.0
         };
-        
+
         FragmentationStatistics {
             mean_ratio,
             std_dev_ratio,
@@ -947,16 +981,21 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
     }
 
     /// Calculate efficiency statistics
-    fn calculate_efficiency_statistics(&self, samples: &[&PerformanceRecord<A>]) -> EfficiencyStatistics<A> {
+    fn calculate_efficiency_statistics(
+        &self,
+        samples: &[&PerformanceRecord<A>],
+    ) -> EfficiencyStatistics<A> {
         let flops_data: Vec<f64> = samples
             .iter()
             .map(|record| record.metrics.efficiency.flops)
             .collect();
 
         let mean_flops = flops_data.iter().sum::<f64>() / flops_data.len() as f64;
-        let flops_variance = flops_data.iter()
+        let flops_variance = flops_data
+            .iter()
             .map(|x| (x - mean_flops).powi(2))
-            .sum::<f64>() / (flops_data.len() - 1) as f64;
+            .sum::<f64>()
+            / (flops_data.len() - 1) as f64;
         let flops_cv = flops_variance.sqrt() / mean_flops;
 
         let efficiency_data: Vec<f64> = samples
@@ -975,17 +1014,23 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
     }
 
     /// Calculate convergence statistics
-    fn calculate_convergence_statistics(&self, samples: &[&PerformanceRecord<A>]) -> ConvergenceStatistics<A> {
+    fn calculate_convergence_statistics(
+        &self,
+        samples: &[&PerformanceRecord<A>],
+    ) -> ConvergenceStatistics<A> {
         let objectives: Vec<A> = samples
             .iter()
             .map(|record| record.metrics.convergence.final_objective)
             .collect();
 
-        let mean_objective = objectives.iter().fold(A::zero(), |acc, &x| acc + x) / A::from(objectives.len()).unwrap();
-        
-        let variance = objectives.iter()
+        let mean_objective = objectives.iter().fold(A::zero(), |acc, &x| acc + x)
+            / A::from(objectives.len()).unwrap();
+
+        let variance = objectives
+            .iter()
             .map(|&x| (x - mean_objective) * (x - mean_objective))
-            .fold(A::zero(), |acc, x| acc + x) / A::from(objectives.len() - 1).unwrap();
+            .fold(A::zero(), |acc, x| acc + x)
+            / A::from(objectives.len() - 1).unwrap();
         let std_objective = variance.sqrt();
 
         let convergence_rates: Vec<f64> = samples
@@ -993,29 +1038,44 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
             .map(|record| record.metrics.convergence.convergence_rate)
             .collect();
 
-        let mean_convergence_rate = convergence_rates.iter().sum::<f64>() / convergence_rates.len() as f64;
+        let mean_convergence_rate =
+            convergence_rates.iter().sum::<f64>() / convergence_rates.len() as f64;
 
         ConvergenceStatistics {
             mean_objective,
             std_objective,
             mean_convergence_rate,
-            convergence_consistency: 1.0 - (convergence_rates.iter()
-                .map(|x| (x - mean_convergence_rate).powi(2))
-                .sum::<f64>() / convergence_rates.len() as f64).sqrt(),
+            convergence_consistency: 1.0
+                - (convergence_rates
+                    .iter()
+                    .map(|x| (x - mean_convergence_rate).powi(2))
+                    .sum::<f64>()
+                    / convergence_rates.len() as f64)
+                    .sqrt(),
         }
     }
 
     /// Calculate confidence intervals
-    fn calculate_confidence_intervals(&self, timing_data: &[f64], memory_data: &[f64]) -> ConfidenceIntervals {
+    fn calculate_confidence_intervals(
+        &self,
+        timing_data: &[f64],
+        memory_data: &[f64],
+    ) -> ConfidenceIntervals {
         let timing_mean = timing_data.iter().sum::<f64>() / timing_data.len() as f64;
-        let timing_std = (timing_data.iter()
+        let timing_std = (timing_data
+            .iter()
             .map(|x| (x - timing_mean).powi(2))
-            .sum::<f64>() / (timing_data.len() - 1) as f64).sqrt();
+            .sum::<f64>()
+            / (timing_data.len() - 1) as f64)
+            .sqrt();
 
         let memory_mean = memory_data.iter().sum::<f64>() / memory_data.len() as f64;
-        let memory_std = (memory_data.iter()
+        let memory_std = (memory_data
+            .iter()
             .map(|x| (x - memory_mean).powi(2))
-            .sum::<f64>() / (memory_data.len() - 1) as f64).sqrt();
+            .sum::<f64>()
+            / (memory_data.len() - 1) as f64)
+            .sqrt();
 
         // Using t-distribution critical values (approximated)
         let t_95 = 1.96; // For large samples
@@ -1028,10 +1088,22 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
         let memory_margin_99 = t_99 * memory_std / (memory_data.len() as f64).sqrt();
 
         ConfidenceIntervals {
-            timing_ci_95: (timing_mean - timing_margin_95, timing_mean + timing_margin_95),
-            memory_ci_95: (memory_mean - memory_margin_95, memory_mean + memory_margin_95),
-            timing_ci_99: (timing_mean - timing_margin_99, timing_mean + timing_margin_99),
-            memory_ci_99: (memory_mean - memory_margin_99, memory_mean + memory_margin_99),
+            timing_ci_95: (
+                timing_mean - timing_margin_95,
+                timing_mean + timing_margin_95,
+            ),
+            memory_ci_95: (
+                memory_mean - memory_margin_95,
+                memory_mean + memory_margin_95,
+            ),
+            timing_ci_99: (
+                timing_mean - timing_margin_99,
+                timing_mean + timing_margin_99,
+            ),
+            memory_ci_99: (
+                memory_mean - memory_margin_99,
+                memory_mean + memory_margin_99,
+            ),
         }
     }
 
@@ -1105,17 +1177,23 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
     fn generate_markdown_report(&self, results: &[RegressionTestResult<A>]) -> Result<String> {
         let mut md = String::new();
         md.push_str("# Performance Regression Test Report\n\n");
-        
+
         let total = results.len();
         let failed = results.iter().filter(|r| r.has_regressions()).count();
         let passed = total - failed;
 
-        md.push_str(&format!("**Summary**: {} tests, {} passed, {} failed\n\n", total, passed, failed));
+        md.push_str(&format!(
+            "**Summary**: {} tests, {} passed, {} failed\n\n",
+            total, passed, failed
+        ));
 
         if failed > 0 {
             md.push_str("## ❌ Failed Tests (Regressions Detected)\n\n");
             for result in results.iter().filter(|r| r.has_regressions()) {
-                md.push_str(&format!("### {} - {}\n", result.optimizer_name, result.test_name));
+                md.push_str(&format!(
+                    "### {} - {}\n",
+                    result.optimizer_name, result.test_name
+                ));
                 for regression in &result.regression_results {
                     if regression.regression_detected {
                         md.push_str(&format!(
@@ -1133,7 +1211,10 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
         if passed > 0 {
             md.push_str("## ✅ Passed Tests\n\n");
             for result in results.iter().filter(|r| !r.has_regressions()) {
-                md.push_str(&format!("- {} - {}\n", result.optimizer_name, result.test_name));
+                md.push_str(&format!(
+                    "- {} - {}\n",
+                    result.optimizer_name, result.test_name
+                ));
             }
         }
 
@@ -1141,7 +1222,10 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
     }
 
     /// Generate GitHub Actions format report
-    fn generate_github_actions_report(&self, results: &[RegressionTestResult<A>]) -> Result<String> {
+    fn generate_github_actions_report(
+        &self,
+        results: &[RegressionTestResult<A>],
+    ) -> Result<String> {
         let mut output = String::new();
 
         for result in results {
@@ -1160,8 +1244,7 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
             } else {
                 output.push_str(&format!(
                     "::notice title=Performance Test Passed::{}_{}: No regression detected\n",
-                    result.optimizer_name,
-                    result.test_name
+                    result.optimizer_name, result.test_name
                 ));
             }
         }
@@ -1172,14 +1255,15 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
     // Helper methods for environment detection
     fn get_git_commit_hash(&self) -> Option<String> {
         use std::process::Command;
-        
+
         Command::new("git")
             .args(["rev-parse", "HEAD"])
             .output()
             .ok()
             .and_then(|output| {
                 if output.status.success() {
-                    String::from_utf8(output.stdout).ok()
+                    String::from_utf8(output.stdout)
+                        .ok()
                         .map(|s| s.trim().to_string())
                 } else {
                     None
@@ -1189,14 +1273,15 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
 
     fn get_git_branch(&self) -> Option<String> {
         use std::process::Command;
-        
+
         Command::new("git")
             .args(["branch", "--show-current"])
             .output()
             .ok()
             .and_then(|output| {
                 if output.status.success() {
-                    String::from_utf8(output.stdout).ok()
+                    String::from_utf8(output.stdout)
+                        .ok()
                         .map(|s| s.trim().to_string())
                 } else {
                     None
@@ -1214,18 +1299,20 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
             hardware_acceleration: self.detect_hardware_acceleration(),
         })
     }
-    
+
     /// Detect CPU model from system information
     fn detect_cpu_model(&self) -> String {
         use std::process::Command;
-        
+
         #[cfg(target_os = "linux")]
         {
             if let Ok(output) = Command::new("cat").arg("/proc/cpuinfo").output() {
                 if let Ok(content) = String::from_utf8(output.stdout) {
                     for line in content.lines() {
                         if line.starts_with("model name") {
-                            return line.split(':').nth(1)
+                            return line
+                                .split(':')
+                                .nth(1)
                                 .unwrap_or("Unknown")
                                 .trim()
                                 .to_string();
@@ -1234,23 +1321,31 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
                 }
             }
         }
-        
+
         #[cfg(target_os = "macos")]
         {
-            if let Ok(output) = Command::new("sysctl").args(["-n", "machdep.cpu.brand_string"]).output() {
+            if let Ok(output) = Command::new("sysctl")
+                .args(["-n", "machdep.cpu.brand_string"])
+                .output()
+            {
                 if let Ok(brand) = String::from_utf8(output.stdout) {
                     return brand.trim().to_string();
                 }
             }
         }
-        
+
         #[cfg(target_os = "windows")]
         {
-            if let Ok(output) = Command::new("wmic").args(["cpu", "get", "name", "/format:list"]).output() {
+            if let Ok(output) = Command::new("wmic")
+                .args(["cpu", "get", "name", "/format:list"])
+                .output()
+            {
                 if let Ok(content) = String::from_utf8(output.stdout) {
                     for line in content.lines() {
                         if line.starts_with("Name=") {
-                            return line.split('=').nth(1)
+                            return line
+                                .split('=')
+                                .nth(1)
                                 .unwrap_or("Unknown")
                                 .trim()
                                 .to_string();
@@ -1259,21 +1354,23 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
                 }
             }
         }
-        
+
         "Unknown".to_string()
     }
-    
+
     /// Detect system memory size in MB
     fn detect_memory_size(&self) -> usize {
         use std::process::Command;
-        
+
         #[cfg(target_os = "linux")]
         {
             if let Ok(output) = Command::new("cat").arg("/proc/meminfo").output() {
                 if let Ok(content) = String::from_utf8(output.stdout) {
                     for line in content.lines() {
                         if line.starts_with("MemTotal:") {
-                            let kb = line.split_whitespace().nth(1)
+                            let kb = line
+                                .split_whitespace()
+                                .nth(1)
                                 .and_then(|s| s.parse::<usize>().ok())
                                 .unwrap_or(0);
                             return kb / 1024; // Convert KB to MB
@@ -1282,7 +1379,7 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
                 }
             }
         }
-        
+
         #[cfg(target_os = "macos")]
         {
             if let Ok(output) = Command::new("sysctl").args(["-n", "hw.memsize"]).output() {
@@ -1293,10 +1390,18 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
                 }
             }
         }
-        
+
         #[cfg(target_os = "windows")]
         {
-            if let Ok(output) = Command::new("wmic").args(["computersystem", "get", "TotalPhysicalMemory", "/format:list"]).output() {
+            if let Ok(output) = Command::new("wmic")
+                .args([
+                    "computersystem",
+                    "get",
+                    "TotalPhysicalMemory",
+                    "/format:list",
+                ])
+                .output()
+            {
                 if let Ok(content) = String::from_utf8(output.stdout) {
                     for line in content.lines() {
                         if line.starts_with("TotalPhysicalMemory=") {
@@ -1310,21 +1415,22 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
                 }
             }
         }
-        
+
         0
     }
-    
+
     /// Detect Rust version
     fn detect_rust_version(&self) -> String {
         use std::process::Command;
-        
+
         Command::new("rustc")
             .arg("--version")
             .output()
             .ok()
             .and_then(|output| {
                 if output.status.success() {
-                    String::from_utf8(output.stdout).ok()
+                    String::from_utf8(output.stdout)
+                        .ok()
                         .map(|s| s.trim().to_string())
                 } else {
                     None
@@ -1332,23 +1438,23 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
             })
             .unwrap_or_else(|| "Unknown".to_string())
     }
-    
+
     /// Detect compiler flags from environment
     fn detect_compiler_flags(&self) -> Vec<String> {
         let mut flags = Vec::new();
-        
+
         // Check common Rust compilation flags
         if let Ok(rustflags) = std::env::var("RUSTFLAGS") {
             flags.extend(rustflags.split_whitespace().map(|s| s.to_string()));
         }
-        
+
         // Check for release vs debug mode
         #[cfg(debug_assertions)]
         flags.push("debug".to_string());
-        
+
         #[cfg(not(debug_assertions))]
         flags.push("release".to_string());
-        
+
         // Check for target features
         if cfg!(target_feature = "avx2") {
             flags.push("avx2".to_string());
@@ -1356,14 +1462,14 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
         if cfg!(target_feature = "sse4.2") {
             flags.push("sse4.2".to_string());
         }
-        
+
         flags
     }
-    
+
     /// Detect available hardware acceleration
     fn detect_hardware_acceleration(&self) -> Vec<String> {
         let mut acceleration = Vec::new();
-        
+
         // Check for SIMD features
         if cfg!(target_feature = "avx2") {
             acceleration.push("AVX2".to_string());
@@ -1374,26 +1480,26 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
         if cfg!(target_feature = "sse4.2") {
             acceleration.push("SSE4.2".to_string());
         }
-        
+
         // Check for GPU acceleration (basic detection)
         #[cfg(feature = "gpu")]
         {
             use std::process::Command;
-            
+
             // Check for NVIDIA GPU
             if Command::new("nvidia-smi").output().is_ok() {
                 acceleration.push("CUDA".to_string());
             }
-            
+
             // Check for AMD GPU
             if Command::new("rocm-smi").output().is_ok() {
                 acceleration.push("ROCm".to_string());
             }
         }
-        
+
         acceleration
     }
-    
+
     /// Extract memory usage information from benchmark result
     fn extract_memory_usage(&self, result: &BenchmarkResult<A>) -> Option<usize> {
         // Use system memory profiling if available
@@ -1401,38 +1507,39 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
         {
             self.get_process_memory_usage()
         }
-        
+
         #[cfg(not(target_os = "linux"))]
         {
             None // Fallback for other platforms
         }
     }
-    
+
     /// Extract average memory usage
     fn extract_avg_memory_usage(&self, _result: &BenchmarkResult<A>) -> Option<usize> {
         // For now, assume 80% of peak memory as average
-        self.extract_memory_usage(_result).map(|peak| (peak as f64 * 0.8) as usize)
+        self.extract_memory_usage(_result)
+            .map(|peak| (peak as f64 * 0.8) as usize)
     }
-    
+
     /// Extract allocation count (simplified)
     fn extract_allocation_count(&self, _result: &BenchmarkResult<A>) -> Option<usize> {
         // This would require memory profiling integration
         // For now, provide a reasonable estimate
         Some(1000) // Default estimate
     }
-    
+
     /// Calculate memory efficiency score
     fn calculate_memory_efficiency(&self, _result: &BenchmarkResult<A>) -> f64 {
         // Simple efficiency calculation based on memory usage patterns
         0.85 // Default efficiency score
     }
-    
+
     /// Estimate memory fragmentation ratio
     fn estimate_fragmentation_ratio(&self, result: &BenchmarkResult<A>) -> f64 {
         // Memory fragmentation estimation based on available metrics
         if let (Some(peak_memory), Some(avg_memory)) = (
-            self.extract_memory_usage(result), 
-            self.extract_avg_memory_usage(result)
+            self.extract_memory_usage(result),
+            self.extract_avg_memory_usage(result),
         ) {
             if peak_memory > 0 {
                 // Fragmentation ratio: 1.0 means perfect allocation, < 1.0 means fragmentation
@@ -1448,7 +1555,7 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
             0.1 // 10% fragmentation estimate
         }
     }
-    
+
     /// Estimate timing standard deviation from single run
     fn estimate_timing_std_dev(&self, result: &BenchmarkResult<A>) -> u64 {
         // Estimate based on typical variation for optimization algorithms
@@ -1456,23 +1563,23 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
         // Typical coefficient of variation for optimization: 5-15%
         (base_time_ns as f64 * 0.1) as u64
     }
-    
+
     /// Estimate timing percentile from single run
     fn estimate_timing_percentile(&self, result: &BenchmarkResult<A>, percentile: f64) -> u64 {
         let base_time_ns = result.elapsed_time.as_nanos() as u64;
         let std_dev = self.estimate_timing_std_dev(result) as f64;
-        
+
         // Use normal distribution approximation
         let z_score = match percentile {
-            p if p >= 0.99 => 2.33,    // 99th percentile
-            p if p >= 0.95 => 1.645,   // 95th percentile
-            p if p >= 0.90 => 1.28,    // 90th percentile
-            _ => 0.0
+            p if p >= 0.99 => 2.33,  // 99th percentile
+            p if p >= 0.95 => 1.645, // 95th percentile
+            p if p >= 0.90 => 1.28,  // 90th percentile
+            _ => 0.0,
         };
-        
+
         (base_time_ns as f64 + z_score * std_dev).max(0.0) as u64
     }
-    
+
     /// Estimate minimum timing from single run
     fn estimate_timing_min(&self, result: &BenchmarkResult<A>) -> u64 {
         let base_time_ns = result.elapsed_time.as_nanos() as u64;
@@ -1480,7 +1587,7 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
         // Minimum is typically 2 standard deviations below mean
         (base_time_ns as f64 - 2.0 * std_dev).max(base_time_ns as f64 * 0.5) as u64
     }
-    
+
     /// Estimate maximum timing from single run  
     fn estimate_timing_max(&self, result: &BenchmarkResult<A>) -> u64 {
         let base_time_ns = result.elapsed_time.as_nanos() as u64;
@@ -1500,7 +1607,7 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
             0.0
         }
     }
-    
+
     /// Calculate arithmetic intensity
     fn calculate_arithmetic_intensity(&self, result: &BenchmarkResult<A>) -> f64 {
         // Arithmetic intensity = FLOPs / bytes accessed
@@ -1509,43 +1616,44 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
         let estimated_memory_access = 1_000_000.0; // Rough estimate in bytes
         flops / estimated_memory_access
     }
-    
+
     /// Extract CPU utilization
     fn extract_cpu_utilization(&self, _result: &BenchmarkResult<A>) -> Option<f64> {
         // This would require system monitoring integration
         // For now, provide a reasonable estimate for single-threaded optimization
         Some(0.75) // 75% utilization estimate
     }
-    
+
     /// Calculate overall efficiency score
     fn calculate_efficiency_score(&self, result: &BenchmarkResult<A>) -> f64 {
         // Combine multiple efficiency metrics
         let time_efficiency = if result.converged { 0.9 } else { 0.5 };
         let memory_efficiency = self.calculate_memory_efficiency(result);
         let cpu_efficiency = self.extract_cpu_utilization(result).unwrap_or(0.5);
-        
+
         (time_efficiency + memory_efficiency + cpu_efficiency) / 3.0
     }
-    
+
     /// Get current process memory usage (Linux-specific)
     #[cfg(target_os = "linux")]
     fn get_process_memory_usage(&self) -> Option<usize> {
         use std::fs;
-        
+
         let pid = std::process::id();
         let status_path = format!("/proc/{}/status", pid);
-        
+
         if let Ok(content) = fs::read_to_string(&status_path) {
             for line in content.lines() {
                 if line.starts_with("VmPeak:") {
-                    return line.split_whitespace()
+                    return line
+                        .split_whitespace()
                         .nth(1)
                         .and_then(|s| s.parse::<usize>().ok())
                         .map(|kb| kb * 1024); // Convert KB to bytes
                 }
             }
         }
-        
+
         None
     }
 }
@@ -1570,16 +1678,26 @@ pub struct RegressionTestResult<A: Float> {
 impl<A: Float> RegressionTestResult<A> {
     /// Check if any regressions were detected
     pub fn has_regressions(&self) -> bool {
-        self.regression_results.iter().any(|r| r.regression_detected)
+        self.regression_results
+            .iter()
+            .any(|r| r.regression_detected)
     }
 
     /// Convert to CI test result format
     pub fn to_ci_test_result(&self) -> CiTestResult {
         CiTestResult {
             name: format!("{}_{}", self.optimizer_name, self.test_name),
-            status: if self.has_regressions() { "failed".to_string() } else { "passed".to_string() },
+            status: if self.has_regressions() {
+                "failed".to_string()
+            } else {
+                "passed".to_string()
+            },
             execution_time_ms: self.execution_time.as_millis() as u64,
-            regression_count: self.regression_results.iter().filter(|r| r.regression_detected).count(),
+            regression_count: self
+                .regression_results
+                .iter()
+                .filter(|r| r.regression_detected)
+                .count(),
         }
     }
 }
@@ -1630,7 +1748,7 @@ impl<A: Float + Debug> RegressionDetector<A> for StatisticalTestDetector {
         let baseline_std = baseline.baseline_stats.timing.std_dev;
 
         let change_percent = ((current_time - baseline_mean) / baseline_mean) * 100.0;
-        
+
         // Calculate memory change percentage
         let current_memory = current_metrics.memory.peak_memory_bytes as f64;
         let baseline_memory_mean = baseline.baseline_stats.memory.mean_memory;
@@ -1639,31 +1757,49 @@ impl<A: Float + Debug> RegressionDetector<A> for StatisticalTestDetector {
         } else {
             0.0
         };
-        
+
         // Simple z-score calculation
-        let z_score = (current_time - baseline_mean) / (baseline_std / (baseline.sample_count as f64).sqrt());
+        let z_score =
+            (current_time - baseline_mean) / (baseline_std / (baseline.sample_count as f64).sqrt());
         let p_value = 2.0 * (1.0 - normal_cdf(z_score.abs())); // Two-tailed test
 
-        let regression_detected = p_value < self.alpha && (change_percent > 0.0 || memory_change_percent > 10.0);
+        let regression_detected =
+            p_value < self.alpha && (change_percent > 0.0 || memory_change_percent > 10.0);
 
         Ok(RegressionResult {
             test_id: "statistical_test".to_string(),
             regression_detected,
-            severity: if regression_detected { (change_percent / 100.0).min(1.0) } else { 0.0 },
+            severity: if regression_detected {
+                (change_percent / 100.0).min(1.0)
+            } else {
+                0.0
+            },
             confidence: 1.0 - p_value,
             performance_change_percent: change_percent,
             memory_change_percent,
-            affected_metrics: if regression_detected { vec!["timing".to_string()] } else { vec![] },
+            affected_metrics: if regression_detected {
+                vec!["timing".to_string()]
+            } else {
+                vec![]
+            },
             statistical_tests: vec![StatisticalTestResult {
                 test_name: "t_test".to_string(),
                 test_statistic: z_score,
                 p_value,
                 degrees_of_freedom: Some(baseline.sample_count - 1),
-                conclusion: if regression_detected { "Significant regression detected".to_string() } else { "No significant change".to_string() },
+                conclusion: if regression_detected {
+                    "Significant regression detected".to_string()
+                } else {
+                    "No significant change".to_string()
+                },
             }],
             analysis: RegressionAnalysis {
                 trend_analysis: TrendAnalysis {
-                    direction: if change_percent > 0.0 { TrendDirection::Degrading } else { TrendDirection::Improving },
+                    direction: if change_percent > 0.0 {
+                        TrendDirection::Degrading
+                    } else {
+                        TrendDirection::Improving
+                    },
                     magnitude: change_percent.abs(),
                     significance: 1.0 - p_value,
                     start_point: None,
@@ -1753,9 +1889,13 @@ impl<A: Float + Debug> RegressionDetector<A> for SlidingWindowDetector {
                         outlier_scores: vec![],
                         outlier_types: vec![],
                     },
-                    root_cause_hints: vec!["Insufficient data for sliding window analysis".to_string()],
+                    root_cause_hints: vec![
+                        "Insufficient data for sliding window analysis".to_string()
+                    ],
                 },
-                recommendations: vec!["Collect more performance data for accurate analysis".to_string()],
+                recommendations: vec![
+                    "Collect more performance data for accurate analysis".to_string()
+                ],
             });
         }
 
@@ -1776,15 +1916,27 @@ impl<A: Float + Debug> RegressionDetector<A> for SlidingWindowDetector {
         Ok(RegressionResult {
             test_id: "sliding_window".to_string(),
             regression_detected,
-            severity: if regression_detected { (change_percent / 100.0).min(1.0) } else { 0.0 },
+            severity: if regression_detected {
+                (change_percent / 100.0).min(1.0)
+            } else {
+                0.0
+            },
             confidence: if regression_detected { 0.8 } else { 0.2 },
             performance_change_percent: change_percent,
             memory_change_percent: 0.0,
-            affected_metrics: if regression_detected { vec!["timing".to_string()] } else { vec![] },
+            affected_metrics: if regression_detected {
+                vec!["timing".to_string()]
+            } else {
+                vec![]
+            },
             statistical_tests: vec![],
             analysis: RegressionAnalysis {
                 trend_analysis: TrendAnalysis {
-                    direction: if change_percent > 0.0 { TrendDirection::Degrading } else { TrendDirection::Improving },
+                    direction: if change_percent > 0.0 {
+                        TrendDirection::Degrading
+                    } else {
+                        TrendDirection::Improving
+                    },
                     magnitude: change_percent.abs(),
                     significance: if regression_detected { 0.8 } else { 0.2 },
                     start_point: Some(history.len() - self.window_size),
@@ -1875,15 +2027,19 @@ impl<A: Float + Debug> RegressionDetector<A> for ChangePointDetector {
                         outlier_scores: vec![],
                         outlier_types: vec![],
                     },
-                    root_cause_hints: vec!["Insufficient data for change point detection".to_string()],
+                    root_cause_hints: vec![
+                        "Insufficient data for change point detection".to_string()
+                    ],
                 },
-                recommendations: vec!["Collect more performance data for change point analysis".to_string()],
+                recommendations: vec![
+                    "Collect more performance data for change point analysis".to_string()
+                ],
             });
         }
 
         // Simple change point detection - compare first and second half
         let mid_point = history.len() / 2;
-        
+
         let first_half: Vec<f64> = history
             .iter()
             .take(mid_point)
@@ -1905,22 +2061,42 @@ impl<A: Float + Debug> RegressionDetector<A> for ChangePointDetector {
         Ok(RegressionResult {
             test_id: "change_point".to_string(),
             regression_detected: change_detected && change_percent > 0.0,
-            severity: if change_detected { (change_percent.abs() / 100.0).min(1.0) } else { 0.0 },
+            severity: if change_detected {
+                (change_percent.abs() / 100.0).min(1.0)
+            } else {
+                0.0
+            },
             confidence: if change_detected { 0.7 } else { 0.3 },
             performance_change_percent: change_percent,
             memory_change_percent: 0.0,
-            affected_metrics: if change_detected { vec!["timing".to_string()] } else { vec![] },
+            affected_metrics: if change_detected {
+                vec!["timing".to_string()]
+            } else {
+                vec![]
+            },
             statistical_tests: vec![],
             analysis: RegressionAnalysis {
                 trend_analysis: TrendAnalysis {
-                    direction: if change_percent > 0.0 { TrendDirection::Degrading } else { TrendDirection::Improving },
+                    direction: if change_percent > 0.0 {
+                        TrendDirection::Degrading
+                    } else {
+                        TrendDirection::Improving
+                    },
                     magnitude: change_percent.abs(),
                     significance: if change_detected { 0.7 } else { 0.3 },
                     start_point: Some(mid_point),
                 },
                 change_point_analysis: ChangePointAnalysis {
-                    change_points: if change_detected { vec![mid_point] } else { vec![] },
-                    magnitudes: if change_detected { vec![change_percent] } else { vec![] },
+                    change_points: if change_detected {
+                        vec![mid_point]
+                    } else {
+                        vec![]
+                    },
+                    magnitudes: if change_detected {
+                        vec![change_percent]
+                    } else {
+                        vec![]
+                    },
                     confidences: if change_detected { vec![0.7] } else { vec![] },
                 },
                 outlier_analysis: OutlierAnalysis {
@@ -1936,7 +2112,8 @@ impl<A: Float + Debug> RegressionDetector<A> for ChangePointDetector {
             },
             recommendations: if change_detected {
                 vec![
-                    "Investigate changes that occurred around the detected change point".to_string(),
+                    "Investigate changes that occurred around the detected change point"
+                        .to_string(),
                     "Review commits and deployments near the change point".to_string(),
                 ]
             } else {
@@ -1951,8 +2128,14 @@ impl<A: Float + Debug> RegressionDetector<A> for ChangePointDetector {
 
     fn config(&self) -> HashMap<String, String> {
         let mut config = HashMap::new();
-        config.insert("min_segment_size".to_string(), self.min_segment_size.to_string());
-        config.insert("significance_threshold".to_string(), self.significance_threshold.to_string());
+        config.insert(
+            "min_segment_size".to_string(),
+            self.min_segment_size.to_string(),
+        );
+        config.insert(
+            "significance_threshold".to_string(),
+            self.significance_threshold.to_string(),
+        );
         config
     }
 }
@@ -1998,11 +2181,20 @@ impl<A: Float + Debug> StatisticalAnalyzer<A> for TrendAnalyzer {
         let x2_sum: f64 = (0..times.len()).map(|i| (i as f64).powi(2)).sum();
 
         let slope = (n * xy_sum - x_sum * y_sum) / (n * x2_sum - x_sum.powi(2));
-        
-        let trend_direction = if slope > 0.0 { "increasing" } else if slope < 0.0 { "decreasing" } else { "stable" };
+
+        let trend_direction = if slope > 0.0 {
+            "increasing"
+        } else if slope < 0.0 {
+            "decreasing"
+        } else {
+            "stable"
+        };
 
         Ok(StatisticalAnalysisResult {
-            summary: format!("Trend analysis: {} trend with slope {:.2}", trend_direction, slope),
+            summary: format!(
+                "Trend analysis: {} trend with slope {:.2}",
+                trend_direction, slope
+            ),
             tests: vec![],
             patterns: vec![format!("Linear trend: {}", trend_direction)],
             anomalies: vec![],
@@ -2046,9 +2238,8 @@ impl<A: Float + Debug> StatisticalAnalyzer<A> for OutlierAnalyzer {
             .collect();
 
         let mean = times.iter().sum::<f64>() / times.len() as f64;
-        let variance = times.iter()
-            .map(|x| (x - mean).powi(2))
-            .sum::<f64>() / (times.len() - 1) as f64;
+        let variance =
+            times.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / (times.len() - 1) as f64;
         let std_dev = variance.sqrt();
 
         let mut outliers = Vec::new();
@@ -2083,8 +2274,14 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> PerformanceDataba
             history: HashMap::new(),
             metadata: DatabaseMetadata {
                 version: "1.0".to_string(),
-                created_at: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
-                last_updated: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
+                created_at: SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs(),
+                last_updated: SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs(),
                 total_records: 0,
             },
         }
@@ -2115,14 +2312,17 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> PerformanceDataba
     pub fn add_record(&mut self, key: String, record: PerformanceRecord<A>) {
         let history = self.history.entry(key).or_insert_with(VecDeque::new);
         history.push_back(record);
-        
+
         // Maintain reasonable history size
         if history.len() > 1000 {
             history.pop_front();
         }
 
         self.metadata.total_records += 1;
-        self.metadata.last_updated = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+        self.metadata.last_updated = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
     }
 }
 
@@ -2148,7 +2348,10 @@ impl AlertSystem {
         }
 
         let alert = Alert {
-            id: format!("alert_{}", SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs()),
+            id: format!(
+                "alert_{}",
+                SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs()
+            ),
             timestamp: SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs(),
             severity: match regression.severity {
                 s if s >= 0.8 => AlertSeverity::Critical,
@@ -2158,8 +2361,7 @@ impl AlertSystem {
             },
             message: format!(
                 "Performance regression detected in {}: {:.2}% degradation",
-                regression.test_id,
-                regression.performance_change_percent
+                regression.test_id, regression.performance_change_percent
             ),
             regression_id: regression.test_id.clone(),
             status: AlertStatus::Active,
@@ -2177,21 +2379,21 @@ impl AlertSystem {
 
         Ok(())
     }
-    
+
     /// Send alert notifications through configured channels
     fn send_alert_notifications(&self, alert: &Alert) -> Result<()> {
         // Check if alerts are enabled and severity meets threshold
         if !self.config.enable_alerts || self.severity_below_threshold(alert) {
             return Ok(());
         }
-        
+
         // Check cooldown period
         if self.is_in_cooldown_period(alert)? {
             return Ok(());
         }
-        
+
         let mut notification_results = Vec::new();
-        
+
         // Send email notifications
         if self.config.enable_email {
             match self.send_email_notification(alert) {
@@ -2199,31 +2401,35 @@ impl AlertSystem {
                 Err(e) => notification_results.push(format!("Email failed: {}", e)),
             }
         }
-        
+
         // Send Slack notifications
         if self.config.enable_slack {
             match self.send_slack_notification(alert) {
-                Ok(()) => notification_results.push("Slack notification sent successfully".to_string()),
+                Ok(()) => {
+                    notification_results.push("Slack notification sent successfully".to_string())
+                }
                 Err(e) => notification_results.push(format!("Slack notification failed: {}", e)),
             }
         }
-        
+
         // Create GitHub issues
         if self.config.enable_github_issues {
             match self.create_github_issue(alert) {
-                Ok(()) => notification_results.push("GitHub issue created successfully".to_string()),
+                Ok(()) => {
+                    notification_results.push("GitHub issue created successfully".to_string())
+                }
                 Err(e) => notification_results.push(format!("GitHub issue creation failed: {}", e)),
             }
         }
-        
+
         // Log notification results
         for result in notification_results {
             eprintln!("Alert notification: {}", result);
         }
-        
+
         Ok(())
     }
-    
+
     /// Check if alert severity is below configured threshold
     fn severity_below_threshold(&self, alert: &Alert) -> bool {
         let alert_severity_value = match alert.severity {
@@ -2234,12 +2440,12 @@ impl AlertSystem {
         };
         alert_severity_value < self.config.severity_threshold
     }
-    
+
     /// Check if we're in cooldown period for similar alerts
     fn is_in_cooldown_period(&self, alert: &Alert) -> Result<bool> {
         let cooldown_duration = Duration::from_secs(self.config.cooldown_minutes * 60);
         let current_time = SystemTime::now();
-        
+
         // Check for similar recent alerts
         for recent_alert in self.alert_history.iter().rev().take(10) {
             if recent_alert.regression_id == alert.regression_id {
@@ -2249,10 +2455,10 @@ impl AlertSystem {
                 }
             }
         }
-        
+
         Ok(false)
     }
-    
+
     /// Send email notification
     fn send_email_notification(&self, alert: &Alert) -> Result<()> {
         // In a real implementation, this would use an email service like:
@@ -2260,17 +2466,17 @@ impl AlertSystem {
         // - AWS SES
         // - SendGrid
         // - Mailgun
-        
+
         let email_body = self.format_email_body(alert);
         let subject = format!("Performance Regression Alert: {}", alert.regression_id);
-        
+
         // Placeholder implementation - would integrate with actual email service
         eprintln!("EMAIL ALERT:");
         eprintln!("To: performance-team@company.com");
         eprintln!("Subject: {}", subject);
         eprintln!("Body:\n{}", email_body);
         eprintln!("---");
-        
+
         // TODO: Integrate with actual email service
         // Example with lettre crate:
         // let email = Message::builder()
@@ -2280,25 +2486,25 @@ impl AlertSystem {
         //     .body(email_body)?;
         // let mailer = SmtpTransport::relay("smtp.company.com")?.build();
         // mailer.send(&email)?;
-        
+
         Ok(())
     }
-    
+
     /// Send Slack notification
     fn send_slack_notification(&self, alert: &Alert) -> Result<()> {
         // In a real implementation, this would use:
         // - Slack webhook URL
         // - reqwest crate for HTTP requests
         // - JSON payload formatting
-        
+
         let slack_message = self.format_slack_message(alert);
-        
+
         // Placeholder implementation - would make HTTP POST to Slack webhook
         eprintln!("SLACK ALERT:");
         eprintln!("Channel: #performance-alerts");
         eprintln!("Message: {}", slack_message);
         eprintln!("---");
-        
+
         // TODO: Integrate with actual Slack API
         // Example:
         // let webhook_url = std::env::var("SLACK_WEBHOOK_URL")?;
@@ -2309,20 +2515,20 @@ impl AlertSystem {
         // });
         // let client = reqwest::Client::new();
         // client.post(&webhook_url).json(&payload).send()?;
-        
+
         Ok(())
     }
-    
+
     /// Create GitHub issue
     fn create_github_issue(&self, alert: &Alert) -> Result<()> {
         // In a real implementation, this would use:
         // - GitHub API with octocrab crate
         // - Personal access token
         // - Repository configuration
-        
+
         let issue_title = format!("Performance regression in {}", alert.regression_id);
         let issue_body = self.format_github_issue_body(alert);
-        
+
         // Placeholder implementation - would create actual GitHub issue
         eprintln!("GITHUB ISSUE:");
         eprintln!("Repository: company/performance-monitoring");
@@ -2330,7 +2536,7 @@ impl AlertSystem {
         eprintln!("Body:\n{}", issue_body);
         eprintln!("Labels: performance, regression, automated");
         eprintln!("---");
-        
+
         // TODO: Integrate with actual GitHub API
         // Example with octocrab:
         // let token = std::env::var("GITHUB_TOKEN")?;
@@ -2340,10 +2546,10 @@ impl AlertSystem {
         //     .body(&issue_body)
         //     .labels(vec!["performance", "regression", "automated"])
         //     .send().await?;
-        
+
         Ok(())
     }
-    
+
     /// Format email body for alert
     fn format_email_body(&self, alert: &Alert) -> String {
         format!(
@@ -2361,15 +2567,10 @@ impl AlertSystem {
             \n\
             Best regards,\n\
             Performance Monitoring System",
-            alert.id,
-            alert.timestamp,
-            alert.severity,
-            alert.regression_id,
-            alert.message,
-            alert.id
+            alert.id, alert.timestamp, alert.severity, alert.regression_id, alert.message, alert.id
         )
     }
-    
+
     /// Format Slack message for alert
     fn format_slack_message(&self, alert: &Alert) -> String {
         let severity_emoji = match alert.severity {
@@ -2378,7 +2579,7 @@ impl AlertSystem {
             AlertSeverity::Medium => "🟡",
             AlertSeverity::Low => "🔵",
         };
-        
+
         format!(
             "{} *Performance Regression Alert*\n\
             *Test:* {}\n\
@@ -2394,7 +2595,7 @@ impl AlertSystem {
             alert.id
         )
     }
-    
+
     /// Format GitHub issue body for alert
     fn format_github_issue_body(&self, alert: &Alert) -> String {
         format!(
@@ -2531,7 +2732,7 @@ mod tests {
     #[test]
     fn test_statistical_test_detector() {
         let detector = StatisticalTestDetector::new();
-        
+
         let baseline = PerformanceBaseline {
             name: "test".to_string(),
             baseline_stats: BaselineStatistics {
@@ -2612,8 +2813,10 @@ mod tests {
         };
 
         let history = VecDeque::new();
-        let result = detector.detect_regression(&baseline, &current_metrics, &history).unwrap();
-        
+        let result = detector
+            .detect_regression(&baseline, &current_metrics, &history)
+            .unwrap();
+
         assert!(result.performance_change_percent > 0.0);
         assert_eq!(result.test_id, "statistical_test");
     }
@@ -2621,7 +2824,7 @@ mod tests {
     #[test]
     fn test_trend_analyzer() {
         let analyzer = TrendAnalyzer::new();
-        
+
         let mut data = VecDeque::new();
         for i in 0..10 {
             let record = PerformanceRecord {

@@ -97,45 +97,45 @@ pub struct CrossImplementationResult {
 
 /// Run enhanced bootstrap validation for confidence intervals
 pub fn validate_bootstrap_confidence_intervals(
-    signal: &[f64], 
+    signal: &[f64],
     time: &[f64],
     n_bootstrap: usize,
-    confidence_levels: &[f64]
+    confidence_levels: &[f64],
 ) -> SignalResult<BootstrapValidationResult> {
     check_positive(n_bootstrap, "n_bootstrap")?;
     check_finite(signal, "signal")?;
     check_finite(time, "time")?;
-    
+
     if signal.len() != time.len() {
         return Err(SignalError::ValueError(
-            "Signal and time arrays must have same length".to_string()
+            "Signal and time arrays must have same length".to_string(),
         ));
     }
-    
+
     let mut rng = rand::thread_rng();
     let n = signal.len();
     let mut successful_iterations = 0;
     let mut bootstrap_powers = Vec::new();
-    
+
     // Perform bootstrap iterations
     for _ in 0..n_bootstrap {
         // Resample with replacement
         let mut bootstrap_signal = vec![0.0; n];
         let mut bootstrap_time = vec![0.0; n];
-        
+
         for i in 0..n {
             let idx = rng.gen_range(0..n);
             bootstrap_signal[i] = signal[idx];
             bootstrap_time[i] = time[idx];
         }
-        
+
         // Sort by time to maintain temporal order
         let mut indices: Vec<usize> = (0..n).collect();
         indices.sort_by(|&a, &b| bootstrap_time[a].partial_cmp(&bootstrap_time[b]).unwrap());
-        
+
         let sorted_signal: Vec<f64> = indices.iter().map(|&i| bootstrap_signal[i]).collect();
         let sorted_time: Vec<f64> = indices.iter().map(|&i| bootstrap_time[i]).collect();
-        
+
         // Compute Lomb-Scargle periodogram
         match lombscargle(&sorted_signal, &sorted_time, None, None, None, None, None) {
             Ok((freqs, power)) => {
@@ -145,26 +145,26 @@ pub fn validate_bootstrap_confidence_intervals(
             Err(_) => continue,
         }
     }
-    
+
     if successful_iterations < n_bootstrap / 2 {
-        return Err(SignalError::ComputationError(
-            format!("Too many bootstrap failures: {} successful out of {}", 
-                    successful_iterations, n_bootstrap)
-        ));
+        return Err(SignalError::ComputationError(format!(
+            "Too many bootstrap failures: {} successful out of {}",
+            successful_iterations, n_bootstrap
+        )));
     }
-    
+
     // Analyze coverage accuracy for each confidence level
     let mut coverage_accuracy = Vec::new();
     for &conf_level in confidence_levels {
         let coverage = compute_bootstrap_coverage(&bootstrap_powers, conf_level)?;
         coverage_accuracy.push((conf_level, coverage));
     }
-    
+
     // Compute bootstrap statistics
     let bootstrap_bias = compute_bootstrap_bias(&bootstrap_powers)?;
     let bootstrap_variance = compute_bootstrap_variance(&bootstrap_powers)?;
     let consistency_score = compute_consistency_score(&bootstrap_powers)?;
-    
+
     Ok(BootstrapValidationResult {
         coverage_accuracy,
         bootstrap_bias,
@@ -177,35 +177,44 @@ pub fn validate_bootstrap_confidence_intervals(
 /// Analyze numerical precision across different floating point types
 pub fn analyze_numerical_precision(
     signal: &[f64],
-    time: &[f64]
+    time: &[f64],
 ) -> SignalResult<PrecisionAnalysisResult> {
     check_finite(signal, "signal")?;
     check_finite(time, "time")?;
-    
+
     // Convert to f32 precision
     let signal_f32: Vec<f32> = signal.iter().map(|&x| x as f32).collect();
     let time_f32: Vec<f32> = time.iter().map(|&x| x as f32).collect();
-    
+
     // Convert back to f64 for comparison
     let signal_f32_as_f64: Vec<f64> = signal_f32.iter().map(|&x| x as f64).collect();
     let time_f32_as_f64: Vec<f64> = time_f32.iter().map(|&x| x as f64).collect();
-    
+
     // Compute using both precisions
     let (freqs_f64, power_f64) = lombscargle(signal, time, None, None, None, None, None)?;
-    let (freqs_f32, power_f32) = lombscargle(&signal_f32_as_f64, &time_f32_as_f64, None, None, None, None, None)?;
-    
+    let (freqs_f32, power_f32) = lombscargle(
+        &signal_f32_as_f64,
+        &time_f32_as_f64,
+        None,
+        None,
+        None,
+        None,
+        None,
+    )?;
+
     // Analyze differences
     let mut max_error = 0.0;
     let mut mean_error = 0.0;
     let mut cancellation_events = 0;
-    
+
     let min_len = power_f64.len().min(power_f32.len());
     for i in 0..min_len {
-        if power_f64[i] > 1e-10 { // Avoid division by very small numbers
+        if power_f64[i] > 1e-10 {
+            // Avoid division by very small numbers
             let relative_error = (power_f64[i] - power_f32[i]).abs() / power_f64[i];
             max_error = max_error.max(relative_error);
             mean_error += relative_error;
-            
+
             // Detect potential catastrophic cancellation
             if relative_error > 0.1 && power_f64[i] < 1e-6 {
                 cancellation_events += 1;
@@ -213,14 +222,14 @@ pub fn analyze_numerical_precision(
         }
     }
     mean_error /= min_len as f64;
-    
+
     // Estimate precision loss in bits
     let precision_loss_bits = if max_error > 0.0 {
         -max_error.log2()
     } else {
         52.0 // Full double precision
     };
-    
+
     // Compute stability score
     let stability_score = if max_error < 1e-10 {
         100.0
@@ -231,7 +240,7 @@ pub fn analyze_numerical_precision(
     } else {
         50.0
     };
-    
+
     Ok(PrecisionAnalysisResult {
         f32_f64_max_error: max_error,
         f32_f64_mean_error: mean_error,
@@ -244,52 +253,57 @@ pub fn analyze_numerical_precision(
 /// Analyze memory performance with large signals
 pub fn analyze_memory_performance(
     signal_sizes: &[usize],
-    test_iterations: usize
+    test_iterations: usize,
 ) -> SignalResult<MemoryPerformanceResult> {
     let mut peak_memory = 0;
     let mut allocation_count = 0;
     let mut leak_indicators = Vec::new();
-    
+
     for &size in signal_sizes {
         // Generate test signal
         let mut rng = rand::thread_rng();
         let signal: Vec<f64> = (0..size).map(|_| rng.gen_range(-1.0..1.0)).collect();
         let time: Vec<f64> = (0..size).map(|i| i as f64).collect();
-        
+
         for iter in 0..test_iterations {
             let start_time = Instant::now();
-            
+
             // Monitor memory usage (simplified - in real implementation would use proper memory profiling)
             let estimated_memory = size * 16 + 1024; // Rough estimate
             peak_memory = peak_memory.max(estimated_memory);
             allocation_count += 1;
-            
+
             match lombscargle(&signal, &time, None, None, None, None, None) {
                 Ok(_) => {
                     let duration = start_time.elapsed();
-                    
+
                     // Check for performance degradation (potential memory issues)
                     if duration.as_millis() > 1000 && size < 10000 {
                         leak_indicators.push(format!(
-                            "Slow computation for size {} iteration {}: {}ms", 
-                            size, iter, duration.as_millis()
+                            "Slow computation for size {} iteration {}: {}ms",
+                            size,
+                            iter,
+                            duration.as_millis()
                         ));
                     }
                 }
                 Err(e) => {
-                    leak_indicators.push(format!("Failed for size {} iteration {}: {}", size, iter, e));
+                    leak_indicators.push(format!(
+                        "Failed for size {} iteration {}: {}",
+                        size, iter, e
+                    ));
                 }
             }
         }
     }
-    
+
     // Compute efficiency metrics
     let max_signal_size = signal_sizes.iter().max().unwrap_or(&1000);
     let expected_memory = max_signal_size * 32; // Expected memory usage
     let efficiency_score = (expected_memory as f64 / peak_memory.max(1) as f64).min(1.0);
-    
+
     let fragmentation_score = if leak_indicators.is_empty() { 0.0 } else { 0.5 };
-    
+
     Ok(MemoryPerformanceResult {
         peak_memory_bytes: peak_memory,
         allocation_count,
@@ -304,52 +318,56 @@ pub fn analyze_statistical_power(
     signal_length: usize,
     target_frequency: f64,
     snr_range_db: &[f64],
-    n_trials: usize
+    n_trials: usize,
 ) -> SignalResult<StatisticalPowerResult> {
     check_positive(signal_length, "signal_length")?;
     check_positive(target_frequency, "target_frequency")?;
     check_positive(n_trials, "n_trials")?;
-    
+
     let mut power_curve = Vec::new();
     let mut type_i_errors = 0;
     let mut type_ii_errors = 0;
     let mut rng = rand::thread_rng();
-    
+
     for &snr_db in snr_range_db {
         let snr_linear = 10.0_f64.powf(snr_db / 10.0);
         let signal_amplitude = snr_linear.sqrt();
         let noise_std = 1.0;
-        
+
         let mut detection_count = 0;
-        
+
         for _ in 0..n_trials {
             // Generate test signal with known frequency
             let time: Vec<f64> = (0..signal_length).map(|i| i as f64).collect();
-            let signal: Vec<f64> = time.iter().map(|&t| {
-                signal_amplitude * (2.0 * PI * target_frequency * t).sin() + 
-                noise_std * rng.gen_range(-1.0..1.0)
-            }).collect();
-            
+            let signal: Vec<f64> = time
+                .iter()
+                .map(|&t| {
+                    signal_amplitude * (2.0 * PI * target_frequency * t).sin()
+                        + noise_std * rng.gen_range(-1.0..1.0)
+                })
+                .collect();
+
             match lombscargle(&signal, &time, None, None, None, None, None) {
                 Ok((freqs, power)) => {
                     // Find peak
                     let max_power = power.iter().cloned().fold(0.0, f64::max);
                     let peak_idx = power.iter().position(|&p| p == max_power).unwrap_or(0);
                     let detected_freq = freqs[peak_idx];
-                    
+
                     // Check if detection is correct (within tolerance)
                     let freq_error = (detected_freq - target_frequency).abs() / target_frequency;
-                    if freq_error < 0.1 && max_power > 0.1 { // Simple detection criterion
+                    if freq_error < 0.1 && max_power > 0.1 {
+                        // Simple detection criterion
                         detection_count += 1;
                     }
                 }
                 Err(_) => continue,
             }
         }
-        
+
         let detection_power = detection_count as f64 / n_trials as f64;
         power_curve.push((snr_db, detection_power));
-        
+
         // Estimate error rates
         if snr_db < -10.0 && detection_power > 0.05 {
             type_i_errors += 1; // False positive at low SNR
@@ -358,19 +376,20 @@ pub fn analyze_statistical_power(
             type_ii_errors += 1; // False negative at high SNR
         }
     }
-    
+
     let n_snr_points = snr_range_db.len();
     let type_i_error_rate = type_i_errors as f64 / n_snr_points.max(1) as f64;
     let type_ii_error_rate = type_ii_errors as f64 / n_snr_points.max(1) as f64;
-    
+
     // Find minimum detectable effect size (50% power point)
-    let minimum_effect_size = power_curve.iter()
+    let minimum_effect_size = power_curve
+        .iter()
         .find(|(_, power)| *power >= 0.5)
         .map(|(snr, _)| *snr)
         .unwrap_or(0.0);
-    
+
     let calibration_score = 100.0 - (type_i_error_rate + type_ii_error_rate) * 50.0;
-    
+
     Ok(StatisticalPowerResult {
         power_curve,
         minimum_effect_size,
@@ -383,26 +402,27 @@ pub fn analyze_statistical_power(
 /// Compare different Lomb-Scargle implementations for consistency
 pub fn validate_cross_implementation_consistency(
     signal: &[f64],
-    time: &[f64]
+    time: &[f64],
 ) -> SignalResult<CrossImplementationResult> {
     check_finite(signal, "signal")?;
     check_finite(time, "time")?;
-    
+
     // Standard implementation
     let (freqs_std, power_std) = lombscargle(signal, time, None, None, None, None, None)?;
-    
+
     // Enhanced implementation
     let config = LombScargleConfig::default();
     let enhanced_result = lombscargle_enhanced(signal, time, &config)?;
-    
+
     // Compare results
     let min_len = power_std.len().min(enhanced_result.power.len());
     let mut max_deviation = 0.0;
     let mut mean_absolute_deviation = 0.0;
     let mut frequency_consistency = Vec::new();
-    
+
     for i in 0..min_len {
-        if power_std[i] > 1e-12 { // Avoid numerical issues with tiny values
+        if power_std[i] > 1e-12 {
+            // Avoid numerical issues with tiny values
             let relative_diff = (power_std[i] - enhanced_result.power[i]).abs() / power_std[i];
             max_deviation = max_deviation.max(relative_diff);
             mean_absolute_deviation += relative_diff;
@@ -412,10 +432,10 @@ pub fn validate_cross_implementation_consistency(
         }
     }
     mean_absolute_deviation /= min_len as f64;
-    
+
     // Compute correlation
     let correlation = compute_correlation(&power_std[..min_len], &enhanced_result.power[..min_len]);
-    
+
     // Overall consistency score
     let consistency_score = if max_deviation < 1e-10 && correlation > 0.999 {
         100.0
@@ -426,7 +446,7 @@ pub fn validate_cross_implementation_consistency(
     } else {
         50.0
     };
-    
+
     Ok(CrossImplementationResult {
         standard_enhanced_correlation: correlation,
         max_implementation_deviation: max_deviation,
@@ -438,26 +458,29 @@ pub fn validate_cross_implementation_consistency(
 
 // Helper functions
 
-fn compute_bootstrap_coverage(bootstrap_powers: &[Vec<f64>], confidence_level: f64) -> SignalResult<f64> {
+fn compute_bootstrap_coverage(
+    bootstrap_powers: &[Vec<f64>],
+    confidence_level: f64,
+) -> SignalResult<f64> {
     if bootstrap_powers.is_empty() {
         return Ok(0.0);
     }
-    
+
     let n_points = bootstrap_powers[0].len();
     let mut coverage_count = 0;
-    
+
     for i in 0..n_points {
         let values: Vec<f64> = bootstrap_powers.iter().map(|power| power[i]).collect();
         let (lower, upper) = compute_percentile_interval(&values, confidence_level);
-        
+
         // For this simple validation, assume true value is the median
         let true_value = compute_median(&values);
-        
+
         if true_value >= lower && true_value <= upper {
             coverage_count += 1;
         }
     }
-    
+
     Ok(coverage_count as f64 / n_points as f64)
 }
 
@@ -465,17 +488,17 @@ fn compute_bootstrap_bias(bootstrap_powers: &[Vec<f64>]) -> SignalResult<f64> {
     if bootstrap_powers.is_empty() {
         return Ok(0.0);
     }
-    
+
     let n_points = bootstrap_powers[0].len();
     let mut total_bias = 0.0;
-    
+
     for i in 0..n_points {
         let values: Vec<f64> = bootstrap_powers.iter().map(|power| power[i]).collect();
         let mean = values.iter().sum::<f64>() / values.len() as f64;
         let median = compute_median(&values);
         total_bias += (mean - median).abs();
     }
-    
+
     Ok(total_bias / n_points as f64)
 }
 
@@ -483,17 +506,18 @@ fn compute_bootstrap_variance(bootstrap_powers: &[Vec<f64>]) -> SignalResult<f64
     if bootstrap_powers.is_empty() {
         return Ok(0.0);
     }
-    
+
     let n_points = bootstrap_powers[0].len();
     let mut total_variance = 0.0;
-    
+
     for i in 0..n_points {
         let values: Vec<f64> = bootstrap_powers.iter().map(|power| power[i]).collect();
         let mean = values.iter().sum::<f64>() / values.len() as f64;
-        let variance = values.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / (values.len() - 1) as f64;
+        let variance =
+            values.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / (values.len() - 1) as f64;
         total_variance += variance;
     }
-    
+
     Ok(total_variance / n_points as f64)
 }
 
@@ -501,36 +525,36 @@ fn compute_consistency_score(bootstrap_powers: &[Vec<f64>]) -> SignalResult<f64>
     if bootstrap_powers.len() < 2 {
         return Ok(0.0);
     }
-    
+
     // Measure consistency across bootstrap samples
     let mut consistency_sum = 0.0;
     let n_comparisons = bootstrap_powers.len() * (bootstrap_powers.len() - 1) / 2;
-    
+
     for i in 0..bootstrap_powers.len() {
         for j in (i + 1)..bootstrap_powers.len() {
             let correlation = compute_correlation(&bootstrap_powers[i], &bootstrap_powers[j]);
             consistency_sum += correlation;
         }
     }
-    
+
     Ok(consistency_sum / n_comparisons.max(1) as f64 * 100.0)
 }
 
 fn compute_percentile_interval(values: &[f64], confidence_level: f64) -> (f64, f64) {
     let mut sorted_values = values.to_vec();
     sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
-    
+
     let alpha = 1.0 - confidence_level;
     let lower_idx = ((alpha / 2.0) * (sorted_values.len() - 1) as f64) as usize;
     let upper_idx = ((1.0 - alpha / 2.0) * (sorted_values.len() - 1) as f64) as usize;
-    
+
     (sorted_values[lower_idx], sorted_values[upper_idx])
 }
 
 fn compute_median(values: &[f64]) -> f64 {
     let mut sorted_values = values.to_vec();
     sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
-    
+
     let n = sorted_values.len();
     if n % 2 == 0 {
         (sorted_values[n / 2 - 1] + sorted_values[n / 2]) / 2.0
@@ -543,15 +567,15 @@ fn compute_correlation(x: &[f64], y: &[f64]) -> f64 {
     if x.len() != y.len() || x.is_empty() {
         return 0.0;
     }
-    
+
     let n = x.len() as f64;
     let mean_x = x.iter().sum::<f64>() / n;
     let mean_y = y.iter().sum::<f64>() / n;
-    
+
     let mut cov = 0.0;
     let mut var_x = 0.0;
     let mut var_y = 0.0;
-    
+
     for i in 0..x.len() {
         let dx = x[i] - mean_x;
         let dy = y[i] - mean_y;
@@ -559,7 +583,7 @@ fn compute_correlation(x: &[f64], y: &[f64]) -> f64 {
         var_x += dx * dx;
         var_y += dy * dy;
     }
-    
+
     if var_x > 0.0 && var_y > 0.0 {
         cov / (var_x * var_y).sqrt()
     } else {
@@ -568,7 +592,7 @@ fn compute_correlation(x: &[f64], y: &[f64]) -> f64 {
 }
 
 /// Comprehensive enhanced validation for Lomb-Scargle periodogram
-/// 
+///
 /// This function performs ultra-comprehensive validation including:
 /// - Statistical power analysis across multiple SNR levels
 /// - Bootstrap confidence interval validation
@@ -585,113 +609,133 @@ pub fn comprehensive_lombscargle_validation(
 ) -> SignalResult<ComprehensiveLombScargleValidationResult> {
     check_positive(test_signal_length, "test_signal_length")?;
     check_positive(bootstrap_iterations, "bootstrap_iterations")?;
-    
+
     if test_frequencies.is_empty() {
-        return Err(SignalError::ValueError("test_frequencies cannot be empty".to_string()));
+        return Err(SignalError::ValueError(
+            "test_frequencies cannot be empty".to_string(),
+        ));
     }
-    
+
     let mut validation_results = ComprehensiveLombScargleValidationResult::default();
     let mut issues = Vec::new();
     let mut performance_metrics = Vec::new();
-    
+
     // 1. Statistical Power Analysis
     let mut power_analysis_results = Vec::new();
     for &snr_db in snr_db_levels {
         for &freq in test_frequencies {
             let power_result = analyze_statistical_power(
-                test_signal_length, 
-                freq, 
-                snr_db, 
-                bootstrap_iterations / 5  // Fewer iterations for power analysis
+                test_signal_length,
+                freq,
+                snr_db,
+                bootstrap_iterations / 5, // Fewer iterations for power analysis
             )?;
             power_analysis_results.push((snr_db, freq, power_result));
         }
     }
-    
+
     // 2. Bootstrap Confidence Interval Validation
     let time: Vec<f64> = (0..test_signal_length).map(|i| i as f64).collect();
-    let test_signal: Vec<f64> = time.iter()
-        .map(|&t| test_frequencies.iter().map(|&f| (2.0 * PI * f * t / test_signal_length as f64).sin()).sum::<f64>())
+    let test_signal: Vec<f64> = time
+        .iter()
+        .map(|&t| {
+            test_frequencies
+                .iter()
+                .map(|&f| (2.0 * PI * f * t / test_signal_length as f64).sin())
+                .sum::<f64>()
+        })
         .collect();
-    
+
     let confidence_levels = vec![0.90, 0.95, 0.99];
     let bootstrap_result = validate_bootstrap_confidence_intervals(
-        &test_signal, 
-        &time, 
-        bootstrap_iterations, 
-        &confidence_levels
+        &test_signal,
+        &time,
+        bootstrap_iterations,
+        &confidence_levels,
     )?;
-    
+
     validation_results.bootstrap_validation = Some(bootstrap_result);
-    
+
     // 3. Cross-Implementation Consistency Testing
     let consistency_result = validate_cross_implementation_consistency(&test_signal, &time)?;
     if consistency_result.consistency_score < 90.0 {
         issues.push(format!(
-            "Cross-implementation consistency below threshold: {:.1}%", 
+            "Cross-implementation consistency below threshold: {:.1}%",
             consistency_result.consistency_score
         ));
     }
     validation_results.cross_implementation = Some(consistency_result);
-    
+
     // 4. Numerical Precision Analysis
     let precision_result = analyze_numerical_precision(&test_signal, &time)?;
     if precision_result.precision_loss_bits > 8.0 {
         issues.push(format!(
-            "Significant precision loss detected: {:.1} bits", 
+            "Significant precision loss detected: {:.1} bits",
             precision_result.precision_loss_bits
         ));
     }
     validation_results.precision_analysis = Some(precision_result);
-    
+
     // 5. Edge Case Robustness Testing
     let edge_case_score = test_edge_case_robustness()?;
     if edge_case_score < 85.0 {
         issues.push(format!(
-            "Edge case robustness below threshold: {:.1}%", 
+            "Edge case robustness below threshold: {:.1}%",
             edge_case_score
         ));
     }
     validation_results.edge_case_robustness_score = edge_case_score;
-    
+
     // 6. Performance Benchmarking with Regression Detection
     let performance_result = benchmark_lombscargle_performance(&test_signal, &time)?;
     performance_metrics.push(performance_result.clone());
     validation_results.performance_analysis = Some(performance_result);
-    
+
     // 7. Memory Efficiency Validation
     let memory_result = analyze_memory_efficiency(test_signal_length)?;
     if memory_result.efficiency_score < 0.8 {
         issues.push(format!(
-            "Memory efficiency below threshold: {:.1}%", 
+            "Memory efficiency below threshold: {:.1}%",
             memory_result.efficiency_score * 100.0
         ));
     }
     validation_results.memory_analysis = Some(memory_result);
-    
+
     // 8. SIMD vs Scalar Consistency (if available)
     let simd_consistency_score = validate_simd_scalar_consistency(&test_signal, &time)?;
     if simd_consistency_score < 95.0 {
         issues.push(format!(
-            "SIMD vs scalar consistency below threshold: {:.1}%", 
+            "SIMD vs scalar consistency below threshold: {:.1}%",
             simd_consistency_score
         ));
     }
     validation_results.simd_consistency_score = simd_consistency_score;
-    
+
     // Calculate overall validation score
     let scores = vec![
-        power_analysis_results.iter().map(|(_, _, result)| result.calibration_score).sum::<f64>() / power_analysis_results.len() as f64,
-        validation_results.cross_implementation.as_ref().map(|c| c.consistency_score).unwrap_or(0.0),
-        validation_results.precision_analysis.as_ref().map(|p| p.stability_score).unwrap_or(0.0),
+        power_analysis_results
+            .iter()
+            .map(|(_, _, result)| result.calibration_score)
+            .sum::<f64>()
+            / power_analysis_results.len() as f64,
+        validation_results
+            .cross_implementation
+            .as_ref()
+            .map(|c| c.consistency_score)
+            .unwrap_or(0.0),
+        validation_results
+            .precision_analysis
+            .as_ref()
+            .map(|p| p.stability_score)
+            .unwrap_or(0.0),
         edge_case_score,
         memory_result.efficiency_score * 100.0,
         simd_consistency_score,
     ];
-    
+
     validation_results.overall_score = scores.iter().sum::<f64>() / scores.len() as f64;
     validation_results.issues = issues;
-    
+
     Ok(validation_results)
 }
 
@@ -718,41 +762,49 @@ pub struct PerformanceAnalysisResult {
     pub performance_score: f64,
 }
 
-
 /// Test edge case robustness
 fn test_edge_case_robustness() -> SignalResult<f64> {
     let mut score = 100.0;
-    
+
     // Test 1: Empty signal
     let empty_signal = vec![];
     let empty_time = vec![];
     match lombscargle(&empty_signal, &empty_time, None, None, None, None, None) {
-        Err(_) => (), // Expected behavior
+        Err(_) => (),           // Expected behavior
         Ok(_) => score -= 20.0, // Should fail gracefully
     }
-    
+
     // Test 2: Single point
     let single_signal = vec![1.0];
     let single_time = vec![0.0];
     match lombscargle(&single_signal, &single_time, None, None, None, None, None) {
-        Err(_) => (), // Expected behavior
+        Err(_) => (),           // Expected behavior
         Ok(_) => score -= 10.0, // May or may not work
     }
-    
+
     // Test 3: Constant signal
     let constant_signal = vec![1.0; 100];
     let constant_time: Vec<f64> = (0..100).map(|i| i as f64).collect();
-    match lombscargle(&constant_signal, &constant_time, None, None, None, None, None) {
+    match lombscargle(
+        &constant_signal,
+        &constant_time,
+        None,
+        None,
+        None,
+        None,
+        None,
+    ) {
         Ok((_, power)) => {
             // Should produce flat spectrum
-            let power_variance = power.iter().map(|&p| (p - power[0]).powi(2)).sum::<f64>() / power.len() as f64;
+            let power_variance =
+                power.iter().map(|&p| (p - power[0]).powi(2)).sum::<f64>() / power.len() as f64;
             if power_variance > 0.1 {
                 score -= 15.0;
             }
         }
         Err(_) => score -= 10.0,
     }
-    
+
     // Test 4: Very large values
     let large_signal = vec![1e10; 50];
     let large_time: Vec<f64> = (0..50).map(|i| i as f64).collect();
@@ -764,7 +816,7 @@ fn test_edge_case_robustness() -> SignalResult<f64> {
         }
         Err(_) => score -= 5.0,
     }
-    
+
     // Test 5: Very small values
     let small_signal = vec![1e-10; 50];
     let small_time: Vec<f64> = (0..50).map(|i| i as f64).collect();
@@ -776,27 +828,27 @@ fn test_edge_case_robustness() -> SignalResult<f64> {
         }
         Err(_) => score -= 5.0,
     }
-    
+
     Ok(score.max(0.0))
 }
 
 /// Benchmark Lomb-Scargle performance
 fn benchmark_lombscargle_performance(
-    signal: &[f64], 
-    time: &[f64]
+    signal: &[f64],
+    time: &[f64],
 ) -> SignalResult<PerformanceAnalysisResult> {
     let n_iterations = 10;
     let mut times = Vec::new();
-    
+
     for _ in 0..n_iterations {
         let start = Instant::now();
         let _ = lombscargle(signal, time, None, None, None, None, None)?;
         times.push(start.elapsed().as_secs_f64() * 1000.0); // Convert to ms
     }
-    
+
     let mean_time = times.iter().sum::<f64>() / times.len() as f64;
     let throughput = signal.len() as f64 / (mean_time / 1000.0);
-    
+
     // Simple performance scoring based on throughput
     let performance_score = if throughput > 10000.0 {
         100.0
@@ -807,7 +859,7 @@ fn benchmark_lombscargle_performance(
     } else {
         40.0
     };
-    
+
     Ok(PerformanceAnalysisResult {
         computation_time_ms: mean_time,
         memory_peak_mb: 0.0, // Would need actual memory monitoring
@@ -827,10 +879,10 @@ fn analyze_memory_efficiency(signal_length: usize) -> SignalResult<MemoryPerform
     } else {
         0.8
     };
-    
+
     Ok(MemoryPerformanceResult {
         peak_memory_bytes: estimated_memory,
-        allocation_count: 2, // Estimate
+        allocation_count: 2,      // Estimate
         fragmentation_score: 0.1, // Low fragmentation expected
         leak_indicators: vec![],
         efficiency_score,
@@ -842,7 +894,7 @@ fn validate_simd_scalar_consistency(signal: &[f64], time: &[f64]) -> SignalResul
     // For now, return a high score as we'd need actual SIMD implementation to test
     // In a real implementation, this would compare SIMD-accelerated vs scalar versions
     let consistency_score = 95.0;
-    
+
     // Basic validation that the signal processing doesn't fail
     match lombscargle(signal, time, None, None, None, None, None) {
         Ok((_, power)) => {
@@ -866,13 +918,14 @@ mod tests {
         let n = 100;
         let fs = 10.0;
         let freq = 1.0;
-        
+
         let time: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
         let signal: Vec<f64> = time.iter().map(|&t| (2.0 * PI * freq * t).sin()).collect();
-        
+
         let confidence_levels = vec![0.90, 0.95, 0.99];
-        let result = validate_bootstrap_confidence_intervals(&signal, &time, 50, &confidence_levels);
-        
+        let result =
+            validate_bootstrap_confidence_intervals(&signal, &time, 50, &confidence_levels);
+
         assert!(result.is_ok());
         let validation = result.unwrap();
         assert_eq!(validation.coverage_accuracy.len(), confidence_levels.len());
@@ -884,10 +937,10 @@ mod tests {
         let n = 100;
         let time: Vec<f64> = (0..n).map(|i| i as f64).collect();
         let signal: Vec<f64> = time.iter().map(|&t| t.sin()).collect();
-        
+
         let result = analyze_numerical_precision(&signal, &time);
         assert!(result.is_ok());
-        
+
         let analysis = result.unwrap();
         assert!(analysis.f32_f64_max_error >= 0.0);
         assert!(analysis.stability_score >= 0.0);
@@ -899,10 +952,10 @@ mod tests {
         let n = 50;
         let time: Vec<f64> = (0..n).map(|i| i as f64).collect();
         let signal: Vec<f64> = time.iter().map(|&t| (2.0 * PI * 0.1 * t).sin()).collect();
-        
+
         let result = validate_cross_implementation_consistency(&signal, &time);
         assert!(result.is_ok());
-        
+
         let consistency = result.unwrap();
         assert!(consistency.standard_enhanced_correlation >= 0.0);
         assert!(consistency.standard_enhanced_correlation <= 1.0);

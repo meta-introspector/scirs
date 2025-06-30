@@ -6,11 +6,11 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast, One, Zero};
+use rand;
 use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
+use std::cmp::Ordering;
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
-use std::cmp::Ordering;
-use rand;
 
 /// Memory constraints configuration
 #[derive(Debug, Clone)]
@@ -419,17 +419,17 @@ where
     F: Float + NumCast + Zero + One + Copy + 'a,
 {
     let start_time = std::time::Instant::now();
-    
+
     // First pass: compute mean and covariance incrementally
     let mut n_samples = 0;
     let mut n_features = 0;
     let mut running_mean = Array1::<F>::zeros(0);
     let mut running_cov = Array2::<F>::zeros((0, 0));
     let mut initialized = false;
-    
+
     for chunk in data_chunks {
         let (chunk_samples, chunk_features) = chunk.dim();
-        
+
         if !initialized {
             n_features = chunk_features;
             running_mean = Array1::<F>::zeros(n_features);
@@ -440,25 +440,27 @@ where
                 "All chunks must have same number of features".to_string(),
             ));
         }
-        
+
         // Update running statistics using Welford's method
         for i in 0..chunk_samples {
             n_samples += 1;
             let row = chunk.row(i);
-            
+
             // Update mean
             let n_f = F::from(n_samples).unwrap();
             for j in 0..n_features {
                 let delta = row[j] - running_mean[j];
                 running_mean[j] = running_mean[j] + delta / n_f;
             }
-            
+
             // Update covariance (simplified incremental update)
             if n_samples > 1 {
                 for j in 0..n_features {
                     for k in j..n_features {
                         let prod = (row[j] - running_mean[j]) * (row[k] - running_mean[k]);
-                        running_cov[[j, k]] = running_cov[[j, k]] * F::from(n_samples - 1).unwrap() / n_f + prod / n_f;
+                        running_cov[[j, k]] = running_cov[[j, k]] * F::from(n_samples - 1).unwrap()
+                            / n_f
+                            + prod / n_f;
                         if j != k {
                             running_cov[[k, j]] = running_cov[[j, k]];
                         }
@@ -467,23 +469,25 @@ where
             }
         }
     }
-    
+
     if n_samples == 0 {
         return Err(StatsError::InvalidArgument("No data provided".to_string()));
     }
-    
+
     // Simplified eigendecomposition (would use proper SVD in production)
-    let (components, explained_variance) = compute_eigendecomposition(&running_cov.view(), n_components)?;
-    
+    let (components, explained_variance) =
+        compute_eigendecomposition(&running_cov.view(), n_components)?;
+
     // Record memory usage
-    let memory_used = n_features * n_features * std::mem::size_of::<F>() + n_features * std::mem::size_of::<F>();
+    let memory_used =
+        n_features * n_features * std::mem::size_of::<F>() + n_features * std::mem::size_of::<F>();
     manager.record_operation(OperationMetrics {
         operation_type: "streaming_pca_enhanced".to_string(),
         memory_used,
         processing_time: start_time.elapsed(),
         chunk_size_used: manager.constraints.chunk_size,
     });
-    
+
     Ok(PCAResult {
         components,
         explained_variance,
@@ -501,12 +505,12 @@ where
     F: Float + NumCast + Zero + One + Copy + PartialOrd + 'a,
 {
     let start_time = std::time::Instant::now();
-    
+
     let mut min_val = F::infinity();
     let mut max_val = F::neg_infinity();
     let mut total_count = 0;
     let mut values = Vec::new(); // For adaptive binning
-    
+
     // First pass: find range and collect sample for bin determination
     for chunk in data_chunks {
         for &value in chunk.iter() {
@@ -517,7 +521,7 @@ where
                 max_val = value;
             }
             total_count += 1;
-            
+
             // Reservoir sampling to maintain memory bounds
             if values.len() < manager.constraints.chunk_size {
                 values.push(value);
@@ -529,41 +533,51 @@ where
             }
         }
     }
-    
+
     if total_count == 0 {
         return Err(StatsError::InvalidArgument("No data provided".to_string()));
     }
-    
+
     // Adaptive bin count using Freedman-Diaconis rule
     values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
     let q75_idx = (values.len() as f64 * 0.75) as usize;
     let q25_idx = (values.len() as f64 * 0.25) as usize;
     let iqr = values[q75_idx] - values[q25_idx];
-    let h = F::from(2.0).unwrap() * iqr / F::from(total_count as f64).unwrap().powf(F::from(1.0/3.0).unwrap());
+    let h = F::from(2.0).unwrap() * iqr
+        / F::from(total_count as f64)
+            .unwrap()
+            .powf(F::from(1.0 / 3.0).unwrap());
     let n_bins = if h > F::zero() {
-        ((max_val - min_val) / h).to_usize().unwrap_or(50).max(10).min(1000)
+        ((max_val - min_val) / h)
+            .to_usize()
+            .unwrap_or(50)
+            .max(10)
+            .min(1000)
     } else {
         50 // Default
     };
-    
+
     let bin_width = (max_val - min_val) / F::from(n_bins).unwrap();
     let mut bin_edges = Array1::<F>::zeros(n_bins + 1);
     let mut counts = Array1::<usize>::zeros(n_bins);
-    
+
     // Set bin edges
     for i in 0..=n_bins {
         bin_edges[i] = min_val + F::from(i).unwrap() * bin_width;
     }
-    
+
     // Second pass would count values into bins (simplified here)
     // In practice, you'd iterate through chunks again
     for &value in values.iter() {
         if value >= min_val && value <= max_val {
-            let bin_idx = ((value - min_val) / bin_width).to_usize().unwrap_or(0).min(n_bins - 1);
+            let bin_idx = ((value - min_val) / bin_width)
+                .to_usize()
+                .unwrap_or(0)
+                .min(n_bins - 1);
             counts[bin_idx] += 1;
         }
     }
-    
+
     let memory_used = n_bins * (std::mem::size_of::<F>() + std::mem::size_of::<usize>());
     manager.record_operation(OperationMetrics {
         operation_type: "streaming_histogram_adaptive".to_string(),
@@ -571,7 +585,7 @@ where
         processing_time: start_time.elapsed(),
         chunk_size_used: manager.constraints.chunk_size,
     });
-    
+
     Ok((bin_edges, counts))
 }
 
@@ -585,14 +599,12 @@ where
     F: Float + NumCast + Zero + One + Copy + PartialOrd + 'a,
 {
     let start_time = std::time::Instant::now();
-    
-    let mut p2_estimators: Vec<P2Estimator<F>> = quantiles
-        .iter()
-        .map(|&q| P2Estimator::new(q))
-        .collect();
-    
+
+    let mut p2_estimators: Vec<P2Estimator<F>> =
+        quantiles.iter().map(|&q| P2Estimator::new(q)).collect();
+
     let mut total_count = 0;
-    
+
     for chunk in data_chunks {
         for &value in chunk.iter() {
             total_count += 1;
@@ -601,16 +613,13 @@ where
             }
         }
     }
-    
+
     if total_count == 0 {
         return Err(StatsError::InvalidArgument("No data provided".to_string()));
     }
-    
-    let results: Vec<F> = p2_estimators
-        .iter()
-        .map(|est| est.quantile())
-        .collect();
-    
+
+    let results: Vec<F> = p2_estimators.iter().map(|est| est.quantile()).collect();
+
     let memory_used = quantiles.len() * std::mem::size_of::<P2Estimator<F>>();
     manager.record_operation(OperationMetrics {
         operation_type: "streaming_quantiles_p2".to_string(),
@@ -618,7 +627,7 @@ where
         processing_time: start_time.elapsed(),
         chunk_size_used: manager.constraints.chunk_size,
     });
-    
+
     Ok(Array1::from_vec(results))
 }
 
@@ -642,31 +651,38 @@ where
             quantile,
             markers: [F::zero(); 5],
             positions: [1.0, 2.0, 3.0, 4.0, 5.0],
-            desired_positions: [1.0, 1.0 + 2.0 * quantile, 1.0 + 4.0 * quantile, 3.0 + 2.0 * quantile, 5.0],
+            desired_positions: [
+                1.0,
+                1.0 + 2.0 * quantile,
+                1.0 + 4.0 * quantile,
+                3.0 + 2.0 * quantile,
+                5.0,
+            ],
             increment: [0.0, quantile / 2.0, quantile, (1.0 + quantile) / 2.0, 1.0],
             count: 0,
         };
-        
+
         // Initialize desired positions
         estimator.desired_positions[1] = 1.0 + 2.0 * quantile;
         estimator.desired_positions[2] = 1.0 + 4.0 * quantile;
         estimator.desired_positions[3] = 3.0 + 2.0 * quantile;
-        
+
         estimator
     }
-    
+
     fn update(&mut self, value: F) {
         self.count += 1;
-        
+
         if self.count <= 5 {
             // Initialize first 5 values
             self.markers[self.count - 1] = value;
             if self.count == 5 {
-                self.markers.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+                self.markers
+                    .sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
             }
             return;
         }
-        
+
         // Find cell k such that markers[k] <= value < markers[k+1]
         let mut k = 0;
         for i in 0..4 {
@@ -674,7 +690,7 @@ where
                 k = i + 1;
             }
         }
-        
+
         if k == 0 {
             self.markers[0] = value;
             k = 1;
@@ -682,25 +698,26 @@ where
             self.markers[4] = value;
             k = 4;
         }
-        
+
         // Increment positions k through 4
         for i in k..5 {
             self.positions[i] += 1.0;
         }
-        
+
         // Update desired positions
         for i in 0..5 {
             self.desired_positions[i] += self.increment[i];
         }
-        
+
         // Adjust heights if necessary
         for i in 1..4 {
             let d = self.desired_positions[i] - self.positions[i];
-            if (d >= 1.0 && self.positions[i + 1] - self.positions[i] > 1.0) ||
-               (d <= -1.0 && self.positions[i - 1] - self.positions[i] < -1.0) {
+            if (d >= 1.0 && self.positions[i + 1] - self.positions[i] > 1.0)
+                || (d <= -1.0 && self.positions[i - 1] - self.positions[i] < -1.0)
+            {
                 let d_sign = if d >= 0.0 { 1.0 } else { -1.0 };
                 let new_height = self.parabolic_prediction(i, d_sign);
-                
+
                 if self.markers[i - 1] < new_height && new_height < self.markers[i + 1] {
                     self.markers[i] = new_height;
                 } else {
@@ -710,7 +727,7 @@ where
             }
         }
     }
-    
+
     fn parabolic_prediction(&self, i: usize, d: f64) -> F {
         let qi = self.markers[i];
         let qi_prev = self.markers[i - 1];
@@ -718,14 +735,14 @@ where
         let ni = self.positions[i];
         let ni_prev = self.positions[i - 1];
         let ni_next = self.positions[i + 1];
-        
+
         let a = d / (ni_next - ni_prev);
         let b1 = (ni - ni_prev + d) * (qi_next - qi) / (ni_next - ni);
         let b2 = (ni_next - ni - d) * (qi - qi_prev) / (ni - ni_prev);
-        
+
         qi + a * (b1 + b2)
     }
-    
+
     fn linear_prediction(&self, i: usize, d: f64) -> F {
         if d > 0.0 {
             let qi_next = self.markers[i + 1];
@@ -741,7 +758,7 @@ where
             qi + (qi_prev - qi) * F::from(-d / (ni - ni_prev)).unwrap()
         }
     }
-    
+
     fn quantile(&self) -> F {
         if self.count < 5 {
             // For small datasets, use simple sorting
@@ -765,17 +782,17 @@ where
     F: Float + NumCast + Zero + One + Copy + 'a,
 {
     let start_time = std::time::Instant::now();
-    
+
     let mut xtx = Array2::<F>::zeros((0, 0));
     let mut xty = Array1::<F>::zeros(0);
     let mut n_samples = 0;
     let mut n_features = 0;
     let mut initialized = false;
-    
+
     // Accumulate X'X and X'y incrementally
     for (x_chunk, y_chunk) in data_chunks {
         let (chunk_samples, chunk_features) = x_chunk.dim();
-        
+
         if !initialized {
             n_features = chunk_features;
             xtx = Array2::<F>::zeros((n_features, n_features));
@@ -786,15 +803,15 @@ where
                 "All chunks must have same number of features".to_string(),
             ));
         }
-        
+
         if y_chunk.len() != chunk_samples {
             return Err(StatsError::DimensionMismatch(
                 "X and y must have same number of samples".to_string(),
             ));
         }
-        
+
         n_samples += chunk_samples;
-        
+
         // Update X'X
         for i in 0..n_features {
             for j in i..n_features {
@@ -808,7 +825,7 @@ where
                 }
             }
         }
-        
+
         // Update X'y
         for i in 0..n_features {
             let mut sum = F::zero();
@@ -818,28 +835,29 @@ where
             xty[i] = xty[i] + sum;
         }
     }
-    
+
     if n_samples == 0 {
         return Err(StatsError::InvalidArgument("No data provided".to_string()));
     }
-    
+
     // Add regularization to diagonal
     for i in 0..n_features {
         xtx[[i, i]] = xtx[[i, i]] + regularization;
     }
-    
+
     // Solve (X'X + λI)β = X'y using simplified method
     // In practice, would use proper matrix decomposition
     let coefficients = solve_linear_system(&xtx.view(), &xty.view())?;
-    
-    let memory_used = n_features * n_features * std::mem::size_of::<F>() + n_features * std::mem::size_of::<F>();
+
+    let memory_used =
+        n_features * n_features * std::mem::size_of::<F>() + n_features * std::mem::size_of::<F>();
     manager.record_operation(OperationMetrics {
         operation_type: "streaming_regression_enhanced".to_string(),
         memory_used,
         processing_time: start_time.elapsed(),
         chunk_size_used: manager.constraints.chunk_size,
     });
-    
+
     Ok(coefficients)
 }
 
@@ -850,12 +868,14 @@ where
 {
     let n = a.nrows();
     if a.ncols() != n || b.len() != n {
-        return Err(StatsError::DimensionMismatch("Matrix dimensions incompatible".to_string()));
+        return Err(StatsError::DimensionMismatch(
+            "Matrix dimensions incompatible".to_string(),
+        ));
     }
-    
+
     // Simplified Gaussian elimination (not numerically stable for production)
     let mut aug = Array2::<F>::zeros((n, n + 1));
-    
+
     // Copy A and b into augmented matrix
     for i in 0..n {
         for j in 0..n {
@@ -863,7 +883,7 @@ where
         }
         aug[[i, n]] = b[i];
     }
-    
+
     // Forward elimination
     for i in 0..n {
         // Find pivot
@@ -873,7 +893,7 @@ where
                 max_row = k;
             }
         }
-        
+
         // Swap rows
         if max_row != i {
             for j in 0..=n {
@@ -882,17 +902,19 @@ where
                 aug[[max_row, j]] = temp;
             }
         }
-        
+
         // Make diagonal 1
         let pivot = aug[[i, i]];
         if pivot.abs() < F::from(1e-12).unwrap() {
-            return Err(StatsError::ComputationError("Matrix is singular".to_string()));
+            return Err(StatsError::ComputationError(
+                "Matrix is singular".to_string(),
+            ));
         }
-        
+
         for j in i..=n {
             aug[[i, j]] = aug[[i, j]] / pivot;
         }
-        
+
         // Eliminate column
         for k in 0..n {
             if k != i {
@@ -903,13 +925,13 @@ where
             }
         }
     }
-    
+
     // Extract solution
     let mut solution = Array1::<F>::zeros(n);
     for i in 0..n {
         solution[i] = aug[[i, n]];
     }
-    
+
     Ok(solution)
 }
 

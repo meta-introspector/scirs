@@ -8,11 +8,7 @@ use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, FromPrimitive, NumCast, One, Zero};
 use rand::{rngs::StdRng, Rng, SeedableRng};
-use scirs2_core::{
-    parallel_ops::*,
-    simd_ops::SimdUnifiedOps,
-    validation::*,
-};
+use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
@@ -282,7 +278,7 @@ where
         T: Into<F> + Copy + Send + Sync,
     {
         check_array_finite(data, "data")?;
-        
+
         if data.is_empty() {
             return Err(StatsError::InvalidArgument(
                 "Data cannot be empty".to_string(),
@@ -305,9 +301,9 @@ where
             BootstrapType::Wild { distribution } => {
                 self.wild_bootstrap(data, distribution, statistic_fn)?
             }
-            BootstrapType::Parametric { distribution_params } => {
-                self.parametric_bootstrap(data, distribution_params, statistic_fn)?
-            }
+            BootstrapType::Parametric {
+                distribution_params,
+            } => self.parametric_bootstrap(data, distribution_params, statistic_fn)?,
             BootstrapType::Balanced => self.balanced_bootstrap(data, statistic_fn)?,
         };
 
@@ -328,9 +324,7 @@ where
 
         // Determine effective sample size
         let effective_sample_size = match &self.config.bootstrap_type {
-            BootstrapType::Block { .. } => {
-                Some(self.compute_effective_sample_size(data.len()))
-            }
+            BootstrapType::Block { .. } => Some(self.compute_effective_sample_size(data.len())),
             _ => None,
         };
 
@@ -367,12 +361,12 @@ where
                 .map(|_| {
                     let mut local_rng = StdRng::from_entropy();
                     let mut resample = Array1::zeros(n);
-                    
+
                     for i in 0..n {
                         let idx = local_rng.random_range(0..n);
                         resample[i] = data[idx];
                     }
-                    
+
                     statistic_fn(&resample.view()).map(|s| s.into())
                 })
                 .collect();
@@ -385,12 +379,12 @@ where
             // Sequential execution
             for i in 0..self.config.n_bootstrap {
                 let mut resample = Array1::zeros(n);
-                
+
                 for j in 0..n {
                     let idx = self.rng.random_range(0..n);
                     resample[j] = data[idx];
                 }
-                
+
                 bootstrap_samples[i] = statistic_fn(&resample.view())?.into();
             }
         }
@@ -417,7 +411,10 @@ where
         // Group data by strata
         let mut strata_groups: HashMap<usize, Vec<(usize, F)>> = HashMap::new();
         for (i, (&value, &stratum)) in data.iter().zip(strata.iter()).enumerate() {
-            strata_groups.entry(stratum).or_insert_with(Vec::new).push((i, value));
+            strata_groups
+                .entry(stratum)
+                .or_insert_with(Vec::new)
+                .push((i, value));
         }
 
         let n = data.len();
@@ -430,7 +427,7 @@ where
             // Sample from each stratum proportionally
             for (_, group_data) in &strata_groups {
                 let group_size = group_data.len();
-                
+
                 for _ in 0..group_size {
                     let idx = self.rng.random_range(0..group_size);
                     resample[resample_idx] = group_data[idx].1;
@@ -455,7 +452,9 @@ where
         T: Into<F> + Copy + Send + Sync,
     {
         let n = data.len();
-        let block_length = self.config.block_length
+        let block_length = self
+            .config
+            .block_length
             .unwrap_or_else(|| self.optimal_block_length(n));
 
         if block_length >= n {
@@ -488,18 +487,24 @@ where
     }
 
     /// Moving block bootstrap
-    fn moving_block_bootstrap(&mut self, data: &ArrayView1<F>, block_length: usize) -> StatsResult<Array1<F>> {
+    fn moving_block_bootstrap(
+        &mut self,
+        data: &ArrayView1<F>,
+        block_length: usize,
+    ) -> StatsResult<Array1<F>> {
         let n = data.len();
         let n_blocks = (n + block_length - 1) / block_length; // Ceiling division
         let mut resample = Array1::zeros(n);
         let mut pos = 0;
 
         for _ in 0..n_blocks {
-            if pos >= n { break; }
-            
+            if pos >= n {
+                break;
+            }
+
             let start_idx = self.rng.random_range(0..=(n - block_length));
             let copy_length = std::cmp::min(block_length, n - pos);
-            
+
             for i in 0..copy_length {
                 resample[pos + i] = data[start_idx + i];
             }
@@ -510,18 +515,24 @@ where
     }
 
     /// Circular block bootstrap
-    fn circular_block_bootstrap(&mut self, data: &ArrayView1<F>, block_length: usize) -> StatsResult<Array1<F>> {
+    fn circular_block_bootstrap(
+        &mut self,
+        data: &ArrayView1<F>,
+        block_length: usize,
+    ) -> StatsResult<Array1<F>> {
         let n = data.len();
         let n_blocks = (n + block_length - 1) / block_length;
         let mut resample = Array1::zeros(n);
         let mut pos = 0;
 
         for _ in 0..n_blocks {
-            if pos >= n { break; }
-            
+            if pos >= n {
+                break;
+            }
+
             let start_idx = self.rng.random_range(0..n);
             let copy_length = std::cmp::min(block_length, n - pos);
-            
+
             for i in 0..copy_length {
                 let idx = (start_idx + i) % n; // Circular indexing
                 resample[pos + i] = data[idx];
@@ -533,11 +544,15 @@ where
     }
 
     /// Non-overlapping block bootstrap
-    fn non_overlapping_block_bootstrap(&mut self, data: &ArrayView1<F>, block_length: usize) -> StatsResult<Array1<F>> {
+    fn non_overlapping_block_bootstrap(
+        &mut self,
+        data: &ArrayView1<F>,
+        block_length: usize,
+    ) -> StatsResult<Array1<F>> {
         let n = data.len();
         let n_complete_blocks = n / block_length;
         let remainder = n % block_length;
-        
+
         // Create blocks
         let mut blocks = Vec::new();
         for i in 0..n_complete_blocks {
@@ -545,7 +560,7 @@ where
             let end = start + block_length;
             blocks.push(data.slice(ndarray::s![start..end]).to_owned());
         }
-        
+
         // Add remainder as partial block if exists
         if remainder > 0 {
             let start = n_complete_blocks * block_length;
@@ -555,12 +570,12 @@ where
         // Resample blocks
         let mut resample = Array1::zeros(n);
         let mut pos = 0;
-        
+
         while pos < n {
             let block_idx = self.rng.random_range(0..blocks.len());
             let block = &blocks[block_idx];
             let copy_length = std::cmp::min(block.len(), n - pos);
-            
+
             for i in 0..copy_length {
                 resample[pos + i] = block[i];
             }
@@ -571,7 +586,11 @@ where
     }
 
     /// Stationary bootstrap with random block lengths
-    fn stationary_bootstrap(&mut self, data: &ArrayView1<F>, expected_length: f64) -> StatsResult<Array1<F>> {
+    fn stationary_bootstrap(
+        &mut self,
+        data: &ArrayView1<F>,
+        expected_length: f64,
+    ) -> StatsResult<Array1<F>> {
         let n = data.len();
         let p = 1.0 / expected_length; // Probability of ending a block
         let mut resample = Array1::zeros(n);
@@ -580,19 +599,21 @@ where
         while pos < n {
             let start_idx = self.rng.random_range(0..n);
             let mut block_length = 1;
-            
+
             // Generate random block length using geometric distribution
             while self.rng.random::<f64>() > p && block_length < n - pos {
                 block_length += 1;
             }
-            
+
             // Copy block with circular indexing
             for i in 0..block_length {
-                if pos + i >= n { break; }
+                if pos + i >= n {
+                    break;
+                }
                 let idx = (start_idx + i) % n;
                 resample[pos + i] = data[idx];
             }
-            
+
             pos += block_length;
         }
 
@@ -612,16 +633,18 @@ where
         let mut pos = 0;
 
         for _ in 0..n_blocks {
-            if pos >= n { break; }
-            
+            if pos >= n {
+                break;
+            }
+
             let start_idx = self.rng.random_range(0..=(n - block_length));
             let copy_length = std::cmp::min(block_length, n - pos);
-            
+
             // Apply tapering weights
             for i in 0..copy_length {
                 let weight = self.compute_taper_weight(i, copy_length, taper_function);
                 let value = data[start_idx + i] * F::from(weight).unwrap();
-                
+
                 if pos + i < resample.len() {
                     resample[pos + i] = resample[pos + i] + value;
                 }
@@ -633,9 +656,14 @@ where
     }
 
     /// Compute taper weight
-    fn compute_taper_weight(&self, position: usize, block_length: usize, taper_function: &TaperFunction) -> f64 {
+    fn compute_taper_weight(
+        &self,
+        position: usize,
+        block_length: usize,
+        taper_function: &TaperFunction,
+    ) -> f64 {
         let t = position as f64 / (block_length - 1) as f64;
-        
+
         match taper_function {
             TaperFunction::Linear => {
                 if t <= 0.5 {
@@ -644,9 +672,7 @@ where
                     2.0 * (1.0 - t)
                 }
             }
-            TaperFunction::Cosine => {
-                0.5 * (1.0 - (std::f64::consts::PI * t).cos())
-            }
+            TaperFunction::Cosine => 0.5 * (1.0 - (std::f64::consts::PI * t).cos()),
             TaperFunction::Exponential { decay_rate } => {
                 let distance_from_center = (t - 0.5).abs();
                 (-decay_rate * distance_from_center).exp()
@@ -670,24 +696,24 @@ where
             // Generate random weights from Dirichlet(1,1,...,1) = Exponential(1)
             let mut weights = Array1::zeros(n);
             let mut weight_sum = F::zero();
-            
+
             for j in 0..n {
                 let exp_sample = -self.rng.random::<f64>().ln(); // Exponential(1) sample
                 weights[j] = F::from(exp_sample).unwrap();
                 weight_sum = weight_sum + weights[j];
             }
-            
+
             // Normalize weights
             for j in 0..n {
                 weights[j] = weights[j] / weight_sum;
             }
-            
+
             // Create weighted resample
             let mut resample = Array1::zeros(n);
             for j in 0..n {
                 resample[j] = data[j] * weights[j] * F::from(n).unwrap(); // Scale by n
             }
-            
+
             bootstrap_samples[i] = statistic_fn(&resample.view())?.into();
         }
 
@@ -709,11 +735,15 @@ where
 
         for i in 0..self.config.n_bootstrap {
             let mut resample = Array1::zeros(n);
-            
+
             for j in 0..n {
                 let multiplier = match distribution {
                     WildDistribution::Rademacher => {
-                        if self.rng.random::<f64>() < 0.5 { -1.0 } else { 1.0 }
+                        if self.rng.random::<f64>() < 0.5 {
+                            -1.0
+                        } else {
+                            1.0
+                        }
                     }
                     WildDistribution::Mammen => {
                         let golden_ratio = (1.0 + 5.0_f64.sqrt()) / 2.0;
@@ -731,13 +761,17 @@ where
                         (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
                     }
                     WildDistribution::TwoPoint { prob_positive } => {
-                        if self.rng.random::<f64>() < *prob_positive { 1.0 } else { -1.0 }
+                        if self.rng.random::<f64>() < *prob_positive {
+                            1.0
+                        } else {
+                            -1.0
+                        }
                     }
                 };
-                
+
                 resample[j] = data[j] * F::from(multiplier).unwrap();
             }
-            
+
             bootstrap_samples[i] = statistic_fn(&resample.view())?.into();
         }
 
@@ -773,11 +807,12 @@ where
                 }
                 ParametricBootstrapParams::Custom { name, params } => {
                     return Err(StatsError::InvalidArgument(format!(
-                        "Custom distribution '{}' not implemented", name
+                        "Custom distribution '{}' not implemented",
+                        name
                     )));
                 }
             };
-            
+
             bootstrap_samples[i] = statistic_fn(&resample.view())?.into();
         }
 
@@ -795,33 +830,33 @@ where
     {
         let n = data.len();
         let mut bootstrap_samples = Array1::zeros(self.config.n_bootstrap);
-        
+
         // Create balanced indices
         let total_samples = self.config.n_bootstrap * n;
         let mut all_indices = Vec::with_capacity(total_samples);
-        
+
         for _ in 0..self.config.n_bootstrap {
             for i in 0..n {
                 all_indices.push(i);
             }
         }
-        
+
         // Shuffle the indices
         for i in (1..all_indices.len()).rev() {
             let j = self.rng.random_range(0..=i);
             all_indices.swap(i, j);
         }
-        
+
         // Create bootstrap samples
         for i in 0..self.config.n_bootstrap {
             let mut resample = Array1::zeros(n);
             let start_idx = i * n;
-            
+
             for j in 0..n {
                 let data_idx = all_indices[start_idx + j];
                 resample[j] = data[data_idx];
             }
-            
+
             bootstrap_samples[i] = statistic_fn(&resample.view())?.into();
         }
 
@@ -831,35 +866,40 @@ where
     /// Generate normal distribution sample
     fn generate_normal_sample(&mut self, n: usize, mean: f64, std: f64) -> StatsResult<Array1<F>> {
         let mut sample = Array1::zeros(n);
-        
+
         for i in 0..n {
             let u1 = self.rng.random::<f64>();
             let u2 = self.rng.random::<f64>();
             let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
             sample[i] = F::from(mean + std * z).unwrap();
         }
-        
+
         Ok(sample)
     }
 
     /// Generate exponential distribution sample
     fn generate_exponential_sample(&mut self, n: usize, rate: f64) -> StatsResult<Array1<F>> {
         let mut sample = Array1::zeros(n);
-        
+
         for i in 0..n {
             let u = self.rng.random::<f64>();
             let x = -u.ln() / rate;
             sample[i] = F::from(x).unwrap();
         }
-        
+
         Ok(sample)
     }
 
     /// Generate gamma distribution sample (simplified)
-    fn generate_gamma_sample(&mut self, n: usize, shape: f64, scale: f64) -> StatsResult<Array1<F>> {
+    fn generate_gamma_sample(
+        &mut self,
+        n: usize,
+        shape: f64,
+        scale: f64,
+    ) -> StatsResult<Array1<F>> {
         // Simplified implementation - would use proper gamma generation in full version
         let mut sample = Array1::zeros(n);
-        
+
         for i in 0..n {
             // Using normal approximation for simplicity
             let mean = shape * scale;
@@ -869,7 +909,7 @@ where
             let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
             sample[i] = F::from((mean + std * z).max(0.0)).unwrap();
         }
-        
+
         Ok(sample)
     }
 
@@ -877,14 +917,14 @@ where
     fn generate_beta_sample(&mut self, n: usize, alpha: f64, beta: f64) -> StatsResult<Array1<F>> {
         // Simplified implementation using gamma ratio method
         let mut sample = Array1::zeros(n);
-        
+
         for i in 0..n {
             let x = self.rng.random::<f64>().powf(1.0 / alpha);
             let y = self.rng.random::<f64>().powf(1.0 / beta);
             let value = x / (x + y);
             sample[i] = F::from(value).unwrap();
         }
-        
+
         Ok(sample)
     }
 
@@ -897,9 +937,11 @@ where
 
     /// Compute effective sample size for block bootstrap
     fn compute_effective_sample_size(&self, n: usize) -> usize {
-        let block_length = self.config.block_length
+        let block_length = self
+            .config
+            .block_length
             .unwrap_or_else(|| self.optimal_block_length(n));
-        
+
         // Approximation for effective sample size
         let correlation_factor = 1.0 - (block_length as f64 - 1.0) / (2.0 * n as f64);
         (n as f64 * correlation_factor).ceil() as usize
@@ -938,7 +980,8 @@ where
 
         // Bias-corrected intervals (simplified)
         let bias_corrected = if self.config.bias_correction {
-            let bias_correction = self.compute_bias_correction(bootstrap_samples, original_statistic);
+            let bias_correction =
+                self.compute_bias_correction(bootstrap_samples, original_statistic);
             Some((
                 percentile.0 + bias_correction,
                 percentile.1 + bias_correction,
@@ -966,12 +1009,13 @@ where
 
     /// Compute bias correction
     fn compute_bias_correction(&self, bootstrap_samples: &Array1<F>, original_statistic: F) -> F {
-        let count_below = bootstrap_samples.iter()
+        let count_below = bootstrap_samples
+            .iter()
             .filter(|&&x| x < original_statistic)
             .count();
-        
+
         let proportion = count_below as f64 / bootstrap_samples.len() as f64;
-        
+
         // Simplified bias correction
         let bootstrap_mean = self.compute_mean(bootstrap_samples);
         bootstrap_mean - original_statistic
@@ -984,7 +1028,8 @@ where
         original_statistic: F,
     ) -> StatsResult<BootstrapDiagnostics<F>> {
         let distribution_stats = self.compute_distribution_stats(bootstrap_samples)?;
-        let quality_metrics = self.compute_quality_metrics(bootstrap_samples, original_statistic)?;
+        let quality_metrics =
+            self.compute_quality_metrics(bootstrap_samples, original_statistic)?;
         let convergence_info = self.compute_convergence_info(bootstrap_samples)?;
         let method_specific = HashMap::new(); // Would be populated based on method
 
@@ -997,13 +1042,17 @@ where
     }
 
     /// Compute distribution statistics
-    fn compute_distribution_stats(&self, samples: &Array1<F>) -> StatsResult<BootstrapDistributionStats<F>> {
+    fn compute_distribution_stats(
+        &self,
+        samples: &Array1<F>,
+    ) -> StatsResult<BootstrapDistributionStats<F>> {
         let mean = self.compute_mean(samples);
         let std = self.compute_std(samples);
-        
+
         // Skewness
         let skewness = if std > F::zero() {
-            let skew_sum = samples.iter()
+            let skew_sum = samples
+                .iter()
                 .map(|&x| {
                     let z = (x - mean) / std;
                     z * z * z
@@ -1016,7 +1065,8 @@ where
 
         // Kurtosis
         let kurtosis = if std > F::zero() {
-            let kurt_sum = samples.iter()
+            let kurt_sum = samples
+                .iter()
                 .map(|&x| {
                     let z = (x - mean) / std;
                     z * z * z * z
@@ -1034,7 +1084,7 @@ where
         Ok(BootstrapDistributionStats {
             skewness,
             kurtosis,
-            jarque_bera: F::zero(), // Simplified
+            jarque_bera: F::zero(),      // Simplified
             anderson_darling: F::zero(), // Simplified
             min_value,
             max_value,
@@ -1049,11 +1099,11 @@ where
     ) -> StatsResult<QualityMetrics<F>> {
         let std_error = self.compute_std(samples);
         let mc_std_error = std_error / F::from((samples.len() as f64).sqrt()).unwrap();
-        
+
         Ok(QualityMetrics {
             mc_standard_error: mc_std_error,
             coverage_probability: F::from(self.config.confidence_level).unwrap(),
-            efficiency: None, // Would require analytical comparison
+            efficiency: None,    // Would require analytical comparison
             stability: F::one(), // Simplified
         })
     }
@@ -1062,11 +1112,11 @@ where
     fn compute_convergence_info(&self, samples: &Array1<F>) -> StatsResult<ConvergenceInfo<F>> {
         // Simplified convergence assessment
         let converged = samples.len() >= 100; // Simple threshold
-        
+
         Ok(ConvergenceInfo {
             converged,
             convergence_sample_size: if converged { Some(samples.len()) } else { None },
-            mean_stability: F::one(), // Simplified
+            mean_stability: F::one(),     // Simplified
             variance_stability: F::one(), // Simplified
         })
     }
@@ -1087,10 +1137,12 @@ where
         }
 
         let mean = self.compute_mean(data);
-        let variance = data.iter()
+        let variance = data
+            .iter()
             .map(|&x| (x - mean) * (x - mean))
-            .fold(F::zero(), |acc, x| acc + x) / F::from(data.len() - 1).unwrap();
-        
+            .fold(F::zero(), |acc, x| acc + x)
+            / F::from(data.len() - 1).unwrap();
+
         variance.sqrt()
     }
 }
@@ -1110,7 +1162,7 @@ where
     config.bootstrap_type = BootstrapType::Stratified {
         strata: strata.to_vec(),
     };
-    
+
     let mut processor = AdvancedBootstrapProcessor::new(config);
     processor.bootstrap(data, statistic_fn)
 }
@@ -1128,7 +1180,7 @@ where
 {
     let mut config = config.unwrap_or_default();
     config.bootstrap_type = BootstrapType::Block { block_type };
-    
+
     let mut processor = AdvancedBootstrapProcessor::new(config);
     processor.bootstrap(data, statistic_fn)
 }
@@ -1150,7 +1202,7 @@ where
     };
     config.block_length = block_length;
     config.n_bootstrap = n_bootstrap.unwrap_or(1000);
-    
+
     let mut processor = AdvancedBootstrapProcessor::new(config);
     processor.bootstrap(data, statistic_fn)
 }
@@ -1172,7 +1224,7 @@ where
     };
     config.block_length = block_length;
     config.n_bootstrap = n_bootstrap.unwrap_or(1000);
-    
+
     let mut processor = AdvancedBootstrapProcessor::new(config);
     processor.bootstrap(data, statistic_fn)
 }
@@ -1195,7 +1247,7 @@ where
         },
     };
     config.n_bootstrap = n_bootstrap.unwrap_or(1000);
-    
+
     let mut processor = AdvancedBootstrapProcessor::new(config);
     processor.bootstrap(data, statistic_fn)
 }
@@ -1208,9 +1260,7 @@ mod tests {
     #[test]
     fn test_basic_bootstrap() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
-        let mean_fn = |x: &ArrayView1<f64>| -> StatsResult<f64> {
-            Ok(x.sum() / x.len() as f64)
-        };
+        let mean_fn = |x: &ArrayView1<f64>| -> StatsResult<f64> { Ok(x.sum() / x.len() as f64) };
 
         let config = AdvancedBootstrapConfig {
             n_bootstrap: 100,
@@ -1230,9 +1280,7 @@ mod tests {
     fn test_stratified_bootstrap() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
         let strata = vec![0, 0, 1, 1, 2, 2]; // Three strata
-        let mean_fn = |x: &ArrayView1<f64>| -> StatsResult<f64> {
-            Ok(x.sum() / x.len() as f64)
-        };
+        let mean_fn = |x: &ArrayView1<f64>| -> StatsResult<f64> { Ok(x.sum() / x.len() as f64) };
 
         let result = stratified_bootstrap(
             &data.view(),
@@ -1243,7 +1291,8 @@ mod tests {
                 seed: Some(123),
                 ..Default::default()
             }),
-        ).unwrap();
+        )
+        .unwrap();
 
         assert_eq!(result.n_successful, 50);
         assert!(matches!(result.method, BootstrapType::Stratified { .. }));
@@ -1252,16 +1301,15 @@ mod tests {
     #[test]
     fn test_moving_block_bootstrap() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
-        let mean_fn = |x: &ArrayView1<f64>| -> StatsResult<f64> {
-            Ok(x.sum() / x.len() as f64)
-        };
+        let mean_fn = |x: &ArrayView1<f64>| -> StatsResult<f64> { Ok(x.sum() / x.len() as f64) };
 
         let result = moving_block_bootstrap(
             &data.view(),
             mean_fn,
-            Some(3), // block length
+            Some(3),  // block length
             Some(50), // n_bootstrap
-        ).unwrap();
+        )
+        .unwrap();
 
         assert_eq!(result.n_successful, 50);
         assert!(result.effective_sample_size.is_some());
@@ -1270,16 +1318,9 @@ mod tests {
     #[test]
     fn test_circular_block_bootstrap() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
-        let mean_fn = |x: &ArrayView1<f64>| -> StatsResult<f64> {
-            Ok(x.sum() / x.len() as f64)
-        };
+        let mean_fn = |x: &ArrayView1<f64>| -> StatsResult<f64> { Ok(x.sum() / x.len() as f64) };
 
-        let result = circular_block_bootstrap(
-            &data.view(),
-            mean_fn,
-            Some(2),
-            Some(30),
-        ).unwrap();
+        let result = circular_block_bootstrap(&data.view(), mean_fn, Some(2), Some(30)).unwrap();
 
         assert_eq!(result.n_successful, 30);
     }
@@ -1287,9 +1328,7 @@ mod tests {
     #[test]
     fn test_confidence_intervals() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
-        let mean_fn = |x: &ArrayView1<f64>| -> StatsResult<f64> {
-            Ok(x.sum() / x.len() as f64)
-        };
+        let mean_fn = |x: &ArrayView1<f64>| -> StatsResult<f64> { Ok(x.sum() / x.len() as f64) };
 
         let config = AdvancedBootstrapConfig {
             n_bootstrap: 200,
@@ -1325,6 +1364,9 @@ mod tests {
         let result = processor.bootstrap(&data.view(), var_fn).unwrap();
 
         assert!(result.diagnostics.convergence_info.converged);
-        assert!(result.diagnostics.distribution_stats.min_value <= result.diagnostics.distribution_stats.max_value);
+        assert!(
+            result.diagnostics.distribution_stats.min_value
+                <= result.diagnostics.distribution_stats.max_value
+        );
     }
 }

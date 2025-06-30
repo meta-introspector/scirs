@@ -12,10 +12,10 @@ use std::collections::HashMap;
 #[cfg(feature = "cuda")]
 pub mod cuda {
     use super::*;
-    use std::sync::Arc;
+    use num_traits::Float;
     use std::ffi::CString;
     use std::ptr;
-    use num_traits::Float;
+    use std::sync::Arc;
 
     // CUDA runtime types and constants (would normally come from cuda-sys crate)
     type CudaResult = i32;
@@ -25,42 +25,54 @@ pub mod cuda {
     type CudaEvent = *mut std::ffi::c_void;
     type CublasHandle = *mut std::ffi::c_void;
     type CusolverDnHandle = *mut std::ffi::c_void;
-    
+
     const CUDA_SUCCESS: CudaResult = 0;
     const CUDA_ERROR_NO_DEVICE: CudaResult = 38;
-    
+
     // Mock CUDA functions (in real implementation, these would be extern "C" bindings)
     fn cuda_get_device_count() -> (CudaResult, i32) {
         // Mock implementation - would use cudart sys bindings
         (CUDA_SUCCESS, 0) // Return 0 devices for safety in this mock
     }
-    
-    fn cuda_get_device_properties(_props: &mut CudaDeviceProperties, _device: CudaDevice) -> CudaResult {
+
+    fn cuda_get_device_properties(
+        _props: &mut CudaDeviceProperties,
+        _device: CudaDevice,
+    ) -> CudaResult {
         CUDA_SUCCESS
     }
-    
+
     fn cuda_set_device(_device: CudaDevice) -> CudaResult {
         CUDA_SUCCESS
     }
-    
+
     fn cuda_device_synchronize() -> CudaResult {
         CUDA_SUCCESS
     }
-    
+
     fn cuda_malloc(_ptr: *mut *mut std::ffi::c_void, _size: usize) -> CudaResult {
         CUDA_SUCCESS
     }
-    
+
     fn cuda_free(_ptr: *mut std::ffi::c_void) -> CudaResult {
         CUDA_SUCCESS
     }
-    
-    fn cuda_memcpy(_dst: *mut std::ffi::c_void, _src: *const std::ffi::c_void, _count: usize, _kind: i32) -> CudaResult {
+
+    fn cuda_memcpy(
+        _dst: *mut std::ffi::c_void,
+        _src: *const std::ffi::c_void,
+        _count: usize,
+        _kind: i32,
+    ) -> CudaResult {
         CUDA_SUCCESS
     }
-    
+
     fn cuda_mem_get_info() -> (CudaResult, usize, usize) {
-        (CUDA_SUCCESS, 8 * 1024 * 1024 * 1024, 16 * 1024 * 1024 * 1024) // Mock 8GB free, 16GB total
+        (
+            CUDA_SUCCESS,
+            8 * 1024 * 1024 * 1024,
+            16 * 1024 * 1024 * 1024,
+        ) // Mock 8GB free, 16GB total
     }
 
     /// Comprehensive CUDA backend with advanced features
@@ -118,21 +130,23 @@ pub mod cuda {
                         "No CUDA-capable devices found".to_string(),
                     ));
                 }
-                return Err(LinalgError::ComputationError(
-                    format!("Failed to initialize CUDA runtime: error code {}", result),
-                ));
+                return Err(LinalgError::ComputationError(format!(
+                    "Failed to initialize CUDA runtime: error code {}",
+                    result
+                )));
             }
 
             let mut devices = Vec::with_capacity(device_count as usize);
-            
+
             // Enumerate all CUDA devices
             for device_id in 0..device_count {
                 let mut properties = [0u8; 352];
                 let result = cuda_get_device_properties(&mut properties, device_id);
                 if result != CUDA_SUCCESS {
-                    return Err(LinalgError::ComputationError(
-                        format!("Failed to get device properties for device {}: error code {}", device_id, result),
-                    ));
+                    return Err(LinalgError::ComputationError(format!(
+                        "Failed to get device properties for device {}: error code {}",
+                        device_id, result
+                    )));
                 }
 
                 // Parse device properties (simplified for mock implementation)
@@ -224,24 +238,32 @@ pub mod cuda {
                 ));
             }
 
-            let devices = self.devices
+            let devices = self
+                .devices
                 .iter()
                 .map(|cuda_device| {
                     // Calculate memory bandwidth (simplified calculation)
-                    let memory_bandwidth = (cuda_device.memory_clock_rate as f64 * 2.0 * cuda_device.memory_bus_width as f64) / 8.0 / 1_000_000.0;
-                    
+                    let memory_bandwidth = (cuda_device.memory_clock_rate as f64
+                        * 2.0
+                        * cuda_device.memory_bus_width as f64)
+                        / 8.0
+                        / 1_000_000.0;
+
                     GpuDeviceInfo {
                         device_type: GpuDeviceType::Cuda,
-                        name: format!("CUDA Device {} (Compute {}.{})", 
-                                    cuda_device.device_id, 
-                                    cuda_device.compute_capability.0,
-                                    cuda_device.compute_capability.1),
+                        name: format!(
+                            "CUDA Device {} (Compute {}.{})",
+                            cuda_device.device_id,
+                            cuda_device.compute_capability.0,
+                            cuda_device.compute_capability.1
+                        ),
                         total_memory: 11 * 1024 * 1024 * 1024, // Mock 11GB VRAM
-                        compute_units: 68, // Mock SM count for RTX 2080 Ti
+                        compute_units: 68,                     // Mock SM count for RTX 2080 Ti
                         clock_frequency: (cuda_device.clock_rate / 1000) as u32, // Convert to MHz
                         supports_fp64: cuda_device.compute_capability.0 >= 2, // Fermi and later
-                        supports_fp16: cuda_device.compute_capability.0 >= 5 || 
-                                     (cuda_device.compute_capability.0 == 5 && cuda_device.compute_capability.1 >= 3), // Maxwell and later
+                        supports_fp16: cuda_device.compute_capability.0 >= 5
+                            || (cuda_device.compute_capability.0 == 5
+                                && cuda_device.compute_capability.1 >= 3), // Maxwell and later
                         max_work_group_size: cuda_device.max_threads_per_block as usize,
                         memory_bandwidth,
                         l2_cache_size: cuda_device.l2_cache_size,
@@ -268,19 +290,22 @@ pub mod cuda {
             }
 
             if device_id >= self.devices.len() {
-                return Err(LinalgError::ComputationError(
-                    format!("Invalid device ID: {} (available devices: {})", device_id, self.devices.len()),
-                ));
+                return Err(LinalgError::ComputationError(format!(
+                    "Invalid device ID: {} (available devices: {})",
+                    device_id,
+                    self.devices.len()
+                )));
             }
 
             let cuda_device = &self.devices[device_id];
-            
+
             // Set CUDA device
             let result = cuda_set_device(cuda_device.device_id);
             if result != CUDA_SUCCESS {
-                return Err(LinalgError::ComputationError(
-                    format!("Failed to set CUDA device {}: error code {}", device_id, result),
-                ));
+                return Err(LinalgError::ComputationError(format!(
+                    "Failed to set CUDA device {}: error code {}",
+                    device_id, result
+                )));
             }
 
             // Create CUDA context
@@ -304,22 +329,22 @@ pub mod cuda {
     impl CudaContext {
         fn new(device_info: CudaDeviceInfo) -> LinalgResult<Self> {
             let device_id = device_info.device_id;
-            
+
             // Initialize cuBLAS (mock)
             let cublas_handle = None; // Would create cuBLAS handle
-            
+
             // Initialize cuSOLVER (mock)
             let cusolver_handle = None; // Would create cuSOLVER handle
-            
+
             // Create default streams
             let streams = Vec::new(); // Would create CUDA streams
-            
+
             // Create events for timing
             let events = Vec::new(); // Would create CUDA events
-            
+
             // Initialize memory pool
             let memory_pool = CudaMemoryPool::new(device_id)?;
-            
+
             // Initialize performance statistics
             let performance_stats = CudaPerformanceStats::new();
 
@@ -363,23 +388,30 @@ pub mod cuda {
         fn device_info(&self) -> &GpuDeviceInfo {
             // Convert CudaDeviceInfo to GpuDeviceInfo
             static mut CACHED_INFO: Option<GpuDeviceInfo> = None;
-            
+
             unsafe {
                 if CACHED_INFO.is_none() {
-                    let memory_bandwidth = (self.device_info.memory_clock_rate as f64 * 2.0 * self.device_info.memory_bus_width as f64) / 8.0 / 1_000_000.0;
-                    
+                    let memory_bandwidth = (self.device_info.memory_clock_rate as f64
+                        * 2.0
+                        * self.device_info.memory_bus_width as f64)
+                        / 8.0
+                        / 1_000_000.0;
+
                     CACHED_INFO = Some(GpuDeviceInfo {
                         device_type: GpuDeviceType::Cuda,
-                        name: format!("CUDA Device {} (Compute {}.{})", 
-                                    self.device_info.device_id, 
-                                    self.device_info.compute_capability.0,
-                                    self.device_info.compute_capability.1),
+                        name: format!(
+                            "CUDA Device {} (Compute {}.{})",
+                            self.device_info.device_id,
+                            self.device_info.compute_capability.0,
+                            self.device_info.compute_capability.1
+                        ),
                         total_memory: 11 * 1024 * 1024 * 1024,
                         compute_units: 68,
                         clock_frequency: (self.device_info.clock_rate / 1000) as u32,
                         supports_fp64: self.device_info.compute_capability.0 >= 2,
-                        supports_fp16: self.device_info.compute_capability.0 >= 5 || 
-                                     (self.device_info.compute_capability.0 == 5 && self.device_info.compute_capability.1 >= 3),
+                        supports_fp16: self.device_info.compute_capability.0 >= 5
+                            || (self.device_info.compute_capability.0 == 5
+                                && self.device_info.compute_capability.1 >= 3),
                         max_work_group_size: self.device_info.max_threads_per_block as usize,
                         memory_bandwidth,
                         l2_cache_size: self.device_info.l2_cache_size,
@@ -393,7 +425,7 @@ pub mod cuda {
                         vendor: "NVIDIA".to_string(),
                     });
                 }
-                
+
                 CACHED_INFO.as_ref().unwrap()
             }
         }
@@ -401,9 +433,10 @@ pub mod cuda {
         fn synchronize(&self) -> LinalgResult<()> {
             let result = cuda_device_synchronize();
             if result != CUDA_SUCCESS {
-                return Err(LinalgError::ComputationError(
-                    format!("CUDA synchronization failed: error code {}", result),
-                ));
+                return Err(LinalgError::ComputationError(format!(
+                    "CUDA synchronization failed: error code {}",
+                    result
+                )));
             }
             Ok(())
         }
@@ -411,9 +444,10 @@ pub mod cuda {
         fn available_memory(&self) -> LinalgResult<usize> {
             let (result, free_mem, _total_mem) = cuda_mem_get_info();
             if result != CUDA_SUCCESS {
-                return Err(LinalgError::ComputationError(
-                    format!("Failed to get memory info: error code {}", result),
-                ));
+                return Err(LinalgError::ComputationError(format!(
+                    "Failed to get memory info: error code {}",
+                    result
+                )));
             }
             Ok(free_mem)
         }
@@ -461,9 +495,10 @@ pub mod cuda {
             let mut ptr = ptr::null_mut();
             let result = cuda_malloc(&mut ptr, size);
             if result != CUDA_SUCCESS {
-                return Err(LinalgError::ComputationError(
-                    format!("CUDA memory allocation failed: error code {}", result),
-                ));
+                return Err(LinalgError::ComputationError(format!(
+                    "CUDA memory allocation failed: error code {}",
+                    result
+                )));
             }
 
             self.total_allocated += size;
@@ -494,12 +529,13 @@ pub mod cuda {
         fn new(size: usize, device_id: i32) -> LinalgResult<Self> {
             let byte_size = size * std::mem::size_of::<T>();
             let mut device_ptr = ptr::null_mut();
-            
+
             let result = cuda_malloc(&mut device_ptr, byte_size);
             if result != CUDA_SUCCESS {
-                return Err(LinalgError::ComputationError(
-                    format!("Failed to allocate CUDA buffer: error code {}", result),
-                ));
+                return Err(LinalgError::ComputationError(format!(
+                    "Failed to allocate CUDA buffer: error code {}",
+                    result
+                )));
             }
 
             Ok(Self {
@@ -532,9 +568,11 @@ pub mod cuda {
 
         fn copy_from_host(&mut self, data: &[T]) -> LinalgResult<()> {
             if data.len() != self.size {
-                return Err(LinalgError::ShapeError(
-                    format!("Buffer size mismatch: expected {}, got {}", self.size, data.len()),
-                ));
+                return Err(LinalgError::ShapeError(format!(
+                    "Buffer size mismatch: expected {}, got {}",
+                    self.size,
+                    data.len()
+                )));
             }
 
             let byte_size = data.len() * std::mem::size_of::<T>();
@@ -546,9 +584,10 @@ pub mod cuda {
             );
 
             if result != CUDA_SUCCESS {
-                return Err(LinalgError::ComputationError(
-                    format!("CUDA host-to-device copy failed: error code {}", result),
-                ));
+                return Err(LinalgError::ComputationError(format!(
+                    "CUDA host-to-device copy failed: error code {}",
+                    result
+                )));
             }
 
             Ok(())
@@ -556,9 +595,11 @@ pub mod cuda {
 
         fn copy_to_host(&self, data: &mut [T]) -> LinalgResult<()> {
             if data.len() != self.size {
-                return Err(LinalgError::ShapeError(
-                    format!("Buffer size mismatch: expected {}, got {}", self.size, data.len()),
-                ));
+                return Err(LinalgError::ShapeError(format!(
+                    "Buffer size mismatch: expected {}, got {}",
+                    self.size,
+                    data.len()
+                )));
             }
 
             let byte_size = data.len() * std::mem::size_of::<T>();
@@ -570,9 +611,10 @@ pub mod cuda {
             );
 
             if result != CUDA_SUCCESS {
-                return Err(LinalgError::ComputationError(
-                    format!("CUDA device-to-host copy failed: error code {}", result),
-                ));
+                return Err(LinalgError::ComputationError(format!(
+                    "CUDA device-to-host copy failed: error code {}",
+                    result
+                )));
             }
 
             Ok(())
@@ -627,9 +669,9 @@ pub mod cuda {
 #[cfg(feature = "opencl")]
 pub mod opencl {
     use super::*;
-    use std::sync::Arc;
-    use std::ffi::{CString, CStr};
+    use std::ffi::{CStr, CString};
     use std::ptr;
+    use std::sync::Arc;
 
     // OpenCL types and constants (would normally come from opencl-sys crate)
     type ClInt = i32;
@@ -644,7 +686,7 @@ pub mod opencl {
     type ClKernel = *mut std::ffi::c_void;
     type ClMem = *mut std::ffi::c_void;
     type ClEvent = *mut std::ffi::c_void;
-    
+
     const CL_SUCCESS: ClInt = 0;
     const CL_DEVICE_NOT_FOUND: ClInt = -1;
     const CL_DEVICE_TYPE_GPU: ClULong = 1 << 2;
@@ -652,36 +694,42 @@ pub mod opencl {
     const CL_DEVICE_TYPE_ALL: ClULong = 0xFFFFFFFF;
     const CL_MEM_READ_WRITE: ClULong = 1 << 0;
     const CL_MEM_COPY_HOST_PTR: ClULong = 1 << 2;
-    
+
     // Mock OpenCL functions
     fn cl_get_platform_ids() -> (ClInt, Vec<ClPlatformId>) {
         (CL_SUCCESS, vec![]) // Mock empty platforms for safety
     }
-    
-    fn cl_get_device_ids(_platform: ClPlatformId, _device_type: ClULong) -> (ClInt, Vec<ClDeviceId>) {
+
+    fn cl_get_device_ids(
+        _platform: ClPlatformId,
+        _device_type: ClULong,
+    ) -> (ClInt, Vec<ClDeviceId>) {
         (CL_SUCCESS, vec![])
     }
-    
+
     fn cl_get_device_info(_device: ClDeviceId, _param_name: ClUInt) -> (ClInt, Vec<u8>) {
         (CL_SUCCESS, vec![0; 256])
     }
-    
+
     fn cl_get_platform_info(_platform: ClPlatformId, _param_name: ClUInt) -> (ClInt, String) {
         (CL_SUCCESS, "Mock Platform".to_string())
     }
-    
+
     fn cl_create_context(_devices: &[ClDeviceId]) -> (ClInt, ClContext) {
         (CL_SUCCESS, ptr::null_mut())
     }
-    
-    fn cl_create_command_queue(_context: ClContext, _device: ClDeviceId) -> (ClInt, ClCommandQueue) {
+
+    fn cl_create_command_queue(
+        _context: ClContext,
+        _device: ClDeviceId,
+    ) -> (ClInt, ClCommandQueue) {
         (CL_SUCCESS, ptr::null_mut())
     }
-    
+
     fn cl_create_buffer(_context: ClContext, _flags: ClULong, _size: usize) -> (ClInt, ClMem) {
         (CL_SUCCESS, ptr::null_mut())
     }
-    
+
     fn cl_enqueue_write_buffer(
         _queue: ClCommandQueue,
         _buffer: ClMem,
@@ -692,7 +740,7 @@ pub mod opencl {
     ) -> ClInt {
         CL_SUCCESS
     }
-    
+
     fn cl_enqueue_read_buffer(
         _queue: ClCommandQueue,
         _buffer: ClMem,
@@ -703,11 +751,11 @@ pub mod opencl {
     ) -> ClInt {
         CL_SUCCESS
     }
-    
+
     fn cl_finish(_queue: ClCommandQueue) -> ClInt {
         CL_SUCCESS
     }
-    
+
     fn cl_release_mem_object(_memobj: ClMem) -> ClInt {
         CL_SUCCESS
     }
@@ -805,9 +853,10 @@ pub mod opencl {
                         "No OpenCL platforms found".to_string(),
                     ));
                 }
-                return Err(LinalgError::ComputationError(
-                    format!("Failed to get OpenCL platforms: error code {}", result),
-                ));
+                return Err(LinalgError::ComputationError(format!(
+                    "Failed to get OpenCL platforms: error code {}",
+                    result
+                )));
             }
 
             let mut platforms = Vec::new();
@@ -910,14 +959,14 @@ pub mod opencl {
                 max_parameter_size: 1024,
                 mem_base_addr_align: 1024,
                 min_data_type_align_size: 128,
-                single_fp_config: 0x3F, // Mock FP config
+                single_fp_config: 0x3F,   // Mock FP config
                 global_mem_cache_type: 2, // CL_READ_WRITE_CACHE
                 global_mem_cacheline_size: 64,
-                global_mem_cache_size: 2 * 1024 * 1024, // 2MB
+                global_mem_cache_size: 2 * 1024 * 1024,  // 2MB
                 global_mem_size: 8 * 1024 * 1024 * 1024, // 8GB
-                max_constant_buffer_size: 64 * 1024, // 64KB
+                max_constant_buffer_size: 64 * 1024,     // 64KB
                 max_constant_args: 8,
-                local_mem_type: 1, // CL_LOCAL
+                local_mem_type: 1,         // CL_LOCAL
                 local_mem_size: 48 * 1024, // 48KB
                 error_correction_support: 0,
                 profiling_timer_resolution: 1,
@@ -925,7 +974,7 @@ pub mod opencl {
                 available: 1,
                 compiler_available: 1,
                 execution_capabilities: 1, // CL_EXEC_KERNEL
-                queue_properties: 2, // CL_QUEUE_PROFILING_ENABLE
+                queue_properties: 2,       // CL_QUEUE_PROFILING_ENABLE
                 platform_id,
             })
         }
@@ -966,12 +1015,14 @@ pub mod opencl {
         }
 
         fn list_devices(&self) -> LinalgResult<Vec<GpuDeviceInfo>> {
-            let devices = self.devices
+            let devices = self
+                .devices
                 .iter()
                 .map(|opencl_device| {
                     // Calculate memory bandwidth (estimated)
-                    let memory_bandwidth = (opencl_device.max_clock_frequency as f64 * 256.0) / 1000.0; // Rough estimate
-                    
+                    let memory_bandwidth =
+                        (opencl_device.max_clock_frequency as f64 * 256.0) / 1000.0; // Rough estimate
+
                     let device_type = match opencl_device.device_type {
                         CL_DEVICE_TYPE_GPU => GpuDeviceType::OpenCl,
                         CL_DEVICE_TYPE_CPU => GpuDeviceType::OpenCl,
@@ -1006,27 +1057,31 @@ pub mod opencl {
 
         fn create_context(&self, device_id: usize) -> LinalgResult<Box<dyn GpuContext>> {
             if device_id >= self.devices.len() {
-                return Err(LinalgError::ComputationError(
-                    format!("Invalid device ID: {} (available devices: {})", device_id, self.devices.len()),
-                ));
+                return Err(LinalgError::ComputationError(format!(
+                    "Invalid device ID: {} (available devices: {})",
+                    device_id,
+                    self.devices.len()
+                )));
             }
 
             let device_info = &self.devices[device_id];
-            
+
             // Create OpenCL context
             let (result, context) = cl_create_context(&[device_info.device_id]);
             if result != CL_SUCCESS {
-                return Err(LinalgError::ComputationError(
-                    format!("Failed to create OpenCL context: error code {}", result),
-                ));
+                return Err(LinalgError::ComputationError(format!(
+                    "Failed to create OpenCL context: error code {}",
+                    result
+                )));
             }
 
             // Create command queue
             let (result, command_queue) = cl_create_command_queue(context, device_info.device_id);
             if result != CL_SUCCESS {
-                return Err(LinalgError::ComputationError(
-                    format!("Failed to create OpenCL command queue: error code {}", result),
-                ));
+                return Err(LinalgError::ComputationError(format!(
+                    "Failed to create OpenCL command queue: error code {}",
+                    result
+                )));
             }
 
             let context_data = Arc::new(OpenClContextData {
@@ -1076,7 +1131,11 @@ pub mod opencl {
         }
 
         /// Compile and cache a kernel
-        pub fn compile_kernel(&mut self, kernel_name: &str, source: &str) -> LinalgResult<ClKernel> {
+        pub fn compile_kernel(
+            &mut self,
+            kernel_name: &str,
+            source: &str,
+        ) -> LinalgResult<ClKernel> {
             // In a real implementation, this would compile OpenCL kernel source
             // For now, return a null pointer as mock
             Ok(ptr::null_mut())
@@ -1092,12 +1151,13 @@ pub mod opencl {
         fn device_info(&self) -> &GpuDeviceInfo {
             // Convert OpenClDeviceInfo to GpuDeviceInfo
             static mut CACHED_INFO: Option<GpuDeviceInfo> = None;
-            
+
             unsafe {
                 if CACHED_INFO.is_none() {
                     let opencl_device = &self.context_data.device_info;
-                    let memory_bandwidth = (opencl_device.max_clock_frequency as f64 * 256.0) / 1000.0;
-                    
+                    let memory_bandwidth =
+                        (opencl_device.max_clock_frequency as f64 * 256.0) / 1000.0;
+
                     CACHED_INFO = Some(GpuDeviceInfo {
                         device_type: GpuDeviceType::OpenCl,
                         name: format!("{} ({})", opencl_device.name, opencl_device.vendor),
@@ -1119,7 +1179,7 @@ pub mod opencl {
                         vendor: opencl_device.vendor.clone(),
                     });
                 }
-                
+
                 CACHED_INFO.as_ref().unwrap()
             }
         }
@@ -1127,9 +1187,10 @@ pub mod opencl {
         fn synchronize(&self) -> LinalgResult<()> {
             let result = cl_finish(self.context_data.command_queue);
             if result != CL_SUCCESS {
-                return Err(LinalgError::ComputationError(
-                    format!("OpenCL synchronization failed: error code {}", result),
-                ));
+                return Err(LinalgError::ComputationError(format!(
+                    "OpenCL synchronization failed: error code {}",
+                    result
+                )));
             }
             Ok(())
         }
@@ -1145,7 +1206,11 @@ pub mod opencl {
             &self,
             size: usize,
         ) -> LinalgResult<Box<dyn GpuBuffer<T>>> {
-            let buffer = OpenClBuffer::new(size, self.context_data.context, self.context_data.command_queue)?;
+            let buffer = OpenClBuffer::new(
+                size,
+                self.context_data.context,
+                self.context_data.command_queue,
+            )?;
             Ok(Box::new(buffer))
         }
     }
@@ -1180,9 +1245,10 @@ pub mod opencl {
             // Allocate new buffer
             let (result, buffer) = cl_create_buffer(self.context, CL_MEM_READ_WRITE, size);
             if result != CL_SUCCESS {
-                return Err(LinalgError::ComputationError(
-                    format!("OpenCL buffer allocation failed: error code {}", result),
-                ));
+                return Err(LinalgError::ComputationError(format!(
+                    "OpenCL buffer allocation failed: error code {}",
+                    result
+                )));
             }
 
             self.total_allocated += size;
@@ -1208,14 +1274,19 @@ pub mod opencl {
     }
 
     impl<T: Clone + Send + Sync + Copy> OpenClBuffer<T> {
-        fn new(size: usize, context: ClContext, command_queue: ClCommandQueue) -> LinalgResult<Self> {
+        fn new(
+            size: usize,
+            context: ClContext,
+            command_queue: ClCommandQueue,
+        ) -> LinalgResult<Self> {
             let byte_size = size * std::mem::size_of::<T>();
-            
+
             let (result, buffer) = cl_create_buffer(context, CL_MEM_READ_WRITE, byte_size);
             if result != CL_SUCCESS {
-                return Err(LinalgError::ComputationError(
-                    format!("Failed to create OpenCL buffer: error code {}", result),
-                ));
+                return Err(LinalgError::ComputationError(format!(
+                    "Failed to create OpenCL buffer: error code {}",
+                    result
+                )));
             }
 
             Ok(Self {
@@ -1240,9 +1311,11 @@ pub mod opencl {
 
         fn copy_from_host(&mut self, data: &[T]) -> LinalgResult<()> {
             if data.len() != self.size {
-                return Err(LinalgError::ShapeError(
-                    format!("Buffer size mismatch: expected {}, got {}", self.size, data.len()),
-                ));
+                return Err(LinalgError::ShapeError(format!(
+                    "Buffer size mismatch: expected {}, got {}",
+                    self.size,
+                    data.len()
+                )));
             }
 
             let byte_size = data.len() * std::mem::size_of::<T>();
@@ -1256,9 +1329,10 @@ pub mod opencl {
             );
 
             if result != CL_SUCCESS {
-                return Err(LinalgError::ComputationError(
-                    format!("OpenCL host-to-device copy failed: error code {}", result),
-                ));
+                return Err(LinalgError::ComputationError(format!(
+                    "OpenCL host-to-device copy failed: error code {}",
+                    result
+                )));
             }
 
             Ok(())
@@ -1266,9 +1340,11 @@ pub mod opencl {
 
         fn copy_to_host(&self, data: &mut [T]) -> LinalgResult<()> {
             if data.len() != self.size {
-                return Err(LinalgError::ShapeError(
-                    format!("Buffer size mismatch: expected {}, got {}", self.size, data.len()),
-                ));
+                return Err(LinalgError::ShapeError(format!(
+                    "Buffer size mismatch: expected {}, got {}",
+                    self.size,
+                    data.len()
+                )));
             }
 
             let byte_size = data.len() * std::mem::size_of::<T>();
@@ -1282,9 +1358,10 @@ pub mod opencl {
             );
 
             if result != CL_SUCCESS {
-                return Err(LinalgError::ComputationError(
-                    format!("OpenCL device-to-host copy failed: error code {}", result),
-                ));
+                return Err(LinalgError::ComputationError(format!(
+                    "OpenCL device-to-host copy failed: error code {}",
+                    result
+                )));
             }
 
             Ok(())

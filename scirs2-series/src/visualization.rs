@@ -23,16 +23,16 @@
 //!
 //! let data = Array1::linspace(0.0, 10.0, 100);
 //! let ts_data = data.mapv(|x| (x * 2.0 * std::f64::consts::PI).sin());
-//! 
+//!
 //! let mut plot = TimeSeriesPlot::new("Sample Time Series");
 //! plot.add_series("sine_wave", &data, &ts_data, PlotStyle::Line);
 //! plot.show();
 //! ```
 
+use crate::error::{Result, TimeSeriesError};
 use ndarray::{Array1, Array2};
 use std::collections::HashMap;
 use std::path::Path;
-use crate::error::{Result, TimeSeriesError};
 
 /// Configuration for plot styling and appearance
 #[derive(Debug, Clone)]
@@ -267,12 +267,22 @@ impl TimeSeriesPlot {
     }
 
     /// Add a time series to the plot
-    pub fn add_series(&mut self, name: &str, time: &Array1<f64>, values: &Array1<f64>, style: PlotStyle) -> Result<()> {
+    pub fn add_series(
+        &mut self,
+        name: &str,
+        time: &Array1<f64>,
+        values: &Array1<f64>,
+        style: PlotStyle,
+    ) -> Result<()> {
         if time.len() != values.len() {
-            return Err(TimeSeriesError::InvalidInput("Time and value arrays must have the same length".to_string()).into());
+            return Err(TimeSeriesError::InvalidInput(
+                "Time and value arrays must have the same length".to_string(),
+            )
+            .into());
         }
 
-        let data: Vec<TimePoint> = time.iter()
+        let data: Vec<TimePoint> = time
+            .iter()
             .zip(values.iter())
             .map(|(&t, &v)| TimePoint {
                 time: t,
@@ -293,10 +303,20 @@ impl TimeSeriesPlot {
     }
 
     /// Add a series with error bars (confidence intervals)
-    pub fn add_series_with_confidence(&mut self, name: &str, time: &Array1<f64>, values: &Array1<f64>, 
-                                     lower: &Array1<f64>, upper: &Array1<f64>, style: PlotStyle) -> Result<()> {
+    pub fn add_series_with_confidence(
+        &mut self,
+        name: &str,
+        time: &Array1<f64>,
+        values: &Array1<f64>,
+        lower: &Array1<f64>,
+        upper: &Array1<f64>,
+        style: PlotStyle,
+    ) -> Result<()> {
         if time.len() != values.len() || values.len() != lower.len() || lower.len() != upper.len() {
-            return Err(TimeSeriesError::InvalidInput("All arrays must have the same length".to_string()).into());
+            return Err(TimeSeriesError::InvalidInput(
+                "All arrays must have the same length".to_string(),
+            )
+            .into());
         }
 
         // Add main series
@@ -309,7 +329,8 @@ impl TimeSeriesPlot {
         confidence_style.line_style = LineStyle::Solid;
 
         // Create upper bound series
-        let upper_data: Vec<TimePoint> = time.iter()
+        let upper_data: Vec<TimePoint> = time
+            .iter()
             .zip(upper.iter())
             .map(|(&t, &v)| TimePoint {
                 time: t,
@@ -319,7 +340,8 @@ impl TimeSeriesPlot {
             .collect();
 
         // Create lower bound series (reversed for proper filling)
-        let lower_data: Vec<TimePoint> = time.iter()
+        let lower_data: Vec<TimePoint> = time
+            .iter()
             .zip(lower.iter())
             .rev()
             .map(|(&t, &v)| TimePoint {
@@ -350,7 +372,11 @@ impl TimeSeriesPlot {
     }
 
     /// Highlight anomalies on the plot
-    pub fn highlight_anomalies(&mut self, time: &Array1<f64>, anomaly_indices: &[usize]) -> Result<()> {
+    pub fn highlight_anomalies(
+        &mut self,
+        time: &Array1<f64>,
+        anomaly_indices: &[usize],
+    ) -> Result<()> {
         for &idx in anomaly_indices {
             if idx < time.len() {
                 let annotation = Annotation {
@@ -396,9 +422,10 @@ impl TimeSeriesPlot {
     /// Generate HTML output for the plot
     pub fn to_html(&self) -> String {
         let mut html = String::new();
-        
+
         // HTML header with CSS and JavaScript
-        html.push_str(&format!(r#"
+        html.push_str(&format!(
+            r#"
 <!DOCTYPE html>
 <html>
 <head>
@@ -414,18 +441,23 @@ impl TimeSeriesPlot {
     <div class="title">{}</div>
     <div id="plot" class="plot-container"></div>
     <script>
-"#, self.title, self.config.width, self.config.height, self.title));
+"#,
+            self.title, self.config.width, self.config.height, self.title
+        ));
 
         // Generate Plotly data
         html.push_str("var data = [\n");
-        
+
         for (i, series) in self.series.iter().enumerate() {
-            if i > 0 { html.push_str(",\n"); }
-            
+            if i > 0 {
+                html.push_str(",\n");
+            }
+
             let x_values: Vec<f64> = series.data.iter().map(|p| p.time).collect();
             let y_values: Vec<f64> = series.data.iter().map(|p| p.value).collect();
-            
-            html.push_str(&format!(r#"
+
+            html.push_str(&format!(
+                r#"
     {{
         x: {:?},
         y: {:?},
@@ -435,7 +467,8 @@ impl TimeSeriesPlot {
         line: {{ color: '{}', width: {} }},
         opacity: {}
     }}"#,
-                x_values, y_values,
+                x_values,
+                y_values,
                 match series.series_type {
                     SeriesType::Line => "scatter",
                     SeriesType::Scatter => "scatter",
@@ -455,11 +488,12 @@ impl TimeSeriesPlot {
                 series.style.opacity
             ));
         }
-        
+
         html.push_str("\n];\n");
 
         // Plot layout
-        html.push_str(&format!(r#"
+        html.push_str(&format!(
+            r#"
 var layout = {{
     title: '{}',
     xaxis: {{ title: '{}' }},
@@ -476,19 +510,23 @@ var config = {{
 }};
 
 Plotly.newPlot('plot', data, layout, config);
-"#, 
-            self.title, self.x_label, self.y_label,
+"#,
+            self.title,
+            self.x_label,
+            self.y_label,
             self.config.show_legend,
             self.config.background_color,
             self.config.background_color,
             self.config.interactive
         ));
 
-        html.push_str(r#"
+        html.push_str(
+            r#"
     </script>
 </body>
 </html>
-"#);
+"#,
+        );
 
         html
     }
@@ -496,31 +534,37 @@ Plotly.newPlot('plot', data, layout, config);
     /// Save plot to file
     pub fn save<P: AsRef<Path>>(&self, path: P, format: ExportFormat) -> Result<()> {
         let path = path.as_ref();
-        
+
         match format {
             ExportFormat::HTML => {
                 let html_content = self.to_html();
-                std::fs::write(path, html_content)
-                    .map_err(|e| TimeSeriesError::IOError(format!("Failed to save HTML plot: {}", e)))?;
-            },
+                std::fs::write(path, html_content).map_err(|e| {
+                    TimeSeriesError::IOError(format!("Failed to save HTML plot: {}", e))
+                })?;
+            }
             ExportFormat::SVG => {
                 // Generate SVG output
                 let svg_content = self.to_svg();
-                std::fs::write(path, svg_content)
-                    .map_err(|e| TimeSeriesError::IOError(format!("Failed to save SVG plot: {}", e)))?;
-            },
+                std::fs::write(path, svg_content).map_err(|e| {
+                    TimeSeriesError::IOError(format!("Failed to save SVG plot: {}", e))
+                })?;
+            }
             _ => {
-                return Err(TimeSeriesError::NotImplemented(format!("Export format {:?} not yet implemented", format)).into());
+                return Err(TimeSeriesError::NotImplemented(format!(
+                    "Export format {:?} not yet implemented",
+                    format
+                ))
+                .into());
             }
         }
-        
+
         Ok(())
     }
 
     /// Generate SVG output for the plot
     fn to_svg(&self) -> String {
         let mut svg = String::new();
-        
+
         svg.push_str(&format!(r#"<?xml version="1.0" encoding="UTF-8"?>
 <svg width="{}" height="{}" xmlns="http://www.w3.org/2000/svg">
     <rect width="100%" height="100%" fill="{}"/>
@@ -561,43 +605,49 @@ Plotly.newPlot('plot', data, layout, config);
         max_y += y_range * 0.05;
 
         // Draw axes
-        svg.push_str(&format!(r#"
+        svg.push_str(&format!(
+            r#"
     <!-- Axes -->
     <line x1="{}" y1="{}" x2="{}" y2="{}" stroke="{}" stroke-width="1"/>
     <line x1="{}" y1="{}" x2="{}" y2="{}" stroke="{}" stroke-width="1"/>
 "#,
-            margin, self.config.height as i32 - margin, // Y axis
-            margin + plot_width, self.config.height as i32 - margin,
+            margin,
+            self.config.height as i32 - margin, // Y axis
+            margin + plot_width,
+            self.config.height as i32 - margin,
             self.config.axis_color,
-            margin, margin, // X axis  
-            margin, self.config.height as i32 - margin,
+            margin,
+            margin, // X axis
+            margin,
+            self.config.height as i32 - margin,
             self.config.axis_color
         ));
 
         // Draw series
         for series in &self.series {
-            if series.data.is_empty() { continue; }
-            
+            if series.data.is_empty() {
+                continue;
+            }
+
             let mut path_data = String::from("M");
-            
+
             for (i, point) in series.data.iter().enumerate() {
                 let x = margin as f64 + (point.time - min_x) / (max_x - min_x) * plot_width as f64;
-                let y = (self.config.height as f64 - margin as f64) - (point.value - min_y) / (max_y - min_y) * plot_height as f64;
-                
+                let y = (self.config.height as f64 - margin as f64)
+                    - (point.value - min_y) / (max_y - min_y) * plot_height as f64;
+
                 if i == 0 {
                     path_data.push_str(&format!(" {:.2} {:.2}", x, y));
                 } else {
                     path_data.push_str(&format!(" L {:.2} {:.2}", x, y));
                 }
             }
-            
-            svg.push_str(&format!(r#"
+
+            svg.push_str(&format!(
+                r#"
     <path d="{}" fill="none" stroke="{}" stroke-width="{}" opacity="{}"/>
-"#, 
-                path_data, 
-                series.style.color, 
-                series.style.line_width,
-                series.style.opacity
+"#,
+                path_data, series.style.color, series.style.line_width, series.style.opacity
             ));
         }
 
@@ -622,26 +672,26 @@ Plotly.newPlot('plot', data, layout, config);
     pub fn show(&self) -> Result<()> {
         let temp_path = std::env::temp_dir().join("scirs2_plot.html");
         self.save(&temp_path, ExportFormat::HTML)?;
-        
+
         // Try to open in browser
         #[cfg(target_os = "windows")]
         std::process::Command::new("cmd")
             .args(["/c", "start", "", &temp_path.to_string_lossy()])
             .spawn()
             .map_err(|e| TimeSeriesError::IOError(format!("Failed to open plot: {}", e)))?;
-            
+
         #[cfg(target_os = "macos")]
         std::process::Command::new("open")
             .arg(&temp_path)
             .spawn()
             .map_err(|e| TimeSeriesError::IOError(format!("Failed to open plot: {}", e)))?;
-            
+
         #[cfg(target_os = "linux")]
         std::process::Command::new("xdg-open")
             .arg(&temp_path)
             .spawn()
             .map_err(|e| TimeSeriesError::IOError(format!("Failed to open plot: {}", e)))?;
-            
+
         Ok(())
     }
 }
@@ -661,29 +711,29 @@ impl SpecializedPlots {
     ) -> Result<TimeSeriesPlot> {
         let mut plot = TimeSeriesPlot::new(title);
         plot.set_labels("Time", "Value");
-        
+
         // Original series
         let mut original_style = PlotStyle::default();
         original_style.color = "#1f77b4".to_string(); // Blue
         plot.add_series("Original", time, original, original_style)?;
-        
+
         // Trend component
         let mut trend_style = PlotStyle::default();
         trend_style.color = "#ff7f0e".to_string(); // Orange
         trend_style.line_width = 3.0;
         plot.add_series("Trend", time, trend, trend_style)?;
-        
+
         // Seasonal component
         let mut seasonal_style = PlotStyle::default();
         seasonal_style.color = "#2ca02c".to_string(); // Green
         plot.add_series("Seasonal", time, seasonal, seasonal_style)?;
-        
+
         // Residual component
         let mut residual_style = PlotStyle::default();
         residual_style.color = "#d62728".to_string(); // Red
         residual_style.opacity = 0.7;
         plot.add_series("Residual", time, residual, residual_style)?;
-        
+
         Ok(plot)
     }
 
@@ -699,21 +749,27 @@ impl SpecializedPlots {
     ) -> Result<TimeSeriesPlot> {
         let mut plot = TimeSeriesPlot::new(title);
         plot.set_labels("Time", "Value");
-        
+
         // Historical data
         let mut hist_style = PlotStyle::default();
         hist_style.color = "#1f77b4".to_string(); // Blue
         hist_style.line_width = 2.0;
         plot.add_series("Historical", historical_time, historical_data, hist_style)?;
-        
+
         // Forecast with confidence intervals
         let mut forecast_style = PlotStyle::default();
         forecast_style.color = "#ff7f0e".to_string(); // Orange
         forecast_style.line_width = 2.5;
         forecast_style.line_style = LineStyle::Dashed;
-        plot.add_series_with_confidence("Forecast", forecast_time, forecast_values, 
-                                       confidence_lower, confidence_upper, forecast_style)?;
-        
+        plot.add_series_with_confidence(
+            "Forecast",
+            forecast_time,
+            forecast_values,
+            confidence_lower,
+            confidence_upper,
+            forecast_style,
+        )?;
+
         Ok(plot)
     }
 
@@ -726,11 +782,11 @@ impl SpecializedPlots {
     ) -> Result<TimeSeriesPlot> {
         let mut plot = TimeSeriesPlot::new(title);
         plot.set_labels("Time within Period", "Value");
-        
+
         // Group data by seasonal period
         let num_periods = data.len() / period;
         let mut seasonal_data = Array2::<f64>::zeros((period, num_periods));
-        
+
         for i in 0..num_periods {
             for j in 0..period {
                 let idx = i * period + j;
@@ -739,26 +795,32 @@ impl SpecializedPlots {
                 }
             }
         }
-        
+
         // Create time axis for one period
         let period_time = Array1::linspace(0.0, period as f64 - 1.0, period);
-        
+
         // Plot each period as a separate series
-        for i in 0..num_periods.min(10) { // Limit to 10 periods for clarity
+        for i in 0..num_periods.min(10) {
+            // Limit to 10 periods for clarity
             let period_values = seasonal_data.column(i).to_owned();
             let mut style = PlotStyle::default();
             style.opacity = 0.6;
             style.color = format!("#1f77b4"); // Use same color with varying opacity
-            plot.add_series(&format!("Period {}", i + 1), &period_time, &period_values, style)?;
+            plot.add_series(
+                &format!("Period {}", i + 1),
+                &period_time,
+                &period_values,
+                style,
+            )?;
         }
-        
+
         // Add mean seasonal pattern
         let mean_seasonal: Array1<f64> = seasonal_data.mean_axis(ndarray::Axis(1)).unwrap();
         let mut mean_style = PlotStyle::default();
         mean_style.color = "#d62728".to_string(); // Red
         mean_style.line_width = 3.0;
         plot.add_series("Mean Pattern", &period_time, &mean_seasonal, mean_style)?;
-        
+
         Ok(plot)
     }
 }
@@ -820,8 +882,9 @@ impl Dashboard {
     /// Generate HTML dashboard
     pub fn to_html(&self) -> String {
         let mut html = String::new();
-        
-        html.push_str(&format!(r#"
+
+        html.push_str(&format!(
+            r#"
 <!DOCTYPE html>
 <html>
 <head>
@@ -868,41 +931,43 @@ impl Dashboard {
 <body>
     <div class="dashboard-title">{}</div>
     <div class="dashboard-container">
-"#, 
-            self.title, 
-            self.layout.columns, 
-            self.layout.spacing, 
-            self.layout.width,
-            self.title
+"#,
+            self.title, self.layout.columns, self.layout.spacing, self.layout.width, self.title
         ));
 
         // Add each plot section
         for (i, (section_title, _plot)) in self.plots.iter().enumerate() {
-            html.push_str(&format!(r#"
+            html.push_str(&format!(
+                r#"
         <div class="plot-section">
             <div class="plot-title">{}</div>
             <div id="plot_{}" class="plot-container"></div>
         </div>
-"#, section_title, i));
+"#,
+                section_title, i
+            ));
         }
 
         html.push_str("    </div>\n");
 
         // Add JavaScript for each plot
         html.push_str("    <script>\n");
-        
+
         for (i, (_, plot)) in self.plots.iter().enumerate() {
             // Generate plot data for each plot
             html.push_str(&format!("        // Plot {}\n", i));
             html.push_str(&format!("        var data_{} = [\n", i));
-            
+
             for (j, series) in plot.series.iter().enumerate() {
-                if j > 0 { html.push_str(",\n"); }
-                
+                if j > 0 {
+                    html.push_str(",\n");
+                }
+
                 let x_values: Vec<f64> = series.data.iter().map(|p| p.time).collect();
                 let y_values: Vec<f64> = series.data.iter().map(|p| p.value).collect();
-                
-                html.push_str(&format!(r#"
+
+                html.push_str(&format!(
+                    r#"
             {{
                 x: {:?},
                 y: {:?},
@@ -914,9 +979,10 @@ impl Dashboard {
                     x_values, y_values, series.name, series.style.color, series.style.line_width
                 ));
             }
-            
+
             html.push_str(&format!("\n        ];\n"));
-            html.push_str(&format!(r#"
+            html.push_str(&format!(
+                r#"
         var layout_{} = {{
             title: '{}',
             xaxis: {{ title: '{}' }},
@@ -926,11 +992,11 @@ impl Dashboard {
         }};
         
         Plotly.newPlot('plot_{}', data_{}, layout_{}, {{responsive: true}});
-"#, 
+"#,
                 i, plot.title, plot.x_label, plot.y_label, i, i, i
             ));
         }
-        
+
         html.push_str("    </script>\n</body>\n</html>");
         html
     }
@@ -947,26 +1013,26 @@ impl Dashboard {
     pub fn show(&self) -> Result<()> {
         let temp_path = std::env::temp_dir().join("scirs2_dashboard.html");
         self.save(&temp_path)?;
-        
+
         // Try to open in browser
         #[cfg(target_os = "windows")]
         std::process::Command::new("cmd")
             .args(["/c", "start", "", &temp_path.to_string_lossy()])
             .spawn()
             .map_err(|e| TimeSeriesError::IOError(format!("Failed to open dashboard: {}", e)))?;
-            
+
         #[cfg(target_os = "macos")]
         std::process::Command::new("open")
             .arg(&temp_path)
             .spawn()
             .map_err(|e| TimeSeriesError::IOError(format!("Failed to open dashboard: {}", e)))?;
-            
+
         #[cfg(target_os = "linux")]
         std::process::Command::new("xdg-open")
             .arg(&temp_path)
             .spawn()
             .map_err(|e| TimeSeriesError::IOError(format!("Failed to open dashboard: {}", e)))?;
-            
+
         Ok(())
     }
 }
@@ -992,17 +1058,22 @@ pub mod quick_plots {
     }
 
     /// Quick multi-series plot
-    pub fn multi_plot(series_data: &[(String, Array1<f64>, Array1<f64>)], title: &str) -> Result<TimeSeriesPlot> {
+    pub fn multi_plot(
+        series_data: &[(String, Array1<f64>, Array1<f64>)],
+        title: &str,
+    ) -> Result<TimeSeriesPlot> {
         let mut plot = TimeSeriesPlot::new(title);
-        
-        let colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b"];
-        
+
+        let colors = [
+            "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b",
+        ];
+
         for (i, (name, x, y)) in series_data.iter().enumerate() {
             let mut style = PlotStyle::default();
             style.color = colors[i % colors.len()].to_string();
             plot.add_series(name, x, y, style)?;
         }
-        
+
         Ok(plot)
     }
 }
@@ -1025,7 +1096,7 @@ mod tests {
         let mut plot = TimeSeriesPlot::new("Test Plot");
         let time = Array1::linspace(0.0, 10.0, 11);
         let values = time.mapv(|x: f64| x.sin());
-        
+
         let result = plot.add_series("sine", &time, &values, PlotStyle::default());
         assert!(result.is_ok());
         assert_eq!(plot.series.len(), 1);
@@ -1037,7 +1108,7 @@ mod tests {
         let mut plot = TimeSeriesPlot::new("Test Plot");
         let time = Array1::linspace(0.0, 10.0, 11);
         let values = Array1::linspace(0.0, 5.0, 6); // Different length
-        
+
         let result = plot.add_series("test", &time, &values, PlotStyle::default());
         assert!(result.is_err());
     }
@@ -1047,10 +1118,11 @@ mod tests {
         let mut plot = TimeSeriesPlot::new("Test Plot");
         let time = Array1::linspace(0.0, 10.0, 11);
         let values = time.mapv(|x: f64| x.sin());
-        
-        plot.add_series("sine", &time, &values, PlotStyle::default()).unwrap();
+
+        plot.add_series("sine", &time, &values, PlotStyle::default())
+            .unwrap();
         let html = plot.to_html();
-        
+
         assert!(html.contains("Test Plot"));
         assert!(html.contains("sine"));
         assert!(html.contains("Plotly.newPlot"));
@@ -1062,10 +1134,11 @@ mod tests {
         let mut plot = TimeSeriesPlot::new("Sub Plot");
         let time = Array1::linspace(0.0, 10.0, 11);
         let values = time.mapv(|x: f64| x.sin());
-        
-        plot.add_series("sine", &time, &values, PlotStyle::default()).unwrap();
+
+        plot.add_series("sine", &time, &values, PlotStyle::default())
+            .unwrap();
         dashboard.add_plot("Section 1", plot);
-        
+
         assert_eq!(dashboard.plots.len(), 1);
         assert_eq!(dashboard.plots[0].0, "Section 1");
     }

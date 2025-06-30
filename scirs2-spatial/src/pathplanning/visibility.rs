@@ -123,21 +123,22 @@ impl Edge {
     fn intersects_segment(&self, p1: &Point2D, p2: &Point2D) -> bool {
         // Don't consider intersection if the segments share an endpoint
         const EPSILON: f64 = 1e-10;
-        
-        let shares_endpoint = 
-            (self.start.x - p1.x).abs() < EPSILON && (self.start.y - p1.y).abs() < EPSILON ||
-            (self.start.x - p2.x).abs() < EPSILON && (self.start.y - p2.y).abs() < EPSILON ||
-            (self.end.x - p1.x).abs() < EPSILON && (self.end.y - p1.y).abs() < EPSILON ||
-            (self.end.x - p2.x).abs() < EPSILON && (self.end.y - p2.y).abs() < EPSILON;
+
+        let shares_endpoint = (self.start.x - p1.x).abs() < EPSILON
+            && (self.start.y - p1.y).abs() < EPSILON
+            || (self.start.x - p2.x).abs() < EPSILON && (self.start.y - p2.y).abs() < EPSILON
+            || (self.end.x - p1.x).abs() < EPSILON && (self.end.y - p1.y).abs() < EPSILON
+            || (self.end.x - p2.x).abs() < EPSILON && (self.end.y - p2.y).abs() < EPSILON;
 
         if shares_endpoint {
             return false;
         }
 
         // Check for degenerate segments (zero length)
-        let seg1_length_sq = (self.end.x - self.start.x).powi(2) + (self.end.y - self.start.y).powi(2);
+        let seg1_length_sq =
+            (self.end.x - self.start.x).powi(2) + (self.end.y - self.start.y).powi(2);
         let seg2_length_sq = (p2.x - p1.x).powi(2) + (p2.y - p1.y).powi(2);
-        
+
         if seg1_length_sq < EPSILON || seg2_length_sq < EPSILON {
             return false;
         }
@@ -300,7 +301,7 @@ impl VisibilityGraph {
 
             // Adaptive sampling: more samples for longer edges
             let num_samples = (edge_length * 10.0).ceil().clamp(3.0, 50.0) as usize;
-            
+
             // Convert obstacle to ndarray once for efficiency
             let mut obstacle_array = Array2::zeros((obstacle.len(), 2));
             for (idx, p) in obstacle.iter().enumerate() {
@@ -625,7 +626,7 @@ fn segments_intersect(a1: &[f64], a2: &[f64], b1: &[f64], b2: &[f64]) -> bool {
     // Function to compute orientation of triplet (p, q, r)
     // Returns:
     // 0 -> collinear
-    // 1 -> clockwise 
+    // 1 -> clockwise
     // 2 -> counterclockwise
     let orientation = |p: &[f64], q: &[f64], r: &[f64]| -> i32 {
         let val = (q[1] - p[1]) * (r[0] - q[0]) - (q[0] - p[0]) * (r[1] - q[1]);
@@ -645,7 +646,7 @@ fn segments_intersect(a1: &[f64], a2: &[f64], b1: &[f64], b2: &[f64]) -> bool {
         let max_x = p[0].max(r[0]) + EPSILON;
         let min_y = p[1].min(r[1]) - EPSILON;
         let max_y = p[1].max(r[1]) + EPSILON;
-        
+
         q[0] >= min_x && q[0] <= max_x && q[1] >= min_y && q[1] <= max_y
     };
 

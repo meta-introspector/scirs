@@ -5,7 +5,7 @@
 //! with the standard scientific computing library.
 
 use approx::assert_abs_diff_eq;
-use ndarray::{array, Array2, s};
+use ndarray::{array, s, Array2};
 use scirs2_linalg::{cholesky, det, inv, lu, matrix_norm, qr, solve, svd};
 
 const TOLERANCE: f64 = 1e-10;
@@ -129,7 +129,7 @@ fn test_svd_against_scipy() {
     for i in 0..s.len() {
         s_matrix[[i, i]] = s[i];
     }
-    
+
     // Reconstruct matrix: A = U * S * V^T
     // Handle shape compatibility for thin SVD
     let reconstructed = if u.ncols() == s.len() && vt.nrows() == s.len() {
@@ -141,7 +141,7 @@ fn test_svd_against_scipy() {
         let vt_thin = vt.slice(s![..s.len(), ..]).to_owned();
         u_thin.dot(&s_matrix).dot(&vt_thin)
     };
-    
+
     // Verify reconstruction within tolerance
     assert_abs_diff_eq!(reconstructed, a, epsilon = TOLERANCE * 10.0); // Slightly higher tolerance for reconstruction
 }

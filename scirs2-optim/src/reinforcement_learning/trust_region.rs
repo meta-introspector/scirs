@@ -3,7 +3,7 @@
 //! This module implements trust region methods including TRPO (Trust Region Policy Optimization)
 //! and other constrained optimization techniques for policy learning.
 
-use super::{PolicyNetwork, RLOptimizerConfig, RLOptimizationMetrics};
+use super::{PolicyNetwork, RLOptimizationMetrics, RLOptimizerConfig};
 use crate::error::OptimizerError;
 use ndarray::{Array1, Array2};
 use num_traits::Float;
@@ -13,13 +13,13 @@ use num_traits::Float;
 pub enum TrustRegionMethod {
     /// Trust Region Policy Optimization (TRPO)
     TRPO,
-    
+
     /// Constrained Policy Optimization (CPO)
     CPO,
-    
+
     /// Projection-based trust region
     Projection,
-    
+
     /// Natural gradient with trust region
     NaturalGradient,
 }
@@ -29,20 +29,20 @@ pub enum TrustRegionMethod {
 pub struct TrustRegionConfig<T: Float> {
     /// Trust region method
     pub method: TrustRegionMethod,
-    
+
     /// Maximum KL divergence
     pub max_kl: T,
-    
+
     /// Conjugate gradient parameters
     pub cg_iters: usize,
     pub cg_damping: T,
     pub cg_tolerance: T,
-    
+
     /// Line search parameters
     pub max_backtracks: usize,
     pub backtrack_coeff: T,
     pub accept_ratio: T,
-    
+
     /// Natural gradient Fisher information matrix estimation
     pub fisher_subsample_freq: usize,
     pub fisher_reg: T,
@@ -69,16 +69,16 @@ impl<T: Float> Default for TrustRegionConfig<T> {
 pub struct TrustRegionOptimizer<T: Float, P: PolicyNetwork<T>> {
     /// Configuration
     config: TrustRegionConfig<T>,
-    
+
     /// Policy network
     policy: P,
-    
+
     /// Fisher information matrix
     fisher_matrix: Option<Array2<T>>,
-    
+
     /// Natural gradient state
     natural_grad_state: NaturalGradientState<T>,
-    
+
     /// Update counter
     update_count: usize,
 }
@@ -88,10 +88,10 @@ pub struct TrustRegionOptimizer<T: Float, P: PolicyNetwork<T>> {
 pub struct NaturalGradientState<T: Float> {
     /// Previous gradients for momentum
     pub prev_gradients: Option<Array1<T>>,
-    
+
     /// Momentum coefficient
     pub momentum: T,
-    
+
     /// Adaptive learning rate state
     pub adaptive_lr_state: AdaptiveLRState<T>,
 }
@@ -101,13 +101,13 @@ pub struct NaturalGradientState<T: Float> {
 pub struct AdaptiveLRState<T: Float> {
     /// Current learning rate
     pub learning_rate: T,
-    
+
     /// Learning rate adaptation factor
     pub adapt_factor: T,
-    
+
     /// Success counter for adaptation
     pub success_count: usize,
-    
+
     /// Failure counter for adaptation
     pub failure_count: usize,
 }
@@ -132,9 +132,12 @@ impl<T: Float, P: PolicyNetwork<T>> TrustRegionOptimizer<T, P> {
             update_count: 0,
         }
     }
-    
+
     /// Perform trust region update
-    pub fn update(&mut self, gradients: &Array1<T>) -> Result<RLOptimizationMetrics<T>, OptimizerError> {
+    pub fn update(
+        &mut self,
+        gradients: &Array1<T>,
+    ) -> Result<RLOptimizationMetrics<T>, OptimizerError> {
         match self.config.method {
             TrustRegionMethod::TRPO => self.update_trpo(gradients),
             TrustRegionMethod::CPO => self.update_cpo(gradients),
@@ -142,56 +145,71 @@ impl<T: Float, P: PolicyNetwork<T>> TrustRegionOptimizer<T, P> {
             TrustRegionMethod::NaturalGradient => self.update_natural_gradient(gradients),
         }
     }
-    
+
     /// TRPO update with conjugate gradient and line search
-    fn update_trpo(&mut self, gradients: &Array1<T>) -> Result<RLOptimizationMetrics<T>, OptimizerError> {
+    fn update_trpo(
+        &mut self,
+        gradients: &Array1<T>,
+    ) -> Result<RLOptimizationMetrics<T>, OptimizerError> {
         // 1. Compute natural gradient using conjugate gradient
         let natural_grad = self.compute_natural_gradient(gradients)?;
-        
+
         // 2. Compute step size using line search
         let step_size = self.line_search(&natural_grad)?;
-        
+
         // 3. Apply update
         let update_step = &natural_grad * step_size;
         self.apply_parameter_update(&update_step)?;
-        
+
         self.update_count += 1;
-        
+
         Ok(RLOptimizationMetrics::default())
     }
-    
+
     /// CPO (Constrained Policy Optimization) update
-    fn update_cpo(&mut self, gradients: &Array1<T>) -> Result<RLOptimizationMetrics<T>, OptimizerError> {
+    fn update_cpo(
+        &mut self,
+        gradients: &Array1<T>,
+    ) -> Result<RLOptimizationMetrics<T>, OptimizerError> {
         // CPO extends TRPO with additional safety constraints
         self.update_trpo(gradients) // Simplified
     }
-    
+
     /// Projection-based trust region update
-    fn update_projection(&mut self, gradients: &Array1<T>) -> Result<RLOptimizationMetrics<T>, OptimizerError> {
+    fn update_projection(
+        &mut self,
+        gradients: &Array1<T>,
+    ) -> Result<RLOptimizationMetrics<T>, OptimizerError> {
         // Project gradients onto trust region
         let projected_grad = self.project_to_trust_region(gradients)?;
         self.apply_parameter_update(&projected_grad)?;
-        
+
         Ok(RLOptimizationMetrics::default())
     }
-    
+
     /// Natural gradient update
-    fn update_natural_gradient(&mut self, gradients: &Array1<T>) -> Result<RLOptimizationMetrics<T>, OptimizerError> {
+    fn update_natural_gradient(
+        &mut self,
+        gradients: &Array1<T>,
+    ) -> Result<RLOptimizationMetrics<T>, OptimizerError> {
         let natural_grad = self.compute_natural_gradient(gradients)?;
         let lr = self.natural_grad_state.adaptive_lr_state.learning_rate;
         let update_step = &natural_grad * lr;
-        
+
         self.apply_parameter_update(&update_step)?;
-        
+
         Ok(RLOptimizationMetrics::default())
     }
-    
+
     /// Compute natural gradient using conjugate gradient method
-    fn compute_natural_gradient(&mut self, gradients: &Array1<T>) -> Result<Array1<T>, OptimizerError> {
+    fn compute_natural_gradient(
+        &mut self,
+        gradients: &Array1<T>,
+    ) -> Result<Array1<T>, OptimizerError> {
         // Solve F * x = g for natural gradient x, where F is Fisher information matrix
         self.conjugate_gradient(gradients)
     }
-    
+
     /// Conjugate gradient solver for Fisher information system
     fn conjugate_gradient(&self, b: &Array1<T>) -> Result<Array1<T>, OptimizerError> {
         let n = b.len();
@@ -199,91 +217,99 @@ impl<T: Float, P: PolicyNetwork<T>> TrustRegionOptimizer<T, P> {
         let mut r = b.clone();
         let mut p = r.clone();
         let mut rsold = self.dot(&r, &r);
-        
+
         for _i in 0..self.config.cg_iters {
             let ap = self.fisher_vector_product(&p)?;
             let alpha = rsold / self.dot(&p, &ap);
-            
+
             x = &x + &(&p * alpha);
             r = &r - &(&ap * alpha);
-            
+
             let rsnew = self.dot(&r, &r);
-            
+
             if rsnew.sqrt() < self.config.cg_tolerance {
                 break;
             }
-            
+
             let beta = rsnew / rsold;
             p = &r + &(&p * beta);
             rsold = rsnew;
         }
-        
+
         Ok(x)
     }
-    
+
     /// Fisher information matrix vector product
     fn fisher_vector_product(&self, v: &Array1<T>) -> Result<Array1<T>, OptimizerError> {
         // Approximate Fisher-vector product using empirical Fisher information
         // This would typically involve second-order derivatives
         Ok(v * self.config.fisher_reg + v.clone())
     }
-    
+
     /// Line search for step size selection
     fn line_search(&self, direction: &Array1<T>) -> Result<T, OptimizerError> {
         let mut step_size = T::from(1.0).unwrap();
-        
+
         for _i in 0..self.config.max_backtracks {
             // Check if step satisfies trust region constraint
             if self.check_trust_region_constraint(direction, step_size)? {
                 return Ok(step_size);
             }
-            
+
             step_size = step_size * self.config.backtrack_coeff;
         }
-        
+
         // If no acceptable step found, use small step
         Ok(step_size)
     }
-    
+
     /// Check if step satisfies trust region constraint
-    fn check_trust_region_constraint(&self, direction: &Array1<T>, step_size: T) -> Result<bool, OptimizerError> {
+    fn check_trust_region_constraint(
+        &self,
+        direction: &Array1<T>,
+        step_size: T,
+    ) -> Result<bool, OptimizerError> {
         // Compute expected KL divergence after update
         let expected_kl = self.estimate_kl_divergence(direction, step_size)?;
         Ok(expected_kl <= self.config.max_kl)
     }
-    
+
     /// Estimate KL divergence for proposed update
-    fn estimate_kl_divergence(&self, direction: &Array1<T>, step_size: T) -> Result<T, OptimizerError> {
+    fn estimate_kl_divergence(
+        &self,
+        direction: &Array1<T>,
+        step_size: T,
+    ) -> Result<T, OptimizerError> {
         // Quadratic approximation: KL ≈ 0.5 * d^T * F * d * step_size^2
         let fvp = self.fisher_vector_product(direction)?;
         let kl_estimate = T::from(0.5).unwrap() * self.dot(direction, &fvp) * step_size * step_size;
         Ok(kl_estimate)
     }
-    
+
     /// Project gradients onto trust region
     fn project_to_trust_region(&self, gradients: &Array1<T>) -> Result<Array1<T>, OptimizerError> {
         let grad_norm = self.norm(gradients);
         let max_norm = (T::from(2.0).unwrap() * self.config.max_kl).sqrt();
-        
+
         if grad_norm <= max_norm {
             Ok(gradients.clone())
         } else {
             Ok(gradients * (max_norm / grad_norm))
         }
     }
-    
+
     /// Apply parameter update to policy network
     fn apply_parameter_update(&mut self, update: &Array1<T>) -> Result<(), OptimizerError> {
         // In practice, this would update the policy network parameters
         // For now, we just store the update
         Ok(())
     }
-    
+
     /// Dot product
     fn dot(&self, a: &Array1<T>, b: &Array1<T>) -> T {
         a.iter().zip(b.iter()).map(|(&x, &y)| x * y).sum()
     }
-    
+
     /// Vector norm
     fn norm(&self, v: &Array1<T>) -> T {
         self.dot(v, v).sqrt()

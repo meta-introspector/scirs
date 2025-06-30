@@ -16,7 +16,7 @@ mod example {
         // This example is temporarily disabled due to missing autograd modules
         println!("Example disabled - autograd transformations module not available");
         Ok(())
-        
+
         // TODO: Re-enable when autograd transformations are implemented
         /*
         // Example 1: 2D Rotation Matrix

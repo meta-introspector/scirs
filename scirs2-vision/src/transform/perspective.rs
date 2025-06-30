@@ -1056,7 +1056,7 @@ pub fn detect_quad_simd(src: &DynamicImage, threshold: u8) -> Result<[(f64, f64)
     use crate::feature::sobel_edges;
     use crate::preprocessing::gaussian_blur;
     use ndarray::Array2;
-    
+
     // Convert to grayscale
     let gray = src.to_luma8();
     let (width, height) = gray.dimensions();
@@ -1145,7 +1145,6 @@ pub fn detect_quad_simd(src: &DynamicImage, threshold: u8) -> Result<[(f64, f64)
 ///
 /// * Result containing binary edge map
 fn simd_binary_threshold(image: &DynamicImage, threshold: u8) -> Result<Array2<f64>> {
-    
     let (width, height) = image.dimensions();
     let threshold_f64 = threshold as f64;
 
@@ -1441,7 +1440,6 @@ fn point_to_line_distances_simd(
     line_start: (f64, f64),
     line_end: (f64, f64),
 ) -> Vec<f64> {
-    
     let n = x_coords.len();
     if n == 0 {
         return Vec::new();
@@ -1566,7 +1564,6 @@ fn find_corner_points_simd(contour: &[(f64, f64)]) -> Vec<(f64, f64)> {
 ///
 /// * Vector of curvature values for each point
 fn compute_curvatures_simd(contour: &[(f64, f64)], window_size: usize) -> Vec<f64> {
-    
     let n = contour.len();
     let mut curvatures = vec![0.0; n];
 
@@ -1651,7 +1648,6 @@ fn compute_curvatures_simd(contour: &[(f64, f64)], window_size: usize) -> Vec<f6
 ///
 /// * Total perimeter length
 fn calculate_perimeter_simd(points: &[(f64, f64)]) -> f64 {
-    
     if points.len() < 2 {
         return 0.0;
     }
@@ -1694,7 +1690,6 @@ fn calculate_perimeter_simd(points: &[(f64, f64)]) -> f64 {
 ///
 /// * Area of the quadrilateral
 fn calculate_quad_area_simd(quad: &[(f64, f64); 4]) -> f64 {
-    
     // Extract coordinates
     let x_coords = Array1::from_vec(vec![quad[0].0, quad[1].0, quad[2].0, quad[3].0]);
     let y_coords = Array1::from_vec(vec![quad[0].1, quad[1].1, quad[2].1, quad[3].1]);
@@ -1721,7 +1716,6 @@ fn calculate_quad_area_simd(quad: &[(f64, f64); 4]) -> f64 {
 ///
 /// * Quadrilateral points ordered clockwise from top-left
 fn order_quad_points_simd(quad: [(f64, f64); 4]) -> [(f64, f64); 4] {
-    
     let points = quad.to_vec();
 
     // Find centroid using SIMD

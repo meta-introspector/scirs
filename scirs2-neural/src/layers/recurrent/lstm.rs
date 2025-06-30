@@ -4,9 +4,9 @@ use crate::error::{NeuralError, Result};
 use crate::layers::recurrent::{LstmGateCache, LstmStepOutput};
 use crate::layers::{Layer, ParamLayer};
 use ndarray::{Array, ArrayView, Ix2, IxDyn, ScalarOperand};
+use ndarray_rand::rand::distributions::{Distribution, Uniform};
 use num_traits::Float;
 use rand::Rng;
-use ndarray_rand::rand::distributions::{Distribution, Uniform};
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 
@@ -114,7 +114,11 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LSTM<F> {
     /// # Returns
     ///
     /// * A new LSTM layer
-    pub fn new<R: Rng + rand::RngCore + ndarray_rand::rand::RngCore>(input_size: usize, hidden_size: usize, rng: &mut R) -> Result<Self> {
+    pub fn new<R: Rng + rand::RngCore + ndarray_rand::rand::RngCore>(
+        input_size: usize,
+        hidden_size: usize,
+        rng: &mut R,
+    ) -> Result<Self> {
         // Validate parameters
         if input_size == 0 || hidden_size == 0 {
             return Err(NeuralError::InvalidArchitecture(
@@ -436,10 +440,14 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for LSTM
             NeuralError::InferenceError("Failed to acquire read lock on input cache".to_string())
         })?;
         let hidden_states_ref = self.hidden_states_cache.read().map_err(|_| {
-            NeuralError::InferenceError("Failed to acquire read lock on hidden states cache".to_string())
+            NeuralError::InferenceError(
+                "Failed to acquire read lock on hidden states cache".to_string(),
+            )
         })?;
         let cell_states_ref = self.cell_states_cache.read().map_err(|_| {
-            NeuralError::InferenceError("Failed to acquire read lock on cell states cache".to_string())
+            NeuralError::InferenceError(
+                "Failed to acquire read lock on cell states cache".to_string(),
+            )
         })?;
 
         if input_ref.is_none() || hidden_states_ref.is_none() || cell_states_ref.is_none() {
@@ -595,7 +603,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for
 //     use ndarray::Array3;
 //     use rand::rngs::SmallRng;
 //     use rand::SeedableRng;
-// 
+//
 //     #[test]
 // //     fn test_lstm_shape() {
 // //         // Create an LSTM layer
@@ -606,16 +614,16 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for
 // //             &mut rng,
 // //         )
 // //         .unwrap();
-// // 
+// //
 // //         // Create a batch of input data
 // //         let batch_size = 2;
 // //         let seq_len = 5;
 // //         let input_size = 10;
 // //         let input = Array3::<f64>::from_elem((batch_size, seq_len, input_size), 0.1).into_dyn();
-// // 
+// //
 // //         // Forward pass
 // //         let output = lstm.forward(&input).unwrap();
-// // 
+// //
 // //         // Check output shape
 // //         assert_eq!(output.shape(), &[batch_size, seq_len, 20]);
 // //     }

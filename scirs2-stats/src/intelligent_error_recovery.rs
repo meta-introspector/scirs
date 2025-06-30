@@ -756,7 +756,7 @@ impl NeuralErrorClassifier {
         let input_size = 12; // Number of features
         let hidden_size = 8;
         let output_size = 5; // Number of error classes
-        
+
         // Input to hidden layer
         let mut layer1 = Vec::new();
         for _ in 0..hidden_size {
@@ -767,7 +767,7 @@ impl NeuralErrorClassifier {
             layer1.push(neuron_weights);
         }
         weights.push(layer1.into_iter().flatten().collect());
-        
+
         // Hidden to output layer
         let mut layer2 = Vec::new();
         for _ in 0..output_size {
@@ -778,7 +778,7 @@ impl NeuralErrorClassifier {
             layer2.push(neuron_weights);
         }
         weights.push(layer2.into_iter().flatten().collect());
-        
+
         Self {
             weights,
             biases: vec![0.0; hidden_size + output_size],
@@ -786,24 +786,25 @@ impl NeuralErrorClassifier {
             learning_rate: 0.01,
         }
     }
-    
+
     /// Classify error pattern and predict best recovery strategy
     pub fn classify_error_pattern(&self, features: &[f64]) -> (usize, f64) {
         let output = self.forward_pass(features);
-        let (best_class, confidence) = output.iter()
+        let (best_class, confidence) = output
+            .iter()
             .enumerate()
             .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
             .map(|(i, &conf)| (i, conf))
             .unwrap_or((0, 0.0));
-        
+
         (best_class, confidence)
     }
-    
+
     /// Forward pass through the neural network
     fn forward_pass(&self, features: &[f64]) -> Vec<f64> {
         let hidden_size = 8;
         let output_size = 5;
-        
+
         // Input to hidden layer
         let mut hidden = vec![0.0; hidden_size];
         for i in 0..hidden_size {
@@ -813,7 +814,7 @@ impl NeuralErrorClassifier {
             }
             hidden[i] = Self::relu(sum);
         }
-        
+
         // Hidden to output layer
         let mut output = vec![0.0; output_size];
         for i in 0..output_size {
@@ -825,24 +826,24 @@ impl NeuralErrorClassifier {
             }
             output[i] = Self::sigmoid(sum);
         }
-        
+
         output
     }
-    
+
     /// ReLU activation function
     fn relu(x: f64) -> f64 {
         x.max(0.0)
     }
-    
+
     /// Sigmoid activation function
     fn sigmoid(x: f64) -> f64 {
         1.0 / (1.0 + (-x).exp())
     }
-    
+
     /// Online learning update
     pub fn update_from_feedback(&mut self, features: &[f64], correct_class: usize, success: bool) {
         self.training_data.push((features.to_vec(), correct_class));
-        
+
         if success {
             // Positive reinforcement - strengthen this prediction
             self.reinforce_prediction(features, correct_class, 1.0);
@@ -850,30 +851,31 @@ impl NeuralErrorClassifier {
             // Negative reinforcement - weaken this prediction
             self.reinforce_prediction(features, correct_class, -0.5);
         }
-        
+
         // Trim training data to prevent memory overflow
         if self.training_data.len() > 1000 {
             self.training_data.drain(0..500);
         }
     }
-    
+
     /// Reinforce or weaken prediction
     fn reinforce_prediction(&mut self, features: &[f64], target_class: usize, strength: f64) {
         let prediction = self.forward_pass(features);
-        let error = strength * (if target_class < prediction.len() { 
-            1.0 - prediction[target_class] 
-        } else { 
-            1.0 
-        });
-        
+        let error = strength
+            * (if target_class < prediction.len() {
+                1.0 - prediction[target_class]
+            } else {
+                1.0
+            });
+
         // Simple gradient-like update (simplified backpropagation)
         let update_magnitude = self.learning_rate * error;
-        
+
         // Update biases
         if target_class < self.biases.len() {
             self.biases[target_class] += update_magnitude;
         }
-        
+
         // Update some weights (simplified)
         for weight_layer in &mut self.weights {
             for weight in weight_layer.iter_mut().take(10) {
@@ -934,8 +936,11 @@ pub struct RecoveryStrategyEnsemble {
 
 /// Trait for strategy generation
 pub trait StrategyGenerator {
-    fn generate_strategies(&self, error: &EnhancedStatsError, features: &[f64]) 
-        -> StatsResult<Vec<IntelligentRecoveryStrategy>>;
+    fn generate_strategies(
+        &self,
+        error: &EnhancedStatsError,
+        features: &[f64],
+    ) -> StatsResult<Vec<IntelligentRecoveryStrategy>>;
     fn name(&self) -> &str;
 }
 
@@ -945,21 +950,25 @@ pub struct SimilarityBasedGenerator {
 }
 
 impl StrategyGenerator for SimilarityBasedGenerator {
-    fn generate_strategies(&self, _error: &EnhancedStatsError, features: &[f64]) 
-        -> StatsResult<Vec<IntelligentRecoveryStrategy>> {
+    fn generate_strategies(
+        &self,
+        _error: &EnhancedStatsError,
+        features: &[f64],
+    ) -> StatsResult<Vec<IntelligentRecoveryStrategy>> {
         let mut strategies = Vec::new();
-        
+
         // Find most similar historical patterns
-        let mut similarities: Vec<(f64, &IntelligentRecoveryStrategy)> = self.historical_patterns
+        let mut similarities: Vec<(f64, &IntelligentRecoveryStrategy)> = self
+            .historical_patterns
             .iter()
             .map(|(hist_features, strategy)| {
                 let similarity = self.compute_similarity(features, hist_features);
                 (similarity, strategy)
             })
             .collect();
-        
+
         similarities.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
-        
+
         // Return top 3 most similar strategies
         for (similarity, strategy) in similarities.into_iter().take(3) {
             if similarity > 0.6 {
@@ -968,10 +977,10 @@ impl StrategyGenerator for SimilarityBasedGenerator {
                 strategies.push(adjusted_strategy);
             }
         }
-        
+
         Ok(strategies)
     }
-    
+
     fn name(&self) -> &str {
         "SimilarityBased"
     }
@@ -983,28 +992,29 @@ impl SimilarityBasedGenerator {
             historical_patterns: Vec::new(),
         }
     }
-    
+
     pub fn add_pattern(&mut self, features: Vec<f64>, strategy: IntelligentRecoveryStrategy) {
         self.historical_patterns.push((features, strategy));
-        
+
         // Limit size to prevent memory issues
         if self.historical_patterns.len() > 500 {
             self.historical_patterns.drain(0..100);
         }
     }
-    
+
     fn compute_similarity(&self, features1: &[f64], features2: &[f64]) -> f64 {
         if features1.len() != features2.len() {
             return 0.0;
         }
-        
-        let dot_product: f64 = features1.iter()
+
+        let dot_product: f64 = features1
+            .iter()
             .zip(features2.iter())
             .map(|(a, b)| a * b)
             .sum();
         let norm1: f64 = features1.iter().map(|x| x * x).sum::<f64>().sqrt();
         let norm2: f64 = features2.iter().map(|x| x * x).sum::<f64>().sqrt();
-        
+
         if norm1 == 0.0 || norm2 == 0.0 {
             0.0
         } else {
@@ -1026,10 +1036,13 @@ pub struct ErrorCluster {
 }
 
 impl StrategyGenerator for ClusteringBasedGenerator {
-    fn generate_strategies(&self, _error: &EnhancedStatsError, features: &[f64]) 
-        -> StatsResult<Vec<IntelligentRecoveryStrategy>> {
+    fn generate_strategies(
+        &self,
+        _error: &EnhancedStatsError,
+        features: &[f64],
+    ) -> StatsResult<Vec<IntelligentRecoveryStrategy>> {
         let mut strategies = Vec::new();
-        
+
         // Find closest cluster
         for cluster in &self.error_clusters {
             let distance = self.euclidean_distance(features, &cluster.center);
@@ -1044,10 +1057,10 @@ impl StrategyGenerator for ClusteringBasedGenerator {
                 }
             }
         }
-        
+
         Ok(strategies)
     }
-    
+
     fn name(&self) -> &str {
         "ClusteringBased"
     }
@@ -1059,9 +1072,10 @@ impl ClusteringBasedGenerator {
             error_clusters: Vec::new(),
         }
     }
-    
+
     fn euclidean_distance(&self, features1: &[f64], features2: &[f64]) -> f64 {
-        features1.iter()
+        features1
+            .iter()
             .zip(features2.iter())
             .map(|(a, b)| (a - b).powi(2))
             .sum::<f64>()
@@ -1076,19 +1090,19 @@ impl RecoveryStrategyEnsemble {
             generator_weights: Vec::new(),
             performance_history: HashMap::new(),
         };
-        
+
         // Add default generators
         ensemble.add_generator(Box::new(SimilarityBasedGenerator::new()), 1.0);
         ensemble.add_generator(Box::new(ClusteringBasedGenerator::new()), 1.0);
-        
+
         ensemble
     }
-    
+
     pub fn add_generator(&mut self, generator: Box<dyn StrategyGenerator>, initial_weight: f64) {
         self.strategy_generators.push(generator);
         self.generator_weights.push(initial_weight);
     }
-    
+
     /// Generate ensemble strategies with voting
     pub fn generate_ensemble_strategies(
         &self,
@@ -1096,58 +1110,62 @@ impl RecoveryStrategyEnsemble {
         features: &[f64],
     ) -> StatsResult<Vec<IntelligentRecoveryStrategy>> {
         let mut all_strategies = Vec::new();
-        
+
         // Collect strategies from all generators
         for (i, generator) in self.strategy_generators.iter().enumerate() {
             if let Ok(mut strategies) = generator.generate_strategies(error, features) {
                 let weight = self.generator_weights[i];
-                
+
                 // Apply generator weight to strategy confidence
                 for strategy in &mut strategies {
                     strategy.success_probability *= weight;
                 }
-                
+
                 all_strategies.extend(strategies);
             }
         }
-        
+
         // Merge similar strategies and rank by weighted confidence
         let merged_strategies = self.merge_similar_strategies(all_strategies);
-        
+
         Ok(merged_strategies)
     }
-    
+
     /// Merge similar strategies to avoid redundancy
     fn merge_similar_strategies(
         &self,
         strategies: Vec<IntelligentRecoveryStrategy>,
     ) -> Vec<IntelligentRecoveryStrategy> {
         let mut merged = Vec::new();
-        
+
         for strategy in strategies {
             let mut found_similar = false;
-            
+
             for existing in &mut merged {
                 if self.strategies_similar(&strategy, existing) {
                     // Merge strategies by averaging probabilities
-                    existing.success_probability = 
+                    existing.success_probability =
                         (existing.success_probability + strategy.success_probability) / 2.0;
                     found_similar = true;
                     break;
                 }
             }
-            
+
             if !found_similar {
                 merged.push(strategy);
             }
         }
-        
+
         // Sort by success probability
-        merged.sort_by(|a, b| b.success_probability.partial_cmp(&a.success_probability).unwrap());
-        
+        merged.sort_by(|a, b| {
+            b.success_probability
+                .partial_cmp(&a.success_probability)
+                .unwrap()
+        });
+
         merged
     }
-    
+
     /// Check if two strategies are similar
     fn strategies_similar(
         &self,
@@ -1155,18 +1173,18 @@ impl RecoveryStrategyEnsemble {
         strategy2: &IntelligentRecoveryStrategy,
     ) -> bool {
         // Simple similarity check based on suggestion type and action
-        strategy1.suggestion.suggestion_type == strategy2.suggestion.suggestion_type &&
-        std::mem::discriminant(&strategy1.suggestion.action) == 
-        std::mem::discriminant(&strategy2.suggestion.action)
+        strategy1.suggestion.suggestion_type == strategy2.suggestion.suggestion_type
+            && std::mem::discriminant(&strategy1.suggestion.action)
+                == std::mem::discriminant(&strategy2.suggestion.action)
     }
-    
+
     /// Update generator weights based on performance feedback
     pub fn update_weights(&mut self, generator_name: &str, success: bool) {
         self.performance_history
             .entry(generator_name.to_string())
             .or_insert_with(Vec::new)
             .push(success);
-        
+
         // Update weights based on recent performance
         for (i, generator) in self.strategy_generators.iter().enumerate() {
             if generator.name() == generator_name {
@@ -1175,8 +1193,9 @@ impl RecoveryStrategyEnsemble {
                         .rev()
                         .take(20) // Last 20 outcomes
                         .map(|&s| if s { 1.0 } else { 0.0 })
-                        .sum::<f64>() / history.len().min(20) as f64;
-                    
+                        .sum::<f64>()
+                        / history.len().min(20) as f64;
+
                     // Adaptive weight update
                     self.generator_weights[i] = 0.5 + recent_success_rate;
                 }
@@ -1195,64 +1214,73 @@ impl MLEnhancedErrorRecovery {
             ml_config: config,
         }
     }
-    
+
     /// Analyze error with ML enhancement
-    pub fn analyze_with_ml(&mut self, error: &EnhancedStatsError) 
-        -> StatsResult<Vec<IntelligentRecoveryStrategy>> {
+    pub fn analyze_with_ml(
+        &mut self,
+        error: &EnhancedStatsError,
+    ) -> StatsResult<Vec<IntelligentRecoveryStrategy>> {
         let mut all_strategies = Vec::new();
-        
+
         // Get base strategies
         let base_strategies = self.base_recovery.analyze_and_suggest(error)?;
-        
+
         // Extract features for ML
         let features = self.extract_enhanced_features(error)?;
-        
+
         // Neural network predictions
         if self.ml_config.use_neural_classifier {
-            let (predicted_class, confidence) = self.neural_classifier.classify_error_pattern(&features);
-            
+            let (predicted_class, confidence) =
+                self.neural_classifier.classify_error_pattern(&features);
+
             if confidence >= self.ml_config.ml_confidence_threshold {
-                let ml_strategies = self.generate_neural_strategies(predicted_class, confidence, error)?;
+                let ml_strategies =
+                    self.generate_neural_strategies(predicted_class, confidence, error)?;
                 all_strategies.extend(ml_strategies);
             }
         }
-        
+
         // Ensemble strategies
         if self.ml_config.use_strategy_ensemble {
-            let ensemble_strategies = self.strategy_ensemble.generate_ensemble_strategies(error, &features)?;
+            let ensemble_strategies = self
+                .strategy_ensemble
+                .generate_ensemble_strategies(error, &features)?;
             all_strategies.extend(ensemble_strategies);
         }
-        
+
         // Combine base and ML strategies with weighting
         let combined_strategies = self.combine_strategies(base_strategies, all_strategies);
-        
+
         Ok(combined_strategies)
     }
-    
+
     /// Extract enhanced features for ML
     fn extract_enhanced_features(&self, error: &EnhancedStatsError) -> StatsResult<Vec<f64>> {
         let mut features = Vec::new();
-        
+
         // Add base features
         let base_features = self.base_recovery.extract_error_features(error)?;
         features.extend(base_features);
-        
+
         // Add time-based features
-        features.push(std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_secs() as f64 % 86400.0); // Time of day
-        
+        features.push(
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs() as f64
+                % 86400.0,
+        ); // Time of day
+
         // Add error frequency features (if available)
         features.push(1.0); // Placeholder for error frequency
-        
+
         // Add system load features (simplified)
         features.push(0.5); // Placeholder for CPU load
         features.push(0.3); // Placeholder for memory usage
-        
+
         Ok(features)
     }
-    
+
     /// Generate strategies based on neural network predictions
     fn generate_neural_strategies(
         &self,
@@ -1261,7 +1289,7 @@ impl MLEnhancedErrorRecovery {
         error: &EnhancedStatsError,
     ) -> StatsResult<Vec<IntelligentRecoveryStrategy>> {
         let mut strategies = Vec::new();
-        
+
         // Map neural network classes to recovery strategies
         let strategy = match predicted_class {
             0 => self.create_data_preprocessing_strategy(error, confidence)?,
@@ -1271,11 +1299,11 @@ impl MLEnhancedErrorRecovery {
             4 => self.create_approximation_strategy(error, confidence)?,
             _ => self.create_adaptive_strategy(error, confidence)?,
         };
-        
+
         strategies.push(strategy);
         Ok(strategies)
     }
-    
+
     /// Create data preprocessing strategy
     fn create_data_preprocessing_strategy(
         &self,
@@ -1302,7 +1330,7 @@ impl MLEnhancedErrorRecovery {
             risk_level: RiskLevel::Low,
         })
     }
-    
+
     /// Create algorithm optimization strategy
     fn create_algorithm_optimization_strategy(
         &self,
@@ -1331,7 +1359,7 @@ impl MLEnhancedErrorRecovery {
             risk_level: RiskLevel::Medium,
         })
     }
-    
+
     /// Create numerical stability strategy
     fn create_numerical_stability_strategy(
         &self,
@@ -1342,7 +1370,9 @@ impl MLEnhancedErrorRecovery {
             suggestion: RecoverySuggestion {
                 suggestion_type: SuggestionType::ParameterAdjustment,
                 description: "Apply ML-tuned numerical stability parameters".to_string(),
-                action: RecoveryAction::AdjustTolerance { new_tolerance: 1e-10 },
+                action: RecoveryAction::AdjustTolerance {
+                    new_tolerance: 1e-10,
+                },
                 expected_outcome: "Enhanced numerical precision and stability".to_string(),
                 confidence,
                 prerequisites: vec!["Iterative computation".to_string()],
@@ -1358,7 +1388,7 @@ impl MLEnhancedErrorRecovery {
             risk_level: RiskLevel::Low,
         })
     }
-    
+
     /// Create resource scaling strategy
     fn create_resource_scaling_strategy(
         &self,
@@ -1366,7 +1396,7 @@ impl MLEnhancedErrorRecovery {
         confidence: f64,
     ) -> StatsResult<IntelligentRecoveryStrategy> {
         let cores = error.context.system_info.cpu_cores.unwrap_or(1);
-        
+
         Ok(IntelligentRecoveryStrategy {
             suggestion: RecoverySuggestion {
                 suggestion_type: SuggestionType::ResourceIncrease,
@@ -1387,7 +1417,7 @@ impl MLEnhancedErrorRecovery {
             risk_level: RiskLevel::Low,
         })
     }
-    
+
     /// Create approximation strategy
     fn create_approximation_strategy(
         &self,
@@ -1398,8 +1428,8 @@ impl MLEnhancedErrorRecovery {
             suggestion: RecoverySuggestion {
                 suggestion_type: SuggestionType::Approximation,
                 description: "Use ML-guided approximation methods".to_string(),
-                action: RecoveryAction::UseApproximation { 
-                    method: "neural_approximation".to_string() 
+                action: RecoveryAction::UseApproximation {
+                    method: "neural_approximation".to_string(),
                 },
                 expected_outcome: "Fast approximate solution with controlled error".to_string(),
                 confidence,
@@ -1416,7 +1446,7 @@ impl MLEnhancedErrorRecovery {
             risk_level: RiskLevel::Medium,
         })
     }
-    
+
     /// Create adaptive strategy
     fn create_adaptive_strategy(
         &self,
@@ -1443,7 +1473,7 @@ impl MLEnhancedErrorRecovery {
             risk_level: RiskLevel::Low,
         })
     }
-    
+
     /// Combine base and ML strategies with intelligent weighting
     fn combine_strategies(
         &self,
@@ -1451,27 +1481,31 @@ impl MLEnhancedErrorRecovery {
         ml_strategies: Vec<IntelligentRecoveryStrategy>,
     ) -> Vec<IntelligentRecoveryStrategy> {
         let mut combined = Vec::new();
-        
+
         // Weight base strategies
         for mut strategy in base_strategies {
             strategy.success_probability *= 1.0 - self.ml_config.ml_weight;
             combined.push(strategy);
         }
-        
+
         // Weight ML strategies
         for mut strategy in ml_strategies {
             strategy.success_probability *= self.ml_config.ml_weight;
             combined.push(strategy);
         }
-        
+
         // Sort by success probability
-        combined.sort_by(|a, b| b.success_probability.partial_cmp(&a.success_probability).unwrap());
-        
+        combined.sort_by(|a, b| {
+            b.success_probability
+                .partial_cmp(&a.success_probability)
+                .unwrap()
+        });
+
         // Remove duplicates and limit results
         combined.truncate(8);
         combined
     }
-    
+
     /// Provide feedback for online learning
     pub fn provide_feedback(
         &mut self,
@@ -1483,23 +1517,27 @@ impl MLEnhancedErrorRecovery {
         if self.ml_config.enable_online_learning {
             let features = self.extract_enhanced_features(error)?;
             let strategy_class = self.strategy_to_class(strategy_used);
-            self.neural_classifier.update_from_feedback(&features, strategy_class, success);
+            self.neural_classifier
+                .update_from_feedback(&features, strategy_class, success);
         }
-        
+
         // Update ensemble weights
         let generator_name = "ensemble"; // Simplified
-        self.strategy_ensemble.update_weights(generator_name, success);
-        
+        self.strategy_ensemble
+            .update_weights(generator_name, success);
+
         // Update base recovery system
         if success {
-            self.base_recovery.record_successful_recovery(&strategy_used.suggestion.action);
+            self.base_recovery
+                .record_successful_recovery(&strategy_used.suggestion.action);
         } else {
-            self.base_recovery.record_failed_recovery(&strategy_used.suggestion.action);
+            self.base_recovery
+                .record_failed_recovery(&strategy_used.suggestion.action);
         }
-        
+
         Ok(())
     }
-    
+
     /// Map strategy to neural network class
     fn strategy_to_class(&self, strategy: &IntelligentRecoveryStrategy) -> usize {
         match strategy.suggestion.suggestion_type {

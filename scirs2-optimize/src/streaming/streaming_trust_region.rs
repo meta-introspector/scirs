@@ -4,11 +4,14 @@
 //! real-time optimization scenarios. The methods maintain approximate Hessian
 //! information and adapt the trust region radius based on streaming performance.
 
+use super::{
+    utils, StreamingConfig, StreamingDataPoint, StreamingObjective, StreamingOptimizer,
+    StreamingStats,
+};
+use crate::error::OptimizeError;
 use ndarray::{Array1, Array2, ArrayView1};
 use scirs2_core::error::Result;
 use scirs2_core::linalg::{solve_linear_system, LinalgError};
-use crate::error::OptimizeError;
-use super::{StreamingOptimizer, StreamingObjective, StreamingDataPoint, StreamingConfig, StreamingStats, utils};
 
 /// Streaming Trust Region optimizer
 #[derive(Debug, Clone)]
@@ -61,7 +64,7 @@ impl<T: StreamingObjective> StreamingTrustRegion<T> {
     /// Solve the trust region subproblem using Cauchy point method
     fn solve_trust_region_subproblem(&self, gradient: &ArrayView1<f64>) -> Result<Array1<f64>> {
         let n = gradient.len();
-        
+
         // For numerical stability, add regularization to Hessian
         let mut regularized_hessian = self.hessian_approx.clone();
         for i in 0..n {
@@ -72,7 +75,7 @@ impl<T: StreamingObjective> StreamingTrustRegion<T> {
         match solve_linear_system(&regularized_hessian, &(-gradient)) {
             Ok(newton_step) => {
                 let step_norm = newton_step.mapv(|x| x * x).sum().sqrt();
-                
+
                 if step_norm <= self.trust_radius {
                     // Newton step is within trust region
                     Ok(newton_step)
@@ -95,9 +98,13 @@ impl<T: StreamingObjective> StreamingTrustRegion<T> {
     }
 
     /// Update the Hessian approximation using BFGS-like formula
-    fn update_hessian_approximation(&mut self, step: &ArrayView1<f64>, grad_diff: &ArrayView1<f64>) {
+    fn update_hessian_approximation(
+        &mut self,
+        step: &ArrayView1<f64>,
+        grad_diff: &ArrayView1<f64>,
+    ) {
         let rho = step.dot(grad_diff);
-        
+
         if rho.abs() < 1e-12 {
             return; // Skip update if curvature condition is not satisfied
         }
@@ -109,16 +116,16 @@ impl<T: StreamingObjective> StreamingTrustRegion<T> {
         let n = step.len();
         let mut outer_yy = Array2::zeros((n, n));
         let mut hs = Array1::zeros(n);
-        
+
         // Compute H*s
         for i in 0..n {
             for j in 0..n {
                 hs[i] += self.hessian_approx[[i, j]] * step[j];
             }
         }
-        
+
         let shs = step.dot(&hs);
-        
+
         if shs > 1e-12 {
             // Compute outer products
             for i in 0..n {
@@ -128,7 +135,7 @@ impl<T: StreamingObjective> StreamingTrustRegion<T> {
                 }
             }
         }
-        
+
         // Ensure positive definiteness by adding regularization if needed
         let min_eigenvalue = self.estimate_min_eigenvalue();
         if min_eigenvalue < self.config.regularization {
@@ -142,18 +149,18 @@ impl<T: StreamingObjective> StreamingTrustRegion<T> {
     fn estimate_min_eigenvalue(&self) -> f64 {
         let n = self.hessian_approx.nrows();
         let mut min_est = f64::INFINITY;
-        
+
         for i in 0..n {
             let diagonal = self.hessian_approx[[i, i]];
             let off_diagonal_sum: f64 = (0..n)
                 .filter(|&j| j != i)
                 .map(|j| self.hessian_approx[[i, j]].abs())
                 .sum();
-            
+
             let lower_bound = diagonal - off_diagonal_sum;
             min_est = min_est.min(lower_bound);
         }
-        
+
         min_est
     }
 
@@ -166,7 +173,7 @@ impl<T: StreamingObjective> StreamingTrustRegion<T> {
     ) -> f64 {
         // Predicted reduction: m(0) - m(step) ≈ -g^T*step - 0.5*step^T*H*step
         let linear_term = -gradient.dot(step);
-        
+
         let mut quadratic_term = 0.0;
         for i in 0..step.len() {
             for j in 0..step.len() {
@@ -174,9 +181,9 @@ impl<T: StreamingObjective> StreamingTrustRegion<T> {
             }
         }
         quadratic_term *= 0.5;
-        
+
         let predicted_reduction = linear_term + quadratic_term;
-        
+
         if predicted_reduction.abs() < 1e-12 {
             0.0
         } else {
@@ -210,19 +217,20 @@ impl<T: StreamingObjective> StreamingTrustRegion<T> {
 impl<T: StreamingObjective + Clone> StreamingOptimizer for StreamingTrustRegion<T> {
     fn update(&mut self, data_point: &StreamingDataPoint) -> Result<()> {
         let start_time = std::time::Instant::now();
-        
+
         // Evaluate current function value
         let current_f = self.objective.evaluate(&self.parameters.view(), data_point);
-        
+
         // Compute gradient
         let gradient = self.objective.gradient(&self.parameters.view(), data_point);
-        
+
         // Accumulate gradient for better estimates (exponential smoothing)
         if self.gradient_count == 0 {
             self.gradient_accumulator = gradient.clone();
         } else {
             let alpha = 1.0 / (self.gradient_count as f64 + 1.0).min(10.0); // Adaptive averaging
-            self.gradient_accumulator = &((1.0 - alpha) * &self.gradient_accumulator) + &(alpha * &gradient);
+            self.gradient_accumulator =
+                &((1.0 - alpha) * &self.gradient_accumulator) + &(alpha * &gradient);
         }
         self.gradient_count += 1;
 
@@ -239,13 +247,19 @@ impl<T: StreamingObjective + Clone> StreamingOptimizer for StreamingTrustRegion<
 
         // Trial point
         let trial_parameters = &self.parameters + &step;
-        let trial_f = self.objective.evaluate(&trial_parameters.view(), data_point);
+        let trial_f = self
+            .objective
+            .evaluate(&trial_parameters.view(), data_point);
 
         // Compute actual reduction
         let actual_reduction = current_f - trial_f;
 
         // Compute trust region ratio
-        let ratio = self.compute_trust_region_ratio(&step.view(), &effective_gradient.view(), actual_reduction);
+        let ratio = self.compute_trust_region_ratio(
+            &step.view(),
+            &effective_gradient.view(),
+            actual_reduction,
+        );
 
         // Accept or reject step
         const ACCEPTANCE_THRESHOLD: f64 = 0.1;
@@ -261,8 +275,12 @@ impl<T: StreamingObjective + Clone> StreamingOptimizer for StreamingTrustRegion<
             }
 
             // Check convergence
-            self.stats.converged = utils::check_convergence(&old_parameters.view(), &self.parameters.view(), self.config.tolerance);
-            
+            self.stats.converged = utils::check_convergence(
+                &old_parameters.view(),
+                &self.parameters.view(),
+                self.config.tolerance,
+            );
+
             self.stats.updates_performed += 1;
             self.prev_function_value = trial_f;
         } else {
@@ -274,12 +292,13 @@ impl<T: StreamingObjective + Clone> StreamingOptimizer for StreamingTrustRegion<
 
         // Update statistics
         self.stats.points_processed += 1;
-        self.stats.current_loss = if ratio >= ACCEPTANCE_THRESHOLD { trial_f } else { current_f };
-        self.stats.average_loss = utils::ewma_update(
-            self.stats.average_loss,
-            self.stats.current_loss,
-            0.01,
-        );
+        self.stats.current_loss = if ratio >= ACCEPTANCE_THRESHOLD {
+            trial_f
+        } else {
+            current_f
+        };
+        self.stats.average_loss =
+            utils::ewma_update(self.stats.average_loss, self.stats.current_loss, 0.01);
 
         self.stats.processing_time_ms += start_time.elapsed().as_secs_f64() * 1000.0;
 
@@ -315,7 +334,7 @@ pub fn streaming_trust_region_linear_regression(
     let trust_radius = initial_trust_radius.unwrap_or(1.0);
     let initial_params = Array1::zeros(n_features);
     let objective = super::LinearRegressionObjective;
-    
+
     StreamingTrustRegion::new(initial_params, objective, config, trust_radius)
 }
 
@@ -329,7 +348,7 @@ pub fn streaming_trust_region_logistic_regression(
     let trust_radius = initial_trust_radius.unwrap_or(1.0);
     let initial_params = Array1::zeros(n_features);
     let objective = super::LogisticRegressionObjective;
-    
+
     StreamingTrustRegion::new(initial_params, objective, config, trust_radius)
 }
 
@@ -337,96 +356,98 @@ pub fn streaming_trust_region_logistic_regression(
 mod tests {
     use super::*;
     use crate::streaming::{LinearRegressionObjective, StreamingDataPoint};
-    
+
     #[test]
     fn test_streaming_trust_region_creation() {
         let params = Array1::from(vec![0.0, 0.0]);
         let objective = LinearRegressionObjective;
         let config = StreamingConfig::default();
         let trust_radius = 1.0;
-        
+
         let optimizer = StreamingTrustRegion::new(params.clone(), objective, config, trust_radius);
         assert_eq!(optimizer.parameters(), &params);
         assert_eq!(optimizer.trust_radius, 1.0);
     }
-    
+
     #[test]
     fn test_trust_region_subproblem_solving() {
         let params = Array1::from(vec![0.0, 0.0]);
         let objective = LinearRegressionObjective;
         let config = StreamingConfig::default();
         let trust_radius = 1.0;
-        
+
         let optimizer = StreamingTrustRegion::new(params, objective, config, trust_radius);
         let gradient = Array1::from(vec![1.0, 2.0]);
-        
-        let step = optimizer.solve_trust_region_subproblem(&gradient.view()).unwrap();
+
+        let step = optimizer
+            .solve_trust_region_subproblem(&gradient.view())
+            .unwrap();
         let step_norm = step.mapv(|x| x * x).sum().sqrt();
-        
+
         // Step should be within trust region
         assert!(step_norm <= trust_radius + 1e-10);
     }
-    
+
     #[test]
     fn test_streaming_trust_region_update() {
         let mut optimizer = streaming_trust_region_linear_regression(2, None, Some(1.0));
-        
+
         let features = Array1::from(vec![1.0, 2.0]);
         let target = 3.0;
         let point = StreamingDataPoint::new(features, target);
-        
+
         assert!(optimizer.update(&point).is_ok());
         assert_eq!(optimizer.stats().points_processed, 1);
     }
-    
+
     #[test]
     fn test_hessian_update() {
         let params = Array1::from(vec![1.0, 1.0]);
         let objective = LinearRegressionObjective;
         let mut config = StreamingConfig::default();
         config.regularization = 1e-6;
-        
+
         let mut optimizer = StreamingTrustRegion::new(params, objective, config, 1.0);
-        
+
         let step = Array1::from(vec![0.1, 0.2]);
         let grad_diff = Array1::from(vec![0.05, 0.1]);
-        
+
         let original_hessian = optimizer.hessian_approx.clone();
         optimizer.update_hessian_approximation(&step.view(), &grad_diff.view());
-        
+
         // Hessian should have changed
         assert!(&optimizer.hessian_approx != &original_hessian);
     }
-    
+
     #[test]
     fn test_trust_radius_adaptation() {
         let params = Array1::from(vec![0.0, 0.0]);
         let objective = LinearRegressionObjective;
         let config = StreamingConfig::default();
         let initial_radius = 1.0;
-        
+
         let mut optimizer = StreamingTrustRegion::new(params, objective, config, initial_radius);
-        
+
         // Test expansion with very successful step
         optimizer.update_trust_radius(0.9, 0.9); // High ratio, near boundary
         assert!(optimizer.trust_radius > initial_radius);
-        
+
         // Test contraction with unsuccessful step
         optimizer.update_trust_radius(0.1, 0.5); // Low ratio
         assert!(optimizer.trust_radius < initial_radius);
     }
-    
+
     #[test]
     fn test_convergence_detection() {
         let mut config = StreamingConfig::default();
         config.tolerance = 1e-2;
         config.learning_rate = 0.5;
-        
+
         let mut optimizer = streaming_trust_region_linear_regression(2, Some(config), Some(1.0));
-        
+
         // Use simple data that should converge quickly
         let point = StreamingDataPoint::new(Array1::from(vec![0.0, 0.0]), 0.0);
-        
+
         // Should converge quickly with zero gradient
         for _ in 0..10 {
             optimizer.update(&point).unwrap();
@@ -434,7 +455,7 @@ mod tests {
                 break;
             }
         }
-        
+
         // Should detect convergence when parameters don't change much
         assert!(optimizer.converged() || optimizer.stats().updates_performed < 10);
     }

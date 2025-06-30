@@ -3,7 +3,7 @@
 //! This module provides the foundation for GPU-accelerated time series processing,
 //! including forecasting, decomposition, and feature extraction.
 
-use ndarray::{Array1, s};
+use ndarray::{s, Array1};
 use num_traits::Float;
 use std::fmt::Debug;
 
@@ -707,7 +707,7 @@ pub mod fft {
 
             // GPU-optimized Cooley-Tukey FFT implementation
             let result = self.cooley_tukey_fft(&padded_data, false)?;
-            
+
             // Return only the original length
             Ok(result.slice(s![0..n]).to_owned())
         }
@@ -727,7 +727,7 @@ pub mod fft {
 
             let result = self.cooley_tukey_fft(&padded_data, true)?;
             let normalized: Array1<F> = result.mapv(|x| x / F::from(padded_n).unwrap());
-            
+
             Ok(normalized.slice(s![0..n]).to_owned())
         }
 
@@ -766,9 +766,9 @@ pub mod fft {
             // Cooley-Tukey FFT with GPU-style parallel butterfly operations
             let mut length = 2;
             while length <= n {
-                let angle = if inverse { 
+                let angle = if inverse {
                     two * pi / F::from(length).unwrap()
-                } else { 
+                } else {
                     -two * pi / F::from(length).unwrap()
                 };
 
@@ -803,7 +803,11 @@ pub mod fft {
         }
 
         /// GPU-accelerated power spectral density
-        pub fn power_spectral_density(&self, data: &Array1<F>, window_size: usize) -> Result<Array1<F>> {
+        pub fn power_spectral_density(
+            &self,
+            data: &Array1<F>,
+            window_size: usize,
+        ) -> Result<Array1<F>> {
             if data.len() < window_size {
                 return Err(TimeSeriesError::InsufficientData {
                     message: "Data length less than window size".to_string(),
@@ -819,7 +823,7 @@ pub mod fft {
             for i in 0..num_windows {
                 let start = i * window_size / 2;
                 let end = (start + window_size).min(data.len());
-                
+
                 if end - start < window_size {
                     break;
                 }
@@ -827,7 +831,7 @@ pub mod fft {
                 let window = data.slice(s![start..end]);
                 let windowed = self.apply_hanning_window(&window.to_owned())?;
                 let fft_result = self.fft(&windowed)?;
-                
+
                 // Compute power spectrum for this window
                 for j in 0..psd.len() {
                     if j < fft_result.len() {
@@ -849,8 +853,8 @@ pub mod fft {
             let two = F::from(2).unwrap();
 
             for i in 0..n {
-                let window_val = F::from(0.5).unwrap() * 
-                    (F::one() - (two * pi * F::from(i).unwrap() / F::from(n - 1).unwrap()).cos());
+                let window_val = F::from(0.5).unwrap()
+                    * (F::one() - (two * pi * F::from(i).unwrap() / F::from(n - 1).unwrap()).cos());
                 windowed[i] = windowed[i] * window_val;
             }
 
@@ -858,7 +862,12 @@ pub mod fft {
         }
 
         /// GPU-accelerated spectrogram computation
-        pub fn spectrogram(&self, data: &Array1<F>, window_size: usize, overlap: usize) -> Result<Array2<F>> {
+        pub fn spectrogram(
+            &self,
+            data: &Array1<F>,
+            window_size: usize,
+            overlap: usize,
+        ) -> Result<Array2<F>> {
             if window_size <= overlap {
                 return Err(TimeSeriesError::InvalidInput(
                     "Window size must be greater than overlap".to_string(),
@@ -910,7 +919,7 @@ pub mod convolution {
     impl<F: Float + Debug + Clone> GpuConvolution<F> {
         /// Create new GPU convolution processor
         pub fn new(config: GpuConfig) -> Self {
-            Self { 
+            Self {
                 config,
                 _phantom: std::marker::PhantomData,
             }
@@ -932,25 +941,29 @@ pub mod convolution {
 
             // GPU-style parallel convolution with memory coalescing
             let chunk_size = self.config.batch_size;
-            
+
             for chunk_start in (0..output_len).step_by(chunk_size) {
                 let chunk_end = (chunk_start + chunk_size).min(output_len);
-                
+
                 // Parallel processing within chunk
                 for i in chunk_start..chunk_end {
                     let mut sum = F::zero();
-                    
+
                     // Vectorized inner loop
-                    let k_start = if i >= signal_len - 1 { i - signal_len + 1 } else { 0 };
+                    let k_start = if i >= signal_len - 1 {
+                        i - signal_len + 1
+                    } else {
+                        0
+                    };
                     let k_end = (i + 1).min(kernel_len);
-                    
+
                     for k in k_start..k_end {
                         let signal_idx = i - k;
                         if signal_idx < signal_len {
                             sum = sum + signal[signal_idx] * kernel[k];
                         }
                     }
-                    
+
                     result[i] = sum;
                 }
             }
@@ -974,11 +987,11 @@ pub mod convolution {
             // GPU-optimized cross-correlation using parallel reduction
             for lag in 0..result_len {
                 let mut correlation = F::zero();
-                
+
                 // Determine overlap region
                 let start_x = if lag >= m { lag - m + 1 } else { 0 };
                 let end_x = (lag + 1).min(n);
-                
+
                 // Parallel dot product computation
                 for i in start_x..end_x {
                     let j = lag - i;
@@ -986,7 +999,7 @@ pub mod convolution {
                         correlation = correlation + x[i] * y[j];
                     }
                 }
-                
+
                 result[lag] = correlation;
             }
 
@@ -1003,7 +1016,7 @@ pub mod convolution {
             // Use FFT-based correlation for better performance
             let padded_size = (2 * n - 1).next_power_of_two();
             let mut padded = Array1::zeros(padded_size);
-            
+
             // Copy data to padded array
             for i in 0..n {
                 padded[i] = data[i];
@@ -1012,18 +1025,23 @@ pub mod convolution {
             // Compute FFT, multiply by conjugate, then IFFT
             let fft_processor = fft::GpuFFT::new(self.config.clone());
             let fft_result = fft_processor.fft(&padded)?;
-            
+
             // Multiply by complex conjugate (for real signals, this is just squaring)
             let power_spectrum = fft_result.mapv(|x| x * x);
-            
+
             let autocorr_full = fft_processor.ifft(&power_spectrum)?;
-            
+
             // Return only the meaningful part (0 to n-1 lags)
             Ok(autocorr_full.slice(s![0..n]).to_owned())
         }
 
         /// GPU-accelerated sliding window correlation
-        pub fn sliding_correlation(&self, x: &Array1<F>, y: &Array1<F>, window_size: usize) -> Result<Array1<F>> {
+        pub fn sliding_correlation(
+            &self,
+            x: &Array1<F>,
+            y: &Array1<F>,
+            window_size: usize,
+        ) -> Result<Array1<F>> {
             if x.len() != y.len() {
                 return Err(TimeSeriesError::DimensionMismatch {
                     expected: x.len(),
@@ -1046,25 +1064,25 @@ pub mod convolution {
             for i in 0..num_windows {
                 let x_window = x.slice(s![i..i + window_size]);
                 let y_window = y.slice(s![i..i + window_size]);
-                
+
                 // Compute Pearson correlation coefficient
                 let mean_x = x_window.sum() / F::from(window_size).unwrap();
                 let mean_y = y_window.sum() / F::from(window_size).unwrap();
-                
+
                 let mut num = F::zero();
                 let mut den_x = F::zero();
                 let mut den_y = F::zero();
-                
+
                 // Vectorized correlation computation
                 for j in 0..window_size {
                     let dx = x_window[j] - mean_x;
                     let dy = y_window[j] - mean_y;
-                    
+
                     num = num + dx * dy;
                     den_x = den_x + dx * dx;
                     den_y = den_y + dy * dy;
                 }
-                
+
                 let denominator = (den_x * den_y).sqrt();
                 correlations[i] = if denominator > F::zero() {
                     num / denominator
@@ -1093,7 +1111,7 @@ pub mod blas {
     impl<F: Float + Debug + Clone> GpuBLAS<F> {
         /// Create new GPU BLAS processor
         pub fn new(config: GpuConfig) -> Self {
-            Self { 
+            Self {
                 config,
                 _phantom: std::marker::PhantomData,
             }
@@ -1160,9 +1178,16 @@ pub mod blas {
         }
 
         /// GPU-accelerated matrix-vector multiplication (BLAS Level 2)
-        pub fn gemv(&self, alpha: F, a: &Array2<F>, x: &Array1<F>, beta: F, y: &mut Array1<F>) -> Result<()> {
+        pub fn gemv(
+            &self,
+            alpha: F,
+            a: &Array2<F>,
+            x: &Array1<F>,
+            beta: F,
+            y: &mut Array1<F>,
+        ) -> Result<()> {
             let (m, n) = a.dim();
-            
+
             if x.len() != n {
                 return Err(TimeSeriesError::DimensionMismatch {
                     expected: n,
@@ -1321,7 +1346,17 @@ pub mod algorithms {
         _phantom: std::marker::PhantomData<F>,
     }
 
-    impl<F: Float + Debug + Clone + num_traits::Zero + num_traits::One + std::iter::Sum + PartialOrd + Copy> GpuTimeSeriesProcessor<F> {
+    impl<
+            F: Float
+                + Debug
+                + Clone
+                + num_traits::Zero
+                + num_traits::One
+                + std::iter::Sum
+                + PartialOrd
+                + Copy,
+        > GpuTimeSeriesProcessor<F>
+    {
         /// Create new GPU processor
         pub fn new(config: GpuConfig) -> Result<Self> {
             let device_manager = GpuDeviceManager::new()?;

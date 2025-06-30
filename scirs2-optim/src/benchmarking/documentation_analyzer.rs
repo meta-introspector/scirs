@@ -813,7 +813,10 @@ impl DocumentationAnalyzer {
             quality_metrics,
         };
 
-        println!("Example verification completed: {}/{} passed", compiled_examples, total_examples);
+        println!(
+            "Example verification completed: {}/{} passed",
+            compiled_examples, total_examples
+        );
         Ok(())
     }
 
@@ -887,7 +890,7 @@ impl DocumentationAnalyzer {
                 if in_example {
                     // End of example block
                     *total_examples += 1;
-                    
+
                     if self.compile_example(&example_code) {
                         *compiled_examples += 1;
                         functions_with_examples += 1;
@@ -902,7 +905,7 @@ impl DocumentationAnalyzer {
                         };
                         failed_examples.push(failed_example);
                     }
-                    
+
                     example_code.clear();
                     in_example = false;
                 } else {
@@ -956,10 +959,10 @@ impl DocumentationAnalyzer {
     ) -> ExampleQualityMetrics {
         // Simplified metrics calculation
         ExampleQualityMetrics {
-            average_length: 15.0, // Average lines per example
+            average_length: 15.0,         // Average lines per example
             error_handling_coverage: 0.7, // 70% of examples show error handling
-            comment_coverage: 0.8, // 80% of examples have comments
-            best_practices_score: 0.75, // 75% follow best practices
+            comment_coverage: 0.8,        // 80% of examples have comments
+            best_practices_score: 0.75,   // 75% follow best practices
         }
     }
 
@@ -996,7 +999,10 @@ impl DocumentationAnalyzer {
             internal_link_consistency,
         };
 
-        println!("Link checking completed: {}/{} valid", valid_links, total_links);
+        println!(
+            "Link checking completed: {}/{} valid",
+            valid_links, total_links
+        );
         Ok(())
     }
 
@@ -1055,7 +1061,7 @@ impl DocumentationAnalyzer {
             // Simple link detection - in practice would use regex
             if line.contains("http://") || line.contains("https://") {
                 *total_links += 1;
-                
+
                 // Extract URL (simplified)
                 if let Some(url) = self.extract_url(line) {
                     if self.validate_url(&url) {
@@ -1071,7 +1077,8 @@ impl DocumentationAnalyzer {
                             suggested_replacement: None,
                         };
                         broken_links.push(broken_link);
-                        external_link_status.insert(url, LinkStatus::Broken("404 Not Found".to_string()));
+                        external_link_status
+                            .insert(url, LinkStatus::Broken("404 Not Found".to_string()));
                     }
                 }
             }
@@ -1124,7 +1131,10 @@ impl DocumentationAnalyzer {
             format_analysis,
         };
 
-        println!("Style analysis completed: {:.1}% consistent", consistency_score * 100.0);
+        println!(
+            "Style analysis completed: {:.1}% consistent",
+            consistency_score * 100.0
+        );
         Ok(())
     }
 
@@ -1305,10 +1315,10 @@ impl DocumentationAnalyzer {
         violations: &HashMap<StyleCategory, Vec<StyleViolation>>,
     ) -> f64 {
         let total_violations: usize = violations.values().map(|v| v.len()).sum();
-        
+
         // Assume 100 items checked per violation category
         let total_items = violations.len() * 100;
-        
+
         if total_items > 0 {
             1.0 - (total_violations as f64 / total_items as f64)
         } else {
@@ -1319,10 +1329,10 @@ impl DocumentationAnalyzer {
     /// Analyze documentation format
     fn analyze_documentation_format(&self) -> FormatAnalysis {
         FormatAnalysis {
-            markdown_compliance: 0.9,    // 90% compliant
-            rustdoc_compliance: 0.95,    // 95% compliant
+            markdown_compliance: 0.9,          // 90% compliant
+            rustdoc_compliance: 0.95,          // 95% compliant
             cross_reference_completeness: 0.8, // 80% complete
-            toc_quality: 0.85,           // 85% quality
+            toc_quality: 0.85,                 // 85% quality
         }
     }
 
@@ -1389,15 +1399,13 @@ impl DocumentationAnalyzer {
         Ok(DocumentationDebt {
             total_debt_score,
             debt_by_category,
-            high_priority_items: vec![
-                DebtItem {
-                    category: DebtCategory::MissingDocumentation,
-                    description: "Critical optimizers lack comprehensive documentation".to_string(),
-                    file_path: PathBuf::from("src/optimizers/"),
-                    priority: Priority::High,
-                    estimated_effort: 12.0,
-                },
-            ],
+            high_priority_items: vec![DebtItem {
+                category: DebtCategory::MissingDocumentation,
+                description: "Critical optimizers lack comprehensive documentation".to_string(),
+                file_path: PathBuf::from("src/optimizers/"),
+                priority: Priority::High,
+                estimated_effort: 12.0,
+            }],
             estimated_effort_hours: 40.0,
         })
     }
@@ -1422,12 +1430,15 @@ impl DocumentationAnalyzer {
         } else {
             1.0
         };
-        let link_score = self.analysis_results.link_checking.internal_link_consistency;
+        let link_score = self
+            .analysis_results
+            .link_checking
+            .internal_link_consistency;
         let style_score = self.analysis_results.style_analysis.consistency_score;
 
-        self.analysis_results.overall_quality_score = 
+        self.analysis_results.overall_quality_score =
             (coverage_score * 0.4 + example_score * 0.3 + link_score * 0.15 + style_score * 0.15)
-            .clamp(0.0, 1.0);
+                .clamp(0.0, 1.0);
     }
 
     /// Generate comprehensive documentation report
@@ -1454,90 +1465,111 @@ impl DocumentationAnalyzer {
     /// Get critical missing items
     fn get_critical_missing_items(&self) -> Vec<String> {
         let mut critical_items = Vec::new();
-        
+
         for (category, items) in &self.analysis_results.coverage.undocumented_by_category {
             if matches!(category, ItemCategory::Function | ItemCategory::Struct) {
-                for item in items.iter().take(5) { // Top 5 critical items
-                    critical_items.push(format!("{}: {}", 
+                for item in items.iter().take(5) {
+                    // Top 5 critical items
+                    critical_items.push(format!(
+                        "{}: {}",
                         match category {
                             ItemCategory::Function => "Function",
-                            ItemCategory::Struct => "Struct", 
-                            _ => "Item"
+                            ItemCategory::Struct => "Struct",
+                            _ => "Item",
                         },
                         item.name
                     ));
                 }
             }
         }
-        
+
         critical_items
     }
 
     /// Identify documentation strengths
     fn identify_documentation_strengths(&self) -> Vec<String> {
         let mut strengths = Vec::new();
-        
+
         if self.analysis_results.coverage.coverage_percentage >= 80.0 {
             strengths.push("High documentation coverage".to_string());
         }
-        
-        if self.analysis_results.example_verification.total_examples > 0 &&
-           self.analysis_results.example_verification.compiled_examples as f64 / 
-           self.analysis_results.example_verification.total_examples as f64 >= 0.9 {
+
+        if self.analysis_results.example_verification.total_examples > 0
+            && self.analysis_results.example_verification.compiled_examples as f64
+                / self.analysis_results.example_verification.total_examples as f64
+                >= 0.9
+        {
             strengths.push("High-quality, working examples".to_string());
         }
-        
+
         if self.analysis_results.style_analysis.consistency_score >= 0.8 {
             strengths.push("Consistent documentation style".to_string());
         }
-        
+
         strengths
     }
 
     /// Identify documentation weaknesses
     fn identify_documentation_weaknesses(&self) -> Vec<String> {
         let mut weaknesses = Vec::new();
-        
+
         if self.analysis_results.coverage.coverage_percentage < 60.0 {
             weaknesses.push("Low documentation coverage".to_string());
         }
-        
-        if !self.analysis_results.example_verification.failed_examples.is_empty() {
-            weaknesses.push(format!("{} failed examples", 
-                self.analysis_results.example_verification.failed_examples.len()));
+
+        if !self
+            .analysis_results
+            .example_verification
+            .failed_examples
+            .is_empty()
+        {
+            weaknesses.push(format!(
+                "{} failed examples",
+                self.analysis_results
+                    .example_verification
+                    .failed_examples
+                    .len()
+            ));
         }
-        
+
         if !self.analysis_results.link_checking.broken_links.is_empty() {
-            weaknesses.push(format!("{} broken links", 
-                self.analysis_results.link_checking.broken_links.len()));
+            weaknesses.push(format!(
+                "{} broken links",
+                self.analysis_results.link_checking.broken_links.len()
+            ));
         }
-        
+
         weaknesses
     }
 
     /// Identify improvement priorities
     fn identify_improvement_priorities(&self) -> Vec<String> {
         let mut priorities = Vec::new();
-        
+
         if self.analysis_results.coverage.coverage_percentage < 80.0 {
             priorities.push("Increase documentation coverage".to_string());
         }
-        
-        if !self.analysis_results.example_verification.failed_examples.is_empty() {
+
+        if !self
+            .analysis_results
+            .example_verification
+            .failed_examples
+            .is_empty()
+        {
             priorities.push("Fix broken examples".to_string());
         }
-        
+
         if self.analysis_results.style_analysis.consistency_score < 0.7 {
             priorities.push("Improve style consistency".to_string());
         }
-        
+
         priorities
     }
 
     /// Generate actionable recommendations
     fn generate_actionable_recommendations(&self) -> Vec<ActionableRecommendation> {
         let mut recommendations = Vec::new();
-        
+
         // Coverage recommendations
         if self.analysis_results.coverage.coverage_percentage < 80.0 {
             recommendations.push(ActionableRecommendation {
@@ -1547,8 +1579,8 @@ impl DocumentationAnalyzer {
                 description: format!(
                     "Current coverage is {:.1}%. Focus on documenting {} undocumented items.",
                     self.analysis_results.coverage.coverage_percentage,
-                    self.analysis_results.coverage.total_public_items - 
-                    self.analysis_results.coverage.documented_items
+                    self.analysis_results.coverage.total_public_items
+                        - self.analysis_results.coverage.documented_items
                 ),
                 action_steps: vec![
                     "Identify highest-priority undocumented APIs".to_string(),
@@ -1561,14 +1593,22 @@ impl DocumentationAnalyzer {
         }
 
         // Example recommendations
-        if !self.analysis_results.example_verification.failed_examples.is_empty() {
+        if !self
+            .analysis_results
+            .example_verification
+            .failed_examples
+            .is_empty()
+        {
             recommendations.push(ActionableRecommendation {
                 priority: Priority::Medium,
                 category: "Examples".to_string(),
                 title: "Fix Broken Examples".to_string(),
                 description: format!(
                     "{} examples are failing compilation.",
-                    self.analysis_results.example_verification.failed_examples.len()
+                    self.analysis_results
+                        .example_verification
+                        .failed_examples
+                        .len()
                 ),
                 action_steps: vec![
                     "Review failed examples".to_string(),
@@ -1585,18 +1625,26 @@ impl DocumentationAnalyzer {
 
     /// Calculate improvement effort
     fn calculate_improvement_effort(&self) -> EffortEstimate {
-        let documentation_effort = 
-            (self.analysis_results.coverage.total_public_items - 
-             self.analysis_results.coverage.documented_items) as f64 * 0.5; // 30 min per item
+        let documentation_effort = (self.analysis_results.coverage.total_public_items
+            - self.analysis_results.coverage.documented_items)
+            as f64
+            * 0.5; // 30 min per item
 
-        let example_effort = 
-            self.analysis_results.example_verification.failed_examples.len() as f64 * 1.0; // 1 hour per failed example
+        let example_effort = self
+            .analysis_results
+            .example_verification
+            .failed_examples
+            .len() as f64
+            * 1.0; // 1 hour per failed example
 
-        let style_effort = 
-            self.analysis_results.style_analysis.violations
-                .values()
-                .map(|v| v.len())
-                .sum::<usize>() as f64 * 0.1; // 6 min per violation
+        let style_effort = self
+            .analysis_results
+            .style_analysis
+            .violations
+            .values()
+            .map(|v| v.len())
+            .sum::<usize>() as f64
+            * 0.1; // 6 min per violation
 
         EffortEstimate {
             total_hours: documentation_effort + example_effort + style_effort,
@@ -1610,7 +1658,7 @@ impl DocumentationAnalyzer {
     }
 
     // Helper methods for parsing different item types
-    
+
     fn extract_function_name(&self, line: &str) -> Option<String> {
         // pub fn function_name(...) -> ReturnType
         if let Some(start) = line.find("fn ") {
@@ -1629,7 +1677,8 @@ impl DocumentationAnalyzer {
         // pub struct StructName<T>
         if let Some(start) = line.find("struct ") {
             let after_struct = &line[start + 7..];
-            let end = after_struct.find(' ')
+            let end = after_struct
+                .find(' ')
                 .or_else(|| after_struct.find('<'))
                 .or_else(|| after_struct.find('{'))
                 .unwrap_or(after_struct.len());
@@ -1643,7 +1692,8 @@ impl DocumentationAnalyzer {
         // pub enum EnumName<T>
         if let Some(start) = line.find("enum ") {
             let after_enum = &line[start + 5..];
-            let end = after_enum.find(' ')
+            let end = after_enum
+                .find(' ')
                 .or_else(|| after_enum.find('<'))
                 .or_else(|| after_enum.find('{'))
                 .unwrap_or(after_enum.len());
@@ -1657,7 +1707,8 @@ impl DocumentationAnalyzer {
         // pub trait TraitName<T>
         if let Some(start) = line.find("trait ") {
             let after_trait = &line[start + 6..];
-            let end = after_trait.find(' ')
+            let end = after_trait
+                .find(' ')
                 .or_else(|| after_trait.find('<'))
                 .or_else(|| after_trait.find(':'))
                 .or_else(|| after_trait.find('{'))
@@ -1672,7 +1723,8 @@ impl DocumentationAnalyzer {
         // pub mod module_name;
         if let Some(start) = line.find("mod ") {
             let after_mod = &line[start + 4..];
-            let end = after_mod.find(' ')
+            let end = after_mod
+                .find(' ')
                 .or_else(|| after_mod.find(';'))
                 .or_else(|| after_mod.find('{'))
                 .unwrap_or(after_mod.len());
@@ -1948,7 +2000,7 @@ mod tests {
         let analyzer = DocumentationAnalyzer::new(AnalyzerConfig::default());
         let valid_code = "let x = 5;\nprintln!(\"{}\", x);";
         let invalid_code = "syntax_error";
-        
+
         assert!(analyzer.compile_example(valid_code));
         assert!(!analyzer.compile_example(invalid_code));
     }

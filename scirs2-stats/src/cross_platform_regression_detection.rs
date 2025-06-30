@@ -1,7 +1,7 @@
 //! Cross-platform performance regression detection system for scirs2-stats v1.0.0
 //!
 //! This module provides comprehensive performance regression detection across different
-//! platforms, architectures, and compiler configurations. It addresses the v1.0.0 
+//! platforms, architectures, and compiler configurations. It addresses the v1.0.0
 //! roadmap goals for "Cross-platform Testing" and "Performance & Optimization".
 //!
 //! Features:
@@ -12,15 +12,15 @@
 //! - Performance trend analysis and prediction
 //! - Integration with CI/CD pipelines
 
-use crate::benchmark_suite::{BenchmarkSuite, BenchmarkConfig, BenchmarkReport};
+use crate::benchmark_suite::{BenchmarkConfig, BenchmarkReport, BenchmarkSuite};
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ArrayView1};
-use num_traits::{Float, NumCast, Zero, One};
+use num_traits::{Float, NumCast, One, Zero};
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, BTreeMap};
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::path::Path;
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 /// Cross-platform regression detection configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -61,9 +61,7 @@ impl Default for CrossPlatformRegressionConfig {
             hardware_aware_normalization: true,
             compiler_optimization_detection: true,
             trend_analysis: true,
-            target_platforms: vec![
-                PlatformInfo::current_platform(),
-            ],
+            target_platforms: vec![PlatformInfo::current_platform()],
             monitored_functions: vec![
                 "mean".to_string(),
                 "std".to_string(),
@@ -157,25 +155,38 @@ impl PlatformInfo {
 
     fn detect_simd_capabilities() -> Vec<String> {
         let mut capabilities = Vec::new();
-        
+
         #[cfg(target_arch = "x86_64")]
         {
-            if is_x86_feature_detected!("sse2") { capabilities.push("sse2".to_string()); }
-            if is_x86_feature_detected!("sse4.1") { capabilities.push("sse4.1".to_string()); }
-            if is_x86_feature_detected!("avx") { capabilities.push("avx".to_string()); }
-            if is_x86_feature_detected!("avx2") { capabilities.push("avx2".to_string()); }
-            if is_x86_feature_detected!("avx512f") { capabilities.push("avx512f".to_string()); }
-            if is_x86_feature_detected!("fma") { capabilities.push("fma".to_string()); }
+            if is_x86_feature_detected!("sse2") {
+                capabilities.push("sse2".to_string());
+            }
+            if is_x86_feature_detected!("sse4.1") {
+                capabilities.push("sse4.1".to_string());
+            }
+            if is_x86_feature_detected!("avx") {
+                capabilities.push("avx".to_string());
+            }
+            if is_x86_feature_detected!("avx2") {
+                capabilities.push("avx2".to_string());
+            }
+            if is_x86_feature_detected!("avx512f") {
+                capabilities.push("avx512f".to_string());
+            }
+            if is_x86_feature_detected!("fma") {
+                capabilities.push("fma".to_string());
+            }
         }
-        
+
         capabilities
     }
 
     /// Generate a unique platform identifier
     pub fn platform_id(&self) -> String {
-        format!("{}-{}-{}-{}", 
-            self.os, 
-            self.arch, 
+        format!(
+            "{}-{}-{}-{}",
+            self.os,
+            self.arch,
             self.optimization_level,
             self.simd_capabilities.join("_")
         )
@@ -378,7 +389,7 @@ impl CrossPlatformRegressionDetector {
             baselines: HashMap::new(),
             historical_data: BTreeMap::new(),
         };
-        
+
         detector.load_baselines()?;
         Ok(detector)
     }
@@ -386,8 +397,9 @@ impl CrossPlatformRegressionDetector {
     /// Load existing baseline data from storage
     fn load_baselines(&mut self) -> StatsResult<()> {
         if !Path::new(&self.config.baseline_storage_path).exists() {
-            fs::create_dir_all(&self.config.baseline_storage_path)
-                .map_err(|e| StatsError::InvalidInput(format!("Failed to create baseline directory: {}", e)))?;
+            fs::create_dir_all(&self.config.baseline_storage_path).map_err(|e| {
+                StatsError::InvalidInput(format!("Failed to create baseline directory: {}", e))
+            })?;
             return Ok(());
         }
 
@@ -399,8 +411,11 @@ impl CrossPlatformRegressionDetector {
                     let path = entry.path();
                     if path.extension().map_or(false, |ext| ext == "json") {
                         if let Ok(content) = fs::read_to_string(&path) {
-                            if let Ok(baseline) = serde_json::from_str::<PerformanceBaseline>(&content) {
-                                let key = format!("{}-{}", 
+                            if let Ok(baseline) =
+                                serde_json::from_str::<PerformanceBaseline>(&content)
+                            {
+                                let key = format!(
+                                    "{}-{}",
                                     baseline.platform.platform_id(),
                                     baseline.function_name
                                 );
@@ -417,18 +432,20 @@ impl CrossPlatformRegressionDetector {
 
     /// Save baseline data to storage
     fn save_baseline(&self, baseline: &PerformanceBaseline) -> StatsResult<()> {
-        let filename = format!("{}-{}.json", 
+        let filename = format!(
+            "{}-{}.json",
             baseline.platform.platform_id(),
             baseline.function_name
         );
         let filepath = Path::new(&self.config.baseline_storage_path).join(filename);
-        
-        let content = serde_json::to_string_pretty(baseline)
-            .map_err(|e| StatsError::InvalidInput(format!("Failed to serialize baseline: {}", e)))?;
-        
+
+        let content = serde_json::to_string_pretty(baseline).map_err(|e| {
+            StatsError::InvalidInput(format!("Failed to serialize baseline: {}", e))
+        })?;
+
         fs::write(filepath, content)
             .map_err(|e| StatsError::InvalidInput(format!("Failed to write baseline: {}", e)))?;
-        
+
         Ok(())
     }
 
@@ -457,11 +474,14 @@ impl CrossPlatformRegressionDetector {
         };
 
         // Add to historical data
-        self.historical_data.entry(timestamp).or_insert_with(Vec::new).push(measurement.clone());
+        self.historical_data
+            .entry(timestamp)
+            .or_insert_with(Vec::new)
+            .push(measurement.clone());
 
         // Update or create baseline
         let baseline_key = format!("{}-{}", platform.platform_id(), function_name);
-        
+
         if let Some(baseline) = self.baselines.get_mut(&baseline_key) {
             baseline.measurements.push(measurement);
             baseline.last_updated = timestamp;
@@ -491,7 +511,7 @@ impl CrossPlatformRegressionDetector {
                 },
                 last_updated: timestamp,
             };
-            
+
             self.baselines.insert(baseline_key, baseline.clone());
             self.save_baseline(&baseline)?;
         }
@@ -507,17 +527,20 @@ impl CrossPlatformRegressionDetector {
     ) -> StatsResult<RegressionAnalysisResult> {
         let platform = PlatformInfo::current_platform();
         let baseline_key = format!("{}-{}", platform.platform_id(), function_name);
-        
-        let baseline = self.baselines.get(&baseline_key)
-            .ok_or_else(|| StatsError::InvalidInput(
-                format!("No baseline found for function {} on platform {}", 
-                    function_name, platform.platform_id())
-            ))?;
+
+        let baseline = self.baselines.get(&baseline_key).ok_or_else(|| {
+            StatsError::InvalidInput(format!(
+                "No baseline found for function {} on platform {}",
+                function_name,
+                platform.platform_id()
+            ))
+        })?;
 
         // Calculate performance change
-        let performance_change_percent = 
-            ((current_measurement.execution_time_ns - baseline.statistics.mean_time_ns) 
-             / baseline.statistics.mean_time_ns) * 100.0;
+        let performance_change_percent = ((current_measurement.execution_time_ns
+            - baseline.statistics.mean_time_ns)
+            / baseline.statistics.mean_time_ns)
+            * 100.0;
 
         // Perform statistical significance test
         let statistical_significance = self.calculate_statistical_significance(
@@ -526,7 +549,8 @@ impl CrossPlatformRegressionDetector {
         )?;
 
         // Determine if regression is detected
-        let regression_detected = performance_change_percent > self.config.regression_threshold_percent
+        let regression_detected = performance_change_percent
+            > self.config.regression_threshold_percent
             && statistical_significance < self.config.significance_level;
 
         // Calculate confidence level
@@ -551,7 +575,8 @@ impl CrossPlatformRegressionDetector {
             current_platform: platform.clone(),
             baseline_platform: baseline.platform.clone(),
             hardware_normalization_factor: 1.0, // Would be calculated
-            platform_similarity_score: self.calculate_platform_similarity(&platform, &baseline.platform),
+            platform_similarity_score: self
+                .calculate_platform_similarity(&platform, &baseline.platform),
         };
 
         Ok(RegressionAnalysisResult {
@@ -579,7 +604,7 @@ impl CrossPlatformRegressionDetector {
         }
 
         // One-sample t-test
-        let t_statistic = (current_time - baseline_stats.mean_time_ns) 
+        let t_statistic = (current_time - baseline_stats.mean_time_ns)
             / (baseline_stats.std_dev_time_ns / (baseline_stats.sample_count as f64).sqrt());
 
         // Simplified p-value calculation (would use proper t-distribution in real implementation)
@@ -595,28 +620,30 @@ impl CrossPlatformRegressionDetector {
     }
 
     /// Calculate baseline statistics from measurements
-    fn calculate_statistics(&self, measurements: &[PerformanceMeasurement]) -> StatsResult<BaselineStatistics> {
+    fn calculate_statistics(
+        &self,
+        measurements: &[PerformanceMeasurement],
+    ) -> StatsResult<BaselineStatistics> {
         if measurements.is_empty() {
-            return Err(StatsError::InvalidInput("No measurements provided".to_string()));
+            return Err(StatsError::InvalidInput(
+                "No measurements provided".to_string(),
+            ));
         }
 
-        let times: Vec<f64> = measurements.iter()
-            .map(|m| m.execution_time_ns)
-            .collect();
+        let times: Vec<f64> = measurements.iter().map(|m| m.execution_time_ns).collect();
 
         let times_array = Array1::from_vec(times.clone());
-        
+
         // Calculate basic statistics
         let mean = times.iter().sum::<f64>() / times.len() as f64;
-        let variance = times.iter()
-            .map(|&x| (x - mean).powi(2))
-            .sum::<f64>() / (times.len() - 1).max(1) as f64;
+        let variance = times.iter().map(|&x| (x - mean).powi(2)).sum::<f64>()
+            / (times.len() - 1).max(1) as f64;
         let std_dev = variance.sqrt();
 
         // Calculate percentiles
         let mut sorted_times = times.clone();
         sorted_times.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        
+
         let median = if sorted_times.len() % 2 == 0 {
             let mid = sorted_times.len() / 2;
             (sorted_times[mid - 1] + sorted_times[mid]) / 2.0
@@ -652,7 +679,9 @@ impl CrossPlatformRegressionDetector {
     /// Analyze performance trend over time
     fn analyze_trend(&self, function_name: &str) -> StatsResult<TrendAnalysis> {
         // Get historical measurements for this function
-        let measurements: Vec<_> = self.historical_data.values()
+        let measurements: Vec<_> = self
+            .historical_data
+            .values()
             .flatten()
             .filter(|m| {
                 // Would match function name from context in real implementation
@@ -672,15 +701,11 @@ impl CrossPlatformRegressionDetector {
         }
 
         // Simple linear regression on time vs performance
-        let timestamps: Vec<f64> = measurements.iter()
-            .map(|m| m.timestamp as f64)
-            .collect();
-        let times: Vec<f64> = measurements.iter()
-            .map(|m| m.execution_time_ns)
-            .collect();
+        let timestamps: Vec<f64> = measurements.iter().map(|m| m.timestamp as f64).collect();
+        let times: Vec<f64> = measurements.iter().map(|m| m.execution_time_ns).collect();
 
         let (slope, r_squared) = self.linear_regression(&timestamps, &times)?;
-        
+
         // Convert slope from per-second to per-day
         let slope_ns_per_day = slope * 86400.0; // seconds per day
 
@@ -701,8 +726,8 @@ impl CrossPlatformRegressionDetector {
             .unwrap()
             .as_secs() as f64;
         let future_time = current_time + (30.0 * 86400.0);
-        let predicted_performance_30d = slope * future_time + 
-            (times.iter().sum::<f64>() / times.len() as f64);
+        let predicted_performance_30d =
+            slope * future_time + (times.iter().sum::<f64>() / times.len() as f64);
 
         Ok(TrendAnalysis {
             trend_direction,
@@ -717,7 +742,9 @@ impl CrossPlatformRegressionDetector {
     /// Simple linear regression implementation
     fn linear_regression(&self, x: &[f64], y: &[f64]) -> StatsResult<(f64, f64)> {
         if x.len() != y.len() || x.len() < 2 {
-            return Err(StatsError::InvalidInput("Invalid data for regression".to_string()));
+            return Err(StatsError::InvalidInput(
+                "Invalid data for regression".to_string(),
+            ));
         }
 
         let n = x.len() as f64;
@@ -728,22 +755,28 @@ impl CrossPlatformRegressionDetector {
         let sum_y2 = y.iter().map(|yi| yi * yi).sum::<f64>();
 
         let slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x * sum_x);
-        
+
         // Calculate R-squared
         let mean_y = sum_y / n;
         let ss_tot = y.iter().map(|yi| (yi - mean_y).powi(2)).sum::<f64>();
         let intercept = (sum_y - slope * sum_x) / n;
-        let ss_res = x.iter().zip(y.iter())
+        let ss_res = x
+            .iter()
+            .zip(y.iter())
             .map(|(xi, yi)| (yi - (slope * xi + intercept)).powi(2))
             .sum::<f64>();
-        
+
         let r_squared = 1.0 - (ss_res / ss_tot);
 
         Ok((slope, r_squared))
     }
 
     /// Calculate platform similarity score
-    fn calculate_platform_similarity(&self, platform1: &PlatformInfo, platform2: &PlatformInfo) -> f64 {
+    fn calculate_platform_similarity(
+        &self,
+        platform1: &PlatformInfo,
+        platform2: &PlatformInfo,
+    ) -> f64 {
         let mut score = 0.0;
         let mut factors = 0.0;
 
@@ -760,10 +793,15 @@ impl CrossPlatformRegressionDetector {
         factors += 0.2;
 
         // SIMD capabilities similarity
-        let common_simd: Vec<_> = platform1.simd_capabilities.iter()
+        let common_simd: Vec<_> = platform1
+            .simd_capabilities
+            .iter()
             .filter(|cap| platform2.simd_capabilities.contains(cap))
             .collect();
-        let total_simd = platform1.simd_capabilities.len().max(platform2.simd_capabilities.len());
+        let total_simd = platform1
+            .simd_capabilities
+            .len()
+            .max(platform2.simd_capabilities.len());
         if total_simd > 0 {
             score += 0.3 * (common_simd.len() as f64 / total_simd as f64);
         }
@@ -775,7 +813,11 @@ impl CrossPlatformRegressionDetector {
         }
         factors += 0.2;
 
-        if factors > 0.0 { score / factors } else { 0.0 }
+        if factors > 0.0 {
+            score / factors
+        } else {
+            0.0
+        }
     }
 
     /// Generate performance recommendations
@@ -807,7 +849,9 @@ impl CrossPlatformRegressionDetector {
             recommendations.push(PerformanceRecommendation {
                 category: RecommendationCategory::CompilerOptimization,
                 priority: RecommendationPriority::Medium,
-                description: "High performance variability detected. Consider compiler optimization flags.".to_string(),
+                description:
+                    "High performance variability detected. Consider compiler optimization flags."
+                        .to_string(),
                 expected_impact_percent: -10.0,
                 confidence: 0.6,
             });
@@ -819,7 +863,9 @@ impl CrossPlatformRegressionDetector {
             recommendations.push(PerformanceRecommendation {
                 category: RecommendationCategory::SIMDOptimization,
                 priority: RecommendationPriority::Medium,
-                description: "AVX-512 capabilities detected. Consider using specialized SIMD optimizations.".to_string(),
+                description:
+                    "AVX-512 capabilities detected. Consider using specialized SIMD optimizations."
+                        .to_string(),
                 expected_impact_percent: -25.0,
                 confidence: 0.7,
             });
@@ -842,8 +888,12 @@ impl CrossPlatformRegressionDetector {
     /// Capture current compiler context
     fn capture_compiler_context(&self) -> StatsResult<CompilerContext> {
         Ok(CompilerContext {
-            rustc_version: option_env!("RUSTC_VERSION").unwrap_or("unknown").to_string(),
-            target_triple: option_env!("TARGET").unwrap_or("unknown-target").to_string(),
+            rustc_version: option_env!("RUSTC_VERSION")
+                .unwrap_or("unknown")
+                .to_string(),
+            target_triple: option_env!("TARGET")
+                .unwrap_or("unknown-target")
+                .to_string(),
             optimization_flags: vec![], // Would capture actual flags
             feature_flags: vec![],
         })
@@ -852,7 +902,7 @@ impl CrossPlatformRegressionDetector {
     /// Generate comprehensive regression report
     pub fn generate_report(&self) -> StatsResult<RegressionReport> {
         let mut function_analyses = Vec::new();
-        
+
         for function_name in &self.config.monitored_functions {
             if let Some(latest_measurement) = self.get_latest_measurement(function_name) {
                 if let Ok(analysis) = self.detect_regression(function_name, &latest_measurement) {
@@ -868,7 +918,10 @@ impl CrossPlatformRegressionDetector {
         };
 
         Ok(RegressionReport {
-            timestamp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
+            timestamp: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
             overall_status,
             platform: PlatformInfo::current_platform(),
             function_analyses,

@@ -2,9 +2,9 @@
 //!
 //! Population-based reinforcement learning optimization methods.
 
+use crate::result::OptimizeResults;
 use ndarray::{Array1, ArrayView1};
 use scirs2_core::error::Result;
-use crate::result::OptimizeResults;
 
 /// Evolutionary strategy optimizer
 #[derive(Debug, Clone)]
@@ -27,7 +27,7 @@ impl EvolutionaryStrategy {
             let individual = Array1::from_shape_fn(dimensions, |_| rand::random::<f64>() - 0.5);
             population.push(individual);
         }
-        
+
         Self {
             population_size,
             population,
@@ -35,7 +35,7 @@ impl EvolutionaryStrategy {
             sigma,
         }
     }
-    
+
     /// Evaluate population
     pub fn evaluate<F>(&mut self, objective: &F)
     where
@@ -45,42 +45,42 @@ impl EvolutionaryStrategy {
             self.fitness[i] = objective(&individual.view());
         }
     }
-    
+
     /// Evolve population
     pub fn evolve(&mut self) {
         // Select best half
         let mut indices: Vec<usize> = (0..self.population_size).collect();
         indices.sort_by(|&a, &b| self.fitness[a].partial_cmp(&self.fitness[b]).unwrap());
-        
+
         let elite_size = self.population_size / 2;
-        
+
         // Generate new population
         for i in elite_size..self.population_size {
             let parent_idx = indices[rand::random::<usize>() % elite_size];
             let parent = &self.population[parent_idx];
-            
+
             // Mutate
             let mut offspring = parent.clone();
             for j in 0..offspring.len() {
                 offspring[j] += self.sigma * (rand::random::<f64>() - 0.5);
             }
-            
+
             self.population[i] = offspring;
         }
     }
-    
+
     /// Get best individual
     pub fn get_best(&self) -> (Array1<f64>, f64) {
         let mut best_idx = 0;
         let mut best_fitness = self.fitness[0];
-        
+
         for (i, &fitness) in self.fitness.iter().enumerate() {
             if fitness < best_fitness {
                 best_fitness = fitness;
                 best_idx = i;
             }
         }
-        
+
         (self.population[best_idx].clone(), best_fitness)
     }
 }
@@ -95,17 +95,17 @@ where
     F: Fn(&ArrayView1<f64>) -> f64,
 {
     let mut es = EvolutionaryStrategy::new(50, initial_params.len(), 0.1);
-    
+
     // Initialize with initial params
     es.population[0] = initial_params.to_owned();
-    
+
     for _generation in 0..num_generations {
         es.evaluate(&objective);
         es.evolve();
     }
-    
+
     let (best_params, best_fitness) = es.get_best();
-    
+
     Ok(OptimizeResults {
         x: best_params,
         fun: best_fitness,

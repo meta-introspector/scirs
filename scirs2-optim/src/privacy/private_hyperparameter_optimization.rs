@@ -17,25 +17,25 @@ use std::collections::HashMap;
 pub struct PrivateHyperparameterOptimizer<T: Float> {
     /// Configuration for privacy-preserving hyperparameter optimization
     config: PrivateHPOConfig,
-    
+
     /// Privacy budget manager
     budget_manager: HPOBudgetManager,
-    
+
     /// Noisy optimization algorithms
     noisy_optimizers: HashMap<String, Box<dyn NoisyOptimizer<T>>>,
-    
+
     /// Hyperparameter space definition
     parameter_space: ParameterSpace<T>,
-    
+
     /// Objective function with privacy guarantees
     private_objective: PrivateObjective<T>,
-    
+
     /// Search strategy
     search_strategy: SearchStrategy<T>,
-    
+
     /// Results aggregator with privacy
     results_aggregator: PrivateResultsAggregator<T>,
-    
+
     /// Privacy accountant for hyperparameter selection
     privacy_accountant: MomentsAccountant,
 }
@@ -45,31 +45,31 @@ pub struct PrivateHyperparameterOptimizer<T: Float> {
 pub struct PrivateHPOConfig<T: Float> {
     /// Base differential privacy configuration
     pub base_privacy_config: DifferentialPrivacyConfig,
-    
+
     /// Privacy budget allocation strategy
     pub budget_allocation: BudgetAllocationStrategy,
-    
+
     /// Hyperparameter search algorithm
     pub search_algorithm: SearchAlgorithm,
-    
+
     /// Number of hyperparameter configurations to evaluate
     pub num_evaluations: usize,
-    
+
     /// Number of cross-validation folds
     pub cv_folds: usize,
-    
+
     /// Early stopping criteria
     pub early_stopping: EarlyStoppingConfig,
-    
+
     /// Noise mechanism for hyperparameter selection
     pub noise_mechanism: HyperparameterNoiseMechanism,
-    
+
     /// Sensitivity bounds for hyperparameters
     pub sensitivity_bounds: SensitivityBounds<T>,
-    
+
     /// Enable private model selection
     pub private_model_selection: bool,
-    
+
     /// Validation strategy
     pub validation_strategy: ValidationStrategy,
 }
@@ -79,16 +79,16 @@ pub struct PrivateHPOConfig<T: Float> {
 pub enum BudgetAllocationStrategy {
     /// Equal allocation across all evaluations
     Equal,
-    
+
     /// Adaptive allocation based on promising regions
     Adaptive,
-    
+
     /// Bandit-based allocation
     Bandit,
-    
+
     /// Hierarchical allocation (coarse to fine)
     Hierarchical,
-    
+
     /// Budget allocation based on uncertainty
     Uncertainty,
 }
@@ -98,22 +98,22 @@ pub enum BudgetAllocationStrategy {
 pub enum SearchAlgorithm {
     /// Random search with differential privacy
     RandomSearch,
-    
+
     /// Grid search with differential privacy
     GridSearch,
-    
+
     /// Bayesian optimization with differential privacy
     BayesianOptimization,
-    
+
     /// Genetic algorithm with differential privacy
     GeneticAlgorithm,
-    
+
     /// Particle swarm optimization with differential privacy
     ParticleSwarm,
-    
+
     /// Simulated annealing with differential privacy
     SimulatedAnnealing,
-    
+
     /// Tree-structured Parzen estimator with differential privacy
     TPE,
 }
@@ -123,13 +123,13 @@ pub enum SearchAlgorithm {
 pub struct EarlyStoppingConfig {
     /// Enable early stopping
     pub enabled: bool,
-    
+
     /// Patience (number of evaluations without improvement)
     pub patience: usize,
-    
+
     /// Minimum improvement threshold
     pub min_improvement: f64,
-    
+
     /// Maximum number of evaluations
     pub max_evaluations: usize,
 }
@@ -139,16 +139,16 @@ pub struct EarlyStoppingConfig {
 pub enum HyperparameterNoiseMechanism {
     /// Exponential mechanism for discrete selection
     Exponential,
-    
+
     /// Gaussian mechanism for continuous parameters
     Gaussian,
-    
+
     /// Laplace mechanism
     Laplace,
-    
+
     /// Report noisy max for selection
     NoisyMax,
-    
+
     /// Sparse vector technique
     SparseVector,
 }
@@ -158,10 +158,10 @@ pub enum HyperparameterNoiseMechanism {
 pub struct SensitivityBounds<T: Float> {
     /// Global sensitivity for each hyperparameter
     pub global_sensitivity: HashMap<String, T>,
-    
+
     /// Local sensitivity bounds
     pub local_sensitivity: HashMap<String, (T, T)>,
-    
+
     /// Smooth sensitivity parameters
     pub smooth_sensitivity: HashMap<String, SmoothSensitivityParams<T>>,
 }
@@ -171,10 +171,10 @@ pub struct SensitivityBounds<T: Float> {
 pub struct SmoothSensitivityParams<T: Float> {
     /// Beta parameter for smooth sensitivity
     pub beta: T,
-    
+
     /// Maximum local sensitivity
     pub max_local_sensitivity: T,
-    
+
     /// Smoothness parameter
     pub smoothness: T,
 }
@@ -184,16 +184,16 @@ pub struct SmoothSensitivityParams<T: Float> {
 pub enum ValidationStrategy {
     /// Hold-out validation
     HoldOut,
-    
+
     /// K-fold cross-validation with privacy
     KFoldCV,
-    
+
     /// Leave-one-out cross-validation
     LeaveOneOut,
-    
+
     /// Bootstrap validation
     Bootstrap,
-    
+
     /// Time series split for temporal data
     TimeSeriesSplit,
 }
@@ -202,16 +202,16 @@ pub enum ValidationStrategy {
 pub struct HPOBudgetManager {
     /// Total privacy budget
     total_budget: PrivacyBudget,
-    
+
     /// Budget allocation per evaluation
     evaluation_budgets: Vec<PrivacyBudget>,
-    
+
     /// Budget allocation strategy
     allocation_strategy: BudgetAllocationStrategy,
-    
+
     /// Consumed budget tracker
     consumed_budget: PrivacyBudget,
-    
+
     /// Adaptive budget controller
     adaptive_controller: AdaptiveBudgetController,
 }
@@ -220,13 +220,13 @@ pub struct HPOBudgetManager {
 pub struct AdaptiveBudgetController {
     /// Historical performance scores
     performance_history: Vec<f64>,
-    
+
     /// Budget efficiency tracker
     budget_efficiency: Vec<f64>,
-    
+
     /// Allocation weights
     allocation_weights: Vec<f64>,
-    
+
     /// Learning rate for adaptation
     adaptation_rate: f64,
 }
@@ -240,7 +240,7 @@ pub trait NoisyOptimizer<T: Float>: Send + Sync {
         evaluation_history: &[HPOEvaluation<T>],
         privacy_budget: &PrivacyBudget,
     ) -> Result<ParameterConfiguration<T>, OptimizerError>;
-    
+
     /// Update optimizer with new evaluation result
     fn update(
         &mut self,
@@ -248,7 +248,7 @@ pub trait NoisyOptimizer<T: Float>: Send + Sync {
         result: &HPOResult<T>,
         privacy_budget: &PrivacyBudget,
     ) -> Result<(), OptimizerError>;
-    
+
     /// Get optimizer name
     fn name(&self) -> &str;
 }
@@ -258,10 +258,10 @@ pub trait NoisyOptimizer<T: Float>: Send + Sync {
 pub struct ParameterSpace<T: Float> {
     /// Parameter definitions
     pub parameters: HashMap<String, ParameterDefinition<T>>,
-    
+
     /// Parameter constraints
     pub constraints: Vec<ParameterConstraint<T>>,
-    
+
     /// Default configuration
     pub default_config: Option<ParameterConfiguration<T>>,
 }
@@ -271,16 +271,16 @@ pub struct ParameterSpace<T: Float> {
 pub struct ParameterDefinition<T: Float> {
     /// Parameter name
     pub name: String,
-    
+
     /// Parameter type
     pub param_type: ParameterType<T>,
-    
+
     /// Parameter bounds
     pub bounds: ParameterBounds<T>,
-    
+
     /// Prior distribution (for Bayesian optimization)
     pub prior: Option<ParameterPrior<T>>,
-    
+
     /// Transformation function
     pub transformation: Option<ParameterTransformation>,
 }
@@ -290,16 +290,16 @@ pub struct ParameterDefinition<T: Float> {
 pub enum ParameterType<T: Float> {
     /// Continuous parameter
     Continuous,
-    
+
     /// Discrete integer parameter
     Integer,
-    
+
     /// Categorical parameter
     Categorical(Vec<String>),
-    
+
     /// Boolean parameter
     Boolean,
-    
+
     /// Ordinal parameter
     Ordinal(Vec<T>),
 }
@@ -309,13 +309,13 @@ pub enum ParameterType<T: Float> {
 pub struct ParameterBounds<T: Float> {
     /// Minimum value
     pub min: Option<T>,
-    
+
     /// Maximum value
     pub max: Option<T>,
-    
+
     /// Step size (for discrete parameters)
     pub step: Option<T>,
-    
+
     /// Valid values (for categorical parameters)
     pub valid_values: Option<Vec<String>>,
 }
@@ -325,16 +325,16 @@ pub struct ParameterBounds<T: Float> {
 pub enum ParameterPrior<T: Float> {
     /// Uniform prior
     Uniform(T, T),
-    
+
     /// Normal prior
     Normal(T, T),
-    
+
     /// Log-normal prior
     LogNormal(T, T),
-    
+
     /// Beta prior
     Beta(T, T),
-    
+
     /// Gamma prior
     Gamma(T, T),
 }
@@ -344,16 +344,16 @@ pub enum ParameterPrior<T: Float> {
 pub enum ParameterTransformation {
     /// No transformation
     Identity,
-    
+
     /// Logarithmic transformation
     Log,
-    
+
     /// Exponential transformation
     Exp,
-    
+
     /// Square root transformation
     Sqrt,
-    
+
     /// Square transformation
     Square,
 }
@@ -363,10 +363,10 @@ pub enum ParameterTransformation {
 pub struct ParameterConstraint<T: Float> {
     /// Constraint name
     pub name: String,
-    
+
     /// Constraint type
     pub constraint_type: ConstraintType<T>,
-    
+
     /// Constraint violation penalty
     pub penalty: T,
 }
@@ -376,10 +376,10 @@ pub struct ParameterConstraint<T: Float> {
 pub enum ConstraintType<T: Float> {
     /// Linear constraint: a^T x <= b
     Linear(Vec<T>, T),
-    
+
     /// Quadratic constraint: x^T A x + b^T x <= c
     Quadratic(Array2<T>, Array1<T>, T),
-    
+
     /// Custom constraint function
     Custom(String),
 }
@@ -389,10 +389,10 @@ pub enum ConstraintType<T: Float> {
 pub struct ParameterConfiguration<T: Float> {
     /// Parameter values
     pub values: HashMap<String, ParameterValue<T>>,
-    
+
     /// Configuration identifier
     pub id: String,
-    
+
     /// Configuration metadata
     pub metadata: HashMap<String, String>,
 }
@@ -402,16 +402,16 @@ pub struct ParameterConfiguration<T: Float> {
 pub enum ParameterValue<T: Float> {
     /// Continuous value
     Continuous(T),
-    
+
     /// Integer value
     Integer(i64),
-    
+
     /// Categorical value
     Categorical(String),
-    
+
     /// Boolean value
     Boolean(bool),
-    
+
     /// Ordinal value
     Ordinal(usize),
 }
@@ -419,14 +419,15 @@ pub enum ParameterValue<T: Float> {
 /// Private objective function
 pub struct PrivateObjective<T: Float> {
     /// Underlying objective function
-    objective_fn: Box<dyn Fn(&ParameterConfiguration<T>) -> Result<f64, OptimizerError> + Send + Sync>,
-    
+    objective_fn:
+        Box<dyn Fn(&ParameterConfiguration<T>) -> Result<f64, OptimizerError> + Send + Sync>,
+
     /// Noise mechanism for objective evaluation
     noise_mechanism: ObjectiveNoiseMechanism<T>,
-    
+
     /// Sensitivity analysis
     sensitivity_analyzer: ObjectiveSensitivityAnalyzer<T>,
-    
+
     /// Cross-validation with privacy
     cv_evaluator: PrivateCrossValidation<T>,
 }
@@ -435,10 +436,10 @@ pub struct PrivateObjective<T: Float> {
 pub struct ObjectiveNoiseMechanism<T: Float> {
     /// Mechanism type
     mechanism_type: HyperparameterNoiseMechanism,
-    
+
     /// Noise parameters
     noise_params: NoiseParameters<T>,
-    
+
     /// Random number generator
     rng: ChaCha20Rng,
 }
@@ -448,13 +449,13 @@ pub struct ObjectiveNoiseMechanism<T: Float> {
 pub struct NoiseParameters<T: Float> {
     /// Noise scale
     pub scale: T,
-    
+
     /// Sensitivity bound
     pub sensitivity: T,
-    
+
     /// Privacy parameters
     pub epsilon: f64,
-    
+
     /// Delta parameter (for Gaussian mechanism)
     pub delta: Option<f64>,
 }
@@ -463,10 +464,10 @@ pub struct NoiseParameters<T: Float> {
 pub struct ObjectiveSensitivityAnalyzer<T: Float> {
     /// Sensitivity estimation method
     estimation_method: SensitivityEstimationMethod,
-    
+
     /// Sensitivity cache
     sensitivity_cache: HashMap<String, T>,
-    
+
     /// Sample-based sensitivity estimator
     sample_estimator: SampleBasedSensitivityEstimator<T>,
 }
@@ -476,16 +477,16 @@ pub struct ObjectiveSensitivityAnalyzer<T: Float> {
 pub enum SensitivityEstimationMethod {
     /// Global sensitivity (worst-case)
     Global,
-    
+
     /// Local sensitivity (data-dependent)
     Local,
-    
+
     /// Smooth sensitivity
     Smooth,
-    
+
     /// Sample-based estimation
     SampleBased,
-    
+
     /// Theoretical bounds
     Theoretical,
 }
@@ -494,13 +495,13 @@ pub enum SensitivityEstimationMethod {
 pub struct SampleBasedSensitivityEstimator<T: Float> {
     /// Number of samples for estimation
     num_samples: usize,
-    
+
     /// Sampling strategy
     sampling_strategy: SamplingStrategy,
-    
+
     /// Confidence level for bounds
     confidence_level: f64,
-    
+
     /// Bootstrap estimator
     bootstrap_estimator: BootstrapEstimator<T>,
 }
@@ -510,16 +511,16 @@ pub struct SampleBasedSensitivityEstimator<T: Float> {
 pub enum SamplingStrategy {
     /// Uniform random sampling
     Uniform,
-    
+
     /// Latin hypercube sampling
     LatinHypercube,
-    
+
     /// Sobol sequence sampling
     Sobol,
-    
+
     /// Halton sequence sampling
     Halton,
-    
+
     /// Importance sampling
     ImportanceSampling,
 }
@@ -528,10 +529,10 @@ pub enum SamplingStrategy {
 pub struct BootstrapEstimator<T: Float> {
     /// Number of bootstrap samples
     num_bootstrap: usize,
-    
+
     /// Bootstrap confidence interval
     confidence_interval: (f64, f64),
-    
+
     /// Bias correction
     bias_correction: bool,
 }
@@ -540,13 +541,13 @@ pub struct BootstrapEstimator<T: Float> {
 pub struct PrivateCrossValidation<T: Float> {
     /// Number of folds
     num_folds: usize,
-    
+
     /// Privacy budget per fold
     fold_budgets: Vec<PrivacyBudget>,
-    
+
     /// Fold assignment strategy
     fold_strategy: FoldStrategy,
-    
+
     /// Result aggregation with privacy
     private_aggregation: PrivateFoldAggregation<T>,
 }
@@ -556,13 +557,13 @@ pub struct PrivateCrossValidation<T: Float> {
 pub enum FoldStrategy {
     /// Random assignment
     Random,
-    
+
     /// Stratified assignment
     Stratified,
-    
+
     /// Time-based assignment (for time series)
     TimeBased,
-    
+
     /// Group-based assignment
     GroupBased,
 }
@@ -571,10 +572,10 @@ pub enum FoldStrategy {
 pub struct PrivateFoldAggregation<T: Float> {
     /// Aggregation method
     aggregation_method: AggregationMethod,
-    
+
     /// Noise parameters for aggregation
     noise_params: NoiseParameters<T>,
-    
+
     /// Confidence interval estimation
     confidence_estimation: ConfidenceEstimation<T>,
 }
@@ -584,16 +585,16 @@ pub struct PrivateFoldAggregation<T: Float> {
 pub enum AggregationMethod {
     /// Mean aggregation with noise
     NoisyMean,
-    
+
     /// Median aggregation
     Median,
-    
+
     /// Trimmed mean
     TrimmedMean,
-    
+
     /// Weighted average
     WeightedAverage,
-    
+
     /// Robust aggregation
     Robust,
 }
@@ -602,10 +603,10 @@ pub enum AggregationMethod {
 pub struct ConfidenceEstimation<T: Float> {
     /// Confidence level
     confidence_level: f64,
-    
+
     /// Estimation method
     estimation_method: ConfidenceEstimationMethod,
-    
+
     /// Bootstrap parameters
     bootstrap_params: Option<BootstrapParams>,
 }
@@ -615,13 +616,13 @@ pub struct ConfidenceEstimation<T: Float> {
 pub enum ConfidenceEstimationMethod {
     /// Normal approximation
     Normal,
-    
+
     /// Bootstrap confidence intervals
     Bootstrap,
-    
+
     /// Jackknife estimation
     Jackknife,
-    
+
     /// Bayesian credible intervals
     Bayesian,
 }
@@ -631,10 +632,10 @@ pub enum ConfidenceEstimationMethod {
 pub struct BootstrapParams {
     /// Number of bootstrap samples
     pub num_samples: usize,
-    
+
     /// Bootstrap type
     pub bootstrap_type: BootstrapType,
-    
+
     /// Bias correction
     pub bias_correction: bool,
 }
@@ -644,13 +645,13 @@ pub struct BootstrapParams {
 pub enum BootstrapType {
     /// Standard bootstrap
     Standard,
-    
+
     /// Bias-corrected and accelerated (BCa)
     BCa,
-    
+
     /// Parametric bootstrap
     Parametric,
-    
+
     /// Block bootstrap (for time series)
     Block,
 }
@@ -659,13 +660,13 @@ pub enum BootstrapType {
 pub struct SearchStrategy<T: Float> {
     /// Search algorithm
     algorithm: SearchAlgorithm,
-    
+
     /// Algorithm-specific parameters
     algorithm_params: HashMap<String, f64>,
-    
+
     /// Exploration-exploitation balance
     exploration_factor: f64,
-    
+
     /// Convergence criteria
     convergence_criteria: ConvergenceCriteria<T>,
 }
@@ -675,13 +676,13 @@ pub struct SearchStrategy<T: Float> {
 pub struct ConvergenceCriteria<T: Float> {
     /// Maximum number of iterations
     pub max_iterations: usize,
-    
+
     /// Tolerance for objective improvement
     pub tolerance: T,
-    
+
     /// Patience for early stopping
     pub patience: usize,
-    
+
     /// Minimum change in best value
     pub min_change: T,
 }
@@ -690,13 +691,13 @@ pub struct ConvergenceCriteria<T: Float> {
 pub struct PrivateResultsAggregator<T: Float> {
     /// Aggregation strategy
     aggregation_strategy: ResultAggregationStrategy,
-    
+
     /// Privacy budget for final selection
     selection_budget: PrivacyBudget,
-    
+
     /// Selection mechanism
     selection_mechanism: SelectionMechanism<T>,
-    
+
     /// Result validation
     result_validator: ResultValidator<T>,
 }
@@ -706,16 +707,16 @@ pub struct PrivateResultsAggregator<T: Float> {
 pub enum ResultAggregationStrategy {
     /// Select best configuration
     SelectBest,
-    
+
     /// Ensemble of top configurations
     Ensemble,
-    
+
     /// Weighted combination
     WeightedCombination,
-    
+
     /// Consensus-based selection
     Consensus,
-    
+
     /// Multi-objective selection
     MultiObjective,
 }
@@ -724,10 +725,10 @@ pub enum ResultAggregationStrategy {
 pub struct SelectionMechanism<T: Float> {
     /// Mechanism type
     mechanism_type: HyperparameterNoiseMechanism,
-    
+
     /// Selection parameters
     selection_params: SelectionParameters<T>,
-    
+
     /// Utility function for selection
     utility_function: UtilityFunction<T>,
 }
@@ -737,13 +738,13 @@ pub struct SelectionMechanism<T: Float> {
 pub struct SelectionParameters<T: Float> {
     /// Temperature parameter (for exponential mechanism)
     pub temperature: T,
-    
+
     /// Sensitivity bound for utility
     pub utility_sensitivity: T,
-    
+
     /// Privacy parameters
     pub epsilon: f64,
-    
+
     /// Selection threshold
     pub threshold: Option<T>,
 }
@@ -752,10 +753,10 @@ pub struct SelectionParameters<T: Float> {
 pub struct UtilityFunction<T: Float> {
     /// Function type
     function_type: UtilityFunctionType,
-    
+
     /// Function parameters
     parameters: Vec<T>,
-    
+
     /// Multi-objective weights
     multi_objective_weights: Option<Vec<T>>,
 }
@@ -765,16 +766,16 @@ pub struct UtilityFunction<T: Float> {
 pub enum UtilityFunctionType {
     /// Linear utility
     Linear,
-    
+
     /// Exponential utility
     Exponential,
-    
+
     /// Logarithmic utility
     Logarithmic,
-    
+
     /// Quadratic utility
     Quadratic,
-    
+
     /// Custom utility function
     Custom,
 }
@@ -783,10 +784,10 @@ pub enum UtilityFunctionType {
 pub struct ResultValidator<T: Float> {
     /// Validation rules
     validation_rules: Vec<ValidationRule<T>>,
-    
+
     /// Statistical tests
     statistical_tests: Vec<StatisticalTest<T>>,
-    
+
     /// Anomaly detection
     anomaly_detector: AnomalyDetector<T>,
 }
@@ -795,10 +796,10 @@ pub struct ResultValidator<T: Float> {
 pub struct ValidationRule<T: Float> {
     /// Rule name
     pub name: String,
-    
+
     /// Rule function
     pub rule_fn: Box<dyn Fn(&HPOResult<T>) -> bool + Send + Sync>,
-    
+
     /// Rule weight
     pub weight: f64,
 }
@@ -807,10 +808,10 @@ pub struct ValidationRule<T: Float> {
 pub struct StatisticalTest<T: Float> {
     /// Test name
     pub name: String,
-    
+
     /// Test function
     pub test_fn: Box<dyn Fn(&[HPOResult<T>]) -> StatisticalTestResult + Send + Sync>,
-    
+
     /// Significance level
     pub alpha: f64,
 }
@@ -820,13 +821,13 @@ pub struct StatisticalTest<T: Float> {
 pub struct StatisticalTestResult {
     /// Test statistic
     pub statistic: f64,
-    
+
     /// P-value
     pub p_value: f64,
-    
+
     /// Test conclusion
     pub conclusion: TestConclusion,
-    
+
     /// Confidence interval
     pub confidence_interval: Option<(f64, f64)>,
 }
@@ -836,10 +837,10 @@ pub struct StatisticalTestResult {
 pub enum TestConclusion {
     /// Reject null hypothesis
     Reject,
-    
+
     /// Fail to reject null hypothesis
     FailToReject,
-    
+
     /// Insufficient evidence
     InsufficientEvidence,
 }
@@ -848,10 +849,10 @@ pub enum TestConclusion {
 pub struct AnomalyDetector<T: Float> {
     /// Detection threshold
     threshold: T,
-    
+
     /// Detection method
     detection_method: AnomalyDetectionMethod,
-    
+
     /// Historical baseline
     baseline: Option<T>,
 }
@@ -861,13 +862,13 @@ pub struct AnomalyDetector<T: Float> {
 pub enum AnomalyDetectionMethod {
     /// Z-score based detection
     ZScore,
-    
+
     /// Interquartile range method
     IQR,
-    
+
     /// Isolation forest
     IsolationForest,
-    
+
     /// Local outlier factor
     LocalOutlierFactor,
 }
@@ -877,19 +878,19 @@ pub enum AnomalyDetectionMethod {
 pub struct HPOEvaluation<T: Float> {
     /// Evaluation identifier
     pub id: String,
-    
+
     /// Parameter configuration
     pub configuration: ParameterConfiguration<T>,
-    
+
     /// Evaluation result
     pub result: HPOResult<T>,
-    
+
     /// Privacy budget consumed
     pub privacy_cost: PrivacyBudget,
-    
+
     /// Evaluation timestamp
     pub timestamp: u64,
-    
+
     /// Evaluation metadata
     pub metadata: HashMap<String, String>,
 }
@@ -899,22 +900,22 @@ pub struct HPOEvaluation<T: Float> {
 pub struct HPOResult<T: Float> {
     /// Objective value
     pub objective_value: T,
-    
+
     /// Standard error (if available)
     pub standard_error: Option<T>,
-    
+
     /// Cross-validation scores
     pub cv_scores: Option<Vec<T>>,
-    
+
     /// Training time
     pub training_time: Option<f64>,
-    
+
     /// Model complexity metrics
     pub complexity_metrics: HashMap<String, T>,
-    
+
     /// Additional metrics
     pub additional_metrics: HashMap<String, T>,
-    
+
     /// Result status
     pub status: EvaluationStatus,
 }
@@ -924,16 +925,16 @@ pub struct HPOResult<T: Float> {
 pub enum EvaluationStatus {
     /// Evaluation completed successfully
     Success,
-    
+
     /// Evaluation failed
     Failed,
-    
+
     /// Evaluation timed out
     Timeout,
-    
+
     /// Evaluation was cancelled
     Cancelled,
-    
+
     /// Evaluation is in progress
     InProgress,
 }
@@ -949,16 +950,16 @@ impl<T: Float> PrivateHyperparameterOptimizer<T> {
             config.budget_allocation,
             config.num_evaluations,
         )?;
-        
+
         let privacy_accountant = MomentsAccountant::new(
             config.base_privacy_config.noise_multiplier,
             config.base_privacy_config.target_delta,
             config.base_privacy_config.batch_size,
             config.base_privacy_config.dataset_size,
         );
-        
+
         let mut noisy_optimizers: HashMap<String, Box<dyn NoisyOptimizer<T>>> = HashMap::new();
-        
+
         // Add default noisy optimizers based on configuration
         match config.search_algorithm {
             SearchAlgorithm::RandomSearch => {
@@ -981,7 +982,7 @@ impl<T: Float> PrivateHyperparameterOptimizer<T> {
                 );
             }
         }
-        
+
         Ok(Self {
             config,
             budget_manager,
@@ -993,35 +994,37 @@ impl<T: Float> PrivateHyperparameterOptimizer<T> {
             privacy_accountant,
         })
     }
-    
+
     /// Optimize hyperparameters with differential privacy
     pub fn optimize(
         &mut self,
-        objective_fn: Box<dyn Fn(&ParameterConfiguration<T>) -> Result<f64, OptimizerError> + Send + Sync>,
+        objective_fn: Box<
+            dyn Fn(&ParameterConfiguration<T>) -> Result<f64, OptimizerError> + Send + Sync,
+        >,
     ) -> Result<PrivateHPOResults<T>, OptimizerError> {
         // Set up private objective function
         self.private_objective.set_objective(objective_fn)?;
-        
+
         let mut evaluations = Vec::new();
         let mut best_config: Option<ParameterConfiguration<T>> = None;
         let mut best_score = T::neg_infinity();
-        
+
         // Get the primary optimizer
         let optimizer_name = match self.config.search_algorithm {
             SearchAlgorithm::RandomSearch => "random_search",
             SearchAlgorithm::BayesianOptimization => "bayesian_opt",
             _ => "random_search",
         };
-        
+
         for iteration in 0..self.config.num_evaluations {
             // Check if we have remaining privacy budget
             if !self.budget_manager.has_budget_remaining()? {
                 break;
             }
-            
+
             // Get privacy budget for this evaluation
             let evaluation_budget = self.budget_manager.get_evaluation_budget(iteration)?;
-            
+
             // Suggest next configuration
             let config = if let Some(optimizer) = self.noisy_optimizers.get_mut(optimizer_name) {
                 optimizer.suggest_next(&self.parameter_space, &evaluations, &evaluation_budget)?
@@ -1030,10 +1033,12 @@ impl<T: Float> PrivateHyperparameterOptimizer<T> {
                     "No optimizer available".to_string(),
                 ));
             };
-            
+
             // Evaluate configuration with privacy
-            let result = self.private_objective.evaluate(&config, &evaluation_budget)?;
-            
+            let result = self
+                .private_objective
+                .evaluate(&config, &evaluation_budget)?;
+
             // Create evaluation record
             let evaluation = HPOEvaluation {
                 id: format!("eval_{}", iteration),
@@ -1046,33 +1051,36 @@ impl<T: Float> PrivateHyperparameterOptimizer<T> {
                     .as_secs(),
                 metadata: HashMap::new(),
             };
-            
+
             // Update best configuration
             if result.objective_value > best_score {
                 best_score = result.objective_value;
                 best_config = Some(config.clone());
             }
-            
+
             // Update optimizer with result
             if let Some(optimizer) = self.noisy_optimizers.get_mut(optimizer_name) {
                 optimizer.update(&config, &result, &evaluation_budget)?;
             }
-            
+
             // Record evaluation
             evaluations.push(evaluation);
-            
+
             // Update budget manager
-            self.budget_manager.record_evaluation(&evaluation_budget, result.objective_value.to_f64().unwrap_or(0.0))?;
-            
+            self.budget_manager.record_evaluation(
+                &evaluation_budget,
+                result.objective_value.to_f64().unwrap_or(0.0),
+            )?;
+
             // Check early stopping criteria
             if self.should_stop_early(&evaluations)? {
                 break;
             }
         }
-        
+
         // Aggregate results with privacy guarantees
         let final_results = self.results_aggregator.aggregate_results(&evaluations)?;
-        
+
         Ok(PrivateHPOResults {
             best_configuration: best_config,
             best_score,
@@ -1082,17 +1090,17 @@ impl<T: Float> PrivateHyperparameterOptimizer<T> {
             optimization_stats: self.compute_optimization_stats()?,
         })
     }
-    
+
     /// Check early stopping criteria
     fn should_stop_early(&self, evaluations: &[HPOEvaluation<T>]) -> Result<bool, OptimizerError> {
         if !self.config.early_stopping.enabled {
             return Ok(false);
         }
-        
+
         if evaluations.len() < self.config.early_stopping.patience {
             return Ok(false);
         }
-        
+
         // Check for improvement in recent evaluations
         let recent_scores: Vec<T> = evaluations
             .iter()
@@ -1100,23 +1108,22 @@ impl<T: Float> PrivateHyperparameterOptimizer<T> {
             .take(self.config.early_stopping.patience)
             .map(|eval| eval.result.objective_value)
             .collect();
-        
-        let best_recent = recent_scores.iter().fold(T::neg_infinity(), |acc, &x| {
-            if x > acc { x } else { acc }
-        });
-        
+
+        let best_recent =
+            recent_scores
+                .iter()
+                .fold(T::neg_infinity(), |acc, &x| if x > acc { x } else { acc });
+
         let best_overall = evaluations
             .iter()
             .map(|eval| eval.result.objective_value)
-            .fold(T::neg_infinity(), |acc, x| {
-                if x > acc { x } else { acc }
-            });
-        
+            .fold(T::neg_infinity(), |acc, x| if x > acc { x } else { acc });
+
         let improvement = best_recent - best_overall;
-        
+
         Ok(improvement < T::from(self.config.early_stopping.min_improvement).unwrap())
     }
-    
+
     /// Compute optimization statistics
     fn compute_optimization_stats(&self) -> Result<OptimizationStats<T>, OptimizerError> {
         Ok(OptimizationStats {
@@ -1136,19 +1143,19 @@ impl<T: Float> PrivateHyperparameterOptimizer<T> {
 pub struct PrivateHPOResults<T: Float> {
     /// Best configuration found
     pub best_configuration: Option<ParameterConfiguration<T>>,
-    
+
     /// Best objective score
     pub best_score: T,
-    
+
     /// All evaluations performed
     pub all_evaluations: Vec<HPOEvaluation<T>>,
-    
+
     /// Final aggregated results
     pub final_results: AggregatedResults<T>,
-    
+
     /// Total privacy cost
     pub total_privacy_cost: PrivacyBudget,
-    
+
     /// Optimization statistics
     pub optimization_stats: OptimizationStats<T>,
 }
@@ -1158,13 +1165,13 @@ pub struct PrivateHPOResults<T: Float> {
 pub struct AggregatedResults<T: Float> {
     /// Top-k configurations
     pub top_configurations: Vec<(ParameterConfiguration<T>, T)>,
-    
+
     /// Confidence intervals for best score
     pub confidence_intervals: Option<(T, T)>,
-    
+
     /// Privacy-preserving summary statistics
     pub summary_stats: SummaryStatistics<T>,
-    
+
     /// Model selection results
     pub model_selection: Option<ModelSelectionResults<T>>,
 }
@@ -1174,13 +1181,13 @@ pub struct AggregatedResults<T: Float> {
 pub struct SummaryStatistics<T: Float> {
     /// Noisy mean of objective values
     pub noisy_mean: T,
-    
+
     /// Noisy standard deviation
     pub noisy_std: T,
-    
+
     /// Noisy median
     pub noisy_median: T,
-    
+
     /// Noisy quantiles
     pub noisy_quantiles: Vec<(f64, T)>,
 }
@@ -1190,10 +1197,10 @@ pub struct SummaryStatistics<T: Float> {
 pub struct ModelSelectionResults<T: Float> {
     /// Selected model configuration
     pub selected_config: ParameterConfiguration<T>,
-    
+
     /// Selection confidence
     pub selection_confidence: f64,
-    
+
     /// Alternative configurations
     pub alternatives: Vec<ParameterConfiguration<T>>,
 }
@@ -1203,22 +1210,22 @@ pub struct ModelSelectionResults<T: Float> {
 pub struct OptimizationStats<T: Float> {
     /// Total number of evaluations
     pub total_evaluations: usize,
-    
+
     /// Number of successful evaluations
     pub successful_evaluations: usize,
-    
+
     /// Number of failed evaluations
     pub failed_evaluations: usize,
-    
+
     /// Average evaluation time
     pub average_evaluation_time: f64,
-    
+
     /// Total optimization time
     pub total_optimization_time: f64,
-    
+
     /// Iteration where convergence was detected
     pub convergence_iteration: Option<usize>,
-    
+
     /// Budget efficiency score
     pub budget_efficiency: f64,
 }
@@ -1227,10 +1234,10 @@ pub struct OptimizationStats<T: Float> {
 pub struct PrivateRandomSearch<T: Float> {
     /// Configuration
     config: PrivateHPOConfig,
-    
+
     /// Random number generator
     rng: ChaCha20Rng,
-    
+
     /// Evaluation history
     history: Vec<HPOEvaluation<T>>,
 }
@@ -1253,7 +1260,7 @@ impl<T: Float> NoisyOptimizer<T> for PrivateRandomSearch<T> {
         _privacy_budget: &PrivacyBudget,
     ) -> Result<ParameterConfiguration<T>, OptimizerError> {
         let mut values = HashMap::new();
-        
+
         for (param_name, param_def) in &parameter_space.parameters {
             let value = match &param_def.param_type {
                 ParameterType::Continuous => {
@@ -1263,13 +1270,21 @@ impl<T: Float> NoisyOptimizer<T> for PrivateRandomSearch<T> {
                     ParameterValue::Continuous(min + random_val * (max - min))
                 }
                 ParameterType::Integer => {
-                    let min = param_def.bounds.min.unwrap_or(T::zero()).to_i64().unwrap_or(0);
-                    let max = param_def.bounds.max.unwrap_or(T::from(100).unwrap()).to_i64().unwrap_or(100);
+                    let min = param_def
+                        .bounds
+                        .min
+                        .unwrap_or(T::zero())
+                        .to_i64()
+                        .unwrap_or(0);
+                    let max = param_def
+                        .bounds
+                        .max
+                        .unwrap_or(T::from(100).unwrap())
+                        .to_i64()
+                        .unwrap_or(100);
                     ParameterValue::Integer(self.rng.gen_range(min..=max))
                 }
-                ParameterType::Boolean => {
-                    ParameterValue::Boolean(self.rng.gen())
-                }
+                ParameterType::Boolean => ParameterValue::Boolean(self.rng.gen()),
                 ParameterType::Categorical(categories) => {
                     let idx = self.rng.gen_range(0..categories.len());
                     ParameterValue::Categorical(categories[idx].clone())
@@ -1279,17 +1294,17 @@ impl<T: Float> NoisyOptimizer<T> for PrivateRandomSearch<T> {
                     ParameterValue::Ordinal(idx)
                 }
             };
-            
+
             values.insert(param_name.clone(), value);
         }
-        
+
         Ok(ParameterConfiguration {
             values,
             id: format!("config_{}", self.history.len()),
             metadata: HashMap::new(),
         })
     }
-    
+
     fn update(
         &mut self,
         _config: &ParameterConfiguration<T>,
@@ -1299,7 +1314,7 @@ impl<T: Float> NoisyOptimizer<T> for PrivateRandomSearch<T> {
         // Random search doesn't need to update based on results
         Ok(())
     }
-    
+
     fn name(&self) -> &str {
         "PrivateRandomSearch"
     }
@@ -1309,13 +1324,13 @@ impl<T: Float> NoisyOptimizer<T> for PrivateRandomSearch<T> {
 pub struct PrivateBayesianOptimization<T: Float> {
     /// Configuration
     config: PrivateHPOConfig,
-    
+
     /// Gaussian process surrogate model
     gp_model: Option<GaussianProcessModel<T>>,
-    
+
     /// Acquisition function
     acquisition_fn: AcquisitionFunction<T>,
-    
+
     /// Evaluation history
     history: Vec<HPOEvaluation<T>>,
 }
@@ -1342,7 +1357,7 @@ impl<T: Float> NoisyOptimizer<T> for PrivateBayesianOptimization<T> {
             // First evaluation - use random sampling
             let mut rng = ChaCha20Rng::from_entropy();
             let mut values = HashMap::new();
-            
+
             for (param_name, param_def) in &parameter_space.parameters {
                 let value = match &param_def.param_type {
                     ParameterType::Continuous => {
@@ -1358,14 +1373,14 @@ impl<T: Float> NoisyOptimizer<T> for PrivateBayesianOptimization<T> {
                 };
                 values.insert(param_name.clone(), value);
             }
-            
+
             return Ok(ParameterConfiguration {
                 values,
                 id: "initial_config".to_string(),
                 metadata: HashMap::new(),
             });
         }
-        
+
         // Use acquisition function to suggest next point
         // This is a simplified implementation
         Ok(ParameterConfiguration {
@@ -1374,7 +1389,7 @@ impl<T: Float> NoisyOptimizer<T> for PrivateBayesianOptimization<T> {
             metadata: HashMap::new(),
         })
     }
-    
+
     fn update(
         &mut self,
         config: &ParameterConfiguration<T>,
@@ -1385,7 +1400,7 @@ impl<T: Float> NoisyOptimizer<T> for PrivateBayesianOptimization<T> {
         // This is a simplified implementation
         Ok(())
     }
-    
+
     fn name(&self) -> &str {
         "PrivateBayesianOptimization"
     }
@@ -1395,13 +1410,13 @@ impl<T: Float> NoisyOptimizer<T> for PrivateBayesianOptimization<T> {
 pub struct GaussianProcessModel<T: Float> {
     /// Training inputs
     training_inputs: Vec<Vec<T>>,
-    
+
     /// Training outputs
     training_outputs: Vec<T>,
-    
+
     /// Kernel function
     kernel: KernelFunction<T>,
-    
+
     /// Hyperparameters
     hyperparameters: Vec<T>,
 }
@@ -1410,7 +1425,7 @@ pub struct GaussianProcessModel<T: Float> {
 pub struct KernelFunction<T: Float> {
     /// Kernel type
     kernel_type: KernelType,
-    
+
     /// Kernel parameters
     parameters: Vec<T>,
 }
@@ -1420,13 +1435,13 @@ pub struct KernelFunction<T: Float> {
 pub enum KernelType {
     /// Radial basis function kernel
     RBF,
-    
+
     /// Matern kernel
     Matern,
-    
+
     /// Linear kernel
     Linear,
-    
+
     /// Polynomial kernel
     Polynomial,
 }
@@ -1435,10 +1450,10 @@ pub enum KernelType {
 pub struct AcquisitionFunction<T: Float> {
     /// Function type
     function_type: AcquisitionFunctionType,
-    
+
     /// Function parameters
     parameters: Vec<T>,
-    
+
     /// Exploration-exploitation balance
     exploration_weight: T,
 }
@@ -1448,13 +1463,13 @@ pub struct AcquisitionFunction<T: Float> {
 pub enum AcquisitionFunctionType {
     /// Expected Improvement
     ExpectedImprovement,
-    
+
     /// Upper Confidence Bound
     UpperConfidenceBound,
-    
+
     /// Probability of Improvement
     ProbabilityOfImprovement,
-    
+
     /// Knowledge Gradient
     KnowledgeGradient,
 }
@@ -1475,7 +1490,7 @@ impl HPOBudgetManager {
             accounting_method: crate::privacy::AccountingMethod::MomentsAccountant,
             estimated_steps_remaining: num_evaluations,
         };
-        
+
         Ok(Self {
             total_budget,
             evaluation_budgets: Vec::new(),
@@ -1492,16 +1507,25 @@ impl HPOBudgetManager {
             adaptive_controller: AdaptiveBudgetController::new(),
         })
     }
-    
+
     pub fn has_budget_remaining(&self) -> Result<bool, OptimizerError> {
-        Ok(self.consumed_budget.epsilon_remaining > 0.0 && self.consumed_budget.delta_remaining > 0.0)
+        Ok(self.consumed_budget.epsilon_remaining > 0.0
+            && self.consumed_budget.delta_remaining > 0.0)
     }
-    
-    pub fn get_evaluation_budget(&mut self, iteration: usize) -> Result<PrivacyBudget, OptimizerError> {
-        let remaining_evaluations = self.total_budget.estimated_steps_remaining.saturating_sub(iteration);
-        let epsilon_per_eval = self.consumed_budget.epsilon_remaining / remaining_evaluations.max(1) as f64;
-        let delta_per_eval = self.consumed_budget.delta_remaining / remaining_evaluations.max(1) as f64;
-        
+
+    pub fn get_evaluation_budget(
+        &mut self,
+        iteration: usize,
+    ) -> Result<PrivacyBudget, OptimizerError> {
+        let remaining_evaluations = self
+            .total_budget
+            .estimated_steps_remaining
+            .saturating_sub(iteration);
+        let epsilon_per_eval =
+            self.consumed_budget.epsilon_remaining / remaining_evaluations.max(1) as f64;
+        let delta_per_eval =
+            self.consumed_budget.delta_remaining / remaining_evaluations.max(1) as f64;
+
         Ok(PrivacyBudget {
             epsilon_consumed: 0.0,
             delta_consumed: 0.0,
@@ -1512,18 +1536,22 @@ impl HPOBudgetManager {
             estimated_steps_remaining: 1,
         })
     }
-    
-    pub fn record_evaluation(&mut self, budget_used: &PrivacyBudget, score: f64) -> Result<(), OptimizerError> {
+
+    pub fn record_evaluation(
+        &mut self,
+        budget_used: &PrivacyBudget,
+        score: f64,
+    ) -> Result<(), OptimizerError> {
         self.consumed_budget.epsilon_consumed += budget_used.epsilon_remaining;
         self.consumed_budget.delta_consumed += budget_used.delta_remaining;
         self.consumed_budget.epsilon_remaining -= budget_used.epsilon_remaining;
         self.consumed_budget.delta_remaining -= budget_used.delta_remaining;
         self.consumed_budget.steps_taken += 1;
-        
+
         self.adaptive_controller.record_performance(score);
         Ok(())
     }
-    
+
     pub fn get_total_consumed_budget(&self) -> PrivacyBudget {
         self.consumed_budget.clone()
     }
@@ -1538,7 +1566,7 @@ impl AdaptiveBudgetController {
             adaptation_rate: 0.1,
         }
     }
-    
+
     pub fn record_performance(&mut self, score: f64) {
         self.performance_history.push(score);
     }
@@ -1553,23 +1581,27 @@ impl<T: Float> PrivateObjective<T> {
             cv_evaluator: PrivateCrossValidation::new(),
         })
     }
-    
+
     pub fn set_objective(
         &mut self,
-        objective_fn: Box<dyn Fn(&ParameterConfiguration<T>) -> Result<f64, OptimizerError> + Send + Sync>,
+        objective_fn: Box<
+            dyn Fn(&ParameterConfiguration<T>) -> Result<f64, OptimizerError> + Send + Sync,
+        >,
     ) -> Result<(), OptimizerError> {
         self.objective_fn = objective_fn;
         Ok(())
     }
-    
+
     pub fn evaluate(
         &self,
         config: &ParameterConfiguration<T>,
         privacy_budget: &PrivacyBudget,
     ) -> Result<HPOResult<T>, OptimizerError> {
         let objective_value = (self.objective_fn)(config)?;
-        let noisy_value = self.noise_mechanism.add_noise(objective_value, privacy_budget)?;
-        
+        let noisy_value = self
+            .noise_mechanism
+            .add_noise(objective_value, privacy_budget)?;
+
         Ok(HPOResult {
             objective_value: T::from(noisy_value).unwrap(),
             standard_error: None,
@@ -1595,17 +1627,21 @@ impl<T: Float> ObjectiveNoiseMechanism<T> {
             rng: ChaCha20Rng::from_entropy(),
         }
     }
-    
-    pub fn add_noise(&mut self, value: f64, _privacy_budget: &PrivacyBudget) -> Result<f64, OptimizerError> {
+
+    pub fn add_noise(
+        &mut self,
+        value: f64,
+        _privacy_budget: &PrivacyBudget,
+    ) -> Result<f64, OptimizerError> {
         use rand_distr::{Distribution, Normal};
-        
+
         match self.mechanism_type {
             HyperparameterNoiseMechanism::Gaussian => {
                 let noise_scale = self.noise_params.scale.to_f64().unwrap_or(1.0);
                 let normal = Normal::new(0.0, noise_scale).map_err(|_| {
                     OptimizerError::InvalidConfig("Invalid noise scale".to_string())
                 })?;
-                
+
                 let noise = normal.sample(&mut self.rng);
                 Ok(value + noise)
             }
@@ -1714,43 +1750,47 @@ impl<T: Float> PrivateResultsAggregator<T> {
             result_validator: ResultValidator::new(),
         })
     }
-    
+
     pub fn aggregate_results(
         &self,
         evaluations: &[HPOEvaluation<T>],
     ) -> Result<AggregatedResults<T>, OptimizerError> {
         let mut top_configs = Vec::new();
-        
+
         // Sort evaluations by objective value
         let mut sorted_evals = evaluations.to_vec();
         sorted_evals.sort_by(|a, b| {
-            b.result.objective_value.partial_cmp(&a.result.objective_value)
+            b.result
+                .objective_value
+                .partial_cmp(&a.result.objective_value)
                 .unwrap_or(std::cmp::Ordering::Equal)
         });
-        
+
         // Take top configurations
         for eval in sorted_evals.iter().take(5) {
             top_configs.push((eval.configuration.clone(), eval.result.objective_value));
         }
-        
+
         // Compute summary statistics
-        let objective_values: Vec<T> = evaluations.iter()
+        let objective_values: Vec<T> = evaluations
+            .iter()
             .map(|eval| eval.result.objective_value)
             .collect();
-        
+
         let mean = if !objective_values.is_empty() {
-            objective_values.iter().fold(T::zero(), |acc, &x| acc + x) / T::from(objective_values.len()).unwrap()
+            objective_values.iter().fold(T::zero(), |acc, &x| acc + x)
+                / T::from(objective_values.len()).unwrap()
         } else {
             T::zero()
         };
-        
+
         let summary_stats = SummaryStatistics {
             noisy_mean: mean,
             noisy_std: T::zero(), // Simplified
             noisy_median: mean,
             noisy_quantiles: vec![(0.5, mean)],
         };
-        
+
         Ok(AggregatedResults {
             top_configurations: top_configs,
             confidence_intervals: None,
@@ -1838,7 +1878,7 @@ impl<T: Float> AcquisitionFunction<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_private_hpo_config() {
         let config = PrivateHPOConfig {
@@ -1862,50 +1902,50 @@ mod tests {
             private_model_selection: true,
             validation_strategy: ValidationStrategy::KFoldCV,
         };
-        
+
         assert_eq!(config.num_evaluations, 100);
         assert_eq!(config.cv_folds, 5);
         assert!(config.early_stopping.enabled);
     }
-    
+
     #[test]
     fn test_parameter_space() {
         let mut parameters = HashMap::new();
-        
-        parameters.insert("learning_rate".to_string(), ParameterDefinition {
-            name: "learning_rate".to_string(),
-            param_type: ParameterType::Continuous,
-            bounds: ParameterBounds {
-                min: Some(0.001),
-                max: Some(0.1),
-                step: None,
-                valid_values: None,
+
+        parameters.insert(
+            "learning_rate".to_string(),
+            ParameterDefinition {
+                name: "learning_rate".to_string(),
+                param_type: ParameterType::Continuous,
+                bounds: ParameterBounds {
+                    min: Some(0.001),
+                    max: Some(0.1),
+                    step: None,
+                    valid_values: None,
+                },
+                prior: Some(ParameterPrior::LogNormal(-3.0, 1.0)),
+                transformation: Some(ParameterTransformation::Log),
             },
-            prior: Some(ParameterPrior::LogNormal(-3.0, 1.0)),
-            transformation: Some(ParameterTransformation::Log),
-        });
-        
+        );
+
         let parameter_space = ParameterSpace {
             parameters,
             constraints: Vec::new(),
             default_config: None,
         };
-        
+
         assert!(parameter_space.parameters.contains_key("learning_rate"));
     }
-    
+
     #[test]
     fn test_budget_manager() {
         let base_config = DifferentialPrivacyConfig::default();
-        let budget_manager = HPOBudgetManager::new(
-            base_config,
-            BudgetAllocationStrategy::Equal,
-            10,
-        ).unwrap();
-        
+        let budget_manager =
+            HPOBudgetManager::new(base_config, BudgetAllocationStrategy::Equal, 10).unwrap();
+
         assert!(budget_manager.has_budget_remaining().unwrap());
     }
-    
+
     #[test]
     fn test_private_random_search() {
         let config = PrivateHPOConfig {
@@ -1929,7 +1969,7 @@ mod tests {
             private_model_selection: false,
             validation_strategy: ValidationStrategy::HoldOut,
         };
-        
+
         let optimizer = PrivateRandomSearch::new(config).unwrap();
         assert_eq!(optimizer.name(), "PrivateRandomSearch");
     }

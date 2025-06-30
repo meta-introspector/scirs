@@ -827,7 +827,7 @@ fn create_dtcwt_filters(filter_set: FilterSet) -> SignalResult<DtcwtFilters> {
                 -0.0238494650,
                 0.0378284555,
             ]);
-            
+
             let h1a = Array1::from_vec(vec![
                 -0.0645388826,
                 0.0406894251,
@@ -851,7 +851,7 @@ fn create_dtcwt_filters(filter_set: FilterSet) -> SignalResult<DtcwtFilters> {
                 -0.0119247325,
                 0.0189142278,
             ]);
-            
+
             let h1b = Array1::from_vec(vec![
                 -0.0322694413,
                 0.0203447126,

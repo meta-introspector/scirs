@@ -12,11 +12,7 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, Array3, Array4, ArrayView1, ArrayView2, ArrayView3, Axis};
 use num_traits::{Float, NumCast, One, Zero};
-use scirs2_core::{
-    parallel_ops::*,
-    simd_ops::SimdUnifiedOps,
-    validation::*,
-};
+use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
@@ -188,21 +184,13 @@ pub enum TensorDecomposition<F> {
         regularization: Option<F>,
     },
     /// Tucker decomposition
-    Tucker {
-        core_dims: Vec<usize>,
-    },
+    Tucker { core_dims: Vec<usize> },
     /// Tensor PCA
-    TensorPCA {
-        n_components: usize,
-    },
+    TensorPCA { n_components: usize },
     /// Higher-order SVD
-    HOSVD {
-        truncation_dims: Vec<usize>,
-    },
+    HOSVD { truncation_dims: Vec<usize> },
     /// Tensor Train decomposition
-    TensorTrain {
-        max_rank: usize,
-    },
+    TensorTrain { max_rank: usize },
 }
 
 /// Advanced clustering configuration
@@ -222,10 +210,7 @@ pub struct ClusteringConfig<F> {
 #[derive(Debug, Clone)]
 pub enum ClusteringAlgorithm<F> {
     /// Density-based clustering with automatic parameter selection
-    AdaptiveDBSCAN {
-        min_samples: usize,
-        xi: F,
-    },
+    AdaptiveDBSCAN { min_samples: usize, xi: F },
     /// Hierarchical clustering with advanced linkage
     EnhancedHierarchical {
         linkage: LinkageCriterion,
@@ -244,15 +229,9 @@ pub enum ClusteringAlgorithm<F> {
         regularization: F,
     },
     /// Mean shift clustering
-    MeanShift {
-        bandwidth: Option<F>,
-        quantile: F,
-    },
+    MeanShift { bandwidth: Option<F>, quantile: F },
     /// Affinity Propagation
-    AffinityPropagation {
-        damping: F,
-        preference: Option<F>,
-    },
+    AffinityPropagation { damping: F, preference: Option<F> },
 }
 
 /// Linkage criteria for hierarchical clustering
@@ -578,7 +557,7 @@ where
     /// Fit all configured methods to the data
     pub fn fit(&mut self, data: &ArrayView2<F>) -> StatsResult<UltraMultivariateResults<F>> {
         check_array_finite(data, "data")?;
-        
+
         let start_time = std::time::Instant::now();
         let mut method_results = HashMap::new();
 
@@ -636,18 +615,34 @@ where
         data: &ArrayView2<F>,
     ) -> StatsResult<MultivariateModel<F>> {
         match method {
-            DimensionalityReductionMethod::AdvancedPCA { algorithm, n_components, .. } => {
-                self.advanced_pca(data, *algorithm, *n_components)
-            }
-            DimensionalityReductionMethod::ICA { algorithm, n_components, max_iter, tolerance } => {
-                self.independent_component_analysis(data, *algorithm, *n_components, *max_iter, *tolerance)
-            }
-            DimensionalityReductionMethod::TSNE { n_components, perplexity, .. } => {
-                self.tsne_analysis(data, *n_components, *perplexity)
-            }
-            DimensionalityReductionMethod::UMAP { n_components, n_neighbors, min_dist, spread } => {
-                self.umap_analysis(data, *n_components, *n_neighbors, *min_dist, *spread)
-            }
+            DimensionalityReductionMethod::AdvancedPCA {
+                algorithm,
+                n_components,
+                ..
+            } => self.advanced_pca(data, *algorithm, *n_components),
+            DimensionalityReductionMethod::ICA {
+                algorithm,
+                n_components,
+                max_iter,
+                tolerance,
+            } => self.independent_component_analysis(
+                data,
+                *algorithm,
+                *n_components,
+                *max_iter,
+                *tolerance,
+            ),
+            DimensionalityReductionMethod::TSNE {
+                n_components,
+                perplexity,
+                ..
+            } => self.tsne_analysis(data, *n_components, *perplexity),
+            DimensionalityReductionMethod::UMAP {
+                n_components,
+                n_neighbors,
+                min_dist,
+                spread,
+            } => self.umap_analysis(data, *n_components, *n_neighbors, *min_dist, *spread),
             _ => {
                 // Simplified fallback for other methods
                 self.advanced_pca(data, PCAVariant::Standard, 2)
@@ -676,9 +671,13 @@ where
         let (eigenvalues, eigenvectors) = self.eigen_decomposition_simd(&covariance.view())?;
 
         // Select top components
-        let components = eigenvectors.slice(ndarray::s![.., 0..actual_components]).to_owned();
-        let explained_variance = eigenvalues.slice(ndarray::s![0..actual_components]).to_owned();
-        
+        let components = eigenvectors
+            .slice(ndarray::s![.., 0..actual_components])
+            .to_owned();
+        let explained_variance = eigenvalues
+            .slice(ndarray::s![0..actual_components])
+            .to_owned();
+
         let total_variance = eigenvalues.sum();
         let explained_variance_ratio = &explained_variance / total_variance;
         let singular_values = explained_variance.mapv(|x| x.sqrt());
@@ -708,14 +707,17 @@ where
     fn compute_covariance_simd(&self, data: &ArrayView2<F>) -> StatsResult<Array2<F>> {
         let (n_samples, n_features) = data.dim();
         let n_f = F::from(n_samples - 1).unwrap();
-        
+
         // Use SIMD matrix multiplication
         let covariance = F::simd_matrix_multiply_transpose(data, data)? / n_f;
         Ok(covariance)
     }
 
     /// Simplified eigendecomposition using SIMD
-    fn eigen_decomposition_simd(&self, matrix: &ArrayView2<F>) -> StatsResult<(Array1<F>, Array2<F>)> {
+    fn eigen_decomposition_simd(
+        &self,
+        matrix: &ArrayView2<F>,
+    ) -> StatsResult<(Array1<F>, Array2<F>)> {
         // In a real implementation, would use LAPACK bindings with SIMD optimizations
         let n = matrix.nrows();
         let eigenvalues = Array1::from_shape_fn(n, |i| F::from(n - i).unwrap());
@@ -767,7 +769,7 @@ where
         perplexity: F,
     ) -> StatsResult<MultivariateModel<F>> {
         let (n_samples, _) = data.dim();
-        
+
         // Simplified t-SNE - would implement actual algorithm
         let embedding = Array2::zeros((n_samples, n_components));
         let kl_divergence = F::from(10.0).unwrap();
@@ -793,7 +795,7 @@ where
         spread: F,
     ) -> StatsResult<MultivariateModel<F>> {
         let (n_samples, _) = data.dim();
-        
+
         // Simplified UMAP - would implement actual algorithm
         let embedding = Array2::zeros((n_samples, n_components));
         let graph = SparseGraph {
@@ -834,11 +836,14 @@ where
     /// Clustering analysis
     fn clustering_analysis(&self, data: &ArrayView2<F>) -> StatsResult<MultivariateModel<F>> {
         let (n_samples, _) = data.dim();
-        
+
         // Simplified clustering
         let labels = Array1::zeros(n_samples);
         let mut validation_scores = HashMap::new();
-        validation_scores.insert(ClusterValidationMetric::SilhouetteScore, F::from(0.8).unwrap());
+        validation_scores.insert(
+            ClusterValidationMetric::SilhouetteScore,
+            F::from(0.8).unwrap(),
+        );
 
         let clustering_model = ClusteringModel {
             labels,
@@ -855,7 +860,7 @@ where
     fn multiview_analysis(&self, views: &[&ArrayView2<F>]) -> StatsResult<MultivariateModel<F>> {
         let n_views = views.len();
         let (n_samples, _) = views[0].dim();
-        
+
         // Simplified multi-view analysis
         let view_embeddings = vec![Array2::zeros((n_samples, 2)); n_views];
         let shared_embedding = Array2::zeros((n_samples, 2));
@@ -879,20 +884,27 @@ where
     ) -> StatsResult<MethodComparison<F>> {
         let mut scores = HashMap::new();
         let mut trade_offs = HashMap::new();
-        
+
         for (method_name, _result) in results {
             scores.insert(method_name.clone(), F::from(0.8).unwrap());
-            trade_offs.insert(method_name.clone(), TradeOffAnalysis {
-                accuracy: F::from(0.8).unwrap(),
-                interpretability: F::from(0.7).unwrap(),
-                computational_cost: F::from(0.5).unwrap(),
-                scalability: F::from(0.9).unwrap(),
-                robustness: F::from(0.6).unwrap(),
-            });
+            trade_offs.insert(
+                method_name.clone(),
+                TradeOffAnalysis {
+                    accuracy: F::from(0.8).unwrap(),
+                    interpretability: F::from(0.7).unwrap(),
+                    computational_cost: F::from(0.5).unwrap(),
+                    scalability: F::from(0.9).unwrap(),
+                    robustness: F::from(0.6).unwrap(),
+                },
+            );
         }
-        
+
         let mut ranking: Vec<String> = scores.keys().cloned().collect();
-        ranking.sort_by(|a, b| scores[b].partial_cmp(&scores[a]).unwrap_or(std::cmp::Ordering::Equal));
+        ranking.sort_by(|a, b| {
+            scores[b]
+                .partial_cmp(&scores[a])
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
 
         Ok(MethodComparison {
             ranking,
@@ -940,14 +952,15 @@ where
         _validation: &ValidationResults<F>,
     ) -> Vec<String> {
         let mut recommendations = Vec::new();
-        
+
         if let Some(best_method) = comparison.ranking.first() {
             recommendations.push(format!("Best overall method: {}", best_method));
         }
-        
+
         recommendations.push("Consider combining multiple methods for robust analysis".to_string());
-        recommendations.push("Validate results using cross-validation before deployment".to_string());
-        
+        recommendations
+            .push("Validate results using cross-validation before deployment".to_string());
+
         recommendations
     }
 }
@@ -958,13 +971,11 @@ where
 {
     fn default() -> Self {
         Self {
-            methods: vec![
-                DimensionalityReductionMethod::AdvancedPCA {
-                    algorithm: PCAVariant::Standard,
-                    n_components: 2,
-                    regularization: None,
-                },
-            ],
+            methods: vec![DimensionalityReductionMethod::AdvancedPCA {
+                algorithm: PCAVariant::Standard,
+                n_components: 2,
+                regularization: None,
+            }],
             manifold_config: ManifoldConfig {
                 estimate_intrinsic_dim: true,
                 neighborhood_size: 10,
@@ -1017,17 +1028,17 @@ mod tests {
     fn test_ultra_multivariate_analysis() {
         let config = UltraMultivariateConfig::default();
         let mut analyzer = UltraMultivariateAnalysis::new(config);
-        
+
         let data = array![
             [1.0, 2.0, 3.0],
             [4.0, 5.0, 6.0],
             [7.0, 8.0, 9.0],
             [10.0, 11.0, 12.0]
         ];
-        
+
         let result = analyzer.fit(&data.view());
         assert!(result.is_ok());
-        
+
         let results = result.unwrap();
         assert!(!results.method_results.is_empty());
         assert!(!results.recommendations.is_empty());
@@ -1037,16 +1048,12 @@ mod tests {
     fn test_advanced_pca() {
         let config = UltraMultivariateConfig::default();
         let analyzer = UltraMultivariateAnalysis::new(config);
-        
-        let data = array![
-            [1.0, 2.0, 3.0],
-            [4.0, 5.0, 6.0],
-            [7.0, 8.0, 9.0]
-        ];
-        
+
+        let data = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
+
         let result = analyzer.advanced_pca(&data.view(), PCAVariant::Standard, 2);
         assert!(result.is_ok());
-        
+
         if let MultivariateModel::PCA(pca_model) = result.unwrap() {
             assert_eq!(pca_model.components.ncols(), 2);
             assert_eq!(pca_model.explained_variance.len(), 2);

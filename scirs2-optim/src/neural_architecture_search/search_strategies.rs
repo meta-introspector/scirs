@@ -3,35 +3,32 @@
 //! Implements various NAS algorithms including DARTS, evolutionary search,
 //! reinforcement learning-based search, and Bayesian optimization.
 
-use ndarray::{Array1, Array2, Array3, s};
+use ndarray::{s, Array1, Array2, Array3};
 use num_traits::Float;
-use std::collections::{HashMap, VecDeque};
 use rand::Rng;
+use std::collections::{HashMap, VecDeque};
 
+use super::{EvaluationMetric, OptimizerArchitecture, SearchResult, SearchSpaceConfig};
 use crate::error::OptimizerError;
-use super::{
-    OptimizerArchitecture, SearchSpaceConfig, SearchResult, 
-    EvaluationMetric
-};
 
 /// Base trait for all search strategies
 pub trait SearchStrategy<T: Float>: Send + Sync {
     /// Initialize the search strategy
     fn initialize(&mut self, search_space: &SearchSpaceConfig) -> Result<(), OptimizerError>;
-    
+
     /// Generate a new architecture candidate
     fn generate_architecture(
         &mut self,
         search_space: &SearchSpaceConfig,
         history: &VecDeque<SearchResult<T>>,
     ) -> Result<OptimizerArchitecture<T>, OptimizerError>;
-    
+
     /// Update strategy with evaluation results
     fn update_with_results(&mut self, results: &[SearchResult<T>]) -> Result<(), OptimizerError>;
-    
+
     /// Get strategy name
     fn name(&self) -> &str;
-    
+
     /// Get current search statistics
     fn get_statistics(&self) -> SearchStrategyStatistics<T>;
 }
@@ -292,7 +289,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> RandomSearch<T>
         } else {
             Box::new(rand::rng())
         };
-        
+
         Self {
             rng,
             statistics: SearchStrategyStatistics::default(),
@@ -301,105 +298,113 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> RandomSearch<T>
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<T> for RandomSearch<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<T>
+    for RandomSearch<T>
+{
     fn initialize(&mut self, search_space: &SearchSpaceConfig) -> Result<(), OptimizerError> {
         self.search_space = Some(search_space.clone());
         Ok(())
     }
-    
+
     fn generate_architecture(
         &mut self,
         search_space: &SearchSpaceConfig,
         _history: &VecDeque<SearchResult<T>>,
     ) -> Result<OptimizerArchitecture<T>, OptimizerError> {
-        use super::{OptimizerComponent, ComponentType};
-        
+        use super::{ComponentType, OptimizerComponent};
+
         // Randomly select number of components
         let num_components = self.rng.gen_range(1..=5);
         let mut components = Vec::new();
-        
+
         for _ in 0..num_components {
             // Randomly select component type
-            let component_config = &search_space.optimizer_components[
-                self.rng.gen_range(0..search_space.optimizer_components.len())
-            ];
-            
+            let component_config = &search_space.optimizer_components[self
+                .rng
+                .gen_range(0..search_space.optimizer_components.len())];
+
             let mut hyperparameters = HashMap::new();
-            
+
             // Randomly sample hyperparameters
             for (param_name, param_range) in &component_config.hyperparameter_ranges {
                 let value = match param_range {
                     super::ParameterRange::Continuous(min, max) => {
                         let val = self.rng.gen_range(*min..=*max);
                         T::from(val).unwrap()
-                    },
+                    }
                     super::ParameterRange::LogUniform(min, max) => {
                         let log_min = min.ln();
                         let log_max = max.ln();
                         let log_val = self.rng.gen_range(log_min..=log_max);
                         T::from(log_val.exp()).unwrap()
-                    },
+                    }
                     super::ParameterRange::Integer(min, max) => {
                         let val = self.rng.gen_range(*min..=*max) as f64;
                         T::from(val).unwrap()
-                    },
+                    }
                     super::ParameterRange::Boolean => {
                         let val = if self.rng.gen_bool(0.5) { 1.0 } else { 0.0 };
                         T::from(val).unwrap()
-                    },
+                    }
                     super::ParameterRange::Discrete(values) => {
                         let idx = self.rng.gen_range(0..values.len());
                         T::from(values[idx]).unwrap()
-                    },
+                    }
                     super::ParameterRange::Categorical(_values) => {
                         // For categorical, we'll use index as value
                         T::from(0.0).unwrap() // Simplified
-                    },
+                    }
                 };
-                
+
                 hyperparameters.insert(param_name.clone(), value);
             }
-            
+
             components.push(OptimizerComponent {
                 component_type: component_config.component_type,
                 hyperparameters,
                 connections: Vec::new(),
             });
         }
-        
+
         self.statistics.total_architectures_generated += 1;
-        
+
         Ok(OptimizerArchitecture {
             components,
             connections: Vec::new(),
             metadata: HashMap::new(),
         })
     }
-    
+
     fn update_with_results(&mut self, results: &[SearchResult<T>]) -> Result<(), OptimizerError> {
         if !results.is_empty() {
-            let performances: Vec<T> = results.iter()
-                .filter_map(|r| r.evaluation_results.metric_scores.get(&EvaluationMetric::FinalPerformance))
+            let performances: Vec<T> = results
+                .iter()
+                .filter_map(|r| {
+                    r.evaluation_results
+                        .metric_scores
+                        .get(&EvaluationMetric::FinalPerformance)
+                })
                 .cloned()
                 .collect();
-            
+
             if !performances.is_empty() {
-                self.statistics.best_performance = performances.iter()
+                self.statistics.best_performance = performances
+                    .iter()
                     .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
                     .cloned()
                     .unwrap_or(T::zero());
-                
+
                 let sum: T = performances.iter().cloned().sum();
                 self.statistics.average_performance = sum / T::from(performances.len()).unwrap();
             }
         }
         Ok(())
     }
-    
+
     fn name(&self) -> &str {
         "RandomSearch"
     }
-    
+
     fn get_statistics(&self) -> SearchStrategyStatistics<T> {
         self.statistics.clone()
     }
@@ -425,27 +430,31 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> EvolutionarySea
             adaptive_rates: true,
         }
     }
-    
-    fn initialize_population(&mut self, search_space: &SearchSpaceConfig) -> Result<(), OptimizerError> {
+
+    fn initialize_population(
+        &mut self,
+        search_space: &SearchSpaceConfig,
+    ) -> Result<(), OptimizerError> {
         self.population.clear();
-        
+
         // Use random search to generate initial population
         let mut random_search = RandomSearch::<T>::new(Some(42));
         random_search.initialize(search_space)?;
-        
+
         for _ in 0..self.population_size {
-            let architecture = random_search.generate_architecture(search_space, &VecDeque::new())?;
+            let architecture =
+                random_search.generate_architecture(search_space, &VecDeque::new())?;
             self.population.push(architecture);
         }
-        
+
         Ok(())
     }
-    
+
     fn selection(&self, fitness_scores: &[T]) -> Result<usize, OptimizerError> {
         // Tournament selection
         let mut best_idx = 0;
         let mut best_fitness = T::neg_infinity();
-        
+
         for _ in 0..self.tournament_size {
             let idx = rand::random::<usize>() % self.population.len();
             if fitness_scores[idx] > best_fitness {
@@ -453,20 +462,20 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> EvolutionarySea
                 best_idx = idx;
             }
         }
-        
+
         Ok(best_idx)
     }
-    
+
     fn crossover(
         &self,
         parent1: &OptimizerArchitecture<T>,
         parent2: &OptimizerArchitecture<T>,
     ) -> Result<OptimizerArchitecture<T>, OptimizerError> {
-        use super::{OptimizerComponent, ComponentType};
-        
+        use super::{ComponentType, OptimizerComponent};
+
         let mut child_components = Vec::new();
         let max_len = parent1.components.len().max(parent2.components.len());
-        
+
         for i in 0..max_len {
             let component = if i < parent1.components.len() && i < parent2.components.len() {
                 // Crossover between components
@@ -480,24 +489,25 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> EvolutionarySea
             } else {
                 parent2.components[i].clone()
             };
-            
+
             child_components.push(component);
         }
-        
+
         Ok(OptimizerArchitecture {
             components: child_components,
             connections: parent1.connections.clone(), // Simplified
             metadata: HashMap::new(),
         })
     }
-    
+
     fn mutate(
         &self,
         architecture: &mut OptimizerArchitecture<T>,
         search_space: &SearchSpaceConfig,
     ) -> Result<(), OptimizerError> {
         for component in &mut architecture.components {
-            for (param_name, param_range) in search_space.optimizer_components
+            for (param_name, param_range) in search_space
+                .optimizer_components
                 .iter()
                 .find(|c| c.component_type == component.component_type)
                 .map(|c| &c.hyperparameter_ranges)
@@ -511,14 +521,14 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> EvolutionarySea
                                 let new_val = current_value.to_f64().unwrap_or(0.0) + noise;
                                 let clamped = new_val.max(*min).min(*max);
                                 *current_value = T::from(clamped).unwrap();
-                            },
+                            }
                             super::ParameterRange::LogUniform(min, max) => {
                                 let log_val = current_value.to_f64().unwrap_or(0.001).ln();
                                 let noise = rand::random::<f64>() * 0.2 - 0.1;
                                 let new_log = log_val + noise;
                                 let new_val = new_log.exp().max(*min).min(*max);
                                 *current_value = T::from(new_val).unwrap();
-                            },
+                            }
                             _ => {
                                 // For other types, regenerate randomly
                                 // This is simplified - could be more sophisticated
@@ -528,18 +538,20 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> EvolutionarySea
                 }
             }
         }
-        
+
         Ok(())
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<T> for EvolutionarySearch<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<T>
+    for EvolutionarySearch<T>
+{
     fn initialize(&mut self, search_space: &SearchSpaceConfig) -> Result<(), OptimizerError> {
         self.initialize_population(search_space)?;
         self.generation_count = 0;
         Ok(())
     }
-    
+
     fn generate_architecture(
         &mut self,
         search_space: &SearchSpaceConfig,
@@ -548,70 +560,79 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<
         if self.population.is_empty() {
             self.initialize_population(search_space)?;
         }
-        
+
         // Extract fitness scores from recent history
-        let recent_results: Vec<_> = history.iter()
-            .rev()
-            .take(self.population_size)
-            .collect();
-        
+        let recent_results: Vec<_> = history.iter().rev().take(self.population_size).collect();
+
         if recent_results.len() >= self.population_size {
             // Perform evolutionary step
-            let fitness_scores: Vec<T> = recent_results.iter()
-                .filter_map(|r| r.evaluation_results.metric_scores.get(&EvaluationMetric::FinalPerformance))
+            let fitness_scores: Vec<T> = recent_results
+                .iter()
+                .filter_map(|r| {
+                    r.evaluation_results
+                        .metric_scores
+                        .get(&EvaluationMetric::FinalPerformance)
+                })
                 .cloned()
                 .collect();
-            
+
             if fitness_scores.len() == self.population_size {
                 // Selection and reproduction
                 let parent1_idx = self.selection(&fitness_scores)?;
                 let parent2_idx = self.selection(&fitness_scores)?;
-                
+
                 let mut child = if rand::random::<f64>() < self.crossover_rate {
                     self.crossover(&self.population[parent1_idx], &self.population[parent2_idx])?
                 } else {
                     self.population[parent1_idx].clone()
                 };
-                
+
                 self.mutate(&mut child, search_space)?;
-                
+
                 // Replace worst individual with child
-                let worst_idx = fitness_scores.iter()
+                let worst_idx = fitness_scores
+                    .iter()
                     .enumerate()
                     .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
                     .map(|(idx, _)| idx)
                     .unwrap_or(0);
-                
+
                 self.population[worst_idx] = child.clone();
                 self.generation_count += 1;
-                
+
                 self.statistics.total_architectures_generated += 1;
                 return Ok(child);
             }
         }
-        
+
         // Fallback to random generation
         let idx = rand::random::<usize>() % self.population.len();
         self.statistics.total_architectures_generated += 1;
         Ok(self.population[idx].clone())
     }
-    
+
     fn update_with_results(&mut self, results: &[SearchResult<T>]) -> Result<(), OptimizerError> {
         if !results.is_empty() {
-            let performances: Vec<T> = results.iter()
-                .filter_map(|r| r.evaluation_results.metric_scores.get(&EvaluationMetric::FinalPerformance))
+            let performances: Vec<T> = results
+                .iter()
+                .filter_map(|r| {
+                    r.evaluation_results
+                        .metric_scores
+                        .get(&EvaluationMetric::FinalPerformance)
+                })
                 .cloned()
                 .collect();
-            
+
             if !performances.is_empty() {
-                self.statistics.best_performance = performances.iter()
+                self.statistics.best_performance = performances
+                    .iter()
                     .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
                     .cloned()
                     .unwrap_or(T::zero());
-                
+
                 let sum: T = performances.iter().cloned().sum();
                 self.statistics.average_performance = sum / T::from(performances.len()).unwrap();
-                
+
                 // Adaptive rate adjustment
                 if self.adaptive_rates && self.generation_count > 10 {
                     let recent_improvement = self.calculate_recent_improvement(&performances);
@@ -625,11 +646,11 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<
         }
         Ok(())
     }
-    
+
     fn name(&self) -> &str {
         "EvolutionarySearch"
     }
-    
+
     fn get_statistics(&self) -> SearchStrategyStatistics<T> {
         let mut stats = self.statistics.clone();
         stats.exploration_rate = T::from(self.mutation_rate).unwrap();
@@ -643,10 +664,18 @@ impl<T: Float> EvolutionarySearch<T> {
         if performances.len() < 10 {
             return T::zero();
         }
-        
-        let recent_avg = performances.iter().rev().take(5).cloned().sum::<T>() / T::from(5.0).unwrap();
-        let earlier_avg = performances.iter().rev().skip(5).take(5).cloned().sum::<T>() / T::from(5.0).unwrap();
-        
+
+        let recent_avg =
+            performances.iter().rev().take(5).cloned().sum::<T>() / T::from(5.0).unwrap();
+        let earlier_avg = performances
+            .iter()
+            .rev()
+            .skip(5)
+            .take(5)
+            .cloned()
+            .sum::<T>()
+            / T::from(5.0).unwrap();
+
         recent_avg - earlier_avg
     }
 }
@@ -658,7 +687,10 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> ReinforcementLe
         learning_rate: f64,
     ) -> Self {
         Self {
-            controller_network: ControllerNetwork::new(controller_hidden_size, controller_num_layers),
+            controller_network: ControllerNetwork::new(
+                controller_hidden_size,
+                controller_num_layers,
+            ),
             experience_buffer: ExperienceBuffer::new(10000),
             policy_optimizer: PolicyOptimizer::new(T::from(learning_rate).unwrap()),
             baseline_predictor: BaselinePredictor::new(),
@@ -670,39 +702,43 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> ReinforcementLe
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<T> for ReinforcementLearningSearch<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<T>
+    for ReinforcementLearningSearch<T>
+{
     fn initialize(&mut self, _search_space: &SearchSpaceConfig) -> Result<(), OptimizerError> {
         // Initialize controller network
         self.controller_network.reset_states();
         Ok(())
     }
-    
+
     fn generate_architecture(
         &mut self,
         search_space: &SearchSpaceConfig,
         _history: &VecDeque<SearchResult<T>>,
     ) -> Result<OptimizerArchitecture<T>, OptimizerError> {
-        use super::{OptimizerComponent, ComponentType};
-        
+        use super::{ComponentType, OptimizerComponent};
+
         // Use controller to generate architecture
         let state = self.encode_search_space(search_space)?;
         let actions = self.controller_network.forward(&state)?;
-        
+
         // Decode actions to architecture
         let architecture = self.decode_actions_to_architecture(&actions, search_space)?;
-        
+
         self.statistics.total_architectures_generated += 1;
         Ok(architecture)
     }
-    
+
     fn update_with_results(&mut self, results: &[SearchResult<T>]) -> Result<(), OptimizerError> {
         // Update experience buffer and train controller
         for result in results {
-            let reward = result.evaluation_results.metric_scores
+            let reward = result
+                .evaluation_results
+                .metric_scores
                 .get(&EvaluationMetric::FinalPerformance)
                 .cloned()
                 .unwrap_or(T::zero());
-            
+
             // Store experience and train if buffer is full enough
             self.experience_buffer.add_experience(
                 Array1::zeros(64), // Simplified state
@@ -712,39 +748,45 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<
                 true,              // Done flag
             );
         }
-        
+
         if self.experience_buffer.size() > 1000 {
             self.train_controller()?;
         }
-        
+
         // Update statistics
         if !results.is_empty() {
-            let performances: Vec<T> = results.iter()
-                .filter_map(|r| r.evaluation_results.metric_scores.get(&EvaluationMetric::FinalPerformance))
+            let performances: Vec<T> = results
+                .iter()
+                .filter_map(|r| {
+                    r.evaluation_results
+                        .metric_scores
+                        .get(&EvaluationMetric::FinalPerformance)
+                })
                 .cloned()
                 .collect();
-            
+
             if !performances.is_empty() {
-                self.statistics.best_performance = performances.iter()
+                self.statistics.best_performance = performances
+                    .iter()
                     .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
                     .cloned()
                     .unwrap_or(T::zero());
-                
+
                 let sum: T = performances.iter().cloned().sum();
                 self.statistics.average_performance = sum / T::from(performances.len()).unwrap();
             }
         }
-        
+
         // Decay exploration
         self.epsilon *= self.exploration_decay;
-        
+
         Ok(())
     }
-    
+
     fn name(&self) -> &str {
         "ReinforcementLearningSearch"
     }
-    
+
     fn get_statistics(&self) -> SearchStrategyStatistics<T> {
         let mut stats = self.statistics.clone();
         stats.exploration_rate = T::from(self.epsilon).unwrap();
@@ -754,26 +796,29 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<
 }
 
 impl<T: Float + Default + Clone> ReinforcementLearningSearch<T> {
-    fn encode_search_space(&self, _search_space: &SearchSpaceConfig) -> Result<Array1<T>, OptimizerError> {
+    fn encode_search_space(
+        &self,
+        _search_space: &SearchSpaceConfig,
+    ) -> Result<Array1<T>, OptimizerError> {
         // Simplified encoding - in practice this would be more sophisticated
         Ok(Array1::zeros(64))
     }
-    
+
     fn decode_actions_to_architecture(
         &self,
         _actions: &Array1<T>,
         search_space: &SearchSpaceConfig,
     ) -> Result<OptimizerArchitecture<T>, OptimizerError> {
-        use super::{OptimizerComponent, ComponentType};
-        
+        use super::{ComponentType, OptimizerComponent};
+
         // Simplified decoding - randomly select for now
         let component_config = &search_space.optimizer_components[0];
         let mut hyperparameters = HashMap::new();
-        
+
         for (param_name, _param_range) in &component_config.hyperparameter_ranges {
             hyperparameters.insert(param_name.clone(), T::from(0.01).unwrap());
         }
-        
+
         Ok(OptimizerArchitecture {
             components: vec![OptimizerComponent {
                 component_type: component_config.component_type,
@@ -784,7 +829,7 @@ impl<T: Float + Default + Clone> ReinforcementLearningSearch<T> {
             metadata: HashMap::new(),
         })
     }
-    
+
     fn train_controller(&mut self) -> Result<(), OptimizerError> {
         // Simplified controller training
         // In practice, this would implement policy gradient methods
@@ -813,14 +858,14 @@ impl<T: Float + Default + Clone> ControllerNetwork<T> {
         let mut lstm_biases = Vec::new();
         let mut hidden_states = Vec::new();
         let mut cell_states = Vec::new();
-        
+
         for _ in 0..num_layers {
             lstm_weights.push(Array2::zeros((hidden_size * 4, hidden_size)));
             lstm_biases.push(Array1::zeros(hidden_size * 4));
             hidden_states.push(Array1::zeros(hidden_size));
             cell_states.push(Array1::zeros(hidden_size));
         }
-        
+
         Self {
             lstm_weights,
             lstm_biases,
@@ -832,17 +877,17 @@ impl<T: Float + Default + Clone> ControllerNetwork<T> {
             hidden_size,
         }
     }
-    
+
     fn reset_states(&mut self) {
         for i in 0..self.num_layers {
             self.hidden_states[i].fill(T::zero());
             self.cell_states[i].fill(T::zero());
         }
     }
-    
+
     fn forward(&mut self, input: &Array1<T>) -> Result<Array1<T>, OptimizerError> {
         let mut current_input = input.clone();
-        
+
         // Simplified LSTM forward pass
         for layer in 0..self.num_layers {
             let output = self.lstm_weights[layer].dot(&current_input) + &self.lstm_biases[layer];
@@ -850,7 +895,7 @@ impl<T: Float + Default + Clone> ControllerNetwork<T> {
             self.hidden_states[layer] = output.mapv(|x| x.tanh());
             current_input = self.hidden_states[layer].clone();
         }
-        
+
         // Output projection
         let output = self.output_weights.dot(&current_input) + &self.output_bias;
         Ok(output)
@@ -868,7 +913,7 @@ impl<T: Float + Default> ExperienceBuffer<T> {
             capacity,
         }
     }
-    
+
     fn add_experience(
         &mut self,
         state: Array1<T>,
@@ -882,7 +927,7 @@ impl<T: Float + Default> ExperienceBuffer<T> {
         self.rewards.push_back(reward);
         self.next_states.push_back(next_state);
         self.dones.push_back(done);
-        
+
         // Remove oldest if at capacity
         if self.states.len() > self.capacity {
             self.states.pop_front();
@@ -892,7 +937,7 @@ impl<T: Float + Default> ExperienceBuffer<T> {
             self.dones.pop_front();
         }
     }
-    
+
     fn size(&self) -> usize {
         self.states.len()
     }
@@ -946,50 +991,52 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> DifferentiableS
             discretization_strategy: DiscretizationStrategy::Progressive,
         }
     }
-    
+
     fn gumbel_softmax_sample(&self, logits: &Array1<T>) -> Array1<T> {
         if !self.gumbel_softmax {
             return self.softmax(logits);
         }
-        
+
         let gumbel_noise: Array1<T> = Array1::from_shape_fn(logits.len(), |_| {
             let u = rand::random::<f64>();
             T::from(-(-u.ln()).ln()).unwrap()
         });
-        
+
         let gumbel_logits = logits + &gumbel_noise;
         let scaled_logits = gumbel_logits / self.temperature;
         self.softmax(&scaled_logits)
     }
-    
+
     fn softmax(&self, x: &Array1<T>) -> Array1<T> {
-        let max_val = x.iter().cloned().fold(T::neg_infinity(), |a, b| if a > b { a } else { b });
+        let max_val = x
+            .iter()
+            .cloned()
+            .fold(T::neg_infinity(), |a, b| if a > b { a } else { b });
         let exp_x = x.mapv(|xi| (xi - max_val).exp());
         let sum_exp = exp_x.sum();
         exp_x / sum_exp
     }
-    
+
     fn discretize_architecture(&self, weights: &Array3<T>) -> OptimizerArchitecture<T> {
-        use super::{OptimizerComponent, ComponentType};
-        
+        use super::{ComponentType, OptimizerComponent};
+
         let mut components = Vec::new();
-        
+
         for edge_idx in 0..weights.dim().0 {
             let edge_weights = weights.slice(s![edge_idx, .., 0]);
-            
+
             let selected_op_idx = match self.discretization_strategy {
-                DiscretizationStrategy::Greedy => {
-                    edge_weights.iter()
-                        .enumerate()
-                        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-                        .map(|(idx, _)| idx)
-                        .unwrap_or(0)
-                },
+                DiscretizationStrategy::Greedy => edge_weights
+                    .iter()
+                    .enumerate()
+                    .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+                    .map(|(idx, _)| idx)
+                    .unwrap_or(0),
                 DiscretizationStrategy::Sampling => {
                     let probs = self.softmax(&edge_weights.to_owned());
                     let rand_val = rand::random::<f64>();
                     let mut cumsum = 0.0;
-                    
+
                     for (idx, prob) in probs.iter().enumerate() {
                         cumsum += prob.to_f64().unwrap_or(0.0);
                         if cumsum >= rand_val {
@@ -997,26 +1044,30 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> DifferentiableS
                         }
                     }
                     0
-                },
+                }
                 DiscretizationStrategy::Threshold => {
                     let threshold = T::from(0.5).unwrap();
-                    edge_weights.iter()
+                    edge_weights
+                        .iter()
                         .enumerate()
                         .find(|(_, &weight)| weight > threshold)
                         .map(|(idx, _)| idx)
                         .unwrap_or(0)
-                },
+                }
                 DiscretizationStrategy::Progressive => {
                     // Gradually sharpen the distribution
                     let sharpened = edge_weights.mapv(|x| x.powf(T::from(2.0).unwrap()));
-                    sharpened.iter()
+                    sharpened
+                        .iter()
                         .enumerate()
-                        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+                        .max_by(|(_, a), (_, b)| {
+                            a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal)
+                        })
                         .map(|(idx, _)| idx)
                         .unwrap_or(0)
                 }
             };
-            
+
             // Map operation index to component type (simplified)
             let component_type = match selected_op_idx {
                 0 => ComponentType::SGD,
@@ -1025,17 +1076,17 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> DifferentiableS
                 3 => ComponentType::RMSprop,
                 _ => ComponentType::Adam,
             };
-            
+
             let mut hyperparameters = HashMap::new();
             hyperparameters.insert("learning_rate".to_string(), T::from(0.001).unwrap());
-            
+
             components.push(OptimizerComponent {
                 component_type,
                 hyperparameters,
                 connections: Vec::new(),
             });
         }
-        
+
         OptimizerArchitecture {
             components,
             connections: Vec::new(),
@@ -1044,16 +1095,18 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> DifferentiableS
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<T> for DifferentiableSearch<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<T>
+    for DifferentiableSearch<T>
+{
     fn initialize(&mut self, _search_space: &SearchSpaceConfig) -> Result<(), OptimizerError> {
         // Initialize architecture weights with small random values
-        self.architecture_weights = Array3::from_shape_fn(
-            self.architecture_weights.raw_dim(),
-            |_| T::from(rand::random::<f64>() * 0.1 - 0.05).unwrap()
-        );
+        self.architecture_weights =
+            Array3::from_shape_fn(self.architecture_weights.raw_dim(), |_| {
+                T::from(rand::random::<f64>() * 0.1 - 0.05).unwrap()
+            });
         Ok(())
     }
-    
+
     fn generate_architecture(
         &mut self,
         _search_space: &SearchSpaceConfig,
@@ -1062,16 +1115,16 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<
         if self.continuous_relaxation {
             // Generate continuous relaxation of architecture
             let mut sampled_weights = Array3::zeros(self.architecture_weights.raw_dim());
-            
+
             for edge_idx in 0..self.architecture_weights.dim().0 {
                 let edge_weights = self.architecture_weights.slice(s![edge_idx, .., 0]);
                 let sampled = self.gumbel_softmax_sample(&edge_weights.to_owned());
-                
+
                 for (op_idx, &weight) in sampled.iter().enumerate() {
                     sampled_weights[[edge_idx, op_idx, 0]] = weight;
                 }
             }
-            
+
             self.statistics.total_architectures_generated += 1;
             Ok(self.discretize_architecture(&sampled_weights))
         } else {
@@ -1080,47 +1133,54 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<
             Ok(self.discretize_architecture(&self.architecture_weights))
         }
     }
-    
+
     fn update_with_results(&mut self, results: &[SearchResult<T>]) -> Result<(), OptimizerError> {
         if results.is_empty() {
             return Ok(());
         }
-        
+
         // Compute gradients based on performance
-        let performances: Vec<T> = results.iter()
-            .filter_map(|r| r.evaluation_results.metric_scores.get(&EvaluationMetric::FinalPerformance))
+        let performances: Vec<T> = results
+            .iter()
+            .filter_map(|r| {
+                r.evaluation_results
+                    .metric_scores
+                    .get(&EvaluationMetric::FinalPerformance)
+            })
             .cloned()
             .collect();
-        
+
         if !performances.is_empty() {
             // Update statistics
-            self.statistics.best_performance = performances.iter()
+            self.statistics.best_performance = performances
+                .iter()
                 .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
                 .cloned()
                 .unwrap_or(T::zero());
-            
+
             let sum: T = performances.iter().cloned().sum();
             self.statistics.average_performance = sum / T::from(performances.len()).unwrap();
-            
+
             // Compute gradient estimate (simplified REINFORCE-style)
             let baseline = self.statistics.average_performance;
             let reward = performances[0] - baseline;
-            
+
             // Update architecture weights
             let learning_rate = T::from(0.001).unwrap();
-            self.architecture_weights = &self.architecture_weights + &(Array3::ones(self.architecture_weights.raw_dim()) * learning_rate * reward);
-            
+            self.architecture_weights = &self.architecture_weights
+                + &(Array3::ones(self.architecture_weights.raw_dim()) * learning_rate * reward);
+
             // Anneal temperature
             self.temperature = self.temperature * T::from(0.999).unwrap();
         }
-        
+
         Ok(())
     }
-    
+
     fn name(&self) -> &str {
         "DifferentiableSearch"
     }
-    
+
     fn get_statistics(&self) -> SearchStrategyStatistics<T> {
         let mut stats = self.statistics.clone();
         stats.exploration_rate = self.temperature;
@@ -1137,7 +1197,10 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> BayesianOptimiz
     ) -> Self {
         Self {
             gaussian_process: GaussianProcess::new(kernel_type),
-            acquisition_function: AcquisitionFunction::new(acquisition_type, T::from(exploration_factor).unwrap()),
+            acquisition_function: AcquisitionFunction::new(
+                acquisition_type,
+                T::from(exploration_factor).unwrap(),
+            ),
             observed_architectures: Vec::new(),
             observed_performances: Vec::new(),
             kernel: GPKernel::new(kernel_type),
@@ -1145,86 +1208,94 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> BayesianOptimiz
             exploration_factor: T::from(exploration_factor).unwrap(),
         }
     }
-    
+
     fn encode_architecture(&self, architecture: &OptimizerArchitecture<T>) -> Array1<T> {
         // Simple encoding: component types and hyperparameter values
         let mut encoding = Vec::new();
-        
+
         for component in &architecture.components {
             // Encode component type as one-hot
             encoding.push(T::from(component.component_type as u8).unwrap());
-            
+
             // Encode hyperparameters
             for (_, &value) in &component.hyperparameters {
                 encoding.push(value);
             }
         }
-        
+
         // Pad to fixed size
         encoding.resize(64, T::zero());
         Array1::from_vec(encoding)
     }
-    
+
     fn fit_gp(&mut self) -> Result<(), OptimizerError> {
         if self.observed_architectures.len() < 2 {
             return Ok(());
         }
-        
+
         // Encode all observed architectures
-        let encoded_archs: Vec<Array1<T>> = self.observed_architectures.iter()
+        let encoded_archs: Vec<Array1<T>> = self
+            .observed_architectures
+            .iter()
             .map(|arch| self.encode_architecture(arch))
             .collect();
-        
+
         // Fit Gaussian Process
-        self.gaussian_process.fit(&encoded_archs, &self.observed_performances)?;
-        
+        self.gaussian_process
+            .fit(&encoded_archs, &self.observed_performances)?;
+
         Ok(())
     }
-    
-    fn suggest_next_architecture(&mut self, search_space: &SearchSpaceConfig) -> Result<OptimizerArchitecture<T>, OptimizerError> {
+
+    fn suggest_next_architecture(
+        &mut self,
+        search_space: &SearchSpaceConfig,
+    ) -> Result<OptimizerArchitecture<T>, OptimizerError> {
         if self.observed_architectures.len() < 5 {
             // Use random search for initial points
             let mut random_search = RandomSearch::<T>::new(Some(42));
             random_search.initialize(search_space)?;
             return random_search.generate_architecture(search_space, &VecDeque::new());
         }
-        
+
         // Generate candidate architectures
         let num_candidates = 100;
         let mut candidates = Vec::new();
         let mut random_search = RandomSearch::<T>::new(Some(42));
         random_search.initialize(search_space)?;
-        
+
         for _ in 0..num_candidates {
             candidates.push(random_search.generate_architecture(search_space, &VecDeque::new())?);
         }
-        
+
         // Evaluate acquisition function for each candidate
         let mut best_architecture = candidates[0].clone();
         let mut best_acquisition = T::neg_infinity();
-        
+
         for candidate in candidates {
             let encoded = self.encode_architecture(&candidate);
             let (mean, variance) = self.gaussian_process.predict(&encoded)?;
             let acquisition_value = self.acquisition_function.evaluate(mean, variance);
-            
+
             if acquisition_value > best_acquisition {
                 best_acquisition = acquisition_value;
                 best_architecture = candidate;
             }
         }
-        
+
         Ok(best_architecture)
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<T> for BayesianOptimization<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<T>
+    for BayesianOptimization<T>
+{
     fn initialize(&mut self, _search_space: &SearchSpaceConfig) -> Result<(), OptimizerError> {
         self.observed_architectures.clear();
         self.observed_performances.clear();
         Ok(())
     }
-    
+
     fn generate_architecture(
         &mut self,
         search_space: &SearchSpaceConfig,
@@ -1234,36 +1305,42 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<
         self.statistics.total_architectures_generated += 1;
         Ok(architecture)
     }
-    
+
     fn update_with_results(&mut self, results: &[SearchResult<T>]) -> Result<(), OptimizerError> {
         for result in results {
-            if let Some(&performance) = result.evaluation_results.metric_scores.get(&EvaluationMetric::FinalPerformance) {
-                self.observed_architectures.push(result.architecture.clone());
+            if let Some(&performance) = result
+                .evaluation_results
+                .metric_scores
+                .get(&EvaluationMetric::FinalPerformance)
+            {
+                self.observed_architectures
+                    .push(result.architecture.clone());
                 self.observed_performances.push(performance);
-                
+
                 // Update statistics
                 if performance > self.statistics.best_performance {
                     self.statistics.best_performance = performance;
                 }
-                
+
                 // Refit GP
                 self.fit_gp()?;
             }
         }
-        
+
         // Update average performance
         if !self.observed_performances.is_empty() {
             let sum: T = self.observed_performances.iter().cloned().sum();
-            self.statistics.average_performance = sum / T::from(self.observed_performances.len()).unwrap();
+            self.statistics.average_performance =
+                sum / T::from(self.observed_performances.len()).unwrap();
         }
-        
+
         Ok(())
     }
-    
+
     fn name(&self) -> &str {
         "BayesianOptimization"
     }
-    
+
     fn get_statistics(&self) -> SearchStrategyStatistics<T> {
         let mut stats = self.statistics.clone();
         stats.exploration_rate = self.exploration_factor;
@@ -1294,12 +1371,12 @@ impl<T: Float + Default> GaussianProcess<T> {
             signal_variance: T::one(),
         }
     }
-    
+
     fn fit(&mut self, _x: &[Array1<T>], _y: &[T]) -> Result<(), OptimizerError> {
         // Simplified GP fitting
         Ok(())
     }
-    
+
     fn predict(&self, _x: &Array1<T>) -> Result<(T, T), OptimizerError> {
         // Simplified prediction - return mean and variance
         Ok((T::from(0.5).unwrap(), T::from(0.1).unwrap()))
@@ -1314,12 +1391,10 @@ impl<T: Float + Default> AcquisitionFunction<T> {
             current_best: T::zero(),
         }
     }
-    
+
     fn evaluate(&self, mean: T, variance: T) -> T {
         match self.function_type {
-            AcquisitionType::UCB => {
-                mean + self.exploration_weight * variance.sqrt()
-            },
+            AcquisitionType::UCB => mean + self.exploration_weight * variance.sqrt(),
             AcquisitionType::EI => {
                 // Simplified Expected Improvement
                 let std_dev = variance.sqrt();
@@ -1330,21 +1405,25 @@ impl<T: Float + Default> AcquisitionFunction<T> {
                 } else {
                     T::zero()
                 }
-            },
+            }
             AcquisitionType::PI => {
                 // Simplified Probability of Improvement
                 if variance > T::from(1e-8).unwrap() {
                     let z = (mean - self.current_best) / variance.sqrt();
                     // Simplified - would need proper CDF
-                    if z > T::zero() { T::one() } else { T::zero() }
+                    if z > T::zero() {
+                        T::one()
+                    } else {
+                        T::zero()
+                    }
                 } else {
                     T::zero()
                 }
-            },
+            }
             AcquisitionType::Thompson => {
                 // Thompson sampling - sample from posterior
                 mean + variance.sqrt() * T::from(rand::random::<f64>()).unwrap()
-            },
+            }
             AcquisitionType::InfoGain => {
                 // Information gain - simplified as entropy
                 variance.ln()
@@ -1371,88 +1450,111 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> NeuralPredictor
         Self {
             predictor_network: PredictorNetwork::new(predictor_architecture),
             architecture_encoder: ArchitectureEncoder::new(embedding_dim),
-            search_optimizer: SearchOptimizer::new(SearchOptimizerType::Adam, T::from(0.001).unwrap()),
+            search_optimizer: SearchOptimizer::new(
+                SearchOptimizerType::Adam,
+                T::from(0.001).unwrap(),
+            ),
             confidence_threshold: T::from(confidence_threshold).unwrap(),
             statistics: SearchStrategyStatistics::default(),
             uncertainty_sampling: true,
         }
     }
-    
-    fn predict_performance(&self, architecture: &OptimizerArchitecture<T>) -> Result<(T, T), OptimizerError> {
+
+    fn predict_performance(
+        &self,
+        architecture: &OptimizerArchitecture<T>,
+    ) -> Result<(T, T), OptimizerError> {
         // Encode architecture
         let encoded = self.architecture_encoder.encode(architecture)?;
-        
+
         // Forward pass through predictor network
-        let (prediction, uncertainty) = self.predictor_network.forward_with_uncertainty(&encoded)?;
-        
+        let (prediction, uncertainty) =
+            self.predictor_network.forward_with_uncertainty(&encoded)?;
+
         Ok((prediction, uncertainty))
     }
-    
-    fn train_predictor(&mut self, architectures: &[OptimizerArchitecture<T>], performances: &[T]) -> Result<(), OptimizerError> {
+
+    fn train_predictor(
+        &mut self,
+        architectures: &[OptimizerArchitecture<T>],
+        performances: &[T],
+    ) -> Result<(), OptimizerError> {
         if architectures.len() != performances.len() || architectures.is_empty() {
             return Ok(());
         }
-        
+
         // Encode all architectures
-        let encoded_archs: Result<Vec<_>, _> = architectures.iter()
+        let encoded_archs: Result<Vec<_>, _> = architectures
+            .iter()
             .map(|arch| self.architecture_encoder.encode(arch))
             .collect();
         let encoded_archs = encoded_archs?;
-        
+
         // Train predictor network
         for (encoded_arch, &target_performance) in encoded_archs.iter().zip(performances.iter()) {
-            let (prediction, _) = self.predictor_network.forward_with_uncertainty(encoded_arch)?;
+            let (prediction, _) = self
+                .predictor_network
+                .forward_with_uncertainty(encoded_arch)?;
             let loss = (prediction - target_performance).powf(T::from(2.0).unwrap());
-            
+
             // Simplified gradient update
-            self.predictor_network.backward_update(encoded_arch, target_performance, &mut self.search_optimizer)?;
+            self.predictor_network.backward_update(
+                encoded_arch,
+                target_performance,
+                &mut self.search_optimizer,
+            )?;
         }
-        
+
         Ok(())
     }
-    
-    fn generate_candidate_with_uncertainty(&mut self, search_space: &SearchSpaceConfig) -> Result<OptimizerArchitecture<T>, OptimizerError> {
+
+    fn generate_candidate_with_uncertainty(
+        &mut self,
+        search_space: &SearchSpaceConfig,
+    ) -> Result<OptimizerArchitecture<T>, OptimizerError> {
         // Generate multiple candidates and select based on uncertainty
         let num_candidates = 50;
         let mut candidates = Vec::new();
         let mut random_search = RandomSearch::<T>::new(None);
         random_search.initialize(search_space)?;
-        
+
         for _ in 0..num_candidates {
             candidates.push(random_search.generate_architecture(search_space, &VecDeque::new())?);
         }
-        
+
         // Select candidate with highest uncertainty (for exploration) or highest predicted performance (for exploitation)
         let mut best_candidate = candidates[0].clone();
         let mut best_score = T::neg_infinity();
-        
+
         for candidate in candidates {
             let (predicted_perf, uncertainty) = self.predict_performance(&candidate)?;
-            
+
             // Combine prediction and uncertainty for selection
             let score = if self.uncertainty_sampling {
                 predicted_perf + uncertainty // UCB-style selection
             } else {
                 predicted_perf // Pure exploitation
             };
-            
+
             if score > best_score {
                 best_score = score;
                 best_candidate = candidate;
             }
         }
-        
+
         Ok(best_candidate)
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<T> for NeuralPredictorSearch<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<T>
+    for NeuralPredictorSearch<T>
+{
     fn initialize(&mut self, _search_space: &SearchSpaceConfig) -> Result<(), OptimizerError> {
         // Initialize predictor network with random weights
         self.predictor_network.initialize()?;
         Ok(())
     }
-    
+
     fn generate_architecture(
         &mut self,
         search_space: &SearchSpaceConfig,
@@ -1461,16 +1563,21 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<
         // Train predictor if enough data is available
         if history.len() > 10 {
             let architectures: Vec<_> = history.iter().map(|r| r.architecture.clone()).collect();
-            let performances: Vec<_> = history.iter()
-                .filter_map(|r| r.evaluation_results.metric_scores.get(&EvaluationMetric::FinalPerformance))
+            let performances: Vec<_> = history
+                .iter()
+                .filter_map(|r| {
+                    r.evaluation_results
+                        .metric_scores
+                        .get(&EvaluationMetric::FinalPerformance)
+                })
                 .cloned()
                 .collect();
-            
+
             if architectures.len() == performances.len() {
                 self.train_predictor(&architectures, &performances)?;
             }
         }
-        
+
         // Generate candidate based on predictor
         let architecture = if history.len() > 5 {
             self.generate_candidate_with_uncertainty(search_space)?
@@ -1480,47 +1587,57 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<
             random_search.initialize(search_space)?;
             random_search.generate_architecture(search_space, history)?
         };
-        
+
         self.statistics.total_architectures_generated += 1;
         Ok(architecture)
     }
-    
+
     fn update_with_results(&mut self, results: &[SearchResult<T>]) -> Result<(), OptimizerError> {
         if results.is_empty() {
             return Ok(());
         }
-        
+
         // Extract architectures and performances
         let architectures: Vec<_> = results.iter().map(|r| r.architecture.clone()).collect();
-        let performances: Vec<_> = results.iter()
-            .filter_map(|r| r.evaluation_results.metric_scores.get(&EvaluationMetric::FinalPerformance))
+        let performances: Vec<_> = results
+            .iter()
+            .filter_map(|r| {
+                r.evaluation_results
+                    .metric_scores
+                    .get(&EvaluationMetric::FinalPerformance)
+            })
             .cloned()
             .collect();
-        
+
         if architectures.len() == performances.len() && !performances.is_empty() {
             // Update statistics
-            self.statistics.best_performance = performances.iter()
+            self.statistics.best_performance = performances
+                .iter()
                 .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
                 .cloned()
                 .unwrap_or(T::zero());
-            
+
             let sum: T = performances.iter().cloned().sum();
             self.statistics.average_performance = sum / T::from(performances.len()).unwrap();
-            
+
             // Train predictor with new data
             self.train_predictor(&architectures, &performances)?;
         }
-        
+
         Ok(())
     }
-    
+
     fn name(&self) -> &str {
         "NeuralPredictorSearch"
     }
-    
+
     fn get_statistics(&self) -> SearchStrategyStatistics<T> {
         let mut stats = self.statistics.clone();
-        stats.exploration_rate = if self.uncertainty_sampling { T::from(0.7).unwrap() } else { T::from(0.3).unwrap() };
+        stats.exploration_rate = if self.uncertainty_sampling {
+            T::from(0.7).unwrap()
+        } else {
+            T::from(0.3).unwrap()
+        };
         stats.exploitation_rate = T::one() - stats.exploration_rate;
         stats
     }
@@ -1533,41 +1650,41 @@ impl<T: Float + Default + Clone> PredictorNetwork<T> {
         for i in 0..architecture.len() - 1 {
             layers.push(PredictorLayer::new(architecture[i], architecture[i + 1]));
         }
-        
+
         Self {
             layers,
             dropout_rates: vec![T::from(0.1).unwrap(); architecture.len() - 1],
             architecture,
         }
     }
-    
+
     fn initialize(&mut self) -> Result<(), OptimizerError> {
         for layer in &mut self.layers {
             layer.initialize()?;
         }
         Ok(())
     }
-    
+
     fn forward_with_uncertainty(&self, input: &Array1<T>) -> Result<(T, T), OptimizerError> {
         let mut current = input.clone();
-        
+
         // Forward pass through all layers
         for (i, layer) in self.layers.iter().enumerate() {
             current = layer.forward(&current)?;
-            
+
             // Apply dropout for uncertainty estimation (Monte Carlo dropout)
             if i < self.dropout_rates.len() {
                 current = self.apply_dropout(&current, self.dropout_rates[i]);
             }
         }
-        
+
         // For simplicity, return the first output as prediction and a simple uncertainty estimate
         let prediction = current[0];
         let uncertainty = current.iter().map(|&x| x * x).sum::<T>().sqrt() * T::from(0.1).unwrap();
-        
+
         Ok((prediction, uncertainty))
     }
-    
+
     fn backward_update(
         &mut self,
         _input: &Array1<T>,
@@ -1577,7 +1694,7 @@ impl<T: Float + Default + Clone> PredictorNetwork<T> {
         // Simplified backward pass - in practice would implement proper backpropagation
         Ok(())
     }
-    
+
     fn apply_dropout(&self, input: &Array1<T>, dropout_rate: T) -> Array1<T> {
         input.mapv(|x| {
             if rand::random::<f64>() < dropout_rate.to_f64().unwrap_or(0.0) {
@@ -1597,31 +1714,33 @@ impl<T: Float + Default + Clone> PredictorLayer<T> {
             activation: ActivationFunction::ReLU,
         }
     }
-    
+
     fn initialize(&mut self) -> Result<(), OptimizerError> {
         // Xavier initialization
         let fan_in = self.weights.ncols() as f64;
         let fan_out = self.weights.nrows() as f64;
         let scale = (6.0 / (fan_in + fan_out)).sqrt();
-        
+
         self.weights = Array2::from_shape_fn(self.weights.raw_dim(), |_| {
             T::from(rand::random::<f64>() * scale * 2.0 - scale).unwrap()
         });
-        
+
         Ok(())
     }
-    
+
     fn forward(&self, input: &Array1<T>) -> Result<Array1<T>, OptimizerError> {
         let linear_output = self.weights.dot(input) + &self.bias;
         Ok(self.apply_activation(&linear_output))
     }
-    
+
     fn apply_activation(&self, x: &Array1<T>) -> Array1<T> {
         match self.activation {
             ActivationFunction::ReLU => x.mapv(|xi| if xi > T::zero() { xi } else { T::zero() }),
             ActivationFunction::GELU => x.mapv(|xi| {
                 let x_f64 = xi.to_f64().unwrap_or(0.0);
-                let gelu_val = 0.5 * x_f64 * (1.0 + (x_f64 * 0.7978845608 * (1.0 + 0.044715 * x_f64 * x_f64)).tanh());
+                let gelu_val = 0.5
+                    * x_f64
+                    * (1.0 + (x_f64 * 0.7978845608 * (1.0 + 0.044715 * x_f64 * x_f64)).tanh());
                 T::from(gelu_val).unwrap()
             }),
             ActivationFunction::Swish => x.mapv(|xi| {
@@ -1642,25 +1761,25 @@ impl<T: Float + Default + Clone> ArchitectureEncoder<T> {
             max_components: 64,
         }
     }
-    
+
     fn encode(&self, architecture: &OptimizerArchitecture<T>) -> Result<Array1<T>, OptimizerError> {
         // Simple encoding: one-hot component types + hyperparameters
         let mut encoding = Vec::new();
-        
+
         for (i, component) in architecture.components.iter().enumerate() {
             if i >= self.max_components {
                 break;
             }
-            
+
             // Encode component type
             encoding.push(T::from(component.component_type as u8).unwrap());
-            
+
             // Encode hyperparameters (take first few)
             for (_, &value) in component.hyperparameters.iter().take(3) {
                 encoding.push(value);
             }
         }
-        
+
         // Pad to fixed size
         encoding.resize(self.embedding_dim, T::zero());
         Ok(Array1::from_vec(encoding))
@@ -1676,8 +1795,11 @@ impl<T: Float + Default + Clone> SearchOptimizer<T> {
             parameters: HashMap::new(),
         }
     }
-    
-    fn update_parameters(&mut self, _gradients: &HashMap<String, Array1<T>>) -> Result<(), OptimizerError> {
+
+    fn update_parameters(
+        &mut self,
+        _gradients: &HashMap<String, Array1<T>>,
+    ) -> Result<(), OptimizerError> {
         // Simplified parameter update
         Ok(())
     }
@@ -1686,20 +1808,20 @@ impl<T: Float + Default + Clone> SearchOptimizer<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_random_search_creation() {
         let search = RandomSearch::<f64>::new(Some(42));
         assert_eq!(search.name(), "RandomSearch");
     }
-    
+
     #[test]
     fn test_evolutionary_search_creation() {
         let search = EvolutionarySearch::<f64>::new(50, 0.1, 0.8, 3);
         assert_eq!(search.name(), "EvolutionarySearch");
         assert_eq!(search.population_size, 50);
     }
-    
+
     #[test]
     fn test_rl_search_creation() {
         let search = ReinforcementLearningSearch::<f64>::new(256, 2, 0.001);

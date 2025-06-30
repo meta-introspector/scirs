@@ -7,17 +7,13 @@
 
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
-use num_traits::{Float, NumCast, Zero, One};
-use scirs2_core::{
-    parallel_ops::*,
-    simd_ops::SimdUnifiedOps,
-    validation::*,
-};
+use num_traits::{Float, NumCast, One, Zero};
+use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
+use std::marker::PhantomData;
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant};
-use std::marker::PhantomData;
 
 /// Configuration for ultra-advanced streaming analytics
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -239,7 +235,10 @@ pub enum CompressionAlgorithm {
     /// Piecewise Aggregate Approximation (PAA)
     PAA { segments: usize },
     /// Symbolic Aggregate approXimation (SAX)
-    SAX { alphabet_size: usize, segments: usize },
+    SAX {
+        alphabet_size: usize,
+        segments: usize,
+    },
     /// Discrete Fourier Transform compression
     DFT { coefficients: usize },
     /// Wavelet compression
@@ -366,11 +365,11 @@ where
 {
     /// Create a new ultra-advanced streaming processor
     pub fn new(config: UltraStreamingConfig) -> Self {
-        let windowing_strategy = WindowingStrategy::Sliding { 
-            size: config.default_window_size 
+        let windowing_strategy = WindowingStrategy::Sliding {
+            size: config.default_window_size,
         };
         let processing_mode = StreamProcessingMode::Adaptive;
-        
+
         let statistics = StreamingStatistics {
             count: 0,
             mean: F::zero(),
@@ -404,12 +403,12 @@ where
     /// Process a new data point in the stream
     pub fn process_data_point(&mut self, value: F) -> StatsResult<()> {
         let timestamp = Instant::now();
-        
+
         // Add to buffer
         {
             let mut buffer = self.buffer.write().unwrap();
             buffer.push_back((timestamp, value));
-            
+
             // Apply windowing strategy
             self.apply_windowing_strategy(&mut buffer)?;
         }
@@ -443,9 +442,9 @@ where
     /// Process a batch of data points for higher throughput
     pub fn process_batch(&mut self, values: &ArrayView1<F>) -> StatsResult<()> {
         check_array_finite(values, "values")?;
-        
+
         let start_time = Instant::now();
-        
+
         // Use SIMD-optimized batch processing
         if values.len() >= 64 {
             self.process_batch_simd(values)?;
@@ -458,7 +457,7 @@ where
         // Update throughput metrics
         let elapsed = start_time.elapsed();
         let throughput = values.len() as f64 / elapsed.as_secs_f64();
-        
+
         {
             let mut stats = self.statistics.write().unwrap();
             stats.throughput = throughput;
@@ -489,8 +488,12 @@ where
             stats.std_dev = stats.variance.sqrt();
             stats.count += values.len();
 
-            if batch_min < stats.min { stats.min = batch_min; }
-            if batch_max > stats.max { stats.max = batch_max; }
+            if batch_min < stats.min {
+                stats.min = batch_min;
+            }
+            if batch_max > stats.max {
+                stats.max = batch_max;
+            }
             stats.last_update = Instant::now();
         }
 
@@ -498,10 +501,7 @@ where
     }
 
     /// Apply the configured windowing strategy
-    fn apply_windowing_strategy(
-        &self,
-        buffer: &mut VecDeque<(Instant, F)>,
-    ) -> StatsResult<()> {
+    fn apply_windowing_strategy(&self, buffer: &mut VecDeque<(Instant, F)>) -> StatsResult<()> {
         match &self.windowing_strategy {
             WindowingStrategy::Sliding { size } => {
                 while buffer.len() > *size {
@@ -524,7 +524,9 @@ where
                     }
                 }
             }
-            WindowingStrategy::Adaptive { min_size, max_size, .. } => {
+            WindowingStrategy::Adaptive {
+                min_size, max_size, ..
+            } => {
                 // Adaptive windowing based on data characteristics
                 let adaptive_size = self.calculate_adaptive_window_size(*min_size, *max_size)?;
                 while buffer.len() > adaptive_size {
@@ -539,18 +541,22 @@ where
     }
 
     /// Calculate adaptive window size based on data characteristics
-    fn calculate_adaptive_window_size(&self, min_size: usize, max_size: usize) -> StatsResult<usize> {
+    fn calculate_adaptive_window_size(
+        &self,
+        min_size: usize,
+        max_size: usize,
+    ) -> StatsResult<usize> {
         let stats = self.statistics.read().unwrap();
-        
+
         // Base the window size on variance and throughput
         let variance_factor = if stats.variance > F::zero() {
             (stats.variance.sqrt()).to_f64().unwrap_or(1.0)
         } else {
             1.0
         };
-        
+
         let throughput_factor = (stats.throughput / 1000.0).max(0.1).min(10.0);
-        
+
         let adaptive_size = (min_size as f64 * variance_factor * throughput_factor) as usize;
         Ok(adaptive_size.max(min_size).min(max_size))
     }
@@ -558,7 +564,7 @@ where
     /// Update real-time statistics with new data point
     fn update_statistics(&self, value: F, timestamp: Instant) -> StatsResult<()> {
         let mut stats = self.statistics.write().unwrap();
-        
+
         if stats.count == 0 {
             // First data point
             stats.mean = value;
@@ -577,8 +583,12 @@ where
             stats.std_dev = (stats.variance / n).sqrt();
             stats.count += 1;
 
-            if value < stats.min { stats.min = value; }
-            if value > stats.max { stats.max = value; }
+            if value < stats.min {
+                stats.min = value;
+            }
+            if value > stats.max {
+                stats.max = value;
+            }
         }
 
         // Calculate throughput
@@ -586,7 +596,7 @@ where
         if elapsed.as_secs_f64() > 0.0 {
             stats.throughput = 1.0 / elapsed.as_secs_f64();
         }
-        
+
         stats.last_update = timestamp;
         Ok(())
     }
@@ -628,9 +638,11 @@ where
     /// Get current streaming analytics results
     pub fn get_analytics_results(&self) -> StatsResult<StreamingAnalyticsResult<F>> {
         let stats = self.statistics.read().unwrap().clone();
-        
+
         // Generate change point events
-        let change_points: Vec<ChangePointEvent> = stats.change_points.iter()
+        let change_points: Vec<ChangePointEvent> = stats
+            .change_points
+            .iter()
             .map(|&timestamp| ChangePointEvent {
                 timestamp,
                 confidence: 0.95, // Would be calculated based on algorithm
@@ -641,7 +653,9 @@ where
             .collect();
 
         // Generate anomaly events
-        let anomalies: Vec<AnomalyEvent<F>> = stats.anomalies.iter()
+        let anomalies: Vec<AnomalyEvent<F>> = stats
+            .anomalies
+            .iter()
             .map(|(timestamp, value)| AnomalyEvent {
                 timestamp: *timestamp,
                 value: *value,
@@ -658,7 +672,7 @@ where
             latency_microseconds: 50.0, // Would be measured
             memory_usage_mb: (stats.memory_usage as f64) / (1024.0 * 1024.0),
             cpu_utilization_percent: 25.0, // Would be measured
-            accuracy_vs_batch: 0.999, // Would be calculated
+            accuracy_vs_batch: 0.999,      // Would be calculated
             data_freshness_seconds: 0.1,
         };
 
@@ -697,7 +711,8 @@ where
         if performance.throughput_samples_per_sec < self.config.high_throughput_threshold {
             recommendations.push(StreamingRecommendation {
                 category: RecommendationCategory::PerformanceTuning,
-                message: "Consider enabling approximate algorithms for higher throughput".to_string(),
+                message: "Consider enabling approximate algorithms for higher throughput"
+                    .to_string(),
                 priority: RecommendationPriority::Medium,
                 estimated_impact: 2.0,
             });
@@ -733,7 +748,10 @@ where
 {
     fn new() -> Self {
         Self {
-            algorithm: ChangePointAlgorithm::CUSUM { drift: 0.5, threshold: 5.0 },
+            algorithm: ChangePointAlgorithm::CUSUM {
+                drift: 0.5,
+                threshold: 5.0,
+            },
             window_data: VecDeque::new(),
             threshold: 0.05,
             last_detection: None,
@@ -743,7 +761,7 @@ where
 
     fn detect(&mut self, value: F) -> StatsResult<Option<Instant>> {
         self.window_data.push_back(value);
-        
+
         match &self.algorithm {
             ChangePointAlgorithm::CUSUM { drift, threshold } => {
                 // Implement CUSUM algorithm
@@ -760,7 +778,7 @@ where
                 // Other algorithms would be implemented here
             }
         }
-        
+
         Ok(None)
     }
 
@@ -768,8 +786,10 @@ where
         if self.window_data.is_empty() {
             return Ok(0.0);
         }
-        
-        let sum: f64 = self.window_data.iter()
+
+        let sum: f64 = self
+            .window_data
+            .iter()
             .map(|&x| x.to_f64().unwrap_or(0.0))
             .sum();
         Ok(sum / self.window_data.len() as f64)
@@ -820,7 +840,7 @@ where
                 // Other algorithms would be implemented here
             }
         }
-        
+
         Ok(None)
     }
 
@@ -828,9 +848,11 @@ where
         if self.baseline_statistics.std_dev == F::zero() {
             return Ok(0.0);
         }
-        
+
         let diff = value - self.baseline_statistics.mean;
-        let z_score = (diff / self.baseline_statistics.std_dev).to_f64().unwrap_or(0.0);
+        let z_score = (diff / self.baseline_statistics.std_dev)
+            .to_f64()
+            .unwrap_or(0.0);
         Ok(z_score)
     }
 }
@@ -872,7 +894,7 @@ where
                 // Other compression algorithms would be implemented here
             }
         }
-        
+
         Ok(())
     }
 }
@@ -913,7 +935,7 @@ mod tests {
         let mut processor = create_ultra_streaming_processor::<f64>();
         let result = processor.process_data_point(5.0);
         assert!(result.is_ok());
-        
+
         let stats = processor.statistics.read().unwrap();
         assert_eq!(stats.count, 1);
         assert_eq!(stats.mean, 5.0);
@@ -925,7 +947,7 @@ mod tests {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let result = processor.process_batch(&data.view());
         assert!(result.is_ok());
-        
+
         let stats = processor.statistics.read().unwrap();
         assert_eq!(stats.count, 5);
         assert_eq!(stats.mean, 3.0);
@@ -936,7 +958,7 @@ mod tests {
         let mut processor = create_ultra_streaming_processor::<f64>();
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 100.0]; // Include an outlier
         let _ = processor.process_batch(&data.view());
-        
+
         let results = processor.get_analytics_results().unwrap();
         assert!(results.performance_metrics.throughput_samples_per_sec > 0.0);
         assert!(!results.recommendations.is_empty());
@@ -945,12 +967,12 @@ mod tests {
     #[test]
     fn test_change_point_detector() {
         let mut detector = ChangePointDetector::<f64>::new();
-        
+
         // Add normal data points
         for i in 1..=20 {
             let _ = detector.detect(i as f64);
         }
-        
+
         // Add a significant change
         let result = detector.detect(100.0);
         assert!(result.is_ok());
@@ -959,12 +981,12 @@ mod tests {
     #[test]
     fn test_anomaly_detector() {
         let mut detector = AnomalyDetector::<f64>::new();
-        
+
         // Add normal data points to establish baseline
         for i in 1..=20 {
             let _ = detector.detect(i as f64);
         }
-        
+
         // Test anomaly detection
         let result = detector.detect(1000.0); // Clear outlier
         assert!(result.is_ok());
@@ -983,12 +1005,12 @@ mod tests {
     fn test_windowing_strategies() {
         let config = UltraStreamingConfig::default();
         let processor = UltraAdvancedStreamingProcessor::<f64>::new(config);
-        
+
         let mut buffer = VecDeque::new();
         for i in 0..2000 {
             buffer.push_back((Instant::now(), i as f64));
         }
-        
+
         let result = processor.apply_windowing_strategy(&mut buffer);
         assert!(result.is_ok());
         assert!(buffer.len() <= 1000); // Should be limited by window size

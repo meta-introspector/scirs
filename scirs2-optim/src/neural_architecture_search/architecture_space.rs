@@ -4,19 +4,18 @@
 //! including components, connections, and constraints.
 
 use num_traits::Float;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use serde::{Serialize, Deserialize};
-
 
 /// Complete optimizer architecture representation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OptimizerArchitecture<T: Float> {
     /// List of optimizer components
     pub components: Vec<OptimizerComponent<T>>,
-    
+
     /// Connections between components
     pub connections: Vec<ComponentConnection>,
-    
+
     /// Architecture metadata
     pub metadata: HashMap<String, String>,
 }
@@ -26,10 +25,10 @@ pub struct OptimizerArchitecture<T: Float> {
 pub struct OptimizerComponent<T: Float> {
     /// Type of the component
     pub component_type: ComponentType,
-    
+
     /// Hyperparameters for this component
     pub hyperparameters: HashMap<String, T>,
-    
+
     /// Input/output connections
     pub connections: Vec<ComponentConnection>,
 }
@@ -43,7 +42,7 @@ pub enum ComponentType {
     AdaGrad,
     RMSprop,
     AdamW,
-    
+
     // Advanced optimizers
     LAMB,
     LARS,
@@ -54,12 +53,12 @@ pub enum ComponentType {
     LBFGS,
     SparseAdam,
     GroupedAdam,
-    
+
     // Meta-learning components
     MAML,
     Reptile,
     MetaSGD,
-    
+
     // Learning rate schedulers
     ConstantLR,
     ExponentialLR,
@@ -67,7 +66,7 @@ pub enum ComponentType {
     CosineAnnealingLR,
     OneCycleLR,
     CyclicLR,
-    
+
     // Regularization components
     L1Regularizer,
     L2Regularizer,
@@ -75,17 +74,17 @@ pub enum ComponentType {
     DropoutRegularizer,
     GradientClipping,
     WeightDecay,
-    
+
     // Adaptive components
     AdaptiveLR,
     AdaptiveMomentum,
     AdaptiveRegularization,
-    
+
     // Neural components
     LSTMOptimizer,
     TransformerOptimizer,
     AttentionOptimizer,
-    
+
     // Custom components
     Custom(String),
 }
@@ -95,16 +94,16 @@ pub enum ComponentType {
 pub struct ComponentConnection {
     /// Source component index
     pub from: usize,
-    
+
     /// Target component index
     pub to: usize,
-    
+
     /// Connection type
     pub connection_type: ConnectionType,
-    
+
     /// Connection weight (if applicable)
     pub weight: f64,
-    
+
     /// Connection metadata
     pub metadata: HashMap<String, String>,
 }
@@ -114,25 +113,25 @@ pub struct ComponentConnection {
 pub enum ConnectionType {
     /// Sequential connection (output of one feeds into next)
     Sequential,
-    
+
     /// Parallel connection (components process same input)
     Parallel,
-    
+
     /// Skip connection (bypassing intermediate components)
     Skip,
-    
+
     /// Residual connection (adding input to output)
     Residual,
-    
+
     /// Attention connection (weighted combination)
     Attention,
-    
+
     /// Gating connection (conditional processing)
     Gating,
-    
+
     /// Feedback connection (output feeds back as input)
     Feedback,
-    
+
     /// Custom connection
     Custom(String),
 }
@@ -142,22 +141,22 @@ pub enum ConnectionType {
 pub enum ConnectionPattern {
     /// Simple sequential chain
     Sequential,
-    
+
     /// Parallel branches that merge
     Parallel,
-    
+
     /// Skip connections throughout
     Skip,
-    
+
     /// Dense connections (all-to-all)
     Dense,
-    
+
     /// Hierarchical structure
     Hierarchical,
-    
+
     /// Graph-based structure
     Graph,
-    
+
     /// Custom pattern
     Custom,
 }
@@ -167,16 +166,16 @@ pub enum ConnectionPattern {
 pub struct SearchSpace {
     /// Available component types
     pub component_types: Vec<ComponentType>,
-    
+
     /// Hyperparameter ranges for each component type
     pub hyperparameter_ranges: HashMap<ComponentType, ComponentHyperparameters>,
-    
+
     /// Available connection patterns
     pub connection_patterns: Vec<ConnectionPattern>,
-    
+
     /// Architecture constraints
     pub constraints: ArchitectureConstraints,
-    
+
     /// Search space metadata
     pub metadata: SearchSpaceMetadata,
 }
@@ -186,19 +185,19 @@ pub struct SearchSpace {
 pub struct ComponentHyperparameters {
     /// Continuous parameters (min, max)
     pub continuous: HashMap<String, (f64, f64)>,
-    
+
     /// Integer parameters (min, max)
     pub integer: HashMap<String, (i32, i32)>,
-    
+
     /// Categorical parameters
     pub categorical: HashMap<String, Vec<String>>,
-    
+
     /// Boolean parameters
     pub boolean: Vec<String>,
-    
+
     /// Log-uniform parameters (min, max)
     pub log_uniform: HashMap<String, (f64, f64)>,
-    
+
     /// Dependent parameters (parameter -> condition)
     pub dependencies: HashMap<String, ParameterDependency>,
 }
@@ -208,10 +207,10 @@ pub struct ComponentHyperparameters {
 pub struct ParameterDependency {
     /// Parameter this depends on
     pub depends_on: String,
-    
+
     /// Condition for dependency
     pub condition: DependencyCondition,
-    
+
     /// Valid values when condition is met
     pub valid_values: ParameterValues,
 }
@@ -221,16 +220,16 @@ pub struct ParameterDependency {
 pub enum DependencyCondition {
     /// Equals specific value
     Equals(String),
-    
+
     /// Greater than threshold
     GreaterThan(f64),
-    
+
     /// Less than threshold
     LessThan(f64),
-    
+
     /// In specific range
     InRange(f64, f64),
-    
+
     /// In set of values
     InSet(Vec<String>),
 }
@@ -240,13 +239,13 @@ pub enum DependencyCondition {
 pub enum ParameterValues {
     /// Continuous range
     Continuous(f64, f64),
-    
+
     /// Integer range
     Integer(i32, i32),
-    
+
     /// Categorical options
     Categorical(Vec<String>),
-    
+
     /// Boolean value
     Boolean(bool),
 }
@@ -256,22 +255,22 @@ pub enum ParameterValues {
 pub struct ArchitectureConstraints {
     /// Maximum number of components
     pub max_components: usize,
-    
+
     /// Minimum number of components
     pub min_components: usize,
-    
+
     /// Maximum memory usage (MB)
     pub max_memory_mb: usize,
-    
+
     /// Maximum computation time per step (ms)
     pub max_computation_time_ms: f64,
-    
+
     /// Maximum model parameters
     pub max_parameters: usize,
-    
+
     /// Compatibility constraints
     pub compatibility: Vec<CompatibilityConstraint>,
-    
+
     /// Performance constraints
     pub performance: PerformanceConstraints,
 }
@@ -281,13 +280,13 @@ pub struct ArchitectureConstraints {
 pub struct CompatibilityConstraint {
     /// First component type
     pub component1: ComponentType,
-    
+
     /// Second component type
     pub component2: ComponentType,
-    
+
     /// Compatibility type
     pub compatibility_type: CompatibilityType,
-    
+
     /// Additional conditions
     pub conditions: Vec<String>,
 }
@@ -297,16 +296,16 @@ pub struct CompatibilityConstraint {
 pub enum CompatibilityType {
     /// Components are fully compatible
     Compatible,
-    
+
     /// Components are incompatible
     Incompatible,
-    
+
     /// Components are conditionally compatible
     Conditional,
-    
+
     /// Components have synergistic effects
     Synergistic,
-    
+
     /// Components have conflicting effects
     Conflicting,
 }
@@ -316,16 +315,16 @@ pub enum CompatibilityType {
 pub struct PerformanceConstraints {
     /// Minimum convergence speed
     pub min_convergence_speed: f64,
-    
+
     /// Maximum training time (hours)
     pub max_training_time_hours: f64,
-    
+
     /// Minimum final performance
     pub min_final_performance: f64,
-    
+
     /// Maximum performance variance
     pub max_performance_variance: f64,
-    
+
     /// Robustness requirements
     pub robustness_requirements: RobustnessRequirements,
 }
@@ -335,13 +334,13 @@ pub struct PerformanceConstraints {
 pub struct RobustnessRequirements {
     /// Hyperparameter sensitivity threshold
     pub hyperparameter_sensitivity: f64,
-    
+
     /// Noise tolerance level
     pub noise_tolerance: f64,
-    
+
     /// Distribution shift robustness
     pub distribution_shift_robustness: f64,
-    
+
     /// Initialization sensitivity
     pub initialization_sensitivity: f64,
 }
@@ -351,22 +350,22 @@ pub struct RobustnessRequirements {
 pub struct SearchSpaceMetadata {
     /// Search space name
     pub name: String,
-    
+
     /// Version
     pub version: String,
-    
+
     /// Description
     pub description: String,
-    
+
     /// Target domains
     pub target_domains: Vec<OptimizationDomain>,
-    
+
     /// Complexity level
     pub complexity_level: ComplexityLevel,
-    
+
     /// Creation timestamp
     pub created_at: String,
-    
+
     /// Author information
     pub author: String,
 }
@@ -401,13 +400,13 @@ pub enum ComplexityLevel {
 pub struct ValidationResult {
     /// Whether architecture is valid
     pub is_valid: bool,
-    
+
     /// Validation errors
     pub errors: Vec<ValidationError>,
-    
+
     /// Validation warnings
     pub warnings: Vec<ValidationWarning>,
-    
+
     /// Estimated resource usage
     pub resource_estimate: ResourceEstimate,
 }
@@ -417,13 +416,13 @@ pub struct ValidationResult {
 pub struct ValidationError {
     /// Error type
     pub error_type: ValidationErrorType,
-    
+
     /// Error message
     pub message: String,
-    
+
     /// Component index (if applicable)
     pub component_index: Option<usize>,
-    
+
     /// Parameter name (if applicable)
     pub parameter_name: Option<String>,
 }
@@ -444,10 +443,10 @@ pub enum ValidationErrorType {
 pub struct ValidationWarning {
     /// Warning type
     pub warning_type: ValidationWarningType,
-    
+
     /// Warning message
     pub message: String,
-    
+
     /// Severity level
     pub severity: WarningSeverity,
 }
@@ -475,16 +474,16 @@ pub enum WarningSeverity {
 pub struct ResourceEstimate {
     /// Estimated memory usage (MB)
     pub memory_mb: f64,
-    
+
     /// Estimated computation time per step (ms)
     pub computation_time_ms: f64,
-    
+
     /// Estimated model parameters
     pub model_parameters: usize,
-    
+
     /// Estimated training time (hours)
     pub training_time_hours: f64,
-    
+
     /// Estimated energy consumption (kWh)
     pub energy_consumption_kwh: f64,
 }
@@ -499,7 +498,7 @@ impl ArchitectureFactory {
         hyperparameters.insert("learning_rate".to_string(), T::from(0.01).unwrap());
         hyperparameters.insert("momentum".to_string(), T::from(0.9).unwrap());
         hyperparameters.insert("weight_decay".to_string(), T::from(0.0001).unwrap());
-        
+
         OptimizerArchitecture {
             components: vec![OptimizerComponent {
                 component_type: ComponentType::SGD,
@@ -510,7 +509,7 @@ impl ArchitectureFactory {
             metadata: HashMap::new(),
         }
     }
-    
+
     /// Create an Adam architecture
     pub fn create_adam_architecture<T: Float>() -> OptimizerArchitecture<T> {
         let mut hyperparameters = HashMap::new();
@@ -519,7 +518,7 @@ impl ArchitectureFactory {
         hyperparameters.insert("beta2".to_string(), T::from(0.999).unwrap());
         hyperparameters.insert("epsilon".to_string(), T::from(1e-8).unwrap());
         hyperparameters.insert("weight_decay".to_string(), T::from(0.0).unwrap());
-        
+
         OptimizerArchitecture {
             components: vec![OptimizerComponent {
                 component_type: ComponentType::Adam,
@@ -530,44 +529,44 @@ impl ArchitectureFactory {
             metadata: HashMap::new(),
         }
     }
-    
+
     /// Create a complex hybrid architecture
     pub fn create_hybrid_architecture<T: Float>() -> OptimizerArchitecture<T> {
         let mut components = Vec::new();
-        
+
         // Adam optimizer component
         let mut adam_params = HashMap::new();
         adam_params.insert("learning_rate".to_string(), T::from(0.001).unwrap());
         adam_params.insert("beta1".to_string(), T::from(0.9).unwrap());
         adam_params.insert("beta2".to_string(), T::from(0.999).unwrap());
-        
+
         components.push(OptimizerComponent {
             component_type: ComponentType::Adam,
             hyperparameters: adam_params,
             connections: Vec::new(),
         });
-        
+
         // Cosine annealing scheduler
         let mut scheduler_params = HashMap::new();
         scheduler_params.insert("t_max".to_string(), T::from(100.0).unwrap());
         scheduler_params.insert("eta_min".to_string(), T::from(1e-6).unwrap());
-        
+
         components.push(OptimizerComponent {
             component_type: ComponentType::CosineAnnealingLR,
             hyperparameters: scheduler_params,
             connections: Vec::new(),
         });
-        
+
         // L2 regularization
         let mut reg_params = HashMap::new();
         reg_params.insert("lambda".to_string(), T::from(0.0001).unwrap());
-        
+
         components.push(OptimizerComponent {
             component_type: ComponentType::L2Regularizer,
             hyperparameters: reg_params,
             connections: Vec::new(),
         });
-        
+
         // Sequential connections
         let connections = vec![
             ComponentConnection {
@@ -585,14 +584,14 @@ impl ArchitectureFactory {
                 metadata: HashMap::new(),
             },
         ];
-        
+
         OptimizerArchitecture {
             components,
             connections,
             metadata: HashMap::new(),
         }
     }
-    
+
     /// Create an LSTM-based neural optimizer architecture
     pub fn create_lstm_optimizer_architecture<T: Float>() -> OptimizerArchitecture<T> {
         let mut hyperparameters = HashMap::new();
@@ -600,7 +599,7 @@ impl ArchitectureFactory {
         hyperparameters.insert("num_layers".to_string(), T::from(2.0).unwrap());
         hyperparameters.insert("dropout".to_string(), T::from(0.1).unwrap());
         hyperparameters.insert("meta_learning_rate".to_string(), T::from(0.001).unwrap());
-        
+
         OptimizerArchitecture {
             components: vec![OptimizerComponent {
                 component_type: ComponentType::LSTMOptimizer,
@@ -623,12 +622,12 @@ impl ArchitectureValidator {
     pub fn new(search_space: SearchSpace) -> Self {
         Self { search_space }
     }
-    
+
     /// Validate an architecture
     pub fn validate<T: Float>(&self, architecture: &OptimizerArchitecture<T>) -> ValidationResult {
         let mut errors = Vec::new();
         let mut warnings = Vec::new();
-        
+
         // Check component count constraints
         if architecture.components.len() > self.search_space.constraints.max_components {
             errors.push(ValidationError {
@@ -642,7 +641,7 @@ impl ArchitectureValidator {
                 parameter_name: None,
             });
         }
-        
+
         if architecture.components.len() < self.search_space.constraints.min_components {
             errors.push(ValidationError {
                 error_type: ValidationErrorType::ConstraintViolation,
@@ -655,35 +654,34 @@ impl ArchitectureValidator {
                 parameter_name: None,
             });
         }
-        
+
         // Validate each component
         for (i, component) in architecture.components.iter().enumerate() {
             self.validate_component(component, i, &mut errors, &mut warnings);
         }
-        
+
         // Validate connections
         self.validate_connections(architecture, &mut errors, &mut warnings);
-        
+
         // Check compatibility constraints
         self.validate_compatibility(architecture, &mut errors, &mut warnings);
-        
+
         // Estimate resources
         let resource_estimate = self.estimate_resources(architecture);
-        
+
         // Check resource constraints
         if resource_estimate.memory_mb > self.search_space.constraints.max_memory_mb as f64 {
             errors.push(ValidationError {
                 error_type: ValidationErrorType::ResourceExceeded,
                 message: format!(
                     "Memory usage exceeds limit: {:.2} MB > {} MB",
-                    resource_estimate.memory_mb,
-                    self.search_space.constraints.max_memory_mb
+                    resource_estimate.memory_mb, self.search_space.constraints.max_memory_mb
                 ),
                 component_index: None,
                 parameter_name: None,
             });
         }
-        
+
         ValidationResult {
             is_valid: errors.is_empty(),
             errors,
@@ -691,7 +689,7 @@ impl ArchitectureValidator {
             resource_estimate,
         }
     }
-    
+
     fn validate_component<T: Float>(
         &self,
         component: &OptimizerComponent<T>,
@@ -700,22 +698,33 @@ impl ArchitectureValidator {
         warnings: &mut Vec<ValidationWarning>,
     ) {
         // Check if component type is in search space
-        if !self.search_space.component_types.contains(&component.component_type) {
+        if !self
+            .search_space
+            .component_types
+            .contains(&component.component_type)
+        {
             errors.push(ValidationError {
                 error_type: ValidationErrorType::InvalidParameter,
-                message: format!("Component type {:?} not in search space", component.component_type),
+                message: format!(
+                    "Component type {:?} not in search space",
+                    component.component_type
+                ),
                 component_index: Some(index),
                 parameter_name: None,
             });
             return;
         }
-        
+
         // Get hyperparameter specification for this component type
-        if let Some(param_spec) = self.search_space.hyperparameter_ranges.get(&component.component_type) {
+        if let Some(param_spec) = self
+            .search_space
+            .hyperparameter_ranges
+            .get(&component.component_type)
+        {
             self.validate_hyperparameters(component, param_spec, index, errors, warnings);
         }
     }
-    
+
     fn validate_hyperparameters<T: Float>(
         &self,
         component: &OptimizerComponent<T>,
@@ -726,7 +735,7 @@ impl ArchitectureValidator {
     ) {
         for (param_name, param_value) in &component.hyperparameters {
             let value = param_value.to_f64().unwrap_or(0.0);
-            
+
             // Check continuous parameters
             if let Some((min, max)) = param_spec.continuous.get(param_name) {
                 if value < *min || value > *max {
@@ -741,7 +750,7 @@ impl ArchitectureValidator {
                     });
                 }
             }
-            
+
             // Check log-uniform parameters
             if let Some((min, max)) = param_spec.log_uniform.get(param_name) {
                 if value <= 0.0 || value < *min || value > *max {
@@ -756,7 +765,7 @@ impl ArchitectureValidator {
                     });
                 }
             }
-            
+
             // Check integer parameters
             if let Some((min, max)) = param_spec.integer.get(param_name) {
                 let int_value = value as i32;
@@ -774,7 +783,7 @@ impl ArchitectureValidator {
             }
         }
     }
-    
+
     fn validate_connections<T: Float>(
         &self,
         architecture: &OptimizerArchitecture<T>,
@@ -785,29 +794,23 @@ impl ArchitectureValidator {
             if connection.from >= architecture.components.len() {
                 errors.push(ValidationError {
                     error_type: ValidationErrorType::InvalidConnection,
-                    message: format!(
-                        "Connection source index {} out of bounds",
-                        connection.from
-                    ),
+                    message: format!("Connection source index {} out of bounds", connection.from),
                     component_index: None,
                     parameter_name: None,
                 });
             }
-            
+
             if connection.to >= architecture.components.len() {
                 errors.push(ValidationError {
                     error_type: ValidationErrorType::InvalidConnection,
-                    message: format!(
-                        "Connection target index {} out of bounds",
-                        connection.to
-                    ),
+                    message: format!("Connection target index {} out of bounds", connection.to),
                     component_index: None,
                     parameter_name: None,
                 });
             }
         }
     }
-    
+
     fn validate_compatibility<T: Float>(
         &self,
         architecture: &OptimizerArchitecture<T>,
@@ -815,11 +818,15 @@ impl ArchitectureValidator {
         warnings: &mut Vec<ValidationWarning>,
     ) {
         for constraint in &self.search_space.constraints.compatibility {
-            let component1_exists = architecture.components.iter()
+            let component1_exists = architecture
+                .components
+                .iter()
                 .any(|c| c.component_type == constraint.component1);
-            let component2_exists = architecture.components.iter()
+            let component2_exists = architecture
+                .components
+                .iter()
                 .any(|c| c.component_type == constraint.component2);
-            
+
             if component1_exists && component2_exists {
                 match constraint.compatibility_type {
                     CompatibilityType::Incompatible => {
@@ -848,24 +855,29 @@ impl ArchitectureValidator {
             }
         }
     }
-    
-    fn estimate_resources<T: Float>(&self, architecture: &OptimizerArchitecture<T>) -> ResourceEstimate {
+
+    fn estimate_resources<T: Float>(
+        &self,
+        architecture: &OptimizerArchitecture<T>,
+    ) -> ResourceEstimate {
         let mut memory_mb = 0.0;
         let mut computation_time_ms = 0.0;
         let mut model_parameters = 0;
-        
+
         for component in &architecture.components {
             match component.component_type {
                 ComponentType::LSTMOptimizer => {
-                    let hidden_size = component.hyperparameters
+                    let hidden_size = component
+                        .hyperparameters
                         .get("hidden_size")
                         .map(|v| v.to_f64().unwrap_or(256.0))
                         .unwrap_or(256.0);
-                    let num_layers = component.hyperparameters
+                    let num_layers = component
+                        .hyperparameters
                         .get("num_layers")
                         .map(|v| v.to_f64().unwrap_or(2.0))
                         .unwrap_or(2.0);
-                    
+
                     memory_mb += hidden_size * num_layers * 4.0 / 1024.0 / 1024.0; // Rough estimate
                     computation_time_ms += hidden_size * num_layers * 0.01;
                     model_parameters += (hidden_size * hidden_size * 4.0 * num_layers) as usize;
@@ -882,7 +894,7 @@ impl ArchitectureValidator {
                 }
             }
         }
-        
+
         ResourceEstimate {
             memory_mb,
             computation_time_ms,
@@ -912,9 +924,9 @@ impl Default for SearchSpace {
             ComponentType::L2Regularizer,
             ComponentType::GradientClipping,
         ];
-        
+
         let mut hyperparameter_ranges = HashMap::new();
-        
+
         // SGD hyperparameters
         let mut sgd_params = ComponentHyperparameters {
             continuous: HashMap::new(),
@@ -924,11 +936,17 @@ impl Default for SearchSpace {
             log_uniform: HashMap::new(),
             dependencies: HashMap::new(),
         };
-        sgd_params.log_uniform.insert("learning_rate".to_string(), (1e-6, 1e-1));
-        sgd_params.continuous.insert("momentum".to_string(), (0.0, 0.99));
-        sgd_params.log_uniform.insert("weight_decay".to_string(), (1e-8, 1e-2));
+        sgd_params
+            .log_uniform
+            .insert("learning_rate".to_string(), (1e-6, 1e-1));
+        sgd_params
+            .continuous
+            .insert("momentum".to_string(), (0.0, 0.99));
+        sgd_params
+            .log_uniform
+            .insert("weight_decay".to_string(), (1e-8, 1e-2));
         hyperparameter_ranges.insert(ComponentType::SGD, sgd_params);
-        
+
         // Adam hyperparameters
         let mut adam_params = ComponentHyperparameters {
             continuous: HashMap::new(),
@@ -938,13 +956,23 @@ impl Default for SearchSpace {
             log_uniform: HashMap::new(),
             dependencies: HashMap::new(),
         };
-        adam_params.log_uniform.insert("learning_rate".to_string(), (1e-6, 1e-1));
-        adam_params.continuous.insert("beta1".to_string(), (0.8, 0.999));
-        adam_params.continuous.insert("beta2".to_string(), (0.9, 0.9999));
-        adam_params.log_uniform.insert("epsilon".to_string(), (1e-10, 1e-6));
-        adam_params.log_uniform.insert("weight_decay".to_string(), (1e-8, 1e-2));
+        adam_params
+            .log_uniform
+            .insert("learning_rate".to_string(), (1e-6, 1e-1));
+        adam_params
+            .continuous
+            .insert("beta1".to_string(), (0.8, 0.999));
+        adam_params
+            .continuous
+            .insert("beta2".to_string(), (0.9, 0.9999));
+        adam_params
+            .log_uniform
+            .insert("epsilon".to_string(), (1e-10, 1e-6));
+        adam_params
+            .log_uniform
+            .insert("weight_decay".to_string(), (1e-8, 1e-2));
         hyperparameter_ranges.insert(ComponentType::Adam, adam_params);
-        
+
         Self {
             component_types,
             hyperparameter_ranges,
@@ -989,15 +1017,17 @@ impl Default for SearchSpace {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_sgd_architecture_creation() {
         let arch = ArchitectureFactory::create_sgd_architecture::<f64>();
         assert_eq!(arch.components.len(), 1);
         assert_eq!(arch.components[0].component_type, ComponentType::SGD);
-        assert!(arch.components[0].hyperparameters.contains_key("learning_rate"));
+        assert!(arch.components[0]
+            .hyperparameters
+            .contains_key("learning_rate"));
     }
-    
+
     #[test]
     fn test_adam_architecture_creation() {
         let arch = ArchitectureFactory::create_adam_architecture::<f64>();
@@ -1006,31 +1036,31 @@ mod tests {
         assert!(arch.components[0].hyperparameters.contains_key("beta1"));
         assert!(arch.components[0].hyperparameters.contains_key("beta2"));
     }
-    
+
     #[test]
     fn test_hybrid_architecture_creation() {
         let arch = ArchitectureFactory::create_hybrid_architecture::<f64>();
         assert_eq!(arch.components.len(), 3);
         assert_eq!(arch.connections.len(), 2);
     }
-    
+
     #[test]
     fn test_architecture_validation() {
         let search_space = SearchSpace::default();
         let validator = ArchitectureValidator::new(search_space);
         let arch = ArchitectureFactory::create_adam_architecture::<f64>();
-        
+
         let result = validator.validate(&arch);
         assert!(result.is_valid);
         assert!(result.errors.is_empty());
     }
-    
+
     #[test]
     fn test_resource_estimation() {
         let search_space = SearchSpace::default();
         let validator = ArchitectureValidator::new(search_space);
         let arch = ArchitectureFactory::create_lstm_optimizer_architecture::<f64>();
-        
+
         let result = validator.validate(&arch);
         assert!(result.resource_estimate.memory_mb > 0.0);
         assert!(result.resource_estimate.model_parameters > 0);

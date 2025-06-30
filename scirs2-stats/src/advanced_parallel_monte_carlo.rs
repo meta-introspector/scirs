@@ -316,7 +316,8 @@ where
                 (current_error / current_estimate.abs()).to_f64().unwrap()
             } else {
                 current_error.to_f64().unwrap()
-            }).unwrap(),
+            })
+            .unwrap(),
             n_samples: total_samples,
             metrics: self.metrics.lock().unwrap().clone(),
             converged,

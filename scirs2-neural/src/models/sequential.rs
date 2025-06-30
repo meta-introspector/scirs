@@ -10,7 +10,7 @@ use std::fmt::{Debug, Display};
 use crate::error::{NeuralError, Result};
 use crate::layers::{Layer, ParamLayer};
 use crate::losses::Loss;
-use crate::models::{Model, History, TrainingConfig};
+use crate::models::{History, Model, TrainingConfig};
 use crate::optimizers::Optimizer;
 
 /// A sequential model that chains layers together in a linear sequence
@@ -21,7 +21,9 @@ pub struct Sequential<F: Float + Debug + ScalarOperand + 'static> {
     history: History<F>,
 }
 
-impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + 'static> Default for Sequential<F> {
+impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + 'static> Default
+    for Sequential<F>
+{
     fn default() -> Self {
         Self::new()
     }
@@ -93,14 +95,21 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + 'static> Seque
     }
 
     /// Predict on batched input data
-    pub fn predict_batched(&self, inputs: &Array<F, ndarray::IxDyn>, batch_size: usize) -> Result<Array<F, ndarray::IxDyn>> {
+    pub fn predict_batched(
+        &self,
+        inputs: &Array<F, ndarray::IxDyn>,
+        batch_size: usize,
+    ) -> Result<Array<F, ndarray::IxDyn>> {
         let input_shape = inputs.shape();
         let num_samples = input_shape[0];
         let mut outputs = Vec::new();
 
         for i in (0..num_samples).step_by(batch_size) {
             let end_idx = std::cmp::min(i + batch_size, num_samples);
-            let batch = inputs.slice(ndarray::s![i..end_idx, ..]).to_owned().into_dyn();
+            let batch = inputs
+                .slice(ndarray::s![i..end_idx, ..])
+                .to_owned()
+                .into_dyn();
             let batch_output = self.forward(&batch)?;
             outputs.push(batch_output);
         }
@@ -127,7 +136,6 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + 'static> Seque
         loss_fn: &dyn Loss<F>,
         optimizer: &mut dyn Optimizer<F>,
     ) -> Result<()> {
-
         let num_samples = x_train.shape()[0];
         let val_split_idx = if config.validation_split > 0.0 {
             ((1.0 - config.validation_split) * num_samples as f64) as usize
@@ -137,16 +145,28 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + 'static> Seque
 
         // Split data into training and validation sets
         let (x_train_split, x_val) = if config.validation_split > 0.0 {
-            let x_train_split = x_train.slice(ndarray::s![0..val_split_idx, ..]).to_owned().into_dyn();
-            let x_val = x_train.slice(ndarray::s![val_split_idx.., ..]).to_owned().into_dyn();
+            let x_train_split = x_train
+                .slice(ndarray::s![0..val_split_idx, ..])
+                .to_owned()
+                .into_dyn();
+            let x_val = x_train
+                .slice(ndarray::s![val_split_idx.., ..])
+                .to_owned()
+                .into_dyn();
             (x_train_split, Some(x_val))
         } else {
             (x_train.clone(), None)
         };
 
         let (y_train_split, y_val) = if config.validation_split > 0.0 {
-            let y_train_split = y_train.slice(ndarray::s![0..val_split_idx, ..]).to_owned().into_dyn();
-            let y_val = y_train.slice(ndarray::s![val_split_idx.., ..]).to_owned().into_dyn();
+            let y_train_split = y_train
+                .slice(ndarray::s![0..val_split_idx, ..])
+                .to_owned()
+                .into_dyn();
+            let y_val = y_train
+                .slice(ndarray::s![val_split_idx.., ..])
+                .to_owned()
+                .into_dyn();
             (y_train_split, Some(y_val))
         } else {
             (y_train.clone(), None)
@@ -160,16 +180,24 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + 'static> Seque
             // Training phase
             for i in 0..num_batches {
                 let start_idx = i * config.batch_size;
-                let end_idx = std::cmp::min(start_idx + config.batch_size, x_train_split.shape()[0]);
-                
-                let batch_x = x_train_split.slice(ndarray::s![start_idx..end_idx, ..]).to_owned().into_dyn();
-                let batch_y = y_train_split.slice(ndarray::s![start_idx..end_idx, ..]).to_owned().into_dyn();
-                
+                let end_idx =
+                    std::cmp::min(start_idx + config.batch_size, x_train_split.shape()[0]);
+
+                let batch_x = x_train_split
+                    .slice(ndarray::s![start_idx..end_idx, ..])
+                    .to_owned()
+                    .into_dyn();
+                let batch_y = y_train_split
+                    .slice(ndarray::s![start_idx..end_idx, ..])
+                    .to_owned()
+                    .into_dyn();
+
                 let batch_loss = self.train_batch(&batch_x, &batch_y, loss_fn, optimizer)?;
                 epoch_loss = epoch_loss + batch_loss;
             }
 
-            let avg_train_loss = epoch_loss / F::from_usize(num_batches).unwrap_or_else(|| F::one());
+            let avg_train_loss =
+                epoch_loss / F::from_usize(num_batches).unwrap_or_else(|| F::one());
             self.history.train_loss.push(avg_train_loss);
 
             // Validation phase
@@ -182,7 +210,12 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + 'static> Seque
             }
 
             if config.verbose > 0 {
-                println!("Epoch {}/{} - loss: {:.4}", epoch + 1, config.epochs, avg_train_loss);
+                println!(
+                    "Epoch {}/{} - loss: {:.4}",
+                    epoch + 1,
+                    config.epochs,
+                    avg_train_loss
+                );
             }
         }
 
@@ -190,7 +223,9 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + 'static> Seque
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + 'static> Model<F> for Sequential<F> {
+impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + 'static> Model<F>
+    for Sequential<F>
+{
     fn forward(&self, input: &Array<F, ndarray::IxDyn>) -> Result<Array<F, ndarray::IxDyn>> {
         let mut current_output = input.clone();
 
@@ -365,16 +400,16 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + 'static> Model
 //     fn _test_sequential_training() {
 //         let mut rng = StdRng::seed_from_u64(42);
 //         let mut model = Sequential::<f64>::new();
-//         
+//
 //         // Add layers
 //         model.add_layer(Dense::new(4, 8, None, &mut rng).unwrap());
 //         model.add_layer(Dense::new(8, 4, None, &mut rng).unwrap());
 //         model.add_layer(Dense::new(4, 1, None, &mut rng).unwrap());
-//         
+//
 //         // Create dummy data
 //         let train_x = Array2::<f64>::from_elem((100, 4), 0.5).into_dyn();
 //         let train_y = Array2::<f64>::from_elem((100, 1), 1.0).into_dyn();
-//         
+//
 //         // Training configuration
 //         let config = TrainingConfig {
 //             batch_size: 10,
@@ -383,43 +418,43 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + 'static> Model
 //             verbose: 0,
 //             ..Default::default()
 //         };
-//         
+//
 //         let loss_fn = MeanSquaredError::new();
 //         let mut optimizer = SGD::new(0.01);
-//         
+//
 //         // Train the model
 //         model.fit(&train_x, &train_y, &config, &loss_fn, &mut optimizer).unwrap();
-//         
+//
 //         // Check that training history was recorded
 //         assert!(!model.training_history().train_loss.is_empty());
 //         assert!(!model.training_history().val_loss.is_empty());
 //     }
-//     
+//
 //     #[test]
 //     fn test_sequential_prediction() {
 //         let mut rng = StdRng::seed_from_u64(42);
 //         let mut model = Sequential::<f64>::new();
-//         
+//
 //         model.add_layer(Dense::new(3, 5, None, &mut rng).unwrap());
 //         model.add_layer(Dense::new(5, 2, None, &mut rng).unwrap());
-//         
+//
 //         let input = Array2::<f64>::from_elem((2, 3), 0.5).into_dyn();
 //         let output = model.predict(&input).unwrap();
-//         
+//
 //         assert_eq!(output.shape(), &[2, 2]);
 //     }
-//     
+//
 //     #[test]
 //     fn test_batched_prediction() {
 //         let mut rng = StdRng::seed_from_u64(42);
 //         let mut model = Sequential::<f64>::new();
-//         
+//
 //         model.add_layer(Dense::new(3, 5, None, &mut rng).unwrap());
 //         model.add_layer(Dense::new(5, 2, None, &mut rng).unwrap());
-//         
+//
 //         let input = Array2::<f64>::from_elem((25, 3), 0.5).into_dyn();
 //         let output = model.predict_batched(&input, 10).unwrap();
-//         
+//
 //         assert_eq!(output.shape(), &[25, 2]);
 //     }
 // }

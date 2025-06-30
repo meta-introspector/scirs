@@ -3,11 +3,11 @@
 use crate::error::{NeuralError, Result};
 use ndarray::prelude::*;
 use ndarray::{ArrayView, Zip};
-use std::sync::{Arc, Mutex, RwLock};
+use scirs2_core::parallel_ops::*;
 use std::collections::HashMap;
+use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
 use std::time::{Duration, Instant};
-use scirs2_core::parallel_ops::*;
 
 /// Accelerator type enumeration
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -185,7 +185,12 @@ impl DeviceBuffer {
     }
 
     /// Create a new device buffer with specified memory type
-    pub fn new_with_type(ptr: *mut u8, size: usize, device_id: usize, memory_type: MemoryType) -> Self {
+    pub fn new_with_type(
+        ptr: *mut u8,
+        size: usize,
+        device_id: usize,
+        memory_type: MemoryType,
+    ) -> Self {
         static COUNTER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
         let id = COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
 
@@ -366,7 +371,12 @@ impl MemoryPool {
         }
     }
 
-    pub fn allocate(&self, size: usize, device_id: usize, memory_type: MemoryType) -> Result<DeviceBuffer> {
+    pub fn allocate(
+        &self,
+        size: usize,
+        device_id: usize,
+        memory_type: MemoryType,
+    ) -> Result<DeviceBuffer> {
         // Try to reuse a block of similar size
         if let Ok(mut free_blocks) = self.free_blocks.lock() {
             if let Some(blocks) = free_blocks.get_mut(&size) {
@@ -417,9 +427,13 @@ impl MemoryPool {
         }
 
         // Add to free blocks for reuse if buffer is still valid
-        if buffer.is_valid() && buffer.age() < Duration::from_secs(300) { // 5 minute reuse window
+        if buffer.is_valid() && buffer.age() < Duration::from_secs(300) {
+            // 5 minute reuse window
             if let Ok(mut free_blocks) = self.free_blocks.lock() {
-                free_blocks.entry(buffer.size).or_insert_with(Vec::new).push(buffer);
+                free_blocks
+                    .entry(buffer.size)
+                    .or_insert_with(Vec::new)
+                    .push(buffer);
             }
         }
 
@@ -538,48 +552,63 @@ impl Kernel for MatMulKernel {
 
 impl MatMulKernel {
     pub fn new(m: usize, n: usize, k: usize, alpha: f32, beta: f32) -> Self {
-        Self { m, n, k, alpha, beta }
+        Self {
+            m,
+            n,
+            k,
+            alpha,
+            beta,
+        }
     }
 
     /// Execute matrix multiplication on CPU with SIMD optimization
     pub fn execute_cpu(&self, a: &[f32], b: &[f32], c: &mut [f32]) -> Result<()> {
         // Validate input sizes
         if a.len() != self.m * self.k {
-            return Err(NeuralError::InvalidInput("Matrix A size mismatch".to_string()));
+            return Err(NeuralError::InvalidInput(
+                "Matrix A size mismatch".to_string(),
+            ));
         }
         if b.len() != self.k * self.n {
-            return Err(NeuralError::InvalidInput("Matrix B size mismatch".to_string()));
+            return Err(NeuralError::InvalidInput(
+                "Matrix B size mismatch".to_string(),
+            ));
         }
         if c.len() != self.m * self.n {
-            return Err(NeuralError::InvalidInput("Matrix C size mismatch".to_string()));
+            return Err(NeuralError::InvalidInput(
+                "Matrix C size mismatch".to_string(),
+            ));
         }
 
         // Parallel matrix multiplication with tiling for cache efficiency
         let tile_size = 64;
-        
-        (0..self.m).into_par_iter().step_by(tile_size).for_each(|i_start| {
-            for j_start in (0..self.n).step_by(tile_size) {
-                for k_start in (0..self.k).step_by(tile_size) {
-                    let i_end = std::cmp::min(i_start + tile_size, self.m);
-                    let j_end = std::cmp::min(j_start + tile_size, self.n);
-                    let k_end = std::cmp::min(k_start + tile_size, self.k);
 
-                    for i in i_start..i_end {
-                        for j in j_start..j_end {
-                            let mut sum = 0.0f32;
-                            
-                            // Vectorized inner loop
-                            for k in k_start..k_end {
-                                sum += a[i * self.k + k] * b[k * self.n + j];
+        (0..self.m)
+            .into_par_iter()
+            .step_by(tile_size)
+            .for_each(|i_start| {
+                for j_start in (0..self.n).step_by(tile_size) {
+                    for k_start in (0..self.k).step_by(tile_size) {
+                        let i_end = std::cmp::min(i_start + tile_size, self.m);
+                        let j_end = std::cmp::min(j_start + tile_size, self.n);
+                        let k_end = std::cmp::min(k_start + tile_size, self.k);
+
+                        for i in i_start..i_end {
+                            for j in j_start..j_end {
+                                let mut sum = 0.0f32;
+
+                                // Vectorized inner loop
+                                for k in k_start..k_end {
+                                    sum += a[i * self.k + k] * b[k * self.n + j];
+                                }
+
+                                let c_idx = i * self.n + j;
+                                c[c_idx] = self.alpha * sum + self.beta * c[c_idx];
                             }
-                            
-                            let c_idx = i * self.n + j;
-                            c[c_idx] = self.alpha * sum + self.beta * c[c_idx];
                         }
                     }
                 }
-            }
-        });
+            });
 
         Ok(())
     }
@@ -675,7 +704,7 @@ impl Accelerator for CPUAccelerator {
         outputs: &mut [&mut DeviceBuffer],
     ) -> Result<()> {
         let start = Instant::now();
-        
+
         // Validate inputs
         kernel.validate_inputs(inputs)?;
 
@@ -710,7 +739,7 @@ impl Accelerator for CPUAccelerator {
 
                 // Execute the matrix multiplication
                 matmul_kernel.execute_cpu(a_slice, b_slice, c_slice)?;
-                
+
                 let duration = start.elapsed();
                 println!(
                     "Executed MatMul {}x{}x{} on CPU in {:.3}ms",
@@ -748,33 +777,36 @@ impl Accelerator for CPUAccelerator {
 
     fn profile_kernel(&self, kernel: &dyn Kernel) -> Result<ProfilingInfo> {
         let start = Instant::now();
-        
+
         // Simulate profiling by getting kernel requirements
         let mem_req = kernel.memory_requirements();
         let work_dim = kernel.work_dimensions();
-        
+
         let total_work = work_dim.global.0 * work_dim.global.1 * work_dim.global.2;
-        let total_memory = mem_req.inputs.iter().sum::<usize>() + mem_req.outputs.iter().sum::<usize>();
-        
+        let total_memory =
+            mem_req.inputs.iter().sum::<usize>() + mem_req.outputs.iter().sum::<usize>();
+
         // Calculate estimated performance metrics
-        let est_execution_time = (total_work as f64 / (self.capabilities.compute_units as f64 * 1000.0)) * 1000.0; // microseconds
+        let est_execution_time =
+            (total_work as f64 / (self.capabilities.compute_units as f64 * 1000.0)) * 1000.0; // microseconds
         let memory_bandwidth_achieved = if est_execution_time > 0.0 {
-            (total_memory as f64 / (est_execution_time / 1_000_000.0)) / 1_000_000_000.0 // GB/s
+            (total_memory as f64 / (est_execution_time / 1_000_000.0)) / 1_000_000_000.0
+        // GB/s
         } else {
             0.0
         };
-        
+
         let profiling_overhead = start.elapsed().as_micros() as f64;
-        
+
         Ok(ProfilingInfo {
             kernel_name: kernel.name().to_string(),
             execution_time_us: est_execution_time,
             memory_transfer_us: profiling_overhead * 0.1, // Assume 10% of time is memory transfer
-            occupancy: 1.0, // CPU is always fully utilized
+            occupancy: 1.0,                               // CPU is always fully utilized
             memory_throughput: memory_bandwidth_achieved as f32,
             compute_throughput: (total_work as f64 / est_execution_time) as f32, // ops per microsecond
             energy_consumption: est_execution_time as f32 * 0.1, // Assume 0.1J per microsecond
-            cache_hit_ratio: 0.85, // Assume good cache efficiency
+            cache_hit_ratio: 0.85,                               // Assume good cache efficiency
             instruction_throughput: (total_work as f64 * 4.0 / est_execution_time) as f32, // ~4 instructions per operation
             register_usage: 0.6, // Assume moderate register usage
             shared_memory_usage: work_dim.shared_memory,
@@ -832,10 +864,10 @@ impl CUDAAccelerator {
     pub fn new(device_id: usize) -> Result<Self> {
         let capabilities = AcceleratorCapabilities {
             name: format!("CUDA Device {}", device_id),
-            compute_capability: (8, 6), // Default to modern GPU
+            compute_capability: (8, 6),            // Default to modern GPU
             total_memory: 24 * 1024 * 1024 * 1024, // 24GB
-            memory_bandwidth: 900.0, // GB/s
-            compute_units: 108, // SM count
+            memory_bandwidth: 900.0,               // GB/s
+            compute_units: 108,                    // SM count
             peak_tflops_fp32: 35.0,
             peak_tflops_fp16: 142.0,
             peak_tflops_int8: 284.0,
@@ -892,11 +924,11 @@ impl Accelerator for CUDAAccelerator {
     fn upload(&self, data: &ArrayView2<f32>) -> Result<DeviceBuffer> {
         let size = data.len() * std::mem::size_of::<f32>();
         let mut buffer = self.allocate(size)?;
-        
+
         unsafe {
             std::ptr::copy_nonoverlapping(data.as_ptr() as *const u8, buffer.ptr, size);
         }
-        
+
         Ok(buffer)
     }
 
@@ -904,11 +936,11 @@ impl Accelerator for CUDAAccelerator {
         let elements = buffer.size / std::mem::size_of::<f32>();
         let shape = (elements, 1);
         let mut data = Array2::zeros(shape);
-        
+
         unsafe {
             std::ptr::copy_nonoverlapping(buffer.ptr as *const f32, data.as_mut_ptr(), elements);
         }
-        
+
         Ok(data)
     }
 
@@ -918,7 +950,11 @@ impl Accelerator for CUDAAccelerator {
         _inputs: &[&DeviceBuffer],
         _outputs: &mut [&mut DeviceBuffer],
     ) -> Result<()> {
-        println!("Executing kernel: {} on CUDA device {}", kernel.name(), self.device_id);
+        println!(
+            "Executing kernel: {} on CUDA device {}",
+            kernel.name(),
+            self.device_id
+        );
         Ok(())
     }
 
@@ -1019,11 +1055,11 @@ impl Accelerator for MetalAccelerator {
     fn upload(&self, data: &ArrayView2<f32>) -> Result<DeviceBuffer> {
         let size = data.len() * std::mem::size_of::<f32>();
         let mut buffer = self.allocate(size)?;
-        
+
         unsafe {
             std::ptr::copy_nonoverlapping(data.as_ptr() as *const u8, buffer.ptr, size);
         }
-        
+
         Ok(buffer)
     }
 
@@ -1031,11 +1067,11 @@ impl Accelerator for MetalAccelerator {
         let elements = buffer.size / std::mem::size_of::<f32>();
         let shape = (elements, 1);
         let mut data = Array2::zeros(shape);
-        
+
         unsafe {
             std::ptr::copy_nonoverlapping(buffer.ptr as *const f32, data.as_mut_ptr(), elements);
         }
-        
+
         Ok(data)
     }
 
@@ -1149,11 +1185,11 @@ impl Accelerator for ROCmAccelerator {
     fn upload(&self, data: &ArrayView2<f32>) -> Result<DeviceBuffer> {
         let size = data.len() * std::mem::size_of::<f32>();
         let mut buffer = self.allocate(size)?;
-        
+
         unsafe {
             std::ptr::copy_nonoverlapping(data.as_ptr() as *const u8, buffer.ptr, size);
         }
-        
+
         Ok(buffer)
     }
 
@@ -1161,11 +1197,11 @@ impl Accelerator for ROCmAccelerator {
         let elements = buffer.size / std::mem::size_of::<f32>();
         let shape = (elements, 1);
         let mut data = Array2::zeros(shape);
-        
+
         unsafe {
             std::ptr::copy_nonoverlapping(buffer.ptr as *const f32, data.as_mut_ptr(), elements);
         }
-        
+
         Ok(data)
     }
 
@@ -1175,7 +1211,11 @@ impl Accelerator for ROCmAccelerator {
         _inputs: &[&DeviceBuffer],
         _outputs: &mut [&mut DeviceBuffer],
     ) -> Result<()> {
-        println!("Executing kernel: {} on ROCm device {}", kernel.name(), self.device_id);
+        println!(
+            "Executing kernel: {} on ROCm device {}",
+            kernel.name(),
+            self.device_id
+        );
         Ok(())
     }
 
@@ -1279,11 +1319,11 @@ impl Accelerator for OneAPIAccelerator {
     fn upload(&self, data: &ArrayView2<f32>) -> Result<DeviceBuffer> {
         let size = data.len() * std::mem::size_of::<f32>();
         let mut buffer = self.allocate(size)?;
-        
+
         unsafe {
             std::ptr::copy_nonoverlapping(data.as_ptr() as *const u8, buffer.ptr, size);
         }
-        
+
         Ok(buffer)
     }
 
@@ -1291,11 +1331,11 @@ impl Accelerator for OneAPIAccelerator {
         let elements = buffer.size / std::mem::size_of::<f32>();
         let shape = (elements, 1);
         let mut data = Array2::zeros(shape);
-        
+
         unsafe {
             std::ptr::copy_nonoverlapping(buffer.ptr as *const f32, data.as_mut_ptr(), elements);
         }
-        
+
         Ok(data)
     }
 
@@ -1305,7 +1345,11 @@ impl Accelerator for OneAPIAccelerator {
         _inputs: &[&DeviceBuffer],
         _outputs: &mut [&mut DeviceBuffer],
     ) -> Result<()> {
-        println!("Executing kernel: {} on Intel OneAPI device {}", kernel.name(), self.device_id);
+        println!(
+            "Executing kernel: {} on Intel OneAPI device {}",
+            kernel.name(),
+            self.device_id
+        );
         Ok(())
     }
 
@@ -1409,11 +1453,11 @@ impl Accelerator for FPGAAccelerator {
     fn upload(&self, data: &ArrayView2<f32>) -> Result<DeviceBuffer> {
         let size = data.len() * std::mem::size_of::<f32>();
         let mut buffer = self.allocate(size)?;
-        
+
         unsafe {
             std::ptr::copy_nonoverlapping(data.as_ptr() as *const u8, buffer.ptr, size);
         }
-        
+
         Ok(buffer)
     }
 
@@ -1421,11 +1465,11 @@ impl Accelerator for FPGAAccelerator {
         let elements = buffer.size / std::mem::size_of::<f32>();
         let shape = (elements, 1);
         let mut data = Array2::zeros(shape);
-        
+
         unsafe {
             std::ptr::copy_nonoverlapping(buffer.ptr as *const f32, data.as_mut_ptr(), elements);
         }
-        
+
         Ok(data)
     }
 
@@ -1435,7 +1479,11 @@ impl Accelerator for FPGAAccelerator {
         _inputs: &[&DeviceBuffer],
         _outputs: &mut [&mut DeviceBuffer],
     ) -> Result<()> {
-        println!("Executing kernel: {} on FPGA device {}", kernel.name(), self.device_id);
+        println!(
+            "Executing kernel: {} on FPGA device {}",
+            kernel.name(),
+            self.device_id
+        );
         Ok(())
     }
 
@@ -1539,11 +1587,11 @@ impl Accelerator for TPUAccelerator {
     fn upload(&self, data: &ArrayView2<f32>) -> Result<DeviceBuffer> {
         let size = data.len() * std::mem::size_of::<f32>();
         let mut buffer = self.allocate(size)?;
-        
+
         unsafe {
             std::ptr::copy_nonoverlapping(data.as_ptr() as *const u8, buffer.ptr, size);
         }
-        
+
         Ok(buffer)
     }
 
@@ -1551,11 +1599,11 @@ impl Accelerator for TPUAccelerator {
         let elements = buffer.size / std::mem::size_of::<f32>();
         let shape = (elements, 1);
         let mut data = Array2::zeros(shape);
-        
+
         unsafe {
             std::ptr::copy_nonoverlapping(buffer.ptr as *const f32, data.as_mut_ptr(), elements);
         }
-        
+
         Ok(data)
     }
 
@@ -1565,7 +1613,11 @@ impl Accelerator for TPUAccelerator {
         _inputs: &[&DeviceBuffer],
         _outputs: &mut [&mut DeviceBuffer],
     ) -> Result<()> {
-        println!("Executing kernel: {} on TPU device {}", kernel.name(), self.device_id);
+        println!(
+            "Executing kernel: {} on TPU device {}",
+            kernel.name(),
+            self.device_id
+        );
         Ok(())
     }
 
@@ -1653,8 +1705,7 @@ impl Accelerator for NPUAccelerator {
     }
 
     fn is_available(&self) -> bool {
-        std::path::Path::new("/dev/npu0").exists() || 
-        std::env::var("NPU_RUNTIME").is_ok()
+        std::path::Path::new("/dev/npu0").exists() || std::env::var("NPU_RUNTIME").is_ok()
     }
 
     fn allocate(&self, size: usize) -> Result<DeviceBuffer> {
@@ -1664,17 +1715,22 @@ impl Accelerator for NPUAccelerator {
                 "Failed to allocate NPU memory".to_string(),
             ));
         }
-        Ok(DeviceBuffer::new_with_type(ptr, size, self.device_id, MemoryType::Unified))
+        Ok(DeviceBuffer::new_with_type(
+            ptr,
+            size,
+            self.device_id,
+            MemoryType::Unified,
+        ))
     }
 
     fn upload(&self, data: &ArrayView2<f32>) -> Result<DeviceBuffer> {
         let size = data.len() * std::mem::size_of::<f32>();
         let mut buffer = self.allocate(size)?;
-        
+
         unsafe {
             std::ptr::copy_nonoverlapping(data.as_ptr() as *const u8, buffer.ptr, size);
         }
-        
+
         Ok(buffer)
     }
 
@@ -1682,11 +1738,11 @@ impl Accelerator for NPUAccelerator {
         let elements = buffer.size / std::mem::size_of::<f32>();
         let shape = (elements, 1);
         let mut data = Array2::zeros(shape);
-        
+
         unsafe {
             std::ptr::copy_nonoverlapping(buffer.ptr as *const f32, data.as_mut_ptr(), elements);
         }
-        
+
         Ok(data)
     }
 
@@ -1696,7 +1752,11 @@ impl Accelerator for NPUAccelerator {
         _inputs: &[&DeviceBuffer],
         _outputs: &mut [&mut DeviceBuffer],
     ) -> Result<()> {
-        println!("Executing kernel: {} on NPU device {}", kernel.name(), self.device_id);
+        println!(
+            "Executing kernel: {} on NPU device {}",
+            kernel.name(),
+            self.device_id
+        );
         Ok(())
     }
 
@@ -1753,7 +1813,7 @@ impl ASICAccelerator {
             name: format!("Custom ASIC {}", device_id),
             compute_capability: (1, 0),
             total_memory: 4 * 1024 * 1024 * 1024, // 4GB
-            memory_bandwidth: 2000.0, // Very high bandwidth
+            memory_bandwidth: 2000.0,             // Very high bandwidth
             compute_units: 256,
             peak_tflops_fp32: 200.0, // Highly optimized
             peak_tflops_fp16: 400.0,
@@ -1808,11 +1868,11 @@ impl Accelerator for ASICAccelerator {
     fn upload(&self, data: &ArrayView2<f32>) -> Result<DeviceBuffer> {
         let size = data.len() * std::mem::size_of::<f32>();
         let mut buffer = self.allocate(size)?;
-        
+
         unsafe {
             std::ptr::copy_nonoverlapping(data.as_ptr() as *const u8, buffer.ptr, size);
         }
-        
+
         Ok(buffer)
     }
 
@@ -1820,11 +1880,11 @@ impl Accelerator for ASICAccelerator {
         let elements = buffer.size / std::mem::size_of::<f32>();
         let shape = (elements, 1);
         let mut data = Array2::zeros(shape);
-        
+
         unsafe {
             std::ptr::copy_nonoverlapping(buffer.ptr as *const f32, data.as_mut_ptr(), elements);
         }
-        
+
         Ok(data)
     }
 
@@ -1834,7 +1894,11 @@ impl Accelerator for ASICAccelerator {
         _inputs: &[&DeviceBuffer],
         _outputs: &mut [&mut DeviceBuffer],
     ) -> Result<()> {
-        println!("Executing kernel: {} on ASIC device {}", kernel.name(), self.device_id);
+        println!(
+            "Executing kernel: {} on ASIC device {}",
+            kernel.name(),
+            self.device_id
+        );
         Ok(())
     }
 
@@ -1946,11 +2010,11 @@ impl Accelerator for NervanaAccelerator {
     fn upload(&self, data: &ArrayView2<f32>) -> Result<DeviceBuffer> {
         let size = data.len() * std::mem::size_of::<f32>();
         let mut buffer = self.allocate(size)?;
-        
+
         unsafe {
             std::ptr::copy_nonoverlapping(data.as_ptr() as *const u8, buffer.ptr, size);
         }
-        
+
         Ok(buffer)
     }
 
@@ -1958,11 +2022,11 @@ impl Accelerator for NervanaAccelerator {
         let elements = buffer.size / std::mem::size_of::<f32>();
         let shape = (elements, 1);
         let mut data = Array2::zeros(shape);
-        
+
         unsafe {
             std::ptr::copy_nonoverlapping(buffer.ptr as *const f32, data.as_mut_ptr(), elements);
         }
-        
+
         Ok(data)
     }
 
@@ -1972,7 +2036,11 @@ impl Accelerator for NervanaAccelerator {
         _inputs: &[&DeviceBuffer],
         _outputs: &mut [&mut DeviceBuffer],
     ) -> Result<()> {
-        println!("Executing kernel: {} on Nervana device {}", kernel.name(), self.device_id);
+        println!(
+            "Executing kernel: {} on Nervana device {}",
+            kernel.name(),
+            self.device_id
+        );
         Ok(())
     }
 
@@ -2029,8 +2097,8 @@ impl IPUAccelerator {
             name: format!("Graphcore IPU {}", device_id),
             compute_capability: (2, 0),
             total_memory: 900 * 1024 * 1024, // 900MB per IPU
-            memory_bandwidth: 45000.0, // Very high on-chip bandwidth
-            compute_units: 1472, // 1472 tiles per IPU
+            memory_bandwidth: 45000.0,       // Very high on-chip bandwidth
+            compute_units: 1472,             // 1472 tiles per IPU
             peak_tflops_fp32: 30.0,
             peak_tflops_fp16: 250.0, // Optimized for FP16
             peak_tflops_int8: 500.0,
@@ -2068,8 +2136,7 @@ impl Accelerator for IPUAccelerator {
     }
 
     fn is_available(&self) -> bool {
-        std::env::var("POPLAR_SDK_ENABLED").is_ok() || 
-        std::path::Path::new("/opt/gc").exists()
+        std::env::var("POPLAR_SDK_ENABLED").is_ok() || std::path::Path::new("/opt/gc").exists()
     }
 
     fn allocate(&self, size: usize) -> Result<DeviceBuffer> {
@@ -2079,17 +2146,22 @@ impl Accelerator for IPUAccelerator {
                 "Failed to allocate IPU memory".to_string(),
             ));
         }
-        Ok(DeviceBuffer::new_with_type(ptr, size, self.device_id, MemoryType::Unified))
+        Ok(DeviceBuffer::new_with_type(
+            ptr,
+            size,
+            self.device_id,
+            MemoryType::Unified,
+        ))
     }
 
     fn upload(&self, data: &ArrayView2<f32>) -> Result<DeviceBuffer> {
         let size = data.len() * std::mem::size_of::<f32>();
         let mut buffer = self.allocate(size)?;
-        
+
         unsafe {
             std::ptr::copy_nonoverlapping(data.as_ptr() as *const u8, buffer.ptr, size);
         }
-        
+
         Ok(buffer)
     }
 
@@ -2097,11 +2169,11 @@ impl Accelerator for IPUAccelerator {
         let elements = buffer.size / std::mem::size_of::<f32>();
         let shape = (elements, 1);
         let mut data = Array2::zeros(shape);
-        
+
         unsafe {
             std::ptr::copy_nonoverlapping(buffer.ptr as *const f32, data.as_mut_ptr(), elements);
         }
-        
+
         Ok(data)
     }
 
@@ -2111,7 +2183,11 @@ impl Accelerator for IPUAccelerator {
         _inputs: &[&DeviceBuffer],
         _outputs: &mut [&mut DeviceBuffer],
     ) -> Result<()> {
-        println!("Executing kernel: {} on IPU device {}", kernel.name(), self.device_id);
+        println!(
+            "Executing kernel: {} on IPU device {}",
+            kernel.name(),
+            self.device_id
+        );
         Ok(())
     }
 
@@ -2142,7 +2218,7 @@ impl Accelerator for IPUAccelerator {
     fn profile_kernel(&self, kernel: &dyn Kernel) -> Result<ProfilingInfo> {
         Ok(ProfilingInfo {
             kernel_name: kernel.name().to_string(),
-            execution_time_us: 2.0, // Very fast on-chip execution
+            execution_time_us: 2.0,  // Very fast on-chip execution
             memory_transfer_us: 0.1, // Minimal memory transfer time
             occupancy: 0.95,
             memory_throughput: 20000.0, // Very high on-chip bandwidth
@@ -2173,7 +2249,7 @@ impl AcceleratorFactory {
             AcceleratorType::NPU => Ok(Arc::new(NPUAccelerator::new(0)?)),
             AcceleratorType::ASIC => Ok(Arc::new(ASICAccelerator::new(0)?)),
             AcceleratorType::Nervana => Ok(Arc::new(NervanaAccelerator::new(0)?)),
-            AcceleratorType::IPU => Ok(Arc::new(IPUAccelerator::new(0)?))
+            AcceleratorType::IPU => Ok(Arc::new(IPUAccelerator::new(0)?)),
         }
     }
 
@@ -2219,10 +2295,10 @@ impl AcceleratorFactory {
 
     /// Check if CUDA is available
     fn check_cuda() -> bool {
-        std::env::var("CUDA_HOME").is_ok() || 
-        std::path::Path::new("/usr/local/cuda").exists() ||
-        std::path::Path::new("/opt/cuda").exists() ||
-        std::env::var("CUDA_PATH").is_ok()
+        std::env::var("CUDA_HOME").is_ok()
+            || std::path::Path::new("/usr/local/cuda").exists()
+            || std::path::Path::new("/opt/cuda").exists()
+            || std::env::var("CUDA_PATH").is_ok()
     }
 
     /// Check if ROCm is available
@@ -2248,16 +2324,16 @@ impl AcceleratorFactory {
 
     /// Check if FPGA is available
     fn check_fpga() -> bool {
-        std::path::Path::new("/dev/fpga0").exists() || 
-        std::path::Path::new("/dev/xclmgmt").exists() ||
-        std::env::var("XILINX_VIVADO").is_ok()
+        std::path::Path::new("/dev/fpga0").exists()
+            || std::path::Path::new("/dev/xclmgmt").exists()
+            || std::env::var("XILINX_VIVADO").is_ok()
     }
 
     /// Check if TPU is available
     fn check_tpu() -> bool {
-        std::env::var("TPU_NAME").is_ok() || 
-        std::env::var("COLAB_TPU_ADDR").is_ok() ||
-        std::path::Path::new("/dev/accel0").exists()
+        std::env::var("TPU_NAME").is_ok()
+            || std::env::var("COLAB_TPU_ADDR").is_ok()
+            || std::path::Path::new("/dev/accel0").exists()
     }
 }
 

@@ -10,12 +10,8 @@
 
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
-use num_traits::{Float, NumCast, Zero, One};
-use scirs2_core::{
-    parallel_ops::*,
-    simd_ops::SimdUnifiedOps,
-    validation::*,
-};
+use num_traits::{Float, NumCast, One, Zero};
+use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::marker::PhantomData;
@@ -269,7 +265,7 @@ where
     /// Create a new ultra-enhanced SIMD processor
     pub fn new(config: UltraSimdConfig) -> StatsResult<Self> {
         let cpu_features = Self::detect_cpu_capabilities()?;
-        
+
         Ok(Self {
             cpu_features,
             config,
@@ -303,13 +299,13 @@ where
     /// Compute ultra-optimized mean with adaptive algorithm selection
     pub fn ultra_mean(&self, data: ArrayView1<F>) -> StatsResult<UltraSimdResults<F>> {
         let start_time = std::time::Instant::now();
-        
+
         // Validate input
         check_not_empty(&data, "data")?;
-        
+
         // Select optimal algorithm based on data characteristics
         let algorithm = self.select_optimal_mean_algorithm(&data)?;
-        
+
         // Execute the selected algorithm
         let result = match algorithm.instruction_set {
             InstructionSet::AVX512F => self.mean_avx512(&data)?,
@@ -319,19 +315,19 @@ where
             InstructionSet::NEON => self.mean_neon(&data)?,
             _ => self.mean_scalar(&data)?,
         };
-        
+
         // Record performance metrics
         let execution_time = start_time.elapsed();
         self.update_performance_stats(&algorithm.name, execution_time.as_nanos() as u64);
-        
+
         Ok(UltraSimdResults {
             result,
             performance: OperationPerformance {
                 execution_time_ns: execution_time.as_nanos() as u64,
                 memory_bandwidth_gb_s: self.estimate_bandwidth(&data, execution_time),
                 vector_utilization: 0.85, // Estimated
-                cache_misses: 0, // Would be measured in real implementation
-                ipc: 2.0, // Estimated instructions per cycle
+                cache_misses: 0,          // Would be measured in real implementation
+                ipc: 2.0,                 // Estimated instructions per cycle
             },
             algorithm: algorithm.name,
             accuracy: AccuracyMetrics {
@@ -346,18 +342,18 @@ where
     /// Select optimal algorithm for mean calculation
     fn select_optimal_mean_algorithm(&self, data: &ArrayView1<F>) -> StatsResult<OptimalAlgorithm> {
         let cache_key = format!("mean_{}", data.len());
-        
+
         // Check cache first
         if let Ok(cache) = self.algorithm_cache.read() {
             if let Some(algorithm) = cache.get(&cache_key) {
                 return Ok(algorithm.clone());
             }
         }
-        
+
         // Determine best algorithm based on data characteristics
         let data_size = data.len();
         let data_size_bytes = data_size * std::mem::size_of::<F>();
-        
+
         let algorithm = if data_size < self.config.scalar_fallback_threshold {
             OptimalAlgorithm {
                 name: "scalar".to_string(),
@@ -367,8 +363,12 @@ where
                 accuracy_score: 1.0,
                 last_used: std::time::Instant::now(),
             }
-        } else if self.cpu_features.instruction_sets.contains(&InstructionSet::AVX512F) 
-            && data_size > 10000 {
+        } else if self
+            .cpu_features
+            .instruction_sets
+            .contains(&InstructionSet::AVX512F)
+            && data_size > 10000
+        {
             OptimalAlgorithm {
                 name: "mean_avx512".to_string(),
                 instruction_set: InstructionSet::AVX512F,
@@ -377,7 +377,11 @@ where
                 accuracy_score: 0.95,
                 last_used: std::time::Instant::now(),
             }
-        } else if self.cpu_features.instruction_sets.contains(&InstructionSet::AVX2) {
+        } else if self
+            .cpu_features
+            .instruction_sets
+            .contains(&InstructionSet::AVX2)
+        {
             OptimalAlgorithm {
                 name: "mean_avx2".to_string(),
                 instruction_set: InstructionSet::AVX2,
@@ -386,7 +390,11 @@ where
                 accuracy_score: 0.98,
                 last_used: std::time::Instant::now(),
             }
-        } else if self.cpu_features.instruction_sets.contains(&InstructionSet::AVX) {
+        } else if self
+            .cpu_features
+            .instruction_sets
+            .contains(&InstructionSet::AVX)
+        {
             OptimalAlgorithm {
                 name: "mean_avx".to_string(),
                 instruction_set: InstructionSet::AVX,
@@ -405,12 +413,12 @@ where
                 last_used: std::time::Instant::now(),
             }
         };
-        
+
         // Cache the selection
         if let Ok(mut cache) = self.algorithm_cache.write() {
             cache.insert(cache_key, algorithm.clone());
         }
-        
+
         Ok(algorithm)
     }
 
@@ -419,45 +427,40 @@ where
     fn mean_avx512(&self, data: &ArrayView1<F>) -> StatsResult<F> {
         // In a real implementation, this would use AVX-512 intrinsics
         // For now, delegate to the core SIMD operations
-        F::simd_mean(data).ok_or_else(|| {
-            StatsError::InvalidArgument("SIMD mean failed".to_string())
-        })
+        F::simd_mean(data)
+            .ok_or_else(|| StatsError::InvalidArgument("SIMD mean failed".to_string()))
     }
 
     /// AVX2 optimized mean calculation  
     #[allow(dead_code)]
     fn mean_avx2(&self, data: &ArrayView1<F>) -> StatsResult<F> {
         // In a real implementation, this would use AVX2 intrinsics
-        F::simd_mean(data).ok_or_else(|| {
-            StatsError::InvalidArgument("SIMD mean failed".to_string())
-        })
+        F::simd_mean(data)
+            .ok_or_else(|| StatsError::InvalidArgument("SIMD mean failed".to_string()))
     }
 
     /// AVX optimized mean calculation
     #[allow(dead_code)]
     fn mean_avx(&self, data: &ArrayView1<F>) -> StatsResult<F> {
         // In a real implementation, this would use AVX intrinsics
-        F::simd_mean(data).ok_or_else(|| {
-            StatsError::InvalidArgument("SIMD mean failed".to_string())
-        })
+        F::simd_mean(data)
+            .ok_or_else(|| StatsError::InvalidArgument("SIMD mean failed".to_string()))
     }
 
     /// SSE2 optimized mean calculation
     #[allow(dead_code)]
     fn mean_sse2(&self, data: &ArrayView1<F>) -> StatsResult<F> {
         // In a real implementation, this would use SSE2 intrinsics
-        F::simd_mean(data).ok_or_else(|| {
-            StatsError::InvalidArgument("SIMD mean failed".to_string())
-        })
+        F::simd_mean(data)
+            .ok_or_else(|| StatsError::InvalidArgument("SIMD mean failed".to_string()))
     }
 
     /// NEON optimized mean calculation (ARM)
     #[allow(dead_code)]
     fn mean_neon(&self, data: &ArrayView1<F>) -> StatsResult<F> {
         // In a real implementation, this would use NEON intrinsics
-        F::simd_mean(data).ok_or_else(|| {
-            StatsError::InvalidArgument("SIMD mean failed".to_string())
-        })
+        F::simd_mean(data)
+            .ok_or_else(|| StatsError::InvalidArgument("SIMD mean failed".to_string()))
     }
 
     /// Scalar fallback mean calculation
@@ -472,15 +475,15 @@ where
     /// Ultra-optimized standard deviation with numerical stability
     pub fn ultra_std(&self, data: ArrayView1<F>, ddof: usize) -> StatsResult<UltraSimdResults<F>> {
         let start_time = std::time::Instant::now();
-        
+
         // Validate input
         check_not_empty(&data, "data")?;
-        
+
         // Use Welford's algorithm for numerical stability
         let result = self.std_welford(&data, ddof)?;
-        
+
         let execution_time = start_time.elapsed();
-        
+
         Ok(UltraSimdResults {
             result,
             performance: OperationPerformance {
@@ -504,7 +507,7 @@ where
     fn std_welford(&self, data: &ArrayView1<F>, ddof: usize) -> StatsResult<F> {
         if data.len() <= ddof {
             return Err(StatsError::InvalidArgument(
-                "Insufficient degrees of freedom".to_string()
+                "Insufficient degrees of freedom".to_string(),
             ));
         }
 
@@ -524,7 +527,7 @@ where
         let n = F::from(data.len() - ddof).ok_or_else(|| {
             StatsError::InvalidArgument("Cannot convert degrees of freedom".to_string())
         })?;
-        
+
         Ok((m2 / n).sqrt())
     }
 
@@ -544,13 +547,17 @@ where
         if let Ok(mut stats) = self.performance_stats.write() {
             stats.total_operations += 1;
             stats.total_time_ns += execution_time_ns;
-            *stats.algorithm_usage.entry(algorithm.to_string()).or_insert(0) += 1;
+            *stats
+                .algorithm_usage
+                .entry(algorithm.to_string())
+                .or_insert(0) += 1;
         }
     }
 
     /// Get current performance statistics
     pub fn get_performance_stats(&self) -> PerformanceStatistics {
-        self.performance_stats.read()
+        self.performance_stats
+            .read()
             .map(|stats| stats.clone())
             .unwrap_or_default()
     }
@@ -607,7 +614,7 @@ where
         loop_unrolling: true,
         prefetch_strategy: PrefetchStrategy::Adaptive,
     };
-    
+
     UltraEnhancedSimdProcessor::new(config)
 }
 
@@ -628,7 +635,7 @@ where
         loop_unrolling: false,
         prefetch_strategy: PrefetchStrategy::Software,
     };
-    
+
     UltraEnhancedSimdProcessor::new(config)
 }
 

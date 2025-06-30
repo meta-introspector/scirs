@@ -527,7 +527,7 @@ impl CsrMatrix<f64> {
     pub fn gpu_dot(&self, _vec: &[f64]) -> SparseResult<Vec<f64>> {
         // Temporarily disabled until gpu_spmv_implementation module is re-enabled
         Err(SparseError::OperationNotSupported(
-            "GPU operations temporarily disabled".to_string()
+            "GPU operations temporarily disabled".to_string(),
         ))
     }
 
@@ -542,17 +542,28 @@ impl CsrMatrix<f64> {
     ///
     /// * Result of matrix-vector multiplication
     #[allow(dead_code)]
-    pub fn gpu_dot_with_backend(&self, _vec: &[f64], _backend: crate::gpu_ops::GpuBackend) -> SparseResult<Vec<f64>> {
+    pub fn gpu_dot_with_backend(
+        &self,
+        _vec: &[f64],
+        _backend: crate::gpu_ops::GpuBackend,
+    ) -> SparseResult<Vec<f64>> {
         // Temporarily disabled until gpu_spmv_implementation module is re-enabled
         Err(SparseError::OperationNotSupported(
-            "GPU operations temporarily disabled".to_string()
+            "GPU operations temporarily disabled".to_string(),
         ))
     }
 }
 
 impl<T> CsrMatrix<T>
 where
-    T: num_traits::Float + std::fmt::Debug + Copy + Default + crate::gpu_ops::GpuDataType + Send + Sync + 'static,
+    T: num_traits::Float
+        + std::fmt::Debug
+        + Copy
+        + Default
+        + crate::gpu_ops::GpuDataType
+        + Send
+        + Sync
+        + 'static,
 {
     /// GPU-accelerated matrix-vector multiplication for generic floating-point types
     ///
@@ -567,7 +578,7 @@ where
     pub fn gpu_dot_generic(&self, _vec: &[T]) -> SparseResult<Vec<T>> {
         // Temporarily disabled until gpu_spmv_implementation module is re-enabled
         Err(SparseError::OperationNotSupported(
-            "GPU operations temporarily disabled".to_string()
+            "GPU operations temporarily disabled".to_string(),
         ))
     }
 
@@ -581,7 +592,7 @@ where
         // and reasonable sparsity (< 50% dense)
         let nnz_threshold = 10000;
         let density = self.nnz() as f64 / (self.rows * self.cols) as f64;
-        
+
         self.nnz() > nnz_threshold && density < 0.5
     }
 
@@ -594,7 +605,7 @@ where
     pub fn gpu_backend_info() -> SparseResult<(crate::gpu_ops::GpuBackend, String)> {
         // Temporarily disabled until gpu_spmv_implementation module is re-enabled
         Err(SparseError::OperationNotSupported(
-            "GPU operations temporarily disabled".to_string()
+            "GPU operations temporarily disabled".to_string(),
         ))
     }
 }
@@ -702,11 +713,11 @@ mod tests {
 
         let matrix = CsrMatrix::new(data, rows, cols, shape).unwrap();
         let vec = vec![1.0, 2.0, 3.0];
-        
+
         // Test GPU-accelerated SpMV
         let gpu_result = matrix.gpu_dot(&vec);
         assert!(gpu_result.is_ok(), "GPU SpMV should succeed");
-        
+
         if let Ok(result) = gpu_result {
             let expected = vec![7.0, 9.0, 14.0]; // Same as regular dot product
             assert_eq!(result.len(), expected.len());
@@ -719,40 +730,40 @@ mod tests {
     #[test]
     fn test_should_use_gpu() {
         // Small matrix - should not use GPU
-        let small_matrix = CsrMatrix::new(
-            vec![1.0, 2.0], 
-            vec![0, 1], 
-            vec![0, 1], 
-            (2, 2)
-        ).unwrap();
-        assert!(!small_matrix.should_use_gpu(), "Small matrix should not use GPU");
+        let small_matrix = CsrMatrix::new(vec![1.0, 2.0], vec![0, 1], vec![0, 1], (2, 2)).unwrap();
+        assert!(
+            !small_matrix.should_use_gpu(),
+            "Small matrix should not use GPU"
+        );
 
         // Large sparse matrix - should use GPU
         let large_data = vec![1.0; 15000];
         let large_rows: Vec<usize> = (0..15000).collect();
         let large_cols: Vec<usize> = (0..15000).collect();
-        let large_matrix = CsrMatrix::new(
-            large_data, 
-            large_rows, 
-            large_cols, 
-            (15000, 15000)
-        ).unwrap();
-        assert!(large_matrix.should_use_gpu(), "Large sparse matrix should use GPU");
+        let large_matrix =
+            CsrMatrix::new(large_data, large_rows, large_cols, (15000, 15000)).unwrap();
+        assert!(
+            large_matrix.should_use_gpu(),
+            "Large sparse matrix should use GPU"
+        );
     }
 
     #[test]
     fn test_gpu_backend_info() {
         let backend_info = CsrMatrix::<f64>::gpu_backend_info();
-        assert!(backend_info.is_ok(), "Should be able to get GPU backend info");
-        
+        assert!(
+            backend_info.is_ok(),
+            "Should be able to get GPU backend info"
+        );
+
         if let Ok((backend, name)) = backend_info {
             assert!(!name.is_empty(), "Backend name should not be empty");
             // Backend should be one of the supported types
             match backend {
-                crate::gpu_ops::GpuBackend::Cuda |
-                crate::gpu_ops::GpuBackend::OpenCl |
-                crate::gpu_ops::GpuBackend::Metal |
-                crate::gpu_ops::GpuBackend::Cpu => {},
+                crate::gpu_ops::GpuBackend::Cuda
+                | crate::gpu_ops::GpuBackend::OpenCl
+                | crate::gpu_ops::GpuBackend::Metal
+                | crate::gpu_ops::GpuBackend::Cpu => {}
             }
         }
     }
@@ -767,11 +778,11 @@ mod tests {
 
         let matrix = CsrMatrix::new(data, rows, cols, shape).unwrap();
         let vec = vec![1.0f32, 2.0, 3.0];
-        
+
         // Test generic GPU SpMV with f32
         let gpu_result = matrix.gpu_dot_generic(&vec);
         assert!(gpu_result.is_ok(), "Generic GPU SpMV should succeed");
-        
+
         if let Ok(result) = gpu_result {
             let expected = vec![7.0f32, 9.0, 14.0];
             assert_eq!(result.len(), expected.len());

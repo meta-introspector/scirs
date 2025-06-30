@@ -5,46 +5,46 @@
 
 use ndarray::{Array1, Array2};
 use num_traits::Float;
-use std::collections::{HashMap, VecDeque, BTreeMap, HashSet};
-use std::time::{Duration, Instant};
 use rand::Rng;
+use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
+use std::time::{Duration, Instant};
 
-use crate::neural_architecture_search::{
-    OptimizerArchitecture, SearchStrategy, PerformanceEvaluator,
-    MultiObjectiveOptimizer, ArchitectureController, NASConfig
-};
-use crate::learned_optimizers::neural_architecture_search::ArchitectureSearchSpace;
 use crate::error::OptimizerError;
+use crate::learned_optimizers::neural_architecture_search::ArchitectureSearchSpace;
+use crate::neural_architecture_search::{
+    ArchitectureController, MultiObjectiveOptimizer, NASConfig, OptimizerArchitecture,
+    PerformanceEvaluator, SearchStrategy,
+};
 
 /// Adaptive NAS System that learns from optimization performance
 pub struct AdaptiveNASSystem<T: Float> {
     /// Performance-aware architecture searcher
     performance_searcher: PerformanceAwareSearcher<T>,
-    
+
     /// Architecture performance database
     performance_database: ArchitecturePerformanceDatabase<T>,
-    
+
     /// Learning-based architecture generator
     learning_generator: LearningBasedGenerator<T>,
-    
+
     /// Multi-objective optimizer for architecture search
     multi_objective_optimizer: MultiObjectiveArchitectureOptimizer<T>,
-    
+
     /// Dynamic search space manager
     search_space_manager: DynamicSearchSpaceManager<T>,
-    
+
     /// Performance predictor ensemble
     predictor_ensemble: PerformancePredictorEnsemble<T>,
-    
+
     /// Adaptation engine for continuous learning
     adaptation_engine: ContinuousAdaptationEngine<T>,
-    
+
     /// Architecture quality assessor
     quality_assessor: ArchitectureQualityAssessor<T>,
-    
+
     /// Configuration for adaptive NAS
     config: AdaptiveNASConfig<T>,
-    
+
     /// System state tracker
     state_tracker: NASSystemStateTracker<T>,
 }
@@ -54,58 +54,58 @@ pub struct AdaptiveNASSystem<T: Float> {
 pub struct AdaptiveNASConfig<T: Float> {
     /// Base NAS configuration
     pub base_config: NASConfig,
-    
+
     /// Performance tracking window
     pub performance_window: usize,
-    
+
     /// Minimum performance improvement threshold
     pub improvement_threshold: T,
-    
+
     /// Adaptation learning rate
     pub adaptation_lr: T,
-    
+
     /// Architecture complexity penalty
     pub complexity_penalty: T,
-    
+
     /// Enable online learning
     pub online_learning: bool,
-    
+
     /// Enable architecture transfer
     pub architecture_transfer: bool,
-    
+
     /// Enable curriculum search
     pub curriculum_search: bool,
-    
+
     /// Search diversity weight
     pub diversity_weight: T,
-    
+
     /// Exploration vs exploitation balance
     pub exploration_weight: T,
-    
+
     /// Performance prediction confidence threshold
     pub prediction_confidence_threshold: T,
-    
+
     /// Maximum architecture complexity
     pub max_complexity: usize,
-    
+
     /// Minimum architecture performance
     pub min_performance: T,
-    
+
     /// Enable meta-learning for architecture search
     pub enable_meta_learning: bool,
-    
+
     /// Meta-learning update frequency
     pub meta_learning_frequency: usize,
-    
+
     /// Architecture novelty weight
     pub novelty_weight: T,
-    
+
     /// Enable progressive search
     pub progressive_search: bool,
-    
+
     /// Search budget allocation strategy
     pub budget_allocation: BudgetAllocationStrategy,
-    
+
     /// Quality assessment criteria
     pub quality_criteria: Vec<QualityCriterion>,
 }
@@ -115,16 +115,16 @@ pub struct AdaptiveNASConfig<T: Float> {
 pub struct PerformanceAwareSearcher<T: Float> {
     /// Search strategy selector
     strategy_selector: SearchStrategySelector<T>,
-    
+
     /// Performance-guided search
     guided_search: PerformanceGuidedSearch<T>,
-    
+
     /// Architecture candidate generator
     candidate_generator: ArchitectureCandidateGenerator<T>,
-    
+
     /// Search history
     search_history: SearchHistory<T>,
-    
+
     /// Performance feedback processor
     feedback_processor: PerformanceFeedbackProcessor<T>,
 }
@@ -134,16 +134,16 @@ pub struct PerformanceAwareSearcher<T: Float> {
 pub struct SearchHistory<T: Float> {
     /// Search records
     search_records: VecDeque<SearchRecord<T>>,
-    
+
     /// Performance timeline
     performance_timeline: Vec<(Instant, T)>,
-    
+
     /// Strategy performance history
     strategy_performance: HashMap<String, Vec<T>>,
-    
+
     /// Current best performance
     current_best_performance: T,
-    
+
     /// Total search duration
     total_search_duration: Duration,
 }
@@ -153,22 +153,22 @@ pub struct SearchHistory<T: Float> {
 pub struct SearchRecord<T: Float> {
     /// Strategy used for this search
     pub strategy_used: String,
-    
+
     /// Baseline performance before search
     pub baseline_performance: T,
-    
+
     /// Performance achieved by this search
     pub achieved_performance: T,
-    
+
     /// Performance improvement
     pub performance_improvement: T,
-    
+
     /// Time taken for this search
     pub search_duration: Duration,
-    
+
     /// Search parameters used
     pub search_parameters: HashMap<String, f64>,
-    
+
     /// Search timestamp
     pub timestamp: Instant,
 }
@@ -178,16 +178,16 @@ pub struct SearchRecord<T: Float> {
 pub struct PerformanceGuidedSearch<T: Float> {
     /// Available search strategies
     search_strategies: Vec<SearchStrategyType>,
-    
+
     /// Performance models for different strategies
     performance_models: HashMap<SearchStrategyType, PerformanceModel<T>>,
-    
+
     /// Guidance weights
     guidance_weights: Array1<T>,
-    
+
     /// Exploration vs exploitation balance
     exploration_exploitation_balance: T,
-    
+
     /// Search parameters
     search_parameters: SearchParameters,
 }
@@ -197,13 +197,13 @@ pub struct PerformanceGuidedSearch<T: Float> {
 pub struct PerformanceModel<T: Float> {
     /// Model weights
     weights: Array1<T>,
-    
+
     /// Model bias
     bias: T,
-    
+
     /// Model confidence
     confidence: T,
-    
+
     /// Training data count
     training_count: usize,
 }
@@ -213,13 +213,13 @@ pub struct PerformanceModel<T: Float> {
 pub struct SearchParameters {
     /// Maximum search iterations
     pub max_iterations: usize,
-    
+
     /// Convergence threshold
     pub convergence_threshold: f64,
-    
+
     /// Temperature for annealing
     pub temperature: f64,
-    
+
     /// Random seed
     pub random_seed: Option<u64>,
 }
@@ -239,16 +239,16 @@ pub enum SearchStrategyType {
 pub struct ArchitecturePattern {
     /// Pattern identifier
     pub id: String,
-    
+
     /// Pattern components
     pub components: Vec<ComponentPattern>,
-    
+
     /// Pattern frequency
     pub frequency: usize,
-    
+
     /// Pattern success rate
     pub success_rate: f64,
-    
+
     /// Pattern complexity
     pub complexity: f64,
 }
@@ -258,10 +258,10 @@ pub struct ArchitecturePattern {
 pub struct ComponentPattern {
     /// Component type
     pub component_type: ComponentType,
-    
+
     /// Parameter patterns
     pub parameter_patterns: HashMap<String, ParameterPattern>,
-    
+
     /// Connection patterns
     pub connection_patterns: Vec<ConnectionPattern>,
 }
@@ -271,13 +271,13 @@ pub struct ComponentPattern {
 pub struct ParameterPattern {
     /// Parameter name
     pub name: String,
-    
+
     /// Typical value range
     pub value_range: (f64, f64),
-    
+
     /// Optimal value
     pub optimal_value: f64,
-    
+
     /// Pattern frequency
     pub frequency: usize,
 }
@@ -319,16 +319,16 @@ impl Default for ArchitectureSpecification {
 pub struct ArchitectureCandidateGenerator<T: Float> {
     /// Available generation strategies
     generation_strategies: Vec<GenerationStrategy>,
-    
+
     /// Component library
     component_library: ComponentLibrary,
-    
+
     /// Validation rules
     validation_rules: ValidationRules,
-    
+
     /// Diversity maintainer
     diversity_maintainer: DiversityMaintainer<T>,
-    
+
     /// Generation history
     generation_history: GenerationHistory<T>,
 }
@@ -360,10 +360,10 @@ pub enum ComponentType {
 pub struct ComponentLibrary {
     /// Available component types
     available_components: Vec<ComponentType>,
-    
+
     /// Component usage statistics
     usage_statistics: HashMap<ComponentType, usize>,
-    
+
     /// Successful component patterns
     successful_patterns: Vec<ComponentPattern>,
 }
@@ -393,13 +393,13 @@ pub enum LayerType {
 pub struct ValidationRules {
     /// Maximum parameter count
     max_parameters: usize,
-    
+
     /// Maximum memory usage
     max_memory: usize,
-    
+
     /// Maximum computation cost
     max_flops: usize,
-    
+
     /// Allowed layer types
     allowed_layer_types: HashSet<LayerType>,
 }
@@ -409,10 +409,10 @@ pub struct ValidationRules {
 pub struct DiversityMaintainer<T: Float> {
     /// Diversity weight
     diversity_weight: T,
-    
+
     /// Minimum distance threshold
     min_distance_threshold: T,
-    
+
     /// Diversity metrics
     diversity_metrics: Vec<DiversityMetric>,
 }
@@ -431,10 +431,10 @@ pub enum DiversityMetric {
 pub struct GenerationHistory<T: Float> {
     /// Generated candidates history
     candidates: VecDeque<ArchitectureCandidate<T>>,
-    
+
     /// Generation statistics
     generation_stats: GenerationStatistics,
-    
+
     /// Successful patterns extracted
     extracted_patterns: Vec<ArchitecturePattern>,
 }
@@ -444,13 +444,13 @@ pub struct GenerationHistory<T: Float> {
 pub struct GenerationStatistics {
     /// Total candidates generated
     total_generated: usize,
-    
+
     /// Successful candidates
     successful_candidates: usize,
-    
+
     /// Average generation time
     avg_generation_time: Duration,
-    
+
     /// Diversity metrics
     diversity_scores: Vec<f64>,
 }
@@ -477,9 +477,9 @@ impl ComponentLibrary {
 impl ValidationRules {
     fn new() -> Self {
         Self {
-            max_parameters: 100_000_000, // 100M parameters
+            max_parameters: 100_000_000,         // 100M parameters
             max_memory: 16 * 1024 * 1024 * 1024, // 16GB
-            max_flops: 1_000_000_000_000, // 1T FLOPS
+            max_flops: 1_000_000_000_000,        // 1T FLOPS
             allowed_layer_types: [
                 LayerType::Linear,
                 LayerType::LSTM,
@@ -489,7 +489,10 @@ impl ValidationRules {
                 LayerType::Normalization,
                 LayerType::Activation,
                 LayerType::Embedding,
-            ].iter().cloned().collect(),
+            ]
+            .iter()
+            .cloned()
+            .collect(),
         }
     }
 }
@@ -505,17 +508,20 @@ impl<T: Float> DiversityMaintainer<T> {
             ],
         }
     }
-    
-    fn ensure_diversity(&self, candidates: Vec<ArchitectureCandidate<T>>) -> Result<Vec<ArchitectureCandidate<T>>, OptimizerError> {
+
+    fn ensure_diversity(
+        &self,
+        candidates: Vec<ArchitectureCandidate<T>>,
+    ) -> Result<Vec<ArchitectureCandidate<T>>, OptimizerError> {
         if candidates.len() <= 1 {
             return Ok(candidates);
         }
-        
+
         let mut diverse_candidates = vec![candidates[0].clone()];
-        
+
         for candidate in candidates.iter().skip(1) {
             let mut is_diverse = true;
-            
+
             for existing in &diverse_candidates {
                 let distance = self.calculate_distance(candidate, existing)?;
                 if distance < self.min_distance_threshold {
@@ -523,83 +529,103 @@ impl<T: Float> DiversityMaintainer<T> {
                     break;
                 }
             }
-            
+
             if is_diverse {
                 diverse_candidates.push(candidate.clone());
             }
         }
-        
+
         Ok(diverse_candidates)
     }
-    
-    fn calculate_distance(&self, arch1: &ArchitectureCandidate<T>, arch2: &ArchitectureCandidate<T>) -> Result<T, OptimizerError> {
+
+    fn calculate_distance(
+        &self,
+        arch1: &ArchitectureCandidate<T>,
+        arch2: &ArchitectureCandidate<T>,
+    ) -> Result<T, OptimizerError> {
         let mut total_distance = T::zero();
         let mut metric_count = 0;
-        
+
         for metric in &self.diversity_metrics {
             let distance = match metric {
                 DiversityMetric::StructuralDistance => {
                     self.calculate_structural_distance(&arch1.specification, &arch2.specification)?
-                },
+                }
                 DiversityMetric::ParameterDistance => {
                     self.calculate_parameter_distance(&arch1.specification, &arch2.specification)?
-                },
+                }
                 DiversityMetric::PerformanceDistance => {
                     self.calculate_performance_distance(arch1, arch2)?
-                },
+                }
                 DiversityMetric::ComplexityDistance => {
                     self.calculate_complexity_distance(&arch1.specification, &arch2.specification)?
-                },
+                }
             };
-            
+
             total_distance = total_distance + distance;
             metric_count += 1;
         }
-        
+
         if metric_count > 0 {
             Ok(total_distance / T::from(metric_count).unwrap())
         } else {
             Ok(T::zero())
         }
     }
-    
-    fn calculate_structural_distance(&self, spec1: &ArchitectureSpecification, spec2: &ArchitectureSpecification) -> Result<T, OptimizerError> {
+
+    fn calculate_structural_distance(
+        &self,
+        spec1: &ArchitectureSpecification,
+        spec2: &ArchitectureSpecification,
+    ) -> Result<T, OptimizerError> {
         if spec1.layers.len() != spec2.layers.len() {
             return Ok(T::one());
         }
-        
+
         let mut differences = 0;
         for (layer1, layer2) in spec1.layers.iter().zip(spec2.layers.iter()) {
             if layer1.layer_type != layer2.layer_type {
                 differences += 1;
             }
         }
-        
+
         Ok(T::from(differences as f64 / spec1.layers.len() as f64).unwrap())
     }
-    
-    fn calculate_parameter_distance(&self, spec1: &ArchitectureSpecification, spec2: &ArchitectureSpecification) -> Result<T, OptimizerError> {
+
+    fn calculate_parameter_distance(
+        &self,
+        spec1: &ArchitectureSpecification,
+        spec2: &ArchitectureSpecification,
+    ) -> Result<T, OptimizerError> {
         let param_diff = (spec1.parameter_count as f64 - spec2.parameter_count as f64).abs();
         let max_params = (spec1.parameter_count.max(spec2.parameter_count)) as f64;
-        
+
         if max_params > 0.0 {
             Ok(T::from(param_diff / max_params).unwrap())
         } else {
             Ok(T::zero())
         }
     }
-    
-    fn calculate_performance_distance(&self, arch1: &ArchitectureCandidate<T>, arch2: &ArchitectureCandidate<T>) -> Result<T, OptimizerError> {
+
+    fn calculate_performance_distance(
+        &self,
+        arch1: &ArchitectureCandidate<T>,
+        arch2: &ArchitectureCandidate<T>,
+    ) -> Result<T, OptimizerError> {
         match (arch1.estimated_quality, arch2.estimated_quality) {
             (Some(qual1), Some(qual2)) => Ok((qual1 - qual2).abs()),
-            _ => Ok(T::zero()) // If no quality estimates, assume similar
+            _ => Ok(T::zero()), // If no quality estimates, assume similar
         }
     }
-    
-    fn calculate_complexity_distance(&self, spec1: &ArchitectureSpecification, spec2: &ArchitectureSpecification) -> Result<T, OptimizerError> {
+
+    fn calculate_complexity_distance(
+        &self,
+        spec1: &ArchitectureSpecification,
+        spec2: &ArchitectureSpecification,
+    ) -> Result<T, OptimizerError> {
         let flops_diff = (spec1.flops as f64 - spec2.flops as f64).abs();
         let max_flops = (spec1.flops.max(spec2.flops)) as f64;
-        
+
         if max_flops > 0.0 {
             Ok(T::from(flops_diff / max_flops).unwrap())
         } else {
@@ -621,11 +647,11 @@ impl<T: Float> GenerationHistory<T> {
             extracted_patterns: Vec::new(),
         }
     }
-    
+
     fn add_candidate(&mut self, candidate: ArchitectureCandidate<T>) {
         self.candidates.push_back(candidate);
         self.generation_stats.total_generated += 1;
-        
+
         // Maintain history size limit
         while self.candidates.len() > 1000 {
             self.candidates.pop_front();
@@ -638,16 +664,16 @@ impl<T: Float> GenerationHistory<T> {
 pub struct ArchitecturePerformanceDatabase<T: Float> {
     /// Performance records
     performance_records: HashMap<String, ArchitecturePerformanceRecord<T>>,
-    
+
     /// Performance indices
     performance_indices: PerformanceIndices<T>,
-    
+
     /// Database statistics
     database_stats: DatabaseStatistics,
-    
+
     /// Query optimizer
     query_optimizer: DatabaseQueryOptimizer<T>,
-    
+
     /// Performance trends
     performance_trends: PerformanceTrendAnalyzer<T>,
 }
@@ -657,16 +683,16 @@ pub struct ArchitecturePerformanceDatabase<T: Float> {
 pub struct LearningBasedGenerator<T: Float> {
     /// Generative model
     generative_model: ArchitectureGenerativeModel<T>,
-    
+
     /// Learning algorithm
     learning_algorithm: GenerativeLearningAlgorithm,
-    
+
     /// Generation strategy
     generation_strategy: GenerationStrategy<T>,
-    
+
     /// Quality filter
     quality_filter: GeneratedArchitectureFilter<T>,
-    
+
     /// Generation history
     generation_history: GenerationHistory<T>,
 }
@@ -676,16 +702,16 @@ pub struct LearningBasedGenerator<T: Float> {
 pub struct MultiObjectiveArchitectureOptimizer<T: Float> {
     /// Optimization algorithm
     algorithm: MultiObjectiveAlgorithm,
-    
+
     /// Objective functions
     objectives: Vec<OptimizationObjective<T>>,
-    
+
     /// Pareto front manager
     pareto_front: ParetoFrontManager<T>,
-    
+
     /// Solution diversity maintainer
     diversity_maintainer: SolutionDiversityMaintainer<T>,
-    
+
     /// Hypervolume calculator
     hypervolume_calculator: HypervolumeCalculator<T>,
 }
@@ -695,16 +721,16 @@ pub struct MultiObjectiveArchitectureOptimizer<T: Float> {
 pub struct DynamicSearchSpaceManager<T: Float> {
     /// Current search space
     current_space: ArchitectureSearchSpace,
-    
+
     /// Space evolution strategy
     evolution_strategy: SearchSpaceEvolutionStrategy,
-    
+
     /// Promising region detector
     promising_detector: PromisingRegionDetector<T>,
-    
+
     /// Search space optimizer
     space_optimizer: SearchSpaceOptimizer<T>,
-    
+
     /// Space history
     space_history: Vec<SearchSpaceSnapshot>,
 }
@@ -714,16 +740,16 @@ pub struct DynamicSearchSpaceManager<T: Float> {
 pub struct PerformancePredictorEnsemble<T: Float> {
     /// Individual predictors
     predictors: Vec<Box<dyn ArchitecturePerformancePredictor<T>>>,
-    
+
     /// Ensemble weights
     ensemble_weights: Array1<T>,
-    
+
     /// Prediction aggregator
     aggregator: PredictionAggregator<T>,
-    
+
     /// Uncertainty estimator
     uncertainty_estimator: EnsembleUncertaintyEstimator<T>,
-    
+
     /// Predictor quality tracker
     quality_tracker: PredictorQualityTracker<T>,
 }
@@ -733,16 +759,16 @@ pub struct PerformancePredictorEnsemble<T: Float> {
 pub struct ContinuousAdaptationEngine<T: Float> {
     /// Adaptation strategy
     adaptation_strategy: AdaptationStrategy<T>,
-    
+
     /// Performance monitor
     performance_monitor: PerformanceMonitor<T>,
-    
+
     /// Adaptation trigger
     adaptation_trigger: AdaptationTrigger<T>,
-    
+
     /// Learning rate scheduler
     lr_scheduler: AdaptationLearningRateScheduler<T>,
-    
+
     /// Adaptation history
     adaptation_history: AdaptationHistory<T>,
 }
@@ -1027,16 +1053,16 @@ pub enum HypervolumeMethod {
 pub struct ArchitectureQualityAssessor<T: Float> {
     /// Quality metrics
     quality_metrics: Vec<QualityMetric<T>>,
-    
+
     /// Assessment strategy
     assessment_strategy: QualityAssessmentStrategy,
-    
+
     /// Quality threshold manager
     threshold_manager: QualityThresholdManager<T>,
-    
+
     /// Quality trends analyzer
     trends_analyzer: QualityTrendsAnalyzer<T>,
-    
+
     /// Assessment cache
     assessment_cache: QualityAssessmentCache<T>,
 }
@@ -1046,13 +1072,13 @@ pub struct ArchitectureQualityAssessor<T: Float> {
 pub struct NASSystemStateTracker<T: Float> {
     /// Current system state
     current_state: NASSystemState<T>,
-    
+
     /// State history
     state_history: VecDeque<NASSystemState<T>>,
-    
+
     /// State transition analyzer
     transition_analyzer: StateTransitionAnalyzer<T>,
-    
+
     /// Performance correlation tracker
     correlation_tracker: PerformanceCorrelationTracker<T>,
 }
@@ -1062,19 +1088,19 @@ pub struct NASSystemStateTracker<T: Float> {
 pub enum BudgetAllocationStrategy {
     /// Equal allocation
     Uniform,
-    
+
     /// Performance-based allocation
     PerformanceBased,
-    
+
     /// Uncertainty-based allocation
     UncertaintyBased,
-    
+
     /// Expected improvement
     ExpectedImprovement,
-    
+
     /// Upper confidence bound
     UpperConfidenceBound,
-    
+
     /// Thompson sampling
     ThompsonSampling,
 }
@@ -1084,22 +1110,22 @@ pub enum BudgetAllocationStrategy {
 pub enum QualityCriterion {
     /// Performance on validation set
     ValidationPerformance,
-    
+
     /// Convergence speed
     ConvergenceSpeed,
-    
+
     /// Computational efficiency
     ComputationalEfficiency,
-    
+
     /// Memory efficiency
     MemoryEfficiency,
-    
+
     /// Generalization ability
     GeneralizationAbility,
-    
+
     /// Robustness to hyperparameters
     RobustnessToHyperparams,
-    
+
     /// Transfer learning capability
     TransferLearningCapability,
 }
@@ -1109,22 +1135,22 @@ pub enum QualityCriterion {
 pub struct ArchitecturePerformanceRecord<T: Float> {
     /// Architecture identifier
     pub architecture_id: String,
-    
+
     /// Architecture specification
     pub architecture_spec: ArchitectureSpecification,
-    
+
     /// Performance metrics
     pub performance_metrics: PerformanceMetrics<T>,
-    
+
     /// Training context
     pub training_context: TrainingContext<T>,
-    
+
     /// Evaluation results
     pub evaluation_results: EvaluationResults<T>,
-    
+
     /// Record timestamp
     pub timestamp: Instant,
-    
+
     /// Record metadata
     pub metadata: RecordMetadata,
 }
@@ -1134,16 +1160,16 @@ pub struct ArchitecturePerformanceRecord<T: Float> {
 pub struct ArchitectureSpecification {
     /// Layer specifications
     pub layers: Vec<LayerSpecification>,
-    
+
     /// Connection topology
     pub connections: ConnectionTopology,
-    
+
     /// Parameter count
     pub parameter_count: usize,
-    
+
     /// Computational complexity
     pub flops: usize,
-    
+
     /// Memory requirements
     pub memory_requirements: MemoryRequirements,
 }
@@ -1153,17 +1179,16 @@ pub struct ArchitectureSpecification {
 pub struct LayerSpecification {
     /// Layer type
     pub layer_type: LayerType,
-    
+
     /// Layer parameters
     pub parameters: HashMap<String, LayerParameter>,
-    
+
     /// Input dimensions
     pub input_dims: Vec<usize>,
-    
+
     /// Output dimensions
     pub output_dims: Vec<usize>,
 }
-
 
 /// Layer parameter
 #[derive(Debug, Clone)]
@@ -1180,10 +1205,10 @@ pub enum LayerParameter {
 pub struct ConnectionTopology {
     /// Adjacency matrix
     pub adjacency_matrix: Array2<bool>,
-    
+
     /// Connection types
     pub connection_types: HashMap<(usize, usize), ConnectionType>,
-    
+
     /// Skip connections
     pub skip_connections: Vec<SkipConnection>,
 }
@@ -1203,13 +1228,13 @@ pub enum ConnectionType {
 pub struct SkipConnection {
     /// Source layer
     pub source: usize,
-    
+
     /// Target layer
     pub target: usize,
-    
+
     /// Connection weight
     pub weight: f64,
-    
+
     /// Connection type
     pub connection_type: SkipConnectionType,
 }
@@ -1228,13 +1253,13 @@ pub enum SkipConnectionType {
 pub struct MemoryRequirements {
     /// Parameter memory (bytes)
     pub parameters: usize,
-    
+
     /// Activation memory (bytes)
     pub activations: usize,
-    
+
     /// Gradient memory (bytes)
     pub gradients: usize,
-    
+
     /// Total memory (bytes)
     pub total: usize,
 }
@@ -1244,16 +1269,16 @@ pub struct MemoryRequirements {
 pub struct PerformanceMetrics<T: Float> {
     /// Primary performance metric
     pub primary_metric: T,
-    
+
     /// Secondary metrics
     pub secondary_metrics: HashMap<String, T>,
-    
+
     /// Convergence metrics
     pub convergence_metrics: ConvergenceMetrics<T>,
-    
+
     /// Efficiency metrics
     pub efficiency_metrics: EfficiencyMetrics<T>,
-    
+
     /// Robustness metrics
     pub robustness_metrics: RobustnessMetrics<T>,
 }
@@ -1263,13 +1288,13 @@ pub struct PerformanceMetrics<T: Float> {
 pub struct ConvergenceMetrics<T: Float> {
     /// Convergence speed
     pub convergence_speed: T,
-    
+
     /// Final convergence value
     pub final_value: T,
-    
+
     /// Convergence stability
     pub stability: T,
-    
+
     /// Early stopping iteration
     pub early_stopping_iter: Option<usize>,
 }
@@ -1279,16 +1304,16 @@ pub struct ConvergenceMetrics<T: Float> {
 pub struct EfficiencyMetrics<T: Float> {
     /// Training time per epoch
     pub training_time_per_epoch: Duration,
-    
+
     /// Inference time per sample
     pub inference_time: Duration,
-    
+
     /// Memory usage
     pub memory_usage: usize,
-    
+
     /// FLOPS count
     pub flops: usize,
-    
+
     /// Energy consumption
     pub energy_consumption: Option<T>,
 }
@@ -1298,13 +1323,13 @@ pub struct EfficiencyMetrics<T: Float> {
 pub struct RobustnessMetrics<T: Float> {
     /// Hyperparameter sensitivity
     pub hyperparam_sensitivity: T,
-    
+
     /// Noise robustness
     pub noise_robustness: T,
-    
+
     /// Adversarial robustness
     pub adversarial_robustness: Option<T>,
-    
+
     /// Transfer learning performance
     pub transfer_performance: Option<T>,
 }
@@ -1314,13 +1339,13 @@ pub struct RobustnessMetrics<T: Float> {
 pub struct TrainingContext<T: Float> {
     /// Dataset characteristics
     pub dataset: DatasetCharacteristics,
-    
+
     /// Training hyperparameters
     pub hyperparameters: TrainingHyperparameters<T>,
-    
+
     /// Training environment
     pub environment: TrainingEnvironment,
-    
+
     /// Optimization task
     pub task: OptimizationTask,
 }
@@ -1330,16 +1355,16 @@ pub struct TrainingContext<T: Float> {
 pub struct DatasetCharacteristics {
     /// Dataset size
     pub size: usize,
-    
+
     /// Input dimensions
     pub input_dims: Vec<usize>,
-    
+
     /// Output dimensions
     pub output_dims: Vec<usize>,
-    
+
     /// Task type
     pub task_type: TaskType,
-    
+
     /// Data complexity
     pub complexity: f64,
 }
@@ -1359,16 +1384,16 @@ pub enum TaskType {
 pub struct TrainingHyperparameters<T: Float> {
     /// Learning rate
     pub learning_rate: T,
-    
+
     /// Batch size
     pub batch_size: usize,
-    
+
     /// Number of epochs
     pub epochs: usize,
-    
+
     /// Regularization parameters
     pub regularization: HashMap<String, T>,
-    
+
     /// Optimizer parameters
     pub optimizer_params: HashMap<String, T>,
 }
@@ -1378,10 +1403,10 @@ pub struct TrainingHyperparameters<T: Float> {
 pub struct TrainingEnvironment {
     /// Hardware specifications
     pub hardware: HardwareSpecs,
-    
+
     /// Software environment
     pub software: SoftwareEnvironment,
-    
+
     /// Resource constraints
     pub constraints: ResourceConstraints,
 }
@@ -1391,13 +1416,13 @@ pub struct TrainingEnvironment {
 pub struct HardwareSpecs {
     /// CPU specifications
     pub cpu: CPUSpecs,
-    
+
     /// GPU specifications
     pub gpu: Option<GPUSpecs>,
-    
+
     /// Memory size
     pub memory: usize,
-    
+
     /// Storage type
     pub storage: StorageType,
 }
@@ -1407,13 +1432,13 @@ pub struct HardwareSpecs {
 pub struct CPUSpecs {
     /// Number of cores
     pub cores: usize,
-    
+
     /// Clock speed (GHz)
     pub clock_speed: f64,
-    
+
     /// Cache size (MB)
     pub cache_size: usize,
-    
+
     /// Architecture
     pub architecture: String,
 }
@@ -1423,13 +1448,13 @@ pub struct CPUSpecs {
 pub struct GPUSpecs {
     /// GPU model
     pub model: String,
-    
+
     /// Memory size (GB)
     pub memory: usize,
-    
+
     /// Compute capability
     pub compute_capability: String,
-    
+
     /// Number of cores
     pub cores: usize,
 }
@@ -1448,13 +1473,13 @@ pub enum StorageType {
 pub struct SoftwareEnvironment {
     /// Framework version
     pub framework: String,
-    
+
     /// Python version
     pub python_version: String,
-    
+
     /// CUDA version
     pub cuda_version: Option<String>,
-    
+
     /// Additional libraries
     pub libraries: HashMap<String, String>,
 }
@@ -1464,13 +1489,13 @@ pub struct SoftwareEnvironment {
 pub struct ResourceConstraints {
     /// Maximum memory usage
     pub max_memory: Option<usize>,
-    
+
     /// Maximum training time
     pub max_training_time: Option<Duration>,
-    
+
     /// Maximum FLOPS
     pub max_flops: Option<usize>,
-    
+
     /// Energy budget
     pub energy_budget: Option<f64>,
 }
@@ -1480,16 +1505,16 @@ pub struct ResourceConstraints {
 pub struct OptimizationTask {
     /// Task identifier
     pub task_id: String,
-    
+
     /// Task type
     pub task_type: TaskType,
-    
+
     /// Task complexity
     pub complexity: f64,
-    
+
     /// Task objectives
     pub objectives: Vec<String>,
-    
+
     /// Task constraints
     pub constraints: Vec<String>,
 }
@@ -1499,13 +1524,13 @@ pub struct OptimizationTask {
 pub struct EvaluationResults<T: Float> {
     /// Validation performance
     pub validation_performance: T,
-    
+
     /// Test performance
     pub test_performance: Option<T>,
-    
+
     /// Cross-validation results
     pub cv_results: Option<CrossValidationResults<T>>,
-    
+
     /// Benchmark results
     pub benchmark_results: Option<BenchmarkResults<T>>,
 }
@@ -1515,13 +1540,13 @@ pub struct EvaluationResults<T: Float> {
 pub struct CrossValidationResults<T: Float> {
     /// Mean performance
     pub mean: T,
-    
+
     /// Standard deviation
     pub std: T,
-    
+
     /// Individual fold results
     pub fold_results: Vec<T>,
-    
+
     /// Number of folds
     pub n_folds: usize,
 }
@@ -1531,13 +1556,13 @@ pub struct CrossValidationResults<T: Float> {
 pub struct BenchmarkResults<T: Float> {
     /// Benchmark scores
     pub scores: HashMap<String, T>,
-    
+
     /// Ranking position
     pub ranking: Option<usize>,
-    
+
     /// Comparison baselines
     pub baselines: HashMap<String, T>,
-    
+
     /// Statistical significance
     pub significance: Option<StatisticalSignificance<T>>,
 }
@@ -1547,13 +1572,13 @@ pub struct BenchmarkResults<T: Float> {
 pub struct StatisticalSignificance<T: Float> {
     /// P-value
     pub p_value: T,
-    
+
     /// Effect size
     pub effect_size: T,
-    
+
     /// Confidence interval
     pub confidence_interval: (T, T),
-    
+
     /// Test statistic
     pub test_statistic: T,
 }
@@ -1563,13 +1588,13 @@ pub struct StatisticalSignificance<T: Float> {
 pub struct RecordMetadata {
     /// Record version
     pub version: String,
-    
+
     /// Creator information
     pub creator: String,
-    
+
     /// Tags
     pub tags: Vec<String>,
-    
+
     /// Additional metadata
     pub additional: HashMap<String, String>,
 }
@@ -1579,13 +1604,13 @@ pub struct RecordMetadata {
 pub struct PerformanceIndices<T: Float> {
     /// Performance-based index
     performance_index: BTreeMap<String, Vec<String>>,
-    
+
     /// Complexity-based index
     complexity_index: BTreeMap<usize, Vec<String>>,
-    
+
     /// Task-based index
     task_index: HashMap<TaskType, Vec<String>>,
-    
+
     /// Time-based index
     time_index: BTreeMap<Instant, Vec<String>>,
 }
@@ -1595,16 +1620,16 @@ pub struct PerformanceIndices<T: Float> {
 pub struct DatabaseStatistics {
     /// Total records
     pub total_records: usize,
-    
+
     /// Unique architectures
     pub unique_architectures: usize,
-    
+
     /// Average performance
     pub avg_performance: f64,
-    
+
     /// Performance distribution
     pub performance_distribution: Vec<f64>,
-    
+
     /// Database size (bytes)
     pub database_size: usize,
 }
@@ -1614,10 +1639,10 @@ pub struct DatabaseStatistics {
 pub struct DatabaseQueryOptimizer<T: Float> {
     /// Query cache
     query_cache: HashMap<String, QueryResult<T>>,
-    
+
     /// Index optimizer
     index_optimizer: IndexOptimizer,
-    
+
     /// Query planner
     query_planner: QueryPlanner<T>,
 }
@@ -1627,10 +1652,10 @@ pub struct DatabaseQueryOptimizer<T: Float> {
 pub struct PerformanceTrendAnalyzer<T: Float> {
     /// Trend models
     trend_models: Vec<TrendModel<T>>,
-    
+
     /// Trend detection algorithms
     detection_algorithms: Vec<TrendDetectionAlgorithm>,
-    
+
     /// Trend history
     trend_history: VecDeque<PerformanceTrend<T>>,
 }
@@ -1640,10 +1665,10 @@ pub struct PerformanceTrendAnalyzer<T: Float> {
 pub struct QueryResult<T: Float> {
     /// Result records
     pub records: Vec<ArchitecturePerformanceRecord<T>>,
-    
+
     /// Query time
     pub query_time: Duration,
-    
+
     /// Result metadata
     pub metadata: QueryMetadata,
 }
@@ -1653,10 +1678,10 @@ pub struct QueryResult<T: Float> {
 pub struct QueryMetadata {
     /// Number of records scanned
     pub records_scanned: usize,
-    
+
     /// Index usage
     pub indices_used: Vec<String>,
-    
+
     /// Cache hit
     pub cache_hit: bool,
 }
@@ -1666,7 +1691,7 @@ pub struct QueryMetadata {
 pub struct IndexOptimizer {
     /// Index statistics
     index_stats: HashMap<String, IndexStatistics>,
-    
+
     /// Optimization strategy
     optimization_strategy: IndexOptimizationStrategy,
 }
@@ -1676,13 +1701,13 @@ pub struct IndexOptimizer {
 pub struct IndexStatistics {
     /// Index size
     pub size: usize,
-    
+
     /// Access frequency
     pub access_frequency: f64,
-    
+
     /// Selectivity
     pub selectivity: f64,
-    
+
     /// Maintenance cost
     pub maintenance_cost: f64,
 }
@@ -1701,10 +1726,10 @@ pub enum IndexOptimizationStrategy {
 pub struct QueryPlanner<T: Float> {
     /// Query optimizer
     optimizer: QueryOptimizer,
-    
+
     /// Execution plans
     execution_plans: HashMap<String, ExecutionPlan>,
-    
+
     /// Cost estimator
     cost_estimator: QueryCostEstimator<T>,
 }
@@ -1714,7 +1739,7 @@ pub struct QueryPlanner<T: Float> {
 pub struct QueryOptimizer {
     /// Optimization rules
     optimization_rules: Vec<OptimizationRule>,
-    
+
     /// Cost model
     cost_model: CostModel,
 }
@@ -1724,10 +1749,10 @@ pub struct QueryOptimizer {
 pub struct ExecutionPlan {
     /// Plan steps
     pub steps: Vec<ExecutionStep>,
-    
+
     /// Estimated cost
     pub estimated_cost: f64,
-    
+
     /// Plan metadata
     pub metadata: ExecutionPlanMetadata,
 }
@@ -1747,10 +1772,10 @@ pub enum ExecutionStep {
 pub struct FilterCondition {
     /// Field name
     pub field: String,
-    
+
     /// Operator
     pub operator: FilterOperator,
-    
+
     /// Value
     pub value: FilterValue,
 }
@@ -1784,7 +1809,7 @@ pub enum FilterValue {
 pub struct SortCondition {
     /// Field name
     pub field: String,
-    
+
     /// Sort order
     pub order: SortOrder,
 }
@@ -1801,10 +1826,10 @@ pub enum SortOrder {
 pub struct JoinCondition {
     /// Left field
     pub left_field: String,
-    
+
     /// Right field
     pub right_field: String,
-    
+
     /// Join type
     pub join_type: JoinType,
 }
@@ -1823,10 +1848,10 @@ pub enum JoinType {
 pub struct ExecutionPlanMetadata {
     /// Plan creation time
     pub creation_time: Instant,
-    
+
     /// Plan version
     pub version: u32,
-    
+
     /// Optimization level
     pub optimization_level: OptimizationLevel,
 }
@@ -1845,7 +1870,7 @@ pub enum OptimizationLevel {
 pub struct QueryCostEstimator<T: Float> {
     /// Cost model
     cost_model: CostModel,
-    
+
     /// Statistics collector
     stats_collector: StatisticsCollector<T>,
 }
@@ -1855,13 +1880,13 @@ pub struct QueryCostEstimator<T: Float> {
 pub struct CostModel {
     /// CPU cost factor
     pub cpu_cost_factor: f64,
-    
+
     /// IO cost factor
     pub io_cost_factor: f64,
-    
+
     /// Memory cost factor
     pub memory_cost_factor: f64,
-    
+
     /// Network cost factor
     pub network_cost_factor: f64,
 }
@@ -1871,10 +1896,10 @@ pub struct CostModel {
 pub struct StatisticsCollector<T: Float> {
     /// Table statistics
     table_stats: HashMap<String, TableStatistics>,
-    
+
     /// Column statistics
     column_stats: HashMap<String, ColumnStatistics<T>>,
-    
+
     /// Query statistics
     query_stats: HashMap<String, QueryStatistics>,
 }
@@ -1884,13 +1909,13 @@ pub struct StatisticsCollector<T: Float> {
 pub struct TableStatistics {
     /// Number of rows
     pub row_count: usize,
-    
+
     /// Table size (bytes)
     pub size: usize,
-    
+
     /// Average row size
     pub avg_row_size: f64,
-    
+
     /// Last update time
     pub last_update: Instant,
 }
@@ -1900,19 +1925,19 @@ pub struct TableStatistics {
 pub struct ColumnStatistics<T: Float> {
     /// Number of distinct values
     pub distinct_count: usize,
-    
+
     /// Null count
     pub null_count: usize,
-    
+
     /// Minimum value
     pub min_value: Option<T>,
-    
+
     /// Maximum value
     pub max_value: Option<T>,
-    
+
     /// Average value
     pub avg_value: Option<T>,
-    
+
     /// Histogram
     pub histogram: Option<Vec<HistogramBucket<T>>>,
 }
@@ -1922,10 +1947,10 @@ pub struct ColumnStatistics<T: Float> {
 pub struct HistogramBucket<T: Float> {
     /// Lower bound
     pub lower_bound: T,
-    
+
     /// Upper bound
     pub upper_bound: T,
-    
+
     /// Frequency
     pub frequency: usize,
 }
@@ -1935,13 +1960,13 @@ pub struct HistogramBucket<T: Float> {
 pub struct QueryStatistics {
     /// Execution count
     pub execution_count: usize,
-    
+
     /// Average execution time
     pub avg_execution_time: Duration,
-    
+
     /// Average result size
     pub avg_result_size: usize,
-    
+
     /// Last execution time
     pub last_execution: Instant,
 }
@@ -1951,13 +1976,13 @@ pub struct QueryStatistics {
 pub struct OptimizationRule {
     /// Rule name
     pub name: String,
-    
+
     /// Rule condition
     pub condition: RuleCondition,
-    
+
     /// Rule action
     pub action: RuleAction,
-    
+
     /// Rule priority
     pub priority: u32,
 }
@@ -1999,13 +2024,13 @@ pub enum RuleAction {
 pub struct TrendModel<T: Float> {
     /// Model type
     model_type: TrendModelType,
-    
+
     /// Model parameters
     parameters: HashMap<String, T>,
-    
+
     /// Model accuracy
     accuracy: T,
-    
+
     /// Last update time
     last_update: Instant,
 }
@@ -2038,16 +2063,16 @@ pub enum TrendDetectionAlgorithm {
 pub struct PerformanceTrend<T: Float> {
     /// Trend direction
     pub direction: TrendDirection,
-    
+
     /// Trend strength
     pub strength: T,
-    
+
     /// Confidence level
     pub confidence: T,
-    
+
     /// Time period
     pub time_period: (Instant, Instant),
-    
+
     /// Trend metadata
     pub metadata: TrendMetadata,
 }
@@ -2067,13 +2092,13 @@ pub enum PerformanceTrendDirection {
 pub struct TrendMetadata {
     /// Detection algorithm
     pub algorithm: TrendDetectionAlgorithm,
-    
+
     /// Model used
     pub model: TrendModelType,
-    
+
     /// Data points analyzed
     pub data_points: usize,
-    
+
     /// Analysis timestamp
     pub timestamp: Instant,
 }
@@ -2083,10 +2108,10 @@ pub struct TrendMetadata {
 pub struct SearchStrategySelector<T: Float> {
     /// Available strategies
     strategies: Vec<SearchStrategy<T>>,
-    
+
     /// Strategy performance history
     strategy_performance: HashMap<String, Vec<T>>,
-    
+
     /// Selection algorithm
     selection_algorithm: StrategySelectionAlgorithm,
 }
@@ -2146,7 +2171,7 @@ impl<T: Float> AdaptiveNASSystem<T> {
             config,
         })
     }
-    
+
     /// Search for optimal architecture for given task
     pub fn search_architecture(
         &mut self,
@@ -2154,39 +2179,38 @@ impl<T: Float> AdaptiveNASSystem<T> {
         performance_history: &[T],
     ) -> Result<ArchitectureRecommendation<T>, OptimizerError> {
         // Update system state
-        self.state_tracker.update_state(task_context, performance_history)?;
-        
+        self.state_tracker
+            .update_state(task_context, performance_history)?;
+
         // Adapt search strategy based on performance
-        self.adaptation_engine.adapt_to_performance(performance_history)?;
-        
+        self.adaptation_engine
+            .adapt_to_performance(performance_history)?;
+
         // Generate architecture candidates
         let candidates = self.learning_generator.generate_candidates(task_context)?;
-        
+
         // Predict performance for candidates
         let predictions = self.predictor_ensemble.predict_batch(&candidates)?;
-        
+
         // Select best candidates using multi-objective optimization
-        let selected = self.multi_objective_optimizer.select_candidates(
-            &candidates,
-            &predictions,
-        )?;
-        
+        let selected = self
+            .multi_objective_optimizer
+            .select_candidates(&candidates, &predictions)?;
+
         // Assess quality of selected architectures
         let quality_assessments = self.quality_assessor.assess_batch(&selected)?;
-        
+
         // Generate final recommendation
-        let recommendation = self.generate_recommendation(
-            selected,
-            predictions,
-            quality_assessments,
-        )?;
-        
+        let recommendation =
+            self.generate_recommendation(selected, predictions, quality_assessments)?;
+
         // Update performance database
-        self.performance_database.record_search_result(&recommendation)?;
-        
+        self.performance_database
+            .record_search_result(&recommendation)?;
+
         Ok(recommendation)
     }
-    
+
     /// Update system with new performance feedback
     pub fn update_with_feedback(
         &mut self,
@@ -2194,22 +2218,25 @@ impl<T: Float> AdaptiveNASSystem<T> {
         performance_feedback: &PerformanceFeedback<T>,
     ) -> Result<(), OptimizerError> {
         // Update performance database
-        self.performance_database.update_performance(architecture_id, performance_feedback)?;
-        
+        self.performance_database
+            .update_performance(architecture_id, performance_feedback)?;
+
         // Update predictor ensemble
-        self.predictor_ensemble.update_with_feedback(architecture_id, performance_feedback)?;
-        
+        self.predictor_ensemble
+            .update_with_feedback(architecture_id, performance_feedback)?;
+
         // Trigger adaptation if needed
         if self.adaptation_engine.should_adapt(performance_feedback)? {
             self.adaptation_engine.trigger_adaptation()?;
         }
-        
+
         // Update search space if needed
-        self.search_space_manager.update_based_on_feedback(performance_feedback)?;
-        
+        self.search_space_manager
+            .update_based_on_feedback(performance_feedback)?;
+
         Ok(())
     }
-    
+
     /// Get system performance metrics
     pub fn get_system_metrics(&self) -> SystemPerformanceMetrics<T> {
         SystemPerformanceMetrics {
@@ -2219,7 +2246,7 @@ impl<T: Float> AdaptiveNASSystem<T> {
             database_stats: self.performance_database.get_statistics(),
         }
     }
-    
+
     fn generate_recommendation(
         &self,
         _selected: Vec<ArchitectureCandidate<T>>,
@@ -2262,16 +2289,16 @@ impl<T: Float> AdaptiveNASSystem<T> {
 pub struct ArchitectureRecommendation<T: Float> {
     /// Recommended architecture
     pub architecture_spec: ArchitectureSpecification,
-    
+
     /// Predicted performance
     pub predicted_performance: T,
-    
+
     /// Confidence in recommendation
     pub confidence: T,
-    
+
     /// Quality score
     pub quality_score: T,
-    
+
     /// Recommendation metadata
     pub recommendation_metadata: RecommendationMetadata,
 }
@@ -2281,13 +2308,13 @@ pub struct ArchitectureRecommendation<T: Float> {
 pub struct RecommendationMetadata {
     /// Time spent searching
     pub search_time: Duration,
-    
+
     /// Number of candidates evaluated
     pub candidates_evaluated: usize,
-    
+
     /// Search strategy used
     pub search_strategy: String,
-    
+
     /// Recommendation timestamp
     pub timestamp: Instant,
 }
@@ -2297,10 +2324,10 @@ pub struct RecommendationMetadata {
 pub struct ProcessingResult<T: Float> {
     /// Number of processed candidates
     pub processed_count: usize,
-    
+
     /// Average processing time
     pub avg_processing_time: Duration,
-    
+
     /// Processing success rate
     pub success_rate: T,
 }
@@ -2310,7 +2337,7 @@ pub struct ProcessingResult<T: Float> {
 pub struct PerformanceAnalyzer<T: Float> {
     /// Analysis history
     pub analysis_history: VecDeque<T>,
-    
+
     /// Analyzer configuration
     pub config: AnalyzerConfig<T>,
 }
@@ -2320,7 +2347,7 @@ pub struct PerformanceAnalyzer<T: Float> {
 pub struct AnalyzerConfig<T: Float> {
     /// Analysis window size
     pub window_size: usize,
-    
+
     /// Minimum performance threshold
     pub min_threshold: T,
 }
@@ -2330,10 +2357,10 @@ pub struct AnalyzerConfig<T: Float> {
 pub struct ProcessingMetadata {
     /// Processing timestamp
     pub timestamp: Instant,
-    
+
     /// Processing duration
     pub duration: Duration,
-    
+
     /// Processing status
     pub status: ProcessingStatus,
 }
@@ -2352,13 +2379,13 @@ pub enum ProcessingStatus {
 pub struct ArchitectureFeedback<T: Float> {
     /// Feedback score
     pub score: T,
-    
+
     /// Feedback confidence
     pub confidence: T,
-    
+
     /// Feedback metadata
     pub metadata: HashMap<String, String>,
-    
+
     /// Feedback timestamp
     pub timestamp: Instant,
 }
@@ -2368,10 +2395,10 @@ pub struct ArchitectureFeedback<T: Float> {
 pub struct FeedbackProcessingConfig<T: Float> {
     /// History window size
     pub history_window: usize,
-    
+
     /// Processing threshold
     pub processing_threshold: T,
-    
+
     /// Enable automatic filtering
     pub auto_filtering: bool,
 }
@@ -2381,7 +2408,7 @@ pub struct FeedbackProcessingConfig<T: Float> {
 pub struct PerformanceFeedbackProcessor<T: Float> {
     /// Feedback history buffer
     pub feedback_history: VecDeque<PerformanceFeedback<T>>,
-    
+
     /// Processing configuration
     pub processing_config: FeedbackProcessingConfig<T>,
 }
@@ -2391,13 +2418,13 @@ pub struct PerformanceFeedbackProcessor<T: Float> {
 pub struct PerformanceFeedback<T: Float> {
     /// Actual performance achieved
     pub actual_performance: T,
-    
+
     /// Performance context
     pub context: TrainingContext<T>,
-    
+
     /// Additional metrics
     pub additional_metrics: HashMap<String, T>,
-    
+
     /// Feedback timestamp
     pub timestamp: Instant,
 }
@@ -2407,13 +2434,13 @@ pub struct PerformanceFeedback<T: Float> {
 pub struct NASSystemPerformanceMetrics<T: Float> {
     /// Search efficiency metrics
     pub search_efficiency: SearchEfficiencyMetrics<T>,
-    
+
     /// Prediction accuracy metrics
     pub prediction_accuracy: PredictionAccuracyMetrics<T>,
-    
+
     /// Adaptation performance metrics
     pub adaptation_performance: AdaptationPerformanceMetrics<T>,
-    
+
     /// Database statistics
     pub database_stats: DatabaseStatistics,
 }
@@ -2423,13 +2450,13 @@ pub struct NASSystemPerformanceMetrics<T: Float> {
 pub struct SearchEfficiencyMetrics<T: Float> {
     /// Average search time
     pub avg_search_time: Duration,
-    
+
     /// Search success rate
     pub success_rate: T,
-    
+
     /// Improvement over baseline
     pub improvement_over_baseline: T,
-    
+
     /// Resource utilization
     pub resource_utilization: T,
 }
@@ -2439,13 +2466,13 @@ pub struct SearchEfficiencyMetrics<T: Float> {
 pub struct PredictionAccuracyMetrics<T: Float> {
     /// Mean absolute error
     pub mean_absolute_error: T,
-    
+
     /// Root mean square error
     pub root_mean_square_error: T,
-    
+
     /// Correlation coefficient
     pub correlation: T,
-    
+
     /// Prediction confidence
     pub avg_confidence: T,
 }
@@ -2455,13 +2482,13 @@ pub struct PredictionAccuracyMetrics<T: Float> {
 pub struct AdaptationPerformanceMetrics<T: Float> {
     /// Adaptation frequency
     pub adaptation_frequency: f64,
-    
+
     /// Performance improvement from adaptation
     pub improvement_from_adaptation: T,
-    
+
     /// Adaptation overhead
     pub adaptation_overhead: Duration,
-    
+
     /// Adaptation success rate
     pub adaptation_success_rate: T,
 }
@@ -2477,7 +2504,7 @@ impl<T: Float> PerformanceAwareSearcher<T> {
             feedback_processor: PerformanceFeedbackProcessor::new(config)?,
         })
     }
-    
+
     fn get_efficiency_metrics(&self) -> SearchEfficiencyMetrics<T> {
         // Calculate metrics based on actual search history
         let total_searches = self.search_history.search_count();
@@ -2486,7 +2513,7 @@ impl<T: Float> PerformanceAwareSearcher<T> {
         } else {
             60
         };
-        
+
         SearchEfficiencyMetrics {
             avg_search_time: Duration::from_secs(avg_time),
             success_rate: self.search_history.calculate_success_rate(),
@@ -2494,7 +2521,7 @@ impl<T: Float> PerformanceAwareSearcher<T> {
             resource_utilization: T::from(0.8).unwrap(),
         }
     }
-    
+
     /// Search for architectures based on performance guidance
     fn search_guided_architectures(
         &mut self,
@@ -2502,27 +2529,30 @@ impl<T: Float> PerformanceAwareSearcher<T> {
         num_candidates: usize,
     ) -> Result<Vec<ArchitectureCandidate<T>>, OptimizerError> {
         // Get search strategy
-        let strategy = self.strategy_selector.select_strategy(&self.search_history)?;
-        
+        let strategy = self
+            .strategy_selector
+            .select_strategy(&self.search_history)?;
+
         // Generate candidates using guided search
         let mut candidates = Vec::with_capacity(num_candidates);
-        
+
         for _ in 0..num_candidates {
             let candidate = self.guided_search.generate_guided_candidate(
                 task_context,
                 &strategy,
                 &self.search_history,
             )?;
-            
+
             // Filter candidate through generator
             if self.candidate_generator.validate_candidate(&candidate)? {
                 candidates.push(candidate);
             }
         }
-        
+
         // Process candidates for feedback
-        self.feedback_processor.process_candidate_batch(&candidates)?;
-        
+        self.feedback_processor
+            .process_candidate_batch(&candidates)?;
+
         Ok(candidates)
     }
 }
@@ -2537,7 +2567,7 @@ impl<T: Float> ArchitecturePerformanceDatabase<T> {
             performance_trends: PerformanceTrendAnalyzer::new(),
         })
     }
-    
+
     fn update_performance(
         &mut self,
         _architecture_id: &str,
@@ -2546,7 +2576,7 @@ impl<T: Float> ArchitecturePerformanceDatabase<T> {
         // Update database with new performance data
         Ok(())
     }
-    
+
     fn record_search_result(
         &mut self,
         _recommendation: &ArchitectureRecommendation<T>,
@@ -2554,7 +2584,7 @@ impl<T: Float> ArchitecturePerformanceDatabase<T> {
         // Record search results in database
         Ok(())
     }
-    
+
     fn get_statistics(&self) -> DatabaseStatistics {
         self.database_stats.clone()
     }
@@ -2570,7 +2600,7 @@ impl<T: Float> LearningBasedGenerator<T> {
             generation_history: GenerationHistory::new(),
         })
     }
-    
+
     fn generate_candidates(
         &mut self,
         _task_context: &OptimizationTask,
@@ -2743,7 +2773,7 @@ impl<T: Float> MultiObjectiveArchitectureOptimizer<T> {
             hypervolume_calculator: HypervolumeCalculator::new(),
         })
     }
-    
+
     fn select_candidates(
         &self,
         _candidates: &[ArchitectureCandidate<T>],
@@ -2807,7 +2837,7 @@ mod tests {
                 total: 4000,
             },
         };
-        
+
         assert_eq!(spec.parameter_count, 1000);
         assert_eq!(spec.flops, 10000);
         assert_eq!(spec.memory_requirements.total, 4000);
@@ -2825,7 +2855,7 @@ impl<T: Float> PerformanceGuidedSearch<T> {
             search_parameters: SearchParameters::default(),
         })
     }
-    
+
     /// Generate architecture candidate using performance guidance
     fn generate_guided_candidate(
         &mut self,
@@ -2835,51 +2865,52 @@ impl<T: Float> PerformanceGuidedSearch<T> {
     ) -> Result<ArchitectureCandidate<T>, OptimizerError> {
         // Analyze performance trends from history
         let trend = history.get_recent_trend(20);
-        
+
         // Adjust guidance based on trend
         if let Some(ref trend_data) = trend {
             self.adjust_guidance_weights(trend_data)?;
         }
-        
+
         // Generate candidate based on strategy and guidance
         let candidate = match strategy {
             SearchStrategyType::PerformanceBased => {
                 self.generate_performance_guided_candidate(task_context, history)?
-            },
+            }
             SearchStrategyType::ExplorationBased => {
                 self.generate_exploration_candidate(task_context)?
-            },
+            }
             SearchStrategyType::ExploitationBased => {
                 self.generate_exploitation_candidate(task_context, history)?
-            },
-            _ => {
-                self.generate_hybrid_candidate(task_context, history)?
             }
+            _ => self.generate_hybrid_candidate(task_context, history)?,
         };
-        
+
         Ok(candidate)
     }
-    
+
     /// Adjust guidance weights based on performance trends
-    fn adjust_guidance_weights(&mut self, trend: &PerformanceTrend<T>) -> Result<(), OptimizerError> {
+    fn adjust_guidance_weights(
+        &mut self,
+        trend: &PerformanceTrend<T>,
+    ) -> Result<(), OptimizerError> {
         match trend.direction {
             TrendDirection::Increasing => {
                 // Performance is improving, slightly increase exploitation
                 self.exploration_exploitation_balance *= T::from(0.95).unwrap();
-            },
+            }
             TrendDirection::Decreasing => {
                 // Performance is declining, increase exploration
                 self.exploration_exploitation_balance *= T::from(1.05).unwrap();
-            },
+            }
             TrendDirection::Stable => {
                 // Performance is stable, moderate exploration
                 self.exploration_exploitation_balance = T::from(0.3).unwrap();
-            },
+            }
             _ => {
                 // For other cases, maintain current balance
             }
         }
-        
+
         // Clamp balance to reasonable range
         let min_balance = T::from(0.1).unwrap();
         let max_balance = T::from(0.9).unwrap();
@@ -2889,10 +2920,10 @@ impl<T: Float> PerformanceGuidedSearch<T> {
         if self.exploration_exploitation_balance > max_balance {
             self.exploration_exploitation_balance = max_balance;
         }
-        
+
         Ok(())
     }
-    
+
     fn generate_performance_guided_candidate(
         &self,
         task_context: &OptimizationTask,
@@ -2900,7 +2931,7 @@ impl<T: Float> PerformanceGuidedSearch<T> {
     ) -> Result<ArchitectureCandidate<T>, OptimizerError> {
         // Use performance history to guide architecture generation
         let best_configs = self.extract_best_configurations(history, 5);
-        
+
         // Generate candidate by combining/mutating best configurations
         let base_config = if !best_configs.is_empty() {
             &best_configs[0] // Use best configuration as base
@@ -2908,7 +2939,7 @@ impl<T: Float> PerformanceGuidedSearch<T> {
             // Fallback to default if no history
             return self.generate_default_candidate(task_context);
         };
-        
+
         // Create mutated candidate
         Ok(ArchitectureCandidate {
             id: format!("perf_guided_{}", rand::random::<u32>()),
@@ -2917,7 +2948,7 @@ impl<T: Float> PerformanceGuidedSearch<T> {
             estimated_quality: Some(T::from(0.8).unwrap()),
         })
     }
-    
+
     fn generate_exploration_candidate(
         &self,
         task_context: &OptimizationTask,
@@ -2930,7 +2961,7 @@ impl<T: Float> PerformanceGuidedSearch<T> {
             estimated_quality: None,
         })
     }
-    
+
     fn generate_exploitation_candidate(
         &self,
         task_context: &OptimizationTask,
@@ -2938,7 +2969,7 @@ impl<T: Float> PerformanceGuidedSearch<T> {
     ) -> Result<ArchitectureCandidate<T>, OptimizerError> {
         // Generate candidate that exploits known good patterns
         let best_patterns = self.extract_successful_patterns(history);
-        
+
         Ok(ArchitectureCandidate {
             id: format!("exploitation_{}", rand::random::<u32>()),
             specification: self.combine_successful_patterns(&best_patterns, task_context)?,
@@ -2946,22 +2977,25 @@ impl<T: Float> PerformanceGuidedSearch<T> {
             estimated_quality: Some(T::from(0.9).unwrap()),
         })
     }
-    
+
     fn generate_hybrid_candidate(
         &self,
         task_context: &OptimizationTask,
         history: &SearchHistory<T>,
     ) -> Result<ArchitectureCandidate<T>, OptimizerError> {
         // Balance exploration and exploitation
-        let explore_factor = self.exploration_exploitation_balance.to_f64().unwrap_or(0.3);
-        
+        let explore_factor = self
+            .exploration_exploitation_balance
+            .to_f64()
+            .unwrap_or(0.3);
+
         if rand::random::<f64>() < explore_factor {
             self.generate_exploration_candidate(task_context)
         } else {
             self.generate_exploitation_candidate(task_context, history)
         }
     }
-    
+
     fn generate_default_candidate(
         &self,
         _task_context: &OptimizationTask,
@@ -2973,25 +3007,39 @@ impl<T: Float> PerformanceGuidedSearch<T> {
             estimated_quality: Some(T::from(0.5).unwrap()),
         })
     }
-    
+
     // Helper methods (simplified implementations)
-    fn extract_best_configurations(&self, _history: &SearchHistory<T>, _count: usize) -> Vec<ArchitectureSpecification> {
+    fn extract_best_configurations(
+        &self,
+        _history: &SearchHistory<T>,
+        _count: usize,
+    ) -> Vec<ArchitectureSpecification> {
         vec![] // Placeholder
     }
-    
-    fn mutate_architecture_spec(&self, _base: &ArchitectureSpecification) -> Result<ArchitectureSpecification, OptimizerError> {
+
+    fn mutate_architecture_spec(
+        &self,
+        _base: &ArchitectureSpecification,
+    ) -> Result<ArchitectureSpecification, OptimizerError> {
         Ok(ArchitectureSpecification::default()) // Placeholder
     }
-    
-    fn generate_diverse_architecture(&self, _task_context: &OptimizationTask) -> Result<ArchitectureSpecification, OptimizerError> {
+
+    fn generate_diverse_architecture(
+        &self,
+        _task_context: &OptimizationTask,
+    ) -> Result<ArchitectureSpecification, OptimizerError> {
         Ok(ArchitectureSpecification::default()) // Placeholder
     }
-    
+
     fn extract_successful_patterns(&self, _history: &SearchHistory<T>) -> Vec<ArchitecturePattern> {
         vec![] // Placeholder
     }
-    
-    fn combine_successful_patterns(&self, _patterns: &[ArchitecturePattern], _task_context: &OptimizationTask) -> Result<ArchitectureSpecification, OptimizerError> {
+
+    fn combine_successful_patterns(
+        &self,
+        _patterns: &[ArchitecturePattern],
+        _task_context: &OptimizationTask,
+    ) -> Result<ArchitectureSpecification, OptimizerError> {
         Ok(ArchitectureSpecification::default()) // Placeholder
     }
 }
@@ -3010,39 +3058,44 @@ impl<T: Float> ArchitectureCandidateGenerator<T> {
             generation_history: GenerationHistory::new(),
         })
     }
-    
+
     /// Validate an architecture candidate
-    fn validate_candidate(&self, candidate: &ArchitectureCandidate<T>) -> Result<bool, OptimizerError> {
+    fn validate_candidate(
+        &self,
+        candidate: &ArchitectureCandidate<T>,
+    ) -> Result<bool, OptimizerError> {
         // Check basic structure validity
         if candidate.specification.layers.is_empty() {
             return Ok(false);
         }
-        
+
         // Check parameter constraints
         for layer in &candidate.specification.layers {
             if !self.validate_layer_specification(layer)? {
                 return Ok(false);
             }
         }
-        
+
         // Check memory constraints
-        if candidate.specification.memory_requirements.total > 16 * 1024 * 1024 * 1024 { // 16GB limit
+        if candidate.specification.memory_requirements.total > 16 * 1024 * 1024 * 1024 {
+            // 16GB limit
             return Ok(false);
         }
-        
+
         // Check complexity constraints
-        if candidate.specification.parameter_count > 100_000_000 { // 100M parameter limit
+        if candidate.specification.parameter_count > 100_000_000 {
+            // 100M parameter limit
             return Ok(false);
         }
-        
+
         // Check for cycles in connections
         if self.has_cycles(&candidate.specification.connections)? {
             return Ok(false);
         }
-        
+
         Ok(true)
     }
-    
+
     /// Generate multiple architecture candidates
     fn generate_candidates(
         &mut self,
@@ -3051,11 +3104,13 @@ impl<T: Float> ArchitectureCandidateGenerator<T> {
         context: &OptimizationTask,
     ) -> Result<Vec<ArchitectureCandidate<T>>, OptimizerError> {
         let mut candidates = Vec::with_capacity(count);
-        
+
         for i in 0..count {
             let candidate = match strategy {
                 GenerationStrategy::Random => self.generate_random_candidate(context)?,
-                GenerationStrategy::Evolutionary => self.generate_evolutionary_candidate(context, i)?,
+                GenerationStrategy::Evolutionary => {
+                    self.generate_evolutionary_candidate(context, i)?
+                }
                 GenerationStrategy::Guided => self.generate_guided_candidate(context)?,
                 GenerationStrategy::Hybrid => {
                     if i % 2 == 0 {
@@ -3065,68 +3120,75 @@ impl<T: Float> ArchitectureCandidateGenerator<T> {
                     }
                 }
             };
-            
+
             if self.validate_candidate(&candidate)? {
                 candidates.push(candidate);
             }
         }
-        
+
         // Ensure diversity
         let diverse_candidates = self.diversity_maintainer.ensure_diversity(candidates)?;
-        
+
         // Update generation history
         for candidate in &diverse_candidates {
             self.generation_history.add_candidate(candidate.clone());
         }
-        
+
         Ok(diverse_candidates)
     }
-    
-    fn validate_layer_specification(&self, layer: &LayerSpecification) -> Result<bool, OptimizerError> {
+
+    fn validate_layer_specification(
+        &self,
+        layer: &LayerSpecification,
+    ) -> Result<bool, OptimizerError> {
         // Check input/output dimension compatibility
         if layer.input_dims.is_empty() || layer.output_dims.is_empty() {
             return Ok(false);
         }
-        
+
         // Check parameter validity for specific layer types
         match layer.layer_type {
             LayerType::Linear => {
                 if layer.input_dims.len() != 1 || layer.output_dims.len() != 1 {
                     return Ok(false);
                 }
-            },
+            }
             LayerType::LSTM | LayerType::GRU => {
                 // Check hidden size parameter
-                if let Some(LayerParameter::Integer(hidden_size)) = layer.parameters.get("hidden_size") {
+                if let Some(LayerParameter::Integer(hidden_size)) =
+                    layer.parameters.get("hidden_size")
+                {
                     if *hidden_size <= 0 || *hidden_size > 4096 {
                         return Ok(false);
                     }
                 }
-            },
+            }
             LayerType::Convolution1D => {
                 // Check kernel size, stride, padding
-                if let Some(LayerParameter::Integer(kernel_size)) = layer.parameters.get("kernel_size") {
+                if let Some(LayerParameter::Integer(kernel_size)) =
+                    layer.parameters.get("kernel_size")
+                {
                     if *kernel_size <= 0 || *kernel_size > 128 {
                         return Ok(false);
                     }
                 }
-            },
+            }
             _ => {} // Other layer types pass for now
         }
-        
+
         Ok(true)
     }
-    
+
     fn has_cycles(&self, connections: &ConnectionTopology) -> Result<bool, OptimizerError> {
         let n = connections.adjacency_matrix.nrows();
         if n == 0 {
             return Ok(false);
         }
-        
+
         // Simple DFS-based cycle detection
         let mut visited = vec![false; n];
         let mut rec_stack = vec![false; n];
-        
+
         for i in 0..n {
             if !visited[i] {
                 if self.has_cycle_util(i, &mut visited, &mut rec_stack, connections)? {
@@ -3134,10 +3196,10 @@ impl<T: Float> ArchitectureCandidateGenerator<T> {
                 }
             }
         }
-        
+
         Ok(false)
     }
-    
+
     fn has_cycle_util(
         &self,
         node: usize,
@@ -3147,7 +3209,7 @@ impl<T: Float> ArchitectureCandidateGenerator<T> {
     ) -> Result<bool, OptimizerError> {
         visited[node] = true;
         rec_stack[node] = true;
-        
+
         for j in 0..connections.adjacency_matrix.ncols() {
             if connections.adjacency_matrix[[node, j]] {
                 if !visited[j] {
@@ -3159,15 +3221,18 @@ impl<T: Float> ArchitectureCandidateGenerator<T> {
                 }
             }
         }
-        
+
         rec_stack[node] = false;
         Ok(false)
     }
-    
-    fn generate_random_candidate(&self, context: &OptimizationTask) -> Result<ArchitectureCandidate<T>, OptimizerError> {
+
+    fn generate_random_candidate(
+        &self,
+        context: &OptimizationTask,
+    ) -> Result<ArchitectureCandidate<T>, OptimizerError> {
         let num_layers = rand::rng().gen_range(1..=8);
         let mut layers = Vec::with_capacity(num_layers);
-        
+
         for i in 0..num_layers {
             let layer_type = match context.task_type {
                 TaskType::SequenceModeling => {
@@ -3176,19 +3241,21 @@ impl<T: Float> ArchitectureCandidateGenerator<T> {
                     } else if i == num_layers - 1 {
                         LayerType::Linear
                     } else {
-                        *[LayerType::LSTM, LayerType::GRU, LayerType::Transformer].choose(&mut rand::rng()).unwrap()
+                        *[LayerType::LSTM, LayerType::GRU, LayerType::Transformer]
+                            .choose(&mut rand::rng())
+                            .unwrap()
                     }
-                },
-                _ => LayerType::Linear
+                }
+                _ => LayerType::Linear,
             };
-            
+
             let layer = self.generate_random_layer(layer_type, i, num_layers)?;
             layers.push(layer);
         }
-        
+
         let connections = self.generate_sequential_connections(num_layers)?;
         let (param_count, flops, memory_req) = self.estimate_architecture_cost(&layers);
-        
+
         Ok(ArchitectureCandidate {
             id: format!("random_{}", rand::random::<u32>()),
             specification: ArchitectureSpecification {
@@ -3202,59 +3269,99 @@ impl<T: Float> ArchitectureCandidateGenerator<T> {
             estimated_quality: None,
         })
     }
-    
-    fn generate_evolutionary_candidate(&self, context: &OptimizationTask, generation: usize) -> Result<ArchitectureCandidate<T>, OptimizerError> {
+
+    fn generate_evolutionary_candidate(
+        &self,
+        context: &OptimizationTask,
+        generation: usize,
+    ) -> Result<ArchitectureCandidate<T>, OptimizerError> {
         // For now, use random generation with some bias based on generation
         let mut candidate = self.generate_random_candidate(context)?;
-        
+
         // Apply evolutionary mutations based on generation
         if generation > 0 {
             candidate = self.apply_evolutionary_mutations(candidate, generation)?;
         }
-        
+
         candidate.generation_method = GenerationMethod::Evolutionary;
         Ok(candidate)
     }
-    
-    fn generate_guided_candidate(&self, context: &OptimizationTask) -> Result<ArchitectureCandidate<T>, OptimizerError> {
+
+    fn generate_guided_candidate(
+        &self,
+        context: &OptimizationTask,
+    ) -> Result<ArchitectureCandidate<T>, OptimizerError> {
         // Use successful patterns from history
         let mut candidate = self.generate_random_candidate(context)?;
-        
+
         // Apply guidance from component library
         candidate = self.apply_component_guidance(candidate)?;
-        
+
         candidate.generation_method = GenerationMethod::Guided;
         candidate.estimated_quality = Some(T::from(0.7).unwrap());
-        
+
         Ok(candidate)
     }
-    
-    fn generate_random_layer(&self, layer_type: LayerType, position: usize, total_layers: usize) -> Result<LayerSpecification, OptimizerError> {
+
+    fn generate_random_layer(
+        &self,
+        layer_type: LayerType,
+        position: usize,
+        total_layers: usize,
+    ) -> Result<LayerSpecification, OptimizerError> {
         let mut parameters = HashMap::new();
-        let (input_dims, output_dims) = self.generate_layer_dimensions(layer_type, position, total_layers);
-        
+        let (input_dims, output_dims) =
+            self.generate_layer_dimensions(layer_type, position, total_layers);
+
         match layer_type {
             LayerType::Linear => {
                 // No additional parameters needed
-            },
+            }
             LayerType::LSTM | LayerType::GRU => {
-                parameters.insert("hidden_size".to_string(), LayerParameter::Integer(rand::rng().gen_range(64..=512)));
-                parameters.insert("num_layers".to_string(), LayerParameter::Integer(rand::rng().gen_range(1..=3)));
-                parameters.insert("dropout".to_string(), LayerParameter::Float(rand::rng().gen_range(0.0..=0.5)));
-            },
+                parameters.insert(
+                    "hidden_size".to_string(),
+                    LayerParameter::Integer(rand::rng().gen_range(64..=512)),
+                );
+                parameters.insert(
+                    "num_layers".to_string(),
+                    LayerParameter::Integer(rand::rng().gen_range(1..=3)),
+                );
+                parameters.insert(
+                    "dropout".to_string(),
+                    LayerParameter::Float(rand::rng().gen_range(0.0..=0.5)),
+                );
+            }
             LayerType::Transformer => {
-                parameters.insert("num_heads".to_string(), LayerParameter::Integer(rand::rng().gen_range(4..=16)));
-                parameters.insert("ff_dim".to_string(), LayerParameter::Integer(rand::rng().gen_range(512..=2048)));
-                parameters.insert("dropout".to_string(), LayerParameter::Float(rand::rng().gen_range(0.0..=0.3)));
-            },
+                parameters.insert(
+                    "num_heads".to_string(),
+                    LayerParameter::Integer(rand::rng().gen_range(4..=16)),
+                );
+                parameters.insert(
+                    "ff_dim".to_string(),
+                    LayerParameter::Integer(rand::rng().gen_range(512..=2048)),
+                );
+                parameters.insert(
+                    "dropout".to_string(),
+                    LayerParameter::Float(rand::rng().gen_range(0.0..=0.3)),
+                );
+            }
             LayerType::Convolution1D => {
-                parameters.insert("kernel_size".to_string(), LayerParameter::Integer(rand::rng().gen_range(3..=15)));
-                parameters.insert("stride".to_string(), LayerParameter::Integer(rand::rng().gen_range(1..=3)));
-                parameters.insert("padding".to_string(), LayerParameter::Integer(rand::rng().gen_range(0..=5)));
-            },
+                parameters.insert(
+                    "kernel_size".to_string(),
+                    LayerParameter::Integer(rand::rng().gen_range(3..=15)),
+                );
+                parameters.insert(
+                    "stride".to_string(),
+                    LayerParameter::Integer(rand::rng().gen_range(1..=3)),
+                );
+                parameters.insert(
+                    "padding".to_string(),
+                    LayerParameter::Integer(rand::rng().gen_range(0..=5)),
+                );
+            }
             _ => {} // Other layer types get default parameters
         }
-        
+
         Ok(LayerSpecification {
             layer_type,
             parameters,
@@ -3262,50 +3369,65 @@ impl<T: Float> ArchitectureCandidateGenerator<T> {
             output_dims,
         })
     }
-    
-    fn generate_layer_dimensions(&self, layer_type: LayerType, position: usize, total_layers: usize) -> (Vec<usize>, Vec<usize>) {
+
+    fn generate_layer_dimensions(
+        &self,
+        layer_type: LayerType,
+        position: usize,
+        total_layers: usize,
+    ) -> (Vec<usize>, Vec<usize>) {
         match layer_type {
             LayerType::Linear => {
                 let input_size = if position == 0 { 256 } else { 128 };
-                let output_size = if position == total_layers - 1 { 64 } else { 128 };
+                let output_size = if position == total_layers - 1 {
+                    64
+                } else {
+                    128
+                };
                 (vec![input_size], vec![output_size])
-            },
+            }
             LayerType::LSTM | LayerType::GRU => {
                 (vec![256], vec![256]) // Typical for sequence models
-            },
+            }
             LayerType::Transformer => {
                 (vec![512], vec![512]) // Typical transformer dimensions
-            },
+            }
             LayerType::Embedding => {
                 (vec![10000], vec![256]) // Vocab size to embedding dim
-            },
-            _ => (vec![128], vec![128]) // Default dimensions
+            }
+            _ => (vec![128], vec![128]), // Default dimensions
         }
     }
-    
-    fn generate_sequential_connections(&self, num_layers: usize) -> Result<ConnectionTopology, OptimizerError> {
+
+    fn generate_sequential_connections(
+        &self,
+        num_layers: usize,
+    ) -> Result<ConnectionTopology, OptimizerError> {
         let mut adjacency_matrix = Array2::zeros((num_layers, num_layers));
         let mut connection_types = HashMap::new();
-        
+
         // Create sequential connections
         for i in 0..num_layers - 1 {
             adjacency_matrix[[i, i + 1]] = true;
             connection_types.insert((i, i + 1), ConnectionType::Sequential);
         }
-        
+
         Ok(ConnectionTopology {
             adjacency_matrix,
             connection_types,
             skip_connections: vec![],
         })
     }
-    
-    fn estimate_architecture_cost(&self, layers: &[LayerSpecification]) -> (usize, usize, MemoryRequirements) {
+
+    fn estimate_architecture_cost(
+        &self,
+        layers: &[LayerSpecification],
+    ) -> (usize, usize, MemoryRequirements) {
         let mut param_count = 0;
         let mut flops = 0;
         let mut memory_params = 0;
         let mut memory_activations = 0;
-        
+
         for layer in layers {
             match layer.layer_type {
                 LayerType::Linear => {
@@ -3315,23 +3437,31 @@ impl<T: Float> ArchitectureCandidateGenerator<T> {
                     flops += input_size * output_size;
                     memory_params += param_count * 4; // 4 bytes per float32
                     memory_activations += output_size * 4;
-                },
+                }
                 LayerType::LSTM => {
-                    let hidden_size = layer.parameters.get("hidden_size")
-                        .and_then(|p| if let LayerParameter::Integer(size) = p { Some(*size as usize) } else { None })
+                    let hidden_size = layer
+                        .parameters
+                        .get("hidden_size")
+                        .and_then(|p| {
+                            if let LayerParameter::Integer(size) = p {
+                                Some(*size as usize)
+                            } else {
+                                None
+                            }
+                        })
                         .unwrap_or(256);
                     param_count += hidden_size * hidden_size * 8; // 4 gates * 2 matrices
                     flops += hidden_size * hidden_size * 8;
                     memory_params += param_count * 4;
                     memory_activations += hidden_size * 4 * 4; // 4 cell states
-                },
+                }
                 LayerType::Transformer => {
                     let model_dim = 512; // Default transformer dimension
                     param_count += model_dim * model_dim * 4; // QKV + output projections
                     flops += model_dim * model_dim * 4;
                     memory_params += param_count * 4;
                     memory_activations += model_dim * 4;
-                },
+                }
                 _ => {
                     param_count += 1000; // Default parameter count
                     flops += 1000;
@@ -3340,38 +3470,49 @@ impl<T: Float> ArchitectureCandidateGenerator<T> {
                 }
             }
         }
-        
+
         let memory_gradients = memory_params; // Same size as parameters
         let total_memory = memory_params + memory_activations + memory_gradients;
-        
-        (param_count, flops, MemoryRequirements {
-            parameters: memory_params,
-            activations: memory_activations,
-            gradients: memory_gradients,
-            total: total_memory,
-        })
+
+        (
+            param_count,
+            flops,
+            MemoryRequirements {
+                parameters: memory_params,
+                activations: memory_activations,
+                gradients: memory_gradients,
+                total: total_memory,
+            },
+        )
     }
-    
-    fn apply_evolutionary_mutations(&self, mut candidate: ArchitectureCandidate<T>, _generation: usize) -> Result<ArchitectureCandidate<T>, OptimizerError> {
+
+    fn apply_evolutionary_mutations(
+        &self,
+        mut candidate: ArchitectureCandidate<T>,
+        _generation: usize,
+    ) -> Result<ArchitectureCandidate<T>, OptimizerError> {
         // Simple mutation: modify some parameters
         for layer in &mut candidate.specification.layers {
             for (_, param) in &mut layer.parameters {
                 match param {
                     LayerParameter::Float(ref mut value) => {
                         *value *= rand::rng().gen_range(0.8..=1.2);
-                    },
+                    }
                     LayerParameter::Integer(ref mut value) => {
                         *value = (*value as f64 * rand::rng().gen_range(0.9..=1.1)) as i64;
-                    },
+                    }
                     _ => {}
                 }
             }
         }
-        
+
         Ok(candidate)
     }
-    
-    fn apply_component_guidance(&self, candidate: ArchitectureCandidate<T>) -> Result<ArchitectureCandidate<T>, OptimizerError> {
+
+    fn apply_component_guidance(
+        &self,
+        candidate: ArchitectureCandidate<T>,
+    ) -> Result<ArchitectureCandidate<T>, OptimizerError> {
         // Apply guidance from component library (placeholder implementation)
         Ok(candidate)
     }
@@ -3387,107 +3528,114 @@ impl<T: Float> SearchHistory<T> {
             total_search_duration: Duration::from_secs(0),
         }
     }
-    
+
     /// Get total number of searches performed
     fn search_count(&self) -> usize {
         self.search_records.len()
     }
-    
+
     /// Get total search time in seconds
     fn total_search_time(&self) -> u64 {
         self.total_search_duration.as_secs()
     }
-    
+
     /// Calculate success rate based on performance improvements
     fn calculate_success_rate(&self) -> T {
         if self.search_records.is_empty() {
             return T::zero();
         }
-        
-        let successful_searches = self.search_records
+
+        let successful_searches = self
+            .search_records
             .iter()
             .filter(|record| record.performance_improvement > T::zero())
             .count();
-            
+
         T::from(successful_searches as f64 / self.search_records.len() as f64).unwrap()
     }
-    
+
     /// Calculate improvement over baseline
     fn calculate_improvement(&self) -> T {
         if self.search_records.is_empty() {
             return T::zero();
         }
-        
-        let first_performance = self.search_records
+
+        let first_performance = self
+            .search_records
             .front()
             .map(|r| r.baseline_performance)
             .unwrap_or(T::zero());
-            
+
         if first_performance > T::zero() {
             (self.current_best_performance - first_performance) / first_performance
         } else {
             T::zero()
         }
     }
-    
+
     /// Add a new search record
     fn add_search_record(&mut self, record: SearchRecord<T>) {
         // Update best performance
         if record.achieved_performance > self.current_best_performance {
             self.current_best_performance = record.achieved_performance;
         }
-        
+
         // Update total search time
         self.total_search_duration += record.search_duration;
-        
+
         // Add to timeline
-        self.performance_timeline.push((Instant::now(), record.achieved_performance));
-        
+        self.performance_timeline
+            .push((Instant::now(), record.achieved_performance));
+
         // Update strategy performance
         let strategy_name = record.strategy_used.clone();
-        let strategy_perf = self.strategy_performance
+        let strategy_perf = self
+            .strategy_performance
             .entry(strategy_name)
             .or_insert_with(Vec::new);
         strategy_perf.push(record.achieved_performance);
-        
+
         // Add to records
         self.search_records.push_back(record);
-        
+
         // Maintain history size limit
         while self.search_records.len() > 1000 {
             self.search_records.pop_front();
         }
     }
-    
+
     /// Get recent performance trend
     fn get_recent_trend(&self, window_size: usize) -> Option<PerformanceTrend<T>> {
         if self.performance_timeline.len() < window_size {
             return None;
         }
-        
-        let recent_performances: Vec<T> = self.performance_timeline
+
+        let recent_performances: Vec<T> = self
+            .performance_timeline
             .iter()
             .rev()
             .take(window_size)
             .map(|(_, perf)| *perf)
             .collect();
-            
+
         // Simple linear trend calculation
         let n = recent_performances.len() as f64;
         let sum_x = (0..recent_performances.len()).sum::<usize>() as f64;
-        let sum_y = recent_performances.iter()
+        let sum_y = recent_performances
+            .iter()
             .map(|p| p.to_f64().unwrap_or(0.0))
             .sum::<f64>();
-        let sum_xy = recent_performances.iter()
+        let sum_xy = recent_performances
+            .iter()
             .enumerate()
             .map(|(i, p)| i as f64 * p.to_f64().unwrap_or(0.0))
             .sum::<f64>();
         let sum_x2 = (0..recent_performances.len())
             .map(|i| (i * i) as f64)
             .sum::<f64>();
-            
+
         let slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x * sum_x);
-        
+
         let direction = if slope > 0.01 {
             TrendDirection::Increasing
         } else if slope < -0.01 {
@@ -3495,7 +3643,7 @@ impl<T: Float> SearchHistory<T> {
         } else {
             TrendDirection::Stable
         };
-        
+
         Some(PerformanceTrend {
             direction,
             strength: T::from(slope.abs()).unwrap(),
@@ -3525,42 +3673,43 @@ impl<T: Float> PerformanceFeedbackProcessor<T> {
             learning_rate: config.adaptation_lr,
         })
     }
-    
+
     /// Process a batch of architecture candidates with their feedback
-    fn process_candidate_batch(&mut self, candidates: &[ArchitectureCandidate<T>]) -> Result<ProcessingResult<T>, OptimizerError> {
+    fn process_candidate_batch(
+        &mut self,
+        candidates: &[ArchitectureCandidate<T>],
+    ) -> Result<ProcessingResult<T>, OptimizerError> {
         let mut batch_feedback = Vec::new();
-        
+
         // Collect initial feedback for each candidate
         for candidate in candidates {
             let feedback = self.generate_initial_feedback(candidate)?;
             batch_feedback.push(feedback);
         }
-        
+
         // Aggregate feedback across the batch
         let aggregated_feedback = self.feedback_aggregator.aggregate_batch(&batch_feedback)?;
-        
+
         // Extract patterns from successful candidates
-        let patterns = self.pattern_extractor.extract_patterns(
-            candidates,
-            &batch_feedback,
-        )?;
-        
+        let patterns = self
+            .pattern_extractor
+            .extract_patterns(candidates, &batch_feedback)?;
+
         // Analyze performance trends
-        let performance_analysis = self.performance_analyzer.analyze_batch(
-            &batch_feedback,
-            &self.feedback_history,
-        )?;
-        
+        let performance_analysis = self
+            .performance_analyzer
+            .analyze_batch(&batch_feedback, &self.feedback_history)?;
+
         // Update feedback history
         for feedback in batch_feedback {
             self.feedback_history.push_back(feedback);
         }
-        
+
         // Maintain history size limit
         while self.feedback_history.len() > 1000 {
             self.feedback_history.pop_front();
         }
-        
+
         Ok(ProcessingResult {
             aggregated_feedback,
             extracted_patterns: patterns,
@@ -3572,35 +3721,42 @@ impl<T: Float> PerformanceFeedbackProcessor<T> {
             },
         })
     }
-    
+
     /// Update feedback processor with new performance data
-    fn update_with_performance_feedback(&mut self, feedback: &PerformanceFeedback<T>) -> Result<(), OptimizerError> {
+    fn update_with_performance_feedback(
+        &mut self,
+        feedback: &PerformanceFeedback<T>,
+    ) -> Result<(), OptimizerError> {
         // Convert performance feedback to architecture feedback
         let arch_feedback = self.convert_performance_feedback(feedback)?;
-        
+
         // Update internal models with new feedback
         self.performance_analyzer.update_models(&arch_feedback)?;
-        self.pattern_extractor.update_pattern_library(&arch_feedback)?;
-        
+        self.pattern_extractor
+            .update_pattern_library(&arch_feedback)?;
+
         // Add to history
         self.feedback_history.push_back(arch_feedback);
-        
+
         Ok(())
     }
-    
+
     /// Generate initial feedback for a candidate architecture
-    fn generate_initial_feedback(&self, candidate: &ArchitectureCandidate<T>) -> Result<ArchitectureFeedback<T>, OptimizerError> {
+    fn generate_initial_feedback(
+        &self,
+        candidate: &ArchitectureCandidate<T>,
+    ) -> Result<ArchitectureFeedback<T>, OptimizerError> {
         // Analyze architecture characteristics
         let complexity_score = self.calculate_complexity_score(&candidate.specification)?;
         let efficiency_score = self.calculate_efficiency_score(&candidate.specification)?;
         let novelty_score = self.calculate_novelty_score(candidate)?;
-        
+
         // Generate quality prediction
         let predicted_quality = self.predict_candidate_quality(candidate)?;
-        
+
         // Calculate confidence based on similar architectures in history
         let confidence = self.calculate_prediction_confidence(candidate)?;
-        
+
         Ok(ArchitectureFeedback {
             candidate_id: candidate.id.clone(),
             complexity_score,
@@ -3616,91 +3772,125 @@ impl<T: Float> PerformanceFeedbackProcessor<T> {
             timestamp: std::time::Instant::now(),
         })
     }
-    
-    fn calculate_complexity_score(&self, spec: &ArchitectureSpecification) -> Result<T, OptimizerError> {
+
+    fn calculate_complexity_score(
+        &self,
+        spec: &ArchitectureSpecification,
+    ) -> Result<T, OptimizerError> {
         // Calculate normalized complexity score based on multiple factors
         let param_complexity = T::from(spec.parameter_count as f64 / 1_000_000.0).unwrap(); // Normalize by 1M params
         let layer_complexity = T::from(spec.layers.len() as f64 / 10.0).unwrap(); // Normalize by 10 layers
-        let connection_complexity = T::from(spec.connections.skip_connections.len() as f64 / 5.0).unwrap(); // Normalize by 5 skip connections
-        
+        let connection_complexity =
+            T::from(spec.connections.skip_connections.len() as f64 / 5.0).unwrap(); // Normalize by 5 skip connections
+
         // Weighted combination
-        let complexity = param_complexity * T::from(0.5).unwrap() +
-                        layer_complexity * T::from(0.3).unwrap() +
-                        connection_complexity * T::from(0.2).unwrap();
-        
+        let complexity = param_complexity * T::from(0.5).unwrap()
+            + layer_complexity * T::from(0.3).unwrap()
+            + connection_complexity * T::from(0.2).unwrap();
+
         // Clamp to [0, 1] range
         Ok(complexity.min(T::one()).max(T::zero()))
     }
-    
-    fn calculate_efficiency_score(&self, spec: &ArchitectureSpecification) -> Result<T, OptimizerError> {
+
+    fn calculate_efficiency_score(
+        &self,
+        spec: &ArchitectureSpecification,
+    ) -> Result<T, OptimizerError> {
         // Calculate efficiency as inverse of computational cost
         let flops_ratio = T::from(spec.flops as f64 / 1_000_000_000.0).unwrap(); // Normalize by 1B FLOPS
-        let memory_ratio = T::from(spec.memory_requirements.total as f64 / (1024.0 * 1024.0 * 1024.0)).unwrap(); // Normalize by 1GB
-        
+        let memory_ratio =
+            T::from(spec.memory_requirements.total as f64 / (1024.0 * 1024.0 * 1024.0)).unwrap(); // Normalize by 1GB
+
         // Higher efficiency for lower resource usage
-        let efficiency = T::one() / (T::one() + flops_ratio * T::from(0.6).unwrap() + memory_ratio * T::from(0.4).unwrap());
-        
+        let efficiency = T::one()
+            / (T::one()
+                + flops_ratio * T::from(0.6).unwrap()
+                + memory_ratio * T::from(0.4).unwrap());
+
         Ok(efficiency.min(T::one()).max(T::zero()))
     }
-    
-    fn calculate_novelty_score(&self, candidate: &ArchitectureCandidate<T>) -> Result<T, OptimizerError> {
+
+    fn calculate_novelty_score(
+        &self,
+        candidate: &ArchitectureCandidate<T>,
+    ) -> Result<T, OptimizerError> {
         if self.feedback_history.is_empty() {
             return Ok(T::one()); // First candidate is novel
         }
-        
+
         // Calculate average distance to historical candidates
         let mut total_distance = T::zero();
         let mut count = 0;
-        
+
         for historical_feedback in &self.feedback_history {
             // Find historical candidate with matching ID pattern
-            if let Some(distance) = self.calculate_architectural_distance(candidate, &historical_feedback.candidate_id)? {
+            if let Some(distance) =
+                self.calculate_architectural_distance(candidate, &historical_feedback.candidate_id)?
+            {
                 total_distance = total_distance + distance;
                 count += 1;
             }
         }
-        
+
         if count > 0 {
             Ok(total_distance / T::from(count).unwrap())
         } else {
             Ok(T::from(0.5).unwrap()) // Medium novelty if no comparisons possible
         }
     }
-    
-    fn predict_candidate_quality(&self, candidate: &ArchitectureCandidate<T>) -> Result<T, OptimizerError> {
+
+    fn predict_candidate_quality(
+        &self,
+        candidate: &ArchitectureCandidate<T>,
+    ) -> Result<T, OptimizerError> {
         // Use simple heuristic-based prediction
         let complexity_score = self.calculate_complexity_score(&candidate.specification)?;
         let efficiency_score = self.calculate_efficiency_score(&candidate.specification)?;
-        
+
         // Balance complexity and efficiency for quality prediction
-        let quality = (complexity_score * T::from(0.3).unwrap() + efficiency_score * T::from(0.7).unwrap())
-            .min(T::one()).max(T::zero());
-        
+        let quality = (complexity_score * T::from(0.3).unwrap()
+            + efficiency_score * T::from(0.7).unwrap())
+        .min(T::one())
+        .max(T::zero());
+
         Ok(quality)
     }
-    
-    fn calculate_prediction_confidence(&self, candidate: &ArchitectureCandidate<T>) -> Result<T, OptimizerError> {
+
+    fn calculate_prediction_confidence(
+        &self,
+        candidate: &ArchitectureCandidate<T>,
+    ) -> Result<T, OptimizerError> {
         // Confidence based on how similar this candidate is to previous ones
         let novelty = self.calculate_novelty_score(candidate)?;
-        
+
         // Lower novelty = higher confidence (we've seen similar architectures)
         let confidence = T::one() - novelty * T::from(0.5).unwrap();
-        
+
         Ok(confidence.min(T::one()).max(T::from(0.1).unwrap())) // Minimum confidence of 0.1
     }
-    
-    fn calculate_architectural_distance(&self, candidate: &ArchitectureCandidate<T>, historical_id: &str) -> Result<Option<T>, OptimizerError> {
+
+    fn calculate_architectural_distance(
+        &self,
+        candidate: &ArchitectureCandidate<T>,
+        historical_id: &str,
+    ) -> Result<Option<T>, OptimizerError> {
         // Simple distance calculation based on ID similarity and generation method
-        let id_similarity = if candidate.id.contains(&historical_id[..3.min(historical_id.len())]) {
+        let id_similarity = if candidate
+            .id
+            .contains(&historical_id[..3.min(historical_id.len())])
+        {
             T::from(0.8).unwrap()
         } else {
             T::from(0.2).unwrap()
         };
-        
+
         Ok(Some(T::one() - id_similarity))
     }
-    
-    fn convert_performance_feedback(&self, feedback: &PerformanceFeedback<T>) -> Result<ArchitectureFeedback<T>, OptimizerError> {
+
+    fn convert_performance_feedback(
+        &self,
+        feedback: &PerformanceFeedback<T>,
+    ) -> Result<ArchitectureFeedback<T>, OptimizerError> {
         Ok(ArchitectureFeedback {
             candidate_id: format!("perf_feedback_{}", feedback.timestamp.elapsed().as_millis()),
             complexity_score: T::from(0.5).unwrap(), // Default values
@@ -3708,9 +3898,7 @@ impl<T: Float> PerformanceFeedbackProcessor<T> {
             novelty_score: T::from(0.3).unwrap(),
             predicted_quality: feedback.actual_performance,
             confidence: T::from(0.9).unwrap(),
-            feedback_components: vec![
-                FeedbackComponent::Performance(feedback.actual_performance),
-            ],
+            feedback_components: vec![FeedbackComponent::Performance(feedback.actual_performance)],
             timestamp: feedback.timestamp,
         })
     }
@@ -3726,16 +3914,20 @@ impl<T: Float> DynamicSearchSpaceManager<T> {
             space_history: Vec::new(),
         })
     }
-    
-    fn update_based_on_feedback(&mut self, feedback: &PerformanceFeedback<T>) -> Result<(), OptimizerError> {
+
+    fn update_based_on_feedback(
+        &mut self,
+        feedback: &PerformanceFeedback<T>,
+    ) -> Result<(), OptimizerError> {
         // Analyze feedback to identify promising regions
         let regions = self.promising_detector.analyze_feedback(feedback)?;
-        
+
         // Update search space based on promising regions
         for region in regions {
-            self.space_optimizer.expand_region(&mut self.current_space, &region)?;
+            self.space_optimizer
+                .expand_region(&mut self.current_space, &region)?;
         }
-        
+
         // Record space snapshot
         let snapshot = SearchSpaceSnapshot {
             timestamp: std::time::Instant::now(),
@@ -3743,33 +3935,36 @@ impl<T: Float> DynamicSearchSpaceManager<T> {
             promising_regions: self.promising_detector.get_active_regions().len(),
             performance_threshold: feedback.actual_performance,
         };
-        
+
         self.space_history.push(snapshot);
-        
+
         // Maintain history size limit
         if self.space_history.len() > 100 {
             self.space_history.remove(0);
         }
-        
+
         Ok(())
     }
-    
+
     fn estimate_space_size(&self) -> usize {
         // Estimate current search space size
         1000000 // Placeholder value
     }
-    
+
     fn evolve_search_space(&mut self) -> Result<(), OptimizerError> {
         match self.evolution_strategy {
             SearchSpaceEvolutionStrategy::AdaptiveBoundary => {
-                self.space_optimizer.adapt_boundaries(&mut self.current_space)?;
-            },
+                self.space_optimizer
+                    .adapt_boundaries(&mut self.current_space)?;
+            }
             SearchSpaceEvolutionStrategy::GradientBased => {
-                self.space_optimizer.apply_gradient_evolution(&mut self.current_space)?;
-            },
+                self.space_optimizer
+                    .apply_gradient_evolution(&mut self.current_space)?;
+            }
             SearchSpaceEvolutionStrategy::StatisticalAnalysis => {
-                self.space_optimizer.apply_statistical_evolution(&mut self.current_space, &self.space_history)?;
-            },
+                self.space_optimizer
+                    .apply_statistical_evolution(&mut self.current_space, &self.space_history)?;
+            }
         }
         Ok(())
     }
@@ -3778,15 +3973,16 @@ impl<T: Float> DynamicSearchSpaceManager<T> {
 impl<T: Float> PerformancePredictorEnsemble<T> {
     fn new(config: &AdaptiveNASConfig<T>) -> Result<Self, OptimizerError> {
         let mut predictors: Vec<Box<dyn ArchitecturePerformancePredictor<T>>> = Vec::new();
-        
+
         // Add different types of predictors to the ensemble
         predictors.push(Box::new(SimpleLinearPredictor::new()));
         predictors.push(Box::new(ComplexityBasedPredictor::new()));
         predictors.push(Box::new(HistoryBasedPredictor::new()));
-        
+
         let num_predictors = predictors.len();
-        let ensemble_weights = Array1::from_elem(num_predictors, T::one() / T::from(num_predictors).unwrap());
-        
+        let ensemble_weights =
+            Array1::from_elem(num_predictors, T::one() / T::from(num_predictors).unwrap());
+
         Ok(Self {
             predictors,
             ensemble_weights,
@@ -3795,32 +3991,34 @@ impl<T: Float> PerformancePredictorEnsemble<T> {
             quality_tracker: PredictorQualityTracker::new(config.prediction_confidence_threshold),
         })
     }
-    
-    fn predict_batch(&self, candidates: &[ArchitectureCandidate<T>]) -> Result<Vec<PerformancePrediction<T>>, OptimizerError> {
+
+    fn predict_batch(
+        &self,
+        candidates: &[ArchitectureCandidate<T>],
+    ) -> Result<Vec<PerformancePrediction<T>>, OptimizerError> {
         let mut batch_predictions = Vec::new();
-        
+
         for candidate in candidates {
             let mut individual_predictions = Vec::new();
-            
+
             // Get predictions from each predictor
             for predictor in &self.predictors {
                 let prediction = predictor.predict(&candidate.specification)?;
                 let confidence = predictor.get_confidence(&candidate.specification)?;
-                
+
                 individual_predictions.push((prediction, confidence));
             }
-            
+
             // Aggregate predictions using ensemble weights
-            let aggregated_prediction = self.aggregator.aggregate_weighted_predictions(
-                &individual_predictions,
-                &self.ensemble_weights,
-            )?;
-            
+            let aggregated_prediction = self
+                .aggregator
+                .aggregate_weighted_predictions(&individual_predictions, &self.ensemble_weights)?;
+
             // Estimate uncertainty
-            let uncertainty = self.uncertainty_estimator.calculate_uncertainty(
-                &individual_predictions,
-            )?;
-            
+            let uncertainty = self
+                .uncertainty_estimator
+                .calculate_uncertainty(&individual_predictions)?;
+
             batch_predictions.push(PerformancePrediction {
                 predicted_value: aggregated_prediction,
                 confidence: T::one() - uncertainty,
@@ -3828,46 +4026,51 @@ impl<T: Float> PerformancePredictorEnsemble<T> {
                 prediction_method: "Ensemble".to_string(),
             });
         }
-        
+
         Ok(batch_predictions)
     }
-    
-    fn update_with_feedback(&mut self, id: &str, feedback: &PerformanceFeedback<T>) -> Result<(), OptimizerError> {
+
+    fn update_with_feedback(
+        &mut self,
+        id: &str,
+        feedback: &PerformanceFeedback<T>,
+    ) -> Result<(), OptimizerError> {
         // Update quality tracker with feedback
-        self.quality_tracker.update_predictor_performance(id, feedback)?;
-        
+        self.quality_tracker
+            .update_predictor_performance(id, feedback)?;
+
         // Update ensemble weights based on predictor performance
         self.update_ensemble_weights()?;
-        
+
         // Update individual predictors if they support online learning
         for (i, predictor) in self.predictors.iter_mut().enumerate() {
             // Simulate architecture spec from feedback (simplified)
             let dummy_spec = ArchitectureSpecification::default();
             predictor.update(&dummy_spec, feedback.actual_performance)?;
         }
-        
+
         Ok(())
     }
-    
+
     fn get_accuracy_metrics(&self) -> PredictionAccuracyMetrics<T> {
         // Calculate real metrics from quality tracker
         self.quality_tracker.get_ensemble_metrics()
     }
-    
+
     fn update_ensemble_weights(&mut self) -> Result<(), OptimizerError> {
         // Update weights based on individual predictor performance
         let performance_scores = self.quality_tracker.get_predictor_scores();
-        
+
         if !performance_scores.is_empty() {
             let total_score: T = performance_scores.iter().cloned().sum();
-            
+
             if total_score > T::zero() {
                 for (i, score) in performance_scores.iter().enumerate() {
                     self.ensemble_weights[i] = *score / total_score;
                 }
             }
         }
-        
+
         Ok(())
     }
 }
@@ -3922,19 +4125,19 @@ impl<T: Float> ContinuousAdaptationEngine<T> {
             adaptation_history,
         })
     }
-    
+
     fn adapt_to_performance(&mut self, _history: &[T]) -> Result<(), OptimizerError> {
         Ok(())
     }
-    
+
     fn should_adapt(&self, _feedback: &PerformanceFeedback<T>) -> Result<bool, OptimizerError> {
         Ok(false)
     }
-    
+
     fn trigger_adaptation(&mut self) -> Result<(), OptimizerError> {
         Ok(())
     }
-    
+
     fn get_performance_metrics(&self) -> AdaptationPerformanceMetrics<T> {
         AdaptationPerformanceMetrics {
             adaptation_frequency: 0.1,
@@ -3952,7 +4155,7 @@ impl<T: Float> ArchitectureQualityAssessor<T> {
         quality_metrics.push(QualityMetric::Efficiency);
         quality_metrics.push(QualityMetric::Complexity);
         quality_metrics.push(QualityMetric::Robustness);
-        
+
         Ok(Self {
             quality_metrics,
             assessment_strategy: QualityAssessmentStrategy::WeightedSum,
@@ -3961,59 +4164,78 @@ impl<T: Float> ArchitectureQualityAssessor<T> {
             assessment_cache: QualityAssessmentCache::new(),
         })
     }
-    
-    fn assess_batch(&self, candidates: &[ArchitectureCandidate<T>]) -> Result<Vec<QualityAssessment<T>>, OptimizerError> {
+
+    fn assess_batch(
+        &self,
+        candidates: &[ArchitectureCandidate<T>],
+    ) -> Result<Vec<QualityAssessment<T>>, OptimizerError> {
         let mut assessments = Vec::new();
-        
+
         for candidate in candidates {
             // Check cache first
             if let Some(cached_assessment) = self.assessment_cache.get(&candidate.id) {
                 assessments.push(cached_assessment.clone());
                 continue;
             }
-            
+
             let mut quality_breakdown = HashMap::new();
             let mut overall_quality = T::zero();
             let total_metrics = T::from(self.quality_metrics.len()).unwrap();
-            
+
             for metric in &self.quality_metrics {
                 let score = self.calculate_metric_score(candidate, metric)?;
                 quality_breakdown.insert(*metric, score);
                 overall_quality = overall_quality + score;
             }
-            
+
             overall_quality = overall_quality / total_metrics;
-            
+
             let assessment = QualityAssessment {
                 overall_quality,
                 quality_breakdown,
                 assessment_confidence: self.calculate_assessment_confidence(candidate)?,
                 assessment_method: format!("{:?}", self.assessment_strategy),
             };
-            
+
             assessments.push(assessment);
         }
-        
+
         Ok(assessments)
     }
-    
-    fn calculate_metric_score(&self, candidate: &ArchitectureCandidate<T>, metric: &QualityMetric<T>) -> Result<T, OptimizerError> {
+
+    fn calculate_metric_score(
+        &self,
+        candidate: &ArchitectureCandidate<T>,
+        metric: &QualityMetric<T>,
+    ) -> Result<T, OptimizerError> {
         match metric {
             QualityMetric::Performance => {
                 candidate.estimated_quality.unwrap_or(T::from(0.5).unwrap())
-            },
+            }
             QualityMetric::Efficiency => {
                 // Score based on computational efficiency
-                let param_efficiency = T::one() / (T::one() + T::from(candidate.specification.parameter_count as f64 / 1_000_000.0).unwrap());
-                let flops_efficiency = T::one() / (T::one() + T::from(candidate.specification.flops as f64 / 1_000_000_000.0).unwrap());
+                let param_efficiency = T::one()
+                    / (T::one()
+                        + T::from(candidate.specification.parameter_count as f64 / 1_000_000.0)
+                            .unwrap());
+                let flops_efficiency = T::one()
+                    / (T::one()
+                        + T::from(candidate.specification.flops as f64 / 1_000_000_000.0).unwrap());
                 (param_efficiency + flops_efficiency) / T::from(2.0).unwrap()
-            },
+            }
             QualityMetric::Complexity => {
                 // Score based on architecture complexity (lower complexity = higher score)
-                let layer_complexity = T::one() / (T::one() + T::from(candidate.specification.layers.len() as f64 / 10.0).unwrap());
-                let connection_complexity = T::one() / (T::one() + T::from(candidate.specification.connections.skip_connections.len() as f64 / 5.0).unwrap());
+                let layer_complexity = T::one()
+                    / (T::one()
+                        + T::from(candidate.specification.layers.len() as f64 / 10.0).unwrap());
+                let connection_complexity = T::one()
+                    / (T::one()
+                        + T::from(
+                            candidate.specification.connections.skip_connections.len() as f64 / 5.0,
+                        )
+                        .unwrap());
                 (layer_complexity + connection_complexity) / T::from(2.0).unwrap()
-            },
+            }
             QualityMetric::Robustness => {
                 // Simplified robustness score based on architecture diversity
                 match candidate.generation_method {
@@ -4022,28 +4244,34 @@ impl<T: Float> ArchitectureQualityAssessor<T> {
                     GenerationMethod::Learned => T::from(0.8).unwrap(),
                     _ => T::from(0.5).unwrap(),
                 }
-            },
-        }.map_err(|_| OptimizerError::ComputationError("Failed to calculate metric score".to_string()))
+            }
+        }
+        .map_err(|_| {
+            OptimizerError::ComputationError("Failed to calculate metric score".to_string())
+        })
     }
-    
-    fn calculate_assessment_confidence(&self, candidate: &ArchitectureCandidate<T>) -> Result<T, OptimizerError> {
+
+    fn calculate_assessment_confidence(
+        &self,
+        candidate: &ArchitectureCandidate<T>,
+    ) -> Result<T, OptimizerError> {
         // Confidence based on how well-defined the candidate is
         let mut confidence_factors = Vec::new();
-        
+
         // Factor 1: Estimated quality availability
         confidence_factors.push(if candidate.estimated_quality.is_some() {
             T::one()
         } else {
             T::from(0.5).unwrap()
         });
-        
+
         // Factor 2: Architecture completeness
         confidence_factors.push(if candidate.specification.layers.is_empty() {
             T::from(0.2).unwrap()
         } else {
             T::from(0.9).unwrap()
         });
-        
+
         // Factor 3: Generation method reliability
         confidence_factors.push(match candidate.generation_method {
             GenerationMethod::Learned => T::from(0.9).unwrap(),
@@ -4051,7 +4279,7 @@ impl<T: Float> ArchitectureQualityAssessor<T> {
             GenerationMethod::GradientBased => T::from(0.7).unwrap(),
             _ => T::from(0.6).unwrap(),
         });
-        
+
         // Average confidence factors
         let total_confidence: T = confidence_factors.iter().cloned().sum();
         Ok(total_confidence / T::from(confidence_factors.len()).unwrap())
@@ -4077,7 +4305,7 @@ impl<T: Float> NASSystemStateTracker<T> {
         };
 
         let state_history = VecDeque::with_capacity(1000);
-        
+
         let transition_analyzer = StateTransitionAnalyzer {
             transition_patterns: HashMap::new(),
             pattern_frequency: HashMap::new(),
@@ -4097,8 +4325,12 @@ impl<T: Float> NASSystemStateTracker<T> {
             correlation_tracker,
         })
     }
-    
-    fn update_state(&mut self, _task: &OptimizationTask, _history: &[T]) -> Result<(), OptimizerError> {
+
+    fn update_state(
+        &mut self,
+        _task: &OptimizationTask,
+        _history: &[T],
+    ) -> Result<(), OptimizerError> {
         Ok(())
     }
 }
@@ -4154,7 +4386,7 @@ impl<T: Float> GeneratedArchitectureFilter<T> {
             novelty_threshold: T::from(0.4).unwrap(),
             feasibility_checker: FeasibilityChecker {
                 max_parameters: 10_000_000,
-                max_memory: 8_000_000_000, // 8GB
+                max_memory: 8_000_000_000,  // 8GB
                 max_flops: 100_000_000_000, // 100 GFLOPS
                 allowed_operations,
             },
@@ -4224,8 +4456,13 @@ impl<T: Float> HypervolumeCalculator<T> {
 // Define trait for architecture performance predictors
 pub trait ArchitecturePerformancePredictor<T: Float> {
     fn predict(&self, architecture: &ArchitectureSpecification) -> Result<T, OptimizerError>;
-    fn update(&mut self, architecture: &ArchitectureSpecification, performance: T) -> Result<(), OptimizerError>;
-    fn get_confidence(&self, architecture: &ArchitectureSpecification) -> Result<T, OptimizerError>;
+    fn update(
+        &mut self,
+        architecture: &ArchitectureSpecification,
+        performance: T,
+    ) -> Result<(), OptimizerError>;
+    fn get_confidence(&self, architecture: &ArchitectureSpecification)
+        -> Result<T, OptimizerError>;
 }
 
 // Define missing types
@@ -4393,10 +4630,7 @@ impl Default for ArchitectureSearchSpace {
             },
             connection_constraints: ConnectionConstraints {
                 max_skip_connections: 5,
-                allowed_patterns: vec![
-                    ConnectionPattern::Sequential,
-                    ConnectionPattern::Residual,
-                ],
+                allowed_patterns: vec![ConnectionPattern::Sequential, ConnectionPattern::Residual],
                 density_limits: (0.1, 0.9),
             },
             parameter_bounds: ParameterBounds {
@@ -4421,8 +4655,11 @@ impl<T: Float> PromisingRegionDetector<T> {
             active_regions: Vec::new(),
         }
     }
-    
-    fn analyze_feedback(&mut self, feedback: &PerformanceFeedback<T>) -> Result<Vec<PromisingRegion<T>>, OptimizerError> {
+
+    fn analyze_feedback(
+        &mut self,
+        feedback: &PerformanceFeedback<T>,
+    ) -> Result<Vec<PromisingRegion<T>>, OptimizerError> {
         if feedback.actual_performance > self.detection_threshold {
             let region = PromisingRegion {
                 center: vec![feedback.actual_performance; 5], // 5-dimensional feature space
@@ -4430,20 +4667,20 @@ impl<T: Float> PromisingRegionDetector<T> {
                 performance_score: feedback.actual_performance,
                 confidence: T::from(0.8).unwrap(),
             };
-            
+
             self.active_regions.push(region.clone());
-            
+
             // Maintain region limit
             if self.active_regions.len() > 20 {
                 self.active_regions.remove(0);
             }
-            
+
             Ok(vec![region])
         } else {
             Ok(vec![])
         }
     }
-    
+
     fn get_active_regions(&self) -> &[PromisingRegion<T>] {
         &self.active_regions
     }
@@ -4457,14 +4694,18 @@ impl<T: Float> SearchSpaceOptimizer<T> {
             convergence_threshold: T::from(0.01).unwrap(),
         }
     }
-    
-    fn expand_region(&self, space: &mut ArchitectureSearchSpace, region: &PromisingRegion<T>) -> Result<(), OptimizerError> {
+
+    fn expand_region(
+        &self,
+        space: &mut ArchitectureSearchSpace,
+        region: &PromisingRegion<T>,
+    ) -> Result<(), OptimizerError> {
         // Expand search space boundaries based on promising region
         if region.performance_score > T::from(0.8).unwrap() {
             // Increase parameter limits slightly
-            space.parameter_bounds.max_parameters = 
+            space.parameter_bounds.max_parameters =
                 (space.parameter_bounds.max_parameters as f64 * 1.1) as usize;
-            
+
             // Allow more complex architectures
             if space.layer_constraints.max_layers < 15 {
                 space.layer_constraints.max_layers += 1;
@@ -4472,31 +4713,34 @@ impl<T: Float> SearchSpaceOptimizer<T> {
         }
         Ok(())
     }
-    
+
     fn adapt_boundaries(&self, space: &mut ArchitectureSearchSpace) -> Result<(), OptimizerError> {
         // Adaptive boundary adjustment based on current optimization method
         match self.optimization_method {
             SpaceOptimizationMethod::BoundaryExpansion => {
-                space.complexity_limits.max_depth = 
+                space.complexity_limits.max_depth =
                     (space.complexity_limits.max_depth as f64 * 1.05) as usize;
-            },
+            }
             SpaceOptimizationMethod::RegionRefinement => {
                 space.connection_constraints.density_limits.1 *= 0.95;
-            },
+            }
             _ => {} // Other methods handled separately
         }
         Ok(())
     }
-    
-    fn apply_gradient_evolution(&self, _space: &mut ArchitectureSearchSpace) -> Result<(), OptimizerError> {
+
+    fn apply_gradient_evolution(
+        &self,
+        _space: &mut ArchitectureSearchSpace,
+    ) -> Result<(), OptimizerError> {
         // Placeholder for gradient-based space evolution
         Ok(())
     }
-    
+
     fn apply_statistical_evolution(
-        &self, 
-        _space: &mut ArchitectureSearchSpace, 
-        _history: &[SearchSpaceSnapshot]
+        &self,
+        _space: &mut ArchitectureSearchSpace,
+        _history: &[SearchSpaceSnapshot],
     ) -> Result<(), OptimizerError> {
         // Placeholder for statistical space evolution
         Ok(())
@@ -4524,39 +4768,46 @@ impl<T: Float> ArchitecturePerformancePredictor<T> for SimpleLinearPredictor<T> 
         // Simple linear prediction based on architecture features
         let features = self.extract_features(architecture);
         let mut prediction = self.bias;
-        
+
         for (i, &feature) in features.iter().enumerate() {
             if i < self.weights.len() {
                 prediction = prediction + self.weights[i] * feature;
             }
         }
-        
+
         Ok(prediction.max(T::zero()).min(T::one()))
     }
-    
-    fn update(&mut self, architecture: &ArchitectureSpecification, performance: T) -> Result<(), OptimizerError> {
+
+    fn update(
+        &mut self,
+        architecture: &ArchitectureSpecification,
+        performance: T,
+    ) -> Result<(), OptimizerError> {
         let features = self.extract_features(architecture);
         let prediction = self.predict(architecture)?;
         let error = performance - prediction;
         let learning_rate = T::from(0.01).unwrap();
-        
+
         // Simple gradient descent update
         for (i, &feature) in features.iter().enumerate() {
             if i < self.weights.len() {
                 self.weights[i] = self.weights[i] + learning_rate * error * feature;
             }
         }
-        
+
         self.bias = self.bias + learning_rate * error;
-        
+
         Ok(())
     }
-    
-    fn get_confidence(&self, architecture: &ArchitectureSpecification) -> Result<T, OptimizerError> {
+
+    fn get_confidence(
+        &self,
+        architecture: &ArchitectureSpecification,
+    ) -> Result<T, OptimizerError> {
         // Confidence based on feature magnitudes
         let features = self.extract_features(architecture);
         let feature_sum: T = features.iter().cloned().sum();
-        
+
         Ok(T::one() / (T::one() + feature_sum * T::from(0.1).unwrap()))
     }
 }
@@ -4566,8 +4817,9 @@ impl<T: Float> SimpleLinearPredictor<T> {
         vec![
             T::from(architecture.layers.len() as f64 / 10.0).unwrap(), // Normalized layer count
             T::from(architecture.parameter_count as f64 / 1_000_000.0).unwrap(), // Normalized param count
-            T::from(architecture.flops as f64 / 1_000_000_000.0).unwrap(), // Normalized FLOPS
-            T::from(architecture.memory_requirements.total as f64 / (1024.0 * 1024.0 * 1024.0)).unwrap(), // Normalized memory
+            T::from(architecture.flops as f64 / 1_000_000_000.0).unwrap(),       // Normalized FLOPS
+            T::from(architecture.memory_requirements.total as f64 / (1024.0 * 1024.0 * 1024.0))
+                .unwrap(), // Normalized memory
             T::from(architecture.connections.skip_connections.len() as f64 / 5.0).unwrap(), // Normalized skip connections
         ]
     }
@@ -4586,7 +4838,7 @@ impl<T: Float> ComplexityBasedPredictor<T> {
         complexity_weights.insert(LayerType::LSTM, T::from(0.7).unwrap());
         complexity_weights.insert(LayerType::GRU, T::from(0.6).unwrap());
         complexity_weights.insert(LayerType::Transformer, T::from(0.8).unwrap());
-        
+
         Self {
             complexity_weights,
             base_performance: T::from(0.5).unwrap(),
@@ -4597,27 +4849,34 @@ impl<T: Float> ComplexityBasedPredictor<T> {
 impl<T: Float> ArchitecturePerformancePredictor<T> for ComplexityBasedPredictor<T> {
     fn predict(&self, architecture: &ArchitectureSpecification) -> Result<T, OptimizerError> {
         let mut complexity_score = T::zero();
-        
+
         for layer in &architecture.layers {
             if let Some(&weight) = self.complexity_weights.get(&layer.layer_type) {
                 complexity_score = complexity_score + weight;
             }
         }
-        
+
         // Normalize by number of layers
         if !architecture.layers.is_empty() {
             complexity_score = complexity_score / T::from(architecture.layers.len()).unwrap();
         }
-        
+
         Ok((self.base_performance + complexity_score * T::from(0.3).unwrap()).min(T::one()))
     }
-    
-    fn update(&mut self, _architecture: &ArchitectureSpecification, _performance: T) -> Result<(), OptimizerError> {
+
+    fn update(
+        &mut self,
+        _architecture: &ArchitectureSpecification,
+        _performance: T,
+    ) -> Result<(), OptimizerError> {
         // This predictor doesn't learn from feedback
         Ok(())
     }
-    
-    fn get_confidence(&self, _architecture: &ArchitectureSpecification) -> Result<T, OptimizerError> {
+
+    fn get_confidence(
+        &self,
+        _architecture: &ArchitectureSpecification,
+    ) -> Result<T, OptimizerError> {
         Ok(T::from(0.7).unwrap()) // Fixed confidence
     }
 }
@@ -4640,15 +4899,15 @@ impl<T: Float> HistoryBasedPredictor<T> {
 impl<T: Float> ArchitecturePerformancePredictor<T> for HistoryBasedPredictor<T> {
     fn predict(&self, architecture: &ArchitectureSpecification) -> Result<T, OptimizerError> {
         let features = self.extract_basic_features(architecture);
-        
+
         if self.performance_history.is_empty() {
             return Ok(T::from(0.5).unwrap()); // Default prediction
         }
-        
+
         // Find most similar architecture in history
         let mut best_similarity = T::zero();
         let mut best_performance = T::from(0.5).unwrap();
-        
+
         for (hist_features, hist_performance) in &self.performance_history {
             let similarity = self.calculate_similarity(&features, hist_features);
             if similarity > best_similarity {
@@ -4656,36 +4915,43 @@ impl<T: Float> ArchitecturePerformancePredictor<T> for HistoryBasedPredictor<T> 
                 best_performance = *hist_performance;
             }
         }
-        
+
         Ok(best_performance)
     }
-    
-    fn update(&mut self, architecture: &ArchitectureSpecification, performance: T) -> Result<(), OptimizerError> {
+
+    fn update(
+        &mut self,
+        architecture: &ArchitectureSpecification,
+        performance: T,
+    ) -> Result<(), OptimizerError> {
         let features = self.extract_basic_features(architecture);
         self.performance_history.push_back((features, performance));
-        
+
         // Maintain history size
         if self.performance_history.len() > 100 {
             self.performance_history.pop_front();
         }
-        
+
         Ok(())
     }
-    
-    fn get_confidence(&self, architecture: &ArchitectureSpecification) -> Result<T, OptimizerError> {
+
+    fn get_confidence(
+        &self,
+        architecture: &ArchitectureSpecification,
+    ) -> Result<T, OptimizerError> {
         let features = self.extract_basic_features(architecture);
-        
+
         if self.performance_history.is_empty() {
             return Ok(T::from(0.1).unwrap());
         }
-        
+
         // Confidence based on similarity to historical data
         let mut max_similarity = T::zero();
         for (hist_features, _) in &self.performance_history {
             let similarity = self.calculate_similarity(&features, hist_features);
             max_similarity = max_similarity.max(similarity);
         }
-        
+
         Ok(max_similarity)
     }
 }
@@ -4698,18 +4964,18 @@ impl<T: Float> HistoryBasedPredictor<T> {
             T::from(architecture.connections.skip_connections.len()).unwrap(),
         ]
     }
-    
+
     fn calculate_similarity(&self, features1: &[T], features2: &[T]) -> T {
         if features1.len() != features2.len() {
             return T::zero();
         }
-        
+
         let mut sum_sq_diff = T::zero();
         for (f1, f2) in features1.iter().zip(features2.iter()) {
             let diff = *f1 - *f2;
             sum_sq_diff = sum_sq_diff + diff * diff;
         }
-        
+
         // Return similarity (higher for smaller differences)
         T::one() / (T::one() + sum_sq_diff)
     }
@@ -4736,7 +5002,7 @@ impl<T: Float> PredictionAggregator<T> {
             _phantom: std::marker::PhantomData,
         }
     }
-    
+
     fn aggregate_weighted_predictions(
         &self,
         predictions: &[(T, T)], // (prediction, confidence)
@@ -4745,29 +5011,29 @@ impl<T: Float> PredictionAggregator<T> {
         if predictions.is_empty() {
             return Ok(T::from(0.5).unwrap());
         }
-        
+
         match self.aggregation_method {
             AggregationMethod::WeightedAverage => {
                 let mut weighted_sum = T::zero();
                 let mut total_weight = T::zero();
-                
+
                 for (i, (prediction, confidence)) in predictions.iter().enumerate() {
                     let weight = if i < weights.len() {
                         weights[i] * *confidence
                     } else {
                         *confidence
                     };
-                    
+
                     weighted_sum = weighted_sum + *prediction * weight;
                     total_weight = total_weight + weight;
                 }
-                
+
                 if total_weight > T::zero() {
                     Ok(weighted_sum / total_weight)
                 } else {
                     Ok(T::from(0.5).unwrap())
                 }
-            },
+            }
             _ => {
                 // Simplified - just return average
                 let sum: T = predictions.iter().map(|(p, _)| *p).sum();
@@ -4788,22 +5054,25 @@ impl<T: Float> EnsembleUncertaintyEstimator<T> {
             _phantom: std::marker::PhantomData,
         }
     }
-    
+
     fn calculate_uncertainty(&self, predictions: &[(T, T)]) -> Result<T, OptimizerError> {
         if predictions.is_empty() {
             return Ok(T::one());
         }
-        
+
         // Calculate variance of predictions as uncertainty measure
-        let mean: T = predictions.iter().map(|(p, _)| *p).sum::<T>() / T::from(predictions.len()).unwrap();
-        
-        let variance: T = predictions.iter()
+        let mean: T =
+            predictions.iter().map(|(p, _)| *p).sum::<T>() / T::from(predictions.len()).unwrap();
+
+        let variance: T = predictions
+            .iter()
             .map(|(p, _)| {
                 let diff = *p - mean;
                 diff * diff
             })
-            .sum::<T>() / T::from(predictions.len()).unwrap();
-            
+            .sum::<T>()
+            / T::from(predictions.len()).unwrap();
+
         Ok(variance.sqrt().min(T::one()))
     }
 }
@@ -4823,23 +5092,28 @@ impl<T: Float> PredictorQualityTracker<T> {
             error_history: VecDeque::new(),
         }
     }
-    
-    fn update_predictor_performance(&mut self, _id: &str, _feedback: &PerformanceFeedback<T>) -> Result<(), OptimizerError> {
+
+    fn update_predictor_performance(
+        &mut self,
+        _id: &str,
+        _feedback: &PerformanceFeedback<T>,
+    ) -> Result<(), OptimizerError> {
         // Update predictor performance tracking
         Ok(())
     }
-    
+
     fn get_predictor_scores(&self) -> Vec<T> {
         self.predictor_scores.clone()
     }
-    
+
     fn get_ensemble_metrics(&self) -> PredictionAccuracyMetrics<T> {
         let avg_error = if !self.error_history.is_empty() {
-            self.error_history.iter().cloned().sum::<T>() / T::from(self.error_history.len()).unwrap()
+            self.error_history.iter().cloned().sum::<T>()
+                / T::from(self.error_history.len()).unwrap()
         } else {
             T::from(0.1).unwrap()
         };
-        
+
         PredictionAccuracyMetrics {
             mean_absolute_error: avg_error,
             root_mean_square_error: avg_error * T::from(1.2).unwrap(),
@@ -4922,11 +5196,11 @@ impl<T: Float> QualityAssessmentCache<T> {
             max_size: 1000,
         }
     }
-    
+
     fn get(&self, id: &str) -> Option<&QualityAssessment<T>> {
         self.cache.get(id)
     }
-    
+
     fn insert(&mut self, id: String, assessment: QualityAssessment<T>) {
         if self.cache.len() >= self.max_size {
             // Simple eviction: remove oldest entries

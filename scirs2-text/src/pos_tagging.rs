@@ -1562,7 +1562,9 @@ impl ContextualDisambiguator {
             let current = tags[i].clone();
 
             for rule in &self.context_rules {
-                if self.matches_pattern(&rule.pattern, left.as_ref(), &current, right.as_ref()) && confidences[i] < rule.confidence {
+                if self.matches_pattern(&rule.pattern, left.as_ref(), &current, right.as_ref())
+                    && confidences[i] < rule.confidence
+                {
                     tags[i] = rule.new_tag.clone();
                     confidences[i] = rule.confidence;
                 }

@@ -47,23 +47,23 @@ pub struct UltraSimdConfig {
 impl Default for UltraSimdConfig {
     fn default() -> Self {
         let platform = PlatformCapabilities::detect();
-        
+
         let vector_width = if platform.avx512 {
             16 // 512-bit vectors
         } else if platform.avx2 {
-            8  // 256-bit vectors
+            8 // 256-bit vectors
         } else if platform.sse4_1 {
-            4  // 128-bit vectors
+            4 // 128-bit vectors
         } else {
-            1  // Scalar fallback
+            1 // Scalar fallback
         };
 
         Self {
             platform,
             vector_width,
-            cache_line_size: 64,      // Typical cache line size
-            l1_cache_size: 32768,     // 32KB L1 cache
-            l2_cache_size: 262144,    // 256KB L2 cache
+            cache_line_size: 64,   // Typical cache line size
+            l1_cache_size: 32768,  // 32KB L1 cache
+            l2_cache_size: 262144, // 256KB L2 cache
             enable_prefetch: true,
             enable_cache_blocking: true,
             enable_pipelining: true,
@@ -170,8 +170,8 @@ where
         } else if config.platform.avx2 {
             VectorStrategy::UnrolledVector { unroll_factor: 4 }
         } else if config.enable_cache_blocking {
-            VectorStrategy::CacheBlockedVector { 
-                block_size: config.l1_cache_size / 4 
+            VectorStrategy::CacheBlockedVector {
+                block_size: config.l1_cache_size / 4,
             }
         } else {
             VectorStrategy::SingleVector
@@ -181,13 +181,15 @@ where
     /// Select optimal memory access pattern
     fn select_optimal_memory_pattern(config: &UltraSimdConfig) -> MemoryPattern {
         if config.enable_cache_blocking {
-            MemoryPattern::Blocked { 
-                block_size: config.l1_cache_size / std::mem::size_of::<f64>() 
+            MemoryPattern::Blocked {
+                block_size: config.l1_cache_size / std::mem::size_of::<f64>(),
             }
         } else if config.enable_prefetch {
             MemoryPattern::SequentialPrefetch
         } else {
-            MemoryPattern::Tiled { tile_size: config.cache_line_size / std::mem::size_of::<f64>() }
+            MemoryPattern::Tiled {
+                tile_size: config.cache_line_size / std::mem::size_of::<f64>(),
+            }
         }
     }
 
@@ -220,9 +222,7 @@ where
             VectorStrategy::CacheBlockedVector { block_size } => {
                 self.compute_cache_blocked_stats(data, block_size)
             }
-            VectorStrategy::SingleVector => {
-                self.compute_single_vector_stats(data)
-            }
+            VectorStrategy::SingleVector => self.compute_single_vector_stats(data),
         }
     }
 
@@ -252,7 +252,7 @@ where
         // Process chunks with multiple vector registers
         for chunk_idx in 0..n_chunks {
             let base_offset = chunk_idx * chunk_size;
-            
+
             // Prefetch future data if enabled
             if self.config.enable_prefetch && chunk_idx + 2 < n_chunks {
                 let prefetch_offset = (chunk_idx + 2) * chunk_size;
@@ -268,26 +268,26 @@ where
             for reg_idx in 0..num_registers {
                 let start = base_offset + reg_idx * vector_width;
                 let end = (start + vector_width).min(n);
-                
+
                 if start < n {
                     let chunk = data.slice(ndarray::s![start..end]);
-                    
+
                     // Use ultra-optimized SIMD operations
-                    let (sum, sum_sq, sum_cube, sum_quad, min_val, max_val) = 
+                    let (sum, sum_sq, sum_cube, sum_quad, min_val, max_val) =
                         self.compute_vector_moments(&chunk)?;
-                    
+
                     sum_accumulators[reg_idx] = sum_accumulators[reg_idx] + sum;
                     sum_sq_accumulators[reg_idx] = sum_sq_accumulators[reg_idx] + sum_sq;
                     sum_cube_accumulators[reg_idx] = sum_cube_accumulators[reg_idx] + sum_cube;
                     sum_quad_accumulators[reg_idx] = sum_quad_accumulators[reg_idx] + sum_quad;
-                    
+
                     if min_val < min_accumulators[reg_idx] {
                         min_accumulators[reg_idx] = min_val;
                     }
                     if max_val > max_accumulators[reg_idx] {
                         max_accumulators[reg_idx] = max_val;
                     }
-                    
+
                     vector_ops_count += 1;
                 }
             }
@@ -298,8 +298,14 @@ where
         let total_sum_sq: F = sum_sq_accumulators.iter().copied().sum();
         let total_sum_cube: F = sum_cube_accumulators.iter().copied().sum();
         let total_sum_quad: F = sum_quad_accumulators.iter().copied().sum();
-        let global_min = min_accumulators.iter().copied().fold(F::infinity(), |a, b| a.min(b));
-        let global_max = max_accumulators.iter().copied().fold(F::neg_infinity(), |a, b| a.max(b));
+        let global_min = min_accumulators
+            .iter()
+            .copied()
+            .fold(F::infinity(), |a, b| a.min(b));
+        let global_max = max_accumulators
+            .iter()
+            .copied()
+            .fold(F::neg_infinity(), |a, b| a.max(b));
 
         // Handle remainder with scalar operations
         let mut remainder_sum = F::zero();
@@ -317,8 +323,12 @@ where
                 remainder_sum_sq = remainder_sum_sq + val * val;
                 remainder_sum_cube = remainder_sum_cube + val * val * val;
                 remainder_sum_quad = remainder_sum_quad + val * val * val * val;
-                if val < remainder_min { remainder_min = val; }
-                if val > remainder_max { remainder_max = val; }
+                if val < remainder_min {
+                    remainder_min = val;
+                }
+                if val > remainder_max {
+                    remainder_max = val;
+                }
             }
         }
 
@@ -333,19 +343,27 @@ where
         // Compute final statistics
         let n_f = F::from(n).unwrap();
         let mean = final_sum / n_f;
-        
+
         // Use numerically stable formulas
         let m2 = final_sum_sq / n_f - mean * mean;
         let m3 = final_sum_cube / n_f - F::from(3).unwrap() * mean * m2 - mean * mean * mean;
-        let m4 = final_sum_quad / n_f 
-            - F::from(4).unwrap() * mean * m3 
-            - F::from(6).unwrap() * mean * mean * m2 
+        let m4 = final_sum_quad / n_f
+            - F::from(4).unwrap() * mean * m3
+            - F::from(6).unwrap() * mean * mean * m2
             - mean * mean * mean * mean;
 
         let variance = m2;
         let std_dev = variance.sqrt();
-        let skewness = if m2 > F::zero() { m3 / (m2 * m2.sqrt()) } else { F::zero() };
-        let kurtosis = if m2 > F::zero() { m4 / (m2 * m2) - F::from(3).unwrap() } else { F::zero() };
+        let skewness = if m2 > F::zero() {
+            m3 / (m2 * m2.sqrt())
+        } else {
+            F::zero()
+        };
+        let kurtosis = if m2 > F::zero() {
+            m4 / (m2 * m2) - F::from(3).unwrap()
+        } else {
+            F::zero()
+        };
 
         // Calculate performance metrics
         let theoretical_max_vectors = n / vector_width;
@@ -354,13 +372,13 @@ where
         } else {
             0.0
         };
-        
+
         let cache_efficiency = if n_chunks > 0 {
             0.95 // Placeholder - would measure actual cache performance
         } else {
             0.0
         };
-        
+
         let prefetch_efficiency = if n_chunks > 2 {
             prefetch_hits as f64 / (n_chunks - 2) as f64
         } else {
@@ -406,24 +424,28 @@ where
         // Unrolled processing for better instruction-level parallelism
         for i in 0..n_unrolled {
             let base_idx = i * unrolled_size;
-            
+
             // Process unroll_factor vectors in sequence for better pipelining
             for j in 0..unroll_factor {
                 let start = base_idx + j * vector_width;
                 let end = start + vector_width;
-                
+
                 if end <= n {
                     let chunk = data.slice(ndarray::s![start..end]);
-                    let (sum, sum_sq, sum_cube, sum_quad, chunk_min, chunk_max) = 
+                    let (sum, sum_sq, sum_cube, sum_quad, chunk_min, chunk_max) =
                         self.compute_vector_moments(&chunk)?;
-                    
+
                     sum_acc = sum_acc + sum;
                     sum_sq_acc = sum_sq_acc + sum_sq;
                     sum_cube_acc = sum_cube_acc + sum_cube;
                     sum_quad_acc = sum_quad_acc + sum_quad;
-                    if chunk_min < min_val { min_val = chunk_min; }
-                    if chunk_max > max_val { max_val = chunk_max; }
-                    
+                    if chunk_min < min_val {
+                        min_val = chunk_min;
+                    }
+                    if chunk_max > max_val {
+                        max_val = chunk_max;
+                    }
+
                     vector_ops_count += 1;
                 }
             }
@@ -438,8 +460,12 @@ where
                 sum_sq_acc = sum_sq_acc + val * val;
                 sum_cube_acc = sum_cube_acc + val * val * val;
                 sum_quad_acc = sum_quad_acc + val * val * val * val;
-                if val < min_val { min_val = val; }
-                if val > max_val { max_val = val; }
+                if val < min_val {
+                    min_val = val;
+                }
+                if val > max_val {
+                    max_val = val;
+                }
             }
         }
 
@@ -448,15 +474,23 @@ where
         let mean = sum_acc / n_f;
         let m2 = sum_sq_acc / n_f - mean * mean;
         let m3 = sum_cube_acc / n_f - F::from(3).unwrap() * mean * m2 - mean * mean * mean;
-        let m4 = sum_quad_acc / n_f 
-            - F::from(4).unwrap() * mean * m3 
-            - F::from(6).unwrap() * mean * mean * m2 
+        let m4 = sum_quad_acc / n_f
+            - F::from(4).unwrap() * mean * m3
+            - F::from(6).unwrap() * mean * mean * m2
             - mean * mean * mean * mean;
 
         let variance = m2;
         let std_dev = variance.sqrt();
-        let skewness = if m2 > F::zero() { m3 / (m2 * m2.sqrt()) } else { F::zero() };
-        let kurtosis = if m2 > F::zero() { m4 / (m2 * m2) - F::from(3).unwrap() } else { F::zero() };
+        let skewness = if m2 > F::zero() {
+            m3 / (m2 * m2.sqrt())
+        } else {
+            F::zero()
+        };
+        let kurtosis = if m2 > F::zero() {
+            m4 / (m2 * m2) - F::from(3).unwrap()
+        } else {
+            F::zero()
+        };
 
         Ok(UltraStatsResult {
             mean,
@@ -497,17 +531,21 @@ where
             let start = block_idx * block_size;
             let end = start + block_size;
             let block = data.slice(ndarray::s![start..end]);
-            
+
             // Process block with SIMD, ensuring it stays in cache
             let block_result = self.process_cache_block(&block)?;
-            
+
             sum_acc = sum_acc + block_result.sum;
             sum_sq_acc = sum_sq_acc + block_result.sum_sq;
             sum_cube_acc = sum_cube_acc + block_result.sum_cube;
             sum_quad_acc = sum_quad_acc + block_result.sum_quad;
-            if block_result.min < min_val { min_val = block_result.min; }
-            if block_result.max > max_val { max_val = block_result.max; }
-            
+            if block_result.min < min_val {
+                min_val = block_result.min;
+            }
+            if block_result.max > max_val {
+                max_val = block_result.max;
+            }
+
             vector_ops_count += block_result.vector_ops;
         }
 
@@ -516,14 +554,18 @@ where
             let start = n_blocks * block_size;
             let remainder_block = data.slice(ndarray::s![start..]);
             let remainder_result = self.process_cache_block(&remainder_block)?;
-            
+
             sum_acc = sum_acc + remainder_result.sum;
             sum_sq_acc = sum_sq_acc + remainder_result.sum_sq;
             sum_cube_acc = sum_cube_acc + remainder_result.sum_cube;
             sum_quad_acc = sum_quad_acc + remainder_result.sum_quad;
-            if remainder_result.min < min_val { min_val = remainder_result.min; }
-            if remainder_result.max > max_val { max_val = remainder_result.max; }
-            
+            if remainder_result.min < min_val {
+                min_val = remainder_result.min;
+            }
+            if remainder_result.max > max_val {
+                max_val = remainder_result.max;
+            }
+
             vector_ops_count += remainder_result.vector_ops;
         }
 
@@ -532,15 +574,23 @@ where
         let mean = sum_acc / n_f;
         let m2 = sum_sq_acc / n_f - mean * mean;
         let m3 = sum_cube_acc / n_f - F::from(3).unwrap() * mean * m2 - mean * mean * mean;
-        let m4 = sum_quad_acc / n_f 
-            - F::from(4).unwrap() * mean * m3 
-            - F::from(6).unwrap() * mean * mean * m2 
+        let m4 = sum_quad_acc / n_f
+            - F::from(4).unwrap() * mean * m3
+            - F::from(6).unwrap() * mean * mean * m2
             - mean * mean * mean * mean;
 
         let variance = m2;
         let std_dev = variance.sqrt();
-        let skewness = if m2 > F::zero() { m3 / (m2 * m2.sqrt()) } else { F::zero() };
-        let kurtosis = if m2 > F::zero() { m4 / (m2 * m2) - F::from(3).unwrap() } else { F::zero() };
+        let skewness = if m2 > F::zero() {
+            m3 / (m2 * m2.sqrt())
+        } else {
+            F::zero()
+        };
+        let kurtosis = if m2 > F::zero() {
+            m4 / (m2 * m2) - F::from(3).unwrap()
+        } else {
+            F::zero()
+        };
 
         Ok(UltraStatsResult {
             mean,
@@ -578,16 +628,20 @@ where
             let start = i * vector_width;
             let end = start + vector_width;
             let chunk = data.slice(ndarray::s![start..end]);
-            
+
             let chunk_sum = F::simd_sum(&chunk);
             let chunk_sum_sq = F::simd_sum_squares(&chunk);
             let chunk_min = F::simd_min(&chunk);
             let chunk_max = F::simd_max(&chunk);
-            
+
             sum_acc = sum_acc + chunk_sum;
             sum_sq_acc = sum_sq_acc + chunk_sum_sq;
-            if chunk_min < min_val { min_val = chunk_min; }
-            if chunk_max > max_val { max_val = chunk_max; }
+            if chunk_min < min_val {
+                min_val = chunk_min;
+            }
+            if chunk_max > max_val {
+                max_val = chunk_max;
+            }
         }
 
         // Handle remainder
@@ -597,8 +651,12 @@ where
                 let val = data[i];
                 sum_acc = sum_acc + val;
                 sum_sq_acc = sum_sq_acc + val * val;
-                if val < min_val { min_val = val; }
-                if val > max_val { max_val = val; }
+                if val < min_val {
+                    min_val = val;
+                }
+                if val > max_val {
+                    max_val = val;
+                }
             }
         }
 
@@ -623,17 +681,14 @@ where
     }
 
     /// Compute moments for a vector chunk
-    fn compute_vector_moments(
-        &self,
-        chunk: &ArrayView1<F>,
-    ) -> StatsResult<(F, F, F, F, F, F)> {
+    fn compute_vector_moments(&self, chunk: &ArrayView1<F>) -> StatsResult<(F, F, F, F, F, F)> {
         let sum = F::simd_sum(chunk);
         let sum_sq = F::simd_sum_squares(chunk);
         let sum_cube = F::simd_sum_cubes(chunk);
         let sum_quad = F::simd_sum_quads(chunk);
         let min_val = F::simd_min(chunk);
         let max_val = F::simd_max(chunk);
-        
+
         Ok((sum, sum_sq, sum_cube, sum_quad, min_val, max_val))
     }
 
@@ -656,16 +711,20 @@ where
             let start = i * vector_width;
             let end = start + vector_width;
             let chunk = block.slice(ndarray::s![start..end]);
-            
-            let (chunk_sum, chunk_sum_sq, chunk_sum_cube, chunk_sum_quad, chunk_min, chunk_max) = 
+
+            let (chunk_sum, chunk_sum_sq, chunk_sum_cube, chunk_sum_quad, chunk_min, chunk_max) =
                 self.compute_vector_moments(&chunk)?;
-            
+
             sum = sum + chunk_sum;
             sum_sq = sum_sq + chunk_sum_sq;
             sum_cube = sum_cube + chunk_sum_cube;
             sum_quad = sum_quad + chunk_sum_quad;
-            if chunk_min < min_val { min_val = chunk_min; }
-            if chunk_max > max_val { max_val = chunk_max; }
+            if chunk_min < min_val {
+                min_val = chunk_min;
+            }
+            if chunk_max > max_val {
+                max_val = chunk_max;
+            }
         }
 
         // Handle remainder within block
@@ -677,8 +736,12 @@ where
                 sum_sq = sum_sq + val * val;
                 sum_cube = sum_cube + val * val * val;
                 sum_quad = sum_quad + val * val * val * val;
-                if val < min_val { min_val = val; }
-                if val > max_val { max_val = val; }
+                if val < min_val {
+                    min_val = val;
+                }
+                if val > max_val {
+                    max_val = val;
+                }
             }
         }
 
@@ -706,16 +769,17 @@ where
     fn compute_scalar_fallback(&self, data: &ArrayView1<F>) -> StatsResult<UltraStatsResult<F>> {
         let n = data.len();
         let n_f = F::from(n).unwrap();
-        
+
         let sum: F = data.iter().copied().sum();
         let mean = sum / n_f;
-        
-        let variance = data.iter()
-            .map(|&x| (x - mean) * (x - mean))
-            .sum::<F>() / n_f;
-        
+
+        let variance = data.iter().map(|&x| (x - mean) * (x - mean)).sum::<F>() / n_f;
+
         let min_val = data.iter().copied().fold(F::infinity(), |a, b| a.min(b));
-        let max_val = data.iter().copied().fold(F::neg_infinity(), |a, b| a.max(b));
+        let max_val = data
+            .iter()
+            .copied()
+            .fold(F::neg_infinity(), |a, b| a.max(b));
 
         Ok(UltraStatsResult {
             mean,
@@ -778,7 +842,7 @@ mod tests {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
         let processor = UltraSimdProcessor::<f64>::new();
         let result = processor.compute_ultra_statistics(&data.view()).unwrap();
-        
+
         assert!((result.mean - 4.5).abs() < 1e-10);
         assert!(result.simd_utilization >= 0.0);
         assert!(result.cache_efficiency >= 0.0);
@@ -789,7 +853,7 @@ mod tests {
         let data: Array1<f64> = Array1::from_shape_fn(10000, |i| i as f64);
         let processor = UltraSimdProcessor::<f64>::new();
         let result = processor.compute_ultra_statistics(&data.view()).unwrap();
-        
+
         assert!(result.simd_utilization > 0.5); // Should have good SIMD utilization
         assert!(result.vector_operations_count > 0);
     }
@@ -797,7 +861,7 @@ mod tests {
     #[test]
     fn test_different_vector_strategies() {
         let data: Array1<f64> = Array1::from_shape_fn(1000, |i| (i as f64).sin());
-        
+
         // Test multi-vector strategy
         let config_multi = UltraSimdConfig {
             vector_width: 8,
@@ -805,8 +869,10 @@ mod tests {
             ..Default::default()
         };
         let processor_multi = UltraSimdProcessor::with_config(config_multi);
-        let result_multi = processor_multi.compute_ultra_statistics(&data.view()).unwrap();
-        
+        let result_multi = processor_multi
+            .compute_ultra_statistics(&data.view())
+            .unwrap();
+
         // Test cache-blocked strategy
         let config_blocked = UltraSimdConfig {
             enable_cache_blocking: true,
@@ -814,8 +880,10 @@ mod tests {
             ..Default::default()
         };
         let processor_blocked = UltraSimdProcessor::with_config(config_blocked);
-        let result_blocked = processor_blocked.compute_ultra_statistics(&data.view()).unwrap();
-        
+        let result_blocked = processor_blocked
+            .compute_ultra_statistics(&data.view())
+            .unwrap();
+
         // Results should be numerically equivalent
         assert!((result_multi.mean - result_blocked.mean).abs() < 1e-10);
         assert!((result_multi.variance - result_blocked.variance).abs() < 1e-10);

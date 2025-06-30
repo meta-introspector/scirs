@@ -6,33 +6,33 @@
 use crate::error::OptimizerError;
 use ndarray::{Array1, ArrayBase, Data, Dimension};
 use num_traits::Float;
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::time::{SystemTime, UNIX_EPOCH};
-use serde::{Deserialize, Serialize};
 
 /// Enhanced audit system for privacy-preserving optimization
 pub struct EnhancedAuditSystem<T: Float> {
     /// Configuration for audit system
     config: AuditConfig,
-    
+
     /// Audit trail storage
     audit_trail: AuditTrail,
-    
+
     /// Compliance monitor
     compliance_monitor: ComplianceMonitor,
-    
+
     /// Formal verification engine
     verification_engine: FormalVerificationEngine<T>,
-    
+
     /// Privacy budget tracker
     privacy_tracker: PrivacyBudgetTracker,
-    
+
     /// Cryptographic proof generator
     proof_generator: CryptographicProofGenerator<T>,
-    
+
     /// Regulatory compliance checker
     regulatory_checker: RegulatoryComplianceChecker,
-    
+
     /// Real-time monitoring dashboard
     monitoring_dashboard: MonitoringDashboard,
 }
@@ -42,25 +42,25 @@ pub struct EnhancedAuditSystem<T: Float> {
 pub struct AuditConfig {
     /// Enable comprehensive logging
     pub comprehensive_logging: bool,
-    
+
     /// Enable real-time monitoring
     pub real_time_monitoring: bool,
-    
+
     /// Enable formal verification
     pub formal_verification: bool,
-    
+
     /// Retention period for audit logs (days)
     pub retention_period_days: u32,
-    
+
     /// Compliance frameworks to check
     pub compliance_frameworks: Vec<ComplianceFramework>,
-    
+
     /// Cryptographic proof requirements
     pub proof_requirements: ProofRequirements,
-    
+
     /// Audit trail encryption
     pub encrypt_audit_trail: bool,
-    
+
     /// External audit integration
     pub external_audit_integration: bool,
 }
@@ -70,25 +70,25 @@ pub struct AuditConfig {
 pub enum ComplianceFramework {
     /// General Data Protection Regulation (EU)
     GDPR,
-    
+
     /// California Consumer Privacy Act
     CCPA,
-    
+
     /// Health Insurance Portability and Accountability Act
     HIPAA,
-    
+
     /// Sarbanes-Oxley Act
     SOX,
-    
+
     /// Federal Information Security Management Act
     FISMA,
-    
+
     /// ISO 27001
     ISO27001,
-    
+
     /// NIST Privacy Framework
     NISTPrivacy,
-    
+
     /// Custom compliance framework
     Custom(String),
 }
@@ -98,16 +98,16 @@ pub enum ComplianceFramework {
 pub struct ProofRequirements {
     /// Require zero-knowledge proofs
     pub zero_knowledge_proofs: bool,
-    
+
     /// Require non-repudiation proofs
     pub non_repudiation: bool,
-    
+
     /// Require integrity proofs
     pub integrity_proofs: bool,
-    
+
     /// Require confidentiality proofs
     pub confidentiality_proofs: bool,
-    
+
     /// Require completeness proofs
     pub completeness_proofs: bool,
 }
@@ -116,13 +116,13 @@ pub struct ProofRequirements {
 pub struct AuditTrail {
     /// Audit events
     events: VecDeque<AuditEvent>,
-    
+
     /// Event index for fast lookup
     event_index: HashMap<String, Vec<usize>>,
-    
+
     /// Cryptographic chain for tamper detection
     chain: AuditChain,
-    
+
     /// Encryption key for sensitive data
     encryption_key: Option<Vec<u8>>,
 }
@@ -132,25 +132,25 @@ pub struct AuditTrail {
 pub struct AuditEvent {
     /// Unique event identifier
     pub id: String,
-    
+
     /// Timestamp of the event
     pub timestamp: u64,
-    
+
     /// Event type
     pub event_type: AuditEventType,
-    
+
     /// Actor who triggered the event
     pub actor: String,
-    
+
     /// Detailed event data
     pub data: AuditEventData,
-    
+
     /// Privacy parameters at time of event
     pub privacy_context: PrivacyContext,
-    
+
     /// Cryptographic signature
     pub signature: Option<Vec<u8>>,
-    
+
     /// Compliance annotations
     pub compliance_annotations: HashMap<ComplianceFramework, ComplianceStatus>,
 }
@@ -160,37 +160,37 @@ pub struct AuditEvent {
 pub enum AuditEventType {
     /// Privacy budget allocation
     PrivacyBudgetAllocation,
-    
+
     /// Privacy budget consumption
     PrivacyBudgetConsumption,
-    
+
     /// Gradient computation
     GradientComputation,
-    
+
     /// Model parameter update
     ModelParameterUpdate,
-    
+
     /// Data access
     DataAccess,
-    
+
     /// User consent
     UserConsent,
-    
+
     /// Data deletion
     DataDeletion,
-    
+
     /// Anonymization process
     AnonymizationProcess,
-    
+
     /// Security incident
     SecurityIncident,
-    
+
     /// Compliance check
     ComplianceCheck,
-    
+
     /// Configuration change
     ConfigurationChange,
-    
+
     /// System startup/shutdown
     SystemLifecycle,
 }
@@ -200,22 +200,22 @@ pub enum AuditEventType {
 pub struct AuditEventData {
     /// Event description
     pub description: String,
-    
+
     /// Affected data subjects
     pub affected_data_subjects: Vec<String>,
-    
+
     /// Data categories involved
     pub data_categories: Vec<String>,
-    
+
     /// Processing purposes
     pub processing_purposes: Vec<String>,
-    
+
     /// Legal basis for processing
     pub legal_basis: Vec<String>,
-    
+
     /// Technical measures applied
     pub technical_measures: Vec<String>,
-    
+
     /// Additional metadata
     pub metadata: HashMap<String, String>,
 }
@@ -225,19 +225,19 @@ pub struct AuditEventData {
 pub struct PrivacyContext {
     /// Current epsilon budget
     pub epsilon_budget: f64,
-    
+
     /// Current delta budget
     pub delta_budget: f64,
-    
+
     /// Privacy mechanism used
     pub privacy_mechanism: String,
-    
+
     /// Data minimization status
     pub data_minimization: bool,
-    
+
     /// Purpose limitation compliance
     pub purpose_limitation: bool,
-    
+
     /// Storage limitation compliance
     pub storage_limitation: bool,
 }
@@ -247,13 +247,13 @@ pub struct PrivacyContext {
 pub enum ComplianceStatus {
     /// Compliant with framework
     Compliant,
-    
+
     /// Non-compliant with framework
     NonCompliant(String),
-    
+
     /// Requires manual review
     RequiresReview(String),
-    
+
     /// Not applicable
     NotApplicable,
 }
@@ -262,10 +262,10 @@ pub enum ComplianceStatus {
 pub struct AuditChain {
     /// Chain of hashes for tamper detection
     hash_chain: Vec<Vec<u8>>,
-    
+
     /// Digital signatures for non-repudiation
     signatures: Vec<Vec<u8>>,
-    
+
     /// Merkle tree for efficient verification
     merkle_tree: MerkleTree,
 }
@@ -274,10 +274,10 @@ pub struct AuditChain {
 pub struct MerkleTree {
     /// Tree nodes
     nodes: Vec<Vec<u8>>,
-    
+
     /// Tree depth
     depth: usize,
-    
+
     /// Root hash
     root_hash: Option<Vec<u8>>,
 }
@@ -286,13 +286,13 @@ pub struct MerkleTree {
 pub struct ComplianceMonitor {
     /// Active compliance frameworks
     frameworks: Vec<ComplianceFramework>,
-    
+
     /// Compliance rules
     rules: HashMap<ComplianceFramework, Vec<ComplianceRule>>,
-    
+
     /// Violation history
     violations: VecDeque<ComplianceViolation>,
-    
+
     /// Automated remediation actions
     remediation_actions: HashMap<String, RemediationAction>,
 }
@@ -302,19 +302,19 @@ pub struct ComplianceMonitor {
 pub struct ComplianceRule {
     /// Rule identifier
     pub id: String,
-    
+
     /// Rule name
     pub name: String,
-    
+
     /// Rule description
     pub description: String,
-    
+
     /// Rule evaluation function
     pub evaluation_fn: Box<dyn Fn(&AuditEvent) -> ComplianceRuleResult + Send + Sync>,
-    
+
     /// Rule severity
     pub severity: RuleSeverity,
-    
+
     /// Applicable frameworks
     pub frameworks: Vec<ComplianceFramework>,
 }
@@ -324,13 +324,13 @@ pub struct ComplianceRule {
 pub struct ComplianceRuleResult {
     /// Whether rule passed
     pub passed: bool,
-    
+
     /// Detailed result message
     pub message: String,
-    
+
     /// Recommended actions
     pub recommendations: Vec<String>,
-    
+
     /// Risk level
     pub risk_level: RiskLevel,
 }
@@ -340,16 +340,16 @@ pub struct ComplianceRuleResult {
 pub enum RuleSeverity {
     /// Critical violation requiring immediate action
     Critical,
-    
+
     /// High severity violation
     High,
-    
+
     /// Medium severity violation
     Medium,
-    
+
     /// Low severity violation
     Low,
-    
+
     /// Informational only
     Info,
 }
@@ -359,16 +359,16 @@ pub enum RuleSeverity {
 pub enum RiskLevel {
     /// Very high risk
     VeryHigh,
-    
+
     /// High risk
     High,
-    
+
     /// Medium risk
     Medium,
-    
+
     /// Low risk
     Low,
-    
+
     /// Very low risk
     VeryLow,
 }
@@ -378,25 +378,25 @@ pub enum RiskLevel {
 pub struct ComplianceViolation {
     /// Violation identifier
     pub id: String,
-    
+
     /// Timestamp of violation
     pub timestamp: u64,
-    
+
     /// Violated rule
     pub rule_id: String,
-    
+
     /// Severity level
     pub severity: RuleSeverity,
-    
+
     /// Framework violated
     pub framework: ComplianceFramework,
-    
+
     /// Detailed description
     pub description: String,
-    
+
     /// Remediation status
     pub remediation_status: RemediationStatus,
-    
+
     /// Associated audit event
     pub audit_event_id: String,
 }
@@ -406,16 +406,16 @@ pub struct ComplianceViolation {
 pub enum RemediationStatus {
     /// Violation detected but not remediated
     Open,
-    
+
     /// Remediation in progress
     InProgress,
-    
+
     /// Violation remediated
     Resolved,
-    
+
     /// False positive
     FalsePositive,
-    
+
     /// Accepted risk
     AcceptedRisk,
 }
@@ -425,16 +425,16 @@ pub enum RemediationStatus {
 pub struct RemediationAction {
     /// Action identifier
     pub id: String,
-    
+
     /// Action name
     pub name: String,
-    
+
     /// Action description
     pub description: String,
-    
+
     /// Action execution function
     pub execution_fn: String, // Serialized function name
-    
+
     /// Required approval level
     pub approval_level: ApprovalLevel,
 }
@@ -444,13 +444,13 @@ pub struct RemediationAction {
 pub enum ApprovalLevel {
     /// Automatic execution
     Automatic,
-    
+
     /// Requires operator approval
     Operator,
-    
+
     /// Requires supervisor approval
     Supervisor,
-    
+
     /// Requires executive approval
     Executive,
 }
@@ -459,13 +459,13 @@ pub enum ApprovalLevel {
 pub struct FormalVerificationEngine<T: Float> {
     /// Verification rules
     verification_rules: Vec<FormalVerificationRule<T>>,
-    
+
     /// Proof system
     proof_system: ProofSystem<T>,
-    
+
     /// Model checker
     model_checker: ModelChecker<T>,
-    
+
     /// Theorem prover
     theorem_prover: TheoremProver<T>,
 }
@@ -474,13 +474,13 @@ pub struct FormalVerificationEngine<T: Float> {
 pub struct FormalVerificationRule<T: Float> {
     /// Rule name
     pub name: String,
-    
+
     /// Formal specification
     pub specification: String,
-    
+
     /// Verification function
     pub verify_fn: Box<dyn Fn(&Array1<T>, &PrivacyContext) -> VerificationResult + Send + Sync>,
-    
+
     /// Rule criticality
     pub criticality: VerificationCriticality,
 }
@@ -490,13 +490,13 @@ pub struct FormalVerificationRule<T: Float> {
 pub enum VerificationCriticality {
     /// Must be verified for safety
     Safety,
-    
+
     /// Must be verified for correctness
     Correctness,
-    
+
     /// Should be verified for performance
     Performance,
-    
+
     /// Optional verification
     Optional,
 }
@@ -506,13 +506,13 @@ pub enum VerificationCriticality {
 pub struct VerificationResult {
     /// Whether verification passed
     pub verified: bool,
-    
+
     /// Proof generated
     pub proof: Option<Vec<u8>>,
-    
+
     /// Verification message
     pub message: String,
-    
+
     /// Confidence level
     pub confidence: f64,
 }
@@ -521,7 +521,7 @@ pub struct VerificationResult {
 pub struct ProofSystem<T: Float> {
     /// Proof generation algorithms
     algorithms: HashMap<String, ProofAlgorithm<T>>,
-    
+
     /// Verification keys
     verification_keys: HashMap<String, Vec<u8>>,
 }
@@ -530,10 +530,10 @@ pub struct ProofSystem<T: Float> {
 pub struct ProofAlgorithm<T: Float> {
     /// Algorithm name
     pub name: String,
-    
+
     /// Proof generation function
     pub generate_fn: Box<dyn Fn(&Array1<T>) -> Result<Vec<u8>, OptimizerError> + Send + Sync>,
-    
+
     /// Proof verification function
     pub verify_fn: Box<dyn Fn(&[u8], &Array1<T>) -> bool + Send + Sync>,
 }
@@ -542,7 +542,7 @@ pub struct ProofAlgorithm<T: Float> {
 pub struct ModelChecker<T: Float> {
     /// System model
     model: SystemModel<T>,
-    
+
     /// Properties to check
     properties: Vec<SystemProperty>,
 }
@@ -551,7 +551,7 @@ pub struct ModelChecker<T: Float> {
 pub struct SystemModel<T: Float> {
     /// System states
     states: Vec<SystemState<T>>,
-    
+
     /// Transition function
     transitions: HashMap<String, TransitionFunction<T>>,
 }
@@ -561,10 +561,10 @@ pub struct SystemModel<T: Float> {
 pub struct SystemState<T: Float> {
     /// State identifier
     pub id: String,
-    
+
     /// State variables
     pub variables: HashMap<String, T>,
-    
+
     /// Privacy parameters
     pub privacy_params: PrivacyContext,
 }
@@ -573,7 +573,7 @@ pub struct SystemState<T: Float> {
 pub struct TransitionFunction<T: Float> {
     /// Function name
     pub name: String,
-    
+
     /// Transition logic
     pub logic: Box<dyn Fn(&SystemState<T>) -> Vec<SystemState<T>> + Send + Sync>,
 }
@@ -583,10 +583,10 @@ pub struct TransitionFunction<T: Float> {
 pub struct SystemProperty {
     /// Property name
     pub name: String,
-    
+
     /// Formal specification (e.g., CTL formula)
     pub specification: String,
-    
+
     /// Property type
     pub property_type: PropertyType,
 }
@@ -596,13 +596,13 @@ pub struct SystemProperty {
 pub enum PropertyType {
     /// Safety property (something bad never happens)
     Safety,
-    
+
     /// Liveness property (something good eventually happens)
     Liveness,
-    
+
     /// Temporal property (time-based property)
     Temporal,
-    
+
     /// Invariant property (always true)
     Invariant,
 }
@@ -611,7 +611,7 @@ pub enum PropertyType {
 pub struct TheoremProver<T: Float> {
     /// Axioms and rules
     axioms: Vec<Axiom<T>>,
-    
+
     /// Proof strategies
     strategies: Vec<ProofStrategy<T>>,
 }
@@ -620,10 +620,10 @@ pub struct TheoremProver<T: Float> {
 pub struct Axiom<T: Float> {
     /// Axiom name
     pub name: String,
-    
+
     /// Formal statement
     pub statement: String,
-    
+
     /// Axiom verification function
     pub verify_fn: Box<dyn Fn(&Array1<T>) -> bool + Send + Sync>,
 }
@@ -632,7 +632,7 @@ pub struct Axiom<T: Float> {
 pub struct ProofStrategy<T: Float> {
     /// Strategy name
     pub name: String,
-    
+
     /// Strategy application function
     pub apply_fn: Box<dyn Fn(&Array1<T>, &[Axiom<T>]) -> ProofResult + Send + Sync>,
 }
@@ -642,13 +642,13 @@ pub struct ProofStrategy<T: Float> {
 pub struct ProofResult {
     /// Whether theorem was proven
     pub proven: bool,
-    
+
     /// Proof steps
     pub proof_steps: Vec<String>,
-    
+
     /// Used axioms
     pub used_axioms: Vec<String>,
-    
+
     /// Proof confidence
     pub confidence: f64,
 }
@@ -657,13 +657,13 @@ pub struct ProofResult {
 pub struct PrivacyBudgetTracker {
     /// Current allocations by purpose
     allocations: HashMap<String, BudgetAllocation>,
-    
+
     /// Historical consumption
     consumption_history: VecDeque<BudgetConsumption>,
-    
+
     /// Budget alerts
     alerts: Vec<BudgetAlert>,
-    
+
     /// Forecasting model
     forecasting_model: BudgetForecastingModel,
 }
@@ -673,22 +673,22 @@ pub struct PrivacyBudgetTracker {
 pub struct BudgetAllocation {
     /// Purpose identifier
     pub purpose: String,
-    
+
     /// Allocated epsilon
     pub allocated_epsilon: f64,
-    
+
     /// Allocated delta
     pub allocated_delta: f64,
-    
+
     /// Consumed epsilon
     pub consumed_epsilon: f64,
-    
+
     /// Consumed delta
     pub consumed_delta: f64,
-    
+
     /// Allocation timestamp
     pub timestamp: u64,
-    
+
     /// Expiration timestamp
     pub expires_at: Option<u64>,
 }
@@ -698,19 +698,19 @@ pub struct BudgetAllocation {
 pub struct BudgetConsumption {
     /// Consumption identifier
     pub id: String,
-    
+
     /// Timestamp
     pub timestamp: u64,
-    
+
     /// Purpose
     pub purpose: String,
-    
+
     /// Epsilon consumed
     pub epsilon_consumed: f64,
-    
+
     /// Delta consumed
     pub delta_consumed: f64,
-    
+
     /// Operation performed
     pub operation: String,
 }
@@ -720,19 +720,19 @@ pub struct BudgetConsumption {
 pub struct BudgetAlert {
     /// Alert identifier
     pub id: String,
-    
+
     /// Alert type
     pub alert_type: BudgetAlertType,
-    
+
     /// Alert message
     pub message: String,
-    
+
     /// Severity level
     pub severity: AlertSeverity,
-    
+
     /// Timestamp
     pub timestamp: u64,
-    
+
     /// Acknowledged
     pub acknowledged: bool,
 }
@@ -742,16 +742,16 @@ pub struct BudgetAlert {
 pub enum BudgetAlertType {
     /// Budget nearly exhausted
     BudgetNearlyExhausted,
-    
+
     /// Budget exhausted
     BudgetExhausted,
-    
+
     /// Unusual consumption pattern
     UnusualConsumption,
-    
+
     /// Budget allocation expired
     AllocationExpired,
-    
+
     /// Budget reallocation needed
     ReallocationNeeded,
 }
@@ -761,10 +761,10 @@ pub enum BudgetAlertType {
 pub enum AlertSeverity {
     /// Critical alert requiring immediate action
     Critical,
-    
+
     /// Warning alert
     Warning,
-    
+
     /// Informational alert
     Info,
 }
@@ -773,7 +773,7 @@ pub enum AlertSeverity {
 pub struct BudgetForecastingModel {
     /// Historical consumption patterns
     patterns: Vec<ConsumptionPattern>,
-    
+
     /// Prediction model
     model: PredictionModel,
 }
@@ -783,16 +783,16 @@ pub struct BudgetForecastingModel {
 pub struct ConsumptionPattern {
     /// Pattern identifier
     pub id: String,
-    
+
     /// Time window
     pub time_window: u64,
-    
+
     /// Average consumption rate
     pub avg_consumption_rate: f64,
-    
+
     /// Peak consumption rate
     pub peak_consumption_rate: f64,
-    
+
     /// Pattern type
     pub pattern_type: PatternType,
 }
@@ -802,13 +802,13 @@ pub struct ConsumptionPattern {
 pub enum PatternType {
     /// Steady consumption
     Steady,
-    
+
     /// Bursty consumption
     Bursty,
-    
+
     /// Periodic consumption
     Periodic,
-    
+
     /// Irregular consumption
     Irregular,
 }
@@ -817,7 +817,7 @@ pub enum PatternType {
 pub struct PredictionModel {
     /// Model parameters
     parameters: Vec<f64>,
-    
+
     /// Model type
     model_type: ModelType,
 }
@@ -827,13 +827,13 @@ pub struct PredictionModel {
 pub enum ModelType {
     /// Linear regression
     LinearRegression,
-    
+
     /// ARIMA model
     ARIMA,
-    
+
     /// Neural network
     NeuralNetwork,
-    
+
     /// Random forest
     RandomForest,
 }
@@ -842,7 +842,7 @@ pub enum ModelType {
 pub struct CryptographicProofGenerator<T: Float> {
     /// Proof types supported
     proof_types: HashMap<String, CryptographicProofType<T>>,
-    
+
     /// Cryptographic keys
     keys: CryptographicKeys,
 }
@@ -851,22 +851,27 @@ pub struct CryptographicProofGenerator<T: Float> {
 pub struct CryptographicProofType<T: Float> {
     /// Proof type name
     pub name: String,
-    
+
     /// Proof generation function
-    pub generate_fn: Box<dyn Fn(&Array1<T>, &CryptographicKeys) -> Result<CryptographicProof, OptimizerError> + Send + Sync>,
-    
+    pub generate_fn: Box<
+        dyn Fn(&Array1<T>, &CryptographicKeys) -> Result<CryptographicProof, OptimizerError>
+            + Send
+            + Sync,
+    >,
+
     /// Proof verification function
-    pub verify_fn: Box<dyn Fn(&CryptographicProof, &Array1<T>, &CryptographicKeys) -> bool + Send + Sync>,
+    pub verify_fn:
+        Box<dyn Fn(&CryptographicProof, &Array1<T>, &CryptographicKeys) -> bool + Send + Sync>,
 }
 
 /// Cryptographic keys for proof generation
 pub struct CryptographicKeys {
     /// Signing keys
     pub signing_keys: HashMap<String, Vec<u8>>,
-    
+
     /// Verification keys
     pub verification_keys: HashMap<String, Vec<u8>>,
-    
+
     /// Encryption keys
     pub encryption_keys: HashMap<String, Vec<u8>>,
 }
@@ -876,16 +881,16 @@ pub struct CryptographicKeys {
 pub struct CryptographicProof {
     /// Proof type
     pub proof_type: String,
-    
+
     /// Proof data
     pub proof_data: Vec<u8>,
-    
+
     /// Public parameters
     pub public_params: Vec<u8>,
-    
+
     /// Timestamp
     pub timestamp: u64,
-    
+
     /// Proof metadata
     pub metadata: HashMap<String, String>,
 }
@@ -894,10 +899,10 @@ pub struct CryptographicProof {
 pub struct RegulatoryComplianceChecker {
     /// Supported regulations
     regulations: HashMap<ComplianceFramework, RegulationChecker>,
-    
+
     /// Compliance reports
     reports: VecDeque<ComplianceReport>,
-    
+
     /// External compliance APIs
     external_apis: HashMap<String, ExternalComplianceAPI>,
 }
@@ -906,12 +911,13 @@ pub struct RegulatoryComplianceChecker {
 pub struct RegulationChecker {
     /// Framework name
     pub framework: ComplianceFramework,
-    
+
     /// Compliance rules
     pub rules: Vec<ComplianceRule>,
-    
+
     /// Assessment functions
-    pub assessment_fns: HashMap<String, Box<dyn Fn(&AuditEvent) -> ComplianceAssessment + Send + Sync>>,
+    pub assessment_fns:
+        HashMap<String, Box<dyn Fn(&AuditEvent) -> ComplianceAssessment + Send + Sync>>,
 }
 
 /// Compliance assessment result
@@ -919,16 +925,16 @@ pub struct RegulationChecker {
 pub struct ComplianceAssessment {
     /// Framework assessed
     pub framework: ComplianceFramework,
-    
+
     /// Overall compliance score (0.0 - 1.0)
     pub compliance_score: f64,
-    
+
     /// Detailed findings
     pub findings: Vec<ComplianceFinding>,
-    
+
     /// Recommendations
     pub recommendations: Vec<String>,
-    
+
     /// Risk assessment
     pub risk_assessment: RiskAssessment,
 }
@@ -938,16 +944,16 @@ pub struct ComplianceAssessment {
 pub struct ComplianceFinding {
     /// Finding identifier
     pub id: String,
-    
+
     /// Rule or requirement violated/satisfied
     pub rule: String,
-    
+
     /// Compliance status
     pub status: ComplianceStatus,
-    
+
     /// Evidence
     pub evidence: Vec<String>,
-    
+
     /// Impact level
     pub impact: ImpactLevel,
 }
@@ -957,16 +963,16 @@ pub struct ComplianceFinding {
 pub enum ImpactLevel {
     /// Very high impact
     VeryHigh,
-    
+
     /// High impact
     High,
-    
+
     /// Medium impact
     Medium,
-    
+
     /// Low impact
     Low,
-    
+
     /// Very low impact
     VeryLow,
 }
@@ -976,13 +982,13 @@ pub enum ImpactLevel {
 pub struct RiskAssessment {
     /// Overall risk score (0.0 - 1.0)
     pub risk_score: f64,
-    
+
     /// Risk factors
     pub risk_factors: Vec<RiskFactor>,
-    
+
     /// Mitigation recommendations
     pub mitigations: Vec<String>,
-    
+
     /// Residual risk
     pub residual_risk: f64,
 }
@@ -992,13 +998,13 @@ pub struct RiskAssessment {
 pub struct RiskFactor {
     /// Factor name
     pub name: String,
-    
+
     /// Factor weight
     pub weight: f64,
-    
+
     /// Factor value
     pub value: f64,
-    
+
     /// Factor description
     pub description: String,
 }
@@ -1008,25 +1014,25 @@ pub struct RiskFactor {
 pub struct ComplianceReport {
     /// Report identifier
     pub id: String,
-    
+
     /// Report timestamp
     pub timestamp: u64,
-    
+
     /// Reporting period
     pub period: ReportingPeriod,
-    
+
     /// Frameworks covered
     pub frameworks: Vec<ComplianceFramework>,
-    
+
     /// Overall compliance status
     pub overall_status: ComplianceStatus,
-    
+
     /// Detailed assessments
     pub assessments: HashMap<ComplianceFramework, ComplianceAssessment>,
-    
+
     /// Executive summary
     pub executive_summary: String,
-    
+
     /// Report format
     pub format: ReportFormat,
 }
@@ -1036,19 +1042,19 @@ pub struct ComplianceReport {
 pub enum ReportingPeriod {
     /// Daily report
     Daily,
-    
+
     /// Weekly report
     Weekly,
-    
+
     /// Monthly report
     Monthly,
-    
+
     /// Quarterly report
     Quarterly,
-    
+
     /// Annual report
     Annual,
-    
+
     /// Custom period
     Custom(u64, u64), // start, end timestamps
 }
@@ -1058,16 +1064,16 @@ pub enum ReportingPeriod {
 pub enum ReportFormat {
     /// JSON format
     JSON,
-    
+
     /// XML format
     XML,
-    
+
     /// PDF format
     PDF,
-    
+
     /// HTML format
     HTML,
-    
+
     /// CSV format
     CSV,
 }
@@ -1076,13 +1082,13 @@ pub enum ReportFormat {
 pub struct ExternalComplianceAPI {
     /// API name
     pub name: String,
-    
+
     /// API endpoint
     pub endpoint: String,
-    
+
     /// API key
     pub api_key: Option<String>,
-    
+
     /// Supported frameworks
     pub frameworks: Vec<ComplianceFramework>,
 }
@@ -1091,10 +1097,10 @@ pub struct ExternalComplianceAPI {
 pub struct MonitoringDashboard {
     /// Dashboard metrics
     metrics: HashMap<String, DashboardMetric>,
-    
+
     /// Real-time alerts
     alerts: VecDeque<DashboardAlert>,
-    
+
     /// Dashboard configuration
     config: DashboardConfig,
 }
@@ -1104,16 +1110,16 @@ pub struct MonitoringDashboard {
 pub struct DashboardMetric {
     /// Metric name
     pub name: String,
-    
+
     /// Current value
     pub current_value: f64,
-    
+
     /// Historical values
     pub historical_values: VecDeque<(u64, f64)>,
-    
+
     /// Metric unit
     pub unit: String,
-    
+
     /// Metric type
     pub metric_type: MetricType,
 }
@@ -1123,13 +1129,13 @@ pub struct DashboardMetric {
 pub enum MetricType {
     /// Counter metric (monotonically increasing)
     Counter,
-    
+
     /// Gauge metric (can increase or decrease)
     Gauge,
-    
+
     /// Histogram metric
     Histogram,
-    
+
     /// Rate metric
     Rate,
 }
@@ -1139,19 +1145,19 @@ pub enum MetricType {
 pub struct DashboardAlert {
     /// Alert identifier
     pub id: String,
-    
+
     /// Alert message
     pub message: String,
-    
+
     /// Alert severity
     pub severity: AlertSeverity,
-    
+
     /// Timestamp
     pub timestamp: u64,
-    
+
     /// Related metric
     pub metric: Option<String>,
-    
+
     /// Alert status
     pub status: AlertStatus,
 }
@@ -1161,13 +1167,13 @@ pub struct DashboardAlert {
 pub enum AlertStatus {
     /// Active alert
     Active,
-    
+
     /// Acknowledged alert
     Acknowledged,
-    
+
     /// Resolved alert
     Resolved,
-    
+
     /// Suppressed alert
     Suppressed,
 }
@@ -1177,13 +1183,13 @@ pub enum AlertStatus {
 pub struct DashboardConfig {
     /// Refresh interval (seconds)
     pub refresh_interval: u32,
-    
+
     /// Historical data retention (hours)
     pub history_retention_hours: u32,
-    
+
     /// Alert thresholds
     pub alert_thresholds: HashMap<String, AlertThreshold>,
-    
+
     /// Dashboard layout
     pub layout: DashboardLayout,
 }
@@ -1193,13 +1199,13 @@ pub struct DashboardConfig {
 pub struct AlertThreshold {
     /// Metric name
     pub metric: String,
-    
+
     /// Warning threshold
     pub warning: f64,
-    
+
     /// Critical threshold
     pub critical: f64,
-    
+
     /// Threshold direction
     pub direction: ThresholdDirection,
 }
@@ -1209,7 +1215,7 @@ pub struct AlertThreshold {
 pub enum ThresholdDirection {
     /// Alert when value exceeds threshold
     Above,
-    
+
     /// Alert when value drops below threshold
     Below,
 }
@@ -1219,7 +1225,7 @@ pub enum ThresholdDirection {
 pub struct DashboardLayout {
     /// Number of columns
     pub columns: u32,
-    
+
     /// Widget configurations
     pub widgets: Vec<WidgetConfig>,
 }
@@ -1229,16 +1235,16 @@ pub struct DashboardLayout {
 pub struct WidgetConfig {
     /// Widget identifier
     pub id: String,
-    
+
     /// Widget type
     pub widget_type: WidgetType,
-    
+
     /// Associated metrics
     pub metrics: Vec<String>,
-    
+
     /// Widget position
     pub position: (u32, u32),
-    
+
     /// Widget size
     pub size: (u32, u32),
 }
@@ -1248,22 +1254,22 @@ pub struct WidgetConfig {
 pub enum WidgetType {
     /// Line chart
     LineChart,
-    
+
     /// Bar chart
     BarChart,
-    
+
     /// Pie chart
     PieChart,
-    
+
     /// Gauge widget
     Gauge,
-    
+
     /// Table widget
     Table,
-    
+
     /// Text display
     Text,
-    
+
     /// Alert list
     AlertList,
 }
@@ -1282,52 +1288,57 @@ impl<T: Float> EnhancedAuditSystem<T> {
             monitoring_dashboard: MonitoringDashboard::new(),
         }
     }
-    
+
     /// Log audit event
     pub fn log_event(&mut self, event: AuditEvent) -> Result<(), OptimizerError> {
         // Add cryptographic signature
         let signed_event = self.sign_event(event)?;
-        
+
         // Store in audit trail
         self.audit_trail.add_event(signed_event.clone())?;
-        
+
         // Check compliance
         self.compliance_monitor.check_event(&signed_event)?;
-        
+
         // Update privacy tracking
-        if matches!(signed_event.event_type, AuditEventType::PrivacyBudgetConsumption) {
+        if matches!(
+            signed_event.event_type,
+            AuditEventType::PrivacyBudgetConsumption
+        ) {
             self.privacy_tracker.record_consumption(&signed_event)?;
         }
-        
+
         // Update monitoring dashboard
         self.monitoring_dashboard.update_metrics(&signed_event)?;
-        
+
         Ok(())
     }
-    
+
     /// Generate compliance report
     pub fn generate_compliance_report(
         &self,
         frameworks: &[ComplianceFramework],
         period: ReportingPeriod,
     ) -> Result<ComplianceReport, OptimizerError> {
-        self.regulatory_checker.generate_report(frameworks, period, &self.audit_trail)
+        self.regulatory_checker
+            .generate_report(frameworks, period, &self.audit_trail)
     }
-    
+
     /// Verify system properties
     pub fn verify_system_properties(
         &self,
         data: &Array1<T>,
         context: &PrivacyContext,
     ) -> Result<Vec<VerificationResult>, OptimizerError> {
-        self.verification_engine.verify_all_properties(data, context)
+        self.verification_engine
+            .verify_all_properties(data, context)
     }
-    
+
     /// Get current privacy budget status
     pub fn get_privacy_budget_status(&self) -> HashMap<String, BudgetAllocation> {
         self.privacy_tracker.get_current_allocations()
     }
-    
+
     /// Generate cryptographic proof
     pub fn generate_proof(
         &self,
@@ -1336,7 +1347,7 @@ impl<T: Float> EnhancedAuditSystem<T> {
     ) -> Result<CryptographicProof, OptimizerError> {
         self.proof_generator.generate_proof(proof_type, data)
     }
-    
+
     /// Sign audit event
     fn sign_event(&self, mut event: AuditEvent) -> Result<AuditEvent, OptimizerError> {
         // Generate cryptographic signature
@@ -1344,17 +1355,17 @@ impl<T: Float> EnhancedAuditSystem<T> {
         event.signature = Some(signature);
         Ok(event)
     }
-    
+
     /// Generate signature for event
     fn generate_signature(&self, event: &AuditEvent) -> Result<Vec<u8>, OptimizerError> {
         use sha2::{Digest, Sha256};
-        
+
         let mut hasher = Sha256::new();
         hasher.update(event.id.as_bytes());
         hasher.update(&event.timestamp.to_le_bytes());
         hasher.update(serde_json::to_string(&event.event_type).unwrap().as_bytes());
         hasher.update(event.actor.as_bytes());
-        
+
         Ok(hasher.finalize().to_vec())
     }
 }
@@ -1369,25 +1380,25 @@ impl AuditTrail {
             encryption_key: None,
         }
     }
-    
+
     /// Add event to audit trail
     pub fn add_event(&mut self, event: AuditEvent) -> Result<(), OptimizerError> {
         // Add to chain for tamper detection
         self.chain.add_event(&event)?;
-        
+
         // Index event for fast lookup
         let event_index = self.events.len();
         self.event_index
             .entry(event.actor.clone())
             .or_insert_with(Vec::new)
             .push(event_index);
-        
+
         // Store event
         self.events.push_back(event);
-        
+
         Ok(())
     }
-    
+
     /// Query events by criteria
     pub fn query_events(&self, criteria: &AuditQueryCriteria) -> Vec<&AuditEvent> {
         self.events
@@ -1395,7 +1406,7 @@ impl AuditTrail {
             .filter(|event| self.matches_criteria(event, criteria))
             .collect()
     }
-    
+
     /// Check if event matches query criteria
     fn matches_criteria(&self, event: &AuditEvent, criteria: &AuditQueryCriteria) -> bool {
         if let Some(ref actor) = criteria.actor {
@@ -1403,25 +1414,25 @@ impl AuditTrail {
                 return false;
             }
         }
-        
+
         if let Some(ref event_type) = criteria.event_type {
             if !matches!(event.event_type, event_type) {
                 return false;
             }
         }
-        
+
         if let Some(start_time) = criteria.start_time {
             if event.timestamp < start_time {
                 return false;
             }
         }
-        
+
         if let Some(end_time) = criteria.end_time {
             if event.timestamp > end_time {
                 return false;
             }
         }
-        
+
         true
     }
 }
@@ -1431,16 +1442,16 @@ impl AuditTrail {
 pub struct AuditQueryCriteria {
     /// Filter by actor
     pub actor: Option<String>,
-    
+
     /// Filter by event type
     pub event_type: Option<AuditEventType>,
-    
+
     /// Start time filter
     pub start_time: Option<u64>,
-    
+
     /// End time filter
     pub end_time: Option<u64>,
-    
+
     /// Text search in descriptions
     pub text_search: Option<String>,
 }
@@ -1454,34 +1465,34 @@ impl AuditChain {
             merkle_tree: MerkleTree::new(),
         }
     }
-    
+
     /// Add event to chain
     pub fn add_event(&mut self, event: &AuditEvent) -> Result<(), OptimizerError> {
         // Compute hash of event
         let event_hash = self.compute_event_hash(event)?;
-        
+
         // Add to hash chain
         self.hash_chain.push(event_hash.clone());
-        
+
         // Update Merkle tree
         self.merkle_tree.add_leaf(event_hash)?;
-        
+
         Ok(())
     }
-    
+
     /// Compute hash of event
     fn compute_event_hash(&self, event: &AuditEvent) -> Result<Vec<u8>, OptimizerError> {
         use sha2::{Digest, Sha256};
-        
+
         let event_json = serde_json::to_string(event)
             .map_err(|_| OptimizerError::InvalidConfig("Failed to serialize event".to_string()))?;
-        
+
         let mut hasher = Sha256::new();
         hasher.update(event_json.as_bytes());
-        
+
         Ok(hasher.finalize().to_vec())
     }
-    
+
     /// Verify chain integrity
     pub fn verify_integrity(&self) -> bool {
         // Verify Merkle tree
@@ -1498,25 +1509,25 @@ impl MerkleTree {
             root_hash: None,
         }
     }
-    
+
     /// Add leaf to tree
     pub fn add_leaf(&mut self, leaf_hash: Vec<u8>) -> Result<(), OptimizerError> {
         self.nodes.push(leaf_hash);
         self.rebuild_tree()?;
         Ok(())
     }
-    
+
     /// Rebuild Merkle tree
     fn rebuild_tree(&mut self) -> Result<(), OptimizerError> {
         if self.nodes.is_empty() {
             return Ok(());
         }
-        
+
         let mut current_level = self.nodes.clone();
-        
+
         while current_level.len() > 1 {
             let mut next_level = Vec::new();
-            
+
             for chunk in current_level.chunks(2) {
                 let combined_hash = if chunk.len() == 2 {
                     self.combine_hashes(&chunk[0], &chunk[1])?
@@ -1525,25 +1536,25 @@ impl MerkleTree {
                 };
                 next_level.push(combined_hash);
             }
-            
+
             current_level = next_level;
         }
-        
+
         self.root_hash = current_level.into_iter().next();
         Ok(())
     }
-    
+
     /// Combine two hashes
     fn combine_hashes(&self, left: &[u8], right: &[u8]) -> Result<Vec<u8>, OptimizerError> {
         use sha2::{Digest, Sha256};
-        
+
         let mut hasher = Sha256::new();
         hasher.update(left);
         hasher.update(right);
-        
+
         Ok(hasher.finalize().to_vec())
     }
-    
+
     /// Verify tree integrity
     pub fn verify_integrity(&self) -> bool {
         // Simple integrity check
@@ -1561,7 +1572,7 @@ impl ComplianceMonitor {
             remediation_actions: HashMap::new(),
         }
     }
-    
+
     pub fn check_event(&mut self, event: &AuditEvent) -> Result<(), OptimizerError> {
         // Check event against all rules
         for framework in &self.frameworks {
@@ -1576,7 +1587,7 @@ impl ComplianceMonitor {
         }
         Ok(())
     }
-    
+
     fn record_violation(
         &mut self,
         framework: &ComplianceFramework,
@@ -1586,7 +1597,10 @@ impl ComplianceMonitor {
     ) -> Result<(), OptimizerError> {
         let violation = ComplianceViolation {
             id: format!("violation_{}", self.violations.len()),
-            timestamp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
+            timestamp: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
             rule_id: rule.id.clone(),
             severity: rule.severity,
             framework: framework.clone(),
@@ -1594,7 +1608,7 @@ impl ComplianceMonitor {
             remediation_status: RemediationStatus::Open,
             audit_event_id: event.id.clone(),
         };
-        
+
         self.violations.push_back(violation);
         Ok(())
     }
@@ -1609,19 +1623,19 @@ impl<T: Float> FormalVerificationEngine<T> {
             theorem_prover: TheoremProver::new(),
         }
     }
-    
+
     pub fn verify_all_properties(
         &self,
         data: &Array1<T>,
         context: &PrivacyContext,
     ) -> Result<Vec<VerificationResult>, OptimizerError> {
         let mut results = Vec::new();
-        
+
         for rule in &self.verification_rules {
             let result = (rule.verify_fn)(data, context);
             results.push(result);
         }
-        
+
         Ok(results)
     }
 }
@@ -1671,7 +1685,7 @@ impl PrivacyBudgetTracker {
             forecasting_model: BudgetForecastingModel::new(),
         }
     }
-    
+
     pub fn record_consumption(&mut self, event: &AuditEvent) -> Result<(), OptimizerError> {
         // Extract consumption information from event
         let consumption = BudgetConsumption {
@@ -1682,11 +1696,11 @@ impl PrivacyBudgetTracker {
             delta_consumed: event.privacy_context.delta_budget,
             operation: event.data.description.clone(),
         };
-        
+
         self.consumption_history.push_back(consumption);
         Ok(())
     }
-    
+
     pub fn get_current_allocations(&self) -> HashMap<String, BudgetAllocation> {
         self.allocations.clone()
     }
@@ -1717,7 +1731,7 @@ impl<T: Float> CryptographicProofGenerator<T> {
             keys: CryptographicKeys::new(),
         }
     }
-    
+
     pub fn generate_proof(
         &self,
         proof_type: &str,
@@ -1752,7 +1766,7 @@ impl RegulatoryComplianceChecker {
             external_apis: HashMap::new(),
         }
     }
-    
+
     pub fn generate_report(
         &self,
         frameworks: &[ComplianceFramework],
@@ -1761,7 +1775,10 @@ impl RegulatoryComplianceChecker {
     ) -> Result<ComplianceReport, OptimizerError> {
         let report = ComplianceReport {
             id: format!("report_{}", self.reports.len()),
-            timestamp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
+            timestamp: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
             period,
             frameworks: frameworks.to_vec(),
             overall_status: ComplianceStatus::Compliant,
@@ -1769,7 +1786,7 @@ impl RegulatoryComplianceChecker {
             executive_summary: "Compliance report generated successfully".to_string(),
             format: ReportFormat::JSON,
         };
-        
+
         Ok(report)
     }
 }
@@ -1782,22 +1799,24 @@ impl MonitoringDashboard {
             config: DashboardConfig::default(),
         }
     }
-    
+
     pub fn update_metrics(&mut self, event: &AuditEvent) -> Result<(), OptimizerError> {
         // Update relevant metrics based on event
         let timestamp = event.timestamp;
-        
+
         // Example: Update privacy budget metric
         if let Some(metric) = self.metrics.get_mut("privacy_budget_epsilon") {
             metric.current_value = event.privacy_context.epsilon_budget;
-            metric.historical_values.push_back((timestamp, event.privacy_context.epsilon_budget));
-            
+            metric
+                .historical_values
+                .push_back((timestamp, event.privacy_context.epsilon_budget));
+
             // Keep only recent history
             if metric.historical_values.len() > 1000 {
                 metric.historical_values.pop_front();
             }
         }
-        
+
         Ok(())
     }
 }
@@ -1819,7 +1838,7 @@ impl Default for DashboardConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_audit_config() {
         let config = AuditConfig {
@@ -1838,17 +1857,20 @@ mod tests {
             encrypt_audit_trail: true,
             external_audit_integration: false,
         };
-        
+
         assert!(config.comprehensive_logging);
         assert_eq!(config.compliance_frameworks.len(), 2);
         assert!(config.proof_requirements.zero_knowledge_proofs);
     }
-    
+
     #[test]
     fn test_audit_event_creation() {
         let event = AuditEvent {
             id: "test_event_1".to_string(),
-            timestamp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
+            timestamp: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
             event_type: AuditEventType::PrivacyBudgetConsumption,
             actor: "test_user".to_string(),
             data: AuditEventData {
@@ -1871,19 +1893,25 @@ mod tests {
             signature: None,
             compliance_annotations: HashMap::new(),
         };
-        
+
         assert_eq!(event.actor, "test_user");
-        assert!(matches!(event.event_type, AuditEventType::PrivacyBudgetConsumption));
+        assert!(matches!(
+            event.event_type,
+            AuditEventType::PrivacyBudgetConsumption
+        ));
         assert_eq!(event.privacy_context.epsilon_budget, 1.0);
     }
-    
+
     #[test]
     fn test_audit_trail() {
         let mut trail = AuditTrail::new();
-        
+
         let event = AuditEvent {
             id: "test_event".to_string(),
-            timestamp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
+            timestamp: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
             event_type: AuditEventType::DataAccess,
             actor: "test_actor".to_string(),
             data: AuditEventData {
@@ -1906,7 +1934,7 @@ mod tests {
             signature: None,
             compliance_annotations: HashMap::new(),
         };
-        
+
         trail.add_event(event).unwrap();
         assert_eq!(trail.events.len(), 1);
         assert!(trail.chain.verify_integrity());

@@ -556,9 +556,9 @@ impl PerformanceRegressionDetector {
             return Ok(vec![]);
         }
 
-        let latest_measurements = self.historical_data.get_latest_measurements(
-            self.config.min_samples
-        )?;
+        let latest_measurements = self
+            .historical_data
+            .get_latest_measurements(self.config.min_samples)?;
 
         if latest_measurements.len() < self.config.min_samples {
             return Ok(vec![]);
@@ -644,11 +644,7 @@ impl PerformanceRegressionDetector {
     }
 
     /// Calculate percentage change
-    fn calculate_change_percentage(
-        &self,
-        values: &[f64],
-        baseline: Option<&MetricValue>,
-    ) -> f64 {
+    fn calculate_change_percentage(&self, values: &[f64], baseline: Option<&MetricValue>) -> f64 {
         if let Some(baseline) = baseline {
             let current = *values.last().unwrap();
             if baseline.value != 0.0 {
@@ -704,10 +700,7 @@ impl PerformanceRegressionDetector {
             return false;
         }
 
-        let changes: Vec<f64> = values
-            .windows(2)
-            .map(|w| (w[1] - w[0]).abs())
-            .collect();
+        let changes: Vec<f64> = values.windows(2).map(|w| (w[1] - w[0]).abs()).collect();
 
         let avg_change = changes.iter().sum::<f64>() / changes.len() as f64;
         let max_change = changes.iter().fold(0.0, |acc, &x| acc.max(x));
@@ -725,8 +718,10 @@ impl PerformanceRegressionDetector {
 
         match metric_type {
             MetricType::ExecutionTime => {
-                recommendations.push("Profile the code to identify performance bottlenecks".to_string());
-                recommendations.push("Check for algorithmic changes or inefficient loops".to_string());
+                recommendations
+                    .push("Profile the code to identify performance bottlenecks".to_string());
+                recommendations
+                    .push("Check for algorithmic changes or inefficient loops".to_string());
                 recommendations.push("Verify compiler optimizations are enabled".to_string());
             }
             MetricType::MemoryUsage => {
@@ -771,7 +766,9 @@ impl PerformanceRegressionDetector {
 
             if recent_measurements.len() >= 10 {
                 let trend = self.calculate_trend(metric_type, &recent_measurements)?;
-                self.historical_data.trends.insert(metric_type.clone(), trend);
+                self.historical_data
+                    .trends
+                    .insert(metric_type.clone(), trend);
             }
         }
 
@@ -810,10 +807,14 @@ impl PerformanceRegressionDetector {
         // Simple linear regression slope calculation
         let n = values.len() as f64;
         let x_values: Vec<f64> = (0..values.len()).map(|i| i as f64).collect();
-        
+
         let sum_x = x_values.iter().sum::<f64>();
         let sum_y = values.iter().sum::<f64>();
-        let sum_xy = x_values.iter().zip(values.iter()).map(|(x, y)| x * y).sum::<f64>();
+        let sum_xy = x_values
+            .iter()
+            .zip(values.iter())
+            .map(|(x, y)| x * y)
+            .sum::<f64>();
         let sum_x2 = x_values.iter().map(|x| x * x).sum::<f64>();
 
         let slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x * sum_x);
@@ -855,7 +856,7 @@ impl PerformanceRegressionDetector {
 
         let variance = self.calculate_variance(values);
         let strength = self.calculate_trend_strength(values);
-        
+
         // Higher variance reduces significance, higher strength increases it
         (strength / (1.0 + variance.sqrt())).clamp(0.0, 1.0)
     }
@@ -889,7 +890,8 @@ impl PerformanceRegressionDetector {
     /// Generate alerts for regressions
     fn generate_alerts(&mut self, regression_results: &[RegressionResult]) -> Result<()> {
         for result in regression_results {
-            if result.severity >= 0.7 { // High severity threshold
+            if result.severity >= 0.7 {
+                // High severity threshold
                 let alert = Alert {
                     id: format!("regression_{}_{}", 
                         result.metric.to_string().to_lowercase(),
@@ -935,13 +937,13 @@ impl PerformanceRegressionDetector {
 
     /// Update baseline from recent measurements
     pub fn update_baseline_from_recent(&mut self, commit_hash: String) -> Result<()> {
-        let recent_measurements = self.historical_data.get_latest_measurements(
-            self.config.min_samples
-        )?;
+        let recent_measurements = self
+            .historical_data
+            .get_latest_measurements(self.config.min_samples)?;
 
         if recent_measurements.len() < self.config.min_samples {
             return Err(OptimError::InvalidConfig(
-                "Insufficient measurements for baseline update".to_string()
+                "Insufficient measurements for baseline update".to_string(),
             ));
         }
 
@@ -960,22 +962,28 @@ impl PerformanceRegressionDetector {
                 let variance = self.calculate_variance(&values);
                 let std_dev = variance.sqrt();
 
-                metrics.insert(metric_type.clone(), MetricValue {
-                    value: mean,
-                    std_dev: Some(std_dev),
-                    sample_count: values.len(),
-                    min_value: values.iter().fold(f64::INFINITY, |acc, &x| acc.min(x)),
-                    max_value: values.iter().fold(f64::NEG_INFINITY, |acc, &x| acc.max(x)),
-                    percentiles: None,
-                });
+                metrics.insert(
+                    metric_type.clone(),
+                    MetricValue {
+                        value: mean,
+                        std_dev: Some(std_dev),
+                        sample_count: values.len(),
+                        min_value: values.iter().fold(f64::INFINITY, |acc, &x| acc.min(x)),
+                        max_value: values.iter().fold(f64::NEG_INFINITY, |acc, &x| acc.max(x)),
+                        percentiles: None,
+                    },
+                );
 
                 // 95% confidence interval
                 let margin = 1.96 * std_dev / (values.len() as f64).sqrt();
-                confidence_intervals.insert(metric_type.clone(), ConfidenceInterval {
-                    lower_bound: mean - margin,
-                    upper_bound: mean + margin,
-                    confidence_level: 0.95,
-                });
+                confidence_intervals.insert(
+                    metric_type.clone(),
+                    ConfidenceInterval {
+                        lower_bound: mean - margin,
+                        upper_bound: mean + margin,
+                        confidence_level: 0.95,
+                    },
+                );
             }
         }
 
@@ -1030,14 +1038,15 @@ impl PerformanceRegressionDetector {
             let complete_metrics = measurements
                 .iter()
                 .map(|m| {
-                    self.config.tracked_metrics
+                    self.config
+                        .tracked_metrics
                         .iter()
                         .filter(|metric| m.metrics.contains_key(metric))
                         .count()
                 })
                 .max()
                 .unwrap_or(0);
-            
+
             complete_metrics as f64 / self.config.tracked_metrics.len() as f64
         };
 
@@ -1047,7 +1056,7 @@ impl PerformanceRegressionDetector {
     /// Export performance data for CI/CD reporting
     pub fn export_for_ci_cd(&self) -> Result<CiCdReport> {
         let latest_results = &self.regression_analyzer.current_results;
-        
+
         let status = if latest_results.iter().any(|r| r.severity >= 0.7) {
             CiCdStatus::Failed
         } else if latest_results.iter().any(|r| r.severity >= 0.5) {
@@ -1073,7 +1082,7 @@ impl PerformanceRegressionDetector {
     /// Generate performance summary
     fn generate_performance_summary(&self) -> Result<PerformanceSummary> {
         let latest_measurements = self.historical_data.get_latest_measurements(5)?;
-        
+
         let mut metric_summaries = HashMap::new();
         for metric_type in &self.config.tracked_metrics {
             let values: Vec<f64> = latest_measurements
@@ -1084,19 +1093,25 @@ impl PerformanceRegressionDetector {
 
             if !values.is_empty() {
                 let trend = self.historical_data.trends.get(metric_type);
-                metric_summaries.insert(metric_type.clone(), MetricSummary {
-                    current_value: *values.last().unwrap(),
-                    trend_direction: trend.map(|t| t.direction.clone()).unwrap_or(TrendDirection::Uncertain),
-                    trend_strength: trend.map(|t| t.strength).unwrap_or(0.0),
-                    stability_score: trend.map(|t| 1.0 - t.volatility).unwrap_or(1.0),
-                });
+                metric_summaries.insert(
+                    metric_type.clone(),
+                    MetricSummary {
+                        current_value: *values.last().unwrap(),
+                        trend_direction: trend
+                            .map(|t| t.direction.clone())
+                            .unwrap_or(TrendDirection::Uncertain),
+                        trend_strength: trend.map(|t| t.strength).unwrap_or(0.0),
+                        stability_score: trend.map(|t| 1.0 - t.volatility).unwrap_or(1.0),
+                    },
+                );
             }
         }
 
         Ok(PerformanceSummary {
             overall_health_score: self.calculate_overall_health_score(&metric_summaries),
             metric_summaries,
-            data_quality_score: self.baseline_metrics
+            data_quality_score: self
+                .baseline_metrics
                 .as_ref()
                 .map(|b| b.quality_score)
                 .unwrap_or(0.0),
@@ -1104,7 +1119,10 @@ impl PerformanceRegressionDetector {
     }
 
     /// Calculate overall health score
-    fn calculate_overall_health_score(&self, summaries: &HashMap<MetricType, MetricSummary>) -> f64 {
+    fn calculate_overall_health_score(
+        &self,
+        summaries: &HashMap<MetricType, MetricSummary>,
+    ) -> f64 {
         if summaries.is_empty() {
             return 1.0;
         }
@@ -1118,7 +1136,7 @@ impl PerformanceRegressionDetector {
                     TrendDirection::Degrading => 0.3,
                     TrendDirection::Uncertain => 0.6,
                 };
-                
+
                 (trend_score + summary.stability_score) / 2.0
             })
             .collect();
@@ -1131,7 +1149,8 @@ impl PerformanceRegressionDetector {
         let mut recommendations = Vec::new();
 
         if results.is_empty() {
-            recommendations.push("No performance regressions detected. Continue monitoring.".to_string());
+            recommendations
+                .push("No performance regressions detected. Continue monitoring.".to_string());
             return recommendations;
         }
 
@@ -1153,27 +1172,32 @@ impl PerformanceRegressionDetector {
         }
 
         // Group recommendations by regression type
-        let regression_types: std::collections::HashSet<_> = results
-            .iter()
-            .map(|r| &r.regression_type)
-            .collect();
+        let regression_types: std::collections::HashSet<_> =
+            results.iter().map(|r| &r.regression_type).collect();
 
         for regression_type in regression_types {
             match regression_type {
                 RegressionType::MemoryLeak => {
-                    recommendations.push("Memory leak detected. Run memory profiling tools.".to_string());
+                    recommendations
+                        .push("Memory leak detected. Run memory profiling tools.".to_string());
                 }
                 RegressionType::IncreasedLatency => {
-                    recommendations.push("Performance degradation detected. Profile critical paths.".to_string());
+                    recommendations.push(
+                        "Performance degradation detected. Profile critical paths.".to_string(),
+                    );
                 }
                 RegressionType::ReducedThroughput => {
-                    recommendations.push("Throughput reduction detected. Check parallelization efficiency.".to_string());
+                    recommendations.push(
+                        "Throughput reduction detected. Check parallelization efficiency."
+                            .to_string(),
+                    );
                 }
                 _ => {}
             }
         }
 
-        recommendations.push("Review recent commits for performance-impacting changes.".to_string());
+        recommendations
+            .push("Review recent commits for performance-impacting changes.".to_string());
         recommendations
     }
 }
@@ -1272,7 +1296,8 @@ impl PerformanceDatabase {
     }
 
     fn get_latest_measurements(&self, count: usize) -> Result<Vec<PerformanceMeasurement>> {
-        Ok(self.measurements
+        Ok(self
+            .measurements
             .iter()
             .rev()
             .take(count)
@@ -1285,7 +1310,8 @@ impl PerformanceDatabase {
         metric_type: &MetricType,
         count: usize,
     ) -> Result<Vec<f64>> {
-        Ok(self.measurements
+        Ok(self
+            .measurements
             .iter()
             .rev()
             .take(count)
@@ -1310,7 +1336,8 @@ impl StatisticalAnalyzer {
         let p_value = self.calculate_p_value(values, baseline, test_type);
         let effect_size = self.calculate_effect_size(values, baseline);
         let confidence = 1.0 - p_value;
-        let is_significant = p_value < self.config.alpha && effect_size > self.config.min_effect_size;
+        let is_significant =
+            p_value < self.config.alpha && effect_size > self.config.min_effect_size;
 
         Ok(StatisticalTestResult {
             is_significant,
@@ -1334,9 +1361,9 @@ impl StatisticalAnalyzer {
     fn calculate_effect_size(&self, values: &[f64], baseline: Option<&MetricValue>) -> f64 {
         if let Some(baseline) = baseline {
             let current_mean = values.iter().sum::<f64>() / values.len() as f64;
-            let pooled_std = (baseline.std_dev.unwrap_or(1.0) + 
-                self.calculate_std_dev(values)) / 2.0;
-            
+            let pooled_std =
+                (baseline.std_dev.unwrap_or(1.0) + self.calculate_std_dev(values)) / 2.0;
+
             if pooled_std > 0.0 {
                 ((current_mean - baseline.value) / pooled_std).abs()
             } else {
@@ -1353,10 +1380,9 @@ impl StatisticalAnalyzer {
         }
 
         let mean = values.iter().sum::<f64>() / values.len() as f64;
-        let variance = values.iter()
-            .map(|x| (x - mean).powi(2))
-            .sum::<f64>() / (values.len() - 1) as f64;
-        
+        let variance =
+            values.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / (values.len() - 1) as f64;
+
         variance.sqrt()
     }
 }
@@ -1459,7 +1485,7 @@ impl Default for AlertThresholds {
             degradation_thresholds,
             memory_increase_thresholds: HashMap::new(),
             failure_rate_threshold: 0.05, // 5% failure rate
-            timeout_threshold: 300.0, // 5 minutes
+            timeout_threshold: 300.0,     // 5 minutes
         }
     }
 }
@@ -1511,7 +1537,7 @@ impl Default for AlertConfig {
             rate_limit: RateLimit {
                 max_alerts: 10,
                 time_window: Duration::from_secs(60 * 60), // 1 hour
-                cooldown: Duration::from_secs(5 * 60), // 5 minutes
+                cooldown: Duration::from_secs(5 * 60),     // 5 minutes
             },
             channels: vec![NotificationChannel::Console],
         }
@@ -1559,14 +1585,17 @@ mod tests {
         let mut measurements = Vec::new();
         for i in 0..20 {
             let mut metrics = HashMap::new();
-            metrics.insert(MetricType::ExecutionTime, MetricValue {
-                value: 10.0 + (i as f64 * 0.1),
-                std_dev: Some(0.5),
-                sample_count: 1,
-                min_value: 10.0,
-                max_value: 12.0,
-                percentiles: None,
-            });
+            metrics.insert(
+                MetricType::ExecutionTime,
+                MetricValue {
+                    value: 10.0 + (i as f64 * 0.1),
+                    std_dev: Some(0.5),
+                    sample_count: 1,
+                    min_value: 10.0,
+                    max_value: 12.0,
+                    percentiles: None,
+                },
+            );
 
             measurements.push(PerformanceMeasurement {
                 timestamp: SystemTime::now(),
@@ -1592,18 +1621,14 @@ mod tests {
 
         // Memory leak pattern (monotonic increase)
         let memory_leak_values = vec![100.0, 105.0, 110.0, 115.0, 120.0];
-        let regression_type = detector.classify_regression_type(
-            &MetricType::MemoryUsage,
-            &memory_leak_values
-        );
+        let regression_type =
+            detector.classify_regression_type(&MetricType::MemoryUsage, &memory_leak_values);
         assert!(matches!(regression_type, RegressionType::MemoryLeak));
 
         // Execution time increase
         let latency_values = vec![10.0, 12.0, 15.0, 18.0, 20.0];
-        let regression_type = detector.classify_regression_type(
-            &MetricType::ExecutionTime,
-            &latency_values
-        );
+        let regression_type =
+            detector.classify_regression_type(&MetricType::ExecutionTime, &latency_values);
         assert!(matches!(regression_type, RegressionType::IncreasedLatency));
     }
 

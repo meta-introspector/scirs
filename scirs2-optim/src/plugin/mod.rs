@@ -19,11 +19,11 @@
 //! ```rust
 //! use scirs2_optim::plugin::{OptimizerPlugin, PluginInfo, PluginCapabilities};
 //! use ndarray::Array1;
-//! 
+//!
 //! struct MyCustomOptimizer {
 //!     learning_rate: f64,
 //! }
-//! 
+//!
 //! impl OptimizerPlugin<f64> for MyCustomOptimizer {
 //!     fn step(&mut self, params: &Array1<f64>, gradients: &Array1<f64>) -> Array1<f64> {
 //!         // Custom optimization logic
@@ -37,15 +37,15 @@
 //! ```
 
 pub mod core;
-pub mod registry;
 pub mod loader;
+pub mod registry;
 pub mod sdk;
 pub mod validation;
 // Examples are in the examples/ directory
 
 pub use core::*;
-pub use registry::*;
 pub use loader::*;
+pub use registry::*;
 pub use sdk::*;
 pub use validation::*;
 

@@ -1312,8 +1312,10 @@ pub struct MetaLearningStatistics<T: Float> {
 // MAML implementation
 impl<T: Float + Default + Clone + Send + Sync, D: Dimension> MAMLLearner<T, D> {
     pub fn new(config: MAMLConfig<T>) -> Result<Self, OptimizerError> {
-        let inner_optimizer: Box<dyn Optimizer<T, D> + Send + Sync> = Box::new(crate::optimizers::SGD::new(config.inner_lr));
-        let outer_optimizer: Box<dyn Optimizer<T, D> + Send + Sync> = Box::new(crate::optimizers::SGD::new(config.outer_lr));
+        let inner_optimizer: Box<dyn Optimizer<T, D> + Send + Sync> =
+            Box::new(crate::optimizers::SGD::new(config.inner_lr));
+        let outer_optimizer: Box<dyn Optimizer<T, D> + Send + Sync> =
+            Box::new(crate::optimizers::SGD::new(config.outer_lr));
         let gradient_engine = GradientComputationEngine::new()?;
         let second_order_engine = if config.second_order {
             Some(SecondOrderGradientEngine::new()?)

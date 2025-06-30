@@ -1,11 +1,11 @@
 //! Streaming Optimization Module
-//! 
+//!
 //! This module provides optimization algorithms specifically designed for streaming data
 //! and real-time optimization scenarios. Unlike traditional batch optimization methods,
 //! these algorithms can process data incrementally and adapt to changing conditions.
 //!
 //! # Key Features
-//! 
+//!
 //! - **Online Gradient Descent**: Incremental parameter updates for streaming data
 //! - **Streaming Trust Region**: Adaptive trust region methods for non-stationary problems
 //! - **Incremental Newton Methods**: Memory-efficient quasi-Newton updates
@@ -20,23 +20,23 @@
 //! - Streaming least squares problems
 //! - Non-stationary optimization problems
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use scirs2_core::error::Result;
 use crate::error::OptimizeError;
 use crate::result::OptimizeResults;
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use scirs2_core::error::Result;
 
-pub mod online_gradient_descent;
-pub mod streaming_trust_region;
 pub mod incremental_newton;
-pub mod rolling_window;
+pub mod online_gradient_descent;
 pub mod real_time_estimation;
+pub mod rolling_window;
+pub mod streaming_trust_region;
 pub mod ultra_adaptive_streaming;
 
-pub use online_gradient_descent::*;
-pub use streaming_trust_region::*;
 pub use incremental_newton::*;
-pub use rolling_window::*;
+pub use online_gradient_descent::*;
 pub use real_time_estimation::*;
+pub use rolling_window::*;
+pub use streaming_trust_region::*;
 pub use ultra_adaptive_streaming::*;
 
 /// Configuration for streaming optimization algorithms
@@ -151,7 +151,7 @@ impl StreamingDataPoint {
 pub trait StreamingOptimizer {
     /// Process a single data point and update parameters
     fn update(&mut self, data_point: &StreamingDataPoint) -> Result<()>;
-    
+
     /// Process a batch of data points
     fn update_batch(&mut self, data_points: &[StreamingDataPoint]) -> Result<()> {
         for point in data_points {
@@ -159,16 +159,16 @@ pub trait StreamingOptimizer {
         }
         Ok(())
     }
-    
+
     /// Get current parameter estimates
     fn parameters(&self) -> &Array1<f64>;
-    
+
     /// Get current optimization statistics
     fn stats(&self) -> &StreamingStats;
-    
+
     /// Reset the optimizer state
     fn reset(&mut self);
-    
+
     /// Check if the optimizer has converged
     fn converged(&self) -> bool {
         self.stats().converged
@@ -179,12 +179,20 @@ pub trait StreamingOptimizer {
 pub trait StreamingObjective {
     /// Evaluate the objective function for a single data point
     fn evaluate(&self, parameters: &ArrayView1<f64>, data_point: &StreamingDataPoint) -> f64;
-    
+
     /// Compute the gradient for a single data point
-    fn gradient(&self, parameters: &ArrayView1<f64>, data_point: &StreamingDataPoint) -> Array1<f64>;
-    
+    fn gradient(
+        &self,
+        parameters: &ArrayView1<f64>,
+        data_point: &StreamingDataPoint,
+    ) -> Array1<f64>;
+
     /// Compute the Hessian for a single data point (optional)
-    fn hessian(&self, _parameters: &ArrayView1<f64>, _data_point: &StreamingDataPoint) -> Option<Array2<f64>> {
+    fn hessian(
+        &self,
+        _parameters: &ArrayView1<f64>,
+        _data_point: &StreamingDataPoint,
+    ) -> Option<Array2<f64>> {
         None
     }
 }
@@ -200,26 +208,34 @@ impl StreamingObjective for LinearRegressionObjective {
         let weight = data_point.weight.unwrap_or(1.0);
         0.5 * weight * residual * residual
     }
-    
-    fn gradient(&self, parameters: &ArrayView1<f64>, data_point: &StreamingDataPoint) -> Array1<f64> {
+
+    fn gradient(
+        &self,
+        parameters: &ArrayView1<f64>,
+        data_point: &StreamingDataPoint,
+    ) -> Array1<f64> {
         let prediction = parameters.dot(&data_point.features);
         let residual = prediction - data_point.target;
         let weight = data_point.weight.unwrap_or(1.0);
         weight * residual * &data_point.features
     }
-    
-    fn hessian(&self, _parameters: &ArrayView1<f64>, data_point: &StreamingDataPoint) -> Option<Array2<f64>> {
+
+    fn hessian(
+        &self,
+        _parameters: &ArrayView1<f64>,
+        data_point: &StreamingDataPoint,
+    ) -> Option<Array2<f64>> {
         let weight = data_point.weight.unwrap_or(1.0);
         let n = data_point.features.len();
         let mut hessian = Array2::zeros((n, n));
-        
+
         // H = weight * X^T * X for linear regression
         for i in 0..n {
             for j in 0..n {
                 hessian[[i, j]] = weight * data_point.features[i] * data_point.features[j];
             }
         }
-        
+
         Some(hessian)
     }
 }
@@ -232,40 +248,48 @@ impl StreamingObjective for LogisticRegressionObjective {
     fn evaluate(&self, parameters: &ArrayView1<f64>, data_point: &StreamingDataPoint) -> f64 {
         let z = parameters.dot(&data_point.features);
         let weight = data_point.weight.unwrap_or(1.0);
-        
+
         // Numerical stability for sigmoid
         let loss = if z > 0.0 {
             z + (1.0 + (-z).exp()).ln() - data_point.target * z
         } else {
             (1.0 + z.exp()).ln() - data_point.target * z
         };
-        
+
         weight * loss
     }
-    
-    fn gradient(&self, parameters: &ArrayView1<f64>, data_point: &StreamingDataPoint) -> Array1<f64> {
+
+    fn gradient(
+        &self,
+        parameters: &ArrayView1<f64>,
+        data_point: &StreamingDataPoint,
+    ) -> Array1<f64> {
         let z = parameters.dot(&data_point.features);
         let sigmoid = 1.0 / (1.0 + (-z).exp());
         let weight = data_point.weight.unwrap_or(1.0);
-        
+
         weight * (sigmoid - data_point.target) * &data_point.features
     }
-    
-    fn hessian(&self, parameters: &ArrayView1<f64>, data_point: &StreamingDataPoint) -> Option<Array2<f64>> {
+
+    fn hessian(
+        &self,
+        parameters: &ArrayView1<f64>,
+        data_point: &StreamingDataPoint,
+    ) -> Option<Array2<f64>> {
         let z = parameters.dot(&data_point.features);
         let sigmoid = 1.0 / (1.0 + (-z).exp());
         let weight = data_point.weight.unwrap_or(1.0);
         let scale = weight * sigmoid * (1.0 - sigmoid);
-        
+
         let n = data_point.features.len();
         let mut hessian = Array2::zeros((n, n));
-        
+
         for i in 0..n {
             for j in 0..n {
                 hessian[[i, j]] = scale * data_point.features[i] * data_point.features[j];
             }
         }
-        
+
         Some(hessian)
     }
 }
@@ -273,12 +297,12 @@ impl StreamingObjective for LogisticRegressionObjective {
 /// Utility functions for streaming optimization
 pub mod utils {
     use super::*;
-    
+
     /// Compute exponentially weighted moving average
     pub fn ewma_update(current: f64, new_value: f64, alpha: f64) -> f64 {
         alpha * new_value + (1.0 - alpha) * current
     }
-    
+
     /// Adaptive learning rate based on gradient history
     pub fn adaptive_learning_rate(
         base_lr: f64,
@@ -294,7 +318,7 @@ pub mod utils {
             base_lr
         }
     }
-    
+
     /// Check convergence based on parameter change
     pub fn check_convergence(
         old_params: &ArrayView1<f64>,
@@ -310,19 +334,19 @@ pub mod utils {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_streaming_data_point_creation() {
         let features = Array1::from(vec![1.0, 2.0, 3.0]);
         let target = 5.0;
-        
+
         let point = StreamingDataPoint::new(features.clone(), target);
         assert_eq!(point.features, features);
         assert_eq!(point.target, target);
         assert!(point.weight.is_none());
         assert!(point.timestamp.is_none());
     }
-    
+
     #[test]
     fn test_linear_regression_objective() {
         let objective = LinearRegressionObjective;
@@ -330,39 +354,47 @@ mod tests {
         let features = Array1::from(vec![3.0, 4.0]);
         let target = 10.0;
         let point = StreamingDataPoint::new(features, target);
-        
+
         let loss = objective.evaluate(&params.view(), &point);
         let gradient = objective.gradient(&params.view(), &point);
-        
+
         // prediction = 1*3 + 2*4 = 11, residual = 11 - 10 = 1
         // loss = 0.5 * 1^2 = 0.5
         assert!((loss - 0.5).abs() < 1e-10);
-        
+
         // gradient = residual * features = 1 * [3, 4] = [3, 4]
         assert!((gradient[0] - 3.0).abs() < 1e-10);
         assert!((gradient[1] - 4.0).abs() < 1e-10);
     }
-    
+
     #[test]
     fn test_utils_ewma() {
         let current = 10.0;
         let new_value = 20.0;
         let alpha = 0.1;
-        
+
         let result = utils::ewma_update(current, new_value, alpha);
         let expected = 0.1 * 20.0 + 0.9 * 10.0;
         assert!((result - expected).abs() < 1e-10);
     }
-    
+
     #[test]
     fn test_utils_convergence() {
         let old_params = Array1::from(vec![1.0, 2.0]);
         let new_params = Array1::from(vec![1.001, 2.001]);
-        
+
         // Should converge with loose tolerance
-        assert!(utils::check_convergence(&old_params.view(), &new_params.view(), 1e-2));
-        
+        assert!(utils::check_convergence(
+            &old_params.view(),
+            &new_params.view(),
+            1e-2
+        ));
+
         // Should not converge with tight tolerance
-        assert!(!utils::check_convergence(&old_params.view(), &new_params.view(), 1e-6));
+        assert!(!utils::check_convergence(
+            &old_params.view(),
+            &new_params.view(),
+            1e-6
+        ));
     }
 }

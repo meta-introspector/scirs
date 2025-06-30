@@ -4,16 +4,16 @@
 //! real-time monitoring, allocation tracking, pattern analysis, and
 //! performance optimization recommendations.
 
-use scirs2_optim::benchmarking::memory_leak_detector::{
-    MemoryLeakDetector, MemoryDetectionConfig, AllocationType,
-};
-use scirs2_optim::optimizers::{Adam, SGD, AdamW, RMSprop};
-use scirs2_optim::error::Result;
+use clap::{Arg, Command};
 use ndarray::{Array1, Array2};
+use scirs2_optim::benchmarking::memory_leak_detector::{
+    AllocationType, MemoryDetectionConfig, MemoryLeakDetector,
+};
+use scirs2_optim::error::Result;
+use scirs2_optim::optimizers::{Adam, AdamW, RMSprop, SGD};
+use serde_json;
 use std::collections::HashMap;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
-use clap::{Arg, Command};
-use serde_json;
 
 #[derive(Clone, Debug)]
 struct ProfilingSession {
@@ -39,7 +39,8 @@ struct MemorySnapshot {
 struct ProfilingResults {
     session: ProfilingSession,
     snapshots: Vec<MemorySnapshot>,
-    leak_analysis: Option<scirs2_optim::benchmarking::memory_leak_detector::MemoryOptimizationReport>,
+    leak_analysis:
+        Option<scirs2_optim::benchmarking::memory_leak_detector::MemoryOptimizationReport>,
     performance_metrics: HashMap<String, f64>,
     efficiency_score: f64,
 }
@@ -102,15 +103,35 @@ fn main() -> Result<()> {
         .get_matches();
 
     let output_file = matches.get_one::<String>("output").unwrap();
-    let duration: u64 = matches.get_one::<String>("duration").unwrap().parse()
-        .map_err(|_| scirs2_optim::error::OptimError::InvalidConfig("Invalid duration".to_string()))?;
-    let sampling_rate: u64 = matches.get_one::<String>("sampling-rate").unwrap().parse()
-        .map_err(|_| scirs2_optim::error::OptimError::InvalidConfig("Invalid sampling rate".to_string()))?;
+    let duration: u64 = matches
+        .get_one::<String>("duration")
+        .unwrap()
+        .parse()
+        .map_err(|_| {
+            scirs2_optim::error::OptimError::InvalidConfig("Invalid duration".to_string())
+        })?;
+    let sampling_rate: u64 = matches
+        .get_one::<String>("sampling-rate")
+        .unwrap()
+        .parse()
+        .map_err(|_| {
+            scirs2_optim::error::OptimError::InvalidConfig("Invalid sampling rate".to_string())
+        })?;
     let optimizer_type = matches.get_one::<String>("optimizer").unwrap();
-    let problem_size: usize = matches.get_one::<String>("problem-size").unwrap().parse()
-        .map_err(|_| scirs2_optim::error::OptimError::InvalidConfig("Invalid problem size".to_string()))?;
-    let batch_size: usize = matches.get_one::<String>("batch-size").unwrap().parse()
-        .map_err(|_| scirs2_optim::error::OptimError::InvalidConfig("Invalid batch size".to_string()))?;
+    let problem_size: usize = matches
+        .get_one::<String>("problem-size")
+        .unwrap()
+        .parse()
+        .map_err(|_| {
+            scirs2_optim::error::OptimError::InvalidConfig("Invalid problem size".to_string())
+        })?;
+    let batch_size: usize = matches
+        .get_one::<String>("batch-size")
+        .unwrap()
+        .parse()
+        .map_err(|_| {
+            scirs2_optim::error::OptimError::InvalidConfig("Invalid batch size".to_string())
+        })?;
     let detailed_tracking = matches.get_flag("enable-detailed-tracking");
 
     println!("🔬 Comprehensive Memory Profiler");
@@ -141,7 +162,7 @@ fn main() -> Result<()> {
             sampling_rate,
             detailed_tracking,
         )?;
-        
+
         display_profiling_summary(&result);
         results.push(result);
         println!();
@@ -178,7 +199,11 @@ fn profile_optimizer(
     detector.start_monitoring()?;
 
     let session = ProfilingSession {
-        session_id: format!("{}_{}", optimizer_type, SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs()),
+        session_id: format!(
+            "{}_{}",
+            optimizer_type,
+            SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs()
+        ),
         start_time: SystemTime::now(),
         optimizer_type: optimizer_type.to_string(),
         problem_size,
@@ -345,25 +370,25 @@ fn create_memory_snapshot(
     elapsed: Duration,
 ) -> Result<MemorySnapshot> {
     let snapshot = detector.take_snapshot()?;
-    
+
     Ok(MemorySnapshot {
         timestamp: elapsed.as_millis() as u64,
-        total_allocated: 0, // Would be calculated from detector state
-        total_deallocated: 0, // Would be calculated from detector state
+        total_allocated: 0,    // Would be calculated from detector state
+        total_deallocated: 0,  // Would be calculated from detector state
         active_allocations: 0, // Would be calculated from detector state
         peak_memory: snapshot.total_memory,
-        allocation_rate: 0.0, // Would be calculated from recent history
+        allocation_rate: 0.0,   // Would be calculated from recent history
         deallocation_rate: 0.0, // Would be calculated from recent history
     })
 }
 
 fn estimate_optimizer_state_size(optimizer_type: &str, problem_size: usize) -> usize {
     let base_size = problem_size * std::mem::size_of::<f32>();
-    
+
     match optimizer_type {
         "adam" | "adamw" => base_size * 3, // params + momentum + velocity
-        "rmsprop" => base_size * 2, // params + squared gradients
-        "sgd" => base_size * 2, // params + momentum
+        "rmsprop" => base_size * 2,        // params + squared gradients
+        "sgd" => base_size * 2,            // params + momentum
         _ => base_size,
     }
 }
@@ -373,7 +398,7 @@ fn calculate_performance_metrics(
     session: &ProfilingSession,
 ) -> HashMap<String, f64> {
     let mut metrics = HashMap::new();
-    
+
     if snapshots.is_empty() {
         return metrics;
     }
@@ -381,8 +406,10 @@ fn calculate_performance_metrics(
     // Memory growth rate
     let first_memory = snapshots.first().unwrap().peak_memory as f64;
     let last_memory = snapshots.last().unwrap().peak_memory as f64;
-    let duration = (snapshots.last().unwrap().timestamp - snapshots.first().unwrap().timestamp) as f64 / 1000.0;
-    
+    let duration = (snapshots.last().unwrap().timestamp - snapshots.first().unwrap().timestamp)
+        as f64
+        / 1000.0;
+
     if duration > 0.0 {
         let growth_rate = (last_memory - first_memory) / duration;
         metrics.insert("memory_growth_rate_bytes_per_sec".to_string(), growth_rate);
@@ -393,7 +420,8 @@ fn calculate_performance_metrics(
     metrics.insert("peak_memory_bytes".to_string(), peak_memory);
 
     // Average memory usage
-    let avg_memory = snapshots.iter().map(|s| s.peak_memory as f64).sum::<f64>() / snapshots.len() as f64;
+    let avg_memory =
+        snapshots.iter().map(|s| s.peak_memory as f64).sum::<f64>() / snapshots.len() as f64;
     metrics.insert("average_memory_bytes".to_string(), avg_memory);
 
     // Memory efficiency (parameter memory / total memory)
@@ -414,23 +442,20 @@ fn calculate_std_dev(values: &[f64]) -> f64 {
     if values.len() <= 1 {
         return 0.0;
     }
-    
+
     let mean = values.iter().sum::<f64>() / values.len() as f64;
-    let variance = values.iter()
-        .map(|x| (x - mean).powi(2))
-        .sum::<f64>() / (values.len() - 1) as f64;
+    let variance =
+        values.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / (values.len() - 1) as f64;
     variance.sqrt()
 }
 
-fn calculate_efficiency_score(
-    snapshots: &[MemorySnapshot],
-    metrics: &HashMap<String, f64>,
-) -> f64 {
+fn calculate_efficiency_score(snapshots: &[MemorySnapshot], metrics: &HashMap<String, f64>) -> f64 {
     let mut score = 1.0;
 
     // Penalize high memory growth
     if let Some(growth_rate) = metrics.get("memory_growth_rate_bytes_per_sec") {
-        if *growth_rate > 1024.0 { // More than 1KB/sec growth
+        if *growth_rate > 1024.0 {
+            // More than 1KB/sec growth
             score *= 0.8;
         }
     }
@@ -461,71 +486,89 @@ fn display_profiling_summary(results: &ProfilingResults) {
     println!("  ⚙️  Optimizer: {}", results.session.optimizer_type);
     println!("  📊 Snapshots: {}", results.snapshots.len());
     println!("  🎯 Efficiency Score: {:.3}", results.efficiency_score);
-    
+
     for (metric, value) in &results.performance_metrics {
         println!("  📈 {}: {:.2}", metric, value);
     }
-    
+
     if let Some(leak_analysis) = &results.leak_analysis {
         println!("  🔍 Leak Analysis:");
         println!("    - Leaks detected: {}", leak_analysis.leak_results.len());
         println!("    - Patterns found: {}", leak_analysis.patterns.len());
-        println!("    - Recommendations: {}", leak_analysis.recommendations.len());
+        println!(
+            "    - Recommendations: {}",
+            leak_analysis.recommendations.len()
+        );
     }
 }
 
 fn generate_comparative_analysis(results: &[ProfilingResults]) {
     println!("🏆 Comparative Analysis");
     println!("======================");
-    
+
     // Find best and worst performers
-    let mut efficiency_scores: Vec<_> = results.iter()
+    let mut efficiency_scores: Vec<_> = results
+        .iter()
         .map(|r| (&r.session.optimizer_type, r.efficiency_score))
         .collect();
     efficiency_scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-    
+
     println!("🥇 Efficiency Ranking:");
     for (i, (optimizer, score)) in efficiency_scores.iter().enumerate() {
         let medal = match i {
             0 => "🥇",
-            1 => "🥈", 
+            1 => "🥈",
             2 => "🥉",
             _ => "  ",
         };
         println!("  {} {}: {:.3}", medal, optimizer, score);
     }
-    
+
     // Memory usage comparison
     println!("\n💾 Memory Usage Comparison:");
     for result in results {
         if let Some(peak_memory) = result.performance_metrics.get("peak_memory_bytes") {
-            println!("  {}: {:.2} MB", 
+            println!(
+                "  {}: {:.2} MB",
                 result.session.optimizer_type,
                 peak_memory / (1024.0 * 1024.0)
             );
         }
     }
-    
+
     // Growth rate comparison
     println!("\n📈 Memory Growth Rate Comparison:");
     for result in results {
-        if let Some(growth_rate) = result.performance_metrics.get("memory_growth_rate_bytes_per_sec") {
-            println!("  {}: {:.2} KB/s", 
+        if let Some(growth_rate) = result
+            .performance_metrics
+            .get("memory_growth_rate_bytes_per_sec")
+        {
+            println!(
+                "  {}: {:.2} KB/s",
                 result.session.optimizer_type,
                 growth_rate / 1024.0
             );
         }
     }
-    
+
     // Recommendations
     println!("\n💡 Recommendations:");
     let best_optimizer = &efficiency_scores[0].0;
     let worst_optimizer = &efficiency_scores.last().unwrap().0;
-    
-    println!("  ✅ Best performer: {} (efficiency: {:.3})", best_optimizer, efficiency_scores[0].1);
-    println!("  ⚠️  Consider optimizing: {} (efficiency: {:.3})", worst_optimizer, efficiency_scores.last().unwrap().1);
-    
+
+    println!(
+        "  ✅ Best performer: {} (efficiency: {:.3})",
+        best_optimizer, efficiency_scores[0].1
+    );
+    println!(
+        "  ⚠️  Consider optimizing: {} (efficiency: {:.3})",
+        worst_optimizer,
+        efficiency_scores.last().unwrap().1
+    );
+
     if efficiency_scores[0].1 - efficiency_scores.last().unwrap().1 > 0.2 {
-        println!("  🔧 Significant performance gap detected - investigate memory allocation patterns");
+        println!(
+            "  🔧 Significant performance gap detected - investigate memory allocation patterns"
+        );
     }
 }

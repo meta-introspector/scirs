@@ -8,7 +8,7 @@
 //! - Copula models for dependency modeling
 //! - Regime-switching models
 
-use ndarray::{Array1, Array2, s};
+use ndarray::{s, Array1, Array2};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
@@ -205,7 +205,7 @@ impl<F: Float + Debug + Clone + std::iter::Sum + num_traits::FromPrimitive> Risk
             F::from(0.95).unwrap(),
             F::from(0.99).unwrap(),
         ];
-        
+
         Self {
             returns,
             confidence_levels,
@@ -226,7 +226,9 @@ impl<F: Float + Debug + Clone + std::iter::Sum + num_traits::FromPrimitive> Risk
         sorted_returns.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
         let percentile = F::one() - confidence_level;
-        let index = (percentile * F::from(sorted_returns.len()).unwrap()).to_usize().unwrap();
+        let index = (percentile * F::from(sorted_returns.len()).unwrap())
+            .to_usize()
+            .unwrap();
         let index = index.min(sorted_returns.len() - 1);
 
         Ok(-sorted_returns[index]) // VaR is typically reported as positive loss
@@ -245,7 +247,9 @@ impl<F: Float + Debug + Clone + std::iter::Sum + num_traits::FromPrimitive> Risk
         let var = self.value_at_risk(confidence_level)?;
         let var_threshold = -var; // Convert back to actual return value
 
-        let tail_losses: Vec<F> = self.returns.iter()
+        let tail_losses: Vec<F> = self
+            .returns
+            .iter()
             .filter(|&&r| r <= var_threshold)
             .cloned()
             .collect();
@@ -281,7 +285,7 @@ impl<F: Float + Debug + Clone + std::iter::Sum + num_traits::FromPrimitive> Risk
             if cumulative[i] > peak {
                 peak = cumulative[i];
             }
-            
+
             let drawdown = (peak - cumulative[i]) / peak;
             if drawdown > max_drawdown {
                 max_drawdown = drawdown;
@@ -326,11 +330,20 @@ impl<F: Float + Debug + Clone + std::iter::Sum + num_traits::FromPrimitive> Risk
         let excess_return = mean_return - risk_free_rate;
 
         // Calculate downside deviation
-        let negative_returns: Vec<F> = self.returns.iter()
-            .map(|&r| if r < risk_free_rate { (r - risk_free_rate) * (r - risk_free_rate) } else { F::zero() })
+        let negative_returns: Vec<F> = self
+            .returns
+            .iter()
+            .map(|&r| {
+                if r < risk_free_rate {
+                    (r - risk_free_rate) * (r - risk_free_rate)
+                } else {
+                    F::zero()
+                }
+            })
             .collect();
 
-        let downside_variance = negative_returns.into_iter().sum::<F>() / F::from(negative_returns.len()).unwrap();
+        let downside_variance =
+            negative_returns.into_iter().sum::<F>() / F::from(negative_returns.len()).unwrap();
         let downside_deviation = downside_variance.sqrt();
 
         if downside_deviation == F::zero() {
@@ -347,9 +360,12 @@ impl<F: Float + Debug + Clone + std::iter::Sum + num_traits::FromPrimitive> Risk
         }
 
         let mean = self.returns.mean().unwrap();
-        let variance = self.returns.iter()
+        let variance = self
+            .returns
+            .iter()
             .map(|&r| (r - mean) * (r - mean))
-            .sum::<F>() / F::from(self.returns.len() - 1).unwrap();
+            .sum::<F>()
+            / F::from(self.returns.len() - 1).unwrap();
 
         Ok(variance.sqrt())
     }
@@ -358,11 +374,11 @@ impl<F: Float + Debug + Clone + std::iter::Sum + num_traits::FromPrimitive> Risk
     pub fn calmar_ratio(&self, periods_per_year: F) -> Result<F> {
         let annual_return = self.returns.mean().unwrap() * periods_per_year;
         let max_dd = self.maximum_drawdown()?;
-        
+
         if max_dd == F::zero() {
             return Ok(F::zero());
         }
-        
+
         Ok(annual_return / max_dd)
     }
 }
@@ -372,10 +388,7 @@ pub struct HFTIndicators;
 
 impl HFTIndicators {
     /// Volume Weighted Average Price (VWAP)
-    pub fn vwap<F: Float + Clone>(
-        prices: &Array1<F>,
-        volumes: &Array1<F>,
-    ) -> Result<Array1<F>> {
+    pub fn vwap<F: Float + Clone>(prices: &Array1<F>, volumes: &Array1<F>) -> Result<Array1<F>> {
         if prices.len() != volumes.len() {
             return Err(TimeSeriesError::DimensionMismatch {
                 expected: prices.len(),
@@ -390,7 +403,7 @@ impl HFTIndicators {
         for i in 0..prices.len() {
             cumulative_pv = cumulative_pv + prices[i] * volumes[i];
             cumulative_volume = cumulative_volume + volumes[i];
-            
+
             if cumulative_volume > F::zero() {
                 vwap[i] = cumulative_pv / cumulative_volume;
             } else {
@@ -446,10 +459,7 @@ impl HFTIndicators {
     }
 
     /// Order Book Imbalance
-    pub fn order_book_imbalance<F: Float>(
-        bid_volume: F,
-        ask_volume: F,
-    ) -> F {
+    pub fn order_book_imbalance<F: Float>(bid_volume: F, ask_volume: F) -> F {
         let total_volume = bid_volume + ask_volume;
         if total_volume == F::zero() {
             return F::zero();
@@ -471,22 +481,24 @@ impl HFTIndicators {
         }
 
         let mut noise = Array1::zeros(prices.len() - window);
-        
+
         for i in 0..noise.len() {
             let window_prices = prices.slice(s![i..i + window + 1]);
-            
+
             // Calculate first differences
             let mut diffs = Vec::with_capacity(window);
             for j in 1..window_prices.len() {
                 diffs.push(window_prices[j] - window_prices[j - 1]);
             }
-            
+
             // Calculate variance of first differences
             let mean_diff = diffs.into_iter().sum::<F>() / F::from(diffs.len()).unwrap();
-            let variance = diffs.iter()
+            let variance = diffs
+                .iter()
                 .map(|&d| (d - mean_diff) * (d - mean_diff))
-                .sum::<F>() / F::from(diffs.len() - 1).unwrap();
-            
+                .sum::<F>()
+                / F::from(diffs.len() - 1).unwrap();
+
             noise[i] = variance.sqrt();
         }
 
@@ -553,9 +565,11 @@ impl BlackScholes {
                 let delta = -dividend_factor * n_minus_d1;
                 (price, delta)
             }
-            _ => return Err(TimeSeriesError::NotImplemented(
-                "Only European options supported".to_string(),
-            )),
+            _ => {
+                return Err(TimeSeriesError::NotImplemented(
+                    "Only European options supported".to_string(),
+                ))
+            }
         };
 
         // Calculate Greeks
@@ -566,12 +580,14 @@ impl BlackScholes {
             OptionType::Call => {
                 (-s * dividend_factor * phi_d1 * sigma / (2.0 * t.sqrt())
                     - r * k * discount_factor * nd2
-                    + q * s * dividend_factor * nd1) / 365.0 // Per day
+                    + q * s * dividend_factor * nd1)
+                    / 365.0 // Per day
             }
             OptionType::Put => {
                 (-s * dividend_factor * phi_d1 * sigma / (2.0 * t.sqrt())
                     + r * k * discount_factor * n_minus_d2
-                    - q * s * dividend_factor * n_minus_d1) / 365.0 // Per day
+                    - q * s * dividend_factor * n_minus_d1)
+                    / 365.0 // Per day
             }
             _ => 0.0,
         };
@@ -727,7 +743,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> RegimeSwitchingModel<F> {
         let mut updated_probs: Array1<F> = Array1::zeros(self.num_regimes);
         for i in 0..self.num_regimes {
             for j in 0..self.num_regimes {
-                updated_probs[i] = updated_probs[i] + self.state_probs[j] * self.transition_probs[[j, i]];
+                updated_probs[i] =
+                    updated_probs[i] + self.state_probs[j] * self.transition_probs[[j, i]];
             }
             updated_probs[i] = updated_probs[i] * new_probs[i];
         }
@@ -748,7 +765,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> RegimeSwitchingModel<F> {
         let variance = std_dev * std_dev;
         let diff = x - mean;
         let exponent = -(diff * diff) / (F::from(2).unwrap() * variance);
-        
+
         exponent.exp() / (sqrt_two_pi * std_dev)
     }
 
@@ -775,11 +792,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> RegimeSwitchingModel<F> {
     /// Forecast next period using current regime probabilities
     pub fn forecast(&self) -> Result<F> {
         let mut forecast = F::zero();
-        
+
         for (i, &prob) in self.state_probs.iter().enumerate() {
             forecast = forecast + prob * self.regime_params[i].mean;
         }
-        
+
         Ok(forecast)
     }
 }
@@ -793,7 +810,7 @@ mod tests {
     fn test_value_at_risk() {
         let returns = Array1::from_vec(vec![-0.05, -0.02, 0.01, -0.01, 0.03, -0.04, 0.02]);
         let risk_metrics = RiskMetrics::new(returns);
-        
+
         let var_95 = risk_metrics.value_at_risk(0.95).unwrap();
         assert!(var_95 > 0.0); // VaR should be positive (representing loss)
     }
@@ -802,7 +819,7 @@ mod tests {
     fn test_sharpe_ratio() {
         let returns = Array1::from_vec(vec![0.01, 0.02, -0.01, 0.03, 0.00, 0.02, 0.01]);
         let risk_metrics = RiskMetrics::new(returns);
-        
+
         let sharpe = risk_metrics.sharpe_ratio(0.02).unwrap();
         assert!(sharpe.is_finite());
     }
@@ -811,7 +828,7 @@ mod tests {
     fn test_maximum_drawdown() {
         let returns = Array1::from_vec(vec![0.10, -0.05, -0.10, 0.05, 0.15, -0.20]);
         let risk_metrics = RiskMetrics::new(returns);
-        
+
         let max_dd = risk_metrics.maximum_drawdown().unwrap();
         assert!(max_dd >= 0.0);
         assert!(max_dd <= 1.0);
@@ -829,7 +846,7 @@ mod tests {
         };
 
         let option_price = BlackScholes::price(&contract, 0.2).unwrap();
-        
+
         assert!(option_price.price > 0.0);
         assert!(option_price.delta > 0.0 && option_price.delta < 1.0);
         assert!(option_price.gamma > 0.0);
@@ -849,7 +866,7 @@ mod tests {
         };
 
         let option_price = BlackScholes::price(&contract, 0.2).unwrap();
-        
+
         assert!(option_price.price > 0.0);
         assert!(option_price.delta < 0.0 && option_price.delta > -1.0);
         assert!(option_price.gamma > 0.0);
@@ -861,10 +878,10 @@ mod tests {
     fn test_vwap() {
         let prices = Array1::from_vec(vec![100.0, 101.0, 102.0, 101.5, 100.5]);
         let volumes = Array1::from_vec(vec![1000.0, 1500.0, 800.0, 1200.0, 900.0]);
-        
+
         let vwap = HFTIndicators::vwap(&prices, &volumes).unwrap();
         assert_eq!(vwap.len(), prices.len());
-        
+
         // VWAP should be reasonable
         assert!(vwap[vwap.len() - 1] >= 100.0 && vwap[vwap.len() - 1] <= 102.0);
     }
@@ -873,18 +890,15 @@ mod tests {
     fn test_order_book_imbalance() {
         let imbalance = HFTIndicators::order_book_imbalance(1000.0, 800.0);
         assert_abs_diff_eq!(imbalance, 0.111111, epsilon = 1e-5);
-        
+
         let balanced = HFTIndicators::order_book_imbalance(500.0, 500.0);
         assert_abs_diff_eq!(balanced, 0.0, epsilon = 1e-10);
     }
 
     #[test]
     fn test_regime_switching_model() {
-        let transition_probs = Array2::from_shape_vec(
-            (2, 2),
-            vec![0.8, 0.2, 0.3, 0.7]
-        ).unwrap();
-        
+        let transition_probs = Array2::from_shape_vec((2, 2), vec![0.8, 0.2, 0.3, 0.7]).unwrap();
+
         let regime_params = vec![
             RegimeParameters {
                 mean: 0.05,
@@ -899,12 +913,12 @@ mod tests {
         ];
 
         let mut model = RegimeSwitchingModel::new(2, transition_probs, regime_params).unwrap();
-        
+
         // Test state update
         model.update_states(0.03).unwrap();
         let current_regime = model.current_regime();
         assert!(current_regime < 2);
-        
+
         // Test forecasting
         let forecast = model.forecast().unwrap();
         assert!(forecast.is_finite());
@@ -924,16 +938,17 @@ mod tests {
         // Calculate theoretical price with known volatility
         let known_vol = 0.2;
         let theoretical_price = BlackScholes::price(&contract, known_vol).unwrap().price;
-        
+
         // Calculate implied volatility from theoretical price
         let implied_vol = BlackScholes::implied_volatility(
             &contract,
             theoretical_price,
             0.15, // initial guess
             1e-6, // tolerance
-            100   // max iterations
-        ).unwrap();
-        
+            100,  // max iterations
+        )
+        .unwrap();
+
         assert_abs_diff_eq!(implied_vol, known_vol, epsilon = 1e-4);
     }
 }

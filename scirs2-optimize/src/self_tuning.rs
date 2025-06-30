@@ -782,7 +782,9 @@ impl AdaptationEngine {
         let suggestions = if let Some(ref mut optimizer) = self.bayesian_optimizer {
             optimizer.suggest_parameters(parameter_manager.current_values(), metrics)?
         } else {
-            return Err(ScirsError::ComputationError("Bayesian optimizer not available".to_string()));
+            return Err(ScirsError::ComputationError(
+                "Bayesian optimizer not available".to_string(),
+            ));
         };
         let mut changes = Vec::new();
 

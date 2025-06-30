@@ -479,30 +479,30 @@ impl<A: Float + Debug> PerformanceProfiler<A> {
     /// Complete a profiling step
     pub fn complete_step(&mut self, step_profiler: StepProfiler<A>) -> Result<()> {
         let step_timing = step_profiler.finalize()?;
-        
+
         // Update metrics
         self.metrics.step_timings.push_back(step_timing.clone());
-        
+
         // Maintain history size
         if self.metrics.step_timings.len() > self.config.max_history_length {
             self.metrics.step_timings.pop_front();
         }
-        
+
         // Update memory metrics if enabled
         if self.config.enable_memory_profiling {
             self.update_memory_metrics()?;
         }
-        
+
         // Update efficiency metrics if enabled
         if self.config.enable_efficiency_analysis {
             self.update_efficiency_metrics(&step_timing)?;
         }
-        
+
         // Update hardware metrics if enabled
         if self.config.enable_hardware_monitoring {
             self.update_hardware_metrics()?;
         }
-        
+
         Ok(())
     }
 
@@ -511,11 +511,11 @@ impl<A: Float + Debug> PerformanceProfiler<A> {
         // Simulate memory usage measurement
         // In a real implementation, this would use system calls or profiling APIs
         let current_memory = self.estimate_memory_usage();
-        
+
         self.memory_tracker.current_memory_bytes = current_memory;
-        self.memory_tracker.peak_memory_bytes = 
+        self.memory_tracker.peak_memory_bytes =
             self.memory_tracker.peak_memory_bytes.max(current_memory);
-        
+
         // Create memory snapshot
         let snapshot = MemorySnapshot {
             timestamp: Instant::now(),
@@ -523,14 +523,14 @@ impl<A: Float + Debug> PerformanceProfiler<A> {
             allocations: self.memory_tracker.allocation_count,
             fragmentation_ratio: self.estimate_fragmentation(),
         };
-        
+
         self.memory_tracker.memory_history.push_back(snapshot);
-        
+
         // Maintain history size
         if self.memory_tracker.memory_history.len() > self.config.max_history_length {
             self.memory_tracker.memory_history.pop_front();
         }
-        
+
         Ok(())
     }
 
@@ -538,20 +538,28 @@ impl<A: Float + Debug> PerformanceProfiler<A> {
     fn update_efficiency_metrics(&mut self, step_timing: &StepTiming) -> Result<()> {
         // Estimate FLOPS for this step
         let estimated_flops = self.estimate_flops(step_timing);
-        self.efficiency_analyzer.flops_history.push_back(estimated_flops);
-        
+        self.efficiency_analyzer
+            .flops_history
+            .push_back(estimated_flops);
+
         // Estimate arithmetic intensity
         let arithmetic_intensity = self.estimate_arithmetic_intensity();
-        self.efficiency_analyzer.arithmetic_intensity_history.push_back(arithmetic_intensity);
-        
+        self.efficiency_analyzer
+            .arithmetic_intensity_history
+            .push_back(arithmetic_intensity);
+
         // Maintain history size
         if self.efficiency_analyzer.flops_history.len() > self.config.max_history_length {
             self.efficiency_analyzer.flops_history.pop_front();
         }
-        if self.efficiency_analyzer.arithmetic_intensity_history.len() > self.config.max_history_length {
-            self.efficiency_analyzer.arithmetic_intensity_history.pop_front();
+        if self.efficiency_analyzer.arithmetic_intensity_history.len()
+            > self.config.max_history_length
+        {
+            self.efficiency_analyzer
+                .arithmetic_intensity_history
+                .pop_front();
         }
-        
+
         Ok(())
     }
 
@@ -560,10 +568,10 @@ impl<A: Float + Debug> PerformanceProfiler<A> {
         // Simulate hardware metrics collection
         let cpu_util = self.measure_cpu_utilization();
         let memory_bw = self.measure_memory_bandwidth();
-        
+
         self.hardware_monitor.cpu_utilization.push_back(cpu_util);
         self.hardware_monitor.memory_bandwidth.push_back(memory_bw);
-        
+
         // Maintain history size
         if self.hardware_monitor.cpu_utilization.len() > self.config.max_history_length {
             self.hardware_monitor.cpu_utilization.pop_front();
@@ -571,7 +579,7 @@ impl<A: Float + Debug> PerformanceProfiler<A> {
         if self.hardware_monitor.memory_bandwidth.len() > self.config.max_history_length {
             self.hardware_monitor.memory_bandwidth.pop_front();
         }
-        
+
         Ok(())
     }
 
@@ -591,17 +599,19 @@ impl<A: Float + Debug> PerformanceProfiler<A> {
     /// Analyze memory performance
     fn analyze_memory_performance(&self) -> MemoryAnalysis {
         let avg_memory = if !self.memory_tracker.memory_history.is_empty() {
-            self.memory_tracker.memory_history
+            self.memory_tracker
+                .memory_history
                 .iter()
                 .map(|s| s.memory_bytes as f64)
-                .sum::<f64>() / self.memory_tracker.memory_history.len() as f64
+                .sum::<f64>()
+                / self.memory_tracker.memory_history.len() as f64
         } else {
             0.0
         };
-        
+
         let efficiency_score = self.calculate_memory_efficiency_score();
         let leak_indicators = self.detect_memory_leaks();
-        
+
         MemoryAnalysis {
             peak_usage_bytes: self.memory_tracker.peak_memory_bytes,
             average_usage_bytes: avg_memory,
@@ -615,16 +625,18 @@ impl<A: Float + Debug> PerformanceProfiler<A> {
     /// Analyze computational performance
     fn analyze_computational_performance(&self) -> ComputationalAnalysis<A> {
         let avg_flops = if !self.efficiency_analyzer.flops_history.is_empty() {
-            self.efficiency_analyzer.flops_history.iter().sum::<f64>() 
+            self.efficiency_analyzer.flops_history.iter().sum::<f64>()
                 / self.efficiency_analyzer.flops_history.len() as f64
         } else {
             0.0
         };
-        
-        let peak_flops = self.efficiency_analyzer.flops_history
+
+        let peak_flops = self
+            .efficiency_analyzer
+            .flops_history
             .iter()
             .fold(0.0, |acc, &x| acc.max(x));
-        
+
         ComputationalAnalysis {
             average_flops: avg_flops,
             peak_flops,
@@ -643,11 +655,13 @@ impl<A: Float + Debug> PerformanceProfiler<A> {
         } else {
             0.0
         };
-        
-        let peak_cpu = self.hardware_monitor.cpu_utilization
+
+        let peak_cpu = self
+            .hardware_monitor
+            .cpu_utilization
             .iter()
             .fold(0.0, |acc, &x| acc.max(x));
-        
+
         HardwareAnalysis {
             cpu_utilization_avg: avg_cpu,
             cpu_utilization_peak: peak_cpu,
@@ -661,7 +675,7 @@ impl<A: Float + Debug> PerformanceProfiler<A> {
     /// Generate efficiency recommendations
     fn generate_efficiency_recommendations(&self) -> Vec<EfficiencyRecommendation> {
         let mut recommendations = Vec::new();
-        
+
         // Memory-related recommendations
         if self.memory_tracker.fragmentation_metrics.current_ratio > 0.3 {
             recommendations.push(EfficiencyRecommendation {
@@ -672,16 +686,17 @@ impl<A: Float + Debug> PerformanceProfiler<A> {
                 estimated_impact: 0.2,
             });
         }
-        
+
         // Computational recommendations
         let avg_flops = if !self.efficiency_analyzer.flops_history.is_empty() {
-            self.efficiency_analyzer.flops_history.iter().sum::<f64>() 
+            self.efficiency_analyzer.flops_history.iter().sum::<f64>()
                 / self.efficiency_analyzer.flops_history.len() as f64
         } else {
             0.0
         };
-        
-        if avg_flops < 1e9 { // Less than 1 GFLOPS
+
+        if avg_flops < 1e9 {
+            // Less than 1 GFLOPS
             recommendations.push(EfficiencyRecommendation {
                 category: RecommendationCategory::Computation,
                 priority: RecommendationPriority::Medium,
@@ -690,7 +705,7 @@ impl<A: Float + Debug> PerformanceProfiler<A> {
                 estimated_impact: 0.3,
             });
         }
-        
+
         // Hardware utilization recommendations
         let avg_cpu = if !self.hardware_monitor.cpu_utilization.is_empty() {
             self.hardware_monitor.cpu_utilization.iter().sum::<f64>()
@@ -698,7 +713,7 @@ impl<A: Float + Debug> PerformanceProfiler<A> {
         } else {
             0.0
         };
-        
+
         if avg_cpu < 0.5 {
             recommendations.push(EfficiencyRecommendation {
                 category: RecommendationCategory::Hardware,
@@ -708,7 +723,7 @@ impl<A: Float + Debug> PerformanceProfiler<A> {
                 estimated_impact: 0.25,
             });
         }
-        
+
         recommendations
     }
 
@@ -717,59 +732,60 @@ impl<A: Float + Debug> PerformanceProfiler<A> {
         let memory_score = self.calculate_memory_efficiency_score();
         let computational_score = self.calculate_computational_efficiency_score();
         let hardware_score = self.calculate_hardware_efficiency_score();
-        
+
         // Weighted average
         (memory_score * 0.3 + computational_score * 0.4 + hardware_score * 0.3).clamp(0.0, 1.0)
     }
 
     // Helper methods for calculations and estimations
-    
+
     fn estimate_memory_usage(&self) -> usize {
         // Simplified estimation - in practice would use system APIs
         1024 * 1024 * (self.current_step % 100 + 50) // Simulate memory usage
     }
-    
+
     fn estimate_fragmentation(&self) -> f64 {
         // Simplified fragmentation estimation
         (self.current_step as f64 * 0.001).min(0.5)
     }
-    
+
     fn estimate_flops(&self, _step_timing: &StepTiming) -> f64 {
         // Simplified FLOPS estimation
         1e8 + (self.current_step as f64 * 1e6)
     }
-    
+
     fn estimate_arithmetic_intensity(&self) -> f64 {
         // Simplified arithmetic intensity estimation
         2.0 + (self.current_step as f64 * 0.1) % 5.0
     }
-    
+
     fn measure_cpu_utilization(&self) -> f64 {
         // Simplified CPU utilization measurement
         0.6 + (self.current_step as f64 * 0.1).sin() * 0.2
     }
-    
+
     fn measure_memory_bandwidth(&self) -> f64 {
         // Simplified memory bandwidth measurement
         0.7 + (self.current_step as f64 * 0.05).cos() * 0.15
     }
-    
+
     fn calculate_memory_efficiency_score(&self) -> f64 {
         // Simplified memory efficiency calculation
         1.0 - self.memory_tracker.fragmentation_metrics.current_ratio
     }
-    
+
     fn detect_memory_leaks(&self) -> MemoryLeakIndicators {
         // Simplified memory leak detection
         let growth_rate = if self.memory_tracker.memory_history.len() > 2 {
-            let recent = &self.memory_tracker.memory_history[self.memory_tracker.memory_history.len()-1];
+            let recent =
+                &self.memory_tracker.memory_history[self.memory_tracker.memory_history.len() - 1];
             let earlier = &self.memory_tracker.memory_history[0];
-            (recent.memory_bytes as f64 - earlier.memory_bytes as f64) / 
-                self.memory_tracker.memory_history.len() as f64
+            (recent.memory_bytes as f64 - earlier.memory_bytes as f64)
+                / self.memory_tracker.memory_history.len() as f64
         } else {
             0.0
         };
-        
+
         MemoryLeakIndicators {
             suspected_leak: growth_rate > 1024.0, // Growing by more than 1KB per step
             growth_rate,
@@ -781,45 +797,53 @@ impl<A: Float + Debug> PerformanceProfiler<A> {
             },
         }
     }
-    
+
     fn generate_memory_optimizations(&self) -> Vec<String> {
         let mut optimizations = Vec::new();
-        
+
         if self.memory_tracker.fragmentation_metrics.current_ratio > 0.2 {
             optimizations.push("Use object pooling to reduce fragmentation".to_string());
         }
-        
-        if self.memory_tracker.peak_memory_bytes > 1024 * 1024 * 100 { // 100MB
+
+        if self.memory_tracker.peak_memory_bytes > 1024 * 1024 * 100 {
+            // 100MB
             optimizations.push("Consider streaming or chunked processing".to_string());
         }
-        
+
         optimizations
     }
-    
+
     fn calculate_average_arithmetic_intensity(&self) -> f64 {
-        if self.efficiency_analyzer.arithmetic_intensity_history.is_empty() {
+        if self
+            .efficiency_analyzer
+            .arithmetic_intensity_history
+            .is_empty()
+        {
             0.0
         } else {
-            self.efficiency_analyzer.arithmetic_intensity_history.iter().sum::<f64>()
+            self.efficiency_analyzer
+                .arithmetic_intensity_history
+                .iter()
+                .sum::<f64>()
                 / self.efficiency_analyzer.arithmetic_intensity_history.len() as f64
         }
     }
-    
+
     fn analyze_vectorization_efficiency(&self) -> f64 {
         // Simplified vectorization analysis
         0.7 // Assume 70% vectorization efficiency
     }
-    
+
     fn identify_computational_bottlenecks(&self) -> Vec<PerformanceBottleneck<A>> {
         let mut bottlenecks = Vec::new();
-        
+
         let avg_flops = if !self.efficiency_analyzer.flops_history.is_empty() {
-            self.efficiency_analyzer.flops_history.iter().sum::<f64>() 
+            self.efficiency_analyzer.flops_history.iter().sum::<f64>()
                 / self.efficiency_analyzer.flops_history.len() as f64
         } else {
             0.0
         };
-        
+
         if avg_flops < 1e9 {
             bottlenecks.push(PerformanceBottleneck {
                 bottleneck_type: BottleneckType::ComputeBound,
@@ -832,10 +856,10 @@ impl<A: Float + Debug> PerformanceProfiler<A> {
                 estimated_impact: A::from(0.3).unwrap(),
             });
         }
-        
+
         bottlenecks
     }
-    
+
     fn identify_optimization_opportunities(&self) -> Vec<String> {
         vec![
             "Enable advanced SIMD operations".to_string(),
@@ -843,7 +867,7 @@ impl<A: Float + Debug> PerformanceProfiler<A> {
             "Consider parallel processing".to_string(),
         ]
     }
-    
+
     fn calculate_memory_bandwidth_utilization(&self) -> f64 {
         if self.hardware_monitor.memory_bandwidth.is_empty() {
             0.0
@@ -852,7 +876,7 @@ impl<A: Float + Debug> PerformanceProfiler<A> {
                 / self.hardware_monitor.memory_bandwidth.len() as f64
         }
     }
-    
+
     fn analyze_cache_performance(&self) -> CachePerformanceAnalysis {
         CachePerformanceAnalysis {
             l1_hit_ratio: 0.95,
@@ -862,12 +886,12 @@ impl<A: Float + Debug> PerformanceProfiler<A> {
             miss_penalty_impact: 0.1,
         }
     }
-    
+
     fn calculate_computational_efficiency_score(&self) -> f64 {
         // Simplified computational efficiency calculation
         0.75
     }
-    
+
     fn calculate_hardware_efficiency_score(&self) -> f64 {
         let cpu_score = if !self.hardware_monitor.cpu_utilization.is_empty() {
             self.hardware_monitor.cpu_utilization.iter().sum::<f64>()
@@ -875,26 +899,26 @@ impl<A: Float + Debug> PerformanceProfiler<A> {
         } else {
             0.0
         };
-        
+
         let memory_score = self.calculate_memory_bandwidth_utilization();
-        
+
         (cpu_score + memory_score) / 2.0
     }
-    
+
     fn analyze_hardware_underutilization(&self) -> Vec<String> {
         let mut issues = Vec::new();
-        
+
         let avg_cpu = if !self.hardware_monitor.cpu_utilization.is_empty() {
             self.hardware_monitor.cpu_utilization.iter().sum::<f64>()
                 / self.hardware_monitor.cpu_utilization.len() as f64
         } else {
             0.0
         };
-        
+
         if avg_cpu < 0.5 {
             issues.push("CPU underutilization detected".to_string());
         }
-        
+
         issues
     }
 }
@@ -928,43 +952,43 @@ impl<A: Float> StepProfiler<A> {
             _phantom: std::marker::PhantomData,
         }
     }
-    
+
     /// Mark the start of gradient computation
     pub fn start_gradient_computation(&mut self) {
         self.gradient_start = Some(Instant::now());
     }
-    
+
     /// Mark the end of gradient computation
     pub fn end_gradient_computation(&mut self) {
         if let Some(start) = self.gradient_start {
             self.gradient_duration = Some(start.elapsed());
         }
     }
-    
+
     /// Mark the start of parameter update
     pub fn start_parameter_update(&mut self) {
         self.update_start = Some(Instant::now());
     }
-    
+
     /// Mark the end of parameter update
     pub fn end_parameter_update(&mut self) {
         if let Some(start) = self.update_start {
             self.update_duration = Some(start.elapsed());
         }
     }
-    
+
     /// Mark the start of memory operation
     pub fn start_memory_operation(&mut self) {
         self.memory_start = Some(Instant::now());
     }
-    
+
     /// Mark the end of memory operation
     pub fn end_memory_operation(&mut self) {
         if let Some(start) = self.memory_start {
             self.memory_duration = Some(start.elapsed());
         }
     }
-    
+
     /// Finalize the step profiling
     fn finalize(self) -> Result<StepTiming> {
         Ok(StepTiming {
@@ -1324,16 +1348,16 @@ mod tests {
     fn test_step_profiling() {
         let config = ProfilerConfig::default();
         let mut profiler = PerformanceProfiler::<f64>::new(config);
-        
+
         let mut step_profiler = profiler.start_step();
         step_profiler.start_gradient_computation();
         std::thread::sleep(std::time::Duration::from_millis(1));
         step_profiler.end_gradient_computation();
-        
+
         step_profiler.start_parameter_update();
         std::thread::sleep(std::time::Duration::from_millis(1));
         step_profiler.end_parameter_update();
-        
+
         profiler.complete_step(step_profiler).unwrap();
         assert_eq!(profiler.current_step, 1);
     }
@@ -1342,7 +1366,7 @@ mod tests {
     fn test_performance_report_generation() {
         let config = ProfilerConfig::default();
         let profiler = PerformanceProfiler::<f64>::new(config);
-        
+
         let report = profiler.generate_performance_report();
         assert!(report.performance_score >= 0.0 && report.performance_score <= 1.0);
     }
@@ -1351,7 +1375,7 @@ mod tests {
     fn test_memory_leak_detection() {
         let config = ProfilerConfig::default();
         let profiler = PerformanceProfiler::<f64>::new(config);
-        
+
         let leak_indicators = profiler.detect_memory_leaks();
         assert!(leak_indicators.confidence >= 0.0 && leak_indicators.confidence <= 1.0);
     }
@@ -1360,7 +1384,7 @@ mod tests {
     fn test_efficiency_recommendations() {
         let config = ProfilerConfig::default();
         let profiler = PerformanceProfiler::<f64>::new(config);
-        
+
         let recommendations = profiler.generate_efficiency_recommendations();
         assert!(!recommendations.is_empty());
     }

@@ -204,12 +204,14 @@ pub mod distributed_gpu;
 pub mod global;
 pub mod gpu;
 pub mod jit_optimization;
+pub mod learned_optimizers;
 pub mod least_squares;
 pub mod ml_optimizers;
 pub mod multi_objective;
 pub mod neural_integration;
 pub mod neuromorphic;
 pub mod parallel;
+pub mod quantum_inspired;
 pub mod reinforcement_learning;
 pub mod roots;
 pub mod roots_anderson;
@@ -223,8 +225,6 @@ pub mod streaming;
 pub mod unconstrained;
 pub mod unified_pipeline;
 pub mod visualization;
-pub mod quantum_inspired;
-pub mod learned_optimizers;
 
 // Common optimization result structure
 pub mod result;
@@ -268,6 +268,13 @@ pub use gpu::{
     GpuFunction, GpuOptimizationConfig, GpuOptimizationContext, GpuPrecision,
 };
 pub use jit_optimization::{optimize_function, FunctionPattern, JitCompiler, JitOptions, JitStats};
+pub use learned_optimizers::{
+    few_shot_learning_optimize, learned_optimize, ActivationType, AdaptationStatistics,
+    AdaptiveNASSystem, AdaptiveTransformerOptimizer, FewShotLearningOptimizer,
+    LearnedHyperparameterTuner, LearnedOptimizationConfig, LearnedOptimizer, MetaOptimizerState,
+    NeuralAdaptiveOptimizer, OptimizationNetwork, OptimizationProblem, ParameterDistribution,
+    ProblemEncoder, TrainingTask,
+};
 pub use least_squares::{
     bounded_least_squares, least_squares, robust_least_squares, separable_least_squares,
     total_least_squares, weighted_least_squares, BisquareLoss, CauchyLoss, HuberLoss,
@@ -285,11 +292,15 @@ pub use neuromorphic::{
     neuromorphic_optimize, BasicNeuromorphicOptimizer, NeuromorphicConfig, NeuromorphicNetwork,
     NeuromorphicOptimizer, NeuronState, SpikeEvent,
 };
+pub use quantum_inspired::{
+    quantum_optimize, quantum_particle_swarm_optimize, Complex, CoolingSchedule,
+    QuantumAnnealingSchedule, QuantumInspiredOptimizer, QuantumOptimizationStats, QuantumState,
+};
 pub use reinforcement_learning::{
-    policy_gradient_optimize, bandit_optimize, evolutionary_optimize, meta_learning_optimize,
-    PolicyGradientOptimizer, QLearningOptimizer, ActorCriticOptimizer, BanditOptimizer,
-    EvolutionaryStrategy, MetaLearningOptimizer, RLOptimizationConfig, OptimizationState,
-    OptimizationAction, Experience, RLOptimizer,
+    bandit_optimize, evolutionary_optimize, meta_learning_optimize, policy_gradient_optimize,
+    ActorCriticOptimizer, BanditOptimizer, EvolutionaryStrategy, Experience, MetaLearningOptimizer,
+    OptimizationAction, OptimizationState, PolicyGradientOptimizer, QLearningOptimizer,
+    RLOptimizationConfig, RLOptimizer,
 };
 pub use roots::root;
 pub use scalar::minimize_scalar;
@@ -305,13 +316,15 @@ pub use stochastic::{
     StochasticMethod, StochasticOptions,
 };
 pub use streaming::{
-    exponentially_weighted_rls, incremental_bfgs, incremental_lbfgs, incremental_lbfgs_linear_regression,
-    kalman_filter_estimator, online_linear_regression, online_logistic_regression, real_time_linear_regression,
-    recursive_least_squares, rolling_window_gradient_descent, rolling_window_least_squares,
-    rolling_window_linear_regression, rolling_window_weighted_least_squares, streaming_trust_region_linear_regression,
-    streaming_trust_region_logistic_regression, IncrementalNewton, IncrementalNewtonMethod,
-    LinearRegressionObjective, LogisticRegressionObjective, OnlineGradientDescent, RealTimeEstimator,
-    RealTimeMethod, RollingWindowOptimizer, StreamingConfig, StreamingDataPoint, StreamingObjective,
+    exponentially_weighted_rls, incremental_bfgs, incremental_lbfgs,
+    incremental_lbfgs_linear_regression, kalman_filter_estimator, online_linear_regression,
+    online_logistic_regression, real_time_linear_regression, recursive_least_squares,
+    rolling_window_gradient_descent, rolling_window_least_squares,
+    rolling_window_linear_regression, rolling_window_weighted_least_squares,
+    streaming_trust_region_linear_regression, streaming_trust_region_logistic_regression,
+    IncrementalNewton, IncrementalNewtonMethod, LinearRegressionObjective,
+    LogisticRegressionObjective, OnlineGradientDescent, RealTimeEstimator, RealTimeMethod,
+    RollingWindowOptimizer, StreamingConfig, StreamingDataPoint, StreamingObjective,
     StreamingOptimizer, StreamingStats, StreamingTrustRegion,
 };
 pub use unconstrained::{minimize, Bounds};
@@ -322,18 +335,6 @@ pub use unified_pipeline::{
 pub use visualization::{
     tracking::TrajectoryTracker, ColorScheme, OptimizationTrajectory, OptimizationVisualizer,
     OutputFormat, VisualizationConfig,
-};
-pub use quantum_inspired::{
-    quantum_optimize, quantum_particle_swarm_optimize, QuantumInspiredOptimizer, QuantumState,
-    QuantumAnnealingSchedule, QuantumOptimizationStats, Complex, CoolingSchedule,
-};
-pub use learned_optimizers::{
-    learned_optimize, few_shot_learning_optimize, 
-    AdaptiveNASSystem, AdaptiveTransformerOptimizer, FewShotLearningOptimizer,
-    NeuralAdaptiveOptimizer, LearnedHyperparameterTuner,
-    LearnedOptimizer, LearnedOptimizationConfig, OptimizationProblem, TrainingTask,
-    MetaOptimizerState, ParameterDistribution, AdaptationStatistics, ActivationType,
-    OptimizationNetwork, ProblemEncoder,
 };
 
 // Prelude module for convenient imports
@@ -382,6 +383,13 @@ pub mod prelude {
     pub use crate::jit_optimization::{
         optimize_function, FunctionPattern, JitCompiler, JitOptions, JitStats,
     };
+    pub use crate::learned_optimizers::{
+        few_shot_learning_optimize, learned_optimize, ActivationType, AdaptationStatistics,
+        AdaptiveNASSystem, AdaptiveTransformerOptimizer, FewShotLearningOptimizer,
+        LearnedHyperparameterTuner, LearnedOptimizationConfig, LearnedOptimizer,
+        MetaOptimizerState, NeuralAdaptiveOptimizer, OptimizationNetwork, OptimizationProblem,
+        ParameterDistribution, ProblemEncoder, TrainingTask,
+    };
     pub use crate::least_squares::{
         bounded_least_squares, least_squares, robust_least_squares, separable_least_squares,
         total_least_squares, weighted_least_squares, BisquareLoss, BoundedOptions, CauchyLoss,
@@ -407,11 +415,15 @@ pub mod prelude {
     pub use crate::parallel::{
         parallel_evaluate_batch, parallel_finite_diff_gradient, ParallelOptions,
     };
+    pub use crate::quantum_inspired::{
+        quantum_optimize, quantum_particle_swarm_optimize, Complex, CoolingSchedule,
+        QuantumAnnealingSchedule, QuantumInspiredOptimizer, QuantumOptimizationStats, QuantumState,
+    };
     pub use crate::reinforcement_learning::{
-        policy_gradient_optimize, bandit_optimize, evolutionary_optimize, meta_learning_optimize,
-        PolicyGradientOptimizer, QLearningOptimizer, ActorCriticOptimizer, BanditOptimizer,
-        EvolutionaryStrategy, MetaLearningOptimizer, RLOptimizationConfig, OptimizationState,
-        OptimizationAction, Experience, RLOptimizer,
+        bandit_optimize, evolutionary_optimize, meta_learning_optimize, policy_gradient_optimize,
+        ActorCriticOptimizer, BanditOptimizer, EvolutionaryStrategy, Experience,
+        MetaLearningOptimizer, OptimizationAction, OptimizationState, PolicyGradientOptimizer,
+        QLearningOptimizer, RLOptimizationConfig, RLOptimizer,
     };
     pub use crate::result::OptimizeResults;
     pub use crate::roots::{root, Method as RootMethod};
@@ -424,13 +436,15 @@ pub mod prelude {
     };
     pub use crate::sparse_numdiff::{sparse_hessian, sparse_jacobian, SparseFiniteDiffOptions};
     pub use crate::streaming::{
-        exponentially_weighted_rls, incremental_bfgs, incremental_lbfgs, incremental_lbfgs_linear_regression,
-        kalman_filter_estimator, online_linear_regression, online_logistic_regression, real_time_linear_regression,
-        recursive_least_squares, rolling_window_gradient_descent, rolling_window_least_squares,
-        rolling_window_linear_regression, rolling_window_weighted_least_squares, streaming_trust_region_linear_regression,
-        streaming_trust_region_logistic_regression, IncrementalNewton, IncrementalNewtonMethod,
-        LinearRegressionObjective, LogisticRegressionObjective, OnlineGradientDescent, RealTimeEstimator,
-        RealTimeMethod, RollingWindowOptimizer, StreamingConfig, StreamingDataPoint, StreamingObjective,
+        exponentially_weighted_rls, incremental_bfgs, incremental_lbfgs,
+        incremental_lbfgs_linear_regression, kalman_filter_estimator, online_linear_regression,
+        online_logistic_regression, real_time_linear_regression, recursive_least_squares,
+        rolling_window_gradient_descent, rolling_window_least_squares,
+        rolling_window_linear_regression, rolling_window_weighted_least_squares,
+        streaming_trust_region_linear_regression, streaming_trust_region_logistic_regression,
+        IncrementalNewton, IncrementalNewtonMethod, LinearRegressionObjective,
+        LogisticRegressionObjective, OnlineGradientDescent, RealTimeEstimator, RealTimeMethod,
+        RollingWindowOptimizer, StreamingConfig, StreamingDataPoint, StreamingObjective,
         StreamingOptimizer, StreamingStats, StreamingTrustRegion,
     };
     pub use crate::unconstrained::{minimize, Bounds, Method as UnconstrainedMethod, Options};
@@ -441,18 +455,6 @@ pub mod prelude {
     pub use crate::visualization::{
         tracking::TrajectoryTracker, ColorScheme, OptimizationTrajectory, OptimizationVisualizer,
         OutputFormat, VisualizationConfig,
-    };
-    pub use crate::quantum_inspired::{
-        quantum_optimize, quantum_particle_swarm_optimize, QuantumInspiredOptimizer, QuantumState,
-        QuantumAnnealingSchedule, QuantumOptimizationStats, Complex, CoolingSchedule,
-    };
-    pub use crate::learned_optimizers::{
-        learned_optimize, few_shot_learning_optimize, 
-        AdaptiveNASSystem, AdaptiveTransformerOptimizer, FewShotLearningOptimizer,
-        NeuralAdaptiveOptimizer, LearnedHyperparameterTuner,
-        LearnedOptimizer, LearnedOptimizationConfig, OptimizationProblem, TrainingTask,
-        MetaOptimizerState, ParameterDistribution, AdaptationStatistics, ActivationType,
-        OptimizationNetwork, ProblemEncoder,
     };
 }
 

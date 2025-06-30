@@ -1,21 +1,21 @@
 //! Advanced memory leak detection algorithms
 //!
 //! This module implements sophisticated memory leak detection algorithms including
-//! reference counting analysis, cycle detection, real-time monitoring, and 
+//! reference counting analysis, cycle detection, real-time monitoring, and
 //! pattern-based leak identification.
 
 use super::memory_leak_detector::{
-    LeakDetector, MemoryLeakResult, MemoryUsageSnapshot, AllocationEvent,
-    LeakSource, MemoryGrowthAnalysis, GrowthTrend, GrowthPattern, AllocationType
+    AllocationEvent, AllocationType, GrowthPattern, GrowthTrend, LeakDetector, LeakSource,
+    MemoryGrowthAnalysis, MemoryLeakResult, MemoryUsageSnapshot,
 };
 use crate::error::{OptimError, Result};
 use num_traits::Float;
-use serde::{Serialize, Deserialize};
-use std::collections::{HashMap, VecDeque, HashSet};
+use serde::{Deserialize, Serialize};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt::Debug;
 use std::sync::{Arc, Mutex, RwLock};
-use std::time::{Duration, Instant};
 use std::thread;
+use std::time::{Duration, Instant};
 
 /// Reference counting leak detector
 ///
@@ -183,13 +183,15 @@ impl ReferenceCountingDetector {
         event_type: ReferenceEventType,
         reference_count: usize,
     ) -> Result<()> {
-        let mut tracker = self.reference_tracker.write()
-            .map_err(|_| OptimError::InvalidState("Failed to acquire reference tracker lock".to_string()))?;
+        let mut tracker = self.reference_tracker.write().map_err(|_| {
+            OptimError::InvalidState("Failed to acquire reference tracker lock".to_string())
+        })?;
 
         let now = Instant::now();
 
         // Update reference info
-        let ref_info = tracker.active_references
+        let ref_info = tracker
+            .active_references
             .entry(allocation_id)
             .or_insert_with(|| ReferenceInfo {
                 allocation_id,
@@ -305,7 +307,12 @@ impl ReferenceCountingDetector {
         let mut visited = HashSet::new();
         let mut recursion_stack = HashSet::new();
 
-        self.dfs_cycle_detection(allocation_id, reference_graph, &mut visited, &mut recursion_stack)
+        self.dfs_cycle_detection(
+            allocation_id,
+            reference_graph,
+            &mut visited,
+            &mut recursion_stack,
+        )
     }
 
     /// Depth-first search for cycle detection
@@ -343,8 +350,9 @@ impl LeakDetector for ReferenceCountingDetector {
         allocation_history: &VecDeque<AllocationEvent>,
         usage_snapshots: &VecDeque<MemoryUsageSnapshot>,
     ) -> Result<MemoryLeakResult> {
-        let tracker = self.reference_tracker.read()
-            .map_err(|_| OptimError::InvalidState("Failed to acquire reference tracker lock".to_string()))?;
+        let tracker = self.reference_tracker.read().map_err(|_| {
+            OptimError::InvalidState("Failed to acquire reference tracker lock".to_string())
+        })?;
 
         let mut leak_sources = Vec::new();
         let mut total_leaked_bytes = 0;
@@ -390,10 +398,23 @@ impl LeakDetector for ReferenceCountingDetector {
              - Maximum Reference Count: {}",
             tracker.active_references.len(),
             tracker.suspected_leaks.len(),
-            tracker.suspected_leaks.iter().filter(|l| matches!(l.leak_type, LeakType::CircularReference)).count(),
-            tracker.active_references.values().map(|r| r.reference_count).sum::<usize>() as f64 
+            tracker
+                .suspected_leaks
+                .iter()
+                .filter(|l| matches!(l.leak_type, LeakType::CircularReference))
+                .count(),
+            tracker
+                .active_references
+                .values()
+                .map(|r| r.reference_count)
+                .sum::<usize>() as f64
                 / tracker.active_references.len().max(1) as f64,
-            tracker.active_references.values().map(|r| r.reference_count).max().unwrap_or(0)
+            tracker
+                .active_references
+                .values()
+                .map(|r| r.reference_count)
+                .max()
+                .unwrap_or(0)
         );
 
         Ok(MemoryLeakResult {
@@ -414,10 +435,22 @@ impl LeakDetector for ReferenceCountingDetector {
 
     fn config(&self) -> HashMap<String, String> {
         let mut config = HashMap::new();
-        config.insert("min_suspicious_refcount".to_string(), self.config.min_suspicious_refcount.to_string());
-        config.insert("max_normal_refcount".to_string(), self.config.max_normal_refcount.to_string());
-        config.insert("cycle_detection_depth".to_string(), self.config.cycle_detection_depth.to_string());
-        config.insert("reference_age_threshold".to_string(), self.config.reference_age_threshold.to_string());
+        config.insert(
+            "min_suspicious_refcount".to_string(),
+            self.config.min_suspicious_refcount.to_string(),
+        );
+        config.insert(
+            "max_normal_refcount".to_string(),
+            self.config.max_normal_refcount.to_string(),
+        );
+        config.insert(
+            "cycle_detection_depth".to_string(),
+            self.config.cycle_detection_depth.to_string(),
+        );
+        config.insert(
+            "reference_age_threshold".to_string(),
+            self.config.reference_age_threshold.to_string(),
+        );
         config
     }
 }
@@ -437,10 +470,7 @@ impl ReferenceCountingDetector {
             });
         }
 
-        let memory_values: Vec<f64> = snapshots
-            .iter()
-            .map(|s| s.total_memory as f64)
-            .collect();
+        let memory_values: Vec<f64> = snapshots.iter().map(|s| s.total_memory as f64).collect();
 
         // Calculate growth rate using linear regression
         let n = memory_values.len() as f64;
@@ -473,7 +503,10 @@ impl ReferenceCountingDetector {
         // Determine pattern type
         let pattern_type = if growth_rate > 50000.0 {
             GrowthPattern::Leak
-        } else if memory_values.windows(2).any(|w| (w[1] - w[0]).abs() > 10000000.0) {
+        } else if memory_values
+            .windows(2)
+            .any(|w| (w[1] - w[0]).abs() > 10000000.0)
+        {
             GrowthPattern::Burst
         } else {
             GrowthPattern::Normal
@@ -566,10 +599,7 @@ impl CycleDetector {
     }
 
     /// Detect cycles in reference graph using Tarjan's algorithm
-    pub fn detect_cycles(
-        &self,
-        graph: &HashMap<usize, HashSet<usize>>,
-    ) -> Vec<Vec<usize>> {
+    pub fn detect_cycles(&self, graph: &HashMap<usize, HashSet<usize>>) -> Vec<Vec<usize>> {
         let mut index = 0;
         let mut stack = Vec::new();
         let mut indices = HashMap::new();
@@ -595,7 +625,13 @@ impl CycleDetector {
         // Filter to return only cycles (SCCs with more than one node or self-loops)
         strongly_connected_components
             .into_iter()
-            .filter(|scc| scc.len() > 1 || (scc.len() == 1 && graph.get(&scc[0]).map_or(false, |neighbors| neighbors.contains(&scc[0]))))
+            .filter(|scc| {
+                scc.len() > 1
+                    || (scc.len() == 1
+                        && graph
+                            .get(&scc[0])
+                            .map_or(false, |neighbors| neighbors.contains(&scc[0])))
+            })
             .collect()
     }
 
@@ -708,10 +744,10 @@ pub struct RealTimeMonitorConfig {
 impl Default for RealTimeMonitorConfig {
     fn default() -> Self {
         Self {
-            sampling_interval_ms: 1000, // 1 second
+            sampling_interval_ms: 1000,                // 1 second
             memory_threshold_bytes: 100 * 1024 * 1024, // 100MB
-            growth_rate_threshold: 1024.0 * 1024.0, // 1MB/s
-            trend_window_size: 60, // 1 minute of samples
+            growth_rate_threshold: 1024.0 * 1024.0,    // 1MB/s
+            trend_window_size: 60,                     // 1 minute of samples
             enable_gc_hints: true,
         }
     }
@@ -802,7 +838,9 @@ impl RealTimeMemoryMonitor {
 
     /// Start monitoring
     pub fn start_monitoring(&self) -> Result<()> {
-        let mut is_active = self.is_active.lock()
+        let mut is_active = self
+            .is_active
+            .lock()
             .map_err(|_| OptimError::InvalidState("Failed to acquire monitor lock".to_string()))?;
 
         if *is_active {
@@ -850,7 +888,9 @@ impl RealTimeMemoryMonitor {
 
     /// Stop monitoring
     pub fn stop_monitoring(&self) -> Result<()> {
-        let mut is_active = self.is_active.lock()
+        let mut is_active = self
+            .is_active
+            .lock()
             .map_err(|_| OptimError::InvalidState("Failed to acquire monitor lock".to_string()))?;
 
         *is_active = false;
@@ -864,7 +904,7 @@ impl RealTimeMemoryMonitor {
         MemorySample {
             timestamp,
             memory_usage: Self::get_current_memory_usage(),
-            allocation_rate: 0.0, // Would be calculated from real data
+            allocation_rate: 0.0,   // Would be calculated from real data
             deallocation_rate: 0.0, // Would be calculated from real data
         }
     }
@@ -875,15 +915,16 @@ impl RealTimeMemoryMonitor {
         // - On Linux: /proc/self/status or mallinfo
         // - On macOS: task_info or malloc_zone_statistics
         // - On Windows: GetProcessMemoryInfo
-        
+
         // For now, return a simulated value
         64 * 1024 * 1024 // 64MB
     }
 
     /// Get current monitoring statistics
     pub fn get_statistics(&self) -> Result<MonitoringStatistics> {
-        let state = self.state.lock()
-            .map_err(|_| OptimError::InvalidState("Failed to acquire monitor state lock".to_string()))?;
+        let state = self.state.lock().map_err(|_| {
+            OptimError::InvalidState("Failed to acquire monitor state lock".to_string())
+        })?;
 
         Ok(MonitoringStatistics {
             current_memory_usage: state.current_memory_usage,
@@ -926,11 +967,12 @@ impl MonitorState {
     pub fn add_sample(&mut self, sample: MemorySample) {
         self.current_memory_usage = sample.memory_usage;
         self.peak_memory_usage = self.peak_memory_usage.max(sample.memory_usage);
-        
+
         self.memory_samples.push_back(sample);
-        
+
         // Limit sample history
-        while self.memory_samples.len() > 3600 { // 1 hour at 1s intervals
+        while self.memory_samples.len() > 3600 {
+            // 1 hour at 1s intervals
             self.memory_samples.pop_front();
         }
     }
@@ -940,17 +982,14 @@ impl MonitorState {
         // Calculate growth rate
         if self.memory_samples.len() >= 2 {
             let window_size = config.trend_window_size.min(self.memory_samples.len());
-            let recent_samples: Vec<_> = self.memory_samples
-                .iter()
-                .rev()
-                .take(window_size)
-                .collect();
+            let recent_samples: Vec<_> =
+                self.memory_samples.iter().rev().take(window_size).collect();
 
             if recent_samples.len() >= 2 {
                 let first = recent_samples.last().unwrap();
                 let last = recent_samples.first().unwrap();
                 let time_diff = last.timestamp.duration_since(first.timestamp).as_secs_f64();
-                
+
                 if time_diff > 0.0 {
                     let memory_diff = last.memory_usage as f64 - first.memory_usage as f64;
                     self.current_growth_rate = memory_diff / time_diff;

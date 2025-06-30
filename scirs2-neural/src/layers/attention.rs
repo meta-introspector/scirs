@@ -6,11 +6,11 @@
 
 use crate::error::{NeuralError, Result};
 use crate::layers::{Layer, ParamLayer};
-use ndarray::{Array, ArrayView, IxDyn, ScalarOperand, s};
+use ndarray::{s, Array, ArrayView, IxDyn, ScalarOperand};
 use num_traits::Float;
 use rand::Rng;
-use std::sync::RwLock;
 use std::fmt::Debug;
+use std::sync::RwLock;
 
 // SIMD optimizations using scirs2-core
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
@@ -128,7 +128,9 @@ pub struct MultiHeadAttention<F: Float + Debug + Send + Sync + SimdUnifiedOps> {
     attention_weights_cache: RwLock<Option<Array<F, IxDyn>>>,
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> Clone for MultiHeadAttention<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> Clone
+    for MultiHeadAttention<F>
+{
     fn clone(&self) -> Self {
         Self {
             d_model: self.d_model,
@@ -144,12 +146,16 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
             scale: self.scale,
             input_cache: RwLock::new(self.input_cache.read().unwrap().clone()),
             projection_cache: RwLock::new(self.projection_cache.read().unwrap().clone()),
-            attention_weights_cache: RwLock::new(self.attention_weights_cache.read().unwrap().clone()),
+            attention_weights_cache: RwLock::new(
+                self.attention_weights_cache.read().unwrap().clone(),
+            ),
         }
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> Clone for SelfAttention<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> Clone
+    for SelfAttention<F>
+{
     fn clone(&self) -> Self {
         Self {
             attention: self.attention.clone(),
@@ -157,7 +163,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> MultiHeadAttention<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps>
+    MultiHeadAttention<F>
+{
     /// Create a new multi-head attention layer
     ///
     /// # Arguments
@@ -314,7 +322,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
                 // Process each head in parallel with SIMD vectorization
                 for i in 0..seq_len_q {
                     // Note: query_row was used for SIMD operations but now we access query directly
-                    
+
                     for j in 0..seq_len_k {
                         // Manual dot product for attention score computation
                         let mut dot_product = F::zero();
@@ -344,23 +352,26 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
                 for i in 0..seq_len_q {
                     // Extract the attention row for SIMD processing
                     let mut attention_row = attention_weights.slice_mut(s![b, h, i, ..]);
-                    
+
                     // Find maximum using SIMD reduction
                     let max_val = F::simd_max_element(&attention_row.view());
-                    
+
                     // Subtract max for numerical stability using SIMD
                     let attention_row_data = attention_row.to_vec();
                     let max_array = Array::from_elem(attention_row_data.len(), max_val);
-                    let result = F::simd_sub(&Array::from_vec(attention_row_data).view(), &max_array.view());
+                    let result = F::simd_sub(
+                        &Array::from_vec(attention_row_data).view(),
+                        &max_array.view(),
+                    );
                     attention_row.assign(&result);
-                    
+
                     // Apply exp using ndarray's mapv
                     let exp_result = attention_row.mapv(|x| x.exp());
                     attention_row.assign(&exp_result);
-                    
+
                     // Compute sum using SIMD reduction
                     let sum = F::simd_sum(&attention_row.view());
-                    
+
                     // Normalize by dividing by sum using SIMD
                     if sum > F::zero() {
                         let sum_array = Array::from_elem(attention_row.len(), sum);
@@ -450,8 +461,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
 
         // SIMD-optimized attention scores computation: Q * K^T
         let _capabilities = PlatformCapabilities::detect();
-        
-        if false { // SIMD optimization temporarily disabled
+
+        if false {
+            // SIMD optimization temporarily disabled
             // TEMPORARILY DISABLED: SIMD-optimized attention computation (causing infinite loop)
             self.simd_compute_attention_scores(query, key, &mut attention_scores)?;
         } else {
@@ -488,8 +500,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
 
         // SIMD-optimized softmax computation
         let mut attention_weights = attention_scores.clone();
-        
-        if false { // SIMD optimization temporarily disabled
+
+        if false {
+            // SIMD optimization temporarily disabled
             // TEMPORARILY DISABLED: SIMD-optimized softmax (potential for infinite loop)
             self.simd_apply_softmax(&mut attention_weights)?;
         } else {
@@ -516,7 +529,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
                         // Normalize
                         if sum > F::zero() {
                             for j in 0..seq_len_k {
-                                attention_weights[[b, h, i, j]] = attention_weights[[b, h, i, j]] / sum;
+                                attention_weights[[b, h, i, j]] =
+                                    attention_weights[[b, h, i, j]] / sum;
                             }
                         }
                     }
@@ -576,7 +590,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
                     for d in 0..head_dim {
                         let mut grad_sum = F::zero();
                         for i in 0..seq_len_q {
-                            grad_sum = grad_sum + attention_weights[[b, h, i, j]] * grad_output[[b, i, h, d]];
+                            grad_sum = grad_sum
+                                + attention_weights[[b, h, i, j]] * grad_output[[b, i, h, d]];
                         }
                         grad_value[[b, j, h, d]] = grad_sum;
                     }
@@ -610,13 +625,14 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
                     // Compute sum for this position
                     let mut sum_term = F::zero();
                     for k in 0..seq_len_k {
-                        sum_term = sum_term + attention_weights[[b, h, i, k]] * grad_attn_weights[[b, h, i, k]];
+                        sum_term = sum_term
+                            + attention_weights[[b, h, i, k]] * grad_attn_weights[[b, h, i, k]];
                     }
 
                     // Apply softmax gradient formula
                     for j in 0..seq_len_k {
-                        grad_scores[[b, h, i, j]] = attention_weights[[b, h, i, j]] * 
-                            (grad_attn_weights[[b, h, i, j]] - sum_term);
+                        grad_scores[[b, h, i, j]] = attention_weights[[b, h, i, j]]
+                            * (grad_attn_weights[[b, h, i, j]] - sum_term);
                     }
                 }
             }
@@ -682,7 +698,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> Layer<F> for MultiHeadAttention<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> Layer<F>
+    for MultiHeadAttention<F>
+{
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -753,7 +771,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
         }
 
         // Cache projections for backward pass
-        *self.projection_cache.write().unwrap() = Some((q_proj.clone(), k_proj.clone(), v_proj.clone()));
+        *self.projection_cache.write().unwrap() =
+            Some((q_proj.clone(), k_proj.clone(), v_proj.clone()));
 
         // Reshape for multi-head attention
         let q_reshaped = self.reshape_for_multihead(&q_proj.view(), "query")?;
@@ -859,15 +878,23 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
 
         // 2. Reshape grad_attn_output to [batch, seq, heads, head_dim]
         let grad_attn_reshaped = grad_attn_output
-            .into_shape_with_order(IxDyn(&[batch_size, seq_len, self.config.num_heads, self.config.head_dim]))
+            .into_shape_with_order(IxDyn(&[
+                batch_size,
+                seq_len,
+                self.config.num_heads,
+                self.config.head_dim,
+            ]))
             .map_err(|e| {
                 NeuralError::InferenceError(format!("Failed to reshape grad_attn_output: {}", e))
             })?;
 
         // 3. Backward through scaled dot-product attention
         let (grad_q, grad_k, grad_v) = self.backward_scaled_dot_product_attention(
-            &q_proj, &k_proj, &v_proj,
-            attention_weights, &grad_attn_reshaped
+            &q_proj,
+            &k_proj,
+            &v_proj,
+            attention_weights,
+            &grad_attn_reshaped,
         )?;
 
         // 4. Compute gradients with respect to input through projections using efficient operations
@@ -881,13 +908,13 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
                     let mut q_contrib = F::zero();
                     let mut k_contrib = F::zero();
                     let mut v_contrib = F::zero();
-                    
+
                     for k in 0..self.d_model {
                         q_contrib = q_contrib + grad_q[[b, i, k]] * self.w_query[[j, k]];
                         k_contrib = k_contrib + grad_k[[b, i, k]] * self.w_key[[j, k]];
                         v_contrib = v_contrib + grad_v[[b, i, k]] * self.w_value[[j, k]];
                     }
-                    
+
                     grad_input[[b, i, j]] = q_contrib + k_contrib + v_contrib;
                 }
             }
@@ -911,19 +938,19 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
         // For proper gradient computation, we need to accumulate gradients during backward pass
         // This requires modifying the backward pass to actually compute and store gradients
         // For now, we'll implement a basic gradient descent update using cached values
-        
+
         let input_ref = self.input_cache.read().unwrap();
         let projections_ref = self.projection_cache.read().unwrap();
-        
-        if let (Some(cached_input), Some((q_proj, k_proj, v_proj))) = 
-            (input_ref.as_ref(), projections_ref.as_ref()) {
-            
+
+        if let (Some(cached_input), Some((q_proj, k_proj, v_proj))) =
+            (input_ref.as_ref(), projections_ref.as_ref())
+        {
             let batch_size = cached_input.shape()[0];
             let seq_len = cached_input.shape()[1];
-            
+
             // Compute gradients for weights (simplified gradient computation)
             // In practice, these should be accumulated during backward pass
-            
+
             // Gradient for query weights: input.T @ grad_q_proj
             // For simplification, we'll use a small approximation
             for i in 0..self.d_model {
@@ -932,39 +959,48 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
                     for b in 0..batch_size {
                         for s in 0..seq_len {
                             // Simplified gradient approximation
-                            grad_sum = grad_sum + cached_input[[b, s, i]] * q_proj[[b, s, j]] * F::from(0.001).unwrap();
+                            grad_sum = grad_sum
+                                + cached_input[[b, s, i]]
+                                    * q_proj[[b, s, j]]
+                                    * F::from(0.001).unwrap();
                         }
                     }
                     self.dw_query[[i, j]] = grad_sum / F::from(batch_size * seq_len).unwrap();
                 }
             }
-            
+
             // Similar computation for key weights
             for i in 0..self.d_model {
                 for j in 0..self.d_model {
                     let mut grad_sum = F::zero();
                     for b in 0..batch_size {
                         for s in 0..seq_len {
-                            grad_sum = grad_sum + cached_input[[b, s, i]] * k_proj[[b, s, j]] * F::from(0.001).unwrap();
+                            grad_sum = grad_sum
+                                + cached_input[[b, s, i]]
+                                    * k_proj[[b, s, j]]
+                                    * F::from(0.001).unwrap();
                         }
                     }
                     self.dw_key[[i, j]] = grad_sum / F::from(batch_size * seq_len).unwrap();
                 }
             }
-            
+
             // Similar computation for value weights
             for i in 0..self.d_model {
                 for j in 0..self.d_model {
                     let mut grad_sum = F::zero();
                     for b in 0..batch_size {
                         for s in 0..seq_len {
-                            grad_sum = grad_sum + cached_input[[b, s, i]] * v_proj[[b, s, j]] * F::from(0.001).unwrap();
+                            grad_sum = grad_sum
+                                + cached_input[[b, s, i]]
+                                    * v_proj[[b, s, j]]
+                                    * F::from(0.001).unwrap();
                         }
                     }
                     self.dw_value[[i, j]] = grad_sum / F::from(batch_size * seq_len).unwrap();
                 }
             }
-            
+
             // For output weights, use attention output gradients (simplified)
             for i in 0..self.d_model {
                 for j in 0..self.d_model {
@@ -979,20 +1015,26 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
                 }
             }
         }
-        
+
         // Apply gradient descent updates
         for i in 0..self.d_model {
             for j in 0..self.d_model {
                 self.w_query[[i, j]] = self.w_query[[i, j]] - learning_rate * self.dw_query[[i, j]];
                 self.w_key[[i, j]] = self.w_key[[i, j]] - learning_rate * self.dw_key[[i, j]];
                 self.w_value[[i, j]] = self.w_value[[i, j]] - learning_rate * self.dw_value[[i, j]];
-                self.w_output[[i, j]] = self.w_output[[i, j]] - learning_rate * self.dw_output[[i, j]];
+                self.w_output[[i, j]] =
+                    self.w_output[[i, j]] - learning_rate * self.dw_output[[i, j]];
             }
         }
-        
+
         // Apply weight clipping to prevent exploding gradients
         let clip_value = F::from(5.0).unwrap();
-        for weight_matrix in [&mut self.w_query, &mut self.w_key, &mut self.w_value, &mut self.w_output] {
+        for weight_matrix in [
+            &mut self.w_query,
+            &mut self.w_key,
+            &mut self.w_value,
+            &mut self.w_output,
+        ] {
             for elem in weight_matrix.iter_mut() {
                 *elem = elem.max(-clip_value).min(clip_value);
             }
@@ -1002,7 +1044,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> ParamLayer<F> for MultiHeadAttention<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> ParamLayer<F>
+    for MultiHeadAttention<F>
+{
     fn get_parameters(&self) -> Vec<&Array<F, ndarray::IxDyn>> {
         vec![&self.w_query, &self.w_key, &self.w_value, &self.w_output]
     }
@@ -1079,7 +1123,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> Layer<F> for SelfAttention<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> Layer<F>
+    for SelfAttention<F>
+{
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -1105,7 +1151,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> ParamLayer<F> for SelfAttention<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> ParamLayer<F>
+    for SelfAttention<F>
+{
     fn get_parameters(&self) -> Vec<&Array<F, ndarray::IxDyn>> {
         self.attention.get_parameters()
     }

@@ -39,10 +39,10 @@ use crate::error::SpatialResult;
 use crate::memory_pool::DistancePool;
 use ndarray::{Array1, Array2, ArrayView2};
 use scirs2_core::simd_ops::PlatformCapabilities;
-use std::sync::{Arc, Mutex};
-use std::sync::atomic::{AtomicUsize, AtomicBool, Ordering};
-use std::sync::mpsc::{Sender, Receiver, channel};
 use std::collections::VecDeque;
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::mpsc::{channel, Receiver, Sender};
+use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
@@ -189,10 +189,12 @@ impl NumaTopology {
     pub fn detect() -> Self {
         // In a real implementation, this would query the system for NUMA information
         // using libraries like hwloc or reading /sys/devices/system/node/
-        
-        let num_cpus = thread::available_parallelism().map(|n| n.get()).unwrap_or(4);
+
+        let num_cpus = thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(4);
         let num_nodes = (num_cpus / 8).max(1); // Estimate: 8 cores per NUMA node
-        
+
         Self {
             num_nodes,
             cores_per_node: vec![num_cpus / num_nodes; num_nodes],
@@ -417,7 +419,7 @@ impl WorkStealingPool {
         let shutdown = Arc::new(AtomicBool::new(false));
 
         let mut workers = Vec::with_capacity(num_threads);
-        
+
         // Create workers with NUMA-aware placement
         for thread_id in 0..num_threads {
             let numa_node = if config.numa_aware {
@@ -433,7 +435,7 @@ impl WorkStealingPool {
                 thread_handle: None,
                 memory_pool: Arc::new(DistancePool::new(1000)),
             };
-            
+
             workers.push(worker);
         }
 
@@ -516,13 +518,13 @@ impl WorkStealingPool {
 
         while !shutdown.load(Ordering::Relaxed) {
             let work_item = Self::get_work_item(&local_queue, &global_queue, &config);
-            
+
             if let Some(item) = work_item {
                 active_workers.fetch_add(1, Ordering::Relaxed);
-                
+
                 // Process work item with context
                 Self::process_work_item(item, &work_context);
-                
+
                 completed_work.fetch_add(1, Ordering::Relaxed);
                 active_workers.fetch_sub(1, Ordering::Relaxed);
             } else {
@@ -530,7 +532,7 @@ impl WorkStealingPool {
                 if config.work_stealing {
                     Self::attempt_work_stealing(thread_id, &local_queue, &global_queue, &config);
                 }
-                
+
                 // Brief sleep to avoid busy waiting
                 thread::sleep(Duration::from_micros(100));
             }
@@ -546,13 +548,19 @@ impl WorkStealingPool {
                 #[cfg(target_os = "linux")]
                 {
                     if let Err(e) = Self::set_cpu_affinity_linux(thread_id) {
-                        eprintln!("Warning: Failed to set CPU affinity for thread {}: {}", thread_id, e);
+                        eprintln!(
+                            "Warning: Failed to set CPU affinity for thread {}: {}",
+                            thread_id, e
+                        );
                     }
                 }
                 #[cfg(target_os = "windows")]
                 {
                     if let Err(e) = Self::set_cpu_affinity_windows(thread_id) {
-                        eprintln!("Warning: Failed to set CPU affinity for thread {}: {}", thread_id, e);
+                        eprintln!(
+                            "Warning: Failed to set CPU affinity for thread {}: {}",
+                            thread_id, e
+                        );
                     }
                 }
             }
@@ -561,13 +569,19 @@ impl WorkStealingPool {
                 #[cfg(target_os = "linux")]
                 {
                     if let Err(e) = Self::set_numa_affinity_linux(numa_node) {
-                        eprintln!("Warning: Failed to set NUMA affinity for node {}: {}", numa_node, e);
+                        eprintln!(
+                            "Warning: Failed to set NUMA affinity for node {}: {}",
+                            numa_node, e
+                        );
                     }
                 }
                 #[cfg(target_os = "windows")]
                 {
                     if let Err(e) = Self::set_numa_affinity_windows(numa_node) {
-                        eprintln!("Warning: Failed to set NUMA affinity for node {}: {}", numa_node, e);
+                        eprintln!(
+                            "Warning: Failed to set NUMA affinity for node {}: {}",
+                            numa_node, e
+                        );
                     }
                 }
             }
@@ -576,13 +590,19 @@ impl WorkStealingPool {
                     #[cfg(target_os = "linux")]
                     {
                         if let Err(e) = Self::set_custom_cpu_affinity_linux(cpu) {
-                            eprintln!("Warning: Failed to set custom CPU affinity to core {}: {}", cpu, e);
+                            eprintln!(
+                                "Warning: Failed to set custom CPU affinity to core {}: {}",
+                                cpu, e
+                            );
                         }
                     }
                     #[cfg(target_os = "windows")]
                     {
                         if let Err(e) = Self::set_custom_cpu_affinity_windows(cpu) {
-                            eprintln!("Warning: Failed to set custom CPU affinity to core {}: {}", cpu, e);
+                            eprintln!(
+                                "Warning: Failed to set custom CPU affinity to core {}: {}",
+                                cpu, e
+                            );
                         }
                     }
                 }
@@ -596,17 +616,16 @@ impl WorkStealingPool {
     /// Set CPU affinity to a specific core on Linux
     #[cfg(target_os = "linux")]
     fn set_cpu_affinity_linux(cpu_id: usize) -> Result<(), Box<dyn std::error::Error>> {
-        
         unsafe {
             let mut cpu_set: libc::cpu_set_t = std::mem::zeroed();
             libc::CPU_SET(cpu_id, &mut cpu_set);
-            
+
             let result = libc::sched_setaffinity(
                 0, // Current thread
                 std::mem::size_of::<libc::cpu_set_t>(),
-                &cpu_set
+                &cpu_set,
             );
-            
+
             if result == 0 {
                 Ok(())
             } else {
@@ -614,20 +633,20 @@ impl WorkStealingPool {
             }
         }
     }
-    
+
     /// Set NUMA affinity to all CPUs in a NUMA node on Linux
     #[cfg(target_os = "linux")]
     fn set_numa_affinity_linux(numa_node: usize) -> Result<(), Box<dyn std::error::Error>> {
         use std::fs;
-        
+
         // Read the CPU list for this NUMA node
         let cpulist_path = format!("/sys/devices/system/node/node{}/cpulist", numa_node);
         let cpulist = fs::read_to_string(&cpulist_path)
             .map_err(|_| format!("Failed to read NUMA node {} CPU list", numa_node))?;
-        
+
         unsafe {
             let mut cpu_set: libc::cpu_set_t = std::mem::zeroed();
-            
+
             // Parse CPU list and set affinity (e.g., "0-3,8-11")
             for range in cpulist.trim().split(',') {
                 if let Some((start, end)) = range.split_once('-') {
@@ -640,13 +659,13 @@ impl WorkStealingPool {
                     libc::CPU_SET(cpu as usize, &mut cpu_set);
                 }
             }
-            
+
             let result = libc::sched_setaffinity(
                 0, // Current thread
                 std::mem::size_of::<libc::cpu_set_t>(),
-                &cpu_set
+                &cpu_set,
             );
-            
+
             if result == 0 {
                 Ok(())
             } else {
@@ -654,14 +673,14 @@ impl WorkStealingPool {
             }
         }
     }
-    
+
     /// Set CPU affinity to a specific core from custom list on Linux
     #[cfg(target_os = "linux")]
     fn set_custom_cpu_affinity_linux(cpu_id: usize) -> Result<(), Box<dyn std::error::Error>> {
         // Same implementation as set_cpu_affinity_linux
         Self::set_cpu_affinity_linux(cpu_id)
     }
-    
+
     /// Set CPU affinity on Windows
     #[cfg(target_os = "windows")]
     fn set_cpu_affinity_windows(cpu_id: usize) -> Result<(), Box<dyn std::error::Error>> {
@@ -670,7 +689,7 @@ impl WorkStealingPool {
         let _ = cpu_id;
         Ok(())
     }
-    
+
     /// Set NUMA affinity on Windows
     #[cfg(target_os = "windows")]
     fn set_numa_affinity_windows(numa_node: usize) -> Result<(), Box<dyn std::error::Error>> {
@@ -679,7 +698,7 @@ impl WorkStealingPool {
         let _ = numa_node;
         Ok(())
     }
-    
+
     /// Set custom CPU affinity on Windows
     #[cfg(target_os = "windows")]
     fn set_custom_cpu_affinity_windows(cpu_id: usize) -> Result<(), Box<dyn std::error::Error>> {
@@ -746,19 +765,19 @@ impl WorkStealingPool {
     fn process_distance_matrix_chunk(start: usize, end: usize, context: &WorkContext) {
         if let Some(distance_context) = &context.distance_context {
             use crate::simd_distance::hardware_specific_simd::HardwareOptimizedDistances;
-            
+
             let optimizer = HardwareOptimizedDistances::new();
             let points = &distance_context.points;
             let n_points = points.nrows();
-            
+
             // Convert linear indices to (i, j) pairs for distance matrix
             for linear_idx in start..end {
                 let (i, j) = Self::linear_to_matrix_indices(linear_idx, n_points);
-                
+
                 if i < j && i < n_points && j < n_points {
                     let point_i = points.row(i);
                     let point_j = points.row(j);
-                    
+
                     match optimizer.euclidean_distance_optimized(&point_i, &point_j) {
                         Ok(distance) => {
                             // Store result in shared result matrix (would need synchronization)
@@ -778,23 +797,23 @@ impl WorkStealingPool {
     fn process_kmeans_chunk(start: usize, end: usize, context: &WorkContext) {
         if let Some(kmeans_context) = &context.kmeans_context {
             use crate::simd_distance::hardware_specific_simd::HardwareOptimizedDistances;
-            
+
             let optimizer = HardwareOptimizedDistances::new();
             let points = &kmeans_context.points;
             let centroids = &kmeans_context.centroids;
             let k = centroids.nrows();
-            
+
             // Process point assignments for range [start, end)
             for point_idx in start..end {
                 if point_idx < points.nrows() {
                     let point = points.row(point_idx);
                     let mut best_cluster = 0;
                     let mut best_distance = f64::INFINITY;
-                    
+
                     // Find nearest centroid using SIMD optimizations
                     for cluster_idx in 0..k {
                         let centroid = centroids.row(cluster_idx);
-                        
+
                         match optimizer.euclidean_distance_optimized(&point, &centroid) {
                             Ok(distance) => {
                                 if distance < best_distance {
@@ -805,9 +824,12 @@ impl WorkStealingPool {
                             Err(_) => continue,
                         }
                     }
-                    
+
                     // Send assignment result
-                    kmeans_context.assignment_sender.send((point_idx, best_cluster)).ok();
+                    kmeans_context
+                        .assignment_sender
+                        .send((point_idx, best_cluster))
+                        .ok();
                 }
             }
         }
@@ -819,19 +841,19 @@ impl WorkStealingPool {
             let points = &kdtree_context.points;
             let indices = &kdtree_context.indices;
             let depth = kdtree_context.depth;
-            
+
             // Process subset of points for tree construction
             let chunk_indices: Vec<usize> = indices[start..end.min(indices.len())].to_vec();
-            
+
             if !chunk_indices.is_empty() {
                 // Build local subtree for this chunk
                 let local_tree = Self::build_local_kdtree_chunk(
-                    points, 
-                    &chunk_indices, 
+                    points,
+                    &chunk_indices,
                     depth,
-                    &kdtree_context.config
+                    &kdtree_context.config,
                 );
-                
+
                 // Send result back
                 kdtree_context.result_sender.send((start, local_tree)).ok();
             }
@@ -842,37 +864,38 @@ impl WorkStealingPool {
     fn process_nn_chunk(start: usize, end: usize, context: &WorkContext) {
         if let Some(nn_context) = &context.nn_context {
             use crate::simd_distance::hardware_specific_simd::HardwareOptimizedDistances;
-            
+
             let optimizer = HardwareOptimizedDistances::new();
             let query_points = &nn_context.query_points;
             let data_points = &nn_context.data_points;
             let k = nn_context.k;
-            
+
             // Process query points in range [start, end)
             for query_idx in start..end {
                 if query_idx < query_points.nrows() {
                     let query = query_points.row(query_idx);
-                    
+
                     // Compute distances to all data points
                     let mut distances: Vec<(f64, usize)> = Vec::with_capacity(data_points.nrows());
-                    
+
                     for (data_idx, data_point) in data_points.outer_iter().enumerate() {
                         match optimizer.euclidean_distance_optimized(&query, &data_point) {
                             Ok(distance) => distances.push((distance, data_idx)),
                             Err(_) => distances.push((f64::INFINITY, data_idx)),
                         }
                     }
-                    
+
                     // Find k nearest
                     if k <= distances.len() {
-                        distances.select_nth_unstable_by(k - 1, |a, b| a.0.partial_cmp(&b.0).unwrap());
+                        distances
+                            .select_nth_unstable_by(k - 1, |a, b| a.0.partial_cmp(&b.0).unwrap());
                         distances[..k].sort_unstable_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
-                        
+
                         let result: Vec<(usize, f64)> = distances[..k]
                             .iter()
                             .map(|(dist, idx)| (*idx, *dist))
                             .collect();
-                        
+
                         nn_context.result_sender.send((query_idx, result)).ok();
                     }
                 }
@@ -893,12 +916,12 @@ impl WorkStealingPool {
         // For upper triangular matrix: convert linear index to (i, j) where i < j
         let mut k = linear_idx;
         let mut i = 0;
-        
+
         while k >= n - i - 1 {
             k -= n - i - 1;
             i += 1;
         }
-        
+
         let j = k + i + 1;
         (i, j)
     }
@@ -912,7 +935,7 @@ impl WorkStealingPool {
     ) -> KDTreeChunkResult {
         let n_dims = points.ncols();
         let splitting_dimension = depth % n_dims;
-        
+
         if indices.len() <= 1 {
             return KDTreeChunkResult {
                 node_index: indices.first().copied().unwrap_or(0),
@@ -923,22 +946,24 @@ impl WorkStealingPool {
                 right_indices: Vec::new(),
             };
         }
-        
+
         // Find median for splitting
         let mut sorted_indices = indices.to_vec();
         sorted_indices.sort_by(|&a, &b| {
             let coord_a = points[[a, splitting_dimension]];
             let coord_b = points[[b, splitting_dimension]];
-            coord_a.partial_cmp(&coord_b).unwrap_or(std::cmp::Ordering::Equal)
+            coord_a
+                .partial_cmp(&coord_b)
+                .unwrap_or(std::cmp::Ordering::Equal)
         });
-        
+
         let median_idx = sorted_indices.len() / 2;
         let split_point_idx = sorted_indices[median_idx];
         let split_value = points[[split_point_idx, splitting_dimension]];
-        
+
         let left_indices = sorted_indices[..median_idx].to_vec();
         let right_indices = sorted_indices[median_idx + 1..].to_vec();
-        
+
         KDTreeChunkResult {
             node_index: split_point_idx,
             is_leaf: false,
@@ -966,7 +991,7 @@ impl WorkStealingPool {
     /// Wait for all work to complete
     pub fn wait_for_completion(&self) -> SpatialResult<()> {
         let total = self.total_work.load(Ordering::Relaxed);
-        
+
         while self.completed_work.load(Ordering::Relaxed) < total {
             thread::sleep(Duration::from_millis(1));
         }
@@ -1037,23 +1062,26 @@ impl UltraParallelDistanceMatrix {
         let n_points = points.nrows();
         let n_pairs = n_points * (n_points - 1) / 2;
         let mut result_matrix = Array2::zeros((n_points, n_points));
-        
+
         // Create channel for collecting results
-        let (result_sender, result_receiver): (Sender<(usize, usize, f64)>, Receiver<(usize, usize, f64)>) = channel();
-        
+        let (result_sender, result_receiver): (
+            Sender<(usize, usize, f64)>,
+            Receiver<(usize, usize, f64)>,
+        ) = channel();
+
         // Create distance matrix context
         let _distance_context = DistanceMatrixContext {
             points: points.to_owned(),
             result_sender,
         };
-        
+
         // Update work context in the pool (simplified approach)
         // In a real implementation, this would be shared properly across workers
-        
+
         // Create work items for parallel processing
         let chunk_size = self.config.initial_chunk_size;
         let mut work_items = Vec::new();
-        
+
         for chunk_start in (0..n_pairs).step_by(chunk_size) {
             let chunk_end = (chunk_start + chunk_size).min(n_pairs);
             work_items.push(WorkItem {
@@ -1067,12 +1095,12 @@ impl UltraParallelDistanceMatrix {
 
         // Submit work
         self.pool.submit_work(work_items)?;
-        
+
         // Collect results (simplified - in real implementation would be integrated with workers)
         let mut collected_results = 0;
         let timeout = Duration::from_secs(30);
         let start_time = std::time::Instant::now();
-        
+
         while collected_results < n_pairs && start_time.elapsed() < timeout {
             if let Ok((i, j, distance)) = result_receiver.try_recv() {
                 if i < n_points && j < n_points {
@@ -1084,22 +1112,24 @@ impl UltraParallelDistanceMatrix {
                 thread::sleep(Duration::from_millis(1));
             }
         }
-        
+
         // Wait for workers to complete
         self.pool.wait_for_completion()?;
-        
+
         // Fill in any missing computations using fallback
         if collected_results < n_pairs {
             use crate::simd_distance::hardware_specific_simd::HardwareOptimizedDistances;
             let optimizer = HardwareOptimizedDistances::new();
-            
+
             for i in 0..n_points {
                 for j in (i + 1)..n_points {
                     if result_matrix[[i, j]] == 0.0 && i != j {
                         let point_i = points.row(i);
                         let point_j = points.row(j);
-                        
-                        if let Ok(distance) = optimizer.euclidean_distance_optimized(&point_i, &point_j) {
+
+                        if let Ok(distance) =
+                            optimizer.euclidean_distance_optimized(&point_i, &point_j)
+                        {
                             result_matrix[[i, j]] = distance;
                             result_matrix[[j, i]] = distance;
                         }
@@ -1132,14 +1162,17 @@ impl UltraParallelKMeans {
     }
 
     /// Perform K-means clustering using ultra-parallel processing
-    pub fn fit_parallel(&self, points: &ArrayView2<f64>) -> SpatialResult<(Array2<f64>, Array1<usize>)> {
+    pub fn fit_parallel(
+        &self,
+        points: &ArrayView2<f64>,
+    ) -> SpatialResult<(Array2<f64>, Array1<usize>)> {
         let n_points = points.nrows();
         let n_dims = points.ncols();
-        
+
         // Create work items for parallel K-means iterations
         let chunk_size = self.config.initial_chunk_size;
         let mut work_items = Vec::new();
-        
+
         for chunk_start in (0..n_points).step_by(chunk_size) {
             let chunk_end = (chunk_start + chunk_size).min(n_points);
             work_items.push(WorkItem {
@@ -1159,13 +1192,14 @@ impl UltraParallelKMeans {
         // In a real implementation, this would return the actual clustering results
         let centroids = Array2::zeros((self.k, n_dims));
         let assignments = Array1::zeros(n_points);
-        
+
         Ok((centroids, assignments))
     }
 }
 
 /// Global work-stealing pool instance
-static GLOBAL_WORK_STEALING_POOL: std::sync::OnceLock<Mutex<Option<WorkStealingPool>>> = std::sync::OnceLock::new();
+static GLOBAL_WORK_STEALING_POOL: std::sync::OnceLock<Mutex<Option<WorkStealingPool>>> =
+    std::sync::OnceLock::new();
 
 /// Get or create the global work-stealing pool
 pub fn global_work_stealing_pool() -> SpatialResult<&'static Mutex<Option<WorkStealingPool>>> {
@@ -1176,11 +1210,11 @@ pub fn global_work_stealing_pool() -> SpatialResult<&'static Mutex<Option<WorkSt
 pub fn initialize_global_pool(config: WorkStealingConfig) -> SpatialResult<()> {
     let pool_mutex = global_work_stealing_pool()?;
     let mut pool_guard = pool_mutex.lock().unwrap();
-    
+
     if pool_guard.is_none() {
         *pool_guard = Some(WorkStealingPool::new(config)?);
     }
-    
+
     Ok(())
 }
 
@@ -1193,20 +1227,23 @@ pub fn get_numa_topology() -> NumaTopology {
 pub fn report_ultra_parallel_capabilities() {
     let topology = get_numa_topology();
     let total_cores: usize = topology.cores_per_node.iter().sum();
-    
+
     println!("Ultra-Parallel Processing Capabilities:");
     println!("  Total CPU cores: {}", total_cores);
     println!("  NUMA nodes: {}", topology.num_nodes);
-    
+
     for (node, &cores) in topology.cores_per_node.iter().enumerate() {
         let memory_gb = topology.memory_per_node[node] as f64 / (1024.0 * 1024.0 * 1024.0);
-        println!("    Node {}: {} cores, {:.1} GB memory", node, cores, memory_gb);
+        println!(
+            "    Node {}: {} cores, {:.1} GB memory",
+            node, cores, memory_gb
+        );
     }
-    
+
     println!("  Work-stealing: Available");
     println!("  NUMA-aware allocation: Available");
     println!("  Thread affinity: Available");
-    
+
     let caps = PlatformCapabilities::detect();
     if caps.simd_available {
         println!("  SIMD acceleration: Available");
@@ -1229,7 +1266,7 @@ mod tests {
             .with_numa_aware(true)
             .with_work_stealing(true)
             .with_threads(8);
-        
+
         assert!(config.numa_aware);
         assert!(config.work_stealing);
         assert_eq!(config.num_threads, 8);
@@ -1238,7 +1275,7 @@ mod tests {
     #[test]
     fn test_numa_topology_detection() {
         let topology = NumaTopology::detect();
-        
+
         assert!(topology.num_nodes > 0);
         assert!(!topology.cores_per_node.is_empty());
         assert_eq!(topology.cores_per_node.len(), topology.num_nodes);
@@ -1254,7 +1291,7 @@ mod tests {
             priority: 1,
             numa_hint: Some(0),
         };
-        
+
         assert_eq!(item.start, 0);
         assert_eq!(item.end, 100);
         assert_eq!(item.work_type, WorkType::DistanceMatrix);
@@ -1266,7 +1303,7 @@ mod tests {
     fn test_work_stealing_pool_creation() {
         let config = WorkStealingConfig::new().with_threads(2);
         let pool = WorkStealingPool::new(config);
-        
+
         assert!(pool.is_ok());
         let pool = pool.unwrap();
         assert_eq!(pool.workers.len(), 2);
@@ -1276,32 +1313,30 @@ mod tests {
     fn test_ultra_parallel_distance_matrix() {
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
         let config = WorkStealingConfig::new().with_threads(2);
-        
+
         let processor = UltraParallelDistanceMatrix::new(config);
         assert!(processor.is_ok());
-        
+
         let processor = processor.unwrap();
         let result = processor.compute_parallel(&points.view());
         assert!(result.is_ok());
-        
+
         let matrix = result.unwrap();
         assert_eq!(matrix.dim(), (4, 4));
     }
 
     #[test]
     fn test_ultra_parallel_kmeans() {
-        let points = array![
-            [0.0, 0.0], [0.1, 0.1], [5.0, 5.0], [5.1, 5.1]
-        ];
+        let points = array![[0.0, 0.0], [0.1, 0.1], [5.0, 5.0], [5.1, 5.1]];
         let config = WorkStealingConfig::new().with_threads(2);
-        
+
         let kmeans = UltraParallelKMeans::new(2, config);
         assert!(kmeans.is_ok());
-        
+
         let kmeans = kmeans.unwrap();
         let result = kmeans.fit_parallel(&points.view());
         assert!(result.is_ok());
-        
+
         let (centroids, assignments) = result.unwrap();
         assert_eq!(centroids.dim(), (2, 2));
         assert_eq!(assignments.len(), 4);
@@ -1312,7 +1347,7 @@ mod tests {
         // Test global functions don't panic
         let _topology = get_numa_topology();
         report_ultra_parallel_capabilities();
-        
+
         let config = WorkStealingConfig::new().with_threads(1);
         let init_result = initialize_global_pool(config);
         assert!(init_result.is_ok());
@@ -1322,12 +1357,12 @@ mod tests {
     fn test_work_context_structures() {
         // Test that work context structures can be created
         let (sender, _receiver) = channel::<(usize, usize, f64)>();
-        
+
         let distance_context = DistanceMatrixContext {
             points: Array2::zeros((4, 2)),
             result_sender: sender,
         };
-        
+
         let work_context = WorkContext {
             distance_context: Some(distance_context),
             kmeans_context: None,
@@ -1335,7 +1370,7 @@ mod tests {
             nn_context: None,
             custom_context: None,
         };
-        
+
         // Should not panic
         assert!(work_context.distance_context.is_some());
     }
@@ -1344,7 +1379,7 @@ mod tests {
     fn test_linear_to_matrix_indices() {
         let n = 4;
         let expected_pairs = [(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)];
-        
+
         for (linear_idx, expected) in expected_pairs.iter().enumerate() {
             let result = WorkStealingPool::linear_to_matrix_indices(linear_idx, n);
             assert_eq!(result, *expected, "Failed for linear index {}", linear_idx);
@@ -1361,34 +1396,32 @@ mod tests {
             left_indices: Vec::new(),
             right_indices: Vec::new(),
         };
-        
+
         assert!(chunk_result.is_leaf);
         assert_eq!(chunk_result.node_index, 0);
         assert_eq!(chunk_result.splitting_dimension, 0);
     }
 
-    #[test] 
+    #[test]
     fn test_enhanced_distance_matrix_computation() {
-        let points = array![
-            [0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]
-        ];
+        let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
         let config = WorkStealingConfig::new().with_threads(2);
-        
+
         let processor = UltraParallelDistanceMatrix::new(config);
         assert!(processor.is_ok());
-        
+
         let processor = processor.unwrap();
         let result = processor.compute_parallel(&points.view());
         assert!(result.is_ok());
-        
+
         let matrix = result.unwrap();
         assert_eq!(matrix.dim(), (4, 4));
-        
+
         // Check diagonal is zero
         for i in 0..4 {
             assert_eq!(matrix[[i, i]], 0.0);
         }
-        
+
         // Check symmetry
         for i in 0..4 {
             for j in 0..4 {
@@ -1399,18 +1432,16 @@ mod tests {
 
     #[test]
     fn test_enhanced_kmeans_with_context() {
-        let points = array![
-            [0.0, 0.0], [0.1, 0.1], [5.0, 5.0], [5.1, 5.1]
-        ];
+        let points = array![[0.0, 0.0], [0.1, 0.1], [5.0, 5.0], [5.1, 5.1]];
         let config = WorkStealingConfig::new().with_threads(2);
-        
+
         let kmeans = UltraParallelKMeans::new(2, config);
         assert!(kmeans.is_ok());
-        
+
         let kmeans = kmeans.unwrap();
         let result = kmeans.fit_parallel(&points.view());
         assert!(result.is_ok());
-        
+
         let (centroids, assignments) = result.unwrap();
         assert_eq!(centroids.dim(), (2, 2));
         assert_eq!(assignments.len(), 4);
@@ -1419,18 +1450,18 @@ mod tests {
     #[test]
     fn test_numa_topology_detailed() {
         let topology = NumaTopology::detect();
-        
+
         assert!(topology.num_nodes > 0);
         assert_eq!(topology.cores_per_node.len(), topology.num_nodes);
         assert_eq!(topology.memory_per_node.len(), topology.num_nodes);
         assert_eq!(topology.distance_matrix.len(), topology.num_nodes);
-        
+
         // Test optimal threads calculation
         for node in 0..topology.num_nodes {
             let threads = topology.optimal_threads_per_node(node);
             assert!(threads > 0);
         }
-        
+
         // Test memory capacity
         for node in 0..topology.num_nodes {
             let _capacity = topology.memory_capacity(node);
@@ -1448,7 +1479,7 @@ mod tests {
             .with_chunk_sizes(512, 32)
             .with_thread_affinity(ThreadAffinityStrategy::NumaAware)
             .with_memory_strategy(MemoryStrategy::NumaInterleaved);
-        
+
         assert!(config.numa_aware);
         assert!(config.work_stealing);
         assert!(config.adaptive_scheduling);

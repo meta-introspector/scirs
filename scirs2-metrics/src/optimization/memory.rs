@@ -349,21 +349,20 @@ pub trait MemoryMappedMetric<T> {
     fn finalize(&self, state: &Self::State) -> Result<f64>;
 }
 
-/// Zero-copy memory operations and custom allocators for high-performance metrics computation
-/// 
-/// This module provides advanced memory management techniques including zero-copy operations,
-/// custom allocators, memory pooling, and SIMD-aligned allocations for optimal performance.
-
-use std::alloc::{alloc, dealloc, Layout, GlobalAlloc, System};
-use std::collections::HashMap;
-use std::mem::{align_of, size_of, MaybeUninit};
-use std::ptr::{NonNull, addr_of_mut};
-use std::sync::{Arc, Mutex, RwLock};
-use std::sync::atomic::{AtomicUsize, AtomicPtr, Ordering};
-use std::cell::UnsafeCell;
 use crossbeam_utils::CachePadded;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, ArrayViewMut1, ArrayViewMut2};
 use num_traits::Float;
+/// Zero-copy memory operations and custom allocators for high-performance metrics computation
+///
+/// This module provides advanced memory management techniques including zero-copy operations,
+/// custom allocators, memory pooling, and SIMD-aligned allocations for optimal performance.
+use std::alloc::{alloc, dealloc, GlobalAlloc, Layout, System};
+use std::cell::UnsafeCell;
+use std::collections::HashMap;
+use std::mem::{align_of, size_of, MaybeUninit};
+use std::ptr::{addr_of_mut, NonNull};
+use std::sync::atomic::{AtomicPtr, AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex, RwLock};
 
 /// Zero-copy memory manager for metrics computation
 #[derive(Debug)]
@@ -539,16 +538,22 @@ pub struct ZeroCopyBuffer<T> {
 pub trait CustomAllocator: Send + Sync {
     /// Allocate memory with specific alignment
     fn allocate(&self, size: usize, alignment: usize) -> Result<NonNull<u8>>;
-    
+
     /// Deallocate previously allocated memory
     fn deallocate(&self, ptr: NonNull<u8>, size: usize, alignment: usize);
-    
+
     /// Reallocate memory to a new size
-    fn reallocate(&self, ptr: NonNull<u8>, old_size: usize, new_size: usize, alignment: usize) -> Result<NonNull<u8>>;
-    
+    fn reallocate(
+        &self,
+        ptr: NonNull<u8>,
+        old_size: usize,
+        new_size: usize,
+        alignment: usize,
+    ) -> Result<NonNull<u8>>;
+
     /// Get allocator statistics
     fn get_stats(&self) -> AllocatorStats;
-    
+
     /// Reset allocator state
     fn reset(&self);
 }
@@ -744,18 +749,20 @@ impl ZeroCopyMemoryManager {
             stats: MemoryStats::new(),
         })
     }
-    
+
     /// Allocate zero-copy buffer
     pub fn allocate_buffer<T>(&self, capacity: usize) -> Result<ZeroCopyBuffer<T>> {
         let layout = Layout::array::<T>(capacity)
             .map_err(|_| MetricsError::MemoryError("Invalid layout".to_string()))?;
-        
+
         let allocator = self.get_optimal_allocator(layout.size(), layout.align());
         let ptr = allocator.allocate(layout.size(), layout.align())?;
-        
-        self.stats.total_allocated.fetch_add(layout.size(), Ordering::Relaxed);
+
+        self.stats
+            .total_allocated
+            .fetch_add(layout.size(), Ordering::Relaxed);
         self.stats.allocation_count.fetch_add(1, Ordering::Relaxed);
-        
+
         Ok(ZeroCopyBuffer {
             data: ptr.cast::<T>(),
             capacity,
@@ -764,7 +771,7 @@ impl ZeroCopyMemoryManager {
             allocator,
         })
     }
-    
+
     /// Create zero-copy view from existing data
     pub fn create_view<'a, T>(&'a self, data: &'a [T]) -> ZeroCopyArrayView<'a, T> {
         ZeroCopyArrayView {
@@ -774,7 +781,7 @@ impl ZeroCopyMemoryManager {
             memory_manager: self,
         }
     }
-    
+
     /// Create zero-copy mutable view from existing data
     pub fn create_view_mut<'a, T>(&'a self, data: &'a mut [T]) -> ZeroCopyArrayViewMut<'a, T> {
         ZeroCopyArrayViewMut {
@@ -784,12 +791,16 @@ impl ZeroCopyMemoryManager {
             memory_manager: self,
         }
     }
-    
+
     /// Allocate SIMD-aligned memory
-    pub fn allocate_simd_aligned<T: Float>(&self, count: usize, alignment: usize) -> Result<ZeroCopyBuffer<T>> {
+    pub fn allocate_simd_aligned<T: Float>(
+        &self,
+        count: usize,
+        alignment: usize,
+    ) -> Result<ZeroCopyBuffer<T>> {
         let size = count * size_of::<T>();
         let ptr = self.simd_allocator.allocate_aligned(size, alignment)?;
-        
+
         Ok(ZeroCopyBuffer {
             data: ptr.cast::<T>(),
             capacity: count,
@@ -798,12 +809,16 @@ impl ZeroCopyMemoryManager {
             allocator: Arc::new(SystemAllocator),
         })
     }
-    
+
     /// Map file into memory for zero-copy access
-    pub fn map_file<T>(&self, file_path: &str, access_mode: AccessMode) -> Result<ZeroCopyArrayView<T>> {
+    pub fn map_file<T>(
+        &self,
+        file_path: &str,
+        access_mode: AccessMode,
+    ) -> Result<ZeroCopyArrayView<T>> {
         let mapping = self.mmap_manager.map_file(file_path, access_mode)?;
         let len = mapping.size / size_of::<T>();
-        
+
         Ok(ZeroCopyArrayView {
             data: mapping.memory_region.cast::<T>(),
             len,
@@ -811,7 +826,7 @@ impl ZeroCopyMemoryManager {
             memory_manager: self,
         })
     }
-    
+
     /// Get optimal allocator for given size and alignment
     fn get_optimal_allocator(&self, size: usize, alignment: usize) -> Arc<dyn CustomAllocator> {
         // Choose allocator based on size and alignment requirements
@@ -829,27 +844,27 @@ impl ZeroCopyMemoryManager {
             Arc::new(SystemAllocator)
         }
     }
-    
+
     /// Get memory statistics
     pub fn get_stats(&self) -> &MemoryStats {
         &self.stats
     }
-    
+
     /// Perform garbage collection
     pub fn garbage_collect(&self) -> Result<usize> {
         let mut reclaimed = 0;
-        
+
         // Reclaim from recycler
         reclaimed += self.recycler.reclaim_memory()?;
-        
+
         // Compact memory pools
         for pool in self.memory_pools.values() {
             reclaimed += pool.compact()?;
         }
-        
+
         // Compact arenas
         reclaimed += self.arena_allocator.compact()?;
-        
+
         Ok(reclaimed)
     }
 }
@@ -866,56 +881,56 @@ impl MemoryPool {
             pool_stats: PoolStatistics::new(),
         }
     }
-    
+
     /// Allocate a block from the pool
     pub fn allocate(&self) -> Result<NonNull<u8>> {
         let start_time = std::time::Instant::now();
-        
+
         let mut free_blocks = self.free_blocks.lock().unwrap();
         if let Some(ptr) = free_blocks.pop() {
             self.pool_stats.hits.fetch_add(1, Ordering::Relaxed);
             drop(free_blocks);
-            
+
             self.allocated_count.fetch_add(1, Ordering::Relaxed);
             let allocation_time = start_time.elapsed().as_nanos() as usize;
             self.update_avg_allocation_time(allocation_time);
-            
+
             Ok(ptr)
         } else {
             self.pool_stats.misses.fetch_add(1, Ordering::Relaxed);
             drop(free_blocks);
-            
+
             // Allocate new block
             let layout = Layout::from_size_align(self.block_size, self.alignment)
                 .map_err(|_| MetricsError::MemoryError("Invalid layout".to_string()))?;
-            
+
             let ptr = unsafe { alloc(layout) };
             if ptr.is_null() {
                 return Err(MetricsError::MemoryError("Allocation failed".to_string()));
             }
-            
+
             self.capacity.fetch_add(1, Ordering::Relaxed);
             self.allocated_count.fetch_add(1, Ordering::Relaxed);
-            
+
             Ok(NonNull::new(ptr).unwrap())
         }
     }
-    
+
     /// Deallocate a block back to the pool
     pub fn deallocate(&self, ptr: NonNull<u8>) {
         self.free_blocks.lock().unwrap().push(ptr);
         self.allocated_count.fetch_sub(1, Ordering::Relaxed);
     }
-    
+
     /// Compact the pool by releasing unused blocks
     pub fn compact(&self) -> Result<usize> {
         let mut free_blocks = self.free_blocks.lock().unwrap();
         let mut reclaimed = 0;
-        
+
         // Keep only half of the free blocks, deallocate the rest
         let keep_count = free_blocks.len() / 2;
         let to_deallocate = free_blocks.split_off(keep_count);
-        
+
         for ptr in to_deallocate {
             unsafe {
                 let layout = Layout::from_size_align(self.block_size, self.alignment).unwrap();
@@ -923,11 +938,12 @@ impl MemoryPool {
             }
             reclaimed += self.block_size;
         }
-        
-        self.capacity.fetch_sub(reclaimed / self.block_size, Ordering::Relaxed);
+
+        self.capacity
+            .fetch_sub(reclaimed / self.block_size, Ordering::Relaxed);
         Ok(reclaimed)
     }
-    
+
     fn update_avg_allocation_time(&self, new_time: usize) {
         // Simple exponential moving average
         let current_avg = self.pool_stats.avg_allocation_time.load(Ordering::Relaxed);
@@ -936,7 +952,9 @@ impl MemoryPool {
         } else {
             (current_avg * 7 + new_time) / 8 // 7/8 weight to old, 1/8 to new
         };
-        self.pool_stats.avg_allocation_time.store(new_avg, Ordering::Relaxed);
+        self.pool_stats
+            .avg_allocation_time
+            .store(new_avg, Ordering::Relaxed);
     }
 }
 
@@ -948,24 +966,31 @@ impl SimdAlignedAllocator {
             simd_stats: SimdStats::new(),
         }
     }
-    
+
     /// Allocate SIMD-aligned memory
     pub fn allocate_aligned(&self, size: usize, alignment: usize) -> Result<NonNull<u8>> {
         // Ensure alignment is power of 2 and at least pointer size
         let alignment = alignment.max(align_of::<usize>()).next_power_of_two();
-        
+
         let layout = Layout::from_size_align(size, alignment)
             .map_err(|_| MetricsError::MemoryError("Invalid SIMD layout".to_string()))?;
-        
+
         let ptr = unsafe { alloc(layout) };
         if ptr.is_null() {
-            return Err(MetricsError::MemoryError("SIMD allocation failed".to_string()));
+            return Err(MetricsError::MemoryError(
+                "SIMD allocation failed".to_string(),
+            ));
         }
-        
-        self.simd_stats.simd_memory_usage.fetch_add(size, Ordering::Relaxed);
-        *self.simd_stats.allocations_by_alignment.entry(alignment)
+
+        self.simd_stats
+            .simd_memory_usage
+            .fetch_add(size, Ordering::Relaxed);
+        *self
+            .simd_stats
+            .allocations_by_alignment
+            .entry(alignment)
             .or_insert_with(|| AtomicUsize::new(0)) += 1;
-        
+
         Ok(NonNull::new(ptr).unwrap())
     }
 }
@@ -974,7 +999,7 @@ impl ArenaAllocator {
     /// Create a new arena allocator
     pub fn new(default_arena_size: usize) -> Result<Self> {
         let initial_arena = Arc::new(Mutex::new(Arena::new(default_arena_size)?));
-        
+
         Ok(Self {
             current_arena: initial_arena.clone(),
             arenas: vec![initial_arena],
@@ -982,37 +1007,39 @@ impl ArenaAllocator {
             arena_stats: ArenaStats::new(),
         })
     }
-    
+
     /// Allocate from the arena
     pub fn allocate(&self, size: usize, alignment: usize) -> Result<NonNull<u8>> {
         let mut arena = self.current_arena.lock().unwrap();
-        
+
         if let Ok(ptr) = arena.allocate(size, alignment) {
             Ok(ptr)
         } else {
             // Current arena is full, create a new one
             drop(arena);
-            
+
             let new_arena_size = self.default_arena_size.max(size * 2);
             let new_arena = Arc::new(Mutex::new(Arena::new(new_arena_size)?));
             self.arenas.push(new_arena.clone());
-            
+
             let mut arena = new_arena.lock().unwrap();
             arena.allocate(size, alignment)
         }
     }
-    
+
     /// Reset all arenas
     pub fn reset(&self) {
         for arena in &self.arenas {
             arena.lock().unwrap().reset();
         }
     }
-    
+
     /// Compact arenas by removing empty ones
     pub fn compact(&self) -> Result<usize> {
         // This is a simplified version - in practice you'd want more sophisticated compaction
-        self.arena_stats.fragmentation_waste.store(0, Ordering::Relaxed);
+        self.arena_stats
+            .fragmentation_waste
+            .store(0, Ordering::Relaxed);
         Ok(0)
     }
 }
@@ -1022,12 +1049,14 @@ impl Arena {
     pub fn new(size: usize) -> Result<Self> {
         let layout = Layout::from_size_align(size, 64) // 64-byte alignment for cache lines
             .map_err(|_| MetricsError::MemoryError("Invalid arena layout".to_string()))?;
-        
+
         let ptr = unsafe { alloc(layout) };
         if ptr.is_null() {
-            return Err(MetricsError::MemoryError("Arena allocation failed".to_string()));
+            return Err(MetricsError::MemoryError(
+                "Arena allocation failed".to_string(),
+            ));
         }
-        
+
         Ok(Self {
             memory: NonNull::new(ptr).unwrap(),
             size,
@@ -1035,22 +1064,22 @@ impl Arena {
             alignment: 64,
         })
     }
-    
+
     /// Allocate from the arena
     pub fn allocate(&mut self, size: usize, alignment: usize) -> Result<NonNull<u8>> {
         // Align the current offset
         let aligned_offset = (self.offset + alignment - 1) & !(alignment - 1);
-        
+
         if aligned_offset + size > self.size {
             return Err(MetricsError::MemoryError("Arena exhausted".to_string()));
         }
-        
+
         let ptr = unsafe { self.memory.as_ptr().add(aligned_offset) };
         self.offset = aligned_offset + size;
-        
+
         Ok(NonNull::new(ptr).unwrap())
     }
-    
+
     /// Reset the arena
     pub fn reset(&mut self) {
         self.offset = 0;
@@ -1065,12 +1094,14 @@ impl MemoryMappingManager {
             mapping_stats: MappingStats::new(),
         }
     }
-    
+
     /// Map a file into memory
     pub fn map_file(&self, file_path: &str, access_mode: AccessMode) -> Result<&MemoryMapping> {
         // This is a simplified implementation
         // In practice, you'd use platform-specific APIs (mmap on Unix, MapViewOfFile on Windows)
-        Err(MetricsError::MemoryError("Memory mapping not implemented".to_string()))
+        Err(MetricsError::MemoryError(
+            "Memory mapping not implemented".to_string(),
+        ))
     }
 }
 
@@ -1078,20 +1109,24 @@ impl LockFreeRecycler {
     /// Create a new lock-free recycler
     pub fn new() -> Self {
         const NUM_SIZE_CLASSES: usize = 64;
-        
+
         Self {
-            free_lists: (0..NUM_SIZE_CLASSES).map(|_| AtomicPtr::new(std::ptr::null_mut())).collect(),
-            hazard_pointers: (0..NUM_SIZE_CLASSES).map(|_| AtomicPtr::new(std::ptr::null_mut())).collect(),
+            free_lists: (0..NUM_SIZE_CLASSES)
+                .map(|_| AtomicPtr::new(std::ptr::null_mut()))
+                .collect(),
+            hazard_pointers: (0..NUM_SIZE_CLASSES)
+                .map(|_| AtomicPtr::new(std::ptr::null_mut()))
+                .collect(),
             retired_nodes: CachePadded::new(Mutex::new(Vec::new())),
             recycler_stats: RecyclerStats::new(),
         }
     }
-    
+
     /// Reclaim memory from the recycler
     pub fn reclaim_memory(&self) -> Result<usize> {
         let mut reclaimed = 0;
         let mut retired = self.retired_nodes.lock().unwrap();
-        
+
         // Simple reclamation - in practice you'd implement hazard pointer protocol
         for node_ptr in retired.drain(..) {
             unsafe {
@@ -1099,8 +1134,10 @@ impl LockFreeRecycler {
                 reclaimed += node.size;
             }
         }
-        
-        self.recycler_stats.memory_reclaimed.fetch_add(reclaimed, Ordering::Relaxed);
+
+        self.recycler_stats
+            .memory_reclaimed
+            .fetch_add(reclaimed, Ordering::Relaxed);
         Ok(reclaimed)
     }
 }
@@ -1114,21 +1151,29 @@ impl CustomAllocator for SystemAllocator {
     fn allocate(&self, size: usize, alignment: usize) -> Result<NonNull<u8>> {
         let layout = Layout::from_size_align(size, alignment)
             .map_err(|_| MetricsError::MemoryError("Invalid layout".to_string()))?;
-        
+
         let ptr = unsafe { alloc(layout) };
         if ptr.is_null() {
-            return Err(MetricsError::MemoryError("System allocation failed".to_string()));
+            return Err(MetricsError::MemoryError(
+                "System allocation failed".to_string(),
+            ));
         }
-        
+
         Ok(NonNull::new(ptr).unwrap())
     }
-    
+
     fn deallocate(&self, ptr: NonNull<u8>, size: usize, alignment: usize) {
         let layout = Layout::from_size_align(size, alignment).unwrap();
         unsafe { dealloc(ptr.as_ptr(), layout) };
     }
-    
-    fn reallocate(&self, ptr: NonNull<u8>, old_size: usize, new_size: usize, alignment: usize) -> Result<NonNull<u8>> {
+
+    fn reallocate(
+        &self,
+        ptr: NonNull<u8>,
+        old_size: usize,
+        new_size: usize,
+        alignment: usize,
+    ) -> Result<NonNull<u8>> {
         let new_ptr = self.allocate(new_size, alignment)?;
         unsafe {
             std::ptr::copy_nonoverlapping(ptr.as_ptr(), new_ptr.as_ptr(), old_size.min(new_size));
@@ -1136,11 +1181,11 @@ impl CustomAllocator for SystemAllocator {
         self.deallocate(ptr, old_size, alignment);
         Ok(new_ptr)
     }
-    
+
     fn get_stats(&self) -> AllocatorStats {
         AllocatorStats::new()
     }
-    
+
     fn reset(&self) {
         // System allocator doesn't need reset
     }
@@ -1160,42 +1205,56 @@ impl PoolAllocator {
 impl CustomAllocator for PoolAllocator {
     fn allocate(&self, size: usize, alignment: usize) -> Result<NonNull<u8>> {
         if size > self.block_size {
-            return Err(MetricsError::MemoryError("Size exceeds pool block size".to_string()));
+            return Err(MetricsError::MemoryError(
+                "Size exceeds pool block size".to_string(),
+            ));
         }
-        
+
         let layout = Layout::from_size_align(self.block_size, alignment)
             .map_err(|_| MetricsError::MemoryError("Invalid pool layout".to_string()))?;
-        
+
         let ptr = unsafe { alloc(layout) };
         if ptr.is_null() {
-            return Err(MetricsError::MemoryError("Pool allocation failed".to_string()));
+            return Err(MetricsError::MemoryError(
+                "Pool allocation failed".to_string(),
+            ));
         }
-        
+
         Ok(NonNull::new(ptr).unwrap())
     }
-    
+
     fn deallocate(&self, ptr: NonNull<u8>, _size: usize, alignment: usize) {
         let layout = Layout::from_size_align(self.block_size, alignment).unwrap();
         unsafe { dealloc(ptr.as_ptr(), layout) };
     }
-    
-    fn reallocate(&self, ptr: NonNull<u8>, old_size: usize, new_size: usize, alignment: usize) -> Result<NonNull<u8>> {
+
+    fn reallocate(
+        &self,
+        ptr: NonNull<u8>,
+        old_size: usize,
+        new_size: usize,
+        alignment: usize,
+    ) -> Result<NonNull<u8>> {
         if new_size <= self.block_size {
             Ok(ptr) // No need to reallocate
         } else {
             let new_ptr = self.allocate(new_size, alignment)?;
             unsafe {
-                std::ptr::copy_nonoverlapping(ptr.as_ptr(), new_ptr.as_ptr(), old_size.min(new_size));
+                std::ptr::copy_nonoverlapping(
+                    ptr.as_ptr(),
+                    new_ptr.as_ptr(),
+                    old_size.min(new_size),
+                );
             }
             self.deallocate(ptr, old_size, alignment);
             Ok(new_ptr)
         }
     }
-    
+
     fn get_stats(&self) -> AllocatorStats {
         AllocatorStats::new()
     }
-    
+
     fn reset(&self) {
         // Pool allocator doesn't maintain state to reset
     }
@@ -1213,25 +1272,33 @@ impl SimdAllocatorWrapper {
 impl CustomAllocator for SimdAllocatorWrapper {
     fn allocate(&self, size: usize, alignment: usize) -> Result<NonNull<u8>> {
         let simd_alignment = alignment.max(32).next_power_of_two(); // At least 32-byte aligned for AVX
-        
+
         let layout = Layout::from_size_align(size, simd_alignment)
             .map_err(|_| MetricsError::MemoryError("Invalid SIMD layout".to_string()))?;
-        
+
         let ptr = unsafe { alloc(layout) };
         if ptr.is_null() {
-            return Err(MetricsError::MemoryError("SIMD allocation failed".to_string()));
+            return Err(MetricsError::MemoryError(
+                "SIMD allocation failed".to_string(),
+            ));
         }
-        
+
         Ok(NonNull::new(ptr).unwrap())
     }
-    
+
     fn deallocate(&self, ptr: NonNull<u8>, size: usize, alignment: usize) {
         let simd_alignment = alignment.max(32).next_power_of_two();
         let layout = Layout::from_size_align(size, simd_alignment).unwrap();
         unsafe { dealloc(ptr.as_ptr(), layout) };
     }
-    
-    fn reallocate(&self, ptr: NonNull<u8>, old_size: usize, new_size: usize, alignment: usize) -> Result<NonNull<u8>> {
+
+    fn reallocate(
+        &self,
+        ptr: NonNull<u8>,
+        old_size: usize,
+        new_size: usize,
+        alignment: usize,
+    ) -> Result<NonNull<u8>> {
         let new_ptr = self.allocate(new_size, alignment)?;
         unsafe {
             std::ptr::copy_nonoverlapping(ptr.as_ptr(), new_ptr.as_ptr(), old_size.min(new_size));
@@ -1239,11 +1306,11 @@ impl CustomAllocator for SimdAllocatorWrapper {
         self.deallocate(ptr, old_size, alignment);
         Ok(new_ptr)
     }
-    
+
     fn get_stats(&self) -> AllocatorStats {
         AllocatorStats::new()
     }
-    
+
     fn reset(&self) {
         // SIMD allocator doesn't maintain state to reset
     }
@@ -1263,21 +1330,29 @@ impl CustomAllocator for ArenaAllocatorWrapper {
         // Simplified arena allocation - in practice you'd use a real arena
         let layout = Layout::from_size_align(size, alignment)
             .map_err(|_| MetricsError::MemoryError("Invalid arena layout".to_string()))?;
-        
+
         let ptr = unsafe { alloc(layout) };
         if ptr.is_null() {
-            return Err(MetricsError::MemoryError("Arena allocation failed".to_string()));
+            return Err(MetricsError::MemoryError(
+                "Arena allocation failed".to_string(),
+            ));
         }
-        
+
         Ok(NonNull::new(ptr).unwrap())
     }
-    
+
     fn deallocate(&self, ptr: NonNull<u8>, size: usize, alignment: usize) {
         let layout = Layout::from_size_align(size, alignment).unwrap();
         unsafe { dealloc(ptr.as_ptr(), layout) };
     }
-    
-    fn reallocate(&self, ptr: NonNull<u8>, old_size: usize, new_size: usize, alignment: usize) -> Result<NonNull<u8>> {
+
+    fn reallocate(
+        &self,
+        ptr: NonNull<u8>,
+        old_size: usize,
+        new_size: usize,
+        alignment: usize,
+    ) -> Result<NonNull<u8>> {
         let new_ptr = self.allocate(new_size, alignment)?;
         unsafe {
             std::ptr::copy_nonoverlapping(ptr.as_ptr(), new_ptr.as_ptr(), old_size.min(new_size));
@@ -1285,11 +1360,11 @@ impl CustomAllocator for ArenaAllocatorWrapper {
         self.deallocate(ptr, old_size, alignment);
         Ok(new_ptr)
     }
-    
+
     fn get_stats(&self) -> AllocatorStats {
         AllocatorStats::new()
     }
-    
+
     fn reset(&self) {
         // Arena allocator wrapper doesn't maintain state to reset
     }
@@ -1406,40 +1481,42 @@ impl<T> ZeroCopyBuffer<T> {
     pub fn len(&self) -> usize {
         self.length
     }
-    
+
     /// Check if the buffer is empty
     pub fn is_empty(&self) -> bool {
         self.length == 0
     }
-    
+
     /// Get the capacity of the buffer
     pub fn capacity(&self) -> usize {
         self.capacity
     }
-    
+
     /// Push an element to the buffer
     pub fn push(&mut self, value: T) -> Result<()> {
         if self.length >= self.capacity {
-            return Err(MetricsError::MemoryError("Buffer capacity exceeded".to_string()));
+            return Err(MetricsError::MemoryError(
+                "Buffer capacity exceeded".to_string(),
+            ));
         }
-        
+
         unsafe {
             std::ptr::write(self.data.as_ptr().add(self.length), value);
         }
         self.length += 1;
         Ok(())
     }
-    
+
     /// Get a slice of the buffer data
     pub fn as_slice(&self) -> &[T] {
         unsafe { std::slice::from_raw_parts(self.data.as_ptr(), self.length) }
     }
-    
+
     /// Get a mutable slice of the buffer data
     pub fn as_mut_slice(&mut self) -> &mut [T] {
         unsafe { std::slice::from_raw_parts_mut(self.data.as_ptr(), self.length) }
     }
-    
+
     /// Resize the buffer (zero-copy when shrinking)
     pub fn resize(&mut self, new_size: usize) -> Result<()> {
         if new_size <= self.capacity {
@@ -1453,7 +1530,7 @@ impl<T> ZeroCopyBuffer<T> {
                 new_size * size_of::<T>(),
                 self.layout.align(),
             )?;
-            
+
             self.data = new_ptr.cast::<T>();
             self.capacity = new_size;
             self.length = new_size;
@@ -1470,7 +1547,7 @@ impl<T> Drop for ZeroCopyBuffer<T> {
                 std::ptr::drop_in_place(self.data.as_ptr().add(i));
             }
         }
-        
+
         // Deallocate memory
         self.allocator.deallocate(
             self.data.cast::<u8>(),
@@ -1485,12 +1562,12 @@ impl<'a, T> ZeroCopyArrayView<'a, T> {
     pub fn len(&self) -> usize {
         self.len
     }
-    
+
     /// Check if the view is empty
     pub fn is_empty(&self) -> bool {
         self.len == 0
     }
-    
+
     /// Get element at index
     pub fn get(&self, index: usize) -> Option<&T> {
         if index < self.len {
@@ -1499,18 +1576,20 @@ impl<'a, T> ZeroCopyArrayView<'a, T> {
             None
         }
     }
-    
+
     /// Get a slice of the view
     pub fn as_slice(&self) -> &[T] {
         unsafe { std::slice::from_raw_parts(self.data.as_ptr(), self.len) }
     }
-    
+
     /// Create a subview (zero-copy)
     pub fn subview(&self, start: usize, len: usize) -> Result<ZeroCopyArrayView<'a, T>> {
         if start + len > self.len {
-            return Err(MetricsError::IndexError("Subview bounds exceed array".to_string()));
+            return Err(MetricsError::IndexError(
+                "Subview bounds exceed array".to_string(),
+            ));
         }
-        
+
         Ok(ZeroCopyArrayView {
             data: unsafe { NonNull::new_unchecked(self.data.as_ptr().add(start) as *mut T) },
             len,
@@ -1525,12 +1604,12 @@ impl<'a, T> ZeroCopyArrayViewMut<'a, T> {
     pub fn len(&self) -> usize {
         self.len
     }
-    
+
     /// Check if the view is empty
     pub fn is_empty(&self) -> bool {
         self.len == 0
     }
-    
+
     /// Get element at index
     pub fn get(&self, index: usize) -> Option<&T> {
         if index < self.len {
@@ -1539,7 +1618,7 @@ impl<'a, T> ZeroCopyArrayViewMut<'a, T> {
             None
         }
     }
-    
+
     /// Get mutable element at index
     pub fn get_mut(&mut self, index: usize) -> Option<&mut T> {
         if index < self.len {
@@ -1548,12 +1627,12 @@ impl<'a, T> ZeroCopyArrayViewMut<'a, T> {
             None
         }
     }
-    
+
     /// Get a slice of the view
     pub fn as_slice(&self) -> &[T] {
         unsafe { std::slice::from_raw_parts(self.data.as_ptr(), self.len) }
     }
-    
+
     /// Get a mutable slice of the view
     pub fn as_mut_slice(&mut self) -> &mut [T] {
         unsafe { std::slice::from_raw_parts_mut(self.data.as_ptr(), self.len) }

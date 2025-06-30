@@ -148,8 +148,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> EnhancedS
     pub fn with_options(
         a: Box<dyn LinearOperator<F>>,
         b: Box<dyn LinearOperator<F>>,
-        #[allow(dead_code)]
-    options: EnhancedOperatorOptions,
+        #[allow(dead_code)] options: EnhancedOperatorOptions,
     ) -> SparseResult<Self> {
         if a.shape() != b.shape() {
             return Err(SparseError::ShapeMismatch {
@@ -245,8 +244,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps>
     pub fn with_options(
         a: Box<dyn LinearOperator<F>>,
         b: Box<dyn LinearOperator<F>>,
-        #[allow(dead_code)]
-    options: EnhancedOperatorOptions,
+        #[allow(dead_code)] options: EnhancedOperatorOptions,
     ) -> SparseResult<Self> {
         if a.shape() != b.shape() {
             return Err(SparseError::ShapeMismatch {
@@ -334,8 +332,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> EnhancedS
     pub fn with_options(
         alpha: F,
         operator: Box<dyn LinearOperator<F>>,
-        #[allow(dead_code)]
-    options: EnhancedOperatorOptions,
+        #[allow(dead_code)] options: EnhancedOperatorOptions,
     ) -> Self {
         Self {
             alpha,
@@ -443,22 +440,22 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> Convoluti
     /// Parallel optimization for large convolutions
     fn optimize_convolution_parallel(&self, result: &mut [F], x: &[F]) -> SparseResult<()> {
         use scirs2_core::parallel_ops::*;
-        
+
         // Split the output computation across parallel chunks
         let chunk_size = self.options.chunk_size.min(self.output_size);
         let indices: Vec<usize> = (0..self.output_size).collect();
         let chunks: Vec<&[usize]> = indices.chunks(chunk_size).collect();
-        
+
         let parallel_results: Vec<Vec<F>> = parallel_map(&chunks, |chunk| {
             let mut chunk_result = vec![F::zero(); chunk.len()];
-            
+
             for (local_i, &global_i) in chunk.iter().enumerate() {
                 chunk_result[local_i] = self.compute_convolution_at_index(global_i, x);
             }
-            
+
             chunk_result
         });
-        
+
         // Collect results back into the main result vector
         let mut result_idx = 0;
         for chunk_result in parallel_results {
@@ -469,29 +466,29 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> Convoluti
                 }
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// SIMD optimization for medium-sized convolutions
     fn optimize_convolution_simd(&self, result: &mut [F], x: &[F]) -> SparseResult<()> {
         // For SIMD optimization, we can vectorize the inner product computation
         // when the kernel is sufficiently large
-        
+
         #[allow(clippy::needless_range_loop)]
         for i in 0..self.output_size {
             // Use SIMD-optimized dot product for kernel computation
             let convolution_result = self.compute_convolution_at_index_simd(i, x);
             result[i] = convolution_result;
         }
-        
+
         Ok(())
     }
-    
+
     /// Compute convolution at a specific output index (scalar version)
     fn compute_convolution_at_index(&self, i: usize, x: &[F]) -> F {
         let mut sum = F::zero();
-        
+
         match self.mode {
             ConvolutionMode::Full => {
                 for (j, &kernel_val) in self.kernel.iter().enumerate() {
@@ -518,16 +515,16 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> Convoluti
                 }
             }
         }
-        
+
         sum
     }
-    
+
     /// Compute convolution at a specific output index using SIMD optimization
     fn compute_convolution_at_index_simd(&self, i: usize, x: &[F]) -> F {
         // Extract relevant portions of kernel and input for this output position
         let mut x_segment = Vec::new();
         let mut kernel_segment = Vec::new();
-        
+
         match self.mode {
             ConvolutionMode::Full => {
                 for (j, &kernel_val) in self.kernel.iter().enumerate() {
@@ -557,7 +554,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> Convoluti
                 }
             }
         }
-        
+
         // Use SIMD-optimized dot product if segments are large enough
         if kernel_segment.len() >= self.options.simd_threshold {
             use ndarray::ArrayView1;
@@ -566,7 +563,11 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> Convoluti
             F::simd_dot(&kernel_view, &x_view)
         } else {
             // Fall back to scalar computation for small segments
-            kernel_segment.iter().zip(x_segment.iter()).map(|(&k, &x)| k * x).sum()
+            kernel_segment
+                .iter()
+                .zip(x_segment.iter())
+                .map(|(&k, &x)| k * x)
+                .sum()
         }
     }
 
@@ -576,8 +577,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> Convoluti
         kernel: Vec<F>,
         input_size: usize,
         mode: ConvolutionMode,
-        #[allow(dead_code)]
-    options: EnhancedOperatorOptions,
+        #[allow(dead_code)] options: EnhancedOperatorOptions,
     ) -> Self {
         let output_size = match mode {
             ConvolutionMode::Full => input_size + kernel.len() - 1,
@@ -645,7 +645,8 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
                     result[i] = sum;
                 }
             }
-            ConvolutionMode::Valid => {
+            ConvolutionMode::Valid =>
+            {
                 #[allow(clippy::needless_range_loop)]
                 for i in 0..self.output_size {
                     let mut sum = F::zero();
@@ -688,7 +689,8 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
 
         // Implement correlation (adjoint of convolution)
         match self.mode {
-            ConvolutionMode::Full => {
+            ConvolutionMode::Full =>
+            {
                 #[allow(clippy::needless_range_loop)]
                 for i in 0..self.input_size {
                     let mut sum = F::zero();
@@ -770,8 +772,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> FiniteDif
         order: usize,
         spacing: F,
         boundary: BoundaryCondition,
-        #[allow(dead_code)]
-    options: EnhancedOperatorOptions,
+        #[allow(dead_code)] options: EnhancedOperatorOptions,
     ) -> Self {
         Self {
             size,
@@ -951,7 +952,7 @@ pub struct EnhancedCompositionOperator<F> {
     options: EnhancedOperatorOptions,
 }
 
-impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> 
+impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps>
     EnhancedCompositionOperator<F>
 {
     /// Create a new composition operator (left * right)
@@ -959,19 +960,19 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps>
     #[allow(dead_code)]
     #[allow(dead_code)]
     pub fn new(
-        left: Box<dyn LinearOperator<F>>, 
-        right: Box<dyn LinearOperator<F>>
+        left: Box<dyn LinearOperator<F>>,
+        right: Box<dyn LinearOperator<F>>,
     ) -> SparseResult<Self> {
         let (left_rows, left_cols) = left.shape();
         let (right_rows, _right_cols) = right.shape();
-        
+
         if left_cols != right_rows {
             return Err(SparseError::ShapeMismatch {
                 expected: (left_rows, right_rows),
                 found: (left_rows, left_cols),
             });
         }
-        
+
         Ok(Self {
             left,
             right,
@@ -988,15 +989,19 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps>
     ) -> SparseResult<Self> {
         let (left_rows, left_cols) = left.shape();
         let (right_rows, _right_cols) = right.shape();
-        
+
         if left_cols != right_rows {
             return Err(SparseError::ShapeMismatch {
                 expected: (left_rows, right_rows),
                 found: (left_rows, left_cols),
             });
         }
-        
-        Ok(Self { left, right, options })
+
+        Ok(Self {
+            left,
+            right,
+            options,
+        })
     }
 }
 
@@ -1021,7 +1026,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
                 "adjoint not supported for one or both operators".to_string(),
             ));
         }
-        
+
         // Adjoint of composition: (A*B)^H = B^H * A^H
         let intermediate = self.left.rmatvec(x)?;
         self.right.rmatvec(&intermediate)
@@ -1040,11 +1045,11 @@ pub struct ElementwiseFunctionOperator<F> {
     options: EnhancedOperatorOptions,
 }
 
-impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> 
+impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps>
     ElementwiseFunctionOperator<F>
 {
     /// Create a new element-wise function operator
-    pub fn new<Func>(function: Func, size: usize) -> Self 
+    pub fn new<Func>(function: Func, size: usize) -> Self
     where
         Func: Fn(F) -> F + Send + Sync + 'static,
     {
@@ -1057,11 +1062,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps>
 
     /// Create with custom options
     #[allow(dead_code)]
-    pub fn with_options<Func>(
-        function: Func, 
-        size: usize, 
-        options: EnhancedOperatorOptions
-    ) -> Self 
+    pub fn with_options<Func>(function: Func, size: usize, options: EnhancedOperatorOptions) -> Self
     where
         Func: Fn(F) -> F + Send + Sync + 'static,
     {
@@ -1119,15 +1120,10 @@ pub struct KroneckerProductOperator<F> {
     options: EnhancedOperatorOptions,
 }
 
-impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> 
-    KroneckerProductOperator<F>
-{
+impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> KroneckerProductOperator<F> {
     /// Create a new Kronecker product operator (left ⊗ right)
     #[allow(dead_code)]
-    pub fn new(
-        left: Box<dyn LinearOperator<F>>, 
-        right: Box<dyn LinearOperator<F>>
-    ) -> Self {
+    pub fn new(left: Box<dyn LinearOperator<F>>, right: Box<dyn LinearOperator<F>>) -> Self {
         Self {
             left,
             right,
@@ -1142,7 +1138,11 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps>
         right: Box<dyn LinearOperator<F>>,
         options: EnhancedOperatorOptions,
     ) -> Self {
-        Self { left, right, options }
+        Self {
+            left,
+            right,
+            options,
+        }
     }
 }
 
@@ -1158,7 +1158,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
     fn matvec(&self, x: &[F]) -> SparseResult<Vec<F>> {
         let (left_rows, left_cols) = self.left.shape();
         let (right_rows, right_cols) = self.right.shape();
-        
+
         if x.len() != left_cols * right_cols {
             return Err(SparseError::DimensionMismatch {
                 expected: left_cols * right_cols,
@@ -1222,7 +1222,8 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
         // This is a simplified implementation - in practice, you'd need a more sophisticated approach
         // to handle adjoint of Kronecker products without cloning operators
         Err(SparseError::OperationNotSupported(
-            "Kronecker product adjoint requires operator cloning which is not currently supported".to_string(),
+            "Kronecker product adjoint requires operator cloning which is not currently supported"
+                .to_string(),
         ))
     }
 }

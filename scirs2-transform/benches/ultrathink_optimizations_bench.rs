@@ -30,11 +30,8 @@ fn bench_adaptive_simd_normalization(c: &mut Criterion) {
                 &data,
                 |b, data| {
                     b.iter(|| {
-                        let _result = normalize_array(
-                            black_box(data),
-                            NormalizationMethod::ZScore,
-                            0,
-                        );
+                        let _result =
+                            normalize_array(black_box(data), NormalizationMethod::ZScore, 0);
                     });
                 },
             );
@@ -245,11 +242,8 @@ fn bench_comprehensive_performance(c: &mut Criterion) {
         |b, data| {
             b.iter(|| {
                 // Normalization
-                let normalized = normalize_array(
-                    black_box(data),
-                    NormalizationMethod::ZScore,
-                    0,
-                ).unwrap();
+                let normalized =
+                    normalize_array(black_box(data), NormalizationMethod::ZScore, 0).unwrap();
 
                 // Polynomial features (degree 2)
                 let poly = PolynomialFeatures::new(2, false, false);
@@ -271,11 +265,9 @@ fn bench_comprehensive_performance(c: &mut Criterion) {
                 #[cfg(feature = "simd")]
                 {
                     // Adaptive SIMD normalization
-                    let normalized = simd_normalize_adaptive(
-                        black_box(data),
-                        NormalizationMethod::ZScore,
-                        0,
-                    ).unwrap();
+                    let normalized =
+                        simd_normalize_adaptive(black_box(data), NormalizationMethod::ZScore, 0)
+                            .unwrap();
 
                     // Optimized SIMD polynomial features
                     let poly_features = simd_polynomial_features_optimized(
@@ -284,7 +276,8 @@ fn bench_comprehensive_performance(c: &mut Criterion) {
                         false,
                         false,
                         256, // 256MB memory limit
-                    ).unwrap();
+                    )
+                    .unwrap();
 
                     // Enhanced PCA
                     let mut pca = EnhancedPCA::new(10, true, 512).unwrap();
@@ -294,11 +287,8 @@ fn bench_comprehensive_performance(c: &mut Criterion) {
                 #[cfg(not(feature = "simd"))]
                 {
                     // Fallback to standard pipeline when SIMD is not available
-                    let normalized = normalize_array(
-                        black_box(data),
-                        NormalizationMethod::ZScore,
-                        0,
-                    ).unwrap();
+                    let normalized =
+                        normalize_array(black_box(data), NormalizationMethod::ZScore, 0).unwrap();
 
                     let poly = PolynomialFeatures::new(2, false, false);
                     let poly_features = poly.transform(&normalized.view()).unwrap();

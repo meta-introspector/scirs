@@ -12,7 +12,10 @@
 
 use crate::error::{SignalError, SignalResult};
 use crate::lti::{LtiSystem, StateSpace, TransferFunction};
-use crate::sysid_enhanced::{EnhancedSysIdResult, SystemModel, ParameterEstimate, ModelValidationMetrics, IdentificationMethod, ComputationalDiagnostics};
+use crate::sysid_enhanced::{
+    ComputationalDiagnostics, EnhancedSysIdResult, IdentificationMethod, ModelValidationMetrics,
+    ParameterEstimate, SystemModel,
+};
 use ndarray::{s, Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
 use num_complex::Complex64;
 use num_traits::{Float, NumCast};
@@ -155,10 +158,23 @@ pub struct ParameterDistribution {
 /// Statistical distribution types
 #[derive(Debug, Clone)]
 pub enum DistributionType {
-    Gaussian { mean: f64, variance: f64 },
-    StudentT { degrees_of_freedom: f64, location: f64, scale: f64 },
-    Uniform { lower: f64, upper: f64 },
-    Beta { alpha: f64, beta: f64 },
+    Gaussian {
+        mean: f64,
+        variance: f64,
+    },
+    StudentT {
+        degrees_of_freedom: f64,
+        location: f64,
+        scale: f64,
+    },
+    Uniform {
+        lower: f64,
+        upper: f64,
+    },
+    Beta {
+        alpha: f64,
+        beta: f64,
+    },
     Custom(String),
 }
 
@@ -522,7 +538,7 @@ impl Default for UltraEnhancedSysIdConfig {
 /// let n = 1000;
 /// let input: Array1<f64> = Array1::linspace(0.0, 10.0, n)
 ///     .mapv(|t| (2.0 * PI * 0.1 * t).sin());
-/// 
+///
 /// // Simulate simple system: y[n] = 0.8*y[n-1] + 0.5*u[n-1]
 /// let mut output = Array1::zeros(n);
 /// for i in 1..n {
@@ -531,7 +547,7 @@ impl Default for UltraEnhancedSysIdConfig {
 ///
 /// let config = UltraEnhancedSysIdConfig::default();
 /// let result = ultra_enhanced_system_identification(&input, &output, &config).unwrap();
-/// 
+///
 /// assert!(result.base_result.validation.fit_percentage > 80.0);
 /// assert!(result.model_ensemble.models.len() > 0);
 /// ```
@@ -541,60 +557,68 @@ pub fn ultra_enhanced_system_identification(
     config: &UltraEnhancedSysIdConfig,
 ) -> SignalResult<UltraEnhancedSysIdResult> {
     let start_time = std::time::Instant::now();
-    
+
     // Input validation
     validate_identification_signals(input_signal, output_signal)?;
-    
+
     // SIMD optimization setup
     let caps = PlatformCapabilities::detect();
     let simd_enabled = config.performance_config.simd_optimization && caps.has_avx2;
-    
+
     // Performance monitoring
     let mut performance_monitor = PerformanceMonitor::new();
-    
+
     // Step 1: Multi-method identification
     let mut candidate_models = Vec::new();
-    
+
     for &method in &config.methods {
         let method_start = std::time::Instant::now();
-        
+
         match method {
             UltraAdvancedMethod::DeepNeuralNetwork => {
                 if config.neural_config.enable_neural_models {
                     let neural_result = identify_with_deep_neural_network(
-                        input_signal, output_signal, &config.neural_config, simd_enabled
+                        input_signal,
+                        output_signal,
+                        &config.neural_config,
+                        simd_enabled,
                     )?;
                     candidate_models.push(neural_result);
                 }
-            },
+            }
             UltraAdvancedMethod::BayesianIdentification => {
                 let bayesian_result = identify_with_bayesian_inference(
-                    input_signal, output_signal, &config.uncertainty_config, simd_enabled
+                    input_signal,
+                    output_signal,
+                    &config.uncertainty_config,
+                    simd_enabled,
                 )?;
                 candidate_models.push(bayesian_result);
-            },
+            }
             UltraAdvancedMethod::GaussianProcess => {
-                let gp_result = identify_with_gaussian_process(
-                    input_signal, output_signal, simd_enabled
-                )?;
+                let gp_result =
+                    identify_with_gaussian_process(input_signal, output_signal, simd_enabled)?;
                 candidate_models.push(gp_result);
-            },
+            }
             UltraAdvancedMethod::PhysicsInformedNN => {
                 let pinn_result = identify_with_physics_informed_nn(
-                    input_signal, output_signal, &config.neural_config, simd_enabled
+                    input_signal,
+                    output_signal,
+                    &config.neural_config,
+                    simd_enabled,
                 )?;
                 candidate_models.push(pinn_result);
-            },
+            }
             _ => {
                 // Other methods can be added here
                 eprintln!("Method {:?} not yet implemented", method);
-            },
+            }
         }
-        
+
         let method_time = method_start.elapsed().as_secs_f64() * 1000.0;
         performance_monitor.record_method_time(method, method_time);
     }
-    
+
     // Step 2: Build model ensemble
     let model_ensemble = if config.ensemble_config.enable_ensemble {
         build_model_ensemble(candidate_models, &config.ensemble_config)?
@@ -602,35 +626,40 @@ pub fn ultra_enhanced_system_identification(
         // Use best single model
         build_single_model_ensemble(candidate_models)?
     };
-    
+
     // Step 3: Real-time tracker setup
     let real_time_tracker = if config.real_time_config.enable_real_time {
-        initialize_real_time_tracker(input_signal, output_signal, &model_ensemble, &config.real_time_config)?
+        initialize_real_time_tracker(
+            input_signal,
+            output_signal,
+            &model_ensemble,
+            &config.real_time_config,
+        )?
     } else {
         RealTimeTracker::default()
     };
-    
+
     // Step 4: Uncertainty quantification
     let uncertainty_analysis = if config.uncertainty_config.enable_uncertainty {
         perform_uncertainty_quantification(&model_ensemble, &config.uncertainty_config)?
     } else {
         UncertaintyAnalysis::default()
     };
-    
+
     // Step 5: Neural models (if applicable)
     let neural_models = if config.neural_config.enable_neural_models {
         Some(extract_neural_models(&candidate_models))
     } else {
         None
     };
-    
+
     // Step 6: Select best base model for compatibility
     let base_result = select_best_base_model(&candidate_models)?;
-    
+
     // Finalize performance metrics
     let total_time = start_time.elapsed().as_secs_f64() * 1000.0;
     let performance_metrics = performance_monitor.finalize(total_time, simd_enabled);
-    
+
     Ok(UltraEnhancedSysIdResult {
         base_result,
         model_ensemble,
@@ -655,24 +684,27 @@ pub fn ultra_enhanced_real_time_identification(
     config: &RealTimeConfig,
 ) -> SignalResult<ParameterUpdate> {
     let start_time = std::time::Instant::now();
-    
+
     // Update tracker with new data point
     let parameter_update = tracker.update_with_new_data(new_input, new_output, config)?;
-    
+
     // Check for system changes
-    let change_detected = tracker.detect_change(&parameter_update, config.change_detection_threshold)?;
-    
+    let change_detected =
+        tracker.detect_change(&parameter_update, config.change_detection_threshold)?;
+
     if change_detected {
         tracker.handle_system_change(&parameter_update, config)?;
     }
-    
+
     // Validate real-time constraints
     let processing_time = start_time.elapsed().as_secs_f64() * 1000.0;
     if processing_time > config.max_latency_ms {
-        eprintln!("Warning: Real-time processing exceeded latency limit: {:.2}ms > {:.2}ms",
-                  processing_time, config.max_latency_ms);
+        eprintln!(
+            "Warning: Real-time processing exceeded latency limit: {:.2}ms > {:.2}ms",
+            processing_time, config.max_latency_ms
+        );
     }
-    
+
     Ok(parameter_update)
 }
 
@@ -696,13 +728,13 @@ fn identify_with_deep_neural_network(
             total_parameters: 0,
         }
     };
-    
+
     // Train neural network
     let neural_net = train_feedforward_network(input, output, &architecture, config, simd_enabled)?;
-    
+
     // Convert to system model
     let model = SystemModel::from_neural_network(neural_net)?;
-    
+
     Ok(WeightedModel {
         model,
         weight: 0.8,
@@ -721,7 +753,7 @@ fn identify_with_bayesian_inference(
 ) -> SignalResult<WeightedModel> {
     // Implement Bayesian parameter estimation
     let bayesian_model = perform_bayesian_estimation(input, output, config, simd_enabled)?;
-    
+
     Ok(WeightedModel {
         model: bayesian_model,
         weight: 0.9,
@@ -739,7 +771,7 @@ fn identify_with_gaussian_process(
 ) -> SignalResult<WeightedModel> {
     // Implement Gaussian process regression
     let gp_model = train_gaussian_process(input, output, simd_enabled)?;
-    
+
     Ok(WeightedModel {
         model: gp_model,
         weight: 0.85,
@@ -758,7 +790,7 @@ fn identify_with_physics_informed_nn(
 ) -> SignalResult<WeightedModel> {
     // Implement physics-informed neural network
     let pinn_model = train_physics_informed_network(input, output, config, simd_enabled)?;
-    
+
     Ok(WeightedModel {
         model: pinn_model,
         weight: 0.92,
@@ -790,14 +822,14 @@ impl PerformanceMonitor {
             memory_usage: 0.0,
         }
     }
-    
+
     fn record_method_time(&mut self, method: UltraAdvancedMethod, time_ms: f64) {
         self.method_times.insert(method, time_ms);
     }
-    
+
     fn finalize(self, total_time: f64, simd_enabled: bool) -> PerformanceMetrics {
         let simd_factor = if simd_enabled { 2.5 } else { 1.0 };
-        
+
         PerformanceMetrics {
             computational_metrics: ComputationalMetrics {
                 total_time_ms: total_time,
@@ -819,7 +851,7 @@ impl PerformanceMonitor {
                 optimization_efficiency: 0.88,
             },
             scalability_metrics: ScalabilityMetrics {
-                time_complexity_estimate: 2.2, // O(n^2.2)
+                time_complexity_estimate: 2.2,   // O(n^2.2)
                 memory_complexity_estimate: 1.5, // O(n^1.5)
                 parallel_scaling_factor: 0.8,
                 data_size_handling: 0.9,
@@ -917,14 +949,14 @@ impl RealTimeTracker {
     ) -> SignalResult<ParameterUpdate> {
         // Kalman filter update
         let prediction_error = output - self.predict_output(input)?;
-        
+
         // Update parameters using adaptive learning rate
         let parameter_change = self.learning_rates.mapv(|lr| lr * prediction_error);
         self.current_parameters = &self.current_parameters + &parameter_change;
-        
+
         // Update covariance matrix
         self.update_covariance_matrix(config.forgetting_factor)?;
-        
+
         Ok(ParameterUpdate {
             new_parameters: self.current_parameters.clone(),
             parameter_change,
@@ -932,34 +964,38 @@ impl RealTimeTracker {
             change_detected: false,
         })
     }
-    
+
     fn predict_output(&self, input: f64) -> SignalResult<f64> {
         // Simple linear prediction
         Ok(self.current_parameters[0] * input)
     }
-    
+
     fn update_covariance_matrix(&mut self, forgetting_factor: f64) -> SignalResult<()> {
         self.parameter_covariance *= forgetting_factor;
         Ok(())
     }
-    
+
     fn detect_change(&mut self, update: &ParameterUpdate, threshold: f64) -> SignalResult<bool> {
         let change_magnitude = update.parameter_change.mapv(|x| x.abs()).sum();
         let change_detected = change_magnitude > threshold;
-        
+
         self.change_detection.change_probability = change_magnitude / threshold;
-        
+
         Ok(change_detected)
     }
-    
-    fn handle_system_change(&mut self, update: &ParameterUpdate, config: &RealTimeConfig) -> SignalResult<()> {
+
+    fn handle_system_change(
+        &mut self,
+        update: &ParameterUpdate,
+        config: &RealTimeConfig,
+    ) -> SignalResult<()> {
         // Increase learning rates temporarily
         self.learning_rates *= 2.0;
-        
+
         // Reset covariance to allow faster adaptation
         let n = self.parameter_covariance.nrows();
         self.parameter_covariance = Array2::eye(n) * 10.0;
-        
+
         Ok(())
     }
 }
@@ -972,20 +1008,23 @@ fn validate_identification_signals(input: &Array1<f64>, output: &Array1<f64>) ->
             "Input and output signals must have the same length".to_string(),
         ));
     }
-    
+
     if input.len() < 10 {
         return Err(SignalError::ValueError(
             "Signals must have at least 10 samples for identification".to_string(),
         ));
     }
-    
+
     check_finite(input.as_slice().unwrap(), "input")?;
     check_finite(output.as_slice().unwrap(), "output")?;
-    
+
     Ok(())
 }
 
-fn search_optimal_architecture(input: &Array1<f64>, output: &Array1<f64>) -> SignalResult<NetworkArchitecture> {
+fn search_optimal_architecture(
+    input: &Array1<f64>,
+    output: &Array1<f64>,
+) -> SignalResult<NetworkArchitecture> {
     // Neural architecture search (simplified)
     Ok(NetworkArchitecture {
         input_size: 10,
@@ -1005,23 +1044,26 @@ fn train_feedforward_network(
     // Train neural network (simplified)
     let mut weights = Vec::new();
     let mut biases = Vec::new();
-    
+
     // Initialize weights and biases
     for i in 0..architecture.hidden_layers.len() + 1 {
         let (input_size, output_size) = if i == 0 {
             (architecture.input_size, architecture.hidden_layers[0])
         } else if i == architecture.hidden_layers.len() {
-            (architecture.hidden_layers[i-1], architecture.output_size)
+            (architecture.hidden_layers[i - 1], architecture.output_size)
         } else {
-            (architecture.hidden_layers[i-1], architecture.hidden_layers[i])
+            (
+                architecture.hidden_layers[i - 1],
+                architecture.hidden_layers[i],
+            )
         };
-        
+
         weights.push(Array2::zeros((input_size, output_size)));
         biases.push(Array1::zeros(output_size));
     }
-    
+
     let activation_functions = vec![ActivationFunction::ReLU; architecture.hidden_layers.len() + 1];
-    
+
     Ok(FeedforwardNetwork {
         architecture: architecture.clone(),
         weights,
@@ -1091,14 +1133,14 @@ fn build_model_ensemble(
             computational_efficiency: 0.9,
         },
     };
-    
+
     let diversity_metrics = DiversityMetrics {
         prediction_diversity: 0.3,
         structural_diversity: 0.5,
         parameter_diversity: 0.4,
         ensemble_strength: 0.85,
     };
-    
+
     Ok(ModelEnsemble {
         models,
         ensemble_prediction: Array1::zeros(100), // Placeholder
@@ -1109,7 +1151,10 @@ fn build_model_ensemble(
 
 fn build_single_model_ensemble(models: Vec<WeightedModel>) -> SignalResult<ModelEnsemble> {
     // Select best single model
-    let best_model = models.into_iter().max_by(|a, b| a.weight.partial_cmp(&b.weight).unwrap()).unwrap();
+    let best_model = models
+        .into_iter()
+        .max_by(|a, b| a.weight.partial_cmp(&b.weight).unwrap())
+        .unwrap();
     build_model_ensemble(vec![best_model], &EnsembleConfig::default())
 }
 
@@ -1180,40 +1225,49 @@ mod tests {
     fn test_ultra_enhanced_system_identification() {
         // Generate test signals
         let n = 200;
-        let input: Array1<f64> = Array1::linspace(0.0, 10.0, n)
-            .mapv(|t| (2.0 * PI * 0.1 * t).sin());
-        
+        let input: Array1<f64> =
+            Array1::linspace(0.0, 10.0, n).mapv(|t| (2.0 * PI * 0.1 * t).sin());
+
         let mut output = Array1::zeros(n);
         for i in 1..n {
-            output[i] = 0.8 * output[i-1] + 0.5 * input[i-1];
+            output[i] = 0.8 * output[i - 1] + 0.5 * input[i - 1];
         }
-        
+
         let config = UltraEnhancedSysIdConfig::default();
         let result = ultra_enhanced_system_identification(&input, &output, &config);
-        
+
         assert!(result.is_ok());
         let id_result = result.unwrap();
         assert!(id_result.model_ensemble.models.len() > 0);
-        assert!(id_result.performance_metrics.computational_metrics.total_time_ms > 0.0);
+        assert!(
+            id_result
+                .performance_metrics
+                .computational_metrics
+                .total_time_ms
+                > 0.0
+        );
     }
 
     #[test]
     fn test_real_time_tracker() {
         let mut tracker = RealTimeTracker::default();
         let config = RealTimeConfig::default();
-        
+
         let update = ultra_enhanced_real_time_identification(1.0, 0.8, &mut tracker, &config);
         assert!(update.is_ok());
-        
+
         let param_update = update.unwrap();
-        assert_eq!(param_update.new_parameters.len(), tracker.current_parameters.len());
+        assert_eq!(
+            param_update.new_parameters.len(),
+            tracker.current_parameters.len()
+        );
     }
 
     #[test]
     fn test_performance_monitor() {
         let mut monitor = PerformanceMonitor::new();
         monitor.record_method_time(UltraAdvancedMethod::DeepNeuralNetwork, 100.0);
-        
+
         let metrics = monitor.finalize(150.0, true);
         assert!(metrics.computational_metrics.simd_acceleration_factor > 1.0);
         assert_eq!(metrics.computational_metrics.total_time_ms, 150.0);

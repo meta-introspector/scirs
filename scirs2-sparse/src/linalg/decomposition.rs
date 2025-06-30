@@ -88,7 +88,6 @@ pub enum PivotingStrategy {
     Rook,
 }
 
-
 /// Options for LU decomposition
 #[derive(Debug, Clone)]
 pub struct LUOptions {
@@ -194,7 +193,7 @@ where
         zero_threshold: 1e-14,
         check_singular: true,
     };
-    
+
     lu_decomposition_with_options(matrix, Some(options))
 }
 
@@ -234,8 +233,8 @@ where
 /// ```
 #[allow(dead_code)]
 pub fn lu_decomposition_with_options<T, S>(
-    matrix: &S, 
-    options: Option<LUOptions>
+    matrix: &S,
+    options: Option<LUOptions>,
 ) -> SparseResult<LUResult<T>>
 where
     T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
@@ -261,13 +260,17 @@ where
     // Initialize permutations
     let mut row_perm: Vec<usize> = (0..n).collect();
     let mut col_perm: Vec<usize> = (0..n).collect();
-    
+
     // Compute row scaling factors for scaled partial pivoting
     let mut row_scales = vec![T::one(); n];
     if matches!(opts.pivoting, PivotingStrategy::ScaledPartial) {
         for i in 0..n {
             let row_data = working_matrix.get_row(i);
-            let max_val = row_data.values().map(|&v| v.abs()).fold(T::zero(), |a, b| if a > b { a } else { b });
+            let max_val =
+                row_data
+                    .values()
+                    .map(|&v| v.abs())
+                    .fold(T::zero(), |a, b| if a > b { a } else { b });
             if max_val > T::zero() {
                 row_scales[i] = max_val;
             }
@@ -277,20 +280,19 @@ where
     // Gaussian elimination with enhanced pivoting
     for k in 0..n - 1 {
         // Find pivot using selected strategy
-        let (pivot_row, pivot_col) = find_enhanced_pivot(
-            &working_matrix, 
-            k, 
-            &row_perm, 
-            &col_perm,
-            &row_scales,
-            &opts
-        )?;
+        let (pivot_row, pivot_col) =
+            find_enhanced_pivot(&working_matrix, k, &row_perm, &col_perm, &row_scales, &opts)?;
 
         // Apply row and column permutations
         if pivot_row != k {
             row_perm.swap(k, pivot_row);
         }
-        if pivot_col != k && matches!(opts.pivoting, PivotingStrategy::Complete | PivotingStrategy::Rook) {
+        if pivot_col != k
+            && matches!(
+                opts.pivoting,
+                PivotingStrategy::Complete | PivotingStrategy::Rook
+            )
+        {
             col_perm.swap(k, pivot_col);
             // When columns are swapped, we need to update all matrix elements
             for i in 0..n {
@@ -622,7 +624,8 @@ where
         for i in (k + 1)..n {
             let mut sum = T::zero();
             for j in 0..k {
-                sum = sum + working_matrix.get(perm[i], perm[j]) * working_matrix.get(perm[k], perm[j]);
+                sum = sum
+                    + working_matrix.get(perm[i], perm[j]) * working_matrix.get(perm[k], perm[j]);
             }
 
             let a_ik = working_matrix.get(perm[i], perm[k]);
@@ -633,7 +636,7 @@ where
 
     // Extract lower triangular matrix with proper permutation
     let mut l_rows = Vec::new();
-    let mut l_cols = Vec::new(); 
+    let mut l_cols = Vec::new();
     let mut l_vals = Vec::new();
 
     for i in 0..rank {
@@ -774,7 +777,10 @@ where
             let mut l_ik = working_matrix.get(actual_i, actual_k);
 
             for j in 0..k {
-                l_ik = l_ik - working_matrix.get(actual_i, perm[j]) * working_matrix.get(actual_k, perm[j]) * d_values[j];
+                l_ik = l_ik
+                    - working_matrix.get(actual_i, perm[j])
+                        * working_matrix.get(actual_k, perm[j])
+                        * d_values[j];
             }
 
             l_ik = l_ik / diag_val;
@@ -815,7 +821,7 @@ where
     for i in k..n {
         let actual_i = perm[i];
         let diag_val = matrix.get(actual_i, actual_i).abs();
-        
+
         if diag_val > max_val {
             max_val = diag_val;
             pivot_idx = i;
@@ -845,7 +851,7 @@ where
 
     for i in 0..n {
         let actual_i = perm[i];
-        
+
         // Add diagonal element (always 1 for unit triangular)
         rows.push(i);
         cols.push(i);
@@ -1149,10 +1155,10 @@ where
         zero_threshold: 1e-14,
         check_singular: true,
     };
-    
+
     let row_scales = vec![T::one(); matrix.n];
     let col_perm: Vec<usize> = (0..matrix.n).collect();
-    
+
     let (pivot_row, _) = find_enhanced_pivot(matrix, k, p, &col_perm, &row_scales, &opts)?;
     Ok(pivot_row)
 }
@@ -1170,18 +1176,18 @@ where
     T: Float + Debug + Copy,
 {
     let n = matrix.n;
-    
+
     match &opts.pivoting {
         PivotingStrategy::None => {
             // No pivoting - use diagonal element
             Ok((k, k))
-        },
-        
+        }
+
         PivotingStrategy::Partial => {
             // Standard partial pivoting - find largest element in column k
             let mut max_val = T::zero();
             let mut pivot_row = k;
-            
+
             for i in k..n {
                 let actual_row = row_perm[i];
                 let val = matrix.get(actual_row, col_perm[k]).abs();
@@ -1190,16 +1196,16 @@ where
                     pivot_row = i;
                 }
             }
-            
+
             Ok((pivot_row, k))
-        },
-        
+        }
+
         PivotingStrategy::Threshold(threshold) => {
             // Threshold pivoting - use first element above threshold
             let threshold_val = T::from(*threshold).unwrap();
             let mut max_val = T::zero();
             let mut pivot_row = k;
-            
+
             for i in k..n {
                 let actual_row = row_perm[i];
                 let val = matrix.get(actual_row, col_perm[k]).abs();
@@ -1213,37 +1219,37 @@ where
                     break;
                 }
             }
-            
+
             Ok((pivot_row, k))
-        },
-        
+        }
+
         PivotingStrategy::ScaledPartial => {
             // Scaled partial pivoting - account for row scaling
             let mut max_ratio = T::zero();
             let mut pivot_row = k;
-            
+
             for i in k..n {
                 let actual_row = row_perm[i];
                 let val = matrix.get(actual_row, col_perm[k]).abs();
                 let scale = row_scales[actual_row];
-                
+
                 let ratio = if scale > T::zero() { val / scale } else { val };
-                
+
                 if ratio > max_ratio {
                     max_ratio = ratio;
                     pivot_row = i;
                 }
             }
-            
+
             Ok((pivot_row, k))
-        },
-        
+        }
+
         PivotingStrategy::Complete => {
             // Complete pivoting - find largest element in remaining submatrix
             let mut max_val = T::zero();
             let mut pivot_row = k;
             let mut pivot_col = k;
-            
+
             for i in k..n {
                 let actual_row = row_perm[i];
                 for j in k..n {
@@ -1256,16 +1262,16 @@ where
                     }
                 }
             }
-            
+
             Ok((pivot_row, pivot_col))
-        },
-        
+        }
+
         PivotingStrategy::Rook => {
             // Rook pivoting - alternating row and column searches
             let mut best_row = k;
             let mut best_col = k;
             let mut max_val = T::zero();
-            
+
             // Start with partial pivoting in column k
             for i in k..n {
                 let actual_row = row_perm[i];
@@ -1275,12 +1281,12 @@ where
                     best_row = i;
                 }
             }
-            
+
             // If we found a good pivot, check if we can improve by column pivoting
             if max_val > T::from(opts.zero_threshold).unwrap() {
                 let actual_best_row = row_perm[best_row];
                 let mut col_max = T::zero();
-                
+
                 for j in k..n {
                     let actual_col = col_perm[j];
                     let val = matrix.get(actual_best_row, actual_col).abs();
@@ -1289,7 +1295,7 @@ where
                         best_col = j;
                     }
                 }
-                
+
                 // Use column pivot if it's significantly better
                 let improvement_threshold = T::from(1.5).unwrap();
                 if col_max > max_val * improvement_threshold {
@@ -1305,27 +1311,23 @@ where
                     }
                 }
             }
-            
+
             Ok((best_row, best_col))
-        },
+        }
     }
 }
 
 /// Extract L and U factors from working matrix
 type LuFactors<T> = (
-    Vec<usize>,  // L row pointers
-    Vec<usize>,  // L column indices
-    Vec<T>,      // L values
-    Vec<usize>,  // U row pointers
-    Vec<usize>,  // U column indices
-    Vec<T>,      // U values
+    Vec<usize>, // L row pointers
+    Vec<usize>, // L column indices
+    Vec<T>,     // L values
+    Vec<usize>, // U row pointers
+    Vec<usize>, // U column indices
+    Vec<T>,     // U values
 );
 
-fn extract_lu_factors<T>(
-    matrix: &SparseWorkingMatrix<T>,
-    p: &[usize],
-    n: usize,
-) -> LuFactors<T>
+fn extract_lu_factors<T>(matrix: &SparseWorkingMatrix<T>, p: &[usize], n: usize) -> LuFactors<T>
 where
     T: Float + Debug + Copy,
 {

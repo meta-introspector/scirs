@@ -5,8 +5,8 @@
 
 use ndarray::{Array1, Array2, Axis};
 use num_traits::Float;
-use std::fmt::Debug;
 use std::collections::HashMap;
+use std::fmt::Debug;
 use std::time::{Duration, Instant};
 
 use crate::error::{Result, TimeSeriesError};
@@ -215,7 +215,9 @@ pub enum NodeStatus {
 }
 
 /// Distributed time series processor
-pub struct DistributedProcessor<F: Float + Debug + Clone + num_traits::FromPrimitive + num_traits::Zero + ndarray::ScalarOperand> {
+pub struct DistributedProcessor<
+    F: Float + Debug + Clone + num_traits::FromPrimitive + num_traits::Zero + ndarray::ScalarOperand,
+> {
     /// Cluster configuration
     config: ClusterConfig,
     /// Node registry
@@ -241,24 +243,35 @@ struct LoadBalancerState {
     load_history: HashMap<String, Vec<f64>>,
 }
 
-impl<F: Float + Debug + Clone + num_traits::FromPrimitive + num_traits::Zero + ndarray::ScalarOperand> DistributedProcessor<F> {
+impl<
+        F: Float
+            + Debug
+            + Clone
+            + num_traits::FromPrimitive
+            + num_traits::Zero
+            + ndarray::ScalarOperand,
+    > DistributedProcessor<F>
+{
     /// Create a new distributed processor
     pub fn new(config: ClusterConfig) -> Self {
         let mut nodes = HashMap::new();
-        
+
         // Initialize node information
         for address in &config.nodes {
-            nodes.insert(address.clone(), NodeInfo {
-                address: address.clone(),
-                status: NodeStatus::Available,
-                cpu_cores: 4, // Default values - in practice would be detected
-                total_memory: 8 * 1024 * 1024 * 1024, // 8GB
-                available_memory: 6 * 1024 * 1024 * 1024, // 6GB
-                current_load: 0.0,
-                running_tasks: 0,
-                capabilities: vec!["time_series".to_string(), "forecasting".to_string()],
-                last_heartbeat: Instant::now(),
-            });
+            nodes.insert(
+                address.clone(),
+                NodeInfo {
+                    address: address.clone(),
+                    status: NodeStatus::Available,
+                    cpu_cores: 4, // Default values - in practice would be detected
+                    total_memory: 8 * 1024 * 1024 * 1024, // 8GB
+                    available_memory: 6 * 1024 * 1024 * 1024, // 6GB
+                    current_load: 0.0,
+                    running_tasks: 0,
+                    capabilities: vec!["time_series".to_string(), "forecasting".to_string()],
+                    last_heartbeat: Instant::now(),
+                },
+            );
         }
 
         Self {
@@ -275,18 +288,22 @@ impl<F: Float + Debug + Clone + num_traits::FromPrimitive + num_traits::Zero + n
     pub fn submit_task(&mut self, task: DistributedTask<F>) -> Result<()> {
         // Validate task dependencies
         for dep_id in &task.dependencies {
-            if !self.completed_tasks.contains_key(dep_id) && !self.running_tasks.contains_key(dep_id) {
-                return Err(TimeSeriesError::InvalidInput(
-                    format!("Dependency task {} not found", dep_id)
-                ));
+            if !self.completed_tasks.contains_key(dep_id)
+                && !self.running_tasks.contains_key(dep_id)
+            {
+                return Err(TimeSeriesError::InvalidInput(format!(
+                    "Dependency task {} not found",
+                    dep_id
+                )));
             }
         }
 
         // Add to queue with priority ordering
-        let insert_pos = self.task_queue
+        let insert_pos = self
+            .task_queue
             .binary_search_by(|t| task.priority.cmp(&t.priority).reverse())
             .unwrap_or_else(|pos| pos);
-        
+
         self.task_queue.insert(insert_pos, task);
         Ok(())
     }
@@ -299,7 +316,10 @@ impl<F: Float + Debug + Clone + num_traits::FromPrimitive + num_traits::Zero + n
         _method: &str,
     ) -> Result<Array1<F>> {
         // Split data into chunks for parallel processing
-        let chunk_size = self.config.chunk_size.min(data.len() / self.config.nodes.len().max(1));
+        let chunk_size = self
+            .config
+            .chunk_size
+            .min(data.len() / self.config.nodes.len().max(1));
         let chunks: Vec<Array1<F>> = data
             .axis_chunks_iter(Axis(0), chunk_size)
             .map(|chunk| chunk.to_owned())
@@ -387,18 +407,19 @@ impl<F: Float + Debug + Clone + num_traits::FromPrimitive + num_traits::Zero + n
 
     /// Select optimal node for task execution
     fn select_node_for_task(&mut self, task: &DistributedTask<F>) -> Result<String> {
-        let available_nodes: Vec<&String> = self.nodes
+        let available_nodes: Vec<&String> = self
+            .nodes
             .iter()
             .filter(|(_, info)| {
-                info.status == NodeStatus::Available && 
-                info.running_tasks < self.config.max_concurrent_tasks
+                info.status == NodeStatus::Available
+                    && info.running_tasks < self.config.max_concurrent_tasks
             })
             .map(|(address, _)| address)
             .collect();
 
         if available_nodes.is_empty() {
             return Err(TimeSeriesError::ComputationError(
-                "No available nodes for task execution".to_string()
+                "No available nodes for task execution".to_string(),
             ));
         }
 
@@ -415,7 +436,9 @@ impl<F: Float + Debug + Clone + num_traits::FromPrimitive + num_traits::Zero + n
                     .min_by(|a, b| {
                         let load_a = self.nodes.get(*a as &str).unwrap().current_load;
                         let load_b = self.nodes.get(*b as &str).unwrap().current_load;
-                        load_a.partial_cmp(&load_b).unwrap_or(std::cmp::Ordering::Equal)
+                        load_a
+                            .partial_cmp(&load_b)
+                            .unwrap_or(std::cmp::Ordering::Equal)
                     })
                     .unwrap()
                     .to_string()
@@ -439,7 +462,8 @@ impl<F: Float + Debug + Clone + num_traits::FromPrimitive + num_traits::Zero + n
         while let Some(task) = self.task_queue.pop() {
             // Check if dependencies are satisfied
             let dependencies_satisfied = task.dependencies.iter().all(|dep_id| {
-                self.completed_tasks.get(dep_id)
+                self.completed_tasks
+                    .get(dep_id)
                     .map(|result| result.status == TaskStatus::Completed)
                     .unwrap_or(false)
             });
@@ -452,10 +476,10 @@ impl<F: Float + Debug + Clone + num_traits::FromPrimitive + num_traits::Zero + n
 
             // Select node for execution
             let node_address = self.select_node_for_task(&task)?;
-            
+
             // Simulate task execution
             let result = self.execute_task_on_node(&task, &node_address)?;
-            
+
             // Store result
             self.completed_tasks.insert(task.id.clone(), result);
             self.running_tasks.remove(&task.id);
@@ -471,10 +495,10 @@ impl<F: Float + Debug + Clone + num_traits::FromPrimitive + num_traits::Zero + n
         node_address: &str,
     ) -> Result<TaskResult<F>> {
         let start_time = Instant::now();
-        
+
         // Mark task as running
         self.running_tasks.insert(task.id.clone(), task.clone());
-        
+
         // Update node status
         if let Some(node) = self.nodes.get_mut(node_address) {
             node.running_tasks += 1;
@@ -483,18 +507,10 @@ impl<F: Float + Debug + Clone + num_traits::FromPrimitive + num_traits::Zero + n
 
         // Simulate task execution based on task type
         let result_data = match task.task_type {
-            TaskType::Forecasting => {
-                self.simulate_forecasting_task(task)?
-            }
-            TaskType::FeatureExtraction => {
-                self.simulate_feature_extraction_task(task)?
-            }
-            TaskType::AnomalyDetection => {
-                self.simulate_anomaly_detection_task(task)?
-            }
-            TaskType::Decomposition => {
-                self.simulate_decomposition_task(task)?
-            }
+            TaskType::Forecasting => self.simulate_forecasting_task(task)?,
+            TaskType::FeatureExtraction => self.simulate_feature_extraction_task(task)?,
+            TaskType::AnomalyDetection => self.simulate_anomaly_detection_task(task)?,
+            TaskType::Decomposition => self.simulate_decomposition_task(task)?,
             _ => {
                 // Generic processing
                 task.input_data.clone()
@@ -517,7 +533,7 @@ impl<F: Float + Debug + Clone + num_traits::FromPrimitive + num_traits::Zero + n
                 execution_time,
                 executed_on: node_address.to_string(),
                 memory_usage: task.input_data.len() * std::mem::size_of::<F>(),
-                cpu_utilization: 0.8, // Simulated
+                cpu_utilization: 0.8,                    // Simulated
                 network_time: Duration::from_millis(10), // Simulated
             },
             error: None,
@@ -526,7 +542,9 @@ impl<F: Float + Debug + Clone + num_traits::FromPrimitive + num_traits::Zero + n
 
     /// Simulate forecasting task execution
     fn simulate_forecasting_task(&self, task: &DistributedTask<F>) -> Result<Array1<F>> {
-        let horizon = task.parameters.get("horizon")
+        let horizon = task
+            .parameters
+            .get("horizon")
             .map(|&h| h as usize)
             .unwrap_or(10);
 
@@ -538,7 +556,7 @@ impl<F: Float + Debug + Clone + num_traits::FromPrimitive + num_traits::Zero + n
 
         let slope = (data[data.len() - 1] - data[data.len() - 2]) / F::one();
         let mut forecast = Array1::zeros(horizon);
-        
+
         for i in 0..horizon {
             forecast[i] = data[data.len() - 1] + slope * F::from(i + 1).unwrap();
         }
@@ -549,13 +567,13 @@ impl<F: Float + Debug + Clone + num_traits::FromPrimitive + num_traits::Zero + n
     /// Simulate feature extraction task execution
     fn simulate_feature_extraction_task(&self, task: &DistributedTask<F>) -> Result<Array1<F>> {
         let data = &task.input_data;
-        
+
         // Extract basic statistical features
         let mean = data.mean().unwrap_or(F::zero());
         let variance = data.var(F::zero());
         let min = data.iter().fold(F::infinity(), |acc, &x| acc.min(x));
         let max = data.iter().fold(F::neg_infinity(), |acc, &x| acc.max(x));
-        
+
         // Simulate more features
         let features = vec![
             mean,
@@ -573,14 +591,18 @@ impl<F: Float + Debug + Clone + num_traits::FromPrimitive + num_traits::Zero + n
         let data = &task.input_data;
         let mean = data.mean().unwrap_or(F::zero());
         let std_dev = data.var(F::zero()).sqrt();
-        
+
         // Simple z-score based anomaly detection
         let threshold = F::from(3.0).unwrap();
         let mut anomaly_scores = Array1::zeros(data.len());
-        
+
         for (i, &value) in data.iter().enumerate() {
             let z_score = (value - mean) / std_dev;
-            anomaly_scores[i] = if z_score.abs() > threshold { F::one() } else { F::zero() };
+            anomaly_scores[i] = if z_score.abs() > threshold {
+                F::one()
+            } else {
+                F::zero()
+            };
         }
 
         Ok(anomaly_scores)
@@ -592,11 +614,11 @@ impl<F: Float + Debug + Clone + num_traits::FromPrimitive + num_traits::Zero + n
         let data = &task.input_data;
         let window_size = 10.min(data.len() / 2);
         let mut trend = Array1::zeros(data.len());
-        
+
         for i in 0..data.len() {
             let start = i.saturating_sub(window_size / 2);
             let end = (i + window_size / 2 + 1).min(data.len());
-            
+
             let window_sum = data.slice(ndarray::s![start..end]).sum();
             let window_len = F::from(end - start).unwrap();
             trend[i] = window_sum / window_len;
@@ -615,7 +637,7 @@ impl<F: Float + Debug + Clone + num_traits::FromPrimitive + num_traits::Zero + n
             if task_id.starts_with("forecast_chunk_") && result.status == TaskStatus::Completed {
                 if let Some(data) = &result.data {
                     all_forecasts.push(data.clone());
-                    
+
                     // Extract chunk index for proper ordering
                     if let Some(chunk_str) = task_id.strip_prefix("forecast_chunk_") {
                         if let Ok(index) = chunk_str.parse::<usize>() {
@@ -631,10 +653,8 @@ impl<F: Float + Debug + Clone + num_traits::FromPrimitive + num_traits::Zero + n
         }
 
         // Sort forecasts by chunk index
-        let mut indexed_forecasts: Vec<(usize, Array1<F>)> = chunk_indices
-            .into_iter()
-            .zip(all_forecasts)
-            .collect();
+        let mut indexed_forecasts: Vec<(usize, Array1<F>)> =
+            chunk_indices.into_iter().zip(all_forecasts).collect();
         indexed_forecasts.sort_by_key(|(index, _)| *index);
 
         // Aggregate by averaging (simple ensemble approach)
@@ -666,7 +686,7 @@ impl<F: Float + Debug + Clone + num_traits::FromPrimitive + num_traits::Zero + n
             if task_id.starts_with("features_window_") && result.status == TaskStatus::Completed {
                 if let Some(data) = &result.data {
                     all_features.push(data.clone());
-                    
+
                     // Extract window index
                     if let Some(window_str) = task_id.strip_prefix("features_window_") {
                         if let Ok(index) = window_str.parse::<usize>() {
@@ -682,10 +702,8 @@ impl<F: Float + Debug + Clone + num_traits::FromPrimitive + num_traits::Zero + n
         }
 
         // Sort by window index
-        let mut indexed_features: Vec<(usize, Array1<F>)> = window_indices
-            .into_iter()
-            .zip(all_features)
-            .collect();
+        let mut indexed_features: Vec<(usize, Array1<F>)> =
+            window_indices.into_iter().zip(all_features).collect();
         indexed_features.sort_by_key(|(index, _)| *index);
 
         // Combine into matrix
@@ -707,16 +725,22 @@ impl<F: Float + Debug + Clone + num_traits::FromPrimitive + num_traits::Zero + n
     /// Get cluster status information
     pub fn get_cluster_status(&self) -> ClusterStatus {
         let total_nodes = self.nodes.len();
-        let available_nodes = self.nodes.values()
+        let available_nodes = self
+            .nodes
+            .values()
             .filter(|node| node.status == NodeStatus::Available)
             .count();
-        
+
         let total_running_tasks = self.running_tasks.len();
         let total_completed_tasks = self.completed_tasks.len();
         let total_queued_tasks = self.task_queue.len();
 
         let average_load = if total_nodes > 0 {
-            self.nodes.values().map(|node| node.current_load).sum::<f64>() / total_nodes as f64
+            self.nodes
+                .values()
+                .map(|node| node.current_load)
+                .sum::<f64>()
+                / total_nodes as f64
         } else {
             0.0
         };
@@ -741,18 +765,22 @@ impl<F: Float + Debug + Clone + num_traits::FromPrimitive + num_traits::Zero + n
     pub fn cancel_task(&mut self, task_id: &str) -> Result<()> {
         if let Some(_task) = self.running_tasks.remove(task_id) {
             // Add cancelled result
-            self.completed_tasks.insert(task_id.to_string(), TaskResult {
-                task_id: task_id.to_string(),
-                status: TaskStatus::Cancelled,
-                data: None,
-                metrics: TaskMetrics::default(),
-                error: Some("Task cancelled by user".to_string()),
-            });
+            self.completed_tasks.insert(
+                task_id.to_string(),
+                TaskResult {
+                    task_id: task_id.to_string(),
+                    status: TaskStatus::Cancelled,
+                    data: None,
+                    metrics: TaskMetrics::default(),
+                    error: Some("Task cancelled by user".to_string()),
+                },
+            );
             Ok(())
         } else {
-            Err(TimeSeriesError::InvalidInput(
-                format!("Task {} not found in running tasks", task_id)
-            ))
+            Err(TimeSeriesError::InvalidInput(format!(
+                "Task {} not found in running tasks",
+                task_id
+            )))
         }
     }
 }
@@ -777,7 +805,9 @@ pub struct ClusterStatus {
 }
 
 /// Convenience functions for common distributed operations
-pub fn distributed_moving_average<F: Float + Debug + Clone + num_traits::FromPrimitive + num_traits::Zero + ndarray::ScalarOperand>(
+pub fn distributed_moving_average<
+    F: Float + Debug + Clone + num_traits::FromPrimitive + num_traits::Zero + ndarray::ScalarOperand,
+>(
     processor: &mut DistributedProcessor<F>,
     data: &Array1<F>,
     window_size: usize,
@@ -805,12 +835,12 @@ pub fn distributed_moving_average<F: Float + Debug + Clone + num_traits::FromPri
             Ok(data.clone())
         } else {
             Err(TimeSeriesError::ComputationError(
-                "Moving average computation failed".to_string()
+                "Moving average computation failed".to_string(),
             ))
         }
     } else {
         Err(TimeSeriesError::ComputationError(
-            "Moving average task not found".to_string()
+            "Moving average task not found".to_string(),
         ))
     }
 }
@@ -831,7 +861,7 @@ mod tests {
     fn test_distributed_processor_creation() {
         let config = ClusterConfig::default();
         let processor: DistributedProcessor<f64> = DistributedProcessor::new(config);
-        
+
         assert_eq!(processor.nodes.len(), 1);
         assert!(processor.task_queue.is_empty());
         assert!(processor.running_tasks.is_empty());
@@ -842,7 +872,7 @@ mod tests {
     fn test_task_submission() {
         let config = ClusterConfig::default();
         let mut processor: DistributedProcessor<f64> = DistributedProcessor::new(config);
-        
+
         let task = DistributedTask {
             id: "test_task".to_string(),
             task_type: TaskType::Forecasting,
@@ -860,7 +890,7 @@ mod tests {
     fn test_task_priority_ordering() {
         let config = ClusterConfig::default();
         let mut processor: DistributedProcessor<f64> = DistributedProcessor::new(config);
-        
+
         // Submit tasks with different priorities
         let low_task = DistributedTask {
             id: "low".to_string(),
@@ -892,13 +922,13 @@ mod tests {
     fn test_distributed_forecasting() {
         let config = ClusterConfig::default();
         let mut processor: DistributedProcessor<f64> = DistributedProcessor::new(config);
-        
+
         let data = Array1::from_vec((1..100).map(|x| x as f64).collect());
         let horizon = 10;
 
         let result = processor.distributed_forecast(&data, horizon, "linear");
         assert!(result.is_ok());
-        
+
         let forecast = result.unwrap();
         assert_eq!(forecast.len(), horizon);
     }
@@ -907,7 +937,7 @@ mod tests {
     fn test_cluster_status() {
         let config = ClusterConfig::default();
         let processor: DistributedProcessor<f64> = DistributedProcessor::new(config);
-        
+
         let status = processor.get_cluster_status();
         assert_eq!(status.total_nodes, 1);
         assert_eq!(status.available_nodes, 1);
@@ -919,8 +949,14 @@ mod tests {
     #[test]
     fn test_load_balancing_strategies() {
         // Test that different strategies are properly defined
-        assert_ne!(LoadBalancingStrategy::RoundRobin, LoadBalancingStrategy::LoadBased);
-        assert_ne!(LoadBalancingStrategy::Random, LoadBalancingStrategy::Weighted);
+        assert_ne!(
+            LoadBalancingStrategy::RoundRobin,
+            LoadBalancingStrategy::LoadBased
+        );
+        assert_ne!(
+            LoadBalancingStrategy::Random,
+            LoadBalancingStrategy::Weighted
+        );
     }
 
     #[test]

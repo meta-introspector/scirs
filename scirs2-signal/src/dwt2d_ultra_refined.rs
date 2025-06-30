@@ -265,27 +265,30 @@ pub fn ultra_refined_wavelet_packet_2d(
     config: &UltraRefinedConfig,
 ) -> SignalResult<UltraRefinedWaveletPacketResult> {
     let start_time = std::time::Instant::now();
-    
+
     // Input validation
     validate_input_image(image, config)?;
-    
+
     let (height, width) = image.dim();
-    
+
     // Initialize memory tracking
     let mut memory_tracker = MemoryTracker::new();
-    memory_tracker.track_allocation("input_image", (height * width * 8) as f64 / (1024.0 * 1024.0));
-    
+    memory_tracker.track_allocation(
+        "input_image",
+        (height * width * 8) as f64 / (1024.0 * 1024.0),
+    );
+
     // Detect SIMD capabilities and optimize accordingly
     let caps = PlatformCapabilities::detect();
     let simd_config = optimize_simd_configuration(&caps, config.simd_level);
-    
+
     // Memory-efficient tile-based processing for large images
     let processing_result = if should_use_tiled_processing(image, config) {
         process_image_tiled(image, wavelet, config, &simd_config, &mut memory_tracker)?
     } else {
         process_image_whole(image, wavelet, config, &simd_config, &mut memory_tracker)?
     };
-    
+
     // Build optimal decomposition tree
     let decomposition_time = std::time::Instant::now();
     let decomposition_tree = build_optimal_decomposition_tree(
@@ -295,7 +298,7 @@ pub fn ultra_refined_wavelet_packet_2d(
         config.min_subband_size,
     )?;
     let tree_build_time = decomposition_time.elapsed().as_secs_f64() * 1000.0;
-    
+
     // Compute comprehensive quality metrics
     let quality_metrics = compute_ultra_refined_quality_metrics(
         image,
@@ -303,10 +306,10 @@ pub fn ultra_refined_wavelet_packet_2d(
         &decomposition_tree,
         &config.quality_config,
     )?;
-    
+
     // Finalize memory statistics
     let memory_stats = memory_tracker.finalize();
-    
+
     // Compute performance metrics
     let total_time = start_time.elapsed().as_secs_f64() * 1000.0;
     let performance_metrics = ProcessingMetrics {
@@ -316,7 +319,7 @@ pub fn ultra_refined_wavelet_packet_2d(
         parallel_efficiency: processing_result.parallel_efficiency,
         cache_hit_ratio: estimate_cache_efficiency(image.dim()),
     };
-    
+
     Ok(UltraRefinedWaveletPacketResult {
         coefficients: processing_result.coefficients,
         energy_map: processing_result.energy_map,
@@ -350,28 +353,32 @@ pub fn ultra_refined_wavelet_packet_inverse_2d(
     config: &UltraRefinedConfig,
 ) -> SignalResult<UltraRefinedReconstructionResult> {
     let start_time = std::time::Instant::now();
-    
+
     // Initialize reconstruction with perceptual optimization
     let mut reconstruction_engine = PerceptualReconstructionEngine::new(config);
-    
+
     // Apply adaptive coefficient processing
     let processed_coefficients = if config.quality_config.compute_perceptual_metrics {
         apply_perceptual_coefficient_processing(&result.coefficients, &result.decomposition_tree)?
     } else {
         result.coefficients.clone()
     };
-    
+
     // Memory-efficient reconstruction
     let reconstructed_image = if config.memory_efficient {
-        reconstruct_image_memory_efficient(&processed_coefficients, &result.decomposition_tree, wavelet)?
+        reconstruct_image_memory_efficient(
+            &processed_coefficients,
+            &result.decomposition_tree,
+            wavelet,
+        )?
     } else {
         reconstruct_image_standard(&processed_coefficients, &result.decomposition_tree, wavelet)?
     };
-    
+
     // Compute reconstruction quality metrics
     let reconstruction_time = start_time.elapsed().as_secs_f64() * 1000.0;
     let reconstruction_metrics = compute_reconstruction_metrics(&reconstructed_image, result)?;
-    
+
     Ok(UltraRefinedReconstructionResult {
         image: reconstructed_image,
         reconstruction_time_ms: reconstruction_time,
@@ -403,19 +410,19 @@ pub fn ultra_refined_denoise_2d(
     denoising_config: &UltraRefinedDenoisingConfig,
 ) -> SignalResult<UltraRefinedDenoisingResult> {
     let start_time = std::time::Instant::now();
-    
+
     // Multi-scale noise analysis
     let noise_analysis = analyze_noise_characteristics(noisy_image, wavelet)?;
-    
+
     // Adaptive wavelet packet decomposition
     let config = UltraRefinedConfig {
         adaptive_decomposition: true,
         cost_function: CostFunction::Sure,
         ..Default::default()
     };
-    
+
     let decomposition = ultra_refined_wavelet_packet_2d(noisy_image, wavelet, &config)?;
-    
+
     // Apply adaptive denoising based on noise analysis
     let denoised_coefficients = apply_adaptive_denoising(
         &decomposition.coefficients,
@@ -423,7 +430,7 @@ pub fn ultra_refined_denoise_2d(
         &decomposition.decomposition_tree,
         denoising_config,
     )?;
-    
+
     // Reconstruct with perceptual optimization
     let reconstruction_config = UltraRefinedConfig {
         quality_config: QualityConfig {
@@ -433,18 +440,23 @@ pub fn ultra_refined_denoise_2d(
         },
         ..config
     };
-    
+
     let reconstruction_result = UltraRefinedWaveletPacketResult {
         coefficients: denoised_coefficients,
         ..decomposition
     };
-    
-    let denoised = ultra_refined_wavelet_packet_inverse_2d(&reconstruction_result, wavelet, &reconstruction_config)?;
-    
+
+    let denoised = ultra_refined_wavelet_packet_inverse_2d(
+        &reconstruction_result,
+        wavelet,
+        &reconstruction_config,
+    )?;
+
     // Compute denoising quality metrics
     let denoising_time = start_time.elapsed().as_secs_f64() * 1000.0;
-    let denoising_metrics = compute_denoising_quality_metrics(noisy_image, &denoised.image, &noise_analysis)?;
-    
+    let denoising_metrics =
+        compute_denoising_quality_metrics(noisy_image, &denoised.image, &noise_analysis)?;
+
     Ok(UltraRefinedDenoisingResult {
         denoised_image: denoised.image,
         noise_analysis,
@@ -553,18 +565,18 @@ impl MemoryTracker {
             peak_usage: 0.0,
         }
     }
-    
+
     fn track_allocation(&mut self, name: &str, size_mb: f64) {
         self.allocations.insert(name.to_string(), size_mb);
         let total: f64 = self.allocations.values().sum();
         self.peak_usage = self.peak_usage.max(total);
     }
-    
+
     fn finalize(self) -> MemoryStatistics {
         let total_memory: f64 = self.allocations.values().sum();
         let coefficient_memory = self.allocations.get("coefficients").copied().unwrap_or(0.0);
         let overhead_memory = total_memory - coefficient_memory;
-        
+
         MemoryStatistics {
             peak_memory_mb: self.peak_usage,
             working_memory_mb: total_memory,
@@ -591,30 +603,58 @@ impl PerceptualReconstructionEngine {
 
 fn validate_input_image(image: &Array2<f64>, config: &UltraRefinedConfig) -> SignalResult<()> {
     let (height, width) = image.dim();
-    
+
     if height < 4 || width < 4 {
         return Err(SignalError::ValueError(
             "Image dimensions must be at least 4x4".to_string(),
         ));
     }
-    
+
     check_finite(image.as_slice().unwrap(), "image")?;
-    
+
     Ok(())
 }
 
 fn optimize_simd_configuration(caps: &PlatformCapabilities, level: SimdLevel) -> SimdConfiguration {
     let acceleration_factor = match level {
         SimdLevel::None => 1.0,
-        SimdLevel::Basic => if caps.has_sse4_1 { 2.0 } else { 1.0 },
-        SimdLevel::Advanced => if caps.has_avx2 { 4.0 } else if caps.has_sse4_1 { 2.0 } else { 1.0 },
-        SimdLevel::Aggressive => if caps.has_avx512 { 8.0 } else if caps.has_avx2 { 4.0 } else { 2.0 },
+        SimdLevel::Basic => {
+            if caps.has_sse4_1 {
+                2.0
+            } else {
+                1.0
+            }
+        }
+        SimdLevel::Advanced => {
+            if caps.has_avx2 {
+                4.0
+            } else if caps.has_sse4_1 {
+                2.0
+            } else {
+                1.0
+            }
+        }
+        SimdLevel::Aggressive => {
+            if caps.has_avx512 {
+                8.0
+            } else if caps.has_avx2 {
+                4.0
+            } else {
+                2.0
+            }
+        }
     };
-    
+
     SimdConfiguration {
         acceleration_factor,
         use_fma: caps.has_avx2,
-        vectorization_width: if caps.has_avx512 { 16 } else if caps.has_avx2 { 8 } else { 4 },
+        vectorization_width: if caps.has_avx512 {
+            16
+        } else if caps.has_avx2 {
+            8
+        } else {
+            4
+        },
     }
 }
 
@@ -622,7 +662,7 @@ fn should_use_tiled_processing(image: &Array2<f64>, config: &UltraRefinedConfig)
     let (height, width) = image.dim();
     let image_size = height * width;
     let tile_size = config.tile_size.0 * config.tile_size.1;
-    
+
     config.memory_efficient && image_size > tile_size * 4
 }
 
@@ -636,29 +676,53 @@ fn process_image_tiled(
     let (height, width) = image.dim();
     let (tile_h, tile_w) = config.tile_size;
     let overlap = config.tile_overlap;
-    
+
     // Calculate number of tiles
     let tiles_h = (height + tile_h - 1) / tile_h;
     let tiles_w = (width + tile_w - 1) / tile_w;
-    
+
     // Initialize result arrays
     let max_levels = config.max_levels;
     let n_subbands = 4_usize.pow(max_levels as u32);
     let mut coefficients = Array3::zeros((max_levels, n_subbands, tile_h * tile_w));
     let mut energy_map = Array2::zeros((tiles_h, tiles_w));
-    
-    memory_tracker.track_allocation("coefficients", 
-                                   (coefficients.len() * 8) as f64 / (1024.0 * 1024.0));
-    
+
+    memory_tracker.track_allocation(
+        "coefficients",
+        (coefficients.len() * 8) as f64 / (1024.0 * 1024.0),
+    );
+
     // Process tiles in parallel if enabled
     let parallel_efficiency = if config.base_config.use_parallel {
-        process_tiles_parallel(image, &mut coefficients, &mut energy_map, tiles_h, tiles_w, 
-                              tile_h, tile_w, overlap, wavelet, config, simd_config)?
+        process_tiles_parallel(
+            image,
+            &mut coefficients,
+            &mut energy_map,
+            tiles_h,
+            tiles_w,
+            tile_h,
+            tile_w,
+            overlap,
+            wavelet,
+            config,
+            simd_config,
+        )?
     } else {
-        process_tiles_sequential(image, &mut coefficients, &mut energy_map, tiles_h, tiles_w,
-                                tile_h, tile_w, overlap, wavelet, config, simd_config)?
+        process_tiles_sequential(
+            image,
+            &mut coefficients,
+            &mut energy_map,
+            tiles_h,
+            tiles_w,
+            tile_h,
+            tile_w,
+            overlap,
+            wavelet,
+            config,
+            simd_config,
+        )?
     };
-    
+
     Ok(ProcessingResult {
         coefficients,
         energy_map,
@@ -674,16 +738,22 @@ fn process_image_whole(
     memory_tracker: &mut MemoryTracker,
 ) -> SignalResult<ProcessingResult> {
     let (height, width) = image.dim();
-    
+
     // Simplified whole-image processing
     let max_levels = config.max_levels;
     let n_subbands = 4_usize.pow(max_levels as u32);
-    let coefficients = Array3::zeros((max_levels, n_subbands, height * width / (4_usize.pow(max_levels as u32))));
+    let coefficients = Array3::zeros((
+        max_levels,
+        n_subbands,
+        height * width / (4_usize.pow(max_levels as u32)),
+    ));
     let energy_map = Array2::ones((1, 1));
-    
-    memory_tracker.track_allocation("coefficients", 
-                                   (coefficients.len() * 8) as f64 / (1024.0 * 1024.0));
-    
+
+    memory_tracker.track_allocation(
+        "coefficients",
+        (coefficients.len() * 8) as f64 / (1024.0 * 1024.0),
+    );
+
     Ok(ProcessingResult {
         coefficients,
         energy_map,
@@ -695,8 +765,10 @@ fn process_tiles_parallel(
     image: &Array2<f64>,
     coefficients: &mut Array3<f64>,
     energy_map: &mut Array2<f64>,
-    tiles_h: usize, tiles_w: usize,
-    tile_h: usize, tile_w: usize,
+    tiles_h: usize,
+    tiles_w: usize,
+    tile_h: usize,
+    tile_w: usize,
     overlap: usize,
     wavelet: &Wavelet,
     config: &UltraRefinedConfig,
@@ -710,8 +782,10 @@ fn process_tiles_sequential(
     image: &Array2<f64>,
     coefficients: &mut Array3<f64>,
     energy_map: &mut Array2<f64>,
-    tiles_h: usize, tiles_w: usize,
-    tile_h: usize, tile_w: usize,
+    tiles_h: usize,
+    tiles_w: usize,
+    tile_h: usize,
+    tile_w: usize,
     overlap: usize,
     wavelet: &Wavelet,
     config: &UltraRefinedConfig,
@@ -729,7 +803,7 @@ fn build_optimal_decomposition_tree(
 ) -> SignalResult<DecompositionTree> {
     let mut nodes = Vec::new();
     let mut optimal_basis = Vec::new();
-    
+
     // Build tree structure (simplified)
     for level in 0..max_levels {
         for index in 0..4_usize.pow(level as u32) {
@@ -737,29 +811,29 @@ fn build_optimal_decomposition_tree(
                 level,
                 index,
                 parent: if level > 0 { Some(index / 4) } else { None },
-                children: if level < max_levels - 1 { 
-                    (0..4).map(|i| index * 4 + i).collect() 
-                } else { 
-                    vec![] 
+                children: if level < max_levels - 1 {
+                    (0..4).map(|i| index * 4 + i).collect()
+                } else {
+                    vec![]
                 },
                 energy: compute_subband_energy(coefficients, level, index),
                 entropy: compute_subband_entropy(coefficients, level, index),
                 is_leaf: level == max_levels - 1,
                 subband_type: classify_subband(index),
             };
-            
+
             nodes.push(node);
             optimal_basis.push(index);
         }
     }
-    
+
     let traversal_stats = TreeTraversalStats {
         total_nodes: nodes.len(),
         leaf_nodes: nodes.iter().filter(|n| n.is_leaf).count(),
         average_depth: max_levels as f64 / 2.0,
         compression_ratio: 4.0, // Simplified
     };
-    
+
     Ok(DecompositionTree {
         nodes,
         optimal_basis,
@@ -778,7 +852,7 @@ fn compute_ultra_refined_quality_metrics(
     let approx_energy = compute_approximation_energy(&processing_result.coefficients);
     let detail_energy = compute_detail_energy(&processing_result.coefficients);
     let total_energy = approx_energy + detail_energy;
-    
+
     let basic_metrics = Dwt2dQualityMetrics {
         approx_energy,
         detail_energy,
@@ -787,19 +861,20 @@ fn compute_ultra_refined_quality_metrics(
         sparsity: compute_sparsity(&processing_result.coefficients),
         edge_preservation: 0.95, // Placeholder
     };
-    
+
     // Advanced metrics
     let perceptual_quality = if quality_config.compute_perceptual_metrics {
         compute_perceptual_quality(original_image, &processing_result.coefficients)?
     } else {
         0.0
     };
-    
+
     let ssim = compute_structural_similarity(original_image, &processing_result.coefficients)?;
     let psnr = compute_peak_snr(original_image, &processing_result.coefficients)?;
-    
-    let edge_preservation_ms = compute_multiscale_edge_preservation(original_image, &processing_result.coefficients)?;
-    
+
+    let edge_preservation_ms =
+        compute_multiscale_edge_preservation(original_image, &processing_result.coefficients)?;
+
     let frequency_analysis = if quality_config.compute_frequency_analysis {
         compute_frequency_analysis(&processing_result.coefficients)?
     } else {
@@ -810,7 +885,7 @@ fn compute_ultra_refined_quality_metrics(
             frequency_response_quality: 0.0,
         }
     };
-    
+
     let compression_metrics = if quality_config.compute_compression_metrics {
         compute_compression_metrics(&processing_result.coefficients)?
     } else {
@@ -821,7 +896,7 @@ fn compute_ultra_refined_quality_metrics(
             entropy_bound: 0.0,
         }
     };
-    
+
     Ok(UltraRefinedQualityMetrics {
         basic_metrics,
         perceptual_quality,
@@ -837,7 +912,10 @@ fn compute_ultra_refined_quality_metrics(
 
 fn compute_subband_energy(coefficients: &Array3<f64>, level: usize, index: usize) -> f64 {
     if level < coefficients.dim().0 && index < coefficients.dim().1 {
-        coefficients.slice(s![level, index, ..]).mapv(|x| x * x).sum()
+        coefficients
+            .slice(s![level, index, ..])
+            .mapv(|x| x * x)
+            .sum()
     } else {
         0.0
     }
@@ -866,7 +944,10 @@ fn compute_detail_energy(coefficients: &Array3<f64>) -> f64 {
     let mut total = 0.0;
     for level in 0..coefficients.dim().0 {
         for subband in 1..coefficients.dim().1.min(4) {
-            total += coefficients.slice(s![level, subband, ..]).mapv(|x| x * x).sum();
+            total += coefficients
+                .slice(s![level, subband, ..])
+                .mapv(|x| x * x)
+                .sum();
         }
     }
     total
@@ -888,12 +969,18 @@ fn compute_sparsity(coefficients: &Array3<f64>) -> f64 {
     zero_coeffs as f64 / total_coeffs as f64
 }
 
-fn compute_perceptual_quality(image: &Array2<f64>, coefficients: &Array3<f64>) -> SignalResult<f64> {
+fn compute_perceptual_quality(
+    image: &Array2<f64>,
+    coefficients: &Array3<f64>,
+) -> SignalResult<f64> {
     // Simplified perceptual quality metric
     Ok(0.85)
 }
 
-fn compute_structural_similarity(image: &Array2<f64>, coefficients: &Array3<f64>) -> SignalResult<f64> {
+fn compute_structural_similarity(
+    image: &Array2<f64>,
+    coefficients: &Array3<f64>,
+) -> SignalResult<f64> {
     // Simplified SSIM calculation
     Ok(0.90)
 }
@@ -903,7 +990,10 @@ fn compute_peak_snr(image: &Array2<f64>, coefficients: &Array3<f64>) -> SignalRe
     Ok(30.0) // dB
 }
 
-fn compute_multiscale_edge_preservation(image: &Array2<f64>, coefficients: &Array3<f64>) -> SignalResult<Vec<f64>> {
+fn compute_multiscale_edge_preservation(
+    image: &Array2<f64>,
+    coefficients: &Array3<f64>,
+) -> SignalResult<Vec<f64>> {
     // Multi-scale edge preservation analysis
     Ok(vec![0.95, 0.90, 0.85, 0.80]) // Different scales
 }
@@ -981,7 +1071,10 @@ fn compute_coefficient_utilization(coefficients: &Array3<f64>) -> f64 {
     significant as f64 / coefficients.len() as f64
 }
 
-fn analyze_noise_characteristics(image: &Array2<f64>, wavelet: &Wavelet) -> SignalResult<NoiseAnalysis> {
+fn analyze_noise_characteristics(
+    image: &Array2<f64>,
+    wavelet: &Wavelet,
+) -> SignalResult<NoiseAnalysis> {
     let variance = image.var(0.0);
     Ok(NoiseAnalysis {
         noise_variance: variance,
@@ -1019,7 +1112,7 @@ fn compute_coefficient_statistics(coefficients: &Array3<f64>) -> CoefficientStat
         .map(|level| coefficients.slice(s![level, .., ..]).mapv(|x| x * x).sum())
         .collect();
     let significant = coefficients.iter().filter(|&&x| x.abs() > 1e-6).count();
-    
+
     CoefficientStatistics {
         sparsity,
         energy_distribution: Array1::from_vec(energy_per_level),
@@ -1040,7 +1133,7 @@ mod tests {
 
         let config = UltraRefinedConfig::default();
         let result = ultra_refined_wavelet_packet_2d(&image, &Wavelet::Daubechies4, &config);
-        
+
         assert!(result.is_ok());
         let packet_result = result.unwrap();
         assert!(packet_result.quality_metrics.perceptual_quality >= 0.0);
@@ -1052,7 +1145,7 @@ mod tests {
         let mut tracker = MemoryTracker::new();
         tracker.track_allocation("test1", 10.0);
         tracker.track_allocation("test2", 20.0);
-        
+
         let stats = tracker.finalize();
         assert_eq!(stats.working_memory_mb, 30.0);
         assert_eq!(stats.peak_memory_mb, 30.0);
@@ -1062,7 +1155,7 @@ mod tests {
     fn test_simd_configuration() {
         let caps = PlatformCapabilities::detect();
         let config = optimize_simd_configuration(&caps, SimdLevel::Advanced);
-        
+
         assert!(config.acceleration_factor >= 1.0);
         assert!(config.vectorization_width >= 4);
     }

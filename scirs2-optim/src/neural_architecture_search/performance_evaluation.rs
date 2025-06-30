@@ -5,33 +5,33 @@
 
 use ndarray::{Array1, Array2, ArrayBase, Data, Dimension};
 use num_traits::Float;
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant, SystemTime};
-use serde::{Serialize, Deserialize};
 
-use crate::error::OptimizerError;
 use super::{
-    OptimizerArchitecture, EvaluationResults, ResourceUsage,
-    EvaluationConfig, BenchmarkDataset, StatisticalTestingConfig, EvaluationMetric
+    BenchmarkDataset, EvaluationConfig, EvaluationMetric, EvaluationResults, OptimizerArchitecture,
+    ResourceUsage, StatisticalTestingConfig,
 };
+use crate::error::OptimizerError;
 
 /// Performance evaluator for optimizer architectures
 pub struct PerformanceEvaluator<T: Float> {
     /// Evaluation configuration
     config: EvaluationConfig<T>,
-    
+
     /// Benchmark suite
     benchmark_suite: BenchmarkSuite<T>,
-    
+
     /// Performance predictor
     predictor: Option<PerformancePredictor<T>>,
-    
+
     /// Evaluation cache
     evaluation_cache: EvaluationCache<T>,
-    
+
     /// Statistical analyzer
     statistical_analyzer: StatisticalAnalyzer<T>,
-    
+
     /// Resource monitor
     resource_monitor: ResourceMonitor<T>,
 }
@@ -41,13 +41,13 @@ pub struct PerformanceEvaluator<T: Float> {
 pub struct BenchmarkSuite<T: Float> {
     /// Standard benchmarks
     standard_benchmarks: Vec<StandardBenchmark<T>>,
-    
+
     /// Custom benchmarks
     custom_benchmarks: Vec<CustomBenchmark<T>>,
-    
+
     /// Benchmark metadata
     metadata: BenchmarkMetadata,
-    
+
     /// Benchmark results cache
     results_cache: HashMap<String, BenchmarkResults<T>>,
 }
@@ -57,19 +57,19 @@ pub struct BenchmarkSuite<T: Float> {
 pub struct StandardBenchmark<T: Float> {
     /// Benchmark name
     pub name: String,
-    
+
     /// Benchmark type
     pub benchmark_type: BenchmarkType,
-    
+
     /// Test function
     pub test_function: TestFunction<T>,
-    
+
     /// Expected performance range
     pub expected_range: (T, T),
-    
+
     /// Difficulty level
     pub difficulty: DifficultyLevel,
-    
+
     /// Resource requirements
     pub resource_requirements: ResourceRequirements,
 }
@@ -79,13 +79,13 @@ pub struct StandardBenchmark<T: Float> {
 pub struct CustomBenchmark<T: Float> {
     /// Benchmark name
     pub name: String,
-    
+
     /// Custom test configuration
     pub config: CustomBenchmarkConfig<T>,
-    
+
     /// Evaluation function
     pub evaluator: CustomEvaluator<T>,
-    
+
     /// Validation criteria
     pub validation: ValidationCriteria<T>,
 }
@@ -95,31 +95,31 @@ pub struct CustomBenchmark<T: Float> {
 pub enum BenchmarkType {
     /// Convergence speed test
     ConvergenceSpeed,
-    
+
     /// Final performance test
     FinalPerformance,
-    
+
     /// Robustness test
     Robustness,
-    
+
     /// Generalization test
     Generalization,
-    
+
     /// Efficiency test
     Efficiency,
-    
+
     /// Scalability test
     Scalability,
-    
+
     /// Transfer learning test
     TransferLearning,
-    
+
     /// Multi-task test
     MultiTask,
-    
+
     /// Noisy optimization test
     NoisyOptimization,
-    
+
     /// Non-convex optimization test
     NonConvexOptimization,
 }
@@ -129,16 +129,16 @@ pub enum BenchmarkType {
 pub struct TestFunction<T: Float> {
     /// Function type
     pub function_type: TestFunctionType,
-    
+
     /// Function parameters
     pub parameters: HashMap<String, T>,
-    
+
     /// Dimensionality
     pub dimensions: usize,
-    
+
     /// Evaluation budget
     pub max_evaluations: usize,
-    
+
     /// Target performance
     pub target_performance: Option<T>,
 }
@@ -148,31 +148,31 @@ pub struct TestFunction<T: Float> {
 pub enum TestFunctionType {
     /// Quadratic bowl
     Quadratic,
-    
+
     /// Rosenbrock function
     Rosenbrock,
-    
+
     /// Rastrigin function
     Rastrigin,
-    
+
     /// Ackley function
     Ackley,
-    
+
     /// Sphere function
     Sphere,
-    
+
     /// Beale function
     Beale,
-    
+
     /// Neural network training
     NeuralNetworkTraining,
-    
+
     /// Linear regression
     LinearRegression,
-    
+
     /// Logistic regression
     LogisticRegression,
-    
+
     /// Custom function
     Custom(String),
 }
@@ -192,16 +192,16 @@ pub enum DifficultyLevel {
 pub struct ResourceRequirements {
     /// Memory requirement (MB)
     pub memory_mb: usize,
-    
+
     /// CPU cores required
     pub cpu_cores: usize,
-    
+
     /// GPU memory (MB, if needed)
     pub gpu_memory_mb: Option<usize>,
-    
+
     /// Maximum runtime (seconds)
     pub max_runtime_seconds: u64,
-    
+
     /// Storage requirement (MB)
     pub storage_mb: usize,
 }
@@ -211,13 +211,13 @@ pub struct ResourceRequirements {
 pub struct CustomBenchmarkConfig<T: Float> {
     /// Problem definition
     pub problem_definition: ProblemDefinition<T>,
-    
+
     /// Evaluation criteria
     pub evaluation_criteria: Vec<EvaluationCriterion<T>>,
-    
+
     /// Success metrics
     pub success_metrics: SuccessMetrics<T>,
-    
+
     /// Termination conditions
     pub termination_conditions: TerminationConditions<T>,
 }
@@ -227,19 +227,19 @@ pub struct CustomBenchmarkConfig<T: Float> {
 pub struct ProblemDefinition<T: Float> {
     /// Problem type
     pub problem_type: ProblemType,
-    
+
     /// Input dimensionality
     pub input_dim: usize,
-    
+
     /// Output dimensionality
     pub output_dim: usize,
-    
+
     /// Dataset size
     pub dataset_size: usize,
-    
+
     /// Problem-specific parameters
     pub parameters: HashMap<String, T>,
-    
+
     /// Data characteristics
     pub data_characteristics: DataCharacteristics<T>,
 }
@@ -262,16 +262,16 @@ pub enum ProblemType {
 pub struct DataCharacteristics<T: Float> {
     /// Noise level
     pub noise_level: T,
-    
+
     /// Data sparsity
     pub sparsity: T,
-    
+
     /// Correlation structure
     pub correlation: CorrelationStructure,
-    
+
     /// Distribution type
     pub distribution: DistributionType,
-    
+
     /// Outlier percentage
     pub outlier_percentage: T,
 }
@@ -303,16 +303,16 @@ pub enum DistributionType {
 pub struct EvaluationCriterion<T: Float> {
     /// Criterion name
     pub name: String,
-    
+
     /// Metric type
     pub metric_type: MetricType,
-    
+
     /// Target value
     pub target_value: T,
-    
+
     /// Tolerance
     pub tolerance: T,
-    
+
     /// Weight in overall score
     pub weight: T,
 }
@@ -339,13 +339,13 @@ pub enum MetricType {
 pub struct SuccessMetrics<T: Float> {
     /// Minimum performance threshold
     pub min_performance: T,
-    
+
     /// Maximum convergence time
     pub max_convergence_time: Duration,
-    
+
     /// Required stability
     pub stability_threshold: T,
-    
+
     /// Resource efficiency requirement
     pub efficiency_threshold: T,
 }
@@ -355,16 +355,16 @@ pub struct SuccessMetrics<T: Float> {
 pub struct TerminationConditions<T: Float> {
     /// Maximum iterations
     pub max_iterations: usize,
-    
+
     /// Maximum time
     pub max_time: Duration,
-    
+
     /// Convergence tolerance
     pub convergence_tolerance: T,
-    
+
     /// Stagnation threshold
     pub stagnation_threshold: usize,
-    
+
     /// Early stopping criteria
     pub early_stopping: EarlyStoppingCriteria<T>,
 }
@@ -374,13 +374,13 @@ pub struct TerminationConditions<T: Float> {
 pub struct EarlyStoppingCriteria<T: Float> {
     /// Patience (iterations without improvement)
     pub patience: usize,
-    
+
     /// Minimum improvement threshold
     pub min_improvement: T,
-    
+
     /// Validation metric
     pub validation_metric: MetricType,
-    
+
     /// Relative improvement flag
     pub relative_improvement: bool,
 }
@@ -390,10 +390,10 @@ pub struct EarlyStoppingCriteria<T: Float> {
 pub struct CustomEvaluator<T: Float> {
     /// Evaluator type
     pub evaluator_type: EvaluatorType,
-    
+
     /// Evaluation function parameters
     pub parameters: HashMap<String, T>,
-    
+
     /// Input/output specifications
     pub io_spec: IOSpecification,
 }
@@ -413,13 +413,13 @@ pub enum EvaluatorType {
 pub struct IOSpecification {
     /// Input format
     pub input_format: DataFormat,
-    
+
     /// Output format
     pub output_format: DataFormat,
-    
+
     /// Batch processing support
     pub supports_batching: bool,
-    
+
     /// Parallelization support
     pub supports_parallel: bool,
 }
@@ -442,16 +442,16 @@ pub enum DataFormat {
 pub struct ValidationCriteria<T: Float> {
     /// Cross-validation folds
     pub cv_folds: usize,
-    
+
     /// Validation split ratio
     pub validation_split: T,
-    
+
     /// Statistical significance level
     pub significance_level: T,
-    
+
     /// Confidence intervals
     pub confidence_level: T,
-    
+
     /// Bootstrap samples
     pub bootstrap_samples: usize,
 }
@@ -461,16 +461,16 @@ pub struct ValidationCriteria<T: Float> {
 pub struct PerformancePredictor<T: Float> {
     /// Predictor model
     predictor_model: PredictorModel<T>,
-    
+
     /// Feature extractor
     feature_extractor: FeatureExtractor<T>,
-    
+
     /// Training data
     training_data: PredictorTrainingData<T>,
-    
+
     /// Prediction cache
     prediction_cache: PredictionCache<T>,
-    
+
     /// Uncertainty estimator
     uncertainty_estimator: UncertaintyEstimator<T>,
 }
@@ -480,13 +480,13 @@ pub struct PerformancePredictor<T: Float> {
 pub struct PredictorModel<T: Float> {
     /// Model type
     model_type: PredictorModelType,
-    
+
     /// Model parameters
     parameters: ModelParameters<T>,
-    
+
     /// Model architecture
     architecture: ModelArchitecture,
-    
+
     /// Training state
     training_state: ModelTrainingState<T>,
 }
@@ -508,13 +508,13 @@ pub enum PredictorModelType {
 pub struct ModelParameters<T: Float> {
     /// Weights
     weights: Vec<Array2<T>>,
-    
+
     /// Biases
     biases: Vec<Array1<T>>,
-    
+
     /// Hyperparameters
     hyperparameters: HashMap<String, T>,
-    
+
     /// Regularization parameters
     regularization: RegularizationParameters<T>,
 }
@@ -524,13 +524,13 @@ pub struct ModelParameters<T: Float> {
 pub struct ModelArchitecture {
     /// Layer sizes
     layer_sizes: Vec<usize>,
-    
+
     /// Activation functions
     activations: Vec<ActivationFunction>,
-    
+
     /// Dropout rates
     dropout_rates: Vec<f64>,
-    
+
     /// Skip connections
     skip_connections: Vec<(usize, usize)>,
 }
@@ -552,13 +552,13 @@ pub enum ActivationFunction {
 pub struct RegularizationParameters<T: Float> {
     /// L1 regularization strength
     l1_strength: T,
-    
+
     /// L2 regularization strength
     l2_strength: T,
-    
+
     /// Dropout probability
     dropout_prob: T,
-    
+
     /// Batch normalization flag
     batch_norm: bool,
 }
@@ -568,16 +568,16 @@ pub struct RegularizationParameters<T: Float> {
 pub struct ModelTrainingState<T: Float> {
     /// Current epoch
     current_epoch: usize,
-    
+
     /// Training loss history
     loss_history: Vec<T>,
-    
+
     /// Validation loss history
     validation_loss_history: Vec<T>,
-    
+
     /// Learning rate schedule
     learning_rate_schedule: LearningRateSchedule<T>,
-    
+
     /// Early stopping state
     early_stopping_state: EarlyStoppingState<T>,
 }
@@ -587,13 +587,13 @@ pub struct ModelTrainingState<T: Float> {
 pub struct LearningRateSchedule<T: Float> {
     /// Schedule type
     schedule_type: ScheduleType,
-    
+
     /// Initial learning rate
     initial_lr: T,
-    
+
     /// Current learning rate
     current_lr: T,
-    
+
     /// Schedule parameters
     parameters: HashMap<String, T>,
 }
@@ -614,13 +614,13 @@ pub enum ScheduleType {
 pub struct EarlyStoppingState<T: Float> {
     /// Best validation loss
     best_val_loss: T,
-    
+
     /// Patience counter
     patience_counter: usize,
-    
+
     /// Maximum patience
     max_patience: usize,
-    
+
     /// Should stop flag
     should_stop: bool,
 }
@@ -630,13 +630,13 @@ pub struct EarlyStoppingState<T: Float> {
 pub struct FeatureExtractor<T: Float> {
     /// Feature extraction methods
     extraction_methods: Vec<FeatureExtractionMethod>,
-    
+
     /// Feature engineering pipeline
     engineering_pipeline: FeatureEngineeringPipeline<T>,
-    
+
     /// Feature selection
     feature_selection: FeatureSelection<T>,
-    
+
     /// Feature cache
     feature_cache: FeatureCache<T>,
 }
@@ -657,13 +657,13 @@ pub enum FeatureExtractionMethod {
 pub struct FeatureEngineeringPipeline<T: Float> {
     /// Normalization method
     normalization: NormalizationMethod,
-    
+
     /// Feature scaling
     scaling: FeatureScaling<T>,
-    
+
     /// Feature interactions
     interactions: FeatureInteractions,
-    
+
     /// Polynomial features
     polynomial_features: PolynomialFeatures,
 }
@@ -683,10 +683,10 @@ pub enum NormalizationMethod {
 pub struct FeatureScaling<T: Float> {
     /// Scaling method
     method: ScalingMethod,
-    
+
     /// Scale parameters
     scale_params: HashMap<String, T>,
-    
+
     /// Feature ranges
     feature_ranges: HashMap<String, (T, T)>,
 }
@@ -706,10 +706,10 @@ pub enum ScalingMethod {
 pub struct FeatureInteractions {
     /// Interaction order
     interaction_order: usize,
-    
+
     /// Include bias term
     include_bias: bool,
-    
+
     /// Selected interactions
     selected_interactions: Vec<Vec<usize>>,
 }
@@ -719,10 +719,10 @@ pub struct FeatureInteractions {
 pub struct PolynomialFeatures {
     /// Polynomial degree
     degree: usize,
-    
+
     /// Include bias term
     include_bias: bool,
-    
+
     /// Interaction only flag
     interaction_only: bool,
 }
@@ -732,13 +732,13 @@ pub struct PolynomialFeatures {
 pub struct FeatureSelection<T: Float> {
     /// Selection method
     selection_method: FeatureSelectionMethod,
-    
+
     /// Selection parameters
     parameters: HashMap<String, T>,
-    
+
     /// Selected features
     selected_features: Vec<usize>,
-    
+
     /// Feature importance scores
     importance_scores: Vec<T>,
 }
@@ -759,13 +759,13 @@ pub enum FeatureSelectionMethod {
 pub struct FeatureCache<T: Float> {
     /// Cached features
     cached_features: HashMap<String, Array1<T>>,
-    
+
     /// Cache hit rate
     hit_rate: f64,
-    
+
     /// Cache size limit
     size_limit: usize,
-    
+
     /// Eviction policy
     eviction_policy: CacheEvictionPolicy,
 }
@@ -784,13 +784,13 @@ pub enum CacheEvictionPolicy {
 pub struct PredictorTrainingData<T: Float> {
     /// Architecture features
     architecture_features: Vec<Array1<T>>,
-    
+
     /// Performance targets
     performance_targets: Vec<T>,
-    
+
     /// Training metadata
     metadata: Vec<TrainingMetadata>,
-    
+
     /// Data splits
     data_splits: DataSplits,
 }
@@ -800,13 +800,13 @@ pub struct PredictorTrainingData<T: Float> {
 pub struct TrainingMetadata {
     /// Architecture ID
     architecture_id: String,
-    
+
     /// Benchmark name
     benchmark_name: String,
-    
+
     /// Evaluation timestamp
     timestamp: SystemTime,
-    
+
     /// Resource usage
     resource_usage: ResourceUsageRecord,
 }
@@ -816,13 +816,13 @@ pub struct TrainingMetadata {
 pub struct ResourceUsageRecord {
     /// Memory usage (MB)
     memory_mb: f64,
-    
+
     /// CPU time (seconds)
     cpu_time_seconds: f64,
-    
+
     /// GPU time (seconds)
     gpu_time_seconds: f64,
-    
+
     /// Energy consumption (kWh)
     energy_kwh: f64,
 }
@@ -832,13 +832,13 @@ pub struct ResourceUsageRecord {
 pub struct DataSplits {
     /// Training indices
     train_indices: Vec<usize>,
-    
+
     /// Validation indices
     validation_indices: Vec<usize>,
-    
+
     /// Test indices
     test_indices: Vec<usize>,
-    
+
     /// Split ratios
     split_ratios: (f64, f64, f64),
 }
@@ -848,10 +848,10 @@ pub struct DataSplits {
 pub struct PredictionCache<T: Float> {
     /// Cached predictions
     predictions: HashMap<String, PredictionResult<T>>,
-    
+
     /// Cache statistics
     statistics: CacheStatistics,
-    
+
     /// Cache configuration
     config: CacheConfig,
 }
@@ -861,16 +861,16 @@ pub struct PredictionCache<T: Float> {
 pub struct PredictionResult<T: Float> {
     /// Predicted performance
     predicted_performance: T,
-    
+
     /// Confidence interval
     confidence_interval: (T, T),
-    
+
     /// Prediction uncertainty
     uncertainty: T,
-    
+
     /// Feature importance
     feature_importance: Vec<T>,
-    
+
     /// Prediction timestamp
     timestamp: Instant,
 }
@@ -880,16 +880,16 @@ pub struct PredictionResult<T: Float> {
 pub struct CacheStatistics {
     /// Total requests
     total_requests: usize,
-    
+
     /// Cache hits
     cache_hits: usize,
-    
+
     /// Cache misses
     cache_misses: usize,
-    
+
     /// Hit rate
     hit_rate: f64,
-    
+
     /// Average prediction time
     avg_prediction_time_ms: f64,
 }
@@ -899,13 +899,13 @@ pub struct CacheStatistics {
 pub struct CacheConfig {
     /// Maximum cache size
     max_size: usize,
-    
+
     /// TTL for entries (seconds)
     ttl_seconds: u64,
-    
+
     /// Eviction policy
     eviction_policy: CacheEvictionPolicy,
-    
+
     /// Enable persistence
     enable_persistence: bool,
 }
@@ -915,13 +915,13 @@ pub struct CacheConfig {
 pub struct UncertaintyEstimator<T: Float> {
     /// Estimation method
     estimation_method: UncertaintyEstimationMethod,
-    
+
     /// Model ensemble (if using ensemble methods)
     model_ensemble: Vec<PredictorModel<T>>,
-    
+
     /// Uncertainty parameters
     parameters: UncertaintyParameters<T>,
-    
+
     /// Calibration data
     calibration_data: CalibrationData<T>,
 }
@@ -942,13 +942,13 @@ pub enum UncertaintyEstimationMethod {
 pub struct UncertaintyParameters<T: Float> {
     /// Number of samples for MC methods
     num_samples: usize,
-    
+
     /// Confidence level
     confidence_level: T,
-    
+
     /// Calibration alpha
     calibration_alpha: T,
-    
+
     /// Method-specific parameters
     method_params: HashMap<String, T>,
 }
@@ -958,13 +958,13 @@ pub struct UncertaintyParameters<T: Float> {
 pub struct CalibrationData<T: Float> {
     /// Calibration predictions
     predictions: Vec<T>,
-    
+
     /// Calibration targets
     targets: Vec<T>,
-    
+
     /// Calibration scores
     scores: Vec<T>,
-    
+
     /// Calibration curve
     calibration_curve: CalibrationCurve<T>,
 }
@@ -974,13 +974,13 @@ pub struct CalibrationData<T: Float> {
 pub struct CalibrationCurve<T: Float> {
     /// Bin edges
     bin_edges: Vec<T>,
-    
+
     /// Bin accuracies
     bin_accuracies: Vec<T>,
-    
+
     /// Bin confidences
     bin_confidences: Vec<T>,
-    
+
     /// Bin counts
     bin_counts: Vec<usize>,
 }
@@ -990,10 +990,10 @@ pub struct CalibrationCurve<T: Float> {
 pub struct EvaluationCache<T: Float> {
     /// Cached evaluations
     evaluations: HashMap<String, CachedEvaluation<T>>,
-    
+
     /// Cache metadata
     metadata: CacheMetadata,
-    
+
     /// Access patterns
     access_patterns: AccessPatterns,
 }
@@ -1003,13 +1003,13 @@ pub struct EvaluationCache<T: Float> {
 pub struct CachedEvaluation<T: Float> {
     /// Evaluation results
     results: EvaluationResults<T>,
-    
+
     /// Cache timestamp
     timestamp: SystemTime,
-    
+
     /// Access count
     access_count: usize,
-    
+
     /// Validity flag
     is_valid: bool,
 }
@@ -1019,13 +1019,13 @@ pub struct CachedEvaluation<T: Float> {
 pub struct CacheMetadata {
     /// Total entries
     total_entries: usize,
-    
+
     /// Cache size (bytes)
     cache_size_bytes: usize,
-    
+
     /// Last cleanup time
     last_cleanup: SystemTime,
-    
+
     /// Cache version
     version: String,
 }
@@ -1035,10 +1035,10 @@ pub struct CacheMetadata {
 pub struct AccessPatterns {
     /// Frequency distribution
     frequency_distribution: HashMap<String, usize>,
-    
+
     /// Temporal patterns
     temporal_patterns: Vec<TemporalPattern>,
-    
+
     /// Correlation patterns
     correlation_patterns: HashMap<String, Vec<String>>,
 }
@@ -1048,10 +1048,10 @@ pub struct AccessPatterns {
 pub struct TemporalPattern {
     /// Time window
     time_window: Duration,
-    
+
     /// Access frequency
     access_frequency: f64,
-    
+
     /// Pattern type
     pattern_type: TemporalPatternType,
 }
@@ -1071,13 +1071,13 @@ pub enum TemporalPatternType {
 pub struct StatisticalAnalyzer<T: Float> {
     /// Statistical tests
     statistical_tests: Vec<StatisticalTest<T>>,
-    
+
     /// Analysis methods
     analysis_methods: Vec<AnalysisMethod>,
-    
+
     /// Significance thresholds
     significance_thresholds: HashMap<String, T>,
-    
+
     /// Multiple comparison correction
     multiple_comparison: MultipleComparisonCorrection,
 }
@@ -1087,19 +1087,19 @@ pub struct StatisticalAnalyzer<T: Float> {
 pub struct StatisticalTest<T: Float> {
     /// Test name
     name: String,
-    
+
     /// Test type
     test_type: StatisticalTestType,
-    
+
     /// Test statistic
     test_statistic: T,
-    
+
     /// P-value
     p_value: T,
-    
+
     /// Effect size
     effect_size: T,
-    
+
     /// Confidence interval
     confidence_interval: (T, T),
 }
@@ -1145,13 +1145,13 @@ pub enum MultipleComparisonCorrection {
 pub struct ResourceMonitor<T: Float> {
     /// Current resource usage
     current_usage: ResourceUsage<T>,
-    
+
     /// Resource usage history
     usage_history: VecDeque<ResourceUsageSnapshot<T>>,
-    
+
     /// Resource limits
     limits: ResourceLimits<T>,
-    
+
     /// Monitoring configuration
     config: MonitoringConfig,
 }
@@ -1161,19 +1161,19 @@ pub struct ResourceMonitor<T: Float> {
 pub struct ResourceUsageSnapshot<T: Float> {
     /// Timestamp
     timestamp: SystemTime,
-    
+
     /// Memory usage (MB)
     memory_mb: T,
-    
+
     /// CPU usage (%)
     cpu_usage_percent: T,
-    
+
     /// GPU usage (%)
     gpu_usage_percent: T,
-    
+
     /// Network I/O (MB/s)
     network_io_mbps: T,
-    
+
     /// Disk I/O (MB/s)
     disk_io_mbps: T,
 }
@@ -1183,13 +1183,13 @@ pub struct ResourceUsageSnapshot<T: Float> {
 pub struct ResourceLimits<T: Float> {
     /// Maximum memory (MB)
     max_memory_mb: T,
-    
+
     /// Maximum CPU usage (%)
     max_cpu_percent: T,
-    
+
     /// Maximum GPU memory (MB)
     max_gpu_memory_mb: T,
-    
+
     /// Maximum evaluation time (seconds)
     max_evaluation_time_seconds: T,
 }
@@ -1199,13 +1199,13 @@ pub struct ResourceLimits<T: Float> {
 pub struct MonitoringConfig {
     /// Monitoring interval (milliseconds)
     monitoring_interval_ms: u64,
-    
+
     /// History size limit
     history_size_limit: usize,
-    
+
     /// Enable detailed monitoring
     enable_detailed_monitoring: bool,
-    
+
     /// Alert thresholds
     alert_thresholds: HashMap<String, f64>,
 }
@@ -1215,22 +1215,22 @@ pub struct MonitoringConfig {
 pub struct BenchmarkMetadata {
     /// Suite name
     pub name: String,
-    
+
     /// Version
     pub version: String,
-    
+
     /// Description
     pub description: String,
-    
+
     /// Creation date
     pub created_at: SystemTime,
-    
+
     /// Last updated
     pub updated_at: SystemTime,
-    
+
     /// Author information
     pub author: String,
-    
+
     /// License
     pub license: String,
 }
@@ -1240,16 +1240,16 @@ pub struct BenchmarkMetadata {
 pub struct BenchmarkResults<T: Float> {
     /// Individual test results
     pub test_results: Vec<TestResult<T>>,
-    
+
     /// Overall score
     pub overall_score: T,
-    
+
     /// Performance ranking
     pub ranking: PerformanceRanking,
-    
+
     /// Statistical summary
     pub statistical_summary: StatisticalSummary<T>,
-    
+
     /// Resource usage summary
     pub resource_summary: ResourceSummary<T>,
 }
@@ -1259,22 +1259,22 @@ pub struct BenchmarkResults<T: Float> {
 pub struct TestResult<T: Float> {
     /// Test name
     pub test_name: String,
-    
+
     /// Score
     pub score: T,
-    
+
     /// Normalized score
     pub normalized_score: T,
-    
+
     /// Percentile rank
     pub percentile_rank: T,
-    
+
     /// Execution time
     pub execution_time: Duration,
-    
+
     /// Resource usage
     pub resource_usage: ResourceUsage<T>,
-    
+
     /// Additional metrics
     pub metrics: HashMap<String, T>,
 }
@@ -1284,13 +1284,13 @@ pub struct TestResult<T: Float> {
 pub struct PerformanceRanking {
     /// Overall rank
     pub overall_rank: usize,
-    
+
     /// Category ranks
     pub category_ranks: HashMap<BenchmarkType, usize>,
-    
+
     /// Percentile scores
     pub percentile_scores: HashMap<BenchmarkType, f64>,
-    
+
     /// Relative performance
     pub relative_performance: f64,
 }
@@ -1300,22 +1300,22 @@ pub struct PerformanceRanking {
 pub struct StatisticalSummary<T: Float> {
     /// Mean score
     pub mean: T,
-    
+
     /// Median score
     pub median: T,
-    
+
     /// Standard deviation
     pub std_dev: T,
-    
+
     /// Minimum score
     pub min: T,
-    
+
     /// Maximum score
     pub max: T,
-    
+
     /// Quartiles
     pub quartiles: (T, T, T),
-    
+
     /// Confidence intervals
     pub confidence_intervals: HashMap<String, (T, T)>,
 }
@@ -1325,19 +1325,19 @@ pub struct StatisticalSummary<T: Float> {
 pub struct ResourceSummary<T: Float> {
     /// Total memory usage
     pub total_memory_mb: T,
-    
+
     /// Peak memory usage
     pub peak_memory_mb: T,
-    
+
     /// Total CPU time
     pub total_cpu_seconds: T,
-    
+
     /// Total GPU time
     pub total_gpu_seconds: T,
-    
+
     /// Energy consumption
     pub energy_consumption_kwh: T,
-    
+
     /// Cost estimate
     pub cost_estimate_usd: T,
 }
@@ -1356,65 +1356,70 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> PerformanceEval
             config,
         })
     }
-    
+
     /// Initialize the evaluator
     pub fn initialize(&mut self) -> Result<(), OptimizerError> {
         // Initialize benchmark suite
         self.benchmark_suite.initialize(&self.config)?;
-        
+
         // Initialize performance predictor if enabled
         if self.config.performance_prediction {
             self.predictor = Some(PerformancePredictor::new(&self.config)?);
         }
-        
+
         // Start resource monitoring
         self.resource_monitor.start_monitoring()?;
-        
+
         Ok(())
     }
-    
+
     /// Evaluate an optimizer architecture
     pub fn evaluate_architecture(
         &mut self,
         architecture: &OptimizerArchitecture<T>,
     ) -> Result<EvaluationResults<T>, OptimizerError> {
         let start_time = Instant::now();
-        
+
         // Check cache first
         let cache_key = self.generate_cache_key(architecture);
         if let Some(cached_result) = self.evaluation_cache.get(&cache_key) {
             return Ok(cached_result.results.clone());
         }
-        
+
         // Run benchmarks
         let benchmark_results = self.benchmark_suite.run_benchmarks(architecture)?;
-        
+
         // Compute overall metrics
         let mut metric_scores = HashMap::new();
-        
+
         // Aggregate benchmark scores
         let overall_score = self.aggregate_benchmark_scores(&benchmark_results)?;
         metric_scores.insert(EvaluationMetric::FinalPerformance, overall_score);
-        
+
         // Compute convergence speed
         let convergence_speed = self.compute_convergence_speed(&benchmark_results)?;
         metric_scores.insert(EvaluationMetric::ConvergenceSpeed, convergence_speed);
-        
+
         // Compute stability metrics
         let stability = self.compute_stability(&benchmark_results)?;
         metric_scores.insert(EvaluationMetric::TrainingStability, stability);
-        
+
         // Compute efficiency metrics
         let memory_efficiency = self.compute_memory_efficiency(&benchmark_results)?;
         let computational_efficiency = self.compute_computational_efficiency(&benchmark_results)?;
         metric_scores.insert(EvaluationMetric::MemoryEfficiency, memory_efficiency);
-        metric_scores.insert(EvaluationMetric::ComputationalEfficiency, computational_efficiency);
-        
+        metric_scores.insert(
+            EvaluationMetric::ComputationalEfficiency,
+            computational_efficiency,
+        );
+
         // Statistical analysis
-        let confidence_intervals = self.statistical_analyzer.compute_confidence_intervals(&benchmark_results)?;
-        
+        let confidence_intervals = self
+            .statistical_analyzer
+            .compute_confidence_intervals(&benchmark_results)?;
+
         let evaluation_time = start_time.elapsed();
-        
+
         let results = EvaluationResults {
             metric_scores,
             overall_score,
@@ -1423,69 +1428,77 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> PerformanceEval
             success: true,
             error_message: None,
         };
-        
+
         // Cache results
         self.evaluation_cache.insert(cache_key, results.clone());
-        
+
         Ok(results)
     }
-    
+
     fn generate_cache_key(&self, architecture: &OptimizerArchitecture<T>) -> String {
         // Generate a unique key for the architecture
         // This is simplified - in practice would use better hashing
         format!("arch_{}", architecture.components.len())
     }
-    
+
     fn aggregate_benchmark_scores(&self, results: &[TestResult<T>]) -> Result<T, OptimizerError> {
         if results.is_empty() {
             return Ok(T::zero());
         }
-        
+
         let sum: T = results.iter().map(|r| r.normalized_score).sum();
         Ok(sum / T::from(results.len()).unwrap())
     }
-    
+
     fn compute_convergence_speed(&self, results: &[TestResult<T>]) -> Result<T, OptimizerError> {
         // Simplified convergence speed computation
-        let avg_time: f64 = results.iter()
+        let avg_time: f64 = results
+            .iter()
             .map(|r| r.execution_time.as_secs_f64())
-            .sum::<f64>() / results.len() as f64;
-        
+            .sum::<f64>()
+            / results.len() as f64;
+
         // Inverse of average time (higher is better)
         Ok(T::from(1.0 / (avg_time + 1e-6)).unwrap())
     }
-    
+
     fn compute_stability(&self, results: &[TestResult<T>]) -> Result<T, OptimizerError> {
         if results.len() < 2 {
             return Ok(T::one());
         }
-        
+
         let scores: Vec<T> = results.iter().map(|r| r.score).collect();
         let mean = scores.iter().cloned().sum::<T>() / T::from(scores.len()).unwrap();
-        let variance = scores.iter()
-            .map(|&s| (s - mean) * (s - mean))
-            .sum::<T>() / T::from(scores.len()).unwrap();
+        let variance = scores.iter().map(|&s| (s - mean) * (s - mean)).sum::<T>()
+            / T::from(scores.len()).unwrap();
         let std_dev = variance.sqrt();
-        
+
         // Stability as inverse of coefficient of variation
         let cv = std_dev / mean.abs().max(T::from(1e-6).unwrap());
         Ok(T::one() / (cv + T::from(1e-6).unwrap()))
     }
-    
+
     fn compute_memory_efficiency(&self, results: &[TestResult<T>]) -> Result<T, OptimizerError> {
-        let avg_memory = results.iter()
+        let avg_memory = results
+            .iter()
             .map(|r| r.resource_usage.memory_gb.to_f64().unwrap_or(1.0))
-            .sum::<f64>() / results.len() as f64;
-        
+            .sum::<f64>()
+            / results.len() as f64;
+
         // Efficiency as inverse of memory usage
         Ok(T::from(1.0 / (avg_memory + 1e-6)).unwrap())
     }
-    
-    fn compute_computational_efficiency(&self, results: &[TestResult<T>]) -> Result<T, OptimizerError> {
-        let avg_cpu_time = results.iter()
+
+    fn compute_computational_efficiency(
+        &self,
+        results: &[TestResult<T>],
+    ) -> Result<T, OptimizerError> {
+        let avg_cpu_time = results
+            .iter()
             .map(|r| r.resource_usage.cpu_time_seconds.to_f64().unwrap_or(1.0))
-            .sum::<f64>() / results.len() as f64;
-        
+            .sum::<f64>()
+            / results.len() as f64;
+
         // Efficiency as inverse of CPU time
         Ok(T::from(1.0 / (avg_cpu_time + 1e-6)).unwrap())
     }
@@ -1509,13 +1522,13 @@ impl<T: Float + Default> BenchmarkSuite<T> {
             results_cache: HashMap::new(),
         })
     }
-    
+
     fn initialize(&mut self, _config: &EvaluationConfig<T>) -> Result<(), OptimizerError> {
         // Initialize standard benchmarks
         self.add_standard_benchmarks()?;
         Ok(())
     }
-    
+
     fn add_standard_benchmarks(&mut self) -> Result<(), OptimizerError> {
         // Add Rosenbrock function benchmark
         self.standard_benchmarks.push(StandardBenchmark {
@@ -1538,7 +1551,7 @@ impl<T: Float + Default> BenchmarkSuite<T> {
                 storage_mb: 10,
             },
         });
-        
+
         // Add Quadratic benchmark
         self.standard_benchmarks.push(StandardBenchmark {
             name: "Quadratic".to_string(),
@@ -1560,30 +1573,30 @@ impl<T: Float + Default> BenchmarkSuite<T> {
                 storage_mb: 5,
             },
         });
-        
+
         Ok(())
     }
-    
+
     fn run_benchmarks(
         &mut self,
         _architecture: &OptimizerArchitecture<T>,
     ) -> Result<Vec<TestResult<T>>, OptimizerError> {
         let mut results = Vec::new();
-        
+
         for benchmark in &self.standard_benchmarks {
             let result = self.run_single_benchmark(benchmark)?;
             results.push(result);
         }
-        
+
         Ok(results)
     }
-    
+
     fn run_single_benchmark(
         &self,
         benchmark: &StandardBenchmark<T>,
     ) -> Result<TestResult<T>, OptimizerError> {
         let start_time = Instant::now();
-        
+
         // Simplified benchmark execution
         let score = match benchmark.test_function.function_type {
             TestFunctionType::Rosenbrock => {
@@ -1599,9 +1612,9 @@ impl<T: Float + Default> BenchmarkSuite<T> {
                 T::from(0.1).unwrap()
             }
         };
-        
+
         let execution_time = start_time.elapsed();
-        
+
         Ok(TestResult {
             test_name: benchmark.name.clone(),
             score,
@@ -1650,11 +1663,11 @@ impl<T: Float + Default> EvaluationCache<T> {
             },
         }
     }
-    
+
     fn get(&self, key: &str) -> Option<&CachedEvaluation<T>> {
         self.evaluations.get(key)
     }
-    
+
     fn insert(&mut self, key: String, results: EvaluationResults<T>) {
         let cached_eval = CachedEvaluation {
             results,
@@ -1662,7 +1675,7 @@ impl<T: Float + Default> EvaluationCache<T> {
             access_count: 1,
             is_valid: true,
         };
-        
+
         self.evaluations.insert(key, cached_eval);
         self.metadata.total_entries += 1;
     }
@@ -1684,30 +1697,33 @@ impl<T: Float + Default> StatisticalAnalyzer<T> {
             multiple_comparison: MultipleComparisonCorrection::BenjaminiHochberg,
         }
     }
-    
+
     fn compute_confidence_intervals(
         &self,
         results: &[TestResult<T>],
     ) -> Result<HashMap<EvaluationMetric, (T, T)>, OptimizerError> {
         let mut intervals = HashMap::new();
-        
+
         if !results.is_empty() {
             let scores: Vec<T> = results.iter().map(|r| r.score).collect();
             let mean = scores.iter().cloned().sum::<T>() / T::from(scores.len()).unwrap();
             let std_dev = if scores.len() > 1 {
-                let variance = scores.iter()
-                    .map(|&s| (s - mean) * (s - mean))
-                    .sum::<T>() / T::from(scores.len() - 1).unwrap();
+                let variance = scores.iter().map(|&s| (s - mean) * (s - mean)).sum::<T>()
+                    / T::from(scores.len() - 1).unwrap();
                 variance.sqrt()
             } else {
                 T::zero()
             };
-            
+
             // 95% confidence interval (simplified)
-            let margin = std_dev * T::from(1.96).unwrap() / T::from((scores.len() as f64).sqrt()).unwrap();
-            intervals.insert(EvaluationMetric::FinalPerformance, (mean - margin, mean + margin));
+            let margin =
+                std_dev * T::from(1.96).unwrap() / T::from((scores.len() as f64).sqrt()).unwrap();
+            intervals.insert(
+                EvaluationMetric::FinalPerformance,
+                (mean - margin, mean + margin),
+            );
         }
-        
+
         Ok(intervals)
     }
 }
@@ -1738,7 +1754,7 @@ impl<T: Float + Default> ResourceMonitor<T> {
             },
         }
     }
-    
+
     fn start_monitoring(&mut self) -> Result<(), OptimizerError> {
         // Start resource monitoring (simplified)
         Ok(())
@@ -1895,25 +1911,25 @@ impl<T: Float + Default> UncertaintyEstimator<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_performance_evaluator_creation() {
         let config = EvaluationConfig::default();
         let evaluator = PerformanceEvaluator::<f64>::new(config);
         assert!(evaluator.is_ok());
     }
-    
+
     #[test]
     fn test_benchmark_suite_creation() {
         let suite = BenchmarkSuite::<f64>::new();
         assert!(suite.is_ok());
     }
-    
+
     #[test]
     fn test_evaluation_cache() {
         let mut cache = EvaluationCache::<f64>::new();
         assert_eq!(cache.metadata.total_entries, 0);
-        
+
         let results = EvaluationResults {
             metric_scores: HashMap::new(),
             overall_score: 0.5,
@@ -1922,7 +1938,7 @@ mod tests {
             success: true,
             error_message: None,
         };
-        
+
         cache.insert("test_key".to_string(), results);
         assert_eq!(cache.metadata.total_entries, 1);
     }

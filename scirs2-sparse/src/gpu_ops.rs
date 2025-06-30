@@ -49,7 +49,7 @@ impl GpuError {
     pub fn new(msg: &str) -> Self {
         Self(msg.to_string())
     }
-    
+
     pub fn invalid_buffer(msg: String) -> Self {
         Self(msg)
     }
@@ -75,19 +75,19 @@ impl<T: Clone> GpuBuffer<T> {
     pub fn as_slice(&self) -> &[T] {
         &self.data
     }
-    
+
     pub fn as_mut_slice(&mut self) -> &mut [T] {
         &mut self.data
     }
-    
+
     pub fn to_vec(&self) -> Vec<T> {
         self.data.clone()
     }
-    
+
     pub fn to_host(&self) -> Result<Vec<T>, GpuError> {
         Ok(self.data.clone())
     }
-    
+
     pub fn to_host_range(&self, range: std::ops::Range<usize>) -> Result<Vec<T>, GpuError> {
         if range.end <= self.data.len() {
             Ok(self.data[range].to_vec())
@@ -159,7 +159,11 @@ impl GpuDevice {
         Ok(self.context.create_buffer::<T>(size))
     }
 
-    pub fn compile_kernel(&self, source: &str, _entry_point: &str) -> Result<GpuKernelHandle, GpuError> {
+    pub fn compile_kernel(
+        &self,
+        source: &str,
+        _entry_point: &str,
+    ) -> Result<GpuKernelHandle, GpuError> {
         self.context.execute(|compiler| compiler.compile(source))
     }
 
@@ -168,13 +172,16 @@ impl GpuDevice {
         0
     }
 
-    pub fn execute_kernel_with_args(&self, 
-                                   kernel: &GpuKernelHandle,
-                                   global_size: &[usize],
-                                   local_size: &[usize],
-                                   args: &[Box<dyn std::any::Any>]) -> Result<(), GpuError> {
+    pub fn execute_kernel_with_args(
+        &self,
+        kernel: &GpuKernelHandle,
+        global_size: &[usize],
+        local_size: &[usize],
+        args: &[Box<dyn std::any::Any>],
+    ) -> Result<(), GpuError> {
         // Execute kernel with the GPU context
-        self.context.execute_kernel(kernel, global_size, local_size, args)
+        self.context
+            .execute_kernel(kernel, global_size, local_size, args)
     }
 
     pub fn synchronize(&self) -> Result<(), GpuError> {
@@ -184,7 +191,9 @@ impl GpuDevice {
 
     pub fn get_max_work_group_size(&self) -> Result<usize, GpuError> {
         // Query OpenCL device for max work group size
-        self.context.get_device_info().map(|info| info.max_work_group_size)
+        self.context
+            .get_device_info()
+            .map(|info| info.max_work_group_size)
     }
 
     pub fn finish_queue(&self) -> Result<(), GpuError> {
@@ -194,7 +203,9 @@ impl GpuDevice {
 
     pub fn get_max_threads_per_threadgroup(&self) -> Result<usize, GpuError> {
         // Metal threadgroup query
-        self.context.get_device_info().map(|info| info.max_threads_per_threadgroup)
+        self.context
+            .get_device_info()
+            .map(|info| info.max_threads_per_threadgroup)
     }
 
     pub fn commit_and_wait(&self) -> Result<(), GpuError> {
@@ -217,24 +228,34 @@ impl GpuDevice {
     where
         T: GpuDataType,
     {
-        Ok(GpuBuffer { data: data.to_vec() })
+        Ok(GpuBuffer {
+            data: data.to_vec(),
+        })
     }
 
     pub fn create_buffer_zeros<T>(&self, size: usize) -> Result<GpuBuffer<T>, GpuError>
     where
         T: GpuDataType + Default,
     {
-        Ok(GpuBuffer { data: vec![T::default(); size] })
+        Ok(GpuBuffer {
+            data: vec![T::default(); size],
+        })
     }
 
     pub fn create_buffer_uninit<T>(&self, size: usize) -> Result<GpuBuffer<T>, GpuError>
     where
         T: GpuDataType + Default,
     {
-        Ok(GpuBuffer { data: vec![T::default(); size] })
+        Ok(GpuBuffer {
+            data: vec![T::default(); size],
+        })
     }
 
-    pub fn compile_kernel(&self, _source: &str, _entry_point: &str) -> Result<GpuKernelHandle, GpuError> {
+    pub fn compile_kernel(
+        &self,
+        _source: &str,
+        _entry_point: &str,
+    ) -> Result<GpuKernelHandle, GpuError> {
         Ok(GpuKernelHandle)
     }
 
@@ -243,11 +264,13 @@ impl GpuDevice {
         0
     }
 
-    pub fn execute_kernel_with_args(&self, 
-                                   _kernel: &GpuKernelHandle,
-                                   _global_size: &[usize],
-                                   _local_size: &[usize],
-                                   _args: &[Box<dyn std::any::Any>]) -> Result<(), GpuError> {
+    pub fn execute_kernel_with_args(
+        &self,
+        _kernel: &GpuKernelHandle,
+        _global_size: &[usize],
+        _local_size: &[usize],
+        _args: &[Box<dyn std::any::Any>],
+    ) -> Result<(), GpuError> {
         // CPU fallback - just return success
         Ok(())
     }
@@ -310,7 +333,7 @@ pub struct SpMVKernel {
 impl SpMVKernel {
     pub fn new(device: &GpuDevice, workgroup_size: [u32; 3]) -> Result<Self, GpuError> {
         // Compile GPU kernels for actual hardware acceleration
-        
+
         match device.backend() {
             #[cfg(not(feature = "gpu"))]
             GpuBackend::Cuda => {
@@ -369,15 +392,21 @@ impl SpMVKernel {
                     y[row] = sdata[tid];
                 }
                 "#;
-                
+
                 // Compile and validate CUDA kernel with enhanced error handling
-                let kernel_handle = device.compile_kernel(cuda_kernel_source, "spmv_csr_vectorized_kernel")
-                    .map_err(|e| GpuError::new(&format!("Failed to compile CUDA SpMV kernel: {}", e)))?;
-                
+                let kernel_handle = device
+                    .compile_kernel(cuda_kernel_source, "spmv_csr_vectorized_kernel")
+                    .map_err(|e| {
+                        GpuError::new(&format!("Failed to compile CUDA SpMV kernel: {}", e))
+                    })?;
+
                 // Verify kernel compilation succeeded and store handle
-                Ok(Self { kernel_handle: Some(kernel_handle), backend: device.backend() })
+                Ok(Self {
+                    kernel_handle: Some(kernel_handle),
+                    backend: device.backend(),
+                })
             }
-            
+
             GpuBackend::OpenCl => {
                 // Compile OpenCL SpMV kernel
                 let opencl_kernel_source = r#"
@@ -434,15 +463,21 @@ impl SpMVKernel {
                     y[row] = sdata[lid];
                 }
                 "#;
-                
+
                 // Compile and validate OpenCL kernel with enhanced error handling
-                let kernel_handle = device.compile_kernel(opencl_kernel_source, "spmv_csr_local_kernel")
-                    .map_err(|e| GpuError::new(&format!("Failed to compile OpenCL SpMV kernel: {}", e)))?;
-                
+                let kernel_handle = device
+                    .compile_kernel(opencl_kernel_source, "spmv_csr_local_kernel")
+                    .map_err(|e| {
+                        GpuError::new(&format!("Failed to compile OpenCL SpMV kernel: {}", e))
+                    })?;
+
                 // Verify kernel compilation succeeded and store handle
-                Ok(Self { kernel_handle: Some(kernel_handle), backend: device.backend() })
+                Ok(Self {
+                    kernel_handle: Some(kernel_handle),
+                    backend: device.backend(),
+                })
             }
-            
+
             GpuBackend::Metal => {
                 // Compile Metal compute shader for SpMV
                 let metal_kernel_source = r#"
@@ -496,18 +531,27 @@ impl SpMVKernel {
                     y[row] = sum;
                 }
                 "#;
-                
+
                 // Compile and validate Metal kernel with enhanced error handling
-                let kernel_handle = device.compile_kernel(metal_kernel_source, "spmv_csr_simdgroup_kernel")
-                    .map_err(|e| GpuError::new(&format!("Failed to compile Metal SpMV kernel: {}", e)))?;
-                
+                let kernel_handle = device
+                    .compile_kernel(metal_kernel_source, "spmv_csr_simdgroup_kernel")
+                    .map_err(|e| {
+                        GpuError::new(&format!("Failed to compile Metal SpMV kernel: {}", e))
+                    })?;
+
                 // Verify kernel compilation succeeded and store handle
-                Ok(Self { kernel_handle: Some(kernel_handle), backend: device.backend() })
+                Ok(Self {
+                    kernel_handle: Some(kernel_handle),
+                    backend: device.backend(),
+                })
             }
-            
+
             GpuBackend::Cpu => {
                 // CPU implementation - no kernel handle needed
-                Ok(Self { kernel_handle: None, backend: device.backend() })
+                Ok(Self {
+                    kernel_handle: None,
+                    backend: device.backend(),
+                })
             }
         }
     }
@@ -529,17 +573,38 @@ impl SpMVKernel {
         // Enhanced GPU kernel execution with optimized dispatch using stored kernel handle
         match (&self.kernel_handle, self.backend) {
             #[cfg(feature = "gpu")]
-            (Some(kernel_handle), GpuBackend::Cuda) => {
-                self.execute_cuda_optimized(device, kernel_handle, rows, indptr, indices, data, x, y)
-            },
+            (Some(kernel_handle), GpuBackend::Cuda) => self.execute_cuda_optimized(
+                device,
+                kernel_handle,
+                rows,
+                indptr,
+                indices,
+                data,
+                x,
+                y,
+            ),
             #[cfg(feature = "gpu")]
-            (Some(kernel_handle), GpuBackend::OpenCl) => {
-                self.execute_opencl_optimized(device, kernel_handle, rows, indptr, indices, data, x, y)
-            },
+            (Some(kernel_handle), GpuBackend::OpenCl) => self.execute_opencl_optimized(
+                device,
+                kernel_handle,
+                rows,
+                indptr,
+                indices,
+                data,
+                x,
+                y,
+            ),
             #[cfg(feature = "gpu")]
-            (Some(kernel_handle), GpuBackend::Metal) => {
-                self.execute_metal_optimized(device, kernel_handle, rows, indptr, indices, data, x, y)
-            },
+            (Some(kernel_handle), GpuBackend::Metal) => self.execute_metal_optimized(
+                device,
+                kernel_handle,
+                rows,
+                indptr,
+                indices,
+                data,
+                x,
+                y,
+            ),
             _ => {
                 // CPU fallback when GPU not available or not compiled with GPU support
                 self.execute_cpu_fallback(rows, cols, indptr, indices, data, x, y)
@@ -566,7 +631,7 @@ impl SpMVKernel {
         // Calculate optimal CUDA launch parameters
         let block_size = 256; // Optimal for most modern CUDA devices
         let grid_size = (rows + block_size - 1) / block_size;
-        
+
         // Launch vectorized CUDA kernel with memory coalescing
         device.execute_kernel_with_args(
             kernel_handle,
@@ -575,14 +640,14 @@ impl SpMVKernel {
             &[
                 Box::new(rows as u32),
                 Box::new(indptr),
-                Box::new(indices), 
+                Box::new(indices),
                 Box::new(data),
                 Box::new(x),
                 Box::new(y),
-            ]
+            ],
         )
     }
-    
+
     /// Enhanced OpenCL execution with workgroup optimization
     #[cfg(feature = "gpu")]
     fn execute_opencl_optimized<T>(
@@ -602,7 +667,7 @@ impl SpMVKernel {
         // Calculate optimal OpenCL work dimensions
         let local_work_size = 128; // Conservative for compatibility
         let global_work_size = ((rows + local_work_size - 1) / local_work_size) * local_work_size;
-        
+
         // Launch vectorized OpenCL kernel
         device.execute_kernel_with_args(
             kernel_handle,
@@ -615,10 +680,10 @@ impl SpMVKernel {
                 Box::new(data),
                 Box::new(x),
                 Box::new(y),
-            ]
+            ],
         )
     }
-    
+
     /// Enhanced Metal execution with simdgroup optimization
     #[cfg(feature = "gpu")]
     fn execute_metal_optimized<T>(
@@ -638,7 +703,7 @@ impl SpMVKernel {
         // Calculate optimal Metal thread execution parameters
         let threads_per_threadgroup = 256; // Optimal for Apple GPUs
         let threadgroups = (rows + threads_per_threadgroup - 1) / threads_per_threadgroup;
-        
+
         // Launch optimized Metal kernel with simdgroup operations
         device.execute_kernel_with_args(
             kernel_handle,
@@ -651,7 +716,7 @@ impl SpMVKernel {
                 Box::new(data),
                 Box::new(x),
                 Box::new(y),
-            ]
+            ],
         )
     }
 
@@ -680,20 +745,23 @@ impl SpMVKernel {
         // Use parallel processing when beneficial (for larger matrices)
         if rows > 1000 {
             use scirs2_core::parallel_ops::*;
-            
-            let results: Vec<T> = (0..rows).into_par_iter().map(|row| {
-                let mut sum = T::zero();
-                let start = indptr_slice[row];
-                let end = indptr_slice[row + 1];
-                
-                // Vectorized inner loop when possible using SIMD
-                for idx in start..end {
-                    let col = indices_slice[idx];
-                    sum = sum + data_slice[idx] * x_slice[col];
-                }
-                sum
-            }).collect();
-            
+
+            let results: Vec<T> = (0..rows)
+                .into_par_iter()
+                .map(|row| {
+                    let mut sum = T::zero();
+                    let start = indptr_slice[row];
+                    let end = indptr_slice[row + 1];
+
+                    // Vectorized inner loop when possible using SIMD
+                    for idx in start..end {
+                        let col = indices_slice[idx];
+                        sum = sum + data_slice[idx] * x_slice[col];
+                    }
+                    sum
+                })
+                .collect();
+
             // Copy results back to y_slice
             for (i, result) in results.into_iter().enumerate() {
                 y_slice[i] = result;
@@ -704,7 +772,7 @@ impl SpMVKernel {
                 let mut sum = T::zero();
                 let start = indptr_slice[row];
                 let end = indptr_slice[row + 1];
-                
+
                 for idx in start..end {
                     let col = indices_slice[idx];
                     sum = sum + data_slice[idx] * x_slice[col];
@@ -726,7 +794,7 @@ pub struct SpMSKernel {
 impl SpMSKernel {
     pub fn new(device: &GpuDevice, workgroup_size: [u32; 3]) -> Result<Self, GpuError> {
         // Compile GPU kernels for advanced sparse operations
-        
+
         match device.backend() {
             #[cfg(not(feature = "gpu"))]
             GpuBackend::Cuda => {
@@ -837,17 +905,23 @@ impl SpMSKernel {
                     y[row] = sum;
                 }
                 "#;
-                
+
                 // Attempt to compile CUDA kernels
                 match device.compile_kernel(cuda_kernel_source, "spmm_csr_kernel") {
-                    Ok(kernel_handle) => Ok(Self { kernel_handle: Some(kernel_handle), backend: device.backend() }),
+                    Ok(kernel_handle) => Ok(Self {
+                        kernel_handle: Some(kernel_handle),
+                        backend: device.backend(),
+                    }),
                     Err(_) => {
                         // Fall back to CPU if CUDA compilation fails
-                        Ok(Self { kernel_handle: None, backend: GpuBackend::Cpu })
+                        Ok(Self {
+                            kernel_handle: None,
+                            backend: GpuBackend::Cpu,
+                        })
                     }
                 }
             }
-            
+
             GpuBackend::OpenCl => {
                 // Compile OpenCL kernels for sparse matrix operations
                 let opencl_kernel_source = r#"
@@ -951,17 +1025,23 @@ impl SpMSKernel {
                     y[row] = sum;
                 }
                 "#;
-                
+
                 // Attempt to compile OpenCL kernels
                 match device.compile_kernel(opencl_kernel_source, "spmm_csr_kernel") {
-                    Ok(kernel_handle) => Ok(Self { kernel_handle: Some(kernel_handle), backend: device.backend() }),
+                    Ok(kernel_handle) => Ok(Self {
+                        kernel_handle: Some(kernel_handle),
+                        backend: device.backend(),
+                    }),
                     Err(_) => {
                         // Fall back to CPU if OpenCL compilation fails
-                        Ok(Self { kernel_handle: None, backend: GpuBackend::Cpu })
+                        Ok(Self {
+                            kernel_handle: None,
+                            backend: GpuBackend::Cpu,
+                        })
                     }
                 }
             }
-            
+
             GpuBackend::Metal => {
                 // Compile Metal compute shaders for sparse matrix operations
                 let metal_kernel_source = r#"
@@ -1072,20 +1152,29 @@ impl SpMSKernel {
                     y[row] = sum;
                 }
                 "#;
-                
+
                 // Attempt to compile Metal kernels
                 match device.compile_kernel(metal_kernel_source, "spmm_csr_kernel") {
-                    Ok(kernel_handle) => Ok(Self { kernel_handle: Some(kernel_handle), backend: device.backend() }),
+                    Ok(kernel_handle) => Ok(Self {
+                        kernel_handle: Some(kernel_handle),
+                        backend: device.backend(),
+                    }),
                     Err(_) => {
                         // Fall back to CPU if Metal compilation fails
-                        Ok(Self { kernel_handle: None, backend: GpuBackend::Cpu })
+                        Ok(Self {
+                            kernel_handle: None,
+                            backend: GpuBackend::Cpu,
+                        })
                     }
                 }
             }
-            
+
             GpuBackend::Cpu => {
                 // CPU implementation - always succeeds
-                Ok(Self { kernel_handle: None, backend: device.backend() })
+                Ok(Self {
+                    kernel_handle: None,
+                    backend: device.backend(),
+                })
             }
         }
     }
@@ -1106,17 +1195,38 @@ impl SpMSKernel {
         // Execute GPU kernels for symmetric matrix-vector multiplication using stored kernel handle
         match (&self.kernel_handle, self.backend) {
             #[cfg(feature = "gpu")]
-            (Some(kernel_handle), GpuBackend::Cuda) => {
-                self.execute_cuda_symmetric(device, kernel_handle, rows, indptr, indices, data, x, y)
-            },
+            (Some(kernel_handle), GpuBackend::Cuda) => self.execute_cuda_symmetric(
+                device,
+                kernel_handle,
+                rows,
+                indptr,
+                indices,
+                data,
+                x,
+                y,
+            ),
             #[cfg(feature = "gpu")]
-            (Some(kernel_handle), GpuBackend::OpenCl) => {
-                self.execute_opencl_symmetric(device, kernel_handle, rows, indptr, indices, data, x, y)
-            },
+            (Some(kernel_handle), GpuBackend::OpenCl) => self.execute_opencl_symmetric(
+                device,
+                kernel_handle,
+                rows,
+                indptr,
+                indices,
+                data,
+                x,
+                y,
+            ),
             #[cfg(feature = "gpu")]
-            (Some(kernel_handle), GpuBackend::Metal) => {
-                self.execute_metal_symmetric(device, kernel_handle, rows, indptr, indices, data, x, y)
-            },
+            (Some(kernel_handle), GpuBackend::Metal) => self.execute_metal_symmetric(
+                device,
+                kernel_handle,
+                rows,
+                indptr,
+                indices,
+                data,
+                x,
+                y,
+            ),
             _ => {
                 // CPU fallback when GPU not available or kernel handle not found
                 self.execute_symmetric_cpu_fallback(rows, indptr, indices, data, x, y)
@@ -1146,27 +1256,62 @@ impl SpMSKernel {
         // Execute GPU kernels for sparse matrix-matrix multiplication using stored kernel handle
         match (&self.kernel_handle, self.backend) {
             #[cfg(feature = "gpu")]
-            (Some(kernel_handle), GpuBackend::Cuda) => {
-                self.execute_cuda_spmm(device, kernel_handle, a_rows, a_cols, b_cols, 
-                                     a_indptr, a_indices, a_data, b_indptr, b_indices, b_data,
-                                     c_indptr, c_indices, c_data)
-            },
+            (Some(kernel_handle), GpuBackend::Cuda) => self.execute_cuda_spmm(
+                device,
+                kernel_handle,
+                a_rows,
+                a_cols,
+                b_cols,
+                a_indptr,
+                a_indices,
+                a_data,
+                b_indptr,
+                b_indices,
+                b_data,
+                c_indptr,
+                c_indices,
+                c_data,
+            ),
             #[cfg(feature = "gpu")]
-            (Some(kernel_handle), GpuBackend::OpenCl) => {
-                self.execute_opencl_spmm(device, kernel_handle, a_rows, a_cols, b_cols,
-                                        a_indptr, a_indices, a_data, b_indptr, b_indices, b_data,
-                                        c_indptr, c_indices, c_data)
-            },
+            (Some(kernel_handle), GpuBackend::OpenCl) => self.execute_opencl_spmm(
+                device,
+                kernel_handle,
+                a_rows,
+                a_cols,
+                b_cols,
+                a_indptr,
+                a_indices,
+                a_data,
+                b_indptr,
+                b_indices,
+                b_data,
+                c_indptr,
+                c_indices,
+                c_data,
+            ),
             #[cfg(feature = "gpu")]
-            (Some(kernel_handle), GpuBackend::Metal) => {
-                self.execute_metal_spmm(device, kernel_handle, a_rows, a_cols, b_cols,
-                                       a_indptr, a_indices, a_data, b_indptr, b_indices, b_data,
-                                       c_indptr, c_indices, c_data)
-            },
+            (Some(kernel_handle), GpuBackend::Metal) => self.execute_metal_spmm(
+                device,
+                kernel_handle,
+                a_rows,
+                a_cols,
+                b_cols,
+                a_indptr,
+                a_indices,
+                a_data,
+                b_indptr,
+                b_indices,
+                b_data,
+                c_indptr,
+                c_indices,
+                c_data,
+            ),
             _ => {
                 // CPU fallback when GPU not available or kernel handle not found
-                self.execute_spmm_cpu_fallback(a_rows, a_cols, b_cols, a_indptr, a_indices, a_data, 
-                                             b_indptr, b_indices, b_data, c_indptr, c_indices, c_data)
+                self.execute_spmm_cpu_fallback(
+                    a_rows, a_cols, b_cols, a_indptr, a_indices, a_data, b_indptr, b_indices,
+                    b_data, c_indptr, c_indices, c_data,
+                )
             }
         }
     }
@@ -1187,17 +1332,38 @@ impl SpMSKernel {
         // Execute GPU kernels for triangular solve using stored kernel handle
         match (&self.kernel_handle, self.backend) {
             #[cfg(feature = "gpu")]
-            (Some(kernel_handle), GpuBackend::Cuda) => {
-                self.execute_cuda_triangular_solve(device, kernel_handle, n, indptr, indices, data, b, x)
-            },
+            (Some(kernel_handle), GpuBackend::Cuda) => self.execute_cuda_triangular_solve(
+                device,
+                kernel_handle,
+                n,
+                indptr,
+                indices,
+                data,
+                b,
+                x,
+            ),
             #[cfg(feature = "gpu")]
-            (Some(kernel_handle), GpuBackend::OpenCl) => {
-                self.execute_opencl_triangular_solve(device, kernel_handle, n, indptr, indices, data, b, x)
-            },
+            (Some(kernel_handle), GpuBackend::OpenCl) => self.execute_opencl_triangular_solve(
+                device,
+                kernel_handle,
+                n,
+                indptr,
+                indices,
+                data,
+                b,
+                x,
+            ),
             #[cfg(feature = "gpu")]
-            (Some(kernel_handle), GpuBackend::Metal) => {
-                self.execute_metal_triangular_solve(device, kernel_handle, n, indptr, indices, data, b, x)
-            },
+            (Some(kernel_handle), GpuBackend::Metal) => self.execute_metal_triangular_solve(
+                device,
+                kernel_handle,
+                n,
+                indptr,
+                indices,
+                data,
+                b,
+                x,
+            ),
             _ => {
                 // CPU fallback when GPU not available or kernel handle not found
                 self.execute_triangular_solve_cpu_fallback(n, indptr, indices, data, b, x)
@@ -1233,14 +1399,14 @@ impl SpMSKernel {
         for row in 0..rows {
             let start = indptr_slice[row];
             let end = indptr_slice[row + 1];
-            
+
             for idx in start..end {
                 let col = indices_slice[idx];
                 let val = data_slice[idx];
-                
+
                 // Lower triangular part
                 y_slice[row] = y_slice[row] + val * x_slice[col];
-                
+
                 // Upper triangular part (symmetric)
                 if col != row {
                     y_slice[col] = y_slice[col] + val * x_slice[row];
@@ -1277,7 +1443,7 @@ impl SpMSKernel {
         let b_indptr_slice = b_indptr.as_slice();
         let b_indices_slice = b_indices.as_slice();
         let b_data_slice = b_data.as_slice();
-        
+
         let c_indptr_slice = c_indptr.as_mut_slice();
         let c_indices_slice = c_indices.as_mut_slice();
         let c_data_slice = c_data.as_mut_slice();
@@ -1287,15 +1453,15 @@ impl SpMSKernel {
 
         for row in 0..a_rows {
             let mut current_nnz = nnz_count;
-            
+
             for b_col in 0..b_cols {
                 let mut sum = T::zero();
-                
+
                 // Compute dot product of row 'row' in A with column 'b_col' in B
                 for a_idx in a_indptr_slice[row]..a_indptr_slice[row + 1] {
                     let a_col = a_indices_slice[a_idx];
                     let a_val = a_data_slice[a_idx];
-                    
+
                     // Find corresponding element in column b_col of B
                     for b_idx in b_indptr_slice[a_col]..b_indptr_slice[a_col + 1] {
                         if b_indices_slice[b_idx] == b_col {
@@ -1304,14 +1470,14 @@ impl SpMSKernel {
                         }
                     }
                 }
-                
+
                 if sum != T::zero() && current_nnz < c_indices_slice.len() {
                     c_indices_slice[current_nnz] = b_col;
                     c_data_slice[current_nnz] = sum;
                     current_nnz += 1;
                 }
             }
-            
+
             nnz_count = current_nnz;
             c_indptr_slice[row + 1] = nnz_count;
         }
@@ -1343,18 +1509,18 @@ impl SpMSKernel {
         for i in 0..n {
             let mut sum = b_slice[i];
             let mut diag_val = T::zero();
-            
+
             for j in indptr_slice[i]..indptr_slice[i + 1] {
                 let col = indices_slice[j];
                 let val = data_slice[j];
-                
+
                 if col < i {
                     sum = sum - val * x_slice[col];
                 } else if col == i {
                     diag_val = val;
                 }
             }
-            
+
             if !diag_val.is_zero() {
                 x_slice[i] = sum / diag_val;
             } else {
@@ -1383,7 +1549,7 @@ impl SpMSKernel {
     {
         let block_size = 256;
         let grid_size = (rows + block_size - 1) / block_size;
-        
+
         device.execute_kernel_with_args(
             kernel_handle,
             &[grid_size * block_size],
@@ -1395,10 +1561,10 @@ impl SpMSKernel {
                 Box::new(data),
                 Box::new(x),
                 Box::new(y),
-            ]
+            ],
         )
     }
-    
+
     /// GPU-accelerated OpenCL execution for symmetric SpMV
     #[cfg(feature = "gpu")]
     fn execute_opencl_symmetric<T>(
@@ -1417,7 +1583,7 @@ impl SpMSKernel {
     {
         let local_work_size = 128;
         let global_work_size = ((rows + local_work_size - 1) / local_work_size) * local_work_size;
-        
+
         device.execute_kernel_with_args(
             kernel_handle,
             &[global_work_size],
@@ -1429,10 +1595,10 @@ impl SpMSKernel {
                 Box::new(data),
                 Box::new(x),
                 Box::new(y),
-            ]
+            ],
         )
     }
-    
+
     /// GPU-accelerated Metal execution for symmetric SpMV
     #[cfg(feature = "gpu")]
     fn execute_metal_symmetric<T>(
@@ -1451,7 +1617,7 @@ impl SpMSKernel {
     {
         let threads_per_threadgroup = 256;
         let threadgroups = (rows + threads_per_threadgroup - 1) / threads_per_threadgroup;
-        
+
         device.execute_kernel_with_args(
             kernel_handle,
             &[threadgroups * threads_per_threadgroup],
@@ -1463,10 +1629,10 @@ impl SpMSKernel {
                 Box::new(data),
                 Box::new(x),
                 Box::new(y),
-            ]
+            ],
         )
     }
-    
+
     /// GPU-accelerated CUDA execution for SpMM
     #[cfg(feature = "gpu")]
     fn execute_cuda_spmm<T>(
@@ -1491,7 +1657,7 @@ impl SpMSKernel {
     {
         let block_size = 256;
         let grid_size = (a_rows + block_size - 1) / block_size;
-        
+
         device.execute_kernel_with_args(
             kernel_handle,
             &[grid_size * block_size],
@@ -1509,13 +1675,13 @@ impl SpMSKernel {
                 Box::new(c_indptr),
                 Box::new(c_indices),
                 Box::new(c_data),
-            ]
+            ],
         )?;
-        
+
         // Return the number of non-zeros in result (would need to be computed from c_indptr)
         Ok(c_data.as_slice().len())
     }
-    
+
     /// GPU-accelerated OpenCL execution for SpMM
     #[cfg(feature = "gpu")]
     fn execute_opencl_spmm<T>(
@@ -1540,7 +1706,7 @@ impl SpMSKernel {
     {
         let local_work_size = 128;
         let global_work_size = ((a_rows + local_work_size - 1) / local_work_size) * local_work_size;
-        
+
         device.execute_kernel_with_args(
             kernel_handle,
             &[global_work_size],
@@ -1558,12 +1724,12 @@ impl SpMSKernel {
                 Box::new(c_indptr),
                 Box::new(c_indices),
                 Box::new(c_data),
-            ]
+            ],
         )?;
-        
+
         Ok(c_data.as_slice().len())
     }
-    
+
     /// GPU-accelerated Metal execution for SpMM
     #[cfg(feature = "gpu")]
     fn execute_metal_spmm<T>(
@@ -1588,7 +1754,7 @@ impl SpMSKernel {
     {
         let threads_per_threadgroup = 256;
         let threadgroups = (a_rows + threads_per_threadgroup - 1) / threads_per_threadgroup;
-        
+
         device.execute_kernel_with_args(
             kernel_handle,
             &[threadgroups * threads_per_threadgroup],
@@ -1606,12 +1772,12 @@ impl SpMSKernel {
                 Box::new(c_indptr),
                 Box::new(c_indices),
                 Box::new(c_data),
-            ]
+            ],
         )?;
-        
+
         Ok(c_data.as_slice().len())
     }
-    
+
     /// GPU-accelerated CUDA execution for triangular solve
     #[cfg(feature = "gpu")]
     fn execute_cuda_triangular_solve<T>(
@@ -1641,10 +1807,10 @@ impl SpMSKernel {
                 Box::new(data),
                 Box::new(b),
                 Box::new(x),
-            ]
+            ],
         )
     }
-    
+
     /// GPU-accelerated OpenCL execution for triangular solve
     #[cfg(feature = "gpu")]
     fn execute_opencl_triangular_solve<T>(
@@ -1673,10 +1839,10 @@ impl SpMSKernel {
                 Box::new(data),
                 Box::new(b),
                 Box::new(x),
-            ]
+            ],
         )
     }
-    
+
     /// GPU-accelerated Metal execution for triangular solve
     #[cfg(feature = "gpu")]
     fn execute_metal_triangular_solve<T>(
@@ -1705,7 +1871,7 @@ impl SpMSKernel {
                 Box::new(data),
                 Box::new(b),
                 Box::new(x),
-            ]
+            ],
         )
     }
 }
@@ -1941,26 +2107,35 @@ where
     }
 
     // Convert data to f32 for GPU processing
-    let csr_data_f32: Vec<f32> = csr_data.iter().map(|&v| v.to_f64().unwrap() as f32).collect();
+    let csr_data_f32: Vec<f32> = csr_data
+        .iter()
+        .map(|&v| v.to_f64().unwrap() as f32)
+        .collect();
     let x_f32: Vec<f32> = x.iter().map(|&v| v.to_f64().unwrap() as f32).collect();
 
     // Convert indices to u32 for GPU processing
     let csr_indices_u32: Vec<u32> = csr_indices.iter().map(|&i| i as u32).collect();
-    
+
     // Create GPU buffers using scirs2-core
-    let indptr_buffer = device.create_buffer(&csr_indptr)
+    let indptr_buffer = device
+        .create_buffer(&csr_indptr)
         .map_err(|e| format!("Failed to create indptr buffer: {}", e))?;
-    let indices_buffer = device.create_buffer(&csr_indices_u32)
+    let indices_buffer = device
+        .create_buffer(&csr_indices_u32)
         .map_err(|e| format!("Failed to create indices buffer: {}", e))?;
-    let data_buffer = device.create_buffer(&csr_data_f32)
+    let data_buffer = device
+        .create_buffer(&csr_data_f32)
         .map_err(|e| format!("Failed to create data buffer: {}", e))?;
-    let x_buffer = device.create_buffer(&x_f32)
+    let x_buffer = device
+        .create_buffer(&x_f32)
         .map_err(|e| format!("Failed to create x buffer: {}", e))?;
-    let y_buffer = device.create_buffer_zeros::<f32>(rows)
+    let y_buffer = device
+        .create_buffer_zeros::<f32>(rows)
         .map_err(|e| format!("Failed to create y buffer: {}", e))?;
 
     // Create SpMV GPU operation
-    let spmv_kernel = create_sparse_matvec_kernel(&device, rows, cols, options.workgroup_size[0] as usize)?;
+    let spmv_kernel =
+        create_sparse_matvec_kernel(&device, rows, cols, options.workgroup_size[0] as usize)?;
 
     // Execute GPU kernel with actual kernel dispatch
     execute_spmv_kernel(
@@ -1973,16 +2148,16 @@ where
         &x_buffer,
         &y_buffer,
         options.workgroup_size,
-    ).map_err(|e| format!("GPU kernel execution failed: {}", e))?;
+    )
+    .map_err(|e| format!("GPU kernel execution failed: {}", e))?;
 
     // Read back results from GPU
-    let y_f32 = y_buffer.to_host()
+    let y_f32 = y_buffer
+        .to_host()
         .map_err(|e| format!("Failed to read GPU results: {}", e))?;
 
     // Convert back to original type T
-    let y_result: Vec<T> = y_f32.iter()
-        .map(|&v| T::from(v).unwrap())
-        .collect();
+    let y_result: Vec<T> = y_f32.iter().map(|&v| T::from(v).unwrap()).collect();
 
     Ok(Array1::from_vec(y_result))
 }
@@ -2040,19 +2215,25 @@ where
     let indices_u32: Vec<u32> = indices.iter().map(|&v| v as u32).collect();
 
     // Create GPU buffers using scirs2-core
-    let indptr_buffer = device.create_buffer(&indptr_u32)
+    let indptr_buffer = device
+        .create_buffer(&indptr_u32)
         .map_err(|e| format!("Failed to create indptr buffer: {}", e))?;
-    let indices_buffer = device.create_buffer(&indices_u32)
+    let indices_buffer = device
+        .create_buffer(&indices_u32)
         .map_err(|e| format!("Failed to create indices buffer: {}", e))?;
-    let data_buffer = device.create_buffer(&data_f32)
+    let data_buffer = device
+        .create_buffer(&data_f32)
         .map_err(|e| format!("Failed to create data buffer: {}", e))?;
-    let x_buffer = device.create_buffer(&x_f32)
+    let x_buffer = device
+        .create_buffer(&x_f32)
         .map_err(|e| format!("Failed to create x buffer: {}", e))?;
-    let y_buffer = device.create_buffer_zeros::<f32>(rows)
+    let y_buffer = device
+        .create_buffer_zeros::<f32>(rows)
         .map_err(|e| format!("Failed to create y buffer: {}", e))?;
 
     // Create symmetric SpMV GPU operation
-    let sym_spmv_kernel = create_symmetric_sparse_matvec_kernel(&device, rows, options.workgroup_size[0] as usize)?;
+    let sym_spmv_kernel =
+        create_symmetric_sparse_matvec_kernel(&device, rows, options.workgroup_size[0] as usize)?;
 
     // Execute symmetric SpMV GPU kernel with actual kernel dispatch
     execute_symmetric_spmv_kernel(
@@ -2065,16 +2246,16 @@ where
         &x_buffer,
         &y_buffer,
         options.workgroup_size,
-    ).map_err(|e| format!("GPU kernel execution failed: {}", e))?;
+    )
+    .map_err(|e| format!("GPU kernel execution failed: {}", e))?;
 
     // Read back results from GPU
-    let y_f32 = y_buffer.to_host()
+    let y_f32 = y_buffer
+        .to_host()
         .map_err(|e| format!("Failed to read GPU results: {}", e))?;
 
     // Convert back to original type T
-    let y_result: Vec<T> = y_f32.iter()
-        .map(|&v| T::from(v).unwrap())
-        .collect();
+    let y_result: Vec<T> = y_f32.iter().map(|&v| T::from(v).unwrap()).collect();
 
     Ok(Array1::from_vec(y_result))
 }
@@ -2490,7 +2671,7 @@ impl GpuKernelScheduler {
             GpuBackend::OpenCl => (4_000_000_000, 36, 64), // Example values
             #[cfg(not(feature = "gpu"))]
             GpuBackend::Metal => (8_000_000_000, 32, 32), // Example M1 specs
-            _ => (16_000_000_000, 16, 1),   // Default/fallback values
+            _ => (16_000_000_000, 16, 1), // Default/fallback values
         };
 
         Self {
@@ -3220,7 +3401,11 @@ pub struct GpuOperation {
 }
 
 impl GpuOperation {
-    pub fn from_kernel_source(name: &str, source: &str, workgroup_size: usize) -> Result<Self, String> {
+    pub fn from_kernel_source(
+        name: &str,
+        source: &str,
+        workgroup_size: usize,
+    ) -> Result<Self, String> {
         Ok(Self {
             name: name.to_string(),
             kernel_source: source.to_string(),
@@ -3237,7 +3422,6 @@ fn create_sparse_matvec_kernel(
     cols: usize,
     workgroup_size: usize,
 ) -> Result<GpuKernelHandle, String> {
-    
     // Create a compute shader-based operation for SpMV
     // This would typically compile OpenCL/CUDA/Metal compute kernels
     let operation_config = format!(
@@ -3265,8 +3449,9 @@ fn create_sparse_matvec_kernel(
         }}
         "#
     );
-    
-    device.compile_kernel(&operation_config, "sparse_matvec")
+
+    device
+        .compile_kernel(&operation_config, "sparse_matvec")
         .map_err(|e| format!("Failed to create SpMV kernel: {}", e))
 }
 
@@ -3277,7 +3462,6 @@ fn create_symmetric_sparse_matvec_kernel(
     rows: usize,
     workgroup_size: usize,
 ) -> Result<GpuKernelHandle, String> {
-    
     // Create a compute shader-based operation for symmetric SpMV
     // This exploits symmetry by processing both upper and lower triangular parts
     let operation_config = format!(
@@ -3315,8 +3499,9 @@ fn create_symmetric_sparse_matvec_kernel(
         }}
         "#
     );
-    
-    device.compile_kernel(&operation_config, "symmetric_sparse_matvec")
+
+    device
+        .compile_kernel(&operation_config, "symmetric_sparse_matvec")
         .map_err(|e| format!("Failed to create symmetric SpMV kernel: {}", e))
 }
 /// Execute sparse matrix-vector multiplication kernel
@@ -3335,7 +3520,7 @@ fn execute_spmv_kernel(
 ) -> Result<(), GpuError> {
     // Calculate dispatch size
     let num_groups = ((rows as u32 + workgroup_size[0] - 1) / workgroup_size[0]).max(1);
-    
+
     // Set kernel arguments
     device.set_kernel_arg(kernel, 0, indptr_buffer)?;
     device.set_kernel_arg(kernel, 1, indices_buffer)?;
@@ -3343,13 +3528,13 @@ fn execute_spmv_kernel(
     device.set_kernel_arg(kernel, 3, x_buffer)?;
     device.set_kernel_arg(kernel, 4, y_buffer)?;
     device.set_kernel_arg(kernel, 5, &(rows as u32))?;
-    
+
     // Dispatch kernel
     device.dispatch_kernel(kernel, [num_groups, 1, 1])?;
-    
+
     // Wait for completion
     device.wait_for_completion()?;
-    
+
     Ok(())
 }
 
@@ -3369,10 +3554,10 @@ fn execute_symmetric_spmv_kernel(
 ) -> Result<(), GpuError> {
     // Calculate dispatch size
     let num_groups = ((rows as u32 + workgroup_size[0] - 1) / workgroup_size[0]).max(1);
-    
+
     // Clear output buffer first (important for symmetric operations)
     device.clear_buffer(y_buffer)?;
-    
+
     // Set kernel arguments
     device.set_kernel_arg(kernel, 0, indptr_buffer)?;
     device.set_kernel_arg(kernel, 1, indices_buffer)?;
@@ -3380,13 +3565,13 @@ fn execute_symmetric_spmv_kernel(
     device.set_kernel_arg(kernel, 3, x_buffer)?;
     device.set_kernel_arg(kernel, 4, y_buffer)?;
     device.set_kernel_arg(kernel, 5, &(rows as u32))?;
-    
+
     // Dispatch kernel
     device.dispatch_kernel(kernel, [num_groups, 1, 1])?;
-    
+
     // Wait for completion
     device.wait_for_completion()?;
-    
+
     Ok(())
 }
 

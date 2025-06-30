@@ -5,9 +5,7 @@
 //! methods implemented in scirs2-stats.
 
 use crate::error::StatsResult as Result;
-use crate::mcmc::{
-    ProposalDistribution, TargetDistribution,
-};
+use crate::mcmc::{ProposalDistribution, TargetDistribution};
 use crate::multivariate::{
     CCAResult, CanonicalCorrelationAnalysis, LDAResult, LinearDiscriminantAnalysis,
 };

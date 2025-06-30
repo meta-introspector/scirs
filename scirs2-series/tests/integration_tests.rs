@@ -16,11 +16,11 @@ use scirs2_series::{
     decomposition::stl::STLDecomposer,
     detection::pattern::PatternDetector,
     dimensionality_reduction::FunctionalPCA,
-    distributed::{DistributedProcessor, ClusterConfig, DistributedTask, TaskType, TaskPriority},
+    distributed::{ClusterConfig, DistributedProcessor, DistributedTask, TaskPriority, TaskType},
     environmental::EnvironmentalSensorAnalysis,
     feature_selection::filter::FilterSelector,
     features::statistical::StatisticalFeatures,
-    financial::{garch_model, bollinger_bands, BollingerBandsConfig, MovingAverageType},
+    financial::{bollinger_bands, garch_model, BollingerBandsConfig, MovingAverageType},
     forecasting::neural::NeuralForecaster,
     gpu_acceleration::GpuTimeSeriesProcessor,
     iot_sensors::EnvironmentalSensorAnalysis as IoTEnvironmental,
@@ -41,21 +41,29 @@ use scirs2_series::{
 use std::collections::HashMap;
 
 /// Generate synthetic time series with known properties for testing
-fn generate_test_series(length: usize, trend: f64, seasonal_period: usize, noise_std: f64) -> Array1<f64> {
+fn generate_test_series(
+    length: usize,
+    trend: f64,
+    seasonal_period: usize,
+    noise_std: f64,
+) -> Array1<f64> {
     let mut series = Array1::zeros(length);
     let mut rng_state = 42u64; // Deterministic for reproducible tests
-    
+
     for i in 0..length {
         // Generate deterministic random noise
         rng_state = rng_state.wrapping_mul(1103515245).wrapping_add(12345);
         let noise = ((rng_state % 20000) as f64 / 20000.0 - 0.5) * noise_std;
-        
+
         let trend_component = (i as f64) * trend;
-        let seasonal_component = (2.0 * std::f64::consts::PI * (i % seasonal_period) as f64 / seasonal_period as f64).sin() * 5.0;
-        
+        let seasonal_component = (2.0 * std::f64::consts::PI * (i % seasonal_period) as f64
+            / seasonal_period as f64)
+            .sin()
+            * 5.0;
+
         series[i] = 50.0 + trend_component + seasonal_component + noise;
     }
-    
+
     series
 }
 
@@ -64,19 +72,19 @@ fn generate_change_point_series(length: usize, change_points: &[usize]) -> Array
     let mut series = Array1::zeros(length);
     let mut current_mean = 10.0;
     let mut next_change_idx = 0;
-    
+
     for i in 0..length {
         // Check if we've hit a change point
         if next_change_idx < change_points.len() && i == change_points[next_change_idx] {
             current_mean += 20.0; // Significant shift
             next_change_idx += 1;
         }
-        
+
         // Add some noise
         let noise = ((i % 17) as f64 - 8.0) * 0.5; // Deterministic "noise"
         series[i] = current_mean + noise;
     }
-    
+
     series
 }
 
@@ -84,29 +92,29 @@ fn generate_change_point_series(length: usize, change_points: &[usize]) -> Array
 fn test_end_to_end_forecasting_pipeline() {
     // Create synthetic data with trend and seasonality
     let data = generate_test_series(500, 0.01, 12, 1.0);
-    
+
     // 1. Detect pattern and seasonality
     let pattern_detector = PatternDetector::new();
     let period = pattern_detector.detect_period(&data).unwrap();
     assert!(period >= 10 && period <= 15); // Should detect ~12
-    
+
     // 2. Decompose the series
     let decomposer = STLDecomposer::new(period, 7, 7, 1, false).unwrap();
     let decomposition = decomposer.decompose(&data).unwrap();
-    
+
     // Verify decomposition components
     assert_eq!(decomposition.trend.len(), data.len());
     assert_eq!(decomposition.seasonal.len(), data.len());
     assert_eq!(decomposition.remainder.len(), data.len());
-    
+
     // 3. Fit SARIMA model to the data
     let mut sarima = SARIMAModel::new(1, 1, 1, 1, 1, 1, period).unwrap();
     sarima.fit(&data).unwrap();
-    
+
     // 4. Generate forecasts
     let horizon = 24;
     let forecast = sarima.forecast(horizon).unwrap();
-    
+
     assert_eq!(forecast.len(), horizon);
     // Forecasts should be reasonable (not too far from last observed values)
     let last_value = data[data.len() - 1];
@@ -119,29 +127,29 @@ fn test_end_to_end_forecasting_pipeline() {
 fn test_anomaly_detection_and_change_point_integration() {
     // Create data with anomalies and change points
     let mut data = generate_test_series(200, 0.0, 10, 1.0);
-    
+
     // Insert anomalies at known positions
-    data[50] = 100.0;  // Outlier
+    data[50] = 100.0; // Outlier
     data[150] = -50.0; // Another outlier
-    
+
     // Create change point at position 100
     for i in 100..200 {
         data[i] += 15.0; // Level shift
     }
-    
+
     // 1. Detect anomalies
     let anomaly_detector = AnomalyDetector::new()
         .with_method(scirs2_series::anomaly::AnomalyMethod::ZScore { threshold: 3.0 });
     let anomalies = anomaly_detector.detect(&data).unwrap();
-    
+
     // Should detect the outliers we inserted
     assert!(anomalies[50] > 0.5); // Anomaly at position 50
     assert!(anomalies[150] > 0.5); // Anomaly at position 150
-    
+
     // 2. Detect change points
     let change_detector = PELTDetector::new(10.0);
     let change_points = change_detector.detect(&data).unwrap();
-    
+
     // Should detect change point around position 100
     assert!(change_points.iter().any(|&cp| (cp as i32 - 100).abs() < 10));
 }
@@ -150,66 +158,68 @@ fn test_anomaly_detection_and_change_point_integration() {
 fn test_feature_extraction_and_classification_pipeline() {
     // Generate multiple time series with different characteristics
     let series1 = generate_test_series(300, 0.02, 12, 0.5); // High trend, low noise
-    let series2 = generate_test_series(300, 0.0, 24, 2.0);  // No trend, high noise
+    let series2 = generate_test_series(300, 0.0, 24, 2.0); // No trend, high noise
     let series3 = generate_test_series(300, -0.01, 6, 1.0); // Negative trend, different seasonality
-    
+
     // Stack into matrix for clustering
-    let data_matrix = ndarray::stack(
-        Axis(0),
-        &[series1.view(), series2.view(), series3.view()]
-    ).unwrap();
-    
+    let data_matrix =
+        ndarray::stack(Axis(0), &[series1.view(), series2.view(), series3.view()]).unwrap();
+
     // 1. Extract statistical features
     let feature_extractor = StatisticalFeatures::new();
     let features1 = feature_extractor.extract(&series1).unwrap();
     let features2 = feature_extractor.extract(&series2).unwrap();
     let features3 = feature_extractor.extract(&series3).unwrap();
-    
+
     // Features should be different due to different series characteristics
     assert!((features1[0] - features2[0]).abs() > 0.1); // Different means
     assert!((features1[1] - features3[1]).abs() > 0.1); // Different std devs
-    
+
     // 2. Perform clustering
     let clusterer = TimeSeriesClusterer::new(
         scirs2_series::clustering::ClusteringMethod::KMeans { k: 3 },
         scirs2_series::clustering::DistanceMetric::Euclidean,
     );
     let cluster_assignments = clusterer.cluster(&data_matrix).unwrap();
-    
+
     // Should assign different clusters to different series
     assert_eq!(cluster_assignments.len(), 3);
     // All assignments should be different (since series are quite different)
-    assert!(cluster_assignments[0] != cluster_assignments[1] || 
-           cluster_assignments[1] != cluster_assignments[2] ||
-           cluster_assignments[0] != cluster_assignments[2]);
+    assert!(
+        cluster_assignments[0] != cluster_assignments[1]
+            || cluster_assignments[1] != cluster_assignments[2]
+            || cluster_assignments[0] != cluster_assignments[2]
+    );
 }
 
 #[test]
 fn test_causality_and_correlation_analysis() {
     let length = 300;
-    
+
     // Create two series where X causes Y
     let mut x_series = generate_test_series(length, 0.0, 20, 1.0);
     let mut y_series = Array1::zeros(length);
-    
+
     // Y depends on lagged X plus noise
     for i in 2..length {
-        y_series[i] = 0.7 * x_series[i-1] + 0.3 * x_series[i-2] + 
-                     ((i % 13) as f64 - 6.0) * 0.5; // Deterministic noise
+        y_series[i] = 0.7 * x_series[i - 1] + 0.3 * x_series[i - 2] + ((i % 13) as f64 - 6.0) * 0.5;
+        // Deterministic noise
     }
-    
+
     // 1. Test Granger causality
     let granger_test = GrangerCausalityTest::new(3);
     let causality_result = granger_test.test(&x_series, &y_series).unwrap();
-    
+
     // X should Granger-cause Y
     assert!(causality_result.f_statistic > 1.0);
     assert!(causality_result.p_value < 0.1); // Significant causality
-    
+
     // 2. Test cross-correlation
     let correlator = CrossCorrelation::new();
-    let cross_corr = correlator.cross_correlate(&x_series, &y_series, 10).unwrap();
-    
+    let cross_corr = correlator
+        .cross_correlate(&x_series, &y_series, 10)
+        .unwrap();
+
     // Should show strong correlation at lag 1 and 2
     assert!(cross_corr[11].abs() > 0.3); // Lag 1 (index 10 + 1)
     assert!(cross_corr[12].abs() > 0.2); // Lag 2 (index 10 + 2)
@@ -219,20 +229,24 @@ fn test_causality_and_correlation_analysis() {
 fn test_distributed_processing_workflow() {
     // Large dataset for distributed processing
     let large_data = generate_test_series(50000, 0.01, 12, 1.0);
-    
+
     let config = ClusterConfig::default();
     let mut processor = DistributedProcessor::new(config);
-    
+
     // 1. Distributed forecasting
-    let forecast = processor.distributed_forecast(&large_data, 20, "linear").unwrap();
+    let forecast = processor
+        .distributed_forecast(&large_data, 20, "linear")
+        .unwrap();
     assert_eq!(forecast.len(), 20);
-    
+
     // 2. Distributed feature extraction
     let features = vec!["mean".to_string(), "std".to_string(), "trend".to_string()];
-    let feature_matrix = processor.distributed_feature_extraction(&large_data, &features).unwrap();
+    let feature_matrix = processor
+        .distributed_feature_extraction(&large_data, &features)
+        .unwrap();
     assert!(feature_matrix.nrows() > 0);
     assert_eq!(feature_matrix.ncols(), features.len());
-    
+
     // 3. Check cluster status
     let status = processor.get_cluster_status();
     assert_eq!(status.total_nodes, 1);
@@ -242,24 +256,25 @@ fn test_distributed_processing_workflow() {
 #[test]
 fn test_streaming_analysis_pipeline() {
     let data = generate_test_series(1000, 0.005, 10, 1.0);
-    
+
     // Initialize streaming analyzer
     let mut streaming_analyzer = StreamingAnalyzer::new(50); // Window size 50
-    
+
     let mut anomaly_count = 0;
     let mut trend_changes = 0;
     let mut last_trend = 0.0;
-    
+
     // Process data in streaming fashion
     for (i, &value) in data.iter().enumerate() {
         let stats = streaming_analyzer.update(value).unwrap();
-        
-        if i >= 50 { // Wait for window to be full
+
+        if i >= 50 {
+            // Wait for window to be full
             // Check for anomalies (simple threshold)
             if (value - stats.mean).abs() > 3.0 * stats.std_dev {
                 anomaly_count += 1;
             }
-            
+
             // Check for trend changes
             if (stats.trend - last_trend).abs() > 0.01 {
                 trend_changes += 1;
@@ -267,18 +282,19 @@ fn test_streaming_analysis_pipeline() {
             last_trend = stats.trend;
         }
     }
-    
+
     // Should detect some patterns in the generated data
     assert!(anomaly_count < 50); // Not too many anomalies
-    assert!(trend_changes > 0);  // Some trend variation
+    assert!(trend_changes > 0); // Some trend variation
 }
 
 #[test]
 fn test_financial_analysis_integration() {
     // Generate financial return series
     let returns = generate_test_series(500, 0.0, 1, 0.02); // Daily returns with volatility
-    let prices = Array1::from_iter((0..500).map(|i| 100.0 + returns.slice(ndarray::s![..=i]).sum()));
-    
+    let prices =
+        Array1::from_iter((0..500).map(|i| 100.0 + returns.slice(ndarray::s![..=i]).sum()));
+
     // 1. Bollinger Bands analysis
     let bb_config = BollingerBandsConfig {
         period: 20,
@@ -286,18 +302,18 @@ fn test_financial_analysis_integration() {
         ma_type: MovingAverageType::Simple,
     };
     let bb_result = bollinger_bands(&prices, &bb_config).unwrap();
-    
+
     assert_eq!(bb_result.upper_band.len(), prices.len() - 20 + 1);
     assert_eq!(bb_result.lower_band.len(), prices.len() - 20 + 1);
-    
+
     // Upper band should be above lower band
     for i in 0..bb_result.upper_band.len() {
         assert!(bb_result.upper_band[i] > bb_result.lower_band[i]);
     }
-    
+
     // 2. GARCH volatility modeling
     let garch_result = garch_model(&returns, 1, 1).unwrap();
-    
+
     assert_eq!(garch_result.conditional_variance.len(), returns.len());
     // All variances should be positive
     assert!(garch_result.conditional_variance.iter().all(|&v| v > 0.0));
@@ -310,17 +326,17 @@ fn test_biomedical_signal_processing() {
     let duration = 10.0; // 10 seconds
     let length = (fs * duration) as usize;
     let mut ecg_signal = Array1::zeros(length);
-    
+
     // Simulate ECG with regular heartbeats
     let heart_rate = 72.0; // 72 BPM
     let beat_interval = fs * 60.0 / heart_rate;
-    
+
     for i in 0..length {
         let t = i as f64 / fs;
-        
+
         // Base cardiac rhythm
         let cardiac_component = (2.0 * std::f64::consts::PI * heart_rate * t / 60.0).sin() * 0.5;
-        
+
         // Add QRS complexes (simplified)
         let beat_phase = (i as f64) % beat_interval;
         let qrs_component = if beat_phase < 50.0 {
@@ -328,22 +344,22 @@ fn test_biomedical_signal_processing() {
         } else {
             0.0
         };
-        
+
         // Small amount of noise
         let noise = ((i % 17) as f64 - 8.0) * 0.01;
-        
+
         ecg_signal[i] = cardiac_component + qrs_component + noise;
     }
-    
+
     // Analyze ECG
     let ecg_analysis = ECGAnalysis::new(ecg_signal.clone(), fs).unwrap();
     let r_peaks = ecg_analysis.detect_r_peaks().unwrap();
     let hrv = ecg_analysis.heart_rate_variability().unwrap();
-    
+
     // Should detect reasonable number of R-peaks
     let expected_beats = (duration * heart_rate / 60.0) as usize;
     assert!(r_peaks.len() >= expected_beats - 5 && r_peaks.len() <= expected_beats + 5);
-    
+
     // HRV analysis should return reasonable values
     assert!(hrv.sdnn > 0.0);
     assert!(hrv.rmssd >= 0.0);
@@ -353,7 +369,7 @@ fn test_biomedical_signal_processing() {
 #[test]
 fn test_iot_environmental_monitoring() {
     let length = 1000;
-    
+
     // Generate environmental sensor data
     let timestamps = Array1::from_iter((0..length).map(|i| i as i64));
     let temperature = Array1::from_iter((0..length).map(|i| {
@@ -364,22 +380,25 @@ fn test_iot_environmental_monitoring() {
         50.0 + (i as f64 * 2.0 * std::f64::consts::PI / 150.0).cos() * 10.0 + // Different cycle
                ((i % 11) as f64 - 5.0) * 0.8 // Noise
     }));
-    
+
     // Create environmental analysis
-    let analysis = EnvironmentalSensorAnalysis::new(timestamps, 1.0).unwrap()
-        .with_temperature(temperature.clone()).unwrap()
-        .with_humidity(humidity.clone()).unwrap();
-    
+    let analysis = EnvironmentalSensorAnalysis::new(timestamps, 1.0)
+        .unwrap()
+        .with_temperature(temperature.clone())
+        .unwrap()
+        .with_humidity(humidity.clone())
+        .unwrap();
+
     // 1. Comfort index calculation
     let comfort = analysis.comfort_index().unwrap();
     assert_eq!(comfort.len(), length);
     assert!(comfort.iter().all(|&c| c >= 0.0 && c <= 100.0));
-    
+
     // 2. Sensor malfunction detection
     let malfunctions = analysis.detect_sensor_malfunctions().unwrap();
     assert!(malfunctions.contains_key("Temperature"));
     assert!(malfunctions.contains_key("Humidity"));
-    
+
     // 3. Environmental stress analysis
     let stress_index = analysis.environmental_stress_index().unwrap();
     assert_eq!(stress_index.len(), length);
@@ -393,33 +412,33 @@ fn test_out_of_core_processing_integration() {
         .with_chunk_size(1000)
         .with_overlap(100)
         .with_parallel_processing(false); // Disable for test simplicity
-    
+
     let mut processor = ChunkedProcessor::new(config);
-    
+
     // Generate large dataset (simulated)
     let large_data = generate_test_series(10000, 0.01, 50, 1.0);
-    
+
     // Process in chunks
     let chunk_size = 1000;
     let overlap = 100;
     let mut chunk_results = Vec::new();
-    
+
     for start in (0..large_data.len()).step_by(chunk_size - overlap) {
         let end = (start + chunk_size).min(large_data.len());
         let chunk = large_data.slice(ndarray::s![start..end]);
-        
+
         // Simulate chunk processing (compute mean)
         let chunk_mean = chunk.mean().unwrap();
         chunk_results.push(chunk_mean);
-        
+
         if end >= large_data.len() {
             break;
         }
     }
-    
+
     // Verify chunk processing results
     assert!(chunk_results.len() > 5); // Should have multiple chunks
-    
+
     // All chunk means should be reasonable
     let overall_mean = large_data.mean().unwrap();
     for &chunk_mean in &chunk_results {
@@ -430,21 +449,21 @@ fn test_out_of_core_processing_integration() {
 #[test]
 fn test_cross_validation_workflow() {
     let data = generate_test_series(200, 0.01, 12, 1.0);
-    
+
     // Create cross-validator
     let validator = CrossValidator::new(5, 0.2); // 5-fold CV with 20% holdout
     let splits = validator.time_series_split(&data).unwrap();
-    
+
     assert_eq!(splits.len(), 5);
-    
+
     let mut total_mse = 0.0;
     let mut fold_count = 0;
-    
+
     // Evaluate ARIMA model on each fold
     for split in splits {
         let train_data = data.slice(ndarray::s![split.train_start..split.train_end]);
         let test_data = data.slice(ndarray::s![split.test_start..split.test_end]);
-        
+
         // Fit ARIMA model
         let mut arima = ArimaModel::new(1, 1, 1).unwrap();
         if arima.fit(&train_data.to_owned()).is_ok() {
@@ -452,21 +471,23 @@ fn test_cross_validation_workflow() {
             let horizon = test_data.len();
             if let Ok(forecast) = arima.forecast(horizon) {
                 // Calculate MSE
-                let mse = test_data.iter()
+                let mse = test_data
+                    .iter()
                     .zip(forecast.iter())
                     .map(|(&actual, &pred)| (actual - pred).powi(2))
-                    .sum::<f64>() / test_data.len() as f64;
-                
+                    .sum::<f64>()
+                    / test_data.len() as f64;
+
                 total_mse += mse;
                 fold_count += 1;
             }
         }
     }
-    
+
     if fold_count > 0 {
         let avg_mse = total_mse / fold_count as f64;
         assert!(avg_mse < 100.0); // MSE should be reasonable
-        assert!(avg_mse > 0.0);   // And positive
+        assert!(avg_mse > 0.0); // And positive
     }
 }
 
@@ -476,33 +497,29 @@ fn test_dimensionality_reduction_workflow() {
     let n_series = 10;
     let length = 500;
     let mut data = Array2::zeros((length, n_series));
-    
+
     // Each series has different characteristics but some correlation
     for j in 0..n_series {
         let base_series = generate_test_series(length, 0.01, 20 + j * 5, 1.0);
         for i in 0..length {
             // Add cross-correlation between series
-            let correlation_component = if j > 0 {
-                0.3 * data[[i, j - 1]]
-            } else {
-                0.0
-            };
+            let correlation_component = if j > 0 { 0.3 * data[[i, j - 1]] } else { 0.0 };
             data[[i, j]] = base_series[i] + correlation_component;
         }
     }
-    
+
     // Apply functional PCA
     let fpca = FunctionalPCA::new(3); // Reduce to 3 components
     let reduced_data = fpca.fit_transform(&data).unwrap();
-    
+
     assert_eq!(reduced_data.ncols(), 3);
     assert_eq!(reduced_data.nrows(), length);
-    
+
     // Verify dimensionality reduction preserves some structure
     // (The first few components should capture most variance)
     let original_var = data.var_axis(Axis(0), 0.0);
     let reduced_var = reduced_data.var_axis(Axis(0), 0.0);
-    
+
     // Reduced data should still have reasonable variance
     assert!(reduced_var.sum() > 0.0);
 }
@@ -511,47 +528,49 @@ fn test_dimensionality_reduction_workflow() {
 fn test_trend_analysis_integration() {
     // Generate data with multiple trend regimes
     let mut data = Array1::zeros(500);
-    
+
     // First regime: increasing trend
     for i in 0..200 {
         data[i] = 10.0 + (i as f64) * 0.05 + ((i % 7) as f64 - 3.0) * 0.5;
     }
-    
+
     // Second regime: flat trend
     for i in 200..350 {
         data[i] = data[199] + ((i % 9) as f64 - 4.0) * 0.3;
     }
-    
+
     // Third regime: decreasing trend
     for i in 350..500 {
         data[i] = data[349] - ((i - 350) as f64) * 0.03 + ((i % 11) as f64 - 5.0) * 0.4;
     }
-    
+
     // Apply robust trend filtering
     let trend_filter = RobustTrendFilter::new(0.1);
     let trend = trend_filter.filter(&data).unwrap();
-    
+
     assert_eq!(trend.len(), data.len());
-    
+
     // Trend should be smoother than original data
-    let data_diff_var = data.windows(2).map(|w| (w[1] - w[0]).powi(2)).sum::<f64>() / (data.len() - 1) as f64;
-    let trend_diff_var = trend.windows(2).map(|w| (w[1] - w[0]).powi(2)).sum::<f64>() / (trend.len() - 1) as f64;
-    
+    let data_diff_var =
+        data.windows(2).map(|w| (w[1] - w[0]).powi(2)).sum::<f64>() / (data.len() - 1) as f64;
+    let trend_diff_var =
+        trend.windows(2).map(|w| (w[1] - w[0]).powi(2)).sum::<f64>() / (trend.len() - 1) as f64;
+
     assert!(trend_diff_var < data_diff_var); // Trend should be smoother
 }
 
 #[test]
 fn test_comprehensive_workflow() {
     // This test combines multiple modules in a realistic analysis workflow
-    
+
     // 1. Generate complex synthetic data
     let base_data = generate_test_series(1000, 0.02, 24, 2.0);
-    
+
     // 2. Detect and handle outliers
     let anomaly_detector = AnomalyDetector::new()
         .with_method(scirs2_series::anomaly::AnomalyMethod::IQR { factor: 1.5 });
     let anomalies = anomaly_detector.detect(&base_data).unwrap();
-    
+
     // Create cleaned data by replacing outliers with interpolated values
     let mut cleaned_data = base_data.clone();
     for (i, &is_anomaly) in anomalies.iter().enumerate() {
@@ -559,20 +578,21 @@ fn test_comprehensive_workflow() {
             cleaned_data[i] = (cleaned_data[i - 1] + cleaned_data[i + 1]) / 2.0;
         }
     }
-    
+
     // 3. Decompose the cleaned series
     let decomposer = STLDecomposer::new(24, 7, 7, 1, false).unwrap();
     let decomposition = decomposer.decompose(&cleaned_data).unwrap();
-    
+
     // 4. Analyze trend component for change points
     let change_detector = PELTDetector::new(5.0);
     let change_points = change_detector.detect(&decomposition.trend).unwrap();
-    
+
     // 5. Extract features from each segment between change points
     let mut segments = Vec::new();
     let mut start = 0;
     for &cp in &change_points {
-        if cp > start + 50 { // Minimum segment length
+        if cp > start + 50 {
+            // Minimum segment length
             segments.push((start, cp));
             start = cp;
         }
@@ -580,33 +600,36 @@ fn test_comprehensive_workflow() {
     if start < cleaned_data.len() - 50 {
         segments.push((start, cleaned_data.len()));
     }
-    
+
     let feature_extractor = StatisticalFeatures::new();
     let mut segment_features = Vec::new();
-    
+
     for &(start, end) in &segments {
         let segment = cleaned_data.slice(ndarray::s![start..end]);
         let features = feature_extractor.extract(&segment.to_owned()).unwrap();
         segment_features.push(features);
     }
-    
+
     // 6. Fit forecasting models and generate predictions
     let mut arima = ArimaModel::new(2, 1, 2).unwrap();
     arima.fit(&cleaned_data).unwrap();
     let arima_forecast = arima.forecast(50).unwrap();
-    
+
     // 7. Validate results
     assert!(segments.len() > 0);
     assert!(segment_features.len() == segments.len());
     assert_eq!(arima_forecast.len(), 50);
-    
+
     // The forecast should be reasonable given the trend
     let last_values_mean = cleaned_data.slice(ndarray::s![-50..]).mean().unwrap();
     let forecast_mean = arima_forecast.mean().unwrap();
     assert!((forecast_mean - last_values_mean).abs() < 20.0);
-    
+
     println!("Comprehensive workflow test completed successfully!");
-    println!("Detected {} anomalies", anomalies.iter().filter(|&&x| x > 0.5).count());
+    println!(
+        "Detected {} anomalies",
+        anomalies.iter().filter(|&&x| x > 0.5).count()
+    );
     println!("Found {} change points", change_points.len());
     println!("Analyzed {} segments", segments.len());
     println!("Generated forecast with mean: {:.2}", forecast_mean);

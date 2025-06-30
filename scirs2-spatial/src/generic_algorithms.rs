@@ -80,9 +80,10 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKDTree<T, P> {
         }
 
         if points.len() > 1_000_000 {
-            return Err(SpatialError::ValueError(
-                format!("Point collection too large: {} points. Maximum supported: 1,000,000", points.len())
-            ));
+            return Err(SpatialError::ValueError(format!(
+                "Point collection too large: {} points. Maximum supported: 1,000,000",
+                points.len()
+            )));
         }
 
         let dimension = points[0].dimension();
@@ -93,26 +94,33 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKDTree<T, P> {
         }
 
         if dimension > 50 {
-            return Err(SpatialError::ValueError(
-                format!("Dimension too high: {}. KD-Tree is not efficient for dimensions > 50", dimension)
-            ));
+            return Err(SpatialError::ValueError(format!(
+                "Dimension too high: {}. KD-Tree is not efficient for dimensions > 50",
+                dimension
+            )));
         }
 
         // Verify all points have the same dimension and check for invalid coordinates
         for (i, point) in points.iter().enumerate() {
             if point.dimension() != dimension {
-                return Err(SpatialError::ValueError(
-                    format!("Point {} has dimension {} but expected {}", i, point.dimension(), dimension)
-                ));
+                return Err(SpatialError::ValueError(format!(
+                    "Point {} has dimension {} but expected {}",
+                    i,
+                    point.dimension(),
+                    dimension
+                )));
             }
 
             // Check for invalid coordinates (NaN or infinite)
             for d in 0..dimension {
                 if let Some(coord) = point.coordinate(d) {
                     if !Float::is_finite(coord) {
-                        return Err(SpatialError::ValueError(
-                            format!("Point {} has invalid coordinate {} at dimension {}", i, NumCast::from(coord).unwrap_or(f64::NAN), d)
-                        ));
+                        return Err(SpatialError::ValueError(format!(
+                            "Point {} has invalid coordinate {} at dimension {}",
+                            i,
+                            NumCast::from(coord).unwrap_or(f64::NAN),
+                            d
+                        )));
                     }
                 }
             }
@@ -201,30 +209,37 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKDTree<T, P> {
         }
 
         if k > self.points.len() {
-            return Err(SpatialError::ValueError(
-                format!("k ({}) cannot be larger than the number of points ({})", k, self.points.len())
-            ));
+            return Err(SpatialError::ValueError(format!(
+                "k ({}) cannot be larger than the number of points ({})",
+                k,
+                self.points.len()
+            )));
         }
 
         if k > 1000 {
-            return Err(SpatialError::ValueError(
-                format!("k ({}) is too large. Consider using radius search for k > 1000", k)
-            ));
+            return Err(SpatialError::ValueError(format!(
+                "k ({}) is too large. Consider using radius search for k > 1000",
+                k
+            )));
         }
 
         if query.dimension() != self.dimension {
-            return Err(SpatialError::ValueError(
-                format!("Query point dimension ({}) must match tree dimension ({})", query.dimension(), self.dimension)
-            ));
+            return Err(SpatialError::ValueError(format!(
+                "Query point dimension ({}) must match tree dimension ({})",
+                query.dimension(),
+                self.dimension
+            )));
         }
 
         // Validate query point coordinates
         for d in 0..query.dimension() {
             if let Some(coord) = query.coordinate(d) {
                 if !Float::is_finite(coord) {
-                    return Err(SpatialError::ValueError(
-                        format!("Query point has invalid coordinate {} at dimension {}", NumCast::from(coord).unwrap_or(f64::NAN), d)
-                    ));
+                    return Err(SpatialError::ValueError(format!(
+                        "Query point has invalid coordinate {} at dimension {}",
+                        NumCast::from(coord).unwrap_or(f64::NAN),
+                        d
+                    )));
                 }
             }
         }
@@ -410,7 +425,7 @@ impl GenericDistanceMatrix {
         M: DistanceMetric<T, P> + Send + Sync,
     {
         let n = points.len();
-        
+
         // Use SIMD-optimized computation for larger datasets
         if n > 100 {
             Self::compute_simd_optimized(points, metric)
@@ -418,7 +433,7 @@ impl GenericDistanceMatrix {
             Self::compute_basic(points, metric)
         }
     }
-    
+
     /// Basic computation for small datasets
     fn compute_basic<T, P, M>(points: &[P], metric: &M) -> SpatialResult<Vec<Vec<T>>>
     where
@@ -444,7 +459,7 @@ impl GenericDistanceMatrix {
 
         Ok(matrix)
     }
-    
+
     /// SIMD-optimized computation for larger datasets
     fn compute_simd_optimized<T, P, M>(points: &[P], metric: &M) -> SpatialResult<Vec<Vec<T>>>
     where
@@ -453,30 +468,36 @@ impl GenericDistanceMatrix {
         M: DistanceMetric<T, P> + Send + Sync,
     {
         use scirs2_core::simd_ops::PlatformCapabilities;
-        
+
         let n = points.len();
         let mut matrix = vec![vec![T::zero(); n]; n];
         let caps = PlatformCapabilities::detect();
-        
+
         // Use chunked processing for better cache performance and SIMD vectorization
         const SIMD_CHUNK_SIZE: usize = 8; // Process 8 distances at a time for AVX
-        
+
         if caps.simd_available {
             // SIMD-accelerated distance computation
             for i in 0..n {
                 let point_i = &points[i];
-                
+
                 // Process multiple points simultaneously using SIMD
                 let mut j = i + 1;
                 while j < n {
                     let chunk_end = (j + SIMD_CHUNK_SIZE).min(n);
-                    
+
                     // Collect coordinates for SIMD processing
                     if let Some(dimension) = Self::get_dimension(point_i) {
-                        if dimension <= 4 { // SIMD optimization for low-dimensional data
+                        if dimension <= 4 {
+                            // SIMD optimization for low-dimensional data
                             Self::compute_simd_chunk(
-                                &mut matrix, i, j, chunk_end, 
-                                points, metric, dimension
+                                &mut matrix,
+                                i,
+                                j,
+                                chunk_end,
+                                points,
+                                metric,
+                                dimension,
                             );
                         } else {
                             // Fall back to scalar for high-dimensional data
@@ -494,7 +515,7 @@ impl GenericDistanceMatrix {
                             matrix[k][i] = distance;
                         }
                     }
-                    
+
                     j = chunk_end;
                 }
             }
@@ -505,7 +526,7 @@ impl GenericDistanceMatrix {
 
         Ok(matrix)
     }
-    
+
     /// Get dimension if all points have the same dimension
     fn get_dimension<T, P>(point: &P) -> Option<usize>
     where
@@ -519,7 +540,7 @@ impl GenericDistanceMatrix {
             None
         }
     }
-    
+
     /// Compute SIMD chunk for low-dimensional points
     fn compute_simd_chunk<T, P, M>(
         matrix: &mut [Vec<T>],
@@ -535,51 +556,51 @@ impl GenericDistanceMatrix {
         M: DistanceMetric<T, P>,
     {
         let point_i = &points[i];
-        
+
         // For small dimensions, we can optimize coordinate access
         match dimension {
             2 => {
                 // 2D case - can use vectorized operations
                 let xi = point_i.coordinate(0).unwrap_or(T::zero());
                 let yi = point_i.coordinate(1).unwrap_or(T::zero());
-                
+
                 for k in j_start..j_end {
                     let point_k = &points[k];
                     let xk = point_k.coordinate(0).unwrap_or(T::zero());
                     let yk = point_k.coordinate(1).unwrap_or(T::zero());
-                    
+
                     // Vectorized distance computation for 2D
                     let dx = xi - xk;
                     let dy = yi - yk;
                     let distance_sq = dx * dx + dy * dy;
                     let distance = SpatialScalar::sqrt(distance_sq);
-                    
+
                     matrix[i][k] = distance;
                     matrix[k][i] = distance;
                 }
-            },
+            }
             3 => {
                 // 3D case
                 let xi = point_i.coordinate(0).unwrap_or(T::zero());
                 let yi = point_i.coordinate(1).unwrap_or(T::zero());
                 let zi = point_i.coordinate(2).unwrap_or(T::zero());
-                
+
                 for k in j_start..j_end {
                     let point_k = &points[k];
                     let xk = point_k.coordinate(0).unwrap_or(T::zero());
                     let yk = point_k.coordinate(1).unwrap_or(T::zero());
                     let zk = point_k.coordinate(2).unwrap_or(T::zero());
-                    
+
                     let dx = xi - xk;
                     let dy = yi - yk;
                     let dz = zi - zk;
                     let distance_sq = dx * dx + dy * dy + dz * dz;
                     let distance = SpatialScalar::sqrt(distance_sq);
-                    
+
                     matrix[i][k] = distance;
                     matrix[k][i] = distance;
                 }
-            },
+            }
             _ => {
                 // General case - fall back to metric computation
                 for k in j_start..j_end {
@@ -599,7 +620,7 @@ impl GenericDistanceMatrix {
         M: DistanceMetric<T, P> + Send + Sync,
     {
         let n = points.len();
-        
+
         // Use memory-efficient computation for large datasets
         if n > 1000 {
             Self::compute_parallel_memory_efficient(points, metric)
@@ -607,7 +628,7 @@ impl GenericDistanceMatrix {
             Self::compute_parallel_basic(points, metric)
         }
     }
-    
+
     /// Basic parallel computation for smaller datasets
     fn compute_parallel_basic<T, P, M>(points: &[P], metric: &M) -> SpatialResult<Vec<Vec<T>>>
     where
@@ -643,9 +664,12 @@ impl GenericDistanceMatrix {
 
         Ok(matrix)
     }
-    
+
     /// Memory-efficient parallel computation for large datasets
-    fn compute_parallel_memory_efficient<T, P, M>(points: &[P], metric: &M) -> SpatialResult<Vec<Vec<T>>>
+    fn compute_parallel_memory_efficient<T, P, M>(
+        points: &[P],
+        metric: &M,
+    ) -> SpatialResult<Vec<Vec<T>>>
     where
         T: SpatialScalar + Send + Sync,
         P: SpatialPoint<T> + Send + Sync + Clone,
@@ -653,49 +677,51 @@ impl GenericDistanceMatrix {
     {
         let n = points.len();
         let mut matrix = vec![vec![T::zero(); n]; n];
-        
+
         // Use row-wise processing to minimize memory allocation
         const PARALLEL_CHUNK_SIZE: usize = 64; // Process 64 rows at a time
-        
+
         let chunks: Vec<Vec<usize>> = (0..n)
             .collect::<Vec<_>>()
             .chunks(PARALLEL_CHUNK_SIZE)
             .map(|chunk| chunk.to_vec())
             .collect();
-        
+
         // Process chunks in parallel with memory reuse
         chunks.par_iter().for_each(|chunk_indices| {
             // Allocate local buffers for this chunk to avoid contention
             let mut local_distances = vec![T::zero(); n];
-            
+
             for &i in chunk_indices {
                 // Clear and reuse the distance buffer
                 local_distances.fill(T::zero());
-                
+
                 // Compute distances for this row with SIMD optimization
                 if points[i].dimension() <= 4 {
                     Self::compute_row_distances_simd(
-                        &points[i], points, &mut local_distances, metric
+                        &points[i],
+                        points,
+                        &mut local_distances,
+                        metric,
                     );
                 } else {
                     Self::compute_row_distances_scalar(
-                        &points[i], points, &mut local_distances, metric
+                        &points[i],
+                        points,
+                        &mut local_distances,
+                        metric,
                     );
                 }
-                
+
                 // Copy results to matrix (synchronized access needed)
                 unsafe {
                     let matrix_ptr = matrix.as_ptr() as *mut Vec<T>;
                     let row_ptr = (*matrix_ptr.add(i)).as_mut_ptr();
-                    std::ptr::copy_nonoverlapping(
-                        local_distances.as_ptr(),
-                        row_ptr,
-                        n
-                    );
+                    std::ptr::copy_nonoverlapping(local_distances.as_ptr(), row_ptr, n);
                 }
             }
         });
-        
+
         // Ensure symmetry
         for i in 0..n {
             for j in (i + 1)..n {
@@ -705,7 +731,7 @@ impl GenericDistanceMatrix {
 
         Ok(matrix)
     }
-    
+
     /// SIMD-optimized row distance computation
     fn compute_row_distances_simd<T, P, M>(
         point_i: &P,
@@ -721,39 +747,39 @@ impl GenericDistanceMatrix {
             2 => {
                 let xi = point_i.coordinate(0).unwrap_or(T::zero());
                 let yi = point_i.coordinate(1).unwrap_or(T::zero());
-                
+
                 // Process points in SIMD-friendly chunks
                 for (j, point_j) in points.iter().enumerate() {
                     let xj = point_j.coordinate(0).unwrap_or(T::zero());
                     let yj = point_j.coordinate(1).unwrap_or(T::zero());
-                    
+
                     let dx = xi - xj;
                     let dy = yi - yj;
                     distances[j] = SpatialScalar::sqrt(dx * dx + dy * dy);
                 }
-            },
+            }
             3 => {
                 let xi = point_i.coordinate(0).unwrap_or(T::zero());
                 let yi = point_i.coordinate(1).unwrap_or(T::zero());
                 let zi = point_i.coordinate(2).unwrap_or(T::zero());
-                
+
                 for (j, point_j) in points.iter().enumerate() {
                     let xj = point_j.coordinate(0).unwrap_or(T::zero());
                     let yj = point_j.coordinate(1).unwrap_or(T::zero());
                     let zj = point_j.coordinate(2).unwrap_or(T::zero());
-                    
+
                     let dx = xi - xj;
                     let dy = yi - yj;
                     let dz = zi - zj;
                     distances[j] = SpatialScalar::sqrt(dx * dx + dy * dy + dz * dz);
                 }
-            },
+            }
             _ => {
                 Self::compute_row_distances_scalar(point_i, points, distances, metric);
             }
         }
     }
-    
+
     /// Scalar fallback for row distance computation
     fn compute_row_distances_scalar<T, P, M>(
         point_i: &P,
@@ -844,19 +870,22 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
         }
 
         if self.k > points.len() {
-            return Err(SpatialError::ValueError(
-                format!("k ({}) cannot be larger than the number of points ({})", self.k, points.len())
-            ));
+            return Err(SpatialError::ValueError(format!(
+                "k ({}) cannot be larger than the number of points ({})",
+                self.k,
+                points.len()
+            )));
         }
 
         if self.k > 10000 {
-            return Err(SpatialError::ValueError(
-                format!("k ({}) is too large. Consider using hierarchical clustering for k > 10000", self.k)
-            ));
+            return Err(SpatialError::ValueError(format!(
+                "k ({}) is too large. Consider using hierarchical clustering for k > 10000",
+                self.k
+            )));
         }
 
         let dimension = points[0].dimension();
-        
+
         if dimension == 0 {
             return Err(SpatialError::ValueError(
                 "Points must have at least one dimension".to_string(),
@@ -866,18 +895,24 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
         // Validate all points have same dimension and check for invalid coordinates
         for (i, point) in points.iter().enumerate() {
             if point.dimension() != dimension {
-                return Err(SpatialError::ValueError(
-                    format!("Point {} has dimension {} but expected {}", i, point.dimension(), dimension)
-                ));
+                return Err(SpatialError::ValueError(format!(
+                    "Point {} has dimension {} but expected {}",
+                    i,
+                    point.dimension(),
+                    dimension
+                )));
             }
 
             // Check for invalid coordinates
             for d in 0..dimension {
                 if let Some(coord) = point.coordinate(d) {
                     if !Float::is_finite(coord) {
-                        return Err(SpatialError::ValueError(
-                            format!("Point {} has invalid coordinate {} at dimension {}", i, NumCast::from(coord).unwrap_or(f64::NAN), d)
-                        ));
+                        return Err(SpatialError::ValueError(format!(
+                            "Point {} has invalid coordinate {} at dimension {}",
+                            i,
+                            NumCast::from(coord).unwrap_or(f64::NAN),
+                            d
+                        )));
                     }
                 }
             }
@@ -889,17 +924,17 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
 
         // Pre-allocate arrays for distance computation to avoid repeated allocations
         let mut point_distances = vec![T::zero(); self.k];
-        
+
         for iteration in 0..self.max_iterations {
             let mut changed = false;
 
             // Assign points to nearest centroids using chunked processing for better cache performance
             const CHUNK_SIZE: usize = 1024;
             let chunks = points.chunks(CHUNK_SIZE);
-            
+
             for (chunk_start, chunk) in chunks.enumerate() {
                 let chunk_offset = chunk_start * CHUNK_SIZE;
-                
+
                 if self.parallel && points.len() > 1000 {
                     // Parallel assignment for large datasets with chunked processing
                     for (local_i, point) in chunk.iter().enumerate() {
@@ -1034,13 +1069,13 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
         const UPDATE_CHUNK_SIZE: usize = 512;
         for chunk in points.chunks(UPDATE_CHUNK_SIZE) {
             let assignments_chunk = &assignments[..chunk.len().min(assignments.len())];
-            
+
             for (point, &cluster) in chunk.iter().zip(assignments_chunk.iter()) {
                 // Bulk coordinate copy for better performance
                 let point_coords: Vec<T> = (0..dimension)
                     .map(|d| point.coordinate(d).unwrap_or(T::zero()))
                     .collect();
-                
+
                 for (d, &coord) in point_coords.iter().enumerate() {
                     if let Some(centroid_coord) = centroids[cluster].coords_mut().get_mut(d) {
                         *centroid_coord = *centroid_coord + coord;
@@ -1071,14 +1106,14 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
             .collect();
         Point::new(coords)
     }
-    
+
     /// SIMD-optimized distance computation to all centroids
     fn compute_distances_simd(&self, point: &P, centroids: &[Point<T>], distances: &mut [T]) {
         use scirs2_core::simd_ops::PlatformCapabilities;
-        
+
         let caps = PlatformCapabilities::detect();
         let point_generic = self.point_to_generic(point);
-        
+
         if caps.simd_available && point.dimension() <= 4 && centroids.len() >= 4 {
             // SIMD-optimized path for low-dimensional data with multiple centroids
             self.compute_distances_simd_optimized(&point_generic, centroids, distances);
@@ -1089,15 +1124,20 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
             }
         }
     }
-    
+
     /// SIMD-optimized distance computation implementation
-    fn compute_distances_simd_optimized(&self, point: &Point<T>, centroids: &[Point<T>], distances: &mut [T]) {
+    fn compute_distances_simd_optimized(
+        &self,
+        point: &Point<T>,
+        centroids: &[Point<T>],
+        distances: &mut [T],
+    ) {
         match point.dimension() {
             2 => {
                 // 2D case - can vectorize efficiently
                 let px = point.coordinate(0).unwrap_or(T::zero());
                 let py = point.coordinate(1).unwrap_or(T::zero());
-                
+
                 // Process centroids in chunks of 4 for SIMD
                 let mut i = 0;
                 while i + 3 < centroids.len() {
@@ -1107,7 +1147,7 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
                             let centroid = &centroids[i + j];
                             let cx = centroid.coordinate(0).unwrap_or(T::zero());
                             let cy = centroid.coordinate(1).unwrap_or(T::zero());
-                            
+
                             let dx = px - cx;
                             let dy = py - cy;
                             distances[i + j] = SpatialScalar::sqrt(dx * dx + dy * dy);
@@ -1115,36 +1155,36 @@ impl<T: SpatialScalar, P: SpatialPoint<T> + Clone> GenericKMeans<T, P> {
                     }
                     i += 4;
                 }
-                
+
                 // Handle remaining centroids
                 while i < centroids.len() {
                     let centroid = &centroids[i];
                     let cx = centroid.coordinate(0).unwrap_or(T::zero());
                     let cy = centroid.coordinate(1).unwrap_or(T::zero());
-                    
+
                     let dx = px - cx;
                     let dy = py - cy;
                     distances[i] = SpatialScalar::sqrt(dx * dx + dy * dy);
                     i += 1;
                 }
-            },
+            }
             3 => {
                 // 3D case
                 let px = point.coordinate(0).unwrap_or(T::zero());
                 let py = point.coordinate(1).unwrap_or(T::zero());
                 let pz = point.coordinate(2).unwrap_or(T::zero());
-                
+
                 for (i, centroid) in centroids.iter().enumerate() {
                     let cx = centroid.coordinate(0).unwrap_or(T::zero());
                     let cy = centroid.coordinate(1).unwrap_or(T::zero());
                     let cz = centroid.coordinate(2).unwrap_or(T::zero());
-                    
+
                     let dx = px - cx;
                     let dy = py - cy;
                     let dz = pz - cz;
                     distances[i] = SpatialScalar::sqrt(dx * dx + dy * dy + dz * dz);
                 }
-            },
+            }
             _ => {
                 // General case - fall back to regular computation
                 for (j, centroid) in centroids.iter().enumerate() {
@@ -1309,33 +1349,46 @@ impl<T: SpatialScalar> GenericDBSCAN<T> {
         }
 
         if self.min_samples > points.len() {
-            return Err(SpatialError::ValueError(
-                format!("min_samples ({}) cannot be larger than the number of points ({})", self.min_samples, points.len())
-            ));
+            return Err(SpatialError::ValueError(format!(
+                "min_samples ({}) cannot be larger than the number of points ({})",
+                self.min_samples,
+                points.len()
+            )));
         }
 
         if !Float::is_finite(self.eps) || self.eps <= T::zero() {
-            return Err(SpatialError::ValueError(
-                format!("eps must be a positive finite number, got: {}", NumCast::from(self.eps).unwrap_or(f64::NAN))
-            ));
+            return Err(SpatialError::ValueError(format!(
+                "eps must be a positive finite number, got: {}",
+                NumCast::from(self.eps).unwrap_or(f64::NAN)
+            )));
         }
 
         // Validate points
-        let dimension = if points.is_empty() { 0 } else { points[0].dimension() };
+        let dimension = if points.is_empty() {
+            0
+        } else {
+            points[0].dimension()
+        };
         for (i, point) in points.iter().enumerate() {
             if point.dimension() != dimension {
-                return Err(SpatialError::ValueError(
-                    format!("Point {} has dimension {} but expected {}", i, point.dimension(), dimension)
-                ));
+                return Err(SpatialError::ValueError(format!(
+                    "Point {} has dimension {} but expected {}",
+                    i,
+                    point.dimension(),
+                    dimension
+                )));
             }
 
             // Check for invalid coordinates
             for d in 0..dimension {
                 if let Some(coord) = point.coordinate(d) {
                     if !Float::is_finite(coord) {
-                        return Err(SpatialError::ValueError(
-                            format!("Point {} has invalid coordinate {} at dimension {}", i, NumCast::from(coord).unwrap_or(f64::NAN), d)
-                        ));
+                        return Err(SpatialError::ValueError(format!(
+                            "Point {} has invalid coordinate {} at dimension {}",
+                            i,
+                            NumCast::from(coord).unwrap_or(f64::NAN),
+                            d
+                        )));
                     }
                 }
             }
@@ -1348,10 +1401,10 @@ impl<T: SpatialScalar> GenericDBSCAN<T> {
 
         // Process points in chunks for better cache performance and memory management
         const DBSCAN_PROCESS_CHUNK_SIZE: usize = 256;
-        
+
         for chunk_start in (0..n).step_by(DBSCAN_PROCESS_CHUNK_SIZE) {
             let chunk_end = (chunk_start + DBSCAN_PROCESS_CHUNK_SIZE).min(n);
-            
+
             for i in chunk_start..chunk_end {
                 if visited[i] {
                     continue;
@@ -1374,7 +1427,7 @@ impl<T: SpatialScalar> GenericDBSCAN<T> {
                         metric,
                     );
                     cluster_id += 1;
-                    
+
                     // Limit maximum number of clusters for memory safety
                     if cluster_id > 10000 {
                         return Err(SpatialError::ValueError(
@@ -1383,7 +1436,7 @@ impl<T: SpatialScalar> GenericDBSCAN<T> {
                     }
                 }
             }
-            
+
             // Periodic memory compaction for long-running clustering
             if chunk_start > 0 && chunk_start % (DBSCAN_PROCESS_CHUNK_SIZE * 10) == 0 {
                 // Force garbage collection of temporary allocations
@@ -1410,24 +1463,27 @@ impl<T: SpatialScalar> GenericDBSCAN<T> {
 
         // Use chunk-based processing for better cache locality
         const NEIGHBOR_CHUNK_SIZE: usize = 64;
-        
+
         if points.len() > 5000 {
             // For large datasets, use chunked processing with early termination
             for chunk in points.chunks(NEIGHBOR_CHUNK_SIZE) {
-                let chunk_start = ((chunk.as_ptr() as usize - points.as_ptr() as usize) 
-                    / std::mem::size_of::<P>()).min(points.len());
-                
+                let chunk_start = ((chunk.as_ptr() as usize - points.as_ptr() as usize)
+                    / std::mem::size_of::<P>())
+                .min(points.len());
+
                 for (local_idx, point) in chunk.iter().enumerate() {
                     let global_idx = chunk_start + local_idx;
-                    if global_idx >= points.len() { break; }
-                    
+                    if global_idx >= points.len() {
+                        break;
+                    }
+
                     // Use squared distance for efficiency (avoid sqrt computation)
                     let distance = metric.distance(query_point, point);
                     if distance <= self.eps {
                         neighbors.push(global_idx);
                     }
                 }
-                
+
                 // Early termination if we have enough neighbors for dense regions
                 if neighbors.len() > 100 {
                     break;
@@ -1462,28 +1518,28 @@ impl<T: SpatialScalar> GenericDBSCAN<T> {
         M: DistanceMetric<T, P>,
     {
         labels[point_idx] = cluster_id;
-        
+
         // Use bitset for faster membership testing instead of HashSet
         let mut processed = vec![false; points.len()];
         let mut seed_set = Vec::with_capacity(neighbors.len() * 2);
-        
+
         // Initialize seed set with original neighbors
         for &neighbor in neighbors {
             if neighbor < points.len() {
                 seed_set.push(neighbor);
             }
         }
-        
+
         // Process seeds iteratively with batching for cache efficiency
         const EXPAND_BATCH_SIZE: usize = 32;
         let mut batch_buffer = Vec::with_capacity(EXPAND_BATCH_SIZE);
-        
+
         while !seed_set.is_empty() {
             // Process seeds in batches for better cache locality
             let batch_size = seed_set.len().min(EXPAND_BATCH_SIZE);
             batch_buffer.clear();
             batch_buffer.extend(seed_set.drain(..batch_size));
-            
+
             for q in batch_buffer.iter().copied() {
                 if q >= points.len() || processed[q] {
                     continue;
@@ -1497,9 +1553,10 @@ impl<T: SpatialScalar> GenericDBSCAN<T> {
                     if q_neighbors.len() >= self.min_samples {
                         // Bulk add new neighbors to seed set with deduplication
                         for &neighbor in &q_neighbors {
-                            if neighbor < points.len() 
-                                && !processed[neighbor] 
-                                && !seed_set.contains(&neighbor) {
+                            if neighbor < points.len()
+                                && !processed[neighbor]
+                                && !seed_set.contains(&neighbor)
+                            {
                                 seed_set.push(neighbor);
                             }
                         }
@@ -1511,7 +1568,7 @@ impl<T: SpatialScalar> GenericDBSCAN<T> {
                     labels[q] = cluster_id;
                 }
             }
-            
+
             // Periodically compact the seed set to maintain performance
             if seed_set.len() > 1000 {
                 seed_set.sort_unstable();
@@ -1594,36 +1651,43 @@ impl<T: SpatialScalar> GenericGMM<T> {
         // Initialize covariances based on data spread
         let mut covariances =
             vec![vec![vec![T::zero(); n_features]; n_features]; self.n_components];
-        
+
         // Compute initial covariances based on cluster assignments
         for k in 0..self.n_components {
-            let cluster_points: Vec<&P> = kmeans_result.assignments
+            let cluster_points: Vec<&P> = kmeans_result
+                .assignments
                 .iter()
                 .enumerate()
                 .filter_map(|(i, &cluster)| if cluster == k { Some(&points[i]) } else { None })
                 .collect();
-            
+
             if !cluster_points.is_empty() {
                 let cluster_mean = &means[k];
-                
+
                 // Compute sample covariance for this cluster
                 for i in 0..n_features {
                     for j in 0..n_features {
                         let mut cov_sum = T::zero();
                         let count = T::from(cluster_points.len()).unwrap();
-                        
+
                         for point in &cluster_points {
-                            let pi = point.coordinate(i).unwrap_or(T::zero()) - cluster_mean.coordinate(i).unwrap_or(T::zero());
-                            let pj = point.coordinate(j).unwrap_or(T::zero()) - cluster_mean.coordinate(j).unwrap_or(T::zero());
+                            let pi = point.coordinate(i).unwrap_or(T::zero())
+                                - cluster_mean.coordinate(i).unwrap_or(T::zero());
+                            let pj = point.coordinate(j).unwrap_or(T::zero())
+                                - cluster_mean.coordinate(j).unwrap_or(T::zero());
                             cov_sum = cov_sum + pi * pj;
                         }
-                        
+
                         covariances[k][i][j] = if count > T::one() {
                             cov_sum / (count - T::one())
-                        } else if i == j { T::one() } else { T::zero() };
+                        } else if i == j {
+                            T::one()
+                        } else {
+                            T::zero()
+                        };
                     }
                 }
-                
+
                 // Add regularization to ensure positive definiteness
                 for i in 0..n_features {
                     covariances[k][i][i] = covariances[k][i][i] + self.reg_covar;
@@ -1643,22 +1707,27 @@ impl<T: SpatialScalar> GenericGMM<T> {
         for iteration in 0..self.max_iterations {
             // E-step: compute responsibilities using full multivariate Gaussian
             let mut new_log_likelihood = T::zero();
-            
+
             for i in 0..n_samples {
                 let point = Self::point_to_generic(&points[i]);
                 let mut log_likelihoods = vec![T::min_value(); self.n_components];
                 let mut max_log_likelihood = T::min_value();
-                
+
                 // Compute log probabilities for numerical stability
                 for k in 0..self.n_components {
                     let log_weight = SpatialScalar::ln(weights[k]);
-                    let log_gaussian = self.compute_log_gaussian_probability(&point, &means[k], &covariances[k], n_features);
+                    let log_gaussian = self.compute_log_gaussian_probability(
+                        &point,
+                        &means[k],
+                        &covariances[k],
+                        n_features,
+                    );
                     log_likelihoods[k] = log_weight + log_gaussian;
                     if log_likelihoods[k] > max_log_likelihood {
                         max_log_likelihood = log_likelihoods[k];
                     }
                 }
-                
+
                 // Use log-sum-exp trick for numerical stability
                 let mut sum_exp = T::zero();
                 for k in 0..self.n_components {
@@ -1666,19 +1735,20 @@ impl<T: SpatialScalar> GenericGMM<T> {
                     responsibilities[i][k] = exp_val;
                     sum_exp = sum_exp + exp_val;
                 }
-                
+
                 // Normalize responsibilities
                 if sum_exp > T::zero() {
                     for k in 0..self.n_components {
                         responsibilities[i][k] = responsibilities[i][k] / sum_exp;
                     }
-                    new_log_likelihood = new_log_likelihood + max_log_likelihood + SpatialScalar::ln(sum_exp);
+                    new_log_likelihood =
+                        new_log_likelihood + max_log_likelihood + SpatialScalar::ln(sum_exp);
                 }
             }
 
             // M-step: update parameters (full implementation)
             let mut nk_values = vec![T::zero(); self.n_components];
-            
+
             // Update weights and compute effective sample sizes
             for k in 0..self.n_components {
                 let mut nk = T::zero();
@@ -1688,55 +1758,59 @@ impl<T: SpatialScalar> GenericGMM<T> {
                 nk_values[k] = nk;
                 weights[k] = nk / T::from(n_samples).unwrap();
             }
-            
+
             // Update means
             for k in 0..self.n_components {
                 if nk_values[k] > T::zero() {
                     let mut new_mean_coords = vec![T::zero(); n_features];
-                    
+
                     for i in 0..n_samples {
                         let point = Self::point_to_generic(&points[i]);
                         for d in 0..n_features {
                             let coord = point.coordinate(d).unwrap_or(T::zero());
-                            new_mean_coords[d] = new_mean_coords[d] + responsibilities[i][k] * coord;
+                            new_mean_coords[d] =
+                                new_mean_coords[d] + responsibilities[i][k] * coord;
                         }
                     }
-                    
+
                     // Normalize by effective sample size
                     for d in 0..n_features {
                         new_mean_coords[d] = new_mean_coords[d] / nk_values[k];
                     }
-                    
+
                     means[k] = Point::new(new_mean_coords);
                 }
             }
-            
+
             // Update covariances
             for k in 0..self.n_components {
                 if nk_values[k] > T::one() {
                     let mean_k = &means[k];
-                    
+
                     // Reset covariance matrix
                     for i in 0..n_features {
                         for j in 0..n_features {
                             covariances[k][i][j] = T::zero();
                         }
                     }
-                    
+
                     // Compute weighted covariance
                     for sample_idx in 0..n_samples {
                         let point = Self::point_to_generic(&points[sample_idx]);
                         let resp = responsibilities[sample_idx][k];
-                        
+
                         for i in 0..n_features {
                             for j in 0..n_features {
-                                let diff_i = point.coordinate(i).unwrap_or(T::zero()) - mean_k.coordinate(i).unwrap_or(T::zero());
-                                let diff_j = point.coordinate(j).unwrap_or(T::zero()) - mean_k.coordinate(j).unwrap_or(T::zero());
-                                covariances[k][i][j] = covariances[k][i][j] + resp * diff_i * diff_j;
+                                let diff_i = point.coordinate(i).unwrap_or(T::zero())
+                                    - mean_k.coordinate(i).unwrap_or(T::zero());
+                                let diff_j = point.coordinate(j).unwrap_or(T::zero())
+                                    - mean_k.coordinate(j).unwrap_or(T::zero());
+                                covariances[k][i][j] =
+                                    covariances[k][i][j] + resp * diff_i * diff_j;
                             }
                         }
                     }
-                    
+
                     // Normalize and add regularization
                     for i in 0..n_features {
                         for j in 0..n_features {
@@ -1750,7 +1824,9 @@ impl<T: SpatialScalar> GenericGMM<T> {
             }
 
             // Check for convergence using proper log-likelihood
-            if iteration > 0 && SpatialScalar::abs(new_log_likelihood - log_likelihood) < self.tolerance {
+            if iteration > 0
+                && SpatialScalar::abs(new_log_likelihood - log_likelihood) < self.tolerance
+            {
                 break;
             }
             log_likelihood = new_log_likelihood;
@@ -1790,7 +1866,7 @@ impl<T: SpatialScalar> GenericGMM<T> {
             .collect();
         Point::new(coords)
     }
-    
+
     /// Compute log probability of a point under a multivariate Gaussian distribution
     fn compute_log_gaussian_probability(
         &self,
@@ -1802,20 +1878,21 @@ impl<T: SpatialScalar> GenericGMM<T> {
         // Compute (x - μ)
         let mut diff = vec![T::zero(); n_features];
         for i in 0..n_features {
-            diff[i] = point.coordinate(i).unwrap_or(T::zero()) - mean.coordinate(i).unwrap_or(T::zero());
+            diff[i] =
+                point.coordinate(i).unwrap_or(T::zero()) - mean.coordinate(i).unwrap_or(T::zero());
         }
-        
+
         // Compute covariance determinant and inverse (simplified for numerical stability)
         let mut det = T::one();
         let mut inv_cov = vec![vec![T::zero(); n_features]; n_features];
-        
+
         // Simplified computation assuming diagonal covariance (for numerical stability)
         // In a full implementation, you would use proper matrix decomposition
         for i in 0..n_features {
             det = det * covariance[i][i];
             inv_cov[i][i] = T::one() / covariance[i][i];
         }
-        
+
         // Compute quadratic form: (x - μ)ᵀ Σ⁻¹ (x - μ)
         let mut quadratic_form = T::zero();
         for i in 0..n_features {
@@ -1823,14 +1900,15 @@ impl<T: SpatialScalar> GenericGMM<T> {
                 quadratic_form = quadratic_form + diff[i] * inv_cov[i][j] * diff[j];
             }
         }
-        
+
         // Compute log probability: -0.5 * (k*log(2π) + log|Σ| + (x-μ)ᵀΣ⁻¹(x-μ))
-        let two_pi = T::from(std::f64::consts::TAU).unwrap_or(T::from(std::f64::consts::TAU).unwrap());
+        let two_pi =
+            T::from(std::f64::consts::TAU).unwrap_or(T::from(std::f64::consts::TAU).unwrap());
         let log_2pi_k = T::from(n_features).unwrap() * SpatialScalar::ln(two_pi);
         let log_det = SpatialScalar::ln(SpatialScalar::abs(det));
-        
+
         let log_prob = -T::from(0.5).unwrap() * (log_2pi_k + log_det + quadratic_form);
-        
+
         // Handle numerical issues
         if Float::is_finite(log_prob) {
             log_prob

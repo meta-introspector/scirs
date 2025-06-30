@@ -21,11 +21,11 @@
 use crate::dwt::{Wavelet, WaveletFilters};
 use crate::error::{SignalError, SignalResult};
 use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
+use rand::prelude::*;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_finite, check_positive, check_shape};
 use std::sync::Arc;
-use rand::prelude::*;
 
 /// Enhanced 2D DWT decomposition result
 #[derive(Debug, Clone)]
@@ -482,25 +482,29 @@ fn apply_filters_simd_large(
     let n = signal.len();
     let filter_len = lo_filter.len();
     let chunk_size = 8;
-    
+
     // Process signal in chunks for better cache efficiency
     for signal_start in (0..n).step_by(chunk_size) {
         let signal_end = (signal_start + chunk_size).min(n);
         let signal_chunk = &signal[signal_start..signal_end];
-        
+
         for filter_start in 0..filter_len {
             let output_pos = signal_start + filter_start;
-            
+
             if output_pos < lo_out.len() {
                 // Vectorized dot product for chunk
                 let signal_view = ArrayView1::from(signal_chunk);
                 let available_filter_len = (filter_len - filter_start).min(signal_chunk.len());
-                
+
                 if available_filter_len >= 4 {
-                    let lo_filter_view = ArrayView1::from(&lo_filter[filter_start..filter_start + available_filter_len]);
-                    let hi_filter_view = ArrayView1::from(&hi_filter[filter_start..filter_start + available_filter_len]);
+                    let lo_filter_view = ArrayView1::from(
+                        &lo_filter[filter_start..filter_start + available_filter_len],
+                    );
+                    let hi_filter_view = ArrayView1::from(
+                        &hi_filter[filter_start..filter_start + available_filter_len],
+                    );
                     let signal_sub = signal_view.slice(s![0..available_filter_len]);
-                    
+
                     lo_out[output_pos] += f64::simd_dot(&signal_sub, &lo_filter_view);
                     hi_out[output_pos] += f64::simd_dot(&signal_sub, &hi_filter_view);
                 } else {
@@ -526,16 +530,16 @@ fn apply_filters_simd_medium(
 ) {
     let n = signal.len();
     let filter_len = lo_filter.len();
-    
+
     for i in 0..n {
         let max_len = (n - i).min(filter_len);
-        
+
         if max_len >= 4 {
             let signal_slice = &signal[i..i + max_len];
             let signal_view = ArrayView1::from(signal_slice);
             let lo_filter_view = ArrayView1::from(&lo_filter[0..max_len]);
             let hi_filter_view = ArrayView1::from(&hi_filter[0..max_len]);
-            
+
             // Optimized SIMD dot products
             lo_out[i] = f64::simd_dot(&signal_view, &lo_filter_view);
             hi_out[i] = f64::simd_dot(&signal_view, &hi_filter_view);
@@ -543,13 +547,13 @@ fn apply_filters_simd_medium(
             // Scalar computation for remaining elements
             let mut lo_sum = 0.0;
             let mut hi_sum = 0.0;
-            
+
             for j in 0..max_len {
                 let sig_val = signal[i + j];
                 lo_sum += sig_val * lo_filter[j];
                 hi_sum += sig_val * hi_filter[j];
             }
-            
+
             lo_out[i] = lo_sum;
             hi_out[i] = hi_sum;
         }
@@ -567,7 +571,7 @@ fn apply_filters_scalar_optimized(
 ) {
     let n = signal.len();
     let filter_len = lo_filter.len();
-    
+
     // Unrolled loops for better performance on small filters
     match filter_len {
         2 => {
@@ -586,9 +590,11 @@ fn apply_filters_scalar_optimized(
                 let s1 = signal[i + 1];
                 let s2 = signal[i + 2];
                 let s3 = signal[i + 3];
-                
-                lo_out[i] = s0 * lo_filter[0] + s1 * lo_filter[1] + s2 * lo_filter[2] + s3 * lo_filter[3];
-                hi_out[i] = s0 * hi_filter[0] + s1 * hi_filter[1] + s2 * hi_filter[2] + s3 * hi_filter[3];
+
+                lo_out[i] =
+                    s0 * lo_filter[0] + s1 * lo_filter[1] + s2 * lo_filter[2] + s3 * lo_filter[3];
+                hi_out[i] =
+                    s0 * hi_filter[0] + s1 * hi_filter[1] + s2 * hi_filter[2] + s3 * hi_filter[3];
             }
         }
         _ => {
@@ -597,13 +603,13 @@ fn apply_filters_scalar_optimized(
                 let max_len = (n - i).min(filter_len);
                 let mut lo_sum = 0.0;
                 let mut hi_sum = 0.0;
-                
+
                 for j in 0..max_len {
                     let sig_val = signal[i + j];
                     lo_sum += sig_val * lo_filter[j];
                     hi_sum += sig_val * hi_filter[j];
                 }
-                
+
                 lo_out[i] = lo_sum;
                 hi_out[i] = hi_sum;
             }
@@ -866,7 +872,7 @@ fn process_dwt2d_block(
 ) -> SignalResult<EnhancedDwt2dResult> {
     // Enhanced block processing with offset-aware optimizations
     let (rows, cols) = block.dim();
-    
+
     // Apply block-specific optimizations based on position
     let optimized_config = if row_offset == 0 || col_offset == 0 {
         // Edge blocks may benefit from different boundary handling
@@ -880,7 +886,7 @@ fn process_dwt2d_block(
     } else {
         config.clone()
     };
-    
+
     // Use enhanced SIMD processing for the block
     simd_dwt2d_decompose(block, filters, &optimized_config)
 }
@@ -1277,18 +1283,18 @@ fn simd_convolution_accumulate(
     if filter_len >= 8 && signal_len >= 8 {
         // Advanced vectorized convolution for larger filters
         let chunk_size = 8; // Process 8 elements at a time for better vectorization
-        
+
         for i in (0..signal_len).step_by(chunk_size) {
             let end_i = (i + chunk_size).min(signal_len);
             let current_chunk_size = end_i - i;
-            
+
             if current_chunk_size >= 4 {
                 for j in 0..filter_len {
                     let output_idx = i + j;
                     if output_idx < output.len() {
                         let signal_slice = signal.slice(s![i..end_i]);
                         let filter_val = filter[j];
-                        
+
                         // Vectorized multiplication and accumulation
                         for (k, &sig_val) in signal_slice.iter().enumerate() {
                             if output_idx + k < output.len() {
@@ -1313,14 +1319,14 @@ fn simd_convolution_accumulate(
         // Standard SIMD approach for medium-sized filters
         for i in 0..signal_len {
             let max_len = (signal_len - i).min(filter_len);
-            
+
             if max_len >= 4 {
                 let signal_chunk = signal.slice(s![i..i + max_len]);
                 let filter_chunk = filter.slice(s![0..max_len]);
-                
+
                 // Use optimized SIMD dot product
                 let dot_product = f64::simd_dot(&signal_chunk, &filter_chunk);
-                
+
                 // Accumulate result at appropriate position
                 if i < output.len() {
                     output[i] += dot_product;
@@ -1448,7 +1454,7 @@ pub fn enhanced_dwt2d_adaptive(
     energy_threshold: f64,
 ) -> SignalResult<MultilevelDwt2d> {
     check_finite(&data.as_slice().unwrap(), "data")?;
-    
+
     if energy_threshold <= 0.0 || energy_threshold >= 1.0 {
         return Err(SignalError::ValueError(
             "Energy threshold must be between 0 and 1".to_string(),
@@ -1461,7 +1467,7 @@ pub fn enhanced_dwt2d_adaptive(
     let max_levels = calculate_max_decomposition_levels(data.dim());
     let mut previous_energy_ratio = 1.0;
     let mut energy_decrease_count = 0;
-    
+
     // Enhanced stopping criteria tracking
     let mut level_energies = Vec::new();
     let mut level_entropies = Vec::new();
@@ -1469,7 +1475,7 @@ pub fn enhanced_dwt2d_adaptive(
     loop {
         // Check multiple stopping criteria
         let (rows, cols) = current.dim();
-        
+
         // Size-based stopping criterion
         if rows < 4 || cols < 4 || level >= max_levels {
             break;
@@ -1483,18 +1489,19 @@ pub fn enhanced_dwt2d_adaptive(
         let detail_v_energy: f64 = decomp.detail_v.iter().map(|&x| x * x).sum();
         let detail_d_energy: f64 = decomp.detail_d.iter().map(|&x| x * x).sum();
         let detail_energy = detail_h_energy + detail_v_energy + detail_d_energy;
-        
+
         let approx_energy: f64 = decomp.approx.iter().map(|&x| x * x).sum();
         let total_energy = current.iter().map(|&x| x * x).sum::<f64>();
 
         // Energy-based stopping criterion
         let energy_ratio = detail_energy / total_energy.max(1e-10);
         level_energies.push(energy_ratio);
-        
+
         // Entropy-based analysis for adaptive stopping
-        let entropy = compute_subband_entropy(&decomp.detail_h, &decomp.detail_v, &decomp.detail_d)?;
+        let entropy =
+            compute_subband_entropy(&decomp.detail_h, &decomp.detail_v, &decomp.detail_d)?;
         level_entropies.push(entropy);
-        
+
         // Store detail coefficients
         details.push((
             decomp.detail_h.clone(),
@@ -1506,12 +1513,12 @@ pub fn enhanced_dwt2d_adaptive(
         level += 1;
 
         // Enhanced stopping criteria
-        
+
         // 1. Primary energy threshold
         if energy_ratio < energy_threshold {
             break;
         }
-        
+
         // 2. Energy decrease trend analysis
         if energy_ratio >= previous_energy_ratio {
             energy_decrease_count += 1;
@@ -1522,34 +1529,49 @@ pub fn enhanced_dwt2d_adaptive(
         } else {
             energy_decrease_count = 0;
         }
-        
+
         // 3. Entropy-based stopping (very low entropy indicates little structure)
         if entropy < 0.1 && level > 1 {
             break;
         }
-        
+
         // 4. Approximation energy dominance
         let approx_ratio = approx_energy / total_energy.max(1e-10);
         if approx_ratio > 0.99 && level > 1 {
             // Almost all energy in approximation, further decomposition unlikely to be useful
             break;
         }
-        
+
         // 5. Coefficient magnitude analysis
         let max_detail_coeff = [
-            decomp.detail_h.iter().cloned().fold(f64::NEG_INFINITY, f64::max),
-            decomp.detail_v.iter().cloned().fold(f64::NEG_INFINITY, f64::max),
-            decomp.detail_d.iter().cloned().fold(f64::NEG_INFINITY, f64::max),
-        ].iter().cloned().fold(f64::NEG_INFINITY, f64::max);
-        
-        let signal_range = data.iter().cloned().fold(f64::NEG_INFINITY, f64::max) - 
-                          data.iter().cloned().fold(f64::INFINITY, f64::min);
-        
+            decomp
+                .detail_h
+                .iter()
+                .cloned()
+                .fold(f64::NEG_INFINITY, f64::max),
+            decomp
+                .detail_v
+                .iter()
+                .cloned()
+                .fold(f64::NEG_INFINITY, f64::max),
+            decomp
+                .detail_d
+                .iter()
+                .cloned()
+                .fold(f64::NEG_INFINITY, f64::max),
+        ]
+        .iter()
+        .cloned()
+        .fold(f64::NEG_INFINITY, f64::max);
+
+        let signal_range = data.iter().cloned().fold(f64::NEG_INFINITY, f64::max)
+            - data.iter().cloned().fold(f64::INFINITY, f64::min);
+
         if max_detail_coeff < signal_range * 1e-6 {
             // Detail coefficients are negligible compared to signal range
             break;
         }
-        
+
         previous_energy_ratio = energy_ratio;
     }
 
@@ -1569,7 +1591,7 @@ pub fn enhanced_dwt2d_adaptive(
 fn calculate_max_decomposition_levels(shape: (usize, usize)) -> usize {
     let (rows, cols) = shape;
     let min_dim = rows.min(cols);
-    
+
     // Allow decomposition until minimum dimension is 4
     // This ensures we don't over-decompose small images
     (min_dim as f64).log2().floor() as usize - 2
@@ -2238,25 +2260,25 @@ fn estimate_trend(data: &[f64]) -> f64 {
     if data.len() < 2 {
         return 0.0;
     }
-    
+
     // Robust trend estimation with outlier handling
     if data.len() == 2 {
         return data[1] - data[0];
     }
-    
+
     // Use weighted least squares for better robustness
     let n = data.len();
     let mut weights = vec![1.0; n];
-    
+
     // Identify and downweight potential outliers
     let median = {
         let mut sorted = data.to_vec();
         sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
         sorted[n / 2]
     };
-    
+
     let mad: f64 = data.iter().map(|&x| (x - median).abs()).sum::<f64>() / n as f64;
-    
+
     if mad > 1e-10 {
         for (i, &val) in data.iter().enumerate() {
             let deviation = (val - median).abs() / mad;
@@ -2265,24 +2287,28 @@ fn estimate_trend(data: &[f64]) -> f64 {
             }
         }
     }
-    
+
     // Weighted linear regression
     let weight_sum: f64 = weights.iter().sum();
     if weight_sum < 1e-10 {
         return 0.0;
     }
-    
+
     let weighted_x_sum: f64 = (0..n).map(|i| i as f64 * weights[i]).sum();
     let weighted_y_sum: f64 = data.iter().enumerate().map(|(i, &y)| y * weights[i]).sum();
-    let weighted_xy_sum: f64 = data.iter().enumerate().map(|(i, &y)| i as f64 * y * weights[i]).sum();
+    let weighted_xy_sum: f64 = data
+        .iter()
+        .enumerate()
+        .map(|(i, &y)| i as f64 * y * weights[i])
+        .sum();
     let weighted_x2_sum: f64 = (0..n).map(|i| (i as f64).powi(2) * weights[i]).sum();
-    
+
     let denominator = weight_sum * weighted_x2_sum - weighted_x_sum * weighted_x_sum;
     if denominator.abs() > 1e-10 {
         (weight_sum * weighted_xy_sum - weighted_x_sum * weighted_y_sum) / denominator
     } else {
         // Fallback to simple difference for degenerate cases
-        (data[n-1] - data[0]) / (n - 1) as f64
+        (data[n - 1] - data[0]) / (n - 1) as f64
     }
 }
 
@@ -2687,7 +2713,7 @@ fn validate_dwt2d_result_enhanced(
         (&result.detail_v, "vertical detail"),
         (&result.detail_d, "diagonal detail"),
     ];
-    
+
     for (subband, name) in subbands {
         for (idx, &val) in subband.iter().enumerate() {
             if !val.is_finite() {
@@ -2704,17 +2730,16 @@ fn validate_dwt2d_result_enhanced(
     if config.tolerance > 0.0 {
         // Comprehensive coefficient magnitude analysis
         let mut stats = WaveletCoefficientStats::new();
-        
+
         for (subband, name) in subbands {
             let max_val = subband.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
             let min_val = subband.iter().cloned().fold(f64::INFINITY, f64::min);
             let mean_val = subband.iter().sum::<f64>() / subband.len() as f64;
-            let variance = subband.iter()
-                .map(|&x| (x - mean_val).powi(2))
-                .sum::<f64>() / subband.len() as f64;
-            
+            let variance =
+                subband.iter().map(|&x| (x - mean_val).powi(2)).sum::<f64>() / subband.len() as f64;
+
             stats.update(name, max_val, min_val, mean_val, variance);
-            
+
             // Check for extremely large coefficients
             if max_val > 1e12 {
                 eprintln!(
@@ -2722,7 +2747,7 @@ fn validate_dwt2d_result_enhanced(
                     name, max_val
                 );
             }
-            
+
             // Check for suspicious coefficient distributions
             if variance < 1e-15 && subband.len() > 1 {
                 eprintln!(
@@ -2731,11 +2756,11 @@ fn validate_dwt2d_result_enhanced(
                 );
             }
         }
-        
+
         // Cross-subband validation
         validate_cross_subband_properties(&stats, config)?;
     }
-    
+
     // Energy conservation check
     if config.compute_metrics {
         validate_energy_conservation(result, original_shape)?;
@@ -2764,10 +2789,17 @@ impl WaveletCoefficientStats {
             detail_energy: 0.0,
         }
     }
-    
-    fn update(&mut self, subband_name: &str, max_val: f64, _min_val: f64, _mean: f64, variance: f64) {
+
+    fn update(
+        &mut self,
+        subband_name: &str,
+        max_val: f64,
+        _min_val: f64,
+        _mean: f64,
+        variance: f64,
+    ) {
         let energy = variance;
-        
+
         match subband_name {
             "approximation" => {
                 self.approx_max = max_val;
@@ -2778,7 +2810,7 @@ impl WaveletCoefficientStats {
                 self.detail_energy += energy;
             }
         }
-        
+
         self.total_energy += energy;
     }
 }
@@ -2792,14 +2824,14 @@ fn validate_cross_subband_properties(
     if stats.total_energy > 0.0 {
         let approx_ratio = stats.approx_energy / stats.total_energy;
         let detail_ratio = stats.detail_energy / stats.total_energy;
-        
+
         if approx_ratio > 0.999 {
             eprintln!(
                 "Warning: {:.1}% of energy in approximation subband. Signal may be over-smoothed.",
                 approx_ratio * 100.0
             );
         }
-        
+
         if detail_ratio > 0.999 {
             eprintln!(
                 "Warning: {:.1}% of energy in detail subbands. Signal may be very noisy.",
@@ -2807,11 +2839,11 @@ fn validate_cross_subband_properties(
             );
         }
     }
-    
+
     // Check coefficient magnitude ratios
     if stats.detail_max > 0.0 && stats.approx_max > 0.0 {
         let magnitude_ratio = stats.detail_max / stats.approx_max;
-        
+
         if magnitude_ratio > 100.0 {
             eprintln!(
                 "Warning: Detail coefficients are {:.1}x larger than approximation. This may indicate numerical instability.",
@@ -2819,7 +2851,7 @@ fn validate_cross_subband_properties(
             );
         }
     }
-    
+
     Ok(())
 }
 
@@ -2832,9 +2864,9 @@ fn validate_energy_conservation(
     let detail_h_energy: f64 = result.detail_h.iter().map(|&x| x * x).sum();
     let detail_v_energy: f64 = result.detail_v.iter().map(|&x| x * x).sum();
     let detail_d_energy: f64 = result.detail_d.iter().map(|&x| x * x).sum();
-    
+
     let total_wavelet_energy = approx_energy + detail_h_energy + detail_v_energy + detail_d_energy;
-    
+
     // We can't directly compare with original energy without the original data,
     // but we can check for reasonable energy distribution
     if total_wavelet_energy == 0.0 {
@@ -2842,7 +2874,7 @@ fn validate_energy_conservation(
             "All wavelet coefficients are zero".to_string(),
         ));
     }
-    
+
     // Check for reasonable energy distribution (this is a heuristic)
     let approx_ratio = approx_energy / total_wavelet_energy;
     if approx_ratio < 0.001 {
@@ -2851,7 +2883,7 @@ fn validate_energy_conservation(
             approx_ratio * 100.0
         );
     }
-    
+
     Ok(())
 }
 
@@ -2859,16 +2891,14 @@ fn validate_energy_conservation(
 mod tests {
     use super::*;
     use ndarray::Array2;
-    
+
     #[test]
     fn test_enhanced_dwt2d_basic() {
         let data = Array2::from_shape_vec(
             (4, 4),
             vec![
-                1.0, 2.0, 3.0, 4.0, 
-                5.0, 6.0, 7.0, 8.0, 
-                9.0, 10.0, 11.0, 12.0, 
-                13.0, 14.0, 15.0, 16.0,
+                1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0,
+                16.0,
             ],
         )
         .unwrap();
@@ -2880,7 +2910,7 @@ mod tests {
         assert_eq!(result.detail_h.dim(), (2, 2));
         assert_eq!(result.detail_v.dim(), (2, 2));
         assert_eq!(result.detail_d.dim(), (2, 2));
-        
+
         // Verify all coefficients are finite
         assert!(result.approx.iter().all(|&x| x.is_finite()));
         assert!(result.detail_h.iter().all(|&x| x.is_finite()));
@@ -2912,49 +2942,52 @@ mod tests {
             assert!(result.detail_d.iter().all(|&x| x.is_finite()));
         }
     }
-    
+
     #[test]
     fn test_perfect_reconstruction() {
         let data = Array2::from_shape_fn((8, 8), |(i, j)| (i * j) as f64);
         let config = Dwt2dConfig::default();
-        
+
         // Test with different wavelets
         for wavelet in [Wavelet::Haar, Wavelet::DB(2), Wavelet::DB(4)] {
             let decomp = enhanced_dwt2d_decompose(&data, wavelet, &config).unwrap();
             let reconstructed = enhanced_dwt2d_reconstruct(&decomp, wavelet, &config).unwrap();
-            
+
             // Check dimensions match
             assert_eq!(reconstructed.dim(), data.dim());
-            
+
             // Check reconstruction error is small
-            let error: f64 = data.iter()
+            let error: f64 = data
+                .iter()
                 .zip(reconstructed.iter())
                 .map(|(a, b)| (a - b).powi(2))
-                .sum::<f64>().sqrt();
-            
+                .sum::<f64>()
+                .sqrt();
+
             assert!(error < 1e-10, "Reconstruction error too large: {}", error);
         }
     }
-    
+
     #[test]
     fn test_adaptive_decomposition() {
         let data = Array2::from_shape_fn((16, 16), |(i, j)| {
-            (2.0 * std::f64::consts::PI * i as f64 / 8.0).sin() + 
-            (2.0 * std::f64::consts::PI * j as f64 / 8.0).cos()
+            (2.0 * std::f64::consts::PI * i as f64 / 8.0).sin()
+                + (2.0 * std::f64::consts::PI * j as f64 / 8.0).cos()
         });
-        
+
         let config = Dwt2dConfig::default();
-        let adaptive_decomp = enhanced_dwt2d_adaptive(&data, Wavelet::DB(4), &config, 0.01).unwrap();
-        
+        let adaptive_decomp =
+            enhanced_dwt2d_adaptive(&data, Wavelet::DB(4), &config, 0.01).unwrap();
+
         // Should have created multiple levels
         assert!(!adaptive_decomp.details.is_empty());
         assert!(adaptive_decomp.details.len() <= 4); // Reasonable number of levels
-        
+
         // Test reconstruction
         let reconstructed = waverec2_enhanced(&adaptive_decomp).unwrap();
         assert_eq!(reconstructed.dim(), data.dim());
     }
-    
+
     #[test]
     fn test_memory_optimized_processing() {
         let data = Array2::from_shape_fn((64, 64), |(i, j)| (i + j) as f64);
@@ -2963,13 +2996,13 @@ mod tests {
             block_size: 16,
             ..Default::default()
         };
-        
+
         let result = enhanced_dwt2d_decompose(&data, Wavelet::DB(2), &config).unwrap();
-        
+
         assert_eq!(result.approx.dim(), (32, 32));
         assert!(result.approx.iter().all(|&x| x.is_finite()));
     }
-    
+
     #[test]
     fn test_quality_metrics() {
         let data = Array2::from_shape_fn((16, 16), |(i, j)| (i * j) as f64);
@@ -2977,59 +3010,64 @@ mod tests {
             compute_metrics: true,
             ..Default::default()
         };
-        
+
         let result = enhanced_dwt2d_decompose(&data, Wavelet::DB(4), &config).unwrap();
-        
+
         assert!(result.metrics.is_some());
         let metrics = result.metrics.unwrap();
-        
+
         // Energy preservation should be close to 1.0
         assert!((metrics.energy_preservation - 1.0).abs() < 0.1);
-        
+
         // All metrics should be finite and reasonable
         assert!(metrics.approx_energy.is_finite());
         assert!(metrics.detail_energy.is_finite());
         assert!(metrics.sparsity >= 0.0 && metrics.sparsity <= 1.0);
         assert!(metrics.compression_ratio >= 1.0);
     }
-    
+
     #[test]
     fn test_denoising() {
         // Create noisy image
         let mut rng = rand::rng();
         let clean_data = Array2::from_shape_fn((32, 32), |(i, j)| {
-            (2.0 * std::f64::consts::PI * i as f64 / 16.0).sin() * 
-            (2.0 * std::f64::consts::PI * j as f64 / 16.0).cos()
+            (2.0 * std::f64::consts::PI * i as f64 / 16.0).sin()
+                * (2.0 * std::f64::consts::PI * j as f64 / 16.0).cos()
         });
-        
+
         let mut noisy_data = clean_data.clone();
         for val in noisy_data.iter_mut() {
             *val += 0.1 * rng.random_range(-1.0..1.0);
         }
-        
+
         // Test different denoising methods
-        for method in [DenoisingMethod::Soft, DenoisingMethod::Hard, DenoisingMethod::BayesShrink] {
-            let denoised = adaptive_wavelet_denoising(
-                &noisy_data, 
-                Wavelet::DB(4), 
-                Some(0.01), 
-                method
-            ).unwrap();
-            
+        for method in [
+            DenoisingMethod::Soft,
+            DenoisingMethod::Hard,
+            DenoisingMethod::BayesShrink,
+        ] {
+            let denoised =
+                adaptive_wavelet_denoising(&noisy_data, Wavelet::DB(4), Some(0.01), method)
+                    .unwrap();
+
             assert_eq!(denoised.dim(), noisy_data.dim());
             assert!(denoised.iter().all(|&x| x.is_finite()));
-            
+
             // Denoised signal should be closer to clean signal
-            let noise_error: f64 = clean_data.iter()
+            let noise_error: f64 = clean_data
+                .iter()
                 .zip(noisy_data.iter())
                 .map(|(c, n)| (c - n).powi(2))
-                .sum::<f64>().sqrt();
-                
-            let denoised_error: f64 = clean_data.iter()
+                .sum::<f64>()
+                .sqrt();
+
+            let denoised_error: f64 = clean_data
+                .iter()
                 .zip(denoised.iter())
                 .map(|(c, d)| (c - d).powi(2))
-                .sum::<f64>().sqrt();
-                
+                .sum::<f64>()
+                .sqrt();
+
             // Denoising should reduce error (though this is a simple test)
             assert!(denoised_error <= noise_error * 1.1); // Allow some tolerance
         }

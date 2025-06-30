@@ -343,7 +343,11 @@ impl std::ops::Add for ReverseVariable {
             let result_value = self.value + other.value;
             let max_index = self.index.max(other.index);
             ReverseVariable {
-                index: if max_index == usize::MAX { usize::MAX } else { max_index + 1 },
+                index: if max_index == usize::MAX {
+                    usize::MAX
+                } else {
+                    max_index + 1
+                },
                 value: result_value,
                 grad: 0.0,
             }
@@ -361,7 +365,11 @@ impl std::ops::Sub for ReverseVariable {
             let result_value = self.value - other.value;
             let max_index = self.index.max(other.index);
             ReverseVariable {
-                index: if max_index == usize::MAX { usize::MAX } else { max_index + 1 },
+                index: if max_index == usize::MAX {
+                    usize::MAX
+                } else {
+                    max_index + 1
+                },
                 value: result_value,
                 grad: 0.0,
             }
@@ -379,7 +387,11 @@ impl std::ops::Mul for ReverseVariable {
             let result_value = self.value * other.value;
             let max_index = self.index.max(other.index);
             ReverseVariable {
-                index: if max_index == usize::MAX { usize::MAX } else { max_index + 1 },
+                index: if max_index == usize::MAX {
+                    usize::MAX
+                } else {
+                    max_index + 1
+                },
                 value: result_value,
                 grad: 0.0,
             }
@@ -397,7 +409,11 @@ impl std::ops::Div for ReverseVariable {
             let result_value = self.value / other.value;
             let max_index = self.index.max(other.index);
             ReverseVariable {
-                index: if max_index == usize::MAX { usize::MAX } else { max_index + 1 },
+                index: if max_index == usize::MAX {
+                    usize::MAX
+                } else {
+                    max_index + 1
+                },
                 value: result_value,
                 grad: 0.0,
             }
@@ -706,13 +722,25 @@ pub fn relu(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVar
 }
 
 /// Leaky ReLU operation on computation graph
-pub fn leaky_relu(graph: &mut ComputationGraph, input: &ReverseVariable, alpha: f64) -> ReverseVariable {
+pub fn leaky_relu(
+    graph: &mut ComputationGraph,
+    input: &ReverseVariable,
+    alpha: f64,
+) -> ReverseVariable {
     if input.is_constant() {
-        let result = if input.value > 0.0 { input.value } else { alpha * input.value };
+        let result = if input.value > 0.0 {
+            input.value
+        } else {
+            alpha * input.value
+        };
         return ReverseVariable::constant(result);
     }
 
-    let result_value = if input.value > 0.0 { input.value } else { alpha * input.value };
+    let result_value = if input.value > 0.0 {
+        input.value
+    } else {
+        alpha * input.value
+    };
     let input_grad = if input.value > 0.0 { 1.0 } else { alpha };
 
     graph.add_unary_op(input, result_value, input_grad)
@@ -1362,7 +1390,7 @@ mod tests {
     #[test]
     fn test_leaky_relu() {
         let mut graph = ComputationGraph::new();
-        
+
         // Test Leaky ReLU with positive input
         let x_pos = graph.variable(2.0);
         let leaky_pos = leaky_relu(&mut graph, &x_pos, 0.01);
@@ -1408,7 +1436,7 @@ mod tests {
         // Gradients should be finite and non-zero
         let grad_x = graph.get_gradient(&x);
         let grad_y = graph.get_gradient(&y);
-        
+
         assert!(grad_x.is_finite());
         assert!(grad_y.is_finite());
         assert!(grad_x != 0.0);

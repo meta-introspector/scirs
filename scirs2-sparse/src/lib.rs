@@ -258,17 +258,17 @@ pub use sym_ops::{
 };
 
 // GPU-accelerated operations
-pub mod gpu_ops;
 pub mod gpu_kernel_execution;
+pub mod gpu_ops;
 //pub mod gpu_spmv_implementation; // Temporarily disabled for build fixes
+pub use gpu_kernel_execution::{
+    calculate_adaptive_workgroup_size, execute_spmv_kernel, execute_symmetric_spmv_kernel,
+    execute_triangular_solve_kernel, GpuKernelConfig, GpuMemoryManager as GpuKernelMemoryManager,
+    GpuPerformanceProfiler, MemoryStrategy,
+};
 pub use gpu_ops::{
     gpu_sparse_matvec, gpu_sym_sparse_matvec, AdvancedGpuOps, GpuKernelScheduler, GpuMemoryManager,
     GpuOptions, GpuProfiler, OptimizedGpuOps,
-};
-pub use gpu_kernel_execution::{
-    execute_spmv_kernel, execute_symmetric_spmv_kernel, execute_triangular_solve_kernel,
-    GpuKernelConfig, GpuMemoryManager as GpuKernelMemoryManager, GpuPerformanceProfiler,
-    MemoryStrategy, calculate_adaptive_workgroup_size,
 };
 //pub use gpu_spmv_implementation::GpuSpMV; // Temporarily disabled for build fixes
 

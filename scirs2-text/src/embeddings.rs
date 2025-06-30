@@ -5,7 +5,7 @@
 //!
 //! ## Overview
 //!
-//! Word embeddings are dense vector representations of words that capture semantic 
+//! Word embeddings are dense vector representations of words that capture semantic
 //! relationships. This module implements:
 //!
 //! - **Word2Vec Skip-gram**: Predicts context words from a target word
@@ -109,9 +109,9 @@
 //! ## Mathematical Background
 //!
 //! ### Skip-gram Model
-//! 
+//!
 //! The Skip-gram model maximizes the probability of context words given a target word:
-//! 
+//!
 //! P(context|target) = ∏ P(w_context|w_target)
 //!
 //! ### CBOW Model
@@ -988,7 +988,7 @@ impl Word2Vec {
     }
 
     // Getter methods for model registry serialization
-    
+
     /// Get the vocabulary as a vector of strings
     pub fn get_vocabulary(&self) -> Vec<String> {
         let mut vocab = Vec::new();

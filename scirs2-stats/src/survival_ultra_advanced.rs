@@ -12,11 +12,7 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, NumCast, One, Zero};
-use scirs2_core::{
-    parallel_ops::*,
-    simd_ops::SimdUnifiedOps,
-    validation::*,
-};
+use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
@@ -141,11 +137,26 @@ pub enum KernelType<F> {
 /// Prior types for Bayesian survival models
 #[derive(Debug, Clone)]
 pub enum PriorType<F> {
-    Normal { mean: F, variance: F },
-    Gamma { shape: F, rate: F },
-    Beta { alpha: F, beta: F },
-    Horseshoe { tau: F },
-    SpikeAndSlab { spike_variance: F, slab_variance: F, mixture_weight: F },
+    Normal {
+        mean: F,
+        variance: F,
+    },
+    Gamma {
+        shape: F,
+        rate: F,
+    },
+    Beta {
+        alpha: F,
+        beta: F,
+    },
+    Horseshoe {
+        tau: F,
+    },
+    SpikeAndSlab {
+        spike_variance: F,
+        slab_variance: F,
+        mixture_weight: F,
+    },
 }
 
 /// MCMC configuration for Bayesian models
@@ -247,7 +258,9 @@ pub enum BayesianModelType {
 /// Prior elicitation methods
 #[derive(Debug, Clone)]
 pub enum PriorElicitation<F> {
-    Informative { expert_knowledge: HashMap<String, F> },
+    Informative {
+        expert_knowledge: HashMap<String, F>,
+    },
     Weakly_Informative,
     Reference,
     Adaptive,
@@ -666,7 +679,9 @@ where
         };
 
         // Determine best model
-        let best_model = model_comparison.ranking.first()
+        let best_model = model_comparison
+            .ranking
+            .first()
             .unwrap_or(&"model_0".to_string())
             .clone();
 
@@ -721,23 +736,27 @@ where
         covariates: &ArrayView2<F>,
     ) -> StatsResult<SurvivalModel<F>> {
         let n_features = covariates.ncols();
-        
+
         // Simplified Cox model fitting (would use proper partial likelihood)
         let coefficients = Array1::zeros(n_features);
         let hazard_ratios = coefficients.mapv(|x| x.exp());
         let standard_errors = Array1::ones(n_features) * F::from(0.1).unwrap();
         let p_values = Array1::from_elem(n_features, F::from(0.05).unwrap());
         let confidence_intervals = Array2::zeros((n_features, 2));
-        
+
         // Baseline hazard estimation
         let unique_times = self.get_unique_event_times(durations, events)?;
         let baseline_hazard = BaselineHazardEstimate {
             times: unique_times.clone(),
             hazard: Array1::from_elem(unique_times.len(), F::from(0.1).unwrap()),
-            cumulative_hazard: Array1::from_shape_fn(unique_times.len(), |i| F::from(i).unwrap() * F::from(0.1).unwrap()),
-            survival_function: Array1::from_shape_fn(unique_times.len(), |i| (-F::from(i).unwrap() * F::from(0.1).unwrap()).exp()),
+            cumulative_hazard: Array1::from_shape_fn(unique_times.len(), |i| {
+                F::from(i).unwrap() * F::from(0.1).unwrap()
+            }),
+            survival_function: Array1::from_shape_fn(unique_times.len(), |i| {
+                (-F::from(i).unwrap() * F::from(0.1).unwrap()).exp()
+            }),
         };
-        
+
         let concordance_index = F::from(0.75).unwrap();
         let log_likelihood = F::from(-100.0).unwrap();
 
@@ -767,10 +786,10 @@ where
             .zip(events.iter())
             .filter_map(|(duration, &observed)| if observed { Some(*duration) } else { None })
             .collect();
-        
+
         event_times.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
         event_times.dedup_by(|a, b| (*a - *b).abs() < F::from(1e-10).unwrap());
-        
+
         Ok(Array1::from_vec(event_times))
     }
 
@@ -783,14 +802,16 @@ where
         distribution: AFTDistribution,
     ) -> StatsResult<SurvivalModel<F>> {
         let n_features = covariates.ncols();
-        
+
         // Simplified AFT model (would use proper maximum likelihood)
         let coefficients = Array1::zeros(n_features);
         let scale_parameter = F::one();
         let shape_parameter = Some(F::from(2.0).unwrap());
         let log_likelihood = F::from(-200.0).unwrap();
-        let aic = -F::from(2.0).unwrap() * log_likelihood + F::from(2.0 * (n_features + 1)).unwrap();
-        let bic = -F::from(2.0).unwrap() * log_likelihood + F::from((n_features + 1) as f64).unwrap() * durations.len().ln();
+        let aic =
+            -F::from(2.0).unwrap() * log_likelihood + F::from(2.0 * (n_features + 1)).unwrap();
+        let bic = -F::from(2.0).unwrap() * log_likelihood
+            + F::from((n_features + 1) as f64).unwrap() * durations.len().ln();
         let residuals = Array1::zeros(durations.len());
 
         let aft_model = AFTModel {
@@ -814,12 +835,14 @@ where
         covariates: &ArrayView2<F>,
     ) -> StatsResult<SurvivalModel<F>> {
         let n_features = covariates.ncols();
-        
+
         // Simplified Random Forest (would implement proper tree growing)
-        let variable_importance = Array1::from_shape_fn(n_features, |i| F::from(1.0 / (i + 1) as f64).unwrap());
+        let variable_importance =
+            Array1::from_shape_fn(n_features, |i| F::from(1.0 / (i + 1) as f64).unwrap());
         let oob_error = F::from(0.15).unwrap();
         let concordance_index = F::from(0.80).unwrap();
-        let feature_names: Vec<String> = (0..n_features).map(|i| format!("feature_{}", i)).collect();
+        let feature_names: Vec<String> =
+            (0..n_features).map(|i| format!("feature_{}", i)).collect();
         let tree_count = 100;
 
         let rf_model = RandomForestModel {
@@ -843,14 +866,16 @@ where
         // Simplified Deep Learning model
         let architecture = vec![covariates.ncols(), 64, 32, 1];
         let n_epochs = 100;
-        
+
         let training_history = TrainingHistory {
             loss: Array1::from_shape_fn(n_epochs, |i| F::from(1.0 / (i + 1) as f64).unwrap()),
-            concordance: Array1::from_shape_fn(n_epochs, |i| F::from(0.5 + 0.3 * i as f64 / n_epochs as f64).unwrap()),
+            concordance: Array1::from_shape_fn(n_epochs, |i| {
+                F::from(0.5 + 0.3 * i as f64 / n_epochs as f64).unwrap()
+            }),
             learning_rate: Array1::from_elem(n_epochs, F::from(0.001).unwrap()),
             epochs: n_epochs,
         };
-        
+
         let concordance_index = F::from(0.85).unwrap();
         let calibration_slope = F::from(0.95).unwrap();
         let feature_attributions = Some(Array2::ones((durations.len(), covariates.ncols())));
@@ -867,9 +892,12 @@ where
     }
 
     /// Compare fitted models
-    fn compare_models(&self, models: &HashMap<String, SurvivalModel<F>>) -> StatsResult<ModelComparison<F>> {
+    fn compare_models(
+        &self,
+        models: &HashMap<String, SurvivalModel<F>>,
+    ) -> StatsResult<ModelComparison<F>> {
         let mut performance_scores = HashMap::new();
-        
+
         for (model_name, model) in models {
             let score = match model {
                 SurvivalModel::Cox(cox) => cox.concordance_index,
@@ -879,10 +907,14 @@ where
             };
             performance_scores.insert(model_name.clone(), score);
         }
-        
+
         let mut ranking: Vec<String> = performance_scores.keys().cloned().collect();
-        ranking.sort_by(|a, b| performance_scores[b].partial_cmp(&performance_scores[a]).unwrap_or(std::cmp::Ordering::Equal));
-        
+        ranking.sort_by(|a, b| {
+            performance_scores[b]
+                .partial_cmp(&performance_scores[a])
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+
         let n_models = models.len();
         let performance_matrix = Array2::zeros((n_models, 3)); // 3 metrics
         let statistical_tests = HashMap::new();
@@ -903,10 +935,10 @@ where
         config: &EnsembleConfig<F>,
     ) -> StatsResult<EnsembleResults<F>> {
         let n_models = models.len();
-        
+
         // Simplified ensemble analysis
         let ensemble_performance = F::from(0.85).unwrap();
-        
+
         let diversity_analysis = DiversityAnalysis {
             pairwise_correlations: Array2::eye(n_models),
             kappa_statistics: Array1::from_elem(n_models, F::from(0.7).unwrap()),
@@ -919,7 +951,7 @@ where
                 ensemble_variance: F::from(0.1).unwrap(),
             },
         };
-        
+
         let weight_optimization = WeightOptimization {
             optimal_weights: Array1::ones(n_models) / F::from(n_models).unwrap(),
             optimization_history: Array2::zeros((100, n_models)),
@@ -930,7 +962,7 @@ where
                 gradient_norm: F::from(1e-6).unwrap(),
             },
         };
-        
+
         let uncertainty_quantification = UncertaintyQuantification {
             prediction_intervals: Array2::zeros((10, 2)),
             model_uncertainty: Array1::from_elem(10, F::from(0.1).unwrap()),
@@ -957,15 +989,16 @@ where
         // Simplified causal analysis
         let average_treatment_effect = F::from(0.15).unwrap();
         let treatment_effect_ci = (F::from(0.05).unwrap(), F::from(0.25).unwrap());
-        let conditional_effects = Some(Array1::from_elem(durations.len(), average_treatment_effect));
-        
+        let conditional_effects =
+            Some(Array1::from_elem(durations.len(), average_treatment_effect));
+
         let sensitivity_analysis = SensitivityAnalysis {
             robustness_values: Array1::from_elem(5, F::from(0.8).unwrap()),
             confounding_strength: Array1::from_elem(5, F::from(0.1).unwrap()),
             e_values: Array1::from_elem(5, F::from(2.0).unwrap()),
             bounds: Array2::zeros((5, 2)),
         };
-        
+
         let instrumental_variable_estimates = None;
 
         Ok(CausalEffects {
@@ -987,12 +1020,18 @@ where
     ) -> StatsResult<CompetingRisksResults<F>> {
         let n_events = config.event_types.len();
         let n_times = 100;
-        
+
         // Simplified competing risks analysis
         let cause_specific_hazards = Array2::from_elem((n_times, n_events), F::from(0.1).unwrap());
-        let cumulative_incidence_functions = Array2::from_elem((n_times, n_events), F::from(0.2).unwrap());
-        let subdistribution_hazards = Some(Array2::from_elem((n_times, n_events), F::from(0.08).unwrap()));
-        let net_survival = Array1::from_shape_fn(n_times, |i| (-F::from(i).unwrap() * F::from(0.01).unwrap()).exp());
+        let cumulative_incidence_functions =
+            Array2::from_elem((n_times, n_events), F::from(0.2).unwrap());
+        let subdistribution_hazards = Some(Array2::from_elem(
+            (n_times, n_events),
+            F::from(0.08).unwrap(),
+        ));
+        let net_survival = Array1::from_shape_fn(n_times, |i| {
+            (-F::from(i).unwrap() * F::from(0.01).unwrap()).exp()
+        });
         let years_of_life_lost = Array1::from_elem(durations.len(), F::from(2.5).unwrap());
 
         Ok(CompetingRisksResults {
@@ -1011,18 +1050,18 @@ where
         ensemble: &Option<EnsembleResults<F>>,
     ) -> Vec<String> {
         let mut recommendations = Vec::new();
-        
+
         if let Some(best_model) = comparison.ranking.first() {
             recommendations.push(format!("Best performing model: {}", best_model));
         }
-        
+
         if ensemble.is_some() {
             recommendations.push("Consider ensemble approach for improved robustness".to_string());
         }
-        
+
         recommendations.push("Validate results using external datasets".to_string());
         recommendations.push("Assess proportional hazards assumption for Cox models".to_string());
-        
+
         recommendations
     }
 
@@ -1035,7 +1074,7 @@ where
     ) -> StatsResult<SurvivalPrediction<F>> {
         let n_samples = covariates.nrows();
         let n_times = time_points.len();
-        
+
         // Simplified prediction (would use actual fitted model)
         let risk_scores = Array1::from_elem(n_samples, F::from(0.5).unwrap());
         let survival_functions = Array2::from_elem((n_samples, n_times), F::from(0.8).unwrap());
@@ -1063,14 +1102,12 @@ where
 {
     fn default() -> Self {
         Self {
-            models: vec![
-                SurvivalModelType::EnhancedCox {
-                    penalty: None,
-                    stratification_vars: None,
-                    time_varying_effects: false,
-                    robust_variance: true,
-                },
-            ],
+            models: vec![SurvivalModelType::EnhancedCox {
+                penalty: None,
+                stratification_vars: None,
+                time_varying_effects: false,
+                robust_variance: true,
+            }],
             metrics: vec![
                 SurvivalMetric::ConcordanceIndex,
                 SurvivalMetric::LogLikelihood,
@@ -1100,20 +1137,14 @@ mod tests {
     fn test_ultra_survival_analysis() {
         let config = UltraSurvivalConfig::default();
         let mut analyzer = UltraSurvivalAnalysis::new(config);
-        
+
         let durations = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let events = array![true, false, true, true, false];
-        let covariates = array![
-            [1.0, 2.0],
-            [2.0, 3.0],
-            [3.0, 4.0],
-            [4.0, 5.0],
-            [5.0, 6.0]
-        ];
-        
+        let covariates = array![[1.0, 2.0], [2.0, 3.0], [3.0, 4.0], [4.0, 5.0], [5.0, 6.0]];
+
         let result = analyzer.fit(&durations.view(), &events.view(), &covariates.view());
         assert!(result.is_ok());
-        
+
         let results = result.unwrap();
         assert!(!results.fitted_models.is_empty());
         assert!(!results.recommendations.is_empty());
@@ -1123,13 +1154,13 @@ mod tests {
     fn test_survival_prediction() {
         let config = UltraSurvivalConfig::default();
         let analyzer = UltraSurvivalAnalysis::new(config);
-        
+
         let covariates = array![[1.0, 2.0], [3.0, 4.0]];
         let time_points = array![1.0, 2.0, 3.0];
-        
+
         let prediction = analyzer.predict("model_0", &covariates.view(), &time_points.view());
         assert!(prediction.is_ok());
-        
+
         let pred = prediction.unwrap();
         assert_eq!(pred.risk_scores.len(), 2);
         assert_eq!(pred.survival_functions.nrows(), 2);

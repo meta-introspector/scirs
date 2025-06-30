@@ -8,7 +8,7 @@
 use crate::error::StatsResult;
 use ndarray::{ArrayView1, ArrayView2};
 use num_traits::{Float, NumCast};
-use scirs2_core::{simd_ops::SimdUnifiedOps, parallel_ops::*};
+use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -332,7 +332,7 @@ impl AdaptiveSimdOptimizer {
     /// Create new adaptive SIMD optimizer
     pub fn new(config: AdaptiveSimdConfig) -> StatsResult<Self> {
         let hardware_capabilities = Self::detect_hardware_capabilities()?;
-        
+
         Ok(Self {
             config,
             hardware_capabilities,
@@ -341,12 +341,12 @@ impl AdaptiveSimdOptimizer {
             benchmark_results: Arc::new(Mutex::new(HashMap::new())),
         })
     }
-    
+
     /// Create with default configuration
     pub fn default() -> StatsResult<Self> {
         Self::new(AdaptiveSimdConfig::default())
     }
-    
+
     /// Optimize vector operation using adaptive SIMD
     pub fn optimize_vector_operation<F, T>(
         &self,
@@ -359,15 +359,15 @@ impl AdaptiveSimdOptimizer {
         T: Send + Sync,
     {
         let data_characteristics = self.analyze_data_characteristics(&data)?;
-        
+
         // Get or select optimal strategy
         let strategy = self.select_optimal_strategy(operation_name, &data_characteristics)?;
-        
+
         // Execute operation with performance monitoring
         let start_time = Instant::now();
         let result = operation(&data, &strategy);
         let execution_time = start_time.elapsed();
-        
+
         match result {
             Ok(value) => {
                 let metrics = self.calculate_performance_metrics(
@@ -375,10 +375,10 @@ impl AdaptiveSimdOptimizer {
                     &strategy,
                     execution_time,
                 )?;
-                
+
                 // Update performance cache
                 self.update_performance_cache(operation_name, &strategy, &metrics);
-                
+
                 Ok(SimdOptimizationResult {
                     result: value,
                     strategy_used: strategy,
@@ -393,7 +393,7 @@ impl AdaptiveSimdOptimizer {
             }
         }
     }
-    
+
     /// Optimize matrix operation using adaptive SIMD
     pub fn optimize_matrix_operation<F, T>(
         &self,
@@ -406,12 +406,13 @@ impl AdaptiveSimdOptimizer {
         T: Send + Sync,
     {
         let data_characteristics = self.analyze_matrix_characteristics(&data)?;
-        let strategy = self.select_optimal_matrix_strategy(operation_name, &data_characteristics)?;
-        
+        let strategy =
+            self.select_optimal_matrix_strategy(operation_name, &data_characteristics)?;
+
         let start_time = Instant::now();
         let result = operation(&data, &strategy);
         let execution_time = start_time.elapsed();
-        
+
         match result {
             Ok(value) => {
                 let metrics = self.calculate_matrix_performance_metrics(
@@ -419,9 +420,9 @@ impl AdaptiveSimdOptimizer {
                     &strategy,
                     execution_time,
                 )?;
-                
+
                 self.update_performance_cache(operation_name, &strategy, &metrics);
-                
+
                 Ok(SimdOptimizationResult {
                     result: value,
                     strategy_used: strategy,
@@ -436,7 +437,7 @@ impl AdaptiveSimdOptimizer {
             }
         }
     }
-    
+
     /// Detect hardware capabilities
     fn detect_hardware_capabilities() -> StatsResult<HardwareCapabilities> {
         // Simplified hardware detection - would use proper CPU feature detection
@@ -449,8 +450,8 @@ impl AdaptiveSimdOptimizer {
             vector_width: 256, // AVX2
             simd_units: 2,
             cache_info: CacheHierarchy {
-                l1_size: 32 * 1024,    // 32KB
-                l2_size: 256 * 1024,   // 256KB
+                l1_size: 32 * 1024,       // 32KB
+                l2_size: 256 * 1024,      // 256KB
                 l3_size: 8 * 1024 * 1024, // 8MB
                 cache_line_size: 64,
                 associativity: vec![8, 8, 16],
@@ -460,35 +461,42 @@ impl AdaptiveSimdOptimizer {
             gpu_available: false,
             gpu_capabilities: None,
         };
-        
+
         Ok(capabilities)
     }
-    
+
     /// Analyze data characteristics
-    fn analyze_data_characteristics<F>(&self, data: &ArrayView1<F>) -> StatsResult<DataCharacteristics>
+    fn analyze_data_characteristics<F>(
+        &self,
+        data: &ArrayView1<F>,
+    ) -> StatsResult<DataCharacteristics>
     where
         F: Float + NumCast,
     {
         let size = data.len();
         let element_size = std::mem::size_of::<F>();
-        
+
         // Check alignment
         let alignment = (data.as_ptr() as usize) % 32; // Check 32-byte alignment
-        
+
         // Analyze value distribution
         let mut min_val = F::infinity();
         let mut max_val = F::neg_infinity();
         let mut has_special = false;
-        
+
         for &value in data.iter() {
             if value.is_nan() || value.is_infinite() {
                 has_special = true;
             } else {
-                if value < min_val { min_val = value; }
-                if value > max_val { max_val = value; }
+                if value < min_val {
+                    min_val = value;
+                }
+                if value > max_val {
+                    max_val = value;
+                }
             }
         }
-        
+
         let value_distribution = ValueDistribution {
             value_range: (
                 min_val.to_f64().unwrap_or(0.0),
@@ -501,7 +509,7 @@ impl AdaptiveSimdOptimizer {
                 separation: 0.0,
             },
         };
-        
+
         Ok(DataCharacteristics {
             size,
             element_size,
@@ -512,26 +520,35 @@ impl AdaptiveSimdOptimizer {
             value_distribution,
         })
     }
-    
+
     /// Analyze matrix characteristics
-    fn analyze_matrix_characteristics<F>(&self, data: &ArrayView2<F>) -> StatsResult<DataCharacteristics>
+    fn analyze_matrix_characteristics<F>(
+        &self,
+        data: &ArrayView2<F>,
+    ) -> StatsResult<DataCharacteristics>
     where
         F: Float + NumCast,
     {
         let size = data.len();
         let element_size = std::mem::size_of::<F>();
-        
+
         // Check if matrix is C-contiguous or Fortran-contiguous
         let access_pattern = if data.is_standard_layout() {
             MemoryAccessPattern::Sequential
         } else {
-            MemoryAccessPattern::Strided { stride: data.strides()[0] as usize }
+            MemoryAccessPattern::Strided {
+                stride: data.strides()[0] as usize,
+            }
         };
-        
+
         // Calculate sparsity
         let zero_count = data.iter().filter(|&&x| x == F::zero()).count();
-        let sparsity = if size > 0 { Some(zero_count as f64 / size as f64) } else { None };
-        
+        let sparsity = if size > 0 {
+            Some(zero_count as f64 / size as f64)
+        } else {
+            None
+        };
+
         Ok(DataCharacteristics {
             size,
             element_size,
@@ -550,32 +567,35 @@ impl AdaptiveSimdOptimizer {
             },
         })
     }
-    
+
     /// Select optimal SIMD strategy
     fn select_optimal_strategy(
         &self,
         operation_name: &str,
         characteristics: &DataCharacteristics,
     ) -> StatsResult<SimdStrategy> {
-        let cache_key = format!("{}_{}_{}", operation_name, characteristics.size, characteristics.element_size);
-        
+        let cache_key = format!(
+            "{}_{}_{}",
+            operation_name, characteristics.size, characteristics.element_size
+        );
+
         // Check cache first
         if let Ok(cache) = self.strategy_cache.lock() {
             if let Some(strategy) = cache.get(&cache_key) {
                 return Ok(strategy.clone());
             }
         }
-        
+
         // Generate candidate strategies
         let candidates = self.generate_candidate_strategies(characteristics)?;
-        
+
         // Select best strategy based on characteristics and hardware
         let best_strategy = self.evaluate_strategies(&candidates, characteristics)?;
-        
+
         // Cache the result
         if let Ok(mut cache) = self.strategy_cache.lock() {
             cache.insert(cache_key, best_strategy.clone());
-            
+
             // Maintain cache size
             if cache.len() > self.config.cache_size {
                 let oldest_key = cache.keys().next().cloned();
@@ -584,10 +604,10 @@ impl AdaptiveSimdOptimizer {
                 }
             }
         }
-        
+
         Ok(best_strategy)
     }
-    
+
     /// Select optimal matrix strategy
     fn select_optimal_matrix_strategy(
         &self,
@@ -596,25 +616,31 @@ impl AdaptiveSimdOptimizer {
     ) -> StatsResult<SimdStrategy> {
         // For matrix operations, consider tiling and blocking strategies
         let mut strategy = self.select_optimal_strategy(operation_name, characteristics)?;
-        
+
         // Adjust for matrix-specific optimizations
-        if characteristics.size > 1000000 { // Large matrices
-            strategy.memory_pattern = MemoryAccessPattern::Tiled { tile_size: (64, 64) };
+        if characteristics.size > 1000000 {
+            // Large matrices
+            strategy.memory_pattern = MemoryAccessPattern::Tiled {
+                tile_size: (64, 64),
+            };
             strategy.prefetch_strategy = PrefetchStrategy::Software { distance: 8 };
-        } else if matches!(characteristics.access_pattern, MemoryAccessPattern::Strided { .. }) {
+        } else if matches!(
+            characteristics.access_pattern,
+            MemoryAccessPattern::Strided { .. }
+        ) {
             strategy.memory_pattern = MemoryAccessPattern::Blocked { block_size: 256 };
         }
-        
+
         Ok(strategy)
     }
-    
+
     /// Generate candidate SIMD strategies
     fn generate_candidate_strategies(
         &self,
         characteristics: &DataCharacteristics,
     ) -> StatsResult<Vec<SimdStrategy>> {
         let mut candidates = Vec::new();
-        
+
         // Generate strategies based on available instruction sets
         for instruction_set in &self.hardware_capabilities.simd_instructions {
             let vector_width = match instruction_set {
@@ -624,7 +650,7 @@ impl AdaptiveSimdOptimizer {
                 SimdInstructionSet::NEON => 128,
                 _ => 128,
             };
-            
+
             // Conservative strategy
             candidates.push(SimdStrategy {
                 name: format!("{:?}_conservative", instruction_set),
@@ -640,9 +666,12 @@ impl AdaptiveSimdOptimizer {
                 prefetch_strategy: PrefetchStrategy::None,
                 expected_speedup: 2.0,
             });
-            
+
             // Aggressive strategy
-            if matches!(self.config.optimization_level, OptimizationLevel::Aggressive | OptimizationLevel::Extreme) {
+            if matches!(
+                self.config.optimization_level,
+                OptimizationLevel::Aggressive | OptimizationLevel::Extreme
+            ) {
                 candidates.push(SimdStrategy {
                     name: format!("{:?}_aggressive", instruction_set),
                     instruction_set: instruction_set.clone(),
@@ -659,10 +688,10 @@ impl AdaptiveSimdOptimizer {
                 });
             }
         }
-        
+
         Ok(candidates)
     }
-    
+
     /// Evaluate strategies and select the best one
     fn evaluate_strategies(
         &self,
@@ -671,7 +700,7 @@ impl AdaptiveSimdOptimizer {
     ) -> StatsResult<SimdStrategy> {
         let mut best_strategy = candidates[0].clone();
         let mut best_score = 0.0;
-        
+
         for strategy in candidates {
             let score = self.calculate_strategy_score(strategy, characteristics);
             if score > best_score {
@@ -679,10 +708,10 @@ impl AdaptiveSimdOptimizer {
                 best_strategy = strategy.clone();
             }
         }
-        
+
         Ok(best_strategy)
     }
-    
+
     /// Calculate strategy score based on characteristics
     fn calculate_strategy_score(
         &self,
@@ -690,17 +719,19 @@ impl AdaptiveSimdOptimizer {
         characteristics: &DataCharacteristics,
     ) -> f64 {
         let mut score = strategy.expected_speedup;
-        
+
         // Adjust score based on data characteristics
         if characteristics.size < self.config.min_simd_size {
             score *= 0.5; // Penalty for small data
         }
-        
+
         // Bonus for good alignment
-        if characteristics.alignment == 0 && matches!(strategy.alignment, AlignmentStrategy::ForceAlign) {
+        if characteristics.alignment == 0
+            && matches!(strategy.alignment, AlignmentStrategy::ForceAlign)
+        {
             score *= 1.2;
         }
-        
+
         // Penalty for complex memory patterns
         match &characteristics.access_pattern {
             MemoryAccessPattern::Sequential => score *= 1.0,
@@ -708,15 +739,19 @@ impl AdaptiveSimdOptimizer {
             MemoryAccessPattern::Random => score *= 0.5,
             _ => score *= 0.7,
         }
-        
+
         // Hardware compatibility bonus
-        if self.hardware_capabilities.simd_instructions.contains(&strategy.instruction_set) {
+        if self
+            .hardware_capabilities
+            .simd_instructions
+            .contains(&strategy.instruction_set)
+        {
             score *= 1.5;
         }
-        
+
         score
     }
-    
+
     /// Calculate performance metrics
     fn calculate_performance_metrics(
         &self,
@@ -725,12 +760,12 @@ impl AdaptiveSimdOptimizer {
         execution_time: Duration,
     ) -> StatsResult<SimdPerformanceMetrics> {
         let throughput = characteristics.size as f64 / execution_time.as_secs_f64();
-        
+
         // Estimate bandwidth utilization
         let bytes_processed = characteristics.size * characteristics.element_size;
         let bandwidth_used = bytes_processed as f64 / execution_time.as_secs_f64() / 1e9; // GB/s
         let bandwidth_utilization = bandwidth_used / self.hardware_capabilities.memory_bandwidth;
-        
+
         // Estimate SIMD efficiency
         let theoretical_max = strategy.vector_width / (characteristics.element_size * 8); // elements per vector
         let actual_vectors = characteristics.size / theoretical_max;
@@ -739,7 +774,7 @@ impl AdaptiveSimdOptimizer {
         } else {
             0.0
         };
-        
+
         Ok(SimdPerformanceMetrics {
             execution_time,
             throughput,
@@ -749,7 +784,7 @@ impl AdaptiveSimdOptimizer {
             energy_efficiency: None, // Would require hardware energy monitoring
         })
     }
-    
+
     /// Calculate matrix performance metrics
     fn calculate_matrix_performance_metrics(
         &self,
@@ -758,8 +793,9 @@ impl AdaptiveSimdOptimizer {
         execution_time: Duration,
     ) -> StatsResult<SimdPerformanceMetrics> {
         // Similar to vector metrics but adjusted for matrix operations
-        let mut metrics = self.calculate_performance_metrics(characteristics, strategy, execution_time)?;
-        
+        let mut metrics =
+            self.calculate_performance_metrics(characteristics, strategy, execution_time)?;
+
         // Adjust cache hit rate based on matrix access pattern
         metrics.cache_hit_rate = match &characteristics.access_pattern {
             MemoryAccessPattern::Sequential => 0.95,
@@ -767,10 +803,10 @@ impl AdaptiveSimdOptimizer {
             MemoryAccessPattern::Tiled { .. } => 0.9,
             _ => 0.7,
         };
-        
+
         Ok(metrics)
     }
-    
+
     /// Try fallback strategy on failure
     fn try_fallback_strategy<F, T>(
         &self,
@@ -794,7 +830,7 @@ impl AdaptiveSimdOptimizer {
             prefetch_strategy: PrefetchStrategy::None,
             expected_speedup: 1.0,
         };
-        
+
         let start_time = Instant::now();
         match operation(&data, &fallback_strategy) {
             Ok(result) => {
@@ -805,7 +841,7 @@ impl AdaptiveSimdOptimizer {
                     &fallback_strategy,
                     execution_time,
                 )?;
-                
+
                 Ok(SimdOptimizationResult {
                     result,
                     strategy_used: fallback_strategy,
@@ -821,7 +857,7 @@ impl AdaptiveSimdOptimizer {
             Err(e) => Err(e),
         }
     }
-    
+
     /// Try matrix fallback strategy
     fn try_matrix_fallback_strategy<F, T>(
         &self,
@@ -845,7 +881,7 @@ impl AdaptiveSimdOptimizer {
             prefetch_strategy: PrefetchStrategy::None,
             expected_speedup: 1.0,
         };
-        
+
         let start_time = Instant::now();
         match operation(&data, &fallback_strategy) {
             Ok(result) => {
@@ -856,14 +892,17 @@ impl AdaptiveSimdOptimizer {
                     &fallback_strategy,
                     execution_time,
                 )?;
-                
+
                 Ok(SimdOptimizationResult {
                     result,
                     strategy_used: fallback_strategy,
                     metrics,
                     success: true,
                     fallback_info: Some(FallbackInfo {
-                        reason: format!("Primary matrix strategy '{}' failed", failed_strategy.name),
+                        reason: format!(
+                            "Primary matrix strategy '{}' failed",
+                            failed_strategy.name
+                        ),
                         fallback_strategy: "conservative_matrix_sse2".to_string(),
                         performance_impact: 0.6,
                     }),
@@ -872,7 +911,7 @@ impl AdaptiveSimdOptimizer {
             Err(e) => Err(e),
         }
     }
-    
+
     /// Update performance cache
     fn update_performance_cache(
         &self,
@@ -883,13 +922,13 @@ impl AdaptiveSimdOptimizer {
         if !self.config.enable_profiling {
             return;
         }
-        
+
         let cache_key = format!("{}_{}", operation_name, strategy.name);
-        
+
         if let Ok(mut cache) = self.performance_cache.lock() {
             cache.insert(cache_key.clone(), metrics.clone());
         }
-        
+
         // Also update benchmark results for learning
         if let Ok(mut benchmarks) = self.benchmark_results.lock() {
             benchmarks
@@ -898,24 +937,24 @@ impl AdaptiveSimdOptimizer {
                 .push(metrics.clone());
         }
     }
-    
+
     /// Get performance statistics
     pub fn get_performance_statistics(&self) -> PerformanceStatistics {
         let cache = self.performance_cache.lock().unwrap();
         let benchmarks = self.benchmark_results.lock().unwrap();
-        
+
         let total_operations = cache.len();
         let avg_speedup = if !cache.is_empty() {
             cache.values().map(|m| m.simd_efficiency).sum::<f64>() / cache.len() as f64
         } else {
             0.0
         };
-        
+
         let best_strategies: Vec<(String, f64)> = cache
             .iter()
             .map(|(name, metrics)| (name.clone(), metrics.simd_efficiency))
             .collect();
-        
+
         PerformanceStatistics {
             total_operations,
             average_speedup: avg_speedup,
@@ -923,7 +962,7 @@ impl AdaptiveSimdOptimizer {
             hardware_utilization: self.calculate_hardware_utilization(&cache),
         }
     }
-    
+
     /// Calculate hardware utilization
     fn calculate_hardware_utilization(
         &self,
@@ -934,13 +973,13 @@ impl AdaptiveSimdOptimizer {
         } else {
             0.0
         };
-        
+
         let avg_cache_hit_rate = if !cache.is_empty() {
             cache.values().map(|m| m.cache_hit_rate).sum::<f64>() / cache.len() as f64
         } else {
             0.0
         };
-        
+
         HardwareUtilization {
             simd_utilization: 0.8, // Placeholder
             memory_bandwidth_utilization: avg_bandwidth,
@@ -998,7 +1037,7 @@ where
 mod tests {
     use super::*;
     use ndarray::array;
-    
+
     #[test]
     fn test_adaptive_simd_config() {
         let config = AdaptiveSimdConfig::default();
@@ -1006,24 +1045,26 @@ mod tests {
         assert!(config.enable_profiling);
         assert!(config.min_simd_size > 0);
     }
-    
+
     #[test]
     fn test_hardware_detection() {
         let capabilities = AdaptiveSimdOptimizer::detect_hardware_capabilities().unwrap();
         assert!(!capabilities.simd_instructions.is_empty());
         assert!(capabilities.vector_width > 0);
     }
-    
+
     #[test]
     fn test_data_characteristics_analysis() {
         let optimizer = AdaptiveSimdOptimizer::default().unwrap();
         let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0];
-        
-        let characteristics = optimizer.analyze_data_characteristics(&data.view()).unwrap();
+
+        let characteristics = optimizer
+            .analyze_data_characteristics(&data.view())
+            .unwrap();
         assert_eq!(characteristics.size, 5);
         assert_eq!(characteristics.element_size, 8); // f64
     }
-    
+
     #[test]
     fn test_strategy_generation() {
         let optimizer = AdaptiveSimdOptimizer::default().unwrap();
@@ -1044,11 +1085,13 @@ mod tests {
                 },
             },
         };
-        
-        let strategies = optimizer.generate_candidate_strategies(&characteristics).unwrap();
+
+        let strategies = optimizer
+            .generate_candidate_strategies(&characteristics)
+            .unwrap();
         assert!(!strategies.is_empty());
     }
-    
+
     #[test]
     fn test_strategy_selection() {
         let optimizer = AdaptiveSimdOptimizer::default().unwrap();
@@ -1069,12 +1112,14 @@ mod tests {
                 },
             },
         };
-        
-        let strategy = optimizer.select_optimal_strategy("test_op", &characteristics).unwrap();
+
+        let strategy = optimizer
+            .select_optimal_strategy("test_op", &characteristics)
+            .unwrap();
         assert!(!strategy.name.is_empty());
         assert!(strategy.expected_speedup > 0.0);
     }
-    
+
     #[test]
     fn test_performance_metrics_calculation() {
         let optimizer = AdaptiveSimdOptimizer::default().unwrap();
@@ -1095,7 +1140,7 @@ mod tests {
                 },
             },
         };
-        
+
         let strategy = SimdStrategy {
             name: "test_strategy".to_string(),
             instruction_set: SimdInstructionSet::AVX2,
@@ -1106,13 +1151,11 @@ mod tests {
             prefetch_strategy: PrefetchStrategy::None,
             expected_speedup: 2.0,
         };
-        
-        let metrics = optimizer.calculate_performance_metrics(
-            &characteristics,
-            &strategy,
-            Duration::from_millis(10),
-        ).unwrap();
-        
+
+        let metrics = optimizer
+            .calculate_performance_metrics(&characteristics, &strategy, Duration::from_millis(10))
+            .unwrap();
+
         assert!(metrics.throughput > 0.0);
         assert!(metrics.simd_efficiency >= 0.0 && metrics.simd_efficiency <= 1.0);
     }

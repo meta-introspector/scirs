@@ -7,8 +7,8 @@ use crate::error::{StatsError, StatsResult};
 use ndarray::ArrayView1;
 use num_traits::{Float, NumCast, Signed};
 use scirs2_core::{
-    simd_ops::{AutoOptimizer, SimdUnifiedOps}, 
-    validation::{check_finite, check_not_empty, check_same_shape}
+    simd_ops::{AutoOptimizer, SimdUnifiedOps},
+    validation::{check_finite, check_not_empty, check_same_shape},
 };
 
 /// Compute the arithmetic mean of a data set.
@@ -50,7 +50,7 @@ where
         // Fallback to scalar sum for small arrays or unsupported platforms
         x.iter().cloned().sum::<F>()
     };
-    
+
     let count = NumCast::from(n).unwrap();
     Ok(sum / count)
 }
@@ -231,7 +231,7 @@ where
     // Calculate sum of squared differences from mean with optimization
     let n = x.len();
     let optimizer = AutoOptimizer::new();
-    
+
     let sum_squared_diff = if n > 10000 && workers.unwrap_or(1) > 1 {
         // Use parallel computation for large arrays when workers specified
         use scirs2_core::parallel_ops::*;
@@ -239,7 +239,8 @@ where
         x.to_vec()
             .par_chunks(chunk_size.max(1))
             .map(|chunk| {
-                chunk.iter()
+                chunk
+                    .iter()
                     .map(|&val| {
                         let diff = val - mean_val;
                         diff * diff
@@ -356,7 +357,8 @@ where
     let (sum_sq_dev, sum_cubed_dev) = if n > 10000 && workers.unwrap_or(1) > 1 {
         // Use parallel computation for large arrays when workers specified
         use scirs2_core::parallel_ops::ParallelOps;
-        let results: Vec<(F, F)> = x.chunks_parallel(workers)
+        let results: Vec<(F, F)> = x
+            .chunks_parallel(workers)
             .map(|chunk| {
                 let mut sq_dev = F::zero();
                 let mut cubed_dev = F::zero();
@@ -369,10 +371,11 @@ where
                 (sq_dev, cubed_dev)
             })
             .collect();
-        
-        results.iter().fold((F::zero(), F::zero()), |(acc_sq, acc_cubed), &(sq, cubed)| {
-            (acc_sq + sq, acc_cubed + cubed)
-        })
+
+        results.iter().fold(
+            (F::zero(), F::zero()),
+            |(acc_sq, acc_cubed), &(sq, cubed)| (acc_sq + sq, acc_cubed + cubed),
+        )
     } else {
         // Fallback to scalar computation for small arrays or single-threaded
         let mut sum_sq_dev = F::zero();
@@ -443,7 +446,12 @@ where
 /// let fisher_unbiased = kurtosis(&data.view(), true, false, None).unwrap();
 /// assert!((fisher_unbiased - (-1.2)).abs() < 1e-10);
 /// ```
-pub fn kurtosis<F>(x: &ArrayView1<F>, fisher: bool, bias: bool, workers: Option<usize>) -> StatsResult<F>
+pub fn kurtosis<F>(
+    x: &ArrayView1<F>,
+    fisher: bool,
+    bias: bool,
+    workers: Option<usize>,
+) -> StatsResult<F>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,
 {
@@ -468,7 +476,8 @@ where
         // Use parallel computation for large arrays when workers specified
         use scirs2_core::parallel_ops::*;
         let chunk_size = n / workers.unwrap_or(num_cpus::get()).max(1);
-        let results: Vec<(F, F)> = x.to_vec()
+        let results: Vec<(F, F)> = x
+            .to_vec()
             .par_chunks(chunk_size.max(1))
             .map(|chunk| {
                 let mut sq_dev = F::zero();
@@ -482,10 +491,11 @@ where
                 (sq_dev, fourth_dev)
             })
             .collect();
-        
-        results.iter().fold((F::zero(), F::zero()), |(acc_sq, acc_fourth), &(sq, fourth)| {
-            (acc_sq + sq, acc_fourth + fourth)
-        })
+
+        results.iter().fold(
+            (F::zero(), F::zero()),
+            |(acc_sq, acc_fourth), &(sq, fourth)| (acc_sq + sq, acc_fourth + fourth),
+        )
     } else {
         // Fallback to scalar computation for small arrays or single-threaded
         let mut sum_sq_dev = F::zero();
@@ -583,7 +593,12 @@ where
 /// let second_central = moment(&data.view(), 2, true, None).unwrap();
 /// assert!((second_central - 2.0).abs() < 1e-10);
 /// ```
-pub fn moment<F>(x: &ArrayView1<F>, moment_order: usize, center: bool, workers: Option<usize>) -> StatsResult<F>
+pub fn moment<F>(
+    x: &ArrayView1<F>,
+    moment_order: usize,
+    center: bool,
+    workers: Option<usize>,
+) -> StatsResult<F>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,
 {
@@ -641,12 +656,10 @@ where
             let chunk_size = n / workers.unwrap_or(num_cpus::get()).max(1);
             x.to_vec()
                 .par_chunks(chunk_size.max(1))
-                .map(|chunk| {
-                    chunk.iter().map(|&val| val.powf(order_f)).sum::<F>()
-                })
+                .map(|chunk| chunk.iter().map(|&val| val.powf(order_f)).sum::<F>())
                 .sum::<F>()
         } else {
-            // Fallback to scalar computation  
+            // Fallback to scalar computation
             x.iter().map(|&val| val.powf(order_f)).sum::<F>()
         };
 
@@ -655,9 +668,12 @@ where
 }
 
 /// Backward compatibility: Compute the variance without specifying workers parameter.
-/// 
+///
 /// **Deprecated**: Use `var(x, ddof, workers)` instead for better control over parallel processing.
-#[deprecated(since = "0.1.0-beta.1", note = "Use var(x, ddof, workers) for consistent API")]
+#[deprecated(
+    since = "0.1.0-beta.1",
+    note = "Use var(x, ddof, workers) for consistent API"
+)]
 pub fn var_compat<F>(x: &ArrayView1<F>, ddof: usize) -> StatsResult<F>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,
@@ -666,9 +682,12 @@ where
 }
 
 /// Backward compatibility: Compute the standard deviation without specifying workers parameter.
-/// 
+///
 /// **Deprecated**: Use `std(x, ddof, workers)` instead for better control over parallel processing.
-#[deprecated(since = "0.1.0-beta.1", note = "Use std(x, ddof, workers) for consistent API")]
+#[deprecated(
+    since = "0.1.0-beta.1",
+    note = "Use std(x, ddof, workers) for consistent API"
+)]
 pub fn std_compat<F>(x: &ArrayView1<F>, ddof: usize) -> StatsResult<F>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,
@@ -677,9 +696,12 @@ where
 }
 
 /// Backward compatibility: Compute the skewness without specifying workers parameter.
-/// 
+///
 /// **Deprecated**: Use `skew(x, bias, workers)` instead for better control over parallel processing.
-#[deprecated(since = "0.1.0-beta.1", note = "Use skew(x, bias, workers) for consistent API")]
+#[deprecated(
+    since = "0.1.0-beta.1",
+    note = "Use skew(x, bias, workers) for consistent API"
+)]
 pub fn skew_compat<F>(x: &ArrayView1<F>, bias: bool) -> StatsResult<F>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,
@@ -688,9 +710,12 @@ where
 }
 
 /// Backward compatibility: Compute the kurtosis without specifying workers parameter.
-/// 
+///
 /// **Deprecated**: Use `kurtosis(x, fisher, bias, workers)` instead for better control over parallel processing.
-#[deprecated(since = "0.1.0-beta.1", note = "Use kurtosis(x, fisher, bias, workers) for consistent API")]
+#[deprecated(
+    since = "0.1.0-beta.1",
+    note = "Use kurtosis(x, fisher, bias, workers) for consistent API"
+)]
 pub fn kurtosis_compat<F>(x: &ArrayView1<F>, fisher: bool, bias: bool) -> StatsResult<F>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,
@@ -699,9 +724,12 @@ where
 }
 
 /// Backward compatibility: Compute the moment without specifying workers parameter.
-/// 
+///
 /// **Deprecated**: Use `moment(x, moment_order, center, workers)` instead for better control over parallel processing.
-#[deprecated(since = "0.1.0-beta.1", note = "Use moment(x, moment_order, center, workers) for consistent API")]
+#[deprecated(
+    since = "0.1.0-beta.1",
+    note = "Use moment(x, moment_order, center, workers) for consistent API"
+)]
 pub fn moment_compat<F>(x: &ArrayView1<F>, moment_order: usize, center: bool) -> StatsResult<F>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,

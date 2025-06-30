@@ -183,11 +183,11 @@ impl Default for UltraValidationConfig {
 ///
 /// let config = UltraValidationConfig::default();
 /// let results = run_ultra_validation(&config).unwrap();
-/// 
+///
 /// match results.validation_status {
 ///     ValidationStatus::Passed => println!("All validations passed!"),
 ///     ValidationStatus::PassedWithWarnings => {
-///         println!("Validation passed with {} warnings", 
+///         println!("Validation passed with {} warnings",
 ///                  results.issues.iter().filter(|i| i.severity == IssueSeverity::Warning).count());
 ///     },
 ///     ValidationStatus::Failed => {
@@ -200,15 +200,15 @@ impl Default for UltraValidationConfig {
 pub fn run_ultra_validation(config: &UltraValidationConfig) -> SignalResult<UltraValidationResult> {
     let start_time = Instant::now();
     let mut issues = Vec::new();
-    
+
     // Step 1: Basic accuracy validation
     println!("Running accuracy validation...");
     let accuracy_metrics = validate_accuracy_comprehensive(config, &mut issues)?;
-    
+
     // Step 2: Performance benchmarking
     println!("Running performance benchmarks...");
     let performance_metrics = validate_performance_comprehensive(config, &mut issues)?;
-    
+
     // Step 3: SIMD validation
     println!("Running SIMD validation...");
     let simd_validation = if config.validate_simd {
@@ -222,7 +222,7 @@ pub fn run_ultra_validation(config: &UltraValidationConfig) -> SignalResult<Ultr
             simd_performance_gain: 0.0,
         }
     };
-    
+
     // Step 4: Memory validation
     println!("Running memory validation...");
     let memory_metrics = if config.validate_memory {
@@ -235,7 +235,7 @@ pub fn run_ultra_validation(config: &UltraValidationConfig) -> SignalResult<Ultr
             memory_leaks_detected: 0,
         }
     };
-    
+
     // Step 5: Cross-platform validation
     println!("Running cross-platform validation...");
     let platform_consistency = if config.validate_cross_platform {
@@ -247,22 +247,24 @@ pub fn run_ultra_validation(config: &UltraValidationConfig) -> SignalResult<Ultr
             platform_issues: HashMap::new(),
         }
     };
-    
+
     // Determine overall validation status
     let validation_status = determine_validation_status(&issues);
-    
+
     let total_time = start_time.elapsed().as_secs_f64();
-    
+
     if total_time > config.max_execution_time {
         issues.push(ValidationIssue {
             severity: IssueSeverity::Warning,
             category: "Performance".to_string(),
-            description: format!("Validation took {:.2}s, exceeding limit of {:.2}s", 
-                               total_time, config.max_execution_time),
+            description: format!(
+                "Validation took {:.2}s, exceeding limit of {:.2}s",
+                total_time, config.max_execution_time
+            ),
             recommendation: "Consider optimizing validation or increasing time limit".to_string(),
         });
     }
-    
+
     Ok(UltraValidationResult {
         accuracy_metrics,
         performance_metrics,
@@ -276,52 +278,57 @@ pub fn run_ultra_validation(config: &UltraValidationConfig) -> SignalResult<Ultr
 
 /// Validate accuracy comprehensively across multiple test scenarios
 fn validate_accuracy_comprehensive(
-    config: &UltraValidationConfig, 
-    issues: &mut Vec<ValidationIssue>
+    config: &UltraValidationConfig,
+    issues: &mut Vec<ValidationIssue>,
 ) -> SignalResult<AccuracyMetrics> {
     let mut all_errors = Vec::new();
     let mut peak_errors = Vec::new();
     let mut spectral_leakage_levels = Vec::new();
     let mut noise_floors = Vec::new();
-    
+
     // Test 1: Pure sinusoids at various frequencies
     for &size in &config.test_sizes {
         let test_result = validate_pure_sinusoid_accuracy(size, config.tolerance)?;
         all_errors.extend(test_result.errors);
         peak_errors.extend(test_result.peak_errors);
-        
+
         if test_result.max_error > config.tolerance * 100.0 {
             issues.push(ValidationIssue {
                 severity: IssueSeverity::Warning,
                 category: "Accuracy".to_string(),
-                description: format!("High error for size {}: {:.2e}", size, test_result.max_error),
+                description: format!(
+                    "High error for size {}: {:.2e}",
+                    size, test_result.max_error
+                ),
                 recommendation: "Review numerical precision for large signals".to_string(),
             });
         }
     }
-    
+
     // Test 2: Multi-component signals with varying amplitudes
     for &size in &config.test_sizes {
         let test_result = validate_multicomponent_accuracy(size, config.tolerance)?;
         all_errors.extend(test_result.errors);
         spectral_leakage_levels.push(test_result.spectral_leakage);
     }
-    
+
     // Test 3: Noise floor estimation
     for &size in &config.test_sizes {
         let noise_floor = validate_noise_floor_estimation(size, config.tolerance)?;
         noise_floors.push(noise_floor);
     }
-    
+
     // Test 4: Dynamic range handling
     let dynamic_range_score = validate_dynamic_range_handling(config.tolerance)?;
-    
+
     let max_relative_error = all_errors.iter().cloned().fold(0.0, f64::max);
     let mean_relative_error = all_errors.iter().sum::<f64>() / all_errors.len().max(1) as f64;
     let peak_frequency_accuracy = 1.0 - peak_errors.iter().cloned().fold(0.0, f64::max);
-    let spectral_leakage_level = spectral_leakage_levels.iter().sum::<f64>() / spectral_leakage_levels.len().max(1) as f64;
-    let noise_floor_estimation = noise_floors.iter().sum::<f64>() / noise_floors.len().max(1) as f64;
-    
+    let spectral_leakage_level =
+        spectral_leakage_levels.iter().sum::<f64>() / spectral_leakage_levels.len().max(1) as f64;
+    let noise_floor_estimation =
+        noise_floors.iter().sum::<f64>() / noise_floors.len().max(1) as f64;
+
     Ok(AccuracyMetrics {
         max_relative_error,
         mean_relative_error,
@@ -335,41 +342,43 @@ fn validate_accuracy_comprehensive(
 /// Validate performance across different signal sizes and configurations
 fn validate_performance_comprehensive(
     config: &UltraValidationConfig,
-    issues: &mut Vec<ValidationIssue>
+    issues: &mut Vec<ValidationIssue>,
 ) -> SignalResult<PerformanceMetrics> {
     let mut execution_times = HashMap::new();
     let mut memory_usage = HashMap::new();
     let mut simd_speedup = HashMap::new();
-    
+
     // Benchmark different signal sizes
     for &size in &config.test_sizes {
         let benchmark_result = benchmark_signal_size(size, config.performance_iterations)?;
         execution_times.insert(size, benchmark_result.execution_time_ms);
         memory_usage.insert(size, benchmark_result.memory_mb);
-        
+
         // Check for performance regressions
         let expected_time = estimate_expected_time(size);
         if benchmark_result.execution_time_ms > expected_time * 2.0 {
             issues.push(ValidationIssue {
                 severity: IssueSeverity::Warning,
                 category: "Performance".to_string(),
-                description: format!("Slow execution for size {}: {:.2}ms (expected ~{:.2}ms)", 
-                                   size, benchmark_result.execution_time_ms, expected_time),
+                description: format!(
+                    "Slow execution for size {}: {:.2}ms (expected ~{:.2}ms)",
+                    size, benchmark_result.execution_time_ms, expected_time
+                ),
                 recommendation: "Investigate performance bottlenecks".to_string(),
             });
         }
     }
-    
+
     // Benchmark SIMD vs scalar performance
     let simd_benchmark = benchmark_simd_performance(config)?;
     simd_speedup.insert("overall".to_string(), simd_benchmark.speedup_factor);
-    
+
     // Calculate scalability factor
     let scalability_factor = calculate_scalability_factor(&execution_times);
-    
+
     // Calculate throughput
     let throughput = calculate_throughput(&execution_times);
-    
+
     Ok(PerformanceMetrics {
         execution_times,
         memory_usage,
@@ -382,17 +391,17 @@ fn validate_performance_comprehensive(
 /// Validate SIMD operations comprehensively
 fn validate_simd_operations_comprehensive(
     config: &UltraValidationConfig,
-    issues: &mut Vec<ValidationIssue>
+    issues: &mut Vec<ValidationIssue>,
 ) -> SignalResult<SimdValidationResult> {
     // Detect SIMD capabilities
     let caps = PlatformCapabilities::detect();
     let simd_available = caps.has_avx2 || caps.has_avx512 || caps.has_sse4_1;
-    
+
     let detected_capabilities = format!(
         "SSE4.1: {}, AVX2: {}, AVX512: {}",
         caps.has_sse4_1, caps.has_avx2, caps.has_avx512
     );
-    
+
     if !simd_available {
         issues.push(ValidationIssue {
             severity: IssueSeverity::Info,
@@ -400,7 +409,7 @@ fn validate_simd_operations_comprehensive(
             description: "No SIMD capabilities detected".to_string(),
             recommendation: "SIMD optimizations will not be used".to_string(),
         });
-        
+
         return Ok(SimdValidationResult {
             simd_available,
             detected_capabilities,
@@ -409,25 +418,28 @@ fn validate_simd_operations_comprehensive(
             simd_performance_gain: 0.0,
         });
     }
-    
+
     // Test SIMD vs scalar accuracy
     let simd_scalar_accuracy = validate_simd_scalar_accuracy(config)?;
-    
+
     if simd_scalar_accuracy < 1e-12 {
         issues.push(ValidationIssue {
             severity: IssueSeverity::Critical,
             category: "SIMD".to_string(),
-            description: format!("SIMD operations have poor accuracy: {:.2e}", simd_scalar_accuracy),
+            description: format!(
+                "SIMD operations have poor accuracy: {:.2e}",
+                simd_scalar_accuracy
+            ),
             recommendation: "Review SIMD implementation for numerical issues".to_string(),
         });
     }
-    
+
     // Test individual SIMD operations
     let operation_correctness = validate_individual_simd_operations(config)?;
-    
+
     // Measure SIMD performance gain
     let simd_performance_gain = measure_simd_performance_gain(config)?;
-    
+
     if simd_performance_gain < 1.5 {
         issues.push(ValidationIssue {
             severity: IssueSeverity::Warning,
@@ -436,7 +448,7 @@ fn validate_simd_operations_comprehensive(
             recommendation: "Consider optimizing SIMD implementation".to_string(),
         });
     }
-    
+
     Ok(SimdValidationResult {
         simd_available,
         detected_capabilities,
@@ -449,33 +461,36 @@ fn validate_simd_operations_comprehensive(
 /// Validate memory usage patterns
 fn validate_memory_usage_comprehensive(
     config: &UltraValidationConfig,
-    issues: &mut Vec<ValidationIssue>
+    issues: &mut Vec<ValidationIssue>,
 ) -> SignalResult<MemoryMetrics> {
     let mut peak_memory = 0.0;
     let mut allocation_scores = Vec::new();
-    
+
     // Test memory usage for different signal sizes
     for &size in &config.test_sizes {
         let memory_result = measure_memory_usage(size)?;
         peak_memory = peak_memory.max(memory_result.peak_mb);
         allocation_scores.push(memory_result.allocation_efficiency);
-        
+
         // Check for excessive memory usage
         let expected_memory = estimate_expected_memory(size);
         if memory_result.peak_mb > expected_memory * 3.0 {
             issues.push(ValidationIssue {
                 severity: IssueSeverity::Warning,
                 category: "Memory".to_string(),
-                description: format!("High memory usage for size {}: {:.2}MB (expected ~{:.2}MB)", 
-                                   size, memory_result.peak_mb, expected_memory),
+                description: format!(
+                    "High memory usage for size {}: {:.2}MB (expected ~{:.2}MB)",
+                    size, memory_result.peak_mb, expected_memory
+                ),
                 recommendation: "Review memory allocation patterns".to_string(),
             });
         }
     }
-    
-    let allocation_efficiency = allocation_scores.iter().sum::<f64>() / allocation_scores.len() as f64;
+
+    let allocation_efficiency =
+        allocation_scores.iter().sum::<f64>() / allocation_scores.len() as f64;
     let cache_efficiency_score = measure_cache_efficiency()?;
-    
+
     Ok(MemoryMetrics {
         peak_memory_mb: peak_memory,
         allocation_efficiency,
@@ -487,20 +502,22 @@ fn validate_memory_usage_comprehensive(
 /// Validate cross-platform consistency
 fn validate_cross_platform_consistency(
     config: &UltraValidationConfig,
-    issues: &mut Vec<ValidationIssue>
+    issues: &mut Vec<ValidationIssue>,
 ) -> SignalResult<PlatformConsistencyResult> {
     // For now, return a placeholder result
     // Full implementation would run tests on multiple platforms
-    
+
     let platform_name = std::env::consts::OS;
     let mut platform_issues = HashMap::new();
-    
+
     // Platform-specific checks
     if platform_name == "windows" {
-        platform_issues.insert("Windows".to_string(), 
-                              vec!["Floating-point precision may vary".to_string()]);
+        platform_issues.insert(
+            "Windows".to_string(),
+            vec!["Floating-point precision may vary".to_string()],
+        );
     }
-    
+
     Ok(PlatformConsistencyResult {
         is_consistent: true,
         max_platform_deviation: 1e-15,
@@ -512,7 +529,7 @@ fn validate_cross_platform_consistency(
 fn determine_validation_status(issues: &[ValidationIssue]) -> ValidationStatus {
     let has_critical = issues.iter().any(|i| i.severity == IssueSeverity::Critical);
     let has_warnings = issues.iter().any(|i| i.severity == IssueSeverity::Warning);
-    
+
     if has_critical {
         ValidationStatus::Failed
     } else if has_warnings {
@@ -551,43 +568,52 @@ struct MemoryResult {
 
 // Implementation of helper functions (simplified for brevity)
 
-fn validate_pure_sinusoid_accuracy(size: usize, tolerance: f64) -> SignalResult<AccuracyTestResult> {
+fn validate_pure_sinusoid_accuracy(
+    size: usize,
+    tolerance: f64,
+) -> SignalResult<AccuracyTestResult> {
     // Generate pure sinusoid
     let freq = 10.0;
     let fs = 100.0;
     let t: Array1<f64> = Array1::linspace(0.0, (size - 1) as f64 / fs, size);
     let signal = t.mapv(|ti| (2.0 * PI * freq * ti).sin());
-    
+
     // Add slight irregular sampling
     let mut times = t.to_vec();
     for i in 1..times.len() {
         times[i] += 0.01 * (i as f64).sin() / fs; // Small irregular component
     }
     let times = Array1::from_vec(times);
-    
+
     // Compute Lomb-Scargle
     let frequencies = Array1::linspace(0.1, 50.0, 500);
     let power = lombscargle(&times, &signal, &frequencies)?;
-    
+
     // Find peak
-    let peak_idx = power.iter().enumerate().max_by(|a, b| a.1.partial_cmp(b.1).unwrap()).unwrap().0;
+    let peak_idx = power
+        .iter()
+        .enumerate()
+        .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+        .unwrap()
+        .0;
     let peak_freq = frequencies[peak_idx];
     let peak_error = (peak_freq - freq).abs() / freq;
-    
+
     // Calculate errors
     let max_power = power.iter().cloned().fold(0.0, f64::max);
     let normalized_power = power.mapv(|p| p / max_power);
-    
+
     // Theoretical power should be 1.0 at peak frequency, 0.0 elsewhere (approximately)
     let mut errors = Vec::new();
     for (i, &f) in frequencies.iter().enumerate() {
         let expected = if (f - freq).abs() < 1.0 { 1.0 } else { 0.0 };
         let error = (normalized_power[i] - expected).abs();
-        if expected > 0.1 { // Only count errors near the peak
+        if expected > 0.1 {
+            // Only count errors near the peak
             errors.push(error);
         }
     }
-    
+
     Ok(AccuracyTestResult {
         errors,
         peak_errors: vec![peak_error],
@@ -596,7 +622,10 @@ fn validate_pure_sinusoid_accuracy(size: usize, tolerance: f64) -> SignalResult<
     })
 }
 
-fn validate_multicomponent_accuracy(size: usize, tolerance: f64) -> SignalResult<AccuracyTestResult> {
+fn validate_multicomponent_accuracy(
+    size: usize,
+    tolerance: f64,
+) -> SignalResult<AccuracyTestResult> {
     // Simplified implementation
     Ok(AccuracyTestResult {
         errors: vec![tolerance * 0.1],
@@ -622,16 +651,16 @@ fn benchmark_signal_size(size: usize, iterations: usize) -> SignalResult<Benchma
     let t: Array1<f64> = Array1::linspace(0.0, (size - 1) as f64 / fs, size);
     let signal = t.mapv(|ti| (2.0 * PI * freq * ti).sin());
     let frequencies = Array1::linspace(0.1, 50.0, size / 4);
-    
+
     let start = Instant::now();
     for _ in 0..iterations {
         let _ = lombscargle(&t, &signal, &frequencies)?;
     }
     let avg_time = start.elapsed().as_secs_f64() * 1000.0 / iterations as f64;
-    
+
     // Estimate memory usage (simplified)
     let memory_mb = (size * 16 + frequencies.len() * 8) as f64 / (1024.0 * 1024.0);
-    
+
     Ok(BenchmarkResult {
         execution_time_ms: avg_time,
         memory_mb,
@@ -651,7 +680,9 @@ fn validate_simd_scalar_accuracy(config: &UltraValidationConfig) -> SignalResult
     Ok(1e-14) // Very high accuracy
 }
 
-fn validate_individual_simd_operations(config: &UltraValidationConfig) -> SignalResult<HashMap<String, bool>> {
+fn validate_individual_simd_operations(
+    config: &UltraValidationConfig,
+) -> SignalResult<HashMap<String, bool>> {
     let mut results = HashMap::new();
     results.insert("dot_product".to_string(), true);
     results.insert("complex_multiply".to_string(), true);
@@ -692,28 +723,29 @@ fn calculate_scalability_factor(execution_times: &HashMap<usize, f64>) -> f64 {
     if execution_times.len() < 2 {
         return 1.0;
     }
-    
+
     let mut sizes: Vec<usize> = execution_times.keys().cloned().collect();
     sizes.sort();
-    
+
     if sizes.len() < 2 {
         return 1.0;
     }
-    
+
     let size1 = sizes[0] as f64;
     let size2 = sizes[sizes.len() - 1] as f64;
     let time1 = execution_times[&(size1 as usize)];
     let time2 = execution_times[&(size2 as usize)];
-    
+
     let theoretical_ratio = (size2 * size2.log2()) / (size1 * size1.log2());
     let actual_ratio = time2 / time1;
-    
+
     theoretical_ratio / actual_ratio // Closer to 1.0 is better
 }
 
 fn calculate_throughput(execution_times: &HashMap<usize, f64>) -> f64 {
     // Calculate samples per second throughput
-    execution_times.iter()
+    execution_times
+        .iter()
         .map(|(&size, &time_ms)| size as f64 / (time_ms / 1000.0))
         .fold(0.0, f64::max)
 }
@@ -730,10 +762,10 @@ mod tests {
             tolerance: 1e-8,
             ..Default::default()
         };
-        
+
         let result = run_ultra_validation(&config);
         assert!(result.is_ok());
-        
+
         let validation = result.unwrap();
         // Should at least run without errors
         assert_ne!(validation.validation_status, ValidationStatus::NotRun);
@@ -743,10 +775,10 @@ mod tests {
     fn test_accuracy_validation() {
         let config = UltraValidationConfig::default();
         let mut issues = Vec::new();
-        
+
         let result = validate_accuracy_comprehensive(&config, &mut issues);
         assert!(result.is_ok());
-        
+
         let metrics = result.unwrap();
         assert!(metrics.max_relative_error >= 0.0);
         assert!(metrics.peak_frequency_accuracy >= 0.0);

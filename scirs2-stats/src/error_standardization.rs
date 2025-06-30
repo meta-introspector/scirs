@@ -549,36 +549,42 @@ impl BatchErrorHandler {
             warnings: Vec::new(),
         }
     }
-    
+
     /// Add an error for a specific batch item
     pub fn add_error(&mut self, index: usize, error: StatsError, context: EnhancedErrorContext) {
         self.errors.push((index, error, context));
     }
-    
+
     /// Add a warning for a specific batch item
     pub fn add_warning(&mut self, index: usize, warning: String) {
         self.warnings.push((index, warning));
     }
-    
+
     /// Generate a comprehensive batch error report
     pub fn generate_batch_report(&self) -> String {
         let mut report = String::new();
-        
+
         if !self.errors.is_empty() {
-            report.push_str(&format!("🚨 Batch Processing Errors ({} errors):\n\n", self.errors.len()));
-            
+            report.push_str(&format!(
+                "🚨 Batch Processing Errors ({} errors):\n\n",
+                self.errors.len()
+            ));
+
             for (i, (index, error, context)) in self.errors.iter().enumerate() {
                 report.push_str(&format!("Error {} (Item {}):\n", i + 1, index));
                 report.push_str(&format!("  ❌ {}\n", error));
-                report.push_str(&format!("  📍 Function: {}::{}\n", context.module_name, context.function_name));
+                report.push_str(&format!(
+                    "  📍 Function: {}::{}\n",
+                    context.module_name, context.function_name
+                ));
                 report.push_str(&format!("  📊 Data: {:?}\n", context.data_info.shape));
-                
+
                 if !context.recovery_actions.is_empty() {
                     report.push_str("  💡 Suggested Actions:\n");
                     for action in &context.recovery_actions {
                         let priority_icon = match action.priority {
                             1 => "🔴",
-                            2 => "🟡", 
+                            2 => "🟡",
                             3 => "🟢",
                             _ => "⚪",
                         };
@@ -588,22 +594,25 @@ impl BatchErrorHandler {
                 report.push('\n');
             }
         }
-        
+
         if !self.warnings.is_empty() {
-            report.push_str(&format!("⚠️  Batch Processing Warnings ({} warnings):\n\n", self.warnings.len()));
-            
+            report.push_str(&format!(
+                "⚠️  Batch Processing Warnings ({} warnings):\n\n",
+                self.warnings.len()
+            ));
+
             for (index, warning) in &self.warnings {
                 report.push_str(&format!("  Item {}: {}\n", index, warning));
             }
         }
-        
+
         report
     }
-    
+
     /// Get summary statistics of errors
     pub fn get_error_summary(&self) -> HashMap<String, usize> {
         let mut summary = HashMap::new();
-        
+
         for (_, error, _) in &self.errors {
             let error_type = match error {
                 StatsError::ComputationError(_) => "Computation",
@@ -614,10 +623,10 @@ impl BatchErrorHandler {
                 StatsError::ConvergenceError(_) => "Convergence",
                 StatsError::CoreError(_) => "Core",
             };
-            
+
             *summary.entry(error_type.to_string()).or_insert(0) += 1;
         }
-        
+
         summary
     }
 }
@@ -640,7 +649,7 @@ impl ErrorDiagnostics {
         let mut finite_values = Vec::new();
         let mut has_negative = false;
         let mut has_zeros = false;
-        
+
         for &value in data {
             if value.is_nan() {
                 nan_count += 1;
@@ -656,21 +665,25 @@ impl ErrorDiagnostics {
                 }
             }
         }
-        
+
         // Calculate basic statistics for finite values
         let (min, max, mean, std) = if !finite_values.is_empty() {
             let min = finite_values.iter().fold(f64::INFINITY, |a, &b| a.min(b));
-            let max = finite_values.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+            let max = finite_values
+                .iter()
+                .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
             let mean = finite_values.iter().sum::<f64>() / finite_values.len() as f64;
-            let variance = finite_values.iter()
+            let variance = finite_values
+                .iter()
                 .map(|&x| (x - mean).powi(2))
-                .sum::<f64>() / finite_values.len() as f64;
+                .sum::<f64>()
+                / finite_values.len() as f64;
             let std = variance.sqrt();
             (Some(min), Some(max), Some(mean), Some(std))
         } else {
             (None, None, None, None)
         };
-        
+
         // Detect quality issues
         if nan_count > 0 {
             quality_issues.push(DataQualityIssue::HasNaN);
@@ -687,18 +700,19 @@ impl ErrorDiagnostics {
         if finite_values.len() < 2 {
             quality_issues.push(DataQualityIssue::SmallSample(finite_values.len()));
         }
-        
+
         // Check for constant data
         if let (Some(min_val), Some(max_val)) = (min, max) {
             if (max_val - min_val).abs() < 1e-15 {
                 quality_issues.push(DataQualityIssue::Constant);
             }
         }
-        
+
         // Simple outlier detection (values beyond 3 std devs)
         if let (Some(mean_val), Some(std_val)) = (mean, std) {
             if std_val > 0.0 {
-                let outlier_count = finite_values.iter()
+                let outlier_count = finite_values
+                    .iter()
                     .filter(|&&x| (x - mean_val).abs() > 3.0 * std_val)
                     .count();
                 if outlier_count > 0 {
@@ -706,7 +720,7 @@ impl ErrorDiagnostics {
                 }
             }
         }
-        
+
         DataDiagnostics {
             shape: vec![data.len()],
             data_type: "f64".to_string(),
@@ -722,14 +736,14 @@ impl ErrorDiagnostics {
             quality_issues,
         }
     }
-    
+
     /// Generate system diagnostics
     pub fn get_system_diagnostics() -> SystemDiagnostics {
         use scirs2_core::simd_ops::PlatformCapabilities;
-        
+
         let capabilities = PlatformCapabilities::detect();
         let thread_count = num_cpus::get();
-        
+
         SystemDiagnostics {
             available_memory_mb: Self::get_available_memory_mb(),
             cpu_info: format!("Threads: {}", thread_count),
@@ -737,7 +751,7 @@ impl ErrorDiagnostics {
             thread_count,
         }
     }
-    
+
     fn get_available_memory_mb() -> Option<usize> {
         // Simple approximation - would use system APIs in production
         Some(8192) // Assume 8GB available
@@ -749,19 +763,24 @@ pub struct InterModuleErrorChecker;
 
 impl InterModuleErrorChecker {
     /// Check error consistency across modules
-    pub fn validate_error_consistency(module_errors: &HashMap<String, Vec<StatsError>>) -> Vec<String> {
+    pub fn validate_error_consistency(
+        module_errors: &HashMap<String, Vec<StatsError>>,
+    ) -> Vec<String> {
         let mut inconsistencies = Vec::new();
-        
+
         // Check for similar error patterns across modules
         let mut error_patterns: HashMap<String, Vec<String>> = HashMap::new();
-        
+
         for (module, errors) in module_errors {
             for error in errors {
                 let pattern = Self::extract_error_pattern(error);
-                error_patterns.entry(pattern).or_default().push(module.clone());
+                error_patterns
+                    .entry(pattern)
+                    .or_default()
+                    .push(module.clone());
             }
         }
-        
+
         // Look for patterns that should be consistent but aren't
         for (pattern, modules) in error_patterns {
             if modules.len() > 1 {
@@ -774,19 +793,23 @@ impl InterModuleErrorChecker {
                 }
             }
         }
-        
+
         inconsistencies
     }
-    
+
     fn extract_error_pattern(error: &StatsError) -> String {
         match error {
             StatsError::DimensionMismatch(_) => "dimension_mismatch".to_string(),
             StatsError::InvalidArgument(msg) if msg.contains("empty") => "empty_array".to_string(),
             StatsError::InvalidArgument(msg) if msg.contains("NaN") => "nan_values".to_string(),
             StatsError::DomainError(msg) if msg.contains("positive") => "non_positive".to_string(),
-            StatsError::DomainError(msg) if msg.contains("probability") => "invalid_probability".to_string(),
+            StatsError::DomainError(msg) if msg.contains("probability") => {
+                "invalid_probability".to_string()
+            }
             StatsError::ConvergenceError(_) => "convergence_failure".to_string(),
-            StatsError::ComputationError(msg) if msg.contains("singular") => "singular_matrix".to_string(),
+            StatsError::ComputationError(msg) if msg.contains("singular") => {
+                "singular_matrix".to_string()
+            }
             _ => "other".to_string(),
         }
     }
@@ -802,33 +825,33 @@ impl AutoRecoverySystem {
         context: &EnhancedErrorContext,
     ) -> Option<RecoveryAction> {
         match error {
-            StatsError::InvalidArgument(msg) if msg.contains("NaN") => {
-                Some(RecoveryAction {
-                    description: "Automatically remove NaN values".to_string(),
-                    priority: 1,
-                    performance_impact: PerformanceImpact::Minimal,
-                    code_example: Some("let clean_data = data.iter().filter(|x| x.is_finite()).collect();".to_string()),
-                    automatic: true,
-                })
-            }
+            StatsError::InvalidArgument(msg) if msg.contains("NaN") => Some(RecoveryAction {
+                description: "Automatically remove NaN values".to_string(),
+                priority: 1,
+                performance_impact: PerformanceImpact::Minimal,
+                code_example: Some(
+                    "let clean_data = data.iter().filter(|x| x.is_finite()).collect();".to_string(),
+                ),
+                automatic: true,
+            }),
             StatsError::DimensionMismatch(_) => {
                 Some(RecoveryAction {
                     description: "Attempt automatic dimension alignment".to_string(),
                     priority: 2,
                     performance_impact: PerformanceImpact::Minimal,
-                    code_example: Some("let aligned_data = data.broadcast_to(target_shape);".to_string()),
+                    code_example: Some(
+                        "let aligned_data = data.broadcast_to(target_shape);".to_string(),
+                    ),
                     automatic: false, // Usually requires user input
                 })
             }
-            StatsError::ComputationError(msg) if msg.contains("singular") => {
-                Some(RecoveryAction {
-                    description: "Add regularization to handle singularity".to_string(),
-                    priority: 1,
-                    performance_impact: PerformanceImpact::Minimal,
-                    code_example: Some("let regularized = matrix + Array2::eye(n) * 1e-6;".to_string()),
-                    automatic: true,
-                })
-            }
+            StatsError::ComputationError(msg) if msg.contains("singular") => Some(RecoveryAction {
+                description: "Add regularization to handle singularity".to_string(),
+                priority: 1,
+                performance_impact: PerformanceImpact::Minimal,
+                code_example: Some("let regularized = matrix + Array2::eye(n) * 1e-6;".to_string()),
+                automatic: true,
+            }),
             _ => None,
         }
     }
@@ -868,17 +891,19 @@ mod tests {
     fn test_enhanced_error_context() {
         let data = [1.0, 2.0, f64::NAN, 4.0];
         let diagnostics = ErrorDiagnostics::diagnose_array_f64(&data, "test_data");
-        
+
         assert_eq!(diagnostics.shape, vec![4]);
         assert_eq!(diagnostics.summary.nan_count, 1);
         assert_eq!(diagnostics.summary.finite_count, 3);
-        assert!(diagnostics.quality_issues.contains(&DataQualityIssue::HasNaN));
+        assert!(diagnostics
+            .quality_issues
+            .contains(&DataQualityIssue::HasNaN));
     }
 
     #[test]
     fn test_batch_error_handler() {
         let mut handler = BatchErrorHandler::new();
-        
+
         let error = ErrorMessages::empty_array("test");
         let context = EnhancedErrorContext {
             function_name: "test_function".to_string(),
@@ -887,14 +912,14 @@ mod tests {
             system_info: ErrorDiagnostics::get_system_diagnostics(),
             recovery_actions: vec![],
         };
-        
+
         handler.add_error(0, error, context);
         handler.add_warning(1, "This is a test warning".to_string());
-        
+
         let report = handler.generate_batch_report();
         assert!(report.contains("Batch Processing Errors"));
         assert!(report.contains("Batch Processing Warnings"));
-        
+
         let summary = handler.get_error_summary();
         assert_eq!(summary.get("Invalid Argument"), Some(&1));
     }
@@ -909,7 +934,7 @@ mod tests {
             system_info: ErrorDiagnostics::get_system_diagnostics(),
             recovery_actions: vec![],
         };
-        
+
         let recovery = AutoRecoverySystem::attempt_auto_recovery(&error, &context);
         assert!(recovery.is_some());
         assert!(recovery.unwrap().automatic);

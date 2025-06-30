@@ -869,7 +869,7 @@ where
 }
 
 /// Implements the Levenberg-Marquardt method for root finding
-/// 
+///
 /// This is a damped least-squares method that combines the steepest descent
 /// and Gauss-Newton methods. It's particularly effective for overdetermined
 /// systems and provides good convergence properties.
@@ -982,7 +982,8 @@ where
                     Some(d) => d,
                     None => {
                         // If still singular, use steepest descent
-                        let step_size = 0.1 / (1.0 + jtf.iter().map(|&g| g.powi(2)).sum::<f64>().sqrt());
+                        let step_size =
+                            0.1 / (1.0 + jtf.iter().map(|&g| g.powi(2)).sum::<f64>().sqrt());
                         -&jtf * step_size
                     }
                 }
@@ -1004,7 +1005,7 @@ where
         if new_cost < current_cost {
             // Good step: accept it and decrease damping
             let improvement = (current_cost - new_cost) / current_cost;
-            
+
             // Check convergence on parameters
             let step_norm = (0..n)
                 .map(|i| (x_new[i] - x[i]).powi(2))
@@ -1042,7 +1043,6 @@ where
             jac = new_jac;
             nfev += nfev_delta;
             njev += njev_delta;
-
         } else {
             // Bad step: reject it and increase damping
             lambda = f64::min(lambda * lambda_factor, 1e12);
@@ -1075,7 +1075,7 @@ where
 }
 
 /// Implements scalar root finding methods for single-variable functions
-/// 
+///
 /// This method assumes the input function is scalar (single input, single output)
 /// and uses a combination of bisection and Newton's method for robust convergence.
 fn root_scalar<F, J, S>(
@@ -1168,7 +1168,11 @@ where
                 }
             } else {
                 // No bracket and no derivative, try a small step
-                if f_val > 0.0 { -0.1 } else { 0.1 }
+                if f_val > 0.0 {
+                    -0.1
+                } else {
+                    0.1
+                }
             }
         };
 

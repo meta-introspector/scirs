@@ -279,7 +279,9 @@ pub struct QuantizationAwareTrainer<F: Float + Debug + FromPrimitive + Send + Sy
     quantized_params: HashMap<String, Array<F, IxDyn>>,
 }
 
-impl<F: Float + Debug + FromPrimitive + Send + Sync + ndarray::ScalarOperand> QuantizationAwareTrainer<F> {
+impl<F: Float + Debug + FromPrimitive + Send + Sync + ndarray::ScalarOperand>
+    QuantizationAwareTrainer<F>
+{
     /// Create a new QAT trainer
     pub fn new(config: QuantizationConfig) -> Self {
         Self {

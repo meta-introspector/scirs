@@ -475,9 +475,9 @@ mod tests {
 
         let b = Array1::from_vec(vec![1.0, 1.0, 1.0]);
 
-        let options = LSQROptions { 
-            calc_var: true, 
-            ..Default::default() 
+        let options = LSQROptions {
+            calc_var: true,
+            ..Default::default()
         };
 
         let result = lsqr(&matrix, &b.view(), None, options).unwrap();

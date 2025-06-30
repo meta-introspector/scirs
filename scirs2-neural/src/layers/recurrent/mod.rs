@@ -20,14 +20,16 @@ use ndarray::{Array, IxDyn};
 use std::sync::{Arc, RwLock};
 
 /// Type alias for LSTM gate cache (input, forget, output, cell gates)
-pub type LstmGateCache<F> = Arc<RwLock<
-    Option<(
-        Array<F, IxDyn>,
-        Array<F, IxDyn>,
-        Array<F, IxDyn>,
-        Array<F, IxDyn>,
-    )>,
->>;
+pub type LstmGateCache<F> = Arc<
+    RwLock<
+        Option<(
+            Array<F, IxDyn>,
+            Array<F, IxDyn>,
+            Array<F, IxDyn>,
+            Array<F, IxDyn>,
+        )>,
+    >,
+>;
 
 /// Type alias for LSTM forward step output (new hidden, new cell, gates)
 pub type LstmStepOutput<F> = (

@@ -242,7 +242,10 @@ where
     }
 
     /// Compute descriptive statistics for the given data
-    pub fn compute(&self, data: ArrayView1<F>) -> StatsResult<StandardizedResult<DescriptiveStats<F>>> {
+    pub fn compute(
+        &self,
+        data: ArrayView1<F>,
+    ) -> StatsResult<StandardizedResult<DescriptiveStats<F>>> {
         let start_time = std::time::Instant::now();
         let mut warnings = Vec::new();
 
@@ -255,7 +258,7 @@ where
 
         // Handle null values based on strategy
         let (cleaned_data, sample_size) = self.handle_null_values(&data, &mut warnings)?;
-        
+
         // Select computation method based on configuration
         let stats = if self.config.auto_optimize {
             self.compute_optimized(&cleaned_data, &mut warnings)?
@@ -285,22 +288,24 @@ where
     }
 
     /// Handle null values according to the configured strategy
-    fn handle_null_values(&self, data: &ArrayView1<F>, warnings: &mut Vec<String>) -> StatsResult<(Array1<F>, usize)> {
+    fn handle_null_values(
+        &self,
+        data: &ArrayView1<F>,
+        warnings: &mut Vec<String>,
+    ) -> StatsResult<(Array1<F>, usize)> {
         // For now, assume no null values in numeric arrays
         // In a real implementation, this would detect and handle NaN values
-        let finite_data: Vec<F> = data.iter()
-            .filter(|&&x| x.is_finite())
-            .cloned()
-            .collect();
+        let finite_data: Vec<F> = data.iter().filter(|&&x| x.is_finite()).cloned().collect();
 
         if finite_data.len() != data.len() {
-            warnings.push(format!("Removed {} non-finite values", data.len() - finite_data.len()));
+            warnings.push(format!(
+                "Removed {} non-finite values",
+                data.len() - finite_data.len()
+            ));
         }
 
         match self.config.null_handling {
-            NullHandling::Exclude => {
-                Ok((Array1::from_vec(finite_data), finite_data.len()))
-            }
+            NullHandling::Exclude => Ok((Array1::from_vec(finite_data), finite_data.len())),
             NullHandling::Fail if finite_data.len() != data.len() => {
                 Err(StatsError::InvalidArgument(
                     "Null values encountered with Fail strategy".to_string(),
@@ -311,9 +316,13 @@ where
     }
 
     /// Compute statistics using optimized methods
-    fn compute_optimized(&self, data: &Array1<F>, warnings: &mut Vec<String>) -> StatsResult<DescriptiveStats<F>> {
+    fn compute_optimized(
+        &self,
+        data: &Array1<F>,
+        warnings: &mut Vec<String>,
+    ) -> StatsResult<DescriptiveStats<F>> {
         let n = data.len();
-        
+
         // Use SIMD-optimized functions when available and beneficial
         if self.config.simd && n > 64 {
             self.compute_simd_optimized(data, warnings)
@@ -325,17 +334,22 @@ where
     }
 
     /// Compute statistics using SIMD optimizations
-    fn compute_simd_optimized(&self, data: &Array1<F>, _warnings: &mut Vec<String>) -> StatsResult<DescriptiveStats<F>> {
+    fn compute_simd_optimized(
+        &self,
+        data: &Array1<F>,
+        _warnings: &mut Vec<String>,
+    ) -> StatsResult<DescriptiveStats<F>> {
         // Use SIMD-optimized descriptive statistics
         let mean = crate::descriptive_simd::mean_simd(&data.view())?;
-        let variance = crate::descriptive_simd::variance_simd(&data.view(), self.ddof.unwrap_or(1))?;
+        let variance =
+            crate::descriptive_simd::variance_simd(&data.view(), self.ddof.unwrap_or(1))?;
         let std = variance.sqrt();
 
         // Compute other statistics
         let (min, max) = self.compute_min_max(data);
         let sorted_data = self.get_sorted_data(data);
         let percentiles = self.compute_percentiles(&sorted_data)?;
-        
+
         // Use existing functions for skewness and kurtosis
         let skewness = crate::descriptive::skew(&data.view(), false)?;
         let kurtosis = crate::descriptive::kurtosis(&data.view(), true, false)?;
@@ -356,17 +370,28 @@ where
     }
 
     /// Compute statistics using parallel optimizations
-    fn compute_parallel_optimized(&self, data: &Array1<F>, _warnings: &mut Vec<String>) -> StatsResult<DescriptiveStats<F>> {
+    fn compute_parallel_optimized(
+        &self,
+        data: &Array1<F>,
+        _warnings: &mut Vec<String>,
+    ) -> StatsResult<DescriptiveStats<F>> {
         // Use parallel-optimized functions
-        let mean = crate::parallel_stats::mean_parallel(&data.view(), scirs2_core::parallel_ops::num_threads())?;
-        let variance = crate::parallel_stats::variance_parallel(&data.view(), self.ddof.unwrap_or(1), scirs2_core::parallel_ops::num_threads())?;
+        let mean = crate::parallel_stats::mean_parallel(
+            &data.view(),
+            scirs2_core::parallel_ops::num_threads(),
+        )?;
+        let variance = crate::parallel_stats::variance_parallel(
+            &data.view(),
+            self.ddof.unwrap_or(1),
+            scirs2_core::parallel_ops::num_threads(),
+        )?;
         let std = variance.sqrt();
 
         // Compute other statistics
         let (min, max) = self.compute_min_max(data);
         let sorted_data = self.get_sorted_data(data);
         let percentiles = self.compute_percentiles(&sorted_data)?;
-        
+
         // Use existing functions for skewness and kurtosis
         let skewness = crate::descriptive::skew(&data.view(), false)?;
         let kurtosis = crate::descriptive::kurtosis(&data.view(), true, false)?;
@@ -387,15 +412,19 @@ where
     }
 
     /// Compute statistics using standard methods
-    fn compute_standard(&self, data: &Array1<F>, _warnings: &mut Vec<String>) -> StatsResult<DescriptiveStats<F>> {
+    fn compute_standard(
+        &self,
+        data: &Array1<F>,
+        _warnings: &mut Vec<String>,
+    ) -> StatsResult<DescriptiveStats<F>> {
         let mean = crate::descriptive::mean(&data.view())?;
         let variance = crate::descriptive::var(&data.view(), self.ddof.unwrap_or(1))?;
         let std = variance.sqrt();
-        
+
         let (min, max) = self.compute_min_max(data);
         let sorted_data = self.get_sorted_data(data);
         let percentiles = self.compute_percentiles(&sorted_data)?;
-        
+
         let skewness = crate::descriptive::skew(&data.view(), false)?;
         let kurtosis = crate::descriptive::kurtosis(&data.view(), true, false)?;
 
@@ -418,12 +447,16 @@ where
     fn compute_min_max(&self, data: &Array1<F>) -> (F, F) {
         let mut min = data[0];
         let mut max = data[0];
-        
+
         for &value in data.iter() {
-            if value < min { min = value; }
-            if value > max { max = value; }
+            if value < min {
+                min = value;
+            }
+            if value > max {
+                max = value;
+            }
         }
-        
+
         (min, max)
     }
 
@@ -526,7 +559,11 @@ where
     }
 
     /// Compute correlation between two variables
-    pub fn compute(&self, x: ArrayView1<F>, y: ArrayView1<F>) -> StatsResult<StandardizedResult<CorrelationResult<F>>> {
+    pub fn compute(
+        &self,
+        x: ArrayView1<F>,
+        y: ArrayView1<F>,
+    ) -> StatsResult<StandardizedResult<CorrelationResult<F>>> {
         let start_time = std::time::Instant::now();
         let mut warnings = Vec::new();
 
@@ -546,9 +583,11 @@ where
         // Check minimum periods requirement
         if let Some(min_periods) = self.min_periods {
             if x.len() < min_periods {
-                return Err(StatsError::InvalidArgument(
-                    format!("Insufficient data: {} observations, {} required", x.len(), min_periods),
-                ));
+                return Err(StatsError::InvalidArgument(format!(
+                    "Insufficient data: {} observations, {} required",
+                    x.len(),
+                    min_periods
+                )));
             }
         }
 
@@ -561,12 +600,8 @@ where
                     crate::correlation::pearson_r(&x, &y)?
                 }
             }
-            CorrelationMethod::Spearman => {
-                crate::correlation::spearman_r(&x, &y)?
-            }
-            CorrelationMethod::Kendall => {
-                crate::correlation::kendall_tau(&x, &y, "b")?
-            }
+            CorrelationMethod::Spearman => crate::correlation::spearman_r(&x, &y)?,
+            CorrelationMethod::Kendall => crate::correlation::kendall_tau(&x, &y, "b")?,
             _ => {
                 warnings.push("Advanced correlation methods not yet implemented".to_string());
                 crate::correlation::pearson_r(&x, &y)?
@@ -608,7 +643,10 @@ where
     }
 
     /// Compute correlation matrix for multiple variables
-    pub fn compute_matrix(&self, data: ArrayView2<F>) -> StatsResult<StandardizedResult<Array2<F>>> {
+    pub fn compute_matrix(
+        &self,
+        data: ArrayView2<F>,
+    ) -> StatsResult<StandardizedResult<Array2<F>>> {
         let start_time = std::time::Instant::now();
         let mut warnings = Vec::new();
 
@@ -616,7 +654,7 @@ where
         let correlation_matrix = if self.config.auto_optimize {
             // Use memory-optimized correlation matrix computation
             let mut optimizer = crate::memory_optimization_advanced::MemoryOptimizationSuite::new(
-                crate::memory_optimization_advanced::MemoryOptimizationConfig::default()
+                crate::memory_optimization_advanced::MemoryOptimizationConfig::default(),
             );
             optimizer.optimized_correlation_matrix(data)?
         } else {
@@ -644,29 +682,35 @@ where
     }
 
     /// Compute statistical inference (p-values, confidence intervals)
-    fn compute_statistical_inference(&self, correlation: F, n: usize, _warnings: &mut Vec<String>) -> StatsResult<(Option<F>, Option<(F, F)>)> {
+    fn compute_statistical_inference(
+        &self,
+        correlation: F,
+        n: usize,
+        _warnings: &mut Vec<String>,
+    ) -> StatsResult<(Option<F>, Option<(F, F)>)> {
         // Fisher's z-transformation for confidence intervals
         let z = ((F::one() + correlation) / (F::one() - correlation)).ln() * F::from(0.5).unwrap();
         let se_z = F::one() / F::from(n - 3).unwrap().sqrt();
-        
+
         // Critical value for given confidence level (simplified - would use proper t-distribution)
         let alpha = F::one() - F::from(self.config.confidence_level).unwrap();
         let z_critical = F::from(1.96).unwrap(); // Approximate for 95% confidence
-        
+
         let z_lower = z - z_critical * se_z;
         let z_upper = z + z_critical * se_z;
-        
+
         // Transform back to correlation scale
         let r_lower = (F::from(2.0).unwrap() * z_lower).exp();
         let r_lower = (r_lower - F::one()) / (r_lower + F::one());
-        
+
         let r_upper = (F::from(2.0).unwrap() * z_upper).exp();
         let r_upper = (r_upper - F::one()) / (r_upper + F::one());
-        
+
         // Simplified p-value calculation (would use proper statistical test)
-        let t_stat = correlation * F::from(n - 2).unwrap().sqrt() / (F::one() - correlation * correlation).sqrt();
+        let t_stat = correlation * F::from(n - 2).unwrap().sqrt()
+            / (F::one() - correlation * correlation).sqrt();
         let p_value = F::from(2.0).unwrap() * (F::one() - F::from(0.95).unwrap()); // Simplified
-        
+
         Ok((Some(p_value), Some((r_lower, r_upper))))
     }
 
@@ -699,7 +743,10 @@ where
     }
 
     /// Perform comprehensive descriptive analysis
-    pub fn describe(&self, data: ArrayView1<F>) -> StatsResult<StandardizedResult<DescriptiveStats<F>>> {
+    pub fn describe(
+        &self,
+        data: ArrayView1<F>,
+    ) -> StatsResult<StandardizedResult<DescriptiveStats<F>>> {
         DescriptiveStatsBuilder::new()
             .parallel(self.config.parallel)
             .simd(self.config.simd)
@@ -709,7 +756,12 @@ where
     }
 
     /// Perform correlation analysis
-    pub fn correlate(&self, x: ArrayView1<F>, y: ArrayView1<F>, method: CorrelationMethod) -> StatsResult<StandardizedResult<CorrelationResult<F>>> {
+    pub fn correlate(
+        &self,
+        x: ArrayView1<F>,
+        y: ArrayView1<F>,
+        method: CorrelationMethod,
+    ) -> StatsResult<StandardizedResult<CorrelationResult<F>>> {
         CorrelationBuilder::new()
             .method(method)
             .confidence_level(self.config.confidence_level)
@@ -770,7 +822,7 @@ mod tests {
     #[test]
     fn test_descriptive_stats_builder() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
-        
+
         let result = DescriptiveStatsBuilder::new()
             .ddof(1)
             .parallel(false)
@@ -811,14 +863,16 @@ mod tests {
 
         let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let y = array![5.0, 4.0, 3.0, 2.0, 1.0];
-        let corr_result = analyzer.correlate(x.view(), y.view(), CorrelationMethod::Pearson).unwrap();
+        let corr_result = analyzer
+            .correlate(x.view(), y.view(), CorrelationMethod::Pearson)
+            .unwrap();
         assert!((corr_result.value.correlation + 1.0).abs() < 1e-10);
     }
 
     #[test]
     fn test_null_handling() {
         let data = array![1.0, 2.0, f64::NAN, 4.0, 5.0];
-        
+
         let result = DescriptiveStatsBuilder::new()
             .null_handling(NullHandling::Exclude)
             .compute(data.view())
@@ -828,7 +882,7 @@ mod tests {
         assert!(!result.warnings.is_empty()); // Should have warning about removed values
     }
 
-    #[test] 
+    #[test]
     fn test_standardized_config() {
         let config = StandardizedConfig {
             auto_optimize: false,
@@ -883,7 +937,10 @@ mod tests {
         };
 
         let report = framework.validate_api(&signature);
-        assert!(matches!(report.overall_status, ValidationStatus::Passed | ValidationStatus::PassedWithWarnings));
+        assert!(matches!(
+            report.overall_status,
+            ValidationStatus::Passed | ValidationStatus::PassedWithWarnings
+        ));
     }
 }
 
@@ -1238,7 +1295,7 @@ impl APIValidationFramework {
             performance_benchmarks: HashMap::new(),
             error_patterns: HashMap::new(),
         };
-        
+
         framework.initialize_default_rules();
         framework
     }
@@ -1248,7 +1305,8 @@ impl APIValidationFramework {
         // Parameter naming consistency
         self.add_validation_rule(ValidationRule {
             id: "param_naming_consistency".to_string(),
-            description: "Parameter names should follow consistent snake_case conventions".to_string(),
+            description: "Parameter names should follow consistent snake_case conventions"
+                .to_string(),
             category: ValidationCategory::ParameterNaming,
             severity: ValidationSeverity::Warning,
         });
@@ -1256,7 +1314,8 @@ impl APIValidationFramework {
         // Error handling consistency
         self.add_validation_rule(ValidationRule {
             id: "error_handling_consistency".to_string(),
-            description: "Functions should return Result<T, StatsError> for consistency".to_string(),
+            description: "Functions should return Result<T, StatsError> for consistency"
+                .to_string(),
             category: ValidationCategory::ErrorHandling,
             severity: ValidationSeverity::Error,
         });
@@ -1310,7 +1369,11 @@ impl APIValidationFramework {
     }
 
     /// Apply a single validation rule
-    fn apply_validation_rule(&self, rule: &ValidationRule, signature: &APISignature) -> ValidationResult {
+    fn apply_validation_rule(
+        &self,
+        rule: &ValidationRule,
+        signature: &APISignature,
+    ) -> ValidationResult {
         match rule.category {
             ValidationCategory::ParameterNaming => self.validate_parameter_naming(signature),
             ValidationCategory::ErrorHandling => self.validate_error_handling(signature),
@@ -1330,20 +1393,23 @@ impl APIValidationFramework {
     fn validate_parameter_naming(&self, signature: &APISignature) -> ValidationResult {
         let mut messages = Vec::new();
         let mut suggested_fixes = Vec::new();
-        
+
         for param in &signature.parameters {
             // Check for snake_case convention
             if param.name.contains(char::is_uppercase) || param.name.contains('-') {
                 messages.push(ValidationMessage {
                     severity: ValidationSeverity::Warning,
                     message: format!("Parameter '{}' should use snake_case naming", param.name),
-                    location: Some(format!("{}::{}", signature.module_path, signature.function_name)),
+                    location: Some(format!(
+                        "{}::{}",
+                        signature.module_path, signature.function_name
+                    )),
                     rule_id: "param_naming_consistency".to_string(),
                 });
                 suggested_fixes.push(format!("Rename parameter '{}' to snake_case", param.name));
             }
         }
-        
+
         ValidationResult {
             passed: messages.is_empty(),
             messages,
@@ -1356,29 +1422,35 @@ impl APIValidationFramework {
     fn validate_error_handling(&self, signature: &APISignature) -> ValidationResult {
         let mut messages = Vec::new();
         let mut suggested_fixes = Vec::new();
-        
+
         if !signature.return_type.result_wrapped {
             messages.push(ValidationMessage {
                 severity: ValidationSeverity::Error,
                 message: "Function should return Result<T, StatsError> for consistency".to_string(),
-                location: Some(format!("{}::{}", signature.module_path, signature.function_name)),
+                location: Some(format!(
+                    "{}::{}",
+                    signature.module_path, signature.function_name
+                )),
                 rule_id: "error_handling_consistency".to_string(),
             });
             suggested_fixes.push("Wrap return type in Result<T, StatsError>".to_string());
         }
-        
+
         if let Some(error_type) = &signature.return_type.error_type {
             if error_type != "StatsError" {
                 messages.push(ValidationMessage {
                     severity: ValidationSeverity::Warning,
                     message: format!("Non-standard error type '{}' used", error_type),
-                    location: Some(format!("{}::{}", signature.module_path, signature.function_name)),
+                    location: Some(format!(
+                        "{}::{}",
+                        signature.module_path, signature.function_name
+                    )),
                     rule_id: "error_handling_consistency".to_string(),
                 });
                 suggested_fixes.push("Use StatsError for consistency".to_string());
             }
         }
-        
+
         ValidationResult {
             passed: messages.is_empty(),
             messages,
@@ -1391,29 +1463,37 @@ impl APIValidationFramework {
     fn validate_documentation(&self, signature: &APISignature) -> ValidationResult {
         let mut messages = Vec::new();
         let mut suggested_fixes = Vec::new();
-        
+
         if !signature.documentation.has_doc_comment {
             messages.push(ValidationMessage {
                 severity: ValidationSeverity::Warning,
                 message: "Function lacks documentation comment".to_string(),
-                location: Some(format!("{}::{}", signature.module_path, signature.function_name)),
+                location: Some(format!(
+                    "{}::{}",
+                    signature.module_path, signature.function_name
+                )),
                 rule_id: "documentation_completeness".to_string(),
             });
             suggested_fixes.push("Add comprehensive doc comment".to_string());
         }
-        
+
         if !signature.documentation.has_examples {
             messages.push(ValidationMessage {
                 severity: ValidationSeverity::Info,
                 message: "Function lacks usage examples".to_string(),
-                location: Some(format!("{}::{}", signature.module_path, signature.function_name)),
+                location: Some(format!(
+                    "{}::{}",
+                    signature.module_path, signature.function_name
+                )),
                 rule_id: "documentation_completeness".to_string(),
             });
             suggested_fixes.push("Add usage examples in # Examples section".to_string());
         }
-        
+
         ValidationResult {
-            passed: messages.iter().all(|m| matches!(m.severity, ValidationSeverity::Info)),
+            passed: messages
+                .iter()
+                .all(|m| matches!(m.severity, ValidationSeverity::Info)),
             messages,
             suggested_fixes,
             related_rules: vec!["scipy_compatibility".to_string()],
@@ -1424,22 +1504,35 @@ impl APIValidationFramework {
     fn validate_scipy_compatibility(&self, signature: &APISignature) -> ValidationResult {
         let mut messages = Vec::new();
         let mut suggested_fixes = Vec::new();
-        
+
         // Check for SciPy standard parameter names
-        let scipy_standard_params = ["axis", "ddof", "keepdims", "out", "dtype", "method", "alternative"];
-        let has_scipy_params = signature.parameters.iter()
+        let scipy_standard_params = [
+            "axis",
+            "ddof",
+            "keepdims",
+            "out",
+            "dtype",
+            "method",
+            "alternative",
+        ];
+        let has_scipy_params = signature
+            .parameters
+            .iter()
             .any(|p| scipy_standard_params.contains(&p.name.as_str()));
-        
+
         if has_scipy_params && signature.documentation.scipy_compatibility.is_none() {
             messages.push(ValidationMessage {
                 severity: ValidationSeverity::Info,
                 message: "Consider documenting SciPy compatibility status".to_string(),
-                location: Some(format!("{}::{}", signature.module_path, signature.function_name)),
+                location: Some(format!(
+                    "{}::{}",
+                    signature.module_path, signature.function_name
+                )),
                 rule_id: "scipy_compatibility".to_string(),
             });
             suggested_fixes.push("Add SciPy compatibility note in documentation".to_string());
         }
-        
+
         ValidationResult {
             passed: true, // Informational only
             messages,
@@ -1452,17 +1545,20 @@ impl APIValidationFramework {
     fn validate_performance(&self, signature: &APISignature) -> ValidationResult {
         let mut messages = Vec::new();
         let mut suggested_fixes = Vec::new();
-        
+
         if signature.performance.time_complexity.is_none() {
             messages.push(ValidationMessage {
                 severity: ValidationSeverity::Info,
                 message: "Consider documenting time complexity".to_string(),
-                location: Some(format!("{}::{}", signature.module_path, signature.function_name)),
+                location: Some(format!(
+                    "{}::{}",
+                    signature.module_path, signature.function_name
+                )),
                 rule_id: "performance_characteristics".to_string(),
             });
             suggested_fixes.push("Add time complexity documentation".to_string());
         }
-        
+
         ValidationResult {
             passed: true, // Informational only
             messages,
@@ -1492,47 +1588,54 @@ impl ValidationReport {
     /// Add validation result
     pub fn add_result(&mut self, rule_id: String, result: ValidationResult) {
         self.summary.total_rules += 1;
-        
+
         if result.passed {
             self.summary.passed += 1;
         } else {
-            let max_severity = result.messages.iter()
+            let max_severity = result
+                .messages
+                .iter()
                 .map(|m| m.severity)
                 .max()
                 .unwrap_or(ValidationSeverity::Info);
-                
+
             match max_severity {
-                ValidationSeverity::Info => {},
+                ValidationSeverity::Info => {}
                 ValidationSeverity::Warning => {
                     self.summary.warnings += 1;
                     if matches!(self.overall_status, ValidationStatus::Passed) {
                         self.overall_status = ValidationStatus::PassedWithWarnings;
                     }
-                },
+                }
                 ValidationSeverity::Error => {
                     self.summary.errors += 1;
                     if !matches!(self.overall_status, ValidationStatus::Critical) {
                         self.overall_status = ValidationStatus::Failed;
                     }
-                },
+                }
                 ValidationSeverity::Critical => {
                     self.summary.critical += 1;
                     self.overall_status = ValidationStatus::Critical;
-                },
+                }
             }
         }
-        
+
         self.results.insert(rule_id, result);
     }
 
     /// Generate human-readable report
     pub fn generate_report(&self) -> String {
         let mut report = String::new();
-        report.push_str(&format!("API Validation Report for {}\n", self.function_name));
+        report.push_str(&format!(
+            "API Validation Report for {}\n",
+            self.function_name
+        ));
         report.push_str(&format!("Status: {:?}\n", self.overall_status));
-        report.push_str(&format!("Summary: {} passed, {} warnings, {} errors, {} critical\n\n",
-            self.summary.passed, self.summary.warnings, self.summary.errors, self.summary.critical));
-        
+        report.push_str(&format!(
+            "Summary: {} passed, {} warnings, {} errors, {} critical\n\n",
+            self.summary.passed, self.summary.warnings, self.summary.errors, self.summary.critical
+        ));
+
         for (rule_id, result) in &self.results {
             if !result.passed {
                 report.push_str(&format!("Rule: {}\n", rule_id));
@@ -1548,7 +1651,7 @@ impl ValidationReport {
                 report.push('\n');
             }
         }
-        
+
         report
     }
 }

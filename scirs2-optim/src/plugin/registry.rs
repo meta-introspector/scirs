@@ -49,22 +49,22 @@ pub struct PluginRegistration {
 pub trait PluginFactoryWrapper: Debug + Send + Sync {
     /// Create optimizer with f32 precision
     fn create_f32(&self, config: OptimizerConfig) -> Result<Box<dyn OptimizerPlugin<f32>>>;
-    
+
     /// Create optimizer with f64 precision
     fn create_f64(&self, config: OptimizerConfig) -> Result<Box<dyn OptimizerPlugin<f64>>>;
-    
+
     /// Get factory information
     fn info(&self) -> PluginInfo;
-    
+
     /// Validate configuration
     fn validate_config(&self, config: &OptimizerConfig) -> Result<()>;
-    
+
     /// Get default configuration
     fn default_config(&self) -> OptimizerConfig;
-    
+
     /// Get configuration schema
     fn config_schema(&self) -> ConfigSchema;
-    
+
     /// Check if factory supports the given data type
     fn supports_type(&self, data_type: &DataType) -> bool;
 }
@@ -155,16 +155,16 @@ pub struct CacheStats {
 pub trait RegistryEventListener: Debug + Send + Sync {
     /// Called when a plugin is registered
     fn on_plugin_registered(&mut self, info: &PluginInfo) {}
-    
+
     /// Called when a plugin is unregistered
     fn on_plugin_unregistered(&mut self, name: &str) {}
-    
+
     /// Called when a plugin is loaded
     fn on_plugin_loaded(&mut self, name: &str) {}
-    
+
     /// Called when a plugin fails to load
     fn on_plugin_load_failed(&mut self, name: &str, error: &str) {}
-    
+
     /// Called when a plugin is enabled/disabled
     fn on_plugin_status_changed(&mut self, name: &str, status: &PluginStatus) {}
 }
@@ -223,7 +223,7 @@ impl PluginRegistry {
             event_listeners: RwLock::new(Vec::new()),
         }
     }
-    
+
     /// Get the global plugin registry instance
     pub fn global() -> &'static Self {
         static INSTANCE: std::sync::OnceLock<PluginRegistry> = std::sync::OnceLock::new();
@@ -234,7 +234,7 @@ impl PluginRegistry {
             registry
         })
     }
-    
+
     /// Register a plugin factory
     pub fn register_plugin<F>(&self, factory: F) -> Result<()>
     where
@@ -242,12 +242,12 @@ impl PluginRegistry {
     {
         let info = factory.info();
         let name = info.name.clone();
-        
+
         // Validate plugin if enabled
         if self.config.validate_on_registration {
             self.validate_plugin(&factory)?;
         }
-        
+
         let registration = PluginRegistration {
             factory: Box::new(factory),
             info: info.clone(),
@@ -256,12 +256,12 @@ impl PluginRegistry {
             load_count: 0,
             last_used: None,
         };
-        
+
         {
             let mut factories = self.factories.write().unwrap();
             factories.insert(name.clone(), registration);
         }
-        
+
         // Notify event listeners
         {
             let mut listeners = self.event_listeners.write().unwrap();
@@ -269,10 +269,10 @@ impl PluginRegistry {
                 listener.on_plugin_registered(&info);
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Unregister a plugin
     pub fn unregister_plugin(&self, name: &str) -> Result<()> {
         let mut factories = self.factories.write().unwrap();
@@ -288,7 +288,7 @@ impl PluginRegistry {
             Err(OptimError::PluginNotFound(name.to_string()))
         }
     }
-    
+
     /// Create optimizer instance from plugin
     pub fn create_optimizer<A: Float + 'static>(
         &self,
@@ -299,30 +299,31 @@ impl PluginRegistry {
         A: Float + Debug + Send + Sync,
     {
         let factories = self.factories.read().unwrap();
-        let registration = factories.get(name)
+        let registration = factories
+            .get(name)
             .ok_or_else(|| OptimError::PluginNotFound(name.to_string()))?;
-        
+
         // Check plugin status
         match registration.status {
-            PluginStatus::Active => {},
+            PluginStatus::Active => {}
             PluginStatus::Disabled => {
                 return Err(OptimError::PluginDisabled(name.to_string()));
-            },
+            }
             PluginStatus::Failed(ref error) => {
                 return Err(OptimError::PluginLoadError(error.clone()));
-            },
+            }
             PluginStatus::Deprecated => {
                 // Log warning but continue
                 eprintln!("Warning: Plugin '{}' is deprecated", name);
-            },
+            }
             PluginStatus::Maintenance => {
                 return Err(OptimError::PluginInMaintenance(name.to_string()));
-            },
+            }
         }
-        
+
         // Validate configuration
         registration.factory.validate_config(&config)?;
-        
+
         // Create optimizer based on type
         let optimizer = if std::any::TypeId::of::<A>() == std::any::TypeId::of::<f32>() {
             let opt = registration.factory.create_f32(config)?;
@@ -333,11 +334,12 @@ impl PluginRegistry {
             // This is safe because we checked the type
             unsafe { std::mem::transmute(opt) }
         } else {
-            return Err(OptimError::UnsupportedDataType(
-                format!("Type {} not supported", std::any::type_name::<A>())
-            ));
+            return Err(OptimError::UnsupportedDataType(format!(
+                "Type {} not supported",
+                std::any::type_name::<A>()
+            )));
         };
-        
+
         // Update usage statistics
         drop(factories);
         let mut factories = self.factories.write().unwrap();
@@ -345,45 +347,45 @@ impl PluginRegistry {
             registration.load_count += 1;
             registration.last_used = Some(std::time::SystemTime::now());
         }
-        
+
         // Notify event listeners
         drop(factories);
         let mut listeners = self.event_listeners.write().unwrap();
         for listener in listeners.iter_mut() {
             listener.on_plugin_loaded(name);
         }
-        
+
         Ok(optimizer)
     }
-    
+
     /// List all registered plugins
     pub fn list_plugins(&self) -> Vec<PluginInfo> {
         let factories = self.factories.read().unwrap();
         factories.values().map(|reg| reg.info.clone()).collect()
     }
-    
+
     /// Search for plugins matching criteria
     pub fn search_plugins(&self, query: PluginQuery) -> PluginSearchResult {
         let start_time = std::time::Instant::now();
         let factories = self.factories.read().unwrap();
-        
+
         let mut matching_plugins = Vec::new();
-        
+
         for registration in factories.values() {
             if self.matches_query(&registration.info, &query) {
                 matching_plugins.push(registration.info.clone());
             }
         }
-        
+
         let total_count = matching_plugins.len();
-        
+
         // Apply limit if specified
         if let Some(limit) = query.limit {
             matching_plugins.truncate(limit);
         }
-        
+
         let search_time = start_time.elapsed();
-        
+
         PluginSearchResult {
             plugins: matching_plugins,
             total_count,
@@ -391,28 +393,29 @@ impl PluginRegistry {
             search_time,
         }
     }
-    
+
     /// Get plugin information
     pub fn get_plugin_info(&self, name: &str) -> Option<PluginInfo> {
         let factories = self.factories.read().unwrap();
         factories.get(name).map(|reg| reg.info.clone())
     }
-    
+
     /// Get plugin status
     pub fn get_plugin_status(&self, name: &str) -> Option<PluginStatus> {
         let factories = self.factories.read().unwrap();
         factories.get(name).map(|reg| reg.status.clone())
     }
-    
+
     /// Enable/disable plugin
     pub fn set_plugin_status(&self, name: &str, status: PluginStatus) -> Result<()> {
         let mut factories = self.factories.write().unwrap();
-        let registration = factories.get_mut(name)
+        let registration = factories
+            .get_mut(name)
             .ok_or_else(|| OptimError::PluginNotFound(name.to_string()))?;
-        
+
         let old_status = registration.status.clone();
         registration.status = status.clone();
-        
+
         // Notify event listeners if status changed
         if old_status != status {
             drop(factories);
@@ -421,62 +424,62 @@ impl PluginRegistry {
                 listener.on_plugin_status_changed(name, &status);
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Add plugin search path
     pub fn add_search_path<P: AsRef<Path>>(&self, path: P) {
         let mut search_paths = self.search_paths.write().unwrap();
         search_paths.push(path.as_ref().to_path_buf());
     }
-    
+
     /// Discover plugins in search paths
     pub fn discover_plugins(&self) -> Result<usize> {
         if !self.config.auto_discovery {
             return Ok(0);
         }
-        
+
         let search_paths = self.search_paths.read().unwrap();
         let mut discovered_count = 0;
-        
+
         for path in search_paths.iter() {
             if path.exists() && path.is_dir() {
                 discovered_count += self.discover_plugins_in_directory(path)?;
             }
         }
-        
+
         Ok(discovered_count)
     }
-    
+
     /// Add event listener
     pub fn add_event_listener(&self, listener: Box<dyn RegistryEventListener>) {
         let mut listeners = self.event_listeners.write().unwrap();
         listeners.push(listener);
     }
-    
+
     /// Get cache statistics
     pub fn get_cache_stats(&self) -> CacheStats {
         let cache = self.cache.lock().unwrap();
         cache.stats.clone()
     }
-    
+
     /// Clear plugin cache
     pub fn clear_cache(&self) {
         let mut cache = self.cache.lock().unwrap();
         cache.instances.clear();
         cache.stats = CacheStats::default();
     }
-    
+
     // Private helper methods
-    
+
     fn validate_plugin(&self, factory: &dyn PluginFactoryWrapper) -> Result<()> {
         // Basic validation - check if plugin can be created
         let config = factory.default_config();
         let _optimizer = factory.create_f64(config)?;
         Ok(())
     }
-    
+
     fn matches_query(&self, info: &PluginInfo, query: &PluginQuery) -> bool {
         // Check name pattern
         if let Some(ref pattern) = query.name_pattern {
@@ -484,69 +487,70 @@ impl PluginRegistry {
                 return false;
             }
         }
-        
+
         // Check category
         if let Some(ref category) = query.category {
             if info.category != *category {
                 return false;
             }
         }
-        
+
         // Check data types
         if !query.data_types.is_empty() {
-            let has_common_type = query.data_types.iter()
+            let has_common_type = query
+                .data_types
+                .iter()
                 .any(|dt| info.supported_types.contains(dt));
             if !has_common_type {
                 return false;
             }
         }
-        
+
         // Check tags
         if !query.tags.is_empty() {
-            let has_common_tag = query.tags.iter()
-                .any(|tag| info.tags.contains(tag));
+            let has_common_tag = query.tags.iter().any(|tag| info.tags.contains(tag));
             if !has_common_tag {
                 return false;
             }
         }
-        
+
         // Check version requirements
         if let Some(ref version_req) = query.version_requirements {
             if !self.version_matches(&info.version, version_req) {
                 return false;
             }
         }
-        
+
         true
     }
-    
+
     fn version_matches(&self, version: &str, requirement: &VersionRequirement) -> bool {
         // Simplified version matching - in practice would use semver
         if let Some(ref exact) = requirement.exact_version {
             return version == exact;
         }
-        
+
         if let Some(ref min) = requirement.min_version {
             if version < min {
                 return false;
             }
         }
-        
+
         if let Some(ref max) = requirement.max_version {
             if version >= max {
                 return false;
             }
         }
-        
+
         true
     }
-    
+
     fn discover_plugins_in_directory(&self, _path: &Path) -> Result<usize> {
         // In a real implementation, this would scan for plugin files
         // and attempt to load them dynamically
         Ok(0)
     }
-    
+
     fn register_builtin_plugins(&mut self) {
         // Register built-in plugins would go here
         // For now, this is a placeholder
@@ -612,32 +616,32 @@ impl PluginQueryBuilder {
             query: PluginQuery::default(),
         }
     }
-    
+
     pub fn name_pattern(mut self, pattern: &str) -> Self {
         self.query.name_pattern = Some(pattern.to_string());
         self
     }
-    
+
     pub fn category(mut self, category: PluginCategory) -> Self {
         self.query.category = Some(category);
         self
     }
-    
+
     pub fn data_type(mut self, data_type: DataType) -> Self {
         self.query.data_types.push(data_type);
         self
     }
-    
+
     pub fn tag(mut self, tag: &str) -> Self {
         self.query.tags.push(tag.to_string());
         self
     }
-    
+
     pub fn limit(mut self, limit: usize) -> Self {
         self.query.limit = Some(limit);
         self
     }
-    
+
     pub fn build(self) -> PluginQuery {
         self.query
     }
@@ -646,14 +650,14 @@ impl PluginQueryBuilder {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_plugin_registry_creation() {
         let config = RegistryConfig::default();
         let registry = PluginRegistry::new(config);
         assert_eq!(registry.list_plugins().len(), 0);
     }
-    
+
     #[test]
     fn test_plugin_query_builder() {
         let query = PluginQueryBuilder::new()
@@ -662,7 +666,7 @@ mod tests {
             .data_type(DataType::F32)
             .limit(10)
             .build();
-        
+
         assert_eq!(query.name_pattern, Some("adam".to_string()));
         assert_eq!(query.category, Some(PluginCategory::FirstOrder));
         assert_eq!(query.limit, Some(10));

@@ -5,39 +5,39 @@
 
 use ndarray::{Array1, Array2, Array3, ArrayView1, ArrayViewMut1};
 use scirs2_optim::{
-    optimizers::{Adam, SGD, AdamW, LBFGS},
+    optimizers::{Adam, AdamW, LBFGS, SGD},
+    regularizers::{ElasticNetRegularizer, L1Regularizer, L2Regularizer},
+    schedulers::{CosineAnnealingLR, ExponentialDecay, OneCycleLR},
     unified_api::{OptimizerConfig, OptimizerFactory, Parameter, UnifiedOptimizer},
-    schedulers::{ExponentialDecay, CosineAnnealingLR, OneCycleLR},
-    regularizers::{L1Regularizer, L2Regularizer, ElasticNetRegularizer},
-    Optimizer, LearningRateScheduler, Regularizer,
+    LearningRateScheduler, Optimizer, Regularizer,
 };
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
 use std::marker::PhantomData;
+use std::sync::{Arc, Mutex};
 
 /// Generic trait for ML framework tensors
 pub trait FrameworkTensor<T> {
     /// Get tensor shape
     fn shape(&self) -> Vec<usize>;
-    
+
     /// Get tensor data as slice
     fn data(&self) -> &[T];
-    
+
     /// Get mutable tensor data
     fn data_mut(&mut self) -> &mut [T];
-    
+
     /// Get gradient data if available
     fn grad(&self) -> Option<&[T]>;
-    
+
     /// Set gradient data
     fn set_grad(&mut self, grad: &[T]);
-    
+
     /// Zero gradients
     fn zero_grad(&mut self);
-    
+
     /// Move tensor to device
     fn to_device(&mut self, device: &str);
-    
+
     /// Get device string
     fn device(&self) -> String;
 }
@@ -46,22 +46,22 @@ pub trait FrameworkTensor<T> {
 pub trait FrameworkModel<T, Tensor: FrameworkTensor<T>> {
     /// Get model parameters
     fn parameters(&self) -> Vec<&Tensor>;
-    
+
     /// Get mutable model parameters
     fn parameters_mut(&mut self) -> Vec<&mut Tensor>;
-    
+
     /// Forward pass
     fn forward(&self, input: &Tensor) -> Tensor;
-    
+
     /// Get parameter by name
     fn get_parameter(&self, name: &str) -> Option<&Tensor>;
-    
+
     /// Set parameter by name
     fn set_parameter(&mut self, name: &str, param: Tensor);
-    
+
     /// Save model state
     fn state_dict(&self) -> HashMap<String, Vec<T>>;
-    
+
     /// Load model state
     fn load_state_dict(&mut self, state: HashMap<String, Vec<T>>);
 }
@@ -143,14 +143,17 @@ where
     Model: FrameworkModel<T, Tensor>,
 {
     /// Create new adapter
-    pub fn new(optimizer_type: &str, config: OptimizerConfig) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn new(
+        optimizer_type: &str,
+        config: OptimizerConfig,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
         let optimizer = match optimizer_type.to_lowercase().as_str() {
             "sgd" => OptimizerFactory::sgd(config),
             "adam" => OptimizerFactory::adam(config),
             "adamw" => OptimizerFactory::adamw(config),
             _ => return Err(format!("Unknown optimizer type: {}", optimizer_type).into()),
         };
-        
+
         Ok(Self {
             optimizer,
             scheduler: None,
@@ -162,33 +165,39 @@ where
             _phantom: PhantomData,
         })
     }
-    
+
     /// Register model with the optimizer
     pub fn register_model(&mut self, model: &Model) -> Result<(), Box<dyn std::error::Error>> {
         // Extract and register all model parameters
         let state_dict = model.state_dict();
-        
+
         for (name, data) in state_dict {
-            let param_data = data.iter()
+            let param_data = data
+                .iter()
                 .map(|&x| x.to_f64().unwrap_or(0.0))
                 .collect::<Vec<f64>>();
-            
+
             let parameter = Parameter::new(Array1::from_vec(param_data), &name);
             self.parameter_registry.insert(name, parameter);
         }
-        
+
         println!("📝 Registered {} parameters", self.parameter_registry.len());
         Ok(())
     }
-    
+
     /// Add parameter group
     pub fn add_parameter_group(&mut self, group: ParameterGroup) {
         self.parameter_groups.push(group);
     }
-    
+
     /// Add learning rate scheduler
-    pub fn add_scheduler(&mut self, scheduler_type: &str, config: SchedulerConfig) -> Result<(), Box<dyn std::error::Error>> {
-        let scheduler: Box<dyn LearningRateScheduler> = match scheduler_type.to_lowercase().as_str() {
+    pub fn add_scheduler(
+        &mut self,
+        scheduler_type: &str,
+        config: SchedulerConfig,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let scheduler: Box<dyn LearningRateScheduler> = match scheduler_type.to_lowercase().as_str()
+        {
             "exponential" => Box::new(ExponentialDecay::new(
                 config.initial_lr,
                 config.gamma.unwrap_or(0.95),
@@ -206,11 +215,11 @@ where
             )),
             _ => return Err(format!("Unknown scheduler type: {}", scheduler_type).into()),
         };
-        
+
         self.scheduler = Some(scheduler);
         Ok(())
     }
-    
+
     /// Add regularizer
     pub fn add_regularizer(&mut self, regularizer_type: &str, strength: f64) {
         let regularizer: Box<dyn Regularizer<T>> = match regularizer_type.to_lowercase().as_str() {
@@ -222,82 +231,85 @@ where
             )),
             _ => return,
         };
-        
+
         self.regularizers.push(regularizer);
     }
-    
+
     /// Perform optimization step
     pub fn step(&mut self, model: &mut Model, loss: f64) -> Result<(), Box<dyn std::error::Error>> {
         // Extract gradients from model
         self.extract_gradients(model)?;
-        
+
         // Apply gradient clipping if configured
         if let Some(clip_value) = self.optimization_config.gradient_clipping {
             self.clip_gradients(clip_value);
         }
-        
+
         // Apply regularization
         self.apply_regularization(model)?;
-        
+
         // Perform optimization steps for each parameter group
         for group in &self.parameter_groups {
             if !group.enabled {
                 continue;
             }
-            
+
             for param_name in &group.parameter_names {
                 if let Some(param) = self.parameter_registry.get_mut(param_name) {
                     self.optimizer.step_param(param)?;
                 }
             }
         }
-        
+
         // Update model parameters
         self.update_model_parameters(model)?;
-        
+
         // Update learning rate
         if let Some(scheduler) = &mut self.scheduler {
             let new_lr = scheduler.step();
             self.update_learning_rate(new_lr);
         }
-        
+
         // Update metrics
         self.update_metrics(loss);
-        
+
         self.metrics.step_count += 1;
         Ok(())
     }
-    
+
     /// Zero gradients
     pub fn zero_grad(&mut self, model: &mut Model) {
         for param in model.parameters_mut() {
             param.zero_grad();
         }
-        
+
         // Also zero gradients in our parameter registry
         for param in self.parameter_registry.values_mut() {
             param.zero_grad();
         }
     }
-    
+
     /// Get optimization statistics
     pub fn get_metrics(&self) -> &OptimizationMetrics {
         &self.metrics
     }
-    
+
     /// Save optimizer state
     pub fn state_dict(&self) -> HashMap<String, Vec<f64>> {
         let mut state = HashMap::new();
-        
+
         for (name, param) in &self.parameter_registry {
             state.insert(name.clone(), param.data().to_vec());
         }
-        
+
         state
     }
-    
+
     /// Load optimizer state
-    pub fn load_state_dict(&mut self, state: HashMap<String, Vec<f64>>) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn load_state_dict(
+        &mut self,
+        state: HashMap<String, Vec<f64>>,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         for (name, data) in state {
             if let Some(param) = self.parameter_registry.get_mut(&name) {
                 param.set_data(Array1::from_vec(data));
@@ -305,14 +317,15 @@ where
         }
         Ok(())
     }
-    
+
     // Helper methods
-    
+
     fn extract_gradients(&mut self, model: &Model) -> Result<(), Box<dyn std::error::Error>> {
         for (name, param) in &mut self.parameter_registry {
             if let Some(model_param) = model.get_parameter(name) {
                 if let Some(grad_data) = model_param.grad() {
-                    let grad_f64: Vec<f64> = grad_data.iter()
+                    let grad_f64: Vec<f64> = grad_data
+                        .iter()
                         .map(|&x| x.to_f64().unwrap_or(0.0))
                         .collect();
                     param.set_grad(Array1::from_vec(grad_f64));
@@ -321,7 +334,7 @@ where
         }
         Ok(())
     }
-    
+
     fn clip_gradients(&mut self, clip_value: f64) {
         for param in self.parameter_registry.values_mut() {
             if let Some(mut grad) = param.grad_mut() {
@@ -333,7 +346,7 @@ where
             }
         }
     }
-    
+
     fn apply_regularization(&mut self, model: &Model) -> Result<(), Box<dyn std::error::Error>> {
         for regularizer in &self.regularizers {
             for param in self.parameter_registry.values_mut() {
@@ -352,29 +365,31 @@ where
         }
         Ok(())
     }
-    
+
     fn update_model_parameters(&self, model: &mut Model) -> Result<(), Box<dyn std::error::Error>> {
         let mut updated_state = HashMap::new();
-        
+
         for (name, param) in &self.parameter_registry {
-            let data_t: Vec<T> = param.data().iter()
+            let data_t: Vec<T> = param
+                .data()
+                .iter()
                 .map(|&x| T::from(x).unwrap_or(T::zero()))
                 .collect();
             updated_state.insert(name.clone(), data_t);
         }
-        
+
         model.load_state_dict(updated_state);
         Ok(())
     }
-    
+
     fn update_learning_rate(&mut self, new_lr: f64) {
         // Update learning rate in optimizer configuration
         // This would depend on the specific optimizer implementation
     }
-    
+
     fn update_metrics(&mut self, loss: f64) {
         self.metrics.loss_history.push(loss);
-        
+
         // Calculate gradient norm
         let mut total_grad_norm = 0.0;
         for param in self.parameter_registry.values() {
@@ -383,33 +398,33 @@ where
             }
         }
         self.metrics.gradient_norms.push(total_grad_norm.sqrt());
-        
+
         // Calculate parameter norm
         let mut total_param_norm = 0.0;
         for param in self.parameter_registry.values() {
             total_param_norm += param.data().iter().map(|&x| x * x).sum::<f64>();
         }
         self.metrics.parameter_norms.push(total_param_norm.sqrt());
-        
+
         // Update convergence metrics
         self.update_convergence_metrics();
     }
-    
+
     fn update_convergence_metrics(&mut self) {
         let conv = &mut self.metrics.convergence_metrics;
-        
+
         // Update gradient norm
         if let Some(&grad_norm) = self.metrics.gradient_norms.last() {
             conv.gradient_norm = grad_norm;
         }
-        
+
         // Calculate loss improvement rate
         if self.metrics.loss_history.len() >= 2 {
             let current_loss = self.metrics.loss_history.last().unwrap();
             let prev_loss = self.metrics.loss_history[self.metrics.loss_history.len() - 2];
             conv.loss_improvement_rate = (prev_loss - current_loss) / prev_loss.abs();
         }
-        
+
         // Simple convergence check
         conv.is_converged = conv.gradient_norm < 1e-6 && conv.loss_improvement_rate.abs() < 1e-8;
         conv.convergence_score = if conv.is_converged { 1.0 } else { 0.0 };
@@ -481,63 +496,69 @@ where
             config,
         }
     }
-    
+
     pub fn train<DataLoader>(&mut self, train_loader: DataLoader, val_loader: Option<DataLoader>)
     where
         DataLoader: Iterator<Item = (Tensor, Tensor)>,
     {
         println!("🚀 Starting universal training loop");
         println!("📊 Training for {} epochs", self.config.epochs);
-        
+
         for epoch in 0..self.config.epochs {
             let epoch_start = std::time::Instant::now();
             let mut epoch_loss = 0.0;
             let mut batch_count = 0;
-            
+
             // Training phase
             for (batch_idx, (inputs, targets)) in train_loader.enumerate() {
                 self.optimizer_adapter.zero_grad(&mut self.model);
-                
+
                 // Forward pass
                 let outputs = self.model.forward(&inputs);
                 let loss = self.compute_loss(&outputs, &targets);
-                
+
                 // Backward pass (framework-specific)
                 self.backward_pass(&outputs, &targets);
-                
+
                 // Optimization step
                 self.optimizer_adapter.step(&mut self.model, loss).unwrap();
-                
+
                 epoch_loss += loss;
                 batch_count += 1;
-                
+
                 // Logging
                 if batch_idx % self.config.log_frequency == 0 {
                     let metrics = self.optimizer_adapter.get_metrics();
-                    println!("📈 Epoch {}, Batch {}: Loss = {:.6}, Grad Norm = {:.6}",
-                             epoch, batch_idx, loss, 
-                             metrics.gradient_norms.last().unwrap_or(&0.0));
+                    println!(
+                        "📈 Epoch {}, Batch {}: Loss = {:.6}, Grad Norm = {:.6}",
+                        epoch,
+                        batch_idx,
+                        loss,
+                        metrics.gradient_norms.last().unwrap_or(&0.0)
+                    );
                 }
             }
-            
+
             let avg_loss = epoch_loss / batch_count as f64;
             let epoch_time = epoch_start.elapsed();
-            
-            println!("✅ Epoch {} completed: Loss = {:.6}, Time = {:?}",
-                     epoch, avg_loss, epoch_time);
-            
+
+            println!(
+                "✅ Epoch {} completed: Loss = {:.6}, Time = {:?}",
+                epoch, avg_loss, epoch_time
+            );
+
             // Validation
             if let Some(ref val_loader) = val_loader {
                 if epoch % self.config.validation_frequency == 0 {
                     self.validate(val_loader);
                 }
             }
-            
+
             // Checkpointing
             if epoch % self.config.save_frequency == 0 {
                 self.save_checkpoint(epoch);
             }
-            
+
             // Check convergence
             let metrics = self.optimizer_adapter.get_metrics();
             if metrics.convergence_metrics.is_converged {
@@ -545,47 +566,47 @@ where
                 break;
             }
         }
-        
+
         println!("🏁 Training completed!");
     }
-    
+
     fn compute_loss(&self, outputs: &Tensor, targets: &Tensor) -> f64 {
         // Framework-specific loss computation
         // This would be implemented based on the specific ML framework
         0.5 // Placeholder
     }
-    
+
     fn backward_pass(&self, outputs: &Tensor, targets: &Tensor) {
         // Framework-specific backward pass
         // This would trigger gradient computation in the specific framework
     }
-    
+
     fn validate<DataLoader>(&mut self, val_loader: &DataLoader)
     where
         DataLoader: Iterator<Item = (Tensor, Tensor)> + Clone,
     {
         println!("🔍 Running validation...");
-        
+
         let mut val_loss = 0.0;
         let mut val_count = 0;
-        
+
         for (inputs, targets) in val_loader.clone() {
             let outputs = self.model.forward(&inputs);
             let loss = self.compute_loss(&outputs, &targets);
             val_loss += loss;
             val_count += 1;
         }
-        
+
         let avg_val_loss = val_loss / val_count as f64;
         println!("📊 Validation Loss: {:.6}", avg_val_loss);
     }
-    
+
     fn save_checkpoint(&self, epoch: usize) {
         println!("💾 Saving checkpoint at epoch {}", epoch);
         // Save model and optimizer state
         let model_state = self.model.state_dict();
         let optimizer_state = self.optimizer_adapter.state_dict();
-        
+
         // Framework-specific checkpoint saving would go here
     }
 }
@@ -593,12 +614,13 @@ where
 /// Example usage with different ML frameworks
 fn example_usage() {
     println!("🎯 Universal SciRS2 Integration Examples\n");
-    
+
     // Example 1: Basic optimizer setup
     println!("📝 Example 1: Basic Optimizer Setup");
     let config = OptimizerConfig::new(0.001).weight_decay(1e-4);
-    let mut adapter = UniversalOptimizerAdapter::<f64, DummyTensor, DummyModel>::new("adam", config).unwrap();
-    
+    let mut adapter =
+        UniversalOptimizerAdapter::<f64, DummyTensor, DummyModel>::new("adam", config).unwrap();
+
     // Add parameter groups
     let features_group = ParameterGroup {
         name: "features".to_string(),
@@ -609,7 +631,7 @@ fn example_usage() {
         enabled: true,
     };
     adapter.add_parameter_group(features_group);
-    
+
     // Add scheduler
     let scheduler_config = SchedulerConfig {
         initial_lr: 0.001,
@@ -618,22 +640,26 @@ fn example_usage() {
         ..Default::default()
     };
     adapter.add_scheduler("cosine", scheduler_config).unwrap();
-    
+
     // Add regularization
     adapter.add_regularizer("l2", 1e-4);
-    
+
     println!("✅ Optimizer configured with parameter groups, scheduler, and regularization");
-    
+
     // Example 2: Multi-optimizer setup
     println!("\n📝 Example 2: Multi-Optimizer Setup");
     let backbone_config = OptimizerConfig::new(1e-5);
     let head_config = OptimizerConfig::new(1e-3);
-    
-    let backbone_adapter = UniversalOptimizerAdapter::<f64, DummyTensor, DummyModel>::new("sgd", backbone_config).unwrap();
-    let head_adapter = UniversalOptimizerAdapter::<f64, DummyTensor, DummyModel>::new("adam", head_config).unwrap();
-    
+
+    let backbone_adapter =
+        UniversalOptimizerAdapter::<f64, DummyTensor, DummyModel>::new("sgd", backbone_config)
+            .unwrap();
+    let head_adapter =
+        UniversalOptimizerAdapter::<f64, DummyTensor, DummyModel>::new("adam", head_config)
+            .unwrap();
+
     println!("✅ Multi-optimizer setup for transfer learning");
-    
+
     // Example 3: Training loop
     println!("\n📝 Example 3: Training Loop");
     let training_config = TrainingConfig {
@@ -644,9 +670,9 @@ fn example_usage() {
         log_frequency: 100,
         output_dir: "./checkpoints".to_string(),
     };
-    
+
     println!("✅ Training configuration ready");
-    
+
     println!("\n🎉 Universal integration examples completed!");
     println!("💡 This adapter pattern works with:");
     println!("   ✅ PyTorch (via Python bindings)");
@@ -666,14 +692,28 @@ struct DummyTensor {
 }
 
 impl FrameworkTensor<f64> for DummyTensor {
-    fn shape(&self) -> Vec<usize> { self.shape.clone() }
-    fn data(&self) -> &[f64] { &self.data }
-    fn data_mut(&mut self) -> &mut [f64] { &mut self.data }
-    fn grad(&self) -> Option<&[f64]> { self.grad.as_deref() }
-    fn set_grad(&mut self, grad: &[f64]) { self.grad = Some(grad.to_vec()); }
-    fn zero_grad(&mut self) { self.grad = None; }
+    fn shape(&self) -> Vec<usize> {
+        self.shape.clone()
+    }
+    fn data(&self) -> &[f64] {
+        &self.data
+    }
+    fn data_mut(&mut self) -> &mut [f64] {
+        &mut self.data
+    }
+    fn grad(&self) -> Option<&[f64]> {
+        self.grad.as_deref()
+    }
+    fn set_grad(&mut self, grad: &[f64]) {
+        self.grad = Some(grad.to_vec());
+    }
+    fn zero_grad(&mut self) {
+        self.grad = None;
+    }
     fn to_device(&mut self, _device: &str) {}
-    fn device(&self) -> String { "cpu".to_string() }
+    fn device(&self) -> String {
+        "cpu".to_string()
+    }
 }
 
 #[derive(Debug)]
@@ -685,11 +725,11 @@ impl FrameworkModel<f64, DummyTensor> for DummyModel {
     fn parameters(&self) -> Vec<&DummyTensor> {
         self.parameters.values().collect()
     }
-    
+
     fn parameters_mut(&mut self) -> Vec<&mut DummyTensor> {
         self.parameters.values_mut().collect()
     }
-    
+
     fn forward(&self, _input: &DummyTensor) -> DummyTensor {
         DummyTensor {
             data: vec![0.0; 10],
@@ -697,21 +737,22 @@ impl FrameworkModel<f64, DummyTensor> for DummyModel {
             shape: vec![10],
         }
     }
-    
+
     fn get_parameter(&self, name: &str) -> Option<&DummyTensor> {
         self.parameters.get(name)
     }
-    
+
     fn set_parameter(&mut self, name: &str, param: DummyTensor) {
         self.parameters.insert(name.to_string(), param);
     }
-    
+
     fn state_dict(&self) -> HashMap<String, Vec<f64>> {
-        self.parameters.iter()
+        self.parameters
+            .iter()
             .map(|(name, tensor)| (name.clone(), tensor.data.clone()))
             .collect()
     }
-    
+
     fn load_state_dict(&mut self, state: HashMap<String, Vec<f64>>) {
         for (name, data) in state {
             if let Some(param) = self.parameters.get_mut(&name) {
@@ -742,14 +783,15 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_adapter_creation() {
         let config = OptimizerConfig::new(0.001);
-        let adapter = UniversalOptimizerAdapter::<f64, DummyTensor, DummyModel>::new("adam", config);
+        let adapter =
+            UniversalOptimizerAdapter::<f64, DummyTensor, DummyModel>::new("adam", config);
         assert!(adapter.is_ok());
     }
-    
+
     #[test]
     fn test_parameter_group() {
         let group = ParameterGroup {
@@ -760,11 +802,11 @@ mod tests {
             momentum: 0.9,
             enabled: true,
         };
-        
+
         assert_eq!(group.name, "test");
         assert!(group.enabled);
     }
-    
+
     #[test]
     fn test_dummy_tensor() {
         let mut tensor = DummyTensor {
@@ -772,13 +814,13 @@ mod tests {
             grad: None,
             shape: vec![3],
         };
-        
+
         assert_eq!(tensor.data(), &[1.0, 2.0, 3.0]);
         assert!(tensor.grad().is_none());
-        
+
         tensor.set_grad(&[0.1, 0.2, 0.3]);
         assert!(tensor.grad().is_some());
-        
+
         tensor.zero_grad();
         assert!(tensor.grad().is_none());
     }

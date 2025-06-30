@@ -14,10 +14,10 @@
 use crate::error::Result;
 use crate::streaming::{Frame, ProcessingStage};
 use ndarray::{Array1, Array2, ArrayView2};
-use std::collections::{HashMap, VecDeque};
-use std::time::{Duration, Instant};
 use rand::prelude::*;
 use rand::rng;
+use std::collections::{HashMap, VecDeque};
+use std::time::{Duration, Instant};
 
 /// Spiking neuron model for neuromorphic processing
 #[derive(Debug, Clone)]
@@ -94,10 +94,10 @@ impl SpikingNeuron {
         self.membrane_potential = self.reset_potential;
         self.is_refractory = true;
         self.time_since_spike = 0.0;
-        
+
         // Record spike time
         self.spike_times.push_back(self.get_current_time());
-        
+
         // Keep spike history bounded
         if self.spike_times.len() > 100 {
             self.spike_times.pop_front();
@@ -114,11 +114,13 @@ impl SpikingNeuron {
     pub fn spike_rate(&self, time_window: f64) -> f64 {
         let current_time = self.get_current_time();
         let cutoff_time = current_time - time_window;
-        
-        let recent_spikes = self.spike_times.iter()
+
+        let recent_spikes = self
+            .spike_times
+            .iter()
             .filter(|&&spike_time| spike_time >= cutoff_time)
             .count();
-        
+
         recent_spikes as f64 / time_window
     }
 }
@@ -205,7 +207,7 @@ impl PlasticSynapse {
         // Apply STDP if both neurons have spiked
         if let (Some(t_pre), Some(t_post)) = (self.last_pre_spike, self.last_post_spike) {
             let dt = t_post - t_pre - self.delay;
-            
+
             let weight_change = if dt > 0.0 {
                 // Potentiation (post after pre)
                 self.stdp_params.a_plus * (-dt / self.stdp_params.tau_plus).exp()
@@ -215,7 +217,9 @@ impl PlasticSynapse {
             };
 
             self.weight += weight_change;
-            self.weight = self.weight.clamp(self.stdp_params.w_min, self.stdp_params.w_max);
+            self.weight = self
+                .weight
+                .clamp(self.stdp_params.w_min, self.stdp_params.w_max);
         }
     }
 
@@ -275,7 +279,7 @@ impl SpikingNeuralNetwork {
             for j in 0..num_neurons {
                 if i != j && rng.gen::<f64>() < connectivity_probability {
                     connections.push(j);
-                    
+
                     // Create synapse
                     let weight = rng.gen_range(0.1..0.8);
                     synapses.push(PlasticSynapse::new(i, j, weight));
@@ -298,7 +302,7 @@ impl SpikingNeuralNetwork {
     pub fn process_input(&mut self, input: &Array1<f64>) -> Array1<f64> {
         let num_neurons = self.neurons.len();
         let input_size = input.len();
-        
+
         // Clear previous spike events
         self.spike_events.clear();
 
@@ -311,16 +315,18 @@ impl SpikingNeuralNetwork {
 
         // Simulate network for one time step
         let mut spikes = vec![false; num_neurons];
-        
+
         // First, collect neuron spike states to avoid borrow checker issues
-        let neuron_spike_states: Vec<bool> = self.neurons.iter()
+        let neuron_spike_states: Vec<bool> = self
+            .neurons
+            .iter()
             .map(|neuron| neuron.time_since_spike < self.dt)
             .collect();
-            
+
         for (i, neuron) in self.neurons.iter_mut().enumerate() {
             // Calculate total synaptic input
             let mut synaptic_input = 0.0;
-            
+
             for synapse in &self.synapses {
                 if synapse.post_neuron_id == i {
                     let pre_spike = neuron_spike_states[synapse.pre_neuron_id];
@@ -353,7 +359,7 @@ impl SpikingNeuralNetwork {
             } else {
                 None
             };
-            
+
             let post_spike_time = if spikes[synapse.post_neuron_id] {
                 Some(self.current_time)
             } else {
@@ -378,17 +384,25 @@ impl SpikingNeuralNetwork {
     /// Get network activity statistics
     pub fn get_activity_stats(&self) -> NetworkActivityStats {
         let total_spikes = self.spike_events.len();
-        let active_neurons = self.neurons.iter()
+        let active_neurons = self
+            .neurons
+            .iter()
             .filter(|neuron| neuron.spike_rate(10.0) > 0.0)
             .count();
-        
-        let avg_membrane_potential = self.neurons.iter()
-            .map(|neuron| neuron.membrane_potential)
-            .sum::<f64>() / self.neurons.len() as f64;
 
-        let avg_weight = self.synapses.iter()
+        let avg_membrane_potential = self
+            .neurons
+            .iter()
+            .map(|neuron| neuron.membrane_potential)
+            .sum::<f64>()
+            / self.neurons.len() as f64;
+
+        let avg_weight = self
+            .synapses
+            .iter()
             .map(|synapse| synapse.weight)
-            .sum::<f64>() / self.synapses.len() as f64;
+            .sum::<f64>()
+            / self.synapses.len() as f64;
 
         NetworkActivityStats {
             total_spikes,
@@ -456,7 +470,7 @@ impl NeuromorphicEdgeDetector {
     pub fn new(input_size: usize) -> Self {
         let network_size = input_size * 2; // Hidden layer for processing
         let snn = SpikingNeuralNetwork::new(network_size, 0.3);
-        
+
         Self {
             snn,
             preprocessing_params: EdgePreprocessingParams::default(),
@@ -521,40 +535,45 @@ impl NeuromorphicEdgeDetector {
     /// Adapt preprocessing parameters based on performance
     fn adapt_parameters(&mut self, performance_metric: f64) {
         self.processing_history.push_back(performance_metric);
-        
+
         if self.processing_history.len() > 10 {
             self.processing_history.pop_front();
         }
 
         // Calculate performance trend
         if self.processing_history.len() >= 2 {
-            let recent_avg = self.processing_history.iter()
-                .rev()
-                .take(5)
-                .sum::<f64>() / 5.0.min(self.processing_history.len() as f64);
+            let recent_avg = self.processing_history.iter().rev().take(5).sum::<f64>()
+                / 5.0.min(self.processing_history.len() as f64);
 
-            let older_avg = self.processing_history.iter()
-                .take(5)
-                .sum::<f64>() / 5.0.min(self.processing_history.len() as f64);
+            let older_avg = self.processing_history.iter().take(5).sum::<f64>()
+                / 5.0.min(self.processing_history.len() as f64);
 
             let trend = recent_avg - older_avg;
 
             // Adapt thresholds based on trend
             if trend < 0.0 {
                 // Performance declining, adjust parameters
-                self.preprocessing_params.contrast_threshold *= 1.0 - self.preprocessing_params.adaptation_speed;
-                self.preprocessing_params.temporal_threshold *= 1.0 + self.preprocessing_params.adaptation_speed;
+                self.preprocessing_params.contrast_threshold *=
+                    1.0 - self.preprocessing_params.adaptation_speed;
+                self.preprocessing_params.temporal_threshold *=
+                    1.0 + self.preprocessing_params.adaptation_speed;
             } else if trend > 0.0 {
                 // Performance improving, continue current direction
-                self.preprocessing_params.contrast_threshold *= 1.0 + self.preprocessing_params.adaptation_speed * 0.5;
-                self.preprocessing_params.temporal_threshold *= 1.0 - self.preprocessing_params.adaptation_speed * 0.5;
+                self.preprocessing_params.contrast_threshold *=
+                    1.0 + self.preprocessing_params.adaptation_speed * 0.5;
+                self.preprocessing_params.temporal_threshold *=
+                    1.0 - self.preprocessing_params.adaptation_speed * 0.5;
             }
 
             // Keep parameters in valid ranges
-            self.preprocessing_params.contrast_threshold = 
-                self.preprocessing_params.contrast_threshold.clamp(0.01, 0.5);
-            self.preprocessing_params.temporal_threshold = 
-                self.preprocessing_params.temporal_threshold.clamp(0.01, 0.2);
+            self.preprocessing_params.contrast_threshold = self
+                .preprocessing_params
+                .contrast_threshold
+                .clamp(0.01, 0.5);
+            self.preprocessing_params.temporal_threshold = self
+                .preprocessing_params
+                .temporal_threshold
+                .clamp(0.01, 0.2);
         }
     }
 }
@@ -563,10 +582,11 @@ impl ProcessingStage for NeuromorphicEdgeDetector {
     fn process(&mut self, frame: Frame) -> Result<Frame> {
         // Apply neuromorphic edge detection
         let edge_map = self.detect_edges_neuromorphic(&frame)?;
-        
+
         // Calculate performance metric (edge density)
-        let edge_density = edge_map.iter().filter(|&&x| x > 0.1).count() as f64 / edge_map.len() as f64;
-        
+        let edge_density =
+            edge_map.iter().filter(|&&x| x > 0.1).count() as f64 / edge_map.len() as f64;
+
         // Adapt parameters
         self.adapt_parameters(edge_density);
 
@@ -670,23 +690,23 @@ impl EventDrivenProcessor {
     fn generate_events(&mut self, current_frame: &Array2<f32>) -> Vec<PixelEvent> {
         let mut events = Vec::new();
         let current_time = Instant::now();
-        
+
         if let Some(ref prev_frame) = self.previous_frame {
             let (height, width) = current_frame.dim();
-            
+
             for y in 0..height {
                 for x in 0..width {
                     let current_val = current_frame[[y, x]];
                     let prev_val = prev_frame[[y, x]];
                     let diff = current_val - prev_val;
-                    
+
                     if diff.abs() > self.event_threshold {
                         let polarity = if diff > 0.0 {
                             EventPolarity::Positive
                         } else {
                             EventPolarity::Negative
                         };
-                        
+
                         events.push(PixelEvent {
                             x,
                             y,
@@ -698,7 +718,7 @@ impl EventDrivenProcessor {
                 }
             }
         }
-        
+
         self.previous_frame = Some(current_frame.clone());
         events
     }
@@ -706,38 +726,39 @@ impl EventDrivenProcessor {
     /// Cluster events spatially for efficient processing
     fn cluster_events(&mut self, events: &[PixelEvent]) {
         const CLUSTER_RADIUS: f32 = 5.0;
-        
+
         // Clear old clusters
         let current_time = Instant::now();
         self.spatial_clusters.retain(|_, cluster| {
             current_time.duration_since(cluster.last_update) < self.temporal_window
         });
-        
+
         for event in events {
             let mut assigned_to_cluster = false;
-            
+
             // Try to assign to existing cluster
             for cluster in self.spatial_clusters.values_mut() {
-                let distance = ((event.x as f32 - cluster.center.0).powi(2) + 
-                               (event.y as f32 - cluster.center.1).powi(2)).sqrt();
-                
+                let distance = ((event.x as f32 - cluster.center.0).powi(2)
+                    + (event.y as f32 - cluster.center.1).powi(2))
+                .sqrt();
+
                 if distance <= CLUSTER_RADIUS {
                     cluster.events.push(event.clone());
                     cluster.activity += event.magnitude;
                     cluster.last_update = current_time;
-                    
+
                     // Update cluster center
                     let total_events = cluster.events.len() as f32;
                     cluster.center = (
                         (cluster.center.0 * (total_events - 1.0) + event.x as f32) / total_events,
                         (cluster.center.1 * (total_events - 1.0) + event.y as f32) / total_events,
                     );
-                    
+
                     assigned_to_cluster = true;
                     break;
                 }
             }
-            
+
             // Create new cluster if not assigned
             if !assigned_to_cluster {
                 let cluster = EventCluster {
@@ -746,7 +767,7 @@ impl EventDrivenProcessor {
                     activity: event.magnitude,
                     last_update: current_time,
                 };
-                
+
                 self.spatial_clusters.insert((event.x, event.y), cluster);
             }
         }
@@ -756,52 +777,52 @@ impl EventDrivenProcessor {
     fn process_events_sparse(&self, frame_shape: (usize, usize)) -> Array2<f32> {
         let (height, width) = frame_shape;
         let mut processed_frame = Array2::zeros((height, width));
-        
+
         // Process only active clusters
         for cluster in self.spatial_clusters.values() {
             if cluster.activity > self.event_threshold {
                 // Apply processing to cluster region
                 let cluster_x = cluster.center.0 as usize;
                 let cluster_y = cluster.center.1 as usize;
-                
+
                 // Simple enhancement based on cluster activity
                 let enhancement_radius = 2;
                 for dy in -(enhancement_radius as i32)..=enhancement_radius as i32 {
                     for dx in -(enhancement_radius as i32)..=enhancement_radius as i32 {
                         let x = (cluster_x as i32 + dx).clamp(0, width as i32 - 1) as usize;
                         let y = (cluster_y as i32 + dy).clamp(0, height as i32 - 1) as usize;
-                        
+
                         let distance = ((dx as f32).powi(2) + (dy as f32).powi(2)).sqrt();
                         let weight = (1.0 - distance / enhancement_radius as f32).max(0.0);
-                        
+
                         processed_frame[[y, x]] += cluster.activity * weight;
                     }
                 }
             }
         }
-        
+
         // Normalize
         let max_val = processed_frame.iter().fold(0.0f32, |a, &b| a.max(b));
         if max_val > 0.0 {
             processed_frame.mapv_inplace(|x| x / max_val);
         }
-        
+
         processed_frame
     }
 
     /// Update efficiency metrics
     fn update_efficiency_metrics(&mut self, events: &[PixelEvent], frame_size: usize) {
         let event_count = events.len();
-        
+
         // Calculate sparsity
         self.efficiency_metrics.sparsity = event_count as f32 / frame_size as f32;
-        
+
         // Estimate energy consumption (events require less energy than full processing)
         self.efficiency_metrics.energy_consumption = self.efficiency_metrics.sparsity * 0.1;
-        
+
         // Calculate speedup from sparse processing
         self.efficiency_metrics.speedup_factor = 1.0 / self.efficiency_metrics.sparsity.max(0.01);
-        
+
         // Calculate compression ratio
         self.efficiency_metrics.compression_ratio = frame_size as f32 / event_count.max(1) as f32;
     }
@@ -810,23 +831,23 @@ impl EventDrivenProcessor {
 impl ProcessingStage for EventDrivenProcessor {
     fn process(&mut self, frame: Frame) -> Result<Frame> {
         let frame_size = frame.data.len();
-        
+
         // Generate events from temporal differences
         let events = self.generate_events(&frame.data);
-        
+
         // Cluster events spatially
         self.cluster_events(&events);
-        
+
         // Process using sparse event representation
         let processed_data = self.process_events_sparse(frame.data.dim());
-        
+
         // Update efficiency metrics
         self.update_efficiency_metrics(&events, frame_size);
-        
+
         // Store events in buffer
         for event in events {
             self.event_buffer.push_back(event);
-            
+
             // Keep buffer bounded
             if self.event_buffer.len() > 10000 {
                 self.event_buffer.pop_front();
@@ -856,17 +877,21 @@ impl EventDrivenProcessor {
     pub fn get_event_stats(&self) -> EventStats {
         let total_events = self.event_buffer.len();
         let active_clusters = self.spatial_clusters.len();
-        
-        let positive_events = self.event_buffer.iter()
+
+        let positive_events = self
+            .event_buffer
+            .iter()
             .filter(|event| event.polarity == EventPolarity::Positive)
             .count();
-        
+
         let negative_events = total_events - positive_events;
-        
+
         let avg_magnitude = if total_events > 0 {
-            self.event_buffer.iter()
+            self.event_buffer
+                .iter()
                 .map(|event| event.magnitude)
-                .sum::<f32>() / total_events as f32
+                .sum::<f32>()
+                / total_events as f32
         } else {
             0.0
         };
@@ -957,7 +982,7 @@ impl AdaptiveNeuromorphicPipeline {
     pub fn new(input_size: usize) -> Self {
         let edge_detector = NeuromorphicEdgeDetector::new(input_size);
         let event_processor = EventDrivenProcessor::new(0.05);
-        
+
         Self {
             edge_detector,
             event_processor,
@@ -975,7 +1000,7 @@ impl AdaptiveNeuromorphicPipeline {
     /// Process frame with adaptive neuromorphic processing
     pub fn process_adaptive(&mut self, frame: Frame) -> Result<Frame> {
         let start_time = Instant::now();
-        
+
         // Select processing based on current mode
         let processed_frame = match self.processing_mode {
             NeuromorphicMode::HighAccuracy => {
@@ -986,7 +1011,7 @@ impl AdaptiveNeuromorphicPipeline {
             NeuromorphicMode::Balanced => {
                 // Selective processing based on activity
                 let event_stats = self.event_processor.get_event_stats();
-                
+
                 if event_stats.sparsity > 0.1 {
                     // High activity, use edge detection
                     let edge_frame = self.edge_detector.process(frame)?;
@@ -1003,7 +1028,7 @@ impl AdaptiveNeuromorphicPipeline {
         };
 
         let processing_time = start_time.elapsed();
-        
+
         // Record performance snapshot
         let efficiency_metrics = self.event_processor.get_efficiency_metrics();
         let snapshot = PerformanceSnapshot {
@@ -1013,7 +1038,7 @@ impl AdaptiveNeuromorphicPipeline {
             sparsity: efficiency_metrics.sparsity,
             timestamp: Instant::now(),
         };
-        
+
         self.performance_history.push_back(snapshot);
         if self.performance_history.len() > 100 {
             self.performance_history.pop_front();
@@ -1029,8 +1054,9 @@ impl AdaptiveNeuromorphicPipeline {
     fn estimate_accuracy(&self, frame: &Frame) -> f32 {
         // Simple heuristic based on information content
         let variance = frame.data.var(0.0);
-        let edge_density = frame.data.iter().filter(|&&x| x > 0.1).count() as f32 / frame.data.len() as f32;
-        
+        let edge_density =
+            frame.data.iter().filter(|&&x| x > 0.1).count() as f32 / frame.data.len() as f32;
+
         (variance.sqrt() + edge_density).min(1.0)
     }
 
@@ -1040,23 +1066,22 @@ impl AdaptiveNeuromorphicPipeline {
             return;
         }
 
-        let recent_performance = &self.performance_history.iter()
+        let recent_performance = &self
+            .performance_history
+            .iter()
             .rev()
             .take(10)
             .cloned()
             .collect::<Vec<_>>();
 
-        let avg_accuracy = recent_performance.iter()
-            .map(|p| p.accuracy)
-            .sum::<f32>() / recent_performance.len() as f32;
+        let avg_accuracy = recent_performance.iter().map(|p| p.accuracy).sum::<f32>()
+            / recent_performance.len() as f32;
 
-        let avg_energy = recent_performance.iter()
-            .map(|p| p.energy)
-            .sum::<f32>() / recent_performance.len() as f32;
+        let avg_energy = recent_performance.iter().map(|p| p.energy).sum::<f32>()
+            / recent_performance.len() as f32;
 
-        let avg_speed = recent_performance.iter()
-            .map(|p| p.speed)
-            .sum::<f32>() / recent_performance.len() as f32;
+        let avg_speed = recent_performance.iter().map(|p| p.speed).sum::<f32>()
+            / recent_performance.len() as f32;
 
         // Adaptation logic
         match self.processing_mode {
@@ -1068,7 +1093,9 @@ impl AdaptiveNeuromorphicPipeline {
             NeuromorphicMode::Balanced => {
                 if avg_accuracy < self.adaptation_params.min_accuracy {
                     self.processing_mode = NeuromorphicMode::HighAccuracy;
-                } else if avg_energy < self.adaptation_params.energy_budget * 0.5 && avg_speed > 60.0 {
+                } else if avg_energy < self.adaptation_params.energy_budget * 0.5
+                    && avg_speed > 60.0
+                {
                     self.processing_mode = NeuromorphicMode::UltraEfficient;
                 }
             }
@@ -1084,7 +1111,7 @@ impl AdaptiveNeuromorphicPipeline {
     pub fn get_processing_stats(&self) -> NeuromorphicProcessingStats {
         let efficiency_metrics = self.event_processor.get_efficiency_metrics();
         let event_stats = self.event_processor.get_event_stats();
-        
+
         let recent_performance = if !self.performance_history.is_empty() {
             self.performance_history.back().unwrap().clone()
         } else {
@@ -1138,11 +1165,11 @@ mod tests {
     #[test]
     fn test_spiking_neuron() {
         let mut neuron = SpikingNeuron::new();
-        
+
         // Test with high input current
         let spiked = neuron.update(1.0, 50.0);
         assert!(neuron.membrane_potential > neuron.resting_potential);
-        
+
         // Test spike generation
         for _ in 0..100 {
             if neuron.update(1.0, 100.0) {
@@ -1155,11 +1182,11 @@ mod tests {
     #[test]
     fn test_plastic_synapse() {
         let mut synapse = PlasticSynapse::new(0, 1, 0.5);
-        
+
         // Test STDP with positive timing
         synapse.update_weight(Some(10.0), Some(15.0));
         assert!(synapse.weight >= 0.5); // Should increase
-        
+
         // Test STDP with negative timing
         synapse.update_weight(Some(20.0), Some(18.0));
         // Weight might decrease depending on timing
@@ -1169,10 +1196,10 @@ mod tests {
     fn test_spiking_neural_network() {
         let mut snn = SpikingNeuralNetwork::new(10, 0.2);
         let input = Array1::from_vec(vec![1.0, 0.5, 0.8, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]);
-        
+
         let output = snn.process_input(&input);
         assert_eq!(output.len(), 10);
-        
+
         let stats = snn.get_activity_stats();
         assert!(stats.avg_membrane_potential < 0.0); // Should be negative
     }
@@ -1180,7 +1207,7 @@ mod tests {
     #[test]
     fn test_neuromorphic_edge_detector() {
         let mut detector = NeuromorphicEdgeDetector::new(64);
-        
+
         let frame = Frame {
             data: Array2::from_shape_fn((8, 8), |(y, x)| if x > 4 { 1.0 } else { 0.0 }),
             timestamp: Instant::now(),
@@ -1195,7 +1222,7 @@ mod tests {
 
         let result = detector.process(frame);
         assert!(result.is_ok());
-        
+
         let processed = result.unwrap();
         assert_eq!(processed.data.dim(), (8, 8));
     }
@@ -1203,7 +1230,7 @@ mod tests {
     #[test]
     fn test_event_driven_processor() {
         let mut processor = EventDrivenProcessor::new(0.1);
-        
+
         // Create frame with some structure
         let frame1 = Frame {
             data: Array2::zeros((10, 10)),
@@ -1234,7 +1261,7 @@ mod tests {
     #[test]
     fn test_adaptive_neuromorphic_pipeline() {
         let mut pipeline = AdaptiveNeuromorphicPipeline::new(64);
-        
+
         let frame = Frame {
             data: Array2::from_shape_fn((8, 8), |(y, x)| (x + y) as f32 / 16.0),
             timestamp: Instant::now(),
@@ -1244,7 +1271,7 @@ mod tests {
 
         let result = pipeline.process_adaptive(frame);
         assert!(result.is_ok());
-        
+
         let stats = pipeline.get_processing_stats();
         assert!(stats.sparsity >= 0.0 && stats.sparsity <= 1.0);
     }

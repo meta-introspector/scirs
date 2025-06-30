@@ -1971,7 +1971,11 @@ impl EventSystem {
     }
 
     /// Handle click events
-    fn handle_click_event(&mut self, event: &WidgetEvent, response: &mut EventResponse) -> Result<()> {
+    fn handle_click_event(
+        &mut self,
+        event: &WidgetEvent,
+        response: &mut EventResponse,
+    ) -> Result<()> {
         // Add data point highlighting action
         response.actions.push(WidgetAction {
             action_type: ActionType::Highlight,
@@ -1989,7 +1993,11 @@ impl EventSystem {
     }
 
     /// Handle hover events
-    fn handle_hover_event(&mut self, event: &WidgetEvent, response: &mut EventResponse) -> Result<()> {
+    fn handle_hover_event(
+        &mut self,
+        event: &WidgetEvent,
+        response: &mut EventResponse,
+    ) -> Result<()> {
         // Show tooltip action
         response.actions.push(WidgetAction {
             action_type: ActionType::ShowTooltip,
@@ -2001,7 +2009,11 @@ impl EventSystem {
     }
 
     /// Handle selection events
-    fn handle_selection_event(&mut self, event: &WidgetEvent, response: &mut EventResponse) -> Result<()> {
+    fn handle_selection_event(
+        &mut self,
+        event: &WidgetEvent,
+        response: &mut EventResponse,
+    ) -> Result<()> {
         // Update selection across linked widgets
         response.actions.push(WidgetAction {
             action_type: ActionType::UpdateSelection,
@@ -2011,14 +2023,20 @@ impl EventSystem {
 
         // Update data filter
         if let Some(selected_items) = event.data.get("selected_items") {
-            response.data_updates.insert("filtered_data".to_string(), selected_items.clone());
+            response
+                .data_updates
+                .insert("filtered_data".to_string(), selected_items.clone());
         }
 
         Ok(())
     }
 
     /// Handle filter events
-    fn handle_filter_event(&mut self, event: &WidgetEvent, response: &mut EventResponse) -> Result<()> {
+    fn handle_filter_event(
+        &mut self,
+        event: &WidgetEvent,
+        response: &mut EventResponse,
+    ) -> Result<()> {
         // Apply filter to data
         response.actions.push(WidgetAction {
             action_type: ActionType::ApplyFilter,
@@ -2028,14 +2046,20 @@ impl EventSystem {
 
         // Update filter state
         if let Some(filter_config) = event.data.get("filter") {
-            response.state_changes.insert("active_filter".to_string(), filter_config.clone());
+            response
+                .state_changes
+                .insert("active_filter".to_string(), filter_config.clone());
         }
 
         Ok(())
     }
 
     /// Handle zoom events
-    fn handle_zoom_event(&mut self, event: &WidgetEvent, response: &mut EventResponse) -> Result<()> {
+    fn handle_zoom_event(
+        &mut self,
+        event: &WidgetEvent,
+        response: &mut EventResponse,
+    ) -> Result<()> {
         // Update zoom level
         response.actions.push(WidgetAction {
             action_type: ActionType::Zoom,
@@ -2045,14 +2069,20 @@ impl EventSystem {
 
         // Update zoom state
         if let Some(zoom_level) = event.data.get("zoom_level") {
-            response.state_changes.insert("zoom_level".to_string(), zoom_level.clone());
+            response
+                .state_changes
+                .insert("zoom_level".to_string(), zoom_level.clone());
         }
 
         Ok(())
     }
 
     /// Handle pan events
-    fn handle_pan_event(&mut self, event: &WidgetEvent, response: &mut EventResponse) -> Result<()> {
+    fn handle_pan_event(
+        &mut self,
+        event: &WidgetEvent,
+        response: &mut EventResponse,
+    ) -> Result<()> {
         // Update pan position
         response.actions.push(WidgetAction {
             action_type: ActionType::Pan,
@@ -2062,14 +2092,20 @@ impl EventSystem {
 
         // Update pan state
         if let Some(pan_position) = event.data.get("pan_position") {
-            response.state_changes.insert("pan_position".to_string(), pan_position.clone());
+            response
+                .state_changes
+                .insert("pan_position".to_string(), pan_position.clone());
         }
 
         Ok(())
     }
 
     /// Register event handler for specific widget
-    pub fn register_handler(&mut self, widget_id: String, handler: Box<dyn EventHandler + Send + Sync>) {
+    pub fn register_handler(
+        &mut self,
+        widget_id: String,
+        handler: Box<dyn EventHandler + Send + Sync>,
+    ) {
         self.handlers.insert(widget_id, handler);
     }
 
@@ -2102,25 +2138,26 @@ impl LayoutManager {
     pub fn add_widget(&mut self, widget_id: String, layout: WidgetLayout) -> Result<()> {
         // Validate layout constraints
         self.validate_layout(&layout)?;
-        
+
         // Add widget to layout map
-        self.widget_layouts.insert(widget_id.clone(), layout.clone());
-        
+        self.widget_layouts
+            .insert(widget_id.clone(), layout.clone());
+
         // Apply layout constraints
         self.apply_constraints(&widget_id, &layout)?;
-        
+
         Ok(())
     }
 
     /// Update widget layout
     pub fn update_widget_layout(&mut self, widget_id: &str, layout: WidgetLayout) -> Result<()> {
         self.validate_layout(&layout)?;
-        
+
         if let Some(current_layout) = self.widget_layouts.get_mut(widget_id) {
             *current_layout = layout.clone();
             self.apply_constraints(widget_id, &layout)?;
         }
-        
+
         Ok(())
     }
 
@@ -2134,55 +2171,50 @@ impl LayoutManager {
     /// Calculate layout for given viewport size
     pub fn calculate_layout(&self, viewport: Size) -> Result<HashMap<String, WidgetPosition>> {
         let mut positions = match self.layout_config.layout_type {
-            LayoutType::Grid => {
-                self.calculate_grid_layout(&viewport)?
-            },
-            LayoutType::Flex => {
-                self.calculate_flex_layout(&viewport)?
-            },
-            LayoutType::Absolute => {
-                self.calculate_absolute_layout(&viewport)?
-            },
-            LayoutType::Masonry => {
-                self.calculate_masonry_layout(&viewport)?
-            },
-            LayoutType::Custom(_) => {
-                self.calculate_custom_layout(&viewport)?
-            },
+            LayoutType::Grid => self.calculate_grid_layout(&viewport)?,
+            LayoutType::Flex => self.calculate_flex_layout(&viewport)?,
+            LayoutType::Absolute => self.calculate_absolute_layout(&viewport)?,
+            LayoutType::Masonry => self.calculate_masonry_layout(&viewport)?,
+            LayoutType::Custom(_) => self.calculate_custom_layout(&viewport)?,
         };
 
         // Apply responsive adjustments
         self.apply_responsive_rules(&mut positions, &viewport)?;
-        
+
         Ok(positions)
     }
 
     /// Calculate grid layout
     fn calculate_grid_layout(&self, viewport: &Size) -> Result<HashMap<String, WidgetPosition>> {
         let mut positions = HashMap::new();
-        
+
         if let Some(grid_config) = &self.layout_config.grid_config {
-            let cell_width = (viewport.width - (grid_config.columns + 1) * grid_config.gap) / grid_config.columns;
-            let cell_height = (viewport.height - (grid_config.rows + 1) * grid_config.gap) / grid_config.rows;
-            
+            let cell_width = (viewport.width - (grid_config.columns + 1) * grid_config.gap)
+                / grid_config.columns;
+            let cell_height =
+                (viewport.height - (grid_config.rows + 1) * grid_config.gap) / grid_config.rows;
+
             let mut current_row = 0;
             let mut current_col = 0;
-            
+
             for (widget_id, widget_layout) in &self.widget_layouts {
                 let x = current_col * (cell_width + grid_config.gap) + grid_config.gap;
                 let y = current_row * (cell_height + grid_config.gap) + grid_config.gap;
-                
+
                 let width = cell_width * widget_layout.span.columns;
                 let height = cell_height * widget_layout.span.rows;
-                
-                positions.insert(widget_id.clone(), WidgetPosition {
-                    x: x as f32,
-                    y: y as f32,
-                    width: width as f32,
-                    height: height as f32,
-                    z_index: widget_layout.z_index.unwrap_or(0),
-                });
-                
+
+                positions.insert(
+                    widget_id.clone(),
+                    WidgetPosition {
+                        x: x as f32,
+                        y: y as f32,
+                        width: width as f32,
+                        height: height as f32,
+                        z_index: widget_layout.z_index.unwrap_or(0),
+                    },
+                );
+
                 // Move to next position
                 current_col += widget_layout.span.columns;
                 if current_col >= grid_config.columns {
@@ -2191,90 +2223,102 @@ impl LayoutManager {
                 }
             }
         }
-        
+
         Ok(positions)
     }
 
     /// Calculate flex layout
     fn calculate_flex_layout(&self, viewport: &Size) -> Result<HashMap<String, WidgetPosition>> {
         let mut positions = HashMap::new();
-        
+
         let mut current_x = 0u32;
         let mut current_y = 0u32;
         let mut row_height = 0u32;
-        
+
         for (widget_id, widget_layout) in &self.widget_layouts {
             let width = widget_layout.size.width.unwrap_or(200) as u32;
             let height = widget_layout.size.height.unwrap_or(150) as u32;
-            
+
             // Check if widget fits in current row
             if current_x + width > viewport.width {
                 current_x = 0;
                 current_y += row_height + self.layout_config.spacing.widget_spacing;
                 row_height = 0;
             }
-            
-            positions.insert(widget_id.clone(), WidgetPosition {
-                x: current_x as f32,
-                y: current_y as f32,
-                width: width as f32,
-                height: height as f32,
-                z_index: widget_layout.z_index.unwrap_or(0),
-            });
-            
+
+            positions.insert(
+                widget_id.clone(),
+                WidgetPosition {
+                    x: current_x as f32,
+                    y: current_y as f32,
+                    width: width as f32,
+                    height: height as f32,
+                    z_index: widget_layout.z_index.unwrap_or(0),
+                },
+            );
+
             current_x += width + self.layout_config.spacing.widget_spacing;
             row_height = row_height.max(height);
         }
-        
+
         Ok(positions)
     }
 
     /// Calculate absolute layout
-    fn calculate_absolute_layout(&self, _viewport: &Size) -> Result<HashMap<String, WidgetPosition>> {
+    fn calculate_absolute_layout(
+        &self,
+        _viewport: &Size,
+    ) -> Result<HashMap<String, WidgetPosition>> {
         let mut positions = HashMap::new();
-        
+
         for (widget_id, widget_layout) in &self.widget_layouts {
             if let Some(position) = &widget_layout.absolute_position {
                 positions.insert(widget_id.clone(), position.clone());
             }
         }
-        
+
         Ok(positions)
     }
 
     /// Calculate masonry layout
     fn calculate_masonry_layout(&self, viewport: &Size) -> Result<HashMap<String, WidgetPosition>> {
         let mut positions = HashMap::new();
-        
+
         if let Some(grid_config) = &self.layout_config.grid_config {
-            let column_width = (viewport.width - (grid_config.columns + 1) * grid_config.gap) / grid_config.columns;
+            let column_width = (viewport.width - (grid_config.columns + 1) * grid_config.gap)
+                / grid_config.columns;
             let mut column_heights = vec![0u32; grid_config.columns as usize];
-            
+
             for (widget_id, widget_layout) in &self.widget_layouts {
                 // Find shortest column
-                let shortest_column = column_heights.iter().enumerate()
+                let shortest_column = column_heights
+                    .iter()
+                    .enumerate()
                     .min_by_key(|(_, &height)| height)
                     .map(|(idx, _)| idx)
                     .unwrap_or(0);
-                
+
                 let x = shortest_column as u32 * (column_width + grid_config.gap) + grid_config.gap;
                 let y = column_heights[shortest_column];
-                
+
                 let width = column_width;
                 let height = widget_layout.size.height.unwrap_or(150) as u32;
-                
-                positions.insert(widget_id.clone(), WidgetPosition {
-                    x: x as f32,
-                    y: y as f32,
-                    width: width as f32,
-                    height: height as f32,
-                    z_index: widget_layout.z_index.unwrap_or(0),
-                });
-                
+
+                positions.insert(
+                    widget_id.clone(),
+                    WidgetPosition {
+                        x: x as f32,
+                        y: y as f32,
+                        width: width as f32,
+                        height: height as f32,
+                        z_index: widget_layout.z_index.unwrap_or(0),
+                    },
+                );
+
                 column_heights[shortest_column] += height + grid_config.gap;
             }
         }
-        
+
         Ok(positions)
     }
 
@@ -2289,16 +2333,20 @@ impl LayoutManager {
         // Check minimum dimensions
         if let Some(width) = layout.size.width {
             if width <= 0.0 {
-                return Err(MetricsError::InvalidInput("Widget width must be positive".to_string()));
+                return Err(MetricsError::InvalidInput(
+                    "Widget width must be positive".to_string(),
+                ));
             }
         }
-        
+
         if let Some(height) = layout.size.height {
             if height <= 0.0 {
-                return Err(MetricsError::InvalidInput("Widget height must be positive".to_string()));
+                return Err(MetricsError::InvalidInput(
+                    "Widget height must be positive".to_string(),
+                ));
             }
         }
-        
+
         Ok(())
     }
 
@@ -2315,13 +2363,14 @@ impl LayoutManager {
                 ]),
             });
         }
-        
+
         Ok(())
     }
 
     /// Remove widget constraints
     fn remove_widget_constraints(&mut self, widget_id: &str) {
-        self.constraints.retain(|constraint| constraint.widget_id != widget_id);
+        self.constraints
+            .retain(|constraint| constraint.widget_id != widget_id);
     }
 
     /// Add default responsive rules
@@ -2329,30 +2378,30 @@ impl LayoutManager {
         // Mobile breakpoint
         self.responsive_rules.push(ResponsiveRule {
             breakpoint: 768,
-            layout_changes: vec![
-                LayoutChange {
-                    widget_selector: "*".to_string(),
-                    property: "columns".to_string(),
-                    value: "1".to_string(),
-                },
-            ],
+            layout_changes: vec![LayoutChange {
+                widget_selector: "*".to_string(),
+                property: "columns".to_string(),
+                value: "1".to_string(),
+            }],
         });
-        
+
         // Tablet breakpoint
         self.responsive_rules.push(ResponsiveRule {
             breakpoint: 1024,
-            layout_changes: vec![
-                LayoutChange {
-                    widget_selector: "*".to_string(),
-                    property: "columns".to_string(),
-                    value: "2".to_string(),
-                },
-            ],
+            layout_changes: vec![LayoutChange {
+                widget_selector: "*".to_string(),
+                property: "columns".to_string(),
+                value: "2".to_string(),
+            }],
         });
     }
 
     /// Apply responsive rules to layout
-    fn apply_responsive_rules(&self, positions: &mut HashMap<String, WidgetPosition>, viewport: &Size) -> Result<()> {
+    fn apply_responsive_rules(
+        &self,
+        positions: &mut HashMap<String, WidgetPosition>,
+        viewport: &Size,
+    ) -> Result<()> {
         for rule in &self.responsive_rules {
             if viewport.width <= rule.breakpoint {
                 // Apply layout changes
@@ -2370,12 +2419,16 @@ impl LayoutManager {
                 break; // Apply only the first matching rule
             }
         }
-        
+
         Ok(())
     }
 
     /// Apply individual layout change
-    fn apply_layout_change(&self, _position: &mut WidgetPosition, _change: &LayoutChange) -> Result<()> {
+    fn apply_layout_change(
+        &self,
+        _position: &mut WidgetPosition,
+        _change: &LayoutChange,
+    ) -> Result<()> {
         // Implementation would modify position based on change
         Ok(())
     }
@@ -2407,22 +2460,27 @@ impl RenderingEngine for DefaultRenderingEngine {
 
     fn render_dashboard(&self, dashboard_state: &DashboardState) -> Result<RenderOutput> {
         let start_time = Instant::now();
-        
+
         // Generate comprehensive HTML structure
         let mut html = String::new();
         html.push_str("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n");
         html.push_str("<meta charset=\"UTF-8\">\n");
-        html.push_str("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n");
-        html.push_str(&format!("<title>{}</title>\n", dashboard_state.config.title));
+        html.push_str(
+            "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n",
+        );
+        html.push_str(&format!(
+            "<title>{}</title>\n",
+            dashboard_state.config.title
+        ));
         html.push_str("<style id=\"dashboard-styles\"></style>\n");
         html.push_str("</head>\n<body>\n");
-        
+
         // Dashboard container with responsive grid layout
         html.push_str(&format!(
             "<div id=\"dashboard-container\" data-width=\"{}\" data-height=\"{}\">\n",
             dashboard_state.config.width, dashboard_state.config.height
         ));
-        
+
         html.push_str("<header class=\"dashboard-header\">\n");
         html.push_str(&format!("  <h1>{}</h1>\n", dashboard_state.config.title));
         html.push_str("  <div class=\"dashboard-controls\">\n");
@@ -2430,9 +2488,9 @@ impl RenderingEngine for DefaultRenderingEngine {
         html.push_str("    <button id=\"export-btn\" class=\"control-btn\">Export</button>\n");
         html.push_str("  </div>\n");
         html.push_str("</header>\n");
-        
+
         html.push_str("<main class=\"dashboard-grid\">\n");
-        
+
         // Render each widget
         for (widget_id, widget_state) in &dashboard_state.widgets {
             html.push_str(&format!(
@@ -2442,7 +2500,10 @@ impl RenderingEngine for DefaultRenderingEngine {
                 widget_state.widget_type.to_string()
             ));
             html.push_str("    <div class=\"widget-header\">\n");
-            html.push_str(&format!("      <h3 class=\"widget-title\">{}</h3>\n", widget_state.title));
+            html.push_str(&format!(
+                "      <h3 class=\"widget-title\">{}</h3>\n",
+                widget_state.title
+            ));
             html.push_str("      <div class=\"widget-controls\">\n");
             html.push_str("        <button class=\"widget-menu-btn\">⋮</button>\n");
             html.push_str("      </div>\n");
@@ -2452,12 +2513,12 @@ impl RenderingEngine for DefaultRenderingEngine {
             html.push_str("    </div>\n");
             html.push_str("  </div>\n");
         }
-        
+
         html.push_str("</main>\n");
         html.push_str("</div>\n");
         html.push_str("<script id=\"dashboard-script\"></script>\n");
         html.push_str("</body>\n</html>");
-        
+
         // Generate modern CSS with responsive design
         let css = "body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; background: #f8fafc; }\n\
                    .dashboard-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }\n\
@@ -2470,7 +2531,7 @@ impl RenderingEngine for DefaultRenderingEngine {
                    .loading-spinner { display: flex; justify-content: center; align-items: center; height: 100px; color: #718096; }\n\
                    .control-btn { background: #4299e1; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; }\n\
                    .control-btn:hover { background: #3182ce; }".to_string();
-        
+
         // Generate enhanced JavaScript with interactivity
         let javascript = "document.addEventListener('DOMContentLoaded', function() {\n\
                          console.log('Interactive dashboard loaded');\n\
@@ -2496,9 +2557,9 @@ impl RenderingEngine for DefaultRenderingEngine {
                            });\n\
                          });\n\
                        });".to_string();
-        
+
         let render_time = start_time.elapsed();
-        
+
         Ok(RenderOutput {
             html,
             css,
@@ -2652,7 +2713,6 @@ impl DashboardState {
         }
     }
 }
-
 
 #[cfg(test)]
 mod tests {

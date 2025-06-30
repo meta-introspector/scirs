@@ -54,13 +54,13 @@ pub struct ValidationConfig {
 pub trait ValidationTestSuite<A: Float>: Debug {
     /// Run all tests in the suite
     fn run_tests(&self, plugin: &mut dyn OptimizerPlugin<A>) -> SuiteResult;
-    
+
     /// Get suite name
     fn name(&self) -> &str;
-    
+
     /// Get suite description
     fn description(&self) -> &str;
-    
+
     /// Get test count
     fn test_count(&self) -> usize;
 }
@@ -99,10 +99,10 @@ pub struct TestSummary {
 pub trait ComplianceChecker: Debug {
     /// Check plugin compliance
     fn check_compliance(&self, plugin_info: &PluginInfo) -> ComplianceResult;
-    
+
     /// Get checker name
     fn name(&self) -> &str;
-    
+
     /// Get compliance requirements
     fn requirements(&self) -> Vec<ComplianceRequirement>;
 }
@@ -198,13 +198,13 @@ pub struct PerformanceBenchmarker<A: Float> {
 pub trait PerformanceBenchmark<A: Float>: Debug {
     /// Run benchmark
     fn run(&self, plugin: &mut dyn OptimizerPlugin<A>) -> BenchmarkResult<A>;
-    
+
     /// Get benchmark name
     fn name(&self) -> &str;
-    
+
     /// Get benchmark type
     fn benchmark_type(&self) -> BenchmarkType;
-    
+
     /// Get expected baseline
     fn expected_baseline(&self) -> Option<BenchmarkBaseline>;
 }
@@ -362,47 +362,48 @@ impl<A: Float + Debug + Send + Sync + 'static> PluginValidationFramework<A> {
             benchmarker: PerformanceBenchmarker::new(BenchmarkConfig::default()),
             results: ValidationResults::new(),
         };
-        
+
         // Add default test suites
         framework.add_default_test_suites();
         framework.add_default_compliance_checkers();
         framework.add_default_benchmarks();
-        
+
         framework
     }
-    
+
     /// Run complete validation on a plugin
     pub fn validate_plugin(&mut self, plugin: &mut dyn OptimizerPlugin<A>) -> ValidationResults {
         let start_time = Instant::now();
         let mut suite_results = Vec::new();
         let mut compliance_results = Vec::new();
         let mut benchmark_results = Vec::new();
-        
+
         // Run test suites
         for test_suite in &self.test_suites {
             let result = test_suite.run_tests(plugin);
             suite_results.push(result);
         }
-        
+
         // Run compliance checks
         let plugin_info = plugin.plugin_info();
         for checker in &self.compliance_checkers {
             let result = checker.check_compliance(&plugin_info);
             compliance_results.push(result);
         }
-        
+
         // Run performance benchmarks
         let bench_results = self.benchmarker.run_all_benchmarks(plugin);
         benchmark_results.extend(bench_results);
-        
+
         // Calculate overall score
-        let overall_score = self.calculate_overall_score(&suite_results, &compliance_results, &benchmark_results);
-        
+        let overall_score =
+            self.calculate_overall_score(&suite_results, &compliance_results, &benchmark_results);
+
         // Determine if validation passed
         let validation_passed = overall_score >= 0.8 && // 80% threshold
             suite_results.iter().all(|r| r.suite_passed) &&
             compliance_results.iter().all(|r| r.compliant);
-        
+
         ValidationResults {
             validation_passed,
             suite_results,
@@ -413,54 +414,68 @@ impl<A: Float + Debug + Send + Sync + 'static> PluginValidationFramework<A> {
             total_time: start_time.elapsed(),
         }
     }
-    
+
     /// Add custom test suite
     pub fn add_test_suite(&mut self, test_suite: Box<dyn ValidationTestSuite<A>>) {
         self.test_suites.push(test_suite);
     }
-    
+
     /// Add custom compliance checker
     pub fn add_compliance_checker(&mut self, checker: Box<dyn ComplianceChecker>) {
         self.compliance_checkers.push(checker);
     }
-    
+
     /// Add custom benchmark
     pub fn add_benchmark(&mut self, benchmark: Box<dyn PerformanceBenchmark<A>>) {
         self.benchmarker.add_benchmark(benchmark);
     }
-    
+
     fn add_default_test_suites(&mut self) {
-        self.test_suites.push(Box::new(FunctionalityTestSuite::new(self.config.clone())));
-        self.test_suites.push(Box::new(NumericalAccuracyTestSuite::new(self.config.clone())));
-        
+        self.test_suites
+            .push(Box::new(FunctionalityTestSuite::new(self.config.clone())));
+        self.test_suites
+            .push(Box::new(NumericalAccuracyTestSuite::new(
+                self.config.clone(),
+            )));
+
         if self.config.check_thread_safety {
-            self.test_suites.push(Box::new(ThreadSafetyTestSuite::new(self.config.clone())));
+            self.test_suites
+                .push(Box::new(ThreadSafetyTestSuite::new(self.config.clone())));
         }
-        
+
         if self.config.check_memory_leaks {
-            self.test_suites.push(Box::new(MemoryTestSuite::new(self.config.clone())));
+            self.test_suites
+                .push(Box::new(MemoryTestSuite::new(self.config.clone())));
         }
-        
+
         if self.config.check_convergence {
-            self.test_suites.push(Box::new(ConvergenceTestSuite::new(self.config.clone())));
+            self.test_suites
+                .push(Box::new(ConvergenceTestSuite::new(self.config.clone())));
         }
     }
-    
+
     fn add_default_compliance_checkers(&mut self) {
-        self.compliance_checkers.push(Box::new(ApiComplianceChecker));
-        self.compliance_checkers.push(Box::new(SecurityComplianceChecker));
-        self.compliance_checkers.push(Box::new(PerformanceComplianceChecker));
-        self.compliance_checkers.push(Box::new(DocumentationComplianceChecker));
+        self.compliance_checkers
+            .push(Box::new(ApiComplianceChecker));
+        self.compliance_checkers
+            .push(Box::new(SecurityComplianceChecker));
+        self.compliance_checkers
+            .push(Box::new(PerformanceComplianceChecker));
+        self.compliance_checkers
+            .push(Box::new(DocumentationComplianceChecker));
     }
-    
+
     fn add_default_benchmarks(&mut self) {
         for &size in &self.config.test_data_sizes {
-            self.benchmarker.add_benchmark(Box::new(ThroughputBenchmark::new(size, 100)));
-            self.benchmarker.add_benchmark(Box::new(LatencyBenchmark::new(size)));
-            self.benchmarker.add_benchmark(Box::new(MemoryBenchmark::new(size)));
+            self.benchmarker
+                .add_benchmark(Box::new(ThroughputBenchmark::new(size, 100)));
+            self.benchmarker
+                .add_benchmark(Box::new(LatencyBenchmark::new(size)));
+            self.benchmarker
+                .add_benchmark(Box::new(MemoryBenchmark::new(size)));
         }
     }
-    
+
     fn calculate_overall_score(
         &self,
         suite_results: &[SuiteResult],
@@ -469,34 +484,37 @@ impl<A: Float + Debug + Send + Sync + 'static> PluginValidationFramework<A> {
     ) -> f64 {
         let mut total_score = 0.0;
         let mut weight_sum = 0.0;
-        
+
         // Test suite scores (50% weight)
         if !suite_results.is_empty() {
-            let suite_score = suite_results.iter()
+            let suite_score = suite_results
+                .iter()
                 .map(|r| r.summary.success_rate)
-                .sum::<f64>() / suite_results.len() as f64;
+                .sum::<f64>()
+                / suite_results.len() as f64;
             total_score += suite_score * 0.5;
             weight_sum += 0.5;
         }
-        
+
         // Compliance scores (30% weight)
         if !compliance_results.is_empty() {
-            let compliance_score = compliance_results.iter()
+            let compliance_score = compliance_results
+                .iter()
                 .map(|r| r.compliance_score)
-                .sum::<f64>() / compliance_results.len() as f64;
+                .sum::<f64>()
+                / compliance_results.len() as f64;
             total_score += compliance_score * 0.3;
             weight_sum += 0.3;
         }
-        
+
         // Performance scores (20% weight)
         if !benchmark_results.is_empty() {
-            let perf_score = benchmark_results.iter()
-                .map(|r| r.score)
-                .sum::<f64>() / benchmark_results.len() as f64;
+            let perf_score = benchmark_results.iter().map(|r| r.score).sum::<f64>()
+                / benchmark_results.len() as f64;
             total_score += perf_score * 0.2;
             weight_sum += 0.2;
         }
-        
+
         if weight_sum > 0.0 {
             total_score / weight_sum
         } else {
@@ -516,30 +534,32 @@ impl<A: Float + Debug + Send + Sync + 'static> FunctionalityTestSuite<A> {
     }
 }
 
-impl<A: Float + Debug + Send + Sync + 'static> ValidationTestSuite<A> for FunctionalityTestSuite<A> {
+impl<A: Float + Debug + Send + Sync + 'static> ValidationTestSuite<A>
+    for FunctionalityTestSuite<A>
+{
     fn run_tests(&self, plugin: &mut dyn OptimizerPlugin<A>) -> SuiteResult {
         let start_time = Instant::now();
         let mut test_results = Vec::new();
-        
+
         // Test 1: Basic step functionality
         let result1 = self.test_basic_step(plugin);
         test_results.push(result1);
-        
+
         // Test 2: Parameter initialization
         let result2 = self.test_initialization(plugin);
         test_results.push(result2);
-        
+
         // Test 3: State management
         let result3 = self.test_state_management(plugin);
         test_results.push(result3);
-        
+
         // Test 4: Configuration handling
         let result4 = self.test_configuration(plugin);
         test_results.push(result4);
-        
+
         let passed_tests = test_results.iter().filter(|r| r.passed).count();
         let total_tests = test_results.len();
-        
+
         SuiteResult {
             suite_name: self.name().to_string(),
             test_results,
@@ -554,15 +574,15 @@ impl<A: Float + Debug + Send + Sync + 'static> ValidationTestSuite<A> for Functi
             },
         }
     }
-    
+
     fn name(&self) -> &str {
         "Functionality Tests"
     }
-    
+
     fn description(&self) -> &str {
         "Tests basic optimizer functionality and API compliance"
     }
-    
+
     fn test_count(&self) -> usize {
         4
     }
@@ -571,11 +591,11 @@ impl<A: Float + Debug + Send + Sync + 'static> ValidationTestSuite<A> for Functi
 impl<A: Float + Debug + Send + Sync + 'static> FunctionalityTestSuite<A> {
     fn test_basic_step(&self, plugin: &mut dyn OptimizerPlugin<A>) -> TestResult {
         let start_time = Instant::now();
-        
+
         // Create test data
         let params = Array1::from_vec(vec![A::from(1.0).unwrap(), A::from(2.0).unwrap()]);
         let gradients = Array1::from_vec(vec![A::from(0.1).unwrap(), A::from(0.2).unwrap()]);
-        
+
         match plugin.step(&params, &gradients) {
             Ok(result) => {
                 if result.len() == params.len() {
@@ -602,10 +622,10 @@ impl<A: Float + Debug + Send + Sync + 'static> FunctionalityTestSuite<A> {
             },
         }
     }
-    
+
     fn test_initialization(&self, plugin: &mut dyn OptimizerPlugin<A>) -> TestResult {
         let start_time = Instant::now();
-        
+
         match plugin.initialize(&[10, 20]) {
             Ok(()) => TestResult {
                 passed: true,
@@ -621,10 +641,10 @@ impl<A: Float + Debug + Send + Sync + 'static> FunctionalityTestSuite<A> {
             },
         }
     }
-    
+
     fn test_state_management(&self, plugin: &mut dyn OptimizerPlugin<A>) -> TestResult {
         let start_time = Instant::now();
-        
+
         // Test getting and setting state
         match (plugin.get_state(), plugin.reset()) {
             (Ok(_), Ok(())) => TestResult {
@@ -647,10 +667,10 @@ impl<A: Float + Debug + Send + Sync + 'static> FunctionalityTestSuite<A> {
             },
         }
     }
-    
+
     fn test_configuration(&self, plugin: &mut dyn OptimizerPlugin<A>) -> TestResult {
         let start_time = Instant::now();
-        
+
         let config = plugin.get_config();
         match plugin.set_config(config) {
             Ok(()) => TestResult {
@@ -680,7 +700,9 @@ impl<A: Float + Debug + Send + Sync + 'static> NumericalAccuracyTestSuite<A> {
     }
 }
 
-impl<A: Float + Debug + Send + Sync + 'static> ValidationTestSuite<A> for NumericalAccuracyTestSuite<A> {
+impl<A: Float + Debug + Send + Sync + 'static> ValidationTestSuite<A>
+    for NumericalAccuracyTestSuite<A>
+{
     fn run_tests(&self, _plugin: &mut dyn OptimizerPlugin<A>) -> SuiteResult {
         // Implementation would include numerical precision tests
         SuiteResult {
@@ -697,15 +719,15 @@ impl<A: Float + Debug + Send + Sync + 'static> ValidationTestSuite<A> for Numeri
             },
         }
     }
-    
+
     fn name(&self) -> &str {
         "Numerical Accuracy Tests"
     }
-    
+
     fn description(&self) -> &str {
         "Tests numerical precision and accuracy of optimization steps"
     }
-    
+
     fn test_count(&self) -> usize {
         0
     }
@@ -721,13 +743,19 @@ impl<A: Float> PerformanceBenchmarker<A> {
             baselines: HashMap::new(),
         }
     }
-    
+
     fn add_benchmark(&mut self, benchmark: Box<dyn PerformanceBenchmark<A>>) {
         self.benchmarks.push(benchmark);
     }
-    
-    fn run_all_benchmarks(&mut self, plugin: &mut dyn OptimizerPlugin<A>) -> Vec<BenchmarkResult<A>> {
-        self.benchmarks.iter().map(|bench| bench.run(plugin)).collect()
+
+    fn run_all_benchmarks(
+        &mut self,
+        plugin: &mut dyn OptimizerPlugin<A>,
+    ) -> Vec<BenchmarkResult<A>> {
+        self.benchmarks
+            .iter()
+            .map(|bench| bench.run(plugin))
+            .collect()
     }
 }
 
@@ -774,11 +802,11 @@ impl ComplianceChecker for ApiComplianceChecker {
             compliance_score: 1.0,
         }
     }
-    
+
     fn name(&self) -> &str {
         "API Compliance"
     }
-    
+
     fn requirements(&self) -> Vec<ComplianceRequirement> {
         Vec::new()
     }
@@ -793,11 +821,11 @@ impl ComplianceChecker for SecurityComplianceChecker {
             compliance_score: 1.0,
         }
     }
-    
+
     fn name(&self) -> &str {
         "Security Compliance"
     }
-    
+
     fn requirements(&self) -> Vec<ComplianceRequirement> {
         Vec::new()
     }
@@ -812,11 +840,11 @@ impl ComplianceChecker for PerformanceComplianceChecker {
             compliance_score: 1.0,
         }
     }
-    
+
     fn name(&self) -> &str {
         "Performance Compliance"
     }
-    
+
     fn requirements(&self) -> Vec<ComplianceRequirement> {
         Vec::new()
     }
@@ -826,7 +854,7 @@ impl ComplianceChecker for DocumentationComplianceChecker {
     fn check_compliance(&self, plugin_info: &PluginInfo) -> ComplianceResult {
         let mut violations = Vec::new();
         let mut score = 1.0;
-        
+
         if plugin_info.description.len() < 10 {
             violations.push(ComplianceViolation {
                 violation_type: ViolationType::DocumentationViolation,
@@ -836,7 +864,7 @@ impl ComplianceChecker for DocumentationComplianceChecker {
             });
             score -= 0.2;
         }
-        
+
         if plugin_info.author.is_empty() {
             violations.push(ComplianceViolation {
                 violation_type: ViolationType::MissingMetadata,
@@ -846,7 +874,7 @@ impl ComplianceChecker for DocumentationComplianceChecker {
             });
             score -= 0.1;
         }
-        
+
         ComplianceResult {
             compliant: violations.is_empty(),
             violations,
@@ -854,11 +882,11 @@ impl ComplianceChecker for DocumentationComplianceChecker {
             compliance_score: score.max(0.0),
         }
     }
-    
+
     fn name(&self) -> &str {
         "Documentation Compliance"
     }
-    
+
     fn requirements(&self) -> Vec<ComplianceRequirement> {
         Vec::new()
     }
@@ -867,7 +895,7 @@ impl ComplianceChecker for DocumentationComplianceChecker {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_validation_config_default() {
         let config = ValidationConfig::default();
@@ -875,7 +903,7 @@ mod tests {
         assert!(config.check_memory_leaks);
         assert!(config.check_convergence);
     }
-    
+
     #[test]
     fn test_validation_framework_creation() {
         let config = ValidationConfig::default();
@@ -883,15 +911,15 @@ mod tests {
         assert!(!framework.test_suites.is_empty());
         assert!(!framework.compliance_checkers.is_empty());
     }
-    
+
     #[test]
     fn test_documentation_compliance_checker() {
         let checker = DocumentationComplianceChecker;
-        
+
         let mut info = PluginInfo::default();
         info.description = "Short".to_string();
         info.author = "".to_string();
-        
+
         let result = checker.check_compliance(&info);
         assert!(!result.compliant);
         assert_eq!(result.violations.len(), 2);

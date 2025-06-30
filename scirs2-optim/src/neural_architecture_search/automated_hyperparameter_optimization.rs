@@ -6,46 +6,46 @@
 
 use ndarray::{Array1, Array2, ArrayBase, Data, Dimension};
 use num_traits::Float;
-use std::collections::{HashMap, VecDeque, BTreeMap};
+use serde::{Deserialize, Serialize};
+use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
-use serde::{Serialize, Deserialize};
 
-use crate::error::OptimizerError;
 use super::{
-    OptimizerArchitecture, SearchResult, EvaluationResults, EvaluationMetric,
-    SearchSpaceConfig, NASConfig, MultiObjectiveConfig
+    EvaluationMetric, EvaluationResults, MultiObjectiveConfig, NASConfig, OptimizerArchitecture,
+    SearchResult, SearchSpaceConfig,
 };
+use crate::error::OptimizerError;
 
 /// Main hyperparameter optimization coordinator
 pub struct HyperparameterOptimizer<T: Float> {
     /// Optimization strategy
     strategy: Box<dyn HyperOptStrategy<T>>,
-    
+
     /// Search space definition
     search_space: HyperparameterSearchSpace<T>,
-    
+
     /// Optimization history
     optimization_history: VecDeque<HyperOptResult<T>>,
-    
+
     /// Current best configurations
     best_configurations: Vec<HyperparameterConfig<T>>,
-    
+
     /// Multi-fidelity manager
     fidelity_manager: Option<MultiFidelityManager<T>>,
-    
+
     /// Population-based training manager
     pbt_manager: Option<PopulationBasedTrainer<T>>,
-    
+
     /// Early stopping manager
     early_stopping: EarlyStoppingManager<T>,
-    
+
     /// Resource budget
     resource_budget: ResourceBudget<T>,
-    
+
     /// Optimization statistics
     statistics: HyperOptStatistics<T>,
-    
+
     /// Configuration cache
     config_cache: ConfigurationCache<T>,
 }
@@ -53,20 +53,26 @@ pub struct HyperparameterOptimizer<T: Float> {
 /// Hyperparameter optimization strategies
 pub trait HyperOptStrategy<T: Float>: Send + Sync {
     /// Initialize the strategy
-    fn initialize(&mut self, search_space: &HyperparameterSearchSpace<T>) -> Result<(), OptimizerError>;
-    
+    fn initialize(
+        &mut self,
+        search_space: &HyperparameterSearchSpace<T>,
+    ) -> Result<(), OptimizerError>;
+
     /// Suggest next configuration to evaluate
-    fn suggest_next(&mut self, history: &[HyperOptResult<T>]) -> Result<HyperparameterConfig<T>, OptimizerError>;
-    
+    fn suggest_next(
+        &mut self,
+        history: &[HyperOptResult<T>],
+    ) -> Result<HyperparameterConfig<T>, OptimizerError>;
+
     /// Update strategy with new results
     fn update(&mut self, result: &HyperOptResult<T>) -> Result<(), OptimizerError>;
-    
+
     /// Get strategy name
     fn name(&self) -> &str;
-    
+
     /// Get strategy statistics
     fn statistics(&self) -> StrategyStatistics<T>;
-    
+
     /// Check if optimization should continue
     fn should_continue(&self, history: &[HyperOptResult<T>]) -> bool;
 }
@@ -76,22 +82,22 @@ pub trait HyperOptStrategy<T: Float>: Send + Sync {
 pub struct HyperparameterSearchSpace<T: Float> {
     /// Continuous hyperparameters
     pub continuous_params: HashMap<String, ContinuousParameter<T>>,
-    
+
     /// Integer hyperparameters
     pub integer_params: HashMap<String, IntegerParameter>,
-    
+
     /// Categorical hyperparameters
     pub categorical_params: HashMap<String, CategoricalParameter>,
-    
+
     /// Boolean hyperparameters
     pub boolean_params: Vec<String>,
-    
+
     /// Conditional dependencies
     pub dependencies: Vec<ParameterDependency>,
-    
+
     /// Constraints
     pub constraints: Vec<HyperparameterConstraint<T>>,
-    
+
     /// Search space metadata
     pub metadata: SearchSpaceMetadata,
 }
@@ -101,19 +107,19 @@ pub struct HyperparameterSearchSpace<T: Float> {
 pub struct ContinuousParameter<T: Float> {
     /// Minimum value
     pub min_value: T,
-    
+
     /// Maximum value
     pub max_value: T,
-    
+
     /// Distribution type
     pub distribution: ParameterDistribution,
-    
+
     /// Default value
     pub default_value: Option<T>,
-    
+
     /// Transformation (log, sqrt, etc.)
     pub transformation: Option<ParameterTransformation>,
-    
+
     /// Prior distribution parameters
     pub prior_params: Option<PriorParameters<T>>,
 }
@@ -123,16 +129,16 @@ pub struct ContinuousParameter<T: Float> {
 pub struct IntegerParameter {
     /// Minimum value
     pub min_value: i32,
-    
+
     /// Maximum value
     pub max_value: i32,
-    
+
     /// Step size
     pub step: Option<i32>,
-    
+
     /// Default value
     pub default_value: Option<i32>,
-    
+
     /// Distribution type
     pub distribution: ParameterDistribution,
 }
@@ -142,13 +148,13 @@ pub struct IntegerParameter {
 pub struct CategoricalParameter {
     /// Possible values
     pub choices: Vec<String>,
-    
+
     /// Default value
     pub default_value: Option<String>,
-    
+
     /// Prior probabilities
     pub prior_probabilities: Option<Vec<f64>>,
-    
+
     /// Ordinal ordering (if applicable)
     pub ordinal: bool,
 }
@@ -181,10 +187,10 @@ pub enum ParameterTransformation {
 pub struct PriorParameters<T: Float> {
     /// Distribution type
     pub distribution_type: PriorDistributionType,
-    
+
     /// Distribution parameters
     pub parameters: Vec<T>,
-    
+
     /// Confidence/strength
     pub confidence: T,
 }
@@ -204,13 +210,13 @@ pub enum PriorDistributionType {
 pub struct ParameterDependency {
     /// Child parameter name
     pub child_param: String,
-    
+
     /// Parent parameter name
     pub parent_param: String,
-    
+
     /// Dependency condition
     pub condition: DependencyCondition,
-    
+
     /// Child parameter constraints when condition is met
     pub child_constraints: DependencyConstraints,
 }
@@ -220,19 +226,19 @@ pub struct ParameterDependency {
 pub enum DependencyCondition {
     /// Parent equals specific value
     Equals(String),
-    
+
     /// Parent in set of values
     In(Vec<String>),
-    
+
     /// Parent greater than threshold
     GreaterThan(f64),
-    
+
     /// Parent less than threshold
     LessThan(f64),
-    
+
     /// Parent in range
     InRange(f64, f64),
-    
+
     /// Custom condition
     Custom(String),
 }
@@ -242,16 +248,16 @@ pub enum DependencyCondition {
 pub enum DependencyConstraints {
     /// Enable/disable parameter
     Active(bool),
-    
+
     /// Modify continuous parameter range
     ContinuousRange(f64, f64),
-    
+
     /// Modify integer parameter range
     IntegerRange(i32, i32),
-    
+
     /// Modify categorical choices
     CategoricalChoices(Vec<String>),
-    
+
     /// Custom constraints
     Custom(HashMap<String, String>),
 }
@@ -261,16 +267,16 @@ pub enum DependencyConstraints {
 pub struct HyperparameterConstraint<T: Float> {
     /// Constraint type
     pub constraint_type: ConstraintType,
-    
+
     /// Involved parameters
     pub parameters: Vec<String>,
-    
+
     /// Constraint expression
     pub expression: ConstraintExpression<T>,
-    
+
     /// Penalty for violation
     pub violation_penalty: T,
-    
+
     /// Hard or soft constraint
     pub constraint_level: ConstraintLevel,
 }
@@ -294,19 +300,17 @@ pub enum ConstraintExpression<T: Float> {
         bound: T,
         inequality: InequalityType,
     },
-    
+
     /// Nonlinear constraint
     Nonlinear {
         expression: String,
         bound: T,
         inequality: InequalityType,
     },
-    
+
     /// Logical constraint
-    Logical {
-        expression: LogicalExpression,
-    },
-    
+    Logical { expression: LogicalExpression },
+
     /// Custom constraint
     Custom {
         evaluator: String,
@@ -346,16 +350,16 @@ pub enum ConstraintLevel {
 pub struct SearchSpaceMetadata {
     /// Total number of parameters
     pub total_parameters: usize,
-    
+
     /// Estimated search space size
     pub estimated_space_size: f64,
-    
+
     /// Complexity score
     pub complexity_score: f64,
-    
+
     /// Creation timestamp
     pub created_at: String,
-    
+
     /// Version
     pub version: String,
 }
@@ -365,16 +369,16 @@ pub struct SearchSpaceMetadata {
 pub struct HyperparameterConfig<T: Float> {
     /// Configuration ID
     pub id: String,
-    
+
     /// Parameter values
     pub parameters: HashMap<String, ParameterValue<T>>,
-    
+
     /// Configuration metadata
     pub metadata: ConfigMetadata,
-    
+
     /// Generation information
     pub generation_info: GenerationInfo,
-    
+
     /// Validation status
     pub validation_status: ValidationStatus,
 }
@@ -393,16 +397,16 @@ pub enum ParameterValue<T: Float> {
 pub struct ConfigMetadata {
     /// Creation timestamp
     pub created_at: std::time::SystemTime,
-    
+
     /// Source strategy
     pub source_strategy: String,
-    
+
     /// Parent configurations (if derived)
     pub parent_configs: Vec<String>,
-    
+
     /// Hash for deduplication
     pub config_hash: u64,
-    
+
     /// Priority score
     pub priority_score: f64,
 }
@@ -412,13 +416,13 @@ pub struct ConfigMetadata {
 pub struct GenerationInfo {
     /// Strategy used to generate this config
     pub strategy: String,
-    
+
     /// Generation method
     pub method: GenerationMethod,
-    
+
     /// Exploitation vs exploration score
     pub exploration_score: f64,
-    
+
     /// Confidence in this configuration
     pub confidence: f64,
 }
@@ -451,22 +455,22 @@ pub enum ValidationStatus {
 pub struct HyperOptResult<T: Float> {
     /// Configuration that was evaluated
     pub config: HyperparameterConfig<T>,
-    
+
     /// Evaluation results
     pub evaluation: EvaluationResults<T>,
-    
+
     /// Objective values (for multi-objective)
     pub objectives: HashMap<String, T>,
-    
+
     /// Constraint violations
     pub constraint_violations: Vec<ConstraintViolation<T>>,
-    
+
     /// Resource usage
     pub resource_usage: ResourceUsage<T>,
-    
+
     /// Evaluation metadata
     pub eval_metadata: EvaluationMetadata,
-    
+
     /// Fidelity level (for multi-fidelity optimization)
     pub fidelity_level: Option<FidelityLevel>,
 }
@@ -476,13 +480,13 @@ pub struct HyperOptResult<T: Float> {
 pub struct ConstraintViolation<T: Float> {
     /// Constraint that was violated
     pub constraint_id: String,
-    
+
     /// Violation amount
     pub violation_amount: T,
-    
+
     /// Constraint type
     pub constraint_type: ConstraintType,
-    
+
     /// Severity
     pub severity: ViolationSeverity,
 }
@@ -501,19 +505,19 @@ pub enum ViolationSeverity {
 pub struct ResourceUsage<T: Float> {
     /// Evaluation time
     pub evaluation_time: Duration,
-    
+
     /// Memory usage (MB)
     pub memory_mb: T,
-    
+
     /// CPU hours
     pub cpu_hours: T,
-    
+
     /// GPU hours
     pub gpu_hours: T,
-    
+
     /// Energy consumption (kWh)
     pub energy_kwh: T,
-    
+
     /// Financial cost
     pub cost: T,
 }
@@ -523,16 +527,16 @@ pub struct ResourceUsage<T: Float> {
 pub struct EvaluationMetadata {
     /// Evaluation timestamp
     pub timestamp: std::time::SystemTime,
-    
+
     /// Evaluator version
     pub evaluator_version: String,
-    
+
     /// Evaluation environment
     pub environment: EvaluationEnvironment,
-    
+
     /// Random seed used
     pub random_seed: Option<u64>,
-    
+
     /// Cross-validation fold (if applicable)
     pub cv_fold: Option<usize>,
 }
@@ -542,10 +546,10 @@ pub struct EvaluationMetadata {
 pub struct EvaluationEnvironment {
     /// Hardware specification
     pub hardware: HardwareSpec,
-    
+
     /// Software environment
     pub software: SoftwareSpec,
-    
+
     /// Dataset information
     pub dataset: DatasetSpec,
 }
@@ -581,16 +585,16 @@ pub struct DatasetSpec {
 pub struct MultiFidelityManager<T: Float> {
     /// Available fidelity levels
     fidelity_levels: Vec<FidelityLevel>,
-    
+
     /// Fidelity allocation strategy
     allocation_strategy: FidelityAllocationStrategy,
-    
+
     /// Performance models for each fidelity
     fidelity_models: HashMap<String, Box<dyn PerformanceModel<T>>>,
-    
+
     /// Budget allocation
     budget_allocation: BudgetAllocation<T>,
-    
+
     /// Promotion criteria
     promotion_criteria: PromotionCriteria<T>,
 }
@@ -600,16 +604,16 @@ pub struct MultiFidelityManager<T: Float> {
 pub struct FidelityLevel {
     /// Fidelity name/identifier
     pub name: String,
-    
+
     /// Fidelity value (0.0 to 1.0)
     pub level: f64,
-    
+
     /// Resource multiplier
     pub resource_multiplier: f64,
-    
+
     /// Correlation with full fidelity
     pub correlation: Option<f64>,
-    
+
     /// Fidelity parameters
     pub parameters: FidelityParameters,
 }
@@ -619,16 +623,16 @@ pub struct FidelityLevel {
 pub struct FidelityParameters {
     /// Training epochs/iterations
     pub epochs: Option<usize>,
-    
+
     /// Dataset fraction
     pub dataset_fraction: Option<f64>,
-    
+
     /// Model size reduction
     pub model_size_fraction: Option<f64>,
-    
+
     /// Evaluation budget
     pub evaluation_budget: Option<usize>,
-    
+
     /// Custom parameters
     pub custom: HashMap<String, f64>,
 }
@@ -638,16 +642,16 @@ pub struct FidelityParameters {
 pub enum FidelityAllocationStrategy {
     /// Successive halving
     SuccessiveHalving,
-    
+
     /// HyperBand
     HyperBand,
-    
+
     /// Adaptive allocation
     Adaptive,
-    
+
     /// Multi-armed bandit
     Bandit,
-    
+
     /// Bayesian optimization
     Bayesian,
 }
@@ -655,13 +659,24 @@ pub enum FidelityAllocationStrategy {
 /// Performance models for fidelity estimation
 pub trait PerformanceModel<T: Float>: Send + Sync {
     /// Predict performance at higher fidelity
-    fn predict(&self, config: &HyperparameterConfig<T>, target_fidelity: &FidelityLevel) -> Result<T, OptimizerError>;
-    
+    fn predict(
+        &self,
+        config: &HyperparameterConfig<T>,
+        target_fidelity: &FidelityLevel,
+    ) -> Result<T, OptimizerError>;
+
     /// Update model with new observations
-    fn update(&mut self, observations: &[(HyperparameterConfig<T>, FidelityLevel, T)]) -> Result<(), OptimizerError>;
-    
+    fn update(
+        &mut self,
+        observations: &[(HyperparameterConfig<T>, FidelityLevel, T)],
+    ) -> Result<(), OptimizerError>;
+
     /// Get prediction uncertainty
-    fn uncertainty(&self, config: &HyperparameterConfig<T>, fidelity: &FidelityLevel) -> Result<T, OptimizerError>;
+    fn uncertainty(
+        &self,
+        config: &HyperparameterConfig<T>,
+        fidelity: &FidelityLevel,
+    ) -> Result<T, OptimizerError>;
 }
 
 /// Budget allocation for multi-fidelity
@@ -669,13 +684,13 @@ pub trait PerformanceModel<T: Float>: Send + Sync {
 pub struct BudgetAllocation<T: Float> {
     /// Total budget
     pub total_budget: T,
-    
+
     /// Budget per fidelity level
     pub fidelity_budgets: HashMap<String, T>,
-    
+
     /// Used budget tracking
     pub used_budget: HashMap<String, T>,
-    
+
     /// Budget allocation strategy
     pub strategy: BudgetStrategy,
 }
@@ -694,16 +709,16 @@ pub enum BudgetStrategy {
 pub struct PromotionCriteria<T: Float> {
     /// Performance threshold for promotion
     pub performance_threshold: T,
-    
+
     /// Top-k promotion
     pub top_k: Option<usize>,
-    
+
     /// Percentile-based promotion
     pub percentile: Option<f64>,
-    
+
     /// Minimum evaluations before promotion
     pub min_evaluations: usize,
-    
+
     /// Uncertainty threshold
     pub uncertainty_threshold: Option<T>,
 }
@@ -712,19 +727,19 @@ pub struct PromotionCriteria<T: Float> {
 pub struct PopulationBasedTrainer<T: Float> {
     /// Current population
     population: Vec<PBTIndividual<T>>,
-    
+
     /// Population size
     population_size: usize,
-    
+
     /// Exploration/exploitation parameters
     exploration_params: ExplorationParameters<T>,
-    
+
     /// Selection strategy
     selection_strategy: SelectionStrategy,
-    
+
     /// Mutation strategy
     mutation_strategy: MutationStrategy<T>,
-    
+
     /// Population statistics
     population_stats: PopulationStatistics<T>,
 }
@@ -734,19 +749,19 @@ pub struct PopulationBasedTrainer<T: Float> {
 pub struct PBTIndividual<T: Float> {
     /// Individual ID
     pub id: String,
-    
+
     /// Current configuration
     pub config: HyperparameterConfig<T>,
-    
+
     /// Performance history
     pub performance_history: Vec<T>,
-    
+
     /// Age (number of training steps)
     pub age: usize,
-    
+
     /// Resource allocation
     pub resource_allocation: T,
-    
+
     /// Ancestry information
     pub ancestry: Vec<String>,
 }
@@ -756,13 +771,13 @@ pub struct PBTIndividual<T: Float> {
 pub struct ExplorationParameters<T: Float> {
     /// Exploitation probability
     pub exploit_prob: T,
-    
+
     /// Exploration probability
     pub explore_prob: T,
-    
+
     /// Perturbation strength
     pub perturbation_strength: T,
-    
+
     /// Resample probability
     pub resample_prob: T,
 }
@@ -782,13 +797,13 @@ pub enum SelectionStrategy {
 pub struct MutationStrategy<T: Float> {
     /// Mutation type
     pub mutation_type: MutationType,
-    
+
     /// Mutation rate
     pub mutation_rate: T,
-    
+
     /// Mutation strength
     pub mutation_strength: T,
-    
+
     /// Adaptive mutation
     pub adaptive: bool,
 }
@@ -808,16 +823,16 @@ pub enum MutationType {
 pub struct PopulationStatistics<T: Float> {
     /// Best performance
     pub best_performance: T,
-    
+
     /// Average performance
     pub average_performance: T,
-    
+
     /// Performance diversity
     pub performance_diversity: T,
-    
+
     /// Configuration diversity
     pub config_diversity: T,
-    
+
     /// Convergence measure
     pub convergence: T,
 }
@@ -826,16 +841,16 @@ pub struct PopulationStatistics<T: Float> {
 pub struct EarlyStoppingManager<T: Float> {
     /// Stopping criteria
     criteria: Vec<EarlyStoppingCriterion<T>>,
-    
+
     /// Grace period
     grace_period: usize,
-    
+
     /// Performance history
     performance_history: VecDeque<T>,
-    
+
     /// Patience counter
     patience_counter: usize,
-    
+
     /// Best performance seen
     best_performance: Option<T>,
 }
@@ -845,16 +860,16 @@ pub struct EarlyStoppingManager<T: Float> {
 pub struct EarlyStoppingCriterion<T: Float> {
     /// Criterion type
     pub criterion_type: StoppingCriterionType,
-    
+
     /// Threshold value
     pub threshold: T,
-    
+
     /// Patience (evaluations to wait)
     pub patience: usize,
-    
+
     /// Minimum improvement
     pub min_improvement: T,
-    
+
     /// Relative improvement
     pub relative_improvement: bool,
 }
@@ -875,19 +890,19 @@ pub enum StoppingCriterionType {
 pub struct ResourceBudget<T: Float> {
     /// Maximum evaluations
     pub max_evaluations: usize,
-    
+
     /// Maximum time budget
     pub max_time: Duration,
-    
+
     /// Maximum financial cost
     pub max_cost: T,
-    
+
     /// Maximum memory usage
     pub max_memory_gb: T,
-    
+
     /// Maximum energy consumption
     pub max_energy_kwh: T,
-    
+
     /// Current usage tracking
     pub current_usage: ResourceUsage<T>,
 }
@@ -897,22 +912,22 @@ pub struct ResourceBudget<T: Float> {
 pub struct HyperOptStatistics<T: Float> {
     /// Total evaluations performed
     pub total_evaluations: usize,
-    
+
     /// Total time spent
     pub total_time: Duration,
-    
+
     /// Best performance found
     pub best_performance: T,
-    
+
     /// Average performance
     pub average_performance: T,
-    
+
     /// Performance improvement rate
     pub improvement_rate: T,
-    
+
     /// Strategy effectiveness
     pub strategy_effectiveness: HashMap<String, T>,
-    
+
     /// Convergence metrics
     pub convergence_metrics: ConvergenceMetrics<T>,
 }
@@ -922,13 +937,13 @@ pub struct HyperOptStatistics<T: Float> {
 pub struct ConvergenceMetrics<T: Float> {
     /// Convergence rate
     pub convergence_rate: T,
-    
+
     /// Plateau detection
     pub plateau_length: usize,
-    
+
     /// Diversity measure
     pub diversity: T,
-    
+
     /// Exploration efficiency
     pub exploration_efficiency: T,
 }
@@ -937,13 +952,13 @@ pub struct ConvergenceMetrics<T: Float> {
 pub struct ConfigurationCache<T: Float> {
     /// Cache storage
     cache: HashMap<u64, HyperOptResult<T>>,
-    
+
     /// Cache statistics
     cache_stats: CacheStatistics,
-    
+
     /// Cache policy
     cache_policy: CachePolicy,
-    
+
     /// Maximum cache size
     max_size: usize,
 }
@@ -953,13 +968,13 @@ pub struct ConfigurationCache<T: Float> {
 pub struct CacheStatistics {
     /// Cache hits
     pub hits: usize,
-    
+
     /// Cache misses
     pub misses: usize,
-    
+
     /// Cache size
     pub current_size: usize,
-    
+
     /// Evictions
     pub evictions: usize,
 }
@@ -967,9 +982,9 @@ pub struct CacheStatistics {
 /// Cache policies
 #[derive(Debug, Clone, Copy)]
 pub enum CachePolicy {
-    LRU, // Least Recently Used
-    LFU, // Least Frequently Used
-    TTL, // Time To Live
+    LRU,  // Least Recently Used
+    LFU,  // Least Frequently Used
+    TTL,  // Time To Live
     Size, // Size-based eviction
 }
 
@@ -978,16 +993,16 @@ pub enum CachePolicy {
 pub struct StrategyStatistics<T: Float> {
     /// Number of suggestions made
     pub suggestions_made: usize,
-    
+
     /// Average performance of suggestions
     pub avg_performance: T,
-    
+
     /// Best performance found
     pub best_performance: T,
-    
+
     /// Exploration vs exploitation ratio
     pub exploration_ratio: T,
-    
+
     /// Strategy-specific metrics
     pub custom_metrics: HashMap<String, T>,
 }
@@ -996,16 +1011,16 @@ pub struct StrategyStatistics<T: Float> {
 pub struct BayesianOptimizationStrategy<T: Float> {
     /// Gaussian Process model
     gp_model: GaussianProcess<T>,
-    
+
     /// Acquisition function
     acquisition_fn: AcquisitionFunction<T>,
-    
+
     /// Observed configurations and performances
     observations: Vec<(HyperparameterConfig<T>, T)>,
-    
+
     /// Strategy statistics
     stats: StrategyStatistics<T>,
-    
+
     /// Hyperparameters
     hyperparams: BayesianOptParams<T>,
 }
@@ -1015,16 +1030,16 @@ pub struct BayesianOptimizationStrategy<T: Float> {
 pub struct GaussianProcess<T: Float> {
     /// Kernel function
     kernel: KernelFunction<T>,
-    
+
     /// Training data
     training_data: Vec<(Array1<T>, T)>,
-    
+
     /// Kernel hyperparameters
     kernel_params: KernelParameters<T>,
-    
+
     /// Noise parameter
     noise_variance: T,
-    
+
     /// Covariance matrix inverse
     k_inv: Option<Array2<T>>,
 }
@@ -1045,13 +1060,13 @@ pub enum KernelFunction<T: Float> {
 pub struct KernelParameters<T: Float> {
     /// Lengthscale parameters
     pub lengthscales: Array1<T>,
-    
+
     /// Signal variance
     pub signal_variance: T,
-    
+
     /// Noise variance
     pub noise_variance: T,
-    
+
     /// Additional parameters
     pub additional_params: HashMap<String, T>,
 }
@@ -1072,13 +1087,13 @@ pub enum AcquisitionFunction<T: Float> {
 pub struct BayesianOptParams<T: Float> {
     /// Number of initial random samples
     pub n_initial_samples: usize,
-    
+
     /// Acquisition optimization settings
     pub acq_opt_config: AcquisitionOptConfig<T>,
-    
+
     /// GP hyperparameter optimization
     pub gp_opt_config: GPOptConfig<T>,
-    
+
     /// Convergence criteria
     pub convergence_config: ConvergenceConfig<T>,
 }
@@ -1088,13 +1103,13 @@ pub struct BayesianOptParams<T: Float> {
 pub struct AcquisitionOptConfig<T: Float> {
     /// Number of restarts for optimization
     pub n_restarts: usize,
-    
+
     /// Maximum iterations
     pub max_iterations: usize,
-    
+
     /// Convergence tolerance
     pub tolerance: T,
-    
+
     /// Optimization method
     pub method: AcquisitionOptMethod,
 }
@@ -1114,13 +1129,13 @@ pub enum AcquisitionOptMethod {
 pub struct GPOptConfig<T: Float> {
     /// Whether to optimize kernel hyperparameters
     pub optimize_hyperparams: bool,
-    
+
     /// Optimization frequency
     pub opt_frequency: usize,
-    
+
     /// Maximum likelihood optimization method
     pub ml_method: MLOptMethod,
-    
+
     /// Prior distributions
     pub priors: HashMap<String, PriorParameters<T>>,
 }
@@ -1139,13 +1154,13 @@ pub enum MLOptMethod {
 pub struct ConvergenceConfig<T: Float> {
     /// Minimum number of iterations
     pub min_iterations: usize,
-    
+
     /// Maximum number of iterations
     pub max_iterations: usize,
-    
+
     /// Improvement threshold
     pub improvement_threshold: T,
-    
+
     /// Patience for early stopping
     pub patience: usize,
 }
@@ -1170,46 +1185,52 @@ impl<T: Float> HyperparameterOptimizer<T> {
             config_cache: ConfigurationCache::new(1000),
         }
     }
-    
+
     /// Run hyperparameter optimization
     pub fn optimize(&mut self) -> Result<OptimizationResults<T>, OptimizerError> {
         let start_time = Instant::now();
-        
+
         // Initialize strategy
         self.strategy.initialize(&self.search_space)?;
-        
+
         // Main optimization loop
         while self.should_continue_optimization() {
             // Suggest next configuration
-            let config = self.strategy.suggest_next(&self.optimization_history.iter().cloned().collect::<Vec<_>>())?;
-            
+            let config = self.strategy.suggest_next(
+                &self
+                    .optimization_history
+                    .iter()
+                    .cloned()
+                    .collect::<Vec<_>>(),
+            )?;
+
             // Check cache first
             if let Some(cached_result) = self.config_cache.get(&config) {
                 self.optimization_history.push_back(cached_result.clone());
                 continue;
             }
-            
+
             // Evaluate configuration
             let result = self.evaluate_configuration(config)?;
-            
+
             // Update strategy
             self.strategy.update(&result)?;
-            
+
             // Store result
             self.optimization_history.push_back(result.clone());
             self.config_cache.insert(result.clone());
-            
+
             // Update best configurations
             self.update_best_configurations(&result);
-            
+
             // Update statistics
             self.update_statistics();
         }
-        
+
         // Finalize results
         let total_time = start_time.elapsed();
         self.statistics.total_time = total_time;
-        
+
         Ok(OptimizationResults {
             best_configs: self.best_configurations.clone(),
             history: self.optimization_history.iter().cloned().collect(),
@@ -1217,25 +1238,34 @@ impl<T: Float> HyperparameterOptimizer<T> {
             resource_usage: self.resource_budget.current_usage.clone(),
         })
     }
-    
+
     fn should_continue_optimization(&self) -> bool {
         // Check resource budget
         if self.optimization_history.len() >= self.resource_budget.max_evaluations {
             return false;
         }
-        
+
         if self.statistics.total_time >= self.resource_budget.max_time {
             return false;
         }
-        
+
         // Check early stopping
-        self.early_stopping.should_continue(&self.optimization_history.iter().cloned().collect::<Vec<_>>())
+        self.early_stopping.should_continue(
+            &self
+                .optimization_history
+                .iter()
+                .cloned()
+                .collect::<Vec<_>>(),
+        )
     }
-    
-    fn evaluate_configuration(&self, config: HyperparameterConfig<T>) -> Result<HyperOptResult<T>, OptimizerError> {
+
+    fn evaluate_configuration(
+        &self,
+        config: HyperparameterConfig<T>,
+    ) -> Result<HyperOptResult<T>, OptimizerError> {
         // Simplified evaluation - in practice would run actual optimization
         let performance = T::from(0.8).unwrap(); // Placeholder
-        
+
         let evaluation = EvaluationResults {
             metric_scores: HashMap::new(),
             overall_score: performance,
@@ -1244,7 +1274,7 @@ impl<T: Float> HyperparameterOptimizer<T> {
             success: true,
             error_message: None,
         };
-        
+
         Ok(HyperOptResult {
             config,
             evaluation,
@@ -1287,21 +1317,21 @@ impl<T: Float> HyperparameterOptimizer<T> {
             fidelity_level: None,
         })
     }
-    
+
     fn update_best_configurations(&mut self, result: &HyperOptResult<T>) {
         self.best_configurations.push(result.config.clone());
-        
+
         // Keep only top 10
         self.best_configurations.sort_by(|a, b| {
             // Sort by performance (would need to look up performance)
             std::cmp::Ordering::Equal
         });
-        
+
         if self.best_configurations.len() > 10 {
             self.best_configurations.truncate(10);
         }
     }
-    
+
     fn update_statistics(&mut self) {
         self.statistics.total_evaluations = self.optimization_history.len();
         // Update other statistics...
@@ -1318,7 +1348,7 @@ impl<T: Float> EarlyStoppingManager<T> {
             best_performance: None,
         }
     }
-    
+
     fn should_continue(&self, _history: &[HyperOptResult<T>]) -> bool {
         // Simplified - would implement actual early stopping logic
         true
@@ -1339,7 +1369,7 @@ impl<T: Float> ConfigurationCache<T> {
             max_size,
         }
     }
-    
+
     fn get(&mut self, config: &HyperparameterConfig<T>) -> Option<&HyperOptResult<T>> {
         let hash = config.metadata.config_hash;
         if let Some(result) = self.cache.get(&hash) {
@@ -1350,10 +1380,10 @@ impl<T: Float> ConfigurationCache<T> {
             None
         }
     }
-    
+
     fn insert(&mut self, result: HyperOptResult<T>) {
         let hash = result.config.metadata.config_hash;
-        
+
         if self.cache.len() >= self.max_size {
             // Simple eviction - remove first entry
             if let Some((key, _)) = self.cache.iter().next() {
@@ -1362,7 +1392,7 @@ impl<T: Float> ConfigurationCache<T> {
                 self.cache_stats.evictions += 1;
             }
         }
-        
+
         self.cache.insert(hash, result);
         self.cache_stats.current_size = self.cache.len();
     }
@@ -1373,13 +1403,13 @@ impl<T: Float> ConfigurationCache<T> {
 pub struct OptimizationResults<T: Float> {
     /// Best configurations found
     pub best_configs: Vec<HyperparameterConfig<T>>,
-    
+
     /// Optimization history
     pub history: Vec<HyperOptResult<T>>,
-    
+
     /// Final statistics
     pub statistics: HyperOptStatistics<T>,
-    
+
     /// Resource usage summary
     pub resource_usage: ResourceUsage<T>,
 }
@@ -1424,7 +1454,7 @@ impl<T: Float> Default for HyperOptStatistics<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_hyperparameter_search_space_creation() {
         let mut search_space = HyperparameterSearchSpace::<f64> {
@@ -1442,7 +1472,7 @@ mod tests {
                 version: "1.0".to_string(),
             },
         };
-        
+
         // Add learning rate parameter
         search_space.continuous_params.insert(
             "learning_rate".to_string(),
@@ -1453,21 +1483,27 @@ mod tests {
                 default_value: Some(1e-3),
                 transformation: Some(ParameterTransformation::Log),
                 prior_params: None,
-            }
+            },
         );
-        
+
         assert_eq!(search_space.continuous_params.len(), 1);
         assert!(search_space.continuous_params.contains_key("learning_rate"));
     }
-    
+
     #[test]
     fn test_hyperparameter_config_creation() {
         let mut parameters = HashMap::new();
-        parameters.insert("learning_rate".to_string(), ParameterValue::Continuous(0.001));
+        parameters.insert(
+            "learning_rate".to_string(),
+            ParameterValue::Continuous(0.001),
+        );
         parameters.insert("batch_size".to_string(), ParameterValue::Integer(32));
-        parameters.insert("optimizer".to_string(), ParameterValue::Categorical("Adam".to_string()));
+        parameters.insert(
+            "optimizer".to_string(),
+            ParameterValue::Categorical("Adam".to_string()),
+        );
         parameters.insert("use_dropout".to_string(), ParameterValue::Boolean(true));
-        
+
         let config = HyperparameterConfig {
             id: "config_001".to_string(),
             parameters,
@@ -1486,11 +1522,11 @@ mod tests {
             },
             validation_status: ValidationStatus::Valid,
         };
-        
+
         assert_eq!(config.parameters.len(), 4);
         assert!(matches!(config.validation_status, ValidationStatus::Valid));
     }
-    
+
     #[test]
     fn test_resource_budget_tracking() {
         let budget = ResourceBudget {
@@ -1508,7 +1544,7 @@ mod tests {
                 cost: 0.0,
             },
         };
-        
+
         assert_eq!(budget.max_evaluations, 1000);
         assert_eq!(budget.max_time.as_secs(), 3600);
     }

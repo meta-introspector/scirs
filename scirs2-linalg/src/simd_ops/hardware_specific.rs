@@ -67,21 +67,15 @@ where
     if std::any::TypeId::of::<F>() == std::any::TypeId::of::<f64>() {
         if capabilities.has_avx2 && n >= 16 {
             unsafe {
-                let raw_result = avx2_dot_f64(
-                    x.as_ptr() as *const f64,
-                    y.as_ptr() as *const f64,
-                    n,
-                )?;
+                let raw_result =
+                    avx2_dot_f64(x.as_ptr() as *const f64, y.as_ptr() as *const f64, n)?;
                 result = F::from(raw_result).unwrap_or(F::zero());
             }
         } else if capabilities.has_neon && cfg!(target_arch = "aarch64") && n >= 8 {
             #[cfg(target_arch = "aarch64")]
             unsafe {
-                let raw_result = neon_dot_f64(
-                    x.as_ptr() as *const f64,
-                    y.as_ptr() as *const f64,
-                    n,
-                )?;
+                let raw_result =
+                    neon_dot_f64(x.as_ptr() as *const f64, y.as_ptr() as *const f64, n)?;
                 result = F::from(raw_result).unwrap_or(F::zero());
             }
         } else {
@@ -93,21 +87,15 @@ where
     } else if std::any::TypeId::of::<F>() == std::any::TypeId::of::<f32>() {
         if capabilities.has_avx2 && n >= 32 {
             unsafe {
-                let raw_result = avx2_dot_f32(
-                    x.as_ptr() as *const f32,
-                    y.as_ptr() as *const f32,
-                    n,
-                )?;
+                let raw_result =
+                    avx2_dot_f32(x.as_ptr() as *const f32, y.as_ptr() as *const f32, n)?;
                 result = F::from(raw_result).unwrap_or(F::zero());
             }
         } else if capabilities.has_neon && cfg!(target_arch = "aarch64") && n >= 16 {
             #[cfg(target_arch = "aarch64")]
             unsafe {
-                let raw_result = neon_dot_f32(
-                    x.as_ptr() as *const f32,
-                    y.as_ptr() as *const f32,
-                    n,
-                )?;
+                let raw_result =
+                    neon_dot_f32(x.as_ptr() as *const f32, y.as_ptr() as *const f32, n)?;
                 result = F::from(raw_result).unwrap_or(F::zero());
             }
         } else {
@@ -413,7 +401,6 @@ unsafe fn neon_matvec_f32(
     Ok(())
 }
 
-
 /// Standard fallback dot product
 #[allow(dead_code)]
 fn standard_dot<F>(x: &ArrayView1<F>, y: &ArrayView1<F>) -> F
@@ -586,9 +573,8 @@ unsafe fn neon_dot_f64(x_ptr: *const f64, y_ptr: *const f64, n: usize) -> Linalg
     Ok(result)
 }
 
-
 /// SIMD-Parallel hybrid matrix multiplication for large matrices
-/// 
+///
 /// This function combines SIMD vectorization with parallel processing
 /// to achieve optimal performance for large matrix operations.
 pub fn simd_parallel_gemm<F>(
@@ -616,7 +602,7 @@ where
     }
 
     let mut result = Array2::zeros((m, n));
-    
+
     // Determine optimal block size based on hardware capabilities
     let simd_width = capabilities.optimal_vector_width();
     let cache_block_size = if capabilities.has_avx2 {
@@ -638,13 +624,8 @@ where
 
     let results: Vec<Array2<F>> = parallel_map(&chunks, |(start_row, end_row)| {
         let a_block = a.slice(s![*start_row..*end_row, ..]);
-        hardware_optimized_gemm_block(
-            &a_block,
-            b,
-            capabilities,
-            cache_block_size,
-            simd_width,
-        ).unwrap()
+        hardware_optimized_gemm_block(&a_block, b, capabilities, cache_block_size, simd_width)
+            .unwrap()
     });
 
     // Assemble results
@@ -671,10 +652,10 @@ where
 {
     let (m, k) = a.dim();
     let (_, n) = b.dim();
-    
+
     let mut result = Array2::zeros((m, n));
     let cache_block_size = capabilities.optimal_vector_width() * 4;
-    
+
     // Blocked GEMM with SIMD optimization
     for ii in (0..m).step_by(cache_block_size) {
         for jj in (0..n).step_by(cache_block_size) {
@@ -682,26 +663,22 @@ where
                 let i_end = (ii + cache_block_size).min(m);
                 let j_end = (jj + cache_block_size).min(n);
                 let k_end = (kk + cache_block_size).min(k);
-                
+
                 // Process each block using SIMD operations
                 for i in ii..i_end {
                     for j in jj..j_end {
                         let a_row = a.slice(s![i, kk..k_end]);
                         let b_col = b.slice(s![kk..k_end, j]);
-                        
+
                         // Use hardware-optimized dot product
-                        let dot_result = hardware_optimized_dot(
-                            &a_row,
-                            &b_col,
-                            capabilities,
-                        )?;
+                        let dot_result = hardware_optimized_dot(&a_row, &b_col, capabilities)?;
                         result[[i, j]] += dot_result;
                     }
                 }
             }
         }
     }
-    
+
     Ok(result)
 }
 
@@ -718,9 +695,9 @@ where
 {
     let (m, k) = a.dim();
     let (_, n) = b.dim();
-    
+
     let mut result = Array2::zeros((m, n));
-    
+
     // Optimized block multiplication
     for ii in (0..m).step_by(cache_block_size) {
         for jj in (0..n).step_by(cache_block_size) {
@@ -728,24 +705,20 @@ where
                 let i_end = (ii + cache_block_size).min(m);
                 let j_end = (jj + cache_block_size).min(n);
                 let k_end = (kk + cache_block_size).min(k);
-                
+
                 for i in ii..i_end {
                     for j in jj..j_end {
                         let a_row = a.slice(s![i, kk..k_end]);
                         let b_col = b.slice(s![kk..k_end, j]);
-                        
-                        let dot_result = hardware_optimized_dot(
-                            &a_row,
-                            &b_col,
-                            capabilities,
-                        )?;
+
+                        let dot_result = hardware_optimized_dot(&a_row, &b_col, capabilities)?;
                         result[[i, j]] += dot_result;
                     }
                 }
             }
         }
     }
-    
+
     Ok(result)
 }
 

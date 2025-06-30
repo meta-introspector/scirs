@@ -15,10 +15,10 @@
 //! - Mixture model diagnostics and validation
 
 use crate::error::{StatsError, StatsResult};
-use ndarray::{Array1, Array2, Array3, ArrayView1, ArrayView2, Axis, s};
+use either::Either;
+use ndarray::{s, Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive, One, Zero};
 use rand::Rng;
-use either::Either;
 use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 use std::collections::HashMap;
 use std::marker::PhantomData;
@@ -1011,7 +1011,7 @@ where
     for n_comp in min_components..=max_components {
         let mut gmm = GaussianMixtureModel::new(n_comp, config.clone())?;
         let params = gmm.fit(data)?;
-        
+
         if params.model_selection.bic < best_bic {
             best_bic = params.model_selection.bic;
             best_n_components = n_comp;
@@ -1047,9 +1047,9 @@ where
         // Enable robust EM
         config.robust_em = true;
         config.outlier_threshold = outlier_threshold.to_f64().unwrap();
-        
+
         let gmm = GaussianMixtureModel::new(n_components, config)?;
-        
+
         Ok(Self {
             gmm,
             outlier_threshold,
@@ -1070,15 +1070,23 @@ where
         })?;
 
         let outlier_scores = params.outlier_scores.as_ref().ok_or_else(|| {
-            StatsError::InvalidArgument("Robust EM must be enabled for outlier detection".to_string())
+            StatsError::InvalidArgument(
+                "Robust EM must be enabled for outlier detection".to_string(),
+            )
         })?;
 
         // Determine outlier threshold based on contamination rate
         let mut sorted_scores = outlier_scores.to_owned();
-        sorted_scores.as_slice_mut().unwrap().sort_by(|a, b| a.partial_cmp(b).unwrap());
-        
-        let threshold_idx = ((F::one() - self.contamination) * F::from(sorted_scores.len()).unwrap())
-            .to_usize().unwrap().min(sorted_scores.len() - 1);
+        sorted_scores
+            .as_slice_mut()
+            .unwrap()
+            .sort_by(|a, b| a.partial_cmp(b).unwrap());
+
+        let threshold_idx = ((F::one() - self.contamination)
+            * F::from(sorted_scores.len()).unwrap())
+        .to_usize()
+        .unwrap()
+        .min(sorted_scores.len() - 1);
         let adaptive_threshold = sorted_scores[threshold_idx];
 
         let outliers = outlier_scores.mapv(|score| score > adaptive_threshold);
@@ -1115,7 +1123,7 @@ where
         config: GMMConfig,
     ) -> StatsResult<Self> {
         let gmm = GaussianMixtureModel::new(n_components, config)?;
-        
+
         Ok(Self {
             gmm,
             learning_rate,
@@ -1131,7 +1139,7 @@ where
     /// Update model with new batch of data
     pub fn partial_fit(&mut self, batch: &ArrayView2<F>) -> StatsResult<()> {
         let batch_size = batch.nrows();
-        
+
         if self.n_samples_seen == 0 {
             // Initialize with first batch
             self.gmm.fit(batch)?;
@@ -1143,7 +1151,7 @@ where
             // Online update
             self.online_update(batch)?;
         }
-        
+
         self.n_samples_seen += batch_size;
         Ok(())
     }
@@ -1151,46 +1159,43 @@ where
     /// Perform online parameter update
     fn online_update(&mut self, batch: &ArrayView2<F>) -> StatsResult<()> {
         let params = self.gmm.parameters.as_ref().unwrap();
-        
+
         // E-step on new batch
-        let responsibilities = self.gmm.e_step(
-            batch,
-            &params.weights,
-            &params.means,
-            &params.covariances,
-        )?;
-        
+        let responsibilities =
+            self.gmm
+                .e_step(batch, &params.weights, &params.means, &params.covariances)?;
+
         // Compute batch statistics
         let batch_weights = self.gmm.m_step_weights(&responsibilities)?;
         let batch_means = self.gmm.m_step_means_advanced(batch, &responsibilities)?;
-        
+
         // Update running statistics with exponential decay
         let lr = self.learning_rate;
         let decay = self.decay_factor;
-        
-        if let (Some(ref mut r_weights), Some(ref mut r_means)) = 
-            (&mut self.running_weights, &mut self.running_means) {
-            
+
+        if let (Some(ref mut r_weights), Some(ref mut r_means)) =
+            (&mut self.running_weights, &mut self.running_means)
+        {
             // Update weights: w = decay * w_old + lr * w_batch
             *r_weights = r_weights.mapv(|x| x * decay) + batch_weights.mapv(|x| x * lr);
-            
+
             // Normalize weights
             let weight_sum = r_weights.sum();
             if weight_sum > F::zero() {
                 *r_weights = r_weights.mapv(|x| x / weight_sum);
             }
-            
+
             // Update means
             *r_means = r_means.mapv(|x| x * decay) + batch_means.mapv(|x| x * lr);
         }
-        
+
         // Update model parameters
         if let Some(ref params_mut) = &mut self.gmm.parameters {
             let params_mut = unsafe { &mut *(params_mut as *const _ as *mut GMMParameters<F>) };
             params_mut.weights = self.running_weights.as_ref().unwrap().clone();
             params_mut.means = self.running_means.as_ref().unwrap().clone();
         }
-        
+
         Ok(())
     }
 
@@ -1211,10 +1216,10 @@ where
 {
     // Simplified hierarchical clustering for initialization
     // Full implementation would use proper hierarchical clustering
-    
+
     let mut init_config = config.clone();
     init_config.init_method = InitializationMethod::FurthestFirst;
-    
+
     gaussian_mixture_model(data, n_components, Some(init_config))
 }
 
@@ -1231,11 +1236,15 @@ where
     let (n_samples, _) = data.dim();
     let fold_size = n_samples / n_folds;
     let mut cv_scores = Vec::with_capacity(n_folds);
-    
+
     for fold in 0..n_folds {
         let val_start = fold * fold_size;
-        let val_end = if fold == n_folds - 1 { n_samples } else { (fold + 1) * fold_size };
-        
+        let val_end = if fold == n_folds - 1 {
+            n_samples
+        } else {
+            (fold + 1) * fold_size
+        };
+
         // Create training and validation sets
         let mut train_indices = Vec::new();
         for i in 0..n_samples {
@@ -1243,17 +1252,17 @@ where
                 train_indices.push(i);
             }
         }
-        
+
         let train_data = Array2::from_shape_fn((train_indices.len(), data.ncols()), |(i, j)| {
             data[[train_indices[i], j]]
         });
-        
+
         let val_data = data.slice(ndarray::s![val_start..val_end, ..]);
-        
+
         // Fit model on training data
         let mut gmm = GaussianMixtureModel::new(n_components, config.clone())?;
         let params = gmm.fit(&train_data.view())?;
-        
+
         // Evaluate on validation data
         let val_likelihood = gmm.compute_log_likelihood(
             &val_data,
@@ -1261,10 +1270,10 @@ where
             &params.means,
             &params.covariances,
         )?;
-        
+
         cv_scores.push(val_likelihood);
     }
-    
+
     // Return average CV score
     let avg_score = cv_scores.iter().copied().sum::<F>() / F::from(cv_scores.len()).unwrap();
     Ok(avg_score)
@@ -1273,21 +1282,24 @@ where
 /// Performance benchmarking for mixture models
 pub fn benchmark_mixture_models<F>(
     data: &ArrayView2<F>,
-    methods: &[(&str, Box<dyn Fn(&ArrayView2<F>) -> StatsResult<GMMParameters<F>>>)],
+    methods: &[(
+        &str,
+        Box<dyn Fn(&ArrayView2<F>) -> StatsResult<GMMParameters<F>>>,
+    )],
 ) -> StatsResult<Vec<(String, std::time::Duration, F)>>
 where
     F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive,
 {
     let mut results = Vec::new();
-    
+
     for (name, method) in methods {
         let start_time = std::time::Instant::now();
         let params = method(data)?;
         let duration = start_time.elapsed();
-        
+
         results.push((name.to_string(), duration, params.log_likelihood));
     }
-    
+
     Ok(results)
 }
 
@@ -1306,17 +1318,17 @@ mod tests {
             [5.1, 6.1],
             [4.9, 5.9]
         ];
-        
+
         let config = GMMConfig {
             max_iter: 50,
             tolerance: 1e-4,
             n_init: 2,
             ..Default::default()
         };
-        
+
         let mut gmm = GaussianMixtureModel::new(2, config).unwrap();
         let params = gmm.fit(&data.view()).unwrap();
-        
+
         assert_eq!(params.weights.len(), 2);
         assert!(params.converged);
         assert!(params.log_likelihood.is_finite());
@@ -1332,45 +1344,27 @@ mod tests {
             [5.0, 6.0],
             [5.1, 6.1]
         ];
-        
-        let mut robust_gmm = RobustGMM::new(
-            2, 
-            0.1f64, 
-            0.2f64, 
-            GMMConfig::default()
-        ).unwrap();
-        
+
+        let mut robust_gmm = RobustGMM::new(2, 0.1f64, 0.2f64, GMMConfig::default()).unwrap();
+
         let params = robust_gmm.fit(&data.view()).unwrap();
         assert!(params.outlier_scores.is_some());
-        
+
         let outliers = robust_gmm.detect_outliers(&data.view()).unwrap();
         assert_eq!(outliers.len(), data.nrows());
     }
 
     #[test]
     fn test_streaming_gmm() {
-        let batch1 = array![
-            [1.0, 2.0],
-            [1.1, 2.1],
-            [0.9, 1.9]
-        ];
-        
-        let batch2 = array![
-            [5.0, 6.0],
-            [5.1, 6.1],
-            [4.9, 5.9]
-        ];
-        
-        let mut streaming_gmm = StreamingGMM::new(
-            2,
-            0.1f64,
-            0.9f64,
-            GMMConfig::default()
-        ).unwrap();
-        
+        let batch1 = array![[1.0, 2.0], [1.1, 2.1], [0.9, 1.9]];
+
+        let batch2 = array![[5.0, 6.0], [5.1, 6.1], [4.9, 5.9]];
+
+        let mut streaming_gmm = StreamingGMM::new(2, 0.1f64, 0.9f64, GMMConfig::default()).unwrap();
+
         streaming_gmm.partial_fit(&batch1.view()).unwrap();
         streaming_gmm.partial_fit(&batch2.view()).unwrap();
-        
+
         let params = streaming_gmm.get_parameters().unwrap();
         assert_eq!(params.weights.len(), 2);
     }
@@ -1378,18 +1372,28 @@ mod tests {
     #[test]
     fn test_gmm_model_selection() {
         let data = array![
-            [1.0, 2.0], [1.1, 2.1], [0.9, 1.9],
-            [5.0, 6.0], [5.1, 6.1], [4.9, 5.9],
-            [3.0, 3.0], [3.1, 3.1], [2.9, 2.9]
+            [1.0, 2.0],
+            [1.1, 2.1],
+            [0.9, 1.9],
+            [5.0, 6.0],
+            [5.1, 6.1],
+            [4.9, 5.9],
+            [3.0, 3.0],
+            [3.1, 3.1],
+            [2.9, 2.9]
         ];
-        
+
         let (best_n, params) = gmm_model_selection(
             &data.view(),
             2,
             4,
-            Some(GMMConfig { max_iter: 20, ..Default::default() })
-        ).unwrap();
-        
+            Some(GMMConfig {
+                max_iter: 20,
+                ..Default::default()
+            }),
+        )
+        .unwrap();
+
         assert!(best_n >= 2 && best_n <= 4);
         assert!(params.model_selection.bic.is_finite());
     }
@@ -1397,17 +1401,20 @@ mod tests {
     #[test]
     fn test_variational_gmm() {
         let data = array![
-            [1.0, 2.0], [1.1, 2.1], [0.9, 1.9],
-            [5.0, 6.0], [5.1, 6.1], [4.9, 5.9]
+            [1.0, 2.0],
+            [1.1, 2.1],
+            [0.9, 1.9],
+            [5.0, 6.0],
+            [5.1, 6.1],
+            [4.9, 5.9]
         ];
-        
+
         let mut vgmm = VariationalGMM::new(2, VariationalGMMConfig::default());
         let result = vgmm.fit(&data.view()).unwrap();
-        
+
         assert!(result.lower_bound > f64::NEG_INFINITY);
         assert!(result.effective_components > 0);
     }
-
 }
 
 /// Variational Bayesian Gaussian Mixture Model
@@ -1511,44 +1518,63 @@ where
     /// Fit Variational GMM to data
     pub fn fit(&mut self, data: &ArrayView2<F>) -> StatsResult<VariationalGMMResult<F>> {
         let (n_samples, n_features) = data.dim();
-        
+
         // Initialize parameters
-        let mut weight_concentration = Array1::from_elem(self.max_components, F::from(self.config.alpha).unwrap());
+        let mut weight_concentration =
+            Array1::from_elem(self.max_components, F::from(self.config.alpha).unwrap());
         let mut mean_precision = Array1::from_elem(self.max_components, F::one());
         let mut means = self.initialize_means(data)?;
-        let mut degrees_of_freedom = Array1::from_elem(self.max_components, F::from(self.config.nu + n_features as f64).unwrap());
+        let mut degrees_of_freedom = Array1::from_elem(
+            self.max_components,
+            F::from(self.config.nu + n_features as f64).unwrap(),
+        );
         let mut scale_matrices = Array3::zeros((self.max_components, n_features, n_features));
-        
+
         // Initialize scale matrices as identity
         for k in 0..self.max_components {
             for i in 0..n_features {
                 scale_matrices[[k, i, i]] = F::one();
             }
         }
-        
+
         let mut lower_bound = F::neg_infinity();
         let mut converged = false;
-        
+
         for iteration in 0..self.config.max_iter {
             // E-step: Update responsibilities
             let responsibilities = self.compute_responsibilities(
-                data, &means, &scale_matrices, &degrees_of_freedom, &weight_concentration
+                data,
+                &means,
+                &scale_matrices,
+                &degrees_of_freedom,
+                &weight_concentration,
             )?;
-            
+
             // M-step: Update parameters
-            let (new_weight_concentration, new_mean_precision, new_means, new_degrees_of_freedom, new_scale_matrices) = 
-                self.update_parameters(data, &responsibilities)?;
-            
+            let (
+                new_weight_concentration,
+                new_mean_precision,
+                new_means,
+                new_degrees_of_freedom,
+                new_scale_matrices,
+            ) = self.update_parameters(data, &responsibilities)?;
+
             // Compute lower bound
             let new_lower_bound = self.compute_lower_bound(
-                data, &responsibilities, &new_weight_concentration, &new_means, &new_scale_matrices
+                data,
+                &responsibilities,
+                &new_weight_concentration,
+                &new_means,
+                &new_scale_matrices,
             )?;
-            
+
             // Check convergence
-            if iteration > 0 && (new_lower_bound - lower_bound).abs() < F::from(self.config.tolerance).unwrap() {
+            if iteration > 0
+                && (new_lower_bound - lower_bound).abs() < F::from(self.config.tolerance).unwrap()
+            {
                 converged = true;
             }
-            
+
             // Update parameters
             weight_concentration = new_weight_concentration;
             mean_precision = new_mean_precision;
@@ -1556,23 +1582,27 @@ where
             degrees_of_freedom = new_degrees_of_freedom;
             scale_matrices = new_scale_matrices;
             lower_bound = new_lower_bound;
-            
+
             self.lower_bound_history.push(lower_bound);
-            
+
             if converged {
                 break;
             }
         }
-        
+
         // Compute effective number of components
         let effective_components = self.compute_effective_components(&weight_concentration);
-        
+
         // Compute final responsibilities and weights
         let responsibilities = self.compute_responsibilities(
-            data, &means, &scale_matrices, &degrees_of_freedom, &weight_concentration
+            data,
+            &means,
+            &scale_matrices,
+            &degrees_of_freedom,
+            &weight_concentration,
         )?;
         let weights = self.compute_weights(&weight_concentration);
-        
+
         let parameters = VariationalGMMParameters {
             weight_concentration,
             mean_precision,
@@ -1584,9 +1614,9 @@ where
             n_iter: self.lower_bound_history.len(),
             converged,
         };
-        
+
         self.parameters = Some(parameters);
-        
+
         Ok(VariationalGMMResult {
             lower_bound,
             effective_components,
@@ -1599,18 +1629,18 @@ where
     fn initialize_means(&self, data: &ArrayView2<F>) -> StatsResult<Array2<F>> {
         let (n_samples, n_features) = data.dim();
         let mut means = Array2::zeros((self.max_components, n_features));
-        
+
         use rand::{rngs::StdRng, SeedableRng};
         let mut rng = match self.config.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
             None => SeedableRng::from_entropy(),
         };
-        
+
         for i in 0..self.max_components {
             let idx = rng.random_range(0..n_samples);
             means.row_mut(i).assign(&data.row(idx));
         }
-        
+
         Ok(means)
     }
 
@@ -1625,10 +1655,10 @@ where
     ) -> StatsResult<Array2<F>> {
         let (n_samples, _) = data.dim();
         let mut responsibilities = Array2::zeros((n_samples, self.max_components));
-        
+
         for i in 0..n_samples {
             let mut log_probs = Array1::zeros(self.max_components);
-            
+
             for k in 0..self.max_components {
                 // Compute log probability for component k
                 let log_weight = self.compute_log_weight(weight_concentration[k]);
@@ -1640,14 +1670,14 @@ where
                 )?;
                 log_probs[k] = log_weight + log_likelihood;
             }
-            
+
             // Normalize responsibilities
             let log_sum = self.log_sum_exp(&log_probs);
             for k in 0..self.max_components {
                 responsibilities[[i, k]] = (log_probs[k] - log_sum).exp();
             }
         }
-        
+
         Ok(responsibilities)
     }
 
@@ -1658,23 +1688,27 @@ where
         responsibilities: &Array2<F>,
     ) -> StatsResult<(Array1<F>, Array1<F>, Array2<F>, Array1<F>, Array3<F>)> {
         let (n_samples, n_features) = data.dim();
-        
+
         // Update weight concentration
-        let mut weight_concentration = Array1::from_elem(self.max_components, F::from(self.config.alpha).unwrap());
+        let mut weight_concentration =
+            Array1::from_elem(self.max_components, F::from(self.config.alpha).unwrap());
         for k in 0..self.max_components {
             let nk: F = responsibilities.column(k).sum();
             weight_concentration[k] = weight_concentration[k] + nk;
         }
-        
+
         // Update means and precisions
         let mut mean_precision = Array1::ones(self.max_components);
         let mut means = Array2::zeros((self.max_components, n_features));
-        let mut degrees_of_freedom = Array1::from_elem(self.max_components, F::from(self.config.nu + n_features as f64).unwrap());
+        let mut degrees_of_freedom = Array1::from_elem(
+            self.max_components,
+            F::from(self.config.nu + n_features as f64).unwrap(),
+        );
         let mut scale_matrices = Array3::zeros((self.max_components, n_features, n_features));
-        
+
         for k in 0..self.max_components {
             let nk: F = responsibilities.column(k).sum();
-            
+
             if nk > F::zero() {
                 // Update mean
                 for j in 0..n_features {
@@ -1684,18 +1718,24 @@ where
                     }
                     means[[k, j]] = weighted_sum / nk;
                 }
-                
+
                 // Update degrees of freedom
                 degrees_of_freedom[k] = F::from(self.config.nu).unwrap() + nk;
-                
+
                 // Update scale matrix (simplified)
                 for i in 0..n_features {
                     scale_matrices[[k, i, i]] = F::one() + F::from(0.1).unwrap() * nk;
                 }
             }
         }
-        
-        Ok((weight_concentration, mean_precision, means, degrees_of_freedom, scale_matrices))
+
+        Ok((
+            weight_concentration,
+            mean_precision,
+            means,
+            degrees_of_freedom,
+            scale_matrices,
+        ))
     }
 
     /// Compute lower bound
@@ -1709,7 +1749,7 @@ where
     ) -> StatsResult<F> {
         let (n_samples, _) = data.dim();
         let mut lower_bound = F::zero();
-        
+
         // Expected log likelihood
         for i in 0..n_samples {
             for k in 0..self.max_components {
@@ -1724,13 +1764,13 @@ where
                 }
             }
         }
-        
+
         // KL divergence terms (simplified)
         for k in 0..self.max_components {
             let weight_contrib = weight_concentration[k] * weight_concentration[k].ln();
             lower_bound = lower_bound - weight_contrib * F::from(0.01).unwrap();
         }
-        
+
         Ok(lower_bound)
     }
 
@@ -1738,14 +1778,15 @@ where
     fn compute_effective_components(&self, weight_concentration: &Array1<F>) -> usize {
         let total: F = weight_concentration.sum();
         let mut effective = 0;
-        
+
         for &weight in weight_concentration.iter() {
             let proportion = weight / total;
-            if proportion > F::from(0.01).unwrap() { // 1% threshold
+            if proportion > F::from(0.01).unwrap() {
+                // 1% threshold
                 effective += 1;
             }
         }
-        
+
         effective
     }
 
@@ -1774,7 +1815,7 @@ where
             let diff = *x - *m;
             sum_sq = sum_sq + diff * diff;
         }
-        
+
         let log_likelihood = -F::from(0.5).unwrap() * sum_sq;
         Ok(log_likelihood)
     }
@@ -1785,11 +1826,9 @@ where
         if max_val == F::neg_infinity() {
             return F::neg_infinity();
         }
-        
-        let sum: F = log_values.iter()
-            .map(|&x| (x - max_val).exp())
-            .sum();
-        
+
+        let sum: F = log_values.iter().map(|&x| (x - max_val).exp()).sum();
+
         max_val + sum.ln()
     }
 }

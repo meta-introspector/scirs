@@ -5,6 +5,7 @@
 //! and performance profiling. This showcases why scirs2-ndimage is a compelling
 //! choice for high-performance scientific computing.
 
+use ndarray::{Array, Array2, Array3, Ix2, Ix3};
 use scirs2_ndimage::{
     api_compatibility_verification::{ApiCompatibilityTester, CompatibilityConfig},
     backend::{auto_backend, Backend, BackendConfig},
@@ -16,7 +17,6 @@ use scirs2_ndimage::{
     scipy_performance_comparison::{BenchmarkConfig, SciPyBenchmarkSuite},
     BorderMode, DistanceMetric, StructureType,
 };
-use ndarray::{Array, Array2, Array3, Ix2, Ix3};
 use std::time::Instant;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -26,7 +26,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 1. GPU Acceleration Demonstration
     println!("1. GPU ACCELERATION FRAMEWORK");
     println!("==============================");
-    
+
     let gpu_config = GpuOperationsConfig {
         min_gpu_size: 1000,
         auto_fallback: true,
@@ -34,37 +34,36 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         operation_timeout: 5000,
         ..Default::default()
     };
-    
+
     match GpuOperations::new(gpu_config) {
         Ok(gpu_ops) => {
             println!("✓ GPU operations initialized successfully");
             println!("  - CUDA backend available: {}", gpu_ops.cuda_available());
-            println!("  - OpenCL backend available: {}", gpu_ops.opencl_available());
+            println!(
+                "  - OpenCL backend available: {}",
+                gpu_ops.opencl_available()
+            );
             println!("  - Automatic fallback enabled: Yes");
         }
-        Err(e) => println!("⚠ GPU operations not available: {} (falling back to CPU)", e),
+        Err(e) => println!(
+            "⚠ GPU operations not available: {} (falling back to CPU)",
+            e
+        ),
     }
     println!();
 
     // 2. Ultra-Enhanced SIMD Optimizations
     println!("2. ULTRA-ENHANCED SIMD OPTIMIZATIONS");
     println!("=====================================");
-    
+
     let large_image = Array2::<f32>::zeros((2048, 2048));
-    let edge_kernel = array![
-        [-1.0, -1.0, -1.0],
-        [-1.0,  8.0, -1.0],
-        [-1.0, -1.0, -1.0]
-    ];
-    
+    let edge_kernel = array![[-1.0, -1.0, -1.0], [-1.0, 8.0, -1.0], [-1.0, -1.0, -1.0]];
+
     let start = Instant::now();
-    let _edges = ultra_simd_convolution_2d(
-        large_image.view(),
-        edge_kernel.view(),
-        BorderMode::Reflect,
-    )?;
+    let _edges =
+        ultra_simd_convolution_2d(large_image.view(), edge_kernel.view(), BorderMode::Reflect)?;
     let simd_time = start.elapsed();
-    
+
     println!("✓ Ultra-SIMD edge detection completed");
     println!("  - Image size: 2048x2048 pixels");
     println!("  - Processing time: {:.2}ms", simd_time.as_millis());
@@ -74,7 +73,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 3. Advanced Performance Profiling
     println!("3. ADVANCED PERFORMANCE PROFILING");
     println!("==================================");
-    
+
     let profiler_config = ProfilerConfig {
         enable_memory_tracking: true,
         sampling_interval_ms: 10,
@@ -82,13 +81,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         track_cache_performance: true,
         ..Default::default()
     };
-    
+
     let mut profiler = PerformanceProfiler::new(profiler_config);
     profiler.start_profiling("gaussian_filter_benchmark")?;
-    
+
     let test_data = Array3::<f32>::zeros((256, 256, 128));
     let _filtered = gaussian_filter(test_data.view(), 2.0, BorderMode::Reflect)?;
-    
+
     let report = profiler.stop_profiling("gaussian_filter_benchmark")?;
     println!("✓ Performance profiling completed");
     println!("  - Operation: 3D Gaussian filtering (256x256x128)");
@@ -100,7 +99,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 4. Comprehensive SciPy Validation
     println!("4. COMPREHENSIVE SCIPY VALIDATION");
     println!("==================================");
-    
+
     let validation_config = ValidationConfig {
         tolerance: 1e-10,
         test_edge_cases: true,
@@ -108,21 +107,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         validate_performance: true,
         ..Default::default()
     };
-    
+
     let mut validation_suite = SciPyValidationSuite::new(validation_config);
     let validation_results = validation_suite.run_comprehensive_validation()?;
-    
+
     println!("✓ SciPy validation completed");
     println!("  - Total tests: {}", validation_results.total_tests);
     println!("  - Passed: {}", validation_results.passed_tests);
-    println!("  - Numerical accuracy: {:.2e} max error", validation_results.max_numerical_error);
-    println!("  - API compatibility: {:.1}%", validation_results.compatibility_score * 100.0);
+    println!(
+        "  - Numerical accuracy: {:.2e} max error",
+        validation_results.max_numerical_error
+    );
+    println!(
+        "  - API compatibility: {:.1}%",
+        validation_results.compatibility_score * 100.0
+    );
     println!();
 
     // 5. API Compatibility Testing
     println!("5. API COMPATIBILITY VERIFICATION");
     println!("==================================");
-    
+
     let compat_config = CompatibilityConfig {
         test_edge_cases: true,
         strict_parameter_checking: true,
@@ -130,21 +135,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         test_boundary_conditions: true,
         ..Default::default()
     };
-    
+
     let mut api_tester = ApiCompatibilityTester::new(compat_config);
     let compat_results = api_tester.test_all_functions()?;
-    
+
     println!("✓ API compatibility testing completed");
     println!("  - Functions tested: {}", compat_results.total_functions);
     println!("  - Compatible: {}", compat_results.compatible_functions);
-    println!("  - Compatibility score: {:.1}%", compat_results.compatibility_percentage);
-    println!("  - Parameter compatibility: {:.1}%", compat_results.parameter_compatibility);
+    println!(
+        "  - Compatibility score: {:.1}%",
+        compat_results.compatibility_percentage
+    );
+    println!(
+        "  - Parameter compatibility: {:.1}%",
+        compat_results.parameter_compatibility
+    );
     println!();
 
     // 6. Performance Benchmarking Against SciPy
     println!("6. SCIPY PERFORMANCE BENCHMARKING");
     println!("==================================");
-    
+
     let benchmark_config = BenchmarkConfig {
         iterations: 5,
         warmup_iterations: 2,
@@ -152,22 +163,33 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         include_memory_profiling: true,
         ..Default::default()
     };
-    
+
     let mut benchmark_suite = SciPyBenchmarkSuite::new(benchmark_config);
     let benchmark_results = benchmark_suite.run_comprehensive_benchmarks()?;
-    
+
     println!("✓ Performance benchmarking completed");
-    println!("  - Operations benchmarked: {}", benchmark_results.total_operations);
-    println!("  - Average speedup vs SciPy: {:.1}x", benchmark_results.average_speedup);
-    println!("  - Memory efficiency: {:.1}x better", benchmark_results.memory_efficiency);
-    println!("  - Best performing operation: {} ({:.1}x speedup)", 
-             benchmark_results.best_operation, benchmark_results.best_speedup);
+    println!(
+        "  - Operations benchmarked: {}",
+        benchmark_results.total_operations
+    );
+    println!(
+        "  - Average speedup vs SciPy: {:.1}x",
+        benchmark_results.average_speedup
+    );
+    println!(
+        "  - Memory efficiency: {:.1}x better",
+        benchmark_results.memory_efficiency
+    );
+    println!(
+        "  - Best performing operation: {} ({:.1}x speedup)",
+        benchmark_results.best_operation, benchmark_results.best_speedup
+    );
     println!();
 
     // 7. Advanced Backend Demonstration
     println!("7. ADVANCED BACKEND SYSTEM");
     println!("===========================");
-    
+
     let backend_config = BackendConfig {
         prefer_gpu: true,
         auto_select: true,
@@ -175,7 +197,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         enable_profiling: true,
         ..Default::default()
     };
-    
+
     let backend = auto_backend(backend_config)?;
     println!("✓ Advanced backend system initialized");
     println!("  - Active backend: {}", backend.backend_type());
@@ -187,52 +209,54 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 8. Complex Real-World Example
     println!("8. COMPLEX REAL-WORLD PROCESSING PIPELINE");
     println!("==========================================");
-    
+
     // Simulate a complex medical imaging pipeline
     let medical_image = Array3::<f32>::from_shape_fn((512, 512, 64), |(i, j, k)| {
         // Synthetic medical image with structures
         let x = i as f32 / 512.0;
         let y = j as f32 / 512.0;
         let z = k as f32 / 64.0;
-        
+
         // Simulate tissue structures
         let tissue = ((x - 0.5).powi(2) + (y - 0.5).powi(2)).sqrt();
         let vessel = (tissue * 10.0).sin() * 0.1;
         let noise = (x * y * z * 1000.0).sin() * 0.05;
-        
+
         (1.0 - tissue) + vessel + noise
     });
-    
+
     let pipeline_start = Instant::now();
-    
+
     // Step 1: Denoise with bilateral filter
     let denoised = bilateral_filter(
         medical_image.view(),
-        2.0,    // spatial sigma
-        0.1,    // intensity sigma
+        2.0, // spatial sigma
+        0.1, // intensity sigma
         BorderMode::Reflect,
     )?;
-    
+
     // Step 2: Enhance structures with distance transform
     let binary_mask = denoised.mapv(|x| if x > 0.5 { 1u8 } else { 0u8 });
-    let distances = distance_transform_edt(
-        binary_mask.view(),
-        Some(DistanceMetric::Euclidean),
-        None,
-    )?;
-    
+    let distances =
+        distance_transform_edt(binary_mask.view(), Some(DistanceMetric::Euclidean), None)?;
+
     // Step 3: Morphological processing
     let structure = generate_binary_structure(3, StructureType::Ball { radius: 2.0 })?;
     let processed = binary_dilation(binary_mask.view(), structure.view(), None, 1)?;
-    
+
     let pipeline_time = pipeline_start.elapsed();
-    
+
     println!("✓ Complex processing pipeline completed");
     println!("  - Input: 3D medical image (512x512x64 voxels)");
     println!("  - Pipeline: Denoise → Distance transform → Morphology");
-    println!("  - Total processing time: {:.1}ms", pipeline_time.as_millis());
-    println!("  - Throughput: {:.1} MVoxels/sec", 
-             (512.0 * 512.0 * 64.0) / (pipeline_time.as_secs_f64() * 1_000_000.0));
+    println!(
+        "  - Total processing time: {:.1}ms",
+        pipeline_time.as_millis()
+    );
+    println!(
+        "  - Throughput: {:.1} MVoxels/sec",
+        (512.0 * 512.0 * 64.0) / (pipeline_time.as_secs_f64() * 1_000_000.0)
+    );
     println!();
 
     // Summary
@@ -249,7 +273,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!();
     println!("🎯 scirs2-ndimage is production-ready with enterprise-grade");
     println!("   performance, compatibility, and reliability features!");
-    
+
     Ok(())
 }
 
@@ -265,23 +289,22 @@ fn generate_binary_structure(
             let size = (2.0 * radius + 1.0) as usize;
             let center = size / 2;
             let mut structure = Array3::zeros((size, size, size));
-            
+
             for i in 0..size {
                 for j in 0..size {
                     for k in 0..size {
-                        let distance = (
-                            (i as f64 - center as f64).powi(2) +
-                            (j as f64 - center as f64).powi(2) +
-                            (k as f64 - center as f64).powi(2)
-                        ).sqrt();
-                        
+                        let distance = ((i as f64 - center as f64).powi(2)
+                            + (j as f64 - center as f64).powi(2)
+                            + (k as f64 - center as f64).powi(2))
+                        .sqrt();
+
                         if distance <= radius {
                             structure[[i, j, k]] = 1;
                         }
                     }
                 }
             }
-            
+
             Ok(structure)
         }
         _ => {

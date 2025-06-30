@@ -12,12 +12,8 @@
 
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, Array3, Array4, ArrayView1, ArrayView2, Axis};
-use num_traits::{Float, NumCast, One, Zero, FloatConst};
-use scirs2_core::{
-    parallel_ops::*,
-    simd_ops::SimdUnifiedOps,
-    validation::*,
-};
+use num_traits::{Float, FloatConst, NumCast, One, Zero};
+use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 use scirs2_linalg::parallel_dispatch::ParallelConfig;
 use std::collections::HashMap;
 use std::marker::PhantomData;
@@ -483,7 +479,9 @@ where
 
         // Update performance metrics
         let elapsed = start_time.elapsed();
-        self.performance.timing.insert("total_analysis".to_string(), elapsed.as_secs_f64());
+        self.performance
+            .timing
+            .insert("total_analysis".to_string(), elapsed.as_secs_f64());
 
         results.performance = self.performance.clone();
         Ok(results)
@@ -496,7 +494,7 @@ where
     ) -> StatsResult<CoherenceResults<F>> {
         check_array_finite(signals, "signals")?;
         let (n_samples, n_channels) = signals.dim();
-        
+
         if n_channels < 2 {
             return Err(StatsError::InvalidArgument(
                 "Need at least 2 channels for coherence analysis".to_string(),
@@ -513,7 +511,8 @@ where
 
         // Magnitude-squared coherence
         if self.config.coherence_config.magnitude_squared {
-            coherence_results.magnitude_squared = Some(self.compute_magnitude_squared_coherence(signals)?);
+            coherence_results.magnitude_squared =
+                Some(self.compute_magnitude_squared_coherence(signals)?);
         }
 
         // Complex coherence
@@ -535,17 +534,16 @@ where
     }
 
     /// Time-frequency analysis using advanced methods
-    pub fn time_frequency_analysis(
-        &mut self,
-        signal: &ArrayView1<F>,
-    ) -> StatsResult<Array3<F>> {
+    pub fn time_frequency_analysis(&mut self, signal: &ArrayView1<F>) -> StatsResult<Array3<F>> {
         check_array_finite(signal, "signal")?;
 
         let n_samples = signal.len();
         let window_size = self.config.nonstationary_config.stft_window_size;
         let overlap = self.config.nonstationary_config.stft_overlap;
-        
-        let hop_size = ((F::one() - overlap) * F::from(window_size).unwrap()).to_usize().unwrap();
+
+        let hop_size = ((F::one() - overlap) * F::from(window_size).unwrap())
+            .to_usize()
+            .unwrap();
         let n_windows = (n_samples - window_size) / hop_size + 1;
         let n_freqs = window_size / 2 + 1;
 
@@ -555,9 +553,14 @@ where
         let window = self.generate_window(WindowFunction::Hann, window_size)?;
 
         // Compute STFT
-        for (win_idx, window_start) in (0..n_samples - window_size + 1).step_by(hop_size).enumerate() {
-            if win_idx >= n_windows { break; }
-            
+        for (win_idx, window_start) in (0..n_samples - window_size + 1)
+            .step_by(hop_size)
+            .enumerate()
+        {
+            if win_idx >= n_windows {
+                break;
+            }
+
             let window_end = window_start + window_size;
             let windowed_signal = self.apply_window(
                 &signal.slice(ndarray::s![window_start..window_end]),
@@ -565,7 +568,7 @@ where
             )?;
 
             let spectrum = self.compute_fft(&windowed_signal)?;
-            
+
             // Store power spectral density
             for (freq_idx, &coeff) in spectrum.iter().enumerate().take(n_freqs) {
                 spectrogram[[freq_idx, win_idx, 0]] = coeff.norm_sqr();
@@ -583,7 +586,7 @@ where
     ) -> StatsResult<Vec<SpectralPeak<F>>> {
         check_array_finite(psd, "psd")?;
         check_array_finite(frequencies, "frequencies")?;
-        
+
         if psd.len() != frequencies.len() {
             return Err(StatsError::InvalidArgument(
                 "PSD and frequency arrays must have same length".to_string(),
@@ -592,53 +595,57 @@ where
 
         let mut peaks = Vec::new();
         let n = psd.len();
-        
+
         // Simple peak detection (would be more sophisticated in practice)
-        for i in 1..n-1 {
-            if psd[i] > psd[i-1] && psd[i] > psd[i+1] {
+        for i in 1..n - 1 {
+            if psd[i] > psd[i - 1] && psd[i] > psd[i + 1] {
                 let peak = SpectralPeak {
                     frequency: frequencies[i],
                     amplitude: psd[i],
-                    phase: F::zero(), // Would compute from complex spectrum
-                    bandwidth: F::zero(), // Would estimate from neighboring points
+                    phase: F::zero(),          // Would compute from complex spectrum
+                    bandwidth: F::zero(),      // Would estimate from neighboring points
                     quality_factor: F::zero(), // Would compute Q = f0/bandwidth
-                    confidence: F::one(), // Would estimate from noise level
+                    confidence: F::one(),      // Would estimate from noise level
                 };
                 peaks.push(peak);
             }
         }
 
         // Sort peaks by amplitude (descending)
-        peaks.sort_by(|a, b| b.amplitude.partial_cmp(&a.amplitude).unwrap_or(std::cmp::Ordering::Equal));
+        peaks.sort_by(|a, b| {
+            b.amplitude
+                .partial_cmp(&a.amplitude)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
 
         Ok(peaks)
     }
 
     // Private implementation methods
-    
+
     fn multitaper_psd(&mut self, signal: &ArrayView1<F>) -> StatsResult<(Array2<F>, Array1<F>)> {
         let n = signal.len();
         let nw = self.config.multitaper_config.nw;
         let k = self.config.multitaper_config.k;
-        
+
         // Generate Slepian tapers (DPSS sequences)
         let tapers = self.generate_slepian_tapers(n, nw, k)?;
-        
+
         let n_freqs = n / 2 + 1;
         let mut psd = Array2::zeros((n_freqs, 1));
         let frequencies = self.generate_frequency_grid(n)?;
-        
+
         // Apply each taper and compute periodogram
         for taper_idx in 0..k {
             let tapered_signal = self.apply_taper(signal, &tapers.column(taper_idx))?;
             let spectrum = self.compute_fft(&tapered_signal)?;
-            
+
             // Add to averaged PSD
             for (freq_idx, &coeff) in spectrum.iter().enumerate().take(n_freqs) {
                 psd[[freq_idx, 0]] = psd[[freq_idx, 0]] + coeff.norm_sqr() / F::from(k).unwrap();
             }
         }
-        
+
         Ok((psd, frequencies))
     }
 
@@ -669,7 +676,10 @@ where
         Ok(results)
     }
 
-    fn higher_order_analysis(&mut self, signal: &ArrayView1<F>) -> StatsResult<HigherOrderResults<F>> {
+    fn higher_order_analysis(
+        &mut self,
+        signal: &ArrayView1<F>,
+    ) -> StatsResult<HigherOrderResults<F>> {
         let mut results = HigherOrderResults {
             bispectrum: None,
             bicoherence: None,
@@ -721,11 +731,11 @@ where
     }
 
     // Helper methods (simplified implementations)
-    
+
     fn generate_window(&self, window_type: WindowFunction, size: usize) -> StatsResult<Array1<F>> {
         let mut window = Array1::zeros(size);
         let n_f = F::from(size).unwrap();
-        
+
         match window_type {
             WindowFunction::Hann => {
                 for i in 0..size {
@@ -733,28 +743,33 @@ where
                     let two_pi = F::from(2.0).unwrap() * F::PI();
                     window[i] = F::from(0.5).unwrap() * (F::one() - (two_pi * i_f / n_f).cos());
                 }
-            },
+            }
             WindowFunction::Hamming => {
                 for i in 0..size {
                     let i_f = F::from(i).unwrap();
                     let two_pi = F::from(2.0).unwrap() * F::PI();
-                    window[i] = F::from(0.54).unwrap() - F::from(0.46).unwrap() * (two_pi * i_f / n_f).cos();
+                    window[i] = F::from(0.54).unwrap()
+                        - F::from(0.46).unwrap() * (two_pi * i_f / n_f).cos();
                 }
-            },
+            }
             WindowFunction::Rectangular => {
                 window.fill(F::one());
-            },
+            }
             _ => {
                 return Err(StatsError::InvalidArgument(
                     "Window function not implemented".to_string(),
                 ));
             }
         }
-        
+
         Ok(window)
     }
 
-    fn apply_window(&self, signal: &ArrayView1<F>, window: &ArrayView1<F>) -> StatsResult<Array1<F>> {
+    fn apply_window(
+        &self,
+        signal: &ArrayView1<F>,
+        window: &ArrayView1<F>,
+    ) -> StatsResult<Array1<F>> {
         if signal.len() != window.len() {
             return Err(StatsError::InvalidArgument(
                 "Signal and window must have same length".to_string(),
@@ -765,7 +780,7 @@ where
         for i in 0..signal.len() {
             windowed[i] = signal[i] * window[i];
         }
-        
+
         Ok(windowed)
     }
 
@@ -773,17 +788,19 @@ where
         // Simplified FFT implementation - would use proper FFT library
         let n = signal.len();
         let mut spectrum = Vec::with_capacity(n);
-        
+
         for k in 0..n {
             let mut sum = num_complex::Complex::new(F::zero(), F::zero());
             for j in 0..n {
-                let angle = -F::from(2.0).unwrap() * F::PI() * F::from(k).unwrap() * F::from(j).unwrap() / F::from(n).unwrap();
+                let angle =
+                    -F::from(2.0).unwrap() * F::PI() * F::from(k).unwrap() * F::from(j).unwrap()
+                        / F::from(n).unwrap();
                 let complex_exp = num_complex::Complex::new(angle.cos(), angle.sin());
                 sum = sum + signal[j] * complex_exp;
             }
             spectrum.push(sum);
         }
-        
+
         Ok(spectrum)
     }
 
@@ -791,27 +808,28 @@ where
         let mut frequencies = Array1::zeros(n / 2 + 1);
         let fs = self.config.fs;
         let n_f = F::from(n).unwrap();
-        
+
         for i in 0..frequencies.len() {
             frequencies[i] = fs * F::from(i).unwrap() / n_f;
         }
-        
+
         frequencies
     }
 
     fn generate_slepian_tapers(&mut self, n: usize, nw: F, k: usize) -> StatsResult<Array2<F>> {
         // Simplified Slepian taper generation - would use proper DPSS implementation
         let mut tapers = Array2::zeros((n, k));
-        
+
         for taper_idx in 0..k {
             for i in 0..n {
                 let i_f = F::from(i).unwrap();
                 let n_f = F::from(n).unwrap();
-                let phase = F::from(2.0).unwrap() * F::PI() * F::from(taper_idx).unwrap() * i_f / n_f;
+                let phase =
+                    F::from(2.0).unwrap() * F::PI() * F::from(taper_idx).unwrap() * i_f / n_f;
                 tapers[[i, taper_idx]] = phase.sin();
             }
         }
-        
+
         Ok(tapers)
     }
 
@@ -824,17 +842,26 @@ where
         Ok(Array3::zeros((n_freqs, 1, 2))) // [freq, channel, CI_bounds]
     }
 
-    fn compute_magnitude_squared_coherence(&self, signals: &ArrayView2<F>) -> StatsResult<Array2<F>> {
+    fn compute_magnitude_squared_coherence(
+        &self,
+        signals: &ArrayView2<F>,
+    ) -> StatsResult<Array2<F>> {
         let (_, n_channels) = signals.dim();
         let n_freqs = signals.nrows() / 2 + 1;
         Ok(Array2::zeros((n_freqs, n_channels * (n_channels - 1) / 2)))
     }
 
-    fn compute_complex_coherence(&self, signals: &ArrayView2<F>) -> StatsResult<Array2<num_complex::Complex<F>>> {
+    fn compute_complex_coherence(
+        &self,
+        signals: &ArrayView2<F>,
+    ) -> StatsResult<Array2<num_complex::Complex<F>>> {
         let (_, n_channels) = signals.dim();
         let n_freqs = signals.nrows() / 2 + 1;
         let n_pairs = n_channels * (n_channels - 1) / 2;
-        Ok(Array2::from_elem((n_freqs, n_pairs), num_complex::Complex::new(F::zero(), F::zero())))
+        Ok(Array2::from_elem(
+            (n_freqs, n_pairs),
+            num_complex::Complex::new(F::zero(), F::zero()),
+        ))
     }
 
     fn compute_partial_coherence(&self, signals: &ArrayView2<F>) -> StatsResult<Array3<F>> {
@@ -852,39 +879,57 @@ where
     fn compute_cwt(&self, signal: &ArrayView1<F>) -> StatsResult<Array3<num_complex::Complex<F>>> {
         let n_samples = signal.len();
         let n_scales = self.config.wavelet_config.scales;
-        Ok(Array3::from_elem((n_scales, n_samples, 1), num_complex::Complex::new(F::zero(), F::zero())))
+        Ok(Array3::from_elem(
+            (n_scales, n_samples, 1),
+            num_complex::Complex::new(F::zero(), F::zero()),
+        ))
     }
 
     fn compute_dwt(&self, signal: &ArrayView1<F>) -> StatsResult<Vec<Array1<F>>> {
         let n_levels = (signal.len() as f64).log2().floor() as usize;
         let mut coefficients = Vec::new();
-        
+
         for level in 0..n_levels {
             let size = signal.len() >> level;
             coefficients.push(Array1::zeros(size));
         }
-        
+
         Ok(coefficients)
     }
 
-    fn compute_wavelet_packets(&self, signal: &ArrayView1<F>) -> StatsResult<HashMap<String, Array1<F>>> {
+    fn compute_wavelet_packets(
+        &self,
+        signal: &ArrayView1<F>,
+    ) -> StatsResult<HashMap<String, Array1<F>>> {
         let mut packets = HashMap::new();
         packets.insert("root".to_string(), signal.to_owned());
         Ok(packets)
     }
 
-    fn compute_bispectrum(&self, signal: &ArrayView1<F>) -> StatsResult<(Array3<num_complex::Complex<F>>, Array3<F>)> {
+    fn compute_bispectrum(
+        &self,
+        signal: &ArrayView1<F>,
+    ) -> StatsResult<(Array3<num_complex::Complex<F>>, Array3<F>)> {
         let n = signal.len();
         let n_freqs = n / 2 + 1;
-        let bispectrum = Array3::from_elem((n_freqs, n_freqs, 1), num_complex::Complex::new(F::zero(), F::zero()));
+        let bispectrum = Array3::from_elem(
+            (n_freqs, n_freqs, 1),
+            num_complex::Complex::new(F::zero(), F::zero()),
+        );
         let bicoherence = Array3::zeros((n_freqs, n_freqs, 1));
         Ok((bispectrum, bicoherence))
     }
 
-    fn compute_trispectrum(&self, signal: &ArrayView1<F>) -> StatsResult<(Array4<num_complex::Complex<F>>, Array4<F>)> {
+    fn compute_trispectrum(
+        &self,
+        signal: &ArrayView1<F>,
+    ) -> StatsResult<(Array4<num_complex::Complex<F>>, Array4<F>)> {
         let n = signal.len();
         let n_freqs = n / 2 + 1;
-        let trispectrum = Array4::from_elem((n_freqs, n_freqs, n_freqs, 1), num_complex::Complex::new(F::zero(), F::zero()));
+        let trispectrum = Array4::from_elem(
+            (n_freqs, n_freqs, n_freqs, 1),
+            num_complex::Complex::new(F::zero(), F::zero()),
+        );
         let tricoherence = Array4::zeros((n_freqs, n_freqs, n_freqs, 1));
         Ok((trispectrum, tricoherence))
     }
@@ -991,7 +1036,7 @@ mod tests {
     fn test_spectral_analyzer_creation() {
         let config = UltraSpectralConfig::default();
         let analyzer = UltraSpectralAnalyzer::<f64>::new(config);
-        
+
         assert_eq!(analyzer.config.fs, 1.0);
         assert_eq!(analyzer.config.multitaper_config.k, 7);
     }
@@ -1000,7 +1045,7 @@ mod tests {
     fn test_window_generation() {
         let config = UltraSpectralConfig::default();
         let analyzer = UltraSpectralAnalyzer::<f64>::new(config);
-        
+
         let window = analyzer.generate_window(WindowFunction::Hann, 10).unwrap();
         assert_eq!(window.len(), 10);
         assert!(window[0] < window[5]); // Window should be peaked in middle
@@ -1011,18 +1056,18 @@ mod tests {
         let mut config = UltraSpectralConfig::default();
         config.fs = 100.0;
         let analyzer = UltraSpectralAnalyzer::<f64>::new(config);
-        
+
         let freqs = analyzer.generate_frequency_grid(20);
         assert_eq!(freqs.len(), 11); // n/2 + 1
         assert_eq!(freqs[0], 0.0);
-        assert!((freqs[freqs.len()-1] - 50.0).abs() < 1e-10); // Nyquist frequency
+        assert!((freqs[freqs.len() - 1] - 50.0).abs() < 1e-10); // Nyquist frequency
     }
 
     #[test]
     fn test_comprehensive_analysis() {
         let config = UltraSpectralConfig::default();
         let mut analyzer = UltraSpectralAnalyzer::<f64>::new(config);
-        
+
         // Generate test signal: sine wave + noise
         let n = 128;
         let mut signal = Array1::zeros(n);
@@ -1030,9 +1075,9 @@ mod tests {
             let t = i as f64 / 10.0;
             signal[i] = (2.0 * std::f64::consts::PI * t).sin() + 0.1 * (i as f64).sin();
         }
-        
+
         let result = analyzer.analyze_comprehensive(&signal.view()).unwrap();
-        
+
         assert!(result.frequencies.len() > 0);
         assert!(result.psd.nrows() > 0);
         assert!(result.performance.timing.contains_key("total_analysis"));
@@ -1043,16 +1088,17 @@ mod tests {
         let mut config = UltraSpectralConfig::default();
         config.nonstationary_config.stft_window_size = 32;
         config.nonstationary_config.stft_overlap = 0.5;
-        
+
         let mut analyzer = UltraSpectralAnalyzer::<f64>::new(config);
-        
-        let signal = array![1.0, 2.0, 3.0, 4.0, 5.0, 4.0, 3.0, 2.0, 1.0, 0.0,
-                           1.0, 2.0, 3.0, 4.0, 5.0, 4.0, 3.0, 2.0, 1.0, 0.0,
-                           1.0, 2.0, 3.0, 4.0, 5.0, 4.0, 3.0, 2.0, 1.0, 0.0,
-                           1.0, 2.0, 3.0, 4.0, 5.0, 4.0, 3.0, 2.0, 1.0, 0.0];
-        
+
+        let signal = array![
+            1.0, 2.0, 3.0, 4.0, 5.0, 4.0, 3.0, 2.0, 1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 4.0, 3.0,
+            2.0, 1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 4.0, 3.0, 2.0, 1.0, 0.0, 1.0, 2.0, 3.0, 4.0,
+            5.0, 4.0, 3.0, 2.0, 1.0, 0.0
+        ];
+
         let result = analyzer.time_frequency_analysis(&signal.view()).unwrap();
-        
+
         assert!(result.ndim() == 3);
         assert!(result.shape()[0] > 0); // Frequency bins
         assert!(result.shape()[1] > 0); // Time bins
@@ -1062,13 +1108,15 @@ mod tests {
     fn test_spectral_peak_detection() {
         let config = UltraSpectralConfig::default();
         let analyzer = UltraSpectralAnalyzer::<f64>::new(config);
-        
+
         // Create PSD with clear peaks
         let psd = array![1.0, 2.0, 10.0, 2.0, 1.0, 3.0, 15.0, 3.0, 1.0, 2.0];
         let freqs = array![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
-        
-        let peaks = analyzer.detect_spectral_peaks(&psd.view(), &freqs.view()).unwrap();
-        
+
+        let peaks = analyzer
+            .detect_spectral_peaks(&psd.view(), &freqs.view())
+            .unwrap();
+
         assert!(peaks.len() >= 2); // Should detect at least 2 peaks
         assert!(peaks[0].amplitude >= peaks[1].amplitude); // Should be sorted by amplitude
     }

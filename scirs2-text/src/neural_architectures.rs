@@ -811,8 +811,9 @@ impl AdditiveAttention {
             (rng().random::<f64>() - 0.5) * 2.0 * scale
         });
 
-        let v_a =
-            Array1::from_shape_fn(attention_dim, |_| (rng().random::<f64>() - 0.5) * 2.0 * scale);
+        let v_a = Array1::from_shape_fn(attention_dim, |_| {
+            (rng().random::<f64>() - 0.5) * 2.0 * scale
+        });
 
         Self {
             w_a,
@@ -891,14 +892,18 @@ impl SelfAttention {
         let d_k = d_model;
         let scale = (2.0 / d_model as f64).sqrt();
 
-        let w_q =
-            Array2::from_shape_fn((d_model, d_k), |_| (rng().random::<f64>() - 0.5) * 2.0 * scale);
-        let w_k =
-            Array2::from_shape_fn((d_model, d_k), |_| (rng().random::<f64>() - 0.5) * 2.0 * scale);
-        let w_v =
-            Array2::from_shape_fn((d_model, d_k), |_| (rng().random::<f64>() - 0.5) * 2.0 * scale);
-        let w_o =
-            Array2::from_shape_fn((d_k, d_model), |_| (rng().random::<f64>() - 0.5) * 2.0 * scale);
+        let w_q = Array2::from_shape_fn((d_model, d_k), |_| {
+            (rng().random::<f64>() - 0.5) * 2.0 * scale
+        });
+        let w_k = Array2::from_shape_fn((d_model, d_k), |_| {
+            (rng().random::<f64>() - 0.5) * 2.0 * scale
+        });
+        let w_v = Array2::from_shape_fn((d_model, d_k), |_| {
+            (rng().random::<f64>() - 0.5) * 2.0 * scale
+        });
+        let w_o = Array2::from_shape_fn((d_k, d_model), |_| {
+            (rng().random::<f64>() - 0.5) * 2.0 * scale
+        });
 
         Self {
             w_q,
@@ -999,14 +1004,18 @@ impl CrossAttention {
         let d_k = d_model;
         let scale = (2.0 / d_model as f64).sqrt();
 
-        let w_q =
-            Array2::from_shape_fn((d_model, d_k), |_| (rng().random::<f64>() - 0.5) * 2.0 * scale);
-        let w_k =
-            Array2::from_shape_fn((d_model, d_k), |_| (rng().random::<f64>() - 0.5) * 2.0 * scale);
-        let w_v =
-            Array2::from_shape_fn((d_model, d_k), |_| (rng().random::<f64>() - 0.5) * 2.0 * scale);
-        let w_o =
-            Array2::from_shape_fn((d_k, d_model), |_| (rng().random::<f64>() - 0.5) * 2.0 * scale);
+        let w_q = Array2::from_shape_fn((d_model, d_k), |_| {
+            (rng().random::<f64>() - 0.5) * 2.0 * scale
+        });
+        let w_k = Array2::from_shape_fn((d_model, d_k), |_| {
+            (rng().random::<f64>() - 0.5) * 2.0 * scale
+        });
+        let w_v = Array2::from_shape_fn((d_model, d_k), |_| {
+            (rng().random::<f64>() - 0.5) * 2.0 * scale
+        });
+        let w_o = Array2::from_shape_fn((d_k, d_model), |_| {
+            (rng().random::<f64>() - 0.5) * 2.0 * scale
+        });
 
         Self {
             w_q,
@@ -1216,7 +1225,8 @@ impl TextCNN {
         }
 
         // Concatenate all feature maps
-        let mut concatenated_features = Array1::zeros(feature_maps.iter().map(|fm| fm.len()).sum::<usize>());
+        let mut concatenated_features =
+            Array1::zeros(feature_maps.iter().map(|fm| fm.len()).sum::<usize>());
         let mut offset = 0;
         for feature_map in feature_maps {
             let end = offset + feature_map.len();

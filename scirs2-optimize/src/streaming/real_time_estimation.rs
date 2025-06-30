@@ -4,11 +4,14 @@
 //! handle continuous data streams with minimal latency. These methods are designed
 //! for applications where immediate response to new data is critical.
 
+use super::{
+    utils, StreamingConfig, StreamingDataPoint, StreamingObjective, StreamingOptimizer,
+    StreamingStats,
+};
+use crate::error::OptimizeError;
 use ndarray::{Array1, Array2, ArrayView1};
 use scirs2_core::error::Result;
 use std::time::{Duration, Instant};
-use crate::error::OptimizeError;
-use super::{StreamingOptimizer, StreamingObjective, StreamingDataPoint, StreamingConfig, StreamingStats, utils};
 
 /// Real-time estimation methods
 #[derive(Debug, Clone, Copy)]
@@ -65,7 +68,7 @@ impl<T: StreamingObjective> RealTimeEstimator<T> {
         let initial_covariance = Array2::eye(n_params) * initial_covariance_scale;
         let forgetting_factor = config.forgetting_factor;
         let window_size = config.window_size;
-        
+
         Self {
             parameters: initial_parameters,
             objective,
@@ -85,11 +88,11 @@ impl<T: StreamingObjective> RealTimeEstimator<T> {
     /// Update using Recursive Least Squares
     fn update_rls(&mut self, features: &ArrayView1<f64>, target: f64) -> Result<()> {
         let n = features.len();
-        
+
         // Compute prediction error
         let prediction = self.parameters.dot(features);
         let error = target - prediction;
-        
+
         // Compute gain vector: K = P * x / (1 + x^T * P * x)
         let mut px = Array1::zeros(n);
         for i in 0..n {
@@ -97,38 +100,38 @@ impl<T: StreamingObjective> RealTimeEstimator<T> {
                 px[i] += self.covariance[[i, j]] * features[j];
             }
         }
-        
+
         let denominator = 1.0 + features.dot(&px);
         if denominator.abs() < 1e-12 {
             return Ok(()); // Skip update if denominator too small
         }
-        
+
         let gain = &px / denominator;
-        
+
         // Update parameters: θ = θ + K * error
         self.parameters = &self.parameters + &(error * &gain);
-        
+
         // Update covariance: P = P - K * x^T * P
         for i in 0..n {
             for j in 0..n {
                 self.covariance[[i, j]] -= gain[i] * px[j];
             }
         }
-        
+
         Ok(())
     }
 
     /// Update using Exponentially Weighted RLS
     fn update_ewrls(&mut self, features: &ArrayView1<f64>, target: f64) -> Result<()> {
         let n = features.len();
-        
+
         // Scale covariance by forgetting factor
         self.covariance *= 1.0 / self.forgetting_factor;
-        
+
         // Compute prediction error
         let prediction = self.parameters.dot(features);
         let error = target - prediction;
-        
+
         // Compute gain vector: K = P * x / (λ + x^T * P * x)
         let mut px = Array1::zeros(n);
         for i in 0..n {
@@ -136,41 +139,41 @@ impl<T: StreamingObjective> RealTimeEstimator<T> {
                 px[i] += self.covariance[[i, j]] * features[j];
             }
         }
-        
+
         let denominator = self.forgetting_factor + features.dot(&px);
         if denominator.abs() < 1e-12 {
             return Ok(());
         }
-        
+
         let gain = &px / denominator;
-        
+
         // Update parameters
         self.parameters = &self.parameters + &(error * &gain);
-        
+
         // Update covariance
         for i in 0..n {
             for j in 0..n {
                 self.covariance[[i, j]] -= gain[i] * px[j];
             }
         }
-        
+
         Ok(())
     }
 
     /// Update using Kalman Filter
     fn update_kalman(&mut self, features: &ArrayView1<f64>, target: f64) -> Result<()> {
         let n = features.len();
-        
+
         // Time update (prediction step)
         // Add process noise to covariance
         for i in 0..n {
             self.covariance[[i, i]] += self.process_noise;
         }
-        
+
         // Measurement update (correction step)
         let prediction = self.parameters.dot(features);
         let innovation = target - prediction;
-        
+
         // Innovation covariance: S = H * P * H^T + R
         // For linear case: H = x^T, so S = x^T * P * x + R
         let mut px = Array1::zeros(n);
@@ -179,25 +182,25 @@ impl<T: StreamingObjective> RealTimeEstimator<T> {
                 px[i] += self.covariance[[i, j]] * features[j];
             }
         }
-        
+
         let innovation_covariance = features.dot(&px) + self.measurement_noise;
         if innovation_covariance.abs() < 1e-12 {
             return Ok(());
         }
-        
+
         // Kalman gain: K = P * H^T / S = P * x / S
         let kalman_gain = &px / innovation_covariance;
-        
+
         // Update parameters: θ = θ + K * innovation
         self.parameters = &self.parameters + &(innovation * &kalman_gain);
-        
+
         // Update covariance: P = (I - K * H) * P = P - K * x^T * P
         for i in 0..n {
             for j in 0..n {
                 self.covariance[[i, j]] -= kalman_gain[i] * px[j];
             }
         }
-        
+
         Ok(())
     }
 
@@ -205,17 +208,17 @@ impl<T: StreamingObjective> RealTimeEstimator<T> {
     fn update_sliding_window_rls(&mut self, features: &ArrayView1<f64>, target: f64) -> Result<()> {
         // Add new data point
         self.window_data.push_back((features.to_owned(), target));
-        
+
         // Remove old data if window is full
         if self.window_data.len() > self.config.window_size {
             self.window_data.pop_front();
         }
-        
+
         // Rebuild normal equations from window
         let n = features.len();
         let mut xtx = Array2::zeros((n, n));
         let mut xty = Array1::zeros(n);
-        
+
         for (x, y) in &self.window_data {
             for i in 0..n {
                 for j in 0..n {
@@ -224,12 +227,12 @@ impl<T: StreamingObjective> RealTimeEstimator<T> {
                 xty[i] += x[i] * y;
             }
         }
-        
+
         // Add regularization
         for i in 0..n {
             xtx[[i, i]] += self.config.regularization;
         }
-        
+
         // Solve normal equations
         match scirs2_core::linalg::solve_linear_system(&xtx, &xty) {
             Ok(solution) => {
@@ -245,7 +248,7 @@ impl<T: StreamingObjective> RealTimeEstimator<T> {
                 self.update_rls(features, target)?;
             }
         }
-        
+
         Ok(())
     }
 
@@ -254,7 +257,7 @@ impl<T: StreamingObjective> RealTimeEstimator<T> {
         // Adapt forgetting factor based on recent performance
         if self.stats.points_processed > 10 {
             let recent_loss_trend = self.stats.current_loss - self.stats.average_loss;
-            
+
             if recent_loss_trend > 0.0 {
                 // Performance is getting worse, reduce forgetting factor (adapt faster)
                 self.forgetting_factor = (self.forgetting_factor * 0.95).max(0.5);
@@ -263,7 +266,7 @@ impl<T: StreamingObjective> RealTimeEstimator<T> {
                 self.forgetting_factor = (self.forgetting_factor * 1.01).min(0.999);
             }
         }
-        
+
         // Adapt noise parameters for Kalman filter
         if matches!(self.method, RealTimeMethod::KalmanFilter) {
             let param_change_rate = if self.stats.points_processed > 1 {
@@ -273,7 +276,7 @@ impl<T: StreamingObjective> RealTimeEstimator<T> {
             } else {
                 1e-6
             };
-            
+
             self.process_noise = (param_change_rate * 0.1).max(1e-8).min(1e-3);
         }
     }
@@ -287,16 +290,16 @@ impl<T: StreamingObjective> RealTimeEstimator<T> {
 impl<T: StreamingObjective + Clone> StreamingOptimizer for RealTimeEstimator<T> {
     fn update(&mut self, data_point: &StreamingDataPoint) -> Result<()> {
         let start_time = Instant::now();
-        
+
         // Skip update if timing constraints are violated
         if self.should_skip_for_timing(start_time) {
             return Ok(());
         }
-        
+
         let old_parameters = self.parameters.clone();
         let features = &data_point.features;
         let target = data_point.target;
-        
+
         // Apply method-specific update
         match self.method {
             RealTimeMethod::RecursiveLeastSquares => {
@@ -312,12 +315,12 @@ impl<T: StreamingObjective + Clone> StreamingOptimizer for RealTimeEstimator<T> 
                 self.update_sliding_window_rls(&features.view(), target)?;
             }
         }
-        
+
         // Adaptive parameter tuning
         if self.stats.points_processed % 20 == 0 {
             self.adapt_parameters();
         }
-        
+
         // Update statistics
         let loss = self.objective.evaluate(&self.parameters.view(), data_point);
         self.stats.points_processed += 1;
@@ -328,13 +331,17 @@ impl<T: StreamingObjective + Clone> StreamingOptimizer for RealTimeEstimator<T> 
             loss,
             0.05, // Faster adaptation for real-time
         );
-        
+
         // Check convergence
-        self.stats.converged = utils::check_convergence(&old_parameters.view(), &self.parameters.view(), self.config.tolerance);
-        
+        self.stats.converged = utils::check_convergence(
+            &old_parameters.view(),
+            &self.parameters.view(),
+            self.config.tolerance,
+        );
+
         self.stats.processing_time_ms += start_time.elapsed().as_secs_f64() * 1000.0;
         self.last_update_time = Some(start_time);
-        
+
         Ok(())
     }
 
@@ -365,7 +372,7 @@ pub fn recursive_least_squares<T: StreamingObjective>(
 ) -> RealTimeEstimator<T> {
     let config = config.unwrap_or_default();
     let uncertainty = initial_uncertainty.unwrap_or(1000.0);
-    
+
     RealTimeEstimator::new(
         initial_parameters,
         objective,
@@ -386,7 +393,7 @@ pub fn exponentially_weighted_rls<T: StreamingObjective>(
     if let Some(ff) = forgetting_factor {
         config.forgetting_factor = ff;
     }
-    
+
     RealTimeEstimator::new(
         initial_parameters,
         objective,
@@ -412,14 +419,14 @@ pub fn kalman_filter_estimator<T: StreamingObjective>(
         RealTimeMethod::KalmanFilter,
         1.0,
     );
-    
+
     if let Some(pn) = process_noise {
         estimator.process_noise = pn;
     }
     if let Some(mn) = measurement_noise {
         estimator.measurement_noise = mn;
     }
-    
+
     estimator
 }
 
@@ -432,7 +439,7 @@ pub fn real_time_linear_regression(
     let config = config.unwrap_or_default();
     let initial_params = Array1::zeros(n_features);
     let objective = super::LinearRegressionObjective;
-    
+
     RealTimeEstimator::new(initial_params, objective, config, method, 100.0)
 }
 
@@ -440,61 +447,57 @@ pub fn real_time_linear_regression(
 mod tests {
     use super::*;
     use crate::streaming::{LinearRegressionObjective, StreamingDataPoint};
-    
+
     #[test]
     fn test_rls_creation() {
-        let estimator = recursive_least_squares(
-            Array1::zeros(2),
-            LinearRegressionObjective,
-            None,
-            None,
-        );
-        
+        let estimator =
+            recursive_least_squares(Array1::zeros(2), LinearRegressionObjective, None, None);
+
         assert_eq!(estimator.parameters().len(), 2);
-        assert!(matches!(estimator.method, RealTimeMethod::RecursiveLeastSquares));
+        assert!(matches!(
+            estimator.method,
+            RealTimeMethod::RecursiveLeastSquares
+        ));
     }
-    
+
     #[test]
     fn test_rls_update() {
-        let mut estimator = real_time_linear_regression(
-            2,
-            RealTimeMethod::RecursiveLeastSquares,
-            None,
-        );
-        
+        let mut estimator =
+            real_time_linear_regression(2, RealTimeMethod::RecursiveLeastSquares, None);
+
         let features = Array1::from(vec![1.0, 2.0]);
         let target = 3.0;
         let point = StreamingDataPoint::new(features, target);
-        
+
         assert!(estimator.update(&point).is_ok());
         assert_eq!(estimator.stats().points_processed, 1);
     }
-    
+
     #[test]
     fn test_ewrls_adaptation() {
         let mut config = StreamingConfig::default();
         config.forgetting_factor = 0.9;
-        
+
         let mut estimator = exponentially_weighted_rls(
             Array1::zeros(2),
             LinearRegressionObjective,
             Some(config),
             None,
         );
-        
+
         // Process several data points
         for i in 0..10 {
             let features = Array1::from(vec![i as f64, 1.0]);
             let target = 2.0 * i as f64 + 1.0;
             let point = StreamingDataPoint::new(features, target);
-            
+
             estimator.update(&point).unwrap();
         }
-        
+
         assert_eq!(estimator.stats().points_processed, 10);
         assert!(estimator.stats().current_loss.is_finite());
     }
-    
+
     #[test]
     fn test_kalman_filter() {
         let mut estimator = kalman_filter_estimator(
@@ -504,48 +507,44 @@ mod tests {
             Some(1e-6),
             Some(1e-3),
         );
-        
+
         // Add noisy data
         let data_points = vec![
             StreamingDataPoint::new(Array1::from(vec![1.0, 0.0]), 2.1),
             StreamingDataPoint::new(Array1::from(vec![0.0, 1.0]), 2.9),
             StreamingDataPoint::new(Array1::from(vec![1.0, 1.0]), 5.1),
         ];
-        
+
         for point in &data_points {
             estimator.update(point).unwrap();
         }
-        
+
         assert_eq!(estimator.stats().points_processed, 3);
-        
+
         // Parameters should be close to [2, 3] despite noise
         let params = estimator.parameters();
         assert!((params[0] - 2.0).abs() < 1.0);
         assert!((params[1] - 3.0).abs() < 1.0);
     }
-    
+
     #[test]
     fn test_sliding_window_rls() {
-        let mut estimator = real_time_linear_regression(
-            2,
-            RealTimeMethod::SlidingWindowRLS,
-            None,
-        );
-        
+        let mut estimator = real_time_linear_regression(2, RealTimeMethod::SlidingWindowRLS, None);
+
         // Add data points to exceed window size
         for i in 0..15 {
             let features = Array1::from(vec![i as f64, 1.0]);
             let target = 2.0 * i as f64;
             let point = StreamingDataPoint::new(features, target);
-            
+
             estimator.update(&point).unwrap();
         }
-        
+
         // Should have processed all points but window is limited
         assert_eq!(estimator.stats().points_processed, 15);
         assert!(estimator.window_data.len() <= estimator.config.window_size);
     }
-    
+
     #[test]
     fn test_covariance_updates() {
         let mut estimator = recursive_least_squares(
@@ -554,47 +553,44 @@ mod tests {
             None,
             Some(100.0),
         );
-        
+
         let initial_covariance = estimator.covariance.clone();
-        
+
         let features = Array1::from(vec![1.0, 1.0]);
         let target = 1.0;
         let point = StreamingDataPoint::new(features, target);
-        
+
         estimator.update(&point).unwrap();
-        
+
         // Covariance should change after update
         assert!(&estimator.covariance != &initial_covariance);
-        
+
         // Diagonal elements should generally decrease (uncertainty reduction)
         assert!(estimator.covariance[[0, 0]] < initial_covariance[[0, 0]]);
         assert!(estimator.covariance[[1, 1]] < initial_covariance[[1, 1]]);
     }
-    
+
     #[test]
     fn test_real_time_constraints() {
-        let mut estimator = real_time_linear_regression(
-            2,
-            RealTimeMethod::RecursiveLeastSquares,
-            None,
-        );
-        
+        let mut estimator =
+            real_time_linear_regression(2, RealTimeMethod::RecursiveLeastSquares, None);
+
         // Set very tight timing constraint
         estimator.max_processing_time = Duration::from_nanos(1);
-        
+
         let features = Array1::from(vec![1.0, 2.0]);
         let target = 3.0;
         let point = StreamingDataPoint::new(features, target);
-        
+
         // Update should complete quickly (might skip processing due to timing)
         let start = Instant::now();
         estimator.update(&point).unwrap();
         let elapsed = start.elapsed();
-        
+
         // Should not take more than a reasonable amount of time
         assert!(elapsed < Duration::from_millis(100));
     }
-    
+
     #[test]
     fn test_parameter_adaptation() {
         let mut estimator = exponentially_weighted_rls(
@@ -603,18 +599,18 @@ mod tests {
             None,
             Some(0.95),
         );
-        
+
         let initial_ff = estimator.forgetting_factor;
-        
+
         // Process many points to trigger adaptation
         for i in 0..50 {
             let features = Array1::from(vec![i as f64, 1.0]);
             let target = i as f64; // Potentially changing relationship
             let point = StreamingDataPoint::new(features, target);
-            
+
             estimator.update(&point).unwrap();
         }
-        
+
         // Forgetting factor may have been adapted
         // (exact behavior depends on loss trends)
         assert!(estimator.stats().points_processed == 50);

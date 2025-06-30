@@ -13,9 +13,7 @@
 use crate::error::{SignalError, SignalResult};
 use crate::lombscargle::{lombscargle, AutoFreqMethod};
 use crate::lombscargle_enhanced::{lombscargle_enhanced, LombScargleConfig, WindowType};
-use crate::lombscargle_validation::{
-    validate_analytical_cases, ValidationResult,
-};
+use crate::lombscargle_validation::{validate_analytical_cases, ValidationResult};
 use ndarray::{Array1, Array2};
 use num_traits::Float;
 use rand::prelude::*;
@@ -3854,7 +3852,7 @@ fn test_cross_validation_extended(
 }
 
 /// Ultra-comprehensive Lomb-Scargle validation with additional edge cases
-/// 
+///
 /// This function provides the most thorough validation available, including:
 /// - Non-uniform sampling patterns
 /// - Multi-scale temporal analysis  
@@ -3872,7 +3870,7 @@ pub fn validate_lombscargle_ultra_comprehensive(
     let mut base_result = validate_lombscargle_enhanced("enhanced", config)?;
 
     // Additional ultra-comprehensive tests
-    
+
     // 1. Non-uniform sampling pattern analysis
     let non_uniform_results = validate_non_uniform_sampling_patterns(config)?;
     if non_uniform_results.overall_score < 0.8 {
@@ -3900,7 +3898,9 @@ pub fn validate_lombscargle_ultra_comprehensive(
     // 5. Window function optimization
     let window_optimization_results = validate_window_function_optimization(config)?;
     if window_optimization_results.optimal_selection_accuracy < 0.9 {
-        warnings.push("Window function selection not optimal for given data characteristics".to_string());
+        warnings.push(
+            "Window function selection not optimal for given data characteristics".to_string(),
+        );
     }
 
     // 6. Computational precision analysis
@@ -3920,17 +3920,17 @@ pub fn validate_lombscargle_ultra_comprehensive(
     base_result.warnings.extend(warnings);
 
     // Recalculate overall score including new tests
-    let additional_tests_score = (
-        non_uniform_results.overall_score +
-        temporal_scale_results.scale_consistency +
-        harmonic_distortion_results.harmonic_separation +
-        (aliasing_results.alias_rejection_db / 60.0).min(1.0) +
-        window_optimization_results.optimal_selection_accuracy +
-        (1.0 - precision_analysis_results.precision_degradation) +
-        real_world_results.realistic_signal_accuracy
-    ) / 7.0;
+    let additional_tests_score = (non_uniform_results.overall_score
+        + temporal_scale_results.scale_consistency
+        + harmonic_distortion_results.harmonic_separation
+        + (aliasing_results.alias_rejection_db / 60.0).min(1.0)
+        + window_optimization_results.optimal_selection_accuracy
+        + (1.0 - precision_analysis_results.precision_degradation)
+        + real_world_results.realistic_signal_accuracy)
+        / 7.0;
 
-    base_result.overall_score = (base_result.overall_score * 0.7 + additional_tests_score * 100.0 * 0.3);
+    base_result.overall_score =
+        (base_result.overall_score * 0.7 + additional_tests_score * 100.0 * 0.3);
 
     Ok(base_result)
 }
@@ -3945,7 +3945,7 @@ fn validate_non_uniform_sampling_patterns(
     // Test different non-uniform sampling patterns
     let patterns = vec![
         SamplingPattern::Exponential,
-        SamplingPattern::Logarithmic, 
+        SamplingPattern::Logarithmic,
         SamplingPattern::Random,
         SamplingPattern::Burst,
         SamplingPattern::Clustered,
@@ -3954,7 +3954,7 @@ fn validate_non_uniform_sampling_patterns(
     for pattern in patterns {
         let score = test_sampling_pattern(&pattern, config.tolerance)?;
         pattern_scores.push(score);
-        
+
         if config.verbose_diagnostics {
             println!("Sampling pattern {:?}: score = {:.3}", pattern, score);
         }
@@ -3965,7 +3965,7 @@ fn validate_non_uniform_sampling_patterns(
     results.random_score = pattern_scores[2];
     results.burst_score = pattern_scores[3];
     results.clustered_score = pattern_scores[4];
-    
+
     results.overall_score = pattern_scores.iter().sum::<f64>() / pattern_scores.len() as f64;
 
     Ok(results)
@@ -3976,24 +3976,24 @@ fn validate_temporal_scale_invariance(
     config: &EnhancedValidationConfig,
 ) -> SignalResult<TemporalScaleResults> {
     let mut results = TemporalScaleResults::default();
-    
+
     // Test at different temporal scales
     let scales = vec![0.1, 1.0, 10.0, 100.0, 1000.0];
     let mut scale_errors = Vec::new();
-    
+
     for &scale in &scales {
         let error = test_temporal_scale(scale, config.tolerance)?;
         scale_errors.push(error);
     }
-    
+
     // Check consistency across scales
     let mean_error = scale_errors.iter().sum::<f64>() / scale_errors.len() as f64;
     let max_error = scale_errors.iter().cloned().fold(0.0, f64::max);
-    
+
     results.mean_scale_error = mean_error;
     results.max_scale_error = max_error;
     results.scale_consistency = (1.0 - max_error.min(1.0)).max(0.0);
-    
+
     Ok(results)
 }
 
@@ -4002,104 +4002,140 @@ fn validate_harmonic_distortion_handling(
     config: &EnhancedValidationConfig,
 ) -> SignalResult<HarmonicDistortionResults> {
     let mut results = HarmonicDistortionResults::default();
-    
+
     // Generate signal with harmonics
     let n = 1000;
     let fs = 100.0;
     let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
-    
+
     let f0 = 5.0; // Fundamental frequency
-    let signal: Vec<f64> = t.iter().map(|&ti| {
-        (2.0 * PI * f0 * ti).sin() +           // Fundamental
+    let signal: Vec<f64> = t
+        .iter()
+        .map(|&ti| {
+            (2.0 * PI * f0 * ti).sin() +           // Fundamental
         0.3 * (2.0 * PI * 2.0 * f0 * ti).sin() + // 2nd harmonic
-        0.1 * (2.0 * PI * 3.0 * f0 * ti).sin()   // 3rd harmonic
-    }).collect();
-    
+        0.1 * (2.0 * PI * 3.0 * f0 * ti).sin() // 3rd harmonic
+        })
+        .collect();
+
     // Compute Lomb-Scargle periodogram
     let (freqs, power) = lombscargle(
-        &t, &signal, None, Some("standard"), Some(true), Some(true), None, None
+        &t,
+        &signal,
+        None,
+        Some("standard"),
+        Some(true),
+        Some(true),
+        None,
+        None,
     )?;
-    
+
     // Find peaks
     let peaks = find_peaks(&power, 0.1)?;
     let peak_freqs: Vec<f64> = peaks.iter().map(|&idx| freqs[idx]).collect();
-    
+
     // Check harmonic separation
     let expected_freqs = vec![f0, 2.0 * f0, 3.0 * f0];
     let mut separations = Vec::new();
-    
+
     for &expected in &expected_freqs {
-        let closest_idx = peak_freqs.iter()
+        let closest_idx = peak_freqs
+            .iter()
             .enumerate()
-            .min_by(|(_, f1), (_, f2)| (f1 - expected).abs().partial_cmp(&(f2 - expected).abs()).unwrap())
+            .min_by(|(_, f1), (_, f2)| {
+                (f1 - expected)
+                    .abs()
+                    .partial_cmp(&(f2 - expected).abs())
+                    .unwrap()
+            })
             .map(|(idx, _)| idx);
-            
+
         if let Some(idx) = closest_idx {
             let error = (peak_freqs[idx] - expected).abs() / expected;
             separations.push(1.0 - error.min(1.0));
         }
     }
-    
+
     results.fundamental_accuracy = separations[0];
-    results.second_harmonic_accuracy = if separations.len() > 1 { separations[1] } else { 0.0 };
-    results.third_harmonic_accuracy = if separations.len() > 2 { separations[2] } else { 0.0 };
+    results.second_harmonic_accuracy = if separations.len() > 1 {
+        separations[1]
+    } else {
+        0.0
+    };
+    results.third_harmonic_accuracy = if separations.len() > 2 {
+        separations[2]
+    } else {
+        0.0
+    };
     results.harmonic_separation = separations.iter().sum::<f64>() / separations.len() as f64;
-    
+
     Ok(results)
 }
 
 /// Validate aliasing effects
-fn validate_aliasing_effects(
-    config: &EnhancedValidationConfig,
-) -> SignalResult<AliasingResults> {
+fn validate_aliasing_effects(config: &EnhancedValidationConfig) -> SignalResult<AliasingResults> {
     let mut results = AliasingResults::default();
-    
+
     // Create signal with high-frequency components near Nyquist
     let n = 500;
     let fs = 50.0;
     let nyquist = fs / 2.0;
     let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
-    
+
     // Signal with frequency at 0.8 * Nyquist
     let f_high = 0.8 * nyquist;
     let signal: Vec<f64> = t.iter().map(|&ti| (2.0 * PI * f_high * ti).sin()).collect();
-    
+
     // Add irregular sampling to test aliasing effects
     let mut rng = rand::rng();
     let mut t_irregular = Vec::new();
     let mut signal_irregular = Vec::new();
-    
+
     for i in 0..n {
-        if rng.random_range(0.0..1.0) > 0.3 { // Keep 70% of samples
+        if rng.random_range(0.0..1.0) > 0.3 {
+            // Keep 70% of samples
             t_irregular.push(t[i]);
             signal_irregular.push(signal[i]);
         }
     }
-    
+
     // Compute periodogram
     let (freqs, power) = lombscargle(
-        &t_irregular, &signal_irregular, None, Some("standard"), Some(true), Some(true), None, None
+        &t_irregular,
+        &signal_irregular,
+        None,
+        Some("standard"),
+        Some(true),
+        Some(true),
+        None,
+        None,
     )?;
-    
+
     // Find peak
-    let (peak_idx, _) = power.iter().enumerate()
+    let (peak_idx, _) = power
+        .iter()
+        .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
         .unwrap();
     let detected_freq = freqs[peak_idx];
-    
+
     // Check for aliasing (false peak at low frequency)
     let freq_error = (detected_freq - f_high).abs() / f_high;
-    let alias_rejection = if freq_error < 0.1 { 60.0 } else { 20.0 * (1.0 - freq_error).max(0.0) };
-    
+    let alias_rejection = if freq_error < 0.1 {
+        60.0
+    } else {
+        20.0 * (1.0 - freq_error).max(0.0)
+    };
+
     // Check power distribution
     let total_power: f64 = power.iter().sum();
     let peak_power = power[peak_idx];
     let snr_db = 10.0 * (peak_power / (total_power - peak_power)).log10();
-    
+
     results.alias_rejection_db = alias_rejection;
     results.high_freq_detection_accuracy = 1.0 - freq_error.min(1.0);
     results.spurious_peak_suppression = snr_db.max(0.0) / 40.0; // Normalize to 0-1
-    
+
     Ok(results)
 }
 
@@ -4108,32 +4144,37 @@ fn validate_window_function_optimization(
     config: &EnhancedValidationConfig,
 ) -> SignalResult<WindowOptimizationResults> {
     let mut results = WindowOptimizationResults::default();
-    
+
     // Test different scenarios and optimal window selection
     let scenarios = vec![
-        (1.0, "single_tone"),      // Single frequency
-        (3.0, "multi_tone"),       // Multiple frequencies  
-        (0.1, "low_snr"),          // Low SNR
-        (10.0, "broadband"),       // Broadband signal
+        (1.0, "single_tone"), // Single frequency
+        (3.0, "multi_tone"),  // Multiple frequencies
+        (0.1, "low_snr"),     // Low SNR
+        (10.0, "broadband"),  // Broadband signal
     ];
-    
+
     let mut optimization_scores = Vec::new();
-    
+
     for (scenario_param, scenario_name) in scenarios {
-        let score = test_window_optimization_scenario(scenario_param, scenario_name, config.tolerance)?;
+        let score =
+            test_window_optimization_scenario(scenario_param, scenario_name, config.tolerance)?;
         optimization_scores.push(score);
-        
+
         if config.verbose_diagnostics {
-            println!("Window optimization for {}: score = {:.3}", scenario_name, score);
+            println!(
+                "Window optimization for {}: score = {:.3}",
+                scenario_name, score
+            );
         }
     }
-    
+
     results.single_tone_optimization = optimization_scores[0];
     results.multi_tone_optimization = optimization_scores[1];
     results.low_snr_optimization = optimization_scores[2];
     results.broadband_optimization = optimization_scores[3];
-    results.optimal_selection_accuracy = optimization_scores.iter().sum::<f64>() / optimization_scores.len() as f64;
-    
+    results.optimal_selection_accuracy =
+        optimization_scores.iter().sum::<f64>() / optimization_scores.len() as f64;
+
     Ok(results)
 }
 
@@ -4142,45 +4183,65 @@ fn validate_computational_precision_analysis(
     config: &EnhancedValidationConfig,
 ) -> SignalResult<PrecisionAnalysisResults> {
     let mut results = PrecisionAnalysisResults::default();
-    
+
     // Test precision degradation with different data types
     let n = 1000;
     let fs = 100.0;
     let f0 = 10.0;
     let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
     let signal_f64: Vec<f64> = t.iter().map(|&ti| (2.0 * PI * f0 * ti).sin()).collect();
-    
+
     // Convert to f32 and back to test precision loss
     let signal_f32: Vec<f32> = signal_f64.iter().map(|&x| x as f32).collect();
     let signal_f32_f64: Vec<f64> = signal_f32.iter().map(|&x| x as f64).collect();
-    
+
     // Compute periodograms
     let (freqs_f64, power_f64) = lombscargle(
-        &t, &signal_f64, None, Some("standard"), Some(true), Some(true), None, None
+        &t,
+        &signal_f64,
+        None,
+        Some("standard"),
+        Some(true),
+        Some(true),
+        None,
+        None,
     )?;
-    
+
     let (freqs_f32, power_f32) = lombscargle(
-        &t, &signal_f32_f64, None, Some("standard"), Some(true), Some(true), None, None
+        &t,
+        &signal_f32_f64,
+        None,
+        Some("standard"),
+        Some(true),
+        Some(true),
+        None,
+        None,
     )?;
-    
+
     // Compare results
-    let freq_differences: Vec<f64> = freqs_f64.iter()
+    let freq_differences: Vec<f64> = freqs_f64
+        .iter()
         .zip(freqs_f32.iter())
         .map(|(f64_val, f32_val)| (f64_val - f32_val).abs())
         .collect();
-        
-    let power_differences: Vec<f64> = power_f64.iter()
+
+    let power_differences: Vec<f64> = power_f64
+        .iter()
         .zip(power_f32.iter())
         .map(|(p64, p32)| (p64 - p32).abs() / (p64.max(1e-15)))
         .collect();
-    
+
     let max_freq_diff = freq_differences.iter().cloned().fold(0.0, f64::max);
     let max_power_diff = power_differences.iter().cloned().fold(0.0, f64::max);
-    
+
     results.precision_degradation = max_freq_diff.max(max_power_diff);
     results.f32_f64_consistency = (1.0 - results.precision_degradation.min(1.0)).max(0.0);
-    results.numerical_stability_score = if results.precision_degradation < 1e-6 { 1.0 } else { 0.5 };
-    
+    results.numerical_stability_score = if results.precision_degradation < 1e-6 {
+        1.0
+    } else {
+        0.5
+    };
+
     Ok(results)
 }
 
@@ -4189,34 +4250,34 @@ fn validate_real_world_signal_emulation(
     config: &EnhancedValidationConfig,
 ) -> SignalResult<RealWorldResults> {
     let mut results = RealWorldResults::default();
-    
+
     // Generate realistic signals with various characteristics
     let signal_types = vec![
         RealWorldSignalType::Biomedical,
-        RealWorldSignalType::Seismic, 
+        RealWorldSignalType::Seismic,
         RealWorldSignalType::Astronomical,
         RealWorldSignalType::Communications,
         RealWorldSignalType::Industrial,
     ];
-    
+
     let mut type_scores = Vec::new();
-    
+
     for signal_type in signal_types {
         let score = test_real_world_signal_type(&signal_type, config.tolerance)?;
         type_scores.push(score);
-        
+
         if config.verbose_diagnostics {
             println!("Real-world signal {:?}: score = {:.3}", signal_type, score);
         }
     }
-    
+
     results.biomedical_accuracy = type_scores[0];
-    results.seismic_accuracy = type_scores[1]; 
+    results.seismic_accuracy = type_scores[1];
     results.astronomical_accuracy = type_scores[2];
     results.communications_accuracy = type_scores[3];
     results.industrial_accuracy = type_scores[4];
     results.realistic_signal_accuracy = type_scores.iter().sum::<f64>() / type_scores.len() as f64;
-    
+
     Ok(results)
 }
 
@@ -4309,13 +4370,13 @@ fn test_sampling_pattern(pattern: &SamplingPattern, tolerance: f64) -> SignalRes
 
 fn test_temporal_scale(scale: f64, tolerance: f64) -> SignalResult<f64> {
     // Implementation would test temporal scale invariance
-    Ok(scale.log10().abs() * 0.1) // Placeholder  
+    Ok(scale.log10().abs() * 0.1) // Placeholder
 }
 
 fn find_peak_indices(power: &[f64], threshold: f64) -> SignalResult<Vec<usize>> {
     let mut peaks = Vec::new();
-    for i in 1..power.len()-1 {
-        if power[i] > power[i-1] && power[i] > power[i+1] && power[i] > threshold {
+    for i in 1..power.len() - 1 {
+        if power[i] > power[i - 1] && power[i] > power[i + 1] && power[i] > threshold {
             peaks.push(i);
         }
     }
@@ -4327,7 +4388,10 @@ fn test_window_optimization_scenario(param: f64, name: &str, tolerance: f64) -> 
     Ok(0.9) // Placeholder
 }
 
-fn test_real_world_signal_type(signal_type: &RealWorldSignalType, tolerance: f64) -> SignalResult<f64> {
+fn test_real_world_signal_type(
+    signal_type: &RealWorldSignalType,
+    tolerance: f64,
+) -> SignalResult<f64> {
     // Implementation would test with realistic signal characteristics
     Ok(0.8) // Placeholder
 }
@@ -4341,12 +4405,19 @@ pub fn validate_cross_algorithm_consistency(
     tolerance: f64,
 ) -> SignalResult<CrossAlgorithmConsistencyResult> {
     let mut result = CrossAlgorithmConsistencyResult::default();
-    
+
     // Test standard vs enhanced implementations
     let (freqs_std, power_std) = lombscargle(
-        time, signal, None, Some("standard"), Some(true), Some(true), None, None
+        time,
+        signal,
+        None,
+        Some("standard"),
+        Some(true),
+        Some(true),
+        None,
+        None,
     )?;
-    
+
     let config = LombScargleConfig {
         window: WindowType::Hann,
         normalization: "standard".to_string(),
@@ -4354,21 +4425,23 @@ pub fn validate_cross_algorithm_consistency(
         ..Default::default()
     };
     let (freqs_enh, power_enh) = lombscargle_enhanced(time, signal, &config)?;
-    
+
     // Compare results - frequencies should be similar
     let freq_agreement = calculate_frequency_agreement(&freqs_std, &freqs_enh, tolerance);
     result.frequency_agreement = freq_agreement;
-    
+
     // Compare power spectra at common frequencies
-    let power_agreement = calculate_power_agreement(&freqs_std, &power_std, &freqs_enh, &power_enh, tolerance);
+    let power_agreement =
+        calculate_power_agreement(&freqs_std, &power_std, &freqs_enh, &power_enh, tolerance);
     result.power_agreement = power_agreement;
-    
+
     // Test with different normalization methods
     result.normalization_consistency = test_normalization_methods(time, signal, tolerance)?;
-    
+
     // Overall score
-    result.overall_score = (freq_agreement + power_agreement + result.normalization_consistency) / 3.0;
-    
+    result.overall_score =
+        (freq_agreement + power_agreement + result.normalization_consistency) / 3.0;
+
     Ok(result)
 }
 
@@ -4381,51 +4454,69 @@ pub fn validate_statistical_significance(
     let mut false_positives = 0;
     let mut true_positives = 0;
     let mut rng = rand::rng();
-    
+
     for trial in 0..num_trials {
         // Generate pure noise signal
         let n = 1000;
         let time: Vec<f64> = (0..n).map(|i| i as f64).collect();
         let noise: Vec<f64> = (0..n).map(|_| rng.gen_range(-1.0..1.0)).collect();
-        
+
         // Compute periodogram
         let (freqs, power) = lombscargle(
-            &time, &noise, None, Some("standard"), Some(true), Some(true), None, None
+            &time,
+            &noise,
+            None,
+            Some("standard"),
+            Some(true),
+            Some(true),
+            None,
+            None,
         )?;
-        
+
         // Find significant peaks (should be none for pure noise)
         let significance_level = 1.0 - alpha;
         let significant_peaks = count_significant_peaks(&power, significance_level);
-        
+
         if significant_peaks > 0 {
             false_positives += 1;
         }
-        
+
         // Generate signal with known frequency
         if trial % 2 == 0 {
             let f_true = 0.1;
-            let signal_with_tone: Vec<f64> = time.iter().enumerate().map(|(i, &t)| {
-                (2.0 * std::f64::consts::PI * f_true * t).sin() + 0.1 * rng.gen_range(-1.0..1.0)
-            }).collect();
-            
+            let signal_with_tone: Vec<f64> = time
+                .iter()
+                .enumerate()
+                .map(|(i, &t)| {
+                    (2.0 * std::f64::consts::PI * f_true * t).sin() + 0.1 * rng.gen_range(-1.0..1.0)
+                })
+                .collect();
+
             let (freqs_tone, power_tone) = lombscargle(
-                &time, &signal_with_tone, None, Some("standard"), Some(true), Some(true), None, None
+                &time,
+                &signal_with_tone,
+                None,
+                Some("standard"),
+                Some(true),
+                Some(true),
+                None,
+                None,
             )?;
-            
+
             let significant_peaks_tone = count_significant_peaks(&power_tone, significance_level);
             if significant_peaks_tone > 0 {
                 true_positives += 1;
             }
         }
     }
-    
+
     result.false_positive_rate = false_positives as f64 / num_trials as f64;
     result.true_positive_rate = true_positives as f64 / (num_trials / 2) as f64;
     result.meets_alpha_criterion = result.false_positive_rate <= alpha;
-    
+
     // Calculate statistical power
     result.statistical_power = result.true_positive_rate;
-    
+
     Ok(result)
 }
 
@@ -4436,25 +4527,28 @@ pub fn validate_frequency_resolution(
 ) -> SignalResult<FrequencyResolutionResult> {
     let mut result = FrequencyResolutionResult::default();
     let mut resolution_tests = Vec::new();
-    
+
     for &fs in sampling_rates {
         for &n in signal_lengths {
             let test_result = test_frequency_resolution_single(fs, n)?;
             resolution_tests.push(test_result);
         }
     }
-    
+
     // Analyze theoretical vs empirical resolution
     let theoretical_resolution = calculate_theoretical_resolution(sampling_rates, signal_lengths);
     let empirical_resolution = calculate_empirical_resolution(&resolution_tests);
-    
-    result.theoretical_agreement = calculate_resolution_agreement(&theoretical_resolution, &empirical_resolution);
-    result.min_resolvable_separation = empirical_resolution.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+
+    result.theoretical_agreement =
+        calculate_resolution_agreement(&theoretical_resolution, &empirical_resolution);
+    result.min_resolvable_separation = empirical_resolution
+        .iter()
+        .fold(f64::INFINITY, |a, &b| a.min(b));
     result.max_resolvable_separation = empirical_resolution.iter().fold(0.0, |a, &b| a.max(b));
-    
+
     // Test frequency leakage
     result.spectral_leakage_factor = test_spectral_leakage(sampling_rates[0], signal_lengths[0])?;
-    
+
     Ok(result)
 }
 
@@ -4465,23 +4559,24 @@ pub fn validate_computational_scaling(
 ) -> SignalResult<ComputationalScalingResult> {
     let mut result = ComputationalScalingResult::default();
     let mut timing_results = Vec::new();
-    
+
     for &n in signal_sizes {
         let avg_time = benchmark_signal_size(n, num_iterations)?;
         timing_results.push((n, avg_time));
     }
-    
+
     // Analyze computational complexity
     result.empirical_complexity = estimate_complexity(&timing_results);
     result.scaling_efficiency = calculate_scaling_efficiency(&timing_results);
-    
+
     // Expected complexity for Lomb-Scargle is O(N log N) to O(N^2)
     let expected_complexity = 1.5; // Between linear and quadratic
-    result.matches_expected_complexity = (result.empirical_complexity - expected_complexity).abs() < 0.5;
-    
+    result.matches_expected_complexity =
+        (result.empirical_complexity - expected_complexity).abs() < 0.5;
+
     // Memory scaling
     result.memory_scaling = estimate_memory_scaling(signal_sizes)?;
-    
+
     Ok(result)
 }
 
@@ -4493,34 +4588,45 @@ pub fn validate_parallel_consistency(
 ) -> SignalResult<ParallelConsistencyResult> {
     let mut result = ParallelConsistencyResult::default();
     let mut consistency_scores = Vec::new();
-    
+
     for _ in 0..num_trials {
         // Run sequential implementation
         let (freqs_seq, power_seq) = lombscargle(
-            time, signal, None, Some("standard"), Some(true), Some(true), None, None
+            time,
+            signal,
+            None,
+            Some("standard"),
+            Some(true),
+            Some(true),
+            None,
+            None,
         )?;
-        
+
         // Run parallel implementation (if available)
         let config_parallel = LombScargleConfig {
             parallel: true,
             ..Default::default()
         };
         let (freqs_par, power_par) = lombscargle_enhanced(time, signal, &config_parallel)?;
-        
+
         // Compare results
         let freq_consistency = calculate_frequency_agreement(&freqs_seq, &freqs_par, 1e-12);
-        let power_consistency = calculate_power_agreement(&freqs_seq, &power_seq, &freqs_par, &power_par, 1e-12);
-        
+        let power_consistency =
+            calculate_power_agreement(&freqs_seq, &power_seq, &freqs_par, &power_par, 1e-12);
+
         let overall_consistency = (freq_consistency + power_consistency) / 2.0;
         consistency_scores.push(overall_consistency);
     }
-    
-    result.mean_consistency = consistency_scores.iter().sum::<f64>() / consistency_scores.len() as f64;
-    result.min_consistency = consistency_scores.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+
+    result.mean_consistency =
+        consistency_scores.iter().sum::<f64>() / consistency_scores.len() as f64;
+    result.min_consistency = consistency_scores
+        .iter()
+        .fold(f64::INFINITY, |a, &b| a.min(b));
     result.std_consistency = calculate_std_dev(&consistency_scores, result.mean_consistency);
-    
+
     result.is_deterministic = result.std_consistency < 1e-10;
-    
+
     Ok(result)
 }
 
@@ -4571,31 +4677,38 @@ pub struct ParallelConsistencyResult {
 fn calculate_frequency_agreement(freqs1: &[f64], freqs2: &[f64], tolerance: f64) -> f64 {
     let min_len = freqs1.len().min(freqs2.len());
     let mut agreements = 0;
-    
+
     for i in 0..min_len {
         if (freqs1[i] - freqs2[i]).abs() < tolerance {
             agreements += 1;
         }
     }
-    
+
     agreements as f64 / min_len as f64
 }
 
-fn calculate_power_agreement(freqs1: &[f64], power1: &[f64], freqs2: &[f64], power2: &[f64], tolerance: f64) -> f64 {
+fn calculate_power_agreement(
+    freqs1: &[f64],
+    power1: &[f64],
+    freqs2: &[f64],
+    power2: &[f64],
+    tolerance: f64,
+) -> f64 {
     // Interpolate power2 to freqs1 grid for comparison
     let mut agreement_sum = 0.0;
     let mut count = 0;
-    
+
     for (i, &f) in freqs1.iter().enumerate() {
         if let Some(interpolated_power) = interpolate_power(f, freqs2, power2) {
-            let relative_error = (power1[i] - interpolated_power).abs() / (power1[i] + interpolated_power + 1e-10);
+            let relative_error =
+                (power1[i] - interpolated_power).abs() / (power1[i] + interpolated_power + 1e-10);
             if relative_error < tolerance {
                 agreement_sum += 1.0;
             }
             count += 1;
         }
     }
-    
+
     if count > 0 {
         agreement_sum / count as f64
     } else {
@@ -4617,19 +4730,19 @@ fn interpolate_power(freq: f64, freqs: &[f64], power: &[f64]) -> Option<f64> {
 fn test_normalization_methods(time: &[f64], signal: &[f64], tolerance: f64) -> SignalResult<f64> {
     // Test different configurations and compare results
     let config_std = LombScargleConfig::default();
-    
+
     let config_alt = LombScargleConfig {
         oversample: 10.0,
         ..Default::default()
     };
-    
+
     let (_, power_std) = lombscargle_enhanced(time, signal, &config_std)?;
     let (_, power_alt) = lombscargle_enhanced(time, signal, &config_alt)?;
-    
+
     // Compare relative peak positions (should be consistent)
     let peaks_std = find_peak_indices(&power_std, 0.1)?;
     let peaks_alt = find_peak_indices(&power_alt, 0.1)?;
-    
+
     let peak_consistency = if peaks_std.len() == peaks_alt.len() {
         let mut matches = 0;
         for (p1, p2) in peaks_std.iter().zip(peaks_alt.iter()) {
@@ -4641,7 +4754,7 @@ fn test_normalization_methods(time: &[f64], signal: &[f64], tolerance: f64) -> S
     } else {
         0.0
     };
-    
+
     Ok(peak_consistency)
 }
 
@@ -4656,19 +4769,29 @@ fn test_frequency_resolution_single(fs: f64, n: usize) -> SignalResult<f64> {
     let time: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
     let f1 = fs / 4.0;
     let f2 = f1 + fs / (n as f64); // Frequency separation at theoretical limit
-    
-    let signal: Vec<f64> = time.iter().map(|&t| {
-        (2.0 * std::f64::consts::PI * f1 * t).sin() + 
-        (2.0 * std::f64::consts::PI * f2 * t).sin()
-    }).collect();
-    
+
+    let signal: Vec<f64> = time
+        .iter()
+        .map(|&t| {
+            (2.0 * std::f64::consts::PI * f1 * t).sin()
+                + (2.0 * std::f64::consts::PI * f2 * t).sin()
+        })
+        .collect();
+
     let (freqs, power) = lombscargle(
-        &time, &signal, None, Some("standard"), Some(true), Some(true), None, None
+        &time,
+        &signal,
+        None,
+        Some("standard"),
+        Some(true),
+        Some(true),
+        None,
+        None,
     )?;
-    
+
     // Check if two distinct peaks are resolved
     let peaks = find_peak_indices(&power, 0.1)?;
-    
+
     if peaks.len() >= 2 {
         fs / (n as f64) // Return theoretical resolution
     } else {
@@ -4705,41 +4828,58 @@ fn test_spectral_leakage(fs: f64, n: usize) -> SignalResult<f64> {
     // Test spectral leakage with a pure tone not at bin center
     let time: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
     let f_tone = fs / 4.0 + fs / (2.0 * n as f64); // Off-grid frequency
-    
-    let signal: Vec<f64> = time.iter().map(|&t| {
-        (2.0 * std::f64::consts::PI * f_tone * t).sin()
-    }).collect();
-    
+
+    let signal: Vec<f64> = time
+        .iter()
+        .map(|&t| (2.0 * std::f64::consts::PI * f_tone * t).sin())
+        .collect();
+
     let (freqs, power) = lombscargle(
-        &time, &signal, None, Some("standard"), Some(true), Some(true), None, None
+        &time,
+        &signal,
+        None,
+        Some("standard"),
+        Some(true),
+        Some(true),
+        None,
+        None,
     )?;
-    
+
     // Find peak and measure leakage
-    let max_idx = power.iter().enumerate()
+    let max_idx = power
+        .iter()
+        .enumerate()
         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
         .map(|(i, _)| i)
         .unwrap_or(0);
-    
+
     let peak_power = power[max_idx];
     let total_power: f64 = power.iter().sum();
-    
+
     1.0 - peak_power / total_power // Leakage factor
 }
 
 fn benchmark_signal_size(n: usize, num_iterations: usize) -> SignalResult<f64> {
     let mut total_time = 0.0;
-    
+
     for _ in 0..num_iterations {
         let time: Vec<f64> = (0..n).map(|i| i as f64).collect();
         let signal: Vec<f64> = (0..n).map(|i| (i as f64).sin()).collect();
-        
+
         let start = Instant::now();
         let _ = lombscargle(
-            &time, &signal, None, Some("standard"), Some(true), Some(true), None, None
+            &time,
+            &signal,
+            None,
+            Some("standard"),
+            Some(true),
+            Some(true),
+            None,
+            None,
         )?;
         total_time += start.elapsed().as_secs_f64();
     }
-    
+
     Ok(total_time / num_iterations as f64)
 }
 
@@ -4748,16 +4888,16 @@ fn estimate_complexity(timing_results: &[(usize, f64)]) -> f64 {
     if timing_results.len() < 2 {
         return 1.0;
     }
-    
+
     let n1 = timing_results[0].0 as f64;
     let t1 = timing_results[0].1;
     let n2 = timing_results[1].0 as f64;
     let t2 = timing_results[1].1;
-    
+
     if n1 <= 0.0 || n2 <= 0.0 || t1 <= 0.0 || t2 <= 0.0 {
         return 1.0;
     }
-    
+
     (t2 / t1).ln() / (n2 / n1).ln()
 }
 
@@ -4766,10 +4906,11 @@ fn calculate_scaling_efficiency(timing_results: &[(usize, f64)]) -> f64 {
     if timing_results.len() < 2 {
         return 1.0;
     }
-    
+
     let baseline_efficiency = timing_results[0].1 / timing_results[0].0 as f64;
-    let final_efficiency = timing_results.last().unwrap().1 / timing_results.last().unwrap().0 as f64;
-    
+    let final_efficiency =
+        timing_results.last().unwrap().1 / timing_results.last().unwrap().0 as f64;
+
     baseline_efficiency / final_efficiency
 }
 
@@ -4778,7 +4919,7 @@ fn estimate_memory_scaling(signal_sizes: &[usize]) -> SignalResult<f64> {
     // For Lomb-Scargle, memory usage should be roughly O(N)
     let min_size = signal_sizes[0] as f64;
     let max_size = signal_sizes.last().unwrap_or(&signal_sizes[0]) as f64;
-    
+
     // Assume linear memory scaling for now
     Ok(max_size / min_size)
 }
@@ -4787,10 +4928,8 @@ fn calculate_std_dev(values: &[f64], mean: f64) -> f64 {
     if values.is_empty() {
         return 0.0;
     }
-    
-    let variance = values.iter()
-        .map(|&x| (x - mean).powi(2))
-        .sum::<f64>() / values.len() as f64;
-    
+
+    let variance = values.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / values.len() as f64;
+
     variance.sqrt()
 }

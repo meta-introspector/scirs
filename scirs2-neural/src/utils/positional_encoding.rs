@@ -162,7 +162,9 @@ impl<F: Float + Debug + 'static> SinusoidalPositionalEncoding<F> {
     }
 }
 
-impl<F: Float + Debug + Send + Sync + 'static> PositionalEncoding<F> for SinusoidalPositionalEncoding<F> {
+impl<F: Float + Debug + Send + Sync + 'static> PositionalEncoding<F>
+    for SinusoidalPositionalEncoding<F>
+{
     fn forward(&self, embeddings: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
         if embeddings.ndim() < 2 {
             return Err(NeuralError::InferenceError(
@@ -274,7 +276,9 @@ impl<F: Float + Debug + 'static> LearnedPositionalEncoding<F> {
     }
 }
 
-impl<F: Float + Debug + Send + Sync + 'static> PositionalEncoding<F> for LearnedPositionalEncoding<F> {
+impl<F: Float + Debug + Send + Sync + 'static> PositionalEncoding<F>
+    for LearnedPositionalEncoding<F>
+{
     fn forward(&self, embeddings: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
         if embeddings.ndim() < 2 {
             return Err(NeuralError::InferenceError(
@@ -407,7 +411,9 @@ impl<F: Float + Debug + 'static> RelativePositionalEncoding<F> {
     }
 }
 
-impl<F: Float + Debug + Send + Sync + 'static> PositionalEncoding<F> for RelativePositionalEncoding<F> {
+impl<F: Float + Debug + Send + Sync + 'static> PositionalEncoding<F>
+    for RelativePositionalEncoding<F>
+{
     fn forward(&self, embeddings: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
         if embeddings.ndim() < 2 {
             return Err(NeuralError::InferenceError(

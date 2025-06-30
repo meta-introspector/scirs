@@ -938,22 +938,22 @@ impl SphericalVoronoi {
         if nrows == 0 || ncols == 0 {
             return Ok(0);
         }
-        
+
         // For small matrices, use QR decomposition approach
         if nrows <= 10 && ncols <= 10 {
             return Self::compute_rank_qr(matrix, tol);
         }
-        
+
         // For larger matrices, use iterative approach with column norms
         // This is more computationally efficient than full SVD
         let mut rank = 0;
         let mut remaining_matrix = matrix.clone();
-        
+
         for _ in 0..ncols.min(nrows) {
             // Find the column with maximum norm
             let mut max_norm = 0.0;
             let mut max_col = 0;
-            
+
             for j in 0..remaining_matrix.ncols() {
                 let col = remaining_matrix.column(j);
                 let norm_sq: f64 = col.iter().map(|&x| x * x).sum();
@@ -962,31 +962,31 @@ impl SphericalVoronoi {
                     max_col = j;
                 }
             }
-            
+
             let max_norm = max_norm.sqrt();
             if max_norm < tol {
                 break; // Remaining columns are linearly dependent
             }
-            
+
             rank += 1;
-            
+
             // Perform Gram-Schmidt orthogonalization
             let pivot_col = remaining_matrix.column(max_col).to_owned();
             let pivot_unit = &pivot_col / max_norm;
-            
+
             // Update remaining matrix by removing component in direction of pivot
             for j in 0..remaining_matrix.ncols() {
                 if j != max_col {
                     let col = remaining_matrix.column(j).to_owned();
                     let projection = dot(&col, &pivot_unit);
                     let orthogonal = col - projection * &pivot_unit;
-                    
+
                     for i in 0..remaining_matrix.nrows() {
                         remaining_matrix[[i, j]] = orthogonal[i];
                     }
                 }
             }
-            
+
             // Remove the pivot column for next iteration (conceptually)
             if max_col < remaining_matrix.ncols() - 1 {
                 // Set pivot column to zero to ignore it in future iterations
@@ -995,22 +995,22 @@ impl SphericalVoronoi {
                 }
             }
         }
-        
+
         Ok(rank)
     }
-    
+
     /// Compute matrix rank using QR decomposition for small matrices
     #[allow(dead_code)]
     fn compute_rank_qr(matrix: &Array2<f64>, tol: f64) -> SpatialResult<usize> {
         let (nrows, ncols) = matrix.dim();
         let mut working_matrix = matrix.clone();
         let mut rank = 0;
-        
+
         for col in 0..ncols.min(nrows) {
             // Find the pivot element
             let mut max_val = 0.0;
             let mut max_row = col;
-            
+
             for row in col..nrows {
                 let val = working_matrix[[row, col]].abs();
                 if val > max_val {
@@ -1018,11 +1018,11 @@ impl SphericalVoronoi {
                     max_row = row;
                 }
             }
-            
+
             if max_val < tol {
                 continue; // Column is essentially zero
             }
-            
+
             // Swap rows if needed
             if max_row != col {
                 for j in 0..ncols {
@@ -1031,9 +1031,9 @@ impl SphericalVoronoi {
                     working_matrix[[max_row, j]] = temp;
                 }
             }
-            
+
             rank += 1;
-            
+
             // Eliminate below the pivot
             let pivot = working_matrix[[col, col]];
             for row in (col + 1)..nrows {
@@ -1043,20 +1043,22 @@ impl SphericalVoronoi {
                 }
             }
         }
-        
+
         Ok(rank)
     }
-    
+
     /// Find an orthogonal vector to the given vector using Gram-Schmidt process
     fn find_orthogonal_vector(vector: &Array1<f64>) -> SpatialResult<Array1<f64>> {
         let dim = vector.len();
         if dim < 2 {
-            return Err(SpatialError::ValueError("Vector dimension must be at least 2".into()));
+            return Err(SpatialError::ValueError(
+                "Vector dimension must be at least 2".into(),
+            ));
         }
-        
+
         // Start with a standard basis vector that's not parallel to the input
         let mut candidate = Array1::zeros(dim);
-        
+
         // Find the dimension with the smallest absolute component
         let mut min_abs = f64::MAX;
         let mut min_idx = 0;
@@ -1067,14 +1069,14 @@ impl SphericalVoronoi {
                 min_idx = i;
             }
         }
-        
+
         // Set the candidate vector to the standard basis vector for that dimension
         candidate[min_idx] = 1.0;
-        
+
         // Apply Gram-Schmidt to get an orthogonal vector
         let projection = dot(&candidate, vector);
         let orthogonal = candidate.clone() - projection * vector;
-        
+
         // Normalize the result
         let norm_val = norm(&orthogonal);
         if norm_val < 1e-12 {
@@ -1082,20 +1084,20 @@ impl SphericalVoronoi {
             candidate.fill(0.0);
             let next_idx = (min_idx + 1) % dim;
             candidate[next_idx] = 1.0;
-            
+
             let projection = dot(&candidate, vector);
             let orthogonal = candidate.clone() - projection * vector;
             let norm_val = norm(&orthogonal);
-            
+
             if norm_val < 1e-12 {
                 return Err(SpatialError::ComputationError(
                     "Could not find orthogonal vector".into(),
                 ));
             }
-            
+
             return Ok(orthogonal / norm_val);
         }
-        
+
         Ok(orthogonal / norm_val)
     }
 }
@@ -1185,7 +1187,7 @@ where
     let dim = a.len();
     assert_eq!(dim, b.len());
     assert_eq!(dim, c.len());
-    
+
     if dim < 3 {
         // For dimensions < 3, return unit vector
         let mut result = Array1::zeros(dim);
@@ -1194,23 +1196,23 @@ where
         }
         return result;
     }
-    
+
     // For high dimensions, compute normal using the Gram-Schmidt process
     // to find a vector orthogonal to both (b-a) and (c-a)
-    
+
     // Create vectors from a to b and a to c
     let ab: Array1<T> = (0..dim).map(|i| b[i] - a[i]).collect();
     let ac: Array1<T> = (0..dim).map(|i| c[i] - a[i]).collect();
-    
+
     // Find a vector orthogonal to both ab and ac using Gram-Schmidt
     // Start with a standard basis vector
     let mut result = Array1::zeros(dim);
-    
+
     // Try each standard basis vector until we find one that works
     for basis_idx in 0..dim {
         result.fill(T::zero());
         result[basis_idx] = T::one();
-        
+
         // Orthogonalize against ab
         let proj_ab = dot_generic(&result, &ab) / dot_generic(&ab, &ab);
         if proj_ab.is_finite() && !proj_ab.is_nan() {
@@ -1218,7 +1220,7 @@ where
                 result[i] = result[i] - proj_ab * ab[i];
             }
         }
-        
+
         // Orthogonalize against ac
         let proj_ac = dot_generic(&result, &ac) / dot_generic(&ac, &ac);
         if proj_ac.is_finite() && !proj_ac.is_nan() {
@@ -1226,7 +1228,7 @@ where
                 result[i] = result[i] - proj_ac * ac[i];
             }
         }
-        
+
         // Check if we have a valid non-zero result
         let norm_sq = dot_generic(&result, &result);
         if norm_sq > T::zero() {
@@ -1240,7 +1242,7 @@ where
             }
         }
     }
-    
+
     // Fallback: return first standard basis vector
     let mut fallback = Array1::zeros(dim);
     fallback[0] = T::one();

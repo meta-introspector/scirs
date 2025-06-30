@@ -4,9 +4,9 @@
 //! during training. Unlike Dropout which drops units, DropConnect drops individual weights.
 
 use ndarray::{Array, Dimension, ScalarOperand};
-use rand::rng;
 use ndarray_rand::rand_distr::{Bernoulli, Distribution};
 use num_traits::Float;
+use rand::rng;
 use std::fmt::Debug;
 
 use crate::error::{OptimError, Result};

@@ -735,7 +735,6 @@ fn process_descriptor_chunk_simd(
     descriptors2: &[Vec<u8>],
     params: &MatcherParams,
 ) -> Result<Vec<FeatureMatch>> {
-
     let mut chunk_matches = Vec::new();
 
     for (local_i, desc1) in chunk.iter().enumerate() {
@@ -789,7 +788,6 @@ fn process_descriptor_chunk_simd(
 ///
 /// * Vector of Hamming distances
 fn compute_hamming_distances_simd(desc1: &[u8], descriptors2: &[Vec<u8>]) -> Vec<f32> {
-
     let mut distances = Vec::with_capacity(descriptors2.len());
     let desc_len = desc1.len();
 
@@ -845,7 +843,6 @@ fn compute_hamming_distances_simd(desc1: &[u8], descriptors2: &[Vec<u8>]) -> Vec
 ///
 /// * Vector of Hamming distances for the batch
 fn compute_hamming_simd_optimized(desc1: &[u8], descriptors: &[&Vec<u8>]) -> Vec<f32> {
-
     let mut distances = Vec::with_capacity(descriptors.len());
     let desc_len = desc1.len();
 

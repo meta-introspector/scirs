@@ -303,60 +303,44 @@ impl BenchmarkSuite {
             let data = self.generate_test_data(size)?;
 
             // Benchmark mean calculation
-            metrics.push(self.benchmark_function(
-                "mean",
-                size,
-                || crate::descriptive::mean(&data.view()),
-            )?);
+            metrics.push(
+                self.benchmark_function("mean", size, || crate::descriptive::mean(&data.view()))?,
+            );
 
-            // Benchmark variance calculation  
-            metrics.push(self.benchmark_function(
-                "variance",
-                size,
-                || crate::descriptive::var(&data.view(), 1),
-            )?);
+            // Benchmark variance calculation
+            metrics.push(self.benchmark_function("variance", size, || {
+                crate::descriptive::var(&data.view(), 1)
+            })?);
 
             // Benchmark standard deviation
-            metrics.push(self.benchmark_function(
-                "std_dev",
-                size,
-                || crate::descriptive::std(&data.view(), 1),
-            )?);
+            metrics.push(self.benchmark_function("std_dev", size, || {
+                crate::descriptive::std(&data.view(), 1)
+            })?);
 
             // Benchmark SIMD variants if enabled
             if self.config.test_simd {
-                metrics.push(self.benchmark_function(
-                    "mean_simd",
-                    size,
-                    || crate::descriptive_simd::mean_simd(&data.view()),
-                )?);
+                metrics.push(self.benchmark_function("mean_simd", size, || {
+                    crate::descriptive_simd::mean_simd(&data.view())
+                })?);
 
-                metrics.push(self.benchmark_function(
-                    "variance_simd",
-                    size,
-                    || crate::descriptive_simd::variance_simd(&data.view(), 1),
-                )?);
+                metrics.push(self.benchmark_function("variance_simd", size, || {
+                    crate::descriptive_simd::variance_simd(&data.view(), 1)
+                })?);
 
-                metrics.push(self.benchmark_function(
-                    "std_simd",
-                    size,
-                    || crate::descriptive_simd::std_simd(&data.view(), 1),
-                )?);
+                metrics.push(self.benchmark_function("std_simd", size, || {
+                    crate::descriptive_simd::std_simd(&data.view(), 1)
+                })?);
             }
 
             // Benchmark parallel variants if enabled
             if self.config.test_parallel && size > 10000 {
-                metrics.push(self.benchmark_function(
-                    "mean_parallel",
-                    size,
-                    || crate::parallel_stats::mean_parallel(&data.view()),
-                )?);
+                metrics.push(self.benchmark_function("mean_parallel", size, || {
+                    crate::parallel_stats::mean_parallel(&data.view())
+                })?);
 
-                metrics.push(self.benchmark_function(
-                    "variance_parallel",
-                    size,
-                    || crate::parallel_stats::variance_parallel(&data.view(), 1),
-                )?);
+                metrics.push(self.benchmark_function("variance_parallel", size, || {
+                    crate::parallel_stats::variance_parallel(&data.view(), 1)
+                })?);
             }
         }
 
@@ -384,36 +368,31 @@ impl BenchmarkSuite {
             let data_y = self.generate_correlated_data(&data_x, 0.7)?; // 70% correlation
 
             // Benchmark Pearson correlation
-            metrics.push(self.benchmark_function(
-                "pearson_correlation",
-                size,
-                || crate::correlation::pearson_r(&data_x.view(), &data_y.view()),
-            )?);
+            metrics.push(self.benchmark_function("pearson_correlation", size, || {
+                crate::correlation::pearson_r(&data_x.view(), &data_y.view())
+            })?);
 
             // Benchmark Spearman correlation
-            metrics.push(self.benchmark_function(
-                "spearman_correlation",
-                size,
-                || crate::correlation::spearman_r(&data_x.view(), &data_y.view()),
-            )?);
+            metrics.push(self.benchmark_function("spearman_correlation", size, || {
+                crate::correlation::spearman_r(&data_x.view(), &data_y.view())
+            })?);
 
             // Benchmark SIMD correlation if available
             if self.config.test_simd {
-                metrics.push(self.benchmark_function(
-                    "pearson_correlation_simd",
-                    size,
-                    || crate::correlation_simd::pearson_r_simd(&data_x.view(), &data_y.view()),
-                )?);
+                metrics.push(
+                    self.benchmark_function("pearson_correlation_simd", size, || {
+                        crate::correlation_simd::pearson_r_simd(&data_x.view(), &data_y.view())
+                    })?,
+                );
             }
 
             // Benchmark correlation matrix for multivariate data
-            if size <= 100000 { // Limit matrix size for memory
+            if size <= 100000 {
+                // Limit matrix size for memory
                 let matrix_data = self.generate_matrix_data(size, 5)?; // 5 variables
-                metrics.push(self.benchmark_function(
-                    "correlation_matrix",
-                    size,
-                    || crate::correlation::corrcoef(&matrix_data.view(), "pearson"),
-                )?);
+                metrics.push(self.benchmark_function("correlation_matrix", size, || {
+                    crate::correlation::corrcoef(&matrix_data.view(), "pearson")
+                })?);
             }
         }
 
@@ -438,41 +417,21 @@ impl BenchmarkSuite {
         for &size in &self.config.data_sizes {
             // Benchmark normal distribution operations
             let normal = crate::distributions::norm(0.0f64, 1.0)?;
-            
-            metrics.push(self.benchmark_function(
-                "normal_pdf_single",
-                1,
-                || Ok(normal.pdf(0.5)),
-            )?);
 
-            metrics.push(self.benchmark_function(
-                "normal_cdf_single", 
-                1,
-                || Ok(normal.cdf(1.96)),
-            )?);
+            metrics.push(self.benchmark_function("normal_pdf_single", 1, || Ok(normal.pdf(0.5)))?);
+
+            metrics.push(self.benchmark_function("normal_cdf_single", 1, || Ok(normal.cdf(1.96)))?);
 
             // Benchmark random sample generation
-            metrics.push(self.benchmark_function(
-                "normal_rvs",
-                size,
-                || normal.rvs(size),
-            )?);
+            metrics.push(self.benchmark_function("normal_rvs", size, || normal.rvs(size))?);
 
             // Benchmark other distributions if size is reasonable
             if size <= 100000 {
                 let gamma = crate::distributions::gamma(2.0f64, 1.0, 0.0)?;
-                metrics.push(self.benchmark_function(
-                    "gamma_rvs",
-                    size,
-                    || gamma.rvs(size),
-                )?);
+                metrics.push(self.benchmark_function("gamma_rvs", size, || gamma.rvs(size))?);
 
                 let beta = crate::distributions::beta(2.0f64, 3.0, 0.0, 1.0)?;
-                metrics.push(self.benchmark_function(
-                    "beta_rvs",
-                    size,
-                    || beta.rvs(size),
-                )?);
+                metrics.push(self.benchmark_function("beta_rvs", size, || beta.rvs(size))?);
             }
         }
 
@@ -578,15 +537,17 @@ impl BenchmarkSuite {
             StatsError::ComputationError(format!("Failed to create normal distribution: {}", e))
         })?;
 
-        let data: Vec<f64> = (0..size)
-            .map(|_| normal.sample(&mut rng))
-            .collect();
+        let data: Vec<f64> = (0..size).map(|_| normal.sample(&mut rng)).collect();
 
         Ok(Array1::from_vec(data))
     }
 
     /// Generate correlated test data
-    fn generate_correlated_data(&self, base_data: &Array1<f64>, correlation: f64) -> StatsResult<Array1<f64>> {
+    fn generate_correlated_data(
+        &self,
+        base_data: &Array1<f64>,
+        correlation: f64,
+    ) -> StatsResult<Array1<f64>> {
         use rand::{rng, Rng};
         use rand_distr::{Distribution, Normal};
 
@@ -596,8 +557,9 @@ impl BenchmarkSuite {
         })?;
 
         let noise_factor = (1.0 - correlation * correlation).sqrt();
-        
-        let correlated_data: Vec<f64> = base_data.iter()
+
+        let correlated_data: Vec<f64> = base_data
+            .iter()
             .map(|&x| correlation * x + noise_factor * normal.sample(&mut rng))
             .collect();
 
@@ -614,42 +576,47 @@ impl BenchmarkSuite {
             StatsError::ComputationError(format!("Failed to create normal distribution: {}", e))
         })?;
 
-        let data: Vec<f64> = (0..rows * cols)
-            .map(|_| normal.sample(&mut rng))
-            .collect();
+        let data: Vec<f64> = (0..rows * cols).map(|_| normal.sample(&mut rng)).collect();
 
-        Array2::from_shape_vec((rows, cols), data).map_err(|e| {
-            StatsError::ComputationError(format!("Failed to create matrix: {}", e))
-        })
+        Array2::from_shape_vec((rows, cols), data)
+            .map_err(|e| StatsError::ComputationError(format!("Failed to create matrix: {}", e)))
     }
 
     /// Calculate standard deviation of timing measurements
     fn calculate_std_dev(&self, values: &[f64]) -> f64 {
         let mean = values.iter().sum::<f64>() / values.len() as f64;
-        let variance = values.iter()
-            .map(|x| (x - mean).powi(2))
-            .sum::<f64>() / values.len() as f64;
+        let variance = values.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / values.len() as f64;
         variance.sqrt()
     }
 
     /// Detect algorithm configuration used
     fn detect_algorithm_config(&self, function_name: &str, data_size: usize) -> AlgorithmConfig {
-        let simd_enabled = function_name.contains("simd") || 
-                          (data_size > 64 && scirs2_core::simd_ops::PlatformCapabilities::detect().simd_available);
-        let parallel_enabled = function_name.contains("parallel") || 
-                              (data_size > 10000 && num_threads() > 1);
+        let simd_enabled = function_name.contains("simd")
+            || (data_size > 64
+                && scirs2_core::simd_ops::PlatformCapabilities::detect().simd_available);
+        let parallel_enabled =
+            function_name.contains("parallel") || (data_size > 10000 && num_threads() > 1);
 
         AlgorithmConfig {
             simd_enabled,
             parallel_enabled,
-            thread_count: if parallel_enabled { Some(num_threads()) } else { None },
+            thread_count: if parallel_enabled {
+                Some(num_threads())
+            } else {
+                None
+            },
             simd_width: if simd_enabled { Some(8) } else { None }, // Typical SIMD width
             algorithm_variant: function_name.to_string(),
         }
     }
 
     /// Get baseline performance comparison
-    fn get_baseline_comparison(&self, _function_name: &str, _data_size: usize, current_time_ns: f64) -> Option<f64> {
+    fn get_baseline_comparison(
+        &self,
+        _function_name: &str,
+        _data_size: usize,
+        current_time_ns: f64,
+    ) -> Option<f64> {
         // This would typically compare against stored baseline measurements
         // For now, we'll simulate a baseline comparison
         let simulated_baseline = current_time_ns * 1.2; // Assume we're 20% faster than baseline
@@ -657,7 +624,10 @@ impl BenchmarkSuite {
     }
 
     /// Analyze performance across all benchmarks
-    fn analyze_performance(&self, metrics: &[BenchmarkMetrics]) -> StatsResult<PerformanceAnalysis> {
+    fn analyze_performance(
+        &self,
+        metrics: &[BenchmarkMetrics],
+    ) -> StatsResult<PerformanceAnalysis> {
         let mut simd_effectiveness = HashMap::new();
         let mut parallel_effectiveness = HashMap::new();
         let mut regressions = Vec::new();
@@ -666,13 +636,14 @@ impl BenchmarkSuite {
         for metric in metrics {
             if metric.algorithm_config.simd_enabled {
                 let base_name = metric.function_name.replace("_simd", "");
-                if let Some(base_metric) = metrics.iter().find(|m| 
-                    m.function_name == base_name && 
-                    m.data_size == metric.data_size &&
-                    !m.algorithm_config.simd_enabled
-                ) {
+                if let Some(base_metric) = metrics.iter().find(|m| {
+                    m.function_name == base_name
+                        && m.data_size == metric.data_size
+                        && !m.algorithm_config.simd_enabled
+                }) {
                     let improvement = base_metric.timing.mean_ns / metric.timing.mean_ns;
-                    simd_effectiveness.insert(format!("{}_{}", base_name, metric.data_size), improvement);
+                    simd_effectiveness
+                        .insert(format!("{}_{}", base_name, metric.data_size), improvement);
                 }
             }
         }
@@ -681,13 +652,14 @@ impl BenchmarkSuite {
         for metric in metrics {
             if metric.algorithm_config.parallel_enabled {
                 let base_name = metric.function_name.replace("_parallel", "");
-                if let Some(base_metric) = metrics.iter().find(|m| 
-                    m.function_name == base_name && 
-                    m.data_size == metric.data_size &&
-                    !m.algorithm_config.parallel_enabled
-                ) {
+                if let Some(base_metric) = metrics.iter().find(|m| {
+                    m.function_name == base_name
+                        && m.data_size == metric.data_size
+                        && !m.algorithm_config.parallel_enabled
+                }) {
                     let improvement = base_metric.timing.mean_ns / metric.timing.mean_ns;
-                    parallel_effectiveness.insert(format!("{}_{}", base_name, metric.data_size), improvement);
+                    parallel_effectiveness
+                        .insert(format!("{}_{}", base_name, metric.data_size), improvement);
                 }
             }
         }
@@ -709,19 +681,20 @@ impl BenchmarkSuite {
         }
 
         // Calculate overall performance score
-        let mean_throughput = metrics.iter()
-            .map(|m| m.throughput)
-            .sum::<f64>() / metrics.len() as f64;
+        let mean_throughput =
+            metrics.iter().map(|m| m.throughput).sum::<f64>() / metrics.len() as f64;
         let overall_score = (mean_throughput / 1_000_000.0).min(100.0); // Normalize to 0-100
 
         // Calculate memory efficiency
-        let memory_efficiency = metrics.iter()
+        let memory_efficiency = metrics
+            .iter()
             .filter_map(|m| m.memory.as_ref())
             .map(|mem| {
                 // Simple efficiency metric based on fragmentation and allocation overhead
                 100.0 * (1.0 - mem.fragmentation_score)
             })
-            .sum::<f64>() / metrics.len() as f64;
+            .sum::<f64>()
+            / metrics.len() as f64;
 
         // Analyze scaling characteristics
         let scaling_analysis = self.analyze_scaling(metrics)?;
@@ -745,7 +718,8 @@ impl BenchmarkSuite {
         // Group metrics by function name
         let mut function_groups: HashMap<String, Vec<&BenchmarkMetrics>> = HashMap::new();
         for metric in metrics {
-            function_groups.entry(metric.function_name.clone())
+            function_groups
+                .entry(metric.function_name.clone())
                 .or_insert_with(Vec::new)
                 .push(metric);
         }
@@ -793,12 +767,8 @@ impl BenchmarkSuite {
         let times: Vec<f64> = metrics.iter().map(|m| m.timing.mean_ns).collect();
 
         // Simple heuristic classification based on growth rate
-        let size_ratios: Vec<f64> = sizes.windows(2)
-            .map(|w| w[1] / w[0])
-            .collect();
-        let time_ratios: Vec<f64> = times.windows(2)
-            .map(|w| w[1] / w[0])
-            .collect();
+        let size_ratios: Vec<f64> = sizes.windows(2).map(|w| w[1] / w[0]).collect();
+        let time_ratios: Vec<f64> = times.windows(2).map(|w| w[1] / w[0]).collect();
 
         if time_ratios.is_empty() {
             return ComplexityClass::Unknown;
@@ -829,7 +799,8 @@ impl BenchmarkSuite {
 
     /// Analyze memory scaling characteristics
     fn analyze_memory_scaling(&self, metrics: &[&BenchmarkMetrics]) -> Option<MemoryScaling> {
-        let memory_data: Vec<_> = metrics.iter()
+        let memory_data: Vec<_> = metrics
+            .iter()
             .filter_map(|m| m.memory.as_ref().map(|mem| (m.data_size, mem.peak_bytes)))
             .collect();
 
@@ -838,7 +809,8 @@ impl BenchmarkSuite {
         }
 
         // Simple linear regression to estimate scaling factor
-        let (sizes, memories): (Vec<f64>, Vec<f64>) = memory_data.iter()
+        let (sizes, memories): (Vec<f64>, Vec<f64>) = memory_data
+            .iter()
             .map(|(size, mem)| (*size as f64, *mem as f64))
             .unzip();
 
@@ -906,7 +878,10 @@ impl BenchmarkSuite {
             recommendations.push(OptimizationRecommendation {
                 priority: 5,
                 target: regression.function_name.clone(),
-                strategy: format!("Investigate {:.1}% performance regression", regression.regression_percent),
+                strategy: format!(
+                    "Investigate {:.1}% performance regression",
+                    regression.regression_percent
+                ),
                 expected_impact: "Restore baseline performance".to_string(),
                 complexity: "Variable".to_string(),
             });
@@ -975,7 +950,7 @@ mod tests {
         assert_eq!(suite.config.iterations, 100);
     }
 
-    #[test] 
+    #[test]
     fn test_test_data_generation() {
         let suite = BenchmarkSuite::new();
         let data = suite.generate_test_data(1000).unwrap();

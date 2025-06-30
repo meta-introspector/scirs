@@ -3,19 +3,19 @@
 //! This example demonstrates deep integration between scirs2-optim and Burn,
 //! showing how to use scirs2-optim optimizers with Burn tensors and training loops.
 
-use scirs2_optim::{
-    optimizers::{Adam, SGD, RMSprop, Optimizer as OptimizerTrait},
-    unified_api::{OptimizerConfig, OptimizerFactory, Parameter},
-    schedulers::{ExponentialDecay, CosineAnnealing, ReduceOnPlateau, Scheduler},
-    regularizers::{L2Regularizer, DropoutLayer, Regularizer},
-    gradient_processing::{GradientClipper, ClippingStrategy},
-    error::Result as OptimResult,
-};
 use ndarray::{Array1, Array2, Array3};
+use scirs2_optim::{
+    error::Result as OptimResult,
+    gradient_processing::{ClippingStrategy, GradientClipper},
+    optimizers::{Adam, Optimizer as OptimizerTrait, RMSprop, SGD},
+    regularizers::{DropoutLayer, L2Regularizer, Regularizer},
+    schedulers::{CosineAnnealing, ExponentialDecay, ReduceOnPlateau, Scheduler},
+    unified_api::{OptimizerConfig, OptimizerFactory, Parameter},
+};
 use std::collections::HashMap;
 
 /// Burn tensor compatibility layer
-/// 
+///
 /// This module provides conversion utilities between Burn tensors and ndarray arrays
 /// to enable seamless integration with scirs2-optim optimizers.
 pub mod burn_bridge {
@@ -92,16 +92,16 @@ pub mod activations {
 
     pub fn softmax(input: &Array2<f64>) -> Array2<f64> {
         let mut output = Array2::zeros(input.raw_dim());
-        
+
         for (i, row) in input.outer_iter().enumerate() {
             let max_val = row.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
             let exp_row: Array1<f64> = row.mapv(|x| (x - max_val).exp());
             let sum_exp = exp_row.sum();
-            
+
             let softmax_row = exp_row / sum_exp;
             output.row_mut(i).assign(&softmax_row);
         }
-        
+
         output
     }
 }
@@ -148,7 +148,7 @@ impl BurnNeuralLayer {
             ActivationType::ReLU => (2.0 / input_dim as f64).sqrt(),
             _ => (2.0 / (input_dim + output_dim) as f64).sqrt(),
         };
-        
+
         let weights_data: Vec<f64> = (0..input_dim * output_dim)
             .map(|i| {
                 // Simple deterministic initialization for reproducible testing
@@ -156,16 +156,16 @@ impl BurnNeuralLayer {
                 val * scale
             })
             .collect();
-        
+
         let bias_data: Vec<f64> = (0..output_dim).map(|_| 0.0).collect();
-        
+
         let weights = Parameter::new(
             Array2::from_shape_vec((input_dim, output_dim), weights_data)
                 .expect("Invalid weight shape")
                 .into_dyn(),
             &format!("{}.weight", name),
         );
-        
+
         let bias = Parameter::new(
             Array1::from_vec(bias_data).into_dyn(),
             &format!("{}.bias", name),
@@ -198,22 +198,30 @@ impl BurnNeuralLayer {
     /// Forward pass with activation
     pub fn forward(&self, input: &Array2<f64>, training: bool) -> OptimResult<Array2<f64>> {
         // Linear transformation
-        let weights_2d = self.weights.data()
+        let weights_2d = self
+            .weights
+            .data()
             .clone()
             .into_dimensionality::<ndarray::Ix2>()
-            .map_err(|_| scirs2_optim::error::OptimError::DimensionMismatch(
-                "Weight tensor dimension mismatch".to_string()
-            ))?;
-        
-        let bias_1d = self.bias.data()
+            .map_err(|_| {
+                scirs2_optim::error::OptimError::DimensionMismatch(
+                    "Weight tensor dimension mismatch".to_string(),
+                )
+            })?;
+
+        let bias_1d = self
+            .bias
+            .data()
             .clone()
             .into_dimensionality::<ndarray::Ix1>()
-            .map_err(|_| scirs2_optim::error::OptimError::DimensionMismatch(
-                "Bias tensor dimension mismatch".to_string()
-            ))?;
+            .map_err(|_| {
+                scirs2_optim::error::OptimError::DimensionMismatch(
+                    "Bias tensor dimension mismatch".to_string(),
+                )
+            })?;
 
         let linear_output = input.dot(&weights_2d) + &bias_1d;
-        
+
         // Apply activation
         let activated_output = match self.activation {
             ActivationType::ReLU => activations::relu(&linear_output),
@@ -251,60 +259,65 @@ impl BurnNeuralLayer {
 
         // Apply activation derivative
         let grad_linear = match self.activation {
-            ActivationType::ReLU => {
-                &grad_activated * &activations::relu_derivative(pre_activation)
-            },
+            ActivationType::ReLU => &grad_activated * &activations::relu_derivative(pre_activation),
             ActivationType::Sigmoid => {
                 &grad_activated * &activations::sigmoid_derivative(pre_activation)
-            },
-            ActivationType::Tanh => {
-                &grad_activated * &activations::tanh_derivative(pre_activation)
-            },
+            }
+            ActivationType::Tanh => &grad_activated * &activations::tanh_derivative(pre_activation),
             ActivationType::Linear => grad_activated,
             ActivationType::Softmax => {
                 // Simplified softmax gradient (assuming cross-entropy loss)
                 grad_activated
-            },
+            }
         };
 
         // Compute parameter gradients
         let grad_weights = input.t().dot(&grad_linear);
         let grad_bias = grad_linear.sum_axis(ndarray::Axis(0));
-        
+
         // Apply L2 regularization to weight gradients
         let final_grad_weights = if let Some(ref l2_reg) = self.l2_regularizer {
-            let weights_2d = self.weights.data()
+            let weights_2d = self
+                .weights
+                .data()
                 .clone()
                 .into_dimensionality::<ndarray::Ix2>()
-                .map_err(|_| scirs2_optim::error::OptimError::DimensionMismatch(
-                    "Weight tensor dimension mismatch".to_string()
-                ))?;
-            
+                .map_err(|_| {
+                    scirs2_optim::error::OptimError::DimensionMismatch(
+                        "Weight tensor dimension mismatch".to_string(),
+                    )
+                })?;
+
             let l2_grad = l2_reg.compute_gradient(&weights_2d.into_dyn())?;
-            let l2_grad_2d = l2_grad.into_dimensionality::<ndarray::Ix2>()
-                .map_err(|_| scirs2_optim::error::OptimError::DimensionMismatch(
-                    "L2 gradient dimension mismatch".to_string()
-                ))?;
-            
+            let l2_grad_2d = l2_grad.into_dimensionality::<ndarray::Ix2>().map_err(|_| {
+                scirs2_optim::error::OptimError::DimensionMismatch(
+                    "L2 gradient dimension mismatch".to_string(),
+                )
+            })?;
+
             grad_weights + l2_grad_2d
         } else {
             grad_weights
         };
-        
+
         // Compute input gradient
-        let weights_2d = self.weights.data()
+        let weights_2d = self
+            .weights
+            .data()
             .clone()
             .into_dimensionality::<ndarray::Ix2>()
-            .map_err(|_| scirs2_optim::error::OptimError::DimensionMismatch(
-                "Weight tensor dimension mismatch".to_string()
-            ))?;
-        
+            .map_err(|_| {
+                scirs2_optim::error::OptimError::DimensionMismatch(
+                    "Weight tensor dimension mismatch".to_string(),
+                )
+            })?;
+
         let grad_input = grad_linear.dot(&weights_2d.t());
-        
+
         // Set gradients in parameters
         self.weights.set_grad(final_grad_weights.into_dyn());
         self.bias.set_grad(grad_bias.into_dyn());
-        
+
         Ok(grad_input)
     }
 
@@ -316,13 +329,17 @@ impl BurnNeuralLayer {
     /// Get regularization loss
     pub fn regularization_loss(&self) -> OptimResult<f64> {
         if let Some(ref l2_reg) = self.l2_regularizer {
-            let weights_2d = self.weights.data()
+            let weights_2d = self
+                .weights
+                .data()
                 .clone()
                 .into_dimensionality::<ndarray::Ix2>()
-                .map_err(|_| scirs2_optim::error::OptimError::DimensionMismatch(
-                    "Weight tensor dimension mismatch".to_string()
-                ))?;
-            
+                .map_err(|_| {
+                    scirs2_optim::error::OptimError::DimensionMismatch(
+                        "Weight tensor dimension mismatch".to_string(),
+                    )
+                })?;
+
             l2_reg.compute_loss(&weights_2d.into_dyn())
         } else {
             Ok(0.0)
@@ -357,12 +374,12 @@ impl BurnNeuralNetwork {
     pub fn new(architecture: Vec<usize>, activations: Vec<ActivationType>) -> OptimResult<Self> {
         if architecture.len() != activations.len() + 1 {
             return Err(scirs2_optim::error::OptimError::InvalidConfig(
-                "Architecture length must be activations length + 1".to_string()
+                "Architecture length must be activations length + 1".to_string(),
             ));
         }
 
         let mut layers = Vec::new();
-        
+
         for i in 0..architecture.len() - 1 {
             let layer = BurnNeuralLayer::new(
                 architecture[i],
@@ -401,7 +418,7 @@ impl BurnNeuralNetwork {
             current = layer.forward(&current, self.training_mode)?;
             activations.push(current.clone());
         }
-        
+
         Ok((current, activations))
     }
 
@@ -414,7 +431,7 @@ impl BurnNeuralNetwork {
     ) -> OptimResult<(f64, Vec<Array2<f64>>)> {
         // Forward pass to compute activations and pre-activations
         let (output, activations) = self.forward(input.clone())?;
-        
+
         // Compute loss and initial gradient
         let (loss, mut grad_output) = match loss_type {
             LossType::MeanSquaredError => {
@@ -422,7 +439,7 @@ impl BurnNeuralNetwork {
                 let mse_loss = (&diff * &diff).mean().unwrap_or(0.0);
                 let grad = &diff * (2.0 / output.nrows() as f64);
                 (mse_loss, grad)
-            },
+            }
             LossType::CrossEntropy => {
                 // Simplified cross-entropy for softmax output
                 let epsilon = 1e-15;
@@ -431,7 +448,7 @@ impl BurnNeuralNetwork {
                 let ce_loss = -(target * &log_output).mean().unwrap_or(0.0);
                 let grad = (&clipped_output - target) / output.nrows() as f64;
                 (ce_loss, grad)
-            },
+            }
         };
 
         // Add regularization loss
@@ -442,7 +459,7 @@ impl BurnNeuralNetwork {
 
         // Backward pass through layers
         let mut pre_activations = Vec::new();
-        
+
         // Store pre-activations (simplified - would need actual pre-activation storage)
         for i in 0..activations.len() - 1 {
             pre_activations.push(activations[i + 1].clone());
@@ -451,7 +468,7 @@ impl BurnNeuralNetwork {
         for (i, layer) in self.layers.iter_mut().enumerate().rev() {
             let layer_input = &activations[i];
             let pre_activation = &pre_activations[i];
-            
+
             grad_output = layer.backward(
                 layer_input,
                 &grad_output,
@@ -486,7 +503,10 @@ impl BurnNeuralNetwork {
 
     /// Get total parameter count
     pub fn parameter_count(&self) -> usize {
-        self.layers.iter().map(|layer| layer.parameter_count()).sum()
+        self.layers
+            .iter()
+            .map(|layer| layer.parameter_count())
+            .sum()
     }
 
     /// Get network architecture
@@ -496,14 +516,18 @@ impl BurnNeuralNetwork {
 
     /// Get layer information
     pub fn layer_info(&self) -> Vec<String> {
-        self.layers.iter().map(|layer| {
-            format!("{}: {} -> {}, activation: {:?}",
-                layer.name(),
-                layer.input_dim,
-                layer.output_dim,
-                layer.activation
-            )
-        }).collect()
+        self.layers
+            .iter()
+            .map(|layer| {
+                format!(
+                    "{}: {} -> {}, activation: {:?}",
+                    layer.name(),
+                    layer.input_dim,
+                    layer.output_dim,
+                    layer.activation
+                )
+            })
+            .collect()
     }
 }
 
@@ -601,17 +625,14 @@ impl BurnTrainer {
 
         // Add gradient clipping if configured
         if let Some(ref clip_config) = config.grad_clip_config {
-            network = network.with_gradient_clipping(
-                clip_config.clip_value,
-                clip_config.strategy.clone(),
-            );
+            network = network
+                .with_gradient_clipping(clip_config.clip_value, clip_config.strategy.clone());
         }
 
         // Create optimizer
-        let optimizer_config = OptimizerConfig::new(config.learning_rate)
-            .weight_decay(0.0001);
+        let optimizer_config = OptimizerConfig::new(config.learning_rate).weight_decay(0.0001);
 
-        let optimizer: Box<dyn scirs2_optim::unified_api::UnifiedOptimizer<f64>> = 
+        let optimizer: Box<dyn scirs2_optim::unified_api::UnifiedOptimizer<f64>> =
             match config.optimizer_type.as_str() {
                 "adam" => Box::new(OptimizerFactory::adam(optimizer_config)),
                 "sgd" => Box::new(OptimizerFactory::sgd(optimizer_config)),
@@ -620,28 +641,29 @@ impl BurnTrainer {
             };
 
         // Create scheduler if configured
-        let scheduler: Option<Box<dyn Scheduler<f64>>> = if let Some(ref sched_config) = config.scheduler_config {
-            match sched_config.scheduler_type.as_str() {
-                "exponential" => Some(Box::new(ExponentialDecay::new(
-                    config.learning_rate,
-                    sched_config.decay_rate,
-                ))),
-                "cosine" => Some(Box::new(CosineAnnealing::new(
-                    config.learning_rate,
-                    sched_config.min_lr.unwrap_or(0.0),
-                    config.epochs,
-                ))),
-                "reduce_on_plateau" => Some(Box::new(ReduceOnPlateau::new(
-                    config.learning_rate,
-                    sched_config.factor.unwrap_or(0.5),
-                    sched_config.patience.unwrap_or(10),
-                    sched_config.min_lr.unwrap_or(1e-8),
-                ))),
-                _ => None,
-            }
-        } else {
-            None
-        };
+        let scheduler: Option<Box<dyn Scheduler<f64>>> =
+            if let Some(ref sched_config) = config.scheduler_config {
+                match sched_config.scheduler_type.as_str() {
+                    "exponential" => Some(Box::new(ExponentialDecay::new(
+                        config.learning_rate,
+                        sched_config.decay_rate,
+                    ))),
+                    "cosine" => Some(Box::new(CosineAnnealing::new(
+                        config.learning_rate,
+                        sched_config.min_lr.unwrap_or(0.0),
+                        config.epochs,
+                    ))),
+                    "reduce_on_plateau" => Some(Box::new(ReduceOnPlateau::new(
+                        config.learning_rate,
+                        sched_config.factor.unwrap_or(0.5),
+                        sched_config.patience.unwrap_or(10),
+                        sched_config.min_lr.unwrap_or(1e-8),
+                    ))),
+                    _ => None,
+                }
+            } else {
+                None
+            };
 
         Ok(Self {
             network,
@@ -661,7 +683,7 @@ impl BurnTrainer {
         train_targets: &Array2<f64>,
     ) -> OptimResult<BurnTrainingResults> {
         let start_time = std::time::Instant::now();
-        
+
         // Split data into training and validation
         let split_idx = ((1.0 - self.config.validation_split) * train_data.nrows() as f64) as usize;
         let (train_x, val_x) = train_data.split_at(ndarray::Axis(0), split_idx);
@@ -671,7 +693,13 @@ impl BurnTrainer {
         println!("   Architecture: {:?}", self.network.architecture());
         println!("   Parameters: {}", self.network.parameter_count());
         println!("   Optimizer: {}", self.config.optimizer_type);
-        println!("   Scheduler: {:?}", self.config.scheduler_config.as_ref().map(|s| &s.scheduler_type));
+        println!(
+            "   Scheduler: {:?}",
+            self.config
+                .scheduler_config
+                .as_ref()
+                .map(|s| &s.scheduler_type)
+        );
         println!("   Loss Type: {:?}", self.config.loss_type);
         println!("   Epochs: {}", self.config.epochs);
         println!("   Batch Size: {}", self.config.batch_size);
@@ -684,22 +712,22 @@ impl BurnTrainer {
 
         for epoch in 0..self.config.epochs {
             let epoch_start = std::time::Instant::now();
-            
+
             // Training phase
             self.network.set_training(true);
             let train_loss = self.train_epoch(&train_x.to_owned(), &train_y.to_owned())?;
-            
+
             // Validation phase
             self.network.set_training(false);
             let val_loss = self.validate(&val_x.to_owned(), &val_y.to_owned())?;
-            
+
             let epoch_time = epoch_start.elapsed();
-            
+
             // Record history
             self.train_history.train_losses.push(train_loss);
             self.train_history.val_losses.push(val_loss);
             self.train_history.epoch_times.push(epoch_time);
-            
+
             let current_lr = if let Some(ref scheduler) = self.scheduler {
                 scheduler.get_lr()
             } else {
@@ -710,8 +738,10 @@ impl BurnTrainer {
             // Update learning rate scheduler
             if let Some(ref mut scheduler) = self.scheduler {
                 // For ReduceOnPlateau, we need to pass the validation loss
-                if let Some(reduce_scheduler) = scheduler.as_any_mut()
-                    .downcast_mut::<ReduceOnPlateau<f64>>() {
+                if let Some(reduce_scheduler) = scheduler
+                    .as_any_mut()
+                    .downcast_mut::<ReduceOnPlateau<f64>>()
+                {
                     reduce_scheduler.step_with_loss(val_loss);
                 } else {
                     scheduler.step();
@@ -740,10 +770,18 @@ impl BurnTrainer {
         }
 
         let total_training_time = start_time.elapsed();
-        let final_train_loss = self.train_history.train_losses.last().copied().unwrap_or(0.0);
+        let final_train_loss = self
+            .train_history
+            .train_losses
+            .last()
+            .copied()
+            .unwrap_or(0.0);
         let final_val_loss = self.train_history.val_losses.last().copied().unwrap_or(0.0);
 
-        println!("✅ Training completed in {:.2}s", total_training_time.as_secs_f64());
+        println!(
+            "✅ Training completed in {:.2}s",
+            total_training_time.as_secs_f64()
+        );
         println!("   Final Train Loss: {:.6}", final_train_loss);
         println!("   Final Validation Loss: {:.6}", final_val_loss);
         println!("   Best Validation Loss: {:.6}", self.best_loss);
@@ -755,14 +793,18 @@ impl BurnTrainer {
             training_time: total_training_time,
             epochs_trained: self.train_history.train_losses.len(),
             converged: final_val_loss < 0.01,
-            early_stopped: self.config.early_stopping_patience.is_some() && 
-                           self.early_stopping_counter >= self.config.early_stopping_patience.unwrap(),
+            early_stopped: self.config.early_stopping_patience.is_some()
+                && self.early_stopping_counter >= self.config.early_stopping_patience.unwrap(),
             history: self.train_history.clone(),
         })
     }
 
     /// Train one epoch
-    fn train_epoch(&mut self, train_data: &Array2<f64>, train_targets: &Array2<f64>) -> OptimResult<f64> {
+    fn train_epoch(
+        &mut self,
+        train_data: &Array2<f64>,
+        train_targets: &Array2<f64>,
+    ) -> OptimResult<f64> {
         let mut epoch_loss = 0.0;
         let mut batch_count = 0;
         let batch_size = self.config.batch_size;
@@ -770,11 +812,19 @@ impl BurnTrainer {
 
         for batch_start in (0..n_samples).step_by(batch_size) {
             let batch_end = (batch_start + batch_size).min(n_samples);
-            
-            let batch_data = train_data.slice(ndarray::s![batch_start..batch_end, ..]).to_owned();
-            let batch_targets = train_targets.slice(ndarray::s![batch_start..batch_end, ..]).to_owned();
 
-            let (loss, _) = self.network.backward(&batch_data, &batch_targets, self.config.loss_type.clone())?;
+            let batch_data = train_data
+                .slice(ndarray::s![batch_start..batch_end, ..])
+                .to_owned();
+            let batch_targets = train_targets
+                .slice(ndarray::s![batch_start..batch_end, ..])
+                .to_owned();
+
+            let (loss, _) = self.network.backward(
+                &batch_data,
+                &batch_targets,
+                self.config.loss_type.clone(),
+            )?;
             epoch_loss += loss;
             batch_count += 1;
 
@@ -790,18 +840,18 @@ impl BurnTrainer {
     /// Validate the model
     fn validate(&self, val_data: &Array2<f64>, val_targets: &Array2<f64>) -> OptimResult<f64> {
         let (output, _) = self.network.forward(val_data.clone())?;
-        
+
         let loss = match self.config.loss_type {
             LossType::MeanSquaredError => {
                 let diff = &output - val_targets;
                 (&diff * &diff).mean().unwrap_or(0.0)
-            },
+            }
             LossType::CrossEntropy => {
                 let epsilon = 1e-15;
                 let clipped_output = output.mapv(|x| x.max(epsilon).min(1.0 - epsilon));
                 let log_output = clipped_output.mapv(|x| x.ln());
                 -(val_targets * &log_output).mean().unwrap_or(0.0)
-            },
+            }
         };
 
         Ok(loss)
@@ -834,7 +884,7 @@ pub fn generate_classification_data(
     noise_level: f64,
 ) -> (Array2<f64>, Array2<f64>) {
     let mut rng_state = 42u64;
-    
+
     // Generate random input data
     let mut input_data = Vec::new();
     for _i in 0..n_samples * n_features {
@@ -842,9 +892,9 @@ pub fn generate_classification_data(
         let random_val = (rng_state % 10000) as f64 / 10000.0 - 0.5;
         input_data.push(random_val);
     }
-    
-    let input = Array2::from_shape_vec((n_samples, n_features), input_data)
-        .expect("Invalid input shape");
+
+    let input =
+        Array2::from_shape_vec((n_samples, n_features), input_data).expect("Invalid input shape");
 
     // Generate one-hot encoded targets
     let mut target_data = vec![0.0; n_samples * n_classes];
@@ -854,10 +904,10 @@ pub fn generate_classification_data(
         for j in 0..n_features {
             class_score += input[[i, j]] * (j + 1) as f64;
         }
-        
+
         let class = ((class_score + 1.0) * n_classes as f64 / 2.0) as usize % n_classes;
         target_data[i * n_classes + class] = 1.0;
-        
+
         // Add label noise
         if noise_level > 0.0 {
             rng_state = rng_state.wrapping_mul(1103515245).wrapping_add(12345);
@@ -868,9 +918,9 @@ pub fn generate_classification_data(
             }
         }
     }
-    
-    let targets = Array2::from_shape_vec((n_samples, n_classes), target_data)
-        .expect("Invalid target shape");
+
+    let targets =
+        Array2::from_shape_vec((n_samples, n_classes), target_data).expect("Invalid target shape");
 
     (input, targets)
 }
@@ -923,21 +973,33 @@ fn main() -> OptimResult<()> {
 
     // Create and train the model
     let mut trainer = BurnTrainer::new(architecture, activations, config)?;
-    
+
     let training_results = trainer.train(&train_data, &train_targets)?;
-    
+
     println!("\n📈 Training Results:");
-    println!("   Final Training Loss: {:.6}", training_results.final_train_loss);
-    println!("   Final Validation Loss: {:.6}", training_results.final_val_loss);
-    println!("   Best Validation Loss: {:.6}", training_results.best_val_loss);
-    println!("   Training Time: {:.2}s", training_results.training_time.as_secs_f64());
+    println!(
+        "   Final Training Loss: {:.6}",
+        training_results.final_train_loss
+    );
+    println!(
+        "   Final Validation Loss: {:.6}",
+        training_results.final_val_loss
+    );
+    println!(
+        "   Best Validation Loss: {:.6}",
+        training_results.best_val_loss
+    );
+    println!(
+        "   Training Time: {:.2}s",
+        training_results.training_time.as_secs_f64()
+    );
     println!("   Epochs Trained: {}", training_results.epochs_trained);
     println!("   Converged: {}", training_results.converged);
     println!("   Early Stopped: {}", training_results.early_stopped);
 
     // Demonstrate different optimizers and configurations
     println!("\n🔄 Comparing Different Configurations:");
-    
+
     let test_configs = vec![
         ("SGD with Momentum", "sgd", "exponential", None),
         ("RMSprop", "rmsprop", "cosine", Some(0.5)),
@@ -972,10 +1034,11 @@ fn main() -> OptimResult<()> {
             vec![ActivationType::ReLU, ActivationType::Softmax],
             config,
         )?;
-        
+
         let results = trainer.train(&train_data, &train_targets)?;
-        
-        println!("   {}: Final Loss = {:.6}, Time = {:.2}s, Epochs = {}", 
+
+        println!(
+            "   {}: Final Loss = {:.6}, Time = {:.2}s, Epochs = {}",
             name,
             results.final_val_loss,
             results.training_time.as_secs_f64(),
@@ -984,7 +1047,7 @@ fn main() -> OptimResult<()> {
     }
 
     println!("\n✅ Advanced Burn integration example completed successfully!");
-    
+
     Ok(())
 }
 
@@ -995,10 +1058,10 @@ mod tests {
     #[test]
     fn test_burn_neural_layer() {
         let mut layer = BurnNeuralLayer::new(3, 2, ActivationType::ReLU, "test");
-        
+
         let input = Array2::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
         let output = layer.forward(&input, false).unwrap();
-        
+
         assert_eq!(output.shape(), &[2, 2]);
         assert_eq!(layer.parameter_count(), 8);
     }
@@ -1008,11 +1071,12 @@ mod tests {
         let network = BurnNeuralNetwork::new(
             vec![3, 4, 2],
             vec![ActivationType::ReLU, ActivationType::Linear],
-        ).unwrap();
-        
+        )
+        .unwrap();
+
         let input = Array2::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
         let (output, activations) = network.forward(input).unwrap();
-        
+
         assert_eq!(output.shape(), &[2, 2]);
         assert_eq!(activations.len(), 3); // input + 2 layers
     }
@@ -1020,11 +1084,11 @@ mod tests {
     #[test]
     fn test_activation_functions() {
         let input = Array2::from_shape_vec((2, 2), vec![-1.0, 0.0, 1.0, 2.0]).unwrap();
-        
+
         let relu_output = activations::relu(&input);
         assert_eq!(relu_output[[0, 0]], 0.0); // ReLU(-1) = 0
         assert_eq!(relu_output[[1, 1]], 2.0); // ReLU(2) = 2
-        
+
         let sigmoid_output = activations::sigmoid(&input);
         assert!(sigmoid_output[[0, 0]] > 0.0 && sigmoid_output[[0, 0]] < 1.0);
     }
@@ -1032,10 +1096,10 @@ mod tests {
     #[test]
     fn test_classification_data_generation() {
         let (input, targets) = generate_classification_data(100, 5, 3, 0.0);
-        
+
         assert_eq!(input.shape(), &[100, 5]);
         assert_eq!(targets.shape(), &[100, 3]);
-        
+
         // Check that targets are one-hot encoded
         for i in 0..100 {
             let row_sum: f64 = targets.row(i).iter().sum();
@@ -1067,9 +1131,9 @@ mod tests {
 
     #[test]
     fn test_layer_with_regularization() {
-        let layer = BurnNeuralLayer::new(3, 2, ActivationType::ReLU, "test")
-            .with_l2_regularization(0.01);
-        
+        let layer =
+            BurnNeuralLayer::new(3, 2, ActivationType::ReLU, "test").with_l2_regularization(0.01);
+
         let reg_loss = layer.regularization_loss().unwrap();
         assert!(reg_loss >= 0.0);
     }

@@ -417,15 +417,16 @@ fn bench_distance_transform_performance(c: &mut Criterion) {
             BenchmarkId::new("distance_transform_edt", format!("{}x{}", rows, cols)),
             &input_dyn,
             |b, input| {
-                b.iter(|| {
-                    distance_transform_edt(black_box(input), None, true, false).unwrap()
-                })
+                b.iter(|| distance_transform_edt(black_box(input), None, true, false).unwrap())
             },
         );
 
         // Benchmark City Block distance transform
         group.bench_with_input(
-            BenchmarkId::new("distance_transform_cdt_cityblock", format!("{}x{}", rows, cols)),
+            BenchmarkId::new(
+                "distance_transform_cdt_cityblock",
+                format!("{}x{}", rows, cols),
+            ),
             &input_dyn,
             |b, input| {
                 b.iter(|| {
@@ -436,7 +437,10 @@ fn bench_distance_transform_performance(c: &mut Criterion) {
 
         // Benchmark Chessboard distance transform
         group.bench_with_input(
-            BenchmarkId::new("distance_transform_cdt_chessboard", format!("{}x{}", rows, cols)),
+            BenchmarkId::new(
+                "distance_transform_cdt_chessboard",
+                format!("{}x{}", rows, cols),
+            ),
             &input_dyn,
             |b, input| {
                 b.iter(|| {
@@ -447,7 +451,10 @@ fn bench_distance_transform_performance(c: &mut Criterion) {
 
         // Benchmark brute force distance transform for comparison
         group.bench_with_input(
-            BenchmarkId::new("distance_transform_bf_euclidean", format!("{}x{}", rows, cols)),
+            BenchmarkId::new(
+                "distance_transform_bf_euclidean",
+                format!("{}x{}", rows, cols),
+            ),
             &input_dyn,
             |b, input| {
                 b.iter(|| {
@@ -483,55 +490,35 @@ fn bench_edge_detection_performance(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("sobel_filter", format!("{}x{}", rows, cols)),
             &input,
-            |b, input| {
-                b.iter(|| {
-                    sobel(black_box(input), None, None).unwrap()
-                })
-            },
+            |b, input| b.iter(|| sobel(black_box(input), None, None).unwrap()),
         );
 
         // Benchmark Prewitt edge detection
         group.bench_with_input(
             BenchmarkId::new("prewitt_filter", format!("{}x{}", rows, cols)),
             &input,
-            |b, input| {
-                b.iter(|| {
-                    prewitt(black_box(input), None, None).unwrap()
-                })
-            },
+            |b, input| b.iter(|| prewitt(black_box(input), None, None).unwrap()),
         );
 
         // Benchmark Laplacian edge detection
         group.bench_with_input(
             BenchmarkId::new("laplace_filter", format!("{}x{}", rows, cols)),
             &input,
-            |b, input| {
-                b.iter(|| {
-                    laplace(black_box(input), None, None).unwrap()
-                })
-            },
+            |b, input| b.iter(|| laplace(black_box(input), None, None).unwrap()),
         );
 
         // Benchmark Laplacian edge detection (4-connected)
         group.bench_with_input(
             BenchmarkId::new("laplace_4connected", format!("{}x{}", rows, cols)),
             &input,
-            |b, input| {
-                b.iter(|| {
-                    laplace(black_box(input), None, None).unwrap()
-                })
-            },
+            |b, input| b.iter(|| laplace(black_box(input), None, None).unwrap()),
         );
 
         // Benchmark Laplacian edge detection (8-connected)
         group.bench_with_input(
             BenchmarkId::new("laplace_8connected", format!("{}x{}", rows, cols)),
             &input,
-            |b, input| {
-                b.iter(|| {
-                    laplace(black_box(input), None, Some(true)).unwrap()
-                })
-            },
+            |b, input| b.iter(|| laplace(black_box(input), None, Some(true)).unwrap()),
         );
     }
 
@@ -544,12 +531,12 @@ fn bench_data_type_performance(c: &mut Criterion) {
     group.measurement_time(Duration::from_secs(8));
 
     let size = (256, 256);
-    
+
     // Generate test data for both f32 and f64
     let input_f32 = Array2::from_shape_fn(size, |(i, j)| {
         ((i as f32 * 0.1).sin() * (j as f32 * 0.1).cos()) as f32
     });
-    
+
     let input_f64 = Array2::from_shape_fn(size, |(i, j)| {
         (i as f64 * 0.1).sin() * (j as f64 * 0.1).cos()
     });
@@ -575,17 +562,13 @@ fn bench_data_type_performance(c: &mut Criterion) {
     group.bench_with_input(
         BenchmarkId::new("median_f32", format!("{}x{}", size.0, size.1)),
         &input_f32,
-        |b, input| {
-            b.iter(|| median_filter(black_box(input), black_box(&[5, 5]), None).unwrap())
-        },
+        |b, input| b.iter(|| median_filter(black_box(input), black_box(&[5, 5]), None).unwrap()),
     );
 
     group.bench_with_input(
         BenchmarkId::new("median_f64", format!("{}x{}", size.0, size.1)),
         &input_f64,
-        |b, input| {
-            b.iter(|| median_filter(black_box(input), black_box(&[5, 5]), None).unwrap())
-        },
+        |b, input| b.iter(|| median_filter(black_box(input), black_box(&[5, 5]), None).unwrap()),
     );
 
     group.finish();
@@ -605,7 +588,10 @@ fn bench_memory_intensive_operations(c: &mut Criterion) {
 
     // Test operations that require significant memory bandwidth
     group.bench_with_input(
-        BenchmarkId::new("large_gaussian", format!("{}x{}", large_size.0, large_size.1)),
+        BenchmarkId::new(
+            "large_gaussian",
+            format!("{}x{}", large_size.0, large_size.1),
+        ),
         &large_array,
         |b, input| {
             b.iter(|| gaussian_filter(black_box(input), black_box(2.0), None, None).unwrap())
@@ -615,13 +601,14 @@ fn bench_memory_intensive_operations(c: &mut Criterion) {
     group.bench_with_input(
         BenchmarkId::new("large_median", format!("{}x{}", large_size.0, large_size.1)),
         &large_array,
-        |b, input| {
-            b.iter(|| median_filter(black_box(input), black_box(&[7, 7]), None).unwrap())
-        },
+        |b, input| b.iter(|| median_filter(black_box(input), black_box(&[7, 7]), None).unwrap()),
     );
 
     group.bench_with_input(
-        BenchmarkId::new("large_uniform", format!("{}x{}", large_size.0, large_size.1)),
+        BenchmarkId::new(
+            "large_uniform",
+            format!("{}x{}", large_size.0, large_size.1),
+        ),
         &large_array,
         |b, input| {
             b.iter(|| uniform_filter(black_box(input), black_box(&[9, 9]), None, None).unwrap())
@@ -640,9 +627,7 @@ fn bench_small_array_performance(c: &mut Criterion) {
     let small_sizes = vec![(8, 8), (16, 16), (32, 32)];
 
     for (rows, cols) in small_sizes {
-        let input = Array2::from_shape_fn((rows, cols), |(i, j)| {
-            (i as f64 + j as f64) * 0.1
-        });
+        let input = Array2::from_shape_fn((rows, cols), |(i, j)| (i as f64 + j as f64) * 0.1);
 
         // Test operations on small arrays to measure overhead
         group.bench_with_input(

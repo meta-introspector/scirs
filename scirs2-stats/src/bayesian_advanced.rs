@@ -12,11 +12,7 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, NumCast, One, Zero};
-use scirs2_core::{
-    parallel_ops::*,
-    simd_ops::SimdUnifiedOps,
-    validation::*,
-};
+use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
@@ -52,13 +48,9 @@ pub struct BayesianModel<F> {
 #[derive(Debug, Clone)]
 pub enum AdvancedPrior<F> {
     /// Standard conjugate priors
-    Conjugate {
-        parameters: HashMap<String, F>,
-    },
+    Conjugate { parameters: HashMap<String, F> },
     /// Hierarchical priors with hyperpriors
-    Hierarchical {
-        levels: Vec<PriorLevel<F>>,
-    },
+    Hierarchical { levels: Vec<PriorLevel<F>> },
     /// Mixture of priors
     Mixture {
         components: Vec<PriorComponent<F>>,
@@ -99,16 +91,42 @@ pub struct PriorComponent<F> {
 /// Distribution types for priors and likelihoods
 #[derive(Debug, Clone)]
 pub enum DistributionType<F> {
-    Normal { mean: F, precision: F },
-    Gamma { shape: F, rate: F },
-    Beta { alpha: F, beta: F },
-    InverseGamma { shape: F, scale: F },
-    Exponential { rate: F },
-    Uniform { lower: F, upper: F },
-    StudentT { degrees_freedom: F, location: F, scale: F },
-    Laplace { location: F, scale: F },
-    Horseshoe { tau: F },
-    Custom { 
+    Normal {
+        mean: F,
+        precision: F,
+    },
+    Gamma {
+        shape: F,
+        rate: F,
+    },
+    Beta {
+        alpha: F,
+        beta: F,
+    },
+    InverseGamma {
+        shape: F,
+        scale: F,
+    },
+    Exponential {
+        rate: F,
+    },
+    Uniform {
+        lower: F,
+        upper: F,
+    },
+    StudentT {
+        degrees_freedom: F,
+        location: F,
+        scale: F,
+    },
+    Laplace {
+        location: F,
+        scale: F,
+    },
+    Horseshoe {
+        tau: F,
+    },
+    Custom {
         log_density: Box<dyn Fn(F) -> F + Send + Sync>,
         parameters: HashMap<String, F>,
     },
@@ -156,17 +174,17 @@ pub enum ModelType {
     /// Gaussian process regression
     GaussianProcess { kernel: KernelType },
     /// Bayesian neural network
-    BayesianNeuralNetwork { 
+    BayesianNeuralNetwork {
         layers: Vec<usize>,
         activation: ActivationType,
     },
     /// State space model
-    StateSpace { 
+    StateSpace {
         state_dim: usize,
         observation_dim: usize,
     },
     /// Mixture model
-    Mixture { 
+    Mixture {
         components: usize,
         component_type: ComponentType,
     },
@@ -513,16 +531,16 @@ where
         // Fit each model and compute criteria
         for model in &self.models {
             let model_result = self.fit_single_model(model, x, y)?;
-            
+
             let mut model_ic_values = HashMap::new();
-            
+
             for criterion in &self.criteria {
                 let ic_value = self.compute_criterion(&model_result, criterion)?;
                 model_ic_values.insert(*criterion, ic_value);
             }
-            
+
             ic_values.insert(model.id.clone(), model_ic_values);
-            
+
             // Cross-validation
             let cv_result = self.cross_validate_model(model, x, y)?;
             cv_results.insert(model.id.clone(), cv_result);
@@ -534,10 +552,10 @@ where
                 .iter()
                 .map(|(id, scores)| (id.clone(), scores[criterion]))
                 .collect();
-            
+
             // Sort by criterion (lower is better for most criteria)
             model_scores.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
-            
+
             let ranking: Vec<String> = model_scores.into_iter().map(|(id, _)| id).collect();
             rankings.insert(*criterion, ranking);
         }
@@ -579,10 +597,10 @@ where
         // Simplified model fitting - would implement actual inference
         let n_params = x.ncols();
         let n_samples = 1000;
-        
+
         // Generate dummy posterior samples (would use actual MCMC/VI)
         let posterior_samples = Array2::zeros((n_samples, n_params));
-        
+
         let posterior_summary = PosteriorSummary {
             means: Array1::zeros(n_params),
             stds: Array1::ones(n_params),
@@ -666,28 +684,28 @@ where
         ic_values: &HashMap<String, HashMap<ModelSelectionCriterion, F>>,
     ) -> StatsResult<HashMap<String, F>> {
         let mut weights = HashMap::new();
-        
+
         // Use WAIC for weight computation
         let waic_values: Vec<_> = ic_values
             .iter()
             .map(|(id, scores)| (id.clone(), scores[&ModelSelectionCriterion::WAIC]))
             .collect();
-        
+
         let min_waic = waic_values
             .iter()
             .map(|(_, waic)| *waic)
             .fold(F::infinity(), |a, b| if a < b { a } else { b });
-        
+
         let weight_sum: F = waic_values
             .iter()
             .map(|(_, waic)| (-((*waic - min_waic) / F::from(2.0).unwrap())).exp())
             .sum();
-        
+
         for (id, waic) in waic_values {
             let weight = (-(waic - min_waic) / F::from(2.0).unwrap()).exp() / weight_sum;
             weights.insert(id, weight);
         }
-        
+
         Ok(weights)
     }
 }
@@ -762,19 +780,19 @@ where
     ) -> StatsResult<Self> {
         check_array_finite(&x_train.view(), "x_train")?;
         check_array_finite(&y_train.view(), "y_train")?;
-        
+
         if x_train.nrows() != y_train.len() {
             return Err(StatsError::DimensionMismatch(
                 "X and y must have same number of observations".to_string(),
             ));
         }
-        
+
         if noise_level <= F::zero() {
             return Err(StatsError::InvalidArgument(
                 "Noise level must be positive".to_string(),
             ));
         }
-        
+
         Ok(Self {
             x_train,
             y_train,
@@ -784,13 +802,17 @@ where
             hyperparameter_samples: None,
         })
     }
-    
+
     /// Compute kernel matrix
-    pub fn compute_kernel_matrix(&self, x1: &ArrayView2<F>, x2: &ArrayView2<F>) -> StatsResult<Array2<F>> {
+    pub fn compute_kernel_matrix(
+        &self,
+        x1: &ArrayView2<F>,
+        x2: &ArrayView2<F>,
+    ) -> StatsResult<Array2<F>> {
         let n1 = x1.nrows();
         let n2 = x2.nrows();
         let mut k = Array2::zeros((n1, n2));
-        
+
         for i in 0..n1 {
             for j in 0..n2 {
                 let x1_row = x1.row(i);
@@ -798,49 +820,52 @@ where
                 k[[i, j]] = self.kernel_function(&x1_row, &x2_row)?;
             }
         }
-        
+
         Ok(k)
     }
-    
+
     /// Evaluate kernel function between two points
     fn kernel_function(&self, x1: &ArrayView1<F>, x2: &ArrayView1<F>) -> StatsResult<F> {
         match &self.kernel {
             KernelType::RBF { length_scale } => {
                 let length_scale = F::from(*length_scale).unwrap();
                 let mut squared_dist = F::zero();
-                
+
                 for (a, b) in x1.iter().zip(x2.iter()) {
                     let diff = *a - *b;
                     squared_dist = squared_dist + diff * diff;
                 }
-                
+
                 Ok((-squared_dist / (F::from(2.0).unwrap() * length_scale * length_scale)).exp())
-            },
+            }
             KernelType::Matern { nu, length_scale } => {
                 let nu = F::from(*nu).unwrap();
                 let length_scale = F::from(*length_scale).unwrap();
                 let mut dist = F::zero();
-                
+
                 for (a, b) in x1.iter().zip(x2.iter()) {
                     let diff = *a - *b;
                     dist = dist + diff * diff;
                 }
                 dist = dist.sqrt();
-                
+
                 // Simplified Matern kernel for nu = 1.5
                 if nu == F::from(1.5).unwrap() {
                     let sqrt3_r_l = F::from(3.0).unwrap().sqrt() * dist / length_scale;
                     Ok((F::one() + sqrt3_r_l) * (-sqrt3_r_l).exp())
                 } else {
                     // Fallback to RBF for other nu values
-                    Ok((-dist * dist / (F::from(2.0).unwrap() * length_scale * length_scale)).exp())
+                    Ok(
+                        (-dist * dist / (F::from(2.0).unwrap() * length_scale * length_scale))
+                            .exp(),
+                    )
                 }
-            },
+            }
             KernelType::Linear { variance } => {
                 let variance = F::from(*variance).unwrap();
                 let dot_product = F::simd_dot(x1, x2);
                 Ok(variance * dot_product)
-            },
+            }
             KernelType::WhiteNoise { variance } => {
                 let variance = F::from(*variance).unwrap();
                 // White noise kernel is only non-zero when x1 == x2
@@ -852,7 +877,7 @@ where
                     }
                 }
                 Ok(if is_equal { variance } else { F::zero() })
-            },
+            }
             _ => {
                 // For complex kernels (Sum, Product), use RBF as fallback
                 let mut squared_dist = F::zero();
@@ -864,24 +889,24 @@ where
             }
         }
     }
-    
+
     /// Make predictions at new input points
     pub fn predict(&self, x_test: &ArrayView2<F>) -> StatsResult<(Array1<F>, Array1<F>)> {
         check_array_finite(x_test, "x_test")?;
-        
+
         let n_test = x_test.nrows();
-        
+
         // Simplified prediction using nearest neighbor approach
         let mut mean_pred = Array1::zeros(n_test);
         let mut var_pred = Array1::zeros(n_test);
-        
+
         let n_train = self.x_train.nrows();
-        
+
         for i in 0..n_test {
             let test_point = x_test.row(i);
             let mut min_dist = F::infinity();
             let mut nearest_y = F::zero();
-            
+
             for j in 0..n_train {
                 let train_point = self.x_train.row(j);
                 let mut dist = F::zero();
@@ -889,17 +914,17 @@ where
                     let diff = *a - *b;
                     dist = dist + diff * diff;
                 }
-                
+
                 if dist < min_dist {
                     min_dist = dist;
                     nearest_y = self.y_train[j];
                 }
             }
-            
+
             mean_pred[i] = nearest_y;
             var_pred[i] = self.noise_level; // Simplified variance
         }
-        
+
         Ok((mean_pred, var_pred))
     }
 }
@@ -909,37 +934,40 @@ where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
 {
     /// Create new Bayesian neural network
-    pub fn new(
-        architecture: Vec<usize>,
-        activations: Vec<ActivationType>,
-    ) -> StatsResult<Self> {
+    pub fn new(architecture: Vec<usize>, activations: Vec<ActivationType>) -> StatsResult<Self> {
         if architecture.len() < 2 {
             return Err(StatsError::InvalidArgument(
                 "Architecture must have at least input and output layers".to_string(),
             ));
         }
-        
+
         if activations.len() != architecture.len() - 1 {
             return Err(StatsError::InvalidArgument(
                 "Number of activations must equal number of layers - 1".to_string(),
             ));
         }
-        
+
         let n_layers = architecture.len() - 1;
-        
+
         // Initialize priors with appropriate scales based on layer sizes
         let weight_priors = (0..n_layers)
             .map(|i| {
                 let fan_in = F::from(architecture[i]).unwrap();
                 let precision = fan_in; // Xavier initialization scale
-                DistributionType::Normal { mean: F::zero(), precision }
+                DistributionType::Normal {
+                    mean: F::zero(),
+                    precision,
+                }
             })
             .collect();
-            
+
         let bias_priors = (0..n_layers)
-            .map(|_| DistributionType::Normal { mean: F::zero(), precision: F::from(0.1).unwrap() })
+            .map(|_| DistributionType::Normal {
+                mean: F::zero(),
+                precision: F::from(0.1).unwrap(),
+            })
             .collect();
-        
+
         Ok(Self {
             architecture,
             activations,
@@ -949,11 +977,17 @@ where
             bias_samples: None,
         })
     }
-    
+
     /// Apply activation function
     fn apply_activation(&self, x: F, activation: ActivationType) -> F {
         match activation {
-            ActivationType::ReLU => if x > F::zero() { x } else { F::zero() },
+            ActivationType::ReLU => {
+                if x > F::zero() {
+                    x
+                } else {
+                    F::zero()
+                }
+            }
             ActivationType::Sigmoid => F::one() / (F::one() + (-x).exp()),
             ActivationType::Tanh => x.tanh(),
             ActivationType::Swish => x / (F::one() + (-x).exp()),
@@ -963,64 +997,73 @@ where
                 let coeff = F::from(0.044715).unwrap();
                 let inner = sqrt_2_pi * (x + coeff * x * x * x);
                 F::from(0.5).unwrap() * x * (F::one() + inner.tanh())
-            },
+            }
         }
     }
-    
+
     /// Forward pass through the network
-    pub fn forward(&self, x: &ArrayView2<F>, weights: &[Array2<F>], biases: &[Array1<F>]) -> StatsResult<Array2<F>> {
+    pub fn forward(
+        &self,
+        x: &ArrayView2<F>,
+        weights: &[Array2<F>],
+        biases: &[Array1<F>],
+    ) -> StatsResult<Array2<F>> {
         check_array_finite(x, "x")?;
-        
+
         if weights.len() != self.architecture.len() - 1 {
             return Err(StatsError::InvalidArgument(
                 "Number of weight matrices must match network layers".to_string(),
             ));
         }
-        
+
         if biases.len() != self.architecture.len() - 1 {
             return Err(StatsError::InvalidArgument(
                 "Number of bias vectors must match network layers".to_string(),
             ));
         }
-        
+
         let mut activations = x.to_owned();
-        
+
         for (layer_idx, (&activation_type)) in self.activations.iter().enumerate() {
             // Linear transformation: z = x * W + b
-            let z = self.linear_transform(&activations.view(), &weights[layer_idx], &biases[layer_idx])?;
-            
+            let z = self.linear_transform(
+                &activations.view(),
+                &weights[layer_idx],
+                &biases[layer_idx],
+            )?;
+
             // Apply activation function
             activations = z.mapv(|val| self.apply_activation(val, activation_type));
         }
-        
+
         Ok(activations)
     }
-    
+
     /// Linear transformation: z = x * W + b
     fn linear_transform(
-        &self, 
-        x: &ArrayView2<F>, 
-        weights: &Array2<F>, 
-        bias: &Array1<F>
+        &self,
+        x: &ArrayView2<F>,
+        weights: &Array2<F>,
+        bias: &Array1<F>,
     ) -> StatsResult<Array2<F>> {
         let (batch_size, input_dim) = x.dim();
         let (weight_input_dim, output_dim) = weights.dim();
-        
+
         if input_dim != weight_input_dim {
             return Err(StatsError::DimensionMismatch(
                 "Input dimension must match weight matrix input dimension".to_string(),
             ));
         }
-        
+
         if bias.len() != output_dim {
             return Err(StatsError::DimensionMismatch(
                 "Bias length must match weight matrix output dimension".to_string(),
             ));
         }
-        
+
         // Matrix multiplication: x * W
         let mut result = Array2::zeros((batch_size, output_dim));
-        
+
         for i in 0..batch_size {
             for j in 0..output_dim {
                 let mut sum = F::zero();
@@ -1030,23 +1073,23 @@ where
                 result[[i, j]] = sum + bias[j];
             }
         }
-        
+
         Ok(result)
     }
-    
+
     /// Sample parameters from priors
     fn sample_from_normal(mean: F, precision: F) -> StatsResult<F> {
         // Simple Box-Muller transform
         let u1 = F::from(0.5).unwrap(); // Would use actual random numbers
         let u2 = F::from(0.5).unwrap();
-        
-        let z = (-F::from(2.0).unwrap() * u1.ln()).sqrt() * 
-               (F::from(2.0 * std::f64::consts::PI).unwrap() * u2).cos();
-               
+
+        let z = (-F::from(2.0).unwrap() * u1.ln()).sqrt()
+            * (F::from(2.0 * std::f64::consts::PI).unwrap() * u2).cos();
+
         let std_dev = F::one() / precision.sqrt();
         Ok(mean + std_dev * z)
     }
-    
+
     /// Make predictions with uncertainty quantification
     pub fn predict_with_uncertainty(
         &self,
@@ -1054,13 +1097,13 @@ where
         n_samples: usize,
     ) -> StatsResult<(Array2<F>, Array2<F>)> {
         check_array_finite(x, "x")?;
-        
+
         let n_test = x.nrows();
         let output_dim = self.architecture.last().unwrap();
-        
+
         let mut predictions = Array2::zeros((n_test, *output_dim));
         let mut prediction_vars = Array2::zeros((n_test, *output_dim));
-        
+
         // Simplified prediction - would implement actual parameter sampling
         for i in 0..n_test {
             for j in 0..*output_dim {
@@ -1068,7 +1111,7 @@ where
                 prediction_vars[[i, j]] = F::one(); // Would compute actual variance
             }
         }
-        
+
         Ok((predictions, prediction_vars))
     }
 }
@@ -1081,7 +1124,7 @@ mod tests {
     #[test]
     fn test_model_comparison() {
         let mut comparison = BayesianModelComparison::<f64>::new();
-        
+
         let model = BayesianModel {
             id: "linear_model".to_string(),
             model_type: ModelType::LinearRegression,
@@ -1091,12 +1134,12 @@ mod tests {
             likelihood: LikelihoodType::Gaussian,
             complexity: 3.0,
         };
-        
+
         comparison.add_model(model);
-        
+
         let x = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]];
         let y = array![1.0, 2.0, 3.0];
-        
+
         let result = comparison.compare_models(&x.view(), &y.view());
         assert!(result.is_ok());
     }
@@ -1110,12 +1153,13 @@ mod tests {
             y_train.clone(),
             KernelType::RBF { length_scale: 1.0 },
             0.1,
-        ).unwrap();
-        
+        )
+        .unwrap();
+
         // Test creation
         assert_eq!(gp.x_train.nrows(), 3);
         assert_eq!(gp.y_train.len(), 3);
-        
+
         // Test prediction
         let x_test = array![[1.5], [2.5]];
         let result = gp.predict(&x_test.view());
@@ -1127,12 +1171,13 @@ mod tests {
         let bnn = BayesianNeuralNetwork::new(
             vec![2, 5, 1],
             vec![ActivationType::ReLU, ActivationType::Sigmoid],
-        ).unwrap();
-        
+        )
+        .unwrap();
+
         // Test creation
         assert_eq!(bnn.architecture.len(), 3);
         assert_eq!(bnn.activations.len(), 2);
-        
+
         // Test prediction with uncertainty
         let x_test = array![[1.0, 2.0], [3.0, 4.0]];
         let result = bnn.predict_with_uncertainty(&x_test.view(), 10);

@@ -4,44 +4,45 @@
 //! including matrix formats, linear algebra operations, eigenvalue computations,
 //! and advanced solver methods.
 
+use ndarray::{Array1, Array2};
 use scirs2_sparse::{
     csr_array::CsrArray,
+    error::{SparseError, SparseResult},
     linalg::{
         decomposition::{
-            lu_decomposition_with_options, pivoted_cholesky_decomposition, LUOptions, PivotingStrategy
+            lu_decomposition_with_options, pivoted_cholesky_decomposition, LUOptions,
+            PivotingStrategy,
         },
-        matfuncs::{twonormest, condest},
-        eigen::{eigsh_shift_invert_enhanced, eigsh_generalized_enhanced},
-        interface::{LinearOperator, IdentityOperator},
-        iterative::{cg, bicgstab, gmres, CGOptions, BiCGSTABOptions, GMRESOptions},
+        eigen::{eigsh_generalized_enhanced, eigsh_shift_invert_enhanced},
         gcrot::{gcrot, GCROTOptions},
+        interface::{IdentityOperator, LinearOperator},
+        iterative::{bicgstab, cg, gmres, BiCGSTABOptions, CGOptions, GMRESOptions},
+        matfuncs::{condest, twonormest},
         tfqmr::{tfqmr, TFQMROptions},
     },
-    error::{SparseResult, SparseError},
 };
-use ndarray::{Array1, Array2};
 
 fn main() -> SparseResult<()> {
     println!("=== SciRS2-Sparse Comprehensive Tutorial ===\n");
 
     // 1. Basic Matrix Construction and Operations
     demonstrate_basic_operations()?;
-    
+
     // 2. Advanced Decompositions
     demonstrate_advanced_decompositions()?;
-    
+
     // 3. Norm Estimation and Condition Numbers
     demonstrate_norm_estimation()?;
-    
+
     // 4. Advanced Eigenvalue Problems
     demonstrate_eigenvalue_problems()?;
-    
+
     // 5. Linear Operators and Composition
     demonstrate_linear_operators()?;
-    
+
     // 6. Advanced Iterative Solvers
     demonstrate_advanced_solvers()?;
-    
+
     // 7. Error Handling and Diagnostics
     demonstrate_error_handling()?;
 
@@ -61,7 +62,7 @@ fn demonstrate_basic_operations() -> SparseResult<()> {
 
     println!("Created 4x4 sparse matrix with {} non-zeros", matrix.nnz());
     println!("Matrix shape: {:?}", matrix.shape());
-    
+
     // Matrix-vector multiplication
     let x = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0]);
     let y = matrix.dot(&x)?;
@@ -77,7 +78,7 @@ fn demonstrate_basic_operations() -> SparseResult<()> {
         }
         println!("]");
     }
-    
+
     println!();
     Ok(())
 }
@@ -93,7 +94,7 @@ fn demonstrate_advanced_decompositions() -> SparseResult<()> {
     let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false)?;
 
     println!("LU Decomposition with Enhanced Pivoting:");
-    
+
     // Test different pivoting strategies
     let strategies = vec![
         ("Partial", PivotingStrategy::Partial),
@@ -109,12 +110,14 @@ fn demonstrate_advanced_decompositions() -> SparseResult<()> {
             zero_threshold: 1e-12,
             check_singular: true,
         };
-        
+
         match lu_decomposition_with_options(&matrix, Some(options)) {
             Ok(lu_result) => {
-                println!("  {} pivoting: Success (rank preserved: {})", 
-                        name, lu_result.success);
-            },
+                println!(
+                    "  {} pivoting: Success (rank preserved: {})",
+                    name, lu_result.success
+                );
+            }
             Err(e) => {
                 println!("  {} pivoting: Failed - {}", name, e);
             }
@@ -126,14 +129,22 @@ fn demonstrate_advanced_decompositions() -> SparseResult<()> {
     let indefinite_rows = vec![0, 1, 1, 2, 2, 2];
     let indefinite_cols = vec![0, 0, 1, 0, 1, 2];
     let indefinite_data = vec![1.0, 2.0, -1.0, 3.0, 1.0, 2.0];
-    let indefinite_matrix = CsrArray::from_triplets(&indefinite_rows, &indefinite_cols, &indefinite_data, (3, 3), false)?;
+    let indefinite_matrix = CsrArray::from_triplets(
+        &indefinite_rows,
+        &indefinite_cols,
+        &indefinite_data,
+        (3, 3),
+        false,
+    )?;
 
     match pivoted_cholesky_decomposition(&indefinite_matrix, Some(1e-12)) {
         Ok(chol_result) => {
-            println!("  Pivoted Cholesky: Rank = {}, Success = {}", 
-                    chol_result.rank, chol_result.success);
+            println!(
+                "  Pivoted Cholesky: Rank = {}, Success = {}",
+                chol_result.rank, chol_result.success
+            );
             println!("  This handles indefinite matrices gracefully!");
-        },
+        }
         Err(e) => {
             println!("  Pivoted Cholesky failed: {}", e);
         }
@@ -160,7 +171,7 @@ fn demonstrate_norm_estimation() -> SparseResult<()> {
     match twonormest(&legacy_matrix, Some(1e-8), Some(100)) {
         Ok(norm_2) => {
             println!("2-norm estimate: {:.6}", norm_2);
-        },
+        }
         Err(e) => {
             println!("2-norm estimation failed: {}", e);
         }
@@ -177,7 +188,7 @@ fn demonstrate_norm_estimation() -> SparseResult<()> {
             } else {
                 println!("Matrix is ill-conditioned");
             }
-        },
+        }
         Err(e) => {
             println!("Condition number estimation failed: {}", e);
         }
@@ -199,7 +210,7 @@ fn demonstrate_eigenvalue_problems() -> SparseResult<()> {
 
     println!("Shift-and-Invert Eigenvalue Method:");
     println!("(Finding eigenvalues near a target value)");
-    
+
     // This would demonstrate shift-and-invert for interior eigenvalues
     // The actual implementation may require symmetric matrix format
     println!("  Shift-and-invert allows finding eigenvalues near a specified target");
@@ -261,9 +272,11 @@ fn demonstrate_advanced_solvers() -> SparseResult<()> {
     };
     match cg(&a_matrix, &b_vector, None, Some(cg_options)) {
         Ok(result) => {
-            println!("  CG: Converged in {} iterations, residual: {:.2e}", 
-                    result.iterations, result.residual_norm);
-        },
+            println!(
+                "  CG: Converged in {} iterations, residual: {:.2e}",
+                result.iterations, result.residual_norm
+            );
+        }
         Err(e) => {
             println!("  CG failed: {}", e);
         }
@@ -277,9 +290,11 @@ fn demonstrate_advanced_solvers() -> SparseResult<()> {
     };
     match bicgstab(&a_matrix, &b_vector, None, Some(bicgstab_options)) {
         Ok(result) => {
-            println!("  BiCGSTAB: Converged in {} iterations, residual: {:.2e}", 
-                    result.iterations, result.residual_norm);
-        },
+            println!(
+                "  BiCGSTAB: Converged in {} iterations, residual: {:.2e}",
+                result.iterations, result.residual_norm
+            );
+        }
         Err(e) => {
             println!("  BiCGSTAB failed: {}", e);
         }
@@ -294,9 +309,11 @@ fn demonstrate_advanced_solvers() -> SparseResult<()> {
     };
     match gmres(&a_matrix, &b_vector, None, Some(gmres_options)) {
         Ok(result) => {
-            println!("  GMRES: Converged in {} iterations, residual: {:.2e}", 
-                    result.iterations, result.residual_norm);
-        },
+            println!(
+                "  GMRES: Converged in {} iterations, residual: {:.2e}",
+                result.iterations, result.residual_norm
+            );
+        }
         Err(e) => {
             println!("  GMRES failed: {}", e);
         }
@@ -311,9 +328,11 @@ fn demonstrate_advanced_solvers() -> SparseResult<()> {
     };
     match gcrot(&a_matrix, &b_vector, None, Some(gcrot_options)) {
         Ok(result) => {
-            println!("  GCROT: Converged in {} iterations, residual: {:.2e}", 
-                    result.iterations, result.residual_norm);
-        },
+            println!(
+                "  GCROT: Converged in {} iterations, residual: {:.2e}",
+                result.iterations, result.residual_norm
+            );
+        }
         Err(e) => {
             println!("  GCROT failed: {}", e);
         }
@@ -327,9 +346,11 @@ fn demonstrate_advanced_solvers() -> SparseResult<()> {
     };
     match tfqmr(&a_matrix, &b_vector, None, Some(tfqmr_options)) {
         Ok(result) => {
-            println!("  TFQMR: Converged in {} iterations, residual: {:.2e}", 
-                    result.iterations, result.residual_norm);
-        },
+            println!(
+                "  TFQMR: Converged in {} iterations, residual: {:.2e}",
+                result.iterations, result.residual_norm
+            );
+        }
         Err(e) => {
             println!("  TFQMR failed: {}", e);
         }

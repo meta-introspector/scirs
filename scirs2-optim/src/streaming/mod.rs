@@ -1297,19 +1297,19 @@ pub enum StreamPriority {
 pub struct MultiStreamCoordinator<A: Float> {
     /// Stream configurations
     stream_configs: HashMap<String, StreamConfig<A>>,
-    
+
     /// Synchronization buffer
     sync_buffer: HashMap<String, VecDeque<StreamingDataPoint<A>>>,
-    
+
     /// Global clock for synchronization
     global_clock: Instant,
-    
+
     /// Maximum synchronization window
     max_sync_window_ms: u64,
-    
+
     /// Stream priorities
     stream_priorities: HashMap<String, StreamPriority>,
-    
+
     /// Load balancing strategy
     load_balancer: LoadBalancingStrategy,
 }
@@ -1325,26 +1325,31 @@ impl<A: Float> MultiStreamCoordinator<A> {
             load_balancer: LoadBalancingStrategy::RoundRobin,
         })
     }
-    
+
     /// Add a new stream
-    pub fn add_stream(&mut self, stream_id: String, config: StreamConfig<A>, priority: StreamPriority) {
+    pub fn add_stream(
+        &mut self,
+        stream_id: String,
+        config: StreamConfig<A>,
+        priority: StreamPriority,
+    ) {
         self.stream_configs.insert(stream_id.clone(), config);
         self.sync_buffer.insert(stream_id.clone(), VecDeque::new());
         self.stream_priorities.insert(stream_id, priority);
     }
-    
+
     /// Coordinate data from multiple streams
     pub fn coordinate_streams(&mut self) -> Result<Vec<StreamingDataPoint<A>>, OptimizerError> {
         let mut coordinated_data = Vec::new();
         let current_time = Instant::now();
-        
+
         // Collect data within synchronization window
         for (stream_id, buffer) in &mut self.sync_buffer {
             let window_start = current_time - Duration::from_millis(self.max_sync_window_ms);
-            
+
             // Remove expired data
             buffer.retain(|point| point.timestamp >= window_start);
-            
+
             // Extract synchronized data based on priority
             if let Some(priority) = self.stream_priorities.get(stream_id) {
                 match priority {
@@ -1355,13 +1360,13 @@ impl<A: Float> MultiStreamCoordinator<A> {
                     _ => {
                         // Buffer for batch processing
                         if buffer.len() >= 10 {
-                            coordinated_data.extend(buffer.drain(..buffer.len()/2));
+                            coordinated_data.extend(buffer.drain(..buffer.len() / 2));
                         }
                     }
                 }
             }
         }
-        
+
         Ok(coordinated_data)
     }
 }
@@ -1389,16 +1394,16 @@ pub enum LoadBalancingStrategy {
 pub struct PredictiveStreamingEngine<A: Float> {
     /// Prediction model state
     prediction_model: PredictionModel<A>,
-    
+
     /// Historical data for pattern learning
     historical_buffer: VecDeque<StreamingDataPoint<A>>,
-    
+
     /// Prediction horizon (time steps)
     prediction_horizon: usize,
-    
+
     /// Confidence threshold for predictions
     confidence_threshold: A,
-    
+
     /// Adaptation rate for model updates
     adaptation_rate: A,
 }
@@ -1413,9 +1418,12 @@ impl<A: Float> PredictiveStreamingEngine<A> {
             adaptation_rate: A::from(0.1).unwrap(),
         })
     }
-    
+
     /// Predict future data points
-    pub fn predict_next(&mut self, current_data: &[StreamingDataPoint<A>]) -> Result<Vec<StreamingDataPoint<A>>, OptimizerError> {
+    pub fn predict_next(
+        &mut self,
+        current_data: &[StreamingDataPoint<A>],
+    ) -> Result<Vec<StreamingDataPoint<A>>, OptimizerError> {
         // Update model with current data
         for data_point in current_data {
             self.historical_buffer.push_back(data_point.clone());
@@ -1423,9 +1431,10 @@ impl<A: Float> PredictiveStreamingEngine<A> {
                 self.historical_buffer.pop_front();
             }
         }
-        
+
         // Generate predictions
-        self.prediction_model.predict(&self.historical_buffer, self.prediction_horizon)
+        self.prediction_model
+            .predict(&self.historical_buffer, self.prediction_horizon)
     }
 }
 
@@ -1433,10 +1442,10 @@ impl<A: Float> PredictiveStreamingEngine<A> {
 pub struct PredictionModel<A: Float> {
     /// Model parameters (simplified linear model)
     weights: Array1<A>,
-    
+
     /// Feature dimension
     feature_dim: usize,
-    
+
     /// Model complexity
     model_order: usize,
 }
@@ -1449,18 +1458,22 @@ impl<A: Float> PredictionModel<A> {
             model_order: 3,
         })
     }
-    
-    pub fn predict(&self, data: &VecDeque<StreamingDataPoint<A>>, horizon: usize) -> Result<Vec<StreamingDataPoint<A>>, OptimizerError> {
+
+    pub fn predict(
+        &self,
+        data: &VecDeque<StreamingDataPoint<A>>,
+        horizon: usize,
+    ) -> Result<Vec<StreamingDataPoint<A>>, OptimizerError> {
         let mut predictions = Vec::new();
-        
+
         if data.len() < self.model_order {
             return Ok(predictions);
         }
-        
+
         // Simple autoregressive prediction
         for i in 0..horizon {
             let recent_data: Vec<_> = data.iter().rev().take(self.model_order).collect();
-            
+
             if recent_data.len() >= self.model_order {
                 // Predict next point based on recent pattern
                 let predicted_features = recent_data[0].features.clone(); // Simplified
@@ -1474,7 +1487,7 @@ impl<A: Float> PredictionModel<A> {
                 predictions.push(predicted_point);
             }
         }
-        
+
         Ok(predictions)
     }
 }
@@ -1483,13 +1496,13 @@ impl<A: Float> PredictionModel<A> {
 pub struct StreamFusionOptimizer<A: Float> {
     /// Fusion strategy
     fusion_strategy: FusionStrategy,
-    
+
     /// Stream weights for weighted fusion
     stream_weights: HashMap<String, A>,
-    
+
     /// Fusion buffer
     fusion_buffer: VecDeque<FusedOptimizationStep<A>>,
-    
+
     /// Consensus mechanism
     consensus_mechanism: ConsensusAlgorithm,
 }
@@ -1503,28 +1516,37 @@ impl<A: Float> StreamFusionOptimizer<A> {
             consensus_mechanism: ConsensusAlgorithm::MajorityVoting,
         })
     }
-    
+
     /// Fuse optimization steps from multiple streams
-    pub fn fuse_optimization_steps(&mut self, steps: &[(String, Array1<A>)]) -> Result<Array1<A>, OptimizerError> {
+    pub fn fuse_optimization_steps(
+        &mut self,
+        steps: &[(String, Array1<A>)],
+    ) -> Result<Array1<A>, OptimizerError> {
         if steps.is_empty() {
-            return Err(OptimizerError::InvalidConfig("No optimization steps to fuse".to_string()));
+            return Err(OptimizerError::InvalidConfig(
+                "No optimization steps to fuse".to_string(),
+            ));
         }
-        
+
         match self.fusion_strategy {
             FusionStrategy::WeightedAverage => {
                 let mut fused_step = Array1::zeros(steps[0].1.len());
                 let mut total_weight = A::zero();
-                
+
                 for (stream_id, step) in steps {
-                    let weight = self.stream_weights.get(stream_id).copied().unwrap_or(A::one());
+                    let weight = self
+                        .stream_weights
+                        .get(stream_id)
+                        .copied()
+                        .unwrap_or(A::one());
                     fused_step = fused_step + step * weight;
                     total_weight = total_weight + weight;
                 }
-                
+
                 if total_weight > A::zero() {
                     fused_step /= total_weight;
                 }
-                
+
                 Ok(fused_step)
             }
             FusionStrategy::MedianFusion => {
@@ -1537,7 +1559,7 @@ impl<A: Float> StreamFusionOptimizer<A> {
             }
         }
     }
-    
+
     fn apply_consensus(&self, steps: &[(String, Array1<A>)]) -> Result<Array1<A>, OptimizerError> {
         // Simplified consensus implementation
         Ok(steps[0].1.clone())
@@ -1575,13 +1597,13 @@ pub struct FusedOptimizationStep<A: Float> {
 pub struct AdvancedQoSManager {
     /// QoS configuration
     config: AdvancedQoSConfig,
-    
+
     /// Current QoS status
     current_status: QoSStatus,
-    
+
     /// QoS violation history
     violation_history: VecDeque<QoSViolation>,
-    
+
     /// Adaptive thresholds
     adaptive_thresholds: HashMap<String, f64>,
 }
@@ -1599,11 +1621,11 @@ impl AdvancedQoSManager {
             adaptive_thresholds: HashMap::new(),
         }
     }
-    
+
     /// Monitor QoS metrics and detect violations
     pub fn monitor_qos(&mut self, metrics: &StreamingMetrics) -> QoSStatus {
         let mut violations = Vec::new();
-        
+
         // Check latency
         if metrics.avg_latency_ms > 50.0 {
             violations.push(QoSViolation::LatencyExceeded {
@@ -1611,7 +1633,7 @@ impl AdvancedQoSManager {
                 target: 50.0,
             });
         }
-        
+
         // Check memory usage
         if metrics.memory_usage_mb > 100.0 {
             violations.push(QoSViolation::MemoryExceeded {
@@ -1619,20 +1641,20 @@ impl AdvancedQoSManager {
                 target: 100.0,
             });
         }
-        
+
         // Check throughput
         if metrics.throughput_violations > 10 {
             violations.push(QoSViolation::ThroughputDegraded {
                 violation_rate: metrics.throughput_violations as f64 / 100.0,
             });
         }
-        
+
         self.current_status = QoSStatus {
             is_compliant: violations.is_empty(),
             violations,
             timestamp: Instant::now(),
         };
-        
+
         self.current_status.clone()
     }
 }
@@ -1641,10 +1663,10 @@ impl AdvancedQoSManager {
 pub struct RealTimeOptimizer {
     /// Configuration
     config: RealTimeConfig,
-    
+
     /// Performance metrics
     performance_metrics: RealTimeMetrics,
-    
+
     /// Optimization state
     optimization_state: RTOptimizationState,
 }
@@ -1657,9 +1679,12 @@ impl RealTimeOptimizer {
             optimization_state: RTOptimizationState::default(),
         })
     }
-    
+
     /// Optimize for real-time performance
-    pub fn optimize_realtime(&mut self, _latency_budget: Duration) -> Result<RTOptimizationResult, OptimizerError> {
+    pub fn optimize_realtime(
+        &mut self,
+        _latency_budget: Duration,
+    ) -> Result<RTOptimizationResult, OptimizerError> {
         // Implement real-time optimization logic
         Ok(RTOptimizationResult {
             optimization_applied: true,
@@ -1700,13 +1725,13 @@ pub struct RTOptimizationResult {
 pub struct AdaptiveResourceManager {
     /// Resource allocation strategy
     allocation_strategy: ResourceAllocationStrategy,
-    
+
     /// Current resource usage
     current_usage: ResourceUsage,
-    
+
     /// Resource constraints
     constraints: ResourceConstraints,
-    
+
     /// Allocation history
     allocation_history: VecDeque<ResourceAllocation>,
 }
@@ -1724,21 +1749,26 @@ impl AdaptiveResourceManager {
             allocation_history: VecDeque::with_capacity(100),
         })
     }
-    
+
     /// Adapt resource allocation based on current load
-    pub fn adapt_allocation(&mut self, load_metrics: &StreamingMetrics) -> Result<ResourceAllocation, OptimizerError> {
+    pub fn adapt_allocation(
+        &mut self,
+        load_metrics: &StreamingMetrics,
+    ) -> Result<ResourceAllocation, OptimizerError> {
         let allocation = ResourceAllocation {
-            memory_allocation_mb: (load_metrics.memory_usage_mb * 1.2).min(self.constraints.max_memory_mb as f64) as usize,
+            memory_allocation_mb: (load_metrics.memory_usage_mb * 1.2)
+                .min(self.constraints.max_memory_mb as f64)
+                as usize,
             cpu_allocation: 2,
             priority_adjustment: 0,
             timestamp: Instant::now(),
         };
-        
+
         self.allocation_history.push_back(allocation.clone());
         if self.allocation_history.len() > self.allocation_history.capacity() {
             self.allocation_history.pop_front();
         }
-        
+
         Ok(allocation)
     }
 }
@@ -1782,13 +1812,13 @@ pub struct ResourceAllocation {
 pub struct PipelineExecutionManager<A: Float> {
     /// Pipeline stages
     pipeline_stages: Vec<PipelineStage<A>>,
-    
+
     /// Parallelism degree
     parallelism_degree: usize,
-    
+
     /// Processing priority
     processing_priority: StreamPriority,
-    
+
     /// Stage coordination
     stage_coordinator: StageCoordinator,
 }
@@ -1802,9 +1832,12 @@ impl<A: Float> PipelineExecutionManager<A> {
             stage_coordinator: StageCoordinator::new(parallelism_degree),
         }
     }
-    
+
     /// Execute pipeline on streaming data
-    pub fn execute_pipeline(&mut self, data: Vec<StreamingDataPoint<A>>) -> Result<Vec<StreamingDataPoint<A>>, OptimizerError> {
+    pub fn execute_pipeline(
+        &mut self,
+        data: Vec<StreamingDataPoint<A>>,
+    ) -> Result<Vec<StreamingDataPoint<A>>, OptimizerError> {
         // Simplified pipeline execution
         Ok(data)
     }

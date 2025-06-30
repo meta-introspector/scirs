@@ -3,10 +3,10 @@
 //! This module provides functions for calculating error metrics between
 //! predicted values and true values in regression models.
 
-use ndarray::{ArrayBase, Data, Dimension, ArrayView1};
+use ndarray::{ArrayBase, ArrayView1, Data, Dimension};
 use num_traits::{Float, FromPrimitive, NumCast};
-use std::cmp::Ordering;
 use scirs2_core::simd_ops::SimdUnifiedOps;
+use std::cmp::Ordering;
 
 use super::check_same_shape;
 use crate::error::{MetricsError, Result};

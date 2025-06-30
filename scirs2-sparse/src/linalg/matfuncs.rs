@@ -280,7 +280,7 @@ where
     let mut v: Vec<F> = (0..n)
         .map(|_| F::from(rng.random::<f64>() - 0.5).unwrap())
         .collect();
-    
+
     // Normalize initial vector
     let v_norm = norm2(&v);
     if v_norm == F::zero() {
@@ -343,12 +343,12 @@ where
             } else {
                 lambda.abs()
             };
-            
+
             if rel_change < tol {
                 break;
             }
         }
-        
+
         lambda_old = lambda;
     }
 
@@ -388,10 +388,10 @@ where
 /// ```
 #[allow(dead_code)]
 pub fn condest<F>(
-    a: &CsrMatrix<F>, 
+    a: &CsrMatrix<F>,
     norm_type: Option<&str>,
-    tol: Option<F>, 
-    maxiter: Option<usize>
+    tol: Option<F>,
+    maxiter: Option<usize>,
 ) -> SparseResult<F>
 where
     F: Float + NumAssign + Sum + 'static + Debug,
@@ -411,9 +411,11 @@ where
     let norm_a = match norm_type {
         "1" => onenormest(a, None, None)?,
         "2" => twonormest(a, Some(tol), Some(maxiter))?,
-        _ => return Err(crate::error::SparseError::ValueError(
-            "norm_type must be '1' or '2'".to_string(),
-        )),
+        _ => {
+            return Err(crate::error::SparseError::ValueError(
+                "norm_type must be '1' or '2'".to_string(),
+            ))
+        }
     };
 
     if norm_a == F::zero() {
@@ -438,7 +440,7 @@ where
     F: Float + NumAssign + Sum + 'static + Debug,
 {
     let _n = a.rows();
-    
+
     // For 1-norm, use inverse power iteration with A^(-1)
     if norm_type == "1" {
         // This is more complex and would require solving linear systems
@@ -463,22 +465,18 @@ where
 }
 
 /// Estimate the smallest singular value using inverse power iteration on A^T * A
-fn estimate_smallest_singular_value<F>(
-    a: &CsrMatrix<F>,
-    tol: F,
-    maxiter: usize,
-) -> SparseResult<F>
+fn estimate_smallest_singular_value<F>(a: &CsrMatrix<F>, tol: F, maxiter: usize) -> SparseResult<F>
 where
     F: Float + NumAssign + Sum + 'static + Debug,
 {
     let n = a.cols();
-    
+
     // Initialize with a random unit vector
     let mut rng = rand::rng();
     let mut v: Vec<F> = (0..n)
         .map(|_| F::from(rng.random::<f64>() - 0.5).unwrap())
         .collect();
-    
+
     // Normalize initial vector
     let v_norm = norm2(&v);
     if v_norm == F::zero() {
@@ -496,11 +494,11 @@ where
         // Using inverse iteration: solve (A^T * A) * x = v for x
         // For simplicity, we'll use a few iterations of the power method on (A^T * A)^(-1)
         // This is equivalent to solving (A^T * A) * u = v and then normalizing u
-        
+
         // Since we don't have a direct solver, we'll approximate using several steps
         // of a simple iterative method (like Jacobi or minimal residual)
         let u = solve_ata_approximately(a, &v, 5)?; // 5 inner iterations
-        
+
         // Normalize u
         let u_norm = norm2(&u);
         if u_norm == F::zero() {
@@ -521,12 +519,12 @@ where
             } else {
                 F::infinity()
             };
-            
+
             if rel_change < tol {
                 break;
             }
         }
-        
+
         lambda_old = lambda;
     }
 
@@ -630,14 +628,14 @@ where
 {
     // For small matrices, we can afford to compute all singular values
     // This is a simplified implementation - in practice, you'd use SVD
-    
+
     let (m, n) = (a.rows(), a.cols());
     let min_dim = m.min(n);
-    
+
     if min_dim == 0 {
         return Ok(F::zero());
     }
-    
+
     if min_dim == 1 {
         // For 1D case, just compute the norm of the single row/column
         let mut max_norm = F::zero();
@@ -651,7 +649,7 @@ where
         }
         return Ok(max_norm);
     }
-    
+
     // For small square matrices, use power iteration with high accuracy
     twonormest(a, Some(F::from(1e-12).unwrap()), Some(1000))
 }
@@ -980,8 +978,6 @@ fn solve_matrix_equation<F: Float + NumAssign>(
     Ok(x)
 }
 
-
-
 /// Enhanced 2-norm estimation for sparse arrays using power iteration
 ///
 /// This function estimates ||A||_2 = σ_max(A), the largest singular value of A,
@@ -1014,8 +1010,8 @@ fn solve_matrix_equation<F: Float + NumAssign>(
 /// ```
 #[allow(dead_code)]
 pub fn twonormest_enhanced<T, S>(
-    a: &S, 
-    tol: Option<T>, 
+    a: &S,
+    tol: Option<T>,
     maxiter: Option<usize>,
     initial_guess: Option<ArrayView1<T>>,
 ) -> SparseResult<T>
@@ -1068,7 +1064,7 @@ where
             v_arr
         }
     };
-    
+
     // Normalize initial vector
     let v_norm = (v.iter().map(|&x| x * x).sum::<T>()).sqrt();
     if v_norm == T::zero() {
@@ -1109,13 +1105,13 @@ where
             } else {
                 lambda.abs()
             };
-            
+
             if rel_change < tol {
                 _converged = true;
                 break;
             }
         }
-        
+
         lambda_old = lambda;
     }
 
@@ -1154,10 +1150,10 @@ where
 /// ```
 #[allow(dead_code)]
 pub fn condest_enhanced<T, S>(
-    a: &S, 
+    a: &S,
     norm_type: Option<&str>,
-    tol: Option<T>, 
-    maxiter: Option<usize>
+    tol: Option<T>,
+    maxiter: Option<usize>,
 ) -> SparseResult<T>
 where
     T: Float
@@ -1190,9 +1186,11 @@ where
     let norm_a = match norm_type {
         "2" => twonormest_enhanced(a, Some(tol), Some(maxiter), None)?,
         "1" => onenormest_enhanced(a, None, None)?,
-        _ => return Err(crate::error::SparseError::ValueError(
-            "norm_type must be '1' or '2'".to_string(),
-        )),
+        _ => {
+            return Err(crate::error::SparseError::ValueError(
+                "norm_type must be '1' or '2'".to_string(),
+            ))
+        }
     };
 
     if norm_a == T::zero() {
@@ -1220,11 +1218,7 @@ where
 ///
 /// An estimate of the 1-norm of the matrix
 #[allow(dead_code)]
-pub fn onenormest_enhanced<T, S>(
-    a: &S, 
-    t: Option<usize>, 
-    itmax: Option<usize>
-) -> SparseResult<T>
+pub fn onenormest_enhanced<T, S>(a: &S, t: Option<usize>, itmax: Option<usize>) -> SparseResult<T>
 where
     T: Float
         + NumAssign
@@ -1254,11 +1248,15 @@ where
     // Initialize with random ±1 vectors
     let mut rng = rand::rng();
     let mut x_vectors = Vec::with_capacity(t);
-    
+
     for _ in 0..t {
         let mut x = Array1::zeros(n);
         for i in 0..n {
-            x[i] = if rng.random::<bool>() { T::one() } else { -T::one() };
+            x[i] = if rng.random::<bool>() {
+                T::one()
+            } else {
+                -T::one()
+            };
         }
         x_vectors.push(x);
     }
@@ -1304,7 +1302,11 @@ where
         x_vectors.clear();
         let mut x = Array1::zeros(n);
         for i in 0..n {
-            x[i] = if y_vectors[max_col][i] >= T::zero() { T::one() } else { -T::one() };
+            x[i] = if y_vectors[max_col][i] >= T::zero() {
+                T::one()
+            } else {
+                -T::one()
+            };
         }
         x_vectors.push(x);
 
@@ -1312,7 +1314,11 @@ where
         for _ in 1..t {
             let mut x = Array1::zeros(n);
             for i in 0..n {
-                x[i] = if rng.random::<bool>() { T::one() } else { -T::one() };
+                x[i] = if rng.random::<bool>() {
+                    T::one()
+                } else {
+                    -T::one()
+                };
             }
             x_vectors.push(x);
         }
@@ -1346,7 +1352,7 @@ where
 {
     // For both 1-norm and 2-norm, estimate smallest singular value of A
     let sigma_min = estimate_smallest_singular_value_enhanced(a, tol, maxiter)?;
-    
+
     if sigma_min == T::zero() {
         Ok(T::infinity())
     } else {
@@ -1355,11 +1361,7 @@ where
 }
 
 /// Estimate the smallest singular value using enhanced inverse power iteration
-fn estimate_smallest_singular_value_enhanced<T, S>(
-    a: &S,
-    tol: T,
-    maxiter: usize,
-) -> SparseResult<T>
+fn estimate_smallest_singular_value_enhanced<T, S>(a: &S, tol: T, maxiter: usize) -> SparseResult<T>
 where
     T: Float
         + NumAssign
@@ -1377,14 +1379,14 @@ where
     S: SparseArray<T>,
 {
     let (_, n) = a.shape();
-    
+
     // Initialize with a random unit vector
     let mut rng = rand::rng();
     let mut v = Array1::zeros(n);
     for i in 0..n {
         v[i] = T::from(rng.random::<f64>() - 0.5).unwrap();
     }
-    
+
     // Normalize initial vector
     let v_norm = (v.iter().map(|&x| x * x).sum::<T>()).sqrt();
     if v_norm == T::zero() {
@@ -1401,7 +1403,7 @@ where
         // We want to find the smallest eigenvalue of A^T * A
         // Using inverse iteration: solve (A^T * A) * x = v for x
         let u = solve_ata_system_enhanced(a, &v, 10)?; // 10 inner iterations
-        
+
         // Normalize u
         let u_norm = (u.iter().map(|&x| x * x).sum::<T>()).sqrt();
         if u_norm == T::zero() {
@@ -1422,12 +1424,12 @@ where
             } else {
                 T::infinity()
             };
-            
+
             if rel_change < tol {
                 break;
             }
         }
-        
+
         lambda_old = lambda;
     }
 
@@ -1529,7 +1531,7 @@ where
 {
     // Compute A * v
     let av = sparse_matvec(a, &v.view())?;
-    
+
     // Compute A^T * (A * v)
     let ata_v = sparse_matvec_transpose(a, &av.view())?;
 
@@ -1557,20 +1559,22 @@ where
 {
     let (m, n) = a.shape();
     let min_dim = m.min(n);
-    
+
     if min_dim == 0 {
         return Ok(T::zero());
     }
-    
+
     if min_dim == 1 {
         // For 1D case, compute the norm of all entries
         let (_, _, values) = a.find();
-        let max_val = values.iter().map(|&v| v.abs()).fold(T::zero(), |acc, v| {
-            if v > acc { v } else { acc }
-        });
+        let max_val =
+            values
+                .iter()
+                .map(|&v| v.abs())
+                .fold(T::zero(), |acc, v| if v > acc { v } else { acc });
         return Ok(max_val);
     }
-    
+
     // For small matrices, use high-precision power iteration
     twonormest_enhanced(a, Some(T::from(1e-12).unwrap()), Some(1000), None)
 }
@@ -1583,22 +1587,22 @@ where
 {
     let (_, n) = a.shape();
     let mut max_col_sum = T::zero();
-    
+
     for j in 0..n {
         let mut col_sum = T::zero();
         let (row_indices, col_indices, values) = a.find();
-        
+
         for (k, (&_i, &col)) in row_indices.iter().zip(col_indices.iter()).enumerate() {
             if col == j {
                 col_sum = col_sum + values[k].abs();
             }
         }
-        
+
         if col_sum > max_col_sum {
             max_col_sum = col_sum;
         }
     }
-    
+
     Ok(max_col_sum)
 }
 

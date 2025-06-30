@@ -100,7 +100,7 @@ impl<F: Float + Debug> OnlineStats<F> {
         self.count += 1;
         self.sum = self.sum + value;
         self.sum_squares = self.sum_squares + value * value;
-        
+
         if value < self.min_val {
             self.min_val = value;
         }
@@ -196,11 +196,11 @@ impl<F: Float + Debug> EWMA<F> {
             Some(prev) => {
                 let new_value = self.alpha * value + (F::one() - self.alpha) * prev;
                 self.current_value = Some(new_value);
-                
+
                 // Update variance estimate
                 let error = value - new_value;
-                let new_variance = self.alpha * error * error + 
-                    (F::one() - self.alpha) * self.variance.unwrap_or(F::zero());
+                let new_variance = self.alpha * error * error
+                    + (F::one() - self.alpha) * self.variance.unwrap_or(F::zero());
                 self.variance = Some(new_variance);
             }
         }
@@ -255,16 +255,16 @@ impl<F: Float + Debug> CusumDetector<F> {
     /// Update CUSUM with new observation
     pub fn update(&mut self, value: F) -> Option<ChangePoint> {
         self.count += 1;
-        
+
         // Update mean estimate
         let delta = value - self.mean_estimate;
         self.mean_estimate = self.mean_estimate + delta / F::from(self.count).unwrap();
-        
+
         // Update CUSUM statistics
         let diff = value - self.mean_estimate;
         self.cusum_pos = F::max(F::zero(), self.cusum_pos + diff - self.drift);
         self.cusum_neg = F::max(F::zero(), self.cusum_neg - diff - self.drift);
-        
+
         // Check for change point
         if self.cusum_pos > self.threshold {
             self.reset();
@@ -334,7 +334,7 @@ impl<F: Float + Debug> StreamingAnalyzer<F> {
     /// Add new observation to the stream
     pub fn add_observation(&mut self, value: F) -> Result<()> {
         let now = Instant::now();
-        
+
         // Add to buffer with window management
         self.buffer.push_back(value);
         self.timestamps.push_back(now);
@@ -386,7 +386,10 @@ impl<F: Float + Debug> StreamingAnalyzer<F> {
 
     /// Check if a value is an outlier
     pub fn is_outlier(&self, value: F) -> bool {
-        self.ewma.is_outlier(value, F::from(self.config.change_detection_threshold).unwrap())
+        self.ewma.is_outlier(
+            value,
+            F::from(self.config.change_detection_threshold).unwrap(),
+        )
     }
 
     /// Get streaming forecast for next n steps
@@ -400,11 +403,11 @@ impl<F: Float + Debug> StreamingAnalyzer<F> {
         }
 
         let mut forecasts = Array1::zeros(steps);
-        
+
         // Simple forecasting using EWMA and linear trend
         let current_value = self.ewma.value().unwrap_or(F::zero());
         let trend = self.estimate_trend();
-        
+
         for i in 0..steps {
             let step_f = F::from(i + 1).unwrap();
             forecasts[i] = current_value + trend * step_f;
@@ -421,7 +424,7 @@ impl<F: Float + Debug> StreamingAnalyzer<F> {
 
         let n = std::cmp::min(20, self.buffer.len()); // Use last 20 observations
         let recent: Vec<F> = self.buffer.iter().rev().take(n).cloned().collect();
-        
+
         if recent.len() < 2 {
             return F::zero();
         }
@@ -456,7 +459,7 @@ impl<F: Float + Debug> StreamingAnalyzer<F> {
         if self.buffer.len() >= self.config.min_observations {
             let next_forecast = self.forecast(1)?;
             self.forecasts.push_back(next_forecast[0]);
-            
+
             // Keep forecasts buffer reasonable size
             if self.forecasts.len() > 100 {
                 self.forecasts.pop_front();
@@ -470,7 +473,8 @@ impl<F: Float + Debug> StreamingAnalyzer<F> {
         // Keep only recent change points
         let keep_count = self.config.memory_threshold / 2;
         if self.change_points.len() > keep_count {
-            self.change_points.drain(0..self.change_points.len() - keep_count);
+            self.change_points
+                .drain(0..self.change_points.len() - keep_count);
         }
 
         // Clean up forecasts buffer
@@ -576,22 +580,32 @@ impl<F: Float + Debug> MultiSeriesAnalyzer<F> {
         let analyzer1 = self.analyzers.get(series1).ok_or_else(|| {
             TimeSeriesError::InvalidInput(format!("Series '{}' not found", series1))
         })?;
-        
+
         let analyzer2 = self.analyzers.get(series2).ok_or_else(|| {
             TimeSeriesError::InvalidInput(format!("Series '{}' not found", series2))
         })?;
 
         let buffer1 = analyzer1.get_buffer();
         let buffer2 = analyzer2.get_buffer();
-        
+
         let min_len = std::cmp::min(buffer1.len(), buffer2.len());
         if min_len < 2 {
             return Ok(F::zero());
         }
 
         // Calculate Pearson correlation
-        let mean1 = buffer1.iter().take(min_len).cloned().fold(F::zero(), |acc, x| acc + x) / F::from(min_len).unwrap();
-        let mean2 = buffer2.iter().take(min_len).cloned().fold(F::zero(), |acc, x| acc + x) / F::from(min_len).unwrap();
+        let mean1 = buffer1
+            .iter()
+            .take(min_len)
+            .cloned()
+            .fold(F::zero(), |acc, x| acc + x)
+            / F::from(min_len).unwrap();
+        let mean2 = buffer2
+            .iter()
+            .take(min_len)
+            .cloned()
+            .fold(F::zero(), |acc, x| acc + x)
+            / F::from(min_len).unwrap();
 
         let mut numerator = F::zero();
         let mut sum1_sq = F::zero();
@@ -622,7 +636,7 @@ mod tests {
     #[test]
     fn test_online_stats() {
         let mut stats = OnlineStats::<f64>::new();
-        
+
         // Add some data points
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         for &val in &data {
@@ -639,10 +653,10 @@ mod tests {
     #[test]
     fn test_ewma() {
         let mut ewma = EWMA::<f64>::new(0.3).unwrap();
-        
+
         ewma.update(10.0);
         assert_abs_diff_eq!(ewma.value().unwrap(), 10.0);
-        
+
         ewma.update(20.0);
         let expected = 0.3 * 20.0 + 0.7 * 10.0;
         assert_abs_diff_eq!(ewma.value().unwrap(), expected);
@@ -651,13 +665,13 @@ mod tests {
     #[test]
     fn test_cusum_detector() {
         let mut cusum = CusumDetector::<f64>::new(5.0, 0.5);
-        
+
         // Add normal data
         for i in 0..10 {
             let change = cusum.update(i as f64);
             assert!(change.is_none());
         }
-        
+
         // Add data with mean shift
         for i in 0..10 {
             let change = cusum.update(10.0 + i as f64);
@@ -672,7 +686,7 @@ mod tests {
     fn test_streaming_analyzer() {
         let config = StreamConfig::default();
         let mut analyzer = StreamingAnalyzer::<f64>::new(config).unwrap();
-        
+
         // Add some observations
         for i in 0..50 {
             let value = (i as f64).sin();
@@ -681,7 +695,7 @@ mod tests {
 
         assert!(analyzer.observation_count() > 0);
         assert!(analyzer.get_stats().count() > 0);
-        
+
         // Test forecasting
         let forecast = analyzer.forecast(5);
         assert!(forecast.is_ok());
@@ -692,19 +706,23 @@ mod tests {
     fn test_multi_series_analyzer() {
         let config = StreamConfig::default();
         let mut multi_analyzer = MultiSeriesAnalyzer::<f64>::new(config);
-        
+
         // Add two series
         multi_analyzer.add_series("series1".to_string()).unwrap();
         multi_analyzer.add_series("series2".to_string()).unwrap();
-        
+
         // Add data to both series
         for i in 0..20 {
             multi_analyzer.add_observation("series1", i as f64).unwrap();
-            multi_analyzer.add_observation("series2", (i as f64) * 2.0).unwrap();
+            multi_analyzer
+                .add_observation("series2", (i as f64) * 2.0)
+                .unwrap();
         }
 
         // Check correlation
-        let correlation = multi_analyzer.get_correlation("series1", "series2").unwrap();
+        let correlation = multi_analyzer
+            .get_correlation("series1", "series2")
+            .unwrap();
         assert!(correlation > 0.5); // Should be highly correlated
     }
 
@@ -712,12 +730,12 @@ mod tests {
     fn test_outlier_detection() {
         let config = StreamConfig::default();
         let mut analyzer = StreamingAnalyzer::<f64>::new(config).unwrap();
-        
+
         // Add normal data
         for i in 0..20 {
             analyzer.add_observation(i as f64).unwrap();
         }
-        
+
         // Check if a clear outlier is detected
         assert!(analyzer.is_outlier(1000.0));
         assert!(!analyzer.is_outlier(20.0)); // Should be normal
@@ -821,7 +839,7 @@ pub mod feature_engineering {
 
             // Extract features based on configurations
             let mut features = Vec::new();
-            
+
             for config in &self.feature_configs {
                 if !config.enabled {
                     continue;
@@ -833,14 +851,17 @@ pub mod feature_engineering {
                 }
 
                 // Only update expensive features at specified frequency
-                if config.update_frequency > 1 && 
-                   self.update_counter % config.update_frequency != 0 &&
-                   self.cached_stats.contains_key(&config.name) {
+                if config.update_frequency > 1
+                    && self.update_counter % config.update_frequency != 0
+                    && self.cached_stats.contains_key(&config.name)
+                {
                     features.push(self.cached_stats[&config.name]);
                     continue;
                 }
 
-                let window_data: Vec<F> = self.window_buffer.iter()
+                let window_data: Vec<F> = self
+                    .window_buffer
+                    .iter()
                     .rev()
                     .take(config.window_size)
                     .rev()
@@ -853,7 +874,7 @@ pub mod feature_engineering {
             }
 
             let feature_array = Array1::from_vec(features);
-            
+
             // Store in feature history
             if self.feature_history.len() >= 100 {
                 self.feature_history.pop_front();
@@ -875,42 +896,38 @@ pub mod feature_engineering {
                     Ok(sum / F::from(data.len()).unwrap())
                 }
                 FeatureType::Variance => {
-                    let mean = data.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(data.len()).unwrap();
-                    let var = data.iter()
+                    let mean = data.iter().fold(F::zero(), |acc, &x| acc + x)
+                        / F::from(data.len()).unwrap();
+                    let var = data
+                        .iter()
                         .map(|&x| (x - mean) * (x - mean))
-                        .fold(F::zero(), |acc, x| acc + x) / F::from(data.len()).unwrap();
+                        .fold(F::zero(), |acc, x| acc + x)
+                        / F::from(data.len()).unwrap();
                     Ok(var)
                 }
-                FeatureType::Skewness => {
-                    self.compute_skewness(data)
-                }
-                FeatureType::Kurtosis => {
-                    self.compute_kurtosis(data)
-                }
-                FeatureType::Min => {
-                    Ok(data.iter().fold(F::infinity(), |acc, &x| acc.min(x)))
-                }
-                FeatureType::Max => {
-                    Ok(data.iter().fold(F::neg_infinity(), |acc, &x| acc.max(x)))
-                }
+                FeatureType::Skewness => self.compute_skewness(data),
+                FeatureType::Kurtosis => self.compute_kurtosis(data),
+                FeatureType::Min => Ok(data.iter().fold(F::infinity(), |acc, &x| acc.min(x))),
+                FeatureType::Max => Ok(data.iter().fold(F::neg_infinity(), |acc, &x| acc.max(x))),
                 FeatureType::Range => {
                     let min_val = data.iter().fold(F::infinity(), |acc, &x| acc.min(x));
                     let max_val = data.iter().fold(F::neg_infinity(), |acc, &x| acc.max(x));
                     Ok(max_val - min_val)
                 }
-                FeatureType::Quantile(q) => {
-                    self.compute_quantile(data, *q)
-                }
+                FeatureType::Quantile(q) => self.compute_quantile(data, *q),
                 FeatureType::InterquartileRange => {
                     let q25 = self.compute_quantile(data, 0.25)?;
                     let q75 = self.compute_quantile(data, 0.75)?;
                     Ok(q75 - q25)
                 }
                 FeatureType::CoefficientOfVariation => {
-                    let mean = data.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(data.len()).unwrap();
-                    let var = data.iter()
+                    let mean = data.iter().fold(F::zero(), |acc, &x| acc + x)
+                        / F::from(data.len()).unwrap();
+                    let var = data
+                        .iter()
                         .map(|&x| (x - mean) * (x - mean))
-                        .fold(F::zero(), |acc, x| acc + x) / F::from(data.len()).unwrap();
+                        .fold(F::zero(), |acc, x| acc + x)
+                        / F::from(data.len()).unwrap();
                     let std_dev = var.sqrt();
                     if mean.abs() > F::zero() {
                         Ok(std_dev / mean.abs())
@@ -918,54 +935,22 @@ pub mod feature_engineering {
                         Ok(F::zero())
                     }
                 }
-                FeatureType::LinearTrend => {
-                    self.compute_linear_trend(data)
-                }
-                FeatureType::SeasonalStrength => {
-                    self.compute_seasonal_strength(data)
-                }
-                FeatureType::TrendStrength => {
-                    self.compute_trend_strength(data)
-                }
-                FeatureType::SpectralCentroid => {
-                    self.compute_spectral_centroid(data)
-                }
-                FeatureType::SpectralRolloff => {
-                    self.compute_spectral_rolloff(data, 0.85)
-                }
-                FeatureType::SpectralFlatness => {
-                    self.compute_spectral_flatness(data)
-                }
-                FeatureType::SampleEntropy => {
-                    self.compute_sample_entropy(data, 2, 0.2)
-                }
-                FeatureType::LempelZivComplexity => {
-                    self.compute_lempel_ziv_complexity(data)
-                }
-                FeatureType::FractalDimension => {
-                    self.compute_fractal_dimension(data)
-                }
-                FeatureType::RelativeStrengthIndex => {
-                    self.compute_rsi(data, 14)
-                }
-                FeatureType::MovingAverageConvergenceDivergence => {
-                    self.compute_macd(data)
-                }
-                FeatureType::BollingerBands => {
-                    self.compute_bollinger_bands(data, 20, 2.0)
-                }
-                FeatureType::StochasticOscillator => {
-                    self.compute_stochastic_oscillator(data, 14)
-                }
-                FeatureType::PatternRecognition => {
-                    self.compute_pattern_recognition(data)
-                }
-                FeatureType::MotifFrequency => {
-                    self.compute_motif_frequency(data)
-                }
-                FeatureType::ShapeletDistance => {
-                    self.compute_shapelet_distance(data)
-                }
+                FeatureType::LinearTrend => self.compute_linear_trend(data),
+                FeatureType::SeasonalStrength => self.compute_seasonal_strength(data),
+                FeatureType::TrendStrength => self.compute_trend_strength(data),
+                FeatureType::SpectralCentroid => self.compute_spectral_centroid(data),
+                FeatureType::SpectralRolloff => self.compute_spectral_rolloff(data, 0.85),
+                FeatureType::SpectralFlatness => self.compute_spectral_flatness(data),
+                FeatureType::SampleEntropy => self.compute_sample_entropy(data, 2, 0.2),
+                FeatureType::LempelZivComplexity => self.compute_lempel_ziv_complexity(data),
+                FeatureType::FractalDimension => self.compute_fractal_dimension(data),
+                FeatureType::RelativeStrengthIndex => self.compute_rsi(data, 14),
+                FeatureType::MovingAverageConvergenceDivergence => self.compute_macd(data),
+                FeatureType::BollingerBands => self.compute_bollinger_bands(data, 20, 2.0),
+                FeatureType::StochasticOscillator => self.compute_stochastic_oscillator(data, 14),
+                FeatureType::PatternRecognition => self.compute_pattern_recognition(data),
+                FeatureType::MotifFrequency => self.compute_motif_frequency(data),
+                FeatureType::ShapeletDistance => self.compute_shapelet_distance(data),
             }
         }
 
@@ -977,17 +962,21 @@ pub mod feature_engineering {
 
             let n = F::from(data.len()).unwrap();
             let mean = data.iter().fold(F::zero(), |acc, &x| acc + x) / n;
-            
-            let m2 = data.iter()
+
+            let m2 = data
+                .iter()
                 .map(|&x| (x - mean) * (x - mean))
-                .fold(F::zero(), |acc, x| acc + x) / n;
-            
-            let m3 = data.iter()
+                .fold(F::zero(), |acc, x| acc + x)
+                / n;
+
+            let m3 = data
+                .iter()
                 .map(|&x| {
                     let diff = x - mean;
                     diff * diff * diff
                 })
-                .fold(F::zero(), |acc, x| acc + x) / n;
+                .fold(F::zero(), |acc, x| acc + x)
+                / n;
 
             if m2 > F::zero() {
                 Ok(m3 / m2.powf(F::from(1.5).unwrap()))
@@ -1004,18 +993,22 @@ pub mod feature_engineering {
 
             let n = F::from(data.len()).unwrap();
             let mean = data.iter().fold(F::zero(), |acc, &x| acc + x) / n;
-            
-            let m2 = data.iter()
+
+            let m2 = data
+                .iter()
                 .map(|&x| (x - mean) * (x - mean))
-                .fold(F::zero(), |acc, x| acc + x) / n;
-            
-            let m4 = data.iter()
+                .fold(F::zero(), |acc, x| acc + x)
+                / n;
+
+            let m4 = data
+                .iter()
                 .map(|&x| {
                     let diff = x - mean;
                     let sq = diff * diff;
                     sq * sq
                 })
-                .fold(F::zero(), |acc, x| acc + x) / n;
+                .fold(F::zero(), |acc, x| acc + x)
+                / n;
 
             if m2 > F::zero() {
                 Ok(m4 / (m2 * m2) - F::from(3.0).unwrap())
@@ -1091,16 +1084,22 @@ pub mod feature_engineering {
             }
 
             // Compute seasonal variance
-            let seasonal_mean = seasonal_component.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(period).unwrap();
-            let seasonal_var = seasonal_component.iter()
+            let seasonal_mean = seasonal_component.iter().fold(F::zero(), |acc, &x| acc + x)
+                / F::from(period).unwrap();
+            let seasonal_var = seasonal_component
+                .iter()
                 .map(|&x| (x - seasonal_mean) * (x - seasonal_mean))
-                .fold(F::zero(), |acc, x| acc + x) / F::from(period).unwrap();
+                .fold(F::zero(), |acc, x| acc + x)
+                / F::from(period).unwrap();
 
             // Total variance
-            let total_mean = data.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(data.len()).unwrap();
-            let total_var = data.iter()
+            let total_mean =
+                data.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(data.len()).unwrap();
+            let total_var = data
+                .iter()
                 .map(|&x| (x - total_mean) * (x - total_mean))
-                .fold(F::zero(), |acc, x| acc + x) / F::from(data.len()).unwrap();
+                .fold(F::zero(), |acc, x| acc + x)
+                / F::from(data.len()).unwrap();
 
             if total_var > F::zero() {
                 Ok(seasonal_var / total_var)
@@ -1120,7 +1119,9 @@ pub mod feature_engineering {
             let mut trend = Vec::new();
 
             for i in 0..=data.len() - window_size {
-                let avg = data[i..i + window_size].iter().fold(F::zero(), |acc, &x| acc + x) 
+                let avg = data[i..i + window_size]
+                    .iter()
+                    .fold(F::zero(), |acc, &x| acc + x)
                     / F::from(window_size).unwrap();
                 trend.push(avg);
             }
@@ -1130,16 +1131,22 @@ pub mod feature_engineering {
             }
 
             // Compute trend variance
-            let trend_mean = trend.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(trend.len()).unwrap();
-            let trend_var = trend.iter()
+            let trend_mean =
+                trend.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(trend.len()).unwrap();
+            let trend_var = trend
+                .iter()
                 .map(|&x| (x - trend_mean) * (x - trend_mean))
-                .fold(F::zero(), |acc, x| acc + x) / F::from(trend.len()).unwrap();
+                .fold(F::zero(), |acc, x| acc + x)
+                / F::from(trend.len()).unwrap();
 
             // Total variance
-            let total_mean = data.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(data.len()).unwrap();
-            let total_var = data.iter()
+            let total_mean =
+                data.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(data.len()).unwrap();
+            let total_var = data
+                .iter()
                 .map(|&x| (x - total_mean) * (x - total_mean))
-                .fold(F::zero(), |acc, x| acc + x) / F::from(data.len()).unwrap();
+                .fold(F::zero(), |acc, x| acc + x)
+                / F::from(data.len()).unwrap();
 
             if total_var > F::zero() {
                 Ok(trend_var / total_var)
@@ -1199,16 +1206,18 @@ pub mod feature_engineering {
             }
 
             let magnitudes: Vec<F> = data.iter().map(|&x| x.abs()).collect();
-            
+
             // Geometric mean
-            let log_sum = magnitudes.iter()
+            let log_sum = magnitudes
+                .iter()
                 .filter(|&&x| x > F::zero())
                 .map(|&x| x.ln())
                 .fold(F::zero(), |acc, x| acc + x);
             let geometric_mean = (log_sum / F::from(magnitudes.len()).unwrap()).exp();
 
             // Arithmetic mean
-            let arithmetic_mean = magnitudes.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(magnitudes.len()).unwrap();
+            let arithmetic_mean = magnitudes.iter().fold(F::zero(), |acc, &x| acc + x)
+                / F::from(magnitudes.len()).unwrap();
 
             if arithmetic_mean > F::zero() {
                 Ok(geometric_mean / arithmetic_mean)
@@ -1271,10 +1280,13 @@ pub mod feature_engineering {
                 return F::zero();
             }
 
-            let mean = data.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(data.len()).unwrap();
-            let variance = data.iter()
+            let mean =
+                data.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(data.len()).unwrap();
+            let variance = data
+                .iter()
                 .map(|&x| (x - mean) * (x - mean))
-                .fold(F::zero(), |acc, x| acc + x) / F::from(data.len()).unwrap();
+                .fold(F::zero(), |acc, x| acc + x)
+                / F::from(data.len()).unwrap();
             variance.sqrt()
         }
 
@@ -1286,7 +1298,8 @@ pub mod feature_engineering {
 
             // Convert to binary string (simplified)
             let median = self.compute_quantile(data, 0.5)?;
-            let binary_string: Vec<u8> = data.iter()
+            let binary_string: Vec<u8> = data
+                .iter()
                 .map(|&x| if x >= median { 1 } else { 0 })
                 .collect();
 
@@ -1388,8 +1401,18 @@ pub mod feature_engineering {
             }
 
             // Average gain/loss over period
-            let avg_gain = gains.iter().rev().take(period).fold(F::zero(), |acc, &x| acc + x) / F::from(period).unwrap();
-            let avg_loss = losses.iter().rev().take(period).fold(F::zero(), |acc, &x| acc + x) / F::from(period).unwrap();
+            let avg_gain = gains
+                .iter()
+                .rev()
+                .take(period)
+                .fold(F::zero(), |acc, &x| acc + x)
+                / F::from(period).unwrap();
+            let avg_loss = losses
+                .iter()
+                .rev()
+                .take(period)
+                .fold(F::zero(), |acc, &x| acc + x)
+                / F::from(period).unwrap();
 
             if avg_loss == F::zero() {
                 return Ok(F::from(100).unwrap());
@@ -1408,8 +1431,18 @@ pub mod feature_engineering {
             }
 
             // Simple moving averages (simplified MACD)
-            let ema_12 = data.iter().rev().take(12).fold(F::zero(), |acc, &x| acc + x) / F::from(12).unwrap();
-            let ema_26 = data.iter().rev().take(26).fold(F::zero(), |acc, &x| acc + x) / F::from(26).unwrap();
+            let ema_12 = data
+                .iter()
+                .rev()
+                .take(12)
+                .fold(F::zero(), |acc, &x| acc + x)
+                / F::from(12).unwrap();
+            let ema_26 = data
+                .iter()
+                .rev()
+                .take(26)
+                .fold(F::zero(), |acc, &x| acc + x)
+                / F::from(26).unwrap();
 
             Ok(ema_12 - ema_26)
         }
@@ -1502,9 +1535,10 @@ pub mod feature_engineering {
             // Extract overlapping motifs
             for i in 0..=data.len() - motif_length {
                 let motif = &data[i..i + motif_length];
-                
+
                 // Discretize motif (simple bucketing)
-                let discretized: Vec<u8> = motif.iter()
+                let discretized: Vec<u8> = motif
+                    .iter()
                     .map(|&x| ((x.to_f64().unwrap_or(0.0) * 10.0) as i32).max(0).min(9) as u8)
                     .collect();
 
@@ -1513,7 +1547,8 @@ pub mod feature_engineering {
 
             // Find most frequent motif
             let max_frequency = motif_counts.values().max().unwrap_or(&0);
-            Ok(F::from(*max_frequency).unwrap() / F::from(data.len().saturating_sub(motif_length - 1)).unwrap())
+            Ok(F::from(*max_frequency).unwrap()
+                / F::from(data.len().saturating_sub(motif_length - 1)).unwrap())
         }
 
         /// Compute shapelet distance (simplified)
@@ -1524,30 +1559,35 @@ pub mod feature_engineering {
 
             // Simple shapelet: use a canonical pattern (e.g., increasing trend)
             let shapelet_length = 4.min(data.len());
-            let canonical_shapelet: Vec<F> = (0..shapelet_length)
-                .map(|i| F::from(i).unwrap())
-                .collect();
+            let canonical_shapelet: Vec<F> =
+                (0..shapelet_length).map(|i| F::from(i).unwrap()).collect();
 
             let mut min_distance = F::infinity();
 
             // Find minimum distance to canonical shapelet
             for i in 0..=data.len() - shapelet_length {
                 let subsequence = &data[i..i + shapelet_length];
-                
+
                 // Normalize both sequences
-                let subseq_mean = subsequence.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(shapelet_length).unwrap();
+                let subseq_mean = subsequence.iter().fold(F::zero(), |acc, &x| acc + x)
+                    / F::from(shapelet_length).unwrap();
                 let subseq_std = {
-                    let var = subsequence.iter()
+                    let var = subsequence
+                        .iter()
                         .map(|&x| (x - subseq_mean) * (x - subseq_mean))
-                        .fold(F::zero(), |acc, x| acc + x) / F::from(shapelet_length).unwrap();
+                        .fold(F::zero(), |acc, x| acc + x)
+                        / F::from(shapelet_length).unwrap();
                     var.sqrt()
                 };
 
-                let canonical_mean = canonical_shapelet.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(shapelet_length).unwrap();
+                let canonical_mean = canonical_shapelet.iter().fold(F::zero(), |acc, &x| acc + x)
+                    / F::from(shapelet_length).unwrap();
                 let canonical_std = {
-                    let var = canonical_shapelet.iter()
+                    let var = canonical_shapelet
+                        .iter()
                         .map(|&x| (x - canonical_mean) * (x - canonical_mean))
-                        .fold(F::zero(), |acc, x| acc + x) / F::from(shapelet_length).unwrap();
+                        .fold(F::zero(), |acc, x| acc + x)
+                        / F::from(shapelet_length).unwrap();
                     var.sqrt()
                 };
 
@@ -1564,7 +1604,8 @@ pub mod feature_engineering {
                     } else {
                         F::zero()
                     };
-                    distance = distance + (norm_subseq - norm_canonical) * (norm_subseq - norm_canonical);
+                    distance =
+                        distance + (norm_subseq - norm_canonical) * (norm_subseq - norm_canonical);
                 }
 
                 min_distance = min_distance.min(distance.sqrt());
@@ -1575,7 +1616,8 @@ pub mod feature_engineering {
 
         /// Get available feature names
         pub fn get_feature_names(&self) -> Vec<String> {
-            self.feature_configs.iter()
+            self.feature_configs
+                .iter()
                 .filter(|config| config.enabled)
                 .map(|config| config.name.clone())
                 .collect()
@@ -1682,8 +1724,10 @@ pub mod adaptive {
             for i in 0..self.num_features {
                 for j in 0..self.num_features {
                     let _update_term = gain[i] * features[j];
-                    new_covariance[[i, j]] = (self.covariance[[i, j]] - temp_vector[i] * features[j]) / self.forgetting_factor;
-                    
+                    new_covariance[[i, j]] = (self.covariance[[i, j]]
+                        - temp_vector[i] * features[j])
+                        / self.forgetting_factor;
+
                     // Add regularization
                     if i == j {
                         new_covariance[[i, j]] = new_covariance[[i, j]] + self.regularization;
@@ -1713,7 +1757,11 @@ pub mod adaptive {
         }
 
         /// Get prediction with confidence interval
-        pub fn predict_with_confidence(&self, features: &Array1<F>, _confidence_level: F) -> Result<(F, F, F)> {
+        pub fn predict_with_confidence(
+            &self,
+            features: &Array1<F>,
+            _confidence_level: F,
+        ) -> Result<(F, F, F)> {
             let prediction = self.predict(features)?;
 
             // Compute prediction variance
@@ -1862,7 +1910,7 @@ pub mod adaptive {
         /// Apply differencing to entire series
         fn apply_differencing_to_series(&self) -> Vec<F> {
             let mut series: Vec<F> = self.observations.iter().cloned().collect();
-            
+
             for _ in 0..self.d {
                 let mut diff_series = Vec::new();
                 for i in 1..series.len() {
@@ -1870,7 +1918,7 @@ pub mod adaptive {
                 }
                 series = diff_series;
             }
-            
+
             series
         }
 
@@ -1885,12 +1933,12 @@ pub mod adaptive {
             for lag in 0..=self.p {
                 let mut sum = F::zero();
                 let mut count = 0;
-                
+
                 for i in lag..data.len() {
                     sum = sum + data[i] * data[i - lag];
                     count += 1;
                 }
-                
+
                 if count > 0 {
                     autocorrs[lag] = sum / F::from(count).unwrap();
                 }
@@ -1902,7 +1950,9 @@ pub mod adaptive {
                 if autocorrs[0] > F::zero() {
                     coeff = autocorrs[i + 1] / autocorrs[0];
                 }
-                self.ar_coeffs[i] = coeff.max(F::from(-0.99).unwrap()).min(F::from(0.99).unwrap());
+                self.ar_coeffs[i] = coeff
+                    .max(F::from(-0.99).unwrap())
+                    .min(F::from(0.99).unwrap());
             }
 
             Ok(())
@@ -1964,9 +2014,11 @@ pub mod adaptive {
                     let lag_index = processed_data.len() - 1 - i;
                     let gradient = residual * processed_data[lag_index];
                     self.ar_coeffs[i] = self.ar_coeffs[i] + self.learning_rate * gradient;
-                    
+
                     // Keep coefficients stable
-                    self.ar_coeffs[i] = self.ar_coeffs[i].max(F::from(-0.99).unwrap()).min(F::from(0.99).unwrap());
+                    self.ar_coeffs[i] = self.ar_coeffs[i]
+                        .max(F::from(-0.99).unwrap())
+                        .min(F::from(0.99).unwrap());
                 }
             }
 
@@ -1976,9 +2028,11 @@ pub mod adaptive {
                     let lag_index = self.residuals.len() - 1 - i;
                     let gradient = residual * self.residuals[lag_index];
                     self.ma_coeffs[i] = self.ma_coeffs[i] + self.learning_rate * gradient;
-                    
+
                     // Keep coefficients stable
-                    self.ma_coeffs[i] = self.ma_coeffs[i].max(F::from(-0.99).unwrap()).min(F::from(0.99).unwrap());
+                    self.ma_coeffs[i] = self.ma_coeffs[i]
+                        .max(F::from(-0.99).unwrap())
+                        .min(F::from(0.99).unwrap());
                 }
             }
 
@@ -2049,7 +2103,7 @@ pub mod adaptive {
         /// Apply differencing to extended data
         fn apply_differencing_to_extended(&self, data: &VecDeque<F>) -> Vec<F> {
             let mut series: Vec<F> = data.iter().cloned().collect();
-            
+
             for _ in 0..self.d {
                 let mut diff_series = Vec::new();
                 for i in 1..series.len() {
@@ -2057,7 +2111,7 @@ pub mod adaptive {
                 }
                 series = diff_series;
             }
-            
+
             series
         }
 
@@ -2187,8 +2241,8 @@ pub mod advanced {
             // Update trend if enabled
             if let Some(beta) = self.beta {
                 if let Some(current_trend) = self.trend {
-                    let new_trend = beta * (self.level.unwrap() - current_level) 
-                                  + (F::one() - beta) * current_trend;
+                    let new_trend = beta * (self.level.unwrap() - current_level)
+                        + (F::one() - beta) * current_trend;
                     self.trend = Some(new_trend);
                 }
             }
@@ -2198,8 +2252,8 @@ pub mod advanced {
                 if self.seasonal.len() >= period {
                     let seasonal_idx = (self.observation_count - 1) % period;
                     let current_seasonal = self.seasonal[seasonal_idx];
-                    let new_seasonal = gamma * (value - self.level.unwrap()) 
-                                     + (F::one() - gamma) * current_seasonal;
+                    let new_seasonal = gamma * (value - self.level.unwrap())
+                        + (F::one() - gamma) * current_seasonal;
                     self.seasonal[seasonal_idx] = new_seasonal;
                 }
             }
@@ -2307,18 +2361,22 @@ pub mod advanced {
             features.push(mean);
 
             // Feature 2: Standard deviation
-            let variance = window.iter()
+            let variance = window
+                .iter()
                 .map(|&x| (x - mean) * (x - mean))
-                .fold(F::zero(), |acc, x| acc + x) / n;
+                .fold(F::zero(), |acc, x| acc + x)
+                / n;
             features.push(variance.sqrt());
 
             // Feature 3: Skewness (simplified)
-            let skewness = window.iter()
+            let skewness = window
+                .iter()
                 .map(|&x| {
                     let normalized = (x - mean) / variance.sqrt();
                     normalized * normalized * normalized
                 })
-                .fold(F::zero(), |acc, x| acc + x) / n;
+                .fold(F::zero(), |acc, x| acc + x)
+                / n;
             features.push(skewness);
 
             // Feature 4: Range
@@ -2331,14 +2389,18 @@ pub mod advanced {
                 let x_mean = F::from(window.len() - 1).unwrap() / F::from(2).unwrap();
                 let mut num = F::zero();
                 let mut den = F::zero();
-                
+
                 for (i, &y) in window.iter().enumerate() {
                     let x = F::from(i).unwrap();
                     num = num + (x - x_mean) * (y - mean);
                     den = den + (x - x_mean) * (x - x_mean);
                 }
-                
-                let slope = if den > F::zero() { num / den } else { F::zero() };
+
+                let slope = if den > F::zero() {
+                    num / den
+                } else {
+                    F::zero()
+                };
                 features.push(slope);
             } else {
                 features.push(F::zero());
@@ -2367,7 +2429,8 @@ pub mod advanced {
             // Calculate isolation score (simplified)
             let mut min_distance = F::infinity();
             for stored_features in &self.feature_buffer {
-                let distance = features.iter()
+                let distance = features
+                    .iter()
                     .zip(stored_features.iter())
                     .map(|(&a, &b)| (a - b) * (a - b))
                     .fold(F::zero(), |acc, x| acc + x)
@@ -2394,7 +2457,8 @@ pub mod advanced {
 
                 for i in 0..self.feature_buffer.len() {
                     for j in i + 1..self.feature_buffer.len() {
-                        let distance = self.feature_buffer[i].iter()
+                        let distance = self.feature_buffer[i]
+                            .iter()
                             .zip(self.feature_buffer[j].iter())
                             .map(|(&a, &b)| (a - b) * (a - b))
                             .fold(F::zero(), |acc, x| acc + x)
@@ -2464,7 +2528,9 @@ pub mod advanced {
             // Check each pattern
             for (i, pattern) in self.patterns.iter().enumerate() {
                 if self.buffer.len() >= pattern.len() {
-                    let recent_data: Vec<F> = self.buffer.iter()
+                    let recent_data: Vec<F> = self
+                        .buffer
+                        .iter()
                         .rev()
                         .take(pattern.len())
                         .rev()
@@ -2561,7 +2627,7 @@ pub mod advanced {
         pub fn push(&mut self, value: F) {
             self.buffer[self.position] = value;
             self.position = (self.position + 1) % self.capacity;
-            
+
             if self.position == 0 {
                 self.is_full = true;
             }
@@ -2590,7 +2656,7 @@ pub mod advanced {
             if self.is_full {
                 // Buffer is full, need to handle wrap-around
                 let start_pos = (self.position + self.capacity - take) % self.capacity;
-                
+
                 if start_pos + take <= self.capacity {
                     // No wrap-around needed
                     result.extend_from_slice(&self.buffer[start_pos..start_pos + take]);
@@ -2618,11 +2684,11 @@ pub mod advanced {
         pub fn window_stats(&self, window_size: usize) -> OnlineStats<F> {
             let recent_data = self.recent(window_size);
             let mut stats = OnlineStats::new();
-            
+
             for value in recent_data {
                 stats.update(value);
             }
-            
+
             stats
         }
     }
@@ -2633,9 +2699,7 @@ pub mod advanced {
 
         #[test]
         fn test_streaming_forecaster() {
-            let mut forecaster = StreamingForecaster::new(
-                0.3, Some(0.1), None, None, 100
-            ).unwrap();
+            let mut forecaster = StreamingForecaster::new(0.3, Some(0.1), None, None, 100).unwrap();
 
             // Add trend data
             for i in 1..=20 {
@@ -2644,7 +2708,7 @@ pub mod advanced {
 
             let forecast = forecaster.forecast(5).unwrap();
             assert_eq!(forecast.len(), 5);
-            
+
             // Should forecast increasing trend
             assert!(forecast[1] > forecast[0]);
             assert!(forecast[2] > forecast[1]);
@@ -2653,10 +2717,10 @@ pub mod advanced {
         #[test]
         fn test_anomaly_detector() {
             let mut detector = StreamingAnomalyDetector::new(100, 2.0, 10, 5);
-            
+
             // Add normal data
             let normal_data: Vec<f64> = (0..20).map(|x| x as f64).collect();
-            
+
             for window in normal_data.windows(10) {
                 let is_anomaly = detector.update(window).unwrap();
                 assert!(!is_anomaly, "Normal data should not be anomalous");
@@ -2665,18 +2729,22 @@ pub mod advanced {
             // Add anomalous data
             let mut anomalous_data = normal_data.clone();
             anomalous_data.extend(vec![1000.0; 10]); // Clear anomaly
-            
-            let result = detector.update(&anomalous_data[anomalous_data.len()-10..]).unwrap();
+
+            let result = detector
+                .update(&anomalous_data[anomalous_data.len() - 10..])
+                .unwrap();
             assert!(result, "Clear anomaly should be detected");
         }
 
         #[test]
         fn test_pattern_matcher() {
             let mut matcher = StreamingPatternMatcher::new(100, 0.8);
-            
+
             // Add a simple pattern
             let pattern = vec![1.0, 2.0, 3.0, 2.0, 1.0];
-            matcher.add_pattern(pattern.clone(), "triangle".to_string()).unwrap();
+            matcher
+                .add_pattern(pattern.clone(), "triangle".to_string())
+                .unwrap();
 
             // Add matching data
             for &value in &pattern {
@@ -2691,20 +2759,20 @@ pub mod advanced {
         #[test]
         fn test_circular_buffer() {
             let mut buffer = CircularBuffer::new(5);
-            
+
             // Add data
             for i in 1..=3 {
                 buffer.push(i as f64);
             }
-            
+
             assert_eq!(buffer.len(), 3);
             assert_eq!(buffer.recent(2), vec![2.0, 3.0]);
-            
+
             // Fill buffer completely
             for i in 4..=7 {
                 buffer.push(i as f64);
             }
-            
+
             assert_eq!(buffer.len(), 5);
             assert_eq!(buffer.to_vec(), vec![3.0, 4.0, 5.0, 6.0, 7.0]);
         }

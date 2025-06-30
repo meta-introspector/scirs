@@ -212,11 +212,11 @@ where
         // Process A in chunks of rows
         for chunk_start in (0..a_rows).step_by(chunk_size) {
             let chunk_end = std::cmp::min(chunk_start + chunk_size, a_rows);
-            
+
             // Extract chunk of A
             let (a_row_indices, a_col_indices, a_values) = a.find();
             let mut chunk_a_data = Vec::new();
-            
+
             // Find all elements in the current row chunk
             for (k, (&row, &col)) in a_row_indices.iter().zip(a_col_indices.iter()).enumerate() {
                 if row >= chunk_start && row < chunk_end {
@@ -225,8 +225,9 @@ where
             }
 
             // Compute chunk result: chunk_a * B
-            let chunk_result = self.compute_chunk_product(&chunk_a_data, b, chunk_end - chunk_start, b_cols)?;
-            
+            let chunk_result =
+                self.compute_chunk_product(&chunk_a_data, b, chunk_end - chunk_start, b_cols)?;
+
             // Add chunk results to final result with row offset
             for (local_row, col, val) in chunk_result {
                 if !val.is_zero() {
@@ -237,11 +238,23 @@ where
             }
         }
 
-        CsrArray::from_triplets(&result_rows, &result_cols, &result_values, (a_rows, b_cols), true)
+        CsrArray::from_triplets(
+            &result_rows,
+            &result_cols,
+            &result_values,
+            (a_rows, b_cols),
+            true,
+        )
     }
 
     /// Compute the product of a chunk of A with B
-    fn compute_chunk_product<S>(&self, chunk_a: &[(usize, usize, T)], b: &S, chunk_rows: usize, b_cols: usize) -> SparseResult<Vec<(usize, usize, T)>>
+    fn compute_chunk_product<S>(
+        &self,
+        chunk_a: &[(usize, usize, T)],
+        b: &S,
+        chunk_rows: usize,
+        b_cols: usize,
+    ) -> SparseResult<Vec<(usize, usize, T)>>
     where
         S: SparseArray<T>,
     {
@@ -249,9 +262,13 @@ where
         let (b_row_indices, b_col_indices, b_values) = b.find();
 
         // Create a more efficient representation of B for column access
-        let mut b_by_row: std::collections::HashMap<usize, Vec<(usize, T)>> = std::collections::HashMap::new();
+        let mut b_by_row: std::collections::HashMap<usize, Vec<(usize, T)>> =
+            std::collections::HashMap::new();
         for (k, (&row, &col)) in b_row_indices.iter().zip(b_col_indices.iter()).enumerate() {
-            b_by_row.entry(row).or_insert_with(Vec::new).push((col, b_values[k]));
+            b_by_row
+                .entry(row)
+                .or_insert_with(Vec::new)
+                .push((col, b_values[k]));
         }
 
         // For each row in the chunk
@@ -267,7 +284,7 @@ where
             // For each column j in B
             for j in 0..b_cols {
                 let mut dot_product = T::zero();
-                
+
                 // Compute A[i, :] · B[:, j]
                 for &(a_col, a_val) in &a_row_entries {
                     if let Some(b_row_data) = b_by_row.get(&a_col) {
@@ -596,19 +613,24 @@ impl ChunkedOperations {
             let (b_rows_idx, b_cols_idx, b_values) = b.find();
 
             // Use HashMap to efficiently combine elements
-            let mut chunk_result: std::collections::HashMap<(usize, usize), T> = std::collections::HashMap::new();
+            let mut chunk_result: std::collections::HashMap<(usize, usize), T> =
+                std::collections::HashMap::new();
 
             // Add elements from matrix A
             for (k, (&row, &col)) in a_rows_idx.iter().zip(a_cols_idx.iter()).enumerate() {
                 if row >= chunk_start && row < chunk_end {
-                    *chunk_result.entry((row - chunk_start, col)).or_insert(T::zero()) += a_values[k];
+                    *chunk_result
+                        .entry((row - chunk_start, col))
+                        .or_insert(T::zero()) += a_values[k];
                 }
             }
 
             // Add elements from matrix B
             for (k, (&row, &col)) in b_rows_idx.iter().zip(b_cols_idx.iter()).enumerate() {
                 if row >= chunk_start && row < chunk_end {
-                    *chunk_result.entry((row - chunk_start, col)).or_insert(T::zero()) += b_values[k];
+                    *chunk_result
+                        .entry((row - chunk_start, col))
+                        .or_insert(T::zero()) += b_values[k];
                 }
             }
 
@@ -626,7 +648,13 @@ impl ChunkedOperations {
             }
         }
 
-        CsrArray::from_triplets(&result_rows, &result_cols, &result_values, (a_rows, a_cols), true)
+        CsrArray::from_triplets(
+            &result_rows,
+            &result_cols,
+            &result_values,
+            (a_rows, a_cols),
+            true,
+        )
     }
 
     /// Memory-efficient sparse matrix scaling using chunking
@@ -683,7 +711,13 @@ impl ChunkedOperations {
             }
         }
 
-        CsrArray::from_triplets(&result_rows, &result_cols, &result_values, (rows, cols), false)
+        CsrArray::from_triplets(
+            &result_rows,
+            &result_cols,
+            &result_values,
+            (rows, cols),
+            false,
+        )
     }
 
     /// Memory-efficient sparse matrix conversion with chunking
@@ -740,7 +774,13 @@ impl ChunkedOperations {
         let result_cols: Vec<usize> = all_triplets.iter().map(|&(_, c, _)| c).collect();
         let result_values: Vec<T> = all_triplets.iter().map(|&(_, _, v)| v).collect();
 
-        CsrArray::from_triplets(&result_rows, &result_cols, &result_values, (rows, cols), false)
+        CsrArray::from_triplets(
+            &result_rows,
+            &result_cols,
+            &result_values,
+            (rows, cols),
+            false,
+        )
     }
 
     /// Memory-efficient bandwidth reduction using reverse Cuthill-McKee algorithm
@@ -753,7 +793,7 @@ impl ChunkedOperations {
         S: SparseArray<T>,
     {
         let (rows, cols) = matrix.shape();
-        
+
         if rows != cols {
             return Err(SparseError::ValueError(
                 "Bandwidth reduction requires square matrix".to_string(),
@@ -790,9 +830,7 @@ impl ChunkedOperations {
         }
 
         // Find vertex with minimum degree as starting point
-        let start_vertex = (0..rows)
-            .min_by_key(|&v| adj_list[v].len())
-            .unwrap_or(0);
+        let start_vertex = (0..rows).min_by_key(|&v| adj_list[v].len()).unwrap_or(0);
 
         // Reverse Cuthill-McKee ordering
         let mut ordering = Vec::new();
@@ -812,7 +850,7 @@ impl ChunkedOperations {
                 .filter(|&&v| !visited[v])
                 .map(|&v| (adj_list[v].len(), v))
                 .collect::<Vec<_>>();
-            
+
             neighbors.sort_unstable();
 
             for (_, neighbor) in neighbors {
@@ -839,7 +877,7 @@ impl ChunkedOperations {
         let mut perm_values = Vec::new();
 
         let (orig_rows, orig_cols, orig_values) = matrix.find();
-        
+
         // Create inverse permutation for quick lookup
         let mut inv_perm = vec![0; rows];
         for (new_idx, &old_idx) in ordering.iter().enumerate() {
@@ -855,7 +893,8 @@ impl ChunkedOperations {
             perm_values.push(orig_values[k]);
         }
 
-        let reordered_matrix = CsrArray::from_triplets(&perm_rows, &perm_cols, &perm_values, (rows, cols), false)?;
+        let reordered_matrix =
+            CsrArray::from_triplets(&perm_rows, &perm_cols, &perm_values, (rows, cols), false)?;
 
         if let Some(ref mut tracker) = memory_tracker {
             tracker.deallocate(memory_needed);
@@ -934,7 +973,7 @@ mod tests {
 
         // Verify result dimensions
         assert_eq!(result.shape(), (2, 2));
-        
+
         // Expected result: A * B = [[2*1, 0], [1*1, 3*2]] = [[2, 0], [1, 6]]
         assert_relative_eq!(result.get(0, 0), 2.0);
         assert_relative_eq!(result.get(0, 1), 0.0);
@@ -1023,7 +1062,9 @@ mod tests {
         let matrix_b = CsrArray::from_triplets(&rows_b, &cols_b, &data_b, (3, 3), false).unwrap();
 
         let mut tracker = MemoryTracker::new(10000);
-        let result = ChunkedOperations::chunked_sparse_add(&matrix_a, &matrix_b, 2, Some(&mut tracker)).unwrap();
+        let result =
+            ChunkedOperations::chunked_sparse_add(&matrix_a, &matrix_b, 2, Some(&mut tracker))
+                .unwrap();
 
         // Check result dimensions
         assert_eq!(result.shape(), (3, 3));
@@ -1042,7 +1083,8 @@ mod tests {
         let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
 
         let mut tracker = MemoryTracker::new(10000);
-        let result = ChunkedOperations::chunked_sparse_scale(&matrix, 2.0, 2, Some(&mut tracker)).unwrap();
+        let result =
+            ChunkedOperations::chunked_sparse_scale(&matrix, 2.0, 2, Some(&mut tracker)).unwrap();
 
         // Check result dimensions
         assert_eq!(result.shape(), (3, 3));
@@ -1061,7 +1103,8 @@ mod tests {
         let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
 
         let mut tracker = MemoryTracker::new(10000);
-        let result = ChunkedOperations::chunked_format_conversion(&matrix, 2, Some(&mut tracker)).unwrap();
+        let result =
+            ChunkedOperations::chunked_format_conversion(&matrix, 2, Some(&mut tracker)).unwrap();
 
         // Should be identical to original
         assert_eq!(result.shape(), matrix.shape());
@@ -1082,7 +1125,8 @@ mod tests {
         let matrix = CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).unwrap();
 
         let mut tracker = MemoryTracker::new(100000);
-        let (ordering, reordered) = ChunkedOperations::bandwidth_reduction(&matrix, Some(&mut tracker)).unwrap();
+        let (ordering, reordered) =
+            ChunkedOperations::bandwidth_reduction(&matrix, Some(&mut tracker)).unwrap();
 
         // Check that we got an ordering
         assert_eq!(ordering.len(), 4);
@@ -1108,11 +1152,15 @@ mod tests {
         let mut tracker = MemoryTracker::new(10);
 
         // All chunked operations should fail with insufficient memory
-        assert!(ChunkedOperations::chunked_sparse_scale(&matrix, 2.0, 1, Some(&mut tracker)).is_err());
-        
+        assert!(
+            ChunkedOperations::chunked_sparse_scale(&matrix, 2.0, 1, Some(&mut tracker)).is_err()
+        );
+
         tracker = MemoryTracker::new(10); // Reset
-        assert!(ChunkedOperations::chunked_format_conversion(&matrix, 1, Some(&mut tracker)).is_err());
-        
+        assert!(
+            ChunkedOperations::chunked_format_conversion(&matrix, 1, Some(&mut tracker)).is_err()
+        );
+
         tracker = MemoryTracker::new(10); // Reset
         assert!(ChunkedOperations::bandwidth_reduction(&matrix, Some(&mut tracker)).is_err());
     }

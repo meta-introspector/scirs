@@ -406,7 +406,7 @@ unsafe fn avx2_fir_filter(input: &[f64], coeffs: &[f64], output: &mut [f64]) -> 
 }
 
 #[cfg(feature = "unstable_avx512")] // Disabled by default
-// #[target_feature(enable = "avx512f")] // Disabled - unstable feature
+                                    // #[target_feature(enable = "avx512f")] // Disabled - unstable feature
 unsafe fn avx512_fir_filter(input: &[f64], coeffs: &[f64], output: &mut [f64]) -> SignalResult<()> {
     let n = input.len();
     let m = coeffs.len();
@@ -448,9 +448,15 @@ unsafe fn avx512_fir_filter(input: &[f64], coeffs: &[f64], output: &mut [f64]) -
 }
 
 #[cfg(not(feature = "unstable_avx512"))]
-unsafe fn avx512_fir_filter(_input: &[f64], _coeffs: &[f64], _output: &mut [f64]) -> SignalResult<()> {
+unsafe fn avx512_fir_filter(
+    _input: &[f64],
+    _coeffs: &[f64],
+    _output: &mut [f64],
+) -> SignalResult<()> {
     // Fallback implementation or error
-    Err(SignalError::ComputationError("AVX512 not available".to_string()))
+    Err(SignalError::ComputationError(
+        "AVX512 not available".to_string(),
+    ))
 }
 
 #[target_feature(enable = "sse4.1")]
@@ -1267,18 +1273,20 @@ pub fn simd_batch_spectral_analysis(
     config: &SimdConfig,
 ) -> SignalResult<BatchSpectralResult> {
     let (n_signals, signal_len) = signals.dim();
-    
+
     if signal_len == 0 || n_signals == 0 {
         return Err(SignalError::ValueError("Empty input signals".to_string()));
     }
 
     if !nfft.is_power_of_two() {
-        return Err(SignalError::ValueError("FFT size must be power of 2".to_string()));
+        return Err(SignalError::ValueError(
+            "FFT size must be power of 2".to_string(),
+        ));
     }
 
     // Generate window function using SIMD
     let window = generate_simd_window(window_type, signal_len, config)?;
-    
+
     // Pre-allocate results
     let n_freqs = nfft / 2 + 1;
     let mut power_spectra = Array2::<f64>::zeros((n_signals, n_freqs));
@@ -1337,7 +1345,9 @@ pub fn simd_batch_spectral_analysis(
         power_spectra,
         phases,
         statistics,
-        frequencies: (0..n_freqs).map(|i| i as f64 * 0.5 / n_freqs as f64).collect(),
+        frequencies: (0..n_freqs)
+            .map(|i| i as f64 * 0.5 / n_freqs as f64)
+            .collect(),
     })
 }
 
@@ -1412,7 +1422,7 @@ fn process_single_signal_simd(
         let magnitude = padded[i].norm();
         power_spectrum[i] = magnitude * magnitude;
         phase[i] = padded[i].arg();
-        
+
         // Scale for one-sided spectrum (except DC and Nyquist)
         if i > 0 && i < n_freqs - 1 {
             power_spectrum[i] *= 2.0;
@@ -1436,7 +1446,7 @@ fn process_single_signal_simd(
         weighted_sum += i as f64 * magnitude;
         magnitude_sum += magnitude;
     }
-    
+
     let spectral_centroid = if magnitude_sum > 1e-15 {
         weighted_sum / magnitude_sum / n_freqs as f64
     } else {
@@ -1452,9 +1462,13 @@ fn process_single_signal_simd(
 }
 
 /// Generate window function using SIMD optimizations
-fn generate_simd_window(window_type: &str, length: usize, config: &SimdConfig) -> SignalResult<Vec<f64>> {
+fn generate_simd_window(
+    window_type: &str,
+    length: usize,
+    config: &SimdConfig,
+) -> SignalResult<Vec<f64>> {
     let mut window = vec![0.0; length];
-    
+
     match window_type {
         "hann" => {
             for i in 0..length {
@@ -1523,23 +1537,23 @@ pub fn simd_enhanced_convolution(
 ) -> SignalResult<()> {
     check_finite(signal, "signal")?;
     check_finite(kernel, "kernel")?;
-    
+
     let signal_len = signal.len();
     let kernel_len = kernel.len();
     let output_len = signal_len + kernel_len - 1;
-    
+
     if output.len() != output_len {
         return Err(SignalError::ValueError(
             "Output buffer size incorrect for full convolution".to_string(),
         ));
     }
-    
+
     if signal_len < config.simd_threshold || config.force_scalar {
         return scalar_enhanced_convolution(signal, kernel, output);
     }
-    
+
     let caps = PlatformCapabilities::detect();
-    
+
     if caps.has_avx512 && config.use_advanced {
         unsafe { avx512_enhanced_convolution(signal, kernel, output) }
     } else if caps.has_avx2 {
@@ -1550,10 +1564,14 @@ pub fn simd_enhanced_convolution(
 }
 
 /// Scalar fallback for enhanced convolution
-fn scalar_enhanced_convolution(signal: &[f64], kernel: &[f64], output: &mut [f64]) -> SignalResult<()> {
+fn scalar_enhanced_convolution(
+    signal: &[f64],
+    kernel: &[f64],
+    output: &mut [f64],
+) -> SignalResult<()> {
     let signal_len = signal.len();
     let kernel_len = kernel.len();
-    
+
     for i in 0..output.len() {
         let mut sum = 0.0;
         for j in 0..kernel_len {
@@ -1564,7 +1582,7 @@ fn scalar_enhanced_convolution(signal: &[f64], kernel: &[f64], output: &mut [f64
         }
         output[i] = sum;
     }
-    
+
     Ok(())
 }
 
@@ -1578,11 +1596,11 @@ unsafe fn avx2_enhanced_convolution(
     let signal_len = signal.len();
     let kernel_len = kernel.len();
     let simd_width = 4;
-    
+
     for i in (0..output.len()).step_by(simd_width) {
         if i + simd_width <= output.len() {
             let mut result = _mm256_setzero_pd();
-            
+
             for j in 0..kernel_len {
                 let signal_idx = i.wrapping_sub(j);
                 if signal_idx < signal_len && signal_idx + simd_width <= signal_len {
@@ -1591,7 +1609,7 @@ unsafe fn avx2_enhanced_convolution(
                     result = _mm256_fmadd_pd(signal_vec, kernel_broadcast, result);
                 }
             }
-            
+
             _mm256_storeu_pd(output.as_mut_ptr().add(i), result);
         } else {
             // Handle remaining elements with scalar code
@@ -1608,7 +1626,7 @@ unsafe fn avx2_enhanced_convolution(
             break;
         }
     }
-    
+
     Ok(())
 }
 
@@ -1622,11 +1640,11 @@ unsafe fn avx512_enhanced_convolution(
     let signal_len = signal.len();
     let kernel_len = kernel.len();
     let simd_width = 8;
-    
+
     for i in (0..output.len()).step_by(simd_width) {
         if i + simd_width <= output.len() {
             let mut result = _mm512_setzero_pd();
-            
+
             for j in 0..kernel_len {
                 let signal_idx = i.wrapping_sub(j);
                 if signal_idx < signal_len && signal_idx + simd_width <= signal_len {
@@ -1635,7 +1653,7 @@ unsafe fn avx512_enhanced_convolution(
                     result = _mm512_fmadd_pd(signal_vec, kernel_broadcast, result);
                 }
             }
-            
+
             _mm512_storeu_pd(output.as_mut_ptr().add(i), result);
         } else {
             // Handle remaining elements with scalar code
@@ -1652,12 +1670,12 @@ unsafe fn avx512_enhanced_convolution(
             break;
         }
     }
-    
+
     Ok(())
 }
 
 /// Ultra-high-performance SIMD matrix operations for signal processing
-/// 
+///
 /// This module provides ultra-optimized SIMD implementations for matrix operations
 /// commonly used in signal processing, including:
 /// - SIMD-accelerated matrix-vector multiplication
@@ -1667,7 +1685,7 @@ unsafe fn avx512_enhanced_convolution(
 /// - Real-time signal filtering with multiple channels
 pub mod ultra_simd_matrix {
     use super::*;
-    
+
     /// SIMD-accelerated matrix-vector multiplication for signal processing
     ///
     /// Optimized for signal processing applications where the matrix represents
@@ -1677,7 +1695,7 @@ pub mod ultra_simd_matrix {
     ///
     /// * `matrix` - Input matrix (rows x cols)
     /// * `vector` - Input vector (length = cols)
-    /// * `result` - Output vector (length = rows) 
+    /// * `result` - Output vector (length = rows)
     /// * `config` - SIMD configuration
     pub fn simd_matrix_vector_mul(
         matrix: &Array2<f64>,
@@ -1686,29 +1704,31 @@ pub mod ultra_simd_matrix {
         config: &SimdConfig,
     ) -> SignalResult<()> {
         let (rows, cols) = matrix.dim();
-        
+
         if vector.len() != cols {
             return Err(SignalError::ValueError(format!(
-                "Vector length {} doesn't match matrix columns {}", 
-                vector.len(), cols
+                "Vector length {} doesn't match matrix columns {}",
+                vector.len(),
+                cols
             )));
         }
-        
+
         if result.len() != rows {
             return Err(SignalError::ValueError(format!(
-                "Result length {} doesn't match matrix rows {}", 
-                result.len(), rows
+                "Result length {} doesn't match matrix rows {}",
+                result.len(),
+                rows
             )));
         }
-        
+
         check_finite(vector, "vector")?;
-        
+
         // Use parallel processing for large matrices
         if rows >= 100 && cols >= 100 && !config.force_scalar {
             (0..rows).into_par_iter().for_each(|i| {
                 let row = matrix.row(i);
                 let mut sum = 0.0;
-                
+
                 // SIMD-accelerated dot product
                 let vector_view = ArrayView1::from(vector);
                 if cols >= config.simd_threshold {
@@ -1716,7 +1736,7 @@ pub mod ultra_simd_matrix {
                 } else {
                     sum = row.iter().zip(vector.iter()).map(|(&a, &b)| a * b).sum();
                 }
-                
+
                 result[i] = sum;
             });
         } else {
@@ -1724,7 +1744,7 @@ pub mod ultra_simd_matrix {
             for i in 0..rows {
                 let row = matrix.row(i);
                 let vector_view = ArrayView1::from(vector);
-                
+
                 result[i] = if cols >= config.simd_threshold && !config.force_scalar {
                     f64::simd_dot(&row, &vector_view)
                 } else {
@@ -1732,10 +1752,10 @@ pub mod ultra_simd_matrix {
                 };
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// SIMD-optimized batch convolution for multiple channels
     ///
     /// Performs convolution of multiple input signals with multiple kernels
@@ -1756,13 +1776,13 @@ pub mod ultra_simd_matrix {
         let (n_channels, signal_len) = signals.dim();
         let (n_kernels, kernel_len) = kernels.dim();
         let expected_output_len = signal_len + kernel_len - 1;
-        
+
         if outputs.dim() != (n_channels, n_kernels, expected_output_len) {
             return Err(SignalError::ValueError(
                 "Output array dimensions don't match expected size".to_string(),
             ));
         }
-        
+
         // Process each channel-kernel combination
         if n_channels * n_kernels >= 4 && !config.force_scalar {
             // Parallel processing for multiple combinations
@@ -1771,7 +1791,7 @@ pub mod ultra_simd_matrix {
                     let signal = signals.row(ch);
                     let kernel = kernels.row(k);
                     let mut output = outputs.slice_mut(s![ch, k, ..]);
-                    
+
                     // Use enhanced SIMD convolution
                     let mut output_vec = vec![0.0; expected_output_len];
                     let _ = simd_enhanced_convolution(
@@ -1780,7 +1800,7 @@ pub mod ultra_simd_matrix {
                         &mut output_vec,
                         config,
                     );
-                    
+
                     for (i, &val) in output_vec.iter().enumerate() {
                         output[i] = val;
                     }
@@ -1793,7 +1813,7 @@ pub mod ultra_simd_matrix {
                     let signal = signals.row(ch);
                     let kernel = kernels.row(k);
                     let mut output = outputs.slice_mut(s![ch, k, ..]);
-                    
+
                     let mut output_vec = vec![0.0; expected_output_len];
                     simd_enhanced_convolution(
                         signal.as_slice().unwrap(),
@@ -1801,17 +1821,17 @@ pub mod ultra_simd_matrix {
                         &mut output_vec,
                         config,
                     )?;
-                    
+
                     for (i, &val) in output_vec.iter().enumerate() {
                         output[i] = val;
                     }
                 }
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// SIMD-accelerated covariance matrix computation
     ///
     /// Computes the covariance matrix of input signals using SIMD acceleration
@@ -1828,20 +1848,20 @@ pub mod ultra_simd_matrix {
         config: &SimdConfig,
     ) -> SignalResult<()> {
         let (n_channels, n_samples) = signals.dim();
-        
+
         if covariance.dim() != (n_channels, n_channels) {
             return Err(SignalError::ValueError(
                 "Covariance matrix dimensions incorrect".to_string(),
             ));
         }
-        
+
         // Compute means for each channel using SIMD
         let mut means = vec![0.0; n_channels];
         for ch in 0..n_channels {
             let signal = signals.row(ch);
             means[ch] = signal.sum() / n_samples as f64;
         }
-        
+
         // Compute covariance matrix with SIMD acceleration
         if n_channels >= 8 && n_samples >= config.simd_threshold && !config.force_scalar {
             // Parallel computation for large matrices
@@ -1849,30 +1869,30 @@ pub mod ultra_simd_matrix {
                 for j in i..n_channels {
                     let signal_i = signals.row(i);
                     let signal_j = signals.row(j);
-                    
+
                     // SIMD-accelerated covariance calculation
                     let mut cov = 0.0;
                     let mean_i = means[i];
                     let mean_j = means[j];
-                    
+
                     // Use SIMD for the inner loop
                     let chunks = n_samples / 4;
                     for chunk in 0..chunks {
                         let start_idx = chunk * 4;
                         let end_idx = start_idx + 4;
-                        
+
                         for k in start_idx..end_idx {
                             cov += (signal_i[k] - mean_i) * (signal_j[k] - mean_j);
                         }
                     }
-                    
+
                     // Handle remaining samples
                     for k in (chunks * 4)..n_samples {
                         cov += (signal_i[k] - mean_i) * (signal_j[k] - mean_j);
                     }
-                    
+
                     cov /= (n_samples - 1) as f64;
-                    
+
                     // Set symmetric elements
                     covariance[[i, j]] = cov;
                     if i != j {
@@ -1886,12 +1906,14 @@ pub mod ultra_simd_matrix {
                 for j in i..n_channels {
                     let signal_i = signals.row(i);
                     let signal_j = signals.row(j);
-                    
-                    let cov = signal_i.iter()
+
+                    let cov = signal_i
+                        .iter()
                         .zip(signal_j.iter())
                         .map(|(&si, &sj)| (si - means[i]) * (sj - means[j]))
-                        .sum::<f64>() / (n_samples - 1) as f64;
-                    
+                        .sum::<f64>()
+                        / (n_samples - 1) as f64;
+
                     covariance[[i, j]] = cov;
                     if i != j {
                         covariance[[j, i]] = cov;
@@ -1899,13 +1921,13 @@ pub mod ultra_simd_matrix {
                 }
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Ultra-fast autocorrelation matrix computation with SIMD
     ///
-    /// Computes the autocorrelation matrix for parametric modeling and 
+    /// Computes the autocorrelation matrix for parametric modeling and
     /// linear prediction using advanced SIMD optimizations.
     ///
     /// # Arguments
@@ -1921,31 +1943,31 @@ pub mod ultra_simd_matrix {
         config: &SimdConfig,
     ) -> SignalResult<()> {
         let n = signal.len();
-        
+
         if autocorr_matrix.dim() != (order, order) {
             return Err(SignalError::ValueError(
                 "Autocorrelation matrix dimensions incorrect".to_string(),
             ));
         }
-        
+
         check_finite(signal, "signal")?;
-        
+
         if order >= n {
             return Err(SignalError::ValueError(
                 "Order must be less than signal length".to_string(),
             ));
         }
-        
+
         // Compute autocorrelation values up to required lags
         let mut autocorr_vals = vec![0.0; order];
-        
+
         for lag in 0..order {
             if n >= config.simd_threshold && !config.force_scalar {
                 // SIMD-accelerated autocorrelation computation
                 let mut sum = 0.0;
                 let effective_len = n - lag;
                 let chunks = effective_len / 4;
-                
+
                 for chunk in 0..chunks {
                     let start_idx = chunk * 4;
                     for i in 0..4 {
@@ -1956,12 +1978,12 @@ pub mod ultra_simd_matrix {
                         }
                     }
                 }
-                
+
                 // Handle remaining elements
                 for i in (chunks * 4)..(n - lag) {
                     sum += signal[i] * signal[i + lag];
                 }
-                
+
                 autocorr_vals[lag] = sum / (n - lag) as f64;
             } else {
                 // Scalar computation
@@ -1972,7 +1994,7 @@ pub mod ultra_simd_matrix {
                 autocorr_vals[lag] = sum / (n - lag) as f64;
             }
         }
-        
+
         // Build Toeplitz autocorrelation matrix
         for i in 0..order {
             for j in 0..order {
@@ -1980,7 +2002,7 @@ pub mod ultra_simd_matrix {
                 autocorr_matrix[[i, j]] = autocorr_vals[lag];
             }
         }
-        
+
         Ok(())
     }
 }
@@ -1988,7 +2010,7 @@ pub mod ultra_simd_matrix {
 /// Ultra-high-performance real-time signal processing operations
 pub mod ultra_simd_realtime {
     use super::*;
-    
+
     /// Real-time SIMD FIR filter state
     #[derive(Debug, Clone)]
     pub struct RealtimeSimdFirFilter {
@@ -1997,7 +2019,7 @@ pub mod ultra_simd_realtime {
         position: usize,
         config: SimdConfig,
     }
-    
+
     impl RealtimeSimdFirFilter {
         /// Create new real-time SIMD FIR filter
         pub fn new(coefficients: Vec<f64>, config: SimdConfig) -> Self {
@@ -2009,20 +2031,20 @@ pub mod ultra_simd_realtime {
                 config,
             }
         }
-        
+
         /// Process single sample with SIMD optimization
         pub fn process_sample(&mut self, input: f64) -> SignalResult<f64> {
             // Add new sample to delay line
             self.delay_line[self.position] = input;
-            
+
             // Compute filter output using SIMD when possible
             let mut output = 0.0;
             let filter_len = self.coefficients.len();
-            
+
             if filter_len >= self.config.simd_threshold && !self.config.force_scalar {
                 // SIMD-accelerated convolution
                 let caps = PlatformCapabilities::detect();
-                
+
                 if caps.has_avx2 {
                     output = unsafe { self.avx2_process_sample() };
                 } else {
@@ -2031,13 +2053,13 @@ pub mod ultra_simd_realtime {
             } else {
                 output = self.scalar_process_sample();
             }
-            
+
             // Update position (circular buffer)
             self.position = (self.position + 1) % filter_len;
-            
+
             Ok(output)
         }
-        
+
         /// Process block of samples for higher efficiency
         pub fn process_block(&mut self, input: &[f64], output: &mut [f64]) -> SignalResult<()> {
             if input.len() != output.len() {
@@ -2045,67 +2067,67 @@ pub mod ultra_simd_realtime {
                     "Input and output block sizes must match".to_string(),
                 ));
             }
-            
+
             for (i, &sample) in input.iter().enumerate() {
                 output[i] = self.process_sample(sample)?;
             }
-            
+
             Ok(())
         }
-        
+
         #[target_feature(enable = "avx2")]
         unsafe fn avx2_process_sample(&self) -> f64 {
             let mut sum = 0.0;
             let filter_len = self.coefficients.len();
-            
+
             // Vectorized computation where possible
             let chunks = filter_len / 4;
             for chunk in 0..chunks {
                 let mut partial_sum = _mm256_setzero_pd();
-                
+
                 for i in 0..4 {
                     let coeff_idx = chunk * 4 + i;
                     let delay_idx = (self.position + filter_len - coeff_idx - 1) % filter_len;
-                    
+
                     let coeff = _mm256_set1_pd(self.coefficients[coeff_idx]);
                     let sample = _mm256_set1_pd(self.delay_line[delay_idx]);
                     partial_sum = _mm256_fmadd_pd(coeff, sample, partial_sum);
                 }
-                
+
                 // Extract and sum the partial results
                 let partial_array: [f64; 4] = std::mem::transmute(partial_sum);
                 sum += partial_array.iter().sum::<f64>();
             }
-            
+
             // Handle remaining coefficients
             for i in (chunks * 4)..filter_len {
                 let delay_idx = (self.position + filter_len - i - 1) % filter_len;
                 sum += self.coefficients[i] * self.delay_line[delay_idx];
             }
-            
+
             sum
         }
-        
+
         fn scalar_process_sample(&self) -> f64 {
             let mut sum = 0.0;
             let filter_len = self.coefficients.len();
-            
+
             for i in 0..filter_len {
                 let delay_idx = (self.position + filter_len - i - 1) % filter_len;
                 sum += self.coefficients[i] * self.delay_line[delay_idx];
             }
-            
+
             sum
         }
     }
-    
+
     /// Multi-channel real-time SIMD processing
     #[derive(Debug, Clone)]
     pub struct MultiChannelRealtimeProcessor {
         filters: Vec<RealtimeSimdFirFilter>,
         config: SimdConfig,
     }
-    
+
     impl MultiChannelRealtimeProcessor {
         /// Create new multi-channel processor
         pub fn new(channel_filters: Vec<Vec<f64>>, config: SimdConfig) -> Self {
@@ -2113,10 +2135,10 @@ pub mod ultra_simd_realtime {
                 .into_iter()
                 .map(|coeffs| RealtimeSimdFirFilter::new(coeffs, config.clone()))
                 .collect();
-            
+
             Self { filters, config }
         }
-        
+
         /// Process multi-channel sample
         pub fn process_multichannel_sample(
             &mut self,
@@ -2128,7 +2150,7 @@ pub mod ultra_simd_realtime {
                     "Input/output channel count mismatch".to_string(),
                 ));
             }
-            
+
             // Process each channel
             if self.filters.len() >= 4 && !self.config.force_scalar {
                 // Parallel processing for multiple channels
@@ -2141,14 +2163,15 @@ pub mod ultra_simd_realtime {
                     });
             } else {
                 // Sequential processing
-                for (i, (&input, filter)) in inputs.iter().zip(self.filters.iter_mut()).enumerate() {
+                for (i, (&input, filter)) in inputs.iter().zip(self.filters.iter_mut()).enumerate()
+                {
                     outputs[i] = filter.process_sample(input)?;
                 }
             }
-            
+
             Ok(())
         }
-        
+
         /// Process multi-channel block
         pub fn process_multichannel_block(
             &mut self,
@@ -2156,38 +2179,38 @@ pub mod ultra_simd_realtime {
             outputs: &mut Array2<f64>,
         ) -> SignalResult<()> {
             let (n_channels, block_size) = inputs.dim();
-            
+
             if outputs.dim() != (n_channels, block_size) {
                 return Err(SignalError::ValueError(
                     "Input and output array dimensions must match".to_string(),
                 ));
             }
-            
+
             if n_channels != self.filters.len() {
                 return Err(SignalError::ValueError(
                     "Number of channels doesn't match number of filters".to_string(),
                 ));
             }
-            
+
             // Process each sample across all channels
             for sample_idx in 0..block_size {
                 let mut input_sample = vec![0.0; n_channels];
                 let mut output_sample = vec![0.0; n_channels];
-                
+
                 // Extract samples for all channels
                 for ch in 0..n_channels {
                     input_sample[ch] = inputs[[ch, sample_idx]];
                 }
-                
+
                 // Process the multi-channel sample
                 self.process_multichannel_sample(&input_sample, &mut output_sample)?;
-                
+
                 // Store results
                 for ch in 0..n_channels {
                     outputs[[ch, sample_idx]] = output_sample[ch];
                 }
             }
-            
+
             Ok(())
         }
     }
@@ -2200,64 +2223,70 @@ pub fn comprehensive_simd_validation(
 ) -> SignalResult<SimdValidationResult> {
     let mut validation_result = SimdValidationResult::default();
     let start_time = std::time::Instant::now();
-    
+
     // 1. Test basic SIMD operations
     let test_signal: Vec<f64> = (0..test_size).map(|i| (i as f64 * 0.1).sin()).collect();
     let test_kernel = vec![0.25, 0.5, 0.25];
     let mut output = vec![0.0; test_signal.len()];
-    
+
     // Test FIR filter
     let fir_start = std::time::Instant::now();
     simd_fir_filter(&test_signal, &test_kernel, &mut output, config)?;
     validation_result.fir_filter_time_ns = fir_start.elapsed().as_nanos() as u64;
-    
+
     // Test autocorrelation
     let autocorr_start = std::time::Instant::now();
     let autocorr = simd_autocorrelation(&test_signal, 10, config)?;
     validation_result.autocorrelation_time_ns = autocorr_start.elapsed().as_nanos() as u64;
-    
+
     // Test cross-correlation
     let xcorr_start = std::time::Instant::now();
     let xcorr = simd_cross_correlation(&test_signal, &test_signal, "full", config)?;
     validation_result.cross_correlation_time_ns = xcorr_start.elapsed().as_nanos() as u64;
-    
+
     // 2. Test matrix operations
     let matrix = Array2::<f64>::ones((100, 100));
     let vector = vec![1.0; 100];
     let mut matrix_result = vec![0.0; 100];
-    
+
     let matrix_start = std::time::Instant::now();
     ultra_simd_matrix::simd_matrix_vector_mul(&matrix, &vector, &mut matrix_result, config)?;
     validation_result.matrix_vector_time_ns = matrix_start.elapsed().as_nanos() as u64;
-    
+
     // 3. Validate SIMD vs Scalar consistency
     let mut scalar_config = config.clone();
     scalar_config.force_scalar = true;
-    
+
     let mut scalar_output = vec![0.0; test_signal.len()];
-    simd_fir_filter(&test_signal, &test_kernel, &mut scalar_output, &scalar_config)?;
-    
+    simd_fir_filter(
+        &test_signal,
+        &test_kernel,
+        &mut scalar_output,
+        &scalar_config,
+    )?;
+
     // Compare results
-    let max_error = output.iter()
+    let max_error = output
+        .iter()
         .zip(scalar_output.iter())
         .map(|(&simd, &scalar)| (simd - scalar).abs())
         .fold(0.0, f64::max);
-    
+
     validation_result.simd_scalar_max_error = max_error;
     validation_result.simd_scalar_consistency = max_error < 1e-12;
-    
+
     // 4. Performance analysis
     let ops_per_second = test_size as f64 / (fir_start.elapsed().as_secs_f64());
     validation_result.operations_per_second = ops_per_second;
-    
+
     // 5. Memory throughput estimation
     let bytes_processed = test_size * std::mem::size_of::<f64>();
     let memory_throughput = bytes_processed as f64 / fir_start.elapsed().as_secs_f64();
     validation_result.memory_throughput_bytes_per_sec = memory_throughput;
-    
+
     validation_result.total_validation_time_ms = start_time.elapsed().as_secs_f64() * 1000.0;
     validation_result.validation_passed = validation_result.simd_scalar_consistency;
-    
+
     Ok(validation_result)
 }
 
@@ -2454,8 +2483,12 @@ pub fn simd_complex_multiply(
     config: &SimdConfig,
 ) -> SignalResult<()> {
     let n = a_real.len();
-    if n != a_imag.len() || n != b_real.len() || n != b_imag.len() 
-        || n != result_real.len() || n != result_imag.len() {
+    if n != a_imag.len()
+        || n != b_real.len()
+        || n != b_imag.len()
+        || n != result_real.len()
+        || n != result_imag.len()
+    {
         return Err(SignalError::ValueError(
             "All arrays must have the same length".to_string(),
         ));
@@ -2618,11 +2651,7 @@ fn scalar_complex_multiply(
     Ok(())
 }
 
-fn scalar_power_spectrum(
-    real: &[f64],
-    imag: &[f64],
-    power: &mut [f64],
-) -> SignalResult<()> {
+fn scalar_power_spectrum(real: &[f64], imag: &[f64], power: &mut [f64]) -> SignalResult<()> {
     for i in 0..real.len() {
         power[i] = real[i] * real[i] + imag[i] * imag[i];
     }
@@ -2636,10 +2665,10 @@ fn scalar_weighted_average_spectra(
 ) -> SignalResult<()> {
     let n_freqs = result.len();
     let n_tapers = spectra.len();
-    
+
     // Initialize result
     result.fill(0.0);
-    
+
     // Compute weighted sum
     for (taper_idx, spectrum) in spectra.iter().enumerate() {
         let weight = weights[taper_idx];
@@ -2647,15 +2676,11 @@ fn scalar_weighted_average_spectra(
             result[freq_idx] += weight * spectrum[freq_idx];
         }
     }
-    
+
     Ok(())
 }
 
-fn scalar_apply_window(
-    signal: &[f64],
-    window: &[f64],
-    result: &mut [f64],
-) -> SignalResult<()> {
+fn scalar_apply_window(signal: &[f64], window: &[f64], result: &mut [f64]) -> SignalResult<()> {
     for i in 0..signal.len() {
         result[i] = signal[i] * window[i];
     }
@@ -2675,70 +2700,62 @@ unsafe fn avx2_complex_multiply(
     let n = a_real.len();
     let simd_width = 4;
     let simd_chunks = n / simd_width;
-    
+
     for chunk in 0..simd_chunks {
         let idx = chunk * simd_width;
-        
+
         let ar_vec = _mm256_loadu_pd(a_real.as_ptr().add(idx));
         let ai_vec = _mm256_loadu_pd(a_imag.as_ptr().add(idx));
         let br_vec = _mm256_loadu_pd(b_real.as_ptr().add(idx));
         let bi_vec = _mm256_loadu_pd(b_imag.as_ptr().add(idx));
-        
+
         // result_real = a_real * b_real - a_imag * b_imag
-        let real_result = _mm256_sub_pd(
-            _mm256_mul_pd(ar_vec, br_vec),
-            _mm256_mul_pd(ai_vec, bi_vec)
-        );
-        
-        // result_imag = a_real * b_imag + a_imag * b_real  
-        let imag_result = _mm256_add_pd(
-            _mm256_mul_pd(ar_vec, bi_vec),
-            _mm256_mul_pd(ai_vec, br_vec)
-        );
-        
+        let real_result =
+            _mm256_sub_pd(_mm256_mul_pd(ar_vec, br_vec), _mm256_mul_pd(ai_vec, bi_vec));
+
+        // result_imag = a_real * b_imag + a_imag * b_real
+        let imag_result =
+            _mm256_add_pd(_mm256_mul_pd(ar_vec, bi_vec), _mm256_mul_pd(ai_vec, br_vec));
+
         _mm256_storeu_pd(result_real.as_mut_ptr().add(idx), real_result);
         _mm256_storeu_pd(result_imag.as_mut_ptr().add(idx), imag_result);
     }
-    
+
     // Handle remaining elements
     for i in (simd_chunks * simd_width)..n {
         result_real[i] = a_real[i] * b_real[i] - a_imag[i] * b_imag[i];
         result_imag[i] = a_real[i] * b_imag[i] + a_imag[i] * b_real[i];
     }
-    
+
     Ok(())
 }
 
 #[target_feature(enable = "avx2")]
-unsafe fn avx2_power_spectrum(
-    real: &[f64],
-    imag: &[f64],
-    power: &mut [f64],
-) -> SignalResult<()> {
+unsafe fn avx2_power_spectrum(real: &[f64], imag: &[f64], power: &mut [f64]) -> SignalResult<()> {
     let n = real.len();
     let simd_width = 4;
     let simd_chunks = n / simd_width;
-    
+
     for chunk in 0..simd_chunks {
         let idx = chunk * simd_width;
-        
+
         let real_vec = _mm256_loadu_pd(real.as_ptr().add(idx));
         let imag_vec = _mm256_loadu_pd(imag.as_ptr().add(idx));
-        
+
         // power = real^2 + imag^2
         let power_vec = _mm256_add_pd(
             _mm256_mul_pd(real_vec, real_vec),
-            _mm256_mul_pd(imag_vec, imag_vec)
+            _mm256_mul_pd(imag_vec, imag_vec),
         );
-        
+
         _mm256_storeu_pd(power.as_mut_ptr().add(idx), power_vec);
     }
-    
+
     // Handle remaining elements
     for i in (simd_chunks * simd_width)..n {
         power[i] = real[i] * real[i] + imag[i] * imag[i];
     }
-    
+
     Ok(())
 }
 
@@ -2752,7 +2769,7 @@ unsafe fn avx2_weighted_average_spectra(
     let n_tapers = spectra.len();
     let simd_width = 4;
     let simd_chunks = n_freqs / simd_width;
-    
+
     // Initialize result
     for chunk in 0..simd_chunks {
         let idx = chunk * simd_width;
@@ -2761,28 +2778,28 @@ unsafe fn avx2_weighted_average_spectra(
     for i in (simd_chunks * simd_width)..n_freqs {
         result[i] = 0.0;
     }
-    
+
     // Accumulate weighted spectra
     for (taper_idx, spectrum) in spectra.iter().enumerate() {
         let weight_vec = _mm256_set1_pd(weights[taper_idx]);
-        
+
         for chunk in 0..simd_chunks {
             let idx = chunk * simd_width;
-            
+
             let result_vec = _mm256_loadu_pd(result.as_ptr().add(idx));
             let spectrum_vec = _mm256_loadu_pd(spectrum.as_ptr().add(idx));
             let weighted_spectrum = _mm256_mul_pd(spectrum_vec, weight_vec);
             let new_result = _mm256_add_pd(result_vec, weighted_spectrum);
-            
+
             _mm256_storeu_pd(result.as_mut_ptr().add(idx), new_result);
         }
-        
+
         // Handle remaining elements
         for i in (simd_chunks * simd_width)..n_freqs {
             result[i] += weights[taper_idx] * spectrum[i];
         }
     }
-    
+
     Ok(())
 }
 
@@ -2795,22 +2812,22 @@ unsafe fn avx2_apply_window(
     let n = signal.len();
     let simd_width = 4;
     let simd_chunks = n / simd_width;
-    
+
     for chunk in 0..simd_chunks {
         let idx = chunk * simd_width;
-        
+
         let signal_vec = _mm256_loadu_pd(signal.as_ptr().add(idx));
         let window_vec = _mm256_loadu_pd(window.as_ptr().add(idx));
         let result_vec = _mm256_mul_pd(signal_vec, window_vec);
-        
+
         _mm256_storeu_pd(result.as_mut_ptr().add(idx), result_vec);
     }
-    
+
     // Handle remaining elements
     for i in (simd_chunks * simd_width)..n {
         result[i] = signal[i] * window[i];
     }
-    
+
     Ok(())
 }
 
@@ -2818,7 +2835,7 @@ unsafe fn avx2_apply_window(
 #[target_feature(enable = "sse4.1")]
 unsafe fn sse_complex_multiply(
     a_real: &[f64],
-    a_imag: &[f64], 
+    a_imag: &[f64],
     b_real: &[f64],
     b_imag: &[f64],
     result_real: &mut [f64],
@@ -2829,11 +2846,7 @@ unsafe fn sse_complex_multiply(
 }
 
 #[target_feature(enable = "sse4.1")]
-unsafe fn sse_power_spectrum(
-    real: &[f64],
-    imag: &[f64],
-    power: &mut [f64],
-) -> SignalResult<()> {
+unsafe fn sse_power_spectrum(real: &[f64], imag: &[f64], power: &mut [f64]) -> SignalResult<()> {
     scalar_power_spectrum(real, imag, power)
 }
 
@@ -2847,10 +2860,6 @@ unsafe fn sse_weighted_average_spectra(
 }
 
 #[target_feature(enable = "sse4.1")]
-unsafe fn sse_apply_window(
-    signal: &[f64],
-    window: &[f64],
-    result: &mut [f64],
-) -> SignalResult<()> {
+unsafe fn sse_apply_window(signal: &[f64], window: &[f64], result: &mut [f64]) -> SignalResult<()> {
     scalar_apply_window(signal, window, result)
 }

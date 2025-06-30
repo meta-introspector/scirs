@@ -840,7 +840,7 @@ impl<F: Float + std::iter::Sum> AdwinDetector<F> {
                 "Confidence must be between 0 and 1".to_string(),
             ));
         }
-        
+
         Ok(Self {
             confidence,
             window: VecDeque::with_capacity(1000),
@@ -867,7 +867,7 @@ impl<F: Float + std::iter::Sum> AdwinDetector<F> {
                     bucket.sum[0] = bucket.sum[0] + bucket.sum[1];
                     bucket.variance[0] = bucket.variance[0] + bucket.variance[1];
                     bucket.width[0] = bucket.width[0] + bucket.width[1];
-                    
+
                     // Shift remaining buckets
                     for i in 1..(bucket.used_buckets - 1) {
                         bucket.sum[i] = bucket.sum[i + 1];
@@ -888,21 +888,23 @@ impl<F: Float + std::iter::Sum> AdwinDetector<F> {
 
         let mut change_detected = false;
         let delta = F::from((1.0 / self.confidence).ln() / 2.0).unwrap();
-        
+
         // Check for significant difference in subwindows
         for cut_point in 1..self.width {
             let w0 = cut_point;
             let w1 = self.width - cut_point;
-            
-            if w0 >= 5 && w1 >= 5 { // Minimum subwindow size
+
+            if w0 >= 5 && w1 >= 5 {
+                // Minimum subwindow size
                 let mean0 = self.calculate_subwindow_mean(0, cut_point);
                 let mean1 = self.calculate_subwindow_mean(cut_point, self.width);
-                
+
                 let var0 = self.calculate_subwindow_variance(0, cut_point, mean0);
                 let var1 = self.calculate_subwindow_variance(cut_point, self.width, mean1);
-                
-                let epsilon = (delta * (var0 / F::from(w0).unwrap() + var1 / F::from(w1).unwrap())).sqrt();
-                
+
+                let epsilon =
+                    (delta * (var0 / F::from(w0).unwrap() + var1 / F::from(w1).unwrap())).sqrt();
+
                 if (mean0 - mean1).abs() > epsilon {
                     // Change detected - remove old data
                     self.remove_subwindow(0, cut_point);
@@ -911,7 +913,7 @@ impl<F: Float + std::iter::Sum> AdwinDetector<F> {
                 }
             }
         }
-        
+
         change_detected
     }
 
@@ -919,7 +921,7 @@ impl<F: Float + std::iter::Sum> AdwinDetector<F> {
         if start >= end || end > self.window.len() {
             return F::zero();
         }
-        
+
         let sum = self.window.range(start..end).cloned().sum::<F>();
         sum / F::from(end - start).unwrap()
     }
@@ -928,8 +930,10 @@ impl<F: Float + std::iter::Sum> AdwinDetector<F> {
         if start >= end || end > self.window.len() {
             return F::zero();
         }
-        
-        let variance = self.window.range(start..end)
+
+        let variance = self
+            .window
+            .range(start..end)
             .map(|&x| (x - mean) * (x - mean))
             .sum::<F>();
         variance / F::from(end - start).unwrap()
@@ -951,47 +955,54 @@ impl<F: Float + std::iter::Sum> AdwinDetector<F> {
             self.variance = F::zero();
             return;
         }
-        
+
         let mean = self.total_sum / F::from(self.width).unwrap();
-        self.variance = self.window.iter()
+        self.variance = self
+            .window
+            .iter()
             .map(|&x| (x - mean) * (x - mean))
-            .sum::<F>() / F::from(self.width - 1).unwrap();
+            .sum::<F>()
+            / F::from(self.width - 1).unwrap();
     }
 }
 
 impl<F: Float> ConceptDriftDetector<F> for AdwinDetector<F> {
     fn update(&mut self, _prediction_correct: bool, error: F) -> Result<DriftDetectionResult> {
         self.samples_count += 1;
-        
+
         // Add error value to window
         self.window.push_back(error);
         self.total_sum = self.total_sum + error;
         self.width += 1;
-        
+
         // Compress buckets if needed for memory efficiency
         if self.width % 100 == 0 {
             self.compress_buckets();
         }
-        
+
         // Detect concept drift
         let change_detected = self.detect_change();
-        
+
         let status = if change_detected {
             self.drift_count += 1;
             DriftStatus::Drift
         } else {
             DriftStatus::Stable
         };
-        
+
         let mut statistics = HashMap::new();
         statistics.insert("window_size".to_string(), self.width as f64);
         statistics.insert("total_drifts".to_string(), self.drift_count as f64);
         statistics.insert("confidence".to_string(), self.confidence);
-        
+
         Ok(DriftDetectionResult {
             status,
             confidence: self.confidence,
-            change_point: if change_detected { Some(self.samples_count) } else { None },
+            change_point: if change_detected {
+                Some(self.samples_count)
+            } else {
+                None
+            },
             statistics,
         })
     }
@@ -1037,7 +1048,7 @@ impl<F: Float> ConceptDriftDetector<F> for AdwinDetector<F> {
         } else {
             F::zero()
         };
-        
+
         DriftStatistics {
             samples_since_reset: self.samples_count,
             warnings_count: self.warning_count,
@@ -1046,13 +1057,17 @@ impl<F: Float> ConceptDriftDetector<F> for AdwinDetector<F> {
             baseline_error_rate: if self.width > 10 {
                 // Use first 10% as baseline
                 let baseline_size = self.width / 10;
-                self.window.iter().take(baseline_size).cloned().sum::<F>() 
+                self.window.iter().take(baseline_size).cloned().sum::<F>()
                     / F::from(baseline_size).unwrap()
             } else {
                 current_error_rate
             },
             drift_score: self.variance,
-            last_detection_time: if self.drift_count > 0 { Some(SystemTime::now()) } else { None },
+            last_detection_time: if self.drift_count > 0 {
+                Some(SystemTime::now())
+            } else {
+                None
+            },
         }
     }
 }
@@ -1318,11 +1333,15 @@ impl<F: Float> AdaptiveWindowManager<F> {
                     trigger = AdaptationTrigger::Scheduled;
                 }
             }
-            WindowAdaptationStrategy::Hybrid { strategies, weights } => {
+            WindowAdaptationStrategy::Hybrid {
+                strategies,
+                weights,
+            } => {
                 // Combine multiple strategies with weights
                 let mut adaptation_score = 0.0;
                 for (strategy, weight) in strategies.iter().zip(weights.iter()) {
-                    let score = self.evaluate_strategy_score(strategy, stats, drift_detected, anomaly)?;
+                    let score =
+                        self.evaluate_strategy_score(strategy, stats, drift_detected, anomaly)?;
                     adaptation_score += score * weight;
                 }
                 if adaptation_score > 0.5 {
@@ -1349,7 +1368,7 @@ impl<F: Float> AdaptiveWindowManager<F> {
 
         if should_adapt {
             let new_size = self.calculate_new_window_size(stats, drift_detected, anomaly)?;
-            
+
             if new_size != self.current_window_size {
                 self.current_window_size = new_size;
                 self.last_adaptation = Some(Instant::now());
@@ -1384,7 +1403,11 @@ impl<F: Float> AdaptiveWindowManager<F> {
     ) -> Result<f64> {
         let score = match strategy {
             WindowAdaptationStrategy::DriftBased => {
-                if drift_detected { 1.0 } else { 0.0 }
+                if drift_detected {
+                    1.0
+                } else {
+                    0.0
+                }
             }
             WindowAdaptationStrategy::PerformanceBased { target_accuracy } => {
                 let current = stats.current_accuracy.to_f64().unwrap_or(0.0);
@@ -1406,10 +1429,16 @@ impl<F: Float> AdaptiveWindowManager<F> {
 
         // Simple trend analysis: check if performance is consistently declining
         let recent = &self.performance_history[self.performance_history.len() - 5..];
-        let older = &self.performance_history[self.performance_history.len() - 10..self.performance_history.len() - 5];
+        let older = &self.performance_history
+            [self.performance_history.len() - 10..self.performance_history.len() - 5];
 
-        let recent_avg = recent.iter().map(|x| x.to_f64().unwrap_or(0.0)).sum::<f64>() / recent.len() as f64;
-        let older_avg = older.iter().map(|x| x.to_f64().unwrap_or(0.0)).sum::<f64>() / older.len() as f64;
+        let recent_avg = recent
+            .iter()
+            .map(|x| x.to_f64().unwrap_or(0.0))
+            .sum::<f64>()
+            / recent.len() as f64;
+        let older_avg =
+            older.iter().map(|x| x.to_f64().unwrap_or(0.0)).sum::<f64>() / older.len() as f64;
 
         // Adapt if performance declined by more than 5%
         Ok(recent_avg < older_avg * 0.95)
@@ -1422,20 +1451,20 @@ impl<F: Float> AdaptiveWindowManager<F> {
         anomaly: Option<&Anomaly<F>>,
     ) -> Result<usize> {
         let current_accuracy = stats.current_accuracy.to_f64().unwrap_or(0.0);
-        
+
         let mut size_multiplier = 1.0;
-        
+
         // Adjust based on different factors
         if drift_detected {
             // Reduce window size to adapt faster to new concept
             size_multiplier *= 0.7;
         }
-        
+
         if anomaly.is_some() {
             // Slightly reduce window to be more sensitive
             size_multiplier *= 0.9;
         }
-        
+
         if current_accuracy < 0.6 {
             // Poor performance: reduce window size
             size_multiplier *= 0.8;
@@ -1443,25 +1472,30 @@ impl<F: Float> AdaptiveWindowManager<F> {
             // Good performance: can afford larger window
             size_multiplier *= 1.2;
         }
-        
+
         // Apply variance based on recent performance stability
         if self.performance_history.len() > 5 {
-            let recent_values: Vec<f64> = self.performance_history.iter()
-                .rev().take(5)
+            let recent_values: Vec<f64> = self
+                .performance_history
+                .iter()
+                .rev()
+                .take(5)
                 .map(|x| x.to_f64().unwrap_or(0.0))
                 .collect();
-            
+
             let mean = recent_values.iter().sum::<f64>() / recent_values.len() as f64;
-            let variance = recent_values.iter()
+            let variance = recent_values
+                .iter()
                 .map(|x| (x - mean).powi(2))
-                .sum::<f64>() / recent_values.len() as f64;
-            
+                .sum::<f64>()
+                / recent_values.len() as f64;
+
             if variance > 0.01 {
                 // High variance: smaller window for responsiveness
                 size_multiplier *= 0.9;
             }
         }
-        
+
         let new_size = ((self.current_window_size as f64) * size_multiplier) as usize;
         Ok(new_size.clamp(self.min_window_size, self.max_window_size))
     }
@@ -1471,7 +1505,7 @@ impl<F: Float> AdaptiveWindowManager<F> {
         let emergency_size = (self.min_window_size * 3).min(self.current_window_size / 2);
         self.current_window_size = emergency_size.max(self.min_window_size);
         self.last_adaptation = Some(Instant::now());
-        
+
         let adaptation = WindowAdaptation {
             timestamp: Instant::now(),
             old_size: self.current_window_size,
@@ -1480,12 +1514,12 @@ impl<F: Float> AdaptiveWindowManager<F> {
             performance_before: 0.0, // Will be updated
             performance_after: None,
         };
-        
+
         self.adaptation_history.push_back(adaptation);
         if self.adaptation_history.len() > 50 {
             self.adaptation_history.pop_front();
         }
-        
+
         Ok(())
     }
 
@@ -1508,7 +1542,8 @@ impl<F: Float> AdaptiveWindowManager<F> {
 
     /// Get performance history
     pub fn get_performance_history(&self) -> Vec<f64> {
-        self.performance_history.iter()
+        self.performance_history
+            .iter()
             .map(|x| x.to_f64().unwrap_or(0.0))
             .collect()
     }
@@ -1539,13 +1574,13 @@ impl<F: Float> PerformanceMonitor<F> {
 
     fn take_snapshot(&mut self, stats: &StreamingStatistics<F>) -> Result<()> {
         let now = Instant::now();
-        
+
         // Create performance snapshot
         let snapshot = PerformanceSnapshot {
             timestamp: now,
             accuracy: stats.current_accuracy,
             precision: F::zero(), // Would be calculated from confusion matrix
-            recall: F::zero(),    // Would be calculated from confusion matrix  
+            recall: F::zero(),    // Would be calculated from confusion matrix
             f1_score: F::zero(),  // Would be calculated from confusion matrix
             processing_time: Duration::from_nanos(1000), // Placeholder
             memory_usage: std::mem::size_of::<StreamingStatistics<F>>(),
@@ -1560,9 +1595,14 @@ impl<F: Float> PerformanceMonitor<F> {
         }
 
         // Update current metrics
-        self.current_metrics.insert("accuracy".to_string(), stats.current_accuracy);
-        self.current_metrics.insert("error_rate".to_string(), stats.error_rate);
-        self.current_metrics.insert("moving_average_accuracy".to_string(), stats.moving_average_accuracy);
+        self.current_metrics
+            .insert("accuracy".to_string(), stats.current_accuracy);
+        self.current_metrics
+            .insert("error_rate".to_string(), stats.error_rate);
+        self.current_metrics.insert(
+            "moving_average_accuracy".to_string(),
+            stats.moving_average_accuracy,
+        );
 
         // Set baseline if this is first measurement
         if self.baseline_metrics.is_empty() {
@@ -1636,20 +1676,16 @@ impl<F: Float> PerformanceMonitor<F> {
             return None;
         }
 
-        let recent_snapshots: Vec<_> = self.performance_history.iter()
-            .rev()
-            .take(window)
-            .collect();
+        let recent_snapshots: Vec<_> = self.performance_history.iter().rev().take(window).collect();
 
-        let values: Vec<f64> = recent_snapshots.iter()
-            .map(|snapshot| {
-                match metric_name {
-                    "accuracy" => snapshot.accuracy.to_f64().unwrap_or(0.0),
-                    "precision" => snapshot.precision.to_f64().unwrap_or(0.0),
-                    "recall" => snapshot.recall.to_f64().unwrap_or(0.0),
-                    "f1_score" => snapshot.f1_score.to_f64().unwrap_or(0.0),
-                    _ => 0.0,
-                }
+        let values: Vec<f64> = recent_snapshots
+            .iter()
+            .map(|snapshot| match metric_name {
+                "accuracy" => snapshot.accuracy.to_f64().unwrap_or(0.0),
+                "precision" => snapshot.precision.to_f64().unwrap_or(0.0),
+                "recall" => snapshot.recall.to_f64().unwrap_or(0.0),
+                "f1_score" => snapshot.f1_score.to_f64().unwrap_or(0.0),
+                _ => 0.0,
             })
             .collect();
 
@@ -1658,16 +1694,15 @@ impl<F: Float> PerformanceMonitor<F> {
         }
 
         let mean = values.iter().sum::<f64>() / values.len() as f64;
-        let variance = values.iter()
-            .map(|x| (x - mean).powi(2))
-            .sum::<f64>() / values.len() as f64;
+        let variance = values.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / values.len() as f64;
 
         Some((mean, variance))
     }
 
     /// Get current performance summary
     pub fn get_performance_summary(&self) -> HashMap<String, f64> {
-        self.current_metrics.iter()
+        self.current_metrics
+            .iter()
             .map(|(k, v)| (k.clone(), v.to_f64().unwrap_or(0.0)))
             .collect()
     }
@@ -1687,7 +1722,9 @@ impl<F: Float + std::iter::Sum> AnomalyDetector<F> {
     fn new(algorithm: AnomalyDetectionAlgorithm) -> Result<Self> {
         let threshold = match &algorithm {
             AnomalyDetectionAlgorithm::ZScore { threshold } => F::from(*threshold).unwrap(),
-            AnomalyDetectionAlgorithm::IsolationForest { contamination: _ } => F::from(0.5).unwrap(),
+            AnomalyDetectionAlgorithm::IsolationForest { contamination: _ } => {
+                F::from(0.5).unwrap()
+            }
             _ => F::from(3.0).unwrap(),
         };
 
@@ -1709,7 +1746,7 @@ impl<F: Float + std::iter::Sum> AnomalyDetector<F> {
 
     fn detect(&mut self, error: F) -> Result<Anomaly<F>> {
         let detection_start = Instant::now();
-        
+
         // Add to history with memory management
         self.history_buffer.push_back(error);
         if self.history_buffer.len() > 1000 {
@@ -1741,7 +1778,7 @@ impl<F: Float + std::iter::Sum> AnomalyDetector<F> {
 
         if is_anomaly {
             let detection_latency = detection_start.elapsed();
-            
+
             let anomaly = Anomaly {
                 timestamp: Instant::now(),
                 value: error,
@@ -1761,9 +1798,13 @@ impl<F: Float + std::iter::Sum> AnomalyDetector<F> {
             self.statistics.total_anomalies += 1;
             self.statistics.detection_latency = detection_latency;
             self.statistics.last_anomaly = Some(Instant::now());
-            
+
             let type_name = format!("{:?}", anomaly_type);
-            *self.statistics.anomalies_by_type.entry(type_name).or_insert(0) += 1;
+            *self
+                .statistics
+                .anomalies_by_type
+                .entry(type_name)
+                .or_insert(0) += 1;
 
             return Ok(anomaly);
         }
@@ -1781,11 +1822,14 @@ impl<F: Float + std::iter::Sum> AnomalyDetector<F> {
         // Calculate running statistics efficiently
         let mean = self.history_buffer.iter().cloned().sum::<F>()
             / F::from(self.history_buffer.len()).unwrap();
-        
-        let variance = self.history_buffer.iter()
+
+        let variance = self
+            .history_buffer
+            .iter()
             .map(|&x| (x - mean) * (x - mean))
-            .sum::<F>() / F::from(self.history_buffer.len() - 1).unwrap();
-        
+            .sum::<F>()
+            / F::from(self.history_buffer.len() - 1).unwrap();
+
         let std_dev = variance.sqrt();
 
         let z_score = if std_dev > F::zero() {
@@ -1796,7 +1840,7 @@ impl<F: Float + std::iter::Sum> AnomalyDetector<F> {
 
         let threshold_f = F::from(threshold).unwrap();
         let is_anomaly = z_score > threshold_f;
-        
+
         let anomaly_type = if is_anomaly {
             if z_score > threshold_f * F::from(2.0).unwrap() {
                 AnomalyType::PointAnomaly
@@ -1810,7 +1854,11 @@ impl<F: Float + std::iter::Sum> AnomalyDetector<F> {
         Ok((is_anomaly, z_score, anomaly_type))
     }
 
-    fn detect_isolation_forest_anomaly(&self, error: F, contamination: f64) -> Result<(bool, F, AnomalyType)> {
+    fn detect_isolation_forest_anomaly(
+        &self,
+        error: F,
+        contamination: f64,
+    ) -> Result<(bool, F, AnomalyType)> {
         // Simplified isolation forest implementation
         if self.history_buffer.len() < 20 {
             return Ok((false, F::zero(), AnomalyType::Unknown));
@@ -1820,13 +1868,16 @@ impl<F: Float + std::iter::Sum> AnomalyDetector<F> {
         let mut sorted_values: Vec<F> = self.history_buffer.iter().cloned().collect();
         sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
-        let position = sorted_values.iter().position(|&x| x >= error).unwrap_or(sorted_values.len());
+        let position = sorted_values
+            .iter()
+            .position(|&x| x >= error)
+            .unwrap_or(sorted_values.len());
         let relative_position = position as f64 / sorted_values.len() as f64;
 
         // Anomalies are typically at the extremes
         let isolation_score = F::from(1.0 - (relative_position - 0.5).abs() * 2.0).unwrap();
         let contamination_threshold = F::from(1.0 - contamination).unwrap();
-        
+
         let is_anomaly = isolation_score > contamination_threshold;
         let anomaly_type = if is_anomaly {
             AnomalyType::PointAnomaly
@@ -1844,11 +1895,13 @@ impl<F: Float + std::iter::Sum> AnomalyDetector<F> {
         }
 
         // Calculate local outlier factor based on k-nearest neighbors
-        let mut distances: Vec<(F, usize)> = self.history_buffer.iter()
+        let mut distances: Vec<(F, usize)> = self
+            .history_buffer
+            .iter()
             .enumerate()
             .map(|(i, &value)| ((value - error).abs(), i))
             .collect();
-        
+
         distances.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
 
         // Get k nearest neighbors
@@ -1877,17 +1930,37 @@ impl<F: Float + std::iter::Sum> AnomalyDetector<F> {
 
     fn build_anomaly_context(&self, error: F) -> Result<HashMap<String, String>> {
         let mut context = HashMap::new();
-        
-        context.insert("buffer_size".to_string(), self.history_buffer.len().to_string());
-        context.insert("error_value".to_string(), format!("{:.6}", error.to_f64().unwrap_or(0.0)));
-        
+
+        context.insert(
+            "buffer_size".to_string(),
+            self.history_buffer.len().to_string(),
+        );
+        context.insert(
+            "error_value".to_string(),
+            format!("{:.6}", error.to_f64().unwrap_or(0.0)),
+        );
+
         if !self.history_buffer.is_empty() {
-            let min_val = self.history_buffer.iter().cloned().fold(F::infinity(), F::min);
-            let max_val = self.history_buffer.iter().cloned().fold(F::neg_infinity(), F::max);
-            context.insert("buffer_min".to_string(), format!("{:.6}", min_val.to_f64().unwrap_or(0.0)));
-            context.insert("buffer_max".to_string(), format!("{:.6}", max_val.to_f64().unwrap_or(0.0)));
+            let min_val = self
+                .history_buffer
+                .iter()
+                .cloned()
+                .fold(F::infinity(), F::min);
+            let max_val = self
+                .history_buffer
+                .iter()
+                .cloned()
+                .fold(F::neg_infinity(), F::max);
+            context.insert(
+                "buffer_min".to_string(),
+                format!("{:.6}", min_val.to_f64().unwrap_or(0.0)),
+            );
+            context.insert(
+                "buffer_max".to_string(),
+                format!("{:.6}", max_val.to_f64().unwrap_or(0.0)),
+            );
         }
-        
+
         Ok(context)
     }
 
@@ -1907,10 +1980,11 @@ impl<F: Float + std::iter::Sum> AnomalyDetector<F> {
         }
 
         let recent_scores: Vec<_> = self.anomaly_scores.iter().rev().take(window).collect();
-        let anomaly_count = recent_scores.iter()
+        let anomaly_count = recent_scores
+            .iter()
             .filter(|&&score| score > self.threshold)
             .count();
-        
+
         anomaly_count as f64 / window as f64
     }
 
@@ -1920,7 +1994,9 @@ impl<F: Float + std::iter::Sum> AnomalyDetector<F> {
             return None;
         }
 
-        let scores: Vec<f64> = self.anomaly_scores.iter()
+        let scores: Vec<f64> = self
+            .anomaly_scores
+            .iter()
             .map(|x| x.to_f64().unwrap_or(0.0))
             .collect();
 
@@ -2064,7 +2140,7 @@ impl AlertsManager {
 }
 
 /// Neural-adaptive streaming system with ML-based parameter optimization
-/// 
+///
 /// This system uses neural networks and reinforcement learning to automatically
 /// tune streaming parameters for optimal performance across different data patterns.
 #[derive(Debug, Clone)]
@@ -2220,7 +2296,9 @@ pub enum FeatureExtractionMethod {
     /// Neural autoencoder features
     NeuralAutoencoder { encoding_dim: usize },
     /// Ensemble of multiple methods
-    Ensemble { methods: Vec<FeatureExtractionMethod> },
+    Ensemble {
+        methods: Vec<FeatureExtractionMethod>,
+    },
 }
 
 /// Feature normalization methods
@@ -2350,14 +2428,18 @@ pub struct BatchNormParams<F: Float> {
 /// Neural network optimizers
 pub trait NeuralOptimizer<F: Float> {
     /// Update parameters based on gradients
-    fn update_parameters(&mut self, gradients: &[Array2<F>], parameters: &mut [Array2<F>]) -> Result<()>;
-    
+    fn update_parameters(
+        &mut self,
+        gradients: &[Array2<F>],
+        parameters: &mut [Array2<F>],
+    ) -> Result<()>;
+
     /// Get current learning rate
     fn get_learning_rate(&self) -> F;
-    
+
     /// Set learning rate
     fn set_learning_rate(&mut self, lr: F);
-    
+
     /// Reset optimizer state
     fn reset(&mut self);
 }
@@ -2378,46 +2460,51 @@ pub struct AdamOptimizer<F: Float> {
 }
 
 impl<F: Float> NeuralOptimizer<F> for AdamOptimizer<F> {
-    fn update_parameters(&mut self, gradients: &[Array2<F>], parameters: &mut [Array2<F>]) -> Result<()> {
+    fn update_parameters(
+        &mut self,
+        gradients: &[Array2<F>],
+        parameters: &mut [Array2<F>],
+    ) -> Result<()> {
         self.t += 1;
-        
+
         // Initialize moment estimates if needed
         if self.m.is_empty() {
             self.m = gradients.iter().map(|g| Array2::zeros(g.dim())).collect();
             self.v = gradients.iter().map(|g| Array2::zeros(g.dim())).collect();
         }
-        
+
         let beta1_t = self.beta1.powi(self.t as i32);
         let beta2_t = self.beta2.powi(self.t as i32);
-        
+
         for (i, (grad, param)) in gradients.iter().zip(parameters.iter_mut()).enumerate() {
             // Update biased first moment estimate
             self.m[i] = &self.m[i] * self.beta1 + grad * (F::one() - self.beta1);
-            
+
             // Update biased second raw moment estimate
             self.v[i] = &self.v[i] * self.beta2 + &(grad * grad) * (F::one() - self.beta2);
-            
+
             // Compute bias-corrected first moment estimate
             let m_hat = &self.m[i] / (F::one() - beta1_t);
-            
+
             // Compute bias-corrected second raw moment estimate
             let v_hat = &self.v[i] / (F::one() - beta2_t);
-            
+
             // Update parameters
-            *param = param - &(&m_hat / (&v_hat.mapv(|x| x.sqrt()) + self.epsilon)) * self.learning_rate;
+            *param =
+                param - &(&m_hat / (&v_hat.mapv(|x| x.sqrt()) + self.epsilon)) * self.learning_rate;
         }
-        
+
         Ok(())
     }
-    
+
     fn get_learning_rate(&self) -> F {
         self.learning_rate
     }
-    
+
     fn set_learning_rate(&mut self, lr: F) {
         self.learning_rate = lr;
     }
-    
+
     fn reset(&mut self) {
         self.m.clear();
         self.v.clear();
@@ -2577,8 +2664,14 @@ pub struct ExplorationDecay<F: Float> {
 /// Reward function trait
 pub trait RewardFunction<F: Float> {
     /// Compute reward based on state, action, and outcome
-    fn compute_reward(&self, state: &Array1<F>, action: &Array1<F>, next_state: &Array1<F>, performance_metrics: &HashMap<String, F>) -> F;
-    
+    fn compute_reward(
+        &self,
+        state: &Array1<F>,
+        action: &Array1<F>,
+        next_state: &Array1<F>,
+        performance_metrics: &HashMap<String, F>,
+    ) -> F;
+
     /// Update reward function parameters
     fn update_parameters(&mut self, feedback: F) -> Result<()>;
 }
@@ -2618,11 +2711,17 @@ pub struct OnlineLearningSystem<F: Float> {
 /// Online optimizer trait
 pub trait OnlineOptimizer<F: Float> {
     /// Update model with single sample
-    fn update(&mut self, parameters: &mut Array1<F>, features: &Array1<F>, target: F, learning_rate: F) -> Result<()>;
-    
+    fn update(
+        &mut self,
+        parameters: &mut Array1<F>,
+        features: &Array1<F>,
+        target: F,
+        learning_rate: F,
+    ) -> Result<()>;
+
     /// Get current learning rate
     fn get_learning_rate(&self) -> F;
-    
+
     /// Adapt to concept drift
     fn adapt_to_drift(&mut self, drift_magnitude: F) -> Result<()>;
 }
@@ -3059,7 +3158,11 @@ pub enum SchedulerType<F: Float> {
     /// Reduce on plateau
     ReduceOnPlateau { factor: F, patience: usize },
     /// Cyclic learning rate
-    CyclicLR { base_lr: F, max_lr: F, step_size: usize },
+    CyclicLR {
+        base_lr: F,
+        max_lr: F,
+        step_size: usize,
+    },
     /// Adaptive based on performance
     PerformanceAdaptive { improvement_threshold: F },
 }
@@ -3086,22 +3189,22 @@ impl<F: Float> NeuralAdaptiveStreaming<F> {
             config.network_config.clone(),
             config.optimization_config.clone(),
         )?;
-        
+
         let rl_agent = AdaptiveControlAgent::new(config.rl_config.clone())?;
-        
+
         let online_learner = OnlineLearningSystem::new(config.online_learning_config.clone())?;
-        
+
         let performance_predictor = PerformancePredictor::new(config.network_config.clone())?;
-        
+
         let parameter_bandit = MultiArmedBandit::new()?;
-        
+
         let feature_extractor = NeuralFeatureExtractor::new(config.feature_config.clone())?;
-        
+
         let learning_scheduler = AdaptiveLearningScheduler::new(
             config.network_config.learning_rate,
             config.optimization_config.clone(),
         )?;
-        
+
         Ok(Self {
             parameter_optimizer,
             rl_agent,
@@ -3113,86 +3216,102 @@ impl<F: Float> NeuralAdaptiveStreaming<F> {
             config,
         })
     }
-    
+
     /// Optimize streaming parameters using neural networks
-    pub fn optimize_parameters(&mut self, current_state: &Array1<F>, performance_metrics: &HashMap<String, F>) -> Result<HashMap<String, F>> {
+    pub fn optimize_parameters(
+        &mut self,
+        current_state: &Array1<F>,
+        performance_metrics: &HashMap<String, F>,
+    ) -> Result<HashMap<String, F>> {
         // Extract features from current state
         let features = self.feature_extractor.extract_features(current_state)?;
-        
+
         // Predict optimal parameters using neural network
         let predicted_params = self.parameter_optimizer.predict(&features)?;
-        
+
         // Use reinforcement learning for exploration
-        let rl_action = self.rl_agent.select_action(&features, performance_metrics)?;
-        
+        let rl_action = self
+            .rl_agent
+            .select_action(&features, performance_metrics)?;
+
         // Use multi-armed bandit for parameter selection
         let bandit_params = self.parameter_bandit.select_arm(&features)?;
-        
+
         // Combine predictions from different sources
-        let optimized_params = self.combine_parameter_predictions(
-            &predicted_params,
-            &rl_action,
-            &bandit_params,
-        )?;
-        
+        let optimized_params =
+            self.combine_parameter_predictions(&predicted_params, &rl_action, &bandit_params)?;
+
         // Update online learning system
         self.online_learner.update(&features, performance_metrics)?;
-        
+
         // Adapt learning rate
         let current_performance = self.compute_overall_performance(performance_metrics);
-        self.learning_scheduler.adapt_learning_rate(current_performance)?;
-        
+        self.learning_scheduler
+            .adapt_learning_rate(current_performance)?;
+
         Ok(optimized_params)
     }
-    
+
     /// Update the neural-adaptive system with new data
-    pub fn update(&mut self, state: &Array1<F>, action: &HashMap<String, F>, performance: &HashMap<String, F>) -> Result<()> {
+    pub fn update(
+        &mut self,
+        state: &Array1<F>,
+        action: &HashMap<String, F>,
+        performance: &HashMap<String, F>,
+    ) -> Result<()> {
         // Update neural parameter optimizer
         let features = self.feature_extractor.extract_features(state)?;
         let target_performance = self.compute_overall_performance(performance);
-        self.parameter_optimizer.train(&features, target_performance)?;
-        
+        self.parameter_optimizer
+            .train(&features, target_performance)?;
+
         // Update reinforcement learning agent
         let reward = self.compute_reward(performance);
-        self.rl_agent.update_experience(state, action, reward, performance)?;
-        
+        self.rl_agent
+            .update_experience(state, action, reward, performance)?;
+
         // Update online learning system
         self.online_learner.update(&features, performance)?;
-        
+
         // Update performance predictor
         self.performance_predictor.update(&features, performance)?;
-        
+
         // Update multi-armed bandit
         self.parameter_bandit.update_rewards(action, reward)?;
-        
+
         Ok(())
     }
-    
+
     /// Predict future performance based on current state
-    pub fn predict_performance(&self, state: &Array1<F>, parameters: &HashMap<String, F>) -> Result<PerformancePrediction<F>> {
+    pub fn predict_performance(
+        &self,
+        state: &Array1<F>,
+        parameters: &HashMap<String, F>,
+    ) -> Result<PerformancePrediction<F>> {
         let features = self.feature_extractor.extract_features(state)?;
         let prediction = self.performance_predictor.predict(&features, parameters)?;
         Ok(prediction)
     }
-    
+
     /// Adapt to concept drift
     pub fn adapt_to_drift(&mut self, drift_magnitude: F) -> Result<()> {
         // Adapt neural networks
         self.parameter_optimizer.adapt_to_drift(drift_magnitude)?;
         self.performance_predictor.adapt_to_drift(drift_magnitude)?;
-        
+
         // Adapt RL agent
         self.rl_agent.adapt_to_drift(drift_magnitude)?;
-        
+
         // Adapt online learning system
         self.online_learner.adapt_to_drift(drift_magnitude)?;
-        
+
         // Reset multi-armed bandit exploration
-        self.parameter_bandit.increase_exploration(drift_magnitude)?;
-        
+        self.parameter_bandit
+            .increase_exploration(drift_magnitude)?;
+
         Ok(())
     }
-    
+
     /// Get current neural-adaptive system statistics
     pub fn get_statistics(&self) -> NeuralAdaptiveStatistics<F> {
         NeuralAdaptiveStatistics {
@@ -3205,9 +3324,9 @@ impl<F: Float> NeuralAdaptiveStreaming<F> {
             current_learning_rate: self.learning_scheduler.get_current_lr(),
         }
     }
-    
+
     // Helper methods
-    
+
     fn combine_parameter_predictions(
         &self,
         neural_params: &HashMap<String, F>,
@@ -3215,42 +3334,41 @@ impl<F: Float> NeuralAdaptiveStreaming<F> {
         bandit_params: &HashMap<String, F>,
     ) -> Result<HashMap<String, F>> {
         let mut combined_params = HashMap::new();
-        
+
         // Weighted combination based on confidence
         let neural_weight = F::from(0.5).unwrap();
         let rl_weight = F::from(0.3).unwrap();
         let bandit_weight = F::from(0.2).unwrap();
-        
+
         for (key, &neural_val) in neural_params {
             let rl_val = rl_params.get(key).copied().unwrap_or(neural_val);
             let bandit_val = bandit_params.get(key).copied().unwrap_or(neural_val);
-            
-            let combined_val = neural_val * neural_weight + 
-                             rl_val * rl_weight + 
-                             bandit_val * bandit_weight;
-            
+
+            let combined_val =
+                neural_val * neural_weight + rl_val * rl_weight + bandit_val * bandit_weight;
+
             combined_params.insert(key.clone(), combined_val);
         }
-        
+
         Ok(combined_params)
     }
-    
+
     fn compute_overall_performance(&self, performance_metrics: &HashMap<String, F>) -> F {
         let mut total_performance = F::zero();
         let mut count = 0;
-        
+
         for &value in performance_metrics.values() {
             total_performance = total_performance + value;
             count += 1;
         }
-        
+
         if count > 0 {
             total_performance / F::from(count).unwrap()
         } else {
             F::zero()
         }
     }
-    
+
     fn compute_reward(&self, performance_metrics: &HashMap<String, F>) -> F {
         // Compute reward based on performance improvement
         let current_performance = self.compute_overall_performance(performance_metrics);
@@ -3304,7 +3422,10 @@ impl Default for NeuralAdaptiveConfig {
                 batch_size: 32,
             },
             online_learning_config: OnlineLearningConfig {
-                algorithm: OnlineLearningAlgorithm::Adam { beta1: 0.9, beta2: 0.999 },
+                algorithm: OnlineLearningAlgorithm::Adam {
+                    beta1: 0.9,
+                    beta2: 0.999,
+                },
                 adaptation_rate: 0.01,
                 forgetting_factor: 0.99,
                 drift_adaptation_threshold: 0.1,
@@ -3319,7 +3440,9 @@ impl Default for NeuralAdaptiveConfig {
                 normalization: FeatureNormalization::StandardScore,
             },
             optimization_config: OptimizationConfig {
-                algorithm: OptimizationAlgorithm::BayesianOptimization { acquisition_function: "ucb".to_string() },
+                algorithm: OptimizationAlgorithm::BayesianOptimization {
+                    acquisition_function: "ucb".to_string(),
+                },
                 max_iterations: 100,
                 tolerance: 1e-6,
                 early_stopping: true,
@@ -3327,7 +3450,11 @@ impl Default for NeuralAdaptiveConfig {
                 enable_hyperparameter_tuning: true,
             },
             monitoring_config: MonitoringConfig {
-                metrics: vec!["accuracy".to_string(), "loss".to_string(), "latency".to_string()],
+                metrics: vec![
+                    "accuracy".to_string(),
+                    "loss".to_string(),
+                    "latency".to_string(),
+                ],
                 frequency: Duration::from_secs(30),
                 enable_logging: true,
                 log_path: None,

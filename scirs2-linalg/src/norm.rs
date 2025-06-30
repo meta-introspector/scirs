@@ -205,7 +205,7 @@ where
 
     // Use threshold to determine if parallel processing is worthwhile
     const PARALLEL_THRESHOLD: usize = 1000;
-    
+
     if x.len() < PARALLEL_THRESHOLD {
         // For small vectors, use sequential implementation
         return vector_norm(x, ord);

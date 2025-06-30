@@ -1217,9 +1217,12 @@ impl<T: Float + Default + Clone + Send + Sync> TPUPodCoordinator<T> {
 
     fn get_device_memory_usage(&self, device_id: DeviceId) -> f64 {
         // Enhanced device memory monitoring with realistic simulation
-        if let Some(allocation) = self.resource_scheduler.active_allocations.values()
-            .find(|alloc| alloc.devices.contains(&device_id)) {
-            
+        if let Some(allocation) = self
+            .resource_scheduler
+            .active_allocations
+            .values()
+            .find(|alloc| alloc.devices.contains(&device_id))
+        {
             let base_usage = 0.3; // 30% base system usage
             let elapsed = allocation.allocated_at.elapsed().as_secs_f64();
             let workload_usage = match allocation.devices.len() {
@@ -1227,7 +1230,7 @@ impl<T: Float + Default + Clone + Send + Sync> TPUPodCoordinator<T> {
                 3..=8 => 0.4, // Medium utilization for moderate load
                 _ => 0.2,     // Lower utilization when load is distributed
             };
-            
+
             // Add some time-based variation to simulate realistic usage patterns
             let variation = (elapsed * 0.1).sin() * 0.1;
             (base_usage + workload_usage + variation).clamp(0.1, 0.95)
@@ -1239,28 +1242,31 @@ impl<T: Float + Default + Clone + Send + Sync> TPUPodCoordinator<T> {
 
     fn get_device_compute_utilization(&self, device_id: DeviceId) -> f64 {
         // Enhanced compute utilization monitoring with workload-aware calculation
-        if let Some(allocation) = self.resource_scheduler.active_allocations.values()
-            .find(|alloc| alloc.devices.contains(&device_id)) {
-            
+        if let Some(allocation) = self
+            .resource_scheduler
+            .active_allocations
+            .values()
+            .find(|alloc| alloc.devices.contains(&device_id))
+        {
             let base_utilization = match self.config.batch_strategy {
                 BatchParallelizationStrategy::DataParallel => 0.85,
                 BatchParallelizationStrategy::ModelParallel => 0.75,
                 BatchParallelizationStrategy::PipelineParallel => 0.80,
                 BatchParallelizationStrategy::HybridParallel => 0.82,
             };
-            
+
             // Adjust based on load balancing efficiency
             let load_factor = match self.config.load_balancing_strategy {
                 LoadBalancingStrategy::Dynamic => 1.0,
                 LoadBalancingStrategy::Static => 0.9,
                 _ => 0.95,
             };
-            
+
             // Add realistic fluctuation based on device characteristics
             let device_efficiency = 1.0 - (device_id as f64 * 0.02) % 0.1;
             let elapsed = allocation.allocated_at.elapsed().as_secs_f64();
             let thermal_factor = if elapsed > 300.0 { 0.95 } else { 1.0 }; // Thermal throttling simulation
-            
+
             (base_utilization * load_factor * device_efficiency * thermal_factor).clamp(0.1, 0.99)
         } else {
             // Idle device - minimal background processes
@@ -1468,7 +1474,7 @@ impl PodPerformanceAnalyzer {
 
     pub fn get_metrics(&self) -> PodPerformanceMetrics {
         let elapsed = self.start_time.elapsed().as_secs_f64();
-        
+
         // Calculate dynamic throughput based on configuration and load
         let base_throughput = match self.config.topology {
             PodTopology::Pod2x2 => 400.0,
@@ -1476,7 +1482,7 @@ impl PodPerformanceAnalyzer {
             PodTopology::Pod8x8 => 4800.0,
             PodTopology::Pod16x16 => 19200.0,
         };
-        
+
         let efficiency_factor = match self.config.coordination_strategy {
             CoordinationStrategy::Centralized => 0.85,
             CoordinationStrategy::Decentralized => 0.92,
@@ -1485,12 +1491,16 @@ impl PodPerformanceAnalyzer {
             CoordinationStrategy::Mesh => 0.94,
             CoordinationStrategy::Adaptive => 0.96,
         };
-        
+
         // Simulate realistic performance variations
-        let workload_factor = if self.config.adaptive_optimization { 1.1 } else { 1.0 };
+        let workload_factor = if self.config.adaptive_optimization {
+            1.1
+        } else {
+            1.0
+        };
         let time_variation = 1.0 + (elapsed * 0.1).sin() * 0.05; // ±5% variation
         let throughput = base_throughput * efficiency_factor * workload_factor * time_variation;
-        
+
         // Calculate latency based on throughput and batch strategy
         let base_latency_ms = match self.config.batch_strategy {
             BatchParallelizationStrategy::DataParallel => 3.0,
@@ -1498,7 +1508,7 @@ impl PodPerformanceAnalyzer {
             BatchParallelizationStrategy::PipelineParallel => 5.0,
             BatchParallelizationStrategy::HybridParallel => 4.5,
         };
-        
+
         let communication_overhead = match self.config.communication_pattern {
             CommunicationPattern::AllReduce => 1.2,
             CommunicationPattern::AllGather => 1.5,
@@ -1507,15 +1517,15 @@ impl PodPerformanceAnalyzer {
             CommunicationPattern::AllToAll => 2.0,
             _ => 1.0,
         };
-        
+
         let latency = Duration::from_millis(
-            (base_latency_ms * communication_overhead * (1.0 + elapsed * 0.001)) as u64
+            (base_latency_ms * communication_overhead * (1.0 + elapsed * 0.001)) as u64,
         );
-        
+
         // Calculate overall utilization
         let device_count = self.config.num_devices as f64;
         let utilization = (0.7 + device_count / 100.0).min(0.95);
-        
+
         // Calculate efficiency based on various factors
         let sync_efficiency = match self.config.synchronization_mode {
             SynchronizationMode::Synchronous => 0.95,
@@ -1523,26 +1533,26 @@ impl PodPerformanceAnalyzer {
             SynchronizationMode::BulkSynchronous => 0.92,
             SynchronizationMode::Adaptive => 0.93,
         };
-        
+
         let load_balance_efficiency = match self.config.load_balancing_strategy {
             LoadBalancingStrategy::Static => 0.85,
             LoadBalancingStrategy::Dynamic => 0.93,
             LoadBalancingStrategy::PredictiveDynamic => 0.96,
         };
-        
+
         let efficiency = (sync_efficiency + load_balance_efficiency) / 2.0;
-        
+
         // Calculate power consumption based on utilization and device count
         let base_power_per_device = 15.0; // Watts per TPU
         let power_consumption = device_count * base_power_per_device * (utilization + 0.2);
-        
+
         // Temperature simulation based on power and time
         let thermal_factor = 1.0 + (power_consumption / 1000.0) * 0.3;
         let ambient_temp = 25.0; // Base ambient temperature
         let thermal_rise = 30.0 * thermal_factor * utilization;
         let cooling_efficiency = if elapsed > 600.0 { 0.9 } else { 1.0 }; // Cooling degrades over time
         let temperature = ambient_temp + (thermal_rise * cooling_efficiency);
-        
+
         PodPerformanceMetrics {
             throughput,
             latency,

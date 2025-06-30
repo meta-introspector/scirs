@@ -13,11 +13,7 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, Array3, Array4, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, NumCast, One, Zero};
-use scirs2_core::{
-    parallel_ops::*,
-    simd_ops::SimdUnifiedOps,
-    validation::*,
-};
+use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
@@ -189,7 +185,10 @@ pub enum QuantumFeatureMap {
     /// Z-feature map
     ZFeatureMap { repetitions: usize },
     /// ZZ-feature map  
-    ZZFeatureMap { repetitions: usize, entanglement: EntanglementType },
+    ZZFeatureMap {
+        repetitions: usize,
+        entanglement: EntanglementType,
+    },
     /// Pauli feature map
     PauliFeatureMap { pauli_strings: Vec<String> },
     /// Custom feature map
@@ -624,13 +623,10 @@ where
     }
 
     /// Comprehensive quantum-inspired statistical analysis
-    pub fn analyze_quantum(
-        &mut self,
-        data: &ArrayView2<F>,
-    ) -> StatsResult<QuantumResults<F>> {
+    pub fn analyze_quantum(&mut self, data: &ArrayView2<F>) -> StatsResult<QuantumResults<F>> {
         check_array_finite(data, "data")?;
         let (n_samples, n_features) = data.dim();
-        
+
         if n_samples < 2 {
             return Err(StatsError::InvalidArgument(
                 "Need at least 2 samples for quantum analysis".to_string(),
@@ -638,7 +634,7 @@ where
         }
 
         let start_time = std::time::Instant::now();
-        
+
         // Quantum amplitude estimation for Monte Carlo enhancement
         let qae_results = if self.config.qae_config.evaluation_qubits > 0 {
             Some(self.quantum_amplitude_estimation(data)?)
@@ -668,7 +664,10 @@ where
         };
 
         // Variational quantum eigensolver
-        let vqe_results = if matches!(self.config.vqe_config.ansatz_type, VQEAnsatz::HardwareEfficient { .. }) {
+        let vqe_results = if matches!(
+            self.config.vqe_config.ansatz_type,
+            VQEAnsatz::HardwareEfficient { .. }
+        ) {
             Some(self.variational_quantum_eigensolver(data)?)
         } else {
             None
@@ -690,7 +689,9 @@ where
 
         // Update performance metrics
         let elapsed = start_time.elapsed();
-        self.performance.circuit_times.insert("total_analysis".to_string(), elapsed.as_secs_f64());
+        self.performance
+            .circuit_times
+            .insert("total_analysis".to_string(), elapsed.as_secs_f64());
 
         Ok(QuantumResults {
             qae_results,
@@ -707,17 +708,19 @@ where
     /// Quantum amplitude estimation for enhanced Monte Carlo
     fn quantum_amplitude_estimation(&mut self, data: &ArrayView2<F>) -> StatsResult<QAEResults<F>> {
         let (n_samples, _) = data.dim();
-        
+
         // Simplified QAE implementation
         let target_amplitude = F::from(0.3).unwrap(); // Would compute actual amplitude
         let confidence_interval = (
             target_amplitude - F::from(0.05).unwrap(),
             target_amplitude + F::from(0.05).unwrap(),
         );
-        
+
         // Estimate oracle calls based on target accuracy
-        let oracle_calls = (F::one() / self.config.qae_config.target_accuracy).to_usize().unwrap_or(100);
-        
+        let oracle_calls = (F::one() / self.config.qae_config.target_accuracy)
+            .to_usize()
+            .unwrap_or(100);
+
         Ok(QAEResults {
             amplitude: target_amplitude,
             confidence_interval,
@@ -730,25 +733,25 @@ where
     fn quantum_pca(&mut self, data: &ArrayView2<F>) -> StatsResult<QPCAResults<F>> {
         let (n_samples, n_features) = data.dim();
         let num_components = self.config.qpca_config.num_components.min(n_features);
-        
+
         // Simplified quantum PCA using matrix exponentiation
         let mut eigenvalues = Array1::zeros(num_components);
         let mut eigenvectors = Array2::zeros((n_features, num_components));
         let mut explained_variance_ratio = Array1::zeros(num_components);
-        
+
         // Generate synthetic eigenvalues (decreasing order)
         for i in 0..num_components {
             eigenvalues[i] = F::from(1.0 / (i + 1) as f64).unwrap();
             explained_variance_ratio[i] = eigenvalues[i] / F::from(num_components).unwrap();
-            
+
             // Generate random eigenvectors (would use actual quantum algorithm)
             for j in 0..n_features {
                 eigenvectors[[j, i]] = F::from((i + j) as f64 / n_features as f64).unwrap();
             }
         }
-        
+
         let reconstruction_error = F::from(0.1).unwrap(); // Simplified error estimate
-        
+
         Ok(QPCAResults {
             eigenvalues,
             eigenvectors,
@@ -760,17 +763,17 @@ where
     /// Quantum support vector machine
     fn quantum_svm(&mut self, data: &ArrayView2<F>) -> StatsResult<QSVMResults<F>> {
         let (n_samples, n_features) = data.dim();
-        
+
         // Simplified quantum SVM
         let num_support_vectors = n_samples / 3; // Typical fraction
         let support_vectors = Array2::zeros((num_support_vectors, n_features));
         let support_vector_labels = Array1::ones(num_support_vectors);
         let decision_function = Array1::zeros(n_samples);
-        
+
         // Simplified metrics
         let accuracy = F::from(0.85).unwrap();
         let margin_width = F::from(1.5).unwrap();
-        
+
         Ok(QSVMResults {
             support_vectors,
             support_vector_labels,
@@ -784,25 +787,25 @@ where
     fn quantum_clustering(&mut self, data: &ArrayView2<F>) -> StatsResult<QClusteringResults<F>> {
         let (n_samples, n_features) = data.dim();
         let num_clusters = self.config.qclustering_config.num_clusters;
-        
+
         // Simplified quantum clustering
         let mut cluster_labels = Array1::zeros(n_samples);
         let cluster_centers = Array2::zeros((num_clusters, n_features));
-        
+
         // Generate simple clustering (would use actual quantum annealing)
         for i in 0..n_samples {
             cluster_labels[i] = i % num_clusters;
         }
-        
+
         let quality_metrics = ClusteringQualityMetrics {
             silhouette_score: F::from(0.7).unwrap(),
             calinski_harabasz_index: F::from(100.0).unwrap(),
             davies_bouldin_index: F::from(0.5).unwrap(),
             quantum_coherence: F::from(0.8).unwrap(),
         };
-        
+
         let final_energy = F::from(-50.0).unwrap(); // Ground state energy
-        
+
         Ok(QClusteringResults {
             cluster_labels,
             cluster_centers,
@@ -812,19 +815,22 @@ where
     }
 
     /// Variational quantum eigensolver
-    fn variational_quantum_eigensolver(&mut self, data: &ArrayView2<F>) -> StatsResult<VQEResults<F>> {
+    fn variational_quantum_eigensolver(
+        &mut self,
+        data: &ArrayView2<F>,
+    ) -> StatsResult<VQEResults<F>> {
         let n_features = data.ncols();
-        
+
         // Simplified VQE for matrix eigenvalue problem
         let min_eigenvalue = F::from(-1.5).unwrap(); // Lowest eigenvalue found
         let optimal_parameters = Array1::ones(self.config.vqe_config.max_iterations);
         let mut convergence_history = Array1::zeros(self.config.vqe_config.max_iterations);
-        
+
         // Generate convergence curve
         for i in 0..self.config.vqe_config.max_iterations {
             convergence_history[i] = min_eigenvalue + F::from(0.1 * (-(i as f64)).exp()).unwrap();
         }
-        
+
         Ok(VQEResults {
             min_eigenvalue,
             optimal_parameters,
@@ -835,24 +841,30 @@ where
     }
 
     /// Tensor network analysis for high-dimensional data
-    fn tensor_network_analysis(&mut self, data: &ArrayView2<F>) -> StatsResult<TensorNetworkResults<F>> {
+    fn tensor_network_analysis(
+        &mut self,
+        data: &ArrayView2<F>,
+    ) -> StatsResult<TensorNetworkResults<F>> {
         let (n_samples, n_features) = data.dim();
-        
+
         // Simplified tensor network decomposition
         let num_tensors = (n_features as f64).log2().ceil() as usize;
         let mut compressed_tensors = Vec::new();
-        
+
         for _ in 0..num_tensors {
-            let tensor = Array3::zeros((self.config.tensor_network_config.max_bond_dim, 
-                                      self.config.tensor_network_config.max_bond_dim, 
-                                      2));
+            let tensor = Array3::zeros((
+                self.config.tensor_network_config.max_bond_dim,
+                self.config.tensor_network_config.max_bond_dim,
+                2,
+            ));
             compressed_tensors.push(tensor);
         }
-        
+
         let compression_ratio = F::from(0.1).unwrap(); // 10x compression
         let reconstruction_fidelity = F::from(0.95).unwrap();
-        let bond_dimensions = Array1::from_elem(num_tensors, self.config.tensor_network_config.max_bond_dim);
-        
+        let bond_dimensions =
+            Array1::from_elem(num_tensors, self.config.tensor_network_config.max_bond_dim);
+
         Ok(TensorNetworkResults {
             compressed_tensors,
             compression_ratio,
@@ -863,23 +875,26 @@ where
 
     /// Quantum neural network training and inference
     fn quantum_neural_network(&mut self, data: &ArrayView2<F>) -> StatsResult<QNNResults<F>> {
-        let total_params = self.config.qnn_config.quantum_layers
+        let total_params = self
+            .config
+            .qnn_config
+            .quantum_layers
             .iter()
             .map(|layer| layer.parameters.num_parameters)
             .sum();
-        
+
         let model_parameters = Array1::ones(total_params);
         let epochs = self.config.qnn_config.training_config.epochs;
         let mut loss_history = Array1::zeros(epochs);
-        
+
         // Generate training loss curve
         for i in 0..epochs {
             loss_history[i] = F::from((-(i as f64) / 10.0).exp()).unwrap();
         }
-        
+
         let validation_accuracy = F::from(0.92).unwrap();
         let circuit_depth = self.config.qnn_config.quantum_layers.len();
-        
+
         Ok(QNNResults {
             model_parameters,
             loss_history,
@@ -897,7 +912,7 @@ where
     ) -> StatsResult<F> {
         check_array_finite(&x1.to_owned().view(), "x1")?;
         check_array_finite(&x2.to_owned().view(), "x2")?;
-        
+
         if x1.len() != x2.len() {
             return Err(StatsError::DimensionMismatch(
                 "Input vectors must have same dimension".to_string(),
@@ -910,29 +925,29 @@ where
                 let dot_product = F::simd_dot(x1, x2);
                 let norm1 = F::simd_norm(x1);
                 let norm2 = F::simd_norm(x2);
-                
+
                 if norm1 == F::zero() || norm2 == F::zero() {
                     Ok(F::zero())
                 } else {
                     let normalized_dot = dot_product / (norm1 * norm2);
                     Ok(normalized_dot * normalized_dot)
                 }
-            },
+            }
             QuantumKernelType::ProjectedKernel => {
                 // Projected quantum kernel with measurement
                 let diff_norm = F::simd_norm(&(x1.to_owned() - x2.to_owned()).view());
                 Ok((-diff_norm * diff_norm).exp())
-            },
+            }
             QuantumKernelType::QuantumFeatureKernel => {
                 // Feature map kernel
                 let feature_overlap = F::simd_dot(x1, x2);
                 Ok((feature_overlap / F::from(x1.len()).unwrap()).exp())
-            },
+            }
             QuantumKernelType::SwapTestKernel => {
                 // Swap test based kernel
                 let overlap = F::simd_dot(x1, x2);
                 Ok((F::one() + overlap) / F::from(2.0).unwrap())
-            },
+            }
         }
     }
 
@@ -943,34 +958,41 @@ where
         initial_state: &ArrayView1<F>,
     ) -> StatsResult<Array1<F>> {
         check_array_finite(&initial_state.to_owned().view(), "initial_state")?;
-        
+
         let mut current_state = initial_state.to_owned();
         let mut best_state = current_state.clone();
         let mut best_energy = objective_function(&best_state.view());
-        
+
         let num_runs = self.config.qclustering_config.annealing_config.num_runs;
-        let (temp_min, temp_max) = self.config.qclustering_config.annealing_config.temperature_range;
-        
+        let (temp_min, temp_max) = self
+            .config
+            .qclustering_config
+            .annealing_config
+            .temperature_range;
+
         for run in 0..num_runs {
-            let temperature = temp_max - (temp_max - temp_min) * F::from(run).unwrap() / F::from(num_runs).unwrap();
-            
+            let temperature = temp_max
+                - (temp_max - temp_min) * F::from(run).unwrap() / F::from(num_runs).unwrap();
+
             // Quantum annealing step (simplified)
             for i in 0..current_state.len() {
                 let old_value = current_state[i];
-                let perturbation = F::from(0.1).unwrap() * (F::from(2.0).unwrap() * F::from(0.5).unwrap() - F::one());
+                let perturbation = F::from(0.1).unwrap()
+                    * (F::from(2.0).unwrap() * F::from(0.5).unwrap() - F::one());
                 current_state[i] = old_value + perturbation;
-                
+
                 let new_energy = objective_function(&current_state.view());
                 let delta_energy = new_energy - best_energy;
-                
+
                 // Accept/reject based on quantum annealing probability
                 let accept_prob = if delta_energy < F::zero() {
                     F::one()
                 } else {
                     (-delta_energy / temperature).exp()
                 };
-                
-                if F::from(0.5).unwrap() < accept_prob {  // Would use proper random number
+
+                if F::from(0.5).unwrap() < accept_prob {
+                    // Would use proper random number
                     best_energy = new_energy;
                     best_state = current_state.clone();
                 } else {
@@ -978,7 +1000,7 @@ where
                 }
             }
         }
-        
+
         Ok(best_state)
     }
 }
@@ -1022,8 +1044,8 @@ where
                 algorithm: QuantumClusteringAlgorithm::QuantumKMeans,
                 num_clusters: 3,
                 annealing_config: QuantumAnnealingConfig {
-                    annealing_schedule: AnnealingSchedule::Linear { 
-                        duration: F::from(100.0).unwrap() 
+                    annealing_schedule: AnnealingSchedule::Linear {
+                        duration: F::from(100.0).unwrap(),
                     },
                     num_runs: 100,
                     temperature_range: (F::from(0.01).unwrap(), F::from(10.0).unwrap()),
@@ -1046,22 +1068,20 @@ where
                 contraction_strategy: ContractionStrategy::Optimal,
             },
             qnn_config: QuantumNeuralNetworkConfig {
-                quantum_layers: vec![
-                    QuantumLayerConfig {
-                        layer_type: QuantumLayerType::RotationLayer { 
-                            axes: vec![RotationAxis::Y, RotationAxis::Z] 
-                        },
-                        num_qubits: 4,
-                        parameters: ParameterConfig {
-                            num_parameters: 8,
-                            initialization: ParameterInitialization::Random,
-                            bounds: Some((-std::f64::consts::PI, std::f64::consts::PI)),
-                        },
+                quantum_layers: vec![QuantumLayerConfig {
+                    layer_type: QuantumLayerType::RotationLayer {
+                        axes: vec![RotationAxis::Y, RotationAxis::Z],
                     },
-                ],
+                    num_qubits: 4,
+                    parameters: ParameterConfig {
+                        num_parameters: 8,
+                        initialization: ParameterInitialization::Random,
+                        bounds: Some((-std::f64::consts::PI, std::f64::consts::PI)),
+                    },
+                }],
                 data_encoding: DataEncodingMethod::AngleEncoding,
-                measurement_strategy: MeasurementStrategy::PauliExpectation { 
-                    operators: vec!["Z".to_string()] 
+                measurement_strategy: MeasurementStrategy::PauliExpectation {
+                    operators: vec!["Z".to_string()],
                 },
                 classical_layers: vec![],
                 training_config: QuantumTrainingConfig {
@@ -1095,7 +1115,7 @@ mod tests {
     fn test_quantum_analyzer_creation() {
         let config = QuantumConfig::default();
         let analyzer = UltraQuantumAnalyzer::<f64>::new(config);
-        
+
         assert_eq!(analyzer.config.num_qubits, 10);
     }
 
@@ -1104,7 +1124,7 @@ mod tests {
         let config = QuantumConfig::default();
         let mut analyzer = UltraQuantumAnalyzer::<f64>::new(config);
         let data = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]];
-        
+
         let result = analyzer.quantum_amplitude_estimation(&data.view());
         assert!(result.is_ok());
     }
@@ -1114,7 +1134,7 @@ mod tests {
         let config = QuantumConfig::default();
         let mut analyzer = UltraQuantumAnalyzer::<f64>::new(config);
         let data = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]];
-        
+
         let result = analyzer.quantum_pca(&data.view());
         assert!(result.is_ok());
     }
@@ -1133,22 +1153,22 @@ where
         num_samples: usize,
     ) -> StatsResult<QuantumMonteCarloResult<F>> {
         let dimension = bounds.len();
-        
+
         // Enhanced quantum-inspired sampling with amplitude amplification
         let samples = self.generate_quantum_samples(bounds, num_samples)?;
-        
+
         // Evaluate function with parallel processing
         let values: Vec<F> = samples
             .outer_iter()
             .into_par_iter()
             .map(|sample| function(sample.as_slice().unwrap()))
             .collect();
-        
+
         // Compute integral estimate with quantum variance reduction
         let integral_estimate = self.compute_quantum_integral(&values, bounds)?;
         let variance = self.compute_quantum_variance(&values, integral_estimate)?;
         let quantum_speedup = self.estimate_quantum_speedup(dimension, num_samples);
-        
+
         Ok(QuantumMonteCarloResult {
             integral_estimate,
             variance,
@@ -1166,7 +1186,7 @@ where
     ) -> StatsResult<Array2<F>> {
         let dimension = bounds.len();
         let mut samples = Array2::zeros((num_samples, dimension));
-        
+
         // Use quantum-inspired low-discrepancy sequences
         for i in 0..num_samples {
             for (j, (lower, upper)) in bounds.iter().enumerate() {
@@ -1176,7 +1196,7 @@ where
                 samples[[i, j]] = *lower + (*upper - *lower) * quasi_random;
             }
         }
-        
+
         Ok(samples)
     }
 
@@ -1185,11 +1205,11 @@ where
         // Simplified van der Corput sequence with quantum enhancement
         let phi = F::from((1.0 + 5.0_f64.sqrt()) / 2.0).unwrap(); // Golden ratio
         let base = F::from(2.0 + dim as f64).unwrap();
-        
+
         // Quantum-inspired modification using Hadamard-like transformation
         let quantum_phase = (t * F::from(std::f64::consts::PI).unwrap()).sin();
         let classical_vdc = self.van_der_corput(t.to_f64().unwrap_or(0.5), 2 + dim);
-        
+
         let quantum_enhanced = (F::from(classical_vdc).unwrap() + quantum_phase) % F::one();
         quantum_enhanced.abs()
     }
@@ -1199,41 +1219,32 @@ where
         let mut result = 0.0;
         let mut f = 1.0 / base as f64;
         let mut i = n.floor() as usize;
-        
+
         while i > 0 {
             result += f * (i % base) as f64;
             i /= base;
             f /= base as f64;
         }
-        
+
         result
     }
 
     /// Compute quantum-enhanced integral estimate
-    fn compute_quantum_integral(
-        &self,
-        values: &[F],
-        bounds: &[(F, F)],
-    ) -> StatsResult<F> {
-        let volume = bounds.iter()
+    fn compute_quantum_integral(&self, values: &[F], bounds: &[(F, F)]) -> StatsResult<F> {
+        let volume = bounds
+            .iter()
             .map(|(lower, upper)| *upper - *lower)
             .fold(F::one(), |acc, x| acc * x);
-        
+
         let mean_value = values.iter().sum::<F>() / F::from(values.len()).unwrap();
         Ok(volume * mean_value)
     }
 
     /// Compute quantum-enhanced variance estimate
-    fn compute_quantum_variance(
-        &self,
-        values: &[F],
-        mean: F,
-    ) -> StatsResult<F> {
+    fn compute_quantum_variance(&self, values: &[F], mean: F) -> StatsResult<F> {
         let n = F::from(values.len()).unwrap();
-        let variance = values.iter()
-            .map(|&x| (x - mean) * (x - mean))
-            .sum::<F>() / (n - F::one());
-        
+        let variance = values.iter().map(|&x| (x - mean) * (x - mean)).sum::<F>() / (n - F::one());
+
         // Quantum error correction reduces variance
         let quantum_correction = F::from(0.8).unwrap(); // Simplified correction factor
         Ok(variance * quantum_correction)
@@ -1244,7 +1255,7 @@ where
         // Theoretical quantum speedup for Monte Carlo is quadratic
         let classical_error = F::from(1.0 / (num_samples as f64).sqrt()).unwrap();
         let quantum_error = F::from(1.0 / num_samples as f64).unwrap();
-        
+
         // Account for dimension-dependent effects
         let dimension_factor = F::from((dimension as f64).ln()).unwrap();
         classical_error / (quantum_error * dimension_factor)
@@ -1257,50 +1268,48 @@ where
         num_latent_variables: usize,
     ) -> StatsResult<QuantumVariationalResult<F>> {
         let (n_samples, n_features) = data.dim();
-        
+
         // Initialize variational parameters using quantum-inspired distributions
-        let mut variational_params = self.initialize_quantum_variational_params(
-            num_latent_variables,
-            n_features,
-        )?;
-        
+        let mut variational_params =
+            self.initialize_quantum_variational_params(num_latent_variables, n_features)?;
+
         // Quantum-enhanced variational optimization
         let mut best_loss = F::infinity();
         let mut converged = false;
-        
+
         for iteration in 0..self.config.vqe_config.max_iterations {
             // Compute quantum-enhanced evidence lower bound (ELBO)
             let elbo = self.compute_quantum_elbo(data, &variational_params)?;
-            
+
             if (-elbo) < best_loss {
                 best_loss = -elbo;
             }
-            
+
             // Quantum gradient estimation using parameter shift rule
             let gradients = self.compute_quantum_gradients(data, &variational_params)?;
-            
+
             // Update parameters with quantum-inspired optimization
             self.update_variational_parameters(&mut variational_params, &gradients)?;
-            
+
             // Check convergence
             if iteration > 10 && (elbo - best_loss).abs() < self.config.vqe_config.tolerance {
                 converged = true;
                 break;
             }
         }
-        
+
         // Extract final latent variables
         let latent_variables = self.extract_latent_variables(data, &variational_params)?;
-        
+
         Ok(QuantumVariationalResult {
             latent_variables,
             variational_params,
             final_elbo: -best_loss,
             converged,
-            num_iterations: if converged { 
-                self.config.vqe_config.max_iterations 
-            } else { 
-                self.config.vqe_config.max_iterations 
+            num_iterations: if converged {
+                self.config.vqe_config.max_iterations
+            } else {
+                self.config.vqe_config.max_iterations
             },
         })
     }
@@ -1314,17 +1323,18 @@ where
         // Use quantum-inspired parameter initialization
         let mut means = Array2::zeros((num_latent, num_features));
         let mut log_vars = Array2::zeros((num_latent, num_features));
-        
+
         // Initialize with small random values following quantum principles
         for i in 0..num_latent {
             for j in 0..num_features {
                 // Quantum superposition-inspired initialization
-                let phase = F::from(2.0 * std::f64::consts::PI * i as f64 / num_latent as f64).unwrap();
+                let phase =
+                    F::from(2.0 * std::f64::consts::PI * i as f64 / num_latent as f64).unwrap();
                 means[[i, j]] = (phase.cos() + phase.sin()) / F::from(2.0).unwrap();
                 log_vars[[i, j]] = F::from(-2.0).unwrap(); // Small initial variance
             }
         }
-        
+
         Ok(QuantumVariationalParams { means, log_vars })
     }
 
@@ -1335,12 +1345,12 @@ where
         params: &QuantumVariationalParams<F>,
     ) -> StatsResult<F> {
         let (n_samples, _) = data.dim();
-        
+
         // Simplified quantum ELBO computation
         // In practice, would use quantum circuits for probability estimation
         let reconstruction_loss = self.compute_reconstruction_loss(data, params)?;
         let kl_divergence = self.compute_quantum_kl_divergence(params)?;
-        
+
         // Quantum enhancement reduces the effective KL divergence
         let quantum_kl_reduction = F::from(0.9).unwrap();
         Ok(-reconstruction_loss - quantum_kl_reduction * kl_divergence)
@@ -1354,7 +1364,7 @@ where
     ) -> StatsResult<F> {
         let (n_samples, n_features) = data.dim();
         let mut total_loss = F::zero();
-        
+
         for i in 0..n_samples {
             for j in 0..n_features {
                 let data_point = data[[i, j]];
@@ -1364,7 +1374,7 @@ where
                 total_loss = total_loss + diff * diff;
             }
         }
-        
+
         Ok(total_loss / F::from(n_samples * n_features).unwrap())
     }
 
@@ -1375,19 +1385,19 @@ where
     ) -> StatsResult<F> {
         let mut kl_div = F::zero();
         let (num_latent, num_features) = params.means.dim();
-        
+
         for i in 0..num_latent {
             for j in 0..num_features {
                 let mean = params.means[[i, j]];
                 let log_var = params.log_vars[[i, j]];
                 let var = log_var.exp();
-                
+
                 // KL divergence between Gaussian and standard normal
                 let kl_component = (var + mean * mean - F::one() - log_var) / F::from(2.0).unwrap();
                 kl_div = kl_div + kl_component;
             }
         }
-        
+
         Ok(kl_div)
     }
 
@@ -1400,28 +1410,28 @@ where
         let (num_latent, num_features) = params.means.dim();
         let mut grad_means = Array2::zeros((num_latent, num_features));
         let mut grad_log_vars = Array2::zeros((num_latent, num_features));
-        
+
         let shift = F::from(std::f64::consts::PI / 2.0).unwrap(); // Quantum parameter shift
-        
+
         for i in 0..num_latent {
             for j in 0..num_features {
                 // Gradient for means using parameter shift rule
                 let mut params_plus = params.clone();
                 let mut params_minus = params.clone();
-                
+
                 params_plus.means[[i, j]] = params.means[[i, j]] + shift;
                 params_minus.means[[i, j]] = params.means[[i, j]] - shift;
-                
+
                 let elbo_plus = self.compute_quantum_elbo(data, &params_plus)?;
                 let elbo_minus = self.compute_quantum_elbo(data, &params_minus)?;
-                
+
                 grad_means[[i, j]] = (elbo_plus - elbo_minus) / (F::from(2.0).unwrap() * shift);
-                
+
                 // Similar for log_vars (simplified)
                 grad_log_vars[[i, j]] = F::from(0.01).unwrap(); // Simplified gradient
             }
         }
-        
+
         Ok(QuantumVariationalParams {
             means: grad_means,
             log_vars: grad_log_vars,
@@ -1436,15 +1446,17 @@ where
     ) -> StatsResult<()> {
         let learning_rate = self.config.qnn_config.training_config.learning_rate;
         let (num_latent, num_features) = params.means.dim();
-        
+
         for i in 0..num_latent {
             for j in 0..num_features {
                 // Quantum-inspired momentum update
-                params.means[[i, j]] = params.means[[i, j]] + learning_rate * gradients.means[[i, j]];
-                params.log_vars[[i, j]] = params.log_vars[[i, j]] + learning_rate * gradients.log_vars[[i, j]];
+                params.means[[i, j]] =
+                    params.means[[i, j]] + learning_rate * gradients.means[[i, j]];
+                params.log_vars[[i, j]] =
+                    params.log_vars[[i, j]] + learning_rate * gradients.log_vars[[i, j]];
             }
         }
-        
+
         Ok(())
     }
 
@@ -1456,18 +1468,18 @@ where
     ) -> StatsResult<Array2<F>> {
         let (n_samples, _) = data.dim();
         let (num_latent, _) = params.means.dim();
-        
+
         let mut latent_vars = Array2::zeros((n_samples, num_latent));
-        
+
         // Simplified latent variable extraction
         for i in 0..n_samples {
             for j in 0..num_latent {
                 // Use quantum sampling from the learned distribution
-                latent_vars[[i, j]] = params.means[[j, 0]] + 
-                    F::from(0.1).unwrap() * F::from(i as f64 / n_samples as f64).unwrap();
+                latent_vars[[i, j]] = params.means[[j, 0]]
+                    + F::from(0.1).unwrap() * F::from(i as f64 / n_samples as f64).unwrap();
             }
         }
-        
+
         Ok(latent_vars)
     }
 
@@ -1479,37 +1491,38 @@ where
         num_quantum_models: usize,
     ) -> StatsResult<QuantumEnsembleResult<F>> {
         let (n_samples, n_features) = data.dim();
-        
+
         // Create quantum-inspired diverse models
         let mut quantum_models = Vec::new();
         let mut model_weights = Array1::zeros(num_quantum_models);
-        
+
         for model_idx in 0..num_quantum_models {
             // Create quantum model with different initialization
             let model = self.create_quantum_model(model_idx, n_features)?;
-            
+
             // Train model with quantum-inspired algorithm
             let trained_model = self.train_quantum_model(data, labels, model)?;
-            
+
             // Compute model weight based on quantum fidelity
             let weight = self.compute_quantum_model_weight(&trained_model, data, labels)?;
             model_weights[model_idx] = weight;
-            
+
             quantum_models.push(trained_model);
         }
-        
+
         // Normalize weights
         let total_weight = model_weights.sum();
         if total_weight > F::zero() {
             model_weights = model_weights / total_weight;
         }
-        
+
         // Compute ensemble predictions
-        let predictions = self.compute_ensemble_predictions(data, &quantum_models, &model_weights)?;
-        
+        let predictions =
+            self.compute_ensemble_predictions(data, &quantum_models, &model_weights)?;
+
         // Quantum uncertainty quantification
         let uncertainties = self.compute_quantum_uncertainties(data, &quantum_models)?;
-        
+
         Ok(QuantumEnsembleResult {
             predictions,
             uncertainties,
@@ -1527,12 +1540,12 @@ where
     ) -> StatsResult<QuantumModel<F>> {
         // Quantum-inspired model initialization with diversity
         let phase_offset = F::from(2.0 * std::f64::consts::PI * model_idx as f64 / 10.0).unwrap();
-        
+
         let mut circuit_params = Array1::zeros(n_features * 2); // Rotation angles
         for i in 0..circuit_params.len() {
             circuit_params[i] = phase_offset + F::from(i as f64 * 0.1).unwrap();
         }
-        
+
         Ok(QuantumModel {
             circuit_params,
             feature_encoding: QuantumFeatureEncoding::AngleEncoding,
@@ -1550,20 +1563,20 @@ where
     ) -> StatsResult<QuantumModel<F>> {
         let max_iterations = 50;
         let learning_rate = F::from(0.01).unwrap();
-        
+
         for _iteration in 0..max_iterations {
             // Compute quantum gradients
             let gradients = self.compute_model_gradients(data, labels, &model)?;
-            
+
             // Update parameters
             for i in 0..model.circuit_params.len() {
                 model.circuit_params[i] = model.circuit_params[i] - learning_rate * gradients[i];
             }
         }
-        
+
         // Compute final training fidelity
         model.training_fidelity = self.compute_training_fidelity(data, labels, &model)?;
-        
+
         Ok(model)
     }
 
@@ -1576,21 +1589,21 @@ where
     ) -> StatsResult<Array1<F>> {
         let mut gradients = Array1::zeros(model.circuit_params.len());
         let shift = F::from(std::f64::consts::PI / 2.0).unwrap();
-        
+
         for i in 0..model.circuit_params.len() {
             // Parameter shift rule for quantum gradients
             let mut model_plus = model.clone();
             let mut model_minus = model.clone();
-            
+
             model_plus.circuit_params[i] = model.circuit_params[i] + shift;
             model_minus.circuit_params[i] = model.circuit_params[i] - shift;
-            
+
             let loss_plus = self.compute_quantum_loss(data, labels, &model_plus)?;
             let loss_minus = self.compute_quantum_loss(data, labels, &model_minus)?;
-            
+
             gradients[i] = (loss_plus - loss_minus) / (F::from(2.0).unwrap() * shift);
         }
-        
+
         Ok(gradients)
     }
 
@@ -1603,13 +1616,13 @@ where
     ) -> StatsResult<F> {
         let (n_samples, _) = data.dim();
         let mut total_loss = F::zero();
-        
+
         for i in 0..n_samples {
             let prediction = self.quantum_predict_single(data.row(i), model)?;
             let diff = prediction - labels[i];
             total_loss = total_loss + diff * diff;
         }
-        
+
         Ok(total_loss / F::from(n_samples).unwrap())
     }
 
@@ -1621,7 +1634,7 @@ where
     ) -> StatsResult<F> {
         // Simplified quantum prediction
         let mut result = F::zero();
-        
+
         for (i, &feature) in sample.iter().enumerate() {
             if i < model.circuit_params.len() / 2 {
                 let param = model.circuit_params[i];
@@ -1629,7 +1642,7 @@ where
                 result = result + quantum_feature;
             }
         }
-        
+
         Ok(result / F::from(sample.len()).unwrap())
     }
 
@@ -1642,16 +1655,20 @@ where
     ) -> StatsResult<F> {
         let (n_samples, _) = data.dim();
         let mut correct_predictions = 0;
-        
+
         for i in 0..n_samples {
             let prediction = self.quantum_predict_single(data.row(i), model)?;
-            let predicted_class = if prediction > F::zero() { F::one() } else { F::zero() };
-            
+            let predicted_class = if prediction > F::zero() {
+                F::one()
+            } else {
+                F::zero()
+            };
+
             if (predicted_class - labels[i]).abs() < F::from(0.5).unwrap() {
                 correct_predictions += 1;
             }
         }
-        
+
         Ok(F::from(correct_predictions as f64 / n_samples as f64).unwrap())
     }
 
@@ -1665,7 +1682,7 @@ where
         // Weight based on training fidelity and quantum advantages
         let base_weight = model.training_fidelity;
         let quantum_bonus = F::from(0.1).unwrap(); // Bonus for quantum advantages
-        
+
         Ok(base_weight + quantum_bonus)
     }
 
@@ -1678,18 +1695,18 @@ where
     ) -> StatsResult<Array1<F>> {
         let (n_samples, _) = data.dim();
         let mut predictions = Array1::zeros(n_samples);
-        
+
         for i in 0..n_samples {
             let mut weighted_prediction = F::zero();
-            
+
             for (model_idx, model) in models.iter().enumerate() {
                 let model_prediction = self.quantum_predict_single(data.row(i), model)?;
                 weighted_prediction = weighted_prediction + weights[model_idx] * model_prediction;
             }
-            
+
             predictions[i] = weighted_prediction;
         }
-        
+
         Ok(predictions)
     }
 
@@ -1701,24 +1718,27 @@ where
     ) -> StatsResult<Array1<F>> {
         let (n_samples, _) = data.dim();
         let mut uncertainties = Array1::zeros(n_samples);
-        
+
         for i in 0..n_samples {
             let mut predictions = Vec::new();
-            
+
             for model in models {
                 let prediction = self.quantum_predict_single(data.row(i), model)?;
                 predictions.push(prediction);
             }
-            
+
             // Compute prediction variance as uncertainty measure
-            let mean_prediction = predictions.iter().sum::<F>() / F::from(predictions.len()).unwrap();
-            let variance = predictions.iter()
+            let mean_prediction =
+                predictions.iter().sum::<F>() / F::from(predictions.len()).unwrap();
+            let variance = predictions
+                .iter()
                 .map(|&p| (p - mean_prediction) * (p - mean_prediction))
-                .sum::<F>() / F::from(predictions.len()).unwrap();
-            
+                .sum::<F>()
+                / F::from(predictions.len()).unwrap();
+
             uncertainties[i] = variance.sqrt();
         }
-        
+
         Ok(uncertainties)
     }
 
@@ -1796,4 +1816,3 @@ pub enum QuantumMeasurementBasis {
     Bell,
     Custom,
 }
-

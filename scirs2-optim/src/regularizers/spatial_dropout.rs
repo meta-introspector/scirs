@@ -5,9 +5,9 @@
 //! - Feature Dropout: drops specific features across all spatial locations
 
 use ndarray::{Array, Axis, Dimension, ScalarOperand};
-use rand::rng;
 use ndarray_rand::rand_distr::{Bernoulli, Distribution};
 use num_traits::Float;
+use rand::rng;
 use std::fmt::Debug;
 
 use crate::error::{OptimError, Result};

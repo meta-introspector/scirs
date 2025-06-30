@@ -4,8 +4,8 @@
 //! workloads across major cloud platforms with automatic scaling and monitoring.
 
 use scirs2_series::cloud_deployment::{
-    CloudDeploymentOrchestrator, CloudPlatform, CloudResourceConfig, DeploymentConfig,
-    CloudTimeSeriesJob, TimeSeriesJobType, JobPriority, ResourceRequirements,
+    CloudDeploymentOrchestrator, CloudPlatform, CloudResourceConfig, CloudTimeSeriesJob,
+    DeploymentConfig, JobPriority, ResourceRequirements, TimeSeriesJobType,
 };
 use std::collections::HashMap;
 use std::time::Duration;
@@ -16,13 +16,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Demo 1: Development Environment
     demo_development_deployment()?;
-    
-    // Demo 2: Production Environment  
+
+    // Demo 2: Production Environment
     demo_production_deployment()?;
-    
+
     // Demo 3: Multi-Cloud Deployment
     demo_multi_cloud_deployment()?;
-    
+
     // Demo 4: Auto-Scaling Demo
     demo_auto_scaling()?;
 
@@ -45,7 +45,7 @@ fn demo_development_deployment() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create orchestrator
     let mut orchestrator = CloudDeploymentOrchestrator::new(config);
-    
+
     // Deploy infrastructure
     orchestrator.deploy()?;
     println!("✅ Development environment deployed successfully");
@@ -58,7 +58,7 @@ fn demo_development_deployment() -> Result<(), Box<dyn std::error::Error>> {
 
     // Cleanup
     orchestrator.terminate()?;
-    
+
     Ok(())
 }
 
@@ -75,13 +75,19 @@ fn demo_production_deployment() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Max instances: {}", config.resources.max_instances);
     println!("   Instance type: {}", config.resources.instance_type);
     println!("   Auto-scaling: {}", config.resources.auto_scaling_enabled);
-    println!("   Load balancer: {}", config.network_config.load_balancer_enabled);
+    println!(
+        "   Load balancer: {}",
+        config.network_config.load_balancer_enabled
+    );
     println!("   SSL enabled: {}", config.network_config.ssl_enabled);
-    println!("   Encryption at rest: {}", config.security_config.encryption_at_rest);
+    println!(
+        "   Encryption at rest: {}",
+        config.security_config.encryption_at_rest
+    );
 
     // Create orchestrator
     let mut orchestrator = CloudDeploymentOrchestrator::new(config);
-    
+
     // Deploy infrastructure
     orchestrator.deploy()?;
     println!("✅ Production environment deployed successfully");
@@ -98,7 +104,7 @@ fn demo_production_deployment() -> Result<(), Box<dyn std::error::Error>> {
 
     // Cleanup
     orchestrator.terminate()?;
-    
+
     Ok(())
 }
 
@@ -115,7 +121,7 @@ fn demo_multi_cloud_deployment() -> Result<(), Box<dyn std::error::Error>> {
 
     for (platform, region, instance_type) in platforms {
         println!("\n🌐 Deploying on {:?} in region {}", platform, region);
-        
+
         // Create platform-specific configuration
         let mut config = DeploymentConfig::development();
         config.resources.platform = platform;
@@ -125,10 +131,10 @@ fn demo_multi_cloud_deployment() -> Result<(), Box<dyn std::error::Error>> {
         // Deploy and test
         let mut orchestrator = CloudDeploymentOrchestrator::new(config);
         orchestrator.deploy()?;
-        
+
         // Submit platform-specific jobs
         submit_sample_jobs(&mut orchestrator, 2)?;
-        
+
         print_deployment_metrics(&orchestrator);
         orchestrator.terminate()?;
     }
@@ -163,7 +169,7 @@ fn demo_auto_scaling() -> Result<(), Box<dyn std::error::Error>> {
         println!("\n📊 Auto-scaling check #{}", i);
         orchestrator.auto_scale()?;
         print_deployment_metrics(&orchestrator);
-        
+
         // Simulate some processing time
         std::thread::sleep(Duration::from_millis(100));
     }
@@ -173,7 +179,10 @@ fn demo_auto_scaling() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Submit sample time series analysis jobs
-fn submit_sample_jobs(orchestrator: &mut CloudDeploymentOrchestrator, count: usize) -> Result<(), Box<dyn std::error::Error>> {
+fn submit_sample_jobs(
+    orchestrator: &mut CloudDeploymentOrchestrator,
+    count: usize,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📤 Submitting {} sample jobs...", count);
 
     let job_types = vec![
@@ -188,12 +197,14 @@ fn submit_sample_jobs(orchestrator: &mut CloudDeploymentOrchestrator, count: usi
 
     for i in 0..count {
         // Generate sample time series data
-        let data: Vec<f64> = (0..100).map(|x| {
-            let t = x as f64 * 0.1;
-            2.0 * (2.0 * std::f64::consts::PI * t).sin() + 
-            0.5 * (10.0 * std::f64::consts::PI * t).sin() + 
-            0.1 * rand::random::<f64>()
-        }).collect();
+        let data: Vec<f64> = (0..100)
+            .map(|x| {
+                let t = x as f64 * 0.1;
+                2.0 * (2.0 * std::f64::consts::PI * t).sin()
+                    + 0.5 * (10.0 * std::f64::consts::PI * t).sin()
+                    + 0.1 * rand::random::<f64>()
+            })
+            .collect();
 
         // Create job
         let job_type = job_types[i % job_types.len()].clone();
@@ -205,8 +216,14 @@ fn submit_sample_jobs(orchestrator: &mut CloudDeploymentOrchestrator, count: usi
         };
 
         let mut parameters = HashMap::new();
-        parameters.insert("window_size".to_string(), serde_json::Value::Number(serde_json::Number::from(10)));
-        parameters.insert("threshold".to_string(), serde_json::Value::Number(serde_json::Number::from_f64(2.5).unwrap()));
+        parameters.insert(
+            "window_size".to_string(),
+            serde_json::Value::Number(serde_json::Number::from(10)),
+        );
+        parameters.insert(
+            "threshold".to_string(),
+            serde_json::Value::Number(serde_json::Number::from_f64(2.5).unwrap()),
+        );
 
         let job = CloudTimeSeriesJob {
             job_id: format!("ts-job-{:03}", i + 1),
@@ -226,7 +243,7 @@ fn submit_sample_jobs(orchestrator: &mut CloudDeploymentOrchestrator, count: usi
 
         // Submit job
         let job_id = orchestrator.submit_job(job)?;
-        
+
         if i < 5 || i % 5 == 0 {
             println!("  ✅ Submitted job: {}", job_id);
         }
@@ -243,7 +260,7 @@ fn submit_sample_jobs(orchestrator: &mut CloudDeploymentOrchestrator, count: usi
 fn print_deployment_metrics(orchestrator: &CloudDeploymentOrchestrator) {
     println!("\n📊 Deployment Metrics:");
     println!("   Status: {:?}", orchestrator.get_status());
-    
+
     let metrics = orchestrator.get_metrics();
     for (key, value) in metrics {
         match key.as_str() {
@@ -267,14 +284,14 @@ fn print_deployment_metrics(orchestrator: &CloudDeploymentOrchestrator) {
 #[allow(dead_code)]
 fn create_custom_config() -> DeploymentConfig {
     let mut config = DeploymentConfig::development();
-    
+
     // Customize for specific requirements
     config.resources.platform = CloudPlatform::AWS;
     config.resources.region = "eu-west-1".to_string();
     config.resources.instance_type = "c5.2xlarge".to_string();
     config.resources.min_instances = 3;
     config.resources.max_instances = 15;
-    
+
     // Enable advanced features
     config.resources.auto_scaling_enabled = true;
     config.resources.cost_optimization_enabled = true;
@@ -286,7 +303,7 @@ fn create_custom_config() -> DeploymentConfig {
     config.monitoring_config.dashboard_enabled = true;
     config.backup_config.backup_enabled = true;
     config.backup_config.cross_region_replication = true;
-    
+
     config
 }
 

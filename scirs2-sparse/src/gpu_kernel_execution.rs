@@ -5,7 +5,7 @@
 
 #![allow(dead_code)]
 
-use crate::gpu_ops::{GpuDevice, GpuKernelHandle, GpuBuffer, GpuError, GpuBackend};
+use crate::gpu_ops::{GpuBackend, GpuBuffer, GpuDevice, GpuError, GpuKernelHandle};
 use num_traits::Float;
 use std::fmt::Debug;
 
@@ -73,19 +73,51 @@ where
     // Backend-specific kernel execution
     match device.backend() {
         GpuBackend::Cuda => execute_cuda_spmv(
-            device, kernel, rows, indptr_buffer, indices_buffer,
-            data_buffer, x_buffer, y_buffer, &global_size, &local_size, config
+            device,
+            kernel,
+            rows,
+            indptr_buffer,
+            indices_buffer,
+            data_buffer,
+            x_buffer,
+            y_buffer,
+            &global_size,
+            &local_size,
+            config,
         ),
         GpuBackend::OpenCl => execute_opencl_spmv(
-            device, kernel, rows, indptr_buffer, indices_buffer,
-            data_buffer, x_buffer, y_buffer, &global_size, &local_size, config
+            device,
+            kernel,
+            rows,
+            indptr_buffer,
+            indices_buffer,
+            data_buffer,
+            x_buffer,
+            y_buffer,
+            &global_size,
+            &local_size,
+            config,
         ),
         GpuBackend::Metal => execute_metal_spmv(
-            device, kernel, rows, indptr_buffer, indices_buffer,
-            data_buffer, x_buffer, y_buffer, &global_size, &local_size, config
+            device,
+            kernel,
+            rows,
+            indptr_buffer,
+            indices_buffer,
+            data_buffer,
+            x_buffer,
+            y_buffer,
+            &global_size,
+            &local_size,
+            config,
         ),
         GpuBackend::Cpu => execute_cpu_spmv_fallback(
-            rows, indptr_buffer, indices_buffer, data_buffer, x_buffer, y_buffer
+            rows,
+            indptr_buffer,
+            indices_buffer,
+            data_buffer,
+            x_buffer,
+            y_buffer,
         ),
     }
 }
@@ -116,19 +148,51 @@ where
 
     match device.backend() {
         GpuBackend::Cuda => execute_cuda_symmetric_spmv(
-            device, kernel, rows, indptr_buffer, indices_buffer,
-            data_buffer, x_buffer, y_buffer, &global_size, &local_size, config
+            device,
+            kernel,
+            rows,
+            indptr_buffer,
+            indices_buffer,
+            data_buffer,
+            x_buffer,
+            y_buffer,
+            &global_size,
+            &local_size,
+            config,
         ),
         GpuBackend::OpenCl => execute_opencl_symmetric_spmv(
-            device, kernel, rows, indptr_buffer, indices_buffer,
-            data_buffer, x_buffer, y_buffer, &global_size, &local_size, config
+            device,
+            kernel,
+            rows,
+            indptr_buffer,
+            indices_buffer,
+            data_buffer,
+            x_buffer,
+            y_buffer,
+            &global_size,
+            &local_size,
+            config,
         ),
         GpuBackend::Metal => execute_metal_symmetric_spmv(
-            device, kernel, rows, indptr_buffer, indices_buffer,
-            data_buffer, x_buffer, y_buffer, &global_size, &local_size, config
+            device,
+            kernel,
+            rows,
+            indptr_buffer,
+            indices_buffer,
+            data_buffer,
+            x_buffer,
+            y_buffer,
+            &global_size,
+            &local_size,
+            config,
         ),
         GpuBackend::Cpu => execute_cpu_symmetric_spmv_fallback(
-            rows, indptr_buffer, indices_buffer, data_buffer, x_buffer, y_buffer
+            rows,
+            indptr_buffer,
+            indices_buffer,
+            data_buffer,
+            x_buffer,
+            y_buffer,
         ),
     }
 }
@@ -145,24 +209,30 @@ fn calculate_optimal_dimensions(
             // NVIDIA GPUs prefer multiples of 32 (warp size)
             let warp_aligned = ((workgroup_size[0] + 31) / 32) * 32;
             [warp_aligned.min(1024), 1, 1] // Max 1024 threads per block
-        },
+        }
         GpuBackend::OpenCl => {
             // Generic OpenCL workgroup size
-            [workgroup_size[0].min(256), workgroup_size[1], workgroup_size[2]]
-        },
+            [
+                workgroup_size[0].min(256),
+                workgroup_size[1],
+                workgroup_size[2],
+            ]
+        }
         GpuBackend::Metal => {
             // Apple GPUs prefer multiples of 32 (simdgroup size)
             let simd_aligned = ((workgroup_size[0] + 31) / 32) * 32;
             [simd_aligned.min(1024), 1, 1]
-        },
+        }
         GpuBackend::Cpu => {
             // CPU execution can use any workgroup size
             workgroup_size
         }
     };
 
-    let global_size = vec![(problem_size + optimal_workgroup[0] as usize - 1) 
-                       / optimal_workgroup[0] as usize * optimal_workgroup[0] as usize];
+    let global_size = vec![
+        (problem_size + optimal_workgroup[0] as usize - 1) / optimal_workgroup[0] as usize
+            * optimal_workgroup[0] as usize,
+    ];
     let local_size = vec![optimal_workgroup[0] as usize];
 
     (global_size, local_size)
@@ -190,17 +260,15 @@ where
     // - Calculate optimal grid dimensions based on compute capability
     // - Use shared memory for better coalescing
     // - Employ warp-level primitives for efficient reduction
-    
+
     // Calculate optimal grid size for CUDA
     let warp_size = 32; // Standard CUDA warp size
     let block_size = local_size[0].min(1024); // Max threads per block
     let grid_size = (rows + block_size - 1) / block_size;
-    
+
     // Calculate shared memory size based on block size and data type
     let shared_memory_size = match config.memory_strategy {
-        MemoryStrategy::SharedMemory => {
-            std::mem::size_of::<T>() * block_size
-        },
+        MemoryStrategy::SharedMemory => std::mem::size_of::<T>() * block_size,
         _ => 0,
     };
 
@@ -208,7 +276,7 @@ where
     let cuda_args = &[
         Box::new(rows as u32),
         Box::new(indptr_buffer),
-        Box::new(indices_buffer), 
+        Box::new(indices_buffer),
         Box::new(data_buffer),
         Box::new(x_buffer),
         Box::new(y_buffer),
@@ -222,13 +290,13 @@ where
 
     // Execute with CUDA-optimized parameters
     device.execute_kernel_with_args(kernel, cuda_global_size, cuda_local_size, cuda_args)?;
-    
+
     // CUDA synchronization for timing accuracy
     if cfg!(debug_assertions) {
         // In debug mode, synchronize to catch errors early
         device.synchronize()?;
     }
-    
+
     Ok(())
 }
 
@@ -254,19 +322,18 @@ where
     // - Calculate optimal work-group dimensions for the device
     // - Use local memory for efficient data sharing
     // - Implement vectorization when possible
-    
+
     // Query device capabilities for optimal work-group size
     let max_work_group_size = device.get_max_work_group_size().unwrap_or(256);
     let optimal_local_size = local_size[0].min(max_work_group_size);
-    
+
     // Calculate global work size (must be multiple of local work size in OpenCL)
-    let aligned_global_size = ((rows + optimal_local_size - 1) / optimal_local_size) * optimal_local_size;
-    
+    let aligned_global_size =
+        ((rows + optimal_local_size - 1) / optimal_local_size) * optimal_local_size;
+
     // Calculate local memory size for work-group sharing
     let local_memory_size = match config.memory_strategy {
-        MemoryStrategy::SharedMemory => {
-            std::mem::size_of::<T>() * optimal_local_size
-        },
+        MemoryStrategy::SharedMemory => std::mem::size_of::<T>() * optimal_local_size,
         _ => 0,
     };
 
@@ -291,7 +358,7 @@ where
 
     // OpenCL finish for proper synchronization
     device.finish_queue()?;
-    
+
     Ok(())
 }
 
@@ -317,23 +384,22 @@ where
     // - Calculate optimal threadgroup dimensions for Apple GPUs
     // - Use simdgroup operations for efficient parallel reduction
     // - Leverage unified memory architecture for optimal data access
-    
+
     // Metal threadgroup sizing (optimal for Apple GPU architectures)
     let simdgroup_size = 32; // Apple GPU simdgroup size
     let max_threads_per_group = device.get_max_threads_per_threadgroup().unwrap_or(1024);
     let optimal_threadgroup_size = local_size[0].min(max_threads_per_group);
-    
+
     // Align with simdgroup boundaries for optimal performance
-    let aligned_threadgroup_size = (optimal_threadgroup_size + simdgroup_size - 1) / simdgroup_size * simdgroup_size;
-    
+    let aligned_threadgroup_size =
+        (optimal_threadgroup_size + simdgroup_size - 1) / simdgroup_size * simdgroup_size;
+
     // Calculate number of threadgroups
     let num_threadgroups = (rows + aligned_threadgroup_size - 1) / aligned_threadgroup_size;
-    
+
     // Threadgroup memory size for Metal
     let threadgroup_memory_size = match config.memory_strategy {
-        MemoryStrategy::SharedMemory => {
-            std::mem::size_of::<T>() * aligned_threadgroup_size
-        },
+        MemoryStrategy::SharedMemory => std::mem::size_of::<T>() * aligned_threadgroup_size,
         _ => 0,
     };
 
@@ -359,7 +425,7 @@ where
 
     // Metal command buffer commit and wait
     device.commit_and_wait()?;
-    
+
     Ok(())
 }
 
@@ -387,11 +453,11 @@ where
         let start = indptr[i] as usize;
         let end = indptr[i + 1] as usize;
         let mut sum = T::zero();
-        
+
         for j in start..end {
             sum = sum + data[j] * x[indices[j] as usize];
         }
-        
+
         y[i] = sum;
     }
 
@@ -418,14 +484,19 @@ where
     T: Float + Debug + Copy + 'static,
 {
     // CUDA symmetric SpMV with optimized memory access
-    device.execute_kernel_with_args(kernel, global_size, local_size, &[
-        Box::new(rows as u32),
-        Box::new(indptr_buffer),
-        Box::new(indices_buffer),
-        Box::new(data_buffer),
-        Box::new(x_buffer),
-        Box::new(y_buffer),
-    ])
+    device.execute_kernel_with_args(
+        kernel,
+        global_size,
+        local_size,
+        &[
+            Box::new(rows as u32),
+            Box::new(indptr_buffer),
+            Box::new(indices_buffer),
+            Box::new(data_buffer),
+            Box::new(x_buffer),
+            Box::new(y_buffer),
+        ],
+    )
 }
 
 #[cfg(feature = "gpu")]
@@ -445,14 +516,19 @@ fn execute_opencl_symmetric_spmv<T>(
 where
     T: Float + Debug + Copy + 'static,
 {
-    device.execute_kernel_with_args(kernel, global_size, local_size, &[
-        Box::new(rows as u32),
-        Box::new(indptr_buffer),
-        Box::new(indices_buffer),
-        Box::new(data_buffer),
-        Box::new(x_buffer),
-        Box::new(y_buffer),
-    ])
+    device.execute_kernel_with_args(
+        kernel,
+        global_size,
+        local_size,
+        &[
+            Box::new(rows as u32),
+            Box::new(indptr_buffer),
+            Box::new(indices_buffer),
+            Box::new(data_buffer),
+            Box::new(x_buffer),
+            Box::new(y_buffer),
+        ],
+    )
 }
 
 #[cfg(feature = "gpu")]
@@ -472,14 +548,19 @@ fn execute_metal_symmetric_spmv<T>(
 where
     T: Float + Debug + Copy + 'static,
 {
-    device.execute_kernel_with_args(kernel, global_size, local_size, &[
-        Box::new(rows as u32),
-        Box::new(indptr_buffer),
-        Box::new(indices_buffer),
-        Box::new(data_buffer),
-        Box::new(x_buffer),
-        Box::new(y_buffer),
-    ])
+    device.execute_kernel_with_args(
+        kernel,
+        global_size,
+        local_size,
+        &[
+            Box::new(rows as u32),
+            Box::new(indptr_buffer),
+            Box::new(indices_buffer),
+            Box::new(data_buffer),
+            Box::new(x_buffer),
+            Box::new(y_buffer),
+        ],
+    )
 }
 
 fn execute_cpu_symmetric_spmv_fallback<T>(
@@ -504,11 +585,11 @@ where
         let start = indptr[i] as usize;
         let end = indptr[i + 1] as usize;
         let mut sum = T::zero();
-        
+
         for j in start..end {
             let col_idx = indices[j] as usize;
             let val = data[j];
-            
+
             // Diagonal element
             if col_idx == i {
                 sum = sum + val * x[col_idx];
@@ -519,7 +600,7 @@ where
                 // for the symmetric contribution
             }
         }
-        
+
         y[i] = sum;
     }
 
@@ -547,15 +628,15 @@ where
         GpuBackend::Cuda => {
             // Use warp-level parallelism for CUDA
             ([32], [32]) // One warp per triangular solve
-        },
+        }
         GpuBackend::OpenCl => {
             // Use wavefront-level parallelism for OpenCL
             ([64], [64])
-        },
+        }
         GpuBackend::Metal => {
             // Use simdgroup-level parallelism for Metal
             ([32], [32])
-        },
+        }
         GpuBackend::Cpu => {
             // Sequential execution for CPU
             ([1], [1])
@@ -564,16 +645,26 @@ where
 
     match device.backend() {
         GpuBackend::Cpu => execute_cpu_triangular_solve_fallback(
-            n, indptr_buffer, indices_buffer, data_buffer, b_buffer, x_buffer
+            n,
+            indptr_buffer,
+            indices_buffer,
+            data_buffer,
+            b_buffer,
+            x_buffer,
         ),
-        _ => device.execute_kernel_with_args(kernel, &global_size, &local_size, &[
-            Box::new(n as u32),
-            Box::new(indptr_buffer),
-            Box::new(indices_buffer),
-            Box::new(data_buffer),
-            Box::new(b_buffer),
-            Box::new(x_buffer),
-        ])
+        _ => device.execute_kernel_with_args(
+            kernel,
+            &global_size,
+            &local_size,
+            &[
+                Box::new(n as u32),
+                Box::new(indptr_buffer),
+                Box::new(indices_buffer),
+                Box::new(data_buffer),
+                Box::new(b_buffer),
+                Box::new(x_buffer),
+            ],
+        ),
     }
 }
 
@@ -601,18 +692,18 @@ where
         let end = indptr[i + 1] as usize;
         let mut sum = T::zero();
         let mut diag_val = T::zero();
-        
+
         for j in start..end {
             let col_idx = indices[j] as usize;
             let val = data[j];
-            
+
             if col_idx == i {
                 diag_val = val;
             } else if col_idx < i {
                 sum = sum + val * x[col_idx];
             }
         }
-        
+
         if diag_val != T::zero() {
             x[i] = (b[i] - sum) / diag_val;
         } else {
@@ -685,14 +776,14 @@ pub enum MemoryLayout {
 impl GpuMemoryManager {
     pub fn new(backend: GpuBackend) -> Result<Self, GpuError> {
         let device = GpuDevice::get_default(backend)?;
-        
+
         let alignment_preference = match backend {
-            GpuBackend::Cuda => 128,    // CUDA prefers 128-byte alignment
-            GpuBackend::OpenCl => 64,   // OpenCL prefers 64-byte alignment
-            GpuBackend::Metal => 16,    // Metal prefers 16-byte alignment
-            GpuBackend::Cpu => 8,       // CPU standard alignment
+            GpuBackend::Cuda => 128,  // CUDA prefers 128-byte alignment
+            GpuBackend::OpenCl => 64, // OpenCL prefers 64-byte alignment
+            GpuBackend::Metal => 16,  // Metal prefers 16-byte alignment
+            GpuBackend::Cpu => 8,     // CPU standard alignment
         };
-        
+
         Ok(Self {
             device,
             buffer_pool: std::collections::HashMap::new(),
@@ -708,9 +799,10 @@ impl GpuMemoryManager {
     where
         T: crate::gpu_ops::GpuDataType + Default + 'static,
     {
-        let aligned_size = self.align_size(size * std::mem::size_of::<T>()) / std::mem::size_of::<T>();
+        let aligned_size =
+            self.align_size(size * std::mem::size_of::<T>()) / std::mem::size_of::<T>();
         let key = (aligned_size, std::any::TypeId::of::<T>());
-        
+
         // Try to get from pool first
         if let Some(pool) = self.buffer_pool.get_mut(&key) {
             if let Some(buffer) = pool.pop() {
@@ -720,28 +812,28 @@ impl GpuMemoryManager {
                 }
             }
         }
-        
+
         // Create new buffer with optimal alignment
         self.memory_stats.pool_misses += 1;
         self.memory_stats.allocation_count += 1;
-        
+
         let buffer = self.device.create_buffer_zeros::<T>(aligned_size)?;
-        
+
         // Update memory statistics
         let allocation_size = aligned_size * std::mem::size_of::<T>();
         self.memory_stats.total_allocated += allocation_size;
         if self.memory_stats.total_allocated > self.memory_stats.peak_usage {
             self.memory_stats.peak_usage = self.memory_stats.total_allocated;
         }
-        
+
         Ok(buffer)
     }
-    
+
     /// Get a buffer with specific memory layout optimization
     pub fn get_buffer_with_layout<T>(
-        &mut self, 
-        size: usize, 
-        layout: MemoryLayout
+        &mut self,
+        size: usize,
+        layout: MemoryLayout,
     ) -> Result<GpuBuffer<T>, GpuError>
     where
         T: crate::gpu_ops::GpuDataType + Default + 'static,
@@ -751,41 +843,43 @@ impl GpuMemoryManager {
                 // Ensure memory access will be coalesced
                 let coalesced_size = self.calculate_coalesced_size(size);
                 self.get_buffer::<T>(coalesced_size)
-            },
+            }
             MemoryLayout::Strided { stride } => {
                 // Create buffer with specific stride for optimal access patterns
                 let strided_size = size + (size % stride);
                 self.get_buffer::<T>(strided_size)
-            },
-            MemoryLayout::Standard => {
-                self.get_buffer::<T>(size)
             }
+            MemoryLayout::Standard => self.get_buffer::<T>(size),
         }
     }
 
     /// Return a buffer to the pool for reuse with smart cleanup
-    pub fn return_buffer<T>(&mut self, buffer: GpuBuffer<T>) 
+    pub fn return_buffer<T>(&mut self, buffer: GpuBuffer<T>)
     where
         T: crate::gpu_ops::GpuDataType + 'static,
     {
         let size = buffer.as_slice().len();
         let allocation_size = size * std::mem::size_of::<T>();
         let key = (size, std::any::TypeId::of::<T>());
-        
+
         let pool = self.buffer_pool.entry(key).or_insert_with(Vec::new);
-        
+
         // Only add to pool if under the limit and buffer is reasonably sized
-        if pool.len() < self.max_pool_size && allocation_size > 1024 { // Only pool buffers > 1KB
+        if pool.len() < self.max_pool_size && allocation_size > 1024 {
+            // Only pool buffers > 1KB
             pool.push(Box::new(buffer));
         }
-        
+
         // Update memory statistics
-        self.memory_stats.total_allocated = self.memory_stats.total_allocated.saturating_sub(allocation_size);
-        
+        self.memory_stats.total_allocated = self
+            .memory_stats
+            .total_allocated
+            .saturating_sub(allocation_size);
+
         // Periodic cleanup of old buffers
         self.cleanup_old_buffers_if_needed();
     }
-    
+
     /// Clean up old buffers when memory pressure is high
     fn cleanup_old_buffers_if_needed(&mut self) {
         if self.memory_stats.total_allocated > self.memory_stats.peak_usage * 3 / 4 {
@@ -801,80 +895,78 @@ impl GpuMemoryManager {
 
     /// Optimize data transfer between host and device with adaptive strategies
     pub fn transfer_data_optimized<T>(
-        &mut self, 
-        host_data: &[T], 
-        _priority: TransferPriority
+        &mut self,
+        host_data: &[T],
+        _priority: TransferPriority,
     ) -> Result<GpuBuffer<T>, GpuError>
     where
         T: crate::gpu_ops::GpuDataType + Copy,
     {
         let transfer_size = host_data.len() * std::mem::size_of::<T>();
         let start_time = std::time::Instant::now();
-        
+
         let buffer = match self.device.backend() {
             #[cfg(feature = "gpu")]
             GpuBackend::Cuda => {
                 self.transfer_data_cuda_optimized(host_data, transfer_size, priority)
-            },
+            }
             #[cfg(feature = "gpu")]
             GpuBackend::OpenCl => {
                 self.transfer_data_opencl_optimized(host_data, transfer_size, priority)
-            },
+            }
             #[cfg(feature = "gpu")]
             GpuBackend::Metal => {
                 self.transfer_data_metal_optimized(host_data, transfer_size, priority)
-            },
+            }
             _ => {
                 // Standard transfer for CPU or when GPU not available
                 self.device.create_buffer(host_data)
             }
         }?;
-        
+
         // Update transfer statistics
         let elapsed = start_time.elapsed().as_secs_f64();
         if elapsed > 0.0 {
             let bandwidth = transfer_size as f64 / elapsed;
             self.update_bandwidth_stats(bandwidth);
         }
-        
+
         Ok(buffer)
     }
-    
+
     /// CUDA-optimized data transfer with pinned memory
     #[cfg(feature = "gpu")]
     fn transfer_data_cuda_optimized<T>(
-        &self, 
-        host_data: &[T], 
-        transfer_size: usize, 
-        _priority: TransferPriority
+        &self,
+        host_data: &[T],
+        transfer_size: usize,
+        _priority: TransferPriority,
     ) -> Result<GpuBuffer<T>, GpuError>
     where
         T: crate::gpu_ops::GpuDataType + Copy,
     {
         match (transfer_size, priority) {
             // Large high-priority transfers: use pinned memory and async transfer
-            (size, TransferPriority::High | TransferPriority::Critical) if size > 4 * 1024 * 1024 => {
+            (size, TransferPriority::High | TransferPriority::Critical)
+                if size > 4 * 1024 * 1024 =>
+            {
                 // Use pinned host memory for faster transfers
                 self.device.create_buffer(host_data) // Would use cudaHostAlloc in real implementation
-            },
-            // Medium transfers: use memory coalescing
-            (size, _) if size > 64 * 1024 => {
-                self.device.create_buffer(host_data)
-            },
-            // Small transfers: standard approach
-            _ => {
-                self.device.create_buffer(host_data)
             }
+            // Medium transfers: use memory coalescing
+            (size, _) if size > 64 * 1024 => self.device.create_buffer(host_data),
+            // Small transfers: standard approach
+            _ => self.device.create_buffer(host_data),
         }
     }
-    
+
     /// OpenCL-optimized data transfer
     #[cfg(feature = "gpu")]
     fn transfer_data_opencl_optimized<T>(
-        &self, 
-        host_data: &[T], 
-        transfer_size: usize, 
-        _priority: TransferPriority
+        &self,
+        host_data: &[T],
+        transfer_size: usize,
+        _priority: TransferPriority,
     ) -> Result<GpuBuffer<T>, GpuError>
     where
         T: crate::gpu_ops::GpuDataType + Copy,
@@ -886,14 +978,14 @@ impl GpuMemoryManager {
             self.device.create_buffer(host_data)
         }
     }
-    
+
     /// Metal-optimized data transfer with unified memory architecture
     #[cfg(feature = "gpu")]
     fn transfer_data_metal_optimized<T>(
-        &self, 
-        host_data: &[T], 
-        transfer_size: usize, 
-        _priority: TransferPriority
+        &self,
+        host_data: &[T],
+        transfer_size: usize,
+        _priority: TransferPriority,
     ) -> Result<GpuBuffer<T>, GpuError>
     where
         T: crate::gpu_ops::GpuDataType + Copy,
@@ -914,29 +1006,32 @@ impl GpuMemoryManager {
     {
         // Mark the beginning of a batch operation
         let batch_start = std::time::Instant::now();
-        
+
         // Execute the batched operations
         let result = operations(self)?;
-        
+
         // Process any pending transfers
         self.process_pending_transfers()?;
-        
+
         // Update performance statistics
         let batch_duration = batch_start.elapsed();
         if batch_duration.as_millis() > 100 {
             // Log slow batches for optimization
-            eprintln!("Warning: GPU batch operation took {}ms", batch_duration.as_millis());
+            eprintln!(
+                "Warning: GPU batch operation took {}ms",
+                batch_duration.as_millis()
+            );
         }
-        
+
         Ok(result)
     }
-    
+
     /// Process pending asynchronous transfers
     fn process_pending_transfers(&mut self) -> Result<(), GpuError> {
         // Sort transfers by priority
         let mut transfers: Vec<_> = self.transfer_queue.drain(..).collect();
         transfers.sort_by_key(|t| (t.priority, t.timestamp));
-        
+
         // Process high-priority transfers first
         for transfer in transfers {
             // In a real implementation, this would execute the actual async transfer
@@ -947,10 +1042,10 @@ impl GpuMemoryManager {
                 self.transfer_queue.push_back(transfer);
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Update bandwidth statistics for performance monitoring
     fn update_bandwidth_stats(&mut self, bandwidth: f64) {
         // Use exponential moving average for bandwidth estimation
@@ -958,16 +1053,16 @@ impl GpuMemoryManager {
         if self.memory_stats.avg_transfer_bandwidth == 0.0 {
             self.memory_stats.avg_transfer_bandwidth = bandwidth;
         } else {
-            self.memory_stats.avg_transfer_bandwidth = 
+            self.memory_stats.avg_transfer_bandwidth =
                 alpha * bandwidth + (1.0 - alpha) * self.memory_stats.avg_transfer_bandwidth;
         }
     }
-    
+
     /// Get current memory usage statistics
     pub fn get_memory_stats(&self) -> &GpuMemoryStats {
         &self.memory_stats
     }
-    
+
     /// Get buffer pool efficiency metrics
     pub fn get_pool_efficiency(&self) -> f64 {
         let total_requests = self.memory_stats.pool_hits + self.memory_stats.pool_misses;
@@ -977,12 +1072,12 @@ impl GpuMemoryManager {
             self.memory_stats.pool_hits as f64 / total_requests as f64
         }
     }
-    
+
     /// Align size to optimal GPU memory boundaries
     fn align_size(&self, size: usize) -> usize {
         (size + self.alignment_preference - 1) & !(self.alignment_preference - 1)
     }
-    
+
     /// Calculate optimal size for memory coalescing
     fn calculate_coalesced_size(&self, size: usize) -> usize {
         match self.device.backend() {
@@ -990,17 +1085,17 @@ impl GpuMemoryManager {
                 // CUDA prefers 128-byte aligned access
                 let alignment = 128 / std::mem::size_of::<usize>();
                 (size + alignment - 1) / alignment * alignment
-            },
+            }
             GpuBackend::OpenCl => {
                 // OpenCL typically prefers 64-byte alignment
                 let alignment = 64 / std::mem::size_of::<usize>();
                 (size + alignment - 1) / alignment * alignment
-            },
+            }
             GpuBackend::Metal => {
                 // Metal prefers 16-byte alignment
                 let alignment = 16 / std::mem::size_of::<usize>();
                 (size + alignment - 1) / alignment * alignment
-            },
+            }
             GpuBackend::Cpu => size,
         }
     }
@@ -1021,7 +1116,7 @@ where
         AccessPattern::Strided { .. } => TransferPriority::High,
         AccessPattern::Blocked => TransferPriority::Normal,
     };
-    
+
     memory_manager.transfer_data_optimized(matrix_data, priority)
 }
 
@@ -1047,16 +1142,12 @@ pub fn optimize_memory_bandwidth(
     match (backend, access_pattern, data_size) {
         (GpuBackend::Cuda, AccessPattern::Sequential, size) if size > 1024 * 1024 => {
             MemoryStrategy::Coalesced
-        },
-        (GpuBackend::Cuda, AccessPattern::Random, _) => {
-            MemoryStrategy::TextureMemory
-        },
-        (GpuBackend::OpenCl, AccessPattern::Blocked, _) => {
-            MemoryStrategy::SharedMemory
-        },
+        }
+        (GpuBackend::Cuda, AccessPattern::Random, _) => MemoryStrategy::TextureMemory,
+        (GpuBackend::OpenCl, AccessPattern::Blocked, _) => MemoryStrategy::SharedMemory,
         (GpuBackend::Metal, _, size) if size > 512 * 1024 => {
             MemoryStrategy::SharedMemory // Unified memory architecture
-        },
+        }
         _ => MemoryStrategy::Standard,
     }
 }
@@ -1068,8 +1159,12 @@ pub fn calculate_adaptive_workgroup_size(
     matrix_nnz: usize,
     available_memory: usize,
 ) -> GpuKernelConfig {
-    let avg_nnz_per_row = if matrix_rows > 0 { matrix_nnz / matrix_rows } else { 0 };
-    
+    let avg_nnz_per_row = if matrix_rows > 0 {
+        matrix_nnz / matrix_rows
+    } else {
+        0
+    };
+
     let workgroup_size = match backend {
         GpuBackend::Cuda => {
             // Adapt based on sparsity pattern
@@ -1080,7 +1175,7 @@ pub fn calculate_adaptive_workgroup_size(
             } else {
                 [512, 1, 1] // Larger workgroups for dense-ish matrices
             }
-        },
+        }
         GpuBackend::OpenCl => {
             // Conservative sizing for compatibility
             if avg_nnz_per_row < 20 {
@@ -1088,7 +1183,7 @@ pub fn calculate_adaptive_workgroup_size(
             } else {
                 [128, 1, 1]
             }
-        },
+        }
         GpuBackend::Metal => {
             // Optimize for Apple GPU architecture
             if avg_nnz_per_row < 15 {
@@ -1096,7 +1191,7 @@ pub fn calculate_adaptive_workgroup_size(
             } else {
                 [256, 1, 1]
             }
-        },
+        }
         GpuBackend::Cpu => {
             // CPU doesn't need workgroup optimization
             [1, 1, 1]
@@ -1111,7 +1206,7 @@ pub fn calculate_adaptive_workgroup_size(
 
     GpuKernelConfig {
         workgroup_size,
-        compute_units: 0, // Auto-detect
+        compute_units: 0,                   // Auto-detect
         vectorization: avg_nnz_per_row > 8, // Enable vectorization for non-sparse patterns
         memory_strategy,
     }
@@ -1134,7 +1229,14 @@ where
     T: Float + Debug + Copy + 'static,
 {
     // Use CPU fallback when GPU feature is not available
-    execute_cpu_spmv_fallback(rows, indptr_buffer, indices_buffer, data_buffer, x_buffer, y_buffer)
+    execute_cpu_spmv_fallback(
+        rows,
+        indptr_buffer,
+        indices_buffer,
+        data_buffer,
+        x_buffer,
+        y_buffer,
+    )
 }
 
 #[cfg(not(feature = "gpu"))]
@@ -1153,7 +1255,14 @@ where
     T: Float + Debug + Copy + 'static,
 {
     // Use CPU symmetric fallback when GPU feature is not available
-    execute_cpu_symmetric_spmv_fallback(rows, indptr_buffer, indices_buffer, data_buffer, x_buffer, y_buffer)
+    execute_cpu_symmetric_spmv_fallback(
+        rows,
+        indptr_buffer,
+        indices_buffer,
+        data_buffer,
+        x_buffer,
+        y_buffer,
+    )
 }
 
 #[cfg(not(feature = "gpu"))]
@@ -1172,7 +1281,14 @@ where
     T: Float + Debug + Copy + 'static,
 {
     // Use CPU triangular solve fallback when GPU feature is not available
-    execute_cpu_triangular_solve_fallback(n, indptr_buffer, indices_buffer, data_buffer, b_buffer, x_buffer)
+    execute_cpu_triangular_solve_fallback(
+        n,
+        indptr_buffer,
+        indices_buffer,
+        data_buffer,
+        b_buffer,
+        x_buffer,
+    )
 }
 
 /// Performance profiling and optimization utilities
@@ -1190,7 +1306,11 @@ impl GpuPerformanceProfiler {
     }
 
     /// Profile a GPU operation and collect timing data
-    pub fn profile_operation<F, R>(&mut self, operation_name: &str, operation: F) -> Result<R, GpuError>
+    pub fn profile_operation<F, R>(
+        &mut self,
+        operation_name: &str,
+        operation: F,
+    ) -> Result<R, GpuError>
     where
         F: FnOnce() -> Result<R, GpuError>,
     {
@@ -1199,9 +1319,12 @@ impl GpuPerformanceProfiler {
         let elapsed = start_time.elapsed().as_secs_f64() * 1000.0; // Convert to milliseconds
 
         // Store timing data
-        let timings = self.timing_data.entry(operation_name.to_string()).or_insert_with(Vec::new);
+        let timings = self
+            .timing_data
+            .entry(operation_name.to_string())
+            .or_insert_with(Vec::new);
         timings.push(elapsed);
-        
+
         // Keep only recent measurements to avoid memory bloat
         if timings.len() > 100 {
             timings.remove(0);
@@ -1232,12 +1355,13 @@ impl GpuPerformanceProfiler {
                 // Calculate timing variance for performance stability analysis
                 let variance = if timings.len() > 1 {
                     let mean = avg_time;
-                    let var = timings.iter().map(|&t| (t - mean).powi(2)).sum::<f64>() / timings.len() as f64;
+                    let var = timings.iter().map(|&t| (t - mean).powi(2)).sum::<f64>()
+                        / timings.len() as f64;
                     var.sqrt()
                 } else {
                     0.0
                 };
-                
+
                 // Provide backend-specific recommendations
                 match self.backend {
                     GpuBackend::Cuda => {
@@ -1253,7 +1377,7 @@ impl GpuPerformanceProfiler {
                                 operation
                             ));
                         }
-                    },
+                    }
                     GpuBackend::OpenCl => {
                         if avg_time > 15.0 {
                             recommendations.push(format!(
@@ -1267,7 +1391,7 @@ impl GpuPerformanceProfiler {
                                 operation
                             ));
                         }
-                    },
+                    }
                     GpuBackend::Metal => {
                         if avg_time > 8.0 && operation.contains("triangular") {
                             recommendations.push(format!(
@@ -1281,7 +1405,7 @@ impl GpuPerformanceProfiler {
                                 operation
                             ));
                         }
-                    },
+                    }
                     GpuBackend::Cpu => {
                         if avg_time > 50.0 {
                             recommendations.push(format!(
@@ -1297,7 +1421,7 @@ impl GpuPerformanceProfiler {
                         }
                     }
                 }
-                
+
                 // General performance recommendations
                 if avg_time > 100.0 {
                     recommendations.push(format!(
@@ -1310,26 +1434,26 @@ impl GpuPerformanceProfiler {
 
         recommendations
     }
-    
+
     /// Get detailed performance metrics for a specific operation
     pub fn get_operation_metrics(&self, operation_name: &str) -> Option<OperationMetrics> {
         if let Some(timings) = self.timing_data.get(operation_name) {
             if timings.is_empty() {
                 return None;
             }
-            
+
             let count = timings.len();
             let total_time: f64 = timings.iter().sum();
             let avg_time = total_time / count as f64;
             let min_time = timings.iter().copied().fold(f64::INFINITY, f64::min);
             let max_time = timings.iter().copied().fold(f64::NEG_INFINITY, f64::max);
-            
+
             let variance = if count > 1 {
                 timings.iter().map(|&t| (t - avg_time).powi(2)).sum::<f64>() / count as f64
             } else {
                 0.0
             };
-            
+
             Some(OperationMetrics {
                 operation_name: operation_name.to_string(),
                 call_count: count,
@@ -1344,15 +1468,18 @@ impl GpuPerformanceProfiler {
             None
         }
     }
-    
+
     /// Reset all performance data
     pub fn reset_metrics(&mut self) {
         self.timing_data.clear();
     }
-    
+
     /// Export performance data for analysis
     pub fn export_metrics(&self) -> Vec<OperationMetrics> {
-        self.timing_data.keys().filter_map(|op| self.get_operation_metrics(op)).collect()
+        self.timing_data
+            .keys()
+            .filter_map(|op| self.get_operation_metrics(op))
+            .collect()
     }
 }
 
@@ -1377,11 +1504,11 @@ mod tests {
     fn test_calculate_optimal_dimensions() {
         let (global, local) = calculate_optimal_dimensions(
             GpuBackend::Cuda,
-            1000, // problem size
+            1000,        // problem size
             [256, 1, 1], // workgroup size
-            0, // auto-detect compute units
+            0,           // auto-detect compute units
         );
-        
+
         assert_eq!(local[0], 256);
         assert!(global[0] >= 1000);
         assert_eq!(global[0] % local[0], 0);
@@ -1391,11 +1518,11 @@ mod tests {
     fn test_adaptive_workgroup_config() {
         let config = calculate_adaptive_workgroup_size(
             GpuBackend::Cuda,
-            10000, // matrix rows
-            50000, // matrix nnz
+            10000,              // matrix rows
+            50000,              // matrix nnz
             1024 * 1024 * 1024, // 1GB available memory
         );
-        
+
         assert!(config.workgroup_size[0] > 0);
         assert!(config.vectorization); // Should enable vectorization for avg 5 nnz per row
         assert_eq!(config.memory_strategy, MemoryStrategy::SharedMemory);

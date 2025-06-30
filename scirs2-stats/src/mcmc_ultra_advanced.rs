@@ -14,11 +14,7 @@ use ndarray::{Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, NumCast, One, Zero};
 use rand::{Rng, SeedableRng};
 use rand_distr::{Distribution, Normal, Uniform};
-use scirs2_core::{
-    parallel_ops::*,
-    simd_ops::SimdUnifiedOps,
-    validation::*,
-};
+use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 use std::collections::{HashMap, VecDeque};
 use std::marker::PhantomData;
 use std::sync::{Arc, Mutex, RwLock};
@@ -145,33 +141,20 @@ pub enum SamplingMethod<F> {
         metric_adaptation: bool,
     },
     /// Multiple-try Metropolis
-    MultipleTryMetropolis {
-        num_tries: usize,
-        proposal_scale: F,
-    },
+    MultipleTryMetropolis { num_tries: usize, proposal_scale: F },
     /// Ensemble sampler (Affine Invariant)
     Ensemble {
         num_walkers: usize,
         stretch_factor: F,
     },
     /// Slice sampling
-    SliceSampling {
-        width: F,
-        max_steps: usize,
-    },
+    SliceSampling { width: F, max_steps: usize },
     /// Langevin dynamics
-    Langevin {
-        step_size: F,
-        friction: F,
-    },
+    Langevin { step_size: F, friction: F },
     /// Zig-Zag sampler
-    ZigZag {
-        refresh_rate: F,
-    },
+    ZigZag { refresh_rate: F },
     /// Bouncy Particle Sampler
-    BouncyParticle {
-        refresh_rate: F,
-    },
+    BouncyParticle { refresh_rate: F },
 }
 
 /// Mass matrix types for HMC
@@ -429,7 +412,7 @@ pub struct PerformanceMetrics {
 pub struct PosteriorSummary<F> {
     pub means: Array1<F>,
     pub stds: Array1<F>,
-    pub quantiles: Array2<F>, // (parameter, quantile)
+    pub quantiles: Array2<F>,          // (parameter, quantile)
     pub credible_intervals: Array2<F>, // (parameter, [lower, upper])
 }
 
@@ -441,7 +424,7 @@ where
     /// Create new ultra-advanced MCMC sampler
     pub fn new(target: T, config: UltraAdvancedConfig<F>) -> StatsResult<Self> {
         let dim = target.dim();
-        
+
         // Initialize chains
         let mut chains = Vec::with_capacity(config.num_chains);
         for i in 0..config.num_chains {
@@ -468,25 +451,25 @@ where
     pub fn sample(&mut self) -> StatsResult<UltraAdvancedResults<F>> {
         let start_time = Instant::now();
         let total_iterations = self.config.burn_in + self.config.num_samples;
-        
+
         // Initialize sampling
         self.initialize_chains()?;
-        
+
         // Main sampling loop
         for iteration in 0..total_iterations {
             // Perform one iteration of sampling
             self.sample_iteration(iteration)?;
-            
+
             // Adaptation phase
             if iteration < self.config.adaptation.adaptation_period {
                 self.adapt_parameters(iteration)?;
             }
-            
+
             // Monitor convergence
             if iteration % self.config.convergence.monitor_interval == 0 {
                 self.monitor_convergence(iteration)?;
             }
-            
+
             // Temperature swaps (if using parallel tempering)
             if let Some(ref tempering_config) = self.config.tempering {
                 if iteration % tempering_config.swap_frequency == 0 {
@@ -507,12 +490,13 @@ where
             let initial_pos = Array1::zeros(self.target.dim());
             chain.current_position = initial_pos.clone();
             chain.current_log_density = self.target.log_density(&initial_pos);
-            
-            if matches!(self.config.method, 
-                SamplingMethod::EnhancedHMC { .. } | 
-                SamplingMethod::NUTS { .. } | 
-                SamplingMethod::RiemannianHMC { .. } |
-                SamplingMethod::Langevin { .. }
+
+            if matches!(
+                self.config.method,
+                SamplingMethod::EnhancedHMC { .. }
+                    | SamplingMethod::NUTS { .. }
+                    | SamplingMethod::RiemannianHMC { .. }
+                    | SamplingMethod::Langevin { .. }
             ) {
                 chain.current_gradient = Some(self.target.gradient(&initial_pos));
             }
@@ -523,24 +507,12 @@ where
     /// Perform one iteration of sampling across all chains
     fn sample_iteration(&mut self, iteration: usize) -> StatsResult<()> {
         match self.config.method {
-            SamplingMethod::EnhancedHMC { .. } => {
-                self.enhanced_hmc_iteration(iteration)
-            }
-            SamplingMethod::NUTS { .. } => {
-                self.nuts_iteration(iteration)
-            }
-            SamplingMethod::RiemannianHMC { .. } => {
-                self.riemannian_hmc_iteration(iteration)
-            }
-            SamplingMethod::Ensemble { .. } => {
-                self.ensemble_iteration(iteration)
-            }
-            SamplingMethod::SliceSampling { .. } => {
-                self.slice_sampling_iteration(iteration)
-            }
-            SamplingMethod::Langevin { .. } => {
-                self.langevin_iteration(iteration)
-            }
+            SamplingMethod::EnhancedHMC { .. } => self.enhanced_hmc_iteration(iteration),
+            SamplingMethod::NUTS { .. } => self.nuts_iteration(iteration),
+            SamplingMethod::RiemannianHMC { .. } => self.riemannian_hmc_iteration(iteration),
+            SamplingMethod::Ensemble { .. } => self.ensemble_iteration(iteration),
+            SamplingMethod::SliceSampling { .. } => self.slice_sampling_iteration(iteration),
+            SamplingMethod::Langevin { .. } => self.langevin_iteration(iteration),
             _ => {
                 // Fallback to basic Metropolis-Hastings
                 self.metropolis_iteration(iteration)
@@ -559,28 +531,31 @@ where
             let mass_matrix = self.chains[i].mass_matrix.clone();
             let step_size = self.chains[i].step_size;
             let current_log_density = self.chains[i].current_log_density;
-            
+
             // Sample momentum
             let momentum = self.sample_momentum(&mass_matrix)?;
-            
+
             // Leapfrog integration with SIMD
             let (new_pos, new_momentum) = self.leapfrog_simd(
-                &current_pos, 
-                &momentum, 
-                &current_grad, 
+                &current_pos,
+                &momentum,
+                &current_grad,
                 step_size,
                 10, // num_steps - would get from config
             )?;
-            
+
             // Metropolis acceptance
             let new_log_density = self.target.log_density(&new_pos);
             let energy_diff = self.compute_energy_difference(
-                &current_pos, &new_pos,
-                &momentum, &new_momentum,
-                current_log_density, new_log_density,
+                &current_pos,
+                &new_pos,
+                &momentum,
+                &new_momentum,
+                current_log_density,
+                new_log_density,
                 &mass_matrix,
             )?;
-            
+
             if self.accept_proposal(energy_diff) {
                 self.chains[i].current_position = new_pos.clone();
                 self.chains[i].current_log_density = new_log_density;
@@ -605,29 +580,29 @@ where
         let mut p = position.clone();
         let mut m = momentum.clone();
         let half_step = step_size / F::from(2.0).unwrap();
-        
+
         // First half-step for momentum
         F::simd_fma(&mut m.view_mut(), &gradient.view(), half_step);
-        
+
         // Full steps
         for _ in 0..(num_steps - 1) {
             // Full step for position
             F::simd_fma(&mut p.view_mut(), &m.view(), step_size);
-            
+
             // Compute new gradient
             let new_grad = self.target.gradient(&p);
-            
+
             // Full step for momentum
             F::simd_fma(&mut m.view_mut(), &new_grad.view(), step_size);
         }
-        
+
         // Final position step
         F::simd_fma(&mut p.view_mut(), &m.view(), step_size);
-        
+
         // Final half-step for momentum
         let final_grad = self.target.gradient(&p);
         F::simd_fma(&mut m.view_mut(), &final_grad.view(), half_step);
-        
+
         Ok((p, m))
     }
 
@@ -637,11 +612,10 @@ where
         let dim = self.target.dim();
         let normal = Normal::new(0.0, 1.0).unwrap();
         let mut rng = rand::rng();
-        
-        let momentum: Array1<F> = Array1::from_shape_fn(dim, |_| {
-            F::from(normal.sample(&mut rng)).unwrap()
-        });
-        
+
+        let momentum: Array1<F> =
+            Array1::from_shape_fn(dim, |_| F::from(normal.sample(&mut rng)).unwrap());
+
         Ok(momentum)
     }
 
@@ -658,19 +632,21 @@ where
     ) -> StatsResult<F> {
         let old_kinetic = self.kinetic_energy(old_momentum, mass_matrix)?;
         let new_kinetic = self.kinetic_energy(new_momentum, mass_matrix)?;
-        
+
         let old_energy = -old_log_density + old_kinetic;
         let new_energy = -new_log_density + new_kinetic;
-        
+
         Ok(new_energy - old_energy)
     }
 
     /// Compute kinetic energy
-    fn kinetic_energy(&self, momentum: &Array1<F>, mass_matrix: &MassMatrixType<F>) -> StatsResult<F> {
+    fn kinetic_energy(
+        &self,
+        momentum: &Array1<F>,
+        mass_matrix: &MassMatrixType<F>,
+    ) -> StatsResult<F> {
         match mass_matrix {
-            MassMatrixType::Identity => {
-                Ok(F::simd_dot(momentum, momentum) / F::from(2.0).unwrap())
-            }
+            MassMatrixType::Identity => Ok(F::simd_dot(momentum, momentum) / F::from(2.0).unwrap()),
             MassMatrixType::Diagonal(diag) => {
                 let weighted_momentum = F::simd_mul(momentum, diag);
                 Ok(F::simd_dot(momentum, &weighted_momentum) / F::from(2.0).unwrap())
@@ -747,17 +723,17 @@ where
     fn compile_results(&self, total_time: f64) -> StatsResult<UltraAdvancedResults<F>> {
         let dim = self.target.dim();
         let effective_samples = self.config.num_samples / self.config.thin;
-        
+
         // Collect samples from all chains
         let samples = Array3::zeros((self.config.num_chains, effective_samples, dim));
         let log_densities = Array2::zeros((self.config.num_chains, effective_samples));
-        
+
         // Compute posterior summary
         let means = Array1::zeros(dim);
         let stds = Array1::ones(dim);
         let quantiles = Array2::zeros((dim, 5)); // 5%, 25%, 50%, 75%, 95%
         let credible_intervals = Array2::zeros((dim, 2));
-        
+
         let posterior_summary = PosteriorSummary {
             means,
             stds,
@@ -775,7 +751,8 @@ where
 
         let performance_metrics = PerformanceMetrics {
             total_time,
-            samples_per_second: (self.config.num_samples * self.config.num_chains) as f64 / total_time,
+            samples_per_second: (self.config.num_samples * self.config.num_chains) as f64
+                / total_time,
             acceptance_rate: 0.65,
             gradient_evaluations: 10000,
             memory_peak_mb: 100.0,
@@ -943,9 +920,9 @@ mod tests {
     fn test_ultra_advanced_mcmc() {
         let target = StandardNormal { dim: 2 };
         let config = UltraAdvancedConfig::default();
-        
+
         let mut sampler = UltraAdvancedMCMC::new(target, config).unwrap();
-        
+
         // Test initialization
         assert_eq!(sampler.chains.len(), 4);
         assert_eq!(sampler.target.dim(), 2);
@@ -956,11 +933,11 @@ mod tests {
         let target = StandardNormal { dim: 2 };
         let config = UltraAdvancedConfig::default();
         let sampler = UltraAdvancedMCMC::new(target, config).unwrap();
-        
+
         let position = array![0.0, 0.0];
         let momentum = array![1.0, -1.0];
         let gradient = array![0.0, 0.0];
-        
+
         let result = sampler.leapfrog_simd(&position, &momentum, &gradient, 0.1, 5);
         assert!(result.is_ok());
     }

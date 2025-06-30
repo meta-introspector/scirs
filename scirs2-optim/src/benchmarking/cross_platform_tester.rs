@@ -132,7 +132,7 @@ pub struct TimeoutSettings {
 impl Default for CrossPlatformConfig {
     fn default() -> Self {
         let mut performance_thresholds = HashMap::new();
-        
+
         // Set default thresholds for common platforms
         for platform in &[
             PlatformTarget::LinuxX64,
@@ -217,7 +217,7 @@ pub struct PlatformInfo {
 #[derive(Debug, Clone)]
 pub enum OperatingSystem {
     Linux(LinuxDistribution),
-    MacOS(String), // version
+    MacOS(String),   // version
     Windows(String), // version
     FreeBSD(String),
     OpenBSD(String),
@@ -472,16 +472,16 @@ pub struct ResourceRequirements {
 pub trait CrossPlatformTest: Debug {
     /// Run the test on the current platform
     fn run_test(&self, platform_info: &PlatformInfo) -> TestResult;
-    
+
     /// Get test name
     fn name(&self) -> &str;
-    
+
     /// Get test category
     fn category(&self) -> TestCategory;
-    
+
     /// Check if test is applicable to platform
     fn is_applicable(&self, platform: &PlatformTarget) -> bool;
-    
+
     /// Get expected performance baseline
     fn performance_baseline(&self, platform: &PlatformTarget) -> Option<PerformanceBaseline>;
 }
@@ -762,26 +762,26 @@ impl CrossPlatformTester {
     /// Run complete cross-platform test suite
     pub fn run_test_suite(&mut self) -> Result<&TestResults> {
         println!("Starting cross-platform test suite...");
-        
+
         // Detect current platform
         let current_platform = self.platform_detector.detect_current_platform()?;
         println!("Detected platform: {:?}", current_platform.target_triple);
-        
+
         // Register built-in tests
         self.register_builtin_tests();
-        
+
         // Run tests for each configured category
         for category in &self.config.test_categories.clone() {
             println!("Running {:?} tests...", category);
             self.run_test_category(category, &current_platform)?;
         }
-        
+
         // Generate compatibility matrix
         self.update_compatibility_matrix();
-        
+
         // Analyze results
         self.analyze_results();
-        
+
         println!("Cross-platform test suite completed.");
         Ok(&self.results)
     }
@@ -796,14 +796,14 @@ impl CrossPlatformTester {
             for test in tests {
                 if test.is_applicable(&self.current_platform_target()) {
                     println!("  Running test: {}", test.name());
-                    
+
                     let start_time = Instant::now();
                     let test_result = test.run_test(platform_info);
                     let execution_time = start_time.elapsed();
-                    
+
                     // Store result
                     self.store_test_result(test.name(), test_result, execution_time);
-                    
+
                     // Check timeout
                     if execution_time > self.config.timeout_settings.test_timeout {
                         println!("    ⚠️  Test exceeded timeout");
@@ -813,7 +813,7 @@ impl CrossPlatformTester {
                 }
             }
         }
-        
+
         Ok(())
     }
 
@@ -865,11 +865,17 @@ impl CrossPlatformTester {
     }
 
     /// Store test result
-    fn store_test_result(&mut self, test_name: &str, mut result: TestResult, execution_time: Duration) {
+    fn store_test_result(
+        &mut self,
+        test_name: &str,
+        mut result: TestResult,
+        execution_time: Duration,
+    ) {
         result.execution_time = execution_time;
         let platform = self.current_platform_target();
-        
-        self.results.results
+
+        self.results
+            .results
             .entry(platform)
             .or_insert_with(HashMap::new)
             .insert(test_name.to_string(), result);
@@ -881,16 +887,17 @@ impl CrossPlatformTester {
             let mut supported_features = Vec::new();
             let mut limitations = Vec::new();
             let mut test_coverage = 0.0;
-            
+
             let total_tests = test_results.len();
-            let passed_tests = test_results.values()
+            let passed_tests = test_results
+                .values()
                 .filter(|r| matches!(r.status, TestStatus::Passed))
                 .count();
-            
+
             if total_tests > 0 {
                 test_coverage = passed_tests as f64 / total_tests as f64;
             }
-            
+
             // Analyze results to determine support status
             let status = if test_coverage >= 0.95 {
                 SupportStatus::FullySupported
@@ -901,7 +908,7 @@ impl CrossPlatformTester {
             } else {
                 SupportStatus::NotSupported
             };
-            
+
             // Identify supported features and limitations
             for (test_name, result) in test_results {
                 match result.status {
@@ -917,15 +924,17 @@ impl CrossPlatformTester {
                     _ => {}
                 }
             }
-            
+
             let platform_support = PlatformSupport {
                 status,
                 supported_features,
                 limitations,
                 test_coverage,
             };
-            
-            self.compatibility_matrix.support_matrix.insert(platform.clone(), platform_support);
+
+            self.compatibility_matrix
+                .support_matrix
+                .insert(platform.clone(), platform_support);
         }
     }
 
@@ -948,13 +957,16 @@ impl CrossPlatformTester {
 
         for (platform, test_results) in &self.results.results {
             let platform_total = test_results.len();
-            let platform_passed = test_results.values()
+            let platform_passed = test_results
+                .values()
                 .filter(|r| matches!(r.status, TestStatus::Passed))
                 .count();
-            let platform_failed = test_results.values()
+            let platform_failed = test_results
+                .values()
                 .filter(|r| matches!(r.status, TestStatus::Failed))
                 .count();
-            let platform_skipped = test_results.values()
+            let platform_skipped = test_results
+                .values()
                 .filter(|r| matches!(r.status, TestStatus::Skipped))
                 .count();
 
@@ -1000,7 +1012,9 @@ impl CrossPlatformTester {
                     issues.push(CompatibilityIssue {
                         issue_type,
                         affected_platforms: vec![platform.clone()],
-                        description: result.error_message.clone()
+                        description: result
+                            .error_message
+                            .clone()
                             .unwrap_or_else(|| "Unknown failure".to_string()),
                         severity,
                         workaround: self.suggest_workaround(&issue_type),
@@ -1018,7 +1032,9 @@ impl CrossPlatformTester {
         let mut comparisons = Vec::new();
 
         // Get all unique test names
-        let all_test_names: std::collections::HashSet<String> = self.results.results
+        let all_test_names: std::collections::HashSet<String> = self
+            .results
+            .results
             .values()
             .flat_map(|tests| tests.keys().cloned())
             .collect();
@@ -1031,14 +1047,16 @@ impl CrossPlatformTester {
             for (platform, test_results) in &self.results.results {
                 if let Some(result) = test_results.get(&test_name) {
                     if matches!(result.status, TestStatus::Passed) {
-                        platform_metrics.insert(platform.clone(), result.performance_metrics.clone());
+                        platform_metrics
+                            .insert(platform.clone(), result.performance_metrics.clone());
                     }
                 }
             }
 
             // Calculate relative performance (fastest = 1.0)
             if !platform_metrics.is_empty() {
-                let max_throughput = platform_metrics.values()
+                let max_throughput = platform_metrics
+                    .values()
                     .map(|m| m.throughput)
                     .fold(0.0, f64::max);
 
@@ -1052,7 +1070,8 @@ impl CrossPlatformTester {
                 }
 
                 // Create performance ranking
-                let mut performance_ranking: Vec<_> = relative_performance.iter()
+                let mut performance_ranking: Vec<_> = relative_performance
+                    .iter()
                     .map(|(platform, &score)| (platform.clone(), score))
                     .collect();
                 performance_ranking.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
@@ -1086,12 +1105,17 @@ impl CrossPlatformTester {
             }
 
             // Look for performance optimization opportunities
-            if let Some(perf_profile) = self.compatibility_matrix.performance_characteristics.get(platform) {
+            if let Some(perf_profile) = self
+                .compatibility_matrix
+                .performance_characteristics
+                .get(platform)
+            {
                 if perf_profile.performance_score < 0.7 {
                     recommendations.push(PlatformRecommendation {
                         platform: platform.clone(),
                         recommendation_type: RecommendationType::Optimization,
-                        description: "Platform-specific optimization needed for better performance".to_string(),
+                        description: "Platform-specific optimization needed for better performance"
+                            .to_string(),
                         priority: RecommendationPriority::High,
                         estimated_impact: (1.0 - perf_profile.performance_score) * 100.0,
                     });
@@ -1124,7 +1148,11 @@ impl CrossPlatformTester {
     }
 
     /// Assess issue severity
-    fn assess_severity(&self, issue_type: &CompatibilityIssueType, _result: &TestResult) -> IssueSeverity {
+    fn assess_severity(
+        &self,
+        issue_type: &CompatibilityIssueType,
+        _result: &TestResult,
+    ) -> IssueSeverity {
         match issue_type {
             CompatibilityIssueType::NumericalPrecision => IssueSeverity::Medium,
             CompatibilityIssueType::PerformanceRegression => IssueSeverity::High,
@@ -1207,7 +1235,10 @@ impl PlatformDetector {
     }
 
     fn get_platform_target(&self) -> PlatformTarget {
-        match (&self.current_platform.operating_system, &self.current_platform.architecture) {
+        match (
+            &self.current_platform.operating_system,
+            &self.current_platform.architecture,
+        ) {
             (OperatingSystem::Linux(_), Architecture::X86_64) => PlatformTarget::LinuxX64,
             (OperatingSystem::Linux(_), Architecture::ARM64) => PlatformTarget::LinuxArm64,
             (OperatingSystem::MacOS(_), Architecture::X86_64) => PlatformTarget::MacOSX64,
@@ -1237,7 +1268,7 @@ impl PlatformDetector {
                 max_frequency: 4200.0,
             },
             memory_info: MemoryInfo {
-                total_memory: 16 * 1024 * 1024 * 1024, // 16GB
+                total_memory: 16 * 1024 * 1024 * 1024,    // 16GB
                 available_memory: 8 * 1024 * 1024 * 1024, // 8GB
                 memory_type: "DDR4".to_string(),
                 memory_frequency: 3200.0,
@@ -1351,15 +1382,19 @@ impl BasicFunctionalityTest {
 impl CrossPlatformTest for BasicFunctionalityTest {
     fn run_test(&self, _platform_info: &PlatformInfo) -> TestResult {
         let start_time = Instant::now();
-        
+
         // Simulate basic functionality test
         let success = true; // Simplified test logic
-        
+
         let execution_time = start_time.elapsed();
-        
+
         TestResult {
             test_name: self.name().to_string(),
-            status: if success { TestStatus::Passed } else { TestStatus::Failed },
+            status: if success {
+                TestStatus::Passed
+            } else {
+                TestStatus::Failed
+            },
             execution_time,
             performance_metrics: PerformanceMetrics {
                 throughput: 1000.0,
@@ -1486,20 +1521,51 @@ macro_rules! impl_test {
                 true
             }
 
-            fn performance_baseline(&self, _platform: &PlatformTarget) -> Option<PerformanceBaseline> {
+            fn performance_baseline(
+                &self,
+                _platform: &PlatformTarget,
+            ) -> Option<PerformanceBaseline> {
                 None
             }
         }
     };
 }
 
-impl_test!(ParameterUpdateTest, "parameter_update", TestCategory::Functionality);
-impl_test!(NumericalPrecisionTest, "numerical_precision", TestCategory::NumericalAccuracy);
-impl_test!(ConvergenceAccuracyTest, "convergence_accuracy", TestCategory::NumericalAccuracy);
-impl_test!(GradientAccuracyTest, "gradient_accuracy", TestCategory::NumericalAccuracy);
-impl_test!(ThroughputBenchmark, "throughput_benchmark", TestCategory::Performance);
-impl_test!(LatencyBenchmark, "latency_benchmark", TestCategory::Performance);
-impl_test!(ScalabilityTest, "scalability_test", TestCategory::Performance);
+impl_test!(
+    ParameterUpdateTest,
+    "parameter_update",
+    TestCategory::Functionality
+);
+impl_test!(
+    NumericalPrecisionTest,
+    "numerical_precision",
+    TestCategory::NumericalAccuracy
+);
+impl_test!(
+    ConvergenceAccuracyTest,
+    "convergence_accuracy",
+    TestCategory::NumericalAccuracy
+);
+impl_test!(
+    GradientAccuracyTest,
+    "gradient_accuracy",
+    TestCategory::NumericalAccuracy
+);
+impl_test!(
+    ThroughputBenchmark,
+    "throughput_benchmark",
+    TestCategory::Performance
+);
+impl_test!(
+    LatencyBenchmark,
+    "latency_benchmark",
+    TestCategory::Performance
+);
+impl_test!(
+    ScalabilityTest,
+    "scalability_test",
+    TestCategory::Performance
+);
 impl_test!(MemoryUsageTest, "memory_usage", TestCategory::Memory);
 impl_test!(MemoryLeakTest, "memory_leak", TestCategory::Memory);
 
@@ -1535,6 +1601,8 @@ mod tests {
             TestCategory::Functionality,
             vec![Box::new(BasicFunctionalityTest::new())],
         );
-        assert!(registry.test_suites.contains_key(&TestCategory::Functionality));
+        assert!(registry
+            .test_suites
+            .contains_key(&TestCategory::Functionality));
     }
 }

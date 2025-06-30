@@ -7,15 +7,15 @@
 #![recursion_limit = "4096"]
 
 // Core working modules
-pub mod error;
 pub mod activations;
+pub mod error;
 pub mod layers;
 pub mod losses;
 pub mod optimizers;
 
 // Utility modules
-pub mod utils;
 pub mod callbacks;
+pub mod utils;
 
 // Core model functionality
 pub mod models;
@@ -40,13 +40,13 @@ pub mod interpretation_legacy;
 pub mod performance;
 
 // Quantization and compression
-pub mod quantization;
 pub mod compression;
 pub mod distillation;
+pub mod quantization;
 
 // Hardware acceleration
-pub mod hardware;
 pub mod gpu;
+pub mod hardware;
 
 // Training utilities
 pub mod training;
@@ -78,51 +78,51 @@ pub use error::{Error, NeuralError, Result};
 // Optional prelude for convenience
 pub mod prelude {
     //! Convenient re-exports for common neural network operations
-    
+
     // Core functionality
+    pub use crate::activations::{Activation, Mish, ReLU, Sigmoid, Softmax, Swish, Tanh, GELU};
     pub use crate::error::{Error, NeuralError, Result};
-    pub use crate::activations::{Activation, ReLU, Sigmoid, Tanh, Softmax, GELU, Swish, Mish};
-    pub use crate::layers::{Layer, Dense, Sequential};
+    pub use crate::layers::{Dense, Layer, Sequential};
     pub use crate::losses::{Loss, MeanSquaredError};
     pub use crate::optimizers::Optimizer;
-    
+
     // Configuration and serialization
-    pub use crate::config::{ConfigSerializer, ConfigBuilder};
-    
+    pub use crate::config::{ConfigBuilder, ConfigSerializer};
+
     // Transfer learning
     pub use crate::transfer_learning::{
-        TransferLearningManager, TransferStrategy, PretrainedWeightLoader,
-        TransferLearningOrchestrator, LayerState
+        LayerState, PretrainedWeightLoader, TransferLearningManager, TransferLearningOrchestrator,
+        TransferStrategy,
     };
-    
+
     // Model interpretation
     pub use crate::interpretation_legacy::{
-        ModelInterpreter, AttributionMethod, BaselineMethod, InterpretationReport
+        AttributionMethod, BaselineMethod, InterpretationReport, ModelInterpreter,
     };
-    
+
     // Training utilities
     pub use crate::training::mixed_precision::MixedPrecisionManager;
-    
+
     // Data utilities
     pub use crate::data::{DataLoader, Dataset};
-    
+
     // Evaluation
     pub use crate::evaluation::Evaluator;
-    
+
     // JIT compilation
     pub use crate::jit::{JITCompiler, JITOperation, TargetArchitecture};
-    
+
     // TPU support
-    pub use crate::tpu::{TPURuntime, TPUDevice, TPUOperation};
-    
+    pub use crate::tpu::{TPUDevice, TPUOperation, TPURuntime};
+
     // Hardware acceleration
-    pub use crate::hardware::{DeviceManager};
-    
+    pub use crate::hardware::DeviceManager;
+
     // Visualization
-    pub use crate::visualization::{NetworkVisualizer};
-    
+    pub use crate::visualization::NetworkVisualizer;
+
     // Unified performance optimization
     pub use crate::performance_integration::{
-        UnifiedPerformanceManager, OptimizationChoice, AutoOptimizationStrategy
+        AutoOptimizationStrategy, OptimizationChoice, UnifiedPerformanceManager,
     };
 }

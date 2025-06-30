@@ -4,20 +4,20 @@
 //! for automated performance regression testing, memory leak detection,
 //! and cross-framework compatibility validation.
 
+use ndarray::Array1;
 use scirs2_optim::{
     benchmarking::{
-        regression_tester::{RegressionTester, RegressionConfig},
-        memory_leak_detector::{MemoryLeakDetector, MemoryDetectionConfig, AllocationType},
-        OptimizerBenchmark, BenchmarkResult,
+        memory_leak_detector::{AllocationType, MemoryDetectionConfig, MemoryLeakDetector},
+        regression_tester::{RegressionConfig, RegressionTester},
+        BenchmarkResult, OptimizerBenchmark,
     },
-    optimizers::{SGD, Adam, Optimizer as OptimizerTrait},
     error::Result,
+    optimizers::{Adam, Optimizer as OptimizerTrait, SGD},
 };
-use ndarray::Array1;
-use std::time::Instant;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
+use std::time::Instant;
 
 /// CI/CD pipeline configuration
 #[derive(Debug, Clone)]
@@ -67,9 +67,15 @@ impl CiCdPipeline {
                 baseline_dir: config.baseline_dir.clone(),
                 enable_ci_integration: true,
                 ci_report_format: match config.ci_system {
-                    CiSystem::GitHubActions => scirs2_optim::benchmarking::regression_tester::CiReportFormat::GitHubActions,
-                    CiSystem::GitLabCI => scirs2_optim::benchmarking::regression_tester::CiReportFormat::JunitXml,
-                    CiSystem::JenkinsCI => scirs2_optim::benchmarking::regression_tester::CiReportFormat::JunitXml,
+                    CiSystem::GitHubActions => {
+                        scirs2_optim::benchmarking::regression_tester::CiReportFormat::GitHubActions
+                    }
+                    CiSystem::GitLabCI => {
+                        scirs2_optim::benchmarking::regression_tester::CiReportFormat::JunitXml
+                    }
+                    CiSystem::JenkinsCI => {
+                        scirs2_optim::benchmarking::regression_tester::CiReportFormat::JunitXml
+                    }
                     _ => scirs2_optim::benchmarking::regression_tester::CiReportFormat::Json,
                 },
                 ..Default::default()
@@ -104,7 +110,7 @@ impl CiCdPipeline {
     /// Run the complete CI/CD pipeline
     pub fn run_pipeline(&mut self) -> Result<PipelineResults> {
         println!("🚀 Starting CI/CD Pipeline for scirs2-optim");
-        
+
         let mut results = PipelineResults::new();
 
         // Stage 1: Performance regression testing
@@ -132,35 +138,37 @@ impl CiCdPipeline {
         // Stage 5: Set CI exit codes based on results
         results.exit_code = self.determine_exit_code(&results);
 
-        println!("✅ CI/CD Pipeline completed with exit code: {}", results.exit_code);
+        println!(
+            "✅ CI/CD Pipeline completed with exit code: {}",
+            results.exit_code
+        );
         Ok(results)
     }
 
     /// Run performance regression tests
-    fn run_regression_tests(&mut self) -> Result<Vec<scirs2_optim::benchmarking::regression_tester::RegressionTestResult<f64>>> {
+    fn run_regression_tests(
+        &mut self,
+    ) -> Result<Vec<scirs2_optim::benchmarking::regression_tester::RegressionTestResult<f64>>> {
         let mut results = Vec::new();
 
         if let Some(ref mut tester) = self.regression_tester {
             // Test SGD optimizer
-            results.push(tester.run_regression_test(
-                "standard_benchmark",
-                "SGD",
-                || self.benchmark_sgd(),
-            )?);
+            results.push(
+                tester.run_regression_test("standard_benchmark", "SGD", || self.benchmark_sgd())?,
+            );
 
             // Test Adam optimizer
-            results.push(tester.run_regression_test(
-                "standard_benchmark", 
-                "Adam",
-                || self.benchmark_adam(),
-            )?);
+            results.push(
+                tester
+                    .run_regression_test("standard_benchmark", "Adam", || self.benchmark_adam())?,
+            );
 
             // Test with different problem sizes
-            results.push(tester.run_regression_test(
-                "large_scale_benchmark",
-                "SGD",
-                || self.benchmark_large_scale(),
-            )?);
+            results.push(
+                tester.run_regression_test("large_scale_benchmark", "SGD", || {
+                    self.benchmark_large_scale()
+                })?,
+            );
         }
 
         Ok(results)
@@ -179,7 +187,7 @@ impl CiCdPipeline {
         for i in 0..1000 {
             let grad = &x * 2.0; // Gradient of x^2
             let f_val = x.mapv(|v| v * v).sum(); // x^2
-            
+
             if grad.mapv(|g| g * g).sum().sqrt() < 1e-6 {
                 converged = true;
                 break;
@@ -217,7 +225,7 @@ impl CiCdPipeline {
         for _i in 0..1000 {
             let grad = &x * 2.0;
             let f_val = x.mapv(|v| v * v).sum();
-            
+
             if grad.mapv(|g| g * g).sum().sqrt() < 1e-6 {
                 converged = true;
                 break;
@@ -255,7 +263,7 @@ impl CiCdPipeline {
         for _i in 0..100 {
             let grad = &x * 2.0;
             let f_val = x.mapv(|v| v * v).sum();
-            
+
             x = sgd.step(&x, &grad)?;
             final_value = f_val;
         }
@@ -277,7 +285,10 @@ impl CiCdPipeline {
     }
 
     /// Run memory leak detection tests
-    fn run_memory_tests(&mut self) -> Result<Vec<scirs2_optim::benchmarking::memory_leak_detector::MemoryOptimizationReport>> {
+    fn run_memory_tests(
+        &mut self,
+    ) -> Result<Vec<scirs2_optim::benchmarking::memory_leak_detector::MemoryOptimizationReport>>
+    {
         let mut results = Vec::new();
 
         if let Some(ref mut detector) = self.memory_detector {
@@ -287,18 +298,22 @@ impl CiCdPipeline {
             for i in 0..100 {
                 // Record allocations for parameter tensors
                 detector.record_allocation(i, 1024 * (i + 1), AllocationType::Parameter)?;
-                
+
                 // Record allocations for gradients
                 detector.record_allocation(i + 1000, 1024 * (i + 1), AllocationType::Gradient)?;
-                
+
                 // Record allocations for optimizer state
-                detector.record_allocation(i + 2000, 512 * (i + 1), AllocationType::OptimizerState)?;
-                
+                detector.record_allocation(
+                    i + 2000,
+                    512 * (i + 1),
+                    AllocationType::OptimizerState,
+                )?;
+
                 // Take periodic snapshots
                 if i % 10 == 0 {
                     detector.take_snapshot()?;
                 }
-                
+
                 // Simulate some deallocations
                 if i > 10 {
                     detector.record_deallocation(i - 10)?;
@@ -307,7 +322,7 @@ impl CiCdPipeline {
             }
 
             detector.stop_monitoring()?;
-            
+
             let report = detector.generate_optimization_report()?;
             results.push(report);
         }
@@ -332,9 +347,9 @@ impl CiCdPipeline {
         let mut sgd = SGD::new(0.01);
         let x = Array1::from_vec(vec![1.0, 2.0]);
         let grad = Array1::from_vec(vec![0.1, 0.2]);
-        
+
         let result = sgd.step(&x, &grad);
-        
+
         Ok(FrameworkTestResult {
             framework_name: "ndarray".to_string(),
             test_name: "basic_optimization".to_string(),
@@ -403,7 +418,10 @@ impl CiCdPipeline {
             CiSystem::GitLabCI => self.generate_gitlab_ci_output(results)?,
             CiSystem::JenkinsCI => self.generate_jenkins_output(results)?,
             _ => {
-                println!("ℹ️  No specific CI output generated for {:?}", self.config.ci_system);
+                println!(
+                    "ℹ️  No specific CI output generated for {:?}",
+                    self.config.ci_system
+                );
             }
         }
 
@@ -418,10 +436,12 @@ impl CiCdPipeline {
         // Performance regression summary
         if !results.regression_results.is_empty() {
             let total_tests = results.regression_results.len();
-            let failed_tests = results.regression_results.iter()
+            let failed_tests = results
+                .regression_results
+                .iter()
                 .filter(|r| r.has_regressions())
                 .count();
-            
+
             summary.push_str(&format!(
                 "## Performance Regression Tests\n\
                 - Total Tests: {}\n\
@@ -435,14 +455,20 @@ impl CiCdPipeline {
 
         // Memory analysis summary
         if !results.memory_results.is_empty() {
-            let leak_detected = results.memory_results.iter()
+            let leak_detected = results
+                .memory_results
+                .iter()
                 .any(|r| r.leak_results.iter().any(|l| l.leak_detected));
-            
+
             summary.push_str(&format!(
                 "## Memory Analysis\n\
                 - Memory Leaks Detected: {}\n\
                 - Reports Generated: {}\n\n",
-                if leak_detected { "Yes ⚠️" } else { "No ✅" },
+                if leak_detected {
+                    "Yes ⚠️"
+                } else {
+                    "No ✅"
+                },
                 results.memory_results.len()
             ));
         }
@@ -450,10 +476,12 @@ impl CiCdPipeline {
         // Framework compatibility summary
         if !results.framework_results.is_empty() {
             let total_tests = results.framework_results.len();
-            let passed_tests = results.framework_results.iter()
+            let passed_tests = results
+                .framework_results
+                .iter()
                 .filter(|r| r.passed)
                 .count();
-            
+
             summary.push_str(&format!(
                 "## Framework Compatibility\n\
                 - Total Tests: {}\n\
@@ -465,7 +493,10 @@ impl CiCdPipeline {
             ));
         }
 
-        summary.push_str(&format!("## Overall Result\nExit Code: {}\n", results.exit_code));
+        summary.push_str(&format!(
+            "## Overall Result\nExit Code: {}\n",
+            results.exit_code
+        ));
 
         let summary_path = self.config.output_dir.join("SUMMARY.md");
         fs::write(&summary_path, summary)?;
@@ -479,12 +510,18 @@ impl CiCdPipeline {
         // Set GitHub Actions outputs
         if let Ok(github_output) = env::var("GITHUB_OUTPUT") {
             let mut output = String::new();
-            
+
             output.push_str(&format!("exit_code={}\n", results.exit_code));
-            output.push_str(&format!("regression_tests={}\n", results.regression_results.len()));
+            output.push_str(&format!(
+                "regression_tests={}\n",
+                results.regression_results.len()
+            ));
             output.push_str(&format!("memory_tests={}\n", results.memory_results.len()));
-            output.push_str(&format!("framework_tests={}\n", results.framework_results.len()));
-            
+            output.push_str(&format!(
+                "framework_tests={}\n",
+                results.framework_results.len()
+            ));
+
             fs::write(github_output, output)?;
         }
 
@@ -493,8 +530,7 @@ impl CiCdPipeline {
             if result.has_regressions() {
                 println!(
                     "::error title=Performance Regression::{}_{}: Performance regression detected",
-                    result.optimizer_name,
-                    result.test_name
+                    result.optimizer_name, result.test_name
                 );
             }
         }
@@ -520,16 +556,19 @@ impl CiCdPipeline {
     /// Determine exit code based on test results
     fn determine_exit_code(&self, results: &PipelineResults) -> i32 {
         // Check for performance regressions
-        let has_regressions = results.regression_results.iter()
+        let has_regressions = results
+            .regression_results
+            .iter()
             .any(|r| r.has_regressions());
 
         // Check for memory leaks
-        let has_memory_leaks = results.memory_results.iter()
+        let has_memory_leaks = results
+            .memory_results
+            .iter()
             .any(|r| r.leak_results.iter().any(|l| l.leak_detected));
 
         // Check for framework compatibility issues
-        let has_framework_failures = results.framework_results.iter()
-            .any(|r| !r.passed);
+        let has_framework_failures = results.framework_results.iter().any(|r| !r.passed);
 
         if has_regressions || has_memory_leaks || has_framework_failures {
             1 // Failure exit code
@@ -542,8 +581,10 @@ impl CiCdPipeline {
 /// Results from the complete CI/CD pipeline
 #[derive(Debug)]
 pub struct PipelineResults {
-    pub regression_results: Vec<scirs2_optim::benchmarking::regression_tester::RegressionTestResult<f64>>,
-    pub memory_results: Vec<scirs2_optim::benchmarking::memory_leak_detector::MemoryOptimizationReport>,
+    pub regression_results:
+        Vec<scirs2_optim::benchmarking::regression_tester::RegressionTestResult<f64>>,
+    pub memory_results:
+        Vec<scirs2_optim::benchmarking::memory_leak_detector::MemoryOptimizationReport>,
     pub framework_results: Vec<FrameworkTestResult>,
     pub exit_code: i32,
 }
@@ -575,12 +616,18 @@ fn main() -> Result<()> {
     // Configuration from environment variables or defaults
     let config = CiCdConfig {
         enable_regression_testing: env::var("ENABLE_REGRESSION_TESTS")
-            .unwrap_or_else(|_| "true".to_string()) == "true",
+            .unwrap_or_else(|_| "true".to_string())
+            == "true",
         enable_memory_testing: env::var("ENABLE_MEMORY_TESTS")
-            .unwrap_or_else(|_| "true".to_string()) == "true",
+            .unwrap_or_else(|_| "true".to_string())
+            == "true",
         enable_cross_framework_testing: env::var("ENABLE_FRAMEWORK_TESTS")
-            .unwrap_or_else(|_| "true".to_string()) == "true",
-        ci_system: match env::var("CI_SYSTEM").unwrap_or_else(|_| "github".to_string()).as_str() {
+            .unwrap_or_else(|_| "true".to_string())
+            == "true",
+        ci_system: match env::var("CI_SYSTEM")
+            .unwrap_or_else(|_| "github".to_string())
+            .as_str()
+        {
             "github" => CiSystem::GitHubActions,
             "gitlab" => CiSystem::GitLabCI,
             "jenkins" => CiSystem::JenkinsCI,
@@ -589,8 +636,12 @@ fn main() -> Result<()> {
             "azure" => CiSystem::AzureDevOps,
             _ => CiSystem::GitHubActions,
         },
-        output_dir: PathBuf::from(env::var("OUTPUT_DIR").unwrap_or_else(|_| "ci_reports".to_string())),
-        baseline_dir: PathBuf::from(env::var("BASELINE_DIR").unwrap_or_else(|_| "performance_baselines".to_string())),
+        output_dir: PathBuf::from(
+            env::var("OUTPUT_DIR").unwrap_or_else(|_| "ci_reports".to_string()),
+        ),
+        baseline_dir: PathBuf::from(
+            env::var("BASELINE_DIR").unwrap_or_else(|_| "performance_baselines".to_string()),
+        ),
     };
 
     // Create and run the CI/CD pipeline

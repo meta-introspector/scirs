@@ -13,13 +13,9 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, NumCast, One, Zero};
-use scirs2_core::{
-    parallel_ops::*,
-    simd_ops::SimdUnifiedOps,
-    validation::*,
-};
+use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 use scirs2_linalg::parallel_dispatch::ParallelConfig;
-use std::collections::{HashMap, HashSet, BTreeMap};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::marker::PhantomData;
 
 /// Ultra-advanced topological data analyzer
@@ -591,7 +587,7 @@ where
     ) -> StatsResult<TopologicalResults<F>> {
         check_array_finite(points, "points")?;
         let (n_points, dimension) = points.dim();
-        
+
         if n_points < 2 {
             return Err(StatsError::InvalidArgument(
                 "Need at least 2 points for topological analysis".to_string(),
@@ -599,16 +595,16 @@ where
         }
 
         let start_time = std::time::Instant::now();
-        
+
         // Build simplicial complex
         let complex = self.build_simplicial_complex(points)?;
-        
+
         // Compute persistence diagrams
         let persistence_diagrams = self.compute_persistent_homology(&complex)?;
-        
+
         // Compute Betti numbers
         let betti_numbers = self.compute_betti_numbers(&complex)?;
-        
+
         // Compute persistent entropy if enabled
         let persistent_entropy = if self.config.persistence_config.compute_entropy {
             Some(self.compute_persistent_entropy(&persistence_diagrams)?)
@@ -639,7 +635,9 @@ where
 
         // Update performance metrics
         let elapsed = start_time.elapsed();
-        self.performance.timing.insert("total_analysis".to_string(), elapsed.as_secs_f64());
+        self.performance
+            .timing
+            .insert("total_analysis".to_string(), elapsed.as_secs_f64());
 
         Ok(TopologicalResults {
             persistence_diagrams,
@@ -658,21 +656,15 @@ where
         points: &ArrayView2<F>,
     ) -> StatsResult<SimplicialComplex> {
         let (n_points, _) = points.dim();
-        
+
         // Compute distance matrix
         let distance_matrix = self.compute_distance_matrix(points)?;
-        
+
         // Build filtration based on configuration
         match self.config.filtration_config.filtration_type {
-            FiltrationType::VietorisRips => {
-                self.build_vietoris_rips_complex(&distance_matrix)
-            },
-            FiltrationType::Alpha => {
-                self.build_alpha_complex(points)
-            },
-            FiltrationType::Cech => {
-                self.build_cech_complex(points)
-            },
+            FiltrationType::VietorisRips => self.build_vietoris_rips_complex(&distance_matrix),
+            FiltrationType::Alpha => self.build_alpha_complex(points),
+            FiltrationType::Cech => self.build_cech_complex(points),
             _ => {
                 // Default to Vietoris-Rips
                 self.build_vietoris_rips_complex(&distance_matrix)
@@ -684,7 +676,7 @@ where
     fn compute_distance_matrix(&self, points: &ArrayView2<F>) -> StatsResult<Array2<F>> {
         let (n_points, _) = points.dim();
         let mut distance_matrix = Array2::zeros((n_points, n_points));
-        
+
         for i in 0..n_points {
             for j in i..n_points {
                 let dist = self.compute_distance(
@@ -696,7 +688,7 @@ where
                 distance_matrix[[j, i]] = dist;
             }
         }
-        
+
         Ok(distance_matrix)
     }
 
@@ -721,14 +713,14 @@ where
                     sum = sum + diff * diff;
                 }
                 Ok(sum.sqrt())
-            },
+            }
             DistanceMetric::Manhattan => {
                 let mut sum = F::zero();
                 for (x1, x2) in point1.iter().zip(point2.iter()) {
                     sum = sum + (*x1 - *x2).abs();
                 }
                 Ok(sum)
-            },
+            }
             DistanceMetric::Chebyshev => {
                 let mut max_diff = F::zero();
                 for (x1, x2) in point1.iter().zip(point2.iter()) {
@@ -738,19 +730,19 @@ where
                     }
                 }
                 Ok(max_diff)
-            },
+            }
             DistanceMetric::Cosine => {
                 let dot_product = F::simd_dot(point1, point2);
                 let norm1 = F::simd_norm(point1);
                 let norm2 = F::simd_norm(point2);
-                
+
                 if norm1 == F::zero() || norm2 == F::zero() {
                     Ok(F::zero())
                 } else {
                     let cosine_sim = dot_product / (norm1 * norm2);
                     Ok(F::one() - cosine_sim)
                 }
-            },
+            }
             _ => {
                 // Default to Euclidean
                 let mut sum = F::zero();
@@ -771,9 +763,9 @@ where
         let n_points = distance_matrix.nrows();
         let max_dim = self.config.max_dimension.min(n_points - 1);
         let max_epsilon = self.config.filtration_config.max_epsilon;
-        
+
         let mut simplices_by_dim = vec![Vec::new(); max_dim + 1];
-        
+
         // Add vertices (0-simplices)
         for i in 0..n_points {
             simplices_by_dim[0].push(Simplex {
@@ -781,10 +773,10 @@ where
                 dimension: 0,
             });
         }
-        
+
         // Add edges (1-simplices)
         for i in 0..n_points {
-            for j in i+1..n_points {
+            for j in i + 1..n_points {
                 if distance_matrix[[i, j]] <= max_epsilon {
                     simplices_by_dim[1].push(Simplex {
                         vertices: vec![i, j],
@@ -793,7 +785,7 @@ where
                 }
             }
         }
-        
+
         // Add higher-dimensional simplices
         for dim in 2..=max_dim {
             simplices_by_dim[dim] = self.generate_higher_simplices(
@@ -803,7 +795,7 @@ where
                 dim,
             )?;
         }
-        
+
         Ok(SimplicialComplex {
             simplices_by_dim,
             max_dimension: max_dim,
@@ -819,7 +811,7 @@ where
         target_dim: usize,
     ) -> StatsResult<Vec<Simplex>> {
         let mut higher_simplices = Vec::new();
-        
+
         // Generate simplices by adding vertices to existing simplices
         for simplex in lower_simplices {
             let n_points = distance_matrix.nrows();
@@ -833,18 +825,18 @@ where
                             break;
                         }
                     }
-                    
+
                     if is_valid {
                         let mut new_vertices = simplex.vertices.clone();
                         new_vertices.push(vertex);
                         new_vertices.sort();
-                        
+
                         // Check for duplicates
                         let new_simplex = Simplex {
                             vertices: new_vertices,
                             dimension: target_dim,
                         };
-                        
+
                         if !higher_simplices.contains(&new_simplex) {
                             higher_simplices.push(new_simplex);
                         }
@@ -852,7 +844,7 @@ where
                 }
             }
         }
-        
+
         Ok(higher_simplices)
     }
 
@@ -876,13 +868,13 @@ where
         complex: &SimplicialComplex,
     ) -> StatsResult<HashMap<usize, PersistenceDiagram<F>>> {
         let mut persistence_diagrams = HashMap::new();
-        
+
         // Compute persistence for each dimension
         for dim in 0..=complex.max_dimension {
             let diagram = self.compute_persistence_for_dimension(complex, dim)?;
             persistence_diagrams.insert(dim, diagram);
         }
-        
+
         Ok(persistence_diagrams)
     }
 
@@ -893,13 +885,15 @@ where
         dimension: usize,
     ) -> StatsResult<PersistenceDiagram<F>> {
         // Simplified persistence computation
-        let num_features = complex.simplices_by_dim.get(dimension)
+        let num_features = complex
+            .simplices_by_dim
+            .get(dimension)
             .map(|s| s.len())
             .unwrap_or(0);
-        
+
         let mut points = Array2::zeros((num_features, 2));
         let mut multiplicities = Array1::ones(num_features);
-        
+
         // Generate dummy birth-death pairs (would use actual persistence algorithm)
         for i in 0..num_features {
             let birth = F::from(i as f64 * 0.1).unwrap();
@@ -907,7 +901,7 @@ where
             points[[i, 0]] = birth;
             points[[i, 1]] = death;
         }
-        
+
         Ok(PersistenceDiagram {
             points,
             multiplicities,
@@ -919,23 +913,25 @@ where
     fn compute_betti_numbers(&self, complex: &SimplicialComplex) -> StatsResult<Array2<usize>> {
         let num_steps = self.config.filtration_config.num_steps;
         let max_dim = complex.max_dimension;
-        
+
         let mut betti_numbers = Array2::zeros((num_steps, max_dim + 1));
-        
+
         // Simplified Betti number computation
         for step in 0..num_steps {
             for dim in 0..=max_dim {
-                let num_simplices = complex.simplices_by_dim.get(dim)
+                let num_simplices = complex
+                    .simplices_by_dim
+                    .get(dim)
                     .map(|s| s.len())
                     .unwrap_or(0);
-                betti_numbers[[step, dim]] = if step * 10 < num_simplices { 
-                    num_simplices - step * 10 
-                } else { 
-                    0 
+                betti_numbers[[step, dim]] = if step * 10 < num_simplices {
+                    num_simplices - step * 10
+                } else {
+                    0
                 };
             }
         }
-        
+
         Ok(betti_numbers)
     }
 
@@ -945,27 +941,27 @@ where
         persistence_diagrams: &HashMap<usize, PersistenceDiagram<F>>,
     ) -> StatsResult<Array1<F>> {
         let mut entropies = Array1::zeros(persistence_diagrams.len());
-        
+
         for (dim, diagram) in persistence_diagrams {
             let mut entropy = F::zero();
             let total_persistence = self.compute_total_persistence(diagram);
-            
+
             if total_persistence > F::zero() {
                 for i in 0..diagram.points.nrows() {
                     let birth = diagram.points[[i, 0]];
                     let death = diagram.points[[i, 1]];
                     let persistence = death - birth;
-                    
+
                     if persistence > F::zero() {
                         let prob = persistence / total_persistence;
                         entropy = entropy - prob * prob.ln();
                     }
                 }
             }
-            
+
             entropies[*dim] = entropy;
         }
-        
+
         Ok(entropies)
     }
 
@@ -983,11 +979,11 @@ where
     /// Compute Mapper graph
     fn compute_mapper(&self, points: &ArrayView2<F>) -> StatsResult<MapperGraph<F>> {
         let (n_points, _) = points.dim();
-        
+
         // Simplified Mapper implementation
         let mut nodes = HashMap::new();
         let mut edges = HashMap::new();
-        
+
         // Create some dummy nodes
         for i in 0..5 {
             let node = MapperNode {
@@ -999,7 +995,7 @@ where
             };
             nodes.insert(i, node);
         }
-        
+
         // Create some dummy edges
         for i in 0..4 {
             let edge = MapperEdge {
@@ -1009,7 +1005,7 @@ where
             };
             edges.insert((i, i + 1), edge);
         }
-        
+
         let statistics = GraphStatistics {
             num_nodes: nodes.len(),
             num_edges: edges.len(),
@@ -1019,7 +1015,7 @@ where
             average_path_length: F::from(2.0).unwrap(),
             clustering_coefficient: F::zero(),
         };
-        
+
         Ok(MapperGraph {
             nodes,
             edges,
@@ -1032,43 +1028,43 @@ where
     fn multiscale_analysis(&mut self, points: &ArrayView2<F>) -> StatsResult<MultiscaleResults<F>> {
         let num_scales = self.config.multiscale_config.num_scales;
         let (min_scale, max_scale) = self.config.multiscale_config.scale_range;
-        
+
         let mut scales = Array1::zeros(num_scales);
         let mut scale_diagrams = Vec::new();
-        
+
         // Generate scales
         for i in 0..num_scales {
             let t = F::from(i).unwrap() / F::from(num_scales - 1).unwrap();
             scales[i] = min_scale + t * (max_scale - min_scale);
         }
-        
+
         // Analyze at each scale
         for &scale in scales.iter() {
             // Temporarily modify config for this scale
             let original_max_epsilon = self.config.filtration_config.max_epsilon;
             self.config.filtration_config.max_epsilon = scale;
-            
+
             let complex = self.build_simplicial_complex(points)?;
             let diagrams = self.compute_persistent_homology(&complex)?;
             scale_diagrams.push(diagrams);
-            
+
             // Restore original config
             self.config.filtration_config.max_epsilon = original_max_epsilon;
         }
-        
+
         // Compute summary statistics
         let entropy_curve = Array1::zeros(num_scales);
         let total_persistence = Array1::zeros(num_scales);
         let feature_count = Array1::zeros(num_scales);
         let stability_measures = Array1::ones(num_scales);
-        
+
         let summary_statistics = MultiscaleSummary {
             entropy_curve,
             total_persistence,
             feature_count,
             stability_measures,
         };
-        
+
         Ok(MultiscaleResults {
             scale_diagrams,
             scales,
@@ -1087,29 +1083,29 @@ where
         let mut p_values = HashMap::new();
         let mut confidence_intervals = HashMap::new();
         let mut critical_values = HashMap::new();
-        
+
         // Compute test statistics for each dimension
         for (dim, diagram) in persistence_diagrams {
             let test_name = format!("dimension_{}", dim);
-            
+
             // Example: total persistence test statistic
             let total_pers = self.compute_total_persistence(diagram);
             test_statistics.insert(test_name.clone(), total_pers);
-            
+
             // Simplified p-value (would use proper null distribution)
             p_values.insert(test_name.clone(), F::from(0.05).unwrap());
-            
+
             // Simplified confidence interval
             let ci_width = total_pers * F::from(0.1).unwrap();
             confidence_intervals.insert(
                 test_name.clone(),
                 (total_pers - ci_width, total_pers + ci_width),
             );
-            
+
             // Simplified critical value
             critical_values.insert(test_name, total_pers * F::from(1.5).unwrap());
         }
-        
+
         Ok(TopologicalInferenceResults {
             test_statistics,
             p_values,
@@ -1186,36 +1182,30 @@ where
     ) -> StatsResult<TopologicalMLResult<F>> {
         // Extract topological features for machine learning
         let topological_features = self.extract_topological_features(data)?;
-        
+
         // Compute topological signatures
         let signatures = self.compute_topological_signatures(&topological_features)?;
-        
+
         // Persistent feature encoding
         let encoded_features = self.encode_persistent_features(&signatures)?;
-        
+
         // Topological kernel matrix for ML
         let kernel_matrix = self.compute_topological_kernel_matrix(&encoded_features)?;
-        
+
         // Classification/regression if labels provided
         let prediction_result = if let Some(labels) = labels {
-            Some(self.topological_classification(
-                &encoded_features,
-                labels,
-                &kernel_matrix,
-            )?)
+            Some(self.topological_classification(&encoded_features, labels, &kernel_matrix)?)
         } else {
             None
         };
-        
+
         // Topological clustering
         let clustering_result = self.topological_clustering(&encoded_features)?;
-        
+
         // Feature importance analysis
-        let feature_importance = self.analyze_topological_feature_importance(
-            &encoded_features,
-            labels,
-        )?;
-        
+        let feature_importance =
+            self.analyze_topological_feature_importance(&encoded_features, labels)?;
+
         Ok(TopologicalMLResult {
             topological_features: encoded_features,
             kernel_matrix,
@@ -1233,25 +1223,25 @@ where
         data: &ArrayView2<F>,
     ) -> StatsResult<TopologicalFeatures<F>> {
         let (n_samples, n_features) = data.dim();
-        
+
         // Persistent homology features
         let persistence_features = self.extract_persistence_features(data)?;
-        
+
         // Persistence images
         let persistence_images = self.compute_persistence_images(&persistence_features)?;
-        
+
         // Persistence landscapes
         let persistence_landscapes = self.compute_persistence_landscapes(&persistence_features)?;
-        
+
         // Betti curves
         let betti_curves = self.compute_betti_curves(&persistence_features)?;
-        
+
         // Euler characteristic curves
         let euler_curves = self.compute_euler_characteristic_curves(&persistence_features)?;
-        
+
         // Topological entropy features
         let entropy_features = self.compute_topological_entropy_features(&persistence_features)?;
-        
+
         Ok(TopologicalFeatures {
             persistence_features,
             persistence_images,
@@ -1271,18 +1261,19 @@ where
         // Compute filtration at multiple scales
         let mut features = Vec::new();
         let num_scales = 10;
-        
+
         for scale_idx in 0..num_scales {
             let scale = F::from(scale_idx as f64 / num_scales as f64).unwrap();
             let epsilon = self.config.filtration_config.max_epsilon * scale;
-            
+
             // Build complex at this scale
             let distance_matrix = self.compute_distance_matrix(data)?;
-            let complex = self.build_vietoris_rips_complex_with_epsilon(&distance_matrix, epsilon)?;
-            
+            let complex =
+                self.build_vietoris_rips_complex_with_epsilon(&distance_matrix, epsilon)?;
+
             // Compute persistence
             let diagrams = self.compute_persistent_homology(&complex)?;
-            
+
             // Extract features from diagrams
             for (dim, diagram) in diagrams {
                 for point in diagram.points {
@@ -1297,7 +1288,7 @@ where
                 }
             }
         }
-        
+
         Ok(features)
     }
 
@@ -1309,7 +1300,7 @@ where
     ) -> StatsResult<SimplicialComplex> {
         let n_points = distance_matrix.nrows();
         let mut simplices_by_dim = vec![Vec::new(); self.config.max_dimension + 1];
-        
+
         // Add vertices (0-simplices)
         for i in 0..n_points {
             simplices_by_dim[0].push(Simplex {
@@ -1317,7 +1308,7 @@ where
                 dimension: 0,
             });
         }
-        
+
         // Add edges (1-simplices)
         for i in 0..n_points {
             for j in (i + 1)..n_points {
@@ -1329,7 +1320,7 @@ where
                 }
             }
         }
-        
+
         // Add higher-dimensional simplices
         for dim in 2..=self.config.max_dimension {
             if dim - 1 < simplices_by_dim.len() && !simplices_by_dim[dim - 1].is_empty() {
@@ -1341,7 +1332,7 @@ where
                 )?;
             }
         }
-        
+
         Ok(SimplicialComplex {
             simplices_by_dim,
             max_dimension: self.config.max_dimension,
@@ -1355,43 +1346,57 @@ where
     ) -> StatsResult<Array2<F>> {
         let resolution = 20; // 20x20 image
         let mut image = Array2::zeros((resolution, resolution));
-        
+
         // Find bounds for normalization
-        let max_birth = features.iter()
+        let max_birth = features
+            .iter()
             .map(|f| f.birth)
             .fold(F::zero(), |a, b| if a > b { a } else { b });
-        let max_death = features.iter()
+        let max_death = features
+            .iter()
             .map(|f| f.death)
             .fold(F::zero(), |a, b| if a > b { a } else { b });
-        
-        let max_val = if max_death > max_birth { max_death } else { max_birth };
-        
+
+        let max_val = if max_death > max_birth {
+            max_death
+        } else {
+            max_birth
+        };
+
         if max_val > F::zero() {
             // Gaussian kernel parameters
             let sigma = F::from(0.1).unwrap() * max_val;
             let sigma_sq = sigma * sigma;
-            
+
             for feature in features {
                 // Map to image coordinates
-                let birth_coord = (feature.birth / max_val * F::from(resolution as f64).unwrap()).to_usize().unwrap_or(0).min(resolution - 1);
-                let death_coord = (feature.death / max_val * F::from(resolution as f64).unwrap()).to_usize().unwrap_or(0).min(resolution - 1);
-                
+                let birth_coord = (feature.birth / max_val * F::from(resolution as f64).unwrap())
+                    .to_usize()
+                    .unwrap_or(0)
+                    .min(resolution - 1);
+                let death_coord = (feature.death / max_val * F::from(resolution as f64).unwrap())
+                    .to_usize()
+                    .unwrap_or(0)
+                    .min(resolution - 1);
+
                 // Add Gaussian kernel centered at (birth, death)
                 for i in 0..resolution {
                     for j in 0..resolution {
-                        let x = F::from(i as f64).unwrap() / F::from(resolution as f64).unwrap() * max_val;
-                        let y = F::from(j as f64).unwrap() / F::from(resolution as f64).unwrap() * max_val;
-                        
-                        let dist_sq = (x - feature.birth) * (x - feature.birth) + 
-                                     (y - feature.death) * (y - feature.death);
+                        let x = F::from(i as f64).unwrap() / F::from(resolution as f64).unwrap()
+                            * max_val;
+                        let y = F::from(j as f64).unwrap() / F::from(resolution as f64).unwrap()
+                            * max_val;
+
+                        let dist_sq = (x - feature.birth) * (x - feature.birth)
+                            + (y - feature.death) * (y - feature.death);
                         let weight = (-dist_sq / sigma_sq).exp() * feature.persistence;
-                        
+
                         image[[i, j]] = image[[i, j]] + weight;
                     }
                 }
             }
         }
-        
+
         Ok(image)
     }
 
@@ -1403,30 +1408,33 @@ where
         let num_points = 100;
         let num_landscapes = 5;
         let mut landscapes = Array2::zeros((num_landscapes, num_points));
-        
+
         if features.is_empty() {
             return Ok(landscapes);
         }
-        
+
         // Find parameter range
-        let min_birth = features.iter()
+        let min_birth = features
+            .iter()
             .map(|f| f.birth)
             .fold(F::infinity(), |a, b| if a < b { a } else { b });
-        let max_death = features.iter()
+        let max_death = features
+            .iter()
             .map(|f| f.death)
             .fold(F::neg_infinity(), |a, b| if a > b { a } else { b });
-        
+
         let range = max_death - min_birth;
         if range <= F::zero() {
             return Ok(landscapes);
         }
-        
+
         for point_idx in 0..num_points {
-            let t = min_birth + F::from(point_idx as f64).unwrap() / F::from(num_points as f64).unwrap() * range;
-            
+            let t = min_birth
+                + F::from(point_idx as f64).unwrap() / F::from(num_points as f64).unwrap() * range;
+
             // Compute landscape functions at parameter t
             let mut values = Vec::new();
-            
+
             for feature in features {
                 if t >= feature.birth && t <= feature.death {
                     let value = if t <= (feature.birth + feature.death) / F::from(2.0).unwrap() {
@@ -1437,10 +1445,10 @@ where
                     values.push(value);
                 }
             }
-            
+
             // Sort values in descending order
             values.sort_by(|a, b| b.partial_cmp(a).unwrap_or(std::cmp::Ordering::Equal));
-            
+
             // Fill landscape levels
             for landscape_idx in 0..num_landscapes {
                 if landscape_idx < values.len() {
@@ -1448,49 +1456,50 @@ where
                 }
             }
         }
-        
+
         Ok(landscapes)
     }
 
     /// Compute Betti curves
-    fn compute_betti_curves(
-        &self,
-        features: &[PersistenceFeature<F>],
-    ) -> StatsResult<Array2<F>> {
+    fn compute_betti_curves(&self, features: &[PersistenceFeature<F>]) -> StatsResult<Array2<F>> {
         let num_points = 100;
         let max_dim = 3;
         let mut betti_curves = Array2::zeros((max_dim, num_points));
-        
+
         if features.is_empty() {
             return Ok(betti_curves);
         }
-        
+
         // Find parameter range
-        let min_val = features.iter()
+        let min_val = features
+            .iter()
             .map(|f| f.birth)
             .fold(F::infinity(), |a, b| if a < b { a } else { b });
-        let max_val = features.iter()
+        let max_val = features
+            .iter()
             .map(|f| f.death)
             .fold(F::neg_infinity(), |a, b| if a > b { a } else { b });
-        
+
         let range = max_val - min_val;
         if range <= F::zero() {
             return Ok(betti_curves);
         }
-        
+
         for point_idx in 0..num_points {
-            let t = min_val + F::from(point_idx as f64).unwrap() / F::from(num_points as f64).unwrap() * range;
-            
+            let t = min_val
+                + F::from(point_idx as f64).unwrap() / F::from(num_points as f64).unwrap() * range;
+
             // Count active features for each dimension
             for dim in 0..max_dim {
-                let count = features.iter()
+                let count = features
+                    .iter()
                     .filter(|f| f.dimension == dim && f.birth <= t && t < f.death)
                     .count();
-                
+
                 betti_curves[[dim, point_idx]] = F::from(count).unwrap();
             }
         }
-        
+
         Ok(betti_curves)
     }
 
@@ -1501,42 +1510,46 @@ where
     ) -> StatsResult<Array1<F>> {
         let num_points = 100;
         let mut euler_curve = Array1::zeros(num_points);
-        
+
         if features.is_empty() {
             return Ok(euler_curve);
         }
-        
+
         // Find parameter range
-        let min_val = features.iter()
+        let min_val = features
+            .iter()
             .map(|f| f.birth)
             .fold(F::infinity(), |a, b| if a < b { a } else { b });
-        let max_val = features.iter()
+        let max_val = features
+            .iter()
             .map(|f| f.death)
             .fold(F::neg_infinity(), |a, b| if a > b { a } else { b });
-        
+
         let range = max_val - min_val;
         if range <= F::zero() {
             return Ok(euler_curve);
         }
-        
+
         for point_idx in 0..num_points {
-            let t = min_val + F::from(point_idx as f64).unwrap() / F::from(num_points as f64).unwrap() * range;
-            
+            let t = min_val
+                + F::from(point_idx as f64).unwrap() / F::from(num_points as f64).unwrap() * range;
+
             // Compute Euler characteristic: χ = Σ(-1)^i * β_i
             let mut euler_char = F::zero();
-            
+
             for dim in 0..=3 {
-                let betti_number = features.iter()
+                let betti_number = features
+                    .iter()
                     .filter(|f| f.dimension == dim && f.birth <= t && t < f.death)
                     .count();
-                
+
                 let sign = if dim % 2 == 0 { F::one() } else { -F::one() };
                 euler_char = euler_char + sign * F::from(betti_number).unwrap();
             }
-            
+
             euler_curve[point_idx] = euler_char;
         }
-        
+
         Ok(euler_curve)
     }
 
@@ -1547,16 +1560,16 @@ where
     ) -> StatsResult<TopologicalEntropyFeatures<F>> {
         // Persistent entropy
         let persistent_entropy = self.compute_persistent_entropy(features)?;
-        
+
         // Persistence-weighted entropy
         let weighted_entropy = self.compute_persistence_weighted_entropy(features)?;
-        
+
         // Multi-scale entropy
         let multiscale_entropy = self.compute_multiscale_topological_entropy(features)?;
-        
+
         // Topological complexity
         let complexity = self.compute_topological_complexity(features)?;
-        
+
         Ok(TopologicalEntropyFeatures {
             persistent_entropy,
             weighted_entropy,
@@ -1566,23 +1579,21 @@ where
     }
 
     /// Compute persistent entropy
-    fn compute_persistent_entropy(
-        &self,
-        features: &[PersistenceFeature<F>],
-    ) -> StatsResult<F> {
+    fn compute_persistent_entropy(&self, features: &[PersistenceFeature<F>]) -> StatsResult<F> {
         if features.is_empty() {
             return Ok(F::zero());
         }
-        
+
         // Normalize persistence values
-        let total_persistence = features.iter()
+        let total_persistence = features
+            .iter()
             .map(|f| f.persistence)
             .fold(F::zero(), |acc, p| acc + p);
-        
+
         if total_persistence <= F::zero() {
             return Ok(F::zero());
         }
-        
+
         // Compute Shannon entropy of persistence distribution
         let mut entropy = F::zero();
         for feature in features {
@@ -1591,7 +1602,7 @@ where
                 entropy = entropy - prob * prob.ln();
             }
         }
-        
+
         Ok(entropy)
     }
 
@@ -1603,12 +1614,13 @@ where
         if features.is_empty() {
             return Ok(F::zero());
         }
-        
+
         let mut weighted_entropy = F::zero();
-        let total_weight = features.iter()
+        let total_weight = features
+            .iter()
             .map(|f| f.persistence * f.persistence)
             .fold(F::zero(), |acc, w| acc + w);
-        
+
         if total_weight > F::zero() {
             for feature in features {
                 let weight = (feature.persistence * feature.persistence) / total_weight;
@@ -1617,7 +1629,7 @@ where
                 }
             }
         }
-        
+
         Ok(weighted_entropy)
     }
 
@@ -1628,41 +1640,41 @@ where
     ) -> StatsResult<Array1<F>> {
         let num_scales = 5;
         let mut multiscale_entropy = Array1::zeros(num_scales);
-        
+
         for scale_idx in 0..num_scales {
             let scale_threshold = F::from((scale_idx + 1) as f64 / num_scales as f64).unwrap();
-            
+
             // Filter features by scale
-            let filtered_features: Vec<_> = features.iter()
+            let filtered_features: Vec<_> = features
+                .iter()
                 .filter(|f| f.persistence >= scale_threshold * f.death)
                 .cloned()
                 .collect();
-            
+
             multiscale_entropy[scale_idx] = self.compute_persistent_entropy(&filtered_features)?;
         }
-        
+
         Ok(multiscale_entropy)
     }
 
     /// Compute topological complexity
-    fn compute_topological_complexity(
-        &self,
-        features: &[PersistenceFeature<F>],
-    ) -> StatsResult<F> {
+    fn compute_topological_complexity(&self, features: &[PersistenceFeature<F>]) -> StatsResult<F> {
         if features.is_empty() {
             return Ok(F::zero());
         }
-        
+
         // Combine multiple complexity measures
         let entropy = self.compute_persistent_entropy(features)?;
         let num_features = F::from(features.len()).unwrap();
-        let avg_persistence = features.iter()
+        let avg_persistence = features
+            .iter()
             .map(|f| f.persistence)
-            .fold(F::zero(), |acc, p| acc + p) / num_features;
-        
+            .fold(F::zero(), |acc, p| acc + p)
+            / num_features;
+
         // Weighted complexity score
         let complexity = entropy * num_features.ln() * avg_persistence;
-        
+
         Ok(complexity)
     }
 
@@ -1673,23 +1685,23 @@ where
     ) -> StatsResult<TopologicalSignatures<F>> {
         // Flatten persistence images
         let image_signature = features.persistence_images.as_slice().unwrap().to_vec();
-        
+
         // Flatten persistence landscapes
         let landscape_signature = features.persistence_landscapes.as_slice().unwrap().to_vec();
-        
+
         // Statistics from Betti curves
         let betti_statistics = self.compute_curve_statistics(&features.betti_curves)?;
-        
+
         // Statistics from Euler curves
         let euler_statistics = self.compute_curve_statistics_1d(&features.euler_curves)?;
-        
+
         // Entropy features
         let entropy_vector = vec![
             features.entropy_features.persistent_entropy,
             features.entropy_features.weighted_entropy,
             features.entropy_features.complexity,
         ];
-        
+
         Ok(TopologicalSignatures {
             image_signature,
             landscape_signature,
@@ -1702,51 +1714,63 @@ where
     /// Compute statistics from 2D curves
     fn compute_curve_statistics(&self, curves: &Array2<F>) -> StatsResult<Vec<F>> {
         let mut statistics = Vec::new();
-        
+
         let (num_curves, num_points) = curves.dim();
-        
+
         for curve_idx in 0..num_curves {
             let curve = curves.row(curve_idx);
-            
+
             // Basic statistics
             let mean = curve.sum() / F::from(num_points).unwrap();
-            let variance = curve.iter()
+            let variance = curve
+                .iter()
                 .map(|&x| (x - mean) * (x - mean))
-                .fold(F::zero(), |acc, x| acc + x) / F::from(num_points).unwrap();
+                .fold(F::zero(), |acc, x| acc + x)
+                / F::from(num_points).unwrap();
             let std_dev = variance.sqrt();
-            
+
             // Extrema
-            let min_val = curve.iter().fold(F::infinity(), |a, &b| if a < b { a } else { b });
-            let max_val = curve.iter().fold(F::neg_infinity(), |a, &b| if a > b { a } else { b });
-            
+            let min_val = curve
+                .iter()
+                .fold(F::infinity(), |a, &b| if a < b { a } else { b });
+            let max_val = curve
+                .iter()
+                .fold(F::neg_infinity(), |a, &b| if a > b { a } else { b });
+
             // Integral (area under curve)
             let integral = curve.sum() / F::from(num_points).unwrap();
-            
+
             statistics.extend_from_slice(&[mean, std_dev, min_val, max_val, integral]);
         }
-        
+
         Ok(statistics)
     }
 
     /// Compute statistics from 1D curves
     fn compute_curve_statistics_1d(&self, curve: &Array1<F>) -> StatsResult<Vec<F>> {
         let num_points = curve.len();
-        
+
         if num_points == 0 {
             return Ok(vec![F::zero(); 5]);
         }
-        
+
         // Basic statistics
         let mean = curve.sum() / F::from(num_points).unwrap();
-        let variance = curve.iter()
+        let variance = curve
+            .iter()
             .map(|&x| (x - mean) * (x - mean))
-            .fold(F::zero(), |acc, x| acc + x) / F::from(num_points).unwrap();
+            .fold(F::zero(), |acc, x| acc + x)
+            / F::from(num_points).unwrap();
         let std_dev = variance.sqrt();
-        
+
         // Extrema
-        let min_val = curve.iter().fold(F::infinity(), |a, &b| if a < b { a } else { b });
-        let max_val = curve.iter().fold(F::neg_infinity(), |a, &b| if a > b { a } else { b });
-        
+        let min_val = curve
+            .iter()
+            .fold(F::infinity(), |a, &b| if a < b { a } else { b });
+        let max_val = curve
+            .iter()
+            .fold(F::neg_infinity(), |a, &b| if a > b { a } else { b });
+
         Ok(vec![mean, std_dev, min_val, max_val, curve.sum()])
     }
 
@@ -1757,49 +1781,46 @@ where
     ) -> StatsResult<Array2<F>> {
         // Combine all signature vectors into feature matrix
         let mut all_features = Vec::new();
-        
+
         all_features.extend_from_slice(&signatures.image_signature);
         all_features.extend_from_slice(&signatures.landscape_signature);
         all_features.extend_from_slice(&signatures.betti_statistics);
         all_features.extend_from_slice(&signatures.euler_statistics);
         all_features.extend_from_slice(&signatures.entropy_vector);
-        
+
         // Create feature matrix (1 sample, n_features)
         let n_features = all_features.len();
         let mut feature_matrix = Array2::zeros((1, n_features));
-        
+
         for (i, &feature) in all_features.iter().enumerate() {
             feature_matrix[[0, i]] = feature;
         }
-        
+
         Ok(feature_matrix)
     }
 
     /// Compute topological kernel matrix
-    fn compute_topological_kernel_matrix(
-        &self,
-        features: &Array2<F>,
-    ) -> StatsResult<Array2<F>> {
+    fn compute_topological_kernel_matrix(&self, features: &Array2<F>) -> StatsResult<Array2<F>> {
         let (n_samples, n_features) = features.dim();
         let mut kernel_matrix = Array2::zeros((n_samples, n_samples));
-        
+
         // Gaussian RBF kernel with topological distance
         let sigma = F::from(1.0).unwrap();
         let sigma_sq = sigma * sigma;
-        
+
         for i in 0..n_samples {
             for j in 0..n_samples {
                 let mut dist_sq = F::zero();
-                
+
                 for k in 0..n_features {
                     let diff = features[[i, k]] - features[[j, k]];
                     dist_sq = dist_sq + diff * diff;
                 }
-                
+
                 kernel_matrix[[i, j]] = (-dist_sq / sigma_sq).exp();
             }
         }
-        
+
         Ok(kernel_matrix)
     }
 
@@ -1811,35 +1832,42 @@ where
         kernel_matrix: &Array2<F>,
     ) -> StatsResult<TopologicalPredictionResult<F>> {
         let (n_samples, _) = features.dim();
-        
+
         // Simplified topological SVM using kernel matrix
         let mut predictions = Array1::zeros(n_samples);
         let mut confidence_scores = Array1::zeros(n_samples);
-        
+
         // Simple nearest neighbor classification using topological kernel
         for i in 0..n_samples {
             let mut best_similarity = F::zero();
             let mut predicted_label = labels[0];
-            
+
             for j in 0..n_samples {
                 if i != j && kernel_matrix[[i, j]] > best_similarity {
                     best_similarity = kernel_matrix[[i, j]];
                     predicted_label = labels[j];
                 }
             }
-            
+
             predictions[i] = predicted_label;
             confidence_scores[i] = best_similarity;
         }
-        
+
         // Compute accuracy
-        let correct_predictions = predictions.iter()
+        let correct_predictions = predictions
+            .iter()
             .zip(labels.iter())
-            .map(|(&pred, &true_label)| if (pred - true_label).abs() < F::from(0.5).unwrap() { 1 } else { 0 })
+            .map(|(&pred, &true_label)| {
+                if (pred - true_label).abs() < F::from(0.5).unwrap() {
+                    1
+                } else {
+                    0
+                }
+            })
             .sum();
-        
+
         let accuracy = F::from(correct_predictions as f64 / n_samples as f64).unwrap();
-        
+
         Ok(TopologicalPredictionResult {
             predictions,
             confidence_scores,
@@ -1855,42 +1883,42 @@ where
     ) -> StatsResult<TopologicalClusteringResult<F>> {
         let (n_samples, _) = features.dim();
         let num_clusters = 3; // Simplified to 3 clusters
-        
+
         // Simple k-means clustering on topological features
         let mut cluster_labels = Array1::zeros(n_samples);
         let mut cluster_centers = Array2::zeros((num_clusters, features.ncols()));
-        
+
         // Initialize centers randomly
         for i in 0..num_clusters {
             for j in 0..features.ncols() {
                 cluster_centers[[i, j]] = F::from(i as f64 / num_clusters as f64).unwrap();
             }
         }
-        
+
         // Simple assignment based on distance to centers
         for i in 0..n_samples {
             let mut best_distance = F::infinity();
             let mut best_cluster = 0;
-            
+
             for cluster in 0..num_clusters {
                 let mut distance = F::zero();
                 for j in 0..features.ncols() {
                     let diff = features[[i, j]] - cluster_centers[[cluster, j]];
                     distance = distance + diff * diff;
                 }
-                
+
                 if distance < best_distance {
                     best_distance = distance;
                     best_cluster = cluster;
                 }
             }
-            
+
             cluster_labels[i] = F::from(best_cluster).unwrap();
         }
-        
+
         // Compute clustering quality (simplified silhouette score)
         let silhouette_score = F::from(0.7).unwrap(); // Placeholder
-        
+
         Ok(TopologicalClusteringResult {
             cluster_labels,
             cluster_centers,
@@ -1907,7 +1935,7 @@ where
     ) -> StatsResult<Array1<F>> {
         let (_, n_features) = features.dim();
         let mut importance_scores = Array1::zeros(n_features);
-        
+
         if let Some(labels) = labels {
             // Compute feature importance based on correlation with labels
             for j in 0..n_features {
@@ -1920,45 +1948,43 @@ where
             for j in 0..n_features {
                 let feature_col = features.column(j);
                 let mean = feature_col.sum() / F::from(feature_col.len()).unwrap();
-                let variance = feature_col.iter()
+                let variance = feature_col
+                    .iter()
                     .map(|&x| (x - mean) * (x - mean))
-                    .fold(F::zero(), |acc, x| acc + x) / F::from(feature_col.len()).unwrap();
-                
+                    .fold(F::zero(), |acc, x| acc + x)
+                    / F::from(feature_col.len()).unwrap();
+
                 importance_scores[j] = variance;
             }
         }
-        
+
         Ok(importance_scores)
     }
 
     /// Compute correlation between two arrays
-    fn compute_correlation(
-        &self,
-        x: &ArrayView1<F>,
-        y: &ArrayView1<F>,
-    ) -> StatsResult<F> {
+    fn compute_correlation(&self, x: &ArrayView1<F>, y: &ArrayView1<F>) -> StatsResult<F> {
         let n = x.len();
         if n != y.len() || n == 0 {
             return Ok(F::zero());
         }
-        
+
         let n_f = F::from(n).unwrap();
         let mean_x = x.sum() / n_f;
         let mean_y = y.sum() / n_f;
-        
+
         let mut num = F::zero();
         let mut den_x = F::zero();
         let mut den_y = F::zero();
-        
+
         for i in 0..n {
             let dx = x[i] - mean_x;
             let dy = y[i] - mean_y;
-            
+
             num = num + dx * dy;
             den_x = den_x + dx * dx;
             den_y = den_y + dy * dy;
         }
-        
+
         let denominator = (den_x * den_y).sqrt();
         if denominator > F::zero() {
             Ok(num / denominator)
@@ -1973,24 +1999,30 @@ where
         signatures: &TopologicalSignatures<F>,
     ) -> StatsResult<F> {
         // Simplified stability score based on signature consistency
-        let image_norm = signatures.image_signature.iter()
+        let image_norm = signatures
+            .image_signature
+            .iter()
             .map(|&x| x * x)
             .fold(F::zero(), |acc, x| acc + x)
             .sqrt();
-        
-        let landscape_norm = signatures.landscape_signature.iter()
+
+        let landscape_norm = signatures
+            .landscape_signature
+            .iter()
             .map(|&x| x * x)
             .fold(F::zero(), |acc, x| acc + x)
             .sqrt();
-        
-        let entropy_norm = signatures.entropy_vector.iter()
+
+        let entropy_norm = signatures
+            .entropy_vector
+            .iter()
             .map(|&x| x * x)
             .fold(F::zero(), |acc, x| acc + x)
             .sqrt();
-        
+
         // Combine norms as stability measure
         let stability = (image_norm + landscape_norm + entropy_norm) / F::from(3.0).unwrap();
-        
+
         Ok(stability)
     }
 
@@ -2086,7 +2118,7 @@ mod tests {
     fn test_topological_analyzer_creation() {
         let config = TopologicalConfig::default();
         let analyzer = UltraTopologicalAnalyzer::<f64>::new(config);
-        
+
         assert_eq!(analyzer.config.max_dimension, 2);
         assert_eq!(analyzer.config.filtration_config.num_steps, 100);
     }
@@ -2095,16 +2127,14 @@ mod tests {
     fn test_distance_computation() {
         let config = TopologicalConfig::default();
         let analyzer = UltraTopologicalAnalyzer::<f64>::new(config);
-        
+
         let p1 = array![0.0, 0.0];
         let p2 = array![3.0, 4.0];
-        
-        let dist = analyzer.compute_distance(
-            &p1.view(),
-            &p2.view(),
-            DistanceMetric::Euclidean,
-        ).unwrap();
-        
+
+        let dist = analyzer
+            .compute_distance(&p1.view(), &p2.view(), DistanceMetric::Euclidean)
+            .unwrap();
+
         assert!((dist - 5.0).abs() < 1e-10);
     }
 
@@ -2112,18 +2142,12 @@ mod tests {
     fn test_point_cloud_analysis() {
         let config = TopologicalConfig::default();
         let mut analyzer = UltraTopologicalAnalyzer::<f64>::new(config);
-        
+
         // Simple 2D point cloud
-        let points = array![
-            [0.0, 0.0],
-            [1.0, 0.0],
-            [0.0, 1.0],
-            [1.0, 1.0],
-            [0.5, 0.5]
-        ];
-        
+        let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0], [0.5, 0.5]];
+
         let result = analyzer.analyze_point_cloud(&points.view()).unwrap();
-        
+
         assert!(!result.persistence_diagrams.is_empty());
         assert!(result.betti_numbers.nrows() > 0);
         assert!(result.performance.timing.contains_key("total_analysis"));
@@ -2133,15 +2157,11 @@ mod tests {
     fn test_simplicial_complex_construction() {
         let config = TopologicalConfig::default();
         let mut analyzer = UltraTopologicalAnalyzer::<f64>::new(config);
-        
-        let points = array![
-            [0.0, 0.0],
-            [1.0, 0.0],
-            [0.0, 1.0]
-        ];
-        
+
+        let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
+
         let complex = analyzer.build_simplicial_complex(&points.view()).unwrap();
-        
+
         assert_eq!(complex.simplices_by_dim[0].len(), 3); // 3 vertices
         assert!(complex.simplices_by_dim[1].len() > 0); // Some edges
     }
@@ -2150,24 +2170,39 @@ mod tests {
     fn test_persistence_computation() {
         let config = TopologicalConfig::default();
         let analyzer = UltraTopologicalAnalyzer::<f64>::new(config);
-        
+
         let complex = SimplicialComplex {
             simplices_by_dim: vec![
                 vec![
-                    Simplex { vertices: vec![0], dimension: 0 },
-                    Simplex { vertices: vec![1], dimension: 0 },
-                    Simplex { vertices: vec![2], dimension: 0 },
+                    Simplex {
+                        vertices: vec![0],
+                        dimension: 0,
+                    },
+                    Simplex {
+                        vertices: vec![1],
+                        dimension: 0,
+                    },
+                    Simplex {
+                        vertices: vec![2],
+                        dimension: 0,
+                    },
                 ],
                 vec![
-                    Simplex { vertices: vec![0, 1], dimension: 1 },
-                    Simplex { vertices: vec![1, 2], dimension: 1 },
+                    Simplex {
+                        vertices: vec![0, 1],
+                        dimension: 1,
+                    },
+                    Simplex {
+                        vertices: vec![1, 2],
+                        dimension: 1,
+                    },
                 ],
             ],
             max_dimension: 1,
         };
-        
+
         let diagrams = analyzer.compute_persistent_homology(&complex).unwrap();
-        
+
         assert!(diagrams.contains_key(&0)); // H_0
         assert!(diagrams.contains_key(&1)); // H_1
     }

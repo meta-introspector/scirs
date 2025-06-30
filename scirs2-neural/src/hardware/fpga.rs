@@ -623,8 +623,7 @@ impl ResourceScheduler {
     fn sort_task_queue(&mut self) {
         match self.strategy {
             SchedulingStrategy::Priority => {
-                self.task_queue
-                    .sort_by(|a, b| b.priority.cmp(&a.priority));
+                self.task_queue.sort_by(|a, b| b.priority.cmp(&a.priority));
             }
             SchedulingStrategy::ShortestJobFirst => {
                 self.task_queue
@@ -762,17 +761,19 @@ impl PerformanceProfiler {
     fn update_metrics(&mut self, kernel_name: &str, time: std::time::Duration, throughput: f32) {
         self.metrics.total_executions += 1;
         self.metrics.total_time += time;
-        
+
         if throughput > self.metrics.peak_throughput {
             self.metrics.peak_throughput = throughput;
             self.metrics.best_kernel = Some(kernel_name.to_string());
         }
 
         // Update per-kernel statistics
-        let stats = self.metrics.per_kernel_stats
+        let stats = self
+            .metrics
+            .per_kernel_stats
             .entry(kernel_name.to_string())
             .or_insert_with(KernelStats::default);
-        
+
         stats.execution_count += 1;
         stats.total_time += time;
         stats.avg_time = stats.total_time / stats.execution_count as u32;
@@ -801,7 +802,10 @@ impl PerformanceProfiler {
 
         for (kernel_name, stats) in &self.metrics.per_kernel_stats {
             if stats.avg_time > std::time::Duration::from_millis(100) {
-                bottlenecks.push(format!("Kernel {} has high average execution time", kernel_name));
+                bottlenecks.push(format!(
+                    "Kernel {} has high average execution time",
+                    kernel_name
+                ));
             }
             if stats.max_throughput < 1000.0 {
                 bottlenecks.push(format!("Kernel {} has low throughput", kernel_name));

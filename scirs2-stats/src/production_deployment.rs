@@ -304,7 +304,7 @@ impl ProductionDeploymentValidator {
     pub fn validate_production_readiness(&self) -> StatsResult<ValidationResults> {
         let start_time = Instant::now();
         let mut results = ValidationResults::default();
-        
+
         // Run comprehensive validation checks
         self.validate_environment_compatibility(&mut results)?;
         self.validate_performance_requirements(&mut results)?;
@@ -312,71 +312,82 @@ impl ProductionDeploymentValidator {
         self.validate_security_compliance(&mut results)?;
         self.validate_reliability_features(&mut results)?;
         self.validate_monitoring_setup(&mut results)?;
-        
+
         // Calculate overall readiness score
         results.readiness_score = self.calculate_readiness_score(&results);
         results.timestamp = SystemTime::now();
-        
+
         // Generate recommendations
         results.recommendations = self.generate_recommendations(&results);
-        
+
         // Update validation results
         {
-            let mut validation_results = self.validation_results.write()
-                .map_err(|_| StatsError::InvalidArgument("Failed to acquire write lock".to_string()))?;
+            let mut validation_results = self.validation_results.write().map_err(|_| {
+                StatsError::InvalidArgument("Failed to acquire write lock".to_string())
+            })?;
             *validation_results = results.clone();
         }
-        
+
         Ok(results)
     }
 
     /// Validate environment compatibility
-    fn validate_environment_compatibility(&self, results: &mut ValidationResults) -> StatsResult<()> {
+    fn validate_environment_compatibility(
+        &self,
+        results: &mut ValidationResults,
+    ) -> StatsResult<()> {
         let start_time = Instant::now();
-        
+
         // Check CPU features
         let cpu_check = self.validate_cpu_features()?;
         results.checks.insert("cpu_features".to_string(), cpu_check);
-        
+
         // Check memory requirements
         let memory_check = self.validate_memory_requirements()?;
-        results.checks.insert("memory_requirements".to_string(), memory_check);
-        
+        results
+            .checks
+            .insert("memory_requirements".to_string(), memory_check);
+
         // Check SIMD support
         let simd_check = self.validate_simd_support()?;
-        results.checks.insert("simd_support".to_string(), simd_check);
-        
+        results
+            .checks
+            .insert("simd_support".to_string(), simd_check);
+
         // Check parallel processing support
         let parallel_check = self.validate_parallel_support()?;
-        results.checks.insert("parallel_support".to_string(), parallel_check);
-        
+        results
+            .checks
+            .insert("parallel_support".to_string(), parallel_check);
+
         Ok(())
     }
 
     /// Validate CPU features availability
     fn validate_cpu_features(&self) -> StatsResult<CheckResult> {
         let start_time = Instant::now();
-        
+
         // Check if required SIMD features are available
         let required_features = vec![SimdFeature::SSE2, SimdFeature::AVX];
         let available_features = &self.config.environment.cpu_features.simd_features;
-        
-        let missing_features: Vec<_> = required_features.iter()
+
+        let missing_features: Vec<_> = required_features
+            .iter()
             .filter(|&feature| !available_features.contains(feature))
             .collect();
-        
+
         let status = if missing_features.is_empty() {
             CheckStatus::Pass
         } else {
             CheckStatus::Warning
         };
-        
+
         let message = if missing_features.is_empty() {
             "All required CPU features are available".to_string()
         } else {
             format!("Missing CPU features: {:?}", missing_features)
         };
-        
+
         Ok(CheckResult {
             name: "CPU Features".to_string(),
             status,
@@ -390,9 +401,13 @@ impl ProductionDeploymentValidator {
     /// Validate memory requirements
     fn validate_memory_requirements(&self) -> StatsResult<CheckResult> {
         let start_time = Instant::now();
-        
+
         // Check available memory vs requirements
-        let required_memory = self.config.performance_requirements.memory_limits.max_heap_mb;
+        let required_memory = self
+            .config
+            .performance_requirements
+            .memory_limits
+            .max_heap_mb;
         let available_memory = match &self.config.environment.environment_type {
             EnvironmentType::Server { memory_gb, .. } => memory_gb * 1024,
             EnvironmentType::Cloud { .. } => 8192, // Default assumption
@@ -400,18 +415,18 @@ impl ProductionDeploymentValidator {
             EnvironmentType::Edge { constraints, .. } => constraints.memory_mb,
             EnvironmentType::Serverless { .. } => 3008, // AWS Lambda max
         };
-        
+
         let status = if available_memory >= required_memory {
             CheckStatus::Pass
         } else {
             CheckStatus::Fail
         };
-        
+
         let message = format!(
             "Memory check: Required {}MB, Available {}MB",
             required_memory, available_memory
         );
-        
+
         Ok(CheckResult {
             name: "Memory Requirements".to_string(),
             status,
@@ -428,147 +443,199 @@ impl ProductionDeploymentValidator {
         if total_checks == 0.0 {
             return 0.0;
         }
-        
-        let passed_checks = results.checks.values()
+
+        let passed_checks = results
+            .checks
+            .values()
             .filter(|check| matches!(check.status, CheckStatus::Pass))
             .count() as f64;
-        
-        let warning_checks = results.checks.values()
+
+        let warning_checks = results
+            .checks
+            .values()
             .filter(|check| matches!(check.status, CheckStatus::Warning))
             .count() as f64;
-        
+
         // Pass = 1.0, Warning = 0.7, Fail = 0.0
         (passed_checks + warning_checks * 0.7) / total_checks
     }
 
     /// Additional validation methods...
-    fn validate_performance_requirements(&self, results: &mut ValidationResults) -> StatsResult<()> {
+    fn validate_performance_requirements(
+        &self,
+        results: &mut ValidationResults,
+    ) -> StatsResult<()> {
         let start_time = Instant::now();
-        
+
         // Test latency requirements with actual operations
         let latency_check = self.validate_latency_requirements()?;
-        results.checks.insert("latency_requirements".to_string(), latency_check);
-        
+        results
+            .checks
+            .insert("latency_requirements".to_string(), latency_check);
+
         // Test throughput requirements
         let throughput_check = self.validate_throughput_requirements()?;
-        results.checks.insert("throughput_requirements".to_string(), throughput_check);
-        
+        results
+            .checks
+            .insert("throughput_requirements".to_string(), throughput_check);
+
         // Test memory performance
         let memory_perf_check = self.validate_memory_performance()?;
-        results.checks.insert("memory_performance".to_string(), memory_perf_check);
-        
+        results
+            .checks
+            .insert("memory_performance".to_string(), memory_perf_check);
+
         // Test CPU performance
         let cpu_perf_check = self.validate_cpu_performance()?;
-        results.checks.insert("cpu_performance".to_string(), cpu_perf_check);
-        
+        results
+            .checks
+            .insert("cpu_performance".to_string(), cpu_perf_check);
+
         Ok(())
     }
 
     fn validate_resource_requirements(&self, results: &mut ValidationResults) -> StatsResult<()> {
         let start_time = Instant::now();
-        
+
         // Check disk space requirements
         let disk_check = self.validate_disk_requirements()?;
-        results.checks.insert("disk_requirements".to_string(), disk_check);
-        
+        results
+            .checks
+            .insert("disk_requirements".to_string(), disk_check);
+
         // Check network requirements
         let network_check = self.validate_network_requirements()?;
-        results.checks.insert("network_requirements".to_string(), network_check);
-        
+        results
+            .checks
+            .insert("network_requirements".to_string(), network_check);
+
         // Check file descriptor limits
         let fd_check = self.validate_file_descriptor_limits()?;
-        results.checks.insert("file_descriptor_limits".to_string(), fd_check);
-        
+        results
+            .checks
+            .insert("file_descriptor_limits".to_string(), fd_check);
+
         // Check process limits
         let process_check = self.validate_process_limits()?;
-        results.checks.insert("process_limits".to_string(), process_check);
-        
+        results
+            .checks
+            .insert("process_limits".to_string(), process_check);
+
         Ok(())
     }
 
     fn validate_security_compliance(&self, results: &mut ValidationResults) -> StatsResult<()> {
         let start_time = Instant::now();
-        
+
         // Check encryption requirements
         let encryption_check = self.validate_encryption_compliance()?;
-        results.checks.insert("encryption_compliance".to_string(), encryption_check);
-        
+        results
+            .checks
+            .insert("encryption_compliance".to_string(), encryption_check);
+
         // Check access control configuration
         let access_check = self.validate_access_control()?;
-        results.checks.insert("access_control".to_string(), access_check);
-        
+        results
+            .checks
+            .insert("access_control".to_string(), access_check);
+
         // Check audit logging
         let audit_check = self.validate_audit_logging()?;
-        results.checks.insert("audit_logging".to_string(), audit_check);
-        
+        results
+            .checks
+            .insert("audit_logging".to_string(), audit_check);
+
         // Check secure communication
         let comm_check = self.validate_secure_communication()?;
-        results.checks.insert("secure_communication".to_string(), comm_check);
-        
+        results
+            .checks
+            .insert("secure_communication".to_string(), comm_check);
+
         Ok(())
     }
 
     fn validate_reliability_features(&self, results: &mut ValidationResults) -> StatsResult<()> {
         let start_time = Instant::now();
-        
+
         // Check error handling mechanisms
         let error_check = self.validate_error_handling()?;
-        results.checks.insert("error_handling".to_string(), error_check);
-        
+        results
+            .checks
+            .insert("error_handling".to_string(), error_check);
+
         // Check circuit breaker configuration
         let circuit_check = self.validate_circuit_breakers()?;
-        results.checks.insert("circuit_breakers".to_string(), circuit_check);
-        
+        results
+            .checks
+            .insert("circuit_breakers".to_string(), circuit_check);
+
         // Check retry mechanisms
         let retry_check = self.validate_retry_mechanisms()?;
-        results.checks.insert("retry_mechanisms".to_string(), retry_check);
-        
+        results
+            .checks
+            .insert("retry_mechanisms".to_string(), retry_check);
+
         // Check graceful degradation
         let degradation_check = self.validate_graceful_degradation()?;
-        results.checks.insert("graceful_degradation".to_string(), degradation_check);
-        
+        results
+            .checks
+            .insert("graceful_degradation".to_string(), degradation_check);
+
         Ok(())
     }
 
     fn validate_monitoring_setup(&self, results: &mut ValidationResults) -> StatsResult<()> {
         let start_time = Instant::now();
-        
+
         // Check metrics collection
         let metrics_check = self.validate_metrics_collection()?;
-        results.checks.insert("metrics_collection".to_string(), metrics_check);
-        
+        results
+            .checks
+            .insert("metrics_collection".to_string(), metrics_check);
+
         // Check health check endpoints
         let health_check = self.validate_health_endpoints()?;
-        results.checks.insert("health_endpoints".to_string(), health_check);
-        
+        results
+            .checks
+            .insert("health_endpoints".to_string(), health_check);
+
         // Check alerting configuration
         let alert_check = self.validate_alerting_config()?;
-        results.checks.insert("alerting_config".to_string(), alert_check);
-        
+        results
+            .checks
+            .insert("alerting_config".to_string(), alert_check);
+
         // Check logging configuration
         let logging_check = self.validate_logging_config()?;
-        results.checks.insert("logging_config".to_string(), logging_check);
-        
+        results
+            .checks
+            .insert("logging_config".to_string(), logging_check);
+
         Ok(())
     }
 
     fn validate_simd_support(&self) -> StatsResult<CheckResult> {
         let start_time = Instant::now();
-        
+
         // Test actual SIMD operations
         let test_data = Array1::from_vec((0..1000).map(|i| i as f64).collect::<Vec<_>>());
-        
+
         // Test SIMD mean calculation
-        let simd_mean_result = std::panic::catch_unwind(|| {
-            crate::descriptive_simd::mean_simd(&test_data.view())
-        });
-        
+        let simd_mean_result =
+            std::panic::catch_unwind(|| crate::descriptive_simd::mean_simd(&test_data.view()));
+
         let (status, message) = match simd_mean_result {
-            Ok(Ok(_)) => (CheckStatus::Pass, "SIMD operations working correctly".to_string()),
-            Ok(Err(e)) => (CheckStatus::Warning, format!("SIMD available but errors: {}", e)),
+            Ok(Ok(_)) => (
+                CheckStatus::Pass,
+                "SIMD operations working correctly".to_string(),
+            ),
+            Ok(Err(e)) => (
+                CheckStatus::Warning,
+                format!("SIMD available but errors: {}", e),
+            ),
             Err(_) => (CheckStatus::Fail, "SIMD operations failed".to_string()),
         };
-        
+
         Ok(CheckResult {
             name: "SIMD Support".to_string(),
             status,
@@ -581,24 +648,29 @@ impl ProductionDeploymentValidator {
 
     fn validate_parallel_support(&self) -> StatsResult<CheckResult> {
         let start_time = Instant::now();
-        
+
         // Test parallel operations
         let test_data = Array1::from_vec((0..10000).map(|i| i as f64).collect::<Vec<_>>());
-        
+
         // Test parallel mean calculation
-        let parallel_result = std::panic::catch_unwind(|| {
-            crate::parallel_stats::mean_parallel(&test_data.view())
-        });
-        
+        let parallel_result =
+            std::panic::catch_unwind(|| crate::parallel_stats::mean_parallel(&test_data.view()));
+
         let (status, message) = match parallel_result {
             Ok(Ok(_)) => {
                 let cpu_count = num_cpus::get();
-                (CheckStatus::Pass, format!("Parallel processing working with {} CPUs", cpu_count))
-            },
-            Ok(Err(e)) => (CheckStatus::Warning, format!("Parallel available but errors: {}", e)),
+                (
+                    CheckStatus::Pass,
+                    format!("Parallel processing working with {} CPUs", cpu_count),
+                )
+            }
+            Ok(Err(e)) => (
+                CheckStatus::Warning,
+                format!("Parallel available but errors: {}", e),
+            ),
             Err(_) => (CheckStatus::Fail, "Parallel operations failed".to_string()),
         };
-        
+
         Ok(CheckResult {
             name: "Parallel Support".to_string(),
             status,
@@ -611,53 +683,52 @@ impl ProductionDeploymentValidator {
 
     fn generate_recommendations(&self, results: &ValidationResults) -> Vec<Recommendation> {
         let mut recommendations = Vec::new();
-        
+
         // Analyze failed checks and generate recommendations
         for (name, check) in &results.checks {
             match check.status {
-                CheckStatus::Fail => {
-                    match name.as_str() {
-                        "memory_requirements" => {
-                            recommendations.push(Recommendation {
-                                category: "Performance".to_string(),
-                                priority: RecommendationPriority::Critical,
-                                title: "Increase memory allocation".to_string(),
-                                description: "Insufficient memory for production workloads".to_string(),
-                                action_items: vec![
-                                    "Increase available memory".to_string(),
-                                    "Consider memory-optimized instance types".to_string(),
-                                    "Implement memory pooling".to_string(),
-                                ],
-                            });
-                        },
-                        "simd_support" => {
-                            recommendations.push(Recommendation {
-                                category: "Performance".to_string(),
-                                priority: RecommendationPriority::High,
-                                title: "Enable SIMD optimizations".to_string(),
-                                description: "SIMD operations not working properly".to_string(),
-                                action_items: vec![
-                                    "Verify CPU supports required SIMD features".to_string(),
-                                    "Check compiler flags for SIMD".to_string(),
-                                    "Consider fallback implementations".to_string(),
-                                ],
-                            });
-                        },
-                        "parallel_support" => {
-                            recommendations.push(Recommendation {
-                                category: "Performance".to_string(),
-                                priority: RecommendationPriority::High,
-                                title: "Fix parallel processing issues".to_string(),
-                                description: "Parallel operations not functioning correctly".to_string(),
-                                action_items: vec![
-                                    "Check thread pool configuration".to_string(),
-                                    "Verify CPU core availability".to_string(),
-                                    "Review parallel algorithm implementations".to_string(),
-                                ],
-                            });
-                        },
-                        _ => {},
+                CheckStatus::Fail => match name.as_str() {
+                    "memory_requirements" => {
+                        recommendations.push(Recommendation {
+                            category: "Performance".to_string(),
+                            priority: RecommendationPriority::Critical,
+                            title: "Increase memory allocation".to_string(),
+                            description: "Insufficient memory for production workloads".to_string(),
+                            action_items: vec![
+                                "Increase available memory".to_string(),
+                                "Consider memory-optimized instance types".to_string(),
+                                "Implement memory pooling".to_string(),
+                            ],
+                        });
                     }
+                    "simd_support" => {
+                        recommendations.push(Recommendation {
+                            category: "Performance".to_string(),
+                            priority: RecommendationPriority::High,
+                            title: "Enable SIMD optimizations".to_string(),
+                            description: "SIMD operations not working properly".to_string(),
+                            action_items: vec![
+                                "Verify CPU supports required SIMD features".to_string(),
+                                "Check compiler flags for SIMD".to_string(),
+                                "Consider fallback implementations".to_string(),
+                            ],
+                        });
+                    }
+                    "parallel_support" => {
+                        recommendations.push(Recommendation {
+                            category: "Performance".to_string(),
+                            priority: RecommendationPriority::High,
+                            title: "Fix parallel processing issues".to_string(),
+                            description: "Parallel operations not functioning correctly"
+                                .to_string(),
+                            action_items: vec![
+                                "Check thread pool configuration".to_string(),
+                                "Verify CPU core availability".to_string(),
+                                "Review parallel algorithm implementations".to_string(),
+                            ],
+                        });
+                    }
+                    _ => {}
                 },
                 CheckStatus::Warning => {
                     if check.severity == CheckSeverity::High {
@@ -669,18 +740,21 @@ impl ProductionDeploymentValidator {
                             action_items: vec!["Review configuration and optimize".to_string()],
                         });
                     }
-                },
-                _ => {},
+                }
+                _ => {}
             }
         }
-        
+
         // Generate performance recommendations based on readiness score
         if results.readiness_score < 0.8 {
             recommendations.push(Recommendation {
                 category: "General".to_string(),
                 priority: RecommendationPriority::High,
                 title: "Improve overall production readiness".to_string(),
-                description: format!("Current readiness score: {:.1}%", results.readiness_score * 100.0),
+                description: format!(
+                    "Current readiness score: {:.1}%",
+                    results.readiness_score * 100.0
+                ),
                 action_items: vec![
                     "Address failing validation checks".to_string(),
                     "Review and optimize configuration".to_string(),
@@ -688,83 +762,90 @@ impl ProductionDeploymentValidator {
                 ],
             });
         }
-        
+
         recommendations
     }
-    
+
     // Additional validation methods
     fn validate_latency_requirements(&self) -> StatsResult<CheckResult> {
         let start_time = Instant::now();
-        
+
         // Test statistical operation latency
         let test_data = Array1::from_vec((0..1000).map(|i| i as f64).collect::<Vec<_>>());
         let op_start = Instant::now();
         let _ = crate::descriptive::mean(&test_data.view())?;
         let latency_ms = op_start.elapsed().as_secs_f64() * 1000.0;
-        
+
         let max_latency = self.config.performance_requirements.max_latency_ms;
         let status = if latency_ms <= max_latency {
             CheckStatus::Pass
         } else {
             CheckStatus::Warning
         };
-        
+
         Ok(CheckResult {
             name: "Latency Requirements".to_string(),
             status,
-            message: format!("Operation latency: {:.2}ms (max: {:.2}ms)", latency_ms, max_latency),
+            message: format!(
+                "Operation latency: {:.2}ms (max: {:.2}ms)",
+                latency_ms, max_latency
+            ),
             severity: CheckSeverity::High,
             execution_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
             metadata: HashMap::new(),
         })
     }
-    
+
     fn validate_throughput_requirements(&self) -> StatsResult<CheckResult> {
         let start_time = Instant::now();
-        
+
         // Test throughput with batch operations
         let test_data = Array1::from_vec((0..10000).map(|i| i as f64).collect::<Vec<_>>());
         let batch_start = Instant::now();
         let batch_size = 100;
-        
+
         for _ in 0..batch_size {
             let _ = crate::descriptive::mean(&test_data.view())?;
         }
-        
+
         let elapsed_secs = batch_start.elapsed().as_secs_f64();
         let throughput = batch_size as f64 / elapsed_secs;
         let min_throughput = self.config.performance_requirements.min_throughput;
-        
+
         let status = if throughput >= min_throughput {
             CheckStatus::Pass
         } else {
             CheckStatus::Warning
         };
-        
+
         Ok(CheckResult {
             name: "Throughput Requirements".to_string(),
             status,
-            message: format!("Throughput: {:.1} ops/sec (min: {:.1} ops/sec)", throughput, min_throughput),
+            message: format!(
+                "Throughput: {:.1} ops/sec (min: {:.1} ops/sec)",
+                throughput, min_throughput
+            ),
             severity: CheckSeverity::High,
             execution_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
             metadata: HashMap::new(),
         })
     }
-    
+
     fn validate_memory_performance(&self) -> StatsResult<CheckResult> {
         let start_time = Instant::now();
-        
+
         // Test memory allocation performance
         let allocation_start = Instant::now();
         let _large_array = Array2::<f64>::zeros((1000, 1000));
         let allocation_time_ms = allocation_start.elapsed().as_secs_f64() * 1000.0;
-        
-        let status = if allocation_time_ms < 100.0 { // 100ms threshold
+
+        let status = if allocation_time_ms < 100.0 {
+            // 100ms threshold
             CheckStatus::Pass
         } else {
             CheckStatus::Warning
         };
-        
+
         Ok(CheckResult {
             name: "Memory Performance".to_string(),
             status,
@@ -774,22 +855,23 @@ impl ProductionDeploymentValidator {
             metadata: HashMap::new(),
         })
     }
-    
+
     fn validate_cpu_performance(&self) -> StatsResult<CheckResult> {
         let start_time = Instant::now();
-        
+
         // Test CPU-intensive operation
         let test_data = Array1::from_vec((0..50000).map(|i| (i as f64).sin()).collect::<Vec<_>>());
         let cpu_start = Instant::now();
         let _ = crate::descriptive::var(&test_data.view(), 1)?;
         let cpu_time_ms = cpu_start.elapsed().as_secs_f64() * 1000.0;
-        
-        let status = if cpu_time_ms < 50.0 { // 50ms threshold
+
+        let status = if cpu_time_ms < 50.0 {
+            // 50ms threshold
             CheckStatus::Pass
         } else {
             CheckStatus::Warning
         };
-        
+
         Ok(CheckResult {
             name: "CPU Performance".to_string(),
             status,
@@ -799,14 +881,14 @@ impl ProductionDeploymentValidator {
             metadata: HashMap::new(),
         })
     }
-    
+
     fn validate_disk_requirements(&self) -> StatsResult<CheckResult> {
         let start_time = Instant::now();
-        
+
         // Simplified disk space check (would use proper syscalls in production)
         let status = CheckStatus::Pass;
         let message = "Disk space requirements satisfied".to_string();
-        
+
         Ok(CheckResult {
             name: "Disk Requirements".to_string(),
             status,
@@ -816,14 +898,14 @@ impl ProductionDeploymentValidator {
             metadata: HashMap::new(),
         })
     }
-    
+
     fn validate_network_requirements(&self) -> StatsResult<CheckResult> {
         let start_time = Instant::now();
-        
+
         // Simplified network check
         let status = CheckStatus::Pass;
         let message = "Network requirements satisfied".to_string();
-        
+
         Ok(CheckResult {
             name: "Network Requirements".to_string(),
             status,
@@ -833,14 +915,14 @@ impl ProductionDeploymentValidator {
             metadata: HashMap::new(),
         })
     }
-    
+
     fn validate_file_descriptor_limits(&self) -> StatsResult<CheckResult> {
         let start_time = Instant::now();
-        
+
         // Check file descriptor limits (simplified)
         let status = CheckStatus::Pass;
         let message = "File descriptor limits adequate".to_string();
-        
+
         Ok(CheckResult {
             name: "File Descriptor Limits".to_string(),
             status,
@@ -850,14 +932,14 @@ impl ProductionDeploymentValidator {
             metadata: HashMap::new(),
         })
     }
-    
+
     fn validate_process_limits(&self) -> StatsResult<CheckResult> {
         let start_time = Instant::now();
-        
+
         // Check process limits
         let status = CheckStatus::Pass;
         let message = "Process limits adequate".to_string();
-        
+
         Ok(CheckResult {
             name: "Process Limits".to_string(),
             status,
@@ -867,28 +949,28 @@ impl ProductionDeploymentValidator {
             metadata: HashMap::new(),
         })
     }
-    
+
     fn validate_encryption_compliance(&self) -> StatsResult<CheckResult> {
         let start_time = Instant::now();
-        
+
         // Check encryption configuration
         let encryption_enabled = match &self.config.security {
             Some(security_config) => security_config.encryption_enabled,
             None => false,
         };
-        
+
         let status = if encryption_enabled {
             CheckStatus::Pass
         } else {
             CheckStatus::Fail
         };
-        
+
         let message = if encryption_enabled {
             "Encryption properly configured".to_string()
         } else {
             "Encryption not enabled - security risk".to_string()
         };
-        
+
         Ok(CheckResult {
             name: "Encryption Compliance".to_string(),
             status,
@@ -898,14 +980,14 @@ impl ProductionDeploymentValidator {
             metadata: HashMap::new(),
         })
     }
-    
+
     fn validate_access_control(&self) -> StatsResult<CheckResult> {
         let start_time = Instant::now();
-        
+
         // Check access control configuration
         let status = CheckStatus::Pass;
         let message = "Access control properly configured".to_string();
-        
+
         Ok(CheckResult {
             name: "Access Control".to_string(),
             status,
@@ -915,14 +997,14 @@ impl ProductionDeploymentValidator {
             metadata: HashMap::new(),
         })
     }
-    
+
     fn validate_audit_logging(&self) -> StatsResult<CheckResult> {
         let start_time = Instant::now();
-        
+
         // Check audit logging configuration
         let status = CheckStatus::Pass;
         let message = "Audit logging properly configured".to_string();
-        
+
         Ok(CheckResult {
             name: "Audit Logging".to_string(),
             status,
@@ -932,14 +1014,14 @@ impl ProductionDeploymentValidator {
             metadata: HashMap::new(),
         })
     }
-    
+
     fn validate_secure_communication(&self) -> StatsResult<CheckResult> {
         let start_time = Instant::now();
-        
+
         // Check secure communication protocols
         let status = CheckStatus::Pass;
         let message = "Secure communication protocols enabled".to_string();
-        
+
         Ok(CheckResult {
             name: "Secure Communication".to_string(),
             status,
@@ -949,30 +1031,30 @@ impl ProductionDeploymentValidator {
             metadata: HashMap::new(),
         })
     }
-    
+
     fn validate_error_handling(&self) -> StatsResult<CheckResult> {
         let start_time = Instant::now();
-        
+
         // Test error handling mechanisms
         let error_test_result = std::panic::catch_unwind(|| {
             // Test error handling with invalid input
             let empty_array = Array1::<f64>::from_vec(vec![]);
             crate::descriptive::mean(&empty_array.view())
         });
-        
+
         let status = match error_test_result {
-            Ok(Err(_)) => CheckStatus::Pass, // Proper error returned
+            Ok(Err(_)) => CheckStatus::Pass,   // Proper error returned
             Ok(Ok(_)) => CheckStatus::Warning, // Should have failed
-            Err(_) => CheckStatus::Fail, // Panic occurred
+            Err(_) => CheckStatus::Fail,       // Panic occurred
         };
-        
+
         let message = match status {
             CheckStatus::Pass => "Error handling working correctly".to_string(),
             CheckStatus::Warning => "Error handling needs improvement".to_string(),
             CheckStatus::Fail => "Error handling causing panics".to_string(),
             _ => "Unknown error handling status".to_string(),
         };
-        
+
         Ok(CheckResult {
             name: "Error Handling".to_string(),
             status,
@@ -982,14 +1064,14 @@ impl ProductionDeploymentValidator {
             metadata: HashMap::new(),
         })
     }
-    
+
     fn validate_circuit_breakers(&self) -> StatsResult<CheckResult> {
         let start_time = Instant::now();
-        
+
         // Check circuit breaker configuration
         let status = CheckStatus::Pass;
         let message = "Circuit breakers properly configured".to_string();
-        
+
         Ok(CheckResult {
             name: "Circuit Breakers".to_string(),
             status,
@@ -999,14 +1081,14 @@ impl ProductionDeploymentValidator {
             metadata: HashMap::new(),
         })
     }
-    
+
     fn validate_retry_mechanisms(&self) -> StatsResult<CheckResult> {
         let start_time = Instant::now();
-        
+
         // Check retry mechanisms
         let status = CheckStatus::Pass;
         let message = "Retry mechanisms properly configured".to_string();
-        
+
         Ok(CheckResult {
             name: "Retry Mechanisms".to_string(),
             status,
@@ -1016,14 +1098,14 @@ impl ProductionDeploymentValidator {
             metadata: HashMap::new(),
         })
     }
-    
+
     fn validate_graceful_degradation(&self) -> StatsResult<CheckResult> {
         let start_time = Instant::now();
-        
+
         // Check graceful degradation capabilities
         let status = CheckStatus::Pass;
         let message = "Graceful degradation capabilities available".to_string();
-        
+
         Ok(CheckResult {
             name: "Graceful Degradation".to_string(),
             status,
@@ -1033,10 +1115,10 @@ impl ProductionDeploymentValidator {
             metadata: HashMap::new(),
         })
     }
-    
+
     fn validate_metrics_collection(&self) -> StatsResult<CheckResult> {
         let start_time = Instant::now();
-        
+
         // Check metrics collection setup
         let metrics_enabled = self.config.monitoring.metrics_enabled;
         let status = if metrics_enabled {
@@ -1044,13 +1126,13 @@ impl ProductionDeploymentValidator {
         } else {
             CheckStatus::Warning
         };
-        
+
         let message = if metrics_enabled {
             "Metrics collection enabled".to_string()
         } else {
             "Metrics collection disabled".to_string()
         };
-        
+
         Ok(CheckResult {
             name: "Metrics Collection".to_string(),
             status,
@@ -1060,10 +1142,10 @@ impl ProductionDeploymentValidator {
             metadata: HashMap::new(),
         })
     }
-    
+
     fn validate_health_endpoints(&self) -> StatsResult<CheckResult> {
         let start_time = Instant::now();
-        
+
         // Check health check endpoints
         let health_checks_count = self.config.monitoring.health_checks.len();
         let status = if health_checks_count > 0 {
@@ -1071,9 +1153,9 @@ impl ProductionDeploymentValidator {
         } else {
             CheckStatus::Warning
         };
-        
+
         let message = format!("{} health checks configured", health_checks_count);
-        
+
         Ok(CheckResult {
             name: "Health Endpoints".to_string(),
             status,
@@ -1083,14 +1165,14 @@ impl ProductionDeploymentValidator {
             metadata: HashMap::new(),
         })
     }
-    
+
     fn validate_alerting_config(&self) -> StatsResult<CheckResult> {
         let start_time = Instant::now();
-        
+
         // Check alerting configuration
         let status = CheckStatus::Pass;
         let message = "Alerting properly configured".to_string();
-        
+
         Ok(CheckResult {
             name: "Alerting Config".to_string(),
             status,
@@ -1100,14 +1182,14 @@ impl ProductionDeploymentValidator {
             metadata: HashMap::new(),
         })
     }
-    
+
     fn validate_logging_config(&self) -> StatsResult<CheckResult> {
         let start_time = Instant::now();
-        
+
         // Check logging configuration
         let status = CheckStatus::Pass;
         let message = "Logging properly configured".to_string();
-        
+
         Ok(CheckResult {
             name: "Logging Config".to_string(),
             status,
@@ -1446,7 +1528,7 @@ impl Default for SlaRequirements {
         percentiles.insert("p50".to_string(), 100.0);
         percentiles.insert("p95".to_string(), 500.0);
         percentiles.insert("p99".to_string(), 1000.0);
-        
+
         Self {
             availability_percentage: 99.9,
             max_downtime_minutes_per_month: 43.2,
@@ -1481,15 +1563,13 @@ impl Default for MonitoringConfig {
     fn default() -> Self {
         Self {
             metrics_enabled: true,
-            health_checks: vec![
-                HealthCheckConfig {
-                    name: "basic_health".to_string(),
-                    endpoint: "/health".to_string(),
-                    interval_seconds: 30,
-                    timeout_seconds: 5,
-                    failure_threshold: 3,
-                },
-            ],
+            health_checks: vec![HealthCheckConfig {
+                name: "basic_health".to_string(),
+                endpoint: "/health".to_string(),
+                interval_seconds: 30,
+                timeout_seconds: 5,
+                failure_threshold: 3,
+            }],
             alerting_enabled: true,
             logging_level: LogLevel::Info,
         }
@@ -1562,34 +1642,40 @@ impl PerformanceMonitor {
             last_update: Instant::now(),
         }
     }
-    
+
     pub fn record_metric(&mut self, name: &str, value: f64) {
-        let metric = self.metrics.entry(name.to_string()).or_insert_with(|| MetricTimeSeries {
-            name: name.to_string(),
-            values: Vec::new(),
-            unit: "".to_string(),
-        });
-        
+        let metric = self
+            .metrics
+            .entry(name.to_string())
+            .or_insert_with(|| MetricTimeSeries {
+                name: name.to_string(),
+                values: Vec::new(),
+                unit: "".to_string(),
+            });
+
         metric.values.push((SystemTime::now(), value));
-        
+
         // Keep only recent values (last 1000 points)
         if metric.values.len() > 1000 {
             metric.values.remove(0);
         }
-        
+
         self.last_update = Instant::now();
     }
-    
+
     pub fn get_metric(&self, name: &str) -> Option<&MetricTimeSeries> {
         self.metrics.get(name)
     }
-    
+
     pub fn add_threshold(&mut self, metric_name: String, warning: f64, critical: f64) {
-        self.thresholds.insert(metric_name.clone(), Threshold {
-            metric_name,
-            warning_threshold: warning,
-            critical_threshold: critical,
-        });
+        self.thresholds.insert(
+            metric_name.clone(),
+            Threshold {
+                metric_name,
+                warning_threshold: warning,
+                critical_threshold: critical,
+            },
+        );
     }
 }
 
@@ -1601,19 +1687,19 @@ impl HealthChecker {
             current_status: HealthStatus::Unknown,
         }
     }
-    
+
     pub fn add_health_check(&mut self, check: HealthCheck) {
         self.health_checks.push(check);
     }
-    
+
     pub fn run_health_checks(&mut self) -> StatsResult<Vec<HealthCheckResult>> {
         let mut results = Vec::new();
-        
+
         for check in &self.health_checks {
             let start_time = Instant::now();
             let result = (check.check_fn)();
             let execution_time = start_time.elapsed();
-            
+
             let health_result = match result {
                 Ok(mut check_result) => {
                     check_result.execution_time = execution_time;
@@ -1626,10 +1712,10 @@ impl HealthChecker {
                     metadata: HashMap::new(),
                 },
             };
-            
+
             results.push(health_result);
         }
-        
+
         // Update overall status based on results
         self.current_status = if results.iter().any(|r| r.status == HealthStatus::Unhealthy) {
             HealthStatus::Unhealthy
@@ -1640,7 +1726,7 @@ impl HealthChecker {
         } else {
             HealthStatus::Healthy
         };
-        
+
         self.last_check = Some(Instant::now());
         Ok(results)
     }
@@ -1649,13 +1735,13 @@ impl HealthChecker {
 // Utility functions for creating production configurations
 pub fn create_cloud_production_config(cloud_provider: CloudProvider) -> ProductionConfig {
     let mut config = ProductionConfig::default();
-    
+
     config.environment.environment_type = EnvironmentType::Cloud {
         provider: cloud_provider,
         instance_type: "m5.large".to_string(),
         region: "us-east-1".to_string(),
     };
-    
+
     // Cloud-specific optimizations
     config.performance_requirements.max_latency_ms = 500.0;
     config.monitoring.metrics_enabled = true;
@@ -1665,13 +1751,13 @@ pub fn create_cloud_production_config(cloud_provider: CloudProvider) -> Producti
         authentication_required: true,
         audit_logging_enabled: true,
     });
-    
+
     config
 }
 
 pub fn create_container_production_config(container_runtime: ContainerRuntime) -> ProductionConfig {
     let mut config = ProductionConfig::default();
-    
+
     config.environment.environment_type = EnvironmentType::Container {
         runtime: container_runtime,
         resources: ContainerResources {
@@ -1680,7 +1766,7 @@ pub fn create_container_production_config(container_runtime: ContainerRuntime) -
             gpu_count: 0,
         },
     };
-    
+
     config.environment.container_config = Some(ContainerConfig {
         orchestrator: "kubernetes".to_string(),
         scaling_config: ScalingConfig {
@@ -1691,7 +1777,7 @@ pub fn create_container_production_config(container_runtime: ContainerRuntime) -
             scale_down_cooldown_seconds: 600,
         },
     });
-    
+
     // Container-specific settings
     config.deployment_strategy.deployment_type = DeploymentType::Rolling;
     config.monitoring.health_checks.push(HealthCheckConfig {
@@ -1701,7 +1787,7 @@ pub fn create_container_production_config(container_runtime: ContainerRuntime) -
         timeout_seconds: 3,
         failure_threshold: 3,
     });
-    
+
     config
 }
 
@@ -1723,7 +1809,7 @@ mod tests {
         let validator = ProductionDeploymentValidator::new(config);
         let result = validator.validate_production_readiness();
         assert!(result.is_ok());
-        
+
         let validation_results = result.unwrap();
         assert!(validation_results.readiness_score >= 0.0);
         assert!(validation_results.readiness_score <= 1.0);
@@ -1732,24 +1818,30 @@ mod tests {
     #[test]
     fn test_cloud_config_creation() {
         let cloud_config = create_cloud_production_config(CloudProvider::AWS);
-        
+
         match cloud_config.environment.environment_type {
-            EnvironmentType::Cloud { provider: CloudProvider::AWS, .. } => {},
+            EnvironmentType::Cloud {
+                provider: CloudProvider::AWS,
+                ..
+            } => {}
             _ => panic!("Expected AWS cloud configuration"),
         }
-        
+
         assert_eq!(cloud_config.performance_requirements.max_latency_ms, 500.0);
     }
 
     #[test]
     fn test_container_config_creation() {
         let container_config = create_container_production_config(ContainerRuntime::Docker);
-        
+
         match container_config.environment.environment_type {
-            EnvironmentType::Container { runtime: ContainerRuntime::Docker, .. } => {},
+            EnvironmentType::Container {
+                runtime: ContainerRuntime::Docker,
+                ..
+            } => {}
             _ => panic!("Expected Docker container configuration"),
         }
-        
+
         assert!(container_config.environment.container_config.is_some());
         assert!(container_config.monitoring.health_checks.len() > 1);
     }
@@ -1758,7 +1850,7 @@ mod tests {
     fn test_performance_monitor() {
         let mut monitor = PerformanceMonitor::new();
         monitor.record_metric("test_metric", 42.0);
-        
+
         let metric = monitor.get_metric("test_metric");
         assert!(metric.is_some());
         assert!(!metric.unwrap().values.is_empty());
@@ -1767,20 +1859,22 @@ mod tests {
     #[test]
     fn test_health_checker() {
         let mut checker = HealthChecker::new();
-        
+
         checker.add_health_check(HealthCheck {
             name: "test_check".to_string(),
-            check_fn: || Ok(HealthCheckResult {
-                status: HealthStatus::Healthy,
-                message: "All good".to_string(),
-                execution_time: Duration::from_millis(1),
-                metadata: HashMap::new(),
-            }),
+            check_fn: || {
+                Ok(HealthCheckResult {
+                    status: HealthStatus::Healthy,
+                    message: "All good".to_string(),
+                    execution_time: Duration::from_millis(1),
+                    metadata: HashMap::new(),
+                })
+            },
             interval: Duration::from_secs(30),
             timeout: Duration::from_secs(5),
             critical: false,
         });
-        
+
         let results = checker.run_health_checks();
         assert!(results.is_ok());
         assert_eq!(results.unwrap().len(), 1);

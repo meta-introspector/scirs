@@ -22,7 +22,7 @@
 //!
 //! // Create ultra-optimized KD-Tree
 //! let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
-//! 
+//!
 //! let config = KDTreeConfig::new()
 //!     .with_cache_aware_layout(true)
 //!     .with_vectorized_search(true)
@@ -41,9 +41,9 @@ use crate::memory_pool::DistancePool;
 use ndarray::{Array2, ArrayView1, ArrayView2};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
-use std::sync::Arc;
-use std::collections::BinaryHeap;
 use std::cmp::Ordering;
+use std::collections::BinaryHeap;
+use std::sync::Arc;
 
 /// Configuration for ultra-optimized KD-Tree
 #[derive(Debug, Clone)]
@@ -81,8 +81,8 @@ impl KDTreeConfig {
             cache_aware_layout: true,
             vectorized_search: true,
             numa_aware: true,
-            leaf_size: 32,           // Optimized for L1 cache
-            cache_line_size: 64,     // Typical cache line size
+            leaf_size: 32,       // Optimized for L1 cache
+            cache_line_size: 64, // Typical cache line size
             parallel_construction: true,
             parallel_threshold: 1000,
             use_memory_pools: true,
@@ -247,7 +247,7 @@ impl UltraKDTree {
     /// Create a new ultra-optimized KD-Tree
     pub fn new(points: &ArrayView2<f64>, config: KDTreeConfig) -> SpatialResult<Self> {
         let start_time = std::time::Instant::now();
-        
+
         if points.is_empty() {
             return Ok(Self {
                 nodes: Vec::new(),
@@ -262,33 +262,36 @@ impl UltraKDTree {
         // Validate input
         let n_points = points.nrows();
         let n_dims = points.ncols();
-        
+
         if n_points > 10_000_000 {
-            return Err(SpatialError::ValueError(
-                format!("Dataset too large: {} points. Ultra KD-Tree supports up to 10M points", n_points)
-            ));
+            return Err(SpatialError::ValueError(format!(
+                "Dataset too large: {} points. Ultra KD-Tree supports up to 10M points",
+                n_points
+            )));
         }
 
         if n_dims > 50 {
-            return Err(SpatialError::ValueError(
-                format!("Dimension too high: {}. Ultra KD-Tree is efficient up to 50 dimensions", n_dims)
-            ));
+            return Err(SpatialError::ValueError(format!(
+                "Dimension too high: {}. Ultra KD-Tree is efficient up to 50 dimensions",
+                n_dims
+            )));
         }
 
         // Validate point coordinates
         for (i, row) in points.outer_iter().enumerate() {
             for (j, &coord) in row.iter().enumerate() {
                 if !coord.is_finite() {
-                    return Err(SpatialError::ValueError(
-                        format!("Point {} has invalid coordinate {} at dimension {}", i, coord, j)
-                    ));
+                    return Err(SpatialError::ValueError(format!(
+                        "Point {} has invalid coordinate {} at dimension {}",
+                        i, coord, j
+                    )));
                 }
             }
         }
 
         // Copy points for cache-friendly access
         let points_copy = points.to_owned();
-        
+
         // Get memory pool
         let memory_pool = if config.use_memory_pools {
             // Clone the global pool to create a new instance
@@ -304,21 +307,9 @@ impl UltraKDTree {
         // Build tree using optimal strategy
         let mut indices: Vec<usize> = (0..n_points).collect();
         let root_index = if config.parallel_construction && n_points >= config.parallel_threshold {
-            Self::build_tree_parallel(
-                &points_copy,
-                &mut indices,
-                &mut nodes,
-                0,
-                &config,
-            )?
+            Self::build_tree_parallel(&points_copy, &mut indices, &mut nodes, 0, &config)?
         } else {
-            Self::build_tree_sequential(
-                &points_copy,
-                &mut indices,
-                &mut nodes,
-                0,
-                &config,
-            )?
+            Self::build_tree_sequential(&points_copy, &mut indices, &mut nodes, 0, &config)?
         };
 
         let construction_time = start_time.elapsed().as_secs_f64() * 1000.0;
@@ -388,18 +379,16 @@ impl UltraKDTree {
 
         // Find median using optimized partitioning
         let median_idx = Self::find_median_optimized(points, indices, splitting_dimension);
-        
+
         // Split indices around median
         let (left_indices, right_indices) = indices.split_at_mut(median_idx);
         let right_indices = &mut right_indices[1..]; // Exclude median
 
         // Recursively build subtrees
-        let left_child = Self::build_tree_sequential(
-            points, left_indices, nodes, depth + 1, config
-        )?;
-        let right_child = Self::build_tree_sequential(
-            points, right_indices, nodes, depth + 1, config
-        )?;
+        let left_child =
+            Self::build_tree_sequential(points, left_indices, nodes, depth + 1, config)?;
+        let right_child =
+            Self::build_tree_sequential(points, right_indices, nodes, depth + 1, config)?;
 
         // Create internal node
         let node_index = nodes.len();
@@ -443,7 +432,7 @@ impl UltraKDTree {
             let coord_b = points[[b, dimension]];
             coord_a.partial_cmp(&coord_b).unwrap_or(Ordering::Equal)
         });
-        
+
         indices.len() / 2
     }
 
@@ -458,15 +447,19 @@ impl UltraKDTree {
         }
 
         if query.len() != self.points.ncols() {
-            return Err(SpatialError::ValueError(
-                format!("Query dimension ({}) must match tree dimension ({})", query.len(), self.points.ncols())
-            ));
+            return Err(SpatialError::ValueError(format!(
+                "Query dimension ({}) must match tree dimension ({})",
+                query.len(),
+                self.points.ncols()
+            )));
         }
 
         if k > self.points.nrows() {
-            return Err(SpatialError::ValueError(
-                format!("k ({}) cannot be larger than number of points ({})", k, self.points.nrows())
-            ));
+            return Err(SpatialError::ValueError(format!(
+                "k ({}) cannot be larger than number of points ({})",
+                k,
+                self.points.nrows()
+            )));
         }
 
         if self.root_index.is_none() {
@@ -475,14 +468,9 @@ impl UltraKDTree {
 
         // Use optimized priority queue for k-NN
         let mut heap = BinaryHeap::with_capacity(k + 1);
-        
+
         // Search starting from root
-        self.search_knn_ultra(
-            self.root_index.unwrap(),
-            query,
-            k,
-            &mut heap,
-        );
+        self.search_knn_ultra(self.root_index.unwrap(), query, k, &mut heap);
 
         // Extract results
         let mut results: Vec<(usize, f64)> = heap
@@ -490,7 +478,7 @@ impl UltraKDTree {
             .into_iter()
             .map(|item| (item.index, item.distance))
             .collect();
-        
+
         results.reverse(); // Convert from max-heap to min-heap order
         results.truncate(k);
 
@@ -509,7 +497,7 @@ impl UltraKDTree {
         heap: &mut BinaryHeap<KNNItem>,
     ) {
         let node = &self.nodes[node_index];
-        
+
         // Calculate distance to current point using SIMD if available
         let point = self.points.row(node.point_index as usize);
         let distance = if self.config.vectorized_search {
@@ -549,7 +537,7 @@ impl UltraKDTree {
         if !node.node_info.is_leaf {
             let query_coord = query[node.splitting_dimension as usize];
             let split_coord = point[node.splitting_dimension as usize];
-            
+
             let (first_child, second_child) = if query_coord < split_coord {
                 (node.node_info.left_child, node.node_info.right_child)
             } else {
@@ -564,7 +552,9 @@ impl UltraKDTree {
             // Check if we need to search the other child
             let dimension_distance = (query_coord - split_coord).abs();
             let should_search_other = heap.len() < k
-                || heap.peek().map_or(true, |top| dimension_distance < top.distance);
+                || heap
+                    .peek()
+                    .map_or(true, |top| dimension_distance < top.distance);
 
             if should_search_other && second_child != 0 {
                 self.search_knn_ultra(second_child as usize, query, k, heap);
@@ -611,22 +601,24 @@ impl UltraKDTree {
                 .zip(queries.outer_iter())
                 .enumerate()
                 .par_bridge()
-                .try_for_each(|(_i, ((mut idx_row, mut dist_row), query))| -> SpatialResult<()> {
-                    let (query_indices, query_distances) = self.knn_search_ultra(&query, k)?;
-                    
-                    for (j, &idx) in query_indices.iter().enumerate().take(k) {
-                        idx_row[j] = idx;
-                    }
-                    for (j, &dist) in query_distances.iter().enumerate().take(k) {
-                        dist_row[j] = dist;
-                    }
-                    Ok(())
-                })?;
+                .try_for_each(
+                    |(_i, ((mut idx_row, mut dist_row), query))| -> SpatialResult<()> {
+                        let (query_indices, query_distances) = self.knn_search_ultra(&query, k)?;
+
+                        for (j, &idx) in query_indices.iter().enumerate().take(k) {
+                            idx_row[j] = idx;
+                        }
+                        for (j, &dist) in query_distances.iter().enumerate().take(k) {
+                            dist_row[j] = dist;
+                        }
+                        Ok(())
+                    },
+                )?;
         } else {
             // Sequential processing for smaller batches
             for (i, query) in queries.outer_iter().enumerate() {
                 let (query_indices, query_distances) = self.knn_search_ultra(&query, k)?;
-                
+
                 for (j, &idx) in query_indices.iter().enumerate().take(k) {
                     indices[[i, j]] = idx;
                 }
@@ -670,7 +662,7 @@ impl UltraKDTree {
     ) {
         let node = &self.nodes[node_index];
         let point = self.points.row(node.point_index as usize);
-        
+
         // Calculate distance using SIMD if available
         let distance = if self.config.vectorized_search {
             self.distance_simd(query, &point)
@@ -725,18 +717,30 @@ impl UltraKDTree {
         }
     }
 
-    fn calculate_depth_recursive(nodes: &[UltraKDNode], node_index: usize, current_depth: usize) -> usize {
+    fn calculate_depth_recursive(
+        nodes: &[UltraKDNode],
+        node_index: usize,
+        current_depth: usize,
+    ) -> usize {
         let node = &nodes[node_index];
         if node.node_info.is_leaf {
             current_depth
         } else {
             let left_depth = if node.node_info.left_child != 0 {
-                Self::calculate_depth_recursive(nodes, node.node_info.left_child as usize, current_depth + 1)
+                Self::calculate_depth_recursive(
+                    nodes,
+                    node.node_info.left_child as usize,
+                    current_depth + 1,
+                )
             } else {
                 current_depth
             };
             let right_depth = if node.node_info.right_child != 0 {
-                Self::calculate_depth_recursive(nodes, node.node_info.right_child as usize, current_depth + 1)
+                Self::calculate_depth_recursive(
+                    nodes,
+                    node.node_info.right_child as usize,
+                    current_depth + 1,
+                )
             } else {
                 current_depth
             };
@@ -781,25 +785,27 @@ impl PartialOrd for KNNItem {
 impl Ord for KNNItem {
     fn cmp(&self, other: &Self) -> Ordering {
         // Max heap (largest distance first)
-        self.distance.partial_cmp(&other.distance).unwrap_or(Ordering::Equal)
+        self.distance
+            .partial_cmp(&other.distance)
+            .unwrap_or(Ordering::Equal)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
     #[allow(unused_imports)]
     use approx::assert_relative_eq;
+    use ndarray::array;
 
     #[test]
     fn test_ultra_kdtree_creation() {
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
         let config = KDTreeConfig::new();
-        
+
         let kdtree = UltraKDTree::new(&points.view(), config);
         assert!(kdtree.is_ok());
-        
+
         let kdtree = kdtree.unwrap();
         assert_eq!(kdtree.points.nrows(), 4);
         assert_eq!(kdtree.points.ncols(), 2);
@@ -807,21 +813,19 @@ mod tests {
 
     #[test]
     fn test_ultra_knn_search() {
-        let points = array![
-            [0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0], [0.5, 0.5]
-        ];
+        let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0], [0.5, 0.5]];
         let config = KDTreeConfig::new()
             .with_vectorized_search(true)
             .with_cache_aware_layout(true);
-        
+
         let kdtree = UltraKDTree::new(&points.view(), config).unwrap();
         let query = array![0.6, 0.6];
-        
+
         let (indices, distances) = kdtree.knn_search_ultra(&query.view(), 2).unwrap();
-        
+
         assert_eq!(indices.len(), 2);
         assert_eq!(distances.len(), 2);
-        
+
         // Should find (0.5, 0.5) as the closest point
         assert_eq!(indices[0], 4);
         assert!(distances[0] < distances[1]);
@@ -829,19 +833,17 @@ mod tests {
 
     #[test]
     fn test_ultra_range_search() {
-        let points = array![
-            [0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0], [0.5, 0.5]
-        ];
+        let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0], [0.5, 0.5]];
         let config = KDTreeConfig::new();
-        
+
         let kdtree = UltraKDTree::new(&points.view(), config).unwrap();
         let query = array![0.5, 0.5];
-        
+
         let results = kdtree.range_search(&query.view(), 0.8).unwrap();
-        
+
         // Should find several points within radius 0.8
         assert!(!results.is_empty());
-        
+
         // All results should be within the specified radius
         for (_, distance) in results {
             assert!(distance <= 0.8);
@@ -850,20 +852,16 @@ mod tests {
 
     #[test]
     fn test_batch_knn_search() {
-        let points = array![
-            [0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]
-        ];
-        let queries = array![
-            [0.1, 0.1], [0.9, 0.9]
-        ];
+        let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
+        let queries = array![[0.1, 0.1], [0.9, 0.9]];
         let config = KDTreeConfig::new().with_parallel_construction(true, 100);
-        
+
         let kdtree = UltraKDTree::new(&points.view(), config).unwrap();
         let (indices, distances) = kdtree.batch_knn_search(&queries.view(), 2).unwrap();
-        
+
         assert_eq!(indices.dim(), (2, 2));
         assert_eq!(distances.dim(), (2, 2));
-        
+
         // First query should be closest to (0,0)
         assert_eq!(indices[[0, 0]], 0);
         // Second query should be closest to (1,1)
@@ -875,19 +873,19 @@ mod tests {
         let mut bbox = BoundingBox::new(2);
         let point1 = array![1.0, 2.0];
         let point2 = array![3.0, 4.0];
-        
+
         bbox.update_with_point(&point1.view());
         bbox.update_with_point(&point2.view());
-        
+
         assert_eq!(bbox.min_coords[0], 1.0);
         assert_eq!(bbox.max_coords[0], 3.0);
         assert_eq!(bbox.min_coords[1], 2.0);
         assert_eq!(bbox.max_coords[1], 4.0);
-        
+
         // Test containment
         let inside_point = array![2.0, 3.0];
         assert!(bbox.contains_point(&inside_point.view()));
-        
+
         let outside_point = array![5.0, 6.0];
         assert!(!bbox.contains_point(&outside_point.view()));
     }
@@ -895,14 +893,20 @@ mod tests {
     #[test]
     fn test_tree_statistics() {
         let points = array![
-            [0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0],
-            [2.0, 2.0], [3.0, 3.0], [4.0, 4.0], [5.0, 5.0]
+            [0.0, 0.0],
+            [1.0, 0.0],
+            [0.0, 1.0],
+            [1.0, 1.0],
+            [2.0, 2.0],
+            [3.0, 3.0],
+            [4.0, 4.0],
+            [5.0, 5.0]
         ];
         let config = KDTreeConfig::new();
-        
+
         let kdtree = UltraKDTree::new(&points.view(), config).unwrap();
         let stats = kdtree.statistics();
-        
+
         assert!(stats.node_count > 0);
         assert!(stats.depth > 0);
         assert!(stats.construction_time_ms >= 0.0);

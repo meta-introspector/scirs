@@ -17,11 +17,12 @@
 //! 9. **Quantum Amplitude Amplification** - Enhanced feature detection
 //! 10. **Quantum Annealing Segmentation** - Global optimization segmentation
 
-use ndarray::{Array2, Array1};
+use ndarray::{Array1, Array2};
 use scirs2_ndimage::{
-    quantum_amplitude_amplification, quantum_annealing_segmentation, quantum_entanglement_correlation,
-    quantum_error_correction, quantum_fourier_enhancement, quantum_machine_learning_classifier,
-    quantum_superposition_filter, quantum_tensor_network_processing, quantum_variational_enhancement,
+    quantum_amplitude_amplification, quantum_annealing_segmentation,
+    quantum_entanglement_correlation, quantum_error_correction, quantum_fourier_enhancement,
+    quantum_machine_learning_classifier, quantum_superposition_filter,
+    quantum_tensor_network_processing, quantum_variational_enhancement,
     quantum_walk_edge_detection, QuantumConfig,
 };
 use std::time::Instant;
@@ -33,54 +34,57 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create sample images for demonstration
     let test_images = create_test_images();
-    
+
     // Configure quantum algorithms
     let mut config = QuantumConfig::default();
     config.iterations = 20; // Reduce for demo
     config.coherence_threshold = 0.9;
     config.entanglement_strength = 0.7;
-    
+
     println!("📊 Quantum Configuration:");
     println!("   Iterations: {}", config.iterations);
     println!("   Coherence Threshold: {:.2}", config.coherence_threshold);
-    println!("   Entanglement Strength: {:.2}", config.entanglement_strength);
+    println!(
+        "   Entanglement Strength: {:.2}",
+        config.entanglement_strength
+    );
     println!("   Noise Level: {:.3}", config.noise_level);
     println!();
 
     // Demonstration 1: Quantum Superposition Filtering
     demonstrate_quantum_superposition_filtering(&test_images.original, &config)?;
-    
+
     // Demonstration 2: Quantum Entanglement Correlation
     demonstrate_quantum_entanglement_correlation(&test_images.original, &config)?;
-    
+
     // Demonstration 3: Quantum Walk Edge Detection
     demonstrate_quantum_walk_edge_detection(&test_images.original, &config)?;
-    
+
     // Demonstration 4: Quantum Machine Learning Classification
     demonstrate_quantum_machine_learning(&test_images, &config)?;
-    
+
     // Demonstration 5: Quantum Error Correction
     demonstrate_quantum_error_correction(&test_images.noisy, &config)?;
-    
+
     // Demonstration 6: Quantum Tensor Network Processing
     demonstrate_quantum_tensor_networks(&test_images.original, &config)?;
-    
+
     // Demonstration 7: Quantum Variational Enhancement
     demonstrate_quantum_variational_enhancement(&test_images.blurred, &config)?;
-    
+
     // Demonstration 8: Quantum Fourier Transform
     demonstrate_quantum_fourier_transform(&test_images.original, &config)?;
-    
+
     // Demonstration 9: Quantum Amplitude Amplification
     demonstrate_quantum_amplitude_amplification(&test_images.original, &config)?;
-    
+
     // Demonstration 10: Quantum Annealing Segmentation
     demonstrate_quantum_annealing_segmentation(&test_images.original, &config)?;
-    
+
     println!("✨ Quantum showcase completed successfully!");
     println!("These algorithms demonstrate the power of quantum-inspired computing");
     println!("for solving complex image processing challenges.");
-    
+
     Ok(())
 }
 
@@ -93,11 +97,11 @@ struct TestImages {
 
 fn create_test_images() -> TestImages {
     println!("🎨 Creating test images...");
-    
+
     // Create a synthetic image with various features
     let size = 16;
     let mut original = Array2::zeros((size, size));
-    
+
     // Add geometric patterns
     for y in 0..size {
         for x in 0..size {
@@ -118,36 +122,42 @@ fn create_test_images() -> TestImages {
                 else {
                     0.1 + 0.3 * (x as f64 / size as f64)
                 };
-            
+
             original[(y, x)] = value;
         }
     }
-    
+
     // Create noisy version
     let mut noisy = original.clone();
     for element in noisy.iter_mut() {
         *element += (rand::random::<f64>() - 0.5) * 0.3;
         *element = element.max(0.0).min(1.0);
     }
-    
+
     // Create blurred version (simple box blur)
     let mut blurred = Array2::zeros((size, size));
-    for y in 1..size-1 {
-        for x in 1..size-1 {
-            let sum = original[(y-1, x-1)] + original[(y-1, x)] + original[(y-1, x+1)] +
-                     original[(y, x-1)] + original[(y, x)] + original[(y, x+1)] +
-                     original[(y+1, x-1)] + original[(y+1, x)] + original[(y+1, x+1)];
+    for y in 1..size - 1 {
+        for x in 1..size - 1 {
+            let sum = original[(y - 1, x - 1)]
+                + original[(y - 1, x)]
+                + original[(y - 1, x + 1)]
+                + original[(y, x - 1)]
+                + original[(y, x)]
+                + original[(y, x + 1)]
+                + original[(y + 1, x - 1)]
+                + original[(y + 1, x)]
+                + original[(y + 1, x + 1)];
             blurred[(y, x)] = sum / 9.0;
         }
     }
-    
+
     // Create edge feature template
-    let edge_features = Array2::from_shape_vec((3, 3), vec![
-        -1.0, -1.0, -1.0,
-        -1.0,  8.0, -1.0,
-        -1.0, -1.0, -1.0
-    ]).unwrap();
-    
+    let edge_features = Array2::from_shape_vec(
+        (3, 3),
+        vec![-1.0, -1.0, -1.0, -1.0, 8.0, -1.0, -1.0, -1.0, -1.0],
+    )
+    .unwrap();
+
     println!("   ✓ Original image: {}x{}", size, size);
     println!("   ✓ Noisy image created");
     println!("   ✓ Blurred image created");
@@ -167,41 +177,36 @@ fn demonstrate_quantum_superposition_filtering(
     config: &QuantumConfig,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("🔮 Quantum Superposition Filtering");
-    println!("   Theory: Uses quantum superposition to apply multiple filter states simultaneously");
-    
+    println!(
+        "   Theory: Uses quantum superposition to apply multiple filter states simultaneously"
+    );
+
     let start = Instant::now();
-    
+
     // Create multiple filter states
-    let gaussian_filter = Array2::from_shape_vec((3, 3), vec![
-        1.0, 2.0, 1.0,
-        2.0, 4.0, 2.0,
-        1.0, 2.0, 1.0
-    ]).unwrap() / 16.0;
-    
-    let edge_filter = Array2::from_shape_vec((3, 3), vec![
-        -1.0, -1.0, -1.0,
-         0.0,  0.0,  0.0,
-         1.0,  1.0,  1.0
-    ]).unwrap();
-    
-    let identity_filter = Array2::from_shape_vec((3, 3), vec![
-        0.0, 0.0, 0.0,
-        0.0, 1.0, 0.0,
-        0.0, 0.0, 0.0
-    ]).unwrap();
-    
+    let gaussian_filter =
+        Array2::from_shape_vec((3, 3), vec![1.0, 2.0, 1.0, 2.0, 4.0, 2.0, 1.0, 2.0, 1.0]).unwrap()
+            / 16.0;
+
+    let edge_filter =
+        Array2::from_shape_vec((3, 3), vec![-1.0, -1.0, -1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0])
+            .unwrap();
+
+    let identity_filter =
+        Array2::from_shape_vec((3, 3), vec![0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]).unwrap();
+
     let filter_states = vec![gaussian_filter, edge_filter, identity_filter];
-    
+
     let result = quantum_superposition_filter(image.view(), &filter_states, config)?;
-    
+
     let duration = start.elapsed();
-    
+
     println!("   ✓ Applied {} quantum filter states", filter_states.len());
     println!("   ✓ Result dimensions: {:?}", result.dim());
     println!("   ✓ Processing time: {:.2?}", duration);
     println!("   ✓ Quantum coherence maintained throughout superposition");
     println!();
-    
+
     Ok(())
 }
 
@@ -211,18 +216,18 @@ fn demonstrate_quantum_entanglement_correlation(
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("🌐 Quantum Entanglement Correlation Analysis");
     println!("   Theory: Detects non-local spatial correlations using entanglement principles");
-    
+
     let start = Instant::now();
-    
+
     let correlation_map = quantum_entanglement_correlation(image.view(), config)?;
-    
+
     let duration = start.elapsed();
-    
+
     // Analyze correlations
     let max_correlation = correlation_map.iter().cloned().fold(0.0, f64::max);
     let min_correlation = correlation_map.iter().cloned().fold(0.0, f64::min);
     let mean_correlation = correlation_map.sum() / (correlation_map.len() as f64);
-    
+
     println!("   ✓ Correlation analysis completed");
     println!("   ✓ Max correlation strength: {:.4}", max_correlation);
     println!("   ✓ Min correlation strength: {:.4}", min_correlation);
@@ -230,7 +235,7 @@ fn demonstrate_quantum_entanglement_correlation(
     println!("   ✓ Processing time: {:.2?}", duration);
     println!("   ✓ Detected long-range quantum entangled pixel relationships");
     println!();
-    
+
     Ok(())
 }
 
@@ -240,19 +245,22 @@ fn demonstrate_quantum_walk_edge_detection(
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("🚶 Quantum Walk Edge Detection");
     println!("   Theory: Uses quantum random walks for enhanced edge sensitivity");
-    
+
     let start = Instant::now();
-    
+
     let walk_steps = 15;
     let edge_map = quantum_walk_edge_detection(image.view(), walk_steps, config)?;
-    
+
     let duration = start.elapsed();
-    
+
     // Analyze edge detection results
     let max_edge_strength = edge_map.iter().cloned().fold(0.0, f64::max);
     let mean_edge_strength = edge_map.sum() / (edge_map.len() as f64);
-    let edge_pixels = edge_map.iter().filter(|&&x| x > mean_edge_strength * 1.5).count();
-    
+    let edge_pixels = edge_map
+        .iter()
+        .filter(|&&x| x > mean_edge_strength * 1.5)
+        .count();
+
     println!("   ✓ Quantum walk steps: {}", walk_steps);
     println!("   ✓ Max edge strength: {:.4}", max_edge_strength);
     println!("   ✓ Mean edge strength: {:.4}", mean_edge_strength);
@@ -260,7 +268,7 @@ fn demonstrate_quantum_walk_edge_detection(
     println!("   ✓ Processing time: {:.2?}", duration);
     println!("   ✓ Quantum interference enhanced edge detection");
     println!();
-    
+
     Ok(())
 }
 
@@ -270,9 +278,9 @@ fn demonstrate_quantum_machine_learning(
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("🧠 Quantum Machine Learning Classification");
     println!("   Theory: Uses quantum feature maps and kernels for enhanced classification");
-    
+
     let start = Instant::now();
-    
+
     // Create training dataset
     let training_data = vec![
         test_images.original.clone(),
@@ -280,7 +288,7 @@ fn demonstrate_quantum_machine_learning(
         test_images.blurred.clone(),
     ];
     let labels = vec![0, 1, 2]; // 0=clean, 1=noisy, 2=blurred
-    
+
     // Test classification on original image
     let (predicted_class, confidence) = quantum_machine_learning_classifier(
         test_images.original.view(),
@@ -288,9 +296,9 @@ fn demonstrate_quantum_machine_learning(
         &labels,
         config,
     )?;
-    
+
     let duration = start.elapsed();
-    
+
     println!("   ✓ Training samples: {}", training_data.len());
     println!("   ✓ Classes: {} (clean, noisy, blurred)", labels.len());
     println!("   ✓ Predicted class: {} (expected: 0)", predicted_class);
@@ -298,7 +306,7 @@ fn demonstrate_quantum_machine_learning(
     println!("   ✓ Processing time: {:.2?}", duration);
     println!("   ✓ Quantum feature mapping and kernel computation successful");
     println!();
-    
+
     Ok(())
 }
 
@@ -308,19 +316,24 @@ fn demonstrate_quantum_error_correction(
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("🛡️ Quantum Error Correction");
     println!("   Theory: Applies quantum error correction for enhanced noise resilience");
-    
+
     let start = Instant::now();
-    
+
     let redundancy_factor = 3;
     let corrected_image = quantum_error_correction(noisy_image.view(), redundancy_factor, config)?;
-    
+
     let duration = start.elapsed();
-    
+
     // Calculate noise reduction metrics
-    let original_noise = noisy_image.iter().map(|&x| (x - 0.5).abs()).sum::<f64>() / noisy_image.len() as f64;
-    let corrected_noise = corrected_image.iter().map(|&x| (x - 0.5).abs()).sum::<f64>() / corrected_image.len() as f64;
+    let original_noise =
+        noisy_image.iter().map(|&x| (x - 0.5).abs()).sum::<f64>() / noisy_image.len() as f64;
+    let corrected_noise = corrected_image
+        .iter()
+        .map(|&x| (x - 0.5).abs())
+        .sum::<f64>()
+        / corrected_image.len() as f64;
     let noise_reduction = (original_noise - corrected_noise) / original_noise * 100.0;
-    
+
     println!("   ✓ Redundancy factor: {}", redundancy_factor);
     println!("   ✓ Original noise level: {:.4}", original_noise);
     println!("   ✓ Corrected noise level: {:.4}", corrected_noise);
@@ -328,7 +341,7 @@ fn demonstrate_quantum_error_correction(
     println!("   ✓ Processing time: {:.2?}", duration);
     println!("   ✓ Quantum syndrome detection and correction applied");
     println!();
-    
+
     Ok(())
 }
 
@@ -338,25 +351,28 @@ fn demonstrate_quantum_tensor_networks(
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("🕸️ Quantum Tensor Network Processing");
     println!("   Theory: Uses tensor networks for efficient high-dimensional representation");
-    
+
     let start = Instant::now();
-    
+
     let bond_dimension = 4;
     let processed_image = quantum_tensor_network_processing(image.view(), bond_dimension, config)?;
-    
+
     let duration = start.elapsed();
-    
+
     // Calculate compression and reconstruction metrics
     let original_data_points = image.len();
     let tensor_network_parameters = image.len() * bond_dimension;
     let compression_ratio = original_data_points as f64 / tensor_network_parameters as f64;
-    
+
     // Calculate reconstruction fidelity
-    let mse = image.iter().zip(processed_image.iter())
+    let mse = image
+        .iter()
+        .zip(processed_image.iter())
         .map(|(&a, &b)| (a - b).powi(2))
-        .sum::<f64>() / image.len() as f64;
+        .sum::<f64>()
+        / image.len() as f64;
     let fidelity = 1.0 - mse;
-    
+
     println!("   ✓ Bond dimension: {}", bond_dimension);
     println!("   ✓ Original data points: {}", original_data_points);
     println!("   ✓ Network parameters: {}", tensor_network_parameters);
@@ -364,7 +380,7 @@ fn demonstrate_quantum_tensor_networks(
     println!("   ✓ Processing time: {:.2?}", duration);
     println!("   ✓ Quantum tensor contractions and gate operations applied");
     println!();
-    
+
     Ok(())
 }
 
@@ -374,19 +390,19 @@ fn demonstrate_quantum_variational_enhancement(
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("🔄 Quantum Variational Enhancement");
     println!("   Theory: Uses variational quantum algorithms for adaptive optimization");
-    
+
     let start = Instant::now();
-    
+
     let num_layers = 3;
     let enhanced_image = quantum_variational_enhancement(blurred_image.view(), num_layers, config)?;
-    
+
     let duration = start.elapsed();
-    
+
     // Calculate enhancement metrics
     let original_variance = calculate_image_variance(blurred_image);
     let enhanced_variance = calculate_image_variance(&enhanced_image);
     let sharpness_improvement = (enhanced_variance - original_variance) / original_variance * 100.0;
-    
+
     println!("   ✓ Variational layers: {}", num_layers);
     println!("   ✓ Optimization iterations: {}", config.iterations);
     println!("   ✓ Original variance: {:.6}", original_variance);
@@ -395,7 +411,7 @@ fn demonstrate_quantum_variational_enhancement(
     println!("   ✓ Processing time: {:.2?}", duration);
     println!("   ✓ Quantum circuit parameters optimized via gradient descent");
     println!();
-    
+
     Ok(())
 }
 
@@ -405,19 +421,19 @@ fn demonstrate_quantum_fourier_transform(
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("🌊 Quantum Fourier Transform Enhancement");
     println!("   Theory: Uses quantum FFT principles for enhanced frequency analysis");
-    
+
     let start = Instant::now();
-    
+
     let qft_result = quantum_fourier_enhancement(image.view(), config)?;
-    
+
     let duration = start.elapsed();
-    
+
     // Analyze frequency domain results
     let max_amplitude = qft_result.iter().map(|x| x.norm()).fold(0.0, f64::max);
     let mean_amplitude = qft_result.iter().map(|x| x.norm()).sum::<f64>() / qft_result.len() as f64;
     let phase_coherence = qft_result.iter().map(|x| x.arg()).collect::<Vec<_>>();
     let phase_std = calculate_phase_std(&phase_coherence);
-    
+
     println!("   ✓ Transform dimensions: {:?}", qft_result.dim());
     println!("   ✓ Max frequency amplitude: {:.4}", max_amplitude);
     println!("   ✓ Mean frequency amplitude: {:.4}", mean_amplitude);
@@ -425,7 +441,7 @@ fn demonstrate_quantum_fourier_transform(
     println!("   ✓ Processing time: {:.2?}", duration);
     println!("   ✓ Quantum parallelism exploited for exponential speedup");
     println!();
-    
+
     Ok(())
 }
 
@@ -435,33 +451,34 @@ fn demonstrate_quantum_amplitude_amplification(
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("📡 Quantum Amplitude Amplification");
     println!("   Theory: Uses Grover-type amplification for enhanced feature detection");
-    
+
     let start = Instant::now();
-    
+
     // Create target features to amplify
-    let edge_feature = Array2::from_shape_vec((3, 3), vec![
-        -1.0, -1.0, -1.0,
-        -1.0,  8.0, -1.0,
-        -1.0, -1.0, -1.0
-    ]).unwrap();
-    
-    let corner_feature = Array2::from_shape_vec((3, 3), vec![
-        1.0, 0.0, -1.0,
-        0.0, 0.0,  0.0,
-        -1.0, 0.0, 1.0
-    ]).unwrap();
-    
+    let edge_feature = Array2::from_shape_vec(
+        (3, 3),
+        vec![-1.0, -1.0, -1.0, -1.0, 8.0, -1.0, -1.0, -1.0, -1.0],
+    )
+    .unwrap();
+
+    let corner_feature =
+        Array2::from_shape_vec((3, 3), vec![1.0, 0.0, -1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0])
+            .unwrap();
+
     let target_features = vec![edge_feature, corner_feature];
-    
+
     let amplified_result = quantum_amplitude_amplification(image.view(), &target_features, config)?;
-    
+
     let duration = start.elapsed();
-    
+
     // Calculate amplification metrics
     let max_amplitude = amplified_result.iter().cloned().fold(0.0, f64::max);
     let mean_amplitude = amplified_result.sum() / amplified_result.len() as f64;
-    let amplified_pixels = amplified_result.iter().filter(|&&x| x > mean_amplitude * 2.0).count();
-    
+    let amplified_pixels = amplified_result
+        .iter()
+        .filter(|&&x| x > mean_amplitude * 2.0)
+        .count();
+
     println!("   ✓ Target features: {}", target_features.len());
     println!("   ✓ Max amplitude: {:.4}", max_amplitude);
     println!("   ✓ Mean amplitude: {:.4}", mean_amplitude);
@@ -469,7 +486,7 @@ fn demonstrate_quantum_amplitude_amplification(
     println!("   ✓ Processing time: {:.2?}", duration);
     println!("   ✓ Quantum oracle and diffusion operations applied");
     println!();
-    
+
     Ok(())
 }
 
@@ -479,14 +496,14 @@ fn demonstrate_quantum_annealing_segmentation(
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("🌡️ Quantum Annealing Segmentation");
     println!("   Theory: Uses quantum tunneling to escape local minima in segmentation");
-    
+
     let start = Instant::now();
-    
+
     let num_segments = 3;
     let segmentation = quantum_annealing_segmentation(image.view(), num_segments, config)?;
-    
+
     let duration = start.elapsed();
-    
+
     // Analyze segmentation results
     let mut segment_counts = vec![0; num_segments];
     for &segment in segmentation.iter() {
@@ -494,9 +511,9 @@ fn demonstrate_quantum_annealing_segmentation(
             segment_counts[segment] += 1;
         }
     }
-    
+
     let total_pixels = segmentation.len();
-    
+
     println!("   ✓ Target segments: {}", num_segments);
     println!("   ✓ Annealing iterations: {}", config.iterations);
     println!("   ✓ Segment distribution:");
@@ -507,7 +524,7 @@ fn demonstrate_quantum_annealing_segmentation(
     println!("   ✓ Processing time: {:.2?}", duration);
     println!("   ✓ Quantum tunneling enabled global optimization");
     println!();
-    
+
     Ok(())
 }
 
@@ -515,9 +532,7 @@ fn demonstrate_quantum_annealing_segmentation(
 
 fn calculate_image_variance(image: &Array2<f64>) -> f64 {
     let mean = image.sum() / image.len() as f64;
-    let variance = image.iter()
-        .map(|&x| (x - mean).powi(2))
-        .sum::<f64>() / image.len() as f64;
+    let variance = image.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / image.len() as f64;
     variance
 }
 
@@ -525,10 +540,8 @@ fn calculate_phase_std(phases: &[f64]) -> f64 {
     if phases.is_empty() {
         return 0.0;
     }
-    
+
     let mean = phases.iter().sum::<f64>() / phases.len() as f64;
-    let variance = phases.iter()
-        .map(|&x| (x - mean).powi(2))
-        .sum::<f64>() / phases.len() as f64;
+    let variance = phases.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / phases.len() as f64;
     variance.sqrt()
 }

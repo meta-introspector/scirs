@@ -312,7 +312,7 @@ impl NaturalNeighborInterpolator {
         for &neighbor_idx in &natural_neighbors {
             // Use a geometric approach to estimate the stolen area
             let stolen_area = self.estimate_stolen_area(point, neighbor_idx, &natural_neighbors)?;
-            
+
             if stolen_area > 1e-12 {
                 weights.insert(neighbor_idx, stolen_area);
                 total_weight += stolen_area;
@@ -352,7 +352,7 @@ impl NaturalNeighborInterpolator {
         natural_neighbors: &[usize],
     ) -> SpatialResult<f64> {
         let neighbor_point = self.points.row(neighbor_idx);
-        
+
         // Compute the distance-based weight with distance decay
         let distance = Self::euclidean_distance(query_point, &neighbor_point);
         if distance < 1e-12 {
@@ -361,28 +361,28 @@ impl NaturalNeighborInterpolator {
 
         // Use inverse distance weighting with a natural neighbor adjustment
         let base_weight = 1.0 / distance;
-        
+
         // Adjust weight based on how "natural" this neighbor is
         let mut adjustment = 1.0;
-        
+
         // Consider the angles to other neighbors to determine influence
         let mut angle_sum = 0.0;
         let mut neighbor_count = 0;
-        
+
         for &other_neighbor_idx in natural_neighbors {
             if other_neighbor_idx != neighbor_idx {
                 let other_neighbor_point = self.points.row(other_neighbor_idx);
-                
+
                 // Compute angle between vectors from query to both neighbors
                 let v1_x = neighbor_point[0] - query_point[0];
                 let v1_y = neighbor_point[1] - query_point[1];
                 let v2_x = other_neighbor_point[0] - query_point[0];
                 let v2_y = other_neighbor_point[1] - query_point[1];
-                
+
                 let dot_product = v1_x * v2_x + v1_y * v2_y;
                 let mag1 = (v1_x * v1_x + v1_y * v1_y).sqrt();
                 let mag2 = (v2_x * v2_x + v2_y * v2_y).sqrt();
-                
+
                 if mag1 > 1e-12 && mag2 > 1e-12 {
                     let cos_angle = (dot_product / (mag1 * mag2)).clamp(-1.0, 1.0);
                     let angle = cos_angle.acos();
@@ -391,7 +391,7 @@ impl NaturalNeighborInterpolator {
                 }
             }
         }
-        
+
         // Neighbors with larger angular separation get higher weights
         if neighbor_count > 0 {
             let average_angle = angle_sum / neighbor_count as f64;
@@ -583,7 +583,7 @@ impl NaturalNeighborInterpolator {
 
         // Use a more sophisticated method to find additional natural neighbors
         let circumradius = self.compute_circumradius(simplex).unwrap_or(1.0);
-        
+
         // Calculate a search radius based on local point density
         let search_radius = self.compute_adaptive_search_radius(point, circumradius)?;
 
@@ -618,7 +618,8 @@ impl NaturalNeighborInterpolator {
                 })
                 .collect();
 
-            all_distances.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
+            all_distances
+                .sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
             for (idx, _) in all_distances.into_iter().take(3 - neighbors.len()) {
                 neighbors.push(idx);
@@ -651,7 +652,7 @@ impl NaturalNeighborInterpolator {
 
         // Adapt the search radius based on local density
         let adaptive_radius = (base_radius * 2.0).max(k_nearest_dist * 1.5);
-        
+
         Ok(adaptive_radius)
     }
 

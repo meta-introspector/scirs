@@ -419,7 +419,7 @@ where
             for &pole in &prototype_poles {
                 let temp = (pole * bw / 2.0).powi(2) + w0 * w0;
                 let sqrt_term = temp.sqrt();
-                
+
                 bp_poles.push(pole * bw / 2.0 + sqrt_term);
                 bp_poles.push(pole * bw / 2.0 - sqrt_term);
             }
@@ -441,7 +441,7 @@ where
                 if pole.norm() > 1e-10 {
                     let temp = (bw / (2.0 * pole)).powi(2) + w0 * w0;
                     let sqrt_term = temp.sqrt();
-                    
+
                     bs_poles.push(bw / (2.0 * pole) + sqrt_term);
                     bs_poles.push(bw / (2.0 * pole) - sqrt_term);
                 }

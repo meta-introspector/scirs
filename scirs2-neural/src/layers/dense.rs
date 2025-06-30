@@ -3,10 +3,10 @@
 use crate::activations::Activation;
 use crate::error::{NeuralError, Result};
 use crate::layers::{Layer, ParamLayer};
-use ndarray::{Array, IxDyn, ScalarOperand, s};
+use ndarray::{s, Array, IxDyn, ScalarOperand};
+use ndarray_rand::rand::distributions::{Distribution, Uniform};
 use num_traits::Float;
 use rand::Rng;
-use ndarray_rand::rand::distributions::{Distribution, Uniform};
 use std::fmt::Debug;
 
 // SIMD optimizations using scirs2-core
@@ -284,7 +284,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Dense<F> {
         output_dim: usize,
     ) {
         let input_row = input.slice(s![row_idx, ..]);
-        
+
         for j in 0..output_dim {
             let weight_col = self.weights.slice(s![.., j]);
             // Use standard dot product
@@ -343,26 +343,36 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
 
         // Reshape input if needed
         let input_to_use = if input.ndim() == 1 {
-            input.clone().into_shape_with_order(IxDyn(&[1, self.input_dim]))
-                .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape input: {}", e)))?
+            input
+                .clone()
+                .into_shape_with_order(IxDyn(&[1, self.input_dim]))
+                .map_err(|e| {
+                    NeuralError::InferenceError(format!("Failed to reshape input: {}", e))
+                })?
         } else {
             let batch_size: usize = input.shape().iter().take(input.ndim() - 1).product();
-            input.clone().into_shape_with_order(IxDyn(&[batch_size, self.input_dim]))
-                .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape input: {}", e)))?
+            input
+                .clone()
+                .into_shape_with_order(IxDyn(&[batch_size, self.input_dim]))
+                .map_err(|e| {
+                    NeuralError::InferenceError(format!("Failed to reshape input: {}", e))
+                })?
         };
 
         // Compute linear transformation: output = input @ weights + bias
         let mut output = Array::zeros(IxDyn(&[input_to_use.shape()[0], self.output_dim]));
-        
+
         // Use SIMD-optimized matrix multiplication
         self.simd_matmul_forward(&input_to_use, &mut output)?;
 
         // Add bias
         for mut row in output.axis_iter_mut(ndarray::Axis(0)) {
             let biases_view = self.biases.view();
-            ndarray::Zip::from(&mut row).and(&biases_view).for_each(|out, &bias| {
-                *out = *out + bias;
-            });
+            ndarray::Zip::from(&mut row)
+                .and(&biases_view)
+                .for_each(|out, &bias| {
+                    *out = *out + bias;
+                });
         }
 
         // Cache pre-activation output
@@ -388,7 +398,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
         let pre_activation = {
             let cache = self.output_pre_activation.read().unwrap();
             cache.clone().ok_or_else(|| {
-                NeuralError::InferenceError("No cached pre-activation output for backward pass".to_string())
+                NeuralError::InferenceError(
+                    "No cached pre-activation output for backward pass".to_string(),
+                )
             })?
         };
 
@@ -401,21 +413,41 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
 
         // Compute gradient w.r.t. input
         let reshaped_input = if input.ndim() == 1 {
-            input.clone().into_shape_with_order(IxDyn(&[1, self.input_dim]))
-                .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape input: {}", e)))?
+            input
+                .clone()
+                .into_shape_with_order(IxDyn(&[1, self.input_dim]))
+                .map_err(|e| {
+                    NeuralError::InferenceError(format!("Failed to reshape input: {}", e))
+                })?
         } else {
             let batch_size: usize = input.shape().iter().take(input.ndim() - 1).product();
-            input.clone().into_shape_with_order(IxDyn(&[batch_size, self.input_dim]))
-                .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape input: {}", e)))?
+            input
+                .clone()
+                .into_shape_with_order(IxDyn(&[batch_size, self.input_dim]))
+                .map_err(|e| {
+                    NeuralError::InferenceError(format!("Failed to reshape input: {}", e))
+                })?
         };
 
         let reshaped_grad = if grad_pre_activation.ndim() == 1 {
-            grad_pre_activation.clone().into_shape_with_order(IxDyn(&[1, self.output_dim]))
-                .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape gradient: {}", e)))?
+            grad_pre_activation
+                .clone()
+                .into_shape_with_order(IxDyn(&[1, self.output_dim]))
+                .map_err(|e| {
+                    NeuralError::InferenceError(format!("Failed to reshape gradient: {}", e))
+                })?
         } else {
-            let batch_size: usize = grad_pre_activation.shape().iter().take(grad_pre_activation.ndim() - 1).product();
-            grad_pre_activation.clone().into_shape_with_order(IxDyn(&[batch_size, self.output_dim]))
-                .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape gradient: {}", e)))?
+            let batch_size: usize = grad_pre_activation
+                .shape()
+                .iter()
+                .take(grad_pre_activation.ndim() - 1)
+                .product();
+            grad_pre_activation
+                .clone()
+                .into_shape_with_order(IxDyn(&[batch_size, self.output_dim]))
+                .map_err(|e| {
+                    NeuralError::InferenceError(format!("Failed to reshape gradient: {}", e))
+                })?
         };
 
         // Compute gradients
@@ -435,7 +467,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
         // Use manual matrix multiplication to avoid trait resolution recursion
         let batch_size = reshaped_grad.shape()[0];
         let mut grad_input = Array::zeros(IxDyn(&[batch_size, self.input_dim]));
-        
+
         for b in 0..batch_size {
             for i in 0..self.input_dim {
                 let mut sum = F::zero();
@@ -448,7 +480,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
 
         // Reshape back to original input shape
         let original_shape: Vec<usize> = input.shape().to_vec();
-        grad_input.into_shape_with_order(IxDyn(&original_shape))
+        grad_input
+            .into_shape_with_order(IxDyn(&original_shape))
             .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape gradient: {}", e)))
     }
 
@@ -494,7 +527,6 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
             self.activation_name().unwrap_or("None")
         )
     }
-
 }
 
 impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for Dense<F> {
@@ -507,18 +539,18 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for
         // In a real implementation, this would need to be redesigned
         // For now, we'll provide empty arrays as placeholders
         // A better design would return owned arrays or use a different interface
-        
+
         // This is a limitation of the current trait design
         // We can't return references to data behind RwLocks
         // The trait would need to be redesigned to return owned arrays
         // or use a callback-based approach
-        
+
         // For compatibility, return empty arrays of the right shape
         #[allow(dead_code)]
         static EMPTY_WEIGHTS: std::sync::OnceLock<Array<f64, IxDyn>> = std::sync::OnceLock::new();
         #[allow(dead_code)]
         static EMPTY_BIASES: std::sync::OnceLock<Array<f64, IxDyn>> = std::sync::OnceLock::new();
-        
+
         // This is a workaround - in practice, the trait would need to be redesigned
         vec![]
     }

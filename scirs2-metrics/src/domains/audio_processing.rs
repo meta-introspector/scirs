@@ -757,9 +757,14 @@ impl AudioProcessingMetrics {
             // Convert to appropriate types for roc_auc_score
             let y_true_u32: Vec<u32> = y_true.iter().map(|&x| x as u32).collect();
             let y_true_u32_array = Array1::from(y_true_u32);
-            let scores_f64: Vec<f64> = scores.column(1).iter().map(|&x| x.to_f64().unwrap_or(0.0)).collect();
+            let scores_f64: Vec<f64> = scores
+                .column(1)
+                .iter()
+                .map(|&x| x.to_f64().unwrap_or(0.0))
+                .collect();
             let scores_f64_array = Array1::from(scores_f64);
-            let auc_val = crate::classification::roc_auc_score(&y_true_u32_array, &scores_f64_array)?;
+            let auc_val =
+                crate::classification::roc_auc_score(&y_true_u32_array, &scores_f64_array)?;
             (Some(eer_val), auc_val)
         } else {
             (None, 0.0)
@@ -914,7 +919,11 @@ impl AudioProcessingMetrics {
     }
 
     /// Calculate precision, recall, and F1 score manually
-    fn calculate_precision_recall_f1<T>(&self, y_true: &ArrayView1<T>, y_pred: &ArrayView1<T>) -> Result<(Vec<f64>, Vec<f64>, Vec<f64>)>
+    fn calculate_precision_recall_f1<T>(
+        &self,
+        y_true: &ArrayView1<T>,
+        y_pred: &ArrayView1<T>,
+    ) -> Result<(Vec<f64>, Vec<f64>, Vec<f64>)>
     where
         T: PartialEq + Clone + std::hash::Hash + std::fmt::Debug + Eq,
     {
@@ -924,16 +933,16 @@ impl AudioProcessingMetrics {
             classes.insert(label.clone());
         }
         let classes: Vec<T> = classes.into_iter().collect();
-        
+
         let mut precision = Vec::new();
         let mut recall = Vec::new();
         let mut f1_score = Vec::new();
-        
+
         for class in &classes {
             let mut tp = 0;
             let mut fp = 0;
             let mut fn_count = 0;
-            
+
             for (true_label, pred_label) in y_true.iter().zip(y_pred.iter()) {
                 if pred_label == class && true_label == class {
                     tp += 1;
@@ -943,16 +952,28 @@ impl AudioProcessingMetrics {
                     fn_count += 1;
                 }
             }
-            
-            let prec = if tp + fp > 0 { tp as f64 / (tp + fp) as f64 } else { 0.0 };
-            let rec = if tp + fn_count > 0 { tp as f64 / (tp + fn_count) as f64 } else { 0.0 };
-            let f1 = if prec + rec > 0.0 { 2.0 * prec * rec / (prec + rec) } else { 0.0 };
-            
+
+            let prec = if tp + fp > 0 {
+                tp as f64 / (tp + fp) as f64
+            } else {
+                0.0
+            };
+            let rec = if tp + fn_count > 0 {
+                tp as f64 / (tp + fn_count) as f64
+            } else {
+                0.0
+            };
+            let f1 = if prec + rec > 0.0 {
+                2.0 * prec * rec / (prec + rec)
+            } else {
+                0.0
+            };
+
             precision.push(prec);
             recall.push(rec);
             f1_score.push(f1);
         }
-        
+
         Ok((precision, recall, f1_score))
     }
 

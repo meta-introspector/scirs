@@ -19,8 +19,8 @@ use scirs2_core::{
 };
 use std::collections::{HashMap, VecDeque};
 use std::marker::PhantomData;
-use std::sync::{Arc, Mutex, RwLock, Barrier};
-use std::sync::atomic::{AtomicBool, AtomicUsize, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
+use std::sync::{Arc, Barrier, Mutex, RwLock};
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -170,7 +170,7 @@ impl Default for UltraParallelConfig {
     fn default() -> Self {
         let cpu_cores = num_threads();
         let system_ram = Self::detect_system_ram();
-        
+
         Self {
             hardware: HardwareConfig {
                 cpu_cores,
@@ -238,7 +238,7 @@ impl UltraParallelConfig {
                 }
             }
         }
-        
+
         #[cfg(target_os = "windows")]
         {
             // Would use GetPhysicallyInstalledSystemMemory on Windows
@@ -249,7 +249,7 @@ impl UltraParallelConfig {
                 }
             }
         }
-        
+
         #[cfg(target_os = "macos")]
         {
             // Would use sysctl on macOS
@@ -260,7 +260,7 @@ impl UltraParallelConfig {
                 }
             }
         }
-        
+
         // Fallback: Estimate based on available threads (rough heuristic)
         let num_cores = num_threads().max(1);
         let estimated_ram = if num_cores >= 16 {
@@ -268,11 +268,11 @@ impl UltraParallelConfig {
         } else if num_cores >= 8 {
             16 * 1024 * 1024 * 1024 // 16GB for mid-range systems
         } else if num_cores >= 4 {
-            8 * 1024 * 1024 * 1024  // 8GB for entry-level systems
+            8 * 1024 * 1024 * 1024 // 8GB for entry-level systems
         } else {
-            4 * 1024 * 1024 * 1024  // 4GB for minimal systems
+            4 * 1024 * 1024 * 1024 // 4GB for minimal systems
         };
-        
+
         estimated_ram
     }
 
@@ -282,7 +282,7 @@ impl UltraParallelConfig {
         #[cfg(target_os = "linux")]
         {
             use std::fs;
-            
+
             // Check /sys/devices/system/node/ for NUMA nodes
             if let Ok(entries) = fs::read_dir("/sys/devices/system/node") {
                 let mut numa_count = 0;
@@ -290,7 +290,9 @@ impl UltraParallelConfig {
                     if let Ok(entry) = entry {
                         let name = entry.file_name();
                         if let Some(name_str) = name.to_str() {
-                            if name_str.starts_with("node") && name_str[4..].parse::<usize>().is_ok() {
+                            if name_str.starts_with("node")
+                                && name_str[4..].parse::<usize>().is_ok()
+                            {
                                 numa_count += 1;
                             }
                         }
@@ -300,7 +302,7 @@ impl UltraParallelConfig {
                     return numa_count;
                 }
             }
-            
+
             // Fallback: check lscpu output if available
             if let Ok(output) = std::process::Command::new("lscpu").output() {
                 if let Ok(output_str) = String::from_utf8(output.stdout) {
@@ -316,7 +318,7 @@ impl UltraParallelConfig {
                 }
             }
         }
-        
+
         // Heuristic: Systems with many cores likely have multiple NUMA nodes
         let num_cores = num_threads();
         if num_cores >= 32 {
@@ -334,18 +336,18 @@ impl UltraParallelConfig {
         #[cfg(target_os = "linux")]
         {
             use std::fs;
-            
+
             let mut l1_data = 32 * 1024;
             let mut l1_instruction = 32 * 1024;
             let mut l2_unified = 256 * 1024;
             let mut l3_shared = 8 * 1024 * 1024;
-            
+
             // Try to read cache information from /sys/devices/system/cpu/cpu0/cache/
             if let Ok(entries) = fs::read_dir("/sys/devices/system/cpu/cpu0/cache") {
                 for entry in entries {
                     if let Ok(entry) = entry {
                         let cache_path = entry.path();
-                        
+
                         // Read cache level
                         if let Ok(level_str) = fs::read_to_string(cache_path.join("level")) {
                             if let Ok(level) = level_str.trim().parse::<u32>() {
@@ -353,21 +355,26 @@ impl UltraParallelConfig {
                                 if let Ok(size_str) = fs::read_to_string(cache_path.join("size")) {
                                     let size_str = size_str.trim();
                                     let size = if size_str.ends_with('K') {
-                                        size_str[..size_str.len()-1].parse::<usize>().unwrap_or(0) * 1024
+                                        size_str[..size_str.len() - 1].parse::<usize>().unwrap_or(0)
+                                            * 1024
                                     } else if size_str.ends_with('M') {
-                                        size_str[..size_str.len()-1].parse::<usize>().unwrap_or(0) * 1024 * 1024
+                                        size_str[..size_str.len() - 1].parse::<usize>().unwrap_or(0)
+                                            * 1024
+                                            * 1024
                                     } else {
                                         size_str.parse::<usize>().unwrap_or(0)
                                     };
-                                    
+
                                     // Read cache type
-                                    if let Ok(type_str) = fs::read_to_string(cache_path.join("type")) {
+                                    if let Ok(type_str) =
+                                        fs::read_to_string(cache_path.join("type"))
+                                    {
                                         match (level, type_str.trim()) {
                                             (1, "Data") => l1_data = size,
                                             (1, "Instruction") => l1_instruction = size,
                                             (2, "Unified") => l2_unified = size,
                                             (3, "Unified") => l3_shared = size,
-                                            _ => {},
+                                            _ => {}
                                         }
                                     }
                                 }
@@ -376,7 +383,7 @@ impl UltraParallelConfig {
                     }
                 }
             }
-            
+
             return CacheSizes {
                 l1_data,
                 l1_instruction,
@@ -384,33 +391,33 @@ impl UltraParallelConfig {
                 l3_shared,
             };
         }
-        
+
         // Fallback: Use reasonable defaults based on CPU generation heuristics
         let num_cores = num_threads();
-        
+
         // Modern CPUs typically have larger caches
         if num_cores >= 16 {
             // High-end server/workstation CPU
             CacheSizes {
-                l1_data: 48 * 1024,      // 48KB
-                l1_instruction: 32 * 1024, // 32KB
-                l2_unified: 512 * 1024,   // 512KB
+                l1_data: 48 * 1024,          // 48KB
+                l1_instruction: 32 * 1024,   // 32KB
+                l2_unified: 512 * 1024,      // 512KB
                 l3_shared: 32 * 1024 * 1024, // 32MB
             }
         } else if num_cores >= 8 {
             // Mid-range desktop CPU
             CacheSizes {
-                l1_data: 32 * 1024,      // 32KB
-                l1_instruction: 32 * 1024, // 32KB
-                l2_unified: 256 * 1024,   // 256KB
+                l1_data: 32 * 1024,          // 32KB
+                l1_instruction: 32 * 1024,   // 32KB
+                l2_unified: 256 * 1024,      // 256KB
                 l3_shared: 16 * 1024 * 1024, // 16MB
             }
         } else {
             // Entry-level CPU
             CacheSizes {
-                l1_data: 32 * 1024,      // 32KB
-                l1_instruction: 32 * 1024, // 32KB
-                l2_unified: 256 * 1024,   // 256KB
+                l1_data: 32 * 1024,         // 32KB
+                l1_instruction: 32 * 1024,  // 32KB
+                l2_unified: 256 * 1024,     // 256KB
                 l3_shared: 6 * 1024 * 1024, // 6MB
             }
         }
@@ -421,17 +428,17 @@ impl UltraParallelConfig {
         // Run a simple memory bandwidth benchmark
         let test_size = 64 * 1024 * 1024; // 64MB test array
         let iterations = 10;
-        
+
         let mut total_bandwidth = 0.0;
         let mut successful_tests = 0;
-        
+
         for _ in 0..iterations {
             if let Some(bandwidth) = Self::measure_memory_bandwidth(test_size) {
                 total_bandwidth += bandwidth;
                 successful_tests += 1;
             }
         }
-        
+
         if successful_tests > 0 {
             let avg_bandwidth = total_bandwidth / successful_tests as f64;
             // Cap at reasonable maximum (modern DDR4/DDR5 peak theoretical)
@@ -442,38 +449,38 @@ impl UltraParallelConfig {
             if num_cores >= 16 {
                 100.0 // High-end system with fast memory
             } else if num_cores >= 8 {
-                50.0  // Mid-range system
+                50.0 // Mid-range system
             } else {
-                25.6  // Entry-level system
+                25.6 // Entry-level system
             }
         }
     }
-    
+
     /// Measure memory bandwidth using sequential read/write operations
     fn measure_memory_bandwidth(size: usize) -> Option<f64> {
         use std::time::Instant;
-        
+
         // Allocate test arrays
         let mut source = vec![1.0f64; size / 8]; // size in bytes / 8 bytes per f64
         let mut dest = vec![0.0f64; size / 8];
-        
+
         // Warm up the memory
         for i in 0..source.len().min(1000) {
             dest[i] = source[i];
         }
-        
+
         // Measure bandwidth with multiple copy operations
         let start = Instant::now();
-        
+
         // Perform memory copy operations
         for _ in 0..4 {
             dest.copy_from_slice(&source);
             // Prevent compiler optimization
             std::hint::black_box(&dest);
         }
-        
+
         let duration = start.elapsed();
-        
+
         if duration.as_nanos() > 0 {
             let bytes_transferred = (size * 4 * 2) as f64; // 4 iterations, read + write
             let seconds = duration.as_secs_f64();
@@ -621,7 +628,7 @@ where
     pub fn with_config(config: UltraParallelConfig) -> Self {
         let performance_monitor = Arc::new(PerformanceMonitor::new());
         let memory_manager = Arc::new(MemoryManager::new(&config.memory));
-        
+
         let thread_pool = if config.hardware.cpu_cores > 1 {
             Some(ThreadPool::new(&config))
         } else {
@@ -656,7 +663,7 @@ where
     {
         // Analyze workload and select optimal strategy
         let strategy = self.select_optimal_strategy(data)?;
-        
+
         match strategy {
             ParallelStrategy::CpuOptimal => self.process_cpu_optimal(data, operation),
             ParallelStrategy::CpuSimd => self.process_cpu_simd(data, operation),
@@ -671,7 +678,7 @@ where
     fn select_optimal_strategy(&self, data: &ArrayView2<F>) -> StatsResult<ParallelStrategy> {
         let data_size = data.len() * std::mem::size_of::<F>();
         let (rows, cols) = data.dim();
-        
+
         // Simple heuristics for strategy selection
         if data_size > self.config.memory.system_ram {
             // Data larger than RAM - use out-of-core processing
@@ -697,14 +704,14 @@ where
         let (rows, cols) = data.dim();
         let num_threads = self.config.hardware.cpu_cores;
         let chunk_size = (rows + num_threads - 1) / num_threads;
-        
+
         // Process in parallel chunks
         let results: Vec<_> = (0..num_threads)
             .into_par_iter()
             .map(|thread_id| {
                 let start_row = thread_id * chunk_size;
                 let end_row = ((thread_id + 1) * chunk_size).min(rows);
-                
+
                 if start_row < rows {
                     let chunk = data.slice(ndarray::s![start_row..end_row, ..]);
                     operation(&chunk)
@@ -715,11 +722,12 @@ where
             })
             .filter_map(|result| result.ok())
             .collect();
-        
+
         // For simplicity, return first successful result
         // In practice, would combine results appropriately
-        results.into_iter().next()
-            .ok_or_else(|| StatsError::ComputationError("No successful parallel results".to_string()))
+        results.into_iter().next().ok_or_else(|| {
+            StatsError::ComputationError("No successful parallel results".to_string())
+        })
     }
 
     /// CPU+SIMD processing with vectorization
@@ -729,8 +737,9 @@ where
         R: Send + Sync + 'static,
     {
         // Use SIMD-optimized operations from ultra_simd_comprehensive
-        let simd_processor = crate::ultra_simd_comprehensive::UltraComprehensiveSimdProcessor::<F>::new();
-        
+        let simd_processor =
+            crate::ultra_simd_comprehensive::UltraComprehensiveSimdProcessor::<F>::new();
+
         // For now, delegate to standard processing
         // In practice, would use SIMD-optimized variants
         operation(data)
@@ -781,10 +790,11 @@ where
         let start_time = Instant::now();
         let result = self.process_cpu_optimal(data, operation)?;
         let duration = start_time.elapsed();
-        
+
         // Update performance metrics
-        self.performance_monitor.update_metrics(duration, data.len());
-        
+        self.performance_monitor
+            .update_metrics(duration, data.len());
+
         Ok(result)
     }
 
@@ -817,7 +827,7 @@ impl PerformanceMonitor {
         if let Ok(mut metrics) = self.metrics.write() {
             metrics.completed_tasks += 1;
             metrics.average_task_time = execution_time;
-            
+
             // Calculate throughput
             let ops_per_sec = if execution_time.as_secs_f64() > 0.0 {
                 data_size as f64 / execution_time.as_secs_f64()
@@ -866,11 +876,18 @@ impl ThreadPool {
         let work_queue = Arc::new(Mutex::new(VecDeque::new()));
         let shutdown = Arc::new(AtomicBool::new(false));
         let active_workers = Arc::new(AtomicUsize::new(0));
-        
+
         let workers = (0..num_workers)
-            .map(|id| Worker::new(id, work_queue.clone(), shutdown.clone(), active_workers.clone()))
+            .map(|id| {
+                Worker::new(
+                    id,
+                    work_queue.clone(),
+                    shutdown.clone(),
+                    active_workers.clone(),
+                )
+            })
             .collect();
-        
+
         Self {
             workers,
             work_queue,
@@ -901,7 +918,7 @@ impl GpuContext {
         if !config.enable_gpu {
             return Err("GPU not enabled".to_string());
         }
-        
+
         // Simplified - would initialize CUDA/OpenCL context
         Ok(Self {
             device_id: config.preferred_device.unwrap_or(0),
@@ -933,7 +950,9 @@ where
     UltraParallelProcessor::new()
 }
 
-pub fn create_optimized_parallel_processor<F>(config: UltraParallelConfig) -> UltraParallelProcessor<F>
+pub fn create_optimized_parallel_processor<F>(
+    config: UltraParallelConfig,
+) -> UltraParallelProcessor<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static,
 {
@@ -988,8 +1007,10 @@ mod tests {
     fn test_strategy_selection() {
         let processor = UltraParallelProcessor::<f64>::new();
         let small_data = Array2::<f64>::zeros((10, 10));
-        let strategy = processor.select_optimal_strategy(&small_data.view()).unwrap();
-        
+        let strategy = processor
+            .select_optimal_strategy(&small_data.view())
+            .unwrap();
+
         // Should select CPU optimal for small data
         assert!(matches!(strategy, ParallelStrategy::CpuOptimal));
     }
@@ -1009,7 +1030,6 @@ mod tests {
     }
 }
 
-
 impl MemoryManager {
     fn new(config: &MemoryConfig) -> Self {
         Self {
@@ -1024,8 +1044,8 @@ impl MemoryManager {
         MemoryUsageStats {
             current_allocated: self.allocated_memory.load(Ordering::Acquire),
             peak_allocated: self.peak_memory.load(Ordering::Acquire),
-            total_allocations: 0, // Would track actual allocations
-            total_deallocations: 0, // Would track actual deallocations
+            total_allocations: 0,     // Would track actual allocations
+            total_deallocations: 0,   // Would track actual deallocations
             fragmentation_ratio: 0.0, // Would calculate actual fragmentation
         }
     }
@@ -1037,11 +1057,11 @@ impl ThreadPool {
         let work_queue = Arc::new(Mutex::new(VecDeque::new()));
         let shutdown = Arc::new(AtomicBool::new(false));
         let active_workers = Arc::new(AtomicUsize::new(0));
-        
+
         let workers = (0..num_workers)
             .map(|id| Worker::new(id, work_queue.clone(), shutdown.clone()))
             .collect();
-        
+
         Self {
             workers,
             work_queue,
@@ -1052,11 +1072,7 @@ impl ThreadPool {
 }
 
 impl Worker {
-    fn new(
-        id: usize,
-        work_queue: Arc<Mutex<VecDeque<Task>>>,
-        shutdown: Arc<AtomicBool>,
-    ) -> Self {
+    fn new(id: usize, work_queue: Arc<Mutex<VecDeque<Task>>>, shutdown: Arc<AtomicBool>) -> Self {
         Self {
             id,
             thread: None, // Would spawn actual worker thread
@@ -1077,5 +1093,3 @@ impl GpuContext {
         })
     }
 }
-
-

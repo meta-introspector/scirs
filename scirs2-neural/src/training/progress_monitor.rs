@@ -126,7 +126,7 @@ impl TrainingProgressMonitor {
     /// Create a new training progress monitor
     pub fn new(total_epochs: usize, config: ProgressMonitorConfig) -> Self {
         let mut early_stopping = EarlyStoppingState::default();
-        
+
         // Initialize best value based on whether we're maximizing or minimizing
         early_stopping.best_value = if config.maximize_metric {
             f32::NEG_INFINITY
@@ -157,7 +157,7 @@ impl TrainingProgressMonitor {
     /// Record metrics for the current epoch
     pub fn record_epoch_metrics(&mut self, metrics: HashMap<String, f32>, epoch_time: Duration) {
         self.epoch_times.push_back(epoch_time);
-        
+
         // Limit history size
         if self.epoch_times.len() > self.config.max_history_length {
             self.epoch_times.pop_front();
@@ -165,12 +165,13 @@ impl TrainingProgressMonitor {
 
         // Record each metric
         for (name, value) in metrics {
-            let history = self.metrics_history
+            let history = self
+                .metrics_history
                 .entry(name.clone())
                 .or_insert_with(VecDeque::new);
-            
+
             history.push_back(value);
-            
+
             // Limit history size
             if history.len() > self.config.max_history_length {
                 history.pop_front();
@@ -193,18 +194,19 @@ impl TrainingProgressMonitor {
         // Record validation metrics
         let mut all_metrics = result.metrics.clone();
         all_metrics.insert("val_loss".to_string(), result.loss);
-        
+
         if let Some(accuracy) = result.accuracy {
             all_metrics.insert("val_accuracy".to_string(), accuracy);
         }
 
         for (name, value) in all_metrics {
-            let history = self.validation_history
+            let history = self
+                .validation_history
                 .entry(name.clone())
                 .or_insert_with(VecDeque::new);
-            
+
             history.push_back(value);
-            
+
             // Limit history size
             if history.len() > self.config.max_history_length {
                 history.pop_front();
@@ -216,13 +218,18 @@ impl TrainingProgressMonitor {
 
         // Check early stopping
         let should_stop = self.check_early_stopping(&result)?;
-        
+
         if should_stop {
-            println!("⏹️  Early stopping triggered at epoch {}", self.current_epoch);
-            println!("   Best {} achieved at epoch {}: {:.6}", 
-                    self.config.early_stopping_metric,
-                    self.early_stopping.best_epoch,
-                    self.early_stopping.best_value);
+            println!(
+                "⏹️  Early stopping triggered at epoch {}",
+                self.current_epoch
+            );
+            println!(
+                "   Best {} achieved at epoch {}: {:.6}",
+                self.config.early_stopping_metric,
+                self.early_stopping.best_epoch,
+                self.early_stopping.best_value
+            );
         }
 
         Ok(should_stop)
@@ -230,13 +237,15 @@ impl TrainingProgressMonitor {
 
     /// Update best metric tracking
     fn update_best_metric(&mut self, name: &str, value: f32) {
-        let current_best = self.best_metrics.get(name).copied().unwrap_or(
-            if self.is_metric_maximized(name) {
-                f32::NEG_INFINITY
-            } else {
-                f32::INFINITY
-            }
-        );
+        let current_best =
+            self.best_metrics
+                .get(name)
+                .copied()
+                .unwrap_or(if self.is_metric_maximized(name) {
+                    f32::NEG_INFINITY
+                } else {
+                    f32::INFINITY
+                });
 
         let is_better = if self.is_metric_maximized(name) {
             value > current_best
@@ -251,11 +260,11 @@ impl TrainingProgressMonitor {
 
     /// Check if a metric should be maximized (e.g., accuracy) or minimized (e.g., loss)
     fn is_metric_maximized(&self, metric_name: &str) -> bool {
-        metric_name.contains("accuracy") || 
-        metric_name.contains("precision") || 
-        metric_name.contains("recall") || 
-        metric_name.contains("f1") ||
-        metric_name.contains("auc")
+        metric_name.contains("accuracy")
+            || metric_name.contains("precision")
+            || metric_name.contains("recall")
+            || metric_name.contains("f1")
+            || metric_name.contains("auc")
     }
 
     /// Check early stopping conditions
@@ -264,12 +273,16 @@ impl TrainingProgressMonitor {
         let metric_value = if self.config.early_stopping_metric == "val_loss" {
             result.loss
         } else {
-            result.metrics.get(&self.config.early_stopping_metric)
+            result
+                .metrics
+                .get(&self.config.early_stopping_metric)
                 .copied()
-                .ok_or_else(|| NeuralError::InvalidArgument(
-                    format!("Early stopping metric '{}' not found in validation results", 
-                           self.config.early_stopping_metric)
-                ))?
+                .ok_or_else(|| {
+                    NeuralError::InvalidArgument(format!(
+                        "Early stopping metric '{}' not found in validation results",
+                        self.config.early_stopping_metric
+                    ))
+                })?
         };
 
         let is_improvement = if self.config.maximize_metric {
@@ -295,10 +308,11 @@ impl TrainingProgressMonitor {
 
     /// Print current training progress
     pub fn print_progress(&self) {
-        let elapsed = self.training_start_time
+        let elapsed = self
+            .training_start_time
             .map(|start| start.elapsed())
             .unwrap_or_default();
-        
+
         let avg_epoch_time = if !self.epoch_times.is_empty() {
             self.epoch_times.iter().sum::<Duration>() / self.epoch_times.len() as u32
         } else {
@@ -307,8 +321,10 @@ impl TrainingProgressMonitor {
 
         let eta = avg_epoch_time * (self.total_epochs - self.current_epoch) as u32;
 
-        println!("📊 Epoch {}/{} | Elapsed: {:?} | ETA: {:?}", 
-                self.current_epoch, self.total_epochs, elapsed, eta);
+        println!(
+            "📊 Epoch {}/{} | Elapsed: {:?} | ETA: {:?}",
+            self.current_epoch, self.total_epochs, elapsed, eta
+        );
 
         // Print recent metrics
         if let Some(recent_loss) = self.get_recent_metric("loss") {
@@ -330,7 +346,8 @@ impl TrainingProgressMonitor {
         println!();
 
         // Print best metrics achieved so far
-        if !self.best_metrics.is_empty() && self.current_epoch % (self.config.print_every * 5) == 0 {
+        if !self.best_metrics.is_empty() && self.current_epoch % (self.config.print_every * 5) == 0
+        {
             println!("🏆 Best metrics so far:");
             for (name, value) in &self.best_metrics {
                 println!("   {}: {:.6}", name, value);
@@ -340,24 +357,28 @@ impl TrainingProgressMonitor {
 
     /// Get the most recent value for a metric
     fn get_recent_metric(&self, name: &str) -> Option<f32> {
-        self.metrics_history.get(name)
+        self.metrics_history
+            .get(name)
             .and_then(|history| history.back().copied())
             .or_else(|| {
-                self.validation_history.get(name)
+                self.validation_history
+                    .get(name)
                     .and_then(|history| history.back().copied())
             })
     }
 
     /// Get metric history
     pub fn get_metric_history(&self, name: &str) -> Option<Vec<f32>> {
-        self.metrics_history.get(name)
+        self.metrics_history
+            .get(name)
             .or_else(|| self.validation_history.get(name))
             .map(|history| history.iter().copied().collect())
     }
 
     /// Get training summary
     pub fn get_training_summary(&self) -> TrainingSummary {
-        let total_time = self.training_start_time
+        let total_time = self
+            .training_start_time
             .map(|start| start.elapsed())
             .unwrap_or_default();
 
@@ -455,7 +476,7 @@ impl TrainingSummary {
         println!("Total epochs: {}", self.total_epochs);
         println!("Total time: {:?}", self.total_time);
         println!("Average epoch time: {:?}", self.avg_epoch_time);
-        
+
         if self.early_stopped {
             println!("Early stopped: Yes (best at epoch {})", self.best_epoch);
         } else {
@@ -483,7 +504,7 @@ mod tests {
     fn test_progress_monitor_creation() {
         let config = ProgressMonitorConfig::default();
         let monitor = TrainingProgressMonitor::new(100, config);
-        
+
         assert_eq!(monitor.total_epochs, 100);
         assert_eq!(monitor.current_epoch, 0);
     }
@@ -492,13 +513,13 @@ mod tests {
     fn test_metric_recording() {
         let config = ProgressMonitorConfig::default();
         let mut monitor = TrainingProgressMonitor::new(10, config);
-        
+
         let mut metrics = HashMap::new();
         metrics.insert("loss".to_string(), 0.5);
         metrics.insert("accuracy".to_string(), 0.85);
-        
+
         monitor.record_epoch_metrics(metrics, Duration::from_secs(30));
-        
+
         assert_eq!(monitor.current_epoch, 1);
         assert_eq!(monitor.get_recent_metric("loss"), Some(0.5));
         assert_eq!(monitor.get_recent_metric("accuracy"), Some(0.85));
@@ -509,9 +530,9 @@ mod tests {
         let mut config = ProgressMonitorConfig::default();
         config.early_stopping_patience = 2;
         config.min_improvement_threshold = 0.01;
-        
+
         let mut monitor = TrainingProgressMonitor::new(10, config);
-        
+
         // First validation - baseline
         let result1 = ValidationResult {
             loss: 1.0,
@@ -519,10 +540,10 @@ mod tests {
             metrics: HashMap::new(),
             validation_time: Duration::from_secs(5),
         };
-        
+
         let should_stop = monitor.record_validation_metrics(result1).unwrap();
         assert!(!should_stop);
-        
+
         // Second validation - no improvement
         let result2 = ValidationResult {
             loss: 1.1,
@@ -530,10 +551,10 @@ mod tests {
             metrics: HashMap::new(),
             validation_time: Duration::from_secs(5),
         };
-        
+
         let should_stop = monitor.record_validation_metrics(result2).unwrap();
         assert!(!should_stop);
-        
+
         // Third validation - still no improvement, should trigger early stopping
         let result3 = ValidationResult {
             loss: 1.2,
@@ -541,7 +562,7 @@ mod tests {
             metrics: HashMap::new(),
             validation_time: Duration::from_secs(5),
         };
-        
+
         let should_stop = monitor.record_validation_metrics(result3).unwrap();
         assert!(should_stop);
     }
@@ -550,18 +571,18 @@ mod tests {
     fn test_best_metrics_tracking() {
         let config = ProgressMonitorConfig::default();
         let mut monitor = TrainingProgressMonitor::new(10, config);
-        
+
         // Record some metrics
         let mut metrics1 = HashMap::new();
         metrics1.insert("loss".to_string(), 0.8);
         metrics1.insert("accuracy".to_string(), 0.6);
         monitor.record_epoch_metrics(metrics1, Duration::from_secs(30));
-        
+
         let mut metrics2 = HashMap::new();
-        metrics2.insert("loss".to_string(), 0.5);  // Better (lower)
-        metrics2.insert("accuracy".to_string(), 0.85);  // Better (higher)
+        metrics2.insert("loss".to_string(), 0.5); // Better (lower)
+        metrics2.insert("accuracy".to_string(), 0.85); // Better (higher)
         monitor.record_epoch_metrics(metrics2, Duration::from_secs(30));
-        
+
         let summary = monitor.get_training_summary();
         assert_eq!(summary.best_metrics.get("loss"), Some(&0.5));
         assert_eq!(summary.best_metrics.get("accuracy"), Some(&0.85));

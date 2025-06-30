@@ -27,30 +27,38 @@ impl MemorySafetyValidator {
     fn validate_allocation_params(ptr: *mut u8, size: usize) -> Result<(), GpuOptimizerError> {
         // Check for null pointer
         if ptr.is_null() {
-            return Err(GpuOptimizerError::InvalidState("Null pointer provided".to_string()));
+            return Err(GpuOptimizerError::InvalidState(
+                "Null pointer provided".to_string(),
+            ));
         }
 
         // Check for zero or extremely large size
         if size == 0 {
-            return Err(GpuOptimizerError::InvalidState("Zero-sized allocation".to_string()));
+            return Err(GpuOptimizerError::InvalidState(
+                "Zero-sized allocation".to_string(),
+            ));
         }
 
         if size > MAX_SAFE_ALLOCATION_SIZE {
-            return Err(GpuOptimizerError::InvalidState(
-                format!("Allocation size {} exceeds maximum safe size {}", size, MAX_SAFE_ALLOCATION_SIZE)
-            ));
+            return Err(GpuOptimizerError::InvalidState(format!(
+                "Allocation size {} exceeds maximum safe size {}",
+                size, MAX_SAFE_ALLOCATION_SIZE
+            )));
         }
 
         // Check memory alignment
         if (ptr as usize) % GPU_MEMORY_ALIGNMENT != 0 {
-            return Err(GpuOptimizerError::InvalidState(
-                format!("Pointer {:p} is not aligned to {} bytes", ptr, GPU_MEMORY_ALIGNMENT)
-            ));
+            return Err(GpuOptimizerError::InvalidState(format!(
+                "Pointer {:p} is not aligned to {} bytes",
+                ptr, GPU_MEMORY_ALIGNMENT
+            )));
         }
 
         // Check for potential integer overflow in size calculations
         if let None = ptr as usize + size {
-            return Err(GpuOptimizerError::InvalidState("Size calculation overflow".to_string()));
+            return Err(GpuOptimizerError::InvalidState(
+                "Size calculation overflow".to_string(),
+            ));
         }
 
         Ok(())
@@ -59,13 +67,13 @@ impl MemorySafetyValidator {
     /// Generate a memory canary value for overflow detection
     fn generate_canary() -> u64 {
         use std::time::{SystemTime, UNIX_EPOCH};
-        
+
         // Use current time and a magic number for canary
         let time_part = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()
             .as_nanos() as u64;
-        
+
         // XOR with magic number to make it less predictable
         time_part ^ 0xDEADBEEFCAFEBABE
     }
@@ -75,7 +83,9 @@ impl MemorySafetyValidator {
         // In a real implementation, this would check memory protection
         // For now, we'll do basic validation
         if ptr.is_null() {
-            return Err(GpuOptimizerError::InvalidState("Null pointer during canary validation".to_string()));
+            return Err(GpuOptimizerError::InvalidState(
+                "Null pointer during canary validation".to_string(),
+            ));
         }
 
         // TODO: In full implementation, read canary from memory and compare
@@ -86,14 +96,17 @@ impl MemorySafetyValidator {
     /// Safely calculate pointer offset with bounds checking
     fn safe_ptr_add(ptr: *mut u8, offset: usize) -> Result<*mut u8, GpuOptimizerError> {
         let ptr_addr = ptr as usize;
-        
+
         // Check for overflow
-        let new_addr = ptr_addr.checked_add(offset)
-            .ok_or_else(|| GpuOptimizerError::InvalidState("Pointer arithmetic overflow".to_string()))?;
+        let new_addr = ptr_addr.checked_add(offset).ok_or_else(|| {
+            GpuOptimizerError::InvalidState("Pointer arithmetic overflow".to_string())
+        })?;
 
         // Ensure the result is still a valid pointer
         if new_addr > usize::MAX - 4096 {
-            return Err(GpuOptimizerError::InvalidState("Pointer address too large".to_string()));
+            return Err(GpuOptimizerError::InvalidState(
+                "Pointer address too large".to_string(),
+            ));
         }
 
         Ok(new_addr as *mut u8)
@@ -155,13 +168,14 @@ impl MemoryBlock {
     fn new(ptr: *mut u8, size: usize) -> Result<Self, GpuOptimizerError> {
         // Validate input parameters
         MemorySafetyValidator::validate_allocation_params(ptr, size)?;
-        
-        let non_null_ptr = NonNull::new(ptr)
-            .ok_or_else(|| GpuOptimizerError::InvalidState("Null pointer in memory block".to_string()))?;
+
+        let non_null_ptr = NonNull::new(ptr).ok_or_else(|| {
+            GpuOptimizerError::InvalidState("Null pointer in memory block".to_string())
+        })?;
 
         // Generate memory canary for overflow detection
         let memory_canary = MemorySafetyValidator::generate_canary();
-        
+
         let now = std::time::Instant::now();
         Ok(Self {
             ptr: non_null_ptr,
@@ -787,10 +801,10 @@ impl CudaMemoryPool {
             if !current_block.in_use && !next_block.in_use {
                 // Safely calculate the end of current block using checked arithmetic
                 let current_end = MemorySafetyValidator::safe_ptr_add(
-                    current_block.as_ptr(), 
-                    current_block.size
+                    current_block.as_ptr(),
+                    current_block.size,
                 )?;
-                
+
                 if current_end == next_block.as_ptr() {
                     // Adjacent blocks can be coalesced
                     let new_size = current_block.size + next_block.size;

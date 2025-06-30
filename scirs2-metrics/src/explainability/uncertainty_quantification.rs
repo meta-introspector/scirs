@@ -1579,19 +1579,27 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
             // Estimate coverage based on prediction set characteristics and calibration data
             // Use heuristic: coverage is higher for larger sets and lower difficulty cases
             let base_coverage_prob = F::from(0.85).unwrap(); // Base coverage probability
-            let difficulty_factor = F::one() - (ps.local_difficulty - median_difficulty).abs() / 
-                                               (difficulties.iter().map(|&d| d).fold(F::zero(), |acc, d| acc.max(d)) + F::from(1e-8).unwrap());
+            let difficulty_factor = F::one()
+                - (ps.local_difficulty - median_difficulty).abs()
+                    / (difficulties
+                        .iter()
+                        .map(|&d| d)
+                        .fold(F::zero(), |acc, d| acc.max(d))
+                        + F::from(1e-8).unwrap());
             let size_factor = ps.size / F::from(10.0).unwrap(); // Normalize by expected set size
-            
+
             let coverage_prob = base_coverage_prob * difficulty_factor * size_factor.min(F::one());
-            
+
             // Use calibration data as a proxy for expected coverage
             let cal_coverage_estimate = if i < cal_predictions.len() && i < y_calibration.len() {
                 let prediction_error = (cal_predictions[i] - y_calibration[i]).abs();
-                let mean_error = cal_predictions.iter().zip(y_calibration.iter())
+                let mean_error = cal_predictions
+                    .iter()
+                    .zip(y_calibration.iter())
                     .map(|(&p, &y)| (p - y).abs())
-                    .sum::<F>() / F::from(cal_predictions.len()).unwrap();
-                
+                    .sum::<F>()
+                    / F::from(cal_predictions.len()).unwrap();
+
                 if prediction_error <= mean_error {
                     F::from(0.9).unwrap()
                 } else {
@@ -1600,9 +1608,10 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
             } else {
                 coverage_prob
             };
-            
+
             // Combine heuristics for final coverage estimate
-            let estimated_coverage = (coverage_prob + cal_coverage_estimate) / F::from(2.0).unwrap();
+            let estimated_coverage =
+                (coverage_prob + cal_coverage_estimate) / F::from(2.0).unwrap();
             let is_covered = estimated_coverage > F::from(0.8).unwrap(); // Threshold for "covered"
 
             if ps.local_difficulty <= median_difficulty {

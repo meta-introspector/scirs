@@ -3426,7 +3426,7 @@ impl<F: Float + Debug + Clone + std::iter::Sum> GjrGarchModel<F> {
         }
 
         let n = returns.len();
-        
+
         // Initialize parameters with typical values
         let omega = F::from(0.00001).unwrap();
         let alpha = F::from(0.05).unwrap();
@@ -3446,11 +3446,15 @@ impl<F: Float + Debug + Clone + std::iter::Sum> GjrGarchModel<F> {
         for i in 1..n {
             let lagged_return = centered_returns[i - 1];
             let lagged_variance = conditional_variance[i - 1];
-            
+
             // Indicator function for negative returns
-            let negative_indicator = if lagged_return < F::zero() { F::one() } else { F::zero() };
-            
-            conditional_variance[i] = omega 
+            let negative_indicator = if lagged_return < F::zero() {
+                F::one()
+            } else {
+                F::zero()
+            };
+
+            conditional_variance[i] = omega
                 + alpha * lagged_return.powi(2)
                 + gamma * negative_indicator * lagged_return.powi(2)
                 + beta * lagged_variance;
@@ -3470,7 +3474,8 @@ impl<F: Float + Debug + Clone + std::iter::Sum> GjrGarchModel<F> {
             if variance > F::zero() {
                 let two_pi = F::from(2.0 * std::f64::consts::PI).unwrap();
                 log_likelihood = log_likelihood
-                    - F::from(0.5).unwrap() * (two_pi.ln() + variance.ln() + centered_returns[i].powi(2) / variance);
+                    - F::from(0.5).unwrap()
+                        * (two_pi.ln() + variance.ln() + centered_returns[i].powi(2) / variance);
             }
         }
 
@@ -3506,7 +3511,9 @@ impl<F: Float + Debug + Clone + std::iter::Sum> GjrGarchModel<F> {
     /// Forecast future volatility
     pub fn forecast(&self, steps: usize) -> Result<Array1<F>> {
         if !self.fitted {
-            return Err(TimeSeriesError::ModelNotFitted("GARCH model must be fitted before forecasting".to_string()));
+            return Err(TimeSeriesError::ModelNotFitted(
+                "GARCH model must be fitted before forecasting".to_string(),
+            ));
         }
 
         let params = self.parameters.as_ref().unwrap();
@@ -3522,7 +3529,8 @@ impl<F: Float + Debug + Clone + std::iter::Sum> GjrGarchModel<F> {
             } else {
                 // Exponential decay to long-run variance
                 let decay_factor = persistence.powi(i as i32);
-                forecasts[i] = long_run_variance + (forecasts[0] - long_run_variance) * decay_factor;
+                forecasts[i] =
+                    long_run_variance + (forecasts[0] - long_run_variance) * decay_factor;
             }
         }
 
@@ -3598,7 +3606,7 @@ impl<F: Float + Debug + Clone + std::iter::Sum> AparchModel<F> {
         }
 
         let n = returns.len();
-        
+
         // Initialize parameters
         let omega = F::from(0.00001).unwrap();
         let alpha = F::from(0.05).unwrap();
@@ -3611,7 +3619,8 @@ impl<F: Float + Debug + Clone + std::iter::Sum> AparchModel<F> {
         let centered_returns: Array1<F> = returns.mapv(|x| x - mean);
 
         // Initialize conditional standard deviation
-        let initial_std = centered_returns.mapv(|x| x.powi(2)).sum().sqrt() / F::from(n - 1).unwrap().sqrt();
+        let initial_std =
+            centered_returns.mapv(|x| x.powi(2)).sum().sqrt() / F::from(n - 1).unwrap().sqrt();
         let mut conditional_std = Array1::zeros(n);
         conditional_std[0] = initial_std;
 
@@ -3619,28 +3628,28 @@ impl<F: Float + Debug + Clone + std::iter::Sum> AparchModel<F> {
         for i in 1..n {
             let lagged_return = centered_returns[i - 1];
             let lagged_std = conditional_std[i - 1];
-            
+
             // APARCH innovation term
             let abs_innovation = lagged_return.abs();
-            let sign_adjustment = if lagged_return < F::zero() { 
-                abs_innovation - gamma * lagged_return 
-            } else { 
-                abs_innovation + gamma * lagged_return 
+            let sign_adjustment = if lagged_return < F::zero() {
+                abs_innovation - gamma * lagged_return
+            } else {
+                abs_innovation + gamma * lagged_return
             };
-            
+
             // Power transformation
             let innovation_power = if delta == F::from(2.0).unwrap() {
                 sign_adjustment.powi(2)
             } else {
                 sign_adjustment.powf(delta)
             };
-            
+
             let std_power = if delta == F::from(2.0).unwrap() {
                 lagged_std.powi(2)
             } else {
                 lagged_std.powf(delta)
             };
-            
+
             let new_std_power = omega + alpha * innovation_power + beta * std_power;
             conditional_std[i] = if delta == F::from(2.0).unwrap() {
                 new_std_power.sqrt()
@@ -3666,7 +3675,10 @@ impl<F: Float + Debug + Clone + std::iter::Sum> AparchModel<F> {
             if std_dev > F::zero() {
                 let two_pi = F::from(2.0 * std::f64::consts::PI).unwrap();
                 log_likelihood = log_likelihood
-                    - F::from(0.5).unwrap() * (two_pi.ln() + F::from(2.0).unwrap() * std_dev.ln() + centered_returns[i].powi(2) / std_dev.powi(2));
+                    - F::from(0.5).unwrap()
+                        * (two_pi.ln()
+                            + F::from(2.0).unwrap() * std_dev.ln()
+                            + centered_returns[i].powi(2) / std_dev.powi(2));
             }
         }
 
@@ -3797,12 +3809,10 @@ pub mod advanced_technical_indicators {
 
         for i in 0..output_len {
             let window = prices.slice(s![i..i + config.period]);
-            
+
             // Calculate moving average
             let ma = match config.ma_type {
-                MovingAverageType::Simple => {
-                    window.sum() / F::from(config.period).unwrap()
-                }
+                MovingAverageType::Simple => window.sum() / F::from(config.period).unwrap(),
                 MovingAverageType::Exponential => {
                     // Simplified EMA calculation
                     let alpha = F::from(2.0).unwrap() / F::from(config.period + 1).unwrap();
@@ -3829,13 +3839,14 @@ pub mod advanced_technical_indicators {
             let variance = window
                 .iter()
                 .map(|&price| (price - ma).powi(2))
-                .fold(F::zero(), |acc, x| acc + x) / F::from(config.period).unwrap();
+                .fold(F::zero(), |acc, x| acc + x)
+                / F::from(config.period).unwrap();
             let std_dev = variance.sqrt();
 
             middle_band[i] = ma;
             upper_band[i] = ma + std_multiplier * std_dev;
             lower_band[i] = ma - std_multiplier * std_dev;
-            
+
             // Calculate bandwidth
             bandwidth[i] = if ma > F::zero() {
                 (upper_band[i] - lower_band[i]) / ma
@@ -3920,16 +3931,18 @@ pub mod advanced_technical_indicators {
         for i in 0..k_output_len {
             let window_start = i;
             let window_end = i + config.k_period;
-            
-            let highest_high = high.slice(s![window_start..window_end])
+
+            let highest_high = high
+                .slice(s![window_start..window_end])
                 .iter()
                 .fold(F::neg_infinity(), |acc, &x| acc.max(x));
-            let lowest_low = low.slice(s![window_start..window_end])
+            let lowest_low = low
+                .slice(s![window_start..window_end])
                 .iter()
                 .fold(F::infinity(), |acc, &x| acc.min(x));
-            
+
             let current_close = close[window_end - 1];
-            
+
             percent_k[i] = if highest_high != lowest_low {
                 F::from(100.0).unwrap() * (current_close - lowest_low) / (highest_high - lowest_low)
             } else {
@@ -3943,15 +3956,13 @@ pub mod advanced_technical_indicators {
         } else {
             0
         };
-        
+
         let mut percent_d = Array1::zeros(d_output_len);
-        
+
         for i in 0..d_output_len {
             let k_window = percent_k.slice(s![i..i + config.d_period]);
             percent_d[i] = match config.d_smoothing {
-                MovingAverageType::Simple => {
-                    k_window.sum() / F::from(config.d_period).unwrap()
-                }
+                MovingAverageType::Simple => k_window.sum() / F::from(config.d_period).unwrap(),
                 MovingAverageType::Exponential => {
                     let alpha = F::from(2.0).unwrap() / F::from(config.d_period + 1).unwrap();
                     let mut ema = k_window[0];
@@ -4042,13 +4053,15 @@ pub mod advanced_technical_indicators {
         }
 
         let n = high.len();
-        
+
         // Helper function to calculate highest high and lowest low
         let calculate_hl_midpoint = |period: usize, start_idx: usize| -> F {
             let end_idx = (start_idx + period).min(n);
             let high_slice = high.slice(s![start_idx..end_idx]);
             let low_slice = low.slice(s![start_idx..end_idx]);
-            let highest = high_slice.iter().fold(F::neg_infinity(), |acc, &x| acc.max(x));
+            let highest = high_slice
+                .iter()
+                .fold(F::neg_infinity(), |acc, &x| acc.max(x));
             let lowest = low_slice.iter().fold(F::infinity(), |acc, &x| acc.min(x));
             (highest + lowest) / F::from(2.0).unwrap()
         };
@@ -4146,12 +4159,13 @@ pub mod advanced_technical_indicators {
         for i in 0..cci.len() {
             let slice = typical_prices.slice(s![i..i + period]);
             let mean = sma_tp[i];
-            
+
             // Calculate mean deviation
             let mad = slice
                 .iter()
                 .map(|&x| (x - mean).abs())
-                .fold(F::zero(), |acc, x| acc + x) / F::from(period).unwrap();
+                .fold(F::zero(), |acc, x| acc + x)
+                / F::from(period).unwrap();
 
             if mad > F::zero() {
                 cci[i] = (typical_prices[i + period - 1] - mean) / (constant * mad);
@@ -4202,7 +4216,7 @@ pub mod advanced_technical_indicators {
             money_flows[i - 1] = if typical_prices[i] > typical_prices[i - 1] {
                 raw_money_flow // Positive money flow
             } else if typical_prices[i] < typical_prices[i - 1] {
-                -raw_money_flow // Negative money flow  
+                -raw_money_flow // Negative money flow
             } else {
                 F::zero() // Neutral
             };
@@ -4311,7 +4325,7 @@ pub mod advanced_technical_indicators {
                         ep = high[i];
                         af = (af + acceleration_factor).min(max_acceleration);
                     }
-                    
+
                     // SAR should not be above previous two lows
                     sar[i] = sar[i].min(low[i - 1]).min(low[i - 2]);
                 }
@@ -4332,7 +4346,7 @@ pub mod advanced_technical_indicators {
                         ep = low[i];
                         af = (af + acceleration_factor).min(max_acceleration);
                     }
-                    
+
                     // SAR should not be below previous two highs
                     sar[i] = sar[i].max(high[i - 1]).max(high[i - 2]);
                 }
@@ -4391,7 +4405,8 @@ pub mod advanced_technical_indicators {
 
             // Calculate Aroon Up and Aroon Down
             aroon_up[i] = hundred * (period_f - F::from(period - 1 - max_pos).unwrap()) / period_f;
-            aroon_down[i] = hundred * (period_f - F::from(period - 1 - min_pos).unwrap()) / period_f;
+            aroon_down[i] =
+                hundred * (period_f - F::from(period - 1 - min_pos).unwrap()) / period_f;
         }
 
         // Calculate Aroon Oscillator
@@ -4423,10 +4438,10 @@ pub mod advanced_technical_indicators {
         for i in 0..n {
             let typical_price = (high[i] + low[i] + close[i]) / three;
             let pv = typical_price * volume[i];
-            
+
             cumulative_pv = cumulative_pv + pv;
             cumulative_volume = cumulative_volume + volume[i];
-            
+
             if cumulative_volume > F::zero() {
                 vwap[i] = cumulative_pv / cumulative_volume;
             } else {
@@ -4464,7 +4479,7 @@ pub mod advanced_technical_indicators {
             } else {
                 F::zero()
             };
-            
+
             let money_flow_volume = clv * volume[i];
             cumulative_ad = cumulative_ad + money_flow_volume;
             ad_line[i] = cumulative_ad;
@@ -4533,12 +4548,12 @@ pub mod advanced_technical_indicators {
         periods: &[usize],
     ) -> Result<Vec<Array1<F>>> {
         let mut results = Vec::with_capacity(periods.len());
-        
+
         for &period in periods {
             let cci_values = cci(high, low, close, period)?;
             results.push(cci_values);
         }
-        
+
         Ok(results)
     }
 
@@ -4673,14 +4688,17 @@ pub mod risk_metrics {
         let variance = returns
             .iter()
             .map(|&r| (r - mean_return).powi(2))
-            .fold(F::zero(), |acc, x| acc + x) / F::from(n - 1).unwrap();
+            .fold(F::zero(), |acc, x| acc + x)
+            / F::from(n - 1).unwrap();
         let std_dev = variance.sqrt();
         let volatility = std_dev * trading_days.sqrt();
 
         // Value at Risk (VaR) - Historical method
         let mut sorted_returns = returns.to_vec();
         sorted_returns.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        let var_index = ((F::one() - confidence_level) * F::from(n).unwrap()).to_usize().unwrap();
+        let var_index = ((F::one() - confidence_level) * F::from(n).unwrap())
+            .to_usize()
+            .unwrap();
         let var = if var_index < sorted_returns.len() {
             -sorted_returns[var_index] // VaR is typically reported as positive
         } else {
@@ -4688,11 +4706,7 @@ pub mod risk_metrics {
         };
 
         // Conditional Value at Risk (CVaR/Expected Shortfall)
-        let tail_returns: Vec<F> = sorted_returns
-            .iter()
-            .take(var_index + 1)
-            .cloned()
-            .collect();
+        let tail_returns: Vec<F> = sorted_returns.iter().take(var_index + 1).cloned().collect();
         let cvar = if !tail_returns.is_empty() {
             -tail_returns.into_iter().sum::<F>() / F::from(tail_returns.len()).unwrap()
         } else {
@@ -4721,7 +4735,8 @@ pub mod risk_metrics {
         let downside_variance = returns
             .iter()
             .map(|&r| if r < F::zero() { r.powi(2) } else { F::zero() })
-            .fold(F::zero(), |acc, x| acc + x) / F::from(n - 1).unwrap();
+            .fold(F::zero(), |acc, x| acc + x)
+            / F::from(n - 1).unwrap();
         let downside_deviation = downside_variance.sqrt() * trading_days.sqrt();
 
         // Sortino Ratio
@@ -4802,10 +4817,7 @@ pub mod risk_metrics {
     }
 
     /// Calculate Value at Risk using parametric method
-    pub fn parametric_var<F: Float + Clone>(
-        returns: &Array1<F>,
-        confidence_level: F,
-    ) -> Result<F> {
+    pub fn parametric_var<F: Float + Clone>(returns: &Array1<F>, confidence_level: F) -> Result<F> {
         if returns.is_empty() {
             return Err(TimeSeriesError::InvalidInput(
                 "Returns array cannot be empty".to_string(),
@@ -4817,7 +4829,8 @@ pub mod risk_metrics {
         let variance = returns
             .iter()
             .map(|&r| (r - mean).powi(2))
-            .fold(F::zero(), |acc, x| acc + x) / F::from(n - 1).unwrap();
+            .fold(F::zero(), |acc, x| acc + x)
+            / F::from(n - 1).unwrap();
         let std_dev = variance.sqrt();
 
         // Normal distribution inverse CDF approximation
@@ -4845,22 +4858,23 @@ pub mod risk_metrics {
         let variance = returns
             .iter()
             .map(|&r| (r - mean).powi(2))
-            .fold(F::zero(), |acc, x| acc + x) / F::from(n - 1).unwrap();
+            .fold(F::zero(), |acc, x| acc + x)
+            / F::from(n - 1).unwrap();
         let std_dev = variance.sqrt();
 
         // Simple Monte Carlo simulation using normal distribution
         let mut simulated_returns = Vec::with_capacity(num_simulations);
-        
+
         // Simple random number generation (in practice, use proper RNG)
         let mut seed = 12345u64;
         for _ in 0..num_simulations {
             // Simple LCG for demonstration
             seed = seed.wrapping_mul(1664525).wrapping_add(1013904223);
             let u1 = (seed as f64) / (u64::MAX as f64);
-            
+
             seed = seed.wrapping_mul(1664525).wrapping_add(1013904223);
             let u2 = (seed as f64) / (u64::MAX as f64);
-            
+
             // Box-Muller transformation
             let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
             let simulated_return = mean + std_dev * F::from(z).unwrap();
@@ -4869,7 +4883,9 @@ pub mod risk_metrics {
 
         // Sort and find VaR
         simulated_returns.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        let var_index = ((F::one() - confidence_level) * F::from(num_simulations).unwrap()).to_usize().unwrap();
+        let var_index = ((F::one() - confidence_level) * F::from(num_simulations).unwrap())
+            .to_usize()
+            .unwrap();
         let var = if var_index < simulated_returns.len() {
             -simulated_returns[var_index]
         } else {
@@ -5024,7 +5040,7 @@ pub mod risk_metrics {
         trading_days_per_year: usize,
     ) -> Result<F> {
         let beta = calculate_beta(returns, benchmark_returns)?;
-        
+
         if beta.abs() < F::from(1e-10).unwrap() {
             return Ok(F::zero());
         }
@@ -5045,14 +5061,14 @@ pub mod risk_metrics {
         trading_days_per_year: usize,
     ) -> Result<F> {
         let beta = calculate_beta(returns, benchmark_returns)?;
-        
+
         let n = F::from(returns.len()).unwrap();
         let mean_asset_return = returns.sum() / n;
         let mean_benchmark_return = benchmark_returns.sum() / n;
-        
+
         let annualized_asset = mean_asset_return * F::from(trading_days_per_year).unwrap();
         let annualized_benchmark = mean_benchmark_return * F::from(trading_days_per_year).unwrap();
-        
+
         let expected_return = risk_free_rate + beta * (annualized_benchmark - risk_free_rate);
         Ok(annualized_asset - expected_return)
     }
@@ -5077,7 +5093,11 @@ pub mod risk_metrics {
         let denominator = F::one() + b1 * t + b2 * t.powi(2) + b3 * t.powi(3);
         let z = t - numerator / denominator;
 
-        if p < F::from(0.5).unwrap() { -z } else { z }
+        if p < F::from(0.5).unwrap() {
+            -z
+        } else {
+            z
+        }
     }
 
     #[cfg(test)]
@@ -5088,9 +5108,9 @@ pub mod risk_metrics {
         fn test_risk_metrics_calculation() {
             let returns = Array1::from_vec(vec![0.01, -0.02, 0.015, -0.01, 0.005, -0.008, 0.02]);
             let config = RiskConfig::default();
-            
+
             let metrics = calculate_risk_metrics(&returns, &config).unwrap();
-            
+
             assert!(metrics.var > 0.0);
             assert!(metrics.cvar >= metrics.var);
             assert!(metrics.max_drawdown >= 0.0);
@@ -5108,7 +5128,7 @@ pub mod risk_metrics {
         fn test_beta_calculation() {
             let asset_returns = Array1::from_vec(vec![0.01, -0.02, 0.015, -0.01, 0.005]);
             let benchmark_returns = Array1::from_vec(vec![0.008, -0.015, 0.012, -0.008, 0.004]);
-            
+
             let beta = calculate_beta(&asset_returns, &benchmark_returns).unwrap();
             assert!(beta.abs() < 10.0); // Reasonable beta range
         }

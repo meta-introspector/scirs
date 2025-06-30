@@ -5,9 +5,8 @@
 //! automated benchmarking, regression detection, and report generation.
 
 use crate::benchmarking::performance_regression_detector::{
-    PerformanceRegressionDetector, RegressionConfig, PerformanceMeasurement,
-    MetricType, MetricValue, EnvironmentInfo, TestConfiguration, CiCdReport,
-    CiCdStatus, RegressionResult
+    CiCdReport, CiCdStatus, EnvironmentInfo, MetricType, MetricValue, PerformanceMeasurement,
+    PerformanceRegressionDetector, RegressionConfig, RegressionResult, TestConfiguration,
 };
 use crate::error::{OptimError, Result};
 use serde::{Deserialize, Serialize};
@@ -406,13 +405,13 @@ pub struct ArtifactManager {
 pub trait ArtifactStorage: std::fmt::Debug + Send + Sync {
     /// Upload an artifact
     fn upload(&self, path: &Path, key: &str) -> Result<String>;
-    
+
     /// Download an artifact
     fn download(&self, key: &str, path: &Path) -> Result<()>;
-    
+
     /// List artifacts
     fn list(&self, prefix: &str) -> Result<Vec<String>>;
-    
+
     /// Delete an artifact
     fn delete(&self, key: &str) -> Result<()>;
 }
@@ -530,10 +529,8 @@ pub enum TriggerEvent {
 impl CiCdAutomation {
     /// Create a new CI/CD automation engine
     pub fn new(config: CiCdAutomationConfig) -> Result<Self> {
-        let regression_detector = PerformanceRegressionDetector::new(
-            RegressionConfig::default()
-        )?;
-        
+        let regression_detector = PerformanceRegressionDetector::new(RegressionConfig::default())?;
+
         let environment = Self::detect_environment()?;
         let test_suite = PerformanceTestSuite::new(TestSuiteConfig::default())?;
         let report_generator = ReportGenerator::new(config.reporting.clone())?;
@@ -552,11 +549,11 @@ impl CiCdAutomation {
     /// Execute automated performance testing
     pub async fn execute_automated_testing(&mut self) -> Result<CiCdTestResult> {
         let start_time = SystemTime::now();
-        
+
         // Detect CI/CD context
         let ci_context = self.detect_ci_context()?;
         let git_info = self.detect_git_info()?;
-        
+
         // Determine if tests should run
         if !self.should_run_tests(&ci_context, &git_info)? {
             return Ok(CiCdTestResult {
@@ -577,38 +574,42 @@ impl CiCdAutomation {
 
         // Execute performance tests
         let measurements = self.execute_performance_tests().await?;
-        
+
         // Load historical baseline if available
         self.load_baseline_for_branch(&git_info.branch).await?;
-        
+
         // Add measurements to regression detector
         for measurement in &measurements {
-            self.regression_detector.add_measurement(measurement.clone())?;
+            self.regression_detector
+                .add_measurement(measurement.clone())?;
         }
-        
+
         // Detect regressions
         let regression_results = self.regression_detector.detect_regressions()?;
-        
+
         // Apply performance gates
         let gate_results = self.apply_performance_gates(&regression_results)?;
-        
+
         // Generate reports
-        let reports = self.generate_reports(&measurements, &regression_results).await?;
-        
+        let reports = self
+            .generate_reports(&measurements, &regression_results)
+            .await?;
+
         // Upload artifacts
         self.upload_artifacts(&reports).await?;
-        
+
         // Send notifications
-        self.send_notifications(&regression_results, &gate_results).await?;
-        
+        self.send_notifications(&regression_results, &gate_results)
+            .await?;
+
         // Update baseline if appropriate
         if self.should_update_baseline(&git_info, &regression_results)? {
             self.update_baseline(&git_info).await?;
         }
-        
+
         let end_time = SystemTime::now();
         let status = Self::determine_execution_status(&regression_results, &gate_results);
-        
+
         Ok(CiCdTestResult {
             status,
             measurements,
@@ -652,10 +653,8 @@ impl CiCdAutomation {
     fn get_cpu_model() -> Result<String> {
         #[cfg(target_os = "linux")]
         {
-            let output = Command::new("cat")
-                .arg("/proc/cpuinfo")
-                .output()?;
-            
+            let output = Command::new("cat").arg("/proc/cpuinfo").output()?;
+
             let content = String::from_utf8_lossy(&output.stdout);
             for line in content.lines() {
                 if line.starts_with("model name") {
@@ -665,19 +664,19 @@ impl CiCdAutomation {
                 }
             }
         }
-        
+
         #[cfg(target_os = "macos")]
         {
             let output = Command::new("sysctl")
                 .arg("-n")
                 .arg("machdep.cpu.brand_string")
                 .output()?;
-            
+
             if output.status.success() {
                 return Ok(String::from_utf8_lossy(&output.stdout).trim().to_string());
             }
         }
-        
+
         Ok("Unknown".to_string())
     }
 
@@ -685,10 +684,8 @@ impl CiCdAutomation {
     fn get_total_memory_mb() -> Result<usize> {
         #[cfg(target_os = "linux")]
         {
-            let output = Command::new("cat")
-                .arg("/proc/meminfo")
-                .output()?;
-            
+            let output = Command::new("cat").arg("/proc/meminfo").output()?;
+
             let content = String::from_utf8_lossy(&output.stdout);
             for line in content.lines() {
                 if line.starts_with("MemTotal:") {
@@ -701,14 +698,14 @@ impl CiCdAutomation {
                 }
             }
         }
-        
+
         #[cfg(target_os = "macos")]
         {
             let output = Command::new("sysctl")
                 .arg("-n")
                 .arg("hw.memsize")
                 .output()?;
-            
+
             if output.status.success() {
                 let bytes_str = String::from_utf8_lossy(&output.stdout).trim();
                 if let Ok(bytes) = bytes_str.parse::<usize>() {
@@ -716,7 +713,7 @@ impl CiCdAutomation {
                 }
             }
         }
-        
+
         Ok(8192) // Default fallback
     }
 
@@ -735,31 +732,29 @@ impl CiCdAutomation {
                 }
             }
         }
-        
+
         // Try lspci for other GPUs
-        if let Ok(output) = Command::new("lspci")
-            .arg("-nn")
-            .output()
-        {
+        if let Ok(output) = Command::new("lspci").arg("-nn").output() {
             if output.status.success() {
                 let content = String::from_utf8_lossy(&output.stdout);
                 for line in content.lines() {
-                    if line.contains("VGA compatible controller") || line.contains("3D controller") {
+                    if line.contains("VGA compatible controller") || line.contains("3D controller")
+                    {
                         return Ok(line.to_string());
                     }
                 }
             }
         }
-        
-        Err(OptimError::Environment("GPU information not available".to_string()))
+
+        Err(OptimError::Environment(
+            "GPU information not available".to_string(),
+        ))
     }
 
     /// Get compiler version
     fn get_compiler_version() -> Result<String> {
-        let output = Command::new("rustc")
-            .arg("--version")
-            .output()?;
-        
+        let output = Command::new("rustc").arg("--version").output()?;
+
         if output.status.success() {
             Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
         } else {
@@ -769,58 +764,67 @@ impl CiCdAutomation {
 
     /// Get Rust version
     fn get_rust_version() -> Result<String> {
-        let output = Command::new("rustc")
-            .arg("--version")
-            .output()?;
-        
+        let output = Command::new("rustc").arg("--version").output()?;
+
         if output.status.success() {
             let version_str = String::from_utf8_lossy(&output.stdout);
             if let Some(version) = version_str.split_whitespace().nth(1) {
                 return Ok(version.to_string());
             }
         }
-        
+
         Ok("Unknown".to_string())
     }
 
     /// Get relevant environment variables
     fn get_relevant_env_vars() -> HashMap<String, String> {
         let mut env_vars = HashMap::new();
-        
+
         let relevant_vars = [
-            "CARGO_PROFILE", "RUSTFLAGS", "CARGO_TARGET_DIR",
-            "RUST_BACKTRACE", "RUST_LOG", "OMP_NUM_THREADS",
-            "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS",
-            "CI", "GITHUB_ACTIONS", "GITLAB_CI", "JENKINS_URL",
+            "CARGO_PROFILE",
+            "RUSTFLAGS",
+            "CARGO_TARGET_DIR",
+            "RUST_BACKTRACE",
+            "RUST_LOG",
+            "OMP_NUM_THREADS",
+            "MKL_NUM_THREADS",
+            "OPENBLAS_NUM_THREADS",
+            "CI",
+            "GITHUB_ACTIONS",
+            "GITLAB_CI",
+            "JENKINS_URL",
         ];
-        
+
         for var in &relevant_vars {
             if let Ok(value) = std::env::var(var) {
                 env_vars.insert(var.to_string(), value);
             }
         }
-        
+
         env_vars
     }
 
     /// Detect CI/CD context
     fn detect_ci_context(&self) -> Result<CiCdContext> {
         let platform = self.detect_ci_platform();
-        let build_number = std::env::var("BUILD_NUMBER").ok()
+        let build_number = std::env::var("BUILD_NUMBER")
+            .ok()
             .or_else(|| std::env::var("GITHUB_RUN_NUMBER").ok())
             .or_else(|| std::env::var("CI_PIPELINE_ID").ok());
-        
-        let job_id = std::env::var("JOB_ID").ok()
+
+        let job_id = std::env::var("JOB_ID")
+            .ok()
             .or_else(|| std::env::var("GITHUB_JOB").ok())
             .or_else(|| std::env::var("CI_JOB_ID").ok());
-        
-        let pr_number = std::env::var("PULL_REQUEST_NUMBER").ok()
+
+        let pr_number = std::env::var("PULL_REQUEST_NUMBER")
+            .ok()
             .or_else(|| std::env::var("GITHUB_PR_NUMBER").ok())
             .or_else(|| std::env::var("CI_MERGE_REQUEST_IID").ok())
             .and_then(|s| s.parse().ok());
-        
+
         let trigger_event = self.detect_trigger_event();
-        
+
         let mut env_vars = HashMap::new();
         for (key, value) in std::env::vars() {
             if key.starts_with("CI") || key.starts_with("GITHUB") || key.starts_with("GITLAB") {
@@ -886,13 +890,14 @@ impl CiCdAutomation {
         let branch = self.get_git_output(&["rev-parse", "--abbrev-ref", "HEAD"])?;
         let commit_message = self.get_git_output(&["log", "-1", "--pretty=%B"])?;
         let author = self.get_git_output(&["log", "-1", "--pretty=%an <%ae>"])?;
-        
+
         let commit_timestamp_str = self.get_git_output(&["log", "-1", "--pretty=%ct"])?;
-        let commit_timestamp = SystemTime::UNIX_EPOCH + Duration::from_secs(
-            commit_timestamp_str.parse::<u64>().unwrap_or(0)
-        );
-        
-        let remote_url = self.get_git_output(&["config", "--get", "remote.origin.url"]).ok();
+        let commit_timestamp = SystemTime::UNIX_EPOCH
+            + Duration::from_secs(commit_timestamp_str.parse::<u64>().unwrap_or(0));
+
+        let remote_url = self
+            .get_git_output(&["config", "--get", "remote.origin.url"])
+            .ok();
 
         Ok(GitInfo {
             commit_hash,
@@ -906,10 +911,8 @@ impl CiCdAutomation {
 
     /// Execute git command and get output
     fn get_git_output(&self, args: &[&str]) -> Result<String> {
-        let output = Command::new("git")
-            .args(args)
-            .output()?;
-        
+        let output = Command::new("git").args(args).output()?;
+
         if output.status.success() {
             Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
         } else {
@@ -939,14 +942,14 @@ impl CiCdAutomation {
     /// Execute performance tests
     async fn execute_performance_tests(&mut self) -> Result<Vec<PerformanceMeasurement>> {
         let mut measurements = Vec::new();
-        
+
         for test_case in &self.test_suite.test_cases.clone() {
             if self.should_run_test_case(test_case) {
                 let test_measurements = self.execute_test_case(test_case).await?;
                 measurements.extend(test_measurements);
             }
         }
-        
+
         Ok(measurements)
     }
 
@@ -962,12 +965,14 @@ impl CiCdAutomation {
         test_case: &PerformanceTestCase,
     ) -> Result<Vec<PerformanceMeasurement>> {
         let mut measurements = Vec::new();
-        
+
         for iteration in 0..self.config.test_execution.test_iterations {
-            let measurement = self.execute_single_test_iteration(test_case, iteration).await?;
+            let measurement = self
+                .execute_single_test_iteration(test_case, iteration)
+                .await?;
             measurements.push(measurement);
         }
-        
+
         Ok(measurements)
     }
 
@@ -978,17 +983,19 @@ impl CiCdAutomation {
         iteration: usize,
     ) -> Result<PerformanceMeasurement> {
         let start_time = SystemTime::now();
-        
+
         // Execute the test based on executor type
         let metrics = match &test_case.executor {
             TestExecutor::RustBench => self.execute_rust_bench(test_case).await?,
             TestExecutor::Criterion => self.execute_criterion_bench(test_case).await?,
             TestExecutor::CustomCommand(cmd) => self.execute_custom_command(cmd, test_case).await?,
-            TestExecutor::InlineFunction(func) => self.execute_inline_function(func, test_case).await?,
+            TestExecutor::InlineFunction(func) => {
+                self.execute_inline_function(func, test_case).await?
+            }
         };
-        
+
         let git_info = self.detect_git_info()?;
-        
+
         Ok(PerformanceMeasurement {
             timestamp: start_time,
             commit_hash: git_info.commit_hash,
@@ -1009,26 +1016,35 @@ impl CiCdAutomation {
     }
 
     /// Execute Rust benchmark
-    async fn execute_rust_bench(&self, _test_case: &PerformanceTestCase) -> Result<HashMap<MetricType, MetricValue>> {
+    async fn execute_rust_bench(
+        &self,
+        _test_case: &PerformanceTestCase,
+    ) -> Result<HashMap<MetricType, MetricValue>> {
         // TODO: Implement actual Rust benchmark execution
         let mut metrics = HashMap::new();
-        
+
         // Simulate execution time measurement
         let execution_time = 0.1; // seconds
-        metrics.insert(MetricType::ExecutionTime, MetricValue {
-            value: execution_time,
-            std_dev: Some(0.01),
-            sample_count: 1,
-            min_value: execution_time,
-            max_value: execution_time,
-            percentiles: None,
-        });
-        
+        metrics.insert(
+            MetricType::ExecutionTime,
+            MetricValue {
+                value: execution_time,
+                std_dev: Some(0.01),
+                sample_count: 1,
+                min_value: execution_time,
+                max_value: execution_time,
+                percentiles: None,
+            },
+        );
+
         Ok(metrics)
     }
 
     /// Execute Criterion benchmark
-    async fn execute_criterion_bench(&self, _test_case: &PerformanceTestCase) -> Result<HashMap<MetricType, MetricValue>> {
+    async fn execute_criterion_bench(
+        &self,
+        _test_case: &PerformanceTestCase,
+    ) -> Result<HashMap<MetricType, MetricValue>> {
         // TODO: Implement Criterion benchmark execution
         Ok(HashMap::new())
     }
@@ -1060,29 +1076,37 @@ impl CiCdAutomation {
     }
 
     /// Apply performance gates
-    fn apply_performance_gates(&self, regression_results: &[RegressionResult]) -> Result<Vec<GateResult>> {
+    fn apply_performance_gates(
+        &self,
+        regression_results: &[RegressionResult],
+    ) -> Result<Vec<GateResult>> {
         let mut gate_results = Vec::new();
-        
+
         if !self.config.performance_gates.enabled {
             return Ok(gate_results);
         }
-        
+
         for result in regression_results {
-            if let Some(gate) = self.config.performance_gates.metric_gates.get(&result.metric) {
+            if let Some(gate) = self
+                .config
+                .performance_gates
+                .metric_gates
+                .get(&result.metric)
+            {
                 if gate.enabled {
                     let gate_result = self.evaluate_gate(result, gate)?;
                     gate_results.push(gate_result);
                 }
             }
         }
-        
+
         Ok(gate_results)
     }
 
     /// Evaluate a single performance gate
     fn evaluate_gate(&self, result: &RegressionResult, gate: &MetricGate) -> Result<GateResult> {
         let regression_percentage = result.change_percentage.abs();
-        let passed = regression_percentage <= gate.max_regression 
+        let passed = regression_percentage <= gate.max_regression
             && result.confidence >= self.config.performance_gates.min_confidence_threshold;
 
         Ok(GateResult {
@@ -1112,22 +1136,31 @@ impl CiCdAutomation {
         regression_results: &[RegressionResult],
     ) -> Result<Vec<GeneratedReport>> {
         let mut reports = Vec::new();
-        
+
         if self.config.reporting.generate_html {
-            let html_report = self.report_generator.generate_html_report(measurements, regression_results).await?;
+            let html_report = self
+                .report_generator
+                .generate_html_report(measurements, regression_results)
+                .await?;
             reports.push(html_report);
         }
-        
+
         if self.config.reporting.generate_json {
-            let json_report = self.report_generator.generate_json_report(measurements, regression_results).await?;
+            let json_report = self
+                .report_generator
+                .generate_json_report(measurements, regression_results)
+                .await?;
             reports.push(json_report);
         }
-        
+
         if self.config.reporting.generate_junit {
-            let junit_report = self.report_generator.generate_junit_report(measurements, regression_results).await?;
+            let junit_report = self
+                .report_generator
+                .generate_junit_report(measurements, regression_results)
+                .await?;
             reports.push(junit_report);
         }
-        
+
         Ok(reports)
     }
 
@@ -1136,12 +1169,17 @@ impl CiCdAutomation {
         if !self.config.artifact_storage.enabled {
             return Ok(());
         }
-        
+
         for report in reports {
-            let key = format!("reports/{}", report.file_path.file_name().unwrap().to_string_lossy());
-            self.artifact_manager.storage_provider.upload(&report.file_path, &key)?;
+            let key = format!(
+                "reports/{}",
+                report.file_path.file_name().unwrap().to_string_lossy()
+            );
+            self.artifact_manager
+                .storage_provider
+                .upload(&report.file_path, &key)?;
         }
-        
+
         Ok(())
     }
 
@@ -1154,22 +1192,25 @@ impl CiCdAutomation {
         if regression_results.is_empty() && gate_results.iter().all(|g| g.passed) {
             return Ok(());
         }
-        
+
         // Send GitHub notifications
         if let Some(github_config) = &self.config.integrations.github {
-            self.send_github_notifications(github_config, regression_results, gate_results).await?;
+            self.send_github_notifications(github_config, regression_results, gate_results)
+                .await?;
         }
-        
+
         // Send Slack notifications
         if let Some(slack_config) = &self.config.integrations.slack {
-            self.send_slack_notifications(slack_config, regression_results, gate_results).await?;
+            self.send_slack_notifications(slack_config, regression_results, gate_results)
+                .await?;
         }
-        
+
         // Send webhook notifications
         for webhook in &self.config.integrations.webhooks {
-            self.send_webhook_notification(webhook, regression_results, gate_results).await?;
+            self.send_webhook_notification(webhook, regression_results, gate_results)
+                .await?;
         }
-        
+
         Ok(())
     }
 
@@ -1207,28 +1248,33 @@ impl CiCdAutomation {
     }
 
     /// Check if baseline should be updated
-    fn should_update_baseline(&self, git_info: &GitInfo, regression_results: &[RegressionResult]) -> Result<bool> {
+    fn should_update_baseline(
+        &self,
+        git_info: &GitInfo,
+        regression_results: &[RegressionResult],
+    ) -> Result<bool> {
         // Don't update if there are regressions
         if !regression_results.is_empty() {
             return Ok(false);
         }
-        
+
         // Check if we're on main branch and auto-update is enabled
         if self.config.baseline_management.auto_update_main && git_info.branch == "main" {
             return Ok(true);
         }
-        
+
         // Check if this is a release and update-on-release is enabled
         if self.config.baseline_management.update_on_release {
             // TODO: Detect if this is a release
         }
-        
+
         Ok(false)
     }
 
     /// Update baseline
     async fn update_baseline(&mut self, git_info: &GitInfo) -> Result<()> {
-        self.regression_detector.update_baseline_from_recent(git_info.commit_hash.clone())?;
+        self.regression_detector
+            .update_baseline_from_recent(git_info.commit_hash.clone())?;
         // TODO: Store baseline in artifact storage
         Ok(())
     }
@@ -1239,8 +1285,10 @@ impl CiCdAutomation {
         gate_results: &[GateResult],
     ) -> TestExecutionStatus {
         let has_critical_regressions = regression_results.iter().any(|r| r.severity >= 0.9);
-        let has_failed_gates = gate_results.iter().any(|g| !g.passed && matches!(g.severity, GateSeverity::Blocking));
-        
+        let has_failed_gates = gate_results
+            .iter()
+            .any(|g| !g.passed && matches!(g.severity, GateSeverity::Blocking));
+
         if has_critical_regressions || has_failed_gates {
             TestExecutionStatus::Failed
         } else if !regression_results.is_empty() || gate_results.iter().any(|g| !g.passed) {
@@ -1336,7 +1384,9 @@ impl TemplateEngine {
 impl ArtifactManager {
     fn new(config: ArtifactStorageConfig) -> Result<Self> {
         let storage_provider: Box<dyn ArtifactStorage> = match &config.provider {
-            ArtifactStorageProvider::Local(path) => Box::new(LocalArtifactStorage::new(path.clone())),
+            ArtifactStorageProvider::Local(path) => {
+                Box::new(LocalArtifactStorage::new(path.clone()))
+            }
             _ => Box::new(LocalArtifactStorage::new(PathBuf::from("./artifacts"))), // Default fallback
         };
 
@@ -1368,17 +1418,17 @@ impl ArtifactStorage for LocalArtifactStorage {
         std::fs::copy(path, &dest_path)?;
         Ok(dest_path.to_string_lossy().to_string())
     }
-    
+
     fn download(&self, key: &str, path: &Path) -> Result<()> {
         let src_path = self.base_path.join(key);
         std::fs::copy(src_path, path)?;
         Ok(())
     }
-    
+
     fn list(&self, prefix: &str) -> Result<Vec<String>> {
         let prefix_path = self.base_path.join(prefix);
         let mut files = Vec::new();
-        
+
         if prefix_path.is_dir() {
             for entry in std::fs::read_dir(prefix_path)? {
                 let entry = entry?;
@@ -1387,10 +1437,10 @@ impl ArtifactStorage for LocalArtifactStorage {
                 }
             }
         }
-        
+
         Ok(files)
     }
-    
+
     fn delete(&self, key: &str) -> Result<()> {
         let path = self.base_path.join(key);
         if path.exists() {
@@ -1492,16 +1542,22 @@ impl Default for IntegrationConfig {
 impl Default for PerformanceGatesConfig {
     fn default() -> Self {
         let mut metric_gates = HashMap::new();
-        metric_gates.insert(MetricType::ExecutionTime, MetricGate {
-            max_regression: 10.0, // 10% regression threshold
-            enabled: true,
-            severity: GateSeverity::Blocking,
-        });
-        metric_gates.insert(MetricType::MemoryUsage, MetricGate {
-            max_regression: 20.0, // 20% regression threshold
-            enabled: true,
-            severity: GateSeverity::Warning,
-        });
+        metric_gates.insert(
+            MetricType::ExecutionTime,
+            MetricGate {
+                max_regression: 10.0, // 10% regression threshold
+                enabled: true,
+                severity: GateSeverity::Blocking,
+            },
+        );
+        metric_gates.insert(
+            MetricType::MemoryUsage,
+            MetricGate {
+                max_regression: 20.0, // 20% regression threshold
+                enabled: true,
+                severity: GateSeverity::Warning,
+            },
+        );
 
         Self {
             enabled: true,
@@ -1557,7 +1613,7 @@ mod tests {
     fn test_performance_gate_evaluation() {
         let config = CiCdAutomationConfig::default();
         let automation = CiCdAutomation::new(config).unwrap();
-        
+
         let regression_result = RegressionResult {
             metric: MetricType::ExecutionTime,
             severity: 0.8,
@@ -1586,20 +1642,20 @@ mod tests {
     fn test_artifact_storage() {
         let temp_dir = std::env::temp_dir().join("test_artifacts");
         let storage = LocalArtifactStorage::new(temp_dir.clone());
-        
+
         // Create a test file
         let test_file = temp_dir.join("test_input.txt");
         std::fs::create_dir_all(&temp_dir).unwrap();
         std::fs::write(&test_file, "test content").unwrap();
-        
+
         // Test upload
         let result = storage.upload(&test_file, "test_key.txt");
         assert!(result.is_ok());
-        
+
         // Test list
         let files = storage.list("").unwrap();
         assert!(files.contains(&"test_key.txt".to_string()));
-        
+
         // Cleanup
         std::fs::remove_dir_all(&temp_dir).ok();
     }

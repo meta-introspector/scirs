@@ -9,7 +9,10 @@
 
 use crate::error::{SignalError, SignalResult};
 use crate::lti::{LtiSystem, StateSpace, TransferFunction};
-use crate::sysid_advanced::{identify_armax_complete, identify_oe_complete, identify_bj_complete, identify_state_space_complete, identify_narx_complete};
+use crate::sysid_advanced::{
+    identify_armax_complete, identify_bj_complete, identify_narx_complete, identify_oe_complete,
+    identify_state_space_complete,
+};
 use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
@@ -1250,7 +1253,7 @@ fn simulate_model(model: &SystemModel, input: &Array1<f64>) -> SignalResult<Arra
             let n = input.len();
             let mut output = Array1::zeros(n);
             let mut noise = Array1::zeros(n);
-            
+
             // Generate white noise for simulation (in practice, this would be estimated)
             use rand::prelude::*;
             let mut rng = rand::rng();
@@ -1301,7 +1304,7 @@ fn simulate_model(model: &SystemModel, input: &Array1<f64>) -> SignalResult<Arra
                         filtered_input[t] -= f[i] * filtered_input[t - i];
                     }
                 }
-                
+
                 output[t] = filtered_input[t];
             }
 
@@ -1313,7 +1316,7 @@ fn simulate_model(model: &SystemModel, input: &Array1<f64>) -> SignalResult<Arra
             let mut filtered_input = Array1::zeros(n);
             let mut noise = Array1::zeros(n);
             let mut filtered_noise = Array1::zeros(n);
-            
+
             // Generate white noise for simulation
             use rand::prelude::*;
             let mut rng = rand::rng();
@@ -1351,9 +1354,13 @@ fn simulate_model(model: &SystemModel, input: &Array1<f64>) -> SignalResult<Arra
 
             Ok(output)
         }
-        SystemModel::HammersteinWiener { linear, input_nonlinearity, output_nonlinearity } => {
+        SystemModel::HammersteinWiener {
+            linear,
+            input_nonlinearity,
+            output_nonlinearity,
+        } => {
             let n = input.len();
-            
+
             // Apply input nonlinearity
             let mut nonlinear_input = Array1::zeros(n);
             for i in 0..n {
@@ -1376,9 +1383,7 @@ fn simulate_model(model: &SystemModel, input: &Array1<f64>) -> SignalResult<Arra
             let ss = transfer_function_to_state_space(tf)?;
             simulate_state_space(&ss, input)
         }
-        SystemModel::StateSpace(ss) => {
-            simulate_state_space(ss, input)
-        }
+        SystemModel::StateSpace(ss) => simulate_state_space(ss, input),
     }
 }
 
@@ -1392,7 +1397,10 @@ fn apply_nonlinear_function(input: f64, func: &NonlinearFunction) -> SignalResul
             }
             Ok(result)
         }
-        NonlinearFunction::PiecewiseLinear { breakpoints, slopes } => {
+        NonlinearFunction::PiecewiseLinear {
+            breakpoints,
+            slopes,
+        } => {
             if breakpoints.len() != slopes.len() + 1 {
                 return Err(SignalError::ValueError(
                     "Breakpoints and slopes length mismatch".to_string(),
@@ -1403,7 +1411,9 @@ fn apply_nonlinear_function(input: f64, func: &NonlinearFunction) -> SignalResul
             for i in 0..breakpoints.len() - 1 {
                 if input >= breakpoints[i] && input < breakpoints[i + 1] {
                     let x0 = breakpoints[i];
-                    let y0 = if i == 0 { 0.0 } else { 
+                    let y0 = if i == 0 {
+                        0.0
+                    } else {
                         // Calculate y0 based on previous segments
                         let mut y = 0.0;
                         for j in 0..i {
@@ -1436,9 +1446,7 @@ fn apply_nonlinear_function(input: f64, func: &NonlinearFunction) -> SignalResul
                 Ok(input + threshold)
             }
         }
-        NonlinearFunction::Saturation { lower, upper } => {
-            Ok(input.max(*lower).min(*upper))
-        }
+        NonlinearFunction::Saturation { lower, upper } => Ok(input.max(*lower).min(*upper)),
         NonlinearFunction::Custom(name) => {
             // For now, implement some common custom functions
             match name.as_str() {
@@ -1446,9 +1454,10 @@ fn apply_nonlinear_function(input: f64, func: &NonlinearFunction) -> SignalResul
                 "relu" => Ok(input.max(0.0)),
                 "leaky_relu" => Ok(if input > 0.0 { input } else { 0.01 * input }),
                 "identity" => Ok(input),
-                _ => Err(SignalError::NotImplemented(
-                    format!("Custom function '{}' not implemented", name),
-                )),
+                _ => Err(SignalError::NotImplemented(format!(
+                    "Custom function '{}' not implemented",
+                    name
+                ))),
             }
         }
     }
@@ -1458,7 +1467,7 @@ fn apply_nonlinear_function(input: f64, func: &NonlinearFunction) -> SignalResul
 fn transfer_function_to_state_space(tf: &TransferFunction) -> SignalResult<StateSpace> {
     let num = &tf.numerator;
     let den = &tf.denominator;
-    
+
     if den.is_empty() || den[0] == 0.0 {
         return Err(SignalError::ValueError(
             "Invalid denominator in transfer function".to_string(),
@@ -2232,7 +2241,6 @@ fn identify_arx_complete(
 
     Ok((model, parameters, 1, true, cost))
 }
-
 
 /// MIMO system identification function
 pub fn mimo_system_identification_advanced(

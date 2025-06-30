@@ -4,8 +4,8 @@
 
 use ndarray::{Array1, ArrayView1};
 use scirs2_core::error::CoreResult as Result;
-use std::collections::BinaryHeap;
 use std::cmp::Ordering;
+use std::collections::BinaryHeap;
 
 /// Event in the optimization process
 #[derive(Debug, Clone)]
@@ -70,12 +70,12 @@ impl EventDrivenOptimizer {
             parameters: initial_params,
         }
     }
-    
+
     /// Schedule an event
     pub fn schedule_event(&mut self, event: OptimizationEvent) {
         self.event_queue.push(event);
     }
-    
+
     /// Process next event
     pub fn process_next_event<F>(&mut self, objective: &F) -> Result<bool>
     where
@@ -83,7 +83,7 @@ impl EventDrivenOptimizer {
     {
         if let Some(event) = self.event_queue.pop() {
             self.current_time = event.time;
-            
+
             match event.event_type {
                 EventType::ParameterUpdate => {
                     // Update parameters with event data
@@ -101,13 +101,13 @@ impl EventDrivenOptimizer {
                     let _obj_val = objective(&self.parameters.view());
                 }
             }
-            
+
             Ok(true)
         } else {
             Ok(false)
         }
     }
-    
+
     /// Compute finite difference gradient
     fn compute_finite_difference_gradient<F>(&self, objective: &F) -> Array1<f64>
     where
@@ -117,14 +117,14 @@ impl EventDrivenOptimizer {
         let mut gradient = Array1::zeros(n);
         let h = 1e-6;
         let f0 = objective(&self.parameters.view());
-        
+
         for i in 0..n {
             let mut params_plus = self.parameters.clone();
             params_plus[i] += h;
             let f_plus = objective(&params_plus.view());
             gradient[i] = (f_plus - f0) / h;
         }
-        
+
         gradient
     }
 }
@@ -139,7 +139,7 @@ where
     F: Fn(&ArrayView1<f64>) -> f64,
 {
     let mut optimizer = EventDrivenOptimizer::new(initial_params.to_owned());
-    
+
     // Schedule initial events
     for i in 0..10 {
         let event = OptimizationEvent {
@@ -149,14 +149,14 @@ where
         };
         optimizer.schedule_event(event);
     }
-    
+
     // Process events
     for _ in 0..max_events {
         if !optimizer.process_next_event(&objective)? {
             break;
         }
     }
-    
+
     Ok(optimizer.parameters)
 }
 

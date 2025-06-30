@@ -400,7 +400,7 @@ fn compute_single_tapered_fft_simd(
             simd_success = true;
         }
     }
-    
+
     if !simd_success && n >= 16 {
         // Strategy 2: Basic SIMD operations with enhanced error handling
         match try_basic_simd_tapering(signal, &taper, &mut tapered) {
@@ -413,7 +413,7 @@ fn compute_single_tapered_fft_simd(
             }
         }
     }
-    
+
     if !simd_success {
         // Strategy 4: Scalar fallback with optimization
         scalar_tapering_optimized(signal, &taper, &mut tapered);
@@ -531,26 +531,26 @@ fn compute_tapered_ffts_parallel(
 fn try_advanced_simd_tapering(
     signal: &[f64],
     taper: &ArrayView1<f64>,
-    tapered: &mut [f64]
+    tapered: &mut [f64],
 ) -> Result<(), Box<dyn std::error::Error>> {
     use crate::simd_advanced::{simd_apply_window, SimdConfig};
-    
+
     let config = SimdConfig::default();
     let taper_vec: Vec<f64> = taper.iter().copied().collect();
-    
+
     simd_apply_window(signal, &taper_vec, tapered, &config)
 }
 
 /// Try basic SIMD tapering with error recovery
 fn try_basic_simd_tapering(
     signal: &[f64],
-    taper: &ArrayView1<f64>, 
-    tapered: &mut [f64]
+    taper: &ArrayView1<f64>,
+    tapered: &mut [f64],
 ) -> SignalResult<()> {
     let signal_view = ArrayView1::from(signal);
     let tapered_view = ArrayView1::from_shape(signal.len(), tapered)
         .map_err(|e| SignalError::ComputationError(format!("Shape error: {}", e)))?;
-    
+
     f64::simd_mul(&signal_view, taper, &tapered_view);
     Ok(())
 }
@@ -559,10 +559,10 @@ fn try_basic_simd_tapering(
 fn try_chunked_simd_tapering(
     signal: &[f64],
     taper: &ArrayView1<f64>,
-    tapered: &mut [f64]
+    tapered: &mut [f64],
 ) -> SignalResult<()> {
     let chunk_size = 256; // Optimal chunk size for most SIMD implementations
-    
+
     for (chunk_idx, (sig_chunk, tap_chunk, out_chunk)) in signal
         .chunks(chunk_size)
         .zip(taper.as_slice().unwrap().chunks(chunk_size))
@@ -571,27 +571,25 @@ fn try_chunked_simd_tapering(
     {
         let sig_view = ArrayView1::from(sig_chunk);
         let tap_view = ArrayView1::from(tap_chunk);
-        let out_view = ArrayView1::from_shape(sig_chunk.len(), out_chunk)
-            .map_err(|e| SignalError::ComputationError(
-                format!("Chunked SIMD shape error at chunk {}: {}", chunk_idx, e)
-            ))?;
-            
+        let out_view = ArrayView1::from_shape(sig_chunk.len(), out_chunk).map_err(|e| {
+            SignalError::ComputationError(format!(
+                "Chunked SIMD shape error at chunk {}: {}",
+                chunk_idx, e
+            ))
+        })?;
+
         f64::simd_mul(&sig_view, &tap_view, &out_view);
     }
-    
+
     Ok(())
 }
 
 /// Optimized scalar tapering fallback
-fn scalar_tapering_optimized(
-    signal: &[f64],
-    taper: &ArrayView1<f64>,
-    tapered: &mut [f64]
-) {
+fn scalar_tapering_optimized(signal: &[f64], taper: &ArrayView1<f64>, tapered: &mut [f64]) {
     // Unrolled loop for better performance
     let taper_slice = taper.as_slice().unwrap();
     let chunks = signal.len() / 4;
-    
+
     // Process 4 elements at a time
     for i in 0..chunks {
         let base_idx = i * 4;
@@ -600,7 +598,7 @@ fn scalar_tapering_optimized(
         tapered[base_idx + 2] = signal[base_idx + 2] * taper_slice[base_idx + 2];
         tapered[base_idx + 3] = signal[base_idx + 3] * taper_slice[base_idx + 3];
     }
-    
+
     // Handle remaining elements
     for i in (chunks * 4)..signal.len() {
         tapered[i] = signal[i] * taper_slice[i];
@@ -631,11 +629,17 @@ fn enhanced_simd_fft(x: &[f64], nfft: usize) -> SignalResult<Vec<Complex64>> {
     }
 
     if !nfft.is_power_of_two() {
-        eprintln!("Warning: FFT length {} is not a power of two, performance may be suboptimal", nfft);
+        eprintln!(
+            "Warning: FFT length {} is not a power of two, performance may be suboptimal",
+            nfft
+        );
     }
-    
+
     if nfft > 1_000_000 {
-        eprintln!("Warning: Very large FFT length {}, consider chunked processing", nfft);
+        eprintln!(
+            "Warning: Very large FFT length {}, consider chunked processing",
+            nfft
+        );
     }
 
     // Pad or truncate to nfft with improved memory management
@@ -721,7 +725,7 @@ fn compute_validated_power_spectrum(spectrum: &[Complex64]) -> SignalResult<Vec<
     let mut power_spectrum = Vec::with_capacity(spectrum.len());
     let mut max_power = 0.0;
     let mut suspicious_values = 0;
-    
+
     for (i, &val) in spectrum.iter().enumerate() {
         let power = val.norm_sqr();
 
@@ -732,10 +736,10 @@ fn compute_validated_power_spectrum(spectrum: &[Complex64]) -> SignalResult<Vec<
                 i, power
             )));
         }
-        
+
         if power < 0.0 {
             return Err(SignalError::ComputationError(format!(
-                "Negative power spectrum value at frequency bin {}: {}", 
+                "Negative power spectrum value at frequency bin {}: {}",
                 i, power
             )));
         }
@@ -745,22 +749,28 @@ fn compute_validated_power_spectrum(spectrum: &[Complex64]) -> SignalResult<Vec<
             suspicious_values += 1;
             if suspicious_values > spectrum.len() / 10 {
                 return Err(SignalError::ComputationError(
-                    "Too many extremely large power spectrum values detected".to_string()
+                    "Too many extremely large power spectrum values detected".to_string(),
                 ));
             }
         }
-        
+
         max_power = max_power.max(power);
         power_spectrum.push(power);
     }
-    
+
     // Warn about potential numerical issues
     if max_power > 1e100 {
-        eprintln!("Warning: Very large maximum power spectrum value: {:.2e}", max_power);
+        eprintln!(
+            "Warning: Very large maximum power spectrum value: {:.2e}",
+            max_power
+        );
     }
-    
+
     if suspicious_values > 0 {
-        eprintln!("Warning: {} suspicious power spectrum values detected", suspicious_values);
+        eprintln!(
+            "Warning: {} suspicious power spectrum values detected",
+            suspicious_values
+        );
     }
 
     Ok(power_spectrum)
@@ -815,7 +825,7 @@ fn combine_spectra_standard(
 }
 
 /// Combine spectra using Thomson's adaptive weighting method with enhanced robustness
-/// 
+///
 /// This refined implementation includes:
 /// - Improved convergence detection with multiple criteria
 /// - Enhanced numerical stability for extreme values
@@ -846,15 +856,15 @@ fn combine_spectra_adaptive(
     let max_iter = 20; // Increased for more reliable convergence
     let base_tolerance = 1e-12; // Enhanced precision
     let min_weight = 1e-16; // Improved numerical precision
-    
+
     // Adaptive regularization based on eigenvalue spread
-    let eigenvalue_ratio = eigenvalues[eigenvalues.len()-1] / eigenvalues[0];
+    let eigenvalue_ratio = eigenvalues[eigenvalues.len() - 1] / eigenvalues[0];
     let regularization = if eigenvalue_ratio < 1e-10 {
         1e-10 // Stronger regularization for ill-conditioned cases
     } else {
         1e-14 // Standard regularization
     };
-    
+
     let damping_start = 8; // Refined damping schedule
     let damping_factor = 0.85; // More conservative damping
 
@@ -870,7 +880,7 @@ fn combine_spectra_adaptive(
     let mut converged = false;
     let mut convergence_history = Vec::new();
     let mut oscillation_detector = 0;
-    
+
     for iter in 0..max_iter {
         let old_psd = psd.clone();
 
@@ -971,7 +981,7 @@ fn combine_spectra_adaptive(
         convergence_history.push(mean_change);
         if convergence_history.len() > 4 {
             convergence_history.remove(0);
-            
+
             // Detect oscillations in convergence
             if convergence_history.len() >= 4 {
                 let recent_trend = convergence_history[3] - convergence_history[1];
@@ -984,13 +994,16 @@ fn combine_spectra_adaptive(
 
         // Adaptive tolerance based on iteration progress
         let adaptive_tolerance = base_tolerance * (1.0 + iter as f64 * 0.1);
-        
+
         // Enhanced convergence criteria
-        if max_change < adaptive_tolerance && mean_change < adaptive_tolerance * 0.1 && rms_change < adaptive_tolerance * 0.5 {
+        if max_change < adaptive_tolerance
+            && mean_change < adaptive_tolerance * 0.1
+            && rms_change < adaptive_tolerance * 0.5
+        {
             converged = true;
             break;
         }
-        
+
         // Early convergence for stable oscillations
         if oscillation_detector >= 3 && mean_change < adaptive_tolerance * 10.0 {
             converged = true;
@@ -1001,11 +1014,12 @@ fn combine_spectra_adaptive(
         if iter > damping_start {
             // Multi-factor adaptive damping
             let convergence_rate = if iter > 0 && convergence_history.len() > 1 {
-                convergence_history[convergence_history.len()-1] / convergence_history[convergence_history.len()-2].max(1e-15)
+                convergence_history[convergence_history.len() - 1]
+                    / convergence_history[convergence_history.len() - 2].max(1e-15)
             } else {
                 1.0
             };
-            
+
             let adaptive_damping = if oscillation_detector > 0 {
                 0.6 // Strong damping for oscillations
             } else if mean_change > adaptive_tolerance * 50.0 {
@@ -1018,13 +1032,14 @@ fn combine_spectra_adaptive(
 
             // Apply frequency-selective damping
             for j in 0..n_freqs {
-                let local_change = (psd[j] - old_psd[j]).abs() / (psd[j].abs().max(old_psd[j].abs()).max(regularization));
+                let local_change = (psd[j] - old_psd[j]).abs()
+                    / (psd[j].abs().max(old_psd[j].abs()).max(regularization));
                 let local_damping = if local_change > adaptive_tolerance * 100.0 {
                     adaptive_damping * 0.8 // Stronger damping for highly variable frequencies
                 } else {
                     adaptive_damping
                 };
-                
+
                 psd[j] = local_damping * psd[j] + (1.0 - local_damping) * old_psd[j];
             }
         }
@@ -1151,20 +1166,26 @@ fn compute_confidence_intervals(
 fn compute_effective_dof(eigenvalues: &Array1<f64>) -> f64 {
     let sum_lambda: f64 = eigenvalues.sum();
     let sum_lambda_sq: f64 = eigenvalues.iter().map(|&x| x * x).sum();
-    
+
     // Enhanced numerical stability for edge cases
     if sum_lambda_sq < 1e-15 || sum_lambda < 1e-15 {
         return 2.0; // Fallback to minimum DOF
     }
-    
+
     let dof = 2.0 * sum_lambda.powi(2) / sum_lambda_sq;
-    
+
     // Validate DOF range
     if dof < 1.0 {
-        eprintln!("Warning: Computed DOF ({:.2}) is less than 1, using minimum value", dof);
+        eprintln!(
+            "Warning: Computed DOF ({:.2}) is less than 1, using minimum value",
+            dof
+        );
         2.0
     } else if dof > 2.0 * eigenvalues.len() as f64 {
-        eprintln!("Warning: Computed DOF ({:.2}) exceeds theoretical maximum", dof);
+        eprintln!(
+            "Warning: Computed DOF ({:.2}) exceeds theoretical maximum",
+            dof
+        );
         2.0 * eigenvalues.len() as f64
     } else {
         dof
@@ -1184,22 +1205,22 @@ fn compute_pmtm_chunked(
     nfft: usize,
 ) -> SignalResult<EnhancedMultitaperResult> {
     let n = signal.len();
-    
+
     // Enhanced adaptive chunk sizing strategy
     let signal_complexity = estimate_signal_complexity(signal);
     let memory_factor = if config.memory_optimized { 0.5 } else { 1.0 };
-    
+
     let base_chunk_size = match (config.k, signal_complexity) {
-        (k, _) if k > 30 => 30_000,  // Many tapers require smaller chunks
+        (k, _) if k > 30 => 30_000, // Many tapers require smaller chunks
         (k, complexity) if k > 15 && complexity > 2.0 => 40_000, // Complex signals need more care
-        (k, _) if k > 10 => 60_000,  // Moderate number of tapers
-        _ => 100_000,                // Standard case
+        (k, _) if k > 10 => 60_000, // Moderate number of tapers
+        _ => 100_000,               // Standard case
     };
-    
+
     let chunk_size = ((base_chunk_size as f64 * memory_factor) as usize)
         .min(n / 8)  // Never use chunks larger than n/8
         .max((config.k * 25).min(n / 2)); // Ensure statistical validity
-        
+
     // Intelligent overlap based on frequency content
     let overlap_ratio = if signal_complexity > 3.0 {
         0.3 // More overlap for complex signals
@@ -1208,7 +1229,7 @@ fn compute_pmtm_chunked(
     } else {
         0.2 // Standard overlap
     };
-    
+
     let overlap = (chunk_size as f64 * overlap_ratio) as usize;
     let step = chunk_size.saturating_sub(overlap).max(chunk_size / 2);
 
@@ -1377,7 +1398,7 @@ fn interpolate_psd(
 }
 
 /// Estimate signal complexity for adaptive processing
-/// 
+///
 /// Returns a complexity score based on:
 /// - Spectral entropy
 /// - Dynamic range
@@ -1386,21 +1407,21 @@ fn estimate_signal_complexity(signal: &[f64]) -> f64 {
     if signal.len() < 64 {
         return 1.0; // Simple case for short signals
     }
-    
+
     // Calculate basic statistics
     let mean = signal.iter().sum::<f64>() / signal.len() as f64;
     let variance = signal.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / signal.len() as f64;
     let std_dev = variance.sqrt();
-    
+
     if std_dev < 1e-12 {
         return 0.5; // Nearly constant signal
     }
-    
+
     // Estimate dynamic range
     let max_val = signal.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
     let min_val = signal.iter().cloned().fold(f64::INFINITY, f64::min);
     let dynamic_range = (max_val - min_val) / std_dev;
-    
+
     // Estimate high-frequency content via differences
     let mut high_freq_energy = 0.0;
     for window in signal.windows(2) {
@@ -1408,12 +1429,12 @@ fn estimate_signal_complexity(signal: &[f64]) -> f64 {
     }
     high_freq_energy /= signal.len() as f64;
     let high_freq_ratio = high_freq_energy / variance.max(1e-12);
-    
+
     // Combine factors for complexity score
     let complexity = 1.0 + 
         (dynamic_range / 10.0).min(2.0) +  // Dynamic range contribution
-        (high_freq_ratio * 5.0).min(2.0);   // High frequency contribution
-        
+        (high_freq_ratio * 5.0).min(2.0); // High frequency contribution
+
     complexity.min(5.0) // Cap at maximum complexity
 }
 

@@ -52,24 +52,24 @@ pub fn compress_jacobian_pattern(
 fn color_jacobian_columns(sparsity: &CsrArray<f64>) -> Result<Vec<usize>, OptimizeError> {
     let (_m, n) = sparsity.shape();
     let mut coloring = vec![0; n];
-    
+
     // For each column, find the lowest color that doesn't conflict
     for col in 0..n {
         let mut used_colors = HashSet::new();
-        
+
         // Find all rows where this column has a nonzero
         let col_rows = get_column_nonzero_rows(sparsity, col);
-        
+
         // Check previously colored columns that share rows with this column
         for prev_col in 0..col {
             let prev_col_rows = get_column_nonzero_rows(sparsity, prev_col);
-            
+
             // If columns share any row, they can't have the same color
             if col_rows.iter().any(|&row| prev_col_rows.contains(&row)) {
                 used_colors.insert(coloring[prev_col]);
             }
         }
-        
+
         // Assign the lowest available color
         let mut color = 0;
         while used_colors.contains(&color) {
@@ -77,7 +77,7 @@ fn color_jacobian_columns(sparsity: &CsrArray<f64>) -> Result<Vec<usize>, Optimi
         }
         coloring[col] = color;
     }
-    
+
     Ok(coloring)
 }
 
@@ -85,7 +85,7 @@ fn color_jacobian_columns(sparsity: &CsrArray<f64>) -> Result<Vec<usize>, Optimi
 fn get_column_nonzero_rows(sparsity: &CsrArray<f64>, col: usize) -> HashSet<usize> {
     let mut rows = HashSet::new();
     let (m, _) = sparsity.shape();
-    
+
     for row in 0..m {
         if let Some(val) = sparsity.get(row, col) {
             if val.abs() > 1e-15 {
@@ -93,7 +93,7 @@ fn get_column_nonzero_rows(sparsity: &CsrArray<f64>, col: usize) -> HashSet<usiz
             }
         }
     }
-    
+
     rows
 }
 
@@ -135,33 +135,33 @@ pub fn compress_hessian_pattern(
 fn color_hessian_columns(sparsity: &CsrArray<f64>) -> Result<Vec<usize>, OptimizeError> {
     let (n, _) = sparsity.shape();
     let mut coloring = vec![0; n];
-    
+
     // Build adjacency information for efficient neighbor lookup
     let adjacency = build_adjacency_list(sparsity);
-    
+
     // For each column, find the lowest color that doesn't conflict
     for col in 0..n {
         let mut used_colors = HashSet::new();
-        
+
         // Get neighbors of current column
         let neighbors = &adjacency[col];
-        
+
         // Check all previously colored columns
         for prev_col in 0..col {
             let prev_neighbors = &adjacency[prev_col];
-            
+
             // Check if columns are distance <= 2 apart
             let distance_conflict = 
                 // Distance 1: directly connected
                 neighbors.contains(&prev_col) ||
                 // Distance 2: share a common neighbor
                 neighbors.iter().any(|&n| prev_neighbors.contains(&n));
-            
+
             if distance_conflict {
                 used_colors.insert(coloring[prev_col]);
             }
         }
-        
+
         // Assign the lowest available color
         let mut color = 0;
         while used_colors.contains(&color) {
@@ -169,7 +169,7 @@ fn color_hessian_columns(sparsity: &CsrArray<f64>) -> Result<Vec<usize>, Optimiz
         }
         coloring[col] = color;
     }
-    
+
     Ok(coloring)
 }
 
@@ -177,7 +177,7 @@ fn color_hessian_columns(sparsity: &CsrArray<f64>) -> Result<Vec<usize>, Optimiz
 fn build_adjacency_list(sparsity: &CsrArray<f64>) -> Vec<HashSet<usize>> {
     let (n, _) = sparsity.shape();
     let mut adjacency = vec![HashSet::new(); n];
-    
+
     for i in 0..n {
         for j in 0..n {
             if i != j {
@@ -190,7 +190,7 @@ fn build_adjacency_list(sparsity: &CsrArray<f64>) -> Vec<HashSet<usize>> {
             }
         }
     }
-    
+
     adjacency
 }
 
@@ -219,17 +219,17 @@ pub fn reconstruct_jacobian(
     let (m, n) = sparsity.shape();
     let (grad_m, num_colors) = gradients.dim();
     let (b_n, b_colors) = b.dim();
-    
+
     // Validate dimensions
     if grad_m != m || b_n != n || b_colors != num_colors {
         return Err(OptimizeError::InvalidInput(
             "Dimension mismatch in reconstruction matrices".to_string(),
         ));
     }
-    
+
     // Create dense matrix for reconstruction, then convert to sparse
     let mut jacobian_dense = Array2::zeros((m, n));
-    
+
     // For each color group, extract the columns
     for color in 0..num_colors {
         // Find all columns that belong to this color
@@ -239,7 +239,7 @@ pub fn reconstruct_jacobian(
                 columns_in_color.push(col);
             }
         }
-        
+
         // The gradient for this color contains the sum of derivatives for all columns in the group
         // Since we used proper coloring, we can extract individual columns
         for &col in &columns_in_color {
@@ -252,12 +252,12 @@ pub fn reconstruct_jacobian(
             }
         }
     }
-    
+
     // Convert dense matrix to sparse, preserving only the sparsity pattern
     let mut row_indices = Vec::new();
     let mut col_indices = Vec::new();
     let mut values = Vec::new();
-    
+
     for row in 0..m {
         for col in 0..n {
             if sparsity.get(row, col).is_some() && jacobian_dense[[row, col]].abs() > 1e-15 {
@@ -267,7 +267,7 @@ pub fn reconstruct_jacobian(
             }
         }
     }
-    
+
     // Create sparse matrix from the reconstructed values
     CsrArray::from_triplets(row_indices, col_indices, values, (m, n))
         .map_err(|_| OptimizeError::InvalidInput("Failed to create sparse matrix".to_string()))
@@ -300,23 +300,23 @@ pub fn reconstruct_hessian_central_diff(
     let (n, _) = sparsity.shape();
     let (grad_n, num_colors) = gradients_forward.dim();
     let (p_n, p_colors) = p.dim();
-    
+
     // Validate dimensions
     if grad_n != n || p_n != n || p_colors != num_colors {
         return Err(OptimizeError::InvalidInput(
             "Dimension mismatch in Hessian reconstruction matrices".to_string(),
         ));
     }
-    
+
     if gradients_backward.dim() != (n, num_colors) {
         return Err(OptimizeError::InvalidInput(
             "Gradient matrices must have the same dimensions".to_string(),
         ));
     }
-    
+
     // Create dense matrix for reconstruction
     let mut hessian_dense = Array2::zeros((n, n));
-    
+
     // Reconstruct using central differences: H = (grad_forward - grad_backward) / (2*h)
     for color in 0..num_colors {
         // Find columns that belong to this color
@@ -326,16 +326,18 @@ pub fn reconstruct_hessian_central_diff(
                 columns_in_color.push(col);
             }
         }
-        
+
         // For each pair of variables in the same color group
         for &col_i in &columns_in_color {
             for row in 0..n {
                 // Check if (row, col_i) should be nonzero according to sparsity
                 if sparsity.get(row, col_i).is_some() {
                     // Central difference approximation
-                    let h_val = (gradients_forward[[row, color]] - gradients_backward[[row, color]]) / (2.0 * h);
+                    let h_val = (gradients_forward[[row, color]]
+                        - gradients_backward[[row, color]])
+                        / (2.0 * h);
                     hessian_dense[[row, col_i]] = h_val;
-                    
+
                     // Ensure symmetry for Hessian
                     if row != col_i && sparsity.get(col_i, row).is_some() {
                         hessian_dense[[col_i, row]] = h_val;
@@ -344,12 +346,12 @@ pub fn reconstruct_hessian_central_diff(
             }
         }
     }
-    
+
     // Convert to sparse matrix, preserving sparsity pattern
     let mut row_indices = Vec::new();
     let mut col_indices = Vec::new();
     let mut values = Vec::new();
-    
+
     for row in 0..n {
         for col in 0..n {
             if sparsity.get(row, col).is_some() && hessian_dense[[row, col]].abs() > 1e-15 {
@@ -359,7 +361,7 @@ pub fn reconstruct_hessian_central_diff(
             }
         }
     }
-    
+
     // Create sparse Hessian
     CsrArray::from_triplets(row_indices, col_indices, values, (n, n))
         .map_err(|_| OptimizeError::InvalidInput("Failed to create sparse Hessian".to_string()))
@@ -376,7 +378,6 @@ pub fn reconstruct_hessian(
     let h = 1e-8; // Default step size
     let gradients_backward = Array2::zeros(gradients.dim());
     let gradients_backward_view = gradients_backward.view();
-    
+
     reconstruct_hessian_central_diff(gradients, &gradients_backward_view, p, sparsity, h)
 }
-

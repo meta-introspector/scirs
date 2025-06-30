@@ -4,18 +4,18 @@
 //! integration systems, with support for parallel execution, resource management,
 //! and comprehensive result reporting across multiple platforms.
 
-use crate::error::{OptimError, Result};
 use crate::benchmarking::cross_platform_tester::{
-    CrossPlatformTester, CrossPlatformConfig, PlatformTarget, TestCategory,
-    PerformanceThresholds, CrossPlatformTestReport
+    CrossPlatformConfig, CrossPlatformTestReport, CrossPlatformTester, PerformanceThresholds,
+    PlatformTarget, TestCategory,
 };
-use serde::{Serialize, Deserialize};
+use crate::error::{OptimError, Result};
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
+use std::process::{Command, Stdio};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
-use std::process::{Command, Stdio};
 
 /// Automated test runner for CI/CD environments
 #[derive(Debug)]
@@ -61,7 +61,7 @@ impl Default for AutomatedRunnerConfig {
     fn default() -> Self {
         Self {
             max_parallel_runners: 4,
-            test_timeout_seconds: 300, // 5 minutes
+            test_timeout_seconds: 300,    // 5 minutes
             global_timeout_seconds: 1800, // 30 minutes
             enable_resource_monitoring: true,
             fail_fast: false,
@@ -382,30 +382,33 @@ impl AutomatedTestRunner {
     /// Run complete cross-platform test matrix
     pub fn run_test_matrix(&mut self) -> Result<MatrixTestResults> {
         println!("🚀 Starting automated cross-platform test matrix...");
-        
+
         // Detect CI environment
         let ci_environment = self.detect_ci_environment();
         println!("CI Environment: {:?}", ci_environment.ci_system);
-        
+
         // Validate resource availability
         self.validate_resources()?;
-        
+
         // Setup platform test executions
         self.setup_test_executions()?;
-        
+
         // Execute tests in parallel with resource management
         let start_time = Instant::now();
         self.execute_test_matrix()?;
         let total_execution_time = start_time.elapsed();
-        
+
         // Aggregate and analyze results
         self.aggregate_results(total_execution_time, ci_environment)?;
-        
+
         // Generate comprehensive report
         let results = self.generate_matrix_results()?;
-        
-        println!("✅ Cross-platform test matrix completed in {:?}", total_execution_time);
-        
+
+        println!(
+            "✅ Cross-platform test matrix completed in {:?}",
+            total_execution_time
+        );
+
         Ok(results)
     }
 
@@ -452,7 +455,8 @@ impl AutomatedTestRunner {
         if branch.is_none() {
             if let Ok(output) = Command::new("git")
                 .args(&["rev-parse", "--abbrev-ref", "HEAD"])
-                .output() {
+                .output()
+            {
                 if output.status.success() {
                     branch = Some(String::from_utf8_lossy(&output.stdout).trim().to_string());
                 }
@@ -472,33 +476,38 @@ impl AutomatedTestRunner {
     /// Validate resource availability
     fn validate_resources(&self) -> Result<()> {
         println!("🔍 Validating resource availability...");
-        
-        let total_required_cores = self.platform_matrix.platforms
+
+        let total_required_cores = self
+            .platform_matrix
+            .platforms
             .values()
             .map(|config| config.resource_requirements.min_cpu_cores)
             .sum::<usize>();
-        
-        let total_required_memory = self.platform_matrix.platforms
+
+        let total_required_memory = self
+            .platform_matrix
+            .platforms
             .values()
             .map(|config| config.resource_requirements.min_memory_mb)
             .sum::<usize>();
-        
-        if total_required_cores > self.resource_manager.available_cores * self.config.max_parallel_runners {
+
+        if total_required_cores
+            > self.resource_manager.available_cores * self.config.max_parallel_runners
+        {
             return Err(OptimError::ResourceError(format!(
                 "Insufficient CPU cores: required {}, available {}",
                 total_required_cores,
                 self.resource_manager.available_cores * self.config.max_parallel_runners
             )));
         }
-        
+
         if total_required_memory > self.resource_manager.available_memory {
             return Err(OptimError::ResourceError(format!(
                 "Insufficient memory: required {}MB, available {}MB",
-                total_required_memory,
-                self.resource_manager.available_memory
+                total_required_memory, self.resource_manager.available_memory
             )));
         }
-        
+
         println!("✅ Resource validation passed");
         Ok(())
     }
@@ -506,20 +515,25 @@ impl AutomatedTestRunner {
     /// Setup test executions
     fn setup_test_executions(&mut self) -> Result<()> {
         println!("📋 Setting up test executions...");
-        
-        let mut queue = self.execution_queue.lock()
-            .map_err(|_| OptimError::InvalidState("Failed to acquire execution queue lock".to_string()))?;
-        
+
+        let mut queue = self.execution_queue.lock().map_err(|_| {
+            OptimError::InvalidState("Failed to acquire execution queue lock".to_string())
+        })?;
+
         // Sort platforms by priority
         let mut platforms: Vec<_> = self.platform_matrix.platforms.keys().collect();
         platforms.sort_by_key(|&platform| {
             std::cmp::Reverse(self.platform_matrix.priorities.get(platform).unwrap_or(&0))
         });
-        
+
         for platform in platforms {
             if let Some(config) = self.platform_matrix.platforms.get(platform) {
                 let execution = TestExecution {
-                    id: format!("{}_{}", platform.to_string(), chrono::Utc::now().timestamp()),
+                    id: format!(
+                        "{}_{}",
+                        platform.to_string(),
+                        chrono::Utc::now().timestamp()
+                    ),
                     platform: platform.clone(),
                     config: config.clone(),
                     status: ExecutionStatus::Queued,
@@ -530,41 +544,42 @@ impl AutomatedTestRunner {
                     results: None,
                     error: None,
                 };
-                
+
                 queue.push_back(execution);
             }
         }
-        
+
         println!("📋 Setup {} test executions", queue.len());
         Ok(())
     }
 
     /// Execute test matrix with parallel execution
     fn execute_test_matrix(&mut self) -> Result<()> {
-        println!("🏃 Executing test matrix with {} parallel runners...", self.config.max_parallel_runners);
-        
+        println!(
+            "🏃 Executing test matrix with {} parallel runners...",
+            self.config.max_parallel_runners
+        );
+
         let mut handles = Vec::new();
         let execution_queue = Arc::clone(&self.execution_queue);
-        
+
         // Spawn worker threads
         for worker_id in 0..self.config.max_parallel_runners {
             let queue_clone = Arc::clone(&execution_queue);
             let config = self.config.clone();
-            
-            let handle = thread::spawn(move || {
-                Self::worker_thread(worker_id, queue_clone, config)
-            });
-            
+
+            let handle = thread::spawn(move || Self::worker_thread(worker_id, queue_clone, config));
+
             handles.push(handle);
         }
-        
+
         // Wait for all workers to complete
         for handle in handles {
             if let Err(e) = handle.join() {
                 eprintln!("Worker thread panicked: {:?}", e);
             }
         }
-        
+
         println!("✅ Test matrix execution completed");
         Ok(())
     }
@@ -576,7 +591,7 @@ impl AutomatedTestRunner {
         config: AutomatedRunnerConfig,
     ) {
         println!("🧵 Worker {} started", worker_id);
-        
+
         loop {
             // Get next execution
             let mut execution = {
@@ -587,8 +602,11 @@ impl AutomatedTestRunner {
                         break;
                     }
                 };
-                
-                match queue.iter_mut().find(|e| e.status == ExecutionStatus::Queued) {
+
+                match queue
+                    .iter_mut()
+                    .find(|e| e.status == ExecutionStatus::Queued)
+                {
                     Some(exec) => {
                         exec.status = ExecutionStatus::Running;
                         exec.start_time = Some(Instant::now());
@@ -600,12 +618,15 @@ impl AutomatedTestRunner {
                     }
                 }
             };
-            
-            println!("🧵 Worker {} executing test for {:?}", worker_id, execution.platform);
-            
+
+            println!(
+                "🧵 Worker {} executing test for {:?}",
+                worker_id, execution.platform
+            );
+
             // Execute test
             let result = Self::execute_platform_test(&mut execution, &config);
-            
+
             // Update execution status
             {
                 let mut queue = execution_queue.lock().unwrap();
@@ -614,14 +635,18 @@ impl AutomatedTestRunner {
                     exec.resource_usage = execution.resource_usage.clone();
                     exec.results = execution.results.clone();
                     exec.error = execution.error.clone();
-                    
+
                     match result {
                         Ok(_) => exec.status = ExecutionStatus::Completed,
                         Err(_) => {
                             if config.retry_failed_tests && exec.retry_count < config.max_retries {
                                 exec.status = ExecutionStatus::Retrying;
                                 exec.retry_count += 1;
-                                println!("🔄 Retrying test for {:?} (attempt {})", execution.platform, exec.retry_count + 1);
+                                println!(
+                                    "🔄 Retrying test for {:?} (attempt {})",
+                                    execution.platform,
+                                    exec.retry_count + 1
+                                );
                             } else {
                                 exec.status = ExecutionStatus::Failed;
                             }
@@ -630,7 +655,7 @@ impl AutomatedTestRunner {
                 }
             }
         }
-        
+
         println!("🧵 Worker {} completed", worker_id);
     }
 
@@ -640,10 +665,10 @@ impl AutomatedTestRunner {
         config: &AutomatedRunnerConfig,
     ) -> Result<()> {
         let start_time = Instant::now();
-        
+
         // Setup platform environment
         Self::setup_platform_environment(&execution.config)?;
-        
+
         // Create cross-platform tester configuration
         let mut test_config = CrossPlatformConfig::default();
         test_config.target_platforms = vec![execution.platform.clone()];
@@ -652,15 +677,15 @@ impl AutomatedTestRunner {
             execution.platform.clone(),
             execution.config.performance_thresholds.clone(),
         );
-        
+
         // Run tests
         let mut tester = CrossPlatformTester::new(test_config)?;
         let test_results = tester.run_test_suite()?;
-        
+
         // Generate report
         let report = tester.generate_report();
         execution.results = Some(report);
-        
+
         // Simulate resource usage tracking
         execution.resource_usage = Some(ResourceUsage {
             peak_cpu_usage: 75.0,
@@ -671,10 +696,10 @@ impl AutomatedTestRunner {
             network_io: (0, 0),
             execution_duration: start_time.elapsed(),
         });
-        
+
         // Cleanup platform environment
         Self::cleanup_platform_environment(&execution.config)?;
-        
+
         Ok(())
     }
 
@@ -684,7 +709,7 @@ impl AutomatedTestRunner {
         for (key, value) in &config.environment_variables {
             std::env::set_var(key, value);
         }
-        
+
         // Run setup commands
         for command in &config.setup_commands {
             let output = Command::new("sh")
@@ -693,18 +718,24 @@ impl AutomatedTestRunner {
                 .stdout(Stdio::null())
                 .stderr(Stdio::null())
                 .status();
-            
+
             match output {
                 Ok(status) if status.success() => continue,
-                Ok(_) => return Err(OptimError::ExecutionError(
-                    format!("Setup command failed: {}", command)
-                )),
-                Err(e) => return Err(OptimError::ExecutionError(
-                    format!("Failed to execute setup command '{}': {}", command, e)
-                )),
+                Ok(_) => {
+                    return Err(OptimError::ExecutionError(format!(
+                        "Setup command failed: {}",
+                        command
+                    )))
+                }
+                Err(e) => {
+                    return Err(OptimError::ExecutionError(format!(
+                        "Failed to execute setup command '{}': {}",
+                        command, e
+                    )))
+                }
             }
         }
-        
+
         Ok(())
     }
 
@@ -720,7 +751,7 @@ impl AutomatedTestRunner {
                 .status();
             // Ignore cleanup failures
         }
-        
+
         Ok(())
     }
 
@@ -731,21 +762,24 @@ impl AutomatedTestRunner {
         ci_environment: CIEnvironmentInfo,
     ) -> Result<()> {
         println!("📊 Aggregating test results...");
-        
-        let queue = self.execution_queue.lock()
-            .map_err(|_| OptimError::InvalidState("Failed to acquire execution queue lock".to_string()))?;
-        
+
+        let queue = self.execution_queue.lock().map_err(|_| {
+            OptimError::InvalidState("Failed to acquire execution queue lock".to_string())
+        })?;
+
         let total_platforms = queue.len();
-        let successful_platforms = queue.iter()
+        let successful_platforms = queue
+            .iter()
             .filter(|e| e.status == ExecutionStatus::Completed)
             .count();
-        let failed_platforms = queue.iter()
+        let failed_platforms = queue
+            .iter()
             .filter(|e| e.status == ExecutionStatus::Failed)
             .count();
-        
+
         // Calculate resource utilization
         let resource_utilization = self.calculate_resource_utilization(&queue);
-        
+
         // Generate matrix summary
         self.results_aggregator.matrix_summary = MatrixExecutionSummary {
             total_platforms,
@@ -760,34 +794,36 @@ impl AutomatedTestRunner {
             resource_utilization,
             ci_environment,
         };
-        
+
         // Collect platform results
         for execution in queue.iter() {
             if let Some(report) = &execution.results {
-                self.results_aggregator.platform_results.insert(
-                    execution.platform.clone(),
-                    report.clone(),
-                );
+                self.results_aggregator
+                    .platform_results
+                    .insert(execution.platform.clone(), report.clone());
             }
         }
-        
+
         // Analyze performance and failures
         self.analyze_performance_matrix()?;
         self.analyze_failures(&queue)?;
-        
+
         println!("📊 Results aggregation completed");
         Ok(())
     }
 
     /// Calculate resource utilization across all executions
-    fn calculate_resource_utilization(&self, queue: &VecDeque<TestExecution>) -> ResourceUtilizationSummary {
+    fn calculate_resource_utilization(
+        &self,
+        queue: &VecDeque<TestExecution>,
+    ) -> ResourceUtilizationSummary {
         let mut total_cpu = 0.0;
         let mut peak_cpu = 0.0;
         let mut total_memory = 0.0;
         let mut peak_memory = 0.0;
         let mut total_compute_time = 0.0;
         let mut count = 0;
-        
+
         for execution in queue {
             if let Some(usage) = &execution.resource_usage {
                 total_cpu += usage.average_cpu_usage;
@@ -798,11 +834,19 @@ impl AutomatedTestRunner {
                 count += 1;
             }
         }
-        
+
         ResourceUtilizationSummary {
-            avg_cpu_utilization: if count > 0 { total_cpu / count as f64 } else { 0.0 },
+            avg_cpu_utilization: if count > 0 {
+                total_cpu / count as f64
+            } else {
+                0.0
+            },
             peak_cpu_utilization: peak_cpu,
-            avg_memory_utilization: if count > 0 { total_memory / count as f64 } else { 0.0 },
+            avg_memory_utilization: if count > 0 {
+                total_memory / count as f64
+            } else {
+                0.0
+            },
             peak_memory_utilization: peak_memory,
             total_compute_time,
         }
@@ -818,7 +862,7 @@ impl AutomatedTestRunner {
             regression_analysis: Vec::new(),
             optimization_opportunities: Vec::new(),
         };
-        
+
         Ok(())
     }
 
@@ -827,7 +871,7 @@ impl AutomatedTestRunner {
         let mut common_patterns = Vec::new();
         let mut platform_issues = HashMap::new();
         let mut recommendations = Vec::new();
-        
+
         // Analyze failed executions
         for execution in queue.iter().filter(|e| e.status == ExecutionStatus::Failed) {
             if let Some(error) = &execution.error {
@@ -837,21 +881,23 @@ impl AutomatedTestRunner {
                     .push(error.clone());
             }
         }
-        
+
         // Generate recommendations based on failures
         if !platform_issues.is_empty() {
-            recommendations.push("Review platform-specific test failures for common patterns".to_string());
-            recommendations.push("Consider increasing timeout values for slower platforms".to_string());
+            recommendations
+                .push("Review platform-specific test failures for common patterns".to_string());
+            recommendations
+                .push("Consider increasing timeout values for slower platforms".to_string());
             recommendations.push("Verify platform-specific dependencies and setup".to_string());
         }
-        
+
         self.results_aggregator.failure_analysis = FailureAnalysis {
             common_patterns,
             platform_issues,
             root_causes: Vec::new(),
             recommendations,
         };
-        
+
         Ok(())
     }
 
@@ -869,24 +915,26 @@ impl AutomatedTestRunner {
     /// Generate final recommendations for the matrix
     fn generate_final_recommendations(&self) -> Vec<String> {
         let mut recommendations = Vec::new();
-        
+
         let summary = &self.results_aggregator.matrix_summary;
-        
+
         if summary.successful_platforms < summary.total_platforms {
             recommendations.push(format!(
                 "Platform compatibility: {}/{} platforms passed tests",
                 summary.successful_platforms, summary.total_platforms
             ));
         }
-        
+
         if summary.resource_utilization.avg_cpu_utilization > 80.0 {
             recommendations.push("Consider optimizing for high CPU usage".to_string());
         }
-        
+
         if summary.total_execution_time > Duration::from_secs(1800) {
-            recommendations.push("Matrix execution time is high - consider parallelization improvements".to_string());
+            recommendations.push(
+                "Matrix execution time is high - consider parallelization improvements".to_string(),
+            );
         }
-        
+
         recommendations
     }
 }
@@ -912,14 +960,14 @@ impl PlatformMatrix {
         let mut platforms = HashMap::new();
         let mut priorities = HashMap::new();
         let mut environment_setup = HashMap::new();
-        
+
         // Define common platforms
         let common_platforms = vec![
             PlatformTarget::LinuxX64,
             PlatformTarget::MacOSX64,
             PlatformTarget::WindowsX64,
         ];
-        
+
         for (i, platform) in common_platforms.iter().enumerate() {
             let config = PlatformTestConfig {
                 platform: platform.clone(),
@@ -938,13 +986,8 @@ impl PlatformMatrix {
                 docker_image: None,
                 required_packages: Vec::new(),
                 environment_variables: HashMap::new(),
-                setup_commands: vec![
-                    "cargo --version".to_string(),
-                    "rustc --version".to_string(),
-                ],
-                cleanup_commands: vec![
-                    "cargo clean".to_string(),
-                ],
+                setup_commands: vec!["cargo --version".to_string(), "rustc --version".to_string()],
+                cleanup_commands: vec!["cargo clean".to_string()],
                 resource_requirements: ResourceRequirements {
                     min_cpu_cores: 2,
                     min_memory_mb: 2048,
@@ -953,12 +996,12 @@ impl PlatformMatrix {
                     network_required: false,
                 },
             };
-            
+
             platforms.insert(platform.clone(), config);
             priorities.insert(platform.clone(), (common_platforms.len() - i) as u32);
             environment_setup.insert(platform.clone(), Vec::new());
         }
-        
+
         Self {
             platforms,
             dependencies: HashMap::new(),
@@ -978,7 +1021,7 @@ impl ResourceManager {
             monitoring_enabled,
         }
     }
-    
+
     /// Get available system memory in MB
     fn get_available_memory() -> usize {
         // Simplified - in practice would use system APIs

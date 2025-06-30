@@ -8,8 +8,7 @@ use crate::denoise::{denoise_wavelet, ThresholdMethod, ThresholdSelect};
 use crate::denoise_advanced::{advanced_denoise, AdvancedDenoiseConfig, NoiseEstimation};
 use crate::denoise_cutting_edge::{denoise_dictionary_learning, DictionaryDenoiseConfig};
 use crate::denoise_enhanced::{
-    denoise_wiener_1d, denoise_median_1d, denoise_total_variation_1d,
-    WienerConfig, BilateralConfig
+    denoise_median_1d, denoise_total_variation_1d, denoise_wiener_1d, BilateralConfig, WienerConfig,
 };
 use crate::denoise_ultra_advanced::{ultra_advanced_denoise, UltraAdvancedDenoisingConfig};
 use crate::dwt::Wavelet;
@@ -28,26 +27,15 @@ pub enum DenoisingMethod {
         threshold_select: ThresholdSelect,
     },
     /// Advanced wavelet denoising with multiple techniques
-    WaveletAdvanced {
-        config: AdvancedDenoiseConfig,
-    },
+    WaveletAdvanced { config: AdvancedDenoiseConfig },
     /// Dictionary learning based denoising
-    DictionaryLearning {
-        config: DictionaryDenoiseConfig,
-    },
+    DictionaryLearning { config: DictionaryDenoiseConfig },
     /// Wiener filtering
-    Wiener {
-        config: WienerConfig,
-    },
+    Wiener { config: WienerConfig },
     /// Median filtering
-    Median {
-        window_size: usize,
-    },
+    Median { window_size: usize },
     /// Total variation denoising
-    TotalVariation {
-        lambda: f64,
-        iterations: usize,
-    },
+    TotalVariation { lambda: f64, iterations: usize },
     /// Ultra-advanced denoising with modern techniques
     UltraAdvanced {
         config: UltraAdvancedDenoisingConfig,
@@ -199,40 +187,56 @@ pub fn denoise_unified(
                 config.noise_level,
             )?;
             let denoised = Array1::from_vec(denoised_vec);
-            let noise_level = config.noise_level.unwrap_or_else(|| estimate_noise_level(&preprocessed));
+            let noise_level = config
+                .noise_level
+                .unwrap_or_else(|| estimate_noise_level(&preprocessed));
             (denoised, noise_level)
-        },
+        }
         DenoisingMethod::WaveletAdvanced { config: adv_config } => {
-            let result = advanced_denoise(
-                preprocessed.as_slice().unwrap(),
-                adv_config,
-            )?;
+            let result = advanced_denoise(preprocessed.as_slice().unwrap(), adv_config)?;
             (Array1::from_vec(result.signal), result.noise_level)
-        },
-        DenoisingMethod::DictionaryLearning { config: dict_config } => {
+        }
+        DenoisingMethod::DictionaryLearning {
+            config: dict_config,
+        } => {
             let denoised = denoise_dictionary_learning(&preprocessed, dict_config)?;
-            let noise_level = config.noise_level.unwrap_or_else(|| estimate_noise_level(&preprocessed));
+            let noise_level = config
+                .noise_level
+                .unwrap_or_else(|| estimate_noise_level(&preprocessed));
             (denoised, noise_level)
-        },
-        DenoisingMethod::Wiener { config: wiener_config } => {
+        }
+        DenoisingMethod::Wiener {
+            config: wiener_config,
+        } => {
             let denoised = denoise_wiener_1d(&preprocessed, wiener_config)?;
-            let noise_level = config.noise_level.unwrap_or_else(|| estimate_noise_level(&preprocessed));
+            let noise_level = config
+                .noise_level
+                .unwrap_or_else(|| estimate_noise_level(&preprocessed));
             (denoised, noise_level)
-        },
+        }
         DenoisingMethod::Median { window_size } => {
             let denoised = denoise_median_1d(&preprocessed, *window_size)?;
-            let noise_level = config.noise_level.unwrap_or_else(|| estimate_noise_level(&preprocessed));
+            let noise_level = config
+                .noise_level
+                .unwrap_or_else(|| estimate_noise_level(&preprocessed));
             (denoised, noise_level)
-        },
+        }
         DenoisingMethod::TotalVariation { lambda, iterations } => {
             let denoised = denoise_total_variation_1d(&preprocessed, *lambda, *iterations)?;
-            let noise_level = config.noise_level.unwrap_or_else(|| estimate_noise_level(&preprocessed));
+            let noise_level = config
+                .noise_level
+                .unwrap_or_else(|| estimate_noise_level(&preprocessed));
             (denoised, noise_level)
-        },
-        DenoisingMethod::UltraAdvanced { config: ultra_config } => {
+        }
+        DenoisingMethod::UltraAdvanced {
+            config: ultra_config,
+        } => {
             let result = ultra_advanced_denoise(&preprocessed, ultra_config)?;
-            (result.denoised_signal, estimate_noise_level(&result.noise_estimate))
-        },
+            (
+                result.denoised_signal,
+                estimate_noise_level(&result.noise_estimate),
+            )
+        }
     };
 
     // Postprocessing
@@ -282,7 +286,7 @@ pub fn auto_select_denoising_method(
     let signal_length = signal.len();
     let signal_complexity = analyze_signal_complexity(signal);
     let estimated_noise = noise_level.unwrap_or_else(|| estimate_noise_level(signal));
-    
+
     // Select method based on characteristics
     let method = if signal_length < 256 {
         // Short signals: use median filtering or simple wavelet
@@ -350,13 +354,13 @@ fn estimate_noise_level(signal: &Array1<f64>) -> f64 {
     if signal.len() < 2 {
         return 0.0;
     }
-    
+
     // Use differences between adjacent samples as noise estimate
     let mut diffs = Vec::with_capacity(signal.len() - 1);
     for i in 0..signal.len() - 1 {
         diffs.push((signal[i + 1] - signal[i]).abs());
     }
-    
+
     // Use median of differences as robust noise estimate
     diffs.sort_by(|a, b| a.partial_cmp(b).unwrap());
     diffs[diffs.len() / 2] * 0.6745 // Scale factor for Gaussian noise
@@ -367,14 +371,14 @@ fn analyze_signal_complexity(signal: &Array1<f64>) -> f64 {
     if signal.len() < 4 {
         return 0.0;
     }
-    
+
     // Calculate second derivative as complexity measure
     let mut complexity_sum = 0.0;
     for i in 1..signal.len() - 1 {
         let second_deriv = signal[i + 1] - 2.0 * signal[i] + signal[i - 1];
         complexity_sum += second_deriv.abs();
     }
-    
+
     let signal_range = signal.mapv(|x| x.abs()).into_iter().fold(0.0, f64::max);
     if signal_range > 0.0 {
         (complexity_sum / ((signal.len() - 2) as f64)) / signal_range
@@ -391,10 +395,12 @@ fn calculate_quality_metrics(
 ) -> QualityMetrics {
     let mse = reference.map(|ref_sig| {
         if ref_sig.len() == denoised.len() {
-            ref_sig.iter()
+            ref_sig
+                .iter()
                 .zip(denoised.iter())
                 .map(|(&r, &d)| (r - d).powi(2))
-                .sum::<f64>() / ref_sig.len() as f64
+                .sum::<f64>()
+                / ref_sig.len() as f64
         } else {
             f64::NAN
         }
@@ -402,7 +408,11 @@ fn calculate_quality_metrics(
 
     let psnr = mse.map(|mse_val| {
         if mse_val > 0.0 {
-            let max_val = reference.unwrap().mapv(|x| x.abs()).into_iter().fold(0.0, f64::max);
+            let max_val = reference
+                .unwrap()
+                .mapv(|x| x.abs())
+                .into_iter()
+                .fold(0.0, f64::max);
             20.0 * (max_val / mse_val.sqrt()).log10()
         } else {
             f64::INFINITY
@@ -422,7 +432,9 @@ fn calculate_quality_metrics(
     let original_hf = calculate_high_frequency_energy(original);
     let denoised_hf = calculate_high_frequency_energy(denoised);
     let noise_reduction = if original_hf > 0.0 {
-        ((original_hf - denoised_hf) / original_hf).max(0.0).min(1.0)
+        ((original_hf - denoised_hf) / original_hf)
+            .max(0.0)
+            .min(1.0)
     } else {
         0.0
     };
@@ -441,8 +453,9 @@ fn calculate_high_frequency_energy(signal: &Array1<f64>) -> f64 {
     if signal.len() < 2 {
         return 0.0;
     }
-    
-    signal.windows(2)
+
+    signal
+        .windows(2)
         .into_iter()
         .map(|window| (window[1] - window[0]).powi(2))
         .sum()
@@ -456,10 +469,10 @@ fn calculate_snr_improvement(original: &Array1<f64>, denoised: &Array1<f64>) -> 
 
     // Estimate noise as difference
     let noise: Array1<f64> = original - denoised;
-    
+
     let signal_power = denoised.mapv(|x| x * x).sum() / denoised.len() as f64;
     let noise_power = noise.mapv(|x| x * x).sum() / noise.len() as f64;
-    
+
     if noise_power > 0.0 && signal_power > 0.0 {
         Some(10.0 * (signal_power / noise_power).log10())
     } else {
@@ -494,10 +507,10 @@ mod tests {
         // Test with a simple signal
         let signal = Array1::from_vec(vec![1.0, 2.0, 1.5, 3.0, 2.5, 1.0]);
         let config = auto_select_denoising_method(&signal, None).unwrap();
-        
+
         // Should select a method appropriate for short signals
         match config.method {
-            DenoisingMethod::Median { .. } | DenoisingMethod::WaveletBasic { .. } => {},
+            DenoisingMethod::Median { .. } | DenoisingMethod::WaveletBasic { .. } => {}
             _ => panic!("Unexpected method selection for short signal"),
         }
     }
@@ -507,7 +520,7 @@ mod tests {
         // Create a signal with known characteristics
         let clean_signal = Array1::from_vec(vec![1.0; 100]);
         let noise_level = estimate_noise_level(&clean_signal);
-        
+
         // Should detect very low noise in constant signal
         assert!(noise_level < 0.1);
     }

@@ -15,11 +15,11 @@
 use crate::error::Result;
 use crate::streaming::{Frame, ProcessingStage};
 use ndarray::{Array1, Array2};
-use std::sync::{Arc, Mutex};
-use std::time::Instant;
-use std::collections::HashMap;
 use rand::prelude::*;
 use rand::rng;
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
+use std::time::Instant;
 
 /// Quantum-inspired amplitude for representing processing states
 #[derive(Debug, Clone)]
@@ -68,13 +68,10 @@ impl QuantumProcessingState {
     /// Create a new quantum processing state
     pub fn new(stage_names: &[String]) -> Self {
         let mut stage_amplitudes = HashMap::new();
-        
+
         // Initialize amplitudes in superposition
         for stage_name in stage_names {
-            let amplitude = QuantumAmplitude::new(
-                1.0 / (stage_names.len() as f64).sqrt(),
-                0.0,
-            );
+            let amplitude = QuantumAmplitude::new(1.0 / (stage_names.len() as f64).sqrt(), 0.0);
             stage_amplitudes.insert(stage_name.clone(), amplitude);
         }
 
@@ -93,18 +90,18 @@ impl QuantumProcessingState {
     pub fn evolve(&mut self, time_step: f64, hamiltonian: &QuantumHamiltonian) {
         // Simplified quantum evolution using Schrödinger equation
         // |ψ(t+dt)⟩ = exp(-iHdt/ℏ)|ψ(t)⟩
-        
+
         for (stage_name, amplitude) in &mut self.stage_amplitudes {
             if let Some(&energy) = hamiltonian.stage_energies.get(stage_name) {
                 let phase_change = -energy * time_step;
-                
+
                 // Apply rotation in complex plane
                 let cos_phase = phase_change.cos();
                 let sin_phase = phase_change.sin();
-                
+
                 let new_real = amplitude.real * cos_phase - amplitude.imaginary * sin_phase;
                 let new_imaginary = amplitude.real * sin_phase + amplitude.imaginary * cos_phase;
-                
+
                 amplitude.real = new_real;
                 amplitude.imaginary = new_imaginary;
             }
@@ -122,7 +119,7 @@ impl QuantumProcessingState {
         for (stage_name, amplitude) in &self.stage_amplitudes {
             let probability = amplitude.probability();
             stage_priorities.insert(stage_name.clone(), probability);
-            
+
             if probability > max_probability {
                 max_probability = probability;
                 optimal_stage = stage_name.clone();
@@ -153,7 +150,7 @@ impl QuantumHamiltonian {
     pub fn new(stage_names: &[String]) -> Self {
         let mut stage_energies = HashMap::new();
         let mut external_fields = HashMap::new();
-        
+
         // Initialize with random energies representing computational costs
         let mut rng = rng();
         for stage_name in stage_names {
@@ -230,7 +227,8 @@ impl QuantumStreamProcessor {
     pub fn process_quantum_frame(&mut self, frame: Frame) -> Result<(Frame, ProcessingDecision)> {
         // Evolve quantum state
         let elapsed = self.last_measurement.elapsed().as_secs_f64();
-        self.quantum_state.evolve(elapsed * self.time_step, &self.hamiltonian);
+        self.quantum_state
+            .evolve(elapsed * self.time_step, &self.hamiltonian);
 
         // Measure quantum state for processing decision
         let decision = self.quantum_state.measure();
@@ -248,20 +246,24 @@ impl QuantumStreamProcessor {
         let mut enhanced_data = frame.data.clone();
 
         // Quantum interference-inspired noise reduction
-        for y in 1..height-1 {
-            for x in 1..width-1 {
+        for y in 1..height - 1 {
+            for x in 1..width - 1 {
                 // Create "quantum superposition" of neighboring pixels
                 let neighbors = [
-                    frame.data[[y-1, x-1]], frame.data[[y-1, x]], frame.data[[y-1, x+1]],
-                    frame.data[[y, x-1]],   frame.data[[y, x]],   frame.data[[y, x+1]],
-                    frame.data[[y+1, x-1]], frame.data[[y+1, x]], frame.data[[y+1, x+1]],
+                    frame.data[[y - 1, x - 1]],
+                    frame.data[[y - 1, x]],
+                    frame.data[[y - 1, x + 1]],
+                    frame.data[[y, x - 1]],
+                    frame.data[[y, x]],
+                    frame.data[[y, x + 1]],
+                    frame.data[[y + 1, x - 1]],
+                    frame.data[[y + 1, x]],
+                    frame.data[[y + 1, x + 1]],
                 ];
 
                 // Apply quantum interference pattern
                 let interference_weights = [
-                    0.0625, 0.125, 0.0625,
-                    0.125,  0.25,  0.125,
-                    0.0625, 0.125, 0.0625,
+                    0.0625, 0.125, 0.0625, 0.125, 0.25, 0.125, 0.0625, 0.125, 0.0625,
                 ];
 
                 let mut interference_value = 0.0;
@@ -331,7 +333,7 @@ impl QuantumAnnealingStage {
     /// Create a new quantum annealing stage
     pub fn new(initial_parameters: HashMap<String, f64>) -> Self {
         let best_parameters = initial_parameters.clone();
-        
+
         Self {
             temperature: 100.0,
             cooling_rate: 0.99,
@@ -349,7 +351,7 @@ impl QuantumAnnealingStage {
         // Generate neighbor solution
         let mut neighbor_params = self.parameters.clone();
         let mut rng = rng();
-        
+
         if let Some((param_name, param_value)) = neighbor_params.iter_mut().choose(&mut rng) {
             let perturbation = rng.gen_range(-0.1..0.1) * self.temperature / 100.0;
             *param_value += perturbation;
@@ -368,7 +370,7 @@ impl QuantumAnnealingStage {
 
         if rng.gen::<f64>() < acceptance_probability {
             self.parameters = neighbor_params;
-            
+
             if neighbor_cost < self.best_cost {
                 self.best_cost = neighbor_cost;
                 self.best_parameters = self.parameters.clone();
@@ -394,7 +396,7 @@ impl ProcessingStage for QuantumAnnealingStage {
         let cost_function = |params: &HashMap<String, f64>| -> f64 {
             let blur_sigma = params.get("blur_sigma").unwrap_or(&1.0);
             let edge_threshold = params.get("edge_threshold").unwrap_or(&0.1);
-            
+
             // Simplified cost based on parameter values
             // In practice, this would evaluate actual image quality
             (blur_sigma - 0.5).abs() + (edge_threshold - 0.2).abs()
@@ -462,8 +464,9 @@ impl QuantumEntanglementStage {
         features.push(variance);
 
         // Extract gradient-based features
-        if let Ok((_grad_x, _grad_y, magnitude)) = 
-            crate::simd_ops::simd_sobel_gradients(&frame.data.view()) {
+        if let Ok((_grad_x, _grad_y, magnitude)) =
+            crate::simd_ops::simd_sobel_gradients(&frame.data.view())
+        {
             let grad_mean = magnitude.mean().unwrap_or(0.0) as f64;
             let grad_variance = magnitude.var(0.0) as f64;
             features.push(grad_mean);
@@ -497,20 +500,19 @@ impl QuantumEntanglementStage {
         let mut count = 0;
 
         // Sample coherence across the image
-        for y in (1..height-1).step_by(4) {
-            for x in (1..width-1).step_by(4) {
+        for y in (1..height - 1).step_by(4) {
+            for x in (1..width - 1).step_by(4) {
                 // Local phase coherence
                 let center = frame.data[[y, x]] as f64;
                 let neighbors = [
-                    frame.data[[y-1, x]] as f64,
-                    frame.data[[y+1, x]] as f64,
-                    frame.data[[y, x-1]] as f64,
-                    frame.data[[y, x+1]] as f64,
+                    frame.data[[y - 1, x]] as f64,
+                    frame.data[[y + 1, x]] as f64,
+                    frame.data[[y, x - 1]] as f64,
+                    frame.data[[y, x + 1]] as f64,
                 ];
 
-                let phase_variance = neighbors.iter()
-                    .map(|&n| (n - center).abs())
-                    .sum::<f64>() / 4.0;
+                let phase_variance =
+                    neighbors.iter().map(|&n| (n - center).abs()).sum::<f64>() / 4.0;
 
                 coherence_sum += 1.0 / (1.0 + phase_variance);
                 count += 1;
@@ -542,20 +544,18 @@ impl QuantumEntanglementStage {
             for i in 0..n_features {
                 for j in 0..n_features {
                     let mut correlation = 0.0;
-                    
+
                     for k in 0..self.feature_history.len() {
                         let feature_i = self.feature_history[k][i];
                         let feature_j = self.feature_history[k][j];
-                        
+
                         // Quantum entanglement-inspired correlation
-                        let entanglement_factor = (
-                            self.entanglement_strength * 
-                            (feature_i * feature_j).abs()
-                        ).exp();
-                        
+                        let entanglement_factor =
+                            (self.entanglement_strength * (feature_i * feature_j).abs()).exp();
+
                         correlation += feature_i * feature_j * entanglement_factor;
                     }
-                    
+
                     correlation /= self.feature_history.len() as f64;
                     new_correlation[[i, j]] = correlation;
                 }
@@ -563,32 +563,41 @@ impl QuantumEntanglementStage {
 
             // Smooth update of correlation matrix
             let alpha = 0.1;
-            self.correlation_matrix = alpha * new_correlation + (1.0 - alpha) * &self.correlation_matrix;
+            self.correlation_matrix =
+                alpha * new_correlation + (1.0 - alpha) * &self.correlation_matrix;
         }
     }
 
     /// Apply quantum entanglement-based enhancement
-    fn apply_entanglement_enhancement(&self, frame: &Frame, features: &Array1<f64>) -> Result<Frame> {
+    fn apply_entanglement_enhancement(
+        &self,
+        frame: &Frame,
+        features: &Array1<f64>,
+    ) -> Result<Frame> {
         let (height, width) = frame.data.dim();
         let mut enhanced_data = frame.data.clone();
 
         // Use correlation matrix to enhance features
         let enhanced_features = self.correlation_matrix.dot(features);
-        
+
         // Apply enhancement based on feature correlations
         for y in 0..height {
             for x in 0..width {
                 let pixel_value = frame.data[[y, x]] as f64;
-                
+
                 // Calculate enhancement factor based on entangled features
                 let spatial_weight = ((y as f64 / height as f64) + (x as f64 / width as f64)) * 0.5;
-                let feature_weight = enhanced_features.iter().enumerate()
+                let feature_weight = enhanced_features
+                    .iter()
+                    .enumerate()
                     .map(|(i, &f)| f * (i as f64 + 1.0))
-                    .sum::<f64>() / enhanced_features.len() as f64;
-                
-                let enhancement = 1.0 + self.entanglement_strength * spatial_weight * feature_weight;
+                    .sum::<f64>()
+                    / enhanced_features.len() as f64;
+
+                let enhancement =
+                    1.0 + self.entanglement_strength * spatial_weight * feature_weight;
                 let enhanced_pixel = (pixel_value * enhancement).clamp(0.0, 1.0);
-                
+
                 enhanced_data[[y, x]] = enhanced_pixel as f32;
             }
         }
@@ -606,10 +615,10 @@ impl ProcessingStage for QuantumEntanglementStage {
     fn process(&mut self, frame: Frame) -> Result<Frame> {
         // Extract quantum-inspired features
         let features = self.extract_quantum_features(&frame);
-        
+
         // Update correlation matrix
         self.update_correlations(&features);
-        
+
         // Apply entanglement-based enhancement
         self.apply_entanglement_enhancement(&frame, &features)
     }
@@ -652,7 +661,7 @@ impl QuantumSuperpositionStage {
                 threshold: rng.gen_range(0.05..0.3),
                 enhancement_factor: rng.gen_range(0.8..1.2),
             };
-            
+
             processing_variants.push(variant);
             superposition_weights.push(1.0 / (num_variants as f64).sqrt());
         }
@@ -689,16 +698,23 @@ impl QuantumSuperpositionStage {
             // Add to superposition with quantum interference
             for y in 0..height {
                 for x in 0..width {
-                    let quantum_contribution = processed[[y, x]] as f64 * weight * interference * variant.enhancement_factor as f64;
+                    let quantum_contribution = processed[[y, x]] as f64
+                        * weight
+                        * interference
+                        * variant.enhancement_factor as f64;
                     superposed_result[[y, x]] += quantum_contribution;
                 }
             }
         }
 
         // Normalize and convert back to f32
-        let max_val = superposed_result.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-        let min_val = superposed_result.iter().fold(f64::INFINITY, |a, &b| a.min(b));
-        
+        let max_val = superposed_result
+            .iter()
+            .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+        let min_val = superposed_result
+            .iter()
+            .fold(f64::INFINITY, |a, &b| a.min(b));
+
         if max_val != min_val {
             superposed_result.mapv_inplace(|x| (x - min_val) / (max_val - min_val));
         }
@@ -718,17 +734,17 @@ impl QuantumSuperpositionStage {
         if performance_metrics.len() == self.superposition_weights.len() {
             // Quantum-inspired weight update
             let total_performance: f64 = performance_metrics.iter().sum();
-            
+
             if total_performance > 0.0 {
                 for (i, &performance) in performance_metrics.iter().enumerate() {
                     // Higher performance gets higher weight
                     self.superposition_weights[i] = (performance / total_performance).sqrt();
                 }
-                
+
                 // Renormalize weights
                 let weight_sum: f64 = self.superposition_weights.iter().map(|w| w * w).sum();
                 let norm_factor = weight_sum.sqrt();
-                
+
                 if norm_factor > 0.0 {
                     for weight in &mut self.superposition_weights {
                         *weight /= norm_factor;
@@ -765,7 +781,7 @@ impl QuantumAdaptiveStreamPipeline {
     /// Create a new quantum adaptive streaming pipeline
     pub fn new(stage_names: Vec<String>) -> Self {
         let quantum_processor = QuantumStreamProcessor::new(stage_names);
-        
+
         Self {
             quantum_processor,
             stages: Vec::new(),
@@ -784,30 +800,31 @@ impl QuantumAdaptiveStreamPipeline {
     pub fn process_quantum_optimized(&mut self, frame: Frame) -> Result<Frame> {
         // Get quantum processing decision
         let (enhanced_frame, decision) = self.quantum_processor.process_quantum_frame(frame)?;
-        
+
         // Apply processing stages with quantum-guided optimization
         let mut current_frame = enhanced_frame;
-        
+
         for stage in &mut self.stages {
             let stage_name = stage.name().to_string();
             let start_time = Instant::now();
-            
+
             // Check if this stage should be prioritized
             let priority = decision.stage_priorities.get(&stage_name).unwrap_or(&1.0);
-            
+
             if *priority > 0.5 {
                 current_frame = stage.process(current_frame)?;
-                
+
                 let processing_time = start_time.elapsed().as_secs_f64();
                 let performance = 1.0 / (1.0 + processing_time); // Higher performance for faster processing
-                
+
                 // Update performance metrics
                 if let Ok(mut metrics) = self.performance_metrics.lock() {
                     metrics.insert(stage_name.clone(), performance);
                 }
-                
+
                 // Update quantum processor
-                self.quantum_processor.update_performance(&stage_name, performance);
+                self.quantum_processor
+                    .update_performance(&stage_name, performance);
             }
         }
 
@@ -829,7 +846,7 @@ mod tests {
     fn test_quantum_amplitude() {
         let mut amplitude = QuantumAmplitude::new(0.6, 0.8);
         assert!((amplitude.probability() - 1.0).abs() < 1e-10);
-        
+
         amplitude.normalize();
         assert!((amplitude.probability() - 1.0).abs() < 1e-10);
     }
@@ -838,10 +855,10 @@ mod tests {
     fn test_quantum_processing_state() {
         let stage_names = vec!["stage1".to_string(), "stage2".to_string()];
         let mut state = QuantumProcessingState::new(&stage_names);
-        
+
         let hamiltonian = QuantumHamiltonian::new(&stage_names);
         state.evolve(0.1, &hamiltonian);
-        
+
         let decision = state.measure();
         assert!(decision.confidence >= 0.0 && decision.confidence <= 1.0);
     }
@@ -851,9 +868,9 @@ mod tests {
         let mut params = HashMap::new();
         params.insert("blur_sigma".to_string(), 1.0);
         params.insert("edge_threshold".to_string(), 0.1);
-        
+
         let mut annealing_stage = QuantumAnnealingStage::new(params);
-        
+
         let frame = Frame {
             data: Array2::from_shape_fn((10, 10), |(y, x)| (x + y) as f32 / 20.0),
             timestamp: Instant::now(),
@@ -873,7 +890,7 @@ mod tests {
     #[test]
     fn test_quantum_entanglement_stage() {
         let mut entanglement_stage = QuantumEntanglementStage::new(6, 0.1);
-        
+
         let frame = Frame {
             data: Array2::from_shape_fn((20, 20), |(y, x)| (x as f32 + y as f32) / 40.0),
             timestamp: Instant::now(),
@@ -888,7 +905,7 @@ mod tests {
     #[test]
     fn test_quantum_superposition_stage() {
         let mut superposition_stage = QuantumSuperpositionStage::new(4);
-        
+
         let frame = Frame {
             data: Array2::from_shape_fn((15, 15), |(y, x)| ((x * y) as f32).sin()),
             timestamp: Instant::now(),
@@ -898,7 +915,7 @@ mod tests {
 
         let result = superposition_stage.process(frame);
         assert!(result.is_ok());
-        
+
         // Test weight update
         let performance_metrics = vec![0.8, 0.6, 0.9, 0.7];
         superposition_stage.update_weights(&performance_metrics);
@@ -908,7 +925,7 @@ mod tests {
     fn test_quantum_stream_processor() {
         let stage_names = vec!["blur".to_string(), "edge".to_string()];
         let mut processor = QuantumStreamProcessor::new(stage_names);
-        
+
         let frame = Frame {
             data: Array2::from_shape_fn((8, 8), |(y, x)| (x + y) as f32 / 16.0),
             timestamp: Instant::now(),
@@ -918,7 +935,7 @@ mod tests {
 
         let result = processor.process_quantum_frame(frame);
         assert!(result.is_ok());
-        
+
         processor.update_performance("blur", 0.8);
         processor.update_performance("edge", 0.9);
     }

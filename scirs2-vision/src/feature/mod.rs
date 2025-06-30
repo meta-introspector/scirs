@@ -72,8 +72,8 @@ pub use tamura::*;
 pub use template_matching::*;
 pub use tracker::*;
 pub use vision_transformer::{
-    ViTConfig, VisionTransformer, SwinTransformer, SwinConfig, 
-    TransformerFeatureMatcher, MatcherConfig,
+    MatcherConfig, SwinConfig, SwinTransformer, TransformerFeatureMatcher, ViTConfig,
+    VisionTransformer,
 };
 
 use crate::error::{Result, VisionError};

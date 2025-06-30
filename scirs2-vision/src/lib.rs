@@ -38,9 +38,9 @@ pub mod simd_ops;
 pub mod streaming;
 
 // Ultrathink mode enhancements - cutting-edge computer vision
-pub mod quantum_inspired_streaming;
-pub mod neuromorphic_streaming;
 pub mod ai_optimization;
+pub mod neuromorphic_streaming;
+pub mod quantum_inspired_streaming;
 pub mod transform;
 
 // Comment out problematic modules during tests to focus on fixing other issues
@@ -139,19 +139,19 @@ pub use streaming::{
 
 // Re-export ultrathink mode enhancements
 pub use quantum_inspired_streaming::{
-    QuantumAdaptiveStreamPipeline, QuantumAnnealingStage, QuantumEntanglementStage,
-    QuantumStreamProcessor, QuantumSuperpositionStage, QuantumAmplitude, QuantumProcessingState,
-    ProcessingDecision,
+    ProcessingDecision, QuantumAdaptiveStreamPipeline, QuantumAmplitude, QuantumAnnealingStage,
+    QuantumEntanglementStage, QuantumProcessingState, QuantumStreamProcessor,
+    QuantumSuperpositionStage,
 };
 
 pub use neuromorphic_streaming::{
-    AdaptiveNeuromorphicPipeline, EventDrivenProcessor, NeuromorphicEdgeDetector, 
-    SpikingNeuralNetwork, SpikingNeuron, PlasticSynapse, EventStats, NeuromorphicProcessingStats,
-    NeuromorphicMode, EfficiencyMetrics,
+    AdaptiveNeuromorphicPipeline, EfficiencyMetrics, EventDrivenProcessor, EventStats,
+    NeuromorphicEdgeDetector, NeuromorphicMode, NeuromorphicProcessingStats, PlasticSynapse,
+    SpikingNeuralNetwork, SpikingNeuron,
 };
 
 pub use ai_optimization::{
-    RLParameterOptimizer, GeneticPipelineOptimizer, NeuralArchitectureSearch, PredictiveScaler,
-    PipelineGenome, ProcessingArchitecture, ScalingRecommendation, PerformanceMetric,
-    ArchitecturePerformance, SearchStrategy,
+    ArchitecturePerformance, GeneticPipelineOptimizer, NeuralArchitectureSearch, PerformanceMetric,
+    PipelineGenome, PredictiveScaler, ProcessingArchitecture, RLParameterOptimizer,
+    ScalingRecommendation, SearchStrategy,
 };

@@ -758,10 +758,12 @@ impl SimdPatternMatcher {
 
         // Check each candidate position for full pattern match
         for pos in candidate_positions {
-            if pos + pattern_bytes.len() <= text_bytes.len() && Self::compare_bytes_vectorized(
+            if pos + pattern_bytes.len() <= text_bytes.len()
+                && Self::compare_bytes_vectorized(
                     &text_bytes[pos..pos + pattern_bytes.len()],
                     pattern_bytes,
-                ) {
+                )
+            {
                 matches.push(pos);
             }
         }

@@ -76,7 +76,7 @@ lazy_static! {
         r"(?i)(?:[$€£¥₹])[ \t]*(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d{1,2})?|(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d{1,2})?[ \t]*(?:dollars?|euros?|pounds?|yen|rupees?|USD|EUR|GBP|JPY|INR)\b"
     ).unwrap();
 
-    // Percentage pattern  
+    // Percentage pattern
     static ref PERCENTAGE_PATTERN: Regex = Regex::new(
         r"(?i)\b[-+]?(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d+)?%"
     ).unwrap();

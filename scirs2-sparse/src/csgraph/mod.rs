@@ -109,7 +109,10 @@ where
 {
     fn cmp(&self, other: &Self) -> Ordering {
         // Reverse the ordering for min-heap behavior
-        other.distance.partial_cmp(&self.distance).unwrap_or(Ordering::Equal)
+        other
+            .distance
+            .partial_cmp(&self.distance)
+            .unwrap_or(Ordering::Equal)
     }
 }
 

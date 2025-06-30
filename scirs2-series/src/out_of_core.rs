@@ -28,18 +28,18 @@
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 
-use ndarray::Array1;
 use crate::error::{Result, TimeSeriesError};
-use scirs2_core::validation::check_positive;
+use memmap2::{Mmap, MmapOptions};
+use ndarray::Array1;
 use scirs2_core::parallel_ops::*;
+use scirs2_core::validation::check_positive;
+use std::collections::VecDeque;
 use std::fs::{File, OpenOptions};
 use std::io::{BufRead, BufReader, BufWriter, Write};
 use std::path::{Path, PathBuf};
-use std::collections::VecDeque;
-use memmap2::{Mmap, MmapOptions};
+use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use std::sync::mpsc;
 use std::time::Instant;
 
 /// Configuration for out-of-core processing
@@ -155,7 +155,7 @@ impl StreamingStats {
             self.sum += value;
             self.min = self.min.min(value);
             self.max = self.max.max(value);
-            
+
             let delta = value - self.mean;
             self.mean += delta / self.count as f64;
             let delta2 = value - self.mean;
@@ -168,18 +168,21 @@ impl StreamingStats {
         if other.count == 0 {
             return;
         }
-        
+
         if self.count == 0 {
             *self = other.clone();
             return;
         }
-        
+
         let combined_count = self.count + other.count;
         let delta = other.mean - self.mean;
-        let combined_mean = (self.count as f64 * self.mean + other.count as f64 * other.mean) / combined_count as f64;
-        
-        let combined_m2 = self.m2 + other.m2 + delta * delta * (self.count as f64 * other.count as f64) / combined_count as f64;
-        
+        let combined_mean = (self.count as f64 * self.mean + other.count as f64 * other.mean)
+            / combined_count as f64;
+
+        let combined_m2 = self.m2
+            + other.m2
+            + delta * delta * (self.count as f64 * other.count as f64) / combined_count as f64;
+
         self.count = combined_count;
         self.mean = combined_mean;
         self.m2 = combined_m2;
@@ -268,20 +271,21 @@ impl MmapTimeSeriesReader {
     pub fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = File::open(path.as_ref())
             .map_err(|e| TimeSeriesError::IOError(format!("Failed to open file: {}", e)))?;
-        
-        let file_size = file.metadata()
+
+        let file_size = file
+            .metadata()
             .map_err(|e| TimeSeriesError::IOError(format!("Failed to get file metadata: {}", e)))?
             .len() as usize;
-        
+
         let mmap = unsafe {
-            MmapOptions::new()
-                .map(&file)
-                .map_err(|e| TimeSeriesError::IOError(format!("Failed to memory map file: {}", e)))?
+            MmapOptions::new().map(&file).map_err(|e| {
+                TimeSeriesError::IOError(format!("Failed to memory map file: {}", e))
+            })?
         };
-        
+
         let element_size = std::mem::size_of::<f64>();
         let num_points = file_size / element_size;
-        
+
         Ok(Self {
             mmap,
             file_size,
@@ -303,26 +307,29 @@ impl MmapTimeSeriesReader {
     /// Read a chunk of data starting at the given index
     pub fn read_chunk(&self, start_idx: usize, chunk_size: usize) -> Result<Array1<f64>> {
         if start_idx >= self.num_points {
-            return Err(TimeSeriesError::InvalidInput("Start index out of bounds".to_string()));
+            return Err(TimeSeriesError::InvalidInput(
+                "Start index out of bounds".to_string(),
+            ));
         }
-        
+
         let end_idx = (start_idx + chunk_size).min(self.num_points);
         let actual_size = end_idx - start_idx;
-        
+
         let mut chunk = Array1::zeros(actual_size);
-        
+
         let byte_start = start_idx * self.element_size;
         let byte_size = actual_size * self.element_size;
-        
+
         if byte_start + byte_size > self.file_size {
-            return Err(TimeSeriesError::InvalidInput("Chunk extends beyond file".to_string()));
+            return Err(TimeSeriesError::InvalidInput(
+                "Chunk extends beyond file".to_string(),
+            ));
         }
-        
+
         let data_slice = &self.mmap[byte_start..byte_start + byte_size];
-        let f64_slice = unsafe {
-            std::slice::from_raw_parts(data_slice.as_ptr() as *const f64, actual_size)
-        };
-        
+        let f64_slice =
+            unsafe { std::slice::from_raw_parts(data_slice.as_ptr() as *const f64, actual_size) };
+
         chunk.assign(&Array1::from_vec(f64_slice.to_vec()));
         Ok(chunk)
     }
@@ -330,11 +337,11 @@ impl MmapTimeSeriesReader {
     /// Read a range of data with optional overlap
     pub fn read_range(&self, start_idx: usize, end_idx: usize) -> Result<Array1<f64>> {
         let end_idx = end_idx.min(self.num_points);
-        
+
         if start_idx >= end_idx {
             return Ok(Array1::zeros(0));
         }
-        
+
         self.read_chunk(start_idx, end_idx - start_idx)
     }
 }
@@ -355,11 +362,11 @@ impl CsvTimeSeriesReader {
     /// Create new CSV reader
     pub fn new<P: AsRef<Path>>(path: P, column_index: usize, has_header: bool) -> Result<Self> {
         let file_path = path.as_ref().to_path_buf();
-        
+
         if !file_path.exists() {
             return Err(TimeSeriesError::IOError("File does not exist".to_string()));
         }
-        
+
         Ok(Self {
             file_path,
             total_lines: None,
@@ -373,23 +380,23 @@ impl CsvTimeSeriesReader {
         if let Some(total) = self.total_lines {
             return Ok(total);
         }
-        
+
         let file = File::open(&self.file_path)
             .map_err(|e| TimeSeriesError::IOError(format!("Failed to open file: {}", e)))?;
-        
+
         let reader = BufReader::new(file);
         let mut count = 0;
-        
+
         for line in reader.lines() {
             line.map_err(|e| TimeSeriesError::IOError(format!("Failed to read line: {}", e)))?;
             count += 1;
         }
-        
+
         // Subtract header if present
         if self.has_header && count > 0 {
             count -= 1;
         }
-        
+
         self.total_lines = Some(count);
         Ok(count)
     }
@@ -398,47 +405,50 @@ impl CsvTimeSeriesReader {
     pub fn read_chunk(&self, start_line: usize, chunk_size: usize) -> Result<Array1<f64>> {
         let file = File::open(&self.file_path)
             .map_err(|e| TimeSeriesError::IOError(format!("Failed to open file: {}", e)))?;
-        
+
         let reader = BufReader::new(file);
         let mut data = Vec::new();
         let mut current_line = 0;
         let mut data_line = 0;
-        
+
         for line in reader.lines() {
-            let line = line.map_err(|e| TimeSeriesError::IOError(format!("Failed to read line: {}", e)))?;
-            
+            let line =
+                line.map_err(|e| TimeSeriesError::IOError(format!("Failed to read line: {}", e)))?;
+
             // Skip header
             if current_line == 0 && self.has_header {
                 current_line += 1;
                 continue;
             }
-            
+
             // Check if we've reached the start of our chunk
             if data_line >= start_line {
                 let fields: Vec<&str> = line.split(',').collect();
-                
+
                 if self.column_index >= fields.len() {
-                    return Err(TimeSeriesError::InvalidInput(
-                        format!("Column index {} out of bounds for line with {} fields", self.column_index, fields.len())
-                    ));
+                    return Err(TimeSeriesError::InvalidInput(format!(
+                        "Column index {} out of bounds for line with {} fields",
+                        self.column_index,
+                        fields.len()
+                    )));
                 }
-                
-                let value: f64 = fields[self.column_index].trim()
-                    .parse()
-                    .map_err(|e| TimeSeriesError::InvalidInput(format!("Failed to parse value: {}", e)))?;
-                
+
+                let value: f64 = fields[self.column_index].trim().parse().map_err(|e| {
+                    TimeSeriesError::InvalidInput(format!("Failed to parse value: {}", e))
+                })?;
+
                 data.push(value);
-                
+
                 // Stop if we've read enough data
                 if data.len() >= chunk_size {
                     break;
                 }
             }
-            
+
             data_line += 1;
             current_line += 1;
         }
-        
+
         Ok(Array1::from_vec(data))
     }
 }
@@ -478,15 +488,26 @@ impl ChunkedProcessor {
     pub fn process_binary_file<P: AsRef<Path>>(&mut self, path: P) -> Result<StreamingStats> {
         let reader = MmapTimeSeriesReader::new(path)?;
         let total_points = reader.len();
-        self.process_with_reader(Box::new(move |start, size| reader.read_chunk(start, size)), total_points)
+        self.process_with_reader(
+            Box::new(move |start, size| reader.read_chunk(start, size)),
+            total_points,
+        )
     }
 
     /// Process a CSV file
-    pub fn process_csv_file<P: AsRef<Path>>(&mut self, path: P, column_index: usize, has_header: bool) -> Result<StreamingStats> {
+    pub fn process_csv_file<P: AsRef<Path>>(
+        &mut self,
+        path: P,
+        column_index: usize,
+        has_header: bool,
+    ) -> Result<StreamingStats> {
         let mut reader = CsvTimeSeriesReader::new(path, column_index, has_header)?;
         let total_lines = reader.estimate_total_lines()?;
-        
-        self.process_with_reader(Box::new(move |start, size| reader.read_chunk(start, size)), total_lines)
+
+        self.process_with_reader(
+            Box::new(move |start, size| reader.read_chunk(start, size)),
+            total_lines,
+        )
     }
 
     /// Process data using a generic reader function
@@ -496,10 +517,11 @@ impl ChunkedProcessor {
     {
         self.start_time = Instant::now();
         self.progress.total_points = total_points as u64;
-        self.progress.total_chunks = (total_points + self.config.chunk_size - 1) / self.config.chunk_size;
-        
+        self.progress.total_chunks =
+            (total_points + self.config.chunk_size - 1) / self.config.chunk_size;
+
         let reader = Arc::new(reader);
-        
+
         if self.config.parallel_processing {
             self.process_parallel(reader, total_points)
         } else {
@@ -508,33 +530,37 @@ impl ChunkedProcessor {
     }
 
     /// Process chunks sequentially
-    fn process_sequential<F>(&mut self, reader: Arc<F>, total_points: usize) -> Result<StreamingStats>
+    fn process_sequential<F>(
+        &mut self,
+        reader: Arc<F>,
+        total_points: usize,
+    ) -> Result<StreamingStats>
     where
         F: Fn(usize, usize) -> Result<Array1<f64>> + Send + Sync + 'static,
     {
         let mut start_idx = 0;
-        
+
         while start_idx < total_points {
             let chunk_size = (self.config.chunk_size).min(total_points - start_idx);
             let chunk = reader(start_idx, chunk_size)?;
-            
+
             // Update statistics
             for &value in chunk.iter() {
                 self.stats.update(value);
             }
-            
+
             // Update progress
             self.progress.chunk_number += 1;
             self.progress.points_processed += chunk.len() as u64;
             self.update_progress();
-            
+
             if self.config.report_progress {
                 self.report_progress();
             }
-            
+
             start_idx += chunk_size - self.config.overlap.min(chunk_size);
         }
-        
+
         Ok(self.stats.clone())
     }
 
@@ -545,48 +571,48 @@ impl ChunkedProcessor {
     {
         let (tx, rx) = mpsc::channel();
         let num_threads = self.config.num_threads;
-        
+
         // Calculate chunk boundaries
         let chunk_size = self.config.chunk_size;
         let overlap = self.config.overlap;
         let mut chunk_starts = Vec::new();
         let mut start_idx = 0;
-        
+
         while start_idx < total_points {
             chunk_starts.push(start_idx);
             let current_chunk_size = chunk_size.min(total_points - start_idx);
             start_idx += current_chunk_size - overlap.min(current_chunk_size);
         }
-        
+
         // Spawn worker threads
         let chunk_starts = Arc::new(chunk_starts);
         let total_chunks = chunk_starts.len();
-        
+
         for thread_id in 0..num_threads {
             let tx = tx.clone();
             let reader = Arc::clone(&reader);
             let chunk_starts = Arc::clone(&chunk_starts);
             let chunk_size = self.config.chunk_size;
-            
+
             thread::spawn(move || {
                 for (chunk_idx, &start_idx) in chunk_starts.iter().enumerate() {
                     if chunk_idx % num_threads != thread_id {
                         continue;
                     }
-                    
+
                     let current_chunk_size = chunk_size.min(total_points - start_idx);
-                    
+
                     match reader(start_idx, current_chunk_size) {
                         Ok(chunk) => {
                             let mut local_stats = StreamingStats::new();
                             for &value in chunk.iter() {
                                 local_stats.update(value);
                             }
-                            
+
                             if let Err(_) = tx.send((chunk_idx, Ok(local_stats))) {
                                 break; // Receiver dropped
                             }
-                        },
+                        }
                         Err(e) => {
                             if let Err(_) = tx.send((chunk_idx, Err(e))) {
                                 break; // Receiver dropped
@@ -596,9 +622,9 @@ impl ChunkedProcessor {
                 }
             });
         }
-        
+
         drop(tx); // Close the channel
-        
+
         // Collect results
         let mut completed_chunks = 0;
         while let Ok((_chunk_idx, result)) = rx.recv() {
@@ -606,36 +632,40 @@ impl ChunkedProcessor {
                 Ok(chunk_stats) => {
                     self.stats.merge(&chunk_stats);
                     completed_chunks += 1;
-                    
+
                     self.progress.chunk_number = completed_chunks;
-                    self.progress.points_processed = (completed_chunks as f64 / total_chunks as f64 * total_points as f64) as u64;
+                    self.progress.points_processed = (completed_chunks as f64 / total_chunks as f64
+                        * total_points as f64)
+                        as u64;
                     self.update_progress();
-                    
+
                     if self.config.report_progress {
                         self.report_progress();
                     }
-                },
+                }
                 Err(e) => {
                     return Err(e);
                 }
             }
         }
-        
+
         Ok(self.stats.clone())
     }
 
     /// Update progress timing information
     fn update_progress(&mut self) {
         self.progress.elapsed_time = self.start_time.elapsed().as_secs_f64();
-        
+
         if self.progress.points_processed > 0 {
-            let completion_ratio = self.progress.points_processed as f64 / self.progress.total_points as f64;
+            let completion_ratio =
+                self.progress.points_processed as f64 / self.progress.total_points as f64;
             let total_estimated_time = self.progress.elapsed_time / completion_ratio;
             self.progress.estimated_remaining = total_estimated_time - self.progress.elapsed_time;
         }
-        
+
         // Estimate memory usage (rough approximation)
-        self.progress.memory_usage = self.config.chunk_size * std::mem::size_of::<f64>() * self.config.num_threads;
+        self.progress.memory_usage =
+            self.config.chunk_size * std::mem::size_of::<f64>() * self.config.num_threads;
     }
 
     /// Report progress to stdout
@@ -643,7 +673,7 @@ impl ChunkedProcessor {
         let completion = self.progress.completion_percentage();
         let rate = self.progress.processing_rate();
         let memory_mb = self.progress.memory_usage as f64 / 1_048_576.0;
-        
+
         println!(
             "Progress: {:.1}% | Chunks: {}/{} | Rate: {:.0} pts/sec | Memory: {:.1} MB | ETA: {:.0}s",
             completion,
@@ -680,7 +710,7 @@ impl OutOfCoreMovingAverage {
     /// Create new moving average calculator
     pub fn new(window_size: usize) -> Result<Self> {
         check_positive(window_size, "window_size")?;
-        
+
         Ok(Self {
             window_size,
             buffer: VecDeque::with_capacity(window_size),
@@ -693,16 +723,16 @@ impl OutOfCoreMovingAverage {
         if !value.is_finite() {
             return None;
         }
-        
+
         self.buffer.push_back(value);
         self.current_sum += value;
-        
+
         if self.buffer.len() > self.window_size {
             if let Some(old_value) = self.buffer.pop_front() {
                 self.current_sum -= old_value;
             }
         }
-        
+
         if self.buffer.len() == self.window_size {
             Some(self.current_sum / self.window_size as f64)
         } else {
@@ -744,12 +774,20 @@ impl OutOfCoreQuantileEstimator {
     /// Create new quantile estimator
     pub fn new(quantile: f64) -> Result<Self> {
         if quantile < 0.0 || quantile > 1.0 {
-            return Err(TimeSeriesError::InvalidInput("Quantile must be between 0 and 1".to_string()));
+            return Err(TimeSeriesError::InvalidInput(
+                "Quantile must be between 0 and 1".to_string(),
+            ));
         }
-        
+
         Ok(Self {
             quantile,
-            positions: [1.0, 1.0 + 2.0 * quantile, 1.0 + 4.0 * quantile, 3.0 + 2.0 * quantile, 5.0],
+            positions: [
+                1.0,
+                1.0 + 2.0 * quantile,
+                1.0 + 4.0 * quantile,
+                3.0 + 2.0 * quantile,
+                5.0,
+            ],
             heights: [0.0; 5],
             count: 0,
             initial_values: Vec::new(),
@@ -761,23 +799,24 @@ impl OutOfCoreQuantileEstimator {
         if !value.is_finite() {
             return;
         }
-        
+
         self.count += 1;
-        
+
         // Collect first 5 values
         if self.count <= 5 {
             self.initial_values.push(value);
-            
+
             if self.count == 5 {
                 // Initialize markers
-                self.initial_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                self.initial_values
+                    .sort_by(|a, b| a.partial_cmp(b).unwrap());
                 for i in 0..5 {
                     self.heights[i] = self.initial_values[i];
                 }
             }
             return;
         }
-        
+
         // Find cell k such that heights[k] <= value < heights[k+1]
         let mut k = 0;
         for i in 0..4 {
@@ -789,12 +828,12 @@ impl OutOfCoreQuantileEstimator {
                 k = 3;
             }
         }
-        
+
         // Increment positions of markers k+1 through 4
         for i in (k + 1)..5 {
             self.positions[i] += 1.0;
         }
-        
+
         // Update desired positions
         let desired_positions = [
             1.0,
@@ -803,32 +842,36 @@ impl OutOfCoreQuantileEstimator {
             3.0 + 2.0 * self.quantile * (self.count as f64 - 1.0),
             self.count as f64,
         ];
-        
+
         // Adjust heights of markers 1-3 if necessary
         for i in 1..4 {
             let d = desired_positions[i] - self.positions[i];
-            
-            if (d >= 1.0 && self.positions[i + 1] - self.positions[i] > 1.0) ||
-               (d <= -1.0 && self.positions[i - 1] - self.positions[i] < -1.0) {
-                
+
+            if (d >= 1.0 && self.positions[i + 1] - self.positions[i] > 1.0)
+                || (d <= -1.0 && self.positions[i - 1] - self.positions[i] < -1.0)
+            {
                 let d_sign = if d > 0.0 { 1.0 } else { -1.0 };
-                
+
                 // Try parabolic formula
-                let new_height = self.heights[i] + d_sign / (self.positions[i + 1] - self.positions[i - 1]) *
-                    ((self.positions[i] - self.positions[i - 1] + d_sign) * (self.heights[i + 1] - self.heights[i]) /
-                     (self.positions[i + 1] - self.positions[i]) +
-                     (self.positions[i + 1] - self.positions[i] - d_sign) * (self.heights[i] - self.heights[i - 1]) /
-                     (self.positions[i] - self.positions[i - 1]));
-                
+                let new_height = self.heights[i]
+                    + d_sign / (self.positions[i + 1] - self.positions[i - 1])
+                        * ((self.positions[i] - self.positions[i - 1] + d_sign)
+                            * (self.heights[i + 1] - self.heights[i])
+                            / (self.positions[i + 1] - self.positions[i])
+                            + (self.positions[i + 1] - self.positions[i] - d_sign)
+                                * (self.heights[i] - self.heights[i - 1])
+                                / (self.positions[i] - self.positions[i - 1]));
+
                 // Check if parabolic formula gives valid result
                 if self.heights[i - 1] < new_height && new_height < self.heights[i + 1] {
                     self.heights[i] = new_height;
                 } else {
                     // Use linear formula
-                    self.heights[i] += d_sign * (self.heights[(i as i32 + d_sign as i32) as usize] - self.heights[i]) /
-                        (self.positions[(i as i32 + d_sign as i32) as usize] - self.positions[i]);
+                    self.heights[i] += d_sign
+                        * (self.heights[(i as i32 + d_sign as i32) as usize] - self.heights[i])
+                        / (self.positions[(i as i32 + d_sign as i32) as usize] - self.positions[i]);
                 }
-                
+
                 self.positions[i] += d_sign;
             }
         }
@@ -855,11 +898,11 @@ pub mod utils {
     ) -> Result<(usize, usize, f64)> {
         let metadata = std::fs::metadata(file_path)
             .map_err(|e| TimeSeriesError::IOError(format!("Failed to get file metadata: {}", e)))?;
-        
+
         let file_size_bytes = metadata.len() as usize;
         let estimated_points = file_size_bytes / data_type_size;
         let estimated_memory_gb = file_size_bytes as f64 / 1_073_741_824.0;
-        
+
         Ok((file_size_bytes, estimated_points, estimated_memory_gb))
     }
 
@@ -870,10 +913,14 @@ pub mod utils {
         safety_factor: f64,
     ) -> usize {
         let element_size = std::mem::size_of::<f64>();
-        let max_chunk_points = (available_memory_bytes as f64 * safety_factor) as usize / element_size;
-        
+        let max_chunk_points =
+            (available_memory_bytes as f64 * safety_factor) as usize / element_size;
+
         // Ensure chunk size is reasonable (between 1K and 10M points)
-        max_chunk_points.max(1_000).min(10_000_000).min(total_points)
+        max_chunk_points
+            .max(1_000)
+            .min(10_000_000)
+            .min(total_points)
     }
 
     /// Convert CSV file to binary format for faster processing
@@ -885,49 +932,55 @@ pub mod utils {
     ) -> Result<usize> {
         let input_file = File::open(csv_path)
             .map_err(|e| TimeSeriesError::IOError(format!("Failed to open CSV file: {}", e)))?;
-        
+
         let output_file = OpenOptions::new()
             .create(true)
             .write(true)
             .truncate(true)
             .open(binary_path)
-            .map_err(|e| TimeSeriesError::IOError(format!("Failed to create binary file: {}", e)))?;
-        
+            .map_err(|e| {
+                TimeSeriesError::IOError(format!("Failed to create binary file: {}", e))
+            })?;
+
         let reader = BufReader::new(input_file);
         let mut writer = BufWriter::new(output_file);
         let mut count = 0;
         let mut line_number = 0;
-        
+
         for line in reader.lines() {
-            let line = line.map_err(|e| TimeSeriesError::IOError(format!("Failed to read line: {}", e)))?;
-            
+            let line =
+                line.map_err(|e| TimeSeriesError::IOError(format!("Failed to read line: {}", e)))?;
+
             // Skip header
             if line_number == 0 && has_header {
                 line_number += 1;
                 continue;
             }
-            
+
             let fields: Vec<&str> = line.split(',').collect();
-            
+
             if column_index >= fields.len() {
-                return Err(TimeSeriesError::InvalidInput(
-                    format!("Column index {} out of bounds for line with {} fields", column_index, fields.len())
-                ));
+                return Err(TimeSeriesError::InvalidInput(format!(
+                    "Column index {} out of bounds for line with {} fields",
+                    column_index,
+                    fields.len()
+                )));
             }
-            
-            let value: f64 = fields[column_index].trim()
-                .parse()
-                .map_err(|e| TimeSeriesError::InvalidInput(format!("Failed to parse value: {}", e)))?;
-            
+
+            let value: f64 = fields[column_index].trim().parse().map_err(|e| {
+                TimeSeriesError::InvalidInput(format!("Failed to parse value: {}", e))
+            })?;
+
             // Write as binary f64
             let bytes = value.to_le_bytes();
-            writer.write_all(&bytes)
-                .map_err(|e| TimeSeriesError::IOError(format!("Failed to write binary data: {}", e)))?;
-            
+            writer.write_all(&bytes).map_err(|e| {
+                TimeSeriesError::IOError(format!("Failed to write binary data: {}", e))
+            })?;
+
             count += 1;
             line_number += 1;
         }
-        
+
         Ok(count)
     }
 }
@@ -941,13 +994,13 @@ mod tests {
     #[test]
     fn test_streaming_stats() {
         let mut stats = StreamingStats::new();
-        
+
         // Add some test data
         let data = [1.0, 2.0, 3.0, 4.0, 5.0];
         for &value in &data {
             stats.update(value);
         }
-        
+
         assert_eq!(stats.count, 5);
         assert!((stats.mean - 3.0).abs() < 1e-10);
         assert!((stats.variance() - 2.5).abs() < 1e-10);
@@ -959,20 +1012,20 @@ mod tests {
     fn test_streaming_stats_merge() {
         let mut stats1 = StreamingStats::new();
         let mut stats2 = StreamingStats::new();
-        
+
         // Add data to first stats
         for i in 1..=5 {
             stats1.update(i as f64);
         }
-        
+
         // Add data to second stats
         for i in 6..=10 {
             stats2.update(i as f64);
         }
-        
+
         // Merge
         stats1.merge(&stats2);
-        
+
         assert_eq!(stats1.count, 10);
         assert!((stats1.mean - 5.5).abs() < 1e-10);
         assert_eq!(stats1.min, 1.0);
@@ -982,13 +1035,13 @@ mod tests {
     #[test]
     fn test_out_of_core_moving_average() {
         let mut ma = OutOfCoreMovingAverage::new(3).unwrap();
-        
+
         assert!(ma.update(1.0).is_none()); // Not enough data yet
         assert!(ma.update(2.0).is_none()); // Not enough data yet
-        
+
         let avg = ma.update(3.0).unwrap(); // Now we have 3 values
         assert!((avg - 2.0).abs() < 1e-10);
-        
+
         let avg = ma.update(4.0).unwrap(); // Window slides
         assert!((avg - 3.0).abs() < 1e-10);
     }
@@ -1002,14 +1055,16 @@ mod tests {
         writeln!(temp_file, "2,20.3,y").unwrap();
         writeln!(temp_file, "3,15.7,z").unwrap();
         temp_file.flush().unwrap();
-        
+
         let config = ProcessingConfig::new()
             .with_chunk_size(2)
             .with_parallel_processing(false);
-        
+
         let mut processor = ChunkedProcessor::new(config);
-        let stats = processor.process_csv_file(temp_file.path(), 1, true).unwrap();
-        
+        let stats = processor
+            .process_csv_file(temp_file.path(), 1, true)
+            .unwrap();
+
         assert_eq!(stats.count, 3);
         assert!((stats.mean - 15.5).abs() < 1e-10);
         assert_eq!(stats.min, 10.5);
@@ -1019,14 +1074,14 @@ mod tests {
     #[test]
     fn test_quantile_estimator() {
         let mut estimator = OutOfCoreQuantileEstimator::new(0.5).unwrap(); // Median
-        
+
         // Add enough data to initialize
         for i in 1..=100 {
             estimator.update(i as f64);
         }
-        
+
         let median = estimator.quantile_estimate().unwrap();
-        
+
         // Should be close to 50.5 (median of 1..100)
         assert!((median - 50.5).abs() < 5.0); // Allow some error due to approximation
     }
@@ -1037,7 +1092,7 @@ mod tests {
             .with_chunk_size(5000)
             .with_overlap(500)
             .with_max_memory(2_000_000_000);
-        
+
         assert_eq!(config.chunk_size, 5000);
         assert_eq!(config.overlap, 500);
         assert_eq!(config.max_memory_usage, 2_000_000_000);

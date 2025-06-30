@@ -274,7 +274,8 @@ fn demonstrate_morphology(image: &Array2<f64>) -> NdimageResult<()> {
 
     // 4. Distance transforms
     println!("  • Distance transforms:");
-    let edt = crate::morphology::distance_transform_edt(&binary_image.view(), None, None, None).expect("Distance transform failed")?;
+    let edt = crate::morphology::distance_transform_edt(&binary_image.view(), None, None, None)
+        .expect("Distance transform failed")?;
     println!("    Euclidean distance transform computed");
 
     Ok(())

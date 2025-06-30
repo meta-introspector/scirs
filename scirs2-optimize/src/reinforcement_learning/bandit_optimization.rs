@@ -2,9 +2,9 @@
 //!
 //! Bandit-based approaches for hyperparameter and strategy selection.
 
+use crate::result::OptimizeResults;
 use ndarray::{Array1, ArrayView1};
 use scirs2_core::error::Result;
-use crate::result::OptimizeResults;
 
 /// Multi-armed bandit for optimization strategy selection
 #[derive(Debug, Clone)]
@@ -26,35 +26,36 @@ impl BanditOptimizer {
             arm_counts: Array1::zeros(num_arms),
         }
     }
-    
+
     /// Select arm using UCB1
     pub fn select_arm(&self) -> usize {
         let total_counts: usize = self.arm_counts.sum();
         if total_counts == 0 {
             return rand::random::<usize>() % self.num_arms;
         }
-        
+
         let mut best_arm = 0;
         let mut best_ucb = f64::NEG_INFINITY;
-        
+
         for arm in 0..self.num_arms {
             if self.arm_counts[arm] == 0 {
                 return arm; // Explore unvisited arms
             }
-            
+
             let average_reward = self.arm_rewards[arm] / self.arm_counts[arm] as f64;
-            let confidence_interval = (2.0 * (total_counts as f64).ln() / self.arm_counts[arm] as f64).sqrt();
+            let confidence_interval =
+                (2.0 * (total_counts as f64).ln() / self.arm_counts[arm] as f64).sqrt();
             let ucb = average_reward + confidence_interval;
-            
+
             if ucb > best_ucb {
                 best_ucb = ucb;
                 best_arm = arm;
             }
         }
-        
+
         best_arm
     }
-    
+
     /// Update arm with reward
     pub fn update_arm(&mut self, arm: usize, reward: f64) {
         if arm < self.num_arms {
@@ -76,32 +77,32 @@ where
     let mut bandit = BanditOptimizer::new(3); // 3 strategies
     let mut params = initial_params.to_owned();
     let mut best_obj = objective(initial_params);
-    
+
     for _iter in 0..num_iterations {
         let arm = bandit.select_arm();
-        
+
         // Apply different strategies based on arm
         let step_size = match arm {
-            0 => 0.01,   // Small steps
-            1 => 0.1,    // Medium steps
-            _ => 0.001,  // Very small steps
+            0 => 0.01,  // Small steps
+            1 => 0.1,   // Medium steps
+            _ => 0.001, // Very small steps
         };
-        
+
         // Simple gradient-like update
         for i in 0..params.len() {
             params[i] += (rand::random::<f64>() - 0.5) * step_size;
         }
-        
+
         let new_obj = objective(&params.view());
         let reward = if new_obj < best_obj { 1.0 } else { 0.0 };
-        
+
         bandit.update_arm(arm, reward);
-        
+
         if new_obj < best_obj {
             best_obj = new_obj;
         }
     }
-    
+
     Ok(OptimizeResults {
         x: params,
         fun: best_obj,

@@ -217,8 +217,12 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LayerNorm<F> {
         let beta = Array::<F, _>::from_elem(IxDyn(&[normalized_shape]), F::zero());
 
         // Initialize gradient arrays to zeros
-        let dgamma = Arc::new(RwLock::new(Array::<F, _>::zeros(IxDyn(&[normalized_shape]))));
-        let dbeta = Arc::new(RwLock::new(Array::<F, _>::zeros(IxDyn(&[normalized_shape]))));
+        let dgamma = Arc::new(RwLock::new(Array::<F, _>::zeros(IxDyn(&[
+            normalized_shape,
+        ]))));
+        let dbeta = Arc::new(RwLock::new(Array::<F, _>::zeros(IxDyn(&[
+            normalized_shape,
+        ]))));
 
         // Convert epsilon to F
         let eps = F::from(eps).ok_or_else(|| {
@@ -316,7 +320,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LayerNorm<F> {
     ) -> Result<()> {
         let mut dgamma_ref = self.dgamma.write().unwrap();
         let mut dbeta_ref = self.dbeta.write().unwrap();
-        
+
         if dgamma.shape() != dgamma_ref.shape() {
             return Err(NeuralError::InvalidArchitecture(format!(
                 "dgamma shape mismatch: expected {:?}, got {:?}",
@@ -577,7 +581,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Laye
     fn update(&mut self, learning_rate: F) -> Result<()> {
         let mut dgamma_ref = self.dgamma.write().unwrap();
         let mut dbeta_ref = self.dbeta.write().unwrap();
-        
+
         // Update parameters using accumulated gradients
         for i in 0..self.normalized_shape[0] {
             // Update gamma: gamma = gamma - learning_rate * dgamma

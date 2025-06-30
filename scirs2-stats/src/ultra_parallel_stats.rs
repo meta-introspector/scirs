@@ -5,14 +5,14 @@
 //! balancing, NUMA-aware processing, and hybrid CPU-GPU computation strategies.
 
 use crate::error::{StatsError, StatsResult};
-use ndarray::{Array2, ArrayView1, ArrayView2, s};
+use ndarray::{s, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, NumCast, Zero};
 use scirs2_core::parallel_ops::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, RwLock};
-use std::time::{Duration, Instant};
 use std::thread;
+use std::time::{Duration, Instant};
 
 /// Configuration for ultra-parallel statistical operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -302,12 +302,12 @@ impl MemoryPool {
     pub fn new(num_blocks: usize, block_size: usize) -> Self {
         let mut blocks = Vec::with_capacity(num_blocks);
         let mut available = Vec::with_capacity(num_blocks);
-        
+
         for i in 0..num_blocks {
             blocks.push(vec![0u8; block_size]);
             available.push(i);
         }
-        
+
         Self {
             blocks,
             available,
@@ -315,7 +315,7 @@ impl MemoryPool {
             total_allocations: 0,
         }
     }
-    
+
     /// Allocate a block
     pub fn allocate(&mut self) -> Option<*mut u8> {
         if let Some(index) = self.available.pop() {
@@ -325,7 +325,7 @@ impl MemoryPool {
             None
         }
     }
-    
+
     /// Deallocate a block
     pub fn deallocate(&mut self, ptr: *mut u8) {
         // Find which block this pointer belongs to
@@ -598,11 +598,13 @@ pub enum MemoryLayoutStrategy {
 impl UltraParallelStatsProcessor {
     /// Create new ultra-parallel processor
     pub fn new(config: UltraParallelConfig) -> StatsResult<Self> {
-        let num_threads = config.thread_pool_config.num_workers
+        let num_threads = config
+            .thread_pool_config
+            .num_workers
             .unwrap_or_else(|| num_threads().max(1));
-        
+
         let mut execution_contexts = Vec::with_capacity(num_threads);
-        
+
         for i in 0..num_threads {
             let context = ParallelExecutionContext {
                 thread_id: i,
@@ -616,7 +618,7 @@ impl UltraParallelStatsProcessor {
             };
             execution_contexts.push(Arc::new(RwLock::new(context)));
         }
-        
+
         Ok(Self {
             config,
             execution_contexts,
@@ -625,43 +627,40 @@ impl UltraParallelStatsProcessor {
             optimization_cache: Arc::new(RwLock::new(HashMap::new())),
         })
     }
-    
+
     /// Create with default configuration
     pub fn default() -> StatsResult<Self> {
         Self::new(UltraParallelConfig::default())
     }
-    
+
     /// Compute mean using ultra-parallel processing
-    pub fn mean_ultra_parallel<F>(
-        &self,
-        data: ArrayView1<F>,
-    ) -> StatsResult<UltraParallelResult<F>>
+    pub fn mean_ultra_parallel<F>(&self, data: ArrayView1<F>) -> StatsResult<UltraParallelResult<F>>
     where
         F: Float + NumCast + Send + Sync + Zero + std::iter::Sum,
     {
         let start_time = Instant::now();
-        
+
         // Analyze workload and select optimal strategy
         let strategy = self.select_optimization_strategy("mean", data.len())?;
-        
+
         // Distribute work among threads
         let work_units = self.create_work_units(&data, &strategy)?;
-        
+
         // Execute parallel computation
         let partial_results = self.execute_parallel_work(&work_units)?;
-        
+
         // Combine results
         let result = self.combine_mean_results(&partial_results, data.len())?;
-        
+
         // Calculate metrics and analysis
         let total_time = start_time.elapsed();
         let metrics = self.calculate_execution_metrics(total_time, &work_units)?;
         let analysis = self.analyze_performance(&metrics)?;
         let resource_utilization = self.measure_resource_utilization()?;
-        
+
         // Update performance history
         self.update_performance_history(&metrics);
-        
+
         Ok(UltraParallelResult {
             result,
             metrics,
@@ -669,7 +668,7 @@ impl UltraParallelStatsProcessor {
             resource_utilization,
         })
     }
-    
+
     /// Compute variance using ultra-parallel processing
     pub fn variance_ultra_parallel<F>(
         &self,
@@ -680,30 +679,30 @@ impl UltraParallelStatsProcessor {
         F: Float + NumCast + Send + Sync + Zero + std::iter::Sum,
     {
         let start_time = Instant::now();
-        
+
         // First compute mean in parallel
         let mean_result = self.mean_ultra_parallel(data)?;
         let mean_val = mean_result.result;
-        
+
         // Select strategy for variance computation
         let strategy = self.select_optimization_strategy("variance", data.len())?;
-        
+
         // Create work units for variance computation
         let work_units = self.create_variance_work_units(&data, mean_val, ddof, &strategy)?;
-        
+
         // Execute parallel computation
         let partial_results = self.execute_parallel_work(&work_units)?;
-        
+
         // Combine variance results
         let result = self.combine_variance_results(&partial_results, data.len(), ddof)?;
-        
+
         let total_time = start_time.elapsed();
         let metrics = self.calculate_execution_metrics(total_time, &work_units)?;
         let analysis = self.analyze_performance(&metrics)?;
         let resource_utilization = self.measure_resource_utilization()?;
-        
+
         self.update_performance_history(&metrics);
-        
+
         Ok(UltraParallelResult {
             result,
             metrics,
@@ -711,7 +710,7 @@ impl UltraParallelStatsProcessor {
             resource_utilization,
         })
     }
-    
+
     /// Compute correlation matrix using ultra-parallel processing
     pub fn correlation_matrix_ultra_parallel<F>(
         &self,
@@ -722,16 +721,16 @@ impl UltraParallelStatsProcessor {
     {
         let start_time = Instant::now();
         let (n_rows, n_cols) = data.dim();
-        
+
         // Create work units for each correlation pair
         let mut correlation_work = Vec::new();
         let mut work_id = 0;
-        
+
         for i in 0..n_cols {
             for j in i..n_cols {
                 let col_i = data.column(i).to_owned();
                 let col_j = data.column(j).to_owned();
-                
+
                 correlation_work.push(WorkUnit {
                     id: work_id,
                     data: (col_i.into_raw_vec(), col_j.into_raw_vec(), i, j),
@@ -743,10 +742,10 @@ impl UltraParallelStatsProcessor {
                 work_id += 1;
             }
         }
-        
+
         // Execute parallel correlation computations
         let correlation_results = self.execute_correlation_work(&correlation_work)?;
-        
+
         // Assemble correlation matrix
         let mut result_matrix = Array2::zeros((n_cols, n_cols));
         for ((i, j), correlation) in correlation_results {
@@ -755,14 +754,14 @@ impl UltraParallelStatsProcessor {
                 result_matrix[[j, i]] = correlation; // Symmetric matrix
             }
         }
-        
+
         let total_time = start_time.elapsed();
         let metrics = self.calculate_matrix_execution_metrics(total_time, &correlation_work)?;
         let analysis = self.analyze_performance(&metrics)?;
         let resource_utilization = self.measure_resource_utilization()?;
-        
+
         self.update_performance_history(&metrics);
-        
+
         Ok(UltraParallelResult {
             result: result_matrix,
             metrics,
@@ -770,7 +769,7 @@ impl UltraParallelStatsProcessor {
             resource_utilization,
         })
     }
-    
+
     /// Select optimal strategy for the given operation
     fn select_optimization_strategy(
         &self,
@@ -778,14 +777,14 @@ impl UltraParallelStatsProcessor {
         data_size: usize,
     ) -> StatsResult<OptimizationStrategy> {
         let cache_key = format!("{}_{}", operation, data_size / 1000); // Granular caching
-        
+
         // Check cache first
         if let Ok(cache) = self.optimization_cache.read() {
             if let Some(strategy) = cache.get(&cache_key) {
                 return Ok(strategy.clone());
             }
         }
-        
+
         // Generate new strategy based on data characteristics
         let optimal_threads = self.calculate_optimal_thread_count(data_size);
         let work_distribution = if data_size > 1_000_000 {
@@ -795,7 +794,7 @@ impl UltraParallelStatsProcessor {
         } else {
             WorkDistributionMethod::EqualChunks
         };
-        
+
         let memory_layout = if self.config.numa_aware {
             MemoryLayoutStrategy::NumaAware
         } else if self.config.cache_optimization != CacheOptimizationLevel::None {
@@ -803,7 +802,7 @@ impl UltraParallelStatsProcessor {
         } else {
             MemoryLayoutStrategy::Contiguous
         };
-        
+
         let strategy = OptimizationStrategy {
             name: format!("{}_optimized", operation),
             thread_count: optimal_threads,
@@ -811,23 +810,23 @@ impl UltraParallelStatsProcessor {
             memory_layout,
             expected_performance: self.estimate_performance(optimal_threads, data_size),
         };
-        
+
         // Cache the strategy
         if let Ok(mut cache) = self.optimization_cache.write() {
             cache.insert(cache_key, strategy.clone());
         }
-        
+
         Ok(strategy)
     }
-    
+
     /// Calculate optimal thread count for given data size
     fn calculate_optimal_thread_count(&self, data_size: usize) -> usize {
         let available_threads = self.execution_contexts.len();
         let min_work_per_thread = self.config.min_work_size;
-        
+
         // Don't use more threads than can be effectively utilized
         let max_useful_threads = (data_size / min_work_per_thread).max(1);
-        
+
         // Consider NUMA topology
         let numa_optimal = if self.config.numa_aware {
             // Simplified: assume 2 NUMA nodes
@@ -835,20 +834,20 @@ impl UltraParallelStatsProcessor {
         } else {
             available_threads
         };
-        
+
         max_useful_threads.min(numa_optimal).min(available_threads)
     }
-    
+
     /// Estimate performance for given configuration
     fn estimate_performance(&self, thread_count: usize, data_size: usize) -> f64 {
         // Simplified performance model
         let sequential_time = data_size as f64;
         let parallel_efficiency = 0.8; // Account for overhead
         let parallel_time = sequential_time / (thread_count as f64 * parallel_efficiency);
-        
+
         sequential_time / parallel_time
     }
-    
+
     /// Create work units for mean computation
     fn create_work_units<F>(
         &self,
@@ -861,7 +860,7 @@ impl UltraParallelStatsProcessor {
         let mut work_units = Vec::new();
         let data_size = data.len();
         let chunk_size = data_size / strategy.thread_count;
-        
+
         for i in 0..strategy.thread_count {
             let start = i * chunk_size;
             let end = if i == strategy.thread_count - 1 {
@@ -869,12 +868,13 @@ impl UltraParallelStatsProcessor {
             } else {
                 (i + 1) * chunk_size
             };
-            
-            let chunk_data: Vec<f64> = data.slice(s![start..end])
+
+            let chunk_data: Vec<f64> = data
+                .slice(s![start..end])
                 .iter()
                 .map(|&x| x.to_f64().unwrap_or(0.0))
                 .collect();
-            
+
             work_units.push(WorkUnit {
                 id: i,
                 data: chunk_data,
@@ -888,10 +888,10 @@ impl UltraParallelStatsProcessor {
                 },
             });
         }
-        
+
         Ok(work_units)
     }
-    
+
     /// Create work units for variance computation
     fn create_variance_work_units<F>(
         &self,
@@ -907,7 +907,7 @@ impl UltraParallelStatsProcessor {
         let data_size = data.len();
         let chunk_size = data_size / strategy.thread_count;
         let mean_f64 = mean_val.to_f64().unwrap_or(0.0);
-        
+
         for i in 0..strategy.thread_count {
             let start = i * chunk_size;
             let end = if i == strategy.thread_count - 1 {
@@ -915,8 +915,9 @@ impl UltraParallelStatsProcessor {
             } else {
                 (i + 1) * chunk_size
             };
-            
-            let chunk_data: Vec<f64> = data.slice(s![start..end])
+
+            let chunk_data: Vec<f64> = data
+                .slice(s![start..end])
                 .iter()
                 .map(|&x| {
                     let val = x.to_f64().unwrap_or(0.0);
@@ -924,7 +925,7 @@ impl UltraParallelStatsProcessor {
                     diff * diff
                 })
                 .collect();
-            
+
             work_units.push(WorkUnit {
                 id: i,
                 data: chunk_data,
@@ -938,44 +939,43 @@ impl UltraParallelStatsProcessor {
                 },
             });
         }
-        
+
         Ok(work_units)
     }
-    
+
     /// Execute parallel work units
-    fn execute_parallel_work(
-        &self,
-        work_units: &[WorkUnit<Vec<f64>>],
-    ) -> StatsResult<Vec<f64>> {
+    fn execute_parallel_work(&self, work_units: &[WorkUnit<Vec<f64>>]) -> StatsResult<Vec<f64>> {
         let num_threads = work_units.len();
         let results = Arc::new(Mutex::new(vec![0.0; num_threads]));
         let work_units = Arc::new(work_units.to_vec());
-        
+
         thread::scope(|s| {
-            let handles: Vec<_> = (0..num_threads).map(|thread_id| {
-                let results = Arc::clone(&results);
-                let work_units = Arc::clone(&work_units);
-                
-                s.spawn(move || {
-                    let work_unit = &work_units[thread_id];
-                    let sum: f64 = work_unit.data.iter().sum();
-                    
-                    if let Ok(mut results) = results.lock() {
-                        results[thread_id] = sum;
-                    }
+            let handles: Vec<_> = (0..num_threads)
+                .map(|thread_id| {
+                    let results = Arc::clone(&results);
+                    let work_units = Arc::clone(&work_units);
+
+                    s.spawn(move || {
+                        let work_unit = &work_units[thread_id];
+                        let sum: f64 = work_unit.data.iter().sum();
+
+                        if let Ok(mut results) = results.lock() {
+                            results[thread_id] = sum;
+                        }
+                    })
                 })
-            }).collect();
-            
+                .collect();
+
             // Wait for all threads to complete
             for handle in handles {
                 let _ = handle.join();
             }
         });
-        
+
         let results = results.lock().unwrap().clone();
         Ok(results)
     }
-    
+
     /// Execute correlation work units
     fn execute_correlation_work(
         &self,
@@ -984,63 +984,61 @@ impl UltraParallelStatsProcessor {
         let num_work_units = work_units.len();
         let results = Arc::new(Mutex::new(Vec::with_capacity(num_work_units)));
         let work_units = Arc::new(work_units.to_vec());
-        
+
         thread::scope(|s| {
-            let handles: Vec<_> = (0..num_work_units).map(|work_id| {
-                let results = Arc::clone(&results);
-                let work_units = Arc::clone(&work_units);
-                
-                s.spawn(move || {
-                    let work_unit = &work_units[work_id];
-                    let (ref x, ref y, i, j) = work_unit.data;
-                    
-                    // Compute Pearson correlation
-                    let correlation = self.compute_correlation(x, y).unwrap_or(0.0);
-                    
-                    if let Ok(mut results) = results.lock() {
-                        results.push(((i, j), correlation));
-                    }
+            let handles: Vec<_> = (0..num_work_units)
+                .map(|work_id| {
+                    let results = Arc::clone(&results);
+                    let work_units = Arc::clone(&work_units);
+
+                    s.spawn(move || {
+                        let work_unit = &work_units[work_id];
+                        let (ref x, ref y, i, j) = work_unit.data;
+
+                        // Compute Pearson correlation
+                        let correlation = self.compute_correlation(x, y).unwrap_or(0.0);
+
+                        if let Ok(mut results) = results.lock() {
+                            results.push(((i, j), correlation));
+                        }
+                    })
                 })
-            }).collect();
-            
+                .collect();
+
             for handle in handles {
                 let _ = handle.join();
             }
         });
-        
+
         let results = results.lock().unwrap().clone();
         Ok(results)
     }
-    
+
     /// Compute Pearson correlation between two vectors
     fn compute_correlation(&self, x: &[f64], y: &[f64]) -> StatsResult<f64> {
         if x.len() != y.len() || x.is_empty() {
             return Ok(0.0);
         }
-        
+
         let n = x.len() as f64;
         let sum_x: f64 = x.iter().sum();
         let sum_y: f64 = y.iter().sum();
         let sum_xx: f64 = x.iter().map(|&xi| xi * xi).sum();
         let sum_yy: f64 = y.iter().map(|&yi| yi * yi).sum();
         let sum_xy: f64 = x.iter().zip(y).map(|(&xi, &yi)| xi * yi).sum();
-        
+
         let numerator = n * sum_xy - sum_x * sum_y;
         let denominator = ((n * sum_xx - sum_x * sum_x) * (n * sum_yy - sum_y * sum_y)).sqrt();
-        
+
         if denominator == 0.0 {
             Ok(0.0)
         } else {
             Ok(numerator / denominator)
         }
     }
-    
+
     /// Combine mean results from parallel computation
-    fn combine_mean_results<F>(
-        &self,
-        partial_results: &[f64],
-        total_count: usize,
-    ) -> StatsResult<F>
+    fn combine_mean_results<F>(&self, partial_results: &[f64], total_count: usize) -> StatsResult<F>
     where
         F: Float + NumCast,
     {
@@ -1050,7 +1048,7 @@ impl UltraParallelStatsProcessor {
             StatsError::ComputationError("Failed to convert mean result".to_string())
         })
     }
-    
+
     /// Combine variance results from parallel computation
     fn combine_variance_results<F>(
         &self,
@@ -1067,7 +1065,7 @@ impl UltraParallelStatsProcessor {
             StatsError::ComputationError("Failed to convert variance result".to_string())
         })
     }
-    
+
     /// Calculate execution metrics
     fn calculate_execution_metrics(
         &self,
@@ -1077,24 +1075,26 @@ impl UltraParallelStatsProcessor {
         let threads_used = work_units.len();
         let total_work: f64 = work_units.iter().map(|wu| wu.cost).sum();
         let avg_work_per_thread = total_work / threads_used as f64;
-        
+
         // Estimate load balance efficiency
-        let work_variance = work_units.iter()
+        let work_variance = work_units
+            .iter()
             .map(|wu| (wu.cost - avg_work_per_thread).powi(2))
-            .sum::<f64>() / threads_used as f64;
+            .sum::<f64>()
+            / threads_used as f64;
         let load_balance_efficiency = 1.0 - (work_variance.sqrt() / avg_work_per_thread).min(1.0);
-        
+
         // Estimate parallel efficiency (simplified)
         let sequential_time_estimate = total_time.mul_f64(threads_used as f64);
         let parallel_efficiency = total_time.as_secs_f64() / sequential_time_estimate.as_secs_f64();
-        
+
         let speedup = threads_used as f64 * parallel_efficiency;
-        
+
         Ok(ParallelExecutionMetrics {
             total_time,
             parallel_time: total_time.mul_f64(0.9), // Estimate
             sequential_time: total_time.mul_f64(0.1), // Estimate
-            sync_time: total_time.mul_f64(0.05), // Estimate
+            sync_time: total_time.mul_f64(0.05),    // Estimate
             threads_used,
             load_balance_efficiency,
             parallel_efficiency,
@@ -1102,7 +1102,7 @@ impl UltraParallelStatsProcessor {
             work_distribution_quality: load_balance_efficiency,
         })
     }
-    
+
     /// Calculate matrix operation execution metrics
     fn calculate_matrix_execution_metrics(
         &self,
@@ -1112,7 +1112,7 @@ impl UltraParallelStatsProcessor {
         let threads_used = work_units.len();
         let total_work: f64 = work_units.iter().map(|wu| wu.cost).sum();
         let load_balance_efficiency = 0.85; // Estimate for matrix operations
-        
+
         Ok(ParallelExecutionMetrics {
             total_time,
             parallel_time: total_time.mul_f64(0.85),
@@ -1125,14 +1125,14 @@ impl UltraParallelStatsProcessor {
             work_distribution_quality: load_balance_efficiency,
         })
     }
-    
+
     /// Analyze performance characteristics
     fn analyze_performance(
         &self,
         metrics: &ParallelExecutionMetrics,
     ) -> StatsResult<ParallelPerformanceAnalysis> {
         let mut bottlenecks = Vec::new();
-        
+
         // Detect load imbalance
         if metrics.load_balance_efficiency < 0.8 {
             bottlenecks.push(PerformanceBottleneck {
@@ -1142,7 +1142,7 @@ impl UltraParallelStatsProcessor {
                 mitigation: "Consider dynamic work distribution".to_string(),
             });
         }
-        
+
         // Detect synchronization overhead
         if metrics.sync_time.as_secs_f64() / metrics.total_time.as_secs_f64() > 0.1 {
             bottlenecks.push(PerformanceBottleneck {
@@ -1152,7 +1152,7 @@ impl UltraParallelStatsProcessor {
                 mitigation: "Reduce synchronization points or use lock-free algorithms".to_string(),
             });
         }
-        
+
         // Performance rating
         let performance_rating = if metrics.parallel_efficiency > 0.9 {
             PerformanceRating::Excellent
@@ -1165,14 +1165,14 @@ impl UltraParallelStatsProcessor {
         } else {
             PerformanceRating::Unacceptable
         };
-        
+
         Ok(ParallelPerformanceAnalysis {
             bottlenecks,
             scaling_analysis: ScalingAnalysis {
                 theoretical_max_speedup: metrics.threads_used as f64,
                 achieved_speedup: metrics.speedup,
-                parallel_fraction: 0.9, // Estimate
-                serial_bottleneck_impact: 0.1, // Estimate
+                parallel_fraction: 0.9,             // Estimate
+                serial_bottleneck_impact: 0.1,      // Estimate
                 scaling_efficiency: HashMap::new(), // Would implement proper analysis
                 optimal_thread_count: metrics.threads_used,
             },
@@ -1180,7 +1180,7 @@ impl UltraParallelStatsProcessor {
             performance_rating,
         })
     }
-    
+
     /// Measure resource utilization
     fn measure_resource_utilization(&self) -> StatsResult<ResourceUtilization> {
         // Simplified resource measurement
@@ -1194,22 +1194,22 @@ impl UltraParallelStatsProcessor {
                 cache_line_utilization: 0.8,
             },
             numa_utilization: vec![0.8, 0.8], // Balanced NUMA utilization
-            energy_consumption: None, // Would require hardware monitoring
+            energy_consumption: None,         // Would require hardware monitoring
         })
     }
-    
+
     /// Update performance history for learning
     fn update_performance_history(&self, metrics: &ParallelExecutionMetrics) {
         if let Ok(mut history) = self.performance_history.lock() {
             history.push(metrics.clone());
-            
+
             // Keep only recent history
             if history.len() > 1000 {
                 history.remove(0);
             }
         }
     }
-    
+
     /// Get performance statistics
     pub fn get_performance_statistics(&self) -> PerformanceStatistics {
         if let Ok(history) = self.performance_history.lock() {
@@ -1219,13 +1219,13 @@ impl UltraParallelStatsProcessor {
             } else {
                 0.0
             };
-            
+
             let avg_efficiency = if !history.is_empty() {
                 history.iter().map(|m| m.parallel_efficiency).sum::<f64>() / history.len() as f64
             } else {
                 0.0
             };
-            
+
             PerformanceStatistics {
                 total_operations,
                 average_speedup: avg_speedup,
@@ -1281,7 +1281,7 @@ where
 mod tests {
     use super::*;
     use ndarray::array;
-    
+
     #[test]
     fn test_ultra_parallel_config() {
         let config = UltraParallelConfig::default();
@@ -1289,23 +1289,25 @@ mod tests {
         assert!(config.numa_aware);
         assert!(config.performance_monitoring);
     }
-    
+
     #[test]
     fn test_processor_creation() {
         let processor = UltraParallelStatsProcessor::default().unwrap();
         assert!(!processor.execution_contexts.is_empty());
     }
-    
+
     #[test]
     fn test_optimization_strategy_selection() {
         let processor = UltraParallelStatsProcessor::default().unwrap();
-        let strategy = processor.select_optimization_strategy("mean", 10000).unwrap();
-        
+        let strategy = processor
+            .select_optimization_strategy("mean", 10000)
+            .unwrap();
+
         assert!(!strategy.name.is_empty());
         assert!(strategy.thread_count > 0);
         assert!(strategy.expected_performance > 0.0);
     }
-    
+
     #[test]
     fn test_work_unit_creation() {
         let processor = UltraParallelStatsProcessor::default().unwrap();
@@ -1317,23 +1319,25 @@ mod tests {
             memory_layout: MemoryLayoutStrategy::Contiguous,
             expected_performance: 2.0,
         };
-        
-        let work_units = processor.create_work_units(&data.view(), &strategy).unwrap();
+
+        let work_units = processor
+            .create_work_units(&data.view(), &strategy)
+            .unwrap();
         assert_eq!(work_units.len(), 2);
         assert!(!work_units[0].data.is_empty());
         assert!(!work_units[1].data.is_empty());
     }
-    
+
     #[test]
     fn test_correlation_computation() {
         let processor = UltraParallelStatsProcessor::default().unwrap();
         let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let y = vec![2.0, 4.0, 6.0, 8.0, 10.0];
-        
+
         let correlation = processor.compute_correlation(&x, &y).unwrap();
         assert!((correlation - 1.0).abs() < 1e-10); // Perfect positive correlation
     }
-    
+
     #[test]
     fn test_performance_metrics_calculation() {
         let processor = UltraParallelStatsProcessor::default().unwrap();
@@ -1355,12 +1359,11 @@ mod tests {
                 numa_node: None,
             },
         ];
-        
-        let metrics = processor.calculate_execution_metrics(
-            Duration::from_millis(100),
-            &work_units,
-        ).unwrap();
-        
+
+        let metrics = processor
+            .calculate_execution_metrics(Duration::from_millis(100), &work_units)
+            .unwrap();
+
         assert_eq!(metrics.threads_used, 2);
         assert!(metrics.load_balance_efficiency > 0.0);
         assert!(metrics.speedup > 0.0);

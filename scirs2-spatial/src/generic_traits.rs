@@ -41,7 +41,9 @@ use std::fmt::Debug;
 ///
 /// This trait extends standard numeric traits with requirements specific
 /// to spatial algorithms, including floating-point operations and conversions.
-pub trait SpatialScalar: Float + Debug + Default + NumCast + Send + Sync + SimdUnifiedOps + 'static {
+pub trait SpatialScalar:
+    Float + Debug + Default + NumCast + Send + Sync + SimdUnifiedOps + 'static
+{
     /// The epsilon value for floating-point comparisons
     fn epsilon() -> Self;
 
@@ -141,7 +143,7 @@ impl SpatialScalar for f32 {
         use ndarray::Array1;
         let a_array = Array1::from(a.to_vec());
         let b_array = Array1::from(b.to_vec());
-        
+
         let diff = Self::simd_sub(&a_array.view(), &b_array.view());
         let squared = Self::simd_mul(&diff.view(), &diff.view());
         Ok(Self::simd_sum(&squared.view()))
@@ -155,7 +157,7 @@ impl SpatialScalar for f32 {
         use ndarray::Array1;
         let a_array = Array1::from(a.to_vec());
         let b_array = Array1::from(b.to_vec());
-        
+
         let diff = Self::simd_sub(&a_array.view(), &b_array.view());
         let abs_diff = Self::simd_abs(&diff.view());
         Ok(Self::simd_sum(&abs_diff.view()))
@@ -169,7 +171,7 @@ impl SpatialScalar for f32 {
         use ndarray::Array1;
         let a_array = Array1::from(a.to_vec());
         let b_array = Array1::from(b.to_vec());
-        
+
         Ok(Self::simd_dot(&a_array.view(), &b_array.view()))
     }
 }
@@ -191,7 +193,7 @@ impl SpatialScalar for f64 {
         use ndarray::Array1;
         let a_array = Array1::from(a.to_vec());
         let b_array = Array1::from(b.to_vec());
-        
+
         let diff = Self::simd_sub(&a_array.view(), &b_array.view());
         let squared = Self::simd_mul(&diff.view(), &diff.view());
         Ok(Self::simd_sum(&squared.view()))
@@ -205,7 +207,7 @@ impl SpatialScalar for f64 {
         use ndarray::Array1;
         let a_array = Array1::from(a.to_vec());
         let b_array = Array1::from(b.to_vec());
-        
+
         let diff = Self::simd_sub(&a_array.view(), &b_array.view());
         let abs_diff = Self::simd_abs(&diff.view());
         Ok(Self::simd_sum(&abs_diff.view()))
@@ -219,7 +221,7 @@ impl SpatialScalar for f64 {
         use ndarray::Array1;
         let a_array = Array1::from(a.to_vec());
         let b_array = Array1::from(b.to_vec());
-        
+
         Ok(Self::simd_dot(&a_array.view(), &b_array.view()))
     }
 }

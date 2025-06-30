@@ -15,8 +15,8 @@ use std::fmt::Debug;
 use std::path::Path;
 
 // External dependencies for serialization
-use serde_json;
 use chrono;
+use serde_json;
 
 /// Supported external frameworks
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -618,13 +618,13 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
 
     fn serialize_onnx_model(&self, model: &ONNXModel<F>, output_path: &Path) -> Result<()> {
         use serde_json::json;
-        
+
         // Create ONNX-compatible model representation
         let mut graph_nodes = Vec::new();
         let mut graph_initializers = Vec::new();
         let mut graph_inputs = Vec::new();
         let mut graph_outputs = Vec::new();
-        
+
         // Convert inputs to ONNX format
         for input in &model.graph.inputs {
             graph_inputs.push(json!({
@@ -645,7 +645,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
                 }
             }));
         }
-        
+
         // Convert outputs to ONNX format
         for output in &model.graph.outputs {
             graph_outputs.push(json!({
@@ -666,13 +666,11 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
                 }
             }));
         }
-        
+
         // Convert initializers (weights) to ONNX format
         for (name, tensor) in &model.graph.initializers {
-            let tensor_data: Vec<f64> = tensor.iter()
-                .map(|&x| x.to_f64().unwrap_or(0.0))
-                .collect();
-            
+            let tensor_data: Vec<f64> = tensor.iter().map(|&x| x.to_f64().unwrap_or(0.0)).collect();
+
             graph_initializers.push(json!({
                 "name": name,
                 "dims": tensor.shape().to_vec(),
@@ -681,7 +679,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
                 "doc_string": format!("Weight tensor {}", name)
             }));
         }
-        
+
         // Create ONNX model structure
         let onnx_model = json!({
             "ir_version": 7,
@@ -719,16 +717,17 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
                 }
             ]
         });
-        
+
         // Write ONNX model to file in JSON format
         // In a real implementation, this would be protobuf binary format
-        let json_string = serde_json::to_string_pretty(&onnx_model)
-            .map_err(|e| NeuralError::ComputationError(format!("JSON serialization error: {}", e)))?;
-            
+        let json_string = serde_json::to_string_pretty(&onnx_model).map_err(|e| {
+            NeuralError::ComputationError(format!("JSON serialization error: {}", e))
+        })?;
+
         std::fs::write(output_path, json_string).map_err(|e| {
             NeuralError::ComputationError(format!("Failed to write ONNX model: {}", e))
         })?;
-        
+
         Ok(())
     }
 
@@ -1114,25 +1113,26 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
         output_path: &Path,
     ) -> Result<()> {
         use serde_json::json;
-        
+
         // Create PyTorch-compatible state dict format
         let mut pytorch_state_dict = serde_json::Map::new();
-        
+
         // Convert each tensor to PyTorch format
         for (param_name, tensor) in &state_dict {
-            let tensor_data: Vec<f64> = tensor.iter()
-                .map(|&x| x.to_f64().unwrap_or(0.0))
-                .collect();
-            
-            pytorch_state_dict.insert(param_name.clone(), json!({
-                "data": tensor_data,
-                "shape": tensor.shape().to_vec(),
-                "dtype": "float32",
-                "requires_grad": true,
-                "is_leaf": true
-            }));
+            let tensor_data: Vec<f64> = tensor.iter().map(|&x| x.to_f64().unwrap_or(0.0)).collect();
+
+            pytorch_state_dict.insert(
+                param_name.clone(),
+                json!({
+                    "data": tensor_data,
+                    "shape": tensor.shape().to_vec(),
+                    "dtype": "float32",
+                    "requires_grad": true,
+                    "is_leaf": true
+                }),
+            );
         }
-        
+
         // Create complete PyTorch checkpoint format
         let checkpoint = json!({
             "state_dict": pytorch_state_dict,
@@ -1144,15 +1144,16 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
                 "parameter_names": state_dict.keys().collect::<Vec<_>>()
             }
         });
-        
+
         // Write to file in PyTorch .pth format (JSON representation)
-        let json_string = serde_json::to_string_pretty(&checkpoint)
-            .map_err(|e| NeuralError::ComputationError(format!("JSON serialization error: {}", e)))?;
-            
+        let json_string = serde_json::to_string_pretty(&checkpoint).map_err(|e| {
+            NeuralError::ComputationError(format!("JSON serialization error: {}", e))
+        })?;
+
         std::fs::write(output_path, json_string).map_err(|e| {
             NeuralError::ComputationError(format!("Failed to write PyTorch state dict: {}", e))
         })?;
-        
+
         Ok(())
     }
 
@@ -1174,16 +1175,14 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
         output_path: &Path,
     ) -> Result<()> {
         use serde_json::json;
-        
+
         // Create TensorFlow SavedModel format
         let mut variables_data = serde_json::Map::new();
-        
+
         // Convert variables to TensorFlow format
         for (var_name, tensor) in &tf_model.variables {
-            let tensor_data: Vec<f64> = tensor.iter()
-                .map(|&x| x.to_f64().unwrap_or(0.0))
-                .collect();
-            
+            let tensor_data: Vec<f64> = tensor.iter().map(|&x| x.to_f64().unwrap_or(0.0)).collect();
+
             variables_data.insert(var_name.clone(), json!({
                 "tensor": {
                     "dtype": "DT_FLOAT",
@@ -1195,17 +1194,20 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
                 "variable_name": var_name
             }));
         }
-        
+
         // Create signatures
         let mut signatures_data = serde_json::Map::new();
         for (sig_name, signature) in &tf_model.signatures {
-            signatures_data.insert(sig_name.clone(), json!({
-                "inputs": signature.inputs,
-                "outputs": signature.outputs,
-                "method_name": signature.method_name
-            }));
+            signatures_data.insert(
+                sig_name.clone(),
+                json!({
+                    "inputs": signature.inputs,
+                    "outputs": signature.outputs,
+                    "method_name": signature.method_name
+                }),
+            );
         }
-        
+
         // Create TensorFlow SavedModel structure
         let saved_model = json!({
             "meta_graphs": [{
@@ -1232,21 +1234,22 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
                 "num_variables": tf_model.variables.len()
             }
         });
-        
+
         // Write SavedModel to directory structure
         if let Some(parent) = output_path.parent() {
             std::fs::create_dir_all(parent).map_err(|e| {
                 NeuralError::ComputationError(format!("Failed to create directory: {}", e))
             })?;
         }
-        
-        let json_string = serde_json::to_string_pretty(&saved_model)
-            .map_err(|e| NeuralError::ComputationError(format!("JSON serialization error: {}", e)))?;
-            
+
+        let json_string = serde_json::to_string_pretty(&saved_model).map_err(|e| {
+            NeuralError::ComputationError(format!("JSON serialization error: {}", e))
+        })?;
+
         std::fs::write(output_path, json_string).map_err(|e| {
             NeuralError::ComputationError(format!("Failed to write TensorFlow model: {}", e))
         })?;
-        
+
         Ok(())
     }
 

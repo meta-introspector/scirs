@@ -8,13 +8,16 @@
 //! - Self-organizing memory hierarchies
 //! - Meta-learning for algorithm selection
 
+use super::{
+    utils, StreamingConfig, StreamingDataPoint, StreamingObjective, StreamingOptimizer,
+    StreamingStats,
+};
+use crate::error::OptimizeError;
 use ndarray::{Array1, Array2, ArrayView1};
 use scirs2_core::error::CoreResult as Result;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
-use crate::error::OptimizeError;
-use super::{StreamingOptimizer, StreamingObjective, StreamingDataPoint, StreamingConfig, StreamingStats, utils};
 
 /// Ultra-advanced streaming optimizer with multiple adaptation mechanisms
 #[derive(Debug, Clone)]
@@ -462,13 +465,9 @@ enum NotificationChannel {
 
 impl<T: StreamingObjective> UltraAdaptiveStreamingOptimizer<T> {
     /// Create a new ultra-adaptive streaming optimizer
-    pub fn new(
-        initial_parameters: Array1<f64>,
-        objective: T,
-        config: StreamingConfig,
-    ) -> Self {
+    pub fn new(initial_parameters: Array1<f64>, objective: T, config: StreamingConfig) -> Self {
         let param_size = initial_parameters.len();
-        
+
         Self {
             parameters: initial_parameters,
             objective,
@@ -483,97 +482,94 @@ impl<T: StreamingObjective> UltraAdaptiveStreamingOptimizer<T> {
             performance_tracker: UltraPerformanceTracker::new(),
         }
     }
-    
+
     /// Ultra-advanced parameter update using multiple adaptation mechanisms
     fn ultra_adaptive_update(&mut self, data_point: &StreamingDataPoint) -> Result<()> {
         let start_time = Instant::now();
-        
+
         // 1. Multi-scale temporal analysis
         let temporal_context = self.analyze_temporal_context()?;
-        
+
         // 2. Neuromorphic spike-based learning
         let neuromorphic_update = self.neuromorphic_learner.process_spike_update(
             &self.parameters,
             data_point,
-            &temporal_context
+            &temporal_context,
         )?;
-        
+
         // 3. Quantum-inspired variational optimization
         let quantum_update = self.quantum_variational.variational_update(
             &self.parameters,
             data_point,
-            &temporal_context
+            &temporal_context,
         )?;
-        
+
         // 4. Meta-learning algorithm selection
         let selected_algorithm = self.meta_learning_selector.select_algorithm(
             &temporal_context,
-            &self.performance_tracker.get_current_metrics()
+            &self.performance_tracker.get_current_metrics(),
         )?;
-        
+
         // 5. Federated learning update
-        let federated_update = self.federated_coordinator.aggregate_update(
-            &neuromorphic_update,
-            &quantum_update
-        )?;
-        
+        let federated_update = self
+            .federated_coordinator
+            .aggregate_update(&neuromorphic_update, &quantum_update)?;
+
         // 6. Self-organizing memory consolidation
-        self.memory_hierarchy.consolidate_updates(
-            &federated_update,
-            &temporal_context
-        )?;
-        
+        self.memory_hierarchy
+            .consolidate_updates(&federated_update, &temporal_context)?;
+
         // 7. Adaptive fusion of all updates
         let fused_update = self.adaptive_fusion(
             &neuromorphic_update,
             &quantum_update,
             &federated_update,
-            &selected_algorithm
+            &selected_algorithm,
         )?;
-        
+
         // 8. Apply update with ultra-advanced regularization
         self.apply_ultra_regularized_update(&fused_update, data_point)?;
-        
+
         // 9. Update performance tracking and anomaly detection
         self.performance_tracker.update_metrics(
             &self.parameters,
             data_point,
-            start_time.elapsed()
+            start_time.elapsed(),
         )?;
-        
+
         // 10. Adaptive hyperparameter tuning
         self.adaptive_hyperparameter_tuning(&temporal_context)?;
-        
+
         Ok(())
     }
-    
+
     /// Analyze temporal context across multiple scales
     fn analyze_temporal_context(&mut self) -> Result<Array1<f64>> {
         let mut context = Array1::zeros(64); // Rich context representation
-        
+
         // Short-term patterns
         if let Some(short_term_pattern) = self.multi_scale_memory.analyze_short_term() {
             context.slice_mut(s![0..16]).assign(&short_term_pattern);
         }
-        
+
         // Medium-term trends
         if let Some(medium_term_trend) = self.multi_scale_memory.analyze_medium_term() {
             context.slice_mut(s![16..32]).assign(&medium_term_trend);
         }
-        
+
         // Long-term dynamics
         if let Some(long_term_dynamics) = self.multi_scale_memory.analyze_long_term() {
             context.slice_mut(s![32..48]).assign(&long_term_dynamics);
         }
-        
+
         // Very long-term structure
         if let Some(structure) = self.multi_scale_memory.analyze_very_long_term() {
             context.slice_mut(s![48..64]).assign(&structure);
         }
-        
+
         Ok(context)
     }
-    
+
     /// Adaptive fusion of multiple update mechanisms
     fn adaptive_fusion(
         &self,
@@ -583,35 +579,35 @@ impl<T: StreamingObjective> UltraAdaptiveStreamingOptimizer<T> {
         selected_algorithm: &OptimizationAlgorithm,
     ) -> Result<Array1<f64>> {
         let mut fusion_weights = Array1::ones(3) / 3.0;
-        
+
         // Adaptive weight calculation based on recent performance
         let recent_performance = self.performance_tracker.get_recent_performance();
-        
+
         // Algorithm-specific weight adjustment
         match selected_algorithm {
             OptimizationAlgorithm::NeuromorphicSpikes => {
                 fusion_weights[0] *= 1.5; // Boost neuromorphic
-            },
+            }
             OptimizationAlgorithm::QuantumVariational => {
                 fusion_weights[1] *= 1.5; // Boost quantum
-            },
+            }
             _ => {
                 fusion_weights[2] *= 1.5; // Boost federated
             }
         }
-        
+
         // Normalize weights
         let weight_sum = fusion_weights.sum();
         fusion_weights /= weight_sum;
-        
+
         // Compute fused update
-        let fused = fusion_weights[0] * neuromorphic_update +
-                   fusion_weights[1] * quantum_update +
-                   fusion_weights[2] * federated_update;
-        
+        let fused = fusion_weights[0] * neuromorphic_update
+            + fusion_weights[1] * quantum_update
+            + fusion_weights[2] * federated_update;
+
         Ok(fused)
     }
-    
+
     /// Apply ultra-regularized parameter update
     fn apply_ultra_regularized_update(
         &mut self,
@@ -620,81 +616,92 @@ impl<T: StreamingObjective> UltraAdaptiveStreamingOptimizer<T> {
     ) -> Result<()> {
         // Adaptive learning rate based on temporal context
         let adaptive_lr = self.compute_adaptive_learning_rate(data_point)?;
-        
+
         // Apply update with multiple regularization techniques
         let regularized_update = self.apply_multi_regularization(update, adaptive_lr)?;
-        
+
         // Update parameters
         self.parameters = &self.parameters + &regularized_update;
-        
+
         // Ensure parameter constraints
         self.enforce_parameter_constraints()?;
-        
+
         Ok(())
     }
-    
+
     /// Compute adaptive learning rate
     fn compute_adaptive_learning_rate(&self, data_point: &StreamingDataPoint) -> Result<f64> {
         let base_lr = self.config.learning_rate;
-        
+
         // Gradient-based adaptation
         let gradient = self.objective.gradient(&self.parameters.view(), data_point);
         let gradient_norm = gradient.mapv(|x| x * x).sum().sqrt();
-        
+
         // Curvature-based adaptation
-        let curvature_factor = if let Some(hessian) = self.objective.hessian(&self.parameters.view(), data_point) {
-            let eigenvalues = self.approximate_eigenvalues(&hessian);
-            let condition_number = eigenvalues.iter().max_by(|a, b| a.partial_cmp(b).unwrap()).unwrap_or(&1.0) /
-                                  eigenvalues.iter().min_by(|a, b| a.partial_cmp(b).unwrap()).unwrap_or(&1.0);
-            1.0 / condition_number.sqrt()
-        } else {
-            1.0
-        };
-        
+        let curvature_factor =
+            if let Some(hessian) = self.objective.hessian(&self.parameters.view(), data_point) {
+                let eigenvalues = self.approximate_eigenvalues(&hessian);
+                let condition_number = eigenvalues
+                    .iter()
+                    .max_by(|a, b| a.partial_cmp(b).unwrap())
+                    .unwrap_or(&1.0)
+                    / eigenvalues
+                        .iter()
+                        .min_by(|a, b| a.partial_cmp(b).unwrap())
+                        .unwrap_or(&1.0);
+                1.0 / condition_number.sqrt()
+            } else {
+                1.0
+            };
+
         // Performance-based adaptation
         let performance_factor = if self.performance_tracker.is_improving() {
             1.1 // Slightly increase if improving
         } else {
             0.9 // Slightly decrease if not improving
         };
-        
+
         let adaptive_lr = base_lr * curvature_factor * performance_factor / (1.0 + gradient_norm);
-        
+
         Ok(adaptive_lr.max(1e-8).min(1.0)) // Clamp to reasonable range
     }
-    
+
     /// Apply multiple regularization techniques
-    fn apply_multi_regularization(&self, update: &Array1<f64>, learning_rate: f64) -> Result<Array1<f64>> {
+    fn apply_multi_regularization(
+        &self,
+        update: &Array1<f64>,
+        learning_rate: f64,
+    ) -> Result<Array1<f64>> {
         let mut regularized = update.clone();
-        
+
         // L1 regularization (sparsity)
         let l1_factor = 1e-6;
         for i in 0..regularized.len() {
             let sign = self.parameters[i].signum();
             regularized[i] -= l1_factor * sign;
         }
-        
+
         // L2 regularization (weight decay)
         let l2_factor = 1e-4;
         regularized = &regularized - &(l2_factor * &self.parameters);
-        
+
         // Elastic net (combination of L1 and L2)
         let alpha = 0.5;
         let elastic_net_reg = alpha * l1_factor + (1.0 - alpha) * l2_factor;
-        
+
         // Adaptive gradient clipping
         let gradient_norm = regularized.mapv(|x| x * x).sum().sqrt();
         let clip_threshold = 1.0;
         if gradient_norm > clip_threshold {
             regularized *= clip_threshold / gradient_norm;
         }
-        
+
         // Apply learning rate
         regularized *= learning_rate;
-        
+
         Ok(regularized)
     }
-    
+
     /// Enforce parameter constraints
     fn enforce_parameter_constraints(&mut self) -> Result<()> {
         // Project parameters onto feasible region
@@ -702,17 +709,17 @@ impl<T: StreamingObjective> UltraAdaptiveStreamingOptimizer<T> {
             // Example constraints (can be customized)
             *param = param.max(-10.0).min(10.0); // Box constraints
         }
-        
+
         // Ensure numerical stability
         for param in self.parameters.iter_mut() {
             if !param.is_finite() {
                 *param = 0.0; // Reset to safe value
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Adaptive hyperparameter tuning
     fn adaptive_hyperparameter_tuning(&mut self, context: &Array1<f64>) -> Result<()> {
         // Tune learning rate based on performance
@@ -721,47 +728,49 @@ impl<T: StreamingObjective> UltraAdaptiveStreamingOptimizer<T> {
         } else if self.performance_tracker.is_oscillating() {
             self.config.learning_rate *= 0.9; // Decrease learning rate
         }
-        
+
         // Tune forgetting factor
         if self.performance_tracker.is_non_stationary() {
             self.config.forgetting_factor *= 0.95; // Adapt faster
         } else {
-            self.config.forgetting_factor = (self.config.forgetting_factor * 1.01).min(0.999); // Adapt slower
+            self.config.forgetting_factor = (self.config.forgetting_factor * 1.01).min(0.999);
+            // Adapt slower
         }
-        
+
         // Clamp hyperparameters to reasonable ranges
         self.config.learning_rate = self.config.learning_rate.max(1e-8).min(1.0);
         self.config.forgetting_factor = self.config.forgetting_factor.max(0.1).min(0.999);
-        
+
         Ok(())
     }
-    
+
     /// Approximate eigenvalues of a matrix
     fn approximate_eigenvalues(&self, matrix: &Array2<f64>) -> Vec<f64> {
         // Simplified power iteration for dominant eigenvalue
         let n = matrix.nrows();
         let mut eigenvalues = Vec::new();
-        
+
         if n > 0 {
             let mut v = Array1::ones(n);
             v /= v.mapv(|x| x * x).sum().sqrt();
-            
-            for _ in 0..10 { // Power iterations
+
+            for _ in 0..10 {
+                // Power iterations
                 let new_v = matrix.dot(&v);
                 let eigenvalue = v.dot(&new_v);
                 eigenvalues.push(eigenvalue);
-                
+
                 let norm = new_v.mapv(|x| x * x).sum().sqrt();
                 if norm > 1e-12 {
                     v = new_v / norm;
                 }
             }
         }
-        
+
         if eigenvalues.is_empty() {
             eigenvalues.push(1.0); // Default eigenvalue
         }
-        
+
         eigenvalues
     }
 }
@@ -770,10 +779,10 @@ impl<T: StreamingObjective + Clone> StreamingOptimizer for UltraAdaptiveStreamin
     fn update(&mut self, data_point: &StreamingDataPoint) -> Result<()> {
         let start_time = Instant::now();
         let old_parameters = self.parameters.clone();
-        
+
         // Ultra-adaptive update
         self.ultra_adaptive_update(data_point)?;
-        
+
         // Update statistics
         self.stats.points_processed += 1;
         self.stats.updates_performed += 1;
@@ -784,27 +793,27 @@ impl<T: StreamingObjective + Clone> StreamingOptimizer for UltraAdaptiveStreamin
             loss,
             0.01, // Slower adaptation for ultra-optimizer
         );
-        
+
         // Check convergence
         self.stats.converged = utils::check_convergence(
             &old_parameters.view(),
             &self.parameters.view(),
             self.config.tolerance,
         );
-        
+
         self.stats.processing_time_ms += start_time.elapsed().as_secs_f64() * 1000.0;
-        
+
         Ok(())
     }
-    
+
     fn parameters(&self) -> &Array1<f64> {
         &self.parameters
     }
-    
+
     fn stats(&self) -> &StreamingStats {
         &self.stats
     }
-    
+
     fn reset(&mut self) {
         self.stats = StreamingStats::default();
         self.multi_scale_memory = MultiScaleTemporalMemory::new(self.parameters.len());
@@ -833,7 +842,7 @@ impl MultiScaleTemporalMemory {
             consolidation_weights: Array1::ones(4) / 4.0,
         }
     }
-    
+
     fn analyze_short_term(&self) -> Option<Array1<f64>> {
         if self.short_term.len() >= 2 {
             Some(Array1::zeros(16)) // Placeholder
@@ -841,7 +850,7 @@ impl MultiScaleTemporalMemory {
             None
         }
     }
-    
+
     fn analyze_medium_term(&self) -> Option<Array1<f64>> {
         if self.medium_term.len() >= 2 {
             Some(Array1::zeros(16)) // Placeholder
@@ -849,7 +858,7 @@ impl MultiScaleTemporalMemory {
             None
         }
     }
-    
+
     fn analyze_long_term(&self) -> Option<Array1<f64>> {
         if self.long_term.len() >= 2 {
             Some(Array1::zeros(16)) // Placeholder
@@ -857,7 +866,7 @@ impl MultiScaleTemporalMemory {
             None
         }
     }
-    
+
     fn analyze_very_long_term(&self) -> Option<Array1<f64>> {
         if self.very_long_term.len() >= 2 {
             Some(Array1::zeros(16)) // Placeholder
@@ -883,7 +892,7 @@ impl NeuromorphicLearningSystem {
             homeostatic_scaling: Array1::ones(param_size),
         }
     }
-    
+
     fn process_spike_update(
         &mut self,
         _parameters: &Array1<f64>,
@@ -910,7 +919,7 @@ impl QuantumInspiredVariational {
             coherence_time: Duration::from_millis(1),
         }
     }
-    
+
     fn variational_update(
         &mut self,
         _parameters: &Array1<f64>,
@@ -942,7 +951,7 @@ impl MetaLearningSelector {
             exploration_factor: 0.1,
         }
     }
-    
+
     fn select_algorithm(
         &mut self,
         _context: &Array1<f64>,
@@ -968,7 +977,7 @@ impl FederatedLearningCoordinator {
             consensus_mechanism: ConsensusType::FederatedAveraging,
         }
     }
-    
+
     fn aggregate_update(
         &mut self,
         _update1: &Array1<f64>,
@@ -990,12 +999,8 @@ impl SelfOrganizingMemoryHierarchy {
             cache_sizes: [16, 64, 256],
         }
     }
-    
-    fn consolidate_updates(
-        &mut self,
-        _update: &Array1<f64>,
-        _context: &Array1<f64>,
-    ) -> Result<()> {
+
+    fn consolidate_updates(&mut self, _update: &Array1<f64>, _context: &Array1<f64>) -> Result<()> {
         // Placeholder for memory consolidation
         Ok(())
     }
@@ -1052,7 +1057,7 @@ impl UltraPerformanceTracker {
             },
         }
     }
-    
+
     fn update_metrics(
         &mut self,
         _parameters: &Array1<f64>,
@@ -1062,32 +1067,32 @@ impl UltraPerformanceTracker {
         // Placeholder for metrics update
         Ok(())
     }
-    
+
     fn get_current_metrics(&self) -> HashMap<String, f64> {
         // Placeholder for current metrics
         HashMap::new()
     }
-    
+
     fn get_recent_performance(&self) -> f64 {
         // Placeholder for recent performance
         1.0
     }
-    
+
     fn is_improving(&self) -> bool {
         // Placeholder for improvement detection
         true
     }
-    
+
     fn is_stagnant(&self) -> bool {
         // Placeholder for stagnation detection
         false
     }
-    
+
     fn is_oscillating(&self) -> bool {
         // Placeholder for oscillation detection
         false
     }
-    
+
     fn is_non_stationary(&self) -> bool {
         // Placeholder for non-stationarity detection
         false
@@ -1108,32 +1113,23 @@ pub fn create_ultra_adaptive_optimizer<T: StreamingObjective>(
 mod tests {
     use super::*;
     use crate::streaming::{LinearRegressionObjective, StreamingDataPoint};
-    
+
     #[test]
     fn test_ultra_adaptive_creation() {
-        let optimizer = create_ultra_adaptive_optimizer(
-            Array1::zeros(2),
-            LinearRegressionObjective,
-            None,
-        );
-        
+        let optimizer =
+            create_ultra_adaptive_optimizer(Array1::zeros(2), LinearRegressionObjective, None);
+
         assert_eq!(optimizer.parameters().len(), 2);
         assert_eq!(optimizer.stats().points_processed, 0);
     }
-    
+
     #[test]
     fn test_ultra_adaptive_update() {
-        let mut optimizer = create_ultra_adaptive_optimizer(
-            Array1::zeros(2),
-            LinearRegressionObjective,
-            None,
-        );
-        
-        let data_point = StreamingDataPoint::new(
-            Array1::from(vec![1.0, 2.0]),
-            3.0,
-        );
-        
+        let mut optimizer =
+            create_ultra_adaptive_optimizer(Array1::zeros(2), LinearRegressionObjective, None);
+
+        let data_point = StreamingDataPoint::new(Array1::from(vec![1.0, 2.0]), 3.0);
+
         assert!(optimizer.update(&data_point).is_ok());
         assert_eq!(optimizer.stats().points_processed, 1);
     }

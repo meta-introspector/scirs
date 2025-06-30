@@ -376,17 +376,9 @@ mod tests {
 
     #[test]
     fn test_sparse_cosine_similarity() {
-        let v1 = SparseVector::from_indices_values(
-            vec![0, 2, 3],
-            vec![1.0, 2.0, 3.0],
-            5,
-        );
+        let v1 = SparseVector::from_indices_values(vec![0, 2, 3], vec![1.0, 2.0, 3.0], 5);
 
-        let v2 = SparseVector::from_indices_values(
-            vec![1, 2, 4],
-            vec![1.0, 2.0, 1.0],
-            5,
-        );
+        let v2 = SparseVector::from_indices_values(vec![1, 2, 4], vec![1.0, 2.0, 1.0], 5);
 
         let similarity = sparse_cosine_similarity(&v1, &v2).unwrap();
 

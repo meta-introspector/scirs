@@ -8,13 +8,16 @@
 //! - Adaptive consensus thresholds
 //! - Fault-tolerant streaming optimization
 
+use super::{
+    utils, StreamingConfig, StreamingDataPoint, StreamingObjective, StreamingOptimizer,
+    StreamingStats,
+};
+use crate::error::OptimizeError;
 use ndarray::{Array1, Array2, ArrayView1};
 use scirs2_core::error::Result;
 use scirs2_core::simd_ops::SimdUnifiedOps;
-use crate::error::OptimizeError;
-use super::{StreamingOptimizer, StreamingObjective, StreamingDataPoint, StreamingConfig, StreamingStats, utils};
-use std::collections::{HashMap, VecDeque, BTreeMap};
-use std::time::{Instant, Duration};
+use std::collections::{BTreeMap, HashMap, VecDeque};
+use std::time::{Duration, Instant};
 
 /// Ultra-Advanced Distributed Consensus Node
 #[derive(Debug, Clone)]
@@ -67,36 +70,38 @@ impl ByzantineFaultDetector {
             last_detection_times: HashMap::new(),
         }
     }
-    
+
     /// Detect Byzantine behavior from parameter proposals
     pub fn detect_byzantine_behavior(
-        &mut self, 
-        node_id: usize, 
+        &mut self,
+        node_id: usize,
         proposed_params: &ArrayView1<f64>,
         consensus_params: &ArrayView1<f64>,
-        current_time: Instant
+        current_time: Instant,
     ) -> bool {
         // Compute parameter deviation
-        let deviation = (proposed_params - consensus_params)
-            .mapv(|x| x.abs())
-            .sum() / proposed_params.len() as f64;
-        
+        let deviation = (proposed_params - consensus_params).mapv(|x| x.abs()).sum()
+            / proposed_params.len() as f64;
+
         // Update deviation history
-        let history = self.deviation_history.entry(node_id).or_insert_with(|| VecDeque::with_capacity(100));
+        let history = self
+            .deviation_history
+            .entry(node_id)
+            .or_insert_with(|| VecDeque::with_capacity(100));
         history.push_back(deviation);
         if history.len() > 100 {
             history.pop_front();
         }
-        
+
         // Check if deviation exceeds threshold
         if deviation > self.fault_threshold {
             let suspicion = self.suspicion_counters.entry(node_id).or_insert(0);
             *suspicion += 1;
-            
+
             // Update reputation (decrease for suspicious behavior)
             let reputation = self.reputation_scores.entry(node_id).or_insert(1.0);
             *reputation *= 0.9;
-            
+
             // Mark as Byzantine if suspicion is high
             if *suspicion > 5 && *reputation < 0.3 {
                 self.last_detection_times.insert(node_id, current_time);
@@ -106,16 +111,16 @@ impl ByzantineFaultDetector {
             // Good behavior: increase reputation
             let reputation = self.reputation_scores.entry(node_id).or_insert(1.0);
             *reputation = (*reputation + 0.01).min(1.0);
-            
+
             // Decrease suspicion
             if let Some(suspicion) = self.suspicion_counters.get_mut(&node_id) {
                 *suspicion = suspicion.saturating_sub(1);
             }
         }
-        
+
         false
     }
-    
+
     /// Check if a node is currently suspected of Byzantine behavior
     pub fn is_byzantine_suspected(&self, node_id: usize, current_time: Instant) -> bool {
         if let Some(&last_detection) = self.last_detection_times.get(&node_id) {
@@ -125,7 +130,7 @@ impl ByzantineFaultDetector {
         }
         false
     }
-    
+
     /// Get trust weight for a node based on reputation
     pub fn get_trust_weight(&self, node_id: usize) -> f64 {
         self.reputation_scores.get(&node_id).copied().unwrap_or(1.0)
@@ -163,7 +168,7 @@ impl ConsensusVotingState {
             round_start: None,
         }
     }
-    
+
     /// Start a new consensus round
     pub fn start_round(&mut self) {
         self.round += 1;
@@ -171,28 +176,29 @@ impl ConsensusVotingState {
         self.votes.clear();
         self.round_start = Some(Instant::now());
     }
-    
+
     /// Add a parameter proposal
     pub fn add_proposal(&mut self, node_id: usize, parameters: Array1<f64>) {
         self.proposals.insert(node_id, parameters);
     }
-    
+
     /// Cast a vote for a proposal
     pub fn vote(&mut self, voter_id: usize, proposal_id: usize, weight: f64) {
         self.voting_weights.insert(voter_id, weight);
         self.votes.entry(proposal_id).or_default().push(voter_id);
     }
-    
+
     /// Check if consensus has been reached
     pub fn check_consensus(&self) -> Option<(usize, Array1<f64>)> {
         let mut best_proposal = None;
         let mut best_weight = 0.0;
-        
+
         for (&proposal_id, voters) in &self.votes {
-            let total_weight: f64 = voters.iter()
+            let total_weight: f64 = voters
+                .iter()
                 .map(|&voter| self.voting_weights.get(&voter).copied().unwrap_or(1.0))
                 .sum();
-            
+
             if total_weight > best_weight && total_weight >= self.consensus_threshold {
                 best_weight = total_weight;
                 if let Some(params) = self.proposals.get(&proposal_id) {
@@ -200,10 +206,10 @@ impl ConsensusVotingState {
                 }
             }
         }
-        
+
         best_proposal
     }
-    
+
     /// Check if round has timed out
     pub fn is_timeout(&self) -> bool {
         if let Some(start) = self.round_start {
@@ -239,7 +245,7 @@ impl NetworkTopology {
             reliability_scores: HashMap::new(),
         }
     }
-    
+
     /// Add bidirectional connection between nodes
     pub fn add_connection(&mut self, node1: usize, node2: usize, weight: f64, delay: f64) {
         if node1 < self.adjacency_matrix.nrows() && node2 < self.adjacency_matrix.ncols() {
@@ -247,22 +253,31 @@ impl NetworkTopology {
             self.adjacency_matrix[[node2, node1]] = weight;
             self.delay_matrix[[node1, node2]] = delay;
             self.delay_matrix[[node2, node1]] = delay;
-            
-            self.active_connections.entry(node1).or_default().push(node2);
-            self.active_connections.entry(node2).or_default().push(node1);
+
+            self.active_connections
+                .entry(node1)
+                .or_default()
+                .push(node2);
+            self.active_connections
+                .entry(node2)
+                .or_default()
+                .push(node1);
         }
     }
-    
+
     /// Get neighbors of a node
     pub fn get_neighbors(&self, node_id: usize) -> Vec<usize> {
-        self.active_connections.get(&node_id).cloned().unwrap_or_default()
+        self.active_connections
+            .get(&node_id)
+            .cloned()
+            .unwrap_or_default()
     }
-    
+
     /// Compute shortest path weights using Floyd-Warshall
     pub fn compute_shortest_paths(&self) -> Array2<f64> {
         let n = self.adjacency_matrix.nrows();
         let mut dist = self.adjacency_matrix.clone();
-        
+
         // Initialize distances
         for i in 0..n {
             for j in 0..n {
@@ -271,7 +286,7 @@ impl NetworkTopology {
                 }
             }
         }
-        
+
         // Floyd-Warshall algorithm
         for k in 0..n {
             for i in 0..n {
@@ -282,7 +297,7 @@ impl NetworkTopology {
                 }
             }
         }
-        
+
         dist
     }
 }
@@ -313,10 +328,7 @@ pub enum ConsensusMessage {
         timestamp: Instant,
     },
     /// Heartbeat for liveness detection
-    Heartbeat {
-        node_id: usize,
-        timestamp: Instant,
-    },
+    Heartbeat { node_id: usize, timestamp: Instant },
     /// Byzantine fault detection alert
     ByzantineAlert {
         suspected_node: usize,
@@ -422,13 +434,13 @@ impl FederatedAveragingState {
             staleness_tolerance: Duration::from_secs(10),
         }
     }
-    
+
     /// Add gradient from a peer node
     pub fn add_peer_gradient(&mut self, peer_id: usize, gradient: Array1<f64>, data_count: usize) {
         self.peer_gradients.insert(peer_id, gradient);
         self.peer_data_counts.insert(peer_id, data_count);
         self.last_updates.insert(peer_id, Instant::now());
-        
+
         // Compute weight based on data count (more data = higher weight)
         let total_data: usize = self.peer_data_counts.values().sum();
         if total_data > 0 {
@@ -436,16 +448,16 @@ impl FederatedAveragingState {
             self.peer_weights.insert(peer_id, weight);
         }
     }
-    
+
     /// Compute federated average gradient
     pub fn compute_federated_gradient(&self, current_time: Instant) -> Option<Array1<f64>> {
         if self.peer_gradients.is_empty() {
             return None;
         }
-        
+
         let mut weighted_sum = None;
         let mut total_weight = 0.0;
-        
+
         for (&peer_id, gradient) in &self.peer_gradients {
             // Check staleness
             if let Some(&last_update) = self.last_updates.get(&peer_id) {
@@ -453,18 +465,18 @@ impl FederatedAveragingState {
                     continue; // Skip stale gradients
                 }
             }
-            
+
             let weight = self.peer_weights.get(&peer_id).copied().unwrap_or(1.0);
-            
+
             if let Some(ref mut sum) = weighted_sum {
                 *sum = &*sum + &(weight * gradient);
             } else {
                 weighted_sum = Some(weight * gradient);
             }
-            
+
             total_weight += weight;
         }
-        
+
         if let Some(sum) = weighted_sum {
             if total_weight > 0.0 {
                 Some(sum / total_weight)
@@ -508,17 +520,17 @@ impl NetworkSynchronizationState {
             sync_period: Duration::from_secs(60),
         }
     }
-    
+
     /// Check if synchronization is needed
     pub fn needs_sync(&self) -> bool {
         self.last_sync.elapsed() > self.sync_period
     }
-    
+
     /// Update clock offset for a node
     pub fn update_clock_offset(&mut self, node_id: usize, offset: Duration) {
         self.clock_offsets.insert(node_id, offset);
     }
-    
+
     /// Get synchronized timestamp
     pub fn get_synchronized_time(&self, node_id: usize) -> Instant {
         let now = Instant::now();
@@ -540,7 +552,7 @@ impl<T: StreamingObjective + Clone> UltraAdvancedDistributedOnlineGD<T> {
         num_nodes: usize,
     ) -> Self {
         let n_params = initial_parameters.len();
-        
+
         let consensus_node = DistributedConsensusNode {
             node_id,
             local_parameters: initial_parameters.clone(),
@@ -552,7 +564,7 @@ impl<T: StreamingObjective + Clone> UltraAdvancedDistributedOnlineGD<T> {
             voting_state: ConsensusVotingState::new(num_nodes as f64 * 0.67), // 2/3 majority
             network_topology: NetworkTopology::new(num_nodes),
         };
-        
+
         Self {
             consensus_node,
             objective,
@@ -567,42 +579,57 @@ impl<T: StreamingObjective + Clone> UltraAdvancedDistributedOnlineGD<T> {
             sync_state: NetworkSynchronizationState::new(),
         }
     }
-    
+
     /// Initialize network topology with peers
     pub fn setup_network_topology(&mut self, peer_connections: &[(usize, usize, f64, f64)]) {
         for &(node1, node2, weight, delay) in peer_connections {
-            self.consensus_node.network_topology.add_connection(node1, node2, weight, delay);
+            self.consensus_node
+                .network_topology
+                .add_connection(node1, node2, weight, delay);
         }
     }
-    
+
     /// Process consensus messages from peers
     pub fn process_consensus_messages(&mut self) -> Result<()> {
         let current_time = Instant::now();
-        
+
         while let Some(message) = self.message_buffer.pop_front() {
             match message {
-                ConsensusMessage::Proposal { round, node_id, parameters, timestamp: _ } => {
+                ConsensusMessage::Proposal {
+                    round,
+                    node_id,
+                    parameters,
+                    timestamp: _,
+                } => {
                     if round == self.consensus_node.voting_state.round {
                         // Check for Byzantine behavior
-                        let is_byzantine = self.consensus_node.byzantine_detector.detect_byzantine_behavior(
-                            node_id,
-                            &parameters.view(),
-                            &self.consensus_node.consensus_parameters.view(),
-                            current_time,
-                        );
-                        
+                        let is_byzantine = self
+                            .consensus_node
+                            .byzantine_detector
+                            .detect_byzantine_behavior(
+                                node_id,
+                                &parameters.view(),
+                                &self.consensus_node.consensus_parameters.view(),
+                                current_time,
+                            );
+
                         if !is_byzantine {
-                            self.consensus_node.voting_state.add_proposal(node_id, parameters);
-                            
+                            self.consensus_node
+                                .voting_state
+                                .add_proposal(node_id, parameters);
+
                             // Auto-vote based on similarity to local parameters
                             let similarity = self.compute_parameter_similarity(
                                 &self.consensus_node.local_parameters.view(),
                                 &self.consensus_node.voting_state.proposals[&node_id].view(),
                             );
-                            
-                            let trust_weight = self.consensus_node.byzantine_detector.get_trust_weight(node_id);
+
+                            let trust_weight = self
+                                .consensus_node
+                                .byzantine_detector
+                                .get_trust_weight(node_id);
                             let vote_weight = similarity * trust_weight;
-                            
+
                             if vote_weight > 0.5 {
                                 self.consensus_node.voting_state.vote(
                                     self.consensus_node.node_id,
@@ -613,62 +640,97 @@ impl<T: StreamingObjective + Clone> UltraAdvancedDistributedOnlineGD<T> {
                         }
                     }
                 }
-                ConsensusMessage::Vote { round, voter_id, proposal_id, weight, timestamp: _ } => {
+                ConsensusMessage::Vote {
+                    round,
+                    voter_id,
+                    proposal_id,
+                    weight,
+                    timestamp: _,
+                } => {
                     if round == self.consensus_node.voting_state.round {
-                        self.consensus_node.voting_state.vote(voter_id, proposal_id, weight);
+                        self.consensus_node
+                            .voting_state
+                            .vote(voter_id, proposal_id, weight);
                     }
                 }
-                ConsensusMessage::ConsensusResult { round: _, winning_proposal: _, parameters, timestamp: _ } => {
+                ConsensusMessage::ConsensusResult {
+                    round: _,
+                    winning_proposal: _,
+                    parameters,
+                    timestamp: _,
+                } => {
                     // Apply consensus parameters
                     self.apply_consensus_parameters(parameters)?;
                 }
-                ConsensusMessage::Heartbeat { node_id, timestamp: _ } => {
+                ConsensusMessage::Heartbeat {
+                    node_id,
+                    timestamp: _,
+                } => {
                     // Update node liveness
-                    self.consensus_node.network_topology.reliability_scores.insert(node_id, 1.0);
+                    self.consensus_node
+                        .network_topology
+                        .reliability_scores
+                        .insert(node_id, 1.0);
                 }
-                ConsensusMessage::ByzantineAlert { suspected_node, reporter_node: _, evidence, timestamp: _ } => {
+                ConsensusMessage::ByzantineAlert {
+                    suspected_node,
+                    reporter_node: _,
+                    evidence,
+                    timestamp: _,
+                } => {
                     // Process Byzantine fault alert
                     self.handle_byzantine_alert(suspected_node, evidence);
                 }
             }
         }
-        
+
         Ok(())
     }
-    
-    fn compute_parameter_similarity(&self, params1: &ArrayView1<f64>, params2: &ArrayView1<f64>) -> f64 {
+
+    fn compute_parameter_similarity(
+        &self,
+        params1: &ArrayView1<f64>,
+        params2: &ArrayView1<f64>,
+    ) -> f64 {
         let diff = params1 - params2;
         let norm = diff.mapv(|x| x * x).sum().sqrt();
         let scale = params1.mapv(|x| x * x).sum().sqrt().max(1e-12);
         (-norm / scale).exp()
     }
-    
+
     fn apply_consensus_parameters(&mut self, parameters: Array1<f64>) -> Result<()> {
         // Blend consensus parameters with local parameters
         let blend_factor = 0.7; // Weight for consensus vs local
-        self.consensus_node.consensus_parameters = 
-            &(blend_factor * &parameters) + &((1.0 - blend_factor) * &self.consensus_node.local_parameters);
-        
+        self.consensus_node.consensus_parameters = &(blend_factor * &parameters)
+            + &((1.0 - blend_factor) * &self.consensus_node.local_parameters);
+
         self.distributed_stats.consensus_rounds += 1;
         Ok(())
     }
-    
+
     fn handle_byzantine_alert(&mut self, suspected_node: usize, evidence: ByzantineEvidence) {
         // Reduce trust in suspected node
-        let current_trust = self.consensus_node.trust_scores.get(&suspected_node).copied().unwrap_or(1.0);
+        let current_trust = self
+            .consensus_node
+            .trust_scores
+            .get(&suspected_node)
+            .copied()
+            .unwrap_or(1.0);
         let new_trust = current_trust * (1.0 - evidence.deviation_magnitude * 0.1);
-        self.consensus_node.trust_scores.insert(suspected_node, new_trust.max(0.0));
-        
+        self.consensus_node
+            .trust_scores
+            .insert(suspected_node, new_trust.max(0.0));
+
         if new_trust < 0.1 {
             self.distributed_stats.byzantine_faults_detected += 1;
         }
     }
-    
+
     /// Run consensus protocol
     pub fn run_consensus_protocol(&mut self) -> Result<Option<Array1<f64>>> {
         // Start new consensus round
         self.consensus_node.voting_state.start_round();
-        
+
         // Propose local parameters
         let proposal_message = ConsensusMessage::Proposal {
             round: self.consensus_node.voting_state.round,
@@ -676,35 +738,37 @@ impl<T: StreamingObjective + Clone> UltraAdvancedDistributedOnlineGD<T> {
             parameters: self.consensus_node.local_parameters.clone(),
             timestamp: Instant::now(),
         };
-        
+
         // Add proposal to voting state
         self.consensus_node.voting_state.add_proposal(
             self.consensus_node.node_id,
             self.consensus_node.local_parameters.clone(),
         );
-        
+
         // Simulate message broadcasting (in real implementation, would send to peers)
         self.message_buffer.push_back(proposal_message);
-        
+
         // Process messages
         self.process_consensus_messages()?;
-        
+
         // Check for consensus
-        if let Some((winning_id, consensus_params)) = self.consensus_node.voting_state.check_consensus() {
-            self.distributed_stats.consensus_success_rate = 
+        if let Some((winning_id, consensus_params)) =
+            self.consensus_node.voting_state.check_consensus()
+        {
+            self.distributed_stats.consensus_success_rate =
                 0.95 * self.distributed_stats.consensus_success_rate + 0.05 * 1.0;
-            
+
             Ok(Some(consensus_params))
         } else if self.consensus_node.voting_state.is_timeout() {
-            self.distributed_stats.consensus_success_rate = 
+            self.distributed_stats.consensus_success_rate =
                 0.95 * self.distributed_stats.consensus_success_rate + 0.05 * 0.0;
-            
+
             Ok(None)
         } else {
             Ok(None)
         }
     }
-    
+
     /// Update with federated averaging
     pub fn federated_update(&mut self, gradient: &ArrayView1<f64>) -> Result<()> {
         // Add local gradient to federated state
@@ -713,19 +777,22 @@ impl<T: StreamingObjective + Clone> UltraAdvancedDistributedOnlineGD<T> {
             gradient.to_owned(),
             1, // Local data count
         );
-        
+
         // Compute federated average if enough peers
         let current_time = Instant::now();
-        if let Some(fed_gradient) = self.federated_state.compute_federated_gradient(current_time) {
+        if let Some(fed_gradient) = self
+            .federated_state
+            .compute_federated_gradient(current_time)
+        {
             // Apply federated gradient update
             self.apply_gradient_update(&fed_gradient.view())?;
-            
+
             self.federated_state.federated_round += 1;
         }
-        
+
         Ok(())
     }
-    
+
     fn apply_gradient_update(&mut self, gradient: &ArrayView1<f64>) -> Result<()> {
         let lr = if self.config.adaptive_lr {
             // Distributed adaptive learning rate
@@ -735,33 +802,34 @@ impl<T: StreamingObjective + Clone> UltraAdvancedDistributedOnlineGD<T> {
         } else {
             self.config.learning_rate
         };
-        
+
         // Update local parameters
-        self.consensus_node.local_parameters = &self.consensus_node.local_parameters - &(lr * gradient);
-        
+        self.consensus_node.local_parameters =
+            &self.consensus_node.local_parameters - &(lr * gradient);
+
         Ok(())
     }
-    
+
     /// Process asynchronous updates
     pub fn process_async_updates(&mut self) -> Result<()> {
         let current_time = Instant::now();
-        
+
         while let Some(update) = self.async_update_queue.front() {
             if current_time >= update.apply_at {
                 let update = self.async_update_queue.pop_front().unwrap();
-                
+
                 // Apply delayed parameter update with staleness compensation
                 let staleness = current_time.duration_since(update.timestamp).as_secs_f64();
                 let staleness_factor = (-staleness * 0.1).exp(); // Exponential decay
-                
+
                 let weighted_update = &update.parameters * staleness_factor;
-                self.consensus_node.local_parameters = 
+                self.consensus_node.local_parameters =
                     &(0.9 * &self.consensus_node.local_parameters) + &(0.1 * &weighted_update);
             } else {
                 break; // Updates are ordered by apply_at time
             }
         }
-        
+
         Ok(())
     }
 }
@@ -769,54 +837,61 @@ impl<T: StreamingObjective + Clone> UltraAdvancedDistributedOnlineGD<T> {
 impl<T: StreamingObjective + Clone> StreamingOptimizer for UltraAdvancedDistributedOnlineGD<T> {
     fn update(&mut self, data_point: &StreamingDataPoint) -> Result<()> {
         let start_time = Instant::now();
-        
+
         // Compute local gradient
-        let gradient = self.objective.gradient(&self.consensus_node.local_parameters.view(), data_point);
-        
+        let gradient = self
+            .objective
+            .gradient(&self.consensus_node.local_parameters.view(), data_point);
+
         // Accumulate gradient for consensus
-        self.consensus_node.gradient_accumulator = &self.consensus_node.gradient_accumulator + &gradient;
-        
+        self.consensus_node.gradient_accumulator =
+            &self.consensus_node.gradient_accumulator + &gradient;
+
         // Periodic consensus protocol
         if self.stats.points_processed % 10 == 0 {
             if let Some(consensus_params) = self.run_consensus_protocol()? {
                 self.apply_consensus_parameters(consensus_params)?;
             }
         }
-        
+
         // Federated averaging update
         self.federated_update(&gradient.view())?;
-        
+
         // Process asynchronous updates
         self.process_async_updates()?;
-        
+
         // Regular streaming update
-        let loss = self.objective.evaluate(&self.consensus_node.local_parameters.view(), data_point);
-        
+        let loss = self
+            .objective
+            .evaluate(&self.consensus_node.local_parameters.view(), data_point);
+
         // Update statistics
         self.stats.points_processed += 1;
         self.stats.updates_performed += 1;
         self.stats.current_loss = loss;
         self.stats.average_loss = utils::ewma_update(self.stats.average_loss, loss, 0.01);
-        
+
         // Convergence check using consensus parameters
-        let param_change = (&self.consensus_node.local_parameters - &self.consensus_node.consensus_parameters)
+        let param_change = (&self.consensus_node.local_parameters
+            - &self.consensus_node.consensus_parameters)
             .mapv(|x| x.abs())
-            .sum() / self.consensus_node.local_parameters.len() as f64;
-        
+            .sum()
+            / self.consensus_node.local_parameters.len() as f64;
+
         self.stats.converged = param_change < self.config.tolerance;
         self.stats.processing_time_ms += start_time.elapsed().as_secs_f64() * 1000.0;
-        
+
         Ok(())
     }
-    
+
     fn parameters(&self) -> &Array1<f64> {
         &self.consensus_node.consensus_parameters
     }
-    
+
     fn stats(&self) -> &StreamingStats {
         &self.stats
     }
-    
+
     fn reset(&mut self) {
         self.consensus_node.local_parameters.fill(0.0);
         self.consensus_node.consensus_parameters.fill(0.0);
@@ -841,7 +916,7 @@ pub fn distributed_online_linear_regression(
     let config = config.unwrap_or_default();
     let initial_params = Array1::zeros(n_features);
     let objective = super::LinearRegressionObjective;
-    
+
     UltraAdvancedDistributedOnlineGD::new(node_id, initial_params, objective, config, num_nodes)
 }
 
@@ -855,7 +930,7 @@ pub fn distributed_online_logistic_regression(
     let config = config.unwrap_or_default();
     let initial_params = Array1::zeros(n_features);
     let objective = super::LogisticRegressionObjective;
-    
+
     UltraAdvancedDistributedOnlineGD::new(node_id, initial_params, objective, config, num_nodes)
 }
 
@@ -878,121 +953,135 @@ pub fn online_logistic_regression(
 mod tests {
     use super::*;
     use crate::streaming::{LinearRegressionObjective, StreamingDataPoint};
-    
+
     #[test]
     fn test_distributed_optimizer_creation() {
         let optimizer = distributed_online_linear_regression(0, 2, 3, None);
         assert_eq!(optimizer.consensus_node.node_id, 0);
         assert_eq!(optimizer.consensus_node.local_parameters.len(), 2);
     }
-    
+
     #[test]
     fn test_byzantine_fault_detector() {
         let mut detector = ByzantineFaultDetector::new(1.0);
         let good_params = Array1::from(vec![1.0, 2.0]);
         let bad_params = Array1::from(vec![10.0, 20.0]); // Large deviation
         let current_time = Instant::now();
-        
+
         // Good behavior should not trigger detection
-        assert!(!detector.detect_byzantine_behavior(1, &good_params.view(), &good_params.view(), current_time));
-        
+        assert!(!detector.detect_byzantine_behavior(
+            1,
+            &good_params.view(),
+            &good_params.view(),
+            current_time
+        ));
+
         // Bad behavior should trigger detection after multiple occurrences
         for _ in 0..10 {
-            detector.detect_byzantine_behavior(2, &bad_params.view(), &good_params.view(), current_time);
+            detector.detect_byzantine_behavior(
+                2,
+                &bad_params.view(),
+                &good_params.view(),
+                current_time,
+            );
         }
-        
+
         assert!(detector.is_byzantine_suspected(2, current_time));
     }
-    
+
     #[test]
     fn test_consensus_voting() {
         let mut voting_state = ConsensusVotingState::new(2.0); // Need 2 votes
         voting_state.start_round();
-        
+
         let params1 = Array1::from(vec![1.0, 2.0]);
         let params2 = Array1::from(vec![1.1, 2.1]);
-        
+
         voting_state.add_proposal(1, params1);
         voting_state.add_proposal(2, params2);
-        
+
         voting_state.vote(1, 1, 1.0);
         voting_state.vote(2, 1, 1.0);
-        
+
         let consensus = voting_state.check_consensus();
         assert!(consensus.is_some());
-        
+
         let (winner_id, _) = consensus.unwrap();
         assert_eq!(winner_id, 1);
     }
-    
+
     #[test]
     fn test_federated_averaging() {
         let mut federated_state = FederatedAveragingState::new();
-        
+
         let grad1 = Array1::from(vec![1.0, 2.0]);
         let grad2 = Array1::from(vec![3.0, 4.0]);
-        
+
         federated_state.add_peer_gradient(1, grad1, 10);
         federated_state.add_peer_gradient(2, grad2, 20);
-        
-        let avg_grad = federated_state.compute_federated_gradient(Instant::now()).unwrap();
-        
+
+        let avg_grad = federated_state
+            .compute_federated_gradient(Instant::now())
+            .unwrap();
+
         // Should be weighted average: (1*10 + 3*20) / 30, (2*10 + 4*20) / 30
-        assert!((avg_grad[0] - 70.0/30.0).abs() < 1e-10);
-        assert!((avg_grad[1] - 100.0/30.0).abs() < 1e-10);
+        assert!((avg_grad[0] - 70.0 / 30.0).abs() < 1e-10);
+        assert!((avg_grad[1] - 100.0 / 30.0).abs() < 1e-10);
     }
-    
+
     #[test]
     fn test_network_topology() {
         let mut topology = NetworkTopology::new(3);
         topology.add_connection(0, 1, 1.0, 0.1);
         topology.add_connection(1, 2, 1.0, 0.1);
-        
+
         let neighbors_0 = topology.get_neighbors(0);
         let neighbors_1 = topology.get_neighbors(1);
-        
+
         assert_eq!(neighbors_0, vec![1]);
         assert_eq!(neighbors_1, vec![0, 2]);
     }
-    
+
     #[test]
     fn test_distributed_optimization_update() {
         let mut optimizer = distributed_online_linear_regression(0, 2, 1, None);
-        
+
         let features = Array1::from(vec![1.0, 2.0]);
         let target = 3.0;
         let point = StreamingDataPoint::new(features, target);
-        
+
         // Update should not fail
         assert!(optimizer.update(&point).is_ok());
         assert_eq!(optimizer.stats().points_processed, 1);
     }
-    
+
     #[test]
     fn test_network_synchronization() {
         let mut sync_state = NetworkSynchronizationState::new();
-        
+
         let offset = Duration::from_millis(100);
         sync_state.update_clock_offset(1, offset);
-        
+
         let sync_time = sync_state.get_synchronized_time(1);
         let now = Instant::now();
-        
+
         // Synchronized time should be earlier by the offset amount
         assert!(now.duration_since(sync_time) >= offset);
     }
-    
+
     #[test]
     fn test_parameter_similarity() {
         let optimizer = distributed_online_linear_regression(0, 2, 1, None);
-        
+
         let params1 = Array1::from(vec![1.0, 2.0]);
         let params2 = Array1::from(vec![1.0, 2.0]); // Identical
         let params3 = Array1::from(vec![10.0, 20.0]); // Very different
-        
-        let similarity_identical = optimizer.compute_parameter_similarity(&params1.view(), &params2.view());
-        let similarity_different = optimizer.compute_parameter_similarity(&params1.view(), &params3.view());
-        
+
+        let similarity_identical =
+            optimizer.compute_parameter_similarity(&params1.view(), &params2.view());
+        let similarity_different =
+            optimizer.compute_parameter_similarity(&params1.view(), &params3.view());
+
         assert!(similarity_identical > 0.9);
         assert!(similarity_different < 0.1);
     }

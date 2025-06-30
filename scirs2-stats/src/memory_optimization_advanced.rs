@@ -7,13 +7,13 @@
 
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
-use num_traits::{Float, NumCast, Zero, One};
+use num_traits::{Float, NumCast, One, Zero};
 use scirs2_core::parallel_ops::*;
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, VecDeque};
-use std::sync::{Arc, Mutex, RwLock};
-use std::mem;
 use std::alloc::{GlobalAlloc, Layout, System};
+use std::collections::{HashMap, VecDeque};
+use std::mem;
+use std::sync::{Arc, Mutex, RwLock};
 
 /// Memory optimization configuration for statistical operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -46,10 +46,10 @@ impl Default for MemoryOptimizationConfig {
             enable_memory_mapping: true,
             enable_cache_optimization: true,
             enable_adaptive_allocation: true,
-            cache_line_size: 64, // Typical cache line size
+            cache_line_size: 64,                // Typical cache line size
             memory_pool_size: 64 * 1024 * 1024, // 64MB pool
-            enable_compression: false, // Disabled by default due to CPU overhead
-            streaming_chunk_size: 10000, // Default chunk size
+            enable_compression: false,          // Disabled by default due to CPU overhead
+            streaming_chunk_size: 10000,        // Default chunk size
         }
     }
 }
@@ -322,7 +322,7 @@ where
     fn calculate_memory_efficiency(&self) -> f64 {
         let theoretical_minimum = mem::size_of::<F>() * self.count;
         let actual_usage = self.estimate_memory_usage();
-        
+
         if actual_usage > 0 {
             (theoretical_minimum as f64 / actual_usage as f64 * 100.0).min(100.0)
         } else {
@@ -332,8 +332,7 @@ where
 
     /// Estimate current memory usage
     fn estimate_memory_usage(&self) -> usize {
-        mem::size_of::<Self>() + 
-        self.computation_buffer.len() * mem::size_of::<F>()
+        mem::size_of::<Self>() + self.computation_buffer.len() * mem::size_of::<F>()
     }
 
     /// Update memory profiling information
@@ -368,11 +367,8 @@ where
 {
     /// Create a cache-optimized matrix with specified layout
     pub fn new(data: Array2<F>, layout: MatrixLayout, cache_line_size: usize) -> Self {
-        let optimal_block_size = Self::calculate_optimal_block_size(
-            data.nrows(),
-            data.ncols(),
-            cache_line_size,
-        );
+        let optimal_block_size =
+            Self::calculate_optimal_block_size(data.nrows(), data.ncols(), cache_line_size);
 
         let mut matrix = Self {
             data,
@@ -386,7 +382,10 @@ where
     }
 
     /// Perform cache-optimized matrix multiplication
-    pub fn multiply_optimized(&self, other: &CacheOptimizedMatrix<F>) -> StatsResult<CacheOptimizedMatrix<F>> {
+    pub fn multiply_optimized(
+        &self,
+        other: &CacheOptimizedMatrix<F>,
+    ) -> StatsResult<CacheOptimizedMatrix<F>> {
         if self.data.ncols() != other.data.nrows() {
             return Err(StatsError::DimensionMismatch(
                 "Matrix dimensions incompatible for multiplication".to_string(),
@@ -397,9 +396,7 @@ where
             MatrixLayout::BlockedRowMajor | MatrixLayout::BlockedColumnMajor => {
                 self.blocked_multiply(&other.data)?
             }
-            _ => {
-                self.standard_multiply(&other.data)?
-            }
+            _ => self.standard_multiply(&other.data)?,
         };
 
         Ok(CacheOptimizedMatrix::new(
@@ -412,19 +409,19 @@ where
     /// Cache-optimized correlation computation
     pub fn correlation_matrix(&self) -> StatsResult<CacheOptimizedMatrix<F>> {
         let (n_samples, n_features) = self.data.dim();
-        
+
         // Compute means using cache-friendly access patterns
         let means = self.compute_column_means_optimized()?;
-        
+
         // Compute correlation matrix using blocked algorithm
         let mut correlation = Array2::zeros((n_features, n_features));
-        
+
         let block_size = self.block_size;
         for i_block in (0..n_features).step_by(block_size) {
             for j_block in (0..n_features).step_by(block_size) {
                 let i_end = (i_block + block_size).min(n_features);
                 let j_end = (j_block + block_size).min(n_features);
-                
+
                 for i in i_block..i_end {
                     for j in j_block..j_end {
                         let correlation_value = self.compute_correlation_pair(i, j, &means)?;
@@ -445,11 +442,11 @@ where
     fn calculate_optimal_block_size(rows: usize, cols: usize, cache_line_size: usize) -> usize {
         let element_size = mem::size_of::<F>();
         let elements_per_cache_line = cache_line_size / element_size;
-        
+
         // Find block size that maximizes cache utilization
         let target_block_elements = (32 * 1024) / element_size; // Target 32KB blocks
         let max_dimension = rows.max(cols);
-        
+
         ((target_block_elements as f64).sqrt() as usize)
             .min(max_dimension)
             .max(elements_per_cache_line)
@@ -490,7 +487,7 @@ where
     fn blocked_multiply(&self, other: &Array2<F>) -> StatsResult<Array2<F>> {
         let (m, k) = self.data.dim();
         let (k2, n) = other.dim();
-        
+
         if k != k2 {
             return Err(StatsError::DimensionMismatch(
                 "Matrix dimensions incompatible".to_string(),
@@ -540,7 +537,7 @@ where
         let block_size = self.block_size;
         for col_block in (0..n_features).step_by(block_size) {
             let col_end = (col_block + block_size).min(n_features);
-            
+
             for col in col_block..col_end {
                 let column_sum = self.data.column(col).sum();
                 means[col] = column_sum / n_samples_f;
@@ -551,14 +548,19 @@ where
     }
 
     /// Compute correlation between two columns
-    fn compute_correlation_pair(&self, col_i: usize, col_j: usize, means: &Array1<F>) -> StatsResult<F> {
+    fn compute_correlation_pair(
+        &self,
+        col_i: usize,
+        col_j: usize,
+        means: &Array1<F>,
+    ) -> StatsResult<F> {
         if col_i == col_j {
             return Ok(F::one());
         }
 
         let n_samples = self.data.nrows();
         let n_samples_f = F::from(n_samples).unwrap();
-        
+
         let mean_i = means[col_i];
         let mean_j = means[col_j];
 
@@ -570,7 +572,7 @@ where
         for row in 0..n_samples {
             let val_i = self.data[[row, col_i]] - mean_i;
             let val_j = self.data[[row, col_j]] - mean_j;
-            
+
             numerator = numerator + val_i * val_j;
             sum_sq_i = sum_sq_i + val_i * val_i;
             sum_sq_j = sum_sq_j + val_j * val_j;
@@ -611,10 +613,15 @@ impl AdaptiveStatsAllocator {
     }
 
     /// Allocate memory with pattern analysis
-    pub fn allocate_optimized(&self, size: usize, alignment: usize, operation_type: &str) -> StatsResult<*mut u8> {
+    pub fn allocate_optimized(
+        &self,
+        size: usize,
+        alignment: usize,
+        operation_type: &str,
+    ) -> StatsResult<*mut u8> {
         // Analyze allocation patterns to predict optimal pool
         let predicted_pool = self.predict_optimal_pool(size, alignment, operation_type);
-        
+
         // Try to allocate from predicted pool first
         if let Some(pool) = self.memory_pools.get(&predicted_pool) {
             if let Ok(mut pool_guard) = pool.lock() {
@@ -628,10 +635,12 @@ impl AdaptiveStatsAllocator {
         // Fallback to system allocator
         let layout = Layout::from_size_align(size, alignment)
             .map_err(|e| StatsError::ComputationError(format!("Invalid layout: {}", e)))?;
-        
+
         let ptr = unsafe { System.alloc(layout) };
         if ptr.is_null() {
-            return Err(StatsError::ComputationError("Memory allocation failed".to_string()));
+            return Err(StatsError::ComputationError(
+                "Memory allocation failed".to_string(),
+            ));
         }
 
         self.record_allocation_event(size, alignment, operation_type);
@@ -708,10 +717,12 @@ impl MemoryPool {
     fn new(pool_id: &str, size: usize) -> StatsResult<Self> {
         let layout = Layout::from_size_align(size, 64) // 64-byte alignment for cache lines
             .map_err(|e| StatsError::ComputationError(format!("Invalid layout: {}", e)))?;
-        
+
         let base_ptr = unsafe { System.alloc(layout) };
         if base_ptr.is_null() {
-            return Err(StatsError::ComputationError("Memory pool allocation failed".to_string()));
+            return Err(StatsError::ComputationError(
+                "Memory pool allocation failed".to_string(),
+            ));
         }
 
         Ok(Self {
@@ -736,7 +747,7 @@ impl MemoryPool {
         for (index, block) in self.free_blocks.iter().enumerate() {
             let aligned_offset = self.align_offset(block.offset, alignment);
             let total_size = aligned_offset - block.offset + size;
-            
+
             if total_size <= block.size {
                 // Split the block if necessary
                 let used_block = MemoryBlock {
@@ -768,7 +779,9 @@ impl MemoryPool {
             }
         }
 
-        Err(StatsError::ComputationError("No suitable block available in pool".to_string()))
+        Err(StatsError::ComputationError(
+            "No suitable block available in pool".to_string(),
+        ))
     }
 
     /// Align offset to specified alignment
@@ -796,7 +809,7 @@ impl AllocationPatternAnalyzer {
         };
 
         self.allocation_history.push_back(event);
-        
+
         // Maintain reasonable history size
         if self.allocation_history.len() > 10000 {
             self.allocation_history.pop_front();
@@ -810,15 +823,17 @@ impl AllocationPatternAnalyzer {
 
     fn update_patterns(&mut self) {
         let mut operation_groups: HashMap<String, Vec<&AllocationEvent>> = HashMap::new();
-        
+
         for event in &self.allocation_history {
-            operation_groups.entry(event.operation_type.clone())
+            operation_groups
+                .entry(event.operation_type.clone())
                 .or_insert_with(Vec::new)
                 .push(event);
         }
 
         for (operation_type, events) in operation_groups {
-            if events.len() >= 10 { // Minimum sample size for pattern
+            if events.len() >= 10 {
+                // Minimum sample size for pattern
                 let pattern = self.analyze_allocation_pattern(&events);
                 self.pattern_cache.insert(operation_type, pattern);
             }
@@ -828,11 +843,11 @@ impl AllocationPatternAnalyzer {
     fn analyze_allocation_pattern(&self, events: &[&AllocationEvent]) -> AllocationPattern {
         let sizes: Vec<usize> = events.iter().map(|e| e.size).collect();
         let alignments: Vec<usize> = events.iter().map(|e| e.alignment).collect();
-        
+
         let typical_size = self.calculate_median(&sizes);
         let typical_alignment = self.calculate_mode(&alignments);
         let frequency = events.len() as f64 / self.allocation_history.len() as f64;
-        
+
         // Simple confidence based on consistency
         let size_variance = self.calculate_variance(&sizes);
         let confidence = 1.0 / (1.0 + size_variance / typical_size as f64);
@@ -857,8 +872,9 @@ impl AllocationPatternAnalyzer {
         for &value in values {
             *counts.entry(value).or_insert(0) += 1;
         }
-        
-        counts.into_iter()
+
+        counts
+            .into_iter()
             .max_by_key(|(_, count)| *count)
             .map(|(value, _)| value)
             .unwrap_or(64) // Default alignment
@@ -866,9 +882,11 @@ impl AllocationPatternAnalyzer {
 
     fn calculate_variance(&self, values: &[usize]) -> f64 {
         let mean = values.iter().sum::<usize>() as f64 / values.len() as f64;
-        let variance = values.iter()
+        let variance = values
+            .iter()
             .map(|&x| (x as f64 - mean).powi(2))
-            .sum::<f64>() / values.len() as f64;
+            .sum::<f64>()
+            / values.len() as f64;
         variance
     }
 
@@ -930,7 +948,7 @@ impl MemoryOptimizationSuite {
                 MatrixLayout::BlockedRowMajor,
                 self.config.cache_line_size,
             );
-            
+
             let result = cache_optimized.correlation_matrix()?;
             Ok(result.data)
         }
@@ -943,24 +961,24 @@ impl MemoryOptimizationSuite {
     {
         let (n_samples, n_features) = data.dim();
         let chunk_size = self.config.streaming_chunk_size;
-        
+
         // Initialize streaming calculators for each feature pair
         let mut correlation_accumulators = HashMap::new();
         let mut means = vec![F::zero(); n_features];
         let mut variances = vec![F::zero(); n_features];
-        
+
         // First pass: compute means
         for chunk_start in (0..n_samples).step_by(chunk_size) {
             let chunk_end = (chunk_start + chunk_size).min(n_samples);
             let chunk = data.slice(ndarray::s![chunk_start..chunk_end, ..]);
-            
+
             for (feature_idx, column) in chunk.axis_iter(Axis(1)).enumerate() {
                 for &value in column.iter() {
                     means[feature_idx] = means[feature_idx] + value;
                 }
             }
         }
-        
+
         let n_samples_f = F::from(n_samples).unwrap();
         for mean in &mut means {
             *mean = *mean / n_samples_f;
@@ -968,12 +986,11 @@ impl MemoryOptimizationSuite {
 
         // Second pass: compute correlations
         let mut correlation_matrix = Array2::zeros((n_features, n_features));
-        
+
         for i in 0..n_features {
             for j in i..n_features {
-                correlation_matrix[[i, j]] = self.compute_streaming_correlation(
-                    &data, i, j, means[i], means[j]
-                )?;
+                correlation_matrix[[i, j]] =
+                    self.compute_streaming_correlation(&data, i, j, means[i], means[j])?;
                 correlation_matrix[[j, i]] = correlation_matrix[[i, j]];
             }
         }
@@ -1006,11 +1023,11 @@ impl MemoryOptimizationSuite {
 
         for chunk_start in (0..n_samples).step_by(chunk_size) {
             let chunk_end = (chunk_start + chunk_size).min(n_samples);
-            
+
             for row in chunk_start..chunk_end {
                 let val_i = data[[row, feature_i]] - mean_i;
                 let val_j = data[[row, feature_j]] - mean_j;
-                
+
                 numerator = numerator + val_i * val_j;
                 sum_sq_i = sum_sq_i + val_i * val_i;
                 sum_sq_j = sum_sq_j + val_j * val_j;
@@ -1029,7 +1046,7 @@ impl MemoryOptimizationSuite {
     pub fn get_optimization_report(&self) -> MemoryOptimizationReport {
         let memory_profile = self.allocator.get_memory_profile();
         let cache_stats = self.cache_manager.get_statistics();
-        
+
         MemoryOptimizationReport {
             config: self.config.clone(),
             memory_profile,
@@ -1160,11 +1177,7 @@ mod tests {
     #[test]
     fn test_cache_optimized_matrix() {
         let data = array![[1.0, 2.0], [3.0, 4.0]];
-        let matrix = CacheOptimizedMatrix::new(
-            data,
-            MatrixLayout::BlockedRowMajor,
-            64,
-        );
+        let matrix = CacheOptimizedMatrix::new(data, MatrixLayout::BlockedRowMajor, 64);
 
         assert_eq!(matrix.data.nrows(), 2);
         assert_eq!(matrix.data.ncols(), 2);
@@ -1175,7 +1188,9 @@ mod tests {
         let config = MemoryOptimizationConfig::default();
         let allocator = AdaptiveStatsAllocator::new(config);
 
-        let ptr = allocator.allocate_optimized(1024, 8, "test_operation").unwrap();
+        let ptr = allocator
+            .allocate_optimized(1024, 8, "test_operation")
+            .unwrap();
         assert!(!ptr.is_null());
     }
 
@@ -1189,7 +1204,7 @@ mod tests {
 
         assert_eq!(correlation.nrows(), 3);
         assert_eq!(correlation.ncols(), 3);
-        
+
         // Diagonal should be 1.0
         for i in 0..3 {
             assert!((correlation[[i, i]] - 1.0).abs() < 1e-10);

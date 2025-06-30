@@ -1704,20 +1704,20 @@ impl SocialMediaTextProcessor {
         while i < chars.len() {
             let current_char = chars[i];
             result.push(current_char);
-            
+
             // Count consecutive occurrences
             let mut count = 1;
             while i + count < chars.len() && chars[i + count] == current_char {
                 count += 1;
             }
-            
+
             // If more than 2 consecutive, add one more (keeping 2 total)
             if count > 2 {
                 result.push(current_char);
             } else if count == 2 {
                 result.push(current_char);
             }
-            
+
             i += count;
         }
         normalized = result.into_iter().collect();

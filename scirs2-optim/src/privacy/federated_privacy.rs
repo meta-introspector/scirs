@@ -605,7 +605,6 @@ pub struct OrganizationTrustConfig {
     pub trust_lifecycle: TrustLifecycleManagement,
 }
 
-
 // Supporting enums and types for the advanced configurations
 
 #[derive(Debug, Clone, Copy)]

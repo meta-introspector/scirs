@@ -104,7 +104,7 @@ impl StreamingProcessor {
             let data: Vec<f64> = self.buffer.drain(..self.config.chunk_size).collect();
             let result = processor(&data)?;
             self.output_buffer.extend(result);
-            
+
             // Update memory usage
             self.stats.current_usage = self.buffer.len() * std::mem::size_of::<f64>();
         }
@@ -161,7 +161,7 @@ where
     I: Iterator<Item = f64>,
 {
     check_positive(chunk_size, "chunk_size")?;
-    
+
     if overlap >= chunk_size {
         return Err(SignalError::ValueError(
             "Overlap must be less than chunk size".to_string(),
@@ -218,24 +218,24 @@ pub struct StreamingFFTResult {
 fn compute_fft_chunk(data: &[f64], _chunk_size: usize) -> SignalResult<Vec<f64>> {
     // Convert to ndarray and compute FFT
     let signal = Array1::from(data.to_vec());
-    
+
     // Use a simple DFT implementation for this example
     let n = signal.len();
     let mut result = vec![0.0; n];
-    
+
     for k in 0..n {
         let mut real = 0.0;
         let mut imag = 0.0;
-        
+
         for j in 0..n {
             let angle = -2.0 * std::f64::consts::PI * (k * j) as f64 / n as f64;
             real += signal[j] * angle.cos();
             imag += signal[j] * angle.sin();
         }
-        
+
         result[k] = (real * real + imag * imag).sqrt();
     }
-    
+
     Ok(result)
 }
 
@@ -269,7 +269,7 @@ where
     let filter_order = a.len().max(b.len());
     let chunk_size = config.chunk_size;
     let overlap = filter_order * 2; // Ensure sufficient overlap for filter
-    
+
     let mut processor = StreamingProcessor::new(config.clone());
     let mut filtered_chunks = Vec::new();
     let mut buffer = VecDeque::with_capacity(chunk_size + overlap);
@@ -293,7 +293,11 @@ where
         }
 
         // Extract chunk for processing
-        let process_size = if chunk_filled { buffer.len() } else { chunk_size };
+        let process_size = if chunk_filled {
+            buffer.len()
+        } else {
+            chunk_size
+        };
         let chunk_data: Vec<f64> = buffer.iter().take(process_size).copied().collect();
 
         // Apply filter to chunk
@@ -345,11 +349,11 @@ fn apply_filter_with_state(
 
     let n = input.len();
     let mut output = vec![0.0; n];
-    
+
     // Simple IIR filter implementation with state
     for i in 0..n {
         let mut y = 0.0;
-        
+
         // FIR part
         for j in 0..b.len() {
             if i >= j {
@@ -358,7 +362,7 @@ fn apply_filter_with_state(
                 y += b[j] * state[state.len() - (j - i)];
             }
         }
-        
+
         // IIR part
         for j in 1..a.len() {
             if i >= j {
@@ -367,11 +371,11 @@ fn apply_filter_with_state(
                 y -= a[j] * state[state.len() - (j - i)];
             }
         }
-        
+
         y /= a[0];
         output[i] = y;
     }
-    
+
     // Update state with latest values
     if n >= state.len() {
         state.copy_from_slice(&output[n - state.len()..]);
@@ -380,7 +384,7 @@ fn apply_filter_with_state(
         state.copy_within(n.., 0);
         state[state.len() - n..].copy_from_slice(&output);
     }
-    
+
     Ok(output)
 }
 
@@ -427,14 +431,14 @@ where
         while buffer.len() >= window_size {
             // Extract frame
             let frame_data: Vec<f64> = buffer.iter().take(window_size).copied().collect();
-            
+
             // Apply window and compute spectrum
             let windowed: Vec<f64> = frame_data
                 .iter()
                 .zip(window.iter())
                 .map(|(x, w)| x * w)
                 .collect();
-            
+
             // Compute FFT magnitude
             let spectrum = compute_fft_chunk(&windowed, window_size)?;
             spectrogram_frames.push(spectrum);
@@ -516,7 +520,7 @@ where
     // Compute cross-correlation using FFT-based method for efficiency
     // For memory efficiency, we'll use a chunked approach
     let chunk_size = config.chunk_size.min(n);
-    
+
     for chunk_start in (0..n).step_by(chunk_size) {
         let chunk_end = (chunk_start + chunk_size).min(n);
         let chunk1 = &signal1_vec[chunk_start..chunk_end];
@@ -631,7 +635,11 @@ where
     /// Get cache statistics
     pub fn stats(&self) -> (usize, usize, f64) {
         let total = self.hits + self.misses;
-        let hit_rate = if total > 0 { self.hits as f64 / total as f64 } else { 0.0 };
+        let hit_rate = if total > 0 {
+            self.hits as f64 / total as f64
+        } else {
+            0.0
+        };
         (self.hits, self.misses, hit_rate)
     }
 
@@ -655,9 +663,8 @@ mod tests {
         };
         let mut processor = StreamingProcessor::new(config);
 
-        let process_fn = |data: &[f64]| -> SignalResult<Vec<f64>> {
-            Ok(data.iter().map(|x| x * 2.0).collect())
-        };
+        let process_fn =
+            |data: &[f64]| -> SignalResult<Vec<f64>> { Ok(data.iter().map(|x| x * 2.0).collect()) };
 
         let chunk1 = [1.0, 2.0];
         let chunk2 = [3.0, 4.0];
@@ -691,14 +698,9 @@ mod tests {
         let signal: Vec<f64> = (0..100)
             .map(|i| (2.0 * std::f64::consts::PI * i as f64 / 10.0).sin())
             .collect();
-        
+
         let config = MemoryConfig::default();
-        let result = memory_efficient_spectrogram(
-            signal.into_iter(),
-            16,
-            8,
-            &config,
-        ).unwrap();
+        let result = memory_efficient_spectrogram(signal.into_iter(), 16, 8, &config).unwrap();
 
         assert!(!result.frames.is_empty());
         assert_eq!(result.window_size, 16);
@@ -717,7 +719,7 @@ mod tests {
         // Test inserts and hits
         cache.insert("key1".to_string(), 100);
         cache.insert("key2".to_string(), 200);
-        
+
         assert_eq!(cache.get(&"key1".to_string()), Some(100));
         assert_eq!(cache.get(&"key2".to_string()), Some(200));
 
@@ -740,12 +742,9 @@ mod tests {
         let signal2 = vec![5.0, 4.0, 3.0, 2.0, 1.0];
         let config = MemoryConfig::default();
 
-        let result = memory_efficient_correlation(
-            signal1.into_iter(),
-            signal2.into_iter(),
-            2,
-            &config,
-        ).unwrap();
+        let result =
+            memory_efficient_correlation(signal1.into_iter(), signal2.into_iter(), 2, &config)
+                .unwrap();
 
         assert_eq!(result.correlation.len(), 5); // 2*max_lag + 1
         assert_eq!(result.lags.len(), 5);

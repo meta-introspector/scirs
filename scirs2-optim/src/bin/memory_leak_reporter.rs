@@ -3,10 +3,10 @@
 //! This binary analyzes memory profiling results and generates comprehensive
 //! memory leak reports for continuous integration pipelines.
 
-use scirs2_optim::benchmarking::memory_leak_detector::{MemoryLeakDetector, MemoryLeakConfig};
+use clap::{Arg, ArgMatches, Command};
+use scirs2_optim::benchmarking::memory_leak_detector::{MemoryLeakConfig, MemoryLeakDetector};
 use scirs2_optim::error::{OptimError, Result};
-use clap::{Arg, Command, ArgMatches};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use serde_json;
 use std::collections::HashMap;
 use std::fs;
@@ -99,48 +99,48 @@ fn main() -> Result<()> {
                 .long("input")
                 .value_name("DIR")
                 .help("Input directory containing memory analysis results")
-                .required(true)
+                .required(true),
         )
         .arg(
             Arg::new("output")
                 .long("output")
                 .value_name("FILE")
                 .help("Output file for the memory leak report")
-                .required(true)
+                .required(true),
         )
         .arg(
             Arg::new("format")
                 .long("format")
                 .value_name("FORMAT")
                 .help("Output format (json, markdown, github-actions)")
-                .default_value("json")
+                .default_value("json"),
         )
         .arg(
             Arg::new("severity-threshold")
                 .long("severity-threshold")
                 .value_name("THRESHOLD")
                 .help("Minimum severity threshold for reporting leaks")
-                .default_value("0.3")
+                .default_value("0.3"),
         )
         .arg(
             Arg::new("confidence-threshold")
                 .long("confidence-threshold")
                 .value_name("THRESHOLD")
                 .help("Minimum confidence threshold for reporting leaks")
-                .default_value("0.7")
+                .default_value("0.7"),
         )
         .arg(
             Arg::new("include-recommendations")
                 .long("include-recommendations")
                 .help("Include optimization recommendations in the report")
-                .action(clap::ArgAction::SetTrue)
+                .action(clap::ArgAction::SetTrue),
         )
         .arg(
             Arg::new("verbose")
                 .short('v')
                 .long("verbose")
                 .help("Enable verbose output")
-                .action(clap::ArgAction::SetTrue)
+                .action(clap::ArgAction::SetTrue),
         )
         .get_matches();
 
@@ -149,12 +149,14 @@ fn main() -> Result<()> {
     let format = matches.get_one::<String>("format").unwrap();
     let verbose = matches.get_flag("verbose");
 
-    let severity_threshold: f64 = matches.get_one::<String>("severity-threshold")
+    let severity_threshold: f64 = matches
+        .get_one::<String>("severity-threshold")
         .unwrap()
         .parse()
         .map_err(|_| OptimError::InvalidConfig("Invalid severity threshold".to_string()))?;
 
-    let confidence_threshold: f64 = matches.get_one::<String>("confidence-threshold")
+    let confidence_threshold: f64 = matches
+        .get_one::<String>("confidence-threshold")
         .unwrap()
         .parse()
         .map_err(|_| OptimError::InvalidConfig("Invalid confidence threshold".to_string()))?;
@@ -167,40 +169,45 @@ fn main() -> Result<()> {
 
     // Analyze memory results
     let memory_results = collect_memory_analysis_results(&input_dir, verbose)?;
-    
+
     // Detect memory leaks
     let leaks = detect_memory_leaks(&memory_results, severity_threshold, confidence_threshold)?;
-    
+
     // Perform comprehensive analysis
     let analysis = perform_memory_analysis(&memory_results)?;
-    
+
     // Generate recommendations if requested
     let recommendations = if matches.get_flag("include-recommendations") {
         generate_optimization_recommendations(&leaks, &analysis)
     } else {
         Vec::new()
     };
-    
+
     // Create comprehensive report
     let report = create_memory_leak_report(leaks, analysis, recommendations)?;
-    
+
     // Generate output in requested format
     let output_content = match format {
         "json" => generate_json_report(&report)?,
         "markdown" => generate_markdown_report(&report)?,
         "github-actions" => generate_github_actions_report(&report)?,
-        _ => return Err(OptimError::InvalidConfig(format!("Unknown format: {}", format))),
+        _ => {
+            return Err(OptimError::InvalidConfig(format!(
+                "Unknown format: {}",
+                format
+            )))
+        }
     };
-    
+
     // Write report to file
     fs::write(&output_path, output_content)?;
-    
+
     if verbose {
         println!("Memory leak report written to: {}", output_path.display());
         println!("Total leaks detected: {}", report.leaks_detected.len());
         println!("Critical leaks: {}", report.summary.critical_leaks);
     }
-    
+
     Ok(())
 }
 
@@ -277,7 +284,10 @@ struct MacosLeaksResults {
     leak_summaries: Vec<String>,
 }
 
-fn collect_memory_analysis_results(input_dir: &Path, verbose: bool) -> Result<MemoryAnalysisResults> {
+fn collect_memory_analysis_results(
+    input_dir: &Path,
+    verbose: bool,
+) -> Result<MemoryAnalysisResults> {
     let mut results = MemoryAnalysisResults {
         valgrind_results: None,
         massif_results: None,
@@ -337,12 +347,20 @@ fn collect_memory_analysis_results(input_dir: &Path, verbose: bool) -> Result<Me
 fn parse_valgrind_results(path: &Path) -> Result<ValgrindResults> {
     // Simplified Valgrind XML parsing
     let content = fs::read_to_string(path)?;
-    
+
     // In a real implementation, this would use an XML parser
     // For now, we'll create mock results based on file presence
     Ok(ValgrindResults {
-        total_leaks: if content.contains("definitely lost") { 2 } else { 0 },
-        leaked_bytes: if content.contains("definitely lost") { 1024 } else { 0 },
+        total_leaks: if content.contains("definitely lost") {
+            2
+        } else {
+            0
+        },
+        leaked_bytes: if content.contains("definitely lost") {
+            1024
+        } else {
+            0
+        },
         leak_records: vec![
             ValgrindLeak {
                 bytes_leaked: 512,
@@ -371,54 +389,50 @@ fn parse_valgrind_results(path: &Path) -> Result<ValgrindResults> {
 fn parse_massif_results(path: &Path) -> Result<MassifResults> {
     // Simplified Massif parsing
     let _content = fs::read_to_string(path)?;
-    
+
     Ok(MassifResults {
         peak_memory: 50 * 1024 * 1024, // 50MB
         memory_timeline: vec![
-            (0, 10 * 1024 * 1024),      // 10MB at start
-            (1000, 25 * 1024 * 1024),   // 25MB at 1s
-            (2000, 50 * 1024 * 1024),   // 50MB at 2s (peak)
-            (3000, 40 * 1024 * 1024),   // 40MB at 3s
+            (0, 10 * 1024 * 1024),    // 10MB at start
+            (1000, 25 * 1024 * 1024), // 25MB at 1s
+            (2000, 50 * 1024 * 1024), // 50MB at 2s (peak)
+            (3000, 40 * 1024 * 1024), // 40MB at 3s
         ],
-        allocation_tree: vec![
-            AllocationNode {
-                bytes: 30 * 1024 * 1024,
-                function: "optimizer_allocations".to_string(),
-                children: vec![
-                    AllocationNode {
-                        bytes: 20 * 1024 * 1024,
-                        function: "adam_buffers".to_string(),
-                        children: vec![],
-                    },
-                    AllocationNode {
-                        bytes: 10 * 1024 * 1024,
-                        function: "gradient_buffers".to_string(),
-                        children: vec![],
-                    },
-                ],
-            },
-        ],
+        allocation_tree: vec![AllocationNode {
+            bytes: 30 * 1024 * 1024,
+            function: "optimizer_allocations".to_string(),
+            children: vec![
+                AllocationNode {
+                    bytes: 20 * 1024 * 1024,
+                    function: "adam_buffers".to_string(),
+                    children: vec![],
+                },
+                AllocationNode {
+                    bytes: 10 * 1024 * 1024,
+                    function: "gradient_buffers".to_string(),
+                    children: vec![],
+                },
+            ],
+        }],
     })
 }
 
 fn parse_heaptrack_results(path: &Path) -> Result<HeaptrackResults> {
     // Simplified HeapTrack parsing
     let _content = fs::read_to_string(path)?;
-    
+
     Ok(HeaptrackResults {
         total_allocations: 15420,
         peak_memory: 48 * 1024 * 1024,
-        leaked_allocations: vec![
-            LeakedAllocation {
-                size: 1024,
-                call_stack: vec![
-                    "malloc".to_string(),
-                    "temporary_buffer_alloc".to_string(),
-                    "optimizer_step".to_string(),
-                ],
-                allocation_time: 1500,
-            },
-        ],
+        leaked_allocations: vec![LeakedAllocation {
+            size: 1024,
+            call_stack: vec![
+                "malloc".to_string(),
+                "temporary_buffer_alloc".to_string(),
+                "optimizer_step".to_string(),
+            ],
+            allocation_time: 1500,
+        }],
     })
 }
 
@@ -427,7 +441,7 @@ fn parse_custom_profiler_results(path: &Path) -> Result<CustomProfilerResults> {
     let content = fs::read_to_string(path)?;
     let _json_data: serde_json::Value = serde_json::from_str(&content)
         .map_err(|e| OptimError::SerializationError(e.to_string()))?;
-    
+
     Ok(CustomProfilerResults {
         memory_timeline: vec![
             (0, 5 * 1024 * 1024),
@@ -435,30 +449,24 @@ fn parse_custom_profiler_results(path: &Path) -> Result<CustomProfilerResults> {
             (2000, 25 * 1024 * 1024),
             (3000, 35 * 1024 * 1024),
         ],
-        allocation_patterns: vec![
-            AllocationPattern {
-                pattern_type: "periodic".to_string(),
-                frequency: 0.5, // Hz
-                size_distribution: [(1024, 50), (2048, 30), (4096, 20)].into_iter().collect(),
-            },
-        ],
-        fragmentation_data: vec![
-            (0, 0.1),
-            (1000, 0.15),
-            (2000, 0.25),
-            (3000, 0.35),
-        ],
+        allocation_patterns: vec![AllocationPattern {
+            pattern_type: "periodic".to_string(),
+            frequency: 0.5, // Hz
+            size_distribution: [(1024, 50), (2048, 30), (4096, 20)].into_iter().collect(),
+        }],
+        fragmentation_data: vec![(0, 0.1), (1000, 0.15), (2000, 0.25), (3000, 0.35)],
     })
 }
 
 fn parse_macos_leaks_results(path: &Path) -> Result<MacosLeaksResults> {
     let content = fs::read_to_string(path)?;
-    
+
     // Simple parsing of macOS leaks output
-    let leak_count = content.lines()
+    let leak_count = content
+        .lines()
         .filter(|line| line.contains("leaks for"))
         .count();
-    
+
     Ok(MacosLeaksResults {
         leak_count,
         leaked_bytes: leak_count * 1024, // Estimate
@@ -481,8 +489,12 @@ fn detect_memory_leaks(
     if let Some(ref valgrind) = results.valgrind_results {
         for leak_record in &valgrind.leak_records {
             let severity = calculate_severity(leak_record.bytes_leaked);
-            let confidence = if leak_record.leak_kind == "definitely lost" { 0.95 } else { 0.6 };
-            
+            let confidence = if leak_record.leak_kind == "definitely lost" {
+                0.95
+            } else {
+                0.6
+            };
+
             if severity >= severity_threshold && confidence >= confidence_threshold {
                 leaks.push(MemoryLeak {
                     leak_id: format!("VG_{:03}", leak_id_counter),
@@ -490,17 +502,21 @@ fn detect_memory_leaks(
                     confidence,
                     leaked_memory_bytes: leak_record.bytes_leaked,
                     leak_rate_bytes_per_second: leak_record.bytes_leaked as f64 / 10.0, // Estimate
-                    leak_sources: vec![
-                        LeakSource {
-                            source_type: "allocation".to_string(),
-                            location: leak_record.call_stack.last().unwrap_or(&"unknown".to_string()).clone(),
-                            contribution_percent: 100.0,
-                            allocation_size: leak_record.bytes_leaked,
-                        },
-                    ],
+                    leak_sources: vec![LeakSource {
+                        source_type: "allocation".to_string(),
+                        location: leak_record
+                            .call_stack
+                            .last()
+                            .unwrap_or(&"unknown".to_string())
+                            .clone(),
+                        contribution_percent: 100.0,
+                        allocation_size: leak_record.bytes_leaked,
+                    }],
                     call_stack: leak_record.call_stack.clone(),
-                    description: format!("Valgrind detected {} leak of {} bytes", 
-                                       leak_record.leak_kind, leak_record.bytes_leaked),
+                    description: format!(
+                        "Valgrind detected {} leak of {} bytes",
+                        leak_record.leak_kind, leak_record.bytes_leaked
+                    ),
                     fix_suggestions: generate_fix_suggestions(&leak_record.call_stack),
                 });
                 leak_id_counter += 1;
@@ -513,27 +529,30 @@ fn detect_memory_leaks(
         for leaked_alloc in &heaptrack.leaked_allocations {
             let severity = calculate_severity(leaked_alloc.size);
             let confidence = 0.8; // HeapTrack has good confidence
-            
+
             if severity >= severity_threshold && confidence >= confidence_threshold {
                 leaks.push(MemoryLeak {
                     leak_id: format!("HT_{:03}", leak_id_counter),
                     severity,
                     confidence,
                     leaked_memory_bytes: leaked_alloc.size,
-                    leak_rate_bytes_per_second: leaked_alloc.size as f64 / 
-                        (leaked_alloc.allocation_time as f64 / 1000.0),
-                    leak_sources: vec![
-                        LeakSource {
-                            source_type: "heap_allocation".to_string(),
-                            location: leaked_alloc.call_stack.last()
-                                .unwrap_or(&"unknown".to_string()).clone(),
-                            contribution_percent: 100.0,
-                            allocation_size: leaked_alloc.size,
-                        },
-                    ],
+                    leak_rate_bytes_per_second: leaked_alloc.size as f64
+                        / (leaked_alloc.allocation_time as f64 / 1000.0),
+                    leak_sources: vec![LeakSource {
+                        source_type: "heap_allocation".to_string(),
+                        location: leaked_alloc
+                            .call_stack
+                            .last()
+                            .unwrap_or(&"unknown".to_string())
+                            .clone(),
+                        contribution_percent: 100.0,
+                        allocation_size: leaked_alloc.size,
+                    }],
                     call_stack: leaked_alloc.call_stack.clone(),
-                    description: format!("HeapTrack detected leaked allocation of {} bytes", 
-                                       leaked_alloc.size),
+                    description: format!(
+                        "HeapTrack detected leaked allocation of {} bytes",
+                        leaked_alloc.size
+                    ),
                     fix_suggestions: generate_fix_suggestions(&leaked_alloc.call_stack),
                 });
                 leak_id_counter += 1;
@@ -544,11 +563,12 @@ fn detect_memory_leaks(
     // Process custom profiler results for patterns that suggest leaks
     if let Some(ref custom) = results.custom_profiler_results {
         let growth_rate = calculate_memory_growth_rate(&custom.memory_timeline);
-        if growth_rate > 1024.0 { // Growing more than 1KB/s suggests a leak
+        if growth_rate > 1024.0 {
+            // Growing more than 1KB/s suggests a leak
             let total_leaked = (growth_rate * custom.memory_timeline.len() as f64) as usize;
             let severity = calculate_severity(total_leaked);
             let confidence = 0.7; // Pattern-based detection has moderate confidence
-            
+
             if severity >= severity_threshold && confidence >= confidence_threshold {
                 leaks.push(MemoryLeak {
                     leak_id: format!("CP_{:03}", leak_id_counter),
@@ -556,19 +576,21 @@ fn detect_memory_leaks(
                     confidence,
                     leaked_memory_bytes: total_leaked,
                     leak_rate_bytes_per_second: growth_rate,
-                    leak_sources: vec![
-                        LeakSource {
-                            source_type: "memory_growth_pattern".to_string(),
-                            location: "optimizer_allocation_pattern".to_string(),
-                            contribution_percent: 100.0,
-                            allocation_size: total_leaked,
-                        },
-                    ],
+                    leak_sources: vec![LeakSource {
+                        source_type: "memory_growth_pattern".to_string(),
+                        location: "optimizer_allocation_pattern".to_string(),
+                        contribution_percent: 100.0,
+                        allocation_size: total_leaked,
+                    }],
                     call_stack: vec!["pattern_analysis".to_string()],
-                    description: format!("Custom profiler detected memory growth pattern: {:.2} bytes/s", growth_rate),
+                    description: format!(
+                        "Custom profiler detected memory growth pattern: {:.2} bytes/s",
+                        growth_rate
+                    ),
                     fix_suggestions: vec![
                         "Review allocation patterns in optimizer loops".to_string(),
-                        "Consider using object pooling for frequently allocated objects".to_string(),
+                        "Consider using object pooling for frequently allocated objects"
+                            .to_string(),
                         "Implement explicit memory management in hot paths".to_string(),
                     ],
                 });
@@ -582,11 +604,11 @@ fn detect_memory_leaks(
 
 fn calculate_severity(leaked_bytes: usize) -> f64 {
     match leaked_bytes {
-        0..=1024 => 0.2,           // Low severity for small leaks
-        1025..=10240 => 0.4,       // Medium-low for < 10KB
-        10241..=102400 => 0.6,     // Medium for < 100KB
-        102401..=1048576 => 0.8,   // High for < 1MB
-        _ => 1.0,                  // Critical for > 1MB
+        0..=1024 => 0.2,         // Low severity for small leaks
+        1025..=10240 => 0.4,     // Medium-low for < 10KB
+        10241..=102400 => 0.6,   // Medium for < 100KB
+        102401..=1048576 => 0.8, // High for < 1MB
+        _ => 1.0,                // Critical for > 1MB
     }
 }
 
@@ -594,13 +616,13 @@ fn calculate_memory_growth_rate(timeline: &[(u64, usize)]) -> f64 {
     if timeline.len() < 2 {
         return 0.0;
     }
-    
+
     let first = timeline.first().unwrap();
     let last = timeline.last().unwrap();
-    
+
     let time_diff = (last.0 - first.0) as f64 / 1000.0; // Convert to seconds
     let memory_diff = last.1 as f64 - first.1 as f64;
-    
+
     if time_diff > 0.0 {
         memory_diff / time_diff
     } else {
@@ -610,7 +632,7 @@ fn calculate_memory_growth_rate(timeline: &[(u64, usize)]) -> f64 {
 
 fn generate_fix_suggestions(call_stack: &[String]) -> Vec<String> {
     let mut suggestions = Vec::new();
-    
+
     // Analyze call stack for common patterns
     for frame in call_stack {
         if frame.contains("malloc") || frame.contains("alloc") {
@@ -625,80 +647,87 @@ fn generate_fix_suggestions(call_stack: &[String]) -> Vec<String> {
             suggestions.push("Use smart pointers for automatic memory management".to_string());
         }
     }
-    
+
     if suggestions.is_empty() {
         suggestions.push("Review memory allocation and deallocation patterns".to_string());
         suggestions.push("Use static analysis tools to identify potential leaks".to_string());
     }
-    
+
     suggestions
 }
 
 fn perform_memory_analysis(results: &MemoryAnalysisResults) -> Result<MemoryAnalysis> {
     let mut peak_memory = 0;
     let mut memory_timeline = Vec::new();
-    
+
     // Aggregate data from different sources
     if let Some(ref massif) = results.massif_results {
         peak_memory = peak_memory.max(massif.peak_memory);
         memory_timeline.extend(massif.memory_timeline.iter().cloned());
     }
-    
+
     if let Some(ref heaptrack) = results.heaptrack_results {
         peak_memory = peak_memory.max(heaptrack.peak_memory);
     }
-    
+
     if let Some(ref custom) = results.custom_profiler_results {
         memory_timeline.extend(custom.memory_timeline.iter().cloned());
     }
-    
+
     // Calculate metrics
     let average_memory = if !memory_timeline.is_empty() {
         memory_timeline.iter().map(|(_, mem)| *mem).sum::<usize>() / memory_timeline.len()
     } else {
         0
     };
-    
+
     let growth_rate = calculate_memory_growth_rate(&memory_timeline);
-    
+
     // Calculate fragmentation ratio (simplified)
     let fragmentation_ratio = if let Some(ref custom) = results.custom_profiler_results {
-        custom.fragmentation_data.last().map(|(_, frag)| *frag).unwrap_or(0.0)
+        custom
+            .fragmentation_data
+            .last()
+            .map(|(_, frag)| *frag)
+            .unwrap_or(0.0)
     } else {
         0.1 // Default estimate
     };
-    
+
     let total_allocations = if let Some(ref heaptrack) = results.heaptrack_results {
         heaptrack.total_allocations
     } else {
         10000 // Estimate
     };
-    
+
     let allocation_patterns = AllocationPatterns {
         total_allocations,
         total_deallocations: total_allocations - 100, // Assume some leaks
         allocation_size_distribution: [
             ("small (< 1KB)".to_string(), total_allocations * 70 / 100),
-            ("medium (1KB-10KB)".to_string(), total_allocations * 25 / 100),
+            (
+                "medium (1KB-10KB)".to_string(),
+                total_allocations * 25 / 100,
+            ),
             ("large (> 10KB)".to_string(), total_allocations * 5 / 100),
-        ].into_iter().collect(),
-        temporal_patterns: vec![
-            TemporalPattern {
-                pattern_type: "periodic".to_string(),
-                frequency: 0.5,
-                amplitude: 1024.0,
-                description: "Regular allocation spikes during optimizer updates".to_string(),
-            },
-        ],
+        ]
+        .into_iter()
+        .collect(),
+        temporal_patterns: vec![TemporalPattern {
+            pattern_type: "periodic".to_string(),
+            frequency: 0.5,
+            amplitude: 1024.0,
+            description: "Regular allocation spikes during optimizer updates".to_string(),
+        }],
     };
-    
+
     let memory_efficiency_score = calculate_memory_efficiency_score(
         peak_memory,
         average_memory,
         fragmentation_ratio,
         growth_rate,
     );
-    
+
     Ok(MemoryAnalysis {
         peak_memory_usage: peak_memory,
         average_memory_usage: average_memory,
@@ -716,15 +745,15 @@ fn calculate_memory_efficiency_score(
     growth_rate: f64,
 ) -> f64 {
     let mut score = 1.0;
-    
+
     // Penalize high fragmentation
     score -= fragmentation_ratio * 0.3;
-    
+
     // Penalize memory growth (potential leaks)
     if growth_rate > 0.0 {
         score -= (growth_rate / 10240.0).min(0.5); // Penalize growth rate
     }
-    
+
     // Penalize poor memory utilization
     if peak_memory > 0 && average_memory > 0 {
         let utilization = average_memory as f64 / peak_memory as f64;
@@ -732,7 +761,7 @@ fn calculate_memory_efficiency_score(
             score -= (0.5 - utilization) * 0.4;
         }
     }
-    
+
     score.max(0.0).min(1.0)
 }
 
@@ -741,7 +770,7 @@ fn generate_optimization_recommendations(
     analysis: &MemoryAnalysis,
 ) -> Vec<OptimizationRecommendation> {
     let mut recommendations = Vec::new();
-    
+
     // Leak-specific recommendations
     if !leaks.is_empty() {
         recommendations.push(OptimizationRecommendation {
@@ -756,13 +785,14 @@ fn generate_optimization_recommendations(
             ],
         });
     }
-    
+
     // Fragmentation recommendations
     if analysis.fragmentation_ratio > 0.2 {
         recommendations.push(OptimizationRecommendation {
             recommendation_type: "fragmentation_reduction".to_string(),
             priority: "medium".to_string(),
-            description: "Reduce memory fragmentation through better allocation strategies".to_string(),
+            description: "Reduce memory fragmentation through better allocation strategies"
+                .to_string(),
             estimated_impact: 0.4,
             implementation_difficulty: "medium".to_string(),
             code_examples: vec![
@@ -771,7 +801,7 @@ fn generate_optimization_recommendations(
             ],
         });
     }
-    
+
     // Memory growth recommendations
     if analysis.memory_growth_rate > 1024.0 {
         recommendations.push(OptimizationRecommendation {
@@ -786,7 +816,7 @@ fn generate_optimization_recommendations(
             ],
         });
     }
-    
+
     // Efficiency recommendations
     if analysis.memory_efficiency_score < 0.6 {
         recommendations.push(OptimizationRecommendation {
@@ -801,7 +831,7 @@ fn generate_optimization_recommendations(
             ],
         });
     }
-    
+
     recommendations
 }
 
@@ -817,7 +847,7 @@ fn create_memory_leak_report(
     } else {
         1.0
     };
-    
+
     let overall_severity = if critical_leaks > 0 {
         "critical".to_string()
     } else if leaks.len() > 0 {
@@ -825,7 +855,7 @@ fn create_memory_leak_report(
     } else {
         "good".to_string()
     };
-    
+
     let summary = LeakSummary {
         total_leaks: leaks.len(),
         critical_leaks,
@@ -833,43 +863,68 @@ fn create_memory_leak_report(
         confidence_score,
         overall_severity,
     };
-    
+
     let mut env_info = HashMap::new();
     env_info.insert("os".to_string(), std::env::consts::OS.to_string());
     env_info.insert("arch".to_string(), std::env::consts::ARCH.to_string());
-    
+
     Ok(MemoryLeakReport {
         summary,
         leaks_detected: leaks,
         memory_analysis: analysis,
         recommendations,
         environment_info: env_info,
-        timestamp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
+        timestamp: SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs(),
     })
 }
 
 fn generate_json_report(report: &MemoryLeakReport) -> Result<String> {
-    serde_json::to_string_pretty(report)
-        .map_err(|e| OptimError::SerializationError(e.to_string()))
+    serde_json::to_string_pretty(report).map_err(|e| OptimError::SerializationError(e.to_string()))
 }
 
 fn generate_markdown_report(report: &MemoryLeakReport) -> Result<String> {
     let mut md = String::new();
-    
+
     md.push_str("# Memory Leak Analysis Report\n\n");
     md.push_str(&format!("**Generated**: <t:{}:F>\n", report.timestamp));
-    md.push_str(&format!("**Environment**: {} on {}\n\n", 
-                        report.environment_info.get("os").unwrap_or(&"unknown".to_string()),
-                        report.environment_info.get("arch").unwrap_or(&"unknown".to_string())));
-    
+    md.push_str(&format!(
+        "**Environment**: {} on {}\n\n",
+        report
+            .environment_info
+            .get("os")
+            .unwrap_or(&"unknown".to_string()),
+        report
+            .environment_info
+            .get("arch")
+            .unwrap_or(&"unknown".to_string())
+    ));
+
     // Summary section
     md.push_str("## Summary\n\n");
-    md.push_str(&format!("- **Total Leaks**: {}\n", report.summary.total_leaks));
-    md.push_str(&format!("- **Critical Leaks**: {}\n", report.summary.critical_leaks));
-    md.push_str(&format!("- **Total Leaked Memory**: {} bytes\n", report.summary.total_leaked_bytes));
-    md.push_str(&format!("- **Confidence Score**: {:.2}\n", report.summary.confidence_score));
-    md.push_str(&format!("- **Overall Severity**: {}\n\n", report.summary.overall_severity));
-    
+    md.push_str(&format!(
+        "- **Total Leaks**: {}\n",
+        report.summary.total_leaks
+    ));
+    md.push_str(&format!(
+        "- **Critical Leaks**: {}\n",
+        report.summary.critical_leaks
+    ));
+    md.push_str(&format!(
+        "- **Total Leaked Memory**: {} bytes\n",
+        report.summary.total_leaked_bytes
+    ));
+    md.push_str(&format!(
+        "- **Confidence Score**: {:.2}\n",
+        report.summary.confidence_score
+    ));
+    md.push_str(&format!(
+        "- **Overall Severity**: {}\n\n",
+        report.summary.overall_severity
+    ));
+
     // Detailed leak information
     if !report.leaks_detected.is_empty() {
         md.push_str("## Detected Leaks\n\n");
@@ -877,10 +932,16 @@ fn generate_markdown_report(report: &MemoryLeakReport) -> Result<String> {
             md.push_str(&format!("### Leak {} ({})\n\n", i + 1, leak.leak_id));
             md.push_str(&format!("- **Severity**: {:.2}\n", leak.severity));
             md.push_str(&format!("- **Confidence**: {:.2}\n", leak.confidence));
-            md.push_str(&format!("- **Leaked Memory**: {} bytes\n", leak.leaked_memory_bytes));
-            md.push_str(&format!("- **Leak Rate**: {:.2} bytes/second\n", leak.leak_rate_bytes_per_second));
+            md.push_str(&format!(
+                "- **Leaked Memory**: {} bytes\n",
+                leak.leaked_memory_bytes
+            ));
+            md.push_str(&format!(
+                "- **Leak Rate**: {:.2} bytes/second\n",
+                leak.leak_rate_bytes_per_second
+            ));
             md.push_str(&format!("- **Description**: {}\n\n", leak.description));
-            
+
             if !leak.fix_suggestions.is_empty() {
                 md.push_str("**Fix Suggestions**:\n");
                 for suggestion in &leak.fix_suggestions {
@@ -890,65 +951,99 @@ fn generate_markdown_report(report: &MemoryLeakReport) -> Result<String> {
             }
         }
     }
-    
+
     // Memory analysis
     md.push_str("## Memory Analysis\n\n");
-    md.push_str(&format!("- **Peak Memory Usage**: {} bytes\n", report.memory_analysis.peak_memory_usage));
-    md.push_str(&format!("- **Average Memory Usage**: {} bytes\n", report.memory_analysis.average_memory_usage));
-    md.push_str(&format!("- **Memory Growth Rate**: {:.2} bytes/second\n", report.memory_analysis.memory_growth_rate));
-    md.push_str(&format!("- **Fragmentation Ratio**: {:.2}\n", report.memory_analysis.fragmentation_ratio));
-    md.push_str(&format!("- **Memory Efficiency Score**: {:.2}\n\n", report.memory_analysis.memory_efficiency_score));
-    
+    md.push_str(&format!(
+        "- **Peak Memory Usage**: {} bytes\n",
+        report.memory_analysis.peak_memory_usage
+    ));
+    md.push_str(&format!(
+        "- **Average Memory Usage**: {} bytes\n",
+        report.memory_analysis.average_memory_usage
+    ));
+    md.push_str(&format!(
+        "- **Memory Growth Rate**: {:.2} bytes/second\n",
+        report.memory_analysis.memory_growth_rate
+    ));
+    md.push_str(&format!(
+        "- **Fragmentation Ratio**: {:.2}\n",
+        report.memory_analysis.fragmentation_ratio
+    ));
+    md.push_str(&format!(
+        "- **Memory Efficiency Score**: {:.2}\n\n",
+        report.memory_analysis.memory_efficiency_score
+    ));
+
     // Recommendations
     if !report.recommendations.is_empty() {
         md.push_str("## Optimization Recommendations\n\n");
         for (i, rec) in report.recommendations.iter().enumerate() {
-            md.push_str(&format!("### {} (Priority: {})\n\n", rec.recommendation_type, rec.priority));
+            md.push_str(&format!(
+                "### {} (Priority: {})\n\n",
+                rec.recommendation_type, rec.priority
+            ));
             md.push_str(&format!("{}\n\n", rec.description));
-            md.push_str(&format!("- **Estimated Impact**: {:.2}\n", rec.estimated_impact));
-            md.push_str(&format!("- **Implementation Difficulty**: {}\n\n", rec.implementation_difficulty));
+            md.push_str(&format!(
+                "- **Estimated Impact**: {:.2}\n",
+                rec.estimated_impact
+            ));
+            md.push_str(&format!(
+                "- **Implementation Difficulty**: {}\n\n",
+                rec.implementation_difficulty
+            ));
         }
     }
-    
+
     Ok(md)
 }
 
 fn generate_github_actions_report(report: &MemoryLeakReport) -> Result<String> {
     let json_report = generate_json_report(report)?;
     let mut output = String::new();
-    
+
     // Add GitHub Actions workflow commands
     if report.summary.critical_leaks > 0 {
-        output.push_str(&format!("::error::Critical memory leaks detected! {} critical leak(s) found.\n", 
-                                report.summary.critical_leaks));
+        output.push_str(&format!(
+            "::error::Critical memory leaks detected! {} critical leak(s) found.\n",
+            report.summary.critical_leaks
+        ));
     }
-    
+
     if report.summary.total_leaks > 0 {
-        output.push_str(&format!("::warning::{} memory leak(s) detected, {} bytes total.\n", 
-                                report.summary.total_leaks, report.summary.total_leaked_bytes));
-        
+        output.push_str(&format!(
+            "::warning::{} memory leak(s) detected, {} bytes total.\n",
+            report.summary.total_leaks, report.summary.total_leaked_bytes
+        ));
+
         for leak in &report.leaks_detected {
             if leak.severity > 0.8 {
-                output.push_str(&format!("::error::Critical leak {}: {} bytes (severity: {:.2})\n",
-                                        leak.leak_id, leak.leaked_memory_bytes, leak.severity));
+                output.push_str(&format!(
+                    "::error::Critical leak {}: {} bytes (severity: {:.2})\n",
+                    leak.leak_id, leak.leaked_memory_bytes, leak.severity
+                ));
             } else {
-                output.push_str(&format!("::warning::Leak {}: {} bytes (severity: {:.2})\n",
-                                        leak.leak_id, leak.leaked_memory_bytes, leak.severity));
+                output.push_str(&format!(
+                    "::warning::Leak {}: {} bytes (severity: {:.2})\n",
+                    leak.leak_id, leak.leaked_memory_bytes, leak.severity
+                ));
             }
         }
     } else {
         output.push_str("::notice::No memory leaks detected!\n");
     }
-    
+
     // Add efficiency warning if needed
     if report.memory_analysis.memory_efficiency_score < 0.6 {
-        output.push_str(&format!("::warning::Low memory efficiency score: {:.2}\n", 
-                                report.memory_analysis.memory_efficiency_score));
+        output.push_str(&format!(
+            "::warning::Low memory efficiency score: {:.2}\n",
+            report.memory_analysis.memory_efficiency_score
+        ));
     }
-    
+
     // Add the JSON report
     output.push('\n');
     output.push_str(&json_report);
-    
+
     Ok(output)
 }

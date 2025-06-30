@@ -51,7 +51,7 @@ impl ActivationFunction {
                 let one = F::one();
                 let sqrt_2_pi = F::from(0.7978845608).unwrap(); // sqrt(2/π)
                 let coeff = F::from(0.044715).unwrap();
-                
+
                 half * x * (one + (sqrt_2_pi * (x + coeff * x * x * x)).tanh())
             }
             ActivationFunction::Swish => {
@@ -74,7 +74,11 @@ impl ActivationFunction {
                 F::one() - tanh_x * tanh_x
             }
             ActivationFunction::ReLU => {
-                if x > F::zero() { F::one() } else { F::zero() }
+                if x > F::zero() {
+                    F::one()
+                } else {
+                    F::zero()
+                }
             }
             ActivationFunction::GELU => {
                 // Simplified derivative approximation
@@ -122,11 +126,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> LSTMCell<F> {
     /// Create new LSTM cell with random initialization
     pub fn new(input_size: usize, hidden_size: usize) -> Self {
         let total_input_size = input_size + hidden_size;
-        
+
         // Initialize weights with Xavier/Glorot initialization
         let scale = F::from(2.0).unwrap() / F::from(total_input_size).unwrap();
         let std_dev = scale.sqrt();
-        
+
         Self {
             input_size,
             hidden_size,
@@ -141,7 +145,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> LSTMCell<F> {
     /// Initialize random matrix with given standard deviation
     fn random_matrix(rows: usize, cols: usize, std_dev: F) -> Array2<F> {
         let mut matrix = Array2::zeros((rows, cols));
-        
+
         // Simple pseudo-random initialization (for production, use proper RNG)
         let mut seed: u32 = 12345;
         for i in 0..rows {
@@ -153,7 +157,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> LSTMCell<F> {
                 matrix[[i, j]] = normalized * std_dev;
             }
         }
-        
+
         matrix
     }
 
@@ -166,7 +170,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> LSTMCell<F> {
             });
         }
 
-        if prev_state.hidden.len() != self.hidden_size || prev_state.cell.len() != self.hidden_size {
+        if prev_state.hidden.len() != self.hidden_size || prev_state.cell.len() != self.hidden_size
+        {
             return Err(TimeSeriesError::DimensionMismatch {
                 expected: self.hidden_size,
                 actual: prev_state.hidden.len(),
@@ -185,7 +190,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> LSTMCell<F> {
         // Compute gate values
         let forget_gate = self.compute_gate(&self.w_forget, &combined_input, 0);
         let input_gate = self.compute_gate(&self.w_input, &combined_input, self.hidden_size);
-        let candidate_gate = self.compute_gate(&self.w_candidate, &combined_input, 2 * self.hidden_size);
+        let candidate_gate =
+            self.compute_gate(&self.w_candidate, &combined_input, 2 * self.hidden_size);
         let output_gate = self.compute_gate(&self.w_output, &combined_input, 3 * self.hidden_size);
 
         // Apply activations
@@ -197,8 +203,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> LSTMCell<F> {
         // Update cell state
         let mut new_cell = Array1::zeros(self.hidden_size);
         for i in 0..self.hidden_size {
-            new_cell[i] = forget_activated[i] * prev_state.cell[i] + 
-                         input_activated[i] * candidate_activated[i];
+            new_cell[i] = forget_activated[i] * prev_state.cell[i]
+                + input_activated[i] * candidate_activated[i];
         }
 
         // Update hidden state
@@ -215,9 +221,14 @@ impl<F: Float + Debug + Clone + FromPrimitive> LSTMCell<F> {
     }
 
     /// Compute gate output (linear transformation)
-    fn compute_gate(&self, weights: &Array2<F>, input: &Array1<F>, bias_offset: usize) -> Array1<F> {
+    fn compute_gate(
+        &self,
+        weights: &Array2<F>,
+        input: &Array1<F>,
+        bias_offset: usize,
+    ) -> Array1<F> {
         let mut output = Array1::zeros(self.hidden_size);
-        
+
         for i in 0..self.hidden_size {
             let mut sum = self.bias[bias_offset + i];
             for j in 0..input.len() {
@@ -225,7 +236,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> LSTMCell<F> {
             }
             output[i] = sum;
         }
-        
+
         output
     }
 
@@ -260,24 +271,24 @@ impl<F: Float + Debug + Clone + FromPrimitive> LSTMNetwork<F> {
         dropout_prob: F,
     ) -> Self {
         let mut layers = Vec::new();
-        
+
         // First layer
         if !hidden_sizes.is_empty() {
             layers.push(LSTMCell::new(input_size, hidden_sizes[0]));
-            
+
             // Additional layers
             for i in 1..hidden_sizes.len() {
-                layers.push(LSTMCell::new(hidden_sizes[i-1], hidden_sizes[i]));
+                layers.push(LSTMCell::new(hidden_sizes[i - 1], hidden_sizes[i]));
             }
         }
 
         let final_hidden_size = hidden_sizes.last().copied().unwrap_or(input_size);
-        
+
         // Output layer initialization
         let output_scale = F::from(2.0).unwrap() / F::from(final_hidden_size).unwrap();
         let output_std = output_scale.sqrt();
         let output_layer = LSTMCell::random_matrix(output_size, final_hidden_size, output_std);
-        
+
         Self {
             layers,
             output_layer,
@@ -289,7 +300,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> LSTMNetwork<F> {
     /// Forward pass through the network
     pub fn forward(&self, input_sequence: &Array2<F>) -> Result<Array2<F>> {
         let (seq_len, _input_size) = input_sequence.dim();
-        
+
         if self.layers.is_empty() {
             return Err(TimeSeriesError::InvalidModel(
                 "No LSTM layers defined".to_string(),
@@ -300,9 +311,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> LSTMNetwork<F> {
         let mut outputs = Array2::zeros((seq_len, output_size));
 
         // Initialize states for all layers
-        let mut states: Vec<LSTMState<F>> = self.layers.iter()
-            .map(|layer| layer.init_state())
-            .collect();
+        let mut states: Vec<LSTMState<F>> =
+            self.layers.iter().map(|layer| layer.init_state()).collect();
 
         // Process each time step
         for t in 0..seq_len {
@@ -334,27 +344,26 @@ impl<F: Float + Debug + Clone + FromPrimitive> LSTMNetwork<F> {
     /// Compute final output projection
     fn compute_output(&self, hidden: &Array1<F>) -> Array1<F> {
         let mut output = self.output_bias.clone();
-        
+
         for i in 0..self.output_layer.nrows() {
             for j in 0..self.output_layer.ncols() {
                 output[i] = output[i] + self.output_layer[[i, j]] * hidden[j];
             }
         }
-        
+
         output
     }
 
     /// Generate forecast for multiple steps
     pub fn forecast(&self, input_sequence: &Array2<F>, forecast_steps: usize) -> Result<Array1<F>> {
         let (seq_len, _) = input_sequence.dim();
-        
+
         // Get the last hidden states from input sequence
         let _ = self.forward(input_sequence)?;
-        
+
         // Initialize states for forecasting
-        let mut states: Vec<LSTMState<F>> = self.layers.iter()
-            .map(|layer| layer.init_state())
-            .collect();
+        let mut states: Vec<LSTMState<F>> =
+            self.layers.iter().map(|layer| layer.init_state()).collect();
 
         // Re-run forward pass to get final states
         for t in 0..seq_len {
@@ -383,7 +392,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> LSTMNetwork<F> {
             // Compute output
             let output = self.compute_output(&layer_input);
             forecasts[step] = output[0]; // Assuming single output for forecasting
-            
+
             // Use forecast as input for next step (assuming univariate)
             if last_output.len() == 1 {
                 last_output[0] = output[0];
@@ -443,7 +452,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MultiHeadAttention<F> {
     /// Forward pass through multi-head attention
     pub fn forward(&self, input: &Array2<F>) -> Result<Array2<F>> {
         let (seq_len, model_dim) = input.dim();
-        
+
         if model_dim != self.model_dim {
             return Err(TimeSeriesError::DimensionMismatch {
                 expected: self.model_dim,
@@ -503,7 +512,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MultiHeadAttention<F> {
     /// Reshape tensor for multi-head attention
     fn reshape_for_attention(&self, tensor: &Array2<F>, seq_len: usize) -> Array3<F> {
         let mut reshaped = Array3::zeros((self.num_heads, seq_len, self.head_dim));
-        
+
         for head in 0..self.num_heads {
             for seq in 0..seq_len {
                 for dim in 0..self.head_dim {
@@ -519,7 +528,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MultiHeadAttention<F> {
     /// Get specific attention head
     fn get_head(&self, tensor: &Array3<F>, head: usize, seq_len: usize) -> Array2<F> {
         let mut head_tensor = Array2::zeros((seq_len, self.head_dim));
-        
+
         for seq in 0..seq_len {
             for dim in 0..self.head_dim {
                 head_tensor[[seq, dim]] = tensor[[head, seq, dim]];
@@ -833,12 +842,12 @@ impl<F: Float + Debug + Clone + FromPrimitive> TransformerForecaster<F> {
     /// Create sinusoidal positional encoding
     fn create_positional_encoding(max_seq_len: usize, model_dim: usize) -> Array2<F> {
         let mut pe = Array2::zeros((max_seq_len, model_dim));
-        
+
         for pos in 0..max_seq_len {
             for i in 0..model_dim / 2 {
-                let angle = F::from(pos as f64).unwrap() / 
-                    F::from(10000.0_f64.powf(2.0 * i as f64 / model_dim as f64)).unwrap();
-                
+                let angle = F::from(pos as f64).unwrap()
+                    / F::from(10000.0_f64.powf(2.0 * i as f64 / model_dim as f64)).unwrap();
+
                 pe[[pos, 2 * i]] = angle.sin();
                 if 2 * i + 1 < model_dim {
                     pe[[pos, 2 * i + 1]] = angle.cos();
@@ -852,7 +861,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> TransformerForecaster<F> {
     /// Forward pass through transformer
     pub fn forward(&self, input: &Array2<F>) -> Result<Array2<F>> {
         let (seq_len, input_dim) = input.dim();
-        
+
         if seq_len > self.max_seq_len {
             return Err(TimeSeriesError::InvalidInput(
                 "Sequence length exceeds maximum".to_string(),
@@ -909,7 +918,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> TransformerForecaster<F> {
         for step in 0..forecast_steps {
             // Forward pass with current sequence
             let output = self.forward(&extended_sequence)?;
-            
+
             // Get the last prediction
             let last_prediction = output[[seq_len + step - 1, 0]];
             forecasts[step] = last_prediction;
@@ -918,23 +927,23 @@ impl<F: Float + Debug + Clone + FromPrimitive> TransformerForecaster<F> {
             if step < forecast_steps - 1 {
                 let mut new_row = Array1::zeros(input_dim);
                 new_row[0] = last_prediction; // Assuming univariate for simplicity
-                
+
                 // Create new extended sequence
                 let new_len = extended_sequence.nrows() + 1;
                 let mut new_sequence = Array2::zeros((new_len, input_dim));
-                
+
                 // Copy existing data
                 for i in 0..extended_sequence.nrows() {
                     for j in 0..input_dim {
                         new_sequence[[i, j]] = extended_sequence[[i, j]];
                     }
                 }
-                
+
                 // Add new prediction
                 for j in 0..input_dim {
                     new_sequence[[new_len - 1, j]] = new_row[j];
                 }
-                
+
                 extended_sequence = new_sequence;
             }
         }
@@ -991,19 +1000,31 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsBlock<F> {
         // Input layer
         let input_size = backcast_size;
         let scale = F::from(2.0).unwrap() / F::from(input_size).unwrap();
-        layers.push(LSTMCell::random_matrix(hidden_size, input_size, scale.sqrt()));
+        layers.push(LSTMCell::random_matrix(
+            hidden_size,
+            input_size,
+            scale.sqrt(),
+        ));
         biases.push(Array1::zeros(hidden_size));
 
         // Hidden layers
         for _ in 1..num_layers {
             let scale = F::from(2.0).unwrap() / F::from(hidden_size).unwrap();
-            layers.push(LSTMCell::random_matrix(hidden_size, hidden_size, scale.sqrt()));
+            layers.push(LSTMCell::random_matrix(
+                hidden_size,
+                hidden_size,
+                scale.sqrt(),
+            ));
             biases.push(Array1::zeros(hidden_size));
         }
 
         // Output layers (theta generation)
         let scale = F::from(2.0).unwrap() / F::from(hidden_size).unwrap();
-        layers.push(LSTMCell::random_matrix(theta_size, hidden_size, scale.sqrt()));
+        layers.push(LSTMCell::random_matrix(
+            theta_size,
+            hidden_size,
+            scale.sqrt(),
+        ));
         biases.push(Array1::zeros(theta_size));
 
         Self {
@@ -1040,7 +1061,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsBlock<F> {
         }
 
         // Final layer to generate theta parameters
-        let theta = self.linear_layer(&x, &self.layers[self.num_layers], &self.biases[self.num_layers]);
+        let theta = self.linear_layer(
+            &x,
+            &self.layers[self.num_layers],
+            &self.biases[self.num_layers],
+        );
 
         // Generate backcast and forecast using basis functions
         let (backcast, forecast) = self.generate_outputs(&theta)?;
@@ -1112,7 +1137,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsBlock<F> {
         for t in 0..self.backcast_size {
             let mut value = F::zero();
             let time_norm = F::from(t as f64 / self.backcast_size as f64).unwrap();
-            
+
             for d in 0..=degree {
                 let power = if d == 0 {
                     F::one()
@@ -1131,8 +1156,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsBlock<F> {
         // Generate polynomial basis for forecast
         for t in 0..self.forecast_size {
             let mut value = F::zero();
-            let time_norm = F::from((self.backcast_size + t) as f64 / self.backcast_size as f64).unwrap();
-            
+            let time_norm =
+                F::from((self.backcast_size + t) as f64 / self.backcast_size as f64).unwrap();
+
             for d in 0..=degree {
                 let power = if d == 0 {
                     F::one()
@@ -1154,7 +1180,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsBlock<F> {
     /// Seasonal basis functions (Fourier)
     fn seasonal_basis(&self, theta: &Array1<F>) -> Result<(Array1<F>, Array1<F>)> {
         let num_harmonics = self.theta_size / 2; // Pairs of cos/sin coefficients
-        
+
         let mut backcast = Array1::zeros(self.backcast_size);
         let mut forecast = Array1::zeros(self.forecast_size);
 
@@ -1165,14 +1191,16 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsBlock<F> {
         for t in 0..self.backcast_size {
             let mut value = F::zero();
             let time = F::from(t as f64).unwrap();
-            
+
             for h in 1..=num_harmonics {
                 if 2 * h <= theta.len() {
-                    let freq = two * pi * F::from(h as f64).unwrap() / F::from(self.backcast_size as f64).unwrap();
+                    let freq = two * pi * F::from(h as f64).unwrap()
+                        / F::from(self.backcast_size as f64).unwrap();
                     let cos_coeff = theta[2 * h - 2];
                     let sin_coeff = theta[2 * h - 1];
-                    
-                    value = value + cos_coeff * (freq * time).cos() + sin_coeff * (freq * time).sin();
+
+                    value =
+                        value + cos_coeff * (freq * time).cos() + sin_coeff * (freq * time).sin();
                 }
             }
             backcast[t] = value;
@@ -1182,14 +1210,16 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsBlock<F> {
         for t in 0..self.forecast_size {
             let mut value = F::zero();
             let time = F::from((self.backcast_size + t) as f64).unwrap();
-            
+
             for h in 1..=num_harmonics {
                 if 2 * h <= theta.len() {
-                    let freq = two * pi * F::from(h as f64).unwrap() / F::from(self.backcast_size as f64).unwrap();
+                    let freq = two * pi * F::from(h as f64).unwrap()
+                        / F::from(self.backcast_size as f64).unwrap();
                     let cos_coeff = theta[2 * h - 2];
                     let sin_coeff = theta[2 * h - 1];
-                    
-                    value = value + cos_coeff * (freq * time).cos() + sin_coeff * (freq * time).sin();
+
+                    value =
+                        value + cos_coeff * (freq * time).cos() + sin_coeff * (freq * time).sin();
                 }
             }
             forecast[t] = value;
@@ -1247,7 +1277,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsStack<F> {
                 // Half trend blocks, half seasonal blocks
                 let trend_blocks = num_blocks / 2;
                 let seasonal_blocks = num_blocks - trend_blocks;
-                
+
                 // Trend blocks
                 for _ in 0..trend_blocks {
                     blocks.push(NBeatsBlock::new(
@@ -1259,7 +1289,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsStack<F> {
                         NBeatsBlockType::Trend,
                     ));
                 }
-                
+
                 // Seasonal blocks
                 for _ in 0..seasonal_blocks {
                     let theta_size = 2 * (backcast_size / 4).max(1); // Number of harmonics * 2
@@ -1275,10 +1305,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsStack<F> {
             }
         }
 
-        Self {
-            blocks,
-            stack_type,
-        }
+        Self { blocks, stack_type }
     }
 
     /// Forward pass through the stack
@@ -1288,12 +1315,12 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsStack<F> {
 
         for block in &self.blocks {
             let (backcast, forecast) = block.forward(&residual)?;
-            
+
             // Subtract backcast from residual
             for i in 0..residual.len() {
                 residual[i] = residual[i] - backcast[i];
             }
-            
+
             // Add forecast to total
             for i in 0..total_forecast.len() {
                 total_forecast[i] = total_forecast[i] + forecast[i];
@@ -1378,7 +1405,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsModel<F> {
         for stack in &self.generic_stacks {
             let (new_residual, forecast) = stack.forward(&residual)?;
             residual = new_residual;
-            
+
             for i in 0..total_forecast.len() {
                 total_forecast[i] = total_forecast[i] + forecast[i];
             }
@@ -1388,7 +1415,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsModel<F> {
         for stack in &self.interpretable_stacks {
             let (new_residual, forecast) = stack.forward(&residual)?;
             residual = new_residual;
-            
+
             for i in 0..total_forecast.len() {
                 total_forecast[i] = total_forecast[i] + forecast[i];
             }
@@ -1416,7 +1443,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsModel<F> {
     }
 
     /// Multi-step forecasting
-    pub fn forecast_multistep(&self, input_sequence: &Array1<F>, steps: usize) -> Result<Array1<F>> {
+    pub fn forecast_multistep(
+        &self,
+        input_sequence: &Array1<F>,
+        steps: usize,
+    ) -> Result<Array1<F>> {
         let mut extended_sequence = input_sequence.clone();
         let mut all_forecasts = Array1::zeros(steps);
         let step_size = self.forecast_size;
@@ -1425,11 +1456,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsModel<F> {
         while current_step < steps {
             // Get forecast for current window
             let forecast = self.forecast(&extended_sequence)?;
-            
+
             // Add forecast to results
             let remaining_steps = steps - current_step;
             let copy_steps = remaining_steps.min(step_size);
-            
+
             for i in 0..copy_steps {
                 all_forecasts[current_step + i] = forecast[i];
             }
@@ -1438,17 +1469,17 @@ impl<F: Float + Debug + Clone + FromPrimitive> NBeatsModel<F> {
             if current_step + step_size < steps {
                 let new_len = extended_sequence.len() + copy_steps;
                 let mut new_sequence = Array1::zeros(new_len);
-                
+
                 // Copy existing sequence
                 for i in 0..extended_sequence.len() {
                     new_sequence[i] = extended_sequence[i];
                 }
-                
+
                 // Add forecasted values
                 for i in 0..copy_steps {
                     new_sequence[extended_sequence.len() + i] = forecast[i];
                 }
-                
+
                 extended_sequence = new_sequence;
             }
 
@@ -1488,10 +1519,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> MambaBlock<F> {
     pub fn new(input_dim: usize, state_dim: usize, conv_size: usize, expand: usize) -> Self {
         let inner_dim = expand * input_dim;
         let dt_rank = (input_dim / 16).max(1);
-        
+
         // Initialize parameters with proper scaling
         let scale = F::from(1.0 / (input_dim as f64).sqrt()).unwrap();
-        
+
         Self {
             input_dim,
             state_dim,
@@ -1501,13 +1532,16 @@ impl<F: Float + Debug + Clone + FromPrimitive> MambaBlock<F> {
             conv1d: Self::init_weight(inner_dim, conv_size, scale),
             x_proj: Self::init_weight(dt_rank + state_dim * 2, inner_dim, scale),
             dt_proj: Self::init_weight(inner_dim, dt_rank, scale),
-            a_log: Array1::from_vec((0..state_dim).map(|i| 
-                F::from(-1.0 - (i as f64 / state_dim as f64) * 6.0).unwrap()).collect()),
+            a_log: Array1::from_vec(
+                (0..state_dim)
+                    .map(|i| F::from(-1.0 - (i as f64 / state_dim as f64) * 6.0).unwrap())
+                    .collect(),
+            ),
             d: Array1::ones(inner_dim),
             out_proj: Self::init_weight(input_dim, inner_dim, scale),
         }
     }
-    
+
     /// Initialize weight matrix
     fn init_weight(out_dim: usize, in_dim: usize, scale: F) -> Array2<F> {
         let mut weight = Array2::zeros((out_dim, in_dim));
@@ -1521,71 +1555,71 @@ impl<F: Float + Debug + Clone + FromPrimitive> MambaBlock<F> {
         }
         weight
     }
-    
+
     /// Forward pass through Mamba block
     pub fn forward(&self, input: &Array2<F>) -> crate::error::Result<Array2<F>> {
         let (seq_len, _) = input.dim();
         let inner_dim = self.expand * self.input_dim;
-        
+
         // Input projection
         let projected = self.linear_transform(input, &self.in_proj);
-        
+
         // Split into x and z
         let x = self.slice_array(&projected, 0, inner_dim);
         let z = self.slice_array(&projected, inner_dim, inner_dim);
-        
+
         // Apply 1D convolution (simplified)
         let x_conv = self.conv1d_forward(&x);
-        
+
         // Apply SiLU activation
         let x_silu = x_conv.mapv(|v| self.silu(v));
-        
+
         // Selective scan mechanism
         let ssm_out = self.selective_scan(&x_silu)?;
-        
+
         // Multiply with gate z (element-wise with SiLU)
         let z_silu = z.mapv(|v| self.silu(v));
         let gated = self.element_wise_multiply(&ssm_out, &z_silu);
-        
+
         // Output projection
         let output = self.linear_transform(&gated, &self.out_proj);
-        
+
         Ok(output)
     }
-    
+
     /// SiLU (Swish) activation function
     fn silu(&self, x: F) -> F {
         let sigmoid = F::one() / (F::one() + (-x).exp());
         x * sigmoid
     }
-    
+
     /// Simplified 1D convolution
     fn conv1d_forward(&self, input: &Array2<F>) -> Array2<F> {
         // Simplified implementation - would use proper convolution in practice
         input.clone()
     }
-    
+
     /// Selective State Space mechanism (core of Mamba)
     fn selective_scan(&self, x: &Array2<F>) -> crate::error::Result<Array2<F>> {
         let (seq_len, inner_dim) = x.dim();
         let dt_rank = (self.input_dim / 16).max(1);
-        
+
         // Project x to get dt, B, C parameters
         let x_dbl = self.linear_transform(x, &self.x_proj);
-        
+
         // Split dt, B, C
         let dt = self.slice_array(&x_dbl, 0, dt_rank);
         let b = self.slice_array(&x_dbl, dt_rank, self.state_dim);
         let c = self.slice_array(&x_dbl, dt_rank + self.state_dim, self.state_dim);
-        
+
         // Project dt
         let dt_proj = self.linear_transform(&dt, &self.dt_proj);
         let dt_softplus = dt_proj.mapv(|v| (F::one() + v.exp()).ln());
-        
+
         // Discretization (simplified)
         let mut a_discrete = Array2::zeros((seq_len, self.state_dim));
         let mut b_discrete = b.clone();
-        
+
         for t in 0..seq_len {
             for i in 0..self.state_dim {
                 let dt_val = if t < dt_softplus.nrows() && i < dt_softplus.ncols() {
@@ -1596,11 +1630,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> MambaBlock<F> {
                 a_discrete[[t, i]] = (-dt_val * self.a_log[i].exp()).exp();
             }
         }
-        
+
         // State space recurrence
         let mut h = Array1::zeros(self.state_dim);
         let mut outputs = Array2::zeros((seq_len, inner_dim));
-        
+
         for t in 0..seq_len {
             // Update state: h = A * h + B * x
             let mut new_h = Array1::zeros(self.state_dim);
@@ -1608,13 +1642,17 @@ impl<F: Float + Debug + Clone + FromPrimitive> MambaBlock<F> {
                 if i < h.len() && t < a_discrete.nrows() && i < a_discrete.ncols() {
                     new_h[i] = a_discrete[[t, i]] * h[i];
                     if t < b_discrete.nrows() && i < b_discrete.ncols() {
-                        let x_val = if t < x.nrows() { x[[t, i.min(x.ncols() - 1)]] } else { F::zero() };
+                        let x_val = if t < x.nrows() {
+                            x[[t, i.min(x.ncols() - 1)]]
+                        } else {
+                            F::zero()
+                        };
                         new_h[i] = new_h[i] + b_discrete[[t, i]] * x_val;
                     }
                 }
             }
             h = new_h;
-            
+
             // Compute output: y = C * h + D * x
             for j in 0..inner_dim {
                 let mut output_val = F::zero();
@@ -1630,16 +1668,16 @@ impl<F: Float + Debug + Clone + FromPrimitive> MambaBlock<F> {
                 outputs[[t, j]] = output_val;
             }
         }
-        
+
         Ok(outputs)
     }
-    
+
     /// Linear transformation helper
     fn linear_transform(&self, input: &Array2<F>, weight: &Array2<F>) -> Array2<F> {
         let (seq_len, input_dim) = input.dim();
         let output_dim = weight.nrows();
         let mut output = Array2::zeros((seq_len, output_dim));
-        
+
         for i in 0..seq_len {
             for j in 0..output_dim {
                 let mut sum = F::zero();
@@ -1651,13 +1689,13 @@ impl<F: Float + Debug + Clone + FromPrimitive> MambaBlock<F> {
         }
         output
     }
-    
+
     /// Array slicing helper
     fn slice_array(&self, array: &Array2<F>, start: usize, size: usize) -> Array2<F> {
         let (seq_len, total_dim) = array.dim();
         let end = (start + size).min(total_dim);
         let mut result = Array2::zeros((seq_len, end - start));
-        
+
         for i in 0..seq_len {
             for j in start..end {
                 if j < total_dim {
@@ -1667,12 +1705,12 @@ impl<F: Float + Debug + Clone + FromPrimitive> MambaBlock<F> {
         }
         result
     }
-    
+
     /// Element-wise multiplication
     fn element_wise_multiply(&self, a: &Array2<F>, b: &Array2<F>) -> Array2<F> {
         let (rows, cols) = a.dim();
         let mut result = Array2::zeros((rows, cols));
-        
+
         for i in 0..rows {
             for j in 0..cols {
                 result[[i, j]] = a[[i, j]] * b[[i, j.min(b.ncols() - 1)]];
@@ -1701,17 +1739,21 @@ pub struct FlashAttention<F: Float + Debug> {
 
 impl<F: Float + Debug + Clone + FromPrimitive> FlashAttention<F> {
     /// Create new Flash Attention layer
-    pub fn new(model_dim: usize, num_heads: usize, block_size: usize) -> crate::error::Result<Self> {
+    pub fn new(
+        model_dim: usize,
+        num_heads: usize,
+        block_size: usize,
+    ) -> crate::error::Result<Self> {
         if model_dim % num_heads != 0 {
             return Err(crate::error::TimeSeriesError::InvalidInput(
                 "Model dimension must be divisible by number of heads".to_string(),
             ));
         }
-        
+
         let head_dim = model_dim / num_heads;
         let scale = F::from(2.0).unwrap() / F::from(model_dim).unwrap();
         let std_dev = scale.sqrt();
-        
+
         Ok(Self {
             model_dim,
             num_heads,
@@ -1721,37 +1763,37 @@ impl<F: Float + Debug + Clone + FromPrimitive> FlashAttention<F> {
             w_output: LSTMCell::random_matrix(model_dim, model_dim, std_dev),
         })
     }
-    
+
     /// Flash Attention forward pass with memory tiling
     pub fn forward(&self, input: &Array2<F>) -> crate::error::Result<Array2<F>> {
         let (seq_len, model_dim) = input.dim();
-        
+
         if model_dim != self.model_dim {
             return Err(crate::error::TimeSeriesError::DimensionMismatch {
                 expected: self.model_dim,
                 actual: model_dim,
             });
         }
-        
+
         // Project to Q, K, V
         let qkv = self.linear_transform(input, &self.w_qkv);
         let (q, k, v) = self.split_qkv(&qkv, seq_len);
-        
+
         // Reshape for multi-head attention
         let q_heads = self.reshape_for_heads(&q, seq_len);
         let k_heads = self.reshape_for_heads(&k, seq_len);
         let v_heads = self.reshape_for_heads(&v, seq_len);
-        
+
         // Flash attention computation with tiling
         let attention_out = self.flash_attention_tiled(&q_heads, &k_heads, &v_heads, seq_len)?;
-        
+
         // Concatenate heads and apply output projection
         let concatenated = self.concatenate_heads(&attention_out, seq_len);
         let output = self.linear_transform(&concatenated, &self.w_output);
-        
+
         Ok(output)
     }
-    
+
     /// Flash attention with memory tiling for efficiency
     fn flash_attention_tiled(
         &self,
@@ -1762,32 +1804,33 @@ impl<F: Float + Debug + Clone + FromPrimitive> FlashAttention<F> {
     ) -> crate::error::Result<Array3<F>> {
         let scale = F::one() / F::from(self.head_dim as f64).unwrap().sqrt();
         let mut output = Array3::zeros((self.num_heads, seq_len, self.head_dim));
-        
+
         // Process in blocks for memory efficiency
         for head in 0..self.num_heads {
             for i in (0..seq_len).step_by(self.block_size) {
                 let i_end = (i + self.block_size).min(seq_len);
-                
+
                 // Initialize block statistics
                 let mut block_max = Array1::from_elem(i_end - i, F::neg_infinity());
                 let mut block_sum = Array1::zeros(i_end - i);
                 let mut block_out = Array2::zeros((i_end - i, self.head_dim));
-                
+
                 for j in (0..seq_len).step_by(self.block_size) {
                     let j_end = (j + self.block_size).min(seq_len);
-                    
+
                     // Compute attention scores for this block
                     let mut scores = Array2::zeros((i_end - i, j_end - j));
                     for ii in 0..(i_end - i) {
                         for jj in 0..(j_end - j) {
                             let mut dot_product = F::zero();
                             for d in 0..self.head_dim {
-                                dot_product = dot_product + q[[head, i + ii, d]] * k[[head, j + jj, d]];
+                                dot_product =
+                                    dot_product + q[[head, i + ii, d]] * k[[head, j + jj, d]];
                             }
                             scores[[ii, jj]] = dot_product * scale;
                         }
                     }
-                    
+
                     // Apply causal mask if needed
                     for ii in 0..(i_end - i) {
                         for jj in 0..(j_end - j) {
@@ -1796,7 +1839,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> FlashAttention<F> {
                             }
                         }
                     }
-                    
+
                     // Online softmax computation
                     for ii in 0..(i_end - i) {
                         // Find new maximum
@@ -1806,38 +1849,38 @@ impl<F: Float + Debug + Clone + FromPrimitive> FlashAttention<F> {
                                 row_max = scores[[ii, jj]];
                             }
                         }
-                        
+
                         // Update global maximum and renormalize
                         let old_max = block_max[ii];
                         let new_max = row_max.max(old_max);
                         let exp_diff_old = (old_max - new_max).exp();
                         let exp_diff_new = (row_max - new_max).exp();
-                        
+
                         block_max[ii] = new_max;
-                        
+
                         // Update running sum and output
                         let mut new_sum = block_sum[ii] * exp_diff_old;
-                        
+
                         for jj in 0..(j_end - j) {
                             let exp_score = (scores[[ii, jj]] - new_max).exp();
                             new_sum = new_sum + exp_score;
-                            
+
                             // Update output
                             for d in 0..self.head_dim {
-                                block_out[[ii, d]] = block_out[[ii, d]] * exp_diff_old + 
-                                    exp_score * v[[head, j + jj, d]];
+                                block_out[[ii, d]] = block_out[[ii, d]] * exp_diff_old
+                                    + exp_score * v[[head, j + jj, d]];
                             }
                         }
-                        
+
                         block_sum[ii] = new_sum;
-                        
+
                         // Normalize output
                         for d in 0..self.head_dim {
                             block_out[[ii, d]] = block_out[[ii, d]] / new_sum;
                         }
                     }
                 }
-                
+
                 // Copy block output to final result
                 for ii in 0..(i_end - i) {
                     for d in 0..self.head_dim {
@@ -1846,16 +1889,16 @@ impl<F: Float + Debug + Clone + FromPrimitive> FlashAttention<F> {
                 }
             }
         }
-        
+
         Ok(output)
     }
-    
+
     /// Helper methods (similar to existing MultiHeadAttention)
     fn linear_transform(&self, input: &Array2<F>, weights: &Array2<F>) -> Array2<F> {
         let (seq_len, input_dim) = input.dim();
         let output_dim = weights.nrows();
         let mut output = Array2::zeros((seq_len, output_dim));
-        
+
         for i in 0..seq_len {
             for j in 0..output_dim {
                 let mut sum = F::zero();
@@ -1867,13 +1910,13 @@ impl<F: Float + Debug + Clone + FromPrimitive> FlashAttention<F> {
         }
         output
     }
-    
+
     fn split_qkv(&self, qkv: &Array2<F>, seq_len: usize) -> (Array2<F>, Array2<F>, Array2<F>) {
         let dim = self.model_dim;
         let mut q = Array2::zeros((seq_len, dim));
         let mut k = Array2::zeros((seq_len, dim));
         let mut v = Array2::zeros((seq_len, dim));
-        
+
         for i in 0..seq_len {
             for j in 0..dim {
                 q[[i, j]] = qkv[[i, j]];
@@ -1881,13 +1924,13 @@ impl<F: Float + Debug + Clone + FromPrimitive> FlashAttention<F> {
                 v[[i, j]] = qkv[[i, j + 2 * dim]];
             }
         }
-        
+
         (q, k, v)
     }
-    
+
     fn reshape_for_heads(&self, tensor: &Array2<F>, seq_len: usize) -> Array3<F> {
         let mut reshaped = Array3::zeros((self.num_heads, seq_len, self.head_dim));
-        
+
         for head in 0..self.num_heads {
             for seq in 0..seq_len {
                 for dim in 0..self.head_dim {
@@ -1896,13 +1939,13 @@ impl<F: Float + Debug + Clone + FromPrimitive> FlashAttention<F> {
                 }
             }
         }
-        
+
         reshaped
     }
-    
+
     fn concatenate_heads(&self, tensor: &Array3<F>, seq_len: usize) -> Array2<F> {
         let mut concatenated = Array2::zeros((seq_len, self.model_dim));
-        
+
         for head in 0..self.num_heads {
             for seq in 0..seq_len {
                 for dim in 0..self.head_dim {
@@ -1911,7 +1954,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> FlashAttention<F> {
                 }
             }
         }
-        
+
         concatenated
     }
 }
@@ -1978,11 +2021,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> LayerNorm<F> {
             dim,
         }
     }
-    
+
     pub fn forward(&self, input: &Array2<F>) -> Array2<F> {
         let (seq_len, dim) = input.dim();
         let mut output = Array2::zeros((seq_len, dim));
-        
+
         for i in 0..seq_len {
             // Compute mean and variance
             let mut mean = F::zero();
@@ -1990,21 +2033,21 @@ impl<F: Float + Debug + Clone + FromPrimitive> LayerNorm<F> {
                 mean = mean + input[[i, j]];
             }
             mean = mean / F::from(dim).unwrap();
-            
+
             let mut variance = F::zero();
             for j in 0..dim {
                 let diff = input[[i, j]] - mean;
                 variance = variance + diff * diff;
             }
             variance = variance / F::from(dim).unwrap();
-            
+
             // Normalize
             let std_dev = (variance + self.eps).sqrt();
             for j in 0..dim {
                 output[[i, j]] = (input[[i, j]] - mean) / std_dev * self.weight[j] + self.bias[j];
             }
         }
-        
+
         output
     }
 }
@@ -2037,14 +2080,14 @@ impl<F: Float + Debug + Clone + FromPrimitive> MixtureOfExperts<F> {
     ) -> Self {
         let scale = F::from(2.0).unwrap() / F::from(input_dim).unwrap();
         let std_dev = scale.sqrt();
-        
+
         let mut experts = Vec::new();
         for _ in 0..num_experts {
             experts.push(LSTMCell::random_matrix(output_dim, input_dim, std_dev));
         }
-        
+
         let gate = LSTMCell::random_matrix(num_experts, input_dim, std_dev);
-        
+
         Self {
             num_experts,
             top_k,
@@ -2055,12 +2098,12 @@ impl<F: Float + Debug + Clone + FromPrimitive> MixtureOfExperts<F> {
             output_dim,
         }
     }
-    
+
     /// Forward pass with expert routing
     pub fn forward(&self, input: &Array2<F>) -> crate::error::Result<Array2<F>> {
         let (seq_len, _) = input.dim();
         let mut output = Array2::zeros((seq_len, self.output_dim));
-        
+
         for i in 0..seq_len {
             // Compute gating scores
             let mut gate_scores = Array1::zeros(self.num_experts);
@@ -2071,17 +2114,17 @@ impl<F: Float + Debug + Clone + FromPrimitive> MixtureOfExperts<F> {
                 }
                 gate_scores[j] = score;
             }
-            
+
             // Apply softmax to gating scores
             let gate_probs = self.softmax_1d(&gate_scores);
-            
+
             // Select top-k experts
             let top_k_indices = self.select_top_k(&gate_probs, self.top_k);
-            
+
             // Compute weighted expert outputs
             for &expert_idx in &top_k_indices {
                 let expert_weight = gate_probs[expert_idx];
-                
+
                 // Expert forward pass
                 let mut expert_output = Array1::zeros(self.output_dim);
                 for j in 0..self.output_dim {
@@ -2091,20 +2134,20 @@ impl<F: Float + Debug + Clone + FromPrimitive> MixtureOfExperts<F> {
                     }
                     expert_output[j] = sum;
                 }
-                
+
                 // Add weighted expert contribution
                 for j in 0..self.output_dim {
                     output[[i, j]] = output[[i, j]] + expert_weight * expert_output[j];
                 }
             }
         }
-        
+
         Ok(output)
     }
-    
+
     fn softmax_1d(&self, input: &Array1<F>) -> Array1<F> {
         let mut output = Array1::zeros(input.len());
-        
+
         // Find maximum for numerical stability
         let mut max_val = F::neg_infinity();
         for &val in input {
@@ -2112,7 +2155,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MixtureOfExperts<F> {
                 max_val = val;
             }
         }
-        
+
         // Compute exponentials and sum
         let mut sum = F::zero();
         for (i, &val) in input.iter().enumerate() {
@@ -2120,26 +2163,25 @@ impl<F: Float + Debug + Clone + FromPrimitive> MixtureOfExperts<F> {
             output[i] = exp_val;
             sum = sum + exp_val;
         }
-        
+
         // Normalize
         for val in output.iter_mut() {
             *val = *val / sum;
         }
-        
+
         output
     }
-    
+
     fn select_top_k(&self, probs: &Array1<F>, k: usize) -> Vec<usize> {
-        let mut indexed_probs: Vec<(usize, F)> = probs.iter()
-            .enumerate()
-            .map(|(i, &p)| (i, p))
-            .collect();
-        
+        let mut indexed_probs: Vec<(usize, F)> =
+            probs.iter().enumerate().map(|(i, &p)| (i, p)).collect();
+
         // Sort by probability (descending)
         indexed_probs.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
-        
+
         // Take top-k
-        indexed_probs.into_iter()
+        indexed_probs
+            .into_iter()
             .take(k.min(self.num_experts))
             .map(|(i, _)| i)
             .collect()
@@ -2175,11 +2217,11 @@ impl<F: Float + Debug + Clone + FromPrimitive> MultiQueryAttention<F> {
                 "Model dimension must be divisible by number of heads".to_string(),
             ));
         }
-        
+
         let head_dim = model_dim / num_heads;
         let scale = F::from(2.0).unwrap() / F::from(model_dim).unwrap();
         let std_dev = scale.sqrt();
-        
+
         Ok(Self {
             model_dim,
             num_heads,
@@ -2190,19 +2232,19 @@ impl<F: Float + Debug + Clone + FromPrimitive> MultiQueryAttention<F> {
             w_output: LSTMCell::random_matrix(model_dim, model_dim, std_dev),
         })
     }
-    
+
     /// Forward pass through Multi-Query Attention
     pub fn forward(&self, input: &Array2<F>) -> crate::error::Result<Array2<F>> {
         let (seq_len, _) = input.dim();
-        
+
         // Project to queries (multiple heads), key and value (single head each)
         let queries = self.linear_transform(input, &self.w_query);
         let keys = self.linear_transform(input, &self.w_key);
         let values = self.linear_transform(input, &self.w_value);
-        
+
         // Reshape queries for multiple heads
         let queries_heads = self.reshape_queries(&queries, seq_len);
-        
+
         // Compute attention for each query head with shared key/value
         let mut attention_outputs = Vec::new();
         for head in 0..self.num_heads {
@@ -2210,15 +2252,15 @@ impl<F: Float + Debug + Clone + FromPrimitive> MultiQueryAttention<F> {
             let attention_out = self.compute_attention(&head_queries, &keys, &values)?;
             attention_outputs.push(attention_out);
         }
-        
+
         // Concatenate heads
         let concatenated = self.concatenate_mqa_heads(&attention_outputs, seq_len);
-        
+
         // Output projection
         let output = self.linear_transform(&concatenated, &self.w_output);
         Ok(output)
     }
-    
+
     /// Compute attention for single head
     fn compute_attention(
         &self,
@@ -2228,7 +2270,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MultiQueryAttention<F> {
     ) -> crate::error::Result<Array2<F>> {
         let (seq_len, _) = queries.dim();
         let scale = F::one() / F::from(self.head_dim as f64).unwrap().sqrt();
-        
+
         // Compute attention scores
         let mut scores = Array2::zeros((seq_len, seq_len));
         for i in 0..seq_len {
@@ -2242,17 +2284,17 @@ impl<F: Float + Debug + Clone + FromPrimitive> MultiQueryAttention<F> {
                 scores[[i, j]] = dot_product * scale;
             }
         }
-        
+
         // Apply causal mask
         for i in 0..seq_len {
             for j in i + 1..seq_len {
                 scores[[i, j]] = F::neg_infinity();
             }
         }
-        
+
         // Softmax
         let attention_weights = self.softmax(&scores);
-        
+
         // Apply attention to values
         let mut output = Array2::zeros((seq_len, self.head_dim));
         for i in 0..seq_len {
@@ -2264,16 +2306,16 @@ impl<F: Float + Debug + Clone + FromPrimitive> MultiQueryAttention<F> {
                 output[[i, k]] = weighted_sum;
             }
         }
-        
+
         Ok(output)
     }
-    
+
     // Helper methods
     fn linear_transform(&self, input: &Array2<F>, weights: &Array2<F>) -> Array2<F> {
         let (seq_len, input_dim) = input.dim();
         let output_dim = weights.nrows();
         let mut output = Array2::zeros((seq_len, output_dim));
-        
+
         for i in 0..seq_len {
             for j in 0..output_dim {
                 let mut sum = F::zero();
@@ -2283,13 +2325,13 @@ impl<F: Float + Debug + Clone + FromPrimitive> MultiQueryAttention<F> {
                 output[[i, j]] = sum;
             }
         }
-        
+
         output
     }
-    
+
     fn reshape_queries(&self, queries: &Array2<F>, seq_len: usize) -> Array3<F> {
         let mut reshaped = Array3::zeros((self.num_heads, seq_len, self.head_dim));
-        
+
         for head in 0..self.num_heads {
             for seq in 0..seq_len {
                 for dim in 0..self.head_dim {
@@ -2300,25 +2342,25 @@ impl<F: Float + Debug + Clone + FromPrimitive> MultiQueryAttention<F> {
                 }
             }
         }
-        
+
         reshaped
     }
-    
+
     fn get_query_head(&self, queries: &Array3<F>, head: usize, seq_len: usize) -> Array2<F> {
         let mut head_queries = Array2::zeros((seq_len, self.head_dim));
-        
+
         for seq in 0..seq_len {
             for dim in 0..self.head_dim {
                 head_queries[[seq, dim]] = queries[[head, seq, dim]];
             }
         }
-        
+
         head_queries
     }
-    
+
     fn concatenate_mqa_heads(&self, heads: &[Array2<F>], seq_len: usize) -> Array2<F> {
         let mut concatenated = Array2::zeros((seq_len, self.model_dim));
-        
+
         for (h, head_output) in heads.iter().enumerate() {
             for i in 0..seq_len.min(head_output.nrows()) {
                 for j in 0..self.head_dim.min(head_output.ncols()) {
@@ -2329,14 +2371,14 @@ impl<F: Float + Debug + Clone + FromPrimitive> MultiQueryAttention<F> {
                 }
             }
         }
-        
+
         concatenated
     }
-    
+
     fn softmax(&self, input: &Array2<F>) -> Array2<F> {
         let (rows, cols) = input.dim();
         let mut output = Array2::zeros((rows, cols));
-        
+
         for i in 0..rows {
             // Find maximum for numerical stability
             let mut max_val = F::neg_infinity();
@@ -2345,7 +2387,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MultiQueryAttention<F> {
                     max_val = input[[i, j]];
                 }
             }
-            
+
             // Compute exponentials and sum
             let mut sum = F::zero();
             for j in 0..cols {
@@ -2353,13 +2395,13 @@ impl<F: Float + Debug + Clone + FromPrimitive> MultiQueryAttention<F> {
                 output[[i, j]] = exp_val;
                 sum = sum + exp_val;
             }
-            
+
             // Normalize
             for j in 0..cols {
                 output[[i, j]] = output[[i, j]] / sum;
             }
         }
-        
+
         output
     }
 }
@@ -2382,26 +2424,26 @@ impl<F: Float + Debug + Clone + FromPrimitive> RotaryPositionalEmbedding<F> {
     /// Create new Rotary Position Embedding
     pub fn new(dim: usize, max_seq_len: usize) -> Self {
         let base = F::from(10000.0).unwrap();
-        
+
         // Precompute sin and cos values
         let mut sin_cache = Array2::zeros((max_seq_len, dim));
         let mut cos_cache = Array2::zeros((max_seq_len, dim));
-        
+
         for pos in 0..max_seq_len {
             for i in 0..dim / 2 {
-                let angle = F::from(pos as f64).unwrap() / 
-                    base.powf(F::from(2.0 * i as f64 / dim as f64).unwrap());
-                
+                let angle = F::from(pos as f64).unwrap()
+                    / base.powf(F::from(2.0 * i as f64 / dim as f64).unwrap());
+
                 sin_cache[[pos, 2 * i]] = angle.sin();
                 cos_cache[[pos, 2 * i]] = angle.cos();
-                
+
                 if 2 * i + 1 < dim {
                     sin_cache[[pos, 2 * i + 1]] = angle.sin();
                     cos_cache[[pos, 2 * i + 1]] = angle.cos();
                 }
             }
         }
-        
+
         Self {
             dim,
             max_seq_len,
@@ -2410,15 +2452,15 @@ impl<F: Float + Debug + Clone + FromPrimitive> RotaryPositionalEmbedding<F> {
             cos_cache,
         }
     }
-    
+
     /// Apply rotary embedding to input tensor
     pub fn apply(&self, input: &Array2<F>) -> Array2<F> {
         let (seq_len, feature_dim) = input.dim();
         let mut output = input.clone();
-        
+
         let actual_seq_len = seq_len.min(self.max_seq_len);
         let actual_dim = feature_dim.min(self.dim);
-        
+
         for pos in 0..actual_seq_len {
             for i in 0..actual_dim / 2 {
                 let x1 = input[[pos, 2 * i]];
@@ -2427,10 +2469,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> RotaryPositionalEmbedding<F> {
                 } else {
                     F::zero()
                 };
-                
+
                 let cos_val = self.cos_cache[[pos, 2 * i]];
                 let sin_val = self.sin_cache[[pos, 2 * i]];
-                
+
                 // Apply rotation matrix
                 output[[pos, 2 * i]] = x1 * cos_val - x2 * sin_val;
                 if 2 * i + 1 < actual_dim {
@@ -2438,10 +2480,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> RotaryPositionalEmbedding<F> {
                 }
             }
         }
-        
+
         output
     }
-    
+
     /// Apply rotary embedding to query and key tensors
     pub fn apply_to_qk(&self, queries: &Array2<F>, keys: &Array2<F>) -> (Array2<F>, Array2<F>) {
         (self.apply(queries), self.apply(keys))
@@ -2463,57 +2505,71 @@ impl<F: Float + Debug + Clone + FromPrimitive> ALiBiAttention<F> {
     /// Create new ALiBi attention layer
     pub fn new(model_dim: usize, num_heads: usize) -> crate::error::Result<Self> {
         let attention = MultiHeadAttention::new(model_dim, num_heads)?;
-        
+
         // Compute ALiBi slopes
         let mut slopes = Array1::zeros(num_heads);
-        let ratio = F::from(2.0).unwrap().powf(F::from(-8.0 / num_heads as f64).unwrap());
-        
+        let ratio = F::from(2.0)
+            .unwrap()
+            .powf(F::from(-8.0 / num_heads as f64).unwrap());
+
         for i in 0..num_heads {
             slopes[i] = F::one() / ratio.powf(F::from(i as f64).unwrap());
         }
-        
+
         Ok(Self {
             attention,
             slopes,
             num_heads,
         })
     }
-    
+
     /// Forward pass with ALiBi position bias
     pub fn forward(&self, input: &Array2<F>) -> crate::error::Result<Array2<F>> {
         let (seq_len, model_dim) = input.dim();
-        
+
         // Get base attention computation (we'll modify the scores)
-        let qkv = self.attention.linear_transform(input, &self.attention.w_query);
-        let queries = self.attention.linear_transform(input, &self.attention.w_query);
-        let keys = self.attention.linear_transform(input, &self.attention.w_key);
-        let values = self.attention.linear_transform(input, &self.attention.w_value);
-        
+        let qkv = self
+            .attention
+            .linear_transform(input, &self.attention.w_query);
+        let queries = self
+            .attention
+            .linear_transform(input, &self.attention.w_query);
+        let keys = self
+            .attention
+            .linear_transform(input, &self.attention.w_key);
+        let values = self
+            .attention
+            .linear_transform(input, &self.attention.w_value);
+
         // Reshape for multi-head attention
         let queries_heads = self.attention.reshape_for_attention(&queries, seq_len);
         let keys_heads = self.attention.reshape_for_attention(&keys, seq_len);
         let values_heads = self.attention.reshape_for_attention(&values, seq_len);
-        
+
         // Compute attention with ALiBi bias for each head
         let mut attention_outputs = Vec::new();
         for head in 0..self.num_heads {
             let q_head = self.attention.get_head(&queries_heads, head, seq_len);
             let k_head = self.attention.get_head(&keys_heads, head, seq_len);
             let v_head = self.attention.get_head(&values_heads, head, seq_len);
-            
+
             let attention_output = self.alibi_attention(&q_head, &k_head, &v_head, head)?;
             attention_outputs.push(attention_output);
         }
-        
+
         // Concatenate heads
-        let concatenated = self.attention.concatenate_heads(&attention_outputs, seq_len);
-        
+        let concatenated = self
+            .attention
+            .concatenate_heads(&attention_outputs, seq_len);
+
         // Final output projection
-        let output = self.attention.linear_transform(&concatenated, &self.attention.w_output);
-        
+        let output = self
+            .attention
+            .linear_transform(&concatenated, &self.attention.w_output);
+
         Ok(output)
     }
-    
+
     /// Attention computation with ALiBi position bias
     fn alibi_attention(
         &self,
@@ -2524,7 +2580,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ALiBiAttention<F> {
     ) -> crate::error::Result<Array2<F>> {
         let (seq_len, head_dim) = queries.dim();
         let scale = F::one() / F::from(head_dim as f64).unwrap().sqrt();
-        
+
         // Compute attention scores
         let mut scores = Array2::zeros((seq_len, seq_len));
         for i in 0..seq_len {
@@ -2536,25 +2592,26 @@ impl<F: Float + Debug + Clone + FromPrimitive> ALiBiAttention<F> {
                 scores[[i, j]] = dot_product * scale;
             }
         }
-        
+
         // Apply ALiBi position bias
         for i in 0..seq_len {
             for j in 0..seq_len {
-                let position_bias = self.slopes[head] * F::from((j as i32 - i as i32).abs() as f64).unwrap();
+                let position_bias =
+                    self.slopes[head] * F::from((j as i32 - i as i32).abs() as f64).unwrap();
                 scores[[i, j]] = scores[[i, j]] - position_bias;
             }
         }
-        
+
         // Apply causal mask
         for i in 0..seq_len {
             for j in i + 1..seq_len {
                 scores[[i, j]] = F::neg_infinity();
             }
         }
-        
+
         // Apply softmax
         let attention_weights = self.softmax(&scores);
-        
+
         // Apply attention to values
         let mut output = Array2::zeros((seq_len, head_dim));
         for i in 0..seq_len {
@@ -2566,15 +2623,15 @@ impl<F: Float + Debug + Clone + FromPrimitive> ALiBiAttention<F> {
                 output[[i, k]] = weighted_sum;
             }
         }
-        
+
         Ok(output)
     }
-    
+
     /// Softmax with numerical stability
     fn softmax(&self, input: &Array2<F>) -> Array2<F> {
         let (rows, cols) = input.dim();
         let mut output = Array2::zeros((rows, cols));
-        
+
         for i in 0..rows {
             // Find maximum for numerical stability
             let mut max_val = F::neg_infinity();
@@ -2583,7 +2640,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ALiBiAttention<F> {
                     max_val = input[[i, j]];
                 }
             }
-            
+
             // Compute exponentials and sum
             let mut sum = F::zero();
             for j in 0..cols {
@@ -2591,13 +2648,13 @@ impl<F: Float + Debug + Clone + FromPrimitive> ALiBiAttention<F> {
                 output[[i, j]] = exp_val;
                 sum = sum + exp_val;
             }
-            
+
             // Normalize
             for j in 0..cols {
                 output[[i, j]] = output[[i, j]] / sum;
             }
         }
-        
+
         output
     }
 }
@@ -2641,18 +2698,20 @@ impl<F: Float + Debug + Clone + FromPrimitive> EnhancedTransformerBlock<F> {
     ) -> crate::error::Result<Self> {
         let attention_type = match attention_variant {
             "multihead" => AttentionType::MultiHead(MultiHeadAttention::new(model_dim, num_heads)?),
-            "multiquery" => AttentionType::MultiQuery(MultiQueryAttention::new(model_dim, num_heads)?),
+            "multiquery" => {
+                AttentionType::MultiQuery(MultiQueryAttention::new(model_dim, num_heads)?)
+            }
             "flash" => AttentionType::Flash(FlashAttention::new(model_dim, num_heads, 64)?),
             "alibi" => AttentionType::ALiBi(ALiBiAttention::new(model_dim, num_heads)?),
             _ => AttentionType::MultiHead(MultiHeadAttention::new(model_dim, num_heads)?),
         };
-        
+
         let rope = if use_rope {
             Some(RotaryPositionalEmbedding::new(model_dim, 512))
         } else {
             None
         };
-        
+
         Ok(Self {
             attention_type,
             rope,
@@ -2662,7 +2721,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> EnhancedTransformerBlock<F> {
             model_dim,
         })
     }
-    
+
     /// Forward pass through enhanced transformer block
     pub fn forward(&self, input: &Array2<F>) -> crate::error::Result<Array2<F>> {
         // Apply rotary position embedding if enabled
@@ -2671,7 +2730,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> EnhancedTransformerBlock<F> {
         } else {
             input.clone()
         };
-        
+
         // Self-attention with residual connection and layer norm
         let attention_out = match &self.attention_type {
             AttentionType::MultiHead(attn) => attn.forward(&input_with_rope)?,
@@ -2679,29 +2738,29 @@ impl<F: Float + Debug + Clone + FromPrimitive> EnhancedTransformerBlock<F> {
             AttentionType::Flash(attn) => attn.forward(&input_with_rope)?,
             AttentionType::ALiBi(attn) => attn.forward(&input_with_rope)?,
         };
-        
+
         let residual1 = self.add_arrays(input, &attention_out);
         let norm1_out = self.norm1.forward(&residual1);
-        
+
         // Feed-forward with residual connection and layer norm
         let ffn_out = self.ffn.forward(&norm1_out);
         let residual2 = self.add_arrays(&norm1_out, &ffn_out);
         let norm2_out = self.norm2.forward(&residual2);
-        
+
         Ok(norm2_out)
     }
-    
+
     /// Add two arrays element-wise
     fn add_arrays(&self, a: &Array2<F>, b: &Array2<F>) -> Array2<F> {
         let (rows, cols) = a.dim();
         let mut result = Array2::zeros((rows, cols));
-        
+
         for i in 0..rows {
             for j in 0..cols {
                 result[[i, j]] = a[[i, j]] + b[[i, j.min(b.ncols() - 1)]];
             }
         }
-        
+
         result
     }
 }
@@ -2714,16 +2773,16 @@ mod tests {
     #[test]
     fn test_activation_functions() {
         let x = 0.5;
-        
+
         let sigmoid = ActivationFunction::Sigmoid.apply(x);
         assert!(sigmoid > 0.0 && sigmoid < 1.0);
-        
+
         let tanh = ActivationFunction::Tanh.apply(x);
         assert!(tanh > 0.0 && tanh < 1.0);
-        
+
         let relu = ActivationFunction::ReLU.apply(-0.5);
         assert_abs_diff_eq!(relu, 0.0);
-        
+
         let relu_positive = ActivationFunction::ReLU.apply(0.5);
         assert_abs_diff_eq!(relu_positive, 0.5);
     }
@@ -2733,12 +2792,12 @@ mod tests {
         let lstm = LSTMCell::<f64>::new(10, 20);
         let input = Array1::from_vec((0..10).map(|i| i as f64 * 0.1).collect());
         let initial_state = lstm.init_state();
-        
+
         let new_state = lstm.forward(&input, &initial_state).unwrap();
-        
+
         assert_eq!(new_state.hidden.len(), 20);
         assert_eq!(new_state.cell.len(), 20);
-        
+
         // Check that states are updated (not zero)
         let hidden_sum: f64 = new_state.hidden.sum();
         let cell_sum: f64 = new_state.cell.sum();
@@ -2749,12 +2808,12 @@ mod tests {
     #[test]
     fn test_lstm_network() {
         let network = LSTMNetwork::<f64>::new(5, vec![10, 8], 1, 0.1);
-        let input_sequence = Array2::from_shape_vec((4, 5), 
-            (0..20).map(|i| i as f64 * 0.1).collect()).unwrap();
-        
+        let input_sequence =
+            Array2::from_shape_vec((4, 5), (0..20).map(|i| i as f64 * 0.1).collect()).unwrap();
+
         let output = network.forward(&input_sequence).unwrap();
         assert_eq!(output.dim(), (4, 1));
-        
+
         // Test forecasting
         let forecasts = network.forecast(&input_sequence, 3).unwrap();
         assert_eq!(forecasts.len(), 3);
@@ -2763,9 +2822,9 @@ mod tests {
     #[test]
     fn test_multi_head_attention() {
         let attention = MultiHeadAttention::<f64>::new(64, 8).unwrap();
-        let input = Array2::from_shape_vec((10, 64), 
-            (0..640).map(|i| i as f64 * 0.01).collect()).unwrap();
-        
+        let input =
+            Array2::from_shape_vec((10, 64), (0..640).map(|i| i as f64 * 0.01).collect()).unwrap();
+
         let output = attention.forward(&input).unwrap();
         assert_eq!(output.dim(), (10, 64));
     }
@@ -2773,9 +2832,9 @@ mod tests {
     #[test]
     fn test_transformer_block() {
         let block = TransformerBlock::<f64>::new(64, 8, 256).unwrap();
-        let input = Array2::from_shape_vec((10, 64), 
-            (0..640).map(|i| i as f64 * 0.01).collect()).unwrap();
-        
+        let input =
+            Array2::from_shape_vec((10, 64), (0..640).map(|i| i as f64 * 0.01).collect()).unwrap();
+
         let output = block.forward(&input).unwrap();
         assert_eq!(output.dim(), (10, 64));
     }
@@ -2783,21 +2842,22 @@ mod tests {
     #[test]
     fn test_transformer_forecaster() {
         let model = TransformerForecaster::<f64>::new(
-            1,  // input_dim
-            64, // model_dim
-            2,  // num_layers
-            4,  // num_heads
+            1,   // input_dim
+            64,  // model_dim
+            2,   // num_layers
+            4,   // num_heads
             128, // ffn_hidden_dim
             50,  // max_seq_len
             1,   // output_dim
-        ).unwrap();
-        
-        let input_sequence = Array2::from_shape_vec((10, 1), 
-            (0..10).map(|i| i as f64 * 0.1).collect()).unwrap();
-        
+        )
+        .unwrap();
+
+        let input_sequence =
+            Array2::from_shape_vec((10, 1), (0..10).map(|i| i as f64 * 0.1).collect()).unwrap();
+
         let output = model.forward(&input_sequence).unwrap();
         assert_eq!(output.dim(), (10, 1));
-        
+
         // Test forecasting
         let forecasts = model.forecast(&input_sequence, 5).unwrap();
         assert_eq!(forecasts.len(), 5);
@@ -2806,9 +2866,9 @@ mod tests {
     #[test]
     fn test_feed_forward_network() {
         let ffn = FeedForwardNetwork::<f64>::new(64, 256, ActivationFunction::ReLU);
-        let input = Array2::from_shape_vec((10, 64), 
-            (0..640).map(|i| i as f64 * 0.01).collect()).unwrap();
-        
+        let input =
+            Array2::from_shape_vec((10, 64), (0..640).map(|i| i as f64 * 0.01).collect()).unwrap();
+
         let output = ffn.forward(&input);
         assert_eq!(output.dim(), (10, 64));
     }
@@ -2823,10 +2883,10 @@ mod tests {
             15, // theta_size (backcast + forecast)
             NBeatsBlockType::Generic,
         );
-        
+
         let input = Array1::from_vec((0..10).map(|i| i as f64 * 0.1).collect());
         let (backcast, forecast) = block.forward(&input).unwrap();
-        
+
         assert_eq!(backcast.len(), 10);
         assert_eq!(forecast.len(), 5);
     }
@@ -2841,10 +2901,10 @@ mod tests {
             4,  // theta_size (polynomial degree + 1)
             NBeatsBlockType::Trend,
         );
-        
+
         let input = Array1::from_vec((0..10).map(|i| i as f64 * 0.1).collect());
         let (backcast, forecast) = block.forward(&input).unwrap();
-        
+
         assert_eq!(backcast.len(), 10);
         assert_eq!(forecast.len(), 5);
     }
@@ -2859,10 +2919,10 @@ mod tests {
             6,  // theta_size (3 harmonics * 2 coefficients)
             NBeatsBlockType::Seasonal,
         );
-        
+
         let input = Array1::from_vec((0..10).map(|i| i as f64 * 0.1).collect());
         let (backcast, forecast) = block.forward(&input).unwrap();
-        
+
         assert_eq!(backcast.len(), 10);
         assert_eq!(forecast.len(), 5);
     }
@@ -2877,10 +2937,10 @@ mod tests {
             3,  // num_blocks
             NBeatsStackType::Generic,
         );
-        
+
         let input = Array1::from_vec((0..10).map(|i| i as f64 * 0.1).collect());
         let (residual, forecast) = stack.forward(&input).unwrap();
-        
+
         assert_eq!(residual.len(), 10);
         assert_eq!(forecast.len(), 5);
     }
@@ -2896,24 +2956,24 @@ mod tests {
             1,  // num_interpretable_stacks
             2,  // blocks_per_stack
         );
-        
+
         let input = Array1::from_vec((0..10).map(|i| i as f64 * 0.1).collect());
         let forecast = model.forward(&input).unwrap();
-        
+
         assert_eq!(forecast.len(), 5);
-        
+
         // Test with longer sequence
         let long_sequence = Array1::from_vec((0..20).map(|i| i as f64 * 0.1).collect());
         let forecast_from_sequence = model.forecast(&long_sequence).unwrap();
         assert_eq!(forecast_from_sequence.len(), 5);
-        
+
         // Test multi-step forecasting
         let multistep_forecast = model.forecast_multistep(&long_sequence, 12).unwrap();
         assert_eq!(multistep_forecast.len(), 12);
     }
-    
+
     // **ULTRATHINK MODE Tests**
-    
+
     #[test]
     fn test_mamba_block() {
         let mamba = MambaBlock::<f64>::new(
@@ -2922,37 +2982,38 @@ mod tests {
             4,  // conv_size
             2,  // expand
         );
-        
-        let input = Array2::from_shape_vec((10, 16), 
-            (0..160).map(|i| i as f64 * 0.01).collect()).unwrap();
-        
+
+        let input =
+            Array2::from_shape_vec((10, 16), (0..160).map(|i| i as f64 * 0.01).collect()).unwrap();
+
         let output = mamba.forward(&input).unwrap();
         assert_eq!(output.dim(), (10, 16));
-        
+
         // Check that output is not zero (model produces meaningful output)
         let output_sum: f64 = output.sum();
         assert!(output_sum.abs() > 1e-10);
     }
-    
-    #[test] 
+
+    #[test]
     fn test_flash_attention() {
         let flash_attn = FlashAttention::<f64>::new(
             64, // model_dim
             8,  // num_heads
             16, // block_size
-        ).unwrap();
-        
-        let input = Array2::from_shape_vec((20, 64), 
-            (0..1280).map(|i| i as f64 * 0.001).collect()).unwrap();
-        
+        )
+        .unwrap();
+
+        let input = Array2::from_shape_vec((20, 64), (0..1280).map(|i| i as f64 * 0.001).collect())
+            .unwrap();
+
         let output = flash_attn.forward(&input).unwrap();
         assert_eq!(output.dim(), (20, 64));
-        
+
         // Verify attention preserves sequence length and feature dimension
         let output_sum: f64 = output.sum();
         assert!(output_sum.abs() > 1e-10);
     }
-    
+
     #[test]
     fn test_mixture_of_experts() {
         let moe = MixtureOfExperts::<f64>::new(
@@ -2962,57 +3023,58 @@ mod tests {
             8,  // num_experts
             2,  // top_k
         );
-        
-        let input = Array2::from_shape_vec((10, 32), 
-            (0..320).map(|i| i as f64 * 0.01).collect()).unwrap();
-        
+
+        let input =
+            Array2::from_shape_vec((10, 32), (0..320).map(|i| i as f64 * 0.01).collect()).unwrap();
+
         let output = moe.forward(&input).unwrap();
         assert_eq!(output.dim(), (10, 16));
-        
+
         // Verify MoE routing produces meaningful output
         let output_sum: f64 = output.sum();
         assert!(output_sum.abs() > 1e-10);
     }
-    
+
     #[test]
     fn test_layer_norm() {
         let layer_norm = LayerNorm::<f64>::new(64);
-        
-        let input = Array2::from_shape_vec((10, 64), 
-            (0..640).map(|i| (i as f64 * 0.1) + 5.0).collect()).unwrap(); // Non-zero mean
-        
+
+        let input =
+            Array2::from_shape_vec((10, 64), (0..640).map(|i| (i as f64 * 0.1) + 5.0).collect())
+                .unwrap(); // Non-zero mean
+
         let output = layer_norm.forward(&input);
         assert_eq!(output.dim(), (10, 64));
-        
+
         // Check normalization properties
         for i in 0..10 {
             let mut row_mean = 0.0;
             let mut row_var = 0.0;
-            
+
             // Compute mean
             for j in 0..64 {
                 row_mean += output[[i, j]];
             }
             row_mean /= 64.0;
-            
+
             // Compute variance
             for j in 0..64 {
                 let diff = output[[i, j]] - row_mean;
                 row_var += diff * diff;
             }
             row_var /= 64.0;
-            
+
             // Check that mean is close to 0 and variance is close to 1
             assert_abs_diff_eq!(row_mean, 0.0, epsilon = 1e-6);
             assert_abs_diff_eq!(row_var, 1.0, epsilon = 1e-3);
         }
     }
-    
+
     #[test]
     fn test_mamba_selective_scan() {
         // Test the selective scan mechanism specifically
         let mamba = MambaBlock::<f64>::new(8, 16, 3, 2);
-        
+
         // Create a simple sequential input pattern
         let mut input = Array2::zeros((5, 8));
         for i in 0..5 {
@@ -3020,139 +3082,143 @@ mod tests {
                 input[[i, j]] = (i * 8 + j) as f64 * 0.1;
             }
         }
-        
+
         let output = mamba.forward(&input).unwrap();
         assert_eq!(output.dim(), (5, 8));
-        
+
         // Verify the model can process sequences
         let first_timestep: f64 = output.row(0).sum();
         let last_timestep: f64 = output.row(4).sum();
-        
+
         // The outputs should be different for different timesteps
         assert!((first_timestep - last_timestep).abs() > 1e-6);
     }
-    
+
     #[test]
     fn test_flash_attention_memory_efficiency() {
         // Test Flash Attention with different block sizes
         let small_block = FlashAttention::<f64>::new(32, 4, 4).unwrap();
         let large_block = FlashAttention::<f64>::new(32, 4, 16).unwrap();
-        
-        let input = Array2::from_shape_vec((12, 32), 
-            (0..384).map(|i| i as f64 * 0.01).collect()).unwrap();
-        
+
+        let input =
+            Array2::from_shape_vec((12, 32), (0..384).map(|i| i as f64 * 0.01).collect()).unwrap();
+
         let output_small = small_block.forward(&input).unwrap();
         let output_large = large_block.forward(&input).unwrap();
-        
+
         // Both should produce the same dimensions
         assert_eq!(output_small.dim(), output_large.dim());
         assert_eq!(output_small.dim(), (12, 32));
-        
+
         // Both should produce meaningful (non-zero) outputs
         assert!(output_small.sum().abs() > 1e-10);
         assert!(output_large.sum().abs() > 1e-10);
     }
-    
+
     #[test]
     fn test_mixture_of_experts_routing() {
         // Test that MoE activates only top-k experts
         let moe = MixtureOfExperts::<f64>::new(16, 32, 8, 4, 2);
-        
+
         // Create varied input patterns to trigger different expert routing
         let mut input = Array2::zeros((3, 16));
-        
+
         // Pattern 1: Small values
         for j in 0..16 {
             input[[0, j]] = j as f64 * 0.01;
         }
-        
+
         // Pattern 2: Large values
         for j in 0..16 {
             input[[1, j]] = j as f64 * 0.1;
         }
-        
+
         // Pattern 3: Mixed values
         for j in 0..16 {
-            input[[2, j]] = if j % 2 == 0 { j as f64 * 0.05 } else { -(j as f64) * 0.03 };
+            input[[2, j]] = if j % 2 == 0 {
+                j as f64 * 0.05
+            } else {
+                -(j as f64) * 0.03
+            };
         }
-        
+
         let output = moe.forward(&input).unwrap();
         assert_eq!(output.dim(), (3, 8));
-        
+
         // Verify different patterns produce different outputs
         let row0_sum: f64 = output.row(0).sum();
         let row1_sum: f64 = output.row(1).sum();
         let row2_sum: f64 = output.row(2).sum();
-        
+
         assert!((row0_sum - row1_sum).abs() > 1e-6);
         assert!((row1_sum - row2_sum).abs() > 1e-6);
     }
-    
+
     // **MODERN ATTENTION MECHANISM Tests**
-    
+
     #[test]
     fn test_multi_query_attention() {
         let mqa = MultiQueryAttention::<f64>::new(64, 8).unwrap();
-        
-        let input = Array2::from_shape_vec((10, 64), 
-            (0..640).map(|i| i as f64 * 0.001).collect()).unwrap();
-        
+
+        let input =
+            Array2::from_shape_vec((10, 64), (0..640).map(|i| i as f64 * 0.001).collect()).unwrap();
+
         let output = mqa.forward(&input).unwrap();
         assert_eq!(output.dim(), (10, 64));
-        
+
         // Verify MQA produces meaningful output
         let output_sum: f64 = output.sum();
         assert!(output_sum.abs() > 1e-10);
     }
-    
+
     #[test]
     fn test_rotary_position_embedding() {
         let rope = RotaryPositionalEmbedding::<f64>::new(32, 100);
-        
-        let input = Array2::from_shape_vec((8, 32), 
-            (0..256).map(|i| i as f64 * 0.01).collect()).unwrap();
-        
+
+        let input =
+            Array2::from_shape_vec((8, 32), (0..256).map(|i| i as f64 * 0.01).collect()).unwrap();
+
         let output = rope.apply(&input);
         assert_eq!(output.dim(), (8, 32));
-        
+
         // RoPE should modify the input (rotation applied)
         let input_sum: f64 = input.sum();
         let output_sum: f64 = output.sum();
-        
+
         // Due to rotation, the sums should be different
         assert!((input_sum - output_sum).abs() > 1e-6);
-        
+
         // Test query-key application
-        let queries = Array2::from_shape_vec((5, 32), 
-            (0..160).map(|i| i as f64 * 0.02).collect()).unwrap();
-        let keys = Array2::from_shape_vec((5, 32), 
-            (0..160).map(|i| i as f64 * 0.015).collect()).unwrap();
-        
+        let queries =
+            Array2::from_shape_vec((5, 32), (0..160).map(|i| i as f64 * 0.02).collect()).unwrap();
+        let keys =
+            Array2::from_shape_vec((5, 32), (0..160).map(|i| i as f64 * 0.015).collect()).unwrap();
+
         let (q_rope, k_rope) = rope.apply_to_qk(&queries, &keys);
         assert_eq!(q_rope.dim(), (5, 32));
         assert_eq!(k_rope.dim(), (5, 32));
     }
-    
+
     #[test]
     fn test_alibi_attention() {
         let alibi = ALiBiAttention::<f64>::new(64, 8).unwrap();
-        
-        let input = Array2::from_shape_vec((12, 64), 
-            (0..768).map(|i| i as f64 * 0.001).collect()).unwrap();
-        
+
+        let input =
+            Array2::from_shape_vec((12, 64), (0..768).map(|i| i as f64 * 0.001).collect()).unwrap();
+
         let output = alibi.forward(&input).unwrap();
         assert_eq!(output.dim(), (12, 64));
-        
+
         // ALiBi should apply position bias
         let output_sum: f64 = output.sum();
         assert!(output_sum.abs() > 1e-10);
     }
-    
+
     #[test]
     fn test_enhanced_transformer_block() {
         // Test different attention variants
         let variants = vec!["multihead", "multiquery", "flash", "alibi"];
-        
+
         for variant in variants {
             let block = EnhancedTransformerBlock::<f64>::new(
                 64,      // model_dim
@@ -3160,20 +3226,22 @@ mod tests {
                 256,     // ffn_hidden_dim
                 variant, // attention_variant
                 true,    // use_rope
-            ).unwrap();
-            
-            let input = Array2::from_shape_vec((10, 64), 
-                (0..640).map(|i| i as f64 * 0.001).collect()).unwrap();
-            
+            )
+            .unwrap();
+
+            let input =
+                Array2::from_shape_vec((10, 64), (0..640).map(|i| i as f64 * 0.001).collect())
+                    .unwrap();
+
             let output = block.forward(&input).unwrap();
             assert_eq!(output.dim(), (10, 64));
-            
+
             // Each variant should produce meaningful output
             let output_sum: f64 = output.sum();
             assert!(output_sum.abs() > 1e-10, "Failed for variant: {}", variant);
         }
     }
-    
+
     #[test]
     fn test_enhanced_transformer_without_rope() {
         let block = EnhancedTransformerBlock::<f64>::new(
@@ -3182,65 +3250,67 @@ mod tests {
             128,         // ffn_hidden_dim
             "multihead", // attention_variant
             false,       // use_rope
-        ).unwrap();
-        
-        let input = Array2::from_shape_vec((6, 32), 
-            (0..192).map(|i| i as f64 * 0.01).collect()).unwrap();
-        
+        )
+        .unwrap();
+
+        let input =
+            Array2::from_shape_vec((6, 32), (0..192).map(|i| i as f64 * 0.01).collect()).unwrap();
+
         let output = block.forward(&input).unwrap();
         assert_eq!(output.dim(), (6, 32));
-        
+
         // Should work without RoPE
         let output_sum: f64 = output.sum();
         assert!(output_sum.abs() > 1e-10);
     }
-    
+
     #[test]
     fn test_mqa_efficiency() {
         // Multi-Query Attention should be more efficient than Multi-Head Attention
         let mqa = MultiQueryAttention::<f64>::new(64, 8).unwrap();
         let mha = MultiHeadAttention::<f64>::new(64, 8).unwrap();
-        
-        let input = Array2::from_shape_vec((16, 64), 
-            (0..1024).map(|i| i as f64 * 0.0005).collect()).unwrap();
-        
+
+        let input =
+            Array2::from_shape_vec((16, 64), (0..1024).map(|i| i as f64 * 0.0005).collect())
+                .unwrap();
+
         let mqa_output = mqa.forward(&input).unwrap();
         let mha_output = mha.forward(&input).unwrap();
-        
+
         // Both should produce the same output dimensions
         assert_eq!(mqa_output.dim(), mha_output.dim());
         assert_eq!(mqa_output.dim(), (16, 64));
-        
+
         // Both should produce meaningful outputs
         assert!(mqa_output.sum().abs() > 1e-10);
         assert!(mha_output.sum().abs() > 1e-10);
     }
-    
+
     #[test]
     fn test_alibi_position_bias() {
         let alibi = ALiBiAttention::<f64>::new(32, 4).unwrap();
-        
+
         // Test with different sequence lengths to verify position bias
-        let short_input = Array2::from_shape_vec((4, 32), 
-            (0..128).map(|i| i as f64 * 0.01).collect()).unwrap();
-        let long_input = Array2::from_shape_vec((8, 32), 
-            (0..256).map(|i| i as f64 * 0.01).collect()).unwrap();
-        
+        let short_input =
+            Array2::from_shape_vec((4, 32), (0..128).map(|i| i as f64 * 0.01).collect()).unwrap();
+        let long_input =
+            Array2::from_shape_vec((8, 32), (0..256).map(|i| i as f64 * 0.01).collect()).unwrap();
+
         let short_output = alibi.forward(&short_input).unwrap();
         let long_output = alibi.forward(&long_input).unwrap();
-        
+
         assert_eq!(short_output.dim(), (4, 32));
         assert_eq!(long_output.dim(), (8, 32));
-        
+
         // ALiBi should handle different sequence lengths
         assert!(short_output.sum().abs() > 1e-10);
         assert!(long_output.sum().abs() > 1e-10);
     }
-    
+
     #[test]
     fn test_rope_frequency_properties() {
         let rope = RotaryPositionalEmbedding::<f64>::new(16, 20);
-        
+
         // Create input with pattern that should be preserved under rotation
         let mut input = Array2::zeros((4, 16));
         for i in 0..4 {
@@ -3248,15 +3318,15 @@ mod tests {
                 input[[i, j]] = (i as f64 + j as f64) * 0.1;
             }
         }
-        
+
         let output = rope.apply(&input);
         assert_eq!(output.dim(), (4, 16));
-        
+
         // RoPE should preserve the norm for each position (approximately)
         for i in 0..4 {
             let input_norm: f64 = input.row(i).mapv(|x| x * x).sum().sqrt();
             let output_norm: f64 = output.row(i).mapv(|x| x * x).sum().sqrt();
-            
+
             // Norms should be approximately equal (rotation preserves magnitude)
             assert_abs_diff_eq!(input_norm, output_norm, epsilon = 1e-10);
         }

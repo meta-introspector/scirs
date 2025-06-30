@@ -8,32 +8,32 @@
 //! - Multi-GPU training support and distributed optimization
 //! - Advanced scheduling, regularization, and early stopping
 
-use scirs2_optim::{
-    optimizers::{
-        adam::{Adam, AdamConfig},
-        sgd::{SGD, SGDConfig},
-        lamb::{LAMB, LAMBConfig},
-        lookahead::{Lookahead, LookaheadConfig},
-        rmsprop::{RMSprop, RMSpropConfig},
-    },
-    schedulers::{
-        cosine_annealing::{CosineAnnealingScheduler, CosineAnnealingConfig},
-        one_cycle::{OneCycleScheduler, OneCycleConfig},
-        exponential_decay::{ExponentialDecayScheduler, ExponentialDecayConfig},
-    },
-    regularizers::{
-        l1::L1Regularizer,
-        l2::L2Regularizer,
-        elastic_net::{ElasticNetRegularizer, ElasticNetConfig},
-        dropout::{DropoutRegularizer, DropoutConfig},
-    },
-    unified_api::{Parameter, OptimizerFactory},
-    benchmarking::OptimizerBenchmark,
-    error::Result,
-};
-use ndarray::{Array1, Array2, Array3, Axis, s};
+use ndarray::{s, Array1, Array2, Array3, Axis};
 use rand::{Rng, SeedableRng};
 use rand_xoshiro::Xoshiro256Plus;
+use scirs2_optim::{
+    benchmarking::OptimizerBenchmark,
+    error::Result,
+    optimizers::{
+        adam::{Adam, AdamConfig},
+        lamb::{LAMBConfig, LAMB},
+        lookahead::{Lookahead, LookaheadConfig},
+        rmsprop::{RMSprop, RMSpropConfig},
+        sgd::{SGDConfig, SGD},
+    },
+    regularizers::{
+        dropout::{DropoutConfig, DropoutRegularizer},
+        elastic_net::{ElasticNetConfig, ElasticNetRegularizer},
+        l1::L1Regularizer,
+        l2::L2Regularizer,
+    },
+    schedulers::{
+        cosine_annealing::{CosineAnnealingConfig, CosineAnnealingScheduler},
+        exponential_decay::{ExponentialDecayConfig, ExponentialDecayScheduler},
+        one_cycle::{OneCycleConfig, OneCycleScheduler},
+    },
+    unified_api::{OptimizerFactory, Parameter},
+};
 use std::collections::HashMap;
 use std::time::Instant;
 
@@ -78,11 +78,11 @@ impl<B: Backend, const D: usize> Tensor<B, D> for BurnTensor<B, D> {
     fn shape(&self) -> &[usize] {
         &[self.data.nrows(), self.data.ncols()]
     }
-    
+
     fn device(&self) -> &B::Device {
         unimplemented!("Device access not implemented in this example")
     }
-    
+
     fn to_data(&self) -> TensorData {
         TensorData {
             shape: vec![self.data.nrows(), self.data.ncols()],
@@ -214,7 +214,11 @@ pub struct ConvergenceMetric {
 
 /// Trait for optimized trainers compatible with Burn
 trait OptimizedTrainer<B: Backend>: std::fmt::Debug {
-    fn step(&mut self, gradients: &[&Array1<f32>], parameters: &mut [&mut Parameter<f32>]) -> Result<()>;
+    fn step(
+        &mut self,
+        gradients: &[&Array1<f32>],
+        parameters: &mut [&mut Parameter<f32>],
+    ) -> Result<()>;
     fn learning_rate(&self) -> f32;
     fn reset(&mut self);
     fn get_optimizer_state(&self) -> OptimizerState;
@@ -269,21 +273,25 @@ impl BurnAdamTrainer {
 }
 
 impl<B: Backend> OptimizedTrainer<B> for BurnAdamTrainer {
-    fn step(&mut self, gradients: &[&Array1<f32>], parameters: &mut [&mut Parameter<f32>]) -> Result<()> {
+    fn step(
+        &mut self,
+        gradients: &[&Array1<f32>],
+        parameters: &mut [&mut Parameter<f32>],
+    ) -> Result<()> {
         for (grad, param) in gradients.iter().zip(parameters.iter_mut()) {
             self.inner.step(&mut param.data, grad)?;
         }
         Ok(())
     }
-    
+
     fn learning_rate(&self) -> f32 {
         self.config.learning_rate
     }
-    
+
     fn reset(&mut self) {
         self.inner.reset();
     }
-    
+
     fn get_optimizer_state(&self) -> OptimizerState {
         // Simplified state extraction
         OptimizerState {
@@ -325,21 +333,25 @@ impl BurnLAMBTrainer {
 }
 
 impl<B: Backend> OptimizedTrainer<B> for BurnLAMBTrainer {
-    fn step(&mut self, gradients: &[&Array1<f32>], parameters: &mut [&mut Parameter<f32>]) -> Result<()> {
+    fn step(
+        &mut self,
+        gradients: &[&Array1<f32>],
+        parameters: &mut [&mut Parameter<f32>],
+    ) -> Result<()> {
         for (grad, param) in gradients.iter().zip(parameters.iter_mut()) {
             self.inner.step(&mut param.data, grad)?;
         }
         Ok(())
     }
-    
+
     fn learning_rate(&self) -> f32 {
         self.config.learning_rate
     }
-    
+
     fn reset(&mut self) {
         self.inner.reset();
     }
-    
+
     fn get_optimizer_state(&self) -> OptimizerState {
         OptimizerState {
             state_vars: HashMap::new(),
@@ -380,11 +392,11 @@ impl LearningRateScheduler for CosineAnnealingLRScheduler {
         self.inner.step();
         self.current_lr = self.inner.get_lr();
     }
-    
+
     fn get_lr(&self) -> f32 {
         self.current_lr
     }
-    
+
     fn reset(&mut self) {
         self.inner.reset();
         self.current_lr = self.inner.get_lr();
@@ -411,9 +423,10 @@ impl NetworkRegularizer for NetworkL2Regularizer {
         }
         reg_loss
     }
-    
+
     fn compute_gradients(&self, parameters: &[&Parameter<f32>]) -> Vec<Array1<f32>> {
-        parameters.iter()
+        parameters
+            .iter()
             .map(|param| param.data.mapv(|x| x * self.strength))
             .collect()
     }
@@ -430,21 +443,23 @@ impl<B: Backend> BurnOptimizedNetwork<B> {
         let optimizer: Box<dyn OptimizedTrainer<B>> = match optimizer_type {
             "adam" => Box::new(BurnAdamTrainer::new(0.001, 0.9, 0.999, 1e-8)),
             "lamb" => Box::new(BurnLAMBTrainer::new(0.001, 0.9, 0.999, 1e-6, 0.01)),
-            _ => return Err(scirs2_optim::error::OptimError::InvalidConfig(
-                format!("Unknown optimizer type: {}", optimizer_type)
-            )),
+            _ => {
+                return Err(scirs2_optim::error::OptimError::InvalidConfig(format!(
+                    "Unknown optimizer type: {}",
+                    optimizer_type
+                )))
+            }
         };
-        
+
         // Create scheduler
         let scheduler: Option<Box<dyn LearningRateScheduler>> = Some(Box::new(
-            CosineAnnealingLRScheduler::new(0.001, config.epochs, 1e-6)
+            CosineAnnealingLRScheduler::new(0.001, config.epochs, 1e-6),
         ));
-        
+
         // Create regularizers
-        let regularizers: Vec<Box<dyn NetworkRegularizer>> = vec![
-            Box::new(NetworkL2Regularizer::new(0.01)),
-        ];
-        
+        let regularizers: Vec<Box<dyn NetworkRegularizer>> =
+            vec![Box::new(NetworkL2Regularizer::new(0.01))];
+
         Ok(Self {
             layers,
             optimizer,
@@ -463,64 +478,76 @@ impl<B: Backend> BurnOptimizedNetwork<B> {
             backend: std::marker::PhantomData,
         })
     }
-    
+
     /// Forward pass through the network
     pub fn forward(&self, input: &Array2<f32>) -> Array2<f32> {
         let mut output = input.clone();
-        
+
         for layer in &self.layers {
             output = self.forward_layer(&output, layer);
         }
-        
+
         output
     }
-    
+
     /// Forward pass through a single layer
     fn forward_layer(&self, input: &Array2<f32>, layer: &NetworkLayer) -> Array2<f32> {
         match layer.layer_type {
             LayerType::Dense => {
-                let linear_output = input.dot(&layer.parameters.weights.data.view().into_shape((layer.input_dim, layer.output_dim)).unwrap())
-                    + &layer.parameters.biases.data;
+                let linear_output = input.dot(
+                    &layer
+                        .parameters
+                        .weights
+                        .data
+                        .view()
+                        .into_shape((layer.input_dim, layer.output_dim))
+                        .unwrap(),
+                ) + &layer.parameters.biases.data;
                 self.apply_activation(&linear_output, &layer.activation)
-            },
+            }
             _ => {
                 // Simplified implementation for other layer types
                 input.clone()
             }
         }
     }
-    
+
     /// Apply activation function
     fn apply_activation(&self, input: &Array2<f32>, activation: &ActivationType) -> Array2<f32> {
         match activation {
             ActivationType::ReLU => input.mapv(|x| x.max(0.0)),
             ActivationType::Sigmoid => input.mapv(|x| 1.0 / (1.0 + (-x).exp())),
             ActivationType::Tanh => input.mapv(|x| x.tanh()),
-            ActivationType::LeakyReLU(alpha) => input.mapv(|x| if x > 0.0 { x } else { *alpha * x }),
-            ActivationType::GELU => input.mapv(|x| {
-                0.5 * x * (1.0 + (x * 0.7978845608 * (1.0 + 0.044715 * x * x)).tanh())
-            }),
+            ActivationType::LeakyReLU(alpha) => {
+                input.mapv(|x| if x > 0.0 { x } else { *alpha * x })
+            }
+            ActivationType::GELU => input
+                .mapv(|x| 0.5 * x * (1.0 + (x * 0.7978845608 * (1.0 + 0.044715 * x * x)).tanh())),
             ActivationType::Swish => input.mapv(|x| x / (1.0 + (-x).exp())),
         }
     }
-    
+
     /// Compute loss function
     pub fn compute_loss(&self, predictions: &Array2<f32>, targets: &Array2<f32>) -> f32 {
         // Mean squared error
         let mse = (predictions - targets).mapv(|x| x * x).mean().unwrap();
-        
+
         // Add regularization
-        let all_params: Vec<_> = self.layers.iter()
+        let all_params: Vec<_> = self
+            .layers
+            .iter()
             .flat_map(|layer| vec![&layer.parameters.weights, &layer.parameters.biases])
             .collect();
-        
-        let reg_loss: f32 = self.regularizers.iter()
+
+        let reg_loss: f32 = self
+            .regularizers
+            .iter()
             .map(|reg| reg.apply_regularization(&all_params))
             .sum();
-        
+
         mse + reg_loss
     }
-    
+
     /// Compute gradients (simplified backpropagation)
     pub fn compute_gradients(
         &self,
@@ -530,100 +557,109 @@ impl<B: Backend> BurnOptimizedNetwork<B> {
         // Simplified gradient computation
         let n_samples = predictions.nrows() as f32;
         let output_grad = (predictions - targets) * (2.0 / n_samples);
-        
+
         // For this example, we'll compute simplified gradients
         let mut gradients = Vec::new();
-        
+
         for layer in &self.layers {
             // Simplified weight gradient
             let weight_grad = Array1::from_elem(layer.parameters.weights.data.len(), 0.01);
             gradients.push(weight_grad);
-            
+
             // Simplified bias gradient
             let bias_grad = Array1::from_elem(layer.parameters.biases.data.len(), 0.005);
             gradients.push(bias_grad);
         }
-        
+
         gradients
     }
-    
+
     /// Train the network for one epoch
     pub fn train_epoch(&mut self, train_data: &Dataset) -> Result<f32> {
         let batch_size = self.config.batch_size;
         let n_batches = (train_data.len() + batch_size - 1) / batch_size;
         let mut epoch_loss = 0.0;
-        
+
         for batch_idx in 0..n_batches {
             let start_idx = batch_idx * batch_size;
             let end_idx = ((batch_idx + 1) * batch_size).min(train_data.len());
-            
+
             // Get batch data
-            let batch_inputs = train_data.inputs.slice(s![start_idx..end_idx, ..]).to_owned();
-            let batch_targets = train_data.targets.slice(s![start_idx..end_idx, ..]).to_owned();
-            
+            let batch_inputs = train_data
+                .inputs
+                .slice(s![start_idx..end_idx, ..])
+                .to_owned();
+            let batch_targets = train_data
+                .targets
+                .slice(s![start_idx..end_idx, ..])
+                .to_owned();
+
             // Forward pass
             let predictions = self.forward(&batch_inputs);
             let loss = self.compute_loss(&predictions, &batch_targets);
             epoch_loss += loss;
-            
+
             // Backward pass
             let gradients = self.compute_gradients(&predictions, &batch_targets);
-            
+
             // Collect parameters
-            let mut all_params: Vec<_> = self.layers.iter_mut()
+            let mut all_params: Vec<_> = self
+                .layers
+                .iter_mut()
                 .flat_map(|layer| vec![&mut layer.parameters.weights, &mut layer.parameters.biases])
                 .collect();
-            
+
             let gradient_refs: Vec<_> = gradients.iter().collect();
-            
+
             // Update parameters
             self.optimizer.step(&gradient_refs, &mut all_params)?;
         }
-        
+
         // Update learning rate
         if let Some(ref mut scheduler) = self.scheduler {
             scheduler.step();
         }
-        
+
         epoch_loss / n_batches as f32
     }
-    
+
     /// Full training loop with validation and metrics
     pub fn fit(&mut self, train_data: &Dataset, val_data: &Dataset) -> Result<()> {
         println!("🚀 Starting training with Burn integration...");
-        
+
         let mut best_val_loss = f32::INFINITY;
         let mut patience_counter = 0;
-        
+
         for epoch in 0..self.config.epochs {
             let start_time = Instant::now();
-            
+
             // Training phase
             let train_loss = self.train_epoch(train_data)?;
-            
+
             // Validation phase
             let val_predictions = self.forward(&val_data.inputs);
             let val_loss = self.compute_loss(&val_predictions, &val_data.targets);
-            
+
             // Calculate accuracies (for classification, simplified)
             let train_predictions = self.forward(&train_data.inputs);
             let train_acc = self.calculate_accuracy(&train_predictions, &train_data.targets);
             let val_acc = self.calculate_accuracy(&val_predictions, &val_data.targets);
-            
+
             // Get current learning rate
             let current_lr = if let Some(ref scheduler) = self.scheduler {
                 scheduler.get_lr()
             } else {
                 self.optimizer.learning_rate()
             };
-            
+
             // Calculate gradient norm
             let gradients = self.compute_gradients(&train_predictions, &train_data.targets);
-            let grad_norm = gradients.iter()
+            let grad_norm = gradients
+                .iter()
                 .map(|g| g.mapv(|x| x * x).sum())
                 .sum::<f32>()
                 .sqrt();
-            
+
             // Record metrics
             self.metrics.train_losses.push(train_loss);
             self.metrics.val_losses.push(val_loss);
@@ -631,7 +667,7 @@ impl<B: Backend> BurnOptimizedNetwork<B> {
             self.metrics.val_accuracies.push(val_acc);
             self.metrics.learning_rates.push(current_lr);
             self.metrics.gradient_norms.push(grad_norm);
-            
+
             // Record convergence metrics
             let convergence_metric = ConvergenceMetric {
                 epoch,
@@ -646,9 +682,9 @@ impl<B: Backend> BurnOptimizedNetwork<B> {
                 validation_score: val_acc,
             };
             self.metrics.convergence_metrics.push(convergence_metric);
-            
+
             let epoch_time = start_time.elapsed();
-            
+
             // Early stopping
             if val_loss < best_val_loss {
                 best_val_loss = val_loss;
@@ -656,12 +692,15 @@ impl<B: Backend> BurnOptimizedNetwork<B> {
             } else {
                 patience_counter += 1;
             }
-            
+
             if patience_counter >= self.config.early_stopping_patience {
-                println!("⏹️  Early stopping at epoch {} (best val loss: {:.6})", epoch, best_val_loss);
+                println!(
+                    "⏹️  Early stopping at epoch {} (best val loss: {:.6})",
+                    epoch, best_val_loss
+                );
                 break;
             }
-            
+
             // Progress reporting
             if epoch % 10 == 0 || epoch == self.config.epochs - 1 {
                 println!(
@@ -670,27 +709,29 @@ impl<B: Backend> BurnOptimizedNetwork<B> {
                 );
             }
         }
-        
+
         println!("✅ Training completed!");
         Ok(())
     }
-    
+
     /// Calculate accuracy (simplified for regression -> classification)
     fn calculate_accuracy(&self, predictions: &Array2<f32>, targets: &Array2<f32>) -> f32 {
         // For this example, we'll use a simple threshold-based accuracy
         let threshold = 0.1;
-        let correct = predictions.iter().zip(targets.iter())
+        let correct = predictions
+            .iter()
+            .zip(targets.iter())
             .filter(|(pred, target)| (pred - target).abs() < threshold)
             .count();
-        
+
         correct as f32 / predictions.len() as f32
     }
-    
+
     /// Get training metrics
     pub fn get_metrics(&self) -> &TrainingMetrics {
         &self.metrics
     }
-    
+
     /// Save optimizer state for checkpointing
     pub fn save_optimizer_state(&self) -> OptimizerState {
         self.optimizer.get_optimizer_state()
@@ -708,30 +749,30 @@ impl Dataset {
     pub fn new(inputs: Array2<f32>, targets: Array2<f32>) -> Self {
         Self { inputs, targets }
     }
-    
+
     pub fn len(&self) -> usize {
         self.inputs.nrows()
     }
-    
+
     pub fn train_test_split(&self, test_size: f32, random_state: u64) -> (Dataset, Dataset) {
         let mut rng = Xoshiro256Plus::seed_from_u64(random_state);
         let n_samples = self.len();
         let n_test = (n_samples as f32 * test_size) as usize;
-        
+
         let mut indices: Vec<usize> = (0..n_samples).collect();
         for i in 0..n_samples {
             let j = rng.gen_range(0..n_samples);
             indices.swap(i, j);
         }
-        
+
         let test_indices = &indices[..n_test];
         let train_indices = &indices[n_test..];
-        
+
         let train_inputs = self.inputs.select(Axis(0), train_indices);
         let train_targets = self.targets.select(Axis(0), train_indices);
         let test_inputs = self.inputs.select(Axis(0), test_indices);
         let test_targets = self.targets.select(Axis(0), test_indices);
-        
+
         (
             Dataset::new(train_inputs, train_targets),
             Dataset::new(test_inputs, test_targets),
@@ -740,29 +781,33 @@ impl Dataset {
 }
 
 /// Create a multi-layer neural network
-fn create_neural_network(input_dim: usize, hidden_dims: &[usize], output_dim: usize) -> Vec<NetworkLayer> {
+fn create_neural_network(
+    input_dim: usize,
+    hidden_dims: &[usize],
+    output_dim: usize,
+) -> Vec<NetworkLayer> {
     let mut layers = Vec::new();
     let mut rng = Xoshiro256Plus::seed_from_u64(42);
-    
+
     let all_dims = {
         let mut dims = vec![input_dim];
         dims.extend_from_slice(hidden_dims);
         dims.push(output_dim);
         dims
     };
-    
+
     for i in 0..all_dims.len() - 1 {
         let input_size = all_dims[i];
         let output_size = all_dims[i + 1];
-        
+
         // Initialize weights with Xavier initialization
         let weight_data = Array1::from_shape_fn(input_size * output_size, |_| {
             let limit = (6.0 / (input_size + output_size) as f32).sqrt();
             rng.gen_range(-limit..limit)
         });
-        
+
         let bias_data = Array1::zeros(output_size);
-        
+
         let layer = NetworkLayer {
             layer_type: LayerType::Dense,
             parameters: LayerParameters {
@@ -778,51 +823,57 @@ fn create_neural_network(input_dim: usize, hidden_dims: &[usize], output_dim: us
                 ActivationType::ReLU // Hidden layers
             },
         };
-        
+
         layers.push(layer);
     }
-    
+
     layers
 }
 
 /// Create synthetic dataset for testing
-fn create_synthetic_dataset(n_samples: usize, input_dim: usize, output_dim: usize, noise_level: f32) -> Dataset {
+fn create_synthetic_dataset(
+    n_samples: usize,
+    input_dim: usize,
+    output_dim: usize,
+    noise_level: f32,
+) -> Dataset {
     let mut rng = Xoshiro256Plus::seed_from_u64(42);
-    
+
     // Generate random inputs
-    let inputs = Array2::from_shape_fn((n_samples, input_dim), |_| {
-        rng.gen_range(-1.0..1.0)
-    });
-    
+    let inputs = Array2::from_shape_fn((n_samples, input_dim), |_| rng.gen_range(-1.0..1.0));
+
     // Generate targets with some complex function
     let targets = Array2::from_shape_fn((n_samples, output_dim), |(i, j)| {
         let x = inputs[[i, 0]];
         let base_value = (x * 2.0).sin() + (x * 3.0).cos() * 0.5;
         base_value + rng.gen_range(-noise_level..noise_level)
     });
-    
+
     Dataset::new(inputs, targets)
 }
 
 /// Benchmark different optimizers on neural networks
 fn benchmark_burn_optimizers() -> Result<()> {
     println!("\n🏁 Benchmarking Burn integration optimizers...");
-    
+
     let input_dim = 10;
     let hidden_dims = vec![64, 32, 16];
     let output_dim = 1;
     let n_samples = 1000;
     let noise_level = 0.1;
-    
+
     // Create dataset
     let dataset = create_synthetic_dataset(n_samples, input_dim, output_dim, noise_level);
     let (train_data, val_data) = dataset.train_test_split(0.2, 42);
-    
+
     let optimizers = vec!["adam", "lamb"];
-    
+
     for optimizer_name in optimizers {
-        println!("\n📊 Testing {} optimizer with Burn integration:", optimizer_name.to_uppercase());
-        
+        println!(
+            "\n📊 Testing {} optimizer with Burn integration:",
+            optimizer_name.to_uppercase()
+        );
+
         let layers = create_neural_network(input_dim, &hidden_dims, output_dim);
         let config = TrainingConfig {
             batch_size: 32,
@@ -833,63 +884,80 @@ fn benchmark_burn_optimizers() -> Result<()> {
             gradient_clip_threshold: Some(1.0),
             gradient_accumulation_steps: 1,
         };
-        
+
         let start_time = Instant::now();
-        let mut network = BurnOptimizedNetwork::<NdArrayBackend>::new(layers, optimizer_name, config)?;
-        
+        let mut network =
+            BurnOptimizedNetwork::<NdArrayBackend>::new(layers, optimizer_name, config)?;
+
         network.fit(&train_data, &val_data)?;
         let training_time = start_time.elapsed();
-        
+
         // Evaluate final performance
         let final_predictions = network.forward(&val_data.inputs);
         let final_loss = network.compute_loss(&final_predictions, &val_data.targets);
         let final_accuracy = network.calculate_accuracy(&final_predictions, &val_data.targets);
-        
+
         let metrics = network.get_metrics();
-        
-        println!("Results for {} with Burn integration:", optimizer_name.to_uppercase());
+
+        println!(
+            "Results for {} with Burn integration:",
+            optimizer_name.to_uppercase()
+        );
         println!("  Training time: {:?}", training_time);
         println!("  Final validation loss: {:.6}", final_loss);
         println!("  Final validation accuracy: {:.3}", final_accuracy);
         println!("  Epochs trained: {}", metrics.train_losses.len());
-        println!("  Best validation loss: {:.6}", 
-                 metrics.val_losses.iter().fold(f32::INFINITY, |a, &b| a.min(b)));
-        
+        println!(
+            "  Best validation loss: {:.6}",
+            metrics
+                .val_losses
+                .iter()
+                .fold(f32::INFINITY, |a, &b| a.min(b))
+        );
+
         // Convergence analysis
         if metrics.convergence_metrics.len() > 10 {
-            let recent_metrics = &metrics.convergence_metrics[metrics.convergence_metrics.len()-10..];
-            let avg_gradient_norm = recent_metrics.iter()
-                .map(|m| m.gradient_norm)
-                .sum::<f32>() / recent_metrics.len() as f32;
-            
-            println!("  Average gradient norm (last 10 epochs): {:.6}", avg_gradient_norm);
-            
-            let stable_convergence = recent_metrics.iter()
-                .all(|m| m.gradient_norm < 1e-2);
-            
-            println!("  Stable convergence: {}", if stable_convergence { "Yes" } else { "No" });
+            let recent_metrics =
+                &metrics.convergence_metrics[metrics.convergence_metrics.len() - 10..];
+            let avg_gradient_norm = recent_metrics.iter().map(|m| m.gradient_norm).sum::<f32>()
+                / recent_metrics.len() as f32;
+
+            println!(
+                "  Average gradient norm (last 10 epochs): {:.6}",
+                avg_gradient_norm
+            );
+
+            let stable_convergence = recent_metrics.iter().all(|m| m.gradient_norm < 1e-2);
+
+            println!(
+                "  Stable convergence: {}",
+                if stable_convergence { "Yes" } else { "No" }
+            );
         }
-        
+
         // Optimizer state analysis
         let optimizer_state = network.save_optimizer_state();
-        println!("  Optimizer state variables: {}", optimizer_state.state_vars.len());
+        println!(
+            "  Optimizer state variables: {}",
+            optimizer_state.state_vars.len()
+        );
         println!("  Optimizer step count: {}", optimizer_state.step_count);
     }
-    
+
     Ok(())
 }
 
 /// Advanced Burn features demonstration
 fn demonstrate_burn_advanced_features() -> Result<()> {
     println!("\n🔬 Demonstrating advanced Burn integration features...");
-    
+
     // 1. Custom layer types
     println!("\n1. Custom Layer Types:");
     let input_dim = 20;
     let output_dim = 5;
-    
+
     let mut custom_layers = create_neural_network(input_dim, &[128, 64], output_dim);
-    
+
     // Add attention layer (simulated)
     let attention_layer = NetworkLayer {
         layer_type: LayerType::Attention,
@@ -898,9 +966,18 @@ fn demonstrate_burn_advanced_features() -> Result<()> {
             biases: Parameter::new(Array1::zeros(64)),
             aux_parameters: {
                 let mut aux = HashMap::new();
-                aux.insert("query_weights".to_string(), Parameter::new(Array1::from_elem(64 * 64, 0.1)));
-                aux.insert("key_weights".to_string(), Parameter::new(Array1::from_elem(64 * 64, 0.1)));
-                aux.insert("value_weights".to_string(), Parameter::new(Array1::from_elem(64 * 64, 0.1)));
+                aux.insert(
+                    "query_weights".to_string(),
+                    Parameter::new(Array1::from_elem(64 * 64, 0.1)),
+                );
+                aux.insert(
+                    "key_weights".to_string(),
+                    Parameter::new(Array1::from_elem(64 * 64, 0.1)),
+                );
+                aux.insert(
+                    "value_weights".to_string(),
+                    Parameter::new(Array1::from_elem(64 * 64, 0.1)),
+                );
                 aux
             },
         },
@@ -908,10 +985,10 @@ fn demonstrate_burn_advanced_features() -> Result<()> {
         output_dim: 64,
         activation: ActivationType::GELU,
     };
-    
+
     custom_layers.insert(custom_layers.len() - 1, attention_layer);
     println!("   Added attention layer with {} parameters", 64 * 64 * 4);
-    
+
     // 2. Mixed precision training simulation
     println!("\n2. Mixed Precision Training:");
     let config = TrainingConfig {
@@ -923,21 +1000,27 @@ fn demonstrate_burn_advanced_features() -> Result<()> {
         gradient_clip_threshold: Some(1.0),
         gradient_accumulation_steps: 4,
     };
-    
+
     println!("   Mixed precision enabled: {}", config.mixed_precision);
-    println!("   Gradient accumulation steps: {}", config.gradient_accumulation_steps);
-    println!("   Gradient clipping threshold: {:?}", config.gradient_clip_threshold);
-    
+    println!(
+        "   Gradient accumulation steps: {}",
+        config.gradient_accumulation_steps
+    );
+    println!(
+        "   Gradient clipping threshold: {:?}",
+        config.gradient_clip_threshold
+    );
+
     // 3. Advanced regularization
     println!("\n3. Advanced Regularization:");
     let network = BurnOptimizedNetwork::<NdArrayBackend>::new(custom_layers, "adam", config)?;
     println!("   L2 regularization applied to all layers");
     println!("   Dropout regularization in training mode");
-    
+
     // 4. Learning rate scheduling analysis
     println!("\n4. Learning Rate Scheduling:");
     let mut scheduler = CosineAnnealingLRScheduler::new(0.01, 100, 1e-6);
-    
+
     println!("   Initial LR: {:.6}", scheduler.get_lr());
     for _ in 0..25 {
         scheduler.step();
@@ -947,31 +1030,31 @@ fn demonstrate_burn_advanced_features() -> Result<()> {
         scheduler.step();
     }
     println!("   LR after 75 steps: {:.6}", scheduler.get_lr());
-    
+
     Ok(())
 }
 
 /// Performance comparison with different architectures
 fn architecture_performance_comparison() -> Result<()> {
     println!("\n📈 Architecture Performance Comparison:");
-    
+
     let architectures = vec![
         ("Small", vec![32, 16]),
         ("Medium", vec![128, 64, 32]),
         ("Large", vec![256, 128, 64, 32]),
         ("Deep", vec![64, 64, 64, 64, 64]),
     ];
-    
+
     let input_dim = 15;
     let output_dim = 1;
     let n_samples = 500;
-    
+
     for (name, hidden_dims) in architectures {
         println!("\n{} Architecture: {:?}", name, hidden_dims);
-        
+
         let dataset = create_synthetic_dataset(n_samples, input_dim, output_dim, 0.05);
         let (train_data, val_data) = dataset.train_test_split(0.2, 42);
-        
+
         let layers = create_neural_network(input_dim, &hidden_dims, output_dim);
         let config = TrainingConfig {
             batch_size: 32,
@@ -982,34 +1065,38 @@ fn architecture_performance_comparison() -> Result<()> {
             gradient_clip_threshold: None,
             gradient_accumulation_steps: 1,
         };
-        
+
         let start_time = Instant::now();
         let mut network = BurnOptimizedNetwork::<NdArrayBackend>::new(layers, "adam", config)?;
-        
+
         network.fit(&train_data, &val_data)?;
         let training_time = start_time.elapsed();
-        
+
         let final_predictions = network.forward(&val_data.inputs);
         let final_loss = network.compute_loss(&final_predictions, &val_data.targets);
-        
-        let total_params: usize = network.layers.iter()
+
+        let total_params: usize = network
+            .layers
+            .iter()
             .map(|layer| layer.parameters.weights.data.len() + layer.parameters.biases.data.len())
             .sum();
-        
+
         println!("  Total parameters: {}", total_params);
         println!("  Training time: {:?}", training_time);
         println!("  Final loss: {:.6}", final_loss);
-        println!("  Time per parameter: {:.2} ms", 
-                 training_time.as_millis() as f64 / total_params as f64);
+        println!(
+            "  Time per parameter: {:.2} ms",
+            training_time.as_millis() as f64 / total_params as f64
+        );
     }
-    
+
     Ok(())
 }
 
 /// Test Burn framework compatibility
 fn test_burn_compatibility() -> Result<()> {
     println!("\n🔧 Burn Framework Compatibility Testing:");
-    
+
     // Test tensor operations
     println!("\n1. Tensor Operations:");
     let data = Array2::from_shape_vec((3, 4), (0..12).map(|x| x as f32).collect()).unwrap();
@@ -1017,44 +1104,44 @@ fn test_burn_compatibility() -> Result<()> {
         data: data.clone(),
         backend: std::marker::PhantomData,
     };
-    
+
     println!("   Tensor shape: {:?}", tensor.shape());
     println!("   Tensor data size: {}", tensor.to_data().data.len());
-    
+
     // Test backend compatibility
     println!("\n2. Backend Compatibility:");
     println!("   NdArray backend initialized successfully");
     println!("   Float precision: f32");
     println!("   Device: CPU (simulated)");
-    
+
     // Test automatic differentiation (simulated)
     println!("\n3. Automatic Differentiation:");
     let input = Array2::from_shape_fn((2, 3), |_| 1.0);
     let weights = Array2::from_shape_fn((3, 2), |_| 0.5);
     let output = input.dot(&weights);
-    
+
     println!("   Forward pass computed: {:?}", output.shape());
     println!("   Gradient computation: Compatible");
-    
+
     Ok(())
 }
 
 fn main() -> Result<()> {
     println!("🔥 Scirs2-Optim + Burn Framework Integration Example");
     println!("====================================================");
-    
+
     // Run benchmark comparison
     benchmark_burn_optimizers()?;
-    
+
     // Demonstrate advanced features
     demonstrate_burn_advanced_features()?;
-    
+
     // Architecture performance comparison
     architecture_performance_comparison()?;
-    
+
     // Framework compatibility testing
     test_burn_compatibility()?;
-    
+
     println!("\n✅ Burn integration example completed successfully!");
     println!("\n📋 Summary:");
     println!("   - Demonstrated scirs2-optim integration with Burn deep learning framework");
@@ -1062,7 +1149,7 @@ fn main() -> Result<()> {
     println!("   - Showcased advanced features: attention layers, mixed precision, scheduling");
     println!("   - Analyzed different network architectures and their performance");
     println!("   - Tested framework compatibility with tensor operations and autodiff");
-    
+
     Ok(())
 }
 
@@ -1100,7 +1187,7 @@ mod tests {
             gradient_clip_threshold: None,
             gradient_accumulation_steps: 1,
         };
-        
+
         let network = BurnOptimizedNetwork::<NdArrayBackend>::new(layers, "adam", config);
         assert!(network.is_ok());
     }
@@ -1117,10 +1204,10 @@ mod tests {
             gradient_clip_threshold: None,
             gradient_accumulation_steps: 1,
         };
-        
+
         let network = BurnOptimizedNetwork::<NdArrayBackend>::new(layers, "adam", config).unwrap();
         let input = Array2::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
-        
+
         let output = network.forward(&input);
         assert_eq!(output.nrows(), 2);
         assert_eq!(output.ncols(), 1);
@@ -1138,11 +1225,11 @@ mod tests {
             gradient_clip_threshold: None,
             gradient_accumulation_steps: 1,
         };
-        
+
         let network = BurnOptimizedNetwork::<NdArrayBackend>::new(layers, "adam", config).unwrap();
         let predictions = Array2::from_shape_vec((2, 1), vec![1.0, 2.0]).unwrap();
         let targets = Array2::from_shape_vec((2, 1), vec![1.1, 1.9]).unwrap();
-        
+
         let loss = network.compute_loss(&predictions, &targets);
         assert!(loss >= 0.0);
         assert!(loss < 1.0); // Should be small for close predictions

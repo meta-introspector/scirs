@@ -12,7 +12,7 @@
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
 use crate::wpt::{reconstruct_from_nodes, wp_decompose, WaveletPacketTree};
-use crate::wpt_validation::{WptValidationResult, OrthogonalityMetrics, PerformanceMetrics};
+use crate::wpt_validation::{OrthogonalityMetrics, PerformanceMetrics, WptValidationResult};
 use ndarray::{Array1, Array2, Array3, ArrayView1, Axis};
 use num_complex::Complex64;
 use num_traits::{Float, NumCast};
@@ -813,7 +813,13 @@ impl Default for UltraWptValidationConfig {
                 TestSignalConfig {
                     signal_type: TestSignalType::Chirp,
                     length: 2048,
-                    parameters: [("start_freq".to_string(), 1.0), ("end_freq".to_string(), 50.0)].iter().cloned().collect(),
+                    parameters: [
+                        ("start_freq".to_string(), 1.0),
+                        ("end_freq".to_string(), 50.0),
+                    ]
+                    .iter()
+                    .cloned()
+                    .collect(),
                 },
                 TestSignalConfig {
                     signal_type: TestSignalType::WhiteNoise,
@@ -821,7 +827,11 @@ impl Default for UltraWptValidationConfig {
                     parameters: [("variance".to_string(), 1.0)].iter().cloned().collect(),
                 },
             ],
-            wavelets_to_test: vec![Wavelet::Daubechies4, Wavelet::Biorthogonal2_2, Wavelet::Coiflet2],
+            wavelets_to_test: vec![
+                Wavelet::Daubechies4,
+                Wavelet::Biorthogonal2_2,
+                Wavelet::Coiflet2,
+            ],
             max_levels_to_test: vec![3, 5, 7],
         }
     }
@@ -852,7 +862,7 @@ impl Default for UltraWptValidationConfig {
 ///
 /// let config = UltraWptValidationConfig::default();
 /// let results = run_ultra_wpt_validation(&config).unwrap();
-/// 
+///
 /// match results.overall_status {
 ///     ValidationStatus::Pass => println!("All validations passed!"),
 ///     ValidationStatus::PassWithWarnings => println!("Validation passed with warnings"),
@@ -864,13 +874,13 @@ pub fn run_ultra_wpt_validation(
     config: &UltraWptValidationConfig,
 ) -> SignalResult<UltraWptValidationResult> {
     let start_time = Instant::now();
-    
+
     println!("Starting ultra-comprehensive WPT validation...");
-    
+
     // Step 1: Basic validation
     println!("Running basic WPT validation...");
     let basic_validation = run_basic_wpt_validation(config)?;
-    
+
     // Step 2: Mathematical properties validation
     println!("Validating mathematical properties...");
     let mathematical_properties = if config.validate_mathematical_properties {
@@ -878,7 +888,7 @@ pub fn run_ultra_wpt_validation(
     } else {
         MathematicalPropertyValidation::default()
     };
-    
+
     // Step 3: SIMD validation
     println!("Validating SIMD implementations...");
     let simd_validation = if config.validate_simd {
@@ -886,7 +896,7 @@ pub fn run_ultra_wpt_validation(
     } else {
         SimdValidationResult::default()
     };
-    
+
     // Step 4: Cross-platform consistency
     println!("Validating cross-platform consistency...");
     let platform_consistency = if config.validate_cross_platform {
@@ -894,7 +904,7 @@ pub fn run_ultra_wpt_validation(
     } else {
         PlatformConsistencyResult::default()
     };
-    
+
     // Step 5: Statistical validation
     println!("Running statistical validation...");
     let statistical_validation = if config.validate_statistical {
@@ -902,7 +912,7 @@ pub fn run_ultra_wpt_validation(
     } else {
         StatisticalValidationResult::default()
     };
-    
+
     // Step 6: Performance regression analysis
     println!("Analyzing performance regression...");
     let performance_regression = if config.validate_performance_regression {
@@ -910,7 +920,7 @@ pub fn run_ultra_wpt_validation(
     } else {
         PerformanceRegressionResult::default()
     };
-    
+
     // Step 7: Memory safety validation
     println!("Validating memory safety...");
     let memory_safety = if config.validate_memory_safety {
@@ -918,7 +928,7 @@ pub fn run_ultra_wpt_validation(
     } else {
         MemorySafetyResult::default()
     };
-    
+
     // Step 8: Real-time processing validation
     println!("Validating real-time processing...");
     let realtime_validation = if config.validate_realtime {
@@ -926,7 +936,7 @@ pub fn run_ultra_wpt_validation(
     } else {
         RealtimeValidationResult::default()
     };
-    
+
     // Determine overall validation status
     let overall_status = determine_overall_validation_status(&[
         &basic_validation,
@@ -938,11 +948,14 @@ pub fn run_ultra_wpt_validation(
         &memory_safety,
         &realtime_validation,
     ]);
-    
+
     let total_time = start_time.elapsed().as_secs_f64();
-    println!("Ultra-comprehensive WPT validation completed in {:.2} seconds", total_time);
+    println!(
+        "Ultra-comprehensive WPT validation completed in {:.2} seconds",
+        total_time
+    );
     println!("Overall status: {:?}", overall_status);
-    
+
     Ok(UltraWptValidationResult {
         basic_validation,
         mathematical_properties,
@@ -958,7 +971,9 @@ pub fn run_ultra_wpt_validation(
 
 // Implementation of validation functions (simplified for brevity)
 
-fn run_basic_wpt_validation(config: &UltraWptValidationConfig) -> SignalResult<WptValidationResult> {
+fn run_basic_wpt_validation(
+    config: &UltraWptValidationConfig,
+) -> SignalResult<WptValidationResult> {
     // Run basic WPT validation using existing functionality
     // This would call the original WPT validation functions
     Ok(WptValidationResult {
@@ -977,7 +992,7 @@ fn run_basic_wpt_validation(config: &UltraWptValidationConfig) -> SignalResult<W
         performance: Some(PerformanceMetrics {
             decomposition_time_ms: 10.0,
             reconstruction_time_ms: 8.0,
-            memory_usage_bytes: 1024*1024,
+            memory_usage_bytes: 1024 * 1024,
             complexity_score: 0.8,
         }),
         best_basis_stability: None,
@@ -995,7 +1010,7 @@ fn validate_mathematical_properties_comprehensive(
     let orthogonality_advanced = validate_advanced_orthogonality(config)?;
     let energy_conservation = validate_energy_conservation_comprehensive(config)?;
     let coefficient_analysis = analyze_coefficient_distributions(config)?;
-    
+
     Ok(MathematicalPropertyValidation {
         perfect_reconstruction,
         tight_frame_validation,
@@ -1010,14 +1025,16 @@ fn validate_simd_implementations_comprehensive(
 ) -> SignalResult<SimdValidationResult> {
     // Comprehensive SIMD validation
     let caps = PlatformCapabilities::detect();
-    let simd_capabilities = format!("SSE4.1: {}, AVX2: {}, AVX512: {}", 
-                                   caps.has_sse4_1, caps.has_avx2, caps.has_avx512);
-    
+    let simd_capabilities = format!(
+        "SSE4.1: {}, AVX2: {}, AVX512: {}",
+        caps.has_sse4_1, caps.has_avx2, caps.has_avx512
+    );
+
     let simd_scalar_accuracy = validate_simd_vs_scalar_accuracy(config)?;
     let operation_correctness = validate_individual_simd_operations(config)?;
     let performance_validation = validate_simd_performance(config)?;
     let architecture_consistency = validate_architecture_consistency(config)?;
-    
+
     Ok(SimdValidationResult {
         simd_capabilities,
         simd_scalar_accuracy,
@@ -1415,7 +1432,7 @@ impl Default for ComparativeAnalysisResult {
 impl Default for PerformanceProfile {
     fn default() -> Self {
         Self {
-            time_complexity: 2.0, // O(n^2)
+            time_complexity: 2.0,  // O(n^2)
             space_complexity: 1.0, // O(n)
             bottlenecks: Vec::new(),
             optimization_opportunities: Vec::new(),
@@ -1572,7 +1589,10 @@ impl Default for JitterDistribution {
     fn default() -> Self {
         Self {
             distribution_type: "Gaussian".to_string(),
-            parameters: [("mean".to_string(), 0.0), ("std".to_string(), 0.1)].iter().cloned().collect(),
+            parameters: [("mean".to_string(), 0.0), ("std".to_string(), 0.1)]
+                .iter()
+                .cloned()
+                .collect(),
             outlier_rate: 0.01,
         }
     }
@@ -1726,10 +1746,10 @@ mod tests {
             validate_realtime: false,
             ..Default::default()
         };
-        
+
         let result = run_ultra_wpt_validation(&config);
         assert!(result.is_ok());
-        
+
         let validation = result.unwrap();
         assert_eq!(validation.overall_status, ValidationStatus::Pass);
     }

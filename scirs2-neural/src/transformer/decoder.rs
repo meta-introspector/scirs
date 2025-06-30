@@ -10,8 +10,8 @@ use ndarray::{Array, IxDyn, ScalarOperand};
 use num_traits::Float;
 use rand::Rng;
 use scirs2_core::simd_ops::SimdUnifiedOps;
-use std::sync::{Arc, RwLock};
 use std::fmt::Debug;
+use std::sync::{Arc, RwLock};
 
 /// Transformer decoder layer
 ///
@@ -44,10 +44,12 @@ pub struct TransformerDecoderLayer<F: Float + Debug + Send + Sync + SimdUnifiedO
     /// Cross-attention output cache for backward pass
     cross_attn_output_cache: Arc<RwLock<Option<Array<F, IxDyn>>>>,
     /// Normalized cross-attention output cache for backward pass
-    norm2_output_cache: Arc<RwLock<Option<Array<F, IxDyn>>>>
+    norm2_output_cache: Arc<RwLock<Option<Array<F, IxDyn>>>>,
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> TransformerDecoderLayer<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps>
+    TransformerDecoderLayer<F>
+{
     /// Create a new transformer decoder layer
     ///
     /// # Arguments
@@ -319,7 +321,9 @@ pub struct TransformerDecoder<F: Float + Debug + Send + Sync + SimdUnifiedOps> {
     layer_outputs: Arc<RwLock<Vec<Array<F, IxDyn>>>>,
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> TransformerDecoder<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps>
+    TransformerDecoder<F>
+{
     /// Create a new transformer decoder
     ///
     /// # Arguments
@@ -407,7 +411,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> Layer<F> for TransformerDecoder<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> Layer<F>
+    for TransformerDecoder<F>
+{
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }

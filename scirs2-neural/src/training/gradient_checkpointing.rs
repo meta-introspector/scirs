@@ -113,7 +113,9 @@ pub struct GradientCheckpointingManager<F: Float + Debug + Clone + Send + Sync +
     stats: CheckpointingStats,
 }
 
-impl<F: Float + Debug + Clone + Send + Sync + FromPrimitive + ndarray::ScalarOperand> GradientCheckpointingManager<F> {
+impl<F: Float + Debug + Clone + Send + Sync + FromPrimitive + ndarray::ScalarOperand>
+    GradientCheckpointingManager<F>
+{
     /// Create a new gradient checkpointing manager
     pub fn new(config: GradientCheckpointingConfig) -> Self {
         Self {

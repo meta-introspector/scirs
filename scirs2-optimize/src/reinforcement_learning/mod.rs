@@ -21,25 +21,25 @@
 //! - Neural architecture search
 //! - AutoML optimization pipelines
 
-use ndarray::{Array1, Array2, ArrayView1};
-use scirs2_core::error::Result;
 use crate::error::OptimizeError;
 use crate::result::OptimizeResults;
+use ndarray::{Array1, Array2, ArrayView1};
+use scirs2_core::error::Result;
 use std::collections::HashMap;
 
-pub mod policy_gradient;
-pub mod q_learning_optimization;
 pub mod actor_critic;
 pub mod bandit_optimization;
 pub mod evolutionary_strategies;
 pub mod meta_learning;
+pub mod policy_gradient;
+pub mod q_learning_optimization;
 
-pub use policy_gradient::*;
-pub use q_learning_optimization::*;
 pub use actor_critic::*;
 pub use bandit_optimization::*;
 pub use evolutionary_strategies::*;
 pub use meta_learning::*;
+pub use policy_gradient::*;
+pub use q_learning_optimization::*;
 
 /// Configuration for reinforcement learning optimization
 #[derive(Debug, Clone)]
@@ -149,23 +149,31 @@ pub struct Experience {
 pub trait RLOptimizer {
     /// Configuration
     fn config(&self) -> &RLOptimizationConfig;
-    
+
     /// Select action given current state
     fn select_action(&mut self, state: &OptimizationState) -> OptimizationAction;
-    
+
     /// Update policy/value function based on experience
     fn update(&mut self, experience: &Experience) -> Result<()>;
-    
+
     /// Run optimization episode
-    fn run_episode<F>(&mut self, objective: &F, initial_params: &ArrayView1<f64>) -> Result<OptimizeResults>
+    fn run_episode<F>(
+        &mut self,
+        objective: &F,
+        initial_params: &ArrayView1<f64>,
+    ) -> Result<OptimizeResults>
     where
         F: Fn(&ArrayView1<f64>) -> f64;
-    
+
     /// Train the RL optimizer
-    fn train<F>(&mut self, objective: &F, initial_params: &ArrayView1<f64>) -> Result<OptimizeResults>
+    fn train<F>(
+        &mut self,
+        objective: &F,
+        initial_params: &ArrayView1<f64>,
+    ) -> Result<OptimizeResults>
     where
         F: Fn(&ArrayView1<f64>) -> f64;
-    
+
     /// Reset optimizer state
     fn reset(&mut self);
 }
@@ -212,17 +220,17 @@ impl RewardFunction for ImprovementReward {
         // Reward for objective improvement
         let improvement = prev_state.objective_value - new_state.objective_value;
         let improvement_reward = self.improvement_scale * improvement;
-        
+
         // Penalty for taking steps (encourages efficiency)
         let step_penalty = -self.step_penalty;
-        
+
         // Bonus for convergence
         let convergence_bonus = if new_state.convergence_metrics.relative_objective_change < 1e-6 {
             self.convergence_bonus
         } else {
             0.0
         };
-        
+
         improvement_reward + step_penalty + convergence_bonus
     }
 }
@@ -247,7 +255,7 @@ impl ExperienceBuffer {
             position: 0,
         }
     }
-    
+
     /// Add experience to buffer
     pub fn add(&mut self, experience: Experience) {
         if self.buffer.len() < self.max_size {
@@ -257,7 +265,7 @@ impl ExperienceBuffer {
             self.position = (self.position + 1) % self.max_size;
         }
     }
-    
+
     /// Sample batch of experiences
     pub fn sample_batch(&self, batch_size: usize) -> Vec<Experience> {
         let mut batch = Vec::with_capacity(batch_size);
@@ -267,7 +275,7 @@ impl ExperienceBuffer {
         }
         batch
     }
-    
+
     /// Get buffer size
     pub fn size(&self) -> usize {
         self.buffer.len()
@@ -277,7 +285,7 @@ impl ExperienceBuffer {
 /// Utility functions for RL optimization
 pub mod utils {
     use super::*;
-    
+
     /// Create optimization state from parameters and objective
     pub fn create_state<F>(
         parameters: Array1<f64>,
@@ -289,18 +297,21 @@ pub mod utils {
         F: Fn(&ArrayView1<f64>) -> f64,
     {
         let objective_value = objective(&parameters.view());
-        
+
         // Compute convergence metrics
         let convergence_metrics = if let Some(prev) = prev_state {
-            let relative_change = (prev.objective_value - objective_value).abs() / 
-                                 (prev.objective_value.abs() + 1e-12);
-            let param_change = (&parameters - &prev.parameters).mapv(|x| x * x).sum().sqrt();
+            let relative_change = (prev.objective_value - objective_value).abs()
+                / (prev.objective_value.abs() + 1e-12);
+            let param_change = (&parameters - &prev.parameters)
+                .mapv(|x| x * x)
+                .sum()
+                .sqrt();
             let steps_since_improvement = if objective_value < prev.objective_value {
                 0
             } else {
                 prev.convergence_metrics.steps_since_improvement + 1
             };
-            
+
             ConvergenceMetrics {
                 relative_objective_change: relative_change,
                 gradient_norm: None,
@@ -315,7 +326,7 @@ pub mod utils {
                 steps_since_improvement: 0,
             }
         };
-        
+
         // Update objective history
         let mut objective_history = prev_state
             .map(|s| s.objective_history.clone())
@@ -324,7 +335,7 @@ pub mod utils {
         if objective_history.len() > 10 {
             objective_history.remove(0);
         }
-        
+
         OptimizationState {
             parameters,
             objective_value,
@@ -334,7 +345,7 @@ pub mod utils {
             convergence_metrics,
         }
     }
-    
+
     /// Apply action to current state
     pub fn apply_action(
         state: &OptimizationState,
@@ -346,13 +357,13 @@ pub mod utils {
             OptimizationAction::GradientStep { learning_rate } => {
                 // Simplified: use finite difference gradient
                 let mut new_params = state.parameters.clone();
-                
+
                 // Random direction as proxy for gradient
                 for i in 0..new_params.len() {
                     let step = (rand::random::<f64>() - 0.5) * learning_rate;
                     new_params[i] += step;
                 }
-                
+
                 new_params
             }
             OptimizationAction::RandomPerturbation { magnitude } => {
@@ -363,13 +374,16 @@ pub mod utils {
                 }
                 new_params
             }
-            OptimizationAction::MomentumUpdate { momentum: momentum_coeff } => {
+            OptimizationAction::MomentumUpdate {
+                momentum: momentum_coeff,
+            } => {
                 // Update momentum (simplified)
                 for i in 0..momentum.len().min(state.parameters.len()) {
                     let gradient_estimate = (rand::random::<f64>() - 0.5) * 0.1;
-                    momentum[i] = momentum_coeff * momentum[i] + (1.0 - momentum_coeff) * gradient_estimate;
+                    momentum[i] =
+                        momentum_coeff * momentum[i] + (1.0 - momentum_coeff) * gradient_estimate;
                 }
-                
+
                 &state.parameters - &*momentum
             }
             OptimizationAction::AdaptiveLearningRate { factor: _factor } => {
@@ -378,114 +392,112 @@ pub mod utils {
                 let direction = Array1::from(vec![step_size; state.parameters.len()]);
                 &state.parameters - &direction
             }
-            OptimizationAction::ResetToBest => {
-                best_params.clone()
-            }
-            OptimizationAction::Terminate => {
-                state.parameters.clone()
-            }
+            OptimizationAction::ResetToBest => best_params.clone(),
+            OptimizationAction::Terminate => state.parameters.clone(),
         }
     }
-    
+
     /// Check if optimization should terminate
     pub fn should_terminate(state: &OptimizationState, max_steps: usize) -> bool {
-        state.step >= max_steps ||
-        state.convergence_metrics.relative_objective_change < 1e-8 ||
-        state.convergence_metrics.steps_since_improvement > 50
+        state.step >= max_steps
+            || state.convergence_metrics.relative_objective_change < 1e-8
+            || state.convergence_metrics.steps_since_improvement > 50
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_optimization_state_creation() {
         let params = Array1::from(vec![1.0, 2.0]);
         let objective = |x: &ArrayView1<f64>| x[0].powi(2) + x[1].powi(2);
-        
+
         let state = utils::create_state(params, &objective, 0, None);
-        
+
         assert_eq!(state.parameters.len(), 2);
         assert_eq!(state.objective_value, 5.0);
         assert_eq!(state.step, 0);
     }
-    
+
     #[test]
     fn test_experience_buffer() {
         let mut buffer = ExperienceBuffer::new(5);
-        
+
         let params = Array1::from(vec![1.0]);
         let objective = |x: &ArrayView1<f64>| x[0].powi(2);
         let state = utils::create_state(params.clone(), &objective, 0, None);
-        
+
         let experience = Experience {
             state: state.clone(),
-            action: OptimizationAction::GradientStep { learning_rate: 0.01 },
+            action: OptimizationAction::GradientStep {
+                learning_rate: 0.01,
+            },
             reward: 1.0,
             next_state: state,
             done: false,
         };
-        
+
         buffer.add(experience);
         assert_eq!(buffer.size(), 1);
-        
+
         let batch = buffer.sample_batch(1);
         assert_eq!(batch.len(), 1);
     }
-    
+
     #[test]
     fn test_improvement_reward() {
         let reward_fn = ImprovementReward::default();
-        
+
         let params1 = Array1::from(vec![2.0]);
         let params2 = Array1::from(vec![1.0]);
         let objective = |x: &ArrayView1<f64>| x[0].powi(2);
-        
+
         let state1 = utils::create_state(params1, &objective, 0, None);
         let state2 = utils::create_state(params2, &objective, 1, Some(&state1));
-        
+
         let action = OptimizationAction::GradientStep { learning_rate: 0.1 };
         let reward = reward_fn.compute_reward(&state1, &action, &state2);
-        
+
         // Should get positive reward for improvement (4.0 -> 1.0)
         assert!(reward > 0.0);
     }
-    
+
     #[test]
     fn test_action_application() {
         let params = Array1::from(vec![1.0, 2.0]);
         let objective = |x: &ArrayView1<f64>| x[0].powi(2) + x[1].powi(2);
         let state = utils::create_state(params.clone(), &objective, 0, None);
         let mut momentum = Array1::zeros(2);
-        
+
         let action = OptimizationAction::RandomPerturbation { magnitude: 0.1 };
         let new_params = utils::apply_action(&state, &action, &params, &mut momentum);
-        
+
         assert_eq!(new_params.len(), 2);
         // Parameters should have changed due to perturbation
         assert!(new_params != state.parameters);
     }
-    
+
     #[test]
     fn test_termination_condition() {
         let params = Array1::from(vec![1.0]);
         let objective = |x: &ArrayView1<f64>| x[0].powi(2);
         let state = utils::create_state(params, &objective, 100, None);
-        
+
         // Should terminate due to max steps
         assert!(utils::should_terminate(&state, 50));
     }
-    
+
     #[test]
     fn test_convergence_metrics() {
         let params1 = Array1::from(vec![2.0]);
         let params2 = Array1::from(vec![1.9]);
         let objective = |x: &ArrayView1<f64>| x[0].powi(2);
-        
+
         let state1 = utils::create_state(params1, &objective, 0, None);
         let state2 = utils::create_state(params2, &objective, 1, Some(&state1));
-        
+
         assert!(state2.convergence_metrics.relative_objective_change > 0.0);
         assert!(state2.convergence_metrics.parameter_change_norm > 0.0);
         assert_eq!(state2.convergence_metrics.steps_since_improvement, 0); // Improvement occurred

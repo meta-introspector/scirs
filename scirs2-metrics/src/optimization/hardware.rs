@@ -6,7 +6,7 @@
 
 use crate::error::{MetricsError, Result};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
-use num_traits::{Float, Zero, One};
+use num_traits::{Float, One, Zero};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{AutoOptimizer, PlatformCapabilities, SimdUnifiedOps};
 

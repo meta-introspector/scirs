@@ -160,6 +160,11 @@ pub use meta_learning::{
     MetaOptimizer, MetaOptimizerTrait, NeuralOptimizer, OptimizationTrajectory, SGDMetaOptimizer,
     UpdateNetwork,
 };
+pub use neural_architecture_search::{
+    ArchitectureEncodingStrategy, EvaluationMetric, MultiObjectiveConfig, NASConfig,
+    NeuralArchitectureSearch, OptimizerArchitecture, PerformanceEvaluator, SearchResults,
+    SearchStrategyType,
+};
 pub use neural_integration::architecture_aware::{
     ArchitectureAwareOptimizer, ArchitectureStrategy,
 };
@@ -168,14 +173,10 @@ pub use neural_integration::{
     LayerArchitecture, LayerId, OptimizationConfig, ParamId, ParameterManager, ParameterMetadata,
     ParameterOptimizer, ParameterType,
 };
-pub use neural_architecture_search::{
-    NASConfig, NeuralArchitectureSearch, SearchResults, SearchStrategyType, OptimizerArchitecture,
-    PerformanceEvaluator, MultiObjectiveConfig, ArchitectureEncodingStrategy, EvaluationMetric,
-};
 pub use plugin::{
-    OptimizerPlugin, OptimizerPluginFactory, PluginInfo, PluginCapabilities, PluginCategory,
-    PluginRegistry, PluginLoader, PluginTester, PluginValidationFramework, BaseOptimizerPlugin,
-    create_plugin_info, create_basic_capabilities,
+    create_basic_capabilities, create_plugin_info, BaseOptimizerPlugin, OptimizerPlugin,
+    OptimizerPluginFactory, PluginCapabilities, PluginCategory, PluginInfo, PluginLoader,
+    PluginRegistry, PluginTester, PluginValidationFramework,
 };
 // Macro is exported at crate root via #[macro_export]
 pub use online_learning::{

@@ -5,8 +5,8 @@
 
 use clap::{Arg, Command};
 use scirs2_optim::benchmarking::performance_regression_detector::{
-    PerformanceRegressionDetector, RegressionConfig, RegressionSensitivity, StatisticalTest,
-    MetricType, BaselineStrategy, AlertThresholds, CiCdConfig
+    AlertThresholds, BaselineStrategy, CiCdConfig, MetricType, PerformanceRegressionDetector,
+    RegressionConfig, RegressionSensitivity, StatisticalTest,
 };
 use scirs2_optim::error::{OptimError, Result};
 use serde_json;
@@ -24,35 +24,35 @@ fn main() {
                 .long("benchmark-results")
                 .value_name("FILE")
                 .help("Path to benchmark results JSON file")
-                .required(true)
+                .required(true),
         )
         .arg(
             Arg::new("baseline-dir")
                 .long("baseline-dir")
                 .value_name("DIR")
                 .help("Directory containing baseline performance data")
-                .required(true)
+                .required(true),
         )
         .arg(
             Arg::new("output-report")
                 .long("output-report")
                 .value_name("FILE")
                 .help("Output file for regression analysis report")
-                .required(true)
+                .required(true),
         )
         .arg(
             Arg::new("confidence-threshold")
                 .long("confidence-threshold")
                 .value_name("FLOAT")
                 .help("Statistical confidence threshold (0.0-1.0)")
-                .default_value("0.95")
+                .default_value("0.95"),
         )
         .arg(
             Arg::new("degradation-threshold")
                 .long("degradation-threshold")
                 .value_name("FLOAT")
                 .help("Performance degradation threshold (e.g., 0.05 = 5%)")
-                .default_value("0.05")
+                .default_value("0.05"),
         )
         .arg(
             Arg::new("sensitivity")
@@ -60,14 +60,14 @@ fn main() {
                 .value_name("LEVEL")
                 .help("Regression detection sensitivity")
                 .value_parser(["low", "medium", "high"])
-                .default_value("medium")
+                .default_value("medium"),
         )
         .arg(
             Arg::new("features")
                 .long("features")
                 .value_name("STRING")
                 .help("Feature set being tested")
-                .required(true)
+                .required(true),
         )
         .arg(
             Arg::new("statistical-test")
@@ -75,27 +75,27 @@ fn main() {
                 .value_name("TEST")
                 .help("Statistical test to use for regression detection")
                 .value_parser(["mann-whitney", "t-test", "wilcoxon", "kolmogorov-smirnov"])
-                .default_value("mann-whitney")
+                .default_value("mann-whitney"),
         )
         .arg(
             Arg::new("min-samples")
                 .long("min-samples")
                 .value_name("NUMBER")
                 .help("Minimum number of samples required for analysis")
-                .default_value("5")
+                .default_value("5"),
         )
         .arg(
             Arg::new("verbose")
                 .short('v')
                 .long("verbose")
                 .help("Enable verbose output")
-                .action(clap::ArgAction::SetTrue)
+                .action(clap::ArgAction::SetTrue),
         )
         .arg(
             Arg::new("fail-on-regression")
                 .long("fail-on-regression")
                 .help("Exit with error code if regressions are detected")
-                .action(clap::ArgAction::SetTrue)
+                .action(clap::ArgAction::SetTrue),
         )
         .get_matches();
 
@@ -103,14 +103,16 @@ fn main() {
     let benchmark_results = matches.get_one::<String>("benchmark-results").unwrap();
     let baseline_dir = matches.get_one::<String>("baseline-dir").unwrap();
     let output_report = matches.get_one::<String>("output-report").unwrap();
-    let confidence_threshold: f64 = matches.get_one::<String>("confidence-threshold")
+    let confidence_threshold: f64 = matches
+        .get_one::<String>("confidence-threshold")
         .unwrap()
         .parse()
         .unwrap_or_else(|_| {
             eprintln!("Error: Invalid confidence threshold");
             process::exit(1);
         });
-    let degradation_threshold: f64 = matches.get_one::<String>("degradation-threshold")
+    let degradation_threshold: f64 = matches
+        .get_one::<String>("degradation-threshold")
         .unwrap()
         .parse()
         .unwrap_or_else(|_| {
@@ -120,7 +122,8 @@ fn main() {
     let sensitivity_str = matches.get_one::<String>("sensitivity").unwrap();
     let features = matches.get_one::<String>("features").unwrap();
     let statistical_test_str = matches.get_one::<String>("statistical-test").unwrap();
-    let min_samples: usize = matches.get_one::<String>("min-samples")
+    let min_samples: usize = matches
+        .get_one::<String>("min-samples")
         .unwrap()
         .parse()
         .unwrap_or_else(|_| {
@@ -188,7 +191,10 @@ fn main() {
         println!("  Baseline Directory: {}", baseline_dir);
         println!("  Output Report: {}", output_report);
         println!("  Confidence Threshold: {:.2}", confidence_threshold);
-        println!("  Degradation Threshold: {:.1}%", degradation_threshold * 100.0);
+        println!(
+            "  Degradation Threshold: {:.1}%",
+            degradation_threshold * 100.0
+        );
         println!("  Sensitivity: {:?}", sensitivity);
         println!("  Statistical Test: {:?}", statistical_test);
         println!("  Features: {}", features);
@@ -203,7 +209,7 @@ fn main() {
         output_report,
         features,
         config,
-        verbose
+        verbose,
     ) {
         Ok(has_regressions) => {
             if has_regressions && fail_on_regression {
@@ -278,8 +284,9 @@ fn run_regression_detection(
     fs::create_dir_all(output_dir)
         .map_err(|e| OptimError::IoError(format!("Failed to create output directory: {}", e)))?;
 
-    let report_json = serde_json::to_string_pretty(&report)
-        .map_err(|e| OptimError::SerializationError(format!("Failed to serialize report: {}", e)))?;
+    let report_json = serde_json::to_string_pretty(&report).map_err(|e| {
+        OptimError::SerializationError(format!("Failed to serialize report: {}", e))
+    })?;
 
     fs::write(output_report, report_json)
         .map_err(|e| OptimError::IoError(format!("Failed to write report: {}", e)))?;
@@ -290,9 +297,22 @@ fn run_regression_detection(
     if verbose {
         println!("📊 Analysis Summary:");
         println!("  Total Benchmarks: {}", analysis_result.total_benchmarks);
-        println!("  Regressions Detected: {}", analysis_result.regression_count);
-        println!("  Critical Regressions: {}", analysis_result.critical_regressions);
-        println!("  Status: {}", if has_regressions { "⚠️  REGRESSIONS FOUND" } else { "✅ PASSED" });
+        println!(
+            "  Regressions Detected: {}",
+            analysis_result.regression_count
+        );
+        println!(
+            "  Critical Regressions: {}",
+            analysis_result.critical_regressions
+        );
+        println!(
+            "  Status: {}",
+            if has_regressions {
+                "⚠️  REGRESSIONS FOUND"
+            } else {
+                "✅ PASSED"
+            }
+        );
         println!();
         println!("📄 Report saved to: {}", output_report);
     }
@@ -304,8 +324,9 @@ fn load_benchmark_results(path: &str) -> Result<serde_json::Value> {
     let content = fs::read_to_string(path)
         .map_err(|e| OptimError::IoError(format!("Failed to read benchmark results: {}", e)))?;
 
-    let data: serde_json::Value = serde_json::from_str(&content)
-        .map_err(|e| OptimError::SerializationError(format!("Failed to parse benchmark results: {}", e)))?;
+    let data: serde_json::Value = serde_json::from_str(&content).map_err(|e| {
+        OptimError::SerializationError(format!("Failed to parse benchmark results: {}", e))
+    })?;
 
     Ok(data)
 }

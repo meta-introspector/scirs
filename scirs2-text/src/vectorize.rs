@@ -72,7 +72,12 @@ impl CountVectorizer {
     }
 
     /// Get feature count for a specific document and feature index from a matrix
-    pub fn get_feature_count(&self, matrix: &Array2<f64>, document_index: usize, feature_index: usize) -> Option<f64> {
+    pub fn get_feature_count(
+        &self,
+        matrix: &Array2<f64>,
+        document_index: usize,
+        feature_index: usize,
+    ) -> Option<f64> {
         if document_index < matrix.nrows() && feature_index < matrix.ncols() {
             Some(matrix[[document_index, feature_index]])
         } else {
@@ -230,7 +235,12 @@ impl TfidfVectorizer {
     }
 
     /// Get TF-IDF score for a specific document and feature index from a matrix
-    pub fn get_feature_score(&self, matrix: &Array2<f64>, document_index: usize, feature_index: usize) -> Option<f64> {
+    pub fn get_feature_score(
+        &self,
+        matrix: &Array2<f64>,
+        document_index: usize,
+        feature_index: usize,
+    ) -> Option<f64> {
         if document_index < matrix.nrows() && feature_index < matrix.ncols() {
             Some(matrix[[document_index, feature_index]])
         } else {

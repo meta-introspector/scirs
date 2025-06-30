@@ -3,9 +3,9 @@
 //! This binary analyzes results from extended stability and endurance tests,
 //! providing insights into long-term system behavior and reliability.
 
+use clap::{Arg, ArgMatches, Command};
 use scirs2_optim::error::{OptimError, Result};
-use clap::{Arg, Command, ArgMatches};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use serde_json;
 use std::collections::HashMap;
 use std::fs;
@@ -499,49 +499,49 @@ fn main() -> Result<()> {
                 .long("input")
                 .value_name("FILE")
                 .help("Input file containing long-running test results")
-                .required(true)
+                .required(true),
         )
         .arg(
             Arg::new("output")
                 .long("output")
                 .value_name("FILE")
                 .help("Output file for the long-running analysis report")
-                .required(true)
+                .required(true),
         )
         .arg(
             Arg::new("format")
                 .long("format")
                 .value_name("FORMAT")
                 .help("Output format (json, markdown, github-actions)")
-                .default_value("json")
+                .default_value("json"),
         )
         .arg(
             Arg::new("stability-threshold")
                 .long("stability-threshold")
                 .value_name("SCORE")
                 .help("Minimum stability score threshold")
-                .default_value("0.95")
+                .default_value("0.95"),
         )
         .arg(
             Arg::new("degradation-threshold")
                 .long("degradation-threshold")
                 .value_name("PERCENT")
                 .help("Maximum acceptable degradation percentage per day")
-                .default_value("1.0")
+                .default_value("1.0"),
         )
         .arg(
             Arg::new("availability-threshold")
                 .long("availability-threshold")
                 .value_name("PERCENT")
                 .help("Minimum availability percentage")
-                .default_value("99.0")
+                .default_value("99.0"),
         )
         .arg(
             Arg::new("verbose")
                 .short('v')
                 .long("verbose")
                 .help("Enable verbose output")
-                .action(clap::ArgAction::SetTrue)
+                .action(clap::ArgAction::SetTrue),
         )
         .get_matches();
 
@@ -550,23 +550,29 @@ fn main() -> Result<()> {
     let format = matches.get_one::<String>("format").unwrap();
     let verbose = matches.get_flag("verbose");
 
-    let stability_threshold: f64 = matches.get_one::<String>("stability-threshold")
+    let stability_threshold: f64 = matches
+        .get_one::<String>("stability-threshold")
         .unwrap()
         .parse()
         .map_err(|_| OptimError::InvalidConfig("Invalid stability threshold".to_string()))?;
 
-    let degradation_threshold: f64 = matches.get_one::<String>("degradation-threshold")
+    let degradation_threshold: f64 = matches
+        .get_one::<String>("degradation-threshold")
         .unwrap()
         .parse()
         .map_err(|_| OptimError::InvalidConfig("Invalid degradation threshold".to_string()))?;
 
-    let availability_threshold: f64 = matches.get_one::<String>("availability-threshold")
+    let availability_threshold: f64 = matches
+        .get_one::<String>("availability-threshold")
         .unwrap()
         .parse()
         .map_err(|_| OptimError::InvalidConfig("Invalid availability threshold".to_string()))?;
 
     if verbose {
-        println!("Analyzing long-running test results from: {}", input_path.display());
+        println!(
+            "Analyzing long-running test results from: {}",
+            input_path.display()
+        );
         println!("Stability threshold: {:.2}", stability_threshold);
         println!("Degradation threshold: {:.2}%/day", degradation_threshold);
         println!("Availability threshold: {:.2}%", availability_threshold);
@@ -574,12 +580,12 @@ fn main() -> Result<()> {
 
     // Load and parse long-running test results
     let longrun_data = load_longrun_test_results(&input_path, verbose)?;
-    
+
     // Perform comprehensive long-term analysis
     if verbose {
         println!("Performing comprehensive long-term analysis...");
     }
-    
+
     let analysis_report = analyze_longrun_test_results(
         longrun_data,
         stability_threshold,
@@ -587,25 +593,36 @@ fn main() -> Result<()> {
         availability_threshold,
         verbose,
     )?;
-    
+
     // Generate output in requested format
     let output_content = match format {
         "json" => generate_json_report(&analysis_report)?,
         "markdown" => generate_markdown_report(&analysis_report)?,
         "github-actions" => generate_github_actions_report(&analysis_report)?,
-        _ => return Err(OptimError::InvalidConfig(format!("Unknown format: {}", format))),
+        _ => {
+            return Err(OptimError::InvalidConfig(format!(
+                "Unknown format: {}",
+                format
+            )))
+        }
     };
-    
+
     // Write report to file
     fs::write(&output_path, output_content)?;
-    
+
     if verbose {
-        println!("Long-running analysis report written to: {}", output_path.display());
-        println!("Overall stability score: {:.3}", analysis_report.summary.overall_stability_score);
+        println!(
+            "Long-running analysis report written to: {}",
+            output_path.display()
+        );
+        println!(
+            "Overall stability score: {:.3}",
+            analysis_report.summary.overall_stability_score
+        );
         println!("Test status: {}", analysis_report.summary.test_status);
         println!("Uptime: {:.2}%", analysis_report.summary.uptime_percentage);
     }
-    
+
     Ok(())
 }
 
@@ -654,19 +671,19 @@ fn load_longrun_test_results(path: &Path, verbose: bool) -> Result<LongRunTestDa
     if verbose {
         println!("  Loading long-running test data from: {}", path.display());
     }
-    
+
     let content = fs::read_to_string(path)?;
-    
+
     // Try to parse as JSON first
     if let Ok(data) = serde_json::from_str::<LongRunTestData>(&content) {
         return Ok(data);
     }
-    
+
     // If JSON parsing fails, create mock data based on file existence
     if verbose {
         println!("  Creating mock long-running test data for analysis");
     }
-    
+
     Ok(create_mock_longrun_data())
 }
 
@@ -674,40 +691,40 @@ fn create_mock_longrun_data() -> LongRunTestData {
     let duration = 43200.0; // 12 hours
     let sampling_interval = 60.0; // Every minute
     let samples = (duration / sampling_interval) as usize;
-    
+
     let mut performance_timeline = Vec::new();
     let mut memory_timeline = Vec::new();
     let mut cpu_timeline = Vec::new();
     let mut error_timeline = Vec::new();
-    
+
     for i in 0..samples {
         let time = (i as f64 * sampling_interval) as u64;
-        
+
         // Simulate gradual performance degradation with noise
         let base_performance = 100.0;
         let degradation = i as f64 * 0.005; // 0.5% degradation per 100 samples
         let noise = (time as f64 * 0.01).sin() * 3.0;
         let performance = base_performance - degradation + noise;
         performance_timeline.push((time, performance));
-        
+
         // Simulate memory growth with fluctuations
         let base_memory = 100.0;
         let growth = i as f64 * 0.02; // Gradual growth
         let fluctuation = (time as f64 * 0.005).sin() * 5.0;
         let memory = base_memory + growth + fluctuation;
         memory_timeline.push((time, memory));
-        
+
         // Simulate CPU utilization
         let cpu = 65.0 + (time as f64 * 0.003).sin() * 15.0;
         cpu_timeline.push((time, cpu));
-        
+
         // Simulate occasional errors
         let error_count = if i % 100 == 0 && i > 0 { 1 } else { 0 };
         if error_count > 0 {
             error_timeline.push((time, error_count));
         }
     }
-    
+
     LongRunTestData {
         total_duration_seconds: duration,
         sampling_interval_seconds: sampling_interval,
@@ -715,34 +732,28 @@ fn create_mock_longrun_data() -> LongRunTestData {
         memory_timeline,
         cpu_timeline,
         error_timeline,
-        failure_events: vec![
-            FailureEvent {
-                timestamp: 3600, // 1 hour in
-                failure_type: "memory_exhaustion".to_string(),
-                severity: "medium".to_string(),
-                downtime_seconds: 120.0,
-                recovery_method: "automatic_restart".to_string(),
-                root_cause: Some("memory_leak_accumulation".to_string()),
-            },
-        ],
-        resource_events: vec![
-            ResourceUtilizationEvent {
-                timestamp: 7200, // 2 hours in
-                resource_type: "memory".to_string(),
-                utilization_percent: 95.0,
-                threshold_exceeded: true,
-                duration_seconds: 300.0,
-            },
-        ],
-        system_events: vec![
-            SystemEvent {
-                timestamp: 1800, // 30 minutes in
-                event_type: "performance_degradation".to_string(),
-                severity: "warning".to_string(),
-                description: "Gradual performance degradation detected".to_string(),
-                impact_level: 0.3,
-            },
-        ],
+        failure_events: vec![FailureEvent {
+            timestamp: 3600, // 1 hour in
+            failure_type: "memory_exhaustion".to_string(),
+            severity: "medium".to_string(),
+            downtime_seconds: 120.0,
+            recovery_method: "automatic_restart".to_string(),
+            root_cause: Some("memory_leak_accumulation".to_string()),
+        }],
+        resource_events: vec![ResourceUtilizationEvent {
+            timestamp: 7200, // 2 hours in
+            resource_type: "memory".to_string(),
+            utilization_percent: 95.0,
+            threshold_exceeded: true,
+            duration_seconds: 300.0,
+        }],
+        system_events: vec![SystemEvent {
+            timestamp: 1800, // 30 minutes in
+            event_type: "performance_degradation".to_string(),
+            severity: "warning".to_string(),
+            description: "Gradual performance degradation detected".to_string(),
+            impact_level: 0.3,
+        }],
     }
 }
 
@@ -753,32 +764,31 @@ fn analyze_longrun_test_results(
     availability_threshold: f64,
     verbose: bool,
 ) -> Result<LongRunAnalysisReport> {
-    
     if verbose {
         println!("  Analyzing endurance characteristics...");
     }
     let endurance_analysis = analyze_endurance(&data);
-    
+
     if verbose {
         println!("  Analyzing long-term trends...");
     }
     let trend_analysis = analyze_trends(&data);
-    
+
     if verbose {
         println!("  Analyzing reliability metrics...");
     }
     let reliability_analysis = analyze_reliability(&data);
-    
+
     if verbose {
         println!("  Analyzing resource utilization patterns...");
     }
     let resource_analysis = analyze_longterm_resources(&data);
-    
+
     if verbose {
         println!("  Analyzing degradation patterns...");
     }
     let degradation_analysis = analyze_longterm_degradation(&data);
-    
+
     if verbose {
         println!("  Generating long-term recommendations...");
     }
@@ -790,18 +800,18 @@ fn analyze_longrun_test_results(
         degradation_threshold,
         availability_threshold,
     );
-    
+
     // Calculate summary metrics
     let total_duration_hours = data.total_duration_seconds / 3600.0;
     let total_samples = data.performance_timeline.len();
     let sampling_interval = data.sampling_interval_seconds;
-    
+
     // Calculate uptime
-    let total_downtime_seconds: f64 = data.failure_events.iter()
-        .map(|f| f.downtime_seconds)
-        .sum();
-    let uptime_percentage = ((data.total_duration_seconds - total_downtime_seconds) / data.total_duration_seconds) * 100.0;
-    
+    let total_downtime_seconds: f64 = data.failure_events.iter().map(|f| f.downtime_seconds).sum();
+    let uptime_percentage = ((data.total_duration_seconds - total_downtime_seconds)
+        / data.total_duration_seconds)
+        * 100.0;
+
     // Calculate MTBF
     let failures = data.failure_events.len();
     let mtbf_hours = if failures > 0 {
@@ -809,17 +819,18 @@ fn analyze_longrun_test_results(
     } else {
         total_duration_hours // No failures observed
     };
-    
+
     // Calculate MTTR
     let mttr_minutes = if failures > 0 {
         total_downtime_seconds / (failures as f64 * 60.0)
     } else {
         0.0
     };
-    
-    let overall_stability_score = calculate_overall_stability_score(&reliability_analysis, &endurance_analysis);
+
+    let overall_stability_score =
+        calculate_overall_stability_score(&reliability_analysis, &endurance_analysis);
     let critical_issues = count_critical_issues(&data, &endurance_analysis, &reliability_analysis);
-    
+
     let test_status = determine_test_status(
         overall_stability_score,
         uptime_percentage,
@@ -827,7 +838,7 @@ fn analyze_longrun_test_results(
         stability_threshold,
         availability_threshold,
     );
-    
+
     let summary = LongRunSummary {
         total_duration_hours,
         total_samples,
@@ -839,12 +850,15 @@ fn analyze_longrun_test_results(
         test_status,
         critical_issues_detected: critical_issues,
     };
-    
+
     let mut env_info = HashMap::new();
     env_info.insert("os".to_string(), std::env::consts::OS.to_string());
     env_info.insert("arch".to_string(), std::env::consts::ARCH.to_string());
-    env_info.insert("test_duration_hours".to_string(), total_duration_hours.to_string());
-    
+    env_info.insert(
+        "test_duration_hours".to_string(),
+        total_duration_hours.to_string(),
+    );
+
     Ok(LongRunAnalysisReport {
         summary,
         endurance_analysis,
@@ -854,7 +868,10 @@ fn analyze_longrun_test_results(
         degradation_analysis,
         recommendations,
         environment_info: env_info,
-        timestamp: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
+        timestamp: SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs(),
     })
 }
 
@@ -863,8 +880,9 @@ fn analyze_endurance(data: &LongRunTestData) -> EnduranceAnalysis {
     let perf_timeline = &data.performance_timeline;
     let initial_perf = perf_timeline.first().map(|(_, p)| *p).unwrap_or(100.0);
     let final_perf = perf_timeline.last().map(|(_, p)| *p).unwrap_or(100.0);
-    let decay_rate_per_day = ((initial_perf - final_perf) / initial_perf) * 100.0 * (24.0 * 3600.0) / data.total_duration_seconds;
-    
+    let decay_rate_per_day = ((initial_perf - final_perf) / initial_perf) * 100.0 * (24.0 * 3600.0)
+        / data.total_duration_seconds;
+
     let performance_sustainability = PerformanceSustainabilityAnalysis {
         performance_decay_rate_per_day: decay_rate_per_day,
         performance_stability_coefficient: calculate_stability_coefficient(perf_timeline),
@@ -876,27 +894,26 @@ fn analyze_endurance(data: &LongRunTestData) -> EnduranceAnalysis {
             latency_volatility_score: 0.15,
             drift_acceleration: 0.01,
         },
-        efficiency_degradation_patterns: vec![
-            EfficiencyDegradationPattern {
-                pattern_name: "gradual_linear_degradation".to_string(),
-                degradation_rate: decay_rate_per_day / 100.0,
-                onset_time_hours: 1.0,
-                recovery_observed: false,
-                pattern_strength: 0.8,
-                contributing_factors: vec![
-                    "memory_fragmentation".to_string(),
-                    "resource_accumulation".to_string(),
-                ],
-            },
-        ],
+        efficiency_degradation_patterns: vec![EfficiencyDegradationPattern {
+            pattern_name: "gradual_linear_degradation".to_string(),
+            degradation_rate: decay_rate_per_day / 100.0,
+            onset_time_hours: 1.0,
+            recovery_observed: false,
+            pattern_strength: 0.8,
+            contributing_factors: vec![
+                "memory_fragmentation".to_string(),
+                "resource_accumulation".to_string(),
+            ],
+        }],
     };
-    
+
     // Analyze memory sustainability
     let mem_timeline = &data.memory_timeline;
     let initial_mem = mem_timeline.first().map(|(_, m)| *m).unwrap_or(100.0);
     let final_mem = mem_timeline.last().map(|(_, m)| *m).unwrap_or(100.0);
-    let mem_growth_rate = ((final_mem - initial_mem) / initial_mem) * 100.0 * (24.0 * 3600.0) / data.total_duration_seconds;
-    
+    let mem_growth_rate = ((final_mem - initial_mem) / initial_mem) * 100.0 * (24.0 * 3600.0)
+        / data.total_duration_seconds;
+
     let memory_sustainability = MemorySustainabilityAnalysis {
         memory_growth_sustainability: calculate_sustainability_score(mem_growth_rate),
         fragmentation_progression: FragmentationProgressionAnalysis {
@@ -910,11 +927,14 @@ fn analyze_endurance(data: &LongRunTestData) -> EnduranceAnalysis {
             total_accumulated_leaks_mb: (final_mem - initial_mem).max(0.0),
             leak_accumulation_rate_mb_per_hour: mem_growth_rate / 24.0,
             leak_sources_identified: 2,
-            leak_severity_distribution: [
-                ("low".to_string(), 1),
-                ("medium".to_string(), 1),
-            ].into_iter().collect(),
-            projected_resource_exhaustion_time_days: if mem_growth_rate > 0.0 { Some(30.0) } else { None },
+            leak_severity_distribution: [("low".to_string(), 1), ("medium".to_string(), 1)]
+                .into_iter()
+                .collect(),
+            projected_resource_exhaustion_time_days: if mem_growth_rate > 0.0 {
+                Some(30.0)
+            } else {
+                None
+            },
         },
         memory_pressure_incidents: vec![],
         memory_efficiency_trends: MemoryEfficiencyTrends {
@@ -924,7 +944,7 @@ fn analyze_endurance(data: &LongRunTestData) -> EnduranceAnalysis {
             projected_efficiency_at_30_days: 0.7,
         },
     };
-    
+
     // Analyze error accumulation
     let total_errors: usize = data.error_timeline.iter().map(|(_, e)| *e).sum();
     let error_rate_progression = ErrorRateProgression {
@@ -934,7 +954,7 @@ fn analyze_endurance(data: &LongRunTestData) -> EnduranceAnalysis {
         error_rate_volatility: 0.3,
         peak_error_rate_per_hour: 2.0,
     };
-    
+
     let error_accumulation = ErrorAccumulationAnalysis {
         total_errors_detected: total_errors,
         error_rate_progression,
@@ -958,45 +978,49 @@ fn analyze_endurance(data: &LongRunTestData) -> EnduranceAnalysis {
             automated_recovery_percentage: 0.85,
         },
     };
-    
-    let wear_indicators = vec![
-        WearIndicator {
-            indicator_name: "memory_fragmentation".to_string(),
-            current_wear_level: 0.25,
-            wear_rate_per_day: 0.15,
-            projected_critical_wear_time_days: Some(10.0),
-            wear_factors: vec!["frequent_allocations".to_string(), "variable_sizes".to_string()],
-            mitigation_strategies: vec!["object_pooling".to_string(), "memory_compaction".to_string()],
-        },
-    ];
-    
+
+    let wear_indicators = vec![WearIndicator {
+        indicator_name: "memory_fragmentation".to_string(),
+        current_wear_level: 0.25,
+        wear_rate_per_day: 0.15,
+        projected_critical_wear_time_days: Some(10.0),
+        wear_factors: vec![
+            "frequent_allocations".to_string(),
+            "variable_sizes".to_string(),
+        ],
+        mitigation_strategies: vec![
+            "object_pooling".to_string(),
+            "memory_compaction".to_string(),
+        ],
+    }];
+
     let longevity_projections = LongevityProjections {
         projected_system_lifetime_days: Some(25.0),
         confidence_interval_days: Some((20.0, 30.0)),
-        limiting_factors: vec![
-            LimitingFactor {
-                factor_name: "memory_growth".to_string(),
-                impact_severity: 0.8,
-                time_to_critical_impact_days: 30.0,
-                mitigation_complexity: "medium".to_string(),
-            },
-        ],
-        maintenance_requirements: vec![
-            MaintenanceRequirement {
-                maintenance_type: "memory_cleanup".to_string(),
-                frequency_days: 7.0,
-                estimated_downtime_minutes: 30.0,
-                preventive_effectiveness: 0.8,
-            },
-        ],
+        limiting_factors: vec![LimitingFactor {
+            factor_name: "memory_growth".to_string(),
+            impact_severity: 0.8,
+            time_to_critical_impact_days: 30.0,
+            mitigation_complexity: "medium".to_string(),
+        }],
+        maintenance_requirements: vec![MaintenanceRequirement {
+            maintenance_type: "memory_cleanup".to_string(),
+            frequency_days: 7.0,
+            estimated_downtime_minutes: 30.0,
+            preventive_effectiveness: 0.8,
+        }],
         sustainability_recommendations: vec![
             "Implement regular memory cleanup routines".to_string(),
             "Monitor and limit resource accumulation".to_string(),
         ],
     };
-    
-    let system_endurance_score = calculate_endurance_score(&performance_sustainability, &memory_sustainability, &error_accumulation);
-    
+
+    let system_endurance_score = calculate_endurance_score(
+        &performance_sustainability,
+        &memory_sustainability,
+        &error_accumulation,
+    );
+
     EnduranceAnalysis {
         system_endurance_score,
         performance_sustainability,
@@ -1011,13 +1035,15 @@ fn calculate_stability_coefficient(timeline: &[(u64, f64)]) -> f64 {
     if timeline.len() < 2 {
         return 1.0;
     }
-    
+
     let mean = timeline.iter().map(|(_, v)| *v).sum::<f64>() / timeline.len() as f64;
-    let variance = timeline.iter()
+    let variance = timeline
+        .iter()
         .map(|(_, v)| (*v - mean).powi(2))
-        .sum::<f64>() / (timeline.len() - 1) as f64;
+        .sum::<f64>()
+        / (timeline.len() - 1) as f64;
     let std_dev = variance.sqrt();
-    
+
     if mean > 0.0 {
         1.0 - (std_dev / mean).min(1.0)
     } else {
@@ -1041,33 +1067,30 @@ fn calculate_endurance_score(
     let perf_score = performance.throughput_sustainability_score;
     let mem_score = memory.memory_growth_sustainability;
     let error_score = errors.error_recovery_effectiveness.recovery_success_rate;
-    
+
     (perf_score + mem_score + error_score) / 3.0
 }
 
 fn analyze_trends(_data: &LongRunTestData) -> TrendAnalysis {
     // Simplified trend analysis
     TrendAnalysis {
-        long_term_trends: vec![
-            LongTermTrend {
-                metric_name: "performance".to_string(),
-                trend_direction: "declining".to_string(),
-                trend_strength: 0.6,
-                trend_significance: 0.85,
-                linear_coefficient: -0.05,
-                r_squared: 0.72,
-                projected_value_at_30_days: 85.0,
-            },
-        ],
+        long_term_trends: vec![LongTermTrend {
+            metric_name: "performance".to_string(),
+            trend_direction: "declining".to_string(),
+            trend_strength: 0.6,
+            trend_significance: 0.85,
+            linear_coefficient: -0.05,
+            r_squared: 0.72,
+            projected_value_at_30_days: 85.0,
+        }],
         seasonal_patterns: vec![],
         cyclical_behaviors: vec![],
         anomaly_detection: AnomalyDetectionResults {
             anomalies_detected: 5,
             anomaly_rate_per_day: 1.0,
-            anomaly_severity_distribution: [
-                ("low".to_string(), 3),
-                ("medium".to_string(), 2),
-            ].into_iter().collect(),
+            anomaly_severity_distribution: [("low".to_string(), 3), ("medium".to_string(), 2)]
+                .into_iter()
+                .collect(),
             anomaly_clustering: vec![],
             false_positive_rate: 0.1,
         },
@@ -1084,36 +1107,40 @@ fn analyze_reliability(data: &LongRunTestData) -> ReliabilityAnalysis {
     } else {
         0.0
     };
-    
+
     let failure_analysis = FailureAnalysis {
         total_failures,
         failure_rate_per_1000_hours: failure_rate,
-        failure_mode_distribution: failures.iter()
-            .fold(HashMap::new(), |mut acc, f| {
-                *acc.entry(f.failure_type.clone()).or_insert(0) += 1;
-                acc
-            }),
+        failure_mode_distribution: failures.iter().fold(HashMap::new(), |mut acc, f| {
+            *acc.entry(f.failure_type.clone()).or_insert(0) += 1;
+            acc
+        }),
         failure_impact_analysis: vec![],
         failure_root_cause_analysis: vec![],
     };
-    
+
     let total_downtime: f64 = failures.iter().map(|f| f.downtime_seconds).sum();
-    let availability_percent = ((data.total_duration_seconds - total_downtime) / data.total_duration_seconds) * 100.0;
-    
+    let availability_percent =
+        ((data.total_duration_seconds - total_downtime) / data.total_duration_seconds) * 100.0;
+
     let availability_analysis = AvailabilityAnalysis {
         overall_availability_percent: availability_percent,
         planned_downtime_percent: 0.0,
         unplanned_downtime_percent: (total_downtime / data.total_duration_seconds) * 100.0,
         availability_trend: -0.1, // Slight downward trend
-        sla_compliance_percent: if availability_percent >= 99.0 { 100.0 } else { 90.0 },
+        sla_compliance_percent: if availability_percent >= 99.0 {
+            100.0
+        } else {
+            90.0
+        },
     };
-    
+
     let mtbf_hours = if total_failures > 0 {
         duration_hours / total_failures as f64
     } else {
         duration_hours
     };
-    
+
     let mtbf_analysis = MtbfAnalysis {
         mean_time_between_failures_hours: mtbf_hours,
         mtbf_confidence_interval: (mtbf_hours * 0.8, mtbf_hours * 1.2),
@@ -1125,23 +1152,27 @@ fn analyze_reliability(data: &LongRunTestData) -> ReliabilityAnalysis {
             (720.0, 0.80), // 1 month
         ],
     };
-    
+
     let fault_tolerance_assessment = FaultToleranceAssessment {
         fault_tolerance_score: 0.85,
         single_point_of_failure_analysis: vec![],
         graceful_degradation_effectiveness: 0.9,
         error_handling_robustness: 0.88,
     };
-    
+
     let redundancy_effectiveness = RedundancyEffectiveness {
         redundancy_mechanisms: vec![],
         overall_redundancy_score: 0.7,
         redundancy_efficiency: 0.8,
         failover_success_rate: 0.95,
     };
-    
-    let system_reliability_score = calculate_reliability_score(&availability_analysis, &mtbf_analysis, &fault_tolerance_assessment);
-    
+
+    let system_reliability_score = calculate_reliability_score(
+        &availability_analysis,
+        &mtbf_analysis,
+        &fault_tolerance_assessment,
+    );
+
     ReliabilityAnalysis {
         system_reliability_score,
         failure_analysis,
@@ -1159,14 +1190,14 @@ fn calculate_reliability_score(
 ) -> f64 {
     let availability_score = availability.overall_availability_percent / 100.0;
     let fault_tolerance_score = fault_tolerance.fault_tolerance_score;
-    
+
     (availability_score + fault_tolerance_score) / 2.0
 }
 
 fn analyze_longterm_resources(data: &LongRunTestData) -> LongTermResourceAnalysis {
     let cpu_trends = analyze_resource_trends(&data.cpu_timeline);
     let memory_trends = analyze_resource_trends(&data.memory_timeline);
-    
+
     // Mock IO trends
     let io_trends = ResourceTrendAnalysis {
         average_utilization_percent: 45.0,
@@ -1176,28 +1207,25 @@ fn analyze_longterm_resources(data: &LongRunTestData) -> LongTermResourceAnalysi
         saturation_incidents: 2,
         projected_saturation_time_days: Some(45.0),
     };
-    
+
     let resource_efficiency = ResourceEfficiencyAnalysis {
         overall_efficiency_score: 0.75,
-        efficiency_trends: [
-            ("cpu".to_string(), -0.02),
-            ("memory".to_string(), -0.05),
-        ].into_iter().collect(),
+        efficiency_trends: [("cpu".to_string(), -0.02), ("memory".to_string(), -0.05)]
+            .into_iter()
+            .collect(),
         inefficiency_hotspots: vec![],
         optimization_opportunities: vec![],
     };
-    
-    let capacity_planning = vec![
-        CapacityPlanningRecommendation {
-            resource_type: "memory".to_string(),
-            current_capacity_utilization: memory_trends.average_utilization_percent,
-            projected_utilization_in_30_days: memory_trends.average_utilization_percent + 15.0,
-            recommended_capacity_increase_percent: 25.0,
-            urgency_level: "medium".to_string(),
-            cost_implications: "moderate".to_string(),
-        },
-    ];
-    
+
+    let capacity_planning = vec![CapacityPlanningRecommendation {
+        resource_type: "memory".to_string(),
+        current_capacity_utilization: memory_trends.average_utilization_percent,
+        projected_utilization_in_30_days: memory_trends.average_utilization_percent + 15.0,
+        recommended_capacity_increase_percent: 25.0,
+        urgency_level: "medium".to_string(),
+        cost_implications: "moderate".to_string(),
+    }];
+
     LongTermResourceAnalysis {
         cpu_utilization_trends: cpu_trends,
         memory_utilization_trends: memory_trends,
@@ -1219,15 +1247,16 @@ fn analyze_resource_trends(timeline: &[(u64, f64)]) -> ResourceTrendAnalysis {
             projected_saturation_time_days: None,
         };
     }
-    
+
     let average = timeline.iter().map(|(_, v)| *v).sum::<f64>() / timeline.len() as f64;
     let peak = timeline.iter().map(|(_, v)| *v).fold(0.0, f64::max);
-    
+
     // Calculate trend (simplified linear regression)
     let trend = if timeline.len() > 1 {
         let first = timeline.first().unwrap().1;
         let last = timeline.last().unwrap().1;
-        let time_span_days = (timeline.last().unwrap().0 - timeline.first().unwrap().0) as f64 / (24.0 * 3600.0);
+        let time_span_days =
+            (timeline.last().unwrap().0 - timeline.first().unwrap().0) as f64 / (24.0 * 3600.0);
         if time_span_days > 0.0 {
             (last - first) / time_span_days
         } else {
@@ -1236,16 +1265,16 @@ fn analyze_resource_trends(timeline: &[(u64, f64)]) -> ResourceTrendAnalysis {
     } else {
         0.0
     };
-    
+
     let volatility = calculate_stability_coefficient(timeline);
     let saturation_incidents = timeline.iter().filter(|(_, v)| *v > 90.0).count();
-    
+
     let projected_saturation = if trend > 0.0 && peak < 100.0 {
         Some((100.0 - peak) / trend)
     } else {
         None
     };
-    
+
     ResourceTrendAnalysis {
         average_utilization_percent: average,
         peak_utilization_percent: peak,
@@ -1258,40 +1287,45 @@ fn analyze_resource_trends(timeline: &[(u64, f64)]) -> ResourceTrendAnalysis {
 
 fn analyze_longterm_degradation(data: &LongRunTestData) -> LongTermDegradationAnalysis {
     let performance_timeline = &data.performance_timeline;
-    let initial_perf = performance_timeline.first().map(|(_, p)| *p).unwrap_or(100.0);
-    let final_perf = performance_timeline.last().map(|(_, p)| *p).unwrap_or(100.0);
-    
+    let initial_perf = performance_timeline
+        .first()
+        .map(|(_, p)| *p)
+        .unwrap_or(100.0);
+    let final_perf = performance_timeline
+        .last()
+        .map(|(_, p)| *p)
+        .unwrap_or(100.0);
+
     let overall_degradation = (initial_perf - final_perf) / initial_perf;
-    
-    let degradation_patterns = vec![
-        DegradationPattern {
-            pattern_name: "linear_performance_decline".to_string(),
-            degradation_rate: overall_degradation * 24.0 / (data.total_duration_seconds / 3600.0),
-            pattern_onset_time_hours: 0.5,
-            affected_components: vec!["optimizer_core".to_string(), "memory_manager".to_string()],
-            degradation_mechanism: "resource_accumulation".to_string(),
-            reversibility: 0.3,
-        },
-    ];
-    
+
+    let degradation_patterns = vec![DegradationPattern {
+        pattern_name: "linear_performance_decline".to_string(),
+        degradation_rate: overall_degradation * 24.0 / (data.total_duration_seconds / 3600.0),
+        pattern_onset_time_hours: 0.5,
+        affected_components: vec!["optimizer_core".to_string(), "memory_manager".to_string()],
+        degradation_mechanism: "resource_accumulation".to_string(),
+        reversibility: 0.3,
+    }];
+
     let acceleration_analysis = DegradationAccelerationAnalysis {
         acceleration_detected: false,
         acceleration_rate: 0.0,
         acceleration_triggers: vec![],
         projected_critical_degradation_time_days: Some(20.0),
     };
-    
-    let component_wear = vec![
-        ComponentWearAnalysis {
-            component_name: "memory_allocator".to_string(),
-            wear_level: 0.2,
-            wear_rate_per_day: 0.02,
-            expected_lifetime_days: 40.0,
-            wear_factors: vec!["fragmentation".to_string(), "allocation_frequency".to_string()],
-            replacement_indicators: vec!["allocation_failure_rate".to_string()],
-        },
-    ];
-    
+
+    let component_wear = vec![ComponentWearAnalysis {
+        component_name: "memory_allocator".to_string(),
+        wear_level: 0.2,
+        wear_rate_per_day: 0.02,
+        expected_lifetime_days: 40.0,
+        wear_factors: vec![
+            "fragmentation".to_string(),
+            "allocation_frequency".to_string(),
+        ],
+        replacement_indicators: vec!["allocation_failure_rate".to_string()],
+    }];
+
     let maintenance_effectiveness = MaintenanceEffectivenessAnalysis {
         maintenance_frequency_days: 7.0,
         maintenance_success_rate: 0.95,
@@ -1299,7 +1333,7 @@ fn analyze_longterm_degradation(data: &LongRunTestData) -> LongTermDegradationAn
         preventive_vs_reactive_ratio: 0.7,
         maintenance_cost_effectiveness: 0.85,
     };
-    
+
     LongTermDegradationAnalysis {
         overall_degradation_score: overall_degradation,
         degradation_patterns,
@@ -1318,14 +1352,15 @@ fn generate_longrun_recommendations(
     availability_threshold: f64,
 ) -> Vec<LongRunRecommendation> {
     let mut recommendations = Vec::new();
-    
+
     // Endurance-based recommendations
     if endurance.system_endurance_score < stability_threshold {
         recommendations.push(LongRunRecommendation {
             recommendation_type: "endurance_improvement".to_string(),
             priority: "high".to_string(),
             category: "endurance".to_string(),
-            description: "Improve system endurance through resource management optimization".to_string(),
+            description: "Improve system endurance through resource management optimization"
+                .to_string(),
             urgency_level: "immediate".to_string(),
             estimated_impact: 0.8,
             implementation_complexity: "medium".to_string(),
@@ -1334,14 +1369,19 @@ fn generate_longrun_recommendations(
             monitoring_requirements: vec!["Resource utilization tracking".to_string()],
         });
     }
-    
+
     // Performance degradation recommendations
-    if endurance.performance_sustainability.performance_decay_rate_per_day > degradation_threshold {
+    if endurance
+        .performance_sustainability
+        .performance_decay_rate_per_day
+        > degradation_threshold
+    {
         recommendations.push(LongRunRecommendation {
             recommendation_type: "performance_degradation_mitigation".to_string(),
             priority: "high".to_string(),
             category: "performance".to_string(),
-            description: "Address performance degradation through systematic optimization".to_string(),
+            description: "Address performance degradation through systematic optimization"
+                .to_string(),
             urgency_level: "high".to_string(),
             estimated_impact: 0.9,
             implementation_complexity: "high".to_string(),
@@ -1350,14 +1390,19 @@ fn generate_longrun_recommendations(
             monitoring_requirements: vec!["Continuous performance tracking".to_string()],
         });
     }
-    
+
     // Reliability recommendations
-    if reliability.availability_analysis.overall_availability_percent < availability_threshold {
+    if reliability
+        .availability_analysis
+        .overall_availability_percent
+        < availability_threshold
+    {
         recommendations.push(LongRunRecommendation {
             recommendation_type: "availability_improvement".to_string(),
             priority: "critical".to_string(),
             category: "reliability".to_string(),
-            description: "Enhance system availability through redundancy and fault tolerance".to_string(),
+            description: "Enhance system availability through redundancy and fault tolerance"
+                .to_string(),
             urgency_level: "critical".to_string(),
             estimated_impact: 0.95,
             implementation_complexity: "high".to_string(),
@@ -1366,7 +1411,7 @@ fn generate_longrun_recommendations(
             monitoring_requirements: vec!["Availability monitoring".to_string()],
         });
     }
-    
+
     // Long-term degradation recommendations
     if degradation.overall_degradation_score > 0.1 {
         recommendations.push(LongRunRecommendation {
@@ -1382,11 +1427,14 @@ fn generate_longrun_recommendations(
             monitoring_requirements: vec!["Component wear monitoring".to_string()],
         });
     }
-    
+
     recommendations
 }
 
-fn calculate_overall_stability_score(reliability: &ReliabilityAnalysis, endurance: &EnduranceAnalysis) -> f64 {
+fn calculate_overall_stability_score(
+    reliability: &ReliabilityAnalysis,
+    endurance: &EnduranceAnalysis,
+) -> f64 {
     (reliability.system_reliability_score + endurance.system_endurance_score) / 2.0
 }
 
@@ -1396,22 +1444,30 @@ fn count_critical_issues(
     reliability: &ReliabilityAnalysis,
 ) -> usize {
     let mut issues = 0;
-    
+
     // Count critical failures
-    issues += data.failure_events.iter()
+    issues += data
+        .failure_events
+        .iter()
         .filter(|f| f.severity == "critical")
         .count();
-    
+
     // Count critical wear indicators
-    issues += endurance.wear_indicators.iter()
+    issues += endurance
+        .wear_indicators
+        .iter()
         .filter(|w| w.current_wear_level > 0.8)
         .count();
-    
+
     // Count availability issues
-    if reliability.availability_analysis.overall_availability_percent < 95.0 {
+    if reliability
+        .availability_analysis
+        .overall_availability_percent
+        < 95.0
+    {
         issues += 1;
     }
-    
+
     issues
 }
 
@@ -1432,124 +1488,233 @@ fn determine_test_status(
 }
 
 fn generate_json_report(report: &LongRunAnalysisReport) -> Result<String> {
-    serde_json::to_string_pretty(report)
-        .map_err(|e| OptimError::SerializationError(e.to_string()))
+    serde_json::to_string_pretty(report).map_err(|e| OptimError::SerializationError(e.to_string()))
 }
 
 fn generate_markdown_report(report: &LongRunAnalysisReport) -> Result<String> {
     let mut md = String::new();
-    
+
     md.push_str("# Long-Running Test Analysis Report\n\n");
     md.push_str(&format!("**Generated**: <t:{}:F>\n", report.timestamp));
-    md.push_str(&format!("**Test Duration**: {:.2} hours\n", report.summary.total_duration_hours));
-    md.push_str(&format!("**Total Samples**: {}\n\n", report.summary.total_samples));
-    
+    md.push_str(&format!(
+        "**Test Duration**: {:.2} hours\n",
+        report.summary.total_duration_hours
+    ));
+    md.push_str(&format!(
+        "**Total Samples**: {}\n\n",
+        report.summary.total_samples
+    ));
+
     // Executive Summary
     md.push_str("## Executive Summary\n\n");
-    md.push_str(&format!("- **Test Status**: {}\n", report.summary.test_status));
-    md.push_str(&format!("- **Overall Stability Score**: {:.3}\n", report.summary.overall_stability_score));
-    md.push_str(&format!("- **System Uptime**: {:.2}%\n", report.summary.uptime_percentage));
-    md.push_str(&format!("- **MTBF**: {:.2} hours\n", report.summary.mean_time_between_failures_hours));
-    md.push_str(&format!("- **MTTR**: {:.2} minutes\n", report.summary.mean_time_to_recovery_minutes));
-    md.push_str(&format!("- **Critical Issues**: {}\n\n", report.summary.critical_issues_detected));
-    
+    md.push_str(&format!(
+        "- **Test Status**: {}\n",
+        report.summary.test_status
+    ));
+    md.push_str(&format!(
+        "- **Overall Stability Score**: {:.3}\n",
+        report.summary.overall_stability_score
+    ));
+    md.push_str(&format!(
+        "- **System Uptime**: {:.2}%\n",
+        report.summary.uptime_percentage
+    ));
+    md.push_str(&format!(
+        "- **MTBF**: {:.2} hours\n",
+        report.summary.mean_time_between_failures_hours
+    ));
+    md.push_str(&format!(
+        "- **MTTR**: {:.2} minutes\n",
+        report.summary.mean_time_to_recovery_minutes
+    ));
+    md.push_str(&format!(
+        "- **Critical Issues**: {}\n\n",
+        report.summary.critical_issues_detected
+    ));
+
     // Key Findings
     md.push_str("## Key Findings\n\n");
-    
+
     let endurance = &report.endurance_analysis;
     md.push_str("### System Endurance\n");
-    md.push_str(&format!("- **Endurance Score**: {:.3}\n", endurance.system_endurance_score));
-    md.push_str(&format!("- **Performance Decay**: {:.2}%/day\n", endurance.performance_sustainability.performance_decay_rate_per_day));
-    md.push_str(&format!("- **Memory Growth**: {:.2} MB/hour\n", endurance.memory_sustainability.leak_accumulation_analysis.leak_accumulation_rate_mb_per_hour));
-    
-    if let Some(lifetime) = endurance.longevity_projections.projected_system_lifetime_days {
-        md.push_str(&format!("- **Projected System Lifetime**: {:.1} days\n", lifetime));
+    md.push_str(&format!(
+        "- **Endurance Score**: {:.3}\n",
+        endurance.system_endurance_score
+    ));
+    md.push_str(&format!(
+        "- **Performance Decay**: {:.2}%/day\n",
+        endurance
+            .performance_sustainability
+            .performance_decay_rate_per_day
+    ));
+    md.push_str(&format!(
+        "- **Memory Growth**: {:.2} MB/hour\n",
+        endurance
+            .memory_sustainability
+            .leak_accumulation_analysis
+            .leak_accumulation_rate_mb_per_hour
+    ));
+
+    if let Some(lifetime) = endurance
+        .longevity_projections
+        .projected_system_lifetime_days
+    {
+        md.push_str(&format!(
+            "- **Projected System Lifetime**: {:.1} days\n",
+            lifetime
+        ));
     }
     md.push('\n');
-    
+
     let reliability = &report.reliability_analysis;
     md.push_str("### Reliability Analysis\n");
-    md.push_str(&format!("- **Reliability Score**: {:.3}\n", reliability.system_reliability_score));
-    md.push_str(&format!("- **Total Failures**: {}\n", reliability.failure_analysis.total_failures));
-    md.push_str(&format!("- **Availability**: {:.2}%\n", reliability.availability_analysis.overall_availability_percent));
-    md.push_str(&format!("- **Fault Tolerance**: {:.3}\n", reliability.fault_tolerance_assessment.fault_tolerance_score));
+    md.push_str(&format!(
+        "- **Reliability Score**: {:.3}\n",
+        reliability.system_reliability_score
+    ));
+    md.push_str(&format!(
+        "- **Total Failures**: {}\n",
+        reliability.failure_analysis.total_failures
+    ));
+    md.push_str(&format!(
+        "- **Availability**: {:.2}%\n",
+        reliability
+            .availability_analysis
+            .overall_availability_percent
+    ));
+    md.push_str(&format!(
+        "- **Fault Tolerance**: {:.3}\n",
+        reliability.fault_tolerance_assessment.fault_tolerance_score
+    ));
     md.push('\n');
-    
+
     // Recommendations
     if !report.recommendations.is_empty() {
         md.push_str("## Critical Recommendations\n\n");
         for (i, rec) in report.recommendations.iter().take(5).enumerate() {
-            md.push_str(&format!("{}. **{}** (Priority: {}, Urgency: {})\n", 
-                               i + 1, rec.recommendation_type, rec.priority, rec.urgency_level));
+            md.push_str(&format!(
+                "{}. **{}** (Priority: {}, Urgency: {})\n",
+                i + 1,
+                rec.recommendation_type,
+                rec.priority,
+                rec.urgency_level
+            ));
             md.push_str(&format!("   {}\n", rec.description));
-            md.push_str(&format!("   *Implementation Time*: {:.0} days\n\n", rec.time_to_implement_days));
+            md.push_str(&format!(
+                "   *Implementation Time*: {:.0} days\n\n",
+                rec.time_to_implement_days
+            ));
         }
     }
-    
+
     // Degradation Analysis
     md.push_str("## Degradation Analysis\n\n");
     let degradation = &report.degradation_analysis;
-    md.push_str(&format!("- **Overall Degradation Score**: {:.3}\n", degradation.overall_degradation_score));
-    md.push_str(&format!("- **Degradation Patterns**: {}\n", degradation.degradation_patterns.len()));
-    md.push_str(&format!("- **Component Wear Items**: {}\n", degradation.component_wear_analysis.len()));
-    
-    if degradation.degradation_acceleration_analysis.acceleration_detected {
+    md.push_str(&format!(
+        "- **Overall Degradation Score**: {:.3}\n",
+        degradation.overall_degradation_score
+    ));
+    md.push_str(&format!(
+        "- **Degradation Patterns**: {}\n",
+        degradation.degradation_patterns.len()
+    ));
+    md.push_str(&format!(
+        "- **Component Wear Items**: {}\n",
+        degradation.component_wear_analysis.len()
+    ));
+
+    if degradation
+        .degradation_acceleration_analysis
+        .acceleration_detected
+    {
         md.push_str("- **⚠️ Degradation Acceleration Detected**\n");
     }
-    
-    if let Some(critical_time) = degradation.degradation_acceleration_analysis.projected_critical_degradation_time_days {
-        md.push_str(&format!("- **Projected Critical Time**: {:.1} days\n", critical_time));
+
+    if let Some(critical_time) = degradation
+        .degradation_acceleration_analysis
+        .projected_critical_degradation_time_days
+    {
+        md.push_str(&format!(
+            "- **Projected Critical Time**: {:.1} days\n",
+            critical_time
+        ));
     }
-    
+
     Ok(md)
 }
 
 fn generate_github_actions_report(report: &LongRunAnalysisReport) -> Result<String> {
     let json_report = generate_json_report(report)?;
     let mut output = String::new();
-    
+
     // Add GitHub Actions workflow commands
     match report.summary.test_status.as_str() {
         "failed" => {
-            output.push_str("::error::Long-running test failed! Critical system issues detected.\n");
-            output.push_str(&format!("::error::{} critical issue(s) identified.\n", 
-                                    report.summary.critical_issues_detected));
-        },
+            output
+                .push_str("::error::Long-running test failed! Critical system issues detected.\n");
+            output.push_str(&format!(
+                "::error::{} critical issue(s) identified.\n",
+                report.summary.critical_issues_detected
+            ));
+        }
         "degraded" => {
             output.push_str("::warning::Long-running test passed with degradation concerns.\n");
-            output.push_str(&format!("::warning::System stability score: {:.3}\n", 
-                                    report.summary.overall_stability_score));
-        },
+            output.push_str(&format!(
+                "::warning::System stability score: {:.3}\n",
+                report.summary.overall_stability_score
+            ));
+        }
         "passed" => {
             output.push_str("::notice::Long-running test passed successfully!\n");
-            output.push_str(&format!("::notice::System uptime: {:.2}%\n", 
-                                    report.summary.uptime_percentage));
-        },
+            output.push_str(&format!(
+                "::notice::System uptime: {:.2}%\n",
+                report.summary.uptime_percentage
+            ));
+        }
         _ => {
             output.push_str("::warning::Long-running test completed with unknown status.\n");
         }
     }
-    
+
     // Add specific warnings for concerning metrics
     if report.summary.uptime_percentage < 99.0 {
-        output.push_str(&format!("::warning::Low system uptime: {:.2}%\n", 
-                                report.summary.uptime_percentage));
+        output.push_str(&format!(
+            "::warning::Low system uptime: {:.2}%\n",
+            report.summary.uptime_percentage
+        ));
     }
-    
-    if report.endurance_analysis.performance_sustainability.performance_decay_rate_per_day > 1.0 {
-        output.push_str(&format!("::warning::High performance degradation: {:.2}%/day\n", 
-                                report.endurance_analysis.performance_sustainability.performance_decay_rate_per_day));
+
+    if report
+        .endurance_analysis
+        .performance_sustainability
+        .performance_decay_rate_per_day
+        > 1.0
+    {
+        output.push_str(&format!(
+            "::warning::High performance degradation: {:.2}%/day\n",
+            report
+                .endurance_analysis
+                .performance_sustainability
+                .performance_decay_rate_per_day
+        ));
     }
-    
-    if let Some(lifetime) = report.endurance_analysis.longevity_projections.projected_system_lifetime_days {
+
+    if let Some(lifetime) = report
+        .endurance_analysis
+        .longevity_projections
+        .projected_system_lifetime_days
+    {
         if lifetime < 30.0 {
-            output.push_str(&format!("::warning::Short projected system lifetime: {:.1} days\n", lifetime));
+            output.push_str(&format!(
+                "::warning::Short projected system lifetime: {:.1} days\n",
+                lifetime
+            ));
         }
     }
-    
+
     // Add the JSON report
     output.push('\n');
     output.push_str(&json_report);
-    
+
     Ok(output)
 }

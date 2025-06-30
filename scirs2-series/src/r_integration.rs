@@ -4,25 +4,25 @@
 //! analysis ecosystem, enabling interoperability with ts, forecast, and other R packages.
 
 #[cfg(feature = "r")]
+use std::collections::HashMap;
+#[cfg(feature = "r")]
 use std::ffi::{CStr, CString};
 #[cfg(feature = "r")]
 use std::os::raw::{c_char, c_double, c_int, c_void};
 #[cfg(feature = "r")]
 use std::slice;
-#[cfg(feature = "r")]
-use std::collections::HashMap;
 
 #[cfg(feature = "r")]
-use ndarray::{Array1, Array2};
-#[cfg(feature = "r")]
 use crate::{
-    arima_models::{ARIMAModel, ARIMAConfig},
     anomaly::AnomalyDetector,
+    arima_models::{ARIMAConfig, ARIMAModel},
     decomposition::STLDecomposition,
-    forecasting::neural::NeuralForecaster,
     error::{Result, TimeSeriesError},
+    forecasting::neural::NeuralForecaster,
     utils::*,
 };
+#[cfg(feature = "r")]
+use ndarray::{Array1, Array2};
 
 /// Error codes for R integration
 #[cfg(feature = "r")]
@@ -131,7 +131,7 @@ pub extern "C" fn scirs_create_timeseries(
     unsafe {
         let data_slice = slice::from_raw_parts(values, length as usize);
         let mut ts_values = Vec::with_capacity(length as usize);
-        
+
         for &val in data_slice {
             ts_values.push(val);
         }
@@ -156,7 +156,11 @@ pub extern "C" fn scirs_free_timeseries(ts: *mut RTimeSeries) {
         unsafe {
             let ts_box = Box::from_raw(ts);
             if !ts_box.values.is_null() {
-                Vec::from_raw_parts(ts_box.values, ts_box.length as usize, ts_box.length as usize);
+                Vec::from_raw_parts(
+                    ts_box.values,
+                    ts_box.length as usize,
+                    ts_box.length as usize,
+                );
             }
         }
     }
@@ -280,11 +284,11 @@ pub extern "C" fn scirs_difference_series(
             Ok(differenced) => {
                 let output_length = std::cmp::min(differenced.len(), max_length as usize);
                 let output_slice = slice::from_raw_parts_mut(output, output_length);
-                
+
                 for (i, &val) in differenced.iter().take(output_length).enumerate() {
                     output_slice[i] = val;
                 }
-                
+
                 output_length as c_int
             }
             Err(_) => R_ERROR_COMPUTATION,
@@ -355,7 +359,7 @@ pub extern "C" fn scirs_fit_arima(model: *mut RARIMAModel, ts: *const RTimeSerie
     unsafe {
         let model_ref = &mut *model;
         let ts_ref = &*ts;
-        
+
         if model_ref.handle.is_null() || ts_ref.values.is_null() || ts_ref.length <= 0 {
             return R_ERROR_INVALID_PARAMS;
         }
@@ -391,16 +395,16 @@ pub extern "C" fn scirs_forecast_arima(
         }
 
         let arima_model = &*(model_ref.handle as *const ARIMAModel);
-        
+
         match arima_model.forecast(steps as usize) {
             Ok(forecasts) => {
                 let output_length = std::cmp::min(forecasts.len(), max_length as usize);
                 let output_slice = slice::from_raw_parts_mut(output, output_length);
-                
+
                 for (i, &val) in forecasts.iter().take(output_length).enumerate() {
                     output_slice[i] = val;
                 }
-                
+
                 output_length as c_int
             }
             Err(_) => R_ERROR_COMPUTATION,
@@ -428,7 +432,7 @@ pub extern "C" fn scirs_get_arima_params(
         }
 
         let arima_model = &*(model_ref.handle as *const ARIMAModel);
-        
+
         match arima_model.get_params() {
             Ok(params) => {
                 let param_count = std::cmp::min(params.len(), max_params as usize);
@@ -440,7 +444,7 @@ pub extern "C" fn scirs_get_arima_params(
                     names_slice[i] = c_name.into_raw();
                     values_slice[i] = *value;
                 }
-                
+
                 param_count as c_int
             }
             Err(_) => R_ERROR_COMPUTATION,
@@ -494,7 +498,7 @@ pub extern "C" fn scirs_detect_anomalies_iqr(
     unsafe {
         let detector_ref = &*detector;
         let ts_ref = &*ts;
-        
+
         if detector_ref.handle.is_null() || ts_ref.values.is_null() || ts_ref.length <= 0 {
             return R_ERROR_INVALID_PARAMS;
         }
@@ -507,11 +511,11 @@ pub extern "C" fn scirs_detect_anomalies_iqr(
             Ok(anomalies) => {
                 let anomaly_count = std::cmp::min(anomalies.len(), max_anomalies as usize);
                 let indices_slice = slice::from_raw_parts_mut(anomaly_indices, anomaly_count);
-                
+
                 for (i, &idx) in anomalies.iter().take(anomaly_count).enumerate() {
                     indices_slice[i] = idx as c_int;
                 }
-                
+
                 anomaly_count as c_int
             }
             Err(_) => R_ERROR_COMPUTATION,
@@ -536,7 +540,7 @@ pub extern "C" fn scirs_detect_anomalies_zscore(
     unsafe {
         let detector_ref = &*detector;
         let ts_ref = &*ts;
-        
+
         if detector_ref.handle.is_null() || ts_ref.values.is_null() || ts_ref.length <= 0 {
             return R_ERROR_INVALID_PARAMS;
         }
@@ -549,11 +553,11 @@ pub extern "C" fn scirs_detect_anomalies_zscore(
             Ok(anomalies) => {
                 let anomaly_count = std::cmp::min(anomalies.len(), max_anomalies as usize);
                 let indices_slice = slice::from_raw_parts_mut(anomaly_indices, anomaly_count);
-                
+
                 for (i, &idx) in anomalies.iter().take(anomaly_count).enumerate() {
                     indices_slice[i] = idx as c_int;
                 }
-                
+
                 anomaly_count as c_int
             }
             Err(_) => R_ERROR_COMPUTATION,
@@ -610,7 +614,7 @@ pub extern "C" fn scirs_decompose_stl(
     unsafe {
         let decomp_ref = &*decomposition;
         let ts_ref = &*ts;
-        
+
         if decomp_ref.handle.is_null() || ts_ref.values.is_null() || ts_ref.length <= 0 {
             return R_ERROR_INVALID_PARAMS;
         }
@@ -623,22 +627,22 @@ pub extern "C" fn scirs_decompose_stl(
             Ok(decomp_result) => {
                 let result_ref = &mut *result;
                 let length = decomp_result.trend.len();
-                
+
                 // Allocate memory for results
                 let trend_vec = decomp_result.trend.to_vec();
                 let seasonal_vec = decomp_result.seasonal.to_vec();
                 let residual_vec = decomp_result.residual.to_vec();
-                
+
                 result_ref.trend = trend_vec.as_ptr() as *mut c_double;
                 result_ref.seasonal = seasonal_vec.as_ptr() as *mut c_double;
                 result_ref.residual = residual_vec.as_ptr() as *mut c_double;
                 result_ref.length = length as c_int;
-                
+
                 // Prevent deallocation
                 std::mem::forget(trend_vec);
                 std::mem::forget(seasonal_vec);
                 std::mem::forget(residual_vec);
-                
+
                 R_SUCCESS
             }
             Err(_) => R_ERROR_COMPUTATION,
@@ -668,13 +672,25 @@ pub extern "C" fn scirs_free_decomposition_result(result: *mut RDecompositionRes
         unsafe {
             let result_ref = &*result;
             if !result_ref.trend.is_null() {
-                Vec::from_raw_parts(result_ref.trend, result_ref.length as usize, result_ref.length as usize);
+                Vec::from_raw_parts(
+                    result_ref.trend,
+                    result_ref.length as usize,
+                    result_ref.length as usize,
+                );
             }
             if !result_ref.seasonal.is_null() {
-                Vec::from_raw_parts(result_ref.seasonal, result_ref.length as usize, result_ref.length as usize);
+                Vec::from_raw_parts(
+                    result_ref.seasonal,
+                    result_ref.length as usize,
+                    result_ref.length as usize,
+                );
             }
             if !result_ref.residual.is_null() {
-                Vec::from_raw_parts(result_ref.residual, result_ref.length as usize, result_ref.length as usize);
+                Vec::from_raw_parts(
+                    result_ref.residual,
+                    result_ref.length as usize,
+                    result_ref.length as usize,
+                );
             }
         }
     }
@@ -712,7 +728,7 @@ pub extern "C" fn scirs_auto_arima(
         let values_array = Array1::from_vec(values_slice.to_vec());
 
         let seasonal_bool = seasonal != 0;
-        
+
         match crate::arima_models::auto_arima(
             &values_array,
             max_p as usize,
@@ -724,24 +740,22 @@ pub extern "C" fn scirs_auto_arima(
             max_seasonal_q as usize,
             seasonal_period as usize,
         ) {
-            Ok(best_config) => {
-                match ARIMAModel::new(best_config.clone()) {
-                    Ok(model) => {
-                        let r_model = Box::new(RARIMAModel {
-                            handle: Box::into_raw(Box::new(model)) as *mut c_void,
-                            p: best_config.p as c_int,
-                            d: best_config.d as c_int,
-                            q: best_config.q as c_int,
-                            seasonal_p: best_config.seasonal_p as c_int,
-                            seasonal_d: best_config.seasonal_d as c_int,
-                            seasonal_q: best_config.seasonal_q as c_int,
-                            seasonal_period: best_config.seasonal_period as c_int,
-                        });
-                        Box::into_raw(r_model)
-                    }
-                    Err(_) => std::ptr::null_mut(),
+            Ok(best_config) => match ARIMAModel::new(best_config.clone()) {
+                Ok(model) => {
+                    let r_model = Box::new(RARIMAModel {
+                        handle: Box::into_raw(Box::new(model)) as *mut c_void,
+                        p: best_config.p as c_int,
+                        d: best_config.d as c_int,
+                        q: best_config.q as c_int,
+                        seasonal_p: best_config.seasonal_p as c_int,
+                        seasonal_d: best_config.seasonal_d as c_int,
+                        seasonal_q: best_config.seasonal_q as c_int,
+                        seasonal_period: best_config.seasonal_period as c_int,
+                    });
+                    Box::into_raw(r_model)
                 }
-            }
+                Err(_) => std::ptr::null_mut(),
+            },
             Err(_) => std::ptr::null_mut(),
         }
     }
@@ -804,7 +818,7 @@ pub extern "C" fn scirs_train_neural_forecaster(
     unsafe {
         let forecaster_ref = &mut *forecaster;
         let ts_ref = &*ts;
-        
+
         if forecaster_ref.handle.is_null() || ts_ref.values.is_null() || ts_ref.length <= 0 {
             return R_ERROR_INVALID_PARAMS;
         }
@@ -837,7 +851,7 @@ pub extern "C" fn scirs_forecast_neural(
 
     unsafe {
         let forecaster_ref = &*forecaster;
-        
+
         if forecaster_ref.handle.is_null() {
             return R_ERROR_NOT_FITTED;
         }
@@ -850,11 +864,11 @@ pub extern "C" fn scirs_forecast_neural(
             Ok(forecasts) => {
                 let output_length = std::cmp::min(forecasts.len(), max_length as usize);
                 let output_slice = slice::from_raw_parts_mut(output, output_length);
-                
+
                 for (i, &val) in forecasts.iter().take(output_length).enumerate() {
                     output_slice[i] = val;
                 }
-                
+
                 output_length as c_int
             }
             Err(_) => R_ERROR_COMPUTATION,
@@ -932,7 +946,7 @@ mod tests {
     fn test_r_structures_size() {
         // Ensure C structures have expected sizes
         use std::mem;
-        
+
         assert!(mem::size_of::<RTimeSeries>() > 0);
         assert!(mem::size_of::<RARIMAModel>() > 0);
         assert!(mem::size_of::<RAnomalyDetector>() > 0);

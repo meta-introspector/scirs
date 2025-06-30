@@ -137,7 +137,7 @@ pub fn warp_image_gpu(
     // Note: GPU kernel execution infrastructure is not yet fully implemented in scirs2-core
     // The current implementation generates shader code but cannot execute it
     // Fall back to CPU implementation for now
-    
+
     // Log the attempted GPU operation for debugging
     #[cfg(debug_assertions)]
     {
@@ -146,7 +146,7 @@ pub fn warp_image_gpu(
             _operation.len()
         );
     }
-    
+
     // Return to CPU implementation with proper error context
     warp_image_cpu(image, transform, output_size, interpolation, boundary)
 }
@@ -2103,7 +2103,6 @@ fn compute_cost_volume(
     right_image: &Array2<f32>,
     params: &StereoMatchingParams,
 ) -> Result<Array3<f32>> {
-
     let (height, width) = left_image.dim();
     let num_disparities = (params.max_disparity - params.min_disparity + 1) as usize;
     let mut cost_volume = Array3::zeros((height, width, num_disparities));
@@ -2349,17 +2348,12 @@ fn compute_ncc_cost_simd(
     let left_centered = f32::simd_sub(&left_array.view(), &left_mean_array.view());
     let right_centered = f32::simd_sub(&right_array.view(), &right_mean_array.view());
 
-    let numerator = f32::simd_sum(
-        &f32::simd_mul(&left_centered.view(), &right_centered.view()).view(),
-    );
-    let left_norm = f32::simd_sum(
-        &f32::simd_mul(&left_centered.view(), &left_centered.view()).view(),
-    )
-    .sqrt();
-    let right_norm = f32::simd_sum(
-        &f32::simd_mul(&right_centered.view(), &right_centered.view()).view(),
-    )
-    .sqrt();
+    let numerator =
+        f32::simd_sum(&f32::simd_mul(&left_centered.view(), &right_centered.view()).view());
+    let left_norm =
+        f32::simd_sum(&f32::simd_mul(&left_centered.view(), &left_centered.view()).view()).sqrt();
+    let right_norm =
+        f32::simd_sum(&f32::simd_mul(&right_centered.view(), &right_centered.view()).view()).sqrt();
 
     let denominator = left_norm * right_norm;
 
@@ -2539,7 +2533,14 @@ fn aggregate_costs_direction(
                     };
 
                     if prev_y < height && prev_x < width {
-                        aggregate_pixel_costs(&mut direction_costs, y, x, prev_y, prev_x, sgm_params);
+                        aggregate_pixel_costs(
+                            &mut direction_costs,
+                            y,
+                            x,
+                            prev_y,
+                            prev_x,
+                            sgm_params,
+                        );
                     }
                 }
             }
@@ -2561,7 +2562,14 @@ fn aggregate_costs_direction(
                     };
 
                     if prev_y < height && prev_x < width {
-                        aggregate_pixel_costs(&mut direction_costs, y, x, prev_y, prev_x, sgm_params);
+                        aggregate_pixel_costs(
+                            &mut direction_costs,
+                            y,
+                            x,
+                            prev_y,
+                            prev_x,
+                            sgm_params,
+                        );
                     }
                 }
             }

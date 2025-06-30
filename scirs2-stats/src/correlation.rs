@@ -945,35 +945,37 @@ where
     // Use parallel processing for correlation calculations on large matrices
     let correlations: StatsResult<Vec<((usize, usize), F)>> = if pairs.len() > 50 {
         // Parallel computation for large correlation matrices
-        pairs.par_iter()
+        pairs
+            .par_iter()
             .map(|&(i, j)| {
                 let var_i = data.slice(s![.., i]);
                 let var_j = data.slice(s![.., j]);
-                
+
                 let corr = match method {
                     "pearson" => pearson_r::<F, _>(&var_i, &var_j)?,
                     "spearman" => spearman_r::<F, _>(&var_i, &var_j)?,
                     "kendall" => kendall_tau::<F, _>(&var_i, &var_j, "b")?,
                     _ => unreachable!(),
                 };
-                
+
                 Ok(((i, j), corr))
             })
             .collect()
     } else {
         // Sequential computation for small matrices to avoid parallel overhead
-        pairs.iter()
+        pairs
+            .iter()
             .map(|&(i, j)| {
                 let var_i = data.slice(s![.., i]);
                 let var_j = data.slice(s![.., j]);
-                
+
                 let corr = match method {
                     "pearson" => pearson_r::<F, _>(&var_i, &var_j)?,
                     "spearman" => spearman_r::<F, _>(&var_i, &var_j)?,
                     "kendall" => kendall_tau::<F, _>(&var_i, &var_j, "b")?,
                     _ => unreachable!(),
                 };
-                
+
                 Ok(((i, j), corr))
             })
             .collect()

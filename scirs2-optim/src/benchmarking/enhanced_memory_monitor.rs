@@ -5,18 +5,18 @@
 //! and intelligent alert generation for production environments.
 
 use crate::benchmarking::memory_leak_detector::{
-    MemoryLeakDetector, MemoryDetectionConfig, AllocationEvent, AllocationType,
-    MemoryUsageSnapshot, MemoryLeakResult, LeakDetector, PatternDetector,
-    AnomalyDetector, MemoryPattern, MemoryAnomaly, OptimizationRecommendation
+    AllocationEvent, AllocationType, AnomalyDetector, LeakDetector, MemoryAnomaly,
+    MemoryDetectionConfig, MemoryLeakDetector, MemoryLeakResult, MemoryPattern,
+    MemoryUsageSnapshot, OptimizationRecommendation, PatternDetector,
 };
 use crate::error::{OptimError, Result};
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, VecDeque, BTreeMap};
-use std::sync::{Arc, Mutex, RwLock};
+use std::collections::{BTreeMap, HashMap, VecDeque};
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
-use std::path::PathBuf;
 
 /// Enhanced real-time memory monitoring system
 #[derive(Debug)]
@@ -86,9 +86,17 @@ pub struct AlertConfig {
 pub enum AlertChannel {
     Console,
     File(PathBuf),
-    Webhook { url: String, headers: HashMap<String, String> },
-    Email { smtp_config: SmtpConfig },
-    Slack { webhook_url: String, channel: String },
+    Webhook {
+        url: String,
+        headers: HashMap<String, String>,
+    },
+    Email {
+        smtp_config: SmtpConfig,
+    },
+    Slack {
+        webhook_url: String,
+        channel: String,
+    },
     Custom(String),
 }
 
@@ -173,12 +181,23 @@ pub struct SystemProfilerConfig {
 /// Available profiling tools
 #[derive(Debug, Clone)]
 pub enum ProfilingTool {
-    Perf { executable_path: PathBuf },
-    Valgrind { executable_path: PathBuf },
-    Instruments { executable_path: PathBuf },
+    Perf {
+        executable_path: PathBuf,
+    },
+    Valgrind {
+        executable_path: PathBuf,
+    },
+    Instruments {
+        executable_path: PathBuf,
+    },
     AddressSanitizer,
-    Heaptrack { executable_path: PathBuf },
-    Custom { name: String, executable_path: PathBuf },
+    Heaptrack {
+        executable_path: PathBuf,
+    },
+    Custom {
+        name: String,
+        executable_path: PathBuf,
+    },
 }
 
 /// Active profiling session
@@ -258,16 +277,16 @@ pub struct MLTrainingPoint {
 pub trait MLModel: std::fmt::Debug + Send + Sync {
     /// Train the model with data
     fn train(&mut self, data: &[MLTrainingPoint]) -> Result<()>;
-    
+
     /// Predict anomaly score for features
     fn predict(&self, features: &[f64]) -> Result<f64>;
-    
+
     /// Update model with new data point
     fn update(&mut self, point: &MLTrainingPoint) -> Result<()>;
-    
+
     /// Get model name
     fn name(&self) -> &str;
-    
+
     /// Get model metrics
     fn metrics(&self) -> ModelMetrics;
 }
@@ -308,10 +327,10 @@ pub struct MLPrediction {
 pub trait FeatureExtractor: std::fmt::Debug + Send + Sync {
     /// Extract features from memory snapshot
     fn extract_features(&self, snapshot: &MemoryUsageSnapshot) -> Result<Vec<f64>>;
-    
+
     /// Get feature names
     fn feature_names(&self) -> Vec<String>;
-    
+
     /// Get extractor name
     fn name(&self) -> &str;
 }
@@ -330,11 +349,11 @@ impl<K: Ord + Clone, V> LruCache<K, V> {
             data: BTreeMap::new(),
         }
     }
-    
+
     pub fn get(&mut self, key: &K) -> Option<&V> {
         self.data.get(key)
     }
-    
+
     pub fn insert(&mut self, key: K, value: V) {
         if self.data.len() >= self.capacity {
             if let Some(first_key) = self.data.keys().next().cloned() {
@@ -669,7 +688,8 @@ impl EnhancedMemoryMonitor {
         let system_profiler = SystemProfiler::new(SystemProfilerConfig::default())?;
         let ml_detector = MachineLearningDetector::new(MLConfig::default())?;
         let alert_system = AdvancedAlertSystem::new(config.alert_config.clone())?;
-        let metrics_collector = PerformanceMetricsCollector::new(config.performance_config.clone())?;
+        let metrics_collector =
+            PerformanceMetricsCollector::new(config.performance_config.clone())?;
         let statistical_analyzer = StatisticalAnalyzer::new(config.statistical_config.clone())?;
         let pressure_detector = MemoryPressureDetector::new()?;
 
@@ -690,7 +710,9 @@ impl EnhancedMemoryMonitor {
     /// Start enhanced monitoring
     pub fn start_monitoring(&mut self) -> Result<()> {
         if self.is_monitoring.load(Ordering::Relaxed) {
-            return Err(OptimError::InvalidState("Monitoring already started".to_string()));
+            return Err(OptimError::InvalidState(
+                "Monitoring already started".to_string(),
+            ));
         }
 
         self.is_monitoring.store(true, Ordering::Relaxed);
@@ -749,14 +771,14 @@ impl EnhancedMemoryMonitor {
         let leak_detector = Arc::clone(&self.leak_detector);
         let is_monitoring = Arc::clone(&self.is_monitoring);
         let interval = Duration::from_millis(self.config.monitoring_interval_ms);
-        
+
         let handle = thread::spawn(move || {
             while is_monitoring.load(Ordering::Relaxed) {
                 // Perform monitoring cycle
                 if let Err(e) = Self::monitoring_cycle(&leak_detector) {
                     eprintln!("Monitoring cycle error: {:?}", e);
                 }
-                
+
                 thread::sleep(interval);
             }
         });
@@ -767,16 +789,16 @@ impl EnhancedMemoryMonitor {
 
     /// Execute one monitoring cycle
     fn monitoring_cycle(leak_detector: &Arc<Mutex<MemoryLeakDetector>>) -> Result<()> {
-        let mut detector = leak_detector.lock().map_err(|_| {
-            OptimError::LockError("Failed to acquire detector lock".to_string())
-        })?;
+        let mut detector = leak_detector
+            .lock()
+            .map_err(|_| OptimError::LockError("Failed to acquire detector lock".to_string()))?;
 
         // Take memory snapshot
         let snapshot = detector.take_snapshot()?;
-        
+
         // Detect leaks
         let leak_results = detector.detect_leaks()?;
-        
+
         // Process results and generate alerts if needed
         for result in leak_results {
             if result.leak_detected && result.severity > 0.7 {
@@ -789,9 +811,10 @@ impl EnhancedMemoryMonitor {
 
     /// Generate comprehensive monitoring report
     pub fn generate_monitoring_report(&self) -> Result<EnhancedMonitoringReport> {
-        let detector = self.leak_detector.lock().map_err(|_| {
-            OptimError::LockError("Failed to acquire detector lock".to_string())
-        })?;
+        let detector = self
+            .leak_detector
+            .lock()
+            .map_err(|_| OptimError::LockError("Failed to acquire detector lock".to_string()))?;
 
         let base_report = detector.generate_optimization_report()?;
         let ml_insights = if self.config.enable_ml_detection {
@@ -826,32 +849,30 @@ impl EnhancedMemoryMonitor {
     /// Generate comprehensive optimization recommendations
     fn generate_comprehensive_recommendations(&self) -> Result<Vec<EnhancedRecommendation>> {
         // This would combine recommendations from all analysis engines
-        Ok(vec![
-            EnhancedRecommendation {
-                category: RecommendationCategory::MemoryOptimization,
-                priority: RecommendationPriority::High,
-                title: "Implement Memory Pooling".to_string(),
-                description: "Use memory pools for frequent allocations to reduce overhead".to_string(),
-                estimated_impact: ImpactEstimate {
-                    memory_reduction: Some(30.0),
-                    performance_improvement: Some(15.0),
-                    implementation_time: Some(Duration::from_secs(3600 * 8)), // 8 hours
-                },
-                evidence: vec![
-                    "High allocation frequency detected".to_string(),
-                    "Memory fragmentation above 20%".to_string(),
-                ],
-                implementation_steps: vec![
-                    "Identify frequently allocated objects".to_string(),
-                    "Implement object pool pattern".to_string(),
-                    "Benchmark and validate improvements".to_string(),
-                ],
-                code_examples: vec![
-                    "let pool = ObjectPool::new(1000);".to_string(),
-                    "let obj = pool.acquire();".to_string(),
-                ],
-            }
-        ])
+        Ok(vec![EnhancedRecommendation {
+            category: RecommendationCategory::MemoryOptimization,
+            priority: RecommendationPriority::High,
+            title: "Implement Memory Pooling".to_string(),
+            description: "Use memory pools for frequent allocations to reduce overhead".to_string(),
+            estimated_impact: ImpactEstimate {
+                memory_reduction: Some(30.0),
+                performance_improvement: Some(15.0),
+                implementation_time: Some(Duration::from_secs(3600 * 8)), // 8 hours
+            },
+            evidence: vec![
+                "High allocation frequency detected".to_string(),
+                "Memory fragmentation above 20%".to_string(),
+            ],
+            implementation_steps: vec![
+                "Identify frequently allocated objects".to_string(),
+                "Implement object pool pattern".to_string(),
+                "Benchmark and validate improvements".to_string(),
+            ],
+            code_examples: vec![
+                "let pool = ObjectPool::new(1000);".to_string(),
+                "let obj = pool.acquire();".to_string(),
+            ],
+        }])
     }
 }
 
@@ -1274,7 +1295,8 @@ impl AdvancedAlertSystem {
             .as_secs()
             .saturating_sub(hours * 3600);
 
-        Ok(self.alert_history
+        Ok(self
+            .alert_history
             .iter()
             .filter(|alert| alert.timestamp >= cutoff)
             .cloned()
@@ -1307,10 +1329,7 @@ impl PerformanceMetricsCollector {
             avg_cpu_usage: 45.0,
             peak_memory_bandwidth: 15000.0, // MB/s
             cache_efficiency: 0.92,
-            top_system_calls: vec![
-                ("malloc".to_string(), 10000),
-                ("free".to_string(), 9500),
-            ],
+            top_system_calls: vec![("malloc".to_string(), 10000), ("free".to_string(), 9500)],
             trends: vec![],
         })
     }
@@ -1381,9 +1400,9 @@ impl Default for AlertConfig {
     fn default() -> Self {
         Self {
             enable_alerts: true,
-            leak_threshold: 10.0, // 10% memory growth
+            leak_threshold: 10.0,     // 10% memory growth
             pressure_threshold: 85.0, // 85% memory usage
-            cooldown_seconds: 300, // 5 minutes
+            cooldown_seconds: 300,    // 5 minutes
             max_alerts_per_hour: 10,
             channels: vec![AlertChannel::Console],
         }
@@ -1408,7 +1427,7 @@ impl Default for PerformanceConfig {
             monitor_cpu_usage: true,
             monitor_memory_bandwidth: true,
             monitor_cache_performance: false, // Requires special tools
-            monitor_system_calls: false, // Can be expensive
+            monitor_system_calls: false,      // Can be expensive
         }
     }
 }
@@ -1429,7 +1448,7 @@ impl Default for SystemProfilerConfig {
         Self {
             enable_perf: true,
             enable_instruments: false, // macOS only
-            enable_valgrind: false, // Too slow for production
+            enable_valgrind: false,    // Too slow for production
             custom_profilers: vec![],
             sample_rate: 1000, // Hz
         }
@@ -1517,9 +1536,9 @@ impl Default for StatisticalSnapshot {
 impl Default for SystemMemoryInfo {
     fn default() -> Self {
         Self {
-            total_memory: 8 * 1024 * 1024 * 1024, // 8GB default
+            total_memory: 8 * 1024 * 1024 * 1024,     // 8GB default
             available_memory: 4 * 1024 * 1024 * 1024, // 4GB available
-            swap_total: 2 * 1024 * 1024 * 1024, // 2GB swap
+            swap_total: 2 * 1024 * 1024 * 1024,       // 2GB swap
             swap_used: 0,
             page_size: 4096, // 4KB pages
         }
@@ -1560,7 +1579,7 @@ mod tests {
         cache.insert("key1".to_string(), "value1".to_string());
         cache.insert("key2".to_string(), "value2".to_string());
         cache.insert("key3".to_string(), "value3".to_string()); // Should evict key1
-        
+
         assert!(cache.get(&"key1".to_string()).is_none());
         assert!(cache.get(&"key2".to_string()).is_some());
         assert!(cache.get(&"key3".to_string()).is_some());

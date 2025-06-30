@@ -5,11 +5,11 @@
 
 use crate::error::Result;
 use num_traits::Float;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Arc;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 /// Advanced memory leak detector and profiler
@@ -421,17 +421,22 @@ impl MemoryLeakDetector {
 
     /// Initialize default leak detection algorithms
     fn initialize_default_detectors(&mut self) {
-        self.detectors.push(Box::new(GrowthBasedLeakDetector::new()));
-        self.detectors.push(Box::new(PatternBasedLeakDetector::new()));
-        self.detectors.push(Box::new(StatisticalLeakDetector::new()));
-        
+        self.detectors
+            .push(Box::new(GrowthBasedLeakDetector::new()));
+        self.detectors
+            .push(Box::new(PatternBasedLeakDetector::new()));
+        self.detectors
+            .push(Box::new(StatisticalLeakDetector::new()));
+
         // Add advanced leak detectors
         if self.config.enable_real_time_monitoring {
             use crate::benchmarking::advanced_leak_detectors::{
-                ReferenceCountingDetector, ReferenceCountingConfig
+                ReferenceCountingConfig, ReferenceCountingDetector,
             };
             let ref_counting_config = ReferenceCountingConfig::default();
-            self.detectors.push(Box::new(ReferenceCountingDetector::new(ref_counting_config)));
+            self.detectors.push(Box::new(ReferenceCountingDetector::new(
+                ref_counting_config,
+            )));
         }
     }
 
@@ -527,7 +532,7 @@ impl MemoryLeakDetector {
     }
 
     // Helper methods for memory monitoring
-    
+
     fn capture_stack_trace(&self) -> Option<Vec<String>> {
         // Simplified stack trace capture
         // In a real implementation, this would use backtrace crate
@@ -535,7 +540,9 @@ impl MemoryLeakDetector {
     }
 
     fn get_total_memory_usage(&self) -> usize {
-        self.allocation_tracker.current_memory_usage.load(Ordering::Relaxed)
+        self.allocation_tracker
+            .current_memory_usage
+            .load(Ordering::Relaxed)
     }
 
     fn get_heap_memory_usage(&self) -> usize {
@@ -550,7 +557,7 @@ impl MemoryLeakDetector {
 
     fn get_memory_by_type(&self) -> HashMap<String, usize> {
         let mut memory_by_type = HashMap::new();
-        
+
         // Analyze allocations by type
         for (_, info) in &self.allocation_tracker.active_allocations {
             let type_name = format!("{:?}", info.allocation_type);
@@ -566,8 +573,10 @@ impl MemoryLeakDetector {
             return 0.0;
         }
 
-        let recent = &self.pattern_analyzer.usage_patterns[self.pattern_analyzer.usage_patterns.len() - 1];
-        let previous = &self.pattern_analyzer.usage_patterns[self.pattern_analyzer.usage_patterns.len() - 2];
+        let recent =
+            &self.pattern_analyzer.usage_patterns[self.pattern_analyzer.usage_patterns.len() - 1];
+        let previous =
+            &self.pattern_analyzer.usage_patterns[self.pattern_analyzer.usage_patterns.len() - 2];
 
         let time_diff = recent.timestamp.saturating_sub(previous.timestamp) as f64;
         if time_diff > 0.0 {
@@ -584,10 +593,19 @@ impl MemoryLeakDetector {
     }
 
     fn generate_summary(&self) -> Result<String> {
-        let total_allocations = self.allocation_tracker.total_allocations.load(Ordering::Relaxed);
-        let total_deallocations = self.allocation_tracker.total_deallocations.load(Ordering::Relaxed);
+        let total_allocations = self
+            .allocation_tracker
+            .total_allocations
+            .load(Ordering::Relaxed);
+        let total_deallocations = self
+            .allocation_tracker
+            .total_deallocations
+            .load(Ordering::Relaxed);
         let current_memory = self.get_total_memory_usage();
-        let peak_memory = self.allocation_tracker.peak_memory_usage.load(Ordering::Relaxed);
+        let peak_memory = self
+            .allocation_tracker
+            .peak_memory_usage
+            .load(Ordering::Relaxed);
 
         Ok(format!(
             "Memory Analysis Summary:\n\
@@ -602,7 +620,11 @@ impl MemoryLeakDetector {
             total_allocations - total_deallocations,
             current_memory,
             peak_memory,
-            if peak_memory > 0 { (current_memory as f64 / peak_memory as f64) * 100.0 } else { 0.0 }
+            if peak_memory > 0 {
+                (current_memory as f64 / peak_memory as f64) * 100.0
+            } else {
+                0.0
+            }
         ))
     }
 }
@@ -656,8 +678,11 @@ impl AllocationTracker {
     pub fn record_allocation(&mut self, event: AllocationEvent) -> Result<()> {
         // Update counters
         self.total_allocations.fetch_add(1, Ordering::Relaxed);
-        let current = self.current_memory_usage.fetch_add(event.size, Ordering::Relaxed) + event.size;
-        
+        let current = self
+            .current_memory_usage
+            .fetch_add(event.size, Ordering::Relaxed)
+            + event.size;
+
         // Update peak memory
         let mut peak = self.peak_memory_usage.load(Ordering::Relaxed);
         while current > peak {
@@ -680,12 +705,13 @@ impl AllocationTracker {
             source_location: None,
             reference_count: 1,
         };
-        
-        self.active_allocations.insert(event.allocation_id, allocation_info);
-        
+
+        self.active_allocations
+            .insert(event.allocation_id, allocation_info);
+
         // Add to history
         self.allocation_history.push_back(event);
-        
+
         // Maintain history size
         if self.allocation_history.len() > 10000 {
             self.allocation_history.pop_front();
@@ -698,7 +724,8 @@ impl AllocationTracker {
     pub fn record_deallocation(&mut self, allocation_id: usize) -> Result<()> {
         if let Some(info) = self.active_allocations.remove(&allocation_id) {
             self.total_deallocations.fetch_add(1, Ordering::Relaxed);
-            self.current_memory_usage.fetch_sub(info.size, Ordering::Relaxed);
+            self.current_memory_usage
+                .fetch_sub(info.size, Ordering::Relaxed);
         }
         Ok(())
     }
@@ -717,12 +744,16 @@ impl MemoryPatternAnalyzer {
     /// Start pattern analysis
     pub fn start_analysis(&mut self) -> Result<()> {
         // Initialize pattern detection algorithms
-        self.pattern_detectors.push(Box::new(TrendPatternDetector::new()));
-        self.pattern_detectors.push(Box::new(PeriodicPatternDetector::new()));
-        
-        self.anomaly_detectors.push(Box::new(SpikeAnomalyDetector::new()));
-        self.anomaly_detectors.push(Box::new(LeakAnomalyDetector::new()));
-        
+        self.pattern_detectors
+            .push(Box::new(TrendPatternDetector::new()));
+        self.pattern_detectors
+            .push(Box::new(PeriodicPatternDetector::new()));
+
+        self.anomaly_detectors
+            .push(Box::new(SpikeAnomalyDetector::new()));
+        self.anomaly_detectors
+            .push(Box::new(LeakAnomalyDetector::new()));
+
         Ok(())
     }
 
@@ -734,7 +765,7 @@ impl MemoryPatternAnalyzer {
     /// Add a memory usage snapshot
     pub fn add_snapshot(&mut self, snapshot: MemoryUsageSnapshot) {
         self.usage_patterns.push_back(snapshot);
-        
+
         // Maintain reasonable history size
         if self.usage_patterns.len() > 1000 {
             self.usage_patterns.pop_front();
@@ -744,24 +775,24 @@ impl MemoryPatternAnalyzer {
     /// Detect all patterns in usage data
     pub fn detect_all_patterns(&self) -> Result<Vec<MemoryPattern>> {
         let mut all_patterns = Vec::new();
-        
+
         for detector in &self.pattern_detectors {
             let patterns = detector.detect_patterns(&self.usage_patterns)?;
             all_patterns.extend(patterns);
         }
-        
+
         Ok(all_patterns)
     }
 
     /// Detect all anomalies in usage data
     pub fn detect_all_anomalies(&self) -> Result<Vec<MemoryAnomaly>> {
         let mut all_anomalies = Vec::new();
-        
+
         for detector in &self.anomaly_detectors {
             let anomalies = detector.detect_anomalies(&self.usage_patterns)?;
             all_anomalies.extend(anomalies);
         }
-        
+
         Ok(all_anomalies)
     }
 }
@@ -793,27 +824,25 @@ impl MemoryOptimizer {
         leak_results: &[MemoryLeakResult],
     ) -> Result<Vec<OptimizationRecommendation>> {
         let mut recommendations = Vec::new();
-        
+
         for strategy in &self.strategies {
             for leak_result in leak_results {
                 let strategy_recommendations = strategy.recommend(leak_result, &VecDeque::new())?;
                 recommendations.extend(strategy_recommendations);
             }
         }
-        
+
         // Sort by priority and remove duplicates
-        recommendations.sort_by(|a, b| {
-            match (a.priority.clone(), b.priority.clone()) {
-                (RecommendationPriority::Critical, _) => std::cmp::Ordering::Less,
-                (_, RecommendationPriority::Critical) => std::cmp::Ordering::Greater,
-                (RecommendationPriority::High, _) => std::cmp::Ordering::Less,
-                (_, RecommendationPriority::High) => std::cmp::Ordering::Greater,
-                _ => std::cmp::Ordering::Equal,
-            }
+        recommendations.sort_by(|a, b| match (a.priority.clone(), b.priority.clone()) {
+            (RecommendationPriority::Critical, _) => std::cmp::Ordering::Less,
+            (_, RecommendationPriority::Critical) => std::cmp::Ordering::Greater,
+            (RecommendationPriority::High, _) => std::cmp::Ordering::Less,
+            (_, RecommendationPriority::High) => std::cmp::Ordering::Greater,
+            _ => std::cmp::Ordering::Equal,
         });
-        
+
         recommendations.dedup_by(|a, b| a.description == b.description);
-        
+
         Ok(recommendations)
     }
 }
@@ -860,13 +889,17 @@ impl LeakDetector for GrowthBasedLeakDetector {
 
         let first = &usage_snapshots[0];
         let last = &usage_snapshots[usage_snapshots.len() - 1];
-        
+
         let growth_ratio = last.total_memory as f64 / first.total_memory as f64;
         let leak_detected = growth_ratio > self.growth_threshold;
-        
+
         Ok(MemoryLeakResult {
             leak_detected,
-            severity: if leak_detected { (growth_ratio - 1.0).min(1.0) } else { 0.0 },
+            severity: if leak_detected {
+                (growth_ratio - 1.0).min(1.0)
+            } else {
+                0.0
+            },
             confidence: 0.8,
             leaked_memory_bytes: if leak_detected {
                 last.total_memory - first.total_memory
@@ -882,8 +915,8 @@ impl LeakDetector for GrowthBasedLeakDetector {
                 } else {
                     GrowthTrend::Stable
                 },
-                growth_rate: (last.total_memory as f64 - first.total_memory as f64) / 
-                           (last.timestamp - first.timestamp) as f64,
+                growth_rate: (last.total_memory as f64 - first.total_memory as f64)
+                    / (last.timestamp - first.timestamp) as f64,
                 projected_usage: vec![],
                 pattern_type: if leak_detected {
                     GrowthPattern::Leak
@@ -914,7 +947,10 @@ impl LeakDetector for GrowthBasedLeakDetector {
 
     fn config(&self) -> HashMap<String, String> {
         let mut config = HashMap::new();
-        config.insert("growth_threshold".to_string(), self.growth_threshold.to_string());
+        config.insert(
+            "growth_threshold".to_string(),
+            self.growth_threshold.to_string(),
+        );
         config
     }
 }
@@ -1167,7 +1203,8 @@ impl OptimizationStrategy for InPlaceStrategy {
     ) -> Result<Vec<OptimizationRecommendation>> {
         let mut recommendations = Vec::new();
 
-        if leak_result.leaked_memory_bytes > 1024 * 1024 { // > 1MB
+        if leak_result.leaked_memory_bytes > 1024 * 1024 {
+            // > 1MB
             recommendations.push(OptimizationRecommendation {
                 recommendation_type: RecommendationType::InPlaceOperations,
                 priority: RecommendationPriority::Medium,
@@ -1259,7 +1296,7 @@ mod tests {
     #[test]
     fn test_growth_based_leak_detector() {
         let detector = GrowthBasedLeakDetector::new();
-        
+
         let mut snapshots = VecDeque::new();
         snapshots.push_back(MemoryUsageSnapshot {
             timestamp: 0,

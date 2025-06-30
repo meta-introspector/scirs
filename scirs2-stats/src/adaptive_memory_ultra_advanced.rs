@@ -18,10 +18,10 @@ use scirs2_core::{
     simd_ops::{PlatformCapabilities, SimdUnifiedOps},
     validation::*,
 };
-use std::collections::{HashMap, VecDeque, BTreeMap};
+use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::marker::PhantomData;
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, RwLock, Weak};
-use std::sync::atomic::{AtomicBool, AtomicUsize, AtomicU64, Ordering};
 use std::thread;
 use std::time::{Duration, Instant, SystemTime};
 
@@ -920,9 +920,9 @@ pub struct PrefetchInstruction {
 /// Prefetch type
 #[derive(Debug, Clone, Copy)]
 pub enum PrefetchType {
-    T0, // Temporal locality
-    T1, // Temporal locality with lower priority
-    T2, // Temporal locality with even lower priority
+    T0,  // Temporal locality
+    T1,  // Temporal locality with lower priority
+    T2,  // Temporal locality with even lower priority
     NTA, // Non-temporal access
 }
 
@@ -1192,9 +1192,9 @@ pub struct Chunk {
 /// Chunk location
 #[derive(Debug, Clone)]
 pub enum ChunkLocation {
-    Memory(usize), // Memory address
-    Disk(String),  // File path
-    Network(String), // Network URL
+    Memory(usize),         // Memory address
+    Disk(String),          // File path
+    Network(String),       // Network URL
     Hybrid(usize, String), // Both memory and disk
 }
 
@@ -1729,10 +1729,10 @@ where
     pub fn allocate(&self, size: usize) -> StatsResult<*mut u8> {
         // Analyze allocation request
         let allocation_context = self.analyze_allocation_request(size)?;
-        
+
         // Select optimal allocation strategy
         let strategy = self.select_allocation_strategy(&allocation_context)?;
-        
+
         // Perform allocation
         match strategy {
             AllocationStrategy::System => self.allocate_system(size),
@@ -1748,11 +1748,13 @@ where
     fn analyze_allocation_request(&self, size: usize) -> StatsResult<AllocationContext> {
         let current_thread = thread::current().id();
         let thread_id = unsafe { std::mem::transmute::<_, usize>(current_thread) };
-        
+
         let current_pressure = self.pressure_monitor.get_current_pressure();
-        let predicted_usage = self.predictive_engine.predict_memory_usage(size, thread_id)?;
+        let predicted_usage = self
+            .predictive_engine
+            .predict_memory_usage(size, thread_id)?;
         let numa_node = self.numa_manager.get_optimal_node(thread_id);
-        
+
         Ok(AllocationContext {
             size,
             thread_id,
@@ -1791,12 +1793,17 @@ where
     }
 
     /// Select optimal allocation strategy
-    fn select_allocation_strategy(&self, context: &AllocationContext) -> StatsResult<AllocationStrategy> {
+    fn select_allocation_strategy(
+        &self,
+        context: &AllocationContext,
+    ) -> StatsResult<AllocationStrategy> {
         match self.config.allocation_strategy {
             AllocationStrategy::Adaptive => {
                 // Use ML model to select best strategy
                 let features = self.extract_allocation_features(context);
-                let predicted_strategy = self.predictive_engine.predict_allocation_strategy(&features)?;
+                let predicted_strategy = self
+                    .predictive_engine
+                    .predict_allocation_strategy(&features)?;
                 Ok(predicted_strategy)
             }
             strategy => Ok(strategy),
@@ -1818,13 +1825,15 @@ where
     /// System allocator
     fn allocate_system(&self, size: usize) -> StatsResult<*mut u8> {
         use std::alloc::{alloc, Layout};
-        
+
         let layout = Layout::from_size_align(size, std::mem::align_of::<F>())
             .map_err(|e| StatsError::InvalidArgument(format!("Invalid layout: {}", e)))?;
-        
+
         let ptr = unsafe { alloc(layout) };
         if ptr.is_null() {
-            Err(StatsError::ComputationError("Memory allocation failed".to_string()))
+            Err(StatsError::ComputationError(
+                "Memory allocation failed".to_string(),
+            ))
         } else {
             Ok(ptr)
         }
@@ -1835,7 +1844,7 @@ where
         // Get or create appropriate memory pool
         let pool_size = self.calculate_pool_size(size);
         let pool = self.get_or_create_pool(pool_size)?;
-        
+
         // Allocate from pool
         pool.allocate()
     }
@@ -1871,7 +1880,11 @@ where
     }
 
     /// NUMA-aware allocator
-    fn allocate_numa_aware(&self, size: usize, context: &AllocationContext) -> StatsResult<*mut u8> {
+    fn allocate_numa_aware(
+        &self,
+        size: usize,
+        context: &AllocationContext,
+    ) -> StatsResult<*mut u8> {
         let numa_node = context.numa_node.unwrap_or(0);
         self.numa_manager.allocate_on_node(size, numa_node)
     }
@@ -1885,7 +1898,7 @@ where
     fn allocate_adaptive(&self, size: usize, context: &AllocationContext) -> StatsResult<*mut u8> {
         // Use real-time performance feedback to select strategy
         let performance_metrics = self.performance_monitor.get_current_metrics();
-        
+
         if performance_metrics.memory_bandwidth < 0.5 {
             // Low bandwidth - use pool allocation
             self.allocate_pool(size)
@@ -1911,7 +1924,7 @@ where
     pub fn deallocate(&self, ptr: *mut u8, size: usize) -> StatsResult<()> {
         // Determine allocation strategy used for this pointer
         let strategy = self.infer_deallocation_strategy(ptr, size);
-        
+
         match strategy {
             AllocationStrategy::System => self.deallocate_system(ptr, size),
             AllocationStrategy::Pool => self.deallocate_pool(ptr, size),
@@ -1931,10 +1944,10 @@ where
     /// System deallocation
     fn deallocate_system(&self, ptr: *mut u8, size: usize) -> StatsResult<()> {
         use std::alloc::{dealloc, Layout};
-        
+
         let layout = Layout::from_size_align(size, std::mem::align_of::<F>())
             .map_err(|e| StatsError::InvalidArgument(format!("Invalid layout: {}", e)))?;
-        
+
         unsafe { dealloc(ptr, layout) };
         Ok(())
     }
@@ -2032,7 +2045,7 @@ where
     fn calculate_fragmentation(&self) -> f64 {
         let total_allocated = self.calculate_total_allocated() as f64;
         let total_requested = self.calculate_total_requested() as f64;
-        
+
         if total_requested > 0.0 {
             (total_allocated - total_requested) / total_allocated
         } else {
@@ -2097,13 +2110,15 @@ impl MemoryPool {
 
     fn allocate_new_chunk(&self) -> StatsResult<*mut u8> {
         use std::alloc::{alloc, Layout};
-        
+
         let layout = Layout::from_size_align(self.chunk_size, 64) // 64-byte alignment for SIMD
             .map_err(|e| StatsError::InvalidArgument(format!("Invalid layout: {}", e)))?;
-        
+
         let ptr = unsafe { alloc(layout) };
         if ptr.is_null() {
-            Err(StatsError::ComputationError("Memory allocation failed".to_string()))
+            Err(StatsError::ComputationError(
+                "Memory allocation failed".to_string(),
+            ))
         } else {
             self.allocated_chunks.fetch_add(1, Ordering::Relaxed);
             self.total_chunks.fetch_add(1, Ordering::Relaxed);
@@ -2228,13 +2243,15 @@ impl NumaManager {
     fn allocate_on_node(&self, size: usize, _node: usize) -> StatsResult<*mut u8> {
         // Fallback to system allocation for now
         use std::alloc::{alloc, Layout};
-        
+
         let layout = Layout::from_size_align(size, 8)
             .map_err(|e| StatsError::InvalidArgument(format!("Invalid layout: {}", e)))?;
-        
+
         let ptr = unsafe { alloc(layout) };
         if ptr.is_null() {
-            Err(StatsError::ComputationError("Memory allocation failed".to_string()))
+            Err(StatsError::ComputationError(
+                "Memory allocation failed".to_string(),
+            ))
         } else {
             Ok(ptr)
         }
@@ -2242,10 +2259,10 @@ impl NumaManager {
 
     fn deallocate(&self, ptr: *mut u8, size: usize) -> StatsResult<()> {
         use std::alloc::{dealloc, Layout};
-        
+
         let layout = Layout::from_size_align(size, 8)
             .map_err(|e| StatsError::InvalidArgument(format!("Invalid layout: {}", e)))?;
-        
+
         unsafe { dealloc(ptr, layout) };
         Ok(())
     }
@@ -2375,13 +2392,15 @@ impl OutOfCoreManager {
     fn allocate_mapped(&self, size: usize) -> StatsResult<*mut u8> {
         // Stub implementation - fallback to system allocation
         use std::alloc::{alloc, Layout};
-        
+
         let layout = Layout::from_size_align(size, 8)
             .map_err(|e| StatsError::InvalidArgument(format!("Invalid layout: {}", e)))?;
-        
+
         let ptr = unsafe { alloc(layout) };
         if ptr.is_null() {
-            Err(StatsError::ComputationError("Memory allocation failed".to_string()))
+            Err(StatsError::ComputationError(
+                "Memory allocation failed".to_string(),
+            ))
         } else {
             Ok(ptr)
         }
@@ -2389,10 +2408,10 @@ impl OutOfCoreManager {
 
     fn deallocate_mapped(&self, ptr: *mut u8, size: usize) -> StatsResult<()> {
         use std::alloc::{dealloc, Layout};
-        
+
         let layout = Layout::from_size_align(size, 8)
             .map_err(|e| StatsError::InvalidArgument(format!("Invalid layout: {}", e)))?;
-        
+
         unsafe { dealloc(ptr, layout) };
         Ok(())
     }
@@ -2666,7 +2685,7 @@ mod tests {
         let manager = AdaptiveMemoryManager::<f64>::new();
         let ptr = manager.allocate(1024).unwrap();
         assert!(!ptr.is_null());
-        
+
         let result = manager.deallocate(ptr, 1024);
         assert!(result.is_ok());
     }
@@ -2675,7 +2694,7 @@ mod tests {
     fn test_performance_metrics() {
         let manager = AdaptiveMemoryManager::<f64>::new();
         let metrics = manager.get_performance_metrics();
-        
+
         assert!(metrics.allocation_rate > 0.0);
         assert!(metrics.cache_hit_ratio >= 0.0 && metrics.cache_hit_ratio <= 1.0);
         assert!(metrics.numa_locality >= 0.0 && metrics.numa_locality <= 1.0);
@@ -2685,7 +2704,7 @@ mod tests {
     fn test_gc_trigger() {
         let manager = AdaptiveMemoryManager::<f64>::new();
         let result = manager.trigger_gc().unwrap();
-        
+
         assert!(result.memory_reclaimed > 0);
         assert!(result.collection_time > Duration::from_nanos(0));
     }
@@ -2695,8 +2714,11 @@ mod tests {
         let mut manager = AdaptiveMemoryManager::<f64>::new();
         let mut new_config = AdaptiveMemoryConfig::default();
         new_config.allocation_strategy = AllocationStrategy::NumaAware;
-        
+
         manager.update_config(new_config);
-        assert!(matches!(manager.config.allocation_strategy, AllocationStrategy::NumaAware));
+        assert!(matches!(
+            manager.config.allocation_strategy,
+            AllocationStrategy::NumaAware
+        ));
     }
 }

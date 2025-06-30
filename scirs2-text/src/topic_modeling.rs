@@ -502,9 +502,13 @@ impl LatentDirichletAllocation {
         topic_word_prior: f64,
     ) -> Result<()> {
         let (n_samples, n_features) = doc_term_matrix.dim();
-        self.vocabulary.get_or_insert_with(|| (0..n_features).map(|i| (i, format!("word_{}", i))).collect());
+        self.vocabulary.get_or_insert_with(|| {
+            (0..n_features)
+                .map(|i| (i, format!("word_{}", i)))
+                .collect()
+        });
         self.bound.get_or_insert_with(|| Vec::new());
-        
+
         // Initialize topic-word distribution if not already done
         if self.components.is_none() {
             let mut rng = if let Some(seed) = self.config.random_seed {
@@ -512,7 +516,7 @@ impl LatentDirichletAllocation {
             } else {
                 StdRng::from_rng(&mut rng())
             };
-            
+
             let mut components = Array2::<f64>::zeros((self.config.n_topics, n_features));
             for i in 0..self.config.n_topics {
                 for j in 0..n_features {
@@ -521,13 +525,13 @@ impl LatentDirichletAllocation {
             }
             self.components = Some(components);
         }
-        
+
         let batch_size = self.config.batch_size.min(n_samples);
         let n_batches = (n_samples + batch_size - 1) / batch_size;
-        
+
         for epoch in 0..self.config.max_iter {
             let mut total_bound = 0.0;
-            
+
             // Shuffle document indices for each epoch
             let mut doc_indices: Vec<usize> = (0..n_samples).collect();
             let mut rng = if let Some(seed) = self.config.random_seed {
@@ -536,46 +540,58 @@ impl LatentDirichletAllocation {
                 StdRng::from_rng(&mut rng())
             };
             doc_indices.shuffle(&mut rng);
-            
+
             for batch_idx in 0..n_batches {
                 let start_idx = batch_idx * batch_size;
                 let end_idx = ((batch_idx + 1) * batch_size).min(n_samples);
-                
+
                 // Get batch documents
                 let batch_docs: Vec<usize> = doc_indices[start_idx..end_idx].to_vec();
-                
+
                 // E-step: Update document-topic distributions for batch
-                let mut batch_gamma = Array2::<f64>::zeros((batch_docs.len(), self.config.n_topics));
+                let mut batch_gamma =
+                    Array2::<f64>::zeros((batch_docs.len(), self.config.n_topics));
                 let mut batch_bound = 0.0;
-                
+
                 for (local_idx, &doc_idx) in batch_docs.iter().enumerate() {
                     let doc = doc_term_matrix.row(doc_idx);
                     let mut gamma = Array1::<f64>::from_elem(self.config.n_topics, doc_topic_prior);
-                    
+
                     // Update document distribution
                     let components = self.components.as_ref().unwrap();
                     let exp_topic_word_distr = components.map(|x| x.exp());
-                    self.update_doc_distribution(&doc.to_owned(), &mut gamma, &exp_topic_word_distr, doc_topic_prior)?;
-                    
+                    self.update_doc_distribution(
+                        &doc.to_owned(),
+                        &mut gamma,
+                        &exp_topic_word_distr,
+                        doc_topic_prior,
+                    )?;
+
                     batch_gamma.row_mut(local_idx).assign(&gamma);
-                    
+
                     // Compute bound contribution (simplified)
                     batch_bound += gamma.sum();
                 }
-                
+
                 // M-step: Update topic-word distributions
                 let learning_rate = self.compute_learning_rate(epoch * n_batches + batch_idx);
-                self.update_topic_word_distribution(&batch_docs, doc_term_matrix, &batch_gamma, 
-                                                   topic_word_prior, learning_rate, n_samples)?;
-                
+                self.update_topic_word_distribution(
+                    &batch_docs,
+                    doc_term_matrix,
+                    &batch_gamma,
+                    topic_word_prior,
+                    learning_rate,
+                    n_samples,
+                )?;
+
                 total_bound += batch_bound;
             }
-            
+
             // Store bound for this epoch
             if let Some(ref mut bound) = self.bound {
                 bound.push(total_bound / n_samples as f64);
             }
-            
+
             // Check convergence
             if let Some(ref bound) = self.bound {
                 if bound.len() > 1 {
@@ -587,19 +603,19 @@ impl LatentDirichletAllocation {
                     }
                 }
             }
-            
+
             self.n_iter = epoch + 1;
         }
-        
+
         self.n_documents = n_samples;
         Ok(())
     }
-    
+
     /// Compute learning rate for online learning
     fn compute_learning_rate(&self, iteration: usize) -> f64 {
         (self.config.learning_offset + iteration as f64).powf(-self.config.learning_decay)
     }
-    
+
     /// Update topic-word distributions in online learning
     fn update_topic_word_distribution(
         &mut self,
@@ -612,16 +628,16 @@ impl LatentDirichletAllocation {
     ) -> Result<()> {
         let batch_size = batch_docs.len();
         let n_features = doc_term_matrix.ncols();
-        
+
         if let Some(ref mut components) = self.components {
             // Compute sufficient statistics for this batch
             let mut batch_stats = Array2::<f64>::zeros((self.config.n_topics, n_features));
-            
+
             for (local_idx, &doc_idx) in batch_docs.iter().enumerate() {
                 let doc = doc_term_matrix.row(doc_idx);
                 let gamma = batch_gamma.row(local_idx);
                 let gamma_sum = gamma.sum();
-                
+
                 for (word_idx, &count) in doc.iter().enumerate() {
                     if count > 0.0 {
                         for topic_idx in 0..self.config.n_topics {
@@ -631,21 +647,22 @@ impl LatentDirichletAllocation {
                     }
                 }
             }
-            
+
             // Scale batch statistics to full corpus size
             let scale_factor = total_docs as f64 / batch_size as f64;
             batch_stats.mapv_inplace(|x| x * scale_factor);
-            
+
             // Update components using natural gradient with learning rate
             for topic_idx in 0..self.config.n_topics {
                 for word_idx in 0..n_features {
                     let old_val = components[[topic_idx, word_idx]];
                     let new_val = topic_word_prior + batch_stats[[topic_idx, word_idx]];
-                    components[[topic_idx, word_idx]] = (1.0 - learning_rate) * old_val + learning_rate * new_val;
+                    components[[topic_idx, word_idx]] =
+                        (1.0 - learning_rate) * old_val + learning_rate * new_val;
                 }
             }
         }
-        
+
         Ok(())
     }
 

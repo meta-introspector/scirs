@@ -68,20 +68,20 @@ pub mod cqt;
 pub mod czt;
 pub mod deconvolution;
 pub mod denoise;
+pub mod denoise_adaptive_ultra;
 pub mod denoise_advanced;
 pub mod denoise_cutting_edge;
 pub mod denoise_enhanced;
 pub mod denoise_ultra_advanced;
 pub mod denoise_unified;
-pub mod denoise_adaptive_ultra;
 pub mod detrend;
 pub mod dwt;
 pub mod dwt2d;
 pub mod dwt2d_advanced_algorithms;
 pub mod dwt2d_advanced_features;
 pub mod dwt2d_enhanced;
-pub mod dwt2d_ultra_refined;
 pub mod dwt2d_image;
+pub mod dwt2d_ultra_refined;
 pub mod dwt2d_validation;
 pub mod emd;
 pub mod features;
@@ -96,6 +96,7 @@ pub mod filter;
 pub mod filter_banks;
 pub mod higher_order;
 pub mod hr_spectral;
+pub mod integration_tests;
 pub mod interpolate;
 pub mod kalman;
 pub mod lombscargle;
@@ -103,17 +104,17 @@ pub mod lombscargle_advanced_validation;
 pub mod lombscargle_comprehensive_validation;
 pub mod lombscargle_enhanced;
 pub mod lombscargle_enhanced_validation;
+pub mod lombscargle_enhanced_validation_improvements;
+pub mod lombscargle_scipy_validation;
 pub mod lombscargle_simd;
 pub mod lombscargle_ultra_validation;
 pub mod lombscargle_validation;
-pub mod lombscargle_enhanced_validation_improvements;
-pub mod lombscargle_scipy_validation;
 pub mod lti;
 pub mod lti_analysis_enhanced;
 pub mod lti_response;
 pub mod median;
-pub mod memory_optimized;
 pub mod memory_efficient;
+pub mod memory_optimized;
 pub mod multirate;
 pub mod multitaper;
 pub mod nlm;
@@ -133,6 +134,7 @@ pub mod reassigned;
 pub mod resample;
 pub mod robust;
 pub mod savgol;
+pub mod scipy_validation;
 pub mod separation;
 pub mod simd_advanced;
 pub mod simd_ops;
@@ -149,10 +151,8 @@ pub mod sysid_advanced;
 pub mod sysid_enhanced;
 pub mod sysid_robust_enhancements;
 pub mod sysid_ultra_enhanced;
-pub mod scipy_validation;
 pub mod tv;
 pub mod validation_runner;
-pub mod integration_tests;
 pub mod waveforms;
 pub mod wavelet_vis;
 pub mod wavelets;
@@ -240,14 +240,14 @@ pub use median::{
     hybrid_median_filter_2d, median_filter_1d, median_filter_2d, median_filter_color,
     rank_filter_1d, EdgeMode, MedianConfig,
 };
-pub use memory_optimized::{
-    memory_optimized_fft, memory_optimized_fir_filter, memory_optimized_spectrogram, MemoryConfig,
-    MemoryOptimizedData, MemoryOptimizedResult, MemoryStats, TimingStats,
-};
 pub use memory_efficient::{
     memory_efficient_correlation, memory_efficient_fft, memory_efficient_filter,
     memory_efficient_spectrogram, MemoryCache, StreamingCorrelationResult, StreamingFFTResult,
     StreamingFilterResult, StreamingProcessor, StreamingSpectrogramResult,
+};
+pub use memory_optimized::{
+    memory_optimized_fft, memory_optimized_fir_filter, memory_optimized_spectrogram, MemoryConfig,
+    MemoryOptimizedData, MemoryOptimizedResult, MemoryStats, TimingStats,
 };
 pub use multirate::{
     FilterBankProperties, MultirateConverter, PerfectReconstructionConfig,

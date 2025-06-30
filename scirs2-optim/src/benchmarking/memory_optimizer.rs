@@ -72,10 +72,10 @@ impl Default for MemoryOptimizerConfig {
             fragmentation_threshold: 0.3,
             enable_stack_traces: false, // Expensive, disabled by default
             alert_thresholds: AlertThresholds {
-                warning_threshold: 0.8,   // 80%
-                critical_threshold: 0.95, // 95%
+                warning_threshold: 0.8,            // 80%
+                critical_threshold: 0.95,          // 95%
                 allocation_rate_threshold: 1000.0, // 1000 allocs/sec
-                fragmentation_threshold: 0.5, // 50%
+                fragmentation_threshold: 0.5,      // 50%
             },
         }
     }
@@ -470,10 +470,10 @@ pub struct CausalRelationship {
 pub trait LeakDetectionAlgorithm: Debug {
     /// Analyze memory usage for leaks
     fn detect_leaks(&self, snapshots: &[MemorySnapshot]) -> Vec<MemoryLeak>;
-    
+
     /// Get algorithm name
     fn name(&self) -> &str;
-    
+
     /// Get algorithm sensitivity
     fn sensitivity(&self) -> f64;
 }
@@ -615,10 +615,10 @@ pub struct CodeExample {
 pub trait OptimizationStrategy: Debug {
     /// Analyze memory usage and generate recommendations
     fn analyze(&self, tracker: &AdvancedMemoryTracker) -> Vec<MemoryOptimizationRecommendation>;
-    
+
     /// Get strategy name
     fn name(&self) -> &str;
-    
+
     /// Get strategy applicability score
     fn applicability(&self, usage_pattern: &MemoryUsage) -> f64;
 }
@@ -801,12 +801,12 @@ impl MemoryOptimizer {
     /// Start memory monitoring
     pub fn start_monitoring(&mut self) -> Result<()> {
         println!("Starting advanced memory monitoring...");
-        
+
         // Initialize tracking systems
         self.memory_tracker.initialize()?;
         self.leak_detector.initialize()?;
         self.pattern_analyzer.initialize()?;
-        
+
         Ok(())
     }
 
@@ -815,7 +815,7 @@ impl MemoryOptimizer {
         let usage = self.collect_memory_usage()?;
         let fragmentation = self.calculate_fragmentation(&usage)?;
         let performance_impact = self.measure_performance_impact()?;
-        
+
         let snapshot = MemorySnapshot {
             timestamp: Instant::now(),
             usage,
@@ -824,34 +824,37 @@ impl MemoryOptimizer {
             fragmentation,
             performance_impact,
         };
-        
+
         self.memory_tracker.add_snapshot(snapshot.clone());
         self.pattern_analyzer.analyze_snapshot(&snapshot)?;
-        
+
         // Check for leaks
         if self.config.enable_leak_detection {
-            self.leak_detector.check_for_leaks(&self.memory_tracker.get_snapshots())?;
+            self.leak_detector
+                .check_for_leaks(&self.memory_tracker.get_snapshots())?;
         }
-        
+
         Ok(())
     }
 
     /// Analyze memory usage and generate recommendations
     pub fn analyze_and_recommend(&mut self) -> Result<MemoryAnalysisReport> {
         println!("Analyzing memory usage patterns...");
-        
+
         // Generate optimization recommendations
-        let recommendations = self.optimization_engine.generate_recommendations(&self.memory_tracker)?;
-        
+        let recommendations = self
+            .optimization_engine
+            .generate_recommendations(&self.memory_tracker)?;
+
         // Detect memory leaks
         let leaks = self.leak_detector.get_detected_leaks();
-        
+
         // Analyze patterns
         let patterns = self.pattern_analyzer.get_detected_patterns();
-        
+
         // Calculate overall memory efficiency
         let efficiency_score = self.calculate_memory_efficiency()?;
-        
+
         let report = MemoryAnalysisReport {
             timestamp: Instant::now(),
             efficiency_score,
@@ -861,19 +864,22 @@ impl MemoryOptimizer {
             memory_patterns: patterns.clone(),
             fragmentation_analysis: self.analyze_fragmentation()?,
             performance_impact_analysis: self.analyze_performance_impact()?,
-            cost_benefit_analysis: self.optimization_engine.analyze_cost_benefit(&recommendations),
+            cost_benefit_analysis: self
+                .optimization_engine
+                .analyze_cost_benefit(&recommendations),
         };
-        
+
         Ok(report)
     }
 
     /// Get real-time memory alerts
     pub fn get_alerts(&self) -> Vec<MemoryAlert> {
         let mut alerts = Vec::new();
-        
+
         if let Some(current_usage) = self.memory_tracker.get_current_usage() {
-            let usage_ratio = current_usage.used_memory as f64 / current_usage.total_allocated as f64;
-            
+            let usage_ratio =
+                current_usage.used_memory as f64 / current_usage.total_allocated as f64;
+
             if usage_ratio > self.config.alert_thresholds.critical_threshold {
                 alerts.push(MemoryAlert {
                     alert_type: AlertType::CriticalMemoryUsage,
@@ -899,7 +905,7 @@ impl MemoryOptimizer {
                 });
             }
         }
-        
+
         // Check for detected leaks
         for leak in self.leak_detector.get_detected_leaks() {
             match leak.severity {
@@ -924,23 +930,23 @@ impl MemoryOptimizer {
                 _ => {}
             }
         }
-        
+
         alerts
     }
 
     // Private helper methods
-    
+
     fn collect_memory_usage(&self) -> Result<MemoryUsage> {
         // Simulate memory usage collection
         // In a real implementation, this would interface with the system
         let mut by_category = HashMap::new();
         by_category.insert(MemoryCategory::OptimizerState, 1024 * 1024 * 10); // 10MB
-        by_category.insert(MemoryCategory::Parameters, 1024 * 1024 * 50);     // 50MB
-        by_category.insert(MemoryCategory::Gradients, 1024 * 1024 * 30);      // 30MB
-        by_category.insert(MemoryCategory::Temporaries, 1024 * 1024 * 20);    // 20MB
-        
+        by_category.insert(MemoryCategory::Parameters, 1024 * 1024 * 50); // 50MB
+        by_category.insert(MemoryCategory::Gradients, 1024 * 1024 * 30); // 30MB
+        by_category.insert(MemoryCategory::Temporaries, 1024 * 1024 * 20); // 20MB
+
         let total_allocated = by_category.values().sum();
-        
+
         Ok(MemoryUsage {
             total_allocated,
             used_memory: (total_allocated as f64 * 0.8) as usize,
@@ -951,26 +957,26 @@ impl MemoryOptimizer {
             physical_memory: (total_allocated as f64 * 0.9) as usize,
         })
     }
-    
+
     fn calculate_fragmentation(&self, _usage: &MemoryUsage) -> Result<FragmentationMetrics> {
         Ok(FragmentationMetrics {
-            external_fragmentation: 0.15, // 15%
-            internal_fragmentation: 0.08,  // 8%
+            external_fragmentation: 0.15,        // 15%
+            internal_fragmentation: 0.08,        // 8%
             largest_free_block: 1024 * 1024 * 5, // 5MB
             free_block_count: 42,
             average_free_block_size: 1024.0 * 200.0, // 200KB
         })
     }
-    
+
     fn measure_performance_impact(&self) -> Result<PerformanceImpact> {
         Ok(PerformanceImpact {
             allocation_overhead: Duration::from_micros(50),
-            cache_miss_ratio: 0.05, // 5%
+            cache_miss_ratio: 0.05,            // 5%
             memory_bandwidth_utilization: 0.7, // 70%
-            tlb_miss_ratio: 0.02, // 2%
+            tlb_miss_ratio: 0.02,              // 2%
         })
     }
-    
+
     fn calculate_memory_efficiency(&self) -> Result<f64> {
         // Simplified efficiency calculation
         if let Some(usage) = self.memory_tracker.get_current_usage() {
@@ -982,11 +988,11 @@ impl MemoryOptimizer {
             Ok(0.0)
         }
     }
-    
+
     fn get_average_fragmentation(&self) -> f64 {
         0.1 // 10% average fragmentation
     }
-    
+
     fn analyze_fragmentation(&self) -> Result<FragmentationAnalysisReport> {
         Ok(FragmentationAnalysisReport {
             current_fragmentation: FragmentationMetrics {
@@ -1007,18 +1013,16 @@ impl MemoryOptimizer {
             ],
         })
     }
-    
+
     fn analyze_performance_impact(&self) -> Result<PerformanceImpactReport> {
         Ok(PerformanceImpactReport {
             overall_impact_score: 0.85, // 85% efficiency
-            bottlenecks: vec![
-                PerformanceBottleneck {
-                    bottleneck_type: "Memory Allocation".to_string(),
-                    severity: 0.3,
-                    description: "Frequent small allocations causing overhead".to_string(),
-                    impact: 0.15, // 15% performance loss
-                },
-            ],
+            bottlenecks: vec![PerformanceBottleneck {
+                bottleneck_type: "Memory Allocation".to_string(),
+                severity: 0.3,
+                description: "Frequent small allocations causing overhead".to_string(),
+                impact: 0.15, // 15% performance loss
+            }],
             optimization_opportunities: vec![
                 "Pre-allocate working memory".to_string(),
                 "Use memory pools for small objects".to_string(),
@@ -1154,12 +1158,12 @@ impl AdvancedMemoryTracker {
             gc_metrics: GarbageCollectionMetrics::default(),
         }
     }
-    
+
     fn initialize(&mut self) -> Result<()> {
         // Initialize tracking systems
         Ok(())
     }
-    
+
     fn add_snapshot(&mut self, snapshot: MemorySnapshot) {
         self.usage_history.push_back(snapshot);
         // Maintain history size limit
@@ -1167,25 +1171,25 @@ impl AdvancedMemoryTracker {
             self.usage_history.pop_front();
         }
     }
-    
+
     fn get_snapshots(&self) -> &VecDeque<MemorySnapshot> {
         &self.usage_history
     }
-    
+
     fn get_current_usage(&self) -> Option<&MemoryUsage> {
         Some(&self.current_usage)
     }
-    
+
     fn get_recent_allocations(&self) -> Vec<AllocationEvent> {
         // Return recent allocation events
         Vec::new()
     }
-    
+
     fn get_recent_deallocations(&self) -> Vec<DeallocationEvent> {
         // Return recent deallocation events
         Vec::new()
     }
-    
+
     fn get_usage_summary(&self) -> MemoryUsageSummary {
         MemoryUsageSummary {
             current_usage: self.current_usage.clone(),
@@ -1194,12 +1198,12 @@ impl AdvancedMemoryTracker {
             usage_trend: self.calculate_usage_trend(),
         }
     }
-    
+
     fn calculate_average_usage(&self) -> MemoryUsage {
         // Calculate average from history
         self.current_usage.clone() // Simplified
     }
-    
+
     fn calculate_usage_trend(&self) -> UsageTrend {
         UsageTrend::Stable // Simplified
     }
@@ -1237,17 +1241,17 @@ impl MemoryLeakDetector {
             correlation_analyzer: LeakCorrelationAnalyzer::new(),
         }
     }
-    
+
     fn initialize(&mut self) -> Result<()> {
         // Initialize leak detection algorithms
         Ok(())
     }
-    
+
     fn check_for_leaks(&mut self, _snapshots: &VecDeque<MemorySnapshot>) -> Result<()> {
         // Run leak detection algorithms
         Ok(())
     }
-    
+
     fn get_detected_leaks(&self) -> &[MemoryLeak] {
         &self.detected_leaks
     }
@@ -1288,63 +1292,63 @@ impl OptimizationEngine {
             cost_benefit_analyzer: CostBenefitAnalyzer::new(),
         }
     }
-    
-    fn generate_recommendations(&mut self, _tracker: &AdvancedMemoryTracker) -> Vec<MemoryOptimizationRecommendation> {
+
+    fn generate_recommendations(
+        &mut self,
+        _tracker: &AdvancedMemoryTracker,
+    ) -> Vec<MemoryOptimizationRecommendation> {
         // Generate optimization recommendations
-        vec![
-            MemoryOptimizationRecommendation {
-                recommendation_type: OptimizationType::AddMemoryPooling,
-                priority: Priority::High,
-                title: "Implement Memory Pooling".to_string(),
-                description: "Add memory pools for frequently allocated objects".to_string(),
-                implementation_steps: vec![
-                    "Identify frequently allocated sizes".to_string(),
-                    "Create size-specific pools".to_string(),
-                    "Integrate pool allocation".to_string(),
-                ],
-                estimated_effort: EstimatedEffort {
-                    development_hours: 16.0,
-                    testing_hours: 8.0,
-                    deployment_complexity: Complexity::Medium,
-                    expertise_level: ExpertiseLevel::Intermediate,
-                },
-                expected_benefits: ExpectedBenefits {
-                    memory_reduction_percent: 20.0,
-                    performance_improvement_percent: 15.0,
-                    allocation_reduction: 1000,
-                    fragmentation_improvement: 0.3,
-                    cost_savings: 500.0,
-                },
-                risk_assessment: RiskAssessment {
-                    risk_level: RiskLevel::Low,
-                    potential_issues: vec!["Pool sizing challenges".to_string()],
-                    mitigation_strategies: vec!["Start with conservative pool sizes".to_string()],
-                    rollback_plan: "Disable pooling if issues arise".to_string(),
-                },
-                code_examples: vec![
-                    CodeExample {
-                        title: "Memory Pool Implementation".to_string(),
-                        before_code: "let data = vec![0u8; size];".to_string(),
-                        after_code: "let data = pool.allocate(size);".to_string(),
-                        explanation: "Use memory pool instead of direct allocation".to_string(),
-                    },
-                ],
+        vec![MemoryOptimizationRecommendation {
+            recommendation_type: OptimizationType::AddMemoryPooling,
+            priority: Priority::High,
+            title: "Implement Memory Pooling".to_string(),
+            description: "Add memory pools for frequently allocated objects".to_string(),
+            implementation_steps: vec![
+                "Identify frequently allocated sizes".to_string(),
+                "Create size-specific pools".to_string(),
+                "Integrate pool allocation".to_string(),
+            ],
+            estimated_effort: EstimatedEffort {
+                development_hours: 16.0,
+                testing_hours: 8.0,
+                deployment_complexity: Complexity::Medium,
+                expertise_level: ExpertiseLevel::Intermediate,
             },
-        ]
+            expected_benefits: ExpectedBenefits {
+                memory_reduction_percent: 20.0,
+                performance_improvement_percent: 15.0,
+                allocation_reduction: 1000,
+                fragmentation_improvement: 0.3,
+                cost_savings: 500.0,
+            },
+            risk_assessment: RiskAssessment {
+                risk_level: RiskLevel::Low,
+                potential_issues: vec!["Pool sizing challenges".to_string()],
+                mitigation_strategies: vec!["Start with conservative pool sizes".to_string()],
+                rollback_plan: "Disable pooling if issues arise".to_string(),
+            },
+            code_examples: vec![CodeExample {
+                title: "Memory Pool Implementation".to_string(),
+                before_code: "let data = vec![0u8; size];".to_string(),
+                after_code: "let data = pool.allocate(size);".to_string(),
+                explanation: "Use memory pool instead of direct allocation".to_string(),
+            }],
+        }]
     }
-    
-    fn analyze_cost_benefit(&self, _recommendations: &[MemoryOptimizationRecommendation]) -> CostBenefitReport {
+
+    fn analyze_cost_benefit(
+        &self,
+        _recommendations: &[MemoryOptimizationRecommendation],
+    ) -> CostBenefitReport {
         CostBenefitReport {
             total_potential_savings: 2000.0,
             implementation_costs: 800.0,
-            roi_estimates: vec![
-                ROIEstimate {
-                    optimization_type: OptimizationType::AddMemoryPooling,
-                    estimated_roi: 2.5, // 250% ROI
-                    time_to_break_even: Duration::from_secs(3600 * 24 * 30), // 30 days
-                    confidence_level: 0.8,
-                },
-            ],
+            roi_estimates: vec![ROIEstimate {
+                optimization_type: OptimizationType::AddMemoryPooling,
+                estimated_roi: 2.5, // 250% ROI
+                time_to_break_even: Duration::from_secs(3600 * 24 * 30), // 30 days
+                confidence_level: 0.8,
+            }],
             risk_assessments: vec![],
         }
     }
@@ -1357,7 +1361,7 @@ impl CostBenefitAnalyzer {
             benefit_models: Vec::new(),
             roi_calculator: ROICalculator {
                 time_horizon: Duration::from_secs(3600 * 24 * 365), // 1 year
-                discount_rate: 0.1, // 10%
+                discount_rate: 0.1,                                 // 10%
             },
         }
     }
@@ -1375,17 +1379,17 @@ impl MemoryPatternAnalyzer {
             },
         }
     }
-    
+
     fn initialize(&mut self) -> Result<()> {
         // Initialize pattern analysis
         Ok(())
     }
-    
+
     fn analyze_snapshot(&mut self, _snapshot: &MemorySnapshot) -> Result<()> {
         // Analyze memory patterns in snapshot
         Ok(())
     }
-    
+
     fn get_detected_patterns(&self) -> &[MemoryPattern] {
         &self.detected_patterns
     }

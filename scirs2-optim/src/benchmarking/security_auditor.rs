@@ -1029,50 +1029,53 @@ impl SecurityAuditor {
     /// Run comprehensive security audit
     pub fn run_security_audit(&mut self) -> Result<&SecurityAuditResults> {
         println!("🔒 Starting comprehensive security audit...");
-        
+
         let start_time = Instant::now();
-        
+
         // Run all enabled security analyses
         if self.config.enable_input_validation {
             println!("  Running input validation analysis...");
             self.run_input_validation_analysis()?;
         }
-        
+
         if self.config.enable_privacy_analysis {
             println!("  Running privacy guarantees analysis...");
             self.run_privacy_analysis()?;
         }
-        
+
         if self.config.enable_memory_safety {
             println!("  Running memory safety analysis...");
             self.run_memory_safety_analysis()?;
         }
-        
+
         if self.config.enable_numerical_analysis {
             println!("  Running numerical stability analysis...");
             self.run_numerical_stability_analysis()?;
         }
-        
+
         if self.config.enable_access_control {
             println!("  Running access control analysis...");
             self.run_access_control_analysis()?;
         }
-        
+
         if self.config.enable_crypto_analysis {
             println!("  Running cryptographic security analysis...");
             self.run_cryptographic_analysis()?;
         }
-        
+
         // Generate final results
         self.generate_final_results(start_time);
-        
+
         // Generate recommendations if enabled
         if self.config.generate_recommendations {
             self.generate_security_recommendations();
         }
-        
-        println!("🔒 Security audit completed in {:.2}s", start_time.elapsed().as_secs_f64());
-        
+
+        println!(
+            "🔒 Security audit completed in {:.2}s",
+            start_time.elapsed().as_secs_f64()
+        );
+
         Ok(&self.audit_results)
     }
 
@@ -1080,36 +1083,38 @@ impl SecurityAuditor {
     fn run_input_validation_analysis(&mut self) -> Result<()> {
         // Register built-in input validation tests
         self.input_validator.register_builtin_tests();
-        
+
         // Execute all input validation tests
         for test in &self.input_validator.test_cases.clone() {
             let result = self.execute_input_validation_test(test)?;
             self.input_validator.results.push(result);
         }
-        
+
         // Update vulnerability statistics
         self.input_validator.update_vulnerability_statistics();
-        
+
         Ok(())
     }
 
     /// Execute individual input validation test
-    fn execute_input_validation_test(&self, test: &InputValidationTest) -> Result<ValidationTestResult> {
+    fn execute_input_validation_test(
+        &self,
+        test: &InputValidationTest,
+    ) -> Result<ValidationTestResult> {
         let start_time = Instant::now();
-        
+
         // Generate test payload
         let payload = self.generate_test_payload(&test.payload_generator);
-        
+
         // Execute test with timeout
-        let test_result = self.execute_with_timeout(|| {
-            self.test_input_validation(test, &payload)
-        })?;
-        
+        let test_result =
+            self.execute_with_timeout(|| self.test_input_validation(test, &payload))?;
+
         let execution_time = start_time.elapsed();
-        
+
         // Analyze result and determine if vulnerability was detected
         let (status, vulnerability, severity) = self.analyze_validation_result(&test_result, test);
-        
+
         Ok(ValidationTestResult {
             test_name: test.name.clone(),
             status,
@@ -1125,7 +1130,9 @@ impl SecurityAuditor {
     fn generate_test_payload(&self, payload_type: &PayloadType) -> TestPayload {
         match payload_type {
             PayloadType::NaNPayload => TestPayload::FloatArray(vec![f64::NAN, 1.0, 2.0]),
-            PayloadType::InfinityPayload => TestPayload::FloatArray(vec![f64::INFINITY, f64::NEG_INFINITY]),
+            PayloadType::InfinityPayload => {
+                TestPayload::FloatArray(vec![f64::INFINITY, f64::NEG_INFINITY])
+            }
             PayloadType::ExtremeValuePayload(val) => TestPayload::FloatArray(vec![*val, -*val]),
             PayloadType::ZeroSizedPayload => TestPayload::EmptyArray,
             PayloadType::DimensionMismatchPayload => TestPayload::MismatchedDimensions,
@@ -1134,15 +1141,18 @@ impl SecurityAuditor {
         }
     }
 
-
     /// Test input validation with specific payload
-    fn test_input_validation(&self, test: &InputValidationTest, payload: &TestPayload) -> Result<()> {
+    fn test_input_validation(
+        &self,
+        test: &InputValidationTest,
+        payload: &TestPayload,
+    ) -> Result<()> {
         match payload {
             TestPayload::FloatArray(data) => {
                 // Test with potentially malicious float data
                 let array = Array1::from_vec(data.clone());
                 let gradients = Array1::from_vec(data.clone());
-                
+
                 // Simulate optimizer step with malicious input
                 self.simulate_optimizer_with_input(&array, &gradients)?;
             }
@@ -1166,37 +1176,49 @@ impl SecurityAuditor {
                 self.simulate_invalid_privacy_config()?;
             }
         }
-        
+
         Ok(())
     }
 
     /// Simulate optimizer with potentially malicious input
-    fn simulate_optimizer_with_input(&self, params: &Array1<f64>, gradients: &Array1<f64>) -> Result<()> {
+    fn simulate_optimizer_with_input(
+        &self,
+        params: &Array1<f64>,
+        gradients: &Array1<f64>,
+    ) -> Result<()> {
         // This would normally call actual optimizer implementations
         // For now, we simulate basic validation
-        
+
         // Check for NaN/Infinity
         if params.iter().any(|x| !x.is_finite()) || gradients.iter().any(|x| !x.is_finite()) {
-            return Err(OptimError::InvalidConfig("Non-finite values detected".to_string()));
+            return Err(OptimError::InvalidConfig(
+                "Non-finite values detected".to_string(),
+            ));
         }
-        
+
         // Check dimension match
         if params.len() != gradients.len() {
-            return Err(OptimError::DimensionMismatch("Parameter and gradient dimensions must match".to_string()));
+            return Err(OptimError::DimensionMismatch(
+                "Parameter and gradient dimensions must match".to_string(),
+            ));
         }
-        
+
         // Check for empty arrays
         if params.is_empty() || gradients.is_empty() {
-            return Err(OptimError::InvalidConfig("Empty arrays not allowed".to_string()));
+            return Err(OptimError::InvalidConfig(
+                "Empty arrays not allowed".to_string(),
+            ));
         }
-        
+
         Ok(())
     }
 
     /// Simulate optimizer with negative parameters
     fn simulate_optimizer_with_negative_params(&self, learning_rate: f64) -> Result<()> {
         if learning_rate < 0.0 {
-            return Err(OptimError::InvalidConfig("Negative learning rate not allowed".to_string()));
+            return Err(OptimError::InvalidConfig(
+                "Negative learning rate not allowed".to_string(),
+            ));
         }
         Ok(())
     }
@@ -1206,7 +1228,9 @@ impl SecurityAuditor {
         // Test invalid epsilon values
         let invalid_epsilon = -1.0;
         if invalid_epsilon < 0.0 {
-            return Err(OptimError::InvalidPrivacyConfig("Epsilon must be non-negative".to_string()));
+            return Err(OptimError::InvalidPrivacyConfig(
+                "Epsilon must be non-negative".to_string(),
+            ));
         }
         Ok(())
     }
@@ -1224,9 +1248,9 @@ impl SecurityAuditor {
 
     /// Analyze validation test result
     fn analyze_validation_result(
-        &self, 
-        result: &Result<()>, 
-        test: &InputValidationTest
+        &self,
+        result: &Result<()>,
+        test: &InputValidationTest,
     ) -> (TestStatus, Option<Vulnerability>, SeverityLevel) {
         match result {
             Ok(_) => {
@@ -1238,7 +1262,9 @@ impl SecurityAuditor {
                             vulnerability_type: VulnerabilityType::InputValidationBypass,
                             cvss_score: 7.5,
                             description: format!("Input validation bypass in test: {}", test.name),
-                            proof_of_concept: "Malicious input was accepted when it should have been rejected".to_string(),
+                            proof_of_concept:
+                                "Malicious input was accepted when it should have been rejected"
+                                    .to_string(),
                             impact: ImpactAssessment {
                                 confidentiality: ImpactLevel::Medium,
                                 integrity: ImpactLevel::High,
@@ -1254,7 +1280,7 @@ impl SecurityAuditor {
                         };
                         (TestStatus::Failed, Some(vulnerability), SeverityLevel::High)
                     }
-                    _ => (TestStatus::Passed, None, SeverityLevel::Low)
+                    _ => (TestStatus::Passed, None, SeverityLevel::Low),
                 }
             }
             Err(_) => {
@@ -1276,11 +1302,19 @@ impl SecurityAuditor {
     /// Generate recommendation for validation test
     fn generate_validation_recommendation(&self, test: &InputValidationTest) -> Option<String> {
         match test.attack_vector {
-            AttackVector::NaNInjection => Some("Implement NaN/Infinity checks in input validation".to_string()),
+            AttackVector::NaNInjection => {
+                Some("Implement NaN/Infinity checks in input validation".to_string())
+            }
             AttackVector::ExtremeValues => Some("Add bounds checking for input values".to_string()),
-            AttackVector::DimensionMismatch => Some("Validate array dimensions before processing".to_string()),
-            AttackVector::EmptyArrays => Some("Check for empty arrays and handle appropriately".to_string()),
-            AttackVector::PrivacyParameterAttack => Some("Validate privacy parameters before use".to_string()),
+            AttackVector::DimensionMismatch => {
+                Some("Validate array dimensions before processing".to_string())
+            }
+            AttackVector::EmptyArrays => {
+                Some("Check for empty arrays and handle appropriately".to_string())
+            }
+            AttackVector::PrivacyParameterAttack => {
+                Some("Validate privacy parameters before use".to_string())
+            }
             _ => Some("Implement comprehensive input validation".to_string()),
         }
     }
@@ -1289,12 +1323,12 @@ impl SecurityAuditor {
     fn run_privacy_analysis(&mut self) -> Result<()> {
         // Register privacy tests
         self.privacy_analyzer.register_privacy_tests();
-        
+
         // Execute privacy verification tests
         for test in &self.privacy_analyzer.test_cases.clone() {
             self.execute_privacy_test(test)?;
         }
-        
+
         Ok(())
     }
 
@@ -1312,7 +1346,7 @@ impl SecurityAuditor {
                 // Other privacy tests would be implemented here
             }
         }
-        
+
         Ok(())
     }
 
@@ -1320,7 +1354,7 @@ impl SecurityAuditor {
     fn test_membership_inference(&mut self, _test: &PrivacyTest) -> Result<()> {
         // Simulate membership inference test
         // This would involve training models and testing if membership can be inferred
-        
+
         // For demonstration, we'll simulate a privacy violation detection
         let violation = PrivacyViolation {
             violation_type: PrivacyViolationType::InformationLeakage,
@@ -1334,9 +1368,9 @@ impl SecurityAuditor {
             confidence: 0.85,
             evidence: vec!["Statistical test indicates membership can be inferred".to_string()],
         };
-        
+
         self.privacy_analyzer.violations.push(violation);
-        
+
         Ok(())
     }
 
@@ -1350,9 +1384,11 @@ impl SecurityAuditor {
             projected_exhaustion: Some(10),
             recommendations: vec!["Reduce noise multiplier".to_string()],
         };
-        
-        self.privacy_analyzer.budget_verification.push(verification_result);
-        
+
+        self.privacy_analyzer
+            .budget_verification
+            .push(verification_result);
+
         Ok(())
     }
 
@@ -1360,12 +1396,12 @@ impl SecurityAuditor {
     fn run_memory_safety_analysis(&mut self) -> Result<()> {
         // Register memory safety tests
         self.memory_analyzer.register_memory_tests();
-        
+
         // Execute memory safety tests
         for test in &self.memory_analyzer.test_cases.clone() {
             self.execute_memory_test(test)?;
         }
-        
+
         Ok(())
     }
 
@@ -1382,7 +1418,7 @@ impl SecurityAuditor {
                 // Other memory tests would be implemented here
             }
         }
-        
+
         Ok(())
     }
 
@@ -1390,21 +1426,25 @@ impl SecurityAuditor {
     fn test_large_array_allocation(&mut self) -> Result<()> {
         // Simulate memory tracking during large allocation
         let large_size = 1024 * 1024 * 100; // 100MB
-        
+
         // Record memory snapshot before
         let before_snapshot = MemorySnapshot {
             timestamp: Instant::now(),
             usage_bytes: 1024 * 1024 * 10, // 10MB baseline
             allocation_count: 100,
         };
-        
-        self.memory_analyzer.memory_tracking.usage_history.push_back(before_snapshot);
-        
+
+        self.memory_analyzer
+            .memory_tracking
+            .usage_history
+            .push_back(before_snapshot);
+
         // Simulate allocation (we don't actually allocate to avoid issues)
         let simulated_allocation = large_size;
-        
+
         // Check if allocation would exceed reasonable limits
-        if simulated_allocation > 1024 * 1024 * 1024 { // 1GB limit
+        if simulated_allocation > 1024 * 1024 * 1024 {
+            // 1GB limit
             let memory_issue = MemoryIssue {
                 issue_type: MemoryIssueType::OverAccess,
                 severity: SeverityLevel::High,
@@ -1416,10 +1456,10 @@ impl SecurityAuditor {
                     address: None,
                 }),
             };
-            
+
             self.memory_analyzer.memory_issues.push(memory_issue);
         }
-        
+
         Ok(())
     }
 
@@ -1427,22 +1467,24 @@ impl SecurityAuditor {
     fn test_rapid_allocation(&mut self) -> Result<()> {
         // Simulate rapid allocation/deallocation pattern
         let mut allocation_count = 0;
-        
+
         for _ in 0..1000 {
             // Simulate allocation
             allocation_count += 1;
-            
+
             // Track allocation
             let allocation_info = AllocationInfo {
                 size: 1024,
                 timestamp: Instant::now(),
                 source: "rapid_allocation_test".to_string(),
             };
-            
-            self.memory_analyzer.memory_tracking.allocations
+
+            self.memory_analyzer
+                .memory_tracking
+                .allocations
                 .insert(format!("alloc_{}", allocation_count), allocation_info);
         }
-        
+
         // Check for potential memory fragmentation
         if allocation_count > 500 {
             let memory_issue = MemoryIssue {
@@ -1452,10 +1494,10 @@ impl SecurityAuditor {
                 stack_trace: None,
                 memory_location: None,
             };
-            
+
             self.memory_analyzer.memory_issues.push(memory_issue);
         }
-        
+
         Ok(())
     }
 
@@ -1463,12 +1505,12 @@ impl SecurityAuditor {
     fn run_numerical_stability_analysis(&mut self) -> Result<()> {
         // Register numerical stability tests
         self.numerical_analyzer.register_stability_tests();
-        
+
         // Execute stability tests
         for test in &self.numerical_analyzer.test_cases.clone() {
             self.execute_numerical_test(test)?;
         }
-        
+
         Ok(())
     }
 
@@ -1485,7 +1527,7 @@ impl SecurityAuditor {
                 // Other numerical tests would be implemented here
             }
         }
-        
+
         Ok(())
     }
 
@@ -1496,7 +1538,10 @@ impl SecurityAuditor {
             if *max_val > f64::MAX / 2.0 || *min_val < f64::MIN / 2.0 {
                 let instability = NumericalInstability {
                     instability_type: InstabilityType::Overflow,
-                    triggering_conditions: vec![format!("Values in range [{}, {}]", min_val, max_val)],
+                    triggering_conditions: vec![format!(
+                        "Values in range [{}, {}]",
+                        min_val, max_val
+                    )],
                     impact: NumericalImpact {
                         precision_loss: 64.0, // Complete precision loss on overflow
                         convergence_impact: ConvergenceImpact::Divergence,
@@ -1508,11 +1553,11 @@ impl SecurityAuditor {
                         "Normalize input values".to_string(),
                     ],
                 };
-                
+
                 self.numerical_analyzer.instabilities.push(instability);
             }
         }
-        
+
         Ok(())
     }
 
@@ -1521,14 +1566,17 @@ impl SecurityAuditor {
         // Simulate precision tracking
         let precision_measurement = PrecisionMeasurement {
             step: 1,
-            precision_bits: 52.0, // IEEE 754 double precision
+            precision_bits: 52.0,   // IEEE 754 double precision
             condition_number: 1e12, // Ill-conditioned
         };
-        
+
         if precision_measurement.condition_number > 1e10 {
             let instability = NumericalInstability {
                 instability_type: InstabilityType::IllConditioning,
-                triggering_conditions: vec![format!("Condition number: {}", precision_measurement.condition_number)],
+                triggering_conditions: vec![format!(
+                    "Condition number: {}",
+                    precision_measurement.condition_number
+                )],
                 impact: NumericalImpact {
                     precision_loss: 10.0, // Estimated bits lost
                     convergence_impact: ConvergenceImpact::SlowedConvergence,
@@ -1539,13 +1587,15 @@ impl SecurityAuditor {
                     "Implement preconditioning".to_string(),
                 ],
             };
-            
+
             self.numerical_analyzer.instabilities.push(instability);
         }
-        
-        self.numerical_analyzer.precision_tracking.precision_history
+
+        self.numerical_analyzer
+            .precision_tracking
+            .precision_history
             .push_back(precision_measurement);
-        
+
         Ok(())
     }
 
@@ -1553,12 +1603,12 @@ impl SecurityAuditor {
     fn run_access_control_analysis(&mut self) -> Result<()> {
         // Register access control tests
         self.access_analyzer.register_access_tests();
-        
+
         // Execute access control tests
         for test in &self.access_analyzer.test_cases.clone() {
             self.execute_access_test(test)?;
         }
-        
+
         Ok(())
     }
 
@@ -1581,7 +1631,7 @@ impl SecurityAuditor {
                 // Other access control tests
             }
         }
-        
+
         Ok(())
     }
 
@@ -1589,12 +1639,12 @@ impl SecurityAuditor {
     fn run_cryptographic_analysis(&mut self) -> Result<()> {
         // Register cryptographic tests
         self.crypto_analyzer.register_crypto_tests();
-        
+
         // Execute cryptographic security tests
         for test in &self.crypto_analyzer.test_cases.clone() {
             self.execute_crypto_test(test)?;
         }
-        
+
         Ok(())
     }
 
@@ -1611,7 +1661,7 @@ impl SecurityAuditor {
                 // Other crypto tests
             }
         }
-        
+
         Ok(())
     }
 
@@ -1619,7 +1669,7 @@ impl SecurityAuditor {
     fn test_random_number_generation(&mut self) -> Result<()> {
         // Simulate randomness quality testing
         let entropy_estimate = 7.8; // bits per byte (should be close to 8.0)
-        
+
         if entropy_estimate < 7.0 {
             let weakness = CryptographicWeakness {
                 weakness_type: WeaknessType::InsufficientEntropy,
@@ -1627,10 +1677,10 @@ impl SecurityAuditor {
                 severity: SeverityLevel::High,
                 description: format!("Low entropy detected: {} bits/byte", entropy_estimate),
             };
-            
+
             self.crypto_analyzer.weaknesses.push(weakness);
         }
-        
+
         // Update randomness quality assessment
         self.crypto_analyzer.randomness_quality = RandomnessQualityAssessment {
             entropy_estimate,
@@ -1653,7 +1703,7 @@ impl SecurityAuditor {
                 bias_estimate: 0.001,
             },
         };
-        
+
         Ok(())
     }
 
@@ -1661,12 +1711,12 @@ impl SecurityAuditor {
     fn test_noise_generation(&mut self) -> Result<()> {
         // Simulate noise quality testing for differential privacy
         // This would test the statistical properties of generated noise
-        
+
         // Check for potential patterns or weaknesses in noise generation
         let noise_samples = 1000;
         let expected_variance = 1.0;
         let measured_variance = 0.98; // Simulated measurement
-        
+
         if (measured_variance - expected_variance).abs() > 0.1 {
             let weakness = CryptographicWeakness {
                 weakness_type: WeaknessType::PredictablePatterns,
@@ -1674,34 +1724,35 @@ impl SecurityAuditor {
                 severity: SeverityLevel::Medium,
                 description: "Noise variance deviates from expected value".to_string(),
             };
-            
+
             self.crypto_analyzer.weaknesses.push(weakness);
         }
-        
+
         Ok(())
     }
 
     /// Generate final audit results
     fn generate_final_results(&mut self, start_time: Instant) {
         self.audit_results.timestamp = start_time;
-        
+
         // Calculate overall security score
         self.audit_results.overall_security_score = self.calculate_overall_security_score();
-        
+
         // Count total vulnerabilities
         self.audit_results.total_vulnerabilities = self.count_total_vulnerabilities();
-        
+
         // Group vulnerabilities by severity
         self.audit_results.vulnerabilities_by_severity = self.group_vulnerabilities_by_severity();
-        
+
         // Copy results from individual analyzers
         self.audit_results.input_validation_results = self.input_validator.results.clone();
         self.audit_results.privacy_analysis_results = self.privacy_analyzer.violations.clone();
         self.audit_results.memory_safety_results = self.memory_analyzer.memory_issues.clone();
-        self.audit_results.numerical_stability_results = self.numerical_analyzer.instabilities.clone();
+        self.audit_results.numerical_stability_results =
+            self.numerical_analyzer.instabilities.clone();
         self.audit_results.access_control_results = self.access_analyzer.violations.clone();
         self.audit_results.cryptographic_results = self.crypto_analyzer.weaknesses.clone();
-        
+
         // Generate compliance status
         self.audit_results.compliance_status = self.generate_compliance_status();
     }
@@ -1709,29 +1760,31 @@ impl SecurityAuditor {
     /// Calculate overall security score (0-100)
     fn calculate_overall_security_score(&self) -> f64 {
         let mut score = 100.0;
-        
+
         // Deduct points for critical vulnerabilities
         let critical_vulns = self.count_vulnerabilities_by_severity(SeverityLevel::Critical);
         score -= critical_vulns as f64 * 25.0;
-        
+
         // Deduct points for high severity vulnerabilities
         let high_vulns = self.count_vulnerabilities_by_severity(SeverityLevel::High);
         score -= high_vulns as f64 * 15.0;
-        
+
         // Deduct points for medium severity vulnerabilities
         let medium_vulns = self.count_vulnerabilities_by_severity(SeverityLevel::Medium);
         score -= medium_vulns as f64 * 8.0;
-        
+
         // Deduct points for low severity vulnerabilities
         let low_vulns = self.count_vulnerabilities_by_severity(SeverityLevel::Low);
         score -= low_vulns as f64 * 3.0;
-        
+
         score.max(0.0)
     }
 
     /// Count total vulnerabilities across all categories
     fn count_total_vulnerabilities(&self) -> usize {
-        self.input_validator.results.iter()
+        self.input_validator
+            .results
+            .iter()
             .filter(|r| r.vulnerability_detected.is_some())
             .count()
             + self.privacy_analyzer.violations.len()
@@ -1743,30 +1796,44 @@ impl SecurityAuditor {
 
     /// Count vulnerabilities by severity level
     fn count_vulnerabilities_by_severity(&self, severity: SeverityLevel) -> usize {
-        let input_val_count = self.input_validator.results.iter()
+        let input_val_count = self
+            .input_validator
+            .results
+            .iter()
             .filter(|r| r.severity == severity)
             .count();
-        
-        let memory_count = self.memory_analyzer.memory_issues.iter()
+
+        let memory_count = self
+            .memory_analyzer
+            .memory_issues
+            .iter()
             .filter(|i| i.severity == severity)
             .count();
-        
-        let crypto_count = self.crypto_analyzer.weaknesses.iter()
+
+        let crypto_count = self
+            .crypto_analyzer
+            .weaknesses
+            .iter()
             .filter(|w| w.severity == severity)
             .count();
-        
+
         input_val_count + memory_count + crypto_count
     }
 
     /// Group vulnerabilities by severity
     fn group_vulnerabilities_by_severity(&self) -> HashMap<SeverityLevel, usize> {
         let mut groups = HashMap::new();
-        
-        for severity in [SeverityLevel::Critical, SeverityLevel::High, SeverityLevel::Medium, SeverityLevel::Low] {
+
+        for severity in [
+            SeverityLevel::Critical,
+            SeverityLevel::High,
+            SeverityLevel::Medium,
+            SeverityLevel::Low,
+        ] {
             let count = self.count_vulnerabilities_by_severity(severity.clone());
             groups.insert(severity, count);
         }
-        
+
         groups
     }
 
@@ -1774,14 +1841,14 @@ impl SecurityAuditor {
     fn generate_compliance_status(&self) -> ComplianceStatus {
         let mut standards_compliance = HashMap::new();
         let mut regulatory_compliance = HashMap::new();
-        
+
         // Simulate compliance assessment
         standards_compliance.insert("OWASP".to_string(), ComplianceLevel::PartiallyCompliant);
         standards_compliance.insert("NIST".to_string(), ComplianceLevel::FullyCompliant);
-        
+
         regulatory_compliance.insert("GDPR".to_string(), ComplianceLevel::FullyCompliant);
         regulatory_compliance.insert("CCPA".to_string(), ComplianceLevel::PartiallyCompliant);
-        
+
         ComplianceStatus {
             standards_compliance,
             regulatory_compliance,
@@ -1792,7 +1859,7 @@ impl SecurityAuditor {
     /// Generate security recommendations
     fn generate_security_recommendations(&mut self) {
         let mut recommendations = Vec::new();
-        
+
         // Generate recommendations based on found vulnerabilities
         if self.count_vulnerabilities_by_severity(SeverityLevel::Critical) > 0 {
             recommendations.push(SecurityRecommendation {
@@ -1814,7 +1881,7 @@ impl SecurityAuditor {
                 risk_reduction: 90.0,
             });
         }
-        
+
         // Add specific recommendations based on analyzer results
         if !self.input_validator.results.is_empty() {
             recommendations.push(SecurityRecommendation {
@@ -1822,7 +1889,8 @@ impl SecurityAuditor {
                 priority: RecommendationPriority::High,
                 category: RecommendationCategory::InputValidation,
                 title: "Enhance Input Validation".to_string(),
-                description: "Strengthen input validation to prevent malicious input attacks".to_string(),
+                description: "Strengthen input validation to prevent malicious input attacks"
+                    .to_string(),
                 implementation_steps: vec![
                     "Add comprehensive input sanitization".to_string(),
                     "Implement bounds checking".to_string(),
@@ -1836,7 +1904,7 @@ impl SecurityAuditor {
                 risk_reduction: 70.0,
             });
         }
-        
+
         // Add privacy-specific recommendations
         if !self.privacy_analyzer.violations.is_empty() {
             recommendations.push(SecurityRecommendation {
@@ -1844,7 +1912,9 @@ impl SecurityAuditor {
                 priority: RecommendationPriority::High,
                 category: RecommendationCategory::PrivacyGuarantees,
                 title: "Strengthen Privacy Guarantees".to_string(),
-                description: "Address privacy guarantee violations to ensure proper differential privacy".to_string(),
+                description:
+                    "Address privacy guarantee violations to ensure proper differential privacy"
+                        .to_string(),
                 implementation_steps: vec![
                     "Review privacy budget calculations".to_string(),
                     "Implement stricter noise generation".to_string(),
@@ -1858,7 +1928,7 @@ impl SecurityAuditor {
                 risk_reduction: 85.0,
             });
         }
-        
+
         self.audit_results.recommendations = recommendations;
     }
 
@@ -1904,20 +1974,32 @@ impl SecurityAuditor {
     /// Generate category breakdown
     fn generate_category_breakdown(&self) -> HashMap<String, usize> {
         let mut breakdown = HashMap::new();
-        
-        breakdown.insert("Input Validation".to_string(), 
-                        self.input_validator.results.len());
-        breakdown.insert("Privacy Guarantees".to_string(), 
-                        self.privacy_analyzer.violations.len());
-        breakdown.insert("Memory Safety".to_string(), 
-                        self.memory_analyzer.memory_issues.len());
-        breakdown.insert("Numerical Stability".to_string(), 
-                        self.numerical_analyzer.instabilities.len());
-        breakdown.insert("Access Control".to_string(), 
-                        self.access_analyzer.violations.len());
-        breakdown.insert("Cryptographic Security".to_string(), 
-                        self.crypto_analyzer.weaknesses.len());
-        
+
+        breakdown.insert(
+            "Input Validation".to_string(),
+            self.input_validator.results.len(),
+        );
+        breakdown.insert(
+            "Privacy Guarantees".to_string(),
+            self.privacy_analyzer.violations.len(),
+        );
+        breakdown.insert(
+            "Memory Safety".to_string(),
+            self.memory_analyzer.memory_issues.len(),
+        );
+        breakdown.insert(
+            "Numerical Stability".to_string(),
+            self.numerical_analyzer.instabilities.len(),
+        );
+        breakdown.insert(
+            "Access Control".to_string(),
+            self.access_analyzer.violations.len(),
+        );
+        breakdown.insert(
+            "Cryptographic Security".to_string(),
+            self.crypto_analyzer.weaknesses.len(),
+        );
+
         breakdown
     }
 
@@ -1934,7 +2016,7 @@ impl SecurityAuditor {
     /// Generate detailed findings
     fn generate_detailed_findings(&self) -> Vec<DetailedFinding> {
         let mut findings = Vec::new();
-        
+
         // Add input validation findings
         for result in &self.input_validator.results {
             if let Some(vuln) = &result.vulnerability_detected {
@@ -1946,13 +2028,15 @@ impl SecurityAuditor {
                     category: "Input Validation".to_string(),
                     cvss_score: vuln.cvss_score,
                     proof_of_concept: vuln.proof_of_concept.clone(),
-                    remediation_guidance: result.recommendation.clone()
+                    remediation_guidance: result
+                        .recommendation
+                        .clone()
                         .unwrap_or_else(|| "Review input validation logic".to_string()),
                     affected_components: vec![result.test_name.clone()],
                 });
             }
         }
-        
+
         // Add memory safety findings
         for issue in &self.memory_analyzer.memory_issues {
             findings.push(DetailedFinding {
@@ -1972,7 +2056,7 @@ impl SecurityAuditor {
                 affected_components: vec!["Memory Management".to_string()],
             });
         }
-        
+
         findings
     }
 
@@ -1987,7 +2071,7 @@ impl SecurityAuditor {
         } else {
             RiskLevel::Critical
         };
-        
+
         RiskAssessment {
             overall_risk_level: overall_risk,
             risk_factors: self.identify_risk_factors(),
@@ -2000,7 +2084,7 @@ impl SecurityAuditor {
     /// Identify risk factors
     fn identify_risk_factors(&self) -> Vec<RiskFactor> {
         let mut factors = Vec::new();
-        
+
         if self.count_vulnerabilities_by_severity(SeverityLevel::Critical) > 0 {
             factors.push(RiskFactor {
                 factor: "Critical vulnerabilities present".to_string(),
@@ -2008,7 +2092,7 @@ impl SecurityAuditor {
                 likelihood: RiskLikelihood::High,
             });
         }
-        
+
         if !self.privacy_analyzer.violations.is_empty() {
             factors.push(RiskFactor {
                 factor: "Privacy guarantee violations".to_string(),
@@ -2016,7 +2100,7 @@ impl SecurityAuditor {
                 likelihood: RiskLikelihood::Medium,
             });
         }
-        
+
         factors
     }
 
@@ -2050,9 +2134,14 @@ impl SecurityAuditor {
     /// Generate risk matrix
     fn generate_risk_matrix(&self) -> Vec<RiskMatrixEntry> {
         let mut matrix = Vec::new();
-        
+
         // Add entries for each identified vulnerability type
-        for severity in [SeverityLevel::Critical, SeverityLevel::High, SeverityLevel::Medium, SeverityLevel::Low] {
+        for severity in [
+            SeverityLevel::Critical,
+            SeverityLevel::High,
+            SeverityLevel::Medium,
+            SeverityLevel::Low,
+        ] {
             let count = self.count_vulnerabilities_by_severity(severity.clone());
             if count > 0 {
                 matrix.push(RiskMatrixEntry {
@@ -2068,7 +2157,7 @@ impl SecurityAuditor {
                 });
             }
         }
-        
+
         matrix
     }
 
@@ -2086,7 +2175,7 @@ impl SecurityAuditor {
     fn generate_remediation_timeline(&self) -> RemediationTimeline {
         let critical_count = self.count_vulnerabilities_by_severity(SeverityLevel::Critical);
         let high_count = self.count_vulnerabilities_by_severity(SeverityLevel::High);
-        
+
         RemediationTimeline {
             immediate_actions: if critical_count > 0 {
                 vec!["Address critical vulnerabilities".to_string()]
@@ -2347,7 +2436,9 @@ impl InputValidationAnalyzer {
             description: "Tests handling of negative learning rates".to_string(),
             category: ValidationCategory::MalformedInput,
             attack_vector: AttackVector::ExtremeValues,
-            expected_behavior: ExpectedBehavior::RejectWithError("Negative learning rate".to_string()),
+            expected_behavior: ExpectedBehavior::RejectWithError(
+                "Negative learning rate".to_string(),
+            ),
             payload_generator: PayloadType::NegativeLearningRate,
         });
 
@@ -2363,10 +2454,14 @@ impl InputValidationAnalyzer {
 
     fn update_vulnerability_statistics(&mut self) {
         let total_tests = self.results.len();
-        let tests_passed = self.results.iter()
+        let tests_passed = self
+            .results
+            .iter()
             .filter(|r| r.status == TestStatus::Passed)
             .count();
-        let tests_failed = self.results.iter()
+        let tests_failed = self
+            .results
+            .iter()
             .filter(|r| r.status == TestStatus::Failed)
             .count();
 
@@ -2378,8 +2473,12 @@ impl InputValidationAnalyzer {
 
         for result in &self.results {
             if let Some(vuln) = &result.vulnerability_detected {
-                *vulnerabilities_by_severity.entry(result.severity.clone()).or_insert(0) += 1;
-                *vulnerabilities_by_type.entry(format!("{:?}", vuln.vulnerability_type)).or_insert(0) += 1;
+                *vulnerabilities_by_severity
+                    .entry(result.severity.clone())
+                    .or_insert(0) += 1;
+                *vulnerabilities_by_type
+                    .entry(format!("{:?}", vuln.vulnerability_type))
+                    .or_insert(0) += 1;
                 total_cvss += vuln.cvss_score;
                 vuln_count += 1;
                 total_detection_time += result.execution_time;
@@ -2625,7 +2724,7 @@ mod tests {
             expected_behavior: ExpectedBehavior::RejectWithError("Error".to_string()),
             payload_generator: PayloadType::NaNPayload,
         };
-        
+
         assert_eq!(test.name, "Test");
         assert!(matches!(test.attack_vector, AttackVector::NaNInjection));
     }

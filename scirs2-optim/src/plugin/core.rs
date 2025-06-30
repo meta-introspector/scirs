@@ -17,45 +17,45 @@ use std::time::Duration;
 pub trait OptimizerPlugin<A: Float>: Debug + Send + Sync {
     /// Perform a single optimization step
     fn step(&mut self, params: &Array1<A>, gradients: &Array1<A>) -> Result<Array1<A>>;
-    
+
     /// Get optimizer name
     fn name(&self) -> &str;
-    
+
     /// Get optimizer version
     fn version(&self) -> &str;
-    
+
     /// Get plugin information
     fn plugin_info(&self) -> PluginInfo;
-    
+
     /// Get optimizer capabilities
     fn capabilities(&self) -> PluginCapabilities;
-    
+
     /// Initialize optimizer with parameters
     fn initialize(&mut self, param_shape: &[usize]) -> Result<()>;
-    
+
     /// Reset optimizer state
     fn reset(&mut self) -> Result<()>;
-    
+
     /// Get optimizer configuration
     fn get_config(&self) -> OptimizerConfig;
-    
+
     /// Set optimizer configuration
     fn set_config(&mut self, config: OptimizerConfig) -> Result<()>;
-    
+
     /// Get optimizer state for serialization
     fn get_state(&self) -> Result<OptimizerState>;
-    
+
     /// Set optimizer state from deserialization
     fn set_state(&mut self, state: OptimizerState) -> Result<()>;
-    
+
     /// Clone the optimizer plugin
     fn clone_plugin(&self) -> Box<dyn OptimizerPlugin<A>>;
-    
+
     /// Get memory usage information
     fn memory_usage(&self) -> MemoryUsage {
         MemoryUsage::default()
     }
-    
+
     /// Get performance metrics
     fn performance_metrics(&self) -> PerformanceMetrics {
         PerformanceMetrics::default()
@@ -66,19 +66,19 @@ pub trait OptimizerPlugin<A: Float>: Debug + Send + Sync {
 pub trait ExtendedOptimizerPlugin<A: Float>: OptimizerPlugin<A> {
     /// Perform batch optimization step
     fn batch_step(&mut self, params: &Array2<A>, gradients: &Array2<A>) -> Result<Array2<A>>;
-    
+
     /// Compute adaptive learning rate
     fn adaptive_learning_rate(&self, gradients: &Array1<A>) -> A;
-    
+
     /// Gradient preprocessing
     fn preprocess_gradients(&self, gradients: &Array1<A>) -> Result<Array1<A>>;
-    
+
     /// Parameter postprocessing
     fn postprocess_parameters(&self, params: &Array1<A>) -> Result<Array1<A>>;
-    
+
     /// Get optimization trajectory
     fn get_trajectory(&self) -> Vec<Array1<A>>;
-    
+
     /// Compute convergence metrics
     fn convergence_metrics(&self) -> ConvergenceMetrics;
 }
@@ -312,16 +312,16 @@ pub struct BenchmarkResults {
 pub trait OptimizerPluginFactory<A: Float>: Debug + Send + Sync {
     /// Create a new optimizer instance
     fn create_optimizer(&self, config: OptimizerConfig) -> Result<Box<dyn OptimizerPlugin<A>>>;
-    
+
     /// Get factory information
     fn factory_info(&self) -> PluginInfo;
-    
+
     /// Validate configuration
     fn validate_config(&self, config: &OptimizerConfig) -> Result<()>;
-    
+
     /// Get default configuration
     fn default_config(&self) -> OptimizerConfig;
-    
+
     /// Get configuration schema
     fn config_schema(&self) -> ConfigSchema;
 }
@@ -355,12 +355,25 @@ pub struct FieldSchema {
 /// Field types for schema
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum FieldType {
-    Float { min: Option<f64>, max: Option<f64> },
-    Integer { min: Option<i64>, max: Option<i64> },
+    Float {
+        min: Option<f64>,
+        max: Option<f64>,
+    },
+    Integer {
+        min: Option<i64>,
+        max: Option<i64>,
+    },
     Boolean,
-    String { max_length: Option<usize> },
-    Array { element_type: Box<FieldType>, max_length: Option<usize> },
-    Choice { options: Vec<String> },
+    String {
+        max_length: Option<usize>,
+    },
+    Array {
+        element_type: Box<FieldType>,
+        max_length: Option<usize>,
+    },
+    Choice {
+        options: Vec<String>,
+    },
 }
 
 /// Validation constraints
@@ -385,32 +398,42 @@ pub enum ValidationConstraint {
 /// Plugin lifecycle hooks
 pub trait PluginLifecycle {
     /// Called when plugin is loaded
-    fn on_load(&mut self) -> Result<()> { Ok(()) }
-    
+    fn on_load(&mut self) -> Result<()> {
+        Ok(())
+    }
+
     /// Called when plugin is unloaded
-    fn on_unload(&mut self) -> Result<()> { Ok(()) }
-    
+    fn on_unload(&mut self) -> Result<()> {
+        Ok(())
+    }
+
     /// Called when plugin is enabled
-    fn on_enable(&mut self) -> Result<()> { Ok(()) }
-    
+    fn on_enable(&mut self) -> Result<()> {
+        Ok(())
+    }
+
     /// Called when plugin is disabled
-    fn on_disable(&mut self) -> Result<()> { Ok(()) }
-    
+    fn on_disable(&mut self) -> Result<()> {
+        Ok(())
+    }
+
     /// Called periodically for maintenance
-    fn on_maintenance(&mut self) -> Result<()> { Ok(()) }
+    fn on_maintenance(&mut self) -> Result<()> {
+        Ok(())
+    }
 }
 
 /// Plugin event system
 pub trait PluginEventHandler {
     /// Handle optimization step event
     fn on_step(&mut self, _step: usize, _params: &Array1<f64>, _gradients: &Array1<f64>) {}
-    
+
     /// Handle convergence event
     fn on_convergence(&mut self, _final_params: &Array1<f64>) {}
-    
+
     /// Handle error event
     fn on_error(&mut self, _error: &OptimError) {}
-    
+
     /// Handle custom event
     fn on_custom_event(&mut self, _event_name: &str, _data: &dyn Any) {}
 }
@@ -418,16 +441,24 @@ pub trait PluginEventHandler {
 /// Plugin metadata provider
 pub trait PluginMetadata {
     /// Get plugin documentation
-    fn documentation(&self) -> String { String::new() }
-    
+    fn documentation(&self) -> String {
+        String::new()
+    }
+
     /// Get plugin examples
-    fn examples(&self) -> Vec<PluginExample> { Vec::new() }
-    
+    fn examples(&self) -> Vec<PluginExample> {
+        Vec::new()
+    }
+
     /// Get plugin changelog
-    fn changelog(&self) -> String { String::new() }
-    
+    fn changelog(&self) -> String {
+        String::new()
+    }
+
     /// Get plugin compatibility information
-    fn compatibility(&self) -> CompatibilityInfo { CompatibilityInfo::default() }
+    fn compatibility(&self) -> CompatibilityInfo {
+        CompatibilityInfo::default()
+    }
 }
 
 /// Plugin example
@@ -564,14 +595,15 @@ pub fn validate_config_against_schema(
             }
             _ => {
                 if !config.custom_params.contains_key(required_field) {
-                    return Err(OptimError::InvalidConfig(
-                        format!("Required field '{}' is missing", required_field),
-                    ));
+                    return Err(OptimError::InvalidConfig(format!(
+                        "Required field '{}' is missing",
+                        required_field
+                    )));
                 }
             }
         }
     }
-    
+
     // Validate field constraints
     for (field_name, field_schema) in &schema.fields {
         let value = match field_name.as_str() {
@@ -580,16 +612,17 @@ pub fn validate_config_against_schema(
             "momentum" => Some(ConfigValue::Float(config.momentum)),
             _ => config.custom_params.get(field_name).cloned(),
         };
-        
+
         if let Some(value) = value {
             validate_field_value(&value, field_schema)?;
         } else if field_schema.required {
-            return Err(OptimError::InvalidConfig(
-                format!("Required field '{}' is missing", field_name),
-            ));
+            return Err(OptimError::InvalidConfig(format!(
+                "Required field '{}' is missing",
+                field_name
+            )));
         }
     }
-    
+
     Ok(())
 }
 
@@ -599,16 +632,18 @@ fn validate_field_value(value: &ConfigValue, schema: &FieldSchema) -> Result<()>
         match (value, constraint) {
             (ConfigValue::Float(v), ValidationConstraint::Min(min)) => {
                 if *v < *min {
-                    return Err(OptimError::InvalidConfig(
-                        format!("Value {} is below minimum {}", v, min),
-                    ));
+                    return Err(OptimError::InvalidConfig(format!(
+                        "Value {} is below minimum {}",
+                        v, min
+                    )));
                 }
             }
             (ConfigValue::Float(v), ValidationConstraint::Max(max)) => {
                 if *v > *max {
-                    return Err(OptimError::InvalidConfig(
-                        format!("Value {} is above maximum {}", v, max),
-                    ));
+                    return Err(OptimError::InvalidConfig(format!(
+                        "Value {} is above maximum {}",
+                        v, max
+                    )));
                 }
             }
             (ConfigValue::Float(v), ValidationConstraint::Positive) => {
@@ -627,9 +662,10 @@ fn validate_field_value(value: &ConfigValue, schema: &FieldSchema) -> Result<()>
             }
             (ConfigValue::Float(v), ValidationConstraint::Range(min, max)) => {
                 if *v < *min || *v > *max {
-                    return Err(OptimError::InvalidConfig(
-                        format!("Value {} is outside range [{}, {}]", v, min, max),
-                    ));
+                    return Err(OptimError::InvalidConfig(format!(
+                        "Value {} is outside range [{}, {}]",
+                        v, min, max
+                    )));
                 }
             }
             _ => {} // Other constraint types can be added as needed
@@ -641,21 +677,21 @@ fn validate_field_value(value: &ConfigValue, schema: &FieldSchema) -> Result<()>
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_plugin_info_default() {
         let info = PluginInfo::default();
         assert_eq!(info.name, "Unknown");
         assert_eq!(info.version, "0.1.0");
     }
-    
+
     #[test]
     fn test_plugin_capabilities_default() {
         let caps = PluginCapabilities::default();
         assert!(!caps.sparse_gradients);
         assert!(!caps.gpu_support);
     }
-    
+
     #[test]
     fn test_config_validation() {
         let mut schema = ConfigSchema {
@@ -663,23 +699,26 @@ mod tests {
             required_fields: vec!["learning_rate".to_string()],
             version: "1.0".to_string(),
         };
-        
+
         schema.fields.insert(
             "learning_rate".to_string(),
             FieldSchema {
-                field_type: FieldType::Float { min: Some(0.0), max: None },
+                field_type: FieldType::Float {
+                    min: Some(0.0),
+                    max: None,
+                },
                 description: "Learning rate".to_string(),
                 default_value: Some(ConfigValue::Float(0.001)),
                 constraints: vec![ValidationConstraint::Positive],
                 required: true,
             },
         );
-        
+
         let mut config = OptimizerConfig::default();
         config.learning_rate = 0.001;
-        
+
         assert!(validate_config_against_schema(&config, &schema).is_ok());
-        
+
         config.learning_rate = -0.001;
         assert!(validate_config_against_schema(&config, &schema).is_err());
     }

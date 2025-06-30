@@ -11,8 +11,8 @@ use ndarray::{Array, IxDyn, ScalarOperand};
 use num_traits::Float;
 use rand::Rng;
 use scirs2_core::simd_ops::SimdUnifiedOps;
-use std::sync::{Arc, RwLock};
 use std::fmt::Debug;
+use std::sync::{Arc, RwLock};
 
 /// Configuration for transformer models
 #[derive(Debug, Clone)]
@@ -256,7 +256,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> Layer<F> for Transformer<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> Layer<F>
+    for Transformer<F>
+{
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }

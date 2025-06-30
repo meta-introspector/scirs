@@ -936,14 +936,14 @@ impl AdvancedGpuOrchestrator {
         Ok(vec![GpuInfo {
             device_name: "Mock GPU Device".to_string(),
             compute_capability: (8, 6),
-            total_memory: 8 * 1024 * 1024 * 1024, // 8GB
+            total_memory: 8 * 1024 * 1024 * 1024,     // 8GB
             available_memory: 7 * 1024 * 1024 * 1024, // 7GB
             multiprocessor_count: 68,
             warp_size: 32,
             max_threads_per_block: 1024,
             max_shared_memory: 48 * 1024,
             memory_bandwidth: 900_000_000_000, // 900 GB/s
-            clock_rate: 1815000, // 1.815 GHz
+            clock_rate: 1815000,               // 1.815 GHz
         }])
     }
 
@@ -958,43 +958,47 @@ impl AdvancedGpuOrchestrator {
         F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum + 'static,
     {
         let batch_size = y_true_batch.nrows();
-        let work_distribution = self.load_balancer.distribute_work(batch_size, &self.devices);
-        
+        let work_distribution = self
+            .load_balancer
+            .distribute_work(batch_size, &self.devices);
+
         let mut tasks = Vec::new();
-        
+
         for (device_id, (start_idx, end_idx)) in work_distribution {
             let y_true_slice = y_true_batch.slice(ndarray::s![start_idx..end_idx, ..]);
             let y_pred_slice = y_pred_batch.slice(ndarray::s![start_idx..end_idx, ..]);
-            
+
             // Clone metrics for the task
             let metrics_clone = metrics.to_vec();
             let performance_monitor = Arc::clone(&self.performance_monitor);
-            
+
             // Create async task for this device
             let task = tokio::spawn(async move {
                 let start_time = Instant::now();
-                
+
                 // Simulate GPU computation (in real implementation, this would be actual GPU kernels)
-                let result = Self::compute_on_device(device_id, y_true_slice, y_pred_slice, &metrics_clone).await;
-                
+                let result =
+                    Self::compute_on_device(device_id, y_true_slice, y_pred_slice, &metrics_clone)
+                        .await;
+
                 let execution_time = start_time.elapsed();
                 performance_monitor.record_execution_time(device_id, execution_time);
-                
+
                 result
             });
-            
+
             tasks.push(task);
         }
-        
+
         // Collect results from all devices
         let mut all_results = Vec::new();
         for task in tasks {
-            let device_results = task.await.map_err(|e| {
-                MetricsError::ComputationError(format!("GPU task failed: {}", e))
-            })??;
+            let device_results = task
+                .await
+                .map_err(|e| MetricsError::ComputationError(format!("GPU task failed: {}", e)))??;
             all_results.extend(device_results);
         }
-        
+
         Ok(all_results)
     }
 
@@ -1013,13 +1017,13 @@ impl AdvancedGpuOrchestrator {
         // 1. Transfer data to GPU memory
         // 2. Execute compute shaders/kernels
         // 3. Transfer results back to CPU
-        
+
         let batch_size = y_true.nrows();
         let mut results = Vec::with_capacity(batch_size);
-        
+
         for i in 0..batch_size {
             let mut sample_metrics = HashMap::new();
-            
+
             for &metric in metrics {
                 let value = match metric {
                     "mse" => {
@@ -1038,16 +1042,16 @@ impl AdvancedGpuOrchestrator {
                     }
                     _ => F::zero(),
                 };
-                
+
                 sample_metrics.insert(metric.to_string(), value);
             }
-            
+
             results.push(sample_metrics);
         }
-        
+
         // Simulate GPU processing delay
         tokio::time::sleep(tokio::time::Duration::from_millis(1)).await;
-        
+
         Ok(results)
     }
 
@@ -1064,12 +1068,12 @@ impl AdvancedGpuOrchestrator {
     /// Health check for all GPU devices
     pub fn health_check(&mut self) -> Result<Vec<(usize, bool)>> {
         let mut health_status = Vec::new();
-        
+
         for (idx, device) in self.devices.iter().enumerate() {
             let is_healthy = self.fault_manager.check_device_health(idx, device)?;
             health_status.push((idx, is_healthy));
         }
-        
+
         Ok(health_status)
     }
 }
@@ -1084,50 +1088,73 @@ impl LoadBalancer {
         }
     }
 
-    fn distribute_work(&mut self, total_work: usize, devices: &[GpuInfo]) -> Vec<(usize, (usize, usize))> {
+    fn distribute_work(
+        &mut self,
+        total_work: usize,
+        devices: &[GpuInfo],
+    ) -> Vec<(usize, (usize, usize))> {
         match self.strategy {
             LoadBalancingStrategy::RoundRobin => self.round_robin_distribution(total_work, devices),
-            LoadBalancingStrategy::PerformanceBased => self.performance_based_distribution(total_work, devices),
-            LoadBalancingStrategy::MemoryAware => self.memory_aware_distribution(total_work, devices),
+            LoadBalancingStrategy::PerformanceBased => {
+                self.performance_based_distribution(total_work, devices)
+            }
+            LoadBalancingStrategy::MemoryAware => {
+                self.memory_aware_distribution(total_work, devices)
+            }
             LoadBalancingStrategy::Dynamic => self.dynamic_distribution(total_work, devices),
         }
     }
 
-
-    fn performance_based_distribution(&self, total_work: usize, devices: &[GpuInfo]) -> Vec<(usize, (usize, usize))> {
+    fn performance_based_distribution(
+        &self,
+        total_work: usize,
+        devices: &[GpuInfo],
+    ) -> Vec<(usize, (usize, usize))> {
         // Simplified performance-based distribution
         // In real implementation, would use actual performance metrics
         self.round_robin_distribution(total_work, devices)
     }
 
-    fn memory_aware_distribution(&self, total_work: usize, devices: &[GpuInfo]) -> Vec<(usize, (usize, usize))> {
+    fn memory_aware_distribution(
+        &self,
+        total_work: usize,
+        devices: &[GpuInfo],
+    ) -> Vec<(usize, (usize, usize))> {
         // Simplified memory-aware distribution
         // In real implementation, would consider memory usage
         self.round_robin_distribution(total_work, devices)
     }
 
-    fn dynamic_distribution(&mut self, total_work: usize, devices: &[GpuInfo]) -> Vec<(usize, (usize, usize))> {
+    fn dynamic_distribution(
+        &mut self,
+        total_work: usize,
+        devices: &[GpuInfo],
+    ) -> Vec<(usize, (usize, usize))> {
         // Dynamic distribution based on current performance and memory
         self.round_robin_distribution(total_work, devices)
     }
 
     // Helper method for proper distribution (missing from above)
     #[allow(dead_code)]
-    fn round_robin_distribution(&self, total_work: usize, devices: &[GpuInfo]) -> Vec<(usize, (usize, usize))> {
+    fn round_robin_distribution(
+        &self,
+        total_work: usize,
+        devices: &[GpuInfo],
+    ) -> Vec<(usize, (usize, usize))> {
         let num_devices = devices.len();
         let work_per_device = total_work / num_devices;
         let remainder = total_work % num_devices;
-        
+
         let mut distribution = Vec::new();
         let mut current_start = 0;
-        
+
         for (idx, _device) in devices.iter().enumerate() {
             let work_size = work_per_device + if idx < remainder { 1 } else { 0 };
             let end = current_start + work_size;
             distribution.push((idx, (current_start, end)));
             current_start = end;
         }
-        
+
         distribution
     }
 }
@@ -1185,9 +1212,17 @@ impl PerformanceMonitor {
 
     fn get_statistics(&self) -> HashMap<String, f64> {
         let mut stats = HashMap::new();
-        stats.insert("total_devices".to_string(), self.execution_times.len() as f64);
-        stats.insert("total_executions".to_string(), 
-                    self.execution_times.values().map(|v| v.len()).sum::<usize>() as f64);
+        stats.insert(
+            "total_devices".to_string(),
+            self.execution_times.len() as f64,
+        );
+        stats.insert(
+            "total_executions".to_string(),
+            self.execution_times
+                .values()
+                .map(|v| v.len())
+                .sum::<usize>() as f64,
+        );
         stats
     }
 }

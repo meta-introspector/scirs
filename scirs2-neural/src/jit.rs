@@ -10,11 +10,11 @@
 
 use crate::error::{NeuralError, Result};
 use ndarray::{Array, ArrayD, Dimension};
+use num_traits::Float;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
 use std::sync::{Arc, RwLock};
-use num_traits::Float;
 
 /// JIT compilation target architecture
 #[derive(Debug, Clone, PartialEq, Hash)]
@@ -173,9 +173,23 @@ pub enum JITOperation {
 /// Element-wise operation types
 #[derive(Debug, Clone, PartialEq, Hash)]
 pub enum ElementWiseOp {
-    Add, Sub, Mul, Div, Pow,
-    Max, Min, Equal, Greater, Less,
-    Abs, Sqrt, Exp, Log, Sin, Cos, Tanh,
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Pow,
+    Max,
+    Min,
+    Equal,
+    Greater,
+    Less,
+    Abs,
+    Sqrt,
+    Exp,
+    Log,
+    Sin,
+    Cos,
+    Tanh,
     /// Custom operation with code
     Custom(String),
 }
@@ -183,26 +197,46 @@ pub enum ElementWiseOp {
 /// Pooling operation types
 #[derive(Debug, Clone, PartialEq, Hash)]
 pub enum PoolingType {
-    Max, Average, Global, Adaptive,
+    Max,
+    Average,
+    Global,
+    Adaptive,
 }
 
 /// Normalization types
 #[derive(Debug, Clone, PartialEq, Hash)]
 pub enum NormalizationType {
-    BatchNorm, LayerNorm, InstanceNorm, GroupNorm,
+    BatchNorm,
+    LayerNorm,
+    InstanceNorm,
+    GroupNorm,
 }
 
 /// Activation function types
 #[derive(Debug, Clone, PartialEq, Hash)]
 pub enum ActivationType {
-    ReLU, Sigmoid, Tanh, Softmax, GELU, Swish, Mish,
-    LeakyReLU(f64), ELU(f64), SELU,
+    ReLU,
+    Sigmoid,
+    Tanh,
+    Softmax,
+    GELU,
+    Swish,
+    Mish,
+    LeakyReLU(f64),
+    ELU(f64),
+    SELU,
 }
 
 /// Reduction operation types
 #[derive(Debug, Clone, PartialEq, Hash)]
 pub enum ReductionType {
-    Sum, Mean, Max, Min, Prod, Std, Var,
+    Sum,
+    Mean,
+    Max,
+    Min,
+    Prod,
+    Std,
+    Var,
 }
 
 /// Fusion strategies for combining operations
@@ -278,7 +312,10 @@ pub struct MemoryRequirements {
 /// Memory access patterns
 #[derive(Debug, Clone, PartialEq)]
 pub enum MemoryAccessPattern {
-    Sequential, Random, Strided, Blocked,
+    Sequential,
+    Random,
+    Strided,
+    Blocked,
 }
 
 /// Performance hints for kernel execution
@@ -419,11 +456,15 @@ impl JITCompiler {
         #[cfg(target_arch = "wasm32")]
         {
             TargetArchitecture::WASM {
-                simd: true, // Assume SIMD support in modern browsers
+                simd: true,     // Assume SIMD support in modern browsers
                 threads: false, // Threading support varies
             }
         }
-        #[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64", target_arch = "wasm32")))]
+        #[cfg(not(any(
+            target_arch = "x86_64",
+            target_arch = "aarch64",
+            target_arch = "wasm32"
+        )))]
         {
             TargetArchitecture::Generic
         }
@@ -432,7 +473,7 @@ impl JITCompiler {
     /// Compile a JIT operation to optimized code
     pub fn compile_operation(&self, operation: &JITOperation) -> Result<CompiledKernel> {
         let start_time = std::time::Instant::now();
-        
+
         // Create kernel key
         let key = JITKernelKey {
             operation: operation.clone(),
@@ -452,10 +493,10 @@ impl JITCompiler {
         // Generate code for the operation
         let code = self.generate_code(&optimized_operation)?;
         let entry_point = format!("kernel_{}", self.generate_kernel_id(&key));
-        
+
         // Analyze memory requirements
         let memory_requirements = self.analyze_memory_requirements(&optimized_operation)?;
-        
+
         // Estimate performance characteristics
         let performance_hints = self.estimate_performance(&optimized_operation)?;
 
@@ -470,7 +511,7 @@ impl JITCompiler {
 
         // Cache the compiled kernel
         self.cache_kernel(key, kernel.clone());
-        
+
         // Update statistics
         let compile_time = start_time.elapsed().as_millis() as f64;
         self.update_compile_stats(compile_time);
@@ -543,21 +584,30 @@ impl JITCompiler {
     /// Generate optimized code for an operation
     fn generate_code(&self, operation: &JITOperation) -> Result<String> {
         match operation {
-            JITOperation::MatMul { a_shape, b_shape, transpose_a, transpose_b } => {
-                self.generate_matmul_code(a_shape, b_shape, *transpose_a, *transpose_b)
-            }
-            JITOperation::ElementWise { op, shapes } => {
-                self.generate_elementwise_code(op, shapes)
-            }
-            JITOperation::Convolution { input_shape, weight_shape, stride, padding, dilation } => {
+            JITOperation::MatMul {
+                a_shape,
+                b_shape,
+                transpose_a,
+                transpose_b,
+            } => self.generate_matmul_code(a_shape, b_shape, *transpose_a, *transpose_b),
+            JITOperation::ElementWise { op, shapes } => self.generate_elementwise_code(op, shapes),
+            JITOperation::Convolution {
+                input_shape,
+                weight_shape,
+                stride,
+                padding,
+                dilation,
+            } => {
                 self.generate_convolution_code(input_shape, weight_shape, stride, padding, dilation)
             }
-            JITOperation::Activation { activation, input_shape } => {
-                self.generate_activation_code(activation, input_shape)
-            }
-            JITOperation::FusedOp { operations, fusion_strategy } => {
-                self.generate_fused_code(operations, fusion_strategy)
-            }
+            JITOperation::Activation {
+                activation,
+                input_shape,
+            } => self.generate_activation_code(activation, input_shape),
+            JITOperation::FusedOp {
+                operations,
+                fusion_strategy,
+            } => self.generate_fused_code(operations, fusion_strategy),
             _ => {
                 // For other operations, generate generic code
                 Ok(self.generate_generic_code(operation))
@@ -567,11 +617,11 @@ impl JITCompiler {
 
     /// Generate matrix multiplication code
     fn generate_matmul_code(
-        &self, 
-        a_shape: &[usize], 
-        b_shape: &[usize], 
-        transpose_a: bool, 
-        transpose_b: bool
+        &self,
+        a_shape: &[usize],
+        b_shape: &[usize],
+        transpose_a: bool,
+        transpose_b: bool,
     ) -> Result<String> {
         let m = if transpose_a { a_shape[1] } else { a_shape[0] };
         let k = if transpose_a { a_shape[0] } else { a_shape[1] };
@@ -580,7 +630,7 @@ impl JITCompiler {
         let mut code = String::new();
         code.push_str(&format!("// Optimized MatMul: {}x{} * {}x{}\n", m, k, k, n));
         code.push_str("void kernel_matmul(const float* A, const float* B, float* C) {\n");
-        
+
         if self.codegen_settings.vectorize && self.target_arch_supports_simd() {
             // Generate vectorized code
             code.push_str(&self.generate_vectorized_matmul(m, k, n)?);
@@ -588,31 +638,35 @@ impl JITCompiler {
             // Generate scalar code
             code.push_str(&self.generate_scalar_matmul(m, k, n, transpose_a, transpose_b));
         }
-        
+
         code.push_str("}\n");
         Ok(code)
     }
 
     /// Generate element-wise operation code
-    fn generate_elementwise_code(&self, op: &ElementWiseOp, shapes: &[Vec<usize>]) -> Result<String> {
+    fn generate_elementwise_code(
+        &self,
+        op: &ElementWiseOp,
+        shapes: &[Vec<usize>],
+    ) -> Result<String> {
         let mut code = String::new();
         let total_elements = shapes[0].iter().product::<usize>();
-        
+
         code.push_str(&format!("// Element-wise operation: {:?}\n", op));
         code.push_str("void kernel_elementwise(");
-        
+
         // Generate input parameters
         for i in 0..shapes.len() {
             code.push_str(&format!("const float* input{}, ", i));
         }
         code.push_str("float* output) {\n");
-        
+
         if self.codegen_settings.vectorize && self.target_arch_supports_simd() {
             code.push_str(&self.generate_vectorized_elementwise(op, total_elements)?);
         } else {
             code.push_str(&self.generate_scalar_elementwise(op, total_elements));
         }
-        
+
         code.push_str("}\n");
         Ok(code)
     }
@@ -628,56 +682,71 @@ impl JITCompiler {
     ) -> Result<String> {
         let mut code = String::new();
         code.push_str("// Optimized Convolution\n");
-        code.push_str("void kernel_conv2d(const float* input, const float* weight, float* output) {\n");
-        
+        code.push_str(
+            "void kernel_conv2d(const float* input, const float* weight, float* output) {\n",
+        );
+
         // Generate convolution loops with optimizations
         let n = input_shape[0]; // batch size
         let c_in = input_shape[1]; // input channels
         let h_in = input_shape[2]; // input height
         let w_in = input_shape[3]; // input width
-        
+
         let c_out = weight_shape[0]; // output channels
         let kh = weight_shape[2]; // kernel height
         let kw = weight_shape[3]; // kernel width
-        
+
         let h_out = (h_in + 2 * padding[0] - kh) / stride[0] + 1;
         let w_out = (w_in + 2 * padding[1] - kw) / stride[1] + 1;
-        
+
         if self.codegen_settings.unroll_loops && kh <= 3 && kw <= 3 {
             code.push_str(&self.generate_unrolled_conv(n, c_in, c_out, h_out, w_out, kh, kw));
         } else {
-            code.push_str(&self.generate_standard_conv(n, c_in, c_out, h_in, w_in, h_out, w_out, kh, kw, stride, padding));
+            code.push_str(&self.generate_standard_conv(
+                n, c_in, c_out, h_in, w_in, h_out, w_out, kh, kw, stride, padding,
+            ));
         }
-        
+
         code.push_str("}\n");
         Ok(code)
     }
 
     /// Generate activation function code
-    fn generate_activation_code(&self, activation: &ActivationType, input_shape: &[usize]) -> Result<String> {
+    fn generate_activation_code(
+        &self,
+        activation: &ActivationType,
+        input_shape: &[usize],
+    ) -> Result<String> {
         let total_elements = input_shape.iter().product::<usize>();
         let mut code = String::new();
-        
+
         code.push_str(&format!("// Activation: {:?}\n", activation));
         code.push_str("void kernel_activation(const float* input, float* output) {\n");
-        
+
         if self.codegen_settings.vectorize && self.target_arch_supports_simd() {
             code.push_str(&self.generate_vectorized_activation(activation, total_elements)?);
         } else {
             code.push_str(&self.generate_scalar_activation(activation, total_elements));
         }
-        
+
         code.push_str("}\n");
         Ok(code)
     }
 
     /// Generate fused operation code
-    fn generate_fused_code(&self, operations: &[Box<JITOperation>], strategy: &FusionStrategy) -> Result<String> {
+    fn generate_fused_code(
+        &self,
+        operations: &[Box<JITOperation>],
+        strategy: &FusionStrategy,
+    ) -> Result<String> {
         let mut code = String::new();
-        
-        code.push_str(&format!("// Fused operations with strategy: {:?}\n", strategy));
+
+        code.push_str(&format!(
+            "// Fused operations with strategy: {:?}\n",
+            strategy
+        ));
         code.push_str("void kernel_fused(");
-        
+
         match strategy {
             FusionStrategy::Vertical => {
                 // Generate code that combines operations in sequence
@@ -700,7 +769,7 @@ impl JITCompiler {
                 code.push_str("  // Generic fusion\n");
             }
         }
-        
+
         code.push_str("}\n");
         Ok(code)
     }
@@ -723,13 +792,11 @@ impl JITCompiler {
     /// Generate vectorized matrix multiplication code
     fn generate_vectorized_matmul(&self, m: usize, k: usize, n: usize) -> Result<String> {
         let mut code = String::new();
-        
+
         match &self.target_arch {
             TargetArchitecture::X86_64 { avx_level, .. } => {
                 if *avx_level >= 2 {
-                    code.push_str(&format!(
-                        "  // AVX2 vectorized matmul {}x{}x{}\n", m, k, n
-                    ));
+                    code.push_str(&format!("  // AVX2 vectorized matmul {}x{}x{}\n", m, k, n));
                     code.push_str("  #pragma omp parallel for\n");
                     code.push_str("  for (int i = 0; i < m; i += 8) {\n");
                     code.push_str("    for (int j = 0; j < n; j += 8) {\n");
@@ -753,25 +820,32 @@ impl JITCompiler {
             }
             _ => {
                 return Err(NeuralError::ComputationError(
-                    "Vectorization not supported for this architecture".to_string()
+                    "Vectorization not supported for this architecture".to_string(),
                 ));
             }
         }
-        
+
         Ok(code)
     }
 
     /// Generate scalar matrix multiplication code
-    fn generate_scalar_matmul(&self, m: usize, k: usize, n: usize, transpose_a: bool, transpose_b: bool) -> String {
+    fn generate_scalar_matmul(
+        &self,
+        m: usize,
+        k: usize,
+        n: usize,
+        transpose_a: bool,
+        transpose_b: bool,
+    ) -> String {
         let mut code = String::new();
-        
+
         code.push_str(&format!("  // Scalar matmul {}x{}x{}\n", m, k, n));
         code.push_str("  #pragma omp parallel for\n");
         code.push_str("  for (int i = 0; i < m; i++) {\n");
         code.push_str("    for (int j = 0; j < n; j++) {\n");
         code.push_str("      float sum = 0.0f;\n");
         code.push_str("      for (int l = 0; l < k; l++) {\n");
-        
+
         if transpose_a && transpose_b {
             code.push_str("        sum += A[l*m + i] * B[j*k + l];\n");
         } else if transpose_a {
@@ -781,12 +855,12 @@ impl JITCompiler {
         } else {
             code.push_str("        sum += A[i*k + l] * B[l*n + j];\n");
         }
-        
+
         code.push_str("      }\n");
         code.push_str("      C[i*n + j] = sum;\n");
         code.push_str("    }\n");
         code.push_str("  }\n");
-        
+
         code
     }
 
@@ -801,13 +875,20 @@ impl JITCompiler {
     }
 
     /// Generate vectorized element-wise code
-    fn generate_vectorized_elementwise(&self, op: &ElementWiseOp, total_elements: usize) -> Result<String> {
+    fn generate_vectorized_elementwise(
+        &self,
+        op: &ElementWiseOp,
+        total_elements: usize,
+    ) -> Result<String> {
         let mut code = String::new();
-        
-        code.push_str(&format!("  // Vectorized element-wise operation, {} elements\n", total_elements));
+
+        code.push_str(&format!(
+            "  // Vectorized element-wise operation, {} elements\n",
+            total_elements
+        ));
         code.push_str("  #pragma omp parallel for\n");
         code.push_str("  for (int i = 0; i < total_elements; i += 8) {\n");
-        
+
         match op {
             ElementWiseOp::Add => {
                 code.push_str("    __m256 a = _mm256_loadu_ps(&input0[i]);\n");
@@ -831,7 +912,7 @@ impl JITCompiler {
                 code.push_str("    // Generic vectorized operation\n");
             }
         }
-        
+
         code.push_str("  }\n");
         Ok(code)
     }
@@ -839,11 +920,14 @@ impl JITCompiler {
     /// Generate scalar element-wise code
     fn generate_scalar_elementwise(&self, op: &ElementWiseOp, total_elements: usize) -> String {
         let mut code = String::new();
-        
-        code.push_str(&format!("  // Scalar element-wise operation, {} elements\n", total_elements));
+
+        code.push_str(&format!(
+            "  // Scalar element-wise operation, {} elements\n",
+            total_elements
+        ));
         code.push_str("  #pragma omp parallel for\n");
         code.push_str("  for (int i = 0; i < total_elements; i++) {\n");
-        
+
         match op {
             ElementWiseOp::Add => code.push_str("    output[i] = input0[i] + input1[i];\n"),
             ElementWiseOp::Sub => code.push_str("    output[i] = input0[i] - input1[i];\n"),
@@ -859,31 +943,49 @@ impl JITCompiler {
             ElementWiseOp::Cos => code.push_str("    output[i] = cosf(input0[i]);\n"),
             ElementWiseOp::Tanh => code.push_str("    output[i] = tanhf(input0[i]);\n"),
             ElementWiseOp::Custom(expr) => {
-                code.push_str(&format!("    output[i] = {};\n", expr.replace("x", "input0[i]")));
+                code.push_str(&format!(
+                    "    output[i] = {};\n",
+                    expr.replace("x", "input0[i]")
+                ));
             }
             _ => code.push_str("    output[i] = input0[i]; // fallback\n"),
         }
-        
+
         code.push_str("  }\n");
         code
     }
 
     /// Generate unrolled convolution code
-    fn generate_unrolled_conv(&self, n: usize, c_in: usize, c_out: usize, h_out: usize, w_out: usize, kh: usize, kw: usize) -> String {
+    fn generate_unrolled_conv(
+        &self,
+        n: usize,
+        c_in: usize,
+        c_out: usize,
+        h_out: usize,
+        w_out: usize,
+        kh: usize,
+        kw: usize,
+    ) -> String {
         let mut code = String::new();
-        
+
         code.push_str(&format!("  // Unrolled {}x{} convolution\n", kh, kw));
         code.push_str("  #pragma omp parallel for\n");
         code.push_str(&format!("  for (int n = 0; n < {}; n++) {{\n", n));
-        code.push_str(&format!("    for (int c_out = 0; c_out < {}; c_out++) {{\n", c_out));
+        code.push_str(&format!(
+            "    for (int c_out = 0; c_out < {}; c_out++) {{\n",
+            c_out
+        ));
         code.push_str(&format!("      for (int h = 0; h < {}; h++) {{\n", h_out));
         code.push_str(&format!("        for (int w = 0; w < {}; w++) {{\n", w_out));
         code.push_str("          float sum = 0.0f;\n");
-        
+
         // Unroll the kernel loops
         for kh_i in 0..kh {
             for kw_i in 0..kw {
-                code.push_str(&format!("          for (int c_in = 0; c_in < {}; c_in++) {{\n", c_in));
+                code.push_str(&format!(
+                    "          for (int c_in = 0; c_in < {}; c_in++) {{\n",
+                    c_in
+                ));
                 code.push_str(&format!(
                     "            sum += input[((n*c_in + c_in)*h_in + h + {})*w_in + w + {}] * weight[((c_out*c_in + c_in)*{} + {})*{} + {}];\n",
                     kh_i, kw_i, kh, kh_i, kw, kw_i
@@ -891,32 +993,63 @@ impl JITCompiler {
                 code.push_str("          }\n");
             }
         }
-        
+
         code.push_str("          output[((n*c_out + c_out)*h_out + h)*w_out + w] = sum;\n");
         code.push_str("        }\n");
         code.push_str("      }\n");
         code.push_str("    }\n");
         code.push_str("  }\n");
-        
+
         code
     }
 
     /// Generate standard convolution code
-    fn generate_standard_conv(&self, n: usize, c_in: usize, c_out: usize, h_in: usize, w_in: usize, h_out: usize, w_out: usize, kh: usize, kw: usize, stride: &[usize], padding: &[usize]) -> String {
+    fn generate_standard_conv(
+        &self,
+        n: usize,
+        c_in: usize,
+        c_out: usize,
+        h_in: usize,
+        w_in: usize,
+        h_out: usize,
+        w_out: usize,
+        kh: usize,
+        kw: usize,
+        stride: &[usize],
+        padding: &[usize],
+    ) -> String {
         let mut code = String::new();
-        
+
         code.push_str("  // Standard convolution loops\n");
         code.push_str("  #pragma omp parallel for\n");
         code.push_str(&format!("  for (int n = 0; n < {}; n++) {{\n", n));
-        code.push_str(&format!("    for (int c_out = 0; c_out < {}; c_out++) {{\n", c_out));
+        code.push_str(&format!(
+            "    for (int c_out = 0; c_out < {}; c_out++) {{\n",
+            c_out
+        ));
         code.push_str(&format!("      for (int h = 0; h < {}; h++) {{\n", h_out));
         code.push_str(&format!("        for (int w = 0; w < {}; w++) {{\n", w_out));
         code.push_str("          float sum = 0.0f;\n");
-        code.push_str(&format!("          for (int c_in = 0; c_in < {}; c_in++) {{\n", c_in));
-        code.push_str(&format!("            for (int kh = 0; kh < {}; kh++) {{\n", kh));
-        code.push_str(&format!("              for (int kw = 0; kw < {}; kw++) {{\n", kw));
-        code.push_str(&format!("                int h_in_idx = h * {} - {} + kh;\n", stride[0], padding[0]));
-        code.push_str(&format!("                int w_in_idx = w * {} - {} + kw;\n", stride[1], padding[1]));
+        code.push_str(&format!(
+            "          for (int c_in = 0; c_in < {}; c_in++) {{\n",
+            c_in
+        ));
+        code.push_str(&format!(
+            "            for (int kh = 0; kh < {}; kh++) {{\n",
+            kh
+        ));
+        code.push_str(&format!(
+            "              for (int kw = 0; kw < {}; kw++) {{\n",
+            kw
+        ));
+        code.push_str(&format!(
+            "                int h_in_idx = h * {} - {} + kh;\n",
+            stride[0], padding[0]
+        ));
+        code.push_str(&format!(
+            "                int w_in_idx = w * {} - {} + kw;\n",
+            stride[1], padding[1]
+        ));
         code.push_str(&format!("                if (h_in_idx >= 0 && h_in_idx < {} && w_in_idx >= 0 && w_in_idx < {}) {{\n", h_in, w_in));
         code.push_str("                  sum += input[((n*c_in + c_in)*h_in + h_in_idx)*w_in + w_in_idx] * weight[((c_out*c_in + c_in)*kh + kh)*kw + kw];\n");
         code.push_str("                }\n");
@@ -928,19 +1061,23 @@ impl JITCompiler {
         code.push_str("      }\n");
         code.push_str("    }\n");
         code.push_str("  }\n");
-        
+
         code
     }
 
     /// Generate vectorized activation code
-    fn generate_vectorized_activation(&self, activation: &ActivationType, total_elements: usize) -> Result<String> {
+    fn generate_vectorized_activation(
+        &self,
+        activation: &ActivationType,
+        total_elements: usize,
+    ) -> Result<String> {
         let mut code = String::new();
-        
+
         code.push_str(&format!("  // Vectorized activation: {:?}\n", activation));
         code.push_str("  #pragma omp parallel for\n");
         code.push_str("  for (int i = 0; i < total_elements; i += 8) {\n");
         code.push_str("    __m256 input_vec = _mm256_loadu_ps(&input[i]);\n");
-        
+
         match activation {
             ActivationType::ReLU => {
                 code.push_str("    __m256 zero = _mm256_setzero_ps();\n");
@@ -949,9 +1086,13 @@ impl JITCompiler {
             ActivationType::Sigmoid => {
                 code.push_str("    // Sigmoid approximation\n");
                 code.push_str("    __m256 one = _mm256_set1_ps(1.0f);\n");
-                code.push_str("    __m256 neg_input = _mm256_sub_ps(_mm256_setzero_ps(), input_vec);\n");
+                code.push_str(
+                    "    __m256 neg_input = _mm256_sub_ps(_mm256_setzero_ps(), input_vec);\n",
+                );
                 code.push_str("    __m256 exp_neg = _mm256_exp_ps(neg_input);\n");
-                code.push_str("    __m256 result = _mm256_div_ps(one, _mm256_add_ps(one, exp_neg));\n");
+                code.push_str(
+                    "    __m256 result = _mm256_div_ps(one, _mm256_add_ps(one, exp_neg));\n",
+                );
             }
             ActivationType::Tanh => {
                 code.push_str("    __m256 result = _mm256_tanh_ps(input_vec);\n");
@@ -960,21 +1101,25 @@ impl JITCompiler {
                 code.push_str("    __m256 result = input_vec; // fallback\n");
             }
         }
-        
+
         code.push_str("    _mm256_storeu_ps(&output[i], result);\n");
         code.push_str("  }\n");
-        
+
         Ok(code)
     }
 
     /// Generate scalar activation code
-    fn generate_scalar_activation(&self, activation: &ActivationType, total_elements: usize) -> String {
+    fn generate_scalar_activation(
+        &self,
+        activation: &ActivationType,
+        total_elements: usize,
+    ) -> String {
         let mut code = String::new();
-        
+
         code.push_str(&format!("  // Scalar activation: {:?}\n", activation));
         code.push_str("  #pragma omp parallel for\n");
         code.push_str("  for (int i = 0; i < total_elements; i++) {\n");
-        
+
         match activation {
             ActivationType::ReLU => {
                 code.push_str("    output[i] = fmaxf(0.0f, input[i]);\n");
@@ -994,13 +1139,16 @@ impl JITCompiler {
                 code.push_str("    output[i] = x / (1.0f + expf(-x));\n");
             }
             ActivationType::LeakyReLU(alpha) => {
-                code.push_str(&format!("    output[i] = input[i] > 0.0f ? input[i] : {}f * input[i];\n", alpha));
+                code.push_str(&format!(
+                    "    output[i] = input[i] > 0.0f ? input[i] : {}f * input[i];\n",
+                    alpha
+                ));
             }
             _ => {
                 code.push_str("    output[i] = input[i]; // fallback\n");
             }
         }
-        
+
         code.push_str("  }\n");
         code
     }
@@ -1008,37 +1156,45 @@ impl JITCompiler {
     /// Analyze memory requirements for an operation
     fn analyze_memory_requirements(&self, operation: &JITOperation) -> Result<MemoryRequirements> {
         let (min_memory, optimal_memory, access_pattern) = match operation {
-            JITOperation::MatMul { a_shape, b_shape, .. } => {
+            JITOperation::MatMul {
+                a_shape, b_shape, ..
+            } => {
                 let a_size = a_shape.iter().product::<usize>() * std::mem::size_of::<f32>();
                 let b_size = b_shape.iter().product::<usize>() * std::mem::size_of::<f32>();
                 let c_size = a_shape[0] * b_shape[1] * std::mem::size_of::<f32>();
-                
+
                 let min_mem = a_size + b_size + c_size;
                 let optimal_mem = min_mem * 2; // For blocking optimizations
-                
+
                 (min_mem, optimal_mem, MemoryAccessPattern::Blocked)
             }
             JITOperation::ElementWise { shapes, .. } => {
-                let total_size = shapes.iter()
+                let total_size = shapes
+                    .iter()
                     .map(|shape| shape.iter().product::<usize>() * std::mem::size_of::<f32>())
                     .sum::<usize>();
-                
+
                 (total_size, total_size, MemoryAccessPattern::Sequential)
             }
-            JITOperation::Convolution { input_shape, weight_shape, .. } => {
+            JITOperation::Convolution {
+                input_shape,
+                weight_shape,
+                ..
+            } => {
                 let input_size = input_shape.iter().product::<usize>() * std::mem::size_of::<f32>();
-                let weight_size = weight_shape.iter().product::<usize>() * std::mem::size_of::<f32>();
-                
+                let weight_size =
+                    weight_shape.iter().product::<usize>() * std::mem::size_of::<f32>();
+
                 // Output size calculation
                 let n = input_shape[0];
                 let c_out = weight_shape[0];
                 let h_out = input_shape[2]; // Simplified
                 let w_out = input_shape[3]; // Simplified
                 let output_size = n * c_out * h_out * w_out * std::mem::size_of::<f32>();
-                
+
                 let min_mem = input_size + weight_size + output_size;
                 let optimal_mem = min_mem + input_size; // For im2col buffer
-                
+
                 (min_mem, optimal_mem, MemoryAccessPattern::Strided)
             }
             _ => {
@@ -1058,23 +1214,29 @@ impl JITCompiler {
     /// Estimate performance characteristics
     fn estimate_performance(&self, operation: &JITOperation) -> Result<PerformanceHints> {
         let (flops, memory_bytes, vectorization_factor, parallelization_level) = match operation {
-            JITOperation::MatMul { a_shape, b_shape, .. } => {
+            JITOperation::MatMul {
+                a_shape, b_shape, ..
+            } => {
                 let m = a_shape[0];
                 let k = a_shape[1];
                 let n = b_shape[1];
                 let flops = 2 * m * k * n; // 2 operations per multiply-add
                 let memory_bytes = (m * k + k * n + m * n) * std::mem::size_of::<usize>();
-                
+
                 (flops as u64, memory_bytes, 8, 4) // AVX can process 8 floats, good parallelization
             }
             JITOperation::ElementWise { shapes, .. } => {
                 let elements = shapes[0].iter().product::<usize>();
                 let flops = elements; // 1 operation per element
                 let memory_bytes = elements * shapes.len() * std::mem::size_of::<usize>();
-                
+
                 (flops as u64, memory_bytes, 8, 8) // Highly parallel
             }
-            JITOperation::Convolution { input_shape, weight_shape, .. } => {
+            JITOperation::Convolution {
+                input_shape,
+                weight_shape,
+                ..
+            } => {
                 let n = input_shape[0];
                 let c_in = input_shape[1];
                 let h_in = input_shape[2];
@@ -1082,10 +1244,12 @@ impl JITCompiler {
                 let c_out = weight_shape[0];
                 let kh = weight_shape[2];
                 let kw = weight_shape[3];
-                
+
                 let flops = n * c_out * h_in * w_in * c_in * kh * kw * 2; // Approximate
-                let memory_bytes = (input_shape.iter().product::<usize>() + weight_shape.iter().product::<usize>()) * std::mem::size_of::<usize>();
-                
+                let memory_bytes = (input_shape.iter().product::<usize>()
+                    + weight_shape.iter().product::<usize>())
+                    * std::mem::size_of::<usize>();
+
                 (flops as u64, memory_bytes, 4, 4) // Moderate vectorization and parallelization
             }
             _ => {
@@ -1138,10 +1302,10 @@ impl JITCompiler {
         if let Ok(mut stats) = self.stats.write() {
             let total_requests = stats.kernels_compiled + if cache_hit { 1 } else { 0 };
             if total_requests > 0 {
-                let hits = if cache_hit { 
-                    (stats.cache_hit_rate * (total_requests - 1) as f64) + 1.0 
-                } else { 
-                    stats.cache_hit_rate * (total_requests - 1) as f64 
+                let hits = if cache_hit {
+                    (stats.cache_hit_rate * (total_requests - 1) as f64) + 1.0
+                } else {
+                    stats.cache_hit_rate * (total_requests - 1) as f64
                 };
                 stats.cache_hit_rate = hits / total_requests as f64;
             }
@@ -1204,7 +1368,7 @@ impl FusionOptimizer {
     /// Create a new fusion optimizer
     pub fn new() -> Self {
         let mut fusion_rules = HashMap::new();
-        
+
         // Add common fusion rules
         fusion_rules.insert(
             ("elementwise".to_string(), "elementwise".to_string()),
@@ -1213,9 +1377,9 @@ impl FusionOptimizer {
                 performance_gain: 1.5,
                 memory_savings: 0,
                 strategy: FusionStrategy::Horizontal,
-            }
+            },
         );
-        
+
         fusion_rules.insert(
             ("activation".to_string(), "elementwise".to_string()),
             FusionRule {
@@ -1223,7 +1387,7 @@ impl FusionOptimizer {
                 performance_gain: 1.3,
                 memory_savings: 0,
                 strategy: FusionStrategy::Vertical,
-            }
+            },
         );
 
         Self {
@@ -1244,7 +1408,9 @@ impl FusionOptimizer {
     /// Check if two operations can be fused
     pub fn can_fuse(&self, op1: &JITOperation, op2: &JITOperation) -> bool {
         let key = (self.operation_type(op1), self.operation_type(op2));
-        self.fusion_rules.get(&key).map_or(false, |rule| rule.can_fuse)
+        self.fusion_rules
+            .get(&key)
+            .map_or(false, |rule| rule.can_fuse)
     }
 
     /// Get operation type string for fusion rules
@@ -1318,7 +1484,7 @@ mod tests {
     fn test_matrix_multiplication_compilation() {
         let target_arch = TargetArchitecture::Generic;
         let compiler = JITCompiler::new(target_arch);
-        
+
         let operation = JITOperation::MatMul {
             a_shape: vec![16, 32],
             b_shape: vec![32, 64],
@@ -1328,7 +1494,7 @@ mod tests {
 
         let result = compiler.compile_operation(&operation);
         assert!(result.is_ok());
-        
+
         let kernel = result.unwrap();
         assert!(kernel.code.contains("matmul"));
         assert!(kernel.entry_point.starts_with("kernel_"));
@@ -1338,7 +1504,7 @@ mod tests {
     fn test_element_wise_compilation() {
         let target_arch = TargetArchitecture::Generic;
         let compiler = JITCompiler::new(target_arch);
-        
+
         let operation = JITOperation::ElementWise {
             op: ElementWiseOp::Add,
             shapes: vec![vec![1024, 512], vec![1024, 512]],
@@ -1346,7 +1512,7 @@ mod tests {
 
         let result = compiler.compile_operation(&operation);
         assert!(result.is_ok());
-        
+
         let kernel = result.unwrap();
         assert!(kernel.code.contains("elementwise"));
     }
@@ -1355,7 +1521,7 @@ mod tests {
     fn test_convolution_compilation() {
         let target_arch = TargetArchitecture::Generic;
         let compiler = JITCompiler::new(target_arch);
-        
+
         let operation = JITOperation::Convolution {
             input_shape: vec![1, 3, 224, 224],
             weight_shape: vec![64, 3, 7, 7],
@@ -1366,7 +1532,7 @@ mod tests {
 
         let result = compiler.compile_operation(&operation);
         assert!(result.is_ok());
-        
+
         let kernel = result.unwrap();
         assert!(kernel.code.contains("conv"));
     }
@@ -1375,7 +1541,7 @@ mod tests {
     fn test_activation_compilation() {
         let target_arch = TargetArchitecture::Generic;
         let compiler = JITCompiler::new(target_arch);
-        
+
         let operation = JITOperation::Activation {
             activation: ActivationType::ReLU,
             input_shape: vec![32, 128, 56, 56],
@@ -1383,7 +1549,7 @@ mod tests {
 
         let result = compiler.compile_operation(&operation);
         assert!(result.is_ok());
-        
+
         let kernel = result.unwrap();
         assert!(kernel.code.contains("activation"));
     }
@@ -1392,7 +1558,7 @@ mod tests {
     fn test_cache_functionality() {
         let target_arch = TargetArchitecture::Generic;
         let compiler = JITCompiler::new(target_arch);
-        
+
         let operation = JITOperation::ElementWise {
             op: ElementWiseOp::Mul,
             shapes: vec![vec![100, 100]],
@@ -1412,12 +1578,12 @@ mod tests {
     #[test]
     fn test_fusion_optimizer() {
         let optimizer = FusionOptimizer::new();
-        
+
         let op1 = JITOperation::ElementWise {
             op: ElementWiseOp::Add,
             shapes: vec![vec![100, 100]],
         };
-        
+
         let op2 = JITOperation::ElementWise {
             op: ElementWiseOp::Mul,
             shapes: vec![vec![100, 100]],
@@ -1430,7 +1596,7 @@ mod tests {
     fn test_memory_requirements_analysis() {
         let target_arch = TargetArchitecture::Generic;
         let compiler = JITCompiler::new(target_arch);
-        
+
         let operation = JITOperation::MatMul {
             a_shape: vec![100, 200],
             b_shape: vec![200, 300],
@@ -1440,7 +1606,7 @@ mod tests {
 
         let requirements = compiler.analyze_memory_requirements(&operation);
         assert!(requirements.is_ok());
-        
+
         let mem_req = requirements.unwrap();
         assert!(mem_req.min_memory > 0);
         assert!(mem_req.optimal_memory >= mem_req.min_memory);
@@ -1450,7 +1616,7 @@ mod tests {
     fn test_performance_estimation() {
         let target_arch = TargetArchitecture::Generic;
         let compiler = JITCompiler::new(target_arch);
-        
+
         let operation = JITOperation::MatMul {
             a_shape: vec![100, 200],
             b_shape: vec![200, 300],
@@ -1460,7 +1626,7 @@ mod tests {
 
         let performance = compiler.estimate_performance(&operation);
         assert!(performance.is_ok());
-        
+
         let perf_hints = performance.unwrap();
         assert!(perf_hints.estimated_flops > 0);
         assert!(perf_hints.compute_intensity >= 0.0);
@@ -1469,13 +1635,13 @@ mod tests {
     #[test]
     fn test_target_architecture_detection() {
         let target_arch = JITCompiler::detect_target_architecture();
-        
+
         // Should detect some valid architecture
         match target_arch {
-            TargetArchitecture::X86_64 { .. } |
-            TargetArchitecture::ARM64 { .. } |
-            TargetArchitecture::WASM { .. } |
-            TargetArchitecture::Generic => {
+            TargetArchitecture::X86_64 { .. }
+            | TargetArchitecture::ARM64 { .. }
+            | TargetArchitecture::WASM { .. }
+            | TargetArchitecture::Generic => {
                 // All valid
             }
             _ => panic!("Unknown architecture detected"),
@@ -1486,7 +1652,7 @@ mod tests {
     fn test_statistics_tracking() {
         let target_arch = TargetArchitecture::Generic;
         let compiler = JITCompiler::new(target_arch);
-        
+
         let operation = JITOperation::ElementWise {
             op: ElementWiseOp::Add,
             shapes: vec![vec![10, 10]],
@@ -1494,7 +1660,7 @@ mod tests {
 
         // Compile operation
         let _result = compiler.compile_operation(&operation);
-        
+
         let stats = compiler.get_statistics();
         assert_eq!(stats.kernels_compiled, 1);
         assert!(stats.total_compile_time_ms >= 0.0);
@@ -1504,13 +1670,13 @@ mod tests {
     fn test_code_generation_settings() {
         let target_arch = TargetArchitecture::Generic;
         let mut compiler = JITCompiler::new(target_arch);
-        
+
         let mut settings = CodeGenSettings::default();
         settings.vectorize = false;
         settings.unroll_loops = false;
-        
+
         compiler.set_codegen_settings(settings);
-        
+
         let operation = JITOperation::ElementWise {
             op: ElementWiseOp::Add,
             shapes: vec![vec![100, 100]],
@@ -1524,7 +1690,7 @@ mod tests {
     fn test_optimization_levels() {
         let target_arch = TargetArchitecture::Generic;
         let mut compiler = JITCompiler::new(target_arch);
-        
+
         // Test different optimization levels
         let levels = vec![
             OptimizationLevel::O0,

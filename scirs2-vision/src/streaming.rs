@@ -573,23 +573,23 @@ impl FeatureDetectionStage {
         let (grad_x, grad_y, _) = crate::simd_ops::simd_sobel_gradients(image)?;
 
         let (height, width) = grad_x.dim();
-        
+
         // Initialize arrays for Harris matrix elements
         let mut ixx = Array2::zeros((height, width));
         let mut iyy = Array2::zeros((height, width));
         let mut ixy = Array2::zeros((height, width));
-        
+
         // SIMD computation of Harris matrix elements row by row
         // Ixx = Ix * Ix, Iyy = Iy * Iy, Ixy = Ix * Iy
         for y in 0..height {
             let gx_row = grad_x.row(y);
             let gy_row = grad_y.row(y);
-            
+
             // SIMD element-wise multiplication
             let ixx_row = f32::simd_mul(&gx_row, &gx_row);
             let iyy_row = f32::simd_mul(&gy_row, &gy_row);
             let ixy_row = f32::simd_mul(&gx_row, &gy_row);
-            
+
             // Copy to output arrays
             ixx.row_mut(y).assign(&ixx_row);
             iyy.row_mut(y).assign(&iyy_row);
@@ -607,26 +607,26 @@ impl FeatureDetectionStage {
         // SIMD Harris response computation: R = det(M) - k * trace(M)^2
         // det(M) = Ixx * Iyy - Ixy^2, trace(M) = Ixx + Iyy
         let mut harris_response = Array2::zeros((height, width));
-        
+
         for y in 0..height {
             let ixx_row = ixx_smooth.row(y);
             let iyy_row = iyy_smooth.row(y);
             let ixy_row = ixy_smooth.row(y);
-            
+
             // det(M) = Ixx * Iyy - Ixy^2
             let det_row = f32::simd_sub(
                 &f32::simd_mul(&ixx_row, &iyy_row).view(),
                 &f32::simd_mul(&ixy_row, &ixy_row).view(),
             );
-            
+
             // trace(M) = Ixx + Iyy
             let trace_row = f32::simd_add(&ixx_row, &iyy_row);
             let trace_sq_row = f32::simd_mul(&trace_row.view(), &trace_row.view());
-            
+
             // R = det(M) - k * trace(M)^2
             let k_trace_sq_row = f32::simd_scalar_mul(&trace_sq_row.view(), k);
             let harris_row = f32::simd_sub(&det_row.view(), &k_trace_sq_row.view());
-            
+
             // Copy to output
             harris_response.row_mut(y).assign(&harris_row);
         }
@@ -2052,12 +2052,14 @@ impl MemoryProfiler {
         if self.current_memory > self.peak_memory {
             self.peak_memory = self.current_memory;
         }
-        self.memory_timeline.push((Instant::now(), self.current_memory));
+        self.memory_timeline
+            .push((Instant::now(), self.current_memory));
     }
 
     fn record_deallocation(&mut self, size: usize) {
         self.current_memory = self.current_memory.saturating_sub(size);
-        self.memory_timeline.push((Instant::now(), self.current_memory));
+        self.memory_timeline
+            .push((Instant::now(), self.current_memory));
     }
 
     fn get_stats(&self) -> MemoryStats {
@@ -2066,7 +2068,10 @@ impl MemoryProfiler {
             current_memory: self.current_memory,
             allocation_count: self.allocation_count,
             average_memory: if !self.memory_timeline.is_empty() {
-                self.memory_timeline.iter().map(|(_, mem)| *mem).sum::<usize>() 
+                self.memory_timeline
+                    .iter()
+                    .map(|(_, mem)| *mem)
+                    .sum::<usize>()
                     / self.memory_timeline.len()
             } else {
                 0
@@ -2112,10 +2117,10 @@ impl UltraStreamPipeline {
         // Pre-allocate frame pool for common video sizes
         {
             let mut pool = self.frame_pool.lock().unwrap();
-            
+
             // Common video resolutions
             let common_sizes = [(480, 640), (720, 1280), (1080, 1920), (240, 320)];
-            
+
             for &(height, width) in &common_sizes {
                 for _ in 0..5 {
                     let frame = Frame {
@@ -2133,7 +2138,7 @@ impl UltraStreamPipeline {
                 }
             }
         } // Drop the lock here
-        
+
         self
     }
 
@@ -2175,7 +2180,7 @@ impl UltraStreamPipeline {
                 while let Ok(frame) = prev_rx.recv() {
                     let start = Instant::now();
                     let frame_size = frame.data.len() * std::mem::size_of::<f32>();
-                    
+
                     // Record memory usage
                     if let Ok(mut profiler) = stage_memory_profiler.lock() {
                         profiler.record_allocation(frame_size);
@@ -2197,7 +2202,7 @@ impl UltraStreamPipeline {
                                 if duration > m.peak_processing_time {
                                     m.peak_processing_time = duration;
                                 }
-                                
+
                                 // Calculate FPS
                                 let fps = (1.0 / duration.as_secs_f64()) as f32;
                                 m.fps = m.fps * 0.9 + fps * 0.1; // Smooth FPS calculation
@@ -2230,10 +2235,10 @@ impl UltraStreamPipeline {
         // Optimized input thread with batching
         thread::spawn(move || {
             let mut frame_batch = Vec::with_capacity(4);
-            
+
             for frame in input {
                 frame_batch.push(frame);
-                
+
                 // Process in small batches for better cache locality
                 if frame_batch.len() >= 4 {
                     for frame in frame_batch.drain(..) {
@@ -2243,7 +2248,7 @@ impl UltraStreamPipeline {
                     }
                 }
             }
-            
+
             // Send remaining frames
             for frame in frame_batch {
                 if tx.send(frame).is_err() {
@@ -2286,7 +2291,7 @@ impl UltraStreamProcessor {
     /// Get batch of frames for efficient processing
     pub fn next_batch(&self, batch_size: usize) -> Vec<Frame> {
         let mut batch = Vec::with_capacity(batch_size);
-        
+
         for _ in 0..batch_size {
             if let Some(frame) = self.try_next() {
                 batch.push(frame);
@@ -2294,7 +2299,7 @@ impl UltraStreamProcessor {
                 break;
             }
         }
-        
+
         batch
     }
 
@@ -2359,18 +2364,18 @@ impl AdaptiveQualityStage {
 
     fn adjust_quality(&mut self, processing_time: Duration) {
         self.performance_history.push(processing_time);
-        
+
         // Keep only recent history
         if self.performance_history.len() > 10 {
             self.performance_history.remove(0);
         }
-        
+
         // Calculate average processing time
-        let avg_time = self.performance_history.iter().sum::<Duration>() 
+        let avg_time = self.performance_history.iter().sum::<Duration>()
             / self.performance_history.len() as u32;
-        
+
         let target_frame_time = Duration::from_secs_f32(1.0 / self.target_fps);
-        
+
         if avg_time > target_frame_time {
             // Too slow, reduce quality
             self.current_quality = (self.current_quality - 0.1).max(0.1);
@@ -2390,12 +2395,15 @@ impl AdaptiveQualityStage {
 impl ProcessingStage for AdaptiveQualityStage {
     fn process(&mut self, frame: Frame) -> Result<Frame> {
         let start = Instant::now();
-        
+
         // Adjust processing based on quality level
         let processed_frame = match self.processing_mode {
             ProcessingMode::HighQuality => {
                 // Use high-quality SIMD operations
-                let blurred = crate::simd_ops::simd_gaussian_blur(&frame.data.view(), 1.0 * self.current_quality)?;
+                let blurred = crate::simd_ops::simd_gaussian_blur(
+                    &frame.data.view(),
+                    1.0 * self.current_quality,
+                )?;
                 Frame {
                     data: blurred,
                     ..frame
@@ -2403,7 +2411,10 @@ impl ProcessingStage for AdaptiveQualityStage {
             }
             ProcessingMode::Balanced => {
                 // Use standard processing
-                let blurred = crate::simd_ops::simd_gaussian_blur(&frame.data.view(), 0.7 * self.current_quality)?;
+                let blurred = crate::simd_ops::simd_gaussian_blur(
+                    &frame.data.view(),
+                    0.7 * self.current_quality,
+                )?;
                 Frame {
                     data: blurred,
                     ..frame
@@ -2411,17 +2422,20 @@ impl ProcessingStage for AdaptiveQualityStage {
             }
             ProcessingMode::PerformanceFirst => {
                 // Minimal processing for speed
-                let blurred = crate::simd_ops::simd_gaussian_blur(&frame.data.view(), 0.3 * self.current_quality)?;
+                let blurred = crate::simd_ops::simd_gaussian_blur(
+                    &frame.data.view(),
+                    0.3 * self.current_quality,
+                )?;
                 Frame {
                     data: blurred,
                     ..frame
                 }
             }
         };
-        
+
         let processing_time = start.elapsed();
         self.adjust_quality(processing_time);
-        
+
         Ok(processed_frame)
     }
 

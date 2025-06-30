@@ -8,8 +8,8 @@ use crate::error::{OptimError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex, RwLock};
-use std::time::{Duration, Instant, SystemTime};
 use std::thread;
+use std::time::{Duration, Instant, SystemTime};
 
 /// Advanced memory leak detector with real-time monitoring
 #[derive(Debug)]
@@ -618,9 +618,11 @@ pub struct AnomalyConfig {
 impl AdvancedMemoryLeakDetector {
     /// Create a new advanced memory leak detector
     pub fn new(config: MemoryLeakConfig) -> Result<Self> {
-        let memory_history = Arc::new(RwLock::new(VecDeque::with_capacity(config.max_history_size)));
+        let memory_history = Arc::new(RwLock::new(VecDeque::with_capacity(
+            config.max_history_size,
+        )));
         let active_sessions = Arc::new(Mutex::new(HashMap::new()));
-        
+
         let leak_analyzer = LeakAnalysisEngine::new(AnalysisConfig::default());
         let alert_system = MemoryAlertSystem::new(AlertConfig::default());
         let statistics = MemoryStatistics::default();
@@ -636,9 +638,19 @@ impl AdvancedMemoryLeakDetector {
     }
 
     /// Start monitoring an optimizer
-    pub fn start_monitoring(&self, optimizer_name: String, session_config: SessionConfig) -> Result<String> {
-        let session_id = format!("{}_{}", optimizer_name, SystemTime::now().duration_since(std::time::UNIX_EPOCH)?.as_secs());
-        
+    pub fn start_monitoring(
+        &self,
+        optimizer_name: String,
+        session_config: SessionConfig,
+    ) -> Result<String> {
+        let session_id = format!(
+            "{}_{}",
+            optimizer_name,
+            SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)?
+                .as_secs()
+        );
+
         let session = MonitoringSession {
             session_id: session_id.clone(),
             start_time: Instant::now(),
@@ -649,7 +661,9 @@ impl AdvancedMemoryLeakDetector {
         };
 
         {
-            let mut sessions = self.active_sessions.lock().map_err(|_| OptimError::MonitoringError("Failed to acquire sessions lock".to_string()))?;
+            let mut sessions = self.active_sessions.lock().map_err(|_| {
+                OptimError::MonitoringError("Failed to acquire sessions lock".to_string())
+            })?;
             sessions.insert(session_id.clone(), session);
         }
 
@@ -661,43 +675,48 @@ impl AdvancedMemoryLeakDetector {
 
     /// Stop monitoring a session
     pub fn stop_monitoring(&self, session_id: &str) -> Result<LeakAnalysisResult> {
-        let mut sessions = self.active_sessions.lock().map_err(|_| OptimError::MonitoringError("Failed to acquire sessions lock".to_string()))?;
-        
+        let mut sessions = self.active_sessions.lock().map_err(|_| {
+            OptimError::MonitoringError("Failed to acquire sessions lock".to_string())
+        })?;
+
         if let Some(mut session) = sessions.remove(session_id) {
             // Perform final analysis
             let analysis_result = self.analyze_session(&mut session)?;
-            
+
             // Update statistics
             self.update_statistics(&session, &analysis_result)?;
-            
+
             Ok(analysis_result)
         } else {
-            Err(OptimError::MonitoringError(format!("Session {} not found", session_id)))
+            Err(OptimError::MonitoringError(format!(
+                "Session {} not found",
+                session_id
+            )))
         }
     }
 
     /// Get current memory snapshot
     pub fn get_memory_snapshot(&self) -> Result<MemorySnapshot> {
         let timestamp = SystemTime::now();
-        
+
         // Get system memory information
         let system_memory = self.get_system_memory_info()?;
-        
+
         // Get process memory information
         let (total_memory, heap_memory, stack_memory) = self.get_process_memory_info()?;
-        
+
         // Get GPU memory if available
         let gpu_memory = self.get_gpu_memory_info().ok();
-        
+
         // Calculate fragmentation
         let fragmentation = self.calculate_memory_fragmentation()?;
-        
+
         // Get allocation/deallocation counts
         let (allocation_count, deallocation_count) = self.get_allocation_counts()?;
-        
+
         // Get memory pool information
         let memory_pools = self.get_memory_pool_info()?;
-        
+
         // Get optimizer-specific memory usage
         let optimizer_memory = self.get_optimizer_memory_usage()?;
 
@@ -719,37 +738,44 @@ impl AdvancedMemoryLeakDetector {
     /// Analyze a monitoring session for leaks
     pub fn analyze_session(&self, session: &mut MonitoringSession) -> Result<LeakAnalysisResult> {
         if session.snapshots.len() < 2 {
-            return Err(OptimError::AnalysisError("Insufficient data for analysis".to_string()));
+            return Err(OptimError::AnalysisError(
+                "Insufficient data for analysis".to_string(),
+            ));
         }
 
         // Extract memory values for analysis
-        let memory_values: Vec<f64> = session.snapshots
+        let memory_values: Vec<f64> = session
+            .snapshots
             .iter()
             .map(|snapshot| snapshot.total_memory as f64)
             .collect();
 
         // Perform growth analysis
         let growth_analysis = self.leak_analyzer.analyze_growth(&memory_values)?;
-        
+
         // Perform pattern analysis
         let pattern_analysis = self.leak_analyzer.analyze_patterns(&memory_values)?;
-        
+
         // Perform anomaly detection
         let anomaly_analysis = self.leak_analyzer.detect_anomalies(&memory_values)?;
-        
+
         // Determine if leak is detected
         let leak_detected = growth_analysis.significance > self.config.confidence_level
             && growth_analysis.linear_rate > self.config.growth_threshold;
-        
+
         // Calculate confidence and severity
         let confidence = growth_analysis.significance;
         let severity = self.calculate_leak_severity(&growth_analysis, &anomaly_analysis);
-        
+
         // Determine leak characteristics
         let leak_characteristics = self.analyze_leak_characteristics(session, &growth_analysis)?;
-        
+
         // Generate recommendations
-        let recommendations = self.generate_recommendations(&growth_analysis, &pattern_analysis, &leak_characteristics);
+        let recommendations = self.generate_recommendations(
+            &growth_analysis,
+            &pattern_analysis,
+            &leak_characteristics,
+        );
 
         let result = LeakAnalysisResult {
             timestamp: SystemTime::now(),
@@ -765,7 +791,7 @@ impl AdvancedMemoryLeakDetector {
 
         // Store analysis result in session
         session.analysis_results = Some(result.clone());
-        
+
         // Generate alert if leak detected
         if leak_detected && severity > 0.5 {
             self.generate_leak_alert(&result, session)?;
@@ -776,8 +802,10 @@ impl AdvancedMemoryLeakDetector {
 
     /// Generate comprehensive memory leak report
     pub fn generate_leak_report(&self, session_id: &str) -> Result<MemoryLeakReport> {
-        let sessions = self.active_sessions.lock().map_err(|_| OptimError::MonitoringError("Failed to acquire sessions lock".to_string()))?;
-        
+        let sessions = self.active_sessions.lock().map_err(|_| {
+            OptimError::MonitoringError("Failed to acquire sessions lock".to_string())
+        })?;
+
         if let Some(session) = sessions.get(session_id) {
             let report = MemoryLeakReport {
                 session_id: session_id.to_string(),
@@ -786,16 +814,24 @@ impl AdvancedMemoryLeakDetector {
                 total_snapshots: session.snapshots.len(),
                 analysis_results: session.analysis_results.clone(),
                 session_statistics: session.statistics.clone(),
-                memory_timeline: session.snapshots.iter().map(|s| (s.timestamp, s.total_memory)).collect(),
-                recommendations: session.analysis_results
+                memory_timeline: session
+                    .snapshots
+                    .iter()
+                    .map(|s| (s.timestamp, s.total_memory))
+                    .collect(),
+                recommendations: session
+                    .analysis_results
                     .as_ref()
                     .map(|r| r.recommendations.clone())
                     .unwrap_or_default(),
             };
-            
+
             Ok(report)
         } else {
-            Err(OptimError::MonitoringError(format!("Session {} not found", session_id)))
+            Err(OptimError::MonitoringError(format!(
+                "Session {} not found",
+                session_id
+            )))
         }
     }
 
@@ -823,7 +859,7 @@ impl AdvancedMemoryLeakDetector {
                         let mut sessions = active_sessions.lock().unwrap();
                         if let Some(session) = sessions.get_mut(&session_id) {
                             session.snapshots.push_back(snapshot.clone());
-                            
+
                             // Limit snapshot history
                             if session.snapshots.len() > 1000 {
                                 session.snapshots.pop_front();
@@ -835,7 +871,7 @@ impl AdvancedMemoryLeakDetector {
                     {
                         let mut history = memory_history.write().unwrap();
                         history.push_back(snapshot);
-                        
+
                         // Limit global history
                         if history.len() > 10000 {
                             history.pop_front();
@@ -890,7 +926,9 @@ impl AdvancedMemoryLeakDetector {
 
     fn get_gpu_memory_info(&self) -> Result<u64> {
         // Implementation would query GPU memory if available
-        Err(OptimError::UnsupportedOperation("GPU memory monitoring not available".to_string()))
+        Err(OptimError::UnsupportedOperation(
+            "GPU memory monitoring not available".to_string(),
+        ))
     }
 
     fn calculate_memory_fragmentation(&self) -> Result<f64> {
@@ -913,14 +951,22 @@ impl AdvancedMemoryLeakDetector {
         Ok(HashMap::new())
     }
 
-    fn calculate_leak_severity(&self, growth_analysis: &GrowthAnalysis, anomaly_analysis: &AnomalyAnalysisResult) -> f64 {
+    fn calculate_leak_severity(
+        &self,
+        growth_analysis: &GrowthAnalysis,
+        anomaly_analysis: &AnomalyAnalysisResult,
+    ) -> f64 {
         let growth_severity = (growth_analysis.linear_rate / self.config.growth_threshold).min(1.0);
         let anomaly_severity = anomaly_analysis.anomaly_score;
-        
+
         (growth_severity + anomaly_severity) / 2.0
     }
 
-    fn analyze_leak_characteristics(&self, session: &MonitoringSession, growth_analysis: &GrowthAnalysis) -> Result<LeakCharacteristics> {
+    fn analyze_leak_characteristics(
+        &self,
+        session: &MonitoringSession,
+        growth_analysis: &GrowthAnalysis,
+    ) -> Result<LeakCharacteristics> {
         let leak_type = match growth_analysis.trend_type {
             GrowthTrendType::Linear => LeakType::ClassicLeak,
             GrowthTrendType::Exponential => LeakType::UnboundedGrowth,
@@ -936,11 +982,17 @@ impl AdvancedMemoryLeakDetector {
         })
     }
 
-    fn generate_recommendations(&self, growth_analysis: &GrowthAnalysis, pattern_analysis: &PatternAnalysisResult, leak_characteristics: &LeakCharacteristics) -> Vec<String> {
+    fn generate_recommendations(
+        &self,
+        growth_analysis: &GrowthAnalysis,
+        pattern_analysis: &PatternAnalysisResult,
+        leak_characteristics: &LeakCharacteristics,
+    ) -> Vec<String> {
         let mut recommendations = Vec::new();
 
         if growth_analysis.linear_rate > self.config.growth_threshold {
-            recommendations.push("Investigate memory allocation patterns in the optimizer".to_string());
+            recommendations
+                .push("Investigate memory allocation patterns in the optimizer".to_string());
         }
 
         match leak_characteristics.leak_type {
@@ -950,7 +1002,8 @@ impl AdvancedMemoryLeakDetector {
             }
             LeakType::UnboundedGrowth => {
                 recommendations.push("Check for unbounded collections or caches".to_string());
-                recommendations.push("Implement size limits on internal data structures".to_string());
+                recommendations
+                    .push("Implement size limits on internal data structures".to_string());
             }
             _ => {}
         }
@@ -958,9 +1011,19 @@ impl AdvancedMemoryLeakDetector {
         recommendations
     }
 
-    fn generate_leak_alert(&self, analysis_result: &LeakAnalysisResult, session: &MonitoringSession) -> Result<()> {
+    fn generate_leak_alert(
+        &self,
+        analysis_result: &LeakAnalysisResult,
+        session: &MonitoringSession,
+    ) -> Result<()> {
         let alert = MemoryAlert {
-            id: format!("leak_{}_{}", session.session_id, SystemTime::now().duration_since(std::time::UNIX_EPOCH)?.as_secs()),
+            id: format!(
+                "leak_{}_{}",
+                session.session_id,
+                SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)?
+                    .as_secs()
+            ),
             timestamp: SystemTime::now(),
             severity: match analysis_result.severity {
                 s if s >= 0.9 => AlertSeverity::Critical,
@@ -969,7 +1032,10 @@ impl AdvancedMemoryLeakDetector {
                 _ => AlertSeverity::Low,
             },
             alert_type: MemoryAlertType::MemoryLeak,
-            message: format!("Memory leak detected in optimizer: {}", session.config.optimizer_name),
+            message: format!(
+                "Memory leak detected in optimizer: {}",
+                session.config.optimizer_name
+            ),
             memory_metrics: session.snapshots.back().unwrap().clone(),
             recommended_actions: analysis_result.recommendations.clone(),
         };
@@ -978,7 +1044,11 @@ impl AdvancedMemoryLeakDetector {
         Ok(())
     }
 
-    fn update_statistics(&self, session: &MonitoringSession, analysis_result: &LeakAnalysisResult) -> Result<()> {
+    fn update_statistics(
+        &self,
+        session: &MonitoringSession,
+        analysis_result: &LeakAnalysisResult,
+    ) -> Result<()> {
         // Implementation would update global statistics
         Ok(())
     }
@@ -1020,7 +1090,8 @@ impl LeakAnalysisEngine {
     fn analyze_growth(&self, memory_values: &[f64]) -> Result<GrowthAnalysis> {
         // Simplified implementation - would use proper statistical analysis
         let linear_rate = if memory_values.len() > 1 {
-            (memory_values.last().unwrap() - memory_values.first().unwrap()) / memory_values.len() as f64
+            (memory_values.last().unwrap() - memory_values.first().unwrap())
+                / memory_values.len() as f64
         } else {
             0.0
         };
@@ -1028,7 +1099,11 @@ impl LeakAnalysisEngine {
         Ok(GrowthAnalysis {
             linear_rate,
             exponential_factor: 1.0,
-            trend_type: if linear_rate > 0.0 { GrowthTrendType::Linear } else { GrowthTrendType::NoGrowth },
+            trend_type: if linear_rate > 0.0 {
+                GrowthTrendType::Linear
+            } else {
+                GrowthTrendType::NoGrowth
+            },
             significance: 0.95,
             r_squared: 0.8,
         })
@@ -1112,7 +1187,7 @@ impl Default for MemoryLeakConfig {
 impl Default for MemoryAlertThresholds {
     fn default() -> Self {
         Self {
-            growth_rate_threshold: 1024.0 * 1024.0, // 1MB/s
+            growth_rate_threshold: 1024.0 * 1024.0,        // 1MB/s
             absolute_memory_threshold: 1024 * 1024 * 1024, // 1GB
             fragmentation_threshold: 0.5,
             gc_frequency_threshold: 100,
@@ -1238,15 +1313,17 @@ mod tests {
     fn test_monitoring_session_lifecycle() {
         let config = MemoryLeakConfig::default();
         let detector = AdvancedMemoryLeakDetector::new(config).unwrap();
-        
+
         let session_config = SessionConfig {
             optimizer_name: "test_optimizer".to_string(),
             duration: Duration::from_secs(60),
             sampling_frequency: Duration::from_secs(1),
             analysis_triggers: vec![AnalysisTrigger::Duration(Duration::from_secs(30))],
         };
-        
-        let session_id = detector.start_monitoring("test_optimizer".to_string(), session_config).unwrap();
+
+        let session_id = detector
+            .start_monitoring("test_optimizer".to_string(), session_config)
+            .unwrap();
         assert!(!session_id.is_empty());
     }
 
@@ -1254,9 +1331,12 @@ mod tests {
     fn test_memory_snapshot() {
         let config = MemoryLeakConfig::default();
         let detector = AdvancedMemoryLeakDetector::new(config).unwrap();
-        
+
         let snapshot = detector.get_memory_snapshot().unwrap();
         // Verify snapshot structure
-        assert!(snapshot.timestamp.duration_since(std::time::UNIX_EPOCH).is_ok());
+        assert!(snapshot
+            .timestamp
+            .duration_since(std::time::UNIX_EPOCH)
+            .is_ok());
     }
 }

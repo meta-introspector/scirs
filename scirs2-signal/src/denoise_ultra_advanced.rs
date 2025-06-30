@@ -327,11 +327,11 @@ impl Default for UltraAdvancedDenoisingConfig {
 /// let t: Array1<f64> = Array1::linspace(0.0, 1.0, n);
 /// use rand::prelude::*;
 /// let mut rng = rand::rng();
-/// 
+///
 /// let clean_signal: Array1<f64> = t.mapv(|ti| {
 ///     (2.0 * PI * 5.0 * ti).sin() + 0.3 * (2.0 * PI * 20.0 * ti).sin()
 /// });
-/// 
+///
 /// let noisy_signal: Array1<f64> = clean_signal.mapv(|x| {
 ///     x + 0.2 * rng.random_range(-1.0..1.0)
 /// });
@@ -342,7 +342,7 @@ impl Default for UltraAdvancedDenoisingConfig {
 /// };
 ///
 /// let result = ultra_advanced_denoise(&noisy_signal, &config).unwrap();
-/// 
+///
 /// assert!(result.quality_metrics.snr_improvement_db > 5.0);
 /// assert!(result.processing_stats.simd_speedup >= 1.0);
 /// ```
@@ -351,51 +351,51 @@ pub fn ultra_advanced_denoise(
     config: &UltraAdvancedDenoisingConfig,
 ) -> SignalResult<UltraAdvancedDenoisingResult> {
     let start_time = std::time::Instant::now();
-    
+
     // Input validation
     validate_input_signal(noisy_signal, config)?;
-    
+
     // Multi-scale noise analysis
     let noise_analysis = analyze_noise_multiscale(noisy_signal, &config.multiscale_config)?;
-    
+
     // Detect SIMD capabilities and optimize
     let caps = PlatformCapabilities::detect();
     let simd_optimizer = SimdOptimizer::new(&caps, &config.simd_config);
-    
+
     // Memory management setup
     let memory_manager = MemoryManager::new(&config.memory_config, noisy_signal.len());
-    
+
     // Apply ultra-advanced denoising
     let denoising_result = match config.method {
         UltraAdvancedMethod::AdaptiveNeuralNet => {
             adaptive_neural_net_denoise(noisy_signal, &noise_analysis, &simd_optimizer, config)?
-        },
+        }
         UltraAdvancedMethod::VariationalDenoising => {
             variational_denoise(noisy_signal, &noise_analysis, &simd_optimizer, config)?
-        },
+        }
         UltraAdvancedMethod::AttentionBasedDenoising => {
             attention_based_denoise(noisy_signal, &noise_analysis, &simd_optimizer, config)?
-        },
+        }
         UltraAdvancedMethod::ResidualLearning => {
             residual_learning_denoise(noisy_signal, &noise_analysis, &simd_optimizer, config)?
-        },
+        }
         UltraAdvancedMethod::MultiScaleDictionary => {
             multiscale_dictionary_denoise(noisy_signal, &noise_analysis, &simd_optimizer, config)?
-        },
+        }
         UltraAdvancedMethod::LearnedSparseRepresentation => {
             learned_sparse_denoise(noisy_signal, &noise_analysis, &simd_optimizer, config)?
-        },
+        }
         UltraAdvancedMethod::HybridWaveletNeural => {
             hybrid_wavelet_neural_denoise(noisy_signal, &noise_analysis, &simd_optimizer, config)?
-        },
+        }
         UltraAdvancedMethod::AdaptiveBasisPursuit => {
             adaptive_basis_pursuit_denoise(noisy_signal, &noise_analysis, &simd_optimizer, config)?
-        },
+        }
         UltraAdvancedMethod::EnsembleConsensus => {
             ensemble_consensus_denoise(noisy_signal, &noise_analysis, &simd_optimizer, config)?
-        },
+        }
     };
-    
+
     // Compute comprehensive quality metrics
     let quality_metrics = compute_denoising_quality_metrics(
         noisy_signal,
@@ -403,7 +403,7 @@ pub fn ultra_advanced_denoise(
         &noise_analysis,
         &config.quality_config,
     )?;
-    
+
     // Finalize processing statistics
     let total_time = start_time.elapsed().as_secs_f64() * 1000.0;
     let processing_stats = ProcessingStatistics {
@@ -413,7 +413,7 @@ pub fn ultra_advanced_denoise(
         convergence_info: denoising_result.convergence_info,
         complexity_estimate: estimate_computational_complexity(noisy_signal.len(), config),
     };
-    
+
     Ok(UltraAdvancedDenoisingResult {
         denoised_signal: denoising_result.denoised_signal,
         noise_estimate: denoising_result.noise_estimate,
@@ -447,39 +447,37 @@ pub fn ultra_advanced_denoise_realtime(
     config: &UltraAdvancedDenoisingConfig,
 ) -> SignalResult<Array1<f64>> {
     let start_time = std::time::Instant::now();
-    
+
     // Update streaming context with new data
     context.update_buffer(signal_chunk)?;
-    
+
     // Adaptive algorithm selection based on current signal characteristics
     let optimal_method = context.select_optimal_method(&config.realtime_config)?;
-    
+
     // Apply fast denoising with quality-latency tradeoff
     let denoised_chunk = match optimal_method {
         FastDenoisingMethod::AdaptiveFilter => {
             context.apply_adaptive_filter(&config.simd_config)?
-        },
+        }
         FastDenoisingMethod::SpectralSubtraction => {
             context.apply_spectral_subtraction(&config.simd_config)?
-        },
-        FastDenoisingMethod::WienerFilter => {
-            context.apply_wiener_filter(&config.simd_config)?
-        },
-        FastDenoisingMethod::NeuralNetLite => {
-            context.apply_neural_net_lite(&config.simd_config)?
-        },
+        }
+        FastDenoisingMethod::WienerFilter => context.apply_wiener_filter(&config.simd_config)?,
+        FastDenoisingMethod::NeuralNetLite => context.apply_neural_net_lite(&config.simd_config)?,
     };
-    
+
     // Validate real-time constraint
     let processing_time = start_time.elapsed().as_secs_f64() * 1000.0;
     if processing_time > config.realtime_config.max_latency_ms {
-        eprintln!("Warning: Processing time {:.2}ms exceeds latency limit {:.2}ms", 
-                  processing_time, config.realtime_config.max_latency_ms);
+        eprintln!(
+            "Warning: Processing time {:.2}ms exceeds latency limit {:.2}ms",
+            processing_time, config.realtime_config.max_latency_ms
+        );
     }
-    
+
     // Update quality metrics in context
     context.update_quality_metrics(&denoised_chunk, processing_time);
-    
+
     Ok(denoised_chunk)
 }
 
@@ -506,45 +504,47 @@ pub fn ultra_advanced_denoise_batch(
     progress_callback: Option<Box<dyn Fn(f64) + Send + Sync>>,
 ) -> SignalResult<BatchDenoisingResult> {
     let start_time = std::time::Instant::now();
-    
+
     // Initialize batch processing
     let batch_processor = BatchProcessor::new(config, signals.len());
     let mut results = Vec::with_capacity(signals.len());
-    
+
     // Process signals with optimal parallelization
     let chunk_size = calculate_optimal_chunk_size(signals, config);
-    
+
     for (chunk_idx, signal_chunk) in signals.chunks(chunk_size).enumerate() {
         // Parallel processing within chunk
         let chunk_results: Vec<UltraAdvancedDenoisingResult> = if config.simd_config.enable_simd {
-            signal_chunk.par_iter()
+            signal_chunk
+                .par_iter()
                 .map(|signal| ultra_advanced_denoise(signal, config))
                 .collect::<SignalResult<Vec<_>>>()?
         } else {
-            signal_chunk.iter()
+            signal_chunk
+                .iter()
                 .map(|signal| ultra_advanced_denoise(signal, config))
                 .collect::<SignalResult<Vec<_>>>()?
         };
-        
+
         results.extend(chunk_results);
-        
+
         // Report progress
         if let Some(ref callback) = progress_callback {
             let progress = (chunk_idx + 1) as f64 / (signals.len() / chunk_size) as f64;
             callback(progress);
         }
-        
+
         // Memory management
         if chunk_idx % 10 == 0 {
             // Periodic garbage collection hint
             std::hint::black_box(&results);
         }
     }
-    
+
     // Compute batch statistics
     let batch_stats = compute_batch_statistics(&results);
     let total_time = start_time.elapsed().as_secs_f64() * 1000.0;
-    
+
     Ok(BatchDenoisingResult {
         results,
         batch_statistics: batch_stats,
@@ -563,11 +563,11 @@ fn adaptive_neural_net_denoise(
     config: &UltraAdvancedDenoisingConfig,
 ) -> SignalResult<CoreDenoisingResult> {
     let n = signal.len();
-    
+
     // Initialize adaptive parameters based on noise analysis
     let mut weights = initialize_adaptive_weights(n, &noise_analysis.adaptive_model);
     let mut biases = Array1::zeros(n);
-    
+
     // SIMD-accelerated iterative refinement
     let mut denoised = signal.clone();
     let mut convergence_info = ConvergenceInfo {
@@ -576,33 +576,33 @@ fn adaptive_neural_net_denoise(
         final_residual: f64::INFINITY,
         convergence_rate: 0.0,
     };
-    
+
     for iteration in 0..100 {
         let old_denoised = denoised.clone();
-        
+
         // Forward pass with SIMD acceleration
         simd_optimizer.apply_neural_forward_pass(&mut denoised, &weights, &biases)?;
-        
+
         // Adaptive weight updates based on local signal characteristics
         update_adaptive_weights(&mut weights, &mut biases, signal, &denoised, noise_analysis)?;
-        
+
         // Check convergence
         let residual = compute_residual_norm(&old_denoised, &denoised);
         convergence_info.iterations = iteration + 1;
         convergence_info.final_residual = residual;
-        
+
         if residual < 1e-6 {
             convergence_info.converged = true;
             break;
         }
     }
-    
+
     // Estimate noise component
     let noise_estimate = signal - &denoised;
-    
+
     // Compute confidence map
     let confidence_map = compute_confidence_map(&denoised, &noise_estimate, noise_analysis)?;
-    
+
     Ok(CoreDenoisingResult {
         denoised_signal: denoised,
         noise_estimate,
@@ -623,7 +623,7 @@ fn variational_denoise(
     let denoised = apply_variational_optimization(signal, noise_analysis, simd_optimizer)?;
     let noise_estimate = signal - &denoised;
     let confidence_map = Array1::ones(signal.len()) * 0.8;
-    
+
     Ok(CoreDenoisingResult {
         denoised_signal: denoised,
         noise_estimate,
@@ -648,7 +648,7 @@ fn attention_based_denoise(
     let denoised = apply_attention_mechanism(signal, noise_analysis, simd_optimizer)?;
     let noise_estimate = signal - &denoised;
     let confidence_map = Array1::ones(signal.len()) * 0.9;
-    
+
     Ok(CoreDenoisingResult {
         denoised_signal: denoised,
         noise_estimate,
@@ -674,7 +674,7 @@ fn residual_learning_denoise(
     let denoised = signal.clone(); // Placeholder
     let noise_estimate = Array1::zeros(signal.len());
     let confidence_map = Array1::ones(signal.len()) * 0.85;
-    
+
     Ok(CoreDenoisingResult {
         denoised_signal: denoised,
         noise_estimate,
@@ -693,7 +693,7 @@ fn multiscale_dictionary_denoise(
     let denoised = signal.clone(); // Placeholder
     let noise_estimate = Array1::zeros(signal.len());
     let confidence_map = Array1::ones(signal.len()) * 0.9;
-    
+
     Ok(CoreDenoisingResult {
         denoised_signal: denoised,
         noise_estimate,
@@ -712,7 +712,7 @@ fn learned_sparse_denoise(
     let denoised = signal.clone(); // Placeholder
     let noise_estimate = Array1::zeros(signal.len());
     let confidence_map = Array1::ones(signal.len()) * 0.88;
-    
+
     Ok(CoreDenoisingResult {
         denoised_signal: denoised,
         noise_estimate,
@@ -731,7 +731,7 @@ fn hybrid_wavelet_neural_denoise(
     let denoised = signal.clone(); // Placeholder
     let noise_estimate = Array1::zeros(signal.len());
     let confidence_map = Array1::ones(signal.len()) * 0.92;
-    
+
     Ok(CoreDenoisingResult {
         denoised_signal: denoised,
         noise_estimate,
@@ -750,7 +750,7 @@ fn adaptive_basis_pursuit_denoise(
     let denoised = signal.clone(); // Placeholder
     let noise_estimate = Array1::zeros(signal.len());
     let confidence_map = Array1::ones(signal.len()) * 0.86;
-    
+
     Ok(CoreDenoisingResult {
         denoised_signal: denoised,
         noise_estimate,
@@ -769,7 +769,7 @@ fn ensemble_consensus_denoise(
     let denoised = signal.clone(); // Placeholder
     let noise_estimate = Array1::zeros(signal.len());
     let confidence_map = Array1::ones(signal.len()) * 0.95;
-    
+
     Ok(CoreDenoisingResult {
         denoised_signal: denoised,
         noise_estimate,
@@ -843,11 +843,11 @@ impl SimdOptimizer {
             capabilities: caps.clone(),
         }
     }
-    
+
     fn get_achieved_speedup(&self) -> f64 {
         self.speedup_achieved
     }
-    
+
     fn apply_neural_forward_pass(
         &self,
         signal: &mut Array1<f64>,
@@ -871,7 +871,7 @@ impl MemoryManager {
             peak_usage_mb: estimated_usage,
         }
     }
-    
+
     fn get_peak_usage_mb(&self) -> f64 {
         self.peak_usage_mb
     }
@@ -887,13 +887,16 @@ impl BatchProcessor {
 
 // Implementation of helper functions (simplified for brevity)
 
-fn validate_input_signal(signal: &Array1<f64>, config: &UltraAdvancedDenoisingConfig) -> SignalResult<()> {
+fn validate_input_signal(
+    signal: &Array1<f64>,
+    config: &UltraAdvancedDenoisingConfig,
+) -> SignalResult<()> {
     if signal.is_empty() {
         return Err(SignalError::ValueError("Input signal is empty".to_string()));
     }
-    
+
     check_finite(signal.as_slice().unwrap(), "signal")?;
-    
+
     Ok(())
 }
 
@@ -903,28 +906,28 @@ fn analyze_noise_multiscale(
 ) -> SignalResult<MultiScaleNoiseAnalysis> {
     // Multi-scale noise analysis implementation
     let frequency_band_variance = Array1::ones(config.num_scales) * 0.1;
-    
+
     let temporal_characteristics = TemporalNoiseCharacteristics {
         stationarity: 0.8,
         correlation_length: 10.0,
         burst_locations: vec![],
         impulse_locations: vec![],
     };
-    
+
     let noise_types = vec![NoiseTypeClassification {
         noise_type: NoiseType::AdditiveGaussian,
         confidence: 0.9,
         frequency_range: (0.0, 1000.0),
         amplitude_range: (-0.5, 0.5),
     }];
-    
+
     let adaptive_model = AdaptiveNoiseModel {
         variance_function: Array1::ones(signal.len()) * 0.01,
         spectral_shape: Array1::ones(256),
         model_confidence: 0.85,
         adaptation_rate: 0.1,
     };
-    
+
     Ok(MultiScaleNoiseAnalysis {
         frequency_band_variance,
         temporal_characteristics,
@@ -989,7 +992,7 @@ fn compute_denoising_quality_metrics(
     let noise_power = noisy_signal.var(0.0);
     let residual_power = (noisy_signal - denoised_signal).var(0.0);
     let snr_improvement_db = 10.0 * (noise_power / residual_power.max(1e-12)).log10();
-    
+
     Ok(DenoisingQualityMetrics {
         snr_improvement_db,
         mse_reduction: 0.8,
@@ -1001,25 +1004,35 @@ fn compute_denoising_quality_metrics(
     })
 }
 
-fn estimate_computational_complexity(signal_length: usize, config: &UltraAdvancedDenoisingConfig) -> f64 {
+fn estimate_computational_complexity(
+    signal_length: usize,
+    config: &UltraAdvancedDenoisingConfig,
+) -> f64 {
     // Estimate computational complexity
     signal_length as f64 * (signal_length as f64).log2()
 }
 
-fn calculate_optimal_chunk_size(signals: &[Array1<f64>], config: &UltraAdvancedDenoisingConfig) -> usize {
+fn calculate_optimal_chunk_size(
+    signals: &[Array1<f64>],
+    config: &UltraAdvancedDenoisingConfig,
+) -> usize {
     // Calculate optimal chunk size for batch processing
     10.min(signals.len())
 }
 
 fn compute_batch_statistics(results: &[UltraAdvancedDenoisingResult]) -> BatchStatistics {
-    let avg_snr = results.iter()
+    let avg_snr = results
+        .iter()
         .map(|r| r.quality_metrics.snr_improvement_db)
-        .sum::<f64>() / results.len() as f64;
-    
-    let avg_time = results.iter()
+        .sum::<f64>()
+        / results.len() as f64;
+
+    let avg_time = results
+        .iter()
         .map(|r| r.processing_stats.total_time_ms)
-        .sum::<f64>() / results.len() as f64;
-    
+        .sum::<f64>()
+        / results.len() as f64;
+
     BatchStatistics {
         average_snr_improvement: avg_snr,
         average_processing_time: avg_time,
@@ -1043,37 +1056,49 @@ impl RealTimeDenoisingContext {
             processing_times: Vec::new(),
         }
     }
-    
+
     fn update_buffer(&mut self, new_chunk: &Array1<f64>) -> SignalResult<()> {
         // Update circular buffer with new data
         Ok(())
     }
-    
+
     fn select_optimal_method(&self, config: &RealTimeConfig) -> SignalResult<FastDenoisingMethod> {
         // Select optimal method based on current conditions
         Ok(FastDenoisingMethod::AdaptiveFilter)
     }
-    
-    fn apply_adaptive_filter(&mut self, simd_config: &SimdOptimizationConfig) -> SignalResult<Array1<f64>> {
+
+    fn apply_adaptive_filter(
+        &mut self,
+        simd_config: &SimdOptimizationConfig,
+    ) -> SignalResult<Array1<f64>> {
         // Apply adaptive filter
         Ok(self.buffer.clone())
     }
-    
-    fn apply_spectral_subtraction(&mut self, simd_config: &SimdOptimizationConfig) -> SignalResult<Array1<f64>> {
+
+    fn apply_spectral_subtraction(
+        &mut self,
+        simd_config: &SimdOptimizationConfig,
+    ) -> SignalResult<Array1<f64>> {
         // Apply spectral subtraction
         Ok(self.buffer.clone())
     }
-    
-    fn apply_wiener_filter(&mut self, simd_config: &SimdOptimizationConfig) -> SignalResult<Array1<f64>> {
+
+    fn apply_wiener_filter(
+        &mut self,
+        simd_config: &SimdOptimizationConfig,
+    ) -> SignalResult<Array1<f64>> {
         // Apply Wiener filter
         Ok(self.buffer.clone())
     }
-    
-    fn apply_neural_net_lite(&mut self, simd_config: &SimdOptimizationConfig) -> SignalResult<Array1<f64>> {
+
+    fn apply_neural_net_lite(
+        &mut self,
+        simd_config: &SimdOptimizationConfig,
+    ) -> SignalResult<Array1<f64>> {
         // Apply lightweight neural network
         Ok(self.buffer.clone())
     }
-    
+
     fn update_quality_metrics(&mut self, denoised: &Array1<f64>, processing_time: f64) {
         // Update quality metrics and processing time history
         self.processing_times.push(processing_time);
@@ -1094,15 +1119,16 @@ mod tests {
         let n = 256;
         let t: Array1<f64> = Array1::linspace(0.0, 1.0, n);
         let clean_signal: Array1<f64> = t.mapv(|ti| (2.0 * PI * 5.0 * ti).sin());
-        
+
         // Add noise
         use rand::prelude::*;
         let mut rng = rand::rng();
-        let noisy_signal: Array1<f64> = clean_signal.mapv(|x| x + 0.1 * rng.random_range(-1.0..1.0));
-        
+        let noisy_signal: Array1<f64> =
+            clean_signal.mapv(|x| x + 0.1 * rng.random_range(-1.0..1.0));
+
         let config = UltraAdvancedDenoisingConfig::default();
         let result = ultra_advanced_denoise(&noisy_signal, &config);
-        
+
         assert!(result.is_ok());
         let denoising_result = result.unwrap();
         assert_eq!(denoising_result.denoised_signal.len(), n);
@@ -1113,10 +1139,10 @@ mod tests {
     fn test_real_time_context() {
         let mut context = RealTimeDenoisingContext::new(512);
         let chunk = Array1::ones(64);
-        
+
         let config = UltraAdvancedDenoisingConfig::default();
         let result = ultra_advanced_denoise_realtime(&chunk, &mut context, &config);
-        
+
         assert!(result.is_ok());
         assert_eq!(result.unwrap().len(), 64);
     }
@@ -1130,7 +1156,7 @@ mod tests {
             use_fused_multiply_add: true,
             prefer_accuracy_over_speed: false,
         };
-        
+
         let optimizer = SimdOptimizer::new(&caps, &config);
         assert!(optimizer.get_achieved_speedup() >= 1.0);
     }

@@ -22,10 +22,10 @@ use crate::optimizers::Optimizer;
 
 // Re-export key utility analysis types
 pub use utility_analysis::{
-    PrivacyUtilityAnalyzer, AnalysisConfig, PrivacyParameterSpace, UtilityMetric,
-    PrivacyUtilityResults, ParetoPoint, OptimalConfiguration, PrivacyConfiguration,
-    SensitivityResults, RobustnessResults, BudgetRecommendations,
-    PrivacyRiskAssessment, StatisticalTestResults, AnalysisMetadata,
+    AnalysisConfig, AnalysisMetadata, BudgetRecommendations, OptimalConfiguration, ParetoPoint,
+    PrivacyConfiguration, PrivacyParameterSpace, PrivacyRiskAssessment, PrivacyUtilityAnalyzer,
+    PrivacyUtilityResults, RobustnessResults, SensitivityResults, StatisticalTestResults,
+    UtilityMetric,
 };
 
 /// Differential privacy configuration

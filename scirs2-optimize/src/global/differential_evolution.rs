@@ -25,7 +25,7 @@ struct SobolState {
 impl SobolState {
     fn new(dimension: usize) -> Self {
         let mut direction_numbers = Vec::new();
-        
+
         // Initialize direction numbers for first few dimensions
         // This is a simplified implementation - full Sobol needs proper generating matrices
         for d in 0..dimension {
@@ -47,23 +47,23 @@ impl SobolState {
             }
             direction_numbers.push(dirs);
         }
-        
+
         SobolState {
             dimension,
             count: 0,
             direction_numbers,
         }
     }
-    
+
     fn next_point(&mut self) -> Vec<f64> {
         self.count += 1;
         let mut point = Vec::with_capacity(self.dimension);
-        
+
         for d in 0..self.dimension {
             let mut x = 0u32;
             let mut c = self.count;
             let mut j = 0;
-            
+
             while c > 0 {
                 if (c & 1) == 1 {
                     x ^= self.direction_numbers[d][j];
@@ -71,11 +71,11 @@ impl SobolState {
                 c >>= 1;
                 j += 1;
             }
-            
+
             // Convert to [0, 1)
             point.push(x as f64 / (1u64 << 32) as f64);
         }
-        
+
         point
     }
 }
@@ -343,15 +343,18 @@ where
 
     /// Initialize population using Halton sequence
     fn init_halton(&mut self) {
-        let primes = vec![2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97];
-        
+        let primes = vec![
+            2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83,
+            89, 97,
+        ];
+
         let popsize = self.population.nrows();
         for i in 0..popsize {
             for j in 0..self.ndim {
                 // Use the (i+1)th term of the Halton sequence for base primes[j % primes.len()]
                 let base = primes[j % primes.len()];
                 let halton_value = self.halton_number(i + 1, base);
-                
+
                 // Scale to bounds
                 let (lb, ub) = self.bounds[j];
                 self.population[[i, j]] = lb + halton_value * (ub - lb);
@@ -364,7 +367,7 @@ where
         // Simplified Sobol sequence using scrambled Van der Corput sequence
         // For a full Sobol implementation, we would need generating matrices
         let mut sobol_state = SobolState::new(self.ndim);
-        
+
         let popsize = self.population.nrows();
         for i in 0..popsize {
             let sobol_point = sobol_state.next_point();
@@ -389,13 +392,13 @@ where
         let mut result = 0.0;
         let mut f = 1.0 / base as f64;
         let mut i = n;
-        
+
         while i > 0 {
             result += f * (i % base) as f64;
             i /= base;
             f /= base as f64;
         }
-        
+
         result
     }
 

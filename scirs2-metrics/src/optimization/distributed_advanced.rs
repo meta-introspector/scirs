@@ -51,7 +51,6 @@ pub enum RecoveryActionType {
     ServiceRestart,
 }
 
-
 /// Node health status
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum NodeHealthStatus {
@@ -60,7 +59,6 @@ pub enum NodeHealthStatus {
     Failed,
     Unknown,
 }
-
 
 /// Scaling decision
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -71,7 +69,6 @@ pub struct ScalingDecision {
     pub confidence: f64,
 }
 
-
 /// Cluster metrics for scaling decisions
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClusterMetrics {
@@ -81,8 +78,6 @@ pub struct ClusterMetrics {
     #[serde(with = "duration_serde")]
     pub response_time: Duration,
 }
-
-
 
 /// Scaling operation
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1493,7 +1488,12 @@ impl AdvancedDistributedCoordinator {
                 )?),
                 ConsensusAlgorithm::Pbft => Box::new(PbftConsensus::new(
                     "coordinator".to_string(),
-                    vec!["coordinator".to_string(), "node1".to_string(), "node2".to_string(), "node3".to_string()],
+                    vec![
+                        "coordinator".to_string(),
+                        "node1".to_string(),
+                        "node2".to_string(),
+                        "node3".to_string(),
+                    ],
                 )?),
                 ConsensusAlgorithm::ProofOfStake => Box::new(ProofOfStakeConsensus::new(
                     "coordinator".to_string(),
@@ -1502,7 +1502,11 @@ impl AdvancedDistributedCoordinator {
                 )?),
                 ConsensusAlgorithm::SimpleMajority => Box::new(SimpleMajorityConsensus::new(
                     "coordinator".to_string(),
-                    vec!["coordinator".to_string(), "node1".to_string(), "node2".to_string()],
+                    vec![
+                        "coordinator".to_string(),
+                        "node1".to_string(),
+                        "node2".to_string(),
+                    ],
                 )?),
                 ConsensusAlgorithm::DelegatedProofOfStake => {
                     // DPoS can be implemented as an extension of PoS
@@ -1511,14 +1515,14 @@ impl AdvancedDistributedCoordinator {
                         1000, // stake amount
                         100,  // minimum stake
                     )?)
-                },
+                }
                 ConsensusAlgorithm::None => {
                     // Simple pass-through consensus for testing
                     Box::new(SimpleMajorityConsensus::new(
                         "coordinator".to_string(),
                         vec!["coordinator".to_string()],
                     )?)
-                },
+                }
             };
 
         Ok(Self {
@@ -2091,7 +2095,7 @@ impl ConsensusManager for RaftConsensus {
 }
 
 /// PBFT (Practical Byzantine Fault Tolerance) consensus implementation
-/// 
+///
 /// Provides Byzantine fault tolerance for up to f faulty nodes out of 3f+1 total nodes.
 /// Implements the three-phase protocol: pre-prepare, prepare, and commit.
 pub struct PbftConsensus {
@@ -2213,13 +2217,13 @@ impl PbftConsensus {
         let total_nodes = node_list.len();
         if total_nodes < 4 {
             return Err(MetricsError::ComputationError(
-                "PBFT requires at least 4 nodes".to_string()
+                "PBFT requires at least 4 nodes".to_string(),
             ));
         }
-        
+
         let max_faulty_nodes = (total_nodes - 1) / 3;
         let primary_node = node_list.first().cloned();
-        
+
         Ok(Self {
             node_id,
             view_number: 0,
@@ -2239,28 +2243,28 @@ impl PbftConsensus {
             last_activity: Instant::now(),
         })
     }
-    
+
     /// Process a new request (primary node)
     pub fn process_request(&mut self, request: PbftRequest) -> Result<()> {
         if !self.is_primary() {
             return Err(MetricsError::ComputationError(
-                "Only primary can process requests".to_string()
+                "Only primary can process requests".to_string(),
             ));
         }
-        
+
         let seq_num = self.sequence_number;
         self.sequence_number += 1;
-        
+
         // Store request
         self.request_log.insert(seq_num, request.clone());
         self.phase_status.insert(seq_num, PbftPhase::Request);
-        
+
         // Send pre-prepare message
         self.send_pre_prepare(seq_num, request)?;
-        
+
         Ok(())
     }
-    
+
     /// Send pre-prepare message
     fn send_pre_prepare(&mut self, sequence_number: u64, request: PbftRequest) -> Result<()> {
         let pre_prepare = PrePrepareMessage {
@@ -2270,38 +2274,41 @@ impl PbftConsensus {
             sender: self.node_id.clone(),
             timestamp: SystemTime::now(),
         };
-        
-        self.pre_prepare_messages.insert(sequence_number, pre_prepare.clone());
-        self.phase_status.insert(sequence_number, PbftPhase::PrePrepare);
-        
+
+        self.pre_prepare_messages
+            .insert(sequence_number, pre_prepare.clone());
+        self.phase_status
+            .insert(sequence_number, PbftPhase::PrePrepare);
+
         // In a real implementation, broadcast to all nodes
         // For now, simulate immediate prepare phase
         self.handle_pre_prepare(pre_prepare)?;
-        
+
         Ok(())
     }
-    
+
     /// Handle incoming pre-prepare message
     pub fn handle_pre_prepare(&mut self, pre_prepare: PrePrepareMessage) -> Result<()> {
         let seq_num = pre_prepare.sequence_number;
-        
+
         // Validate pre-prepare message
         if pre_prepare.view_number != self.view_number {
             return Err(MetricsError::ComputationError(
-                "Invalid view number in pre-prepare".to_string()
+                "Invalid view number in pre-prepare".to_string(),
             ));
         }
-        
+
         // Store pre-prepare and send prepare message
-        self.pre_prepare_messages.insert(seq_num, pre_prepare.clone());
+        self.pre_prepare_messages
+            .insert(seq_num, pre_prepare.clone());
         self.phase_status.insert(seq_num, PbftPhase::Prepare);
-        
+
         // Send prepare message
         self.send_prepare(seq_num, &pre_prepare.request)?;
-        
+
         Ok(())
     }
-    
+
     /// Send prepare message
     fn send_prepare(&mut self, sequence_number: u64, request: &PbftRequest) -> Result<()> {
         let prepare = PrepareMessage {
@@ -2311,34 +2318,37 @@ impl PbftConsensus {
             sender: self.node_id.clone(),
             timestamp: SystemTime::now(),
         };
-        
+
         // Add own prepare message
-        self.prepare_messages.entry(sequence_number)
+        self.prepare_messages
+            .entry(sequence_number)
             .or_insert_with(Vec::new)
             .push(prepare.clone());
-        
+
         // Check if we have enough prepare messages
         self.check_prepare_threshold(sequence_number)?;
-        
+
         Ok(())
     }
-    
+
     /// Check if prepare threshold is met
     fn check_prepare_threshold(&mut self, sequence_number: u64) -> Result<()> {
-        let prepare_count = self.prepare_messages.get(&sequence_number)
+        let prepare_count = self
+            .prepare_messages
+            .get(&sequence_number)
             .map(|msgs| msgs.len())
             .unwrap_or(0);
-        
+
         // Need 2f prepare messages (including own)
         let required_prepares = 2 * self.max_faulty_nodes;
-        
+
         if prepare_count >= required_prepares {
             self.send_commit(sequence_number)?;
         }
-        
+
         Ok(())
     }
-    
+
     /// Send commit message
     fn send_commit(&mut self, sequence_number: u64) -> Result<()> {
         if let Some(pre_prepare) = self.pre_prepare_messages.get(&sequence_number) {
@@ -2349,58 +2359,65 @@ impl PbftConsensus {
                 sender: self.node_id.clone(),
                 timestamp: SystemTime::now(),
             };
-            
+
             // Add own commit message
-            self.commit_messages.entry(sequence_number)
+            self.commit_messages
+                .entry(sequence_number)
                 .or_insert_with(Vec::new)
                 .push(commit.clone());
-            
+
             self.phase_status.insert(sequence_number, PbftPhase::Commit);
-            
+
             // Check if we can execute
             self.check_commit_threshold(sequence_number)?;
         }
-        
+
         Ok(())
     }
-    
+
     /// Check if commit threshold is met
     fn check_commit_threshold(&mut self, sequence_number: u64) -> Result<()> {
-        let commit_count = self.commit_messages.get(&sequence_number)
+        let commit_count = self
+            .commit_messages
+            .get(&sequence_number)
             .map(|msgs| msgs.len())
             .unwrap_or(0);
-        
+
         // Need 2f+1 commit messages (including own)
         let required_commits = 2 * self.max_faulty_nodes + 1;
-        
+
         if commit_count >= required_commits {
             self.execute_request(sequence_number)?;
         }
-        
+
         Ok(())
     }
-    
+
     /// Execute the request
     fn execute_request(&mut self, sequence_number: u64) -> Result<()> {
         if self.executed_requests.contains(&sequence_number) {
             return Ok(()); // Already executed
         }
-        
+
         self.executed_requests.insert(sequence_number);
-        self.phase_status.insert(sequence_number, PbftPhase::Executed);
+        self.phase_status
+            .insert(sequence_number, PbftPhase::Executed);
         self.last_activity = Instant::now();
-        
+
         // In a real implementation, execute the actual operation
-        println!("PBFT: Executed request with sequence number {}", sequence_number);
-        
+        println!(
+            "PBFT: Executed request with sequence number {}",
+            sequence_number
+        );
+
         Ok(())
     }
-    
+
     /// Start view change
     pub fn start_view_change(&mut self) -> Result<()> {
         let new_view = self.view_number + 1;
         self.node_state = PbftNodeState::ViewChange;
-        
+
         let view_change = ViewChangeMessage {
             new_view_number: new_view,
             sender: self.node_id.clone(),
@@ -2408,38 +2425,42 @@ impl PbftConsensus {
             checkpoint_proof: Vec::new(), // Simplified
             timestamp: SystemTime::now(),
         };
-        
-        self.view_change_messages.entry(new_view)
+
+        self.view_change_messages
+            .entry(new_view)
             .or_insert_with(Vec::new)
             .push(view_change);
-        
+
         Ok(())
     }
-    
+
     /// Check if this node is the primary
     fn is_primary(&self) -> bool {
         self.primary_node.as_ref() == Some(&self.node_id)
     }
-    
+
     /// Compute digest of a request
     fn compute_request_digest(&self, request: &PbftRequest) -> String {
         // Simplified digest computation
-        format!("{}-{}-{}", request.request_id, request.client_id, request.sequence_number)
+        format!(
+            "{}-{}-{}",
+            request.request_id, request.client_id, request.sequence_number
+        )
     }
-    
+
     /// Handle node failure
     pub fn handle_node_failure(&mut self, failed_node: &str) -> Result<()> {
         // Remove failed node from node list
         self.node_list.retain(|node| node != failed_node);
-        
+
         // If primary failed, start view change
         if self.primary_node.as_ref() == Some(&failed_node.to_string()) {
             self.start_view_change()?;
         }
-        
+
         // Update max faulty nodes calculation
         self.max_faulty_nodes = (self.node_list.len() - 1) / 3;
-        
+
         Ok(())
     }
 }
@@ -2453,11 +2474,11 @@ impl ConsensusManager for PbftConsensus {
             timestamp: SystemTime::now(),
             sequence_number: self.sequence_number,
         };
-        
+
         self.process_request(request)?;
         Ok(task.task_id)
     }
-    
+
     fn get_consensus_state(&self) -> ConsensusState {
         let mut node_states = HashMap::new();
         for node in &self.node_list {
@@ -2472,7 +2493,7 @@ impl ConsensusManager for PbftConsensus {
             };
             node_states.insert(node.clone(), state);
         }
-        
+
         ConsensusState {
             current_leader: self.primary_node.clone(),
             current_term: self.view_number,
@@ -2481,28 +2502,29 @@ impl ConsensusManager for PbftConsensus {
             quorum_size: 2 * self.max_faulty_nodes + 1,
         }
     }
-    
+
     fn handle_node_failure(&mut self, node_id: &str) -> Result<()> {
         self.handle_node_failure(node_id)
     }
-    
+
     fn elect_leader(&mut self) -> Result<String> {
         // In PBFT, leader election is done through view changes
         self.start_view_change()?;
-        
+
         // Select new primary (next node in the list)
         let current_view_index = self.view_number as usize % self.node_list.len();
         self.primary_node = self.node_list.get(current_view_index).cloned();
         self.view_number += 1;
         self.node_state = PbftNodeState::Normal;
-        
-        self.primary_node.clone()
+
+        self.primary_node
+            .clone()
             .ok_or_else(|| MetricsError::ComputationError("Failed to elect leader".to_string()))
     }
 }
 
 /// Proof of Stake consensus implementation
-/// 
+///
 /// Implements a simplified PoS consensus where validators are selected based on their stake.
 pub struct ProofOfStakeConsensus {
     /// Node identifier
@@ -2602,20 +2624,23 @@ impl ProofOfStakeConsensus {
     pub fn new(node_id: String, stake: u64, min_stake: u64) -> Result<Self> {
         if stake < min_stake {
             return Err(MetricsError::ComputationError(
-                "Insufficient stake to participate".to_string()
+                "Insufficient stake to participate".to_string(),
             ));
         }
-        
+
         let mut validators = HashMap::new();
-        validators.insert(node_id.clone(), ValidatorInfo {
-            node_id: node_id.clone(),
-            stake,
-            is_active: true,
-            last_block_proposed: None,
-            slash_count: 0,
-            reputation_score: 1.0,
-        });
-        
+        validators.insert(
+            node_id.clone(),
+            ValidatorInfo {
+                node_id: node_id.clone(),
+                stake,
+                is_active: true,
+                last_block_proposed: None,
+                slash_count: 0,
+                reputation_score: 1.0,
+            },
+        );
+
         Ok(Self {
             node_id,
             current_epoch: 0,
@@ -2635,7 +2660,7 @@ impl ProofOfStakeConsensus {
             last_epoch: Instant::now(),
         })
     }
-    
+
     /// Default slashing conditions
     fn default_slashing_conditions() -> Vec<SlashingCondition> {
         vec![
@@ -2656,61 +2681,66 @@ impl ProofOfStakeConsensus {
             },
         ]
     }
-    
+
     /// Select validator for next block using stake-weighted randomness
     pub fn select_validator(&mut self) -> Result<String> {
-        let active_validators: Vec<_> = self.validators.values()
+        let active_validators: Vec<_> = self
+            .validators
+            .values()
             .filter(|v| v.is_active && v.stake >= self.min_stake)
             .collect();
-        
+
         if active_validators.is_empty() {
             return Err(MetricsError::ComputationError(
-                "No active validators available".to_string()
+                "No active validators available".to_string(),
             ));
         }
-        
+
         // Weighted random selection based on stake
         let total_active_stake: u64 = active_validators.iter().map(|v| v.stake).sum();
         let mut random_point = self.randomness_seed % total_active_stake;
-        
+
         for validator in active_validators {
             if random_point < validator.stake {
                 self.current_validator = Some(validator.node_id.clone());
                 // Update randomness for next selection
-                self.randomness_seed = self.randomness_seed.wrapping_mul(1103515245).wrapping_add(12345);
+                self.randomness_seed = self
+                    .randomness_seed
+                    .wrapping_mul(1103515245)
+                    .wrapping_add(12345);
                 return Ok(validator.node_id.clone());
             }
             random_point -= validator.stake;
         }
-        
+
         // Fallback to first validator
         let first_validator = active_validators[0].node_id.clone();
         self.current_validator = Some(first_validator.clone());
         Ok(first_validator)
     }
-    
+
     /// Propose a new block (if selected as validator)
     pub fn propose_block(&mut self, transactions: Vec<Transaction>) -> Result<Block> {
         if self.current_validator.as_ref() != Some(&self.node_id) {
             return Err(MetricsError::ComputationError(
-                "Not selected as validator for this epoch".to_string()
+                "Not selected as validator for this epoch".to_string(),
             ));
         }
-        
+
         let block_number = self.blockchain.len() as u64;
         let previous_hash = if let Some(last_block) = self.blockchain.last() {
             last_block.block_hash.clone()
         } else {
             "genesis".to_string()
         };
-        
+
         let stake_proof = StakeProof {
             validator_id: self.node_id.clone(),
             stake_amount: self.stake,
             randomness: self.randomness_seed,
             signature: format!("sig_{}_{}", self.node_id, block_number),
         };
-        
+
         let block = Block {
             block_number,
             epoch: self.current_epoch,
@@ -2721,26 +2751,26 @@ impl ProofOfStakeConsensus {
             timestamp: SystemTime::now(),
             stake_proof,
         };
-        
+
         // Add block to blockchain
         self.blockchain.push(block.clone());
-        
+
         // Update validator info
         if let Some(validator) = self.validators.get_mut(&self.node_id) {
             validator.last_block_proposed = Some(block_number);
             validator.reputation_score = (validator.reputation_score * 0.9 + 0.1).min(1.0);
         }
-        
+
         Ok(block)
     }
-    
+
     /// Validate a proposed block
     pub fn validate_block(&self, block: &Block) -> Result<bool> {
         // Check if proposer was the selected validator
         if self.current_validator.as_ref() != Some(&block.proposer) {
             return Ok(false);
         }
-        
+
         // Check if proposer has sufficient stake
         if let Some(validator) = self.validators.get(&block.proposer) {
             if validator.stake < self.min_stake || !validator.is_active {
@@ -2749,35 +2779,35 @@ impl ProofOfStakeConsensus {
         } else {
             return Ok(false);
         }
-        
+
         // Check block ordering
         if block.block_number != self.blockchain.len() as u64 {
             return Ok(false);
         }
-        
+
         // Check previous hash
         if let Some(last_block) = self.blockchain.last() {
             if block.previous_hash != last_block.block_hash {
                 return Ok(false);
             }
         }
-        
+
         // Validate stake proof
         if block.stake_proof.validator_id != block.proposer {
             return Ok(false);
         }
-        
+
         Ok(true)
     }
-    
+
     /// Add a new validator to the network
     pub fn add_validator(&mut self, node_id: String, stake: u64) -> Result<()> {
         if stake < self.min_stake {
             return Err(MetricsError::ComputationError(
-                "Insufficient stake".to_string()
+                "Insufficient stake".to_string(),
             ));
         }
-        
+
         let validator = ValidatorInfo {
             node_id: node_id.clone(),
             stake,
@@ -2786,69 +2816,76 @@ impl ProofOfStakeConsensus {
             slash_count: 0,
             reputation_score: 1.0,
         };
-        
+
         self.validators.insert(node_id, validator);
         self.total_stake += stake;
-        
+
         Ok(())
     }
-    
+
     /// Slash a validator for misbehavior
     pub fn slash_validator(&mut self, node_id: &str, slash_type: SlashingType) -> Result<()> {
         if let Some(validator) = self.validators.get_mut(node_id) {
             // Find appropriate slashing condition
-            if let Some(condition) = self.slashing_conditions.iter()
-                .find(|c| std::mem::discriminant(&c.condition_type) == std::mem::discriminant(&slash_type)) {
-                
+            if let Some(condition) = self.slashing_conditions.iter().find(|c| {
+                std::mem::discriminant(&c.condition_type) == std::mem::discriminant(&slash_type)
+            }) {
                 let penalty = (validator.stake as f64 * condition.penalty_percentage) as u64;
                 validator.stake = validator.stake.saturating_sub(penalty);
                 validator.slash_count += 1;
                 validator.reputation_score *= 0.5; // Reduce reputation
-                
+
                 // Remove from active validators if stake too low
                 if validator.stake < self.min_stake {
                     validator.is_active = false;
                 }
-                
+
                 self.total_stake = self.total_stake.saturating_sub(penalty);
-                
+
                 println!("Slashed validator {} with penalty {}", node_id, penalty);
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Process epoch transition
     pub fn process_epoch(&mut self) -> Result<()> {
         if self.last_epoch.elapsed() >= self.epoch_duration {
             self.current_epoch += 1;
             self.last_epoch = Instant::now();
-            
+
             // Select new validator for the epoch
             self.select_validator()?;
-            
+
             // Process any pending slashing
             self.process_slashing()?;
-            
+
             // Update randomness seed
-            self.randomness_seed = self.randomness_seed.wrapping_mul(1664525).wrapping_add(1013904223);
+            self.randomness_seed = self
+                .randomness_seed
+                .wrapping_mul(1664525)
+                .wrapping_add(1013904223);
         }
-        
+
         Ok(())
     }
-    
+
     /// Process pending slashing conditions
     fn process_slashing(&mut self) -> Result<()> {
-        let inactive_validators: Vec<String> = self.validators.iter()
-            .filter(|(_, v)| v.is_active && v.last_block_proposed.is_none() && self.current_epoch > 2)
+        let inactive_validators: Vec<String> = self
+            .validators
+            .iter()
+            .filter(|(_, v)| {
+                v.is_active && v.last_block_proposed.is_none() && self.current_epoch > 2
+            })
             .map(|(id, _)| id.clone())
             .collect();
-        
+
         for validator_id in inactive_validators {
             self.slash_validator(&validator_id, SlashingType::Inactivity)?;
         }
-        
+
         Ok(())
     }
 }
@@ -2862,18 +2899,18 @@ impl ConsensusManager for ProofOfStakeConsensus {
             data: Vec::new(), // Simplified
             timestamp: SystemTime::now(),
         };
-        
+
         self.pending_transactions.push_back(transaction);
-        
+
         // If we're the selected validator, propose a block
         if self.current_validator.as_ref() == Some(&self.node_id) {
             let transactions: Vec<_> = self.pending_transactions.drain(..).collect();
             self.propose_block(transactions)?;
         }
-        
+
         Ok(task.task_id)
     }
-    
+
     fn get_consensus_state(&self) -> ConsensusState {
         let mut node_states = HashMap::new();
         for (node_id, validator) in &self.validators {
@@ -2888,7 +2925,7 @@ impl ConsensusManager for ProofOfStakeConsensus {
             };
             node_states.insert(node_id.clone(), state);
         }
-        
+
         ConsensusState {
             current_leader: self.current_validator.clone(),
             current_term: self.current_epoch,
@@ -2897,28 +2934,28 @@ impl ConsensusManager for ProofOfStakeConsensus {
             quorum_size: (self.validators.len() * 2) / 3 + 1, // 2/3 majority
         }
     }
-    
+
     fn handle_node_failure(&mut self, node_id: &str) -> Result<()> {
         if let Some(validator) = self.validators.get_mut(node_id) {
             validator.is_active = false;
             self.total_stake = self.total_stake.saturating_sub(validator.stake);
         }
-        
+
         // If the failed node was the current validator, select a new one
         if self.current_validator.as_ref() == Some(&node_id.to_string()) {
             self.select_validator()?;
         }
-        
+
         Ok(())
     }
-    
+
     fn elect_leader(&mut self) -> Result<String> {
         self.select_validator()
     }
 }
 
 /// Simple majority consensus implementation
-/// 
+///
 /// Basic consensus algorithm where decisions are made by simple majority vote.
 /// Suitable for non-Byzantine environments with crash failures only.
 pub struct SimpleMajorityConsensus {
@@ -2999,7 +3036,7 @@ impl SimpleMajorityConsensus {
         for node in &node_list {
             node_states.insert(node.clone(), NodeHealthStatus::Healthy);
         }
-        
+
         Ok(Self {
             node_id,
             node_list,
@@ -3012,21 +3049,25 @@ impl SimpleMajorityConsensus {
             majority_threshold: 0.5, // Simple majority (>50%)
         })
     }
-    
+
     /// Create a new proposal
     pub fn create_proposal(&mut self, task: DistributedTask) -> Result<String> {
         // Check if there's already an active proposal
         if self.current_proposal.is_some() {
             return Err(MetricsError::ComputationError(
-                "Another proposal is already active".to_string()
+                "Another proposal is already active".to_string(),
             ));
         }
-        
-        let proposal_id = format!("proposal_{}_{}", 
-            self.node_id, 
-            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
+
+        let proposal_id = format!(
+            "proposal_{}_{}",
+            self.node_id,
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_millis()
         );
-        
+
         let proposal = ConsensusProposal {
             proposal_id: proposal_id.clone(),
             proposer: self.node_id.clone(),
@@ -3035,39 +3076,44 @@ impl SimpleMajorityConsensus {
             timestamp: SystemTime::now(),
             timeout: self.proposal_timeout,
         };
-        
+
         self.current_proposal = Some(proposal);
         self.votes.clear();
         self.last_proposal_time = Some(Instant::now());
-        
+
         // Vote for own proposal
         self.vote(&proposal_id, VoteDecision::Accept, None)?;
-        
+
         Ok(proposal_id)
     }
-    
+
     /// Submit a vote for the current proposal
-    pub fn vote(&mut self, proposal_id: &str, decision: VoteDecision, reason: Option<String>) -> Result<()> {
+    pub fn vote(
+        &mut self,
+        proposal_id: &str,
+        decision: VoteDecision,
+        reason: Option<String>,
+    ) -> Result<()> {
         // Check if the proposal exists and matches current proposal
         if let Some(ref current) = self.current_proposal {
             if current.proposal_id != proposal_id {
                 return Err(MetricsError::ComputationError(
-                    "Proposal ID does not match current proposal".to_string()
+                    "Proposal ID does not match current proposal".to_string(),
                 ));
             }
         } else {
             return Err(MetricsError::ComputationError(
-                "No active proposal to vote on".to_string()
+                "No active proposal to vote on".to_string(),
             ));
         }
-        
+
         // Check if this node hasn't already voted
         if self.votes.contains_key(&self.node_id) {
             return Err(MetricsError::ComputationError(
-                "Node has already voted on this proposal".to_string()
+                "Node has already voted on this proposal".to_string(),
             ));
         }
-        
+
         let vote = Vote {
             voter: self.node_id.clone(),
             proposal_id: proposal_id.to_string(),
@@ -3075,66 +3121,68 @@ impl SimpleMajorityConsensus {
             timestamp: SystemTime::now(),
             reason,
         };
-        
+
         self.votes.insert(self.node_id.clone(), vote);
-        
+
         // Check if consensus is reached
         self.check_consensus()?;
-        
+
         Ok(())
     }
-    
+
     /// Handle vote from another node
     pub fn handle_external_vote(&mut self, vote: Vote) -> Result<()> {
         // Validate vote
         if let Some(ref current) = self.current_proposal {
             if current.proposal_id != vote.proposal_id {
                 return Err(MetricsError::ComputationError(
-                    "Vote for unknown proposal".to_string()
+                    "Vote for unknown proposal".to_string(),
                 ));
             }
         } else {
             return Err(MetricsError::ComputationError(
-                "No active proposal for vote".to_string()
+                "No active proposal for vote".to_string(),
             ));
         }
-        
+
         // Check if voter is in the node list
         if !self.node_list.contains(&vote.voter) {
             return Err(MetricsError::ComputationError(
-                "Vote from unknown node".to_string()
+                "Vote from unknown node".to_string(),
             ));
         }
-        
+
         // Check if node is healthy
         if self.node_states.get(&vote.voter) != Some(&NodeHealthStatus::Healthy) {
             return Err(MetricsError::ComputationError(
-                "Vote from unhealthy node".to_string()
+                "Vote from unhealthy node".to_string(),
             ));
         }
-        
+
         self.votes.insert(vote.voter.clone(), vote);
-        
+
         // Check if consensus is reached
         self.check_consensus()?;
-        
+
         Ok(())
     }
-    
+
     /// Check if consensus has been reached
     fn check_consensus(&mut self) -> Result<()> {
-        let healthy_nodes: Vec<_> = self.node_list.iter()
+        let healthy_nodes: Vec<_> = self
+            .node_list
+            .iter()
             .filter(|node| self.node_states.get(*node) == Some(&NodeHealthStatus::Healthy))
             .collect();
-        
+
         let total_healthy = healthy_nodes.len();
         let votes_received = self.votes.len();
-        
+
         // Count votes
         let mut votes_for = 0;
         let mut votes_against = 0;
         let mut abstentions = 0;
-        
+
         for vote in self.votes.values() {
             match vote.decision {
                 VoteDecision::Accept => votes_for += 1,
@@ -3142,9 +3190,9 @@ impl SimpleMajorityConsensus {
                 VoteDecision::Abstain => abstentions += 1,
             }
         }
-        
+
         let required_votes = ((total_healthy as f64) * self.majority_threshold).ceil() as usize;
-        
+
         // Determine if consensus is reached
         let decision = if votes_for > required_votes {
             ConsensusResult::Accepted
@@ -3165,20 +3213,20 @@ impl SimpleMajorityConsensus {
                 return Ok(());
             }
         };
-        
+
         // Record decision
         self.finalize_consensus(decision, votes_for, votes_against, abstentions)?;
-        
+
         Ok(())
     }
-    
+
     /// Finalize consensus decision
     fn finalize_consensus(
-        &mut self, 
-        decision: ConsensusResult, 
-        votes_for: usize, 
-        votes_against: usize, 
-        abstentions: usize
+        &mut self,
+        decision: ConsensusResult,
+        votes_for: usize,
+        votes_against: usize,
+        abstentions: usize,
     ) -> Result<()> {
         if let Some(proposal) = self.current_proposal.take() {
             let consensus_decision = ConsensusDecision {
@@ -3190,53 +3238,61 @@ impl SimpleMajorityConsensus {
                 decided_at: SystemTime::now(),
                 execution_result: None, // Would be filled after task execution
             };
-            
+
             self.consensus_history.push_back(consensus_decision);
             self.votes.clear();
             self.last_proposal_time = None;
-            
+
             // Keep only last 100 decisions
             if self.consensus_history.len() > 100 {
                 self.consensus_history.pop_front();
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Update node health status
     pub fn update_node_health(&mut self, node_id: &str, status: NodeHealthStatus) {
         self.node_states.insert(node_id.to_string(), status);
     }
-    
+
     /// Get consensus statistics
     pub fn get_consensus_stats(&self) -> HashMap<String, f64> {
         let mut stats = HashMap::new();
-        
+
         if !self.consensus_history.is_empty() {
             let total_decisions = self.consensus_history.len() as f64;
-            let accepted = self.consensus_history.iter()
+            let accepted = self
+                .consensus_history
+                .iter()
                 .filter(|d| d.decision == ConsensusResult::Accepted)
                 .count() as f64;
-            let rejected = self.consensus_history.iter()
+            let rejected = self
+                .consensus_history
+                .iter()
                 .filter(|d| d.decision == ConsensusResult::Rejected)
                 .count() as f64;
-            let timeouts = self.consensus_history.iter()
+            let timeouts = self
+                .consensus_history
+                .iter()
                 .filter(|d| d.decision == ConsensusResult::Timeout)
                 .count() as f64;
-            
+
             stats.insert("acceptance_rate".to_string(), accepted / total_decisions);
             stats.insert("rejection_rate".to_string(), rejected / total_decisions);
             stats.insert("timeout_rate".to_string(), timeouts / total_decisions);
             stats.insert("total_decisions".to_string(), total_decisions);
         }
-        
-        stats.insert("active_nodes".to_string(), 
-            self.node_states.values()
+
+        stats.insert(
+            "active_nodes".to_string(),
+            self.node_states
+                .values()
                 .filter(|&status| status == &NodeHealthStatus::Healthy)
-                .count() as f64
+                .count() as f64,
         );
-        
+
         stats
     }
 }
@@ -3245,7 +3301,7 @@ impl ConsensusManager for SimpleMajorityConsensus {
     fn propose_task(&mut self, task: DistributedTask) -> Result<String> {
         self.create_proposal(task)
     }
-    
+
     fn get_consensus_state(&self) -> ConsensusState {
         let mut node_states = HashMap::new();
         for node in &self.node_list {
@@ -3260,55 +3316,56 @@ impl ConsensusManager for SimpleMajorityConsensus {
                     } else {
                         NodeState::Follower
                     }
-                },
+                }
                 Some(NodeHealthStatus::Degraded) => NodeState::Candidate,
                 _ => NodeState::Follower,
             };
             node_states.insert(node.clone(), state);
         }
-        
-        let current_leader = self.current_proposal.as_ref()
-            .map(|p| p.proposer.clone());
-        
+
+        let current_leader = self.current_proposal.as_ref().map(|p| p.proposer.clone());
+
         ConsensusState {
             current_leader,
             current_term: self.consensus_history.len() as u64,
-            committed_index: self.consensus_history.iter()
+            committed_index: self
+                .consensus_history
+                .iter()
                 .filter(|d| d.decision == ConsensusResult::Accepted)
                 .count(),
             node_states,
             quorum_size: ((self.node_list.len() as f64) * self.majority_threshold).ceil() as usize,
         }
     }
-    
+
     fn handle_node_failure(&mut self, node_id: &str) -> Result<()> {
         self.update_node_health(node_id, NodeHealthStatus::Failed);
-        
+
         // If the failed node was the proposer, abort current proposal
         if let Some(ref proposal) = self.current_proposal {
             if proposal.proposer == node_id {
-                self.finalize_consensus(
-                    ConsensusResult::Timeout, 0, 0, 0
-                )?;
+                self.finalize_consensus(ConsensusResult::Timeout, 0, 0, 0)?;
             }
         }
-        
+
         Ok(())
     }
-    
+
     fn elect_leader(&mut self) -> Result<String> {
         // In simple majority, any healthy node can be a leader (proposer)
-        let healthy_nodes: Vec<_> = self.node_list.iter()
+        let healthy_nodes: Vec<_> = self
+            .node_list
+            .iter()
             .filter(|node| self.node_states.get(*node) == Some(&NodeHealthStatus::Healthy))
             .cloned()
             .collect();
-        
+
         if healthy_nodes.is_empty() {
             return Err(MetricsError::ComputationError(
-                "No healthy nodes available".to_string()
+                "No healthy nodes available".to_string(),
             ));
         }
-        
+
         // Select first healthy node as leader
         Ok(healthy_nodes[0].clone())
     }
@@ -3318,7 +3375,7 @@ impl ShardManager {
     fn new(config: ShardingConfig) -> Self {
         let mut shard_map = HashMap::new();
         let mut shards = HashMap::new();
-        
+
         // Initialize shards based on configuration
         for shard_idx in 0..config.shard_count {
             let shard_id = format!("shard_{}", shard_idx);
@@ -3335,14 +3392,18 @@ impl ShardManager {
                 version: 1,
                 checksum: format!("{:x}", shard_idx),
             };
-            
+
             // Update shard mapping for hash ranges
-            if let DataRange::Hash { start_hash, end_hash } = &shard.data_range {
+            if let DataRange::Hash {
+                start_hash,
+                end_hash,
+            } = &shard.data_range
+            {
                 for hash_sample in (*start_hash..*end_hash).step_by(1000) {
                     shard_map.insert(hash_sample, shard_id.clone());
                 }
             }
-            
+
             shards.insert(shard_id, shard);
         }
 
@@ -3360,20 +3421,20 @@ impl ShardManager {
         // Find the closest hash in our shard map
         let mut best_match = None;
         let mut min_distance = u64::MAX;
-        
+
         for (&mapped_hash, shard_id) in &self.shard_map {
             let distance = if data_hash > mapped_hash {
                 data_hash - mapped_hash
             } else {
                 mapped_hash - data_hash
             };
-            
+
             if distance < min_distance {
                 min_distance = distance;
                 best_match = Some(shard_id);
             }
         }
-        
+
         best_match.and_then(|shard_id| self.shards.get(shard_id))
     }
 
@@ -3385,7 +3446,7 @@ impl ShardManager {
     /// Process pending migrations
     fn process_migrations(&mut self) -> Result<Vec<String>> {
         let mut completed_migrations = Vec::new();
-        
+
         while let Some(migration) = self.migration_queue.front() {
             if migration.progress >= 1.0 {
                 let completed = self.migration_queue.pop_front().unwrap();
@@ -3394,7 +3455,7 @@ impl ShardManager {
                 break; // Stop at first incomplete migration
             }
         }
-        
+
         Ok(completed_migrations)
     }
 }
@@ -3402,12 +3463,22 @@ impl ShardManager {
 impl FaultRecoveryManager {
     fn new(_config: FaultToleranceConfig) -> Self {
         let mut recovery_strategies = HashMap::new();
-        
+
         // Initialize default recovery strategies
-        recovery_strategies.insert("network_partition".to_string(), RecoveryStrategy::Graceful { timeout: Duration::from_secs(30) });
+        recovery_strategies.insert(
+            "network_partition".to_string(),
+            RecoveryStrategy::Graceful {
+                timeout: Duration::from_secs(30),
+            },
+        );
         recovery_strategies.insert("node_failure".to_string(), RecoveryStrategy::Immediate);
-        recovery_strategies.insert("data_corruption".to_string(), RecoveryStrategy::Custom { strategy_name: "data_restore".to_string() });
-        
+        recovery_strategies.insert(
+            "data_corruption".to_string(),
+            RecoveryStrategy::Custom {
+                strategy_name: "data_restore".to_string(),
+            },
+        );
+
         Self {
             failed_nodes: HashSet::new(),
             recovery_actions: VecDeque::new(),
@@ -3420,26 +3491,30 @@ impl FaultRecoveryManager {
     /// Detect and handle node failures
     fn detect_failures(&mut self, cluster_nodes: &[String]) -> Result<Vec<String>> {
         let mut newly_failed = Vec::new();
-        
+
         for node_id in cluster_nodes {
             if self.is_node_failed(node_id)? && !self.failed_nodes.contains(node_id) {
                 self.failed_nodes.insert(node_id.clone());
                 newly_failed.push(node_id.clone());
-                
+
                 // Schedule recovery action
                 let recovery_action = RecoveryAction {
-                    action_id: format!("recovery_{}_{}", node_id, Instant::now().elapsed().as_millis()),
+                    action_id: format!(
+                        "recovery_{}_{}",
+                        node_id,
+                        Instant::now().elapsed().as_millis()
+                    ),
                     action_type: RecoveryActionType::NodeFailover,
                     target_node: node_id.clone(),
                     scheduled_time: Instant::now(),
                     max_retries: 3,
                     current_retry: 0,
                 };
-                
+
                 self.recovery_actions.push_back(recovery_action);
             }
         }
-        
+
         Ok(newly_failed)
     }
 
@@ -3457,7 +3532,7 @@ impl FaultRecoveryManager {
     /// Execute recovery actions
     fn execute_recovery_actions(&mut self) -> Result<Vec<String>> {
         let mut completed_actions = Vec::new();
-        
+
         while let Some(mut action) = self.recovery_actions.pop_front() {
             match self.execute_single_recovery_action(&mut action) {
                 Ok(true) => {
@@ -3475,7 +3550,7 @@ impl FaultRecoveryManager {
                 }
             }
         }
-        
+
         Ok(completed_actions)
     }
 
@@ -3535,19 +3610,27 @@ impl AutoScalingManager {
     }
 
     /// Evaluate scaling needs based on current metrics
-    fn evaluate_scaling_needs(&mut self, cluster_metrics: &ClusterMetrics) -> Result<ScalingDecision> {
+    fn evaluate_scaling_needs(
+        &mut self,
+        cluster_metrics: &ClusterMetrics,
+    ) -> Result<ScalingDecision> {
         let current_load = self.calculate_current_load(cluster_metrics)?;
         let predicted_load = self.predict_future_load(cluster_metrics)?;
-        
+
         let scale_up_needed = current_load > 0.8 || predicted_load > 0.9;
-        let scale_down_needed = current_load < 0.3 && predicted_load < 0.4 && self.current_nodes > 1;
-        
-        if scale_up_needed && self.current_nodes < 10 { // Max nodes limit
+        let scale_down_needed =
+            current_load < 0.3 && predicted_load < 0.4 && self.current_nodes > 1;
+
+        if scale_up_needed && self.current_nodes < 10 {
+            // Max nodes limit
             let nodes_to_add = (self.current_nodes + 1).min(10) - self.current_nodes;
             Ok(ScalingDecision {
                 action: ScalingAction::ScaleUp(nodes_to_add),
                 target_nodes: (self.current_nodes + 1).min(10),
-                reason: format!("High load detected: current={:.2}, predicted={:.2}", current_load, predicted_load),
+                reason: format!(
+                    "High load detected: current={:.2}, predicted={:.2}",
+                    current_load, predicted_load
+                ),
                 confidence: 0.9,
             })
         } else if scale_down_needed {
@@ -3555,7 +3638,10 @@ impl AutoScalingManager {
             Ok(ScalingDecision {
                 action: ScalingAction::ScaleDown(nodes_to_remove),
                 target_nodes: self.current_nodes - 1,
-                reason: format!("Low load detected: current={:.2}, predicted={:.2}", current_load, predicted_load),
+                reason: format!(
+                    "Low load detected: current={:.2}, predicted={:.2}",
+                    current_load, predicted_load
+                ),
                 confidence: 0.8,
             })
         } else {
@@ -3592,7 +3678,8 @@ impl AutoScalingManager {
             return self.calculate_current_load(metrics);
         }
 
-        let recent_loads: Vec<f64> = self.scaling_history
+        let recent_loads: Vec<f64> = self
+            .scaling_history
             .iter()
             .rev()
             .take(5)
@@ -3618,11 +3705,17 @@ impl AutoScalingManager {
     fn execute_scaling(&mut self, decision: ScalingDecision) -> Result<()> {
         match decision.action {
             ScalingAction::ScaleUp(nodes_to_add) => {
-                println!("Scaling up from {} to {} nodes", self.current_nodes, decision.target_nodes);
+                println!(
+                    "Scaling up from {} to {} nodes",
+                    self.current_nodes, decision.target_nodes
+                );
                 self.schedule_scale_up_operation(nodes_to_add)?;
             }
             ScalingAction::ScaleDown(nodes_to_remove) => {
-                println!("Scaling down from {} to {} nodes", self.current_nodes, decision.target_nodes);
+                println!(
+                    "Scaling down from {} to {} nodes",
+                    self.current_nodes, decision.target_nodes
+                );
                 self.schedule_scale_down_operation(nodes_to_remove)?;
             }
             ScalingAction::NoAction => {
@@ -3661,7 +3754,11 @@ impl AutoScalingManager {
     fn schedule_scale_up_operation(&mut self, nodes_to_add: usize) -> Result<()> {
         for i in 0..nodes_to_add {
             let operation = ScalingOperation {
-                operation_id: format!("scale_up_{}_{}", self.current_nodes + i, Instant::now().elapsed().as_millis()),
+                operation_id: format!(
+                    "scale_up_{}_{}",
+                    self.current_nodes + i,
+                    Instant::now().elapsed().as_millis()
+                ),
                 operation_type: ScalingOperationType::AddNode,
                 target_node: format!("node_{}", self.current_nodes + i),
                 scheduled_time: SystemTime::now(),
@@ -3678,7 +3775,11 @@ impl AutoScalingManager {
         for i in 0..nodes_to_remove {
             let node_to_remove = self.current_nodes - 1 - i;
             let operation = ScalingOperation {
-                operation_id: format!("scale_down_{}_{}", node_to_remove, Instant::now().elapsed().as_millis()),
+                operation_id: format!(
+                    "scale_down_{}_{}",
+                    node_to_remove,
+                    Instant::now().elapsed().as_millis()
+                ),
                 operation_type: ScalingOperationType::RemoveNode,
                 target_node: format!("node_{}", node_to_remove),
                 scheduled_time: SystemTime::now(),
@@ -3693,7 +3794,7 @@ impl AutoScalingManager {
     /// Process pending scaling operations
     fn process_scaling_operations(&mut self) -> Result<Vec<String>> {
         let mut completed_operations = Vec::new();
-        
+
         while let Some(mut operation) = self.pending_operations.pop_front() {
             match self.execute_scaling_operation(&mut operation) {
                 Ok(true) => {
@@ -3718,7 +3819,7 @@ impl AutoScalingManager {
                 }
             }
         }
-        
+
         Ok(completed_operations)
     }
 
@@ -3997,7 +4098,6 @@ pub enum ComputeSpecialization {
     IoIntensive,
 }
 
-
 /// Scheduled job with metadata
 #[derive(Debug, Clone)]
 pub struct ScheduledJob {
@@ -4163,45 +4263,42 @@ impl DistributedClusterOrchestrator {
     pub fn join_node(&mut self, node: ClusterNode) -> Result<()> {
         // Authenticate the node
         self.security_manager.authenticate_node(&node)?;
-        
+
         // Update cluster state
         self.state_manager.add_node(&node)?;
-        
+
         // Register with service mesh
         self.service_mesh.register_node(&node)?;
-        
+
         // Add to local node list
         self.nodes.push(node);
-        
+
         Ok(())
     }
 
     /// Schedule and execute a distributed metrics computation job
-    pub async fn execute_distributed_job<F>(
-        &mut self,
-        job: ScheduledJob,
-    ) -> Result<JobResult>
+    pub async fn execute_distributed_job<F>(&mut self, job: ScheduledJob) -> Result<JobResult>
     where
         F: Float + Send + Sync + 'static,
     {
         // Validate job
         self.validate_job(&job)?;
-        
+
         // Find optimal nodes for execution
         let selected_nodes = self.scheduler.select_nodes(&job, &self.nodes)?;
-        
+
         // Prepare data distribution
         let data_distribution = self.prepare_data_distribution(&job, &selected_nodes)?;
-        
+
         // Execute job across selected nodes
         let execution_tasks = self.create_execution_tasks(job, data_distribution).await?;
-        
+
         // Monitor execution
         let results = self.monitor_and_collect_results(execution_tasks).await?;
-        
+
         // Aggregate results
         let final_result = self.aggregate_results(results)?;
-        
+
         Ok(final_result)
     }
 
@@ -4209,7 +4306,7 @@ impl DistributedClusterOrchestrator {
     pub fn auto_scale_cluster(&mut self) -> Result<ScalingDecision> {
         let cluster_metrics = self.collect_cluster_metrics();
         let scaling_decision = self.autoscaler.make_scaling_decision(&cluster_metrics)?;
-        
+
         match scaling_decision.action {
             ScalingAction::ScaleUp(count) => {
                 self.provision_new_nodes(count)?;
@@ -4221,7 +4318,7 @@ impl DistributedClusterOrchestrator {
                 // No action needed
             }
         }
-        
+
         Ok(scaling_decision)
     }
 
@@ -4229,7 +4326,7 @@ impl DistributedClusterOrchestrator {
     pub fn health_check_cluster(&mut self) -> Result<ClusterHealthReport> {
         let mut node_health = Vec::new();
         let mut unhealthy_nodes = Vec::new();
-        
+
         for node in &mut self.nodes {
             let health = self.check_node_health(node)?;
             if health.status != HealthStatus::Healthy {
@@ -4237,18 +4334,18 @@ impl DistributedClusterOrchestrator {
             }
             node_health.push((node.node_id.clone(), health));
         }
-        
+
         // Check service mesh health
         let mesh_health = self.service_mesh.health_check()?;
-        
+
         // Check replication health
         let replication_health = self.replication_manager.health_check()?;
-        
+
         Ok(ClusterHealthReport {
-            overall_status: if unhealthy_nodes.is_empty() { 
-                HealthStatus::Healthy 
-            } else { 
-                HealthStatus::Degraded 
+            overall_status: if unhealthy_nodes.is_empty() {
+                HealthStatus::Healthy
+            } else {
+                HealthStatus::Degraded
             },
             node_health,
             unhealthy_nodes,
@@ -4261,22 +4358,30 @@ impl DistributedClusterOrchestrator {
     }
 
     // Helper methods
-    
+
     fn validate_job(&self, job: &ScheduledJob) -> Result<()> {
         // Validate job constraints and requirements
         if job.job_id.is_empty() {
-            return Err(MetricsError::InvalidInput("Job ID cannot be empty".to_string()));
+            return Err(MetricsError::InvalidInput(
+                "Job ID cannot be empty".to_string(),
+            ));
         }
-        
+
         // Check resource requirements are reasonable
         if job.resource_requirements.cpu_cores <= 0.0 {
-            return Err(MetricsError::InvalidInput("CPU requirements must be positive".to_string()));
+            return Err(MetricsError::InvalidInput(
+                "CPU requirements must be positive".to_string(),
+            ));
         }
-        
+
         Ok(())
     }
 
-    fn prepare_data_distribution(&self, job: &ScheduledJob, nodes: &[&ClusterNode]) -> Result<DataDistribution> {
+    fn prepare_data_distribution(
+        &self,
+        job: &ScheduledJob,
+        nodes: &[&ClusterNode],
+    ) -> Result<DataDistribution> {
         // Implement data distribution strategy based on job requirements and node capabilities
         let strategy = match job.job_type {
             JobType::Classification | JobType::Regression => DataDistributionStrategy::ByBatch,
@@ -4284,31 +4389,39 @@ impl DistributedClusterOrchestrator {
             JobType::CrossValidation => DataDistributionStrategy::ByFold,
             _ => DataDistributionStrategy::ByBatch,
         };
-        
+
         Ok(DataDistribution {
             strategy,
             partitions: self.create_data_partitions(job, nodes)?,
         })
     }
 
-    fn create_data_partitions(&self, job: &ScheduledJob, nodes: &[&ClusterNode]) -> Result<Vec<DataPartition>> {
+    fn create_data_partitions(
+        &self,
+        job: &ScheduledJob,
+        nodes: &[&ClusterNode],
+    ) -> Result<Vec<DataPartition>> {
         let mut partitions = Vec::new();
-        
+
         for (idx, node) in nodes.iter().enumerate() {
             partitions.push(DataPartition {
                 partition_id: format!("partition_{}_{}", job.job_id, idx),
                 node_id: node.node_id.clone(),
                 data_range: (idx * 100, (idx + 1) * 100), // Simplified partitioning
-                estimated_size: 1024 * 1024, // 1MB per partition
+                estimated_size: 1024 * 1024,              // 1MB per partition
             });
         }
-        
+
         Ok(partitions)
     }
 
-    async fn create_execution_tasks(&self, job: ScheduledJob, distribution: DataDistribution) -> Result<Vec<ExecutionTask>> {
+    async fn create_execution_tasks(
+        &self,
+        job: ScheduledJob,
+        distribution: DataDistribution,
+    ) -> Result<Vec<ExecutionTask>> {
         let mut tasks = Vec::new();
-        
+
         for partition in distribution.partitions {
             let task = ExecutionTask {
                 task_id: format!("task_{}_{}", job.job_id, partition.partition_id),
@@ -4321,13 +4434,16 @@ impl DistributedClusterOrchestrator {
             };
             tasks.push(task);
         }
-        
+
         Ok(tasks)
     }
 
-    async fn monitor_and_collect_results(&self, tasks: Vec<ExecutionTask>) -> Result<Vec<TaskExecutionResult>> {
+    async fn monitor_and_collect_results(
+        &self,
+        tasks: Vec<ExecutionTask>,
+    ) -> Result<Vec<TaskExecutionResult>> {
         let mut results = Vec::new();
-        
+
         // Simulate task execution and result collection
         for task in tasks {
             let result = TaskExecutionResult {
@@ -4339,27 +4455,31 @@ impl DistributedClusterOrchestrator {
             };
             results.push(result);
         }
-        
+
         Ok(results)
     }
 
     fn aggregate_results(&self, results: Vec<TaskExecutionResult>) -> Result<JobResult> {
         // Aggregate task results into final job result
-        let successful_tasks = results.iter().filter(|r| r.status == TaskStatus::Completed).count();
+        let successful_tasks = results
+            .iter()
+            .filter(|r| r.status == TaskStatus::Completed)
+            .count();
         let total_execution_time = results.iter().map(|r| r.execution_time).sum();
-        
+
         Ok(JobResult {
             job_id: "aggregated".to_string(),
-            status: if successful_tasks == results.len() { 
-                JobStatus::Completed 
-            } else { 
-                JobStatus::PartiallyCompleted 
+            status: if successful_tasks == results.len() {
+                JobStatus::Completed
+            } else {
+                JobStatus::PartiallyCompleted
             },
             result_data: vec![], // Aggregated data would go here
             total_execution_time,
             task_count: results.len(),
             successful_tasks,
-            error_messages: results.iter()
+            error_messages: results
+                .iter()
                 .filter_map(|r| r.error_message.as_ref())
                 .cloned()
                 .collect(),
@@ -4369,9 +4489,23 @@ impl DistributedClusterOrchestrator {
     fn collect_cluster_metrics(&self) -> ClusterMetrics {
         ClusterMetrics {
             total_nodes: self.nodes.len(),
-            healthy_nodes: self.nodes.iter().filter(|n| n.health.status == HealthStatus::Healthy).count(),
-            average_cpu_utilization: self.nodes.iter().map(|n| n.workload.cpu_utilization).sum::<f64>() / self.nodes.len() as f64,
-            average_memory_utilization: self.nodes.iter().map(|n| n.workload.memory_utilization).sum::<f64>() / self.nodes.len() as f64,
+            healthy_nodes: self
+                .nodes
+                .iter()
+                .filter(|n| n.health.status == HealthStatus::Healthy)
+                .count(),
+            average_cpu_utilization: self
+                .nodes
+                .iter()
+                .map(|n| n.workload.cpu_utilization)
+                .sum::<f64>()
+                / self.nodes.len() as f64,
+            average_memory_utilization: self
+                .nodes
+                .iter()
+                .map(|n| n.workload.memory_utilization)
+                .sum::<f64>()
+                / self.nodes.len() as f64,
             total_active_jobs: self.nodes.iter().map(|n| n.workload.active_jobs).sum(),
             timestamp: SystemTime::now(),
         }
@@ -4546,7 +4680,11 @@ impl AdvancedWorkScheduler {
         }
     }
 
-    fn select_nodes(&self, job: &ScheduledJob, available_nodes: &[ClusterNode]) -> Result<Vec<&ClusterNode>> {
+    fn select_nodes(
+        &self,
+        job: &ScheduledJob,
+        available_nodes: &[ClusterNode],
+    ) -> Result<Vec<&ClusterNode>> {
         // Simplified node selection based on resource requirements
         let suitable_nodes: Vec<&ClusterNode> = available_nodes
             .iter()
@@ -4556,11 +4694,13 @@ impl AdvancedWorkScheduler {
             })
             .take(3) // Select up to 3 nodes
             .collect();
-            
+
         if suitable_nodes.is_empty() {
-            return Err(MetricsError::ComputationError("No suitable nodes found".to_string()));
+            return Err(MetricsError::ComputationError(
+                "No suitable nodes found".to_string(),
+            ));
         }
-        
+
         Ok(suitable_nodes)
     }
 
@@ -4599,7 +4739,8 @@ impl ServiceMesh {
 
     fn register_node(&mut self, node: &ClusterNode) -> Result<()> {
         // Register node with service discovery
-        self.service_discovery.register(&node.node_id, &node.address)?;
+        self.service_discovery
+            .register(&node.node_id, &node.address)?;
         Ok(())
     }
 
@@ -4642,7 +4783,9 @@ impl SecurityManager {
         if node.security_context.access_token.is_some() {
             Ok(())
         } else {
-            Err(MetricsError::ComputationError("Node authentication failed".to_string()))
+            Err(MetricsError::ComputationError(
+                "Node authentication failed".to_string(),
+            ))
         }
     }
 }
@@ -4652,10 +4795,23 @@ impl SecurityManager {
 impl Default for NodeCapabilities {
     fn default() -> Self {
         Self {
-            cpu: CpuInfo { cores: 4.0, frequency_ghz: 3.0 },
-            memory: MemoryInfo { total_gb: 16.0, available_gb: 12.0 },
-            storage: StorageInfo { total_gb: 1000.0, available_gb: 800.0, is_ssd: true },
-            network: NetworkInfo { bandwidth_gbps: 10.0, latency_ms: 1.0 },
+            cpu: CpuInfo {
+                cores: 4.0,
+                frequency_ghz: 3.0,
+            },
+            memory: MemoryInfo {
+                total_gb: 16.0,
+                available_gb: 12.0,
+            },
+            storage: StorageInfo {
+                total_gb: 1000.0,
+                available_gb: 800.0,
+                is_ssd: true,
+            },
+            network: NetworkInfo {
+                bandwidth_gbps: 10.0,
+                latency_ms: 1.0,
+            },
             gpu: None,
             specialized_hardware: Vec::new(),
         }
@@ -4717,7 +4873,9 @@ struct ResourceTracker {
 }
 
 impl ResourceTracker {
-    fn new() -> Self { Self {} }
+    fn new() -> Self {
+        Self {}
+    }
 }
 
 #[derive(Debug)]
@@ -4726,7 +4884,9 @@ struct PerformancePredictor {
 }
 
 impl PerformancePredictor {
-    fn new() -> Self { Self {} }
+    fn new() -> Self {
+        Self {}
+    }
 }
 
 #[derive(Debug)]
@@ -4735,7 +4895,9 @@ struct JobDependencyGraph {
 }
 
 impl JobDependencyGraph {
-    fn new() -> Self { Self {} }
+    fn new() -> Self {
+        Self {}
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -4757,20 +4919,28 @@ enum ConflictResolution {
 #[derive(Debug)]
 struct BackupScheduler {}
 impl BackupScheduler {
-    fn new() -> Self { Self {} }
+    fn new() -> Self {
+        Self {}
+    }
 }
 
 #[derive(Debug)]
 struct ServiceDiscovery {}
 impl ServiceDiscovery {
-    fn new() -> Self { Self {} }
-    fn register(&mut self, _id: &str, _addr: &SocketAddr) -> Result<()> { Ok(()) }
+    fn new() -> Self {
+        Self {}
+    }
+    fn register(&mut self, _id: &str, _addr: &SocketAddr) -> Result<()> {
+        Ok(())
+    }
 }
 
 #[derive(Debug)]
 struct MeshLoadBalancer {}
 impl MeshLoadBalancer {
-    fn new() -> Self { Self {} }
+    fn new() -> Self {
+        Self {}
+    }
 }
 
 #[derive(Debug)]
@@ -4779,13 +4949,17 @@ struct RateLimiter {}
 #[derive(Debug)]
 struct DistributedTracer {}
 impl DistributedTracer {
-    fn new() -> Self { Self {} }
+    fn new() -> Self {
+        Self {}
+    }
 }
 
 #[derive(Debug, Clone)]
 struct GlobalConfig {}
 impl Default for GlobalConfig {
-    fn default() -> Self { Self {} }
+    fn default() -> Self {
+        Self {}
+    }
 }
 
 #[derive(Debug)]
@@ -4793,19 +4967,25 @@ struct ClusterMetadata {
     nodes: Vec<String>,
 }
 impl ClusterMetadata {
-    fn new() -> Self { Self { nodes: Vec::new() } }
+    fn new() -> Self {
+        Self { nodes: Vec::new() }
+    }
 }
 
 #[derive(Debug)]
 struct StateSynchronizer {}
 impl StateSynchronizer {
-    fn new() -> Self { Self {} }
+    fn new() -> Self {
+        Self {}
+    }
 }
 
 #[derive(Debug)]
 struct AuthenticationProvider {}
 impl AuthenticationProvider {
-    fn new() -> Self { Self {} }
+    fn new() -> Self {
+        Self {}
+    }
 }
 
 #[derive(Debug)]
@@ -4814,19 +4994,25 @@ struct AuthorizationPolicy {}
 #[derive(Debug)]
 struct CertificateManager {}
 impl CertificateManager {
-    fn new() -> Self { Self {} }
+    fn new() -> Self {
+        Self {}
+    }
 }
 
 #[derive(Debug)]
 struct AuditLogger {}
 impl AuditLogger {
-    fn new() -> Self { Self {} }
+    fn new() -> Self {
+        Self {}
+    }
 }
 
 #[derive(Debug, Clone)]
 struct SecurityPolicies {}
 impl Default for SecurityPolicies {
-    fn default() -> Self { Self {} }
+    fn default() -> Self {
+        Self {}
+    }
 }
 
 #[derive(Debug, Clone)]

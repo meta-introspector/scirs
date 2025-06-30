@@ -17,11 +17,11 @@ use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "wasm")]
 use crate::{
-    forecasting::neural::NeuralForecaster,
-    arima_models::{ARIMAModel, ARIMAConfig},
     anomaly::AnomalyDetector,
+    arima_models::{ARIMAConfig, ARIMAModel},
     decomposition::STLDecomposition,
     error::Result,
+    forecasting::neural::NeuralForecaster,
     utils::*,
 };
 
@@ -78,7 +78,7 @@ impl TimeSeriesData {
         if values.len() != timestamps.len() {
             return Err(js_error!("Values and timestamps must have the same length"));
         }
-        
+
         Ok(TimeSeriesData {
             values: values.to_vec(),
             timestamps: Some(timestamps.to_vec()),
@@ -152,13 +152,21 @@ impl WasmARIMA {
     /// Create SARIMA model with seasonal components
     #[wasm_bindgen]
     pub fn sarima(
-        p: usize, d: usize, q: usize,
-        seasonal_p: usize, seasonal_d: usize, seasonal_q: usize,
-        seasonal_period: usize
+        p: usize,
+        d: usize,
+        q: usize,
+        seasonal_p: usize,
+        seasonal_d: usize,
+        seasonal_q: usize,
+        seasonal_period: usize,
     ) -> WasmARIMA {
         let config = ARIMAConfig {
-            p, d, q,
-            seasonal_p, seasonal_d, seasonal_q,
+            p,
+            d,
+            q,
+            seasonal_p,
+            seasonal_d,
+            seasonal_q,
             seasonal_period,
             trend: Some("c".to_string()),
             enforce_stationarity: true,
@@ -231,7 +239,11 @@ impl WasmAnomalyDetector {
 
     /// Detect anomalies using IQR method
     #[wasm_bindgen]
-    pub fn detect_iqr(&self, data: &TimeSeriesData, multiplier: f64) -> Result<Vec<usize>, JsValue> {
+    pub fn detect_iqr(
+        &self,
+        data: &TimeSeriesData,
+        multiplier: f64,
+    ) -> Result<Vec<usize>, JsValue> {
         let arr = Array1::from_vec(data.values.clone());
         let anomalies = js_result!(self.detector.detect_iqr(&arr, multiplier))?;
         Ok(anomalies)
@@ -239,7 +251,11 @@ impl WasmAnomalyDetector {
 
     /// Detect anomalies using Z-score method
     #[wasm_bindgen]
-    pub fn detect_zscore(&self, data: &TimeSeriesData, threshold: f64) -> Result<Vec<usize>, JsValue> {
+    pub fn detect_zscore(
+        &self,
+        data: &TimeSeriesData,
+        threshold: f64,
+    ) -> Result<Vec<usize>, JsValue> {
         let arr = Array1::from_vec(data.values.clone());
         let anomalies = js_result!(self.detector.detect_zscore(&arr, threshold))?;
         Ok(anomalies)
@@ -247,7 +263,11 @@ impl WasmAnomalyDetector {
 
     /// Detect anomalies using isolation forest
     #[wasm_bindgen]
-    pub fn detect_isolation_forest(&self, data: &TimeSeriesData, contamination: f64) -> Result<Vec<usize>, JsValue> {
+    pub fn detect_isolation_forest(
+        &self,
+        data: &TimeSeriesData,
+        contamination: f64,
+    ) -> Result<Vec<usize>, JsValue> {
         let arr = Array1::from_vec(data.values.clone());
         let anomalies = js_result!(self.detector.detect_isolation_forest(&arr, contamination))?;
         Ok(anomalies)
@@ -285,13 +305,13 @@ impl WasmSTLDecomposition {
     pub fn decompose(&self, data: &TimeSeriesData) -> Result<JsValue, JsValue> {
         let arr = Array1::from_vec(data.values.clone());
         let result = js_result!(self.decomposition.decompose(&arr))?;
-        
+
         let decomp_result = DecompositionResult {
             trend: result.trend.to_vec(),
             seasonal: result.seasonal.to_vec(),
             residual: result.residual.to_vec(),
         };
-        
+
         Ok(serde_wasm_bindgen::to_value(&decomp_result)?)
     }
 }
@@ -316,7 +336,12 @@ impl WasmNeuralForecaster {
 
     /// Train the neural forecaster
     #[wasm_bindgen]
-    pub fn train(&mut self, data: &TimeSeriesData, epochs: usize, learning_rate: f64) -> Result<(), JsValue> {
+    pub fn train(
+        &mut self,
+        data: &TimeSeriesData,
+        epochs: usize,
+        learning_rate: f64,
+    ) -> Result<(), JsValue> {
         if let Some(forecaster) = &mut self.forecaster {
             let arr = Array1::from_vec(data.values.clone());
             js_result!(forecaster.train(&arr, epochs, learning_rate))?;
@@ -420,27 +445,19 @@ impl WasmAutoARIMA {
         max_seasonal_p: Option<usize>,
         max_seasonal_d: Option<usize>,
         max_seasonal_q: Option<usize>,
-        seasonal_period: Option<usize>
+        seasonal_period: Option<usize>,
     ) -> Result<WasmARIMA, JsValue> {
         let arr = Array1::from_vec(data.values.clone());
-        
+
         let max_sp = max_seasonal_p.unwrap_or(0);
         let max_sd = max_seasonal_d.unwrap_or(0);
         let max_sq = max_seasonal_q.unwrap_or(0);
         let s_period = seasonal_period.unwrap_or(0);
-        
+
         let best_config = js_result!(crate::arima_models::auto_arima(
-            &arr,
-            max_p,
-            max_d,
-            max_q,
-            seasonal,
-            max_sp,
-            max_sd,
-            max_sq,
-            s_period
+            &arr, max_p, max_d, max_q, seasonal, max_sp, max_sd, max_sq, s_period
         ))?;
-        
+
         Ok(WasmARIMA {
             model: None,
             config: best_config,
@@ -475,6 +492,10 @@ pub fn create_stl_decomposition(period: usize) -> WasmSTLDecomposition {
 
 #[cfg(feature = "wasm")]
 #[wasm_bindgen]
-pub fn create_neural_forecaster(input_size: usize, hidden_size: usize, output_size: usize) -> WasmNeuralForecaster {
+pub fn create_neural_forecaster(
+    input_size: usize,
+    hidden_size: usize,
+    output_size: usize,
+) -> WasmNeuralForecaster {
     WasmNeuralForecaster::new(input_size, hidden_size, output_size)
 }

@@ -3,15 +3,15 @@
 //! This module implements learned optimizers that use neural networks (particularly LSTMs)
 //! to learn optimization strategies, enabling meta-learning for automated optimizer design.
 
-use ndarray::{Array, Array1, Array2, ArrayBase, Data, Dimension, s};
+use ndarray::{s, Array, Array1, Array2, ArrayBase, Data, Dimension};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 
+pub mod adaptive_nas_system;
 pub mod lstm_optimizer;
 pub mod meta_learning;
 pub mod neural_architecture_search;
 pub mod transformer_optimizer;
-pub mod adaptive_nas_system;
 // TODO: Re-enable these modules after fixing remaining compilation issues
 // pub mod adaptive_transformer_enhancement;
 // pub mod few_shot_learning_enhancement;

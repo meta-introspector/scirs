@@ -4,10 +4,9 @@
 //! performance optimizations using SIMD acceleration and parallel processing.
 
 use scirs2_sparse::{
-    enhanced_add, enhanced_diagonal, enhanced_scale,
-    convolution_operator, finite_difference_operator, 
-    EnhancedDiagonalOperator, EnhancedOperatorOptions,
-    ConvolutionMode, BoundaryCondition, LinearOperator
+    convolution_operator, enhanced_add, enhanced_diagonal, enhanced_scale,
+    finite_difference_operator, BoundaryCondition, ConvolutionMode, EnhancedDiagonalOperator,
+    EnhancedOperatorOptions, LinearOperator,
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

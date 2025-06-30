@@ -88,7 +88,7 @@ pub struct UnifiedOptimizer<M: MPIInterface> {
     acceleration_manager: Option<AccelerationManager>,
     visualizer: Option<OptimizationVisualizer>,
     trajectory_tracker: Option<TrajectoryTracker>,
-    
+
     // Internal state for convergence checking
     previous_function_value: Option<f64>,
 }
@@ -293,8 +293,9 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
                 };
 
                 // Check both absolute and relative improvements
-                if abs_improvement < self.config.function_tolerance ||
-                   rel_improvement < self.config.function_tolerance {
+                if abs_improvement < self.config.function_tolerance
+                    || rel_improvement < self.config.function_tolerance
+                {
                     break;
                 }
             }

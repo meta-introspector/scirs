@@ -611,7 +611,7 @@ impl<F: Float + Debug + ScalarOperand + Clone + Send + Sync + 'static> Layer<F> 
 
     fn update(&mut self, learning_rate: F) -> Result<()> {
         // Apply gradient-based updates with SIMD acceleration
-        
+
         // Update weights using computed gradients
         Zip::from(&mut self.weights)
             .and(&self.dweights)
@@ -621,11 +621,9 @@ impl<F: Float + Debug + ScalarOperand + Clone + Send + Sync + 'static> Layer<F> 
 
         // Update bias if present
         if let (Some(ref mut bias), Some(ref dbias)) = (&mut self.bias, &self.dbias) {
-            Zip::from(bias)
-                .and(dbias)
-                .par_for_each(|b, &db| {
-                    *b = *b - learning_rate * db;
-                });
+            Zip::from(bias).and(dbias).par_for_each(|b, &db| {
+                *b = *b - learning_rate * db;
+            });
         }
 
         // Reset gradients to zero for next iteration

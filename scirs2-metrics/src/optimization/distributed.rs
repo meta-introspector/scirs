@@ -2464,7 +2464,7 @@ impl HttpClient {
         // Real HTTP networking implementation
         let response = if is_secure {
             return Err(MetricsError::ComputationError(
-                "HTTPS not yet implemented - use HTTP for now".to_string()
+                "HTTPS not yet implemented - use HTTP for now".to_string(),
             ));
         } else {
             self.send_real_http_request(host, port, path, method, body)?
@@ -2496,13 +2496,16 @@ impl HttpClient {
                 MetricsError::ComputationError(format!("Invalid address: {}", address))
             })?,
             self.timeout,
-        ).map_err(|e| MetricsError::ComputationError(format!("Connection failed: {}", e)))?;
+        )
+        .map_err(|e| MetricsError::ComputationError(format!("Connection failed: {}", e)))?;
 
         // Set timeouts
-        stream.set_read_timeout(Some(self.timeout))
-            .map_err(|e| MetricsError::ComputationError(format!("Failed to set read timeout: {}", e)))?;
-        stream.set_write_timeout(Some(self.timeout))
-            .map_err(|e| MetricsError::ComputationError(format!("Failed to set write timeout: {}", e)))?;
+        stream.set_read_timeout(Some(self.timeout)).map_err(|e| {
+            MetricsError::ComputationError(format!("Failed to set read timeout: {}", e))
+        })?;
+        stream.set_write_timeout(Some(self.timeout)).map_err(|e| {
+            MetricsError::ComputationError(format!("Failed to set write timeout: {}", e))
+        })?;
 
         // Build complete HTTP request
         let mut request = format!(
@@ -2544,17 +2547,19 @@ impl HttpClient {
         request.push_str(body);
 
         // Send request
-        stream.write_all(request.as_bytes())
-            .map_err(|e| MetricsError::ComputationError(format!("Failed to send request: {}", e)))?;
+        stream.write_all(request.as_bytes()).map_err(|e| {
+            MetricsError::ComputationError(format!("Failed to send request: {}", e))
+        })?;
 
         // Read response
         let mut reader = BufReader::new(&mut stream);
-        
+
         // Read status line
         let mut status_line = String::new();
-        reader.read_line(&mut status_line)
-            .map_err(|e| MetricsError::ComputationError(format!("Failed to read status line: {}", e)))?;
-        
+        reader.read_line(&mut status_line).map_err(|e| {
+            MetricsError::ComputationError(format!("Failed to read status line: {}", e))
+        })?;
+
         // Parse status code
         let status_code = if let Some(parts) = status_line.split_whitespace().nth(1) {
             parts.parse::<u16>().unwrap_or(500)
@@ -2565,13 +2570,14 @@ impl HttpClient {
         // Read headers
         let mut headers = HashMap::new();
         let mut content_length = 0;
-        
+
         loop {
             let mut line = String::new();
-            reader.read_line(&mut line)
-                .map_err(|e| MetricsError::ComputationError(format!("Failed to read header line: {}", e)))?;
+            reader.read_line(&mut line).map_err(|e| {
+                MetricsError::ComputationError(format!("Failed to read header line: {}", e))
+            })?;
             let line = line.trim();
-            
+
             if line.is_empty() {
                 break; // End of headers
             }
@@ -2579,11 +2585,11 @@ impl HttpClient {
             if let Some(colon_pos) = line.find(':') {
                 let key = line[..colon_pos].trim().to_lowercase();
                 let value = line[colon_pos + 1..].trim();
-                
+
                 if key == "content-length" {
                     content_length = value.parse().unwrap_or(0);
                 }
-                
+
                 headers.insert(key, value.to_string());
             }
         }
@@ -2592,41 +2598,48 @@ impl HttpClient {
         let mut response_body = String::new();
         if content_length > 0 {
             let mut buffer = vec![0; content_length];
-            reader.read_exact(&mut buffer)
-                .map_err(|e| MetricsError::ComputationError(format!("Failed to read response body: {}", e)))?;
+            reader.read_exact(&mut buffer).map_err(|e| {
+                MetricsError::ComputationError(format!("Failed to read response body: {}", e))
+            })?;
             response_body = String::from_utf8_lossy(&buffer).to_string();
         } else {
             // Read until connection closes if no content-length
-            reader.read_to_string(&mut response_body)
-                .map_err(|e| MetricsError::ComputationError(format!("Failed to read response body: {}", e)))?;
+            reader.read_to_string(&mut response_body).map_err(|e| {
+                MetricsError::ComputationError(format!("Failed to read response body: {}", e))
+            })?;
         }
 
         // Check for HTTP errors
         if status_code >= 400 {
-            return Err(MetricsError::ComputationError(
-                format!("HTTP {} error: {}", status_code, response_body)
-            ));
+            return Err(MetricsError::ComputationError(format!(
+                "HTTP {} error: {}",
+                status_code, response_body
+            )));
         }
 
         Ok(response_body)
     }
 
-
     /// Parse HTTP response into DistributedMessage
-    fn parse_http_response(response_body: &str, original_message: &DistributedMessage) -> Result<DistributedMessage> {
+    fn parse_http_response(
+        response_body: &str,
+        original_message: &DistributedMessage,
+    ) -> Result<DistributedMessage> {
         // Simple JSON parsing (in production, use serde_json)
         match original_message {
-            DistributedMessage::ComputeMetrics { task_id, chunk_id, .. } => {
+            DistributedMessage::ComputeMetrics {
+                task_id, chunk_id, ..
+            } => {
                 let mut results = HashMap::new();
-                
+
                 // Parse the results section from JSON
                 if let Some(results_start) = response_body.find("\"results\"") {
                     if let Some(brace_start) = response_body[results_start..].find('{') {
-                        if let Some(brace_end) = response_body[results_start + brace_start..].find('}') {
-                            let results_json = &response_body[
-                                results_start + brace_start + 1..
-                                results_start + brace_start + brace_end
-                            ];
+                        if let Some(brace_end) =
+                            response_body[results_start + brace_start..].find('}')
+                        {
+                            let results_json = &response_body[results_start + brace_start + 1
+                                ..results_start + brace_start + brace_end];
 
                             // Parse key-value pairs
                             for pair in results_json.split(',') {
@@ -2643,7 +2656,8 @@ impl HttpClient {
                 }
 
                 // Parse sample count
-                let sample_count = if let Some(count_start) = response_body.find("\"sample_count\"") {
+                let sample_count = if let Some(count_start) = response_body.find("\"sample_count\"")
+                {
                     if let Some(colon_pos) = response_body[count_start..].find(':') {
                         let after_colon = &response_body[count_start + colon_pos + 1..];
                         if let Some(comma_pos) = after_colon.find(',') {
@@ -2672,30 +2686,40 @@ impl HttpClient {
                 let status = WorkerStatus {
                     node_id: "remote_worker".to_string(),
                     cpu_usage: Self::parse_json_field(response_body, "cpu_usage").unwrap_or(0.0),
-                    memory_usage: Self::parse_json_field(response_body, "memory_usage").unwrap_or(0.0),
+                    memory_usage: Self::parse_json_field(response_body, "memory_usage")
+                        .unwrap_or(0.0),
                     disk_usage: Self::parse_json_field(response_body, "disk_usage").unwrap_or(0.0),
-                    network_bandwidth: Self::parse_json_field(response_body, "network_bandwidth").unwrap_or(0.0),
-                    active_tasks: Self::parse_json_field(response_body, "active_tasks").unwrap_or(0.0) as usize,
-                    completed_tasks: Self::parse_json_field(response_body, "completed_tasks").unwrap_or(0.0) as usize,
-                    failed_tasks: Self::parse_json_field(response_body, "failed_tasks").unwrap_or(0.0) as usize,
-                    queue_length: Self::parse_json_field(response_body, "queue_length").unwrap_or(0.0) as usize,
-                    last_heartbeat: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
+                    network_bandwidth: Self::parse_json_field(response_body, "network_bandwidth")
+                        .unwrap_or(0.0),
+                    active_tasks: Self::parse_json_field(response_body, "active_tasks")
+                        .unwrap_or(0.0) as usize,
+                    completed_tasks: Self::parse_json_field(response_body, "completed_tasks")
+                        .unwrap_or(0.0) as usize,
+                    failed_tasks: Self::parse_json_field(response_body, "failed_tasks")
+                        .unwrap_or(0.0) as usize,
+                    queue_length: Self::parse_json_field(response_body, "queue_length")
+                        .unwrap_or(0.0) as usize,
+                    last_heartbeat: SystemTime::now()
+                        .duration_since(UNIX_EPOCH)
+                        .unwrap()
+                        .as_secs(),
                     response_time: Duration::from_millis(50),
-                    load_average: Self::parse_json_field(response_body, "load_average").unwrap_or(0.0),
-                    available_cores: Self::parse_json_field(response_body, "available_cores").unwrap_or(4.0) as usize,
+                    load_average: Self::parse_json_field(response_body, "load_average")
+                        .unwrap_or(0.0),
+                    available_cores: Self::parse_json_field(response_body, "available_cores")
+                        .unwrap_or(4.0) as usize,
                     gpu_usage: Self::parse_json_field(response_body, "gpu_usage"),
                     worker_version: "1.0.0".to_string(),
                     capabilities: vec!["metrics".to_string()],
-                    health_score: Self::parse_json_field(response_body, "health_score").unwrap_or(0.9),
+                    health_score: Self::parse_json_field(response_body, "health_score")
+                        .unwrap_or(0.9),
                 };
 
                 Ok(DistributedMessage::HealthCheckResponse { status })
             }
-            _ => {
-                Err(MetricsError::ComputationError(
-                    "Unknown message type in response".to_string()
-                ))
-            }
+            _ => Err(MetricsError::ComputationError(
+                "Unknown message type in response".to_string(),
+            )),
         }
     }
 
@@ -2705,7 +2729,10 @@ impl HttpClient {
         if let Some(field_start) = json.find(&pattern) {
             if let Some(colon_pos) = json[field_start..].find(':') {
                 let after_colon = &json[field_start + colon_pos + 1..];
-                let end_pos = after_colon.find(',').or_else(|| after_colon.find('}')).unwrap_or(after_colon.len());
+                let end_pos = after_colon
+                    .find(',')
+                    .or_else(|| after_colon.find('}'))
+                    .unwrap_or(after_colon.len());
                 let value_str = after_colon[..end_pos].trim();
                 value_str.parse().ok()
             } else {
@@ -2742,7 +2769,8 @@ impl NetworkClient for HttpClient {
                     // Create JSON payload for computation request
                     let y_true_json: Vec<String> = y_true.iter().map(|x| x.to_string()).collect();
                     let y_pred_json: Vec<String> = y_pred.iter().map(|x| x.to_string()).collect();
-                    let metrics_json: Vec<String> = metric_names.iter().map(|s| format!("\"{}\"", s)).collect();
+                    let metrics_json: Vec<String> =
+                        metric_names.iter().map(|s| format!("\"{}\"", s)).collect();
 
                     format!(
                         r#"{{"task_id":"{}","chunk_id":{},"y_true":[{}],"y_pred":[{}],"metrics":[{}]}}"#,
@@ -2753,12 +2781,8 @@ impl NetworkClient for HttpClient {
                         metrics_json.join(",")
                     )
                 }
-                DistributedMessage::HealthCheck => {
-                    r#"{"type":"health_check"}"#.to_string()
-                }
-                _ => {
-                    r#"{"type":"unknown"}"#.to_string()
-                }
+                DistributedMessage::HealthCheck => r#"{"type":"health_check"}"#.to_string(),
+                _ => r#"{"type":"unknown"}"#.to_string(),
             };
 
             // Use a thread to perform blocking HTTP request
@@ -2767,14 +2791,18 @@ impl NetworkClient for HttpClient {
                 // Create a temporary HTTP client for this request
                 let temp_client = HttpClient {
                     auth_config,
-                    connection_pool: Arc::new(Mutex::new(HttpConnectionPool::new(10, Duration::from_secs(300)))),
+                    connection_pool: Arc::new(Mutex::new(HttpConnectionPool::new(
+                        10,
+                        Duration::from_secs(300),
+                    ))),
                     timeout,
                     retry_policy: RetryPolicy::default(),
                 };
 
                 // Send HTTP request
                 temp_client.send_http_request(&address, "POST", &json_body)
-            }).join();
+            })
+            .join();
 
             match result {
                 Ok(Ok(response_body)) => {
@@ -2783,8 +2811,8 @@ impl NetworkClient for HttpClient {
                 }
                 Ok(Err(e)) => Err(e),
                 Err(_) => Err(MetricsError::ComputationError(
-                    "HTTP request thread panicked".to_string()
-                ))
+                    "HTTP request thread panicked".to_string(),
+                )),
             }
         })
     }

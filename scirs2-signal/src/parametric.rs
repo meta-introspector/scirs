@@ -35,7 +35,7 @@
 //! assert!(ar_coeffs.iter().any(|&x| x.abs() > 1e-10));
 //! ```
 
-use ndarray::{Array1, Array2, s};
+use ndarray::{s, Array1, Array2};
 use num_complex::Complex64;
 use std::f64::consts::PI;
 
@@ -867,7 +867,7 @@ pub fn select_ar_order(
 }
 
 /// Enhanced ARMA estimation using Maximum Likelihood with iterative optimization
-/// 
+///
 /// This implementation provides more robust ARMA parameter estimation using:
 /// - Maximum Likelihood Estimation (MLE)
 /// - Kalman filter for likelihood computation
@@ -880,22 +880,22 @@ pub fn estimate_arma_enhanced(
     options: Option<ARMAOptions>,
 ) -> SignalResult<EnhancedARMAResult> {
     let opts = options.unwrap_or_default();
-    
+
     // Validate input parameters
     validate_arma_parameters(signal, ar_order, ma_order, &opts)?;
-    
+
     // Initialize parameters using method of moments or other robust technique
     let initial_params = initialize_arma_parameters(signal, ar_order, ma_order, &opts)?;
-    
+
     // Optimize parameters using iterative algorithm
     let optimized_params = optimize_arma_parameters(signal, initial_params, &opts)?;
-    
+
     // Compute model diagnostics and statistics
     let diagnostics = compute_arma_diagnostics(signal, &optimized_params, &opts)?;
-    
+
     // Validate the estimated model
     let validation = validate_arma_model(signal, &optimized_params, &opts)?;
-    
+
     Ok(EnhancedARMAResult {
         ar_coeffs: optimized_params.ar_coeffs,
         ma_coeffs: optimized_params.ma_coeffs,
@@ -913,18 +913,14 @@ pub fn estimate_arma_enhanced(
 }
 
 /// Moving Average (MA) only model estimation
-/// 
+///
 /// Estimates MA parameters using:
 /// - Innovations algorithm
 /// - Maximum Likelihood Estimation
 /// - Durbin's method for high-order models
-pub fn estimate_ma(
-    signal: &Array1<f64>,
-    order: usize,
-    method: MAMethod,
-) -> SignalResult<MAResult> {
+pub fn estimate_ma(signal: &Array1<f64>, order: usize, method: MAMethod) -> SignalResult<MAResult> {
     validate_ma_parameters(signal, order)?;
-    
+
     match method {
         MAMethod::Innovations => estimate_ma_innovations(signal, order),
         MAMethod::MaximumLikelihood => estimate_ma_ml(signal, order),
@@ -933,7 +929,7 @@ pub fn estimate_ma(
 }
 
 /// Advanced ARMA spectrum calculation with uncertainty quantification
-/// 
+///
 /// Computes spectral density with:
 /// - Confidence bands
 /// - Bootstrap uncertainty estimation
@@ -948,32 +944,32 @@ pub fn arma_spectrum_enhanced(
     options: Option<SpectrumOptions>,
 ) -> SignalResult<EnhancedSpectrumResult> {
     let opts = options.unwrap_or_default();
-    
+
     // Compute basic spectrum
     let spectrum = compute_arma_spectrum_basic(ar_coeffs, ma_coeffs, variance, freqs, fs)?;
-    
+
     // Analyze poles and zeros
     let pole_zero_analysis = analyze_poles_zeros(ar_coeffs, ma_coeffs)?;
-    
+
     // Compute confidence bands if requested
     let confidence_bands = if opts.compute_confidence_bands {
         Some(compute_spectrum_confidence_bands(
-            ar_coeffs, ma_coeffs, variance, freqs, fs, &opts
+            ar_coeffs, ma_coeffs, variance, freqs, fs, &opts,
         )?)
     } else {
         None
     };
-    
+
     // Detect spectral peaks
     let peaks = if opts.detect_peaks {
         Some(detect_spectral_peaks(&spectrum, freqs, &opts)?)
     } else {
         None
     };
-    
+
     // Compute additional metrics
     let metrics = compute_spectrum_metrics(&spectrum, freqs)?;
-    
+
     Ok(EnhancedSpectrumResult {
         frequencies: freqs.clone(),
         spectrum,
@@ -985,7 +981,7 @@ pub fn arma_spectrum_enhanced(
 }
 
 /// Multivariate ARMA (VARMA) estimation for vector time series
-/// 
+///
 /// Estimates parameters for Vector Autoregressive Moving Average models:
 /// - Efficient algorithms for high-dimensional systems
 /// - Cointegration analysis
@@ -993,35 +989,35 @@ pub fn arma_spectrum_enhanced(
 /// - Impulse response functions
 pub fn estimate_varma(
     signals: &Array2<f64>,
-    ar_order: usize, 
+    ar_order: usize,
     ma_order: usize,
     options: Option<VARMAOptions>,
 ) -> SignalResult<VARMAResult> {
     let opts = options.unwrap_or_default();
-    
+
     validate_varma_parameters(signals, ar_order, ma_order, &opts)?;
-    
+
     // For multiple time series, use VAR methodology
     let n_series = signals.nrows();
     let n_samples = signals.ncols();
-    
+
     if n_samples < (ar_order + ma_order) * n_series + 10 {
         return Err(SignalError::ValueError(
-            "Insufficient data for reliable VARMA estimation".to_string()
+            "Insufficient data for reliable VARMA estimation".to_string(),
         ));
     }
-    
+
     // Initialize with VAR estimation
     let var_result = estimate_var_for_varma(signals, ar_order, &opts)?;
-    
+
     // Extend to VARMA using residual analysis
     let varma_result = extend_var_to_varma(signals, var_result, ma_order, &opts)?;
-    
+
     Ok(varma_result)
 }
 
 /// Enhanced model order selection with cross-validation
-/// 
+///
 /// Provides robust order selection using:
 /// - Cross-validation
 /// - Information criteria with penalty adjustments
@@ -1035,38 +1031,40 @@ pub fn select_arma_order_enhanced(
     options: Option<OrderSelectionOptions>,
 ) -> SignalResult<EnhancedOrderSelectionResult> {
     let opts = options.unwrap_or_default();
-    
+
     let mut results = Vec::new();
-    
+
     // Test all combinations of AR and MA orders
     for ar_order in 0..=max_ar_order {
         for ma_order in 0..=max_ma_order {
             if ar_order == 0 && ma_order == 0 {
                 continue; // Skip trivial model
             }
-            
+
             // Fit ARMA model
             let model_result = estimate_arma_enhanced(signal, ar_order, ma_order, None);
-            
+
             if let Ok(result) = model_result {
                 // Compute all requested criteria
                 let mut criterion_values = std::collections::HashMap::new();
-                
+
                 for criterion in &criteria {
                     let value = compute_order_criterion(signal, &result, criterion, &opts)?;
                     criterion_values.insert(criterion.clone(), value);
                 }
-                
+
                 // Cross-validation score
                 let cv_score = if opts.use_cross_validation {
-                    Some(compute_cross_validation_score(signal, ar_order, ma_order, &opts)?)
+                    Some(compute_cross_validation_score(
+                        signal, ar_order, ma_order, &opts,
+                    )?)
                 } else {
                     None
                 };
-                
+
                 // Stability analysis
                 let stability = analyze_model_stability(&result)?;
-                
+
                 results.push(OrderSelectionCandidate {
                     ar_order,
                     ma_order,
@@ -1078,10 +1076,10 @@ pub fn select_arma_order_enhanced(
             }
         }
     }
-    
+
     // Select best models according to each criterion
     let best_models = select_best_models(results, &criteria, &opts)?;
-    
+
     Ok(EnhancedOrderSelectionResult {
         best_models,
         all_candidates: Vec::new(), // Could store all if needed
@@ -1090,7 +1088,7 @@ pub fn select_arma_order_enhanced(
 }
 
 /// Real-time adaptive ARMA estimation for streaming data
-/// 
+///
 /// Provides online parameter estimation with:
 /// - Recursive parameter updates
 /// - Forgetting factors for non-stationary data
@@ -1103,10 +1101,10 @@ pub fn adaptive_arma_estimator(
     adaptation_options: Option<AdaptationOptions>,
 ) -> SignalResult<AdaptiveARMAEstimator> {
     let opts = adaptation_options.unwrap_or_default();
-    
+
     // Initialize with batch estimation
     let initial_estimate = estimate_arma_enhanced(initial_signal, ar_order, ma_order, None)?;
-    
+
     Ok(AdaptiveARMAEstimator {
         ar_order,
         ma_order,
@@ -1345,7 +1343,7 @@ pub enum OptimizationMethod {
     NelderMead,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]  
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum InitializationMethod {
     MethodOfMoments,
     Hannan,
@@ -1508,7 +1506,8 @@ fn validate_ma_parameters(signal: &Array1<f64>, order: usize) -> SignalResult<()
     if order >= signal.len() / 2 {
         return Err(SignalError::ValueError(format!(
             "MA order ({}) too large for signal length ({})",
-            order, signal.len()
+            order,
+            signal.len()
         )));
     }
     Ok(())
@@ -1518,11 +1517,11 @@ fn estimate_ma_innovations(signal: &Array1<f64>, order: usize) -> SignalResult<M
     let n = signal.len();
     let mut ma_coeffs = Array1::zeros(order + 1);
     ma_coeffs[0] = 1.0;
-    
+
     // Simplified innovations algorithm implementation
     let mean = signal.mean().unwrap_or(0.0);
     let variance = signal.mapv(|x| (x - mean).powi(2)).mean().unwrap_or(1.0);
-    
+
     Ok(MAResult {
         ma_coeffs,
         variance,
@@ -1551,7 +1550,10 @@ fn compute_arma_spectrum_basic(
     arma_spectrum(ar_coeffs, ma_coeffs, variance, freqs, fs)
 }
 
-fn analyze_poles_zeros(ar_coeffs: &Array1<f64>, ma_coeffs: &Array1<f64>) -> SignalResult<PoleZeroAnalysis> {
+fn analyze_poles_zeros(
+    ar_coeffs: &Array1<f64>,
+    ma_coeffs: &Array1<f64>,
+) -> SignalResult<PoleZeroAnalysis> {
     // Simplified pole-zero analysis
     Ok(PoleZeroAnalysis {
         poles: Vec::new(),
@@ -1582,31 +1584,37 @@ fn detect_spectral_peaks(
     opts: &SpectrumOptions,
 ) -> SignalResult<Vec<SpectralPeak>> {
     let mut peaks = Vec::new();
-    
+
     // Simple peak detection
     for i in 1..(spectrum.len() - 1) {
-        if spectrum[i] > spectrum[i-1] && spectrum[i] > spectrum[i+1] && 
-           spectrum[i] > opts.peak_threshold {
+        if spectrum[i] > spectrum[i - 1]
+            && spectrum[i] > spectrum[i + 1]
+            && spectrum[i] > opts.peak_threshold
+        {
             peaks.push(SpectralPeak {
                 frequency: freqs[i],
                 power: spectrum[i],
-                prominence: spectrum[i] - spectrum[i-1].min(spectrum[i+1]),
+                prominence: spectrum[i] - spectrum[i - 1].min(spectrum[i + 1]),
                 bandwidth: 1.0,
             });
         }
     }
-    
+
     Ok(peaks)
 }
 
-fn compute_spectrum_metrics(spectrum: &Array1<f64>, freqs: &Array1<f64>) -> SignalResult<SpectrumMetrics> {
+fn compute_spectrum_metrics(
+    spectrum: &Array1<f64>,
+    freqs: &Array1<f64>,
+) -> SignalResult<SpectrumMetrics> {
     let total_power = spectrum.sum();
-    let peak_idx = spectrum.iter()
+    let peak_idx = spectrum
+        .iter()
         .enumerate()
         .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
         .map(|(i, _)| i)
         .unwrap_or(0);
-    
+
     Ok(SpectrumMetrics {
         total_power,
         peak_frequency: freqs[peak_idx],
@@ -1623,7 +1631,7 @@ fn validate_varma_parameters(
 ) -> SignalResult<()> {
     if signals.ncols() < (ar_order + ma_order) * signals.nrows() + 10 {
         return Err(SignalError::ValueError(
-            "Insufficient data for VARMA estimation".to_string()
+            "Insufficient data for VARMA estimation".to_string(),
         ));
     }
     Ok(())
@@ -1693,18 +1701,17 @@ fn select_best_models(
     opts: &OrderSelectionOptions,
 ) -> SignalResult<std::collections::HashMap<OrderSelectionCriterion, OrderSelectionCandidate>> {
     let mut best = std::collections::HashMap::new();
-    
+
     for criterion in criteria {
-        if let Some(best_candidate) = candidates.iter()
-            .min_by(|a, b| {
-                let a_val = a.criterion_values.get(criterion).unwrap_or(&f64::INFINITY);
-                let b_val = b.criterion_values.get(criterion).unwrap_or(&f64::INFINITY);
-                a_val.partial_cmp(b_val).unwrap()
-            }) {
+        if let Some(best_candidate) = candidates.iter().min_by(|a, b| {
+            let a_val = a.criterion_values.get(criterion).unwrap_or(&f64::INFINITY);
+            let b_val = b.criterion_values.get(criterion).unwrap_or(&f64::INFINITY);
+            a_val.partial_cmp(b_val).unwrap()
+        }) {
             best.insert(criterion.clone(), best_candidate.clone());
         }
     }
-    
+
     Ok(best)
 }
 
@@ -1741,7 +1748,7 @@ fn validate_arma_parameters(
 ) -> SignalResult<()> {
     if signal.len() < (ar_order + ma_order) * 5 {
         return Err(SignalError::ValueError(
-            "Insufficient data for reliable ARMA estimation".to_string()
+            "Insufficient data for reliable ARMA estimation".to_string(),
         ));
     }
     Ok(())
@@ -1787,69 +1794,72 @@ fn optimize_arma_parameters(
     opts: &ARMAOptions,
 ) -> SignalResult<ARMAParameters> {
     use scirs2_core::validation::{check_finite, check_positive};
-    
+
     check_finite(signal.as_slice().unwrap(), "signal")?;
     check_positive(opts.max_iterations, "max_iterations")?;
-    
+
     let mut current_params = initial;
     let mut current_likelihood = compute_log_likelihood(signal, &current_params)?;
     let mut best_params = current_params.clone();
     let mut best_likelihood = current_likelihood;
-    
+
     let mut convergence_count = 0;
     let convergence_threshold = 3; // Require 3 consecutive iterations with small change
-    
+
     for iteration in 0..opts.max_iterations {
         // Enhanced parameter update using gradient descent with adaptive learning rate
         let gradient = compute_parameter_gradient(signal, &current_params, opts.tolerance)?;
-        
+
         // Adaptive learning rate based on iteration and gradient magnitude
-        let gradient_norm = gradient.ar_coeffs.mapv(|x| x.powi(2)).sum() + 
-                           gradient.ma_coeffs.mapv(|x| x.powi(2)).sum();
-        let adaptive_learning_rate = opts.learning_rate / (1.0 + 0.1 * iteration as f64) * 
-                                   (1.0 / (1.0 + gradient_norm.sqrt()));
-        
+        let gradient_norm = gradient.ar_coeffs.mapv(|x| x.powi(2)).sum()
+            + gradient.ma_coeffs.mapv(|x| x.powi(2)).sum();
+        let adaptive_learning_rate = opts.learning_rate / (1.0 + 0.1 * iteration as f64)
+            * (1.0 / (1.0 + gradient_norm.sqrt()));
+
         // Update parameters with momentum and regularization
         let momentum_factor = 0.9;
         let regularization = 0.001;
-        
+
         // Update AR coefficients with L2 regularization
         for i in 0..current_params.ar_coeffs.len() {
-            let momentum = if iteration > 0 { 
+            let momentum = if iteration > 0 {
                 momentum_factor * (current_params.ar_coeffs[i] - best_params.ar_coeffs[i])
-            } else { 
-                0.0 
+            } else {
+                0.0
             };
-            
-            current_params.ar_coeffs[i] -= adaptive_learning_rate * gradient.ar_coeffs[i] + 
-                                          regularization * current_params.ar_coeffs[i] + momentum;
+
+            current_params.ar_coeffs[i] -= adaptive_learning_rate * gradient.ar_coeffs[i]
+                + regularization * current_params.ar_coeffs[i]
+                + momentum;
         }
-        
+
         // Update MA coefficients with L2 regularization
         for i in 0..current_params.ma_coeffs.len() {
-            let momentum = if iteration > 0 { 
+            let momentum = if iteration > 0 {
                 momentum_factor * (current_params.ma_coeffs[i] - best_params.ma_coeffs[i])
-            } else { 
-                0.0 
+            } else {
+                0.0
             };
-            
-            current_params.ma_coeffs[i] -= adaptive_learning_rate * gradient.ma_coeffs[i] + 
-                                          regularization * current_params.ma_coeffs[i] + momentum;
+
+            current_params.ma_coeffs[i] -= adaptive_learning_rate * gradient.ma_coeffs[i]
+                + regularization * current_params.ma_coeffs[i]
+                + momentum;
         }
-        
+
         // Update noise variance with constraints
-        current_params.noise_variance = (current_params.noise_variance - 
-                                       adaptive_learning_rate * gradient.noise_variance).max(1e-8);
-        
+        current_params.noise_variance = (current_params.noise_variance
+            - adaptive_learning_rate * gradient.noise_variance)
+            .max(1e-8);
+
         // Ensure model stability
         if !is_stable(&current_params) {
             // Projection onto stable region
             current_params = project_to_stable_region(&current_params)?;
         }
-        
+
         // Compute new likelihood
         let new_likelihood = compute_log_likelihood(signal, &current_params)?;
-        
+
         // Check for improvement
         if new_likelihood > best_likelihood {
             best_params = current_params.clone();
@@ -1858,31 +1868,34 @@ fn optimize_arma_parameters(
         } else {
             convergence_count += 1;
         }
-        
+
         // Convergence check
         let likelihood_change = (new_likelihood - current_likelihood).abs();
         if likelihood_change < opts.tolerance && convergence_count >= convergence_threshold {
             break;
         }
-        
+
         current_likelihood = new_likelihood;
-        
+
         // Enhanced convergence diagnostics
         if iteration % 10 == 0 {
             let stability_margin = compute_stability_margin(&current_params);
             if stability_margin < 0.1 {
-                eprintln!("Warning: Model approaching instability at iteration {}", iteration);
+                eprintln!(
+                    "Warning: Model approaching instability at iteration {}",
+                    iteration
+                );
             }
         }
     }
-    
+
     // Final validation
     if !is_stable(&best_params) {
         return Err(SignalError::ComputationError(
-            "Optimized ARMA model is unstable".to_string()
+            "Optimized ARMA model is unstable".to_string(),
         ));
     }
-    
+
     Ok(best_params)
 }
 
@@ -1894,37 +1907,37 @@ fn compute_parameter_gradient(
 ) -> SignalResult<ARMAParameters> {
     let epsilon = tolerance.sqrt(); // Small perturbation for numerical differentiation
     let base_likelihood = compute_log_likelihood(signal, params)?;
-    
+
     let mut gradient = ARMAParameters {
         ar_coeffs: Array1::zeros(params.ar_coeffs.len()),
         ma_coeffs: Array1::zeros(params.ma_coeffs.len()),
         noise_variance: 0.0,
     };
-    
+
     // Compute gradient for AR coefficients
     for i in 0..params.ar_coeffs.len() {
         let mut params_plus = params.clone();
         params_plus.ar_coeffs[i] += epsilon;
-        
+
         let likelihood_plus = compute_log_likelihood(signal, &params_plus)?;
         gradient.ar_coeffs[i] = (likelihood_plus - base_likelihood) / epsilon;
     }
-    
+
     // Compute gradient for MA coefficients
     for i in 0..params.ma_coeffs.len() {
         let mut params_plus = params.clone();
         params_plus.ma_coeffs[i] += epsilon;
-        
+
         let likelihood_plus = compute_log_likelihood(signal, &params_plus)?;
         gradient.ma_coeffs[i] = (likelihood_plus - base_likelihood) / epsilon;
     }
-    
+
     // Compute gradient for noise variance
     let mut params_plus = params.clone();
     params_plus.noise_variance += epsilon;
     let likelihood_plus = compute_log_likelihood(signal, &params_plus)?;
     gradient.noise_variance = (likelihood_plus - base_likelihood) / epsilon;
-    
+
     Ok(gradient)
 }
 
@@ -1932,10 +1945,10 @@ fn compute_parameter_gradient(
 fn is_stable(params: &ARMAParameters) -> bool {
     // Check AR stability: roots of AR polynomial should be outside unit circle
     let ar_stable = check_ar_stability(&params.ar_coeffs);
-    
+
     // Check MA invertibility: roots of MA polynomial should be outside unit circle
     let ma_stable = check_ma_invertibility(&params.ma_coeffs);
-    
+
     ar_stable && ma_stable
 }
 
@@ -1944,12 +1957,12 @@ fn check_ar_stability(ar_coeffs: &Array1<f64>) -> bool {
     if ar_coeffs.is_empty() {
         return true;
     }
-    
+
     // For AR(1): |a1| < 1
     if ar_coeffs.len() == 1 {
         return ar_coeffs[0].abs() < 1.0;
     }
-    
+
     // For higher orders, use companion matrix approach (simplified)
     // This is a basic stability check - could be enhanced with proper root finding
     let sum_abs: f64 = ar_coeffs.iter().map(|&x| x.abs()).sum();
@@ -1961,7 +1974,7 @@ fn check_ma_invertibility(ma_coeffs: &Array1<f64>) -> bool {
     if ma_coeffs.is_empty() {
         return true;
     }
-    
+
     // Similar to AR stability check
     let sum_abs: f64 = ma_coeffs.iter().map(|&x| x.abs()).sum();
     sum_abs < 1.0
@@ -1970,24 +1983,24 @@ fn check_ma_invertibility(ma_coeffs: &Array1<f64>) -> bool {
 /// Project parameters onto stable region
 fn project_to_stable_region(params: &ARMAParameters) -> SignalResult<ARMAParameters> {
     let mut stable_params = params.clone();
-    
+
     // Project AR coefficients
     let ar_sum: f64 = stable_params.ar_coeffs.iter().map(|&x| x.abs()).sum();
     if ar_sum >= 1.0 {
         let scaling_factor = 0.95 / ar_sum;
         stable_params.ar_coeffs.mapv_inplace(|x| x * scaling_factor);
     }
-    
+
     // Project MA coefficients
     let ma_sum: f64 = stable_params.ma_coeffs.iter().map(|&x| x.abs()).sum();
     if ma_sum >= 1.0 {
         let scaling_factor = 0.95 / ma_sum;
         stable_params.ma_coeffs.mapv_inplace(|x| x * scaling_factor);
     }
-    
+
     // Ensure positive noise variance
     stable_params.noise_variance = stable_params.noise_variance.max(1e-8);
-    
+
     Ok(stable_params)
 }
 
@@ -1995,10 +2008,10 @@ fn project_to_stable_region(params: &ARMAParameters) -> SignalResult<ARMAParamet
 fn compute_stability_margin(params: &ARMAParameters) -> f64 {
     let ar_sum: f64 = params.ar_coeffs.iter().map(|&x| x.abs()).sum();
     let ma_sum: f64 = params.ma_coeffs.iter().map(|&x| x.abs()).sum();
-    
+
     let ar_margin = 1.0 - ar_sum;
     let ma_margin = 1.0 - ma_sum;
-    
+
     ar_margin.min(ma_margin)
 }
 
@@ -2006,15 +2019,15 @@ fn compute_stability_margin(params: &ARMAParameters) -> f64 {
 fn compute_log_likelihood(signal: &Array1<f64>, params: &ARMAParameters) -> SignalResult<f64> {
     let n = signal.len();
     let residuals = compute_residuals(signal, params)?;
-    
+
     let mut log_likelihood = 0.0;
     let two_pi_sigma2 = 2.0 * PI * params.noise_variance;
-    
+
     for &residual in residuals.iter() {
         let term = residual.powi(2) / (2.0 * params.noise_variance);
         log_likelihood -= 0.5 * two_pi_sigma2.ln() + term;
     }
-    
+
     Ok(log_likelihood)
 }
 
@@ -2024,36 +2037,36 @@ fn compute_residuals(signal: &Array1<f64>, params: &ARMAParameters) -> SignalRes
     let mut residuals = Array1::zeros(n);
     let p = params.ar_coeffs.len();
     let q = params.ma_coeffs.len();
-    
+
     // Initialize with zeros for simplicity (could use better initialization)
     let mut ma_errors = vec![0.0; q];
-    
+
     for t in p.max(q)..n {
         let mut prediction = 0.0;
-        
+
         // AR component
         for i in 0..p {
             if t >= i + 1 {
                 prediction += params.ar_coeffs[i] * signal[t - i - 1];
             }
         }
-        
+
         // MA component
         for i in 0..q {
             if i < ma_errors.len() {
                 prediction -= params.ma_coeffs[i] * ma_errors[q - 1 - i];
             }
         }
-        
+
         residuals[t] = signal[t] - prediction;
-        
+
         // Update MA error terms
         if q > 0 {
             ma_errors.rotate_right(1);
             ma_errors[0] = residuals[t];
         }
     }
-    
+
     Ok(residuals)
 }
 
@@ -2063,35 +2076,35 @@ fn compute_arma_diagnostics(
     opts: &ARMAOptions,
 ) -> SignalResult<ARMADiagnostics> {
     use scirs2_core::validation::check_finite;
-    
+
     check_finite(signal.as_slice().unwrap(), "signal")?;
-    
+
     let n = signal.len() as f64;
     let p = params.ar_coeffs.len() as f64;
     let q = params.ma_coeffs.len() as f64;
     let residuals = compute_residuals(signal, params)?;
-    
+
     // Compute log-likelihood
     let log_likelihood = compute_log_likelihood(signal, params)?;
-    
+
     // Akaike Information Criterion (AIC)
     let num_params = p + q + 1.0; // AR + MA + noise variance
     let aic = -2.0 * log_likelihood + 2.0 * num_params;
-    
+
     // Bayesian Information Criterion (BIC)
     let bic = -2.0 * log_likelihood + num_params * n.ln();
-    
+
     // Ljung-Box test for serial correlation in residuals
     let ljung_box_lags = opts.ljung_box_lags.unwrap_or(20.min((n / 4.0) as usize));
     let ljung_box_test = compute_ljung_box_test(&residuals, ljung_box_lags)?;
-    
+
     // Jarque-Bera test for normality of residuals
     let jarque_bera_test = compute_jarque_bera_test(&residuals)?;
-    
+
     // ARCH test for heteroskedasticity
     let arch_lags = opts.arch_lags.unwrap_or(5);
     let arch_test = compute_arch_test(&residuals, arch_lags)?;
-    
+
     Ok(ARMADiagnostics {
         aic,
         bic,
@@ -2102,34 +2115,31 @@ fn compute_arma_diagnostics(
 }
 
 /// Compute Ljung-Box test for serial correlation
-fn compute_ljung_box_test(
-    residuals: &Array1<f64>,
-    lags: usize,
-) -> SignalResult<LjungBoxTest> {
+fn compute_ljung_box_test(residuals: &Array1<f64>, lags: usize) -> SignalResult<LjungBoxTest> {
     let n = residuals.len();
     if n <= lags + 1 {
         return Err(SignalError::ValueError(
-            "Insufficient data for Ljung-Box test".to_string()
+            "Insufficient data for Ljung-Box test".to_string(),
         ));
     }
-    
+
     // Compute sample autocorrelations
     let mut autocorrs = Vec::with_capacity(lags);
     let mean = residuals.mean().unwrap_or(0.0);
     let variance = residuals.mapv(|x| (x - mean).powi(2)).mean().unwrap_or(1.0);
-    
+
     for lag in 1..=lags {
         let mut sum = 0.0;
         let valid_pairs = n - lag;
-        
+
         for i in 0..valid_pairs {
             sum += (residuals[i] - mean) * (residuals[i + lag] - mean);
         }
-        
+
         let autocorr = sum / (valid_pairs as f64 * variance);
         autocorrs.push(autocorr);
     }
-    
+
     // Ljung-Box statistic
     let mut statistic = 0.0;
     for (k, &rho_k) in autocorrs.iter().enumerate() {
@@ -2137,10 +2147,10 @@ fn compute_ljung_box_test(
         statistic += rho_k.powi(2) / (n - lag) as f64;
     }
     statistic *= n as f64 * (n + 2) as f64;
-    
+
     // Approximate p-value using chi-squared distribution
     let p_value = 1.0 - chi_squared_cdf(statistic, lags as f64);
-    
+
     Ok(LjungBoxTest {
         statistic,
         p_value,
@@ -2153,44 +2163,41 @@ fn compute_jarque_bera_test(residuals: &Array1<f64>) -> SignalResult<JarqueBeraT
     let n = residuals.len() as f64;
     if n < 4.0 {
         return Err(SignalError::ValueError(
-            "Insufficient data for Jarque-Bera test".to_string()
+            "Insufficient data for Jarque-Bera test".to_string(),
         ));
     }
-    
+
     let mean = residuals.mean().unwrap_or(0.0);
     let variance = residuals.mapv(|x| (x - mean).powi(2)).mean().unwrap_or(1.0);
     let std_dev = variance.sqrt();
-    
+
     if std_dev < 1e-10 {
         return Ok(JarqueBeraTest {
             statistic: 0.0,
             p_value: 1.0,
         });
     }
-    
+
     // Compute skewness and kurtosis
     let mut skewness = 0.0;
     let mut kurtosis = 0.0;
-    
+
     for &x in residuals.iter() {
         let z = (x - mean) / std_dev;
         skewness += z.powi(3);
         kurtosis += z.powi(4);
     }
-    
+
     skewness /= n;
     kurtosis = kurtosis / n - 3.0; // Excess kurtosis
-    
+
     // Jarque-Bera statistic
     let statistic = n / 6.0 * (skewness.powi(2) + kurtosis.powi(2) / 4.0);
-    
+
     // Approximate p-value using chi-squared distribution with 2 degrees of freedom
     let p_value = 1.0 - chi_squared_cdf(statistic, 2.0);
-    
-    Ok(JarqueBeraTest {
-        statistic,
-        p_value,
-    })
+
+    Ok(JarqueBeraTest { statistic, p_value })
 }
 
 /// Compute ARCH test for heteroskedasticity
@@ -2198,20 +2205,20 @@ fn compute_arch_test(residuals: &Array1<f64>, lags: usize) -> SignalResult<ARCHT
     let n = residuals.len();
     if n <= lags + 1 {
         return Err(SignalError::ValueError(
-            "Insufficient data for ARCH test".to_string()
+            "Insufficient data for ARCH test".to_string(),
         ));
     }
-    
+
     // Compute squared residuals
     let squared_residuals: Array1<f64> = residuals.mapv(|x| x.powi(2));
-    
+
     // Regression of squared residuals on lagged squared residuals
     // This is a simplified implementation - full ARCH test would use proper regression
     let mut sum_sq = 0.0;
     let mut sum_lagged = 0.0;
     let mut sum_cross = 0.0;
     let valid_obs = n - lags;
-    
+
     for i in lags..n {
         let current = squared_residuals[i];
         let mut lagged_sum = 0.0;
@@ -2219,31 +2226,36 @@ fn compute_arch_test(residuals: &Array1<f64>, lags: usize) -> SignalResult<ARCHT
             lagged_sum += squared_residuals[i - j];
         }
         lagged_sum /= lags as f64;
-        
+
         sum_sq += current.powi(2);
         sum_lagged += lagged_sum.powi(2);
         sum_cross += current * lagged_sum;
     }
-    
+
     // Compute R-squared (simplified)
     let mean_current = squared_residuals.slice(s![lags..]).mean().unwrap_or(0.0);
     let mean_lagged = sum_lagged / valid_obs as f64;
-    
-    let ss_total = squared_residuals.slice(s![lags..])
+
+    let ss_total = squared_residuals
+        .slice(s![lags..])
         .mapv(|x| (x - mean_current).powi(2))
         .sum();
-    
-    let ss_explained = (sum_cross - valid_obs as f64 * mean_current * mean_lagged).powi(2) /
-                      (sum_lagged - valid_obs as f64 * mean_lagged.powi(2));
-    
-    let r_squared = if ss_total > 1e-10 { ss_explained / ss_total } else { 0.0 };
-    
+
+    let ss_explained = (sum_cross - valid_obs as f64 * mean_current * mean_lagged).powi(2)
+        / (sum_lagged - valid_obs as f64 * mean_lagged.powi(2));
+
+    let r_squared = if ss_total > 1e-10 {
+        ss_explained / ss_total
+    } else {
+        0.0
+    };
+
     // ARCH test statistic
     let statistic = valid_obs as f64 * r_squared;
-    
+
     // Approximate p-value using chi-squared distribution
     let p_value = 1.0 - chi_squared_cdf(statistic, lags as f64);
-    
+
     Ok(ARCHTest {
         statistic,
         p_value,
@@ -2256,7 +2268,7 @@ fn chi_squared_cdf(x: f64, df: f64) -> f64 {
     if x <= 0.0 {
         return 0.0;
     }
-    
+
     // Simple approximation for small degrees of freedom
     if df == 1.0 {
         return 2.0 * (1.0 - (-x / 2.0).exp()) - 1.0;
@@ -2266,7 +2278,7 @@ fn chi_squared_cdf(x: f64, df: f64) -> f64 {
         // Wilson-Hilferty approximation for larger df
         let h = 2.0 / (9.0 * df);
         let z = (1.0 - h + (x / df).powf(1.0 / 3.0)) / h.sqrt();
-        
+
         // Standard normal CDF approximation
         0.5 * (1.0 + (z / 2.0_f64.sqrt()).tanh())
     }
@@ -2277,16 +2289,23 @@ fn validate_arma_model(
     params: &ARMAParameters,
     opts: &ARMAOptions,
 ) -> SignalResult<ARMAValidation> {
-    // Placeholder implementation  
+    // Placeholder implementation
     Ok(ARMAValidation {
         residual_autocorrelation: Array1::zeros(20),
         normality_tests: NormalityTests {
-            jarque_bera: JarqueBeraTest { statistic: 0.0, p_value: 0.0 },
+            jarque_bera: JarqueBeraTest {
+                statistic: 0.0,
+                p_value: 0.0,
+            },
             kolmogorov_smirnov: 0.0,
             anderson_darling: 0.0,
         },
         heteroskedasticity_tests: HeteroskedasticityTests {
-            arch_test: ARCHTest { statistic: 0.0, p_value: 0.0, lags: 5 },
+            arch_test: ARCHTest {
+                statistic: 0.0,
+                p_value: 0.0,
+                lags: 5,
+            },
             white_test: 0.0,
             breusch_pagan: 0.0,
         },
@@ -2304,7 +2323,7 @@ fn validate_arma_model(
 /// Advanced robust parametric spectral estimation methods
 
 /// Robust AR estimation using M-estimators
-/// 
+///
 /// This method is resistant to outliers and provides more reliable estimates
 /// when the signal contains occasional large deviations from the underlying model.
 ///
@@ -2321,35 +2340,41 @@ pub fn robust_ar_estimation(
     robust_options: Option<RobustEstimationOptions>,
 ) -> SignalResult<RobustARResult> {
     let opts = robust_options.unwrap_or_default();
-    
+
     // Step 1: Initial estimate using standard method
     let initial_result = estimate_ar(signal, order, ARMethod::YuleWalker)?;
     let mut ar_coeffs = initial_result.coefficients;
     let mut error_variance = initial_result.variance;
-    
+
     // Step 2: Iterative robust estimation using Huber's M-estimator
     let mut outliers = Vec::new();
     let mut weights = Array1::ones(signal.len());
-    
+
     for iteration in 0..opts.max_iterations {
         // Compute residuals with current parameter estimates
         let residuals = compute_ar_residuals(signal, &ar_coeffs, order)?;
-        
+
         // Robust scale estimation (MAD - Median Absolute Deviation)
         let scale = robust_scale_estimation(&residuals, opts.scale_method);
-        
+
         // Update weights using robust weight function
         update_robust_weights(&mut weights, &residuals, scale, opts.weight_function);
-        
+
         // Detect outliers based on weights
         let current_outliers: Vec<usize> = weights
             .indexed_iter()
-            .filter_map(|(i, &w)| if w < opts.outlier_threshold { Some(i) } else { None })
+            .filter_map(|(i, &w)| {
+                if w < opts.outlier_threshold {
+                    Some(i)
+                } else {
+                    None
+                }
+            })
             .collect();
-        
+
         // Weighted least squares update
         let (new_ar_coeffs, new_variance) = weighted_ar_estimation(signal, order, &weights)?;
-        
+
         // Check convergence
         let parameter_change = compute_parameter_change(&ar_coeffs, &new_ar_coeffs);
         if parameter_change < opts.tolerance {
@@ -2358,19 +2383,19 @@ pub fn robust_ar_estimation(
             outliers = current_outliers;
             break;
         }
-        
+
         ar_coeffs = new_ar_coeffs;
         error_variance = new_variance;
-        
+
         if iteration == opts.max_iterations - 1 {
             outliers = current_outliers;
         }
     }
-    
+
     // Compute robust model diagnostics
     let final_residuals = compute_ar_residuals(signal, &ar_coeffs, order)?;
     let robust_scale = robust_scale_estimation(&final_residuals, opts.scale_method);
-    
+
     Ok(RobustARResult {
         ar_coefficients: ar_coeffs,
         error_variance,
@@ -2401,36 +2426,45 @@ pub fn state_space_parametric_estimation(
     ss_options: Option<StateSpaceOptions>,
 ) -> SignalResult<StateSpaceParametricResult> {
     let opts = ss_options.unwrap_or_default();
-    
+
     // Initialize state-space matrices
     let n = signal.len();
     let mut state_transition = Array2::eye(state_order); // A matrix
     let mut observation = Array1::zeros(state_order); // C vector
     observation[0] = 1.0; // Observe first state
-    
+
     let mut process_noise_cov = Array2::eye(state_order) * opts.initial_process_variance;
     let mut observation_noise_var = opts.initial_observation_variance;
-    
+
     // Initialize state estimate and covariance
     let mut state_estimates = Array2::zeros((n, state_order));
     let mut state_covariances = Vec::with_capacity(n);
     let mut innovations = Array1::zeros(n);
     let mut innovation_covariances = Array1::zeros(n);
-    
+
     // Expectation-Maximization algorithm for parameter estimation
     let mut log_likelihood = f64::NEG_INFINITY;
-    
+
     for em_iteration in 0..opts.max_em_iterations {
         // E-step: Kalman filter and smoother
-        let (filtered_states, filtered_covs, innovations_seq, innov_covs) = 
-            kalman_filter(signal, &state_transition, &observation, &process_noise_cov, observation_noise_var)?;
-        
-        let (smoothed_states, smoothed_covs, lag_covs) = 
-            kalman_smoother(&filtered_states, &filtered_covs, &state_transition, &process_noise_cov)?;
-        
+        let (filtered_states, filtered_covs, innovations_seq, innov_covs) = kalman_filter(
+            signal,
+            &state_transition,
+            &observation,
+            &process_noise_cov,
+            observation_noise_var,
+        )?;
+
+        let (smoothed_states, smoothed_covs, lag_covs) = kalman_smoother(
+            &filtered_states,
+            &filtered_covs,
+            &state_transition,
+            &process_noise_cov,
+        )?;
+
         // Compute log-likelihood
         let new_log_likelihood = compute_state_space_log_likelihood(&innovations_seq, &innov_covs);
-        
+
         // Check for convergence
         if em_iteration > 0 && (new_log_likelihood - log_likelihood).abs() < opts.em_tolerance {
             state_estimates = smoothed_states;
@@ -2440,7 +2474,7 @@ pub fn state_space_parametric_estimation(
             log_likelihood = new_log_likelihood;
             break;
         }
-        
+
         // M-step: Update parameters
         update_state_space_parameters(
             &smoothed_states,
@@ -2452,21 +2486,26 @@ pub fn state_space_parametric_estimation(
             &mut process_noise_cov,
             &mut observation_noise_var,
         )?;
-        
+
         log_likelihood = new_log_likelihood;
     }
-    
+
     // Compute model diagnostics
     let aic = -2.0 * log_likelihood + 2.0 * (state_order * state_order + state_order + 2) as f64;
-    let bic = -2.0 * log_likelihood + (state_order * state_order + state_order + 2) as f64 * (n as f64).ln();
-    
+    let bic = -2.0 * log_likelihood
+        + (state_order * state_order + state_order + 2) as f64 * (n as f64).ln();
+
     // Convert state-space form back to ARMA representation if requested
     let arma_equivalent = if opts.compute_arma_equivalent {
-        Some(state_space_to_arma(&state_transition, &observation, state_order)?)
+        Some(state_space_to_arma(
+            &state_transition,
+            &observation,
+            state_order,
+        )?)
     } else {
         None
     };
-    
+
     Ok(StateSpaceParametricResult {
         state_transition_matrix: state_transition,
         observation_vector: observation,
@@ -2504,16 +2543,16 @@ pub fn estimate_farima(
     farima_options: Option<FARIMAOptions>,
 ) -> SignalResult<FARIMAResult> {
     let opts = farima_options.unwrap_or_default();
-    
+
     // Step 1: Estimate fractional differencing parameter using Geweke-Porter-Hudak method
     let d_estimate = estimate_fractional_differencing_parameter(signal, opts.gph_bandwidth)?;
-    
+
     // Step 2: Apply fractional differencing to make the series stationary
     let differenced_signal = fractional_differencing(signal, d_estimate, opts.truncation_lag)?;
-    
+
     // Step 3: Fit ARMA model to the differenced series
     let arma_result = estimate_arma_enhanced(&differenced_signal, ar_order, ma_order, None)?;
-    
+
     // Step 4: Compute spectral density of FARIMA process
     let spectrum = farima_spectrum(
         &arma_result.ar_coeffs,
@@ -2522,11 +2561,16 @@ pub fn estimate_farima(
         arma_result.variance,
         opts.spectrum_points,
     )?;
-    
+
     // Step 5: Model diagnostics and validation
-    let residuals = compute_farima_residuals(signal, &arma_result.ar_coeffs, &arma_result.ma_coeffs, d_estimate)?;
+    let residuals = compute_farima_residuals(
+        signal,
+        &arma_result.ar_coeffs,
+        &arma_result.ma_coeffs,
+        d_estimate,
+    )?;
     let hurst_exponent = estimate_hurst_exponent(&residuals)?;
-    
+
     Ok(FARIMAResult {
         ar_coefficients: arma_result.ar_coeffs,
         ma_coefficients: arma_result.ma_coeffs,
@@ -2561,55 +2605,68 @@ pub fn estimate_var(
 ) -> SignalResult<VARResult> {
     let opts = var_options.unwrap_or_default();
     let (n_obs, n_vars) = signals.dim();
-    
+
     if n_obs <= order * n_vars {
         return Err(SignalError::ValueError(
-            "Insufficient observations for VAR estimation".to_string()
+            "Insufficient observations for VAR estimation".to_string(),
         ));
     }
-    
+
     // Construct design matrix for VAR estimation
     let (y_matrix, x_matrix) = construct_var_matrices(signals, order)?;
-    
+
     // OLS estimation: B = (X'X)^(-1) X'Y
     let xtx = x_matrix.t().dot(&x_matrix);
     let xty = x_matrix.t().dot(&y_matrix);
-    
+
     // Solve normal equations (in practice, would use more numerically stable methods)
     let coefficient_matrix = solve_normal_equations(&xtx, &xty)?;
-    
+
     // Compute residuals and covariance matrix
     let predicted = x_matrix.dot(&coefficient_matrix);
     let residuals = &y_matrix - &predicted;
     let error_covariance = compute_var_error_covariance(&residuals)?;
-    
+
     // Model selection criteria
     let log_likelihood = compute_var_log_likelihood(&residuals, &error_covariance);
     let n_params = n_vars * (1 + n_vars * order);
     let aic = -2.0 * log_likelihood + 2.0 * n_params as f64;
     let bic = -2.0 * log_likelihood + n_params as f64 * (n_obs as f64).ln();
-    
+
     // Granger causality tests
     let granger_tests = if opts.compute_granger_causality {
-        Some(compute_granger_causality_tests(&y_matrix, &x_matrix, &coefficient_matrix, &error_covariance)?)
+        Some(compute_granger_causality_tests(
+            &y_matrix,
+            &x_matrix,
+            &coefficient_matrix,
+            &error_covariance,
+        )?)
     } else {
         None
     };
-    
+
     // Impulse response functions
     let impulse_responses = if opts.compute_impulse_responses {
-        Some(compute_var_impulse_responses(&coefficient_matrix, &error_covariance, opts.impulse_horizon)?)
+        Some(compute_var_impulse_responses(
+            &coefficient_matrix,
+            &error_covariance,
+            opts.impulse_horizon,
+        )?)
     } else {
         None
     };
-    
+
     // Cross-spectral density matrix
     let cross_spectral_density = if opts.compute_cross_spectrum {
-        Some(compute_var_cross_spectrum(&coefficient_matrix, &error_covariance, opts.spectrum_points)?)
+        Some(compute_var_cross_spectrum(
+            &coefficient_matrix,
+            &error_covariance,
+            opts.spectrum_points,
+        )?)
     } else {
         None
     };
-    
+
     Ok(VARResult {
         coefficient_matrices: reshape_var_coefficients(&coefficient_matrix, n_vars, order)?,
         error_covariance,
@@ -2620,7 +2677,11 @@ pub fn estimate_var(
         granger_causality_tests: granger_tests,
         impulse_response_functions: impulse_responses,
         cross_spectral_density,
-        stability_eigenvalues: compute_var_stability_eigenvalues(&coefficient_matrix, n_vars, order)?,
+        stability_eigenvalues: compute_var_stability_eigenvalues(
+            &coefficient_matrix,
+            n_vars,
+            order,
+        )?,
     })
 }
 
@@ -2659,9 +2720,9 @@ pub enum RobustWeightFunction {
 
 #[derive(Debug, Clone, Copy)]
 pub enum RobustScaleMethod {
-    MAD,      // Median Absolute Deviation
-    Qn,       // Rousseeuw-Croux Qn estimator
-    Sn,       // Rousseeuw-Croux Sn estimator
+    MAD, // Median Absolute Deviation
+    Qn,  // Rousseeuw-Croux Qn estimator
+    Sn,  // Rousseeuw-Croux Sn estimator
 }
 
 #[derive(Debug, Clone)]
@@ -2783,10 +2844,14 @@ pub struct VARResult {
 
 // Helper function implementations (stubs for the comprehensive implementation)
 
-fn compute_ar_residuals(signal: &Array1<f64>, ar_coeffs: &Array1<f64>, order: usize) -> SignalResult<Array1<f64>> {
+fn compute_ar_residuals(
+    signal: &Array1<f64>,
+    ar_coeffs: &Array1<f64>,
+    order: usize,
+) -> SignalResult<Array1<f64>> {
     let n = signal.len();
     let mut residuals = Array1::zeros(n);
-    
+
     for i in order..n {
         let mut prediction = 0.0;
         for j in 0..order {
@@ -2794,7 +2859,7 @@ fn compute_ar_residuals(signal: &Array1<f64>, ar_coeffs: &Array1<f64>, order: us
         }
         residuals[i] = signal[i] - prediction;
     }
-    
+
     Ok(residuals)
 }
 
@@ -2804,12 +2869,11 @@ fn robust_scale_estimation(residuals: &Array1<f64>, method: RobustScaleMethod) -
             let mut sorted = residuals.to_vec();
             sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
             let median = sorted[sorted.len() / 2];
-            
-            let mut abs_deviations: Vec<f64> = residuals.iter()
-                .map(|&x| (x - median).abs())
-                .collect();
+
+            let mut abs_deviations: Vec<f64> =
+                residuals.iter().map(|&x| (x - median).abs()).collect();
             abs_deviations.sort_by(|a, b| a.partial_cmp(b).unwrap());
-            
+
             1.4826 * abs_deviations[abs_deviations.len() / 2] // MAD * consistency factor
         }
         _ => 1.0, // Placeholder for other robust scale estimators
@@ -2854,7 +2918,7 @@ fn weighted_ar_estimation(
 ) -> SignalResult<(Array1<f64>, f64)> {
     // Weighted least squares implementation (simplified)
     // In practice, this would use proper weighted regression
-    
+
     // For now, return a basic AR estimate
     let result = estimate_ar(signal, order, ARMethod::YuleWalker)?;
     Ok((result.coefficients, result.variance))
@@ -2879,7 +2943,9 @@ fn kalman_filter(
     _observation_noise_var: f64,
 ) -> SignalResult<(Array2<f64>, Vec<Array2<f64>>, Array1<f64>, Array1<f64>)> {
     // Kalman filter implementation stub
-    Err(SignalError::ComputationError("Kalman filter not implemented".to_string()))
+    Err(SignalError::ComputationError(
+        "Kalman filter not implemented".to_string(),
+    ))
 }
 
 fn kalman_smoother(
@@ -2888,11 +2954,16 @@ fn kalman_smoother(
     _state_transition: &Array2<f64>,
     _process_noise_cov: &Array2<f64>,
 ) -> SignalResult<(Array2<f64>, Vec<Array2<f64>>, Vec<Array2<f64>>)> {
-    // Kalman smoother implementation stub  
-    Err(SignalError::ComputationError("Kalman smoother not implemented".to_string()))
+    // Kalman smoother implementation stub
+    Err(SignalError::ComputationError(
+        "Kalman smoother not implemented".to_string(),
+    ))
 }
 
-fn compute_state_space_log_likelihood(_innovations: &Array1<f64>, _innov_covs: &Array1<f64>) -> f64 {
+fn compute_state_space_log_likelihood(
+    _innovations: &Array1<f64>,
+    _innov_covs: &Array1<f64>,
+) -> f64 {
     0.0 // Placeholder
 }
 
@@ -2920,11 +2991,18 @@ fn state_space_to_arma(
 }
 
 // FARIMA helper functions (stubs)
-fn estimate_fractional_differencing_parameter(_signal: &Array1<f64>, _bandwidth: Option<usize>) -> SignalResult<f64> {
+fn estimate_fractional_differencing_parameter(
+    _signal: &Array1<f64>,
+    _bandwidth: Option<usize>,
+) -> SignalResult<f64> {
     Ok(0.0) // Placeholder
 }
 
-fn fractional_differencing(_signal: &Array1<f64>, _d: f64, _truncation: usize) -> SignalResult<Array1<f64>> {
+fn fractional_differencing(
+    _signal: &Array1<f64>,
+    _d: f64,
+    _truncation: usize,
+) -> SignalResult<Array1<f64>> {
     Ok(Array1::zeros(1)) // Placeholder
 }
 
@@ -2956,7 +3034,10 @@ fn compute_d_standard_error(_signal: &Array1<f64>, _d: f64) -> SignalResult<f64>
 }
 
 // VAR helper functions (stubs)
-fn construct_var_matrices(_signals: &Array2<f64>, _order: usize) -> SignalResult<(Array2<f64>, Array2<f64>)> {
+fn construct_var_matrices(
+    _signals: &Array2<f64>,
+    _order: usize,
+) -> SignalResult<(Array2<f64>, Array2<f64>)> {
     Ok((Array2::zeros((1, 1)), Array2::zeros((1, 1)))) // Placeholder
 }
 

@@ -106,14 +106,15 @@ where
     if options.use_parallel && rows >= options.parallel_threshold {
         // Parallel SIMD processing implementation
         let chunk_size = (rows + 3) / 4; // Divide into 4 chunks for good load balancing
-        let row_chunks: Vec<_> = (0..rows).collect::<Vec<_>>()
+        let row_chunks: Vec<_> = (0..rows)
+            .collect::<Vec<_>>()
             .chunks(chunk_size)
             .map(|chunk| chunk.to_vec())
             .collect();
 
         let results: Vec<_> = parallel_map(&row_chunks, |row_chunk| {
             let mut local_y = vec![T::zero(); row_chunk.len()];
-            
+
             for (local_idx, &i) in row_chunk.iter().enumerate() {
                 let start = row_ptr[i];
                 let end = row_ptr[i + 1];
@@ -129,7 +130,7 @@ where
                         // Gather values for SIMD processing
                         let mut values_chunk = vec![T::zero(); options.chunk_size];
                         let mut x_vals_chunk = vec![T::zero(); options.chunk_size];
-                        
+
                         for (idx, k) in (j..j + options.chunk_size).enumerate() {
                             values_chunk[idx] = values[k];
                             x_vals_chunk[idx] = x[col_indices[k]];
@@ -158,7 +159,7 @@ where
                     local_y[local_idx] = sum;
                 }
             }
-            
+
             (row_chunk.clone(), local_y)
         });
 
@@ -185,7 +186,7 @@ where
                     // Prepare data for SIMD operations
                     let mut values_chunk = vec![T::zero(); options.chunk_size];
                     let mut x_vals_chunk = vec![T::zero(); options.chunk_size];
-                    
+
                     for (idx, k) in (j..j + options.chunk_size).enumerate() {
                         values_chunk[idx] = values[k];
                         x_vals_chunk[idx] = x[col_indices[k]];
@@ -330,7 +331,8 @@ where
                     return a_csr.mul(&*b_csr).and_then(|boxed| {
                         boxed
                             .as_any()
-                            .downcast_ref::<CsrArray<T>>().cloned()
+                            .downcast_ref::<CsrArray<T>>()
+                            .cloned()
                             .ok_or_else(|| {
                                 SparseError::ValueError(
                                     "Failed to convert result to CsrArray".to_string(),
@@ -349,7 +351,8 @@ where
                     return a_csr.div(&*b_csr).and_then(|boxed| {
                         boxed
                             .as_any()
-                            .downcast_ref::<CsrArray<T>>().cloned()
+                            .downcast_ref::<CsrArray<T>>()
+                            .cloned()
                             .ok_or_else(|| {
                                 SparseError::ValueError(
                                     "Failed to convert result to CsrArray".to_string(),
@@ -372,7 +375,8 @@ where
         // Convert the result back to CsrArray
         result_box
             .as_any()
-            .downcast_ref::<CsrArray<T>>().cloned()
+            .downcast_ref::<CsrArray<T>>()
+            .cloned()
             .ok_or_else(|| {
                 SparseError::ValueError("Failed to convert result to CsrArray".to_string())
             })

@@ -244,7 +244,7 @@ where
                         // Update based on constraint violation to drive h(x) -> 0
                         let step_size = 0.1;
                         lambda[i] -= step_size * c[i] * penalty;
-                        
+
                         // Optional: add some damping to prevent oscillations
                         lambda[i] *= 0.9;
                     }
@@ -329,7 +329,7 @@ fn compute_trust_region_step_constrained(
     let mut constraint_violated = false;
     for i in 0..n_constr {
         let grad_c_dot_p = (0..n).map(|j| a[[i, j]] * p_unconstrained[j]).sum::<f64>();
-        
+
         match constraints[i].kind {
             ConstraintKind::Inequality => {
                 // For inequality constraints: check if g(x) + grad_g^T p >= -ctol
@@ -383,7 +383,7 @@ fn compute_trust_region_step_constrained(
         // Find most violated constraint
         for i in 0..n_constr {
             let grad_c_dot_p = (0..n).map(|j| a[[i, j]] * p[j]).sum::<f64>();
-            
+
             let viol = match constraints[i].kind {
                 ConstraintKind::Inequality => {
                     // For inequality constraints: violation is max(0, -(g + grad_g^T p))
@@ -394,7 +394,7 @@ fn compute_trust_region_step_constrained(
                     (c[i] + grad_c_dot_p).abs()
                 }
             };
-            
+
             if viol > max_viol {
                 max_viol = viol;
                 most_violated = i;
@@ -413,7 +413,7 @@ fn compute_trust_region_step_constrained(
 
         if a_norm_sq > 1e-10 {
             let grad_c_dot_p = (0..n).map(|j| a[[most_violated, j]] * p[j]).sum::<f64>();
-            
+
             let proj_dist = match constraints[most_violated].kind {
                 ConstraintKind::Inequality => {
                     // For inequality constraints: project to boundary when violated

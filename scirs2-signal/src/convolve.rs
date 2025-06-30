@@ -223,14 +223,14 @@ where
     // H_wiener = V* / (|V|^2 + epsilon)
     // where V* is complex conjugate of V
     let mut result_fft = vec![Complex64::new(0.0, 0.0); fft_size];
-    
+
     for i in 0..fft_size {
         let v_conj = v_padded[i].conj();
         let v_mag_sq = v_padded[i].norm_sqr();
-        
+
         // Regularized Wiener filter
         let denominator = v_mag_sq + epsilon;
-        
+
         if denominator > 1e-15 {
             let wiener_filter = v_conj / denominator;
             result_fft[i] = a_padded[i] * wiener_filter;

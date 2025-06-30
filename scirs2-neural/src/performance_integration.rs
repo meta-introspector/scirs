@@ -12,12 +12,12 @@
 use crate::error::{NeuralError, Result};
 use crate::jit::{JITCompiler, JITOperation, TargetArchitecture};
 use crate::performance::{PerformanceOptimizer, PerformanceStats};
-use crate::tpu::{TPURuntime, TPUDevice, TPUOperation};
+use crate::tpu::{TPUDevice, TPUOperation, TPURuntime};
 use ndarray::ArrayD;
+use num_traits::Float;
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
-use num_traits::Float;
 
 /// Unified performance manager for all acceleration methods
 pub struct UnifiedPerformanceManager {
@@ -255,21 +255,21 @@ impl UnifiedPerformanceManager {
         context: OperationContext,
     ) -> Result<Vec<ArrayD<F>>> {
         let start_time = Instant::now();
-        
+
         // Create operation key for caching
         let op_key = self.create_operation_key(operation_type, inputs, &context);
-        
+
         // Select optimization strategy
         let strategy = self.select_optimization_strategy(&op_key, &context)?;
-        
+
         // Execute with selected strategy
         let result = self.execute_with_strategy(&strategy, operation_type, inputs, &context);
-        
+
         // Record performance metrics
         let execution_time = start_time.elapsed();
         let success = result.is_ok();
         let memory_usage = self.estimate_memory_usage(inputs);
-        
+
         self.record_performance_sample(PerformanceSample {
             timestamp: start_time,
             operation: operation_type.to_string(),
@@ -278,12 +278,12 @@ impl UnifiedPerformanceManager {
             memory_usage,
             success,
         });
-        
+
         // Update optimization cache if successful
         if success {
             self.update_operation_cache(op_key, strategy);
         }
-        
+
         result
     }
 
@@ -314,7 +314,7 @@ impl UnifiedPerformanceManager {
     ) -> Result<ArrayD<f32>> {
         // Calculate output shape (simplified)
         let output_shape = self.calculate_conv2d_output_shape(input, kernel, stride, padding);
-        
+
         let context = OperationContext {
             operation_type: "conv2d".to_string(),
             input_shapes: vec![input.shape().to_vec(), kernel.shape().to_vec()],
@@ -326,7 +326,8 @@ impl UnifiedPerformanceManager {
         };
 
         // For now, delegate to CPU optimizer
-        self.cpu_optimizer.optimized_conv2d(input, kernel, bias, stride, padding)
+        self.cpu_optimizer
+            .optimized_conv2d(input, kernel, bias, stride, padding)
     }
 
     /// Select the best optimization strategy for a given operation
@@ -341,21 +342,16 @@ impl UnifiedPerformanceManager {
         }
 
         match &self.auto_optimization {
-            AutoOptimizationStrategy::AlwaysFastest => {
-                self.select_fastest_strategy(context)
-            }
+            AutoOptimizationStrategy::AlwaysFastest => self.select_fastest_strategy(context),
             AutoOptimizationStrategy::EnergyEfficient => {
                 self.select_energy_efficient_strategy(context)
             }
-            AutoOptimizationStrategy::Balanced => {
-                self.select_balanced_strategy(context)
-            }
-            AutoOptimizationStrategy::Adaptive { learning_rate: _, window_size } => {
-                self.select_adaptive_strategy(context, *window_size)
-            }
-            AutoOptimizationStrategy::Custom(selector) => {
-                Ok(selector(context))
-            }
+            AutoOptimizationStrategy::Balanced => self.select_balanced_strategy(context),
+            AutoOptimizationStrategy::Adaptive {
+                learning_rate: _,
+                window_size,
+            } => self.select_adaptive_strategy(context, *window_size),
+            AutoOptimizationStrategy::Custom(selector) => Ok(selector(context)),
         }
     }
 
@@ -380,46 +376,63 @@ impl UnifiedPerformanceManager {
                             let result_f = result.mapv(|x| F::from(x).unwrap_or(F::zero()));
                             Ok(vec![result_f])
                         } else {
-                            Err(NeuralError::InvalidInput("MatMul requires 2 inputs".to_string()))
+                            Err(NeuralError::InvalidInput(
+                                "MatMul requires 2 inputs".to_string(),
+                            ))
                         }
                     }
-                    _ => Err(NeuralError::NotImplemented(format!("Operation {} not implemented for CPU parallel", operation_type))),
+                    _ => Err(NeuralError::NotImplemented(format!(
+                        "Operation {} not implemented for CPU parallel",
+                        operation_type
+                    ))),
                 }
             }
             OptimizationChoice::JIT => {
                 if let Some(jit_compiler) = &self.jit_compiler {
                     let jit_op = self.convert_to_jit_operation(operation_type, inputs)?;
                     let output_shapes = self.infer_jit_output_shapes(&jit_op, inputs)?;
-                    
+
                     // Execute with JIT (simplified to first input conversion)
                     if !inputs.is_empty() {
                         let f32_input = inputs[0].mapv(|x| x.to_f32().unwrap_or(0.0));
-                        let result = jit_compiler.compile_and_execute(&jit_op, &[&f32_input], &output_shapes[0])?;
+                        let result = jit_compiler.compile_and_execute(
+                            &jit_op,
+                            &[&f32_input],
+                            &output_shapes[0],
+                        )?;
                         let result_f = result.mapv(|x| F::from(x).unwrap_or(F::zero()));
                         Ok(vec![result_f])
                     } else {
                         Err(NeuralError::InvalidInput("No inputs provided".to_string()))
                     }
                 } else {
-                    Err(NeuralError::DeviceError("JIT compiler not available".to_string()))
+                    Err(NeuralError::DeviceError(
+                        "JIT compiler not available".to_string(),
+                    ))
                 }
             }
             OptimizationChoice::TPU => {
                 if let Some(tpu_runtime) = &mut self.tpu_runtime {
                     let tpu_op = self.convert_to_tpu_operation(operation_type)?;
                     let results = tpu_runtime.compile_and_execute(&tpu_op, inputs)?;
-                    Ok(results.into_iter().map(|arr| arr.mapv(|x| F::from(x).unwrap_or(F::zero()))).collect())
+                    Ok(results
+                        .into_iter()
+                        .map(|arr| arr.mapv(|x| F::from(x).unwrap_or(F::zero())))
+                        .collect())
                 } else {
-                    Err(NeuralError::DeviceError("TPU runtime not available".to_string()))
+                    Err(NeuralError::DeviceError(
+                        "TPU runtime not available".to_string(),
+                    ))
                 }
             }
             OptimizationChoice::CPUSerial => {
                 // Fallback to simple implementation
                 self.execute_cpu_serial(operation_type, inputs)
             }
-            _ => {
-                Err(NeuralError::NotImplemented(format!("Strategy {:?} not implemented", strategy)))
-            }
+            _ => Err(NeuralError::NotImplemented(format!(
+                "Strategy {:?} not implemented",
+                strategy
+            ))),
         }
     }
 
@@ -446,7 +459,10 @@ impl UnifiedPerformanceManager {
     }
 
     /// Select energy efficient strategy
-    fn select_energy_efficient_strategy(&self, context: &OperationContext) -> Result<OptimizationChoice> {
+    fn select_energy_efficient_strategy(
+        &self,
+        context: &OperationContext,
+    ) -> Result<OptimizationChoice> {
         // TPU is generally most energy efficient for large operations
         if self.tpu_runtime.is_some() && self.is_large_operation(context) {
             Ok(OptimizationChoice::TPU)
@@ -460,7 +476,7 @@ impl UnifiedPerformanceManager {
     fn select_balanced_strategy(&self, context: &OperationContext) -> Result<OptimizationChoice> {
         // Balance between performance and energy consumption
         let operation_size = self.estimate_operation_size(context);
-        
+
         if operation_size > 1_000_000 && self.tpu_runtime.is_some() {
             Ok(OptimizationChoice::TPU)
         } else if operation_size > 100_000 && self.jit_compiler.is_some() {
@@ -471,16 +487,21 @@ impl UnifiedPerformanceManager {
     }
 
     /// Select strategy using adaptive learning
-    fn select_adaptive_strategy(&self, context: &OperationContext, window_size: usize) -> Result<OptimizationChoice> {
+    fn select_adaptive_strategy(
+        &self,
+        context: &OperationContext,
+        window_size: usize,
+    ) -> Result<OptimizationChoice> {
         if let Ok(monitor) = self.monitor.read() {
             // Use recent performance history to select strategy
-            let recent_performance = monitor.get_recent_performance(&context.operation_type, window_size);
-            
+            let recent_performance =
+                monitor.get_recent_performance(&context.operation_type, window_size);
+
             if let Some(best_strategy) = recent_performance {
                 return Ok(best_strategy);
             }
         }
-        
+
         // Fallback to balanced strategy
         self.select_balanced_strategy(context)
     }
@@ -508,13 +529,17 @@ impl UnifiedPerformanceManager {
 
     fn estimate_operation_size(&self, context: &OperationContext) -> usize {
         // Rough estimate based on input/output sizes
-        let input_size: usize = context.input_shapes.iter()
+        let input_size: usize = context
+            .input_shapes
+            .iter()
             .map(|shape| shape.iter().product::<usize>())
             .sum();
-        let output_size: usize = context.output_shapes.iter()
+        let output_size: usize = context
+            .output_shapes
+            .iter()
             .map(|shape| shape.iter().product::<usize>())
             .sum();
-        
+
         input_size + output_size
     }
 
@@ -534,21 +559,32 @@ impl UnifiedPerformanceManager {
                         transpose_b: false,
                     })
                 } else {
-                    Err(NeuralError::InvalidInput("MatMul requires 2 inputs".to_string()))
+                    Err(NeuralError::InvalidInput(
+                        "MatMul requires 2 inputs".to_string(),
+                    ))
                 }
             }
-            _ => Err(NeuralError::NotImplemented(format!("JIT operation {} not supported", operation_type))),
+            _ => Err(NeuralError::NotImplemented(format!(
+                "JIT operation {} not supported",
+                operation_type
+            ))),
         }
     }
 
     /// Convert operation to TPU format
-    fn convert_to_tpu_operation<F: Float + Debug>(&self, operation_type: &str) -> Result<TPUOperation<F>> {
+    fn convert_to_tpu_operation<F: Float + Debug>(
+        &self,
+        operation_type: &str,
+    ) -> Result<TPUOperation<F>> {
         match operation_type {
             "matmul" => Ok(TPUOperation::MatMul {
                 transpose_a: false,
                 transpose_b: false,
             }),
-            _ => Err(NeuralError::NotImplemented(format!("TPU operation {} not supported", operation_type))),
+            _ => Err(NeuralError::NotImplemented(format!(
+                "TPU operation {} not supported",
+                operation_type
+            ))),
         }
     }
 
@@ -559,14 +595,16 @@ impl UnifiedPerformanceManager {
         inputs: &[&ArrayD<F>],
     ) -> Result<Vec<Vec<usize>>> {
         match operation {
-            JITOperation::MatMul { a_shape, b_shape, .. } => {
-                Ok(vec![vec![a_shape[0], b_shape[1]]])
-            }
+            JITOperation::MatMul {
+                a_shape, b_shape, ..
+            } => Ok(vec![vec![a_shape[0], b_shape[1]]]),
             _ => {
                 if !inputs.is_empty() {
                     Ok(vec![inputs[0].shape().to_vec()])
                 } else {
-                    Err(NeuralError::InvalidInput("Cannot infer output shapes without inputs".to_string()))
+                    Err(NeuralError::InvalidInput(
+                        "Cannot infer output shapes without inputs".to_string(),
+                    ))
                 }
             }
         }
@@ -584,28 +622,37 @@ impl UnifiedPerformanceManager {
                     let result = self.serial_matmul(inputs[0], inputs[1])?;
                     Ok(vec![result])
                 } else {
-                    Err(NeuralError::InvalidInput("MatMul requires 2 inputs".to_string()))
+                    Err(NeuralError::InvalidInput(
+                        "MatMul requires 2 inputs".to_string(),
+                    ))
                 }
             }
-            _ => Err(NeuralError::NotImplemented(format!("Serial operation {} not supported", operation_type))),
+            _ => Err(NeuralError::NotImplemented(format!(
+                "Serial operation {} not supported",
+                operation_type
+            ))),
         }
     }
 
     /// Simple serial matrix multiplication
     fn serial_matmul<F: Float + Debug>(&self, a: &ArrayD<F>, b: &ArrayD<F>) -> Result<ArrayD<F>> {
         if a.ndim() != 2 || b.ndim() != 2 {
-            return Err(NeuralError::InvalidInput("Matrix multiplication requires 2D arrays".to_string()));
+            return Err(NeuralError::InvalidInput(
+                "Matrix multiplication requires 2D arrays".to_string(),
+            ));
         }
 
         let (m, k) = (a.shape()[0], a.shape()[1]);
         let n = b.shape()[1];
-        
+
         if k != b.shape()[0] {
-            return Err(NeuralError::DimensionMismatch("Matrix dimensions don't match for multiplication".to_string()));
+            return Err(NeuralError::DimensionMismatch(
+                "Matrix dimensions don't match for multiplication".to_string(),
+            ));
         }
 
         let mut result = ndarray::Array::zeros((m, n));
-        
+
         for i in 0..m {
             for j in 0..n {
                 let mut sum = F::zero();
@@ -626,11 +673,12 @@ impl UnifiedPerformanceManager {
         inputs: &[&ArrayD<F>],
         context: &OperationContext,
     ) -> OperationKey {
-        let shape_signature = inputs.iter()
+        let shape_signature = inputs
+            .iter()
             .map(|input| format!("{:?}", input.shape()))
             .collect::<Vec<_>>()
             .join(";");
-        
+
         let param_signature = format!("batch_size:{}", context.batch_size);
 
         OperationKey {
@@ -661,7 +709,8 @@ impl UnifiedPerformanceManager {
     }
 
     fn estimate_memory_usage<F: Float + Debug>(&self, inputs: &[&ArrayD<F>]) -> usize {
-        inputs.iter()
+        inputs
+            .iter()
             .map(|input| input.len() * std::mem::size_of::<F>())
             .sum()
     }
@@ -679,10 +728,10 @@ impl UnifiedPerformanceManager {
         let w_in = input.shape()[3];
         let kh = kernel.shape()[2];
         let kw = kernel.shape()[3];
-        
+
         let h_out = (h_in + 2 * padding.0 - kh) / stride.0 + 1;
         let w_out = (w_in + 2 * padding.1 - kw) / stride.1 + 1;
-        
+
         vec![n, c_out, h_out, w_out]
     }
 
@@ -695,7 +744,7 @@ impl UnifiedPerformanceManager {
     /// Get comprehensive performance statistics
     pub fn get_unified_stats(&self) -> UnifiedPerformanceStats {
         let cpu_stats = self.cpu_optimizer.get_performance_stats();
-        
+
         let jit_stats = if let Some(jit_compiler) = &self.jit_compiler {
             let jit_raw_stats = jit_compiler.get_statistics();
             Some(JITStats {
@@ -768,7 +817,7 @@ impl PerformanceMonitor {
     /// Record a performance sample
     pub fn record_sample(&mut self, sample: PerformanceSample) {
         self.total_operations += 1;
-        
+
         // Update execution times
         self.execution_times
             .entry(sample.strategy.clone())
@@ -782,10 +831,11 @@ impl PerformanceMonitor {
             .push(sample.memory_usage);
 
         // Update success rates
-        let (successes, total) = self.success_rates
+        let (successes, total) = self
+            .success_rates
             .entry(sample.strategy.clone())
             .or_insert((0, 0));
-        
+
         if sample.success {
             *successes += 1;
         }
@@ -800,7 +850,8 @@ impl PerformanceMonitor {
 
     /// Get fastest strategy for an operation type
     pub fn get_fastest_strategy(&self, operation_type: &str) -> Option<OptimizationChoice> {
-        let relevant_samples: Vec<_> = self.performance_trends
+        let relevant_samples: Vec<_> = self
+            .performance_trends
             .iter()
             .filter(|sample| sample.operation == operation_type && sample.success)
             .collect();
@@ -811,7 +862,7 @@ impl PerformanceMonitor {
 
         // Group by strategy and find average execution time
         let mut strategy_times: HashMap<OptimizationChoice, Vec<Duration>> = HashMap::new();
-        
+
         for sample in relevant_samples {
             strategy_times
                 .entry(sample.strategy.clone())
@@ -830,8 +881,13 @@ impl PerformanceMonitor {
     }
 
     /// Get recent performance for adaptive strategy
-    pub fn get_recent_performance(&self, operation_type: &str, window_size: usize) -> Option<OptimizationChoice> {
-        let recent_samples: Vec<_> = self.performance_trends
+    pub fn get_recent_performance(
+        &self,
+        operation_type: &str,
+        window_size: usize,
+    ) -> Option<OptimizationChoice> {
+        let recent_samples: Vec<_> = self
+            .performance_trends
             .iter()
             .rev()
             .take(window_size)
@@ -844,10 +900,12 @@ impl PerformanceMonitor {
 
         // Return the strategy with best recent performance
         let mut strategy_performance: HashMap<OptimizationChoice, f64> = HashMap::new();
-        
+
         for sample in recent_samples {
             let score = 1.0 / sample.execution_time.as_secs_f64(); // Higher is better
-            *strategy_performance.entry(sample.strategy.clone()).or_insert(0.0) += score;
+            *strategy_performance
+                .entry(sample.strategy.clone())
+                .or_insert(0.0) += score;
         }
 
         strategy_performance
@@ -859,7 +917,7 @@ impl PerformanceMonitor {
     /// Get unified statistics
     pub fn get_unified_stats(&self) -> UnifiedStats {
         let total_operations = self.total_operations;
-        
+
         // Calculate average speedup (simplified)
         let avg_speedup = 1.5; // Placeholder calculation
 
@@ -867,7 +925,8 @@ impl PerformanceMonitor {
         let energy_efficiency = 1.3; // Placeholder calculation
 
         // Find preferred strategy
-        let preferred_strategy = self.execution_times
+        let preferred_strategy = self
+            .execution_times
             .iter()
             .max_by_key(|(_, times)| times.len())
             .map(|(strategy, _)| strategy.clone())
@@ -876,10 +935,12 @@ impl PerformanceMonitor {
         // Calculate strategy distribution
         let mut strategy_distribution = HashMap::new();
         let total_samples = self.performance_trends.len() as f64;
-        
+
         if total_samples > 0.0 {
             for sample in &self.performance_trends {
-                *strategy_distribution.entry(sample.strategy.clone()).or_insert(0.0) += 1.0 / total_samples;
+                *strategy_distribution
+                    .entry(sample.strategy.clone())
+                    .or_insert(0.0) += 1.0 / total_samples;
             }
         }
 
@@ -917,9 +978,7 @@ impl Default for UnifiedStats {
 
 impl Default for UnifiedPerformanceManager {
     fn default() -> Self {
-        Self::new().unwrap_or_else(|_| {
-            panic!("Failed to create UnifiedPerformanceManager")
-        })
+        Self::new().unwrap_or_else(|_| panic!("Failed to create UnifiedPerformanceManager"))
     }
 }
 
@@ -933,7 +992,15 @@ impl std::fmt::Display for OptimizationChoice {
             OptimizationChoice::TPU => write!(f, "TPU"),
             OptimizationChoice::GPU => write!(f, "GPU"),
             OptimizationChoice::Hybrid(strategies) => {
-                write!(f, "Hybrid({})", strategies.iter().map(|s| format!("{}", s)).collect::<Vec<_>>().join("+"))
+                write!(
+                    f,
+                    "Hybrid({})",
+                    strategies
+                        .iter()
+                        .map(|s| format!("{}", s))
+                        .collect::<Vec<_>>()
+                        .join("+")
+                )
             }
         }
     }
@@ -969,7 +1036,7 @@ mod tests {
     #[test]
     fn test_performance_monitor() {
         let mut monitor = PerformanceMonitor::new();
-        
+
         let sample = PerformanceSample {
             timestamp: Instant::now(),
             operation: "test_op".to_string(),
@@ -985,7 +1052,10 @@ mod tests {
 
     #[test]
     fn test_optimization_choice_display() {
-        assert_eq!(format!("{}", OptimizationChoice::CPUParallel), "CPU Parallel");
+        assert_eq!(
+            format!("{}", OptimizationChoice::CPUParallel),
+            "CPU Parallel"
+        );
         assert_eq!(format!("{}", OptimizationChoice::JIT), "JIT Compiled");
         assert_eq!(format!("{}", OptimizationChoice::TPU), "TPU");
     }
@@ -993,7 +1063,7 @@ mod tests {
     #[test]
     fn test_operation_size_estimation() {
         let manager = UnifiedPerformanceManager::new().unwrap();
-        
+
         let context = OperationContext {
             operation_type: "matmul".to_string(),
             input_shapes: vec![vec![100, 200], vec![200, 150]],
@@ -1011,13 +1081,13 @@ mod tests {
     #[test]
     fn test_serial_matmul() {
         let manager = UnifiedPerformanceManager::new().unwrap();
-        
+
         let a = Array::ones((3, 4)).into_dyn();
         let b = Array::ones((4, 5)).into_dyn();
-        
+
         let result = manager.serial_matmul(&a, &b);
         assert!(result.is_ok());
-        
+
         let result = result.unwrap();
         assert_eq!(result.shape(), &[3, 5]);
         assert_eq!(result[[0, 0]], 4.0); // sum of 1*1 for 4 elements

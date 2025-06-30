@@ -1198,13 +1198,17 @@ impl GpuMemoryPool {
     }
 
     /// Get a buffer from the pool or create a new one
-    pub fn get_buffer(&mut self, ctx: &GpuVisionContext, size: usize) -> scirs2_core::gpu::GpuBuffer<f32> {
+    pub fn get_buffer(
+        &mut self,
+        ctx: &GpuVisionContext,
+        size: usize,
+    ) -> scirs2_core::gpu::GpuBuffer<f32> {
         if let Some(pool) = self.buffers.get_mut(&size) {
             if let Some(buffer) = pool.pop() {
                 return buffer;
             }
         }
-        
+
         // Create new buffer if none available
         ctx.context.create_buffer::<f32>(size)
     }
@@ -1247,9 +1251,10 @@ pub fn gpu_batch_convolve_2d(
     // Ensure all images have the same dimensions
     for (i, image) in images.iter().enumerate() {
         if image.dim() != (height, width) {
-            return Err(VisionError::InvalidInput(
-                format!("Image {} has different dimensions", i),
-            ));
+            return Err(VisionError::InvalidInput(format!(
+                "Image {} has different dimensions",
+                i
+            )));
         }
     }
 
@@ -1264,7 +1269,7 @@ pub fn gpu_batch_convolve_2d(
     // Pack all images into a single buffer
     let total_size = batch_size * height * width;
     let mut batch_data = Vec::with_capacity(total_size);
-    
+
     for image in images {
         batch_data.extend(image.iter().copied());
     }
@@ -1393,7 +1398,11 @@ fn batch_conv2d(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 let work_groups_y = width.div_ceil(workgroup_size);
                 let work_groups_z = batch_size.div_ceil(4); // 4 images per z workgroup
 
-                kernel_handle.dispatch([work_groups_x as u32, work_groups_y as u32, work_groups_z as u32]);
+                kernel_handle.dispatch([
+                    work_groups_x as u32,
+                    work_groups_y as u32,
+                    work_groups_z as u32,
+                ]);
 
                 let mut result_flat = vec![0.0f32; total_size];
                 output_buffer.copy_to_host(&mut result_flat);
@@ -1404,10 +1413,12 @@ fn batch_conv2d(@builtin(global_invocation_id) global_id: vec3<u32>) {
                     let start = i * height * width;
                     let end = start + height * width;
                     let image_data = &result_flat[start..end];
-                    
+
                     let result_array = Array2::from_shape_vec((height, width), image_data.to_vec())
-                        .map_err(|e| VisionError::Other(format!("Failed to reshape output: {}", e)))?;
-                    
+                        .map_err(|e| {
+                            VisionError::Other(format!("Failed to reshape output: {}", e))
+                        })?;
+
                     results.push(result_array);
                 }
 
@@ -1452,9 +1463,7 @@ impl AsyncGpuProcessor {
             GpuOperation::Convolution(kernel) => {
                 gpu_convolve_2d(&self.context, image, &kernel.view())
             }
-            GpuOperation::GaussianBlur(sigma) => {
-                gpu_gaussian_blur(&self.context, image, sigma)
-            }
+            GpuOperation::GaussianBlur(sigma) => gpu_gaussian_blur(&self.context, image, sigma),
             GpuOperation::SobelEdges => {
                 let (_, _, magnitude) = gpu_sobel_gradients(&self.context, image)?;
                 Ok(magnitude)
@@ -1620,7 +1629,7 @@ mod tests {
 }
 
 // ============================================================================
-// Advanced GPU Acceleration for Neural Vision Tasks 
+// Advanced GPU Acceleration for Neural Vision Tasks
 // ============================================================================
 
 /// GPU-accelerated multi-head attention for Vision Transformers
@@ -1647,38 +1656,38 @@ pub fn gpu_multi_head_attention(
     num_heads: usize,
 ) -> Result<Array2<f32>> {
     let (seq_len, hidden_dim) = queries.dim();
-    
+
     if keys.dim() != (seq_len, hidden_dim) || values.dim() != (seq_len, hidden_dim) {
         return Err(VisionError::InvalidInput(
             "Query, key, value dimensions must match".to_string(),
         ));
     }
-    
+
     if hidden_dim % num_heads != 0 {
         return Err(VisionError::InvalidInput(
             "Hidden dimension must be divisible by number of heads".to_string(),
         ));
     }
-    
+
     if !ctx.is_gpu_available() {
         // Fallback to SIMD implementation
         return fallback_multi_head_attention(queries, keys, values, num_heads);
     }
-    
+
     let head_dim = hidden_dim / num_heads;
     let scale = 1.0 / (head_dim as f32).sqrt();
-    
+
     // Flatten matrices for GPU processing
     let q_flat: Vec<f32> = queries.iter().cloned().collect();
     let k_flat: Vec<f32> = keys.iter().cloned().collect();
     let v_flat: Vec<f32> = values.iter().cloned().collect();
-    
+
     // Create GPU buffers
     let q_buffer = ctx.context.create_buffer_from_slice(&q_flat);
     let k_buffer = ctx.context.create_buffer_from_slice(&k_flat);
     let v_buffer = ctx.context.create_buffer_from_slice(&v_flat);
     let output_buffer = ctx.context.create_buffer::<f32>(seq_len * hidden_dim);
-    
+
     // GPU kernel for attention computation
     let attention_kernel = format!(
         r#"
@@ -1761,19 +1770,25 @@ pub fn gpu_multi_head_attention(
         }}
         "#,
     );
-    
+
     // Execute GPU kernel
     match ctx.context.execute_kernel(
         &attention_kernel,
         &[&q_buffer, &k_buffer, &v_buffer, &output_buffer],
         (seq_len as u32, num_heads as u32, 1),
-        &[seq_len as u32, hidden_dim as u32, num_heads as u32, head_dim as u32],
+        &[
+            seq_len as u32,
+            hidden_dim as u32,
+            num_heads as u32,
+            head_dim as u32,
+        ],
         &[scale],
     ) {
         Ok(_) => {
             let result_flat: Vec<f32> = ctx.context.read_buffer(&output_buffer)?;
-            Array2::from_shape_vec((seq_len, hidden_dim), result_flat)
-                .map_err(|e| VisionError::Other(format!("Failed to reshape attention output: {}", e)))
+            Array2::from_shape_vec((seq_len, hidden_dim), result_flat).map_err(|e| {
+                VisionError::Other(format!("Failed to reshape attention output: {}", e))
+            })
         }
         Err(_) => {
             // Fall back to SIMD
@@ -1803,31 +1818,31 @@ pub fn gpu_batch_matmul_transformer(
 ) -> Result<Array2<f32>> {
     let (m, k) = a.dim();
     let (k2, n) = b.dim();
-    
+
     if k != k2 {
         return Err(VisionError::InvalidInput(
             "Matrix dimensions don't match for multiplication".to_string(),
         ));
     }
-    
+
     if !ctx.is_gpu_available() {
         // Fallback to optimized SIMD matmul
         return crate::simd_ops::simd_matmul_attention_ultra(a, b);
     }
-    
+
     // Use GPU for large matrices where it's beneficial
     if m * n * k < 1024 * 1024 {
         // Small matrices benefit more from SIMD
         return crate::simd_ops::simd_matmul_attention_ultra(a, b);
     }
-    
+
     let a_flat: Vec<f32> = a.iter().cloned().collect();
     let b_flat: Vec<f32> = b.iter().cloned().collect();
-    
+
     let a_buffer = ctx.context.create_buffer_from_slice(&a_flat);
     let b_buffer = ctx.context.create_buffer_from_slice(&b_flat);
     let c_buffer = ctx.context.create_buffer::<f32>(m * n);
-    
+
     // Optimized GPU matmul kernel with tile-based computation
     let matmul_kernel = format!(
         r#"
@@ -1900,7 +1915,7 @@ pub fn gpu_batch_matmul_transformer(
         }}
         "#,
     );
-    
+
     // Execute tiled matmul kernel
     match ctx.context.execute_kernel(
         &matmul_kernel,
@@ -1944,28 +1959,28 @@ pub fn gpu_feature_matching_ultra(
 ) -> Result<Vec<(usize, usize, f32)>> {
     let (n1, dim1) = descriptors1.dim();
     let (n2, dim2) = descriptors2.dim();
-    
+
     if dim1 != dim2 {
         return Err(VisionError::InvalidInput(
             "Descriptor dimensions must match".to_string(),
         ));
     }
-    
+
     if !ctx.is_gpu_available() || n1 < 100 || n2 < 100 {
         // Use SIMD for small sets or when GPU unavailable
         return crate::simd_ops::simd_feature_matching_ultra(descriptors1, descriptors2, threshold);
     }
-    
+
     let desc1_flat: Vec<f32> = descriptors1.iter().cloned().collect();
     let desc2_flat: Vec<f32> = descriptors2.iter().cloned().collect();
-    
+
     let desc1_buffer = ctx.context.create_buffer_from_slice(&desc1_flat);
     let desc2_buffer = ctx.context.create_buffer_from_slice(&desc2_flat);
-    
+
     // Output buffers for matches
     let matches_buffer = ctx.context.create_buffer::<u32>(n1 * 3); // (idx1, idx2, valid_flag)
     let distances_buffer = ctx.context.create_buffer::<f32>(n1);
-    
+
     let matching_kernel = format!(
         r#"
         #version 450
@@ -2034,11 +2049,16 @@ pub fn gpu_feature_matching_ultra(
         }}
         "#,
     );
-    
+
     // Execute matching kernel
     match ctx.context.execute_kernel(
         &matching_kernel,
-        &[&desc1_buffer, &desc2_buffer, &matches_buffer, &distances_buffer],
+        &[
+            &desc1_buffer,
+            &desc2_buffer,
+            &matches_buffer,
+            &distances_buffer,
+        ],
         ((n1 + 255) / 256 * 256, 1, 1),
         &[n1 as u32, n2 as u32, dim1 as u32],
         &[threshold],
@@ -2046,7 +2066,7 @@ pub fn gpu_feature_matching_ultra(
         Ok(_) => {
             let matches_flat: Vec<u32> = ctx.context.read_buffer(&matches_buffer)?;
             let distances_flat: Vec<f32> = ctx.context.read_buffer(&distances_buffer)?;
-            
+
             let mut matches = Vec::new();
             for i in 0..n1 {
                 let valid_flag = matches_flat[i * 3 + 2];
@@ -2057,7 +2077,7 @@ pub fn gpu_feature_matching_ultra(
                     matches.push((idx1, idx2, distance));
                 }
             }
-            
+
             Ok(matches)
         }
         Err(_) => {
@@ -2093,27 +2113,37 @@ pub fn gpu_neural_feature_extraction(
             "GPU neural inference requires GPU context".to_string(),
         ));
     }
-    
+
     let (height, width) = image.dim();
     let image_flat: Vec<f32> = image.iter().cloned().collect();
     let mut current_buffer = ctx.context.create_buffer_from_slice(&image_flat);
-    
+
     let mut current_shape = (height, width);
-    
+
     // Process through neural network layers
-    for (layer_idx, (layer_config, layer_weights)) in layer_configs.iter().zip(weights.iter()).enumerate() {
+    for (layer_idx, (layer_config, layer_weights)) in
+        layer_configs.iter().zip(weights.iter()).enumerate()
+    {
         match layer_config.layer_type {
             LayerType::Convolution => {
-                current_buffer = gpu_conv_layer(ctx, &current_buffer, layer_weights, layer_config, current_shape)?;
+                current_buffer = gpu_conv_layer(
+                    ctx,
+                    &current_buffer,
+                    layer_weights,
+                    layer_config,
+                    current_shape,
+                )?;
                 // Update shape based on convolution parameters
                 current_shape = compute_conv_output_shape(current_shape, layer_config);
             }
             LayerType::MaxPool => {
-                current_buffer = gpu_maxpool_layer(ctx, &current_buffer, layer_config, current_shape)?;
+                current_buffer =
+                    gpu_maxpool_layer(ctx, &current_buffer, layer_config, current_shape)?;
                 current_shape = compute_pool_output_shape(current_shape, layer_config);
             }
             LayerType::Dense => {
-                current_buffer = gpu_dense_layer(ctx, &current_buffer, layer_weights, layer_config)?;
+                current_buffer =
+                    gpu_dense_layer(ctx, &current_buffer, layer_weights, layer_config)?;
                 current_shape = (layer_config.output_channels, 1);
             }
             LayerType::ReLU => {
@@ -2121,10 +2151,10 @@ pub fn gpu_neural_feature_extraction(
             }
         }
     }
-    
+
     // Read final result
     let result_flat: Vec<f32> = ctx.context.read_buffer(&current_buffer)?;
-    
+
     // Reshape to final output format
     let output_size = current_shape.0 * current_shape.1;
     if result_flat.len() != output_size {
@@ -2132,7 +2162,7 @@ pub fn gpu_neural_feature_extraction(
             "Neural network output size mismatch".to_string(),
         ));
     }
-    
+
     Array2::from_shape_vec(current_shape, result_flat)
         .map_err(|e| VisionError::Other(format!("Failed to reshape neural output: {}", e)))
 }
@@ -2167,8 +2197,10 @@ fn gpu_conv_layer(
     // Simplified GPU convolution implementation
     // In a full implementation, this would use optimized convolution kernels
     let output_size = compute_conv_output_shape(input_shape, config);
-    let output_buffer = ctx.context.create_buffer::<f32>(output_size.0 * output_size.1 * config.output_channels);
-    
+    let output_buffer = ctx
+        .context
+        .create_buffer::<f32>(output_size.0 * output_size.1 * config.output_channels);
+
     // For now, return the output buffer (would contain actual GPU kernel execution)
     Ok(output_buffer)
 }
@@ -2180,7 +2212,9 @@ fn gpu_maxpool_layer(
     input_shape: (usize, usize),
 ) -> Result<scirs2_core::gpu::GpuBuffer> {
     let output_size = compute_pool_output_shape(input_shape, config);
-    let output_buffer = ctx.context.create_buffer::<f32>(output_size.0 * output_size.1 * config.input_channels);
+    let output_buffer = ctx
+        .context
+        .create_buffer::<f32>(output_size.0 * output_size.1 * config.input_channels);
     Ok(output_buffer)
 }
 
@@ -2228,43 +2262,46 @@ fn fallback_multi_head_attention(
     let (seq_len, hidden_dim) = queries.dim();
     let head_dim = hidden_dim / num_heads;
     let scale = 1.0 / (head_dim as f32).sqrt();
-    
+
     let mut output = Array2::zeros((seq_len, hidden_dim));
-    
+
     // Process each head
     for head in 0..num_heads {
         let head_start = head * head_dim;
         let head_end = head_start + head_dim;
-        
+
         // Extract head slices
         let q_head = queries.slice(ndarray::s![.., head_start..head_end]);
         let k_head = keys.slice(ndarray::s![.., head_start..head_end]);
         let v_head = values.slice(ndarray::s![.., head_start..head_end]);
-        
+
         // Compute attention scores: Q @ K^T
         let scores = crate::simd_ops::simd_matmul_attention_ultra(&q_head, &k_head.t())?;
-        
+
         // Apply scaling
         let scaled_scores = scores.mapv(|x| x * scale);
-        
+
         // Softmax
         let mut attention_weights = Array2::zeros(scaled_scores.dim());
         for (mut row, score_row) in attention_weights.rows_mut().zip(scaled_scores.rows()) {
             let max_val = score_row.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
             let exp_scores: Vec<f32> = score_row.iter().map(|&x| (x - max_val).exp()).collect();
             let sum_exp: f32 = exp_scores.iter().sum();
-            
+
             for (i, &exp_score) in exp_scores.iter().enumerate() {
                 row[i] = exp_score / sum_exp;
             }
         }
-        
+
         // Apply attention to values: attention_weights @ V
-        let head_output = crate::simd_ops::simd_matmul_attention_ultra(&attention_weights, &v_head)?;
-        
+        let head_output =
+            crate::simd_ops::simd_matmul_attention_ultra(&attention_weights, &v_head)?;
+
         // Copy head output to final output
-        output.slice_mut(ndarray::s![.., head_start..head_end]).assign(&head_output);
+        output
+            .slice_mut(ndarray::s![.., head_start..head_end])
+            .assign(&head_output);
     }
-    
+
     Ok(output)
 }

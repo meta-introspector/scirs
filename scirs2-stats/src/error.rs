@@ -198,12 +198,18 @@ Suggestion: Check input data for numerical issues or extreme values",
 Suggestion: Try adjusting convergence parameters, using different initial values, or increasing the maximum number of iterations", msg)
             }
             StatsError::InsufficientData(msg) => {
-                format!("{}
-Suggestion: Increase sample size or use methods designed for small datasets", msg)
+                format!(
+                    "{}
+Suggestion: Increase sample size or use methods designed for small datasets",
+                    msg
+                )
             }
             StatsError::InvalidInput(msg) => {
-                format!("{}
-Suggestion: Check input format and ensure data meets function requirements", msg)
+                format!(
+                    "{}
+Suggestion: Check input format and ensure data meets function requirements",
+                    msg
+                )
             }
             StatsError::NotImplemented(msg) => {
                 format!("{}

@@ -9,8 +9,8 @@ use ndarray::{Array, IxDyn, ScalarOperand};
 use num_traits::Float;
 use rand::Rng;
 use scirs2_core::simd_ops::SimdUnifiedOps;
-use std::sync::{Arc, RwLock};
 use std::fmt::Debug;
+use std::sync::{Arc, RwLock};
 
 /// Feed-forward network used in transformer encoder/decoder layers
 ///
@@ -47,7 +47,9 @@ pub struct FeedForward<F: Float + Debug + Send + Sync + SimdUnifiedOps> {
     hidden_cache: Arc<RwLock<Option<Array<F, IxDyn>>>>,
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> Clone for FeedForward<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> Clone
+    for FeedForward<F>
+{
     fn clone(&self) -> Self {
         Self {
             d_model: self.d_model,
@@ -78,13 +80,19 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
             norm2: self.norm2.clone(),
             dropout: self.dropout,
             d_model: self.d_model,
-            attn_output_cache: Arc::new(RwLock::new(self.attn_output_cache.read().unwrap().clone())),
-            norm1_output_cache: Arc::new(RwLock::new(self.norm1_output_cache.read().unwrap().clone())),
+            attn_output_cache: Arc::new(RwLock::new(
+                self.attn_output_cache.read().unwrap().clone(),
+            )),
+            norm1_output_cache: Arc::new(RwLock::new(
+                self.norm1_output_cache.read().unwrap().clone(),
+            )),
         }
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> Clone for TransformerEncoder<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> Clone
+    for TransformerEncoder<F>
+{
     fn clone(&self) -> Self {
         Self {
             layers: self.layers.clone(),
@@ -176,7 +184,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> Layer<F> for FeedForward<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> Layer<F>
+    for FeedForward<F>
+{
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -431,7 +441,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> ParamLayer<F> for FeedForward<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> ParamLayer<F>
+    for FeedForward<F>
+{
     fn get_parameters(&self) -> Vec<&Array<F, ndarray::IxDyn>> {
         vec![&self.w1, &self.b1, &self.w2, &self.b2]
     }
@@ -483,7 +495,9 @@ pub struct TransformerEncoderLayer<F: Float + Debug + Send + Sync + SimdUnifiedO
     norm1_output_cache: Arc<RwLock<Option<Array<F, IxDyn>>>>,
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> TransformerEncoderLayer<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps>
+    TransformerEncoderLayer<F>
+{
     /// Create a new transformer encoder layer
     ///
     /// # Arguments
@@ -645,10 +659,12 @@ pub struct TransformerEncoder<F: Float + Debug + Send + Sync + SimdUnifiedOps> {
     /// Model embedding dimension
     d_model: usize,
     /// Layer outputs cache for backward pass
-    layer_outputs: Arc<RwLock<Vec<Array<F, IxDyn>>>>
+    layer_outputs: Arc<RwLock<Vec<Array<F, IxDyn>>>>,
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> TransformerEncoder<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps>
+    TransformerEncoder<F>
+{
     /// Create a new transformer encoder
     ///
     /// # Arguments
@@ -689,7 +705,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> Layer<F> for TransformerEncoder<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> Layer<F>
+    for TransformerEncoder<F>
+{
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }

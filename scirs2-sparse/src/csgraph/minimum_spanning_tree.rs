@@ -50,7 +50,10 @@ where
 {
     fn cmp(&self, other: &Self) -> Ordering {
         // Reverse ordering for min-heap behavior
-        other.weight.partial_cmp(&self.weight).unwrap_or(Ordering::Equal)
+        other
+            .weight
+            .partial_cmp(&self.weight)
+            .unwrap_or(Ordering::Equal)
     }
 }
 

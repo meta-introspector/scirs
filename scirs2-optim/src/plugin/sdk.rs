@@ -98,10 +98,10 @@ pub struct TestSuite<A: Float> {
 pub trait PluginTest<A: Float>: Debug {
     /// Run the test
     fn run_test(&self, plugin: &mut dyn OptimizerPlugin<A>) -> TestResult;
-    
+
     /// Get test name
     fn name(&self) -> &str;
-    
+
     /// Get test description
     fn description(&self) -> &str;
 }
@@ -110,10 +110,10 @@ pub trait PluginTest<A: Float>: Debug {
 pub trait PerformanceTest<A: Float>: Debug {
     /// Run performance test
     fn run_performance_test(&self, plugin: &mut dyn OptimizerPlugin<A>) -> PerformanceTestResult;
-    
+
     /// Get test name
     fn name(&self) -> &str;
-    
+
     /// Get performance baseline
     fn baseline(&self) -> PerformanceBaseline;
 }
@@ -121,11 +121,12 @@ pub trait PerformanceTest<A: Float>: Debug {
 /// Convergence test trait
 pub trait ConvergenceTest<A: Float>: Debug {
     /// Run convergence test
-    fn run_convergence_test(&self, plugin: &mut dyn OptimizerPlugin<A>) -> ConvergenceTestResult<A>;
-    
+    fn run_convergence_test(&self, plugin: &mut dyn OptimizerPlugin<A>)
+        -> ConvergenceTestResult<A>;
+
     /// Get test name
     fn name(&self) -> &str;
-    
+
     /// Get convergence criteria
     fn convergence_criteria(&self) -> ConvergenceCriteria<A>;
 }
@@ -134,10 +135,10 @@ pub trait ConvergenceTest<A: Float>: Debug {
 pub trait MemoryTest<A: Float>: Debug {
     /// Run memory test
     fn run_memory_test(&self, plugin: &mut dyn OptimizerPlugin<A>) -> MemoryTestResult;
-    
+
     /// Get test name
     fn name(&self) -> &str;
-    
+
     /// Get memory constraints
     fn memory_constraints(&self) -> MemoryConstraints;
 }
@@ -240,10 +241,10 @@ pub struct PluginValidator<A: Float> {
 pub trait ValidationRule<A: Float>: Debug {
     /// Validate plugin
     fn validate(&self, plugin: &dyn OptimizerPlugin<A>) -> ValidationResult;
-    
+
     /// Get rule name
     fn name(&self) -> &str;
-    
+
     /// Get rule severity
     fn severity(&self) -> ValidationSeverity;
 }
@@ -296,13 +297,13 @@ pub struct BenchmarkSuite<A: Float> {
 pub trait Benchmark<A: Float>: Debug {
     /// Run benchmark
     fn run_benchmark(&self, plugin: &mut dyn OptimizerPlugin<A>) -> BenchmarkResult<A>;
-    
+
     /// Get benchmark name
     fn name(&self) -> &str;
-    
+
     /// Get benchmark description
     fn description(&self) -> &str;
-    
+
     /// Get benchmark category
     fn category(&self) -> BenchmarkCategory;
 }
@@ -358,7 +359,7 @@ impl PluginSDK {
     pub fn create_plugin_template(name: &str) -> PluginTemplate {
         PluginTemplate::new(name)
     }
-    
+
     /// Validate plugin configuration schema
     pub fn validate_config_schema(schema: &ConfigSchema) -> Result<()> {
         for (field_name, field_schema) in &schema.fields {
@@ -367,16 +368,17 @@ impl PluginSDK {
                     "Field name cannot be empty".to_string(),
                 ));
             }
-            
+
             if field_schema.description.is_empty() {
-                return Err(OptimError::InvalidConfig(
-                    format!("Field '{}' must have a description", field_name),
-                ));
+                return Err(OptimError::InvalidConfig(format!(
+                    "Field '{}' must have a description",
+                    field_name
+                )));
             }
         }
         Ok(())
     }
-    
+
     /// Generate plugin manifest template
     pub fn generate_plugin_manifest(info: &PluginInfo) -> String {
         format!(
@@ -399,7 +401,7 @@ min_rust_version = "1.70.0"
             info.name, info.version, info.description, info.author, info.license
         )
     }
-    
+
     /// Create default test configuration
     pub fn default_test_config() -> TestConfig {
         TestConfig {
@@ -411,7 +413,7 @@ min_rust_version = "1.70.0"
             enable_convergence_tests: true,
         }
     }
-    
+
     /// Create performance baseline from existing optimizer
     pub fn create_performance_baseline<A: Float>(
         optimizer: &mut dyn OptimizerPlugin<A>,
@@ -422,15 +424,15 @@ min_rust_version = "1.70.0"
     {
         let start_time = std::time::Instant::now();
         let mut total_memory = 0;
-        
+
         for (params, gradients) in test_data {
             let _result = optimizer.step(params, gradients);
             total_memory += optimizer.memory_usage().current_usage;
         }
-        
+
         let execution_time = start_time.elapsed();
         let avg_memory = total_memory / test_data.len();
-        
+
         PerformanceBaseline {
             reference_platform: PlatformTarget::LinuxX64,
             expected_throughput: test_data.len() as f64 / execution_time.as_secs_f64(),
@@ -495,11 +497,11 @@ impl PluginTemplate {
             structure,
         }
     }
-    
+
     /// Generate template files to directory
     pub fn generate_to_directory(&self, output_dir: &std::path::Path) -> Result<()> {
         std::fs::create_dir_all(output_dir)?;
-        
+
         for file in &self.structure.source_files {
             let file_path = output_dir.join(&file.path);
             if let Some(parent) = file_path.parent() {
@@ -507,12 +509,12 @@ impl PluginTemplate {
             }
             std::fs::write(&file_path, &file.content)?;
         }
-        
+
         for file in &self.structure.config_files {
             let file_path = output_dir.join(&file.path);
             std::fs::write(&file_path, &file.content)?;
         }
-        
+
         for file in &self.structure.test_files {
             let file_path = output_dir.join(&file.path);
             if let Some(parent) = file_path.parent() {
@@ -520,10 +522,10 @@ impl PluginTemplate {
             }
             std::fs::write(&file_path, &file.content)?;
         }
-        
+
         Ok(())
     }
-    
+
     fn create_default_structure(name: &str) -> TemplateStructure {
         let lib_rs_content = format!(
             r#"//! {} optimizer plugin
@@ -651,18 +653,9 @@ impl<A: Float + std::fmt::Debug + Send + Sync + 'static> OptimizerPluginFactory<
     }}
 }}
 "#,
-            name,
-            name,
-            name,
-            name,
-            name,
-            name,
-            name,
-            name,
-            name,
-            name
+            name, name, name, name, name, name, name, name, name, name
         );
-        
+
         let plugin_toml_content = format!(
             r#"[plugin]
 name = "{}"
@@ -682,7 +675,7 @@ min_rust_version = "1.70.0"
 "#,
             name
         );
-        
+
         let test_content = format!(
             r#"//! Tests for {} optimizer plugin
 
@@ -724,29 +717,23 @@ fn test_{}_convergence() {{
             name.to_lowercase(),
             name
         );
-        
+
         TemplateStructure {
-            source_files: vec![
-                TemplateFile {
-                    path: "src/lib.rs".to_string(),
-                    content: lib_rs_content,
-                    file_type: TemplateFileType::RustSource,
-                },
-            ],
-            config_files: vec![
-                TemplateFile {
-                    path: "plugin.toml".to_string(),
-                    content: plugin_toml_content,
-                    file_type: TemplateFileType::TomlConfig,
-                },
-            ],
-            test_files: vec![
-                TemplateFile {
-                    path: "tests/integration_tests.rs".to_string(),
-                    content: test_content,
-                    file_type: TemplateFileType::Test,
-                },
-            ],
+            source_files: vec![TemplateFile {
+                path: "src/lib.rs".to_string(),
+                content: lib_rs_content,
+                file_type: TemplateFileType::RustSource,
+            }],
+            config_files: vec![TemplateFile {
+                path: "plugin.toml".to_string(),
+                content: plugin_toml_content,
+                file_type: TemplateFileType::TomlConfig,
+            }],
+            test_files: vec![TemplateFile {
+                path: "tests/integration_tests.rs".to_string(),
+                content: test_content,
+                file_type: TemplateFileType::Test,
+            }],
             doc_files: vec![],
         }
     }
@@ -767,18 +754,19 @@ impl<A: Float + Debug + Send + Sync + 'static> BaseOptimizerPlugin<A> {
             event_handlers: Vec::new(),
         }
     }
-    
+
     /// Add event handler
     pub fn add_event_handler(&mut self, handler: Box<dyn PluginEventHandler>) {
         self.event_handlers.push(handler);
     }
-    
+
     /// Update performance metrics
     pub fn update_metrics(&mut self, step_time: std::time::Duration) {
         self.metrics.total_steps += 1;
-        self.metrics.avg_step_time = 
-            (self.metrics.avg_step_time * (self.metrics.total_steps - 1) as f64 + 
-             step_time.as_secs_f64()) / self.metrics.total_steps as f64;
+        self.metrics.avg_step_time = (self.metrics.avg_step_time
+            * (self.metrics.total_steps - 1) as f64
+            + step_time.as_secs_f64())
+            / self.metrics.total_steps as f64;
         self.metrics.throughput = 1.0 / self.metrics.avg_step_time;
     }
 }
@@ -834,7 +822,7 @@ macro_rules! create_optimizer_plugin {
             state: OptimizerState,
             _phantom: std::marker::PhantomData<A>,
         }
-        
+
         impl<A: Float> $name<A> {
             pub fn new() -> Self {
                 Self {
@@ -844,55 +832,55 @@ macro_rules! create_optimizer_plugin {
                 }
             }
         }
-        
+
         impl<A: Float + std::fmt::Debug + Send + Sync + 'static> OptimizerPlugin<A> for $name<A> {
             fn step(&mut self, params: &Array1<A>, gradients: &Array1<A>) -> Result<Array1<A>> {
                 $step_fn(self, params, gradients)
             }
-            
+
             fn name(&self) -> &str {
                 stringify!($name)
             }
-            
+
             fn version(&self) -> &str {
                 "0.1.0"
             }
-            
+
             fn plugin_info(&self) -> PluginInfo {
                 create_plugin_info(stringify!($name), "0.1.0", "Auto-generated")
             }
-            
+
             fn capabilities(&self) -> PluginCapabilities {
                 create_basic_capabilities()
             }
-            
+
             fn initialize(&mut self, _param_shape: &[usize]) -> Result<()> {
                 Ok(())
             }
-            
+
             fn reset(&mut self) -> Result<()> {
                 self.state = OptimizerState::default();
                 Ok(())
             }
-            
+
             fn get_config(&self) -> OptimizerConfig {
                 self.config.clone()
             }
-            
+
             fn set_config(&mut self, config: OptimizerConfig) -> Result<()> {
                 self.config = config;
                 Ok(())
             }
-            
+
             fn get_state(&self) -> Result<OptimizerState> {
                 Ok(self.state.clone())
             }
-            
+
             fn set_state(&mut self, state: OptimizerState) -> Result<()> {
                 self.state = state;
                 Ok(())
             }
-            
+
             fn clone_plugin(&self) -> Box<dyn OptimizerPlugin<A>> {
                 Box::new(Self::new())
             }
@@ -903,21 +891,21 @@ macro_rules! create_optimizer_plugin {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_plugin_template_creation() {
         let template = PluginTemplate::new("TestOptimizer");
         assert_eq!(template.name, "TestOptimizer");
         assert!(!template.structure.source_files.is_empty());
     }
-    
+
     #[test]
     fn test_test_config_default() {
         let config = TestConfig::default();
         assert_eq!(config.iterations, 100);
         assert!(config.enable_performance_tests);
     }
-    
+
     #[test]
     fn test_sdk_config_validation() {
         let mut schema = ConfigSchema {
@@ -925,32 +913,38 @@ mod tests {
             required_fields: vec!["test_field".to_string()],
             version: "1.0".to_string(),
         };
-        
+
         schema.fields.insert(
             "test_field".to_string(),
             FieldSchema {
-                field_type: FieldType::Float { min: None, max: None },
+                field_type: FieldType::Float {
+                    min: None,
+                    max: None,
+                },
                 description: "Test field".to_string(),
                 default_value: None,
                 constraints: Vec::new(),
                 required: true,
             },
         );
-        
+
         assert!(PluginSDK::validate_config_schema(&schema).is_ok());
-        
+
         // Test with empty field name
         schema.fields.insert(
             "".to_string(),
             FieldSchema {
-                field_type: FieldType::Float { min: None, max: None },
+                field_type: FieldType::Float {
+                    min: None,
+                    max: None,
+                },
                 description: "Test".to_string(),
                 default_value: None,
                 constraints: Vec::new(),
                 required: false,
             },
         );
-        
+
         assert!(PluginSDK::validate_config_schema(&schema).is_err());
     }
 }

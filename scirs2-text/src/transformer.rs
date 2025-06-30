@@ -128,7 +128,7 @@
 //!
 //! // Apply different learning rates to different layers
 //! let mut model = TransformerModel::new(config).unwrap();
-//! 
+//!
 //! // Typically: deeper layers get smaller learning rates
 //! let base_lr = 1e-4;
 //! for (layer_idx, layer) in model.encoder.layers.iter_mut().enumerate() {

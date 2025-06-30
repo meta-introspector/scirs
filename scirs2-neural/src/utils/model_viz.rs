@@ -67,7 +67,9 @@ impl Default for ModelVizOptions {
 /// # Returns
 ///
 /// * `Result<String>` - ASCII representation of the model architecture
-pub fn sequential_model_summary<F: Float + Debug + ScalarOperand + num_traits::FromPrimitive + std::fmt::Display>(
+pub fn sequential_model_summary<
+    F: Float + Debug + ScalarOperand + num_traits::FromPrimitive + std::fmt::Display,
+>(
     model: &Sequential<F>,
     input_shape: Option<Vec<usize>>,
     title: Option<&str>,
@@ -401,7 +403,9 @@ pub fn sequential_model_summary<F: Float + Debug + ScalarOperand + num_traits::F
 ///
 /// This visualization shows how data flows through the network layers,
 /// including transformations in shape and any connections between layers.
-pub fn sequential_model_dataflow<F: Float + Debug + ScalarOperand + num_traits::FromPrimitive + std::fmt::Display>(
+pub fn sequential_model_dataflow<
+    F: Float + Debug + ScalarOperand + num_traits::FromPrimitive + std::fmt::Display,
+>(
     model: &Sequential<F>,
     input_shape: Vec<usize>,
     title: Option<&str>,

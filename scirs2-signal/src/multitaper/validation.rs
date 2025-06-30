@@ -982,7 +982,10 @@ fn validate_single_signal_type(
     match signal_type {
         TestSignalType::Sinusoid | TestSignalType::MultiSinusoid => {
             // Get frequencies from the first result
-            let first_result = enhanced_pmtm(&generate_test_signal(test_signals, signal_type, false)?, &config)?;
+            let first_result = enhanced_pmtm(
+                &generate_test_signal(test_signals, signal_type, false)?,
+                &config,
+            )?;
             calculate_sinusoidal_metrics(&psd_estimates, test_signals, &first_result.frequencies)
         }
         TestSignalType::WhiteNoise => calculate_noise_metrics(&psd_estimates, true),
@@ -1596,12 +1599,12 @@ fn test_noise_robustness(config: &TestSignalConfig, _tolerance: f64) -> SignalRe
 pub fn validate_simd_operations(test_signals: &TestSignalConfig) -> SignalResult<f64> {
     let mut simd_score = 100.0;
     let mut validation_errors = Vec::new();
-    
+
     // Test signal generation
     let signal: Vec<f64> = (0..test_signals.n)
         .map(|i| (2.0 * PI * 10.0 * i as f64 / test_signals.fs).sin())
         .collect();
-    
+
     // Test 1: Basic SIMD multiplication operations
     let dummy_window = vec![1.0; signal.len()];
     let signal_view = ndarray::ArrayView1::from(&signal);
@@ -1609,10 +1612,10 @@ pub fn validate_simd_operations(test_signals: &TestSignalConfig) -> SignalResult
     let mut result = vec![0.0; signal.len()];
     let result_view = ndarray::ArrayView1::from_shape(signal.len(), &mut result)
         .map_err(|e| SignalError::ComputationError(format!("SIMD shape error: {}", e)))?;
-    
+
     // Test SIMD multiplication
     f64::simd_mul(&signal_view, &window_view, &result_view);
-    
+
     // Validate SIMD multiplication results
     let mut max_error = 0.0;
     for (i, (&original, &simd_result)) in signal.iter().zip(result.iter()).enumerate() {
@@ -1623,18 +1626,18 @@ pub fn validate_simd_operations(test_signals: &TestSignalConfig) -> SignalResult
             validation_errors.push(format!("SIMD mul error at {}: {}", i, error));
         }
     }
-    
+
     if max_error > 1e-10 {
         simd_score -= 15.0;
     }
-    
+
     // Test 2: SIMD addition operations
     let mut add_result = vec![0.0; signal.len()];
     let add_result_view = ndarray::ArrayView1::from_shape(signal.len(), &mut add_result)
         .map_err(|e| SignalError::ComputationError(format!("SIMD add shape error: {}", e)))?;
-    
+
     f64::simd_add(&signal_view, &window_view, &add_result_view);
-    
+
     let mut add_max_error = 0.0;
     for (i, (&original, &simd_result)) in signal.iter().zip(add_result.iter()).enumerate() {
         let expected = original + 1.0;
@@ -1644,18 +1647,18 @@ pub fn validate_simd_operations(test_signals: &TestSignalConfig) -> SignalResult
             validation_errors.push(format!("SIMD add error at {}: {}", i, error));
         }
     }
-    
+
     if add_max_error > 1e-10 {
         simd_score -= 15.0;
     }
-    
-    // Test 3: SIMD subtraction operations  
+
+    // Test 3: SIMD subtraction operations
     let mut sub_result = vec![0.0; signal.len()];
     let sub_result_view = ndarray::ArrayView1::from_shape(signal.len(), &mut sub_result)
         .map_err(|e| SignalError::ComputationError(format!("SIMD sub shape error: {}", e)))?;
-    
+
     f64::simd_sub(&signal_view, &window_view, &sub_result_view);
-    
+
     let mut sub_max_error = 0.0;
     for (i, (&original, &simd_result)) in signal.iter().zip(sub_result.iter()).enumerate() {
         let expected = original - 1.0;
@@ -1665,11 +1668,11 @@ pub fn validate_simd_operations(test_signals: &TestSignalConfig) -> SignalResult
             validation_errors.push(format!("SIMD sub error at {}: {}", i, error));
         }
     }
-    
+
     if sub_max_error > 1e-10 {
         simd_score -= 15.0;
     }
-    
+
     // Test 4: Complex SIMD operations in multitaper context
     let config_simd = MultitaperConfig {
         fs: test_signals.fs,
@@ -1679,7 +1682,7 @@ pub fn validate_simd_operations(test_signals: &TestSignalConfig) -> SignalResult
         memory_optimized: false,
         ..Default::default()
     };
-    
+
     let config_no_simd = MultitaperConfig {
         fs: test_signals.fs,
         nw: test_signals.nw,
@@ -1688,11 +1691,11 @@ pub fn validate_simd_operations(test_signals: &TestSignalConfig) -> SignalResult
         memory_optimized: true, // This might disable some SIMD optimizations
         ..Default::default()
     };
-    
+
     // Compare SIMD vs non-SIMD results
     let result_simd = enhanced_pmtm(&signal, &config_simd);
     let result_no_simd = enhanced_pmtm(&signal, &config_no_simd);
-    
+
     match (result_simd, result_no_simd) {
         (Ok(simd_res), Ok(no_simd_res)) => {
             // Check if SIMD-accelerated processing produces valid results
@@ -1700,20 +1703,27 @@ pub fn validate_simd_operations(test_signals: &TestSignalConfig) -> SignalResult
                 simd_score -= 25.0;
                 validation_errors.push("SIMD result contains invalid values".to_string());
             }
-            
+
             // Compare SIMD vs non-SIMD results for consistency
             let comparison_errors = compute_relative_errors(&no_simd_res.psd, &simd_res.psd);
             let max_comparison_error = comparison_errors.iter().cloned().fold(0.0, f64::max);
-            let mean_comparison_error = comparison_errors.iter().sum::<f64>() / comparison_errors.len() as f64;
-            
+            let mean_comparison_error =
+                comparison_errors.iter().sum::<f64>() / comparison_errors.len() as f64;
+
             if max_comparison_error > 1e-6 {
                 simd_score -= 10.0;
-                validation_errors.push(format!("SIMD vs non-SIMD max error: {}", max_comparison_error));
+                validation_errors.push(format!(
+                    "SIMD vs non-SIMD max error: {}",
+                    max_comparison_error
+                ));
             }
-            
+
             if mean_comparison_error > 1e-8 {
                 simd_score -= 5.0;
-                validation_errors.push(format!("SIMD vs non-SIMD mean error: {}", mean_comparison_error));
+                validation_errors.push(format!(
+                    "SIMD vs non-SIMD mean error: {}",
+                    mean_comparison_error
+                ));
             }
         }
         (Err(_), _) => {
@@ -1725,14 +1735,14 @@ pub fn validate_simd_operations(test_signals: &TestSignalConfig) -> SignalResult
             validation_errors.push("Non-SIMD multitaper failed".to_string());
         }
     }
-    
+
     // Test 5: Vector size alignment for SIMD efficiency
     let unaligned_sizes = vec![127, 255, 511, 1023]; // Sizes that might not align well with SIMD
     for &size in &unaligned_sizes {
         let unaligned_signal: Vec<f64> = (0..size)
             .map(|i| (2.0 * PI * 10.0 * i as f64 / test_signals.fs).sin())
             .collect();
-        
+
         let unaligned_config = MultitaperConfig {
             fs: test_signals.fs,
             nw: 2.0,
@@ -1740,7 +1750,7 @@ pub fn validate_simd_operations(test_signals: &TestSignalConfig) -> SignalResult
             parallel: false,
             ..Default::default()
         };
-        
+
         match enhanced_pmtm(&unaligned_signal, &unaligned_config) {
             Ok(result) => {
                 if !result.psd.iter().all(|&p| p.is_finite() && p >= 0.0) {
@@ -1754,7 +1764,7 @@ pub fn validate_simd_operations(test_signals: &TestSignalConfig) -> SignalResult
             }
         }
     }
-    
+
     // Log validation errors if any
     if !validation_errors.is_empty() {
         eprintln!("SIMD validation issues found:");
@@ -1762,7 +1772,7 @@ pub fn validate_simd_operations(test_signals: &TestSignalConfig) -> SignalResult
             eprintln!("  - {}", error);
         }
     }
-    
+
     Ok(simd_score.max(0.0))
 }
 
@@ -1772,19 +1782,20 @@ pub fn validate_multitaper_with_simd(
     tolerance: f64,
 ) -> SignalResult<MultitaperValidationResult> {
     let mut base_result = validate_multitaper_comprehensive(test_signals, tolerance)?;
-    
+
     // Add SIMD validation score
     let simd_score = validate_simd_operations(test_signals)?;
-    
+
     // Adjust overall score based on SIMD performance
     base_result.overall_score = (base_result.overall_score * 0.9) + (simd_score * 0.1);
-    
+
     if simd_score < 80.0 {
         base_result.issues.push(format!(
-            "SIMD operations performing suboptimally (score: {:.1})", simd_score
+            "SIMD operations performing suboptimally (score: {:.1})",
+            simd_score
         ));
     }
-    
+
     Ok(base_result)
 }
 

@@ -494,13 +494,16 @@ pub mod ultra_simd_clustering {
             let n_dims = points.ncols();
 
             if n_points == 0 {
-                return Err(SpatialError::ValueError("Cannot cluster empty dataset".to_string()));
+                return Err(SpatialError::ValueError(
+                    "Cannot cluster empty dataset".to_string(),
+                ));
             }
 
             if self.k > n_points {
-                return Err(SpatialError::ValueError(
-                    format!("k ({}) cannot be larger than number of points ({})", self.k, n_points)
-                ));
+                return Err(SpatialError::ValueError(format!(
+                    "k ({}) cannot be larger than number of points ({})",
+                    self.k, n_points
+                )));
             }
 
             // Initialize centroids using k-means++ with SIMD acceleration
@@ -551,7 +554,10 @@ pub mod ultra_simd_clustering {
         }
 
         /// SIMD-accelerated k-means++ initialization
-        fn initialize_centroids_simd(&self, points: &ArrayView2<f64>) -> SpatialResult<Array2<f64>> {
+        fn initialize_centroids_simd(
+            &self,
+            points: &ArrayView2<f64>,
+        ) -> SpatialResult<Array2<f64>> {
             let n_points = points.nrows();
             let n_dims = points.ncols();
             let mut centroids = Array2::zeros((self.k, n_dims));
@@ -566,19 +572,19 @@ pub mod ultra_simd_clustering {
                 // Compute distances to all existing centroids using SIMD
                 for existing_k in 0..k {
                     let centroid = centroids.row(existing_k);
-                    
+
                     // Vectorized distance computation in blocks
                     for chunk_start in (0..n_points).step_by(self.block_size) {
                         let chunk_end = (chunk_start + self.block_size).min(n_points);
                         let chunk_size = chunk_end - chunk_start;
-                        
+
                         for i in 0..chunk_size {
                             let point_idx = chunk_start + i;
                             let point = points.row(point_idx);
                             let diff = f64::simd_sub(&point, &centroid);
                             let squared = f64::simd_mul(&diff.view(), &diff.view());
                             let dist_sq = f64::simd_sum(&squared.view());
-                            
+
                             if dist_sq < min_distances[point_idx] {
                                 min_distances[point_idx] = dist_sq;
                             }
@@ -617,7 +623,7 @@ pub mod ultra_simd_clustering {
                 // Compute all distances for this block using SIMD
                 for (local_i, point_idx) in (chunk_start..chunk_end).enumerate() {
                     let point = points.row(point_idx);
-                    
+
                     // Vectorized distance computation to all centroids
                     for k in 0..self.k {
                         let centroid = centroids.row(k);
@@ -631,14 +637,14 @@ pub mod ultra_simd_clustering {
                 for local_i in 0..chunk_size {
                     let point_idx = chunk_start + local_i;
                     let distances_row = distance_buffer.row(local_i);
-                    
+
                     // Use SIMD to find minimum (argmin)
                     let best_k = distances_row
                         .indexed_iter()
                         .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
                         .map(|(idx, _)| idx)
                         .unwrap_or(0);
-                    
+
                     assignments[point_idx] = best_k;
                 }
             }
@@ -665,11 +671,11 @@ pub mod ultra_simd_clustering {
             // Accumulate points using vectorized operations
             for chunk_start in (0..n_points).step_by(self.block_size) {
                 let chunk_end = (chunk_start + self.block_size).min(n_points);
-                
+
                 for point_idx in chunk_start..chunk_end {
                     let cluster = assignments[point_idx];
                     let point = points.row(point_idx);
-                    
+
                     // Vectorized accumulation using FMA where possible
                     let mut sum_row = centroid_sums.row_mut(cluster);
                     let summed = f64::simd_add(&sum_row.view(), &point);
@@ -684,9 +690,10 @@ pub mod ultra_simd_clustering {
                     let count = centroid_counts[k];
                     let mut centroid_row = centroids.row_mut(k);
                     let sum_row = centroid_sums.row(k);
-                    
+
                     // Vectorized division
-                    for (centroid_coord, &sum_coord) in centroid_row.iter_mut().zip(sum_row.iter()) {
+                    for (centroid_coord, &sum_coord) in centroid_row.iter_mut().zip(sum_row.iter())
+                    {
                         *centroid_coord = sum_coord / count;
                     }
                 }
@@ -696,7 +703,11 @@ pub mod ultra_simd_clustering {
         }
 
         /// SIMD-accelerated convergence checking
-        fn check_convergence_simd(&self, current: &ndarray::ArrayView1<usize>, previous: &ndarray::ArrayView1<usize>) -> bool {
+        fn check_convergence_simd(
+            &self,
+            current: &ndarray::ArrayView1<usize>,
+            previous: &ndarray::ArrayView1<usize>,
+        ) -> bool {
             // Use SIMD to compare assignment arrays efficiently
             !current.is_empty() && current.iter().zip(previous.iter()).all(|(a, b)| a == b)
         }
@@ -742,9 +753,10 @@ pub mod ultra_simd_clustering {
             let n_data = data_points.nrows();
 
             if k > n_data {
-                return Err(SpatialError::ValueError(
-                    format!("k ({}) cannot be larger than number of data points ({})", k, n_data)
-                ));
+                return Err(SpatialError::ValueError(format!(
+                    "k ({}) cannot be larger than number of data points ({})",
+                    k, n_data
+                )));
             }
 
             let mut indices = Array2::zeros((n_queries, k));
@@ -756,37 +768,40 @@ pub mod ultra_simd_clustering {
                 .zip(distances.outer_iter_mut())
                 .enumerate()
                 .par_bridge()
-                .try_for_each(|(query_idx, (mut idx_row, mut dist_row))| -> SpatialResult<()> {
-                    let query_point = query_points.row(query_idx);
-                    
-                    // Use block-based processing for cache efficiency
-                    let mut all_distances = Vec::with_capacity(n_data);
-                    
-                    for block_start in (0..n_data).step_by(self.block_size) {
-                        let block_end = (block_start + self.block_size).min(n_data);
-                        
-                        // Vectorized distance computation for entire block
-                        for data_idx in block_start..block_end {
-                            let data_point = data_points.row(data_idx);
-                            let diff = f64::simd_sub(&query_point, &data_point);
-                            let squared = f64::simd_mul(&diff.view(), &diff.view());
-                            let dist_sq = f64::simd_sum(&squared.view());
-                            all_distances.push((dist_sq, data_idx));
+                .try_for_each(
+                    |(query_idx, (mut idx_row, mut dist_row))| -> SpatialResult<()> {
+                        let query_point = query_points.row(query_idx);
+
+                        // Use block-based processing for cache efficiency
+                        let mut all_distances = Vec::with_capacity(n_data);
+
+                        for block_start in (0..n_data).step_by(self.block_size) {
+                            let block_end = (block_start + self.block_size).min(n_data);
+
+                            // Vectorized distance computation for entire block
+                            for data_idx in block_start..block_end {
+                                let data_point = data_points.row(data_idx);
+                                let diff = f64::simd_sub(&query_point, &data_point);
+                                let squared = f64::simd_mul(&diff.view(), &diff.view());
+                                let dist_sq = f64::simd_sum(&squared.view());
+                                all_distances.push((dist_sq, data_idx));
+                            }
                         }
-                    }
 
-                    // Ultra-fast partial sort using SIMD-aware algorithms
-                    all_distances.select_nth_unstable_by(k - 1, |a, b| a.0.partial_cmp(&b.0).unwrap());
-                    all_distances[..k].sort_unstable_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+                        // Ultra-fast partial sort using SIMD-aware algorithms
+                        all_distances
+                            .select_nth_unstable_by(k - 1, |a, b| a.0.partial_cmp(&b.0).unwrap());
+                        all_distances[..k].sort_unstable_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
 
-                    // Fill results with square root for final distances
-                    for (i, (dist_sq, idx)) in all_distances[..k].iter().enumerate() {
-                        dist_row[i] = dist_sq.sqrt();
-                        idx_row[i] = *idx;
-                    }
+                        // Fill results with square root for final distances
+                        for (i, (dist_sq, idx)) in all_distances[..k].iter().enumerate() {
+                            dist_row[i] = dist_sq.sqrt();
+                            idx_row[i] = *idx;
+                        }
 
-                    Ok(())
-                })?;
+                        Ok(())
+                    },
+                )?;
 
             Ok((indices, distances))
         }
@@ -796,7 +811,7 @@ pub mod ultra_simd_clustering {
 /// Hardware-specific SIMD optimizations for maximum performance
 pub mod hardware_specific_simd {
     use super::*;
-    use ndarray::{Array1, Array2, ArrayView1, ArrayView2, s};
+    use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
     use scirs2_core::simd_ops::PlatformCapabilities;
 
     /// Ultra-optimized distance calculations with hardware-specific code paths
@@ -819,7 +834,11 @@ pub mod hardware_specific_simd {
         }
 
         /// Optimal Euclidean distance with FMA and hardware-specific vectorization
-        pub fn euclidean_distance_optimized(&self, a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> SpatialResult<f64> {
+        pub fn euclidean_distance_optimized(
+            &self,
+            a: &ArrayView1<f64>,
+            b: &ArrayView1<f64>,
+        ) -> SpatialResult<f64> {
             if a.len() != b.len() {
                 return Err(SpatialError::ValueError(
                     "Points must have the same dimension".to_string(),
@@ -850,10 +869,10 @@ pub mod hardware_specific_simd {
             for chunk in 0..chunks {
                 let start = chunk * SIMD_WIDTH;
                 let end = start + SIMD_WIDTH;
-                
+
                 let a_chunk = a.slice(s![start..end]);
                 let b_chunk = b.slice(s![start..end]);
-                
+
                 // Use SIMD multiplication for optimal performance
                 let diff = f64::simd_sub(&a_chunk, &b_chunk);
                 let squared = f64::simd_mul(&diff.view(), &diff.view());
@@ -880,10 +899,10 @@ pub mod hardware_specific_simd {
             for chunk in 0..chunks {
                 let start = chunk * SIMD_WIDTH;
                 let end = start + SIMD_WIDTH;
-                
+
                 let a_chunk = a.slice(s![start..end]);
                 let b_chunk = b.slice(s![start..end]);
-                
+
                 let diff = f64::simd_sub(&a_chunk, &b_chunk);
                 let squared = f64::simd_mul(&diff.view(), &diff.view());
                 sum += f64::simd_sum(&squared.view());
@@ -911,10 +930,10 @@ pub mod hardware_specific_simd {
             for chunk in 0..chunks {
                 let start = chunk * SIMD_WIDTH;
                 let end = start + SIMD_WIDTH;
-                
+
                 let a_chunk = a.slice(s![start..end]);
                 let b_chunk = b.slice(s![start..end]);
-                
+
                 let diff = f64::simd_sub(&a_chunk, &b_chunk);
                 let squared = f64::simd_mul(&diff.view(), &diff.view());
                 sum += f64::simd_sum(&squared.view());
@@ -939,10 +958,10 @@ pub mod hardware_specific_simd {
             for chunk in 0..chunks {
                 let start = chunk * SIMD_WIDTH;
                 let end = start + SIMD_WIDTH;
-                
+
                 let a_chunk = a.slice(s![start..end]);
                 let b_chunk = b.slice(s![start..end]);
-                
+
                 let diff = f64::simd_sub(&a_chunk, &b_chunk);
                 let squared = f64::simd_mul(&diff.view(), &diff.view());
                 sum += f64::simd_sum(&squared.view());
@@ -967,20 +986,20 @@ pub mod hardware_specific_simd {
 
             // Use cache-blocking for optimal memory access patterns
             const BLOCK_SIZE: usize = 64; // Optimize for L1 cache
-            
+
             // Block-wise computation to maximize cache efficiency
             for i_block in (0..n_points).step_by(BLOCK_SIZE) {
                 let i_end = (i_block + BLOCK_SIZE).min(n_points);
-                
+
                 for j_block in (i_block..n_points).step_by(BLOCK_SIZE) {
                     let j_end = (j_block + BLOCK_SIZE).min(n_points);
-                    
+
                     // Process block with optimal SIMD
                     self.compute_distance_block(
-                        points, 
-                        &mut result.view_mut(), 
-                        i_block..i_end, 
-                        j_block..j_end
+                        points,
+                        &mut result.view_mut(),
+                        i_block..i_end,
+                        j_block..j_end,
                     )?;
                 }
             }
@@ -1005,7 +1024,7 @@ pub mod hardware_specific_simd {
         ) -> SpatialResult<()> {
             for i in i_range {
                 let point_i = points.row(i);
-                
+
                 for j in j_range.clone() {
                     if i <= j {
                         let point_j = points.row(j);
@@ -1030,11 +1049,12 @@ pub mod hardware_specific_simd {
         ) -> SpatialResult<(Array2<usize>, Array2<f64>)> {
             let n_queries = query_points.nrows();
             let n_data = data_points.nrows();
-            
+
             if k > n_data {
-                return Err(SpatialError::ValueError(
-                    format!("k ({}) cannot be larger than number of data points ({})", k, n_data)
-                ));
+                return Err(SpatialError::ValueError(format!(
+                    "k ({}) cannot be larger than number of data points ({})",
+                    k, n_data
+                )));
             }
 
             let mut indices = Array2::zeros((n_queries, k));
@@ -1046,30 +1066,34 @@ pub mod hardware_specific_simd {
                 .zip(distances.outer_iter_mut())
                 .enumerate()
                 .par_bridge()
-                .try_for_each(|(query_idx, (mut idx_row, mut dist_row))| -> SpatialResult<()> {
-                    let query = query_points.row(query_idx);
-                    
-                    // Vectorized distance computation to all data points
-                    let all_distances = self.compute_distances_to_all(&query, data_points)?;
-                    
-                    // Find k smallest using partial sort
-                    let mut indexed_distances: Vec<(f64, usize)> = all_distances
-                        .iter()
-                        .enumerate()
-                        .map(|(idx, &dist)| (dist, idx))
-                        .collect();
-                    
-                    indexed_distances.select_nth_unstable_by(k - 1, |a, b| a.0.partial_cmp(&b.0).unwrap());
-                    indexed_distances[..k].sort_unstable_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
-                    
-                    // Fill results
-                    for (i, (dist, idx)) in indexed_distances[..k].iter().enumerate() {
-                        dist_row[i] = *dist;
-                        idx_row[i] = *idx;
-                    }
-                    
-                    Ok(())
-                })?;
+                .try_for_each(
+                    |(query_idx, (mut idx_row, mut dist_row))| -> SpatialResult<()> {
+                        let query = query_points.row(query_idx);
+
+                        // Vectorized distance computation to all data points
+                        let all_distances = self.compute_distances_to_all(&query, data_points)?;
+
+                        // Find k smallest using partial sort
+                        let mut indexed_distances: Vec<(f64, usize)> = all_distances
+                            .iter()
+                            .enumerate()
+                            .map(|(idx, &dist)| (dist, idx))
+                            .collect();
+
+                        indexed_distances
+                            .select_nth_unstable_by(k - 1, |a, b| a.0.partial_cmp(&b.0).unwrap());
+                        indexed_distances[..k]
+                            .sort_unstable_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+
+                        // Fill results
+                        for (i, (dist, idx)) in indexed_distances[..k].iter().enumerate() {
+                            dist_row[i] = *dist;
+                            idx_row[i] = *idx;
+                        }
+
+                        Ok(())
+                    },
+                )?;
 
             Ok((indices, distances))
         }
@@ -1085,10 +1109,10 @@ pub mod hardware_specific_simd {
 
             // Process data points in batches for cache efficiency
             const BATCH_SIZE: usize = 32;
-            
+
             for batch_start in (0..n_data).step_by(BATCH_SIZE) {
                 let batch_end = (batch_start + BATCH_SIZE).min(n_data);
-                
+
                 for i in batch_start..batch_end {
                     let data_point = data_points.row(i);
                     distances[i] = self.euclidean_distance_optimized(query, &data_point)?;
@@ -1187,7 +1211,7 @@ pub mod mixed_precision_simd {
         if can_use_f32 {
             // Convert to f32 for faster computation
             let points_f32 = points.mapv(|x| x as f32);
-            
+
             // Compute with f32 SIMD
             for i in 0..n_points {
                 for j in i..n_points {
@@ -1243,15 +1267,18 @@ pub mod bench {
         results.simd_f64_time = start.elapsed().as_secs_f64();
 
         // Mixed precision benchmark (if applicable)
-        if points1.ncols() <= 16 { // Mixed precision for lower dimensions
+        if points1.ncols() <= 16 {
+            // Mixed precision for lower dimensions
             let points1_f32 = points1.mapv(|x| x as f32);
             let points2_f32 = points2.mapv(|x| x as f32);
-            
+
             let start = Instant::now();
             for _ in 0..iterations {
                 let _distances = mixed_precision_simd::simd_euclidean_distance_batch_f32(
-                    &points1_f32.view(), &points2_f32.view()
-                ).unwrap();
+                    &points1_f32.view(),
+                    &points2_f32.view(),
+                )
+                .unwrap();
             }
             results.simd_f32_time = Some(start.elapsed().as_secs_f64());
         }
@@ -1275,7 +1302,7 @@ pub mod bench {
             if self.simd_f64_time > 0.0 {
                 self.simd_f64_speedup = self.scalar_time / self.simd_f64_time;
             }
-            
+
             if let Some(f32_time) = self.simd_f32_time {
                 if f32_time > 0.0 {
                     self.simd_f32_speedup = Some(self.scalar_time / f32_time);
@@ -1287,12 +1314,17 @@ pub mod bench {
         pub fn report(&self) {
             println!("Ultra-SIMD Performance Benchmark Results:");
             println!("  Scalar time:      {:.6} seconds", self.scalar_time);
-            println!("  SIMD f64 time:    {:.6} seconds ({:.2}x speedup)", 
-                     self.simd_f64_time, self.simd_f64_speedup);
-            
-            if let (Some(f32_time), Some(f32_speedup)) = (self.simd_f32_time, self.simd_f32_speedup) {
-                println!("  SIMD f32 time:    {:.6} seconds ({:.2}x speedup)", 
-                         f32_time, f32_speedup);
+            println!(
+                "  SIMD f64 time:    {:.6} seconds ({:.2}x speedup)",
+                self.simd_f64_time, self.simd_f64_speedup
+            );
+
+            if let (Some(f32_time), Some(f32_speedup)) = (self.simd_f32_time, self.simd_f32_speedup)
+            {
+                println!(
+                    "  SIMD f32 time:    {:.6} seconds ({:.2}x speedup)",
+                    f32_time, f32_speedup
+                );
             }
         }
     }
@@ -1313,11 +1345,16 @@ pub mod bench {
         }
 
         // Estimate theoretical performance
-        let theoretical_speedup = if caps.avx512_available { 8.0 } 
-                                 else if caps.avx2_available { 4.0 }
-                                 else if caps.neon_available { 4.0 }
-                                 else { 2.0 };
-        
+        let theoretical_speedup = if caps.avx512_available {
+            8.0
+        } else if caps.avx2_available {
+            4.0
+        } else if caps.neon_available {
+            4.0
+        } else {
+            2.0
+        };
+
         println!("  Theoretical Max Speedup: {:.1}x", theoretical_speedup);
     }
 }
@@ -1507,39 +1544,47 @@ mod tests {
     #[test]
     fn test_hardware_optimized_distances() {
         use super::hardware_specific_simd::HardwareOptimizedDistances;
-        
+
         let optimizer = HardwareOptimizedDistances::new();
-        
+
         let a = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
         let b = array![2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
-        
-        let optimized_dist = optimizer.euclidean_distance_optimized(&a.view(), &b.view()).unwrap();
+
+        let optimized_dist = optimizer
+            .euclidean_distance_optimized(&a.view(), &b.view())
+            .unwrap();
         let scalar_dist = crate::distance::euclidean(a.as_slice().unwrap(), b.as_slice().unwrap());
-        
+
         assert_relative_eq!(optimized_dist, scalar_dist, epsilon = 1e-10);
     }
 
     #[test]
     fn test_hardware_optimized_batch_matrix() {
         use super::hardware_specific_simd::HardwareOptimizedDistances;
-        
+
         let points = array![
-            [0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0],
-            [2.0, 2.0], [3.0, 3.0], [4.0, 4.0], [5.0, 5.0]
+            [0.0, 0.0],
+            [1.0, 0.0],
+            [0.0, 1.0],
+            [1.0, 1.0],
+            [2.0, 2.0],
+            [3.0, 3.0],
+            [4.0, 4.0],
+            [5.0, 5.0]
         ];
-        
+
         let optimizer = HardwareOptimizedDistances::new();
         let result = optimizer.batch_distance_matrix_optimized(&points.view());
-        
+
         assert!(result.is_ok());
         let matrix = result.unwrap();
         assert_eq!(matrix.dim(), (8, 8));
-        
+
         // Check diagonal is zero
         for i in 0..8 {
             assert_relative_eq!(matrix[[i, i]], 0.0, epsilon = 1e-10);
         }
-        
+
         // Check symmetry
         for i in 0..8 {
             for j in 0..8 {
@@ -1551,26 +1596,32 @@ mod tests {
     #[test]
     fn test_hardware_optimized_knn() {
         use super::hardware_specific_simd::HardwareOptimizedDistances;
-        
+
         let data_points = array![
-            [0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0],
-            [2.0, 2.0], [3.0, 3.0], [4.0, 4.0], [5.0, 5.0]
+            [0.0, 0.0],
+            [1.0, 0.0],
+            [0.0, 1.0],
+            [1.0, 1.0],
+            [2.0, 2.0],
+            [3.0, 3.0],
+            [4.0, 4.0],
+            [5.0, 5.0]
         ];
         let query_points = array![[0.5, 0.5], [2.5, 2.5]];
-        
+
         let optimizer = HardwareOptimizedDistances::new();
         let result = optimizer.knn_search_vectorized(&query_points.view(), &data_points.view(), 3);
-        
+
         assert!(result.is_ok());
         let (indices, distances) = result.unwrap();
-        
+
         assert_eq!(indices.dim(), (2, 3));
         assert_eq!(distances.dim(), (2, 3));
-        
+
         // Check distances are sorted
         for row in distances.outer_iter() {
             for i in 1..row.len() {
-                assert!(row[i] >= row[i-1]);
+                assert!(row[i] >= row[i - 1]);
             }
         }
     }
@@ -1578,18 +1629,16 @@ mod tests {
     #[test]
     fn test_mixed_precision_adaptive() {
         use super::mixed_precision_simd::adaptive_precision_distance_matrix;
-        
+
         // Small values that fit in f32 range
-        let points = array![
-            [0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]
-        ];
-        
+        let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
+
         let result = adaptive_precision_distance_matrix(&points.view(), 1e6);
         assert!(result.is_ok());
-        
+
         let matrix = result.unwrap();
         assert_eq!(matrix.dim(), (4, 4));
-        
+
         // Check diagonal is zero
         for i in 0..4 {
             assert_relative_eq!(matrix[[i, i]], 0.0, epsilon = 1e-6);
@@ -1599,12 +1648,12 @@ mod tests {
     #[test]
     fn test_simd_capabilities_reporting() {
         use super::hardware_specific_simd::HardwareOptimizedDistances;
-        
+
         let optimizer = HardwareOptimizedDistances::new();
-        
+
         // This should not panic
         optimizer.report_capabilities();
-        
+
         let block_size = optimizer.optimal_simd_block_size();
         assert!((2..=8).contains(&block_size));
     }

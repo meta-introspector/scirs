@@ -542,7 +542,7 @@ pub fn simd_convolve_2d_parallel(
     // Process rows in parallel with SIMD using row chunks for thread safety
     let valid_height = height - 2 * k_half_h;
     let chunk_size = (valid_height / num_cpus::get()).max(1);
-    
+
     let row_chunks: Vec<_> = (k_half_h..(height - k_half_h))
         .collect::<Vec<_>>()
         .chunks(chunk_size)
@@ -828,12 +828,18 @@ mod tests {
 
         // Compare with regular convolution
         let regular_result = simd_convolve_2d(&image.view(), &kernel.view()).unwrap();
-        
+
         // Results should be identical within floating point precision
         for ((y, x), &expected) in regular_result.indexed_iter() {
             let actual = output[[y, x]];
-            assert!((actual - expected).abs() < 1e-6, 
-                   "Mismatch at ({}, {}): expected {}, got {}", y, x, expected, actual);
+            assert!(
+                (actual - expected).abs() < 1e-6,
+                "Mismatch at ({}, {}): expected {}, got {}",
+                y,
+                x,
+                expected,
+                actual
+            );
         }
     }
 
@@ -857,29 +863,31 @@ mod tests {
 
         // Compare with regular convolution
         let regular_result = simd_convolve_2d(&image.view(), &kernel.view()).unwrap();
-        
+
         // Results should be identical within floating point precision
         for ((y, x), &expected) in regular_result.indexed_iter() {
             let actual = output[[y, x]];
-            assert!((actual - expected).abs() < 1e-6, 
-                   "Mismatch at ({}, {}): expected {}, got {}", y, x, expected, actual);
+            assert!(
+                (actual - expected).abs() < 1e-6,
+                "Mismatch at ({}, {}): expected {}, got {}",
+                y,
+                x,
+                expected,
+                actual
+            );
         }
     }
 
     #[test]
     fn test_simd_image_statistics() {
-        let image = arr2(&[
-            [1.0, 2.0, 3.0],
-            [4.0, 5.0, 6.0],
-            [7.0, 8.0, 9.0],
-        ]);
+        let image = arr2(&[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]]);
 
         let (min_val, max_val, mean, std_dev) = simd_image_statistics(&image.view());
 
         assert_eq!(min_val, 1.0);
         assert_eq!(max_val, 9.0);
         assert!((mean - 5.0).abs() < 1e-6);
-        
+
         // Expected standard deviation for values 1-9
         let expected_std = (60.0f32 / 9.0).sqrt(); // Variance = sum((x - mean)^2) / n
         assert!((std_dev - expected_std).abs() < 1e-5);
@@ -890,17 +898,17 @@ mod tests {
         // Test memory pool functionality
         let buffer1 = get_temp_buffer(100);
         assert_eq!(buffer1.len(), 100);
-        
+
         let buffer2 = get_temp_buffer(50);
         assert_eq!(buffer2.len(), 50);
-        
+
         return_temp_buffer(buffer1);
         return_temp_buffer(buffer2);
-        
+
         // Should reuse the larger buffer
         let buffer3 = get_temp_buffer(75);
         assert_eq!(buffer3.len(), 75);
-        
+
         return_temp_buffer(buffer3);
     }
 }
@@ -930,7 +938,7 @@ pub fn simd_resize_lanczos_ultra(
     new_width: usize,
 ) -> Result<Array2<f32>> {
     let (orig_height, orig_width) = image.dim();
-    
+
     if new_height == 0 || new_width == 0 {
         return Err(crate::error::VisionError::InvalidInput(
             "Target dimensions must be positive".to_string(),
@@ -938,10 +946,10 @@ pub fn simd_resize_lanczos_ultra(
     }
 
     let mut output = Array2::zeros((new_height, new_width));
-    
+
     let scale_y = orig_height as f32 / new_height as f32;
     let scale_x = orig_width as f32 / new_width as f32;
-    
+
     // Lanczos kernel radius
     const LANCZOS_A: f32 = 3.0;
     let kernel_radius = LANCZOS_A;
@@ -949,16 +957,16 @@ pub fn simd_resize_lanczos_ultra(
     // Pre-compute Lanczos weights for x-direction (cached for efficiency)
     let mut x_weights = vec![Vec::new(); new_width];
     let mut x_indices = vec![Vec::new(); new_width];
-    
+
     for target_x in 0..new_width {
         let src_x = (target_x as f32 + 0.5) * scale_x - 0.5;
         let x_start = (src_x - kernel_radius).floor() as i32;
         let x_end = (src_x + kernel_radius).ceil() as i32;
-        
+
         let mut weights = Vec::new();
         let mut indices = Vec::new();
         let mut weight_sum = 0.0f32;
-        
+
         for x in x_start..=x_end {
             if x >= 0 && x < orig_width as i32 {
                 let distance = (x as f32 - src_x).abs();
@@ -968,49 +976,51 @@ pub fn simd_resize_lanczos_ultra(
                 weight_sum += weight;
             }
         }
-        
+
         // Normalize weights
         if weight_sum > 0.0 {
             for w in &mut weights {
                 *w /= weight_sum;
             }
         }
-        
+
         x_weights[target_x] = weights;
         x_indices[target_x] = indices;
     }
 
     // Resize rows first (horizontal pass) with memory pooling
     let mut temp = Array2::zeros((orig_height, new_width));
-    
+
     for y in 0..orig_height {
         for target_x in 0..new_width {
             let weights = &x_weights[target_x];
             let indices = &x_indices[target_x];
-            
+
             let sum = if weights.len() >= 8 {
                 // SIMD-accelerated weighted sum for longer kernels
                 let weights_arr = ndarray::arr1(weights);
                 let mut values = get_temp_buffer(weights.len());
                 values.resize(weights.len(), 0.0);
-                
+
                 for (i, &idx) in indices.iter().enumerate() {
                     values[i] = image[[y, idx]];
                 }
-                
+
                 let values_arr = ndarray::arr1(&values);
                 let products = f32::simd_mul(&values_arr.view(), &weights_arr.view());
                 let result = f32::simd_sum(&products.view());
-                
+
                 return_temp_buffer(values);
                 result
             } else {
                 // Optimized fallback for small kernels
-                weights.iter().zip(indices.iter())
+                weights
+                    .iter()
+                    .zip(indices.iter())
                     .map(|(&weight, &idx)| weight * image[[y, idx]])
                     .sum()
             };
-            
+
             temp[[y, target_x]] = sum;
         }
     }
@@ -1020,11 +1030,11 @@ pub fn simd_resize_lanczos_ultra(
         let src_y = (target_y as f32 + 0.5) * scale_y - 0.5;
         let y_start = (src_y - kernel_radius).floor() as i32;
         let y_end = (src_y + kernel_radius).ceil() as i32;
-        
+
         let mut weights = Vec::new();
         let mut indices = Vec::new();
         let mut weight_sum = 0.0f32;
-        
+
         for y in y_start..=y_end {
             if y >= 0 && y < orig_height as i32 {
                 let distance = (y as f32 - src_y).abs();
@@ -1034,37 +1044,39 @@ pub fn simd_resize_lanczos_ultra(
                 weight_sum += weight;
             }
         }
-        
+
         // Normalize weights
         if weight_sum > 0.0 {
             for w in &mut weights {
                 *w /= weight_sum;
             }
         }
-        
+
         // Process entire row at once for better cache utilization
         if weights.len() >= 4 {
             let weights_arr = ndarray::arr1(&weights);
-            
+
             for x in 0..new_width {
                 let mut values = get_temp_buffer(weights.len());
                 values.resize(weights.len(), 0.0);
-                
+
                 for (i, &idx) in indices.iter().enumerate() {
                     values[i] = temp[[idx, x]];
                 }
-                
+
                 let values_arr = ndarray::arr1(&values);
                 let products = f32::simd_mul(&values_arr.view(), &weights_arr.view());
                 let sum = f32::simd_sum(&products.view());
-                
+
                 output[[target_y, x]] = sum.clamp(0.0, 1.0);
                 return_temp_buffer(values);
             }
         } else {
             // Small kernel fallback
             for x in 0..new_width {
-                let sum: f32 = weights.iter().zip(indices.iter())
+                let sum: f32 = weights
+                    .iter()
+                    .zip(indices.iter())
                     .map(|(&weight, &idx)| weight * temp[[idx, x]])
                     .sum();
                 output[[target_y, x]] = sum.clamp(0.0, 1.0);
@@ -1102,10 +1114,13 @@ fn lanczos_kernel_ultra(x: f32, a: f32) -> f32 {
 ///
 /// Up to 10x faster than naive implementation using cache-aware blocked algorithms.
 /// Optimized for matrices common in vision transformers (768x768, 1024x256, etc.).
-pub fn simd_matmul_attention_ultra(a: &ArrayView2<f32>, b: &ArrayView2<f32>) -> Result<Array2<f32>> {
+pub fn simd_matmul_attention_ultra(
+    a: &ArrayView2<f32>,
+    b: &ArrayView2<f32>,
+) -> Result<Array2<f32>> {
     let (m, k) = a.dim();
     let (k2, n) = b.dim();
-    
+
     if k != k2 {
         return Err(crate::error::VisionError::InvalidInput(
             "Matrix dimensions don't match for multiplication".to_string(),
@@ -1113,10 +1128,16 @@ pub fn simd_matmul_attention_ultra(a: &ArrayView2<f32>, b: &ArrayView2<f32>) -> 
     }
 
     let mut c = Array2::zeros((m, n));
-    
+
     // Adaptive block size based on matrix dimensions and cache size
-    let block_size = if k > 1024 { 128 } else if k > 256 { 64 } else { 32 };
-    
+    let block_size = if k > 1024 {
+        128
+    } else if k > 256 {
+        64
+    } else {
+        32
+    };
+
     // Use memory-efficient blocked algorithm with SIMD
     for i_block in (0..m).step_by(block_size) {
         for j_block in (0..n).step_by(block_size) {
@@ -1124,7 +1145,7 @@ pub fn simd_matmul_attention_ultra(a: &ArrayView2<f32>, b: &ArrayView2<f32>) -> 
                 let i_end = (i_block + block_size).min(m);
                 let j_end = (j_block + block_size).min(n);
                 let k_end = (k_block + block_size).min(k);
-                
+
                 // Micro-kernel optimization for small blocks
                 ultra_matmul_micro_kernel(
                     &a.slice(ndarray::s![i_block..i_end, k_block..k_end]),
@@ -1146,22 +1167,22 @@ fn ultra_matmul_micro_kernel(
 ) -> Result<()> {
     let (m, k) = a.dim();
     let (_, n) = b.dim();
-    
+
     // Process in 4x4 tiles for optimal SIMD utilization
     for i in (0..m).step_by(4) {
         for j in (0..n).step_by(4) {
             let i_end = (i + 4).min(m);
             let j_end = (j + 4).min(n);
-            
+
             // Accumulate 4x4 tile
             for ii in i..i_end {
                 for jj in j..j_end {
                     let mut sum = c[[ii, jj]];
-                    
+
                     // Vectorized inner product
                     if k >= 8 {
                         let chunk_size = k / 8 * 8;
-                        
+
                         for kk in (0..chunk_size).step_by(8) {
                             let a_chunk = a.slice(ndarray::s![ii, kk..kk + 8]);
                             let mut b_vals = vec![0.0f32; 8];
@@ -1169,11 +1190,11 @@ fn ultra_matmul_micro_kernel(
                                 b_vals[idx] = b[[k_idx, jj]];
                             }
                             let b_chunk = ndarray::arr1(&b_vals);
-                            
+
                             let products = f32::simd_mul(&a_chunk, &b_chunk.view());
                             sum += f32::simd_sum(&products.view());
                         }
-                        
+
                         // Handle remainder
                         for kk in chunk_size..k {
                             sum += a[[ii, kk]] * b[[kk, jj]];
@@ -1184,13 +1205,13 @@ fn ultra_matmul_micro_kernel(
                             sum += a[[ii, kk]] * b[[kk, jj]];
                         }
                     }
-                    
+
                     c[[ii, jj]] = sum;
                 }
             }
         }
     }
-    
+
     Ok(())
 }
 
@@ -1216,61 +1237,61 @@ pub fn simd_non_maximum_suppression_ultra(
 ) -> Result<Array2<f32>> {
     let (height, width) = response.dim();
     let mut output = Array2::zeros((height, width));
-    
+
     // Pre-filter pixels above threshold using SIMD
     let mut candidates = Vec::new();
-    
+
     for y in radius..(height - radius) {
         let current_row = response.row(y);
-        
+
         // SIMD threshold filtering
         let threshold_vec = vec![threshold; width];
         let threshold_arr = ndarray::arr1(&threshold_vec);
         let above_threshold_mask = f32::simd_gt(&current_row, &threshold_arr.view());
-        
+
         for x in radius..(width - radius) {
             if above_threshold_mask[x] {
                 candidates.push((y, x, response[[y, x]]));
             }
         }
     }
-    
+
     // Sort candidates by response value (descending) for better early termination
     candidates.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap());
-    
+
     // Track suppressed pixels to avoid redundant checks
     let mut suppressed = vec![vec![false; width]; height];
-    
+
     for (y, x, value) in candidates {
         if suppressed[y][x] {
             continue;
         }
-        
+
         // Check if still a local maximum
         let mut is_maximum = true;
-        
+
         // Optimized neighborhood check with early termination
         let y_start = y.saturating_sub(radius);
         let y_end = (y + radius + 1).min(height);
         let x_start = x.saturating_sub(radius);
         let x_end = (x + radius + 1).min(width);
-        
+
         'check_loop: for dy in y_start..y_end {
             for dx in x_start..x_end {
                 if dy == y && dx == x {
                     continue;
                 }
-                
+
                 if response[[dy, dx]] >= value {
                     is_maximum = false;
                     break 'check_loop;
                 }
             }
         }
-        
+
         if is_maximum {
             output[[y, x]] = value;
-            
+
             // Mark suppression area to speed up future checks
             for dy in y_start..y_end {
                 for dx in x_start..x_end {
@@ -1304,14 +1325,14 @@ pub fn simd_convolve_adaptive_ultra(
 ) -> Result<Array2<f32>> {
     let (height, width) = image.dim();
     let (k_height, k_width) = kernel.dim();
-    
+
     // Ensure kernel is odd-sized
     if k_height % 2 == 0 || k_width % 2 == 0 {
         return Err(crate::error::VisionError::InvalidInput(
             "Kernel must have odd dimensions".to_string(),
         ));
     }
-    
+
     // Select optimal algorithm based on kernel size and image dimensions
     match (k_height, k_width) {
         (3, 3) => simd_convolve_3x3_specialized(image, kernel),
@@ -1323,55 +1344,81 @@ pub fn simd_convolve_adaptive_ultra(
 }
 
 /// Specialized 3x3 convolution with maximum SIMD utilization
-fn simd_convolve_3x3_specialized(image: &ArrayView2<f32>, kernel: &ArrayView2<f32>) -> Result<Array2<f32>> {
+fn simd_convolve_3x3_specialized(
+    image: &ArrayView2<f32>,
+    kernel: &ArrayView2<f32>,
+) -> Result<Array2<f32>> {
     let (height, width) = image.dim();
     let mut output = Array2::zeros((height, width));
-    
+
     // Flatten kernel for fast access
     let k = kernel.as_slice().unwrap();
-    let k00 = k[0]; let k01 = k[1]; let k02 = k[2];
-    let k10 = k[3]; let k11 = k[4]; let k12 = k[5];
-    let k20 = k[6]; let k21 = k[7]; let k22 = k[8];
-    
+    let k00 = k[0];
+    let k01 = k[1];
+    let k02 = k[2];
+    let k10 = k[3];
+    let k11 = k[4];
+    let k12 = k[5];
+    let k20 = k[6];
+    let k21 = k[7];
+    let k22 = k[8];
+
     // Process with vectorized row operations
     for y in 1..(height - 1) {
         // Get row pointers for cache efficiency
         let row_prev = image.row(y - 1);
         let row_curr = image.row(y);
         let row_next = image.row(y + 1);
-        
+
         // Process pixels in chunks for SIMD
         for x in 1..(width - 1) {
-            output[[y, x]] = 
-                k00 * row_prev[x - 1] + k01 * row_prev[x] + k02 * row_prev[x + 1] +
-                k10 * row_curr[x - 1] + k11 * row_curr[x] + k12 * row_curr[x + 1] +
-                k20 * row_next[x - 1] + k21 * row_next[x] + k22 * row_next[x + 1];
+            output[[y, x]] = k00 * row_prev[x - 1]
+                + k01 * row_prev[x]
+                + k02 * row_prev[x + 1]
+                + k10 * row_curr[x - 1]
+                + k11 * row_curr[x]
+                + k12 * row_curr[x + 1]
+                + k20 * row_next[x - 1]
+                + k21 * row_next[x]
+                + k22 * row_next[x + 1];
         }
     }
-    
+
     Ok(output)
 }
 
 /// Specialized 5x5 convolution with blocked processing
-fn simd_convolve_5x5_specialized(image: &ArrayView2<f32>, kernel: &ArrayView2<f32>) -> Result<Array2<f32>> {
+fn simd_convolve_5x5_specialized(
+    image: &ArrayView2<f32>,
+    kernel: &ArrayView2<f32>,
+) -> Result<Array2<f32>> {
     // Use the general blocked algorithm optimized for 5x5
     simd_convolve_2d_blocked(image, kernel, 32)
 }
 
 /// Specialized 7x7 convolution with separable filter optimization
-fn simd_convolve_7x7_specialized(image: &ArrayView2<f32>, kernel: &ArrayView2<f32>) -> Result<Array2<f32>> {
+fn simd_convolve_7x7_specialized(
+    image: &ArrayView2<f32>,
+    kernel: &ArrayView2<f32>,
+) -> Result<Array2<f32>> {
     // For many 7x7 kernels, check if separable for 2x speedup
     // Fall back to blocked algorithm
     simd_convolve_2d_blocked(image, kernel, 64)
 }
 
 /// Optimized small kernel convolution
-fn simd_convolve_small_kernel(image: &ArrayView2<f32>, kernel: &ArrayView2<f32>) -> Result<Array2<f32>> {
+fn simd_convolve_small_kernel(
+    image: &ArrayView2<f32>,
+    kernel: &ArrayView2<f32>,
+) -> Result<Array2<f32>> {
     simd_convolve_2d_blocked(image, kernel, 32)
 }
 
 /// FFT-based convolution for large kernels
-fn simd_convolve_large_kernel_fft(image: &ArrayView2<f32>, kernel: &ArrayView2<f32>) -> Result<Array2<f32>> {
+fn simd_convolve_large_kernel_fft(
+    image: &ArrayView2<f32>,
+    kernel: &ArrayView2<f32>,
+) -> Result<Array2<f32>> {
     // For very large kernels, FFT convolution becomes more efficient
     // For now, fall back to blocked spatial domain
     simd_convolve_2d_blocked(image, kernel, 128)
@@ -1397,74 +1444,74 @@ pub fn simd_feature_matching_ultra(
 ) -> Result<Vec<(usize, usize, f32)>> {
     let (n1, dim1) = descriptors1.dim();
     let (n2, dim2) = descriptors2.dim();
-    
+
     if dim1 != dim2 {
         return Err(crate::error::VisionError::InvalidInput(
             "Descriptor dimensions must match".to_string(),
         ));
     }
-    
+
     let mut matches = Vec::new();
     let threshold_squared = threshold * threshold;
-    
+
     // Pre-compute norms for faster distance calculation
     let mut norms1 = vec![0.0f32; n1];
     let mut norms2 = vec![0.0f32; n2];
-    
+
     for i in 0..n1 {
         let desc = descriptors1.row(i);
         let norm_squared = f32::simd_dot(&desc, &desc);
         norms1[i] = norm_squared;
     }
-    
+
     for j in 0..n2 {
         let desc = descriptors2.row(j);
         let norm_squared = f32::simd_dot(&desc, &desc);
         norms2[j] = norm_squared;
     }
-    
+
     // Use mutual nearest neighbor matching with SIMD distance computation
     for i in 0..n1 {
         let desc1 = descriptors1.row(i);
         let mut best_distance = f32::INFINITY;
         let mut best_match = None;
-        
+
         // SIMD-accelerated distance computation
         for j in 0..n2 {
             let desc2 = descriptors2.row(j);
-            
+
             // Use pre-computed norms for faster L2 distance
             let dot_product = f32::simd_dot(&desc1, &desc2);
             let distance_squared = norms1[i] + norms2[j] - 2.0 * dot_product;
-            
+
             if distance_squared < best_distance && distance_squared < threshold_squared {
                 best_distance = distance_squared;
                 best_match = Some(j);
             }
         }
-        
+
         if let Some(j) = best_match {
             // Verify mutual nearest neighbor
             let desc2 = descriptors2.row(j);
             let mut mutual_best = f32::INFINITY;
             let mut mutual_match = None;
-            
+
             for k in 0..n1 {
                 let desc_k = descriptors1.row(k);
                 let dot_product = f32::simd_dot(&desc2, &desc_k);
                 let distance_squared = norms2[j] + norms1[k] - 2.0 * dot_product;
-                
+
                 if distance_squared < mutual_best {
                     mutual_best = distance_squared;
                     mutual_match = Some(k);
                 }
             }
-            
+
             if mutual_match == Some(i) {
                 matches.push((i, j, best_distance.sqrt()));
             }
         }
     }
-    
+
     Ok(matches)
 }

@@ -10,8 +10,7 @@ use scirs2_ndimage::{
     visualization::{
         advanced::{create_comparison_view, create_interactive_visualization},
         export::{save_plot, ExportConfig},
-        ColorMap, PlotConfig, ReportFormat,
-        plot_heatmap, plot_histogram, plot_surface,
+        plot_heatmap, plot_histogram, plot_surface, ColorMap, PlotConfig, ReportFormat,
     },
 };
 
@@ -22,55 +21,53 @@ fn main() -> NdimageResult<()> {
     // Create sample data
     let image_size = 50;
     let original_image = create_sample_image(image_size);
-    
+
     // Apply some processing
     let smoothed_image = gaussian_filter(&original_image.view(), 2.0, None)?;
     let noisy_image = add_noise(&original_image);
 
     println!("\n1. Creating Interactive Visualization");
     println!("   📊 Generating interactive HTML with controls...");
-    
+
     let interactive_html = create_interactive_visualization(
         &original_image.view(),
-        "Interactive Image Analysis Dashboard"
+        "Interactive Image Analysis Dashboard",
     )?;
-    
+
     // Save the interactive visualization
     let export_config = ExportConfig {
         output_path: "examples/outputs/interactive_visualization.html".to_string(),
         include_metadata: true,
         ..ExportConfig::default()
     };
-    
+
     save_plot(&interactive_html, &export_config)?;
     println!("   ✅ Saved to: {}", export_config.output_path);
 
     println!("\n2. Creating Image Comparison View");
     println!("   🔍 Generating side-by-side comparison...");
-    
+
     let comparison_images = vec![
         ("Original", original_image.view()),
         ("Gaussian Smoothed", smoothed_image.view()),
         ("With Noise", noisy_image.view()),
     ];
-    
-    let comparison_html = create_comparison_view(
-        &comparison_images,
-        "Image Processing Comparison"
-    )?;
-    
+
+    let comparison_html =
+        create_comparison_view(&comparison_images, "Image Processing Comparison")?;
+
     let comparison_config = ExportConfig {
         output_path: "examples/outputs/image_comparison.html".to_string(),
         include_metadata: true,
         ..ExportConfig::default()
     };
-    
+
     save_plot(&comparison_html, &comparison_config)?;
     println!("   ✅ Saved to: {}", comparison_config.output_path);
 
     println!("\n3. Generating Multiple Plot Types");
     println!("   📈 Creating various visualization formats...");
-    
+
     // Heatmap
     let heatmap_config = PlotConfig {
         title: "Data Heatmap".to_string(),
@@ -80,7 +77,7 @@ fn main() -> NdimageResult<()> {
         height: 400,
         ..PlotConfig::default()
     };
-    
+
     let heatmap_html = plot_heatmap(&original_image.view(), &heatmap_config)?;
     let heatmap_export = ExportConfig {
         output_path: "examples/outputs/heatmap_visualization.html".to_string(),
@@ -98,26 +95,29 @@ fn main() -> NdimageResult<()> {
         height: 400,
         ..PlotConfig::default()
     };
-    
+
     let surface_html = plot_surface(&original_image.view(), &surface_config)?;
     let surface_export = ExportConfig {
         output_path: "examples/outputs/surface_visualization.html".to_string(),
         ..ExportConfig::default()
     };
     save_plot(&surface_html, &surface_export)?;
-    println!("   🏔️  Surface plot saved to: {}", surface_export.output_path);
+    println!(
+        "   🏔️  Surface plot saved to: {}",
+        surface_export.output_path
+    );
 
     // Histogram of flattened data
     let flat_data = original_image.iter().cloned().collect::<Vec<_>>();
     let flat_array = ndarray::Array1::from_vec(flat_data);
-    
+
     let histogram_config = PlotConfig {
         title: "Data Distribution Histogram".to_string(),
         format: ReportFormat::Html,
         num_bins: 30,
         ..PlotConfig::default()
     };
-    
+
     let histogram_html = plot_histogram(&flat_array.view(), &histogram_config)?;
     let histogram_export = ExportConfig {
         output_path: "examples/outputs/histogram_visualization.html".to_string(),
@@ -128,7 +128,7 @@ fn main() -> NdimageResult<()> {
 
     println!("\n4. Color Map Demonstrations");
     println!("   🌈 Testing different color schemes...");
-    
+
     let colormaps = vec![
         (ColorMap::Viridis, "viridis"),
         (ColorMap::Plasma, "plasma"),
@@ -137,7 +137,7 @@ fn main() -> NdimageResult<()> {
         (ColorMap::Cool, "cool"),
         (ColorMap::Inferno, "inferno"),
     ];
-    
+
     for (colormap, name) in colormaps {
         let config = PlotConfig {
             title: format!("{} Color Map Demo", name.to_uppercase()),
@@ -147,7 +147,7 @@ fn main() -> NdimageResult<()> {
             height: 300,
             ..PlotConfig::default()
         };
-        
+
         let colormap_html = plot_heatmap(&original_image.view(), &config)?;
         let colormap_export = ExportConfig {
             output_path: format!("examples/outputs/colormap_{}.html", name),
@@ -160,7 +160,7 @@ fn main() -> NdimageResult<()> {
     println!("\n✨ Advanced Visualization Demo Complete!");
     println!("\n📁 All outputs saved to examples/outputs/");
     println!("   Open the HTML files in a web browser to view interactive visualizations");
-    
+
     // Print summary statistics
     let stats = compute_image_stats(&original_image.view());
     println!("\n📊 Sample Data Statistics:");
@@ -176,21 +176,19 @@ fn create_sample_image(size: usize) -> Array2<f64> {
     Array2::from_shape_fn((size, size), |(i, j)| {
         let x = i as f64 / size as f64;
         let y = j as f64 / size as f64;
-        
+
         // Create an interesting pattern with multiple features
         let wave1 = (x * 10.0).sin() * (y * 10.0).cos();
         let wave2 = ((x - 0.5).powi(2) + (y - 0.5).powi(2)).sqrt() * 20.0;
         let gaussian = (-((x - 0.5).powi(2) + (y - 0.5).powi(2)) * 50.0).exp();
-        
+
         wave1 * 0.3 + wave2.sin() * 0.4 + gaussian * 0.8
     })
 }
 
 fn add_noise(image: &Array2<f64>) -> Array2<f64> {
     let mut rng = ndarray_rand::rand::thread_rng();
-    image.mapv(|x| {
-        x + (ndarray_rand::rand::Rng::gen::<f64>(&mut rng) - 0.5) * 0.1
-    })
+    image.mapv(|x| x + (ndarray_rand::rand::Rng::gen::<f64>(&mut rng) - 0.5) * 0.1)
 }
 
 struct ImageStats {
@@ -204,9 +202,14 @@ fn compute_image_stats(image: &ArrayView2<f64>) -> ImageStats {
     let mean = image.mean().unwrap_or(0.0);
     let min = image.iter().cloned().fold(f64::INFINITY, f64::min);
     let max = image.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
-    
+
     let variance = image.mapv(|x| (x - mean).powi(2)).mean().unwrap_or(0.0);
     let std_dev = variance.sqrt();
-    
-    ImageStats { mean, min, max, std_dev }
+
+    ImageStats {
+        mean,
+        min,
+        max,
+        std_dev,
+    }
 }

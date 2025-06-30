@@ -3,17 +3,17 @@
 //! This example demonstrates deep integration between scirs2-optim and Candle,
 //! showing how to use scirs2-optim optimizers with Candle tensors and neural networks.
 
-use scirs2_optim::{
-    optimizers::{Adam, SGD, Optimizer as OptimizerTrait},
-    unified_api::{OptimizerConfig, OptimizerFactory, Parameter},
-    schedulers::{ExponentialDecay, CosineAnnealing, Scheduler},
-    error::Result as OptimResult,
-};
 use ndarray::{Array1, Array2};
+use scirs2_optim::{
+    error::Result as OptimResult,
+    optimizers::{Adam, Optimizer as OptimizerTrait, SGD},
+    schedulers::{CosineAnnealing, ExponentialDecay, Scheduler},
+    unified_api::{OptimizerConfig, OptimizerFactory, Parameter},
+};
 use std::collections::HashMap;
 
 /// Candle tensor compatibility layer
-/// 
+///
 /// This module provides conversion utilities between Candle tensors and ndarray arrays
 /// to enable seamless integration with scirs2-optim optimizers.
 pub mod candle_bridge {
@@ -57,7 +57,7 @@ impl CandleLinearLayer {
     pub fn new(input_dim: usize, output_dim: usize, name: &str) -> Self {
         // Xavier/Glorot initialization
         let scale = (2.0 / (input_dim + output_dim) as f64).sqrt();
-        
+
         let weights_data: Vec<f64> = (0..input_dim * output_dim)
             .map(|i| {
                 // Simple deterministic initialization for reproducible testing
@@ -65,16 +65,16 @@ impl CandleLinearLayer {
                 val * scale
             })
             .collect();
-        
+
         let bias_data: Vec<f64> = (0..output_dim).map(|_| 0.0).collect();
-        
+
         let weights = Parameter::new(
             Array2::from_shape_vec((input_dim, output_dim), weights_data)
                 .expect("Invalid weight shape")
                 .into_dyn(),
             &format!("{}.weight", name),
         );
-        
+
         let bias = Parameter::new(
             Array1::from_vec(bias_data).into_dyn(),
             &format!("{}.bias", name),
@@ -93,27 +93,35 @@ impl CandleLinearLayer {
         // input: (batch_size, input_dim)
         // weights: (input_dim, output_dim)
         // output: (batch_size, output_dim)
-        
-        let weights_2d = self.weights.data()
+
+        let weights_2d = self
+            .weights
+            .data()
             .clone()
             .into_dimensionality::<ndarray::Ix2>()
-            .map_err(|_| scirs2_optim::error::OptimError::DimensionMismatch(
-                "Weight tensor dimension mismatch".to_string()
-            ))?;
-        
-        let bias_1d = self.bias.data()
+            .map_err(|_| {
+                scirs2_optim::error::OptimError::DimensionMismatch(
+                    "Weight tensor dimension mismatch".to_string(),
+                )
+            })?;
+
+        let bias_1d = self
+            .bias
+            .data()
             .clone()
             .into_dimensionality::<ndarray::Ix1>()
-            .map_err(|_| scirs2_optim::error::OptimError::DimensionMismatch(
-                "Bias tensor dimension mismatch".to_string()
-            ))?;
+            .map_err(|_| {
+                scirs2_optim::error::OptimError::DimensionMismatch(
+                    "Bias tensor dimension mismatch".to_string(),
+                )
+            })?;
 
         // Matrix multiplication: input @ weights
         let output = input.dot(&weights_2d);
-        
+
         // Add bias to each row
         let output_with_bias = output + &bias_1d;
-        
+
         Ok(output_with_bias)
     }
 
@@ -126,24 +134,28 @@ impl CandleLinearLayer {
         // Compute gradients
         // grad_weights = input.T @ grad_output
         let grad_weights = input.t().dot(grad_output);
-        
+
         // grad_bias = sum(grad_output, axis=0)
         let grad_bias = grad_output.sum_axis(ndarray::Axis(0));
-        
+
         // grad_input = grad_output @ weights.T
-        let weights_2d = self.weights.data()
+        let weights_2d = self
+            .weights
+            .data()
             .clone()
             .into_dimensionality::<ndarray::Ix2>()
-            .map_err(|_| scirs2_optim::error::OptimError::DimensionMismatch(
-                "Weight tensor dimension mismatch".to_string()
-            ))?;
-        
+            .map_err(|_| {
+                scirs2_optim::error::OptimError::DimensionMismatch(
+                    "Weight tensor dimension mismatch".to_string(),
+                )
+            })?;
+
         let grad_input = grad_output.dot(&weights_2d.t());
-        
+
         // Set gradients in parameters
         self.weights.set_grad(grad_weights.into_dyn());
         self.bias.set_grad(grad_bias.into_dyn());
-        
+
         Ok(grad_input)
     }
 
@@ -170,7 +182,7 @@ impl CandleNeuralNetwork {
     /// Create a new neural network with specified architecture
     pub fn new(architecture: Vec<usize>) -> Self {
         let mut layers = Vec::new();
-        
+
         for i in 0..architecture.len() - 1 {
             let layer = CandleLinearLayer::new(
                 architecture[i],
@@ -199,11 +211,7 @@ impl CandleNeuralNetwork {
     }
 
     /// Backward pass through the network
-    pub fn backward(
-        &mut self,
-        input: &Array2<f64>,
-        target: &Array2<f64>,
-    ) -> OptimResult<f64> {
+    pub fn backward(&mut self, input: &Array2<f64>, target: &Array2<f64>) -> OptimResult<f64> {
         // Forward pass to compute activations
         let mut activations = vec![input.clone()];
         let mut current = input.clone();
@@ -249,7 +257,10 @@ impl CandleNeuralNetwork {
 
     /// Get total parameter count
     pub fn parameter_count(&self) -> usize {
-        self.layers.iter().map(|layer| layer.parameter_count()).sum()
+        self.layers
+            .iter()
+            .map(|layer| layer.parameter_count())
+            .sum()
     }
 
     /// Get network architecture
@@ -298,17 +309,13 @@ pub struct CandleTrainer {
 
 impl CandleTrainer {
     /// Create a new trainer
-    pub fn new(
-        architecture: Vec<usize>,
-        config: CandleTrainingConfig,
-    ) -> OptimResult<Self> {
+    pub fn new(architecture: Vec<usize>, config: CandleTrainingConfig) -> OptimResult<Self> {
         let network = CandleNeuralNetwork::new(architecture);
 
         // Create optimizer
-        let optimizer_config = OptimizerConfig::new(config.learning_rate)
-            .weight_decay(0.0001);
+        let optimizer_config = OptimizerConfig::new(config.learning_rate).weight_decay(0.0001);
 
-        let optimizer: Box<dyn scirs2_optim::unified_api::UnifiedOptimizer<f64>> = 
+        let optimizer: Box<dyn scirs2_optim::unified_api::UnifiedOptimizer<f64>> =
             match config.optimizer_type.as_str() {
                 "adam" => Box::new(OptimizerFactory::adam(optimizer_config)),
                 "sgd" => Box::new(OptimizerFactory::sgd(optimizer_config)),
@@ -316,22 +323,23 @@ impl CandleTrainer {
             };
 
         // Create scheduler if configured
-        let scheduler: Option<Box<dyn Scheduler<f64>>> = if let Some(ref sched_config) = config.scheduler_config {
-            match sched_config.scheduler_type.as_str() {
-                "exponential" => Some(Box::new(ExponentialDecay::new(
-                    config.learning_rate,
-                    sched_config.decay_rate,
-                ))),
-                "cosine" => Some(Box::new(CosineAnnealing::new(
-                    config.learning_rate,
-                    sched_config.min_lr.unwrap_or(0.0),
-                    config.epochs,
-                ))),
-                _ => None,
-            }
-        } else {
-            None
-        };
+        let scheduler: Option<Box<dyn Scheduler<f64>>> =
+            if let Some(ref sched_config) = config.scheduler_config {
+                match sched_config.scheduler_type.as_str() {
+                    "exponential" => Some(Box::new(ExponentialDecay::new(
+                        config.learning_rate,
+                        sched_config.decay_rate,
+                    ))),
+                    "cosine" => Some(Box::new(CosineAnnealing::new(
+                        config.learning_rate,
+                        sched_config.min_lr.unwrap_or(0.0),
+                        config.epochs,
+                    ))),
+                    _ => None,
+                }
+            } else {
+                None
+            };
 
         Ok(Self {
             network,
@@ -367,9 +375,13 @@ impl CandleTrainer {
             // Mini-batch training
             for batch_start in (0..n_samples).step_by(batch_size) {
                 let batch_end = (batch_start + batch_size).min(n_samples);
-                
-                let batch_data = train_data.slice(ndarray::s![batch_start..batch_end, ..]).to_owned();
-                let batch_targets = train_targets.slice(ndarray::s![batch_start..batch_end, ..]).to_owned();
+
+                let batch_data = train_data
+                    .slice(ndarray::s![batch_start..batch_end, ..])
+                    .to_owned();
+                let batch_targets = train_targets
+                    .slice(ndarray::s![batch_start..batch_end, ..])
+                    .to_owned();
 
                 // Forward and backward pass
                 let loss = self.network.backward(&batch_data, &batch_targets)?;
@@ -393,10 +405,13 @@ impl CandleTrainer {
 
                         // Convert to Array1 for optimizer compatibility
                         let grad_1d = if grad.ndim() == 1 {
-                            clipped_grad.into_dimensionality::<ndarray::Ix1>()
-                                .map_err(|_| scirs2_optim::error::OptimError::DimensionMismatch(
-                                    "Gradient dimension mismatch".to_string()
-                                ))?
+                            clipped_grad
+                                .into_dimensionality::<ndarray::Ix1>()
+                                .map_err(|_| {
+                                    scirs2_optim::error::OptimError::DimensionMismatch(
+                                        "Gradient dimension mismatch".to_string(),
+                                    )
+                                })?
                         } else {
                             // Flatten multi-dimensional gradients
                             Array1::from_vec(clipped_grad.iter().cloned().collect())
@@ -423,16 +438,24 @@ impl CandleTrainer {
                 } else {
                     self.config.learning_rate
                 };
-                
-                println!("   Epoch {}/{}: Loss = {:.6}, LR = {:.6}", 
-                    epoch + 1, self.config.epochs, epoch_loss, current_lr);
+
+                println!(
+                    "   Epoch {}/{}: Loss = {:.6}, LR = {:.6}",
+                    epoch + 1,
+                    self.config.epochs,
+                    epoch_loss,
+                    current_lr
+                );
             }
         }
 
         let training_time = start_time.elapsed();
         let final_loss = epoch_losses.last().copied().unwrap_or(0.0);
 
-        println!("✅ Training completed in {:.2}s", training_time.as_secs_f64());
+        println!(
+            "✅ Training completed in {:.2}s",
+            training_time.as_secs_f64()
+        );
         println!("   Final Loss: {:.6}", final_loss);
 
         Ok(TrainingResults {
@@ -450,26 +473,28 @@ impl CandleTrainer {
         test_targets: &Array2<f64>,
     ) -> OptimResult<EvaluationResults> {
         let predictions = self.network.forward(test_data)?;
-        
+
         // Compute MSE loss
         let diff = &predictions - test_targets;
         let mse_loss = (&diff * &diff).mean().unwrap_or(0.0);
-        
+
         // Compute MAE loss
         let mae_loss = diff.mapv(|x| x.abs()).mean().unwrap_or(0.0);
-        
+
         // Compute accuracy for classification (if targets are one-hot)
         let accuracy = if test_targets.ncols() > 1 {
             let mut correct = 0;
             for i in 0..predictions.nrows() {
-                let pred_class = predictions.row(i)
+                let pred_class = predictions
+                    .row(i)
                     .iter()
                     .enumerate()
                     .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
                     .map(|(idx, _)| idx)
                     .unwrap_or(0);
-                
-                let true_class = test_targets.row(i)
+
+                let true_class = test_targets
+                    .row(i)
                     .iter()
                     .enumerate()
                     .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
@@ -505,17 +530,21 @@ impl CandleTrainer {
     /// Save model parameters
     pub fn save_model(&self, path: &str) -> OptimResult<()> {
         let mut model_data = HashMap::new();
-        
+
         // This would serialize the network parameters
         // For now, just create a placeholder
-        model_data.insert("architecture".to_string(), 
-            serde_json::to_string(&self.network.architecture())?);
-        model_data.insert("config".to_string(), 
-            format!("{:?}", self.config.optimizer_type));
+        model_data.insert(
+            "architecture".to_string(),
+            serde_json::to_string(&self.network.architecture())?,
+        );
+        model_data.insert(
+            "config".to_string(),
+            format!("{:?}", self.config.optimizer_type),
+        );
 
         let serialized = serde_json::to_string_pretty(&model_data)?;
         std::fs::write(path, serialized)?;
-        
+
         println!("💾 Model saved to: {}", path);
         Ok(())
     }
@@ -547,7 +576,7 @@ pub fn generate_synthetic_data(
     noise_level: f64,
 ) -> (Array2<f64>, Array2<f64>) {
     let mut rng_state = 42u64; // Simple PRNG state
-    
+
     // Generate random input data
     let mut input_data = Vec::new();
     for _i in 0..n_samples * input_dim {
@@ -555,9 +584,9 @@ pub fn generate_synthetic_data(
         let random_val = (rng_state % 10000) as f64 / 10000.0 - 0.5;
         input_data.push(random_val);
     }
-    
-    let input = Array2::from_shape_vec((n_samples, input_dim), input_data)
-        .expect("Invalid input shape");
+
+    let input =
+        Array2::from_shape_vec((n_samples, input_dim), input_data).expect("Invalid input shape");
 
     // Generate synthetic targets (simple linear relationship + noise)
     let mut target_data = Vec::new();
@@ -567,18 +596,18 @@ pub fn generate_synthetic_data(
             for k in 0..input_dim {
                 target_val += input[[i, k]] * (k + j + 1) as f64 * 0.1;
             }
-            
+
             // Add noise
             rng_state = rng_state.wrapping_mul(1103515245).wrapping_add(12345);
             let noise = (rng_state % 1000) as f64 / 1000.0 - 0.5;
             target_val += noise * noise_level;
-            
+
             target_data.push(target_val);
         }
     }
-    
-    let targets = Array2::from_shape_vec((n_samples, output_dim), target_data)
-        .expect("Invalid target shape");
+
+    let targets =
+        Array2::from_shape_vec((n_samples, output_dim), target_data).expect("Invalid target shape");
 
     (input, targets)
 }
@@ -614,17 +643,20 @@ fn main() -> OptimResult<()> {
 
     // Create and train the model
     let mut trainer = CandleTrainer::new(vec![10, 64, 32, 3], config)?;
-    
+
     let training_results = trainer.train(&train_data, &train_targets)?;
-    
+
     // Evaluate the model
     let eval_results = trainer.evaluate(&test_data, &test_targets)?;
-    
+
     println!("\n📈 Training Results:");
     println!("   Final Training Loss: {:.6}", training_results.final_loss);
-    println!("   Training Time: {:.2}s", training_results.training_time.as_secs_f64());
+    println!(
+        "   Training Time: {:.2}s",
+        training_results.training_time.as_secs_f64()
+    );
     println!("   Converged: {}", training_results.converged);
-    
+
     println!("\n🎯 Evaluation Results:");
     println!("   Test MSE Loss: {:.6}", eval_results.mse_loss);
     println!("   Test MAE Loss: {:.6}", eval_results.mae_loss);
@@ -635,7 +667,7 @@ fn main() -> OptimResult<()> {
 
     // Demonstrate different optimizers
     println!("\n🔄 Comparing Optimizers:");
-    
+
     let optimizers = vec!["sgd", "adam"];
     for optimizer_name in optimizers {
         let config = CandleTrainingConfig {
@@ -649,15 +681,17 @@ fn main() -> OptimResult<()> {
 
         let mut trainer = CandleTrainer::new(vec![10, 32, 3], config)?;
         let results = trainer.train(&train_data, &train_targets)?;
-        
-        println!("   {}: Final Loss = {:.6}, Time = {:.2}s", 
-            optimizer_name.to_uppercase(), 
-            results.final_loss, 
-            results.training_time.as_secs_f64());
+
+        println!(
+            "   {}: Final Loss = {:.6}, Time = {:.2}s",
+            optimizer_name.to_uppercase(),
+            results.final_loss,
+            results.training_time.as_secs_f64()
+        );
     }
 
     println!("\n✅ Candle integration example completed successfully!");
-    
+
     Ok(())
 }
 
@@ -668,10 +702,10 @@ mod tests {
     #[test]
     fn test_candle_linear_layer() {
         let mut layer = CandleLinearLayer::new(3, 2, "test");
-        
+
         let input = Array2::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
         let output = layer.forward(&input).unwrap();
-        
+
         assert_eq!(output.shape(), &[2, 2]);
         assert_eq!(layer.parameter_count(), 8); // 3*2 + 2
     }
@@ -679,18 +713,18 @@ mod tests {
     #[test]
     fn test_candle_neural_network() {
         let network = CandleNeuralNetwork::new(vec![3, 4, 2]);
-        
+
         let input = Array2::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
         let output = network.forward(input).unwrap();
-        
+
         assert_eq!(output.shape(), &[2, 2]);
-        assert_eq!(network.parameter_count(), 3*4 + 4 + 4*2 + 2); // (3*4+4) + (4*2+2)
+        assert_eq!(network.parameter_count(), 3 * 4 + 4 + 4 * 2 + 2); // (3*4+4) + (4*2+2)
     }
 
     #[test]
     fn test_synthetic_data_generation() {
         let (input, targets) = generate_synthetic_data(100, 5, 2, 0.1);
-        
+
         assert_eq!(input.shape(), &[100, 5]);
         assert_eq!(targets.shape(), &[100, 2]);
     }
@@ -714,10 +748,10 @@ mod tests {
     fn test_bridge_conversions() {
         let tensor_data = vec![1.0_f32, 2.0, 3.0, 4.0];
         let array = candle_bridge::tensor_to_array1(&tensor_data);
-        
+
         assert_eq!(array.len(), 4);
         assert_eq!(array[0], 1.0_f64);
-        
+
         let converted_back = candle_bridge::array1_to_tensor_data(&array);
         assert_eq!(converted_back.len(), 4);
         assert_eq!(converted_back[0], 1.0_f32);
@@ -726,7 +760,7 @@ mod tests {
     #[test]
     fn test_training_mini_batch() {
         let (train_data, train_targets) = generate_synthetic_data(50, 3, 2, 0.05);
-        
+
         let config = CandleTrainingConfig {
             learning_rate: 0.01,
             epochs: 5,
@@ -738,7 +772,7 @@ mod tests {
 
         let mut trainer = CandleTrainer::new(vec![3, 4, 2], config).unwrap();
         let results = trainer.train(&train_data, &train_targets).unwrap();
-        
+
         assert_eq!(results.epoch_losses.len(), 5);
         assert!(results.final_loss >= 0.0);
     }

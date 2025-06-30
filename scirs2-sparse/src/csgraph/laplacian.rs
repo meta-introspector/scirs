@@ -390,12 +390,19 @@ where
 /// connected graphs, so we find the k=2 smallest eigenvalues and return the second one.
 pub fn algebraic_connectivity<T, S>(graph: &S, normalized: bool) -> SparseResult<T>
 where
-    T: Float + Debug + Copy + 'static + std::iter::Sum + scirs2_core::simd_ops::SimdUnifiedOps + Send + Sync,
+    T: Float
+        + Debug
+        + Copy
+        + 'static
+        + std::iter::Sum
+        + scirs2_core::simd_ops::SimdUnifiedOps
+        + Send
+        + Sync,
     S: SparseArray<T>,
 {
     use crate::linalg::{lanczos, LanczosOptions};
     use crate::sym_csr::SymCsrMatrix;
-    
+
     validate_graph(graph, false)?; // Ensure it's a valid undirected graph
 
     // Compute the Laplacian matrix
@@ -414,12 +421,12 @@ where
     // For undirected graphs, the Laplacian is already symmetric
     let (rows, cols) = laplacian.shape();
     let (row_indices, col_indices, values) = laplacian.find();
-    
+
     // Extract lower triangular part for symmetric storage
     let mut sym_indices = Vec::new();
     let mut sym_data = Vec::new();
     let mut sym_indptr = vec![0; rows + 1];
-    
+
     // Count non-zeros in lower triangle for each row
     let mut nnz_count = 0;
     #[allow(clippy::needless_range_loop)]
@@ -437,14 +444,9 @@ where
         }
     }
     sym_indptr[rows] = nnz_count;
-    
+
     // Create symmetric CSR matrix
-    let sym_laplacian = SymCsrMatrix::new(
-        sym_data,
-        sym_indices,
-        sym_indptr,
-        (rows, cols),
-    )?;
+    let sym_laplacian = SymCsrMatrix::new(sym_data, sym_indices, sym_indptr, (rows, cols))?;
 
     // Configure Lanczos options to find the 3 smallest eigenvalues
     // We need 3 to be safe in case the smallest is not exactly zero
@@ -453,12 +455,12 @@ where
         max_subspace_size: (rows / 4).clamp(10, 50), // Reasonable subspace size
         tol: 1e-12,
         num_eigenvalues: 3.min(rows), // Find 3 smallest eigenvalues (or fewer if matrix is small)
-        compute_eigenvectors: false, // We only need eigenvalues
+        compute_eigenvectors: false,  // We only need eigenvalues
     };
 
     // Use Lanczos algorithm to find smallest eigenvalues
     let eigen_result = lanczos(&sym_laplacian, &options, None)?;
-    
+
     if !eigen_result.converged {
         return Err(SparseError::ValueError(
             "Eigenvalue computation did not converge".to_string(),
@@ -466,7 +468,7 @@ where
     }
 
     let eigenvalues = eigen_result.eigenvalues;
-    
+
     // Find the second smallest eigenvalue
     // Note: Eigenvalues from Lanczos are typically in ascending order for smallest eigenvalues
     if eigenvalues.len() < 2_usize {
@@ -478,24 +480,22 @@ where
     // Sort eigenvalues to ensure we get the correct ordering
     let mut sorted_eigenvals: Vec<T> = eigenvalues.iter().copied().collect();
     sorted_eigenvals.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-    
+
     // The algebraic connectivity is the second smallest eigenvalue
     // The smallest should be approximately zero for connected graphs
     let algebraic_conn = sorted_eigenvals[1];
-    
+
     // Verify that the smallest eigenvalue is close to zero (sanity check)
     let smallest_eigenval = sorted_eigenvals[0];
     let zero_threshold = T::from(1e-10).unwrap();
-    
+
     if smallest_eigenval.abs() > zero_threshold {
-        return Err(SparseError::ValueError(
-            format!(
-                "Graph may not be connected: smallest eigenvalue is {:.2e}, expected ~0",
-                smallest_eigenval.to_f64().unwrap_or(0.0)
-            )
-        ));
+        return Err(SparseError::ValueError(format!(
+            "Graph may not be connected: smallest eigenvalue is {:.2e}, expected ~0",
+            smallest_eigenval.to_f64().unwrap_or(0.0)
+        )));
     }
-    
+
     Ok(algebraic_conn)
 }
 

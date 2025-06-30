@@ -30,11 +30,11 @@
 //!
 //! // GPU distance matrix computation
 //! let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
-//! 
+//!
 //! let gpu_matrix = GpuDistanceMatrix::new()?;
 //! let distances = gpu_matrix.compute_parallel(&points.view()).await?;
 //! println!("GPU distance matrix: {:?}", distances);
-//! 
+//!
 //! // GPU K-means clustering
 //! let gpu_kmeans = GpuKMeans::new(2)?;
 //! let (centroids, assignments) = gpu_kmeans.fit(&points.view()).await?;
@@ -125,7 +125,7 @@ impl GpuDevice {
     /// Detect available GPU capabilities
     fn detect_capabilities() -> SpatialResult<GpuCapabilities> {
         let mut caps = GpuCapabilities::default();
-        
+
         // Check CUDA backend
         #[cfg(feature = "cuda")]
         {
@@ -133,7 +133,7 @@ impl GpuDevice {
                 caps.gpu_available = true;
                 caps.device_count = Self::get_cuda_device_count();
                 caps.supported_backends.push(GpuBackend::Cuda);
-                
+
                 // Get CUDA device information
                 if let Ok((names, memory_info)) = Self::get_cuda_device_info() {
                     caps.device_names = names;
@@ -142,14 +142,14 @@ impl GpuDevice {
                         caps.available_memory = *available;
                     }
                 }
-                
+
                 // Set CUDA-specific capabilities
                 caps.max_threads_per_block = 1024;
                 caps.max_blocks_per_grid = 2147483647; // 2^31 - 1
                 caps.compute_capability = Self::get_cuda_compute_capability();
             }
         }
-        
+
         // Check ROCm backend
         #[cfg(feature = "rocm")]
         {
@@ -160,7 +160,7 @@ impl GpuDevice {
                     caps.device_count = rocm_count;
                 }
                 caps.supported_backends.push(GpuBackend::Rocm);
-                
+
                 // Get ROCm device information
                 if let Ok((names, memory_info)) = Self::get_rocm_device_info() {
                     if caps.device_names.is_empty() {
@@ -175,20 +175,20 @@ impl GpuDevice {
                         }
                     }
                 }
-                
+
                 // Set ROCm-specific capabilities
                 caps.max_threads_per_block = 1024;
                 caps.max_blocks_per_grid = 2147483647;
             }
         }
-        
+
         // Check Vulkan backend
         #[cfg(feature = "vulkan")]
         {
             if Self::check_vulkan_available() {
                 caps.gpu_available = true;
                 caps.supported_backends.push(GpuBackend::Vulkan);
-                
+
                 // Get Vulkan device information
                 if let Ok((names, memory_info)) = Self::get_vulkan_device_info() {
                     if caps.device_names.is_empty() {
@@ -205,10 +205,10 @@ impl GpuDevice {
                 }
             }
         }
-        
+
         // Always have CPU fallback
         caps.supported_backends.push(GpuBackend::CpuFallback);
-        
+
         Ok(caps)
     }
 
@@ -262,9 +262,13 @@ impl GpuDevice {
     #[cfg(feature = "cuda")]
     fn check_cuda_available() -> bool {
         use std::process::Command;
-        
+
         // Check for NVIDIA driver and CUDA runtime
-        if let Ok(output) = Command::new("nvidia-smi").arg("--query-gpu=count").arg("--format=csv,noheader,nounits").output() {
+        if let Ok(output) = Command::new("nvidia-smi")
+            .arg("--query-gpu=count")
+            .arg("--format=csv,noheader,nounits")
+            .output()
+        {
             if output.status.success() {
                 if let Ok(count_str) = String::from_utf8(output.stdout) {
                     if let Ok(count) = count_str.trim().parse::<u32>() {
@@ -273,22 +277,22 @@ impl GpuDevice {
                 }
             }
         }
-        
+
         // Fallback: check for CUDA libraries
         #[cfg(target_os = "linux")]
         {
             use std::path::Path;
-            Path::exists(Path::new("/usr/local/cuda/lib64/libcuda.so")) ||
-            Path::exists(Path::new("/usr/lib/x86_64-linux-gnu/libcuda.so")) ||
-            Path::exists(Path::new("/usr/lib64/libcuda.so"))
+            Path::exists(Path::new("/usr/local/cuda/lib64/libcuda.so"))
+                || Path::exists(Path::new("/usr/lib/x86_64-linux-gnu/libcuda.so"))
+                || Path::exists(Path::new("/usr/lib64/libcuda.so"))
         }
-        
+
         #[cfg(target_os = "windows")]
         {
             use std::path::Path;
             Path::exists(Path::new("C:\\Windows\\System32\\nvcuda.dll"))
         }
-        
+
         #[cfg(not(any(target_os = "linux", target_os = "windows")))]
         false
     }
@@ -296,8 +300,12 @@ impl GpuDevice {
     #[cfg(feature = "cuda")]
     fn get_cuda_device_count() -> usize {
         use std::process::Command;
-        
-        if let Ok(output) = Command::new("nvidia-smi").arg("--query-gpu=count").arg("--format=csv,noheader,nounits").output() {
+
+        if let Ok(output) = Command::new("nvidia-smi")
+            .arg("--query-gpu=count")
+            .arg("--format=csv,noheader,nounits")
+            .output()
+        {
             if output.status.success() {
                 if let Ok(count_str) = String::from_utf8(output.stdout) {
                     if let Ok(count) = count_str.trim().parse::<usize>() {
@@ -306,39 +314,42 @@ impl GpuDevice {
                 }
             }
         }
-        
+
         // Fallback: try to count GPUs via nvidia-ml-py equivalent
         if let Ok(output) = Command::new("nvidia-smi").arg("-L").output() {
             if output.status.success() {
                 if let Ok(list_str) = String::from_utf8(output.stdout) {
-                    return list_str.lines().filter(|line| line.starts_with("GPU ")).count();
+                    return list_str
+                        .lines()
+                        .filter(|line| line.starts_with("GPU "))
+                        .count();
                 }
             }
         }
-        
+
         0
     }
 
     #[cfg(feature = "rocm")]
     fn check_rocm_available() -> bool {
         use std::process::Command;
-        
+
         // Check for ROCm tools
         if let Ok(output) = Command::new("rocm-smi").arg("--showid").output() {
             if output.status.success() {
                 return true;
             }
         }
-        
+
         // Fallback: check for ROCm libraries
         #[cfg(target_os = "linux")]
         {
             use std::path::Path;
-            Path::exists(Path::new("/opt/rocm/lib/libhip.so")) ||
-            Path::exists(Path::new("/usr/lib/libhip.so")) ||
-            Path::exists(Path::new("/usr/lib/x86_64-linux-gnu/libhip.so"))
+            Path::exists(Path::new("/opt/rocm/lib/libhip.so"))
+                || Path::exists(Path::new("/usr/lib/libhip.so"))
+                || Path::exists(Path::new("/usr/lib/x86_64-linux-gnu/libhip.so"))
         }
-        
+
         #[cfg(not(target_os = "linux"))]
         false
     }
@@ -346,18 +357,19 @@ impl GpuDevice {
     #[cfg(feature = "rocm")]
     fn get_rocm_device_count() -> usize {
         use std::process::Command;
-        
+
         if let Ok(output) = Command::new("rocm-smi").arg("--showid").output() {
             if output.status.success() {
                 if let Ok(list_str) = String::from_utf8(output.stdout) {
                     // Count GPU entries in rocm-smi output
-                    return list_str.lines()
+                    return list_str
+                        .lines()
                         .filter(|line| line.contains("GPU") || line.contains("card"))
                         .count();
                 }
             }
         }
-        
+
         // Fallback: check /sys/class/drm for AMD GPUs
         #[cfg(target_os = "linux")]
         {
@@ -378,107 +390,120 @@ impl GpuDevice {
                 }
             }
         }
-        
+
         0
     }
 
     #[cfg(feature = "vulkan")]
     fn check_vulkan_available() -> bool {
         use std::process::Command;
-        
+
         // Check for vulkaninfo tool
         if let Ok(output) = Command::new("vulkaninfo").arg("--summary").output() {
             if output.status.success() {
                 if let Ok(info_str) = String::from_utf8(output.stdout) {
                     // Check if any devices support compute
-                    return info_str.contains("VK_QUEUE_COMPUTE_BIT") || info_str.contains("deviceType");
+                    return info_str.contains("VK_QUEUE_COMPUTE_BIT")
+                        || info_str.contains("deviceType");
                 }
             }
         }
-        
+
         // Fallback: check for Vulkan loader library
         #[cfg(target_os = "linux")]
         {
             use std::path::Path;
-            Path::exists(Path::new("/usr/lib/libvulkan.so")) ||
-            Path::exists(Path::new("/usr/lib/x86_64-linux-gnu/libvulkan.so")) ||
-            Path::exists(Path::new("/usr/local/lib/libvulkan.so"))
+            Path::exists(Path::new("/usr/lib/libvulkan.so"))
+                || Path::exists(Path::new("/usr/lib/x86_64-linux-gnu/libvulkan.so"))
+                || Path::exists(Path::new("/usr/local/lib/libvulkan.so"))
         }
-        
+
         #[cfg(target_os = "windows")]
         {
             use std::path::Path;
             Path::exists(Path::new("C:\\Windows\\System32\\vulkan-1.dll"))
         }
-        
+
         #[cfg(target_os = "macos")]
         {
             use std::path::Path;
-            Path::exists(Path::new("/usr/local/lib/libvulkan.dylib")) ||
-            Path::exists(Path::new("/System/Library/Frameworks/Metal.framework/Metal"))
+            Path::exists(Path::new("/usr/local/lib/libvulkan.dylib"))
+                || Path::exists(Path::new(
+                    "/System/Library/Frameworks/Metal.framework/Metal",
+                ))
         }
-        
+
         #[cfg(not(any(target_os = "linux", target_os = "windows", target_os = "macos")))]
         false
     }
-    
+
     /// Get detailed CUDA device information
     #[cfg(feature = "cuda")]
-    fn get_cuda_device_info() -> Result<(Vec<String>, Vec<(usize, usize)>), Box<dyn std::error::Error>> {
+    fn get_cuda_device_info(
+    ) -> Result<(Vec<String>, Vec<(usize, usize)>), Box<dyn std::error::Error>> {
         use std::process::Command;
-        
+
         let mut device_names = Vec::new();
         let mut memory_info = Vec::new();
-        
+
         // Get device names
         if let Ok(output) = Command::new("nvidia-smi")
             .arg("--query-gpu=name")
             .arg("--format=csv,noheader,nounits")
-            .output() {
+            .output()
+        {
             if output.status.success() {
                 if let Ok(names_str) = String::from_utf8(output.stdout) {
                     device_names = names_str.lines().map(|s| s.trim().to_string()).collect();
                 }
             }
         }
-        
+
         // Get memory information (in MB)
         if let Ok(output) = Command::new("nvidia-smi")
             .arg("--query-gpu=memory.total,memory.free")
             .arg("--format=csv,noheader,nounits")
-            .output() {
+            .output()
+        {
             if output.status.success() {
                 if let Ok(memory_str) = String::from_utf8(output.stdout) {
                     for line in memory_str.lines() {
                         let parts: Vec<&str> = line.split(',').collect();
                         if parts.len() >= 2 {
-                            if let (Ok(total), Ok(free)) = (parts[0].trim().parse::<usize>(), parts[1].trim().parse::<usize>()) {
-                                memory_info.push((total * 1024 * 1024, free * 1024 * 1024)); // Convert MB to bytes
+                            if let (Ok(total), Ok(free)) = (
+                                parts[0].trim().parse::<usize>(),
+                                parts[1].trim().parse::<usize>(),
+                            ) {
+                                memory_info.push((total * 1024 * 1024, free * 1024 * 1024));
+                                // Convert MB to bytes
                             }
                         }
                     }
                 }
             }
         }
-        
+
         Ok((device_names, memory_info))
     }
-    
+
     /// Get CUDA compute capability
     #[cfg(feature = "cuda")]
     fn get_cuda_compute_capability() -> Option<(u32, u32)> {
         use std::process::Command;
-        
+
         if let Ok(output) = Command::new("nvidia-smi")
             .arg("--query-gpu=compute_cap")
             .arg("--format=csv,noheader,nounits")
-            .output() {
+            .output()
+        {
             if output.status.success() {
                 if let Ok(cap_str) = String::from_utf8(output.stdout) {
                     if let Some(line) = cap_str.lines().next() {
                         let parts: Vec<&str> = line.trim().split('.').collect();
                         if parts.len() >= 2 {
-                            if let (Ok(major), Ok(minor)) = (parts[0].parse::<u32>(), parts[1].parse::<u32>()) {
+                            if let (Ok(major), Ok(minor)) =
+                                (parts[0].parse::<u32>(), parts[1].parse::<u32>())
+                            {
                                 return Some((major, minor));
                             }
                         }
@@ -486,18 +511,19 @@ impl GpuDevice {
                 }
             }
         }
-        
+
         None
     }
-    
+
     /// Get detailed ROCm device information
     #[cfg(feature = "rocm")]
-    fn get_rocm_device_info() -> Result<(Vec<String>, Vec<(usize, usize)>), Box<dyn std::error::Error>> {
+    fn get_rocm_device_info(
+    ) -> Result<(Vec<String>, Vec<(usize, usize)>), Box<dyn std::error::Error>> {
         use std::process::Command;
-        
+
         let mut device_names = Vec::new();
         let mut memory_info = Vec::new();
-        
+
         // Try to get device information from rocm-smi
         if let Ok(output) = Command::new("rocm-smi").arg("--showproductname").output() {
             if output.status.success() {
@@ -512,15 +538,26 @@ impl GpuDevice {
                 }
             }
         }
-        
+
         // Get memory information
-        if let Ok(output) = Command::new("rocm-smi").arg("--showmeminfo").arg("vram").output() {
+        if let Ok(output) = Command::new("rocm-smi")
+            .arg("--showmeminfo")
+            .arg("vram")
+            .output()
+        {
             if output.status.success() {
                 if let Ok(memory_str) = String::from_utf8(output.stdout) {
                     for line in memory_str.lines() {
                         if line.contains("Total memory") || line.contains("Used memory") {
-                            if let Some(mem_part) = line.split_whitespace().find(|s| s.ends_with("MB") || s.ends_with("GB")) {
-                                if let Ok(mem_val) = mem_part.trim_end_matches("MB").trim_end_matches("GB").parse::<usize>() {
+                            if let Some(mem_part) = line
+                                .split_whitespace()
+                                .find(|s| s.ends_with("MB") || s.ends_with("GB"))
+                            {
+                                if let Ok(mem_val) = mem_part
+                                    .trim_end_matches("MB")
+                                    .trim_end_matches("GB")
+                                    .parse::<usize>()
+                                {
                                     let bytes = if mem_part.ends_with("GB") {
                                         mem_val * 1024 * 1024 * 1024
                                     } else {
@@ -534,23 +571,24 @@ impl GpuDevice {
                 }
             }
         }
-        
+
         if device_names.is_empty() && memory_info.is_empty() {
             device_names.push("AMD GPU (ROCm)".to_string());
             memory_info.push((8 * 1024 * 1024 * 1024, 6 * 1024 * 1024 * 1024));
         }
-        
+
         Ok((device_names, memory_info))
     }
-    
+
     /// Get detailed Vulkan device information
     #[cfg(feature = "vulkan")]
-    fn get_vulkan_device_info() -> Result<(Vec<String>, Vec<(usize, usize)>), Box<dyn std::error::Error>> {
+    fn get_vulkan_device_info(
+    ) -> Result<(Vec<String>, Vec<(usize, usize)>), Box<dyn std::error::Error>> {
         use std::process::Command;
-        
+
         let mut device_names = Vec::new();
         let mut memory_info = Vec::new();
-        
+
         if let Ok(output) = Command::new("vulkaninfo").arg("--summary").output() {
             if output.status.success() {
                 if let Ok(info_str) = String::from_utf8(output.stdout) {
@@ -570,36 +608,39 @@ impl GpuDevice {
                 }
             }
         }
-        
+
         if device_names.is_empty() {
             device_names.push("Vulkan Device".to_string());
             memory_info.push((4 * 1024 * 1024 * 1024, 3 * 1024 * 1024 * 1024));
         }
-        
+
         Ok((device_names, memory_info))
     }
-    
+
     #[cfg(not(feature = "cuda"))]
     #[allow(dead_code)]
-    fn get_cuda_device_info() -> Result<(Vec<String>, Vec<(usize, usize)>), Box<dyn std::error::Error>> {
+    fn get_cuda_device_info(
+    ) -> Result<(Vec<String>, Vec<(usize, usize)>), Box<dyn std::error::Error>> {
         Ok((Vec::new(), Vec::new()))
     }
-    
+
     #[cfg(not(feature = "cuda"))]
     #[allow(dead_code)]
     fn get_cuda_compute_capability() -> Option<(u32, u32)> {
         None
     }
-    
+
     #[cfg(not(feature = "rocm"))]
     #[allow(dead_code)]
-    fn get_rocm_device_info() -> Result<(Vec<String>, Vec<(usize, usize)>), Box<dyn std::error::Error>> {
+    fn get_rocm_device_info(
+    ) -> Result<(Vec<String>, Vec<(usize, usize)>), Box<dyn std::error::Error>> {
         Ok((Vec::new(), Vec::new()))
     }
-    
+
     #[cfg(not(feature = "vulkan"))]
     #[allow(dead_code)]
-    fn get_vulkan_device_info() -> Result<(Vec<String>, Vec<(usize, usize)>), Box<dyn std::error::Error>> {
+    fn get_vulkan_device_info(
+    ) -> Result<(Vec<String>, Vec<(usize, usize)>), Box<dyn std::error::Error>> {
         Ok((Vec::new(), Vec::new()))
     }
 }
@@ -645,9 +686,12 @@ impl GpuDistanceMatrix {
     }
 
     /// Compute distance matrix on GPU (async)
-    pub async fn compute_parallel(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
+    pub async fn compute_parallel(
+        &self,
+        points: &ArrayView2<'_, f64>,
+    ) -> SpatialResult<Array2<f64>> {
         let _n_points = points.nrows();
-        
+
         if !self.device.is_gpu_available() {
             return self.compute_cpu_fallback(points).await;
         }
@@ -669,7 +713,7 @@ impl GpuDistanceMatrix {
         // 3. Launch CUDA kernels to compute distances in parallel
         // 4. Transfer results back to CPU
         // 5. Handle errors and memory cleanup
-        
+
         self.compute_cpu_fallback(points).await
     }
 
@@ -686,16 +730,19 @@ impl GpuDistanceMatrix {
     }
 
     /// CPU fallback using optimized SIMD operations
-    async fn compute_cpu_fallback(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
+    async fn compute_cpu_fallback(
+        &self,
+        points: &ArrayView2<'_, f64>,
+    ) -> SpatialResult<Array2<f64>> {
         // Use existing SIMD implementation as fallback
         use crate::simd_distance::parallel_pdist;
-        
+
         let condensed = parallel_pdist(points, "euclidean")?;
-        
+
         // Convert condensed to full matrix
         let n = points.nrows();
         let mut matrix = Array2::zeros((n, n));
-        
+
         let mut idx = 0;
         for i in 0..n {
             for j in (i + 1)..n {
@@ -704,7 +751,7 @@ impl GpuDistanceMatrix {
                 idx += 1;
             }
         }
-        
+
         Ok(matrix)
     }
 }
@@ -750,7 +797,10 @@ impl GpuKMeans {
     }
 
     /// Perform K-means clustering on GPU (async)
-    pub async fn fit(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<(Array2<f64>, Array1<usize>)> {
+    pub async fn fit(
+        &self,
+        points: &ArrayView2<'_, f64>,
+    ) -> SpatialResult<(Array2<f64>, Array1<usize>)> {
         if !self.device.is_gpu_available() {
             return self.fit_cpu_fallback(points).await;
         }
@@ -765,37 +815,49 @@ impl GpuKMeans {
     }
 
     /// GPU K-means using CUDA
-    async fn fit_cuda(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<(Array2<f64>, Array1<usize>)> {
+    async fn fit_cuda(
+        &self,
+        points: &ArrayView2<'_, f64>,
+    ) -> SpatialResult<(Array2<f64>, Array1<usize>)> {
         // In a real implementation, this would:
         // 1. Initialize centroids on GPU
         // 2. Iteratively update assignments and centroids using GPU kernels
         // 3. Use shared memory for efficient centroid updates
         // 4. Use atomic operations for convergence checking
-        
+
         self.fit_cpu_fallback(points).await
     }
 
     /// GPU K-means using ROCm
-    async fn fit_rocm(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<(Array2<f64>, Array1<usize>)> {
+    async fn fit_rocm(
+        &self,
+        points: &ArrayView2<'_, f64>,
+    ) -> SpatialResult<(Array2<f64>, Array1<usize>)> {
         // Similar to CUDA but using ROCm/HIP APIs
         self.fit_cpu_fallback(points).await
     }
 
     /// GPU K-means using Vulkan
-    async fn fit_vulkan(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<(Array2<f64>, Array1<usize>)> {
+    async fn fit_vulkan(
+        &self,
+        points: &ArrayView2<'_, f64>,
+    ) -> SpatialResult<(Array2<f64>, Array1<usize>)> {
         // Use Vulkan compute shaders
         self.fit_cpu_fallback(points).await
     }
 
     /// CPU fallback using ultra-optimized SIMD K-means
-    async fn fit_cpu_fallback(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<(Array2<f64>, Array1<usize>)> {
+    async fn fit_cpu_fallback(
+        &self,
+        points: &ArrayView2<'_, f64>,
+    ) -> SpatialResult<(Array2<f64>, Array1<usize>)> {
         // Use existing ultra-optimized SIMD K-means as fallback
         use crate::simd_distance::ultra_simd_clustering::UltraSimdKMeans;
-        
+
         let ultra_kmeans = UltraSimdKMeans::new(self.k)
             .with_mixed_precision(true)
             .with_block_size(256);
-        
+
         ultra_kmeans.fit(points)
     }
 }
@@ -828,15 +890,23 @@ impl GpuNearestNeighbors {
         k: usize,
     ) -> SpatialResult<(Array2<usize>, Array2<f64>)> {
         if !self.device.is_gpu_available() {
-            return self.knn_search_cpu_fallback(query_points, data_points, k).await;
+            return self
+                .knn_search_cpu_fallback(query_points, data_points, k)
+                .await;
         }
 
         match self.device.preferred_backend {
             GpuBackend::Cuda => self.knn_search_cuda(query_points, data_points, k).await,
             GpuBackend::Rocm => self.knn_search_rocm(query_points, data_points, k).await,
             GpuBackend::Vulkan => self.knn_search_vulkan(query_points, data_points, k).await,
-            GpuBackend::CpuFallback => self.knn_search_cpu_fallback(query_points, data_points, k).await,
-            _ => self.knn_search_cpu_fallback(query_points, data_points, k).await,
+            GpuBackend::CpuFallback => {
+                self.knn_search_cpu_fallback(query_points, data_points, k)
+                    .await
+            }
+            _ => {
+                self.knn_search_cpu_fallback(query_points, data_points, k)
+                    .await
+            }
         }
     }
 
@@ -851,8 +921,9 @@ impl GpuNearestNeighbors {
         // 1. Use GPU-optimized k-NN algorithms like FAISS
         // 2. Build spatial indices on GPU
         // 3. Perform batch queries with optimal memory access patterns
-        
-        self.knn_search_cpu_fallback(query_points, data_points, k).await
+
+        self.knn_search_cpu_fallback(query_points, data_points, k)
+            .await
     }
 
     /// GPU k-NN using ROCm
@@ -862,7 +933,8 @@ impl GpuNearestNeighbors {
         data_points: &ArrayView2<'_, f64>,
         k: usize,
     ) -> SpatialResult<(Array2<usize>, Array2<f64>)> {
-        self.knn_search_cpu_fallback(query_points, data_points, k).await
+        self.knn_search_cpu_fallback(query_points, data_points, k)
+            .await
     }
 
     /// GPU k-NN using Vulkan
@@ -872,7 +944,8 @@ impl GpuNearestNeighbors {
         data_points: &ArrayView2<'_, f64>,
         k: usize,
     ) -> SpatialResult<(Array2<usize>, Array2<f64>)> {
-        self.knn_search_cpu_fallback(query_points, data_points, k).await
+        self.knn_search_cpu_fallback(query_points, data_points, k)
+            .await
     }
 
     /// CPU fallback using ultra-optimized SIMD nearest neighbors
@@ -884,7 +957,7 @@ impl GpuNearestNeighbors {
     ) -> SpatialResult<(Array2<usize>, Array2<f64>)> {
         // Use existing ultra-optimized SIMD nearest neighbors as fallback
         use crate::simd_distance::ultra_simd_clustering::UltraSimdNearestNeighbors;
-        
+
         let ultra_nn = UltraSimdNearestNeighbors::new();
         ultra_nn.simd_knn_ultra_fast(query_points, data_points, k)
     }
@@ -913,8 +986,8 @@ impl HybridProcessor {
         let gpu_device = Arc::new(GpuDevice::new()?);
         Ok(Self {
             gpu_device,
-            cpu_threshold: 1000,     // Use CPU for small datasets
-            gpu_threshold: 100000,   // Use GPU for large datasets
+            cpu_threshold: 1000,   // Use CPU for small datasets
+            gpu_threshold: 100000, // Use GPU for large datasets
         })
     }
 
@@ -936,9 +1009,9 @@ impl HybridProcessor {
     /// Get optimal batch sizes for hybrid processing
     pub fn optimal_batch_sizes(&self, total_size: usize) -> (usize, usize) {
         let gpu_capability = self.gpu_device.capabilities().total_memory / (8 * 1024); // Estimate based on memory
-        let cpu_batch = (total_size / 4).max(1000);  // 25% to CPU
+        let cpu_batch = (total_size / 4).max(1000); // 25% to CPU
         let gpu_batch = (total_size * 3 / 4).min(gpu_capability); // 75% to GPU if memory allows
-        
+
         (cpu_batch, gpu_batch)
     }
 }
@@ -986,17 +1059,23 @@ pub fn get_gpu_capabilities() -> &'static GpuCapabilities {
 pub fn report_gpu_status() {
     let device = global_gpu_device();
     let caps = device.capabilities();
-    
+
     println!("GPU Acceleration Status:");
     println!("  Available: {}", caps.gpu_available);
     println!("  Device Count: {}", caps.device_count);
-    
+
     if caps.gpu_available {
-        println!("  Total Memory: {:.1} GB", caps.total_memory as f64 / (1024.0 * 1024.0 * 1024.0));
-        println!("  Available Memory: {:.1} GB", caps.available_memory as f64 / (1024.0 * 1024.0 * 1024.0));
+        println!(
+            "  Total Memory: {:.1} GB",
+            caps.total_memory as f64 / (1024.0 * 1024.0 * 1024.0)
+        );
+        println!(
+            "  Available Memory: {:.1} GB",
+            caps.available_memory as f64 / (1024.0 * 1024.0 * 1024.0)
+        );
         println!("  Max Threads/Block: {}", caps.max_threads_per_block);
         println!("  Supported Backends: {:?}", caps.supported_backends);
-        
+
         for (i, name) in caps.device_names.iter().enumerate() {
             println!("  Device {}: {}", i, name);
         }
@@ -1015,7 +1094,7 @@ mod tests {
     fn test_gpu_device_creation() {
         let device = GpuDevice::new();
         assert!(device.is_ok());
-        
+
         let device = device.unwrap();
         // Even without actual GPU, should have CPU fallback
         assert!(!device.capabilities().supported_backends.is_empty());
@@ -1024,27 +1103,30 @@ mod tests {
     #[test]
     fn test_processing_strategy_selection() {
         let processor = HybridProcessor::new().unwrap();
-        
+
         // Small dataset should use CPU
         let strategy = processor.choose_strategy(500);
         assert_eq!(strategy, ProcessingStrategy::CpuOnly);
-        
+
         // Large dataset should use GPU if available, otherwise CPU
         let strategy = processor.choose_strategy(200000);
         // Result depends on GPU availability
-        assert!(matches!(strategy, ProcessingStrategy::GpuOnly | ProcessingStrategy::CpuOnly));
+        assert!(matches!(
+            strategy,
+            ProcessingStrategy::GpuOnly | ProcessingStrategy::CpuOnly
+        ));
     }
 
     #[test]
     #[ignore] // GPU testing requires async runtime
     fn test_gpu_distance_matrix() {
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
-        
+
         let gpu_matrix = GpuDistanceMatrix::new().unwrap();
         // GPU functionality not available in this configuration
         let points_view = points.view();
         let _result = gpu_matrix.compute_parallel(&points_view);
-        
+
         // GPU functionality not available in this configuration
         // Tests are disabled pending proper async runtime setup
         // assert!(result.is_ok());
@@ -1056,15 +1138,19 @@ mod tests {
     #[ignore] // GPU testing requires async runtime
     fn test_gpu_kmeans() {
         let points = array![
-            [0.0, 0.0], [0.1, 0.1], [0.0, 0.1],  // Cluster 1
-            [5.0, 5.0], [5.1, 5.1], [5.0, 5.1],  // Cluster 2
+            [0.0, 0.0],
+            [0.1, 0.1],
+            [0.0, 0.1], // Cluster 1
+            [5.0, 5.0],
+            [5.1, 5.1],
+            [5.0, 5.1], // Cluster 2
         ];
-        
+
         let gpu_kmeans = GpuKMeans::new(2).unwrap();
         // GPU functionality not available in this configuration
         let points_view = points.view();
         let _result = gpu_kmeans.fit(&points_view);
-        
+
         // GPU functionality not available in this configuration
         // Tests are disabled pending proper async runtime setup
         // assert!(result.is_ok());
@@ -1076,17 +1162,17 @@ mod tests {
     fn test_gpu_nearest_neighbors() {
         let data_points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
         let query_points = array![[0.1, 0.1], [0.9, 0.9]];
-        
+
         let gpu_nn = GpuNearestNeighbors::new().unwrap();
         let query_view = query_points.view();
         let data_view = data_points.view();
         let _result = gpu_nn.knn_search(&query_view, &data_view, 2);
-        
+
         // GPU functionality not available in this configuration
         // Tests are disabled pending proper async runtime setup
         // assert!(result.is_ok());
         // let (indices, distances) = result.unwrap();
-        
+
         // GPU functionality not available in this configuration
         // Verify results make sense (closest to first query should be [0,0])
         // assert_eq!(indices[[0, 0]], 0);  // Point [0,0] should be closest to [0.1, 0.1]
@@ -1097,7 +1183,7 @@ mod tests {
         // Test global functions
         let device = global_gpu_device();
         assert!(!device.capabilities.device_names.is_empty() || !device.capabilities.gpu_available);
-        
+
         // These shouldn't panic
         report_gpu_status();
         let _caps = get_gpu_capabilities();

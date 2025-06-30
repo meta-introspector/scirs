@@ -634,27 +634,34 @@ impl RuleLemmatizer {
     /// Load lemmatization dictionary from a file
     /// File format: one entry per line, format: "word_form lemma" (tab or space separated)
     pub fn from_dict_file(path: &str) -> Result<Self> {
+        use crate::error::TextError;
         use std::fs::File;
         use std::io::{BufRead, BufReader};
-        use crate::error::TextError;
 
         let mut lemmatizer = Self::new();
-        
-        let file = File::open(path)
-            .map_err(|e| TextError::IoError(format!("Failed to open dictionary file '{}': {}", path, e)))?;
-        
+
+        let file = File::open(path).map_err(|e| {
+            TextError::IoError(format!("Failed to open dictionary file '{}': {}", path, e))
+        })?;
+
         let reader = BufReader::new(file);
-        
+
         for (line_num, line_result) in reader.lines().enumerate() {
-            let line = line_result
-                .map_err(|e| TextError::IoError(format!("Error reading line {} from '{}': {}", line_num + 1, path, e)))?;
-            
+            let line = line_result.map_err(|e| {
+                TextError::IoError(format!(
+                    "Error reading line {} from '{}': {}",
+                    line_num + 1,
+                    path,
+                    e
+                ))
+            })?;
+
             // Skip empty lines and comments
             let line = line.trim();
             if line.is_empty() || line.starts_with('#') {
                 continue;
             }
-            
+
             // Parse the line: "word_form lemma" (separated by tab or spaces)
             let parts: Vec<&str> = line.split_whitespace().collect();
             if parts.len() >= 2 {
@@ -668,7 +675,7 @@ impl RuleLemmatizer {
             }
             // Lines with 0 parts are ignored (whitespace-only lines after trim)
         }
-        
+
         Ok(lemmatizer)
     }
 

@@ -132,7 +132,7 @@ pub use memory::{ChunkedMetrics, StreamingMetric};
 pub use numeric::{StableMetric, StableMetrics};
 pub use parallel::ParallelConfig;
 pub use quantum_acceleration::{
-    QuantumMetricsComputer, QuantumConfig, QuantumBenchmarkResults, VqeParameters,
-    SuperpositionManager, InterferencePatterns, QuantumProcessor,
+    InterferencePatterns, QuantumBenchmarkResults, QuantumConfig, QuantumMetricsComputer,
+    QuantumProcessor, SuperpositionManager, VqeParameters,
 };
 pub use simd_gpu::SimdMetrics;

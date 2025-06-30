@@ -1,6 +1,6 @@
 //! # Text Processing Module for SciRS2
 //!
-//! This module provides comprehensive text processing functionality for scientific computing 
+//! This module provides comprehensive text processing functionality for scientific computing
 //! applications, offering SciPy-compatible APIs while leveraging Rust's performance and safety.
 //!
 //! ## Features

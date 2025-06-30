@@ -3,7 +3,8 @@
 //! This binary provides a command-line interface for managing performance baselines,
 //! including creating, updating, and validating baseline performance data.
 
-use clap::{Arg, Command, ArgMatches};
+use chrono::{DateTime, Utc};
+use clap::{Arg, ArgMatches, Command};
 use scirs2_optim::error::{OptimError, Result};
 use serde::{Deserialize, Serialize};
 use serde_json;
@@ -11,7 +12,6 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 use std::process;
-use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -74,36 +74,36 @@ fn main() {
                         .long("results-file")
                         .value_name("FILE")
                         .help("Path to performance results JSON file")
-                        .required(true)
+                        .required(true),
                 )
                 .arg(
                     Arg::new("baseline-dir")
                         .long("baseline-dir")
                         .value_name("DIR")
                         .help("Directory to store baseline files")
-                        .required(true)
+                        .required(true),
                 )
                 .arg(
                     Arg::new("features")
                         .long("features")
                         .value_name("STRING")
                         .help("Feature set being tested")
-                        .required(true)
+                        .required(true),
                 )
                 .arg(
                     Arg::new("commit-hash")
                         .long("commit-hash")
                         .value_name("HASH")
                         .help("Git commit hash")
-                        .required(true)
+                        .required(true),
                 )
                 .arg(
                     Arg::new("branch")
                         .long("branch")
                         .value_name("BRANCH")
                         .help("Git branch name")
-                        .required(true)
-                )
+                        .required(true),
+                ),
         )
         .subcommand(
             Command::new("update")
@@ -113,35 +113,35 @@ fn main() {
                         .long("results-file")
                         .value_name("FILE")
                         .help("Path to performance results JSON file")
-                        .required(true)
+                        .required(true),
                 )
                 .arg(
                     Arg::new("baseline-dir")
                         .long("baseline-dir")
                         .value_name("DIR")
                         .help("Directory containing baseline files")
-                        .required(true)
+                        .required(true),
                 )
                 .arg(
                     Arg::new("features")
                         .long("features")
                         .value_name("STRING")
                         .help("Feature set being tested")
-                        .required(true)
+                        .required(true),
                 )
                 .arg(
                     Arg::new("commit-hash")
                         .long("commit-hash")
                         .value_name("HASH")
                         .help("Git commit hash")
-                        .required(true)
+                        .required(true),
                 )
                 .arg(
                     Arg::new("branch")
                         .long("branch")
                         .value_name("BRANCH")
                         .help("Git branch name")
-                        .required(true)
+                        .required(true),
                 )
                 .arg(
                     Arg::new("merge-strategy")
@@ -149,8 +149,8 @@ fn main() {
                         .value_name("STRATEGY")
                         .help("Strategy for merging with existing baseline")
                         .value_parser(["replace", "merge", "weighted"])
-                        .default_value("weighted")
-                )
+                        .default_value("weighted"),
+                ),
         )
         .subcommand(
             Command::new("validate")
@@ -160,15 +160,15 @@ fn main() {
                         .long("baseline-dir")
                         .value_name("DIR")
                         .help("Directory containing baseline files")
-                        .required(true)
+                        .required(true),
                 )
                 .arg(
                     Arg::new("features")
                         .long("features")
                         .value_name("STRING")
                         .help("Feature set to validate")
-                        .required(true)
-                )
+                        .required(true),
+                ),
         )
         .subcommand(
             Command::new("list")
@@ -178,8 +178,8 @@ fn main() {
                         .long("baseline-dir")
                         .value_name("DIR")
                         .help("Directory containing baseline files")
-                        .required(true)
-                )
+                        .required(true),
+                ),
         )
         .subcommand(
             Command::new("info")
@@ -189,15 +189,15 @@ fn main() {
                         .long("baseline-dir")
                         .value_name("DIR")
                         .help("Directory containing baseline files")
-                        .required(true)
+                        .required(true),
                 )
                 .arg(
                     Arg::new("features")
                         .long("features")
                         .value_name("STRING")
                         .help("Feature set to show info for")
-                        .required(true)
-                )
+                        .required(true),
+                ),
         )
         .arg(
             Arg::new("verbose")
@@ -205,7 +205,7 @@ fn main() {
                 .long("verbose")
                 .help("Enable verbose output")
                 .action(clap::ArgAction::SetTrue)
-                .global(true)
+                .global(true),
         )
         .get_matches();
 
@@ -283,9 +283,15 @@ fn handle_create_baseline(matches: &ArgMatches, verbose: bool) -> Result<()> {
         println!("✅ Baseline created successfully");
         println!("📄 Saved to: {}", baseline_path.display());
         println!("📊 Summary:");
-        println!("  Total Benchmarks: {}", baseline.statistical_summary.total_benchmarks);
+        println!(
+            "  Total Benchmarks: {}",
+            baseline.statistical_summary.total_benchmarks
+        );
         println!("  Sample Count: {}", baseline.metadata.sample_count);
-        println!("  Quality Score: {:.2}", baseline.statistical_summary.quality_score);
+        println!(
+            "  Quality Score: {:.2}",
+            baseline.statistical_summary.quality_score
+        );
     } else {
         println!("✅ Baseline created: {}", baseline_path.display());
     }
@@ -328,7 +334,14 @@ fn handle_update_baseline(matches: &ArgMatches, verbose: bool) -> Result<()> {
 
     // Create updated baseline
     let updated_baseline = if let Some(existing) = existing_baseline {
-        merge_baseline_with_results(&existing, &results, features, commit_hash, branch, merge_strategy)?
+        merge_baseline_with_results(
+            &existing,
+            &results,
+            features,
+            commit_hash,
+            branch,
+            merge_strategy,
+        )?
     } else {
         create_baseline_from_results(&results, features, commit_hash, branch)?
     };
@@ -340,9 +353,15 @@ fn handle_update_baseline(matches: &ArgMatches, verbose: bool) -> Result<()> {
         println!("✅ Baseline updated successfully");
         println!("📄 Saved to: {}", baseline_path.display());
         println!("📊 Summary:");
-        println!("  Total Benchmarks: {}", updated_baseline.statistical_summary.total_benchmarks);
+        println!(
+            "  Total Benchmarks: {}",
+            updated_baseline.statistical_summary.total_benchmarks
+        );
         println!("  Sample Count: {}", updated_baseline.metadata.sample_count);
-        println!("  Quality Score: {:.2}", updated_baseline.statistical_summary.quality_score);
+        println!(
+            "  Quality Score: {:.2}",
+            updated_baseline.statistical_summary.quality_score
+        );
     } else {
         println!("✅ Baseline updated: {}", baseline_path.display());
     }
@@ -358,7 +377,8 @@ fn handle_validate_baseline(matches: &ArgMatches, verbose: bool) -> Result<()> {
 
     if !baseline_path.exists() {
         return Err(OptimError::ConfigurationError(format!(
-            "Baseline file not found: {}", baseline_path.display()
+            "Baseline file not found: {}",
+            baseline_path.display()
         )));
     }
 
@@ -377,12 +397,31 @@ fn handle_validate_baseline(matches: &ArgMatches, verbose: bool) -> Result<()> {
         println!("  Branch: {}", baseline.metadata.branch);
         println!("  Commit: {}", baseline.metadata.commit_hash);
         println!("  Features: {}", baseline.metadata.features);
-        println!("  Platform: {} {}", baseline.metadata.platform_info.os, baseline.metadata.platform_info.arch);
-        println!("  Total Benchmarks: {}", baseline.statistical_summary.total_benchmarks);
+        println!(
+            "  Platform: {} {}",
+            baseline.metadata.platform_info.os, baseline.metadata.platform_info.arch
+        );
+        println!(
+            "  Total Benchmarks: {}",
+            baseline.statistical_summary.total_benchmarks
+        );
         println!("  Sample Count: {}", baseline.metadata.sample_count);
-        println!("  Quality Score: {:.2}/100", baseline.statistical_summary.quality_score);
-        println!("  Overall Confidence: {:.2}%", baseline.statistical_summary.overall_confidence * 100.0);
-        println!("  Validation Status: {}", if validation_result { "✅ VALID" } else { "❌ INVALID" });
+        println!(
+            "  Quality Score: {:.2}/100",
+            baseline.statistical_summary.quality_score
+        );
+        println!(
+            "  Overall Confidence: {:.2}%",
+            baseline.statistical_summary.overall_confidence * 100.0
+        );
+        println!(
+            "  Validation Status: {}",
+            if validation_result {
+                "✅ VALID"
+            } else {
+                "❌ INVALID"
+            }
+        );
     }
 
     if validation_result {
@@ -412,17 +451,29 @@ fn handle_list_baselines(matches: &ArgMatches, verbose: bool) -> Result<()> {
     println!("Available baselines:");
     for (i, file_path) in baseline_files.iter().enumerate() {
         let baseline = load_baseline(file_path)?;
-        
+
         if verbose {
-            println!("{}. {} ({})", i + 1, baseline.metadata.features, file_path.display());
+            println!(
+                "{}. {} ({})",
+                i + 1,
+                baseline.metadata.features,
+                file_path.display()
+            );
             println!("   Created: {}", baseline.metadata.created_at);
             println!("   Branch: {}", baseline.metadata.branch);
             println!("   Commit: {}", &baseline.metadata.commit_hash[..8]);
-            println!("   Benchmarks: {}", baseline.statistical_summary.total_benchmarks);
-            println!("   Quality: {:.1}/100", baseline.statistical_summary.quality_score);
+            println!(
+                "   Benchmarks: {}",
+                baseline.statistical_summary.total_benchmarks
+            );
+            println!(
+                "   Quality: {:.1}/100",
+                baseline.statistical_summary.quality_score
+            );
             println!();
         } else {
-            println!("  {} - {} benchmarks ({})", 
+            println!(
+                "  {} - {} benchmarks ({})",
                 baseline.metadata.features,
                 baseline.statistical_summary.total_benchmarks,
                 baseline.metadata.created_at.format("%Y-%m-%d")
@@ -441,7 +492,8 @@ fn handle_show_baseline_info(matches: &ArgMatches, verbose: bool) -> Result<()> 
 
     if !baseline_path.exists() {
         return Err(OptimError::ConfigurationError(format!(
-            "Baseline file not found: {}", baseline_path.display()
+            "Baseline file not found: {}",
+            baseline_path.display()
         )));
     }
 
@@ -455,20 +507,39 @@ fn handle_show_baseline_info(matches: &ArgMatches, verbose: bool) -> Result<()> 
     println!("Updated: {}", baseline.metadata.updated_at);
     println!("Branch: {}", baseline.metadata.branch);
     println!("Commit: {}", baseline.metadata.commit_hash);
-    println!("Platform: {} {} ({} cores)", 
+    println!(
+        "Platform: {} {} ({} cores)",
         baseline.metadata.platform_info.os,
         baseline.metadata.platform_info.arch,
         baseline.metadata.platform_info.cpu_cores
     );
-    println!("Rust Version: {}", baseline.metadata.platform_info.rust_version);
+    println!(
+        "Rust Version: {}",
+        baseline.metadata.platform_info.rust_version
+    );
     println!();
     println!("Statistics:");
-    println!("  Total Benchmarks: {}", baseline.statistical_summary.total_benchmarks);
-    println!("  Stable Benchmarks: {}", baseline.statistical_summary.stable_benchmarks);
-    println!("  Variable Benchmarks: {}", baseline.statistical_summary.variable_benchmarks);
+    println!(
+        "  Total Benchmarks: {}",
+        baseline.statistical_summary.total_benchmarks
+    );
+    println!(
+        "  Stable Benchmarks: {}",
+        baseline.statistical_summary.stable_benchmarks
+    );
+    println!(
+        "  Variable Benchmarks: {}",
+        baseline.statistical_summary.variable_benchmarks
+    );
     println!("  Sample Count: {}", baseline.metadata.sample_count);
-    println!("  Quality Score: {:.1}/100", baseline.statistical_summary.quality_score);
-    println!("  Overall Confidence: {:.1}%", baseline.statistical_summary.overall_confidence * 100.0);
+    println!(
+        "  Quality Score: {:.1}/100",
+        baseline.statistical_summary.quality_score
+    );
+    println!(
+        "  Overall Confidence: {:.1}%",
+        baseline.statistical_summary.overall_confidence * 100.0
+    );
 
     if verbose {
         println!();
@@ -479,7 +550,10 @@ fn handle_show_baseline_info(matches: &ArgMatches, verbose: bool) -> Result<()> 
             println!("    Std Dev: {:.6}", metric.std_dev);
             println!("    Range: [{:.6}, {:.6}]", metric.min, metric.max);
             println!("    Samples: {}", metric.samples.len());
-            println!("    Confidence Interval: [{:.6}, {:.6}]", metric.confidence_interval.0, metric.confidence_interval.1);
+            println!(
+                "    Confidence Interval: [{:.6}, {:.6}]",
+                metric.confidence_interval.0, metric.confidence_interval.1
+            );
         }
     }
 
@@ -503,8 +577,9 @@ fn load_baseline(path: &PathBuf) -> Result<BaselineMetrics> {
 }
 
 fn save_baseline(baseline: &BaselineMetrics, path: &PathBuf) -> Result<()> {
-    let content = serde_json::to_string_pretty(baseline)
-        .map_err(|e| OptimError::SerializationError(format!("Failed to serialize baseline: {}", e)))?;
+    let content = serde_json::to_string_pretty(baseline).map_err(|e| {
+        OptimError::SerializationError(format!("Failed to serialize baseline: {}", e))
+    })?;
 
     fs::write(path, content)
         .map_err(|e| OptimError::IoError(format!("Failed to write baseline file: {}", e)))
@@ -557,7 +632,7 @@ fn create_baseline_from_results(
         stable_benchmarks: total_benchmarks, // All are considered stable initially
         variable_benchmarks: 0,
         overall_confidence: 0.7, // Initial confidence is moderate
-        quality_score: 70.0, // Initial quality score
+        quality_score: 70.0,     // Initial quality score
     };
 
     Ok(BaselineMetrics {
@@ -594,35 +669,39 @@ fn merge_baseline_with_results(
                         }
                         "merge" | "weighted" => {
                             existing_metric.samples.push(new_value);
-                            
+
                             // Limit sample history
                             if existing_metric.samples.len() > 100 {
                                 existing_metric.samples.remove(0);
                             }
-                            
+
                             // Recalculate statistics
                             let samples = &existing_metric.samples;
-                            existing_metric.mean = samples.iter().sum::<f64>() / samples.len() as f64;
-                            existing_metric.min = samples.iter().fold(f64::INFINITY, |a, &b| a.min(b));
-                            existing_metric.max = samples.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-                            
+                            existing_metric.mean =
+                                samples.iter().sum::<f64>() / samples.len() as f64;
+                            existing_metric.min =
+                                samples.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+                            existing_metric.max =
+                                samples.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+
                             if samples.len() > 1 {
-                                let variance = samples.iter()
+                                let variance = samples
+                                    .iter()
                                     .map(|&x| (x - existing_metric.mean).powi(2))
-                                    .sum::<f64>() / (samples.len() - 1) as f64;
+                                    .sum::<f64>()
+                                    / (samples.len() - 1) as f64;
                                 existing_metric.std_dev = variance.sqrt();
                             }
-                            
+
                             // Update confidence interval (±2 standard deviations)
                             let margin = existing_metric.std_dev * 2.0;
-                            existing_metric.confidence_interval = (
-                                existing_metric.mean - margin,
-                                existing_metric.mean + margin
-                            );
+                            existing_metric.confidence_interval =
+                                (existing_metric.mean - margin, existing_metric.mean + margin);
                         }
                         _ => {
                             return Err(OptimError::ConfigurationError(format!(
-                                "Unknown merge strategy: {}", merge_strategy
+                                "Unknown merge strategy: {}",
+                                merge_strategy
                             )));
                         }
                     }
@@ -651,13 +730,13 @@ fn merge_baseline_with_results(
         .filter(|m| m.std_dev / m.mean < 0.1) // CV < 10%
         .count();
     let variable_benchmarks = total_benchmarks - stable_benchmarks;
-    
+
     let overall_confidence = if total_benchmarks > 0 {
         stable_benchmarks as f64 / total_benchmarks as f64
     } else {
         0.0
     };
-    
+
     let quality_score = (overall_confidence * 100.0).min(100.0);
 
     let metadata = BaselineMetadata {
@@ -727,11 +806,11 @@ fn validate_baseline(baseline: &BaselineMetrics) -> Result<bool> {
         if metric.samples.is_empty() {
             return Ok(false);
         }
-        
+
         if !metric.mean.is_finite() || metric.mean < 0.0 {
             return Ok(false);
         }
-        
+
         if !metric.std_dev.is_finite() || metric.std_dev < 0.0 {
             return Ok(false);
         }
@@ -742,30 +821,31 @@ fn validate_baseline(baseline: &BaselineMetrics) -> Result<bool> {
 
 fn find_baseline_files(baseline_dir: &str) -> Result<Vec<PathBuf>> {
     let dir_path = PathBuf::from(baseline_dir);
-    
+
     if !dir_path.exists() {
         return Ok(vec![]);
     }
 
     let mut baseline_files = Vec::new();
-    
+
     for entry in fs::read_dir(&dir_path)
-        .map_err(|e| OptimError::IoError(format!("Failed to read directory: {}", e)))? 
+        .map_err(|e| OptimError::IoError(format!("Failed to read directory: {}", e)))?
     {
         let entry = entry
             .map_err(|e| OptimError::IoError(format!("Failed to read directory entry: {}", e)))?;
-        
+
         let path = entry.path();
-        
-        if path.is_file() && 
-           path.extension().map_or(false, |ext| ext == "json") &&
-           path.file_name().map_or(false, |name| 
-               name.to_string_lossy().starts_with("baseline_")
-           ) {
+
+        if path.is_file()
+            && path.extension().map_or(false, |ext| ext == "json")
+            && path.file_name().map_or(false, |name| {
+                name.to_string_lossy().starts_with("baseline_")
+            })
+        {
             baseline_files.push(path);
         }
     }
-    
+
     baseline_files.sort();
     Ok(baseline_files)
 }

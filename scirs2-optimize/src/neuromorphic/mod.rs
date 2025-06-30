@@ -21,25 +21,25 @@
 //! - Neuromorphic hardware optimization
 //! - Event-driven optimization problems
 
-use ndarray::{Array1, Array2, ArrayView1};
-use scirs2_core::error::CoreResult as Result;
 use crate::error::OptimizeError;
 use crate::result::OptimizeResults;
+use ndarray::{Array1, Array2, ArrayView1};
+use scirs2_core::error::CoreResult as Result;
 use std::time::{Duration, Instant};
 
-pub mod spiking_networks;
-pub mod memristive_optimization;
-pub mod stdp_learning;
 pub mod event_driven;
 pub mod liquid_state_machines;
+pub mod memristive_optimization;
 pub mod neural_ode_optimization;
+pub mod spiking_networks;
+pub mod stdp_learning;
 
-pub use spiking_networks::*;
-pub use memristive_optimization::*;
-pub use stdp_learning::*;
 pub use event_driven::*;
 pub use liquid_state_machines::*;
+pub use memristive_optimization::*;
 pub use neural_ode_optimization::*;
+pub use spiking_networks::*;
+pub use stdp_learning::*;
 
 /// Configuration for neuromorphic optimization algorithms
 #[derive(Debug, Clone)]
@@ -67,13 +67,13 @@ pub struct NeuromorphicConfig {
 impl Default for NeuromorphicConfig {
     fn default() -> Self {
         Self {
-            dt: 0.001,              // 1ms time step
-            total_time: 1.0,        // 1 second simulation
-            num_neurons: 100,       // 100 neurons
-            spike_threshold: 1.0,   // Normalized threshold
+            dt: 0.001,                // 1ms time step
+            total_time: 1.0,          // 1 second simulation
+            num_neurons: 100,         // 100 neurons
+            spike_threshold: 1.0,     // Normalized threshold
             refractory_period: 0.002, // 2ms refractory period
             learning_rate: 0.01,
-            membrane_decay: 0.95,   // Exponential decay factor
+            membrane_decay: 0.95, // Exponential decay factor
             noise_level: 0.01,
             event_driven: true,
         }
@@ -129,7 +129,8 @@ impl NeuronState {
 
     /// Update membrane potential (integrate-and-fire dynamics)
     pub fn update_potential(&mut self, dt: f64, decay: f64, input: f64) {
-        if !self.is_refractory(0.0, 0.0) { // Simplified check
+        if !self.is_refractory(0.0, 0.0) {
+            // Simplified check
             self.potential = self.potential * decay + input * dt;
         }
     }
@@ -203,10 +204,10 @@ impl NeuromorphicNetwork {
         for (i, &param) in parameters.iter().enumerate() {
             let start_idx = i * neurons_per_param;
             let end_idx = ((i + 1) * neurons_per_param).min(self.config.num_neurons);
-            
+
             // Rate coding: parameter value determines firing rate
             let firing_rate = (param + 1.0) * 10.0; // Scale to reasonable firing rate
-            
+
             for j in start_idx..end_idx {
                 // Inject current proportional to desired firing rate
                 self.neurons[j].input_current = firing_rate * 0.01;
@@ -223,13 +224,13 @@ impl NeuromorphicNetwork {
         for i in 0..n_params {
             let start_idx = i * neurons_per_param;
             let end_idx = ((i + 1) * neurons_per_param).min(self.config.num_neurons);
-            
+
             // Average membrane potential as parameter estimate
             let mut sum = 0.0;
             for j in start_idx..end_idx {
                 sum += self.neurons[j].potential;
             }
-            
+
             if end_idx > start_idx {
                 decoded[i] = sum / (end_idx - start_idx) as f64;
             }
@@ -273,11 +274,11 @@ impl NeuromorphicNetwork {
             }
 
             // Check for spike
-            if self.neurons[i].should_spike(self.config.spike_threshold) 
-                && !self.neurons[i].is_refractory(self.current_time, self.config.refractory_period) {
-                
+            if self.neurons[i].should_spike(self.config.spike_threshold)
+                && !self.neurons[i].is_refractory(self.current_time, self.config.refractory_period)
+            {
                 self.neurons[i].fire_spike(self.current_time);
-                
+
                 // Add spike event to queue
                 self.spike_queue.push(SpikeEvent {
                     time: self.current_time,
@@ -302,7 +303,8 @@ impl NeuromorphicNetwork {
     /// Process spike events for event-driven dynamics
     fn process_spike_events(&mut self) -> Result<()> {
         // Sort spike events by time
-        self.spike_queue.sort_by(|a, b| a.time.partial_cmp(&b.time).unwrap());
+        self.spike_queue
+            .sort_by(|a, b| a.time.partial_cmp(&b.time).unwrap());
 
         // Process events that should have occurred by now
         while let Some(event) = self.spike_queue.first() {
@@ -335,7 +337,7 @@ impl NeuromorphicNetwork {
         // Simple feedback: better objective values lead to positive input
         let feedback_strength = 0.1;
         let normalized_objective = -objective_value; // Assume minimization
-        
+
         // Different neurons can receive different feedback patterns
         let phase = neuron_id as f64 / self.config.num_neurons as f64 * 2.0 * std::f64::consts::PI;
         feedback_strength * normalized_objective * phase.sin()
@@ -346,7 +348,11 @@ impl NeuromorphicNetwork {
         // Simplified STDP: strengthen connections that led to better performance
         let performance_factor = if self.objective_history.len() > 1 {
             let prev_objective = self.objective_history[self.objective_history.len() - 2];
-            if objective_value < prev_objective { 1.0 } else { -0.1 }
+            if objective_value < prev_objective {
+                1.0
+            } else {
+                -0.1
+            }
         } else {
             0.0
         };
@@ -357,10 +363,11 @@ impl NeuromorphicNetwork {
                 if i != j {
                     // Simplified plasticity rule
                     let correlation = self.neurons[i].potential * self.neurons[j].potential;
-                    let weight_change = self.config.learning_rate * performance_factor * correlation;
-                    
+                    let weight_change =
+                        self.config.learning_rate * performance_factor * correlation;
+
                     self.connectivity[[i, j]] += weight_change;
-                    
+
                     // Bound weights
                     self.connectivity[[i, j]] = self.connectivity[[i, j]].max(-1.0).min(1.0);
                 }
@@ -375,15 +382,19 @@ impl NeuromorphicNetwork {
 pub trait NeuromorphicOptimizer {
     /// Configuration
     fn config(&self) -> &NeuromorphicConfig;
-    
+
     /// Run optimization for given objective function
-    fn optimize<F>(&mut self, objective: F, initial_params: &ArrayView1<f64>) -> Result<OptimizeResults>
+    fn optimize<F>(
+        &mut self,
+        objective: F,
+        initial_params: &ArrayView1<f64>,
+    ) -> Result<OptimizeResults>
     where
         F: Fn(&ArrayView1<f64>) -> f64;
-    
+
     /// Get current network state
     fn network(&self) -> &NeuromorphicNetwork;
-    
+
     /// Reset optimizer state
     fn reset(&mut self);
 }
@@ -401,7 +412,7 @@ impl BasicNeuromorphicOptimizer {
     /// Create a new basic neuromorphic optimizer
     pub fn new(config: NeuromorphicConfig, num_parameters: usize) -> Self {
         let network = NeuromorphicNetwork::new(config, num_parameters);
-        
+
         Self {
             network,
             best_params: Array1::zeros(num_parameters),
@@ -415,44 +426,49 @@ impl NeuromorphicOptimizer for BasicNeuromorphicOptimizer {
     fn config(&self) -> &NeuromorphicConfig {
         &self.network.config
     }
-    
-    fn optimize<F>(&mut self, objective: F, initial_params: &ArrayView1<f64>) -> Result<OptimizeResults>
+
+    fn optimize<F>(
+        &mut self,
+        objective: F,
+        initial_params: &ArrayView1<f64>,
+    ) -> Result<OptimizeResults>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
         self.network.parameters = initial_params.to_owned();
         self.best_params = initial_params.to_owned();
         self.best_objective = objective(initial_params);
-        
+
         let max_iterations = (self.network.config.total_time / self.network.config.dt) as usize;
-        
+
         for iteration in 0..max_iterations {
             // Encode current parameters into network
-            self.network.encode_parameters(&self.network.parameters.view());
-            
+            self.network
+                .encode_parameters(&self.network.parameters.view());
+
             // Evaluate objective
             let current_objective = objective(&self.network.parameters.view());
-            
+
             // Simulate network step
             self.network.simulate_step(current_objective)?;
-            
+
             // Decode new parameters
             self.network.parameters = self.network.decode_parameters();
-            
+
             // Update best solution
             if current_objective < self.best_objective {
                 self.best_objective = current_objective;
                 self.best_params = self.network.parameters.clone();
             }
-            
+
             self.iterations = iteration + 1;
-            
+
             // Check convergence
             if current_objective < 1e-6 {
                 break;
             }
         }
-        
+
         Ok(OptimizeResults {
             x: self.best_params.clone(),
             fun: self.best_objective,
@@ -461,18 +477,18 @@ impl NeuromorphicOptimizer for BasicNeuromorphicOptimizer {
             message: "Neuromorphic optimization completed".to_string(),
         })
     }
-    
+
     fn network(&self) -> &NeuromorphicNetwork {
         &self.network
     }
-    
+
     fn reset(&mut self) {
         self.network.current_time = 0.0;
         self.network.spike_queue.clear();
         self.network.objective_history.clear();
         self.best_objective = f64::INFINITY;
         self.iterations = 0;
-        
+
         // Reset neuron states
         for neuron in &mut self.network.neurons {
             neuron.potential = 0.0;
@@ -500,7 +516,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_neuron_state_creation() {
         let neuron = NeuronState::new(10);
@@ -508,65 +524,65 @@ mod tests {
         assert_eq!(neuron.potential, 0.0);
         assert!(neuron.last_spike_time.is_none());
     }
-    
+
     #[test]
     fn test_neuron_spike_behavior() {
         let mut neuron = NeuronState::new(5);
         neuron.potential = 1.5;
-        
+
         assert!(neuron.should_spike(1.0));
         neuron.fire_spike(0.1);
-        
+
         assert_eq!(neuron.potential, 0.0);
         assert_eq!(neuron.last_spike_time, Some(0.1));
     }
-    
+
     #[test]
     fn test_neuromorphic_network_creation() {
         let config = NeuromorphicConfig::default();
         let network = NeuromorphicNetwork::new(config, 3);
-        
+
         assert_eq!(network.neurons.len(), 100); // Default num_neurons
         assert_eq!(network.parameters.len(), 3);
         assert_eq!(network.current_time, 0.0);
     }
-    
+
     #[test]
     fn test_parameter_encoding_decoding() {
         let config = NeuromorphicConfig::default();
         let mut network = NeuromorphicNetwork::new(config, 2);
-        
+
         let params = Array1::from(vec![0.5, -0.3]);
         network.encode_parameters(&params.view());
-        
+
         // Check that neurons received input
         assert!(network.neurons.iter().any(|n| n.input_current != 0.0));
-        
+
         // Decoding should give some result (though not exact due to neural dynamics)
         let decoded = network.decode_parameters();
         assert_eq!(decoded.len(), 2);
     }
-    
+
     #[test]
     fn test_basic_optimizer() {
         let config = NeuromorphicConfig {
-            total_time: 0.1,  // Short simulation for test
-            num_neurons: 20,   // Fewer neurons for speed
+            total_time: 0.1, // Short simulation for test
+            num_neurons: 20, // Fewer neurons for speed
             ..Default::default()
         };
-        
+
         let mut optimizer = BasicNeuromorphicOptimizer::new(config, 2);
-        
+
         // Simple quadratic objective
         let objective = |x: &ArrayView1<f64>| x[0].powi(2) + x[1].powi(2);
         let initial = Array1::from(vec![1.0, 1.0]);
-        
+
         let result = optimizer.optimize(objective, &initial.view()).unwrap();
-        
+
         assert!(result.iterations > 0);
         assert!(result.fun < 2.0); // Should improve from initial value of 2.0
     }
-    
+
     #[test]
     fn test_convenience_function() {
         let config = NeuromorphicConfig {
@@ -574,31 +590,31 @@ mod tests {
             num_neurons: 10,
             ..Default::default()
         };
-        
+
         let objective = |x: &ArrayView1<f64>| (x[0] - 1.0).powi(2);
         let initial = Array1::from(vec![0.0]);
-        
+
         let result = neuromorphic_optimize(objective, &initial.view(), Some(config)).unwrap();
-        
+
         assert!(result.iterations > 0);
         assert!(result.x.len() == 1);
     }
-    
+
     #[test]
     fn test_spike_queue_processing() {
         let config = NeuromorphicConfig::default();
         let mut network = NeuromorphicNetwork::new(config, 2);
-        
+
         // Add some spike events
         network.spike_queue.push(SpikeEvent {
             time: 0.001,
             neuron_id: 0,
             weight: 1.0,
         });
-        
+
         network.current_time = 0.002;
         network.process_spike_events().unwrap();
-        
+
         // Spike queue should be processed
         assert!(network.spike_queue.is_empty());
     }

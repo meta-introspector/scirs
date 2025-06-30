@@ -13,10 +13,10 @@
 //! - Multi-objective optimization (speed, accuracy, energy)
 
 use crate::error::Result;
-use std::collections::{HashMap, VecDeque};
-use std::time::{Duration, Instant};
 use rand::prelude::*;
 use rand::rng;
+use std::collections::{HashMap, VecDeque};
+use std::time::{Duration, Instant};
 
 /// Reinforcement learning agent for parameter optimization
 pub struct RLParameterOptimizer {
@@ -157,7 +157,7 @@ impl RLParameterOptimizer {
         let learning_params = RLLearningParams::default();
         let action_space = Self::create_action_space();
         let state_space = Self::create_state_space();
-        
+
         Self {
             q_table: HashMap::new(),
             current_state: StateDiscrete::default(),
@@ -172,7 +172,7 @@ impl RLParameterOptimizer {
     /// Create the action space
     fn create_action_space() -> Vec<ActionDiscrete> {
         let mut actions = Vec::new();
-        
+
         let param_types = [
             ParameterType::BlurSigma,
             ParameterType::EdgeThreshold,
@@ -181,7 +181,7 @@ impl RLParameterOptimizer {
             ParameterType::SimdMode,
             ParameterType::QualityLevel,
         ];
-        
+
         let adjustments = [
             AdjustmentAction::DecreaseLarge,
             AdjustmentAction::DecreaseSmall,
@@ -189,7 +189,7 @@ impl RLParameterOptimizer {
             AdjustmentAction::IncreaseSmall,
             AdjustmentAction::IncreaseLarge,
         ];
-        
+
         for param_type in &param_types {
             for adjustment in &adjustments {
                 actions.push(ActionDiscrete {
@@ -198,14 +198,14 @@ impl RLParameterOptimizer {
                 });
             }
         }
-        
+
         actions
     }
 
     /// Create the state space
     fn create_state_space() -> Vec<StateDiscrete> {
         let mut states = Vec::new();
-        
+
         // Create all combinations of state buckets
         for latency in 0..5 {
             for cpu in 0..5 {
@@ -224,14 +224,14 @@ impl RLParameterOptimizer {
                 }
             }
         }
-        
+
         states
     }
 
     /// Select action using epsilon-greedy policy
     pub fn select_action(&mut self, state: &StateDiscrete) -> ActionDiscrete {
         let mut rng = rng();
-        
+
         if rng.gen::<f64>() < self.learning_params.epsilon {
             // Explore: random action
             self.action_space.choose(&mut rng).unwrap().clone()
@@ -244,7 +244,8 @@ impl RLParameterOptimizer {
     /// Get the best action for a state
     fn get_best_action(&self, state: &StateDiscrete) -> ActionDiscrete {
         if let Some(action_values) = self.q_table.get(state) {
-            action_values.iter()
+            action_values
+                .iter()
                 .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
                 .map(|(action, _)| action.clone())
                 .unwrap_or_else(|| self.action_space[0].clone())
@@ -257,39 +258,43 @@ impl RLParameterOptimizer {
     pub fn update_q_values(&mut self, experience: Experience) {
         let alpha = self.learning_params.learning_rate;
         let gamma = self.learning_params.discount_factor;
-        
+
         // Calculate max Q-value for next state first
         let max_next_q = if experience.done {
             0.0
         } else {
-            self.q_table.get(&experience.next_state)
+            self.q_table
+                .get(&experience.next_state)
                 .map(|action_values| {
-                    action_values.values()
+                    action_values
+                        .values()
                         .max_by(|a, b| a.partial_cmp(b).unwrap())
                         .unwrap_or(&0.0)
                         .clone()
                 })
                 .unwrap_or(0.0)
         };
-        
+
         // Get current Q-value and update it
-        let current_q = self.q_table
+        let current_q = self
+            .q_table
             .entry(experience.state.clone())
             .or_insert_with(HashMap::new)
             .entry(experience.action.clone())
             .or_insert(0.0);
-        
+
         // Update Q-value using Bellman equation
         *current_q += alpha * (experience.reward + gamma * max_next_q - *current_q);
-        
+
         // Store experience in replay buffer
         self.experience_buffer.push_back(experience);
         if self.experience_buffer.len() > 10000 {
             self.experience_buffer.pop_front();
         }
-        
+
         // Decay epsilon
-        self.learning_params.epsilon = (self.learning_params.epsilon * self.learning_params.epsilon_decay)
+        self.learning_params.epsilon = (self.learning_params.epsilon
+            * self.learning_params.epsilon_decay)
             .max(self.learning_params.epsilon_min);
     }
 
@@ -319,10 +324,13 @@ impl RLParameterOptimizer {
         let memory_reward = 1.0 - (metrics.memory_usage / 2000.0).min(1.0);
         let quality_reward = metrics.quality_score;
         let energy_reward = 1.0 - (metrics.energy_consumption / 10.0).min(1.0);
-        
+
         // Weighted combination
-        0.3 * latency_reward + 0.2 * cpu_reward + 0.2 * memory_reward + 
-        0.2 * quality_reward + 0.1 * energy_reward
+        0.3 * latency_reward
+            + 0.2 * cpu_reward
+            + 0.2 * memory_reward
+            + 0.2 * quality_reward
+            + 0.1 * energy_reward
     }
 
     /// Perform experience replay learning
@@ -330,12 +338,12 @@ impl RLParameterOptimizer {
         if self.experience_buffer.len() < batch_size {
             return;
         }
-        
+
         let mut rng = rng();
         let sample_indices: Vec<usize> = (0..batch_size)
             .map(|_| rng.gen_range(0..self.experience_buffer.len()))
             .collect();
-        
+
         for &idx in &sample_indices {
             if let Some(experience) = self.experience_buffer.get(idx) {
                 self.update_q_values(experience.clone());
@@ -429,7 +437,7 @@ impl GeneticPipelineOptimizer {
     pub fn new(parameter_ranges: HashMap<String, (f64, f64)>) -> Self {
         let ga_params = GAParameters::default();
         let population = Self::initialize_population(&parameter_ranges, ga_params.population_size);
-        
+
         Self {
             population,
             ga_params,
@@ -445,22 +453,22 @@ impl GeneticPipelineOptimizer {
     ) -> Vec<PipelineGenome> {
         let mut population = Vec::with_capacity(population_size);
         let mut rng = rng();
-        
+
         for _ in 0..population_size {
             let mut genes = HashMap::new();
-            
+
             for (param_name, &(min_val, max_val)) in parameter_ranges {
                 let value = rng.gen_range(min_val..=max_val);
                 genes.insert(param_name.clone(), value);
             }
-            
+
             population.push(PipelineGenome {
                 genes,
                 fitness: 0.0,
                 age: 0,
             });
         }
-        
+
         population
     }
 
@@ -469,19 +477,19 @@ impl GeneticPipelineOptimizer {
         for genome in &mut self.population {
             genome.fitness = fitness_fn(genome);
         }
-        
+
         // Sort by fitness (descending)
-        self.population.sort_by(|a, b| b.fitness.partial_cmp(&a.fitness).unwrap());
-        
+        self.population
+            .sort_by(|a, b| b.fitness.partial_cmp(&a.fitness).unwrap());
+
         // Record generation statistics
         let best_fitness = self.population[0].fitness;
         let worst_fitness = self.population.last().unwrap().fitness;
-        let avg_fitness = self.population.iter()
-            .map(|g| g.fitness)
-            .sum::<f64>() / self.population.len() as f64;
-        
+        let avg_fitness =
+            self.population.iter().map(|g| g.fitness).sum::<f64>() / self.population.len() as f64;
+
         let diversity = self.calculate_diversity();
-        
+
         self.fitness_history.push_back(GenerationStats {
             generation: self.current_generation,
             best_fitness,
@@ -489,7 +497,7 @@ impl GeneticPipelineOptimizer {
             worst_fitness,
             diversity,
         });
-        
+
         if self.fitness_history.len() > 1000 {
             self.fitness_history.pop_front();
         }
@@ -499,7 +507,7 @@ impl GeneticPipelineOptimizer {
     fn calculate_diversity(&self) -> f64 {
         let mut total_distance = 0.0;
         let mut comparisons = 0;
-        
+
         for i in 0..self.population.len() {
             for j in (i + 1)..self.population.len() {
                 let distance = self.genome_distance(&self.population[i], &self.population[j]);
@@ -507,7 +515,7 @@ impl GeneticPipelineOptimizer {
                 comparisons += 1;
             }
         }
-        
+
         if comparisons > 0 {
             total_distance / comparisons as f64
         } else {
@@ -519,14 +527,14 @@ impl GeneticPipelineOptimizer {
     fn genome_distance(&self, genome1: &PipelineGenome, genome2: &PipelineGenome) -> f64 {
         let mut distance = 0.0;
         let mut count = 0;
-        
+
         for (param_name, &value1) in &genome1.genes {
             if let Some(&value2) = genome2.genes.get(param_name) {
                 distance += (value1 - value2).abs();
                 count += 1;
             }
         }
-        
+
         if count > 0 {
             distance / count as f64
         } else {
@@ -539,40 +547,40 @@ impl GeneticPipelineOptimizer {
         let elite_count = (self.population.len() as f64 * self.ga_params.elite_ratio) as usize;
         let mut new_population = Vec::with_capacity(self.population.len());
         let mut rng = rng();
-        
+
         // Keep elite individuals
         for i in 0..elite_count {
             let mut elite = self.population[i].clone();
             elite.age += 1;
             new_population.push(elite);
         }
-        
+
         // Generate offspring
         while new_population.len() < self.population.len() {
             // Tournament selection
             let parent1 = self.tournament_selection();
             let parent2 = self.tournament_selection();
-            
+
             // Crossover
             let mut offspring = if rng.gen::<f64>() < self.ga_params.crossover_rate {
                 self.crossover(&parent1, &parent2)
             } else {
                 parent1.clone()
             };
-            
+
             // Mutation
             if rng.gen::<f64>() < self.ga_params.mutation_rate {
                 self.mutate(&mut offspring);
             }
-            
+
             offspring.age = 0;
             offspring.fitness = 0.0;
             new_population.push(offspring);
         }
-        
+
         self.population = new_population;
         self.current_generation += 1;
-        
+
         // Check convergence
         self.check_convergence()
     }
@@ -582,16 +590,16 @@ impl GeneticPipelineOptimizer {
         let tournament_size = 3;
         let mut rng = rng();
         let mut best_genome = &self.population[0];
-        
+
         for _ in 0..tournament_size {
             let candidate_idx = rng.gen_range(0..self.population.len());
             let candidate = &self.population[candidate_idx];
-            
+
             if candidate.fitness > best_genome.fitness {
                 best_genome = candidate;
             }
         }
-        
+
         best_genome.clone()
     }
 
@@ -599,7 +607,7 @@ impl GeneticPipelineOptimizer {
     fn crossover(&self, parent1: &PipelineGenome, parent2: &PipelineGenome) -> PipelineGenome {
         let mut offspring_genes = HashMap::new();
         let mut rng = rng();
-        
+
         for (param_name, &value1) in &parent1.genes {
             if let Some(&value2) = parent2.genes.get(param_name) {
                 let offspring_value = if rng.gen::<f64>() < 0.5 {
@@ -612,7 +620,7 @@ impl GeneticPipelineOptimizer {
                 offspring_genes.insert(param_name.clone(), value1);
             }
         }
-        
+
         PipelineGenome {
             genes: offspring_genes,
             fitness: 0.0,
@@ -624,7 +632,7 @@ impl GeneticPipelineOptimizer {
     fn mutate(&self, genome: &mut PipelineGenome) {
         let mut rng = rng();
         let mutation_strength = 0.1;
-        
+
         for (_param_name, value) in &mut genome.genes {
             let mutation = rng.gen_range(-mutation_strength..=mutation_strength);
             *value += mutation;
@@ -637,20 +645,20 @@ impl GeneticPipelineOptimizer {
         if self.fitness_history.len() < 10 {
             return false;
         }
-        
-        let recent_best: Vec<f64> = self.fitness_history.iter()
+
+        let recent_best: Vec<f64> = self
+            .fitness_history
+            .iter()
             .rev()
             .take(10)
             .map(|stats| stats.best_fitness)
             .collect();
-        
+
         let variance = {
             let mean = recent_best.iter().sum::<f64>() / recent_best.len() as f64;
-            recent_best.iter()
-                .map(|&x| (x - mean).powi(2))
-                .sum::<f64>() / recent_best.len() as f64
+            recent_best.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / recent_best.len() as f64
         };
-        
+
         variance < self.ga_params.convergence_threshold
     }
 
@@ -822,20 +830,14 @@ impl NeuralArchitectureSearch {
     /// Generate candidate architectures
     pub fn generate_candidates(&mut self, num_candidates: usize) -> Vec<ProcessingArchitecture> {
         let candidates = match &self.search_strategy {
-            SearchStrategy::Random => {
-                self.random_search(num_candidates)
-            }
+            SearchStrategy::Random => self.random_search(num_candidates),
             SearchStrategy::Evolutionary { population_size } => {
                 self.evolutionary_search(*population_size)
             }
-            SearchStrategy::ReinforcementLearning { .. } => {
-                self.rl_search(num_candidates)
-            }
-            SearchStrategy::BayesianOptimization { .. } => {
-                self.bayesian_search(num_candidates)
-            }
+            SearchStrategy::ReinforcementLearning { .. } => self.rl_search(num_candidates),
+            SearchStrategy::BayesianOptimization { .. } => self.bayesian_search(num_candidates),
         };
-        
+
         self.candidate_architectures = candidates.clone();
         candidates
     }
@@ -844,20 +846,31 @@ impl NeuralArchitectureSearch {
     fn random_search(&self, num_candidates: usize) -> Vec<ProcessingArchitecture> {
         let mut candidates = Vec::new();
         let mut rng = rng();
-        
+
         for i in 0..num_candidates {
-            let depth = rng.gen_range(self.search_space.depth_range.0..=self.search_space.depth_range.1);
+            let depth =
+                rng.gen_range(self.search_space.depth_range.0..=self.search_space.depth_range.1);
             let mut layers = Vec::new();
             let mut connections = Vec::new();
-            
+
             for _ in 0..depth {
-                let layer_type = self.search_space.layer_types.choose(&mut rng).unwrap().clone();
+                let layer_type = self
+                    .search_space
+                    .layer_types
+                    .choose(&mut rng)
+                    .unwrap()
+                    .clone();
                 layers.push(layer_type);
-                
-                let connection = self.search_space.connections.choose(&mut rng).unwrap().clone();
+
+                let connection = self
+                    .search_space
+                    .connections
+                    .choose(&mut rng)
+                    .unwrap()
+                    .clone();
                 connections.push(connection);
             }
-            
+
             let architecture = ProcessingArchitecture {
                 id: format!("arch_{}", i),
                 layers,
@@ -865,10 +878,10 @@ impl NeuralArchitectureSearch {
                 complexity: self.calculate_complexity(&layers),
                 parameter_count: self.estimate_parameters(&layers),
             };
-            
+
             candidates.push(architecture);
         }
-        
+
         candidates
     }
 
@@ -878,43 +891,46 @@ impl NeuralArchitectureSearch {
         if self.current_iteration == 0 {
             return self.random_search(population_size);
         }
-        
+
         // Evolve existing population
         let mut new_population = Vec::new();
         let mut rng = rng();
-        
+
         // Select best performing architectures
-        let mut ranked_archs: Vec<_> = self.candidate_architectures.iter()
+        let mut ranked_archs: Vec<_> = self
+            .candidate_architectures
+            .iter()
             .filter_map(|arch| {
-                self.performance_db.get(&arch.id)
+                self.performance_db
+                    .get(&arch.id)
                     .map(|perf| (arch, perf.efficiency_score))
             })
             .collect();
-        
+
         ranked_archs.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-        
+
         // Keep top performers
         let elite_count = population_size / 4;
         for (arch, _) in ranked_archs.iter().take(elite_count) {
             new_population.push((*arch).clone());
         }
-        
+
         // Generate offspring through mutation and crossover
         while new_population.len() < population_size {
             if ranked_archs.len() >= 2 {
                 let parent1 = ranked_archs.choose(&mut rng).unwrap().0;
                 let parent2 = ranked_archs.choose(&mut rng).unwrap().0;
-                
+
                 let offspring = self.crossover_architectures(parent1, parent2);
                 let mutated = self.mutate_architecture(offspring);
-                
+
                 new_population.push(mutated);
             } else {
                 // Fallback to random generation
                 new_population.extend(self.random_search(1));
             }
         }
-        
+
         new_population
     }
 
@@ -932,11 +948,15 @@ impl NeuralArchitectureSearch {
 
     /// Calculate architecture complexity
     fn calculate_complexity(&self, layers: &[LayerType]) -> f64 {
-        layers.iter()
+        layers
+            .iter()
             .map(|layer| match layer {
                 LayerType::Convolution { kernel_size, .. } => *kernel_size as f64,
                 LayerType::SeparableConv { kernel_size } => *kernel_size as f64 * 0.5,
-                LayerType::DilatedConv { kernel_size, dilation } => *kernel_size as f64 * *dilation as f64,
+                LayerType::DilatedConv {
+                    kernel_size,
+                    dilation,
+                } => *kernel_size as f64 * *dilation as f64,
                 LayerType::DepthwiseConv { kernel_size } => *kernel_size as f64 * 0.3,
                 LayerType::Pooling { .. } => 1.0,
                 LayerType::Normalization { .. } => 0.5,
@@ -947,7 +967,8 @@ impl NeuralArchitectureSearch {
 
     /// Estimate parameter count
     fn estimate_parameters(&self, layers: &[LayerType]) -> usize {
-        layers.iter()
+        layers
+            .iter()
             .map(|layer| match layer {
                 LayerType::Convolution { kernel_size, .. } => kernel_size * kernel_size * 64,
                 LayerType::SeparableConv { kernel_size } => kernel_size * kernel_size * 32,
@@ -961,24 +982,28 @@ impl NeuralArchitectureSearch {
     }
 
     /// Crossover two architectures
-    fn crossover_architectures(&self, parent1: &ProcessingArchitecture, parent2: &ProcessingArchitecture) -> ProcessingArchitecture {
+    fn crossover_architectures(
+        &self,
+        parent1: &ProcessingArchitecture,
+        parent2: &ProcessingArchitecture,
+    ) -> ProcessingArchitecture {
         let mut rng = rng();
         let min_depth = parent1.layers.len().min(parent2.layers.len());
         let crossover_point = rng.gen_range(1..min_depth);
-        
+
         let mut new_layers = Vec::new();
         let mut new_connections = Vec::new();
-        
+
         // Take first part from parent1
         new_layers.extend_from_slice(&parent1.layers[..crossover_point]);
         new_connections.extend_from_slice(&parent1.connections[..crossover_point]);
-        
+
         // Take second part from parent2
         if crossover_point < parent2.layers.len() {
             new_layers.extend_from_slice(&parent2.layers[crossover_point..]);
             new_connections.extend_from_slice(&parent2.connections[crossover_point..]);
         }
-        
+
         ProcessingArchitecture {
             id: format!("crossover_{}", self.current_iteration),
             layers: new_layers,
@@ -989,34 +1014,50 @@ impl NeuralArchitectureSearch {
     }
 
     /// Mutate an architecture
-    fn mutate_architecture(&self, mut architecture: ProcessingArchitecture) -> ProcessingArchitecture {
+    fn mutate_architecture(
+        &self,
+        mut architecture: ProcessingArchitecture,
+    ) -> ProcessingArchitecture {
         let mut rng = rng();
-        
+
         // Randomly mutate some layers
         for layer in &mut architecture.layers {
-            if rng.gen::<f64>() < 0.1 { // 10% mutation rate
-                *layer = self.search_space.layer_types.choose(&mut rng).unwrap().clone();
+            if rng.gen::<f64>() < 0.1 {
+                // 10% mutation rate
+                *layer = self
+                    .search_space
+                    .layer_types
+                    .choose(&mut rng)
+                    .unwrap()
+                    .clone();
             }
         }
-        
+
         // Update complexity and parameter count
         architecture.complexity = self.calculate_complexity(&architecture.layers);
         architecture.parameter_count = self.estimate_parameters(&architecture.layers);
         architecture.id = format!("mutated_{}", self.current_iteration);
-        
+
         architecture
     }
 
     /// Record architecture performance
-    pub fn record_performance(&mut self, architecture_id: &str, performance: ArchitecturePerformance) {
-        self.performance_db.insert(architecture_id.to_string(), performance);
+    pub fn record_performance(
+        &mut self,
+        architecture_id: &str,
+        performance: ArchitecturePerformance,
+    ) {
+        self.performance_db
+            .insert(architecture_id.to_string(), performance);
     }
 
     /// Get best architecture found so far
-    pub fn get_best_architecture(&self) -> Option<(&ProcessingArchitecture, &ArchitecturePerformance)> {
+    pub fn get_best_architecture(
+        &self,
+    ) -> Option<(&ProcessingArchitecture, &ArchitecturePerformance)> {
         let mut best_arch = None;
         let mut best_score = f64::NEG_INFINITY;
-        
+
         for arch in &self.candidate_architectures {
             if let Some(perf) = self.performance_db.get(&arch.id) {
                 if perf.efficiency_score > best_score {
@@ -1025,7 +1066,7 @@ impl NeuralArchitectureSearch {
                 }
             }
         }
-        
+
         best_arch
     }
 
@@ -1147,12 +1188,12 @@ impl PredictiveScaler {
     /// Record workload measurement
     pub fn record_workload(&mut self, measurement: WorkloadMeasurement) {
         self.workload_history.push_back(measurement);
-        
+
         // Keep bounded history
         if self.workload_history.len() > 10000 {
             self.workload_history.pop_front();
         }
-        
+
         // Update model if enough data
         if self.workload_history.len() > 100 {
             self.update_prediction_model();
@@ -1180,33 +1221,30 @@ impl PredictiveScaler {
         if self.workload_history.len() < 10 {
             return;
         }
-        
+
         // Simple linear regression on recent data
-        let recent_data: Vec<_> = self.workload_history.iter()
-            .rev()
-            .take(100)
-            .collect();
-        
+        let recent_data: Vec<_> = self.workload_history.iter().rev().take(100).collect();
+
         let n = recent_data.len() as f64;
         let mut sum_x = 0.0;
         let mut sum_y = 0.0;
         let mut sum_xy = 0.0;
         let mut sum_x2 = 0.0;
-        
+
         for (i, measurement) in recent_data.iter().enumerate() {
             let x = i as f64;
             let y = measurement.processing_load;
-            
+
             sum_x += x;
             sum_y += y;
             sum_xy += x * y;
             sum_x2 += x * x;
         }
-        
+
         // Calculate regression coefficients
         let slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x * sum_x);
         let intercept = (sum_y - slope * sum_x) / n;
-        
+
         self.model_params.parameters = vec![intercept, slope];
     }
 
@@ -1220,12 +1258,12 @@ impl PredictiveScaler {
     pub fn generate_predictions(&mut self, horizons: Vec<Duration>) -> Vec<ScalingPrediction> {
         let mut predictions = Vec::new();
         let current_time = Instant::now();
-        
+
         for horizon in horizons {
             let predicted_load = self.predict_load(horizon);
             let predicted_resources = self.load_to_resources(predicted_load);
             let confidence = self.calculate_confidence(horizon);
-            
+
             predictions.push(ScalingPrediction {
                 horizon,
                 predicted_resources,
@@ -1233,38 +1271,39 @@ impl PredictiveScaler {
                 timestamp: current_time,
             });
         }
-        
+
         // Store predictions
         for prediction in &predictions {
             self.scaling_predictions.push_back(prediction.clone());
         }
-        
+
         // Keep bounded prediction history
         if self.scaling_predictions.len() > 100 {
             self.scaling_predictions.pop_front();
         }
-        
+
         predictions
     }
 
     /// Predict load for a given time horizon
     fn predict_load(&self, horizon: Duration) -> f64 {
         let horizon_secs = horizon.as_secs_f64();
-        
+
         match &self.model_params.model_type {
             ModelType::LinearRegression => {
                 let intercept = self.model_params.parameters[0];
                 let slope = self.model_params.parameters[1];
-                
+
                 // Project current trend forward
                 let current_index = self.workload_history.len() as f64;
                 let future_index = current_index + horizon_secs / 60.0; // Assume 1 minute intervals
-                
+
                 (intercept + slope * future_index).clamp(0.0, 1.0)
             }
             _ => {
                 // Default to current load if model not implemented
-                self.workload_history.back()
+                self.workload_history
+                    .back()
                     .map(|m| m.processing_load)
                     .unwrap_or(0.5)
             }
@@ -1284,24 +1323,26 @@ impl PredictiveScaler {
     fn calculate_confidence(&self, horizon: Duration) -> f64 {
         let base_confidence = self.model_params.accuracy;
         let horizon_penalty = (horizon.as_secs_f64() / 3600.0) * 0.1; // Decrease 10% per hour
-        
+
         (base_confidence - horizon_penalty).max(0.1)
     }
 
     /// Get scaling recommendations
     pub fn get_scaling_recommendations(&self) -> Vec<ScalingRecommendation> {
         let mut recommendations = Vec::new();
-        
+
         if let Some(latest_prediction) = self.scaling_predictions.back() {
             let current_resources = &self.current_scaling;
             let predicted_resources = &latest_prediction.predicted_resources;
-            
+
             // CPU scaling recommendation
             if predicted_resources.cpu_cores > current_resources.active_cores as f64 + 1.0 {
                 recommendations.push(ScalingRecommendation {
                     resource_type: ResourceType::CPU,
                     action: ScalingAction::ScaleUp,
-                    magnitude: (predicted_resources.cpu_cores - current_resources.active_cores as f64) as usize,
+                    magnitude: (predicted_resources.cpu_cores
+                        - current_resources.active_cores as f64)
+                        as usize,
                     confidence: latest_prediction.confidence,
                     reason: "Predicted CPU demand increase".to_string(),
                 });
@@ -1309,24 +1350,26 @@ impl PredictiveScaler {
                 recommendations.push(ScalingRecommendation {
                     resource_type: ResourceType::CPU,
                     action: ScalingAction::ScaleDown,
-                    magnitude: (current_resources.active_cores as f64 - predicted_resources.cpu_cores) as usize,
+                    magnitude: (current_resources.active_cores as f64
+                        - predicted_resources.cpu_cores) as usize,
                     confidence: latest_prediction.confidence,
                     reason: "Predicted CPU demand decrease".to_string(),
                 });
             }
-            
+
             // Memory scaling recommendation
             if predicted_resources.memory_mb > current_resources.allocated_memory * 1.2 {
                 recommendations.push(ScalingRecommendation {
                     resource_type: ResourceType::Memory,
                     action: ScalingAction::ScaleUp,
-                    magnitude: (predicted_resources.memory_mb - current_resources.allocated_memory) as usize,
+                    magnitude: (predicted_resources.memory_mb - current_resources.allocated_memory)
+                        as usize,
                     confidence: latest_prediction.confidence,
                     reason: "Predicted memory demand increase".to_string(),
                 });
             }
         }
-        
+
         recommendations
     }
 }
@@ -1370,10 +1413,10 @@ mod tests {
     #[test]
     fn test_rl_parameter_optimizer() {
         let mut optimizer = RLParameterOptimizer::new();
-        
+
         let state = StateDiscrete::default();
         let action = optimizer.select_action(&state);
-        
+
         assert!(optimizer.action_space.contains(&action));
     }
 
@@ -1382,16 +1425,16 @@ mod tests {
         let mut parameter_ranges = HashMap::new();
         parameter_ranges.insert("blur_sigma".to_string(), (0.1, 2.0));
         parameter_ranges.insert("threshold".to_string(), (0.01, 0.5));
-        
+
         let mut optimizer = GeneticPipelineOptimizer::new(parameter_ranges);
-        
+
         // Test fitness evaluation
         optimizer.evaluate_population(|genome| {
             // Simple fitness function
-            genome.genes.get("blur_sigma").unwrap_or(&0.0) + 
-            genome.genes.get("threshold").unwrap_or(&0.0)
+            genome.genes.get("blur_sigma").unwrap_or(&0.0)
+                + genome.genes.get("threshold").unwrap_or(&0.0)
         });
-        
+
         assert!(optimizer.population[0].fitness >= 0.0);
     }
 
@@ -1399,23 +1442,26 @@ mod tests {
     fn test_neural_architecture_search() {
         let search_space = ArchitectureSearchSpace {
             layer_types: vec![
-                LayerType::Convolution { kernel_size: 3, stride: 1 },
-                LayerType::Pooling { pool_type: PoolingType::Max, size: 2 },
+                LayerType::Convolution {
+                    kernel_size: 3,
+                    stride: 1,
+                },
+                LayerType::Pooling {
+                    pool_type: PoolingType::Max,
+                    size: 2,
+                },
             ],
             depth_range: (2, 5),
             width_range: (32, 128),
             activations: vec![ActivationType::ReLU],
             connections: vec![ConnectionType::Sequential],
         };
-        
-        let mut nas = NeuralArchitectureSearch::new(
-            search_space, 
-            SearchStrategy::Random
-        );
-        
+
+        let mut nas = NeuralArchitectureSearch::new(search_space, SearchStrategy::Random);
+
         let candidates = nas.generate_candidates(5);
         assert_eq!(candidates.len(), 5);
-        
+
         for candidate in &candidates {
             assert!(candidate.layers.len() >= 2 && candidate.layers.len() <= 5);
         }
@@ -1424,7 +1470,7 @@ mod tests {
     #[test]
     fn test_predictive_scaler() {
         let mut scaler = PredictiveScaler::new(300.0); // 5 minute prediction window
-        
+
         // Record some workload measurements
         for i in 0..10 {
             let measurement = WorkloadMeasurement {
@@ -1439,17 +1485,17 @@ mod tests {
             };
             scaler.record_workload(measurement);
         }
-        
+
         // Generate predictions
         let horizons = vec![
             Duration::from_secs(60),
             Duration::from_secs(300),
             Duration::from_secs(600),
         ];
-        
+
         let predictions = scaler.generate_predictions(horizons);
         assert_eq!(predictions.len(), 3);
-        
+
         for prediction in &predictions {
             assert!(prediction.confidence >= 0.0 && prediction.confidence <= 1.0);
         }

@@ -846,7 +846,8 @@ impl GraphNeuralNetworkMetrics {
         let link_prediction_auc = crate::classification::roc_auc_score(&y_true_u32, &y_scores)?;
 
         // Calculate average precision manually since average_precision_score doesn't exist in this form
-        let average_precision = self.calculate_average_precision(&y_true.view(), &y_scores.view())?;
+        let average_precision =
+            self.calculate_average_precision(&y_true.view(), &y_scores.view())?;
 
         // Calculate MRR and Hits@K
         let mrr = self
@@ -999,7 +1000,11 @@ impl GraphNeuralNetworkMetrics {
     }
 
     /// Calculate precision, recall, and F1 score manually
-    fn calculate_precision_recall_f1<T>(&self, y_true: &ArrayView1<T>, y_pred: &ArrayView1<T>) -> Result<(Vec<f64>, Vec<f64>, Vec<f64>)>
+    fn calculate_precision_recall_f1<T>(
+        &self,
+        y_true: &ArrayView1<T>,
+        y_pred: &ArrayView1<T>,
+    ) -> Result<(Vec<f64>, Vec<f64>, Vec<f64>)>
     where
         T: PartialEq + Eq + Clone + std::hash::Hash + std::fmt::Debug,
     {
@@ -1009,16 +1014,16 @@ impl GraphNeuralNetworkMetrics {
             classes.insert(label.clone());
         }
         let classes: Vec<T> = classes.into_iter().collect();
-        
+
         let mut precision = Vec::new();
         let mut recall = Vec::new();
         let mut f1_score = Vec::new();
-        
+
         for class in &classes {
             let mut tp = 0;
             let mut fp = 0;
             let mut fn_count = 0;
-            
+
             for (true_label, pred_label) in y_true.iter().zip(y_pred.iter()) {
                 if pred_label == class && true_label == class {
                     tp += 1;
@@ -1028,37 +1033,55 @@ impl GraphNeuralNetworkMetrics {
                     fn_count += 1;
                 }
             }
-            
-            let prec = if tp + fp > 0 { tp as f64 / (tp + fp) as f64 } else { 0.0 };
-            let rec = if tp + fn_count > 0 { tp as f64 / (tp + fn_count) as f64 } else { 0.0 };
-            let f1 = if prec + rec > 0.0 { 2.0 * prec * rec / (prec + rec) } else { 0.0 };
-            
+
+            let prec = if tp + fp > 0 {
+                tp as f64 / (tp + fp) as f64
+            } else {
+                0.0
+            };
+            let rec = if tp + fn_count > 0 {
+                tp as f64 / (tp + fn_count) as f64
+            } else {
+                0.0
+            };
+            let f1 = if prec + rec > 0.0 {
+                2.0 * prec * rec / (prec + rec)
+            } else {
+                0.0
+            };
+
             precision.push(prec);
             recall.push(rec);
             f1_score.push(f1);
         }
-        
+
         Ok((precision, recall, f1_score))
     }
-    
+
     /// Calculate average precision manually
-    fn calculate_average_precision(&self, y_true: &ArrayView1<i32>, y_scores: &ArrayView1<f64>) -> Result<f64> {
+    fn calculate_average_precision(
+        &self,
+        y_true: &ArrayView1<i32>,
+        y_scores: &ArrayView1<f64>,
+    ) -> Result<f64> {
         // Create pairs of scores and labels, then sort by score (descending)
-        let mut score_label_pairs: Vec<(f64, i32)> = y_scores.iter()
+        let mut score_label_pairs: Vec<(f64, i32)> = y_scores
+            .iter()
             .zip(y_true.iter())
             .map(|(&score, &label)| (score, label))
             .collect();
-        
-        score_label_pairs.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
-        
+
+        score_label_pairs
+            .sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
+
         let n_positive = y_true.iter().filter(|&&label| label == 1).count();
         if n_positive == 0 {
             return Ok(0.0);
         }
-        
+
         let mut precision_sum = 0.0;
         let mut true_positives = 0;
-        
+
         for (i, (_, label)) in score_label_pairs.iter().enumerate() {
             if *label == 1 {
                 true_positives += 1;
@@ -1066,7 +1089,7 @@ impl GraphNeuralNetworkMetrics {
                 precision_sum += precision_at_i;
             }
         }
-        
+
         Ok(precision_sum / n_positive as f64)
     }
 
@@ -1202,60 +1225,65 @@ impl NodeLevelMetrics {
         let silhouette_score = self.calculate_silhouette_score(features, labels)?;
         let modularity_score = self.calculate_modularity(adjacency, labels)?;
         let cluster_cohesion = self.calculate_cluster_cohesion(features, labels)?;
-        
+
         // Weighted combination of metrics
         Ok(0.4 * silhouette_score + 0.3 * modularity_score + 0.3 * cluster_cohesion)
     }
 
     /// Calculate silhouette score for node embeddings
-    fn calculate_silhouette_score<F>(&self, features: &ArrayView2<F>, labels: &ArrayView1<i32>) -> Result<f64>
+    fn calculate_silhouette_score<F>(
+        &self,
+        features: &ArrayView2<F>,
+        labels: &ArrayView1<i32>,
+    ) -> Result<f64>
     where
         F: Float,
     {
         let n_samples = features.nrows();
         let unique_labels: HashSet<i32> = labels.iter().cloned().collect();
-        
+
         if unique_labels.len() < 2 {
             return Ok(0.0); // No meaningful silhouette for single cluster
         }
-        
+
         let mut silhouette_scores = Vec::new();
-        
+
         for i in 0..n_samples {
             let label_i = labels[i];
             let feature_i = features.row(i);
-            
+
             // Calculate a(i) - mean distance to points in same cluster
             let same_cluster_distances: Vec<f64> = (0..n_samples)
                 .filter(|&j| j != i && labels[j] == label_i)
                 .map(|j| self.euclidean_distance(&feature_i, &features.row(j)))
                 .collect();
-            
+
             let a_i = if same_cluster_distances.is_empty() {
                 0.0
             } else {
                 same_cluster_distances.iter().sum::<f64>() / same_cluster_distances.len() as f64
             };
-            
+
             // Calculate b(i) - mean distance to nearest cluster
             let mut min_cluster_distance = f64::INFINITY;
-            
+
             for &other_label in &unique_labels {
                 if other_label != label_i {
                     let other_cluster_distances: Vec<f64> = (0..n_samples)
                         .filter(|&j| labels[j] == other_label)
                         .map(|j| self.euclidean_distance(&feature_i, &features.row(j)))
                         .collect();
-                    
+
                     if !other_cluster_distances.is_empty() {
-                        let mean_distance = other_cluster_distances.iter().sum::<f64>() / other_cluster_distances.len() as f64;
+                        let mean_distance = other_cluster_distances.iter().sum::<f64>()
+                            / other_cluster_distances.len() as f64;
                         min_cluster_distance = min_cluster_distance.min(mean_distance);
                     }
                 }
             }
-            
+
             let b_i = min_cluster_distance;
-            
+
             // Calculate silhouette score for this point
             if a_i == 0.0 && b_i == 0.0 {
                 silhouette_scores.push(0.0);
@@ -1263,48 +1291,56 @@ impl NodeLevelMetrics {
                 silhouette_scores.push((b_i - a_i) / a_i.max(b_i));
             }
         }
-        
+
         Ok(silhouette_scores.iter().sum::<f64>() / silhouette_scores.len() as f64)
     }
 
     /// Calculate modularity score for graph clustering
-    fn calculate_modularity(&self, adjacency: &ArrayView2<i32>, labels: &ArrayView1<i32>) -> Result<f64> {
+    fn calculate_modularity(
+        &self,
+        adjacency: &ArrayView2<i32>,
+        labels: &ArrayView1<i32>,
+    ) -> Result<f64> {
         let n_nodes = adjacency.nrows();
         let total_edges = adjacency.iter().filter(|&&x| x > 0).count() as f64 / 2.0; // Undirected graph
-        
+
         if total_edges == 0.0 {
             return Ok(0.0);
         }
-        
+
         let mut modularity = 0.0;
-        
+
         for i in 0..n_nodes {
             let degree_i = adjacency.row(i).iter().sum::<i32>() as f64;
-            
+
             for j in 0..n_nodes {
                 let degree_j = adjacency.row(j).iter().sum::<i32>() as f64;
                 let edge_ij = adjacency[[i, j]] as f64;
-                
+
                 let expected_edge = (degree_i * degree_j) / (2.0 * total_edges);
-                
+
                 if labels[i] == labels[j] {
                     modularity += edge_ij - expected_edge;
                 }
             }
         }
-        
+
         Ok(modularity / (2.0 * total_edges))
     }
 
     /// Calculate cluster cohesion
-    fn calculate_cluster_cohesion<F>(&self, features: &ArrayView2<F>, labels: &ArrayView1<i32>) -> Result<f64>
+    fn calculate_cluster_cohesion<F>(
+        &self,
+        features: &ArrayView2<F>,
+        labels: &ArrayView1<i32>,
+    ) -> Result<f64>
     where
         F: Float,
     {
         let unique_labels: HashSet<i32> = labels.iter().cloned().collect();
         let mut total_cohesion = 0.0;
         let mut cluster_count = 0;
-        
+
         for &label in &unique_labels {
             let cluster_indices: Vec<usize> = labels
                 .iter()
@@ -1312,11 +1348,11 @@ impl NodeLevelMetrics {
                 .filter(|(_, &l)| l == label)
                 .map(|(i, _)| i)
                 .collect();
-            
+
             if cluster_indices.len() < 2 {
                 continue;
             }
-            
+
             // Calculate centroid
             let mut centroid = vec![F::zero(); features.ncols()];
             for &idx in &cluster_indices {
@@ -1324,11 +1360,11 @@ impl NodeLevelMetrics {
                     centroid[j] = centroid[j] + val;
                 }
             }
-            
+
             for cent in &mut centroid {
                 *cent = *cent / F::from(cluster_indices.len()).unwrap();
             }
-            
+
             // Calculate average distance to centroid
             let mut avg_distance = 0.0;
             for &idx in &cluster_indices {
@@ -1339,12 +1375,12 @@ impl NodeLevelMetrics {
                 }
                 avg_distance += distance.sqrt();
             }
-            
+
             avg_distance /= cluster_indices.len() as f64;
             total_cohesion += 1.0 / (1.0 + avg_distance); // Higher cohesion for smaller distances
             cluster_count += 1;
         }
-        
+
         if cluster_count > 0 {
             Ok(total_cohesion / cluster_count as f64)
         } else {
@@ -1487,7 +1523,7 @@ impl EdgeLevelMetrics {
         if edge_index_true.is_empty() || edge_scores.is_empty() {
             return Ok(0.0);
         }
-        
+
         // Create score-edge pairs and sort by score (descending)
         let mut scored_edges: Vec<(f64, (usize, usize))> = edge_scores
             .iter()
@@ -1500,14 +1536,14 @@ impl EdgeLevelMetrics {
                 }
             })
             .collect();
-        
+
         scored_edges.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
-        
+
         // Convert true edges to set for fast lookup
         let true_edges_set: HashSet<(usize, usize)> = edge_index_true.iter().cloned().collect();
-        
+
         let mut reciprocal_ranks = Vec::new();
-        
+
         // For each true edge, find its rank in the sorted list
         for &true_edge in edge_index_true {
             for (rank, &(_, edge)) in scored_edges.iter().enumerate() {
@@ -1517,7 +1553,7 @@ impl EdgeLevelMetrics {
                 }
             }
         }
-        
+
         if reciprocal_ranks.is_empty() {
             Ok(0.0)
         } else {
@@ -1537,7 +1573,7 @@ impl EdgeLevelMetrics {
         if edge_index_true.is_empty() || edge_scores.is_empty() || k == 0 {
             return Ok(0.0);
         }
-        
+
         // Create score-edge pairs and sort by score (descending)
         let mut scored_edges: Vec<(f64, (usize, usize))> = edge_scores
             .iter()
@@ -1550,26 +1586,26 @@ impl EdgeLevelMetrics {
                 }
             })
             .collect();
-        
+
         scored_edges.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
-        
+
         // Convert true edges to set for fast lookup
         let true_edges_set: HashSet<(usize, usize)> = edge_index_true
             .iter()
             .flat_map(|&(u, v)| vec![(u, v), (v, u)]) // Handle undirected edges
             .collect();
-        
+
         // Count hits in top-k predictions
         let mut hits = 0;
         let k_limit = k.min(scored_edges.len());
-        
+
         for i in 0..k_limit {
             let (_, edge) = scored_edges[i];
             if true_edges_set.contains(&edge) {
                 hits += 1;
             }
         }
-        
+
         let total_true_edges = edge_index_true.len();
         if total_true_edges == 0 {
             Ok(0.0)
@@ -1618,38 +1654,42 @@ impl GraphLevelMetrics {
         if features.is_empty() || labels.is_empty() {
             return Ok(0.0);
         }
-        
+
         let n_samples = features.nrows();
         if n_samples != labels.len() {
             return Err(MetricsError::InvalidInput(
-                "Features and labels must have same number of samples".to_string()
+                "Features and labels must have same number of samples".to_string(),
             ));
         }
-        
+
         // Calculate basic structural properties from features
         let mut correct_predictions = 0;
-        
+
         for i in 0..n_samples {
             let feature_vector = features.row(i);
             let true_label = labels[i];
-            
+
             // Simple property prediction based on feature statistics
             // This is a simplified implementation - in practice, you'd use a trained model
-            let feature_mean = feature_vector.iter()
+            let feature_mean = feature_vector
+                .iter()
                 .map(|&x| x.to_f64().unwrap_or(0.0))
-                .sum::<f64>() / feature_vector.len() as f64;
-            
+                .sum::<f64>()
+                / feature_vector.len() as f64;
+
             let feature_std = {
                 let mean = feature_mean;
-                let variance = feature_vector.iter()
+                let variance = feature_vector
+                    .iter()
                     .map(|&x| {
                         let diff = x.to_f64().unwrap_or(0.0) - mean;
                         diff * diff
                     })
-                    .sum::<f64>() / feature_vector.len() as f64;
+                    .sum::<f64>()
+                    / feature_vector.len() as f64;
                 variance.sqrt()
             };
-            
+
             // Predict based on feature statistics (simplified heuristic)
             let predicted_label = if feature_mean > 0.5 && feature_std > 0.2 {
                 1
@@ -1658,12 +1698,12 @@ impl GraphLevelMetrics {
             } else {
                 0
             };
-            
+
             if predicted_label == true_label {
                 correct_predictions += 1;
             }
         }
-        
+
         Ok(correct_predictions as f64 / n_samples as f64)
     }
 }
@@ -1688,13 +1728,13 @@ impl CommunityDetectionMetrics {
     ) -> Result<f64> {
         let n_nodes = adjacency.nrows();
         let total_edges = adjacency.iter().filter(|&&x| x > 0).count() as f64 / 2.0; // Undirected graph
-        
+
         if total_edges == 0.0 {
             return Ok(0.0);
         }
-        
+
         let mut modularity = 0.0;
-        
+
         // Create community membership map
         let mut node_to_community = vec![0; n_nodes];
         for (comm_id, community) in communities.iter().enumerate() {
@@ -1704,22 +1744,22 @@ impl CommunityDetectionMetrics {
                 }
             }
         }
-        
+
         for i in 0..n_nodes {
             let degree_i = adjacency.row(i).iter().sum::<i32>() as f64;
-            
+
             for j in 0..n_nodes {
                 let degree_j = adjacency.row(j).iter().sum::<i32>() as f64;
                 let edge_ij = adjacency[[i, j]] as f64;
-                
+
                 let expected_edge = (degree_i * degree_j) / (2.0 * total_edges);
-                
+
                 if node_to_community[i] == node_to_community[j] {
                     modularity += edge_ij - expected_edge;
                 }
             }
         }
-        
+
         Ok(modularity / (2.0 * total_edges))
     }
 
@@ -1734,28 +1774,28 @@ impl CommunityDetectionMetrics {
             all_nodes.extend(community);
         }
         let n_nodes = all_nodes.len();
-        
+
         if n_nodes == 0 {
             return Ok(1.0);
         }
-        
+
         // Create confusion matrix
         let mut confusion_matrix = vec![vec![0; pred_communities.len()]; true_communities.len()];
-        
+
         for &node in &all_nodes {
             let true_community = true_communities.iter().position(|c| c.contains(&node));
             let pred_community = pred_communities.iter().position(|c| c.contains(&node));
-            
+
             if let (Some(true_idx), Some(pred_idx)) = (true_community, pred_community) {
                 confusion_matrix[true_idx][pred_idx] += 1;
             }
         }
-        
+
         // Calculate mutual information
         let mut mutual_info = 0.0;
         let mut entropy_true = 0.0;
         let mut entropy_pred = 0.0;
-        
+
         // Calculate entropies and mutual information
         for i in 0..true_communities.len() {
             let ni_sum: i32 = confusion_matrix[i].iter().sum();
@@ -1764,7 +1804,7 @@ impl CommunityDetectionMetrics {
                 entropy_true -= pi * pi.ln();
             }
         }
-        
+
         for j in 0..pred_communities.len() {
             let nj_sum: i32 = confusion_matrix.iter().map(|row| row[j]).sum();
             if nj_sum > 0 {
@@ -1772,23 +1812,23 @@ impl CommunityDetectionMetrics {
                 entropy_pred -= pj * pj.ln();
             }
         }
-        
+
         for i in 0..true_communities.len() {
             for j in 0..pred_communities.len() {
                 let nij = confusion_matrix[i][j] as f64;
                 if nij > 0.0 {
                     let ni_sum: i32 = confusion_matrix[i].iter().sum();
                     let nj_sum: i32 = confusion_matrix.iter().map(|row| row[j]).sum();
-                    
+
                     let pij = nij / n_nodes as f64;
                     let pi = ni_sum as f64 / n_nodes as f64;
                     let pj = nj_sum as f64 / n_nodes as f64;
-                    
+
                     mutual_info += pij * (pij / (pi * pj)).ln();
                 }
             }
         }
-        
+
         // Calculate NMI
         let normalizing_factor = ((entropy_true + entropy_pred) / 2.0).max(1e-10);
         Ok(mutual_info / normalizing_factor)
@@ -1805,23 +1845,23 @@ impl CommunityDetectionMetrics {
             all_nodes.extend(community);
         }
         let n_nodes = all_nodes.len();
-        
+
         if n_nodes <= 1 {
             return Ok(1.0);
         }
-        
+
         // Create confusion matrix
         let mut confusion_matrix = vec![vec![0; pred_communities.len()]; true_communities.len()];
-        
+
         for &node in &all_nodes {
             let true_community = true_communities.iter().position(|c| c.contains(&node));
             let pred_community = pred_communities.iter().position(|c| c.contains(&node));
-            
+
             if let (Some(true_idx), Some(pred_idx)) = (true_community, pred_community) {
                 confusion_matrix[true_idx][pred_idx] += 1;
             }
         }
-        
+
         // Calculate sum of combinations of pairs in each cell
         let mut sum_comb_c = 0.0;
         for i in 0..true_communities.len() {
@@ -1832,19 +1872,19 @@ impl CommunityDetectionMetrics {
                 }
             }
         }
-        
+
         // Calculate marginal sums
         let mut a_marginals = vec![0; true_communities.len()];
         let mut b_marginals = vec![0; pred_communities.len()];
-        
+
         for i in 0..true_communities.len() {
             a_marginals[i] = confusion_matrix[i].iter().sum();
         }
-        
+
         for j in 0..pred_communities.len() {
             b_marginals[j] = confusion_matrix.iter().map(|row| row[j]).sum();
         }
-        
+
         // Calculate sum of combinations for marginals
         let mut sum_comb_a = 0.0;
         for &ai in &a_marginals {
@@ -1852,14 +1892,14 @@ impl CommunityDetectionMetrics {
                 sum_comb_a += Self::combinations(ai as u64, 2) as f64;
             }
         }
-        
+
         let mut sum_comb_b = 0.0;
         for &bi in &b_marginals {
             if bi >= 2 {
                 sum_comb_b += Self::combinations(bi as u64, 2) as f64;
             }
         }
-        
+
         // Total combinations
         let n_total = n_nodes as u64;
         let sum_comb_total = if n_total >= 2 {
@@ -1867,13 +1907,13 @@ impl CommunityDetectionMetrics {
         } else {
             1.0
         };
-        
+
         // Calculate expected index
         let expected_index = (sum_comb_a * sum_comb_b) / sum_comb_total;
-        
+
         // Calculate max index
         let max_index = (sum_comb_a + sum_comb_b) / 2.0;
-        
+
         // Calculate ARI
         if max_index - expected_index == 0.0 {
             Ok(0.0)
@@ -1881,20 +1921,20 @@ impl CommunityDetectionMetrics {
             Ok((sum_comb_c - expected_index) / (max_index - expected_index))
         }
     }
-    
+
     /// Calculate combinations (n choose k)
     fn combinations(n: u64, k: u64) -> u64 {
         if k > n || k == 0 {
             return if k == 0 { 1 } else { 0 };
         }
-        
+
         let k = k.min(n - k); // Take advantage of symmetry
         let mut result = 1;
-        
+
         for i in 0..k {
             result = result * (n - i) / (i + 1);
         }
-        
+
         result
     }
 }
@@ -1910,7 +1950,7 @@ impl MolecularGraphMetrics {
     }
 
     /// Comprehensive chemical validity calculation for molecular graphs
-    /// 
+    ///
     /// This function evaluates the chemical validity of molecular structures based on:
     /// - Valence and bonding rules
     /// - Chemical stability indicators
@@ -1925,15 +1965,15 @@ impl MolecularGraphMetrics {
             if desc.is_empty() {
                 return Ok(0.0);
             }
-            
+
             let mut validity_scores = Vec::new();
-            
+
             // Process each molecular structure (rows are molecules, columns are descriptors)
             for molecule in desc.axis_iter(ndarray::Axis(0)) {
                 let molecule_validity = self.validate_single_molecule(&molecule)?;
                 validity_scores.push(molecule_validity);
             }
-            
+
             // Return average validity across all molecules
             if validity_scores.is_empty() {
                 Ok(0.0)
@@ -1944,31 +1984,38 @@ impl MolecularGraphMetrics {
         } else {
             // Without descriptors, use basic heuristic based on other metrics
             let base_validity = 0.85; // Conservative base score
-            
+
             // Adjust based on available drug discovery metrics
-            let toxicity_penalty = if self.drug_discovery.toxicity_metrics.overall_toxicity_f1 < 0.5 {
+            let toxicity_penalty = if self.drug_discovery.toxicity_metrics.overall_toxicity_f1 < 0.5
+            {
                 0.15
             } else {
                 0.0
             };
-            
-            let admet_bonus = if self.drug_discovery.admet_accuracy.values().any(|&acc| acc > 0.8) {
+
+            let admet_bonus = if self
+                .drug_discovery
+                .admet_accuracy
+                .values()
+                .any(|&acc| acc > 0.8)
+            {
                 0.10
             } else {
                 0.0
             };
-            
+
             let synthetic_penalty = if self.drug_discovery.synthetic_accessibility < 0.5 {
                 0.20
             } else {
                 0.0
             };
-            
-            let adjusted_validity = base_validity + admet_bonus - toxicity_penalty - synthetic_penalty;
+
+            let adjusted_validity =
+                base_validity + admet_bonus - toxicity_penalty - synthetic_penalty;
             Ok(adjusted_validity.max(0.0).min(1.0))
         }
     }
-    
+
     /// Validate a single molecular structure based on chemical rules
     fn validate_single_molecule<F>(&self, descriptors: &ArrayView1<F>) -> Result<f64>
     where
@@ -1977,40 +2024,43 @@ impl MolecularGraphMetrics {
         if descriptors.is_empty() {
             return Ok(0.0);
         }
-        
+
         let mut validity_checks = Vec::new();
-        
+
         // 1. Lipinski's Rule of Five for drug-likeness
         let lipinski_score = self.check_lipinski_rules(descriptors)?;
         validity_checks.push(("lipinski", lipinski_score, 0.25)); // 25% weight
-        
+
         // 2. Valence and bonding validity
         let valence_score = self.check_valence_rules(descriptors)?;
         validity_checks.push(("valence", valence_score, 0.30)); // 30% weight
-        
+
         // 3. Chemical stability indicators
         let stability_score = self.check_chemical_stability(descriptors)?;
         validity_checks.push(("stability", stability_score, 0.20)); // 20% weight
-        
+
         // 4. Synthetic accessibility
         let synthesis_score = self.check_synthetic_accessibility(descriptors)?;
         validity_checks.push(("synthesis", synthesis_score, 0.15)); // 15% weight
-        
+
         // 5. ADMET compatibility
         let admet_score = self.check_admet_compatibility(descriptors)?;
         validity_checks.push(("admet", admet_score, 0.10)); // 10% weight
-        
+
         // Calculate weighted average
         let total_weight: f64 = validity_checks.iter().map(|(_, _, w)| w).sum();
-        let weighted_sum: f64 = validity_checks.iter().map(|(_, score, weight)| score * weight).sum();
-        
+        let weighted_sum: f64 = validity_checks
+            .iter()
+            .map(|(_, score, weight)| score * weight)
+            .sum();
+
         if total_weight > 0.0 {
             Ok(weighted_sum / total_weight)
         } else {
             Ok(0.0)
         }
     }
-    
+
     /// Check Lipinski's Rule of Five for drug-likeness
     fn check_lipinski_rules<F>(&self, descriptors: &ArrayView1<F>) -> Result<f64>
     where
@@ -2021,34 +2071,34 @@ impl MolecularGraphMetrics {
         if n_desc < 4 {
             return Ok(0.5); // Neutral score if insufficient data
         }
-        
+
         let molecular_weight = descriptors[0].to_f64().unwrap_or(500.0);
         let logp = descriptors[1].to_f64().unwrap_or(5.0);
         let h_donors = descriptors[2].to_f64().unwrap_or(5.0);
         let h_acceptors = descriptors[3].to_f64().unwrap_or(10.0);
-        
+
         let mut violations = 0;
-        
+
         // Rule 1: Molecular weight ≤ 500 Da
         if molecular_weight > 500.0 {
             violations += 1;
         }
-        
+
         // Rule 2: LogP ≤ 5
         if logp > 5.0 {
             violations += 1;
         }
-        
+
         // Rule 3: Hydrogen bond donors ≤ 5
         if h_donors > 5.0 {
             violations += 1;
         }
-        
+
         // Rule 4: Hydrogen bond acceptors ≤ 10
         if h_acceptors > 10.0 {
             violations += 1;
         }
-        
+
         // Score: 1.0 for no violations, decreasing with violations
         Ok(match violations {
             0 => 1.0,
@@ -2059,7 +2109,7 @@ impl MolecularGraphMetrics {
             _ => 0.0,
         })
     }
-    
+
     /// Check valence and bonding rules
     fn check_valence_rules<F>(&self, descriptors: &ArrayView1<F>) -> Result<f64>
     where
@@ -2067,43 +2117,43 @@ impl MolecularGraphMetrics {
     {
         // Simplified valence check based on molecular descriptors
         // In a real implementation, this would analyze the molecular graph structure
-        
+
         let n_desc = descriptors.len();
         if n_desc < 6 {
             return Ok(0.7); // Conservative score for insufficient data
         }
-        
+
         // Assume descriptors include: [..., n_carbons, n_nitrogens, n_oxygens, n_sulfurs, ...]
         let n_carbons = descriptors[4].to_f64().unwrap_or(0.0).max(0.0);
         let n_nitrogens = descriptors[5].to_f64().unwrap_or(0.0).max(0.0);
-        
+
         // Basic heuristics for valence validity
         let total_heavy_atoms = n_carbons + n_nitrogens + 
                                (if n_desc > 6 { descriptors[6].to_f64().unwrap_or(0.0) } else { 0.0 }) + // oxygen
                                (if n_desc > 7 { descriptors[7].to_f64().unwrap_or(0.0) } else { 0.0 }); // sulfur
-        
+
         if total_heavy_atoms < 1.0 {
             return Ok(0.0); // No heavy atoms = invalid
         }
-        
+
         // Check for reasonable atom ratios
         let carbon_ratio = n_carbons / total_heavy_atoms;
         let nitrogen_ratio = n_nitrogens / total_heavy_atoms;
-        
+
         let mut score = 1.0;
-        
+
         // Penalize unusual atom ratios
         if carbon_ratio < 0.1 || carbon_ratio > 0.95 {
             score -= 0.2;
         }
-        
+
         if nitrogen_ratio > 0.5 {
             score -= 0.3; // Too many nitrogens
         }
-        
+
         Ok(score.max(0.0))
     }
-    
+
     /// Check chemical stability indicators
     fn check_chemical_stability<F>(&self, descriptors: &ArrayView1<F>) -> Result<f64>
     where
@@ -2113,24 +2163,24 @@ impl MolecularGraphMetrics {
         if n_desc < 10 {
             return Ok(0.6); // Conservative score
         }
-        
+
         // Assume descriptors include stability-related features
         // [..., tpsa, rotatable_bonds, aromatic_rings, formal_charge, ...]
         let tpsa = descriptors[8].to_f64().unwrap_or(100.0); // Topological Polar Surface Area
         let rotatable_bonds = descriptors[9].to_f64().unwrap_or(5.0);
-        
+
         let mut stability_score = 1.0;
-        
+
         // TPSA should be reasonable for stability
         if tpsa > 200.0 || tpsa < 10.0 {
             stability_score -= 0.3;
         }
-        
+
         // Too many rotatable bonds reduce stability
         if rotatable_bonds > 15.0 {
             stability_score -= 0.4;
         }
-        
+
         // Check for reasonable molecular complexity
         if n_desc > 10 {
             let aromatic_rings = descriptors[10].to_f64().unwrap_or(1.0);
@@ -2140,10 +2190,10 @@ impl MolecularGraphMetrics {
                 stability_score -= 0.1; // Lack of stabilizing aromatic systems
             }
         }
-        
+
         Ok(stability_score.max(0.0))
     }
-    
+
     /// Check synthetic accessibility
     fn check_synthetic_accessibility<F>(&self, descriptors: &ArrayView1<F>) -> Result<f64>
     where
@@ -2151,82 +2201,99 @@ impl MolecularGraphMetrics {
     {
         // Use stored synthetic accessibility score if available
         let base_score = self.drug_discovery.synthetic_accessibility;
-        
+
         if base_score > 0.0 {
             return Ok(base_score);
         }
-        
+
         // Fallback: estimate from molecular descriptors
         let n_desc = descriptors.len();
         if n_desc < 12 {
             return Ok(0.5);
         }
-        
+
         // Simplified heuristic based on molecular complexity
         let molecular_weight = descriptors[0].to_f64().unwrap_or(300.0);
-        let rotatable_bonds = if n_desc > 9 { descriptors[9].to_f64().unwrap_or(5.0) } else { 5.0 };
-        let aromatic_rings = if n_desc > 10 { descriptors[10].to_f64().unwrap_or(1.0) } else { 1.0 };
-        
+        let rotatable_bonds = if n_desc > 9 {
+            descriptors[9].to_f64().unwrap_or(5.0)
+        } else {
+            5.0
+        };
+        let aromatic_rings = if n_desc > 10 {
+            descriptors[10].to_f64().unwrap_or(1.0)
+        } else {
+            1.0
+        };
+
         let mut synthesis_score = 1.0;
-        
+
         // Larger molecules are generally harder to synthesize
         if molecular_weight > 800.0 {
             synthesis_score -= 0.4;
         } else if molecular_weight > 600.0 {
             synthesis_score -= 0.2;
         }
-        
+
         // Complex flexible molecules are harder to synthesize
         if rotatable_bonds > 12.0 {
             synthesis_score -= 0.3;
         }
-        
+
         // Too many rings increase synthesis difficulty
         if aromatic_rings > 4.0 {
             synthesis_score -= 0.2;
         }
-        
+
         Ok(synthesis_score.max(0.1)) // Minimum 0.1 for any valid molecule
     }
-    
+
     /// Check ADMET (Absorption, Distribution, Metabolism, Excretion, Toxicity) compatibility
     fn check_admet_compatibility<F>(&self, descriptors: &ArrayView1<F>) -> Result<f64>
     where
         F: Float,
     {
         // Use available ADMET predictions from drug discovery metrics
-        let admet_accuracies: Vec<f64> = self.drug_discovery.admet_accuracy.values().cloned().collect();
-        
+        let admet_accuracies: Vec<f64> = self
+            .drug_discovery
+            .admet_accuracy
+            .values()
+            .cloned()
+            .collect();
+
         if !admet_accuracies.is_empty() {
             let avg_admet = admet_accuracies.iter().sum::<f64>() / admet_accuracies.len() as f64;
             return Ok(avg_admet);
         }
-        
+
         // Fallback: estimate ADMET compatibility from molecular properties
         let n_desc = descriptors.len();
         if n_desc < 8 {
             return Ok(0.6);
         }
-        
+
         let molecular_weight = descriptors[0].to_f64().unwrap_or(300.0);
         let logp = descriptors[1].to_f64().unwrap_or(2.0);
-        let tpsa = if n_desc > 8 { descriptors[8].to_f64().unwrap_or(80.0) } else { 80.0 };
-        
+        let tpsa = if n_desc > 8 {
+            descriptors[8].to_f64().unwrap_or(80.0)
+        } else {
+            80.0
+        };
+
         let mut admet_score = 1.0;
-        
+
         // Poor absorption if too large or too polar
         if molecular_weight > 500.0 {
             admet_score -= 0.2;
         }
-        
+
         if logp < -2.0 || logp > 6.0 {
             admet_score -= 0.3; // Poor permeability
         }
-        
+
         if tpsa > 140.0 {
             admet_score -= 0.2; // Poor oral bioavailability
         }
-        
+
         // Factor in toxicity metrics
         let toxicity_score = self.drug_discovery.toxicity_metrics.overall_toxicity_f1;
         if toxicity_score < 0.5 {
@@ -2234,7 +2301,7 @@ impl MolecularGraphMetrics {
         } else if toxicity_score > 0.8 {
             admet_score += 0.1; // Low toxicity prediction (bonus)
         }
-        
+
         Ok(admet_score.max(0.0).min(1.0))
     }
 }

@@ -359,21 +359,21 @@
 //!
 //! // Use global memory pool for frequent allocations
 //! let pool = global_distance_pool();
-//! 
+//!
 //! // Get a reusable distance buffer
 //! let mut buffer = pool.get_distance_buffer(1000);
-//! 
+//!
 //! // Use buffer for computations...
 //! let data = buffer.as_mut_slice();
 //! data[0] = 42.0;
-//! 
+//!
 //! // Buffer automatically returns to pool on drop
 //! drop(buffer);
-//! 
+//!
 //! // Check pool performance
 //! let stats = pool.statistics();
 //! println!("Pool hit rate: {:.1}%", stats.hit_rate());
-//! 
+//!
 //! // Use arena for temporary objects
 //! use scirs2_spatial::ClusteringArena;
 //! let arena = ClusteringArena::new();
@@ -454,7 +454,7 @@
 //!
 //! // Performance statistics
 //! let stats = ultra_kdtree.statistics();
-//! println!("Tree depth: {}, Construction time: {:.2}ms", 
+//! println!("Tree depth: {}, Construction time: {:.2}ms",
 //!          stats.depth, stats.construction_time_ms);
 //! println!("Memory usage: {:.1} KB", stats.memory_usage_bytes as f64 / 1024.0);
 //! ```
@@ -583,10 +583,10 @@
 //! //     .with_real_time_adaptation(true)
 //! //     .with_multi_objective_optimization(true);
 //! //
-//! // let (optimal_algorithm, parameters, performance_prediction) = 
+//! // let (optimal_algorithm, parameters, performance_prediction) =
 //! //     ai_selector.select_optimal_algorithm(&points.view(), "clustering").await?;
-//! // 
-//! // println!("AI selected: {} with predicted accuracy: {:.3}", 
+//! //
+//! // println!("AI selected: {} with predicted accuracy: {:.3}",
 //! //          optimal_algorithm, performance_prediction.expected_accuracy);
 //! ```
 //!
@@ -605,7 +605,7 @@
 //! //
 //! // let ultrafast_matrix = UltrafastDistanceMatrix::new(optimizer);
 //! // let distances = ultrafast_matrix.compute_extreme_performance(&points.view()).await?;
-//! // 
+//! //
 //! // // Self-optimizing algorithms that improve during execution
 //! // let mut self_optimizer = SelfOptimizingAlgorithm::new("clustering")
 //! //     .with_hardware_counter_feedback(true)  // Real-time performance monitoring
@@ -614,10 +614,10 @@
 //! //
 //! // let optimized_result = self_optimizer.auto_optimize_and_execute(&points.view()).await?;
 //! // println!("Self-optimized performance: 10-50x speedup achieved automatically");
-//! // 
+//! //
 //! // // Benchmark all extreme optimizations
 //! // let extreme_metrics = benchmark_extreme_optimizations(&points.view()).await?;
-//! // println!("Extreme speedup: {:.1}x faster than conventional algorithms", 
+//! // println!("Extreme speedup: {:.1}x faster than conventional algorithms",
 //! //          extreme_metrics.extreme_speedup);
 //! ```
 
@@ -677,7 +677,7 @@ pub use kdtree_optimized::KDTreeOptimized;
 // Ultra-optimized KD-Tree with advanced performance features
 pub mod kdtree_ultra;
 pub use kdtree_ultra::{
-    UltraKDTree, KDTreeConfig, TreeStatistics, BoundingBox as KDTreeBoundingBox,
+    BoundingBox as KDTreeBoundingBox, KDTreeConfig, TreeStatistics, UltraKDTree,
 };
 
 // Ball-Tree for efficient nearest neighbor searches in high dimensions
@@ -817,33 +817,35 @@ pub use simd_distance::{
 };
 
 // Ultra-optimized SIMD clustering and distance operations
-pub use simd_distance::ultra_simd_clustering::{UltraSimdKMeans, UltraSimdNearestNeighbors};
-pub use simd_distance::mixed_precision_simd::{
-    simd_euclidean_distance_f32, simd_euclidean_distance_batch_f32,
+pub use simd_distance::bench::{
+    benchmark_distance_computation, report_simd_features, BenchmarkResults,
 };
-pub use simd_distance::bench::{benchmark_distance_computation, report_simd_features, BenchmarkResults};
+pub use simd_distance::mixed_precision_simd::{
+    simd_euclidean_distance_batch_f32, simd_euclidean_distance_f32,
+};
+pub use simd_distance::ultra_simd_clustering::{UltraSimdKMeans, UltraSimdNearestNeighbors};
 
 // Ultra-optimized memory pool system for spatial algorithms
 pub mod memory_pool;
 pub use memory_pool::{
-    ArenaStatistics, ClusteringArena, DistanceBuffer, DistancePool, IndexBuffer, MatrixBuffer,
-    MemoryPoolConfig, PoolStatistics, global_clustering_arena, global_distance_pool,
+    global_clustering_arena, global_distance_pool, ArenaStatistics, ClusteringArena,
+    DistanceBuffer, DistancePool, IndexBuffer, MatrixBuffer, MemoryPoolConfig, PoolStatistics,
 };
 
 // GPU acceleration for massive-scale spatial computations
 pub mod gpu_accel;
 pub use gpu_accel::{
-    GpuCapabilities, GpuDevice, GpuDistanceMatrix, GpuKMeans, GpuNearestNeighbors,
-    HybridProcessor, ProcessingStrategy, global_gpu_device, is_gpu_acceleration_available,
-    get_gpu_capabilities, report_gpu_status,
+    get_gpu_capabilities, global_gpu_device, is_gpu_acceleration_available, report_gpu_status,
+    GpuCapabilities, GpuDevice, GpuDistanceMatrix, GpuKMeans, GpuNearestNeighbors, HybridProcessor,
+    ProcessingStrategy,
 };
 
 // Ultra-parallel algorithms with work-stealing and NUMA-aware optimizations
 pub mod ultra_parallel;
 pub use ultra_parallel::{
-    WorkStealingConfig, WorkStealingPool, UltraParallelDistanceMatrix, UltraParallelKMeans,
-    NumaTopology, ThreadAffinityStrategy, MemoryStrategy, PoolStatistics as UltraPoolStatistics,
-    initialize_global_pool, get_numa_topology, report_ultra_parallel_capabilities,
+    get_numa_topology, initialize_global_pool, report_ultra_parallel_capabilities, MemoryStrategy,
+    NumaTopology, PoolStatistics as UltraPoolStatistics, ThreadAffinityStrategy,
+    UltraParallelDistanceMatrix, UltraParallelKMeans, WorkStealingConfig, WorkStealingPool,
 };
 
 // Utility functions
@@ -886,17 +888,16 @@ mod utils;
 // Distributed spatial computing framework for massive scale processing
 pub mod distributed;
 pub use distributed::{
-    DistributedSpatialCluster, NodeConfig, DataPartition, SpatialBounds,
-    LoadBalancer, LoadMetrics, ClusterStatistics, NodeStatus,
-    DistributedMessage, QueryType, QueryResults,
+    ClusterStatistics, DataPartition, DistributedMessage, DistributedSpatialCluster, LoadBalancer,
+    LoadMetrics, NodeConfig, NodeStatus, QueryResults, QueryType, SpatialBounds,
 };
 
 // Real-time adaptive algorithm selection and optimization
 pub mod adaptive_selection;
 pub use adaptive_selection::{
-    AdaptiveAlgorithmSelector, SelectionContext, AlgorithmSelection,
-    SelectedAlgorithm, AlgorithmParameters, PerformancePrediction,
-    ExecutionResult, DataCharacteristics, ActualPerformance,
+    ActualPerformance, AdaptiveAlgorithmSelector, AlgorithmParameters, AlgorithmSelection,
+    DataCharacteristics, ExecutionResult, PerformancePrediction, SelectedAlgorithm,
+    SelectionContext,
 };
 
 // Quantum-classical hybrid algorithms for unprecedented performance breakthroughs
@@ -926,8 +927,8 @@ pub use adaptive_selection::{
 // Generic traits and algorithms for flexible spatial computing
 pub mod generic_traits;
 pub use generic_traits::{
-    ChebyshevMetric, EuclideanMetric, ManhattanMetric, Point, SpatialArray,
-    SpatialPoint, SpatialScalar,
+    ChebyshevMetric, EuclideanMetric, ManhattanMetric, Point, SpatialArray, SpatialPoint,
+    SpatialScalar,
 };
 
 pub mod generic_algorithms;

@@ -3,29 +3,28 @@
 //! This example showcases the complete NAS pipeline for optimizer discovery,
 //! including learned optimizers, transformer-based meta-learning, and few-shot adaptation.
 
-use scirs2_optim::{
-    neural_architecture_search::{
-        NeuralArchitectureSearch, NASConfig, SearchStrategyType, SearchSpaceConfig,
-        EvaluationConfig, MultiObjectiveConfig, ObjectiveConfig, ObjectiveType,
-        OptimizationDirection, ObjectivePriority, EvaluationMetric, EvaluationBudget,
-        MultiObjectiveAlgorithm, DiversityStrategy, ConstraintHandlingMethod,
-        create_example_architectures,
-        automated_hyperparameter_optimization::{
-            HyperparameterOptimizer, HyperparameterSearchSpace, ContinuousParameter,
-            ParameterDistribution, ParameterTransformation, ResourceBudget,
-            ResourceUsage, OptimizationResults
-        },
-        multi_objective::{NSGA2, ParetoFront, MultiObjectiveOptimizer}
-    },
-    learned_optimizers::{
-        LSTMOptimizer, LearnedOptimizerConfig, NeuralOptimizerType,
-        MetaOptimizationStrategy,
-        transformer_based_optimizer::TransformerOptimizer,
-        few_shot_optimizer::FewShotLearningSystem
-    },
-    error::OptimizerError,
-};
 use ndarray::{Array1, Array2};
+use scirs2_optim::{
+    error::OptimizerError,
+    learned_optimizers::{
+        few_shot_optimizer::FewShotLearningSystem,
+        transformer_based_optimizer::TransformerOptimizer, LSTMOptimizer, LearnedOptimizerConfig,
+        MetaOptimizationStrategy, NeuralOptimizerType,
+    },
+    neural_architecture_search::{
+        automated_hyperparameter_optimization::{
+            ContinuousParameter, HyperparameterOptimizer, HyperparameterSearchSpace,
+            OptimizationResults, ParameterDistribution, ParameterTransformation, ResourceBudget,
+            ResourceUsage,
+        },
+        create_example_architectures,
+        multi_objective::{MultiObjectiveOptimizer, ParetoFront, NSGA2},
+        ConstraintHandlingMethod, DiversityStrategy, EvaluationBudget, EvaluationConfig,
+        EvaluationMetric, MultiObjectiveAlgorithm, MultiObjectiveConfig, NASConfig,
+        NeuralArchitectureSearch, ObjectiveConfig, ObjectivePriority, ObjectiveType,
+        OptimizationDirection, SearchSpaceConfig, SearchStrategyType,
+    },
+};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
@@ -114,19 +113,38 @@ fn demonstrate_optimizer_nas() -> Result<(), OptimizerError> {
     let search_results = nas_engine.run_search()?;
     let search_duration = start_time.elapsed();
 
-    println!("  ✅ Architecture search completed in {:.2}s", search_duration.as_secs_f64());
-    println!("  📈 Found {} promising architectures", search_results.best_architectures.len());
-    println!("  🏆 Best performance: {:.4}", search_results.search_statistics.best_score);
-    println!("  💾 Memory usage: {:.2} GB", search_results.resource_usage_summary.memory_gb);
+    println!(
+        "  ✅ Architecture search completed in {:.2}s",
+        search_duration.as_secs_f64()
+    );
+    println!(
+        "  📈 Found {} promising architectures",
+        search_results.best_architectures.len()
+    );
+    println!(
+        "  🏆 Best performance: {:.4}",
+        search_results.search_statistics.best_score
+    );
+    println!(
+        "  💾 Memory usage: {:.2} GB",
+        search_results.resource_usage_summary.memory_gb
+    );
 
     // Display top architectures
     println!("  🎯 Top 3 discovered optimizer architectures:");
     for (i, arch) in search_results.best_architectures.iter().take(3).enumerate() {
-        println!("    {}. {} components, {} connections", 
-                i + 1, arch.components.len(), arch.connections.len());
+        println!(
+            "    {}. {} components, {} connections",
+            i + 1,
+            arch.components.len(),
+            arch.connections.len()
+        );
         for component in &arch.components {
-            println!("       - {:?} with {} hyperparameters", 
-                    component.component_type, component.hyperparameters.len());
+            println!(
+                "       - {:?} with {} hyperparameters",
+                component.component_type,
+                component.hyperparameters.len()
+            );
         }
     }
 
@@ -164,7 +182,7 @@ fn demonstrate_hyperparameter_optimization() -> Result<(), OptimizerError> {
             default_value: Some(1e-3),
             transformation: Some(ParameterTransformation::Log),
             prior_params: None,
-        }
+        },
     );
 
     // Add momentum parameter
@@ -177,7 +195,7 @@ fn demonstrate_hyperparameter_optimization() -> Result<(), OptimizerError> {
             default_value: Some(0.9),
             transformation: None,
             prior_params: None,
-        }
+        },
     );
 
     // Add batch size as integer parameter
@@ -215,14 +233,17 @@ fn demonstrate_hyperparameter_optimization() -> Result<(), OptimizerError> {
 
     println!("  Running hyperparameter optimization...");
     let start_time = Instant::now();
-    
+
     // Simulate optimization results
     let optimization_duration = Duration::from_millis(1500);
     std::thread::sleep(optimization_duration);
-    
+
     let elapsed = start_time.elapsed();
 
-    println!("  ✅ Hyperparameter optimization completed in {:.2}s", elapsed.as_secs_f64());
+    println!(
+        "  ✅ Hyperparameter optimization completed in {:.2}s",
+        elapsed.as_secs_f64()
+    );
     println!("  🎯 Evaluated 50 configurations");
     println!("  🏆 Best configuration found:");
     println!("     - Learning rate: 3.27e-3");
@@ -238,7 +259,7 @@ fn demonstrate_multi_objective_optimization() -> Result<(), OptimizerError> {
     println!("  Initializing NSGA-II multi-objective optimizer...");
 
     let mut nsga2 = NSGA2::<f64>::new(30, 0.8, 0.1);
-    
+
     // Configure multi-objective settings
     let config = MultiObjectiveConfig {
         objectives: vec![
@@ -273,12 +294,15 @@ fn demonstrate_multi_objective_optimization() -> Result<(), OptimizerError> {
     // Create example search results for demonstration
     let example_architectures = create_example_architectures::<f64>();
     let mut search_results = Vec::new();
-    
+
     for (i, arch) in example_architectures.iter().enumerate() {
         let mut metric_scores = HashMap::new();
         metric_scores.insert(EvaluationMetric::FinalPerformance, 0.85 + (i as f64) * 0.03);
-        metric_scores.insert(EvaluationMetric::ComputationalEfficiency, 0.75 + (i as f64) * 0.05);
-        
+        metric_scores.insert(
+            EvaluationMetric::ComputationalEfficiency,
+            0.75 + (i as f64) * 0.05,
+        );
+
         let eval_results = scirs2_optim::neural_architecture_search::EvaluationResults {
             metric_scores,
             overall_score: 0.8 + (i as f64) * 0.02,
@@ -287,7 +311,7 @@ fn demonstrate_multi_objective_optimization() -> Result<(), OptimizerError> {
             success: true,
             error_message: None,
         };
-        
+
         search_results.push(scirs2_optim::neural_architecture_search::SearchResult {
             architecture: arch.clone(),
             evaluation_results: eval_results,
@@ -302,7 +326,8 @@ fn demonstrate_multi_objective_optimization() -> Result<(), OptimizerError> {
                 network_gb: 0.001,
             },
             encoding: scirs2_optim::neural_architecture_search::ArchitectureEncoding {
-                encoding_type: scirs2_optim::neural_architecture_search::ArchitectureEncodingStrategy::Direct,
+                encoding_type:
+                    scirs2_optim::neural_architecture_search::ArchitectureEncodingStrategy::Direct,
                 encoded_data: vec![1, 2, 3, 4],
                 metadata: HashMap::new(),
                 checksum: 12345,
@@ -313,18 +338,29 @@ fn demonstrate_multi_objective_optimization() -> Result<(), OptimizerError> {
     let pareto_front = nsga2.update_pareto_front(&search_results)?;
 
     println!("  ✅ Multi-objective optimization completed");
-    println!("  🏆 Pareto front discovered with {} solutions", pareto_front.solutions.len());
+    println!(
+        "  🏆 Pareto front discovered with {} solutions",
+        pareto_front.solutions.len()
+    );
     println!("  📏 Hypervolume: {:.4}", pareto_front.metrics.hypervolume);
-    println!("  🎯 Diversity (spread): {:.4}", pareto_front.metrics.spread);
-    println!("  📊 Coverage: {:.2}%", pareto_front.metrics.coverage.objective_space_coverage * 100.0);
+    println!(
+        "  🎯 Diversity (spread): {:.4}",
+        pareto_front.metrics.spread
+    );
+    println!(
+        "  📊 Coverage: {:.2}%",
+        pareto_front.metrics.coverage.objective_space_coverage * 100.0
+    );
 
     println!("  🔍 Sample Pareto-optimal solutions:");
     for (i, solution) in pareto_front.solutions.iter().take(3).enumerate() {
-        println!("    {}. Accuracy: {:.3}, Efficiency: {:.3}, Rank: {}", 
-                i + 1, 
-                solution.objectives.get(0).unwrap_or(&0.0),
-                solution.objectives.get(1).unwrap_or(&0.0),
-                solution.rank);
+        println!(
+            "    {}. Accuracy: {:.3}, Efficiency: {:.3}, Rank: {}",
+            i + 1,
+            solution.objectives.get(0).unwrap_or(&0.0),
+            solution.objectives.get(1).unwrap_or(&0.0),
+            solution.rank
+        );
     }
 
     Ok(())
@@ -373,25 +409,46 @@ fn demonstrate_lstm_learned_optimizer() -> Result<(), OptimizerError> {
     let sample_loss = Some(0.5);
 
     // Perform LSTM optimization step
-    let updated_params = lstm_optimizer.lstm_step(&sample_params, &sample_gradients, sample_loss)?;
-    
+    let updated_params =
+        lstm_optimizer.lstm_step(&sample_params, &sample_gradients, sample_loss)?;
+
     let training_duration = start_time.elapsed();
 
-    println!("  ✅ LSTM optimizer training completed in {:.2}s", training_duration.as_secs_f64());
-    
+    println!(
+        "  ✅ LSTM optimizer training completed in {:.2}s",
+        training_duration.as_secs_f64()
+    );
+
     let metrics = lstm_optimizer.get_metrics();
     println!("  🧠 Meta-learning performance:");
-    println!("     - Meta-training loss: {:.6}", metrics.meta_learning_loss);
-    println!("     - Adaptation efficiency: {:.4}", metrics.adaptation_efficiency);
+    println!(
+        "     - Meta-training loss: {:.6}",
+        metrics.meta_learning_loss
+    );
+    println!(
+        "     - Adaptation efficiency: {:.4}",
+        metrics.adaptation_efficiency
+    );
     println!("     - Memory usage: {:.2} MB", metrics.memory_usage_mb);
-    println!("     - Computational overhead: {:.2}x", metrics.computational_overhead);
+    println!(
+        "     - Computational overhead: {:.2}x",
+        metrics.computational_overhead
+    );
 
     // Display optimization trajectory
     println!("  📈 Parameter updates:");
-    println!("     - Original:  [{:.3}, {:.3}, {:.3}, {:.3}, {:.3}]", 
-            sample_params[0], sample_params[1], sample_params[2], sample_params[3], sample_params[4]);
-    println!("     - Updated:   [{:.3}, {:.3}, {:.3}, {:.3}, {:.3}]", 
-            updated_params[0], updated_params[1], updated_params[2], updated_params[3], updated_params[4]);
+    println!(
+        "     - Original:  [{:.3}, {:.3}, {:.3}, {:.3}, {:.3}]",
+        sample_params[0], sample_params[1], sample_params[2], sample_params[3], sample_params[4]
+    );
+    println!(
+        "     - Updated:   [{:.3}, {:.3}, {:.3}, {:.3}, {:.3}]",
+        updated_params[0],
+        updated_params[1],
+        updated_params[2],
+        updated_params[3],
+        updated_params[4]
+    );
 
     Ok(())
 }
@@ -411,13 +468,16 @@ fn demonstrate_transformer_meta_learning() -> Result<(), OptimizerError> {
 
     println!("  Training transformer on optimization trajectories...");
     let start_time = Instant::now();
-    
+
     // Simulate transformer training
     std::thread::sleep(Duration::from_millis(2000));
-    
+
     let training_duration = start_time.elapsed();
 
-    println!("  ✅ Transformer meta-learning completed in {:.2}s", training_duration.as_secs_f64());
+    println!(
+        "  ✅ Transformer meta-learning completed in {:.2}s",
+        training_duration.as_secs_f64()
+    );
     println!("  🤖 Transformer capabilities:");
     println!("     - Sequence length: 1024 optimization steps");
     println!("     - Attention patterns: Multi-scale temporal");
@@ -426,7 +486,7 @@ fn demonstrate_transformer_meta_learning() -> Result<(), OptimizerError> {
 
     println!("  🎯 Attention analysis:");
     println!("     - Recent gradients: 45% attention weight");
-    println!("     - Loss landscape: 30% attention weight");  
+    println!("     - Loss landscape: 30% attention weight");
     println!("     - Parameter history: 25% attention weight");
 
     Ok(())
@@ -456,7 +516,10 @@ fn demonstrate_few_shot_learning() -> Result<(), OptimizerError> {
 
     let adaptation_duration = start_time.elapsed();
 
-    println!("  ✅ Few-shot adaptation completed in {:.2}s", adaptation_duration.as_secs_f64());
+    println!(
+        "  ✅ Few-shot adaptation completed in {:.2}s",
+        adaptation_duration.as_secs_f64()
+    );
     println!("  🎯 Adaptation results:");
     println!("     - Initial performance: 0.600");
     println!("     - Final performance: 0.900");
@@ -486,27 +549,30 @@ fn demonstrate_integrated_system() -> Result<(), OptimizerError> {
 
     // Simulate integrated optimization process
     println!("  📊 Running integrated optimization...");
-    
+
     // Phase 1: Architecture discovery
     std::thread::sleep(Duration::from_millis(500));
     println!("     Phase 1: Architecture discovery - 25 candidates generated");
-    
+
     // Phase 2: Learned evaluation
     std::thread::sleep(Duration::from_millis(400));
     println!("     Phase 2: Learned evaluation - Efficiency improved 3.2x");
-    
+
     // Phase 3: Multi-objective selection
     std::thread::sleep(Duration::from_millis(300));
     println!("     Phase 3: Multi-objective selection - Pareto front identified");
-    
+
     // Phase 4: Few-shot validation
     std::thread::sleep(Duration::from_millis(200));
     println!("     Phase 4: Few-shot validation - Generalization confirmed");
 
     let total_duration = start_time.elapsed();
 
-    println!("  ✅ Integrated system completed in {:.2}s", total_duration.as_secs_f64());
-    
+    println!(
+        "  ✅ Integrated system completed in {:.2}s",
+        total_duration.as_secs_f64()
+    );
+
     println!("  🏆 Final results:");
     println!("     - Best architecture found: Hybrid Adam-Lion optimizer");
     println!("     - Performance improvement: +34.7% over baseline");
@@ -535,11 +601,11 @@ mod tests {
             // Test key components
             let config = LearnedOptimizerConfig::default();
             assert_eq!(config.optimizer_type, NeuralOptimizerType::LSTM);
-            
+
             let nas_config = NASConfig::<f64>::default();
             assert!(nas_config.search_budget > 0);
         });
-        
+
         assert!(result.is_ok());
     }
 
