@@ -6,6 +6,7 @@
 
 use ndarray::{Array, ArrayView, Ix1, Ix2};
 use std::ops;
+use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
 
 /// Common mathematical operations for numerical arrays (1D)
 pub mod math {
@@ -614,7 +615,7 @@ pub mod reduction {
     use num_traits::{Float, FromPrimitive, One, Zero};
 
     /// Sum of array elements
-    pub fn sum<T>(array: &ArrayView<T, Ix2>, axis: Option<usize>) -> Array<T, Ix1>
+    pub fn sum<T>(array: &ArrayView<T, Ix2>, axis: Option<usize>) -> CoreResult<Array<T, Ix1>>
     where
         T: Clone + Default + ops::Add<Output = T> + Zero,
     {
@@ -635,7 +636,7 @@ pub mod reduction {
                             result[j] = sum;
                         }
 
-                        result
+                        Ok(result)
                     }
                     1 => {
                         // Sum along columns (result has length rows)
@@ -649,9 +650,12 @@ pub mod reduction {
                             result[i] = sum;
                         }
 
-                        result
+                        Ok(result)
                     }
-                    _ => panic!("Axis must be 0 or 1 for 2D arrays"),
+                    _ => return Err(CoreError::ValueError {
+                        message: format!("Invalid axis {} for 2D array: must be 0 or 1", ax),
+                        location: ErrorLocation::here(),
+                    }),
                 }
             }
             None => {
@@ -662,7 +666,7 @@ pub mod reduction {
                     sum = sum + val.clone();
                 }
 
-                Array::from_vec(vec![sum])
+                Ok(Array::from_vec(vec![sum]))
             }
         }
     }

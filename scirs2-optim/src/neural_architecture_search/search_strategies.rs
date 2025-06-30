@@ -3,17 +3,15 @@
 //! Implements various NAS algorithms including DARTS, evolutionary search,
 //! reinforcement learning-based search, and Bayesian optimization.
 
-use ndarray::{Array1, Array2, Array3, ArrayBase, Data, Dimension};
+use ndarray::{Array1, Array2, Array3, s};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
-use std::sync::{Arc, Mutex};
 use rand::Rng;
 
 use crate::error::OptimizerError;
 use super::{
     OptimizerArchitecture, SearchSpaceConfig, SearchResult, 
-    ArchitectureEncoding, ArchitectureEncodingStrategy,
-    EvaluationMetric, EvaluationResults, ResourceUsage
+    EvaluationMetric
 };
 
 /// Base trait for all search strategies
@@ -292,7 +290,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> RandomSearch<T>
         let rng: Box<dyn Rng + Send + Sync> = if let Some(s) = seed {
             Box::new(rand::rngs::StdRng::seed_from_u64(s))
         } else {
-            Box::new(rand::thread_rng())
+            Box::new(rand::rng())
         };
         
         Self {

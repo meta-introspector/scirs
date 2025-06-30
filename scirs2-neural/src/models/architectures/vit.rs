@@ -152,7 +152,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for TransformerMlp
 
 /// Transformer encoder block for ViT
 #[derive(Clone, Debug)]
-struct TransformerEncoderBlock<F: Float + Debug + ScalarOperand + Clone + Send + Sync> {
+struct TransformerEncoderBlock<F: Float + Debug + ScalarOperand + Clone + Send + Sync + scirs2_core::simd_ops::SimdUnifiedOps> {
     /// Layer normalization 1
     norm1: LayerNorm<F>,
     /// Multi-head attention
@@ -167,7 +167,7 @@ struct TransformerEncoderBlock<F: Float + Debug + ScalarOperand + Clone + Send +
     mlp_dropout: Dropout<F>,
 }
 
-impl<F: Float + Debug + ScalarOperand + Clone + Send + Sync> TransformerEncoderBlock<F> {
+impl<F: Float + Debug + ScalarOperand + Clone + Send + Sync + scirs2_core::simd_ops::SimdUnifiedOps> TransformerEncoderBlock<F> {
     /// Create a new transformer encoder block
     pub fn new(
         dim: usize,
@@ -223,7 +223,7 @@ impl<F: Float + Debug + ScalarOperand + Clone + Send + Sync> TransformerEncoderB
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + Clone + Send + Sync> Layer<F>
+impl<F: Float + Debug + ScalarOperand + Clone + Send + Sync + scirs2_core::simd_ops::SimdUnifiedOps> Layer<F>
     for TransformerEncoderBlock<F>
 {
     fn forward(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
@@ -278,7 +278,7 @@ impl<F: Float + Debug + ScalarOperand + Clone + Send + Sync> Layer<F>
 }
 
 /// Vision Transformer implementation
-pub struct VisionTransformer<F: Float + Debug + ScalarOperand + Clone + Send + Sync> {
+pub struct VisionTransformer<F: Float + Debug + ScalarOperand + Clone + Send + Sync + scirs2_core::simd_ops::SimdUnifiedOps> {
     /// Patch embedding layer
     patch_embed: PatchEmbedding<F>,
     /// Class token embedding
@@ -298,7 +298,7 @@ pub struct VisionTransformer<F: Float + Debug + ScalarOperand + Clone + Send + S
 }
 
 // Custom Debug implementation for VisionTransformer
-impl<F: Float + Debug + ScalarOperand + Clone + Send + Sync> std::fmt::Debug
+impl<F: Float + Debug + ScalarOperand + Clone + Send + Sync + scirs2_core::simd_ops::SimdUnifiedOps> std::fmt::Debug
     for VisionTransformer<F>
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -319,7 +319,7 @@ impl<F: Float + Debug + ScalarOperand + Clone + Send + Sync> std::fmt::Debug
 }
 
 // VisionTransformer can now be cloned since TransformerEncoderBlock is cloneable
-impl<F: Float + Debug + ScalarOperand + Clone + Send + Sync> Clone for VisionTransformer<F> {
+impl<F: Float + Debug + ScalarOperand + Clone + Send + Sync + scirs2_core::simd_ops::SimdUnifiedOps> Clone for VisionTransformer<F> {
     fn clone(&self) -> Self {
         Self {
             patch_embed: self.patch_embed.clone(),
@@ -334,7 +334,7 @@ impl<F: Float + Debug + ScalarOperand + Clone + Send + Sync> Clone for VisionTra
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + Clone + Send + Sync> VisionTransformer<F> {
+impl<F: Float + Debug + ScalarOperand + Clone + Send + Sync + scirs2_core::simd_ops::SimdUnifiedOps> VisionTransformer<F> {
     /// Create a new Vision Transformer model
     pub fn new(config: ViTConfig) -> Result<Self> {
         // Calculate number of patches
@@ -433,7 +433,7 @@ impl<F: Float + Debug + ScalarOperand + Clone + Send + Sync> VisionTransformer<F
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + Clone + Send + Sync> Layer<F> for VisionTransformer<F> {
+impl<F: Float + Debug + ScalarOperand + Clone + Send + Sync + scirs2_core::simd_ops::SimdUnifiedOps> Layer<F> for VisionTransformer<F> {
     fn forward(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
         // Check input shape
         let shape = input.shape();

@@ -418,6 +418,7 @@ impl BiLSTM {
 }
 
 /// Convolutional layer for text processing
+#[derive(Debug, Clone)]
 pub struct Conv1D {
     /// Convolution filters
     filters: Array3<f64>,
@@ -496,6 +497,7 @@ impl Conv1D {
 }
 
 /// Max pooling layer for 1D data
+#[derive(Debug)]
 pub struct MaxPool1D {
     /// Pool size
     pool_size: usize,
@@ -608,7 +610,7 @@ impl ResidualBlock1D {
         // Skip connection
         let skip_out = if let Some(ref projection) = self.skip_projection {
             // Project input to match output dimensions
-            input.t().dot(projection).t()
+            input.t().dot(projection).t().to_owned()
         } else {
             // Direct skip connection (dimensions must match)
             input.to_owned()
@@ -659,6 +661,7 @@ pub struct MultiScaleCNN {
     /// Combination weights
     combination_weights: Array2<f64>,
     /// Global max pooling
+    #[allow(dead_code)]
     global_pool: MaxPool1D,
 }
 
@@ -727,7 +730,7 @@ impl MultiScaleCNN {
         }
 
         // Concatenate all branch outputs
-        let mut concatenated = Array1::zeros(branch_outputs.iter().map(|x| x.len()).sum());
+        let mut concatenated = Array1::zeros(branch_outputs.iter().map(|x| x.len()).sum::<usize>());
         let mut offset = 0;
         for branch_output in branch_outputs {
             let end = offset + branch_output.len();
@@ -775,10 +778,13 @@ pub struct AdditiveAttention {
     /// Attention weights
     w_a: Array2<f64>,
     /// Query projection
+    #[allow(dead_code)]
     w_q: Array2<f64>,
     /// Key projection
+    #[allow(dead_code)]
     w_k: Array2<f64>,
     /// Value projection
+    #[allow(dead_code)]
     w_v: Array2<f64>,
     /// Attention vector
     v_a: Array1<f64>,
@@ -875,6 +881,7 @@ pub struct SelfAttention {
     /// Attention dimension
     d_k: usize,
     /// Dropout rate
+    #[allow(dead_code)]
     dropout: f64,
 }
 
@@ -1557,7 +1564,6 @@ impl MultiHeadAttention {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use approx::assert_abs_diff_eq;
 
     #[test]
     fn test_activation_functions() {

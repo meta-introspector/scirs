@@ -5,7 +5,7 @@
 //! and other specialized resampling methods for complex data structures.
 
 use crate::error::{StatsError, StatsResult};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
+use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, FromPrimitive, NumCast, One, Zero};
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use scirs2_core::{
@@ -15,7 +15,6 @@ use scirs2_core::{
 };
 use std::collections::HashMap;
 use std::marker::PhantomData;
-use std::sync::{Arc, Mutex};
 
 /// Advanced bootstrap configuration
 #[derive(Debug, Clone)]

@@ -50,7 +50,7 @@ impl Default for EmbeddingConfig {
 /// This layer is often used to store word embeddings and retrieve them using indices.
 /// The input to the module is a list of indices, and the output is the corresponding
 /// embedding vectors.
-pub struct Embedding<F: Float + Debug + ScalarOperand> {
+pub struct Embedding<F: Float + Debug + ScalarOperand + Send + Sync> {
     /// Configuration for the embedding layer
     pub config: EmbeddingConfig,
     /// Weight matrix containing the embeddings
@@ -61,7 +61,7 @@ pub struct Embedding<F: Float + Debug + ScalarOperand> {
     freq_counter: Option<Vec<usize>>,
 }
 
-impl<F: Float + Debug + ScalarOperand> Embedding<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync> Embedding<F> {
     /// Create a new Embedding layer with the given configuration
     pub fn new(config: EmbeddingConfig) -> Result<Self> {
         if config.num_embeddings == 0 {
@@ -322,7 +322,7 @@ impl<F: Float + Debug + ScalarOperand> Embedding<F> {
     }
 }
 
-impl<F: Float + Debug + ScalarOperand> Layer<F> for Embedding<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for Embedding<F> {
     fn forward(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
         // Convert input to indices
         let indices = input
@@ -424,7 +424,7 @@ impl<F: Float + Debug + ScalarOperand> Layer<F> for Embedding<F> {
 ///
 /// This layer adds positional information to embeddings to help models
 /// understand the position of elements in a sequence.
-pub struct PositionalEmbedding<F: Float + Debug + ScalarOperand> {
+pub struct PositionalEmbedding<F: Float + Debug + ScalarOperand + Send + Sync> {
     /// Maximum sequence length supported
     pub max_seq_length: usize,
     /// Dimension of each embedding vector
@@ -437,7 +437,7 @@ pub struct PositionalEmbedding<F: Float + Debug + ScalarOperand> {
     weight_grad: Option<Array<F, IxDyn>>,
 }
 
-impl<F: Float + Debug + ScalarOperand> PositionalEmbedding<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync> PositionalEmbedding<F> {
     /// Create a new PositionalEmbedding layer
     pub fn new(max_seq_length: usize, embedding_dim: usize, learned: bool) -> Result<Self> {
         if max_seq_length == 0 {
@@ -513,7 +513,7 @@ impl<F: Float + Debug + ScalarOperand> PositionalEmbedding<F> {
     }
 }
 
-impl<F: Float + Debug + ScalarOperand> Layer<F> for PositionalEmbedding<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for PositionalEmbedding<F> {
     fn forward(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
         // Validate input shape - at least 2D with last dimension being embedding_dim
         if input.ndim() < 2 {

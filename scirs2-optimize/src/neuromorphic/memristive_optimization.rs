@@ -5,7 +5,7 @@
 //! Features advanced memristor models, crossbar architectures, and variability modeling.
 
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use scirs2_core::error::Result;
+use scirs2_core::error::CoreResult as Result;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use crate::error::OptimizeError;
 use crate::result::OptimizeResults;

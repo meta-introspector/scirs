@@ -460,7 +460,7 @@ where
         };
 
         let n_points = points.shape()[0];
-        let n_dims = points.shape()[1];
+        let _n_dims = points.shape()[1]; // Reserved for future use
 
         // Build covariance matrix K
         let mut cov_matrix = Array2::zeros((n_points, n_points));
@@ -481,7 +481,7 @@ where
 
         // Build trend matrix F for universal kriging
         let (trend_matrix, n_basis) = Self::build_trend_matrix(&points, self._trend_fn)?;
-        
+
         // Augmented system for universal kriging: [K F; F^T 0] [α; β] = [y; 0]
         let system_size = n_points + n_basis;
         let mut augmented_matrix = Array2::zeros((system_size, system_size));
@@ -554,14 +554,11 @@ where
 
         let (n_basis, basis_fn) = match trend_fn {
             TrendFunction::Constant => (1, |_x: &ArrayView1<F>| vec![F::one()]),
-            TrendFunction::Linear => (
-                1 + n_dims,
-                |x: &ArrayView1<F>| {
-                    let mut basis = vec![F::one()];
-                    basis.extend(x.iter().cloned());
-                    basis
-                },
-            ),
+            TrendFunction::Linear => (1 + n_dims, |x: &ArrayView1<F>| {
+                let mut basis = vec![F::one()];
+                basis.extend(x.iter().cloned());
+                basis
+            }),
             TrendFunction::Quadratic => (
                 1 + n_dims + n_dims * (n_dims + 1) / 2,
                 |x: &ArrayView1<F>| {
@@ -579,10 +576,9 @@ where
             ),
             TrendFunction::Custom(degree) => {
                 let n_basis = Self::compute_polynomial_basis_size(n_dims, degree);
-                (
-                    n_basis,
-                    |x: &ArrayView1<F>| Self::compute_polynomial_basis(x, degree),
-                )
+                (n_basis, |x: &ArrayView1<F>| {
+                    Self::compute_polynomial_basis(x, degree)
+                })
             }
         };
 
@@ -629,10 +625,10 @@ where
     fn compute_polynomial_basis(x: &ArrayView1<F>, degree: usize) -> Vec<F> {
         let n_dims = x.len();
         let mut basis = Vec::new();
-        
+
         // Generate all multi-indices up to degree
         Self::generate_multi_indices(n_dims, degree, &mut basis, x, &mut vec![0; n_dims], 0, 0);
-        
+
         basis
     }
 
@@ -715,7 +711,8 @@ where
                     let val = matrix[[j, j]] - sum;
                     if val <= F::zero() {
                         return Err(InterpolateError::numerical_error(
-                            "Matrix is not positive definite for Cholesky decomposition".to_string(),
+                            "Matrix is not positive definite for Cholesky decomposition"
+                                .to_string(),
                         ));
                     }
                     cholesky[[j, j]] = val.sqrt();
@@ -734,10 +731,7 @@ where
     }
 
     /// Forward substitution for lower triangular matrix
-    fn forward_substitution(
-        lower: &Array2<F>,
-        rhs: &Array1<F>,
-    ) -> InterpolateResult<Array1<F>> {
+    fn forward_substitution(lower: &Array2<F>, rhs: &Array1<F>) -> InterpolateResult<Array1<F>> {
         let n = lower.shape()[0];
         let mut solution = Array1::zeros(n);
 
@@ -753,10 +747,7 @@ where
     }
 
     /// Backward substitution for upper triangular matrix
-    fn backward_substitution(
-        lower: &Array2<F>,
-        rhs: &Array1<F>,
-    ) -> InterpolateResult<Array1<F>> {
+    fn backward_substitution(lower: &Array2<F>, rhs: &Array1<F>) -> InterpolateResult<Array1<F>> {
         let n = lower.shape()[0];
         let mut solution = Array1::zeros(n);
 
@@ -920,30 +911,48 @@ where
     /// Optimize hyperparameters using Maximum A Posteriori estimation
     fn optimize_hyperparameters(self) -> InterpolateResult<Self> {
         let mut current_builder = self;
-        
+
         // Simple optimization using grid search over priors
         if let Some((min_ls, max_ls)) = current_builder.length_scale_prior {
-            let points = current_builder.kriging_builder.points.as_ref()
-                .ok_or_else(|| InterpolateError::invalid_input("points must be set for optimization".to_string()))?;
-            let values = current_builder.kriging_builder.values.as_ref()
-                .ok_or_else(|| InterpolateError::invalid_input("values must be set for optimization".to_string()))?;
-            
+            let points = current_builder
+                .kriging_builder
+                .points
+                .as_ref()
+                .ok_or_else(|| {
+                    InterpolateError::invalid_input(
+                        "points must be set for optimization".to_string(),
+                    )
+                })?;
+            let values = current_builder
+                .kriging_builder
+                .values
+                .as_ref()
+                .ok_or_else(|| {
+                    InterpolateError::invalid_input(
+                        "values must be set for optimization".to_string(),
+                    )
+                })?;
+
             let n_dims = points.shape()[1];
             let mut best_log_likelihood = F::neg_infinity();
             let mut best_length_scales = Array1::from_elem(n_dims, F::one());
-            
+
             // Grid search over length scales
             let n_grid = 5;
             for i in 0..n_grid {
-                let ls_factor = min_ls + (max_ls - min_ls) * F::from_usize(i).unwrap() / F::from_usize(n_grid - 1).unwrap();
+                let ls_factor = min_ls
+                    + (max_ls - min_ls) * F::from_usize(i).unwrap()
+                        / F::from_usize(n_grid - 1).unwrap();
                 let length_scales = Array1::from_elem(n_dims, ls_factor);
-                
+
                 // Compute log marginal likelihood
                 if let Ok(log_likelihood) = Self::compute_log_marginal_likelihood(
-                    points, values, &length_scales, 
+                    points,
+                    values,
+                    &length_scales,
                     current_builder.kriging_builder.sigma_sq,
                     current_builder.kriging_builder.nugget,
-                    current_builder.kriging_builder.cov_fn
+                    current_builder.kriging_builder.cov_fn,
                 ) {
                     if log_likelihood > best_log_likelihood {
                         best_log_likelihood = log_likelihood;
@@ -951,10 +960,12 @@ where
                     }
                 }
             }
-            
-            current_builder.kriging_builder = current_builder.kriging_builder.length_scales(best_length_scales);
+
+            current_builder.kriging_builder = current_builder
+                .kriging_builder
+                .length_scales(best_length_scales);
         }
-        
+
         Ok(current_builder)
     }
 
@@ -968,7 +979,7 @@ where
         cov_fn: CovarianceFunction,
     ) -> InterpolateResult<F> {
         let n_points = points.shape()[0];
-        
+
         // Build covariance matrix
         let mut cov_matrix = Array2::zeros((n_points, n_points));
         let anisotropic_cov = AnisotropicCovariance {
@@ -979,7 +990,7 @@ where
             nugget,
             extra_params: F::one(),
         };
-        
+
         for i in 0..n_points {
             for j in 0..n_points {
                 if i == j {
@@ -990,34 +1001,37 @@ where
                         &points.slice(ndarray::s![j, ..]),
                         &anisotropic_cov,
                     );
-                    cov_matrix[[i, j]] = EnhancedKrigingBuilder::evaluate_covariance(dist, &anisotropic_cov);
+                    cov_matrix[[i, j]] =
+                        EnhancedKrigingBuilder::evaluate_covariance(dist, &anisotropic_cov);
                 }
             }
         }
-        
+
         // Compute log marginal likelihood: -0.5 * (y^T K^-1 y + log|K| + n*log(2π))
         let cholesky = EnhancedKrigingBuilder::cholesky_decomposition(&cov_matrix)?;
         let alpha = EnhancedKrigingBuilder::forward_substitution(&cholesky, values)?;
-        let log_likelihood_alpha = EnhancedKrigingBuilder::backward_substitution(&cholesky, &alpha)?;
-        
+        let log_likelihood_alpha =
+            EnhancedKrigingBuilder::backward_substitution(&cholesky, &alpha)?;
+
         // Compute y^T K^-1 y
         let mut quadratic_form = F::zero();
         for i in 0..n_points {
             quadratic_form = quadratic_form + values[i] * log_likelihood_alpha[i];
         }
-        
+
         // Compute log|K| = 2 * sum(log(diag(L)))
         let mut log_det = F::zero();
         for i in 0..n_points {
             log_det = log_det + cholesky[[i, i]].ln();
         }
         log_det = log_det * F::from_f64(2.0).unwrap();
-        
+
         // Compute log marginal likelihood
         let n_f64 = F::from_usize(n_points).unwrap();
         let log_2pi = F::from_f64(2.0 * std::f64::consts::PI).unwrap().ln();
-        let log_likelihood = -F::from_f64(0.5).unwrap() * (quadratic_form + log_det + n_f64 * log_2pi);
-        
+        let log_likelihood =
+            -F::from_f64(0.5).unwrap() * (quadratic_form + log_det + n_f64 * log_2pi);
+
         Ok(log_likelihood)
     }
 
@@ -1112,14 +1126,14 @@ where
         trend_fn: TrendFunction,
     ) -> InterpolateResult<Vec<F>> {
         let n_dims = query_point.len();
-        
+
         let basis = match trend_fn {
             TrendFunction::Constant => vec![F::one()],
             TrendFunction::Linear => {
                 let mut basis = vec![F::one()];
                 basis.extend(query_point.iter().cloned());
                 basis
-            },
+            }
             TrendFunction::Quadratic => {
                 let mut basis = vec![F::one()];
                 // Linear terms
@@ -1131,12 +1145,12 @@ where
                     }
                 }
                 basis
-            },
+            }
             TrendFunction::Custom(degree) => {
                 EnhancedKrigingBuilder::compute_polynomial_basis(query_point, degree)
             }
         };
-        
+
         Ok(basis)
     }
 
@@ -1175,17 +1189,20 @@ where
                     &sample_point,
                     &self.anisotropic_cov,
                 );
-                k_star[j] = EnhancedKrigingBuilder::evaluate_covariance(dist, &self.anisotropic_cov);
+                k_star[j] =
+                    EnhancedKrigingBuilder::evaluate_covariance(dist, &self.anisotropic_cov);
             }
 
-            // Kriging prediction: μ* = k*^T α + f*^T β  
+            // Kriging prediction: μ* = k*^T α + f*^T β
             let mut prediction = F::zero();
             for j in 0..n_points {
                 prediction = prediction + k_star[j] * self.weights[j];
             }
 
             // Add trend contribution if we have trend coefficients
-            if let (Some(trend_coeffs), Some(basis_functions)) = (&self.trend_coeffs, &self.basis_functions) {
+            if let (Some(trend_coeffs), Some(_basis_functions)) =
+                (&self.trend_coeffs, &self.basis_functions)
+            {
                 // Evaluate trend basis functions at query point
                 let trend_basis = Self::evaluate_trend_basis(&query_point, self._trend_fn)?;
                 for (k, &basis_val) in trend_basis.iter().enumerate() {
@@ -1199,7 +1216,7 @@ where
 
             // Kriging variance: σ²* = k** - k*^T K^-1 k* (+ trend terms)
             let k_star_star = self.anisotropic_cov.sigma_sq; // Prior variance
-            
+
             // Compute k*^T K^-1 k* using pre-computed Cholesky factor if available
             let mut variance_reduction = F::zero();
             if let Some(cholesky) = &self.cholesky_factor {

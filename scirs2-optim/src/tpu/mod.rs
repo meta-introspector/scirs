@@ -1082,7 +1082,7 @@ impl XLAComputationBuilder {
     }
 }
 
-impl Clone for XLAComputationGraph<A> {
+impl<A> Clone for XLAComputationGraph<A> {
     fn clone(&self) -> Self {
         Self {
             nodes: self.nodes.clone(),

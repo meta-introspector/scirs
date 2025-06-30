@@ -30,12 +30,14 @@ pub mod streaming_trust_region;
 pub mod incremental_newton;
 pub mod rolling_window;
 pub mod real_time_estimation;
+pub mod ultra_adaptive_streaming;
 
 pub use online_gradient_descent::*;
 pub use streaming_trust_region::*;
 pub use incremental_newton::*;
 pub use rolling_window::*;
 pub use real_time_estimation::*;
+pub use ultra_adaptive_streaming::*;
 
 /// Configuration for streaming optimization algorithms
 #[derive(Debug, Clone)]
@@ -182,7 +184,7 @@ pub trait StreamingObjective {
     fn gradient(&self, parameters: &ArrayView1<f64>, data_point: &StreamingDataPoint) -> Array1<f64>;
     
     /// Compute the Hessian for a single data point (optional)
-    fn hessian(&self, parameters: &ArrayView1<f64>, data_point: &StreamingDataPoint) -> Option<Array2<f64>> {
+    fn hessian(&self, _parameters: &ArrayView1<f64>, _data_point: &StreamingDataPoint) -> Option<Array2<f64>> {
         None
     }
 }

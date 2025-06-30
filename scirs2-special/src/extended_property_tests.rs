@@ -434,7 +434,7 @@ mod spherical_harmonics_properties {
 // Elliptic function properties
 mod elliptic_properties {
     use super::*;
-    use crate::{ellipe, ellipk};
+    use crate::elliptic::{elliptic_e as ellipe, elliptic_k as ellipk};
 
     #[quickcheck]
     fn elliptic_k_special_values() -> bool {

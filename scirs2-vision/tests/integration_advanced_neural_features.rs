@@ -60,7 +60,7 @@ fn test_neural_features_tracking_integration() -> Result<()> {
 fn test_hdr_super_resolution_pipeline() -> Result<()> {
     // Create multi-exposure images
     let base_image = create_test_image((240, 320));
-    let hdr_images = vec![
+    let hdr_images = [
         base_image.mapv(|x| (x * 0.3).clamp(0.0, 1.0)), // Dark
         base_image.clone(),                             // Normal
         base_image.mapv(|x| (x * 2.5).clamp(0.0, 1.0)), // Bright
@@ -343,8 +343,8 @@ fn create_transformed_image(image: &Array2<f32>) -> Result<Array2<f32>> {
 
     for y in 0..height {
         for x in 0..width {
-            let src_x = if x >= dx { x - dx } else { 0 };
-            let src_y = if y >= dy { y - dy } else { 0 };
+            let src_x = x.saturating_sub(dx);
+            let src_y = y.saturating_sub(dy);
 
             if src_x < width && src_y < height {
                 transformed[[y, x]] = image[[src_y, src_x]];

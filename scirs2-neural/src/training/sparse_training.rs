@@ -386,10 +386,10 @@ impl<F: Float + Debug + FromPrimitive + Send + Sync + Zero + PartialOrd + ndarra
                 }
             }
             PruningStrategy::LotteryTicket => self.prune_lottery_ticket(model)?,
-            _ => {
-                return Err(NeuralError::NotImplementedError(
-                    "Pruning strategy not implemented".to_string(),
-                ))
+            PruningStrategy::GraSP => {
+                if let Some(loss_fn) = loss_fn {
+                    self.prune_grasp(model, loss_fn)?;
+                }
             }
         }
 
@@ -534,6 +534,85 @@ impl<F: Float + Debug + FromPrimitive + Send + Sync + Zero + PartialOrd + ndarra
         }
 
         Ok(())
+    }
+
+    /// GraSP (Gradient Signal Preservation) pruning
+    fn prune_grasp<L: ParamLayer<F>>(
+        &mut self,
+        model: &mut L,
+        loss_fn: &dyn Loss<f32>,
+    ) -> Result<()> {
+        // Convert model to f32 for GraSP computation (simplified)
+        let f32_model = self.convert_to_f32_model(model)?;
+        
+        // Compute GraSP scores based on gradient flow preservation
+        let scores = self.compute_grasp_scores(&*f32_model, loss_fn)?;
+
+        for (layer_id, score) in scores {
+            if let Some(mask) = self.masks.get_mut(&layer_id) {
+                mask.scores = Some(score);
+                // Use scores to create mask based on gradient flow preservation
+                self.create_mask_from_scores(mask, self.config.target_sparsity);
+            }
+        }
+
+        self.current_sparsity = self.config.target_sparsity;
+        self.apply_masks(model)?;
+        Ok(())
+    }
+
+    /// Compute GraSP (Gradient Signal Preservation) scores
+    fn compute_grasp_scores<L: Layer<f32>>(
+        &self,
+        model: &L,
+        loss_fn: &dyn Loss<f32>,
+    ) -> Result<HashMap<String, Array<f64, IxDyn>>> {
+        let data = self
+            .snip_pruner
+            .data_batch
+            .as_ref()
+            .ok_or_else(|| NeuralError::InvalidState("No calibration data set".to_string()))?;
+        let targets = self
+            .snip_pruner
+            .target_batch
+            .as_ref()
+            .ok_or_else(|| NeuralError::InvalidState("No calibration targets set".to_string()))?;
+
+        // Forward pass
+        let outputs = model.forward(data)?;
+
+        // Compute loss
+        let loss = loss_fn.forward(&outputs, targets)?;
+        let grad_output = loss_fn.backward(&outputs, targets)?;
+
+        // Backward pass to get gradients
+        let _grad_input = model.backward(data, &grad_output)?;
+
+        // Get gradients and parameters
+        let gradients = model.gradients();
+        let params = model.params();
+
+        let mut scores = HashMap::new();
+
+        // Compute gradient flow preservation scores
+        // GraSP score = |grad_w * w| * |Hg| where Hg is the Hessian-gradient product
+        for (i, (param, grad)) in params.iter().zip(gradients.iter()).enumerate() {
+            let layer_id = format!("layer_{}", i);
+            let mut grasp_scores = Array::<f64, _>::zeros(param.raw_dim());
+
+            // Simplified GraSP computation - in practice would compute Hessian-gradient product
+            // Here we use the magnitude of gradient * weight as a proxy for gradient flow importance
+            for ((s, &p), &g) in grasp_scores.iter_mut().zip(param.iter()).zip(grad.iter()) {
+                let grad_weight_product = (g * p).abs();
+                // Multiply by gradient magnitude as proxy for Hessian information
+                let gradient_magnitude = g.abs();
+                *s = (grad_weight_product * gradient_magnitude).to_f64().unwrap_or(0.0);
+            }
+
+            scores.insert(layer_id, grasp_scores);
+        }
+
+        Ok(scores)
     }
 
     /// Apply sparsity masks to model
@@ -1003,10 +1082,47 @@ impl<F: Float + Debug + FromPrimitive + Send + Sync + Zero + PartialOrd + ndarra
                     Ok(Box::new(dense_layer))
                 }
                 4 => {
-                    // Convolutional layer - for now return an error as conv layer conversion is more complex
-                    Err(NeuralError::NotImplementedError(
-                        "Convolutional layer conversion not yet implemented".to_string(),
-                    ))
+                    // Convolutional layer
+                    use crate::layers::conv::Conv2D;
+                    
+                    let shape = first_param.shape();
+                    let out_channels = shape[0];
+                    let in_channels = shape[1];
+                    let kernel_height = shape[2];
+                    let kernel_width = shape[3];
+                    
+                    // Create a new Conv2D layer with f32 parameters
+                    let mut conv_layer = Conv2D::<f32>::new(
+                        in_channels,
+                        out_channels,
+                        (kernel_height, kernel_width),
+                        1, // stride - default to 1
+                        0, // padding - default to 0
+                        1, // dilation - default to 1
+                        false, // bias - default to false for simplicity
+                    )?;
+                    
+                    // Convert and copy weights
+                    if let Some((weight_name, weights)) = params.iter().find(|(name, _)| name.contains("weight")) {
+                        let weight_params = conv_layer.parameters_mut();
+                        if let Some((_, conv_weights)) = weight_params.iter_mut().find(|(name, _)| name.contains("weight")) {
+                            for ((out_ch, in_ch, h, w), &val) in weights.indexed_iter() {
+                                conv_weights[[out_ch, in_ch, h, w]] = val.to_f32().unwrap_or(0.0);
+                            }
+                        }
+                    }
+                    
+                    // Convert and copy biases if they exist
+                    if let Some((bias_name, biases)) = params.iter().find(|(name, _)| name.contains("bias")) {
+                        let bias_params = conv_layer.parameters_mut();
+                        if let Some((_, conv_biases)) = bias_params.iter_mut().find(|(name, _)| name.contains("bias")) {
+                            for (i, &val) in biases.indexed_iter() {
+                                conv_biases[i] = val.to_f32().unwrap_or(0.0);
+                            }
+                        }
+                    }
+                    
+                    Ok(Box::new(conv_layer))
                 }
                 _ => {
                     Err(NeuralError::NotImplementedError(

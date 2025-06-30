@@ -2038,7 +2038,7 @@ pub mod advanced_kfac {
         pub memory_budgets: HashMap<String, usize>,
     }
 
-    impl<T: Float> Default for NaturalGradientConfig<T> {
+    impl<T: Float> Default for natural_gradients::NaturalGradientConfig<T> {
         fn default() -> Self {
             Self {
                 learning_rate: T::from(0.01).unwrap(),
@@ -2058,7 +2058,7 @@ pub mod advanced_kfac {
     #[derive(Debug)]
     pub struct NaturalGradientOptimizer<T: Float> {
         /// Configuration
-        config: NaturalGradientConfig<T>,
+        config: natural_gradients::NaturalGradientConfig<T>,
 
         /// Fisher information matrix approximation
         fisher_matrix: FisherInformation<T>,
@@ -2133,9 +2133,9 @@ pub mod advanced_kfac {
         pub fisher_memory_bytes: usize,
     }
 
-    impl<T: Float + Default + Clone + Send + Sync> NaturalGradientOptimizer<T> {
+    impl<T: Float + Default + Clone + Send + Sync + 'static> NaturalGradientOptimizer<T> {
         /// Create a new natural gradient optimizer
-        pub fn new(config: NaturalGradientConfig<T>) -> Self {
+        pub fn new(config: natural_gradients::NaturalGradientConfig<T>) -> Self {
             let damping_state = AdaptiveDampingState {
                 current_damping: config.fisher_damping,
                 acceptance_ratio: T::from(1.0).unwrap(),
@@ -2767,7 +2767,7 @@ pub mod advanced_kfac {
 
         pub fn apply_block_update(
             &mut self,
-            layer_name: &str,
+            _layer_name: &str,
             update: &Array2<T>,
         ) -> Result<Array2<T>> {
             // Simple block-wise application (in practice would be more sophisticated)

@@ -4,6 +4,7 @@
 //! during the neural network training process.
 
 use crate::error::Result;
+use crate::models::History;
 use ndarray::ScalarOperand;
 use num_traits::Float;
 use std::collections::HashMap;
@@ -49,7 +50,7 @@ impl<F: Float + Debug + ScalarOperand> CallbackManager<F> {
             epoch_loss: None,
             val_loss: None,
             metrics: Vec::new(),
-            history: &HashMap::<String, Vec<F>>::new(),
+            history: &History::default(),
             stop_training: false,
             model: None,
         };
@@ -72,7 +73,7 @@ impl<F: Float + Debug + ScalarOperand> CallbackManager<F> {
             epoch_loss: None,
             val_loss: None,
             metrics: Vec::new(),
-            history: &HashMap::<String, Vec<F>>::new(),
+            history: &History::default(),
             stop_training: false,
             model: None,
         };
@@ -95,7 +96,7 @@ impl<F: Float + Debug + ScalarOperand> CallbackManager<F> {
             epoch_loss: None,
             val_loss: None,
             metrics: Vec::new(),
-            history: &HashMap::<String, Vec<F>>::new(),
+            history: &History::default(),
             stop_training: false,
             model: None,
         };
@@ -122,7 +123,7 @@ impl<F: Float + Debug + ScalarOperand> CallbackManager<F> {
             epoch_loss: metrics.get("loss").copied(),
             val_loss: metrics.get("val_loss").copied(),
             metrics: metrics_vec,
-            history: &HashMap::<String, Vec<F>>::new(),
+            history: &History::default(),
             stop_training: false,
             model: None,
         };
@@ -146,7 +147,7 @@ impl<F: Float + Debug + ScalarOperand> CallbackManager<F> {
             epoch_loss: None,
             val_loss: None,
             metrics: Vec::new(),
-            history: &HashMap::<String, Vec<F>>::new(),
+            history: &History::default(),
             stop_training: false,
             model: None,
         };
@@ -172,7 +173,7 @@ impl<F: Float + Debug + ScalarOperand> CallbackManager<F> {
             epoch_loss: None,
             val_loss: None,
             metrics: metrics_vec,
-            history: &HashMap::<String, Vec<F>>::new(),
+            history: &History::default(),
             stop_training: false,
             model: None,
         };

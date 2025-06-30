@@ -29,6 +29,26 @@ pub struct GpuPCA {
 #[cfg(feature = "gpu")]
 impl GpuPCA {
     /// Create a new GPU PCA instance
+    ///
+    /// # Arguments
+    ///
+    /// * `n_components` - Number of principal components to compute
+    ///
+    /// # Returns
+    ///
+    /// Returns a new GpuPCA instance with CUDA context initialized
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if CUDA initialization fails or if n_components is 0
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use scirs2_transform::GpuPCA;
+    /// let pca = GpuPCA::new(5)?;
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
     pub fn new(n_components: usize) -> Result<Self> {
         check_positive(n_components, "n_components")?;
 
@@ -47,6 +67,32 @@ impl GpuPCA {
     }
 
     /// Fit the PCA model on GPU
+    ///
+    /// Computes the principal components using GPU-accelerated eigendecomposition.
+    /// The method automatically selects the optimal approach (X^T X vs X X^T) based
+    /// on the data dimensions for maximum efficiency.
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - Input data matrix with shape (n_samples, n_features)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - Input data is empty or contains non-finite values
+    /// - n_components exceeds min(n_samples, n_features)
+    /// - GPU computation fails
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use scirs2_transform::GpuPCA;
+    /// # use ndarray::Array2;
+    /// let mut pca = GpuPCA::new(2)?;
+    /// let data = Array2::random((100, 5), rand::distributions::StandardNormal);
+    /// pca.fit(&data.view())?;
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
     pub fn fit(&mut self, x: &ArrayView2<f64>) -> Result<()> {
         let (n_samples, n_features) = x.dim();
         check_shape(x, (Some(n_samples), Some(n_features)), "x")?;
@@ -184,7 +230,39 @@ impl GpuPCA {
         Ok(())
     }
 
-    /// Transform data using the fitted PCA model on GPU with enhanced validation
+    /// Transform data using the fitted PCA model on GPU
+    ///
+    /// Projects the input data onto the principal components computed during fitting.
+    /// All operations are performed on GPU for maximum performance.
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - Input data matrix with shape (n_samples, n_features)
+    ///
+    /// # Returns
+    ///
+    /// Transformed data matrix with shape (n_samples, n_components)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - Model has not been fitted
+    /// - Input data is empty or contains non-finite values
+    /// - Number of features doesn't match training data
+    /// - GPU computation fails
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use scirs2_transform::GpuPCA;
+    /// # use ndarray::Array2;
+    /// let mut pca = GpuPCA::new(2)?;
+    /// let data = Array2::random((100, 5), rand::distributions::StandardNormal);
+    /// pca.fit(&data.view())?;
+    /// let transformed = pca.transform(&data.view())?;
+    /// assert_eq!(transformed.dim(), (100, 2));
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
     pub fn transform(&self, x: &ArrayView2<f64>) -> Result<Array2<f64>> {
         // Validate input
         check_not_empty(x, "x")?;
@@ -232,13 +310,68 @@ impl GpuPCA {
         gpu_result.to_ndarray()
     }
 
-    /// Fit and transform in one step
+    /// Fit the PCA model and transform data in one step
+    ///
+    /// Convenience method that combines `fit` and `transform` operations.
+    /// Computes principal components and immediately projects the input data.
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - Input data matrix with shape (n_samples, n_features)
+    ///
+    /// # Returns
+    ///
+    /// Transformed data matrix with shape (n_samples, n_components)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - Input data is empty or contains non-finite values
+    /// - n_components exceeds min(n_samples, n_features)
+    /// - GPU computation fails
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use scirs2_transform::GpuPCA;
+    /// # use ndarray::Array2;
+    /// let mut pca = GpuPCA::new(2)?;
+    /// let data = Array2::random((100, 5), rand::distributions::StandardNormal);
+    /// let transformed = pca.fit_transform(&data.view())?;
+    /// assert_eq!(transformed.dim(), (100, 2));
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
     pub fn fit_transform(&mut self, x: &ArrayView2<f64>) -> Result<Array2<f64>> {
         self.fit(x)?;
         self.transform(x)
     }
 
-    /// Get the explained variance ratio
+    /// Get the explained variance ratio for each principal component
+    ///
+    /// Returns the proportion of the dataset's variance explained by each component.
+    /// The ratios sum to 1.0 when all components are considered.
+    ///
+    /// # Returns
+    ///
+    /// Array of explained variance ratios with length n_components
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the model has not been fitted
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use scirs2_transform::GpuPCA;
+    /// # use ndarray::Array2;
+    /// let mut pca = GpuPCA::new(2)?;
+    /// let data = Array2::random((100, 5), rand::distributions::StandardNormal);
+    /// pca.fit(&data.view())?;
+    /// let ratios = pca.explained_variance_ratio()?;
+    /// assert_eq!(ratios.len(), 2);
+    /// assert!(ratios.sum() <= 1.0);
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
     pub fn explained_variance_ratio(&self) -> Result<Array1<f64>> {
         let explained_var = self
             .explained_variance

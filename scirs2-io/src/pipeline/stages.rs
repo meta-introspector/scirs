@@ -1,5 +1,8 @@
 //! Common pipeline stages for data processing
 
+#![allow(dead_code)]
+#![allow(missing_docs)]
+
 use super::*;
 use crate::csv::{read_csv, write_csv};
 use crate::error::Result;

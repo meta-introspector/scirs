@@ -482,7 +482,8 @@ where
         if let Ok(mut registry) = registry.write() {
             registry.register(func);
         } else {
-            panic!("Failed to acquire write lock on ArrayFunctionRegistry");
+            eprintln!("Warning: Failed to acquire write lock on ArrayFunctionRegistry, skipping function registration");
+            // Continue without registration - this may result in reduced functionality but avoids crash
         }
 
         self.function
@@ -1060,7 +1061,8 @@ where
         if let Ok(mut registry) = ArrayFunctionRegistry::global().write() {
             registry.register(array_func);
         } else {
-            panic!("Failed to acquire write lock on ArrayFunctionRegistry");
+            eprintln!("Warning: Failed to acquire write lock on ArrayFunctionRegistry during array protocol building, skipping function registration");
+            // Continue without registration - this may result in reduced functionality but avoids crash
         }
 
         self.func

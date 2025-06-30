@@ -9,6 +9,7 @@
 
 use crate::error::{SignalError, SignalResult};
 use crate::lti::{LtiSystem, StateSpace, TransferFunction};
+use crate::sysid_advanced::{identify_armax_complete, identify_oe_complete, identify_bj_complete, identify_state_space_complete, identify_narx_complete};
 use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
@@ -790,7 +791,6 @@ fn identify_armax(
     config: &EnhancedSysIdConfig,
 ) -> SignalResult<(SystemModel, ParameterEstimate, usize, bool, f64)> {
     // Use the advanced implementation from sysid_advanced
-    // use crate::sysid_advanced::identify_armax_complete; // TODO: implement sysid_advanced module
 
     let na = config.max_order / 3;
     let nb = config.max_order / 3;
@@ -806,7 +806,6 @@ fn identify_oe(
     config: &EnhancedSysIdConfig,
 ) -> SignalResult<(SystemModel, ParameterEstimate, usize, bool, f64)> {
     // Use the advanced implementation from sysid_advanced
-    // use crate::sysid_advanced::identify_oe_complete; // TODO: implement sysid_advanced module
 
     let nb = config.max_order / 2;
     let nf = config.max_order / 2;
@@ -821,7 +820,6 @@ fn identify_bj(
     config: &EnhancedSysIdConfig,
 ) -> SignalResult<(SystemModel, ParameterEstimate, usize, bool, f64)> {
     // Use the advanced implementation from sysid_advanced
-    // use crate::sysid_advanced::identify_bj_complete; // TODO: implement sysid_advanced module
 
     let nb = config.max_order / 4;
     let nc = config.max_order / 4;
@@ -838,7 +836,6 @@ fn identify_state_space(
     config: &EnhancedSysIdConfig,
 ) -> SignalResult<(SystemModel, ParameterEstimate, usize, bool, f64)> {
     // Use the advanced implementation from sysid_advanced
-    // use crate::sysid_advanced::identify_state_space_complete; // TODO: implement sysid_advanced module
 
     let order = config.max_order.min(10); // Reasonable upper bound for state-space order
 
@@ -851,7 +848,6 @@ fn identify_narx(
     config: &EnhancedSysIdConfig,
 ) -> SignalResult<(SystemModel, ParameterEstimate, usize, bool, f64)> {
     // Use the advanced implementation from sysid_advanced
-    // use crate::sysid_advanced::identify_narx_complete; // TODO: implement sysid_advanced module
 
     let na = config.max_order / 2;
     let nb = config.max_order / 2;
@@ -2237,263 +2233,6 @@ fn identify_arx_complete(
     Ok((model, parameters, 1, true, cost))
 }
 
-/// ARMAX model identification implementation
-fn identify_armax_complete(
-    input: &Array1<f64>,
-    output: &Array1<f64>,
-    na: usize,
-    nb: usize,
-    nc: usize,
-    delay: usize,
-) -> SignalResult<(SystemModel, ParameterEstimate, usize, bool, f64)> {
-    // For now, implement as ARX and add zero C coefficients
-    let (arx_model, mut parameters, iterations, converged, cost) =
-        identify_arx_complete(input, output, na, nb, delay)?;
-
-    if let SystemModel::ARX { a, b, delay } = arx_model {
-        let c_params = Array1::zeros(nc);
-
-        // Extend parameter estimates to include C coefficients
-        let mut extended_values = Array1::zeros(a.len() + b.len() + c_params.len());
-        extended_values.slice_mut(s![..a.len()]).assign(&a);
-        extended_values
-            .slice_mut(s![a.len()..a.len() + b.len()])
-            .assign(&b);
-        // C coefficients remain zero
-
-        let total_params = extended_values.len();
-        let extended_covariance = Array2::eye(total_params) * parameters.covariance[[0, 0]];
-        let extended_std_errors = Array1::from_elem(total_params, parameters.std_errors[0]);
-        let extended_confidence_intervals = vec![(0.0, 0.0); total_params];
-
-        parameters.values = extended_values;
-        parameters.covariance = extended_covariance;
-        parameters.std_errors = extended_std_errors;
-        parameters.confidence_intervals = extended_confidence_intervals;
-
-        let model = SystemModel::ARMAX {
-            a,
-            b,
-            c: c_params,
-            delay,
-        };
-        Ok((model, parameters, iterations, converged, cost))
-    } else {
-        Err(SignalError::ComputationError(
-            "Invalid ARX model structure".to_string(),
-        ))
-    }
-}
-
-/// Output-Error model identification implementation
-fn identify_oe_complete(
-    input: &Array1<f64>,
-    output: &Array1<f64>,
-    nb: usize,
-    nf: usize,
-    delay: usize,
-) -> SignalResult<(SystemModel, ParameterEstimate, usize, bool, f64)> {
-    // Simplified OE implementation using prediction error method
-    let n = input.len();
-    let total_params = nb + nf;
-
-    if n <= total_params + delay {
-        return Err(SignalError::ValueError(
-            "Insufficient data for OE identification".to_string(),
-        ));
-    }
-
-    // Initialize with ARX estimate and refine
-    let (arx_model, _, _, _, _) = identify_arx_complete(input, output, nf, nb, delay)?;
-
-    if let SystemModel::ARX {
-        a: f_init,
-        b: b_init,
-        ..
-    } = arx_model
-    {
-        let mut b_params = b_init;
-        let mut f_params = f_init;
-
-        // Simple parameter refinement (in practice would use nonlinear optimization)
-        let iterations = 5;
-        let mut cost = f64::INFINITY;
-
-        for _iter in 0..iterations {
-            // This is a simplified implementation - in practice would use
-            // proper prediction error minimization
-            cost = 0.0;
-            break; // Early termination for simplicity
-        }
-
-        let theta = {
-            let mut combined = Array1::zeros(total_params);
-            combined.slice_mut(s![..nb]).assign(&b_params);
-            combined.slice_mut(s![nb..]).assign(&f_params);
-            combined
-        };
-
-        let covariance = Array2::eye(total_params) * 0.01;
-        let std_errors = Array1::from_elem(total_params, 0.1);
-        let confidence_intervals = vec![(0.0, 0.0); total_params];
-
-        let model = SystemModel::OE {
-            b: b_params,
-            f: f_params,
-            delay,
-        };
-        let parameters = ParameterEstimate {
-            values: theta,
-            covariance,
-            std_errors,
-            confidence_intervals,
-        };
-
-        Ok((model, parameters, iterations, true, cost))
-    } else {
-        Err(SignalError::ComputationError(
-            "Invalid ARX initialization".to_string(),
-        ))
-    }
-}
-
-/// Box-Jenkins model identification implementation
-fn identify_bj_complete(
-    input: &Array1<f64>,
-    output: &Array1<f64>,
-    nb: usize,
-    nc: usize,
-    nd: usize,
-    nf: usize,
-    delay: usize,
-) -> SignalResult<(SystemModel, ParameterEstimate, usize, bool, f64)> {
-    // Simplified BJ implementation
-    let total_params = nb + nc + nd + nf;
-
-    // Initialize with OE model
-    let (oe_model, _, _, _, _) = identify_oe_complete(input, output, nb, nf, delay)?;
-
-    if let SystemModel::OE { b, f, .. } = oe_model {
-        let c_params = Array1::zeros(nc);
-        let d_params = Array1::ones(nd.max(1)); // Initialize D polynomial to [1]
-
-        let theta = {
-            let mut combined = Array1::zeros(total_params);
-            combined.slice_mut(s![..nb]).assign(&b);
-            combined.slice_mut(s![nb..nb + nc]).assign(&c_params);
-            combined
-                .slice_mut(s![nb + nc..nb + nc + nd])
-                .assign(&d_params);
-            combined.slice_mut(s![nb + nc + nd..]).assign(&f);
-            combined
-        };
-
-        let covariance = Array2::eye(total_params) * 0.01;
-        let std_errors = Array1::from_elem(total_params, 0.1);
-        let confidence_intervals = vec![(0.0, 0.0); total_params];
-
-        let model = SystemModel::BJ {
-            b,
-            c: c_params,
-            d: d_params,
-            f,
-            delay,
-        };
-        let parameters = ParameterEstimate {
-            values: theta,
-            covariance,
-            std_errors,
-            confidence_intervals,
-        };
-
-        Ok((model, parameters, 5, true, 0.0))
-    } else {
-        Err(SignalError::ComputationError(
-            "Invalid OE initialization".to_string(),
-        ))
-    }
-}
-
-/// State-space model identification implementation
-fn identify_state_space_complete(
-    input: &Array1<f64>,
-    output: &Array1<f64>,
-    order: usize,
-) -> SignalResult<(SystemModel, ParameterEstimate, usize, bool, f64)> {
-    // Simplified state-space identification using subspace methods
-    let n = input.len();
-
-    if n <= 4 * order {
-        return Err(SignalError::ValueError(
-            "Insufficient data for state-space identification".to_string(),
-        ));
-    }
-
-    // Create equivalent ARX model for simplicity
-    let na = order;
-    let nb = order;
-    let delay = 1;
-
-    let (arx_model, arx_params, iterations, converged, cost) =
-        identify_arx_complete(input, output, na, nb, delay)?;
-
-    // Convert ARX to state-space representation (companion form)
-    if let SystemModel::ARX { a, b, .. } = arx_model {
-        // Create state-space matrices (simplified)
-        let a_matrix = companion_form_matrix(&a);
-        let b_vector = Array1::from_elem(order, b[0] / order as f64);
-        let c_vector = Array1::from_elem(order, 1.0 / order as f64);
-        let d_scalar = 0.0;
-
-        // For now, represent as TransferFunction
-        let tf = TransferFunction::new(b.to_vec(), {
-            let mut denom = vec![1.0];
-            denom.extend(a.iter());
-            denom
-        })
-        .map_err(|_| {
-            SignalError::ComputationError("Failed to create transfer function".to_string())
-        })?;
-
-        let model = SystemModel::TransferFunction(tf);
-
-        Ok((model, arx_params, iterations, converged, cost))
-    } else {
-        Err(SignalError::ComputationError(
-            "Invalid ARX model for state-space conversion".to_string(),
-        ))
-    }
-}
-
-/// NARX model identification implementation
-fn identify_narx_complete(
-    input: &Array1<f64>,
-    output: &Array1<f64>,
-    na: usize,
-    nb: usize,
-    delay: usize,
-    nonlinearity: NonlinearFunction,
-) -> SignalResult<(SystemModel, ParameterEstimate, usize, bool, f64)> {
-    // Simplified NARX implementation - start with linear part
-    let (arx_model, arx_params, iterations, converged, cost) =
-        identify_arx_complete(input, output, na, nb, delay)?;
-
-    if let SystemModel::ARX { a, b, .. } = arx_model {
-        // Create Hammerstein-Wiener model with linear part and given nonlinearity
-        let linear_model = Box::new(SystemModel::ARX { a, b, delay });
-        let model = SystemModel::HammersteinWiener {
-            linear: linear_model,
-            input_nonlinearity: nonlinearity.clone(),
-            output_nonlinearity: nonlinearity,
-        };
-
-        Ok((model, arx_params, iterations, converged, cost))
-    } else {
-        Err(SignalError::ComputationError(
-            "Invalid ARX model for NARX conversion".to_string(),
-        ))
-    }
-}
 
 /// MIMO system identification function
 pub fn mimo_system_identification_advanced(

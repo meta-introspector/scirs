@@ -134,13 +134,13 @@ fn batch_distance_performance_example() -> Result<(), Box<dyn std::error::Error>
             1, // Single iteration since we have many points
         );
 
-        let speedup = results.scalar_time / results.simd_time;
+        let speedup = results.simd_f64_speedup;
 
         println!(
             "{:>8} {:>12.1} {:>12.1} {:>12.2}x",
             dim,
             results.scalar_time * 1000.0,
-            results.simd_time * 1000.0,
+            results.simd_f64_time * 1000.0,
             speedup
         );
     }

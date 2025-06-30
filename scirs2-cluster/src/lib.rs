@@ -63,6 +63,23 @@
 /// * **Dynamic Cluster Management**: Creates, merges, and removes clusters automatically
 /// * **Quantum Annealing**: Simulated quantum annealing for global optimization
 pub mod advanced;
+/// Advanced benchmarking and performance profiling system.
+///
+/// This module provides cutting-edge benchmarking capabilities for clustering algorithms,
+/// including comprehensive performance analysis, memory profiling, scalability analysis,
+/// performance regression detection, and AI-powered optimization suggestions.
+/// 
+/// # Features
+///
+/// * **Statistical Performance Analysis**: Comprehensive timing statistics with confidence intervals
+/// * **Memory Usage Profiling**: Real-time memory consumption tracking and leak detection
+/// * **Scalability Analysis**: Algorithm complexity estimation and performance predictions
+/// * **Regression Detection**: Automated detection of performance degradation
+/// * **Optimization Suggestions**: AI-powered recommendations for performance improvements
+/// * **Interactive Reporting**: Rich HTML reports with detailed analytics
+/// * **Cross-Platform Benchmarking**: Performance comparisons across different systems
+/// * **GPU vs CPU Analysis**: Comprehensive acceleration analysis
+pub mod advanced_benchmarking;
 pub mod affinity;
 pub mod birch;
 pub mod density;
@@ -136,6 +153,22 @@ pub mod meanshift;
 pub mod metrics;
 pub mod neighbor_search;
 pub mod preprocess;
+/// Python bindings for scirs2-cluster using PyO3.
+///
+/// This module provides Python bindings that make scirs2-cluster algorithms
+/// accessible from Python with scikit-learn compatible APIs. The bindings
+/// include all major clustering algorithms and evaluation metrics.
+///
+/// # Features
+///
+/// * **Scikit-learn Compatible**: Drop-in replacements for scikit-learn clustering algorithms
+/// * **K-means**: Python binding for K-means clustering with multiple initialization methods
+/// * **DBSCAN**: Python binding for DBSCAN density-based clustering
+/// * **Hierarchical**: Python binding for agglomerative clustering with various linkage methods
+/// * **Evaluation Metrics**: Silhouette score, Calinski-Harabasz score, and Davies-Bouldin score
+/// * **Numpy Integration**: Seamless integration with NumPy arrays
+#[cfg(feature = "pyo3")]
+pub mod python_bindings;
 pub mod serialization;
 pub mod sparse;
 pub mod spectral;
@@ -175,15 +208,56 @@ pub mod time_series;
 /// for all clustering algorithms in the scirs2-cluster crate. It supports
 /// grid search, random search, Bayesian optimization, and adaptive strategies.
 pub mod tuning;
+/// Enhanced visualization capabilities for clustering results.
+///
+/// This module provides comprehensive visualization tools for clustering algorithms,
+/// including scatter plots, 3D visualizations, dimensionality reduction plots,
+/// and interactive exploration tools for high-dimensional data.
+///
+/// # Features
+///
+/// * **2D/3D Scatter Plots**: Create scatter plot visualizations of clustering results
+/// * **Dimensionality Reduction**: Support for PCA, t-SNE, UMAP, and MDS for high-dimensional data
+/// * **Color Schemes**: Multiple color palettes including colorblind-friendly options
+/// * **Interactive Features**: Zoom, pan, and selection capabilities
+/// * **Animation Support**: Animate iterative algorithms and streaming data
+/// * **Export Capabilities**: Export to various formats (JSON, HTML, images)
+pub mod visualization;
+/// Native plotting capabilities for clustering results.
+///
+/// This module provides native plotting implementations using popular Rust visualization
+/// libraries like plotters and egui. It bridges the visualization data structures with
+/// actual plotting backends to create publication-ready plots.
+///
+/// # Features
+///
+/// * **Static Plots**: PNG, SVG, PDF output using plotters
+/// * **Interactive Plots**: Real-time visualization using egui
+/// * **Publication Ready**: High-quality plots with customizable styling
+/// * **Multiple Backends**: Support for different rendering backends
+/// * **Performance Optimized**: Efficient rendering for large datasets
+#[cfg(any(feature = "plotters", feature = "egui"))]
+pub mod plotting;
 pub mod vq;
 
 // Re-exports
 pub use advanced::{
     adaptive_online_clustering, quantum_kmeans, rl_clustering, transfer_learning_clustering,
+    deep_embedded_clustering, variational_deep_embedding, qaoa_clustering, vqe_clustering,
     AdaptiveOnlineClustering, AdaptiveOnlineConfig, FeatureAlignment, QuantumConfig, QuantumKMeans,
     RLClustering, RLClusteringConfig, RewardFunction, TransferLearningClustering,
-    TransferLearningConfig,
+    TransferLearningConfig, DeepClusteringConfig, DeepEmbeddedClustering, VariationalDeepEmbedding,
+    QAOAConfig, QAOAClustering, QAOACostFunction, VQEConfig, VQEClustering, VQEAnsatz,
 };
+
+// Re-export advanced benchmarking capabilities
+pub use advanced_benchmarking::{
+    AdvancedBenchmark, BenchmarkConfig, BenchmarkResults, AlgorithmBenchmark, AlgorithmComparison,
+    PerformanceStatistics, MemoryProfile, QualityMetrics, ScalabilityAnalysis, SystemInfo,
+    OptimizationSuggestion, OptimizationCategory, OptimizationPriority, ComplexityClass,
+    GpuVsCpuComparison, RegressionAlert, RegressionSeverity, create_comprehensive_report,
+};
+
 pub use affinity::{affinity_propagation, AffinityPropagationOptions};
 pub use birch::{birch, Birch, BirchOptions, BirchStatistics};
 pub use density::hdbscan::{
@@ -296,6 +370,9 @@ pub use tuning::{
     EvaluationResult, ExplorationStats, HyperParameter, KernelType, LoadBalancingStrategy,
     ParallelConfig, ResourceConstraints, SearchSpace, SearchStrategy, StandardSearchSpaces,
     StoppingReason, SurrogateModel, TuningConfig, TuningResult,
+    // Auto-selection functionality
+    AutoClusteringSelector, ClusteringAlgorithm, AlgorithmSelectionResult,
+    auto_select_clustering_algorithm, quick_algorithm_selection,
 };
 
 // Re-export visualization and animation capabilities
@@ -320,6 +397,18 @@ pub use visualization::interactive::{
 pub use visualization::export::{
     export_scatter_2d_to_html, export_scatter_2d_to_json, export_scatter_3d_to_html,
     export_scatter_3d_to_json, save_visualization_to_file, ExportFormat,
+};
+
+// Re-export native plotting capabilities (when plotting features are enabled)
+#[cfg(feature = "plotters")]
+pub use plotting::{
+    plot_scatter_2d, plot_dendrogram, save_clustering_plot, save_dendrogram_plot, 
+    PlotFormat, PlotOutput,
+};
+
+#[cfg(feature = "egui")]
+pub use plotting::{
+    launch_interactive_visualization, InteractiveClusteringApp,
 };
 
 // Re-export distributed clustering capabilities

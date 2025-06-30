@@ -542,22 +542,33 @@ fn hermite_interpolation_docs() -> MethodDocumentation {
 
 /// Print comprehensive method comparison
 pub fn print_method_comparison() {
-    let methods = ["linear", "cubic", "pchip", "bspline", "rbf", "kriging", "akima", "hermite"];
-    
+    let methods = [
+        "linear", "cubic", "pchip", "bspline", "rbf", "kriging", "akima", "hermite",
+    ];
+
     println!("# Interpolation Methods Comparison\n");
-    
+
     for method in &methods {
         if let Some(doc) = get_method_documentation(method) {
             println!("## {}\n", doc.method_name);
             println!("{}\n", doc.description);
-            
+
             println!("**Performance Characteristics:**");
-            println!("- Construction: {}", doc.performance.construction_complexity);
+            println!(
+                "- Construction: {}",
+                doc.performance.construction_complexity
+            );
             println!("- Evaluation: {}", doc.performance.evaluation_complexity);
             println!("- Memory: {}", doc.performance.memory_complexity);
-            println!("- Real-time suitable: {}", doc.performance.real_time_suitable);
-            println!("- Typical accuracy: {:.0e}\n", doc.performance.typical_accuracy);
-            
+            println!(
+                "- Real-time suitable: {}",
+                doc.performance.real_time_suitable
+            );
+            println!(
+                "- Typical accuracy: {:.0e}\n",
+                doc.performance.typical_accuracy
+            );
+
             println!("**Best for:** {}\n", doc.usage.best_use_cases.join(", "));
             println!("**Avoid when:** {}\n", doc.usage.avoid_when.join(", "));
             println!("---\n");

@@ -8,7 +8,6 @@ use crate::error::{StatsError, StatsResult};
 use crate::error_recovery_system::{
     EnhancedStatsError, RecoveryAction, RecoverySuggestion, SuggestionType,
 };
-use ndarray::Array1;
 use num_traits::Float;
 use std::collections::HashMap;
 

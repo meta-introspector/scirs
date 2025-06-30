@@ -28,9 +28,6 @@ pub struct DictionaryLearning {
     tol: f64,
     /// Algorithm for sparse coding: 'omp', 'lasso_lars', 'lasso_cd'
     transform_algorithm: String,
-    /// Number of parallel jobs for OMP
-    #[allow(dead_code)]
-    n_jobs: usize,
     /// Random state for reproducibility
     random_state: Option<u64>,
     /// Whether to shuffle data before each epoch
@@ -54,7 +51,6 @@ impl DictionaryLearning {
             max_iter: 1000,
             tol: 1e-4,
             transform_algorithm: "omp".to_string(),
-            n_jobs: 1,
             random_state: None,
             shuffle: true,
             dictionary: None,

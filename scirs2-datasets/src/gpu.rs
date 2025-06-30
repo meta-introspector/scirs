@@ -124,6 +124,11 @@ impl GpuContext {
         &self.device_info
     }
 
+    /// Get the backend type
+    pub fn backend(&self) -> &GpuBackend {
+        &self.config.backend
+    }
+
     /// Check if GPU is available and functional
     pub fn is_available(&self) -> bool {
         match &self.config.backend {
@@ -314,15 +319,92 @@ impl GpuContext {
     }
 
     fn is_cuda_available(&self) -> bool {
-        // In a real implementation, this would check CUDA runtime
-        // For demonstration, we'll simulate based on device name
-        self.device_info.name.contains("NVIDIA") || self.device_info.name.contains("Tesla")
+        // Check CUDA availability through multiple methods
+
+        // 1. Check for NVIDIA GPU device name
+        let has_nvidia_device = self.device_info.name.contains("NVIDIA")
+            || self.device_info.name.contains("Tesla")
+            || self.device_info.name.contains("GeForce")
+            || self.device_info.name.contains("Quadro");
+
+        if !has_nvidia_device {
+            return false;
+        }
+
+        // 2. Check for CUDA environment variables
+        let cuda_env_available = std::env::var("CUDA_VISIBLE_DEVICES").is_ok()
+            || std::env::var("CUDA_PATH").is_ok()
+            || std::env::var("CUDA_HOME").is_ok();
+
+        // 3. Check for CUDA installation paths
+        let cuda_paths = [
+            "/usr/local/cuda",
+            "/opt/cuda",
+            "/usr/lib/x86_64-linux-gnu/libcuda.so",
+            "/usr/lib/x86_64-linux-gnu/libcuda.so.1",
+            "/usr/lib64/libcuda.so",
+            "/usr/lib64/libcuda.so.1",
+            "C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA",
+            "C:\\Windows\\System32\\nvcuda.dll",
+        ];
+
+        let cuda_path_available = cuda_paths
+            .iter()
+            .any(|path| std::path::Path::new(path).exists());
+
+        // 4. Try to check nvidia-smi (if available)
+        let nvidia_smi_available = std::process::Command::new("nvidia-smi")
+            .arg("--list-gpus")
+            .output()
+            .map(|output| output.status.success())
+            .unwrap_or(false);
+
+        cuda_env_available || cuda_path_available || nvidia_smi_available
     }
 
     fn is_opencl_available(&self) -> bool {
-        // In a real implementation, this would check OpenCL runtime
-        // For demonstration, we'll return true for any non-CPU device
-        !self.device_info.name.contains("CPU")
+        // Check OpenCL availability through multiple methods
+
+        // 1. Skip pure CPU devices unless they explicitly support OpenCL
+        if self.device_info.name.contains("CPU") && !self.device_info.name.contains("OpenCL") {
+            return false;
+        }
+
+        // 2. Check for common OpenCL library paths
+        let opencl_paths = [
+            "/usr/lib/libOpenCL.so",
+            "/usr/lib/libOpenCL.so.1",
+            "/usr/lib64/libOpenCL.so",
+            "/usr/lib64/libOpenCL.so.1",
+            "/usr/lib/x86_64-linux-gnu/libOpenCL.so",
+            "/usr/lib/x86_64-linux-gnu/libOpenCL.so.1",
+            "/opt/intel/opencl/lib64/libOpenCL.so",
+            "/System/Library/Frameworks/OpenCL.framework/OpenCL", // macOS
+            "C:\\Windows\\System32\\OpenCL.dll",                  // Windows
+        ];
+
+        let opencl_lib_available = opencl_paths
+            .iter()
+            .any(|path| std::path::Path::new(path).exists());
+
+        // 3. Check for vendor-specific OpenCL installations
+        let vendor_opencl_paths = [
+            "/usr/lib/x86_64-linux-gnu/mesa", // Mesa OpenCL
+            "/opt/amdgpu-pro",                // AMD Pro drivers
+            "/opt/intel/opencl",              // Intel OpenCL
+        ];
+
+        let vendor_opencl_available = vendor_opencl_paths
+            .iter()
+            .any(|path| std::path::Path::new(path).exists());
+
+        // 4. Try to run clinfo (if available)
+        let clinfo_available = std::process::Command::new("clinfo")
+            .output()
+            .map(|output| output.status.success() && !output.stdout.is_empty())
+            .unwrap_or(false);
+
+        opencl_lib_available || vendor_opencl_available || clinfo_available
     }
 
     // CUDA-specific implementations (simplified for demonstration)
@@ -774,20 +856,85 @@ impl GpuBenchmarkResults {
 
 /// Utility functions for GPU operations
 
-/// Check if CUDA is available
+/// Check if CUDA is available on the system
 pub fn is_cuda_available() -> bool {
-    // In a real implementation, this would check CUDA runtime
-    // For demonstration, we'll check environment variables or simulate
-    std::env::var("CUDA_VISIBLE_DEVICES").is_ok()
-        || std::path::Path::new("/usr/local/cuda").exists()
+    // 1. Check for CUDA environment variables
+    let cuda_env_available = std::env::var("CUDA_VISIBLE_DEVICES").is_ok()
+        || std::env::var("CUDA_PATH").is_ok()
+        || std::env::var("CUDA_HOME").is_ok();
+
+    // 2. Check for CUDA installation paths (cross-platform)
+    let cuda_paths = [
+        "/usr/local/cuda",
+        "/opt/cuda",
+        "/usr/lib/x86_64-linux-gnu/libcuda.so",
+        "/usr/lib/x86_64-linux-gnu/libcuda.so.1",
+        "/usr/lib64/libcuda.so",
+        "/usr/lib64/libcuda.so.1",
+        "C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA",
+        "C:\\Windows\\System32\\nvcuda.dll",
+        "/System/Library/Frameworks/CUDA.framework", // macOS (if applicable)
+    ];
+
+    let cuda_path_available = cuda_paths
+        .iter()
+        .any(|path| std::path::Path::new(path).exists());
+
+    // 3. Try to execute nvidia-smi to check for NVIDIA GPUs
+    let nvidia_smi_available = std::process::Command::new("nvidia-smi")
+        .arg("--list-gpus")
+        .output()
+        .map(|output| output.status.success() && !output.stdout.is_empty())
+        .unwrap_or(false);
+
+    // 4. Check for NVIDIA devices in /proc (Linux-specific)
+    let nvidia_proc_available = std::path::Path::new("/proc/driver/nvidia").exists();
+
+    cuda_env_available || cuda_path_available || nvidia_smi_available || nvidia_proc_available
 }
 
-/// Check if OpenCL is available
+/// Check if OpenCL is available on the system
 pub fn is_opencl_available() -> bool {
-    // In a real implementation, this would check OpenCL runtime
-    // For demonstration, we'll simulate based on common OpenCL library paths
-    std::path::Path::new("/usr/lib/libOpenCL.so").exists()
-        || std::path::Path::new("/usr/lib64/libOpenCL.so").exists()
+    // 1. Check for common OpenCL library paths (cross-platform)
+    let opencl_paths = [
+        "/usr/lib/libOpenCL.so",
+        "/usr/lib/libOpenCL.so.1",
+        "/usr/lib64/libOpenCL.so",
+        "/usr/lib64/libOpenCL.so.1",
+        "/usr/lib/x86_64-linux-gnu/libOpenCL.so",
+        "/usr/lib/x86_64-linux-gnu/libOpenCL.so.1",
+        "/opt/intel/opencl/lib64/libOpenCL.so",
+        "/System/Library/Frameworks/OpenCL.framework/OpenCL", // macOS
+        "C:\\Windows\\System32\\OpenCL.dll",                  // Windows
+    ];
+
+    let opencl_lib_available = opencl_paths
+        .iter()
+        .any(|path| std::path::Path::new(path).exists());
+
+    // 2. Check for vendor-specific OpenCL installations
+    let vendor_opencl_paths = [
+        "/usr/lib/x86_64-linux-gnu/mesa",                   // Mesa OpenCL
+        "/opt/amdgpu-pro",                                  // AMD Pro drivers
+        "/opt/intel/opencl",                                // Intel OpenCL
+        "/usr/lib/x86_64-linux-gnu/libmali-bifrost-dev.so", // ARM Mali
+    ];
+
+    let vendor_opencl_available = vendor_opencl_paths
+        .iter()
+        .any(|path| std::path::Path::new(path).exists());
+
+    // 3. Try to run clinfo command to enumerate OpenCL devices
+    let clinfo_available = std::process::Command::new("clinfo")
+        .output()
+        .map(|output| output.status.success() && !output.stdout.is_empty())
+        .unwrap_or(false);
+
+    // 4. Check for OpenCL environment variables
+    let opencl_env_available =
+        std::env::var("OPENCL_VENDOR_PATH").is_ok() || std::env::var("OCL_ICD_FILENAMES").is_ok();
+
+    opencl_lib_available || vendor_opencl_available || clinfo_available || opencl_env_available
 }
 
 /// Get optimal GPU configuration for the current system
@@ -858,7 +1005,7 @@ pub fn list_gpu_devices() -> Result<Vec<GpuDeviceInfo>> {
 }
 
 /// Convenience functions for GPU-accelerated data generation
-
+///
 /// Generate classification dataset with automatic GPU detection
 pub fn make_classification_auto_gpu(
     n_samples: usize,
@@ -973,7 +1120,7 @@ mod tests {
             ..Default::default()
         };
 
-        let benchmark = GpuBenchmark::new(config).unwrap();
+        let _benchmark = GpuBenchmark::new(config).unwrap();
         // Should not panic during creation
     }
 }

@@ -28,7 +28,8 @@ bincode = { workspace = true, optional = true }  # For serialization in memory_e
 memmap2 = { workspace = true, optional = true }  # For memory-mapped arrays
 regex = { workspace = true, optional = true }  # For string pattern validation
 
-# Feature-gated dependencies
+# Feature-gated dependencies  
+log = { workspace = true, optional = true }  # Logging support
 wide = { workspace = true, optional = true }  # SIMD acceleration
 rayon = { workspace = true, optional = true }  # Parallel processing
 crossbeam = { workspace = true, optional = true }  # Used in parallel scheduler for channels
@@ -68,6 +69,10 @@ tokio = { workspace = true, optional = true }  # Async runtime for async error h
 
 # GPU backend dependencies
 # Note: metal and objc2-metal-performance-shaders are macOS-specific, moved to target-specific section
+cudarc = { version = "0.12", optional = true, features = ["cuda-12000"] }  # CUDA runtime
+opencl3 = { version = "0.11", optional = true }  # OpenCL runtime  
+wgpu = { version = "22.1", optional = true }  # WebGPU runtime
+pollster = { version = "0.4", optional = true }  # Async runtime for WebGPU
 
 # Production-level feature dependencies
 reqwest = { workspace = true, optional = true }  # HTTP client for tracing export
@@ -110,13 +115,13 @@ parallel = ["rayon", "ndarray/rayon", "crossbeam", "crossbeam-utils", "crossbeam
 cache = ["cached"]  # Caching and memoization functionality
 validation = ["regex"]  # Validation utilities
 cross_platform = ["libc", "sysinfo"]  # Cross-platform validation and compatibility
-logging = []  # Structured logging and diagnostics
+logging = ["log"]  # Structured logging and diagnostics
 async = ["tokio"]  # Async error handling and recovery mechanisms
 gpu = []  # GPU acceleration abstractions
-cuda = ["gpu"]  # CUDA-specific GPU acceleration
-opencl = ["gpu"]  # OpenCL-specific GPU acceleration
+cuda = ["gpu", "dep:cudarc"]  # CUDA-specific GPU acceleration
+opencl = ["gpu", "dep:opencl3"]  # OpenCL-specific GPU acceleration
 metal = ["gpu", "dep:metal", "dep:objc2-metal-performance-shaders"]  # Metal-specific GPU acceleration (Apple)
-wgpu = ["gpu"]  # WebGPU-specific GPU acceleration
+wgpu_backend = ["gpu", "dep:wgpu", "dep:pollster"]  # WebGPU-specific GPU acceleration
 rocm = ["gpu"]  # ROCm-specific GPU acceleration (AMD)
 memory_management = ["bincode", "tempfile"]  # Advanced memory management
 memory_efficient = ["tempfile", "bincode", "memmap2", "rayon"]  # Memory-efficient operations
@@ -153,7 +158,7 @@ array_protocol_gpu = ["array_protocol", "gpu"]  # GPU support for Array Protocol
 array_protocol_cuda = ["array_protocol_gpu", "cuda"]  # CUDA support for Array Protocol
 array_protocol_opencl = ["array_protocol_gpu", "opencl"]  # OpenCL support for Array Protocol
 array_protocol_metal = ["array_protocol_gpu", "metal"]  # Metal support for Array Protocol
-array_protocol_wgpu = ["array_protocol_gpu", "wgpu"]  # WebGPU support for Array Protocol
+array_protocol_wgpu = ["array_protocol_gpu", "wgpu_backend"]  # WebGPU support for Array Protocol
 array_protocol_rocm = ["array_protocol_gpu", "rocm"]  # ROCm support for Array Protocol
 array_protocol_distributed = ["array_protocol", "parallel"]  # Distributed computing for Array Protocol
 array_protocol_all = ["array_protocol", "array_protocol_jit", "array_protocol_cuda", "array_protocol_distributed"]  # All Array Protocol features
@@ -490,3 +495,8 @@ required-features = ["parallel"]
 name = "ecosystem_integration_demo"
 path = "examples/ecosystem_integration_demo.rs"
 required-features = ["testing", "parallel", "random"]
+
+[[example]]
+name = "security_test_verification"
+path = "examples/security_test_verification.rs"
+required-features = ["testing"]

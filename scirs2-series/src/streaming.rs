@@ -3,7 +3,7 @@
 //! This module provides capabilities for analyzing time series data in real-time,
 //! including online learning algorithms, streaming forecasting, and incremental statistics.
 
-use ndarray::Array1;
+use ndarray::{Array1, Array2};
 use num_traits::{Float, FromPrimitive};
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
@@ -1356,7 +1356,7 @@ pub mod feature_engineering {
             }
 
             // Simple linear regression on log-log plot
-            let log_scales: Vec<F> = variations.iter().map(|(s, _)| s.ln()).collect();
+            let _log_scales: Vec<F> = variations.iter().map(|(s, _)| s.ln()).collect();
             let log_variations: Vec<F> = variations.iter().map(|(_, v)| v.ln()).collect();
 
             let slope = self.compute_linear_trend(&log_variations)?;
@@ -1681,7 +1681,7 @@ pub mod adaptive {
             let mut new_covariance = Array2::zeros((self.num_features, self.num_features));
             for i in 0..self.num_features {
                 for j in 0..self.num_features {
-                    let update_term = gain[i] * features[j];
+                    let _update_term = gain[i] * features[j];
                     new_covariance[[i, j]] = (self.covariance[[i, j]] - temp_vector[i] * features[j]) / self.forgetting_factor;
                     
                     // Add regularization
@@ -1713,7 +1713,7 @@ pub mod adaptive {
         }
 
         /// Get prediction with confidence interval
-        pub fn predict_with_confidence(&self, features: &Array1<F>, confidence_level: F) -> Result<(F, F, F)> {
+        pub fn predict_with_confidence(&self, features: &Array1<F>, _confidence_level: F) -> Result<(F, F, F)> {
             let prediction = self.predict(features)?;
 
             // Compute prediction variance
@@ -1951,7 +1951,7 @@ pub mod adaptive {
         }
 
         /// Update parameters using gradient descent
-        fn update_parameters(&mut self, observation: F, residual: F) -> Result<()> {
+        fn update_parameters(&mut self, _observation: F, residual: F) -> Result<()> {
             let processed_data: Vec<F> = if self.d > 0 {
                 self.apply_differencing_to_series()
             } else {
@@ -2168,7 +2168,7 @@ pub mod advanced {
             let mut new_level = value;
 
             // Handle seasonality
-            let seasonal_component = if let Some(period) = self.seasonal_period {
+            let _seasonal_component = if let Some(period) = self.seasonal_period {
                 if self.seasonal.len() >= period {
                     let seasonal_idx = (self.observation_count - 1) % period;
                     let seasonal_val = self.seasonal[seasonal_idx];
@@ -2475,7 +2475,7 @@ pub mod advanced {
                         if correlation >= self.threshold {
                             matches.push(PatternMatch {
                                 pattern_name: self.pattern_names[i].clone(),
-                                correlation,
+                                correlation: correlation.to_f64().unwrap(),
                                 start_index: self.buffer.len() - pattern.len(),
                                 pattern_length: pattern.len(),
                             });
@@ -2506,7 +2506,7 @@ pub mod advanced {
             let mut den_a = F::zero();
             let mut den_b = F::zero();
 
-            for (i, (&val_a, &val_b)) in a.iter().zip(b.iter()).enumerate() {
+            for (_i, (&val_a, &val_b)) in a.iter().zip(b.iter()).enumerate() {
                 let diff_a = val_a - mean_a;
                 let diff_b = val_b - mean_b;
 

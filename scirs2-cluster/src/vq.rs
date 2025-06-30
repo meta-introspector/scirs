@@ -39,6 +39,8 @@ mod kmeans;
 mod kmeans2;
 mod minibatch_kmeans;
 mod parallel_kmeans;
+mod simd_kmeans;
+mod simd_optimizations;
 mod weighted_kmeans;
 pub use self::distance_metrics::{
     create_metric, ChebyshevDistance, CorrelationDistance, CosineDistance,
@@ -47,6 +49,13 @@ pub use self::distance_metrics::{
 };
 pub use distance_simd::{
     distance_to_centroids_simd, pairwise_euclidean_parallel, pairwise_euclidean_simd,
+};
+pub use simd_optimizations::{
+    calculate_distortion_simd, compute_centroids_simd, euclidean_distance_simd, 
+    vq_simd, whiten_simd, SimdOptimizationConfig,
+};
+pub use simd_kmeans::{
+    kmeans_simd, kmeans_plus_plus_simd, mini_batch_kmeans_simd,
 };
 pub use kmeans::{
     kmeans, kmeans_init, kmeans_plus_plus, kmeans_with_metric, kmeans_with_options, KMeansInit,

@@ -12,8 +12,8 @@
 use ndarray::Array1;
 use num_complex::Complex64;
 use scirs2_special::*;
-use std::io::{self, Write};
 use std::f64::consts::{E, PI};
+use std::io::{self, Write};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🧮 Mathematical Derivation Studio");
@@ -104,7 +104,7 @@ fn gamma_reflection_formula_derivation() -> Result<(), Box<dyn std::error::Error
     let gamma_1_minus_z = gamma(1.0 - z);
     let product = gamma_z * gamma_1_minus_z;
     let theoretical = PI / (PI * z).sin();
-    
+
     println!("NUMERICAL VERIFICATION:");
     println!("For z = {:.3}:", z);
     println!("Γ({:.3}) = {:.8}", z, gamma_z);
@@ -224,8 +224,10 @@ fn stirling_asymptotic_derivation() -> Result<(), Box<dyn std::error::Error>> {
         let exact = gammaln(z);
         let stirling = (z - 0.5) * z.ln() - z + 0.5 * (2.0 * PI).ln();
         let error = (exact - stirling).abs();
-        println!("z = {:<4}: exact = {:<10.6}, Stirling = {:<10.6}, error = {:.2e}", 
-                z, exact, stirling, error);
+        println!(
+            "z = {:<4}: exact = {:<10.6}, Stirling = {:<10.6}, error = {:.2e}",
+            z, exact, stirling, error
+        );
     }
     println!();
 
@@ -311,15 +313,17 @@ fn bessel_orthogonality_proof() -> Result<(), Box<dyn std::error::Error>> {
     // Numerical verification
     println!("NUMERICAL VERIFICATION:");
     println!("Testing orthogonality for J₀ with first few zeros:");
-    
+
     let j0_zeros = vec![2.4048, 5.5201, 8.6537]; // Approximate zeros of J₀
-    
+
     for (i, &alpha_i) in j0_zeros.iter().enumerate() {
         for (j, &alpha_j) in j0_zeros.iter().enumerate() {
             let integral = numerical_bessel_orthogonality_integral(0, alpha_i, alpha_j)?;
             let expected = if i == j { "non-zero" } else { "~0" };
-            println!("∫ x J₀({:.4}x) J₀({:.4}x) dx = {:.6} (expected: {})",
-                    alpha_i, alpha_j, integral, expected);
+            println!(
+                "∫ x J₀({:.4}x) J₀({:.4}x) dx = {:.6} (expected: {})",
+                alpha_i, alpha_j, integral, expected
+            );
         }
     }
     println!();
@@ -342,7 +346,7 @@ fn hypergeometric_transformations() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("FUNDAMENTAL TRANSFORMATIONS:");
     println!();
-    
+
     println!("1. EULER'S TRANSFORMATION:");
     println!("₂F₁(a,b;c;z) = (1-z)^(c-a-b) ₂F₁(c-a,c-b;c;z)");
     println!();
@@ -352,7 +356,7 @@ fn hypergeometric_transformations() -> Result<(), Box<dyn std::error::Error>> {
     let b = 1.5;
     let c = 2.0;
     let z = 0.3;
-    
+
     println!("Verification for a={}, b={}, c={}, z={}:", a, b, c, z);
     let left = hypergeometric_2f1(a, b, c, z)?;
     let right = (1.0 - z).powf(c - a - b) * hypergeometric_2f1(c - a, c - b, c, z)?;
@@ -388,7 +392,7 @@ fn hypergeometric_transformations() -> Result<(), Box<dyn std::error::Error>> {
     // Verify some elementary connections
     println!("VERIFICATION OF ELEMENTARY CONNECTIONS:");
     let z_test = 0.5;
-    
+
     // Test ₂F₁(1,1;2;z) = -ln(1-z)/z
     let hyp_val = hypergeometric_2f1(1.0, 1.0, 2.0, z_test)?;
     let elem_val = -(1.0 - z_test).ln() / z_test;
@@ -453,7 +457,10 @@ fn elliptic_integral_connections() -> Result<(), Box<dyn std::error::Error>> {
     println!("Verification for k = {}:", k_test);
     println!("K(k) from elliptic  = {:.8}", k_elliptic);
     println!("K(k) from ₂F₁       = {:.8}", k_hypergeo);
-    println!("Difference          = {:.2e}", (k_elliptic - k_hypergeo).abs());
+    println!(
+        "Difference          = {:.2e}",
+        (k_elliptic - k_hypergeo).abs()
+    );
     println!();
 
     pause_for_user()?;
@@ -470,14 +477,17 @@ fn elliptic_integral_connections() -> Result<(), Box<dyn std::error::Error>> {
     let e_k = elliptic_e(k)?;
     let k_k_prime = elliptic_k(k_prime)?;
     let e_k_prime = elliptic_e(k_prime)?;
-    
+
     let legendre_left = k_k * e_k_prime + k_k_prime * e_k - k_k * k_k_prime;
     let legendre_right = PI / 2.0;
-    
+
     println!("Verification of Legendre's relation for k = {}:", k);
     println!("Left side  = {:.8}", legendre_left);
     println!("Right side = {:.8}", legendre_right);
-    println!("Difference = {:.2e}", (legendre_left - legendre_right).abs());
+    println!(
+        "Difference = {:.2e}",
+        (legendre_left - legendre_right).abs()
+    );
     println!();
 
     pause_for_user()?;
@@ -557,17 +567,20 @@ fn wright_function_asymptotic_analysis() -> Result<(), Box<dyn std::error::Error
 
     for &z in &z_values {
         // Asymptotic approximation
-        let asymptotic = (1.0 / (2.0 * PI * alpha).sqrt()) * 
-                        z.powf((beta - 1.0) / (2.0 * alpha)) *
-                        ((z / alpha).powf(1.0 / alpha) / alpha).exp();
-        
+        let asymptotic = (1.0 / (2.0 * PI * alpha).sqrt())
+            * z.powf((beta - 1.0) / (2.0 * alpha))
+            * ((z / alpha).powf(1.0 / alpha) / alpha).exp();
+
         println!("z = {:<4}: Asymptotic = {:.6e}", z, asymptotic);
-        
+
         // For very large z, the exact computation becomes difficult
         if z <= 10.0 {
             let exact = wright_phi(alpha, beta, z)?;
             let relative_error = ((exact - asymptotic) / exact).abs();
-            println!("           Exact      = {:.6e}, Error = {:.1%}", exact, relative_error);
+            println!(
+                "           Exact      = {:.6e}, Error = {:.1%}",
+                exact, relative_error
+            );
         }
     }
     println!();
@@ -610,7 +623,7 @@ fn information_theory_inequalities() -> Result<(), Box<dyn std::error::Error>> {
     println!("NUMERICAL VERIFICATION:");
     let p = vec![0.5, 0.3, 0.2];
     let q = vec![0.4, 0.4, 0.2];
-    
+
     let kl_div = kl_divergence(&p, &q)?;
     println!("For P = {:?} and Q = {:?}", p, q);
     println!("D_KL(P||Q) = {:.6} ≥ 0 ✓", kl_div);
@@ -684,7 +697,9 @@ fn quantum_mechanics_applications() -> Result<(), Box<dyn std::error::Error>> {
     println!("ψₙₗₘ(r,θ,φ) = Rₙₗ(r) Yₗᵐ(θ,φ)");
     println!();
     println!("Radial part involves associated Laguerre polynomials:");
-    println!("Rₙₗ(r) = √[(2/na₀)³ (n-l-1)!/(2n[(n+l)!])] e^(-r/na₀) (2r/na₀)ˡ L_n+l^(2l+1)(2r/na₀)");
+    println!(
+        "Rₙₗ(r) = √[(2/na₀)³ (n-l-1)!/(2n[(n+l)!])] e^(-r/na₀) (2r/na₀)ˡ L_n+l^(2l+1)(2r/na₀)"
+    );
     println!();
     println!("Angular part uses spherical harmonics:");
     println!("Yₗᵐ(θ,φ) = √[(2l+1)(l-|m|)!/4π(l+|m|)!] Pₗᵐ(cos θ) e^(imφ)");
@@ -730,7 +745,7 @@ fn quantum_mechanics_applications() -> Result<(), Box<dyn std::error::Error>> {
     println!();
     println!("The 'orbital shapes' in chemistry are just |Yₗᵐ|²!");
     println!("• s orbitals (l=0): spherically symmetric");
-    println!("• p orbitals (l=1): dumbbell shapes");  
+    println!("• p orbitals (l=1): dumbbell shapes");
     println!("• d orbitals (l=2): four-leaf clover patterns");
     println!();
 
@@ -789,36 +804,43 @@ fn pause_for_user() -> Result<(), Box<dyn std::error::Error>> {
 fn test_reflection_formula_values() -> Result<(), Box<dyn std::error::Error>> {
     println!("Testing reflection formula for various values:");
     let test_values = vec![0.1, 0.3, 0.7, 0.9, 1.3, 1.7];
-    
+
     for &z in &test_values {
-        if z != 1.0 {  // Avoid pole
+        if z != 1.0 {
+            // Avoid pole
             let gamma_z = gamma(z);
             let gamma_1_minus_z = gamma(1.0 - z);
             let product = gamma_z * gamma_1_minus_z;
             let theoretical = PI / (PI * z).sin();
             let error = ((product - theoretical) / theoretical).abs();
-            
-            println!("z = {:.1}: Γ(z)Γ(1-z) = {:.6}, π/sin(πz) = {:.6}, error = {:.1e}",
-                    z, product, theoretical, error);
+
+            println!(
+                "z = {:.1}: Γ(z)Γ(1-z) = {:.6}, π/sin(πz) = {:.6}, error = {:.1e}",
+                z, product, theoretical, error
+            );
         }
     }
     println!();
     Ok(())
 }
 
-fn numerical_bessel_orthogonality_integral(nu: i32, alpha1: f64, alpha2: f64) -> Result<f64, Box<dyn std::error::Error>> {
+fn numerical_bessel_orthogonality_integral(
+    nu: i32,
+    alpha1: f64,
+    alpha2: f64,
+) -> Result<f64, Box<dyn std::error::Error>> {
     // Simple numerical integration for demonstration
     let n_points = 1000;
     let dx = 1.0 / n_points as f64;
     let mut sum = 0.0;
-    
+
     for i in 1..n_points {
         let x = i as f64 * dx;
-        let j1 = bessel::j0(alpha1 * x);  // Using J₀ for simplicity
+        let j1 = bessel::j0(alpha1 * x); // Using J₀ for simplicity
         let j2 = bessel::j0(alpha2 * x);
         sum += x * j1 * j2 * dx;
     }
-    
+
     Ok(sum)
 }
 
@@ -827,7 +849,7 @@ fn find_radial_maximum(n: i32, l: i32) -> f64 {
     // Exact calculation would require numerical optimization
     let n_eff = n as f64;
     if l == 0 {
-        n_eff * n_eff  // Rough approximation
+        n_eff * n_eff // Rough approximation
     } else {
         n_eff * n_eff * (1.0 + l as f64 / n_eff)
     }
@@ -837,7 +859,7 @@ fn kl_divergence(p: &[f64], q: &[f64]) -> Result<f64, Box<dyn std::error::Error>
     if p.len() != q.len() {
         return Err("Probability vectors must have same length".into());
     }
-    
+
     let mut kl = 0.0;
     for i in 0..p.len() {
         if p[i] > 0.0 && q[i] > 0.0 {
@@ -851,7 +873,7 @@ fn kl_divergence(p: &[f64], q: &[f64]) -> Result<f64, Box<dyn std::error::Error>
 fn hypergeometric_2f1(a: f64, b: f64, c: f64, z: f64) -> Result<f64, Box<dyn std::error::Error>> {
     // This would need to be implemented or use the actual function from the library
     // For now, returning a placeholder
-    Ok(1.0 + (a * b / c) * z)  // First-order approximation
+    Ok(1.0 + (a * b / c) * z) // First-order approximation
 }
 
 fn elliptic_k(k: f64) -> Result<f64, Box<dyn std::error::Error>> {
@@ -861,7 +883,7 @@ fn elliptic_k(k: f64) -> Result<f64, Box<dyn std::error::Error>> {
 }
 
 fn elliptic_e(k: f64) -> Result<f64, Box<dyn std::error::Error>> {
-    // Complete elliptic integral of the second kind  
+    // Complete elliptic integral of the second kind
     // Placeholder implementation
     Ok(PI / 2.0 * hypergeometric_2f1(-0.5, 0.5, 1.0, k * k)?)
 }
@@ -872,7 +894,7 @@ fn wright_phi(alpha: f64, beta: f64, z: f64) -> Result<f64, Box<dyn std::error::
     let mut sum = 0.0;
     let mut term = 1.0 / gamma(beta);
     sum += term;
-    
+
     for n in 1..20 {
         term *= z / (n as f64 * gamma(alpha * n as f64 + beta));
         sum += term;

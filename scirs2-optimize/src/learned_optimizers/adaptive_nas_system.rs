@@ -299,6 +299,7 @@ impl AdaptiveNASSystem {
     pub fn new(config: LearnedOptimizationConfig) -> Self {
         let vocabulary = ArchitectureVocabulary::new();
         let controller = ArchitectureController::new(&vocabulary, config.hidden_size);
+        let hidden_size = config.hidden_size;
         
         Self {
             config,
@@ -307,7 +308,7 @@ impl AdaptiveNASSystem {
             controller,
             meta_state: MetaOptimizerState {
                 meta_params: Array1::zeros(100),
-                network_weights: Array2::zeros((config.hidden_size, config.hidden_size)),
+                network_weights: Array2::zeros((hidden_size, hidden_size)),
                 performance_history: Vec::new(),
                 adaptation_stats: super::AdaptationStatistics::default(),
                 episode: 0,

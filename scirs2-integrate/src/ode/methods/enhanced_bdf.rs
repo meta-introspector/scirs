@@ -226,7 +226,7 @@ where
 
         // Predict initial value using extrapolation from previous points
         let y_pred = if hist_values.len() > 1 {
-            extrapolate(&hist_times, &hist_values, next_t)
+            extrapolate(&hist_times, &hist_values, next_t)?
         } else {
             y.clone()
         };

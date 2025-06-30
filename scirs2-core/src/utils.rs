@@ -2,10 +2,10 @@
 //!
 //! This module provides common utility functions used throughout ``SciRS2``.
 
+use crate::error::{CoreError, CoreResult, ErrorContext};
 use ndarray::{Array, Array1, Array2, ArrayBase, Data, Dimension};
 use num_traits::{Float, FromPrimitive, Num, NumCast};
 use std::fmt::Debug;
-use crate::error::{CoreError, CoreResult, ErrorContext};
 
 /// Checks if two floating-point values are approximately equal
 ///
@@ -65,7 +65,7 @@ pub fn is_close<F: Float>(a: F, b: F, abs_tol: F, rel_tol: F) -> bool {
 #[must_use]
 pub fn points_equal<T>(point1: &[T], point2: &[T], tol: Option<T>) -> bool
 where
-    T: PartialOrd + std::ops::Sub<Output = T> + Copy + FromPrimitive,
+    T: PartialOrd + std::ops::Sub<Output = T> + Copy + FromPrimitive + num_traits::Zero,
 {
     // Check for empty arrays first
     if point1.is_empty() || point2.is_empty() {
@@ -83,7 +83,7 @@ where
                     // If even zero conversion fails, use zero trait method
                     T::zero()
                 })
-            },
+            }
         },
     };
 
@@ -133,7 +133,7 @@ where
     S1: Data<Elem = T>,
     S2: Data<Elem = T>,
     D: Dimension,
-    T: PartialOrd + std::ops::Sub<Output = T> + Copy + FromPrimitive,
+    T: PartialOrd + std::ops::Sub<Output = T> + Copy + FromPrimitive + num_traits::Zero,
 {
     if array1.shape() != array2.shape() {
         return false;

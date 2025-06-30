@@ -3,12 +3,10 @@
 //! Defines the search space of possible optimizer architectures,
 //! including components, connections, and constraints.
 
-use ndarray::{Array1, Array2, ArrayBase, Data, Dimension};
 use num_traits::Float;
-use std::collections::{HashMap, VecDeque};
+use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 
-use crate::error::OptimizerError;
 
 /// Complete optimizer architecture representation
 #[derive(Debug, Clone, Serialize, Deserialize)]

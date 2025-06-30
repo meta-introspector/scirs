@@ -4,13 +4,12 @@
 //! update optimization parameters. The LSTM learns optimization strategies through
 //! meta-learning, enabling automatic discovery of effective optimization patterns.
 
-use ndarray::{s, Array, Array1, Array2, ArrayBase, Data, DataMut, Dimension};
+use ndarray::{s, Array, Array1, Array2, ArrayBase, Data, Dimension};
 use num_traits::Float;
-use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha20Rng;
 use std::collections::{HashMap, VecDeque};
 
-use super::{LearnedOptimizerConfig, MetaOptimizationStrategy, NeuralOptimizerType};
+use super::{LearnedOptimizerConfig, MetaOptimizationStrategy};
 use crate::error::OptimizerError;
 use crate::optimizers::Optimizer;
 

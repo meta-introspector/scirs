@@ -13,6 +13,12 @@ use serde_json;
 #[cfg(feature = "cuda")]
 pub mod cuda;
 
+#[cfg(feature = "opencl")]
+pub mod opencl;
+
+#[cfg(feature = "wgpu_backend")]
+pub mod wgpu;
+
 #[cfg(all(feature = "metal", target_os = "macos"))]
 pub mod metal;
 
@@ -22,6 +28,12 @@ pub mod metal_mps;
 // Re-export backend implementations
 #[cfg(feature = "cuda")]
 pub use cuda::{get_optimizer_kernels, CudaContext};
+
+#[cfg(feature = "opencl")]
+pub use opencl::OpenCLContext;
+
+#[cfg(feature = "wgpu_backend")]
+pub use wgpu::WebGPUContext;
 
 #[cfg(all(feature = "metal", target_os = "macos"))]
 pub use metal::{MetalBufferOptions, MetalContext, MetalStorageMode};

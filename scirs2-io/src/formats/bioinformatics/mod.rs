@@ -35,6 +35,9 @@
 //! # Ok::<(), scirs2_io::error::IoError>(())
 //! ```
 
+#![allow(dead_code)]
+#![allow(missing_docs)]
+
 use crate::error::{IoError, Result};
 use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Write};
@@ -108,6 +111,7 @@ impl FastaRecord {
 pub struct FastaReader {
     reader: BufReader<File>,
     line_buffer: String,
+    lookahead: Option<String>,
 }
 
 impl FastaReader {
@@ -118,6 +122,7 @@ impl FastaReader {
         Ok(Self {
             reader: BufReader::new(file),
             line_buffer: String::new(),
+            lookahead: None,
         })
     }
 
@@ -130,21 +135,26 @@ impl FastaReader {
     fn read_record(&mut self) -> Result<Option<FastaRecord>> {
         self.line_buffer.clear();
 
-        // Find the next header line
-        loop {
-            if self
-                .reader
-                .read_line(&mut self.line_buffer)
-                .map_err(|e| IoError::ParseError(format!("Failed to read line: {}", e)))?
-                == 0
-            {
-                return Ok(None); // EOF
-            }
+        // Check if we have a lookahead line (next header)
+        if let Some(lookahead) = self.lookahead.take() {
+            self.line_buffer = lookahead;
+        } else {
+            // Find the next header line
+            loop {
+                if self
+                    .reader
+                    .read_line(&mut self.line_buffer)
+                    .map_err(|e| IoError::ParseError(format!("Failed to read line: {}", e)))?
+                    == 0
+                {
+                    return Ok(None); // EOF
+                }
 
-            if self.line_buffer.starts_with('>') {
-                break;
+                if self.line_buffer.starts_with('>') {
+                    break;
+                }
+                self.line_buffer.clear();
             }
-            self.line_buffer.clear();
         }
 
         // Parse header
@@ -169,8 +179,8 @@ impl FastaReader {
             if bytes_read == 0 || self.line_buffer.starts_with('>') {
                 // Reached next record or EOF
                 if self.line_buffer.starts_with('>') {
-                    // Put back the header line for the next iteration
-                    // This is a bit hacky but works for our use case
+                    // Store the header line for the next iteration
+                    self.lookahead = Some(self.line_buffer.clone());
                 }
                 break;
             }
@@ -591,7 +601,7 @@ pub fn count_fasta_sequences<P: AsRef<Path>>(path: P) -> Result<usize> {
 
     let count = reader
         .lines()
-        .filter_map(|line| line.ok())
+        .map_while(|result| result.ok())
         .filter(|line| line.starts_with('>'))
         .count();
 

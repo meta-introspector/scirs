@@ -19,7 +19,7 @@
 //! cargo run --example advanced_neural_vision_demo --features="simd,parallel,gpu"
 //! ```
 
-use ndarray::{Array1, Array2, Array3};
+use ndarray::{Array1, Array2};
 use scirs2_vision::{
     error::Result,
     feature::{

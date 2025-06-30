@@ -3,7 +3,7 @@
 //! Implements various controllers for generating and managing optimizer architectures
 //! during the search process.
 
-use ndarray::{Array1, Array2, ArrayBase, Data, Dimension};
+use ndarray::{Array1, Array2, ArrayBase, Data, Dimension, s};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex};

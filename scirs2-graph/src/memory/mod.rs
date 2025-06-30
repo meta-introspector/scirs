@@ -38,7 +38,7 @@ pub struct MemoryProfiler;
 
 impl MemoryProfiler {
     /// Calculate memory statistics for an undirected graph
-    pub fn profile_graph<N, E, Ix>(graph: &Graph<N, E, Ix>) -> MemoryStats 
+    pub fn profile_graph<N, E, Ix>(graph: &Graph<N, E, Ix>) -> MemoryStats
     where
         N: crate::base::Node,
         E: crate::base::EdgeWeight,
@@ -48,7 +48,8 @@ impl MemoryProfiler {
         let edge_count = graph.edge_count();
 
         // Calculate node storage - nodes are stored with their data
-        let node_bytes = node_count * (mem::size_of::<N>() + mem::size_of::<petgraph::graph::NodeIndex<Ix>>()) 
+        let node_bytes = node_count
+            * (mem::size_of::<N>() + mem::size_of::<petgraph::graph::NodeIndex<Ix>>())
             + mem::size_of::<std::collections::HashMap<N, petgraph::graph::NodeIndex<Ix>>>();
 
         // Calculate adjacency list storage based on actual graph structure
@@ -87,7 +88,7 @@ impl MemoryProfiler {
     }
 
     /// Calculate memory statistics for a directed graph
-    pub fn profile_digraph<N, E, Ix>(graph: &DiGraph<N, E, Ix>) -> MemoryStats 
+    pub fn profile_digraph<N, E, Ix>(graph: &DiGraph<N, E, Ix>) -> MemoryStats
     where
         N: crate::base::Node,
         E: crate::base::EdgeWeight,
@@ -97,7 +98,8 @@ impl MemoryProfiler {
         let edge_count = graph.edge_count();
 
         // Similar to undirected but with separate in/out adjacency lists
-        let node_bytes = node_count * (mem::size_of::<N>() + mem::size_of::<petgraph::graph::NodeIndex<Ix>>()) 
+        let node_bytes = node_count
+            * (mem::size_of::<N>() + mem::size_of::<petgraph::graph::NodeIndex<Ix>>())
             + mem::size_of::<std::collections::HashMap<N, petgraph::graph::NodeIndex<Ix>>>();
 
         // Both in-edges and out-edges storage - directed graphs have separate lists
@@ -105,11 +107,13 @@ impl MemoryProfiler {
         for node in graph.nodes() {
             // Count successors (outgoing edges)
             if let Ok(successors) = graph.successors(node) {
-                adjacency_bytes += successors.len() * mem::size_of::<E>() + mem::size_of::<Vec<E>>();
+                adjacency_bytes +=
+                    successors.len() * mem::size_of::<E>() + mem::size_of::<Vec<E>>();
             }
-            // Count predecessors (incoming edges) 
+            // Count predecessors (incoming edges)
             if let Ok(predecessors) = graph.predecessors(node) {
-                adjacency_bytes += predecessors.len() * mem::size_of::<E>() + mem::size_of::<Vec<E>>();
+                adjacency_bytes +=
+                    predecessors.len() * mem::size_of::<E>() + mem::size_of::<Vec<E>>();
             }
         }
 
@@ -164,7 +168,7 @@ impl MemoryProfiler {
     }
 
     /// Analyze memory fragmentation in the graph
-    pub fn analyze_fragmentation<N, E, Ix>(graph: &Graph<N, E, Ix>) -> FragmentationReport 
+    pub fn analyze_fragmentation<N, E, Ix>(graph: &Graph<N, E, Ix>) -> FragmentationReport
     where
         N: crate::base::Node,
         E: crate::base::EdgeWeight,

@@ -63,6 +63,8 @@ impl<T: StreamingObjective> RealTimeEstimator<T> {
     ) -> Self {
         let n_params = initial_parameters.len();
         let initial_covariance = Array2::eye(n_params) * initial_covariance_scale;
+        let forgetting_factor = config.forgetting_factor;
+        let window_size = config.window_size;
         
         Self {
             parameters: initial_parameters,
@@ -71,11 +73,11 @@ impl<T: StreamingObjective> RealTimeEstimator<T> {
             stats: StreamingStats::default(),
             method,
             covariance: initial_covariance,
-            forgetting_factor: config.forgetting_factor,
+            forgetting_factor,
             process_noise: 1e-6,
             measurement_noise: 1e-3,
             last_update_time: None,
-            window_data: std::collections::VecDeque::with_capacity(config.window_size),
+            window_data: std::collections::VecDeque::with_capacity(window_size),
             max_processing_time: Duration::from_millis(10), // 10ms max for real-time
         }
     }

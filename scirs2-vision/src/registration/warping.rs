@@ -4,9 +4,9 @@
 //! interpolation methods and geometric transformations.
 
 use crate::error::{Result, VisionError};
-use crate::registration::{identity_transform, transform_point, Point2D, TransformMatrix, invert_3x3_matrix};
+use crate::registration::{identity_transform, transform_point, Point2D, TransformMatrix};
 use image::{DynamicImage, GenericImageView, GrayImage, Luma, Rgb, RgbImage};
-use ndarray::Array2;
+use ndarray::{Array1, Array2, Array3};
 use std::time::{Duration, Instant};
 
 /// Interpolation method for image resampling
@@ -91,73 +91,64 @@ pub fn warp_image_gpu(
     interpolation: InterpolationMethod,
     boundary: BoundaryMethod,
 ) -> Result<GrayImage> {
-    use scirs2_core::gpu::{GpuContext, GpuBackend, GpuBuffer, GpuOperation, AutoDevice};
-    use scirs2_core::simd_ops::PlatformCapabilities;
-    
+    use scirs2_core::gpu::{GpuBackend, GpuContext};
+
     let (out_width, out_height) = output_size;
     let (in_width, in_height) = image.dimensions();
-    
+
     // Check if GPU acceleration is worthwhile (large images benefit more)
     let total_pixels = (out_width * out_height) as usize;
     if total_pixels < 256 * 256 {
         // For small images, CPU is often faster due to GPU overhead
         return warp_image_cpu(image, transform, output_size, interpolation, boundary);
     }
-    
+
     // Try to get GPU context
-    let gpu_context = match GpuContext::new(AutoDevice) {
+    let gpu_context = match GpuContext::new(GpuBackend::Cpu) {
         Ok(ctx) => ctx,
         Err(_) => {
             // GPU not available, fallback to CPU
             return warp_image_cpu(image, transform, output_size, interpolation, boundary);
         }
     };
-    
+
     // Convert image to f32 array for GPU processing
-    let input_data: Vec<f32> = image.pixels()
-        .map(|p| p.0[0] as f32 / 255.0)
-        .collect();
-    
+    let input_data: Vec<f32> = image.pixels().map(|p| p.0[0] as f32 / 255.0).collect();
+
     // Create GPU buffers
-    let input_buffer = gpu_context.create_buffer(&input_data)
-        .map_err(|e| VisionError::OperationError(format!("Failed to create input buffer: {}", e)))?;
-    
-    let output_buffer = gpu_context.create_buffer_zeros::<f32>(total_pixels)
-        .map_err(|e| VisionError::OperationError(format!("Failed to create output buffer: {}", e)))?;
-    
+    let _input_buffer = gpu_context.create_buffer_from_slice(&input_data);
+
+    let _output_buffer = gpu_context.create_buffer::<f32>(total_pixels);
+
     // Create transformation matrix buffer
-    let transform_flat: Vec<f32> = transform.iter().flatten().map(|&x| x as f32).collect();
-    let transform_buffer = gpu_context.create_buffer(&transform_flat)
-        .map_err(|e| VisionError::OperationError(format!("Failed to create transform buffer: {}", e)))?;
-    
+    let transform_flat: Vec<f32> = transform.iter().map(|&x| x as f32).collect();
+    let _transform_buffer = gpu_context.create_buffer_from_slice(&transform_flat);
+
     // Generate GPU operation for image warping
-    let operation = create_image_warp_operation(
-        in_width, in_height, out_width, out_height,
-        interpolation, boundary
+    let _operation = create_image_warp_operation(
+        in_width,
+        in_height,
+        out_width,
+        out_height,
+        interpolation,
+        boundary,
     )?;
+
+    // Note: GPU kernel execution infrastructure is not yet fully implemented in scirs2-core
+    // The current implementation generates shader code but cannot execute it
+    // Fall back to CPU implementation for now
     
-    // Execute GPU kernel
-    gpu_context.execute_operation(
-        &operation,
-        &[&input_buffer, &transform_buffer],
-        &[&output_buffer],
-        (out_width as usize, out_height as usize, 1)
-    ).map_err(|e| VisionError::OperationError(format!("GPU operation failed: {}", e)))?;
-    
-    // Read back results from GPU
-    let output_data = output_buffer.to_host()
-        .map_err(|e| VisionError::OperationError(format!("Failed to read GPU results: {}", e)))?;
-    
-    // Convert back to u8 and create output image
-    let mut output = GrayImage::new(out_width, out_height);
-    for (i, &value) in output_data.iter().enumerate() {
-        let x = (i % (out_width as usize)) as u32;
-        let y = (i / (out_width as usize)) as u32;
-        let pixel_value = (value.clamp(0.0, 1.0) * 255.0) as u8;
-        output.put_pixel(x, y, Luma([pixel_value]));
+    // Log the attempted GPU operation for debugging
+    #[cfg(debug_assertions)]
+    {
+        eprintln!(
+            "GPU warping attempted but falling back to CPU: operation_len={}",
+            _operation.len()
+        );
     }
     
-    Ok(output)
+    // Return to CPU implementation with proper error context
+    warp_image_cpu(image, transform, output_size, interpolation, boundary)
 }
 
 /// CPU fallback for image warping
@@ -237,9 +228,9 @@ fn create_image_warp_operation(
     out_height: u32,
     interpolation: InterpolationMethod,
     boundary: BoundaryMethod,
-) -> Result<scirs2_core::gpu::GpuOperation> {
-    use scirs2_core::gpu::GpuOperation;
-    
+) -> Result<String> {
+    // Note: GpuOperation does not exist in current scirs2_core, returning shader code as string
+
     // Generate compute shader code based on interpolation and boundary methods
     let shader_code = generate_warp_shader_code(
         in_width,
@@ -250,11 +241,8 @@ fn create_image_warp_operation(
         boundary,
     );
 
-    // Create GPU operation with the generated shader
-    let operation = GpuOperation::new("image_warp", &shader_code)
-        .map_err(|e| VisionError::OperationError(format!("Failed to create GPU operation: {}", e)))?;
-    
-    Ok(operation)
+    // Return the generated shader code (GPU operation creation not available)
+    Ok(shader_code)
 }
 
 /// Generate compute shader code for image warping
@@ -286,8 +274,8 @@ fn generate_warp_shader_code(
     };
 
     let boundary_code = match boundary {
-        BoundaryMethod::Zero => "return 0.0;",
-        BoundaryMethod::Constant(value) => &format!("return {};", value),
+        BoundaryMethod::Zero => "return 0.0;".to_string(),
+        BoundaryMethod::Constant(value) => format!("return {};", value),
         BoundaryMethod::Reflect => generate_reflect_boundary_code(),
         BoundaryMethod::Wrap => generate_wrap_boundary_code(),
         BoundaryMethod::Clamp => generate_clamp_boundary_code(),
@@ -351,9 +339,7 @@ fn generate_warp_shader_code(
             output_data[output_idx] = value;
         }}
         "#,
-        in_width, in_height, out_width, out_height,
-        boundary_code,
-        interpolation_code
+        in_width, in_height, out_width, out_height, boundary_code, interpolation_code
     )
 }
 
@@ -365,7 +351,8 @@ fn generate_nearest_neighbor_code() -> String {
         int iy = int(round(y));
         return sample_boundary(ix, iy);
     }
-    "#.to_string()
+    "#
+    .to_string()
 }
 
 /// Generate bilinear interpolation shader code
@@ -390,7 +377,8 @@ fn generate_bilinear_code() -> String {
         
         return mix(v0, v1, fy);
     }
-    "#.to_string()
+    "#
+    .to_string()
 }
 
 /// Generate bicubic interpolation shader code
@@ -425,7 +413,8 @@ fn generate_bicubic_code() -> String {
 
         return clamp(sum, 0.0, 1.0);
     }
-    "#.to_string()
+    "#
+    .to_string()
 }
 
 /// Generate reflection boundary handling code
@@ -446,7 +435,8 @@ fn generate_reflect_boundary_code() -> String {
     nx = clamp(nx, 0, int(IN_WIDTH) - 1);
     ny = clamp(ny, 0, int(IN_HEIGHT) - 1);
     return input_data[ny * int(IN_WIDTH) + nx];
-    "#.to_string()
+    "#
+    .to_string()
 }
 
 /// Generate wrap boundary handling code
@@ -455,7 +445,8 @@ fn generate_wrap_boundary_code() -> String {
     int nx = ((x % int(IN_WIDTH)) + int(IN_WIDTH)) % int(IN_WIDTH);
     int ny = ((y % int(IN_HEIGHT)) + int(IN_HEIGHT)) % int(IN_HEIGHT);
     return input_data[ny * int(IN_WIDTH) + nx];
-    "#.to_string()
+    "#
+    .to_string()
 }
 
 /// Generate clamp boundary handling code
@@ -464,7 +455,8 @@ fn generate_clamp_boundary_code() -> String {
     int nx = clamp(x, 0, int(IN_WIDTH) - 1);
     int ny = clamp(y, 0, int(IN_HEIGHT) - 1);
     return input_data[ny * int(IN_WIDTH) + nx];
-    "#.to_string()
+    "#
+    .to_string()
 }
 
 /// Sample a grayscale image at fractional coordinates
@@ -588,63 +580,6 @@ pub fn warp_rgb_image(
     }
 
     Ok(output)
-}
-
-/// Sample a grayscale image at fractional coordinates
-fn sample_image(
-    image: &GrayImage,
-    x: f32,
-    y: f32,
-    interpolation: InterpolationMethod,
-    boundary: BoundaryMethod,
-    width: u32,
-    height: u32,
-) -> f32 {
-    match interpolation {
-        InterpolationMethod::NearestNeighbor => {
-            let ix = x.round() as i32;
-            let iy = y.round() as i32;
-            get_pixel_value(image, ix, iy, boundary, width, height)
-        }
-        InterpolationMethod::Bilinear => {
-            let x0 = x.floor() as i32;
-            let y0 = y.floor() as i32;
-            let x1 = x0 + 1;
-            let y1 = y0 + 1;
-
-            let fx = x - x0 as f32;
-            let fy = y - y0 as f32;
-
-            let v00 = get_pixel_value(image, x0, y0, boundary, width, height);
-            let v01 = get_pixel_value(image, x0, y1, boundary, width, height);
-            let v10 = get_pixel_value(image, x1, y0, boundary, width, height);
-            let v11 = get_pixel_value(image, x1, y1, boundary, width, height);
-
-            let v0 = v00 * (1.0 - fx) + v10 * fx;
-            let v1 = v01 * (1.0 - fx) + v11 * fx;
-
-            v0 * (1.0 - fy) + v1 * fy
-        }
-        InterpolationMethod::Bicubic => {
-            // Simplified bicubic interpolation
-            let x0 = x.floor() as i32;
-            let y0 = y.floor() as i32;
-
-            let fx = x - x0 as f32;
-            let fy = y - y0 as f32;
-
-            let mut sum = 0.0;
-            for j in -1..3 {
-                for i in -1..3 {
-                    let weight = cubic_kernel(fx - i as f32) * cubic_kernel(fy - j as f32);
-                    let value = get_pixel_value(image, x0 + i, y0 + j, boundary, width, height);
-                    sum += weight * value;
-                }
-            }
-
-            sum.clamp(0.0, 255.0)
-        }
-    }
 }
 
 /// Sample an RGB image at fractional coordinates for a specific channel
@@ -1295,16 +1230,13 @@ pub fn stitch_images_streaming(
     }
 
     let (_width, _height) = output_size;
-    
+
     // Configure tile-based processing parameters
     let tile_config = TileConfig::for_output_size(output_size);
-    
+
     // Initialize streaming panorama processor
-    let mut panorama_processor = StreamingPanoramaProcessor::new(
-        output_size,
-        tile_config,
-        BlendingMode::MultiBandBlending,
-    )?;
+    let mut panorama_processor =
+        StreamingPanoramaProcessor::new(output_size, tile_config, BlendingMode::MultiBandBlending)?;
 
     // Process each image in streaming fashion
     for (image, transform) in images.iter().zip(transforms.iter()) {
@@ -1411,21 +1343,21 @@ impl TileConfig {
     /// * Optimal tile configuration
     pub fn for_output_size(output_size: (u32, u32)) -> Self {
         let (width, height) = output_size;
-        
+
         // Target tile size based on memory constraints (aim for ~64MB per tile)
         let target_tile_pixels = 16_777_216; // 16 megapixels
         let tile_dimension = (target_tile_pixels as f64).sqrt() as u32;
-        
+
         // Ensure tile size is reasonable
         let tile_width = tile_dimension.min(width).max(512);
         let tile_height = tile_dimension.min(height).max(512);
-        
-        let tiles_x = (width + tile_width - 1) / tile_width;
-        let tiles_y = (height + tile_height - 1) / tile_height;
-        
+
+        let tiles_x = width.div_ceil(tile_width);
+        let tiles_y = height.div_ceil(tile_height);
+
         let overlap = 64; // 64 pixel overlap for blending
         let memory_budget = 1_073_741_824; // 1GB default budget
-        
+
         Self {
             tile_size: (tile_width, tile_height),
             overlap,
@@ -1473,7 +1405,7 @@ impl StreamingPanoramaProcessor {
         blending_mode: BlendingMode,
     ) -> Result<Self> {
         let tile_cache = TileCache::new(&tile_config)?;
-        
+
         Ok(Self {
             output_size,
             tile_config,
@@ -1499,14 +1431,14 @@ impl StreamingPanoramaProcessor {
         transform: &TransformMatrix,
     ) -> Result<()> {
         let rgb_image = image.to_rgb8();
-        
+
         // Process image tile by tile
         for tile_y in 0..self.tile_config.tile_count.1 {
             for tile_x in 0..self.tile_config.tile_count.0 {
                 self.process_tile_for_image(tile_x, tile_y, &rgb_image, transform)?;
             }
         }
-        
+
         self.processed_images += 1;
         Ok(())
     }
@@ -1532,13 +1464,13 @@ impl StreamingPanoramaProcessor {
     ) -> Result<()> {
         // Calculate tile bounds
         let tile_bounds = self.calculate_tile_bounds(tile_x, tile_y);
-        
+
         // Warp only the relevant portion of the image for this tile
         let warped_tile = self.warp_image_for_tile(image, transform, &tile_bounds)?;
-        
+
         // Blend with existing tile data
         self.blend_tile(tile_x, tile_y, &warped_tile)?;
-        
+
         Ok(())
     }
 
@@ -1555,14 +1487,14 @@ impl StreamingPanoramaProcessor {
     fn calculate_tile_bounds(&self, tile_x: u32, tile_y: u32) -> (u32, u32, u32, u32) {
         let (tile_width, tile_height) = self.tile_config.tile_size;
         let overlap = self.tile_config.overlap;
-        
+
         let start_x = tile_x * tile_width;
         let start_y = tile_y * tile_height;
-        
+
         // Add overlap, but clamp to image bounds
         let actual_width = (tile_width + overlap).min(self.output_size.0 - start_x);
         let actual_height = (tile_height + overlap).min(self.output_size.1 - start_y);
-        
+
         (start_x, start_y, actual_width, actual_height)
     }
 
@@ -1584,10 +1516,10 @@ impl StreamingPanoramaProcessor {
         tile_bounds: &(u32, u32, u32, u32),
     ) -> Result<RgbImage> {
         let (tile_x, tile_y, tile_width, tile_height) = *tile_bounds;
-        
+
         // Create a sub-transformation that maps tile coordinates to image coordinates
         let tile_transform = self.create_tile_transform(transform, tile_x, tile_y);
-        
+
         // Warp only the tile region
         warp_rgb_image(
             image,
@@ -1619,7 +1551,7 @@ impl StreamingPanoramaProcessor {
         let mut tile_offset = identity_transform();
         tile_offset[[0, 2]] = tile_x as f64;
         tile_offset[[1, 2]] = tile_y as f64;
-        
+
         // Combine transforms: tile_offset * base_transform
         matrix_multiply(&tile_offset, base_transform).unwrap_or_else(|_| base_transform.clone())
     }
@@ -1637,30 +1569,34 @@ impl StreamingPanoramaProcessor {
     /// * Result indicating success or failure
     fn blend_tile(&mut self, tile_x: u32, tile_y: u32, warped_tile: &RgbImage) -> Result<()> {
         match self.blending_mode {
-            BlendingMode::Linear => {
-                self.blend_tile_linear(tile_x, tile_y, warped_tile)
-            }
+            BlendingMode::Linear => self.blend_tile_linear(tile_x, tile_y, warped_tile),
             BlendingMode::MultiBandBlending => {
                 self.blend_tile_multiband(tile_x, tile_y, warped_tile)
             }
-            BlendingMode::GraphCutSeaming => {
-                self.blend_tile_graphcut(tile_x, tile_y, warped_tile)
-            }
+            BlendingMode::GraphCutSeaming => self.blend_tile_graphcut(tile_x, tile_y, warped_tile),
         }
     }
 
     /// Linear blending for tile
-    fn blend_tile_linear(&mut self, tile_x: u32, tile_y: u32, warped_tile: &RgbImage) -> Result<()> {
-        let tile_id = TileId { x: tile_x, y: tile_y };
+    fn blend_tile_linear(
+        &mut self,
+        tile_x: u32,
+        tile_y: u32,
+        warped_tile: &RgbImage,
+    ) -> Result<()> {
+        let tile_id = TileId {
+            x: tile_x,
+            y: tile_y,
+        };
         let existing_tile = self.tile_cache.get_or_create_tile(tile_id)?;
-        
+
         // Simple averaging blend
         let (tile_width, tile_height) = warped_tile.dimensions();
         for y in 0..tile_height {
             for x in 0..tile_width {
                 let new_pixel = warped_tile.get_pixel(x, y);
                 let existing_pixel = existing_tile.get_pixel_mut(x, y);
-                
+
                 // Check if new pixel has valid data
                 if new_pixel[0] > 0 || new_pixel[1] > 0 || new_pixel[2] > 0 {
                     for c in 0..3 {
@@ -1676,19 +1612,29 @@ impl StreamingPanoramaProcessor {
                 }
             }
         }
-        
+
         Ok(())
     }
 
     /// Multi-band blending for tile (simplified implementation)
-    fn blend_tile_multiband(&mut self, tile_x: u32, tile_y: u32, warped_tile: &RgbImage) -> Result<()> {
+    fn blend_tile_multiband(
+        &mut self,
+        tile_x: u32,
+        tile_y: u32,
+        warped_tile: &RgbImage,
+    ) -> Result<()> {
         // For now, use linear blending as a placeholder
         // In a full implementation, this would use Laplacian pyramids
         self.blend_tile_linear(tile_x, tile_y, warped_tile)
     }
 
     /// Graph-cut seaming for tile (simplified implementation)
-    fn blend_tile_graphcut(&mut self, tile_x: u32, tile_y: u32, warped_tile: &RgbImage) -> Result<()> {
+    fn blend_tile_graphcut(
+        &mut self,
+        tile_x: u32,
+        tile_y: u32,
+        warped_tile: &RgbImage,
+    ) -> Result<()> {
         // For now, use linear blending as a placeholder
         // In a full implementation, this would use graph-cut optimization
         self.blend_tile_linear(tile_x, tile_y, warped_tile)
@@ -1703,16 +1649,19 @@ impl StreamingPanoramaProcessor {
         // Assemble tiles into final panorama
         let (width, height) = self.output_size;
         let mut output = RgbImage::new(width, height);
-        
+
         for tile_y in 0..self.tile_config.tile_count.1 {
             for tile_x in 0..self.tile_config.tile_count.0 {
-                let tile_id = TileId { x: tile_x, y: tile_y };
+                let tile_id = TileId {
+                    x: tile_x,
+                    y: tile_y,
+                };
                 if let Ok(tile) = self.tile_cache.get_tile(tile_id) {
-                    self.copy_tile_to_output(&tile, tile_x, tile_y, &mut output)?;
+                    self.copy_tile_to_output(tile, tile_x, tile_y, &mut output)?;
                 }
             }
         }
-        
+
         Ok(DynamicImage::ImageRgb8(output))
     }
 
@@ -1737,19 +1686,19 @@ impl StreamingPanoramaProcessor {
     ) -> Result<()> {
         let tile_bounds = self.calculate_tile_bounds(tile_x, tile_y);
         let (start_x, start_y, tile_width, tile_height) = tile_bounds;
-        
+
         for y in 0..tile_height {
             for x in 0..tile_width {
                 let output_x = start_x + x;
                 let output_y = start_y + y;
-                
+
                 if output_x < self.output_size.0 && output_y < self.output_size.1 {
                     let pixel = tile.get_pixel(x, y);
                     output.put_pixel(output_x, output_y, *pixel);
                 }
             }
         }
-        
+
         Ok(())
     }
 }
@@ -1795,21 +1744,22 @@ impl TileCache {
     /// # Returns
     ///
     /// * Result containing mutable reference to the tile
+    #[allow(clippy::map_entry)]
     fn get_or_create_tile(&mut self, tile_id: TileId) -> Result<&mut RgbImage> {
         if !self.tiles.contains_key(&tile_id) {
             // Check memory budget and evict if necessary
             self.ensure_memory_budget()?;
-            
+
             // Create new tile
             let (tile_width, tile_height) = self.config.tile_size;
             let tile = RgbImage::new(tile_width, tile_height);
-            
+
             let tile_memory = (tile_width * tile_height * 3) as usize;
             self.memory_usage += tile_memory;
-            
+
             self.tiles.insert(tile_id, tile);
         }
-        
+
         Ok(self.tiles.get_mut(&tile_id).unwrap())
     }
 
@@ -1823,9 +1773,9 @@ impl TileCache {
     ///
     /// * Result containing reference to the tile
     fn get_tile(&self, tile_id: TileId) -> Result<&RgbImage> {
-        self.tiles.get(&tile_id).ok_or_else(|| {
-            VisionError::OperationError(format!("Tile {:?} not found", tile_id))
-        })
+        self.tiles
+            .get(&tile_id)
+            .ok_or_else(|| VisionError::OperationError(format!("Tile {:?} not found", tile_id)))
     }
 
     /// Ensure memory usage stays within budget
@@ -1841,14 +1791,14 @@ impl TileCache {
                 let tile_id = *tile_id;
                 let (tile_width, tile_height) = self.config.tile_size;
                 let tile_memory = (tile_width * tile_height * 3) as usize;
-                
+
                 self.tiles.remove(&tile_id);
                 self.memory_usage = self.memory_usage.saturating_sub(tile_memory);
             } else {
                 break;
             }
         }
-        
+
         Ok(())
     }
 }
@@ -1905,7 +1855,7 @@ fn invert_3x3_matrix(matrix: &TransformMatrix) -> Result<TransformMatrix> {
 /// - Disparity refinement with left-right consistency check
 /// - Hole filling and median filtering for robust depth maps
 /// - SIMD-optimized cost volume computation
-
+///
 /// Stereo matching parameters for depth map computation
 #[derive(Debug, Clone)]
 pub struct StereoMatchingParams {
@@ -2045,19 +1995,19 @@ pub fn compute_depth_map(
     params: &StereoMatchingParams,
 ) -> Result<DepthMapResult> {
     let start_time = Instant::now();
-    
+
     // Validate input images
     let (left_width, left_height) = left_image.dimensions();
     let (right_width, right_height) = right_image.dimensions();
-    
+
     if left_width != right_width || left_height != right_height {
         return Err(VisionError::InvalidParameter(
             "Stereo images must have the same dimensions".to_string(),
         ));
     }
 
-    let width = left_width as usize;
-    let height = left_height as usize;
+    let _width = left_width as usize;
+    let _height = left_height as usize;
 
     // Convert images to Array2 for processing
     let left_array = image_to_array2(left_image);
@@ -2092,7 +2042,7 @@ pub fn compute_depth_map(
 
     // Step 4: Post-processing
     let post_start = Instant::now();
-    
+
     // Left-right consistency check
     if params.lr_consistency_threshold > 0.0 {
         let right_disparity = compute_right_disparity(&left_array, &right_array, params)?;
@@ -2110,7 +2060,7 @@ pub fn compute_depth_map(
 
     // Hole filling and median filtering
     disparity_map = fill_holes_and_filter(&disparity_map, &params.sgm_params)?;
-    
+
     processing_times.post_processing = post_start.elapsed();
     processing_times.total_time = start_time.elapsed();
 
@@ -2153,66 +2103,100 @@ fn compute_cost_volume(
     right_image: &Array2<f32>,
     params: &StereoMatchingParams,
 ) -> Result<Array3<f32>> {
-    use scirs2_core::simd_ops::SimdUnifiedOps;
-    
+
     let (height, width) = left_image.dim();
     let num_disparities = (params.max_disparity - params.min_disparity + 1) as usize;
     let mut cost_volume = Array3::zeros((height, width, num_disparities));
-    
+
     let half_block = params.block_size / 2;
 
     // SIMD-optimized cost computation
     for d in 0..num_disparities {
         let disparity = params.min_disparity + d as i32;
-        
+
         for y in half_block..height - half_block {
             // Process multiple pixels in SIMD batches
             let mut x = half_block;
             while x < width - half_block - 8 {
                 let batch_size = (width - half_block - x).min(8);
                 let mut costs = Vec::with_capacity(batch_size);
-                
+
                 for i in 0..batch_size {
                     let xi = x + i;
                     let cost = match params.cost_function {
-                        MatchingCostFunction::SAD => {
-                            compute_sad_cost_simd(left_image, right_image, xi, y, disparity, params.block_size)?
-                        }
-                        MatchingCostFunction::SSD => {
-                            compute_ssd_cost_simd(left_image, right_image, xi, y, disparity, params.block_size)?
-                        }
-                        MatchingCostFunction::NCC => {
-                            compute_ncc_cost_simd(left_image, right_image, xi, y, disparity, params.block_size)?
-                        }
-                        MatchingCostFunction::Census => {
-                            compute_census_cost_simd(left_image, right_image, xi, y, disparity, params.block_size)?
-                        }
-                        MatchingCostFunction::MutualInformation => {
-                            compute_mi_cost_simd(left_image, right_image, xi, y, disparity, params.block_size)?
-                        }
-                        MatchingCostFunction::Hybrid => {
-                            compute_hybrid_cost_simd(left_image, right_image, xi, y, disparity, params.block_size)?
-                        }
+                        MatchingCostFunction::SAD => compute_sad_cost_simd(
+                            left_image,
+                            right_image,
+                            xi,
+                            y,
+                            disparity,
+                            params.block_size,
+                        )?,
+                        MatchingCostFunction::SSD => compute_ssd_cost_simd(
+                            left_image,
+                            right_image,
+                            xi,
+                            y,
+                            disparity,
+                            params.block_size,
+                        )?,
+                        MatchingCostFunction::NCC => compute_ncc_cost_simd(
+                            left_image,
+                            right_image,
+                            xi,
+                            y,
+                            disparity,
+                            params.block_size,
+                        )?,
+                        MatchingCostFunction::Census => compute_census_cost_simd(
+                            left_image,
+                            right_image,
+                            xi,
+                            y,
+                            disparity,
+                            params.block_size,
+                        )?,
+                        MatchingCostFunction::MutualInformation => compute_mi_cost_simd(
+                            left_image,
+                            right_image,
+                            xi,
+                            y,
+                            disparity,
+                            params.block_size,
+                        )?,
+                        MatchingCostFunction::Hybrid => compute_hybrid_cost_simd(
+                            left_image,
+                            right_image,
+                            xi,
+                            y,
+                            disparity,
+                            params.block_size,
+                        )?,
                     };
                     costs.push(cost);
                 }
-                
+
                 // Store costs
                 for (i, cost) in costs.iter().enumerate() {
                     if x + i < width - half_block {
                         cost_volume[[y, x + i, d]] = *cost;
                     }
                 }
-                
+
                 x += batch_size;
             }
-            
+
             // Handle remaining pixels
             while x < width - half_block {
                 let cost = match params.cost_function {
-                    MatchingCostFunction::SAD => {
-                        compute_sad_cost_simd(left_image, right_image, x, y, disparity, params.block_size)?
-                    }
+                    MatchingCostFunction::SAD => compute_sad_cost_simd(
+                        left_image,
+                        right_image,
+                        x,
+                        y,
+                        disparity,
+                        params.block_size,
+                    )?,
                     _ => 0.0, // Simplified for other cost functions
                 };
                 cost_volume[[y, x, d]] = cost;
@@ -2234,38 +2218,38 @@ fn compute_sad_cost_simd(
     block_size: usize,
 ) -> Result<f32> {
     use scirs2_core::simd_ops::SimdUnifiedOps;
-    
+
     let half_block = block_size / 2;
     let right_x = x as i32 - disparity;
-    
+
     if right_x < half_block as i32 || right_x >= (right_image.dim().1 - half_block) as i32 {
         return Ok(f32::INFINITY); // Invalid disparity
     }
 
     let mut total_cost = 0.0f32;
-    
+
     // SIMD-accelerated block comparison
     for dy in -(half_block as i32)..=(half_block as i32) {
         let ly = (y as i32 + dy) as usize;
         let ry = ly;
-        
+
         // Extract block rows for SIMD processing
         let left_row: Vec<f32> = (-(half_block as i32)..=(half_block as i32))
             .map(|dx| left_image[[ly, (x as i32 + dx) as usize]])
             .collect();
-        
+
         let right_row: Vec<f32> = (-(half_block as i32)..=(half_block as i32))
             .map(|dx| right_image[[ry, (right_x + dx) as usize]])
             .collect();
-        
+
         let left_array = Array1::from_vec(left_row);
         let right_array = Array1::from_vec(right_row);
-        
+
         // SIMD absolute difference
         let diff = f32::simd_sub(&left_array.view(), &right_array.view());
         let abs_diff = f32::simd_abs(&diff.view());
-        let row_sum = f32::simd_horizontal_sum(&abs_diff.view());
-        
+        let row_sum = f32::simd_sum(&abs_diff.view());
+
         total_cost += row_sum;
     }
 
@@ -2282,36 +2266,36 @@ fn compute_ssd_cost_simd(
     block_size: usize,
 ) -> Result<f32> {
     use scirs2_core::simd_ops::SimdUnifiedOps;
-    
+
     let half_block = block_size / 2;
     let right_x = x as i32 - disparity;
-    
+
     if right_x < half_block as i32 || right_x >= (right_image.dim().1 - half_block) as i32 {
         return Ok(f32::INFINITY);
     }
 
     let mut total_cost = 0.0f32;
-    
+
     for dy in -(half_block as i32)..=(half_block as i32) {
         let ly = (y as i32 + dy) as usize;
         let ry = ly;
-        
+
         let left_row: Vec<f32> = (-(half_block as i32)..=(half_block as i32))
             .map(|dx| left_image[[ly, (x as i32 + dx) as usize]])
             .collect();
-        
+
         let right_row: Vec<f32> = (-(half_block as i32)..=(half_block as i32))
             .map(|dx| right_image[[ry, (right_x + dx) as usize]])
             .collect();
-        
+
         let left_array = Array1::from_vec(left_row);
         let right_array = Array1::from_vec(right_row);
-        
+
         // SIMD squared difference
         let diff = f32::simd_sub(&left_array.view(), &right_array.view());
         let sq_diff = f32::simd_mul(&diff.view(), &diff.view());
-        let row_sum = f32::simd_horizontal_sum(&sq_diff.view());
-        
+        let row_sum = f32::simd_sum(&sq_diff.view());
+
         total_cost += row_sum;
     }
 
@@ -2328,10 +2312,10 @@ fn compute_ncc_cost_simd(
     block_size: usize,
 ) -> Result<f32> {
     use scirs2_core::simd_ops::SimdUnifiedOps;
-    
+
     let half_block = block_size / 2;
     let right_x = x as i32 - disparity;
-    
+
     if right_x < half_block as i32 || right_x >= (right_image.dim().1 - half_block) as i32 {
         return Ok(f32::INFINITY);
     }
@@ -2339,38 +2323,46 @@ fn compute_ncc_cost_simd(
     // Extract blocks
     let mut left_block = Vec::new();
     let mut right_block = Vec::new();
-    
+
     for dy in -(half_block as i32)..=(half_block as i32) {
         for dx in -(half_block as i32)..=(half_block as i32) {
             let ly = (y as i32 + dy) as usize;
             let lx = (x as i32 + dx) as usize;
             let ry = ly;
             let rx = (right_x + dx) as usize;
-            
+
             left_block.push(left_image[[ly, lx]]);
             right_block.push(right_image[[ry, rx]]);
         }
     }
-    
+
     let left_array = Array1::from_vec(left_block);
     let right_array = Array1::from_vec(right_block);
-    
+
     // SIMD NCC computation
-    let left_mean = f32::simd_horizontal_sum(&left_array.view()) / left_array.len() as f32;
-    let right_mean = f32::simd_horizontal_sum(&right_array.view()) / right_array.len() as f32;
-    
+    let left_mean = f32::simd_sum(&left_array.view()) / left_array.len() as f32;
+    let right_mean = f32::simd_sum(&right_array.view()) / right_array.len() as f32;
+
     let left_mean_array = Array1::from_elem(left_array.len(), left_mean);
     let right_mean_array = Array1::from_elem(right_array.len(), right_mean);
-    
+
     let left_centered = f32::simd_sub(&left_array.view(), &left_mean_array.view());
     let right_centered = f32::simd_sub(&right_array.view(), &right_mean_array.view());
-    
-    let numerator = f32::simd_horizontal_sum(&f32::simd_mul(&left_centered.view(), &right_centered.view()).view());
-    let left_norm = f32::simd_horizontal_sum(&f32::simd_mul(&left_centered.view(), &left_centered.view()).view()).sqrt();
-    let right_norm = f32::simd_horizontal_sum(&f32::simd_mul(&right_centered.view(), &right_centered.view()).view()).sqrt();
-    
+
+    let numerator = f32::simd_sum(
+        &f32::simd_mul(&left_centered.view(), &right_centered.view()).view(),
+    );
+    let left_norm = f32::simd_sum(
+        &f32::simd_mul(&left_centered.view(), &left_centered.view()).view(),
+    )
+    .sqrt();
+    let right_norm = f32::simd_sum(
+        &f32::simd_mul(&right_centered.view(), &right_centered.view()).view(),
+    )
+    .sqrt();
+
     let denominator = left_norm * right_norm;
-    
+
     if denominator > 1e-6 {
         let ncc = numerator / denominator;
         Ok(1.0 - ncc) // Convert correlation to cost (lower correlation = higher cost)
@@ -2390,7 +2382,7 @@ fn compute_census_cost_simd(
 ) -> Result<f32> {
     let half_block = block_size / 2;
     let right_x = x as i32 - disparity;
-    
+
     if right_x < half_block as i32 || right_x >= (right_image.dim().1 - half_block) as i32 {
         return Ok(f32::INFINITY);
     }
@@ -2398,10 +2390,10 @@ fn compute_census_cost_simd(
     // Compute Census transform for both blocks
     let left_census = compute_census_transform(left_image, x, y, block_size);
     let right_census = compute_census_transform(right_image, right_x as usize, y, block_size);
-    
+
     // Hamming distance between census transforms
     let hamming_distance = (left_census ^ right_census).count_ones() as f32;
-    
+
     Ok(hamming_distance)
 }
 
@@ -2411,23 +2403,23 @@ fn compute_census_transform(image: &Array2<f32>, x: usize, y: usize, block_size:
     let center_value = image[[y, x]];
     let mut census = 0u32;
     let mut bit_index = 0;
-    
+
     for dy in -(half_block as i32)..=(half_block as i32) {
         for dx in -(half_block as i32)..=(half_block as i32) {
             if dx == 0 && dy == 0 {
                 continue; // Skip center pixel
             }
-            
+
             let py = (y as i32 + dy) as usize;
             let px = (x as i32 + dx) as usize;
-            
+
             if image[[py, px]] < center_value {
                 census |= 1 << bit_index;
             }
             bit_index += 1;
         }
     }
-    
+
     census
 }
 
@@ -2455,8 +2447,9 @@ fn compute_hybrid_cost_simd(
     block_size: usize,
 ) -> Result<f32> {
     let sad_cost = compute_sad_cost_simd(left_image, right_image, x, y, disparity, block_size)?;
-    let census_cost = compute_census_cost_simd(left_image, right_image, x, y, disparity, block_size)?;
-    
+    let census_cost =
+        compute_census_cost_simd(left_image, right_image, x, y, disparity, block_size)?;
+
     // Weighted combination
     Ok(0.7 * sad_cost + 0.3 * census_cost)
 }
@@ -2476,13 +2469,10 @@ fn compute_hybrid_cost_simd(
 /// # Returns
 ///
 /// * Result containing aggregated cost volume
-fn aggregate_costs_sgm(
-    cost_volume: &Array3<f32>,
-    sgm_params: &SgmParams,
-) -> Result<Array3<f32>> {
+fn aggregate_costs_sgm(cost_volume: &Array3<f32>, sgm_params: &SgmParams) -> Result<Array3<f32>> {
     let (height, width, num_disparities) = cost_volume.dim();
     let mut aggregated_costs = Array3::zeros((height, width, num_disparities));
-    
+
     // Define aggregation directions
     let directions = if sgm_params.eight_directions {
         vec![
@@ -2498,11 +2488,11 @@ fn aggregate_costs_sgm(
     } else {
         vec![(0, 1), (0, -1), (1, 0), (-1, 0)]
     };
-    
+
     // Aggregate costs in each direction
     for &(dy, dx) in &directions {
         let direction_costs = aggregate_costs_direction(cost_volume, dy, dx, sgm_params)?;
-        
+
         // Add to accumulated costs
         for y in 0..height {
             for x in 0..width {
@@ -2512,11 +2502,11 @@ fn aggregate_costs_sgm(
             }
         }
     }
-    
+
     // Normalize by number of directions
     let num_dirs = directions.len() as f32;
     aggregated_costs.mapv_inplace(|x| x / num_dirs);
-    
+
     Ok(aggregated_costs)
 }
 
@@ -2527,55 +2517,74 @@ fn aggregate_costs_direction(
     dx: i32,
     sgm_params: &SgmParams,
 ) -> Result<Array3<f32>> {
-    let (height, width, num_disparities) = cost_volume.dim();
+    let (height, width, _num_disparities) = cost_volume.dim();
     let mut direction_costs = cost_volume.clone();
-    
+
     // Dynamic programming aggregation
-    if dy > 0 { // Forward pass (top to bottom)
-        for y in 1..height {
-            for x in 0..width {
-                let prev_y = (y as i32 - dy) as usize;
-                let prev_x = if dx != 0 {
-                    let px = x as i32 - dx;
-                    if px >= 0 && px < width as i32 { px as usize } else { continue; }
-                } else { x };
-                
-                if prev_y < height && prev_x < width {
-                    aggregate_pixel_costs(&mut direction_costs, y, x, prev_y, prev_x, sgm_params);
+    match dy.cmp(&0) {
+        std::cmp::Ordering::Greater => {
+            // Forward pass (top to bottom)
+            for y in 1..height {
+                for x in 0..width {
+                    let prev_y = (y as i32 - dy) as usize;
+                    let prev_x = if dx != 0 {
+                        let px = x as i32 - dx;
+                        if px >= 0 && px < width as i32 {
+                            px as usize
+                        } else {
+                            continue;
+                        }
+                    } else {
+                        x
+                    };
+
+                    if prev_y < height && prev_x < width {
+                        aggregate_pixel_costs(&mut direction_costs, y, x, prev_y, prev_x, sgm_params);
+                    }
                 }
             }
         }
-    } else if dy < 0 { // Backward pass (bottom to top)
-        for y in (0..height-1).rev() {
-            for x in 0..width {
-                let prev_y = (y as i32 - dy) as usize;
-                let prev_x = if dx != 0 {
-                    let px = x as i32 - dx;
-                    if px >= 0 && px < width as i32 { px as usize } else { continue; }
-                } else { x };
-                
-                if prev_y < height && prev_x < width {
-                    aggregate_pixel_costs(&mut direction_costs, y, x, prev_y, prev_x, sgm_params);
+        std::cmp::Ordering::Less => {
+            // Backward pass (bottom to top)
+            for y in (0..height - 1).rev() {
+                for x in 0..width {
+                    let prev_y = (y as i32 - dy) as usize;
+                    let prev_x = if dx != 0 {
+                        let px = x as i32 - dx;
+                        if px >= 0 && px < width as i32 {
+                            px as usize
+                        } else {
+                            continue;
+                        }
+                    } else {
+                        x
+                    };
+
+                    if prev_y < height && prev_x < width {
+                        aggregate_pixel_costs(&mut direction_costs, y, x, prev_y, prev_x, sgm_params);
+                    }
                 }
             }
         }
-    } else { // Horizontal pass
-        let x_range: Box<dyn Iterator<Item = usize>> = if dx > 0 {
-            Box::new(1..width)
-        } else {
-            Box::new((0..width-1).rev())
-        };
-        
-        for x in x_range {
-            for y in 0..height {
-                let prev_x = (x as i32 - dx) as usize;
-                if prev_x < width {
-                    aggregate_pixel_costs(&mut direction_costs, y, x, y, prev_x, sgm_params);
+        std::cmp::Ordering::Equal => {
+            // Horizontal pass
+            let x_range: Box<dyn Iterator<Item = usize>> = if dx > 0 {
+                Box::new(1..width)
+            } else {
+                Box::new((0..width - 1).rev())
+            };
+
+            for x in x_range {
+                for y in 0..height {
+                    let prev_x = (x as i32 - dx) as usize;
+                    if prev_x < width {
+                        aggregate_pixel_costs(&mut direction_costs, y, x, y, prev_x, sgm_params);
+                    }
                 }
             }
         }
     }
-    
+
     Ok(direction_costs)
 }
 
@@ -2589,16 +2598,16 @@ fn aggregate_pixel_costs(
     sgm_params: &SgmParams,
 ) {
     let num_disparities = direction_costs.dim().2;
-    
+
     for d in 0..num_disparities {
         let raw_cost = direction_costs[[y, x, d]];
-        
+
         // Find minimum cost from previous pixel with smoothness penalties
         let mut min_aggregated_cost = f32::INFINITY;
-        
+
         for prev_d in 0..num_disparities {
             let prev_cost = direction_costs[[prev_y, prev_x, prev_d]];
-            
+
             let smoothness_penalty = if d == prev_d {
                 0.0 // No penalty for same disparity
             } else if (d as i32 - prev_d as i32).abs() == 1 {
@@ -2606,13 +2615,13 @@ fn aggregate_pixel_costs(
             } else {
                 sgm_params.p2 // Large penalty for large disparity change
             };
-            
+
             let aggregated_cost = prev_cost + smoothness_penalty;
             if aggregated_cost < min_aggregated_cost {
                 min_aggregated_cost = aggregated_cost;
             }
         }
-        
+
         direction_costs[[y, x, d]] = raw_cost + min_aggregated_cost;
     }
 }
@@ -2625,13 +2634,13 @@ fn compute_disparity_wta(
     let (height, width, num_disparities) = cost_volume.dim();
     let mut disparity_map = Array2::zeros((height, width));
     let mut confidence_map = Array2::zeros((height, width));
-    
+
     for y in 0..height {
         for x in 0..width {
             let mut min_cost = f32::INFINITY;
             let mut best_disparity = 0;
             let mut second_min_cost = f32::INFINITY;
-            
+
             // Find best and second-best disparities
             for d in 0..num_disparities {
                 let cost = cost_volume[[y, x, d]];
@@ -2643,20 +2652,20 @@ fn compute_disparity_wta(
                     second_min_cost = cost;
                 }
             }
-            
+
             disparity_map[[y, x]] = (params.min_disparity + best_disparity as i32) as f32;
-            
+
             // Compute confidence based on cost difference
             let confidence = if second_min_cost > min_cost + 1e-6 {
                 1.0 - min_cost / second_min_cost
             } else {
                 0.0
             };
-            
+
             confidence_map[[y, x]] = confidence.clamp(0.0, 1.0);
         }
     }
-    
+
     Ok((disparity_map, confidence_map))
 }
 
@@ -2670,10 +2679,10 @@ fn compute_right_disparity(
     let mut right_params = params.clone();
     right_params.min_disparity = -params.max_disparity;
     right_params.max_disparity = -params.min_disparity;
-    
+
     let cost_volume = compute_cost_volume(right_image, left_image, &right_params)?;
     let (right_disparity, _) = compute_disparity_wta(&cost_volume, &right_params)?;
-    
+
     // Negate disparities to convert back to left image coordinate system
     Ok(right_disparity.mapv(|d| -d))
 }
@@ -2686,15 +2695,15 @@ fn apply_lr_consistency_check(
 ) -> Array2<f32> {
     let (height, width) = left_disparity.dim();
     let mut consistent_disparity = left_disparity.clone();
-    
+
     for y in 0..height {
         for x in 0..width {
             let left_d = left_disparity[[y, x]];
             let right_x = (x as f32 - left_d).round() as i32;
-            
+
             if right_x >= 0 && right_x < width as i32 {
                 let right_d = right_disparity[[y, right_x as usize]];
-                
+
                 if (left_d - right_d).abs() > threshold {
                     consistent_disparity[[y, x]] = f32::NAN; // Mark as invalid
                 }
@@ -2703,7 +2712,7 @@ fn apply_lr_consistency_check(
             }
         }
     }
-    
+
     consistent_disparity
 }
 
@@ -2714,21 +2723,21 @@ fn apply_subpixel_refinement(
 ) -> Result<Array2<f32>> {
     let (height, width) = disparity_map.dim();
     let mut refined_disparity = disparity_map.clone();
-    
+
     for y in 0..height {
         for x in 0..width {
             let d = disparity_map[[y, x]] as usize;
-            
+
             // Skip invalid disparities
             if d == 0 || d >= cost_volume.dim().2 - 1 {
                 continue;
             }
-            
+
             // Parabolic interpolation for sub-pixel refinement
             let c_prev = cost_volume[[y, x, d - 1]];
             let c_curr = cost_volume[[y, x, d]];
             let c_next = cost_volume[[y, x, d + 1]];
-            
+
             let denominator = 2.0 * (c_prev - 2.0 * c_curr + c_next);
             if denominator.abs() > 1e-6 {
                 let offset = (c_prev - c_next) / denominator;
@@ -2736,7 +2745,7 @@ fn apply_subpixel_refinement(
             }
         }
     }
-    
+
     Ok(refined_disparity)
 }
 
@@ -2747,7 +2756,7 @@ fn fill_holes_and_filter(
 ) -> Result<Array2<f32>> {
     let (height, width) = disparity_map.dim();
     let mut filtered_disparity = disparity_map.clone();
-    
+
     // Fill holes using nearest valid disparity
     for y in 0..height {
         for x in 0..width {
@@ -2757,12 +2766,12 @@ fn fill_holes_and_filter(
                 for radius in 1..=10 {
                     let mut sum = 0.0;
                     let mut count = 0;
-                    
-                    for dy in -(radius as i32)..=(radius as i32) {
-                        for dx in -(radius as i32)..=(radius as i32) {
+
+                    for dy in -radius..=radius {
+                        for dx in -radius..=radius {
                             let ny = y as i32 + dy;
                             let nx = x as i32 + dx;
-                            
+
                             if ny >= 0 && ny < height as i32 && nx >= 0 && nx < width as i32 {
                                 let val = disparity_map[[ny as usize, nx as usize]];
                                 if !val.is_nan() {
@@ -2772,27 +2781,27 @@ fn fill_holes_and_filter(
                             }
                         }
                     }
-                    
+
                     if count > 0 {
                         filtered_disparity[[y, x]] = sum / count as f32;
                         found = true;
                         break;
                     }
                 }
-                
+
                 if !found {
                     filtered_disparity[[y, x]] = 0.0;
                 }
             }
         }
     }
-    
+
     // Apply median filter
     filtered_disparity = apply_median_filter(&filtered_disparity, 3)?;
-    
+
     // Apply speckle filter
     filtered_disparity = apply_speckle_filter(&filtered_disparity, sgm_params)?;
-    
+
     Ok(filtered_disparity)
 }
 
@@ -2801,11 +2810,11 @@ fn apply_median_filter(disparity_map: &Array2<f32>, window_size: usize) -> Resul
     let (height, width) = disparity_map.dim();
     let mut filtered = disparity_map.clone();
     let half_window = window_size / 2;
-    
+
     for y in half_window..height - half_window {
         for x in half_window..width - half_window {
             let mut values = Vec::new();
-            
+
             for dy in -(half_window as i32)..=(half_window as i32) {
                 for dx in -(half_window as i32)..=(half_window as i32) {
                     let val = disparity_map[[(y as i32 + dy) as usize, (x as i32 + dx) as usize]];
@@ -2814,14 +2823,14 @@ fn apply_median_filter(disparity_map: &Array2<f32>, window_size: usize) -> Resul
                     }
                 }
             }
-            
+
             if !values.is_empty() {
                 values.sort_by(|a, b| a.partial_cmp(b).unwrap());
                 filtered[[y, x]] = values[values.len() / 2];
             }
         }
     }
-    
+
     Ok(filtered)
 }
 
@@ -2833,7 +2842,7 @@ fn apply_speckle_filter(
     let (height, width) = disparity_map.dim();
     let mut filtered = disparity_map.clone();
     let mut visited = Array2::from_elem((height, width), false);
-    
+
     for y in 0..height {
         for x in 0..width {
             if !visited[[y, x]] && !disparity_map[[y, x]].is_nan() {
@@ -2845,15 +2854,21 @@ fn apply_speckle_filter(
                     disparity_map[[y, x]],
                     sgm_params.speckle_range,
                 );
-                
+
                 if region_size < sgm_params.speckle_size {
                     // Mark small regions as invalid
-                    flood_fill_mark_invalid(&mut filtered, x, y, disparity_map[[y, x]], sgm_params.speckle_range);
+                    flood_fill_mark_invalid(
+                        &mut filtered,
+                        x,
+                        y,
+                        disparity_map[[y, x]],
+                        sgm_params.speckle_range,
+                    );
                 }
             }
         }
     }
-    
+
     Ok(filtered)
 }
 
@@ -2869,27 +2884,35 @@ fn flood_fill_region_size(
     let (height, width) = disparity_map.dim();
     let mut stack = vec![(start_x, start_y)];
     let mut region_size = 0;
-    
+
     while let Some((x, y)) = stack.pop() {
         if x >= width || y >= height || visited[[y, x]] {
             continue;
         }
-        
+
         let disparity = disparity_map[[y, x]];
         if disparity.is_nan() || (disparity - target_disparity).abs() > range {
             continue;
         }
-        
+
         visited[[y, x]] = true;
         region_size += 1;
-        
+
         // Add neighbors
-        if x > 0 { stack.push((x - 1, y)); }
-        if x < width - 1 { stack.push((x + 1, y)); }
-        if y > 0 { stack.push((x, y - 1)); }
-        if y < height - 1 { stack.push((x, y + 1)); }
+        if x > 0 {
+            stack.push((x - 1, y));
+        }
+        if x < width - 1 {
+            stack.push((x + 1, y));
+        }
+        if y > 0 {
+            stack.push((x, y - 1));
+        }
+        if y < height - 1 {
+            stack.push((x, y + 1));
+        }
     }
-    
+
     region_size
 }
 
@@ -2903,24 +2926,32 @@ fn flood_fill_mark_invalid(
 ) {
     let (height, width) = disparity_map.dim();
     let mut stack = vec![(start_x, start_y)];
-    
+
     while let Some((x, y)) = stack.pop() {
         if x >= width || y >= height {
             continue;
         }
-        
+
         let disparity = disparity_map[[y, x]];
         if disparity.is_nan() || (disparity - target_disparity).abs() > range {
             continue;
         }
-        
+
         disparity_map[[y, x]] = f32::NAN;
-        
+
         // Add neighbors
-        if x > 0 { stack.push((x - 1, y)); }
-        if x < width - 1 { stack.push((x + 1, y)); }
-        if y > 0 { stack.push((x, y - 1)); }
-        if y < height - 1 { stack.push((x, y + 1)); }
+        if x > 0 {
+            stack.push((x - 1, y));
+        }
+        if x < width - 1 {
+            stack.push((x + 1, y));
+        }
+        if y > 0 {
+            stack.push((x, y - 1));
+        }
+        if y < height - 1 {
+            stack.push((x, y + 1));
+        }
     }
 }
 
@@ -2934,11 +2965,10 @@ fn compute_depth_map_stats(
     let total_pixels = disparity_map.len();
     let valid_pixels = disparity_map.iter().filter(|&&d| !d.is_nan()).count();
     let occluded_pixels = total_pixels - valid_pixels;
-    
-    let avg_matching_cost = confidence_map.iter()
-        .filter(|&&c| !c.is_nan())
-        .sum::<f32>() / valid_pixels.max(1) as f32;
-    
+
+    let avg_matching_cost =
+        confidence_map.iter().filter(|&&c| !c.is_nan()).sum::<f32>() / valid_pixels.max(1) as f32;
+
     DepthMapStats {
         valid_pixels,
         occluded_pixels,

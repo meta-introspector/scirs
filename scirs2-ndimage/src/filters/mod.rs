@@ -6,7 +6,10 @@
 use std::fmt::Debug;
 
 // Bilateral module exports
-pub use bilateral::bilateral_filter;
+pub use bilateral::{
+    adaptive_bilateral_filter, bilateral_filter, multi_scale_bilateral_filter,
+    MultiScaleBilateralConfig,
+};
 #[cfg(feature = "simd")]
 pub use bilateral::{bilateral_filter_simd_f32, bilateral_filter_simd_f64};
 
@@ -23,11 +26,25 @@ pub use ultra_simd_optimized::{
     ultra_simd_separable_convolution_2d, ultra_simd_template_matching,
 };
 
+// Ultra SIMD enhanced exports
+#[cfg(feature = "simd")]
+pub use ultra_simd_enhanced::{
+    ultra_simd_convolution_2d, ultra_simd_separable_convolution_2d as ultra_simd_separable,
+    ultra_simd_median_filter,
+};
+
 // Advanced SIMD extensions exports
 #[cfg(feature = "simd")]
 pub use advanced_simd_extensions::{
     ultra_simd_advanced_edge_detection, ultra_simd_multi_scale_lbp, ultra_simd_wavelet_pyramid,
     WaveletPyramid, WaveletType,
+};
+
+// Enhanced SIMD optimizations exports
+#[cfg(feature = "simd")]
+pub use simd_enhanced_optimizations::{
+    simd_gradient_magnitude, simd_histogram, simd_image_moments, simd_local_binary_pattern,
+    simd_morphological_operation, GradientOperator, MorphologicalOperation,
 };
 
 pub mod advanced;
@@ -49,9 +66,13 @@ mod memory_efficient_v2;
 mod rank;
 #[cfg(feature = "simd")]
 mod simd_specialized;
+#[cfg(feature = "simd")]
+mod simd_enhanced_optimizations;
 mod tests;
 #[cfg(feature = "simd")]
 mod ultra_simd_optimized;
+#[cfg(feature = "simd")]
+mod ultra_simd_enhanced;
 mod uniform;
 mod utils;
 mod vectorized;

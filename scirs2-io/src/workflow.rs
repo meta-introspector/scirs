@@ -3,6 +3,9 @@
 //! Provides a framework for building and executing automated data processing
 //! workflows with dependency management, scheduling, and monitoring capabilities.
 
+#![allow(dead_code)]
+#![allow(missing_docs)]
+
 use crate::error::{IoError, Result};
 use crate::metadata::{Metadata, MetadataValue};
 use chrono::{DateTime, Datelike, Duration, Utc};
@@ -1059,7 +1062,7 @@ pub mod engines {
             dag_code.push_str("from airflow.operators.python import PythonOperator\n");
             dag_code.push_str("from datetime import datetime, timedelta\n\n");
 
-            dag_code.push_str(&"dag = DAG(\n".to_string());
+            dag_code.push_str("dag = DAG(\n");
             dag_code.push_str(&format!("    '{}',\n", workflow.id));
             dag_code.push_str(&format!(
                 "    description='{}',\n",
@@ -1439,10 +1442,8 @@ pub mod dynamic {
                 let param = param.trim();
                 let value = value.trim().trim_matches('"');
 
-                if let Some(param_value) = params.get(param) {
-                    if let serde_json::Value::String(s) = param_value {
-                        return Ok(s == value);
-                    }
+                if let Some(serde_json::Value::String(s)) = params.get(param) {
+                    return Ok(s == value);
                 }
             }
 
@@ -1569,6 +1570,7 @@ pub mod events {
             Ok(())
         }
 
+        #[allow(clippy::only_used_in_recursion)]
         fn matches_pattern(&self, event: &WorkflowEvent, pattern: &EventPattern) -> bool {
             match pattern {
                 EventPattern::FilePattern { path_regex } => {

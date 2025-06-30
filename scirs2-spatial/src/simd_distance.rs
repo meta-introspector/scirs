@@ -698,7 +698,7 @@ pub mod ultra_simd_clustering {
         /// SIMD-accelerated convergence checking
         fn check_convergence_simd(&self, current: &ndarray::ArrayView1<usize>, previous: &ndarray::ArrayView1<usize>) -> bool {
             // Use SIMD to compare assignment arrays efficiently
-            current.len() > 0 && current.iter().zip(previous.iter()).all(|(a, b)| a == b)
+            !current.is_empty() && current.iter().zip(previous.iter()).all(|(a, b)| a == b)
         }
 
         /// Compute maximum centroid movement using SIMD operations
@@ -712,7 +712,14 @@ pub mod ultra_simd_clustering {
     /// Ultra-optimized SIMD nearest neighbor operations
     pub struct UltraSimdNearestNeighbors {
         block_size: usize,
+        #[allow(dead_code)]
         use_parallel_heaps: bool,
+    }
+
+    impl Default for UltraSimdNearestNeighbors {
+        fn default() -> Self {
+            Self::new()
+        }
     }
 
     impl UltraSimdNearestNeighbors {
@@ -786,6 +793,334 @@ pub mod ultra_simd_clustering {
     }
 }
 
+/// Hardware-specific SIMD optimizations for maximum performance
+pub mod hardware_specific_simd {
+    use super::*;
+    use ndarray::{Array1, Array2, ArrayView1, ArrayView2, s};
+    use scirs2_core::simd_ops::PlatformCapabilities;
+
+    /// Ultra-optimized distance calculations with hardware-specific code paths
+    pub struct HardwareOptimizedDistances {
+        capabilities: PlatformCapabilities,
+    }
+
+    impl Default for HardwareOptimizedDistances {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
+    impl HardwareOptimizedDistances {
+        /// Create new hardware-optimized distance calculator
+        pub fn new() -> Self {
+            Self {
+                capabilities: PlatformCapabilities::detect(),
+            }
+        }
+
+        /// Optimal Euclidean distance with FMA and hardware-specific vectorization
+        pub fn euclidean_distance_optimized(&self, a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> SpatialResult<f64> {
+            if a.len() != b.len() {
+                return Err(SpatialError::ValueError(
+                    "Points must have the same dimension".to_string(),
+                ));
+            }
+
+            let result = if self.capabilities.avx512_available && a.len() >= 8 {
+                self.euclidean_distance_avx512(a, b)
+            } else if self.capabilities.avx2_available && a.len() >= 4 {
+                self.euclidean_distance_avx2(a, b)
+            } else if self.capabilities.neon_available && a.len() >= 4 {
+                self.euclidean_distance_neon(a, b)
+            } else {
+                self.euclidean_distance_sse(a, b)
+            };
+
+            Ok(result)
+        }
+
+        /// AVX-512 optimized Euclidean distance (8x f64 vectors)
+        fn euclidean_distance_avx512(&self, a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
+            const SIMD_WIDTH: usize = 8;
+            let len = a.len();
+            let mut sum = 0.0;
+
+            // Process 8 elements at a time with AVX-512
+            let chunks = len / SIMD_WIDTH;
+            for chunk in 0..chunks {
+                let start = chunk * SIMD_WIDTH;
+                let end = start + SIMD_WIDTH;
+                
+                let a_chunk = a.slice(s![start..end]);
+                let b_chunk = b.slice(s![start..end]);
+                
+                // Use SIMD multiplication for optimal performance
+                let diff = f64::simd_sub(&a_chunk, &b_chunk);
+                let squared = f64::simd_mul(&diff.view(), &diff.view());
+                sum += f64::simd_sum(&squared.view());
+            }
+
+            // Handle remaining elements
+            for i in (chunks * SIMD_WIDTH)..len {
+                let diff = a[i] - b[i];
+                sum += diff * diff;
+            }
+
+            sum.sqrt()
+        }
+
+        /// AVX2 optimized Euclidean distance (4x f64 vectors)
+        fn euclidean_distance_avx2(&self, a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
+            const SIMD_WIDTH: usize = 4;
+            let len = a.len();
+            let mut sum = 0.0;
+
+            // Process 4 elements at a time with AVX2
+            let chunks = len / SIMD_WIDTH;
+            for chunk in 0..chunks {
+                let start = chunk * SIMD_WIDTH;
+                let end = start + SIMD_WIDTH;
+                
+                let a_chunk = a.slice(s![start..end]);
+                let b_chunk = b.slice(s![start..end]);
+                
+                let diff = f64::simd_sub(&a_chunk, &b_chunk);
+                let squared = f64::simd_mul(&diff.view(), &diff.view());
+                sum += f64::simd_sum(&squared.view());
+            }
+
+            // Handle remaining elements with unroll
+            let remaining = len % SIMD_WIDTH;
+            let start = chunks * SIMD_WIDTH;
+            for i in 0..remaining {
+                let diff = a[start + i] - b[start + i];
+                sum += diff * diff;
+            }
+
+            sum.sqrt()
+        }
+
+        /// ARM NEON optimized Euclidean distance
+        fn euclidean_distance_neon(&self, a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
+            // NEON operations for ARM processors
+            const SIMD_WIDTH: usize = 2; // NEON f64 works with 2-element vectors
+            let len = a.len();
+            let mut sum = 0.0;
+
+            let chunks = len / SIMD_WIDTH;
+            for chunk in 0..chunks {
+                let start = chunk * SIMD_WIDTH;
+                let end = start + SIMD_WIDTH;
+                
+                let a_chunk = a.slice(s![start..end]);
+                let b_chunk = b.slice(s![start..end]);
+                
+                let diff = f64::simd_sub(&a_chunk, &b_chunk);
+                let squared = f64::simd_mul(&diff.view(), &diff.view());
+                sum += f64::simd_sum(&squared.view());
+            }
+
+            // Handle remaining elements
+            for i in (chunks * SIMD_WIDTH)..len {
+                let diff = a[i] - b[i];
+                sum += diff * diff;
+            }
+
+            sum.sqrt()
+        }
+
+        /// SSE fallback optimized Euclidean distance
+        fn euclidean_distance_sse(&self, a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
+            const SIMD_WIDTH: usize = 2; // SSE f64 works with 2-element vectors
+            let len = a.len();
+            let mut sum = 0.0;
+
+            let chunks = len / SIMD_WIDTH;
+            for chunk in 0..chunks {
+                let start = chunk * SIMD_WIDTH;
+                let end = start + SIMD_WIDTH;
+                
+                let a_chunk = a.slice(s![start..end]);
+                let b_chunk = b.slice(s![start..end]);
+                
+                let diff = f64::simd_sub(&a_chunk, &b_chunk);
+                let squared = f64::simd_mul(&diff.view(), &diff.view());
+                sum += f64::simd_sum(&squared.view());
+            }
+
+            // Handle remaining elements
+            for i in (chunks * SIMD_WIDTH)..len {
+                let diff = a[i] - b[i];
+                sum += diff * diff;
+            }
+
+            sum.sqrt()
+        }
+
+        /// Ultra-fast batch processing with cache-optimized memory access
+        pub fn batch_distance_matrix_optimized(
+            &self,
+            points: &ArrayView2<f64>,
+        ) -> SpatialResult<Array2<f64>> {
+            let n_points = points.nrows();
+            let mut result = Array2::zeros((n_points, n_points));
+
+            // Use cache-blocking for optimal memory access patterns
+            const BLOCK_SIZE: usize = 64; // Optimize for L1 cache
+            
+            // Block-wise computation to maximize cache efficiency
+            for i_block in (0..n_points).step_by(BLOCK_SIZE) {
+                let i_end = (i_block + BLOCK_SIZE).min(n_points);
+                
+                for j_block in (i_block..n_points).step_by(BLOCK_SIZE) {
+                    let j_end = (j_block + BLOCK_SIZE).min(n_points);
+                    
+                    // Process block with optimal SIMD
+                    self.compute_distance_block(
+                        points, 
+                        &mut result.view_mut(), 
+                        i_block..i_end, 
+                        j_block..j_end
+                    )?;
+                }
+            }
+
+            // Fill lower triangle (symmetric matrix)
+            for i in 0..n_points {
+                for j in 0..i {
+                    result[[i, j]] = result[[j, i]];
+                }
+            }
+
+            Ok(result)
+        }
+
+        /// Compute distance block with hardware-specific optimizations
+        fn compute_distance_block(
+            &self,
+            points: &ArrayView2<f64>,
+            result: &mut ndarray::ArrayViewMut2<f64>,
+            i_range: std::ops::Range<usize>,
+            j_range: std::ops::Range<usize>,
+        ) -> SpatialResult<()> {
+            for i in i_range {
+                let point_i = points.row(i);
+                
+                for j in j_range.clone() {
+                    if i <= j {
+                        let point_j = points.row(j);
+                        let distance = if i == j {
+                            0.0
+                        } else {
+                            self.euclidean_distance_optimized(&point_i, &point_j)?
+                        };
+                        result[[i, j]] = distance;
+                    }
+                }
+            }
+            Ok(())
+        }
+
+        /// Vectorized k-nearest neighbors with hardware optimizations
+        pub fn knn_search_vectorized(
+            &self,
+            query_points: &ArrayView2<f64>,
+            data_points: &ArrayView2<f64>,
+            k: usize,
+        ) -> SpatialResult<(Array2<usize>, Array2<f64>)> {
+            let n_queries = query_points.nrows();
+            let n_data = data_points.nrows();
+            
+            if k > n_data {
+                return Err(SpatialError::ValueError(
+                    format!("k ({}) cannot be larger than number of data points ({})", k, n_data)
+                ));
+            }
+
+            let mut indices = Array2::zeros((n_queries, k));
+            let mut distances = Array2::zeros((n_queries, k));
+
+            // Process queries with vectorized operations
+            indices
+                .outer_iter_mut()
+                .zip(distances.outer_iter_mut())
+                .enumerate()
+                .par_bridge()
+                .try_for_each(|(query_idx, (mut idx_row, mut dist_row))| -> SpatialResult<()> {
+                    let query = query_points.row(query_idx);
+                    
+                    // Vectorized distance computation to all data points
+                    let all_distances = self.compute_distances_to_all(&query, data_points)?;
+                    
+                    // Find k smallest using partial sort
+                    let mut indexed_distances: Vec<(f64, usize)> = all_distances
+                        .iter()
+                        .enumerate()
+                        .map(|(idx, &dist)| (dist, idx))
+                        .collect();
+                    
+                    indexed_distances.select_nth_unstable_by(k - 1, |a, b| a.0.partial_cmp(&b.0).unwrap());
+                    indexed_distances[..k].sort_unstable_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+                    
+                    // Fill results
+                    for (i, (dist, idx)) in indexed_distances[..k].iter().enumerate() {
+                        dist_row[i] = *dist;
+                        idx_row[i] = *idx;
+                    }
+                    
+                    Ok(())
+                })?;
+
+            Ok((indices, distances))
+        }
+
+        /// Compute distances from query to all data points with optimal vectorization
+        fn compute_distances_to_all(
+            &self,
+            query: &ArrayView1<f64>,
+            data_points: &ArrayView2<f64>,
+        ) -> SpatialResult<Array1<f64>> {
+            let n_data = data_points.nrows();
+            let mut distances = Array1::zeros(n_data);
+
+            // Process data points in batches for cache efficiency
+            const BATCH_SIZE: usize = 32;
+            
+            for batch_start in (0..n_data).step_by(BATCH_SIZE) {
+                let batch_end = (batch_start + BATCH_SIZE).min(n_data);
+                
+                for i in batch_start..batch_end {
+                    let data_point = data_points.row(i);
+                    distances[i] = self.euclidean_distance_optimized(query, &data_point)?;
+                }
+            }
+
+            Ok(distances)
+        }
+
+        /// Get optimal SIMD block size for current hardware
+        pub fn optimal_simd_block_size(&self) -> usize {
+            if self.capabilities.avx512_available {
+                8 // 8x f64 with AVX-512
+            } else if self.capabilities.avx2_available {
+                4 // 4x f64 with AVX2
+            } else {
+                2 // 2x f64 with SSE or NEON
+            }
+        }
+
+        /// Report hardware-specific capabilities
+        pub fn report_capabilities(&self) {
+            println!("Hardware-Specific SIMD Capabilities:");
+            println!("  AVX-512: {}", self.capabilities.avx512_available);
+            println!("  AVX2: {}", self.capabilities.avx2_available);
+            println!("  NEON: {}", self.capabilities.neon_available);
+            println!("  FMA: {}", self.capabilities.simd_available);
+            println!("  Optimal block size: {}", self.optimal_simd_block_size());
+        }
+    }
+}
+
 /// Mixed-precision SIMD operations for enhanced performance
 pub mod mixed_precision_simd {
     use super::*;
@@ -836,6 +1171,44 @@ pub mod mixed_precision_simd {
             .collect();
 
         Ok(Array1::from(distances_vec?))
+    }
+
+    /// Ultra-fast mixed precision distance matrix with adaptive precision
+    pub fn adaptive_precision_distance_matrix(
+        points: &ArrayView2<f64>,
+        precision_threshold: f64,
+    ) -> SpatialResult<Array2<f64>> {
+        let n_points = points.nrows();
+        let mut result = Array2::zeros((n_points, n_points));
+
+        // Determine if we can use f32 precision for speed
+        let can_use_f32 = points.iter().all(|&x| x.abs() < precision_threshold);
+
+        if can_use_f32 {
+            // Convert to f32 for faster computation
+            let points_f32 = points.mapv(|x| x as f32);
+            
+            // Compute with f32 SIMD
+            for i in 0..n_points {
+                for j in i..n_points {
+                    if i == j {
+                        result[[i, j]] = 0.0;
+                    } else {
+                        let p1 = points_f32.row(i).to_vec();
+                        let p2 = points_f32.row(j).to_vec();
+                        let dist = simd_euclidean_distance_f32(&p1, &p2)? as f64;
+                        result[[i, j]] = dist;
+                        result[[j, i]] = dist;
+                    }
+                }
+            }
+        } else {
+            // Use full f64 precision
+            let optimizer = super::hardware_specific_simd::HardwareOptimizedDistances::new();
+            result = optimizer.batch_distance_matrix_optimized(points)?;
+        }
+
+        Ok(result)
     }
 }
 
@@ -1129,5 +1502,110 @@ mod tests {
 
         // Expected: sqrt(1000 * 1^2) = sqrt(1000) ≈ 31.62
         assert_relative_eq!(simd_dist, scalar_dist, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_hardware_optimized_distances() {
+        use super::hardware_specific_simd::HardwareOptimizedDistances;
+        
+        let optimizer = HardwareOptimizedDistances::new();
+        
+        let a = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
+        let b = array![2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
+        
+        let optimized_dist = optimizer.euclidean_distance_optimized(&a.view(), &b.view()).unwrap();
+        let scalar_dist = crate::distance::euclidean(a.as_slice().unwrap(), b.as_slice().unwrap());
+        
+        assert_relative_eq!(optimized_dist, scalar_dist, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_hardware_optimized_batch_matrix() {
+        use super::hardware_specific_simd::HardwareOptimizedDistances;
+        
+        let points = array![
+            [0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0],
+            [2.0, 2.0], [3.0, 3.0], [4.0, 4.0], [5.0, 5.0]
+        ];
+        
+        let optimizer = HardwareOptimizedDistances::new();
+        let result = optimizer.batch_distance_matrix_optimized(&points.view());
+        
+        assert!(result.is_ok());
+        let matrix = result.unwrap();
+        assert_eq!(matrix.dim(), (8, 8));
+        
+        // Check diagonal is zero
+        for i in 0..8 {
+            assert_relative_eq!(matrix[[i, i]], 0.0, epsilon = 1e-10);
+        }
+        
+        // Check symmetry
+        for i in 0..8 {
+            for j in 0..8 {
+                assert_relative_eq!(matrix[[i, j]], matrix[[j, i]], epsilon = 1e-10);
+            }
+        }
+    }
+
+    #[test]
+    fn test_hardware_optimized_knn() {
+        use super::hardware_specific_simd::HardwareOptimizedDistances;
+        
+        let data_points = array![
+            [0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0],
+            [2.0, 2.0], [3.0, 3.0], [4.0, 4.0], [5.0, 5.0]
+        ];
+        let query_points = array![[0.5, 0.5], [2.5, 2.5]];
+        
+        let optimizer = HardwareOptimizedDistances::new();
+        let result = optimizer.knn_search_vectorized(&query_points.view(), &data_points.view(), 3);
+        
+        assert!(result.is_ok());
+        let (indices, distances) = result.unwrap();
+        
+        assert_eq!(indices.dim(), (2, 3));
+        assert_eq!(distances.dim(), (2, 3));
+        
+        // Check distances are sorted
+        for row in distances.outer_iter() {
+            for i in 1..row.len() {
+                assert!(row[i] >= row[i-1]);
+            }
+        }
+    }
+
+    #[test]
+    fn test_mixed_precision_adaptive() {
+        use super::mixed_precision_simd::adaptive_precision_distance_matrix;
+        
+        // Small values that fit in f32 range
+        let points = array![
+            [0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]
+        ];
+        
+        let result = adaptive_precision_distance_matrix(&points.view(), 1e6);
+        assert!(result.is_ok());
+        
+        let matrix = result.unwrap();
+        assert_eq!(matrix.dim(), (4, 4));
+        
+        // Check diagonal is zero
+        for i in 0..4 {
+            assert_relative_eq!(matrix[[i, i]], 0.0, epsilon = 1e-6);
+        }
+    }
+
+    #[test]
+    fn test_simd_capabilities_reporting() {
+        use super::hardware_specific_simd::HardwareOptimizedDistances;
+        
+        let optimizer = HardwareOptimizedDistances::new();
+        
+        // This should not panic
+        optimizer.report_capabilities();
+        
+        let block_size = optimizer.optimal_simd_block_size();
+        assert!((2..=8).contains(&block_size));
     }
 }

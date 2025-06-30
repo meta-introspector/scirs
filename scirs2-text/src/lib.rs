@@ -1,7 +1,72 @@
-//! Text processing module for SciRS2
+//! # Text Processing Module for SciRS2
 //!
-//! This module provides functionality for text processing, tokenization,
-//! vectorization, word embeddings, and other NLP-related operations.
+//! This module provides comprehensive text processing functionality for scientific computing 
+//! applications, offering SciPy-compatible APIs while leveraging Rust's performance and safety.
+//!
+//! ## Features
+//!
+//! - **Tokenization**: Character, word, sentence, N-gram, regex, and BPE tokenizers
+//! - **Text Preprocessing**: Unicode normalization, HTML/XML stripping, contraction expansion
+//! - **Stemming & Lemmatization**: Porter, Snowball, Lancaster stemmers with rule-based lemmatization
+//! - **Vectorization**: TF-IDF, count vectorizers with N-gram support
+//! - **Word Embeddings**: Word2Vec implementation with Skip-gram and CBOW
+//! - **Similarity Metrics**: Cosine, Jaccard, Levenshtein distance, phonetic algorithms
+//! - **Advanced NLP**: Sentiment analysis, topic modeling, text summarization
+//! - **Performance**: SIMD-accelerated operations, parallel processing, memory efficiency
+//!
+//! ## Quick Start
+//!
+//! ```rust
+//! use scirs2_text::{
+//!     tokenize::WordTokenizer,
+//!     vectorize::TfidfVectorizer,
+//!     sentiment::LexiconSentimentAnalyzer,
+//!     Tokenizer, Vectorizer
+//! };
+//!
+//! // Basic tokenization
+//! let tokenizer = WordTokenizer::default();
+//! let tokens = tokenizer.tokenize("Hello, world! This is a test.").unwrap();
+//!
+//! // TF-IDF vectorization
+//! let documents = vec![
+//!     "The quick brown fox jumps over the lazy dog",
+//!     "A quick brown dog outpaces a quick fox",
+//!     "The lazy dog sleeps all day"
+//! ];
+//! let mut vectorizer = TfidfVectorizer::new();
+//! let matrix = vectorizer.fit_transform(&documents).unwrap();
+//!
+//! // Sentiment analysis
+//! let analyzer = LexiconSentimentAnalyzer::default();
+//! let sentiment = analyzer.analyze("I love this library!").unwrap();
+//! println!("Sentiment: {:?}", sentiment.sentiment);
+//! ```
+//!
+//! ## Architecture
+//!
+//! The module is organized into focused sub-modules:
+//!
+//! - [`tokenize`]: Text tokenization utilities
+//! - [`vectorize`]: Document vectorization and TF-IDF
+//! - [`embeddings`]: Word embedding training and utilities
+//! - [`sentiment`]: Sentiment analysis tools
+//! - [`topic_modeling`]: Topic modeling with LDA
+//! - [`string_metrics`]: String similarity and distance metrics
+//! - [`preprocess`]: Text cleaning and normalization
+//! - [`stemming`]: Stemming and lemmatization
+//! - [`parallel`]: Parallel processing utilities
+//! - [`simd_ops`]: SIMD-accelerated operations
+//!
+//! ## Performance
+//!
+//! SciRS2 Text is designed for high performance:
+//!
+//! - SIMD acceleration for string operations
+//! - Parallel processing for large document collections
+//! - Memory-efficient sparse matrix representations
+//! - Zero-copy string processing where possible
+//! - Optimized algorithms with complexity guarantees
 
 #![warn(missing_docs)]
 

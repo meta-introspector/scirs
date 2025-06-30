@@ -76,6 +76,7 @@ pub mod online_learning;
 pub mod optimizer_composition;
 pub mod optimizers;
 pub mod parameter_groups;
+pub mod plugin;
 pub mod privacy;
 pub mod regularizers;
 pub mod reinforcement_learning;
@@ -171,6 +172,12 @@ pub use neural_architecture_search::{
     NASConfig, NeuralArchitectureSearch, SearchResults, SearchStrategyType, OptimizerArchitecture,
     PerformanceEvaluator, MultiObjectiveConfig, ArchitectureEncodingStrategy, EvaluationMetric,
 };
+pub use plugin::{
+    OptimizerPlugin, OptimizerPluginFactory, PluginInfo, PluginCapabilities, PluginCategory,
+    PluginRegistry, PluginLoader, PluginTester, PluginValidationFramework, BaseOptimizerPlugin,
+    create_plugin_info, create_basic_capabilities,
+};
+// Macro is exported at crate root via #[macro_export]
 pub use online_learning::{
     ColumnGrowthStrategy, LearningRateAdaptation, LifelongOptimizer, LifelongStats,
     LifelongStrategy, MemoryExample, MemoryUpdateStrategy, MirrorFunction, OnlineLearningStrategy,

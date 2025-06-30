@@ -29,6 +29,37 @@ serde_json = { workspace = true }
 num_cpus = "1.16"
 rand_chacha = "0.3"
 rayon = "1.8"
+uuid = { version = "1.6", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+clap = { version = "4.4", features = ["derive"] }
+
+[[bin]]
+name = "performance_regression_tester"
+path = "src/bin/performance_regression_tester.rs"
+
+[[bin]]
+name = "memory_leak_reporter"
+path = "src/bin/memory_leak_reporter.rs"
+
+[[bin]]
+name = "stress_test_analyzer"
+path = "src/bin/stress_test_analyzer.rs"
+
+[[bin]]
+name = "longrun_analyzer"
+path = "src/bin/longrun_analyzer.rs"
+
+[[bin]]
+name = "memory_pattern_analyzer"
+path = "src/bin/memory_pattern_analyzer.rs"
+
+[[bin]]
+name = "performance-regression-detector"
+path = "src/bin/performance_regression_detector.rs"
+
+[[bin]]
+name = "performance-baseline-manager"
+path = "src/bin/performance_baseline_manager.rs"
 
 [dev-dependencies]
 plotters = { workspace = true }

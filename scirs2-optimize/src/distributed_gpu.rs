@@ -265,7 +265,7 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
         for i in 0..pop_size {
             for j in 0..dims {
                 let (low, high) = bounds[j];
-                population[[i, j]] = rng.random_range(low..=high);
+                population[[i, j]] = rng.gen_range(low..=high);
             }
         }
 
@@ -523,7 +523,7 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
 
             for j in 0..3 {
                 loop {
-                    let idx = rng.random_range(0..pop_size);
+                    let idx = rng.gen_range(0..pop_size);
                     if !selected.contains(&idx) {
                         indices[[i, j]] = idx as i32;
                         selected.insert(idx);
@@ -556,7 +556,7 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
         let mut j_rand = Array1::zeros(pop_size);
 
         for i in 0..pop_size {
-            j_rand[i] = rng.random_range(0..dims) as i32;
+            j_rand[i] = rng.gen_range(0..dims) as i32;
         }
 
         Ok(j_rand)

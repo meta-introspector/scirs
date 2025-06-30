@@ -8,10 +8,8 @@ use crate::layers::{Layer, ParamLayer};
 use ndarray::{Array, ArrayView, IxDyn, ScalarOperand};
 use num_traits::Float;
 use rand::Rng;
-//use std::cell::RefCell; // Removed in favor of RwLock
 use std::fmt::Debug;
 use std::marker::PhantomData;
-use std::cell::RefCell;
 use std::sync::{Arc, RwLock};
 
 /// Layer Normalization layer
@@ -43,7 +41,7 @@ use std::sync::{Arc, RwLock};
 /// assert_eq!(output.shape(), input.shape());
 /// ```
 #[derive(Debug)]
-pub struct LayerNorm<F: Float + Debug> {
+pub struct LayerNorm<F: Float + Debug + Send + Sync> {
     /// Dimensionality of the input features
     normalized_shape: Vec<usize>,
     /// Learnable scale parameter
@@ -51,9 +49,9 @@ pub struct LayerNorm<F: Float + Debug> {
     /// Learnable shift parameter
     beta: Array<F, IxDyn>,
     /// Gradient of gamma
-    dgamma: RefCell<Array<F, IxDyn>>,
+    dgamma: Arc<RwLock<Array<F, IxDyn>>>,
     /// Gradient of beta
-    dbeta: RefCell<Array<F, IxDyn>>,
+    dbeta: Arc<RwLock<Array<F, IxDyn>>>,
     /// Small constant for numerical stability
     eps: F,
     /// Input cache for backward pass
@@ -68,7 +66,7 @@ pub struct LayerNorm<F: Float + Debug> {
 
 /// 2D Layer Normalization for 2D convolutional networks
 #[derive(Debug)]
-pub struct LayerNorm2D<F: Float + Debug> {
+pub struct LayerNorm2D<F: Float + Debug + Send + Sync> {
     /// Number of channels to normalize
     channels: usize,
     /// Internal layer norm implementation
@@ -77,7 +75,7 @@ pub struct LayerNorm2D<F: Float + Debug> {
     name: Option<String>,
 }
 
-impl<F: Float + Debug + ScalarOperand + 'static> LayerNorm2D<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LayerNorm2D<F> {
     /// Create a new 2D layer normalization layer
     pub fn new<R: Rng>(channels: usize, eps: f64, name: Option<&str>) -> Result<Self> {
         let layer_norm = LayerNorm::new(channels, eps, &mut rand::rng())?;
@@ -100,7 +98,7 @@ impl<F: Float + Debug + ScalarOperand + 'static> LayerNorm2D<F> {
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + 'static> Layer<F> for LayerNorm2D<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for LayerNorm2D<F> {
     fn forward(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
         // For 2D layer norm, we expect:
         // [batch_size, channels, height, width] format
@@ -154,7 +152,7 @@ impl<F: Float + Debug + ScalarOperand + 'static> Layer<F> for LayerNorm2D<F> {
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + 'static> Clone for LayerNorm<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Clone for LayerNorm<F> {
     fn clone(&self) -> Self {
         let input_cache_clone = match self.input_cache.read() {
             Ok(guard) => guard.clone(),
@@ -180,8 +178,8 @@ impl<F: Float + Debug + ScalarOperand + 'static> Clone for LayerNorm<F> {
             normalized_shape: self.normalized_shape.clone(),
             gamma: self.gamma.clone(),
             beta: self.beta.clone(),
-            dgamma: RefCell::new(self.dgamma.borrow().clone()),
-            dbeta: RefCell::new(self.dbeta.borrow().clone()),
+            dgamma: Arc::new(RwLock::new(self.dgamma.read().unwrap().clone())),
+            dbeta: Arc::new(RwLock::new(self.dbeta.read().unwrap().clone())),
             eps: self.eps,
             input_cache: Arc::new(RwLock::new(input_cache_clone)),
             norm_cache: Arc::new(RwLock::new(norm_cache_clone)),
@@ -191,7 +189,7 @@ impl<F: Float + Debug + ScalarOperand + 'static> Clone for LayerNorm<F> {
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + 'static> Clone for LayerNorm2D<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Clone for LayerNorm2D<F> {
     fn clone(&self) -> Self {
         Self {
             channels: self.channels,
@@ -201,7 +199,7 @@ impl<F: Float + Debug + ScalarOperand + 'static> Clone for LayerNorm2D<F> {
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + 'static> LayerNorm<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LayerNorm<F> {
     /// Create a new layer normalization layer
     ///
     /// # Arguments
@@ -219,8 +217,8 @@ impl<F: Float + Debug + ScalarOperand + 'static> LayerNorm<F> {
         let beta = Array::<F, _>::from_elem(IxDyn(&[normalized_shape]), F::zero());
 
         // Initialize gradient arrays to zeros
-        let dgamma = RefCell::new(Array::<F, _>::zeros(IxDyn(&[normalized_shape])));
-        let dbeta = RefCell::new(Array::<F, _>::zeros(IxDyn(&[normalized_shape])));
+        let dgamma = Arc::new(RwLock::new(Array::<F, _>::zeros(IxDyn(&[normalized_shape]))));
+        let dbeta = Arc::new(RwLock::new(Array::<F, _>::zeros(IxDyn(&[normalized_shape]))));
 
         // Convert epsilon to F
         let eps = F::from(eps).ok_or_else(|| {
@@ -316,8 +314,8 @@ impl<F: Float + Debug + ScalarOperand + 'static> LayerNorm<F> {
         dgamma: &Array<F, IxDyn>,
         dbeta: &Array<F, IxDyn>,
     ) -> Result<()> {
-        let mut dgamma_ref = self.dgamma.borrow_mut();
-        let mut dbeta_ref = self.dbeta.borrow_mut();
+        let mut dgamma_ref = self.dgamma.write().unwrap();
+        let mut dbeta_ref = self.dbeta.write().unwrap();
         
         if dgamma.shape() != dgamma_ref.shape() {
             return Err(NeuralError::InvalidArchitecture(format!(
@@ -345,7 +343,7 @@ impl<F: Float + Debug + ScalarOperand + 'static> LayerNorm<F> {
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + 'static> Layer<F> for LayerNorm<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for LayerNorm<F> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -500,7 +498,7 @@ impl<F: Float + Debug + ScalarOperand + 'static> Layer<F> for LayerNorm<F> {
         let x_norm = norm_ref.as_ref().unwrap();
         let mean = mean_ref.as_ref().unwrap();
         let var = var_ref.as_ref().unwrap();
-        let cached_input = input_ref.as_ref().unwrap();
+        let _cached_input = input_ref.as_ref().unwrap();
 
         // Reshape cached values to 2D for computation
         let x_norm_reshaped = x_norm
@@ -577,8 +575,8 @@ impl<F: Float + Debug + ScalarOperand + 'static> Layer<F> for LayerNorm<F> {
     }
 
     fn update(&mut self, learning_rate: F) -> Result<()> {
-        let mut dgamma_ref = self.dgamma.borrow_mut();
-        let mut dbeta_ref = self.dbeta.borrow_mut();
+        let mut dgamma_ref = self.dgamma.write().unwrap();
+        let mut dbeta_ref = self.dbeta.write().unwrap();
         
         // Update parameters using accumulated gradients
         for i in 0..self.normalized_shape[0] {
@@ -597,7 +595,7 @@ impl<F: Float + Debug + ScalarOperand + 'static> Layer<F> for LayerNorm<F> {
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + 'static> ParamLayer<F> for LayerNorm<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for LayerNorm<F> {
     fn get_parameters(&self) -> Vec<&Array<F, ndarray::IxDyn>> {
         vec![&self.gamma, &self.beta]
     }

@@ -22,10 +22,8 @@ pub struct UMAP {
     /// Number of components (dimensions) in the low dimensional space
     n_components: usize,
     /// Controls how UMAP balances local versus global structure
-    #[allow(dead_code)]
     min_dist: f64,
     /// Controls how tightly UMAP is allowed to pack points together
-    #[allow(dead_code)]
     spread: f64,
     /// Learning rate for optimization
     learning_rate: f64,

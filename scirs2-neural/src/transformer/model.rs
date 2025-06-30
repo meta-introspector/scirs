@@ -10,7 +10,8 @@ use crate::utils::{PositionalEncoding, PositionalEncodingFactory, PositionalEnco
 use ndarray::{Array, IxDyn, ScalarOperand};
 use num_traits::Float;
 use rand::Rng;
-use std::cell::RefCell;
+use scirs2_core::simd_ops::SimdUnifiedOps;
+use std::sync::{Arc, RwLock};
 use std::fmt::Debug;
 
 /// Configuration for transformer models
@@ -57,7 +58,7 @@ impl Default for TransformerConfig {
 /// This implements the full transformer architecture from
 /// "Attention Is All You Need", combining encoder and decoder
 /// stacks with positional encoding.
-pub struct Transformer<F: Float + Debug + Send + Sync> {
+pub struct Transformer<F: Float + Debug + Send + Sync + SimdUnifiedOps> {
     /// Transformer encoder stack
     encoder: TransformerEncoder<F>,
     /// Transformer decoder stack
@@ -67,10 +68,10 @@ pub struct Transformer<F: Float + Debug + Send + Sync> {
     /// Model configuration
     config: TransformerConfig,
     /// Encoder output cache for backward pass
-    encoder_output_cache: RefCell<Option<Array<F, IxDyn>>>,
+    encoder_output_cache: Arc<RwLock<Option<Array<F, IxDyn>>>>,
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Transformer<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> Transformer<F> {
     /// Create a new transformer model
     ///
     /// # Arguments
@@ -116,7 +117,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Transformer<F> {
             decoder,
             pos_encoding,
             config,
-            encoder_output_cache: RefCell::new(None),
+            encoder_output_cache: Arc::new(RwLock::new(None)),
         })
     }
 
@@ -177,8 +178,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Transformer<F> {
 
         // Encode source
         let encoder_output = self.encoder.forward(&src_pos)?;
-        self.encoder_output_cache
-            .replace(Some(encoder_output.clone()));
+        *self.encoder_output_cache.write().unwrap() = Some(encoder_output.clone());
 
         // Decode target with encoder output
         let decoder_output = self
@@ -245,8 +245,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Transformer<F> {
 
         // Encode source
         let encoder_output = self.encoder.forward(&src_pos)?;
-        self.encoder_output_cache
-            .replace(Some(encoder_output.clone()));
+        *self.encoder_output_cache.write().unwrap() = Some(encoder_output.clone());
 
         // Decode target with encoder output
         let decoder_output = self
@@ -257,7 +256,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Transformer<F> {
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Transformer<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> Layer<F> for Transformer<F> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -292,8 +291,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Tran
 
         // Apply encoder
         let encoder_output = self.encoder.forward(&input_pos)?;
-        self.encoder_output_cache
-            .replace(Some(encoder_output.clone()));
+        *self.encoder_output_cache.write().unwrap() = Some(encoder_output.clone());
 
         Ok(encoder_output)
     }

@@ -88,6 +88,14 @@
 //!   * Uncertainty quantification and probabilistic interpolation
 //!   * Model comparison and Bayesian model selection
 //!   * Sparse GP methods for scalability to large datasets
+//! * Advanced statistical methods (`advanced_statistical` module):
+//!   * Functional Data Analysis (FDA) with multiple basis types
+//!   * Multi-output regression for correlated response variables
+//!   * Piecewise polynomial with automatic breakpoint detection
+//!   * Variational sparse Gaussian processes with ELBO optimization
+//!   * Statistical splines with confidence and prediction bands
+//!   * Advanced bootstrap methods (BCa, block, residual, wild)
+//!   * Savitzky-Golay filtering for smoothing and derivatives
 //! * Neural network enhanced interpolation (`neural_enhanced` module):
 //!   * Hybrid interpolation combining traditional methods with neural networks
 //!   * Residual learning to improve base interpolation accuracy
@@ -117,6 +125,13 @@
 //!   * Outlier detection and robust temporal smoothing
 //!   * Uncertainty estimation for time-dependent predictions
 //!   * Holiday and event-aware interpolation strategies
+//! * Streaming interpolation for online systems (`streaming` module):
+//!   * Online learning with incremental model updates
+//!   * Bounded memory usage for continuous operation
+//!   * Real-time predictions with microsecond latency
+//!   * Adaptive models that handle concept drift
+//!   * Built-in outlier detection and quality control
+//!   * Multiple streaming methods (splines, RBF, ensemble)
 //! * Geospatial interpolation methods (`geospatial` module):
 //!   * Geographic coordinate handling (latitude/longitude, projections)
 //!   * Spherical interpolation with great circle distances
@@ -124,6 +139,13 @@
 //!   * Multi-scale interpolation from local to global coverage
 //!   * Elevation-aware 3D interpolation and topographic considerations
 //!   * Boundary handling for coastal and land/water transitions
+//! * Comprehensive benchmarking suite (`benchmarking` module):
+//!   * Performance validation against SciPy 1.13+
+//!   * SIMD acceleration measurement and validation
+//!   * Memory usage profiling and optimization analysis
+//!   * Scalability testing across different data sizes
+//!   * Cross-platform performance validation
+//!   * Automated regression detection and reporting
 //! * Utility functions (`utils` module):
 //!   * Error estimation with cross-validation
 //!   * Parameter optimization
@@ -134,9 +156,11 @@ pub mod error;
 pub use error::{InterpolateError, InterpolateResult};
 
 // Common traits and API standards
+pub mod api_stabilization_enhanced;
 pub mod api_standards;
 pub mod deprecation;
 pub mod doc_enhancements;
+pub mod documentation_enhancement;
 pub mod traits;
 
 // Interpolation modules
@@ -144,6 +168,8 @@ pub mod adaptive_gp;
 pub mod adaptive_learning;
 pub mod adaptive_singularity;
 pub mod advanced;
+pub mod advanced_statistical;
+pub mod benchmarking;
 pub mod bezier;
 pub mod bivariate;
 pub mod boundarymode;
@@ -173,6 +199,7 @@ pub mod optimization;
 pub mod parallel;
 pub mod penalized;
 pub mod physics_informed;
+pub mod production_stress_testing;
 pub mod production_validation;
 pub mod scattered_optimized;
 pub mod simd_optimized;
@@ -181,18 +208,38 @@ pub mod structured_matrix;
 // SIMD-optimized interpolation methods (optional)
 #[cfg(feature = "simd")]
 pub mod simd_bspline;
+pub mod simd_comprehensive_validation;
+pub mod simd_performance_validation;
 pub mod smoothing;
 pub mod sparse_grid;
 pub mod spatial;
 pub mod spline;
 pub mod statistical;
 pub mod statistical_advanced;
+pub mod streaming;
 pub mod stress_testing;
 pub mod tension;
 pub mod tensor;
 pub mod timeseries;
 pub mod utils;
 pub mod voronoi;
+
+// SciPy compatibility validation
+pub mod scipy_compatibility;
+pub mod scipy_parity_enhanced;
+
+// Enhanced performance validation for stable release
+pub mod performance_validation_enhanced;
+
+// Enhanced production hardening for stable release
+pub mod production_hardening_enhanced;
+
+// Enhanced documentation polish for stable release
+pub mod documentation_polish_enhanced;
+
+// SciPy parity completion for stable release
+pub mod scipy_complete_parity;
+pub mod scipy_parity_completion;
 
 // Re-exports for convenience
 pub use adaptive_gp::{
@@ -227,6 +274,17 @@ pub use advanced::fast_kriging::{
 pub use advanced::kriging::{make_kriging_interpolator, CovarianceFunction, KrigingInterpolator};
 pub use advanced::rbf::{RBFInterpolator, RBFKernel};
 pub use advanced::thinplate::{make_thinplate_interpolator, ThinPlateSpline};
+pub use advanced_statistical::{
+    make_fda_interpolator, make_multi_output_interpolator, make_piecewise_polynomial_interpolator,
+    BasisType, FDAConfig, FunctionalDataInterpolator, MultiOutputInterpolator,
+    PiecewisePolynomialInterpolator,
+};
+pub use benchmarking::{
+    run_benchmarks_with_config, run_comprehensive_benchmarks, run_quick_validation,
+    AccuracyMetrics, BenchmarkConfig, BenchmarkReport, BenchmarkResult,
+    InterpolationBenchmarkSuite, MemoryStatistics, PerformanceBaseline, SimdMetrics, SystemInfo,
+    SystemLoad, TimingStatistics,
+};
 pub use bezier::{bernstein, compute_bernstein_all, BezierCurve, BezierSurface};
 pub use bivariate::{
     BivariateInterpolator, BivariateSpline, RectBivariateSpline, SmoothBivariateSpline,
@@ -258,8 +316,8 @@ pub use deprecation::{
     DeprecationInfo, DeprecationLevel, FeatureRegistry,
 };
 pub use doc_enhancements::{
-    get_method_documentation, print_method_comparison, ComputationalComplexity, 
-    MemoryComplexity, MethodDocumentation, PerformanceCharacteristics, UsageRecommendation,
+    get_method_documentation, print_method_comparison, ComputationalComplexity, MemoryComplexity,
+    MethodDocumentation, PerformanceCharacteristics, UsageRecommendation,
 };
 pub use extrapolation::{
     make_adaptive_extrapolator,
@@ -304,6 +362,10 @@ pub use gpu_accelerated::{
     get_gpu_device_info, gpu_utils, is_gpu_acceleration_available, make_gpu_rbf_interpolator,
     GpuBatchSplineEvaluator, GpuConfig, GpuDeviceInfo, GpuKernelConfig, GpuMemoryManager,
     GpuRBFInterpolator, GpuRBFKernel, GpuStats,
+};
+pub use statistical_advanced::{
+    AdvancedBootstrap, BcaBootstrap, BootstrapMethod, KernelParameters, SavitzkyGolayFilter,
+    StatisticalSpline, VariationalSparseGP,
 };
 
 // Production GPU acceleration
@@ -395,6 +457,19 @@ pub use simd_optimized::{
     get_simd_config, is_simd_available, simd_bspline_basis_functions, simd_bspline_batch_evaluate,
     simd_distance_matrix, simd_rbf_evaluate, RBFKernel as SimdRBFKernel, SimdConfig,
 };
+pub use simd_performance_validation::{
+    run_simd_validation, run_simd_validation_with_config, SimdPerformanceValidator,
+    SimdValidationConfig, ValidationSummary,
+};
+
+// Comprehensive SIMD validation exports for 0.1.0 stable release
+pub use simd_comprehensive_validation::{
+    quick_simd_validation, validate_simd_performance, validate_simd_with_config,
+    AccuracyValidationResult, CpuArchitecture, InstructionSet, PerformanceSummary,
+    SimdPerformanceResult, SimdPerformanceValidator as ComprehensiveSimdValidator,
+    SimdValidationConfig as ComprehensiveSimdConfig, SimdValidationReport, SimdValidationResult,
+    SystemSimdCapabilities,
+};
 pub use smoothing::{
     make_adaptive_smoothing_spline, make_error_based_smoothing_spline,
     make_optimized_smoothing_spline, KnotStrategy, VariableKnotSpline,
@@ -407,7 +482,10 @@ pub use sparse_grid::{
 pub use spatial::balltree::BallTree;
 pub use spatial::kdtree::KdTree;
 pub use spatial::{AdvancedSimdOps, SimdBenchmark};
-pub use spline::{make_interp_spline, CubicSpline, CubicSplineBuilder, SplineBoundaryCondition};
+pub use spline::{
+    cubic_spline_scipy, interp1d_scipy, make_interp_spline, CubicSpline, CubicSplineBuilder,
+    SplineBoundaryCondition,
+};
 pub use statistical::{
     make_auto_kde_interpolator,
     make_bayesian_interpolator,
@@ -439,10 +517,21 @@ pub use statistical::{
     StochasticInterpolator,
 };
 
-// Advanced statistical interpolation methods
-pub use statistical_advanced::{
-    AdvancedBootstrap, BcaBootstrap, BootstrapMethod, KernelParameters, KernelType, 
-    SavitzkyGolayFilter, StatisticalSpline, VariationalSparseGP,
+// Advanced statistical interpolation methods (duplicates removed)
+// Note: AdvancedBootstrap, BcaBootstrap, BootstrapMethod, KernelParameters,
+// SavitzkyGolayFilter, StatisticalSpline, VariationalSparseGP, KernelType
+// are already imported above from statistical_advanced module
+pub use scipy_compatibility::{
+    create_compatibility_checker, quick_compatibility_check, ApiCoverageResults,
+    BehaviorValidationResults, CompatibilityConfig, CompatibilityReport, DifferenceSeverity,
+    ErrorType, FeaturePriority, ImplementationEffort, MissingFeature,
+    ParameterCompatibilityResults, ParameterDifference, SciPyCompatibilityChecker,
+};
+pub use streaming::{
+    make_ensemble_streaming_interpolator, make_online_spline_interpolator,
+    make_streaming_rbf_interpolator, EnsembleStreamingInterpolator, OnlineSplineInterpolator,
+    StreamingConfig, StreamingInterpolator, StreamingMethod, StreamingPoint,
+    StreamingRBFInterpolator, StreamingStats,
 };
 pub use structured_matrix::{
     create_bspline_band_matrix, solve_band_system, solve_sparse_system,
@@ -467,6 +556,97 @@ pub use voronoi::{
     GradientEstimation, InterpolateWithGradient, InterpolateWithGradientResult,
     InterpolationMethod as VoronoiInterpolationMethod, NaturalNeighborInterpolator,
     ParallelNaturalNeighborInterpolator,
+};
+
+// Enhanced performance validation exports
+pub use performance_validation_enhanced::{
+    quick_validation, validate_stable_release_readiness, validate_with_config,
+    AccuracyMetrics as EnhancedAccuracyMetrics, AllocationStats, CpuCapabilities,
+    CrossPlatformConfig, ImpactAssessment, IssueCategory, IssueSeverity, LeakAnalysis,
+    MemoryCapabilities, MemoryMetrics, MemoryStressConfig, MemoryTracker, OperatingSystemInfo,
+    PerformanceMetrics, ProductionWorkload, SimdCapabilities, SimdMetrics as EnhancedSimdMetrics,
+    StabilityAssessment, StableReadiness, StableReleaseValidator, SystemCapabilities,
+    ValidationCategory, ValidationConfig, ValidationReport, ValidationResult, ValidationStatus,
+    WorkEstimate,
+};
+
+// Enhanced production hardening exports
+pub use production_hardening_enhanced::{
+    quick_production_hardening, run_production_hardening, run_production_hardening_with_config,
+    AlertSeverity, ConcurrentAccessConfig, CpuIntensiveConfig, DataDistribution,
+    ErrorMessageAssessment, ErrorMessageQuality, ErrorQualityConfig, HardeningCategory,
+    HardeningConfig, HardeningIssue, HardeningTestResult, MemoryLeakConfig, MemoryPressureConfig,
+    MemorySnapshot, MonitoringAlert, MonitoringConfig, PerformanceSnapshot,
+    ProductionHardeningReport, ProductionHardeningValidator, ProductionMonitoring,
+    ProductionReadiness, ProductionStabilityAssessment, QualityAssessment, SecurityAnalysis,
+    SecurityConfig, SecurityTestResult, SecurityVulnerability, StabilityAnalysisConfig,
+    StressTestConfig, TestSeverity, VulnerabilitySeverity, VulnerabilityType,
+};
+
+// Enhanced documentation polish exports
+pub use documentation_polish_enhanced::{
+    polish_documentation_for_stable_release, polish_documentation_with_config,
+    quick_documentation_review, ApiStabilityDocumentation, AudienceLevel as PolishAudienceLevel,
+    BenchmarkComparison, BenchmarkResult as DocBenchmarkResult, BestPracticesGuide,
+    BreakingChangePolicy, CommonPitfall, CompatibilityMatrix, CompletionEstimate, DecisionNode,
+    DecisionOutcome, DeprecationPeriod, DeprecationPolicy, DeprecationWarningMechanism,
+    DocumentationImprovementType, DocumentationIssue as PolishDocumentationIssue,
+    DocumentationIssueCategory, DocumentationIssueSeverity,
+    DocumentationItemType as PolishDocumentationItemType, DocumentationPolishReport,
+    DocumentationPolisher, DocumentationQuality, DocumentationQualityConfig,
+    DocumentationReviewResult, ErrorCondition, ErrorDocumentation, FeatureComparison,
+    FeatureComparisonItem, MethodSelectionGuide, MigrationAssistance, MigrationGuide,
+    MigrationIssue, MigrationStep, OptimizationStrategy, ParameterGuidance, ParameterGuide,
+    PerformanceComparison, PerformanceOptimizationGuide, PlatformCompatibility,
+    ProductionRecommendations, ProfilingGuidance, StabilityLevel as DocStabilityLevel, Tutorial,
+    TutorialCategory, TutorialSection, VersionRange, VersionType,
+};
+
+// SciPy parity completion exports
+pub use scipy_complete_parity::{
+    create_scipy_interface, validate_scipy_parity as validate_complete_scipy_parity, PPoly,
+    SciPyBSpline, SciPyCompatInterface, SciPyCubicSpline, SciPyInterpolate,
+};
+pub use scipy_parity_completion::{
+    create_scipy_parity_checker, quick_scipy_parity_check, validate_scipy_parity, FeatureAnalysis,
+    MissingFeature as ParityMissingFeature, ParityCompletionConfig, PartialFeature,
+    PerformanceComparison as ParityPerformanceComparison, SciPyFeature, SciPyParityCompletion,
+    SciPyParityReport,
+};
+
+// API stabilization exports for 0.1.0 stable release
+pub use api_stabilization_enhanced::{
+    analyze_api_for_stable_release, analyze_api_with_config, quick_api_analysis, ApiAnalysisResult,
+    ApiIssue, ApiStabilizationAnalyzer, ApiStabilizationReport, BreakingChangeAssessment,
+    DeprecationItem, IssueCategory as ApiIssueCategory, IssueSeverity as ApiIssueSeverity,
+    StabilizationConfig, StableReleaseReadiness, StrictnessLevel,
+};
+
+// Production stress testing exports for production hardening
+pub use production_stress_testing::{
+    run_production_stress_tests, run_quick_stress_tests, run_stress_tests_with_config,
+    ProductionImpact, ProductionReadiness as StressProductionReadiness, ProductionStressTester,
+    StressTestCategory, StressTestConfig as StressTestingConfig, StressTestIssue, StressTestReport,
+    StressTestResult, TestStatus,
+};
+
+// Documentation enhancement exports for 0.1.0 stable release
+pub use documentation_enhancement::{
+    enhance_documentation_for_stable_release, enhance_documentation_with_config,
+    quick_documentation_analysis, AudienceLevel, DocumentationAnalysisResult, DocumentationConfig,
+    DocumentationEnhancer, DocumentationIssue as EnhancementDocumentationIssue,
+    DocumentationItemType, DocumentationReadiness, DocumentationReport, ExampleValidation,
+    QualityAssessment as EnhancementQualityAssessment, Tutorial as EnhancementTutorial, UserGuide,
+};
+
+// SciPy parity enhancement exports for stable release
+pub use scipy_parity_enhanced::{
+    enhance_scipy_parity_for_stable_release, enhance_scipy_parity_with_config,
+    quick_scipy_parity_analysis, CompatibilityTestResult, FeatureGapAnalysis,
+    FeaturePriority as EnhancedFeaturePriority, FocusArea, ImplementationLevel,
+    ImplementationStatus, ParityConfig, ParityReadiness,
+    PerformanceComparison as EnhancedPerformanceComparison, SciPyParityEnhancer,
+    SciPyParityReport as EnhancedSciPyParityReport,
 };
 
 #[cfg(test)]

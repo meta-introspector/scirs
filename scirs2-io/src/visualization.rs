@@ -3,6 +3,9 @@
 //! Provides interfaces and utilities for integrating with popular visualization
 //! libraries and tools, enabling seamless data export and plotting capabilities.
 
+#![allow(dead_code)]
+#![allow(missing_docs)]
+
 use crate::error::{IoError, Result};
 use crate::metadata::Metadata;
 use ndarray::Array2;
@@ -327,7 +330,7 @@ impl VisualizationExporter for PlotlyExporter {
             let trace = match series.plot_type {
                 PlotType::Line | PlotType::Scatter => {
                     serde_json::json!({
-                        "type": if matches!(series.plot_type, PlotType::Line) { "scatter" } else { "scatter" },
+                        "type": "scatter",
                         "mode": if matches!(series.plot_type, PlotType::Line) { "lines" } else { "markers" },
                         "name": series.name,
                         "x": series.x,
@@ -689,7 +692,6 @@ pub mod quick {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::arr2;
 
     #[test]
     fn test_visualization_builder() {

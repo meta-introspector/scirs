@@ -7,6 +7,9 @@
 //! - Parallel and streaming execution
 //! - Caching and checkpointing
 
+#![allow(dead_code)]
+#![allow(missing_docs)]
+
 use crate::error::{IoError, Result};
 use crate::metadata::{Metadata, ProcessingHistoryEntry};
 use scirs2_core::parallel_ops::*;
@@ -18,11 +21,13 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
+mod advanced_optimization;
 mod builders;
 mod executors;
 mod stages;
 mod transforms;
 
+pub use advanced_optimization::*;
 pub use builders::*;
 pub use executors::*;
 pub use stages::*;

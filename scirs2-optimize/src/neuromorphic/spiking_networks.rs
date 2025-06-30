@@ -4,7 +4,7 @@
 //! which process information using discrete spike events rather than continuous signals.
 
 use ndarray::{Array1, Array2, ArrayView1};
-use scirs2_core::error::Result;
+use scirs2_core::error::CoreResult as Result;
 use crate::error::OptimizeError;
 use super::{NeuromorphicConfig, SpikeEvent, NeuronState};
 use std::collections::VecDeque;

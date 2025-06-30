@@ -961,7 +961,7 @@ pub struct ContinualLearningDataset {
 }
 
 /// Convenience functions for advanced data generation
-
+///
 /// Generate adversarial examples from a base dataset
 pub fn make_adversarial_examples(
     base_dataset: &Dataset,

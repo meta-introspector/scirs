@@ -182,13 +182,10 @@ where
     for k in 0..options.max_iter {
         iter = k + 1;
 
-        // Bidiagonalization step
+        // Bidiagonalization step: u := A*v - alpha*u
+        let av = matrix_vector_multiply(matrix, &v.view())?;
         for i in 0..m {
-            u[i] = u[i] - alpha * u[i];
-        }
-        let au = matrix_vector_multiply(matrix, &v.view())?;
-        for i in 0..m {
-            u[i] = au[i] - alpha * u[i];
+            u[i] = av[i] - alpha * u[i];
         }
         let beta_new = l2_norm(&u.view());
 
@@ -198,9 +195,7 @@ where
             }
         }
 
-        for i in 0..n {
-            v[i] = v[i] - beta_new * v[i];
-        }
+        // v := A^T*u - beta_new*v
         let atu = matrix_transpose_vector_multiply(matrix, &u.view())?;
         for i in 0..n {
             v[i] = atu[i] - beta_new * v[i];

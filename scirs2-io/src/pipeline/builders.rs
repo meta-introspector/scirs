@@ -1,5 +1,8 @@
 //! Pipeline builder APIs for constructing complex data processing workflows
 
+#![allow(dead_code)]
+#![allow(missing_docs)]
+
 use super::*;
 use crate::error::Result;
 use std::marker::PhantomData;
@@ -363,7 +366,7 @@ mod tests {
 
     #[test]
     fn test_pipeline_builder() {
-        let pipeline: Pipeline<i32, String> = PipelineBuilder::new()
+        let pipeline: Pipeline<i32, String> = PipelineBuilder::<i32, String>::new()
             .transform("double", |x: i32| Ok(x * 2))
             .transform("to_string", |x: i32| Ok(x.to_string()))
             .build();
@@ -374,7 +377,7 @@ mod tests {
 
     #[test]
     fn test_pipeline_with_filter() {
-        let pipeline: Pipeline<Vec<i32>, Vec<i32>> = PipelineBuilder::new()
+        let pipeline: Pipeline<Vec<i32>, Vec<i32>> = PipelineBuilder::<Vec<i32>, Vec<i32>>::new()
             .transform("filter_even", |nums: Vec<i32>| {
                 Ok(nums.into_iter().filter(|&x| x % 2 == 0).collect())
             })

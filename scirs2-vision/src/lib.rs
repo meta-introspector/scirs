@@ -36,6 +36,11 @@ pub mod registration;
 pub mod segmentation;
 pub mod simd_ops;
 pub mod streaming;
+
+// Ultrathink mode enhancements - cutting-edge computer vision
+pub mod quantum_inspired_streaming;
+pub mod neuromorphic_streaming;
+pub mod ai_optimization;
 pub mod transform;
 
 // Comment out problematic modules during tests to focus on fixing other issues
@@ -130,4 +135,23 @@ pub use streaming::{
     BatchProcessor, BlurStage, EdgeDetectionStage, Frame, FrameMetadata, GrayscaleStage,
     MotionDetectionStage, PerformanceMonitor, PipelineMetrics, ProcessingStage, StreamPipeline,
     StreamProcessor, VideoStreamReader,
+};
+
+// Re-export ultrathink mode enhancements
+pub use quantum_inspired_streaming::{
+    QuantumAdaptiveStreamPipeline, QuantumAnnealingStage, QuantumEntanglementStage,
+    QuantumStreamProcessor, QuantumSuperpositionStage, QuantumAmplitude, QuantumProcessingState,
+    ProcessingDecision,
+};
+
+pub use neuromorphic_streaming::{
+    AdaptiveNeuromorphicPipeline, EventDrivenProcessor, NeuromorphicEdgeDetector, 
+    SpikingNeuralNetwork, SpikingNeuron, PlasticSynapse, EventStats, NeuromorphicProcessingStats,
+    NeuromorphicMode, EfficiencyMetrics,
+};
+
+pub use ai_optimization::{
+    RLParameterOptimizer, GeneticPipelineOptimizer, NeuralArchitectureSearch, PredictiveScaler,
+    PipelineGenome, ProcessingArchitecture, ScalingRecommendation, PerformanceMetric,
+    ArchitecturePerformance, SearchStrategy,
 };

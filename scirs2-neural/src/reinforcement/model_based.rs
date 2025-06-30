@@ -9,6 +9,7 @@ use crate::layers::{Dense, Layer};
 use crate::reinforcement::environments::Environment;
 use ndarray::concatenate;
 use ndarray::prelude::*;
+use rand::seq::SliceRandom;
 
 /// Dynamics model for predicting environment transitions
 pub struct DynamicsModel {
@@ -360,7 +361,6 @@ impl ModelBuffer {
     }
 
     fn sample(&self, batch_size: usize) -> Result<ModelBatch> {
-        use rand::seq::SliceRandom;
         let mut rng = rand::rng();
 
         let indices: Vec<usize> = (0..self.len())

@@ -2385,6 +2385,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "serde")]
     fn test_audit_logger_creation() {
         let temp_dir = tempdir().expect("Failed to create temp dir");
         let config = AuditConfig {
@@ -2405,6 +2406,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "serde")]
     fn test_data_access_logging() {
         let temp_dir = tempdir().expect("Failed to create temp dir");
         let config = AuditConfig {

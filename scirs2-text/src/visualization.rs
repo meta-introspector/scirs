@@ -63,16 +63,24 @@ pub enum ColorScheme {
 /// RGB color representation
 #[derive(Debug, Clone, Copy)]
 pub struct Color {
+    /// Red component (0-255)
     pub r: u8,
+    /// Green component (0-255)
     pub g: u8,
+    /// Blue component (0-255)
     pub b: u8,
 }
 
 impl Color {
+    /// White color constant
     pub const WHITE: Color = Color { r: 255, g: 255, b: 255 };
+    /// Black color constant
     pub const BLACK: Color = Color { r: 0, g: 0, b: 0 };
+    /// Red color constant
     pub const RED: Color = Color { r: 255, g: 0, b: 0 };
+    /// Green color constant
     pub const GREEN: Color = Color { r: 0, g: 255, b: 0 };
+    /// Blue color constant
     pub const BLUE: Color = Color { r: 0, g: 0, b: 255 };
     
     /// Create new color from RGB values
@@ -1118,17 +1126,20 @@ mod tests {
             SentimentResult {
                 sentiment: Sentiment::Positive,
                 confidence: 0.8,
-                scores: HashMap::new(),
+                score: 0.8,
+                word_counts: crate::sentiment::SentimentWordCounts::default(),
             },
             SentimentResult {
                 sentiment: Sentiment::Negative,
                 confidence: 0.7,
-                scores: HashMap::new(),
+                score: -0.7,
+                word_counts: crate::sentiment::SentimentWordCounts::default(),
             },
             SentimentResult {
                 sentiment: Sentiment::Neutral,
                 confidence: 0.6,
-                scores: HashMap::new(),
+                score: 0.0,
+                word_counts: crate::sentiment::SentimentWordCounts::default(),
             },
         ];
         

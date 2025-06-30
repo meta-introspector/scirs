@@ -488,9 +488,6 @@ pub struct GraphAutoencoder {
     learning_rate: f64,
     /// Number of epochs
     n_epochs: usize,
-    /// Random state
-    #[allow(dead_code)]
-    random_state: Option<u64>,
 }
 
 /// Activation function types
@@ -512,7 +509,6 @@ impl GraphAutoencoder {
             activation: ActivationType::ReLU,
             learning_rate: 0.01,
             n_epochs: 200,
-            random_state: None,
         }
     }
 

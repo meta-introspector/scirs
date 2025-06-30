@@ -9,7 +9,7 @@
 //! All SIMD operations are delegated to scirs2-core's unified SIMD abstraction layer
 //! in compliance with the project-wide SIMD policy.
 
-use crate::bspline::{BSpline, BSplineWorkspace, ExtrapolateMode};
+use crate::bspline::{BSpline, BSplineWorkspace};
 use crate::error::InterpolateResult;
 use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, FromPrimitive, Zero};

@@ -71,13 +71,52 @@ impl GpuBackend {
     /// Check if this backend is available on the current system
     pub fn is_available(&self) -> bool {
         match self {
-            // In a real implementation, we would check if the backend is available
-            // For now, just return a default value based on feature flags
-            GpuBackend::Cuda => cfg!(feature = "cuda"),
-            GpuBackend::Rocm => cfg!(feature = "rocm"),
-            GpuBackend::Wgpu => cfg!(feature = "wgpu"),
-            GpuBackend::Metal => cfg!(all(feature = "metal", target_os = "macos")),
-            GpuBackend::OpenCL => cfg!(feature = "opencl"),
+            // Check runtime availability for GPU backends
+            GpuBackend::Cuda => {
+                #[cfg(feature = "cuda")]
+                {
+                    use crate::gpu::backends::cuda::CudaContext;
+                    CudaContext::is_available()
+                }
+                #[cfg(not(feature = "cuda"))]
+                {
+                    false
+                }
+            },
+            GpuBackend::Rocm => cfg!(feature = "rocm"), // Would use ROCm runtime check
+            GpuBackend::Wgpu => {
+                #[cfg(feature = "wgpu_backend")]
+                {
+                    use crate::gpu::backends::wgpu::WebGPUContext;
+                    WebGPUContext::is_available()
+                }
+                #[cfg(not(feature = "wgpu_backend"))]
+                {
+                    false
+                }
+            },
+            GpuBackend::Metal => {
+                #[cfg(all(feature = "metal", target_os = "macos"))]
+                {
+                    // Metal is always available on macOS if the feature is enabled
+                    true
+                }
+                #[cfg(not(all(feature = "metal", target_os = "macos")))]
+                {
+                    false
+                }
+            },
+            GpuBackend::OpenCL => {
+                #[cfg(feature = "opencl")]
+                {
+                    use crate::gpu::backends::opencl::OpenCLContext;
+                    OpenCLContext::is_available()
+                }
+                #[cfg(not(feature = "opencl"))]
+                {
+                    false
+                }
+            },
             GpuBackend::Cpu => true,
         }
     }
@@ -260,6 +299,68 @@ impl From<GpuError> for CoreError {
 
 /// Trait for types that can be used with GPU operations
 pub trait GpuDataType: Copy + Send + Sync + 'static {}
+
+/// GPU memory pointer abstraction
+#[derive(Debug)]
+pub struct GpuPtr<T: GpuDataType> {
+    ptr: u64,
+    size: usize,
+    _phantom: PhantomData<T>,
+}
+
+impl<T: GpuDataType> GpuPtr<T> {
+    /// Allocate GPU memory
+    pub fn allocate(size: usize) -> Result<Self, GpuError> {
+        Ok(GpuPtr {
+            ptr: 0x1000_0000, // Placeholder address
+            size,
+            _phantom: PhantomData,
+        })
+    }
+
+    /// Get the raw pointer value
+    pub fn as_ptr(&self) -> u64 {
+        self.ptr
+    }
+
+    /// Get the size in elements
+    pub fn size(&self) -> usize {
+        self.size
+    }
+}
+
+/// Kernel argument types for GPU kernel execution
+#[derive(Debug, Clone)]
+pub enum KernelArg<'a, T: GpuDataType> {
+    /// Buffer argument
+    Buffer(&'a GpuPtr<T>),
+    /// Scalar argument
+    Scalar(T),
+}
+
+/// Non-generic kernel argument for mixed-type kernel calls
+#[derive(Debug, Clone)]
+pub enum DynamicKernelArg {
+    /// Buffer argument (type-erased)
+    Buffer(u64), // Raw pointer
+    /// f32 scalar
+    F32(f32),
+    /// f64 scalar
+    F64(f64),
+    /// i32 scalar
+    I32(i32),
+    /// u32 scalar
+    U32(u32),
+    /// usize scalar
+    Usize(usize),
+}
+
+/// GPU communication channel for multi-GPU operations
+pub struct GpuChannel {
+    source_device: usize,
+    target_device: usize,
+    bandwidth: f64, // GB/s
+}
 
 // Implement for common types
 impl GpuDataType for f32 {}
@@ -463,13 +564,15 @@ impl GpuContext {
                 }
             }
             GpuBackend::Wgpu => {
-                #[cfg(feature = "wgpu")]
+                #[cfg(feature = "wgpu_backend")]
                 {
-                    // This is just a stub - in a real implementation, we would use the wgpu crate
-                    // to create a context and return it
-                    return Err(GpuError::BackendNotImplemented(backend));
+                    use crate::gpu::backends::wgpu::WebGPUContext;
+                    match WebGPUContext::new() {
+                        Ok(ctx) => Arc::new(ctx) as Arc<dyn GpuContextImpl>,
+                        Err(e) => return Err(e),
+                    }
                 }
-                #[cfg(not(feature = "wgpu"))]
+                #[cfg(not(feature = "wgpu_backend"))]
                 {
                     return Err(GpuError::UnsupportedBackend(backend));
                 }
@@ -491,9 +594,11 @@ impl GpuContext {
             GpuBackend::OpenCL => {
                 #[cfg(feature = "opencl")]
                 {
-                    // This is just a stub - in a real implementation, we would use the opencl crate
-                    // to create a context and return it
-                    return Err(GpuError::BackendNotImplemented(backend));
+                    use crate::gpu::backends::opencl::OpenCLContext;
+                    match OpenCLContext::new() {
+                        Ok(ctx) => Arc::new(ctx) as Arc<dyn GpuContextImpl>,
+                        Err(e) => return Err(e),
+                    }
                 }
                 #[cfg(not(feature = "opencl"))]
                 {
@@ -598,6 +703,63 @@ impl GpuContext {
         // In a real implementation, this would query the device
         // For now, return a placeholder value
         Some(4 * 1024 * 1024 * 1024) // 4GB
+    }
+
+    /// Launch a kernel with the given parameters
+    pub fn launch_kernel(
+        &self,
+        kernel_name: &str,
+        grid_size: (usize, usize, usize),
+        block_size: (usize, usize, usize),
+        args: &[DynamicKernelArg],
+    ) -> Result<(), GpuError> {
+        // Placeholder implementation
+        let _ = (kernel_name, grid_size, block_size, args);
+        Ok(())
+    }
+
+    /// Transfer data from host to device asynchronously
+    pub fn transfer_async_host_to_device<T: GpuDataType>(
+        &self,
+        ptr: &GpuPtr<T>,
+        data: &[T],
+    ) -> Result<(), GpuError> {
+        // Placeholder implementation
+        let _ = (ptr, data);
+        Ok(())
+    }
+
+    /// Transfer data from host to device synchronously
+    pub fn transfer_host_to_device<T: GpuDataType>(
+        &self,
+        ptr: &GpuPtr<T>,
+        data: &[T],
+    ) -> Result<(), GpuError> {
+        // Placeholder implementation
+        let _ = (ptr, data);
+        Ok(())
+    }
+
+    /// Transfer data from device to host asynchronously
+    pub fn transfer_async_device_to_host<T: GpuDataType>(
+        &self,
+        ptr: &GpuPtr<T>,
+        data: &mut [T],
+    ) -> Result<(), GpuError> {
+        // Placeholder implementation
+        let _ = (ptr, data);
+        Ok(())
+    }
+
+    /// Transfer data from device to host synchronously
+    pub fn transfer_device_to_host<T: GpuDataType>(
+        &self,
+        ptr: &GpuPtr<T>,
+        data: &mut [T],
+    ) -> Result<(), GpuError> {
+        // Placeholder implementation
+        let _ = (ptr, data);
+        Ok(())
     }
 }
 

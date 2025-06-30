@@ -1785,7 +1785,19 @@ where
 // Implementation of SplineInterpolator trait for BSpline
 impl<T> crate::traits::SplineInterpolator<T> for BSpline<T>
 where
-    T: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + MulAssign + DivAssign + RemAssign + Send + Sync + 'static,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Display
+        + AddAssign
+        + SubAssign
+        + MulAssign
+        + DivAssign
+        + RemAssign
+        + Send
+        + Sync
+        + 'static
+        + crate::traits::InterpolationFloat,
 {
     fn derivative(
         &self,
@@ -1816,37 +1828,37 @@ where
         Ok(results)
     }
 
-    fn antiderivative(&self) -> crate::InterpolateResult<Box<dyn crate::traits::SplineInterpolator<T>>> {
+    fn antiderivative(
+        &self,
+    ) -> crate::InterpolateResult<Box<dyn crate::traits::SplineInterpolator<T>>> {
         let antideriv = self.antiderivative(1)?;
         Ok(Box::new(antideriv))
     }
 
     fn find_roots(&self, bounds: &[(T, T)], tolerance: T) -> crate::InterpolateResult<Vec<T>> {
         use crate::utils::find_multiple_roots;
-        
+
         let mut all_roots = Vec::new();
-        
+
         for &(a, b) in bounds {
             if a >= b {
                 continue;
             }
-            
+
             // Create evaluation function for root finding
-            let eval_fn = |x: T| -> crate::InterpolateResult<T> {
-                self.evaluate(x)
-            };
-            
+            let eval_fn = |x: T| -> crate::InterpolateResult<T> { self.evaluate(x) };
+
             // Use subdivision approach for B-splines which may have multiple roots
             match find_multiple_roots(a, b, tolerance, 10, eval_fn) {
                 Ok(mut roots) => all_roots.append(&mut roots),
                 Err(_) => continue,
             }
         }
-        
+
         // Sort and remove duplicates
         all_roots.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
         all_roots.dedup_by(|a, b| (*a - *b).abs() < tolerance);
-        
+
         Ok(all_roots)
     }
 
@@ -1856,40 +1868,38 @@ where
         tolerance: T,
     ) -> crate::InterpolateResult<Vec<(T, T, crate::traits::ExtremaType)>> {
         use crate::utils::find_multiple_roots;
-        
+
         let mut extrema = Vec::new();
-        
+
         for &(a, b) in bounds {
             if a >= b {
                 continue;
             }
-            
+
             // Find roots of the first derivative (critical points)
-            let deriv_fn = |x: T| -> crate::InterpolateResult<T> {
-                self.derivative(x, 1)
-            };
-            
+            let deriv_fn = |x: T| -> crate::InterpolateResult<T> { self.derivative(x, 1) };
+
             let critical_points = match find_multiple_roots(a, b, tolerance, 20, deriv_fn) {
                 Ok(points) => points,
                 Err(_) => continue,
             };
-            
+
             for cp in critical_points {
                 if cp < a || cp > b {
                     continue;
                 }
-                
+
                 // Classify using second derivative test
                 let second_deriv = match self.derivative(cp, 2) {
                     Ok(d2) => d2,
                     Err(_) => continue,
                 };
-                
+
                 let f_value = match self.evaluate(cp) {
                     Ok(val) => val,
                     Err(_) => continue,
                 };
-                
+
                 let extrema_type = if second_deriv > T::zero() {
                     crate::traits::ExtremaType::Minimum
                 } else if second_deriv < T::zero() {
@@ -1897,21 +1907,131 @@ where
                 } else {
                     crate::traits::ExtremaType::InflectionPoint
                 };
-                
+
                 extrema.push((cp, f_value, extrema_type));
             }
         }
-        
+
         // Sort by x-coordinate
         extrema.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
-        
+
         Ok(extrema)
+    }
+
+    /// Get knot vector (SciPy-compatible interface)
+    pub fn t(&self) -> &Array1<T> {
+        &self.t
+    }
+
+    /// Get coefficients (SciPy-compatible interface)
+    pub fn c(&self) -> &Array1<T> {
+        &self.c
+    }
+
+    /// Get degree (SciPy-compatible interface)
+    pub fn k(&self) -> usize {
+        self.k
+    }
+
+    /// Evaluate at multiple points with bounds checking (SciPy-compatible)
+    pub fn evaluate_array_checked(&self, x_new: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
+        let mut result = Array1::zeros(x_new.len());
+        let t_min = self.t[0];
+        let t_max = self.t[self.t.len() - 1];
+
+        for (i, &x) in x_new.iter().enumerate() {
+            if x < t_min || x > t_max {
+                return Err(InterpolateError::OutOfBounds(format!(
+                    "x value {} is outside domain [{}, {}]",
+                    x, t_min, t_max
+                )));
+            }
+            result[i] = self.evaluate(x)?;
+        }
+
+        Ok(result)
+    }
+
+    /// Evaluate derivatives at multiple points with bounds checking (SciPy-compatible)
+    pub fn derivative_array(
+        &self,
+        x_new: &ArrayView1<T>,
+        order: usize,
+    ) -> InterpolateResult<Array1<T>> {
+        let mut result = Array1::zeros(x_new.len());
+
+        for (i, &x) in x_new.iter().enumerate() {
+            result[i] = self.derivative_at(x, order)?;
+        }
+
+        Ok(result)
+    }
+
+    /// Evaluate derivatives at multiple points with bounds checking (SciPy-compatible)
+    pub fn derivative_array_checked(
+        &self,
+        x_new: &ArrayView1<T>,
+        order: usize,
+    ) -> InterpolateResult<Array1<T>> {
+        let mut result = Array1::zeros(x_new.len());
+        let t_min = self.t[0];
+        let t_max = self.t[self.t.len() - 1];
+
+        for (i, &x) in x_new.iter().enumerate() {
+            if x < t_min || x > t_max {
+                return Err(InterpolateError::OutOfBounds(format!(
+                    "x value {} is outside domain [{}, {}]",
+                    x, t_min, t_max
+                )));
+            }
+            result[i] = self.derivative_at(x, order)?;
+        }
+
+        Ok(result)
+    }
+
+    /// Evaluate at multiple points (SciPy-compatible)
+    pub fn evaluate_array(&self, x_new: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
+        let mut result = Array1::zeros(x_new.len());
+
+        for (i, &x) in x_new.iter().enumerate() {
+            result[i] = self.evaluate(x)?;
+        }
+
+        Ok(result)
+    }
+
+    /// Compute derivative at a specific point and order
+    pub fn derivative_at(&self, x: T, order: usize) -> InterpolateResult<T> {
+        if order == 0 {
+            return self.evaluate(x);
+        }
+
+        if order > self.k {
+            return Ok(T::zero());
+        }
+
+        // Get the derivative spline
+        let deriv_spline = self.derivative(order)?;
+        deriv_spline.evaluate(x)
     }
 }
 
 impl<T> crate::traits::Interpolator<T> for BSpline<T>
 where
-    T: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + MulAssign + DivAssign + RemAssign + Send + Sync + 'static,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Display
+        + AddAssign
+        + SubAssign
+        + MulAssign
+        + DivAssign
+        + RemAssign
+        + Send
+        + Sync
+        + 'static
+        + crate::traits::InterpolationFloat,
 {
     fn evaluate(&self, query_points: &ArrayView2<T>) -> crate::InterpolateResult<Vec<T>> {
         if query_points.ncols() != 1 {

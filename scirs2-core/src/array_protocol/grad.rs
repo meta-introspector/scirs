@@ -190,7 +190,7 @@ fn broadcast_to(a: &dyn ArrayProtocol, shape: &[usize]) -> CoreResult<Box<dyn Ar
             // Implement basic broadcasting rules
             let input_shape = array.shape();
             let _ndim_diff = shape.len().saturating_sub(input_shape.len());
-            
+
             // Check if broadcasting is possible
             let mut can_broadcast = true;
             for i in 0..input_shape.len() {
@@ -201,7 +201,7 @@ fn broadcast_to(a: &dyn ArrayProtocol, shape: &[usize]) -> CoreResult<Box<dyn Ar
                     break;
                 }
             }
-            
+
             if can_broadcast {
                 // Perform broadcasting by repeating data
                 if let Some(broadcasted_view) = array.broadcast(IxDyn(shape)) {

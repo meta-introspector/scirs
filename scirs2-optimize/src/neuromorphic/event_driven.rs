@@ -3,7 +3,7 @@
 //! Implementation of event-driven optimization algorithms for neuromorphic computing.
 
 use ndarray::{Array1, ArrayView1};
-use scirs2_core::error::Result;
+use scirs2_core::error::CoreResult as Result;
 use std::collections::BinaryHeap;
 use std::cmp::Ordering;
 

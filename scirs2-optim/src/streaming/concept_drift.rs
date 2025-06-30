@@ -61,7 +61,7 @@ impl Default for DriftDetectorConfig {
 }
 
 /// Concept drift detection result
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum DriftStatus {
     /// No drift detected
     Stable,
@@ -1220,7 +1220,7 @@ pub mod advanced_drift_analysis {
 
         fn update_thresholds(&mut self, results: &[DriftStatus], features: &PatternFeatures<A>) {
             // Simplified threshold adaptation
-            for (i, &result) in results.iter().enumerate() {
+            for (i, result) in results.iter().enumerate() {
                 let detector_name = format!("detector_{}", i);
                 let current_threshold = self
                     .thresholds
@@ -1286,7 +1286,7 @@ pub mod advanced_drift_analysis {
         fn analyze_impact(
             &mut self,
             features: &PatternFeatures<A>,
-            pattern: &Option<DriftPattern<A>>,
+            _pattern: &Option<DriftPattern<A>>,
         ) -> Result<DriftImpact<A>, OptimizerError> {
             let performance_degradation = features.variance; // Simplified
             let urgency_level = if performance_degradation > A::from(1.0).unwrap() {
@@ -1318,9 +1318,9 @@ pub mod advanced_drift_analysis {
 
         fn select_strategy(
             &mut self,
-            features: &PatternFeatures<A>,
-            impact: &DriftImpact<A>,
-            pattern: &Option<DriftPattern<A>>,
+            _features: &PatternFeatures<A>,
+            _impact: &DriftImpact<A>,
+            _pattern: &Option<DriftPattern<A>>,
         ) -> Result<Option<AdaptationStrategy<A>>, OptimizerError> {
             // Simplified strategy selection
             let strategy = AdaptationStrategy {

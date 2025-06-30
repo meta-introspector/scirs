@@ -72,15 +72,16 @@ impl<T: StreamingObjective> RollingWindowOptimizer<T> {
         window_optimizer_type: WindowOptimizerType,
         refit_every_update: bool,
     ) -> Self {
+        let window_size = config.window_size;
         Self {
             parameters: initial_parameters,
             objective,
             config,
             stats: StreamingStats::default(),
-            data_window: VecDeque::with_capacity(config.window_size),
+            data_window: VecDeque::with_capacity(window_size),
             window_optimizer: window_optimizer_type,
             refit_every_update,
-            refit_frequency: config.window_size / 4, // Default: refit every quarter window
+            refit_frequency: window_size / 4, // Default: refit every quarter window
             update_counter: 0,
         }
     }

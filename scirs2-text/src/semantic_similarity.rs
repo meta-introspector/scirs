@@ -471,6 +471,7 @@ pub struct SentenceEmbeddingSimilarity {
     pooling_strategy: PoolingStrategy,
 }
 
+/// Strategy for pooling word embeddings into sentence embeddings
 #[derive(Debug, Clone)]
 pub enum PoolingStrategy {
     /// Average all word embeddings
@@ -879,15 +880,22 @@ impl SemanticSimilarityEnsemble {
 /// Conceptual similarity based on hierarchical relationships (WordNet-style)
 pub struct ConceptualSimilarity {
     concept_hierarchy: HashMap<String, ConceptNode>,
+    #[allow(dead_code)]
     max_depth: usize,
 }
 
+/// Node in a concept hierarchy for semantic similarity
 #[derive(Debug, Clone)]
 pub struct ConceptNode {
+    /// Name of the concept
     pub concept: String,
+    /// Parent concepts
     pub parents: Vec<String>,
+    /// Child concepts
     pub children: Vec<String>,
+    /// Depth in the hierarchy
     pub depth: usize,
+    /// Information content score
     pub information_content: f64,
 }
 
@@ -1262,6 +1270,7 @@ pub struct TopicBasedSimilarity {
     similarity_metric: TopicSimilarityMetric,
 }
 
+/// Metrics for comparing topic distributions
 #[derive(Debug, Clone)]
 pub enum TopicSimilarityMetric {
     /// Cosine similarity between topic distributions
@@ -1504,9 +1513,9 @@ mod tests {
         let weighted_result = weighted_sim.similarity(text1, text2, &tokenizer).unwrap();
 
         // All should be valid similarities
-        assert!(mean_result >= 0.0 && mean_result <= 1.0);
-        assert!(max_result >= 0.0 && max_result <= 1.0);
-        assert!(weighted_result >= 0.0 && weighted_result <= 1.0);
+        assert!((0.0..=1.0).contains(&mean_result));
+        assert!((0.0..=1.0).contains(&max_result));
+        assert!((0.0..=1.0).contains(&weighted_result));
     }
 
     #[test]
@@ -1704,9 +1713,9 @@ mod tests {
         let hellinger_result = hellinger_sim.similarity("doc1", "doc2").unwrap();
 
         // All similarity measures should return valid values
-        assert!(cosine_result >= 0.0 && cosine_result <= 1.0);
-        assert!(js_result >= 0.0 && js_result <= 1.0);
-        assert!(hellinger_result >= 0.0 && hellinger_result <= 1.0);
+        assert!((0.0..=1.0).contains(&cosine_result));
+        assert!((0.0..=1.0).contains(&js_result));
+        assert!((0.0..=1.0).contains(&hellinger_result));
     }
 
     #[test]

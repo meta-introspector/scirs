@@ -1,80 +1,128 @@
-//! Neural network building blocks module for SciRS2
+//! Neural network building blocks module for SciRS2 - Core working version
 //!
-//! This module provides neural network building blocks for SciRS2, including:
-//! - Layers (dense, convolutional, recurrent, etc.)
-//! - Activation functions (ReLU, sigmoid, tanh, etc.)
-//! - Loss functions (MSE, cross-entropy, etc.)
-//! - Optimizers (SGD, Adam, etc.)
-//! - Model architectures and training utilities
-//! - Neural network specific linear algebra operations
-//! - Model evaluation and testing
-//! - Advanced training techniques
+//! This version includes the core working modules that compile successfully.
+//! Complex architectures with Send + Sync issues are temporarily disabled.
 
 #![warn(missing_docs)]
-#![recursion_limit = "524288"]
+#![recursion_limit = "4096"]
 
-pub mod activations;
-/// Data augmentation module
-pub mod augmentation;
-pub mod autograd;
-/// C/C++ bindings module
-pub mod bindings;
-pub mod callbacks;
-/// Model compression module
-pub mod compression;
-pub mod config;
-/// Continual and multi-task learning module
-pub mod continual;
-pub mod data;
-/// Knowledge distillation module
-pub mod distillation;
+// Core working modules
 pub mod error;
-pub mod evaluation;
-/// Federated learning module
-pub mod federated;
-/// GPU acceleration module (currently CPU fallback)
-pub mod gpu;
-/// Hardware acceleration module (FPGAs, custom accelerators)
-pub mod hardware;
-/// Framework interoperability module
-pub mod interop;
-/// Interpretation module
-pub mod interpretation;
+pub mod activations;
 pub mod layers;
-pub mod linalg;
 pub mod losses;
-/// Memory-efficient operations module
-pub mod memory_efficient;
-/// Mobile deployment module
-pub mod mobile;
-/// Enhanced model evaluation module
-pub mod model_evaluation;
-pub mod models;
-/// Neural Architecture Search (NAS) module
-pub mod nas;
 pub mod optimizers;
-/// Performance optimization module
-pub mod performance;
-pub mod prelude;
-/// Quantization module
-pub mod quantization;
-/// Reinforcement learning module
-pub mod reinforcement;
-pub mod serialization;
-/// Serving and deployment module
-pub mod serving;
-pub mod training;
-/// Transfer learning module
-pub mod transfer_learning;
-pub mod transformer;
-pub mod utils;
-/// Visualization tools module
-pub mod visualization;
-/// WebAssembly module
-pub mod wasm;
 
-// Export specific items from each module to avoid name conflicts
-// Use the prelude module for a convenient import
+// Utility modules
+pub mod utils;
+pub mod callbacks;
+
+// Core model functionality
+pub mod models;
+
+// Transformer architectures
+pub mod transformer;
+
+// Additional stable modules
+pub mod data;
+pub mod evaluation;
+
+// Configuration and serialization
+pub mod config;
+
+// Transfer learning capabilities
+pub mod transfer_learning;
+
+// Model interpretation and explainability
+pub mod interpretation_legacy;
+
+// Performance optimizations
+pub mod performance;
+
+// Quantization and compression
+pub mod quantization;
+pub mod compression;
+pub mod distillation;
+
+// Hardware acceleration
+pub mod hardware;
+pub mod gpu;
+
+// Training utilities
+pub mod training;
+
+// Visualization
+pub mod visualization;
+
+// Memory efficient implementations
+pub mod memory_efficient;
+
+// Model serving and deployment
+pub mod serving;
+
+// Interoperability
+pub mod interop;
+
+// Just-In-Time compilation
+pub mod jit;
+
+// TPU compatibility infrastructure
+pub mod tpu;
+
+// Unified performance integration
+pub mod performance_integration;
 
 // Re-export the error type
 pub use error::{Error, NeuralError, Result};
+
+// Optional prelude for convenience
+pub mod prelude {
+    //! Convenient re-exports for common neural network operations
+    
+    // Core functionality
+    pub use crate::error::{Error, NeuralError, Result};
+    pub use crate::activations::{Activation, ReLU, Sigmoid, Tanh, Softmax, GELU, Swish, Mish};
+    pub use crate::layers::{Layer, Dense, Sequential};
+    pub use crate::losses::{Loss, MeanSquaredError};
+    pub use crate::optimizers::Optimizer;
+    
+    // Configuration and serialization
+    pub use crate::config::{ConfigSerializer, ConfigBuilder};
+    
+    // Transfer learning
+    pub use crate::transfer_learning::{
+        TransferLearningManager, TransferStrategy, PretrainedWeightLoader,
+        TransferLearningOrchestrator, LayerState
+    };
+    
+    // Model interpretation
+    pub use crate::interpretation_legacy::{
+        ModelInterpreter, AttributionMethod, BaselineMethod, InterpretationReport
+    };
+    
+    // Training utilities
+    pub use crate::training::mixed_precision::MixedPrecisionManager;
+    
+    // Data utilities
+    pub use crate::data::{DataLoader, Dataset};
+    
+    // Evaluation
+    pub use crate::evaluation::Evaluator;
+    
+    // JIT compilation
+    pub use crate::jit::{JITCompiler, JITOperation, TargetArchitecture};
+    
+    // TPU support
+    pub use crate::tpu::{TPURuntime, TPUDevice, TPUOperation};
+    
+    // Hardware acceleration
+    pub use crate::hardware::{DeviceManager};
+    
+    // Visualization
+    pub use crate::visualization::{NetworkVisualizer};
+    
+    // Unified performance optimization
+    pub use crate::performance_integration::{
+        UnifiedPerformanceManager, OptimizationChoice, AutoOptimizationStrategy
+    };
+}

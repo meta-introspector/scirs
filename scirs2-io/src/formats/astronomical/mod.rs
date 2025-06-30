@@ -29,6 +29,9 @@
 //! # Ok::<(), scirs2_io::error::IoError>(())
 //! ```
 
+#![allow(dead_code)]
+#![allow(missing_docs)]
+
 use crate::error::{IoError, Result};
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 use ndarray::Array2;
@@ -798,10 +801,10 @@ impl FitsWriter {
         }
 
         // Pad to 80 characters
-        if card_str.len() < 80 {
-            card_str.push_str(&" ".repeat(80 - card_str.len()));
-        } else if card_str.len() > 80 {
-            card_str.truncate(80);
+        match card_str.len().cmp(&80) {
+            std::cmp::Ordering::Less => card_str.push_str(&" ".repeat(80 - card_str.len())),
+            std::cmp::Ordering::Greater => card_str.truncate(80),
+            std::cmp::Ordering::Equal => {}
         }
 
         self.writer

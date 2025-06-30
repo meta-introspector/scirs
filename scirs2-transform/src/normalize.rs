@@ -440,9 +440,6 @@ where
 
 /// Represents a fitted normalization model that can transform new data
 pub struct Normalizer {
-    /// The normalization method to apply
-    #[allow(dead_code)]
-    method: NormalizationMethod,
     /// The axis along which to normalize (0 for columns, 1 for rows)
     axis: usize,
     /// Parameters from the fit (depends on method)
@@ -520,7 +517,6 @@ impl Normalizer {
         };
 
         Normalizer {
-            method,
             axis,
             params,
         }

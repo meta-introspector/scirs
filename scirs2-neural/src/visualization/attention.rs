@@ -349,8 +349,35 @@ impl<
                     .map_err(|e| NeuralError::IOError(e.to_string()))?;
                 Ok(output_path)
             }
+            ExportFormat::HTML => {
+                let output_path = self
+                    .config
+                    .output_dir
+                    .join(format!("{}_attention.html", layer_name));
+                let html_content = self.generate_interactive_html()?;
+                std::fs::write(&output_path, html_content)?;
+                Ok(output_path)
+            }
+            ExportFormat::SVG => {
+                let output_path = self
+                    .config
+                    .output_dir
+                    .join(format!("{}_attention.svg", layer_name));
+                let svg_content = self.generate_svg_visualization()?;
+                std::fs::write(&output_path, svg_content)?;
+                Ok(output_path)
+            }
+            ExportFormat::Data(DataFormat::JSON) => {
+                let output_path = self
+                    .config
+                    .output_dir
+                    .join(format!("{}_attention_data.json", layer_name));
+                let json_data = self.export_attention_data_as_json()?;
+                std::fs::write(&output_path, json_data)?;
+                Ok(output_path)
+            }
             _ => Err(NeuralError::NotImplementedError(
-                "Export format not yet implemented".to_string(),
+                format!("Export format {:?} not yet implemented", export_options.format),
             )),
         }
     }
@@ -1571,6 +1598,178 @@ impl<
             sparsity,
             top_attended,
         })
+    }
+
+    /// Generate interactive HTML visualization
+    fn generate_interactive_html(&self) -> Result<String> {
+        let mut html = String::from(r#"<!DOCTYPE html>
+<html>
+<head>
+    <title>Attention Visualization</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .attention-container { display: flex; flex-wrap: wrap; gap: 20px; }
+        .attention-layer { border: 1px solid #ccc; padding: 15px; border-radius: 8px; }
+        .heatmap { margin: 10px 0; }
+        .heatmap-cell { display: inline-block; width: 20px; height: 20px; margin: 1px; }
+        .layer-title { font-weight: bold; margin-bottom: 10px; }
+        .stats { font-size: 12px; color: #666; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Neural Network Attention Visualization</h1>
+    <div class="attention-container">
+"#);
+
+        for (layer_name, attention_data) in &self.attention_cache {
+            html.push_str(&format!(r#"
+        <div class="attention-layer">
+            <div class="layer-title">{}</div>
+            <div class="heatmap">
+"#, layer_name));
+
+            let weights = &attention_data.weights;
+            let (rows, cols) = weights.dim();
+            let max_weight = weights.iter().fold(F::zero(), |acc, &w| acc.max(w));
+
+            for i in 0..rows.min(20) {  // Limit display size
+                for j in 0..cols.min(20) {
+                    let weight = weights[[i, j]];
+                    let normalized = if max_weight > F::zero() {
+                        weight.to_f64().unwrap_or(0.0) / max_weight.to_f64().unwrap_or(1.0)
+                    } else {
+                        0.0
+                    };
+                    
+                    let intensity = (normalized * 255.0) as u8;
+                    let red = intensity;
+                    let blue = 255 - intensity;
+                    let color = format!("rgb({}, 128, {})", red, blue);
+                    
+                    html.push_str(&format!(
+                        r#"<div class="heatmap-cell" style="background-color: {};" title="({},{}) = {:.3}"></div>"#,
+                        color, i, j, normalized
+                    ));
+                }
+                html.push_str("<br>");
+            }
+
+            html.push_str(&format!(r#"
+            </div>
+            <div class="stats">
+                Max Attention: {:.3}<br>
+                Shape: {} x {}
+            </div>
+        </div>
+"#, max_weight.to_f64().unwrap_or(0.0), rows, cols));
+        }
+
+        html.push_str(r#"
+    </div>
+</body>
+</html>"#);
+
+        Ok(html)
+    }
+
+    /// Generate SVG visualization
+    fn generate_svg_visualization(&self) -> Result<String> {
+        let width = 800;
+        let height = 600;
+        let margin = 50;
+
+        let mut svg = format!(r#"<?xml version="1.0" encoding="UTF-8"?>
+<svg width="{}" height="{}" xmlns="http://www.w3.org/2000/svg">
+<style>
+    .title {{ font-family: Arial, sans-serif; font-size: 18px; font-weight: bold; text-anchor: middle; }}
+    .layer-title {{ font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; }}
+    .cell {{ stroke: #fff; stroke-width: 1; }}
+</style>
+"#, width, height);
+
+        svg.push_str(&format!(r#"<text x="{}" y="30" class="title">Attention Patterns</text>"#, width / 2));
+
+        let mut y_offset = 60;
+        for (layer_name, attention_data) in &self.attention_cache {
+            svg.push_str(&format!(r#"<text x="50" y="{}" class="layer-title">{}</text>"#, y_offset, layer_name));
+            y_offset += 30;
+
+            let weights = &attention_data.weights;
+            let (rows, cols) = weights.dim();
+            let max_weight = weights.iter().fold(F::zero(), |acc, &w| acc.max(w));
+            let cell_size = 8.0;
+
+            for i in 0..rows.min(15) {
+                for j in 0..cols.min(15) {
+                    let weight = weights[[i, j]];
+                    let normalized = if max_weight > F::zero() {
+                        weight.to_f64().unwrap_or(0.0) / max_weight.to_f64().unwrap_or(1.0)
+                    } else {
+                        0.0
+                    };
+                    
+                    let intensity = (normalized * 255.0) as u8;
+                    let red = intensity;
+                    let blue = 255 - intensity;
+                    let color = format!("rgb({}, 128, {})", red, blue);
+                    
+                    let x = margin + j as i32 * cell_size as i32;
+                    let y = y_offset + i as i32 * cell_size as i32;
+                    
+                    svg.push_str(&format!(
+                        r#"<rect x="{}" y="{}" width="{}" height="{}" fill="{}" class="cell"/>"#,
+                        x, y, cell_size, cell_size, color
+                    ));
+                }
+            }
+            y_offset += (rows.min(15) as i32 * cell_size as i32) + 30;
+        }
+
+        svg.push_str("</svg>");
+        Ok(svg)
+    }
+
+    /// Export attention data as JSON
+    fn export_attention_data_as_json(&self) -> Result<String> {
+        use serde_json::json;
+        
+        let mut layers_data = serde_json::Map::new();
+        
+        for (layer_name, attention_data) in &self.attention_cache {
+            let weights_data: Vec<Vec<f64>> = attention_data.weights
+                .outer_iter()
+                .map(|row| row.iter().map(|&w| w.to_f64().unwrap_or(0.0)).collect())
+                .collect();
+            
+            let layer_data = json!({
+                "weights": weights_data,
+                "queries": attention_data.queries,
+                "keys": attention_data.keys,
+                "layer_info": {
+                    "name": attention_data.layer_info.layer_name,
+                    "index": attention_data.layer_info.layer_index,
+                    "type": attention_data.layer_info.layer_type
+                },
+                "head_info": attention_data.head_info.as_ref().map(|h| json!({
+                    "head_index": h.head_index,
+                    "total_heads": h.total_heads,
+                    "head_dim": h.head_dim
+                })),
+                "shape": attention_data.weights.shape()
+            });
+            
+            layers_data.insert(layer_name.clone(), layer_data);
+        }
+        
+        let export_data = json!({
+            "attention_layers": layers_data,
+            "export_timestamp": chrono::Utc::now().to_rfc3339(),
+            "framework": "scirs2-neural",
+            "version": "0.1.0-beta.1"
+        });
+        
+        serde_json::to_string_pretty(&export_data)
+            .map_err(|e| NeuralError::ComputationError(format!("JSON serialization error: {}", e)))
     }
 }
 

@@ -352,7 +352,7 @@ struct BertIntermediate<F: Float + Debug + ScalarOperand + Send + Sync> {
     /// Dense layer
     dense: Dense<F>,
     /// Activation function
-    activation_fn: Box<dyn Fn(F) -> F>,
+    activation_fn: Box<dyn Fn(F) -> F + Send + Sync>,
 }
 
 impl<F: Float + Debug + ScalarOperand + Send + Sync> BertIntermediate<F> {
@@ -676,7 +676,7 @@ struct BertPooler<F: Float + Debug + ScalarOperand + Send + Sync> {
     /// Dense layer
     dense: Dense<F>,
     /// Activation function
-    activation_fn: Box<dyn Fn(F) -> F>,
+    activation_fn: Box<dyn Fn(F) -> F + Send + Sync>,
 }
 
 impl<F: Float + Debug + ScalarOperand + Send + Sync> BertPooler<F> {

@@ -37,8 +37,8 @@
 //! ```
 
 use crate::error::{SpatialError, SpatialResult};
-use crate::memory_pool::{DistancePool, global_distance_pool};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use crate::memory_pool::DistancePool;
+use ndarray::{Array2, ArrayView1, ArrayView2};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use std::sync::Arc;
@@ -141,6 +141,7 @@ pub struct UltraKDTree {
     /// Tree statistics
     stats: TreeStatistics,
     /// Memory pool for temporary allocations
+    #[allow(dead_code)]
     memory_pool: Arc<DistancePool>,
 }
 
@@ -167,6 +168,7 @@ pub struct NodeInfo {
     /// Is this a leaf node
     is_leaf: bool,
     /// Number of points in subtree (for load balancing)
+    #[allow(dead_code)]
     subtree_size: u32,
 }
 
@@ -198,6 +200,7 @@ impl BoundingBox {
         }
     }
 
+    #[allow(dead_code)]
     fn contains_point(&self, point: &ArrayView1<f64>) -> bool {
         for i in 0..self.dimensions {
             if point[i] < self.min_coords[i] || point[i] > self.max_coords[i] {
@@ -356,7 +359,7 @@ impl UltraKDTree {
         let splitting_dimension = depth % n_dims;
 
         // Create bounding box for this subtree
-        let mut bounding_box = if config.cache_aware_layout {
+        let bounding_box = if config.cache_aware_layout {
             let mut bbox = BoundingBox::new(n_dims.min(8));
             for &idx in indices.iter() {
                 bbox.update_with_point(&points.row(idx));
@@ -608,7 +611,7 @@ impl UltraKDTree {
                 .zip(queries.outer_iter())
                 .enumerate()
                 .par_bridge()
-                .try_for_each(|(i, ((mut idx_row, mut dist_row), query))| -> SpatialResult<()> {
+                .try_for_each(|(_i, ((mut idx_row, mut dist_row), query))| -> SpatialResult<()> {
                     let (query_indices, query_distances) = self.knn_search_ultra(&query, k)?;
                     
                     for (j, &idx) in query_indices.iter().enumerate().take(k) {
@@ -786,6 +789,7 @@ impl Ord for KNNItem {
 mod tests {
     use super::*;
     use ndarray::array;
+    #[allow(unused_imports)]
     use approx::assert_relative_eq;
 
     #[test]

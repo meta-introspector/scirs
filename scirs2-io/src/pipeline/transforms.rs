@@ -1,5 +1,8 @@
 //! Common data transformations for pipelines
 
+#![allow(dead_code)]
+#![allow(missing_docs)]
+
 use super::*;
 use crate::error::Result;
 use ndarray::{s, Array1, Array2, Axis};

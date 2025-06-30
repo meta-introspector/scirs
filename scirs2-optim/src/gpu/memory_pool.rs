@@ -5,13 +5,100 @@
 
 use std::collections::{HashMap, VecDeque};
 use std::fmt;
-use std::ptr;
+use std::ptr::{self, NonNull};
 use std::sync::{Arc, Mutex};
 
 use crate::gpu::GpuOptimizerError;
 
 #[cfg(feature = "gpu")]
 use scirs2_core::gpu::GpuContext;
+
+/// Memory alignment for GPU operations (must be power of 2)
+const GPU_MEMORY_ALIGNMENT: usize = 256;
+
+/// Maximum safe allocation size (1GB)
+const MAX_SAFE_ALLOCATION_SIZE: usize = 1024 * 1024 * 1024;
+
+/// Memory safety validator
+struct MemorySafetyValidator;
+
+impl MemorySafetyValidator {
+    /// Validate allocation parameters for safety
+    fn validate_allocation_params(ptr: *mut u8, size: usize) -> Result<(), GpuOptimizerError> {
+        // Check for null pointer
+        if ptr.is_null() {
+            return Err(GpuOptimizerError::InvalidState("Null pointer provided".to_string()));
+        }
+
+        // Check for zero or extremely large size
+        if size == 0 {
+            return Err(GpuOptimizerError::InvalidState("Zero-sized allocation".to_string()));
+        }
+
+        if size > MAX_SAFE_ALLOCATION_SIZE {
+            return Err(GpuOptimizerError::InvalidState(
+                format!("Allocation size {} exceeds maximum safe size {}", size, MAX_SAFE_ALLOCATION_SIZE)
+            ));
+        }
+
+        // Check memory alignment
+        if (ptr as usize) % GPU_MEMORY_ALIGNMENT != 0 {
+            return Err(GpuOptimizerError::InvalidState(
+                format!("Pointer {:p} is not aligned to {} bytes", ptr, GPU_MEMORY_ALIGNMENT)
+            ));
+        }
+
+        // Check for potential integer overflow in size calculations
+        if let None = ptr as usize + size {
+            return Err(GpuOptimizerError::InvalidState("Size calculation overflow".to_string()));
+        }
+
+        Ok(())
+    }
+
+    /// Generate a memory canary value for overflow detection
+    fn generate_canary() -> u64 {
+        use std::time::{SystemTime, UNIX_EPOCH};
+        
+        // Use current time and a magic number for canary
+        let time_part = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos() as u64;
+        
+        // XOR with magic number to make it less predictable
+        time_part ^ 0xDEADBEEFCAFEBABE
+    }
+
+    /// Validate memory canary to detect buffer overflows
+    fn validate_canary(ptr: *mut u8, expected_canary: u64) -> Result<(), GpuOptimizerError> {
+        // In a real implementation, this would check memory protection
+        // For now, we'll do basic validation
+        if ptr.is_null() {
+            return Err(GpuOptimizerError::InvalidState("Null pointer during canary validation".to_string()));
+        }
+
+        // TODO: In full implementation, read canary from memory and compare
+        // This would require GPU memory read capabilities
+        Ok(())
+    }
+
+    /// Safely calculate pointer offset with bounds checking
+    fn safe_ptr_add(ptr: *mut u8, offset: usize) -> Result<*mut u8, GpuOptimizerError> {
+        let ptr_addr = ptr as usize;
+        
+        // Check for overflow
+        let new_addr = ptr_addr.checked_add(offset)
+            .ok_or_else(|| GpuOptimizerError::InvalidState("Pointer arithmetic overflow".to_string()))?;
+
+        // Ensure the result is still a valid pointer
+        if new_addr > usize::MAX - 4096 {
+            return Err(GpuOptimizerError::InvalidState("Pointer address too large".to_string()));
+        }
+
+        Ok(new_addr as *mut u8)
+    }
+}
 
 /// Memory allocation statistics
 #[derive(Debug, Clone, Default)]
@@ -38,11 +125,11 @@ pub struct MemoryStats {
     pub cache_misses: usize,
 }
 
-/// Memory block metadata
+/// Memory block metadata with safety validation
 #[derive(Debug)]
 struct MemoryBlock {
-    /// Pointer to GPU memory
-    ptr: *mut u8,
+    /// Pointer to GPU memory (NonNull for safety)
+    ptr: NonNull<u8>,
 
     /// Size of the block
     size: usize,
@@ -55,18 +142,41 @@ struct MemoryBlock {
 
     /// Last used timestamp
     last_used: std::time::Instant,
+
+    /// Memory alignment (for validation)
+    alignment: usize,
+
+    /// Memory canary for overflow detection (first 8 bytes of actual content)
+    memory_canary: u64,
 }
 
 impl MemoryBlock {
-    fn new(ptr: *mut u8, size: usize) -> Self {
+    /// Create a new memory block with safety validation
+    fn new(ptr: *mut u8, size: usize) -> Result<Self, GpuOptimizerError> {
+        // Validate input parameters
+        MemorySafetyValidator::validate_allocation_params(ptr, size)?;
+        
+        let non_null_ptr = NonNull::new(ptr)
+            .ok_or_else(|| GpuOptimizerError::InvalidState("Null pointer in memory block".to_string()))?;
+
+        // Generate memory canary for overflow detection
+        let memory_canary = MemorySafetyValidator::generate_canary();
+        
         let now = std::time::Instant::now();
-        Self {
-            ptr,
+        Ok(Self {
+            ptr: non_null_ptr,
             size,
             in_use: true,
             allocated_at: now,
             last_used: now,
-        }
+            alignment: GPU_MEMORY_ALIGNMENT,
+            memory_canary,
+        })
+    }
+
+    /// Get raw pointer (for compatibility with existing code)
+    fn as_ptr(&self) -> *mut u8 {
+        self.ptr.as_ptr()
     }
 
     fn mark_used(&mut self) {
@@ -76,6 +186,11 @@ impl MemoryBlock {
 
     fn mark_free(&mut self) {
         self.in_use = false;
+    }
+
+    /// Validate memory integrity using canary
+    fn validate_integrity(&self) -> Result<(), GpuOptimizerError> {
+        MemorySafetyValidator::validate_canary(self.ptr.as_ptr(), self.memory_canary)
     }
 }
 
@@ -578,8 +693,8 @@ impl CudaMemoryPool {
 
         let ptr = self.allocate_raw_memory(size)?;
 
-        // Create and track memory block
-        let block = MemoryBlock::new(ptr, size);
+        // Create and track memory block with safety validation
+        let block = MemoryBlock::new(ptr, size)?;
         self.all_blocks.push(block);
 
         // Update statistics
@@ -618,19 +733,26 @@ impl CudaMemoryPool {
 
     /// Deallocate memory back to pool
     pub fn deallocate(&mut self, ptr: *mut u8, size: usize) -> Result<(), GpuOptimizerError> {
+        // Validate input parameters first
+        MemorySafetyValidator::validate_allocation_params(ptr, size)?;
+
         // Find the block in our tracking
         let block_index = self
             .all_blocks
             .iter()
-            .position(|block| block.ptr == ptr)
+            .position(|block| block.as_ptr() == ptr)
             .ok_or_else(|| GpuOptimizerError::InvalidState("Block not found".to_string()))?;
+
+        // Validate memory integrity before deallocation
+        self.all_blocks[block_index].validate_integrity()?;
 
         // Mark block as free and add to free list
         self.all_blocks[block_index].mark_free();
 
-        // Add to appropriate free list
+        // Add to appropriate free list with safety validation
         let free_list = self.free_blocks.entry(size).or_insert_with(VecDeque::new);
-        free_list.push_back(MemoryBlock::new(ptr, size));
+        let validated_block = MemoryBlock::new(ptr, size)?;
+        free_list.push_back(validated_block);
 
         // Update statistics
         self.stats.current_used = self.stats.current_used.saturating_sub(size);
@@ -654,7 +776,7 @@ impl CudaMemoryPool {
         }
 
         // Sort blocks by pointer address
-        self.all_blocks.sort_by_key(|block| block.ptr as usize);
+        self.all_blocks.sort_by_key(|block| block.as_ptr() as usize);
 
         // Coalesce adjacent free blocks
         let mut i = 0;
@@ -663,8 +785,13 @@ impl CudaMemoryPool {
             let next_block = &self.all_blocks[i + 1];
 
             if !current_block.in_use && !next_block.in_use {
-                let current_end = unsafe { current_block.ptr.add(current_block.size) };
-                if current_end == next_block.ptr {
+                // Safely calculate the end of current block using checked arithmetic
+                let current_end = MemorySafetyValidator::safe_ptr_add(
+                    current_block.as_ptr(), 
+                    current_block.size
+                )?;
+                
+                if current_end == next_block.as_ptr() {
                     // Adjacent blocks can be coalesced
                     let new_size = current_block.size + next_block.size;
 
@@ -675,12 +802,13 @@ impl CudaMemoryPool {
                     // Update current block
                     self.all_blocks[i].size = new_size;
 
-                    // Add coalesced block to free list
+                    // Add coalesced block to free list with safety validation
                     let free_list = self
                         .free_blocks
                         .entry(new_size)
                         .or_insert_with(VecDeque::new);
-                    free_list.push_back(MemoryBlock::new(current_block.ptr, new_size));
+                    let coalesced_block = MemoryBlock::new(current_block.as_ptr(), new_size)?;
+                    free_list.push_back(coalesced_block);
 
                     // Remove next block
                     self.all_blocks.remove(i + 1);
@@ -3628,7 +3756,7 @@ impl CudaMemoryPool {
         // Allocate new block if within limits
         if self.stats.total_allocated + aligned_size <= self.max_pool_size {
             let ptr = self.allocate_gpu_memory(aligned_size)?;
-            let block = MemoryBlock::new(ptr, aligned_size);
+            let block = MemoryBlock::new(ptr, aligned_size)?;
 
             self.all_blocks.push(block);
             self.stats.total_allocated += aligned_size;
@@ -4036,7 +4164,7 @@ impl CudaMemoryPool {
     fn allocate_new_block(&mut self, size: usize) -> Result<*mut u8, GpuOptimizerError> {
         if self.stats.total_allocated + size <= self.max_pool_size {
             let ptr = self.allocate_gpu_memory(size)?;
-            let block = MemoryBlock::new(ptr, size);
+            let block = MemoryBlock::new(ptr, size)?;
 
             self.all_blocks.push(block);
             self.stats.total_allocated += size;

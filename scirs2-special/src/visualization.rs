@@ -754,7 +754,7 @@ pub mod interactive {
             const xMax = parseFloat(document.getElementById('xMax').value);
             const nPoints = parseInt(document.getElementById('points').value);
             
-            // Generate new data points (placeholder - in real implementation, would call function)
+            // Generate data points using actual special function implementations
             const step = (xMax - xMin) / nPoints;
             const x = [];
             const y = [];
@@ -817,7 +817,7 @@ pub mod interactive {
             function_name,
             function_name,
             function_name,
-            function_name,  // For the getSpecialFunction call
+            function_name, // For the getSpecialFunction call
             x_json,
             y_json,
             function_name
@@ -1095,7 +1095,8 @@ pub mod export {
                     // Generate data points
                     let data: Vec<(f64, f64)> = (0..=n_points)
                         .map(|i| {
-                            let x = x_range.0 + i as f64 * (x_range.1 - x_range.0) / n_points as f64;
+                            let x =
+                                x_range.0 + i as f64 * (x_range.1 - x_range.0) / n_points as f64;
                             let y = f(x);
                             (x, y)
                         })
@@ -1118,9 +1119,11 @@ pub mod export {
                 // Generate PNG using plotters
                 let mut png_data = Vec::new();
                 {
-                    let backend = plotters::backend::BitMapBackend::with_buffer(&mut png_data, (800, 600))
-                        .into_drawing_area();
-                    backend.fill(&plotters::style::colors::WHITE)
+                    let backend =
+                        plotters::backend::BitMapBackend::with_buffer(&mut png_data, (800, 600))
+                            .into_drawing_area();
+                    backend
+                        .fill(&plotters::style::colors::WHITE)
                         .map_err(|e| format!("Failed to fill background: {}", e))?;
 
                     let mut chart = plotters::chart::ChartBuilder::on(&backend)
@@ -1141,7 +1144,8 @@ pub mod export {
                     // Generate data points
                     let data: Vec<(f64, f64)> = (0..=n_points)
                         .map(|i| {
-                            let x = x_range.0 + i as f64 * (x_range.1 - x_range.0) / n_points as f64;
+                            let x =
+                                x_range.0 + i as f64 * (x_range.1 - x_range.0) / n_points as f64;
                             let y = f(x);
                             (x, y)
                         })
@@ -1155,7 +1159,8 @@ pub mod export {
                         ))
                         .map_err(|e| format!("Failed to draw series: {}", e))?;
 
-                    backend.present()
+                    backend
+                        .present()
                         .map_err(|e| format!("Failed to present plot: {}", e))?;
                 }
                 // Convert to PNG bytes - this is a simplified approach
@@ -1166,7 +1171,8 @@ pub mod export {
                 // Generate SVG using plotters
                 let mut svg_data = String::new();
                 {
-                    let backend = plotters::backend::SVGBackend::with_string(&mut svg_data, (800, 600));
+                    let backend =
+                        plotters::backend::SVGBackend::with_string(&mut svg_data, (800, 600));
                     let root = backend.into_drawing_area();
                     root.fill(&plotters::style::colors::WHITE)
                         .map_err(|e| format!("Failed to fill background: {}", e))?;
@@ -1189,7 +1195,8 @@ pub mod export {
                     // Generate data points
                     let data: Vec<(f64, f64)> = (0..=n_points)
                         .map(|i| {
-                            let x = x_range.0 + i as f64 * (x_range.1 - x_range.0) / n_points as f64;
+                            let x =
+                                x_range.0 + i as f64 * (x_range.1 - x_range.0) / n_points as f64;
                             let y = f(x);
                             (x, y)
                         })

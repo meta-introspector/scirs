@@ -17,6 +17,8 @@ use std::sync::{Arc, Mutex, RwLock};
 
 #[cfg(feature = "memory_management")]
 use scirs2_core::memory_efficient::BufferPool;
+#[cfg(feature = "linalg")]
+use scirs2_linalg;
 #[cfg(feature = "memory_efficient")]
 use scirs2_core::memory_efficient::{chunk_wise_op, ChunkingStrategy};
 

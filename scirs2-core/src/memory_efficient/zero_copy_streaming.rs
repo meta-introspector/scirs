@@ -38,6 +38,7 @@
 //! ```
 
 use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
+use crate::error_context;
 use crate::memory_efficient::streaming::StreamState;
 use std::alloc::{alloc_zeroed, dealloc, Layout};
 use std::ptr::NonNull;
@@ -221,23 +222,25 @@ impl ZeroCopyBuffer {
 
     /// Create a shared reference to this buffer
     ///
-    /// # Panics
-    /// Panics if the reference count would overflow
-    pub fn share(&self) -> Self {
+    /// # Errors
+    /// Returns `CoreError::MemoryError` if the reference count would overflow
+    pub fn share(&self) -> CoreResult<Self> {
         let old_count = self.ref_count.fetch_add(1, Ordering::Relaxed);
         if old_count == usize::MAX {
             // Prevent overflow - this is extremely unlikely in practice
             self.ref_count.fetch_sub(1, Ordering::Relaxed);
-            panic!("Reference count overflow in ZeroCopyBuffer");
+            return Err(CoreError::MemoryError(error_context!(
+                "Reference count overflow in ZeroCopyBuffer"
+            )));
         }
 
-        Self {
+        Ok(Self {
             ptr: self.ptr,
             size: self.size,
             ref_count: self.ref_count.clone(),
             numa_node: self.numa_node,
             layout: self.layout,
-        }
+        })
     }
 
     /// Get the size of the buffer
@@ -1077,7 +1080,7 @@ mod tests {
         assert!(buffer.is_unique());
         assert_eq!(buffer.ref_count(), 1);
 
-        let shared = buffer.share();
+        let shared = buffer.share().unwrap();
         assert_eq!(shared.size(), 1024);
         assert!(!buffer.is_unique());
         assert_eq!(buffer.ref_count(), 2);

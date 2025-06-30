@@ -50,6 +50,23 @@ pub struct ClassificationMetrics {
     pub support: usize,
 }
 
+impl ClassificationMetrics {
+    pub fn new() -> Self {
+        Self {
+            precision: 0.0,
+            recall: 0.0,
+            f1_score: 0.0,
+            support: 0,
+        }
+    }
+}
+
+impl Default for ClassificationMetrics {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Equivalent to sklearn.metrics.classification_report
 pub fn classification_report_sklearn(
     y_true: &Array1<i32>,

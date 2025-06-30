@@ -1029,7 +1029,7 @@ impl DistributedMetricsCoordinator {
         let mut handles = Vec::new();
 
         // Spawn threads for concurrent execution
-        for (i, future) in futures.into_iter().enumerate() {
+        for (i, _future) in futures.into_iter().enumerate() {
             let tx_clone = tx.clone();
             let handle = thread::spawn(move || {
                 // Since we can't use async runtime here, we'll use a blocking approach
@@ -2459,16 +2459,15 @@ impl HttpClient {
         let connection = connection.unwrap();
 
         // Build request
-        let request = self.build_request(method, path, body);
+        let _request = self.build_request(method, path, body);
 
-        // Simulate sending request (in practice, use actual networking)
-        thread::sleep(Duration::from_millis(50)); // Simulate network latency
-
-        // Simulate response parsing
+        // Real HTTP networking implementation
         let response = if is_secure {
-            self.simulate_https_response(body)?
+            return Err(MetricsError::ComputationError(
+                "HTTPS not yet implemented - use HTTP for now".to_string()
+            ));
         } else {
-            self.simulate_http_response(body)?
+            self.send_real_http_request(host, port, path, method, body)?
         };
 
         // Return connection to pool
@@ -2478,30 +2477,243 @@ impl HttpClient {
         Ok(response)
     }
 
-    /// Simulate HTTP response
-    fn simulate_http_response(&self, request_body: &str) -> Result<String> {
-        // Parse request and generate appropriate response
-        if request_body.contains("ComputeMetrics") {
-            Ok(r#"{"status": "success", "result": {"mse": 0.1, "mae": 0.05}}"#.to_string())
-        } else if request_body.contains("HealthCheck") {
-            Ok(r#"{"status": "healthy", "cpu": 0.4, "memory": 0.3}"#.to_string())
+    /// Send real HTTP request using TCP sockets
+    fn send_real_http_request(
+        &self,
+        host: &str,
+        port: u16,
+        path: &str,
+        method: &str,
+        body: &str,
+    ) -> Result<String> {
+        use std::io::{BufRead, BufReader, Read, Write};
+        use std::net::TcpStream;
+
+        // Create TCP connection
+        let address = format!("{}:{}", host, port);
+        let mut stream = TcpStream::connect_timeout(
+            &address.parse().map_err(|_| {
+                MetricsError::ComputationError(format!("Invalid address: {}", address))
+            })?,
+            self.timeout,
+        ).map_err(|e| MetricsError::ComputationError(format!("Connection failed: {}", e)))?;
+
+        // Set timeouts
+        stream.set_read_timeout(Some(self.timeout))
+            .map_err(|e| MetricsError::ComputationError(format!("Failed to set read timeout: {}", e)))?;
+        stream.set_write_timeout(Some(self.timeout))
+            .map_err(|e| MetricsError::ComputationError(format!("Failed to set write timeout: {}", e)))?;
+
+        // Build complete HTTP request
+        let mut request = format!(
+            "{} {} HTTP/1.1\r\n\
+             Host: {}\r\n\
+             User-Agent: scirs2-metrics/1.0\r\n\
+             Content-Type: application/json\r\n\
+             Connection: close\r\n",
+            method, path, host
+        );
+
+        // Add authentication headers if configured
+        if let Some(auth) = &self.auth_config {
+            match &auth.auth_method {
+                AuthMethod::Basic => {
+                    if let (Some(username), Some(password)) = (&auth.username, &auth.password) {
+                        let credentials = format!("{}:{}", username, password);
+                        let encoded = self.base64_encode(&credentials);
+                        request.push_str(&format!("Authorization: Basic {}\r\n", encoded));
+                    }
+                }
+                AuthMethod::ApiKey => {
+                    if let Some(token) = &auth.token {
+                        request.push_str(&format!("X-API-Key: {}\r\n", token));
+                    }
+                }
+                AuthMethod::Jwt => {
+                    if let Some(token) = &auth.token {
+                        request.push_str(&format!("Authorization: Bearer {}\r\n", token));
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        // Add content length and body
+        request.push_str(&format!("Content-Length: {}\r\n", body.len()));
+        request.push_str("\r\n");
+        request.push_str(body);
+
+        // Send request
+        stream.write_all(request.as_bytes())
+            .map_err(|e| MetricsError::ComputationError(format!("Failed to send request: {}", e)))?;
+
+        // Read response
+        let mut reader = BufReader::new(&mut stream);
+        
+        // Read status line
+        let mut status_line = String::new();
+        reader.read_line(&mut status_line)
+            .map_err(|e| MetricsError::ComputationError(format!("Failed to read status line: {}", e)))?;
+        
+        // Parse status code
+        let status_code = if let Some(parts) = status_line.split_whitespace().nth(1) {
+            parts.parse::<u16>().unwrap_or(500)
         } else {
-            Ok(r#"{"status": "unknown_request"}"#.to_string())
+            500
+        };
+
+        // Read headers
+        let mut headers = HashMap::new();
+        let mut content_length = 0;
+        
+        loop {
+            let mut line = String::new();
+            reader.read_line(&mut line)
+                .map_err(|e| MetricsError::ComputationError(format!("Failed to read header line: {}", e)))?;
+            let line = line.trim();
+            
+            if line.is_empty() {
+                break; // End of headers
+            }
+
+            if let Some(colon_pos) = line.find(':') {
+                let key = line[..colon_pos].trim().to_lowercase();
+                let value = line[colon_pos + 1..].trim();
+                
+                if key == "content-length" {
+                    content_length = value.parse().unwrap_or(0);
+                }
+                
+                headers.insert(key, value.to_string());
+            }
+        }
+
+        // Read response body
+        let mut response_body = String::new();
+        if content_length > 0 {
+            let mut buffer = vec![0; content_length];
+            reader.read_exact(&mut buffer)
+                .map_err(|e| MetricsError::ComputationError(format!("Failed to read response body: {}", e)))?;
+            response_body = String::from_utf8_lossy(&buffer).to_string();
+        } else {
+            // Read until connection closes if no content-length
+            reader.read_to_string(&mut response_body)
+                .map_err(|e| MetricsError::ComputationError(format!("Failed to read response body: {}", e)))?;
+        }
+
+        // Check for HTTP errors
+        if status_code >= 400 {
+            return Err(MetricsError::ComputationError(
+                format!("HTTP {} error: {}", status_code, response_body)
+            ));
+        }
+
+        Ok(response_body)
+    }
+
+
+    /// Parse HTTP response into DistributedMessage
+    fn parse_http_response(response_body: &str, original_message: &DistributedMessage) -> Result<DistributedMessage> {
+        // Simple JSON parsing (in production, use serde_json)
+        match original_message {
+            DistributedMessage::ComputeMetrics { task_id, chunk_id, .. } => {
+                let mut results = HashMap::new();
+                
+                // Parse the results section from JSON
+                if let Some(results_start) = response_body.find("\"results\"") {
+                    if let Some(brace_start) = response_body[results_start..].find('{') {
+                        if let Some(brace_end) = response_body[results_start + brace_start..].find('}') {
+                            let results_json = &response_body[
+                                results_start + brace_start + 1..
+                                results_start + brace_start + brace_end
+                            ];
+
+                            // Parse key-value pairs
+                            for pair in results_json.split(',') {
+                                if let Some(colon_pos) = pair.find(':') {
+                                    let key = pair[..colon_pos].trim().trim_matches('"');
+                                    let value_str = pair[colon_pos + 1..].trim();
+                                    if let Ok(value) = value_str.parse::<f64>() {
+                                        results.insert(key.to_string(), value);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Parse sample count
+                let sample_count = if let Some(count_start) = response_body.find("\"sample_count\"") {
+                    if let Some(colon_pos) = response_body[count_start..].find(':') {
+                        let after_colon = &response_body[count_start + colon_pos + 1..];
+                        if let Some(comma_pos) = after_colon.find(',') {
+                            after_colon[..comma_pos].trim().parse().unwrap_or(0)
+                        } else if let Some(brace_pos) = after_colon.find('}') {
+                            after_colon[..brace_pos].trim().parse().unwrap_or(0)
+                        } else {
+                            0
+                        }
+                    } else {
+                        0
+                    }
+                } else {
+                    0
+                };
+
+                Ok(DistributedMessage::MetricsResult {
+                    task_id: task_id.clone(),
+                    chunk_id: *chunk_id,
+                    results,
+                    sample_count,
+                })
+            }
+            DistributedMessage::HealthCheck => {
+                // Parse health check response
+                let status = WorkerStatus {
+                    node_id: "remote_worker".to_string(),
+                    cpu_usage: Self::parse_json_field(response_body, "cpu_usage").unwrap_or(0.0),
+                    memory_usage: Self::parse_json_field(response_body, "memory_usage").unwrap_or(0.0),
+                    disk_usage: Self::parse_json_field(response_body, "disk_usage").unwrap_or(0.0),
+                    network_bandwidth: Self::parse_json_field(response_body, "network_bandwidth").unwrap_or(0.0),
+                    active_tasks: Self::parse_json_field(response_body, "active_tasks").unwrap_or(0.0) as usize,
+                    completed_tasks: Self::parse_json_field(response_body, "completed_tasks").unwrap_or(0.0) as usize,
+                    failed_tasks: Self::parse_json_field(response_body, "failed_tasks").unwrap_or(0.0) as usize,
+                    queue_length: Self::parse_json_field(response_body, "queue_length").unwrap_or(0.0) as usize,
+                    last_heartbeat: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs(),
+                    response_time: Duration::from_millis(50),
+                    load_average: Self::parse_json_field(response_body, "load_average").unwrap_or(0.0),
+                    available_cores: Self::parse_json_field(response_body, "available_cores").unwrap_or(4.0) as usize,
+                    gpu_usage: Self::parse_json_field(response_body, "gpu_usage"),
+                    worker_version: "1.0.0".to_string(),
+                    capabilities: vec!["metrics".to_string()],
+                    health_score: Self::parse_json_field(response_body, "health_score").unwrap_or(0.9),
+                };
+
+                Ok(DistributedMessage::HealthCheckResponse { status })
+            }
+            _ => {
+                Err(MetricsError::ComputationError(
+                    "Unknown message type in response".to_string()
+                ))
+            }
         }
     }
 
-    /// Simulate HTTPS response with additional security
-    fn simulate_https_response(&self, request_body: &str) -> Result<String> {
-        // Simulate TLS handshake delay
-        thread::sleep(Duration::from_millis(20));
-
-        // Return the same response as HTTP but with security headers
-        let mut response = self.simulate_http_response(request_body)?;
-
-        // In practice, you'd handle TLS encryption/decryption here
-        response.push_str(r#", "security": "tls_enabled""#);
-
-        Ok(response)
+    /// Parse a specific field from JSON string (simple implementation)
+    fn parse_json_field(json: &str, field_name: &str) -> Option<f64> {
+        let pattern = format!("\"{}\"", field_name);
+        if let Some(field_start) = json.find(&pattern) {
+            if let Some(colon_pos) = json[field_start..].find(':') {
+                let after_colon = &json[field_start + colon_pos + 1..];
+                let end_pos = after_colon.find(',').or_else(|| after_colon.find('}')).unwrap_or(after_colon.len());
+                let value_str = after_colon[..end_pos].trim();
+                value_str.parse().ok()
+            } else {
+                None
+            }
+        } else {
+            None
+        }
     }
 }
 
@@ -2514,12 +2726,12 @@ impl NetworkClient for HttpClient {
         let address = address.to_string();
         let message = message.clone();
 
-        Box::pin(async move {
-            // Simulate HTTP request with custom async sleep
-            AsyncSleep::new(Duration::from_millis(100)).await;
+        let timeout = self.timeout;
+        let auth_config = self.auth_config.clone();
 
-            // Process the actual message
-            match &message {
+        Box::pin(async move {
+            // Convert message to JSON for HTTP request
+            let json_body = match &message {
                 DistributedMessage::ComputeMetrics {
                     task_id,
                     chunk_id,
@@ -2527,72 +2739,52 @@ impl NetworkClient for HttpClient {
                     y_pred,
                     metric_names,
                 } => {
-                    let mut results = HashMap::new();
+                    // Create JSON payload for computation request
+                    let y_true_json: Vec<String> = y_true.iter().map(|x| x.to_string()).collect();
+                    let y_pred_json: Vec<String> = y_pred.iter().map(|x| x.to_string()).collect();
+                    let metrics_json: Vec<String> = metric_names.iter().map(|s| format!("\"{}\"", s)).collect();
 
-                    // Compute metrics
-                    for metric_name in metric_names {
-                        let result = match metric_name.as_str() {
-                            "mse" => {
-                                y_true
-                                    .iter()
-                                    .zip(y_pred.iter())
-                                    .map(|(t, p)| (t - p).powi(2))
-                                    .sum::<f64>()
-                                    / y_true.len() as f64
-                            }
-                            "mae" => {
-                                y_true
-                                    .iter()
-                                    .zip(y_pred.iter())
-                                    .map(|(t, p)| (t - p).abs())
-                                    .sum::<f64>()
-                                    / y_true.len() as f64
-                            }
-                            "rmse" => {
-                                let mse = y_true
-                                    .iter()
-                                    .zip(y_pred.iter())
-                                    .map(|(t, p)| (t - p).powi(2))
-                                    .sum::<f64>()
-                                    / y_true.len() as f64;
-                                mse.sqrt()
-                            }
-                            _ => 0.0,
-                        };
-                        results.insert(metric_name.clone(), result);
-                    }
-
-                    Ok(DistributedMessage::MetricsResult {
-                        task_id: task_id.clone(),
-                        chunk_id: *chunk_id,
-                        results,
-                        sample_count: y_true.len(),
-                    })
+                    format!(
+                        r#"{{"task_id":"{}","chunk_id":{},"y_true":[{}],"y_pred":[{}],"metrics":[{}]}}"#,
+                        task_id,
+                        chunk_id,
+                        y_true_json.join(","),
+                        y_pred_json.join(","),
+                        metrics_json.join(",")
+                    )
                 }
-                _ => Ok(DistributedMessage::HealthCheckResponse {
-                    status: WorkerStatus {
-                        node_id: address,
-                        cpu_usage: 0.4,
-                        memory_usage: 0.3,
-                        disk_usage: 0.2,
-                        network_bandwidth: 100.0,
-                        active_tasks: 1,
-                        completed_tasks: 10,
-                        failed_tasks: 0,
-                        queue_length: 0,
-                        last_heartbeat: SystemTime::now()
-                            .duration_since(UNIX_EPOCH)
-                            .unwrap()
-                            .as_secs(),
-                        response_time: Duration::from_millis(100),
-                        load_average: 0.4,
-                        available_cores: 4,
-                        gpu_usage: None,
-                        worker_version: "1.0.0".to_string(),
-                        capabilities: vec!["metrics".to_string()],
-                        health_score: 0.9,
-                    },
-                }),
+                DistributedMessage::HealthCheck => {
+                    r#"{"type":"health_check"}"#.to_string()
+                }
+                _ => {
+                    r#"{"type":"unknown"}"#.to_string()
+                }
+            };
+
+            // Use a thread to perform blocking HTTP request
+            // (In production, use a proper async HTTP client like reqwest)
+            let result = thread::spawn(move || {
+                // Create a temporary HTTP client for this request
+                let temp_client = HttpClient {
+                    auth_config,
+                    connection_pool: Arc::new(Mutex::new(HttpConnectionPool::new(10, Duration::from_secs(300)))),
+                    timeout,
+                    retry_policy: RetryPolicy::default(),
+                };
+
+                // Send HTTP request
+                temp_client.send_http_request(&address, "POST", &json_body)
+            }).join();
+
+            match result {
+                Ok(Ok(response_body)) => {
+                    // Parse JSON response
+                    Self::parse_http_response(&response_body, &message)
+                }
+                Ok(Err(e)) => Err(e),
+                Err(_) => Err(MetricsError::ComputationError(
+                    "HTTP request thread panicked".to_string()
+                ))
             }
         })
     }
@@ -2610,6 +2802,20 @@ impl NetworkClient for HttpClient {
 
         // Parse response
         self.parse_response(&response_json, message)
+    }
+
+    fn establish_connection(&self, _address: &str) -> Result<()> {
+        // HTTP is stateless, no persistent connection needed
+        Ok(())
+    }
+
+    fn close_connection(&self, _address: &str) -> Result<()> {
+        // HTTP is stateless, no persistent connection to close
+        Ok(())
+    }
+
+    fn get_protocol(&self) -> &NetworkProtocol {
+        &NetworkProtocol::Http
     }
 }
 
@@ -2635,7 +2841,7 @@ impl HttpClient {
     /// Parse HTTP response and convert to DistributedMessage
     fn parse_response(
         &self,
-        response_json: &str,
+        _response_json: &str,
         original_message: &DistributedMessage,
     ) -> Result<DistributedMessage> {
         // Simple JSON parsing (in practice, use a proper JSON library)

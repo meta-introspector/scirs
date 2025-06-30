@@ -9,8 +9,7 @@
 //!
 //! Run with: cargo run --example interactive_learning_modules
 
-use ndarray::Array1;
-use num_complex::Complex64;
+// Removed unused imports - fixed compilation warnings
 use scirs2_special::*;
 use std::collections::HashMap;
 use std::f64::consts::PI;
@@ -169,7 +168,7 @@ fn fundamentals_module(progress: &mut LearningProgress) -> Result<(), Box<dyn st
     println!("🧮 Interactive Example: Comparing Functions");
     println!("Let's see how special functions behave compared to elementary ones:\n");
 
-    let x_values = vec![0.5, 1.0, 1.5, 2.0, 2.5, 3.0];
+    let x_values = vec![0.5_f64, 1.0_f64, 1.5_f64, 2.0_f64, 2.5_f64, 3.0_f64];
     println!("x      x²        sin(x)    Γ(x)      J₀(x)     erf(x)");
     println!("--------------------------------------------------------");
 
@@ -267,7 +266,7 @@ fn gamma_function_deep_dive(
             z,
             gamma_z_plus_1,
             computed_from_recurrence,
-            (gamma_z_plus_1 - computed_from_recurrence).abs()
+            (gamma_z_plus_1 - computed_from_recurrence).abs() as f64
         );
     }
 
@@ -681,7 +680,7 @@ fn series_approximation_demo() -> Result<(), Box<dyn std::error::Error>> {
     println!("🧮 Interactive Series Demonstration");
     println!("===================================\n");
 
-    let x = 0.5;
+    let x = 0.5_f64;
     println!("Let's see how series converge for erf({}):", x);
     println!("erf(x) = (2/√π) * [x - x³/3 + x⁵/(5·2!) - x⁷/(7·3!) + ...]\n");
 

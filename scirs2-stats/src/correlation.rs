@@ -10,6 +10,7 @@ use crate::error::{StatsError, StatsResult};
 use crate::{mean, std};
 use ndarray::{s, Array1, Array2, ArrayBase, Data, Dimension, Ix1, Ix2};
 use num_traits::{Float, NumCast};
+use scirs2_core::parallel_ops::*;
 
 /// Compute the Pearson correlation coefficient between two arrays.
 ///
@@ -747,7 +748,7 @@ where
     mean0 = mean0 / F::from(n0).unwrap();
 
     // Calculate standard deviation of continuous variable
-    let std_y = std(&continuous.view(), 0)?;
+    let std_y = std(&continuous.view(), 0, None)?;
 
     // Calculate point-biserial correlation
     let n = F::from(binary.len()).unwrap();
@@ -928,28 +929,61 @@ where
     // Initialize correlation matrix
     let mut corr_mat = Array2::<F>::zeros((p, p));
 
-    // Compute correlation for each pair of variables
+    // Set diagonal elements to 1
     for i in 0..p {
-        // Diagonal elements are 1
         corr_mat[[i, i]] = F::one();
+    }
 
+    // Generate pairs for parallel computation
+    let mut pairs = Vec::new();
+    for i in 0..p {
         for j in (i + 1)..p {
-            // Get columns i and j
-            let var_i = data.slice(s![.., i]);
-            let var_j = data.slice(s![.., j]);
-
-            // Calculate correlation based on chosen method
-            let corr = match method {
-                "pearson" => pearson_r::<F, _>(&var_i, &var_j)?,
-                "spearman" => spearman_r::<F, _>(&var_i, &var_j)?,
-                "kendall" => kendall_tau::<F, _>(&var_i, &var_j, "b")?,
-                _ => unreachable!(), // Already validated method above
-            };
-
-            // Correlation matrix is symmetric
-            corr_mat[[i, j]] = corr;
-            corr_mat[[j, i]] = corr;
+            pairs.push((i, j));
         }
+    }
+
+    // Use parallel processing for correlation calculations on large matrices
+    let correlations: StatsResult<Vec<((usize, usize), F)>> = if pairs.len() > 50 {
+        // Parallel computation for large correlation matrices
+        pairs.par_iter()
+            .map(|&(i, j)| {
+                let var_i = data.slice(s![.., i]);
+                let var_j = data.slice(s![.., j]);
+                
+                let corr = match method {
+                    "pearson" => pearson_r::<F, _>(&var_i, &var_j)?,
+                    "spearman" => spearman_r::<F, _>(&var_i, &var_j)?,
+                    "kendall" => kendall_tau::<F, _>(&var_i, &var_j, "b")?,
+                    _ => unreachable!(),
+                };
+                
+                Ok(((i, j), corr))
+            })
+            .collect()
+    } else {
+        // Sequential computation for small matrices to avoid parallel overhead
+        pairs.iter()
+            .map(|&(i, j)| {
+                let var_i = data.slice(s![.., i]);
+                let var_j = data.slice(s![.., j]);
+                
+                let corr = match method {
+                    "pearson" => pearson_r::<F, _>(&var_i, &var_j)?,
+                    "spearman" => spearman_r::<F, _>(&var_i, &var_j)?,
+                    "kendall" => kendall_tau::<F, _>(&var_i, &var_j, "b")?,
+                    _ => unreachable!(),
+                };
+                
+                Ok(((i, j), corr))
+            })
+            .collect()
+    };
+
+    // Fill in the correlation matrix with computed values
+    for ((i, j), corr) in correlations? {
+        // Correlation matrix is symmetric
+        corr_mat[[i, j]] = corr;
+        corr_mat[[j, i]] = corr;
     }
 
     Ok(corr_mat)

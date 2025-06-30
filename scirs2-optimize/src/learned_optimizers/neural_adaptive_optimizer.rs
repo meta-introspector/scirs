@@ -9,6 +9,7 @@ use crate::error::OptimizeError;
 use crate::result::OptimizeResults;
 use super::{LearnedOptimizationConfig, OptimizationProblem, LearnedOptimizer, MetaOptimizerState, TrainingTask, ActivationType};
 use std::collections::{HashMap, VecDeque};
+use std::sync::Arc;
 
 /// Neural Adaptive Optimizer with dynamic strategy learning
 #[derive(Debug, Clone)]
@@ -25,6 +26,126 @@ pub struct NeuralAdaptiveOptimizer {
     meta_state: MetaOptimizerState,
     /// Adaptive statistics
     adaptive_stats: AdaptiveOptimizationStats,
+    /// Memory-efficient computation cache
+    computation_cache: ComputationCache,
+}
+
+/// Memory-efficient computation cache for reusing allocations
+#[derive(Debug, Clone)]
+pub struct ComputationCache {
+    /// Reusable gradient buffer
+    gradient_buffer: Array1<f64>,
+    /// Reusable feature buffer
+    feature_buffer: Array1<f64>,
+    /// Reusable parameter buffer
+    param_buffer: Array1<f64>,
+    /// Network output buffer
+    network_output_buffer: Array1<f64>,
+    /// Temporary computation buffer
+    temp_buffer: Array1<f64>,
+    /// Maximum buffer size to prevent unbounded growth
+    max_buffer_size: usize,
+}
+
+/// Memory-efficient bounded history collection
+#[derive(Debug, Clone)]
+pub struct BoundedHistory<T> {
+    /// Internal storage
+    pub(crate) data: VecDeque<T>,
+    /// Maximum capacity
+    max_capacity: usize,
+}
+
+impl<T> BoundedHistory<T> {
+    /// Create new bounded history with specified capacity
+    pub fn new(capacity: usize) -> Self {
+        Self {
+            data: VecDeque::with_capacity(capacity),
+            max_capacity: capacity,
+        }
+    }
+    
+    /// Add item, removing oldest if at capacity
+    pub fn push(&mut self, item: T) {
+        if self.data.len() >= self.max_capacity {
+            self.data.pop_front();
+        }
+        self.data.push_back(item);
+    }
+    
+    /// Get the most recent item
+    pub fn back(&self) -> Option<&T> {
+        self.data.back()
+    }
+    
+    /// Clear all items
+    pub fn clear(&mut self) {
+        self.data.clear();
+    }
+    
+    /// Get length
+    pub fn len(&self) -> usize {
+        self.data.len()
+    }
+    
+    /// Check if empty
+    pub fn is_empty(&self) -> bool {
+        self.data.is_empty()
+    }
+}
+
+impl ComputationCache {
+    /// Create new computation cache
+    pub fn new(max_size: usize) -> Self {
+        Self {
+            gradient_buffer: Array1::zeros(max_size),
+            feature_buffer: Array1::zeros(max_size),
+            param_buffer: Array1::zeros(max_size),
+            network_output_buffer: Array1::zeros(max_size),
+            temp_buffer: Array1::zeros(max_size),
+            max_buffer_size: max_size,
+        }
+    }
+    
+    /// Get reusable gradient buffer
+    pub fn get_gradient_buffer(&mut self, size: usize) -> &mut Array1<f64> {
+        self.resize_buffer(&mut self.gradient_buffer, size);
+        &mut self.gradient_buffer
+    }
+    
+    /// Get reusable feature buffer
+    pub fn get_feature_buffer(&mut self, size: usize) -> &mut Array1<f64> {
+        self.resize_buffer(&mut self.feature_buffer, size);
+        &mut self.feature_buffer
+    }
+    
+    /// Get reusable parameter buffer
+    pub fn get_param_buffer(&mut self, size: usize) -> &mut Array1<f64> {
+        self.resize_buffer(&mut self.param_buffer, size);
+        &mut self.param_buffer
+    }
+    
+    /// Get network output buffer
+    pub fn get_network_output_buffer(&mut self, size: usize) -> &mut Array1<f64> {
+        self.resize_buffer(&mut self.network_output_buffer, size);
+        &mut self.network_output_buffer
+    }
+    
+    /// Get temporary buffer
+    pub fn get_temp_buffer(&mut self, size: usize) -> &mut Array1<f64> {
+        self.resize_buffer(&mut self.temp_buffer, size);
+        &mut self.temp_buffer
+    }
+    
+    /// Resize buffer if needed (up to max size)
+    fn resize_buffer(&mut self, buffer: &mut Array1<f64>, requested_size: usize) {
+        let size = requested_size.min(self.max_buffer_size);
+        if buffer.len() != size {
+            *buffer = Array1::zeros(size);
+        } else {
+            buffer.fill(0.0);
+        }
+    }
 }
 
 /// Neural network for optimization strategy
@@ -119,8 +240,8 @@ pub struct AdaptationController {
     adaptation_rate_controller: AdaptationRateController,
     /// Progress monitor
     progress_monitor: ProgressMonitor,
-    /// Strategy history
-    strategy_history: VecDeque<OptimizationStrategy>,
+    /// Strategy history (bounded to prevent memory growth)
+    strategy_history: BoundedHistory<OptimizationStrategy>,
 }
 
 /// Strategy selector
@@ -158,8 +279,8 @@ pub struct AdaptationRateController {
     controller_network: Array2<f64>,
     /// Current adaptation rate
     current_rate: f64,
-    /// Rate history
-    rate_history: VecDeque<f64>,
+    /// Rate history (bounded)
+    rate_history: BoundedHistory<f64>,
     /// Performance correlation
     performance_correlation: f64,
 }
@@ -184,8 +305,8 @@ pub struct ProgressIndicator {
     name: String,
     /// Current value
     value: f64,
-    /// Historical values
-    history: VecDeque<f64>,
+    /// Historical values (bounded)
+    history: BoundedHistory<f64>,
     /// Trend direction
     trend: f64,
     /// Importance weight
@@ -322,6 +443,8 @@ impl NeuralAdaptiveOptimizer {
         let optimization_network = OptimizationNetwork::new(architecture);
         let adaptation_controller = AdaptationController::new(config.hidden_size);
         let performance_predictor = PerformancePredictor::new(config.hidden_size);
+        let hidden_size = config.hidden_size;
+        let max_buffer_size = config.max_parameters.max(1000); // Reasonable upper bound
         
         Self {
             config,
@@ -329,13 +452,14 @@ impl NeuralAdaptiveOptimizer {
             adaptation_controller,
             performance_predictor,
             meta_state: MetaOptimizerState {
-                meta_params: Array1::zeros(config.hidden_size),
-                network_weights: Array2::zeros((config.hidden_size, config.hidden_size)),
+                meta_params: Array1::zeros(hidden_size),
+                network_weights: Array2::zeros((hidden_size, hidden_size)),
                 performance_history: Vec::new(),
                 adaptation_stats: super::AdaptationStatistics::default(),
                 episode: 0,
             },
             adaptive_stats: AdaptiveOptimizationStats::default(),
+            computation_cache: ComputationCache::new(max_buffer_size),
         }
     }
     
@@ -378,7 +502,7 @@ impl NeuralAdaptiveOptimizer {
     }
     
     /// Extract state features for neural network
-    fn extract_state_features<F>(&self, 
+    fn extract_state_features<F>(&mut self, 
                                 objective: &F,
                                 current_params: &ArrayView1<f64>,
                                 step_number: usize) -> Result<Array1<f64>>
@@ -442,7 +566,7 @@ impl NeuralAdaptiveOptimizer {
     }
     
     /// Extract objective-based features
-    fn extract_objective_features<F>(&self, objective: &F, params: &ArrayView1<f64>) -> Result<Array1<f64>>
+    fn extract_objective_features<F>(&mut self, objective: &F, params: &ArrayView1<f64>) -> Result<Array1<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -451,44 +575,56 @@ impl NeuralAdaptiveOptimizer {
         let f0 = objective(params);
         features[0] = f0.abs().ln().tanh();
         
-        // Gradient features
+        // Gradient features using cached buffers
         let h = 1e-6;
-        let mut gradient_norm = 0.0;
-        let mut gradient_components = Vec::new();
+        let gradient_sample_size = params.len().min(10); // Limit for efficiency
+        let gradient_buffer = self.computation_cache.get_gradient_buffer(gradient_sample_size);
+        let param_buffer = self.computation_cache.get_param_buffer(params.len());
         
-        for i in 0..params.len().min(10) { // Limit for efficiency
-            let mut params_plus = params.to_owned();
-            params_plus[i] += h;
-            let f_plus = objective(&params_plus.view());
-            let grad_i = (f_plus - f0) / h;
-            gradient_components.push(grad_i);
-            gradient_norm += grad_i * grad_i;
+        // Copy parameters to buffer
+        for (i, &val) in params.iter().enumerate() {
+            if i < param_buffer.len() {
+                param_buffer[i] = val;
+            }
         }
         
-        gradient_norm = gradient_norm.sqrt();
+        // Compute gradient components efficiently
+        for i in 0..gradient_sample_size {
+            let original_val = param_buffer[i];
+            param_buffer[i] = original_val + h;
+            let f_plus = objective(&param_buffer.view());
+            param_buffer[i] = original_val; // Restore
+            
+            gradient_buffer[i] = (f_plus - f0) / h;
+        }
+        
+        let gradient_norm = (gradient_buffer.iter().take(gradient_sample_size)
+            .map(|&g| g * g).sum::<f64>()).sqrt();
         features[1] = gradient_norm.ln().tanh();
         
-        if !gradient_components.is_empty() {
-            let grad_mean = gradient_components.iter().sum::<f64>() / gradient_components.len() as f64;
-            let grad_var = gradient_components.iter()
+        if gradient_sample_size > 0 {
+            let grad_mean = gradient_buffer.iter().take(gradient_sample_size).sum::<f64>() / gradient_sample_size as f64;
+            let grad_var = gradient_buffer.iter().take(gradient_sample_size)
                 .map(|&g| (g - grad_mean).powi(2))
-                .sum::<f64>() / gradient_components.len() as f64;
+                .sum::<f64>() / gradient_sample_size as f64;
             
             features[2] = grad_mean.tanh();
             features[3] = grad_var.sqrt().tanh();
         }
         
-        // Curvature approximation
+        // Curvature approximation using cached buffer
         if params.len() > 1 {
-            let mut params_plus_plus = params.to_owned();
-            params_plus_plus[0] += h;
-            params_plus_plus[1] += h;
-            let f_plus_plus = objective(&params_plus_plus.view());
+            // Reuse param_buffer for mixed partial computation
+            param_buffer[0] += h;
+            param_buffer[1] += h;
+            let f_plus_plus = objective(&param_buffer.view());
             
-            let mut params_plus_minus = params.to_owned();
-            params_plus_minus[0] += h;
-            params_plus_minus[1] -= h;
-            let f_plus_minus = objective(&params_plus_minus.view());
+            param_buffer[1] -= 2.0 * h; // Now it's +h, -h
+            let f_plus_minus = objective(&param_buffer.view());
+            
+            // Restore original values
+            param_buffer[0] -= h;
+            param_buffer[1] += h;
             
             let mixed_partial = (f_plus_plus - f_plus_minus) / (2.0 * h);
             features[4] = mixed_partial.tanh();
@@ -924,7 +1060,7 @@ impl AdaptationController {
             strategy_selector: StrategySelector::new(hidden_size),
             adaptation_rate_controller: AdaptationRateController::new(),
             progress_monitor: ProgressMonitor::new(),
-            strategy_history: VecDeque::with_capacity(100),
+            strategy_history: BoundedHistory::new(100),
         }
     }
     
@@ -933,11 +1069,7 @@ impl AdaptationController {
                           network_output: &Array1<f64>, 
                           performance_prediction: &f64) -> Result<OptimizationStrategy> {
         let strategy = self.strategy_selector.select(network_output, *performance_prediction)?;
-        self.strategy_history.push_back(strategy.clone());
-        
-        if self.strategy_history.len() > 100 {
-            self.strategy_history.pop_front();
-        }
+        self.strategy_history.push(strategy.clone());
         
         Ok(strategy)
     }
@@ -1134,7 +1266,7 @@ impl AdaptationRateController {
                 (rand::random::<f64>() - 0.5) * 0.1
             }),
             current_rate: 0.1,
-            rate_history: VecDeque::with_capacity(100),
+            rate_history: BoundedHistory::new(100),
             performance_correlation: 0.0,
         }
     }
@@ -1142,22 +1274,14 @@ impl AdaptationRateController {
     /// Increase adaptation rate
     pub fn increase_rate(&mut self) -> Result<()> {
         self.current_rate = (self.current_rate * 1.2).min(1.0);
-        self.rate_history.push_back(self.current_rate);
-        
-        if self.rate_history.len() > 100 {
-            self.rate_history.pop_front();
-        }
+        self.rate_history.push(self.current_rate);
         
         Ok(())
     }
     
     /// Maintain current rate
     pub fn maintain_rate(&mut self) -> Result<()> {
-        self.rate_history.push_back(self.current_rate);
-        
-        if self.rate_history.len() > 100 {
-            self.rate_history.pop_front();
-        }
+        self.rate_history.push(self.current_rate);
         
         Ok(())
     }
@@ -1222,7 +1346,7 @@ impl ProgressIndicator {
         Self {
             name,
             value: 0.0,
-            history: VecDeque::with_capacity(50),
+            history: BoundedHistory::new(50),
             trend: 0.0,
             importance: 1.0,
         }
@@ -1231,17 +1355,14 @@ impl ProgressIndicator {
     /// Update indicator
     pub fn update(&mut self, new_value: f64) -> Result<()> {
         self.value = new_value;
-        self.history.push_back(new_value);
+        self.history.push(new_value);
         
-        if self.history.len() > 50 {
-            self.history.pop_front();
-        }
-        
-        // Compute trend
+        // Compute trend using bounded history
         if self.history.len() > 2 {
-            let recent_values: Vec<f64> = self.history.iter().copied().collect();
-            self.trend = (recent_values[recent_values.len() - 1] - recent_values[0]) / 
-                        recent_values.len() as f64;
+            // Access the underlying data to compute trend
+            let first = self.history.data.front().copied().unwrap_or(new_value);
+            let last = self.history.data.back().copied().unwrap_or(new_value);
+            self.trend = (last - first) / self.history.len() as f64;
         }
         
         Ok(())
@@ -1468,6 +1589,12 @@ impl LearnedOptimizer for NeuralAdaptiveOptimizer {
         self.adaptive_stats = AdaptiveOptimizationStats::default();
         self.meta_state.performance_history.clear();
         self.adaptation_controller.strategy_history.clear();
+        // Clear computation cache buffers
+        self.computation_cache.gradient_buffer.fill(0.0);
+        self.computation_cache.feature_buffer.fill(0.0);
+        self.computation_cache.param_buffer.fill(0.0);
+        self.computation_cache.network_output_buffer.fill(0.0);
+        self.computation_cache.temp_buffer.fill(0.0);
     }
 }
 
@@ -1501,23 +1628,38 @@ impl NeuralAdaptiveOptimizer {
         })
     }
     
-    fn compute_direction_for_strategy<F>(&self, 
+    fn compute_direction_for_strategy<F>(&mut self, 
                                         objective: &F, 
                                         params: &Array1<f64>, 
                                         strategy: &OptimizationStrategy) -> Result<Array1<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
-        // Compute finite difference gradient
+        // Compute finite difference gradient using cached buffers
         let h = 1e-6;
         let f0 = objective(&params.view());
-        let mut gradient = Array1::zeros(params.len());
+        let gradient_buffer = self.computation_cache.get_gradient_buffer(params.len());
+        let param_buffer = self.computation_cache.get_param_buffer(params.len());
         
-        for i in 0..params.len() {
-            let mut params_plus = params.clone();
-            params_plus[i] += h;
-            let f_plus = objective(&params_plus.view());
-            gradient[i] = (f_plus - f0) / h;
+        // Copy parameters to buffer
+        for (i, &val) in params.iter().enumerate() {
+            if i < param_buffer.len() {
+                param_buffer[i] = val;
+            }
+        }
+        
+        for i in 0..params.len().min(gradient_buffer.len()) {
+            let original_val = param_buffer[i];
+            param_buffer[i] = original_val + h;
+            let f_plus = objective(&param_buffer.view());
+            param_buffer[i] = original_val; // Restore
+            gradient_buffer[i] = (f_plus - f0) / h;
+        }
+        
+        // Create result gradient from buffer
+        let mut gradient = Array1::zeros(params.len());
+        for i in 0..params.len().min(gradient_buffer.len()) {
+            gradient[i] = gradient_buffer[i];
         }
         
         // Apply strategy-specific transformations

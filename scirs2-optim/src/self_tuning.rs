@@ -611,7 +611,7 @@ impl<A: Float + 'static, D: Dimension + 'static> SelfTuningOptimizer<A, D> {
     /// Epsilon-greedy optimizer selection
     fn select_epsilon_greedy(&self) -> usize {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         if rng.gen::<f64>() < self.config.exploration_rate {
             // Explore: random selection
@@ -632,7 +632,7 @@ impl<A: Float + 'static, D: Dimension + 'static> SelfTuningOptimizer<A, D> {
     fn select_thompson_sampling(&self) -> usize {
         // Simplified Thompson sampling - in practice would use Beta distributions
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut best_sample = f64::NEG_INFINITY;
         let mut best_idx = 0;

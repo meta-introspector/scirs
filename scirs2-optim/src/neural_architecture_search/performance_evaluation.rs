@@ -11,8 +11,8 @@ use serde::{Serialize, Deserialize};
 
 use crate::error::OptimizerError;
 use super::{
-    OptimizerArchitecture, EvaluationMetric, EvaluationResults, ResourceUsage,
-    EvaluationConfig, BenchmarkDataset, StatisticalTestingConfig
+    OptimizerArchitecture, EvaluationResults, ResourceUsage,
+    EvaluationConfig, BenchmarkDataset, StatisticalTestingConfig, EvaluationMetric
 };
 
 /// Performance evaluator for optimizer architectures
@@ -295,7 +295,7 @@ pub enum DistributionType {
     Exponential,
     PowerLaw,
     Multimodal,
-    Heavy Tailed,
+    HeavyTailed,
 }
 
 /// Evaluation criterion

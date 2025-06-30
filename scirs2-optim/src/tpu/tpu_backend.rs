@@ -378,6 +378,48 @@ pub struct AssignmentStatistics {
     pub utilization_variance: f64,
 }
 
+/// Runtime executor for TPU operations
+#[derive(Debug)]
+pub struct RuntimeExecutor<T: Float> {
+    /// Execution state
+    state: T,
+}
+
+/// Result collector for TPU computations
+#[derive(Debug)]
+pub struct ResultCollector<T: Float> {
+    /// Collected results
+    results: Vec<T>,
+}
+
+/// Execution context for TPU operations
+#[derive(Debug)]
+pub struct ExecutionContext {
+    /// Context id
+    id: usize,
+}
+
+/// Performance optimizer for TPU operations
+#[derive(Debug)]
+pub struct PerformanceOptimizer<T: Float> {
+    /// Optimization level
+    level: T,
+}
+
+/// Priority manager for TPU task scheduling
+#[derive(Debug)]
+pub struct PriorityManager {
+    /// Priority level
+    level: usize,
+}
+
+/// Dependency resolver for TPU operations
+#[derive(Debug)]
+pub struct DependencyResolver {
+    /// Resolved dependencies
+    dependencies: Vec<String>,
+}
+
 /// Execution engine for TPU computations
 #[derive(Debug)]
 pub struct ExecutionEngine<T: Float> {

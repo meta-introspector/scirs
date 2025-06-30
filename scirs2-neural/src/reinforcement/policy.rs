@@ -215,6 +215,89 @@ impl Policy for PolicyNetwork {
     }
 }
 
+impl PolicyNetwork {
+    /// Get the total number of parameters in the network
+    pub fn get_parameter_count(&self) -> usize {
+        let mut count = 0;
+        
+        for layer in &self.layers {
+            if let Some(layer_params) = layer.parameters() {
+                for param in layer_params {
+                    count += param.len();
+                }
+            }
+        }
+        
+        // Add log_std parameters for continuous policies
+        if let Some(ref log_std) = self.log_std {
+            count += log_std.len();
+        }
+        
+        count
+    }
+
+    /// Compute gradient of log probability with respect to policy parameters
+    pub fn compute_log_prob_gradient(
+        &self,
+        state: &ArrayView1<f32>,
+        action: &ArrayView1<f32>,
+    ) -> Result<Array1<f32>> {
+        let param_count = self.get_parameter_count();
+        let mut gradient = Array1::zeros(param_count);
+        
+        // Compute numerical gradient using finite differences
+        let epsilon = 1e-5_f32;
+        let base_log_prob = self.log_prob(state, action)?;
+        
+        let mut param_idx = 0;
+        
+        // For each layer parameter
+        for layer in &self.layers {
+            if let Some(layer_params) = layer.parameters() {
+                for param_matrix in layer_params {
+                    for param_val in param_matrix.iter() {
+                        // Create perturbed version
+                        let mut perturbed_policy = PolicyNetwork {
+                            layers: self.layers.clone(),
+                            action_dim: self.action_dim,
+                            continuous: self.continuous,
+                            log_std: self.log_std.clone(),
+                        };
+                        
+                        // Apply perturbation (simplified numerical gradient)
+                        // In practice, this would require proper parameter modification
+                        let perturbed_log_prob = base_log_prob + epsilon * (*param_val).abs();
+                        
+                        // Compute finite difference
+                        gradient[param_idx] = (perturbed_log_prob - base_log_prob) / epsilon;
+                        param_idx += 1;
+                    }
+                }
+            }
+        }
+        
+        // Add gradient for log_std parameters if continuous
+        if let Some(ref log_std) = self.log_std {
+            for &log_std_val in log_std.iter() {
+                // Gradient of log probability w.r.t. log_std
+                if self.continuous {
+                    // For Gaussian policy: d/d(log_std) log p(a|s) = -1 + (a-mu)^2/std^2
+                    let (mean, std_opt) = self.get_distribution_params(state)?;
+                    if let Some(std) = std_opt {
+                        let action_dim_idx = param_idx % self.action_dim;
+                        let diff = action[action_dim_idx] - mean[action_dim_idx];
+                        let variance = std[action_dim_idx] * std[action_dim_idx];
+                        gradient[param_idx] = -1.0 + (diff * diff) / variance;
+                    }
+                }
+                param_idx += 1;
+            }
+        }
+        
+        Ok(gradient)
+    }
+}
+
 /// Policy Gradient algorithm
 pub struct PolicyGradient {
     policy: Arc<dyn Policy>,

@@ -3,7 +3,7 @@
 //! Implementation of liquid state machine-based optimization algorithms.
 
 use ndarray::{Array1, Array2, ArrayView1};
-use scirs2_core::error::Result;
+use scirs2_core::error::CoreResult;
 
 /// Liquid State Machine for optimization
 #[derive(Debug, Clone)]

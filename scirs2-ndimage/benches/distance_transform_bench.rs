@@ -53,7 +53,7 @@ fn bench_distance_transform_2d(c: &mut Criterion) {
             |b, input| {
                 b.iter(|| {
                     let (distances, _) =
-                        distance_transform_edt(black_box(input), None, true, false);
+                        distance_transform_edt(black_box(input), None, true, false).expect("EDT failed");
                     black_box(distances)
                 })
             },
@@ -67,7 +67,7 @@ fn bench_distance_transform_2d(c: &mut Criterion) {
                 |b, input| {
                     b.iter(|| {
                         let (distances, _) =
-                            distance_transform_bf(black_box(input), "euclidean", None, true, false);
+                            distance_transform_bf(black_box(input), "euclidean", None, true, false).expect("BF failed");
                         black_box(distances)
                     })
                 },
@@ -98,7 +98,7 @@ fn bench_distance_transform_3d(c: &mut Criterion) {
             |b, input| {
                 b.iter(|| {
                     let (distances, _) =
-                        distance_transform_edt(black_box(input), None, true, false);
+                        distance_transform_edt(black_box(input), None, true, false).expect("EDT 3D failed");
                     black_box(distances)
                 })
             },
@@ -112,7 +112,7 @@ fn bench_distance_transform_3d(c: &mut Criterion) {
                 |b, input| {
                     b.iter(|| {
                         let (distances, _) =
-                            distance_transform_bf(black_box(input), "euclidean", None, true, false);
+                            distance_transform_bf(black_box(input), "euclidean", None, true, false).expect("BF 3D failed");
                         black_box(distances)
                     })
                 },
@@ -139,7 +139,7 @@ fn bench_distance_metrics(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("Metric", label), &input_dyn, |b, input| {
             b.iter(|| {
                 let (distances, _) =
-                    distance_transform_bf(black_box(input), metric, None, true, false);
+                    distance_transform_bf(black_box(input), metric, None, true, false).expect("Metric transform failed");
                 black_box(distances)
             })
         });
@@ -169,7 +169,7 @@ fn bench_sampling_effects(c: &mut Criterion) {
             |b, input| {
                 b.iter(|| {
                     let (distances, _) =
-                        distance_transform_edt(black_box(input), sampling.as_deref(), true, false);
+                        distance_transform_edt(black_box(input), sampling.as_deref(), true, false).expect("Sampling transform failed");
                     black_box(distances)
                 })
             },
@@ -202,7 +202,7 @@ fn bench_return_modes(c: &mut Criterion) {
                         None,
                         return_distances,
                         return_indices,
-                    );
+                    ).expect("Return mode transform failed");
                     black_box((distances, indices))
                 })
             },

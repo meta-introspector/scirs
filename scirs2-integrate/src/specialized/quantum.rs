@@ -9,6 +9,7 @@ use num_complex::Complex64;
 use rand::Rng;
 use scirs2_core::constants::{PI, REDUCED_PLANCK};
 use scirs2_core::simd_ops::SimdUnifiedOps;
+use std::collections::HashMap;
 
 /// Quantum state representation
 #[derive(Debug, Clone)]
@@ -2107,11 +2108,20 @@ pub mod quantum_algorithms {
     #[derive(Debug, Clone)]
     pub enum QAOAOptimizer {
         /// Gradient descent
-        GradientDescent { learning_rate: f64, max_iterations: usize },
+        GradientDescent {
+            learning_rate: f64,
+            max_iterations: usize,
+        },
         /// Simulated annealing
-        SimulatedAnnealing { initial_temp: f64, cooling_rate: f64 },
+        SimulatedAnnealing {
+            initial_temp: f64,
+            cooling_rate: f64,
+        },
         /// Nelder-Mead simplex
-        NelderMead { tolerance: f64, max_iterations: usize },
+        NelderMead {
+            tolerance: f64,
+            max_iterations: usize,
+        },
     }
 
     impl QuantumApproximateOptimizationAlgorithm {
@@ -2123,7 +2133,7 @@ pub mod quantum_algorithms {
             optimizer: QAOAOptimizer,
         ) -> Self {
             let mixer_hamiltonian = Self::create_mixer_hamiltonian(n_qubits);
-            
+
             Self {
                 n_qubits,
                 depth,
@@ -2137,32 +2147,40 @@ pub mod quantum_algorithms {
         fn create_mixer_hamiltonian(n_qubits: usize) -> Array2<f64> {
             let dim = 1 << n_qubits;
             let mut mixer = Array2::zeros((dim, dim));
-            
+
             for qubit in 0..n_qubits {
                 for i in 0..dim {
                     let flipped_i = i ^ (1 << qubit);
                     mixer[[i, flipped_i]] += 1.0;
                 }
             }
-            
+
             mixer
         }
 
         /// Run QAOA optimization
-        pub fn optimize(
-            &self,
-            initial_parameters: &Array1<f64>,
-        ) -> Result<QAOAResult> {
+        pub fn optimize(&self, initial_parameters: &Array1<f64>) -> Result<QAOAResult> {
             match &self.optimizer {
-                QAOAOptimizer::GradientDescent { learning_rate, max_iterations } => {
-                    self.gradient_descent_optimization(initial_parameters, *learning_rate, *max_iterations)
-                }
-                QAOAOptimizer::SimulatedAnnealing { initial_temp, cooling_rate } => {
-                    self.simulated_annealing_optimization(initial_parameters, *initial_temp, *cooling_rate)
-                }
-                QAOAOptimizer::NelderMead { tolerance, max_iterations } => {
-                    self.nelder_mead_optimization(initial_parameters, *tolerance, *max_iterations)
-                }
+                QAOAOptimizer::GradientDescent {
+                    learning_rate,
+                    max_iterations,
+                } => self.gradient_descent_optimization(
+                    initial_parameters,
+                    *learning_rate,
+                    *max_iterations,
+                ),
+                QAOAOptimizer::SimulatedAnnealing {
+                    initial_temp,
+                    cooling_rate,
+                } => self.simulated_annealing_optimization(
+                    initial_parameters,
+                    *initial_temp,
+                    *cooling_rate,
+                ),
+                QAOAOptimizer::NelderMead {
+                    tolerance,
+                    max_iterations,
+                } => self.nelder_mead_optimization(initial_parameters, *tolerance, *max_iterations),
             }
         }
 
@@ -2183,17 +2201,17 @@ pub mod quantum_algorithms {
 
                 // Compute gradients using parameter shift rule
                 let mut gradients = Array1::zeros(parameters.len());
-                
+
                 for i in 0..parameters.len() {
                     let mut params_plus = parameters.clone();
                     let mut params_minus = parameters.clone();
-                    
+
                     params_plus[i] += parameter_shift_delta;
                     params_minus[i] -= parameter_shift_delta;
-                    
+
                     let cost_plus = self.evaluate_cost_function(&params_plus)?;
                     let cost_minus = self.evaluate_cost_function(&params_minus)?;
-                    
+
                     gradients[i] = (cost_plus - cost_minus) / 2.0;
                 }
 
@@ -2203,7 +2221,9 @@ pub mod quantum_algorithms {
                 }
 
                 // Convergence check
-                if iteration > 0 && (cost_history[iteration] - cost_history[iteration - 1]).abs() < 1e-8 {
+                if iteration > 0
+                    && (cost_history[iteration] - cost_history[iteration - 1]).abs() < 1e-8
+                {
                     break;
                 }
             }
@@ -2230,14 +2250,14 @@ pub mod quantum_algorithms {
         ) -> Result<QAOAResult> {
             use rand::Rng;
             let mut rng = rand::rng();
-            
+
             let mut current_params = initial_params.clone();
             let mut best_params = current_params.clone();
             let mut current_cost = self.evaluate_cost_function(&current_params)?;
             let mut best_cost = current_cost;
             let mut cost_history = vec![current_cost];
             let mut temperature = initial_temp;
-            
+
             let max_iterations = 1000;
             let param_perturbation = 0.1;
 
@@ -2312,7 +2332,7 @@ pub mod quantum_algorithms {
                 for vertex in &simplex {
                     let cost = self.evaluate_cost_function(vertex)?;
                     costs.push(cost);
-                    
+
                     if cost < best_cost {
                         best_cost = cost;
                         best_params = vertex.clone();
@@ -2334,7 +2354,7 @@ pub mod quantum_algorithms {
                 // Nelder-Mead operations (simplified)
                 let centroid = self.compute_centroid(&simplex, &indices[..n]);
                 let worst_vertex = &simplex[indices[n]];
-                
+
                 // Reflection
                 let reflected = &centroid + (&centroid - worst_vertex);
                 let reflected_cost = self.evaluate_cost_function(&reflected)?;
@@ -2343,7 +2363,7 @@ pub mod quantum_algorithms {
                     // Expansion
                     let expanded = &centroid + 2.0 * (&reflected - &centroid);
                     let expanded_cost = self.evaluate_cost_function(&expanded)?;
-                    
+
                     if expanded_cost < reflected_cost {
                         simplex[indices[n]] = expanded;
                     } else {
@@ -2386,14 +2406,15 @@ pub mod quantum_algorithms {
         /// Evaluate QAOA cost function
         fn evaluate_cost_function(&self, parameters: &Array1<f64>) -> Result<f64> {
             let state = self.generate_qaoa_state(parameters)?;
-            let expectation = self.compute_hamiltonian_expectation(&state, &self.problem_hamiltonian)?;
+            let expectation =
+                self.compute_hamiltonian_expectation(&state, &self.problem_hamiltonian)?;
             Ok(expectation)
         }
 
         /// Generate QAOA state from parameters
         fn generate_qaoa_state(&self, parameters: &Array1<f64>) -> Result<Array1<Complex64>> {
             let dim = 1 << self.n_qubits;
-            
+
             // Start with uniform superposition state
             let mut state = Array1::from_elem(dim, Complex64::new(1.0 / (dim as f64).sqrt(), 0.0));
 
@@ -2403,7 +2424,8 @@ pub mod quantum_algorithms {
                 let beta = parameters[self.depth + layer];
 
                 // Apply problem Hamiltonian evolution
-                state = self.apply_hamiltonian_evolution(&state, &self.problem_hamiltonian, gamma)?;
+                state =
+                    self.apply_hamiltonian_evolution(&state, &self.problem_hamiltonian, gamma)?;
 
                 // Apply mixer Hamiltonian evolution
                 state = self.apply_hamiltonian_evolution(&state, &self.mixer_hamiltonian, beta)?;
@@ -3425,48 +3447,50 @@ pub mod quantum_algorithms {
         ) -> Result<QuantumSVMModel> {
             use rand::Rng;
             let mut rng = rand::rng();
-            
+
             let n_samples = training_data.nrows();
             let n_features = training_data.ncols();
-            
+
             if n_features > self.n_feature_qubits {
                 return Err(IntegrateError::InvalidInput(
                     "Number of features exceeds available qubits".to_string(),
                 ));
             }
-            
+
             // Initialize dual variables (Lagrange multipliers)
             let mut alphas = Array1::zeros(n_samples);
             for alpha in alphas.iter_mut() {
                 *alpha = rng.random::<f64>() * 0.1;
             }
-            
+
             // Compute quantum kernel matrix
             let kernel_matrix = self.compute_quantum_kernel_matrix(training_data)?;
-            
+
             // SMO-like optimization for quantum SVM
             let mut obj_prev = f64::NEG_INFINITY;
-            
+
             for iteration in 0..self.max_iterations {
                 let mut alpha_changed = false;
-                
+
                 for i in 0..n_samples {
                     let ei = self.compute_error(&alphas, labels, &kernel_matrix, i, 0.0);
-                    
-                    if (labels[i] as f64 * ei < -self.tolerance && alphas[i] < 1.0) ||
-                       (labels[i] as f64 * ei > self.tolerance && alphas[i] > 0.0) {
-                        
+
+                    if (labels[i] as f64 * ei < -self.tolerance && alphas[i] < 1.0)
+                        || (labels[i] as f64 * ei > self.tolerance && alphas[i] > 0.0)
+                    {
                         // Select second alpha using heuristic
                         let j = self.select_second_alpha(i, &alphas, labels, &kernel_matrix, ei);
-                        
-                        if j == i { continue; }
-                        
+
+                        if j == i {
+                            continue;
+                        }
+
                         let ej = self.compute_error(&alphas, labels, &kernel_matrix, j, 0.0);
-                        
+
                         // Store old alphas
                         let alpha_i_old = alphas[i];
                         let alpha_j_old = alphas[j];
-                        
+
                         // Compute bounds
                         let (l, h) = if labels[i] != labels[j] {
                             let l = (alphas[j] - alphas[i]).max(0.0);
@@ -3477,41 +3501,52 @@ pub mod quantum_algorithms {
                             let h = 1.0_f64.min(alphas[i] + alphas[j]);
                             (l, h)
                         };
-                        
-                        if (l - h).abs() < 1e-10 { continue; }
-                        
+
+                        if (l - h).abs() < 1e-10 {
+                            continue;
+                        }
+
                         // Compute eta
-                        let eta = 2.0 * kernel_matrix[[i, j]] - kernel_matrix[[i, i]] - kernel_matrix[[j, j]];
-                        
-                        if eta >= 0.0 { continue; }
-                        
+                        let eta = 2.0 * kernel_matrix[[i, j]]
+                            - kernel_matrix[[i, i]]
+                            - kernel_matrix[[j, j]];
+
+                        if eta >= 0.0 {
+                            continue;
+                        }
+
                         // Update alpha_j
                         alphas[j] = alpha_j_old - labels[j] as f64 * (ei - ej) / eta;
                         alphas[j] = alphas[j].max(l).min(h);
-                        
-                        if (alphas[j] - alpha_j_old).abs() < 1e-5 { continue; }
-                        
+
+                        if (alphas[j] - alpha_j_old).abs() < 1e-5 {
+                            continue;
+                        }
+
                         // Update alpha_i
-                        alphas[i] = alpha_i_old + labels[i] as f64 * labels[j] as f64 * (alpha_j_old - alphas[j]);
-                        
+                        alphas[i] = alpha_i_old
+                            + labels[i] as f64 * labels[j] as f64 * (alpha_j_old - alphas[j]);
+
                         alpha_changed = true;
                     }
                 }
-                
+
                 // Check convergence
                 let objective = self.compute_objective(&alphas, labels, &kernel_matrix);
                 if iteration > 0 && (objective - obj_prev).abs() < self.tolerance {
                     break;
                 }
                 obj_prev = objective;
-                
-                if !alpha_changed { break; }
+
+                if !alpha_changed {
+                    break;
+                }
             }
-            
+
             // Compute support vectors and bias
             let support_vectors = self.extract_support_vectors(&alphas, training_data, labels)?;
             let bias = self.compute_bias(&alphas, labels, &kernel_matrix, &support_vectors)?;
-            
+
             Ok(QuantumSVMModel {
                 support_vectors,
                 alphas: alphas.clone(),
@@ -3525,7 +3560,7 @@ pub mod quantum_algorithms {
         fn compute_quantum_kernel_matrix(&self, data: &Array2<f64>) -> Result<Array2<f64>> {
             let n_samples = data.nrows();
             let mut kernel_matrix = Array2::zeros((n_samples, n_samples));
-            
+
             for i in 0..n_samples {
                 for j in i..n_samples {
                     let kernel_value = self.quantum_kernel(&data.row(i), &data.row(j))?;
@@ -3533,7 +3568,7 @@ pub mod quantum_algorithms {
                     kernel_matrix[[j, i]] = kernel_value; // Symmetric
                 }
             }
-            
+
             Ok(kernel_matrix)
         }
 
@@ -3542,112 +3577,136 @@ pub mod quantum_algorithms {
             // Encode both data points into quantum states
             let state1 = self.encode_data_to_quantum_state(x1)?;
             let state2 = self.encode_data_to_quantum_state(x2)?;
-            
+
             // Compute overlap |⟨ψ(x1)|ψ(x2)⟩|²
-            let overlap = state1.iter()
+            let overlap = state1
+                .iter()
                 .zip(state2.iter())
                 .map(|(a, b)| (a.conj() * b).norm_sqr())
                 .sum::<f64>();
-            
+
             Ok(overlap)
         }
 
         /// Encode classical data into quantum state using feature map
-        fn encode_data_to_quantum_state(&self, data: &ArrayView1<f64>) -> Result<Array1<Complex64>> {
+        fn encode_data_to_quantum_state(
+            &self,
+            data: &ArrayView1<f64>,
+        ) -> Result<Array1<Complex64>> {
             let n_qubits = self.n_feature_qubits;
             let n_states = 1 << n_qubits;
             let mut state = Array1::zeros(n_states);
             state[0] = Complex64::new(1.0, 0.0); // Start with |0...0⟩
-            
+
             // Apply feature map layers
             for _layer in 0..self.kernel_params.layers {
                 state = self.apply_feature_map_layer(&state, data)?;
             }
-            
+
             Ok(state)
         }
 
         /// Apply a single layer of the quantum feature map
-        fn apply_feature_map_layer(&self, state: &Array1<Complex64>, data: &ArrayView1<f64>) -> Result<Array1<Complex64>> {
+        fn apply_feature_map_layer(
+            &self,
+            state: &Array1<Complex64>,
+            data: &ArrayView1<f64>,
+        ) -> Result<Array1<Complex64>> {
             let mut new_state = state.clone();
-            
+
             match self.kernel_params.feature_map {
                 QuantumFeatureMap::ZZ => {
                     // Apply ZZ feature map: exp(iθ(x_i, x_j) Z_i ⊗ Z_j)
                     for i in 0..data.len().min(self.n_feature_qubits) {
-                        for j in (i+1)..data.len().min(self.n_feature_qubits) {
+                        for j in (i + 1)..data.len().min(self.n_feature_qubits) {
                             let angle = data[i] * data[j]; // Feature interaction
                             new_state = self.apply_zz_rotation(&new_state, i, j, angle)?;
                         }
                     }
-                },
+                }
                 QuantumFeatureMap::Pauli => {
                     // Apply Pauli feature map
                     for i in 0..data.len().min(self.n_feature_qubits) {
                         let angle = data[i];
                         new_state = self.apply_pauli_rotation(&new_state, i, angle)?;
                     }
-                },
+                }
                 QuantumFeatureMap::Linear => {
                     // Apply linear feature map
                     for i in 0..data.len().min(self.n_feature_qubits) {
                         let angle = data[i] * PI;
                         new_state = self.apply_ry_rotation(&new_state, i, angle)?;
                     }
-                },
+                }
             }
-            
+
             // Apply entanglement
             new_state = self.apply_entanglement(&new_state)?;
-            
+
             Ok(new_state)
         }
 
         /// Apply ZZ rotation between two qubits
-        fn apply_zz_rotation(&self, state: &Array1<Complex64>, qubit1: usize, qubit2: usize, angle: f64) -> Result<Array1<Complex64>> {
+        fn apply_zz_rotation(
+            &self,
+            state: &Array1<Complex64>,
+            qubit1: usize,
+            qubit2: usize,
+            angle: f64,
+        ) -> Result<Array1<Complex64>> {
             let mut new_state = Array1::zeros(state.len());
             let cos_half = (angle / 2.0).cos();
             let sin_half = (angle / 2.0).sin();
-            
+
             for i in 0..state.len() {
                 let z1_eigenvalue = if (i >> qubit1) & 1 == 0 { 1.0 } else { -1.0 };
                 let z2_eigenvalue = if (i >> qubit2) & 1 == 0 { 1.0 } else { -1.0 };
                 let zz_eigenvalue = z1_eigenvalue * z2_eigenvalue;
-                
+
                 let phase = if zz_eigenvalue > 0.0 {
                     Complex64::new(cos_half, sin_half)
                 } else {
                     Complex64::new(cos_half, -sin_half)
                 };
-                
+
                 new_state[i] = state[i] * phase;
             }
-            
+
             Ok(new_state)
         }
 
         /// Apply Pauli Y rotation
-        fn apply_ry_rotation(&self, state: &Array1<Complex64>, qubit: usize, angle: f64) -> Result<Array1<Complex64>> {
+        fn apply_ry_rotation(
+            &self,
+            state: &Array1<Complex64>,
+            qubit: usize,
+            angle: f64,
+        ) -> Result<Array1<Complex64>> {
             let mut new_state = Array1::zeros(state.len());
             let cos_half = (angle / 2.0).cos();
             let sin_half = (angle / 2.0).sin();
-            
+
             for i in 0..state.len() {
                 let bit = (i >> qubit) & 1;
                 let other_index = i ^ (1 << qubit);
-                
+
                 if bit == 0 {
                     new_state[i] = cos_half * state[i] - sin_half * state[other_index];
                 } else {
                     new_state[i] = sin_half * state[other_index] + cos_half * state[i];
                 }
             }
-            
+
             Ok(new_state)
         }
 
         /// Apply general Pauli rotation
-        fn apply_pauli_rotation(&self, state: &Array1<Complex64>, qubit: usize, angle: f64) -> Result<Array1<Complex64>> {
+        fn apply_pauli_rotation(
+            &self,
+            state: &Array1<Complex64>,
+            qubit: usize,
+            angle: f64,
+        ) -> Result<Array1<Complex64>> {
             // For simplicity, use RY rotation as Pauli rotation
             self.apply_ry_rotation(state, qubit, angle)
         }
@@ -3655,38 +3714,43 @@ pub mod quantum_algorithms {
         /// Apply entanglement pattern
         fn apply_entanglement(&self, state: &Array1<Complex64>) -> Result<Array1<Complex64>> {
             let mut new_state = state.clone();
-            
+
             match self.kernel_params.entanglement {
                 EntanglementPattern::Linear => {
                     // Linear chain of CNOT gates
                     for i in 0..(self.n_feature_qubits - 1) {
                         new_state = self.apply_cnot_gate(&new_state, i, i + 1)?;
                     }
-                },
+                }
                 EntanglementPattern::Full => {
                     // All-to-all CNOT gates
                     for i in 0..self.n_feature_qubits {
-                        for j in (i+1)..self.n_feature_qubits {
+                        for j in (i + 1)..self.n_feature_qubits {
                             new_state = self.apply_cnot_gate(&new_state, i, j)?;
                         }
                     }
-                },
+                }
                 EntanglementPattern::Circular => {
                     // Circular chain of CNOT gates
                     for i in 0..self.n_feature_qubits {
                         let next = (i + 1) % self.n_feature_qubits;
                         new_state = self.apply_cnot_gate(&new_state, i, next)?;
                     }
-                },
+                }
             }
-            
+
             Ok(new_state)
         }
 
         /// Apply CNOT gate between control and target qubits
-        fn apply_cnot_gate(&self, state: &Array1<Complex64>, control: usize, target: usize) -> Result<Array1<Complex64>> {
+        fn apply_cnot_gate(
+            &self,
+            state: &Array1<Complex64>,
+            control: usize,
+            target: usize,
+        ) -> Result<Array1<Complex64>> {
             let mut new_state = state.clone();
-            
+
             for i in 0..state.len() {
                 if (i >> control) & 1 == 1 {
                     let other_index = i ^ (1 << target);
@@ -3695,12 +3759,19 @@ pub mod quantum_algorithms {
                     new_state[other_index] = temp;
                 }
             }
-            
+
             Ok(new_state)
         }
 
         // Helper methods for SVM optimization
-        fn compute_error(&self, alphas: &Array1<f64>, labels: &Array1<i8>, kernel_matrix: &Array2<f64>, i: usize, bias: f64) -> f64 {
+        fn compute_error(
+            &self,
+            alphas: &Array1<f64>,
+            labels: &Array1<i8>,
+            kernel_matrix: &Array2<f64>,
+            i: usize,
+            bias: f64,
+        ) -> f64 {
             let mut sum = 0.0;
             for j in 0..alphas.len() {
                 sum += alphas[j] * labels[j] as f64 * kernel_matrix[[i, j]];
@@ -3708,10 +3779,17 @@ pub mod quantum_algorithms {
             sum + bias - labels[i] as f64
         }
 
-        fn select_second_alpha(&self, i: usize, alphas: &Array1<f64>, labels: &Array1<i8>, kernel_matrix: &Array2<f64>, ei: f64) -> usize {
+        fn select_second_alpha(
+            &self,
+            i: usize,
+            alphas: &Array1<f64>,
+            labels: &Array1<i8>,
+            kernel_matrix: &Array2<f64>,
+            ei: f64,
+        ) -> usize {
             let mut max_delta = 0.0;
             let mut best_j = i;
-            
+
             for j in 0..alphas.len() {
                 if j != i {
                     let ej = self.compute_error(alphas, labels, kernel_matrix, j, 0.0);
@@ -3722,41 +3800,63 @@ pub mod quantum_algorithms {
                     }
                 }
             }
-            
+
             best_j
         }
 
-        fn compute_objective(&self, alphas: &Array1<f64>, labels: &Array1<i8>, kernel_matrix: &Array2<f64>) -> f64 {
+        fn compute_objective(
+            &self,
+            alphas: &Array1<f64>,
+            labels: &Array1<i8>,
+            kernel_matrix: &Array2<f64>,
+        ) -> f64 {
             let mut obj = alphas.sum();
-            
+
             for i in 0..alphas.len() {
                 for j in 0..alphas.len() {
-                    obj -= 0.5 * alphas[i] * alphas[j] * labels[i] as f64 * labels[j] as f64 * kernel_matrix[[i, j]];
+                    obj -= 0.5
+                        * alphas[i]
+                        * alphas[j]
+                        * labels[i] as f64
+                        * labels[j] as f64
+                        * kernel_matrix[[i, j]];
                 }
             }
-            
+
             obj
         }
 
-        fn extract_support_vectors(&self, alphas: &Array1<f64>, data: &Array2<f64>, _labels: &Array1<i8>) -> Result<Array2<f64>> {
-            let support_indices: Vec<usize> = alphas.iter()
+        fn extract_support_vectors(
+            &self,
+            alphas: &Array1<f64>,
+            data: &Array2<f64>,
+            _labels: &Array1<i8>,
+        ) -> Result<Array2<f64>> {
+            let support_indices: Vec<usize> = alphas
+                .iter()
                 .enumerate()
                 .filter(|(_, &alpha)| alpha > 1e-6)
                 .map(|(i, _)| i)
                 .collect();
-            
+
             let mut support_vectors = Array2::zeros((support_indices.len(), data.ncols()));
             for (sv_idx, &data_idx) in support_indices.iter().enumerate() {
                 support_vectors.row_mut(sv_idx).assign(&data.row(data_idx));
             }
-            
+
             Ok(support_vectors)
         }
 
-        fn compute_bias(&self, alphas: &Array1<f64>, labels: &Array1<i8>, kernel_matrix: &Array2<f64>, _support_vectors: &Array2<f64>) -> Result<f64> {
+        fn compute_bias(
+            &self,
+            alphas: &Array1<f64>,
+            labels: &Array1<i8>,
+            kernel_matrix: &Array2<f64>,
+            _support_vectors: &Array2<f64>,
+        ) -> Result<f64> {
             let mut bias_sum = 0.0;
             let mut count = 0;
-            
+
             for i in 0..alphas.len() {
                 if alphas[i] > 1e-6 && alphas[i] < 1.0 - 1e-6 {
                     let mut sum = 0.0;
@@ -3767,7 +3867,7 @@ pub mod quantum_algorithms {
                     count += 1;
                 }
             }
-            
+
             if count > 0 {
                 Ok(bias_sum / count as f64)
             } else {
@@ -3792,20 +3892,24 @@ pub mod quantum_algorithms {
 
     impl QuantumSVMModel {
         /// Predict class for new data points
-        pub fn predict(&self, data: &Array2<f64>, qsvm: &QuantumSupportVectorMachine) -> Result<Array1<i8>> {
+        pub fn predict(
+            &self,
+            data: &Array2<f64>,
+            qsvm: &QuantumSupportVectorMachine,
+        ) -> Result<Array1<i8>> {
             let mut predictions = Array1::zeros(data.nrows());
-            
+
             for (i, data_point) in data.outer_iter().enumerate() {
                 let mut decision_value = self.bias;
-                
+
                 for (j, sv) in self.support_vectors.outer_iter().enumerate() {
                     let kernel_value = qsvm.quantum_kernel(&data_point, &sv)?;
                     decision_value += self.alphas[j] * self.labels[j] as f64 * kernel_value;
                 }
-                
+
                 predictions[i] = if decision_value >= 0.0 { 1 } else { -1 };
             }
-            
+
             Ok(predictions)
         }
     }
@@ -4749,28 +4853,28 @@ impl GPUQuantumSolver {
     ) -> Result<Vec<QuantumState>> {
         let n_steps = (total_time / self.dt) as usize;
         let mut states = Vec::with_capacity(n_steps + 1);
-        
+
         // Initialize spatial grid
         let x = Array1::linspace(x_min, x_max, self.n_points);
         let dx = (x_max - x_min) / (self.n_points - 1) as f64;
-        
+
         // Precompute potential on GPU
         let potential_values = self.gpu_compute_potential(&x)?;
-        
+
         // Initialize current state
         let mut current_state = initial_state.clone();
         states.push(current_state.clone());
-        
+
         // Main time evolution loop with GPU acceleration
         for step in 0..n_steps {
             current_state = self.gpu_split_operator_step(&current_state, &potential_values, dx)?;
-            
+
             // Store intermediate states (every few steps to save memory)
             if step % 10 == 0 || step == n_steps - 1 {
                 states.push(current_state.clone());
             }
         }
-        
+
         Ok(states)
     }
 
@@ -4778,20 +4882,20 @@ impl GPUQuantumSolver {
     #[allow(dead_code)]
     fn gpu_compute_potential(&self, x: &Array1<f64>) -> Result<Array1<f64>> {
         let mut potential = Array1::zeros(self.n_points);
-        
+
         // Simulate GPU kernel launch with thread blocks
         let n_blocks = (self.n_points + self.block_size - 1) / self.block_size;
-        
+
         for block_id in 0..n_blocks {
             let start_idx = block_id * self.block_size;
             let end_idx = (start_idx + self.block_size).min(self.n_points);
-            
+
             // Simulate GPU threads in parallel (using SIMD where possible)
             for i in start_idx..end_idx {
                 potential[i] = self.potential.evaluate(x[i]);
             }
         }
-        
+
         Ok(potential)
     }
 
@@ -4805,16 +4909,16 @@ impl GPUQuantumSolver {
     ) -> Result<QuantumState> {
         let hbar = 1.0; // Natural units
         let mass = 1.0;
-        
+
         // Step 1: Apply kinetic energy operator in momentum space (GPU FFT)
         let mut evolved_state = self.gpu_apply_kinetic_operator(state, dx, hbar, mass)?;
-        
+
         // Step 2: Apply potential operator in position space (GPU element-wise)
         evolved_state = self.gpu_apply_potential_operator(&evolved_state, potential, hbar)?;
-        
+
         // Step 3: Apply kinetic energy operator again (GPU FFT)
         evolved_state = self.gpu_apply_kinetic_operator(&evolved_state, dx, hbar, mass)?;
-        
+
         Ok(evolved_state)
     }
 
@@ -4829,45 +4933,44 @@ impl GPUQuantumSolver {
     ) -> Result<QuantumState> {
         let n = state.psi.len();
         let mut result_amplitudes = state.psi.clone();
-        
+
         // Simulate GPU FFT operation
-        let mut fft_data: Vec<num_complex::Complex<f64>> = state.psi.iter()
-            .cloned()
-            .collect();
-        
+        let mut fft_data: Vec<num_complex::Complex<f64>> = state.psi.iter().cloned().collect();
+
         // Simulate GPU-accelerated FFT (forward transform)
         self.gpu_fft(&mut fft_data, false)?;
-        
+
         // Apply momentum space kinetic energy operator on GPU
         let dk = 2.0 * std::f64::consts::PI / (n as f64 * dx);
         let dt_half = self.dt / 2.0;
-        
+
         // GPU kernel for momentum space evolution
         let n_blocks = (n + self.block_size - 1) / self.block_size;
         for block_id in 0..n_blocks {
             let start_idx = block_id * self.block_size;
             let end_idx = (start_idx + self.block_size).min(n);
-            
+
             for i in start_idx..end_idx {
                 let k = if i < n / 2 {
                     i as f64 * dk
                 } else {
                     (i as f64 - n as f64) * dk
                 };
-                
-                let kinetic_factor = (-num_complex::Complex::i() * dt_half * hbar * k * k / (2.0 * mass)).exp();
+
+                let kinetic_factor =
+                    (-num_complex::Complex::i() * dt_half * hbar * k * k / (2.0 * mass)).exp();
                 fft_data[i] *= kinetic_factor;
             }
         }
-        
+
         // Simulate GPU-accelerated FFT (inverse transform)
         self.gpu_fft(&mut fft_data, true)?;
-        
+
         // Extract real parts (assuming real wavefunction)
         for i in 0..n {
             result_amplitudes[i] = Complex64::new(fft_data[i].re / (n as f64).sqrt(), 0.0);
         }
-        
+
         Ok(QuantumState {
             psi: result_amplitudes,
             x: state.x.clone(),
@@ -4887,22 +4990,23 @@ impl GPUQuantumSolver {
     ) -> Result<QuantumState> {
         let mut result_amplitudes = state.psi.clone();
         let n = result_amplitudes.len();
-        
+
         // GPU kernel for potential operator application
         let n_blocks = (n + self.block_size - 1) / self.block_size;
-        
+
         for block_id in 0..n_blocks {
             let start_idx = block_id * self.block_size;
             let end_idx = (start_idx + self.block_size).min(n);
-            
+
             // Simulate GPU threads applying potential operator
             for i in start_idx..end_idx {
-                let potential_factor = (-num_complex::Complex::i() * self.dt * potential[i] / hbar).exp();
+                let potential_factor =
+                    (-num_complex::Complex::i() * self.dt * potential[i] / hbar).exp();
                 // For real wavefunctions, we apply the cosine part
                 result_amplitudes[i] *= potential_factor.re;
             }
         }
-        
+
         Ok(QuantumState {
             psi: result_amplitudes,
             x: state.x.clone(),
@@ -4914,39 +5018,35 @@ impl GPUQuantumSolver {
 
     /// Simulate GPU FFT operation
     #[allow(dead_code)]
-    fn gpu_fft(
-        &self,
-        data: &mut [num_complex::Complex<f64>],
-        inverse: bool,
-    ) -> Result<()> {
+    fn gpu_fft(&self, data: &mut [num_complex::Complex<f64>], inverse: bool) -> Result<()> {
         let n = data.len();
-        
+
         // Simulate optimized GPU FFT with multiple streams
         let chunk_size = n / self.n_streams;
-        
+
         for stream_id in 0..self.n_streams {
             let start = stream_id * chunk_size;
-            let end = if stream_id == self.n_streams - 1 { n } else { (stream_id + 1) * chunk_size };
-            
+            let end = if stream_id == self.n_streams - 1 {
+                n
+            } else {
+                (stream_id + 1) * chunk_size
+            };
+
             // Simulate GPU FFT kernel execution for this stream
             self.gpu_fft_kernel(&mut data[start..end], inverse)?;
         }
-        
+
         Ok(())
     }
 
     /// GPU FFT kernel simulation (simplified Cooley-Tukey algorithm)
     #[allow(dead_code)]
-    fn gpu_fft_kernel(
-        &self,
-        data: &mut [num_complex::Complex<f64>],
-        inverse: bool,
-    ) -> Result<()> {
+    fn gpu_fft_kernel(&self, data: &mut [num_complex::Complex<f64>], inverse: bool) -> Result<()> {
         let n = data.len();
         if n <= 1 {
             return Ok(());
         }
-        
+
         // Bit-reversal permutation (GPU-optimized)
         for i in 0..n {
             let j = self.bit_reverse(i, n);
@@ -4954,36 +5054,36 @@ impl GPUQuantumSolver {
                 data.swap(i, j);
             }
         }
-        
+
         // Cooley-Tukey FFT algorithm adapted for GPU execution
         let mut length = 2;
         while length <= n {
-            let angle = if inverse { 
+            let angle = if inverse {
                 2.0 * std::f64::consts::PI / length as f64
             } else {
                 -2.0 * std::f64::consts::PI / length as f64
             };
-            
+
             let wlen = num_complex::Complex::new(angle.cos(), angle.sin());
-            
+
             // Simulate GPU thread blocks processing butterflies in parallel
             for i in (0..n).step_by(length) {
                 let mut w = num_complex::Complex::new(1.0, 0.0);
-                
+
                 for j in 0..length / 2 {
                     let u = data[i + j];
                     let v = data[i + j + length / 2] * w;
-                    
+
                     data[i + j] = u + v;
                     data[i + j + length / 2] = u - v;
-                    
+
                     w *= wlen;
                 }
             }
-            
+
             length <<= 1;
         }
-        
+
         // Normalize for inverse transform
         if inverse {
             let norm = 1.0 / n as f64;
@@ -4991,7 +5091,7 @@ impl GPUQuantumSolver {
                 *x *= norm;
             }
         }
-        
+
         Ok(())
     }
 
@@ -5001,13 +5101,13 @@ impl GPUQuantumSolver {
         let mut result = 0;
         let mut temp = x;
         let mut bits = (n as f64).log2() as usize;
-        
+
         while bits > 0 {
             result = (result << 1) | (temp & 1);
             temp >>= 1;
             bits -= 1;
         }
-        
+
         result
     }
 
@@ -5019,47 +5119,34 @@ impl GPUQuantumSolver {
         x_max: f64,
         total_time: f64,
     ) -> Result<Vec<QuantumState>> {
-        // Create a CPU-based Schrödinger solver with same parameters
+        // Create a CPU-based Schrödinger solver with default harmonic oscillator potential
+        let default_potential = Box::new(HarmonicOscillator {
+            k: 1.0,
+            x0: (x_min + x_max) / 2.0,
+        });
         let cpu_solver = SchrodingerSolver::new(
             self.n_points,
             self.dt,
-            x_min,
-            x_max,
+            default_potential,
+            SchrodingerMethod::SplitOperator,
         );
-        
+
         // Use the CPU solver to evolve the quantum state
-        let n_steps = (total_time / self.dt).ceil() as usize;
-        let mut states = Vec::with_capacity(n_steps + 1);
-        states.push(initial_state.clone());
-        
-        let mut current_state = initial_state.clone();
-        
-        for _ in 0..n_steps {
-            // Apply potential at current time
-            let potential_fn = |x: f64| self.potential.evaluate(x);
-            
-            // Evolve one time step using split-operator method
-            current_state = cpu_solver.evolve_split_operator(&current_state, potential_fn)?;
-            current_state.t += self.dt;
-            
-            states.push(current_state.clone());
-        }
-        
-        Ok(states)
+        cpu_solver.solve_time_dependent(initial_state, total_time)
     }
 
     /// Get GPU memory estimation for problem size
     pub fn estimate_gpu_memory(&self) -> usize {
         let complex_size = std::mem::size_of::<num_complex::Complex<f64>>();
         let real_size = std::mem::size_of::<f64>();
-        
+
         // Estimate memory requirements:
         // - Wavefunction: 2 copies (current + evolved) * complex
         // - Potential array: real
         // - FFT workspace: complex
         // - Temporary arrays: 2 * complex
         let total_bytes = self.n_points * (4 * complex_size + real_size + 2 * complex_size);
-        
+
         total_bytes
     }
 
@@ -5095,7 +5182,7 @@ impl GPUMultiBodyQuantumSolver {
     /// Create new GPU-accelerated multi-body quantum solver
     pub fn new(n_particles: usize, dim_per_particle: usize, use_gpu: bool) -> Self {
         let total_dim = dim_per_particle.pow(n_particles as u32);
-        
+
         Self {
             n_particles,
             dim_per_particle,
@@ -5138,18 +5225,19 @@ impl GPUMultiBodyQuantumSolver {
     ) -> Result<Vec<Array1<num_complex::Complex<f64>>>> {
         let mut states = Vec::with_capacity(n_steps + 1);
         states.push(initial_state.clone());
-        
+
         // Precompute time evolution operator on GPU
-        let evolution_operator = self.gpu_matrix_exponential(hamiltonian, -num_complex::Complex::i() * dt)?;
-        
+        let evolution_operator =
+            self.gpu_matrix_exponential(hamiltonian, -num_complex::Complex::i() * dt)?;
+
         let mut current_state = initial_state.clone();
-        
+
         for _step in 0..n_steps {
             // Apply evolution operator using GPU matrix-vector multiplication
             current_state = self.gpu_matrix_vector_multiply(&evolution_operator, &current_state)?;
             states.push(current_state.clone());
         }
-        
+
         Ok(states)
     }
 
@@ -5162,22 +5250,23 @@ impl GPUMultiBodyQuantumSolver {
     ) -> Result<Array2<num_complex::Complex<f64>>> {
         let n = matrix.nrows();
         let scaled_matrix = matrix * factor;
-        
+
         // Use Padé approximation for matrix exponential
         let mut result = Array2::eye(n);
         let mut term = Array2::eye(n);
-        
+
         // GPU-accelerated series computation
-        for k in 1..20 { // Sufficient for most cases
+        for k in 1..20 {
+            // Sufficient for most cases
             term = self.gpu_matrix_multiply(&term, &scaled_matrix)? / k as f64;
             result = result + &term;
-            
+
             // Check convergence (simplified)
             if k > 10 && term.iter().all(|&x| x.norm() < 1e-12) {
                 break;
             }
         }
-        
+
         Ok(result)
     }
 
@@ -5190,16 +5279,18 @@ impl GPUMultiBodyQuantumSolver {
     ) -> Result<Array2<num_complex::Complex<f64>>> {
         let (m, k) = a.dim();
         let (k2, n) = b.dim();
-        
+
         if k != k2 {
-            return Err(IntegrateError::InvalidInput("Matrix dimensions don't match for multiplication".to_string()));
+            return Err(IntegrateError::InvalidInput(
+                "Matrix dimensions don't match for multiplication".to_string(),
+            ));
         }
-        
+
         let mut result = Array2::zeros((m, n));
-        
+
         // Simulate GPU tile-based matrix multiplication
         let tile_size = self.block_size.min(32); // Optimize for GPU cache
-        
+
         for tile_i in (0..m).step_by(tile_size) {
             for tile_j in (0..n).step_by(tile_size) {
                 for tile_k in (0..k).step_by(tile_size) {
@@ -5207,7 +5298,7 @@ impl GPUMultiBodyQuantumSolver {
                     let end_i = (tile_i + tile_size).min(m);
                     let end_j = (tile_j + tile_size).min(n);
                     let end_k = (tile_k + tile_size).min(k);
-                    
+
                     for i in tile_i..end_i {
                         for j in tile_j..end_j {
                             let mut sum = num_complex::Complex::new(0.0, 0.0);
@@ -5220,7 +5311,7 @@ impl GPUMultiBodyQuantumSolver {
                 }
             }
         }
-        
+
         Ok(result)
     }
 
@@ -5233,31 +5324,33 @@ impl GPUMultiBodyQuantumSolver {
     ) -> Result<Array1<num_complex::Complex<f64>>> {
         let (m, n) = matrix.dim();
         if n != vector.len() {
-            return Err(IntegrateError::InvalidInput("Matrix-vector dimension mismatch".to_string()));
+            return Err(IntegrateError::InvalidInput(
+                "Matrix-vector dimension mismatch".to_string(),
+            ));
         }
-        
+
         let mut result = Array1::zeros(m);
-        
+
         // GPU parallelization across rows
         let n_blocks = (m + self.block_size - 1) / self.block_size;
-        
+
         for block_id in 0..n_blocks {
             let start_row = block_id * self.block_size;
             let end_row = (start_row + self.block_size).min(m);
-            
+
             // Each GPU thread computes one row
             for i in start_row..end_row {
                 let mut sum = num_complex::Complex::new(0.0, 0.0);
-                
+
                 // Use SIMD where possible for inner product
                 for j in 0..n {
                     sum += matrix[(i, j)] * vector[j];
                 }
-                
+
                 result[i] = sum;
             }
         }
-        
+
         Ok(result)
     }
 
@@ -5272,35 +5365,36 @@ impl GPUMultiBodyQuantumSolver {
         // Simplified CPU implementation
         let mut states = Vec::with_capacity(n_steps + 1);
         states.push(initial_state.clone());
-        
+
         let mut current_state = initial_state.clone();
-        
+
         for _step in 0..n_steps {
             // Simple first-order approximation: |ψ(t+dt)⟩ ≈ (I - iH*dt)|ψ(t)⟩
             let mut next_state = Array1::zeros(self.total_dim);
-            
+
             for i in 0..self.total_dim {
                 next_state[i] = current_state[i];
                 for j in 0..self.total_dim {
-                    next_state[i] += -num_complex::Complex::i() * dt * hamiltonian[(i, j)] * current_state[j];
+                    next_state[i] +=
+                        -num_complex::Complex::i() * dt * hamiltonian[(i, j)] * current_state[j];
                 }
             }
-            
+
             // Normalize
             let norm = next_state.iter().map(|x| x.norm_sqr()).sum::<f64>().sqrt();
             next_state.mapv_inplace(|x| x / norm);
-            
+
             current_state = next_state;
             states.push(current_state.clone());
         }
-        
+
         Ok(states)
     }
 
     /// Estimate GPU memory requirements for multi-body system
     pub fn estimate_gpu_memory(&self) -> usize {
         let complex_size = std::mem::size_of::<num_complex::Complex<f64>>();
-        
+
         // Memory requirements:
         // - State vectors: 2 copies * total_dim
         // - Hamiltonian matrix: total_dim^2
@@ -5308,7 +5402,7 @@ impl GPUMultiBodyQuantumSolver {
         // - Temporary arrays: 2 * total_dim
         let state_memory = 4 * self.total_dim * complex_size;
         let matrix_memory = 2 * self.total_dim * self.total_dim * complex_size;
-        
+
         state_memory + matrix_memory
     }
 }
@@ -5337,14 +5431,14 @@ impl QuantumAnnealingSolver {
         let n_steps = 1000;
         let mut temperature_schedule = Vec::with_capacity(n_steps);
         let mut transverse_field_schedule = Vec::with_capacity(n_steps);
-        
+
         // Create linear annealing schedules
         for i in 0..n_steps {
             let s = i as f64 / (n_steps - 1) as f64;
             temperature_schedule.push(0.01 * (1.0 - s) + 0.001 * s);
             transverse_field_schedule.push(1.0 * (1.0 - s));
         }
-        
+
         Self {
             n_qubits,
             annealing_time,
@@ -5355,26 +5449,27 @@ impl QuantumAnnealingSolver {
             use_qmc: true,
         }
     }
-    
+
     /// Set Ising coupling between qubits i and j
     pub fn set_coupling(&mut self, i: usize, j: usize, strength: f64) {
-        self.ising_coefficients.insert((i.min(j), i.max(j)), strength);
+        self.ising_coefficients
+            .insert((i.min(j), i.max(j)), strength);
     }
-    
+
     /// Set bias for qubit i
     pub fn set_bias(&mut self, i: usize, bias: f64) {
         if i < self.n_qubits {
             self.qubit_biases[i] = bias;
         }
     }
-    
+
     /// Solve optimization problem using quantum annealing
     pub fn solve(&self, n_runs: usize) -> Result<(Array1<f64>, f64)> {
         let mut best_state = Array1::zeros(self.n_qubits);
         let mut best_energy = f64::INFINITY;
-        
-        let mut rng = rand::thread_rng();
-        
+
+        let mut rng = rand::rng();
+
         for _ in 0..n_runs {
             let (state, energy) = self.single_annealing_run(&mut rng)?;
             if energy < best_energy {
@@ -5382,25 +5477,28 @@ impl QuantumAnnealingSolver {
                 best_state = state;
             }
         }
-        
+
         Ok((best_state, best_energy))
     }
-    
+
     /// Single annealing run with quantum Monte Carlo
     fn single_annealing_run(&self, rng: &mut rand::rngs::ThreadRng) -> Result<(Array1<f64>, f64)> {
         let mut state = Array1::from_elem(self.n_qubits, 0.5); // Start in superposition
         let dt = self.annealing_time / self.temperature_schedule.len() as f64;
-        
-        for (step, (&temperature, &h_field)) in self.temperature_schedule.iter()
-            .zip(self.transverse_field_schedule.iter()).enumerate() {
-            
+
+        for (step, (&temperature, &h_field)) in self
+            .temperature_schedule
+            .iter()
+            .zip(self.transverse_field_schedule.iter())
+            .enumerate()
+        {
             // Quantum Monte Carlo update
             if self.use_qmc {
                 state = self.quantum_monte_carlo_step(&state, temperature, h_field, dt, rng)?;
             } else {
                 state = self.classical_monte_carlo_step(&state, temperature, rng)?;
             }
-            
+
             // Apply transverse field mixing
             if h_field > 0.0 {
                 for i in 0..self.n_qubits {
@@ -5412,14 +5510,14 @@ impl QuantumAnnealingSolver {
                 }
             }
         }
-        
+
         // Collapse to classical state
         let final_state = self.collapse_quantum_state(&state, rng);
         let energy = self.compute_ising_energy(&final_state);
-        
+
         Ok((final_state, energy))
     }
-    
+
     /// Quantum Monte Carlo update step
     fn quantum_monte_carlo_step(
         &self,
@@ -5430,27 +5528,32 @@ impl QuantumAnnealingSolver {
         rng: &mut rand::rngs::ThreadRng,
     ) -> Result<Array1<f64>> {
         let mut new_state = state.clone();
-        
+
         for i in 0..self.n_qubits {
             // Compute local field including quantum corrections
             let local_field = self.compute_local_field(state, i) + h_field;
-            
+
             // Quantum tunneling probability
             let tunnel_prob = h_field * dt / (1.0 + (local_field / temperature).exp());
-            
+
             if rng.random::<f64>() < tunnel_prob {
                 // Quantum update with superposition
-                new_state[i] = 0.5 + 0.5 * (2.0 * state[i] - 1.0).tanh() * (temperature / (temperature + h_field));
+                new_state[i] = 0.5
+                    + 0.5 * (2.0 * state[i] - 1.0).tanh() * (temperature / (temperature + h_field));
             } else {
                 // Thermal update
                 let boltzmann_prob = 1.0 / (1.0 + (local_field / temperature).exp());
-                new_state[i] = if rng.random::<f64>() < boltzmann_prob { 1.0 } else { 0.0 };
+                new_state[i] = if rng.random::<f64>() < boltzmann_prob {
+                    1.0
+                } else {
+                    0.0
+                };
             }
         }
-        
+
         Ok(new_state)
     }
-    
+
     /// Classical Monte Carlo update step
     fn classical_monte_carlo_step(
         &self,
@@ -5459,20 +5562,24 @@ impl QuantumAnnealingSolver {
         rng: &mut rand::rngs::ThreadRng,
     ) -> Result<Array1<f64>> {
         let mut new_state = state.clone();
-        
+
         for i in 0..self.n_qubits {
             let local_field = self.compute_local_field(state, i);
             let boltzmann_prob = 1.0 / (1.0 + (local_field / temperature).exp());
-            new_state[i] = if rng.random::<f64>() < boltzmann_prob { 1.0 } else { 0.0 };
+            new_state[i] = if rng.random::<f64>() < boltzmann_prob {
+                1.0
+            } else {
+                0.0
+            };
         }
-        
+
         Ok(new_state)
     }
-    
+
     /// Compute local field for qubit i
     fn compute_local_field(&self, state: &Array1<f64>, i: usize) -> f64 {
         let mut field = self.qubit_biases[i];
-        
+
         for (&(j, k), &coupling) in &self.ising_coefficients {
             if j == i {
                 field += coupling * (2.0 * state[k] - 1.0);
@@ -5480,29 +5587,33 @@ impl QuantumAnnealingSolver {
                 field += coupling * (2.0 * state[j] - 1.0);
             }
         }
-        
+
         field
     }
-    
+
     /// Collapse quantum superposition to classical state
-    fn collapse_quantum_state(&self, state: &Array1<f64>, rng: &mut rand::rngs::ThreadRng) -> Array1<f64> {
+    fn collapse_quantum_state(
+        &self,
+        state: &Array1<f64>,
+        rng: &mut rand::rngs::ThreadRng,
+    ) -> Array1<f64> {
         state.mapv(|prob| if rng.random::<f64>() < prob { 1.0 } else { 0.0 })
     }
-    
+
     /// Compute Ising model energy
     fn compute_ising_energy(&self, state: &Array1<f64>) -> f64 {
         let mut energy = 0.0;
-        
+
         // Bias terms
         for i in 0..self.n_qubits {
             energy += self.qubit_biases[i] * (2.0 * state[i] - 1.0);
         }
-        
+
         // Coupling terms
         for (&(i, j), &coupling) in &self.ising_coefficients {
             energy += coupling * (2.0 * state[i] - 1.0) * (2.0 * state[j] - 1.0);
         }
-        
+
         energy
     }
 }
@@ -5529,11 +5640,11 @@ impl VariationalQuantumEigensolver {
     /// Create new VQE solver
     pub fn new(n_qubits: usize, circuit_layers: usize, hamiltonian: Array2<Complex64>) -> Self {
         let n_params = n_qubits * circuit_layers * 3; // 3 rotation angles per qubit per layer
-        let mut rng = rand::thread_rng();
-        
+        let mut rng = rand::rng();
+
         // Initialize parameters randomly
         let parameters = Array1::from_shape_fn(n_params, |_| rng.random::<f64>() * 2.0 * PI);
-        
+
         Self {
             n_qubits,
             circuit_layers,
@@ -5545,29 +5656,29 @@ impl VariationalQuantumEigensolver {
             adam_t: 0,
         }
     }
-    
+
     /// Optimize to find ground state energy
     pub fn optimize(&mut self, max_iterations: usize, learning_rate: f64) -> Result<f64> {
         let mut best_energy = f64::INFINITY;
-        
+
         for iteration in 0..max_iterations {
             // Compute current energy
             let energy = self.compute_expectation_value()?;
-            
+
             if energy < best_energy {
                 best_energy = energy;
             }
-            
+
             // Compute gradients using parameter shift rule
             let gradients = self.compute_gradients()?;
-            
+
             // Update parameters using ADAM or simple gradient descent
             if self.use_adam {
                 self.adam_update(&gradients, learning_rate);
             } else {
                 self.gradient_descent_update(&gradients, learning_rate);
             }
-            
+
             // Convergence check
             if iteration > 10 && iteration % 10 == 0 {
                 if gradients.iter().all(|&g| g.abs() < 1e-6) {
@@ -5575,14 +5686,14 @@ impl VariationalQuantumEigensolver {
                 }
             }
         }
-        
+
         Ok(best_energy)
     }
-    
+
     /// Compute expectation value ⟨ψ(θ)|H|ψ(θ)⟩
     fn compute_expectation_value(&self) -> Result<f64> {
         let state_vector = self.prepare_quantum_state()?;
-        
+
         // Compute H|ψ⟩
         let mut h_psi = Array1::zeros(state_vector.len());
         for i in 0..state_vector.len() {
@@ -5590,21 +5701,23 @@ impl VariationalQuantumEigensolver {
                 h_psi[i] += self.hamiltonian[[i, j]] * state_vector[j];
             }
         }
-        
+
         // Compute ⟨ψ|H|ψ⟩
-        let expectation = state_vector.iter().zip(h_psi.iter())
-            .map(|(psi, h_psi)| (psi.conj() * h_psi).re)
+        let expectation: f64 = state_vector
+            .iter()
+            .zip(h_psi.iter())
+            .map(|(psi, h_psi): (&Complex64, &Complex64)| (psi.conj() * h_psi).re)
             .sum();
-        
+
         Ok(expectation)
     }
-    
+
     /// Prepare quantum state |ψ(θ)⟩ using parameterized circuit
     fn prepare_quantum_state(&self) -> Result<Array1<Complex64>> {
         let n_states = 1 << self.n_qubits;
         let mut state = Array1::zeros(n_states);
         state[0] = Complex64::new(1.0, 0.0); // Start in |00...0⟩
-        
+
         // Apply parameterized circuit layers
         for layer in 0..self.circuit_layers {
             // Single-qubit rotations
@@ -5613,19 +5726,19 @@ impl VariationalQuantumEigensolver {
                 let rx_angle = self.parameters[base_idx];
                 let ry_angle = self.parameters[base_idx + 1];
                 let rz_angle = self.parameters[base_idx + 2];
-                
+
                 state = self.apply_rotation_gates(&state, qubit, rx_angle, ry_angle, rz_angle)?;
             }
-            
+
             // Entangling gates (CNOT ladder)
             for qubit in 0..self.n_qubits - 1 {
                 state = self.apply_cnot_gate(&state, qubit, qubit + 1)?;
             }
         }
-        
+
         Ok(state)
     }
-    
+
     /// Apply rotation gates to qubit
     fn apply_rotation_gates(
         &self,
@@ -5636,63 +5749,78 @@ impl VariationalQuantumEigensolver {
         rz: f64,
     ) -> Result<Array1<Complex64>> {
         let mut new_state = state.clone();
-        
+
         // Apply RZ(rz)
         new_state = self.apply_rz_gate(&new_state, qubit, rz)?;
-        // Apply RY(ry)  
+        // Apply RY(ry)
         new_state = self.apply_ry_gate(&new_state, qubit, ry)?;
         // Apply RX(rx)
         new_state = self.apply_rx_gate(&new_state, qubit, rx)?;
-        
+
         Ok(new_state)
     }
-    
+
     /// Apply RX rotation gate
-    fn apply_rx_gate(&self, state: &Array1<Complex64>, qubit: usize, angle: f64) -> Result<Array1<Complex64>> {
+    fn apply_rx_gate(
+        &self,
+        state: &Array1<Complex64>,
+        qubit: usize,
+        angle: f64,
+    ) -> Result<Array1<Complex64>> {
         let mut new_state = Array1::zeros(state.len());
         let cos_half = (angle / 2.0).cos();
         let sin_half = (angle / 2.0).sin();
-        
+
         for i in 0..state.len() {
             let bit = (i >> qubit) & 1;
             let other_index = i ^ (1 << qubit);
-            
+
             if bit == 0 {
                 new_state[i] = cos_half * state[i] - Complex64::i() * sin_half * state[other_index];
             } else {
                 new_state[i] = cos_half * state[i] - Complex64::i() * sin_half * state[other_index];
             }
         }
-        
+
         Ok(new_state)
     }
-    
+
     /// Apply RY rotation gate
-    fn apply_ry_gate(&self, state: &Array1<Complex64>, qubit: usize, angle: f64) -> Result<Array1<Complex64>> {
+    fn apply_ry_gate(
+        &self,
+        state: &Array1<Complex64>,
+        qubit: usize,
+        angle: f64,
+    ) -> Result<Array1<Complex64>> {
         let mut new_state = Array1::zeros(state.len());
         let cos_half = (angle / 2.0).cos();
         let sin_half = (angle / 2.0).sin();
-        
+
         for i in 0..state.len() {
             let bit = (i >> qubit) & 1;
             let other_index = i ^ (1 << qubit);
-            
+
             if bit == 0 {
                 new_state[i] = cos_half * state[i] - sin_half * state[other_index];
             } else {
                 new_state[i] = sin_half * state[other_index] + cos_half * state[i];
             }
         }
-        
+
         Ok(new_state)
     }
-    
+
     /// Apply RZ rotation gate
-    fn apply_rz_gate(&self, state: &Array1<Complex64>, qubit: usize, angle: f64) -> Result<Array1<Complex64>> {
+    fn apply_rz_gate(
+        &self,
+        state: &Array1<Complex64>,
+        qubit: usize,
+        angle: f64,
+    ) -> Result<Array1<Complex64>> {
         let mut new_state = state.clone();
         let phase_0 = (-Complex64::i() * angle / 2.0).exp();
         let phase_1 = (Complex64::i() * angle / 2.0).exp();
-        
+
         for i in 0..state.len() {
             let bit = (i >> qubit) & 1;
             if bit == 0 {
@@ -5701,86 +5829,91 @@ impl VariationalQuantumEigensolver {
                 new_state[i] *= phase_1;
             }
         }
-        
+
         Ok(new_state)
     }
-    
+
     /// Apply CNOT gate
-    fn apply_cnot_gate(&self, state: &Array1<Complex64>, control: usize, target: usize) -> Result<Array1<Complex64>> {
+    fn apply_cnot_gate(
+        &self,
+        state: &Array1<Complex64>,
+        control: usize,
+        target: usize,
+    ) -> Result<Array1<Complex64>> {
         let mut new_state = state.clone();
-        
+
         for i in 0..state.len() {
             if (i >> control) & 1 == 1 {
                 let other_index = i ^ (1 << target);
                 new_state.swap(i, other_index);
             }
         }
-        
+
         Ok(new_state)
     }
-    
+
     /// Compute gradients using parameter shift rule
     fn compute_gradients(&self) -> Result<Array1<f64>> {
         let mut gradients = Array1::zeros(self.parameters.len());
         let shift = PI / 2.0;
-        
+
         for i in 0..self.parameters.len() {
             // Forward shift
             let mut params_plus = self.parameters.clone();
             params_plus[i] += shift;
             let energy_plus = self.compute_expectation_value_with_params(&params_plus)?;
-            
+
             // Backward shift
             let mut params_minus = self.parameters.clone();
             params_minus[i] -= shift;
             let energy_minus = self.compute_expectation_value_with_params(&params_minus)?;
-            
+
             // Parameter shift rule: gradient = (f(θ + π/2) - f(θ - π/2)) / 2
             gradients[i] = (energy_plus - energy_minus) / 2.0;
         }
-        
+
         Ok(gradients)
     }
-    
+
     /// Compute expectation value with given parameters
     fn compute_expectation_value_with_params(&self, params: &Array1<f64>) -> Result<f64> {
         let old_params = self.parameters.clone();
-        
+
         // Temporarily update parameters
         let mut temp_vqe = self.clone();
         temp_vqe.parameters = params.clone();
-        
+
         let energy = temp_vqe.compute_expectation_value()?;
-        
+
         Ok(energy)
     }
-    
+
     /// ADAM optimizer update
     fn adam_update(&mut self, gradients: &Array1<f64>, learning_rate: f64) {
         let beta1 = 0.9;
         let beta2 = 0.999;
         let epsilon = 1e-8;
-        
+
         self.adam_t += 1;
-        
+
         // Update biased first moment estimate
         self.adam_m = beta1 * &self.adam_m + (1.0 - beta1) * gradients;
-        
-        // Update biased second raw moment estimate  
+
+        // Update biased second raw moment estimate
         self.adam_v = beta2 * &self.adam_v + (1.0 - beta2) * gradients.mapv(|g| g * g);
-        
+
         // Compute bias-corrected first moment estimate
         let m_hat = &self.adam_m / (1.0 - beta1.powi(self.adam_t as i32));
-        
+
         // Compute bias-corrected second raw moment estimate
         let v_hat = &self.adam_v / (1.0 - beta2.powi(self.adam_t as i32));
-        
+
         // Update parameters
         for i in 0..self.parameters.len() {
             self.parameters[i] -= learning_rate * m_hat[i] / (v_hat[i].sqrt() + epsilon);
         }
     }
-    
+
     /// Simple gradient descent update
     fn gradient_descent_update(&mut self, gradients: &Array1<f64>, learning_rate: f64) {
         self.parameters = &self.parameters - learning_rate * gradients;
@@ -5811,7 +5944,7 @@ mod gpu_quantum_tests {
     fn test_gpu_quantum_solver_creation() {
         let potential = Box::new(HarmonicOscillator { k: 1.0, x0: 0.0 });
         let solver = GPUQuantumSolver::new(100, 0.01, potential, true);
-        
+
         assert_eq!(solver.n_points, 100);
         assert_eq!(solver.dt, 0.01);
         assert!(solver.use_gpu);
@@ -5822,22 +5955,22 @@ mod gpu_quantum_tests {
     fn test_gpu_memory_estimation() {
         let potential = Box::new(HarmonicOscillator { k: 1.0, x0: 0.0 });
         let solver = GPUQuantumSolver::new(1000, 0.01, potential, true);
-        
+
         let memory_estimate = solver.estimate_gpu_memory();
         assert!(memory_estimate > 0);
-        
+
         // Should scale with n_points
         let potential2 = Box::new(HarmonicOscillator { k: 1.0, x0: 0.0 });
         let solver2 = GPUQuantumSolver::new(2000, 0.01, potential2, true);
         let memory_estimate2 = solver2.estimate_gpu_memory();
-        
+
         assert!(memory_estimate2 > memory_estimate);
     }
 
     #[test]
     fn test_gpu_multibody_solver_creation() {
         let solver = GPUMultiBodyQuantumSolver::new(3, 10, true);
-        
+
         assert_eq!(solver.n_particles, 3);
         assert_eq!(solver.dim_per_particle, 10);
         assert_eq!(solver.total_dim, 1000); // 10^3
@@ -5848,7 +5981,7 @@ mod gpu_quantum_tests {
     fn test_bit_reverse() {
         let potential = Box::new(HarmonicOscillator { k: 1.0, x0: 0.0 });
         let solver = GPUQuantumSolver::new(8, 0.01, potential, true);
-        
+
         // Test bit reversal for n=8 (3 bits)
         assert_eq!(solver.bit_reverse(0, 8), 0); // 000 -> 000
         assert_eq!(solver.bit_reverse(1, 8), 4); // 001 -> 100
@@ -5857,12 +5990,11 @@ mod gpu_quantum_tests {
     }
 }
 
-
 /// Module for GPU-accelerated quantum solvers
 pub mod gpu_acceleration {
     use super::*;
+    use scirs2_core::parallel_ops::*;
     use std::collections::HashMap;
-    use rayon::prelude::*;
 
     /// GPU-accelerated quantum solver
     pub struct GPUQuantumSolver {
@@ -5916,17 +6048,17 @@ pub mod gpu_acceleration {
             n_steps: usize,
         ) -> Result<Vec<QuantumState>> {
             let dt = t_final / n_steps as f64;
-            let mut states = vec\![initial_state.clone()];
+            let mut states = vec![initial_state.clone()];
             let mut current_state = initial_state.clone();
 
-            for step in 0..n_steps {
+            for _step in 0..n_steps {
                 // GPU-accelerated time evolution
                 current_state = self.evolve_state_gpu(&current_state, potential, dt)?;
                 current_state.t += dt;
-                
+
                 // Normalize on GPU
                 self.normalize_state_gpu(&mut current_state)?;
-                
+
                 states.push(current_state.clone());
             }
 
@@ -5940,12 +6072,12 @@ pub mod gpu_acceleration {
             potential: &dyn QuantumPotential,
             dt: f64,
         ) -> Result<QuantumState> {
-            let n = state.psi.len();
+            let _n = state.psi.len();
             let mut new_psi = state.psi.clone();
 
             // Apply kinetic energy operator using GPU-simulated parallel computation
             self.apply_kinetic_operator_gpu(&mut new_psi, state.dx, dt)?;
-            
+
             // Apply potential energy operator
             self.apply_potential_operator_gpu(&mut new_psi, potential, &state.x, dt)?;
 
@@ -5970,11 +6102,13 @@ pub mod gpu_acceleration {
 
             // Simulate GPU parallel computation of second derivative
             let psi_copy = psi.clone();
-            psi.indexed_iter_mut().collect::<Vec<_>>().par_iter_mut()
-                .for_each( < /dev/null | (i, psi_val)| {
+            psi.indexed_iter_mut()
+                .collect::<Vec<_>>()
+                .par_iter_mut()
+                .for_each(|(i, psi_val)| {
                     if *i > 0 && *i < n - 1 {
                         // Second derivative using finite differences
-                        let second_deriv = psi_copy[i + 1] + psi_copy[i - 1] - 2.0 * psi_copy[*i];
+                        let second_deriv = psi_copy[*i + 1] + psi_copy[*i - 1] - 2.0 * psi_copy[*i];
                         **psi_val += kinetic_factor * second_deriv;
                     }
                 });
@@ -5994,7 +6128,10 @@ pub mod gpu_acceleration {
             let potential_values = potential.evaluate_array(&x.view());
 
             // Apply potential operator in parallel (GPU simulation)
-            psi.iter_mut().zip(potential_values.iter()).collect::<Vec<_>>().par_iter_mut()
+            psi.iter_mut()
+                .zip(potential_values.iter())
+                .collect::<Vec<_>>()
+                .par_iter_mut()
                 .for_each(|(psi_val, &pot_val)| {
                     let potential_factor = Complex64::new(0.0, -pot_val * dt / REDUCED_PLANCK);
                     **psi_val *= potential_factor.exp();
@@ -6006,9 +6143,12 @@ pub mod gpu_acceleration {
         /// Normalize quantum state on GPU
         fn normalize_state_gpu(&self, state: &mut QuantumState) -> Result<()> {
             // Parallel computation of norm
-            let norm_squared: f64 = state.psi.par_iter()
+            let norm_squared: f64 = state
+                .psi
+                .par_iter()
                 .map(|&c| (c.conj() * c).re)
-                .sum::<f64>() * state.dx;
+                .sum::<f64>()
+                * state.dx;
 
             let norm = norm_squared.sqrt();
             if norm > 0.0 {
@@ -6027,12 +6167,15 @@ pub mod gpu_acceleration {
         ) -> Result<f64> {
             // Apply operator to position array
             let operator_values = operator(&state.x);
-            
+
             // Parallel computation of expectation value
-            let expectation: f64 = state.psi.par_iter()
-                .zip(operator_values.par_iter())
+            let expectation: f64 = state
+                .psi
+                .iter()
+                .zip(operator_values.iter())
                 .map(|(&psi, &op_val)| (psi.conj() * psi).re * op_val)
-                .sum::<f64>() * state.dx;
+                .sum::<f64>()
+                * state.dx;
 
             Ok(expectation)
         }
@@ -6042,7 +6185,7 @@ pub mod gpu_acceleration {
         /// Create new GPU multi-body quantum solver
         pub fn new(device_id: usize, memory_allocation: usize, n_particles: usize) -> Self {
             let base_solver = GPUQuantumSolver::new(device_id, memory_allocation);
-            
+
             Self {
                 base_solver,
                 n_particles,
@@ -6058,25 +6201,26 @@ pub mod gpu_acceleration {
             t_final: f64,
             n_steps: usize,
         ) -> Result<Vec<Vec<QuantumState>>> {
-            if initial_states.len() \!= self.n_particles {
+            if initial_states.len() != self.n_particles {
                 return Err(IntegrateError::ValueError(
                     "Number of initial states must match number of particles".to_string(),
                 ));
             }
 
             let dt = t_final / n_steps as f64;
-            let mut all_states = vec\![initial_states.to_vec()];
+            let mut all_states = vec![initial_states.to_vec()];
             let mut current_states = initial_states.to_vec();
 
-            for step in 0..n_steps {
+            for _step in 0..n_steps {
                 // GPU-accelerated multi-body evolution
-                current_states = self.evolve_multibody_states_gpu(&current_states, interactions, dt)?;
-                
+                current_states =
+                    self.evolve_multibody_states_gpu(&current_states, interactions, dt)?;
+
                 // Update time for all particles
                 for state in &mut current_states {
                     state.t += dt;
                 }
-                
+
                 all_states.push(current_states.clone());
             }
 
@@ -6092,26 +6236,27 @@ pub mod gpu_acceleration {
         ) -> Result<Vec<QuantumState>> {
             let mut new_states = states.to_vec();
 
-            // Parallel evolution of each particle
-            new_states.par_iter_mut().enumerate().for_each(|(i, state)| {
+            // Sequential evolution of each particle (due to function capture constraints)
+            new_states.iter_mut().enumerate().for_each(|(i, state)| {
                 // Single-particle evolution
                 if let Ok(evolved) = self.base_solver.evolve_state_gpu(
-                    state, 
-                    &HarmonicOscillator { k: 1.0, x0: 0.0 }, 
-                    dt
+                    state,
+                    &HarmonicOscillator { k: 1.0, x0: 0.0 },
+                    dt,
                 ) {
                     *state = evolved;
                 }
 
                 // Add interaction effects
                 for j in 0..self.n_particles {
-                    if i \!= j {
+                    if i != j {
                         let distance = (state.x[0] - states[j].x[0]).abs(); // Simplified 1D
                         let interaction_strength = interactions(i, j, distance);
-                        
+
                         // Apply interaction (simplified)
                         state.psi.iter_mut().for_each(|psi_val| {
-                            let interaction_factor = Complex64::new(0.0, -interaction_strength * dt / REDUCED_PLANCK);
+                            let interaction_factor =
+                                Complex64::new(0.0, -interaction_strength * dt / REDUCED_PLANCK);
                             *psi_val *= interaction_factor.exp();
                         });
                     }
@@ -6148,9 +6293,8 @@ pub mod gpu_acceleration {
 
             for state in states {
                 // Parallel computation of probability density
-                let prob_density: f64 = state.psi.par_iter()
-                    .map(|&psi| (psi.conj() * psi).re)
-                    .sum();
+                let prob_density: f64 =
+                    state.psi.par_iter().map(|&psi| (psi.conj() * psi).re).sum();
 
                 if prob_density > 0.0 {
                     total_entropy -= prob_density * prob_density.ln();
@@ -6161,10 +6305,16 @@ pub mod gpu_acceleration {
         }
 
         /// Compute concurrence for two-qubit systems with GPU acceleration
-        fn compute_concurrence_gpu(&self, state1: &QuantumState, state2: &QuantumState) -> Result<f64> {
+        fn compute_concurrence_gpu(
+            &self,
+            state1: &QuantumState,
+            state2: &QuantumState,
+        ) -> Result<f64> {
             // Simplified concurrence calculation
-            let overlap: Complex64 = state1.psi.par_iter()
-                .zip(state2.psi.par_iter())
+            let overlap: Complex64 = state1
+                .psi
+                .iter()
+                .zip(state2.psi.iter())
                 .map(|(&psi1, &psi2)| psi1.conj() * psi2)
                 .sum();
 
@@ -6179,19 +6329,19 @@ pub mod gpu_acceleration {
         #[test]
         fn test_gpu_quantum_solver_creation() {
             let solver = GPUQuantumSolver::new(0, 1024 * 1024);
-            assert_eq\!(solver.device_id, 0);
-            assert_eq\!(solver.memory_allocation, 1024 * 1024);
+            assert_eq!(solver.device_id, 0);
+            assert_eq!(solver.memory_allocation, 1024 * 1024);
         }
 
         #[test]
         fn test_gpu_tdse_solution() {
             let solver = GPUQuantumSolver::new(0, 1024 * 1024);
-            
+
             // Create simple harmonic oscillator state
             let n_points = 100;
             let x = Array1::linspace(-5.0, 5.0, n_points);
             let dx = x[1] - x[0];
-            
+
             // Gaussian wave packet
             let psi = x.mapv(|xi| {
                 let gaussian = (-0.5 * xi * xi).exp();
@@ -6207,39 +6357,51 @@ pub mod gpu_acceleration {
             };
 
             let potential = HarmonicOscillator { k: 1.0, x0: 0.0 };
-            
+
             let result = solver.solve_tdse_gpu(&initial_state, &potential, 1.0, 10);
-            assert\!(result.is_ok());
-            
+            assert!(result.is_ok());
+
             let states = result.unwrap();
-            assert_eq\!(states.len(), 11); // 10 steps + initial
+            assert_eq!(states.len(), 11); // 10 steps + initial
         }
 
         #[test]
         fn test_gpu_multibody_solver() {
             let solver = GPUMultiBodyQuantumSolver::new(0, 1024 * 1024, 2);
-            assert_eq\!(solver.n_particles, 2);
+            assert_eq!(solver.n_particles, 2);
 
             // Create two simple states
             let n_points = 50;
             let x = Array1::linspace(-2.0, 2.0, n_points);
             let dx = x[1] - x[0];
-            
+
             let psi1 = x.mapv(|xi| Complex64::new((-0.5 * (xi - 0.5).powi(2)).exp(), 0.0));
             let psi2 = x.mapv(|xi| Complex64::new((-0.5 * (xi + 0.5).powi(2)).exp(), 0.0));
 
-            let state1 = QuantumState { psi: psi1, x: x.clone(), t: 0.0, mass: 1.0, dx };
-            let state2 = QuantumState { psi: psi2, x, t: 0.0, mass: 1.0, dx };
+            let state1 = QuantumState {
+                psi: psi1,
+                x: x.clone(),
+                t: 0.0,
+                mass: 1.0,
+                dx,
+            };
+            let state2 = QuantumState {
+                psi: psi2,
+                x,
+                t: 0.0,
+                mass: 1.0,
+                dx,
+            };
 
-            let initial_states = vec\![state1, state2];
+            let initial_states = vec![state1, state2];
             let interaction = |_i: usize, _j: usize, r: f64| 1.0 / (r + 1.0); // Simplified interaction
 
             let result = solver.solve_multibody_gpu(&initial_states, &interaction, 0.5, 5);
-            assert\!(result.is_ok());
+            assert!(result.is_ok());
 
             let all_states = result.unwrap();
-            assert_eq\!(all_states.len(), 6); // 5 steps + initial
-            assert_eq\!(all_states[0].len(), 2); // 2 particles
+            assert_eq!(all_states.len(), 6); // 5 steps + initial
+            assert_eq!(all_states[0].len(), 2); // 2 particles
         }
     }
 
@@ -6247,12 +6409,10 @@ pub mod gpu_acceleration {
     /// Implementation of fundamental quantum computing algorithms not yet present
     pub mod advanced_quantum_algorithms {
         use super::*;
-        use ndarray::{Array1, Array2, Array3, ArrayView1, ArrayView2};
+        use ndarray::{Array1, Array2};
         use num_complex::Complex64;
+        use rand::Rng;
         use std::f64::consts::PI;
-        use scirs2_core::simd_ops::SimdUnifiedOps;
-        use scirs2_core::constants::REDUCED_PLANCK;
-        use rand::{Rng, thread_rng};
 
         /// Quantum Fourier Transform Implementation
         /// Fundamental building block for many quantum algorithms
@@ -6280,9 +6440,11 @@ pub mod gpu_acceleration {
             pub fn apply(&self, state: &Array1<Complex64>) -> Result<Array1<Complex64>> {
                 let n = 1 << self.n_qubits;
                 if state.len() != n {
-                    return Err(IntegrateError::InvalidInput(
-                        format!("State vector size {} doesn't match 2^{} qubits", state.len(), self.n_qubits)
-                    ));
+                    return Err(IntegrateError::InvalidInput(format!(
+                        "State vector size {} doesn't match 2^{} qubits",
+                        state.len(),
+                        self.n_qubits
+                    )));
                 }
 
                 if self.inverse {
@@ -6316,14 +6478,14 @@ pub mod gpu_acceleration {
 
                     for i in (0..n).step_by(size) {
                         let mut wn = Complex64::new(1.0, 0.0);
-                        
+
                         for j in 0..half_size {
                             let u = result[i + j];
                             let v = result[i + j + half_size] * wn;
-                            
+
                             result[i + j] = u + v;
                             result[i + j + half_size] = u - v;
-                            
+
                             wn *= w;
                         }
                     }
@@ -6351,14 +6513,14 @@ pub mod gpu_acceleration {
 
                     for i in (0..n).step_by(size) {
                         let mut wn = Complex64::new(1.0, 0.0);
-                        
+
                         for j in 0..half_size {
                             let u = result[i + j];
                             let v = result[i + j + half_size];
-                            
+
                             result[i + j] = u + v;
                             result[i + j + half_size] = (u - v) * wn;
-                            
+
                             wn *= w;
                         }
                     }
@@ -6393,8 +6555,13 @@ pub mod gpu_acceleration {
             }
 
             /// Apply controlled phase rotation gate
-            pub fn controlled_phase_gate(&self, control: usize, target: usize, angle: f64, 
-                                       state: &mut Array1<Complex64>) -> Result<()> {
+            pub fn controlled_phase_gate(
+                &self,
+                control: usize,
+                target: usize,
+                angle: f64,
+                state: &mut Array1<Complex64>,
+            ) -> Result<()> {
                 let n = 1 << self.n_qubits;
                 let phase = Complex64::new(angle.cos(), angle.sin());
 
@@ -6471,7 +6638,7 @@ pub mod gpu_acceleration {
             /// Apply oracle operator O|x⟩ = (-1)^f(x)|x⟩
             fn apply_oracle(&self, state: &mut Array1<Complex64>) -> Result<()> {
                 let n = 1 << self.n_qubits;
-                
+
                 for i in 0..n {
                     if (self.oracle)(i) {
                         state[i] *= -1.0;
@@ -6484,10 +6651,10 @@ pub mod gpu_acceleration {
             /// Apply diffusion operator (amplitude amplification about average)
             fn apply_diffusion_operator(&self, state: &mut Array1<Complex64>) -> Result<()> {
                 let n = 1 << self.n_qubits;
-                
+
                 // Calculate average amplitude
                 let avg_amplitude = state.sum() / (n as f64);
-                
+
                 // Apply 2|ψ⟩⟨ψ| - I where |ψ⟩ is uniform superposition
                 for i in 0..n {
                     state[i] = 2.0 * avg_amplitude - state[i];
@@ -6549,9 +6716,10 @@ pub mod gpu_acceleration {
         impl QuantumApproximateOptimizationAlgorithm {
             /// Create new QAOA instance
             pub fn new(n_qubits: usize, n_layers: usize, cost_function: Array2<f64>) -> Self {
-                let mut rng = thread_rng();
-                let beta_params = Array1::from_shape_fn(n_layers, |_| rng.gen_range(0.0..PI));
-                let gamma_params = Array1::from_shape_fn(n_layers, |_| rng.gen_range(0.0..2.0*PI));
+                let mut rng = rand::rng();
+                let beta_params = Array1::from_shape_fn(n_layers, |_| rng.random_range(0.0..PI));
+                let gamma_params =
+                    Array1::from_shape_fn(n_layers, |_| rng.random_range(0.0..2.0 * PI));
 
                 Self {
                     n_qubits,
@@ -6574,10 +6742,10 @@ pub mod gpu_acceleration {
                 for iteration in 0..self.max_iterations {
                     // Construct QAOA quantum state
                     let state = self.construct_qaoa_state()?;
-                    
+
                     // Evaluate expectation value
                     let energy = self.evaluate_expectation_value(&state)?;
-                    
+
                     if energy < best_energy {
                         best_energy = energy;
                         best_state = state.clone();
@@ -6599,7 +6767,7 @@ pub mod gpu_acceleration {
             /// Construct QAOA quantum state |γ,β⟩
             fn construct_qaoa_state(&self) -> Result<Array1<Complex64>> {
                 let n = 1 << self.n_qubits;
-                
+
                 // Initialize uniform superposition
                 let mut state = Array1::from_elem(n, Complex64::new(1.0 / (n as f64).sqrt(), 0.0));
 
@@ -6607,8 +6775,8 @@ pub mod gpu_acceleration {
                 for layer in 0..self.n_layers {
                     // Apply cost unitary e^(-iγC)
                     self.apply_cost_unitary(&mut state, self.gamma_params[layer])?;
-                    
-                    // Apply mixing unitary e^(-iβB) 
+
+                    // Apply mixing unitary e^(-iβB)
                     self.apply_mixing_unitary(&mut state, self.beta_params[layer])?;
                 }
 
@@ -6639,7 +6807,8 @@ pub mod gpu_acceleration {
                 for i in 0..n {
                     for qubit in 0..self.n_qubits {
                         let j = i ^ (1 << qubit); // Flip qubit
-                        new_state[i] += cos_beta * state[i] + Complex64::new(0.0, -sin_beta) * state[j];
+                        new_state[i] +=
+                            cos_beta * state[i] + Complex64::new(0.0, -sin_beta) * state[j];
                     }
                 }
 
@@ -6652,7 +6821,7 @@ pub mod gpu_acceleration {
                 let mut cost = 0.0;
 
                 for i in 0..self.n_qubits {
-                    for j in i+1..self.n_qubits {
+                    for j in i + 1..self.n_qubits {
                         let bit_i = (bit_string >> i) & 1;
                         let bit_j = (bit_string >> j) & 1;
                         cost += self.cost_function[[i, j]] * (bit_i * bit_j) as f64;
@@ -6761,21 +6930,23 @@ pub mod gpu_acceleration {
                 let qft = QuantumFourierTransform::new(2, false);
                 let state = Array1::from_vec(vec![
                     Complex64::new(0.5, 0.0),
-                    Complex64::new(0.5, 0.0), 
                     Complex64::new(0.5, 0.0),
-                    Complex64::new(0.5, 0.0)
+                    Complex64::new(0.5, 0.0),
+                    Complex64::new(0.5, 0.0),
                 ]);
 
                 let result = qft.apply(&state);
                 assert!(result.is_ok());
-                
+
                 let transformed = result.unwrap();
                 assert_eq!(transformed.len(), 4);
             }
 
             #[test]
             fn test_grover_algorithm_creation() {
-                fn oracle(x: usize) -> bool { x == 3 }
+                fn oracle(x: usize) -> bool {
+                    x == 3
+                }
                 let grover = GroverSearchAlgorithm::new(2, 1, oracle);
                 assert_eq!(grover.n_qubits, 2);
                 assert_eq!(grover.n_marked, 1);
@@ -6783,11 +6954,13 @@ pub mod gpu_acceleration {
 
             #[test]
             fn test_grover_search() {
-                fn oracle(x: usize) -> bool { x == 3 }
+                fn oracle(x: usize) -> bool {
+                    x == 3
+                }
                 let grover = GroverSearchAlgorithm::new(2, 1, oracle);
                 let result = grover.search();
                 assert!(result.is_ok());
-                
+
                 let (_state, marked) = result.unwrap();
                 assert!(marked.contains(&3));
             }

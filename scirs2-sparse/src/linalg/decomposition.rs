@@ -54,6 +54,62 @@ where
     pub success: bool,
 }
 
+/// Pivoted Cholesky decomposition result
+#[derive(Debug, Clone)]
+pub struct PivotedCholeskyResult<T>
+where
+    T: Float + Debug + Copy + 'static,
+{
+    /// Lower triangular Cholesky factor
+    pub l: CsrArray<T>,
+    /// Permutation matrix (as permutation vector)
+    pub p: Array1<usize>,
+    /// Rank of the decomposition (number of positive eigenvalues)
+    pub rank: usize,
+    /// Whether decomposition was successful
+    pub success: bool,
+}
+
+/// Pivoting strategy for LU decomposition
+#[derive(Debug, Clone, Default)]
+pub enum PivotingStrategy {
+    /// No pivoting (fastest but potentially unstable)
+    None,
+    /// Partial pivoting - choose largest element in column (default)
+    #[default]
+    Partial,
+    /// Threshold pivoting - partial pivoting with threshold
+    Threshold(f64),
+    /// Scaled partial pivoting - account for row scaling
+    ScaledPartial,
+    /// Complete pivoting - choose largest element in submatrix (most stable but expensive)
+    Complete,
+    /// Rook pivoting - hybrid approach balancing stability and cost
+    Rook,
+}
+
+
+/// Options for LU decomposition
+#[derive(Debug, Clone)]
+pub struct LUOptions {
+    /// Pivoting strategy to use
+    pub pivoting: PivotingStrategy,
+    /// Threshold for numerical zero (default: 1e-14)
+    pub zero_threshold: f64,
+    /// Whether to check for singularity (default: true)
+    pub check_singular: bool,
+}
+
+impl Default for LUOptions {
+    fn default() -> Self {
+        Self {
+            pivoting: PivotingStrategy::default(),
+            zero_threshold: 1e-14,
+            check_singular: true,
+        }
+    }
+}
+
 /// Options for incomplete LU decomposition
 #[derive(Debug, Clone)]
 pub struct ILUOptions {
@@ -63,8 +119,8 @@ pub struct ILUOptions {
     pub fill_factor: f64,
     /// Maximum number of fill-in entries per row
     pub max_fill_per_row: usize,
-    /// Pivoting strategy
-    pub use_pivoting: bool,
+    /// Pivoting strategy to use
+    pub pivoting: PivotingStrategy,
 }
 
 impl Default for ILUOptions {
@@ -73,7 +129,7 @@ impl Default for ILUOptions {
             drop_tol: 1e-4,
             fill_factor: 2.0,
             max_fill_per_row: 20,
-            use_pivoting: true,
+            pivoting: PivotingStrategy::default(),
         }
     }
 }
@@ -99,7 +155,7 @@ impl Default for ICOptions {
     }
 }
 
-/// Compute sparse LU decomposition with partial pivoting
+/// Compute sparse LU decomposition with partial pivoting (backward compatibility)
 ///
 /// Computes the LU decomposition of a sparse matrix A such that P*A = L*U,
 /// where P is a permutation matrix, L is lower triangular, and U is upper triangular.
@@ -132,6 +188,60 @@ where
     T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
     S: SparseArray<T>,
 {
+    // Use threshold pivoting for backward compatibility
+    let options = LUOptions {
+        pivoting: PivotingStrategy::Threshold(pivot_threshold),
+        zero_threshold: 1e-14,
+        check_singular: true,
+    };
+    
+    lu_decomposition_with_options(matrix, Some(options))
+}
+
+/// Compute sparse LU decomposition with enhanced pivoting strategies
+///
+/// Computes the LU decomposition of a sparse matrix A such that P*A = L*U,
+/// where P is a permutation matrix, L is lower triangular, and U is upper triangular.
+/// This version supports multiple pivoting strategies for enhanced numerical stability.
+///
+/// # Arguments
+///
+/// * `matrix` - The sparse matrix to decompose
+/// * `options` - LU decomposition options (pivoting strategy, thresholds, etc.)
+///
+/// # Returns
+///
+/// LU decomposition result
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_sparse::linalg::{lu_decomposition_with_options, LUOptions, PivotingStrategy};
+/// use scirs2_sparse::csr_array::CsrArray;
+///
+/// // Create a sparse matrix
+/// let rows = vec![0, 0, 1, 2];
+/// let cols = vec![0, 1, 1, 2];
+/// let data = vec![2.0, 1.0, 3.0, 4.0];
+/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+///
+/// let options = LUOptions {
+///     pivoting: PivotingStrategy::ScaledPartial,
+///     zero_threshold: 1e-12,
+///     check_singular: true,
+/// };
+/// let lu_result = lu_decomposition_with_options(&matrix, Some(options)).unwrap();
+/// ```
+#[allow(dead_code)]
+pub fn lu_decomposition_with_options<T, S>(
+    matrix: &S, 
+    options: Option<LUOptions>
+) -> SparseResult<LUResult<T>>
+where
+    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
+    S: SparseArray<T>,
+{
+    let opts = options.unwrap_or_default();
     let (n, m) = matrix.shape();
     if n != m {
         return Err(SparseError::ValueError(
@@ -139,7 +249,7 @@ where
         ));
     }
 
-    // Convert to working format (simplified sparse representation)
+    // Convert to working format
     let (row_indices, col_indices, values) = matrix.find();
     let mut working_matrix = SparseWorkingMatrix::from_triplets(
         row_indices.as_slice().unwrap(),
@@ -148,40 +258,70 @@ where
         n,
     );
 
-    // Initialize permutation
-    let mut p: Vec<usize> = (0..n).collect();
+    // Initialize permutations
+    let mut row_perm: Vec<usize> = (0..n).collect();
+    let mut col_perm: Vec<usize> = (0..n).collect();
+    
+    // Compute row scaling factors for scaled partial pivoting
+    let mut row_scales = vec![T::one(); n];
+    if matches!(opts.pivoting, PivotingStrategy::ScaledPartial) {
+        for i in 0..n {
+            let row_data = working_matrix.get_row(i);
+            let max_val = row_data.values().map(|&v| v.abs()).fold(T::zero(), |a, b| if a > b { a } else { b });
+            if max_val > T::zero() {
+                row_scales[i] = max_val;
+            }
+        }
+    }
 
-    // Gaussian elimination with partial pivoting
+    // Gaussian elimination with enhanced pivoting
     for k in 0..n - 1 {
-        // Find pivot
-        let pivot_row = find_pivot(&working_matrix, k, &p, pivot_threshold)?;
+        // Find pivot using selected strategy
+        let (pivot_row, pivot_col) = find_enhanced_pivot(
+            &working_matrix, 
+            k, 
+            &row_perm, 
+            &col_perm,
+            &row_scales,
+            &opts
+        )?;
 
-        // Swap rows in permutation
+        // Apply row and column permutations
         if pivot_row != k {
-            p.swap(k, pivot_row);
+            row_perm.swap(k, pivot_row);
+        }
+        if pivot_col != k && matches!(opts.pivoting, PivotingStrategy::Complete | PivotingStrategy::Rook) {
+            col_perm.swap(k, pivot_col);
+            // When columns are swapped, we need to update all matrix elements
+            for i in 0..n {
+                let temp = working_matrix.get(row_perm[i], k);
+                working_matrix.set(row_perm[i], k, working_matrix.get(row_perm[i], pivot_col));
+                working_matrix.set(row_perm[i], pivot_col, temp);
+            }
         }
 
-        let actual_pivot_row = p[k];
-        let pivot_value = working_matrix.get(actual_pivot_row, k);
+        let actual_pivot_row = row_perm[k];
+        let actual_pivot_col = col_perm[k];
+        let pivot_value = working_matrix.get(actual_pivot_row, actual_pivot_col);
 
-        if pivot_value.abs() < T::from(1e-14).unwrap() {
+        // Check for numerical singularity
+        if opts.check_singular && pivot_value.abs() < T::from(opts.zero_threshold).unwrap() {
             return Ok(LUResult {
                 l: CsrArray::from_triplets(&[], &[], &[], (n, n), false)?,
                 u: CsrArray::from_triplets(&[], &[], &[], (n, n), false)?,
-                p: Array1::from_vec(p),
+                p: Array1::from_vec(row_perm),
                 success: false,
             });
         }
 
         // Eliminate below pivot
-        #[allow(clippy::needless_range_loop)]
         for i in (k + 1)..n {
-            let actual_row_i = p[i];
-            let factor = working_matrix.get(actual_row_i, k) / pivot_value;
+            let actual_row_i = row_perm[i];
+            let factor = working_matrix.get(actual_row_i, actual_pivot_col) / pivot_value;
 
             if !factor.is_zero() {
                 // Store multiplier in L
-                working_matrix.set(actual_row_i, k, factor);
+                working_matrix.set(actual_row_i, actual_pivot_col, factor);
 
                 // Update row i
                 let pivot_row_data = working_matrix.get_row(actual_pivot_row);
@@ -195,9 +335,9 @@ where
         }
     }
 
-    // Extract L and U matrices
+    // Extract L and U matrices with proper permutation
     let (l_rows, l_cols, l_vals, u_rows, u_cols, u_vals) =
-        extract_lu_factors(&working_matrix, &p, n);
+        extract_lu_factors(&working_matrix, &row_perm, n);
 
     let l = CsrArray::from_triplets(&l_rows, &l_cols, &l_vals, (n, n), false)?;
     let u = CsrArray::from_triplets(&u_rows, &u_cols, &u_vals, (n, n), false)?;
@@ -205,7 +345,7 @@ where
     Ok(LUResult {
         l,
         u,
-        p: Array1::from_vec(p),
+        p: Array1::from_vec(row_perm),
         success: true,
     })
 }
@@ -383,6 +523,346 @@ where
     let l = CsrArray::from_triplets(&l_rows, &l_cols, &l_vals, (n, n), false)?;
 
     Ok(CholeskyResult { l, success: true })
+}
+
+/// Compute pivoted Cholesky decomposition
+///
+/// Computes the pivoted Cholesky decomposition of a symmetric matrix A = P^T * L * L^T * P,
+/// where P is a permutation matrix and L is lower triangular. This version can handle
+/// indefinite matrices by determining the rank and producing a partial decomposition.
+///
+/// # Arguments
+///
+/// * `matrix` - The symmetric sparse matrix
+/// * `threshold` - Pivoting threshold for numerical stability (default: 1e-12)
+///
+/// # Returns
+///
+/// Pivoted Cholesky decomposition result with rank determination
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_sparse::linalg::pivoted_cholesky_decomposition;
+/// use scirs2_sparse::csr_array::CsrArray;
+///
+/// // Create a symmetric indefinite matrix
+/// let rows = vec![0, 1, 1, 2, 2, 2];
+/// let cols = vec![0, 0, 1, 0, 1, 2];  
+/// let data = vec![1.0, 2.0, -1.0, 3.0, 1.0, 2.0];
+/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+///
+/// let chol_result = pivoted_cholesky_decomposition(&matrix, Some(1e-12)).unwrap();
+/// ```
+#[allow(dead_code)]
+pub fn pivoted_cholesky_decomposition<T, S>(
+    matrix: &S,
+    threshold: Option<T>,
+) -> SparseResult<PivotedCholeskyResult<T>>
+where
+    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
+    S: SparseArray<T>,
+{
+    let (n, m) = matrix.shape();
+    if n != m {
+        return Err(SparseError::ValueError(
+            "Matrix must be square for Cholesky decomposition".to_string(),
+        ));
+    }
+
+    let threshold = threshold.unwrap_or_else(|| T::from(1e-12).unwrap());
+
+    // Convert to working format
+    let (row_indices, col_indices, values) = matrix.find();
+    let mut working_matrix = SparseWorkingMatrix::from_triplets(
+        row_indices.as_slice().unwrap(),
+        col_indices.as_slice().unwrap(),
+        values.as_slice().unwrap(),
+        n,
+    );
+
+    // Initialize permutation
+    let mut perm: Vec<usize> = (0..n).collect();
+    let mut rank = 0;
+
+    // Pivoted Cholesky algorithm
+    for k in 0..n {
+        // Find the pivot: largest diagonal element among remaining
+        let mut max_diag = T::zero();
+        let mut pivot_idx = k;
+
+        for i in k..n {
+            let mut diag_val = working_matrix.get(perm[i], perm[i]);
+            for j in 0..k {
+                let l_ij = working_matrix.get(perm[i], perm[j]);
+                diag_val = diag_val - l_ij * l_ij;
+            }
+            if diag_val > max_diag {
+                max_diag = diag_val;
+                pivot_idx = i;
+            }
+        }
+
+        // Check if we should stop (matrix is not positive definite beyond this point)
+        if max_diag <= threshold {
+            break;
+        }
+
+        // Swap rows/columns in permutation
+        if pivot_idx != k {
+            perm.swap(k, pivot_idx);
+        }
+
+        // Compute L[k,k]
+        let l_kk = max_diag.sqrt();
+        working_matrix.set(perm[k], perm[k], l_kk);
+        rank += 1;
+
+        // Update column k below diagonal
+        for i in (k + 1)..n {
+            let mut sum = T::zero();
+            for j in 0..k {
+                sum = sum + working_matrix.get(perm[i], perm[j]) * working_matrix.get(perm[k], perm[j]);
+            }
+
+            let a_ik = working_matrix.get(perm[i], perm[k]);
+            let l_ik = (a_ik - sum) / l_kk;
+            working_matrix.set(perm[i], perm[k], l_ik);
+        }
+    }
+
+    // Extract lower triangular matrix with proper permutation
+    let mut l_rows = Vec::new();
+    let mut l_cols = Vec::new(); 
+    let mut l_vals = Vec::new();
+
+    for i in 0..rank {
+        for j in 0..=i {
+            let val = working_matrix.get(perm[i], perm[j]);
+            if val != T::zero() {
+                l_rows.push(i);
+                l_cols.push(j);
+                l_vals.push(val);
+            }
+        }
+    }
+
+    let l = CsrArray::from_triplets(&l_rows, &l_cols, &l_vals, (n, rank), false)?;
+    let p = Array1::from_vec(perm);
+
+    Ok(PivotedCholeskyResult {
+        l,
+        p,
+        rank,
+        success: true,
+    })
+}
+
+/// LDLT decomposition result for symmetric indefinite matrices
+#[derive(Debug, Clone)]
+pub struct LDLTResult<T>
+where
+    T: Float + Debug + Copy + 'static,
+{
+    /// Lower triangular factor L (unit diagonal)
+    pub l: CsrArray<T>,
+    /// Diagonal factor D
+    pub d: Array1<T>,
+    /// Permutation matrix (as permutation vector)
+    pub p: Array1<usize>,
+    /// Whether decomposition was successful
+    pub success: bool,
+}
+
+/// Compute LDLT decomposition for symmetric indefinite matrices
+///
+/// Computes the LDLT decomposition of a symmetric matrix A = P^T * L * D * L^T * P,
+/// where P is a permutation matrix, L is unit lower triangular, and D is diagonal.
+/// This method can handle indefinite matrices unlike Cholesky decomposition.
+///
+/// # Arguments
+///
+/// * `matrix` - The symmetric sparse matrix
+/// * `pivoting` - Whether to use pivoting for numerical stability (default: true)
+/// * `threshold` - Pivoting threshold for numerical stability (default: 1e-12)
+///
+/// # Returns
+///
+/// LDLT decomposition result
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_sparse::linalg::ldlt_decomposition;
+/// use scirs2_sparse::csr_array::CsrArray;
+///
+/// // Create a symmetric indefinite matrix
+/// let rows = vec![0, 1, 1, 2, 2, 2];
+/// let cols = vec![0, 0, 1, 0, 1, 2];  
+/// let data = vec![1.0, 2.0, -1.0, 3.0, 1.0, 2.0];
+/// let matrix = CsrArray::from_triplets(&rows, &cols, &data, (3, 3), false).unwrap();
+///
+/// let ldlt_result = ldlt_decomposition(&matrix, Some(true), Some(1e-12)).unwrap();
+/// ```
+#[allow(dead_code)]
+pub fn ldlt_decomposition<T, S>(
+    matrix: &S,
+    pivoting: Option<bool>,
+    threshold: Option<T>,
+) -> SparseResult<LDLTResult<T>>
+where
+    T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
+    S: SparseArray<T>,
+{
+    let (n, m) = matrix.shape();
+    if n != m {
+        return Err(SparseError::ValueError(
+            "Matrix must be square for LDLT decomposition".to_string(),
+        ));
+    }
+
+    let use_pivoting = pivoting.unwrap_or(true);
+    let threshold = threshold.unwrap_or_else(|| T::from(1e-12).unwrap());
+
+    // Convert to working format
+    let (row_indices, col_indices, values) = matrix.find();
+    let mut working_matrix = SparseWorkingMatrix::from_triplets(
+        row_indices.as_slice().unwrap(),
+        col_indices.as_slice().unwrap(),
+        values.as_slice().unwrap(),
+        n,
+    );
+
+    // Initialize permutation
+    let mut perm: Vec<usize> = (0..n).collect();
+    let mut d_values = vec![T::zero(); n];
+
+    // LDLT decomposition with optional pivoting
+    for k in 0..n {
+        // Find pivot if pivoting is enabled
+        if use_pivoting {
+            let pivot_idx = find_ldlt_pivot(&working_matrix, k, &perm, threshold);
+            if pivot_idx != k {
+                perm.swap(k, pivot_idx);
+            }
+        }
+
+        let actual_k = perm[k];
+
+        // Compute diagonal element D[k,k]
+        let mut diag_val = working_matrix.get(actual_k, actual_k);
+        for j in 0..k {
+            let l_kj = working_matrix.get(actual_k, perm[j]);
+            diag_val = diag_val - l_kj * l_kj * d_values[j];
+        }
+
+        d_values[k] = diag_val;
+
+        // Check for numerical issues
+        if diag_val.abs() < threshold {
+            return Ok(LDLTResult {
+                l: CsrArray::from_triplets(&[], &[], &[], (n, n), false)?,
+                d: Array1::from_vec(d_values),
+                p: Array1::from_vec(perm),
+                success: false,
+            });
+        }
+
+        // Compute column k of L below the diagonal
+        for i in (k + 1)..n {
+            let actual_i = perm[i];
+            let mut l_ik = working_matrix.get(actual_i, actual_k);
+
+            for j in 0..k {
+                l_ik = l_ik - working_matrix.get(actual_i, perm[j]) * working_matrix.get(actual_k, perm[j]) * d_values[j];
+            }
+
+            l_ik = l_ik / diag_val;
+            working_matrix.set(actual_i, actual_k, l_ik);
+        }
+
+        // Set diagonal element of L to 1
+        working_matrix.set(actual_k, actual_k, T::one());
+    }
+
+    // Extract L matrix (unit lower triangular)
+    let (l_rows, l_cols, l_vals) = extract_unit_lower_triangular(&working_matrix, &perm, n);
+    let l = CsrArray::from_triplets(&l_rows, &l_cols, &l_vals, (n, n), false)?;
+
+    Ok(LDLTResult {
+        l,
+        d: Array1::from_vec(d_values),
+        p: Array1::from_vec(perm),
+        success: true,
+    })
+}
+
+/// Find pivot for LDLT decomposition using Bunch-Kaufman strategy
+fn find_ldlt_pivot<T>(
+    matrix: &SparseWorkingMatrix<T>,
+    k: usize,
+    perm: &[usize],
+    threshold: T,
+) -> usize
+where
+    T: Float + Debug + Copy,
+{
+    let n = matrix.n;
+    let mut max_val = T::zero();
+    let mut pivot_idx = k;
+
+    // Look for largest diagonal element among remaining rows
+    for i in k..n {
+        let actual_i = perm[i];
+        let diag_val = matrix.get(actual_i, actual_i).abs();
+        
+        if diag_val > max_val {
+            max_val = diag_val;
+            pivot_idx = i;
+        }
+    }
+
+    // Check if pivot is acceptable
+    if max_val >= threshold {
+        pivot_idx
+    } else {
+        k // Use current position if no good pivot found
+    }
+}
+
+/// Extract unit lower triangular matrix from working matrix
+fn extract_unit_lower_triangular<T>(
+    matrix: &SparseWorkingMatrix<T>,
+    perm: &[usize],
+    n: usize,
+) -> (Vec<usize>, Vec<usize>, Vec<T>)
+where
+    T: Float + Debug + Copy,
+{
+    let mut rows = Vec::new();
+    let mut cols = Vec::new();
+    let mut vals = Vec::new();
+
+    for i in 0..n {
+        let actual_i = perm[i];
+        
+        // Add diagonal element (always 1 for unit triangular)
+        rows.push(i);
+        cols.push(i);
+        vals.push(T::one());
+
+        // Add below-diagonal elements
+        for j in 0..i {
+            let val = matrix.get(actual_i, perm[j]);
+            if val != T::zero() {
+                rows.push(i);
+                cols.push(j);
+                vals.push(val);
+            }
+        }
+    }
+
+    (rows, cols, vals)
 }
 
 /// Compute incomplete LU decomposition (ILU)
@@ -652,30 +1132,183 @@ where
     }
 }
 
-/// Find pivot for LU decomposition
+/// Find pivot for LU decomposition (backward compatibility)
+#[allow(dead_code)]
 fn find_pivot<T>(
     matrix: &SparseWorkingMatrix<T>,
     k: usize,
     p: &[usize],
-    _threshold: f64,
+    threshold: f64,
 ) -> SparseResult<usize>
 where
     T: Float + Debug + Copy,
 {
-    let mut max_val = T::zero();
-    let mut pivot_row = k;
-
-    #[allow(clippy::needless_range_loop)]
-    for i in k..matrix.n {
-        let actual_row = p[i];
-        let val = matrix.get(actual_row, k).abs();
-        if val > max_val {
-            max_val = val;
-            pivot_row = i;
-        }
-    }
-
+    // Use threshold pivoting for backward compatibility
+    let opts = LUOptions {
+        pivoting: PivotingStrategy::Threshold(threshold),
+        zero_threshold: 1e-14,
+        check_singular: true,
+    };
+    
+    let row_scales = vec![T::one(); matrix.n];
+    let col_perm: Vec<usize> = (0..matrix.n).collect();
+    
+    let (pivot_row, _) = find_enhanced_pivot(matrix, k, p, &col_perm, &row_scales, &opts)?;
     Ok(pivot_row)
+}
+
+/// Enhanced pivoting function supporting multiple strategies
+fn find_enhanced_pivot<T>(
+    matrix: &SparseWorkingMatrix<T>,
+    k: usize,
+    row_perm: &[usize],
+    col_perm: &[usize],
+    row_scales: &[T],
+    opts: &LUOptions,
+) -> SparseResult<(usize, usize)>
+where
+    T: Float + Debug + Copy,
+{
+    let n = matrix.n;
+    
+    match &opts.pivoting {
+        PivotingStrategy::None => {
+            // No pivoting - use diagonal element
+            Ok((k, k))
+        },
+        
+        PivotingStrategy::Partial => {
+            // Standard partial pivoting - find largest element in column k
+            let mut max_val = T::zero();
+            let mut pivot_row = k;
+            
+            for i in k..n {
+                let actual_row = row_perm[i];
+                let val = matrix.get(actual_row, col_perm[k]).abs();
+                if val > max_val {
+                    max_val = val;
+                    pivot_row = i;
+                }
+            }
+            
+            Ok((pivot_row, k))
+        },
+        
+        PivotingStrategy::Threshold(threshold) => {
+            // Threshold pivoting - use first element above threshold
+            let threshold_val = T::from(*threshold).unwrap();
+            let mut max_val = T::zero();
+            let mut pivot_row = k;
+            
+            for i in k..n {
+                let actual_row = row_perm[i];
+                let val = matrix.get(actual_row, col_perm[k]).abs();
+                if val > max_val {
+                    max_val = val;
+                    pivot_row = i;
+                }
+                // Use first element above threshold for efficiency
+                if val >= threshold_val {
+                    pivot_row = i;
+                    break;
+                }
+            }
+            
+            Ok((pivot_row, k))
+        },
+        
+        PivotingStrategy::ScaledPartial => {
+            // Scaled partial pivoting - account for row scaling
+            let mut max_ratio = T::zero();
+            let mut pivot_row = k;
+            
+            for i in k..n {
+                let actual_row = row_perm[i];
+                let val = matrix.get(actual_row, col_perm[k]).abs();
+                let scale = row_scales[actual_row];
+                
+                let ratio = if scale > T::zero() { val / scale } else { val };
+                
+                if ratio > max_ratio {
+                    max_ratio = ratio;
+                    pivot_row = i;
+                }
+            }
+            
+            Ok((pivot_row, k))
+        },
+        
+        PivotingStrategy::Complete => {
+            // Complete pivoting - find largest element in remaining submatrix
+            let mut max_val = T::zero();
+            let mut pivot_row = k;
+            let mut pivot_col = k;
+            
+            for i in k..n {
+                let actual_row = row_perm[i];
+                for j in k..n {
+                    let actual_col = col_perm[j];
+                    let val = matrix.get(actual_row, actual_col).abs();
+                    if val > max_val {
+                        max_val = val;
+                        pivot_row = i;
+                        pivot_col = j;
+                    }
+                }
+            }
+            
+            Ok((pivot_row, pivot_col))
+        },
+        
+        PivotingStrategy::Rook => {
+            // Rook pivoting - alternating row and column searches
+            let mut best_row = k;
+            let mut best_col = k;
+            let mut max_val = T::zero();
+            
+            // Start with partial pivoting in column k
+            for i in k..n {
+                let actual_row = row_perm[i];
+                let val = matrix.get(actual_row, col_perm[k]).abs();
+                if val > max_val {
+                    max_val = val;
+                    best_row = i;
+                }
+            }
+            
+            // If we found a good pivot, check if we can improve by column pivoting
+            if max_val > T::from(opts.zero_threshold).unwrap() {
+                let actual_best_row = row_perm[best_row];
+                let mut col_max = T::zero();
+                
+                for j in k..n {
+                    let actual_col = col_perm[j];
+                    let val = matrix.get(actual_best_row, actual_col).abs();
+                    if val > col_max {
+                        col_max = val;
+                        best_col = j;
+                    }
+                }
+                
+                // Use column pivot if it's significantly better
+                let improvement_threshold = T::from(1.5).unwrap();
+                if col_max > max_val * improvement_threshold {
+                    // Recompute row pivot for the new column
+                    max_val = T::zero();
+                    for i in k..n {
+                        let actual_row = row_perm[i];
+                        let val = matrix.get(actual_row, col_perm[best_col]).abs();
+                        if val > max_val {
+                            max_val = val;
+                            best_row = i;
+                        }
+                    }
+                }
+            }
+            
+            Ok((best_row, best_col))
+        },
+    }
 }
 
 /// Extract L and U factors from working matrix

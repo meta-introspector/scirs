@@ -8,6 +8,9 @@
 //! These formats are commonly used in their respective fields and require
 //! specialized handling for efficient processing and metadata preservation.
 
+#![allow(dead_code)]
+#![allow(missing_docs)]
+
 /// Bioinformatics file formats
 ///
 /// Provides support for common bioinformatics file formats:

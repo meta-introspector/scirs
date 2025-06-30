@@ -11,12 +11,9 @@
 use crate::{
     error::{InterpolateError, InterpolateResult},
     numerical_stability::{assess_matrix_condition, StabilityLevel},
-    stress_testing::{StressTestConfig, StressTestReport},
     spline::CubicSpline,
-    advanced::rbf::{RBFInterpolator, RBFKernel},
-    bspline::BSpline,
 };
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{Array1, Array2};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::{Debug, Display};
 use std::ops::{AddAssign, SubAssign};
@@ -128,8 +125,8 @@ impl ProductionValidator {
         let start_time = Instant::now();
         let mut test_results = Vec::new();
         let mut performance_metrics = PerformanceMetrics::default();
-        let mut memory_metrics = MemoryMetrics::default();
-        let mut error_handling_results = ErrorHandlingResults::default();
+        let memory_metrics = MemoryMetrics::default();
+        let error_handling_results = ErrorHandlingResults::default();
 
         // 1. Edge Case Validation
         test_results.push(self.test_edge_cases::<F>()?);
@@ -227,10 +224,10 @@ impl ProductionValidator {
         for i in 0..iterations {
             let n = 50 + (i % 100); // Varying dataset sizes
             let data = self.generate_test_data::<F>(n)?;
-            
+
             // Create and destroy interpolators repeatedly
             let _ = self.create_and_test_interpolator::<F>(&data)?;
-            
+
             // Periodically force garbage collection if possible
             if i % 100 == 0 {
                 // In a real implementation, we might check memory usage here
@@ -262,7 +259,7 @@ impl ProductionValidator {
 
         while start_time.elapsed() < timeout {
             let data = self.generate_test_data::<F>(size)?;
-            
+
             let test_start = Instant::now();
             match self.create_and_test_interpolator::<F>(&data) {
                 Ok(_) => {
@@ -271,7 +268,7 @@ impl ProductionValidator {
                 }
                 Err(_) => break, // Stop on first failure
             }
-            
+
             // Ensure individual operations don't take too long
             if test_start.elapsed() > Duration::from_secs(5) {
                 break;
@@ -287,7 +284,10 @@ impl ProductionValidator {
             error_message: if passed {
                 None
             } else {
-                Some(format!("Could only handle {} data points", max_size_handled))
+                Some(format!(
+                    "Could only handle {} data points",
+                    max_size_handled
+                ))
             },
             execution_time_ms: execution_time,
             memory_used_mb: 0.0,
@@ -310,19 +310,29 @@ impl ProductionValidator {
                     // Each thread performs multiple interpolation operations
                     for i in 0..10 {
                         let size = 50 + (thread_id * 10) + i;
-                        match self.generate_test_data::<F>(size) {
-                            Ok(data) => {
-                                if let Err(e) = self.create_and_test_interpolator::<F>(&data) {
+                        // Generate test data inline
+                        let x = Array1::linspace(F::zero(), F::from(10.0).unwrap(), size);
+                        let y = x.mapv(|xi| {
+                            let xi_f64 = xi.to_f64().unwrap_or(0.0);
+                            F::from((xi_f64 * 0.5).sin() + 0.1 * xi_f64).unwrap()
+                        });
+
+                        // Test interpolator inline
+                        match CubicSpline::new(&x.view(), &y.view()) {
+                            Ok(spline) => {
+                                // Test evaluation
+                                let test_x = F::from(5.0).unwrap();
+                                if let Err(e) = spline.evaluate(test_x) {
                                     errors_clone.lock().unwrap().push(format!(
-                                        "Thread {} iteration {}: {}",
+                                        "Thread {} iteration {} evaluation failed: {}",
                                         thread_id, i, e
                                     ));
                                 }
                             }
                             Err(e) => {
                                 errors_clone.lock().unwrap().push(format!(
-                                    "Thread {} data generation failed: {}",
-                                    thread_id, e
+                                    "Thread {} iteration {} spline creation failed: {}",
+                                    thread_id, i, e
                                 ));
                             }
                         }
@@ -412,7 +422,7 @@ impl ProductionValidator {
         F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + Send + Sync + 'static,
     {
         let start_time = Instant::now();
-        
+
         // Test with progressively larger datasets until resource limits
         let mut handled_gracefully = true;
         let mut max_tested_size = 0;
@@ -420,13 +430,13 @@ impl ProductionValidator {
         for size_factor in [1, 2, 4, 8, 16, 32] {
             let size = 1000 * size_factor;
             max_tested_size = size;
-            
+
             match self.generate_test_data::<F>(size) {
                 Ok(data) => {
                     match self.create_and_test_interpolator::<F>(&data) {
                         Ok(_) => continue,
-                        Err(InterpolateError::OutOfMemory(_)) |
-                        Err(InterpolateError::ComputationError(_)) => {
+                        Err(InterpolateError::OutOfMemory(_))
+                        | Err(InterpolateError::ComputationError(_)) => {
                             // Expected graceful failure
                             break;
                         }
@@ -514,113 +524,187 @@ impl ProductionValidator {
         Ok((x, y))
     }
 
-    fn create_and_test_interpolator<F>(&self, data: &(Array1<F>, Array1<F>)) -> InterpolateResult<()>
+    fn create_and_test_interpolator<F>(
+        &self,
+        data: &(Array1<F>, Array1<F>),
+    ) -> InterpolateResult<()>
     where
         F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
     {
         let (x, y) = data;
         let _spline = CubicSpline::new(&x.view(), &y.view())?;
-        
+
         // Test evaluation at a few points
         let test_x = F::from(5.0).unwrap();
         let _result = _spline.evaluate(test_x)?;
-        
+
         Ok(())
     }
 
     // Placeholder methods for specific test implementations
-    fn test_large_datasets<F>(&self) -> InterpolateResult<()> where F: Float + FromPrimitive { Ok(()) }
-    fn test_extreme_values<F>(&self) -> InterpolateResult<()> where F: Float + FromPrimitive { Ok(()) }
-    fn test_near_singular_matrices<F>(&self) -> InterpolateResult<()> where F: Float + FromPrimitive { Ok(()) }
-    fn test_malformed_inputs<F>(&self) -> InterpolateResult<()> where F: Float + FromPrimitive { Ok(()) }
-    fn test_singular_matrix_recovery<F>(&self) -> InterpolateResult<()> where F: Float + FromPrimitive { Ok(()) }
-    fn test_invalid_input_recovery<F>(&self) -> InterpolateResult<()> 
-    where 
+    fn test_large_datasets<F>(&self) -> InterpolateResult<()>
+    where
+        F: Float + FromPrimitive,
+    {
+        Ok(())
+    }
+    fn test_extreme_values<F>(&self) -> InterpolateResult<()>
+    where
+        F: Float + FromPrimitive,
+    {
+        Ok(())
+    }
+    fn test_near_singular_matrices<F>(&self) -> InterpolateResult<()>
+    where
+        F: Float + FromPrimitive,
+    {
+        Ok(())
+    }
+    fn test_malformed_inputs<F>(&self) -> InterpolateResult<()>
+    where
+        F: Float + FromPrimitive,
+    {
+        Ok(())
+    }
+    fn test_singular_matrix_recovery<F>(&self) -> InterpolateResult<()>
+    where
+        F: Float + FromPrimitive,
+    {
+        Ok(())
+    }
+    fn test_invalid_input_recovery<F>(&self) -> InterpolateResult<()>
+    where
         F: Float + FromPrimitive + Debug,
     {
         // Test recovery from various invalid inputs
-        
+
         // Test 1: NaN values
-        let nan_x = Array1::from(vec![F::from_f64(f64::NAN).unwrap(), F::one(), F::from_f64(2.0).unwrap()]);
-        let valid_y = Array1::from(vec![F::one(), F::from_f64(2.0).unwrap(), F::from_f64(3.0).unwrap()]);
-        
+        let nan_x = Array1::from(vec![
+            F::from_f64(f64::NAN).unwrap(),
+            F::one(),
+            F::from_f64(2.0).unwrap(),
+        ]);
+        let valid_y = Array1::from(vec![
+            F::one(),
+            F::from_f64(2.0).unwrap(),
+            F::from_f64(3.0).unwrap(),
+        ]);
+
         match CubicSpline::new(&nan_x.view(), &valid_y.view()) {
-            Err(_) => {}, // Expected - should gracefully handle NaN
-            Ok(_) => return Err(InterpolateError::InvalidState(
-                "Should have failed with NaN input".to_string()
-            )),
+            Err(_) => {} // Expected - should gracefully handle NaN
+            Ok(_) => {
+                return Err(InterpolateError::InvalidState(
+                    "Should have failed with NaN input".to_string(),
+                ))
+            }
         }
-        
+
         // Test 2: Infinite values
         let inf_y = Array1::from(vec![F::infinity(), F::one(), F::from_f64(2.0).unwrap()]);
         let valid_x = Array1::from(vec![F::zero(), F::one(), F::from_f64(2.0).unwrap()]);
-        
+
         match CubicSpline::new(&valid_x.view(), &inf_y.view()) {
-            Err(_) => {}, // Expected - should gracefully handle infinity
-            Ok(_) => {}, // Some implementations might handle this
+            Err(_) => {} // Expected - should gracefully handle infinity
+            Ok(_) => {}  // Some implementations might handle this
         }
-        
+
         // Test 3: Duplicate x values
         let duplicate_x = Array1::from(vec![F::one(), F::one(), F::from_f64(2.0).unwrap()]);
-        let duplicate_y = Array1::from(vec![F::one(), F::from_f64(1.5).unwrap(), F::from_f64(2.0).unwrap()]);
-        
+        let duplicate_y = Array1::from(vec![
+            F::one(),
+            F::from_f64(1.5).unwrap(),
+            F::from_f64(2.0).unwrap(),
+        ]);
+
         match CubicSpline::new(&duplicate_x.view(), &duplicate_y.view()) {
-            Err(_) => {}, // Expected - should handle duplicate x values gracefully
-            Ok(_) => {}, // Some implementations might handle this by averaging or other means
+            Err(_) => {} // Expected - should handle duplicate x values gracefully
+            Ok(_) => {}  // Some implementations might handle this by averaging or other means
         }
-        
+
         // Test 4: Mismatched array lengths
         let short_x = Array1::from(vec![F::zero(), F::one()]);
-        let long_y = Array1::from(vec![F::zero(), F::one(), F::from_f64(2.0).unwrap(), F::from_f64(3.0).unwrap()]);
-        
+        let long_y = Array1::from(vec![
+            F::zero(),
+            F::one(),
+            F::from_f64(2.0).unwrap(),
+            F::from_f64(3.0).unwrap(),
+        ]);
+
         match CubicSpline::new(&short_x.view(), &long_y.view()) {
-            Err(_) => {}, // Expected - should detect dimension mismatch
-            Ok(_) => return Err(InterpolateError::InvalidState(
-                "Should have failed with mismatched array lengths".to_string()
-            )),
+            Err(_) => {} // Expected - should detect dimension mismatch
+            Ok(_) => {
+                return Err(InterpolateError::InvalidState(
+                    "Should have failed with mismatched array lengths".to_string(),
+                ))
+            }
         }
-        
+
         Ok(())
     }
-    fn test_oom_recovery<F>(&self) -> InterpolateResult<()> where F: Float + FromPrimitive { Ok(()) }
-    fn test_overflow_recovery<F>(&self) -> InterpolateResult<()> where F: Float + FromPrimitive { Ok(()) }
-    fn test_timeout_recovery<F>(&self) -> InterpolateResult<()> where F: Float + FromPrimitive { Ok(()) }
-    fn test_collinear_stability<F>(&self) -> InterpolateResult<()> where F: Float + FromPrimitive { Ok(()) }
-    fn test_extreme_range_stability<F>(&self) -> InterpolateResult<()> where F: Float + FromPrimitive { Ok(()) }
-    fn test_high_condition_stability<F>(&self) -> InterpolateResult<()> 
-    where 
-        F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
+    fn test_oom_recovery<F>(&self) -> InterpolateResult<()>
+    where
+        F: Float + FromPrimitive,
+    {
+        Ok(())
+    }
+    fn test_overflow_recovery<F>(&self) -> InterpolateResult<()>
+    where
+        F: Float + FromPrimitive,
+    {
+        Ok(())
+    }
+    fn test_timeout_recovery<F>(&self) -> InterpolateResult<()>
+    where
+        F: Float + FromPrimitive,
+    {
+        Ok(())
+    }
+    fn test_collinear_stability<F>(&self) -> InterpolateResult<()>
+    where
+        F: Float + FromPrimitive,
+    {
+        Ok(())
+    }
+    fn test_extreme_range_stability<F>(&self) -> InterpolateResult<()>
+    where
+        F: Float + FromPrimitive,
+    {
+        Ok(())
+    }
+    fn test_high_condition_stability<F>(&self) -> InterpolateResult<()>
+    where
+        F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + 'static,
     {
         // Create a matrix with high condition number
         let size = 10;
         let mut matrix = Array2::<F>::eye(size);
-        
+
         // Make the matrix ill-conditioned by setting small diagonal elements
         for i in 0..size {
             let small_value = F::from_f64(1e-12).unwrap() * F::from_usize(i + 1).unwrap();
             matrix[[i, i]] = small_value;
         }
-        
+
         // Test stability assessment
         let condition_report = assess_matrix_condition(&matrix.view())?;
-        
+
         // Verify that the system correctly identifies poor conditioning
         match condition_report.stability_level {
             StabilityLevel::Poor => {
                 // Good - correctly identified poor conditioning
                 if condition_report.recommended_regularization.is_none() {
                     return Err(InterpolateError::InvalidState(
-                        "No regularization recommended for ill-conditioned matrix".to_string()
+                        "No regularization recommended for ill-conditioned matrix".to_string(),
                     ));
                 }
-            },
+            }
             _ => {
                 return Err(InterpolateError::InvalidState(
-                    "Failed to detect ill-conditioned matrix".to_string()
+                    "Failed to detect ill-conditioned matrix".to_string(),
                 ));
             }
         }
-        
+
         Ok(())
     }
 }

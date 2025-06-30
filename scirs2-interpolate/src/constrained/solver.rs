@@ -312,10 +312,10 @@ where
     if constraint_matrix.shape()[0] == 0 {
         #[cfg(feature = "linalg")]
         {
-            use ndarray_linalg::Solve;
+            use scirs2_linalg::solve;
             let ata_f64 = ata.mapv(|x| x.to_f64().unwrap());
             let aty_f64 = aty.mapv(|x| x.to_f64().unwrap());
-            match ata_f64.solve(&aty_f64) {
+            match solve(&ata_f64.view(), &aty_f64.view(), None) {
                 Ok(solution) => return Ok(solution.mapv(|x| T::from_f64(x).unwrap())),
                 Err(_) => {
                     return Err(InterpolateError::ComputationError(
@@ -334,10 +334,10 @@ where
     // Use a similar approach as the non-penalized case
     #[cfg(feature = "linalg")]
     let mut c = {
-        use ndarray_linalg::Solve;
+        use scirs2_linalg::solve;
         let ata_f64 = ata.mapv(|x| x.to_f64().unwrap());
         let aty_f64 = aty.mapv(|x| x.to_f64().unwrap());
-        match ata_f64.solve(&aty_f64) {
+        match solve(&ata_f64.view(), &aty_f64.view(), None) {
             Ok(solution) => solution.mapv(|x| T::from_f64(x).unwrap()),
             Err(_) => {
                 // If direct solve fails, try a simpler approach

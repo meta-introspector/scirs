@@ -1397,7 +1397,6 @@ mod tests {
     }
 }
 
-
 /// Advanced verification framework with automatic error estimation
 pub struct AdvancedVerificationFramework {
     /// Grid refinement strategy

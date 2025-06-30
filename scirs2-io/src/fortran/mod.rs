@@ -3,6 +3,9 @@
 //! This module provides functionality for reading and writing Fortran unformatted files,
 //! which are commonly used in scientific computing, particularly in computational physics,
 //! weather modeling, and engineering applications.
+
+#![allow(dead_code)]
+#![allow(missing_docs)]
 //!
 //! # Fortran Unformatted File Format
 //!
@@ -645,10 +648,10 @@ impl<W: Write> FortranFile<W> {
         let mut data = string.as_bytes().to_vec();
 
         // Pad or truncate to specified length
-        if data.len() < length {
-            data.resize(length, b' ');
-        } else if data.len() > length {
-            data.truncate(length);
+        match data.len().cmp(&length) {
+            std::cmp::Ordering::Less => data.resize(length, b' '),
+            std::cmp::Ordering::Greater => data.truncate(length),
+            std::cmp::Ordering::Equal => {}
         }
 
         self.write_record(&data)
@@ -819,7 +822,8 @@ mod tests {
         let temp_file = NamedTempFile::new().unwrap();
         let path = temp_file.path();
 
-        let array = Array2::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])?;
+        let array = Array2::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+            .map_err(|e| IoError::ParseError(format!("Shape error: {}", e)))?;
 
         // Write array
         {

@@ -499,7 +499,7 @@ where
 {
     let n = x.len();
     let step_size = sparse_options.rel_step.unwrap_or(1e-8);
-    let f0 = fun(x).into();
+    let _f0 = fun(x).into();
 
     // Use central differences for better accuracy
     let mut gradient_norm_squared = 0.0;

@@ -1,12 +1,110 @@
-//! Statistical convenience functions
+//! Statistical convenience functions with comprehensive mathematical foundations
 //!
 //! This module provides various statistical functions commonly used in
-//! machine learning, statistics, and numerical computing including:
-//! - Logistic function and its derivatives
-//! - Softmax and log-softmax functions
-//! - Numerically stable logarithmic operations
-//! - Normalized sinc function
-//! - LogSumExp for numerical stability
+//! machine learning, statistics, and numerical computing, with detailed
+//! mathematical theory, derivations, and numerical stability analysis.
+//!
+//! ## Mathematical Theory and Foundations
+//!
+//! ### Historical Context
+//!
+//! These functions form the mathematical backbone of modern machine learning
+//! and statistical inference. The logistic function was first introduced by
+//! Pierre François Verhulst (1838) for modeling population growth, while the
+//! softmax function emerged from the development of statistical mechanics
+//! and was later adopted for neural networks by John Hopfield (1982).
+//!
+//! ### The Logistic Function
+//!
+//! **Definition**: The logistic function (sigmoid) is defined as:
+//! ```text
+//! σ(x) = 1 / (1 + e^(-x)) = e^x / (1 + e^x)
+//! ```
+//!
+//! **Mathematical Properties**:
+//!
+//! 1. **Range**: σ(x) ∈ (0, 1) for all x ∈ ℝ
+//!    - **Proof**: Since e^(-x) > 0 for all x, we have 1 + e^(-x) > 1,
+//!      so 0 < σ(x) < 1. The limits are: lim_{x→-∞} σ(x) = 0, lim_{x→∞} σ(x) = 1
+//!
+//! 2. **Symmetry**: σ(-x) = 1 - σ(x)
+//!    - **Proof**: σ(-x) = 1/(1 + e^x) = e^(-x)/(e^(-x) + 1) = 1 - 1/(1 + e^(-x)) = 1 - σ(x)
+//!
+//! 3. **Monotonicity**: σ'(x) = σ(x)(1 - σ(x)) > 0
+//!    - **Proof**: d/dx[1/(1 + e^(-x))] = e^(-x)/(1 + e^(-x))² = σ(x) · σ(-x) = σ(x)(1 - σ(x))
+//!    - Since σ(x) ∈ (0,1), the derivative is always positive, so σ is strictly increasing
+//!
+//! 4. **Inflection Point**: The function has an inflection point at x = 0
+//!    - **Proof**: σ''(x) = σ'(x)(1 - 2σ(x)) = 0 when σ(x) = 1/2, i.e., at x = 0
+//!
+//! ### The Softmax Function
+//!
+//! **Definition**: For a vector x = (x₁, x₂, ..., xₙ), the softmax function is:
+//! ```text
+//! softmax(xᵢ) = exp(xᵢ) / Σⱼ exp(xⱼ)
+//! ```
+//!
+//! **Mathematical Properties**:
+//!
+//! 1. **Probability Distribution**: Σᵢ softmax(xᵢ) = 1 and softmax(xᵢ) > 0
+//!    - **Proof**: Direct from definition, since we normalize by the sum
+//!
+//! 2. **Translation Invariance**: softmax(x + c) = softmax(x) for any constant c
+//!    - **Proof**: exp(xᵢ + c) / Σⱼ exp(xⱼ + c) = exp(c)exp(xᵢ) / exp(c)Σⱼ exp(xⱼ) = exp(xᵢ) / Σⱼ exp(xⱼ)
+//!    - **Numerical Significance**: This property enables the numerically stable
+//!      implementation by subtracting max(x) to prevent overflow
+//!
+//! 3. **Maximum Preservation**: If xₖ > xᵢ for all i ≠ k, then softmax(xₖ) > softmax(xᵢ)
+//!    - **Proof**: The exponential function preserves order, and normalization maintains it
+//!
+//! ### Numerical Stability Analysis
+//!
+//! **Logistic Function Stability**:
+//! - For x ≥ 0: Use σ(x) = 1/(1 + e^(-x)) to avoid exp(x) overflow
+//! - For x < 0: Use σ(x) = e^x/(1 + e^x) to avoid e^(-x) underflow
+//! - **Error Analysis**: Relative error is O(ε) where ε is machine epsilon
+//!
+//! **Softmax Stability**:
+//! - Standard implementation suffers from overflow when max(x) >> 0
+//! - **Solution**: Compute softmax(x - max(x)) using translation invariance
+//! - **Condition Number**: κ ≈ max(xᵢ) - min(xᵢ), well-conditioned when differences are moderate
+//!
+//! ### The LogSumExp Function
+//!
+//! **Definition**: LSE(x) = log(Σᵢ exp(xᵢ))
+//!
+//! **Connection to Softmax**: log(softmax(xᵢ)) = xᵢ - LSE(x)
+//!
+//! **Numerical Implementation**:
+//! ```text
+//! LSE(x) = max(x) + log(Σᵢ exp(xᵢ - max(x)))
+//! ```
+//!
+//! **Properties**:
+//! 1. **Smooth Maximum**: LSE(x) ≥ max(x) with equality as differences grow
+//! 2. **Convexity**: LSE is convex (log-sum-exp is log of sum of convex exponentials)
+//! 3. **Translation Invariance**: LSE(x + c) = LSE(x) + c
+//!
+//! ### The Sinc Function
+//!
+//! **Definition**: The normalized sinc function is:
+//! ```text
+//! sinc(x) = sin(πx) / (πx) for x ≠ 0, sinc(0) = 1
+//! ```
+//!
+//! **Properties**:
+//! 1. **Limit**: lim_{x→0} sin(πx)/(πx) = 1 (by L'Hôpital's rule)
+//! 2. **Zeros**: sinc(n) = 0 for all non-zero integers n
+//! 3. **Fourier Connection**: The Fourier transform of a rectangular pulse is a sinc function
+//! 4. **Sampling Theory**: Central to the Whittaker-Shannon interpolation formula
+//!
+//! ## Applications in Machine Learning
+//!
+//! - **Logistic Regression**: The logistic function serves as the link function
+//! - **Neural Networks**: Sigmoid activation function in hidden layers
+//! - **Softmax Classification**: Output layer for multi-class classification
+//! - **Attention Mechanisms**: Softmax for computing attention weights
+//! - **Loss Functions**: Cross-entropy loss uses log-softmax for numerical stability
 
 use crate::error::{SpecialError, SpecialResult};
 use ndarray::{Array1, ArrayView1};

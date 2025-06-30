@@ -4,21 +4,37 @@
 //! It includes filters, interpolation, measurements, morphology, feature detection, and segmentation functions.
 
 // Public modules
+pub mod advanced_streaming_ai;
 pub mod analysis;
+pub mod api_compatibility_verification;
 pub mod backend;
+pub mod biological_vision_inspired;
 pub mod chunked;
 pub mod chunked_v2;
+pub mod comprehensive_examples;
+pub mod comprehensive_scipy_benchmarks;
+pub mod comprehensive_scipy_validation;
 pub mod domain_specific;
 pub mod error;
 pub mod features;
 pub mod filters;
+pub mod gpu_operations;
+pub mod hyperdimensional_computing;
 pub mod interpolation;
 pub mod measurements;
 pub mod memory_management;
 pub mod mmap_io;
 pub mod morphology;
+pub mod neuromorphic_computing;
+pub mod performance_profiler;
 pub mod profiling;
-pub mod scipy_compat;
+pub mod python_interop;
+pub mod quantum_inspired;
+pub mod quantum_neuromorphic_fusion;
+pub mod quantum_enhanced_gpu;
+pub mod scipy_compat_layer;
+pub mod scipy_migration_layer;
+pub mod scipy_performance_comparison;
 #[cfg(test)]
 mod scipy_validation_tests;
 pub mod segmentation;
@@ -56,6 +72,7 @@ pub use self::features::{
 // Filters module exports
 pub use self::filters::{
     // Advanced filters
+    adaptive_bilateral_filter,
     adaptive_wiener_filter,
     anisotropic_diffusion,
     bilateral_filter,
@@ -81,6 +98,7 @@ pub use self::filters::{
     median_filter,
     median_filter_chunked,
     minimum_filter,
+    multi_scale_bilateral_filter,
     non_local_means,
     percentile_filter,
     rank_filter,
@@ -94,6 +112,7 @@ pub use self::filters::{
     wavelet_reconstruct,
     BorderMode,
     GaborParams,
+    MultiScaleBilateralConfig,
     WaveletFamily,
     WaveletFilter,
 };
@@ -143,9 +162,13 @@ pub use self::measurements::{
 pub use self::morphology::{
     binary_closing, binary_dilation, binary_erosion, binary_fill_holes, binary_hit_or_miss,
     binary_opening, black_tophat, box_structure, disk_structure, find_boundaries,
-    generate_binary_structure, grey_closing, grey_dilation, grey_erosion, grey_opening,
-    iterate_structure, label, morphological_gradient, morphological_laplace, remove_small_holes,
-    remove_small_objects, white_tophat, Connectivity, MorphBorderMode,
+    generate_binary_structure, geodesic_dilation_2d, geodesic_erosion_2d, granulometry_2d,
+    grey_closing, grey_dilation, grey_erosion, grey_opening, iterate_structure, label,
+    morphological_gradient, morphological_laplace, morphological_reconstruction_2d,
+    multi_scale_morphology_2d, remove_small_holes, remove_small_objects, white_tophat,
+    // Distance transform functions
+    distance_transform_edt, distance_transform_cdt, distance_transform_bf, DistanceMetric,
+    Connectivity, MorphBorderMode, MorphOperation, MultiScaleMorphConfig, StructureType,
 };
 
 // Memory management exports
@@ -208,4 +231,40 @@ pub use self::visualization::{
     create_colormap, create_image_montage, generate_report, plot_contour, plot_heatmap,
     plot_histogram, plot_profile, plot_statistical_comparison, plot_surface, visualize_gradient,
     ColorMap, PlotConfig, ReportConfig, ReportFormat,
+};
+
+// SciPy performance comparison exports
+pub use self::scipy_performance_comparison::{
+    calculate_accuracy_metrics, validate_api_compatibility, AccuracyResult, BenchmarkConfig,
+    CompatibilityResult, PerformanceResult, SciPyBenchmarkSuite,
+};
+
+// API compatibility verification exports
+pub use self::api_compatibility_verification::{
+    ApiCompatibilityResult, ApiCompatibilityTester, CompatibilityConfig, ParameterTest,
+};
+
+// Comprehensive SciPy validation exports
+pub use self::comprehensive_scipy_validation::{
+    SciPyValidationSuite, ValidationConfig, ValidationResult,
+};
+
+// Comprehensive examples exports
+pub use self::comprehensive_examples::{
+    validate_all_examples, ExampleTutorial, TutorialStep,
+};
+
+// Quantum-inspired processing exports
+pub use self::quantum_inspired::{
+    quantum_amplitude_amplification, quantum_annealing_segmentation, quantum_entanglement_correlation,
+    quantum_error_correction, quantum_fourier_enhancement, quantum_machine_learning_classifier,
+    quantum_superposition_filter, quantum_tensor_network_processing, quantum_variational_enhancement,
+    quantum_walk_edge_detection, QuantumConfig, QuantumState,
+};
+
+// Neuromorphic computing exports
+pub use self::neuromorphic_computing::{
+    event_driven_processing, homeostatic_adaptive_filter, liquid_state_machine,
+    spiking_neural_network_filter, stdp_unsupervised_learning, temporal_coding_feature_extraction,
+    Event, NeuromorphicConfig, PlasticSynapse, SpikingNeuron,
 };

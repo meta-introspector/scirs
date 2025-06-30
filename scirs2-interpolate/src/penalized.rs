@@ -444,9 +444,8 @@ where
             // Convert to f64
             let a_f64 = a.mapv(|x| x.to_f64().unwrap());
             let b_f64 = b.mapv(|x| x.to_f64().unwrap());
-            use ndarray_linalg::Solve;
-            a_f64
-                .solve(&b_f64)
+            use scirs2_linalg::solve;
+            solve(&a_f64.view(), &b_f64.view(), None)
                 .map_err(|_| {
                     // SVD fallback for ill-conditioned systems
                     InterpolateError::ComputationError(
@@ -456,8 +455,8 @@ where
                 .map(|solution| solution.mapv(|x| T::from_f64(x).unwrap()))
                 .or_else(|_| {
                     // If direct solve fails, try SVD approach
-                    use ndarray_linalg::SVD;
-                    let (u_opt, s, vt_opt) = match a_f64.svd(true, true) {
+                    use scirs2_linalg::svd;
+                    let (u_opt, s, vt_opt) = match svd(&a_f64.view(), None) {
                         Ok(svd_tuple) => svd_tuple,
                         Err(_) => {
                             return Err(InterpolateError::ComputationError(

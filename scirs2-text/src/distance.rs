@@ -25,7 +25,7 @@ pub fn levenshtein_distance(s1: &str, s2: &str) -> usize {
     // Use SIMD-accelerated version when available
     #[cfg(feature = "simd")]
     {
-        return crate::simd_ops::SimdEditDistance::levenshtein(s1, s2);
+        crate::simd_ops::SimdEditDistance::levenshtein(s1, s2)
     }
 
     #[cfg(not(feature = "simd"))]

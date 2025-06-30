@@ -1024,7 +1024,7 @@ pub mod stability {
         F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
     {
         use rand::seq::SliceRandom;
-        use rand::thread_rng;
+        use rand::rng;
 
         if subsample_ratio <= 0.0 || subsample_ratio > 1.0 {
             return Err(ClusteringError::InvalidInput(
@@ -1041,7 +1041,7 @@ pub mod stability {
             ));
         }
 
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let mut all_labels = Vec::new();
         let mut sample_indices_list = Vec::new();
 
@@ -1772,7 +1772,7 @@ pub mod ensemble {
         F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
     {
         use rand::seq::SliceRandom;
-        use rand::thread_rng;
+        use rand::rng;
 
         if confidence_level <= 0.0 || confidence_level >= 1.0 {
             return Err(ClusteringError::InvalidInput(
@@ -1781,7 +1781,7 @@ pub mod ensemble {
         }
 
         let n_samples = data.shape()[0];
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let mut bootstrap_scores = Vec::new();
 
         // Perform bootstrap resampling

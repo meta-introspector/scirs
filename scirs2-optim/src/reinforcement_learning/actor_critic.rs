@@ -11,6 +11,7 @@ use super::{
 use crate::error::OptimizerError;
 use ndarray::{Array1, Array2, ArrayBase, Data, DataMut, Dimension, Axis};
 use num_traits::Float;
+use rand::{Rng, rngs::ThreadRng, rng};
 use std::collections::HashMap;
 
 /// Actor-Critic optimization methods
@@ -370,7 +371,7 @@ impl<T: Float> ExperienceReplayBuffer<T> {
         
         let mut samples = Vec::new();
         for _ in 0..sample_size {
-            let idx = fastrand::usize(0..available_size);
+            let idx = rng().gen_range(0..available_size);
             samples.push(self.buffer[idx].clone());
         }
         
@@ -523,7 +524,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
                 
                 // Add target policy smoothing noise (TD3 feature)
                 for action in target_actions.iter_mut() {
-                    let noise = T::from(fastrand::f64() - 0.5).unwrap() * 
+                    let noise = T::from(rng().gen::<f64>() - 0.5).unwrap() * 
                         T::from(2.0).unwrap() * self.config.td3_config.policy_noise;
                     let clipped_noise = noise.max(-self.config.td3_config.noise_clip)
                         .min(self.config.td3_config.noise_clip);
@@ -702,7 +703,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
             
             // OU noise update: dx = theta * (0 - x) * dt + sigma * dW
             for noise in ou_state.iter_mut() {
-                let dx = -theta * *noise + sigma * T::from(fastrand::f64() - 0.5).unwrap();
+                let dx = -theta * *noise + sigma * T::from(rng().gen::<f64>() - 0.5).unwrap();
                 *noise = *noise + dx;
             }
         }
@@ -905,7 +906,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
                     
                     // Add Gaussian noise: action = mean + std * noise
                     for ((action, &m), &s) in actions.iter_mut().zip(mean.iter()).zip(std.iter()) {
-                        let noise = T::from(fastrand::f64() - 0.5).unwrap() * T::from(2.0).unwrap(); // Simplified noise
+                        let noise = T::from(rng().gen::<f64>() - 0.5).unwrap() * T::from(2.0).unwrap(); // Simplified noise
                         *action = m + s * noise;
                     }
                     

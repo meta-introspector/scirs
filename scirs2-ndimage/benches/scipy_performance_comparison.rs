@@ -391,6 +391,288 @@ fn bench_high_dimensional_performance(c: &mut Criterion) {
     group.finish();
 }
 
+/// Benchmark distance transform performance with optimized algorithms
+fn bench_distance_transform_performance(c: &mut Criterion) {
+    let mut group = c.benchmark_group("distance_transform_performance");
+    group.measurement_time(Duration::from_secs(12));
+    group.sample_size(10);
+
+    let sizes = vec![(64, 64), (128, 128), (256, 256), (512, 512)];
+
+    for (rows, cols) in sizes {
+        // Create binary test image with complex patterns
+        let binary_input = Array2::from_shape_fn((rows, cols), |(i, j)| {
+            let x = i as f64 / rows as f64;
+            let y = j as f64 / cols as f64;
+            let circle1 = ((x - 0.3).powi(2) + (y - 0.3).powi(2)).sqrt() < 0.2;
+            let circle2 = ((x - 0.7).powi(2) + (y - 0.7).powi(2)).sqrt() < 0.15;
+            let stripes = ((x * 20.0).sin() + (y * 20.0).cos()) > 0.5;
+            circle1 || circle2 || stripes
+        });
+
+        let input_dyn = binary_input.clone().into_dimensionality().unwrap();
+
+        // Benchmark Euclidean distance transform (optimized Felzenszwalb & Huttenlocher)
+        group.bench_with_input(
+            BenchmarkId::new("distance_transform_edt", format!("{}x{}", rows, cols)),
+            &input_dyn,
+            |b, input| {
+                b.iter(|| {
+                    distance_transform_edt(black_box(input), None, true, false).unwrap()
+                })
+            },
+        );
+
+        // Benchmark City Block distance transform
+        group.bench_with_input(
+            BenchmarkId::new("distance_transform_cdt_cityblock", format!("{}x{}", rows, cols)),
+            &input_dyn,
+            |b, input| {
+                b.iter(|| {
+                    distance_transform_cdt(black_box(input), "cityblock", true, false).unwrap()
+                })
+            },
+        );
+
+        // Benchmark Chessboard distance transform
+        group.bench_with_input(
+            BenchmarkId::new("distance_transform_cdt_chessboard", format!("{}x{}", rows, cols)),
+            &input_dyn,
+            |b, input| {
+                b.iter(|| {
+                    distance_transform_cdt(black_box(input), "chessboard", true, false).unwrap()
+                })
+            },
+        );
+
+        // Benchmark brute force distance transform for comparison
+        group.bench_with_input(
+            BenchmarkId::new("distance_transform_bf_euclidean", format!("{}x{}", rows, cols)),
+            &input_dyn,
+            |b, input| {
+                b.iter(|| {
+                    distance_transform_bf(black_box(input), "euclidean", None, true, false).unwrap()
+                })
+            },
+        );
+    }
+
+    group.finish();
+}
+
+/// Benchmark edge detection filter performance
+fn bench_edge_detection_performance(c: &mut Criterion) {
+    let mut group = c.benchmark_group("edge_detection_performance");
+    group.measurement_time(Duration::from_secs(10));
+    group.sample_size(15);
+
+    let sizes = vec![(128, 128), (256, 256), (512, 512)];
+
+    for (rows, cols) in sizes {
+        // Create test image with edges and textures
+        let input = Array2::from_shape_fn((rows, cols), |(i, j)| {
+            let x = i as f64 / rows as f64;
+            let y = j as f64 / cols as f64;
+            let circles = ((x - 0.5).powi(2) + (y - 0.5).powi(2)).sqrt();
+            let waves = (x * 30.0).sin() * (y * 25.0).cos();
+            let gradient = x * y;
+            (circles * 100.0 + waves * 50.0 + gradient * 25.0)
+        });
+
+        // Benchmark Sobel edge detection
+        group.bench_with_input(
+            BenchmarkId::new("sobel_filter", format!("{}x{}", rows, cols)),
+            &input,
+            |b, input| {
+                b.iter(|| {
+                    sobel(black_box(input), None, None).unwrap()
+                })
+            },
+        );
+
+        // Benchmark Prewitt edge detection
+        group.bench_with_input(
+            BenchmarkId::new("prewitt_filter", format!("{}x{}", rows, cols)),
+            &input,
+            |b, input| {
+                b.iter(|| {
+                    prewitt(black_box(input), None, None).unwrap()
+                })
+            },
+        );
+
+        // Benchmark Laplacian edge detection
+        group.bench_with_input(
+            BenchmarkId::new("laplace_filter", format!("{}x{}", rows, cols)),
+            &input,
+            |b, input| {
+                b.iter(|| {
+                    laplace(black_box(input), None, None).unwrap()
+                })
+            },
+        );
+
+        // Benchmark Laplacian edge detection (4-connected)
+        group.bench_with_input(
+            BenchmarkId::new("laplace_4connected", format!("{}x{}", rows, cols)),
+            &input,
+            |b, input| {
+                b.iter(|| {
+                    laplace(black_box(input), None, None).unwrap()
+                })
+            },
+        );
+
+        // Benchmark Laplacian edge detection (8-connected)
+        group.bench_with_input(
+            BenchmarkId::new("laplace_8connected", format!("{}x{}", rows, cols)),
+            &input,
+            |b, input| {
+                b.iter(|| {
+                    laplace(black_box(input), None, Some(true)).unwrap()
+                })
+            },
+        );
+    }
+
+    group.finish();
+}
+
+/// Benchmark data type performance (f32 vs f64)
+fn bench_data_type_performance(c: &mut Criterion) {
+    let mut group = c.benchmark_group("data_type_performance");
+    group.measurement_time(Duration::from_secs(8));
+
+    let size = (256, 256);
+    
+    // Generate test data for both f32 and f64
+    let input_f32 = Array2::from_shape_fn(size, |(i, j)| {
+        ((i as f32 * 0.1).sin() * (j as f32 * 0.1).cos()) as f32
+    });
+    
+    let input_f64 = Array2::from_shape_fn(size, |(i, j)| {
+        (i as f64 * 0.1).sin() * (j as f64 * 0.1).cos()
+    });
+
+    // Benchmark Gaussian filter performance with different data types
+    group.bench_with_input(
+        BenchmarkId::new("gaussian_f32", format!("{}x{}", size.0, size.1)),
+        &input_f32,
+        |b, input| {
+            b.iter(|| gaussian_filter(black_box(input), black_box(1.0f32), None, None).unwrap())
+        },
+    );
+
+    group.bench_with_input(
+        BenchmarkId::new("gaussian_f64", format!("{}x{}", size.0, size.1)),
+        &input_f64,
+        |b, input| {
+            b.iter(|| gaussian_filter(black_box(input), black_box(1.0f64), None, None).unwrap())
+        },
+    );
+
+    // Benchmark median filter performance with different data types
+    group.bench_with_input(
+        BenchmarkId::new("median_f32", format!("{}x{}", size.0, size.1)),
+        &input_f32,
+        |b, input| {
+            b.iter(|| median_filter(black_box(input), black_box(&[5, 5]), None).unwrap())
+        },
+    );
+
+    group.bench_with_input(
+        BenchmarkId::new("median_f64", format!("{}x{}", size.0, size.1)),
+        &input_f64,
+        |b, input| {
+            b.iter(|| median_filter(black_box(input), black_box(&[5, 5]), None).unwrap())
+        },
+    );
+
+    group.finish();
+}
+
+/// Benchmark memory-intensive operations for large arrays
+fn bench_memory_intensive_operations(c: &mut Criterion) {
+    let mut group = c.benchmark_group("memory_intensive_operations");
+    group.measurement_time(Duration::from_secs(15));
+    group.sample_size(5);
+
+    // Large array that will stress memory subsystem
+    let large_size = (1024, 1024);
+    let large_array = Array2::from_shape_fn(large_size, |(i, j)| {
+        ((i * j) as f64).sqrt() * ((i + j) as f64 * 0.001).sin()
+    });
+
+    // Test operations that require significant memory bandwidth
+    group.bench_with_input(
+        BenchmarkId::new("large_gaussian", format!("{}x{}", large_size.0, large_size.1)),
+        &large_array,
+        |b, input| {
+            b.iter(|| gaussian_filter(black_box(input), black_box(2.0), None, None).unwrap())
+        },
+    );
+
+    group.bench_with_input(
+        BenchmarkId::new("large_median", format!("{}x{}", large_size.0, large_size.1)),
+        &large_array,
+        |b, input| {
+            b.iter(|| median_filter(black_box(input), black_box(&[7, 7]), None).unwrap())
+        },
+    );
+
+    group.bench_with_input(
+        BenchmarkId::new("large_uniform", format!("{}x{}", large_size.0, large_size.1)),
+        &large_array,
+        |b, input| {
+            b.iter(|| uniform_filter(black_box(input), black_box(&[9, 9]), None, None).unwrap())
+        },
+    );
+
+    group.finish();
+}
+
+/// Benchmark small array performance to test overhead
+fn bench_small_array_performance(c: &mut Criterion) {
+    let mut group = c.benchmark_group("small_array_performance");
+    group.measurement_time(Duration::from_secs(5));
+    group.sample_size(50);
+
+    let small_sizes = vec![(8, 8), (16, 16), (32, 32)];
+
+    for (rows, cols) in small_sizes {
+        let input = Array2::from_shape_fn((rows, cols), |(i, j)| {
+            (i as f64 + j as f64) * 0.1
+        });
+
+        // Test operations on small arrays to measure overhead
+        group.bench_with_input(
+            BenchmarkId::new("small_gaussian", format!("{}x{}", rows, cols)),
+            &input,
+            |b, input| {
+                b.iter(|| gaussian_filter(black_box(input), black_box(1.0), None, None).unwrap())
+            },
+        );
+
+        group.bench_with_input(
+            BenchmarkId::new("small_median", format!("{}x{}", rows, cols)),
+            &input,
+            |b, input| {
+                b.iter(|| median_filter(black_box(input), black_box(&[3, 3]), None).unwrap())
+            },
+        );
+
+        group.bench_with_input(
+            BenchmarkId::new("small_uniform", format!("{}x{}", rows, cols)),
+            &input,
+            |b, input| {
+                b.iter(|| uniform_filter(black_box(input), black_box(&[3, 3]), None, None).unwrap())
+            },
+        );
+    }
+
+    group.finish();
+}
+
 criterion_group!(
     scipy_performance_benches,
     bench_filter_performance_comparison,
@@ -399,7 +681,12 @@ criterion_group!(
     bench_interpolation_performance,
     bench_3d_operations_performance,
     bench_border_mode_performance,
-    bench_high_dimensional_performance
+    bench_high_dimensional_performance,
+    bench_distance_transform_performance,
+    bench_edge_detection_performance,
+    bench_data_type_performance,
+    bench_memory_intensive_operations,
+    bench_small_array_performance
 );
 
 criterion_main!(scipy_performance_benches);

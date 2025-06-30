@@ -3,6 +3,9 @@
 //! Provides conversion utilities and interfaces for seamless integration with
 //! popular machine learning frameworks, enabling easy data exchange and model I/O.
 
+#![allow(dead_code)]
+#![allow(missing_docs)]
+
 use crate::error::{IoError, Result};
 use ndarray::{Array2, ArrayD, ArrayView2, IxDyn};
 use serde::{Deserialize, Serialize};
@@ -13,7 +16,11 @@ use std::path::{Path, PathBuf};
 
 // Additional imports for async support
 #[cfg(feature = "async")]
-use tokio::{fs, sync::{Arc, Mutex, RwLock}, time::{sleep, Duration, Instant}};
+use tokio::{
+    fs,
+    sync::{Arc, Mutex, RwLock},
+    time::{sleep, Duration, Instant},
+};
 
 // Additional imports for binary operations
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
@@ -55,7 +62,7 @@ pub struct TensorMetadata {
 }
 
 /// Data types supported by ML frameworks
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Hash, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum DataType {
     Float32,
@@ -196,7 +203,9 @@ impl MLModel {
 trait MLFrameworkConverter {
     fn save_model(&self, model: &MLModel, path: &Path) -> Result<()>;
     fn load_model(&self, path: &Path) -> Result<MLModel>;
+    #[allow(dead_code)]
     fn save_tensor(&self, tensor: &MLTensor, path: &Path) -> Result<()>;
+    #[allow(dead_code)]
     fn load_tensor(&self, path: &Path) -> Result<MLTensor>;
 }
 
@@ -361,7 +370,9 @@ impl MLFrameworkConverter for ONNXConverter {
                                 .collect();
 
                             // Read actual tensor data from the JSON
-                            let data = if let Some(data_array) = init_obj.get("data").and_then(|v| v.as_array()) {
+                            let data = if let Some(data_array) =
+                                init_obj.get("data").and_then(|v| v.as_array())
+                            {
                                 // Extract actual data values
                                 data_array
                                     .iter()
@@ -523,7 +534,7 @@ impl MLFrameworkConverter for TensorFlowConverter {
         // TensorFlow SavedModel format
         let model_dir = path.parent().unwrap_or(Path::new("."));
         std::fs::create_dir_all(model_dir).map_err(IoError::Io)?;
-        
+
         let tf_model = serde_json::json!({
             "saved_model_schema_version": 1,
             "meta_graphs": [{
@@ -564,11 +575,14 @@ impl MLFrameworkConverter for TensorFlowConverter {
             .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
         let mut model = MLModel::new(MLFramework::TensorFlow);
-        
+
         // Parse TensorFlow metadata
         if let Some(meta_graphs) = tf_model.get("meta_graphs").and_then(|v| v.as_array()) {
             if let Some(meta_graph) = meta_graphs.first() {
-                if let Some(signature_def) = meta_graph.get("signature_def").and_then(|v| v.get("serving_default")) {
+                if let Some(signature_def) = meta_graph
+                    .get("signature_def")
+                    .and_then(|v| v.get("serving_default"))
+                {
                     if let Some(inputs) = signature_def.get("inputs").and_then(|v| v.as_object()) {
                         for (name, input_info) in inputs {
                             if let Some(shape) = input_info.as_array() {
@@ -597,7 +611,7 @@ impl MLFrameworkConverter for TensorFlowConverter {
                             .iter()
                             .filter_map(|v| v.as_u64().map(|u| u as usize))
                             .collect();
-                        
+
                         let data_vec: Vec<f32> = data
                             .iter()
                             .filter_map(|v| v.as_f64().map(|f| f as f32))
@@ -670,7 +684,9 @@ impl MLFrameworkConverter for TensorFlowConverter {
             return Ok(MLTensor::new(array, None));
         }
 
-        Err(IoError::Other("Invalid TensorFlow tensor format".to_string()))
+        Err(IoError::Other(
+            "Invalid TensorFlow tensor format".to_string(),
+        ))
     }
 }
 
@@ -725,7 +741,9 @@ impl MLFrameworkConverter for JAXConverter {
                     let array = ArrayD::from_shape_vec(IxDyn(&shape), data)
                         .map_err(|e| IoError::Other(e.to_string()))?;
 
-                    model.weights.insert(name.clone(), MLTensor::new(array, Some(name.clone())));
+                    model
+                        .weights
+                        .insert(name.clone(), MLTensor::new(array, Some(name.clone())));
                 }
             }
 
@@ -786,7 +804,7 @@ impl MLFrameworkConverter for MXNetConverter {
             "version": "1.9.0",
             "symbol": {
                 "nodes": [],
-                "arg_nodes": model.weights.keys().enumerate().map(|(i, name)| i).collect::<Vec<_>>(),
+                "arg_nodes": model.weights.keys().enumerate().map(|(i, _name)| i).collect::<Vec<_>>(),
                 "node_row_ptr": [0, model.weights.len()],
                 "attrs": {
                     "mxnet_version": ["1.9.0", "int"]
@@ -830,7 +848,9 @@ impl MLFrameworkConverter for MXNetConverter {
                 let array = ArrayD::from_shape_vec(IxDyn(&shape), data)
                     .map_err(|e| IoError::Other(e.to_string()))?;
 
-                model.weights.insert(name.clone(), MLTensor::new(array, Some(name.clone())));
+                model
+                    .weights
+                    .insert(name.clone(), MLTensor::new(array, Some(name.clone())));
             }
         }
 
@@ -940,7 +960,8 @@ impl MLFrameworkConverter for CoreMLConverter {
         // Parse CoreML metadata
         if let Some(description) = coreml_model.get("description") {
             if let Some(metadata) = description.get("metadata") {
-                if let Some(short_desc) = metadata.get("shortDescription").and_then(|v| v.as_str()) {
+                if let Some(short_desc) = metadata.get("shortDescription").and_then(|v| v.as_str())
+                {
                     model.metadata.model_name = Some(short_desc.to_string());
                 }
             }
@@ -951,7 +972,8 @@ impl MLFrameworkConverter for CoreMLConverter {
                     if let Some(input_obj) = input.as_object() {
                         if let (Some(name), Some(shape)) = (
                             input_obj.get("name").and_then(|v| v.as_str()),
-                            input_obj.get("type")
+                            input_obj
+                                .get("type")
                                 .and_then(|t| t.get("multiArrayType"))
                                 .and_then(|mat| mat.get("shape"))
                                 .and_then(|s| s.as_array()),
@@ -960,7 +982,10 @@ impl MLFrameworkConverter for CoreMLConverter {
                                 .iter()
                                 .filter_map(|v| v.as_u64().map(|u| u as usize))
                                 .collect();
-                            model.metadata.input_shapes.insert(name.to_string(), shape_vec);
+                            model
+                                .metadata
+                                .input_shapes
+                                .insert(name.to_string(), shape_vec);
                         }
                     }
                 }
@@ -972,7 +997,8 @@ impl MLFrameworkConverter for CoreMLConverter {
                     if let Some(output_obj) = output.as_object() {
                         if let (Some(name), Some(shape)) = (
                             output_obj.get("name").and_then(|v| v.as_str()),
-                            output_obj.get("type")
+                            output_obj
+                                .get("type")
                                 .and_then(|t| t.get("multiArrayType"))
                                 .and_then(|mat| mat.get("shape"))
                                 .and_then(|s| s.as_array()),
@@ -981,7 +1007,10 @@ impl MLFrameworkConverter for CoreMLConverter {
                                 .iter()
                                 .filter_map(|v| v.as_u64().map(|u| u as usize))
                                 .collect();
-                            model.metadata.output_shapes.insert(name.to_string(), shape_vec);
+                            model
+                                .metadata
+                                .output_shapes
+                                .insert(name.to_string(), shape_vec);
                         }
                     }
                 }
@@ -1000,7 +1029,9 @@ impl MLFrameworkConverter for CoreMLConverter {
                 let array = ArrayD::from_shape_vec(IxDyn(&shape), data)
                     .map_err(|e| IoError::Other(e.to_string()))?;
 
-                model.weights.insert(name.clone(), MLTensor::new(array, Some(name.clone())));
+                model
+                    .weights
+                    .insert(name.clone(), MLTensor::new(array, Some(name.clone())));
             }
         }
 
@@ -1089,7 +1120,12 @@ impl MLFrameworkConverter for HuggingFaceConverter {
         if let Some(name) = config.get("_name_or_path").and_then(|v| v.as_str()) {
             model.metadata.model_name = Some(name.to_string());
         }
-        if let Some(arch) = config.get("architectures").and_then(|v| v.as_array()).and_then(|a| a.first()).and_then(|v| v.as_str()) {
+        if let Some(arch) = config
+            .get("architectures")
+            .and_then(|v| v.as_array())
+            .and_then(|a| a.first())
+            .and_then(|v| v.as_str())
+        {
             model.metadata.architecture = Some(arch.to_string());
         }
         if let Some(hf_config) = config.get("config") {
@@ -1114,21 +1150,31 @@ impl MLFrameworkConverter for HuggingFaceConverter {
 }
 
 /// Generic converter for unsupported frameworks
+#[allow(dead_code)]
 struct GenericConverter;
 
 impl MLFrameworkConverter for GenericConverter {
     fn save_model(&self, model: &MLModel, path: &Path) -> Result<()> {
         // Fallback to a generic JSON format
+        let weights_map: serde_json::Map<String, serde_json::Value> = model
+            .weights
+            .iter()
+            .map(|(name, tensor)| {
+                (
+                    name.clone(),
+                    serde_json::json!({
+                        "shape": tensor.metadata.shape,
+                        "dtype": format!("{:?}", tensor.metadata.dtype),
+                        "data": tensor.data.as_slice().unwrap().to_vec()
+                    }),
+                )
+            })
+            .collect();
+
         let generic_model = serde_json::json!({
             "format": "generic",
             "metadata": model.metadata,
-            "weights": model.weights.iter().map(|(name, tensor)| {
-                (name, serde_json::json!({
-                    "shape": tensor.metadata.shape,
-                    "dtype": format!("{:?}", tensor.metadata.dtype),
-                    "data": tensor.data.as_slice().unwrap().to_vec()
-                }))
-            }).collect::<serde_json::Map<String, serde_json::Value>>(),
+            "weights": weights_map,
             "config": model.config
         });
 
@@ -1165,7 +1211,9 @@ impl MLFrameworkConverter for GenericConverter {
                 let array = ArrayD::from_shape_vec(IxDyn(&shape), data)
                     .map_err(|e| IoError::Other(e.to_string()))?;
 
-                model.weights.insert(name.clone(), MLTensor::new(array, Some(name.clone())));
+                model
+                    .weights
+                    .insert(name.clone(), MLTensor::new(array, Some(name.clone())));
             }
         }
 
@@ -1203,10 +1251,12 @@ impl MLFrameworkConverter for GenericConverter {
                 .map_err(|e| IoError::Other(e.to_string()))?;
 
             let mut tensor = MLTensor::new(array, None);
-            
+
             // Try to restore metadata if available
             if let Some(metadata) = generic_tensor.get("metadata") {
-                if let Ok(parsed_metadata) = serde_json::from_value::<TensorMetadata>(metadata.clone()) {
+                if let Ok(parsed_metadata) =
+                    serde_json::from_value::<TensorMetadata>(metadata.clone())
+                {
                     tensor.metadata = parsed_metadata;
                 }
             }
@@ -1369,7 +1419,7 @@ pub mod datasets {
 /// Model validation and compatibility checking between frameworks
 pub mod validation {
     use super::*;
-    use std::collections::{HashSet, BTreeMap};
+    use std::collections::{BTreeMap, HashSet};
 
     /// Model validator for checking compatibility between frameworks
     pub struct ModelValidator {
@@ -1500,7 +1550,7 @@ pub mod validation {
     #[derive(Debug, Clone)]
     pub struct ConversionPath {
         pub steps: Vec<ConversionStep>,
-        pub estimated_accuracy_loss: f32, // 0.0 to 1.0
+        pub estimated_accuracy_loss: f32,      // 0.0 to 1.0
         pub estimated_performance_impact: f32, // Relative performance change
         pub complexity: ConversionComplexity,
     }
@@ -1525,19 +1575,15 @@ pub mod validation {
 
     #[derive(Debug, Clone)]
     pub enum ConversionComplexity {
-        Trivial,    // Direct conversion possible
-        Simple,     // Minor adjustments needed
-        Moderate,   // Some manual work required
-        Complex,    // Significant effort required
+        Trivial,     // Direct conversion possible
+        Simple,      // Minor adjustments needed
+        Moderate,    // Some manual work required
+        Complex,     // Significant effort required
         VeryComplex, // Major rewrite needed
     }
 
     impl ModelValidator {
-        pub fn new(
-            source: MLFramework,
-            target: MLFramework,
-            config: ValidationConfig,
-        ) -> Self {
+        pub fn new(source: MLFramework, target: MLFramework, config: ValidationConfig) -> Self {
             Self {
                 source_framework: source,
                 target_framework: target,
@@ -1593,7 +1639,8 @@ pub mod validation {
 
             // Calculate compatibility score
             let compatibility_score = self.calculate_compatibility_score(&errors, &warnings);
-            let is_compatible = compatibility_score > 0.7 && errors.iter().all(|e| e.severity != ErrorSeverity::Critical);
+            let is_compatible = compatibility_score > 0.7
+                && errors.iter().all(|e| e.severity != ErrorSeverity::Critical);
 
             // Generate conversion path if compatible
             let conversion_path = if is_compatible {
@@ -1620,11 +1667,13 @@ pub mod validation {
 
             // Define framework compatibility matrix
             let compatibility_matrix = self.get_framework_compatibility_matrix();
-            
+
             let source_key = format!("{:?}", self.source_framework);
             let target_key = format!("{:?}", self.target_framework);
-            
-            if let Some(compatibility) = compatibility_matrix.get(&(source_key.clone(), target_key.clone())) {
+
+            if let Some(compatibility) =
+                compatibility_matrix.get(&(source_key.clone(), target_key.clone()))
+            {
                 match compatibility.level {
                     CompatibilityLevel::FullyCompatible => {
                         // No issues
@@ -1640,11 +1689,14 @@ pub mod validation {
                     CompatibilityLevel::PartiallyCompatible => {
                         warnings.push(ValidationWarning {
                             category: WarningCategory::Compatibility,
-                            message: format!("Conversion from {} to {} requires significant manual work", source_key, target_key),
+                            message: format!(
+                                "Conversion from {} to {} requires significant manual work",
+                                source_key, target_key
+                            ),
                             location: None,
                             impact: WarningImpact::Medium,
                         });
-                        
+
                         recommendations.push(ValidationRecommendation {
                             category: RecommendationCategory::Alternative,
                             message: format!("Consider using an intermediate format like ONNX for {} to {} conversion", source_key, target_key),
@@ -1656,9 +1708,15 @@ pub mod validation {
                         error = Some(ValidationError {
                             category: ErrorCategory::Framework,
                             severity: ErrorSeverity::Critical,
-                            message: format!("Direct conversion from {} to {} is not supported", source_key, target_key),
+                            message: format!(
+                                "Direct conversion from {} to {} is not supported",
+                                source_key, target_key
+                            ),
                             location: None,
-                            fix_suggestion: Some("Consider using an intermediate format or manual reimplementation".to_string()),
+                            fix_suggestion: Some(
+                                "Consider using an intermediate format or manual reimplementation"
+                                    .to_string(),
+                            ),
                         });
                     }
                 }
@@ -1700,18 +1758,26 @@ pub mod validation {
                     errors.push(ValidationError {
                         category: ErrorCategory::DataType,
                         severity,
-                        message: format!("Data type {:?} in tensor '{}' is not supported by {:?}", 
-                                         tensor.metadata.dtype, tensor_name, self.target_framework),
+                        message: format!(
+                            "Data type {:?} in tensor '{}' is not supported by {:?}",
+                            tensor.metadata.dtype, tensor_name, self.target_framework
+                        ),
                         location: Some(tensor_name.clone()),
-                        fix_suggestion: Some("Consider converting to a supported data type".to_string()),
+                        fix_suggestion: Some(
+                            "Consider converting to a supported data type".to_string(),
+                        ),
                     });
 
                     // Suggest alternative data types
-                    if let Some(alternative) = self.suggest_alternative_dtype(tensor.metadata.dtype, &target_supported_types) {
+                    if let Some(alternative) = self
+                        .suggest_alternative_dtype(tensor.metadata.dtype, &target_supported_types)
+                    {
                         recommendations.push(ValidationRecommendation {
                             category: RecommendationCategory::Conversion,
-                            message: format!("Convert {:?} to {:?} for tensor '{}'", 
-                                             tensor.metadata.dtype, alternative, tensor_name),
+                            message: format!(
+                                "Convert {:?} to {:?} for tensor '{}'",
+                                tensor.metadata.dtype, alternative, tensor_name
+                            ),
                             priority: RecommendationPriority::High,
                             estimated_effort: EstimatedEffort::Minimal,
                         });
@@ -1722,8 +1788,10 @@ pub mod validation {
                 if self.has_precision_loss_risk(tensor.metadata.dtype, self.target_framework) {
                     warnings.push(ValidationWarning {
                         category: WarningCategory::Precision,
-                        message: format!("Potential precision loss when converting {:?} in tensor '{}'", 
-                                         tensor.metadata.dtype, tensor_name),
+                        message: format!(
+                            "Potential precision loss when converting {:?} in tensor '{}'",
+                            tensor.metadata.dtype, tensor_name
+                        ),
                         location: Some(tensor_name.clone()),
                         impact: WarningImpact::Medium,
                     });
@@ -1751,8 +1819,8 @@ pub mod validation {
                     errors.push(ValidationError {
                         category: ErrorCategory::Shape,
                         severity: ErrorSeverity::High,
-                        message: format!("Input '{}' has {} dimensions, but {} only supports up to {} dimensions", 
-                                         input_name, shape.len(), format!("{:?}", self.target_framework), max_dims),
+                        message: format!("Input '{}' has {} dimensions, but {:?} only supports up to {} dimensions", 
+                                         input_name, shape.len(), self.target_framework, max_dims),
                         location: Some(input_name.clone()),
                         fix_suggestion: Some("Consider reshaping or flattening the tensor".to_string()),
                     });
@@ -1762,7 +1830,10 @@ pub mod validation {
                 if self.has_unusual_shape(shape) {
                     warnings.push(ValidationWarning {
                         category: WarningCategory::Compatibility,
-                        message: format!("Input '{}' has an unusual shape that may not be well-supported", input_name),
+                        message: format!(
+                            "Input '{}' has an unusual shape that may not be well-supported",
+                            input_name
+                        ),
                         location: Some(input_name.clone()),
                         impact: WarningImpact::Low,
                     });
@@ -1775,8 +1846,8 @@ pub mod validation {
                     errors.push(ValidationError {
                         category: ErrorCategory::Shape,
                         severity: ErrorSeverity::High,
-                        message: format!("Output '{}' has {} dimensions, but {} only supports up to {} dimensions", 
-                                         output_name, shape.len(), format!("{:?}", self.target_framework), max_dims),
+                        message: format!("Output '{}' has {} dimensions, but {:?} only supports up to {} dimensions", 
+                                         output_name, shape.len(), self.target_framework, max_dims),
                         location: Some(output_name.clone()),
                         fix_suggestion: Some("Consider reshaping the output tensor".to_string()),
                     });
@@ -1789,8 +1860,11 @@ pub mod validation {
                     errors.push(ValidationError {
                         category: ErrorCategory::Shape,
                         severity: ErrorSeverity::Medium,
-                        message: format!("Weight '{}' has {} dimensions, which may not be supported", 
-                                         weight_name, tensor.metadata.shape.len()),
+                        message: format!(
+                            "Weight '{}' has {} dimensions, which may not be supported",
+                            weight_name,
+                            tensor.metadata.shape.len()
+                        ),
                         location: Some(weight_name.clone()),
                         fix_suggestion: Some("Consider reshaping the weight tensor".to_string()),
                     });
@@ -1813,19 +1887,22 @@ pub mod validation {
             // This would check specific operations/layers in the model
             // For now, provide a general compatibility assessment
             let unsupported_ops = self.get_unsupported_operations();
-            
+
             if !unsupported_ops.is_empty() {
                 warnings.push(ValidationWarning {
                     category: WarningCategory::Compatibility,
-                    message: format!("Some operations may not be directly supported in {:?}: {:?}", 
-                                     self.target_framework, unsupported_ops),
+                    message: format!(
+                        "Some operations may not be directly supported in {:?}: {:?}",
+                        self.target_framework, unsupported_ops
+                    ),
                     location: None,
                     impact: WarningImpact::High,
                 });
 
                 recommendations.push(ValidationRecommendation {
                     category: RecommendationCategory::Alternative,
-                    message: "Review the model architecture for framework-specific operations".to_string(),
+                    message: "Review the model architecture for framework-specific operations"
+                        .to_string(),
                     priority: RecommendationPriority::High,
                     estimated_effort: EstimatedEffort::Medium,
                 });
@@ -1879,8 +1956,10 @@ pub mod validation {
             if model.metadata.framework != model_framework {
                 warnings.push(ValidationWarning {
                     category: WarningCategory::Compatibility,
-                    message: format!("Model metadata indicates framework '{}' but source is '{}'", 
-                                     model.metadata.framework, model_framework),
+                    message: format!(
+                        "Model metadata indicates framework '{}' but source is '{}'",
+                        model.metadata.framework, model_framework
+                    ),
                     location: None,
                     impact: WarningImpact::Low,
                 });
@@ -1894,16 +1973,20 @@ pub mod validation {
         }
 
         /// Calculate overall compatibility score
-        fn calculate_compatibility_score(&self, errors: &[ValidationError], warnings: &[ValidationWarning]) -> f32 {
-            let mut score = 1.0;
+        fn calculate_compatibility_score(
+            &self,
+            errors: &[ValidationError],
+            warnings: &[ValidationWarning],
+        ) -> f32 {
+            let mut score = 1.0f32;
 
             // Deduct points for errors
             for error in errors {
                 let deduction = match error.severity {
-                    ErrorSeverity::Critical => 0.5,
-                    ErrorSeverity::High => 0.2,
-                    ErrorSeverity::Medium => 0.1,
-                    ErrorSeverity::Low => 0.05,
+                    ErrorSeverity::Critical => 0.5f32,
+                    ErrorSeverity::High => 0.2f32,
+                    ErrorSeverity::Medium => 0.1f32,
+                    ErrorSeverity::Low => 0.05f32,
                 };
                 score -= deduction;
             }
@@ -1911,14 +1994,14 @@ pub mod validation {
             // Deduct points for warnings
             for warning in warnings {
                 let deduction = match warning.impact {
-                    WarningImpact::High => 0.1,
-                    WarningImpact::Medium => 0.05,
-                    WarningImpact::Low => 0.02,
+                    WarningImpact::High => 0.1f32,
+                    WarningImpact::Medium => 0.05f32,
+                    WarningImpact::Low => 0.02f32,
                 };
                 score -= deduction;
             }
 
-            score.max(0.0)
+            score.max(0.0f32)
         }
 
         /// Generate conversion path
@@ -1952,14 +2035,20 @@ pub mod validation {
                 });
             }
 
-            if warnings.iter().any(|w| w.category == WarningCategory::Performance) {
+            if warnings
+                .iter()
+                .any(|w| w.category == WarningCategory::Performance)
+            {
                 estimated_performance_impact = -0.1; // 10% performance degradation
             }
 
             // Add main conversion step
             steps.push(ConversionStep {
                 operation: ConversionOperation::DirectConversion,
-                description: format!("Convert from {:?} to {:?}", self.source_framework, self.target_framework),
+                description: format!(
+                    "Convert from {:?} to {:?}",
+                    self.source_framework, self.target_framework
+                ),
                 required_tools: vec![format!("{:?} converter", self.target_framework)],
                 estimated_time: EstimatedEffort::Medium,
             });
@@ -1982,20 +2071,29 @@ pub mod validation {
 
         // Helper methods
 
-        fn get_framework_compatibility_matrix(&self) -> HashMap<(String, String), FrameworkCompatibility> {
+        fn get_framework_compatibility_matrix(
+            &self,
+        ) -> HashMap<(String, String), FrameworkCompatibility> {
             let mut matrix = HashMap::new();
 
             // Define compatibility between frameworks
-            let frameworks = ["PyTorch", "TensorFlow", "ONNX", "SafeTensors", "JAX", "MXNet", "CoreML", "HuggingFace"];
-            
+            let frameworks = [
+                "PyTorch",
+                "TensorFlow",
+                "ONNX",
+                "SafeTensors",
+                "JAX",
+                "MXNet",
+                "CoreML",
+                "HuggingFace",
+            ];
+
             for source in &frameworks {
                 for target in &frameworks {
-                    let level = if source == target {
-                        CompatibilityLevel::FullyCompatible
-                    } else if (source == &"PyTorch" && target == &"ONNX") ||
-                              (source == &"TensorFlow" && target == &"ONNX") ||
-                              (source == &"ONNX" && target == &"PyTorch") ||
-                              (source == &"ONNX" && target == &"TensorFlow") {
+                    let level = if source == target
+                        || (source == &"TensorFlow" || source == &"PyTorch") && target == &"ONNX"
+                        || (target == &"TensorFlow" || target == &"PyTorch") && source == &"ONNX"
+                    {
                         CompatibilityLevel::FullyCompatible
                     } else if source == &"HuggingFace" || target == &"HuggingFace" {
                         CompatibilityLevel::MostlyCompatible
@@ -2018,33 +2116,72 @@ pub mod validation {
 
         fn get_supported_data_types(&self, framework: MLFramework) -> HashSet<DataType> {
             match framework {
-                MLFramework::PyTorch => {
-                    [DataType::Float32, DataType::Float64, DataType::Float16, DataType::BFloat16,
-                     DataType::Int32, DataType::Int64, DataType::Int16, DataType::Int8,
-                     DataType::UInt8, DataType::Bool].iter().cloned().collect()
-                }
-                MLFramework::TensorFlow => {
-                    [DataType::Float32, DataType::Float64, DataType::Float16,
-                     DataType::Int32, DataType::Int64, DataType::Int16, DataType::Int8,
-                     DataType::UInt8, DataType::Bool].iter().cloned().collect()
-                }
-                MLFramework::ONNX => {
-                    [DataType::Float32, DataType::Float64, DataType::Float16,
-                     DataType::Int32, DataType::Int64, DataType::Int16, DataType::Int8,
-                     DataType::UInt8, DataType::Bool].iter().cloned().collect()
-                }
-                _ => {
-                    [DataType::Float32, DataType::Int32, DataType::Bool].iter().cloned().collect()
-                }
+                MLFramework::PyTorch => [
+                    DataType::Float32,
+                    DataType::Float64,
+                    DataType::Float16,
+                    DataType::BFloat16,
+                    DataType::Int32,
+                    DataType::Int64,
+                    DataType::Int16,
+                    DataType::Int8,
+                    DataType::UInt8,
+                    DataType::Bool,
+                ]
+                .iter()
+                .cloned()
+                .collect(),
+                MLFramework::TensorFlow => [
+                    DataType::Float32,
+                    DataType::Float64,
+                    DataType::Float16,
+                    DataType::Int32,
+                    DataType::Int64,
+                    DataType::Int16,
+                    DataType::Int8,
+                    DataType::UInt8,
+                    DataType::Bool,
+                ]
+                .iter()
+                .cloned()
+                .collect(),
+                MLFramework::ONNX => [
+                    DataType::Float32,
+                    DataType::Float64,
+                    DataType::Float16,
+                    DataType::Int32,
+                    DataType::Int64,
+                    DataType::Int16,
+                    DataType::Int8,
+                    DataType::UInt8,
+                    DataType::Bool,
+                ]
+                .iter()
+                .cloned()
+                .collect(),
+                _ => [DataType::Float32, DataType::Int32, DataType::Bool]
+                    .iter()
+                    .cloned()
+                    .collect(),
             }
         }
 
-        fn suggest_alternative_dtype(&self, original: DataType, supported: &HashSet<DataType>) -> Option<DataType> {
+        fn suggest_alternative_dtype(
+            &self,
+            original: DataType,
+            supported: &HashSet<DataType>,
+        ) -> Option<DataType> {
             // Suggest the closest supported data type
             match original {
-                DataType::Float64 if !supported.contains(&DataType::Float64) => Some(DataType::Float32),
-                DataType::Float16 if !supported.contains(&DataType::Float16) => Some(DataType::Float32),
-                DataType::BFloat16 if !supported.contains(&DataType::BFloat16) => Some(DataType::Float32),
+                DataType::Float64 if !supported.contains(&DataType::Float64) => {
+                    Some(DataType::Float32)
+                }
+                DataType::Float16 if !supported.contains(&DataType::Float16) => {
+                    Some(DataType::Float32)
+                }
+                DataType::BFloat16 if !supported.contains(&DataType::BFloat16) => {
+                    Some(DataType::Float32)
+                }
                 DataType::Int64 if !supported.contains(&DataType::Int64) => Some(DataType::Int32),
                 DataType::Int16 if !supported.contains(&DataType::Int16) => Some(DataType::Int32),
                 DataType::Int8 if !supported.contains(&DataType::Int8) => Some(DataType::Int32),
@@ -2126,13 +2263,21 @@ pub mod validation {
         FullyCompatible,
         MostlyCompatible,
         PartiallyCompatible,
+        #[allow(dead_code)]
         Incompatible,
     }
 
     /// Batch validation for multiple models
     pub struct BatchValidator {
         validators: Vec<ModelValidator>,
+        #[allow(dead_code)]
         parallel: bool,
+    }
+
+    impl Default for BatchValidator {
+        fn default() -> Self {
+            Self::new()
+        }
     }
 
     impl BatchValidator {
@@ -2143,8 +2288,14 @@ pub mod validation {
             }
         }
 
-        pub fn add_validation(&mut self, source: MLFramework, target: MLFramework, config: ValidationConfig) {
-            self.validators.push(ModelValidator::new(source, target, config));
+        pub fn add_validation(
+            &mut self,
+            source: MLFramework,
+            target: MLFramework,
+            config: ValidationConfig,
+        ) {
+            self.validators
+                .push(ModelValidator::new(source, target, config));
         }
 
         pub fn validate_all(&self, models: &[MLModel]) -> Result<Vec<ValidationReport>> {
@@ -2168,10 +2319,10 @@ pub mod validation {
         pub fn quick_compatibility_check(source: MLFramework, target: MLFramework) -> f32 {
             let validator = ModelValidator::new(source, target, ValidationConfig::default());
             let compatibility_matrix = validator.get_framework_compatibility_matrix();
-            
+
             let source_key = format!("{:?}", source);
             let target_key = format!("{:?}", target);
-            
+
             if let Some(compatibility) = compatibility_matrix.get(&(source_key, target_key)) {
                 match compatibility.level {
                     CompatibilityLevel::FullyCompatible => 1.0,
@@ -2212,7 +2363,10 @@ pub mod validation {
         }
 
         /// Find best conversion path between frameworks
-        pub fn find_best_conversion_path(source: MLFramework, target: MLFramework) -> Vec<MLFramework> {
+        pub fn find_best_conversion_path(
+            source: MLFramework,
+            target: MLFramework,
+        ) -> Vec<MLFramework> {
             // Simple pathfinding - in practice could use more sophisticated algorithms
             if source == target {
                 return vec![source];
@@ -2224,8 +2378,9 @@ pub mod validation {
             }
 
             // Try via ONNX as intermediate
-            if quick_compatibility_check(source, MLFramework::ONNX) > 0.7 &&
-               quick_compatibility_check(MLFramework::ONNX, target) > 0.7 {
+            if quick_compatibility_check(source, MLFramework::ONNX) > 0.7
+                && quick_compatibility_check(MLFramework::ONNX, target) > 0.7
+            {
                 return vec![source, MLFramework::ONNX, target];
             }
 
@@ -2273,7 +2428,8 @@ mod tests {
     #[test]
     fn test_ndarray_conversion() {
         let array = arr2(&[[1.0, 2.0], [3.0, 4.0]]);
-        let tensor = converters::from_ndarray(array.view(), Some("test".to_string()));
+        let tensor =
+            converters::from_ndarray::<ndarray::Ix2>(array.view(), Some("test".to_string()));
 
         assert_eq!(tensor.metadata.shape, vec![2, 2]);
 
@@ -2504,6 +2660,7 @@ pub mod batch_processing {
     /// Batch processor for ML models
     pub struct BatchProcessor {
         batch_size: usize,
+        #[allow(dead_code)]
         prefetch_factor: usize,
     }
 
@@ -2575,9 +2732,9 @@ pub mod serving {
     use std::sync::RwLock as StdRwLock;
     use std::time::{Duration, Instant};
     #[cfg(feature = "async")]
-    use tokio::sync::{RwLock, Mutex};
+    use tokio::sync::{Mutex, RwLock};
     #[cfg(feature = "async")]
-    use tokio::time::{timeout, sleep};
+    use tokio::time::{sleep, timeout};
 
     /// Comprehensive model server with multiple API endpoints
     #[cfg(feature = "async")]
@@ -2755,7 +2912,7 @@ pub mod serving {
         /// Perform single inference
         pub async fn infer(&self, request: InferenceRequest) -> Result<InferenceResponse> {
             let start_time = Instant::now();
-            
+
             // Check queue capacity
             {
                 let queue = self.request_queue.lock().await;
@@ -2776,14 +2933,14 @@ pub mod serving {
                     let mut queue = self.request_queue.lock().await;
                     queue.push_back(request.clone());
                 }
-                
+
                 // Wait for response (simplified - would use proper async coordination)
                 sleep(Duration::from_millis(self.config.batch_timeout_ms)).await;
             }
 
             // Process inference
             let result = self.process_inference(&request.inputs).await;
-            
+
             // Update metrics
             self.update_metrics(start_time, result.is_ok()).await;
 
@@ -2809,13 +2966,16 @@ pub mod serving {
         }
 
         /// Batch inference
-        pub async fn batch_infer(&self, requests: Vec<InferenceRequest>) -> Result<Vec<InferenceResponse>> {
+        pub async fn batch_infer(
+            &self,
+            requests: Vec<InferenceRequest>,
+        ) -> Result<Vec<InferenceResponse>> {
             let start_time = Instant::now();
             let mut responses = Vec::new();
 
             for batch in requests.chunks(self.config.max_batch_size) {
                 let mut batch_inputs = HashMap::new();
-                
+
                 // Combine inputs from batch
                 for (i, request) in batch.iter().enumerate() {
                     for (name, tensor) in &request.inputs {
@@ -2826,7 +2986,7 @@ pub mod serving {
 
                 // Process batch
                 let batch_outputs = self.process_inference(&batch_inputs).await?;
-                
+
                 // Split outputs back to individual responses
                 for (i, request) in batch.iter().enumerate() {
                     let mut outputs = HashMap::new();
@@ -2854,16 +3014,19 @@ pub mod serving {
         }
 
         /// Process actual inference
-        async fn process_inference(&self, inputs: &HashMap<String, MLTensor>) -> Result<HashMap<String, MLTensor>> {
+        async fn process_inference(
+            &self,
+            inputs: &HashMap<String, MLTensor>,
+        ) -> Result<HashMap<String, MLTensor>> {
             let model = self.model.read().await;
-            
+
             // Simplified inference - in practice would use actual model inference
             let mut outputs = HashMap::new();
             for (name, tensor) in inputs {
                 // Mock output - same as input for demonstration
                 outputs.insert(format!("output_{}", name), tensor.clone());
             }
-            
+
             Ok(outputs)
         }
 
@@ -2871,8 +3034,11 @@ pub mod serving {
         async fn start_rest_api(&self) -> Result<()> {
             // This would start an actual REST server (e.g., with warp, axum, or actix-web)
             // For demonstration, we'll just log that it's starting
-            println!("Starting REST API server on port {}", self.config.api_config.rest_port);
-            
+            println!(
+                "Starting REST API server on port {}",
+                self.config.api_config.rest_port
+            );
+
             // Simplified REST endpoints:
             // POST /predict - Single prediction
             // POST /batch_predict - Batch prediction
@@ -2880,21 +3046,24 @@ pub mod serving {
             // GET /metrics - Server metrics
             // POST /model/update - Update model
             // GET /model/info - Model information
-            
+
             Ok(())
         }
 
         /// Start gRPC API server
         async fn start_grpc_api(&self) -> Result<()> {
             // This would start an actual gRPC server (e.g., with tonic)
-            println!("Starting gRPC API server on port {}", self.config.api_config.grpc_port);
-            
+            println!(
+                "Starting gRPC API server on port {}",
+                self.config.api_config.grpc_port
+            );
+
             // Simplified gRPC services:
             // ModelInference service with predict, batch_predict methods
             // ModelManagement service with update_model, get_info methods
             // HealthCheck service
             // Metrics service
-            
+
             Ok(())
         }
 
@@ -2903,7 +3072,7 @@ pub mod serving {
             for worker_id in 0..self.config.num_workers {
                 let queue = self.request_queue.clone();
                 let config = self.config.clone();
-                
+
                 tokio::spawn(async move {
                     loop {
                         // Process requests from queue
@@ -2922,7 +3091,7 @@ pub mod serving {
                     }
                 });
             }
-            
+
             Ok(())
         }
 
@@ -2930,11 +3099,11 @@ pub mod serving {
         async fn start_metrics_collection(&self) {
             let metrics = self.metrics.clone();
             let start_time = Instant::now();
-            
+
             tokio::spawn(async move {
                 loop {
                     sleep(Duration::from_secs(1)).await;
-                    
+
                     // Update uptime
                     {
                         let mut m = metrics.lock().await;
@@ -2948,32 +3117,32 @@ pub mod serving {
         async fn update_metrics(&self, start_time: Instant, success: bool) {
             let mut metrics = self.metrics.lock().await;
             metrics.total_requests += 1;
-            
+
             if success {
                 metrics.successful_requests += 1;
             } else {
                 metrics.failed_requests += 1;
             }
-            
+
             let latency = start_time.elapsed().as_millis() as f64;
-            metrics.average_latency_ms = 
-                (metrics.average_latency_ms * (metrics.total_requests - 1) as f64 + latency) / 
-                metrics.total_requests as f64;
+            metrics.average_latency_ms =
+                (metrics.average_latency_ms * (metrics.total_requests - 1) as f64 + latency)
+                    / metrics.total_requests as f64;
         }
 
         /// Update batch metrics
         async fn update_batch_metrics(&self, batch_size: usize, start_time: Instant) {
             let mut metrics = self.metrics.lock().await;
             metrics.batch_stats.total_batches += 1;
-            
+
             let current_avg = metrics.batch_stats.average_batch_size;
             let total_batches = metrics.batch_stats.total_batches as f64;
-            metrics.batch_stats.average_batch_size = 
+            metrics.batch_stats.average_batch_size =
                 (current_avg * (total_batches - 1.0) + batch_size as f64) / total_batches;
-            
+
             let processing_time = start_time.elapsed().as_millis() as f64;
             let current_time_avg = metrics.batch_stats.batch_processing_time_ms;
-            metrics.batch_stats.batch_processing_time_ms = 
+            metrics.batch_stats.batch_processing_time_ms =
                 (current_time_avg * (total_batches - 1.0) + processing_time) / total_batches;
         }
 
@@ -2990,18 +3159,18 @@ pub mod serving {
         /// Update model
         pub async fn update_model(&self, new_model: MLModel) -> Result<()> {
             let start_time = Instant::now();
-            
+
             {
                 let mut model = self.model.write().await;
                 *model = new_model;
             }
-            
+
             // Update metrics
             {
                 let mut metrics = self.metrics.lock().await;
                 metrics.model_load_time_ms = start_time.elapsed().as_millis() as u64;
             }
-            
+
             Ok(())
         }
 
@@ -3009,7 +3178,11 @@ pub mod serving {
         pub async fn get_model_info(&self) -> ModelInfo {
             let model = self.model.read().await;
             ModelInfo {
-                name: model.metadata.model_name.clone().unwrap_or_else(|| "Unknown".to_string()),
+                name: model
+                    .metadata
+                    .model_name
+                    .clone()
+                    .unwrap_or_else(|| "Unknown".to_string()),
                 framework: model.metadata.framework.clone(),
                 version: model.metadata.model_version.clone(),
                 input_shapes: model.metadata.input_shapes.clone(),
@@ -3025,16 +3198,16 @@ pub mod serving {
                 let mut status = self.health_status.write().await;
                 *status = HealthStatus::Stopping;
             }
-            
+
             // Wait for in-flight requests to complete
             sleep(Duration::from_millis(self.config.timeout_ms)).await;
-            
+
             // Clear request queue
             {
                 let mut queue = self.request_queue.lock().await;
                 queue.clear();
             }
-            
+
             Ok(())
         }
     }
@@ -3104,7 +3277,11 @@ pub mod serving {
         }
 
         /// Convert REST format to MLTensor
-        pub fn rest_to_tensor(data: Vec<f32>, shape: Vec<usize>, name: Option<String>) -> Result<MLTensor> {
+        pub fn rest_to_tensor(
+            data: Vec<f32>,
+            shape: Vec<usize>,
+            name: Option<String>,
+        ) -> Result<MLTensor> {
             let array = ArrayD::from_shape_vec(IxDyn(&shape), data)
                 .map_err(|e| IoError::Other(e.to_string()))?;
             Ok(MLTensor::new(array, name))
@@ -3152,7 +3329,10 @@ pub mod serving {
                 name: tensor.metadata.name.clone().unwrap_or_default(),
                 shape: tensor.metadata.shape.iter().map(|&s| s as i64).collect(),
                 dtype: format!("{:?}", tensor.metadata.dtype),
-                data: tensor.data.as_slice().unwrap()
+                data: tensor
+                    .data
+                    .as_slice()
+                    .unwrap()
                     .iter()
                     .flat_map(|f| f.to_le_bytes())
                     .collect(),
@@ -3162,9 +3342,10 @@ pub mod serving {
         /// Convert gRPC format to MLTensor
         pub fn grpc_to_tensor(grpc_tensor: &GrpcTensor) -> Result<MLTensor> {
             let shape: Vec<usize> = grpc_tensor.shape.iter().map(|&s| s as usize).collect();
-            
+
             // Convert bytes back to f32
-            let float_data: Vec<f32> = grpc_tensor.data
+            let float_data: Vec<f32> = grpc_tensor
+                .data
                 .chunks_exact(4)
                 .map(|chunk| {
                     let bytes: [u8; 4] = chunk.try_into().unwrap();
@@ -3174,7 +3355,7 @@ pub mod serving {
 
             let array = ArrayD::from_shape_vec(IxDyn(&shape), float_data)
                 .map_err(|e| IoError::Other(e.to_string()))?;
-            
+
             Ok(MLTensor::new(array, Some(grpc_tensor.name.clone())))
         }
     }
@@ -3242,7 +3423,7 @@ pub mod serving {
         /// Start health checking
         pub async fn start_health_checking(&self) {
             let interval = self.health_checker.check_interval;
-            
+
             tokio::spawn(async move {
                 loop {
                     sleep(interval).await;
@@ -3263,32 +3444,32 @@ pub mod model_hub {
     /// Model hub types with comprehensive configuration
     #[derive(Debug, Clone)]
     pub enum ModelHub {
-        HuggingFace { 
-            repo_id: String, 
+        HuggingFace {
+            repo_id: String,
             revision: Option<String>,
             token: Option<String>,
             use_auth_token: bool,
         },
-        TorchHub { 
-            repo: String, 
+        TorchHub {
+            repo: String,
             model: String,
             force_reload: bool,
             trust_repo: bool,
         },
-        TFHub { 
+        TFHub {
             handle: String,
             signature: Option<String>,
             output_key: Option<String>,
         },
-        ModelZoo { 
+        ModelZoo {
             url: String,
             checksum: Option<String>,
         },
-        ONNX { 
+        ONNX {
             model_name: String,
             opset: Option<i32>,
         },
-        Custom { 
+        Custom {
             url: String,
             format: String,
             metadata: HashMap<String, String>,
@@ -3332,13 +3513,12 @@ pub mod model_hub {
         pub fn new(config: HubConfig) -> Self {
             #[cfg(feature = "reqwest")]
             let client = {
-                let mut builder = reqwest::Client::builder()
-                    .user_agent(&config.user_agent);
-                
+                let mut builder = reqwest::Client::builder().user_agent(&config.user_agent);
+
                 if let Some(timeout) = config.timeout {
                     builder = builder.timeout(std::time::Duration::from_secs(timeout));
                 }
-                
+
                 builder.build().unwrap_or_else(|_| reqwest::Client::new())
             };
 
@@ -3357,24 +3537,38 @@ pub mod model_hub {
             }
 
             match hub {
-                ModelHub::HuggingFace { repo_id, revision, token, .. } => {
-                    self.download_from_huggingface(repo_id, revision.as_deref(), token.as_deref()).await
+                ModelHub::HuggingFace {
+                    repo_id,
+                    revision,
+                    token,
+                    ..
+                } => {
+                    self.download_from_huggingface(repo_id, revision.as_deref(), token.as_deref())
+                        .await
                 }
-                ModelHub::TorchHub { repo, model, force_reload, .. } => {
-                    self.download_from_torchhub(repo, model, *force_reload).await
+                ModelHub::TorchHub {
+                    repo,
+                    model,
+                    force_reload,
+                    ..
+                } => {
+                    self.download_from_torchhub(repo, model, *force_reload)
+                        .await
                 }
-                ModelHub::TFHub { handle, signature, .. } => {
-                    self.download_from_tfhub(handle, signature.as_deref()).await
-                }
+                ModelHub::TFHub {
+                    handle, signature, ..
+                } => self.download_from_tfhub(handle, signature.as_deref()).await,
                 ModelHub::ModelZoo { url, checksum } => {
                     self.download_from_url(url, checksum.as_deref()).await
                 }
                 ModelHub::ONNX { model_name, opset } => {
                     self.download_from_onnx_zoo(model_name, *opset).await
                 }
-                ModelHub::Custom { url, format, metadata } => {
-                    self.download_custom(url, format, metadata).await
-                }
+                ModelHub::Custom {
+                    url,
+                    format,
+                    metadata,
+                } => self.download_custom(url, format, metadata).await,
             }
         }
 
@@ -3382,25 +3576,34 @@ pub mod model_hub {
         fn load_from_cache(&self, hub: &ModelHub) -> Result<PathBuf> {
             let cache_key = self.get_cache_key(hub);
             let cache_path = self.config.cache_dir.join(&cache_key);
-            
+
             if cache_path.exists() {
                 Ok(cache_path)
             } else {
-                Err(IoError::Other(format!("Model not found in cache: {}", cache_key)))
+                Err(IoError::Other(format!(
+                    "Model not found in cache: {}",
+                    cache_key
+                )))
             }
         }
 
         /// Generate cache key for a model
         fn get_cache_key(&self, hub: &ModelHub) -> String {
             match hub {
-                ModelHub::HuggingFace { repo_id, revision, .. } => {
-                    format!("hf_{}_{}", repo_id.replace('/', "_"), revision.as_deref().unwrap_or("main"))
+                ModelHub::HuggingFace {
+                    repo_id, revision, ..
+                } => {
+                    format!(
+                        "hf_{}_{}",
+                        repo_id.replace('/', "_"),
+                        revision.as_deref().unwrap_or("main")
+                    )
                 }
                 ModelHub::TorchHub { repo, model, .. } => {
                     format!("torch_{}_{}", repo.replace('/', "_"), model)
                 }
                 ModelHub::TFHub { handle, .. } => {
-                    format!("tfhub_{}", handle.replace('/', "_").replace(':', "_"))
+                    format!("tfhub_{}", handle.replace(['/', ':'], "_"))
                 }
                 ModelHub::ModelZoo { url, .. } => {
                     format!("zoo_{}", url.replace(['/', ':'], "_"))
@@ -3434,7 +3637,7 @@ pub mod model_hub {
 
             // HuggingFace Hub API endpoints
             let base_url = format!("https://huggingface.co/{}/resolve/{}", repo_id, revision);
-            
+
             // Common files to download
             let files_to_download = vec![
                 "config.json",
@@ -3449,7 +3652,7 @@ pub mod model_hub {
             for file in files_to_download {
                 let file_url = format!("{}/{}", base_url, file);
                 let file_path = model_path.join(file);
-                
+
                 if let Err(_) = self.download_file(&file_url, &file_path, token).await {
                     // File might not exist, continue with others
                     continue;
@@ -3461,7 +3664,9 @@ pub mod model_hub {
             let info_path = model_path.join("model_info.json");
             let info_content = serde_json::to_string_pretty(&model_info)
                 .map_err(|e| IoError::SerializationError(e.to_string()))?;
-            fs::write(&info_path, info_content).await.map_err(IoError::Io)?;
+            fs::write(&info_path, info_content)
+                .await
+                .map_err(IoError::Io)?;
 
             Ok(model_path)
         }
@@ -3486,7 +3691,7 @@ pub mod model_hub {
             // TorchHub uses GitHub releases typically
             let github_url = format!("https://github.com/{}/archive/main.zip", repo);
             let zip_path = model_path.join("repo.zip");
-            
+
             self.download_file(&github_url, &zip_path, None).await?;
 
             // Create a simple model info for TorchHub
@@ -3504,7 +3709,9 @@ pub mod model_hub {
             let info_path = model_path.join("model_info.json");
             let info_content = serde_json::to_string_pretty(&model_info)
                 .map_err(|e| IoError::SerializationError(e.to_string()))?;
-            fs::write(&info_path, info_content).await.map_err(IoError::Io)?;
+            fs::write(&info_path, info_content)
+                .await
+                .map_err(IoError::Io)?;
 
             Ok(model_path)
         }
@@ -3550,7 +3757,9 @@ pub mod model_hub {
             let info_path = model_path.join("model_info.json");
             let info_content = serde_json::to_string_pretty(&model_info)
                 .map_err(|e| IoError::SerializationError(e.to_string()))?;
-            fs::write(&info_path, info_content).await.map_err(IoError::Io)?;
+            fs::write(&info_path, info_content)
+                .await
+                .map_err(IoError::Io)?;
 
             Ok(model_path)
         }
@@ -3575,9 +3784,10 @@ pub mod model_hub {
             // ONNX Model Zoo GitHub URL
             let github_base = "https://github.com/onnx/models/raw/main";
             let model_url = format!("{}/{}/model.onnx", github_base, model_name);
-            
+
             let model_file_path = model_path.join("model.onnx");
-            self.download_file(&model_url, &model_file_path, None).await?;
+            self.download_file(&model_url, &model_file_path, None)
+                .await?;
 
             // Create ONNX model info
             let model_info = ONNXModelInfo {
@@ -3594,18 +3804,16 @@ pub mod model_hub {
             let info_path = model_path.join("model_info.json");
             let info_content = serde_json::to_string_pretty(&model_info)
                 .map_err(|e| IoError::SerializationError(e.to_string()))?;
-            fs::write(&info_path, info_content).await.map_err(IoError::Io)?;
+            fs::write(&info_path, info_content)
+                .await
+                .map_err(IoError::Io)?;
 
             Ok(model_path)
         }
 
         /// Download from generic URL
         #[cfg(feature = "async")]
-        async fn download_from_url(
-            &self,
-            url: &str,
-            checksum: Option<&str>,
-        ) -> Result<PathBuf> {
+        async fn download_from_url(&self, url: &str, checksum: Option<&str>) -> Result<PathBuf> {
             let cache_key = format!("url_{}", url.replace(['/', ':'], "_"));
             let model_path = self.config.cache_dir.join(&cache_key);
 
@@ -3617,7 +3825,7 @@ pub mod model_hub {
 
             let filename = url.split('/').last().unwrap_or("model");
             let file_path = model_path.join(filename);
-            
+
             self.download_file(url, &file_path, None).await?;
 
             // Verify checksum if provided
@@ -3653,43 +3861,45 @@ pub mod model_hub {
 
             let filename = format!("model.{}", format);
             let file_path = model_path.join(&filename);
-            
+
             self.download_file(url, &file_path, None).await?;
 
             // Save metadata
             let metadata_path = model_path.join("metadata.json");
             let metadata_content = serde_json::to_string_pretty(metadata)
                 .map_err(|e| IoError::SerializationError(e.to_string()))?;
-            fs::write(&metadata_path, metadata_content).await.map_err(IoError::Io)?;
+            fs::write(&metadata_path, metadata_content)
+                .await
+                .map_err(IoError::Io)?;
 
             Ok(model_path)
         }
 
         /// Download a file with optional authentication
         #[cfg(feature = "async")]
-        async fn download_file(
-            &self,
-            url: &str,
-            path: &Path,
-            token: Option<&str>,
-        ) -> Result<()> {
+        async fn download_file(&self, url: &str, path: &Path, token: Option<&str>) -> Result<()> {
             let mut request = self.client.get(url);
-            
+
             if let Some(auth_token) = token {
                 request = request.header("Authorization", format!("Bearer {}", auth_token));
             }
 
-            let response = request.send().await
+            let response = request
+                .send()
+                .await
                 .map_err(|e| IoError::Other(format!("Failed to download {}: {}", url, e)))?;
 
             if !response.status().is_success() {
                 return Err(IoError::Other(format!(
                     "Failed to download {}: HTTP {}",
-                    url, response.status()
+                    url,
+                    response.status()
                 )));
             }
 
-            let content = response.bytes().await
+            let content = response
+                .bytes()
+                .await
                 .map_err(|e| IoError::Other(format!("Failed to read response: {}", e)))?;
 
             fs::write(path, content).await.map_err(IoError::Io)?;
@@ -3700,7 +3910,7 @@ pub mod model_hub {
         #[cfg(feature = "async")]
         async fn calculate_checksum(&self, path: &Path) -> Result<String> {
             use sha2::{Digest, Sha256};
-            
+
             let content = fs::read(path).await.map_err(IoError::Io)?;
             let mut hasher = Sha256::new();
             hasher.update(&content);
@@ -3715,13 +3925,15 @@ pub mod model_hub {
             token: Option<&str>,
         ) -> Result<HubModelInfo> {
             let api_url = format!("https://huggingface.co/api/models/{}", repo_id);
-            
+
             let mut request = self.client.get(&api_url);
             if let Some(auth_token) = token {
                 request = request.header("Authorization", format!("Bearer {}", auth_token));
             }
 
-            let response = request.send().await
+            let response = request
+                .send()
+                .await
                 .map_err(|e| IoError::Other(format!("Failed to get model info: {}", e)))?;
 
             if !response.status().is_success() {
@@ -3741,7 +3953,9 @@ pub mod model_hub {
                 });
             }
 
-            let model_info: HubModelInfo = response.json().await
+            let model_info: HubModelInfo = response
+                .json()
+                .await
                 .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
             Ok(model_info)
@@ -3749,13 +3963,20 @@ pub mod model_hub {
 
         /// List available models from a hub
         #[cfg(feature = "async")]
-        pub async fn list_models(&self, hub_type: &str, filter: Option<&str>) -> Result<Vec<String>> {
+        pub async fn list_models(
+            &self,
+            hub_type: &str,
+            filter: Option<&str>,
+        ) -> Result<Vec<String>> {
             match hub_type {
                 "huggingface" => self.list_huggingface_models(filter).await,
                 "torchhub" => self.list_torchhub_models(filter).await,
                 "tfhub" => self.list_tfhub_models(filter).await,
                 "onnx" => self.list_onnx_models(filter).await,
-                _ => Err(IoError::UnsupportedFormat(format!("Unsupported hub: {}", hub_type))),
+                _ => Err(IoError::UnsupportedFormat(format!(
+                    "Unsupported hub: {}",
+                    hub_type
+                ))),
             }
         }
 
@@ -3766,14 +3987,26 @@ pub mod model_hub {
                 api_url.push_str(&format!("&search={}", filter_text));
             }
 
-            let response = self.client.get(&api_url).send().await
+            let response = self
+                .client
+                .get(&api_url)
+                .send()
+                .await
                 .map_err(|e| IoError::Other(format!("Failed to list models: {}", e)))?;
 
-            let models: Vec<serde_json::Value> = response.json().await
+            let models: Vec<serde_json::Value> = response
+                .json()
+                .await
                 .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
-            Ok(models.into_iter()
-                .filter_map(|model| model.get("id").and_then(|id| id.as_str()).map(|s| s.to_string()))
+            Ok(models
+                .into_iter()
+                .filter_map(|model| {
+                    model
+                        .get("id")
+                        .and_then(|id| id.as_str())
+                        .map(|s| s.to_string())
+                })
                 .collect())
         }
 
@@ -3898,7 +4131,7 @@ pub mod model_hub {
             if let Some(hub) = self.registered_models.get(name) {
                 let cache_key = self.downloader.get_cache_key(hub);
                 let cache_path = self.downloader.config.cache_dir.join(&cache_key);
-                
+
                 if cache_path.exists() {
                     if cache_path.is_dir() {
                         fs::remove_dir_all(&cache_path).await.map_err(IoError::Io)?;
@@ -3906,7 +4139,7 @@ pub mod model_hub {
                         fs::remove_file(&cache_path).await.map_err(IoError::Io)?;
                     }
                 }
-                
+
                 Ok(())
             } else {
                 Err(IoError::Other(format!("Model '{}' not registered", name)))
@@ -3917,7 +4150,9 @@ pub mod model_hub {
         #[cfg(feature = "async")]
         pub async fn clear_all_cache(&self) -> Result<()> {
             if self.downloader.config.cache_dir.exists() {
-                fs::remove_dir_all(&self.downloader.config.cache_dir).await.map_err(IoError::Io)?;
+                fs::remove_dir_all(&self.downloader.config.cache_dir)
+                    .await
+                    .map_err(IoError::Io)?;
             }
             Ok(())
         }
@@ -4100,7 +4335,7 @@ pub mod tensorflow_enhanced {
         pub attr: HashMap<String, AttrValue>,
     }
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, Serialize)]
     pub struct VersionDef {
         pub producer: i32,
         pub min_consumer: i32,
@@ -4170,7 +4405,7 @@ pub mod tensorflow_enhanced {
         Placeholder(String),
     }
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, Serialize)]
     pub struct ListValue {
         pub s: Vec<Vec<u8>>,
         pub i: Vec<i64>,
@@ -4182,7 +4417,7 @@ pub mod tensorflow_enhanced {
         pub func: Vec<NameAttrList>,
     }
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, Serialize)]
     pub struct NameAttrList {
         pub name: String,
         pub attr: HashMap<String, AttrValue>,
@@ -4221,7 +4456,7 @@ pub mod tensorflow_enhanced {
         pub uint64_val: Vec<u64>,
     }
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, Serialize)]
     pub struct ResourceHandleProto {
         pub device: String,
         pub container: String,
@@ -4231,13 +4466,13 @@ pub mod tensorflow_enhanced {
         pub dtypes_and_shapes: Vec<DtypeAndShape>,
     }
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, Serialize)]
     pub struct DtypeAndShape {
         pub dtype: DataType,
         pub shape: TensorShapeProto,
     }
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, Serialize)]
     pub struct VariantTensorDataProto {
         pub type_name: String,
         pub metadata: Vec<u8>,
@@ -4300,10 +4535,7 @@ pub mod tensorflow_enhanced {
                     device: "".to_string(),
                     attr: {
                         let mut attrs = HashMap::new();
-                        attrs.insert(
-                            "dtype".to_string(),
-                            AttrValue::Type(tensor.metadata.dtype),
-                        );
+                        attrs.insert("dtype".to_string(), AttrValue::Type(tensor.metadata.dtype));
                         attrs.insert(
                             "value".to_string(),
                             AttrValue::Tensor(TensorProto {
@@ -4461,9 +4693,9 @@ pub mod tensorflow_enhanced {
                         }
                     },
                     "signature_def": saved_model.signature_defs.iter().map(|(key, sig)| {
-                        (key, serde_json::json!({
+                        (key.clone(), serde_json::json!({
                             "inputs": sig.inputs.iter().map(|(name, info)| {
-                                (name, serde_json::json!({
+                                (name.clone(), serde_json::json!({
                                     "name": info.name,
                                     "dtype": format!("{:?}", info.dtype),
                                     "tensor_shape": {
@@ -4474,7 +4706,7 @@ pub mod tensorflow_enhanced {
                                 }))
                             }).collect::<serde_json::Map<String, serde_json::Value>>(),
                             "outputs": sig.outputs.iter().map(|(name, info)| {
-                                (name, serde_json::json!({
+                                (name.clone(), serde_json::json!({
                                     "name": info.name,
                                     "dtype": format!("{:?}", info.dtype),
                                     "tensor_shape": {
@@ -4491,8 +4723,11 @@ pub mod tensorflow_enhanced {
             });
 
             let pb_path = model_dir.join("saved_model.pb");
-            std::fs::write(&pb_path, serde_json::to_vec_pretty(&saved_model_proto).unwrap())
-                .map_err(IoError::Io)?;
+            std::fs::write(
+                &pb_path,
+                serde_json::to_vec_pretty(&saved_model_proto).unwrap(),
+            )
+            .map_err(IoError::Io)?;
 
             // Write variables directory structure
             let variables_data_path = variables_dir.join("variables.data-00000-of-00001");
@@ -4506,14 +4741,17 @@ pub mod tensorflow_enhanced {
             for (name, tensor) in &saved_model.variables {
                 let data = tensor.data.as_slice().unwrap();
                 let bytes: Vec<u8> = data.iter().flat_map(|f| f.to_le_bytes()).collect();
-                
-                index_data.insert(name.clone(), serde_json::json!({
-                    "offset": offset,
-                    "length": bytes.len(),
-                    "shape": tensor.metadata.shape,
-                    "dtype": format!("{:?}", tensor.metadata.dtype)
-                }));
-                
+
+                index_data.insert(
+                    name.clone(),
+                    serde_json::json!({
+                        "offset": offset,
+                        "length": bytes.len(),
+                        "shape": tensor.metadata.shape,
+                        "dtype": format!("{:?}", tensor.metadata.dtype)
+                    }),
+                );
+
                 all_data.extend(bytes);
                 offset += all_data.len();
             }
@@ -4530,9 +4768,9 @@ pub mod tensorflow_enhanced {
 
             // Write checkpoint file
             let checkpoint_path = variables_dir.join("checkpoint");
-            let checkpoint_content = format!(
+            let checkpoint_content =
                 "model_checkpoint_path: \"variables\"\nall_model_checkpoint_paths: \"variables\"\n"
-            );
+                    .to_string();
             std::fs::write(&checkpoint_path, checkpoint_content).map_err(IoError::Io)?;
 
             Ok(())
@@ -4553,35 +4791,59 @@ pub mod tensorflow_enhanced {
             let mut model = MLModel::new(MLFramework::TensorFlow);
 
             // Parse meta graphs
-            if let Some(meta_graphs) = saved_model_proto.get("meta_graphs").and_then(|v| v.as_array()) {
+            if let Some(meta_graphs) = saved_model_proto
+                .get("meta_graphs")
+                .and_then(|v| v.as_array())
+            {
                 if let Some(meta_graph) = meta_graphs.first() {
                     // Parse signature definitions
-                    if let Some(signature_def) = meta_graph.get("signature_def").and_then(|v| v.as_object()) {
+                    if let Some(signature_def) =
+                        meta_graph.get("signature_def").and_then(|v| v.as_object())
+                    {
                         for (_sig_name, sig_data) in signature_def {
-                            if let Some(inputs) = sig_data.get("inputs").and_then(|v| v.as_object()) {
+                            if let Some(inputs) = sig_data.get("inputs").and_then(|v| v.as_object())
+                            {
                                 for (input_name, input_info) in inputs {
-                                    if let Some(tensor_shape) = input_info.get("tensor_shape")
+                                    if let Some(tensor_shape) = input_info
+                                        .get("tensor_shape")
                                         .and_then(|ts| ts.get("dim"))
-                                        .and_then(|dims| dims.as_array()) {
+                                        .and_then(|dims| dims.as_array())
+                                    {
                                         let shape: Vec<usize> = tensor_shape
                                             .iter()
-                                            .filter_map(|d| d.get("size").and_then(|s| s.as_i64().map(|i| i as usize)))
+                                            .filter_map(|d| {
+                                                d.get("size")
+                                                    .and_then(|s| s.as_i64().map(|i| i as usize))
+                                            })
                                             .collect();
-                                        model.metadata.input_shapes.insert(input_name.clone(), shape);
+                                        model
+                                            .metadata
+                                            .input_shapes
+                                            .insert(input_name.clone(), shape);
                                     }
                                 }
                             }
-                            
-                            if let Some(outputs) = sig_data.get("outputs").and_then(|v| v.as_object()) {
+
+                            if let Some(outputs) =
+                                sig_data.get("outputs").and_then(|v| v.as_object())
+                            {
                                 for (output_name, output_info) in outputs {
-                                    if let Some(tensor_shape) = output_info.get("tensor_shape")
+                                    if let Some(tensor_shape) = output_info
+                                        .get("tensor_shape")
                                         .and_then(|ts| ts.get("dim"))
-                                        .and_then(|dims| dims.as_array()) {
+                                        .and_then(|dims| dims.as_array())
+                                    {
                                         let shape: Vec<usize> = tensor_shape
                                             .iter()
-                                            .filter_map(|d| d.get("size").and_then(|s| s.as_i64().map(|i| i as usize)))
+                                            .filter_map(|d| {
+                                                d.get("size")
+                                                    .and_then(|s| s.as_i64().map(|i| i as usize))
+                                            })
                                             .collect();
-                                        model.metadata.output_shapes.insert(output_name.clone(), shape);
+                                        model
+                                            .metadata
+                                            .output_shapes
+                                            .insert(output_name.clone(), shape);
                                     }
                                 }
                             }
@@ -4612,20 +4874,22 @@ pub mod tensorflow_enhanced {
 
                             let start = offset as usize;
                             let end = start + length as usize;
-                            
+
                             if end <= variables_data.len() {
                                 let var_bytes = &variables_data[start..end];
-                                
+
                                 // Convert bytes back to f32 array
                                 let float_count = var_bytes.len() / 4;
                                 let mut float_data = Vec::with_capacity(float_count);
-                                
+
                                 for chunk in var_bytes.chunks_exact(4) {
                                     let bytes: [u8; 4] = chunk.try_into().unwrap();
                                     float_data.push(f32::from_le_bytes(bytes));
                                 }
 
-                                if let Ok(array) = ArrayD::from_shape_vec(IxDyn(&shape_vec), float_data) {
+                                if let Ok(array) =
+                                    ArrayD::from_shape_vec(IxDyn(&shape_vec), float_data)
+                                {
                                     model.weights.insert(
                                         var_name.clone(),
                                         MLTensor::new(array, Some(var_name.clone())),
@@ -4646,16 +4910,23 @@ pub mod tensorflow_enhanced {
         /// Convert MLModel to protobuf-like binary format
         pub fn to_protobuf_bytes(model: &MLModel) -> Result<Vec<u8>> {
             let saved_model = Self::create_saved_model(model);
-            
+
             // Create variables map separately
-            let variables: serde_json::Map<String, serde_json::Value> = saved_model.variables.iter().map(|(name, tensor)| {
-                (name.clone(), serde_json::json!({
-                    "shape": tensor.metadata.shape,
-                    "dtype": format!("{:?}", tensor.metadata.dtype),
-                    "data": tensor.data.as_slice().unwrap().to_vec()
-                }))
-            }).collect();
-            
+            let variables: serde_json::Map<String, serde_json::Value> = saved_model
+                .variables
+                .iter()
+                .map(|(name, tensor)| {
+                    (
+                        name.clone(),
+                        serde_json::json!({
+                            "shape": tensor.metadata.shape,
+                            "dtype": format!("{:?}", tensor.metadata.dtype),
+                            "data": tensor.data.as_slice().unwrap().to_vec()
+                        }),
+                    )
+                })
+                .collect();
+
             // Simplified protobuf-like serialization
             let proto_data = serde_json::json!({
                 "meta_graphs": [{
@@ -4669,8 +4940,7 @@ pub mod tensorflow_enhanced {
                 "variables": variables
             });
 
-            serde_json::to_vec(&proto_data)
-                .map_err(|e| IoError::SerializationError(e.to_string()))
+            serde_json::to_vec(&proto_data).map_err(|e| IoError::SerializationError(e.to_string()))
         }
 
         /// Parse protobuf-like binary format to MLModel
@@ -4692,7 +4962,9 @@ pub mod tensorflow_enhanced {
                     let array = ArrayD::from_shape_vec(IxDyn(&shape), data)
                         .map_err(|e| IoError::Other(e.to_string()))?;
 
-                    model.weights.insert(name.clone(), MLTensor::new(array, Some(name.clone())));
+                    model
+                        .weights
+                        .insert(name.clone(), MLTensor::new(array, Some(name.clone())));
                 }
             }
 
@@ -4746,7 +5018,7 @@ pub mod onnx_enhanced {
         pub dim: Vec<Dimension>,
     }
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, Serialize)]
     pub struct Dimension {
         pub dim_value: Option<i64>,
         pub dim_param: Option<String>,
@@ -4771,7 +5043,7 @@ pub mod onnx_enhanced {
         String(String),
         Tensor(TensorProto),
         Graph(ONNXGraph),
-        SparseTensor(SparseTensorProto),
+        SparseTensor(Box<SparseTensorProto>),
         TypeProto(TypeProto),
         Floats(Vec<f32>),
         Ints(Vec<i64>),
@@ -4800,7 +5072,7 @@ pub mod onnx_enhanced {
         pub data_location: i32,
     }
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, Serialize)]
     pub struct TensorProtoSegment {
         pub begin: i64,
         pub end: i64,
@@ -4813,7 +5085,7 @@ pub mod onnx_enhanced {
         pub dims: Vec<i64>,
     }
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, Serialize)]
     pub struct StringStringEntryProto {
         pub key: String,
         pub value: String,
@@ -4906,7 +5178,7 @@ pub mod onnx_enhanced {
         /// Create new ONNX runtime with model
         pub fn new(model: &MLModel) -> Result<Self> {
             let graph = Self::create_onnx_graph(model)?;
-            
+
             Ok(Self {
                 session: None,
                 graph,
@@ -4919,7 +5191,10 @@ pub mod onnx_enhanced {
         pub fn from_file(path: impl AsRef<Path>) -> Result<Self> {
             let model_path = path.as_ref();
             if !model_path.exists() {
-                return Err(IoError::Other(format!("ONNX model file not found: {:?}", model_path)));
+                return Err(IoError::Other(format!(
+                    "ONNX model file not found: {:?}",
+                    model_path
+                )));
             }
 
             // Load and parse ONNX model
@@ -4959,7 +5234,9 @@ pub mod onnx_enhanced {
                 let session_guard = session.lock().unwrap();
                 session_guard.run(inputs)
             } else {
-                Err(IoError::Other("Session not initialized. Call initialize() first.".to_string()))
+                Err(IoError::Other(
+                    "Session not initialized. Call initialize() first.".to_string(),
+                ))
             }
         }
 
@@ -5007,11 +5284,14 @@ pub mod onnx_enhanced {
                         tensor_type: TensorTypeProto {
                             elem_type: 1, // FLOAT
                             shape: TensorShapeProto {
-                                dim: shape.iter().map(|&d| Dimension {
-                                    dim_value: Some(d as i64),
-                                    dim_param: None,
-                                    denotation: "".to_string(),
-                                }).collect(),
+                                dim: shape
+                                    .iter()
+                                    .map(|&d| Dimension {
+                                        dim_value: Some(d as i64),
+                                        dim_param: None,
+                                        denotation: "".to_string(),
+                                    })
+                                    .collect(),
                             },
                         },
                     },
@@ -5027,11 +5307,14 @@ pub mod onnx_enhanced {
                         tensor_type: TensorTypeProto {
                             elem_type: 1, // FLOAT
                             shape: TensorShapeProto {
-                                dim: shape.iter().map(|&d| Dimension {
-                                    dim_value: Some(d as i64),
-                                    dim_param: None,
-                                    denotation: "".to_string(),
-                                }).collect(),
+                                dim: shape
+                                    .iter()
+                                    .map(|&d| Dimension {
+                                        dim_value: Some(d as i64),
+                                        dim_param: None,
+                                        denotation: "".to_string(),
+                                    })
+                                    .collect(),
                             },
                         },
                     },
@@ -5040,7 +5323,11 @@ pub mod onnx_enhanced {
             }
 
             Ok(ONNXGraph {
-                name: model.metadata.model_name.clone().unwrap_or_else(|| "model".to_string()),
+                name: model
+                    .metadata
+                    .model_name
+                    .clone()
+                    .unwrap_or_else(|| "model".to_string()),
                 inputs,
                 outputs,
                 nodes: Vec::new(), // Would be populated from actual ONNX model
@@ -5105,7 +5392,11 @@ pub mod onnx_enhanced {
             // Extract input information
             for input in &graph.inputs {
                 input_names.push(input.name.clone());
-                let shape: Vec<i64> = input.type_proto.tensor_type.shape.dim
+                let shape: Vec<i64> = input
+                    .type_proto
+                    .tensor_type
+                    .shape
+                    .dim
                     .iter()
                     .filter_map(|d| d.dim_value)
                     .collect();
@@ -5115,7 +5406,11 @@ pub mod onnx_enhanced {
             // Extract output information
             for output in &graph.outputs {
                 output_names.push(output.name.clone());
-                let shape: Vec<i64> = output.type_proto.tensor_type.shape.dim
+                let shape: Vec<i64> = output
+                    .type_proto
+                    .tensor_type
+                    .shape
+                    .dim
                     .iter()
                     .filter_map(|d| d.dim_value)
                     .collect();
@@ -5148,17 +5443,17 @@ pub mod onnx_enhanced {
 
             // Simplified inference - in practice would use actual ONNX runtime
             let mut outputs = HashMap::new();
-            
+
             for output_name in &self.output_names {
                 if let Some(expected_shape) = self.output_shapes.get(output_name) {
                     let shape: Vec<usize> = expected_shape.iter().map(|&d| d as usize).collect();
                     let total_elements: usize = shape.iter().product();
-                    
+
                     // Mock output - in practice would be actual inference result
                     let mock_data = vec![0.0f32; total_elements];
                     let array = ArrayD::from_shape_vec(IxDyn(&shape), mock_data)
                         .map_err(|e| IoError::Other(e.to_string()))?;
-                    
+
                     outputs.insert(
                         output_name.clone(),
                         MLTensor::new(array, Some(output_name.clone())),
@@ -5261,7 +5556,10 @@ pub mod onnx_enhanced {
             for node in &graph.nodes {
                 for input in &node.inputs {
                     if !Self::is_valid_input(input, graph) {
-                        errors.push(format!("Node '{}' has invalid input '{}'", node.name, input));
+                        errors.push(format!(
+                            "Node '{}' has invalid input '{}'",
+                            node.name, input
+                        ));
                     }
                 }
             }
@@ -5275,9 +5573,15 @@ pub mod onnx_enhanced {
 
         fn is_valid_input(input_name: &str, graph: &ONNXGraph) -> bool {
             // Check if input exists in graph inputs or initializers
-            graph.inputs.iter().any(|input| input.name == input_name) ||
-            graph.initializers.iter().any(|init| init.name == input_name) ||
-            graph.nodes.iter().any(|node| node.outputs.contains(&input_name.to_string()))
+            graph.inputs.iter().any(|input| input.name == input_name)
+                || graph
+                    .initializers
+                    .iter()
+                    .any(|init| init.name == input_name)
+                || graph
+                    .nodes
+                    .iter()
+                    .any(|node| node.outputs.contains(&input_name.to_string()))
         }
     }
 
@@ -5308,20 +5612,34 @@ pub mod onnx_enhanced {
 
             // Convert inputs to metadata
             for input in &graph.inputs {
-                let shape: Vec<usize> = input.type_proto.tensor_type.shape.dim
+                let shape: Vec<usize> = input
+                    .type_proto
+                    .tensor_type
+                    .shape
+                    .dim
                     .iter()
                     .filter_map(|d| d.dim_value.map(|v| v as usize))
                     .collect();
-                model.metadata.input_shapes.insert(input.name.clone(), shape);
+                model
+                    .metadata
+                    .input_shapes
+                    .insert(input.name.clone(), shape);
             }
 
             // Convert outputs to metadata
             for output in &graph.outputs {
-                let shape: Vec<usize> = output.type_proto.tensor_type.shape.dim
+                let shape: Vec<usize> = output
+                    .type_proto
+                    .tensor_type
+                    .shape
+                    .dim
                     .iter()
                     .filter_map(|d| d.dim_value.map(|v| v as usize))
                     .collect();
-                model.metadata.output_shapes.insert(output.name.clone(), shape);
+                model
+                    .metadata
+                    .output_shapes
+                    .insert(output.name.clone(), shape);
             }
 
             // Convert initializers to weights
@@ -5343,7 +5661,7 @@ pub mod onnx_enhanced {
         /// Export ONNX model to file
         pub fn export_onnx(graph: &ONNXGraph, path: impl AsRef<Path>) -> Result<()> {
             let path = path.as_ref();
-            
+
             // Simplified ONNX export - in practice would use protobuf serialization
             let onnx_data = serde_json::json!({
                 "ir_version": 8,
@@ -5431,10 +5749,10 @@ pub mod onnx_enhanced {
 pub mod versioning {
     use super::*;
     use serde::{Deserialize, Serialize};
+    use sha2::{Digest, Sha256};
     use std::collections::BTreeMap;
     use std::sync::atomic::AtomicU64;
     use std::time::{SystemTime, UNIX_EPOCH};
-    use sha2::{Sha256, Digest};
 
     /// Semantic version for models
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
@@ -5477,9 +5795,13 @@ pub mod versioning {
                 return Err(IoError::Other("Invalid version format".to_string()));
             }
 
-            let major = parts[0].parse().map_err(|_| IoError::Other("Invalid major version".to_string()))?;
-            let minor = parts[1].parse().map_err(|_| IoError::Other("Invalid minor version".to_string()))?;
-            
+            let major = parts[0]
+                .parse()
+                .map_err(|_| IoError::Other("Invalid major version".to_string()))?;
+            let minor = parts[1]
+                .parse()
+                .map_err(|_| IoError::Other("Invalid minor version".to_string()))?;
+
             // Handle patch with potential pre-release/build metadata
             let patch_part = parts[2];
             let (patch_str, rest) = if let Some(dash_pos) = patch_part.find('-') {
@@ -5490,7 +5812,9 @@ pub mod versioning {
                 (patch_part, None)
             };
 
-            let patch = patch_str.parse().map_err(|_| IoError::Other("Invalid patch version".to_string()))?;
+            let patch = patch_str
+                .parse()
+                .map_err(|_| IoError::Other("Invalid patch version".to_string()))?;
 
             let mut version = Self::new(major, minor, patch);
 
@@ -5535,15 +5859,15 @@ pub mod versioning {
     impl std::fmt::Display for ModelVersion {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             write!(f, "{}.{}.{}", self.major, self.minor, self.patch)?;
-            
+
             if let Some(pre) = &self.pre_release {
                 write!(f, "-{}", pre)?;
             }
-            
+
             if let Some(build) = &self.build_metadata {
                 write!(f, "+{}", build)?;
             }
-            
+
             Ok(())
         }
     }
@@ -5771,7 +6095,7 @@ pub mod versioning {
             provenance: ModelProvenance,
         ) -> Result<()> {
             let checksum = self.calculate_model_checksum(&model)?;
-            
+
             let versioned_metadata = VersionedModelMetadata {
                 base_metadata: model.metadata.clone(),
                 version: version.clone(),
@@ -5833,18 +6157,11 @@ pub mod versioning {
 
         /// Get latest version of a model
         pub fn get_latest_version(&self, model_name: &str) -> Option<&ModelVersion> {
-            self.models
-                .get(model_name)?
-                .keys()
-                .last()
+            self.models.get(model_name)?.keys().last()
         }
 
         /// Get model path
-        pub fn get_model_path(
-            &self,
-            model_name: &str,
-            version: &ModelVersion,
-        ) -> Option<&PathBuf> {
+        pub fn get_model_path(&self, model_name: &str, version: &ModelVersion) -> Option<&PathBuf> {
             self.model_paths
                 .get(model_name)
                 .and_then(|versions| versions.get(version))
@@ -5927,7 +6244,7 @@ pub mod versioning {
         /// Search models by tags
         pub fn search_by_tags(&self, tags: &[String]) -> Vec<(String, ModelVersion)> {
             let mut results = Vec::new();
-            
+
             for (model_name, versions) in &self.models {
                 for (version, metadata) in versions {
                     if tags.iter().all(|tag| metadata.tags.contains(tag)) {
@@ -5935,14 +6252,14 @@ pub mod versioning {
                     }
                 }
             }
-            
+
             results
         }
 
         /// Get models by status
         pub fn get_models_by_status(&self, status: ModelStatus) -> Vec<(String, ModelVersion)> {
             let mut results = Vec::new();
-            
+
             for (model_name, versions) in &self.models {
                 for (version, metadata) in versions {
                     if metadata.status == status {
@@ -5950,7 +6267,7 @@ pub mod versioning {
                     }
                 }
             }
-            
+
             results
         }
 
@@ -5973,27 +6290,27 @@ pub mod versioning {
         /// Calculate model checksum for integrity verification
         fn calculate_model_checksum(&self, model: &MLModel) -> Result<String> {
             let mut hasher = Sha256::new();
-            
+
             // Hash metadata
             let metadata_json = serde_json::to_string(&model.metadata)
                 .map_err(|e| IoError::SerializationError(e.to_string()))?;
             hasher.update(metadata_json.as_bytes());
-            
+
             // Hash weights (sorted by name for consistency)
             let mut weight_names: Vec<_> = model.weights.keys().collect();
             weight_names.sort();
-            
+
             for name in weight_names {
                 if let Some(tensor) = model.weights.get(name) {
                     hasher.update(name.as_bytes());
                     if let Some(data) = tensor.data.as_slice() {
                         for &value in data {
-                            hasher.update(&value.to_le_bytes());
+                            hasher.update(value.to_le_bytes());
                         }
                     }
                 }
             }
-            
+
             Ok(format!("{:x}", hasher.finalize()))
         }
 
@@ -6018,7 +6335,7 @@ pub mod versioning {
                 "models": self.models,
                 "model_paths": self.model_paths,
             });
-            
+
             std::fs::write(path, serde_json::to_string_pretty(&registry_data).unwrap())
                 .map_err(IoError::Io)
         }
@@ -6028,17 +6345,17 @@ pub mod versioning {
             let data = std::fs::read_to_string(path).map_err(IoError::Io)?;
             let registry_data: serde_json::Value = serde_json::from_str(&data)
                 .map_err(|e| IoError::SerializationError(e.to_string()))?;
-            
+
             if let Some(models) = registry_data.get("models") {
                 self.models = serde_json::from_value(models.clone())
                     .map_err(|e| IoError::SerializationError(e.to_string()))?;
             }
-            
+
             if let Some(paths) = registry_data.get("model_paths") {
                 self.model_paths = serde_json::from_value(paths.clone())
                     .map_err(|e| IoError::SerializationError(e.to_string()))?;
             }
-            
+
             Ok(())
         }
     }
@@ -6067,7 +6384,7 @@ pub mod versioning {
             model2: &VersionedModelMetadata,
         ) -> ModelDifference {
             let mut differences = Vec::new();
-            
+
             // Compare frameworks
             if model1.base_metadata.framework != model2.base_metadata.framework {
                 differences.push(DifferenceType::Framework {
@@ -6075,7 +6392,7 @@ pub mod versioning {
                     to: model2.base_metadata.framework.clone(),
                 });
             }
-            
+
             // Compare input shapes
             if model1.base_metadata.input_shapes != model2.base_metadata.input_shapes {
                 differences.push(DifferenceType::InputShapes {
@@ -6083,7 +6400,7 @@ pub mod versioning {
                     to: model2.base_metadata.input_shapes.clone(),
                 });
             }
-            
+
             // Compare output shapes
             if model1.base_metadata.output_shapes != model2.base_metadata.output_shapes {
                 differences.push(DifferenceType::OutputShapes {
@@ -6091,19 +6408,19 @@ pub mod versioning {
                     to: model2.base_metadata.output_shapes.clone(),
                 });
             }
-            
+
             // Compare metrics
-            let metrics_changed = model1.metrics.accuracy != model2.metrics.accuracy ||
-                model1.metrics.loss != model2.metrics.loss ||
-                model1.metrics.f1_score != model2.metrics.f1_score;
-            
+            let metrics_changed = model1.metrics.accuracy != model2.metrics.accuracy
+                || model1.metrics.loss != model2.metrics.loss
+                || model1.metrics.f1_score != model2.metrics.f1_score;
+
             if metrics_changed {
                 differences.push(DifferenceType::Metrics {
                     from: model1.metrics.clone(),
-                    to: model2.metrics.clone(),
+                    to: Box::new(model2.metrics.clone()),
                 });
             }
-            
+
             ModelDifference {
                 differences,
                 version_change: Some((model1.version.clone(), model2.version.clone())),
@@ -6118,14 +6435,11 @@ pub mod versioning {
             let difference = Self::compare_models(from_metadata, to_metadata);
             let mut steps = Vec::new();
             let mut breaking_changes = Vec::new();
-            
+
             for diff in difference.differences {
                 match diff {
                     DifferenceType::Framework { from, to } => {
-                        breaking_changes.push(format!(
-                            "Framework changed from {} to {}",
-                            from, to
-                        ));
+                        breaking_changes.push(format!("Framework changed from {} to {}", from, to));
                         steps.push(format!(
                             "Update model loading code to use {} instead of {}",
                             to, from
@@ -6144,7 +6458,7 @@ pub mod versioning {
                     }
                 }
             }
-            
+
             MigrationGuide {
                 from_version: from_metadata.version.clone(),
                 to_version: to_metadata.version.clone(),
@@ -6169,10 +6483,22 @@ pub mod versioning {
     /// Types of differences between models
     #[derive(Debug)]
     pub enum DifferenceType {
-        Framework { from: String, to: String },
-        InputShapes { from: HashMap<String, Vec<usize>>, to: HashMap<String, Vec<usize>> },
-        OutputShapes { from: HashMap<String, Vec<usize>>, to: HashMap<String, Vec<usize>> },
-        Metrics { from: ModelMetrics, to: ModelMetrics },
+        Framework {
+            from: String,
+            to: String,
+        },
+        InputShapes {
+            from: HashMap<String, Vec<usize>>,
+            to: HashMap<String, Vec<usize>>,
+        },
+        OutputShapes {
+            from: HashMap<String, Vec<usize>>,
+            to: HashMap<String, Vec<usize>>,
+        },
+        Metrics {
+            from: ModelMetrics,
+            to: Box<ModelMetrics>,
+        },
     }
 
     /// Migration guide for version upgrades
@@ -6235,15 +6561,16 @@ pub mod versioning {
         /// Generate markdown changelog
         pub fn to_markdown(&self) -> String {
             let mut markdown = String::from("# Model Changelog\n\n");
-            
+
             for entry in self.entries.values().rev() {
-                markdown.push_str(&format!("## [{}] - {}\n\n", 
+                markdown.push_str(&format!(
+                    "## [{}] - {}\n\n",
                     entry.version,
                     chrono::DateTime::from_timestamp(entry.timestamp as i64, 0)
                         .unwrap_or_default()
                         .format("%Y-%m-%d")
                 ));
-                
+
                 let mut added = Vec::new();
                 let mut modified = Vec::new();
                 let mut fixed = Vec::new();
@@ -6251,7 +6578,7 @@ pub mod versioning {
                 let mut removed = Vec::new();
                 let mut security = Vec::new();
                 let mut performance = Vec::new();
-                
+
                 for change in &entry.changes {
                     match change {
                         Change::Added(desc) => added.push(desc),
@@ -6263,7 +6590,7 @@ pub mod versioning {
                         Change::Performance(desc) => performance.push(desc),
                     }
                 }
-                
+
                 if !added.is_empty() {
                     markdown.push_str("### Added\n");
                     for item in added {
@@ -6271,7 +6598,7 @@ pub mod versioning {
                     }
                     markdown.push('\n');
                 }
-                
+
                 if !modified.is_empty() {
                     markdown.push_str("### Changed\n");
                     for item in modified {
@@ -6279,7 +6606,7 @@ pub mod versioning {
                     }
                     markdown.push('\n');
                 }
-                
+
                 if !fixed.is_empty() {
                     markdown.push_str("### Fixed\n");
                     for item in fixed {
@@ -6287,7 +6614,7 @@ pub mod versioning {
                     }
                     markdown.push('\n');
                 }
-                
+
                 if !deprecated.is_empty() {
                     markdown.push_str("### Deprecated\n");
                     for item in deprecated {
@@ -6295,7 +6622,7 @@ pub mod versioning {
                     }
                     markdown.push('\n');
                 }
-                
+
                 if !removed.is_empty() {
                     markdown.push_str("### Removed\n");
                     for item in removed {
@@ -6303,7 +6630,7 @@ pub mod versioning {
                     }
                     markdown.push('\n');
                 }
-                
+
                 if !security.is_empty() {
                     markdown.push_str("### Security\n");
                     for item in security {
@@ -6311,7 +6638,7 @@ pub mod versioning {
                     }
                     markdown.push('\n');
                 }
-                
+
                 if !performance.is_empty() {
                     markdown.push_str("### Performance\n");
                     for item in performance {
@@ -6319,14 +6646,14 @@ pub mod versioning {
                     }
                     markdown.push('\n');
                 }
-                
+
                 if let Some(notes) = &entry.notes {
                     markdown.push_str("### Notes\n");
                     markdown.push_str(notes);
                     markdown.push_str("\n\n");
                 }
             }
-            
+
             markdown
         }
     }
@@ -6349,7 +6676,7 @@ pub mod versioning {
         ) -> (MLModel, VersionedModelMetadata) {
             let provenance = ModelProvenance::new(author);
             let checksum = calculate_simple_checksum(&model);
-            
+
             let metadata = VersionedModelMetadata {
                 base_metadata: model.metadata.clone(),
                 version,
@@ -6362,7 +6689,7 @@ pub mod versioning {
                 compatibility: CompatibilityInfo::new(),
                 experimental_features: Vec::new(),
             };
-            
+
             (model, metadata)
         }
 
@@ -6370,14 +6697,14 @@ pub mod versioning {
         fn calculate_simple_checksum(model: &MLModel) -> String {
             use std::collections::hash_map::DefaultHasher;
             use std::hash::{Hash, Hasher};
-            
+
             let mut hasher = DefaultHasher::new();
-            
+
             // Hash basic properties
             model.metadata.framework.hash(&mut hasher);
             model.metadata.model_name.hash(&mut hasher);
             model.weights.len().hash(&mut hasher);
-            
+
             format!("{:x}", hasher.finish())
         }
 
@@ -6470,9 +6797,9 @@ pub mod versioning {
 /// Comprehensive error handling and recovery mechanisms
 pub mod error_handling {
     use super::*;
-    use std::time::{Duration, Instant};
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::Arc;
+    use std::time::{Duration, Instant};
 
     /// Enhanced error types for ML framework operations
     #[derive(Debug, thiserror::Error)]
@@ -6499,21 +6826,13 @@ pub mod error_handling {
         },
 
         #[error("Model validation failed: {reasons:?}")]
-        ValidationFailed {
-            reasons: Vec<String>,
-        },
+        ValidationFailed { reasons: Vec<String> },
 
         #[error("Network operation failed after {attempts} attempts: {last_error}")]
-        NetworkError {
-            attempts: usize,
-            last_error: String,
-        },
+        NetworkError { attempts: usize, last_error: String },
 
         #[error("Model serving error: {service} encountered {error}")]
-        ServingError {
-            service: String,
-            error: String,
-        },
+        ServingError { service: String, error: String },
 
         #[error("Resource exhaustion: {resource} limit exceeded")]
         ResourceExhaustion {
@@ -6598,12 +6917,12 @@ pub mod error_handling {
         /// Get next retry delay with exponential backoff
         pub fn get_retry_delay(&self) -> Duration {
             let attempts = self.attempt_count.load(Ordering::Relaxed);
-            let delay = self.config.retry_delay.as_millis() as f64 
+            let delay = self.config.retry_delay.as_millis() as f64
                 * self.config.backoff_multiplier.powi(attempts as i32);
-            
+
             let max_delay_ms = self.config.max_delay.as_millis() as f64;
             let delay_ms = delay.min(max_delay_ms) as u64;
-            
+
             Duration::from_millis(delay_ms)
         }
 
@@ -6713,17 +7032,23 @@ pub mod error_handling {
         }
 
         /// Register a fallback strategy
-        pub fn register_fallback_strategy(&mut self, strategy: Box<dyn FallbackStrategy + Send + Sync>) {
-            self.fallback_registry.insert(strategy.name().to_string(), strategy);
+        pub fn register_fallback_strategy(
+            &mut self,
+            strategy: Box<dyn FallbackStrategy + Send + Sync>,
+        ) {
+            self.fallback_registry
+                .insert(strategy.name().to_string(), strategy);
         }
 
         /// Register an error handler
         pub fn register_error_handler(&mut self, handler: Box<dyn ErrorHandler + Send + Sync>) {
-            self.error_handlers.insert(format!("handler_{}", self.error_handlers.len()), handler);
+            self.error_handlers
+                .insert(format!("handler_{}", self.error_handlers.len()), handler);
         }
 
         /// Execute operation with recovery support
-        pub async fn execute_with_recovery<F, T>(&self, 
+        pub async fn execute_with_recovery<F, T>(
+            &self,
             operation_name: String,
             operation: F,
             config: RecoveryConfig,
@@ -6733,14 +7058,18 @@ pub mod error_handling {
             T: Send + Sync,
         {
             let context = RecoveryContext::new(operation_name.clone(), config);
-            self.metrics.total_operations.fetch_add(1, Ordering::Relaxed);
+            self.metrics
+                .total_operations
+                .fetch_add(1, Ordering::Relaxed);
 
             loop {
                 context.record_attempt();
-                
+
                 // Check timeout
                 if context.is_timed_out() {
-                    self.metrics.failed_operations.fetch_add(1, Ordering::Relaxed);
+                    self.metrics
+                        .failed_operations
+                        .fetch_add(1, Ordering::Relaxed);
                     return Err(IoError::Other(format!(
                         "Operation {} timed out after {:?}",
                         operation_name,
@@ -6750,29 +7079,37 @@ pub mod error_handling {
 
                 match operation() {
                     Ok(result) => {
-                        self.metrics.successful_operations.fetch_add(1, Ordering::Relaxed);
+                        self.metrics
+                            .successful_operations
+                            .fetch_add(1, Ordering::Relaxed);
                         if context.attempt_count.load(Ordering::Relaxed) > 1 {
-                            self.metrics.recovered_operations.fetch_add(1, Ordering::Relaxed);
+                            self.metrics
+                                .recovered_operations
+                                .fetch_add(1, Ordering::Relaxed);
                         }
                         return Ok(result);
                     }
                     Err(error) => {
                         // Handle the error
-                        if let Err(_) = self.handle_error(&error, &context).await {
+                        if (self.handle_error(&error, &context).await).is_err() {
                             // Error handling failed, check if we should retry
                             if !context.should_retry() {
-                                self.metrics.failed_operations.fetch_add(1, Ordering::Relaxed);
+                                self.metrics
+                                    .failed_operations
+                                    .fetch_add(1, Ordering::Relaxed);
                                 return Err(error);
                             }
                         }
 
                         // Wait before retry
                         let delay = context.get_retry_delay();
-                        self.metrics.total_retry_attempts.fetch_add(1, Ordering::Relaxed);
-                        
+                        self.metrics
+                            .total_retry_attempts
+                            .fetch_add(1, Ordering::Relaxed);
+
                         #[cfg(feature = "async")]
                         sleep(delay).await;
-                        
+
                         #[cfg(not(feature = "async"))]
                         std::thread::sleep(delay);
                     }
@@ -6793,31 +7130,43 @@ pub mod error_handling {
                     to_framework: "unknown".to_string(),
                     reason: msg.clone(),
                 },
-                IoError::SerializationError(msg) | IoError::DeserializationError(msg) => MLFrameworkError::ValidationFailed {
-                    reasons: vec![msg.clone()],
-                },
-                IoError::FileError(_msg) | IoError::FileNotFound(_msg) => MLFrameworkError::ModelLoadingFailed {
-                    source: error.clone(),
-                    model_path: PathBuf::from("unknown"),
-                    framework: "unknown".to_string(),
-                },
-                IoError::FormatError(msg) | IoError::ParseError(msg) => MLFrameworkError::ConversionFailed {
-                    from_framework: "unknown".to_string(),
-                    to_framework: "unknown".to_string(),
-                    reason: msg.clone(),
-                },
-                IoError::ValidationError(msg) | IoError::ChecksumError(msg) | IoError::IntegrityError(msg) => MLFrameworkError::ValidationFailed {
+                IoError::SerializationError(msg) | IoError::DeserializationError(msg) => {
+                    MLFrameworkError::ValidationFailed {
+                        reasons: vec![msg.clone()],
+                    }
+                }
+                IoError::FileError(_msg) | IoError::FileNotFound(_msg) => {
+                    MLFrameworkError::ModelLoadingFailed {
+                        source: error.clone(),
+                        model_path: PathBuf::from("unknown"),
+                        framework: "unknown".to_string(),
+                    }
+                }
+                IoError::FormatError(msg) | IoError::ParseError(msg) => {
+                    MLFrameworkError::ConversionFailed {
+                        from_framework: "unknown".to_string(),
+                        to_framework: "unknown".to_string(),
+                        reason: msg.clone(),
+                    }
+                }
+                IoError::ValidationError(msg)
+                | IoError::ChecksumError(msg)
+                | IoError::IntegrityError(msg) => MLFrameworkError::ValidationFailed {
                     reasons: vec![msg.clone()],
                 },
                 IoError::NetworkError(msg) => MLFrameworkError::NetworkError {
                     attempts: context.attempt_count.load(Ordering::Relaxed),
                     last_error: msg.clone(),
                 },
-                IoError::CompressionError(msg) | IoError::DecompressionError(msg) | IoError::UnsupportedCompressionAlgorithm(msg) => MLFrameworkError::ConversionFailed {
-                    from_framework: "compressed".to_string(),
-                    to_framework: "uncompressed".to_string(),
-                    reason: msg.clone(),
-                },
+                IoError::CompressionError(msg)
+                | IoError::DecompressionError(msg)
+                | IoError::UnsupportedCompressionAlgorithm(msg) => {
+                    MLFrameworkError::ConversionFailed {
+                        from_framework: "compressed".to_string(),
+                        to_framework: "uncompressed".to_string(),
+                        reason: msg.clone(),
+                    }
+                }
                 IoError::ConversionError(msg) => MLFrameworkError::ConversionFailed {
                     from_framework: "unknown".to_string(),
                     to_framework: "unknown".to_string(),
@@ -6844,7 +7193,7 @@ pub mod error_handling {
             handlers.sort_by_key(|h| h.priority());
 
             for handler in handlers {
-                if let Ok(_) = handler.handle(&ml_error, context) {
+                if handler.handle(&ml_error, context).is_ok() {
                     return Ok(());
                 }
             }
@@ -6854,14 +7203,19 @@ pub mod error_handling {
                 for fallback in self.fallback_registry.values() {
                     if fallback.can_handle(&ml_error) {
                         if let Ok(Some(_)) = fallback.execute(context) {
-                            self.metrics.fallback_operations.fetch_add(1, Ordering::Relaxed);
+                            self.metrics
+                                .fallback_operations
+                                .fetch_add(1, Ordering::Relaxed);
                             return Ok(());
                         }
                     }
                 }
             }
 
-            Err(IoError::Other(format!("All recovery attempts failed for: {}", ml_error)))
+            Err(IoError::Other(format!(
+                "All recovery attempts failed for: {}",
+                ml_error
+            )))
         }
 
         /// Get recovery metrics
@@ -6880,7 +7234,8 @@ pub mod error_handling {
                 format!("load_model_{:?}", framework),
                 || MLModel::load(framework, path),
                 config,
-            ).await
+            )
+            .await
         }
 
         /// Execute model conversion with recovery
@@ -6900,7 +7255,8 @@ pub mod error_handling {
                     Ok(converted_model)
                 },
                 config,
-            ).await
+            )
+            .await
         }
     }
 
@@ -6918,7 +7274,10 @@ pub mod error_handling {
             // Create a minimal CPU-compatible model
             let mut model = MLModel::new(MLFramework::PyTorch);
             model.metadata.model_name = Some(format!("cpu_fallback_{}", _context.operation_name));
-            model.metadata.parameters.insert("fallback_type".to_string(), serde_json::Value::String("cpu".to_string()));
+            model.metadata.parameters.insert(
+                "fallback_type".to_string(),
+                serde_json::Value::String("cpu".to_string()),
+            );
             Ok(Some(model))
         }
 
@@ -6942,7 +7301,10 @@ pub mod error_handling {
         }
 
         fn can_handle(&self, error: &MLFrameworkError) -> bool {
-            matches!(error, MLFrameworkError::ModelLoadingFailed { .. } | MLFrameworkError::NetworkError { .. })
+            matches!(
+                error,
+                MLFrameworkError::ModelLoadingFailed { .. } | MLFrameworkError::NetworkError { .. }
+            )
         }
 
         fn name(&self) -> &str {
@@ -6957,9 +7319,13 @@ pub mod error_handling {
         fn execute(&self, _context: &RecoveryContext) -> Result<Option<MLModel>> {
             // Create a very simple identity model as fallback
             let mut model = MLModel::new(MLFramework::PyTorch);
-            model.metadata.model_name = Some(format!("simple_fallback_{}", _context.operation_name));
+            model.metadata.model_name =
+                Some(format!("simple_fallback_{}", _context.operation_name));
             model.metadata.model_version = Some("fallback.1.0.0".to_string());
-            model.metadata.parameters.insert("fallback_type".to_string(), serde_json::Value::String("simple".to_string()));
+            model.metadata.parameters.insert(
+                "fallback_type".to_string(),
+                serde_json::Value::String("simple".to_string()),
+            );
             Ok(Some(model))
         }
 
@@ -6979,7 +7345,10 @@ pub mod error_handling {
     impl ErrorHandler for NetworkErrorHandler {
         fn handle(&self, error: &MLFrameworkError, _context: &RecoveryContext) -> Result<()> {
             match error {
-                MLFrameworkError::NetworkError { attempts, last_error } => {
+                MLFrameworkError::NetworkError {
+                    attempts,
+                    last_error,
+                } => {
                     if attempts > &5 {
                         return Err(IoError::Other(format!(
                             "Network error persists after {} attempts: {}",
@@ -7004,7 +7373,11 @@ pub mod error_handling {
     impl ErrorHandler for ResourceErrorHandler {
         fn handle(&self, error: &MLFrameworkError, _context: &RecoveryContext) -> Result<()> {
             match error {
-                MLFrameworkError::ResourceExhaustion { resource, current, limit } => {
+                MLFrameworkError::ResourceExhaustion {
+                    resource,
+                    current,
+                    limit,
+                } => {
                     if resource == "memory" || resource == "gpu_memory" {
                         // Suggest garbage collection or model simplification
                         return Ok(());
@@ -7083,7 +7456,7 @@ pub mod error_handling {
         {
             // Check current state
             let state = *self.state.lock().unwrap();
-            
+
             match state {
                 CircuitState::Open => {
                     // Check if enough time has passed to try half-open
@@ -7126,12 +7499,12 @@ pub mod error_handling {
                 }
                 Err(error) => {
                     self.record_failure();
-                    
+
                     // Check if we should open the circuit
                     if self.failure_count.load(Ordering::Relaxed) >= self.failure_threshold {
                         *self.state.lock().unwrap() = CircuitState::Open;
                     }
-                    
+
                     Err(error)
                 }
             }
@@ -7189,22 +7562,22 @@ pub mod error_handling {
 
         pub fn check_health(&self) -> HashMap<String, HealthStatus> {
             let mut results = HashMap::new();
-            
+
             for (name, check) in &self.checks {
                 results.insert(name.clone(), check.check());
             }
-            
+
             results
         }
 
         pub fn overall_health(&self) -> HealthStatus {
             let results = self.check_health();
-            
+
             let mut unhealthy_count = 0;
             let mut degraded_count = 0;
             let mut unhealthy_reasons = Vec::new();
             let mut degraded_reasons = Vec::new();
-            
+
             for (name, status) in results {
                 match status {
                     HealthStatus::Unhealthy(reason) => {
@@ -7218,7 +7591,7 @@ pub mod error_handling {
                     HealthStatus::Healthy => {}
                 }
             }
-            
+
             if unhealthy_count > 0 {
                 HealthStatus::Unhealthy(unhealthy_reasons.join("; "))
             } else if degraded_count > 0 {
@@ -7333,14 +7706,14 @@ pub mod error_handling {
 
             for record in history.iter() {
                 summary.total_errors += 1;
-                
+
                 if record.recovery_attempted {
                     summary.recovery_attempts += 1;
                     if record.recovery_successful {
                         summary.successful_recoveries += 1;
                     }
                 }
-                
+
                 match record.level {
                     LogLevel::Error => summary.error_count += 1,
                     LogLevel::Warn => summary.warning_count += 1,

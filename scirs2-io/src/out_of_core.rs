@@ -79,6 +79,7 @@ struct ArrayMetadata {
     /// Array shape
     shape: Vec<usize>,
     /// Data type name
+    #[allow(dead_code)]
     dtype: String,
     /// Element size in bytes
     element_size: usize,
@@ -103,6 +104,7 @@ pub struct OutOfCoreArray<T> {
     /// Memory-mapped file
     mmap: Option<Mmap>,
     /// Mutable memory map (for writing)
+    #[allow(dead_code)]
     mmap_mut: Option<MmapMut>,
     /// Configuration
     config: OutOfCoreConfig,
@@ -131,6 +133,7 @@ struct CachedChunk<T> {
     /// Whether chunk is dirty (modified)
     dirty: bool,
     /// Access count
+    #[allow(dead_code)]
     access_count: usize,
 }
 
@@ -488,6 +491,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
         let mut file = OpenOptions::new()
             .write(true)
             .create(true)
+            .truncate(true)
             .open(&self.file_path)
             .map_err(|e| IoError::FileError(format!("Failed to open file for writing: {}", e)))?;
 
@@ -851,8 +855,8 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
         }
 
         // Check bounds
-        for i in 0..start.len() {
-            if start[i] + data.shape()[i] > self.metadata.shape[i] {
+        for (i, &start_val) in start.iter().enumerate() {
+            if start_val + data.shape()[i] > self.metadata.shape[i] {
                 return Err(IoError::FileError(
                     "Window extends beyond array bounds".to_string(),
                 ));
@@ -1139,7 +1143,7 @@ pub struct VirtualArray<T> {
 }
 
 /// Source for virtual array components
-trait ArraySource<T>: Send + Sync {
+pub trait ArraySource<T>: Send + Sync {
     /// Get shape
     fn shape(&self) -> &[usize];
 

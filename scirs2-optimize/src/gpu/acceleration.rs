@@ -1502,11 +1502,12 @@ mod tests {
     
     #[test]
     fn test_algorithm_specific_state() {
-        match AlgorithmSpecificState::ParticleSwarm {
+        let state = AlgorithmSpecificState::ParticleSwarm {
             inertia_weights: Array1::zeros(10),
             acceleration_coefficients: Array2::zeros((10, 2)),
             neighborhood_topology: Array2::from_elem((10, 10), false),
-        } {
+        };
+        match state {
             AlgorithmSpecificState::ParticleSwarm { .. } => {
                 // Test passed
             }

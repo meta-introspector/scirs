@@ -224,6 +224,7 @@ pub mod unconstrained;
 pub mod unified_pipeline;
 pub mod visualization;
 pub mod quantum_inspired;
+pub mod learned_optimizers;
 
 // Common optimization result structure
 pub mod result;
@@ -325,6 +326,14 @@ pub use visualization::{
 pub use quantum_inspired::{
     quantum_optimize, quantum_particle_swarm_optimize, QuantumInspiredOptimizer, QuantumState,
     QuantumAnnealingSchedule, QuantumOptimizationStats, Complex, CoolingSchedule,
+};
+pub use learned_optimizers::{
+    learned_optimize, few_shot_learning_optimize, 
+    AdaptiveNASSystem, AdaptiveTransformerOptimizer, FewShotLearningOptimizer,
+    NeuralAdaptiveOptimizer, LearnedHyperparameterTuner,
+    LearnedOptimizer, LearnedOptimizationConfig, OptimizationProblem, TrainingTask,
+    MetaOptimizerState, ParameterDistribution, AdaptationStatistics, ActivationType,
+    OptimizationNetwork, ProblemEncoder,
 };
 
 // Prelude module for convenient imports
@@ -436,6 +445,14 @@ pub mod prelude {
     pub use crate::quantum_inspired::{
         quantum_optimize, quantum_particle_swarm_optimize, QuantumInspiredOptimizer, QuantumState,
         QuantumAnnealingSchedule, QuantumOptimizationStats, Complex, CoolingSchedule,
+    };
+    pub use crate::learned_optimizers::{
+        learned_optimize, few_shot_learning_optimize, 
+        AdaptiveNASSystem, AdaptiveTransformerOptimizer, FewShotLearningOptimizer,
+        NeuralAdaptiveOptimizer, LearnedHyperparameterTuner,
+        LearnedOptimizer, LearnedOptimizationConfig, OptimizationProblem, TrainingTask,
+        MetaOptimizerState, ParameterDistribution, AdaptationStatistics, ActivationType,
+        OptimizationNetwork, ProblemEncoder,
     };
 }
 

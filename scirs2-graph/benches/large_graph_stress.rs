@@ -574,4 +574,274 @@ mod tests {
         // Save results
         let _ = save_results(&results, "stress_test_5m_results.json");
     }
+
+    #[test]
+    #[ignore] // Run with: cargo test --release -- --ignored extreme_scale_stress_test
+    fn extreme_scale_stress_test() {
+        println!("🚀 Starting extreme scale stress test...");
+
+        let config = StressTestConfig {
+            node_counts: vec![10_000_000, 20_000_000, 50_000_000],
+            edge_densities: vec![0.0000001], // Ultra sparse
+            algorithms: vec!["bfs".to_string(), "degree_distribution".to_string()],
+            memory_limit_mb: 64_000, // 64GB
+            timeout_seconds: 3600,   // 1 hour
+            sample_size: 100_000,
+            parallel: true,
+        };
+
+        let results = run_stress_test_suite(config);
+        print_stress_test_report(&results);
+
+        // Validate extreme scale performance
+        assert!(results.summary.largest_graph_tested >= 10_000_000);
+        assert!(results.memory_profile.peak_memory_mb < 64_000.0);
+
+        let _ = save_results(&results, "extreme_scale_stress_results.json");
+    }
+
+    #[test]
+    #[ignore] // Run with: cargo test --release -- --ignored dense_graph_stress_test
+    fn dense_graph_stress_test() {
+        println!("📊 Starting dense graph stress test...");
+
+        // Test smaller graphs with higher density
+        let config = StressTestConfig {
+            node_counts: vec![10_000, 50_000, 100_000],
+            edge_densities: vec![0.01, 0.05, 0.1], // Much denser
+            algorithms: vec![
+                "connected_components".to_string(),
+                "pagerank".to_string(),
+                "clustering_coefficient".to_string(),
+            ],
+            memory_limit_mb: 16_384,
+            timeout_seconds: 900, // 15 minutes
+            sample_size: 5000,
+            parallel: true,
+        };
+
+        let results = run_stress_test_suite(config);
+        print_stress_test_report(&results);
+
+        // Dense graphs should have different performance characteristics
+        for result in &results.algorithm_performance {
+            if result.algorithm == "clustering_coefficient" {
+                println!("Dense graph clustering result: {}", result.result_summary);
+            }
+        }
+
+        let _ = save_results(&results, "dense_graph_stress_results.json");
+    }
+
+    #[test]
+    #[ignore] // Run with: cargo test --release -- --ignored streaming_scalability_test
+    fn streaming_scalability_test() {
+        println!("🌊 Starting streaming scalability test...");
+
+        // Test streaming operations on very large graphs
+        let total_nodes = 100_000_000; // 100M nodes
+        let chunk_sizes = vec![100_000, 1_000_000, 10_000_000];
+
+        for chunk_size in chunk_sizes {
+            println!("Testing chunk size: {}", chunk_size);
+
+            let start = Instant::now();
+            let mut total_processed = 0;
+            let memory_start = memory::get_current_memory_mb();
+
+            // Simulate streaming processing
+            for chunk_start in (0..total_nodes).step_by(chunk_size) {
+                let chunk_end = (chunk_start + chunk_size).min(total_nodes);
+                let chunk_nodes = chunk_end - chunk_start;
+
+                // Create and process chunk
+                let chunk_graph = generators::path_graph(chunk_nodes);
+
+                // Simulate processing
+                let _degrees: Vec<usize> = (0..chunk_graph.node_count())
+                    .map(|i| chunk_graph.degree(i))
+                    .collect();
+
+                total_processed += chunk_nodes;
+
+                // Memory check
+                let current_memory = memory::get_current_memory_mb();
+                if current_memory - memory_start > 4096.0 {
+                    // 4GB limit
+                    println!(
+                        "Memory limit reached at {} nodes processed",
+                        total_processed
+                    );
+                    break;
+                }
+
+                if total_processed % 10_000_000 == 0 {
+                    println!("Processed {} nodes...", total_processed);
+                }
+            }
+
+            let duration = start.elapsed();
+            let memory_used = memory::get_current_memory_mb() - memory_start;
+
+            println!(
+                "Chunk size {}: Processed {} nodes in {:.2}s using {:.1}MB",
+                chunk_size,
+                total_processed,
+                duration.as_secs_f64(),
+                memory_used
+            );
+        }
+    }
+
+    #[test]
+    #[ignore] // Run with: cargo test --release -- --ignored parallel_performance_comparison
+    fn parallel_performance_comparison() {
+        println!("⚡ Starting parallel performance comparison...");
+
+        let graph_sizes = vec![100_000, 500_000, 1_000_000];
+
+        for &size in &graph_sizes {
+            println!("\nTesting graph with {} nodes:", size);
+
+            let graph = generators::barabasi_albert_graph(size, 3, None).unwrap();
+
+            // Test serial PageRank
+            let start = Instant::now();
+            let _serial_result = algorithms::pagerank(&graph, 0.85, Some(50)).unwrap();
+            let serial_time = start.elapsed();
+
+            // Test parallel PageRank (if available)
+            let start = Instant::now();
+            let _parallel_result =
+                measures::parallel_pagerank_centrality(&graph, 0.85, Some(50)).unwrap();
+            let parallel_time = start.elapsed();
+
+            let speedup = serial_time.as_secs_f64() / parallel_time.as_secs_f64();
+
+            println!("  Serial PageRank: {:.3}s", serial_time.as_secs_f64());
+            println!("  Parallel PageRank: {:.3}s", parallel_time.as_secs_f64());
+            println!("  Speedup: {:.2}x", speedup);
+
+            // Assert reasonable speedup
+            assert!(speedup > 1.5, "Parallel speedup should be at least 1.5x");
+        }
+    }
+
+    #[test]
+    #[ignore] // Run with: cargo test --release -- --ignored memory_pressure_test
+    fn memory_pressure_test() {
+        println!("💾 Starting memory pressure test...");
+
+        let mut graphs = Vec::new();
+        let initial_memory = memory::get_current_memory_mb();
+        let memory_limit = 8192.0; // 8GB limit
+
+        // Create graphs until we approach memory limit
+        let mut graph_count = 0;
+        loop {
+            let current_memory = memory::get_current_memory_mb();
+            if current_memory - initial_memory > memory_limit * 0.8 {
+                println!(
+                    "Approaching memory limit, stopping at {} graphs",
+                    graph_count
+                );
+                break;
+            }
+
+            let graph = generators::erdos_renyi_graph(50_000, 0.001, None).unwrap();
+            graphs.push(graph);
+            graph_count += 1;
+
+            if graph_count % 10 == 0 {
+                println!(
+                    "Created {} graphs, using {:.1}MB",
+                    graph_count,
+                    current_memory - initial_memory
+                );
+            }
+
+            if graph_count > 1000 {
+                println!("Safety limit reached at 1000 graphs");
+                break;
+            }
+        }
+
+        // Test operations under memory pressure
+        println!("Testing operations under memory pressure...");
+        for (i, graph) in graphs.iter().enumerate().take(10) {
+            let start = Instant::now();
+            let _components = algorithms::connected_components(graph).unwrap();
+            let duration = start.elapsed();
+
+            if i % 5 == 0 {
+                println!(
+                    "Graph {}: connected_components in {:.3}s",
+                    i,
+                    duration.as_secs_f64()
+                );
+            }
+        }
+
+        let final_memory = memory::get_current_memory_mb();
+        println!(
+            "Memory pressure test completed. Used {:.1}MB total.",
+            final_memory - initial_memory
+        );
+    }
+
+    #[test]
+    #[ignore] // Run with: cargo test --release -- --ignored edge_case_graphs_test
+    fn edge_case_graphs_test() {
+        println!("🔍 Testing edge case graph structures...");
+
+        // Test 1: Star graph (one central node)
+        println!("Testing star graph...");
+        let star = generators::star_graph(1_000_000);
+        let start = Instant::now();
+        let _components = algorithms::connected_components(&star).unwrap();
+        println!(
+            "Star graph (1M nodes) connected_components: {:.3}s",
+            start.elapsed().as_secs_f64()
+        );
+
+        // Test 2: Path graph (linear structure)
+        println!("Testing path graph...");
+        let path = generators::path_graph(1_000_000);
+        let start = Instant::now();
+        let _diameter = algorithms::diameter(&path).unwrap();
+        println!(
+            "Path graph (1M nodes) diameter: {:.3}s",
+            start.elapsed().as_secs_f64()
+        );
+
+        // Test 3: Complete subgraphs
+        println!("Testing complete subgraphs...");
+        let complete = generators::complete_graph(10_000);
+        let start = Instant::now();
+        let _triangles = algorithms::count_triangles(&complete).unwrap();
+        println!(
+            "Complete graph (10K nodes) triangle count: {:.3}s",
+            start.elapsed().as_secs_f64()
+        );
+
+        // Test 4: Disconnected components
+        println!("Testing disconnected graph...");
+        let mut disconnected = generators::erdos_renyi_graph(100_000, 0.0001, None).unwrap();
+        // Artificially create multiple components by removing edges
+        for i in (0..50_000).step_by(1000) {
+            if let Some(neighbors) = disconnected.neighbors(i).ok() {
+                for neighbor in neighbors.clone() {
+                    let _ = disconnected.remove_edge(i, neighbor);
+                }
+            }
+        }
+
+        let start = Instant::now();
+        let components = algorithms::connected_components(&disconnected).unwrap();
+        println!(
+            "Disconnected graph: {} components found in {:.3}s",
+            components.len(),
+            start.elapsed().as_secs_f64()
+        );
+    }
 }

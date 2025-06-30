@@ -3,6 +3,9 @@
 //! Provides comprehensive metadata handling across different file formats with
 //! unified interfaces for storing, retrieving, and transforming metadata.
 
+#![allow(dead_code)]
+#![allow(missing_docs)]
+
 use crate::error::{IoError, Result};
 use chrono::{DateTime, Utc};
 use indexmap::{indexmap, IndexMap};
@@ -400,6 +403,7 @@ impl MetadataSchema {
         Ok(())
     }
 
+    #[allow(clippy::only_used_in_recursion)]
     fn validate_type(&self, value: &MetadataValue, expected: &MetadataFieldType) -> bool {
         match (value, expected) {
             (MetadataValue::String(_), MetadataFieldType::String) => true,
@@ -1075,6 +1079,7 @@ impl MetadataReferenceResolver {
         refs
     }
 
+    #[allow(clippy::only_used_in_recursion)]
     fn extract_refs_from_value(
         &self,
         data: &IndexMap<String, MetadataValue>,

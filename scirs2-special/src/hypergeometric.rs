@@ -1,7 +1,143 @@
-//! Hypergeometric functions
+//! Hypergeometric functions with comprehensive mathematical foundations
 //!
-//! This module provides implementations of various hypergeometric functions
-//! and related special functions.
+//! This module provides implementations of hypergeometric functions, which form
+//! the mathematical foundation for many other special functions. These functions
+//! are among the most general and important in special function theory.
+//!
+//! ## Mathematical Theory and Derivations
+//!
+//! ### Historical Context
+//!
+//! Hypergeometric functions were first studied by Euler and Gauss in the 18th and
+//! 19th centuries. Gauss's work on the hypergeometric equation and its solutions
+//! laid the foundation for much of modern special function theory. The theory was
+//! later extended by Kummer, Riemann, and others.
+//!
+//! ### The Hypergeometric Differential Equation
+//!
+//! The **generalized hypergeometric differential equation** is:
+//! ```text
+//! x(1-x) d²y/dx² + [c - (a+b+1)x] dy/dx - ab y = 0
+//! ```
+//!
+//! **Derivation from Power Series Method**:
+//!
+//! Assuming a power series solution y = Σ_{n=0}^∞ aₙ xⁿ and substituting into
+//! the differential equation yields the recurrence relation:
+//! ```text
+//! aₙ₊₁/aₙ = [(a+n)(b+n)] / [(c+n)(n+1)]
+//! ```
+//!
+//! This leads directly to the hypergeometric series representation.
+//!
+//! ### The Hypergeometric Function ₂F₁(a,b;c;z)
+//!
+//! **Definition** (Gauss hypergeometric function):
+//! ```text
+//! ₂F₁(a,b;c;z) = Σ_{n=0}^∞ [(a)ₙ(b)ₙ / (c)ₙ] (zⁿ/n!)
+//! ```
+//! where (a)ₙ is the Pochhammer symbol (rising factorial).
+//!
+//! **Convergence Properties**:
+//! - **|z| < 1**: Series converges absolutely for all a, b, c (c ≠ 0, -1, -2, ...)
+//! - **|z| = 1**: Convergence depends on Re(c - a - b):
+//!   - Re(c - a - b) > 0: Absolute convergence
+//!   - -1 < Re(c - a - b) ≤ 0: Conditional convergence (z ≠ 1)
+//!   - Re(c - a - b) ≤ -1: Divergence
+//!
+//! **Proof of convergence for |z| < 1**: Apply the ratio test to the series
+//! coefficients. The ratio |aₙ₊₁/aₙ| → |z| as n → ∞.
+//!
+//! ### Fundamental Properties and Identities
+//!
+//! **Symmetry in parameters a and b**:
+//! ```text
+//! ₂F₁(a,b;c;z) = ₂F₁(b,a;c;z)
+//! ```
+//! **Proof**: Direct from series definition by interchanging summation indices.
+//!
+//! **Euler's Transformation** (|z| < 1):
+//! ```text
+//! ₂F₁(a,b;c;z) = (1-z)^(c-a-b) ₂F₁(c-a,c-b;c;z)
+//! ```
+//! **Proof**: Use the integral representation and change of variables.
+//!
+//! **Pfaff's Transformation**:
+//! ```text
+//! ₂F₁(a,b;c;z) = (1-z)^(-a) ₂F₁(a,c-b;c;z/(z-1))
+//! ```
+//!
+//! **Gauss's Summation Formula** (c - a - b > 0):
+//! ```text
+//! ₂F₁(a,b;c;1) = Γ(c)Γ(c-a-b) / [Γ(c-a)Γ(c-b)]
+//! ```
+//! **Proof**: Use the integral representation and beta function properties.
+//!
+//! ### Integral Representations
+//!
+//! **Euler's Integral** (Re(c) > Re(b) > 0):
+//! ```text
+//! ₂F₁(a,b;c;z) = [Γ(c)/Γ(b)Γ(c-b)] ∫₀¹ t^(b-1)(1-t)^(c-b-1)(1-zt)^(-a) dt
+//! ```
+//! **Proof**: Expand (1-zt)^(-a) using the binomial theorem and integrate term by term.
+//!
+//! ### Connection to Elementary and Special Functions
+//!
+//! **Logarithm**:
+//! ```text
+//! ln(1+z) = z ₂F₁(1,1;2;-z)
+//! ```
+//!
+//! **Arctangent**:
+//! ```text
+//! arctan(z) = z ₂F₁(1/2,1;3/2;-z²)
+//! ```
+//!
+//! **Legendre Polynomials**:
+//! ```text
+//! Pₙ(z) = ₂F₁(-n,n+1;1;(1-z)/2)
+//! ```
+//!
+//! **Bessel Functions** (via confluent hypergeometric functions):
+//! ```text
+//! Jᵥ(z) = (z/2)^ν / Γ(ν+1) ₀F₁(;ν+1;-z²/4)
+//! ```
+//!
+//! ### Confluent Hypergeometric Function ₁F₁(a;c;z)
+//!
+//! **Definition** (Kummer's function):
+//! ```text
+//! ₁F₁(a;c;z) = Σ_{n=0}^∞ [(a)ₙ / (c)ₙ] (zⁿ/n!)
+//! ```
+//!
+//! **Limiting Relationship**:
+//! ```text
+//! ₁F₁(a;c;z) = lim_{b→∞} ₂F₁(a,b;c;z/b)
+//! ```
+//! **Proof**: Take the limit in the series representation using Stirling's approximation.
+//!
+//! **Kummer's Transformation**:
+//! ```text
+//! ₁F₁(a;c;z) = e^z ₁F₁(c-a;c;-z)
+//! ```
+//!
+//! ### Computational Methods
+//!
+//! This implementation uses several computational strategies:
+//!
+//! 1. **Direct series summation** for |z| < 0.5 and moderate parameters
+//! 2. **Transformation formulas** to map to convergent regions
+//! 3. **Recurrence relations** for efficient parameter shifting
+//! 4. **Asymptotic expansions** for large parameters
+//! 5. **Continued fractions** for enhanced numerical stability
+//!
+//! ### Applications in Physics and Engineering
+//!
+//! - **Quantum mechanics**: Hydrogen atom wave functions
+//! - **Statistical mechanics**: Partition functions
+//! - **Electromagnetic theory**: Antenna radiation patterns
+//! - **Probability theory**: Beta and gamma distributions
+//! - **Mathematical physics**: Solutions to many PDEs
 
 use crate::error::{SpecialError, SpecialResult};
 use crate::gamma::gamma;

@@ -31,6 +31,7 @@ pub struct PosTagger {
     /// Transition probabilities between POS tags
     transition_probs: HashMap<(PosTag, PosTag), f64>,
     /// Emission probabilities for word given POS tag
+    #[allow(dead_code)]
     emission_probs: HashMap<(String, PosTag), f64>,
     /// Use contextual information for disambiguation
     use_context: bool,
@@ -1561,11 +1562,9 @@ impl ContextualDisambiguator {
             let current = tags[i].clone();
 
             for rule in &self.context_rules {
-                if self.matches_pattern(&rule.pattern, left.as_ref(), &current, right.as_ref()) {
-                    if confidences[i] < rule.confidence {
-                        tags[i] = rule.new_tag.clone();
-                        confidences[i] = rule.confidence;
-                    }
+                if self.matches_pattern(&rule.pattern, left.as_ref(), &current, right.as_ref()) && confidences[i] < rule.confidence {
+                    tags[i] = rule.new_tag.clone();
+                    confidences[i] = rule.confidence;
                 }
             }
         }

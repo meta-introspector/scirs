@@ -277,62 +277,268 @@ pub mod lazy {
 pub mod gpu {
     use super::*;
 
-    /// GPU buffer for array data
+    /// Advanced GPU buffer for array data with memory management
     pub struct GpuBuffer {
-        // Use scirs2_core GPU abstractions
         #[cfg(feature = "gpu")]
-        buffer: Option<scirs2_core::gpu::GpuBuffer<f64>>,
+        buffer: Option<std::sync::Arc<dyn scirs2_core::gpu::GpuBuffer>>,
         size: usize,
+        element_size: usize,
+        shape: Vec<usize>,
+        allocated_size: usize,
     }
 
-    /// GPU compute pipeline for special functions
-    pub struct GpuPipeline {
-        // Use scirs2_core GPU abstractions
+    impl GpuBuffer {
+        /// Create a new GPU buffer
         #[cfg(feature = "gpu")]
-        context: Option<scirs2_core::gpu::GpuContext>,
-        #[cfg(feature = "gpu")]
-        gamma_kernel: Option<String>, // Placeholder for kernel name
-    }
-
-    impl GpuPipeline {
-        /// Create a new GPU pipeline
-        #[cfg(feature = "gpu")]
-        pub async fn new() -> SpecialResult<Self> {
-            // Use scirs2_core::gpu for GPU operations
-            use scirs2_core::gpu::{GpuBackend, GpuContext};
-
-            let context = GpuContext::new(GpuBackend::default()).map_err(|e| {
-                SpecialError::ComputationError(format!("Failed to create GPU context: {}", e))
+        pub fn new<T>(ctx: &scirs2_core::gpu::GpuContext, data: &[T]) -> SpecialResult<Self>
+        where
+            T: bytemuck::Pod + 'static,
+        {
+            let byte_data = bytemuck::cast_slice(data);
+            let buffer = ctx.create_buffer_with_data(byte_data).map_err(|e| {
+                SpecialError::ComputationError(format!("GPU buffer creation failed: {}", e))
             })?;
 
-            // Register or get gamma kernel handle
-            let gamma_kernel = Some("special_gamma".to_string()); // Placeholder
-                                                                  /*context.get_kernel("special_gamma").ok_or_else(|| {
-                                                                      SpecialError::ComputationError(
-                                                                          "Gamma kernel not registered in GPU context".to_string(),
-                                                                      )
-                                                                  })?;*/
-
             Ok(Self {
-                context: Some(context),
-                gamma_kernel,
+                buffer: Some(buffer),
+                size: data.len(),
+                element_size: std::mem::size_of::<T>(),
+                shape: vec![data.len()],
+                allocated_size: byte_data.len(),
             })
         }
 
-        /// Execute gamma function on GPU
+        /// Get buffer size in elements
+        pub fn size(&self) -> usize {
+            self.size
+        }
+
+        /// Get buffer shape
+        pub fn shape(&self) -> &[usize] {
+            &self.shape
+        }
+
+        /// Check if buffer is valid
         #[cfg(feature = "gpu")]
-        pub async fn gamma_gpu<D>(&self, input: &Array<f64, D>) -> SpecialResult<Array<f64, D>>
+        pub fn is_valid(&self) -> bool {
+            self.buffer.is_some()
+        }
+
+        #[cfg(not(feature = "gpu"))]
+        pub fn is_valid(&self) -> bool {
+            false
+        }
+    }
+
+    /// Advanced GPU compute pipeline for special functions
+    pub struct GpuPipeline {
+        #[cfg(feature = "gpu")]
+        context: Option<std::sync::Arc<scirs2_core::gpu::GpuContext>>,
+        #[cfg(feature = "gpu")]
+        pipelines: std::collections::HashMap<
+            String,
+            std::sync::Arc<dyn scirs2_core::gpu::ComputePipeline>,
+        >,
+        cache_enabled: bool,
+        performance_stats:
+            std::sync::Mutex<std::collections::HashMap<String, (u64, std::time::Duration)>>,
+    }
+
+    impl GpuPipeline {
+        /// Create a new advanced GPU pipeline with comprehensive functionality
+        #[cfg(feature = "gpu")]
+        pub fn new() -> SpecialResult<Self> {
+            use crate::gpu_context_manager::get_best_gpu_context;
+
+            let context = get_best_gpu_context().map_err(|e| {
+                SpecialError::ComputationError(format!("Failed to create GPU context: {}", e))
+            })?;
+
+            let mut pipelines = std::collections::HashMap::new();
+
+            // Pre-load commonly used shaders
+            let gamma_shader = include_str!("../shaders/gamma_compute.wgsl");
+            if let Ok(pipeline) = context.create_compute_pipeline(gamma_shader) {
+                pipelines.insert("gamma".to_string(), pipeline);
+            }
+
+            let bessel_shader = include_str!("../shaders/bessel_j0_compute.wgsl");
+            if let Ok(pipeline) = context.create_compute_pipeline(bessel_shader) {
+                pipelines.insert("bessel_j0".to_string(), pipeline);
+            }
+
+            let erf_shader = include_str!("../shaders/erf_compute.wgsl");
+            if let Ok(pipeline) = context.create_compute_pipeline(erf_shader) {
+                pipelines.insert("erf".to_string(), pipeline);
+            }
+
+            Ok(Self {
+                context: Some(context),
+                pipelines,
+                cache_enabled: true,
+                performance_stats: std::sync::Mutex::new(std::collections::HashMap::new()),
+            })
+        }
+
+        /// Execute a kernel on GPU with performance monitoring
+        #[cfg(feature = "gpu")]
+        pub fn execute_kernel<T>(
+            &self,
+            kernel_name: &str,
+            input: &[T],
+            output: &mut [T],
+        ) -> SpecialResult<std::time::Duration>
+        where
+            T: bytemuck::Pod + Clone,
+        {
+            let start_time = std::time::Instant::now();
+
+            let context = self.context.as_ref().ok_or_else(|| {
+                SpecialError::ComputationError("No GPU context available".to_string())
+            })?;
+
+            let pipeline = self.pipelines.get(kernel_name).ok_or_else(|| {
+                SpecialError::ComputationError(format!("Kernel '{}' not found", kernel_name))
+            })?;
+
+            // Create GPU buffers
+            let input_buffer = context
+                .create_buffer_with_data(bytemuck::cast_slice(input))
+                .map_err(|e| {
+                    SpecialError::ComputationError(format!("Input buffer creation failed: {}", e))
+                })?;
+
+            let output_buffer = context
+                .create_buffer(output.len() * std::mem::size_of::<T>())
+                .map_err(|e| {
+                    SpecialError::ComputationError(format!("Output buffer creation failed: {}", e))
+                })?;
+
+            // Execute kernel
+            let workgroup_count = (input.len() + 255) / 256;
+            context
+                .execute_compute(
+                    pipeline.as_ref(),
+                    input_buffer.as_ref(),
+                    output_buffer.as_ref(),
+                    (workgroup_count, 1, 1),
+                )
+                .map_err(|e| {
+                    SpecialError::ComputationError(format!("Kernel execution failed: {}", e))
+                })?;
+
+            // Read results
+            let result_data = context.read_buffer(output_buffer.as_ref()).map_err(|e| {
+                SpecialError::ComputationError(format!("Buffer read failed: {}", e))
+            })?;
+
+            let typed_result = bytemuck::cast_slice::<u8, T>(&result_data);
+            output.copy_from_slice(typed_result);
+
+            let elapsed = start_time.elapsed();
+
+            // Update performance statistics
+            if let Ok(mut stats) = self.performance_stats.lock() {
+                let entry = stats
+                    .entry(kernel_name.to_string())
+                    .or_insert((0, std::time::Duration::ZERO));
+                entry.0 += 1;
+                entry.1 += elapsed;
+            }
+
+            Ok(elapsed)
+        }
+
+        /// Get performance statistics for a kernel
+        pub fn get_kernel_stats(&self, kernel_name: &str) -> Option<(u64, std::time::Duration)> {
+            self.performance_stats
+                .lock()
+                .ok()?
+                .get(kernel_name)
+                .copied()
+        }
+
+        /// Clear performance statistics
+        pub fn clear_stats(&self) {
+            if let Ok(mut stats) = self.performance_stats.lock() {
+                stats.clear();
+            }
+        }
+
+        /// Execute gamma function on GPU with advanced features
+        #[cfg(feature = "gpu")]
+        pub fn gamma_gpu<D>(&self, input: &Array<f64, D>) -> SpecialResult<Array<f64, D>>
         where
             D: Dimension,
         {
-            // Placeholder for actual GPU execution
-            // In a real implementation, this would:
-            // 1. Transfer data to GPU
-            // 2. Execute the kernel
-            // 3. Transfer results back
+            // For 1D arrays, use direct GPU execution
+            if input.ndim() == 1 {
+                let input_slice = input.as_slice().ok_or_else(|| {
+                    SpecialError::ComputationError("Array not contiguous".to_string())
+                })?;
 
-            // For now, fall back to CPU implementation
-            Ok(input.mapv(crate::gamma::gamma))
+                let mut output = vec![0.0f64; input_slice.len()];
+                self.execute_kernel("gamma", input_slice, &mut output)?;
+
+                let result = Array::from_vec(output)
+                    .into_dimensionality::<D>()
+                    .map_err(|e| {
+                        SpecialError::ComputationError(format!("Shape conversion error: {}", e))
+                    })?;
+
+                Ok(result)
+            } else {
+                // For multi-dimensional arrays, flatten, process, and reshape
+                let flattened: Vec<f64> = input.iter().copied().collect();
+                let mut output = vec![0.0f64; flattened.len()];
+
+                self.execute_kernel("gamma", &flattened, &mut output)?;
+
+                let result = Array::from_vec(output)
+                    .to_shape(input.dim())
+                    .map_err(|e| SpecialError::ComputationError(format!("Shape error: {}", e)))?
+                    .into_owned();
+
+                Ok(result)
+            }
+        }
+
+        /// Execute Bessel J0 function on GPU
+        #[cfg(feature = "gpu")]
+        pub fn bessel_j0_gpu<D>(&self, input: &Array<f64, D>) -> SpecialResult<Array<f64, D>>
+        where
+            D: Dimension,
+        {
+            let flattened: Vec<f64> = input.iter().copied().collect();
+            let mut output = vec![0.0f64; flattened.len()];
+
+            self.execute_kernel("bessel_j0", &flattened, &mut output)?;
+
+            let result = Array::from_vec(output)
+                .to_shape(input.dim())
+                .map_err(|e| SpecialError::ComputationError(format!("Shape error: {}", e)))?
+                .into_owned();
+
+            Ok(result)
+        }
+
+        /// Execute error function on GPU
+        #[cfg(feature = "gpu")]
+        pub fn erf_gpu<D>(&self, input: &Array<f64, D>) -> SpecialResult<Array<f64, D>>
+        where
+            D: Dimension,
+        {
+            let flattened: Vec<f64> = input.iter().copied().collect();
+            let mut output = vec![0.0f64; flattened.len()];
+
+            self.execute_kernel("erf", &flattened, &mut output)?;
+
+            let result = Array::from_vec(output)
+                .to_shape(input.dim())
+                .map_err(|e| SpecialError::ComputationError(format!("Shape error: {}", e)))?
+                .into_owned();
+
+            Ok(result)
         }
 
         /// Execute gamma function on CPU as fallback

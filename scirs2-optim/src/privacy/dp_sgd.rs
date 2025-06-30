@@ -214,7 +214,7 @@ where
             config.dataset_size,
         );
 
-        let rng = Box::new(rand::thread_rng());
+        let rng = Box::new(rand::rng());
 
         let adaptive_clipping = if config.adaptive_clipping {
             Some(AdaptiveClippingState::new(

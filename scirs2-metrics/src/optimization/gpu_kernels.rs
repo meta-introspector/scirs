@@ -406,6 +406,7 @@ pub trait GpuRuntime {
 }
 
 /// CUDA runtime implementation
+#[derive(Debug)]
 pub struct CudaRuntime {
     device_id: i32,
     context: Option<usize>,
@@ -467,6 +468,7 @@ impl GpuRuntime for CudaRuntime {
 }
 
 /// OpenCL runtime implementation
+#[derive(Debug)]
 pub struct OpenClRuntime {
     platform_id: usize,
     device_id: usize,
@@ -1031,7 +1033,7 @@ impl AdvancedGpuComputer {
             GpuApi::Metal => {
                 // Metal support for macOS
                 if Self::is_metal_available() {
-                    let metal_ctx = Self::initialize_metal_context()?;
+                    let _metal_ctx = Self::initialize_metal_context()?;
                     // Note: Metal context would be stored differently, but for consistency
                     println!("Metal compute backend initialized");
                 } else {
@@ -1041,7 +1043,7 @@ impl AdvancedGpuComputer {
             GpuApi::Vulkan => {
                 // Vulkan compute support
                 if Self::is_vulkan_available() {
-                    let vulkan_ctx = Self::initialize_vulkan_context()?;
+                    let _vulkan_ctx = Self::initialize_vulkan_context()?;
                     println!("Vulkan compute backend initialized");
                 } else {
                     println!("Vulkan not available, falling back to other backends");
@@ -1228,11 +1230,12 @@ impl AdvancedGpuComputer {
         }
 
         // Check for Vulkan SDK paths
+        let vulkan_sdk_env = std::env::var("VULKAN_SDK").unwrap_or_default();
         let vulkan_sdk_paths = [
             "/usr/share/vulkan",
             "/opt/vulkan-sdk",
             "/usr/local/share/vulkan",
-            std::env::var("VULKAN_SDK").unwrap_or_default().as_str(),
+            vulkan_sdk_env.as_str(),
         ];
 
         for path in &vulkan_sdk_paths {
@@ -1326,10 +1329,10 @@ impl AdvancedGpuComputer {
         metrics: &[&str],
     ) -> Result<GpuComputeResults<Vec<HashMap<String, F>>>>
     where
-        F: Float + SimdUnifiedOps<F> + Send + Sync + NumCast,
+        F: Float + SimdUnifiedOps + Send + Sync + NumCast,
     {
         let start_time = Instant::now();
-        let batch_size = y_true_batch.nrows();
+        let _batch_size = y_true_batch.nrows();
         let data_size = y_true_batch.len();
 
         // Determine optimal computation strategy
@@ -1407,9 +1410,9 @@ impl AdvancedGpuComputer {
         metrics: &[&str],
     ) -> Result<(Vec<HashMap<String, F>>, KernelMetrics, TransferMetrics)>
     where
-        F: Float + NumCast,
+        F: Float + NumCast + std::iter::Sum,
     {
-        let cuda_ctx = self.cuda_context.as_ref().ok_or_else(|| {
+        let _cuda_ctx = self.cuda_context.as_ref().ok_or_else(|| {
             MetricsError::ComputationError("CUDA context not available".to_string())
         })?;
 
@@ -1589,7 +1592,7 @@ impl AdvancedGpuComputer {
         metrics: &[&str],
     ) -> Result<Vec<HashMap<String, F>>>
     where
-        F: Float + SimdUnifiedOps<F> + Send + Sync,
+        F: Float + SimdUnifiedOps + Send + Sync,
     {
         use scirs2_core::parallel_ops::*;
 
@@ -1644,7 +1647,7 @@ impl AdvancedGpuComputer {
         _config: &KernelConfig,
     ) -> Result<F>
     where
-        F: Float,
+        F: Float + std::iter::Sum,
     {
         // Optimized CUDA MSE kernel simulation
         let mse = y_true
@@ -1663,7 +1666,7 @@ impl AdvancedGpuComputer {
         _config: &KernelConfig,
     ) -> Result<F>
     where
-        F: Float,
+        F: Float + std::iter::Sum,
     {
         let mae = y_true
             .iter()
@@ -1681,7 +1684,7 @@ impl AdvancedGpuComputer {
         _config: &KernelConfig,
     ) -> Result<F>
     where
-        F: Float,
+        F: Float + std::iter::Sum,
     {
         let mean_true = y_true.iter().cloned().sum::<F>() / F::from(y_true.len()).unwrap();
 
@@ -1710,7 +1713,7 @@ impl AdvancedGpuComputer {
         _config: &KernelConfig,
     ) -> Result<F>
     where
-        F: Float,
+        F: Float + std::iter::Sum,
     {
         let n = F::from(x.len()).unwrap();
         let mean_x = x.iter().cloned().sum::<F>() / n;
@@ -1739,28 +1742,28 @@ impl AdvancedGpuComputer {
     // OpenCL kernel implementations (similar to CUDA but with different performance characteristics)
     fn opencl_mse_kernel<F>(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F>
     where
-        F: Float,
+        F: Float + std::iter::Sum,
     {
         self.cuda_mse_kernel(y_true, y_pred, &KernelConfig::default())
     }
 
     fn opencl_mae_kernel<F>(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F>
     where
-        F: Float,
+        F: Float + std::iter::Sum,
     {
         self.cuda_mae_kernel(y_true, y_pred, &KernelConfig::default())
     }
 
     fn opencl_r2_kernel<F>(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F>
     where
-        F: Float,
+        F: Float + std::iter::Sum,
     {
         self.cuda_r2_kernel(y_true, y_pred, &KernelConfig::default())
     }
 
     fn opencl_correlation_kernel<F>(&self, x: &ArrayView1<F>, y: &ArrayView1<F>) -> Result<F>
     where
-        F: Float,
+        F: Float + std::iter::Sum,
     {
         self.cuda_correlation_kernel(x, y, &KernelConfig::default())
     }
@@ -1768,7 +1771,7 @@ impl AdvancedGpuComputer {
     // SIMD implementations
     fn simd_mse<F>(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F>
     where
-        F: Float + SimdUnifiedOps<F>,
+        F: Float + SimdUnifiedOps,
     {
         if self.capabilities.supports_simd() {
             let diff = F::simd_sub(y_true, y_pred)?;
@@ -1788,7 +1791,7 @@ impl AdvancedGpuComputer {
 
     fn simd_mae<F>(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F>
     where
-        F: Float + SimdUnifiedOps<F>,
+        F: Float + SimdUnifiedOps,
     {
         if self.capabilities.supports_simd() {
             let diff = F::simd_sub(y_true, y_pred)?;
@@ -1808,7 +1811,7 @@ impl AdvancedGpuComputer {
 
     fn simd_r2_score<F>(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F>
     where
-        F: Float + SimdUnifiedOps<F>,
+        F: Float + SimdUnifiedOps,
     {
         if self.capabilities.supports_simd() {
             let mean_true = F::simd_sum(y_true)? / F::from(y_true.len()).unwrap();
@@ -1834,7 +1837,7 @@ impl AdvancedGpuComputer {
 
     fn simd_correlation<F>(&self, x: &ArrayView1<F>, y: &ArrayView1<F>) -> Result<F>
     where
-        F: Float + SimdUnifiedOps<F>,
+        F: Float + SimdUnifiedOps,
     {
         if self.capabilities.supports_simd() {
             let n = F::from(x.len()).unwrap();

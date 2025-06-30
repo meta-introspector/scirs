@@ -182,12 +182,18 @@ impl TransformationMonitor {
 
         #[cfg(feature = "monitoring")]
         {
-            metrics_registry.register(Box::new(prometheus_metrics.drift_detections.clone()))?;
-            metrics_registry.register(Box::new(prometheus_metrics.processing_time.clone()))?;
-            metrics_registry.register(Box::new(prometheus_metrics.memory_usage.clone()))?;
-            metrics_registry.register(Box::new(prometheus_metrics.error_rate.clone()))?;
-            metrics_registry.register(Box::new(prometheus_metrics.throughput.clone()))?;
-            metrics_registry.register(Box::new(prometheus_metrics.data_quality.clone()))?;
+            metrics_registry.register(Box::new(prometheus_metrics.drift_detections.clone()))
+                .map_err(|e| TransformError::ComputationError(format!("Failed to register counter: {}", e)))?;
+            metrics_registry.register(Box::new(prometheus_metrics.processing_time.clone()))
+                .map_err(|e| TransformError::ComputationError(format!("Failed to register histogram: {}", e)))?;
+            metrics_registry.register(Box::new(prometheus_metrics.memory_usage.clone()))
+                .map_err(|e| TransformError::ComputationError(format!("Failed to register gauge: {}", e)))?;
+            metrics_registry.register(Box::new(prometheus_metrics.error_rate.clone()))
+                .map_err(|e| TransformError::ComputationError(format!("Failed to register gauge: {}", e)))?;
+            metrics_registry.register(Box::new(prometheus_metrics.throughput.clone()))
+                .map_err(|e| TransformError::ComputationError(format!("Failed to register gauge: {}", e)))?;
+            metrics_registry.register(Box::new(prometheus_metrics.data_quality.clone()))
+                .map_err(|e| TransformError::ComputationError(format!("Failed to register gauge: {}", e)))?;
         }
 
         Ok(TransformationMonitor {

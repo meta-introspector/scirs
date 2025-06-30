@@ -125,11 +125,11 @@ pub use time_series::{FourierFeatures, LagFeatures, TimeSeriesFeatures, WaveletF
 #[cfg(feature = "simd")]
 pub use normalize_simd::{
     simd_l2_normalize_1d, simd_maxabs_normalize_1d, simd_minmax_normalize_1d, simd_normalize_array,
-    simd_zscore_normalize_1d,
+    simd_normalize_adaptive, simd_normalize_batch, simd_zscore_normalize_1d, AdaptiveBlockSizer,
 };
 
 #[cfg(feature = "simd")]
-pub use features_simd::{simd_binarize, simd_power_transform, SimdPolynomialFeatures};
+pub use features_simd::{simd_binarize, simd_polynomial_features_optimized, simd_power_transform, SimdPolynomialFeatures};
 
 #[cfg(feature = "simd")]
 pub use scaling_simd::{SimdMaxAbsScaler, SimdRobustScaler, SimdStandardScaler};
@@ -156,7 +156,11 @@ pub use utils::{
     ArrayMemoryPool, DataChunker, PerfUtils, ProcessingStrategy, StatUtils, TypeConverter,
     ValidationUtils,
 };
-pub use performance::{EnhancedPCA, EnhancedStandardScaler};\npub use optimization_config::{\n    AutoTuner, DataCharacteristics, OptimizationConfig, OptimizationReport, SystemResources,\n    TransformationRecommendation,\n};
+pub use performance::{EnhancedPCA, EnhancedStandardScaler, PerformanceStats, UltraFastMemoryPool, UltraFastPCA};
+pub use optimization_config::{
+    AutoTuner, DataCharacteristics, OptimizationConfig, OptimizationReport, SystemResources,
+    TransformationRecommendation,
+};
 
 // GPU acceleration exports
 #[cfg(feature = "gpu")]

@@ -338,8 +338,9 @@ mod tests {
     fn test_array_wrapper() {
         use ndarray::arr1;
 
-        let arr_gamma =
-            ArrayWrapper::new("gamma_array", |x: &ArrayView1<f64>| x.mapv(gamma::<f64>));
+        let arr_gamma = ArrayWrapper::new("gamma_array", |x: &ArrayView1<f64>| {
+            x.mapv(crate::gamma::gamma::<f64>)
+        });
 
         // Valid array
         let input = arr1(&[1.0, 2.0, 3.0, 4.0]);

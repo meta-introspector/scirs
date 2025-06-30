@@ -297,7 +297,7 @@ impl FeatureRegistry {
 
 /// Convenience functions for common deprecation scenarios
 pub mod convenience {
-    use super::*;
+    use crate::experimental_feature;
 
     /// Mark a GPU feature as experimental
     pub fn warn_gpu_experimental(feature_name: &str) {

@@ -38,9 +38,9 @@ use crate::cache::BSplineCache;
 use crate::error::{InterpolateError, InterpolateResult};
 use ndarray::{Array1, Array2, ArrayView1};
 use num_traits::{Float, FromPrimitive, Zero};
+use std::cell::RefCell;
 use std::fmt::{Debug, Display};
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, RemAssign, Sub, SubAssign};
-use std::cell::RefCell;
 use std::sync::Arc;
 
 /// Fast B-spline evaluator with optimized recursive algorithms
@@ -240,11 +240,15 @@ where
     }
 
     /// Evaluate using cache optimization with basis function caching
-    fn evaluate_with_cache(&self, x: T, cache_cell: &RefCell<BSplineCache<T>>) -> InterpolateResult<T> {
+    fn evaluate_with_cache(
+        &self,
+        x: T,
+        cache_cell: &RefCell<BSplineCache<T>>,
+    ) -> InterpolateResult<T> {
         let knots = self.spline.knot_vector();
         let coeffs = self.spline.coefficients();
         let degree = self.spline.degree();
-        
+
         // Find the knot span using cached lookup if available
         let span = self.find_knot_span_fast(x);
 
@@ -259,7 +263,7 @@ where
                     index: basis_index,
                     degree,
                 };
-                
+
                 // Get basis function value from cache or compute
                 let basis_value = {
                     let mut cache = cache_cell.borrow_mut();
@@ -271,7 +275,7 @@ where
                         }
                     })
                 };
-                
+
                 result += coeffs[basis_index] * basis_value;
             }
         }
@@ -288,7 +292,13 @@ where
     }
 
     /// Compute a single basis function using Cox-de Boor recursion
-    fn compute_basis_function_recursive(&self, x: T, i: usize, degree: usize, knots: &Array1<T>) -> T {
+    fn compute_basis_function_recursive(
+        &self,
+        x: T,
+        i: usize,
+        degree: usize,
+        knots: &Array1<T>,
+    ) -> T {
         if degree == 0 {
             if i < knots.len() - 1 && x >= knots[i] && x < knots[i + 1] {
                 T::one()
@@ -307,8 +317,10 @@ where
 
             // Right term: (t_{i+p+1} - x) / (t_{i+p+1} - t_{i+1}) * N_{i+1,p-1}(x)
             if i + 1 < knots.len() - degree - 1 && knots[i + degree + 1] != knots[i + 1] {
-                let basis_right = self.compute_basis_function_recursive(x, i + 1, degree - 1, knots);
-                right = (knots[i + degree + 1] - x) / (knots[i + degree + 1] - knots[i + 1]) * basis_right;
+                let basis_right =
+                    self.compute_basis_function_recursive(x, i + 1, degree - 1, knots);
+                right = (knots[i + degree + 1] - x) / (knots[i + degree + 1] - knots[i + 1])
+                    * basis_right;
             }
 
             left + right
@@ -615,7 +627,7 @@ where
         // Adaptive chunk sizing based on problem size and cache performance
         if let Some(cache_stats) = self.cache_stats() {
             let hit_ratio = cache_stats.hit_ratio();
-            
+
             if hit_ratio > 0.8 {
                 // High hit ratio - can use larger chunks
                 self.chunk_size = (problem_size / 16).max(128).min(1024);
@@ -646,13 +658,10 @@ where
     /// Array of spline values at the given points
     #[cfg(feature = "parallel")]
     pub fn evaluate_batch_parallel(&self, x_vals: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
-        use rayon::prelude::*;
+        use scirs2_core::parallel_ops::*;
 
         let chunk_size = self.chunk_size;
-        let chunks: Vec<_> = x_vals.as_slice()
-            .unwrap()
-            .chunks(chunk_size)
-            .collect();
+        let chunks: Vec<_> = x_vals.as_slice().unwrap().chunks(chunk_size).collect();
 
         let results: Result<Vec<_>, _> = chunks
             .into_par_iter()

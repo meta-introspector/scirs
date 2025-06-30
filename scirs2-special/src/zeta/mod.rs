@@ -12,9 +12,9 @@
 //! Both functions can be analytically continued to the entire complex plane
 //! except for a simple pole at s = 1.
 
+use crate::combinatorial::bernoulli_number;
 use crate::error::SpecialResult;
 use crate::gamma::gamma;
-use crate::combinatorial::bernoulli_number;
 use num_traits::{Float, FromPrimitive};
 use std::f64;
 use std::fmt::Debug;
@@ -453,14 +453,14 @@ where
     // For negative s, we use the reflection formula
     // For negative integer values: ζ(-n, q) = -B_{n+1}(q)/(n+1)
     // where B_n(q) is the nth Bernoulli polynomial evaluated at q
-    
+
     let s_f64 = s.to_f64().unwrap_or(0.0);
     let q_f64 = q.to_f64().unwrap_or(1.0);
-    
+
     // Check if s is a negative integer
     if s_f64.fract() == 0.0 && s_f64 < 0.0 {
         let n = (-s_f64) as u32;
-        
+
         // ζ(-n, q) = -B_{n+1}(q)/(n+1)
         // For simplicity, we'll use the case where q = 1 first
         if (q_f64 - 1.0).abs() < F::epsilon().to_f64().unwrap_or(1e-15) {
@@ -475,7 +475,7 @@ where
             // This is more complex, so we'll use an approximation for now
             let mut bernoulli_poly = 0.0;
             let n_plus_1 = n + 1;
-            
+
             for k in 0..=n_plus_1 {
                 if let Ok(bernoulli_k) = bernoulli_number(k) {
                     // Binomial coefficient C(n+1, k)
@@ -483,54 +483,54 @@ where
                     for i in 0..k {
                         binom_coeff *= (n_plus_1 - i) as f64 / (i + 1) as f64;
                     }
-                    
+
                     let q_power = q_f64.powi((n_plus_1 - k) as i32);
                     bernoulli_poly += binom_coeff * bernoulli_k * q_power;
                 }
             }
-            
+
             let result = -bernoulli_poly / (n + 1) as f64;
             return Ok(F::from(result).unwrap_or(F::zero()));
         }
     }
-    
+
     // For non-integer negative s, use the general reflection formula
     // ζ(s, q) = 2 * Γ(1-s) / (2π)^{1-s} * [sin(π(1-s)/2) * ∑_{n=1}^∞ cos(2πnq)/n^{1-s}
     //                                      + cos(π(1-s)/2) * ∑_{n=1}^∞ sin(2πnq)/n^{1-s}]
-    
+
     // This is quite complex, so for now we'll use a simpler approach with the functional equation
     // ζ(s, q) relation to ζ(1-s, ·) which is more tractable
-    
+
     // For moderate negative values, use asymptotic expansion
     if s_f64 > -10.0 {
         let one_minus_s = F::one() - s;
         let pi = F::from(std::f64::consts::PI).unwrap_or(F::zero());
         let two_pi = F::from(2.0).unwrap_or(F::zero()) * pi;
-        
+
         // Use the first few terms of the reflection formula approximation
         let mut sum_cos = F::zero();
         let mut sum_sin = F::zero();
-        
+
         for n in 1..=50 {
             let n_f = F::from(n).unwrap_or(F::zero());
             let term_base = n_f.powf(-one_minus_s);
             let angle = two_pi * n_f * q;
-            
+
             sum_cos = sum_cos + angle.cos() * term_base;
             sum_sin = sum_sin + angle.sin() * term_base;
         }
-        
+
         // Approximate the gamma function and trigonometric prefactors
         let gamma_val = gamma((F::one() - s).to_f64().unwrap_or(1.0));
         let pi_power = (two_pi).powf(-one_minus_s);
         let angle_factor = pi * (one_minus_s) / F::from(2.0).unwrap_or(F::one());
-        
-        let result = F::from(2.0 * gamma_val).unwrap_or(F::zero()) / pi_power *
-            (angle_factor.sin() * sum_cos + angle_factor.cos() * sum_sin);
-        
+
+        let result = F::from(2.0 * gamma_val).unwrap_or(F::zero()) / pi_power
+            * (angle_factor.sin() * sum_cos + angle_factor.cos() * sum_sin);
+
         return Ok(result);
     }
-    
+
     // For very negative values, fall back to direct summation
     hurwitz_zeta_direct_sum(s, q)
 }

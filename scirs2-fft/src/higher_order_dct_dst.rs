@@ -72,39 +72,39 @@ where
     // Prepare data for inverse transform using the properties of DCT-V
     // The inverse relationship requires careful phase handling
     let scale_factor = (2.0_f64 / n as f64).sqrt();
-    
+
     for k in 0..n {
         let phase = PI * (2 * k + 1) as f64 / (4.0 * n as f64);
         let cos_phase = phase.cos();
         let sin_phase = phase.sin();
-        
+
         // Use conjugate symmetry properties for stability
         extended[k] = Complex64::new(
             x[k] * cos_phase * scale_factor,
-            x[k] * sin_phase * scale_factor
+            x[k] * sin_phase * scale_factor,
         );
-        
+
         // Mirror with appropriate phase for type V symmetry
         extended[2 * n - 1 - k] = Complex64::new(
             -x[k] * cos_phase * scale_factor,
-            x[k] * sin_phase * scale_factor
+            x[k] * sin_phase * scale_factor,
         );
     }
 
     // Compute inverse FFT for more stable reconstruction
     let mut fft_input = extended.clone();
-    
+
     // Apply conjugate for inverse FFT
     for item in &mut fft_input {
         *item = item.conj();
     }
-    
+
     let ifft_result = fft(&fft_input, None)?;
-    
+
     // Extract real part with proper scaling and conjugation
     let mut result = Array1::zeros(n);
     let final_scale = 1.0 / (2.0 * n as f64);
-    
+
     for i in 0..n {
         result[i] = ifft_result[i].re * final_scale;
     }

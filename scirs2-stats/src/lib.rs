@@ -341,7 +341,9 @@ pub use error_recovery_system::{
 };
 pub use error_standardization::{
     ErrorMessages, ErrorValidator, PerformanceImpact as StandardizedPerformanceImpact,
-    RecoverySuggestions, StandardizedErrorReporter,
+    RecoverySuggestions, StandardizedErrorReporter, EnhancedErrorContext, DataDiagnostics,
+    DataQualityIssue, StatsSummary, SystemDiagnostics, BatchErrorHandler,
+    ErrorDiagnostics, InterModuleErrorChecker, AutoRecoverySystem,
 };
 pub use error_suggestions::{
     diagnose_error, DiagnosisReport, ErrorFormatter, ErrorType, Severity, Suggestion,
@@ -358,6 +360,22 @@ pub use performance_optimization::{
 pub use benchmark_suite::{
     BenchmarkSuite, BenchmarkConfig, BenchmarkReport, BenchmarkMetrics, PerformanceAnalysis,
     TimingStats, MemoryStats, AlgorithmConfig, ComplexityClass, OptimizationRecommendation,
+};
+pub use scipy_benchmark_comparison::{
+    run_scipy_comparison, run_function_comparison, ScipyBenchmarkComparison, ScipyComparisonConfig,
+    ScipyComparisonReport, FunctionComparison, PerformanceComparison, AccuracyComparison,
+    ComparisonStatus, PerformanceRating, AccuracyRating, ComparisonRecommendation,
+};
+pub use adaptive_simd_optimization::{
+    create_adaptive_simd_optimizer, optimize_simd_operation, AdaptiveSimdOptimizer,
+    AdaptiveSimdConfig, SimdStrategy, SimdOptimizationResult, HardwareCapabilities,
+    PerformanceStatistics, DataCharacteristics as SimdDataCharacteristics, OptimizationLevel,
+};
+pub use ultra_parallel_stats::{
+    create_ultra_parallel_processor, mean_ultra_parallel, variance_ultra_parallel,
+    UltraParallelStatsProcessor, UltraParallelConfig as UltraParallelStatsConfig, UltraParallelResult,
+    ParallelExecutionMetrics, ParallelPerformanceAnalysis, WorkStealingStrategy,
+    LoadBalancingAlgorithm, PerformanceRating as UltraParallelPerformanceRating,
 };
 pub use memory_optimization_advanced::{
     MemoryOptimizationSuite, MemoryOptimizationConfig, StreamingStatsCalculator, CacheOptimizedMatrix,
@@ -404,13 +422,24 @@ pub use api_consistency_validation::{
     ReturnTypeInfo, DocumentationStatus, ParameterUsage, ValidationReport, FunctionCategory,
     NamingConventions, FunctionPattern,
 };
+pub use production_deployment::{
+    ProductionDeploymentValidator, ProductionConfig, EnvironmentSpec, EnvironmentType, CloudProvider,
+    ContainerRuntime, ServerlessPlatform, CpuFeatures, SimdFeature, PerformanceRequirements,
+    MemoryLimits, ValidationResults as ProductionValidationResults, CheckResult, CheckStatus, CheckSeverity,
+    PerformanceMonitor, HealthChecker, HealthCheck, HealthCheckResult, HealthStatus,
+    create_cloud_production_config, create_container_production_config,
+};
 
 // Advanced performance and optimization modules
 pub mod benchmark_suite; // Comprehensive benchmarking framework for performance analysis
+pub mod scipy_benchmark_comparison; // SciPy comparison and validation framework
+pub mod adaptive_simd_optimization; // Adaptive SIMD optimization framework
+pub mod ultra_parallel_stats; // Ultra-parallel statistical computing framework
 pub mod memory_optimization_advanced; // Advanced memory optimization strategies
 pub mod api_standardization; // Unified API layer for v1.0.0 consistency
 pub mod advanced_bootstrap; // Advanced bootstrap methods for complex statistical inference
 pub mod api_consistency_validation; // Comprehensive API consistency validation framework
+pub mod production_deployment; // Production deployment utilities and validation
 
 // Module substructure following SciPy's organization
 pub mod advanced_integration; // High-level workflows integrating multiple advanced methods
@@ -459,6 +488,7 @@ mod simd_enhanced_v6;
 mod simd_optimized_v2;
 mod ultra_simd_advanced;
 mod ultra_simd_comprehensive;
+mod ultra_simd_enhanced;
 mod ultra_parallel_advanced;
 mod bayesian_advanced;
 mod mcmc_ultra_advanced;
@@ -468,6 +498,9 @@ mod survival_ultra_advanced;
 mod spectral_ultra_advanced;
 mod topological_ultra_advanced;
 mod quantum_ultra_advanced;
+mod adaptive_memory_ultra_advanced;
+mod streaming_ultra_advanced;
+mod cross_platform_regression_detection;
 pub use descriptive::*;
 pub use descriptive_simd::{descriptive_stats_simd, mean_simd, std_simd, variance_simd};
 pub use dispersion_simd::{
@@ -483,8 +516,9 @@ pub use memory_efficient::{
 };
 pub use memory_optimized_advanced::{
     cache_oblivious_matrix_mult, corrcoef_memory_aware, pca_memory_efficient,
-    streaming_covariance_matrix, AdaptiveMemoryManager as AdvancedMemoryManager, MemoryConstraints,
-    MemoryStatistics, PCAResult,
+    streaming_covariance_matrix, streaming_pca_enhanced, streaming_histogram_adaptive,
+    streaming_quantiles_p2, streaming_regression_enhanced, AdaptiveMemoryManager as AdvancedMemoryManager, 
+    MemoryConstraints, MemoryStatistics, PCAResult,
 };
 pub use memory_optimized_v2::{
     mean_zero_copy, variance_cache_aware, LazyStats, MemoryConfig, MemoryPool, StreamingCovariance,
@@ -528,7 +562,9 @@ pub use parallel_stats_enhanced::{
 #[cfg(test)]
 pub use property_based_tests_extended::{
     BatchProcessingTester, MathematicalInvariantTester, MatrixTestData, MemoryOptimizationTester,
-    ParallelConsistencyTester, SimdConsistencyTester, StatisticalTestData,
+    ParallelConsistencyTester, SimdConsistencyTester, StatisticalTestData, FuzzingTester,
+    CrossPlatformTester, RobustnessTester, PerformanceRegressionTester, ExtendedMathematicalTester,
+    NumericalStabilityTester,
 };
 pub use quantile_simd::{
     median_simd, percentile_simd, quantile_simd, quantiles_simd, quickselect_simd,
@@ -567,8 +603,15 @@ pub use ultra_simd_comprehensive::{
     UltraComprehensiveSimdProcessor, UltraComprehensiveSimdConfig, ComprehensiveStatsResult,
     MatrixStatsResult as UltraMatrixStatsResult,
 };
+pub use ultra_simd_enhanced::{
+    UltraEnhancedSimdProcessor, UltraSimdConfig as UltraEnhancedSimdConfig, UltraSimdResults,
+    CpuCapabilities, InstructionSet, ProfilingLevel, CacheOptimizationStrategy, NumericalStabilityLevel,
+    MemoryAlignment, VectorizationLevel, PrefetchStrategy, PerformanceStatistics as UltraSimdPerformanceStats,
+    OptimalAlgorithm, OperationPerformance, AccuracyMetrics, F64UltraSimdProcessor, F32UltraSimdProcessor,
+    create_ultra_simd_processor, create_performance_optimized_simd_processor, create_stability_optimized_simd_processor,
+};
 pub use ultra_parallel_advanced::{
-    UltraParallelProcessor, UltraParallelConfig, ParallelStrategy, HardwareConfig,
+    UltraParallelProcessor, UltraParallelConfig as UltraParallelAdvancedConfig, ParallelStrategy, HardwareConfig,
     MemoryConfig as UltraMemoryConfig, OptimizationConfig, PerformanceMetrics as UltraPerformanceMetrics, MemoryUsageStats,
 };
 pub use bayesian_advanced::{
@@ -612,7 +655,29 @@ pub use quantum_ultra_advanced::{
     UltraQuantumAnalyzer, QuantumConfig, QuantumResults, QAEResults, QPCAResults, QSVMResults,
     QClusteringResults, VQEResults, TensorNetworkResults, QNNResults, QuantumKernelType,
     QuantumFeatureMap, QuantumClusteringAlgorithm, VQEAnsatz, TensorNetworkType, DataEncodingMethod,
-    QuantumPerformanceMetrics, QuantumAdvantageMetrics,
+    QuantumPerformanceMetrics, QuantumAdvantageMetrics, QuantumMonteCarloResult, QuantumVariationalResult,
+    QuantumEnsembleResult, QuantumModel, QuantumFeatureEncoding, QuantumMeasurementBasis,
+};
+pub use adaptive_memory_ultra_advanced::{
+    AdaptiveMemoryManager as UltraAdaptiveMemoryManager, AdaptiveMemoryConfig, AllocationStrategy, CacheOptimizationConfig,
+    NumaConfig, PredictiveConfig, MemoryPressureConfig, OutOfCoreConfig, GarbageCollectionConfig,
+    MemoryUsageStatistics, GCResult, F64AdaptiveMemoryManager, F32AdaptiveMemoryManager,
+    create_adaptive_memory_manager, create_optimized_memory_manager,
+};
+pub use streaming_ultra_advanced::{
+    UltraAdvancedStreamingProcessor, UltraStreamingConfig, WindowingStrategy, StreamProcessingMode,
+    StreamingStatistics, ChangePointDetector, ChangePointAlgorithm, AnomalyDetector, AnomalyDetectionAlgorithm,
+    IncrementalMLModel, MLModelType, CompressionEngine, CompressionAlgorithm, StreamingAnalyticsResult,
+    ChangePointEvent, AnomalyEvent, AnomalySeverity, CompressionSummary, StreamingPerformanceMetrics,
+    StreamingRecommendation, RecommendationCategory, RecommendationPriority, AnomalyType,
+    create_ultra_streaming_processor, create_streaming_processor_with_config,
+};
+pub use cross_platform_regression_detection::{
+    CrossPlatformRegressionDetector, CrossPlatformRegressionConfig, PlatformInfo, PerformanceBaseline,
+    PerformanceMeasurement, BaselineStatistics, RegressionAnalysisResult, PlatformComparison,
+    TrendAnalysis, TrendDirection as RegressionTrendDirection, PerformanceRecommendation, RegressionReport, RegressionStatus,
+    RegressionSummaryStatistics, HardwareContext, CompilerContext,
+    create_regression_detector, create_regression_detector_with_config,
 };
 
 // MCMC module

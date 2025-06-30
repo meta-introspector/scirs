@@ -474,7 +474,10 @@ pub mod genomics {
                     "Disease_Y".to_string(),
                 ]),
                 feature_descriptions: Some(
-                    feature_names.iter().map(|name| format!("Expression level of {}", name)).collect()
+                    feature_names
+                        .iter()
+                        .map(|name| format!("Expression level of {}", name))
+                        .collect(),
                 ),
                 description: Some(format!(
                     "Synthetic gene expression data: {} samples × {} genes",
@@ -514,12 +517,10 @@ pub mod genomics {
                                 } else {
                                     'C'
                                 }
+                            } else if rng.random::<f64>() < 0.5 {
+                                'A'
                             } else {
-                                if rng.random::<f64>() < 0.5 {
-                                    'A'
-                                } else {
-                                    'T'
-                                }
+                                'T'
                             }
                         }
                         1 => {
@@ -530,12 +531,10 @@ pub mod genomics {
                                 } else {
                                     'T'
                                 }
+                            } else if rng.random::<f64>() < 0.5 {
+                                'G'
                             } else {
-                                if rng.random::<f64>() < 0.5 {
-                                    'G'
-                                } else {
-                                    'C'
-                                }
+                                'C'
                             }
                         }
                         _ => {
@@ -577,7 +576,10 @@ pub mod genomics {
                     "Random".to_string(),
                 ]),
                 feature_descriptions: Some(
-                    kmers.iter().map(|kmer| format!("Frequency of {}-mer: {}", k, kmer)).collect()
+                    kmers
+                        .iter()
+                        .map(|kmer| format!("Frequency of {}-mer: {}", k, kmer))
+                        .collect(),
                 ),
                 description: Some(format!(
                     "DNA sequences: {} seqs × {}-mer features",
@@ -981,7 +983,6 @@ pub mod convenience {
 #[cfg(test)]
 mod tests {
     use super::convenience::*;
-    use super::*;
 
     #[test]
     fn test_load_stellar_classification() {

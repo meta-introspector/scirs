@@ -9,7 +9,8 @@ use crate::transformer::encoder::FeedForward;
 use ndarray::{Array, IxDyn, ScalarOperand};
 use num_traits::Float;
 use rand::Rng;
-use std::cell::RefCell;
+use scirs2_core::simd_ops::SimdUnifiedOps;
+use std::sync::{Arc, RwLock};
 use std::fmt::Debug;
 
 /// Transformer decoder layer
@@ -18,7 +19,7 @@ use std::fmt::Debug;
 /// "Attention Is All You Need" by Vaswani et al. It consists of masked multi-head
 /// self-attention, multi-head cross-attention over encoder output, and a position-wise
 /// feed-forward network, with residual connections and layer normalization.
-pub struct TransformerDecoderLayer<F: Float + Debug + Send + Sync> {
+pub struct TransformerDecoderLayer<F: Float + Debug + Send + Sync + SimdUnifiedOps> {
     /// Masked multi-head self-attention layer
     self_attn: SelfAttention<F>,
     /// Layer normalization after self-attention
@@ -37,16 +38,16 @@ pub struct TransformerDecoderLayer<F: Float + Debug + Send + Sync> {
     /// Model embedding dimension
     d_model: usize,
     /// Self-attention output cache for backward pass
-    self_attn_output_cache: RefCell<Option<Array<F, IxDyn>>>,
+    self_attn_output_cache: Arc<RwLock<Option<Array<F, IxDyn>>>>,
     /// Normalized self-attention output cache for backward pass
-    norm1_output_cache: RefCell<Option<Array<F, IxDyn>>>,
+    norm1_output_cache: Arc<RwLock<Option<Array<F, IxDyn>>>>,
     /// Cross-attention output cache for backward pass
-    cross_attn_output_cache: RefCell<Option<Array<F, IxDyn>>>,
+    cross_attn_output_cache: Arc<RwLock<Option<Array<F, IxDyn>>>>,
     /// Normalized cross-attention output cache for backward pass
-    norm2_output_cache: RefCell<Option<Array<F, IxDyn>>>,
+    norm2_output_cache: Arc<RwLock<Option<Array<F, IxDyn>>>>
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> TransformerDecoderLayer<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> TransformerDecoderLayer<F> {
     /// Create a new transformer decoder layer
     ///
     /// # Arguments
@@ -120,10 +121,10 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> TransformerDecode
             norm3,
             dropout,
             d_model,
-            self_attn_output_cache: RefCell::new(None),
-            norm1_output_cache: RefCell::new(None),
-            cross_attn_output_cache: RefCell::new(None),
-            norm2_output_cache: RefCell::new(None),
+            self_attn_output_cache: Arc::new(RwLock::new(None)),
+            norm1_output_cache: Arc::new(RwLock::new(None)),
+            cross_attn_output_cache: Arc::new(RwLock::new(None)),
+            norm2_output_cache: Arc::new(RwLock::new(None)),
         })
     }
 
@@ -179,8 +180,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> TransformerDecode
 
         // 1. Self-attention with residual connection
         let self_attn_output = self.self_attn.forward(input)?;
-        self.self_attn_output_cache
-            .replace(Some(self_attn_output.clone()));
+        *self.self_attn_output_cache.write().unwrap() = Some(self_attn_output.clone());
 
         // Add residual connection (x + Sublayer(x))
         let mut self_attn_output_residual = input.clone();
@@ -189,12 +189,11 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> TransformerDecode
 
         // 2. Layer normalization after self-attention
         let norm1_output = self.norm1.forward(&self_attn_output_residual)?;
-        self.norm1_output_cache.replace(Some(norm1_output.clone()));
+        *self.norm1_output_cache.write().unwrap() = Some(norm1_output.clone());
 
         // 3. Cross-attention with encoder output
         let cross_attn_output = self.cross_attn.forward(&norm1_output)?;
-        self.cross_attn_output_cache
-            .replace(Some(cross_attn_output.clone()));
+        *self.cross_attn_output_cache.write().unwrap() = Some(cross_attn_output.clone());
 
         // Add residual connection (x + Sublayer(x))
         let mut cross_attn_output_residual = norm1_output.clone();
@@ -203,7 +202,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> TransformerDecode
 
         // 4. Layer normalization after cross-attention
         let norm2_output = self.norm2.forward(&cross_attn_output_residual)?;
-        self.norm2_output_cache.replace(Some(norm2_output.clone()));
+        *self.norm2_output_cache.write().unwrap() = Some(norm2_output.clone());
 
         // 5. Feed-forward network with residual connection
         let ff_output = self.feed_forward.forward(&norm2_output)?;
@@ -220,7 +219,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> TransformerDecode
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F>
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> Layer<F>
     for TransformerDecoderLayer<F>
 {
     fn as_any(&self) -> &dyn std::any::Any {
@@ -254,8 +253,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F>
 
         // 1. Self-attention with residual connection
         let self_attn_output = self.self_attn.forward(input)?;
-        self.self_attn_output_cache
-            .replace(Some(self_attn_output.clone()));
+        *self.self_attn_output_cache.write().unwrap() = Some(self_attn_output.clone());
 
         // Add residual connection (x + Sublayer(x))
         let mut self_attn_output_residual = input.clone();
@@ -264,7 +262,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F>
 
         // 2. Layer normalization after self-attention
         let norm1_output = self.norm1.forward(&self_attn_output_residual)?;
-        self.norm1_output_cache.replace(Some(norm1_output.clone()));
+        *self.norm1_output_cache.write().unwrap() = Some(norm1_output.clone());
 
         // For feed-forward only, use norm1 output as input to feed-forward
         let output = self.feed_forward.forward(&norm1_output)?;
@@ -312,16 +310,16 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F>
 ///
 /// Stack of transformer decoder layers that processes target sequences using
 /// masked self-attention, cross-attention with encoder output, and feed-forward networks.
-pub struct TransformerDecoder<F: Float + Debug + Send + Sync> {
+pub struct TransformerDecoder<F: Float + Debug + Send + Sync + SimdUnifiedOps> {
     /// Stack of decoder layers
     layers: Vec<TransformerDecoderLayer<F>>,
     /// Model embedding dimension
     d_model: usize,
     /// Layer outputs cache for backward pass
-    layer_outputs: RefCell<Vec<Array<F, IxDyn>>>,
+    layer_outputs: Arc<RwLock<Vec<Array<F, IxDyn>>>>,
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> TransformerDecoder<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> TransformerDecoder<F> {
     /// Create a new transformer decoder
     ///
     /// # Arguments
@@ -357,7 +355,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> TransformerDecode
         Ok(Self {
             layers,
             d_model,
-            layer_outputs: RefCell::new(Vec::new()),
+            layer_outputs: Arc::new(RwLock::new(Vec::new())),
         })
     }
 
@@ -394,7 +392,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> TransformerDecode
         }
 
         // Clear layer outputs cache
-        self.layer_outputs.replace(Vec::new());
+        *self.layer_outputs.write().unwrap() = Vec::new();
 
         // Process input through all decoder layers
         let mut output = input.clone();
@@ -402,14 +400,14 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> TransformerDecode
             output = layer.forward_with_encoder(&output, encoder_output)?;
 
             // Cache layer output for backward pass
-            self.layer_outputs.borrow_mut().push(output.clone());
+            self.layer_outputs.write().unwrap().push(output.clone());
         }
 
         Ok(output)
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for TransformerDecoder<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> Layer<F> for TransformerDecoder<F> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -440,7 +438,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Tran
         }
 
         // Clear layer outputs cache
-        self.layer_outputs.replace(Vec::new());
+        *self.layer_outputs.write().unwrap() = Vec::new();
 
         // Process input through all decoder layers
         let mut output = input.clone();
@@ -448,7 +446,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Tran
             output = layer.forward(&output)?;
 
             // Cache layer output for backward pass
-            self.layer_outputs.borrow_mut().push(output.clone());
+            self.layer_outputs.write().unwrap().push(output.clone());
         }
 
         Ok(output)

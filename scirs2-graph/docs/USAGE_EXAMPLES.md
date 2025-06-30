@@ -1139,20 +1139,636 @@ for (idx, path) in pareto_paths.iter().enumerate() {
 }
 ```
 
+## Real-World Integration Patterns
+
+### Loading Graphs from Databases
+
+```rust
+use scirs2_graph::{Graph, Result};
+use sqlx::{Row, PgPool};
+
+async fn load_graph_from_database(pool: &PgPool) -> Result<Graph<i64, f64>> {
+    let mut graph = Graph::new();
+    
+    // Load nodes
+    let nodes = sqlx::query("SELECT id, name FROM nodes")
+        .fetch_all(pool)
+        .await?;
+    
+    for row in nodes {
+        let node_id: i64 = row.get("id");
+        graph.add_node(node_id);
+    }
+    
+    // Load edges with weights
+    let edges = sqlx::query("SELECT source_id, target_id, weight FROM edges")
+        .fetch_all(pool)
+        .await?;
+    
+    for row in edges {
+        let source: i64 = row.get("source_id");
+        let target: i64 = row.get("target_id");
+        let weight: f64 = row.get("weight");
+        graph.add_edge(source, target, weight)?;
+    }
+    
+    Ok(graph)
+}
+
+// Batch processing for large databases
+async fn load_large_graph_streaming(pool: &PgPool) -> Result<Graph<i64, f64>> {
+    let mut graph = Graph::new();
+    const BATCH_SIZE: i64 = 10000;
+    let mut offset = 0;
+    
+    loop {
+        let edges = sqlx::query(
+            "SELECT source_id, target_id, weight FROM edges 
+             ORDER BY id LIMIT $1 OFFSET $2"
+        )
+        .bind(BATCH_SIZE)
+        .bind(offset)
+        .fetch_all(pool)
+        .await?;
+        
+        if edges.is_empty() {
+            break;
+        }
+        
+        for row in edges {
+            let source: i64 = row.get("source_id");
+            let target: i64 = row.get("target_id");
+            let weight: f64 = row.get("weight");
+            
+            // Add nodes if they don't exist
+            graph.add_node(source);
+            graph.add_node(target);
+            graph.add_edge(source, target, weight)?;
+        }
+        
+        offset += BATCH_SIZE;
+        println!("Loaded {} edges", offset);
+    }
+    
+    Ok(graph)
+}
+```
+
+### Graph Processing Pipelines
+
+```rust
+use scirs2_graph::{Graph, Pipeline, Stage, Result};
+use serde_json::Value;
+
+// Define a data processing pipeline
+struct GraphAnalysisPipeline {
+    stages: Vec<Box<dyn Stage>>,
+}
+
+impl GraphAnalysisPipeline {
+    fn new() -> Self {
+        Self {
+            stages: vec![
+                Box::new(DataValidationStage),
+                Box::new(PreprocessingStage),
+                Box::new(CentralityAnalysisStage),
+                Box::new(CommunityDetectionStage),
+                Box::new(VisualizationStage),
+                Box::new(ReportGenerationStage),
+            ]
+        }
+    }
+    
+    async fn execute(&self, input_data: Value) -> Result<Value> {
+        let mut data = input_data;
+        
+        for stage in &self.stages {
+            println!("Executing stage: {}", stage.name());
+            data = stage.process(data).await?;
+        }
+        
+        Ok(data)
+    }
+}
+
+trait Stage: Send + Sync {
+    fn name(&self) -> &str;
+    async fn process(&self, input: Value) -> Result<Value>;
+}
+
+struct CentralityAnalysisStage;
+
+impl Stage for CentralityAnalysisStage {
+    fn name(&self) -> &str { "Centrality Analysis" }
+    
+    async fn process(&self, mut input: Value) -> Result<Value> {
+        // Extract graph from input
+        let graph = self.extract_graph(&input)?;
+        
+        // Calculate multiple centrality measures
+        let pagerank = pagerank_centrality(&graph, 0.85, 1e-6)?;
+        let betweenness = betweenness_centrality(&graph, true)?;
+        let closeness = closeness_centrality(&graph)?;
+        
+        // Add results to output
+        input["centrality"] = serde_json::json!({
+            "pagerank": pagerank,
+            "betweenness": betweenness,
+            "closeness": closeness
+        });
+        
+        Ok(input)
+    }
+}
+
+// Parallel processing for multiple graphs
+use rayon::prelude::*;
+use std::sync::Arc;
+
+fn parallel_graph_analysis(graphs: Vec<Graph<usize, f64>>) -> Vec<GraphAnalysisResult> {
+    graphs.into_par_iter()
+        .map(|graph| {
+            GraphAnalysisResult {
+                node_count: graph.node_count(),
+                edge_count: graph.edge_count(),
+                diameter: graph.diameter().unwrap_or(0),
+                clustering_coefficient: clustering_coefficient(&graph).unwrap(),
+                communities: louvain_communities(&graph).unwrap(),
+                centrality: pagerank_centrality(&graph, 0.85, 1e-6).unwrap(),
+            }
+        })
+        .collect()
+}
+```
+
+### Monitoring and Logging
+
+```rust
+use scirs2_graph::{Graph, Result};
+use tracing::{info, warn, error, instrument};
+use std::time::Instant;
+
+#[instrument(skip(graph))]
+pub async fn monitored_community_detection(
+    graph: &Graph<usize, f64>
+) -> Result<Vec<Vec<usize>>> {
+    let start = Instant::now();
+    info!("Starting community detection on graph with {} nodes", graph.node_count());
+    
+    // Check graph properties
+    if graph.node_count() > 100_000 {
+        warn!("Large graph detected, this may take a while");
+    }
+    
+    if !graph.is_connected()? {
+        warn!("Graph is not connected, communities will be computed per component");
+    }
+    
+    // Run community detection with progress monitoring
+    let communities = match graph.node_count() {
+        n if n < 1000 => {
+            info!("Using exact Louvain method for small graph");
+            louvain_communities(graph)?
+        },
+        n if n < 100_000 => {
+            info!("Using standard Louvain method for medium graph");
+            louvain_communities(graph)?
+        },
+        _ => {
+            info!("Using approximate method for large graph");
+            label_propagation(graph)?
+        }
+    };
+    
+    let duration = start.elapsed();
+    info!(
+        "Community detection completed in {:?}, found {} communities",
+        duration,
+        communities.len()
+    );
+    
+    // Log community size distribution
+    let sizes: Vec<usize> = communities.iter().map(|c| c.len()).collect();
+    let avg_size = sizes.iter().sum::<usize>() as f64 / sizes.len() as f64;
+    let max_size = sizes.iter().max().unwrap_or(&0);
+    let min_size = sizes.iter().min().unwrap_or(&0);
+    
+    info!(
+        "Community stats - avg: {:.1}, min: {}, max: {}",
+        avg_size, min_size, max_size
+    );
+    
+    Ok(communities)
+}
+
+// Performance monitoring with metrics
+use prometheus::{Counter, Histogram, register_counter, register_histogram};
+
+lazy_static::lazy_static! {
+    static ref GRAPH_OPERATIONS: Counter = register_counter!(
+        "graph_operations_total",
+        "Total number of graph operations"
+    ).unwrap();
+    
+    static ref ALGORITHM_DURATION: Histogram = register_histogram!(
+        "algorithm_duration_seconds",
+        "Time spent in graph algorithms"
+    ).unwrap();
+}
+
+pub fn monitored_pagerank(graph: &Graph<usize, f64>) -> Result<HashMap<usize, f64>> {
+    GRAPH_OPERATIONS.inc();
+    let timer = ALGORITHM_DURATION.start_timer();
+    
+    let result = pagerank_centrality(graph, 0.85, 1e-6);
+    
+    timer.observe_duration();
+    result
+}
+```
+
+### Configuration Management
+
+```rust
+use scirs2_graph::{Graph, Config, AlgorithmConfig};
+use serde::{Deserialize, Serialize};
+use config::{ConfigError, File, Environment};
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct GraphAnalysisConfig {
+    pub input: InputConfig,
+    pub algorithms: AlgorithmConfig,
+    pub output: OutputConfig,
+    pub performance: PerformanceConfig,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct AlgorithmConfig {
+    pub pagerank: PageRankConfig,
+    pub community_detection: CommunityConfig,
+    pub centrality: CentralityConfig,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct PageRankConfig {
+    pub damping_factor: f64,
+    pub tolerance: f64,
+    pub max_iterations: usize,
+}
+
+impl Default for GraphAnalysisConfig {
+    fn default() -> Self {
+        Self {
+            input: InputConfig::default(),
+            algorithms: AlgorithmConfig {
+                pagerank: PageRankConfig {
+                    damping_factor: 0.85,
+                    tolerance: 1e-6,
+                    max_iterations: 100,
+                },
+                community_detection: CommunityConfig::default(),
+                centrality: CentralityConfig::default(),
+            },
+            output: OutputConfig::default(),
+            performance: PerformanceConfig::default(),
+        }
+    }
+}
+
+impl GraphAnalysisConfig {
+    pub fn from_file(path: &str) -> Result<Self, ConfigError> {
+        let mut s = config::Config::new();
+        s.merge(File::with_name(path))?;
+        s.merge(Environment::with_prefix("GRAPH"))?;
+        s.try_into()
+    }
+}
+
+// Configurable analysis workflow
+pub struct ConfigurableAnalyzer {
+    config: GraphAnalysisConfig,
+}
+
+impl ConfigurableAnalyzer {
+    pub fn new(config: GraphAnalysisConfig) -> Self {
+        Self { config }
+    }
+    
+    pub fn analyze_graph(&self, graph: &Graph<usize, f64>) -> Result<AnalysisResults> {
+        let mut results = AnalysisResults::new();
+        
+        // PageRank with custom parameters
+        if self.config.algorithms.pagerank.enabled {
+            let pagerank = pagerank_centrality(
+                graph,
+                self.config.algorithms.pagerank.damping_factor,
+                self.config.algorithms.pagerank.tolerance
+            )?;
+            results.add_centrality("pagerank", pagerank);
+        }
+        
+        // Community detection with algorithm selection
+        match &self.config.algorithms.community_detection.algorithm {
+            CommunityAlgorithm::Louvain => {
+                let communities = louvain_communities(graph)?;
+                results.add_communities(communities);
+            },
+            CommunityAlgorithm::LabelPropagation => {
+                let communities = label_propagation(graph)?;
+                results.add_communities(communities);
+            },
+            CommunityAlgorithm::Infomap => {
+                let communities = infomap_communities(graph)?;
+                results.add_communities(communities);
+            },
+        }
+        
+        Ok(results)
+    }
+}
+```
+
+### Testing and Validation Workflows
+
+```rust
+use scirs2_graph::{Graph, generators::*, Result};
+use proptest::prelude::*;
+
+// Property-based testing for graph algorithms
+proptest! {
+    #[test]
+    fn pagerank_properties(
+        n in 10usize..100,
+        p in 0.01f64..0.5
+    ) {
+        let mut rng = rand::thread_rng();
+        let graph = erdos_renyi_graph(n, p, &mut rng).unwrap();
+        
+        if graph.edge_count() > 0 {
+            let pagerank = pagerank_centrality(&graph, 0.85, 1e-6).unwrap();
+            
+            // Property 1: Sum of PageRank values should be approximately 1
+            let sum: f64 = pagerank.values().sum();
+            prop_assert!((sum - 1.0).abs() < 1e-6);
+            
+            // Property 2: All values should be positive
+            for &value in pagerank.values() {
+                prop_assert!(value > 0.0);
+            }
+            
+            // Property 3: More connected nodes tend to have higher PageRank
+            let degrees: HashMap<_, _> = graph.nodes().iter()
+                .map(|&n| (n, graph.degree(&n).unwrap()))
+                .collect();
+            
+            // Test correlation between degree and PageRank
+            let correlation = compute_correlation(&degrees, &pagerank);
+            prop_assert!(correlation > 0.0); // Generally positive correlation
+        }
+    }
+}
+
+// Integration testing with known results
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use approx::assert_relative_eq;
+    
+    #[test]
+    fn test_karate_club_communities() {
+        let karate_club = load_karate_club_graph();
+        let communities = louvain_communities(&karate_club).unwrap();
+        
+        // Karate club should split into 2-4 communities
+        assert!(communities.len() >= 2 && communities.len() <= 4);
+        
+        // Instructor and Mr. Hi should be in different communities
+        let instructor_community = find_node_community(&communities, "Instructor");
+        let mrhi_community = find_node_community(&communities, "Mr. Hi");
+        assert_ne!(instructor_community, mrhi_community);
+    }
+    
+    #[test]
+    fn test_pathological_cases() {
+        // Empty graph
+        let empty = Graph::<usize, f64>::new();
+        assert!(connected_components(&empty).unwrap().is_empty());
+        
+        // Single node
+        let mut single = Graph::new();
+        single.add_node(0);
+        let components = connected_components(&single).unwrap();
+        assert_eq!(components.len(), 1);
+        assert_eq!(components[0], vec![0]);
+        
+        // Disconnected graph
+        let mut disconnected = Graph::new();
+        disconnected.add_node(0);
+        disconnected.add_node(1);
+        disconnected.add_node(2);
+        disconnected.add_edge(0, 1, 1.0).unwrap();
+        // Node 2 is isolated
+        
+        let components = connected_components(&disconnected).unwrap();
+        assert_eq!(components.len(), 2);
+    }
+}
+
+// Benchmarking different algorithm implementations
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
+
+fn benchmark_centrality_algorithms(c: &mut Criterion) {
+    let mut group = c.benchmark_group("centrality");
+    
+    for size in &[100, 500, 1000] {
+        let mut rng = rand::thread_rng();
+        let graph = barabasi_albert_graph(*size, 3, &mut rng).unwrap();
+        
+        group.bench_with_input(
+            format!("pagerank_{}", size),
+            &graph,
+            |b, g| b.iter(|| pagerank_centrality(black_box(g), 0.85, 1e-6))
+        );
+        
+        group.bench_with_input(
+            format!("betweenness_{}", size),
+            &graph,
+            |b, g| b.iter(|| betweenness_centrality(black_box(g), true))
+        );
+    }
+    
+    group.finish();
+}
+```
+
+### Production Deployment Patterns
+
+```rust
+use scirs2_graph::{Graph, Result};
+use tokio::task;
+use std::sync::Arc;
+use dashmap::DashMap;
+
+// Thread-safe graph cache for web services
+pub struct GraphCache {
+    graphs: Arc<DashMap<String, Arc<Graph<usize, f64>>>>,
+    analysis_cache: Arc<DashMap<String, AnalysisResult>>,
+}
+
+impl GraphCache {
+    pub fn new() -> Self {
+        Self {
+            graphs: Arc::new(DashMap::new()),
+            analysis_cache: Arc::new(DashMap::new()),
+        }
+    }
+    
+    pub async fn get_or_compute_analysis(
+        &self,
+        graph_id: &str,
+        analysis_type: AnalysisType,
+    ) -> Result<AnalysisResult> {
+        let cache_key = format!("{}:{:?}", graph_id, analysis_type);
+        
+        // Check cache first
+        if let Some(result) = self.analysis_cache.get(&cache_key) {
+            return Ok(result.clone());
+        }
+        
+        // Get graph
+        let graph = self.graphs.get(graph_id)
+            .ok_or_else(|| Error::GraphNotFound(graph_id.to_string()))?;
+        
+        // Compute analysis in background task
+        let graph_clone = graph.clone();
+        let result = task::spawn_blocking(move || {
+            match analysis_type {
+                AnalysisType::PageRank => {
+                    let pr = pagerank_centrality(&graph_clone, 0.85, 1e-6)?;
+                    Ok(AnalysisResult::Centrality(pr))
+                },
+                AnalysisType::Communities => {
+                    let comm = louvain_communities(&graph_clone)?;
+                    Ok(AnalysisResult::Communities(comm))
+                },
+                // ... other analysis types
+            }
+        }).await??;
+        
+        // Cache result
+        self.analysis_cache.insert(cache_key, result.clone());
+        
+        Ok(result)
+    }
+}
+
+// Graceful shutdown for long-running algorithms
+use tokio_util::sync::CancellationToken;
+
+pub struct CancellableAnalysis {
+    token: CancellationToken,
+}
+
+impl CancellableAnalysis {
+    pub fn new() -> Self {
+        Self {
+            token: CancellationToken::new(),
+        }
+    }
+    
+    pub async fn run_pagerank(
+        &self,
+        graph: &Graph<usize, f64>
+    ) -> Result<Option<HashMap<usize, f64>>> {
+        let token = self.token.clone();
+        
+        task::spawn_blocking(move || {
+            pagerank_centrality_cancellable(&graph, 0.85, 1e-6, token)
+        }).await?
+    }
+    
+    pub fn cancel(&self) {
+        self.token.cancel();
+    }
+}
+
+// Health checks for graph processing services
+use serde_json::json;
+
+#[derive(Debug)]
+pub struct HealthChecker {
+    test_graph: Graph<usize, f64>,
+}
+
+impl HealthChecker {
+    pub fn new() -> Result<Self> {
+        let mut rng = rand::thread_rng();
+        let test_graph = erdos_renyi_graph(50, 0.1, &mut rng)?;
+        Ok(Self { test_graph })
+    }
+    
+    pub async fn health_check(&self) -> serde_json::Value {
+        let start = std::time::Instant::now();
+        
+        // Test basic operations
+        let basic_ops = self.test_basic_operations().await;
+        let algorithms = self.test_algorithms().await;
+        
+        let duration = start.elapsed();
+        
+        json!({
+            "status": if basic_ops && algorithms { "healthy" } else { "unhealthy" },
+            "checks": {
+                "basic_operations": basic_ops,
+                "algorithms": algorithms
+            },
+            "response_time_ms": duration.as_millis(),
+            "timestamp": chrono::Utc::now().to_rfc3339()
+        })
+    }
+    
+    async fn test_basic_operations(&self) -> bool {
+        self.test_graph.node_count() > 0 &&
+        self.test_graph.edge_count() > 0 &&
+        self.test_graph.density().unwrap_or(0.0) > 0.0
+    }
+    
+    async fn test_algorithms(&self) -> bool {
+        let graph = &self.test_graph;
+        
+        // Test that algorithms complete without error
+        pagerank_centrality(graph, 0.85, 1e-6).is_ok() &&
+        connected_components(graph).is_ok() &&
+        shortest_path(graph, &0, &1).is_ok()
+    }
+}
+```
+
 ## Summary
 
 These examples demonstrate the versatility of scirs2-graph for various graph processing tasks:
 
+### Core Applications
 - **Social Network Analysis**: Centrality measures, community detection
 - **Route Finding**: Shortest paths, A* search, alternative routes
 - **Machine Learning**: Feature extraction, graph embeddings
 - **Bioinformatics**: Protein networks, functional modules
 - **Operations Research**: Network flow, supply chain optimization
 - **Visualization**: Layout algorithms, data export
+
+### Advanced Scenarios
 - **Temporal Graphs**: Time-respecting paths, temporal motifs
 - **Hypergraphs**: Document analysis, overlapping communities
 - **Graph Comparison**: Edit distance, kernel methods
 - **Multi-layer Networks**: Cross-platform analysis
 - **Advanced Pathfinding**: Constrained and multi-objective optimization
 
-The library provides efficient implementations suitable for both research and production use, with comprehensive error handling and performance optimization features.
+### Production Patterns
+- **Database Integration**: Efficient loading from SQL databases
+- **Pipeline Processing**: Configurable analysis workflows
+- **Monitoring & Logging**: Performance tracking and observability
+- **Configuration Management**: Flexible algorithm parameters
+- **Testing & Validation**: Property-based and integration testing
+- **Deployment Patterns**: Caching, cancellation, health checks
+
+The library provides efficient implementations suitable for both research and production use, with comprehensive error handling, performance optimization features, and production-ready patterns for scaling graph analysis workloads.

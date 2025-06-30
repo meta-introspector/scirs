@@ -6,7 +6,7 @@
 
 use crate::error::{ScirsError, ScirsResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use scirs2_core::gpu::{GpuArray, GpuBackend, GpuBuffer, GpuDevice};
+use scirs2_core::gpu::{GpuBackend, GpuBuffer, GpuDevice};
 use std::sync::Arc;
 
 // Implement error conversion for GPU errors
@@ -21,8 +21,8 @@ impl From<scirs2_core::gpu::GpuError> for ScirsError {
     }
 }
 
-// Real GPU array type backed by scirs2-core
-pub type OptimGpuArray<T> = GpuArray<T>;
+// Real GPU array type backed by scirs2-core (using GpuBuffer instead of GpuArray)
+pub type OptimGpuArray<T> = GpuBuffer<T>;
 pub type GpuContext = GpuDevice;
 
 pub mod acceleration;

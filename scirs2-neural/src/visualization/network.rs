@@ -7,7 +7,7 @@ use super::config::{ImageFormat, VisualizationConfig};
 use crate::error::{NeuralError, Result};
 use crate::models::sequential::Sequential;
 
-use ndarray;
+use ndarray::{Array, IxDyn, ScalarOperand};
 use num_traits::Float;
 use serde::Serialize;
 use std::fmt::Debug;
@@ -1619,17 +1619,103 @@ impl<
             highlighted.forEach(el => el.classList.remove('highlight'));
         }}
         
-        // Layout change (placeholder - would need server communication)
+        // Layout change implementation
         function changeLayout() {{
             const select = document.getElementById('layoutSelect');
             const layout = select.value;
             
-            // In a real implementation, this would trigger a server request
-            // to regenerate the layout and update the SVG
             console.log(`Switching to ${{layout}} layout`);
             
-            // For demo, just show a message
-            alert(`Layout switching to ${{layout}} - this would reload the visualization in a full implementation`);
+            // Apply different layout algorithms
+            switch(layout) {{
+                case 'hierarchical':
+                    applyHierarchicalLayout();
+                    break;
+                case 'circular':
+                    applyCircularLayout();
+                    break;
+                case 'force':
+                    applyForceDirectedLayout();
+                    break;
+                case 'grid':
+                    applyGridLayout();
+                    break;
+                default:
+                    applyDefaultLayout();
+                    break;
+            }}
+        }}
+        
+        function applyHierarchicalLayout() {{
+            const layers = svg.querySelectorAll('rect, circle, ellipse');
+            const width = svg.viewBox.baseVal.width || 800;
+            const height = svg.viewBox.baseVal.height || 600;
+            const margin = 50;
+            
+            layers.forEach((layer, index) => {{
+                const x = margin + (index % 4) * (width - 2 * margin) / 3;
+                const y = margin + Math.floor(index / 4) * (height - 2 * margin) / 3;
+                layer.setAttribute('x', x);
+                layer.setAttribute('y', y);
+            }});
+        }}
+        
+        function applyCircularLayout() {{
+            const layers = svg.querySelectorAll('rect, circle, ellipse');
+            const centerX = (svg.viewBox.baseVal.width || 800) / 2;
+            const centerY = (svg.viewBox.baseVal.height || 600) / 2;
+            const radius = Math.min(centerX, centerY) - 100;
+            
+            layers.forEach((layer, index) => {{
+                const angle = (2 * Math.PI * index) / layers.length;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                layer.setAttribute('x', x);
+                layer.setAttribute('y', y);
+            }});
+        }}
+        
+        function applyForceDirectedLayout() {{
+            const layers = svg.querySelectorAll('rect, circle, ellipse');
+            const width = svg.viewBox.baseVal.width || 800;
+            const height = svg.viewBox.baseVal.height || 600;
+            
+            // Simple force-directed positioning
+            layers.forEach((layer, index) => {{
+                const x = Math.random() * (width - 100) + 50;
+                const y = Math.random() * (height - 100) + 50;
+                layer.setAttribute('x', x);
+                layer.setAttribute('y', y);
+            }});
+        }}
+        
+        function applyGridLayout() {{
+            const layers = svg.querySelectorAll('rect, circle, ellipse');
+            const width = svg.viewBox.baseVal.width || 800;
+            const height = svg.viewBox.baseVal.height || 600;
+            const cols = Math.ceil(Math.sqrt(layers.length));
+            const rows = Math.ceil(layers.length / cols);
+            
+            layers.forEach((layer, index) => {{
+                const col = index % cols;
+                const row = Math.floor(index / cols);
+                const x = 50 + col * (width - 100) / cols;
+                const y = 50 + row * (height - 100) / rows;
+                layer.setAttribute('x', x);
+                layer.setAttribute('y', y);
+            }});
+        }}
+        
+        function applyDefaultLayout() {{
+            const layers = svg.querySelectorAll('rect, circle, ellipse');
+            const width = svg.viewBox.baseVal.width || 800;
+            
+            layers.forEach((layer, index) => {{
+                const x = 50 + (index * 100) % (width - 100);
+                const y = 100 + Math.floor((index * 100) / (width - 100)) * 80;
+                layer.setAttribute('x', x);
+                layer.setAttribute('y', y);
+            }});
         }}
         
         // Initialize interactive features

@@ -190,14 +190,14 @@ pub struct OptionPrice {
 
 /// Risk metrics calculator
 #[derive(Debug)]
-pub struct RiskMetrics<F: Float + Debug> {
+pub struct RiskMetrics<F: Float + Debug + std::iter::Sum + num_traits::FromPrimitive> {
     /// Returns data
     returns: Array1<F>,
     /// Confidence levels for VaR/CVaR
     confidence_levels: Vec<F>,
 }
 
-impl<F: Float + Debug + Clone> RiskMetrics<F> {
+impl<F: Float + Debug + Clone + std::iter::Sum + num_traits::FromPrimitive> RiskMetrics<F> {
     /// Create new risk metrics calculator
     pub fn new(returns: Array1<F>) -> Self {
         let confidence_levels = vec![
@@ -254,7 +254,7 @@ impl<F: Float + Debug + Clone> RiskMetrics<F> {
             return Ok(var);
         }
 
-        let cvar = tail_losses.iter().sum::<F>() / F::from(tail_losses.len()).unwrap();
+        let cvar = tail_losses.into_iter().sum::<F>() / F::from(tail_losses.len()).unwrap();
         Ok(-cvar) // Report as positive loss
     }
 
@@ -269,7 +269,7 @@ impl<F: Float + Debug + Clone> RiskMetrics<F> {
         }
 
         // Convert returns to cumulative price series
-        let mut cumulative = Array1::ones(self.returns.len() + 1);
+        let mut cumulative: Array1<F> = Array1::ones(self.returns.len() + 1);
         for i in 0..self.returns.len() {
             cumulative[i + 1] = cumulative[i] * (F::one() + self.returns[i]);
         }
@@ -330,7 +330,7 @@ impl<F: Float + Debug + Clone> RiskMetrics<F> {
             .map(|&r| if r < risk_free_rate { (r - risk_free_rate) * (r - risk_free_rate) } else { F::zero() })
             .collect();
 
-        let downside_variance = negative_returns.iter().sum::<F>() / F::from(negative_returns.len()).unwrap();
+        let downside_variance = negative_returns.into_iter().sum::<F>() / F::from(negative_returns.len()).unwrap();
         let downside_deviation = downside_variance.sqrt();
 
         if downside_deviation == F::zero() {
@@ -458,7 +458,7 @@ impl HFTIndicators {
     }
 
     /// Microstructure noise indicator
-    pub fn microstructure_noise<F: Float + Clone>(
+    pub fn microstructure_noise<F: Float + Clone + std::iter::Sum>(
         prices: &Array1<F>,
         window: usize,
     ) -> Result<Array1<F>> {
@@ -482,7 +482,7 @@ impl HFTIndicators {
             }
             
             // Calculate variance of first differences
-            let mean_diff = diffs.iter().sum::<F>() / F::from(diffs.len()).unwrap();
+            let mean_diff = diffs.into_iter().sum::<F>() / F::from(diffs.len()).unwrap();
             let variance = diffs.iter()
                 .map(|&d| (d - mean_diff) * (d - mean_diff))
                 .sum::<F>() / F::from(diffs.len() - 1).unwrap();
@@ -642,7 +642,7 @@ impl BlackScholes {
             }
 
             if option_price.vega.abs() < 1e-10 {
-                return Err(TimeSeriesError::ConvergenceError(
+                return Err(TimeSeriesError::ComputationError(
                     "Vega too small for Newton-Raphson".to_string(),
                 ));
             }
@@ -651,7 +651,7 @@ impl BlackScholes {
             vol = vol.max(0.001).min(5.0); // Clamp volatility to reasonable range
         }
 
-        Err(TimeSeriesError::ConvergenceError(
+        Err(TimeSeriesError::ComputationError(
             "Implied volatility calculation did not converge".to_string(),
         ))
     }
@@ -724,7 +724,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> RegimeSwitchingModel<F> {
         }
 
         // Apply transition probabilities
-        let mut updated_probs = Array1::zeros(self.num_regimes);
+        let mut updated_probs: Array1<F> = Array1::zeros(self.num_regimes);
         for i in 0..self.num_regimes {
             for j in 0..self.num_regimes {
                 updated_probs[i] = updated_probs[i] + self.state_probs[j] * self.transition_probs[[j, i]];

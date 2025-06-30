@@ -33,6 +33,7 @@ pub mod sobel;
 pub mod tamura;
 pub mod template_matching;
 pub mod tracker;
+pub mod vision_transformer;
 
 pub use advanced_enhancement::{
     AdvancedDenoiser, DenoisingMethod, HDRProcessor, SuperResolutionMethod,
@@ -70,6 +71,10 @@ pub use sobel::*;
 pub use tamura::*;
 pub use template_matching::*;
 pub use tracker::*;
+pub use vision_transformer::{
+    ViTConfig, VisionTransformer, SwinTransformer, SwinConfig, 
+    TransformerFeatureMatcher, MatcherConfig,
+};
 
 use crate::error::{Result, VisionError};
 use image::{DynamicImage, GrayImage};

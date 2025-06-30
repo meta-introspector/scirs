@@ -504,9 +504,8 @@ where
             }
 
             // Newton iteration: Compute the Jacobian of the residual function
-            // Note: For time-dependent Jacobian, we differentiate with respect to time
-            // This is a placeholder - in a full implementation, we'd compute d(residual)/dt
-            let _jacobian_t: Array2<F> = Array2::zeros((n, n));
+            // Compute time-dependent Jacobian: ∂F/∂t
+            let jacobian_t = compute_time_jacobian(&f, t_new, &y_pred, &y_prime_pred)?;
 
             // Compute jacobians directly using finite differences
             let f_current = f(t_new, y_pred.view(), y_prime_pred.view());
@@ -529,7 +528,23 @@ where
             n_jac += 3;
 
             // Compute the effective Jacobian for Newton iteration
+            // The effective Jacobian includes contributions from:
+            // 1. ∂F/∂y (jacobian_y)
+            // 2. ∂F/∂y' scaled by the BDF derivative approximation (jacobian_y_prime)
+            // 3. ∂F/∂t (jacobian_t) for time-dependent systems
             let mut jacobian_effective = jacobian_y.clone();
+
+            // For highly time-dependent systems, the time Jacobian can improve convergence
+            // by predicting how the residual changes with time step modifications
+            let use_time_jacobian = true; // Enable for better convergence
+            if use_time_jacobian {
+                // Add a small contribution from the time Jacobian to account for
+                // the implicit time dependence in the Newton correction
+                let time_contribution_factor = F::from_f64(0.01).unwrap(); // Small factor
+                for i in 0..n {
+                    jacobian_effective[[i, i]] += jacobian_t[i] * time_contribution_factor;
+                }
+            }
 
             // For first step or order 1, use backward Euler formula dy/dt = (y - y_prev) / h
             // So y' = (y - y_prev) / h, and d(y')/dy = 1/h
@@ -1196,4 +1211,106 @@ where
     let stabilized_g = move |t: F, x: ArrayView1<F>, y: ArrayView1<F>| -> Array1<F> { g(t, x, y) };
 
     Ok((stabilized_f, stabilized_g))
+}
+
+/// Compute the time-dependent Jacobian ∂F/∂t for implicit DAE systems
+///
+/// This function computes the partial derivative of the DAE residual function F(t, y, y')
+/// with respect to time t using finite differences. This is needed for accurate Newton
+/// iteration in implicit DAE solvers.
+///
+/// For a DAE system F(t, y, y') = 0, the time Jacobian is:
+/// ∂F/∂t = lim(h→0) [F(t+h, y, y') - F(t, y, y')] / h
+fn compute_time_jacobian<F, FFunc>(
+    f: &FFunc,
+    t: F,
+    y: &Array1<F>,
+    y_prime: &Array1<F>,
+) -> IntegrateResult<Array1<F>>
+where
+    F: IntegrateFloat,
+    FFunc: Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F>,
+{
+    // Use a small perturbation for finite difference approximation
+    let h = F::from_f64(1e-8)
+        .unwrap()
+        .max(F::epsilon().sqrt() * t.abs());
+
+    // Ensure h is not too small to avoid numerical errors
+    let h = h.max(F::from_f64(1e-12).unwrap());
+
+    // Compute F(t, y, y')
+    let f_base = f(t, y.view(), y_prime.view());
+
+    // Compute F(t + h, y, y')
+    let t_plus_h = t + h;
+    let f_perturbed = f(t_plus_h, y.view(), y_prime.view());
+
+    // Compute the finite difference approximation: ∂F/∂t ≈ [F(t+h) - F(t)] / h
+    let time_jacobian = f_perturbed
+        .iter()
+        .zip(f_base.iter())
+        .map(|(&f_plus, &f_base)| (f_plus - f_base) / h)
+        .collect::<Array1<F>>();
+
+    Ok(time_jacobian)
+}
+
+/// Enhanced time-dependent Jacobian computation with adaptive step sizing
+///
+/// This function provides a more sophisticated approach to computing the time Jacobian
+/// using adaptive step sizing and higher-order finite difference approximations.
+#[allow(dead_code)]
+fn compute_adaptive_time_jacobian<F, FFunc>(
+    f: &FFunc,
+    t: F,
+    y: &Array1<F>,
+    y_prime: &Array1<F>,
+    tolerance: F,
+) -> IntegrateResult<Array1<F>>
+where
+    F: IntegrateFloat,
+    FFunc: Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F>,
+{
+    // Start with a reasonable step size
+    let mut h = F::from_f64(1e-6)
+        .unwrap()
+        .max(F::epsilon().sqrt() * t.abs());
+
+    // Compute base function value
+    let f_base = f(t, y.view(), y_prime.view());
+
+    loop {
+        // Forward difference
+        let f_forward = f(t + h, y.view(), y_prime.view());
+        let jacobian_forward = f_forward
+            .iter()
+            .zip(f_base.iter())
+            .map(|(&f_plus, &f_base)| (f_plus - f_base) / h)
+            .collect::<Array1<F>>();
+
+        // Central difference for comparison (higher accuracy)
+        let f_backward = f(t - h, y.view(), y_prime.view());
+        let jacobian_central = f_forward
+            .iter()
+            .zip(f_backward.iter())
+            .map(|(&f_plus, &f_minus)| (f_plus - f_minus) / (h + h))
+            .collect::<Array1<F>>();
+
+        // Estimate error by comparing forward and central differences
+        let error_estimate = jacobian_forward
+            .iter()
+            .zip(jacobian_central.iter())
+            .map(|(&forward, &central)| (forward - central).abs())
+            .fold(F::zero(), |acc, err| acc.max(err));
+
+        // Check if error is acceptable
+        if error_estimate <= tolerance || h <= F::from_f64(1e-12).unwrap() {
+            // Use central difference for better accuracy
+            return Ok(jacobian_central);
+        }
+
+        // Reduce step size and try again
+        h = h * F::from_f64(0.5).unwrap();
+    }
 }

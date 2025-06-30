@@ -131,7 +131,12 @@ pub mod validation;
 
 // Production-level features for enterprise deployments
 pub mod observability;
+pub mod stability;
 pub mod versioning;
+
+// Advanced optimization and AI features
+pub mod quantum_optimization;
+pub mod neural_architecture_search;
 
 // Benchmarking module
 #[cfg(feature = "benchmarking")]
@@ -271,9 +276,25 @@ pub use crate::validation::data::{
 
 // Production-level feature re-exports
 pub use crate::observability::{audit, tracing};
+pub use crate::stability::{
+    StabilityLevel, ApiContract, PerformanceContract, NumericalContract, ConcurrencyContract,
+    MemoryContract, StabilityGuaranteeManager, has_long_term_stability, validate_stability_requirements,
+    global_stability_manager, UsageContext, BreakingChange, BreakingChangeType,
+};
 pub use crate::versioning::{
     compatibility, deprecation, migration, negotiation, semantic, ApiVersion, CompatibilityLevel,
-    StabilityLevel, SupportStatus, Version, VersionManager,
+    SupportStatus, Version, VersionManager,
+};
+
+// Advanced optimization and AI feature re-exports
+pub use crate::quantum_optimization::{
+    QuantumOptimizer, QuantumStrategy, QuantumState, OptimizationResult,
+    QuantumParameters,
+};
+pub use crate::neural_architecture_search::{
+    NeuralArchitectureSearch, NASStrategy, SearchSpace, Architecture, ArchitecturePerformance,
+    OptimizationObjectives, HardwareConstraints, LayerType, ActivationType, OptimizerType,
+    ConnectionType, SearchResults,
 };
 
 // Benchmarking re-exports

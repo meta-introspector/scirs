@@ -351,7 +351,10 @@ mod tests {
             assert_eq!(v.name, "x");
             assert_eq!(v.index, Some(1));
         } else {
-            panic!("Expected variable expression");
+            panic!(
+                "Expected variable expression, got {:?}",
+                system.expressions[0]
+            );
         }
     }
 }

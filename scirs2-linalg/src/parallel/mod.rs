@@ -11,15 +11,22 @@ pub mod work_stealing;
 
 // Re-export submodule types
 pub use thread_pools::{
-    get_global_manager, AffinityStrategy, AnomalySeverity, AnomalyType, DecompositionType, 
-    IterativeSolverType, MemoryMetrics, OperationType, PerformanceAnomaly, ProfileMetrics,
-    ScopedThreadPool, ThreadPoolConfig, ThreadPoolManager, ThreadPoolProfile, ThreadPoolProfiler, 
-    ThreadPoolStats,
+    get_global_manager, AdvancedThreadPoolConfig, AffinityStrategy, AnomalySeverity, AnomalyType,
+    CacheAllocationPolicy, DecompositionType, DynamicSizingConfig, DynamicThreadManager,
+    IterativeSolverType, MemoryMetrics, MonitoringConfig, OperationType, PerformanceAnomaly,
+    PredictionModelParams, ProfileMetrics, ResourceIsolationConfig, ResourceUsagePattern,
+    ScalingDecision, ScalingReason, ScopedThreadPool, ThreadPoolConfig, ThreadPoolManager,
+    ThreadPoolProfile, ThreadPoolProfiler, ThreadPoolStats, UltraPerformanceStats,
+    UltraPerformanceThreadPool, WorkloadAdaptationConfig, WorkloadCharacteristics, WorkloadPattern,
+    WorkloadPredictor,
 };
 pub use work_stealing::{
-    CacheAwareStrategy, CacheAwareWorkStealer, LoadBalancingParams, MatrixOperationType, 
-    NumaTopology, SchedulerStats, StealingStrategy, WorkComplexity,
-    WorkItem, WorkPriority, WorkStealingScheduler, WorkloadCharacteristics,
+    AdaptiveChunking, AdaptiveChunkingStats, CacheAwareStrategy, CacheAwareWorkStealer,
+    CacheLocalityOptimizer, CacheOptimizationRecommendations, ChunkPerformance,
+    LoadBalancingParams, MatrixOperationType, MemoryAccessPattern, NumaTopology,
+    OptimizedSchedulerStats, OptimizedWorkStealingScheduler, PerformanceMonitor, PerformanceStats,
+    SchedulerStats, StealingStrategy, WorkComplexity, WorkItem, WorkPriority,
+    WorkStealingScheduler,
 };
 
 // Re-export matrix operations

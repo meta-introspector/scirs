@@ -5,7 +5,7 @@
 //! - Feature Dropout: drops specific features across all spatial locations
 
 use ndarray::{Array, Axis, Dimension, ScalarOperand};
-use ndarray_rand::rand::thread_rng;
+use rand::rng;
 use ndarray_rand::rand_distr::{Bernoulli, Distribution};
 use num_traits::Float;
 use std::fmt::Debug;
@@ -81,7 +81,7 @@ impl<A: Float + Debug + ScalarOperand> SpatialDropout<A> {
 
         // Create a mask for each feature map
         let dist = Bernoulli::new(keep_prob.to_f64().unwrap()).unwrap();
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let feature_mask: Vec<bool> = (0..feature_size).map(|_| dist.sample(&mut rng)).collect();
 
         // Apply mask to each feature map
@@ -170,7 +170,7 @@ impl<A: Float + Debug + ScalarOperand> FeatureDropout<A> {
 
         // Create a consistent mask for each feature
         let dist = Bernoulli::new(keep_prob.to_f64().unwrap()).unwrap();
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let feature_mask: Vec<bool> = (0..feature_size).map(|_| dist.sample(&mut rng)).collect();
 
         // Apply the same mask across all spatial/temporal locations

@@ -3,11 +3,9 @@
 //! This module provides functions for transforming irregular data onto regular grids
 //! and vice versa, as well as various grid manipulation utilities.
 
-use crate::error::{InterpolateError, InterpolateResult};
 use crate::advanced::rbf::{RBFInterpolator, RBFKernel};
-use crate::interp1d::{linear_interpolate, cubic_interpolate};
-use crate::interpnd::{RegularGridInterpolator, GridType};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, ArrayD, Axis};
+use crate::error::{InterpolateError, InterpolateResult};
+use ndarray::{Array1, Array2, ArrayD, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive, Zero};
 use std::fmt::Debug;
 
@@ -144,7 +142,7 @@ where
 
     // Create the regular grid
     let grid_coords = create_regular_grid(grid_bounds, grid_shape)?;
-    
+
     // Create a multidimensional array with the specified shape
     let shape: Vec<usize> = grid_shape.to_vec();
     let mut grid_values = ArrayD::from_elem(shape.clone(), fill_value);
@@ -176,46 +174,46 @@ where
     F: Float + FromPrimitive + Debug + Clone + PartialOrd + Zero,
 {
     let n_dims = grid_coords.len();
-    
+
     // For each grid point, find the nearest data point
     let grid_shape: Vec<usize> = grid_coords.iter().map(|coord| coord.len()).collect();
-    
+
     // Generate all grid point coordinates
     let mut indices = vec![0; n_dims];
-    
+
     loop {
         // Convert indices to actual coordinates
         let mut grid_point = vec![F::zero(); n_dims];
         for (dim, &idx) in indices.iter().enumerate() {
             grid_point[dim] = grid_coords[dim][idx];
         }
-        
+
         // Find nearest data point
         let mut min_dist_sq = F::infinity();
         let mut nearest_value = fill_value;
-        
+
         for i in 0..points.nrows() {
             let mut dist_sq = F::zero();
             for j in 0..n_dims {
                 let diff = points[[i, j]] - grid_point[j];
                 dist_sq = dist_sq + diff * diff;
             }
-            
+
             if dist_sq < min_dist_sq {
                 min_dist_sq = dist_sq;
                 nearest_value = values[i];
             }
         }
-        
+
         // Set the grid value
         grid_values[&indices[..]] = nearest_value;
-        
+
         // Increment indices
         if !increment_indices(&mut indices, &grid_shape) {
             break;
         }
     }
-    
+
     Ok(())
 }
 
@@ -237,32 +235,32 @@ where
         RBFKernel::Gaussian,
         F::from_f64(1.0).unwrap_or_else(|| F::one()),
     )?;
-    
+
     let n_dims = grid_coords.len();
     let grid_shape: Vec<usize> = grid_coords.iter().map(|coord| coord.len()).collect();
     let mut indices = vec![0; n_dims];
-    
+
     loop {
         // Convert indices to actual coordinates
         let mut grid_point = Array1::zeros(n_dims);
         for (dim, &idx) in indices.iter().enumerate() {
             grid_point[dim] = grid_coords[dim][idx];
         }
-        
+
         // Evaluate RBF at this grid point
         let interp_value = match rbf.evaluate(&grid_point.view().insert_axis(Axis(0))) {
             Ok(val) => val[0],
             Err(_) => fill_value,
         };
-        
+
         grid_values[&indices[..]] = interp_value;
-        
+
         // Increment indices
         if !increment_indices(&mut indices, &grid_shape) {
             break;
         }
     }
-    
+
     Ok(())
 }
 
@@ -324,14 +322,15 @@ where
         ));
     }
 
-    let n_dims = src_coords.len();
-    
+    let _n_dims = src_coords.len(); // Reserved for future use
+
     // Verify source coordinates match source values shape
     for (i, coord) in src_coords.iter().enumerate() {
         if coord.len() != src_values.shape()[i] {
-            return Err(InterpolateError::invalid_input(
-                format!("Source coordinate dimension {} length doesn't match values shape", i),
-            ));
+            return Err(InterpolateError::invalid_input(format!(
+                "Source coordinate dimension {} length doesn't match values shape",
+                i
+            )));
         }
     }
 
@@ -341,14 +340,32 @@ where
 
     match method {
         GridTransformMethod::Nearest => {
-            grid_to_grid_nearest(src_coords, src_values, dst_coords, &mut dst_values, fill_value)?;
+            grid_to_grid_nearest(
+                src_coords,
+                src_values,
+                dst_coords,
+                &mut dst_values,
+                fill_value,
+            )?;
         }
         GridTransformMethod::Linear => {
-            grid_to_grid_linear(src_coords, src_values, dst_coords, &mut dst_values, fill_value)?;
+            grid_to_grid_linear(
+                src_coords,
+                src_values,
+                dst_coords,
+                &mut dst_values,
+                fill_value,
+            )?;
         }
         GridTransformMethod::Cubic => {
             // For cubic, we'll use linear interpolation as it's more stable for grids
-            grid_to_grid_linear(src_coords, src_values, dst_coords, &mut dst_values, fill_value)?;
+            grid_to_grid_linear(
+                src_coords,
+                src_values,
+                dst_coords,
+                &mut dst_values,
+                fill_value,
+            )?;
         }
     }
 
@@ -385,11 +402,11 @@ where
         for dim in 0..n_dims {
             let coord = dst_point[dim];
             let src_coord = &src_coords[dim];
-            
+
             // Find nearest index in source coordinates
             let mut best_idx = 0;
             let mut min_dist = (src_coord[0] - coord).abs();
-            
+
             for (i, &src_val) in src_coord.iter().enumerate() {
                 let dist = (src_val - coord).abs();
                 if dist < min_dist {
@@ -397,7 +414,7 @@ where
                     best_idx = i;
                 }
             }
-            
+
             src_indices[dim] = best_idx;
         }
 
@@ -442,12 +459,8 @@ where
         }
 
         // Perform multilinear interpolation
-        let interpolated_value = multilinear_interpolate(
-            src_coords, 
-            src_values, 
-            &dst_point, 
-            fill_value
-        )?;
+        let interpolated_value =
+            multilinear_interpolate(src_coords, src_values, &dst_point, fill_value)?;
 
         dst_values[&indices[..]] = interpolated_value;
 
@@ -472,23 +485,23 @@ where
     D: ndarray::Dimension,
 {
     let n_dims = coords.len();
-    
+
     // Find bounding grid cells for each dimension
     let mut lower_indices = vec![0; n_dims];
     let mut upper_indices = vec![0; n_dims];
     let mut weights = vec![F::zero(); n_dims];
-    
+
     for dim in 0..n_dims {
         let coord_array = &coords[dim];
         let target = point[dim];
-        
+
         // Find the interval containing the target
         let mut found = false;
         for i in 0..coord_array.len() - 1 {
             if target >= coord_array[i] && target <= coord_array[i + 1] {
                 lower_indices[dim] = i;
                 upper_indices[dim] = i + 1;
-                
+
                 // Calculate interpolation weight
                 let dx = coord_array[i + 1] - coord_array[i];
                 if dx.abs() > F::zero() {
@@ -500,22 +513,22 @@ where
                 break;
             }
         }
-        
+
         if !found {
             // Point is outside grid bounds
             return Ok(fill_value);
         }
     }
-    
+
     // Perform multilinear interpolation
     // For N dimensions, we need 2^N corner values
     let n_corners = 1 << n_dims; // 2^n_dims
     let mut result = F::zero();
-    
+
     for corner in 0..n_corners {
         let mut corner_indices = vec![0; n_dims];
         let mut corner_weight = F::one();
-        
+
         for dim in 0..n_dims {
             if (corner >> dim) & 1 == 0 {
                 corner_indices[dim] = lower_indices[dim];
@@ -525,12 +538,12 @@ where
                 corner_weight = corner_weight * weights[dim];
             }
         }
-        
+
         // Get value at this corner
         let corner_value = values[&corner_indices[..]];
         result = result + corner_weight * corner_value;
     }
-    
+
     Ok(result)
 }
 
@@ -560,27 +573,28 @@ where
 {
     let n_points = query_points.nrows();
     let n_dims = query_points.ncols();
-    
+
     if grid_coords.len() != n_dims {
         return Err(InterpolateError::invalid_input(
             "Grid coordinates and query point dimensions must match".to_string(),
         ));
     }
-    
+
     // Verify grid coordinates match grid values shape
     for (i, coord) in grid_coords.iter().enumerate() {
         if coord.len() != grid_values.shape()[i] {
-            return Err(InterpolateError::invalid_input(
-                format!("Grid coordinate dimension {} length doesn't match values shape", i),
-            ));
+            return Err(InterpolateError::invalid_input(format!(
+                "Grid coordinate dimension {} length doesn't match values shape",
+                i
+            )));
         }
     }
-    
+
     let mut result = Array1::zeros(n_points);
-    
+
     for i in 0..n_points {
         let query_point: Vec<F> = query_points.row(i).to_vec();
-        
+
         let interpolated_value = match method {
             GridTransformMethod::Nearest => {
                 grid_nearest_neighbor(grid_coords, grid_values, &query_point, fill_value)?
@@ -593,10 +607,10 @@ where
                 multilinear_interpolate(grid_coords, grid_values, &query_point, fill_value)?
             }
         };
-        
+
         result[i] = interpolated_value;
     }
-    
+
     Ok(result)
 }
 
@@ -613,15 +627,15 @@ where
 {
     let n_dims = grid_coords.len();
     let mut nearest_indices = vec![0; n_dims];
-    
+
     for dim in 0..n_dims {
         let coord_array = &grid_coords[dim];
         let target = query_point[dim];
-        
+
         // Find nearest index
         let mut best_idx = 0;
         let mut min_dist = (coord_array[0] - target).abs();
-        
+
         for (i, &coord_val) in coord_array.iter().enumerate() {
             let dist = (coord_val - target).abs();
             if dist < min_dist {
@@ -629,18 +643,15 @@ where
                 best_idx = i;
             }
         }
-        
+
         nearest_indices[dim] = best_idx;
     }
-    
+
     Ok(grid_values[&nearest_indices[..]])
 }
 
 /// Efficient grid coordinate range checking
-fn point_in_grid_bounds<F>(
-    grid_coords: &[Array1<F>],
-    point: &[F],
-) -> bool
+fn point_in_grid_bounds<F>(grid_coords: &[Array1<F>], point: &[F]) -> bool
 where
     F: Float + PartialOrd,
 {
@@ -648,7 +659,7 @@ where
         let target = point[dim];
         let min_coord = coord_array[0];
         let max_coord = coord_array[coord_array.len() - 1];
-        
+
         if target < min_coord || target > max_coord {
             return false;
         }
@@ -670,27 +681,27 @@ where
             "At least one coordinate array required".to_string(),
         ));
     }
-    
+
     // Calculate total number of grid points
     let mut total_points = 1;
     for coord in coords {
         total_points *= coord.len();
     }
-    
+
     let mut result = Array2::zeros((total_points, n_dims));
     let shapes: Vec<usize> = coords.iter().map(|c| c.len()).collect();
     let mut indices = vec![0; n_dims];
-    
+
     for row in 0..total_points {
         // Set coordinates for this grid point
         for (dim, &idx) in indices.iter().enumerate() {
             result[[row, dim]] = coords[dim][idx];
         }
-        
+
         // Increment multi-dimensional indices
         increment_indices(&mut indices, &shapes);
     }
-    
+
     Ok(result)
 }
 
@@ -700,22 +711,22 @@ where
     F: Float + FromPrimitive + Debug + Clone,
 {
     let mut spacings = Vec::with_capacity(coords.len());
-    
+
     for coord in coords {
         if coord.len() < 2 {
             return Err(InterpolateError::invalid_input(
                 "Grid coordinates must have at least 2 points".to_string(),
             ));
         }
-        
+
         // Calculate average spacing (assumes roughly uniform grid)
         let total_range = coord[coord.len() - 1] - coord[0];
         let n_intervals = F::from_usize(coord.len() - 1).unwrap();
         let avg_spacing = total_range / n_intervals;
-        
+
         spacings.push(avg_spacing);
     }
-    
+
     Ok(spacings)
 }
 

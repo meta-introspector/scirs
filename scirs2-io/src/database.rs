@@ -3,6 +3,9 @@
 //! Provides interfaces for reading and writing scientific data to various
 //! database systems, including SQL and NoSQL databases.
 
+#![allow(dead_code)]
+#![allow(missing_docs)]
+
 use crate::error::{IoError, Result};
 use crate::metadata::Metadata;
 use ndarray::{Array1, Array2, ArrayView2};
@@ -2076,9 +2079,9 @@ impl DatabaseConnection for DuckDBConnection {
         if let Ok(mut stmt) = index_rows {
             let rows = stmt.query_map([table], |row| {
                 Ok((
-                    row.get::<_, String>(0)?,         // index_name
-                    row.get::<_, String>(1)?,         // column_names
-                    row.get::<_, bool>(2)?,           // is_unique
+                    row.get::<_, String>(0)?, // index_name
+                    row.get::<_, String>(1)?, // column_names
+                    row.get::<_, bool>(2)?,   // is_unique
                 ))
             });
 

@@ -100,7 +100,7 @@ impl<F: Float + FromPrimitive> Default for ModelPerformance<F> {
 
 /// Ensemble forecasting system
 #[derive(Debug)]
-pub struct EnsembleForecaster<F: Float + Debug> {
+pub struct EnsembleForecaster<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> {
     /// Base models in the ensemble
     base_models: Vec<BaseModelWrapper<F>>,
     /// Ensemble strategy
@@ -120,7 +120,7 @@ pub struct EnsembleForecaster<F: Float + Debug> {
 }
 
 /// Wrapper for base models with their state
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BaseModelWrapper<F: Float + Debug> {
     /// Model type
     model_type: BaseModel,
@@ -300,7 +300,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MetaModel<F> for LinearRegression
     }
 }
 
-impl<F: Float + Debug + Clone + FromPrimitive> EnsembleForecaster<F> {
+impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> EnsembleForecaster<F> {
     /// Create new ensemble forecaster
     pub fn new(
         base_models: Vec<BaseModel>,
@@ -383,8 +383,77 @@ impl<F: Float + Debug + Clone + FromPrimitive> EnsembleForecaster<F> {
     fn retrain_models(&mut self) -> Result<()> {
         let data: Vec<F> = self.training_buffer.iter().cloned().collect();
         
-        for model_wrapper in &mut self.base_models {
-            self.train_single_model(model_wrapper, &data)?;
+        // Process each model individually to avoid borrowing conflicts
+        for i in 0..self.base_models.len() {
+            // Extract the model temporarily to avoid borrow checker issues
+            let mut model = self.base_models[i].clone();
+            
+            match &model.model_type {
+                BaseModel::ARIMA { p, d, q } => {
+                    // Simplified ARIMA training - just store parameters
+                    model.model_state.parameters.insert("p".to_string(), F::from(*p).unwrap());
+                    model.model_state.parameters.insert("d".to_string(), F::from(*d).unwrap());
+                    model.model_state.parameters.insert("q".to_string(), F::from(*q).unwrap());
+                }
+                BaseModel::ExponentialSmoothing { alpha, beta, gamma } => {
+                    // Simplified exponential smoothing training
+                    model.model_state.parameters.insert("alpha".to_string(), F::from(*alpha).unwrap());
+                    if let Some(beta_val) = beta {
+                        model.model_state.parameters.insert("beta".to_string(), F::from(*beta_val).unwrap());
+                    }
+                    if let Some(gamma_val) = gamma {
+                        model.model_state.parameters.insert("gamma".to_string(), F::from(*gamma_val).unwrap());
+                    }
+                }
+                BaseModel::LinearTrend => {
+                    // Simple linear trend estimation
+                    if data.len() >= 2 {
+                        let n = F::from(data.len()).unwrap();
+                        let sum_x = F::from(data.len() * (data.len() - 1) / 2).unwrap();
+                        let sum_y = data.iter().cloned().sum::<F>();
+                        let sum_xy = data.iter().enumerate()
+                            .map(|(i, &y)| F::from(i).unwrap() * y)
+                            .sum::<F>();
+                        let sum_x2 = (0..data.len())
+                            .map(|i| F::from(i * i).unwrap())
+                            .sum::<F>();
+                        
+                        let denominator = n * sum_x2 - sum_x * sum_x;
+                        if denominator != F::zero() {
+                            let slope = (n * sum_xy - sum_x * sum_y) / denominator;
+                            let intercept = (sum_y - slope * sum_x) / n;
+                            model.model_state.parameters.insert("slope".to_string(), slope);
+                            model.model_state.parameters.insert("intercept".to_string(), intercept);
+                        } else {
+                            model.model_state.parameters.insert("slope".to_string(), F::zero());
+                            model.model_state.parameters.insert("intercept".to_string(), sum_y / n);
+                        }
+                    }
+                }
+                BaseModel::SeasonalNaive { period } => {
+                    // Store seasonal period
+                    model.model_state.parameters.insert("period".to_string(), F::from(*period).unwrap());
+                }
+                BaseModel::MovingAverage { window } => {
+                    // Store window size
+                    model.model_state.parameters.insert("window".to_string(), F::from(*window).unwrap());
+                }
+                BaseModel::LSTM { hidden_units, num_layers } => {
+                    // Store network parameters
+                    model.model_state.parameters.insert("hidden_units".to_string(), F::from(*hidden_units).unwrap());
+                    model.model_state.parameters.insert("num_layers".to_string(), F::from(*num_layers).unwrap());
+                }
+                BaseModel::Prophet { seasonality_prior_scale, changepoint_prior_scale } => {
+                    // Store prophet parameters
+                    model.model_state.parameters.insert("seasonality_prior_scale".to_string(), F::from(*seasonality_prior_scale).unwrap());
+                    model.model_state.parameters.insert("changepoint_prior_scale".to_string(), F::from(*changepoint_prior_scale).unwrap());
+                }
+            }
+            
+            model.is_trained = true;
+            
+            // Put the model back
+            self.base_models[i] = model;
         }
 
         // Update ensemble weights
@@ -1041,7 +1110,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> EnsembleForecaster<F> {
 
 /// AutoML for time series forecasting
 #[derive(Debug)]
-pub struct AutoMLForecaster<F: Float + Debug> {
+pub struct AutoMLForecaster<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> {
     /// Candidate models to evaluate
     candidate_models: Vec<BaseModel>,
     /// Best ensemble found
@@ -1143,7 +1212,7 @@ pub enum SearchAlgorithm {
     GeneticAlgorithm { population_size: usize, generations: usize },
 }
 
-impl<F: Float + Debug + Clone + FromPrimitive> AutoMLForecaster<F> {
+impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum + 'static> AutoMLForecaster<F> {
     /// Create new AutoML forecaster
     pub fn new(
         search_space: HyperparameterSpace,
@@ -1267,9 +1336,9 @@ impl<F: Float + Debug + Clone + FromPrimitive> AutoMLForecaster<F> {
     /// Generate models for random search
     fn generate_random_search_models(&mut self, n_iterations: usize) -> Result<()> {
         // Simplified random generation - in practice would use proper random sampling
-        let mut seed = 42;
+        let mut seed: u32 = 42;
         
-        for i in 0..n_iterations {
+        for _i in 0..n_iterations {
             // Simple LCG for pseudo-random numbers
             seed = (seed.wrapping_mul(1103515245).wrapping_add(12345)) & 0x7fffffff;
             let rand_val = (seed as f64) / (i32::MAX as f64);

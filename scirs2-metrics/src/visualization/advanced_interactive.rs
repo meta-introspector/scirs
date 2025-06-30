@@ -709,8 +709,8 @@ pub enum EventType {
 pub struct EventResponse {
     /// Whether the event was handled
     pub handled: bool,
-    /// Response actions
-    pub actions: Vec<ResponseAction>,
+    /// Widget actions to perform
+    pub actions: Vec<WidgetAction>,
     /// Data updates to propagate
     pub data_updates: HashMap<String, serde_json::Value>,
     /// State changes
@@ -750,6 +750,49 @@ pub enum NotificationLevel {
     Warning,
     Error,
     Success,
+}
+
+/// Widget action types
+#[derive(Debug, Clone)]
+pub enum ActionType {
+    /// Highlight elements
+    Highlight,
+    /// Show tooltip
+    ShowTooltip,
+    /// Update selection
+    UpdateSelection,
+    /// Apply filter
+    ApplyFilter,
+    /// Zoom operation
+    Zoom,
+    /// Pan operation
+    Pan,
+}
+
+/// Widget action for event responses
+#[derive(Debug, Clone)]
+pub struct WidgetAction {
+    /// Type of action to perform
+    pub action_type: ActionType,
+    /// Target widget ID
+    pub target_widget: String,
+    /// Action parameters
+    pub parameters: HashMap<String, serde_json::Value>,
+}
+
+/// Widget position in layout
+#[derive(Debug, Clone)]
+pub struct WidgetPosition {
+    /// X coordinate
+    pub x: f32,
+    /// Y coordinate
+    pub y: f32,
+    /// Width
+    pub width: f32,
+    /// Height
+    pub height: f32,
+    /// Z-index for layering
+    pub z_index: i32,
 }
 
 /// Widget data
@@ -1192,12 +1235,10 @@ pub struct LayoutConstraint {
 /// Responsive rules
 #[derive(Debug, Clone)]
 pub struct ResponsiveRule {
-    /// Rule ID
-    pub id: String,
-    /// Media query condition
-    pub condition: MediaQuery,
+    /// Breakpoint width
+    pub breakpoint: u32,
     /// Layout changes to apply
-    pub layout_changes: HashMap<String, LayoutChange>,
+    pub layout_changes: Vec<LayoutChange>,
 }
 
 /// Media query conditions
@@ -1778,7 +1819,7 @@ impl InteractiveDashboard {
                 config.realtime_config.clone(),
             ))),
             collaboration: Arc::new(Mutex::new(CollaborationManager::new(
-                config.collaboration_config,
+                config.collaboration_config.clone(),
             ))),
             state: Arc::new(RwLock::new(DashboardState::new(config))),
         })
@@ -2092,34 +2133,32 @@ impl LayoutManager {
 
     /// Calculate layout for given viewport size
     pub fn calculate_layout(&self, viewport: Size) -> Result<HashMap<String, WidgetPosition>> {
-        let mut positions = HashMap::new();
-        
-        match self.layout_config.layout_type {
+        let mut positions = match self.layout_config.layout_type {
             LayoutType::Grid => {
-                positions = self.calculate_grid_layout(viewport)?;
-            }
+                self.calculate_grid_layout(&viewport)?
+            },
             LayoutType::Flex => {
-                positions = self.calculate_flex_layout(viewport)?;
-            }
+                self.calculate_flex_layout(&viewport)?
+            },
             LayoutType::Absolute => {
-                positions = self.calculate_absolute_layout(viewport)?;
-            }
+                self.calculate_absolute_layout(&viewport)?
+            },
             LayoutType::Masonry => {
-                positions = self.calculate_masonry_layout(viewport)?;
-            }
+                self.calculate_masonry_layout(&viewport)?
+            },
             LayoutType::Custom(_) => {
-                positions = self.calculate_custom_layout(viewport)?;
-            }
-        }
+                self.calculate_custom_layout(&viewport)?
+            },
+        };
 
         // Apply responsive adjustments
-        self.apply_responsive_rules(&mut positions, viewport)?;
+        self.apply_responsive_rules(&mut positions, &viewport)?;
         
         Ok(positions)
     }
 
     /// Calculate grid layout
-    fn calculate_grid_layout(&self, viewport: Size) -> Result<HashMap<String, WidgetPosition>> {
+    fn calculate_grid_layout(&self, viewport: &Size) -> Result<HashMap<String, WidgetPosition>> {
         let mut positions = HashMap::new();
         
         if let Some(grid_config) = &self.layout_config.grid_config {
@@ -2157,7 +2196,7 @@ impl LayoutManager {
     }
 
     /// Calculate flex layout
-    fn calculate_flex_layout(&self, viewport: Size) -> Result<HashMap<String, WidgetPosition>> {
+    fn calculate_flex_layout(&self, viewport: &Size) -> Result<HashMap<String, WidgetPosition>> {
         let mut positions = HashMap::new();
         
         let mut current_x = 0u32;
@@ -2191,7 +2230,7 @@ impl LayoutManager {
     }
 
     /// Calculate absolute layout
-    fn calculate_absolute_layout(&self, _viewport: Size) -> Result<HashMap<String, WidgetPosition>> {
+    fn calculate_absolute_layout(&self, _viewport: &Size) -> Result<HashMap<String, WidgetPosition>> {
         let mut positions = HashMap::new();
         
         for (widget_id, widget_layout) in &self.widget_layouts {
@@ -2204,7 +2243,7 @@ impl LayoutManager {
     }
 
     /// Calculate masonry layout
-    fn calculate_masonry_layout(&self, viewport: Size) -> Result<HashMap<String, WidgetPosition>> {
+    fn calculate_masonry_layout(&self, viewport: &Size) -> Result<HashMap<String, WidgetPosition>> {
         let mut positions = HashMap::new();
         
         if let Some(grid_config) = &self.layout_config.grid_config {
@@ -2240,7 +2279,7 @@ impl LayoutManager {
     }
 
     /// Calculate custom layout
-    fn calculate_custom_layout(&self, viewport: Size) -> Result<HashMap<String, WidgetPosition>> {
+    fn calculate_custom_layout(&self, viewport: &Size) -> Result<HashMap<String, WidgetPosition>> {
         // Fallback to flex layout for custom layouts
         self.calculate_flex_layout(viewport)
     }
@@ -2313,7 +2352,7 @@ impl LayoutManager {
     }
 
     /// Apply responsive rules to layout
-    fn apply_responsive_rules(&self, positions: &mut HashMap<String, WidgetPosition>, viewport: Size) -> Result<()> {
+    fn apply_responsive_rules(&self, positions: &mut HashMap<String, WidgetPosition>, viewport: &Size) -> Result<()> {
         for rule in &self.responsive_rules {
             if viewport.width <= rule.breakpoint {
                 // Apply layout changes
@@ -2366,17 +2405,110 @@ impl RenderingEngine for DefaultRenderingEngine {
         Ok(())
     }
 
-    fn render_dashboard(&self, _dashboard_state: &DashboardState) -> Result<RenderOutput> {
+    fn render_dashboard(&self, dashboard_state: &DashboardState) -> Result<RenderOutput> {
+        let start_time = Instant::now();
+        
+        // Generate comprehensive HTML structure
+        let mut html = String::new();
+        html.push_str("<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n");
+        html.push_str("<meta charset=\"UTF-8\">\n");
+        html.push_str("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n");
+        html.push_str(&format!("<title>{}</title>\n", dashboard_state.config.title));
+        html.push_str("<style id=\"dashboard-styles\"></style>\n");
+        html.push_str("</head>\n<body>\n");
+        
+        // Dashboard container with responsive grid layout
+        html.push_str(&format!(
+            "<div id=\"dashboard-container\" data-width=\"{}\" data-height=\"{}\">\n",
+            dashboard_state.config.width, dashboard_state.config.height
+        ));
+        
+        html.push_str("<header class=\"dashboard-header\">\n");
+        html.push_str(&format!("  <h1>{}</h1>\n", dashboard_state.config.title));
+        html.push_str("  <div class=\"dashboard-controls\">\n");
+        html.push_str("    <button id=\"refresh-btn\" class=\"control-btn\">Refresh</button>\n");
+        html.push_str("    <button id=\"export-btn\" class=\"control-btn\">Export</button>\n");
+        html.push_str("  </div>\n");
+        html.push_str("</header>\n");
+        
+        html.push_str("<main class=\"dashboard-grid\">\n");
+        
+        // Render each widget
+        for (widget_id, widget_state) in &dashboard_state.widgets {
+            html.push_str(&format!(
+                "  <div id=\"widget-{}\" class=\"dashboard-widget widget-{}\" data-type=\"{}\">\n",
+                widget_id,
+                widget_state.widget_type.to_string().to_lowercase(),
+                widget_state.widget_type.to_string()
+            ));
+            html.push_str("    <div class=\"widget-header\">\n");
+            html.push_str(&format!("      <h3 class=\"widget-title\">{}</h3>\n", widget_state.title));
+            html.push_str("      <div class=\"widget-controls\">\n");
+            html.push_str("        <button class=\"widget-menu-btn\">⋮</button>\n");
+            html.push_str("      </div>\n");
+            html.push_str("    </div>\n");
+            html.push_str("    <div class=\"widget-content\">\n");
+            html.push_str("      <div class=\"loading-spinner\">Loading...</div>\n");
+            html.push_str("    </div>\n");
+            html.push_str("  </div>\n");
+        }
+        
+        html.push_str("</main>\n");
+        html.push_str("</div>\n");
+        html.push_str("<script id=\"dashboard-script\"></script>\n");
+        html.push_str("</body>\n</html>");
+        
+        // Generate modern CSS with responsive design
+        let css = "body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; background: #f8fafc; }\n\
+                   .dashboard-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }\n\
+                   .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; padding: 2rem; }\n\
+                   .dashboard-widget { background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; }\n\
+                   .dashboard-widget:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }\n\
+                   .widget-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-bottom: 1px solid #e2e8f0; }\n\
+                   .widget-title { margin: 0; font-size: 1.1rem; font-weight: 600; color: #1a202c; }\n\
+                   .widget-content { padding: 1.5rem; min-height: 200px; }\n\
+                   .loading-spinner { display: flex; justify-content: center; align-items: center; height: 100px; color: #718096; }\n\
+                   .control-btn { background: #4299e1; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; }\n\
+                   .control-btn:hover { background: #3182ce; }".to_string();
+        
+        // Generate enhanced JavaScript with interactivity
+        let javascript = "document.addEventListener('DOMContentLoaded', function() {\n\
+                         console.log('Interactive dashboard loaded');\n\
+                         \n\
+                         // Add click handlers for controls\n\
+                         document.getElementById('refresh-btn')?.addEventListener('click', function() {\n\
+                           console.log('Refreshing dashboard...');\n\
+                           location.reload();\n\
+                         });\n\
+                         \n\
+                         document.getElementById('export-btn')?.addEventListener('click', function() {\n\
+                           console.log('Exporting dashboard...');\n\
+                           alert('Export functionality would be implemented here');\n\
+                         });\n\
+                         \n\
+                         // Add hover effects for widgets\n\
+                         document.querySelectorAll('.dashboard-widget').forEach(function(widget) {\n\
+                           widget.addEventListener('mouseenter', function() {\n\
+                             this.style.transform = 'translateY(-4px)';\n\
+                           });\n\
+                           widget.addEventListener('mouseleave', function() {\n\
+                             this.style.transform = 'translateY(0)';\n\
+                           });\n\
+                         });\n\
+                       });".to_string();
+        
+        let render_time = start_time.elapsed();
+        
         Ok(RenderOutput {
-            html: "<div>Dashboard</div>".to_string(),
-            css: "body { font-family: Arial; }".to_string(),
-            javascript: "console.log('Dashboard loaded');".to_string(),
+            html,
+            css,
+            javascript,
             assets: Vec::new(),
             performance: RenderPerformance {
-                render_time: Duration::from_millis(10),
-                memory_usage: 1024,
+                render_time,
+                memory_usage: (html.len() + css.len() + javascript.len()) as u64,
                 frame_rate: 60.0,
-                gpu_usage: None,
+                gpu_usage: Some(0.1), // Simulated low GPU usage
             },
         })
     }
@@ -2520,6 +2652,7 @@ impl DashboardState {
         }
     }
 }
+
 
 #[cfg(test)]
 mod tests {

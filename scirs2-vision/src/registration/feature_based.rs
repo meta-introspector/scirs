@@ -699,17 +699,13 @@ fn match_features_simd(
     }
 
     let mut matches = Vec::new();
-    
+
     // Process descriptors in parallel chunks for better performance
     const CHUNK_SIZE: usize = 32;
-    
+
     for (chunk_start, chunk) in descriptors1.chunks(CHUNK_SIZE).enumerate() {
-        let chunk_matches = process_descriptor_chunk_simd(
-            chunk,
-            chunk_start * CHUNK_SIZE,
-            descriptors2,
-            params,
-        )?;
+        let chunk_matches =
+            process_descriptor_chunk_simd(chunk, chunk_start * CHUNK_SIZE, descriptors2, params)?;
         matches.extend(chunk_matches);
     }
 
@@ -739,19 +735,17 @@ fn process_descriptor_chunk_simd(
     descriptors2: &[Vec<u8>],
     params: &MatcherParams,
 ) -> Result<Vec<FeatureMatch>> {
-    use scirs2_core::simd_ops::SimdUnifiedOps;
-    
+
     let mut chunk_matches = Vec::new();
-    
+
     for (local_i, desc1) in chunk.iter().enumerate() {
         let global_i = chunk_offset + local_i;
-        
+
         // SIMD-accelerated distance computation for all descriptors2
         let distances = compute_hamming_distances_simd(desc1, descriptors2);
-        
+
         // Find best and second-best matches using SIMD operations
-        let (best_idx, best_dist, second_best_dist) = 
-            find_best_matches_simd(&distances);
+        let (best_idx, best_dist, second_best_dist) = find_best_matches_simd(&distances);
 
         if let Some(idx) = best_idx {
             // Apply distance threshold
@@ -775,7 +769,7 @@ fn process_descriptor_chunk_simd(
             }
         }
     }
-    
+
     Ok(chunk_matches)
 }
 
@@ -795,33 +789,32 @@ fn process_descriptor_chunk_simd(
 ///
 /// * Vector of Hamming distances
 fn compute_hamming_distances_simd(desc1: &[u8], descriptors2: &[Vec<u8>]) -> Vec<f32> {
-    use scirs2_core::simd_ops::SimdUnifiedOps;
-    
+
     let mut distances = Vec::with_capacity(descriptors2.len());
     let desc_len = desc1.len();
-    
+
     // Process descriptors in SIMD-friendly chunks
     const SIMD_CHUNK_SIZE: usize = 8; // Process 8 descriptors at once
-    
+
     for chunk in descriptors2.chunks(SIMD_CHUNK_SIZE) {
         // Ensure all descriptors in chunk have same length as desc1
         let valid_chunk: Vec<&Vec<u8>> = chunk
             .iter()
             .filter(|desc2| desc2.len() == desc_len)
             .collect();
-            
+
         if valid_chunk.is_empty() {
             // Add default distances for invalid descriptors
             distances.extend(vec![f32::INFINITY; chunk.len()]);
             continue;
         }
-        
+
         // SIMD Hamming distance computation
         if desc_len >= 32 && valid_chunk.len() >= 4 {
             // Use optimized SIMD path for standard 256-bit descriptors
             let simd_distances = compute_hamming_simd_optimized(desc1, &valid_chunk);
             distances.extend(simd_distances);
-            
+
             // Add distances for any remaining descriptors in this chunk
             let remaining = chunk.len() - valid_chunk.len();
             distances.extend(vec![f32::INFINITY; remaining]);
@@ -832,7 +825,7 @@ fn compute_hamming_distances_simd(desc1: &[u8], descriptors2: &[Vec<u8>]) -> Vec
             }
         }
     }
-    
+
     distances
 }
 
@@ -852,36 +845,35 @@ fn compute_hamming_distances_simd(desc1: &[u8], descriptors2: &[Vec<u8>]) -> Vec
 ///
 /// * Vector of Hamming distances for the batch
 fn compute_hamming_simd_optimized(desc1: &[u8], descriptors: &[&Vec<u8>]) -> Vec<f32> {
-    use scirs2_core::simd_ops::SimdUnifiedOps;
-    
+
     let mut distances = Vec::with_capacity(descriptors.len());
     let desc_len = desc1.len();
-    
+
     // Convert desc1 to SIMD-friendly format
     let desc1_u32: Vec<u32> = desc1
         .chunks_exact(4)
         .map(|chunk| u32::from_le_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]))
         .collect();
-    
+
     // Process descriptors in groups for SIMD efficiency
     for desc2 in descriptors {
         if desc2.len() != desc_len {
             distances.push(f32::INFINITY);
             continue;
         }
-        
+
         // Convert desc2 to u32 chunks
         let desc2_u32: Vec<u32> = desc2
             .chunks_exact(4)
             .map(|chunk| u32::from_le_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]))
             .collect();
-        
+
         // SIMD XOR and popcount
         let distance = if desc1_u32.len() == desc2_u32.len() && desc1_u32.len() >= 4 {
             // Use SIMD operations for XOR and population count
             let _desc1_arr = Array1::from_vec(desc1_u32.iter().map(|&x| x as f32).collect());
             let _desc2_arr = Array1::from_vec(desc2_u32.iter().map(|&x| x as f32).collect());
-            
+
             // Convert back to u32 for bit operations (approximation for SIMD)
             let mut hamming_dist = 0u32;
             for (v1, v2) in desc1_u32.iter().zip(desc2_u32.iter()) {
@@ -892,10 +884,10 @@ fn compute_hamming_simd_optimized(desc1: &[u8], descriptors: &[&Vec<u8>]) -> Vec
             // Fallback for non-standard sizes
             hamming_distance(desc1, desc2)
         };
-        
+
         distances.push(distance);
     }
-    
+
     distances
 }
 
@@ -915,33 +907,33 @@ fn compute_hamming_simd_optimized(desc1: &[u8], descriptors: &[&Vec<u8>]) -> Vec
 /// * Tuple of (best_index, best_distance, second_best_distance)
 fn find_best_matches_simd(distances: &[f32]) -> (Option<usize>, f32, f32) {
     use scirs2_core::simd_ops::SimdUnifiedOps;
-    
+
     if distances.is_empty() {
         return (None, f32::INFINITY, f32::INFINITY);
     }
-    
+
     // Use SIMD operations for efficient min-finding
     const CHUNK_SIZE: usize = 8;
-    
+
     let mut best_dist = f32::INFINITY;
     let mut second_best_dist = f32::INFINITY;
     let mut best_idx = None;
-    
+
     // Process in SIMD chunks
     for (chunk_start, chunk) in distances.chunks(CHUNK_SIZE).enumerate() {
         if chunk.len() >= 4 {
             // Use SIMD for this chunk
             let chunk_array = Array1::from_vec(chunk.to_vec());
-            
+
             // Find minimum in this chunk using SIMD
-            let chunk_min = f32::simd_horizontal_min(&chunk_array.view());
+            let chunk_min = f32::simd_min_element(&chunk_array.view());
             let chunk_min_idx = chunk
                 .iter()
                 .position(|&x| (x - chunk_min).abs() < f32::EPSILON)
                 .unwrap_or(0);
-            
+
             let global_idx = chunk_start * CHUNK_SIZE + chunk_min_idx;
-            
+
             // Update best and second-best
             if chunk_min < best_dist {
                 second_best_dist = best_dist;
@@ -950,9 +942,9 @@ fn find_best_matches_simd(distances: &[f32]) -> (Option<usize>, f32, f32) {
             } else if chunk_min < second_best_dist {
                 second_best_dist = chunk_min;
             }
-            
+
             // Check for second-best within this chunk
-            for (local_idx, &dist) in chunk.iter().enumerate() {
+            for &dist in chunk.iter() {
                 if dist != chunk_min && dist < second_best_dist {
                     second_best_dist = dist;
                 }
@@ -961,7 +953,7 @@ fn find_best_matches_simd(distances: &[f32]) -> (Option<usize>, f32, f32) {
             // Handle remaining elements with scalar operations
             for (local_idx, &dist) in chunk.iter().enumerate() {
                 let global_idx = chunk_start * CHUNK_SIZE + local_idx;
-                
+
                 if dist < best_dist {
                     second_best_dist = best_dist;
                     best_dist = dist;
@@ -972,7 +964,7 @@ fn find_best_matches_simd(distances: &[f32]) -> (Option<usize>, f32, f32) {
             }
         }
     }
-    
+
     (best_idx, best_dist, second_best_dist)
 }
 
@@ -998,30 +990,30 @@ fn apply_cross_check_simd(
     descriptors2: &[Vec<u8>],
 ) -> Vec<FeatureMatch> {
     let mut validated_matches = Vec::new();
-    
+
     // Process matches in parallel chunks
     const CHUNK_SIZE: usize = 16;
-    
+
     for chunk in matches.chunks(CHUNK_SIZE) {
         let mut chunk_validated = Vec::new();
-        
+
         for match_item in chunk {
             // Check if this match is also the best match in reverse direction
             let desc2 = &descriptors2[match_item.train_idx];
-            
+
             // Use SIMD-accelerated distance computation
             let reverse_distances = compute_hamming_distances_simd(desc2, descriptors1);
-            let (best_idx, _best_dist, _second_best_dist) = 
+            let (best_idx, _best_dist, _second_best_dist) =
                 find_best_matches_simd(&reverse_distances);
-            
+
             if best_idx == Some(match_item.query_idx) {
                 chunk_validated.push(match_item.clone());
             }
         }
-        
+
         validated_matches.extend(chunk_validated);
     }
-    
+
     validated_matches
 }
 
@@ -1038,6 +1030,7 @@ fn hamming_distance(desc1: &[u8], desc2: &[u8]) -> f32 {
 }
 
 /// Apply cross-check validation
+#[allow(dead_code)]
 fn apply_cross_check(
     matches: Vec<FeatureMatch>,
     descriptors1: &[Vec<u8>],

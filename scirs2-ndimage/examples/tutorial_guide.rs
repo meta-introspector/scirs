@@ -494,7 +494,7 @@ fn tutorial_5_shape_analysis() -> NdimageResult<()> {
 
     use ndarray::IxDyn;
     let binary_dyn = binary_image.clone().into_dimensionality::<IxDyn>().unwrap();
-    let (distances, _) = distance_transform_edt(&binary_dyn, None, true, false)?;
+    let (distances, _) = distance_transform_edt(&binary_dyn, None, true, false).expect("Distance transform failed")?;
     let max_distance = distances.fold(0.0, |acc, &x| acc.max(x));
     println!("   Maximum distance: {:.1} pixels", max_distance);
     println!("   Creates 'skeleton' representation of shapes");
@@ -818,7 +818,7 @@ fn tutorial_8_advanced_techniques() -> NdimageResult<()> {
     let distance_map = {
         use ndarray::IxDyn;
         let binary_dyn = binary_image.clone().into_dimensionality::<IxDyn>().unwrap();
-        let (distances, _) = distance_transform_edt(&binary_dyn, None, true, false)?;
+        let (distances, _) = distance_transform_edt(&binary_dyn, None, true, false).expect("Distance transform failed")?;
         distances.into_dimensionality::<ndarray::Ix2>().unwrap()
     };
     

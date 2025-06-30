@@ -4,7 +4,7 @@
 //! during training. Unlike Dropout which drops units, DropConnect drops individual weights.
 
 use ndarray::{Array, Dimension, ScalarOperand};
-use ndarray_rand::rand::thread_rng;
+use rand::rng;
 use ndarray_rand::rand_distr::{Bernoulli, Distribution};
 use num_traits::Float;
 use std::fmt::Debug;
@@ -80,7 +80,7 @@ impl<A: Float + Debug + ScalarOperand> DropConnect<A> {
         let dist = Bernoulli::new(keep_prob.to_f64().unwrap()).unwrap();
 
         // Sample mask
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let mask = Array::from_shape_fn(weights.raw_dim(), |_| dist.sample(&mut rng));
 
         // Apply mask and scale by keep probability
@@ -116,7 +116,7 @@ impl<A: Float + Debug + ScalarOperand> DropConnect<A> {
         let dist = Bernoulli::new(keep_prob.to_f64().unwrap()).unwrap();
 
         // Create mask with same shape as weights
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let mask = Array::from_shape_fn(weights_shape, |_| dist.sample(&mut rng));
 
         // Apply mask to gradients

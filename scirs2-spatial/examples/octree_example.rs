@@ -1,6 +1,6 @@
 use ndarray::{array, Array2};
 use rand::prelude::*;
-use scirs2_spatial::{BoundingBox, Octree};
+use scirs2_spatial::{OctreeBoundingBox as BoundingBox, Octree};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Octree Example");

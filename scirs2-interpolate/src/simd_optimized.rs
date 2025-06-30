@@ -484,25 +484,7 @@ where
     let n_basis = degree + 1;
     let mut basis_values = Array2::zeros((n_points, n_basis));
 
-    // Use SIMD for f64, fall back to scalar for other types
-    if std::any::TypeId::of::<F>() == std::any::TypeId::of::<f64>() {
-        #[cfg(all(feature = "simd", target_arch = "x86_64"))]
-        {
-            if is_x86_feature_detected!("avx2") {
-                unsafe {
-                    return simd_bspline_basis_avx2(
-                        knots,
-                        degree,
-                        x_values,
-                        span_indices,
-                        &mut basis_values,
-                    );
-                }
-            }
-        }
-    }
-
-    // Scalar fallback
+    // Use scalar implementation (AVX2 implementation removed)
     scalar_bspline_basis_functions(knots, degree, x_values, span_indices, &mut basis_values)
 }
 

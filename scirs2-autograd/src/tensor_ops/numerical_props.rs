@@ -40,7 +40,8 @@ impl<F: Float> Op<F> for RankOp<F> {
             .map_err(|_| OpError::IncompatibleShape("Failed to convert to 2D array".into()))?;
 
         // Compute proper singular values using SVD from scirs2-linalg
-        let singular_values = match Self::compute_svd_singular_values(&matrix) {
+        let matrix_owned = matrix.to_owned();
+        let mut singular_values = match Self::compute_svd_singular_values(&matrix_owned) {
             Ok(sv) => sv,
             Err(_) => {
                 // Fallback to diagonal approximation if SVD fails
@@ -92,91 +93,93 @@ impl<F: Float> RankOp<F> {
     fn compute_svd_singular_values(matrix: &Array2<F>) -> Result<Vec<F>, OpError> {
         let (m, n) = matrix.dim();
         let min_dim = m.min(n);
-        
+
         // For now, implement a simplified SVD using QR decomposition approach
         // This is more accurate than diagonal elements but not full SVD
-        
+
         // Convert to f64 for numerical computation
         let matrix_f64: Array2<f64> = matrix.mapv(|x| x.to_f64().unwrap_or(0.0));
-        
+
         // Compute A^T * A for eigenvalue decomposition approach
         let ata = if m >= n {
             matrix_f64.t().dot(&matrix_f64)
         } else {
             matrix_f64.dot(&matrix_f64.t())
         };
-        
+
         // Simple power iteration method for largest eigenvalues
         let mut singular_values = Vec::with_capacity(min_dim);
         let mut current_matrix = ata.clone();
-        
+
         for _ in 0..min_dim {
             // Power iteration to find dominant eigenvalue
             let eigenvalue = Self::power_iteration(&current_matrix)?;
-            if eigenvalue <= 1e-12 {
+            if eigenvalue <= 1e-12_f64 {
                 break; // Stop if eigenvalue is effectively zero
             }
-            
+
             let singular_value = eigenvalue.sqrt();
             singular_values.push(F::from(singular_value).unwrap_or(F::zero()));
-            
+
             // Deflate matrix by removing the computed eigenvalue contribution
             // This is a simplified deflation - in practice, more sophisticated methods are used
             let eye = Array2::<f64>::eye(current_matrix.nrows());
             current_matrix = current_matrix - eye * eigenvalue;
-            
+
             // Ensure matrix remains positive semidefinite
-            current_matrix.mapv_inplace(|x| if x < 0.0 { 0.0 } else { x });
+            current_matrix.mapv_inplace(|x| if x < 0.0_f64 { 0.0_f64 } else { x });
         }
-        
+
         Ok(singular_values)
     }
-    
+
     /// Simple power iteration method to find the largest eigenvalue
     fn power_iteration(matrix: &Array2<f64>) -> Result<f64, OpError> {
         let n = matrix.nrows();
         if n != matrix.ncols() {
-            return Err(OpError::IncompatibleShape("Matrix must be square for eigenvalue computation".into()));
+            return Err(OpError::IncompatibleShape(
+                "Matrix must be square for eigenvalue computation".into(),
+            ));
         }
-        
+
         // Initialize with random vector
         let mut v = Array2::ones((n, 1));
-        
+
         // Normalize
-        let norm = v.mapv(|x| x * x).sum().sqrt();
-        if norm > 1e-12 {
+        let norm = v.mapv(|x: f64| x * x).sum().sqrt();
+        if norm > 1e-12_f64 {
             v.mapv_inplace(|x| x / norm);
         }
-        
+
         // Power iteration
         let max_iterations = 100;
-        let tolerance = 1e-10;
-        let mut eigenvalue = 0.0;
-        
+        let tolerance = 1e-10_f64;
+        let mut eigenvalue = 0.0_f64;
+
         for _ in 0..max_iterations {
             // Compute A * v
             let av = matrix.dot(&v);
-            
+
             // Compute eigenvalue estimate: v^T * A * v
             let new_eigenvalue = v.t().dot(&av)[[0, 0]];
-            
+
             // Check convergence
             if (new_eigenvalue - eigenvalue).abs() < tolerance {
-                return Ok(new_eigenvalue.max(0.0)); // Ensure non-negative
+                return Ok(new_eigenvalue.max(0.0_f64)); // Ensure non-negative
             }
-            
+
             eigenvalue = new_eigenvalue;
-            
+
             // Normalize v = A * v / ||A * v||
-            let norm = av.mapv(|x| x * x).sum().sqrt();
-            if norm > 1e-12 {
+            let norm = av.mapv(|x: f64| x * x).sum().sqrt();
+            if norm > 1e-12_f64 {
                 v = av.mapv(|x| x / norm);
             } else {
                 break; // Converged to zero
             }
         }
-        
-        Ok(eigenvalue.max(0.0))
+
+        Ok(eigenvalue.max(0.0_f64))
     }
 }
 

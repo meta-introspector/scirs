@@ -581,6 +581,11 @@ impl DatasetCache {
         self.max_cache_size
     }
 
+    /// Put data into the cache (alias for write_cached)
+    pub fn put(&self, name: &str, data: &[u8]) -> Result<()> {
+        self.write_cached(name, data)
+    }
+
     /// Get detailed cache information
     pub fn get_detailed_stats(&self) -> Result<DetailedCacheStats> {
         let mut total_size = 0u64;
@@ -717,16 +722,22 @@ impl CacheManager {
                         Ok(dataset) => Ok(Some(dataset)),
                         Err(e) => {
                             // If deserialization fails, consider the cache entry invalid
-                            let _ = self.mem_cache.borrow_mut().remove(&FileCacheKey(name.clone()));
+                            let _ = self
+                                .cache
+                                .mem_cache
+                                .borrow_mut()
+                                .remove(&FileCacheKey(name.clone()));
                             Err(DatasetsError::CacheError(format!(
-                                "Failed to deserialize cached dataset: {}", e
+                                "Failed to deserialize cached dataset: {}",
+                                e
                             )))
                         }
                     }
                 }
                 Err(e) => Err(DatasetsError::CacheError(format!(
-                    "Failed to read cached data: {}", e
-                )))
+                    "Failed to read cached data: {}",
+                    e
+                ))),
             }
         } else {
             Ok(None)
@@ -736,16 +747,16 @@ impl CacheManager {
     /// Put a dataset into cache using CacheKey
     pub fn put(&self, key: &CacheKey, dataset: &crate::utils::Dataset) -> Result<()> {
         let name = key.as_string();
-        
+
         // Serialize the dataset to JSON bytes for caching
         let serialized = serde_json::to_vec(dataset).map_err(|e| {
             DatasetsError::CacheError(format!("Failed to serialize dataset: {}", e))
         })?;
-        
+
         // Write the serialized data to cache
-        self.cache.write_cached(&name, &serialized).map_err(|e| {
-            DatasetsError::CacheError(format!("Failed to write to cache: {}", e))
-        })
+        self.cache
+            .write_cached(&name, &serialized)
+            .map_err(|e| DatasetsError::CacheError(format!("Failed to write to cache: {}", e)))
     }
 
     /// Create a cache manager with comprehensive configuration
@@ -1734,7 +1745,7 @@ mod tests {
     #[test]
     fn test_cache_manager_creation() {
         let temp_dir = TempDir::new().unwrap();
-        let manager = CacheManager::new(temp_dir.path().to_path_buf(), 10, 3600);
+        let manager = CacheManager::with_config(temp_dir.path().to_path_buf(), 10, 3600);
         let stats = manager.get_stats();
         assert_eq!(stats.file_count, 0);
     }
@@ -1843,7 +1854,7 @@ mod tests {
     #[test]
     fn test_cache_manager() {
         let temp_dir = TempDir::new().unwrap();
-        let manager = CacheManager::new(temp_dir.path().to_path_buf(), 10, 3600);
+        let manager = CacheManager::with_config(temp_dir.path().to_path_buf(), 10, 3600);
 
         let stats = manager.get_stats();
         assert_eq!(stats.file_count, 0);

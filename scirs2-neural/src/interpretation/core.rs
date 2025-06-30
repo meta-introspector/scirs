@@ -4,7 +4,7 @@
 //! orchestrator for all interpretation methods, managing caches, configurations,
 //! and coordinating between different interpretation techniques.
 
-use crate::error::{NeuralError, Result};
+use crate::error::Result;
 use ndarray::ArrayD;
 use num_traits::Float;
 use std::collections::HashMap;

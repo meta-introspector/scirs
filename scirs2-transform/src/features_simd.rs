@@ -70,9 +70,9 @@ impl<F: Float + NumCast + SimdUnifiedOps> SimdPolynomialFeatures<F> {
         let mut output = Array2::zeros((n_samples, n_output_features));
 
         // Process samples in batches for better cache locality
-        const BATCH_SIZE: usize = 256;
-        for batch_start in (0..n_samples).step_by(BATCH_SIZE) {
-            let batch_end = (batch_start + BATCH_SIZE).min(n_samples);
+        let batch_size = self.calculate_optimal_batch_size(n_samples, n_output_features);
+        for batch_start in (0..n_samples).step_by(batch_size) {
+            let batch_end = (batch_start + batch_size).min(n_samples);
 
             for i in batch_start..batch_end {
                 let sample = x.row(i);
@@ -246,6 +246,30 @@ impl<F: Float + NumCast + SimdUnifiedOps> SimdPolynomialFeatures<F> {
         }
 
         Ok(output_idx)
+    }
+
+    /// Calculate optimal batch size based on memory characteristics
+    fn calculate_optimal_batch_size(&self, n_samples: usize, n_output_features: usize) -> usize {
+        const L1_CACHE_SIZE: usize = 32_768;
+        const ELEMENT_SIZE: usize = std::mem::size_of::<F>();
+        
+        // Target: keep one batch worth of data in L1 cache
+        let elements_per_batch = L1_CACHE_SIZE / ELEMENT_SIZE / 2; // Conservative estimate
+        let max_batch_size = elements_per_batch / n_output_features.max(1);
+        
+        // Adaptive batch size based on data characteristics
+        let optimal_batch_size = if n_output_features > 1000 {
+            // Large feature count: smaller batches
+            16.max(max_batch_size).min(64)
+        } else if n_samples > 50_000 {
+            // Large sample count: medium batches
+            64.max(max_batch_size).min(256)
+        } else {
+            // Standard case: larger batches for better vectorization
+            128.max(max_batch_size).min(512)
+        };
+        
+        optimal_batch_size.min(n_samples)
     }
 
     /// Calculates the number of output features
@@ -491,16 +515,16 @@ where
     let shape = data.shape();
     let mut result = Array2::zeros((shape[0], shape[1]));
 
-    // Process in chunks for better cache locality
-    const CHUNK_SIZE: usize = 64;
+    // Calculate adaptive chunk size based on data dimensions
+    let chunk_size = calculate_adaptive_chunk_size(shape[0], shape[1]);
 
     for i in 0..shape[0] {
         let row = data.row(i);
         let row_array = row.to_owned();
 
         // Process row in chunks using SIMD
-        for chunk_start in (0..shape[1]).step_by(CHUNK_SIZE) {
-            let chunk_end = (chunk_start + CHUNK_SIZE).min(shape[1]);
+        for chunk_start in (0..shape[1]).step_by(chunk_size) {
+            let chunk_end = (chunk_start + chunk_size).min(shape[1]);
             let chunk_size = chunk_end - chunk_start;
 
             let chunk_slice = row_array.slice(ndarray::s![chunk_start..chunk_end]);
@@ -520,4 +544,110 @@ where
     }
 
     Ok(result)
+}
+
+
+/// Calculate adaptive chunk size for optimal SIMD performance
+fn calculate_adaptive_chunk_size(n_rows: usize, n_cols: usize) -> usize {
+    const L1_CACHE_SIZE: usize = 32_768;
+    const F64_SIZE: usize = 8; // Conservative estimate for element size
+    
+    // Calculate how many elements can fit comfortably in L1 cache
+    let cache_elements = L1_CACHE_SIZE / F64_SIZE / 4; // Conservative factor
+    
+    // Adaptive chunk size based on matrix dimensions
+    let chunk_size = if n_cols > cache_elements {
+        // Wide matrix: use smaller chunks
+        32
+    } else if n_rows > 10_000 {
+        // Many rows: use medium chunks for better cache reuse
+        128
+    } else {
+        // Standard case: larger chunks for better vectorization
+        256
+    };
+    
+    // Ensure chunk size is reasonable and aligned
+    chunk_size.min(n_cols).max(16)
+}
+
+/// Advanced SIMD polynomial features with memory optimization
+pub fn simd_polynomial_features_optimized<F>(
+    data: &Array2<F>,
+    degree: usize,
+    include_bias: bool,
+    interaction_only: bool,
+    memory_limit_mb: usize,
+) -> Result<Array2<F>>
+where
+    F: Float + NumCast + SimdUnifiedOps,
+{
+    check_not_empty(data, "data")?;
+    check_finite(data, "data")?;
+    check_positive(degree, "degree")?;
+    
+    let poly_features = SimdPolynomialFeatures::new(degree, include_bias, interaction_only)?;
+    
+    let shape = data.shape();
+    let element_size = std::mem::size_of::<F>();
+    let data_size_mb = (shape[0] * shape[1] * element_size) / (1024 * 1024);
+    
+    if data_size_mb > memory_limit_mb {
+        // Use chunked processing for large datasets
+        simd_polynomial_features_chunked(data, &poly_features, memory_limit_mb)
+    } else {
+        // Standard processing
+        poly_features.transform(data)
+    }
+}
+
+/// Chunked SIMD polynomial features for large datasets
+fn simd_polynomial_features_chunked<F>(
+    data: &Array2<F>,
+    poly_features: &SimdPolynomialFeatures<F>,
+    memory_limit_mb: usize,
+) -> Result<Array2<F>>
+where
+    F: Float + NumCast + SimdUnifiedOps,
+{
+    let shape = data.shape();
+    let element_size = std::mem::size_of::<F>();
+    let max_rows_per_chunk = (memory_limit_mb * 1024 * 1024) / (shape[1] * element_size * 2); // Factor of 2 for safety
+    
+    if max_rows_per_chunk == 0 {
+        return Err(TransformError::MemoryError(
+            "Memory limit too small for processing".to_string(),
+        ));
+    }
+    
+    // Process first chunk to determine output dimensions
+    let first_chunk_size = max_rows_per_chunk.min(shape[0]);
+    let first_chunk = data.slice(ndarray::s\![0..first_chunk_size, ..]);
+    let first_result = poly_features.transform(&first_chunk)?;
+    let n_output_features = first_result.shape()[1];
+    
+    // Initialize full output matrix
+    let mut output = Array2::zeros((shape[0], n_output_features));
+    
+    // Copy first chunk result
+    for i in 0..first_chunk_size {
+        for j in 0..n_output_features {
+            output[[i, j]] = first_result[[i, j]];
+        }
+    }
+    
+    // Process remaining chunks
+    for chunk_start in (first_chunk_size..shape[0]).step_by(max_rows_per_chunk) {
+        let chunk_end = (chunk_start + max_rows_per_chunk).min(shape[0]);
+        let chunk = data.slice(ndarray::s\![chunk_start..chunk_end, ..]);
+        let chunk_result = poly_features.transform(&chunk)?;
+        
+        for (i_local, i_global) in (chunk_start..chunk_end).enumerate() {
+            for j in 0..n_output_features {
+                output[[i_global, j]] = chunk_result[[i_local, j]];
+            }
+        }
+    }
+    
+    Ok(output)
 }

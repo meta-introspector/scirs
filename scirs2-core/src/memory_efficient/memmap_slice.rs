@@ -6,7 +6,7 @@
 
 use super::memmap::MemoryMappedArray;
 use crate::error::{CoreError, CoreResult, ErrorContext};
-use ndarray::{ArrayBase, Dimension, IntoDimension, IxDyn, SliceInfo, SliceInfoElem};
+use ndarray::{ArrayBase, Dimension, IxDyn, SliceInfo, SliceInfoElem};
 use std::marker::PhantomData;
 use std::ops::RangeBounds;
 
@@ -164,14 +164,19 @@ where
                 }
                 4 => {
                     if result_dims.len() == 4 {
-                        let dim4 = ndarray::Ix4(result_dims[0], result_dims[1], result_dims[2], result_dims[3]);
+                        let dim4 = ndarray::Ix4(
+                            result_dims[0],
+                            result_dims[1],
+                            result_dims[2],
+                            result_dims[3],
+                        );
                         let converted_dim = unsafe { std::mem::transmute_copy(&dim4) };
                         return Ok(converted_dim);
                     }
                 }
                 _ => {}
             }
-            
+
             return Err(CoreError::DimensionError(ErrorContext::new(format!(
                 "Cannot convert {} dimensions to target dimension type",
                 source_ndim
@@ -192,7 +197,8 @@ where
                         Ok(converted_dim)
                     } else {
                         Err(CoreError::DimensionError(ErrorContext::new(format!(
-                            "Cannot expand to 1D from dimensions: {:?}", expanded_dims
+                            "Cannot expand to 1D from dimensions: {:?}",
+                            expanded_dims
                         ))))
                     }
                 }
@@ -203,35 +209,45 @@ where
                         Ok(converted_dim)
                     } else {
                         Err(CoreError::DimensionError(ErrorContext::new(format!(
-                            "Cannot expand to 2D from dimensions: {:?}", expanded_dims
+                            "Cannot expand to 2D from dimensions: {:?}",
+                            expanded_dims
                         ))))
                     }
                 }
                 3 => {
                     if expanded_dims.len() == 3 {
-                        let dim3 = ndarray::Ix3(expanded_dims[0], expanded_dims[1], expanded_dims[2]);
+                        let dim3 =
+                            ndarray::Ix3(expanded_dims[0], expanded_dims[1], expanded_dims[2]);
                         let converted_dim = unsafe { std::mem::transmute_copy(&dim3) };
                         Ok(converted_dim)
                     } else {
                         Err(CoreError::DimensionError(ErrorContext::new(format!(
-                            "Cannot expand to 3D from dimensions: {:?}", expanded_dims
+                            "Cannot expand to 3D from dimensions: {:?}",
+                            expanded_dims
                         ))))
                     }
                 }
                 4 => {
                     if expanded_dims.len() == 4 {
-                        let dim4 = ndarray::Ix4(expanded_dims[0], expanded_dims[1], expanded_dims[2], expanded_dims[3]);
+                        let dim4 = ndarray::Ix4(
+                            expanded_dims[0],
+                            expanded_dims[1],
+                            expanded_dims[2],
+                            expanded_dims[3],
+                        );
                         let converted_dim = unsafe { std::mem::transmute_copy(&dim4) };
                         Ok(converted_dim)
                     } else {
                         Err(CoreError::DimensionError(ErrorContext::new(format!(
-                            "Cannot expand to 4D from dimensions: {:?}", expanded_dims
+                            "Cannot expand to 4D from dimensions: {:?}",
+                            expanded_dims
                         ))))
                     }
                 }
                 _ => Err(CoreError::DimensionError(ErrorContext::new(format!(
-                    "Unsupported target dimension: {}", target_ndim
-                ))))
+                    "Unsupported target dimension: {}",
+                    target_ndim
+                )))),
             }
         } else {
             // Try to remove singleton dimensions
@@ -267,7 +283,8 @@ where
                         Ok(converted_dim)
                     } else {
                         Err(CoreError::DimensionError(ErrorContext::new(format!(
-                            "Cannot squeeze to 1D from dimensions: {:?}", squeezed_dims
+                            "Cannot squeeze to 1D from dimensions: {:?}",
+                            squeezed_dims
                         ))))
                     }
                 }
@@ -278,35 +295,45 @@ where
                         Ok(converted_dim)
                     } else {
                         Err(CoreError::DimensionError(ErrorContext::new(format!(
-                            "Cannot squeeze to 2D from dimensions: {:?}", squeezed_dims
+                            "Cannot squeeze to 2D from dimensions: {:?}",
+                            squeezed_dims
                         ))))
                     }
                 }
                 3 => {
                     if squeezed_dims.len() == 3 {
-                        let dim3 = ndarray::Ix3(squeezed_dims[0], squeezed_dims[1], squeezed_dims[2]);
+                        let dim3 =
+                            ndarray::Ix3(squeezed_dims[0], squeezed_dims[1], squeezed_dims[2]);
                         let converted_dim = unsafe { std::mem::transmute_copy(&dim3) };
                         Ok(converted_dim)
                     } else {
                         Err(CoreError::DimensionError(ErrorContext::new(format!(
-                            "Cannot squeeze to 3D from dimensions: {:?}", squeezed_dims
+                            "Cannot squeeze to 3D from dimensions: {:?}",
+                            squeezed_dims
                         ))))
                     }
                 }
                 4 => {
                     if squeezed_dims.len() == 4 {
-                        let dim4 = ndarray::Ix4(squeezed_dims[0], squeezed_dims[1], squeezed_dims[2], squeezed_dims[3]);
+                        let dim4 = ndarray::Ix4(
+                            squeezed_dims[0],
+                            squeezed_dims[1],
+                            squeezed_dims[2],
+                            squeezed_dims[3],
+                        );
                         let converted_dim = unsafe { std::mem::transmute_copy(&dim4) };
                         Ok(converted_dim)
                     } else {
                         Err(CoreError::DimensionError(ErrorContext::new(format!(
-                            "Cannot squeeze to 4D from dimensions: {:?}", squeezed_dims
+                            "Cannot squeeze to 4D from dimensions: {:?}",
+                            squeezed_dims
                         ))))
                     }
                 }
                 _ => Err(CoreError::DimensionError(ErrorContext::new(format!(
-                    "Unsupported target dimension: {}", target_ndim
-                ))))
+                    "Unsupported target dimension: {}",
+                    target_ndim
+                )))),
             }
         }
     }

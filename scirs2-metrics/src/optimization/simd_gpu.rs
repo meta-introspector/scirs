@@ -226,7 +226,7 @@ impl SimdMetrics {
     /// SIMD-accelerated mean squared error computation
     pub fn simd_mse<F>(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F>
     where
-        F: Float + SimdUnifiedOps<F> + Send + Sync,
+        F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum,
     {
         if y_true.len() != y_pred.len() {
             return Err(MetricsError::InvalidInput(
@@ -249,7 +249,7 @@ impl SimdMetrics {
     /// SIMD-accelerated mean absolute error computation
     pub fn simd_mae<F>(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F>
     where
-        F: Float + SimdUnifiedOps<F> + Send + Sync,
+        F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum,
     {
         if y_true.len() != y_pred.len() {
             return Err(MetricsError::InvalidInput(
@@ -270,7 +270,7 @@ impl SimdMetrics {
     /// SIMD-accelerated R² score computation
     pub fn simd_r2_score<F>(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F>
     where
-        F: Float + SimdUnifiedOps<F> + Send + Sync,
+        F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum,
     {
         if y_true.len() != y_pred.len() {
             return Err(MetricsError::InvalidInput(
@@ -308,7 +308,7 @@ impl SimdMetrics {
     /// SIMD-accelerated correlation computation
     pub fn simd_correlation<F>(&self, x: &ArrayView1<F>, y: &ArrayView1<F>) -> Result<F>
     where
-        F: Float + SimdUnifiedOps<F> + Send + Sync,
+        F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum,
     {
         if x.len() != y.len() {
             return Err(MetricsError::InvalidInput(
@@ -359,7 +359,7 @@ impl SimdMetrics {
         alpha: F,
     ) -> Result<Array1<F>>
     where
-        F: Float + SimdUnifiedOps<F> + Send + Sync,
+        F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum,
     {
         if values.is_empty() {
             return Ok(Array1::zeros(0));
@@ -412,7 +412,7 @@ impl SimdMetrics {
     /// SIMD-accelerated logarithmic operations
     pub fn simd_log_operations<F>(&self, values: &ArrayView1<F>) -> Result<LogOperationResults<F>>
     where
-        F: Float + SimdUnifiedOps<F> + Send + Sync,
+        F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum,
     {
         if self.enable_simd && self.capabilities.supports_simd() {
             // Use fast SIMD approximations for logarithms
@@ -435,7 +435,7 @@ impl SimdMetrics {
     /// Fast SIMD logarithm approximation
     fn simd_fast_log<F>(&self, values: &ArrayView1<F>) -> Result<Array1<F>>
     where
-        F: Float + SimdUnifiedOps<F> + Send + Sync,
+        F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum,
     {
         // Fast log approximation using bit manipulation and polynomial
         // This is a simplified version - real implementation would use more sophisticated SIMD intrinsics
@@ -460,7 +460,7 @@ impl SimdMetrics {
         operation: MatrixOperation,
     ) -> Result<BatchMatrixResults<F>>
     where
-        F: Float + SimdUnifiedOps<F> + Send + Sync,
+        F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum,
     {
         if matrices.is_empty() {
             return Err(MetricsError::InvalidInput(
@@ -512,7 +512,7 @@ impl SimdMetrics {
     /// SIMD-accelerated determinant computation (for small matrices)
     fn simd_determinant<F>(&self, matrix: &Array2<F>) -> Result<F>
     where
-        F: Float + SimdUnifiedOps<F>,
+        F: Float + SimdUnifiedOps,
     {
         let (nrows, ncols) = matrix.dim();
         if nrows != ncols {
@@ -548,7 +548,7 @@ impl SimdMetrics {
     /// SIMD-accelerated trace computation
     fn simd_trace<F>(&self, matrix: &Array2<F>) -> Result<F>
     where
-        F: Float + SimdUnifiedOps<F>,
+        F: Float + SimdUnifiedOps,
     {
         let (nrows, ncols) = matrix.dim();
         if nrows != ncols {
@@ -568,7 +568,7 @@ impl SimdMetrics {
     /// SIMD-accelerated eigenvalue sum estimation
     fn simd_eigenvalue_sum_estimate<F>(&self, matrix: &Array2<F>) -> Result<F>
     where
-        F: Float + SimdUnifiedOps<F>,
+        F: Float + SimdUnifiedOps,
     {
         // For symmetric matrices, the trace equals the sum of eigenvalues
         // For general matrices, this is an approximation
@@ -583,7 +583,7 @@ impl SimdMetrics {
         metrics: &[&str],
     ) -> Result<Vec<HashMap<String, F>>>
     where
-        F: Float + SimdUnifiedOps<F> + Send + Sync,
+        F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum,
     {
         if let Some(gpu_info) = &self.gpu_info {
             self.gpu_compute_batch_metrics(y_true_batch, y_pred_batch, metrics, gpu_info)
@@ -609,7 +609,7 @@ impl SimdMetrics {
 
         // Simulate GPU computation with appropriate delays and batch processing
         let threads_per_block = gpu_info.max_threads_per_block.min(1024);
-        let blocks_needed =
+        let _blocks_needed =
             (batch_size + threads_per_block as usize - 1) / threads_per_block as usize;
 
         // Simulate memory transfer to GPU
@@ -736,7 +736,7 @@ impl SimdMetrics {
         metrics: &[&str],
     ) -> Result<Vec<HashMap<String, F>>>
     where
-        F: Float + SimdUnifiedOps<F> + Send + Sync,
+        F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum,
     {
         use scirs2_core::parallel_ops::*;
 
@@ -1007,7 +1007,7 @@ impl SimdMetrics {
         iterations: usize,
     ) -> Result<BenchmarkResults>
     where
-        F: Float + SimdUnifiedOps<F> + Send + Sync,
+        F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum,
     {
         use std::time::Instant;
 

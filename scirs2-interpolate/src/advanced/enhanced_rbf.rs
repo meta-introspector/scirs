@@ -358,15 +358,34 @@ where
             }
             KernelWidthStrategy::CrossValidation(k) => {
                 // K-fold cross-validation to find optimal epsilon
-                Self::optimize_epsilon_cv(points, values, k, &scale_factors, self.kernel, self.lambda)?
+                Self::optimize_epsilon_cv(
+                    points,
+                    values,
+                    k,
+                    &scale_factors,
+                    self.kernel,
+                    self.lambda,
+                )?
             }
             KernelWidthStrategy::GeneralizedCV => {
                 // Generalized cross-validation
-                Self::optimize_epsilon_gcv(points, values, &scale_factors, self.kernel, self.lambda)?
+                Self::optimize_epsilon_gcv(
+                    points,
+                    values,
+                    &scale_factors,
+                    self.kernel,
+                    self.lambda,
+                )?
             }
             KernelWidthStrategy::LeaveOneOut => {
                 // Leave-one-out cross-validation
-                Self::optimize_epsilon_loo(points, values, &scale_factors, self.kernel, self.lambda)?
+                Self::optimize_epsilon_loo(
+                    points,
+                    values,
+                    &scale_factors,
+                    self.kernel,
+                    self.lambda,
+                )?
             }
         };
 
@@ -716,18 +735,22 @@ where
 
         for &epsilon in &candidates {
             let mut total_error = F::zero();
-            
+
             // K-fold cross-validation
             let fold_size = n_points / k_folds;
-            
+
             for fold in 0..k_folds {
                 let start_idx = fold * fold_size;
-                let end_idx = if fold == k_folds - 1 { n_points } else { (fold + 1) * fold_size };
-                
+                let end_idx = if fold == k_folds - 1 {
+                    n_points
+                } else {
+                    (fold + 1) * fold_size
+                };
+
                 // Create training and validation sets
                 let mut train_indices = Vec::new();
                 let mut val_indices = Vec::new();
-                
+
                 for i in 0..n_points {
                     if i >= start_idx && i < end_idx {
                         val_indices.push(i);
@@ -735,15 +758,15 @@ where
                         train_indices.push(i);
                     }
                 }
-                
+
                 if train_indices.is_empty() || val_indices.is_empty() {
                     continue;
                 }
-                
+
                 // Build training data
                 let train_points = Self::extract_points_subset(points, &train_indices);
                 let train_values = Self::extract_values_subset(values, &train_indices);
-                
+
                 // Train interpolator
                 let coeffs = match Self::compute_coefficients(
                     &train_points.view(),
@@ -757,12 +780,12 @@ where
                     Ok(c) => c,
                     Err(_) => continue, // Skip this epsilon if computation fails
                 };
-                
+
                 // Evaluate on validation set
                 for &val_idx in &val_indices {
                     let val_point = points.slice(ndarray::s![val_idx, ..]);
                     let true_value = values[val_idx];
-                    
+
                     // Predict using trained interpolator
                     let mut predicted = F::zero();
                     for (j, &train_idx) in train_indices.iter().enumerate() {
@@ -771,18 +794,18 @@ where
                         let rbf_val = Self::evaluate_kernel(r, epsilon, kernel);
                         predicted += coeffs[j] * rbf_val;
                     }
-                    
+
                     let error = (predicted - true_value) * (predicted - true_value);
                     total_error += error;
                 }
             }
-            
+
             if total_error < best_error {
                 best_error = total_error;
                 best_epsilon = epsilon;
             }
         }
-        
+
         Ok(best_epsilon)
     }
 
@@ -808,17 +831,24 @@ where
 
         for &epsilon in &candidates {
             // Compute GCV score
-            let gcv_score = match Self::compute_gcv_score(points, values, epsilon, scale_factors, kernel, lambda) {
+            let gcv_score = match Self::compute_gcv_score(
+                points,
+                values,
+                epsilon,
+                scale_factors,
+                kernel,
+                lambda,
+            ) {
                 Ok(score) => score,
                 Err(_) => continue,
             };
-            
+
             if gcv_score < best_gcv_score {
                 best_gcv_score = gcv_score;
                 best_epsilon = epsilon;
             }
         }
-        
+
         Ok(best_epsilon)
     }
 
@@ -845,15 +875,15 @@ where
 
         for &epsilon in &candidates {
             let mut total_error = F::zero();
-            
+
             // Leave-one-out cross-validation
             for i in 0..n_points {
                 // Create training set excluding point i
-                let mut train_indices: Vec<usize> = (0..n_points).filter(|&j| j != i).collect();
-                
+                let train_indices: Vec<usize> = (0..n_points).filter(|&j| j != i).collect();
+
                 let train_points = Self::extract_points_subset(points, &train_indices);
                 let train_values = Self::extract_values_subset(values, &train_indices);
-                
+
                 // Train interpolator
                 let coeffs = match Self::compute_coefficients(
                     &train_points.view(),
@@ -870,11 +900,11 @@ where
                         break;
                     }
                 };
-                
+
                 // Predict the left-out point
                 let val_point = points.slice(ndarray::s![i, ..]);
                 let true_value = values[i];
-                
+
                 let mut predicted = F::zero();
                 for (j, &train_idx) in train_indices.iter().enumerate() {
                     let train_point = points.slice(ndarray::s![train_idx, ..]);
@@ -882,17 +912,17 @@ where
                     let rbf_val = Self::evaluate_kernel(r, epsilon, kernel);
                     predicted += coeffs[j] * rbf_val;
                 }
-                
+
                 let error = (predicted - true_value) * (predicted - true_value);
                 total_error += error;
             }
-            
+
             if total_error < best_error {
                 best_error = total_error;
                 best_epsilon = epsilon;
             }
         }
-        
+
         Ok(best_epsilon)
     }
 
@@ -922,24 +952,24 @@ where
     fn extract_points_subset(points: &ArrayView2<F>, indices: &[usize]) -> Array2<F> {
         let n_dims = points.shape()[1];
         let mut subset = Array2::zeros((indices.len(), n_dims));
-        
+
         for (i, &idx) in indices.iter().enumerate() {
             for j in 0..n_dims {
                 subset[[i, j]] = points[[idx, j]];
             }
         }
-        
+
         subset
     }
 
     /// Helper function to extract a subset of values
     fn extract_values_subset(values: &ArrayView1<F>, indices: &[usize]) -> Array1<F> {
         let mut subset = Array1::zeros(indices.len());
-        
+
         for (i, &idx) in indices.iter().enumerate() {
             subset[i] = values[idx];
         }
-        
+
         subset
     }
 
@@ -953,7 +983,7 @@ where
         lambda: F,
     ) -> InterpolateResult<F> {
         let n_points = points.shape()[0];
-        
+
         // Build the RBF matrix
         let mut a_matrix = Array2::<F>::zeros((n_points, n_points));
         for i in 0..n_points {
@@ -972,37 +1002,43 @@ where
 
         // Compute the smoothing matrix S (S = A(A+λI)^(-1))
         // For GCV, we need tr(I - S) which equals tr(I) - tr(S) = n - tr(S)
-        
+
         // Convert to f64 for linear algebra
-        let a_f64 = a_matrix.mapv(|x| x.to_f64().unwrap());
-        
+        let _a_f64 = a_matrix.mapv(|x| x.to_f64().unwrap()); // Reserved for future use
+
         // For simplicity, estimate the trace without computing the full inverse
         // This is an approximation of the GCV score
         let coeffs = Self::compute_coefficients(
-            points, values, epsilon, scale_factors, kernel, lambda, false
+            points,
+            values,
+            epsilon,
+            scale_factors,
+            kernel,
+            lambda,
+            false,
         )?;
-        
+
         // Compute residual sum of squares
         let mut rss = F::zero();
         for i in 0..n_points {
             let point_i = points.slice(ndarray::s![i, ..]);
             let mut predicted = F::zero();
-            
+
             for j in 0..n_points {
                 let point_j = points.slice(ndarray::s![j, ..]);
                 let r = Self::scaled_distance(&point_i, &point_j, scale_factors);
                 let rbf_val = Self::evaluate_kernel(r, epsilon, kernel);
                 predicted += coeffs[j] * rbf_val;
             }
-            
+
             let residual = values[i] - predicted;
             rss += residual * residual;
         }
-        
+
         // Approximate GCV score (simplified)
         let effective_dof = F::from_usize(n_points).unwrap() * F::from_f64(0.7).unwrap(); // Rough approximation
         let gcv_score = rss / (F::one() - effective_dof / F::from_usize(n_points).unwrap()).powi(2);
-        
+
         Ok(gcv_score)
     }
 

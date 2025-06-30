@@ -30,6 +30,18 @@ pub enum StatsError {
     #[error("Convergence error: {0}")]
     ConvergenceError(String),
 
+    /// Insufficient data error
+    #[error("Insufficient data: {0}")]
+    InsufficientData(String),
+
+    /// Invalid input error
+    #[error("Invalid input: {0}")]
+    InvalidInput(String),
+
+    /// Not implemented (alias for backwards compatibility)
+    #[error("Not implemented: {0}")]
+    NotImplemented(String),
+
     /// Core error (propagated from scirs2-core)
     #[error("{0}")]
     CoreError(#[from] CoreError),
@@ -70,6 +82,16 @@ impl StatsError {
     /// Create a not implemented error with context
     pub fn not_implemented<S: Into<String>>(message: S) -> Self {
         StatsError::NotImplementedError(message.into())
+    }
+
+    /// Create an insufficient data error with context
+    pub fn insufficient_data<S: Into<String>>(message: S) -> Self {
+        StatsError::InsufficientData(message.into())
+    }
+
+    /// Create an invalid input error with context
+    pub fn invalid_input<S: Into<String>>(message: S) -> Self {
+        StatsError::InvalidInput(message.into())
     }
 
     /// Add recovery suggestions based on error type
@@ -174,6 +196,18 @@ Suggestion: Check input data for numerical issues or extreme values",
             StatsError::ConvergenceError(msg) => {
                 format!("{}
 Suggestion: Try adjusting convergence parameters, using different initial values, or increasing the maximum number of iterations", msg)
+            }
+            StatsError::InsufficientData(msg) => {
+                format!("{}
+Suggestion: Increase sample size or use methods designed for small datasets", msg)
+            }
+            StatsError::InvalidInput(msg) => {
+                format!("{}
+Suggestion: Check input format and ensure data meets function requirements", msg)
+            }
+            StatsError::NotImplemented(msg) => {
+                format!("{}
+Suggestion: This feature is not yet available. Consider using an alternative method or check for updates", msg)
             }
             StatsError::CoreError(err) => {
                 format!(

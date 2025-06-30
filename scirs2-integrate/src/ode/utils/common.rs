@@ -243,26 +243,32 @@ pub fn solve_linear_system<F: IntegrateFloat>(
 }
 
 /// Extrapolate solution values for use as initial guess
-pub fn extrapolate<F: IntegrateFloat>(times: &[F], values: &[Array1<F>], t_target: F) -> Array1<F> {
+pub fn extrapolate<F: IntegrateFloat>(
+    times: &[F],
+    values: &[Array1<F>],
+    t_target: F,
+) -> IntegrateResult<Array1<F>> {
     let n = values.len();
 
     if n == 0 {
-        panic!("Cannot extrapolate from empty values");
+        return Err(IntegrateError::ValueError(
+            "Cannot extrapolate from empty values".to_string(),
+        ));
     }
 
     if n == 1 {
-        return values[0].clone();
+        return Ok(values[0].clone());
     }
 
     // Linear extrapolation if we have 2 points
     if n == 2 {
         let dt = times[1] - times[0];
         if dt.abs() < F::from_f64(1e-10).unwrap() {
-            return values[1].clone();
+            return Ok(values[1].clone());
         }
 
         let t_ratio = (t_target - times[1]) / dt;
-        return &values[1] + &((&values[1] - &values[0]) * t_ratio);
+        return Ok(&values[1] + &((&values[1] - &values[0]) * t_ratio));
     }
 
     // Quadratic extrapolation if we have 3 or more points
@@ -287,5 +293,5 @@ pub fn extrapolate<F: IntegrateFloat>(times: &[F], values: &[Array1<F>], t_targe
     let c1 = dt0 * dt2 / (-dt01 * dt12);
     let c2 = dt0 * dt1 / (dt02 * dt12);
 
-    y0 * c0 + y1 * c1 + y2 * c2
+    Ok(y0 * c0 + y1 * c1 + y2 * c2)
 }

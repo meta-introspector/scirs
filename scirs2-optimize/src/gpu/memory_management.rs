@@ -17,11 +17,11 @@ impl From<scirs2_core::gpu::GpuError> for ScirsError {
     }
 }
 use ndarray::{Array1, Array2};
-use scirs2_core::gpu::{GpuArray, GpuBuffer, GpuDevice, GpuMemoryInfo};
+use scirs2_core::gpu::{GpuBuffer, GpuDevice};
 
 // Real GPU types from scirs2-core
 pub type GpuContext = GpuDevice;
-pub type OptimGpuArray<T> = GpuArray<T>;
+pub type OptimGpuArray<T> = GpuBuffer<T>;
 pub type OptimGpuBuffer<T> = GpuBuffer<T>;
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex};

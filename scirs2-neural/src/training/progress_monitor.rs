@@ -4,7 +4,6 @@
 //! metrics tracking, visualization callbacks, and early stopping mechanisms.
 
 use crate::error::{NeuralError, Result};
-use ndarray::{Array1, Array2};
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
 

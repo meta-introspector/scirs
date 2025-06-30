@@ -9,6 +9,7 @@ use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, NumAssign, Zero};
 use std::fmt::Debug;
 
+pub mod acceleration;
 pub mod backends;
 pub mod device_info;
 pub mod memory;
@@ -17,6 +18,12 @@ pub mod operations;
 // Re-export operations
 pub use operations::{
     AdvancedGpuOperations, BatchSizeOptimizer, GpuOperationDispatcher, DEFAULT_GPU_THRESHOLD,
+};
+
+// Re-export acceleration framework
+pub use acceleration::{
+    get_global_gpu_framework, initialize_global_gpu_acceleration, AccelerationConfig,
+    GpuAccelerationFramework, GpuPerformanceProfiler,
 };
 
 /// GPU device types supported by the library

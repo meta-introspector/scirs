@@ -1372,7 +1372,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
             return Ok(F::one());
         }
 
-        let n_samples = samples.len();
+        let _n_samples = samples.len();
         let n_params = samples[0].len();
 
         // Simplified R-hat computation for single chain
@@ -1552,7 +1552,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
     fn compute_conditional_coverage_analysis(
         &self,
         prediction_sets: &[PredictionSet<F>],
-        x_test: &Array2<F>,
+        _x_test: &Array2<F>,
         cal_predictions: &Array1<F>,
         y_calibration: &Array1<F>,
     ) -> Result<HashMap<String, F>> {
@@ -1581,7 +1581,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
             let base_coverage_prob = F::from(0.85).unwrap(); // Base coverage probability
             let difficulty_factor = F::one() - (ps.local_difficulty - median_difficulty).abs() / 
                                                (difficulties.iter().map(|&d| d).fold(F::zero(), |acc, d| acc.max(d)) + F::from(1e-8).unwrap());
-            let size_factor = F::from(ps.prediction_set.len()).unwrap() / F::from(10.0).unwrap(); // Normalize by expected set size
+            let size_factor = ps.size / F::from(10.0).unwrap(); // Normalize by expected set size
             
             let coverage_prob = base_coverage_prob * difficulty_factor * size_factor.min(F::one());
             
@@ -1704,7 +1704,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         &self,
         mean_pred: &Array1<F>,
         var_pred: &Array1<F>,
-        x_data: &ArrayView2<F>,
+        _x_data: &ArrayView2<F>,
         y_data: &Array1<F>,
     ) -> Result<F> {
         let mut log_lik = F::zero();
@@ -1763,7 +1763,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         scales: &[F],
         uncertainties: &[Array1<F>],
     ) -> Result<Array1<F>> {
-        let n_samples = uncertainties[0].len();
+        let _n_samples = uncertainties[0].len();
         let n_scales = scales.len();
         let mut weights = Array1::zeros(n_scales);
 

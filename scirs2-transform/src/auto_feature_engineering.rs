@@ -34,6 +34,8 @@ pub struct DatasetMetaFeatures {
     pub variance_ratio: f64,
     /// Outlier ratio
     pub outlier_ratio: f64,
+    /// Whether the dataset has missing values
+    pub has_missing: bool,
 }
 
 /// Available transformation types for automated selection
@@ -351,11 +353,16 @@ impl MetaLearningModel {
 pub struct AutoFeatureEngineer {
     #[cfg(feature = "auto-feature-engineering")]
     meta_model: MetaLearningModel,
-    #[allow(dead_code)]
+    /// Historical transformation performance data
+    #[cfg(feature = "auto-feature-engineering")]
     transformation_history: Vec<(DatasetMetaFeatures, Vec<TransformationConfig>, f64)>,
 }
 
 impl AutoFeatureEngineer {
+    /// Expose pearson_correlation as a public method for external use
+    pub fn pearson_correlation(&self, x: &ArrayView1<f64>, y: &ArrayView1<f64>) -> Result<f64> {
+        self.pearson_correlation_internal(x, y)
+    }
     /// Create a new automated feature engineer
     pub fn new() -> Result<Self> {
         #[cfg(feature = "auto-feature-engineering")]
@@ -364,6 +371,7 @@ impl AutoFeatureEngineer {
         Ok(AutoFeatureEngineer {
             #[cfg(feature = "auto-feature-engineering")]
             meta_model,
+            #[cfg(feature = "auto-feature-engineering")]
             transformation_history: Vec::new(),
         })
     }
@@ -396,6 +404,7 @@ impl AutoFeatureEngineer {
         // Calculate missing values (assuming NaN represents missing)
         let missing_count = x.iter().filter(|val| val.is_nan()).count();
         let missing_ratio = missing_count as f64 / (n_samples * n_features) as f64;
+        let has_missing = missing_count > 0;
 
         // Calculate variance statistics with better numerical stability
         let variances: Array1<f64> = x.var_axis(ndarray::Axis(0), 0.0);
@@ -435,6 +444,7 @@ impl AutoFeatureEngineer {
             missing_ratio,
             variance_ratio,
             outlier_ratio,
+            has_missing,
         })
     }
 
@@ -552,7 +562,7 @@ impl AutoFeatureEngineer {
             for j in i + 1..n_features {
                 let col_i = x.column(i);
                 let col_j = x.column(j);
-                let correlation = self.pearson_correlation(&col_i, &col_j)?;
+                let correlation = self.pearson_correlation_internal(&col_i, &col_j)?;
                 correlations.push(correlation);
             }
         }
@@ -560,7 +570,7 @@ impl AutoFeatureEngineer {
         Ok(Array1::from_vec(correlations))
     }
 
-    fn pearson_correlation(&self, x: &ArrayView1<f64>, y: &ArrayView1<f64>) -> Result<f64> {
+    fn pearson_correlation_internal(&self, x: &ArrayView1<f64>, y: &ArrayView1<f64>) -> Result<f64> {
         if x.len() != y.len() {
             return Err(TransformError::InvalidInput(
                 "Arrays must have the same length for correlation calculation".to_string(),
@@ -1312,12 +1322,11 @@ impl AdvancedMetaLearningSystem {
         let mut corr_sum = 0.0;
         let mut corr_count = 0;
         
-        let auto_engineer = AutoFeatureEngineer::new()?;
         for i in 0..n_features {
             for j in (i + 1)..n_features {
                 let col_i = x.column(i);
                 let col_j = x.column(j);
-                if let Ok(corr) = auto_engineer.pearson_correlation(&col_i, &col_j) {
+                if let Ok(corr) = self.quick_correlation(&col_i, &col_j) {
                     corr_sum += corr.abs();
                     corr_count += 1;
                 }
@@ -1376,36 +1385,740 @@ impl AdvancedMetaLearningSystem {
         bins.len() - 2
     }
 
-    // Placeholder implementations for remaining methods
-    fn estimate_volume_ratio(&self, _x: &ArrayView2<f64>) -> Result<f64> { Ok(1.0) }
-    fn estimate_autocorrelation(&self, _x: &ArrayView2<f64>) -> Result<f64> { Ok(0.0) }
-    fn estimate_trend_strength(&self, _x: &ArrayView2<f64>) -> Result<f64> { Ok(0.0) }
-    fn estimate_feature_connectivity(&self, _x: &ArrayView2<f64>) -> Result<f64> { Ok(0.5) }
-    fn feature_clustering_coefficient(&self, _x: &ArrayView2<f64>) -> Result<f64> { Ok(0.5) }
-    
-    fn enhanced_meta_features_to_tensor(&self, _features: &EnhancedMetaFeatures) -> Result<Tensor> {
-        // Convert enhanced meta-features to tensor
-        Ok(Tensor::randn(&[1, 20], tch::Kind::Float, self.device))
+    /// Estimate volume ratio (convex hull to bounding box)
+    fn estimate_volume_ratio(&self, x: &ArrayView2<f64>) -> Result<f64> {
+        let (n_samples, n_features) = x.dim();
+        if n_samples < 4 || n_features < 2 {
+            return Ok(1.0); // Default for insufficient data
+        }
+
+        // For high-dimensional data, use sampling approach
+        let sample_size = 1000.min(n_samples);
+        use rand::seq::SliceRandom;
+        use rand::thread_rng;
+        
+        let mut rng = thread_rng();
+        let indices: Vec<usize> = (0..n_samples).collect::<Vec<_>>()
+            .choose_multiple(&mut rng, sample_size)
+            .copied()
+            .collect();
+
+        // Calculate bounding box volume
+        let mut min_vals = vec![f64::INFINITY; n_features];
+        let mut max_vals = vec![f64::NEG_INFINITY; n_features];
+        
+        for &idx in &indices {
+            let row = x.row(idx);
+            for (j, &val) in row.iter().enumerate() {
+                if val.is_finite() {
+                    min_vals[j] = min_vals[j].min(val);
+                    max_vals[j] = max_vals[j].max(val);
+                }
+            }
+        }
+        
+        // Calculate bounding box volume
+        let mut box_volume = 1.0;
+        for j in 0..n_features {
+            let range = max_vals[j] - min_vals[j];
+            if range > f64::EPSILON {
+                box_volume *= range;
+            } else {
+                return Ok(0.0); // Degenerate case
+            }
+        }
+        
+        // Estimate convex hull volume using sampling (simplified approach)
+        // For a proper implementation, you'd use a convex hull algorithm
+        // Here we estimate using variance-based approximation
+        let mut variance_product = 1.0;
+        for j in 0..n_features {
+            let col_values: Vec<f64> = indices.iter()
+                .map(|&idx| x[[idx, j]])
+                .filter(|&val| val.is_finite())
+                .collect();
+            
+            if col_values.len() > 1 {
+                let mean = col_values.iter().sum::<f64>() / col_values.len() as f64;
+                let variance = col_values.iter()
+                    .map(|&val| (val - mean).powi(2))
+                    .sum::<f64>() / (col_values.len() - 1) as f64;
+                variance_product *= variance.sqrt();
+            }
+        }
+        
+        // Approximate volume ratio
+        if box_volume > f64::EPSILON {
+            let ratio = (variance_product / box_volume).min(1.0).max(0.0);
+            Ok(ratio)
+        } else {
+            Ok(0.0)
+        }
+    }
+
+    /// Estimate autocorrelation for time-like patterns
+    fn estimate_autocorrelation(&self, x: &ArrayView2<f64>) -> Result<f64> {
+        let (n_samples, n_features) = x.dim();
+        if n_samples < 3 {
+            return Ok(0.0);
+        }
+
+        let mut autocorr_sum = 0.0;
+        let mut feature_count = 0;
+
+        // Calculate autocorrelation for each feature
+        for j in 0..n_features {
+            let col = x.column(j);
+            let values: Vec<f64> = col.iter()
+                .filter(|&&val| val.is_finite())
+                .copied()
+                .collect();
+            
+            if values.len() < 3 {
+                continue;
+            }
+
+            // Calculate lag-1 autocorrelation
+            let mean = values.iter().sum::<f64>() / values.len() as f64;
+            let mut numerator = 0.0;
+            let mut denominator = 0.0;
+            
+            for i in 0..values.len() - 1 {
+                numerator += (values[i] - mean) * (values[i + 1] - mean);
+            }
+            
+            for &val in &values {
+                denominator += (val - mean).powi(2);
+            }
+            
+            if denominator > f64::EPSILON {
+                autocorr_sum += numerator / denominator;
+                feature_count += 1;
+            }
+        }
+
+        if feature_count > 0 {
+            Ok((autocorr_sum / feature_count as f64).abs())
+        } else {
+            Ok(0.0)
+        }
+    }
+
+    /// Estimate trend strength in the data
+    fn estimate_trend_strength(&self, x: &ArrayView2<f64>) -> Result<f64> {
+        let (n_samples, n_features) = x.dim();
+        if n_samples < 5 {
+            return Ok(0.0);
+        }
+
+        let mut trend_sum = 0.0;
+        let mut feature_count = 0;
+
+        // Calculate trend strength for each feature
+        for j in 0..n_features {
+            let col = x.column(j);
+            let values: Vec<(f64, f64)> = col.iter()
+                .enumerate()
+                .filter(|(_, &val)| val.is_finite())
+                .map(|(i, &val)| (i as f64, val))
+                .collect();
+            
+            if values.len() < 5 {
+                continue;
+            }
+
+            // Calculate linear trend using least squares
+            let n = values.len() as f64;
+            let sum_x: f64 = values.iter().map(|(x, _)| x).sum();
+            let sum_y: f64 = values.iter().map(|(_, y)| y).sum();
+            let sum_xy: f64 = values.iter().map(|(x, y)| x * y).sum();
+            let sum_x2: f64 = values.iter().map(|(x, _)| x * x).sum();
+            
+            let denominator = n * sum_x2 - sum_x * sum_x;
+            if denominator.abs() > f64::EPSILON {
+                let slope = (n * sum_xy - sum_x * sum_y) / denominator;
+                let intercept = (sum_y - slope * sum_x) / n;
+                
+                // Calculate R-squared to measure trend strength
+                let y_mean = sum_y / n;
+                let mut ss_tot = 0.0;
+                let mut ss_res = 0.0;
+                
+                for (x_val, y_val) in &values {
+                    let y_pred = slope * x_val + intercept;
+                    ss_tot += (y_val - y_mean).powi(2);
+                    ss_res += (y_val - y_pred).powi(2);
+                }
+                
+                if ss_tot > f64::EPSILON {
+                    let r_squared = 1.0 - (ss_res / ss_tot);
+                    trend_sum += r_squared.max(0.0);
+                    feature_count += 1;
+                }
+            }
+        }
+
+        if feature_count > 0 {
+            Ok(trend_sum / feature_count as f64)
+        } else {
+            Ok(0.0)
+        }
+    }
+
+    /// Estimate feature connectivity (correlation-based)
+    fn estimate_feature_connectivity(&self, x: &ArrayView2<f64>) -> Result<f64> {
+        let (_, n_features) = x.dim();
+        if n_features < 2 {
+            return Ok(0.0);
+        }
+
+        let mut strong_connections = 0;
+        let mut total_connections = 0;
+        let threshold = 0.5; // Threshold for "strong" connection
+
+        // Sample pairs to avoid O(n²) complexity for large feature sets
+        let max_pairs = 100.min((n_features * (n_features - 1)) / 2);
+        use rand::Rng;
+        let mut rng = rand::thread_rng();
+
+        for _ in 0..max_pairs {
+            let i = rng.gen_range(0..n_features);
+            let j = rng.gen_range(0..n_features);
+            
+            if i != j {
+                let col_i = x.column(i);
+                let col_j = x.column(j);
+                
+                if let Ok(corr) = self.quick_correlation(&col_i, &col_j) {
+                    if corr.abs() > threshold {
+                        strong_connections += 1;
+                    }
+                    total_connections += 1;
+                }
+            }
+        }
+
+        if total_connections > 0 {
+            Ok(strong_connections as f64 / total_connections as f64)
+        } else {
+            Ok(0.0)
+        }
+    }
+
+    /// Quick correlation calculation without full validation
+    fn quick_correlation(&self, x: &ndarray::ArrayView1<f64>, y: &ndarray::ArrayView1<f64>) -> Result<f64> {
+        if x.len() != y.len() || x.len() < 2 {
+            return Ok(0.0);
+        }
+
+        let n = x.len() as f64;
+        let mean_x = x.iter().sum::<f64>() / n;
+        let mean_y = y.iter().sum::<f64>() / n;
+
+        let mut numerator = 0.0;
+        let mut sum_sq_x = 0.0;
+        let mut sum_sq_y = 0.0;
+        
+        for (&xi, &yi) in x.iter().zip(y.iter()) {
+            if xi.is_finite() && yi.is_finite() {
+                let diff_x = xi - mean_x;
+                let diff_y = yi - mean_y;
+                numerator += diff_x * diff_y;
+                sum_sq_x += diff_x * diff_x;
+                sum_sq_y += diff_y * diff_y;
+            }
+        }
+
+        let denominator = (sum_sq_x * sum_sq_y).sqrt();
+        
+        if denominator < f64::EPSILON {
+            Ok(0.0)
+        } else {
+            let correlation = numerator / denominator;
+            Ok(correlation.max(-1.0).min(1.0))
+        }
+    }
+
+    /// Calculate feature clustering coefficient
+    fn feature_clustering_coefficient(&self, x: &ArrayView2<f64>) -> Result<f64> {
+        let (_, n_features) = x.dim();
+        if n_features < 3 {
+            return Ok(0.0);
+        }
+
+        // Build correlation adjacency matrix (sampled)
+        let sample_size = 20.min(n_features);
+        use rand::seq::SliceRandom;
+        use rand::thread_rng;
+        
+        let mut rng = thread_rng();
+        let sampled_features: Vec<usize> = (0..n_features)
+            .collect::<Vec<_>>()
+            .choose_multiple(&mut rng, sample_size)
+            .copied()
+            .collect();
+
+        let threshold = 0.5;
+        let mut adjacency = vec![vec![false; sample_size]; sample_size];
+
+        // Build adjacency matrix
+        for (i, &feat_i) in sampled_features.iter().enumerate() {
+            for (j, &feat_j) in sampled_features.iter().enumerate() {
+                if i != j {
+                    let col_i = x.column(feat_i);
+                    let col_j = x.column(feat_j);
+                    
+                    if let Ok(corr) = self.quick_correlation(&col_i, &col_j) {
+                        adjacency[i][j] = corr.abs() > threshold;
+                    }
+                }
+            }
+        }
+
+        // Calculate clustering coefficient
+        let mut total_coefficient = 0.0;
+        let mut node_count = 0;
+
+        for i in 0..sample_size {
+            // Find neighbors of node i
+            let neighbors: Vec<usize> = (0..sample_size)
+                .filter(|&j| adjacency[i][j])
+                .collect();
+            
+            if neighbors.len() >= 2 {
+                // Count edges between neighbors
+                let mut edges_between_neighbors = 0;
+                let mut possible_edges = 0;
+                
+                for (ni, &neighbor_i) in neighbors.iter().enumerate() {
+                    for &neighbor_j in neighbors.iter().skip(ni + 1) {
+                        possible_edges += 1;
+                        if adjacency[neighbor_i][neighbor_j] {
+                            edges_between_neighbors += 1;
+                        }
+                    }
+                }
+                
+                if possible_edges > 0 {
+                    total_coefficient += edges_between_neighbors as f64 / possible_edges as f64;
+                    node_count += 1;
+                }
+            }
+        }
+
+        if node_count > 0 {
+            Ok(total_coefficient / node_count as f64)
+        } else {
+            Ok(0.0)
+        }
     }
     
-    fn tensor_to_multi_objective_recommendations(&self, _tensor: &Tensor, _features: &EnhancedMetaFeatures) -> Result<Vec<MultiObjectiveRecommendation>> {
-        Ok(vec![])
+    /// Convert enhanced meta-features to tensor for neural network input
+    fn enhanced_meta_features_to_tensor(&self, features: &EnhancedMetaFeatures) -> Result<Tensor> {
+        // Create feature vector with proper normalization
+        let feature_vec = vec![
+            // Base features (normalized)
+            (features.base_features.n_samples as f64).ln().max(0.0),
+            (features.base_features.n_features as f64).ln().max(0.0),
+            features.base_features.sparsity.max(0.0).min(1.0),
+            features.base_features.mean_correlation.max(-1.0).min(1.0),
+            features.base_features.std_correlation.max(0.0),
+            features.base_features.mean_skewness.max(-10.0).min(10.0),
+            features.base_features.mean_kurtosis.max(-10.0).min(10.0),
+            features.base_features.missing_ratio.max(0.0).min(1.0),
+            features.base_features.variance_ratio.max(0.0),
+            features.base_features.outlier_ratio.max(0.0).min(1.0),
+            
+            // Enhanced features (normalized)
+            features.manifold_dimension.max(1.0).min(features.base_features.n_features as f64).ln(),
+            features.clustering_tendency.max(0.0).min(1.0),
+            features.mutual_information_mean.max(0.0),
+            features.entropy_estimate.max(0.0),
+            (features.condition_number.max(1.0)).ln(),
+            features.volume_ratio.max(0.0).min(1.0),
+            features.autocorrelation.max(-1.0).min(1.0),
+            features.trend_strength.max(0.0).min(1.0),
+            features.connectivity.max(0.0).min(1.0),
+            features.clustering_coefficient.max(0.0).min(1.0),
+        ];
+
+        // Validate all features are finite
+        if feature_vec.iter().any(|&f| !f.is_finite()) {
+            return Err(TransformError::ComputationError(
+                "Non-finite values in enhanced meta-features".to_string(),
+            ));
+        }
+
+        Ok(Tensor::of_slice(&feature_vec)
+            .reshape(&[1, 20])
+            .to_device(self.device))
     }
     
-    fn find_similar_datasets(&self, _target: &EnhancedMetaFeatures, _k: usize) -> Result<Vec<PerformanceRecord>> {
-        Ok(vec![])
+    /// Convert tensor predictions to multi-objective recommendations
+    fn tensor_to_multi_objective_recommendations(
+        &self, 
+        tensor: &Tensor, 
+        features: &EnhancedMetaFeatures
+    ) -> Result<Vec<MultiObjectiveRecommendation>> {
+        let scores: Vec<f64> = tensor.double_value(&[0]).into();
+        
+        if scores.len() != 20 {
+            return Err(TransformError::ComputationError(format!(
+                "Expected 20 prediction scores, got {}",
+                scores.len()
+            )));
+        }
+
+        let mut recommendations = Vec::new();
+        
+        // Map scores to transformations (first 10 are transformation types)
+        let transformation_types = [
+            TransformationType::StandardScaler,
+            TransformationType::MinMaxScaler,
+            TransformationType::RobustScaler,
+            TransformationType::PowerTransformer,
+            TransformationType::PolynomialFeatures,
+            TransformationType::PCA,
+            TransformationType::VarianceThreshold,
+            TransformationType::QuantileTransformer,
+            TransformationType::BinaryEncoder,
+            TransformationType::TargetEncoder,
+        ];
+
+        for (i, t_type) in transformation_types.iter().enumerate() {
+            if i < scores.len() && scores[i].is_finite() && scores[i] > 0.3 {
+                // Calculate multi-objective scores
+                let performance_score = scores[i].max(0.0).min(1.0);
+                
+                // Estimate efficiency based on data characteristics
+                let efficiency_score = self.estimate_efficiency_score(t_type, features)?;
+                
+                // Estimate interpretability
+                let interpretability_score = self.estimate_interpretability_score(t_type);
+                
+                // Estimate robustness
+                let robustness_score = self.estimate_robustness_score(t_type, features);
+                
+                // Calculate overall score using default weights
+                let weights = OptimizationWeights::default();
+                let overall_score = performance_score * weights.performance_weight
+                    + efficiency_score * weights.efficiency_weight
+                    + interpretability_score * weights.interpretability_weight
+                    + robustness_score * weights.robustness_weight;
+
+                recommendations.push(MultiObjectiveRecommendation {
+                    transformation: TransformationConfig {
+                        transformation_type: t_type.clone(),
+                        parameters: self.get_optimized_parameters_for_type(t_type, features)?,
+                        expected_performance: performance_score,
+                    },
+                    performance_score,
+                    efficiency_score,
+                    interpretability_score,
+                    robustness_score,
+                    overall_score,
+                });
+            }
+        }
+
+        // Sort by overall score
+        recommendations.sort_by(|a, b| {
+            b.overall_score.partial_cmp(&a.overall_score).unwrap_or(std::cmp::Ordering::Equal)
+        });
+
+        Ok(recommendations)
     }
     
-    fn compute_dataset_similarity(&self, _a: &EnhancedMetaFeatures, _b: &DatasetMetaFeatures) -> Result<f64> {
-        Ok(0.8)
+    /// Find similar datasets from performance database
+    fn find_similar_datasets(
+        &self, 
+        target: &EnhancedMetaFeatures, 
+        k: usize
+    ) -> Result<Vec<PerformanceRecord>> {
+        if self.performance_db.is_empty() {
+            return Ok(vec![]);
+        }
+
+        let mut similarities: Vec<(usize, f64)> = Vec::new();
+        
+        for (i, record) in self.performance_db.iter().enumerate() {
+            let similarity = self.compute_dataset_similarity(target, &record.meta_features)?;
+            similarities.push((i, similarity));
+        }
+
+        // Sort by similarity and take top k
+        similarities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+        
+        let mut similar_records = Vec::new();
+        for (idx, _similarity) in similarities.iter().take(k) {
+            similar_records.push(self.performance_db[*idx].clone());
+        }
+
+        Ok(similar_records)
     }
     
-    fn fallback_recommendations(&self, _features: &EnhancedMetaFeatures) -> Result<Vec<TransformationConfig>> {
-        Ok(vec![])
+    /// Compute similarity between two datasets using enhanced meta-features
+    fn compute_dataset_similarity(
+        &self, 
+        a: &EnhancedMetaFeatures, 
+        b: &DatasetMetaFeatures
+    ) -> Result<f64> {
+        // Compare base features only (since b doesn't have enhanced features)
+        let features_a = &a.base_features;
+        
+        // Normalize features for comparison
+        let scale_similarity = |val_a: f64, val_b: f64, max_val: f64| -> f64 {
+            if max_val > 0.0 {
+                1.0 - (val_a - val_b).abs() / max_val
+            } else {
+                if (val_a - val_b).abs() < f64::EPSILON { 1.0 } else { 0.0 }
+            }
+        };
+
+        // Calculate similarity for each dimension
+        let similarities = vec![
+            scale_similarity(
+                (features_a.n_samples as f64).ln(),
+                (b.n_samples as f64).ln(),
+                20.0, // Reasonable scale for log(samples)
+            ),
+            scale_similarity(
+                (features_a.n_features as f64).ln(),
+                (b.n_features as f64).ln(),
+                15.0, // Reasonable scale for log(features)
+            ),
+            scale_similarity(features_a.sparsity, b.sparsity, 1.0),
+            scale_similarity(features_a.mean_correlation, b.mean_correlation, 2.0),
+            scale_similarity(features_a.std_correlation, b.std_correlation, 1.0),
+            scale_similarity(features_a.mean_skewness, b.mean_skewness, 20.0),
+            scale_similarity(features_a.mean_kurtosis, b.mean_kurtosis, 20.0),
+            scale_similarity(features_a.missing_ratio, b.missing_ratio, 1.0),
+            scale_similarity(features_a.variance_ratio, b.variance_ratio, 10.0),
+            scale_similarity(features_a.outlier_ratio, b.outlier_ratio, 1.0),
+        ];
+
+        // Weighted average (give more weight to important characteristics)
+        let weights = vec![0.15, 0.15, 0.1, 0.15, 0.05, 0.1, 0.1, 0.05, 0.1, 0.05];
+        let weighted_similarity = similarities.iter()
+            .zip(weights.iter())
+            .map(|(sim, weight)| sim * weight)
+            .sum::<f64>();
+
+        Ok(weighted_similarity.max(0.0).min(1.0))
     }
     
-    fn get_optimized_parameters_for_type(&self, _t_type: &TransformationType, _features: &EnhancedMetaFeatures) -> Result<HashMap<String, f64>> {
-        Ok(HashMap::new())
+    /// Fallback recommendations when meta-learning fails
+    fn fallback_recommendations(&self, features: &EnhancedMetaFeatures) -> Result<Vec<TransformationConfig>> {
+        let mut recommendations = Vec::new();
+        let base_features = &features.base_features;
+
+        // Rule-based recommendations
+        
+        // 1. Always recommend StandardScaler for most datasets
+        recommendations.push(TransformationConfig {
+            transformation_type: TransformationType::StandardScaler,
+            parameters: HashMap::new(),
+            expected_performance: 0.8,
+        });
+
+        // 2. High dimensionality -> PCA
+        if base_features.n_features > 100 || base_features.n_features > base_features.n_samples {
+            let mut params = HashMap::new();
+            params.insert("n_components".to_string(), 0.95); // Keep 95% variance
+            recommendations.push(TransformationConfig {
+                transformation_type: TransformationType::PCA,
+                parameters: params,
+                expected_performance: 0.75,
+            });
+        }
+
+        // 3. High outlier ratio -> RobustScaler
+        if base_features.outlier_ratio > 0.1 {
+            recommendations.push(TransformationConfig {
+                transformation_type: TransformationType::RobustScaler,
+                parameters: HashMap::new(),
+                expected_performance: 0.85,
+            });
+        }
+
+        // 4. High skewness -> PowerTransformer
+        if base_features.mean_skewness.abs() > 1.5 {
+            recommendations.push(TransformationConfig {
+                transformation_type: TransformationType::PowerTransformer,
+                parameters: HashMap::new(),
+                expected_performance: 0.8,
+            });
+        }
+
+        // 5. Low variance features -> VarianceThreshold
+        if base_features.variance_ratio < 0.1 {
+            let mut params = HashMap::new();
+            params.insert("threshold".to_string(), 0.01);
+            recommendations.push(TransformationConfig {
+                transformation_type: TransformationType::VarianceThreshold,
+                parameters: params,
+                expected_performance: 0.7,
+            });
+        }
+
+        // Sort by expected performance
+        recommendations.sort_by(|a, b| {
+            b.expected_performance.partial_cmp(&a.expected_performance).unwrap_or(std::cmp::Ordering::Equal)
+        });
+
+        Ok(recommendations.into_iter().take(3).collect()) // Return top 3
+    }
+    
+    /// Get optimized parameters for a transformation type
+    fn get_optimized_parameters_for_type(
+        &self, 
+        t_type: &TransformationType, 
+        features: &EnhancedMetaFeatures
+    ) -> Result<HashMap<String, f64>> {
+        let mut params = HashMap::new();
+        let base_features = &features.base_features;
+
+        match t_type {
+            TransformationType::PCA => {
+                // Adaptive n_components based on data characteristics
+                let variance_threshold = if base_features.n_features > 1000 { 0.99 } else { 0.95 };
+                params.insert("variance_threshold".to_string(), variance_threshold);
+                
+                // Estimate reasonable number of components
+                let max_components = base_features.n_features.min(base_features.n_samples);
+                let estimated_components = if base_features.n_features > base_features.n_samples {
+                    (base_features.n_samples as f64 * 0.8) as usize
+                } else {
+                    (max_components as f64 * variance_threshold) as usize
+                };
+                params.insert("n_components".to_string(), estimated_components.max(1) as f64);
+            },
+            
+            TransformationType::PolynomialFeatures => {
+                // Adaptive degree based on dataset size
+                let degree = if base_features.n_features > 50 { 2 } else { 3 };
+                params.insert("degree".to_string(), degree as f64);
+                params.insert("include_bias".to_string(), 1.0);
+                params.insert("interaction_only".to_string(), 
+                    if base_features.n_features > 20 { 1.0 } else { 0.0 });
+            },
+            
+            TransformationType::VarianceThreshold => {
+                // Adaptive threshold based on data characteristics
+                let threshold = if base_features.variance_ratio < 0.01 { 
+                    0.001 
+                } else { 
+                    0.01 
+                };
+                params.insert("threshold".to_string(), threshold);
+            },
+            
+            TransformationType::PowerTransformer => {
+                // Choose method based on data characteristics
+                let method = if base_features.has_missing || base_features.outlier_ratio > 0.2 {
+                    "yeo-johnson" // Can handle zeros and negative values
+                } else {
+                    "box-cox" // More powerful but requires positive values
+                };
+                params.insert("method".to_string(), if method == "yeo-johnson" { 1.0 } else { 0.0 });
+                params.insert("standardize".to_string(), 1.0);
+            },
+            
+            TransformationType::QuantileTransformer => {
+                // Adaptive number of quantiles
+                let n_quantiles = (base_features.n_samples / 10).max(10).min(1000);
+                params.insert("n_quantiles".to_string(), n_quantiles as f64);
+                params.insert("output_distribution".to_string(), 0.0); // 0 = uniform, 1 = normal
+            },
+            
+            _ => {
+                // Default parameters for other transformations
+            }
+        }
+
+        Ok(params)
+    }
+
+    /// Estimate efficiency score for a transformation
+    fn estimate_efficiency_score(&self, t_type: &TransformationType, features: &EnhancedMetaFeatures) -> Result<f64> {
+        let base_features = &features.base_features;
+        let data_size_factor = (base_features.n_samples * base_features.n_features) as f64;
+        let log_size = data_size_factor.ln();
+
+        let score = match t_type {
+            TransformationType::StandardScaler | TransformationType::MinMaxScaler => {
+                1.0 - (log_size / 25.0).min(0.3) // Very efficient, slight penalty for large data
+            },
+            TransformationType::RobustScaler => {
+                0.9 - (log_size / 20.0).min(0.3) // Slightly less efficient due to median computation
+            },
+            TransformationType::PCA => {
+                let complexity_penalty = if base_features.n_features > base_features.n_samples {
+                    0.5 // Expensive for wide datasets
+                } else {
+                    0.3
+                };
+                0.7 - complexity_penalty - (log_size / 30.0).min(0.2)
+            },
+            TransformationType::PolynomialFeatures => {
+                let feature_penalty = (base_features.n_features as f64 / 100.0).min(0.5);
+                0.5 - feature_penalty - (log_size / 15.0).min(0.3)
+            },
+            TransformationType::PowerTransformer => {
+                0.8 - (log_size / 25.0).min(0.2)
+            },
+            _ => 0.7, // Default efficiency
+        };
+
+        Ok(score.max(0.1).min(1.0))
+    }
+
+    /// Estimate interpretability score for a transformation
+    fn estimate_interpretability_score(&self, t_type: &TransformationType) -> f64 {
+        match t_type {
+            TransformationType::StandardScaler | TransformationType::MinMaxScaler => 0.9,
+            TransformationType::RobustScaler => 0.85,
+            TransformationType::VarianceThreshold => 0.95,
+            TransformationType::QuantileTransformer => 0.6,
+            TransformationType::PowerTransformer => 0.7,
+            TransformationType::PCA => 0.4, // Loses original feature meaning
+            TransformationType::PolynomialFeatures => 0.3, // Creates many new features
+            TransformationType::BinaryEncoder | TransformationType::TargetEncoder => 0.5,
+        }
+    }
+
+    /// Estimate robustness score for a transformation
+    fn estimate_robustness_score(&self, t_type: &TransformationType, features: &EnhancedMetaFeatures) -> f64 {
+        let base_features = &features.base_features;
+        
+        let base_score = match t_type {
+            TransformationType::RobustScaler => 0.95,
+            TransformationType::QuantileTransformer => 0.9,
+            TransformationType::StandardScaler => 0.7,
+            TransformationType::MinMaxScaler => 0.6,
+            TransformationType::PowerTransformer => 0.8,
+            TransformationType::PCA => 0.7,
+            TransformationType::PolynomialFeatures => 0.5,
+            _ => 0.7,
+        };
+
+        // Adjust based on data characteristics
+        let outlier_penalty = if base_features.outlier_ratio > 0.1 {
+            match t_type {
+                TransformationType::RobustScaler | TransformationType::QuantileTransformer => 0.0,
+                _ => base_features.outlier_ratio * 0.3,
+            }
+        } else {
+            0.0
+        };
+
+        let missing_penalty = if base_features.has_missing {
+            0.1
+        } else {
+            0.0
+        };
+
+        (base_score - outlier_penalty - missing_penalty).max(0.1).min(1.0)
     }
 }
 

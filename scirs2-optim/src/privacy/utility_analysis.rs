@@ -1541,7 +1541,7 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
             }
             SamplingStrategy::Random => {
                 use rand::Rng;
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
                 for _ in 0..range.num_samples {
                     let value = rng.gen_range(range.min..=range.max);
                     values.push(T::from(value).unwrap());

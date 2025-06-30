@@ -1,0 +1,1419 @@
+//! TPU (Tensor Processing Unit) compatibility infrastructure
+//!
+//! This module provides infrastructure for running neural networks on TPUs including:
+//! - TPU device detection and enumeration
+//! - XLA (Accelerated Linear Algebra) compilation integration
+//! - TPU-specific memory management
+//! - Distributed TPU pod coordination
+//! - TPU kernel optimization and scheduling
+//! - Performance profiling and optimization
+
+use crate::error::{NeuralError, Result};
+use ndarray::{ArrayD, Dimension};
+use std::collections::{HashMap, VecDeque};
+use std::fmt::Debug;
+use std::sync::{Arc, RwLock, Mutex};
+use std::time::{Duration, Instant};
+use num_traits::Float;
+
+/// TPU device information and capabilities
+#[derive(Debug, Clone)]
+pub struct TPUDevice {
+    /// Device ID
+    pub device_id: u32,
+    /// Device name (e.g., "TPU v4")
+    pub device_name: String,
+    /// TPU generation (v2, v3, v4, v5, etc.)
+    pub generation: TPUGeneration,
+    /// Number of cores available
+    pub num_cores: u32,
+    /// Memory capacity per core (bytes)
+    pub memory_per_core: usize,
+    /// Peak performance (TOPS)
+    pub peak_tops: f64,
+    /// Available for computation
+    pub available: bool,
+    /// Current utilization percentage
+    pub utilization: f64,
+    /// Temperature (Celsius)
+    pub temperature: f32,
+}
+
+/// TPU generations with different capabilities
+#[derive(Debug, Clone, PartialEq)]
+pub enum TPUGeneration {
+    V2, V3, V4, V5,
+    /// Future/custom TPU versions
+    Custom(String),
+}
+
+/// TPU Pod configuration for distributed training
+#[derive(Debug, Clone)]
+pub struct TPUPodConfig {
+    /// Pod slice topology (e.g., 2x2x1 for v3-8)
+    pub topology: Vec<u32>,
+    /// Total number of cores in the pod
+    pub total_cores: u32,
+    /// Inter-chip communication bandwidth (GB/s)
+    pub interconnect_bandwidth: f64,
+    /// Pod coordinator host address
+    pub coordinator_address: String,
+    /// Worker nodes in the pod
+    pub worker_nodes: Vec<TPUWorkerNode>,
+}
+
+/// Individual worker node in a TPU pod
+#[derive(Debug, Clone)]
+pub struct TPUWorkerNode {
+    /// Node ID within the pod
+    pub node_id: u32,
+    /// Host address for communication
+    pub host_address: String,
+    /// TPU devices on this node
+    pub devices: Vec<TPUDevice>,
+    /// Node status
+    pub status: TPUNodeStatus,
+}
+
+/// Status of a TPU worker node
+#[derive(Debug, Clone, PartialEq)]
+pub enum TPUNodeStatus {
+    Online, Offline, Busy, Error(String),
+}
+
+/// XLA compilation context for TPU operations
+pub struct XLACompiler {
+    /// Target TPU generation
+    target_generation: TPUGeneration,
+    /// Compilation cache
+    compilation_cache: Arc<RwLock<HashMap<XLAProgram, CompiledTPUKernel>>>,
+    /// Optimization settings
+    optimization_config: XLAOptimizationConfig,
+    /// Compilation statistics
+    stats: Arc<RwLock<XLACompilationStats>>,
+}
+
+/// XLA program representation
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct XLAProgram {
+    /// Program operations in HLO (High Level Operations) format
+    pub hlo_text: String,
+    /// Input shapes and types
+    pub input_specs: Vec<TensorSpec>,
+    /// Output shapes and types
+    pub output_specs: Vec<TensorSpec>,
+    /// Program unique identifier
+    pub program_id: String,
+}
+
+/// Tensor specification for XLA
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct TensorSpec {
+    /// Tensor shape
+    pub shape: Vec<usize>,
+    /// Data type
+    pub dtype: TPUDataType,
+    /// Layout specification
+    pub layout: Option<TPULayout>,
+}
+
+/// TPU-supported data types
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum TPUDataType {
+    F32, F16, BF16, F64,
+    I8, I16, I32, I64,
+    U8, U16, U32, U64,
+    BOOL, C64, C128,
+}
+
+/// Memory layout for TPU tensors
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct TPULayout {
+    /// Dimension order for memory layout
+    pub minor_to_major: Vec<usize>,
+    /// Padding and alignment information
+    pub padded_shape: Vec<usize>,
+    /// Memory space (HBM, VMEM, etc.)
+    pub memory_space: TPUMemorySpace,
+}
+
+/// TPU memory spaces
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum TPUMemorySpace {
+    /// High Bandwidth Memory (main memory)
+    HBM,
+    /// Vector Memory (on-chip cache)
+    VMEM,
+    /// Scalar Memory
+    SMEM,
+}
+
+/// Compiled TPU kernel
+#[derive(Debug, Clone)]
+pub struct CompiledTPUKernel {
+    /// Compiled binary code
+    pub binary_code: Vec<u8>,
+    /// Kernel metadata
+    pub metadata: TPUKernelMetadata,
+    /// Memory allocation requirements
+    pub memory_requirements: TPUMemoryRequirements,
+    /// Performance estimates
+    pub performance_estimates: TPUPerformanceEstimates,
+    /// Compilation timestamp
+    pub compiled_at: Instant,
+}
+
+/// TPU kernel metadata
+#[derive(Debug, Clone)]
+pub struct TPUKernelMetadata {
+    /// Kernel name
+    pub name: String,
+    /// Target TPU generation
+    pub target_generation: TPUGeneration,
+    /// Required core count
+    pub required_cores: u32,
+    /// Estimated execution time (microseconds)
+    pub estimated_execution_time_us: u64,
+    /// Memory footprint (bytes)
+    pub memory_footprint: usize,
+}
+
+/// TPU memory allocation requirements
+#[derive(Debug, Clone)]
+pub struct TPUMemoryRequirements {
+    /// HBM allocation size
+    pub hbm_bytes: usize,
+    /// VMEM allocation size
+    pub vmem_bytes: usize,
+    /// SMEM allocation size
+    pub smem_bytes: usize,
+    /// Memory alignment requirements
+    pub alignment: usize,
+    /// Persistent memory allocation
+    pub persistent: bool,
+}
+
+/// TPU performance estimates
+#[derive(Debug, Clone)]
+pub struct TPUPerformanceEstimates {
+    /// Estimated FLOPS
+    pub estimated_flops: u64,
+    /// Memory bandwidth utilization
+    pub memory_bandwidth_utilization: f64,
+    /// Compute utilization
+    pub compute_utilization: f64,
+    /// Expected latency (microseconds)
+    pub expected_latency_us: u64,
+    /// Expected throughput (operations/second)
+    pub expected_throughput: f64,
+}
+
+/// XLA optimization configuration
+#[derive(Debug, Clone)]
+pub struct XLAOptimizationConfig {
+    /// Enable auto-sharding for distributed execution
+    pub auto_sharding: bool,
+    /// Enable operator fusion
+    pub operator_fusion: bool,
+    /// Enable layout optimization
+    pub layout_optimization: bool,
+    /// Enable constant folding
+    pub constant_folding: bool,
+    /// Enable algebraic simplification
+    pub algebraic_simplification: bool,
+    /// Maximum fusion depth
+    pub max_fusion_depth: u32,
+    /// Memory optimization level
+    pub memory_optimization_level: u32,
+}
+
+/// XLA compilation statistics
+#[derive(Debug, Clone, Default)]
+pub struct XLACompilationStats {
+    /// Number of programs compiled
+    pub programs_compiled: u64,
+    /// Total compilation time (milliseconds)
+    pub total_compile_time_ms: f64,
+    /// Average compilation time (milliseconds)
+    pub avg_compile_time_ms: f64,
+    /// Cache hit rate
+    pub cache_hit_rate: f64,
+    /// Memory usage for compilation (bytes)
+    pub compilation_memory_usage: usize,
+}
+
+/// TPU memory manager for efficient allocation
+pub struct TPUMemoryManager {
+    /// Available TPU devices
+    devices: Vec<TPUDevice>,
+    /// Memory pools per device
+    memory_pools: HashMap<u32, TPUMemoryPool>,
+    /// Allocation tracker
+    allocations: Arc<RwLock<HashMap<AllocationId, TPUAllocation>>>,
+    /// Memory statistics
+    stats: Arc<RwLock<TPUMemoryStats>>,
+}
+
+/// TPU memory pool for a specific device
+#[derive(Debug)]
+pub struct TPUMemoryPool {
+    /// Device ID
+    device_id: u32,
+    /// Available memory blocks
+    free_blocks: VecDeque<MemoryBlock>,
+    /// Allocated memory blocks
+    allocated_blocks: HashMap<AllocationId, MemoryBlock>,
+    /// Total pool size
+    total_size: usize,
+    /// Currently allocated size
+    allocated_size: usize,
+}
+
+/// Memory block in TPU memory
+#[derive(Debug, Clone)]
+pub struct MemoryBlock {
+    /// Start offset in device memory
+    pub offset: usize,
+    /// Block size in bytes
+    pub size: usize,
+    /// Memory space type
+    pub memory_space: TPUMemorySpace,
+    /// Alignment requirements
+    pub alignment: usize,
+}
+
+/// Unique allocation identifier
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct AllocationId(pub u64);
+
+/// TPU memory allocation
+#[derive(Debug, Clone)]
+pub struct TPUAllocation {
+    /// Allocation ID
+    pub id: AllocationId,
+    /// Device ID where allocated
+    pub device_id: u32,
+    /// Memory block details
+    pub block: MemoryBlock,
+    /// Allocation timestamp
+    pub allocated_at: Instant,
+    /// Reference count for shared allocations
+    pub ref_count: Arc<Mutex<u32>>,
+}
+
+/// TPU memory usage statistics
+#[derive(Debug, Clone, Default)]
+pub struct TPUMemoryStats {
+    /// Total allocations made
+    pub total_allocations: u64,
+    /// Currently active allocations
+    pub active_allocations: u64,
+    /// Peak memory usage across all devices
+    pub peak_memory_usage: usize,
+    /// Current memory usage
+    pub current_memory_usage: usize,
+    /// Memory fragmentation percentage
+    pub fragmentation_percentage: f64,
+}
+
+/// TPU scheduler for optimal workload distribution
+pub struct TPUScheduler {
+    /// Available TPU devices
+    devices: Vec<TPUDevice>,
+    /// Task queue
+    task_queue: Arc<Mutex<VecDeque<TPUTask>>>,
+    /// Running tasks
+    running_tasks: Arc<RwLock<HashMap<TaskId, RunningTask>>>,
+    /// Scheduling statistics
+    stats: Arc<RwLock<TPUSchedulingStats>>,
+    /// Scheduling policy
+    policy: SchedulingPolicy,
+}
+
+/// TPU task for execution
+#[derive(Debug, Clone)]
+pub struct TPUTask {
+    /// Task unique identifier
+    pub task_id: TaskId,
+    /// Compiled kernel to execute
+    pub kernel: CompiledTPUKernel,
+    /// Input tensors
+    pub inputs: Vec<TPUTensor>,
+    /// Expected output shapes
+    pub output_shapes: Vec<Vec<usize>>,
+    /// Task priority
+    pub priority: TaskPriority,
+    /// Maximum execution time allowed
+    pub timeout: Duration,
+    /// Callback for completion
+    pub completion_callback: Option<Box<dyn Fn(TaskResult) + Send + Sync>>,
+}
+
+/// Task unique identifier
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct TaskId(pub u64);
+
+/// Task priority levels
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub enum TaskPriority {
+    Low, Normal, High, Critical,
+}
+
+/// Running task information
+#[derive(Debug)]
+pub struct RunningTask {
+    /// Task details
+    pub task: TPUTask,
+    /// Assigned device
+    pub device_id: u32,
+    /// Start time
+    pub started_at: Instant,
+    /// Expected completion time
+    pub expected_completion: Instant,
+}
+
+/// Task execution result
+#[derive(Debug)]
+pub enum TaskResult {
+    Success {
+        /// Output tensors
+        outputs: Vec<TPUTensor>,
+        /// Execution time
+        execution_time: Duration,
+        /// Device utilization during execution
+        device_utilization: f64,
+    },
+    Error {
+        /// Error description
+        error: String,
+        /// Partial results if any
+        partial_outputs: Option<Vec<TPUTensor>>,
+    },
+    Timeout {
+        /// Time elapsed before timeout
+        elapsed: Duration,
+    },
+}
+
+/// TPU scheduling statistics
+#[derive(Debug, Clone, Default)]
+pub struct TPUSchedulingStats {
+    /// Total tasks scheduled
+    pub total_tasks: u64,
+    /// Successfully completed tasks
+    pub completed_tasks: u64,
+    /// Failed tasks
+    pub failed_tasks: u64,
+    /// Timed out tasks
+    pub timeout_tasks: u64,
+    /// Average execution time
+    pub avg_execution_time_ms: f64,
+    /// Average queue wait time
+    pub avg_queue_wait_time_ms: f64,
+    /// Device utilization across all devices
+    pub avg_device_utilization: f64,
+}
+
+/// Scheduling policies
+#[derive(Debug, Clone)]
+pub enum SchedulingPolicy {
+    /// First-Come-First-Served
+    FCFS,
+    /// Shortest Job First
+    SJF,
+    /// Priority-based scheduling
+    Priority,
+    /// Round-robin across devices
+    RoundRobin,
+    /// Load balancing based on device utilization
+    LoadBalance,
+    /// Custom scheduling algorithm
+    Custom(Box<dyn Fn(&[TPUDevice], &TPUTask) -> Option<u32> + Send + Sync>),
+}
+
+/// TPU tensor representation
+#[derive(Debug, Clone)]
+pub struct TPUTensor {
+    /// Tensor data
+    pub data: ArrayD<f32>, // Simplified to f32 for now
+    /// Tensor specification
+    pub spec: TensorSpec,
+    /// Device where tensor is allocated
+    pub device_id: Option<u32>,
+    /// Memory allocation ID
+    pub allocation_id: Option<AllocationId>,
+}
+
+/// Main TPU runtime for coordinating all TPU operations
+pub struct TPURuntime {
+    /// XLA compiler
+    xla_compiler: XLACompiler,
+    /// Memory manager
+    memory_manager: TPUMemoryManager,
+    /// Task scheduler
+    scheduler: TPUScheduler,
+    /// Available devices
+    devices: Vec<TPUDevice>,
+    /// Pod configuration (if using distributed setup)
+    pod_config: Option<TPUPodConfig>,
+    /// Runtime statistics
+    stats: Arc<RwLock<TPURuntimeStats>>,
+}
+
+/// TPU runtime statistics
+#[derive(Debug, Clone, Default)]
+pub struct TPURuntimeStats {
+    /// Runtime uptime
+    pub uptime: Duration,
+    /// Total operations executed
+    pub total_operations: u64,
+    /// Total data processed (bytes)
+    pub total_data_processed: u64,
+    /// Average operations per second
+    pub avg_ops_per_second: f64,
+    /// Power consumption (watts)
+    pub power_consumption: f64,
+    /// Thermal status across devices
+    pub thermal_status: HashMap<u32, f32>,
+}
+
+impl TPURuntime {
+    /// Initialize TPU runtime with device discovery
+    pub fn initialize() -> Result<Self> {
+        // Discover available TPU devices
+        let devices = Self::discover_tpu_devices()?;
+        
+        if devices.is_empty() {
+            return Err(NeuralError::DeviceError("No TPU devices found".to_string()));
+        }
+
+        // Initialize XLA compiler for the first available device
+        let target_generation = devices[0].generation.clone();
+        let xla_compiler = XLACompiler::new(target_generation)?;
+
+        // Initialize memory manager
+        let memory_manager = TPUMemoryManager::new(&devices)?;
+
+        // Initialize scheduler
+        let scheduler = TPUScheduler::new(devices.clone(), SchedulingPolicy::LoadBalance)?;
+
+        Ok(Self {
+            xla_compiler,
+            memory_manager,
+            scheduler,
+            devices,
+            pod_config: None,
+            stats: Arc::new(RwLock::new(TPURuntimeStats::default())),
+        })
+    }
+
+    /// Discover available TPU devices on the system
+    fn discover_tpu_devices() -> Result<Vec<TPUDevice>> {
+        // In a real implementation, this would interface with the TPU driver
+        // For now, we'll simulate device discovery
+        
+        let mut devices = Vec::new();
+        
+        // Check environment variables or configuration files for TPU availability
+        if std::env::var("TPU_VISIBLE_DEVICES").is_ok() {
+            // Simulate discovering TPU devices
+            for i in 0..1 { // Simulate finding 1 TPU device
+                devices.push(TPUDevice {
+                    device_id: i,
+                    device_name: format!("TPU v4-{}", i),
+                    generation: TPUGeneration::V4,
+                    num_cores: 4,
+                    memory_per_core: 16 * 1024 * 1024 * 1024, // 16GB per core
+                    peak_tops: 275.0, // TOPS for TPU v4
+                    available: true,
+                    utilization: 0.0,
+                    temperature: 45.0,
+                });
+            }
+        }
+        
+        Ok(devices)
+    }
+
+    /// Configure the runtime for distributed TPU pod execution
+    pub fn configure_pod(&mut self, pod_config: TPUPodConfig) -> Result<()> {
+        // Validate pod configuration
+        if pod_config.total_cores == 0 {
+            return Err(NeuralError::InvalidInput("Pod must have at least one core".to_string()));
+        }
+
+        // Initialize distributed communication
+        self.initialize_pod_communication(&pod_config)?;
+
+        self.pod_config = Some(pod_config);
+        Ok(())
+    }
+
+    /// Initialize pod communication infrastructure
+    fn initialize_pod_communication(&self, _pod_config: &TPUPodConfig) -> Result<()> {
+        // In a real implementation, this would set up gRPC/MPI communication
+        // between pod workers
+        Ok(())
+    }
+
+    /// Compile and execute a neural network operation on TPU
+    pub fn compile_and_execute<F: Float + Debug>(
+        &mut self,
+        operation: &TPUOperation<F>,
+        inputs: &[&ArrayD<F>],
+    ) -> Result<Vec<ArrayD<F>>> {
+        // Convert to XLA program
+        let xla_program = self.convert_to_xla_program(operation, inputs)?;
+
+        // Compile the program
+        let compiled_kernel = self.xla_compiler.compile_program(&xla_program)?;
+
+        // Convert inputs to TPU tensors
+        let tpu_inputs = self.convert_inputs_to_tpu_tensors(inputs)?;
+
+        // Create TPU task
+        let task = TPUTask {
+            task_id: TaskId(self.generate_task_id()),
+            kernel: compiled_kernel,
+            inputs: tpu_inputs,
+            output_shapes: self.infer_output_shapes(operation, inputs)?,
+            priority: TaskPriority::Normal,
+            timeout: Duration::from_secs(60),
+            completion_callback: None,
+        };
+
+        // Schedule and execute the task
+        let result = self.scheduler.execute_task(task)?;
+
+        // Convert results back to standard tensors
+        match result {
+            TaskResult::Success { outputs, .. } => {
+                Ok(outputs.into_iter().map(|t| t.data).collect())
+            }
+            TaskResult::Error { error, .. } => {
+                Err(NeuralError::ComputationError(format!("TPU execution failed: {}", error)))
+            }
+            TaskResult::Timeout { elapsed } => {
+                Err(NeuralError::ComputationError(format!("TPU execution timed out after {:?}", elapsed)))
+            }
+        }
+    }
+
+    /// Allocate memory on TPU device
+    pub fn allocate_memory(&mut self, device_id: u32, size: usize, memory_space: TPUMemorySpace) -> Result<AllocationId> {
+        self.memory_manager.allocate(device_id, size, memory_space)
+    }
+
+    /// Free TPU memory allocation
+    pub fn free_memory(&mut self, allocation_id: AllocationId) -> Result<()> {
+        self.memory_manager.free(allocation_id)
+    }
+
+    /// Get runtime statistics
+    pub fn get_statistics(&self) -> TPURuntimeStats {
+        if let Ok(stats) = self.stats.read() {
+            stats.clone()
+        } else {
+            TPURuntimeStats::default()
+        }
+    }
+
+    /// Convert operation to XLA program
+    fn convert_to_xla_program<F: Float + Debug>(
+        &self,
+        operation: &TPUOperation<F>,
+        inputs: &[&ArrayD<F>],
+    ) -> Result<XLAProgram> {
+        // Convert operation to HLO (High Level Operations) format
+        let hlo_text = self.generate_hlo_for_operation(operation, inputs)?;
+        
+        let input_specs = inputs.iter().map(|input| {
+            TensorSpec {
+                shape: input.shape().to_vec(),
+                dtype: TPUDataType::F32, // Simplified
+                layout: None,
+            }
+        }).collect();
+
+        let output_specs = self.infer_output_specs(operation, inputs)?;
+
+        Ok(XLAProgram {
+            hlo_text,
+            input_specs,
+            output_specs,
+            program_id: self.generate_program_id(),
+        })
+    }
+
+    /// Generate HLO code for operation
+    fn generate_hlo_for_operation<F: Float + Debug>(
+        &self,
+        operation: &TPUOperation<F>,
+        inputs: &[&ArrayD<F>],
+    ) -> Result<String> {
+        match operation {
+            TPUOperation::MatMul { transpose_a, transpose_b, .. } => {
+                let mut hlo = String::new();
+                hlo.push_str("HloModule matmul\n");
+                hlo.push_str("ENTRY computation {\n");
+                hlo.push_str("  arg0 = f32[?, ?] parameter(0)\n");
+                hlo.push_str("  arg1 = f32[?, ?] parameter(1)\n");
+                
+                if *transpose_a || *transpose_b {
+                    if *transpose_a {
+                        hlo.push_str("  arg0_t = f32[?, ?] transpose(arg0), dimensions={1,0}\n");
+                    }
+                    if *transpose_b {
+                        hlo.push_str("  arg1_t = f32[?, ?] transpose(arg1), dimensions={1,0}\n");
+                    }
+                }
+                
+                let lhs = if *transpose_a { "arg0_t" } else { "arg0" };
+                let rhs = if *transpose_b { "arg1_t" } else { "arg1" };
+                hlo.push_str(&format!("  ROOT result = f32[?, ?] dot({}, {}), lhs_contracting_dims={{1}}, rhs_contracting_dims={{0}}\n", lhs, rhs));
+                hlo.push_str("}\n");
+                
+                // Replace ? with actual dimensions
+                for (i, input) in inputs.iter().enumerate() {
+                    let shape_str = input.shape().iter().map(|&d| d.to_string()).collect::<Vec<_>>().join(",");
+                    hlo = hlo.replace(&format!("f32[?, ?] parameter({})", i), &format!("f32[{}] parameter({})", shape_str, i));
+                }
+                
+                Ok(hlo)
+            }
+            TPUOperation::ElementWise { op } => {
+                let mut hlo = String::new();
+                hlo.push_str("HloModule elementwise\n");
+                hlo.push_str("ENTRY computation {\n");
+                hlo.push_str("  arg0 = f32[?] parameter(0)\n");
+                hlo.push_str("  arg1 = f32[?] parameter(1)\n");
+                
+                let op_name = match op {
+                    ElementWiseTPUOp::Add => "add",
+                    ElementWiseTPUOp::Multiply => "multiply",
+                    ElementWiseTPUOp::Subtract => "subtract",
+                    ElementWiseTPUOp::Divide => "divide",
+                };
+                
+                hlo.push_str(&format!("  ROOT result = f32[?] {}(arg0, arg1)\n", op_name));
+                hlo.push_str("}\n");
+                
+                Ok(hlo)
+            }
+            TPUOperation::Convolution { .. } => {
+                // Simplified convolution HLO
+                Ok("HloModule conv\nENTRY computation {\n  input = f32[?,?,?,?] parameter(0)\n  weight = f32[?,?,?,?] parameter(1)\n  ROOT result = f32[?,?,?,?] convolution(input, weight), window={size=3x3}, dim_labels=b01f_01io->b01f\n}\n".to_string())
+            }
+        }
+    }
+
+    /// Generate unique program ID
+    fn generate_program_id(&self) -> String {
+        format!("prog_{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos())
+    }
+
+    /// Generate unique task ID
+    fn generate_task_id(&self) -> u64 {
+        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos() as u64
+    }
+
+    /// Convert inputs to TPU tensors
+    fn convert_inputs_to_tpu_tensors<F: Float + Debug>(&self, inputs: &[&ArrayD<F>]) -> Result<Vec<TPUTensor>> {
+        inputs.iter().map(|input| {
+            // Convert to f32 (simplified)
+            let f32_data = input.mapv(|x| x.to_f32().unwrap_or(0.0));
+            
+            Ok(TPUTensor {
+                data: f32_data,
+                spec: TensorSpec {
+                    shape: input.shape().to_vec(),
+                    dtype: TPUDataType::F32,
+                    layout: None,
+                },
+                device_id: None,
+                allocation_id: None,
+            })
+        }).collect()
+    }
+
+    /// Infer output shapes for operation
+    fn infer_output_shapes<F: Float + Debug>(&self, operation: &TPUOperation<F>, inputs: &[&ArrayD<F>]) -> Result<Vec<Vec<usize>>> {
+        match operation {
+            TPUOperation::MatMul { transpose_a, transpose_b, .. } => {
+                if inputs.len() < 2 {
+                    return Err(NeuralError::InvalidInput("MatMul requires 2 inputs".to_string()));
+                }
+                
+                let a_shape = inputs[0].shape();
+                let b_shape = inputs[1].shape();
+                
+                let m = if *transpose_a { a_shape[1] } else { a_shape[0] };
+                let n = if *transpose_b { b_shape[0] } else { b_shape[1] };
+                
+                Ok(vec![vec![m, n]])
+            }
+            TPUOperation::ElementWise { .. } => {
+                if inputs.is_empty() {
+                    return Err(NeuralError::InvalidInput("ElementWise requires at least 1 input".to_string()));
+                }
+                Ok(vec![inputs[0].shape().to_vec()])
+            }
+            TPUOperation::Convolution { .. } => {
+                if inputs.is_empty() {
+                    return Err(NeuralError::InvalidInput("Convolution requires at least 1 input".to_string()));
+                }
+                // Simplified - return input shape (should calculate actual output shape)
+                Ok(vec![inputs[0].shape().to_vec()])
+            }
+        }
+    }
+
+    /// Infer output specifications for operation
+    fn infer_output_specs<F: Float + Debug>(&self, operation: &TPUOperation<F>, inputs: &[&ArrayD<F>]) -> Result<Vec<TensorSpec>> {
+        let output_shapes = self.infer_output_shapes(operation, inputs)?;
+        
+        Ok(output_shapes.into_iter().map(|shape| {
+            TensorSpec {
+                shape,
+                dtype: TPUDataType::F32, // Simplified
+                layout: None,
+            }
+        }).collect())
+    }
+}
+
+/// TPU-specific operations that can be compiled and executed
+#[derive(Debug, Clone)]
+pub enum TPUOperation<F: Float + Debug> {
+    /// Matrix multiplication
+    MatMul {
+        transpose_a: bool,
+        transpose_b: bool,
+        _phantom: std::marker::PhantomData<F>,
+    },
+    /// Element-wise operations
+    ElementWise {
+        op: ElementWiseTPUOp,
+    },
+    /// Convolution operation
+    Convolution {
+        stride: Vec<usize>,
+        padding: Vec<usize>,
+        dilation: Vec<usize>,
+    },
+}
+
+/// Element-wise operations supported on TPU
+#[derive(Debug, Clone)]
+pub enum ElementWiseTPUOp {
+    Add, Multiply, Subtract, Divide,
+}
+
+impl XLACompiler {
+    /// Create a new XLA compiler
+    pub fn new(target_generation: TPUGeneration) -> Result<Self> {
+        let optimization_config = XLAOptimizationConfig {
+            auto_sharding: true,
+            operator_fusion: true,
+            layout_optimization: true,
+            constant_folding: true,
+            algebraic_simplification: true,
+            max_fusion_depth: 4,
+            memory_optimization_level: 2,
+        };
+
+        Ok(Self {
+            target_generation,
+            compilation_cache: Arc::new(RwLock::new(HashMap::new())),
+            optimization_config,
+            stats: Arc::new(RwLock::new(XLACompilationStats::default())),
+        })
+    }
+
+    /// Compile XLA program to TPU kernel
+    pub fn compile_program(&self, program: &XLAProgram) -> Result<CompiledTPUKernel> {
+        let start_time = Instant::now();
+
+        // Check cache first
+        if let Some(cached_kernel) = self.get_cached_kernel(program) {
+            self.update_cache_stats(true);
+            return Ok(cached_kernel);
+        }
+
+        // Compile the program
+        let compiled_kernel = self.perform_compilation(program)?;
+
+        // Cache the result
+        self.cache_kernel(program.clone(), compiled_kernel.clone());
+
+        // Update statistics
+        let compile_time = start_time.elapsed().as_millis() as f64;
+        self.update_compile_stats(compile_time);
+        self.update_cache_stats(false);
+
+        Ok(compiled_kernel)
+    }
+
+    /// Perform actual compilation
+    fn perform_compilation(&self, program: &XLAProgram) -> Result<CompiledTPUKernel> {
+        // In a real implementation, this would call into XLA/JAX compilation
+        // For now, we simulate the compilation process
+        
+        let binary_code = self.generate_tpu_binary(program)?;
+        let metadata = self.generate_kernel_metadata(program)?;
+        let memory_requirements = self.analyze_memory_requirements(program)?;
+        let performance_estimates = self.estimate_performance(program)?;
+
+        Ok(CompiledTPUKernel {
+            binary_code,
+            metadata,
+            memory_requirements,
+            performance_estimates,
+            compiled_at: Instant::now(),
+        })
+    }
+
+    /// Generate TPU binary code (simulated)
+    fn generate_tpu_binary(&self, program: &XLAProgram) -> Result<Vec<u8>> {
+        // Simulate binary generation based on HLO
+        let binary_size = program.hlo_text.len() * 4; // Rough estimate
+        Ok(vec![0u8; binary_size])
+    }
+
+    /// Generate kernel metadata
+    fn generate_kernel_metadata(&self, program: &XLAProgram) -> Result<TPUKernelMetadata> {
+        let estimated_flops = self.estimate_flops(&program.hlo_text)?;
+        let estimated_execution_time = (estimated_flops / 1_000_000) as u64; // Rough estimate
+
+        Ok(TPUKernelMetadata {
+            name: program.program_id.clone(),
+            target_generation: self.target_generation.clone(),
+            required_cores: 1, // Simplified
+            estimated_execution_time_us: estimated_execution_time,
+            memory_footprint: program.input_specs.iter().map(|spec| {
+                spec.shape.iter().product::<usize>() * 4 // 4 bytes per f32
+            }).sum(),
+        })
+    }
+
+    /// Estimate FLOPS from HLO text (simplified)
+    fn estimate_flops(&self, hlo_text: &str) -> Result<u64> {
+        let mut flops = 0u64;
+        
+        if hlo_text.contains("dot") {
+            flops += 1_000_000; // Rough estimate for matrix multiplication
+        }
+        if hlo_text.contains("add") || hlo_text.contains("multiply") {
+            flops += 100_000; // Rough estimate for element-wise ops
+        }
+        if hlo_text.contains("convolution") {
+            flops += 10_000_000; // Rough estimate for convolution
+        }
+        
+        Ok(flops.max(1000))
+    }
+
+    /// Analyze memory requirements for program
+    fn analyze_memory_requirements(&self, program: &XLAProgram) -> Result<TPUMemoryRequirements> {
+        let total_input_size: usize = program.input_specs.iter().map(|spec| {
+            spec.shape.iter().product::<usize>() * self.dtype_size(&spec.dtype)
+        }).sum();
+
+        let total_output_size: usize = program.output_specs.iter().map(|spec| {
+            spec.shape.iter().product::<usize>() * self.dtype_size(&spec.dtype)
+        }).sum();
+
+        let working_memory = (total_input_size + total_output_size) / 2; // Rough estimate
+
+        Ok(TPUMemoryRequirements {
+            hbm_bytes: total_input_size + total_output_size,
+            vmem_bytes: working_memory,
+            smem_bytes: 1024, // Small amount for scalars
+            alignment: 128,   // 128-byte alignment for TPU
+            persistent: false,
+        })
+    }
+
+    /// Get size in bytes for TPU data type
+    fn dtype_size(&self, dtype: &TPUDataType) -> usize {
+        match dtype {
+            TPUDataType::F32 | TPUDataType::I32 | TPUDataType::U32 => 4,
+            TPUDataType::F64 | TPUDataType::I64 | TPUDataType::U64 | TPUDataType::C64 => 8,
+            TPUDataType::F16 | TPUDataType::BF16 | TPUDataType::I16 | TPUDataType::U16 => 2,
+            TPUDataType::I8 | TPUDataType::U8 | TPUDataType::BOOL => 1,
+            TPUDataType::C128 => 16,
+        }
+    }
+
+    /// Estimate performance characteristics
+    fn estimate_performance(&self, program: &XLAProgram) -> Result<TPUPerformanceEstimates> {
+        let estimated_flops = self.estimate_flops(&program.hlo_text)?;
+        let memory_requirements = self.analyze_memory_requirements(program)?;
+        
+        let memory_bandwidth = match self.target_generation {
+            TPUGeneration::V4 => 1200.0, // GB/s for TPU v4
+            TPUGeneration::V3 => 900.0,  // GB/s for TPU v3
+            _ => 600.0, // Conservative estimate
+        };
+
+        let compute_throughput = match self.target_generation {
+            TPUGeneration::V4 => 275e12, // 275 TOPS
+            TPUGeneration::V3 => 123e12, // 123 TOPS
+            _ => 50e12, // Conservative estimate
+        };
+
+        let memory_time_us = (memory_requirements.hbm_bytes as f64 / (memory_bandwidth * 1e9)) * 1e6;
+        let compute_time_us = (estimated_flops as f64 / compute_throughput) * 1e6;
+        
+        let expected_latency_us = memory_time_us.max(compute_time_us) as u64;
+        let memory_bandwidth_util = memory_time_us / (memory_time_us + compute_time_us);
+        let compute_utilization = compute_time_us / (memory_time_us + compute_time_us);
+
+        Ok(TPUPerformanceEstimates {
+            estimated_flops,
+            memory_bandwidth_utilization: memory_bandwidth_util,
+            compute_utilization,
+            expected_latency_us,
+            expected_throughput: if expected_latency_us > 0 { 1_000_000.0 / expected_latency_us as f64 } else { 0.0 },
+        })
+    }
+
+    /// Get cached kernel if available
+    fn get_cached_kernel(&self, program: &XLAProgram) -> Option<CompiledTPUKernel> {
+        if let Ok(cache) = self.compilation_cache.read() {
+            cache.get(program).cloned()
+        } else {
+            None
+        }
+    }
+
+    /// Cache compiled kernel
+    fn cache_kernel(&self, program: XLAProgram, kernel: CompiledTPUKernel) {
+        if let Ok(mut cache) = self.compilation_cache.write() {
+            cache.insert(program, kernel);
+        }
+    }
+
+    /// Update cache statistics
+    fn update_cache_stats(&self, cache_hit: bool) {
+        if let Ok(mut stats) = self.stats.write() {
+            if cache_hit {
+                let total = stats.programs_compiled + 1;
+                stats.cache_hit_rate = ((stats.cache_hit_rate * stats.programs_compiled as f64) + 1.0) / total as f64;
+            }
+        }
+    }
+
+    /// Update compilation statistics
+    fn update_compile_stats(&self, compile_time_ms: f64) {
+        if let Ok(mut stats) = self.stats.write() {
+            stats.programs_compiled += 1;
+            stats.total_compile_time_ms += compile_time_ms;
+            stats.avg_compile_time_ms = stats.total_compile_time_ms / stats.programs_compiled as f64;
+        }
+    }
+}
+
+impl TPUMemoryManager {
+    /// Create a new TPU memory manager
+    pub fn new(devices: &[TPUDevice]) -> Result<Self> {
+        let mut memory_pools = HashMap::new();
+        
+        for device in devices {
+            let pool = TPUMemoryPool::new(device.device_id, device.memory_per_core * device.num_cores as usize)?;
+            memory_pools.insert(device.device_id, pool);
+        }
+
+        Ok(Self {
+            devices: devices.to_vec(),
+            memory_pools,
+            allocations: Arc::new(RwLock::new(HashMap::new())),
+            stats: Arc::new(RwLock::new(TPUMemoryStats::default())),
+        })
+    }
+
+    /// Allocate memory on specific device
+    pub fn allocate(&mut self, device_id: u32, size: usize, memory_space: TPUMemorySpace) -> Result<AllocationId> {
+        let pool = self.memory_pools.get_mut(&device_id)
+            .ok_or_else(|| NeuralError::DeviceError(format!("Device {} not found", device_id)))?;
+
+        let allocation_id = AllocationId(self.generate_allocation_id());
+        let block = pool.allocate(size, memory_space)?;
+        
+        let allocation = TPUAllocation {
+            id: allocation_id,
+            device_id,
+            block,
+            allocated_at: Instant::now(),
+            ref_count: Arc::new(Mutex::new(1)),
+        };
+
+        if let Ok(mut allocations) = self.allocations.write() {
+            allocations.insert(allocation_id, allocation);
+        }
+
+        self.update_allocation_stats(size, true);
+        Ok(allocation_id)
+    }
+
+    /// Free memory allocation
+    pub fn free(&mut self, allocation_id: AllocationId) -> Result<()> {
+        let allocation = {
+            if let Ok(mut allocations) = self.allocations.write() {
+                allocations.remove(&allocation_id)
+            } else {
+                return Err(NeuralError::MemoryError("Failed to access allocations".to_string()));
+            }
+        };
+
+        if let Some(allocation) = allocation {
+            let pool = self.memory_pools.get_mut(&allocation.device_id)
+                .ok_or_else(|| NeuralError::DeviceError(format!("Device {} not found", allocation.device_id)))?;
+
+            pool.free(allocation.block)?;
+            self.update_allocation_stats(allocation.block.size, false);
+        }
+
+        Ok(())
+    }
+
+    /// Generate unique allocation ID
+    fn generate_allocation_id(&self) -> u64 {
+        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos() as u64
+    }
+
+    /// Update allocation statistics
+    fn update_allocation_stats(&self, size: usize, allocated: bool) {
+        if let Ok(mut stats) = self.stats.write() {
+            if allocated {
+                stats.total_allocations += 1;
+                stats.active_allocations += 1;
+                stats.current_memory_usage += size;
+                stats.peak_memory_usage = stats.peak_memory_usage.max(stats.current_memory_usage);
+            } else {
+                stats.active_allocations = stats.active_allocations.saturating_sub(1);
+                stats.current_memory_usage = stats.current_memory_usage.saturating_sub(size);
+            }
+        }
+    }
+}
+
+impl TPUMemoryPool {
+    /// Create a new memory pool for device
+    pub fn new(device_id: u32, total_size: usize) -> Result<Self> {
+        let mut free_blocks = VecDeque::new();
+        
+        // Initialize with one large free block
+        free_blocks.push_back(MemoryBlock {
+            offset: 0,
+            size: total_size,
+            memory_space: TPUMemorySpace::HBM,
+            alignment: 128,
+        });
+
+        Ok(Self {
+            device_id,
+            free_blocks,
+            allocated_blocks: HashMap::new(),
+            total_size,
+            allocated_size: 0,
+        })
+    }
+
+    /// Allocate memory block
+    pub fn allocate(&mut self, size: usize, memory_space: TPUMemorySpace) -> Result<MemoryBlock> {
+        // Find suitable free block
+        let mut block_index = None;
+        for (i, block) in self.free_blocks.iter().enumerate() {
+            if block.size >= size && block.memory_space == memory_space {
+                block_index = Some(i);
+                break;
+            }
+        }
+
+        let block_index = block_index.ok_or_else(|| {
+            NeuralError::MemoryError(format!("Insufficient memory: requested {}, available {}", 
+                size, self.total_size - self.allocated_size))
+        })?;
+
+        let mut free_block = self.free_blocks.remove(block_index).unwrap();
+        
+        // Create allocated block
+        let allocated_block = MemoryBlock {
+            offset: free_block.offset,
+            size,
+            memory_space,
+            alignment: free_block.alignment,
+        };
+
+        // Return remaining space to free blocks if any
+        if free_block.size > size {
+            free_block.offset += size;
+            free_block.size -= size;
+            self.free_blocks.push_back(free_block);
+        }
+
+        self.allocated_size += size;
+        Ok(allocated_block)
+    }
+
+    /// Free memory block
+    pub fn free(&mut self, block: MemoryBlock) -> Result<()> {
+        self.allocated_size = self.allocated_size.saturating_sub(block.size);
+        
+        // Add block back to free list
+        self.free_blocks.push_back(block);
+        
+        // TODO: Implement block coalescing for better memory management
+        
+        Ok(())
+    }
+}
+
+impl TPUScheduler {
+    /// Create a new TPU scheduler
+    pub fn new(devices: Vec<TPUDevice>, policy: SchedulingPolicy) -> Result<Self> {
+        Ok(Self {
+            devices,
+            task_queue: Arc::new(Mutex::new(VecDeque::new())),
+            running_tasks: Arc::new(RwLock::new(HashMap::new())),
+            stats: Arc::new(RwLock::new(TPUSchedulingStats::default())),
+            policy,
+        })
+    }
+
+    /// Execute a task (blocking)
+    pub fn execute_task(&self, task: TPUTask) -> Result<TaskResult> {
+        // Select device based on scheduling policy
+        let device_id = self.select_device(&task)?;
+        
+        // Simulate task execution
+        let start_time = Instant::now();
+        
+        // In a real implementation, this would execute the compiled kernel on the TPU
+        let execution_result = self.simulate_task_execution(&task, device_id)?;
+        
+        let execution_time = start_time.elapsed();
+        
+        // Update statistics
+        self.update_task_stats(&task, &execution_result, execution_time);
+        
+        Ok(execution_result)
+    }
+
+    /// Select device for task execution
+    fn select_device(&self, task: &TPUTask) -> Result<u32> {
+        match &self.policy {
+            SchedulingPolicy::LoadBalance => {
+                // Select device with lowest utilization
+                self.devices.iter()
+                    .min_by(|a, b| a.utilization.partial_cmp(&b.utilization).unwrap())
+                    .map(|d| d.device_id)
+                    .ok_or_else(|| NeuralError::DeviceError("No available devices".to_string()))
+            }
+            SchedulingPolicy::RoundRobin => {
+                // Simple round-robin selection
+                let device_index = (task.task_id.0 as usize) % self.devices.len();
+                Ok(self.devices[device_index].device_id)
+            }
+            _ => {
+                // Default to first available device
+                self.devices.first()
+                    .map(|d| d.device_id)
+                    .ok_or_else(|| NeuralError::DeviceError("No available devices".to_string()))
+            }
+        }
+    }
+
+    /// Simulate task execution (placeholder)
+    fn simulate_task_execution(&self, task: &TPUTask, device_id: u32) -> Result<TaskResult> {
+        // Simulate execution time based on kernel estimates
+        let execution_time = Duration::from_micros(task.kernel.metadata.estimated_execution_time_us);
+        
+        // Simulate successful execution
+        let outputs = task.output_shapes.iter().map(|shape| {
+            TPUTensor {
+                data: ndarray::Array::zeros(shape.as_slice()).into_dyn(),
+                spec: TensorSpec {
+                    shape: shape.clone(),
+                    dtype: TPUDataType::F32,
+                    layout: None,
+                },
+                device_id: Some(device_id),
+                allocation_id: None,
+            }
+        }).collect();
+
+        Ok(TaskResult::Success {
+            outputs,
+            execution_time,
+            device_utilization: 0.8, // Simulated utilization
+        })
+    }
+
+    /// Update task execution statistics
+    fn update_task_stats(&self, _task: &TPUTask, result: &TaskResult, execution_time: Duration) {
+        if let Ok(mut stats) = self.stats.write() {
+            stats.total_tasks += 1;
+            
+            match result {
+                TaskResult::Success { .. } => {
+                    stats.completed_tasks += 1;
+                    stats.avg_execution_time_ms = 
+                        (stats.avg_execution_time_ms * (stats.completed_tasks - 1) as f64 + 
+                         execution_time.as_millis() as f64) / stats.completed_tasks as f64;
+                }
+                TaskResult::Error { .. } => stats.failed_tasks += 1,
+                TaskResult::Timeout { .. } => stats.timeout_tasks += 1,
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_tpu_device_creation() {
+        let device = TPUDevice {
+            device_id: 0,
+            device_name: "TPU v4".to_string(),
+            generation: TPUGeneration::V4,
+            num_cores: 4,
+            memory_per_core: 16 * 1024 * 1024 * 1024,
+            peak_tops: 275.0,
+            available: true,
+            utilization: 0.0,
+            temperature: 45.0,
+        };
+
+        assert_eq!(device.device_id, 0);
+        assert_eq!(device.generation, TPUGeneration::V4);
+        assert!(device.available);
+    }
+
+    #[test]
+    fn test_xla_compiler_creation() {
+        let compiler = XLACompiler::new(TPUGeneration::V4);
+        assert!(compiler.is_ok());
+    }
+
+    #[test]
+    fn test_tpu_memory_manager() {
+        let devices = vec![TPUDevice {
+            device_id: 0,
+            device_name: "Test TPU".to_string(),
+            generation: TPUGeneration::V4,
+            num_cores: 1,
+            memory_per_core: 1024 * 1024, // 1MB
+            peak_tops: 100.0,
+            available: true,
+            utilization: 0.0,
+            temperature: 40.0,
+        }];
+
+        let memory_manager = TPUMemoryManager::new(&devices);
+        assert!(memory_manager.is_ok());
+    }
+
+    #[test]
+    fn test_tpu_scheduler() {
+        let devices = vec![TPUDevice {
+            device_id: 0,
+            device_name: "Test TPU".to_string(),
+            generation: TPUGeneration::V4,
+            num_cores: 1,
+            memory_per_core: 1024 * 1024,
+            peak_tops: 100.0,
+            available: true,
+            utilization: 0.0,
+            temperature: 40.0,
+        }];
+
+        let scheduler = TPUScheduler::new(devices, SchedulingPolicy::LoadBalance);
+        assert!(scheduler.is_ok());
+    }
+
+    #[test]
+    fn test_xla_program_creation() {
+        let program = XLAProgram {
+            hlo_text: "HloModule test\nENTRY computation {\n  ROOT result = f32[10] parameter(0)\n}\n".to_string(),
+            input_specs: vec![TensorSpec {
+                shape: vec![10],
+                dtype: TPUDataType::F32,
+                layout: None,
+            }],
+            output_specs: vec![TensorSpec {
+                shape: vec![10],
+                dtype: TPUDataType::F32,
+                layout: None,
+            }],
+            program_id: "test_program".to_string(),
+        };
+
+        assert!(!program.hlo_text.is_empty());
+        assert_eq!(program.input_specs.len(), 1);
+        assert_eq!(program.output_specs.len(), 1);
+    }
+
+    #[test]
+    fn test_tpu_tensor_creation() {
+        let data = ndarray::Array::zeros((2, 3)).into_dyn();
+        let tensor = TPUTensor {
+            data: data.mapv(|_| 1.0f32),
+            spec: TensorSpec {
+                shape: vec![2, 3],
+                dtype: TPUDataType::F32,
+                layout: None,
+            },
+            device_id: Some(0),
+            allocation_id: None,
+        };
+
+        assert_eq!(tensor.spec.shape, vec![2, 3]);
+        assert_eq!(tensor.spec.dtype, TPUDataType::F32);
+        assert_eq!(tensor.device_id, Some(0));
+    }
+
+    #[test]
+    fn test_tpu_operation_matmul() {
+        let operation: TPUOperation<f32> = TPUOperation::MatMul {
+            transpose_a: false,
+            transpose_b: true,
+            _phantom: std::marker::PhantomData,
+        };
+
+        match operation {
+            TPUOperation::MatMul { transpose_a, transpose_b, .. } => {
+                assert!(!transpose_a);
+                assert!(transpose_b);
+            }
+            _ => panic!("Expected MatMul operation"),
+        }
+    }
+
+    #[test]
+    fn test_memory_pool_allocation() {
+        let mut pool = TPUMemoryPool::new(0, 1024 * 1024).unwrap(); // 1MB pool
+        
+        let block = pool.allocate(1024, TPUMemorySpace::HBM);
+        assert!(block.is_ok());
+        
+        let allocated_block = block.unwrap();
+        assert_eq!(allocated_block.size, 1024);
+        assert_eq!(allocated_block.memory_space, TPUMemorySpace::HBM);
+    }
+
+    #[test]
+    fn test_tpu_generation_comparison() {
+        assert_eq!(TPUGeneration::V4, TPUGeneration::V4);
+        assert_ne!(TPUGeneration::V3, TPUGeneration::V4);
+        
+        let custom = TPUGeneration::Custom("test".to_string());
+        match custom {
+            TPUGeneration::Custom(name) => assert_eq!(name, "test"),
+            _ => panic!("Expected custom generation"),
+        }
+    }
+}

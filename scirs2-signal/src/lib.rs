@@ -69,8 +69,11 @@ pub mod czt;
 pub mod deconvolution;
 pub mod denoise;
 pub mod denoise_advanced;
+pub mod denoise_cutting_edge;
 pub mod denoise_enhanced;
 pub mod denoise_ultra_advanced;
+pub mod denoise_unified;
+pub mod denoise_adaptive_ultra;
 pub mod detrend;
 pub mod dwt;
 pub mod dwt2d;
@@ -103,6 +106,8 @@ pub mod lombscargle_enhanced_validation;
 pub mod lombscargle_simd;
 pub mod lombscargle_ultra_validation;
 pub mod lombscargle_validation;
+pub mod lombscargle_enhanced_validation_improvements;
+pub mod lombscargle_scipy_validation;
 pub mod lti;
 pub mod lti_analysis_enhanced;
 pub mod lti_response;
@@ -144,7 +149,10 @@ pub mod sysid_advanced;
 pub mod sysid_enhanced;
 pub mod sysid_robust_enhancements;
 pub mod sysid_ultra_enhanced;
+pub mod scipy_validation;
 pub mod tv;
+pub mod validation_runner;
+pub mod integration_tests;
 pub mod waveforms;
 pub mod wavelet_vis;
 pub mod wavelets;
@@ -460,6 +468,12 @@ pub use sysid_robust_enhancements::{
 pub use sswt::{
     extract_ridges, frequency_bins, log_scales, reconstruct_from_ridge, synchrosqueezed_cwt,
     SynchroCwtConfig, SynchroCwtResult,
+};
+
+// SciPy numerical validation functions
+pub use scipy_validation::{
+    generate_validation_report, load_reference_data, validate_all, ValidationConfig,
+    ValidationResults, ValidationSummary, ValidationTestResult,
 };
 
 #[cfg(test)]

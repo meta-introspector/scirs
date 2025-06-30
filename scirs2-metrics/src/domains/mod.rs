@@ -13,6 +13,10 @@
 //! - **Anomaly Detection**: Detection accuracy, false alarm rates, distribution metrics
 //! - **Audio Processing**: Speech recognition, music analysis, sound event detection metrics
 //! - **Graph Neural Networks**: Node/edge/graph classification, community detection, graph generation metrics
+//! - **Biomedical & Healthcare**: Clinical trials, drug discovery, medical imaging, genomics, epidemiology metrics
+//! - **Financial Modeling**: Risk management, portfolio optimization, credit risk, trading strategy evaluation metrics
+//! - **Quantum Machine Learning**: Quantum fidelity, entanglement, circuit complexity, quantum advantage metrics
+//! - **Edge AI & Federated Learning**: Edge performance, privacy preservation, federated learning convergence metrics
 //!
 //! # Examples
 //!
@@ -69,10 +73,14 @@ use std::collections::HashMap;
 
 pub mod anomaly_detection;
 pub mod audio_processing;
+pub mod biomedical;
 pub mod computer_vision;
+pub mod edge_ai;
+pub mod financial;
 pub mod generative_ai;
 pub mod graph_neural_networks;
 pub mod nlp;
+pub mod quantum_ml;
 pub mod recommender;
 pub mod time_series;
 
@@ -195,6 +203,10 @@ pub struct DomainSuite {
     gen_ai_metrics: generative_ai::GenerativeAISuite<f64>,
     audio_metrics: audio_processing::AudioProcessingMetrics,
     gnn_metrics: graph_neural_networks::GraphNeuralNetworkMetrics,
+    biomedical_metrics: biomedical::BiomedicalSuite,
+    financial_metrics: financial::FinancialSuite,
+    quantum_ml_metrics: quantum_ml::QuantumMLSuite,
+    edge_ai_metrics: edge_ai::EdgeAISuite,
 }
 
 impl DomainSuite {
@@ -209,6 +221,10 @@ impl DomainSuite {
             gen_ai_metrics: generative_ai::GenerativeAISuite::new(),
             audio_metrics: audio_processing::AudioProcessingMetrics::new(),
             gnn_metrics: graph_neural_networks::GraphNeuralNetworkMetrics::new(),
+            biomedical_metrics: biomedical::BiomedicalSuite::new(),
+            financial_metrics: financial::FinancialSuite::new(),
+            quantum_ml_metrics: quantum_ml::QuantumMLSuite::new(),
+            edge_ai_metrics: edge_ai::EdgeAISuite::new(),
         }
     }
 
@@ -252,6 +268,26 @@ impl DomainSuite {
         &self.gnn_metrics
     }
 
+    /// Get biomedical and healthcare metrics
+    pub fn biomedical(&self) -> &biomedical::BiomedicalSuite {
+        &self.biomedical_metrics
+    }
+
+    /// Get financial modeling metrics
+    pub fn financial(&self) -> &financial::FinancialSuite {
+        &self.financial_metrics
+    }
+
+    /// Get quantum machine learning metrics
+    pub fn quantum_ml(&self) -> &quantum_ml::QuantumMLSuite {
+        &self.quantum_ml_metrics
+    }
+
+    /// Get edge AI and federated learning metrics
+    pub fn edge_ai(&self) -> &edge_ai::EdgeAISuite {
+        &self.edge_ai_metrics
+    }
+
     /// List all available domains
     pub fn available_domains(&self) -> Vec<&'static str> {
         vec![
@@ -263,6 +299,10 @@ impl DomainSuite {
             self.gen_ai_metrics.domain_name(),
             self.audio_metrics.domain_name(),
             self.gnn_metrics.domain_name(),
+            self.biomedical_metrics.domain_name(),
+            self.financial_metrics.domain_name(),
+            self.quantum_ml_metrics.domain_name(),
+            self.edge_ai_metrics.domain_name(),
         ]
     }
 }
@@ -304,7 +344,7 @@ mod tests {
         let suite = create_domain_suite();
         let domains = suite.available_domains();
 
-        assert_eq!(domains.len(), 8);
+        assert_eq!(domains.len(), 12);
         assert!(domains.contains(&"Computer Vision"));
         assert!(domains.contains(&"Natural Language Processing"));
         assert!(domains.contains(&"Time Series"));
@@ -313,5 +353,9 @@ mod tests {
         assert!(domains.contains(&"Generative AI & Deep Learning"));
         assert!(domains.contains(&"Audio Processing"));
         assert!(domains.contains(&"Graph Neural Networks"));
+        assert!(domains.contains(&"Biomedical & Healthcare"));
+        assert!(domains.contains(&"Financial Modeling & Quantitative Finance"));
+        assert!(domains.contains(&"Quantum Machine Learning"));
+        assert!(domains.contains(&"Edge AI & Federated Learning"));
     }
 }

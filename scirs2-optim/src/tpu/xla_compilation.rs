@@ -7,6 +7,7 @@
 use ndarray::{s, Array, Array1, Array2, Array3, ArrayBase, Axis, Data, DataMut, Dimension};
 use num_traits::Float;
 use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
+use std::marker::PhantomData;
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant};
 
@@ -1912,6 +1913,7 @@ pub struct FeatureExtractor<T: Float> {
     pub name: String,
     pub extractor_type: FeatureExtractorType,
     pub configuration: ExtractorConfiguration,
+    _phantom: PhantomData<T>,
 }
 
 /// Feature extractor types
@@ -2047,6 +2049,8 @@ pub struct MemoryPlanner<T: Float> {
 
     /// Optimization objectives
     objectives: Vec<OptimizationObjective>,
+
+    _phantom: PhantomData<T>,
 }
 
 /// Planning algorithms
@@ -2291,6 +2295,7 @@ pub struct LoadBalancer<T: Float> {
     pub balancing_strategy: BalancingStrategy,
     pub work_stealing: WorkStealingConfig,
     pub load_monitor: LoadMonitor,
+    _phantom: PhantomData<T>,
 }
 
 /// Load balancing strategies
@@ -2427,6 +2432,8 @@ pub struct UnificationState<T: Float> {
 
     /// Type variables
     type_variables: HashSet<OperandId>,
+
+    _phantom: PhantomData<T>,
 }
 
 /// Constraint solver
@@ -2484,6 +2491,8 @@ pub struct ShapeAnalyzer<T: Float> {
 
     /// Shape propagation engine
     propagation_engine: ShapePropagationEngine<T>,
+
+    _phantom: PhantomData<T>,
 }
 
 /// Shape inference rule
@@ -2515,6 +2524,8 @@ pub struct ShapePropagationEngine<T: Float> {
 
     /// Propagation statistics
     statistics: PropagationStatistics,
+
+    _phantom: PhantomData<T>,
 }
 
 /// Propagation statistics
@@ -2574,6 +2585,7 @@ pub struct FoldingRule<T: Float> {
     pub operation_type: OperationType,
     pub folder_function: String, // Function identifier
     pub applicability: FoldingApplicability,
+    _phantom: PhantomData<T>,
 }
 
 /// Folding applicability
@@ -2887,6 +2899,8 @@ pub struct TensorCoreOptimizer<T: Float> {
 
     /// Tile size optimizer
     tile_size_optimizer: TileSizeOptimizer<T>,
+
+    _phantom: PhantomData<T>,
 }
 
 /// Matrix size thresholds for optimal tensor core utilization
@@ -2908,6 +2922,8 @@ pub struct TileSizeOptimizer<T: Float> {
 
     /// Performance model
     performance_model: TilePerformanceModel<T>,
+
+    _phantom: PhantomData<T>,
 }
 
 /// Tile key for caching
@@ -2938,6 +2954,8 @@ pub struct TilePerformanceModel<T: Float> {
 
     /// Benchmark data
     benchmark_data: BenchmarkData<T>,
+
+    _phantom: PhantomData<T>,
 }
 
 /// TPU hardware parameters
@@ -2970,6 +2988,8 @@ pub struct BenchmarkData<T: Float> {
 
     /// Measurement quality
     measurement_quality: MeasurementQuality,
+
+    _phantom: PhantomData<T>,
 }
 
 /// Benchmark key

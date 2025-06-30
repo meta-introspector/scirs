@@ -145,6 +145,51 @@ where
         }
     }
 
+    /// Merge with another accumulator for parallel streaming
+    pub fn merge(&mut self, other: &StreamingStatsAccumulator<F>) {
+        if other.count == 0 {
+            return;
+        }
+        if self.count == 0 {
+            *self = other.clone();
+            return;
+        }
+
+        let combined_count = self.count + other.count;
+        let n1 = F::from(self.count).unwrap();
+        let n2 = F::from(other.count).unwrap();
+        let n = F::from(combined_count).unwrap();
+
+        let delta = other.mean - self.mean;
+        let combined_mean = (n1 * self.mean + n2 * other.mean) / n;
+
+        // Combine M2 (variance)
+        let combined_m2 = self.m2 + other.m2 + delta * delta * n1 * n2 / n;
+
+        // Combine M3 (skewness) 
+        let combined_m3 = self.m3 + other.m3
+            + delta * delta * delta * n1 * n2 * (n1 - n2) / (n * n)
+            + F::from(3).unwrap() * delta * (n1 * other.m2 - n2 * self.m2) / n;
+
+        // Combine M4 (kurtosis)
+        let delta2 = delta * delta;
+        let delta3 = delta2 * delta;
+        let delta4 = delta3 * delta;
+        let combined_m4 = self.m4 + other.m4
+            + delta4 * n1 * n2 * (n1 * n1 - n1 * n2 + n2 * n2) / (n * n * n)
+            + F::from(6).unwrap() * delta2 * (n1 * n1 * other.m2 + n2 * n2 * self.m2) / (n * n)
+            + F::from(4).unwrap() * delta * (n1 * other.m3 - n2 * self.m3) / n;
+
+        self.count = combined_count;
+        self.mean = combined_mean;
+        self.m2 = combined_m2;
+        self.m3 = combined_m3;
+        self.m4 = combined_m4;
+        self.sum = self.sum + other.sum;
+        self.min_value = self.min_value.min(other.min_value);
+        self.max_value = self.max_value.max(other.max_value);
+    }
+
     /// Get current mean
     pub fn mean(&self) -> F {
         self.mean

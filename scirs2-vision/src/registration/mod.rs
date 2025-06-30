@@ -229,7 +229,8 @@ pub fn ransac_estimate_transform(
 
     use rand::prelude::*;
     use rand::rngs::StdRng;
-    let mut rng = StdRng::from_entropy();
+    let mut base_rng = rand::rng();
+    let mut rng = StdRng::from_rng(&mut base_rng);
 
     for _iteration in 0..params.ransac_iterations {
         // Sample minimum required points

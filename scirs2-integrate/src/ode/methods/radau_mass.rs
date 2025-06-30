@@ -399,30 +399,24 @@ where
                     match mass_mat {
                         Some(m) => {
                             // CORRECTED Newton system for mass matrix DAEs:
-                            // For the system M(t,k) * k' = f(t,k) and k = y + h * sum(a_ij * k'_j)
-                            // The Newton correction dk should satisfy:
-                            // dk = h * a_ii * dk'  (stage coupling approximation)
-                            // M * dk' + (∂M/∂k * k') * dk = J * dk
-                            // 
-                            // Substituting dk = h * a_ii * dk':
-                            // M * dk' + h * a_ii * (∂M/∂k * k') * dk' = h * a_ii * J * dk'
-                            // [M + h * a_ii * (∂M/∂k * k' - J)] * dk' = rhs
-                            // 
-                            // For numerical stability, we approximate ∂M/∂k ≈ 0 for most cases
-                            // This gives us: [M - h * a_ii * J] * dk' = -residual/(h * a_ii)
-                            // And then: dk = h * a_ii * dk'
+                            // For the Radau method with mass matrix M(t,y) * y' = f(t,y)
+                            // The Newton correction dk for stage k should satisfy:
+                            // (M - h * a_ii * ∂f/∂y) * dk = -residual
+                            //
+                            // This is the standard form for implicit RK methods with mass matrices
+                            // where ∂f/∂y is the Jacobian of the right-hand side function f
 
                             let mut newton_matrix = m.clone();
 
-                            // Subtract h*a_ii*J from M (corrected sign and interpretation)
+                            // Construct (M - h * a_ii * J) where J = ∂f/∂y
                             for i in 0..n_dim {
                                 for j in 0..n_dim {
                                     newton_matrix[[i, j]] -= h * a_coeff * jacobian[[i, j]];
                                 }
                             }
 
-                            // The RHS is -residual/(h * a_ii) to get dk'
-                            let rhs = residual / (-h * a_coeff);
+                            // The RHS is -residual (standard Newton method)
+                            let rhs = residual * (-F::one());
 
                             // Solve with iterative improvement for better numerical stability
                             let solve_with_conditioning =
@@ -465,10 +459,10 @@ where
                                 };
 
                             match solve_with_conditioning(&newton_matrix, &rhs) {
-                                Ok(dk_prime) => {
-                                    // Convert dk' back to dk = h * a_ii * dk'
-                                    Ok(&dk_prime * (h * a_coeff))
-                                },
+                                Ok(dk) => {
+                                    // dk is the direct Newton correction to the stage value
+                                    Ok(dk)
+                                }
                                 Err(_) => {
                                     // Apply Tikhonov regularization for better conditioning
                                     let mut regularized = newton_matrix.clone();
@@ -478,9 +472,8 @@ where
                                         regularized[[i, i]] += reg_param;
                                     }
 
-                                    match solve_linear_system(&regularized.view(), &rhs.view())
-                                    {
-                                        Ok(dk_prime) => Ok(&dk_prime * (h * a_coeff)),
+                                    match solve_linear_system(&regularized.view(), &rhs.view()) {
+                                        Ok(dk) => Ok(dk),
                                         Err(_) => {
                                             // Last resort: stronger regularization
                                             let strong_reg = F::from_f64(1e-8).unwrap() * h;
@@ -491,7 +484,7 @@ where
                                                 &regularized.view(),
                                                 &rhs.view(),
                                             ) {
-                                                Ok(dk_prime) => Ok(&dk_prime * (h * a_coeff)),
+                                                Ok(dk) => Ok(dk),
                                                 Err(e) => Err(e),
                                             }
                                         }

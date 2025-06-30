@@ -291,13 +291,13 @@ impl ExternalClient {
                     .map_err(|e| DatasetsError::FormatError(format!("Invalid UTF-8: {}", e)))?;
 
                 // Write to temporary file for CSV parsing
-                let temp_file = tempfile::NamedTempFile::new()
-                    .map_err(|e| DatasetsError::IoError(e.to_string()))?;
+                let temp_file =
+                    tempfile::NamedTempFile::new().map_err(|e| DatasetsError::IoError(e))?;
 
                 std::fs::write(temp_file.path(), &csv_data)
-                    .map_err(|e| DatasetsError::IoError(e.to_string()))?;
+                    .map_err(|e| DatasetsError::IoError(e))?;
 
-                load_csv(temp_file.path(), &CsvConfig::default())
+                load_csv(temp_file.path(), CsvConfig::default())
             }
             Some("json") => {
                 // Try JSON parsing
@@ -322,7 +322,7 @@ impl ExternalClient {
         let content = String::from_utf8(data.to_vec())
             .map_err(|e| DatasetsError::FormatError(format!("Invalid UTF-8: {}", e)))?;
 
-        let mut lines = content.lines();
+        let lines = content.lines();
         let mut attributes = Vec::new();
         let mut data_section = false;
         let mut data_lines = Vec::new();
@@ -408,7 +408,9 @@ impl ExternalClient {
             target,
             feature_names: Some(attributes[..data_cols].to_vec()),
             target_names: None,
+            feature_descriptions: None,
             description: Some("ARFF dataset loaded from external source".to_string()),
+            metadata: std::collections::HashMap::new(),
         })
     }
 

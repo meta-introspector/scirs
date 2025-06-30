@@ -26,6 +26,7 @@ rand_distr = { workspace = true }
 
 # Optional dependencies for features
 pyo3 = { workspace = true, optional = true }
+numpy = { workspace = true, optional = true }
 
 [dev-dependencies]
 approx = { workspace = true }
@@ -52,7 +53,7 @@ simd = ["scirs2-core/simd"]
 parallel = ["scirs2-core/parallel"]
 
 # Enable scipy comparison benchmarks (requires Python with scipy/numpy)
-scipy-comparison = ["pyo3"]
+scipy-comparison = ["pyo3", "numpy"]
 
 [[bench]]
 name = "basic_interpolation"

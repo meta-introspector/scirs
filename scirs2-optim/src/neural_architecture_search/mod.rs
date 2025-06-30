@@ -5,12 +5,9 @@
 //! Instead of designing neural networks, this NAS framework designs optimizers.
 
 use crate::error::OptimizerError;
-use crate::optimizers::Optimizer;
-use ndarray::{Array1, Array2, ArrayBase, Data, DataMut, Dimension};
 use num_traits::Float;
-use std::collections::{HashMap, VecDeque, BTreeMap};
+use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
-use std::sync::{Arc, Mutex, RwLock};
 
 pub mod architecture_space;
 pub mod search_strategies;
@@ -22,7 +19,7 @@ pub mod automated_hyperparameter_optimization;
 
 // Re-export key types
 pub use architecture_space::{
-    OptimizerArchitecture, OptimizerComponent, ArchitectureSpace,
+    OptimizerArchitecture, OptimizerComponent, 
     ComponentType, ConnectionPattern, SearchSpace
 };
 pub use search_strategies::{
@@ -30,10 +27,10 @@ pub use search_strategies::{
     DifferentiableSearch, BayesianOptimization
 };
 pub use performance_evaluation::{
-    PerformanceEvaluator, EvaluationMetrics, BenchmarkSuite, PerformancePredictor
+    PerformanceEvaluator, BenchmarkSuite, PerformancePredictor
 };
 pub use multi_objective::{
-    MultiObjectiveOptimizer, ObjectiveFunction, ParetoFront, 
+    MultiObjectiveOptimizer, ParetoFront, 
     NSGA2, MOEADOptimizer, WeightedSum
 };
 pub use controllers::{
@@ -512,8 +509,8 @@ pub enum ProblemType {
     Clustering,
     DimensionalityReduction,
     FeatureSelection,
-    Anomaly Detection,
-    Reinforcement Learning,
+    AnomalyDetection,
+    ReinforcementLearning,
 }
 
 /// Dataset size categories
@@ -1673,7 +1670,7 @@ impl<T: Float> NeuralArchitectureSearch<T> {
     fn create_multi_objective_optimizer(config: &MultiObjectiveConfig<T>) -> Result<Box<dyn MultiObjectiveOptimizer<T>>, OptimizerError> {
         match config.algorithm {
             MultiObjectiveAlgorithm::NSGA2 => {
-                Ok(Box::new(multi_objective::NSGA2Optimizer::new(
+                Ok(Box::new(multi_objective::NSGA2::new(
                     config.pareto_front_size,
                     config.diversity_strategy,
                 )?))
@@ -1685,13 +1682,13 @@ impl<T: Float> NeuralArchitectureSearch<T> {
                 )?))
             },
             MultiObjectiveAlgorithm::WeightedSum => {
-                Ok(Box::new(multi_objective::WeightedSumOptimizer::new(
+                Ok(Box::new(multi_objective::WeightedSum::new(
                     &config.objectives,
                 )?))
             },
             _ => {
                 // Default to NSGA2
-                Ok(Box::new(multi_objective::NSGA2Optimizer::new(
+                Ok(Box::new(multi_objective::NSGA2::new(
                     config.pareto_front_size,
                     config.diversity_strategy,
                 )?))

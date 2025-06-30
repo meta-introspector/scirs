@@ -246,7 +246,7 @@ use std::fmt::Debug;
 /// # Ok(())
 /// # }
 /// ```
-pub trait Layer<F: Float + Debug + ScalarOperand> {
+pub trait Layer<F: Float + Debug + ScalarOperand>: Send + Sync {
     /// Forward pass of the layer
     ///
     /// Computes the output of the layer given an input tensor. This method
@@ -482,7 +482,7 @@ pub trait ParamLayer<F: Float + Debug + ScalarOperand>: Layer<F> {
 }
 
 mod attention;
-mod conv;
+pub mod conv;
 pub mod dense;
 mod dropout;
 mod embedding;

@@ -107,6 +107,7 @@ pub mod sample;
 pub mod streaming;
 pub mod time_series;
 pub mod toy;
+pub mod ultra_gpu_optimization;
 /// Core utilities for working with datasets
 ///
 /// This module provides the Dataset struct and helper functions for
@@ -122,7 +123,14 @@ pub mod stability;
 // Temporary module to test method resolution conflict
 mod method_resolution_test;
 
+pub mod adaptive_streaming_engine;
+
 // Re-export commonly used functionality
+pub use adaptive_streaming_engine::{
+    create_adaptive_engine, create_adaptive_engine_with_config, AdaptiveStreamingEngine,
+    AlertSeverity, AlertType, DataCharacteristics, MemoryStrategy, PatternType, PerformanceMetrics,
+    QualityAlert, QualityMetrics, StreamChunk, StreamConfig, TrendDirection, TrendIndicators,
+};
 pub use advanced_generators::{
     make_adversarial_examples, make_anomaly_dataset, make_continual_learning_dataset,
     make_domain_adaptation_dataset, make_few_shot_dataset, make_multitask_dataset,
@@ -152,10 +160,10 @@ pub use explore::{
     DatasetExplorer, DatasetSummary, ExploreConfig, FeatureStatistics, InferredDataType,
     OutputFormat, QualityAssessment,
 };
+#[cfg(not(feature = "download"))]
+pub use external::convenience::{load_github_dataset_sync, load_uci_dataset_sync};
 pub use external::{
-    convenience::{
-        list_uci_datasets, load_from_url_sync, load_github_dataset_sync, load_uci_dataset_sync,
-    },
+    convenience::{list_uci_datasets, load_from_url_sync},
     repositories::{GitHubRepository, KaggleRepository, UCIRepository},
     ExternalClient, ExternalConfig, ProgressCallback,
 };
@@ -200,10 +208,16 @@ pub use streaming::{
     StreamStats, StreamTransformer, StreamingIterator,
 };
 pub use toy::*;
+pub use ultra_gpu_optimization::{
+    benchmark_ultra_performance, generate_ultra_matrix, BenchmarkResult, DataLayout,
+    LoadBalancingMethod, MemoryAccessPattern, PerformanceBenchmarkResults, SpecializationLevel,
+    UltraGpuOptimizer, UltraKernelConfig, VectorizationStrategy,
+};
 pub use utils::{
-    create_balanced_dataset, create_binned_features, generate_synthetic_samples, importance_sample,
-    k_fold_split, min_max_scale, polynomial_features, random_oversample, random_sample,
+    analyze_dataset_ultra, create_balanced_dataset, create_binned_features,
+    generate_synthetic_samples, importance_sample, k_fold_split, min_max_scale,
+    polynomial_features, quick_quality_assessment, random_oversample, random_sample,
     random_undersample, robust_scale, statistical_features, stratified_k_fold_split,
-    stratified_sample, time_series_split, BalancingStrategy, BinningStrategy, CrossValidationFolds,
-    Dataset,
+    stratified_sample, time_series_split, BalancingStrategy, BinningStrategy, CorrelationInsights,
+    CrossValidationFolds, Dataset, NormalityAssessment, UltraDatasetAnalyzer, UltraQualityMetrics,
 };

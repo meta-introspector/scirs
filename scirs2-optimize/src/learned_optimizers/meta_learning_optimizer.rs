@@ -50,11 +50,12 @@ pub struct MetaLearningStats {
 impl MetaLearningOptimizer {
     /// Create new meta-learning optimizer
     pub fn new(config: LearnedOptimizationConfig) -> Self {
+        let hidden_size = config.hidden_size;
         Self {
             config,
             meta_state: MetaOptimizerState {
-                meta_params: Array1::zeros(config.hidden_size),
-                network_weights: Array2::zeros((config.hidden_size, config.hidden_size)),
+                meta_params: Array1::zeros(hidden_size),
+                network_weights: Array2::zeros((hidden_size, hidden_size)),
                 performance_history: Vec::new(),
                 adaptation_stats: super::AdaptationStatistics::default(),
                 episode: 0,

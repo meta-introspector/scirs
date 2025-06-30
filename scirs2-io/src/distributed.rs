@@ -32,6 +32,9 @@
 //! # Ok::<(), scirs2_io::error::IoError>(())
 //! ```
 
+#![allow(dead_code)]
+#![allow(missing_docs)]
+
 use crate::error::{IoError, Result};
 use crate::thread_pool::ThreadPool;
 use ndarray::Array2;
@@ -728,7 +731,8 @@ mod tests {
 
     #[test]
     fn test_partition_strategies() {
-        let temp_file = TempDir::new().unwrap().path().join("test.dat");
+        let temp_dir = TempDir::new().unwrap();
+        let temp_file = temp_dir.path().join("test.dat");
         std::fs::write(&temp_file, vec![0u8; 10000]).unwrap();
 
         let reader =
@@ -739,7 +743,7 @@ mod tests {
         let partitions = reader.create_partitions().unwrap();
         assert_eq!(partitions.len(), 10);
 
-        for (offset, size) in &partitions {
+        for (_offset, size) in &partitions {
             assert_eq!(*size, 1000);
         }
     }

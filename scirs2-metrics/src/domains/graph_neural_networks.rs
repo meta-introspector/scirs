@@ -841,10 +841,12 @@ impl GraphNeuralNetworkMetrics {
             negative_edges,
         )?;
 
-        let link_prediction_auc = crate::classification::roc_auc_score(&y_true, &y_scores, None)?;
+        // Convert y_true from i32 to u32 for roc_auc_score compatibility
+        let y_true_u32: Array1<u32> = y_true.mapv(|x| x as u32);
+        let link_prediction_auc = crate::classification::roc_auc_score(&y_true_u32, &y_scores)?;
 
         // Calculate average precision manually since average_precision_score doesn't exist in this form
-        let average_precision = self.calculate_average_precision(&y_true, &y_scores)?;
+        let average_precision = self.calculate_average_precision(&y_true.view(), &y_scores.view())?;
 
         // Calculate MRR and Hits@K
         let mrr = self
@@ -909,7 +911,7 @@ impl GraphNeuralNetworkMetrics {
         graph_features: Option<&ArrayView2<F>>,
     ) -> Result<GraphLevelResults>
     where
-        F: Float,
+        F: Float + num_traits::NumCast + std::fmt::Debug,
     {
         // Calculate regression RMSE
         let mse = crate::regression::mean_squared_error(y_true, y_pred)?;
@@ -967,7 +969,7 @@ impl GraphNeuralNetworkMetrics {
         admet_predictions: Option<(&ArrayView1<i32>, &ArrayView1<i32>)>,
     ) -> Result<MolecularGraphResults>
     where
-        F: Float,
+        F: Float + num_traits::NumCast + std::fmt::Debug,
     {
         // Calculate property prediction RMSE
         let mse = crate::regression::mean_squared_error(y_true, y_pred)?;
@@ -997,9 +999,9 @@ impl GraphNeuralNetworkMetrics {
     }
 
     /// Calculate precision, recall, and F1 score manually
-    fn calculate_precision_recall_f1<T>(&self, y_true: &Array1<T>, y_pred: &Array1<T>) -> Result<(Vec<f64>, Vec<f64>, Vec<f64>)>
+    fn calculate_precision_recall_f1<T>(&self, y_true: &ArrayView1<T>, y_pred: &ArrayView1<T>) -> Result<(Vec<f64>, Vec<f64>, Vec<f64>)>
     where
-        T: PartialEq + Clone + std::hash::Hash + std::fmt::Debug,
+        T: PartialEq + Eq + Clone + std::hash::Hash + std::fmt::Debug,
     {
         // Get unique classes
         let mut classes = std::collections::HashSet::new();
@@ -1040,7 +1042,7 @@ impl GraphNeuralNetworkMetrics {
     }
     
     /// Calculate average precision manually
-    fn calculate_average_precision(&self, y_true: &Array1<i32>, y_scores: &Array1<f64>) -> Result<f64> {
+    fn calculate_average_precision(&self, y_true: &ArrayView1<i32>, y_scores: &ArrayView1<f64>) -> Result<f64> {
         // Create pairs of scores and labels, then sort by score (descending)
         let mut score_label_pairs: Vec<(f64, i32)> = y_scores.iter()
             .zip(y_true.iter())
@@ -1907,53 +1909,339 @@ impl MolecularGraphMetrics {
         }
     }
 
+    /// Comprehensive chemical validity calculation for molecular graphs
+    /// 
+    /// This function evaluates the chemical validity of molecular structures based on:
+    /// - Valence and bonding rules
+    /// - Chemical stability indicators
+    /// - Drug-likeness criteria (Lipinski's Rule of Five)
+    /// - ADMET properties compatibility
+    /// - Synthetic accessibility assessment
     fn calculate_chemical_validity<F>(&self, descriptors: Option<&ArrayView2<F>>) -> Result<f64>
     where
         F: Float,
     {
-        // Simplified chemical validity calculation
-        Ok(0.95) // Placeholder
+        if let Some(desc) = descriptors {
+            if desc.is_empty() {
+                return Ok(0.0);
+            }
+            
+            let mut validity_scores = Vec::new();
+            
+            // Process each molecular structure (rows are molecules, columns are descriptors)
+            for molecule in desc.axis_iter(ndarray::Axis(0)) {
+                let molecule_validity = self.validate_single_molecule(&molecule)?;
+                validity_scores.push(molecule_validity);
+            }
+            
+            // Return average validity across all molecules
+            if validity_scores.is_empty() {
+                Ok(0.0)
+            } else {
+                let sum: f64 = validity_scores.iter().sum();
+                Ok(sum / validity_scores.len() as f64)
+            }
+        } else {
+            // Without descriptors, use basic heuristic based on other metrics
+            let base_validity = 0.85; // Conservative base score
+            
+            // Adjust based on available drug discovery metrics
+            let toxicity_penalty = if self.drug_discovery.toxicity_metrics.overall_toxicity_f1 < 0.5 {
+                0.15
+            } else {
+                0.0
+            };
+            
+            let admet_bonus = if self.drug_discovery.admet_accuracy.values().any(|&acc| acc > 0.8) {
+                0.10
+            } else {
+                0.0
+            };
+            
+            let synthetic_penalty = if self.drug_discovery.synthetic_accessibility < 0.5 {
+                0.20
+            } else {
+                0.0
+            };
+            
+            let adjusted_validity = base_validity + admet_bonus - toxicity_penalty - synthetic_penalty;
+            Ok(adjusted_validity.max(0.0).min(1.0))
+        }
+    }
+    
+    /// Validate a single molecular structure based on chemical rules
+    fn validate_single_molecule<F>(&self, descriptors: &ArrayView1<F>) -> Result<f64>
+    where
+        F: Float,
+    {
+        if descriptors.is_empty() {
+            return Ok(0.0);
+        }
+        
+        let mut validity_checks = Vec::new();
+        
+        // 1. Lipinski's Rule of Five for drug-likeness
+        let lipinski_score = self.check_lipinski_rules(descriptors)?;
+        validity_checks.push(("lipinski", lipinski_score, 0.25)); // 25% weight
+        
+        // 2. Valence and bonding validity
+        let valence_score = self.check_valence_rules(descriptors)?;
+        validity_checks.push(("valence", valence_score, 0.30)); // 30% weight
+        
+        // 3. Chemical stability indicators
+        let stability_score = self.check_chemical_stability(descriptors)?;
+        validity_checks.push(("stability", stability_score, 0.20)); // 20% weight
+        
+        // 4. Synthetic accessibility
+        let synthesis_score = self.check_synthetic_accessibility(descriptors)?;
+        validity_checks.push(("synthesis", synthesis_score, 0.15)); // 15% weight
+        
+        // 5. ADMET compatibility
+        let admet_score = self.check_admet_compatibility(descriptors)?;
+        validity_checks.push(("admet", admet_score, 0.10)); // 10% weight
+        
+        // Calculate weighted average
+        let total_weight: f64 = validity_checks.iter().map(|(_, _, w)| w).sum();
+        let weighted_sum: f64 = validity_checks.iter().map(|(_, score, weight)| score * weight).sum();
+        
+        if total_weight > 0.0 {
+            Ok(weighted_sum / total_weight)
+        } else {
+            Ok(0.0)
+        }
+    }
+    
+    /// Check Lipinski's Rule of Five for drug-likeness
+    fn check_lipinski_rules<F>(&self, descriptors: &ArrayView1<F>) -> Result<f64>
+    where
+        F: Float,
+    {
+        // Assume descriptors contain: [molecular_weight, logp, h_bond_donors, h_bond_acceptors, ...]
+        let n_desc = descriptors.len();
+        if n_desc < 4 {
+            return Ok(0.5); // Neutral score if insufficient data
+        }
+        
+        let molecular_weight = descriptors[0].to_f64().unwrap_or(500.0);
+        let logp = descriptors[1].to_f64().unwrap_or(5.0);
+        let h_donors = descriptors[2].to_f64().unwrap_or(5.0);
+        let h_acceptors = descriptors[3].to_f64().unwrap_or(10.0);
+        
+        let mut violations = 0;
+        
+        // Rule 1: Molecular weight ≤ 500 Da
+        if molecular_weight > 500.0 {
+            violations += 1;
+        }
+        
+        // Rule 2: LogP ≤ 5
+        if logp > 5.0 {
+            violations += 1;
+        }
+        
+        // Rule 3: Hydrogen bond donors ≤ 5
+        if h_donors > 5.0 {
+            violations += 1;
+        }
+        
+        // Rule 4: Hydrogen bond acceptors ≤ 10
+        if h_acceptors > 10.0 {
+            violations += 1;
+        }
+        
+        // Score: 1.0 for no violations, decreasing with violations
+        Ok(match violations {
+            0 => 1.0,
+            1 => 0.8,
+            2 => 0.6,
+            3 => 0.4,
+            4 => 0.2,
+            _ => 0.0,
+        })
+    }
+    
+    /// Check valence and bonding rules
+    fn check_valence_rules<F>(&self, descriptors: &ArrayView1<F>) -> Result<f64>
+    where
+        F: Float,
+    {
+        // Simplified valence check based on molecular descriptors
+        // In a real implementation, this would analyze the molecular graph structure
+        
+        let n_desc = descriptors.len();
+        if n_desc < 6 {
+            return Ok(0.7); // Conservative score for insufficient data
+        }
+        
+        // Assume descriptors include: [..., n_carbons, n_nitrogens, n_oxygens, n_sulfurs, ...]
+        let n_carbons = descriptors[4].to_f64().unwrap_or(0.0).max(0.0);
+        let n_nitrogens = descriptors[5].to_f64().unwrap_or(0.0).max(0.0);
+        
+        // Basic heuristics for valence validity
+        let total_heavy_atoms = n_carbons + n_nitrogens + 
+                               (if n_desc > 6 { descriptors[6].to_f64().unwrap_or(0.0) } else { 0.0 }) + // oxygen
+                               (if n_desc > 7 { descriptors[7].to_f64().unwrap_or(0.0) } else { 0.0 }); // sulfur
+        
+        if total_heavy_atoms < 1.0 {
+            return Ok(0.0); // No heavy atoms = invalid
+        }
+        
+        // Check for reasonable atom ratios
+        let carbon_ratio = n_carbons / total_heavy_atoms;
+        let nitrogen_ratio = n_nitrogens / total_heavy_atoms;
+        
+        let mut score = 1.0;
+        
+        // Penalize unusual atom ratios
+        if carbon_ratio < 0.1 || carbon_ratio > 0.95 {
+            score -= 0.2;
+        }
+        
+        if nitrogen_ratio > 0.5 {
+            score -= 0.3; // Too many nitrogens
+        }
+        
+        Ok(score.max(0.0))
+    }
+    
+    /// Check chemical stability indicators
+    fn check_chemical_stability<F>(&self, descriptors: &ArrayView1<F>) -> Result<f64>
+    where
+        F: Float,
+    {
+        let n_desc = descriptors.len();
+        if n_desc < 10 {
+            return Ok(0.6); // Conservative score
+        }
+        
+        // Assume descriptors include stability-related features
+        // [..., tpsa, rotatable_bonds, aromatic_rings, formal_charge, ...]
+        let tpsa = descriptors[8].to_f64().unwrap_or(100.0); // Topological Polar Surface Area
+        let rotatable_bonds = descriptors[9].to_f64().unwrap_or(5.0);
+        
+        let mut stability_score = 1.0;
+        
+        // TPSA should be reasonable for stability
+        if tpsa > 200.0 || tpsa < 10.0 {
+            stability_score -= 0.3;
+        }
+        
+        // Too many rotatable bonds reduce stability
+        if rotatable_bonds > 15.0 {
+            stability_score -= 0.4;
+        }
+        
+        // Check for reasonable molecular complexity
+        if n_desc > 10 {
+            let aromatic_rings = descriptors[10].to_f64().unwrap_or(1.0);
+            if aromatic_rings > 6.0 {
+                stability_score -= 0.2; // Too many rings
+            } else if aromatic_rings < 0.5 {
+                stability_score -= 0.1; // Lack of stabilizing aromatic systems
+            }
+        }
+        
+        Ok(stability_score.max(0.0))
+    }
+    
+    /// Check synthetic accessibility
+    fn check_synthetic_accessibility<F>(&self, descriptors: &ArrayView1<F>) -> Result<f64>
+    where
+        F: Float,
+    {
+        // Use stored synthetic accessibility score if available
+        let base_score = self.drug_discovery.synthetic_accessibility;
+        
+        if base_score > 0.0 {
+            return Ok(base_score);
+        }
+        
+        // Fallback: estimate from molecular descriptors
+        let n_desc = descriptors.len();
+        if n_desc < 12 {
+            return Ok(0.5);
+        }
+        
+        // Simplified heuristic based on molecular complexity
+        let molecular_weight = descriptors[0].to_f64().unwrap_or(300.0);
+        let rotatable_bonds = if n_desc > 9 { descriptors[9].to_f64().unwrap_or(5.0) } else { 5.0 };
+        let aromatic_rings = if n_desc > 10 { descriptors[10].to_f64().unwrap_or(1.0) } else { 1.0 };
+        
+        let mut synthesis_score = 1.0;
+        
+        // Larger molecules are generally harder to synthesize
+        if molecular_weight > 800.0 {
+            synthesis_score -= 0.4;
+        } else if molecular_weight > 600.0 {
+            synthesis_score -= 0.2;
+        }
+        
+        // Complex flexible molecules are harder to synthesize
+        if rotatable_bonds > 12.0 {
+            synthesis_score -= 0.3;
+        }
+        
+        // Too many rings increase synthesis difficulty
+        if aromatic_rings > 4.0 {
+            synthesis_score -= 0.2;
+        }
+        
+        Ok(synthesis_score.max(0.1)) // Minimum 0.1 for any valid molecule
+    }
+    
+    /// Check ADMET (Absorption, Distribution, Metabolism, Excretion, Toxicity) compatibility
+    fn check_admet_compatibility<F>(&self, descriptors: &ArrayView1<F>) -> Result<f64>
+    where
+        F: Float,
+    {
+        // Use available ADMET predictions from drug discovery metrics
+        let admet_accuracies: Vec<f64> = self.drug_discovery.admet_accuracy.values().cloned().collect();
+        
+        if !admet_accuracies.is_empty() {
+            let avg_admet = admet_accuracies.iter().sum::<f64>() / admet_accuracies.len() as f64;
+            return Ok(avg_admet);
+        }
+        
+        // Fallback: estimate ADMET compatibility from molecular properties
+        let n_desc = descriptors.len();
+        if n_desc < 8 {
+            return Ok(0.6);
+        }
+        
+        let molecular_weight = descriptors[0].to_f64().unwrap_or(300.0);
+        let logp = descriptors[1].to_f64().unwrap_or(2.0);
+        let tpsa = if n_desc > 8 { descriptors[8].to_f64().unwrap_or(80.0) } else { 80.0 };
+        
+        let mut admet_score = 1.0;
+        
+        // Poor absorption if too large or too polar
+        if molecular_weight > 500.0 {
+            admet_score -= 0.2;
+        }
+        
+        if logp < -2.0 || logp > 6.0 {
+            admet_score -= 0.3; // Poor permeability
+        }
+        
+        if tpsa > 140.0 {
+            admet_score -= 0.2; // Poor oral bioavailability
+        }
+        
+        // Factor in toxicity metrics
+        let toxicity_score = self.drug_discovery.toxicity_metrics.overall_toxicity_f1;
+        if toxicity_score < 0.5 {
+            admet_score -= 0.4; // High toxicity prediction
+        } else if toxicity_score > 0.8 {
+            admet_score += 0.1; // Low toxicity prediction (bonus)
+        }
+        
+        Ok(admet_score.max(0.0).min(1.0))
     }
 }
 
-// Safe default implementations for metrics structs
-macro_rules! impl_new_default {
-    ($struct_name:ident) => {
-        impl $struct_name {
-            fn new() -> Self {
-                Self::default()
-            }
-        }
+// Individual Default implementations for each struct will be provided below
 
-        impl Default for $struct_name {
-            fn default() -> Self {
-                Self {
-                    ..Default::default()
-                }
-            }
-        }
-    };
-}
-
-impl_new_default!(NodeClassificationMetrics);
-impl_new_default!(NodeEmbeddingMetrics);
-impl_new_default!(HomophilyAwareMetrics);
-impl_new_default!(NodeFairnessMetrics);
-impl_new_default!(LinkPredictionMetrics);
-impl_new_default!(EdgeClassificationMetrics);
-impl_new_default!(EdgeRegressionMetrics);
-impl_new_default!(TemporalEdgeMetrics);
-impl_new_default!(GraphClassificationMetrics);
-impl_new_default!(GraphRegressionMetrics);
-impl_new_default!(GraphPropertyMetrics);
-impl_new_default!(GraphSimilarityMetrics);
-impl_new_default!(GraphGenerationMetrics);
-impl_new_default!(KnowledgeGraphMetrics);
-impl_new_default!(SocialNetworkMetrics);
-impl_new_default!(MolecularPropertyMetrics);
-impl_new_default!(DrugDiscoveryMetrics);
-impl_new_default!(ChemicalSimilarityMetrics);
-impl_new_default!(ReactionPredictionMetrics);
+// Default implementations will be added as needed for compilation
 
 impl Default for GraphNeuralNetworkMetrics {
     fn default() -> Self {
@@ -2006,7 +2294,7 @@ mod tests {
         ];
 
         let results = metrics
-            .evaluate_node_classification(
+            .evaluate_node_classification::<f64>(
                 &y_true.view(),
                 &y_pred.view(),
                 None,
@@ -2059,7 +2347,7 @@ mod tests {
         let y_pred = array![0, 1, 1, 1];
 
         let results = metrics
-            .evaluate_graph_classification(&y_true.view(), &y_pred.view(), None, None)
+            .evaluate_graph_classification::<f64>(&y_true.view(), &y_pred.view(), None, None)
             .unwrap();
 
         assert!(results.classification_accuracy >= 0.0 && results.classification_accuracy <= 1.0);

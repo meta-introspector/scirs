@@ -65,6 +65,8 @@ pub enum EntityType {
     Phone,
     /// Custom entity type defined by user
     Custom(String),
+    /// Other unspecified entity type
+    Other,
 }
 
 /// Extracted entity with type and position information
@@ -617,12 +619,18 @@ pub struct EntityLinker {
     alias_map: HashMap<String, String>,
 }
 
+/// Knowledge base entry for entity linking
 #[derive(Debug, Clone)]
 pub struct KnowledgeBaseEntry {
+    /// Canonical name of the entity
     pub canonical_name: String,
+    /// Type of the entity
     pub entity_type: EntityType,
+    /// Alternative names for the entity
     pub aliases: Vec<String>,
+    /// Confidence score for this entry
     pub confidence: f64,
+    /// Additional metadata about the entity
     pub metadata: HashMap<String, String>,
 }
 
@@ -679,9 +687,13 @@ impl EntityLinker {
 /// Entity with knowledge base linking
 #[derive(Debug, Clone)]
 pub struct LinkedEntity {
+    /// The original entity
     pub entity: Entity,
+    /// Canonical name from knowledge base
     pub canonical_name: String,
+    /// Confidence score for the linking
     pub linked_confidence: f64,
+    /// Additional metadata from knowledge base
     pub metadata: HashMap<String, String>,
 }
 
@@ -809,24 +821,33 @@ impl CoreferenceResolver {
 /// Coreference chain representing linked mentions
 #[derive(Debug, Clone)]
 pub struct CoreferenceChain {
+    /// List of mentions in this chain
     pub mentions: Vec<CoreferenceMention>,
+    /// Confidence score for the coreference chain
     pub confidence: f64,
 }
 
 /// Individual mention in a coreference chain
 #[derive(Debug, Clone)]
 pub struct CoreferenceMention {
+    /// Text content of the mention
     pub text: String,
+    /// Start position in the document
     pub start: usize,
+    /// End position in the document
     pub end: usize,
+    /// Type of mention
     pub mention_type: MentionType,
 }
 
 /// Type of coreference mention
 #[derive(Debug, Clone, PartialEq)]
 pub enum MentionType {
+    /// Named entity mention
     Entity,
+    /// Pronoun mention
     Pronoun,
+    /// Descriptive mention
     Description,
 }
 
@@ -1290,51 +1311,77 @@ impl DocumentInformationExtractor {
 /// Summary information for a single document
 #[derive(Debug, Clone)]
 pub struct DocumentSummary {
+    /// Index of the document in the corpus
     pub document_index: usize,
+    /// Number of entities found in the document
     pub entity_count: usize,
+    /// Number of relations found in the document
     pub relation_count: usize,
+    /// Key phrases with confidence scores
     pub key_phrases: Vec<(String, f64)>,
+    /// Overall confidence score for the summary
     pub confidence_score: f64,
 }
 
 /// Cluster of similar entities
 #[derive(Debug, Clone)]
 pub struct EntityCluster {
+    /// Representative entity for the cluster
     pub representative: Entity,
+    /// All entities in the cluster
     pub members: Vec<Entity>,
+    /// Type of entities in the cluster
     pub entity_type: EntityType,
+    /// Confidence score for the clustering
     pub confidence: f64,
 }
 
 /// Extracted event from text
 #[derive(Debug, Clone)]
 pub struct Event {
+    /// Type or category of the event
     pub event_type: String,
+    /// Entities participating in the event
     pub participants: Vec<Entity>,
+    /// Location where the event occurred
     pub location: Option<Entity>,
+    /// Time when the event occurred
     pub time: Option<Entity>,
+    /// Description of the event
     pub description: String,
+    /// Confidence score for the event extraction
     pub confidence: f64,
 }
 
 /// Identified topic across documents
 #[derive(Debug, Clone)]
 pub struct Topic {
+    /// Name of the topic
     pub name: String,
+    /// Key phrases that define the topic
     pub key_phrases: Vec<String>,
+    /// Indices of documents containing this topic
     pub document_indices: Vec<usize>,
+    /// Confidence score for the topic identification
     pub confidence: f64,
 }
 
 /// Structured information extracted from multiple documents
 #[derive(Debug)]
 pub struct StructuredDocumentInformation {
+    /// Summaries of individual documents
     pub documents: Vec<DocumentSummary>,
+    /// Clusters of similar entities across documents
     pub entity_clusters: Vec<EntityCluster>,
+    /// Relations found across documents
     pub relations: Vec<Relation>,
+    /// Events extracted from documents
     pub events: Vec<Event>,
+    /// Topics identified across documents
     pub topics: Vec<Topic>,
+    /// Total number of entities across all documents
     pub total_entities: usize,
+    /// Total number of relations across all documents
     pub total_relations: usize,
 }
 
@@ -1377,6 +1424,7 @@ impl AdvancedExtractionPipeline {
         self
     }
 
+    /// Configure the entity linker component
     pub fn with_entity_linker(mut self, linker: EntityLinker) -> Self {
         self.entity_linker = linker;
         self

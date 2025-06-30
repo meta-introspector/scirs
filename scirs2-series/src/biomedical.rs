@@ -4,11 +4,10 @@
 //! time series data including ECG, EEG, EMG, heart rate variability, and
 //! other physiological signals.
 
-use ndarray::{Array1, Array2, ArrayView1, Axis};
-use scirs2_core::error::{Result, ScirsError};
-use scirs2_core::validation::{check_positive, check_finite, check_shape};
+use ndarray::{Array1, Array2, ArrayView1};
+use crate::error::{Result, TimeSeriesError};
+use scirs2_core::validation::check_positive;
 use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::collections::HashMap;
 
 /// Heart rate variability analysis methods
@@ -37,8 +36,11 @@ pub struct ECGAnalysis {
 impl ECGAnalysis {
     /// Create new ECG analysis
     pub fn new(signal: Array1<f64>, fs: f64) -> Result<Self> {
-        check_finite(&signal, "signal")?;
-        check_positive(fs, "sampling_frequency")?;
+        // Check if all signal values are finite
+        if signal.iter().any(|x| !x.is_finite()) {
+            return Err(TimeSeriesError::InvalidInput("Signal contains non-finite values".to_string()));
+        }
+        check_positive(fs, "sampling_frequency").map_err(|e| TimeSeriesError::InvalidInput(e.to_string()))?;
         
         Ok(Self {
             signal,
@@ -113,10 +115,10 @@ impl ECGAnalysis {
     /// Calculate heart rate variability metrics
     pub fn heart_rate_variability(&self, method: HRVMethod) -> Result<HashMap<String, f64>> {
         let r_peaks = self.r_peaks.as_ref()
-            .ok_or_else(|| ScirsError::InvalidInput("R-peaks must be detected first".to_string()))?;
+            .ok_or_else(|| TimeSeriesError::InvalidInput("R-peaks must be detected first".to_string()))?;
             
         if r_peaks.len() < 2 {
-            return Err(ScirsError::InvalidInput("At least 2 R-peaks required".to_string()));
+            return Err(TimeSeriesError::InvalidInput("At least 2 R-peaks required".to_string()));
         }
         
         // Calculate RR intervals (in seconds)
@@ -163,7 +165,7 @@ impl ECGAnalysis {
             
             HRVMethod::PoincareAnalysis => {
                 if rr_intervals.len() < 2 {
-                    return Err(ScirsError::InvalidInput("At least 2 RR intervals required".to_string()));
+                    return Err(TimeSeriesError::InvalidInput("At least 2 RR intervals required".to_string()));
                 }
                 
                 // Poincaré plot analysis: SD1 and SD2
@@ -194,7 +196,7 @@ impl ECGAnalysis {
             },
             
             _ => {
-                return Err(ScirsError::InvalidInput("HRV method not implemented".to_string()));
+                return Err(TimeSeriesError::InvalidInput("HRV method not implemented".to_string()));
             }
         }
         
@@ -204,10 +206,10 @@ impl ECGAnalysis {
     /// Detect arrhythmias based on RR interval patterns
     pub fn detect_arrhythmias(&self) -> Result<HashMap<String, Vec<usize>>> {
         let r_peaks = self.r_peaks.as_ref()
-            .ok_or_else(|| ScirsError::InvalidInput("R-peaks must be detected first".to_string()))?;
+            .ok_or_else(|| TimeSeriesError::InvalidInput("R-peaks must be detected first".to_string()))?;
             
         if r_peaks.len() < 3 {
-            return Err(ScirsError::InvalidInput("At least 3 R-peaks required".to_string()));
+            return Err(TimeSeriesError::InvalidInput("At least 3 R-peaks required".to_string()));
         }
         
         // Calculate RR intervals
@@ -258,7 +260,7 @@ impl ECGAnalysis {
         let high_norm = high_freq / nyquist;
         
         if low_norm <= 0.0 || high_norm >= 1.0 || low_norm >= high_norm {
-            return Err(ScirsError::InvalidInput("Invalid filter frequencies".to_string()));
+            return Err(TimeSeriesError::InvalidInput("Invalid filter frequencies".to_string()));
         }
         
         // Simple moving average approximation for demo
@@ -287,11 +289,14 @@ pub struct EEGAnalysis {
 impl EEGAnalysis {
     /// Create new EEG analysis
     pub fn new(signals: Array2<f64>, fs: f64, channel_names: Vec<String>) -> Result<Self> {
-        check_finite(&signals, "signals")?;
+        // Check if all signal values are finite
+        if signals.iter().any(|x| !x.is_finite()) {
+            return Err(TimeSeriesError::InvalidInput("Signals contain non-finite values".to_string()));
+        }
         check_positive(fs, "sampling_frequency")?;
         
         if signals.nrows() != channel_names.len() {
-            return Err(ScirsError::InvalidInput(
+            return Err(TimeSeriesError::InvalidInput(
                 "Number of channels must match signal dimensions".to_string(),
             ));
         }
@@ -433,7 +438,7 @@ impl EEGAnalysis {
     /// Calculate correlation between two signals
     fn calculate_correlation(&self, signal1: &ArrayView1<f64>, signal2: &ArrayView1<f64>) -> Result<f64> {
         if signal1.len() != signal2.len() {
-            return Err(ScirsError::InvalidInput("Signals must have same length".to_string()));
+            return Err(TimeSeriesError::InvalidInput("Signals must have same length".to_string()));
         }
         
         let mean1 = signal1.mean().unwrap();
@@ -471,8 +476,11 @@ pub struct EMGAnalysis {
 impl EMGAnalysis {
     /// Create new EMG analysis
     pub fn new(signal: Array1<f64>, fs: f64) -> Result<Self> {
-        check_finite(&signal, "signal")?;
-        check_positive(fs, "sampling_frequency")?;
+        // Check if all signal values are finite
+        if signal.iter().any(|x| !x.is_finite()) {
+            return Err(TimeSeriesError::InvalidInput("Signal contains non-finite values".to_string()));
+        }
+        check_positive(fs, "sampling_frequency").map_err(|e| TimeSeriesError::InvalidInput(e.to_string()))?;
         
         Ok(Self { signal, fs })
     }
@@ -554,7 +562,7 @@ impl EMGAnalysis {
     /// Simple linear regression for trend analysis
     fn linear_regression(&self, x: &Array1<f64>, y: &Array1<f64>) -> Result<(f64, f64, f64)> {
         if x.len() != y.len() {
-            return Err(ScirsError::InvalidInput("X and Y arrays must have same length".to_string()));
+            return Err(TimeSeriesError::InvalidInput("X and Y arrays must have same length".to_string()));
         }
         
         let n = x.len() as f64;

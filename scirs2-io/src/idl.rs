@@ -116,6 +116,7 @@ enum TypeCode {
 pub struct IdlReader {
     reader: BufReader<File>,
     endianness: Endianness,
+    #[allow(dead_code)]
     heap_data: HashMap<u32, IdlType>,
 }
 
@@ -137,7 +138,7 @@ impl IdlReader {
             .read_exact(&mut signature)
             .map_err(|e| IoError::FileError(e.to_string()))?;
 
-        if &signature != IDL_SIGNATURE {
+        if signature != IDL_SIGNATURE {
             return Err(IoError::FormatError(
                 "Invalid IDL file signature".to_string(),
             ));

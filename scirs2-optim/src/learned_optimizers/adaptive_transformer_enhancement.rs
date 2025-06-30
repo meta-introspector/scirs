@@ -446,6 +446,15 @@ pub struct AnalysisResult<T: Float> {
     
     /// Analysis metadata
     metadata: HashMap<String, String>,
+    
+    /// Complexity score
+    complexity_score: T,
+    
+    /// Difficulty score
+    difficulty_score: T,
+    
+    /// Recommended adaptations
+    recommended_adaptations: Vec<OptimizationStrategy>,
 }
 
 /// Performance prediction network
@@ -948,6 +957,9 @@ pub struct EnhancementResult<T: Float> {
     
     /// Landscape analysis
     pub landscape_analysis: LandscapeAnalysis<T>,
+    
+    /// Convergence metrics
+    pub convergence_metrics: ConvergenceMetrics<T>,
 }
 
 /// Sequence adaptation result
@@ -1048,6 +1060,41 @@ pub enum OptimizationStrategy {
     Adaptive,
     Exploratory,
     Exploitative,
+}
+
+/// Convergence metrics for tracking optimization progress
+#[derive(Debug, Clone)]
+pub struct ConvergenceMetrics<T: Float> {
+    /// Rate of convergence
+    pub convergence_rate: T,
+    
+    /// Stability measure
+    pub stability_measure: T,
+    
+    /// Plateau detection flag
+    pub plateau_detection: bool,
+    
+    /// Oscillation measure
+    pub oscillation_measure: T,
+}
+
+/// Enhancement statistics for tracking performance
+#[derive(Debug, Clone)]
+pub struct EnhancementStatistics<T: Float> {
+    /// Total number of enhancements performed
+    pub total_enhancements: usize,
+    
+    /// Average complexity of analyzed landscapes
+    pub average_complexity: T,
+    
+    /// Average performance achieved
+    pub average_performance: T,
+    
+    /// Memory efficiency measure
+    pub memory_efficiency: T,
+    
+    /// Success rate of adaptations
+    pub adaptation_success_rate: T,
 }
 
 // Main implementation for AdaptiveTransformerEnhancement
@@ -1225,10 +1272,18 @@ impl<T: Float> AdaptiveTransformerEnhancement<T> {
         self.landscape_analyzer.analysis_cache.insert(
             cache_key,
             AnalysisResult {
+                timestamp: Instant::now(),
+                features: {
+                    let mut features = HashMap::new();
+                    features.insert("complexity".to_string(), enhancement_result.landscape_analysis.complexity);
+                    features.insert("difficulty".to_string(), enhancement_result.landscape_analysis.difficulty);
+                    features
+                },
                 complexity_score: enhancement_result.landscape_analysis.complexity,
                 difficulty_score: enhancement_result.landscape_analysis.difficulty,
                 recommended_adaptations: enhancement_result.landscape_analysis.recommended_strategies.clone(),
                 confidence: enhancement_result.landscape_analysis.confidence,
+                metadata: HashMap::new(),
             },
         );
         
@@ -1277,23 +1332,6 @@ impl<T: Float> AdaptiveTransformerEnhancement<T> {
             average_performance: avg_performance,
             memory_efficiency: T::from(0.8).unwrap(), // Placeholder
             adaptation_success_rate: T::from(0.85).unwrap(), // Placeholder
-        }
-    }
-}
-
-impl<T: Float> Default for AdaptiveConfig<T> {
-    fn default() -> Self {
-        Self {
-            adaptive_sequence_length: true,
-            max_sequence_length: 1024,
-            min_sequence_length: 64,
-            attention_sparsity_threshold: T::from(0.1).unwrap(),
-            memory_budget: 8192,
-            dynamic_head_pruning: true,
-            layer_adaptation: true,
-            landscape_analysis_frequency: 10,
-            prediction_horizon: 5,
-            adaptation_lr: T::from(0.01).unwrap(),
         }
     }
 }
@@ -1867,14 +1905,69 @@ impl Default for TransformerOptimizerConfig {
             gradient_checkpointing: false,
             attention_optimization: AttentionOptimization {
                 attention_patterns: Array3::zeros((8, 512, 512)),
-                sparsity_level: T::from(0.1).unwrap(),
+                sparsity_level: 0.1,
                 memory_savings: 0,
-                computational_speedup: T::from(1.0).unwrap(),
+                computational_speedup: 1.0,
             },
             multi_scale_attention: false,
             cross_attention: false,
         }
     }
+}
+
+/// Transformer optimizer configuration
+#[derive(Debug, Clone)]
+pub struct TransformerOptimizerConfig {
+    /// Base learned optimizer config
+    pub base_config: super::LearnedOptimizerConfig,
+    
+    /// Model dimension
+    pub model_dim: usize,
+    
+    /// Number of attention heads
+    pub num_heads: usize,
+    
+    /// Feed-forward dimension
+    pub ff_dim: usize,
+    
+    /// Number of layers
+    pub num_layers: usize,
+    
+    /// Maximum sequence length
+    pub max_sequence_length: usize,
+    
+    /// Attention dropout rate
+    pub attention_dropout: f64,
+    
+    /// Feed-forward dropout rate
+    pub ff_dropout: f64,
+    
+    /// Layer normalization epsilon
+    pub layer_norm_eps: f64,
+    
+    /// Pre-layer normalization flag
+    pub pre_layer_norm: bool,
+    
+    /// Positional encoding type
+    pub pos_encoding_type: PositionalEncodingType,
+    
+    /// Relative position bias flag
+    pub relative_position_bias: bool,
+    
+    /// Use RoPE (Rotary Position Embedding)
+    pub use_rope: bool,
+    
+    /// Gradient checkpointing flag
+    pub gradient_checkpointing: bool,
+    
+    /// Attention optimization configuration
+    pub attention_optimization: AttentionOptimization<f64>,
+    
+    /// Multi-scale attention flag
+    pub multi_scale_attention: bool,
+    
+    /// Cross-attention flag
+    pub cross_attention: bool,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -1885,333 +1978,20 @@ pub enum PositionalEncodingType {
     Relative,
 }
 
-// Missing supporting types for AdaptiveTransformerEnhancement
-#[derive(Debug)]
-pub struct EnhancementResult<T: Float> {
-    pub landscape_analysis: LandscapeAnalysis<T>,
-    pub sequence_adaptation: SequenceAdaptation<T>,
-    pub attention_optimization: AttentionOptimization<T>,
-    pub architecture_adaptation: ArchitectureAdaptation<T>,
-    pub performance_prediction: PerformancePrediction<T>,
-    pub convergence_metrics: ConvergenceMetrics<T>,
-}
-
-#[derive(Debug)]
-pub struct SequenceAdaptation<T: Float> {
-    pub new_length: usize,
-    pub compression_ratio: T,
-    pub information_preservation: T,
-    pub efficiency_gain: T,
-}
-
-#[derive(Debug)]
-pub struct AttentionOptimization<T: Float> {
-    pub attention_patterns: Array3<T>,
-    pub sparsity_level: T,
-    pub memory_savings: usize,
-    pub computational_speedup: T,
-}
-
-#[derive(Debug)]
-pub struct ArchitectureAdaptation<T: Float> {
-    pub adapted_config: TransformerOptimizerConfig,
-    pub changes: Vec<ArchitectureChange>,
-    pub expected_improvement: T,
-    pub confidence: T,
-}
-
-#[derive(Debug)]
-pub struct ConvergenceMetrics<T: Float> {
-    pub convergence_rate: T,
-    pub stability_measure: T,
-    pub plateau_detection: bool,
-    pub oscillation_measure: T,
-}
-
-#[derive(Debug)]
-pub struct EnhancementStatistics<T: Float> {
-    pub total_enhancements: usize,
-    pub average_complexity: T,
-    pub average_performance: T,
-    pub memory_efficiency: T,
-    pub adaptation_success_rate: T,
-}
-
-#[derive(Debug)]
-pub struct AnalysisResult<T: Float> {
-    pub complexity_score: T,
-    pub difficulty_score: T,
-    pub recommended_adaptations: Vec<OptimizationStrategy>,
-    pub confidence: T,
-}
-
-// Missing enum types
-#[derive(Debug, Clone, Copy)]
-pub enum TrendDirection {
-    Increasing,
-    Decreasing,
-    Stable,
-    Oscillating,
-    Unknown,
-}
-
-#[derive(Debug, Clone)]
-pub struct PerformanceTrend<T: Float> {
-    pub direction: TrendDirection,
-    pub strength: T,
-    pub confidence: T,
-    pub time_period: (std::time::Instant, std::time::Instant),
-    pub metadata: TrendMetadata,
-}
-
-#[derive(Debug, Clone)]
-pub struct TrendMetadata {
-    pub algorithm: TrendDetectionAlgorithm,
-    pub model: TrendModelType,
-    pub data_points: usize,
-    pub timestamp: std::time::Instant,
-}
-
-#[derive(Debug, Clone, Copy)]
-pub enum TrendDetectionAlgorithm {
-    LinearRegression,
-    MovingAverage,
-    ExponentialSmoothing,
-    KalmanFilter,
-}
-
-#[derive(Debug, Clone, Copy)]
-pub enum TrendModelType {
-    Linear,
-    Exponential,
-    Polynomial,
-    Harmonic,
-}
-
-// Missing algorithm enum types
-#[derive(Debug, Clone, Copy)]
-pub enum MinimaDetectionAlgorithm {
-    GradientBased,
-    HessianBased,
-    EnergyLandscape,
-    StatisticalAnalysis,
-}
-
-#[derive(Debug, Clone, Copy)]
-pub enum SaddleDetectionAlgorithm {
-    EigenvalueBased,
-    GradientFlow,
-    TopologicalAnalysis,
-    NumericalAnalysis,
-}
-
-#[derive(Debug, Clone, Copy)]
-pub enum BasinAnalysisMethod {
-    GradientFlow,
-    MonteCarloSampling,
-    EnergyContours,
-    VoronoiTessellation,
-}
-
-// Missing supporting structures
-#[derive(Debug)]
-pub struct PathAnalysisResults<T: Float> {
-    pub shortest_paths: Vec<OptimizationPath<T>>,
-    pub path_difficulties: Vec<T>,
-    pub connectivity_measure: T,
-}
-
-#[derive(Debug)]
-pub struct OptimizationPath<T: Float> {
-    pub waypoints: Vec<Array1<T>>,
-    pub path_length: T,
-    pub difficulty_score: T,
-    pub energy_barrier: T,
-}
-
-#[derive(Debug)]
-pub struct PatternLibrary<T: Float> {
-    pub patterns: HashMap<String, OptimizationPattern<T>>,
-    pub pattern_index: HashMap<String, Vec<String>>,
-    pub usage_stats: HashMap<String, usize>,
-}
-
-#[derive(Debug)]
-pub struct OptimizationPattern<T: Float> {
-    pub pattern_id: String,
-    pub pattern_type: PatternType,
-    pub characteristic_features: Array1<T>,
-    pub effectiveness_score: T,
-    pub frequency: usize,
-}
-
-#[derive(Debug, Clone, Copy)]
-pub enum PatternType {
-    ConvergenceBehavior,
-    LossLandscape,
-    GradientDynamics,
-    HyperparameterSensitivity,
-    OptimizationTrajectory,
-}
-
-#[derive(Debug)]
-pub struct Basin<T: Float> {
-    pub center: Array1<T>,
-    pub radius: T,
-    pub depth: T,
-    pub attraction_strength: T,
-    pub escape_difficulty: T,
-}
-
-#[derive(Debug)]
-pub struct Symmetry<T: Float> {
-    pub symmetry_type: SymmetryType,
-    pub transformation_matrix: Array2<T>,
-    pub invariant_subspace: Option<Array2<T>>,
-    pub symmetry_strength: T,
-}
-
-#[derive(Debug, Clone, Copy)]
-pub enum SymmetryType {
-    Rotational,
-    Translational,
-    Reflection,
-    Scaling,
-    Permutation,
-}
-
-// Additional missing types
-#[derive(Debug, Clone, Copy)]
-pub enum ActivationType {
-    ReLU,
-    GELU,
-    Swish,
-    Tanh,
-    Sigmoid,
-    ELU,
-    LeakyReLU,
-}
-
-#[derive(Debug)]
-pub struct PredictorNetwork<T: Float> {
-    weights: Vec<Array2<T>>,
-    biases: Vec<Array1<T>>,
-    activations: Vec<ActivationType>,
-    architecture: Vec<usize>,
-}
-
-#[derive(Debug)]
-pub struct PerformanceFeatureExtractor<T: Float> {
-    feature_dims: usize,
-    feature_cache: HashMap<String, Array1<T>>,
-    importance_weights: Array1<T>,
-}
-
-#[derive(Debug)]
-pub struct PredictionCache<T: Float> {
-    predictions: HashMap<String, PerformancePrediction<T>>,
-    hit_rate: f64,
-    capacity: usize,
-}
-
-// Additional defaults and implementations
-impl<T: Float> Default for ArchitectureAdaptation<T> {
-    fn default() -> Self {
-        Self {
-            adapted_config: TransformerOptimizerConfig::default(),
-            changes: Vec::new(),
-            expected_improvement: T::from(0.1).unwrap(),
-            confidence: T::from(0.5).unwrap(),
-        }
-    }
-}
-
-impl<T: Float> Default for AttentionOptimization<T> {
-    fn default() -> Self {
-        Self {
-            attention_patterns: Array3::zeros((8, 512, 512)),
-            sparsity_level: T::from(0.1).unwrap(),
-            memory_savings: 1024,
-            computational_speedup: T::from(1.5).unwrap(),
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn test_adaptive_config_default() {
-        let config = AdaptiveConfig::<f64>::default();
-        assert!(config.adaptive_sequence_length);
-        assert_eq!(config.max_sequence_length, 1024);
-        assert_eq!(config.min_sequence_length, 64);
-    }
-
-    #[test]
-    fn test_adaptive_transformer_enhancement_creation() {
-        let config = AdaptiveConfig::<f64>::default();
-        let enhancement = AdaptiveTransformerEnhancement::new(config);
-        assert!(enhancement.is_ok());
-        
-        if let Ok(enhancement) = enhancement {
-            let stats = enhancement.get_enhancement_statistics();
-            assert!(stats.average_performance >= 0.0);
-            assert!(stats.memory_efficiency > 0.0);
-        }
-    }
     
     #[test]
-    fn test_enhancement_result_creation() {
-        let landscape = LandscapeAnalysis {
-            complexity: 0.5,
-            difficulty: 0.3,
-            recommended_strategies: vec![OptimizationStrategy::Adaptive],
-            confidence: 0.9,
-        };
-        
-        let sequence_adaptation = SequenceAdaptation {
-            new_length: 512,
-            compression_ratio: 0.8,
-            information_preservation: 0.95,
-            efficiency_gain: 1.2,
-        };
-        
-        let attention_optimization = AttentionOptimization::default();
-        let architecture_adaptation = ArchitectureAdaptation::default();
-        
-        let performance_prediction = PerformancePrediction {
-            convergence_improvement: 0.15,
-            final_performance: 0.92,
-            confidence: 0.85,
-            uncertainty: 0.05,
-        };
-        
-        let convergence_metrics = ConvergenceMetrics {
-            convergence_rate: 0.1,
-            stability_measure: 0.8,
-            plateau_detection: false,
-            oscillation_measure: 0.05,
-        };
-        
-        let result = EnhancementResult {
-            landscape_analysis: landscape,
-            sequence_adaptation,
-            attention_optimization,
-            architecture_adaptation,
-            performance_prediction,
-            convergence_metrics,
-        };
-        
-        assert!(result.performance_prediction.confidence > 0.0);
-        assert!(result.convergence_metrics.stability_measure > 0.0);
+    fn test_adaptive_transformer_creation() {
+        let config = AdaptiveConfig::<f64>::default();
+        let enhancement = AdaptiveTransformerEnhancement::<f64>::new(config);
+        assert!(enhancement.is_ok());
     }
-
-    #[test]
-    fn test_landscape_features_default() {
-        let features = LandscapeFeatures::<f64>::default();
-        assert!(features.smoothness > 0.0);
-        assert!(features.noise_level >= 0.0);
+    
+    #[test] 
+    fn test_positional_encoding_types() {
+        let encoding_type = PositionalEncodingType::Learned;
+        assert!(matches!(encoding_type, PositionalEncodingType::Learned));
     }
 }

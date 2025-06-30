@@ -6,7 +6,7 @@
 use ndarray::ScalarOperand;
 use ndarray_rand::rand::distributions::Distribution;
 use ndarray_rand::rand::rngs::ThreadRng;
-use ndarray_rand::rand::thread_rng;
+use rand::rng;
 use ndarray_rand::rand_distr::{Normal, Uniform};
 use num_traits::{Float, NumCast};
 use std::fmt::Debug;
@@ -105,7 +105,7 @@ where
             base_scheduler,
             noise_dist,
             step_count: 0,
-            rng: thread_rng(),
+            rng: rng(),
             min_lr,
         }
     }
@@ -161,16 +161,16 @@ where
         let base_lr = self.base_scheduler.get_learning_rate();
 
         // Use fresh thread RNG to sample noise since get_learning_rate takes &self
-        let mut thread_rng = thread_rng();
+        let mut rand_rng = rng();
         let noise = match self.noise_dist {
             NoiseDistribution::Uniform { min, max } => {
                 let dist = Uniform::new(min.to_f64().unwrap(), max.to_f64().unwrap());
-                let sample = dist.sample(&mut thread_rng);
+                let sample = dist.sample(&mut rand_rng);
                 <A as NumCast>::from(sample).unwrap()
             }
             NoiseDistribution::Gaussian { mean, std_dev } => {
                 let dist = Normal::new(mean.to_f64().unwrap(), std_dev.to_f64().unwrap()).unwrap();
-                let sample = dist.sample(&mut thread_rng);
+                let sample = dist.sample(&mut rand_rng);
                 <A as NumCast>::from(sample).unwrap()
             }
             NoiseDistribution::Cyclical { amplitude, period } => {
@@ -194,7 +194,7 @@ where
 
                 // Sample from uniform distribution and scale by the decaying factor
                 let dist = Uniform::new(-1.0, 1.0);
-                let sample = dist.sample(&mut thread_rng);
+                let sample = dist.sample(&mut rand_rng);
                 scale * NumCast::from(sample).unwrap()
             }
         };
@@ -237,7 +237,7 @@ where
             base_scheduler: self.base_scheduler.clone(),
             noise_dist: self.noise_dist,
             step_count: self.step_count,
-            rng: thread_rng(),
+            rng: rng(),
             min_lr: self.min_lr,
         }
     }

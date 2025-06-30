@@ -38,13 +38,13 @@ pub struct DeepUncertaintyQuantifier<F: Float> {
     pub random_seed: Option<u64>,
 }
 
-impl<F: Float + num_traits::FromPrimitive + Sum> Default for DeepUncertaintyQuantifier<F> {
+impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand> Default for DeepUncertaintyQuantifier<F> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<F: Float + num_traits::FromPrimitive + Sum> DeepUncertaintyQuantifier<F> {
+impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand> DeepUncertaintyQuantifier<F> {
     /// Create new deep uncertainty quantifier
     pub fn new() -> Self {
         Self {

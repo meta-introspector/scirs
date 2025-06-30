@@ -7,6 +7,20 @@
 use crate::error::{OptimError, Result};
 
 pub mod cross_framework;
+pub mod performance_profiler;
+pub mod documentation_analyzer;
+pub mod memory_optimizer;
+pub mod cross_platform_tester;
+pub mod security_auditor;
+pub mod comprehensive_security_auditor;
+pub mod regression_tester;
+pub mod memory_leak_detector;
+pub mod advanced_leak_detectors;
+pub mod advanced_memory_leak_detector;
+pub mod automated_test_runners;
+pub mod performance_regression_detector;
+pub mod ci_cd_automation;
+pub mod enhanced_memory_monitor;
 use ndarray::{Array, Array1, Dimension, ScalarOperand};
 use num_traits::Float;
 use std::collections::VecDeque;

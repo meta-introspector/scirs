@@ -1404,7 +1404,7 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
     ) -> InterpolateResult<T> {
         // Use linear extrapolation as base method
         let base_value = self.linear_extrapolation(x, direction)?;
-        
+
         // Calculate confidence bounds based on distance from boundary
         let (bound, value, deriv) = match direction {
             ExtrapolationDirection::Lower => {
@@ -1414,13 +1414,13 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
                 (self.upper_bound, self.upper_value, self.upper_derivative)
             }
         };
-        
+
         let distance = (x - bound).abs();
         let confidence_factor = T::from(0.95).unwrap(); // 95% confidence
-        
+
         // Uncertainty increases with distance
         let uncertainty = distance * deriv.abs() * (T::one() - confidence_factor);
-        
+
         // For conservative extrapolation, bias towards boundary value when uncertain
         let weight = T::one() / (T::one() + distance);
         Ok(base_value * (T::one() - weight) + value * weight + uncertainty)
@@ -1438,29 +1438,31 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
             (ExtrapolationMethod::Cubic, T::from(0.2).unwrap()),
             (ExtrapolationMethod::Exponential, T::from(0.1).unwrap()),
         ];
-        
+
         let mut weighted_sum = T::zero();
         let mut weight_sum = T::zero();
-        
+
         for (method, weight) in methods.iter() {
             let value = match method {
                 ExtrapolationMethod::Linear => self.linear_extrapolation(x, direction)?,
                 ExtrapolationMethod::Quadratic => {
-                    if self.lower_second_derivative.is_some() && self.upper_second_derivative.is_some() {
+                    if self.lower_second_derivative.is_some()
+                        && self.upper_second_derivative.is_some()
+                    {
                         self.quadratic_extrapolation(x, direction)?
                     } else {
                         self.linear_extrapolation(x, direction)?
                     }
-                },
+                }
                 ExtrapolationMethod::Cubic => self.cubic_extrapolation(x, direction)?,
                 ExtrapolationMethod::Exponential => self.exponential_extrapolation(x, direction)?,
                 _ => self.linear_extrapolation(x, direction)?, // fallback
             };
-            
+
             weighted_sum = weighted_sum + value * (*weight);
             weight_sum = weight_sum + (*weight);
         }
-        
+
         Ok(weighted_sum / weight_sum)
     }
 
@@ -1478,10 +1480,10 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
                 (self.upper_bound, self.upper_value, self.upper_derivative)
             }
         };
-        
+
         let distance = (x - bound).abs();
         let derivative_magnitude = deriv.abs();
-        
+
         // Adaptive method selection based on characteristics
         if derivative_magnitude < T::from(0.1).unwrap() {
             // Low derivative - use constant extrapolation
@@ -1489,7 +1491,10 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
         } else if derivative_magnitude < T::from(1.0).unwrap() && distance < T::from(1.0).unwrap() {
             // Moderate derivative, close distance - use linear
             self.linear_extrapolation(x, direction)
-        } else if self.lower_second_derivative.is_some() && self.upper_second_derivative.is_some() && distance < T::from(2.0).unwrap() {
+        } else if self.lower_second_derivative.is_some()
+            && self.upper_second_derivative.is_some()
+            && distance < T::from(2.0).unwrap()
+        {
             // Has second derivatives and moderate distance - use quadratic
             self.quadratic_extrapolation(x, direction)
         } else {
@@ -1506,7 +1511,7 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
     ) -> InterpolateResult<T> {
         // Simple AR(1) model: x(t) = φ * x(t-1) + ε
         // For extrapolation: f(x) = φ * f(boundary) + trend * (x - boundary)
-        
+
         let (bound, value, deriv) = match direction {
             ExtrapolationDirection::Lower => {
                 (self.lower_bound, self.lower_value, self.lower_derivative)
@@ -1515,25 +1520,25 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
                 (self.upper_bound, self.upper_value, self.upper_derivative)
             }
         };
-        
+
         let distance = (x - bound).abs();
-        
+
         // Estimate AR coefficient based on derivative (stability parameter)
         let phi = if deriv.abs() < T::from(0.5).unwrap() {
             T::from(0.8).unwrap() // Stable, low autocorrelation
         } else {
             T::from(0.6).unwrap() // Less stable, moderate autocorrelation
         };
-        
+
         // Apply AR model with exponential decay for extrapolation stability
         let ar_factor = phi.powf(distance);
         let trend_component = deriv * distance * (T::one() - ar_factor);
-        
+
         Ok(value * ar_factor + trend_component)
     }
 
     /// Nearest extrapolation (SciPy 'nearest' mode)
-    /// 
+    ///
     /// Returns the nearest boundary value - equivalent to constant extrapolation
     /// but specifically designed for compatibility with SciPy's 'nearest' mode.
     fn nearest_extrapolation(
@@ -1548,7 +1553,7 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
     }
 
     /// Mirror extrapolation (SciPy 'mirror' mode)
-    /// 
+    ///
     /// Reflects the function about the boundary without repeating the edge values.
     /// For a point outside the domain, it computes the reflected position inside
     /// the domain and returns the value at that position.
@@ -1558,12 +1563,12 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
         direction: ExtrapolationDirection,
     ) -> InterpolateResult<T> {
         let domain_size = self.upper_bound - self.lower_bound;
-        
+
         match direction {
             ExtrapolationDirection::Lower => {
                 let distance_outside = self.lower_bound - x;
                 let mirrored_x = self.lower_bound + distance_outside;
-                
+
                 // If the mirrored point is still outside, use linear extrapolation
                 if mirrored_x > self.upper_bound {
                     self.linear_extrapolation(x, direction)
@@ -1572,11 +1577,11 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
                     let t = distance_outside / domain_size;
                     Ok(self.lower_value + self.lower_derivative * distance_outside * t)
                 }
-            },
+            }
             ExtrapolationDirection::Upper => {
                 let distance_outside = x - self.upper_bound;
                 let mirrored_x = self.upper_bound - distance_outside;
-                
+
                 // If the mirrored point is still outside, use linear extrapolation
                 if mirrored_x < self.lower_bound {
                     self.linear_extrapolation(x, direction)
@@ -1590,23 +1595,23 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
     }
 
     /// Wrap extrapolation (SciPy 'wrap' mode)
-    /// 
+    ///
     /// Wraps the input coordinate into the domain using periodic boundary conditions.
     /// This is similar to periodic extrapolation but specifically for SciPy compatibility.
     fn wrap_extrapolation(&self, x: T) -> InterpolateResult<T> {
         let domain_size = self.upper_bound - self.lower_bound;
-        
+
         if domain_size <= T::zero() {
             return Err(InterpolateError::InvalidValue(
-                "Domain size must be positive for wrap extrapolation".to_string()
+                "Domain size must be positive for wrap extrapolation".to_string(),
             ));
         }
-        
+
         // Map x into the domain [lower_bound, upper_bound)
         let offset = x - self.lower_bound;
         let wrapped_offset = offset - (offset / domain_size).floor() * domain_size;
-        let wrapped_x = self.lower_bound + wrapped_offset;
-        
+        let _wrapped_x = self.lower_bound + wrapped_offset; // Reserved for future use
+
         // Since this is extrapolation, we need to estimate the value
         // using the boundary conditions in a periodic manner
         let t = wrapped_offset / domain_size;
@@ -1614,12 +1619,12 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
     }
 
     /// Clamped extrapolation with zero derivatives
-    /// 
+    ///
     /// Uses zero derivatives at the boundaries for smooth extrapolation.
     /// This corresponds to "clamped" boundary conditions in spline theory.
     fn clamped_extrapolation(
         &self,
-        x: T,
+        _x: T,
         direction: ExtrapolationDirection,
     ) -> InterpolateResult<T> {
         // For clamped extrapolation, we use zero derivatives at boundaries
@@ -1627,16 +1632,16 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
             ExtrapolationDirection::Lower => {
                 // Linear extrapolation with zero derivative
                 Ok(self.lower_value)
-            },
+            }
             ExtrapolationDirection::Upper => {
                 // Linear extrapolation with zero derivative
                 Ok(self.upper_value)
-            },
+            }
         }
     }
 
     /// Grid-specific mirror extrapolation
-    /// 
+    ///
     /// Similar to mirror extrapolation but optimized for structured grid data.
     /// Uses a more sophisticated reflection algorithm suitable for grid-based interpolation.
     fn grid_mirror_extrapolation(
@@ -1650,7 +1655,7 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
     }
 
     /// Grid-specific constant extrapolation
-    /// 
+    ///
     /// Similar to constant extrapolation but optimized for structured grid data.
     fn grid_constant_extrapolation(
         &self,
@@ -1665,7 +1670,7 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
     }
 
     /// Grid-specific wrap extrapolation
-    /// 
+    ///
     /// Similar to wrap extrapolation but optimized for structured grid data.
     fn grid_wrap_extrapolation(&self, x: T) -> InterpolateResult<T> {
         // For now, delegate to regular wrap extrapolation

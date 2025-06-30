@@ -221,6 +221,9 @@ impl RealWorldDatasets {
             n_features: 16,
             task_type: "classification".to_string(),
             target_names: Some(vec!["no".to_string(), "yes".to_string()]),
+            feature_names: None,
+            url: None,
+            checksum: None,
         };
 
         let dataset = Dataset::from_metadata(data, Some(target), metadata);
@@ -252,6 +255,9 @@ impl RealWorldDatasets {
             n_features: 7,
             task_type: "classification".to_string(),
             target_names: Some(vec!["died".to_string(), "survived".to_string()]),
+            feature_names: None,
+            url: None,
+            checksum: None,
         };
 
         let dataset = Dataset::from_metadata(data, Some(target), metadata);
@@ -275,6 +281,9 @@ impl RealWorldDatasets {
             n_features: 20,
             task_type: "classification".to_string(),
             target_names: Some(vec!["bad_credit".to_string(), "good_credit".to_string()]),
+            feature_names: None,
+            url: None,
+            checksum: None,
         };
 
         Ok(Dataset::from_metadata(data, Some(target), metadata))
@@ -296,6 +305,9 @@ impl RealWorldDatasets {
             n_features: 8,
             task_type: "regression".to_string(),
             target_names: None, // Regression task
+            feature_names: None,
+            url: None,
+            checksum: None,
         };
 
         Ok(Dataset::from_metadata(data, Some(target), metadata))
@@ -313,6 +325,9 @@ impl RealWorldDatasets {
             n_features: 11,
             task_type: "regression".to_string(),
             target_names: None, // Regression task
+            feature_names: None,
+            url: None,
+            checksum: None,
         };
 
         Ok(Dataset::from_metadata(data, Some(target), metadata))
@@ -330,6 +345,9 @@ impl RealWorldDatasets {
             n_features: 8,
             task_type: "regression".to_string(),
             target_names: None, // Regression task
+            feature_names: None,
+            url: None,
+            checksum: None,
         };
 
         Ok(Dataset::from_metadata(data, Some(target), metadata))
@@ -350,6 +368,9 @@ impl RealWorldDatasets {
             n_features: 1,
             task_type: "time_series".to_string(),
             target_names: None, // Time series data
+            feature_names: None,
+            url: None,
+            checksum: None,
         };
 
         Ok(Dataset::from_metadata(data, target, metadata))
@@ -367,6 +388,9 @@ impl RealWorldDatasets {
             n_features: 6,
             task_type: "time_series".to_string(),
             target_names: None, // Time series data
+            feature_names: None,
+            url: None,
+            checksum: None,
         };
 
         Ok(Dataset::from_metadata(data, target, metadata))
@@ -387,6 +411,9 @@ impl RealWorldDatasets {
             n_features: 13,
             task_type: "classification".to_string(),
             target_names: Some(vec!["no_disease".to_string(), "disease".to_string()]),
+            feature_names: None,
+            url: None,
+            checksum: None,
         };
 
         Ok(Dataset::from_metadata(data, Some(target), metadata))
@@ -407,22 +434,126 @@ impl RealWorldDatasets {
                 "no_readmission".to_string(),
                 "readmission".to_string(),
             ]),
+            feature_names: None,
+            url: None,
+            checksum: None,
         };
 
         Ok(Dataset::from_metadata(data, Some(target), metadata))
     }
 
-    // Missing method implementations (placeholder/delegating implementations)
+    /// Load the Credit Approval dataset from UCI repository
     pub fn load_credit_approval(&mut self) -> Result<Dataset> {
-        self.create_synthetic_credit_approval_data()
+        let cache_key = CacheKey::new("credit_approval", &self.config);
+
+        if self.config.use_cache {
+            if let Some(dataset) = self.cache.get(&cache_key)? {
+                return Ok(dataset);
+            }
+        }
+
+        // UCI Credit Approval dataset URL
+        let url =
+            "https://archive.ics.uci.edu/ml/machine-learning-databases/credit-screening/crx.data";
+        let columns = &[
+            "A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10", "A11", "A12", "A13",
+            "A14", "A15", "class",
+        ];
+
+        let dataset =
+            self.download_and_parse_csv(url, "credit_approval", columns, Some("class"), true)?;
+
+        if self.config.use_cache {
+            self.cache.put(&cache_key, &dataset)?;
+        }
+
+        Ok(dataset)
     }
 
+    /// Load the Mushroom dataset from UCI repository
     pub fn load_mushroom(&mut self) -> Result<Dataset> {
-        self.create_synthetic_mushroom_data()
+        let cache_key = CacheKey::new("mushroom", &self.config);
+
+        if self.config.use_cache {
+            if let Some(dataset) = self.cache.get(&cache_key)? {
+                return Ok(dataset);
+            }
+        }
+
+        // UCI Mushroom dataset URL
+        let url = "https://archive.ics.uci.edu/ml/machine-learning-databases/mushroom/agaricus-lepiota.data";
+        let columns = &[
+            "class",
+            "cap-shape",
+            "cap-surface",
+            "cap-color",
+            "bruises",
+            "odor",
+            "gill-attachment",
+            "gill-spacing",
+            "gill-size",
+            "gill-color",
+            "stalk-shape",
+            "stalk-root",
+            "stalk-surface-above-ring",
+            "stalk-surface-below-ring",
+            "stalk-color-above-ring",
+            "stalk-color-below-ring",
+            "veil-type",
+            "veil-color",
+            "ring-number",
+            "ring-type",
+            "spore-print-color",
+            "population",
+            "habitat",
+        ];
+
+        let dataset = self.download_and_parse_csv(url, "mushroom", columns, Some("class"), true)?;
+
+        if self.config.use_cache {
+            self.cache.put(&cache_key, &dataset)?;
+        }
+
+        Ok(dataset)
     }
 
+    /// Load the Spambase dataset from UCI repository
     pub fn load_spam(&mut self) -> Result<Dataset> {
-        self.create_synthetic_spam_data()
+        let cache_key = CacheKey::new("spam", &self.config);
+
+        if self.config.use_cache {
+            if let Some(dataset) = self.cache.get(&cache_key)? {
+                return Ok(dataset);
+            }
+        }
+
+        // UCI Spambase dataset URL
+        let url =
+            "https://archive.ics.uci.edu/ml/machine-learning-databases/spambase/spambase.data";
+        let mut columns: Vec<String> = Vec::new();
+
+        // Generate feature names for spambase (57 features + 1 target)
+        for i in 0..48 {
+            columns.push(format!("word_freq_{}", i));
+        }
+        for i in 0..6 {
+            columns.push(format!("char_freq_{}", i));
+        }
+        columns.push("capital_run_length_average".to_string());
+        columns.push("capital_run_length_longest".to_string());
+        columns.push("capital_run_length_total".to_string());
+        columns.push("spam".to_string());
+
+        let column_refs: Vec<&str> = columns.iter().map(|s| s.as_str()).collect();
+
+        let dataset =
+            self.download_and_parse_csv(url, "spam", &column_refs, Some("spam"), false)?;
+
+        if self.config.use_cache {
+            self.cache.put(&cache_key, &dataset)?;
+        }
+
+        Ok(dataset)
     }
 
     pub fn load_auto_mpg(&mut self) -> Result<Dataset> {
@@ -438,11 +569,16 @@ impl RealWorldDatasets {
 
         let metadata = DatasetMetadata {
             name: "Auto MPG".to_string(),
-            description: "Predict car fuel efficiency (miles per gallon) from technical specifications".to_string(),
+            description:
+                "Predict car fuel efficiency (miles per gallon) from technical specifications"
+                    .to_string(),
             n_samples: 392,
             n_features: 7,
             task_type: "regression".to_string(),
             target_names: None, // Regression task
+            feature_names: None,
+            url: None,
+            checksum: None,
         };
 
         let dataset = Dataset::from_metadata(data, Some(target), metadata);
@@ -467,11 +603,15 @@ impl RealWorldDatasets {
 
         let metadata = DatasetMetadata {
             name: "Concrete Compressive Strength".to_string(),
-            description: "Predict concrete compressive strength from mixture components".to_string(),
+            description: "Predict concrete compressive strength from mixture components"
+                .to_string(),
             n_samples: 1030,
             n_features: 8,
             task_type: "regression".to_string(),
             target_names: None, // Regression task
+            feature_names: None,
+            url: None,
+            checksum: None,
         };
 
         let dataset = Dataset::from_metadata(data, Some(target), metadata);
@@ -501,6 +641,9 @@ impl RealWorldDatasets {
             n_features: 11,
             task_type: "regression".to_string(),
             target_names: None, // Regression task
+            feature_names: None,
+            url: None,
+            checksum: None,
         };
 
         let dataset = Dataset::from_metadata(data, Some(target), metadata);
@@ -525,11 +668,15 @@ impl RealWorldDatasets {
 
         let metadata = DatasetMetadata {
             name: "Electricity Load".to_string(),
-            description: "Hourly electricity consumption forecasting with weather factors".to_string(),
+            description: "Hourly electricity consumption forecasting with weather factors"
+                .to_string(),
             n_samples: 26304,
             n_features: 3,
             task_type: "time_series".to_string(),
             target_names: None, // Regression/time series task
+            feature_names: None,
+            url: None,
+            checksum: None,
         };
 
         let dataset = Dataset::from_metadata(data, Some(target), metadata);
@@ -559,6 +706,9 @@ impl RealWorldDatasets {
             n_features: 5,
             task_type: "time_series".to_string(),
             target_names: None, // Regression/time series task
+            feature_names: None,
+            url: None,
+            checksum: None,
         };
 
         let dataset = Dataset::from_metadata(data, Some(target), metadata);
@@ -599,6 +749,9 @@ impl RealWorldDatasets {
                 "ship".to_string(),
                 "truck".to_string(),
             ]),
+            feature_names: None,
+            url: None,
+            checksum: None,
         };
 
         let dataset = Dataset::from_metadata(data, Some(target), metadata);
@@ -623,7 +776,8 @@ impl RealWorldDatasets {
 
         let metadata = DatasetMetadata {
             name: "Fashion-MNIST Subset".to_string(),
-            description: "Subset of Fashion-MNIST 28x28 grayscale images of fashion items".to_string(),
+            description: "Subset of Fashion-MNIST 28x28 grayscale images of fashion items"
+                .to_string(),
             n_samples: 1000,
             n_features: 784,
             task_type: "classification".to_string(),
@@ -639,6 +793,9 @@ impl RealWorldDatasets {
                 "Bag".to_string(),
                 "Ankle boot".to_string(),
             ]),
+            feature_names: None,
+            url: None,
+            checksum: None,
         };
 
         let dataset = Dataset::from_metadata(data, Some(target), metadata);
@@ -668,6 +825,9 @@ impl RealWorldDatasets {
             n_features: 1000,
             task_type: "classification".to_string(),
             target_names: Some(vec!["negative".to_string(), "positive".to_string()]),
+            feature_names: None,
+            url: None,
+            checksum: None,
         };
 
         let dataset = Dataset::from_metadata(data, Some(target), metadata);
@@ -703,6 +863,9 @@ impl RealWorldDatasets {
                 "sport".to_string(),
                 "tech".to_string(),
             ]),
+            feature_names: None,
+            url: None,
+            checksum: None,
         };
 
         let dataset = Dataset::from_metadata(data, Some(target), metadata);
@@ -727,11 +890,15 @@ impl RealWorldDatasets {
 
         let metadata = DatasetMetadata {
             name: "Credit Card Fraud Detection".to_string(),
-            description: "Detect fraudulent credit card transactions from anonymized features".to_string(),
+            description: "Detect fraudulent credit card transactions from anonymized features"
+                .to_string(),
             n_samples: 284807,
             n_features: 28,
             task_type: "classification".to_string(),
             target_names: Some(vec!["legitimate".to_string(), "fraud".to_string()]),
+            feature_names: None,
+            url: None,
+            checksum: None,
         };
 
         let dataset = Dataset::from_metadata(data, Some(target), metadata);
@@ -756,11 +923,15 @@ impl RealWorldDatasets {
 
         let metadata = DatasetMetadata {
             name: "Loan Default Prediction".to_string(),
-            description: "Predict loan default risk from borrower characteristics and loan details".to_string(),
+            description: "Predict loan default risk from borrower characteristics and loan details"
+                .to_string(),
             n_samples: 10000,
             n_features: 15,
             task_type: "classification".to_string(),
             target_names: Some(vec!["no_default".to_string(), "default".to_string()]),
+            feature_names: None,
+            url: None,
+            checksum: None,
         };
 
         let dataset = Dataset::from_metadata(data, Some(target), metadata);
@@ -783,9 +954,6 @@ impl RealWorldDatasets {
         target_col: Option<&str>,
         has_categorical: bool,
     ) -> Result<Dataset> {
-        use std::io::{BufRead, BufReader, Cursor};
-        use std::collections::HashMap;
-
         // Check if we should download
         if !self.config.download_if_missing {
             return Err(DatasetsError::DownloadError(
@@ -793,12 +961,22 @@ impl RealWorldDatasets {
             ));
         }
 
-        // For now, create a synthetic version that matches the real dataset characteristics
-        // In a production implementation, you would use an HTTP client like reqwest
+        // Try to download the actual dataset when download feature is enabled
+        #[cfg(feature = "download")]
+        {
+            match self.download_real_dataset(url, name, columns, target_col, has_categorical) {
+                Ok(dataset) => return Ok(dataset),
+                Err(e) => {
+                    eprintln!("Warning: Failed to download real dataset from {}: {}. Falling back to synthetic data.", url, e);
+                }
+            }
+        }
+
+        // Fallback to synthetic version that matches the real dataset characteristics
         match name {
             "adult" => {
                 let (data, target) = self.create_synthetic_adult_dataset(32561, 14)?;
-                
+
                 let feature_names = vec![
                     "age".to_string(),
                     "workclass".to_string(),
@@ -818,7 +996,8 @@ impl RealWorldDatasets {
 
                 let metadata = crate::registry::DatasetMetadata {
                     name: "Adult Census Income".to_string(),
-                    description: Some("Predict whether income exceeds $50K/yr based on census data".to_string()),
+                    description: "Predict whether income exceeds $50K/yr based on census data"
+                        .to_string(),
                     n_samples: 32561,
                     n_features: 14,
                     task_type: "classification".to_string(),
@@ -834,19 +1013,26 @@ impl RealWorldDatasets {
             _ => {
                 // Fallback: create a generic synthetic dataset
                 let n_features = columns.len() - if target_col.is_some() { 1 } else { 0 };
-                let (data, target) = self.create_generic_synthetic_dataset(1000, n_features, has_categorical)?;
-                
-                let feature_names: Vec<String> = columns.iter()
+                let (data, target) =
+                    self.create_generic_synthetic_dataset(1000, n_features, has_categorical)?;
+
+                let feature_names: Vec<String> = columns
+                    .iter()
                     .filter(|&&col| Some(col) != target_col)
                     .map(|&col| col.to_string())
                     .collect();
 
                 let metadata = crate::registry::DatasetMetadata {
                     name: format!("Synthetic {}", name),
-                    description: Some(format!("Synthetic version of {} dataset", name)),
+                    description: format!("Synthetic version of {} dataset", name),
                     n_samples: 1000,
                     n_features,
-                    task_type: if target_col.is_some() { "classification" } else { "regression" }.to_string(),
+                    task_type: if target_col.is_some() {
+                        "classification"
+                    } else {
+                        "regression"
+                    }
+                    .to_string(),
                     target_names: None,
                     feature_names: Some(feature_names),
                     url: Some(url.to_string()),
@@ -859,13 +1045,158 @@ impl RealWorldDatasets {
         }
     }
 
+    /// Download and parse real dataset from URL
+    #[cfg(feature = "download")]
+    fn download_real_dataset(
+        &self,
+        url: &str,
+        name: &str,
+        columns: &[&str],
+        target_col: Option<&str>,
+        _has_categorical: bool,
+    ) -> Result<Dataset> {
+        use crate::cache::download_data;
+        use std::collections::HashMap;
+        use std::io::{BufRead, BufReader, Cursor};
+
+        // Download the data
+        let data_bytes = download_data(url, false)?;
+
+        // Parse CSV data
+        let cursor = Cursor::new(data_bytes);
+        let reader = BufReader::new(cursor);
+
+        let mut rows: Vec<Vec<String>> = Vec::new();
+        let mut header_found = false;
+
+        for line_result in reader.lines() {
+            let line = line_result
+                .map_err(|e| DatasetsError::ParseError(format!("Failed to read line: {}", e)))?;
+            let line = line.trim();
+
+            if line.is_empty() {
+                continue;
+            }
+
+            // Simple CSV parsing (handles comma-separated values)
+            let fields: Vec<String> = line
+                .split(',')
+                .map(|s| s.trim().trim_matches('"').to_string())
+                .collect();
+
+            if !header_found && fields.len() == columns.len() {
+                // Skip header row if it matches expected columns
+                let is_header = fields.iter().enumerate().all(|(i, field)| {
+                    field.to_lowercase().contains(&columns[i].to_lowercase())
+                        || columns[i].to_lowercase().contains(&field.to_lowercase())
+                });
+                if is_header {
+                    header_found = true;
+                    continue;
+                }
+            }
+
+            if fields.len() == columns.len() {
+                rows.push(fields);
+            }
+        }
+
+        if rows.is_empty() {
+            return Err(DatasetsError::ParseError(
+                "No valid data rows found in CSV".to_string(),
+            ));
+        }
+
+        // Convert to numerical data
+        let n_samples = rows.len();
+        let n_features = if let Some(_) = target_col {
+            columns.len() - 1
+        } else {
+            columns.len()
+        };
+
+        let mut data = Array2::<f64>::zeros((n_samples, n_features));
+        let mut target = if target_col.is_some() {
+            Some(Array1::<f64>::zeros(n_samples))
+        } else {
+            None
+        };
+
+        // Map categorical values to numeric
+        let mut category_maps: HashMap<usize, HashMap<String, f64>> = HashMap::new();
+
+        for (row_idx, row) in rows.iter().enumerate() {
+            let mut feature_idx = 0;
+
+            for (col_idx, value) in row.iter().enumerate() {
+                if Some(columns[col_idx]) == target_col {
+                    // This is the target column
+                    if let Some(ref mut target_array) = target {
+                        let numeric_value = match value.parse::<f64>() {
+                            Ok(v) => v,
+                            Err(_) => {
+                                // Handle categorical target
+                                let category_map =
+                                    category_maps.entry(col_idx).or_insert_with(HashMap::new);
+                                let next_id = category_map.len() as f64;
+                                *category_map.entry(value.clone()).or_insert(next_id)
+                            }
+                        };
+                        target_array[row_idx] = numeric_value;
+                    }
+                } else {
+                    // This is a feature column
+                    let numeric_value = match value.parse::<f64>() {
+                        Ok(v) => v,
+                        Err(_) => {
+                            // Handle categorical features
+                            let category_map =
+                                category_maps.entry(col_idx).or_insert_with(HashMap::new);
+                            let next_id = category_map.len() as f64;
+                            *category_map.entry(value.clone()).or_insert(next_id)
+                        }
+                    };
+                    data[[row_idx, feature_idx]] = numeric_value;
+                    feature_idx += 1;
+                }
+            }
+        }
+
+        // Create feature names (excluding target)
+        let feature_names: Vec<String> = columns
+            .iter()
+            .filter(|&&col| Some(col) != target_col)
+            .map(|&col| col.to_string())
+            .collect();
+
+        // Create metadata
+        let metadata = crate::registry::DatasetMetadata {
+            name: name.to_string(),
+            description: format!("Real-world dataset: {}", name),
+            n_samples,
+            n_features,
+            task_type: if target.is_some() {
+                "classification".to_string()
+            } else {
+                "unsupervised".to_string()
+            },
+            target_names: None,
+            feature_names: Some(feature_names),
+            url: Some(url.to_string()),
+            checksum: None,
+            ..Default::default()
+        };
+
+        Ok(Dataset::from_metadata(data, target, metadata))
+    }
+
     fn create_synthetic_bank_data(
         &self,
         n_samples: usize,
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -887,14 +1218,14 @@ impl RealWorldDatasets {
 
     fn create_synthetic_credit_approval_data(&self) -> Result<Dataset> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
-        
+        let mut rng = rand::rng();
+
         let n_samples = 690; // Based on the actual UCI credit approval dataset size
         let n_features = 15;
-        
+
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
-        
+
         let feature_names = vec![
             "credit_score".to_string(),
             "annual_income".to_string(),
@@ -912,7 +1243,7 @@ impl RealWorldDatasets {
             "marital_status".to_string(),
             "verification_status".to_string(),
         ];
-        
+
         for i in 0..n_samples {
             // Credit score (300-850)
             data[[i, 0]] = rng.random_range(300.0..850.0);
@@ -944,28 +1275,32 @@ impl RealWorldDatasets {
             data[[i, 13]] = rng.random_range(0.0f64..3.0).floor();
             // Verification status (0=not verified, 1=verified)
             data[[i, 14]] = if rng.random_bool(0.7) { 1.0 } else { 0.0 };
-            
+
             // Determine approval based on realistic criteria
             let credit_score_factor = (data[[i, 0]] - 300.0) / 550.0; // Normalize credit score
             let income_factor = (data[[i, 1]] / 100000.0).min(1.0); // Normalize income
             let debt_factor = 1.0 - data[[i, 2]]; // Lower debt is better
             let employment_factor = (data[[i, 3]] / 10.0).min(1.0); // Employment stability
             let delinquency_penalty = data[[i, 11]] * 0.1; // Penalties for past delinquencies
-            
-            let approval_score = credit_score_factor * 0.4 + 
-                               income_factor * 0.3 + 
-                               debt_factor * 0.2 + 
-                               employment_factor * 0.1 - 
-                               delinquency_penalty;
-            
+
+            let approval_score = credit_score_factor * 0.4
+                + income_factor * 0.3
+                + debt_factor * 0.2
+                + employment_factor * 0.1
+                - delinquency_penalty;
+
             // Add some noise and determine final approval
             let noise = rng.random_range(-0.2..0.2);
-            target[i] = if (approval_score + noise) > 0.5 { 1.0 } else { 0.0 };
+            target[i] = if (approval_score + noise) > 0.5 {
+                1.0
+            } else {
+                0.0
+            };
         }
-        
+
         let metadata = crate::registry::DatasetMetadata {
             name: "Credit Approval Dataset".to_string(),
-            description: Some("Synthetic credit approval dataset with realistic financial features for binary classification".to_string()),
+            description: "Synthetic credit approval dataset with realistic financial features for binary classification".to_string(),
             n_samples,
             n_features,
             task_type: "classification".to_string(),
@@ -975,20 +1310,20 @@ impl RealWorldDatasets {
             checksum: None,
             ..Default::default()
         };
-        
+
         Ok(Dataset::from_metadata(data, Some(target), metadata))
     }
 
     fn create_synthetic_mushroom_data(&self) -> Result<Dataset> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
-        
+        let mut rng = rand::rng();
+
         let n_samples = 8124; // Based on the actual UCI mushroom dataset size
         let n_features = 22;
-        
+
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
-        
+
         let feature_names = vec![
             "cap_shape".to_string(),
             "cap_surface".to_string(),
@@ -1013,7 +1348,7 @@ impl RealWorldDatasets {
             "population".to_string(),
             "habitat".to_string(),
         ];
-        
+
         for i in 0..n_samples {
             // Cap shape (0-5: bell, conical, convex, flat, knobbed, sunken)
             data[[i, 0]] = rng.random_range(0.0f64..6.0).floor();
@@ -1059,37 +1394,45 @@ impl RealWorldDatasets {
             data[[i, 20]] = rng.random_range(0.0f64..6.0).floor();
             // Habitat (0-6: grasses, leaves, meadows, paths, urban, waste, woods)
             data[[i, 21]] = rng.random_range(0.0f64..7.0).floor();
-            
+
             // Determine edibility based on key features
             // Poisonous mushrooms often have certain characteristics
             let mut poison_score = 0.0;
-            
+
             // Bad odors often indicate poisonous mushrooms
-            if data[[i, 4]] == 2.0 || data[[i, 4]] == 3.0 || data[[i, 4]] == 4.0 { // creosote, fishy, foul
+            if data[[i, 4]] == 2.0 || data[[i, 4]] == 3.0 || data[[i, 4]] == 4.0 {
+                // creosote, fishy, foul
                 poison_score += 0.8;
             }
-            if data[[i, 4]] == 5.0 || data[[i, 4]] == 7.0 { // musty, pungent
+            if data[[i, 4]] == 5.0 || data[[i, 4]] == 7.0 {
+                // musty, pungent
                 poison_score += 0.4;
             }
-            
+
             // Certain spore print colors are associated with poisonous mushrooms
-            if data[[i, 19]] == 2.0 || data[[i, 19]] == 4.0 { // buff, green
+            if data[[i, 19]] == 2.0 || data[[i, 19]] == 4.0 {
+                // buff, green
                 poison_score += 0.3;
             }
-            
+
             // Stalk root type affects edibility
-            if data[[i, 10]] == 0.0 { // bulbous root often poisonous
+            if data[[i, 10]] == 0.0 {
+                // bulbous root often poisonous
                 poison_score += 0.2;
             }
-            
+
             // Add some randomness for realistic variation
             let noise = rng.random_range(-0.3..0.3);
-            target[i] = if (poison_score + noise) > 0.5 { 1.0 } else { 0.0 }; // 1=poisonous, 0=edible
+            target[i] = if (poison_score + noise) > 0.5 {
+                1.0
+            } else {
+                0.0
+            }; // 1=poisonous, 0=edible
         }
-        
+
         let metadata = crate::registry::DatasetMetadata {
             name: "Mushroom Dataset".to_string(),
-            description: Some("Synthetic mushroom classification dataset with morphological features for edibility prediction".to_string()),
+            description: "Synthetic mushroom classification dataset with morphological features for edibility prediction".to_string(),
             n_samples,
             n_features,
             task_type: "classification".to_string(),
@@ -1099,50 +1442,98 @@ impl RealWorldDatasets {
             checksum: None,
             ..Default::default()
         };
-        
+
         Ok(Dataset::from_metadata(data, Some(target), metadata))
     }
 
     fn create_synthetic_spam_data(&self) -> Result<Dataset> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
-        
+        let mut rng = rand::rng();
+
         let n_samples = 4601; // Based on the actual spam dataset size
         let n_features = 57; // 54 word frequency features + 3 character frequency features
-        
+
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
-        
+
         // Generate feature names for the spam dataset
         let mut feature_names = Vec::with_capacity(n_features);
-        
+
         // Word frequency features (first 54 features)
         let spam_words = vec![
-            "make", "address", "all", "3d", "our", "over", "remove", "internet",
-            "order", "mail", "receive", "will", "people", "report", "addresses",
-            "free", "business", "email", "you", "credit", "your", "font", "000",
-            "money", "hp", "hpl", "george", "650", "lab", "labs", "telnet", "857",
-            "data", "415", "85", "technology", "1999", "parts", "pm", "direct",
-            "cs", "meeting", "original", "project", "re", "edu", "table", "conference",
-            "char_freq_semicolon", "char_freq_parenthesis", "char_freq_bracket",
-            "char_freq_exclamation", "char_freq_dollar", "char_freq_hash",
-            "capital_run_length_average", "capital_run_length_longest", "capital_run_length_total"
+            "make",
+            "address",
+            "all",
+            "3d",
+            "our",
+            "over",
+            "remove",
+            "internet",
+            "order",
+            "mail",
+            "receive",
+            "will",
+            "people",
+            "report",
+            "addresses",
+            "free",
+            "business",
+            "email",
+            "you",
+            "credit",
+            "your",
+            "font",
+            "000",
+            "money",
+            "hp",
+            "hpl",
+            "george",
+            "650",
+            "lab",
+            "labs",
+            "telnet",
+            "857",
+            "data",
+            "415",
+            "85",
+            "technology",
+            "1999",
+            "parts",
+            "pm",
+            "direct",
+            "cs",
+            "meeting",
+            "original",
+            "project",
+            "re",
+            "edu",
+            "table",
+            "conference",
+            "char_freq_semicolon",
+            "char_freq_parenthesis",
+            "char_freq_bracket",
+            "char_freq_exclamation",
+            "char_freq_dollar",
+            "char_freq_hash",
+            "capital_run_length_average",
+            "capital_run_length_longest",
+            "capital_run_length_total",
         ];
-        
+
         for (i, word) in spam_words.iter().enumerate() {
             if i < n_features {
                 feature_names.push(format!("word_freq_{}", word));
             }
         }
-        
+
         // Fill remaining feature names if needed
         while feature_names.len() < n_features {
             feature_names.push(format!("feature_{}", feature_names.len()));
         }
-        
+
         for i in 0..n_samples {
             let is_spam = rng.random_bool(0.4); // 40% spam rate
-            
+
             // Generate word frequency features (0-54)
             for j in 0..54 {
                 if is_spam {
@@ -1162,24 +1553,24 @@ impl RealWorldDatasets {
                     }
                 }
             }
-            
+
             // Character frequency features (54-56)
             if is_spam {
                 data[[i, 54]] = rng.random_range(0.0..0.2); // Semicolon frequency
-                data[[i, 55]] = rng.random_range(0.0..0.5); // Parenthesis frequency  
+                data[[i, 55]] = rng.random_range(0.0..0.5); // Parenthesis frequency
                 data[[i, 56]] = rng.random_range(0.0..0.3); // Exclamation frequency
             } else {
                 data[[i, 54]] = rng.random_range(0.0..0.1);
                 data[[i, 55]] = rng.random_range(0.0..0.2);
                 data[[i, 56]] = rng.random_range(0.0..0.1);
             }
-            
+
             target[i] = if is_spam { 1.0 } else { 0.0 };
         }
-        
+
         let metadata = crate::registry::DatasetMetadata {
             name: "Spam Email Dataset".to_string(),
-            description: Some("Synthetic spam email classification dataset with word and character frequency features".to_string()),
+            description: "Synthetic spam email classification dataset with word and character frequency features".to_string(),
             n_samples,
             n_features,
             task_type: "classification".to_string(),
@@ -1189,7 +1580,7 @@ impl RealWorldDatasets {
             checksum: None,
             ..Default::default()
         };
-        
+
         Ok(Dataset::from_metadata(data, Some(target), metadata))
     }
 
@@ -1199,7 +1590,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -1237,7 +1628,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -1260,7 +1651,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -1300,7 +1691,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -1338,7 +1729,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -1379,7 +1770,7 @@ impl RealWorldDatasets {
         n_timesteps: usize,
     ) -> Result<(Array2<f64>, Option<Array1<f64>>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_timesteps, 6));
         let mut price = 30000.0; // Starting price
@@ -1410,7 +1801,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -1450,7 +1841,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -1474,7 +1865,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -1496,8 +1887,9 @@ impl RealWorldDatasets {
             data[[i, 6]] = (rng.random_range(1.0f64..4.0f64)).floor();
 
             // MPG calculation: inversely related to weight and displacement, positively to efficiency
-            let mpg: f64 = 45.0 - (data[[i, 3]] / 5140.0) * 20.0 - (data[[i, 1]] / 455.0) * 15.0 + 
-                     (data[[i, 4]] / 24.8) * 10.0 + rng.random_range(-3.0..3.0);
+            let mpg: f64 = 45.0 - (data[[i, 3]] / 5140.0) * 20.0 - (data[[i, 1]] / 455.0) * 15.0
+                + (data[[i, 4]] / 24.8) * 10.0
+                + rng.random_range(-3.0..3.0);
             target[i] = mpg.max(9.0).min(46.6);
         }
 
@@ -1510,7 +1902,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -1552,7 +1944,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -1560,20 +1952,25 @@ impl RealWorldDatasets {
         for i in 0..n_samples {
             let hour = (i % 24) as f64;
             let day_of_year = (i / 24) % 365;
-            
+
             // Temperature
-            data[[i, 0]] = 20.0 + 15.0 * (day_of_year as f64 * 2.0 * std::f64::consts::PI / 365.0).sin() +
-                          rng.random_range(-5.0..5.0);
+            data[[i, 0]] = 20.0
+                + 15.0 * (day_of_year as f64 * 2.0 * std::f64::consts::PI / 365.0).sin()
+                + rng.random_range(-5.0..5.0);
             // Humidity
             data[[i, 1]] = 50.0 + 30.0 * rng.random_range(0.0..1.0);
             // Hour of day
             data[[i, 2]] = hour;
 
             // Electricity load: seasonal + daily patterns + weather effects
-            let seasonal = 50.0 + 30.0 * (day_of_year as f64 * 2.0 * std::f64::consts::PI / 365.0 + std::f64::consts::PI).cos();
+            let seasonal = 50.0
+                + 30.0
+                    * (day_of_year as f64 * 2.0 * std::f64::consts::PI / 365.0
+                        + std::f64::consts::PI)
+                        .cos();
             let daily = 40.0 + 60.0 * ((hour - 12.0) * std::f64::consts::PI / 12.0).cos();
             let temp_effect = (data[[i, 0]] - 20.0).abs() * 2.0; // Higher load for extreme temperatures
-            
+
             target[i] = seasonal + daily + temp_effect + rng.random_range(-10.0..10.0);
         }
 
@@ -1586,7 +1983,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -1597,7 +1994,7 @@ impl RealWorldDatasets {
             // Price movement (random walk with trend)
             let change = rng.random_range(-0.05..0.05);
             price *= 1.0 + change;
-            
+
             // Features: OHLC + Volume
             let high = price * (1.0 + rng.random_range(0.0..0.02));
             let low = price * (1.0 - rng.random_range(0.0..0.02));
@@ -1623,7 +2020,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -1656,7 +2053,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -1676,7 +2073,7 @@ impl RealWorldDatasets {
             data[[i, 5]] = rng.random_range(0.0..40.0);
             // Debt-to-income ratio
             data[[i, 6]] = rng.random_range(0.0..0.4);
-            
+
             // Fill remaining features
             for j in 7..n_features {
                 data[[i, j]] = rng.random_range(0.0..1.0);
@@ -1700,7 +2097,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -1727,17 +2124,24 @@ impl RealWorldDatasets {
             // Sex (0=Female, 1=Male)
             data[[i, 9]] = if rng.random_bool(0.67) { 1.0 } else { 0.0 };
             // Capital gain (0-99999)
-            data[[i, 10]] = if rng.random_bool(0.9) { 0.0 } else { rng.random_range(1.0..99999.0) };
+            data[[i, 10]] = if rng.random_bool(0.9) {
+                0.0
+            } else {
+                rng.random_range(1.0..99999.0)
+            };
             // Capital loss (0-4356)
-            data[[i, 11]] = if rng.random_bool(0.95) { 0.0 } else { rng.random_range(1.0..4356.0) };
+            data[[i, 11]] = if rng.random_bool(0.95) {
+                0.0
+            } else {
+                rng.random_range(1.0..4356.0)
+            };
             // Hours per week (1-99)
             data[[i, 12]] = rng.random_range(1.0..99.0);
             // Native country (encoded 0-40)
             data[[i, 13]] = rng.random_range(0.0f64..41.0).floor();
 
             // Income prediction based on realistic factors
-            let income_score = 
-                (data[[i, 0]] - 17.0) / 73.0 * 0.2 + // Age factor
+            let income_score = (data[[i, 0]] - 17.0) / 73.0 * 0.2 + // Age factor
                 data[[i, 4]] / 16.0 * 0.3 + // Education factor
                 data[[i, 9]] * 0.2 + // Gender factor (historically male bias)
                 (data[[i, 12]] - 1.0) / 98.0 * 0.2 + // Hours worked factor
@@ -1745,7 +2149,11 @@ impl RealWorldDatasets {
 
             // Add some randomness
             let noise = rng.random_range(-0.15..0.15);
-            target[i] = if (income_score + noise) > 0.5 { 1.0 } else { 0.0 };
+            target[i] = if (income_score + noise) > 0.5 {
+                1.0
+            } else {
+                0.0
+            };
         }
 
         Ok((data, target))
@@ -1758,7 +2166,7 @@ impl RealWorldDatasets {
         has_categorical: bool,
     ) -> Result<(Array2<f64>, Option<Array1<f64>>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
 
@@ -1791,7 +2199,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -1818,7 +2226,7 @@ impl RealWorldDatasets {
 
                 // Add noise and variation
                 data[[i, j]] = base_intensity + rng.random_range(-0.3..0.3);
-                data[[i, j]] = data[[i, j]].max(0.0).min(1.0); // Clamp to [0, 1]
+                data[[i, j]] = (data[[i, j]] as f64).max(0.0_f64).min(1.0_f64); // Clamp to [0, 1]
             }
         }
 
@@ -1831,7 +2239,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -1859,7 +2267,7 @@ impl RealWorldDatasets {
                 // Add texture and noise
                 let texture_noise = rng.random_range(-0.2..0.2);
                 data[[i, j]] = base_intensity + texture_noise;
-                data[[i, j]] = data[[i, j]].max(0.0).min(1.0); // Clamp to [0, 1]
+                data[[i, j]] = (data[[i, j]] as f64).max(0.0_f64).min(1.0_f64); // Clamp to [0, 1]
             }
         }
 
@@ -1872,7 +2280,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -1880,7 +2288,7 @@ impl RealWorldDatasets {
         // Define word groups for sentiment analysis
         let positive_words = 0..n_features / 3; // First third are positive words
         let negative_words = n_features / 3..2 * n_features / 3; // Second third are negative words
-        let neutral_words = 2 * n_features / 3..n_features; // Last third are neutral words
+        let _neutral_words = 2 * n_features / 3..n_features; // Last third are neutral words
 
         for i in 0..n_samples {
             let is_positive = rng.random_bool(0.5);
@@ -1917,7 +2325,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -1931,7 +2339,7 @@ impl RealWorldDatasets {
 
             for j in 0..n_features {
                 let word_topic = j / words_per_topic;
-                
+
                 let base_freq = if word_topic == topic as usize {
                     // Words from the same topic appear more frequently
                     rng.random_range(1.0..3.0)
@@ -1942,7 +2350,7 @@ impl RealWorldDatasets {
 
                 // Add some noise
                 let noise = rng.random_range(-0.2..0.2);
-                data[[i, j]] = (base_freq + noise).max(0.0);
+                data[[i, j]] = (base_freq + noise as f64).max(0.0_f64);
             }
         }
 

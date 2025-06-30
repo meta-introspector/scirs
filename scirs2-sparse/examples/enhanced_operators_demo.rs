@@ -3,9 +3,12 @@
 //! This example demonstrates the new enhanced linear operators that provide
 //! performance optimizations using SIMD acceleration and parallel processing.
 
-use scirs2_sparse::linalg::enhanced_operators::*;
-use scirs2_sparse::linalg::interface::LinearOperator;
-use scirs2_sparse::{enhanced_diagonal, convolution_operator, finite_difference_operator, ConvolutionMode, BoundaryCondition};
+use scirs2_sparse::{
+    enhanced_add, enhanced_diagonal, enhanced_scale,
+    convolution_operator, finite_difference_operator, 
+    EnhancedDiagonalOperator, EnhancedOperatorOptions,
+    ConvolutionMode, BoundaryCondition, LinearOperator
+};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Enhanced Linear Operators Demo");

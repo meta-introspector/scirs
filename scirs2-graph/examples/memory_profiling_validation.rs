@@ -7,8 +7,8 @@
 use scirs2_graph::{
     generators,
     memory::{
-        BitPackedGraph, CSRGraph, CompressedAdjacencyList, HybridGraph, MemoryProfiler,
-        OptimizedGraphBuilder, RealTimeMemoryProfiler, suggest_optimizations,
+        suggest_optimizations, BitPackedGraph, CSRGraph, CompressedAdjacencyList, HybridGraph,
+        MemoryProfiler, OptimizedGraphBuilder, RealTimeMemoryProfiler,
     },
     Graph,
 };
@@ -18,7 +18,7 @@ use std::time::Duration;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔍 SciRS2-Graph Memory Profiling Validation");
-    println!("=" .repeat(50));
+    println!("=".repeat(50));
 
     // Test 1: Basic Memory Profiling
     println!("\n📊 Test 1: Basic Memory Profiling");
@@ -53,7 +53,7 @@ fn basic_memory_profiling() -> Result<(), Box<dyn std::error::Error>> {
     let edge_probability = 0.01;
 
     println!("Graph Size | Total Memory | Node Memory | Edge Memory | Efficiency");
-    println!("-" .repeat(70));
+    println!("-".repeat(70));
 
     for size in sizes {
         let graph = generators::erdos_renyi_graph(size, edge_probability, None)?;
@@ -99,7 +99,7 @@ fn representation_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let compressed = CompressedAdjacencyList::from_adjacency(adj_lists);
 
     println!("Representation      | Memory Usage | vs Standard");
-    println!("-" .repeat(45));
+    println!("-".repeat(45));
     println!(
         "{:18} | {:11} | {:8}",
         "Standard Graph",
@@ -131,13 +131,19 @@ fn representation_comparison() -> Result<(), Box<dyn std::error::Error>> {
 fn fragmentation_analysis() -> Result<(), Box<dyn std::error::Error>> {
     // Create graphs with different degree distributions
     let graphs = vec![
-        ("Erdős-Rényi (uniform)", generators::erdos_renyi_graph(2000, 0.01, None)?),
-        ("Barabási-Albert (scale-free)", generators::barabasi_albert_graph(2000, 5, None)?),
+        (
+            "Erdős-Rényi (uniform)",
+            generators::erdos_renyi_graph(2000, 0.01, None)?,
+        ),
+        (
+            "Barabási-Albert (scale-free)",
+            generators::barabasi_albert_graph(2000, 5, None)?,
+        ),
         ("Complete", generators::complete_graph(100)?),
     ];
 
     println!("Graph Type           | Fragmentation | Wasted Memory");
-    println!("-" .repeat(55));
+    println!("-".repeat(55));
 
     for (name, graph) in graphs {
         let fragmentation = MemoryProfiler::analyze_fragmentation(&graph);
@@ -155,7 +161,7 @@ fn fragmentation_analysis() -> Result<(), Box<dyn std::error::Error>> {
 fn optimization_suggestions() -> Result<(), Box<dyn std::error::Error>> {
     // Create a graph with poor memory characteristics
     let mut graph = Graph::new();
-    
+
     // Add nodes with uneven degree distribution
     for i in 0..1000 {
         graph.add_node(i)?;
@@ -172,20 +178,29 @@ fn optimization_suggestions() -> Result<(), Box<dyn std::error::Error>> {
     let fragmentation = MemoryProfiler::analyze_fragmentation(&graph);
     let suggestions = suggest_optimizations(&stats, &fragmentation);
 
-    println!("Current memory efficiency: {:.1}%", stats.efficiency * 100.0);
-    println!("Fragmentation ratio: {:.1}%", fragmentation.fragmentation_ratio * 100.0);
+    println!(
+        "Current memory efficiency: {:.1}%",
+        stats.efficiency * 100.0
+    );
+    println!(
+        "Fragmentation ratio: {:.1}%",
+        fragmentation.fragmentation_ratio * 100.0
+    );
     println!("\nOptimization suggestions:");
     for suggestion in &suggestions.suggestions {
         println!("  • {}", suggestion);
     }
-    println!("Potential savings: {}", format_bytes(suggestions.potential_savings));
+    println!(
+        "Potential savings: {}",
+        format_bytes(suggestions.potential_savings)
+    );
 
     Ok(())
 }
 
 fn real_time_monitoring() -> Result<(), Box<dyn std::error::Error>> {
     println!("Starting real-time memory monitoring...");
-    
+
     let mut profiler = RealTimeMemoryProfiler::new(Duration::from_millis(100))?;
     profiler.start_monitoring()?;
 
@@ -198,7 +213,7 @@ fn real_time_monitoring() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     thread::sleep(Duration::from_millis(500));
-    
+
     let metrics = profiler.get_current_metrics()?;
     profiler.stop_monitoring()?;
 
@@ -251,7 +266,7 @@ fn optimized_builder_test() -> Result<(), Box<dyn std::error::Error>> {
     let optimized_stats = MemoryProfiler::profile_graph(&optimized_graph);
 
     println!("Construction Method | Time (ms) | Memory | Efficiency");
-    println!("-" .repeat(55));
+    println!("-".repeat(55));
     println!(
         "{:18} | {:8.1} | {:6} | {:9.1}%",
         "Standard",

@@ -721,7 +721,7 @@ impl<F: Float> AdaptiveStreamingMetrics<F> {
     }
 
     /// Handle concept drift detection
-    fn handle_concept_drift(&mut self, drift_results: &[DriftDetectionResult]) -> Result<()> {
+    fn handle_concept_drift(&mut self, _drift_results: &[DriftDetectionResult]) -> Result<()> {
         // Log drift detection
         let alert = Alert {
             id: format!("drift_{}", self.current_stats.total_samples),
@@ -833,7 +833,7 @@ pub struct AnomalySummary<F: Float> {
 }
 
 // Real implementation of ADWIN detector for efficient streaming
-impl<F: Float> AdwinDetector<F> {
+impl<F: Float + std::iter::Sum> AdwinDetector<F> {
     fn new(confidence: f64) -> Result<Self> {
         if !(0.0..=1.0).contains(&confidence) {
             return Err(MetricsError::InvalidInput(
@@ -960,7 +960,7 @@ impl<F: Float> AdwinDetector<F> {
 }
 
 impl<F: Float> ConceptDriftDetector<F> for AdwinDetector<F> {
-    fn update(&mut self, prediction_correct: bool, error: F) -> Result<DriftDetectionResult> {
+    fn update(&mut self, _prediction_correct: bool, error: F) -> Result<DriftDetectionResult> {
         self.samples_count += 1;
         
         // Add error value to window
@@ -1380,7 +1380,7 @@ impl<F: Float> AdaptiveWindowManager<F> {
         strategy: &WindowAdaptationStrategy,
         stats: &StreamingStatistics<F>,
         drift_detected: bool,
-        anomaly: Option<&Anomaly<F>>,
+        _anomaly: Option<&Anomaly<F>>,
     ) -> Result<f64> {
         let score = match strategy {
             WindowAdaptationStrategy::DriftBased => {
@@ -1683,7 +1683,7 @@ impl<F: Float> PerformanceMonitor<F> {
     }
 }
 
-impl<F: Float> AnomalyDetector<F> {
+impl<F: Float + std::iter::Sum> AnomalyDetector<F> {
     fn new(algorithm: AnomalyDetectionAlgorithm) -> Result<Self> {
         let threshold = match &algorithm {
             AnomalyDetectionAlgorithm::ZScore { threshold } => F::from(*threshold).unwrap(),
@@ -1997,7 +1997,7 @@ impl<F: Float> StreamingStatistics<F> {
         }
     }
 
-    fn update(&mut self, prediction_correct: bool, error: F) -> Result<()> {
+    fn update(&mut self, prediction_correct: bool, _error: F) -> Result<()> {
         self.total_samples += 1;
 
         if prediction_correct {
@@ -2060,6 +2060,1280 @@ impl AlertsManager {
 
         // In a real implementation, this would send alerts via configured channels
         Ok(())
+    }
+}
+
+/// Neural-adaptive streaming system with ML-based parameter optimization
+/// 
+/// This system uses neural networks and reinforcement learning to automatically
+/// tune streaming parameters for optimal performance across different data patterns.
+#[derive(Debug, Clone)]
+pub struct NeuralAdaptiveStreaming<F: Float> {
+    /// Neural parameter optimizer
+    parameter_optimizer: NeuralParameterOptimizer<F>,
+    /// Reinforcement learning agent for adaptive control
+    rl_agent: AdaptiveControlAgent<F>,
+    /// Online learning system for pattern recognition
+    online_learner: OnlineLearningSystem<F>,
+    /// Performance predictor neural network
+    performance_predictor: PerformancePredictor<F>,
+    /// Multi-armed bandit for exploration-exploitation
+    parameter_bandit: MultiArmedBandit<F>,
+    /// Neural feature extractor
+    feature_extractor: NeuralFeatureExtractor<F>,
+    /// Adaptive learning rate scheduler
+    learning_scheduler: AdaptiveLearningScheduler<F>,
+    /// Configuration for neural adaptation
+    config: NeuralAdaptiveConfig,
+}
+
+/// Configuration for neural-adaptive streaming
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NeuralAdaptiveConfig {
+    /// Neural network architecture parameters
+    pub network_config: NetworkConfig,
+    /// Reinforcement learning parameters
+    pub rl_config: RLConfig,
+    /// Online learning parameters
+    pub online_learning_config: OnlineLearningConfig,
+    /// Feature extraction parameters
+    pub feature_config: FeatureConfig,
+    /// Optimization parameters
+    pub optimization_config: OptimizationConfig,
+    /// Performance monitoring parameters
+    pub monitoring_config: MonitoringConfig,
+}
+
+/// Neural network configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NetworkConfig {
+    /// Hidden layer sizes for parameter optimizer
+    pub optimizer_hidden_layers: Vec<usize>,
+    /// Hidden layer sizes for performance predictor
+    pub predictor_hidden_layers: Vec<usize>,
+    /// Activation function type
+    pub activation: ActivationFunction,
+    /// Dropout rate for regularization
+    pub dropout_rate: f64,
+    /// Batch normalization enabled
+    pub batch_norm: bool,
+    /// Learning rate for neural networks
+    pub learning_rate: f64,
+    /// Weight decay for regularization
+    pub weight_decay: f64,
+}
+
+/// Reinforcement learning configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RLConfig {
+    /// RL algorithm type
+    pub algorithm: RLAlgorithm,
+    /// Exploration rate (epsilon for epsilon-greedy)
+    pub exploration_rate: f64,
+    /// Exploration decay rate
+    pub exploration_decay: f64,
+    /// Minimum exploration rate
+    pub min_exploration: f64,
+    /// Discount factor (gamma)
+    pub discount_factor: f64,
+    /// Target network update frequency
+    pub target_update_frequency: usize,
+    /// Experience replay buffer size
+    pub replay_buffer_size: usize,
+    /// Batch size for training
+    pub batch_size: usize,
+}
+
+/// Reinforcement learning algorithms
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum RLAlgorithm {
+    /// Deep Q-Network
+    DQN { double_dqn: bool },
+    /// Policy Gradient (REINFORCE)
+    PolicyGradient { baseline: bool },
+    /// Actor-Critic
+    ActorCritic { advantage_estimation: bool },
+    /// Proximal Policy Optimization
+    PPO { clip_ratio: f64 },
+    /// Soft Actor-Critic
+    SAC { entropy_coefficient: f64 },
+}
+
+/// Online learning configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OnlineLearningConfig {
+    /// Online learning algorithm
+    pub algorithm: OnlineLearningAlgorithm,
+    /// Adaptation speed
+    pub adaptation_rate: f64,
+    /// Forgetting factor for old data
+    pub forgetting_factor: f64,
+    /// Concept drift adaptation threshold
+    pub drift_adaptation_threshold: f64,
+    /// Model update frequency
+    pub update_frequency: usize,
+    /// Enable meta-learning
+    pub enable_meta_learning: bool,
+}
+
+/// Online learning algorithms
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum OnlineLearningAlgorithm {
+    /// Stochastic Gradient Descent
+    SGD { momentum: f64 },
+    /// Adaptive Gradient (AdaGrad)
+    AdaGrad { epsilon: f64 },
+    /// Adam optimizer
+    Adam { beta1: f64, beta2: f64 },
+    /// Online Passive-Aggressive
+    PassiveAggressive { aggressiveness: f64 },
+    /// Hedge algorithm
+    Hedge { learning_rate: f64 },
+}
+
+/// Feature extraction configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FeatureConfig {
+    /// Feature extraction method
+    pub extraction_method: FeatureExtractionMethod,
+    /// Number of features to extract
+    pub num_features: usize,
+    /// Time window for feature extraction
+    pub time_window: Duration,
+    /// Enable automatic feature selection
+    pub auto_feature_selection: bool,
+    /// Feature normalization method
+    pub normalization: FeatureNormalization,
+}
+
+/// Feature extraction methods
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum FeatureExtractionMethod {
+    /// Statistical features (mean, std, skewness, etc.)
+    Statistical,
+    /// Time-series features (trends, seasonality, etc.)
+    TimeSeries,
+    /// Frequency domain features (FFT-based)
+    FrequencyDomain,
+    /// Wavelet-based features
+    Wavelet { wavelet_type: String },
+    /// Neural autoencoder features
+    NeuralAutoencoder { encoding_dim: usize },
+    /// Ensemble of multiple methods
+    Ensemble { methods: Vec<FeatureExtractionMethod> },
+}
+
+/// Feature normalization methods
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum FeatureNormalization {
+    None,
+    StandardScore,
+    MinMax,
+    Robust,
+    Quantile,
+}
+
+/// Optimization configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OptimizationConfig {
+    /// Optimization algorithm
+    pub algorithm: OptimizationAlgorithm,
+    /// Maximum number of optimization iterations
+    pub max_iterations: usize,
+    /// Convergence tolerance
+    pub tolerance: f64,
+    /// Enable early stopping
+    pub early_stopping: bool,
+    /// Patience for early stopping
+    pub patience: usize,
+    /// Enable hyperparameter tuning
+    pub enable_hyperparameter_tuning: bool,
+}
+
+/// Optimization algorithms
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum OptimizationAlgorithm {
+    /// Bayesian Optimization
+    BayesianOptimization { acquisition_function: String },
+    /// Genetic Algorithm
+    GeneticAlgorithm { population_size: usize },
+    /// Particle Swarm Optimization
+    ParticleSwarm { swarm_size: usize },
+    /// Simulated Annealing
+    SimulatedAnnealing { initial_temperature: f64 },
+    /// Grid Search
+    GridSearch { grid_density: usize },
+    /// Random Search
+    RandomSearch { num_trials: usize },
+}
+
+/// Monitoring configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MonitoringConfig {
+    /// Performance metrics to track
+    pub metrics: Vec<String>,
+    /// Monitoring frequency
+    pub frequency: Duration,
+    /// Enable performance logging
+    pub enable_logging: bool,
+    /// Log file path
+    pub log_path: Option<String>,
+    /// Enable real-time visualization
+    pub enable_visualization: bool,
+}
+
+/// Activation functions for neural networks
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ActivationFunction {
+    ReLU,
+    LeakyReLU { alpha: f64 },
+    ELU { alpha: f64 },
+    Swish,
+    GELU,
+    Tanh,
+    Sigmoid,
+}
+
+/// Neural parameter optimizer using deep learning
+#[derive(Debug, Clone)]
+pub struct NeuralParameterOptimizer<F: Float> {
+    /// Input layer size (number of input features)
+    input_size: usize,
+    /// Output layer size (number of parameters to optimize)
+    output_size: usize,
+    /// Hidden layer weights and biases
+    hidden_layers: Vec<NeuralLayer<F>>,
+    /// Output layer
+    output_layer: NeuralLayer<F>,
+    /// Optimizer for training
+    optimizer: Box<dyn NeuralOptimizer<F> + Send + Sync>,
+    /// Training history
+    training_history: Vec<TrainingMetrics<F>>,
+    /// Current learning rate
+    learning_rate: F,
+    /// Regularization parameters
+    regularization: RegularizationConfig<F>,
+}
+
+/// Neural layer representation
+#[derive(Debug, Clone)]
+pub struct NeuralLayer<F: Float> {
+    /// Weight matrix
+    weights: Array2<F>,
+    /// Bias vector
+    biases: Array1<F>,
+    /// Activation function
+    activation: ActivationFunction,
+    /// Dropout rate
+    dropout_rate: f64,
+    /// Batch normalization parameters
+    batch_norm: Option<BatchNormParams<F>>,
+}
+
+/// Batch normalization parameters
+#[derive(Debug, Clone)]
+pub struct BatchNormParams<F: Float> {
+    /// Running mean
+    running_mean: Array1<F>,
+    /// Running variance
+    running_variance: Array1<F>,
+    /// Scale parameter (gamma)
+    gamma: Array1<F>,
+    /// Shift parameter (beta)
+    beta: Array1<F>,
+    /// Momentum for running statistics
+    momentum: F,
+    /// Small constant for numerical stability
+    epsilon: F,
+}
+
+/// Neural network optimizers
+pub trait NeuralOptimizer<F: Float> {
+    /// Update parameters based on gradients
+    fn update_parameters(&mut self, gradients: &[Array2<F>], parameters: &mut [Array2<F>]) -> Result<()>;
+    
+    /// Get current learning rate
+    fn get_learning_rate(&self) -> F;
+    
+    /// Set learning rate
+    fn set_learning_rate(&mut self, lr: F);
+    
+    /// Reset optimizer state
+    fn reset(&mut self);
+}
+
+/// Adam optimizer implementation
+#[derive(Debug, Clone)]
+pub struct AdamOptimizer<F: Float> {
+    learning_rate: F,
+    beta1: F,
+    beta2: F,
+    epsilon: F,
+    /// First moment estimates
+    m: Vec<Array2<F>>,
+    /// Second moment estimates
+    v: Vec<Array2<F>>,
+    /// Time step
+    t: usize,
+}
+
+impl<F: Float> NeuralOptimizer<F> for AdamOptimizer<F> {
+    fn update_parameters(&mut self, gradients: &[Array2<F>], parameters: &mut [Array2<F>]) -> Result<()> {
+        self.t += 1;
+        
+        // Initialize moment estimates if needed
+        if self.m.is_empty() {
+            self.m = gradients.iter().map(|g| Array2::zeros(g.dim())).collect();
+            self.v = gradients.iter().map(|g| Array2::zeros(g.dim())).collect();
+        }
+        
+        let beta1_t = self.beta1.powi(self.t as i32);
+        let beta2_t = self.beta2.powi(self.t as i32);
+        
+        for (i, (grad, param)) in gradients.iter().zip(parameters.iter_mut()).enumerate() {
+            // Update biased first moment estimate
+            self.m[i] = &self.m[i] * self.beta1 + grad * (F::one() - self.beta1);
+            
+            // Update biased second raw moment estimate
+            self.v[i] = &self.v[i] * self.beta2 + &(grad * grad) * (F::one() - self.beta2);
+            
+            // Compute bias-corrected first moment estimate
+            let m_hat = &self.m[i] / (F::one() - beta1_t);
+            
+            // Compute bias-corrected second raw moment estimate
+            let v_hat = &self.v[i] / (F::one() - beta2_t);
+            
+            // Update parameters
+            *param = param - &(&m_hat / (&v_hat.mapv(|x| x.sqrt()) + self.epsilon)) * self.learning_rate;
+        }
+        
+        Ok(())
+    }
+    
+    fn get_learning_rate(&self) -> F {
+        self.learning_rate
+    }
+    
+    fn set_learning_rate(&mut self, lr: F) {
+        self.learning_rate = lr;
+    }
+    
+    fn reset(&mut self) {
+        self.m.clear();
+        self.v.clear();
+        self.t = 0;
+    }
+}
+
+/// Training metrics for neural networks
+#[derive(Debug, Clone)]
+pub struct TrainingMetrics<F: Float> {
+    pub epoch: usize,
+    pub loss: F,
+    pub accuracy: F,
+    pub learning_rate: F,
+    pub gradient_norm: F,
+    pub timestamp: Instant,
+}
+
+/// Regularization configuration
+#[derive(Debug, Clone)]
+pub struct RegularizationConfig<F: Float> {
+    /// L1 regularization strength
+    pub l1_strength: F,
+    /// L2 regularization strength
+    pub l2_strength: F,
+    /// Dropout rate
+    pub dropout_rate: f64,
+    /// Enable early stopping
+    pub early_stopping: bool,
+    /// Patience for early stopping
+    pub patience: usize,
+}
+
+/// Reinforcement learning agent for adaptive control
+#[derive(Debug, Clone)]
+pub struct AdaptiveControlAgent<F: Float> {
+    /// Current state representation
+    current_state: Array1<F>,
+    /// Action space definition
+    action_space: ActionSpace<F>,
+    /// Q-network for value estimation
+    q_network: NeuralParameterOptimizer<F>,
+    /// Target network for stable training
+    target_network: Option<NeuralParameterOptimizer<F>>,
+    /// Experience replay buffer
+    replay_buffer: ExperienceReplayBuffer<F>,
+    /// Current policy
+    policy: Policy<F>,
+    /// Exploration strategy
+    exploration_strategy: ExplorationStrategy<F>,
+    /// Reward function
+    reward_function: Box<dyn RewardFunction<F> + Send + Sync>,
+    /// Training metrics
+    training_metrics: Vec<RLTrainingMetrics<F>>,
+}
+
+/// Action space for reinforcement learning
+#[derive(Debug, Clone)]
+pub struct ActionSpace<F: Float> {
+    /// Continuous action bounds
+    pub continuous_bounds: Vec<(F, F)>,
+    /// Discrete action choices
+    pub discrete_actions: Vec<Vec<F>>,
+    /// Action type
+    pub action_type: ActionType,
+}
+
+/// Action types
+#[derive(Debug, Clone)]
+pub enum ActionType {
+    Continuous,
+    Discrete,
+    Mixed,
+}
+
+/// Experience replay buffer
+#[derive(Debug, Clone)]
+pub struct ExperienceReplayBuffer<F: Float> {
+    /// Buffer capacity
+    capacity: usize,
+    /// Stored experiences
+    experiences: VecDeque<Experience<F>>,
+    /// Current position
+    position: usize,
+}
+
+/// Experience tuple for replay buffer
+#[derive(Debug, Clone)]
+pub struct Experience<F: Float> {
+    pub state: Array1<F>,
+    pub action: Array1<F>,
+    pub reward: F,
+    pub next_state: Array1<F>,
+    pub done: bool,
+    pub timestamp: Instant,
+}
+
+/// Policy for action selection
+#[derive(Debug, Clone)]
+pub struct Policy<F: Float> {
+    /// Policy type
+    policy_type: PolicyType,
+    /// Policy parameters
+    parameters: HashMap<String, F>,
+    /// Action selection history
+    history: VecDeque<PolicyAction<F>>,
+}
+
+/// Policy types
+#[derive(Debug, Clone)]
+pub enum PolicyType {
+    EpsilonGreedy,
+    Softmax,
+    UCB,
+    Thompson,
+    Deterministic,
+}
+
+/// Policy action with metadata
+#[derive(Debug, Clone)]
+pub struct PolicyAction<F: Float> {
+    pub action: Array1<F>,
+    pub probability: F,
+    pub value: F,
+    pub timestamp: Instant,
+}
+
+/// Exploration strategies
+#[derive(Debug, Clone)]
+pub struct ExplorationStrategy<F: Float> {
+    /// Strategy type
+    strategy_type: ExplorationStrategyType,
+    /// Current exploration rate
+    current_rate: F,
+    /// Decay parameters
+    decay_parameters: ExplorationDecay<F>,
+}
+
+/// Exploration strategy types
+#[derive(Debug, Clone)]
+pub enum ExplorationStrategyType {
+    EpsilonGreedy,
+    GaussianNoise,
+    OrnsteinUhlenbeck,
+    ParameterSpace,
+}
+
+/// Exploration decay parameters
+#[derive(Debug, Clone)]
+pub struct ExplorationDecay<F: Float> {
+    pub initial_rate: F,
+    pub final_rate: F,
+    pub decay_rate: F,
+    pub decay_steps: usize,
+}
+
+/// Reward function trait
+pub trait RewardFunction<F: Float> {
+    /// Compute reward based on state, action, and outcome
+    fn compute_reward(&self, state: &Array1<F>, action: &Array1<F>, next_state: &Array1<F>, performance_metrics: &HashMap<String, F>) -> F;
+    
+    /// Update reward function parameters
+    fn update_parameters(&mut self, feedback: F) -> Result<()>;
+}
+
+/// RL training metrics
+#[derive(Debug, Clone)]
+pub struct RLTrainingMetrics<F: Float> {
+    pub episode: usize,
+    pub total_reward: F,
+    pub average_reward: F,
+    pub exploration_rate: F,
+    pub loss: F,
+    pub timestamp: Instant,
+}
+
+/// Online learning system for pattern recognition and adaptation
+#[derive(Debug, Clone)]
+pub struct OnlineLearningSystem<F: Float> {
+    /// Current model parameters
+    model_parameters: Array1<F>,
+    /// Feature buffer for online learning
+    feature_buffer: VecDeque<Array1<F>>,
+    /// Target buffer
+    target_buffer: VecDeque<F>,
+    /// Online optimizer
+    optimizer: Box<dyn OnlineOptimizer<F> + Send + Sync>,
+    /// Concept drift detector
+    drift_detector: Box<dyn ConceptDriftDetector<F> + Send + Sync>,
+    /// Model ensemble for robustness
+    model_ensemble: Vec<OnlineModel<F>>,
+    /// Adaptation history
+    adaptation_history: Vec<AdaptationEvent<F>>,
+    /// Performance tracker
+    performance_tracker: OnlinePerformanceTracker<F>,
+}
+
+/// Online optimizer trait
+pub trait OnlineOptimizer<F: Float> {
+    /// Update model with single sample
+    fn update(&mut self, parameters: &mut Array1<F>, features: &Array1<F>, target: F, learning_rate: F) -> Result<()>;
+    
+    /// Get current learning rate
+    fn get_learning_rate(&self) -> F;
+    
+    /// Adapt to concept drift
+    fn adapt_to_drift(&mut self, drift_magnitude: F) -> Result<()>;
+}
+
+/// Online model representation
+#[derive(Debug, Clone)]
+pub struct OnlineModel<F: Float> {
+    /// Model type
+    model_type: OnlineModelType,
+    /// Model parameters
+    parameters: Array1<F>,
+    /// Model weight in ensemble
+    weight: F,
+    /// Performance metrics
+    performance: OnlineModelPerformance<F>,
+}
+
+/// Online model types
+#[derive(Debug, Clone)]
+pub enum OnlineModelType {
+    LinearRegression,
+    LogisticRegression,
+    PerceptronNetwork,
+    NaiveBayes,
+    DecisionStump,
+    KNearestNeighbors,
+}
+
+/// Online model performance metrics
+#[derive(Debug, Clone)]
+pub struct OnlineModelPerformance<F: Float> {
+    pub accuracy: F,
+    pub loss: F,
+    pub prediction_variance: F,
+    pub adaptation_speed: F,
+    pub stability: F,
+}
+
+/// Adaptation event for tracking model changes
+#[derive(Debug, Clone)]
+pub struct AdaptationEvent<F: Float> {
+    pub timestamp: Instant,
+    pub event_type: AdaptationEventType,
+    pub magnitude: F,
+    pub performance_before: F,
+    pub performance_after: F,
+    pub parameters_changed: usize,
+}
+
+/// Adaptation event types
+#[derive(Debug, Clone)]
+pub enum AdaptationEventType {
+    ConceptDrift,
+    PerformanceDegradation,
+    DataDistributionChange,
+    ModelUpdate,
+    HyperparameterAdjustment,
+}
+
+/// Online performance tracker
+#[derive(Debug, Clone)]
+pub struct OnlinePerformanceTracker<F: Float> {
+    /// Performance history
+    performance_history: VecDeque<PerformanceSnapshot<F>>,
+    /// Current performance metrics
+    current_metrics: HashMap<String, F>,
+    /// Performance trends
+    trends: HashMap<String, TrendAnalysis<F>>,
+    /// Anomaly detection for performance
+    performance_anomaly_detector: Box<dyn AnomalyDetector<F> + Send + Sync>,
+}
+
+/// Trend analysis for performance metrics
+#[derive(Debug, Clone)]
+pub struct TrendAnalysis<F: Float> {
+    pub slope: F,
+    pub r_squared: F,
+    pub trend_direction: TrendDirection,
+    pub confidence: F,
+    pub forecast: Vec<F>,
+}
+
+/// Trend directions
+#[derive(Debug, Clone)]
+pub enum TrendDirection {
+    Increasing,
+    Decreasing,
+    Stable,
+    Oscillating,
+    Unknown,
+}
+
+/// Performance predictor using neural networks
+#[derive(Debug, Clone)]
+pub struct PerformancePredictor<F: Float> {
+    /// Neural network for prediction
+    predictor_network: NeuralParameterOptimizer<F>,
+    /// Feature preprocessor
+    feature_preprocessor: FeaturePreprocessor<F>,
+    /// Prediction history
+    prediction_history: VecDeque<PredictionRecord<F>>,
+    /// Model confidence estimator
+    confidence_estimator: ConfidenceEstimator<F>,
+    /// Uncertainty quantification
+    uncertainty_quantifier: UncertaintyQuantifier<F>,
+}
+
+/// Feature preprocessor for performance prediction
+#[derive(Debug, Clone)]
+pub struct FeaturePreprocessor<F: Float> {
+    /// Normalization parameters
+    normalization_params: NormalizationParams<F>,
+    /// Feature selection mask
+    feature_selection_mask: Array1<bool>,
+    /// Dimensionality reduction matrix
+    projection_matrix: Option<Array2<F>>,
+    /// Feature engineering functions
+    feature_engineering: Vec<FeatureEngineeringFunction>,
+}
+
+/// Normalization parameters
+#[derive(Debug, Clone)]
+pub struct NormalizationParams<F: Float> {
+    pub mean: Array1<F>,
+    pub std: Array1<F>,
+    pub min: Array1<F>,
+    pub max: Array1<F>,
+}
+
+/// Feature engineering functions
+#[derive(Debug, Clone)]
+pub enum FeatureEngineeringFunction {
+    Polynomial { degree: usize },
+    Logarithmic,
+    Exponential,
+    Trigonometric,
+    Interaction,
+    RollingStatistics { window_size: usize },
+}
+
+/// Prediction record
+#[derive(Debug, Clone)]
+pub struct PredictionRecord<F: Float> {
+    pub timestamp: Instant,
+    pub features: Array1<F>,
+    pub predicted_performance: F,
+    pub actual_performance: Option<F>,
+    pub prediction_error: Option<F>,
+    pub confidence: F,
+    pub uncertainty: F,
+}
+
+/// Confidence estimator for predictions
+#[derive(Debug, Clone)]
+pub struct ConfidenceEstimator<F: Float> {
+    /// Ensemble of confidence models
+    confidence_models: Vec<ConfidenceModel<F>>,
+    /// Calibration parameters
+    calibration_params: CalibrationParams<F>,
+    /// Historical calibration data
+    calibration_history: VecDeque<CalibrationPoint<F>>,
+}
+
+/// Confidence model
+#[derive(Debug, Clone)]
+pub struct ConfidenceModel<F: Float> {
+    pub model_type: ConfidenceModelType,
+    pub parameters: Array1<F>,
+    pub weight: F,
+}
+
+/// Confidence model types
+#[derive(Debug, Clone)]
+pub enum ConfidenceModelType {
+    Bootstrap,
+    BayesianNeural,
+    EnsembleVariance,
+    DropoutBased,
+    DistanceBasedUncertainty,
+}
+
+/// Calibration parameters
+#[derive(Debug, Clone)]
+pub struct CalibrationParams<F: Float> {
+    pub temperature: F,
+    pub bias: F,
+    pub scale: F,
+}
+
+/// Calibration point for confidence estimation
+#[derive(Debug, Clone)]
+pub struct CalibrationPoint<F: Float> {
+    pub predicted_confidence: F,
+    pub actual_accuracy: F,
+    pub timestamp: Instant,
+}
+
+/// Uncertainty quantifier
+#[derive(Debug, Clone)]
+pub struct UncertaintyQuantifier<F: Float> {
+    /// Aleatoric uncertainty (data noise)
+    aleatoric_estimator: AleatoricUncertaintyEstimator<F>,
+    /// Epistemic uncertainty (model uncertainty)
+    epistemic_estimator: EpistemicUncertaintyEstimator<F>,
+    /// Combined uncertainty estimation
+    uncertainty_combination: UncertaintyCombination,
+}
+
+/// Aleatoric uncertainty estimator
+#[derive(Debug, Clone)]
+pub struct AleatoricUncertaintyEstimator<F: Float> {
+    /// Noise model parameters
+    noise_parameters: Array1<F>,
+    /// Heteroscedastic noise model
+    heteroscedastic_model: Option<NeuralParameterOptimizer<F>>,
+}
+
+/// Epistemic uncertainty estimator
+#[derive(Debug, Clone)]
+pub struct EpistemicUncertaintyEstimator<F: Float> {
+    /// Model ensemble for uncertainty estimation
+    model_ensemble: Vec<NeuralParameterOptimizer<F>>,
+    /// Monte Carlo dropout parameters
+    mc_dropout_params: MCDropoutParams,
+    /// Bayesian neural network parameters
+    bayesian_params: Option<BayesianParams<F>>,
+}
+
+/// Monte Carlo dropout parameters
+#[derive(Debug, Clone)]
+pub struct MCDropoutParams {
+    pub num_samples: usize,
+    pub dropout_rate: f64,
+    pub enable_mc_dropout: bool,
+}
+
+/// Bayesian neural network parameters
+#[derive(Debug, Clone)]
+pub struct BayesianParams<F: Float> {
+    /// Prior distribution parameters
+    pub prior_mean: F,
+    pub prior_std: F,
+    /// Variational parameters
+    pub variational_mean: Array1<F>,
+    pub variational_std: Array1<F>,
+}
+
+/// Uncertainty combination methods
+#[derive(Debug, Clone)]
+pub enum UncertaintyCombination {
+    Addition,
+    Multiplication,
+    WeightedSum { weights: Vec<f64> },
+    Maximum,
+    Quadrature,
+}
+
+/// Multi-armed bandit for parameter exploration
+#[derive(Debug, Clone)]
+pub struct MultiArmedBandit<F: Float> {
+    /// Bandit algorithm
+    algorithm: BanditAlgorithm<F>,
+    /// Arms (parameter configurations)
+    arms: Vec<ParameterConfiguration<F>>,
+    /// Reward history for each arm
+    reward_history: Vec<VecDeque<F>>,
+    /// Action history
+    action_history: VecDeque<BanditAction<F>>,
+    /// Current best arm
+    best_arm: Option<usize>,
+    /// Regret tracking
+    regret_tracker: RegretTracker<F>,
+}
+
+/// Bandit algorithms
+#[derive(Debug, Clone)]
+pub enum BanditAlgorithm<F: Float> {
+    /// Upper Confidence Bound
+    UCB { confidence: F },
+    /// Thompson Sampling
+    ThompsonSampling { prior_alpha: F, prior_beta: F },
+    /// Epsilon-Greedy
+    EpsilonGreedy { epsilon: F },
+    /// Gradient Bandit
+    GradientBandit { step_size: F },
+    /// LinUCB for contextual bandits
+    LinUCB { alpha: F },
+}
+
+/// Parameter configuration for bandit arms
+#[derive(Debug, Clone)]
+pub struct ParameterConfiguration<F: Float> {
+    /// Parameter values
+    pub parameters: HashMap<String, F>,
+    /// Configuration name
+    pub name: String,
+    /// Expected performance
+    pub expected_performance: F,
+    /// Confidence interval
+    pub confidence_interval: (F, F),
+    /// Number of times selected
+    pub selection_count: usize,
+}
+
+/// Bandit action record
+#[derive(Debug, Clone)]
+pub struct BanditAction<F: Float> {
+    pub timestamp: Instant,
+    pub arm_index: usize,
+    pub reward: F,
+    pub context: Option<Array1<F>>,
+    pub regret: F,
+}
+
+/// Regret tracker for bandit performance
+#[derive(Debug, Clone)]
+pub struct RegretTracker<F: Float> {
+    /// Cumulative regret
+    pub cumulative_regret: F,
+    /// Regret history
+    pub regret_history: VecDeque<F>,
+    /// Optimal arm performance
+    pub optimal_performance: F,
+    /// Regret bounds
+    pub theoretical_bound: F,
+}
+
+/// Neural feature extractor
+#[derive(Debug, Clone)]
+pub struct NeuralFeatureExtractor<F: Float> {
+    /// Autoencoder for feature extraction
+    autoencoder: AutoencoderNetwork<F>,
+    /// Convolutional layers for pattern recognition
+    conv_layers: Vec<ConvolutionalLayer<F>>,
+    /// Attention mechanism for feature importance
+    attention_mechanism: AttentionMechanism<F>,
+    /// Feature selection network
+    feature_selector: FeatureSelectionNetwork<F>,
+    /// Extracted features cache
+    features_cache: HashMap<String, Array1<F>>,
+}
+
+/// Autoencoder network for feature extraction
+#[derive(Debug, Clone)]
+pub struct AutoencoderNetwork<F: Float> {
+    /// Encoder network
+    encoder: NeuralParameterOptimizer<F>,
+    /// Decoder network
+    decoder: NeuralParameterOptimizer<F>,
+    /// Bottleneck dimension
+    bottleneck_dim: usize,
+    /// Reconstruction loss history
+    reconstruction_loss: VecDeque<F>,
+}
+
+/// Convolutional layer for pattern recognition
+#[derive(Debug, Clone)]
+pub struct ConvolutionalLayer<F: Float> {
+    /// Convolution kernels
+    kernels: Array2<F>,
+    /// Bias terms
+    biases: Array1<F>,
+    /// Stride
+    stride: usize,
+    /// Padding
+    padding: usize,
+    /// Activation function
+    activation: ActivationFunction,
+}
+
+/// Attention mechanism for feature importance
+#[derive(Debug, Clone)]
+pub struct AttentionMechanism<F: Float> {
+    /// Query matrix
+    query_matrix: Array2<F>,
+    /// Key matrix
+    key_matrix: Array2<F>,
+    /// Value matrix
+    value_matrix: Array2<F>,
+    /// Attention scores
+    attention_scores: Array2<F>,
+    /// Attention type
+    attention_type: AttentionType,
+}
+
+/// Attention types
+#[derive(Debug, Clone)]
+pub enum AttentionType {
+    SelfAttention,
+    CrossAttention,
+    MultiHeadAttention { num_heads: usize },
+    PositionalAttention,
+}
+
+/// Feature selection network
+#[derive(Debug, Clone)]
+pub struct FeatureSelectionNetwork<F: Float> {
+    /// Selection network
+    selection_network: NeuralParameterOptimizer<F>,
+    /// Feature importance scores
+    importance_scores: Array1<F>,
+    /// Selection threshold
+    selection_threshold: F,
+    /// Selected features mask
+    selected_features: Array1<bool>,
+}
+
+/// Adaptive learning rate scheduler
+#[derive(Debug, Clone)]
+pub struct AdaptiveLearningScheduler<F: Float> {
+    /// Current learning rate
+    current_lr: F,
+    /// Initial learning rate
+    initial_lr: F,
+    /// Scheduler type
+    scheduler_type: SchedulerType<F>,
+    /// Performance history for adaptation
+    performance_history: VecDeque<F>,
+    /// Learning rate history
+    lr_history: VecDeque<F>,
+    /// Adaptation parameters
+    adaptation_params: SchedulerAdaptationParams<F>,
+}
+
+/// Learning rate scheduler types
+#[derive(Debug, Clone)]
+pub enum SchedulerType<F: Float> {
+    /// Exponential decay
+    ExponentialDecay { decay_rate: F },
+    /// Step decay
+    StepDecay { step_size: usize, gamma: F },
+    /// Cosine annealing
+    CosineAnnealing { t_max: usize },
+    /// Reduce on plateau
+    ReduceOnPlateau { factor: F, patience: usize },
+    /// Cyclic learning rate
+    CyclicLR { base_lr: F, max_lr: F, step_size: usize },
+    /// Adaptive based on performance
+    PerformanceAdaptive { improvement_threshold: F },
+}
+
+/// Scheduler adaptation parameters
+#[derive(Debug, Clone)]
+pub struct SchedulerAdaptationParams<F: Float> {
+    /// Minimum learning rate
+    pub min_lr: F,
+    /// Maximum learning rate
+    pub max_lr: F,
+    /// Adaptation speed
+    pub adaptation_speed: F,
+    /// Performance monitoring window
+    pub monitoring_window: usize,
+}
+
+// Implementation methods for NeuralAdaptiveStreaming
+
+impl<F: Float> NeuralAdaptiveStreaming<F> {
+    /// Create a new neural-adaptive streaming system
+    pub fn new(config: NeuralAdaptiveConfig) -> Result<Self> {
+        let parameter_optimizer = NeuralParameterOptimizer::new(
+            config.network_config.clone(),
+            config.optimization_config.clone(),
+        )?;
+        
+        let rl_agent = AdaptiveControlAgent::new(config.rl_config.clone())?;
+        
+        let online_learner = OnlineLearningSystem::new(config.online_learning_config.clone())?;
+        
+        let performance_predictor = PerformancePredictor::new(config.network_config.clone())?;
+        
+        let parameter_bandit = MultiArmedBandit::new()?;
+        
+        let feature_extractor = NeuralFeatureExtractor::new(config.feature_config.clone())?;
+        
+        let learning_scheduler = AdaptiveLearningScheduler::new(
+            config.network_config.learning_rate,
+            config.optimization_config.clone(),
+        )?;
+        
+        Ok(Self {
+            parameter_optimizer,
+            rl_agent,
+            online_learner,
+            performance_predictor,
+            parameter_bandit,
+            feature_extractor,
+            learning_scheduler,
+            config,
+        })
+    }
+    
+    /// Optimize streaming parameters using neural networks
+    pub fn optimize_parameters(&mut self, current_state: &Array1<F>, performance_metrics: &HashMap<String, F>) -> Result<HashMap<String, F>> {
+        // Extract features from current state
+        let features = self.feature_extractor.extract_features(current_state)?;
+        
+        // Predict optimal parameters using neural network
+        let predicted_params = self.parameter_optimizer.predict(&features)?;
+        
+        // Use reinforcement learning for exploration
+        let rl_action = self.rl_agent.select_action(&features, performance_metrics)?;
+        
+        // Use multi-armed bandit for parameter selection
+        let bandit_params = self.parameter_bandit.select_arm(&features)?;
+        
+        // Combine predictions from different sources
+        let optimized_params = self.combine_parameter_predictions(
+            &predicted_params,
+            &rl_action,
+            &bandit_params,
+        )?;
+        
+        // Update online learning system
+        self.online_learner.update(&features, performance_metrics)?;
+        
+        // Adapt learning rate
+        let current_performance = self.compute_overall_performance(performance_metrics);
+        self.learning_scheduler.adapt_learning_rate(current_performance)?;
+        
+        Ok(optimized_params)
+    }
+    
+    /// Update the neural-adaptive system with new data
+    pub fn update(&mut self, state: &Array1<F>, action: &HashMap<String, F>, performance: &HashMap<String, F>) -> Result<()> {
+        // Update neural parameter optimizer
+        let features = self.feature_extractor.extract_features(state)?;
+        let target_performance = self.compute_overall_performance(performance);
+        self.parameter_optimizer.train(&features, target_performance)?;
+        
+        // Update reinforcement learning agent
+        let reward = self.compute_reward(performance);
+        self.rl_agent.update_experience(state, action, reward, performance)?;
+        
+        // Update online learning system
+        self.online_learner.update(&features, performance)?;
+        
+        // Update performance predictor
+        self.performance_predictor.update(&features, performance)?;
+        
+        // Update multi-armed bandit
+        self.parameter_bandit.update_rewards(action, reward)?;
+        
+        Ok(())
+    }
+    
+    /// Predict future performance based on current state
+    pub fn predict_performance(&self, state: &Array1<F>, parameters: &HashMap<String, F>) -> Result<PerformancePrediction<F>> {
+        let features = self.feature_extractor.extract_features(state)?;
+        let prediction = self.performance_predictor.predict(&features, parameters)?;
+        Ok(prediction)
+    }
+    
+    /// Adapt to concept drift
+    pub fn adapt_to_drift(&mut self, drift_magnitude: F) -> Result<()> {
+        // Adapt neural networks
+        self.parameter_optimizer.adapt_to_drift(drift_magnitude)?;
+        self.performance_predictor.adapt_to_drift(drift_magnitude)?;
+        
+        // Adapt RL agent
+        self.rl_agent.adapt_to_drift(drift_magnitude)?;
+        
+        // Adapt online learning system
+        self.online_learner.adapt_to_drift(drift_magnitude)?;
+        
+        // Reset multi-armed bandit exploration
+        self.parameter_bandit.increase_exploration(drift_magnitude)?;
+        
+        Ok(())
+    }
+    
+    /// Get current neural-adaptive system statistics
+    pub fn get_statistics(&self) -> NeuralAdaptiveStatistics<F> {
+        NeuralAdaptiveStatistics {
+            optimizer_performance: self.parameter_optimizer.get_performance_metrics(),
+            rl_performance: self.rl_agent.get_training_metrics(),
+            online_learning_performance: self.online_learner.get_performance_metrics(),
+            predictor_accuracy: self.performance_predictor.get_accuracy(),
+            bandit_regret: self.parameter_bandit.get_cumulative_regret(),
+            feature_importance: self.feature_extractor.get_feature_importance(),
+            current_learning_rate: self.learning_scheduler.get_current_lr(),
+        }
+    }
+    
+    // Helper methods
+    
+    fn combine_parameter_predictions(
+        &self,
+        neural_params: &HashMap<String, F>,
+        rl_params: &HashMap<String, F>,
+        bandit_params: &HashMap<String, F>,
+    ) -> Result<HashMap<String, F>> {
+        let mut combined_params = HashMap::new();
+        
+        // Weighted combination based on confidence
+        let neural_weight = F::from(0.5).unwrap();
+        let rl_weight = F::from(0.3).unwrap();
+        let bandit_weight = F::from(0.2).unwrap();
+        
+        for (key, &neural_val) in neural_params {
+            let rl_val = rl_params.get(key).copied().unwrap_or(neural_val);
+            let bandit_val = bandit_params.get(key).copied().unwrap_or(neural_val);
+            
+            let combined_val = neural_val * neural_weight + 
+                             rl_val * rl_weight + 
+                             bandit_val * bandit_weight;
+            
+            combined_params.insert(key.clone(), combined_val);
+        }
+        
+        Ok(combined_params)
+    }
+    
+    fn compute_overall_performance(&self, performance_metrics: &HashMap<String, F>) -> F {
+        let mut total_performance = F::zero();
+        let mut count = 0;
+        
+        for &value in performance_metrics.values() {
+            total_performance = total_performance + value;
+            count += 1;
+        }
+        
+        if count > 0 {
+            total_performance / F::from(count).unwrap()
+        } else {
+            F::zero()
+        }
+    }
+    
+    fn compute_reward(&self, performance_metrics: &HashMap<String, F>) -> F {
+        // Compute reward based on performance improvement
+        let current_performance = self.compute_overall_performance(performance_metrics);
+        // In a real implementation, this would compare against baseline
+        current_performance
+    }
+}
+
+/// Performance prediction result
+#[derive(Debug, Clone)]
+pub struct PerformancePrediction<F: Float> {
+    pub predicted_performance: HashMap<String, F>,
+    pub confidence: F,
+    pub uncertainty: F,
+    pub prediction_interval: (F, F),
+    pub feature_importance: Array1<F>,
+}
+
+/// Neural-adaptive system statistics
+#[derive(Debug, Clone)]
+pub struct NeuralAdaptiveStatistics<F: Float> {
+    pub optimizer_performance: HashMap<String, F>,
+    pub rl_performance: HashMap<String, F>,
+    pub online_learning_performance: HashMap<String, F>,
+    pub predictor_accuracy: F,
+    pub bandit_regret: F,
+    pub feature_importance: Array1<F>,
+    pub current_learning_rate: F,
+}
+
+impl Default for NeuralAdaptiveConfig {
+    fn default() -> Self {
+        Self {
+            network_config: NetworkConfig {
+                optimizer_hidden_layers: vec![128, 64, 32],
+                predictor_hidden_layers: vec![64, 32, 16],
+                activation: ActivationFunction::ReLU,
+                dropout_rate: 0.1,
+                batch_norm: true,
+                learning_rate: 0.001,
+                weight_decay: 0.0001,
+            },
+            rl_config: RLConfig {
+                algorithm: RLAlgorithm::DQN { double_dqn: true },
+                exploration_rate: 0.1,
+                exploration_decay: 0.995,
+                min_exploration: 0.01,
+                discount_factor: 0.99,
+                target_update_frequency: 1000,
+                replay_buffer_size: 10000,
+                batch_size: 32,
+            },
+            online_learning_config: OnlineLearningConfig {
+                algorithm: OnlineLearningAlgorithm::Adam { beta1: 0.9, beta2: 0.999 },
+                adaptation_rate: 0.01,
+                forgetting_factor: 0.99,
+                drift_adaptation_threshold: 0.1,
+                update_frequency: 10,
+                enable_meta_learning: true,
+            },
+            feature_config: FeatureConfig {
+                extraction_method: FeatureExtractionMethod::Statistical,
+                num_features: 32,
+                time_window: Duration::from_secs(60),
+                auto_feature_selection: true,
+                normalization: FeatureNormalization::StandardScore,
+            },
+            optimization_config: OptimizationConfig {
+                algorithm: OptimizationAlgorithm::BayesianOptimization { acquisition_function: "ucb".to_string() },
+                max_iterations: 100,
+                tolerance: 1e-6,
+                early_stopping: true,
+                patience: 10,
+                enable_hyperparameter_tuning: true,
+            },
+            monitoring_config: MonitoringConfig {
+                metrics: vec!["accuracy".to_string(), "loss".to_string(), "latency".to_string()],
+                frequency: Duration::from_secs(30),
+                enable_logging: true,
+                log_path: None,
+                enable_visualization: false,
+            },
+        }
     }
 }
 

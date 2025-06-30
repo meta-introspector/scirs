@@ -11,13 +11,14 @@
 //! - Machine learning enhanced spectral methods
 
 use crate::error::{StatsError, StatsResult};
-use ndarray::{Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
+use ndarray::{Array1, Array2, Array3, Array4, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, NumCast, One, Zero, FloatConst};
 use scirs2_core::{
     parallel_ops::*,
     simd_ops::SimdUnifiedOps,
     validation::*,
 };
+use scirs2_linalg::parallel_dispatch::ParallelConfig;
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
@@ -820,38 +821,38 @@ where
 
     fn compute_confidence_intervals(&self, signal: &ArrayView1<F>) -> StatsResult<Array3<F>> {
         let n_freqs = signal.len() / 2 + 1;
-        Array3::zeros((n_freqs, 1, 2)) // [freq, channel, CI_bounds]
+        Ok(Array3::zeros((n_freqs, 1, 2))) // [freq, channel, CI_bounds]
     }
 
     fn compute_magnitude_squared_coherence(&self, signals: &ArrayView2<F>) -> StatsResult<Array2<F>> {
         let (_, n_channels) = signals.dim();
         let n_freqs = signals.nrows() / 2 + 1;
-        Array2::zeros((n_freqs, n_channels * (n_channels - 1) / 2))
+        Ok(Array2::zeros((n_freqs, n_channels * (n_channels - 1) / 2)))
     }
 
     fn compute_complex_coherence(&self, signals: &ArrayView2<F>) -> StatsResult<Array2<num_complex::Complex<F>>> {
         let (_, n_channels) = signals.dim();
         let n_freqs = signals.nrows() / 2 + 1;
         let n_pairs = n_channels * (n_channels - 1) / 2;
-        Array2::from_elem((n_freqs, n_pairs), num_complex::Complex::new(F::zero(), F::zero()))
+        Ok(Array2::from_elem((n_freqs, n_pairs), num_complex::Complex::new(F::zero(), F::zero())))
     }
 
     fn compute_partial_coherence(&self, signals: &ArrayView2<F>) -> StatsResult<Array3<F>> {
         let (_, n_channels) = signals.dim();
         let n_freqs = signals.nrows() / 2 + 1;
-        Array3::zeros((n_freqs, n_channels, n_channels))
+        Ok(Array3::zeros((n_freqs, n_channels, n_channels)))
     }
 
     fn compute_multiple_coherence(&self, signals: &ArrayView2<F>) -> StatsResult<Array2<F>> {
         let (_, n_channels) = signals.dim();
         let n_freqs = signals.nrows() / 2 + 1;
-        Array2::zeros((n_freqs, n_channels))
+        Ok(Array2::zeros((n_freqs, n_channels)))
     }
 
     fn compute_cwt(&self, signal: &ArrayView1<F>) -> StatsResult<Array3<num_complex::Complex<F>>> {
         let n_samples = signal.len();
         let n_scales = self.config.wavelet_config.scales;
-        Array3::from_elem((n_scales, n_samples, 1), num_complex::Complex::new(F::zero(), F::zero()))
+        Ok(Array3::from_elem((n_scales, n_samples, 1), num_complex::Complex::new(F::zero(), F::zero())))
     }
 
     fn compute_dwt(&self, signal: &ArrayView1<F>) -> StatsResult<Vec<Array1<F>>> {
@@ -896,7 +897,7 @@ where
     fn spectral_super_resolution(&self, psd: &Array2<F>) -> StatsResult<Array2<F>> {
         // Simplified super-resolution - would implement GAN-based approach
         let (n_freqs, n_channels) = psd.dim();
-        Array2::zeros((n_freqs * 2, n_channels)) // Double frequency resolution
+        Ok(Array2::zeros((n_freqs * 2, n_channels))) // Double frequency resolution
     }
 }
 

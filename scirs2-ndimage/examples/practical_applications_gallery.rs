@@ -162,7 +162,7 @@ fn medical_imaging_applications() -> NdimageResult<()> {
     let distance_transform = {
         use ndarray::IxDyn;
         let mask_dyn = nuclei_mask.clone().into_dimensionality::<IxDyn>().unwrap();
-        let (distances, _) = distance_transform_edt(&mask_dyn, None, true, false)?;
+        let (distances, _) = distance_transform_edt(&mask_dyn, None, true, false).expect("Distance transform failed")?;
         distances.into_dimensionality::<ndarray::Ix2>().unwrap()
     };
     
@@ -525,7 +525,7 @@ fn scientific_imaging_applications() -> NdimageResult<()> {
     let distance_transform = {
         use ndarray::IxDyn;
         let mask_dyn = particle_mask.clone().into_dimensionality::<IxDyn>().unwrap();
-        let (distances, _) = distance_transform_edt(&mask_dyn, None, true, false)?;
+        let (distances, _) = distance_transform_edt(&mask_dyn, None, true, false).expect("Distance transform failed")?;
         distances.into_dimensionality::<ndarray::Ix2>().unwrap()
     };
     

@@ -9,14 +9,33 @@ use std::sync::{Arc, Mutex};
 
 use crate::gpu::{GpuBufferImpl, GpuCompilerImpl, GpuContextImpl, GpuError, GpuKernelImpl};
 
-// CUDA API types (simplified - in real implementation would use cuda-sys or cudarc)
+#[cfg(feature = "cuda")]
+use cudarc::driver::{CudaDevice, DevicePtr, LaunchAsync, LaunchConfig};
+#[cfg(feature = "cuda")]
+use cudarc::driver::sys::{CUdevice, CUcontext, CUdeviceptr, CUmodule, CUfunction};
+#[cfg(feature = "cuda")]
+use cudarc::nvrtc::Ptx;
+
+// CUDA API types - use real CUDA when available, fallback types otherwise
+#[cfg(feature = "cuda")]
+type CudaDeviceHandle = Arc<CudaDevice>;
+#[cfg(not(feature = "cuda"))]
+type CudaDeviceHandle = i32;
+
+#[cfg(not(feature = "cuda"))]
 type CUdevice = i32;
+#[cfg(not(feature = "cuda"))]
 type CUcontext = *mut c_void;
+#[cfg(not(feature = "cuda"))]
 type CUmodule = *mut c_void;
+#[cfg(not(feature = "cuda"))]
 type CUfunction = *mut c_void;
+#[cfg(not(feature = "cuda"))]
 type CUdeviceptr = u64;
+#[cfg(not(feature = "cuda"))]
 type CUresult = i32;
 
+#[cfg(not(feature = "cuda"))]
 const CUDA_SUCCESS: CUresult = 0;
 
 // CUDA kernel source code templates
@@ -156,7 +175,11 @@ extern "C" __global__ void lamb_update_f32(
 
 /// CUDA context wrapper
 pub struct CudaContext {
+    #[cfg(feature = "cuda")]
+    device: CudaDeviceHandle,
+    #[cfg(not(feature = "cuda"))]
     device: CUdevice,
+    #[cfg(not(feature = "cuda"))]
     context: CUcontext,
     compiled_kernels: Arc<Mutex<HashMap<String, CudaKernel>>>,
     memory_pool: Arc<Mutex<CudaMemoryPool>>,
@@ -169,16 +192,32 @@ unsafe impl Sync for CudaContext {}
 impl CudaContext {
     /// Create a new CUDA context
     pub fn new() -> Result<Self, GpuError> {
-        // Initialize CUDA and create context
-        let device = Self::initialize_cuda()?;
-        let context = Self::create_cuda_context(device)?;
+        #[cfg(feature = "cuda")]
+        {
+            // Real CUDA implementation
+            let device = Arc::new(CudaDevice::new(0).map_err(|e| {
+                GpuError::Other(format!("Failed to initialize CUDA device: {}", e))
+            })?);
 
-        Ok(Self {
-            device,
-            context,
-            compiled_kernels: Arc::new(Mutex::new(HashMap::new())),
-            memory_pool: Arc::new(Mutex::new(CudaMemoryPool::new(1024 * 1024 * 1024))), // 1GB pool
-        })
+            Ok(Self {
+                device,
+                compiled_kernels: Arc::new(Mutex::new(HashMap::new())),
+                memory_pool: Arc::new(Mutex::new(CudaMemoryPool::new(1024 * 1024 * 1024))), // 1GB pool
+            })
+        }
+        #[cfg(not(feature = "cuda"))]
+        {
+            // Fallback implementation
+            let device = Self::initialize_cuda()?;
+            let context = Self::create_cuda_context(device)?;
+
+            Ok(Self {
+                device,
+                context,
+                compiled_kernels: Arc::new(Mutex::new(HashMap::new())),
+                memory_pool: Arc::new(Mutex::new(CudaMemoryPool::new(1024 * 1024 * 1024))), // 1GB pool
+            })
+        }
     }
 
     /// Initialize CUDA and get the best device
@@ -215,72 +254,121 @@ impl CudaContext {
 
     /// Check if CUDA is available and working
     pub fn is_available() -> bool {
-        // In real implementation: try to initialize CUDA and check for errors
-        // For stub: return true to indicate framework readiness
-        true
+        #[cfg(feature = "cuda")]
+        {
+            // Real CUDA implementation - try to create a device
+            match CudaDevice::new(0) {
+                Ok(_) => true,
+                Err(_) => false,
+            }
+        }
+        #[cfg(not(feature = "cuda"))]
+        {
+            // Fallback: return false since we don't have real CUDA
+            false
+        }
     }
 
     /// Compile a kernel from PTX or source
     fn compile_kernel_internal(&self, source: &str, name: &str) -> Result<CudaKernel, GpuError> {
-        // Step 1: Compile CUDA source to PTX using nvrtc
-        let ptx = Self::compile_to_ptx(source, name)?;
+        #[cfg(feature = "cuda")]
+        {
+            // Real CUDA implementation
+            let ptx = Self::compile_to_ptx(source, name)?;
+            let module = Self::load_ptx_module(&self.device, &ptx)?;
 
-        // Step 2: Load PTX module
-        let module = Self::load_ptx_module(&ptx)?;
+            Ok(CudaKernel {
+                module,
+                name: name.to_string(),
+            })
+        }
+        #[cfg(not(feature = "cuda"))]
+        {
+            // Fallback implementation
+            let ptx = Self::compile_to_ptx(source, name)?;
+            let module = Self::load_ptx_module(&ptx)?;
+            let function = Self::get_kernel_function(module, name)?;
 
-        // Step 3: Get function handle
-        let function = Self::get_kernel_function(module, name)?;
-
-        Ok(CudaKernel {
-            module,
-            function,
-            name: name.to_string(),
-        })
+            Ok(CudaKernel {
+                module,
+                function,
+                name: name.to_string(),
+            })
+        }
     }
 
     /// Compile CUDA source to PTX using nvrtc
     fn compile_to_ptx(source: &str, name: &str) -> Result<String, GpuError> {
-        // In real implementation with nvrtc:
-        // 1. Create nvrtcProgram with nvrtcCreateProgram
-        // 2. Add headers and include paths
-        // 3. Compile with nvrtcCompileProgram
-        // 4. Get PTX with nvrtcGetPTX
+        #[cfg(feature = "cuda")]
+        {
+            // Real NVRTC implementation
+            use cudarc::nvrtc::compile_ptx;
+            
+            compile_ptx(source)
+                .map_err(|e| GpuError::Other(format!("NVRTC compilation failed for {}: {}", name, e)))
+        }
+        #[cfg(not(feature = "cuda"))]
+        {
+            // Fallback implementation - return mock PTX
+            let ptx = format!(
+                ".version 8.0\n.target sm_50\n.address_size 64\n\n// Compiled from {}\n// {}",
+                name,
+                source.lines().take(5).collect::<Vec<_>>().join("\n// ")
+            );
 
-        // Stub implementation - in practice, this would return actual PTX
-        let ptx = format!(
-            ".version 8.0\n.target sm_50\n.address_size 64\n\n// Compiled from {}\n// {}",
-            name,
-            source.lines().take(5).collect::<Vec<_>>().join("\n// ")
-        );
-
-        Ok(ptx)
+            Ok(ptx)
+        }
     }
 
     /// Load PTX module into CUDA context
+    #[cfg(feature = "cuda")]
+    fn load_ptx_module(device: &CudaDevice, ptx: &str) -> Result<Arc<cudarc::driver::CudaModule>, GpuError> {
+        device
+            .load_ptx(Ptx::from_src(ptx), "module", &[])
+            .map_err(|e| GpuError::Other(format!("Failed to load PTX module: {}", e)))
+            .map(Arc::new)
+    }
+
+    /// Load PTX module into CUDA context (fallback)
+    #[cfg(not(feature = "cuda"))]
     fn load_ptx_module(_ptx: &str) -> Result<CUmodule, GpuError> {
-        // In real implementation: cuModuleLoadData(&mut module, ptx.as_ptr())
-        // For stub: return non-null pointer
+        // Fallback implementation: return non-null pointer
         Ok(0x2 as *mut c_void)
     }
 
-    /// Get kernel function from loaded module
+    /// Get kernel function from loaded module (fallback only - real impl uses CudaModule directly)
+    #[cfg(not(feature = "cuda"))]
     fn get_kernel_function(_module: CUmodule, _name: &str) -> Result<CUfunction, GpuError> {
-        // In real implementation: cuModuleGetFunction(&mut function, module, name_cstr.as_ptr())
-        // For stub: return non-null pointer
+        // Fallback implementation: return non-null pointer
         Ok(0x3 as *mut c_void)
     }
 
     /// Allocate device memory
+    #[cfg(feature = "cuda")]
+    pub fn allocate_device_memory(&self, size: usize) -> Result<DevicePtr<u8>, GpuError> {
+        self.device
+            .alloc_zeros::<u8>(size)
+            .map_err(|e| GpuError::Other(format!("CUDA memory allocation failed: {}", e)))
+    }
+
+    /// Allocate device memory (fallback)
+    #[cfg(not(feature = "cuda"))]
     pub fn allocate_device_memory(&self, size: usize) -> Result<CUdeviceptr, GpuError> {
-        // In real implementation: cuMemAlloc_v2(&mut dptr, size)
-        // For stub: return a simulated device pointer
+        // Fallback implementation: return a simulated device pointer
         Ok(0x1000 + size as CUdeviceptr) // Simulate unique device addresses
     }
 
     /// Free device memory
+    #[cfg(feature = "cuda")]
+    pub fn free_device_memory(&self, _ptr: DevicePtr<u8>) -> Result<(), GpuError> {
+        // DevicePtr automatically deallocates when dropped
+        Ok(())
+    }
+
+    /// Free device memory (fallback)
+    #[cfg(not(feature = "cuda"))]
     pub fn free_device_memory(&self, ptr: CUdeviceptr) -> Result<(), GpuError> {
-        // In real implementation: cuMemFree_v2(ptr)
-        // For stub: just validate pointer
+        // Fallback implementation: just validate pointer
         if ptr == 0 {
             return Err(GpuError::Other("Invalid device pointer".to_string()));
         }
@@ -390,7 +478,11 @@ impl Drop for CudaBuffer {
 
 /// CUDA kernel wrapper
 struct CudaKernel {
+    #[cfg(feature = "cuda")]
+    module: Arc<cudarc::driver::CudaModule>,
+    #[cfg(not(feature = "cuda"))]
     module: CUmodule,
+    #[cfg(not(feature = "cuda"))]
     function: CUfunction,
     name: String,
 }

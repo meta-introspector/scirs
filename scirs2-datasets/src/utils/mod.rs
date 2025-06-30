@@ -13,6 +13,7 @@ pub mod sampling;
 pub mod scaling;
 pub mod serialization;
 pub mod splitting;
+pub mod ultra_analytics;
 
 // Re-export main types and functions for backward compatibility
 
@@ -44,6 +45,12 @@ pub use scaling::{min_max_scale, normalize, robust_scale, StatsExt};
 // Feature engineering
 pub use feature_engineering::{
     create_binned_features, polynomial_features, statistical_features, BinningStrategy,
+};
+
+// Ultra-advanced analytics
+pub use ultra_analytics::{
+    analyze_dataset_ultra, quick_quality_assessment, CorrelationInsights, NormalityAssessment,
+    UltraDatasetAnalyzer, UltraQualityMetrics,
 };
 
 // Trait extensions

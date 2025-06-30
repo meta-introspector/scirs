@@ -55,6 +55,25 @@ pub enum VisionError {
     Other(String),
 }
 
+impl Clone for VisionError {
+    fn clone(&self) -> Self {
+        match self {
+            VisionError::ImageLoadError(s) => VisionError::ImageLoadError(s.clone()),
+            VisionError::InvalidParameter(s) => VisionError::InvalidParameter(s.clone()),
+            VisionError::OperationError(s) => VisionError::OperationError(s.clone()),
+            VisionError::OperationFailed(s) => VisionError::OperationFailed(s.clone()),
+            VisionError::NdimageError(s) => VisionError::NdimageError(s.clone()),
+            VisionError::IoError(e) => VisionError::Other(format!("I/O error: {}", e)),
+            VisionError::TypeConversionError(s) => VisionError::TypeConversionError(s.clone()),
+            VisionError::ShapeError(e) => VisionError::Other(format!("Shape error: {}", e)),
+            VisionError::LinAlgError(s) => VisionError::LinAlgError(s.clone()),
+            VisionError::DimensionMismatch(s) => VisionError::DimensionMismatch(s.clone()),
+            VisionError::InvalidInput(s) => VisionError::InvalidInput(s.clone()),
+            VisionError::Other(s) => VisionError::Other(s.clone()),
+        }
+    }
+}
+
 /// Result type for vision operations
 pub type Result<T> = std::result::Result<T, VisionError>;
 
@@ -67,7 +86,7 @@ pub type Result<T> = std::result::Result<T, VisionError>;
 /// - Graceful degradation when resources are limited
 /// - Comprehensive error reporting and recovery logging
 /// - Performance-aware error handling with minimal overhead
-
+///
 /// Error recovery strategies for vision operations
 #[derive(Debug, Clone)]
 pub enum RecoveryStrategy {
@@ -285,14 +304,14 @@ impl SystemStateMonitor {
     fn update_system_state(&mut self) {
         // Detect SIMD support
         self.last_state.simd_support = detect_simd_support();
-        
+
         // Get thread count
         self.last_state.thread_count = num_cpus::get();
-        
+
         // Simulate memory and CPU readings (in real implementation, would query actual system)
         self.last_state.available_memory = 2_147_483_648; // 2GB
         self.last_state.cpu_usage = 25.0; // 25% default
-        
+
         // Check GPU availability (simplified check)
         self.last_state.gpu_available = check_gpu_availability();
     }
@@ -323,13 +342,13 @@ impl ErrorRecoveryManager {
         parameters: std::collections::HashMap<String, String>,
     ) -> Result<RecoveryStrategy> {
         let start_time = std::time::Instant::now();
-        
+
         // Get current system state
         let system_state = self.system_monitor.get_current_state().clone();
-        
+
         // Analyze error and determine recovery strategies
         let recovery_strategies = self.analyze_error(&error, &system_state, operation);
-        
+
         // Create error context
         let context = ErrorContext {
             operation: operation.to_string(),
@@ -377,42 +396,42 @@ impl ErrorRecoveryManager {
                     strategies.push(RecoveryStrategy::ReduceQuality);
                     strategies.push(RecoveryStrategy::RetryWithReducedParams);
                 }
-                
+
                 if system_state.cpu_usage > self.config.cpu_threshold {
                     strategies.push(RecoveryStrategy::FallbackToScalar);
                 }
-                
+
                 // GPU-related operations
                 if operation.contains("gpu") || operation.contains("GPU") {
                     strategies.push(RecoveryStrategy::FallbackToCpu);
                 }
-                
+
                 // SIMD-related operations
                 if operation.contains("simd") || operation.contains("SIMD") {
                     strategies.push(RecoveryStrategy::FallbackToScalar);
                 }
-                
+
                 strategies.push(RecoveryStrategy::UseDefaultParams);
                 strategies.push(RecoveryStrategy::AdaptiveAdjustment);
             }
-            
+
             VisionError::InvalidParameter(_) => {
                 strategies.push(RecoveryStrategy::UseDefaultParams);
                 strategies.push(RecoveryStrategy::AdaptiveAdjustment);
                 strategies.push(RecoveryStrategy::RetryWithReducedParams);
             }
-            
+
             VisionError::DimensionMismatch(_) | VisionError::ShapeError(_) => {
                 strategies.push(RecoveryStrategy::AdaptiveAdjustment);
                 strategies.push(RecoveryStrategy::UseDefaultParams);
             }
-            
+
             VisionError::LinAlgError(_) => {
                 strategies.push(RecoveryStrategy::FallbackToScalar);
                 strategies.push(RecoveryStrategy::UseDefaultParams);
                 strategies.push(RecoveryStrategy::RetryWithReducedParams);
             }
-            
+
             _ => {
                 // Generic recovery strategies
                 strategies.push(RecoveryStrategy::UseDefaultParams);
@@ -423,7 +442,7 @@ impl ErrorRecoveryManager {
         // Remove duplicate strategies
         strategies.sort_by_key(|s| format!("{:?}", s));
         strategies.dedup_by_key(|s| format!("{:?}", s));
-        
+
         strategies
     }
 
@@ -431,7 +450,9 @@ impl ErrorRecoveryManager {
     fn determine_error_severity(&self, error: &VisionError) -> ErrorSeverity {
         match error {
             VisionError::InvalidParameter(_) | VisionError::InvalidInput(_) => ErrorSeverity::Low,
-            VisionError::OperationError(_) | VisionError::TypeConversionError(_) => ErrorSeverity::Medium,
+            VisionError::OperationError(_) | VisionError::TypeConversionError(_) => {
+                ErrorSeverity::Medium
+            }
             VisionError::LinAlgError(_) | VisionError::DimensionMismatch(_) => ErrorSeverity::High,
             VisionError::IoError(_) | VisionError::Other(_) => ErrorSeverity::Critical,
             _ => ErrorSeverity::Medium,
@@ -445,7 +466,7 @@ impl ErrorRecoveryManager {
         strategy: RecoveryStrategy,
     ) -> bool {
         let start_time = std::time::Instant::now();
-        
+
         // Simulate recovery attempt (in real implementation, would apply actual recovery logic)
         let success = match strategy {
             RecoveryStrategy::FallbackToCpu | RecoveryStrategy::FallbackToScalar => true,
@@ -476,33 +497,38 @@ impl ErrorRecoveryManager {
     ) {
         self.recovery_stats.total_errors += 1;
         self.recovery_stats.successful_recoveries += 1;
-        
+
         // Update strategy success rates
         for attempt in &error.recovery_attempts {
             if attempt.success {
                 let strategy_name = format!("{:?}", attempt.strategy);
-                let current_rate = self.recovery_stats.strategy_success_rates
+                let current_rate = self
+                    .recovery_stats
+                    .strategy_success_rates
                     .get(&strategy_name)
                     .copied()
                     .unwrap_or(0.0);
-                
+
                 // Simple moving average update
                 let new_rate = (current_rate + 1.0) / 2.0;
-                self.recovery_stats.strategy_success_rates.insert(strategy_name, new_rate);
+                self.recovery_stats
+                    .strategy_success_rates
+                    .insert(strategy_name, new_rate);
                 break;
             }
         }
-        
+
         // Update average recovery time
         let current_avg = self.recovery_stats.avg_recovery_time;
-        let new_avg = std::time::Duration::from_nanos(
-            (current_avg.as_nanos() + total_duration.as_nanos()) / 2
-        );
+        let avg_nanos = ((current_avg.as_nanos() + total_duration.as_nanos()) / 2)
+            .try_into()
+            .unwrap_or(u64::MAX);
+        let new_avg = std::time::Duration::from_nanos(avg_nanos);
         self.recovery_stats.avg_recovery_time = new_avg;
-        
+
         // Add to error history
         self.add_to_error_history(error.clone());
-        
+
         if self.config.enable_logging {
             eprintln!("Successfully recovered from error: {}", error.base_error);
         }
@@ -512,15 +538,22 @@ impl ErrorRecoveryManager {
     fn record_failed_recovery(&mut self, error: &RecoverableVisionError) {
         self.recovery_stats.total_errors += 1;
         self.recovery_stats.failed_recoveries += 1;
-        
+
         // Update common errors
         let error_type = format!("{:?}", error.base_error);
-        let count = self.recovery_stats.common_errors.get(&error_type).copied().unwrap_or(0);
-        self.recovery_stats.common_errors.insert(error_type, count + 1);
-        
+        let count = self
+            .recovery_stats
+            .common_errors
+            .get(&error_type)
+            .copied()
+            .unwrap_or(0);
+        self.recovery_stats
+            .common_errors
+            .insert(error_type, count + 1);
+
         // Add to error history
         self.add_to_error_history(error.clone());
-        
+
         if self.config.enable_logging {
             eprintln!("Failed to recover from error: {}", error.base_error);
         }
@@ -529,7 +562,7 @@ impl ErrorRecoveryManager {
     /// Add error to history for pattern analysis
     fn add_to_error_history(&mut self, error: RecoverableVisionError) {
         self.error_history.push_back(error);
-        
+
         // Keep history bounded
         if self.error_history.len() > self.config.max_error_history {
             self.error_history.pop_front();
@@ -544,31 +577,45 @@ impl ErrorRecoveryManager {
     /// Generate error recovery report
     pub fn generate_recovery_report(&self) -> String {
         let mut report = String::new();
-        
+
         report.push_str("=== Error Recovery Report ===\n");
-        report.push_str(&format!("Total errors: {}\n", self.recovery_stats.total_errors));
-        report.push_str(&format!("Successful recoveries: {}\n", self.recovery_stats.successful_recoveries));
-        report.push_str(&format!("Failed recoveries: {}\n", self.recovery_stats.failed_recoveries));
-        
+        report.push_str(&format!(
+            "Total errors: {}\n",
+            self.recovery_stats.total_errors
+        ));
+        report.push_str(&format!(
+            "Successful recoveries: {}\n",
+            self.recovery_stats.successful_recoveries
+        ));
+        report.push_str(&format!(
+            "Failed recoveries: {}\n",
+            self.recovery_stats.failed_recoveries
+        ));
+
         let success_rate = if self.recovery_stats.total_errors > 0 {
-            self.recovery_stats.successful_recoveries as f32 / self.recovery_stats.total_errors as f32 * 100.0
+            self.recovery_stats.successful_recoveries as f32
+                / self.recovery_stats.total_errors as f32
+                * 100.0
         } else {
             0.0
         };
         report.push_str(&format!("Overall success rate: {:.1}%\n", success_rate));
-        
-        report.push_str(&format!("Average recovery time: {:?}\n", self.recovery_stats.avg_recovery_time));
-        
+
+        report.push_str(&format!(
+            "Average recovery time: {:?}\n",
+            self.recovery_stats.avg_recovery_time
+        ));
+
         report.push_str("\n--- Strategy Success Rates ---\n");
         for (strategy, rate) in &self.recovery_stats.strategy_success_rates {
             report.push_str(&format!("{}: {:.1}%\n", strategy, rate * 100.0));
         }
-        
+
         report.push_str("\n--- Common Error Types ---\n");
         for (error_type, count) in &self.recovery_stats.common_errors {
             report.push_str(&format!("{}: {} occurrences\n", error_type, count));
         }
-        
+
         report
     }
 }
@@ -629,7 +676,7 @@ macro_rules! recover_or_fallback {
         match $operation {
             Ok(result) => Ok(result),
             Err(error) => {
-                let mut recovery_manager = crate::error::get_error_recovery();
+                let mut recovery_manager = $crate::error::get_error_recovery();
                 if let Some(ref mut manager) = *recovery_manager {
                     match manager.recover_from_error(error, $operation_name, $params) {
                         Ok(strategy) => {
@@ -648,31 +695,33 @@ macro_rules! recover_or_fallback {
 
 /// Trait for operations that support graceful degradation
 pub trait GracefulDegradation {
+    /// The output type returned by operations
     type Output;
+    /// The parameters type used to configure operations
     type Params;
-    
+
     /// Attempt operation with full quality
     fn try_full_quality(&self, params: &Self::Params) -> Result<Self::Output>;
-    
+
     /// Fallback to reduced quality operation
     fn fallback_reduced_quality(&self, params: &Self::Params) -> Result<Self::Output>;
-    
+
     /// Final fallback with minimal quality
     fn fallback_minimal_quality(&self, params: &Self::Params) -> Result<Self::Output>;
-    
+
     /// Execute with automatic quality degradation
     fn execute_with_degradation(&self, params: &Self::Params) -> Result<Self::Output> {
         // Try full quality first
         if let Ok(result) = self.try_full_quality(params) {
             return Ok(result);
         }
-        
+
         // Fall back to reduced quality
         if let Ok(result) = self.fallback_reduced_quality(params) {
             eprintln!("Degraded to reduced quality");
             return Ok(result);
         }
-        
+
         // Final fallback to minimal quality
         eprintln!("Degraded to minimal quality");
         self.fallback_minimal_quality(params)

@@ -707,6 +707,7 @@ pub struct HierarchicalSparseMatrix {
     /// Block size for top level
     top_block_size: usize,
     /// Sub-block size within each top-level block
+    #[allow(dead_code)]
     sub_block_size: usize,
     /// Matrix dimensions
     n_rows: usize,
@@ -719,7 +720,9 @@ pub struct CompressedBlock {
     /// Run-length encoded indices and values
     rle_data: Vec<(usize, f64)>, // (run_length, value)
     /// Original block dimensions
+    #[allow(dead_code)]
     block_rows: usize,
+    #[allow(dead_code)]
     block_cols: usize,
 }
 
@@ -1012,10 +1015,15 @@ impl SparseMemoryPool {
 /// Adaptive sparse matrix that chooses optimal format based on sparsity pattern
 #[derive(Debug)]
 pub enum AdaptiveSparseMatrix {
+    /// Compressed Sparse Row format
     Csr(CsrMatrix),
+    /// Compressed Sparse Column format
     Csc(CscMatrix),
+    /// Coordinate format
     Coo(CooMatrix),
+    /// Block sparse format
     Block(BlockSparseMatrix),
+    /// Hierarchical sparse format
     Hierarchical(HierarchicalSparseMatrix),
 }
 
@@ -1063,6 +1071,7 @@ impl AdaptiveSparseMatrix {
 /// Streaming sparse matrix processor for out-of-core operations
 pub struct StreamingSparseProcessor {
     chunk_size: usize,
+    #[allow(dead_code)]
     memory_limit: usize,
 }
 
@@ -1132,9 +1141,11 @@ pub struct ApproximateSparseMatrix {
     /// Hash-based sketches of rows
     row_sketches: Vec<Vec<(u32, f32)>>, // (hash, value) pairs
     /// Sketch size
+    #[allow(dead_code)]
     sketch_size: usize,
     /// Original dimensions
     n_rows: usize,
+    #[allow(dead_code)]
     n_cols: usize,
 }
 

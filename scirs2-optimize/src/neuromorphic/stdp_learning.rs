@@ -9,7 +9,7 @@
 //! - Calcium-based synaptic dynamics
 
 use ndarray::{Array1, Array2, ArrayView1};
-use scirs2_core::error::Result;
+use scirs2_core::error::CoreResult as Result;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::collections::VecDeque;
 

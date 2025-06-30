@@ -15,7 +15,7 @@
 use super::{DomainEvaluationResult, DomainMetrics};
 use crate::error::{MetricsError, Result};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use num_traits::Float;
+use num_traits::{Float, ToPrimitive};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::time::Duration;
@@ -754,7 +754,12 @@ impl AudioProcessingMetrics {
             let eer_val = self
                 .audio_classification
                 .calculate_eer(y_true, &scores.column(1))?;
-            let auc_val = crate::classification::roc_auc_score(y_true, &scores.column(1), None)?;
+            // Convert to appropriate types for roc_auc_score
+            let y_true_u32: Vec<u32> = y_true.iter().map(|&x| x as u32).collect();
+            let y_true_u32_array = Array1::from(y_true_u32);
+            let scores_f64: Vec<f64> = scores.column(1).iter().map(|&x| x.to_f64().unwrap_or(0.0)).collect();
+            let scores_f64_array = Array1::from(scores_f64);
+            let auc_val = crate::classification::roc_auc_score(&y_true_u32_array, &scores_f64_array)?;
             (Some(eer_val), auc_val)
         } else {
             (None, 0.0)
@@ -837,7 +842,7 @@ impl AudioProcessingMetrics {
         sample_rate: f64,
     ) -> Result<AudioQualityResults>
     where
-        F: Float,
+        F: Float + std::iter::Sum,
     {
         // Calculate SNR
         let snr = self
@@ -911,7 +916,7 @@ impl AudioProcessingMetrics {
     /// Calculate precision, recall, and F1 score manually
     fn calculate_precision_recall_f1<T>(&self, y_true: &ArrayView1<T>, y_pred: &ArrayView1<T>) -> Result<(Vec<f64>, Vec<f64>, Vec<f64>)>
     where
-        T: PartialEq + Clone + std::hash::Hash + std::fmt::Debug,
+        T: PartialEq + Clone + std::hash::Hash + std::fmt::Debug + Eq,
     {
         // Get unique classes
         let mut classes = std::collections::HashSet::new();
@@ -1414,7 +1419,7 @@ impl AudioQualityMetrics {
 
     fn calculate_snr<F>(&self, reference: &ArrayView1<F>, degraded: &ArrayView1<F>) -> Result<F>
     where
-        F: Float,
+        F: Float + std::iter::Sum,
     {
         let signal_power = reference.iter().map(|&x| x * x).sum::<F>();
         let noise_power = reference
@@ -1432,7 +1437,7 @@ impl AudioQualityMetrics {
 
     fn calculate_sdr<F>(&self, reference: &ArrayView1<F>, degraded: &ArrayView1<F>) -> Result<F>
     where
-        F: Float,
+        F: Float + std::iter::Sum,
     {
         // Simplified SDR calculation
         self.calculate_snr(reference, degraded)
@@ -1440,7 +1445,7 @@ impl AudioQualityMetrics {
 
     fn calculate_si_sdr<F>(&self, reference: &ArrayView1<F>, degraded: &ArrayView1<F>) -> Result<F>
     where
-        F: Float,
+        F: Float + std::iter::Sum,
     {
         // Scale-Invariant SDR calculation
         let dot_product = reference

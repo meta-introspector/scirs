@@ -645,7 +645,6 @@ impl MemoryReport {
 }
 
 /// Global memory monitoring functions
-
 /// Start global memory monitoring
 pub fn start_monitoring() {
     let _ = GLOBAL_MONITOR.set(Arc::new(Mutex::new(GlobalMemoryMonitor {
@@ -716,10 +715,13 @@ pub fn get_global_stats() -> Option<GlobalMemoryStats> {
 pub fn get_monitor_report(name: &str) -> Option<MemoryReport> {
     GLOBAL_MONITOR
         .get()
-        .and_then(|global_monitor| global_monitor.lock().ok())
-        .and_then(|global| global.monitors.get(name).cloned())
-        .and_then(|monitor| monitor.lock().ok())
-        .map(|m| m.generate_report())
+        .and_then(|global_monitor| {
+            global_monitor
+                .lock()
+                .ok()
+                .and_then(|global| global.monitors.get(name).cloned())
+        })
+        .and_then(|monitor| monitor.lock().ok().map(|m| m.generate_report()))
 }
 
 /// Get reports for all active monitors
@@ -735,6 +737,627 @@ pub fn get_all_reports() -> Vec<MemoryReport> {
         }
     }
     Vec::new()
+}
+
+/// Enhanced stress testing memory profiler
+#[derive(Debug)]
+pub struct StressMemoryProfiler {
+    /// Base monitor for standard tracking
+    base_monitor: MemoryMonitor,
+
+    /// Stress test specific metrics
+    stress_metrics: StressMemoryMetrics,
+
+    /// Memory usage history during stress tests
+    stress_history: VecDeque<MemorySnapshot>,
+
+    /// System memory pressure indicators
+    pressure_indicators: MemoryPressureIndicators,
+
+    /// Configuration for stress profiling
+    stress_config: StressProfilingConfig,
+}
+
+/// Stress-specific memory metrics
+#[derive(Debug, Clone)]
+pub struct StressMemoryMetrics {
+    /// Maximum memory growth rate during stress (bytes/second)
+    pub max_growth_rate: f64,
+
+    /// Memory allocation spikes during stress
+    pub allocation_spikes: Vec<AllocationSpike>,
+
+    /// Memory fragmentation under stress
+    pub stress_fragmentation: f64,
+
+    /// Concurrent access memory overhead
+    pub concurrent_overhead: f64,
+
+    /// Large dataset memory efficiency
+    pub large_dataset_efficiency: f64,
+
+    /// Memory recovery time after stress
+    pub recovery_time_seconds: f64,
+}
+
+/// Memory allocation spike during stress testing
+#[derive(Debug, Clone)]
+pub struct AllocationSpike {
+    /// Time when spike occurred
+    pub timestamp: Instant,
+
+    /// Size of the spike in bytes
+    pub spike_size: usize,
+
+    /// Duration of the spike
+    pub duration: Duration,
+
+    /// Stress condition that caused the spike
+    pub stress_condition: String,
+}
+
+/// Memory snapshot during stress testing
+#[derive(Debug, Clone)]
+pub struct MemorySnapshot {
+    /// Timestamp of snapshot
+    pub timestamp: Instant,
+
+    /// Total memory usage at this point
+    pub total_memory: usize,
+
+    /// Memory usage by category
+    pub category_breakdown: HashMap<String, usize>,
+
+    /// System memory pressure level (0.0 to 1.0)
+    pub system_pressure: f64,
+
+    /// Active stress conditions
+    pub active_stress_conditions: Vec<String>,
+}
+
+/// System memory pressure indicators
+#[derive(Debug, Clone)]
+pub struct MemoryPressureIndicators {
+    /// System memory utilization percentage
+    pub system_memory_utilization: f64,
+
+    /// Available memory in bytes
+    pub available_memory: usize,
+
+    /// Memory allocation failure rate
+    pub allocation_failure_rate: f64,
+
+    /// Garbage collection frequency (if applicable)
+    pub gc_frequency: f64,
+
+    /// Swap usage percentage
+    pub swap_utilization: f64,
+}
+
+impl Default for MemoryPressureIndicators {
+    fn default() -> Self {
+        Self {
+            system_memory_utilization: 0.0,
+            available_memory: 8 * 1024 * 1024 * 1024, // 8GB default
+            allocation_failure_rate: 0.0,
+            gc_frequency: 0.0,
+            swap_utilization: 0.0,
+        }
+    }
+}
+
+/// Configuration for stress profiling
+#[derive(Debug, Clone)]
+pub struct StressProfilingConfig {
+    /// Sampling interval for memory snapshots during stress
+    pub snapshot_interval: Duration,
+
+    /// Maximum number of snapshots to retain
+    pub max_snapshots: usize,
+
+    /// Threshold for detecting allocation spikes (bytes)
+    pub spike_threshold: usize,
+
+    /// Enable system memory pressure monitoring
+    pub monitor_system_pressure: bool,
+
+    /// Enable detailed category tracking under stress
+    pub detailed_category_tracking: bool,
+}
+
+impl Default for StressProfilingConfig {
+    fn default() -> Self {
+        Self {
+            snapshot_interval: Duration::from_millis(100), // 10 samples per second
+            max_snapshots: 10000,                          // ~17 minutes at 100ms intervals
+            spike_threshold: 10 * 1024 * 1024,             // 10MB
+            monitor_system_pressure: true,
+            detailed_category_tracking: true,
+        }
+    }
+}
+
+impl StressMemoryProfiler {
+    /// Create a new stress memory profiler
+    pub fn new(name: impl Into<String>, config: Option<StressProfilingConfig>) -> Self {
+        Self {
+            base_monitor: MemoryMonitor::new(name),
+            stress_metrics: StressMemoryMetrics {
+                max_growth_rate: 0.0,
+                allocation_spikes: Vec::new(),
+                stress_fragmentation: 0.0,
+                concurrent_overhead: 0.0,
+                large_dataset_efficiency: 1.0,
+                recovery_time_seconds: 0.0,
+            },
+            stress_history: VecDeque::new(),
+            pressure_indicators: MemoryPressureIndicators::default(),
+            stress_config: config.unwrap_or_default(),
+        }
+    }
+
+    /// Start profiling under specific stress condition
+    pub fn start_stress_profiling(&mut self, stress_condition: &str) {
+        println!("Starting stress memory profiling for: {}", stress_condition);
+
+        // Take initial snapshot
+        self.take_memory_snapshot(vec![stress_condition.to_string()]);
+
+        // Update system pressure indicators
+        self.update_system_pressure();
+    }
+
+    /// Track memory allocation during stress test
+    pub fn track_stress_allocation(
+        &mut self,
+        size_bytes: usize,
+        category: impl Into<String>,
+        stress_condition: &str,
+    ) {
+        let category = category.into();
+
+        // Track with base monitor
+        self.base_monitor.track_allocation(size_bytes, &category);
+
+        // Check for allocation spike
+        if size_bytes >= self.stress_config.spike_threshold {
+            self.stress_metrics.allocation_spikes.push(AllocationSpike {
+                timestamp: Instant::now(),
+                spike_size: size_bytes,
+                duration: Duration::from_millis(0), // Would measure actual duration
+                stress_condition: stress_condition.to_string(),
+            });
+        }
+
+        // Take periodic snapshots
+        if self.should_take_snapshot() {
+            self.take_memory_snapshot(vec![stress_condition.to_string()]);
+        }
+
+        // Update growth rate
+        self.update_growth_rate();
+    }
+
+    /// Track memory deallocation during stress test
+    pub fn track_stress_deallocation(&mut self, size_bytes: usize, category: impl Into<String>) {
+        self.base_monitor.track_deallocation(size_bytes, category);
+
+        // Update stress metrics
+        self.update_growth_rate();
+    }
+
+    /// Take a memory snapshot for stress analysis
+    fn take_memory_snapshot(&mut self, active_stress_conditions: Vec<String>) {
+        let snapshot = MemorySnapshot {
+            timestamp: Instant::now(),
+            total_memory: self.base_monitor.current_memory_bytes,
+            category_breakdown: self.base_monitor.allocations.clone(),
+            system_pressure: self.calculate_system_pressure(),
+            active_stress_conditions,
+        };
+
+        self.stress_history.push_back(snapshot);
+
+        // Limit history size
+        if self.stress_history.len() > self.stress_config.max_snapshots {
+            self.stress_history.pop_front();
+        }
+    }
+
+    /// Check if should take snapshot based on timing
+    fn should_take_snapshot(&self) -> bool {
+        if let Some(last_snapshot) = self.stress_history.back() {
+            last_snapshot.timestamp.elapsed() >= self.stress_config.snapshot_interval
+        } else {
+            true // Always take first snapshot
+        }
+    }
+
+    /// Update memory growth rate during stress
+    fn update_growth_rate(&mut self) {
+        if self.stress_history.len() >= 2 {
+            let recent_snapshots: Vec<_> = self.stress_history.iter().rev().take(10).collect();
+
+            if recent_snapshots.len() >= 2 {
+                let latest = recent_snapshots[0];
+                let previous = recent_snapshots[recent_snapshots.len() - 1];
+
+                let memory_delta = latest.total_memory as i64 - previous.total_memory as i64;
+                let time_delta = latest
+                    .timestamp
+                    .duration_since(previous.timestamp)
+                    .as_secs_f64();
+
+                if time_delta > 0.0 {
+                    let growth_rate = memory_delta as f64 / time_delta;
+                    self.stress_metrics.max_growth_rate =
+                        self.stress_metrics.max_growth_rate.max(growth_rate);
+                }
+            }
+        }
+    }
+
+    /// Update system memory pressure indicators
+    fn update_system_pressure(&mut self) {
+        // In a real implementation, this would query the operating system
+        // For now, simulate pressure based on our current usage
+
+        let total_system_memory = 16 * 1024 * 1024 * 1024; // 16GB assumed
+        let our_usage = self.base_monitor.current_memory_bytes;
+
+        self.pressure_indicators.system_memory_utilization =
+            (our_usage as f64 / total_system_memory as f64 * 100.0).min(100.0);
+
+        self.pressure_indicators.available_memory = total_system_memory.saturating_sub(our_usage);
+
+        // Simulate other metrics
+        self.pressure_indicators.allocation_failure_rate =
+            if self.pressure_indicators.system_memory_utilization > 90.0 {
+                0.1
+            } else {
+                0.0
+            };
+    }
+
+    /// Calculate current system pressure level
+    fn calculate_system_pressure(&self) -> f64 {
+        let pressure_factors = [
+            self.pressure_indicators.system_memory_utilization / 100.0,
+            self.pressure_indicators.allocation_failure_rate,
+            self.pressure_indicators.swap_utilization / 100.0,
+        ];
+
+        pressure_factors.iter().sum::<f64>() / pressure_factors.len() as f64
+    }
+
+    /// Analyze memory efficiency under large dataset stress
+    pub fn analyze_large_dataset_efficiency(
+        &mut self,
+        dataset_size: usize,
+        expected_memory: usize,
+    ) {
+        let actual_memory = self.base_monitor.current_memory_bytes;
+
+        self.stress_metrics.large_dataset_efficiency =
+            expected_memory as f64 / actual_memory.max(1) as f64;
+
+        println!(
+            "Large dataset efficiency for {} elements: {:.2} (expected: {}MB, actual: {}MB)",
+            dataset_size,
+            self.stress_metrics.large_dataset_efficiency,
+            expected_memory / (1024 * 1024),
+            actual_memory / (1024 * 1024)
+        );
+    }
+
+    /// Analyze concurrent access memory overhead
+    pub fn analyze_concurrent_overhead(
+        &mut self,
+        baseline_memory: usize,
+        concurrent_threads: usize,
+    ) {
+        let current_memory = self.base_monitor.current_memory_bytes;
+        let overhead = current_memory.saturating_sub(baseline_memory);
+
+        self.stress_metrics.concurrent_overhead = overhead as f64 / concurrent_threads as f64;
+
+        println!(
+            "Concurrent access overhead: {:.1}KB per thread ({} threads)",
+            self.stress_metrics.concurrent_overhead / 1024.0,
+            concurrent_threads
+        );
+    }
+
+    /// Measure memory recovery time after stress
+    pub fn measure_recovery_time(&mut self, stress_end_time: Instant) {
+        let recovery_start_memory = self.base_monitor.current_memory_bytes;
+
+        // Monitor memory for recovery (simplified - would need async monitoring in practice)
+        let recovery_time = Instant::now().duration_since(stress_end_time);
+        self.stress_metrics.recovery_time_seconds = recovery_time.as_secs_f64();
+
+        println!(
+            "Memory recovery time: {:.2}s",
+            self.stress_metrics.recovery_time_seconds
+        );
+    }
+
+    /// Generate comprehensive stress memory report
+    pub fn generate_stress_report(&self) -> StressMemoryReport {
+        let base_report = self.base_monitor.generate_report();
+
+        let memory_pressure_analysis = self.analyze_memory_pressure();
+        let allocation_pattern_analysis = self.analyze_allocation_patterns();
+        let stress_performance_analysis = self.analyze_stress_performance();
+
+        StressMemoryReport {
+            base_report,
+            stress_metrics: self.stress_metrics.clone(),
+            memory_pressure_analysis,
+            allocation_pattern_analysis,
+            stress_performance_analysis,
+            system_pressure: self.pressure_indicators.clone(),
+            snapshot_count: self.stress_history.len(),
+            stress_recommendations: self.generate_stress_recommendations(),
+        }
+    }
+
+    /// Analyze memory pressure patterns
+    fn analyze_memory_pressure(&self) -> MemoryPressureAnalysis {
+        let max_pressure = self
+            .stress_history
+            .iter()
+            .map(|s| s.system_pressure)
+            .fold(0.0, f64::max);
+
+        let avg_pressure = if !self.stress_history.is_empty() {
+            self.stress_history
+                .iter()
+                .map(|s| s.system_pressure)
+                .sum::<f64>()
+                / self.stress_history.len() as f64
+        } else {
+            0.0
+        };
+
+        let pressure_spikes = self
+            .stress_history
+            .iter()
+            .filter(|s| s.system_pressure > 0.8)
+            .count();
+
+        MemoryPressureAnalysis {
+            max_pressure,
+            avg_pressure,
+            pressure_spikes,
+            critical_periods: pressure_spikes, // Simplified
+        }
+    }
+
+    /// Analyze allocation patterns under stress
+    fn analyze_allocation_patterns(&self) -> AllocationPatternAnalysis {
+        let spike_count = self.stress_metrics.allocation_spikes.len();
+        let total_spike_memory: usize = self
+            .stress_metrics
+            .allocation_spikes
+            .iter()
+            .map(|s| s.spike_size)
+            .sum();
+
+        let pattern_regularity = if spike_count > 1 {
+            // Calculate variance in spike timing
+            let intervals: Vec<_> = self
+                .stress_metrics
+                .allocation_spikes
+                .windows(2)
+                .map(|pair| {
+                    pair[1]
+                        .timestamp
+                        .duration_since(pair[0].timestamp)
+                        .as_secs_f64()
+                })
+                .collect();
+
+            if !intervals.is_empty() {
+                let mean_interval = intervals.iter().sum::<f64>() / intervals.len() as f64;
+                let variance = intervals
+                    .iter()
+                    .map(|&x| (x - mean_interval).powi(2))
+                    .sum::<f64>()
+                    / intervals.len() as f64;
+                1.0 / (1.0 + variance) // Higher variance = lower regularity
+            } else {
+                1.0
+            }
+        } else {
+            1.0
+        };
+
+        AllocationPatternAnalysis {
+            spike_count,
+            total_spike_memory,
+            pattern_regularity,
+            fragmentation_level: self.stress_metrics.stress_fragmentation,
+        }
+    }
+
+    /// Analyze stress performance
+    fn analyze_stress_performance(&self) -> StressPerformanceAnalysis {
+        StressPerformanceAnalysis {
+            max_growth_rate: self.stress_metrics.max_growth_rate,
+            concurrent_overhead: self.stress_metrics.concurrent_overhead,
+            large_dataset_efficiency: self.stress_metrics.large_dataset_efficiency,
+            recovery_time: self.stress_metrics.recovery_time_seconds,
+            overall_stress_grade: self.calculate_stress_grade(),
+        }
+    }
+
+    /// Calculate overall stress performance grade
+    fn calculate_stress_grade(&self) -> StressPerformanceGrade {
+        let factors = [
+            if self.stress_metrics.max_growth_rate < 1024.0 * 1024.0 {
+                1.0
+            } else {
+                0.0
+            }, // < 1MB/s growth
+            if self.stress_metrics.concurrent_overhead < 1024.0 * 1024.0 {
+                1.0
+            } else {
+                0.0
+            }, // < 1MB overhead per thread
+            self.stress_metrics.large_dataset_efficiency.min(1.0), // Efficiency ratio
+            if self.stress_metrics.recovery_time_seconds < 10.0 {
+                1.0
+            } else {
+                0.0
+            }, // < 10s recovery
+        ];
+
+        let score = factors.iter().sum::<f64>() / factors.len() as f64;
+
+        match score {
+            s if s >= 0.9 => StressPerformanceGrade::Excellent,
+            s if s >= 0.7 => StressPerformanceGrade::Good,
+            s if s >= 0.5 => StressPerformanceGrade::Fair,
+            s if s >= 0.3 => StressPerformanceGrade::Poor,
+            _ => StressPerformanceGrade::Critical,
+        }
+    }
+
+    /// Generate stress-specific recommendations
+    fn generate_stress_recommendations(&self) -> Vec<String> {
+        let mut recommendations = Vec::new();
+
+        if self.stress_metrics.max_growth_rate > 10.0 * 1024.0 * 1024.0 {
+            // > 10MB/s
+            recommendations
+                .push("High memory growth rate detected - consider batch processing".to_string());
+        }
+
+        if self.stress_metrics.allocation_spikes.len() > 10 {
+            recommendations
+                .push("Frequent allocation spikes - implement memory pre-allocation".to_string());
+        }
+
+        if self.stress_metrics.concurrent_overhead > 5.0 * 1024.0 * 1024.0 {
+            // > 5MB per thread
+            recommendations
+                .push("High concurrent overhead - review thread-local memory usage".to_string());
+        }
+
+        if self.stress_metrics.large_dataset_efficiency < 0.7 {
+            recommendations
+                .push("Poor large dataset efficiency - optimize memory layout".to_string());
+        }
+
+        if self.stress_metrics.recovery_time_seconds > 30.0 {
+            recommendations.push("Slow memory recovery - implement explicit cleanup".to_string());
+        }
+
+        recommendations
+    }
+}
+
+/// Comprehensive stress memory report
+#[derive(Debug, Clone)]
+pub struct StressMemoryReport {
+    /// Base memory report
+    pub base_report: MemoryReport,
+
+    /// Stress-specific metrics
+    pub stress_metrics: StressMemoryMetrics,
+
+    /// Memory pressure analysis
+    pub memory_pressure_analysis: MemoryPressureAnalysis,
+
+    /// Allocation pattern analysis
+    pub allocation_pattern_analysis: AllocationPatternAnalysis,
+
+    /// Stress performance analysis
+    pub stress_performance_analysis: StressPerformanceAnalysis,
+
+    /// System pressure indicators
+    pub system_pressure: MemoryPressureIndicators,
+
+    /// Number of snapshots taken
+    pub snapshot_count: usize,
+
+    /// Stress-specific recommendations
+    pub stress_recommendations: Vec<String>,
+}
+
+/// Memory pressure analysis results
+#[derive(Debug, Clone)]
+pub struct MemoryPressureAnalysis {
+    /// Maximum pressure level reached (0.0 to 1.0)
+    pub max_pressure: f64,
+
+    /// Average pressure level
+    pub avg_pressure: f64,
+
+    /// Number of pressure spikes
+    pub pressure_spikes: usize,
+
+    /// Number of critical pressure periods
+    pub critical_periods: usize,
+}
+
+/// Allocation pattern analysis results
+#[derive(Debug, Clone)]
+pub struct AllocationPatternAnalysis {
+    /// Number of allocation spikes
+    pub spike_count: usize,
+
+    /// Total memory in spikes
+    pub total_spike_memory: usize,
+
+    /// Pattern regularity (0.0 to 1.0)
+    pub pattern_regularity: f64,
+
+    /// Memory fragmentation level
+    pub fragmentation_level: f64,
+}
+
+/// Stress performance analysis
+#[derive(Debug, Clone)]
+pub struct StressPerformanceAnalysis {
+    /// Maximum memory growth rate (bytes/second)
+    pub max_growth_rate: f64,
+
+    /// Concurrent access overhead per thread
+    pub concurrent_overhead: f64,
+
+    /// Large dataset memory efficiency
+    pub large_dataset_efficiency: f64,
+
+    /// Recovery time after stress
+    pub recovery_time: f64,
+
+    /// Overall stress performance grade
+    pub overall_stress_grade: StressPerformanceGrade,
+}
+
+/// Stress performance grades
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum StressPerformanceGrade {
+    Excellent,
+    Good,
+    Fair,
+    Poor,
+    Critical,
+}
+
+/// Create a stress memory profiler for testing
+pub fn create_stress_profiler(name: impl Into<String>) -> StressMemoryProfiler {
+    StressMemoryProfiler::new(name, None)
+}
+
+/// Create a stress memory profiler with custom configuration
+pub fn create_stress_profiler_with_config(
+    name: impl Into<String>,
+    config: StressProfilingConfig,
+) -> StressMemoryProfiler {
+    StressMemoryProfiler::new(name, Some(config))
 }
 
 #[cfg(test)]
@@ -782,5 +1405,32 @@ mod tests {
         assert_eq!(stats.active_interpolators, 2);
 
         stop_monitoring();
+    }
+
+    #[test]
+    fn test_stress_profiler_basic() {
+        let mut profiler = create_stress_profiler("stress_test");
+
+        profiler.start_stress_profiling("large_dataset");
+        profiler.track_stress_allocation(10 * 1024 * 1024, "large_matrix", "large_dataset");
+        profiler.track_stress_allocation(5 * 1024 * 1024, "cache", "large_dataset");
+
+        let report = profiler.generate_stress_report();
+        assert!(report.stress_metrics.allocation_spikes.len() > 0);
+        assert!(report.snapshot_count > 0);
+    }
+
+    #[test]
+    fn test_stress_allocation_spike_detection() {
+        let mut profiler = create_stress_profiler("spike_test");
+
+        // Trigger allocation spike (default threshold is 10MB)
+        profiler.track_stress_allocation(15 * 1024 * 1024, "spike", "stress_test");
+
+        assert_eq!(profiler.stress_metrics.allocation_spikes.len(), 1);
+        assert_eq!(
+            profiler.stress_metrics.allocation_spikes[0].spike_size,
+            15 * 1024 * 1024
+        );
     }
 }

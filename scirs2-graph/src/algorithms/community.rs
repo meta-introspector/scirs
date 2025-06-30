@@ -5,7 +5,7 @@
 use crate::base::{EdgeWeight, Graph, IndexType, Node};
 use petgraph::visit::EdgeRef;
 use rand::seq::SliceRandom;
-use scirs2_core::parallel_ops::*;
+// use scirs2_core::parallel_ops::*;  // TODO: Add parallel implementations
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 

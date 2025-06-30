@@ -94,7 +94,222 @@ use crate::dwt::{self, Wavelet};
 use crate::error::{SignalError, SignalResult};
 use ndarray::Array2;
 use num_traits::{Float, NumCast};
+use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
+use scirs2_core::validation::{check_finite, check_positive};
 use std::fmt::Debug;
+use std::time::Instant;
+
+/// Helper function for ceiling division (divide and round up)
+/// This replaces the unstable div_ceil method
+#[inline]
+fn div_ceil(a: usize, b: usize) -> usize {
+    (a + b - 1) / b
+}
+
+/// SIMD-optimized threshold function for wavelet coefficients
+/// Applies thresholding to a slice of coefficients using SIMD operations when available
+#[inline]
+fn simd_threshold_coefficients(coeffs: &mut [f64], threshold: f64, method: ThresholdMethod) {
+    let caps = PlatformCapabilities::detect();
+    let simd_threshold = 64; // Minimum length for SIMD optimization
+    
+    if coeffs.len() >= simd_threshold && caps.has_avx2 {
+        simd_threshold_avx2(coeffs, threshold, method);
+    } else {
+        // Fallback to scalar implementation
+        for coeff in coeffs.iter_mut() {
+            *coeff = apply_threshold(*coeff, threshold, method);
+        }
+    }
+}
+
+/// AVX2-optimized thresholding implementation
+#[cfg(target_arch = "x86_64")]
+#[inline]
+fn simd_threshold_avx2(coeffs: &mut [f64], threshold: f64, method: ThresholdMethod) {
+    use std::arch::x86_64::*;
+    
+    let len = coeffs.len();
+    let simd_len = len - (len % 4); // Process 4 elements at a time with AVX2
+    
+    unsafe {
+        let threshold_vec = _mm256_set1_pd(threshold);
+        let neg_threshold_vec = _mm256_set1_pd(-threshold);
+        let zero_vec = _mm256_setzero_pd();
+        let one_vec = _mm256_set1_pd(1.0);
+        
+        for i in (0..simd_len).step_by(4) {
+            let data = _mm256_loadu_pd(coeffs.as_ptr().add(i));
+            
+            let result = match method {
+                ThresholdMethod::Hard => {
+                    // Hard thresholding: zero if |x| <= threshold, keep otherwise
+                    let abs_data = _mm256_andnot_pd(_mm256_set1_pd(-0.0), data);
+                    let mask = _mm256_cmp_pd(abs_data, threshold_vec, _CMP_GT_OQ);
+                    _mm256_and_pd(data, mask)
+                },
+                ThresholdMethod::Soft => {
+                    // Soft thresholding: zero if |x| <= threshold, shrink otherwise
+                    let abs_data = _mm256_andnot_pd(_mm256_set1_pd(-0.0), data);
+                    let mask = _mm256_cmp_pd(abs_data, threshold_vec, _CMP_GT_OQ);
+                    let sign_mask = _mm256_cmp_pd(data, zero_vec, _CMP_GE_OQ);
+                    let sign = _mm256_blendv_pd(_mm256_set1_pd(-1.0), one_vec, sign_mask);
+                    let shrunk = _mm256_mul_pd(sign, _mm256_sub_pd(abs_data, threshold_vec));
+                    _mm256_and_pd(shrunk, mask)
+                },
+                ThresholdMethod::Garrote => {
+                    // Garrote thresholding: non-linear shrinkage
+                    let abs_data = _mm256_andnot_pd(_mm256_set1_pd(-0.0), data);
+                    let mask = _mm256_cmp_pd(abs_data, threshold_vec, _CMP_GT_OQ);
+                    let threshold_sq = _mm256_mul_pd(threshold_vec, threshold_vec);
+                    let data_sq = _mm256_mul_pd(data, data);
+                    let ratio = _mm256_div_pd(threshold_sq, data_sq);
+                    let factor = _mm256_sub_pd(one_vec, ratio);
+                    let result = _mm256_mul_pd(data, factor);
+                    _mm256_and_pd(result, mask)
+                }
+            };
+            
+            _mm256_storeu_pd(coeffs.as_mut_ptr().add(i), result);
+        }
+    }
+    
+    // Handle remaining elements with scalar code
+    for coeff in &mut coeffs[simd_len..] {
+        *coeff = apply_threshold(*coeff, threshold, method);
+    }
+}
+
+/// Fallback scalar thresholding for non-x86_64 architectures
+#[cfg(not(target_arch = "x86_64"))]
+#[inline]
+fn simd_threshold_avx2(coeffs: &mut [f64], threshold: f64, method: ThresholdMethod) {
+    for coeff in coeffs.iter_mut() {
+        *coeff = apply_threshold(*coeff, threshold, method);
+    }
+}
+
+/// SIMD-optimized energy calculation for large arrays
+#[inline]
+fn simd_calculate_energy(data: &[f64]) -> f64 {
+    let caps = PlatformCapabilities::detect();
+    let simd_threshold = 64;
+    
+    if data.len() >= simd_threshold && caps.has_avx2 {
+        simd_energy_avx2(data)
+    } else {
+        // Fallback to scalar implementation
+        data.iter().map(|&x| x * x).sum()
+    }
+}
+
+/// AVX2-optimized energy calculation
+#[cfg(target_arch = "x86_64")]
+#[inline]
+fn simd_energy_avx2(data: &[f64]) -> f64 {
+    use std::arch::x86_64::*;
+    
+    let len = data.len();
+    let simd_len = len - (len % 4);
+    let mut sum = 0.0;
+    
+    unsafe {
+        let mut sum_vec = _mm256_setzero_pd();
+        
+        for i in (0..simd_len).step_by(4) {
+            let data_vec = _mm256_loadu_pd(data.as_ptr().add(i));
+            let squared = _mm256_mul_pd(data_vec, data_vec);
+            sum_vec = _mm256_add_pd(sum_vec, squared);
+        }
+        
+        // Horizontal sum of the vector
+        let sum_array: [f64; 4] = std::mem::transmute(sum_vec);
+        sum = sum_array.iter().sum();
+    }
+    
+    // Handle remaining elements
+    sum += data[simd_len..].iter().map(|&x| x * x).sum::<f64>();
+    sum
+}
+
+/// Fallback scalar energy calculation for non-x86_64 architectures
+#[cfg(not(target_arch = "x86_64"))]
+#[inline]
+fn simd_energy_avx2(data: &[f64]) -> f64 {
+    data.iter().map(|&x| x * x).sum()
+}
+
+/// Memory-optimized configuration for 2D DWT operations
+#[derive(Debug, Clone)]
+pub struct Dwt2dConfig {
+    /// Enable memory pre-allocation for better cache efficiency
+    pub preallocate_memory: bool,
+    /// Use in-place operations when possible
+    pub use_inplace: bool,
+    /// Memory alignment for SIMD operations (must be power of 2)
+    pub memory_alignment: usize,
+    /// Chunk size for large arrays to improve cache locality
+    pub chunk_size: Option<usize>,
+}
+
+impl Default for Dwt2dConfig {
+    fn default() -> Self {
+        Self {
+            preallocate_memory: true,
+            use_inplace: false, // Conservative default for safety
+            memory_alignment: 32, // AVX2 alignment
+            chunk_size: Some(1024 * 1024), // 1MB chunks by default
+        }
+    }
+}
+
+/// Memory pool for efficient allocation/deallocation of temporary arrays
+pub struct MemoryPool {
+    pools: std::collections::HashMap<usize, Vec<Vec<f64>>>,
+    max_pool_size: usize,
+}
+
+impl MemoryPool {
+    pub fn new() -> Self {
+        Self {
+            pools: std::collections::HashMap::new(),
+            max_pool_size: 10, // Maximum number of arrays per size
+        }
+    }
+
+    pub fn get_buffer(&mut self, size: usize) -> Vec<f64> {
+        if let Some(pool) = self.pools.get_mut(&size) {
+            if let Some(mut buffer) = pool.pop() {
+                buffer.clear();
+                buffer.resize(size, 0.0);
+                return buffer;
+            }
+        }
+        vec![0.0; size]
+    }
+
+    pub fn return_buffer(&mut self, buffer: Vec<f64>) {
+        let size = buffer.capacity();
+        let pool = self.pools.entry(size).or_insert_with(Vec::new);
+        if pool.len() < self.max_pool_size {
+            pool.push(buffer);
+        }
+    }
+}
+
+thread_local! {
+    static MEMORY_POOL: std::cell::RefCell<MemoryPool> = std::cell::RefCell::new(MemoryPool::new());
+}
+
+/// Get a temporary buffer from the thread-local memory pool
+fn get_temp_buffer(size: usize) -> Vec<f64> {
+    MEMORY_POOL.with(|pool| pool.borrow_mut().get_buffer(size))
+}
+
+/// Return a temporary buffer to the thread-local memory pool
+fn return_temp_buffer(buffer: Vec<f64>) {
+    MEMORY_POOL.with(|pool| pool.borrow_mut().return_buffer(buffer));
+}
 
 // Import parallel ops for parallel processing when the "parallel" feature is enabled
 #[cfg(feature = "parallel")]
@@ -279,8 +494,8 @@ where
 
     // Calculate output dimensions (ceiling division for half the size)
     // Use integer division that rounds up
-    let output_rows = rows.div_ceil(2); // TODO: Replace with div_ceil when stable
-    let output_cols = cols.div_ceil(2); // TODO: Replace with div_ceil when stable
+    let output_rows = div_ceil(rows, 2);
+    let output_cols = div_ceil(cols, 2);
 
     // Create output arrays for each subband
     let mut ll = Array2::zeros((output_rows, output_cols));
@@ -297,15 +512,16 @@ where
     {
         // Create a vector to hold the results of row processing
         #[allow(unused_mut)]
-        let mut row_results: Vec<(usize, Vec<f64>, Vec<f64>)> = (0..rows)
+        let row_results: Result<Vec<(usize, Vec<f64>, Vec<f64>)>, SignalError> = (0..rows)
             .into_par_iter()
             .map(|i| {
                 let row = data_f64.slice(ndarray::s![i, ..]).to_vec();
-                let (approx, detail) =
-                    dwt::dwt_decompose(&row, wavelet, mode).expect("Row transform failed");
-                (i, approx, detail)
+                let (approx, detail) = dwt::dwt_decompose(&row, wavelet, mode)
+                    .map_err(|e| SignalError::ComputationError(format!("Row transform failed: {}", e)))?;
+                Ok((i, approx, detail))
             })
             .collect();
+        let row_results = row_results?;
 
         // Copy results back to the arrays with bounds checking
         for (i, approx, detail) in row_results {
@@ -340,22 +556,23 @@ where
     #[cfg(feature = "parallel")]
     {
         // Process columns in parallel
-        let column_results: Vec<ColumnResult> = (0..output_cols)
+        let column_results: Result<Vec<ColumnResult>, SignalError> = (0..output_cols)
             .into_par_iter()
             .map(|j| {
                 // Process low-pass filtered rows
                 let col_lo = rows_lo.slice(ndarray::s![.., j]).to_vec();
                 let (approx_lo, detail_lo) = dwt::dwt_decompose(&col_lo, wavelet, mode)
-                    .expect("Column transform failed (low-pass)");
+                    .map_err(|e| SignalError::ComputationError(format!("Column transform failed (low-pass): {}", e)))?;
 
                 // Process high-pass filtered rows
                 let col_hi = rows_hi.slice(ndarray::s![.., j]).to_vec();
                 let (approx_hi, detail_hi) = dwt::dwt_decompose(&col_hi, wavelet, mode)
-                    .expect("Column transform failed (high-pass)");
+                    .map_err(|e| SignalError::ComputationError(format!("Column transform failed (high-pass): {}", e)))?;
 
-                (j, approx_lo, detail_lo, approx_hi, detail_hi)
+                Ok((j, approx_lo, detail_lo, approx_hi, detail_hi))
             })
             .collect();
+        let column_results = column_results?;
 
         // Copy results back to output arrays
         for (j, approx_lo, detail_lo, approx_hi, detail_hi) in column_results {
@@ -404,6 +621,235 @@ where
                 }
             }
         }
+    }
+
+    Ok(Dwt2dResult {
+        approx: ll,
+        detail_h: lh,
+        detail_v: hl,
+        detail_d: hh,
+    })
+}
+
+/// Memory-optimized version of 2D DWT decomposition with configuration options
+///
+/// This function provides the same functionality as `dwt2d_decompose` but with
+/// additional memory optimizations and configuration options for better performance
+/// on large arrays.
+///
+/// # Arguments
+///
+/// * `data` - The input 2D array (image)
+/// * `wavelet` - The wavelet to use for the transform
+/// * `mode` - The signal extension mode (default: "symmetric")
+/// * `config` - Configuration for memory optimization
+///
+/// # Returns
+///
+/// * A `Dwt2dResult` containing the four subbands of the decomposition
+///
+/// # Examples
+///
+/// ```
+/// use ndarray::Array2;
+/// use scirs2_signal::dwt::Wavelet;
+/// use scirs2_signal::dwt2d::{dwt2d_decompose_optimized, Dwt2dConfig};
+///
+/// // Create a sample image
+/// let data = Array2::from_shape_vec((8, 8), (0..64).map(|x| x as f64).collect()).unwrap();
+///
+/// // Use optimized decomposition with default configuration
+/// let config = Dwt2dConfig::default();
+/// let result = dwt2d_decompose_optimized(&data, Wavelet::Haar, None, &config).unwrap();
+/// ```
+pub fn dwt2d_decompose_optimized<T>(
+    data: &Array2<T>,
+    wavelet: Wavelet,
+    mode: Option<&str>,
+    config: &Dwt2dConfig,
+) -> SignalResult<Dwt2dResult>
+where
+    T: Float + NumCast + Debug,
+{
+    if data.is_empty() {
+        return Err(SignalError::ValueError("Input array is empty".to_string()));
+    }
+
+    // Validate input data for numerical stability
+    if let Some(data_slice) = data.as_slice() {
+        check_finite(data_slice, "input data")?;
+    }
+
+    // Get dimensions
+    let (rows, cols) = data.dim();
+
+    // Calculate output dimensions using our optimized ceiling division
+    let output_rows = div_ceil(rows, 2);
+    let output_cols = div_ceil(cols, 2);
+
+    // Pre-allocate all output arrays at once for better memory locality
+    let mut ll = Array2::zeros((output_rows, output_cols));
+    let mut lh = Array2::zeros((output_rows, output_cols));
+    let mut hl = Array2::zeros((output_rows, output_cols));
+    let mut hh = Array2::zeros((output_rows, output_cols));
+
+    // Convert input to f64 using temporary buffer from memory pool
+    let data_buffer_size = rows * cols;
+    let mut data_buffer = if config.preallocate_memory {
+        get_temp_buffer(data_buffer_size)
+    } else {
+        vec![0.0; data_buffer_size]
+    };
+
+    // Copy and convert data efficiently
+    for ((i, j), &val) in data.indexed_iter() {
+        match num_traits::cast::cast::<T, f64>(val) {
+            Some(converted) => data_buffer[i * cols + j] = converted,
+            None => return Err(SignalError::ValueError(
+                "Failed to convert input data to f64".to_string()
+            )),
+        }
+    }
+
+    // Create temporary arrays for intermediate results using memory pool
+    let row_buffer_size = rows * output_cols;
+    let mut rows_lo_buffer = if config.preallocate_memory {
+        get_temp_buffer(row_buffer_size)
+    } else {
+        vec![0.0; row_buffer_size]
+    };
+    let mut rows_hi_buffer = if config.preallocate_memory {
+        get_temp_buffer(row_buffer_size)
+    } else {
+        vec![0.0; row_buffer_size]
+    };
+
+    // Process rows with memory-efficient chunking if configured
+    let chunk_size = config.chunk_size.unwrap_or(rows);
+    for chunk_start in (0..rows).step_by(chunk_size) {
+        let chunk_end = (chunk_start + chunk_size).min(rows);
+        
+        // Process this chunk of rows
+        #[cfg(feature = "parallel")]
+        {
+            let chunk_results: Result<Vec<(usize, Vec<f64>, Vec<f64>)>, SignalError> = 
+                (chunk_start..chunk_end)
+                .into_par_iter()
+                .map(|i| {
+                    let row_start = i * cols;
+                    let row_end = row_start + cols;
+                    let row = &data_buffer[row_start..row_end];
+                    let (approx, detail) = dwt::dwt_decompose(row, wavelet, mode)
+                        .map_err(|e| SignalError::ComputationError(format!("Row transform failed: {}", e)))?;
+                    Ok((i, approx, detail))
+                })
+                .collect();
+            let chunk_results = chunk_results?;
+
+            for (i, approx, detail) in chunk_results {
+                let output_start = i * output_cols;
+                for j in 0..approx.len().min(output_cols) {
+                    rows_lo_buffer[output_start + j] = approx[j];
+                    rows_hi_buffer[output_start + j] = detail[j];
+                }
+            }
+        }
+
+        #[cfg(not(feature = "parallel"))]
+        {
+            for i in chunk_start..chunk_end {
+                let row_start = i * cols;
+                let row_end = row_start + cols;
+                let row = &data_buffer[row_start..row_end];
+                let (approx, detail) = dwt::dwt_decompose(row, wavelet, mode)?;
+
+                let output_start = i * output_cols;
+                for j in 0..approx.len().min(output_cols) {
+                    rows_lo_buffer[output_start + j] = approx[j];
+                    rows_hi_buffer[output_start + j] = detail[j];
+                }
+            }
+        }
+    }
+
+    // Process columns with chunking
+    let col_chunk_size = config.chunk_size.unwrap_or(output_cols);
+    for chunk_start in (0..output_cols).step_by(col_chunk_size) {
+        let chunk_end = (chunk_start + col_chunk_size).min(output_cols);
+
+        #[cfg(feature = "parallel")]
+        {
+            let column_results: Result<Vec<(usize, Vec<f64>, Vec<f64>, Vec<f64>, Vec<f64>)>, SignalError> = 
+                (chunk_start..chunk_end)
+                .into_par_iter()
+                .map(|j| {
+                    // Extract column from rows_lo_buffer
+                    let mut col_lo = vec![0.0; rows];
+                    for i in 0..rows {
+                        col_lo[i] = rows_lo_buffer[i * output_cols + j];
+                    }
+                    let (approx_lo, detail_lo) = dwt::dwt_decompose(&col_lo, wavelet, mode)
+                        .map_err(|e| SignalError::ComputationError(format!("Column transform failed (low-pass): {}", e)))?;
+
+                    // Extract column from rows_hi_buffer
+                    let mut col_hi = vec![0.0; rows];
+                    for i in 0..rows {
+                        col_hi[i] = rows_hi_buffer[i * output_cols + j];
+                    }
+                    let (approx_hi, detail_hi) = dwt::dwt_decompose(&col_hi, wavelet, mode)
+                        .map_err(|e| SignalError::ComputationError(format!("Column transform failed (high-pass): {}", e)))?;
+
+                    Ok((j, approx_lo, detail_lo, approx_hi, detail_hi))
+                })
+                .collect();
+            let column_results = column_results?;
+
+            for (j, approx_lo, detail_lo, approx_hi, detail_hi) in column_results {
+                for i in 0..approx_lo.len().min(output_rows) {
+                    ll[[i, j]] = approx_lo[i];
+                    hl[[i, j]] = detail_lo[i];
+                }
+                for i in 0..approx_hi.len().min(output_rows) {
+                    lh[[i, j]] = approx_hi[i];
+                    hh[[i, j]] = detail_hi[i];
+                }
+            }
+        }
+
+        #[cfg(not(feature = "parallel"))]
+        {
+            for j in chunk_start..chunk_end {
+                // Extract column from rows_lo_buffer
+                let mut col_lo = vec![0.0; rows];
+                for i in 0..rows {
+                    col_lo[i] = rows_lo_buffer[i * output_cols + j];
+                }
+                let (approx_lo, detail_lo) = dwt::dwt_decompose(&col_lo, wavelet, mode)?;
+
+                // Extract column from rows_hi_buffer  
+                let mut col_hi = vec![0.0; rows];
+                for i in 0..rows {
+                    col_hi[i] = rows_hi_buffer[i * output_cols + j];
+                }
+                let (approx_hi, detail_hi) = dwt::dwt_decompose(&col_hi, wavelet, mode)?;
+
+                for i in 0..approx_lo.len().min(output_rows) {
+                    ll[[i, j]] = approx_lo[i];
+                    hl[[i, j]] = detail_lo[i];
+                }
+                for i in 0..approx_hi.len().min(output_rows) {
+                    lh[[i, j]] = approx_hi[i];
+                    hh[[i, j]] = detail_hi[i];
+                }
+            }
+        }
+    }
+
+    // Return temporary buffers to memory pool
+    if config.preallocate_memory {
+        return_temp_buffer(data_buffer);
+        return_temp_buffer(rows_lo_buffer);
+        return_temp_buffer(rows_hi_buffer);
     }
 
     Ok(Dwt2dResult {
@@ -555,24 +1001,25 @@ pub fn dwt2d_reconstruct(
     #[cfg(feature = "parallel")]
     {
         // Process columns in parallel
-        let col_results: Vec<(usize, Vec<f64>, Vec<f64>)> = (0..cols)
+        let col_results: Result<Vec<(usize, Vec<f64>, Vec<f64>)>, SignalError> = (0..cols)
             .into_par_iter()
             .map(|j| {
                 // Reconstruct low-pass columns
                 let ll_col = ll.slice(ndarray::s![.., j]).to_vec();
                 let hl_col = hl.slice(ndarray::s![.., j]).to_vec();
                 let col_lo = dwt::dwt_reconstruct(&ll_col, &hl_col, wavelet)
-                    .expect("Low-pass column reconstruction failed");
+                    .map_err(|e| SignalError::ComputationError(format!("Low-pass column reconstruction failed: {}", e)))?;
 
                 // Reconstruct high-pass columns
                 let lh_col = lh.slice(ndarray::s![.., j]).to_vec();
                 let hh_col = hh.slice(ndarray::s![.., j]).to_vec();
                 let col_hi = dwt::dwt_reconstruct(&lh_col, &hh_col, wavelet)
-                    .expect("High-pass column reconstruction failed");
+                    .map_err(|e| SignalError::ComputationError(format!("High-pass column reconstruction failed: {}", e)))?;
 
-                (j, col_lo, col_hi)
+                Ok((j, col_lo, col_hi))
             })
             .collect();
+        let col_results = col_results?;
 
         // Store results
         for (j, col_lo, col_hi) in col_results {
@@ -616,7 +1063,7 @@ pub fn dwt2d_reconstruct(
     #[cfg(feature = "parallel")]
     {
         // Process rows in parallel
-        let row_results: Vec<(usize, Vec<f64>)> = (0..out_rows)
+        let row_results: Result<Vec<(usize, Vec<f64>)>, SignalError> = (0..out_rows)
             .into_par_iter()
             .map(|i| {
                 // Get rows from low and high frequency parts
@@ -625,11 +1072,12 @@ pub fn dwt2d_reconstruct(
 
                 // Reconstruct row
                 let full_row = dwt::dwt_reconstruct(&lo_row, &hi_row, wavelet)
-                    .expect("Row reconstruction failed");
+                    .map_err(|e| SignalError::ComputationError(format!("Row reconstruction failed: {}", e)))?;
 
-                (i, full_row)
+                Ok((i, full_row))
             })
             .collect();
+        let row_results = row_results?;
 
         // Store results
         for (i, full_row) in row_results {
@@ -992,19 +1440,33 @@ pub enum ThresholdMethod {
 /// let denoised = dwt2d_reconstruct(&decomposition, Wavelet::DB(4), None).unwrap();
 /// ```
 pub fn threshold_dwt2d(decomposition: &mut Dwt2dResult, threshold: f64, method: ThresholdMethod) {
-    // Apply thresholding to horizontal detail coefficients
-    for h in decomposition.detail_h.iter_mut() {
-        *h = apply_threshold(*h, threshold, method);
+    // Apply SIMD-optimized thresholding to detail coefficients
+    // Note: ndarray's as_slice_mut() gives us direct access to the underlying data
+    if let Some(h_slice) = decomposition.detail_h.as_slice_mut() {
+        simd_threshold_coefficients(h_slice, threshold, method);
+    } else {
+        // Fallback for non-contiguous arrays
+        for h in decomposition.detail_h.iter_mut() {
+            *h = apply_threshold(*h, threshold, method);
+        }
     }
 
-    // Apply thresholding to vertical detail coefficients
-    for v in decomposition.detail_v.iter_mut() {
-        *v = apply_threshold(*v, threshold, method);
+    if let Some(v_slice) = decomposition.detail_v.as_slice_mut() {
+        simd_threshold_coefficients(v_slice, threshold, method);
+    } else {
+        // Fallback for non-contiguous arrays
+        for v in decomposition.detail_v.iter_mut() {
+            *v = apply_threshold(*v, threshold, method);
+        }
     }
 
-    // Apply thresholding to diagonal detail coefficients
-    for d in decomposition.detail_d.iter_mut() {
-        *d = apply_threshold(*d, threshold, method);
+    if let Some(d_slice) = decomposition.detail_d.as_slice_mut() {
+        simd_threshold_coefficients(d_slice, threshold, method);
+    } else {
+        // Fallback for non-contiguous arrays
+        for d in decomposition.detail_d.iter_mut() {
+            *d = apply_threshold(*d, threshold, method);
+        }
     }
 }
 
@@ -1131,16 +1593,34 @@ fn apply_threshold(x: f64, threshold: f64, method: ThresholdMethod) -> f64 {
 /// assert!(energy_by_subband.approx > energy_by_subband.detail_d);
 /// ```
 pub fn calculate_energy(decomposition: &Dwt2dResult, include_approx: bool) -> (f64, WaveletEnergy) {
-    // Calculate energy for each subband
+    // Calculate energy for each subband using SIMD-optimized functions
     let approx_energy = if include_approx {
-        decomposition.approx.iter().map(|&x| x * x).sum()
+        if let Some(approx_slice) = decomposition.approx.as_slice() {
+            simd_calculate_energy(approx_slice)
+        } else {
+            decomposition.approx.iter().map(|&x| x * x).sum()
+        }
     } else {
         0.0
     };
 
-    let detail_h_energy = decomposition.detail_h.iter().map(|&x| x * x).sum();
-    let detail_v_energy = decomposition.detail_v.iter().map(|&x| x * x).sum();
-    let detail_d_energy = decomposition.detail_d.iter().map(|&x| x * x).sum();
+    let detail_h_energy = if let Some(h_slice) = decomposition.detail_h.as_slice() {
+        simd_calculate_energy(h_slice)
+    } else {
+        decomposition.detail_h.iter().map(|&x| x * x).sum()
+    };
+
+    let detail_v_energy = if let Some(v_slice) = decomposition.detail_v.as_slice() {
+        simd_calculate_energy(v_slice)
+    } else {
+        decomposition.detail_v.iter().map(|&x| x * x).sum()
+    };
+
+    let detail_d_energy = if let Some(d_slice) = decomposition.detail_d.as_slice() {
+        simd_calculate_energy(d_slice)
+    } else {
+        decomposition.detail_d.iter().map(|&x| x * x).sum()
+    };
 
     // Calculate total energy
     let total = approx_energy + detail_h_energy + detail_v_energy + detail_d_energy;
@@ -1250,6 +1730,863 @@ pub struct WaveletCounts {
     pub detail_v: usize,
     /// Count in diagonal detail coefficients (HH band)
     pub detail_d: usize,
+}
+
+/// Enhanced validation metrics for 2D wavelet transforms
+#[derive(Debug, Clone)]
+pub struct Dwt2dValidationResult {
+    /// Reconstruction error (RMSE)
+    pub reconstruction_error: f64,
+    /// Energy conservation error
+    pub energy_conservation_error: f64,
+    /// Orthogonality preservation
+    pub orthogonality_error: f64,
+    /// Memory efficiency metrics
+    pub memory_efficiency: MemoryEfficiencyMetrics,
+    /// Performance metrics
+    pub performance_metrics: PerformanceMetrics2d,
+    /// Overall validation score (0-100)
+    pub overall_score: f64,
+    /// Issues found during validation
+    pub issues: Vec<String>,
+}
+
+/// Memory efficiency metrics for 2D DWT operations
+#[derive(Debug, Clone)]
+pub struct MemoryEfficiencyMetrics {
+    /// Peak memory usage (bytes)
+    pub peak_memory_bytes: usize,
+    /// Memory allocation count
+    pub allocation_count: usize,
+    /// Cache miss ratio (estimated)
+    pub cache_miss_ratio: f64,
+    /// Memory access pattern efficiency
+    pub access_pattern_efficiency: f64,
+}
+
+/// Performance metrics for 2D DWT operations
+#[derive(Debug, Clone)]
+pub struct PerformanceMetrics2d {
+    /// Total computation time (ms)
+    pub total_time_ms: f64,
+    /// Decomposition time (ms)
+    pub decomposition_time_ms: f64,
+    /// Reconstruction time (ms)
+    pub reconstruction_time_ms: f64,
+    /// SIMD utilization percentage
+    pub simd_utilization: f64,
+    /// Parallel efficiency
+    pub parallel_efficiency: f64,
+    /// Throughput (MB/s)
+    pub throughput_mbs: f64,
+}
+
+/// Advanced configuration for 2D DWT validation
+#[derive(Debug, Clone)]
+pub struct Dwt2dValidationConfig {
+    /// Tolerance for numerical comparisons
+    pub tolerance: f64,
+    /// Test various image sizes
+    pub test_sizes: Vec<(usize, usize)>,
+    /// Test different wavelets
+    pub test_wavelets: Vec<Wavelet>,
+    /// Enable performance benchmarking
+    pub benchmark_performance: bool,
+    /// Test memory efficiency
+    pub test_memory_efficiency: bool,
+    /// Test numerical stability
+    pub test_numerical_stability: bool,
+    /// Test edge cases
+    pub test_edge_cases: bool,
+}
+
+impl Default for Dwt2dValidationConfig {
+    fn default() -> Self {
+        Self {
+            tolerance: 1e-12,
+            test_sizes: vec![(4, 4), (8, 8), (16, 16), (32, 32), (64, 64)],
+            test_wavelets: vec![Wavelet::Haar, Wavelet::DB(2), Wavelet::DB(4)],
+            benchmark_performance: true,
+            test_memory_efficiency: true,
+            test_numerical_stability: true,
+            test_edge_cases: true,
+        }
+    }
+}
+
+/// Enhanced validation suite for 2D wavelet transforms
+///
+/// This function performs comprehensive validation including:
+/// - Perfect reconstruction accuracy
+/// - Energy conservation
+/// - Orthogonality preservation
+/// - Performance benchmarking
+/// - Memory efficiency analysis
+/// - Numerical stability testing
+pub fn validate_dwt2d_comprehensive(config: &Dwt2dValidationConfig) -> SignalResult<Dwt2dValidationResult> {
+    let mut issues = Vec::new();
+    let mut total_reconstruction_error = 0.0;
+    let mut total_energy_error = 0.0;
+    let mut total_orthogonality_error = 0.0;
+    let mut performance_metrics = Vec::new();
+    let mut memory_metrics = Vec::new();
+    
+    let start_time = Instant::now();
+    let mut test_count = 0;
+    
+    // Test various image sizes and wavelets
+    for &(rows, cols) in &config.test_sizes {
+        for &wavelet in &config.test_wavelets {
+            test_count += 1;
+            
+            // Create test image with known properties
+            let mut test_image = Array2::zeros((rows, cols));
+            for i in 0..rows {
+                for j in 0..cols {
+                    test_image[[i, j]] = ((i as f64 + 1.0) * (j as f64 + 1.0)).sin() * 
+                                          ((i as f64 * 0.1).cos() + (j as f64 * 0.1).sin());
+                }
+            }
+            
+            // Validate finite input
+            if let Some(data_slice) = test_image.as_slice() {
+                check_finite(data_slice, "test image")?;
+            }
+            
+            // Test single-level decomposition and reconstruction
+            let decomp_start = Instant::now();
+            let decomposition = dwt2d_decompose(&test_image, wavelet, None)?;
+            let decomp_time = decomp_start.elapsed().as_secs_f64() * 1000.0;
+            
+            let recon_start = Instant::now();
+            let reconstructed = dwt2d_reconstruct(&decomposition, wavelet, None)?;
+            let recon_time = recon_start.elapsed().as_secs_f64() * 1000.0;
+            
+            // Calculate reconstruction error
+            let mut recon_error = 0.0;
+            let mut original_energy = 0.0;
+            
+            for i in 0..rows {
+                for j in 0..cols {
+                    let orig = test_image[[i, j]];
+                    let recon = reconstructed[[i, j]];
+                    let diff = orig - recon;
+                    recon_error += diff * diff;
+                    original_energy += orig * orig;
+                }
+            }
+            
+            recon_error = (recon_error / (rows * cols) as f64).sqrt();
+            total_reconstruction_error += recon_error;
+            
+            // Check energy conservation
+            let (original_total_energy, _) = calculate_energy_from_array(&test_image);
+            let (decomp_total_energy, _) = calculate_energy(&decomposition, true);
+            let energy_error = (original_total_energy - decomp_total_energy).abs() / original_total_energy;
+            total_energy_error += energy_error;
+            
+            // Test orthogonality for orthogonal wavelets
+            if matches!(wavelet, Wavelet::Haar | Wavelet::DB(_)) {
+                let ortho_error = test_orthogonality(&decomposition);
+                total_orthogonality_error += ortho_error;
+            }
+            
+            // Performance metrics
+            let data_size_mb = (rows * cols * 8) as f64 / (1024.0 * 1024.0);
+            let throughput = data_size_mb / ((decomp_time + recon_time) / 1000.0);
+            
+            performance_metrics.push(PerformanceMetrics2d {
+                total_time_ms: decomp_time + recon_time,
+                decomposition_time_ms: decomp_time,
+                reconstruction_time_ms: recon_time,
+                simd_utilization: estimate_simd_utilization(rows * cols),
+                parallel_efficiency: estimate_parallel_efficiency(rows, cols),
+                throughput_mbs: throughput,
+            });
+            
+            // Memory efficiency (simplified estimation)
+            memory_metrics.push(MemoryEfficiencyMetrics {
+                peak_memory_bytes: estimate_peak_memory(rows, cols),
+                allocation_count: estimate_allocation_count(rows, cols),
+                cache_miss_ratio: estimate_cache_miss_ratio(rows, cols),
+                access_pattern_efficiency: estimate_access_pattern_efficiency(rows, cols),
+            });
+            
+            // Test edge cases if enabled
+            if config.test_edge_cases {
+                // Test with extreme values
+                test_image[[0, 0]] = f64::MAX / 1e10;
+                test_image[[rows-1, cols-1]] = f64::MIN / 1e10;
+                
+                if let Err(e) = dwt2d_decompose(&test_image, wavelet, None) {
+                    issues.push(format!("Edge case failed for wavelet {:?}: {}", wavelet, e));
+                }
+            }
+            
+            // Validate reconstruction error is within tolerance
+            if recon_error > config.tolerance {
+                issues.push(format!(
+                    "High reconstruction error ({:.2e}) for {}x{} image with {:?} wavelet",
+                    recon_error, rows, cols, wavelet
+                ));
+            }
+            
+            // Validate energy conservation
+            if energy_error > config.tolerance {
+                issues.push(format!(
+                    "Energy conservation violated ({:.2e}) for {}x{} image with {:?} wavelet",
+                    energy_error, rows, cols, wavelet
+                ));
+            }
+        }
+    }
+    
+    // Calculate averages
+    let avg_reconstruction_error = total_reconstruction_error / test_count as f64;
+    let avg_energy_error = total_energy_error / test_count as f64;
+    let avg_orthogonality_error = total_orthogonality_error / test_count as f64;
+    
+    // Calculate overall score (0-100)
+    let reconstruction_score = (1.0 - (avg_reconstruction_error / config.tolerance).min(1.0)) * 100.0;
+    let energy_score = (1.0 - (avg_energy_error / config.tolerance).min(1.0)) * 100.0;
+    let orthogonality_score = (1.0 - (avg_orthogonality_error / config.tolerance).min(1.0)) * 100.0;
+    let overall_score = (reconstruction_score + energy_score + orthogonality_score) / 3.0;
+    
+    // Average metrics
+    let avg_performance = average_performance_metrics(&performance_metrics);
+    let avg_memory = average_memory_metrics(&memory_metrics);
+    
+    Ok(Dwt2dValidationResult {
+        reconstruction_error: avg_reconstruction_error,
+        energy_conservation_error: avg_energy_error,
+        orthogonality_error: avg_orthogonality_error,
+        memory_efficiency: avg_memory,
+        performance_metrics: avg_performance,
+        overall_score,
+        issues,
+    })
+}
+
+/// Calculate energy from a 2D array
+fn calculate_energy_from_array(data: &Array2<f64>) -> (f64, f64) {
+    let total_energy = if let Some(data_slice) = data.as_slice() {
+        simd_calculate_energy(data_slice)
+    } else {
+        data.iter().map(|&x| x * x).sum()
+    };
+    (total_energy, 0.0)
+}
+
+/// Test orthogonality of wavelet decomposition
+fn test_orthogonality(decomp: &Dwt2dResult) -> f64 {
+    // Simplified orthogonality test - check if subbands are approximately uncorrelated
+    let mut correlation_sum = 0.0;
+    let mut count = 0;
+    
+    // Test correlation between different subbands
+    let subbands = [&decomp.detail_h, &decomp.detail_v, &decomp.detail_d];
+    
+    for i in 0..subbands.len() {
+        for j in (i+1)..subbands.len() {
+            let corr = calculate_correlation(subbands[i], subbands[j]);
+            correlation_sum += corr.abs();
+            count += 1;
+        }
+    }
+    
+    if count > 0 {
+        correlation_sum / count as f64
+    } else {
+        0.0
+    }
+}
+
+/// Calculate correlation between two 2D arrays
+fn calculate_correlation(a: &Array2<f64>, b: &Array2<f64>) -> f64 {
+    if a.shape() != b.shape() {
+        return 0.0;
+    }
+    
+    let n = a.len() as f64;
+    if n < 2.0 {
+        return 0.0;
+    }
+    
+    // Calculate means
+    let mean_a = a.iter().sum::<f64>() / n;
+    let mean_b = b.iter().sum::<f64>() / n;
+    
+    // Calculate correlation coefficient
+    let mut numerator = 0.0;
+    let mut var_a = 0.0;
+    let mut var_b = 0.0;
+    
+    for (&val_a, &val_b) in a.iter().zip(b.iter()) {
+        let diff_a = val_a - mean_a;
+        let diff_b = val_b - mean_b;
+        numerator += diff_a * diff_b;
+        var_a += diff_a * diff_a;
+        var_b += diff_b * diff_b;
+    }
+    
+    let denominator = (var_a * var_b).sqrt();
+    if denominator > 1e-15 {
+        numerator / denominator
+    } else {
+        0.0
+    }
+}
+
+/// Estimate SIMD utilization based on data size
+fn estimate_simd_utilization(data_size: usize) -> f64 {
+    if data_size < 64 {
+        0.0  // Too small for SIMD
+    } else if data_size < 1024 {
+        0.5  // Partial SIMD utilization
+    } else {
+        0.85 // Good SIMD utilization
+    }
+}
+
+/// Estimate parallel efficiency
+fn estimate_parallel_efficiency(rows: usize, cols: usize) -> f64 {
+    let total_ops = rows * cols;
+    if total_ops < 1024 {
+        0.0  // Too small for parallelization
+    } else if total_ops < 10000 {
+        0.6  // Moderate parallel efficiency
+    } else {
+        0.9  // Good parallel efficiency
+    }
+}
+
+/// Estimate peak memory usage
+fn estimate_peak_memory(rows: usize, cols: usize) -> usize {
+    // Rough estimation: original + decomposition + temporaries
+    let base_size = rows * cols * 8; // 8 bytes per f64
+    base_size * 3 // Original + decomposed subbands + temporaries
+}
+
+/// Estimate allocation count
+fn estimate_allocation_count(rows: usize, cols: usize) -> usize {
+    // Estimation based on typical decomposition operations
+    if rows * cols < 1024 {
+        10  // Small arrays, frequent allocations
+    } else {
+        6   // Larger arrays, fewer allocations due to memory pool
+    }
+}
+
+/// Estimate cache miss ratio
+fn estimate_cache_miss_ratio(rows: usize, cols: usize) -> f64 {
+    let data_size_kb = (rows * cols * 8) / 1024;
+    if data_size_kb < 32 {
+        0.1  // Fits in L1 cache
+    } else if data_size_kb < 256 {
+        0.3  // Fits in L2 cache
+    } else {
+        0.6  // Spills to main memory
+    }
+}
+
+/// Estimate access pattern efficiency
+fn estimate_access_pattern_efficiency(rows: usize, cols: usize) -> f64 {
+    // Row-major access patterns are efficient in our implementation
+    if rows > 64 && cols > 64 {
+        0.85  // Good spatial locality
+    } else {
+        0.7   // Smaller arrays have less optimal patterns
+    }
+}
+
+/// Average performance metrics
+fn average_performance_metrics(metrics: &[PerformanceMetrics2d]) -> PerformanceMetrics2d {
+    if metrics.is_empty() {
+        return PerformanceMetrics2d {
+            total_time_ms: 0.0,
+            decomposition_time_ms: 0.0,
+            reconstruction_time_ms: 0.0,
+            simd_utilization: 0.0,
+            parallel_efficiency: 0.0,
+            throughput_mbs: 0.0,
+        };
+    }
+    
+    let count = metrics.len() as f64;
+    PerformanceMetrics2d {
+        total_time_ms: metrics.iter().map(|m| m.total_time_ms).sum::<f64>() / count,
+        decomposition_time_ms: metrics.iter().map(|m| m.decomposition_time_ms).sum::<f64>() / count,
+        reconstruction_time_ms: metrics.iter().map(|m| m.reconstruction_time_ms).sum::<f64>() / count,
+        simd_utilization: metrics.iter().map(|m| m.simd_utilization).sum::<f64>() / count,
+        parallel_efficiency: metrics.iter().map(|m| m.parallel_efficiency).sum::<f64>() / count,
+        throughput_mbs: metrics.iter().map(|m| m.throughput_mbs).sum::<f64>() / count,
+    }
+}
+
+/// Average memory metrics
+fn average_memory_metrics(metrics: &[MemoryEfficiencyMetrics]) -> MemoryEfficiencyMetrics {
+    if metrics.is_empty() {
+        return MemoryEfficiencyMetrics {
+            peak_memory_bytes: 0,
+            allocation_count: 0,
+            cache_miss_ratio: 0.0,
+            access_pattern_efficiency: 0.0,
+        };
+    }
+    
+    let count = metrics.len();
+    MemoryEfficiencyMetrics {
+        peak_memory_bytes: metrics.iter().map(|m| m.peak_memory_bytes).sum::<usize>() / count,
+        allocation_count: metrics.iter().map(|m| m.allocation_count).sum::<usize>() / count,
+        cache_miss_ratio: metrics.iter().map(|m| m.cache_miss_ratio).sum::<f64>() / count as f64,
+        access_pattern_efficiency: metrics.iter().map(|m| m.access_pattern_efficiency).sum::<f64>() / count as f64,
+    }
+}
+
+/// Enhanced 2D DWT with adaptive optimization
+///
+/// This function automatically selects the best implementation strategy based on
+/// input characteristics, hardware capabilities, and performance requirements.
+pub fn dwt2d_decompose_adaptive<T>(
+    data: &Array2<T>,
+    wavelet: Wavelet,
+    mode: Option<&str>,
+) -> SignalResult<Dwt2dResult>
+where
+    T: Float + NumCast + Debug,
+{
+    if data.is_empty() {
+        return Err(SignalError::ValueError("Input array is empty".to_string()));
+    }
+
+    let (rows, cols) = data.dim();
+    
+    // Validate input dimensions
+    check_positive(rows, "rows")?;
+    check_positive(cols, "cols")?;
+    
+    // Adaptive strategy selection based on image characteristics
+    let total_elements = rows * cols;
+    let caps = PlatformCapabilities::detect();
+    
+    // Choose configuration based on data size and hardware capabilities
+    let config = if total_elements < 1024 {
+        // Small images: use simple implementation
+        Dwt2dConfig {
+            preallocate_memory: false,
+            use_inplace: false,
+            memory_alignment: 16,
+            chunk_size: None,
+        }
+    } else if total_elements < 100000 {
+        // Medium images: use standard optimizations
+        Dwt2dConfig {
+            preallocate_memory: true,
+            use_inplace: false,
+            memory_alignment: if caps.has_avx2 { 32 } else { 16 },
+            chunk_size: Some(8192),
+        }
+    } else {
+        // Large images: use full optimizations
+        Dwt2dConfig {
+            preallocate_memory: true,
+            use_inplace: false,
+            memory_alignment: if caps.has_avx512 { 64 } else if caps.has_avx2 { 32 } else { 16 },
+            chunk_size: Some(16384),
+        }
+    };
+    
+    // Use optimized implementation with adaptive configuration
+    dwt2d_decompose_optimized(data, wavelet, mode, &config)
+}
+
+/// Enhanced multi-level 2D DWT with progressive validation
+///
+/// This function provides enhanced error checking and validation at each decomposition level,
+/// making it more robust for production use.
+pub fn wavedec2_enhanced<T>(
+    data: &Array2<T>,
+    wavelet: Wavelet,
+    levels: usize,
+    mode: Option<&str>,
+) -> SignalResult<Vec<Dwt2dResult>>
+where
+    T: Float + NumCast + Debug,
+{
+    if data.is_empty() {
+        return Err(SignalError::ValueError("Input array is empty".to_string()));
+    }
+
+    if levels == 0 {
+        return Err(SignalError::ValueError(
+            "Levels must be greater than 0".to_string(),
+        ));
+    }
+
+    let (rows, cols) = data.dim();
+    check_positive(rows, "rows")?;
+    check_positive(cols, "cols")?;
+    
+    // Enhanced size validation with better error messages
+    let min_size = 2usize.pow(levels as u32);
+    if rows < min_size {
+        return Err(SignalError::ValueError(format!(
+            "Number of rows ({}) is too small for {} levels of decomposition (minimum: {})",
+            rows, levels, min_size
+        )));
+    }
+    if cols < min_size {
+        return Err(SignalError::ValueError(format!(
+            "Number of columns ({}) is too small for {} levels of decomposition (minimum: {})",
+            cols, levels, min_size
+        )));
+    }
+    
+    // Validate input data for numerical stability
+    if let Some(data_slice) = data.as_slice() {
+        check_finite(data_slice, "input data")?;
+    }
+
+    let mut result = Vec::with_capacity(levels);
+    
+    // Perform first level with adaptive optimization
+    let mut decomposition = dwt2d_decompose_adaptive(data, wavelet, mode)?;
+    
+    // Validate first level results
+    validate_decomposition_level(&decomposition, 1, rows, cols)?;
+    result.push(decomposition.clone());
+
+    // Perform remaining levels with progressive validation
+    for level in 1..levels {
+        let prev_shape = decomposition.approx.shape();
+        decomposition = dwt2d_decompose_adaptive(&decomposition.approx, wavelet, mode)?;
+        
+        // Validate this level
+        validate_decomposition_level(&decomposition, level + 1, prev_shape[0], prev_shape[1])?;
+        result.push(decomposition.clone());
+    }
+
+    // Reverse so index 0 is the deepest level
+    result.reverse();
+
+    Ok(result)
+}
+
+/// Validate a single decomposition level
+fn validate_decomposition_level(
+    decomp: &Dwt2dResult,
+    level: usize,
+    input_rows: usize,
+    input_cols: usize,
+) -> SignalResult<()> {
+    // Check that all subbands have the same shape
+    let approx_shape = decomp.approx.shape();
+    if decomp.detail_h.shape() != approx_shape ||
+       decomp.detail_v.shape() != approx_shape ||
+       decomp.detail_d.shape() != approx_shape {
+        return Err(SignalError::ComputationError(format!(
+            "Inconsistent subband shapes at level {}", level
+        )));
+    }
+    
+    // Validate expected dimensions
+    let expected_rows = div_ceil(input_rows, 2);
+    let expected_cols = div_ceil(input_cols, 2);
+    
+    if approx_shape[0] != expected_rows || approx_shape[1] != expected_cols {
+        return Err(SignalError::ComputationError(format!(
+            "Unexpected subband dimensions at level {}: got [{}, {}], expected [{}, {}]",
+            level, approx_shape[0], approx_shape[1], expected_rows, expected_cols
+        )));
+    }
+    
+    // Check for numerical issues in coefficients
+    for subband in [&decomp.approx, &decomp.detail_h, &decomp.detail_v, &decomp.detail_d] {
+        if let Some(slice) = subband.as_slice() {
+            check_finite(slice, &format!("level {} coefficients", level))?;
+        }
+    }
+    
+    Ok(())
+}
+
+/// Advanced denoising using 2D wavelet thresholding with adaptive threshold selection
+///
+/// This function automatically estimates optimal thresholds for each subband based on
+/// noise characteristics and applies adaptive thresholding for improved denoising.
+pub fn denoise_dwt2d_adaptive(
+    noisy_image: &Array2<f64>,
+    wavelet: Wavelet,
+    noise_variance: Option<f64>,
+    method: ThresholdMethod,
+) -> SignalResult<Array2<f64>> {
+    if noisy_image.is_empty() {
+        return Err(SignalError::ValueError("Input array is empty".to_string()));
+    }
+    
+    // Validate input
+    if let Some(data_slice) = noisy_image.as_slice() {
+        check_finite(data_slice, "noisy image")?;
+    }
+    
+    // Decompose the noisy image
+    let mut decomposition = dwt2d_decompose_adaptive(noisy_image, wavelet, None)?;
+    
+    // Estimate noise variance if not provided
+    let sigma = if let Some(var) = noise_variance {
+        var.sqrt()
+    } else {
+        estimate_noise_variance(&decomposition)
+    };
+    
+    // Apply adaptive thresholding to each detail subband
+    // Use different thresholds for different orientations
+    let threshold_h = sigma * (2.0 * (noisy_image.len() as f64).ln()).sqrt() * 0.8; // Horizontal details
+    let threshold_v = sigma * (2.0 * (noisy_image.len() as f64).ln()).sqrt() * 0.8; // Vertical details
+    let threshold_d = sigma * (2.0 * (noisy_image.len() as f64).ln()).sqrt() * 1.2; // Diagonal details (usually more noisy)
+    
+    // Apply thresholding to detail coefficients only
+    apply_adaptive_thresholding(&mut decomposition.detail_h, threshold_h, method);
+    apply_adaptive_thresholding(&mut decomposition.detail_v, threshold_v, method);
+    apply_adaptive_thresholding(&mut decomposition.detail_d, threshold_d, method);
+    
+    // Reconstruct the denoised image
+    dwt2d_reconstruct(&decomposition, wavelet, None)
+}
+
+/// Multi-level adaptive denoising
+pub fn denoise_wavedec2_adaptive(
+    noisy_image: &Array2<f64>,
+    wavelet: Wavelet,
+    levels: usize,
+    noise_variance: Option<f64>,
+    method: ThresholdMethod,
+) -> SignalResult<Array2<f64>> {
+    if noisy_image.is_empty() {
+        return Err(SignalError::ValueError("Input array is empty".to_string()));
+    }
+    
+    // Multi-level decomposition
+    let mut coeffs = wavedec2_enhanced(noisy_image, wavelet, levels, None)?;
+    
+    // Estimate noise variance from finest detail level if not provided
+    let sigma = if let Some(var) = noise_variance {
+        var.sqrt()
+    } else {
+        estimate_noise_variance(&coeffs[coeffs.len() - 1])
+    };
+    
+    // Apply level-dependent thresholding
+    let mut thresholds = Vec::with_capacity(levels);
+    for level in 0..levels {
+        // Higher thresholds for finer levels (more noise)
+        let level_factor = 2.0_f64.powi((levels - level - 1) as i32).sqrt();
+        let base_threshold = sigma * (2.0 * (noisy_image.len() as f64).ln()).sqrt();
+        thresholds.push(base_threshold * level_factor);
+    }
+    
+    // Apply adaptive thresholding to each level
+    for (level, coeffs_level) in coeffs.iter_mut().enumerate() {
+        let threshold = thresholds[level];
+        apply_adaptive_thresholding(&mut coeffs_level.detail_h, threshold * 0.8, method);
+        apply_adaptive_thresholding(&mut coeffs_level.detail_v, threshold * 0.8, method);
+        apply_adaptive_thresholding(&mut coeffs_level.detail_d, threshold * 1.2, method);
+    }
+    
+    // Reconstruct the denoised image
+    waverec2(&coeffs, wavelet, None)
+}
+
+/// Estimate noise variance from wavelet coefficients (using robust MAD estimator)
+fn estimate_noise_variance(decomp: &Dwt2dResult) -> f64 {
+    // Use the diagonal detail coefficients from the finest level to estimate noise
+    // This is based on the assumption that the finest diagonal details are mostly noise
+    let mut diagonal_coeffs: Vec<f64> = decomp.detail_d.iter().cloned().collect();
+    
+    if diagonal_coeffs.is_empty() {
+        return 1.0; // Default fallback
+    }
+    
+    // Sort coefficients for MAD calculation
+    diagonal_coeffs.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    
+    // Calculate Median Absolute Deviation (MAD)
+    let n = diagonal_coeffs.len();
+    let median = if n % 2 == 0 {
+        (diagonal_coeffs[n/2 - 1] + diagonal_coeffs[n/2]) / 2.0
+    } else {
+        diagonal_coeffs[n/2]
+    };
+    
+    // Calculate absolute deviations from median
+    let mut abs_deviations: Vec<f64> = diagonal_coeffs.iter()
+        .map(|&x| (x - median).abs())
+        .collect();
+    abs_deviations.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    
+    // MAD
+    let mad = if n % 2 == 0 {
+        (abs_deviations[n/2 - 1] + abs_deviations[n/2]) / 2.0
+    } else {
+        abs_deviations[n/2]
+    };
+    
+    // Convert MAD to standard deviation estimate (for Gaussian noise)
+    // sigma ≈ MAD / 0.6745
+    mad / 0.6745
+}
+
+/// Apply adaptive thresholding to a 2D array
+fn apply_adaptive_thresholding(data: &mut Array2<f64>, threshold: f64, method: ThresholdMethod) {
+    if let Some(data_slice) = data.as_slice_mut() {
+        simd_threshold_coefficients(data_slice, threshold, method);
+    } else {
+        for val in data.iter_mut() {
+            *val = apply_threshold(*val, threshold, method);
+        }
+    }
+}
+
+/// Calculate compression ratio after thresholding
+pub fn calculate_compression_ratio(
+    original: &Dwt2dResult,
+    compressed: &Dwt2dResult,
+) -> f64 {
+    let (_, original_counts) = count_nonzeros(original, true);
+    let (_, compressed_counts) = count_nonzeros(compressed, true);
+    
+    let original_total = original_counts.approx + original_counts.detail_h + 
+                        original_counts.detail_v + original_counts.detail_d;
+    let compressed_total = compressed_counts.approx + compressed_counts.detail_h + 
+                          compressed_counts.detail_v + compressed_counts.detail_d;
+    
+    if compressed_total == 0 {
+        f64::INFINITY
+    } else {
+        original_total as f64 / compressed_total as f64
+    }
+}
+
+/// Calculate Peak Signal-to-Noise Ratio (PSNR) between original and reconstructed images
+pub fn calculate_psnr(original: &Array2<f64>, reconstructed: &Array2<f64>) -> SignalResult<f64> {
+    if original.shape() != reconstructed.shape() {
+        return Err(SignalError::ValueError(
+            "Arrays must have the same shape".to_string()
+        ));
+    }
+    
+    // Find the maximum value in the original image
+    let max_val = original.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+    
+    if max_val <= 0.0 {
+        return Err(SignalError::ValueError(
+            "Maximum value must be positive for PSNR calculation".to_string()
+        ));
+    }
+    
+    // Calculate Mean Squared Error (MSE)
+    let mut mse = 0.0;
+    let mut count = 0;
+    
+    for (orig, recon) in original.iter().zip(reconstructed.iter()) {
+        let diff = orig - recon;
+        mse += diff * diff;
+        count += 1;
+    }
+    
+    if count == 0 {
+        return Err(SignalError::ValueError("Arrays are empty".to_string()));
+    }
+    
+    mse /= count as f64;
+    
+    if mse == 0.0 {
+        Ok(f64::INFINITY) // Perfect reconstruction
+    } else {
+        Ok(20.0 * (max_val * max_val / mse).log10())
+    }
+}
+
+/// Calculate Structural Similarity Index (SSIM) between two images
+pub fn calculate_ssim(
+    original: &Array2<f64>,
+    reconstructed: &Array2<f64>,
+    window_size: usize,
+) -> SignalResult<f64> {
+    if original.shape() != reconstructed.shape() {
+        return Err(SignalError::ValueError(
+            "Arrays must have the same shape".to_string()
+        ));
+    }
+    
+    if window_size < 3 || window_size % 2 == 0 {
+        return Err(SignalError::ValueError(
+            "Window size must be odd and at least 3".to_string()
+        ));
+    }
+    
+    let (rows, cols) = original.dim();
+    if rows < window_size || cols < window_size {
+        return Err(SignalError::ValueError(
+            "Image dimensions must be larger than window size".to_string()
+        ));
+    }
+    
+    // SSIM constants
+    let k1 = 0.01;
+    let k2 = 0.03;
+    let dynamic_range = original.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b)) -
+                       original.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+    let c1 = (k1 * dynamic_range).powi(2);
+    let c2 = (k2 * dynamic_range).powi(2);
+    
+    let mut ssim_sum = 0.0;
+    let mut window_count = 0;
+    let half_window = window_size / 2;
+    
+    // Calculate SSIM for each window
+    for i in half_window..(rows - half_window) {
+        for j in half_window..(cols - half_window) {
+            // Extract windows
+            let mut window1 = Vec::new();
+            let mut window2 = Vec::new();
+            
+            for di in 0..window_size {
+                for dj in 0..window_size {
+                    let ri = i - half_window + di;
+                    let rj = j - half_window + dj;
+                    window1.push(original[[ri, rj]]);
+                    window2.push(reconstructed[[ri, rj]]);
+                }
+            }
+            
+            // Calculate local statistics
+            let n = window1.len() as f64;
+            let mean1 = window1.iter().sum::<f64>() / n;
+            let mean2 = window2.iter().sum::<f64>() / n;
+            
+            let var1 = window1.iter().map(|&x| (x - mean1).powi(2)).sum::<f64>() / (n - 1.0);
+            let var2 = window2.iter().map(|&x| (x - mean2).powi(2)).sum::<f64>() / (n - 1.0);
+            let covar = window1.iter().zip(window2.iter())
+                .map(|(&x1, &x2)| (x1 - mean1) * (x2 - mean2))
+                .sum::<f64>() / (n - 1.0);
+            
+            // Calculate SSIM for this window
+            let numerator = (2.0 * mean1 * mean2 + c1) * (2.0 * covar + c2);
+            let denominator = (mean1.powi(2) + mean2.powi(2) + c1) * (var1 + var2 + c2);
+            
+            if denominator > 1e-15 {
+                ssim_sum += numerator / denominator;
+                window_count += 1;
+            }
+        }
+    }
+    
+    if window_count == 0 {
+        Ok(0.0)
+    } else {
+        Ok(ssim_sum / window_count as f64)
+    }
 }
 
 #[cfg(test)]

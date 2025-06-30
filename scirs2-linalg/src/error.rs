@@ -4,7 +4,7 @@ use scirs2_core::error::CoreError;
 use thiserror::Error;
 
 /// Linear algebra error type
-#[derive(Error, Debug)]
+#[derive(Error, Debug, Clone)]
 pub enum LinalgError {
     /// Core error
     #[error(transparent)]

@@ -3,9 +3,10 @@
 //! This module provides functions for calculating error metrics between
 //! predicted values and true values in regression models.
 
-use ndarray::{ArrayBase, Data, Dimension};
+use ndarray::{ArrayBase, Data, Dimension, ArrayView1};
 use num_traits::{Float, FromPrimitive, NumCast};
 use std::cmp::Ordering;
+use scirs2_core::simd_ops::SimdUnifiedOps;
 
 use super::check_same_shape;
 use crate::error::{MetricsError, Result};
@@ -93,11 +94,21 @@ where
 
     let n_samples = y_true.len();
 
-    let mut squared_error_sum = F::zero();
-    for (yt, yp) in y_true.iter().zip(y_pred.iter()) {
-        let error = *yt - *yp;
-        squared_error_sum = squared_error_sum + error * error;
-    }
+    // Use SIMD optimizations for vector operations when data is contiguous
+    let squared_error_sum = if y_true.is_standard_layout() && y_pred.is_standard_layout() {
+        // SIMD-optimized computation
+        let diff = F::simd_sub(&y_true.view(), &y_pred.view());
+        let squared_diff = F::simd_mul(&diff, &diff);
+        F::simd_sum(&squared_diff)
+    } else {
+        // Fallback for non-contiguous arrays
+        let mut sum = F::zero();
+        for (yt, yp) in y_true.iter().zip(y_pred.iter()) {
+            let error = *yt - *yp;
+            sum = sum + error * error;
+        }
+        sum
+    };
 
     Ok(squared_error_sum / NumCast::from(n_samples).unwrap())
 }
@@ -186,11 +197,21 @@ where
 
     let n_samples = y_true.len();
 
-    let mut abs_error_sum = F::zero();
-    for (yt, yp) in y_true.iter().zip(y_pred.iter()) {
-        let error = (*yt - *yp).abs();
-        abs_error_sum = abs_error_sum + error;
-    }
+    // Use SIMD optimizations for vector operations when data is contiguous
+    let abs_error_sum = if y_true.is_standard_layout() && y_pred.is_standard_layout() {
+        // SIMD-optimized computation
+        let diff = F::simd_sub(&y_true.view(), &y_pred.view());
+        let abs_diff = F::simd_abs(&diff);
+        F::simd_sum(&abs_diff)
+    } else {
+        // Fallback for non-contiguous arrays
+        let mut sum = F::zero();
+        for (yt, yp) in y_true.iter().zip(y_pred.iter()) {
+            let error = (*yt - *yp).abs();
+            sum = sum + error;
+        }
+        sum
+    };
 
     Ok(abs_error_sum / NumCast::from(n_samples).unwrap())
 }

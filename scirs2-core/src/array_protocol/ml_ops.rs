@@ -189,26 +189,32 @@ array_function_dispatch!(
                         for out_h in 0..out_height {
                             for out_w in 0..out_width {
                                 let mut sum = 0.0;
-                                
+
                                 // Convolution over the filter window
                                 for f_h in 0..filter_height {
                                     for f_w in 0..filter_width {
                                         for in_c in 0..input_channels {
                                             // Calculate input coordinates with padding
-                                            let in_h = (out_h * stride.0) as i32 + f_h as i32 - padding.0 as i32;
-                                            let in_w = (out_w * stride.1) as i32 + f_w as i32 - padding.1 as i32;
-                                            
+                                            let in_h = (out_h * stride.0) as i32 + f_h as i32
+                                                - padding.0 as i32;
+                                            let in_w = (out_w * stride.1) as i32 + f_w as i32
+                                                - padding.1 as i32;
+
                                             // Check bounds (zero padding)
-                                            if in_h >= 0 && in_h < input_height as i32 &&
-                                               in_w >= 0 && in_w < input_width as i32 {
-                                                let input_val = input[[b, in_h as usize, in_w as usize, in_c]];
+                                            if in_h >= 0
+                                                && in_h < input_height as i32
+                                                && in_w >= 0
+                                                && in_w < input_width as i32
+                                            {
+                                                let input_val =
+                                                    input[[b, in_h as usize, in_w as usize, in_c]];
                                                 let filter_val = filters[[f_h, f_w, in_c, out_c]];
                                                 sum += input_val * filter_val;
                                             }
                                         }
                                     }
                                 }
-                                
+
                                 output[[b, out_h, out_w, out_c]] = sum;
                             }
                         }
@@ -283,17 +289,22 @@ array_function_dispatch!(
                         for out_h in 0..out_height {
                             for out_w in 0..out_width {
                                 let mut max_val = f64::NEG_INFINITY;
-                                
+
                                 // Pool over the kernel window
                                 for k_h in 0..kernel_size.0 {
                                     for k_w in 0..kernel_size.1 {
                                         // Calculate input coordinates with padding
-                                        let in_h = (out_h * stride.0) as i32 + k_h as i32 - padding.0 as i32;
-                                        let in_w = (out_w * stride.1) as i32 + k_w as i32 - padding.1 as i32;
-                                        
+                                        let in_h = (out_h * stride.0) as i32 + k_h as i32
+                                            - padding.0 as i32;
+                                        let in_w = (out_w * stride.1) as i32 + k_w as i32
+                                            - padding.1 as i32;
+
                                         // Check bounds
-                                        if in_h >= 0 && in_h < input_height as i32 &&
-                                           in_w >= 0 && in_w < input_width as i32 {
+                                        if in_h >= 0
+                                            && in_h < input_height as i32
+                                            && in_w >= 0
+                                            && in_w < input_width as i32
+                                        {
                                             let val = input[[b, in_h as usize, in_w as usize, c]];
                                             if val > max_val {
                                                 max_val = val;
@@ -301,9 +312,13 @@ array_function_dispatch!(
                                         }
                                     }
                                 }
-                                
+
                                 // Use 0.0 if no valid values found (due to padding)
-                                output[[b, out_h, out_w, c]] = if max_val == f64::NEG_INFINITY { 0.0 } else { max_val };
+                                output[[b, out_h, out_w, c]] = if max_val == f64::NEG_INFINITY {
+                                    0.0
+                                } else {
+                                    max_val
+                                };
                             }
                         }
                     }
@@ -412,11 +427,11 @@ array_function_dispatch!(
                 // Perform batch normalization
                 // For each channel, normalize using the formula:
                 // y = scale * (x - mean) / sqrt(variance + epsilon) + offset
-                
+
                 let batch_size = input.shape()[0];
                 let height = input.shape()[1];
                 let width = input.shape()[2];
-                
+
                 for b in 0..batch_size {
                     for h in 0..height {
                         for w in 0..width {
@@ -426,13 +441,13 @@ array_function_dispatch!(
                                 let v = variance[[c]];
                                 let s = scale[[c]];
                                 let o = offset[[c]];
-                                
+
                                 // Normalize: (x - mean) / sqrt(variance + epsilon)
                                 let normalized = (x - m) / (v + epsilon).sqrt();
-                                
+
                                 // Scale and shift: scale * normalized + offset
                                 let result = s * normalized + o;
-                                
+
                                 output[[b, h, w, c]] = result;
                             }
                         }
@@ -730,19 +745,19 @@ array_function_dispatch!(
                 // 2. if mask: scores = scores.masked_fill(mask, -inf)
                 // 3. attention = softmax(scores)
                 // 4. output = matmul(attention, v)
-                
+
                 let scale_factor = scale.unwrap_or(1.0 / (d_k as f64).sqrt());
                 let mut output: Array<f64, Ix3> = Array::zeros((batch_size, q_len, d_k));
-                
+
                 for b in 0..batch_size {
                     // Extract batch slices
                     let q_batch = q.slice(ndarray::s![b, .., .., ..]);
                     let k_batch = k.slice(ndarray::s![b, .., .., ..]);
                     let v_batch = v.slice(ndarray::s![b, .., .., ..]);
-                    
+
                     // Compute attention scores: Q * K^T for each head
                     let mut head_outputs = Array::zeros((q_len, num_heads, d_k));
-                    
+
                     for h in 0..num_heads {
                         let mut scores = Array::zeros((q_len, k_len));
                         for i in 0..q_len {
@@ -754,46 +769,50 @@ array_function_dispatch!(
                                 scores[[i, j]] = dot_product * scale_factor;
                             }
                         }
-                    
+
                         // Apply mask if provided
-                    if let Some(mask_array) = mask {
-                        if let Some(mask_wrapper) = mask_array.as_any().downcast_ref::<NdarrayWrapper<f64, Ix3>>() {
-                            let mask_batch = mask_wrapper.as_array().slice(ndarray::s![b, .., ..]);
-                            for i in 0..q_len {
-                                for j in 0..k_len {
-                                    if mask_batch[[i, j]] == 0.0 {
-                                        scores[[i, j]] = f64::NEG_INFINITY;
+                        if let Some(mask_array) = mask {
+                            if let Some(mask_wrapper) = mask_array
+                                .as_any()
+                                .downcast_ref::<NdarrayWrapper<f64, Ix3>>()
+                            {
+                                let mask_batch =
+                                    mask_wrapper.as_array().slice(ndarray::s![b, .., ..]);
+                                for i in 0..q_len {
+                                    for j in 0..k_len {
+                                        if mask_batch[[i, j]] == 0.0 {
+                                            scores[[i, j]] = f64::NEG_INFINITY;
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-                    
-                    // Apply softmax to get attention weights
-                    let mut attention = Array::zeros((q_len, k_len));
-                    for i in 0..q_len {
-                        // Find max for numerical stability
-                        let mut max_score = f64::NEG_INFINITY;
-                        for j in 0..k_len {
-                            if scores[[i, j]] > max_score {
-                                max_score = scores[[i, j]];
+
+                        // Apply softmax to get attention weights
+                        let mut attention = Array::zeros((q_len, k_len));
+                        for i in 0..q_len {
+                            // Find max for numerical stability
+                            let mut max_score = f64::NEG_INFINITY;
+                            for j in 0..k_len {
+                                if scores[[i, j]] > max_score {
+                                    max_score = scores[[i, j]];
+                                }
+                            }
+
+                            // Compute exp and sum
+                            let mut exp_sum = 0.0;
+                            for j in 0..k_len {
+                                let exp_val = (scores[[i, j]] - max_score).exp();
+                                attention[[i, j]] = exp_val;
+                                exp_sum += exp_val;
+                            }
+
+                            // Normalize
+                            for j in 0..k_len {
+                                attention[[i, j]] /= exp_sum;
                             }
                         }
-                        
-                        // Compute exp and sum
-                        let mut exp_sum = 0.0;
-                        for j in 0..k_len {
-                            let exp_val = (scores[[i, j]] - max_score).exp();
-                            attention[[i, j]] = exp_val;
-                            exp_sum += exp_val;
-                        }
-                        
-                        // Normalize
-                        for j in 0..k_len {
-                            attention[[i, j]] /= exp_sum;
-                        }
-                    }
-                    
+
                         // Compute output: attention * V
                         for i in 0..q_len {
                             for k in 0..d_k {
@@ -805,7 +824,7 @@ array_function_dispatch!(
                             }
                         }
                     }
-                    
+
                     // Aggregate outputs from all heads (simple average)
                     for i in 0..q_len {
                         for k in 0..d_k {

@@ -3,18 +3,17 @@
 //! This module implements an advanced NAS system that continuously learns from
 //! optimization performance to automatically design better optimizer architectures.
 
-use ndarray::{Array1, Array2, Array3, ArrayBase, Data, Dimension, s};
+use ndarray::{Array1, Array2};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque, BTreeMap, HashSet};
 use std::time::{Duration, Instant};
-use rand::{thread_rng, Rng};
-use rand::seq::SliceRandom;
+use rand::Rng;
 
-use super::neural_architecture_search::{
-    NeuralArchitectureSearch, NASConfig, ArchitectureSearchSpace, SearchStrategy,
-    ArchitectureEvaluator, PerformancePredictor
+use crate::neural_architecture_search::{
+    OptimizerArchitecture, SearchStrategy, PerformanceEvaluator,
+    MultiObjectiveOptimizer, ArchitectureController, NASConfig
 };
-use super::{LearnedOptimizerConfig, NeuralOptimizerType};
+use crate::learned_optimizers::neural_architecture_search::ArchitectureSearchSpace;
 use crate::error::OptimizerError;
 
 /// Adaptive NAS System that learns from optimization performance
@@ -343,6 +342,19 @@ pub enum GenerationStrategy {
     Hybrid,
 }
 
+/// Component types for architecture generation
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum ComponentType {
+    Linear,
+    Convolution,
+    Attention,
+    Normalization,
+    Activation,
+    Pooling,
+    Dropout,
+    Embedding,
+}
+
 /// Component library for architecture generation
 #[derive(Debug)]
 pub struct ComponentLibrary {
@@ -354,6 +366,26 @@ pub struct ComponentLibrary {
     
     /// Successful component patterns
     successful_patterns: Vec<ComponentPattern>,
+}
+
+/// Layer types for neural networks
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum LayerType {
+    Dense,
+    Conv1D,
+    Conv2D,
+    Conv3D,
+    LSTM,
+    GRU,
+    Attention,
+    Transformer,
+    Embedding,
+    BatchNorm,
+    LayerNorm,
+    Dropout,
+    MaxPool,
+    AvgPool,
+    AdaptivePool,
 }
 
 /// Validation rules for architectures
@@ -886,7 +918,7 @@ pub enum GenerativeModelType {
 
 /// Generation strategy for architectures
 #[derive(Debug)]
-pub struct GenerationStrategy<T: Float> {
+pub struct ArchitectureGenerationStrategy<T: Float> {
     pub strategy_type: GenerationStrategyType,
     pub exploration_rate: T,
     pub exploitation_rate: T,
@@ -923,16 +955,16 @@ pub struct FeasibilityChecker {
 
 /// Generation history tracker
 #[derive(Debug)]
-pub struct GenerationHistory<T: Float> {
+pub struct ArchitectureGenerationHistory<T: Float> {
     pub generated_architectures: Vec<ArchitectureCandidate<T>>,
-    pub generation_statistics: GenerationStatistics<T>,
+    pub generation_statistics: ArchitectureGenerationStatistics<T>,
     pub performance_trends: Vec<T>,
     pub diversity_trends: Vec<T>,
 }
 
 /// Statistics for generation process
 #[derive(Debug)]
-pub struct GenerationStatistics<T: Float> {
+pub struct ArchitectureGenerationStatistics<T: Float> {
     pub total_generated: usize,
     pub successful_generations: usize,
     pub average_quality: T,
@@ -1132,21 +1164,6 @@ pub struct LayerSpecification {
     pub output_dims: Vec<usize>,
 }
 
-/// Layer types for NAS
-#[derive(Debug, Clone, Copy)]
-pub enum LayerType {
-    Linear,
-    LSTM,
-    GRU,
-    Transformer,
-    Attention,
-    Convolution1D,
-    Normalization,
-    Activation,
-    Dropout,
-    Embedding,
-    Custom(u32),
-}
 
 /// Layer parameter
 #[derive(Debug, Clone)]
@@ -2037,7 +2054,7 @@ pub struct PerformanceTrend<T: Float> {
 
 /// Trend directions
 #[derive(Debug, Clone, Copy)]
-pub enum TrendDirection {
+pub enum PerformanceTrendDirection {
     Increasing,
     Decreasing,
     Stable,
@@ -2275,6 +2292,100 @@ pub struct RecommendationMetadata {
     pub timestamp: Instant,
 }
 
+/// Processing result for candidate batch
+#[derive(Debug)]
+pub struct ProcessingResult<T: Float> {
+    /// Number of processed candidates
+    pub processed_count: usize,
+    
+    /// Average processing time
+    pub avg_processing_time: Duration,
+    
+    /// Processing success rate
+    pub success_rate: T,
+}
+
+/// Performance analyzer for NAS
+#[derive(Debug)]
+pub struct PerformanceAnalyzer<T: Float> {
+    /// Analysis history
+    pub analysis_history: VecDeque<T>,
+    
+    /// Analyzer configuration
+    pub config: AnalyzerConfig<T>,
+}
+
+/// Analyzer configuration
+#[derive(Debug)]
+pub struct AnalyzerConfig<T: Float> {
+    /// Analysis window size
+    pub window_size: usize,
+    
+    /// Minimum performance threshold
+    pub min_threshold: T,
+}
+
+/// Processing metadata
+#[derive(Debug)]
+pub struct ProcessingMetadata {
+    /// Processing timestamp
+    pub timestamp: Instant,
+    
+    /// Processing duration
+    pub duration: Duration,
+    
+    /// Processing status
+    pub status: ProcessingStatus,
+}
+
+/// Processing status
+#[derive(Debug, Clone, Copy)]
+pub enum ProcessingStatus {
+    Success,
+    Failed,
+    Timeout,
+    Cancelled,
+}
+
+/// Architecture feedback
+#[derive(Debug)]
+pub struct ArchitectureFeedback<T: Float> {
+    /// Feedback score
+    pub score: T,
+    
+    /// Feedback confidence
+    pub confidence: T,
+    
+    /// Feedback metadata
+    pub metadata: HashMap<String, String>,
+    
+    /// Feedback timestamp
+    pub timestamp: Instant,
+}
+
+/// Feedback processing configuration
+#[derive(Debug)]
+pub struct FeedbackProcessingConfig<T: Float> {
+    /// History window size
+    pub history_window: usize,
+    
+    /// Processing threshold
+    pub processing_threshold: T,
+    
+    /// Enable automatic filtering
+    pub auto_filtering: bool,
+}
+
+/// Performance feedback processor
+#[derive(Debug)]
+pub struct PerformanceFeedbackProcessor<T: Float> {
+    /// Feedback history buffer
+    pub feedback_history: VecDeque<PerformanceFeedback<T>>,
+    
+    /// Processing configuration
+    pub processing_config: FeedbackProcessingConfig<T>,
+}
+
 /// Performance feedback
 #[derive(Debug)]
 pub struct PerformanceFeedback<T: Float> {
@@ -2293,7 +2404,7 @@ pub struct PerformanceFeedback<T: Float> {
 
 /// System performance metrics
 #[derive(Debug)]
-pub struct SystemPerformanceMetrics<T: Float> {
+pub struct NASSystemPerformanceMetrics<T: Float> {
     /// Search efficiency metrics
     pub search_efficiency: SearchEfficiencyMetrics<T>,
     
@@ -2651,23 +2762,8 @@ pub enum MultiObjectiveAlgorithm {
     PESA2,
 }
 
-// Additional implementation stubs for remaining components...
-macro_rules! impl_new_default {
-    ($type:ty) => {
-        impl<T: Float> $type {
-            fn new() -> Self {
-                Self::default()
-            }
-        }
-        
-        impl<T: Float> Default for $type {
-            fn default() -> Self {
-                // Provide appropriate default implementation
-                unimplemented!("Default implementation for {}", stringify!($type))
-            }
-        }
-    };
-}
+// Note: Implementation stubs are provided individually for each type as needed
+// to avoid generic macro complexity and ensure proper implementations
 
 // Apply to remaining types that need implementations
 // impl_new_default!(PerformanceGuidedSearch<T>);
@@ -3069,7 +3165,7 @@ impl<T: Float> ArchitectureCandidateGenerator<T> {
     }
     
     fn generate_random_candidate(&self, context: &OptimizationTask) -> Result<ArchitectureCandidate<T>, OptimizerError> {
-        let num_layers = rand::thread_rng().gen_range(1..=8);
+        let num_layers = rand::rng().gen_range(1..=8);
         let mut layers = Vec::with_capacity(num_layers);
         
         for i in 0..num_layers {
@@ -3080,7 +3176,7 @@ impl<T: Float> ArchitectureCandidateGenerator<T> {
                     } else if i == num_layers - 1 {
                         LayerType::Linear
                     } else {
-                        *[LayerType::LSTM, LayerType::GRU, LayerType::Transformer].choose(&mut rand::thread_rng()).unwrap()
+                        *[LayerType::LSTM, LayerType::GRU, LayerType::Transformer].choose(&mut rand::rng()).unwrap()
                     }
                 },
                 _ => LayerType::Linear
@@ -3142,19 +3238,19 @@ impl<T: Float> ArchitectureCandidateGenerator<T> {
                 // No additional parameters needed
             },
             LayerType::LSTM | LayerType::GRU => {
-                parameters.insert("hidden_size".to_string(), LayerParameter::Integer(rand::thread_rng().gen_range(64..=512)));
-                parameters.insert("num_layers".to_string(), LayerParameter::Integer(rand::thread_rng().gen_range(1..=3)));
-                parameters.insert("dropout".to_string(), LayerParameter::Float(rand::thread_rng().gen_range(0.0..=0.5)));
+                parameters.insert("hidden_size".to_string(), LayerParameter::Integer(rand::rng().gen_range(64..=512)));
+                parameters.insert("num_layers".to_string(), LayerParameter::Integer(rand::rng().gen_range(1..=3)));
+                parameters.insert("dropout".to_string(), LayerParameter::Float(rand::rng().gen_range(0.0..=0.5)));
             },
             LayerType::Transformer => {
-                parameters.insert("num_heads".to_string(), LayerParameter::Integer(rand::thread_rng().gen_range(4..=16)));
-                parameters.insert("ff_dim".to_string(), LayerParameter::Integer(rand::thread_rng().gen_range(512..=2048)));
-                parameters.insert("dropout".to_string(), LayerParameter::Float(rand::thread_rng().gen_range(0.0..=0.3)));
+                parameters.insert("num_heads".to_string(), LayerParameter::Integer(rand::rng().gen_range(4..=16)));
+                parameters.insert("ff_dim".to_string(), LayerParameter::Integer(rand::rng().gen_range(512..=2048)));
+                parameters.insert("dropout".to_string(), LayerParameter::Float(rand::rng().gen_range(0.0..=0.3)));
             },
             LayerType::Convolution1D => {
-                parameters.insert("kernel_size".to_string(), LayerParameter::Integer(rand::thread_rng().gen_range(3..=15)));
-                parameters.insert("stride".to_string(), LayerParameter::Integer(rand::thread_rng().gen_range(1..=3)));
-                parameters.insert("padding".to_string(), LayerParameter::Integer(rand::thread_rng().gen_range(0..=5)));
+                parameters.insert("kernel_size".to_string(), LayerParameter::Integer(rand::rng().gen_range(3..=15)));
+                parameters.insert("stride".to_string(), LayerParameter::Integer(rand::rng().gen_range(1..=3)));
+                parameters.insert("padding".to_string(), LayerParameter::Integer(rand::rng().gen_range(0..=5)));
             },
             _ => {} // Other layer types get default parameters
         }
@@ -3262,10 +3358,10 @@ impl<T: Float> ArchitectureCandidateGenerator<T> {
             for (_, param) in &mut layer.parameters {
                 match param {
                     LayerParameter::Float(ref mut value) => {
-                        *value *= rand::thread_rng().gen_range(0.8..=1.2);
+                        *value *= rand::rng().gen_range(0.8..=1.2);
                     },
                     LayerParameter::Integer(ref mut value) => {
-                        *value = (*value as f64 * rand::thread_rng().gen_range(0.9..=1.1)) as i64;
+                        *value = (*value as f64 * rand::rng().gen_range(0.9..=1.1)) as i64;
                     },
                     _ => {}
                 }
@@ -4148,7 +4244,7 @@ pub enum ObjectiveTarget<T: Float> {
 }
 
 #[derive(Debug)]
-pub struct NASSystemState<T: Float> {
+pub struct AdaptiveNASSystemState<T: Float> {
     pub current_performance: T,
     pub search_progress: T,
     pub resource_utilization: T,
@@ -4237,7 +4333,7 @@ pub struct SearchSpaceSnapshot {
 }
 
 #[derive(Debug)]
-pub struct ArchitectureSearchSpace {
+pub struct LocalArchitectureSearchSpace {
     pub layer_constraints: LayerConstraints,
     pub connection_constraints: ConnectionConstraints,
     pub parameter_bounds: ParameterBounds,
@@ -4843,28 +4939,7 @@ impl<T: Float> QualityAssessmentCache<T> {
     }
 }
 
-// Implement missing Default implementations
-impl<T: Float> Default for AdaptiveNASConfig<T> {
-    fn default() -> Self {
-        Self {
-            base_config: NASConfig::default(),
-            performance_window: 100,
-            improvement_threshold: T::from(0.05).unwrap(),
-            adaptation_lr: T::from(0.01).unwrap(),
-            complexity_penalty: T::from(0.1).unwrap(),
-            online_learning: true,
-            architecture_transfer: true,
-            curriculum_search: false,
-            diversity_weight: T::from(0.3).unwrap(),
-            exploration_weight: T::from(0.3).unwrap(),
-            prediction_confidence_threshold: T::from(0.7).unwrap(),
-            max_complexity: 1000,
-            min_performance: T::from(0.1).unwrap(),
-            enable_meta_learning: true,
-            meta_learning_frequency: 10,
-        }
-    }
-}
+// Duplicate implementation removed - using the first complete one
 
 impl<T: Float> Default for NASConfig<T> {
     fn default() -> Self {
@@ -5013,7 +5088,7 @@ pub enum ArchitectureEncodingStrategy {
 }
 
 #[derive(Debug, Clone)]
-pub struct ResourceConstraints<T: Float> {
+pub struct NASResourceConstraints<T: Float> {
     pub max_memory_gb: T,
     pub max_training_time_hours: T,
     pub max_flops_per_epoch: T,
@@ -5022,7 +5097,7 @@ pub struct ResourceConstraints<T: Float> {
 
 // Additional missing supporting types
 #[derive(Debug, Clone, Copy)]
-pub enum SearchStrategyType {
+pub enum NASSearchStrategyType {
     Random,
     Evolutionary,
     PerformanceBased,
@@ -5034,7 +5109,7 @@ pub enum SearchStrategyType {
 }
 
 #[derive(Debug)]
-pub struct SearchParameters<T: Float> {
+pub struct NASSearchParameters<T: Float> {
     pub mutation_rate: T,
     pub crossover_rate: T,
     pub selection_pressure: T,

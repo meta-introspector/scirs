@@ -4,15 +4,13 @@
 //! Hessians, third-order derivatives, and mixed partial derivatives for
 //! advanced optimization algorithms.
 
-use ndarray::{s, Array, Array1, Array2, Array3, ArrayBase, Data, Dimension};
+use ndarray::{Array1, Array2, Array3, Dimension};
 use num_traits::Float;
 use std::collections::HashMap;
 
-use super::forward_mode::{ForwardModeEngine, VectorDual};
+use super::forward_mode::ForwardModeEngine;
 use super::reverse_mode::ReverseModeEngine;
 use crate::error::OptimizerError;
-use std::sync::Arc;
-use std::thread;
 
 /// Higher-order differentiation engine
 pub struct HigherOrderEngine<T: Float> {

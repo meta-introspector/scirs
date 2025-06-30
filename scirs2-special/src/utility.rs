@@ -1,7 +1,122 @@
-//! Utility and convenience functions
+//! Utility and convenience functions with mathematical foundations
 //!
-//! This module provides various utility functions that are commonly used
-//! in scientific computing, matching SciPy's special module.
+//! This module provides various utility functions commonly used in scientific
+//! computing, with detailed mathematical theory, proofs, and numerical analysis.
+//!
+//! ## Mathematical Theory and Foundations
+//!
+//! ### Elementary Functions with Special Properties
+//!
+//! This module contains fundamental mathematical functions that serve as building
+//! blocks for more complex special functions. Each function is implemented with
+//! careful attention to numerical stability and mathematical rigor.
+//!
+//! ### The Cube Root Function
+//!
+//! **Mathematical Definition**: For x ∈ ℝ, the cube root is defined as:
+//! ```text
+//! ∛x = x^(1/3) = exp(ln|x|/3) · sign(x)
+//! ```
+//!
+//! **Properties**:
+//! 1. **Domain and Range**: ∛: ℝ → ℝ (unlike square root, defined for all reals)
+//! 2. **Odd Function**: ∛(-x) = -∛x
+//!    - **Proof**: Using the definition, ∛(-x) = (-x)^(1/3) = (-1)^(1/3) · x^(1/3) = -∛x
+//! 3. **Monotonically Increasing**: d/dx[x^(1/3)] = (1/3)x^(-2/3) > 0 for x > 0
+//! 4. **Inverse of Cubing**: (∛x)³ = x for all x ∈ ℝ
+//!
+//! **Numerical Implementation**: To handle negative numbers correctly, we use:
+//! - For x ≥ 0: ∛x = x^(1/3)
+//! - For x < 0: ∛x = -(-x)^(1/3)
+//!
+//! ### Exponential Functions with Different Bases
+//!
+//! **Base-10 Exponential (exp10)**:
+//! ```text
+//! exp10(x) = 10^x = e^(x·ln(10))
+//! ```
+//!
+//! **Mathematical Properties**:
+//! 1. **Exponential Law**: 10^(x+y) = 10^x · 10^y
+//! 2. **Inverse of log₁₀**: exp10(log₁₀(x)) = x for x > 0
+//! 3. **Derivative**: d/dx[10^x] = 10^x · ln(10)
+//! 4. **Growth Rate**: 10^x grows faster than any polynomial
+//!
+//! **Base-2 Exponential (exp2)**:
+//! ```text
+//! exp2(x) = 2^x = e^(x·ln(2))
+//! ```
+//!
+//! **Computer Science Applications**:
+//! - Binary representation: 2^n gives powers of 2
+//! - Information theory: 2^H(X) relates to entropy
+//! - Algorithm complexity: Many algorithms have 2^n complexity
+//!
+//! ### Trigonometric Functions in Degrees
+//!
+//! **Degree-Radian Conversion**:
+//! ```text
+//! radians = degrees × π/180
+//! degrees = radians × 180/π
+//! ```
+//!
+//! **Mathematical Justification**: A full circle contains 2π radians = 360°,
+//! establishing the conversion factor π/180.
+//!
+//! **Degree-based Trigonometric Functions**:
+//! - sindg(x) = sin(x × π/180)
+//! - cosdg(x) = cos(x × π/180)  
+//! - tandg(x) = tan(x × π/180)
+//! - cotdg(x) = cot(x × π/180) = 1/tan(x × π/180)
+//!
+//! ### Special Numerical Functions
+//!
+//! **exprel(x) = (e^x - 1)/x**:
+//! - **Purpose**: Numerically stable computation of (e^x - 1)/x near x = 0
+//! - **Taylor Series**: exprel(x) = 1 + x/2 + x²/6 + x³/24 + ... = Σ_{n=0}^∞ x^n/(n+1)!
+//! - **Limit**: lim_{x→0} exprel(x) = 1 (removable singularity)
+//! - **Applications**: Actuarial calculations, queuing theory
+//!
+//! **cosm1(x) = cos(x) - 1**:
+//! - **Purpose**: Accurate computation of cos(x) - 1 for small |x|
+//! - **Series**: cosm1(x) = -x²/2 + x⁴/24 - x⁶/720 + ... = -Σ_{n=1}^∞ (-1)^n x^(2n)/(2n)!
+//! - **Numerical Advantage**: Avoids catastrophic cancellation when cos(x) ≈ 1
+//!
+//! **powm1(x, y) = x^y - 1**:
+//! - **Implementation**: For small y, use powm1(x, y) = exp(y·ln(x)) - 1 ≈ y·ln(x) when |y·ln(x)| is small
+//! - **Numerical Stability**: Avoids precision loss when x^y ≈ 1
+//!
+//! ### Advanced Utility Functions
+//!
+//! **Dirichlet Kernel (diric)**:
+//! ```text
+//! diric(x, n) = sin(nx/2) / (n·sin(x/2)) for x ≠ 2πk
+//! diric(2πk, n) = (-1)^(kn)
+//! ```
+//!
+//! **Properties**:
+//! 1. **Periodicity**: diric(x + 2π, n) = diric(x, n)
+//! 2. **Normalization**: ∫_{-π}^π diric(x, n) dx = 2π
+//! 3. **Fourier Connection**: Dirichlet kernel is the Fourier kernel for rectangular window
+//!
+//! **Owen's T Function**:
+//! ```text
+//! T(h, a) = (1/2π) ∫₀^a exp(-h²(1+t²)/2) / (1+t²) dt
+//! ```
+//!
+//! **Applications**:
+//! - Bivariate normal distribution calculations
+//! - Statistical hypothesis testing
+//! - Error probability computations
+//!
+//! ### Numerical Stability Considerations
+//!
+//! All functions in this module are implemented with careful attention to:
+//!
+//! 1. **Overflow/Underflow Prevention**: Using appropriate scaling and range reduction
+//! 2. **Catastrophic Cancellation Avoidance**: Special algorithms for near-zero differences
+//! 3. **Precision Preservation**: Maintaining accuracy across the full range of inputs
+//! 4. **Edge Case Handling**: Proper behavior at singularities and boundary conditions
 
 use crate::error::{SpecialError, SpecialResult};
 use crate::validation::check_finite;

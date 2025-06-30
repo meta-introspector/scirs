@@ -1152,6 +1152,7 @@ pub mod dynamic_dispatch;
 
 /// Specialized numeric types for scientific computing
 pub mod scientific {
+    use crate::types::NumericConversionError;
 
     /// Fixed-point number for precise decimal arithmetic
     #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -1527,9 +1528,9 @@ mod enhanced_tests {
 
     #[test]
     fn test_rational_arithmetic() {
-        let a = scientific::Rational::new(1, 3);
-        let b = scientific::Rational::new(1, 6);
-        let sum = a.add(&b);
+        let a = scientific::Rational::new(1, 3).unwrap();
+        let b = scientific::Rational::new(1, 6).unwrap();
+        let sum = a.add(&b).unwrap();
 
         assert_eq!(sum.numerator(), 1);
         assert_eq!(sum.denominator(), 2);

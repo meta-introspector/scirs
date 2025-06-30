@@ -31,6 +31,9 @@
 //! # Ok::<(), scirs2_io::error::IoError>(())
 //! ```
 
+#![allow(dead_code)]
+#![allow(missing_docs)]
+
 use crate::error::{IoError, Result};
 use ndarray::Array2;
 use std::collections::HashMap;
@@ -160,11 +163,11 @@ impl GeoTiff {
         let mut file = std::fs::File::open(&file_path)?;
         let mut buffer = [0u8; 8];
         file.read_exact(&mut buffer)?;
-        
+
         // Check for basic TIFF magic bytes (II for little-endian, MM for big-endian)
         let is_valid_tiff = (buffer[0] == 0x49 && buffer[1] == 0x49) || // II
-                           (buffer[0] == 0x4D && buffer[1] == 0x4D);    // MM
-        
+                           (buffer[0] == 0x4D && buffer[1] == 0x4D); // MM
+
         if !is_valid_tiff {
             return Err(IoError::FormatError("Not a valid TIFF file".to_string()));
         }
@@ -172,9 +175,9 @@ impl GeoTiff {
         // For basic implementation, use reasonable defaults based on common GeoTIFF files
         // In a real implementation, we would parse the TIFF header and IFD
         Ok(Self {
-            width: 1024,  // Common size for satellite imagery
+            width: 1024, // Common size for satellite imagery
             height: 1024,
-            bands: 3,     // RGB is common
+            bands: 3, // RGB is common
             data_type: GeoTiffDataType::UInt8,
             geo_transform: GeoTransform::new(0.0, 0.0, 1.0, -1.0),
             crs: Some(CRS::from_epsg(4326)), // WGS84
@@ -223,10 +226,11 @@ impl GeoTiff {
             Ok(bytes_read) => {
                 let total_pixels = (self.width * self.height) as usize;
                 let element_size = std::mem::size_of::<T>();
-                
+
                 let data = if bytes_read >= total_pixels * element_size {
                     // Use actual data if available
-                    buffer.chunks_exact(element_size)
+                    buffer
+                        .chunks_exact(element_size)
                         .take(total_pixels)
                         .map(|chunk| {
                             // Better conversion based on data type
@@ -234,19 +238,22 @@ impl GeoTiff {
                                 GeoTiffDataType::UInt8 => {
                                     let val = chunk[0] as f32 / 255.0;
                                     T::from_f32(val)
-                                },
+                                }
                                 GeoTiffDataType::Int8 => {
                                     let val = chunk[0] as i8 as f32 / 127.0;
                                     T::from_f32(val)
-                                },
+                                }
                                 GeoTiffDataType::UInt16 => {
-                                    let val = u16::from_le_bytes([chunk[0], chunk[1]]) as f32 / 65535.0;
+                                    let val =
+                                        u16::from_le_bytes([chunk[0], chunk[1]]) as f32 / 65535.0;
                                     T::from_f32(val)
-                                },
+                                }
                                 GeoTiffDataType::Float32 => {
-                                    let val = f32::from_le_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]);
+                                    let val = f32::from_le_bytes([
+                                        chunk[0], chunk[1], chunk[2], chunk[3],
+                                    ]);
                                     T::from_f32(val)
-                                },
+                                }
                                 _ => T::zero(),
                             }
                         })
@@ -260,7 +267,7 @@ impl GeoTiff {
                         })
                         .collect()
                 };
-                
+
                 Array2::from_shape_vec((self.height as usize, self.width as usize), data)
                     .map_err(|e| IoError::ParseError(format!("Failed to create array: {}", e)))
             }
@@ -331,7 +338,7 @@ impl GeoTiffNumeric for u8 {
     fn zero() -> Self {
         0
     }
-    
+
     fn from_f32(val: f32) -> Self {
         (val * 255.0).clamp(0.0, 255.0) as u8
     }
@@ -341,7 +348,7 @@ impl GeoTiffNumeric for i8 {
     fn zero() -> Self {
         0
     }
-    
+
     fn from_f32(val: f32) -> Self {
         (val * 127.0).clamp(-128.0, 127.0) as i8
     }
@@ -351,7 +358,7 @@ impl GeoTiffNumeric for u16 {
     fn zero() -> Self {
         0
     }
-    
+
     fn from_f32(val: f32) -> Self {
         (val * 65535.0).clamp(0.0, 65535.0) as u16
     }
@@ -361,7 +368,7 @@ impl GeoTiffNumeric for i16 {
     fn zero() -> Self {
         0
     }
-    
+
     fn from_f32(val: f32) -> Self {
         (val * 32767.0).clamp(-32768.0, 32767.0) as i16
     }
@@ -371,7 +378,7 @@ impl GeoTiffNumeric for u32 {
     fn zero() -> Self {
         0
     }
-    
+
     fn from_f32(val: f32) -> Self {
         (val * 4294967295.0).clamp(0.0, 4294967295.0) as u32
     }
@@ -381,7 +388,7 @@ impl GeoTiffNumeric for i32 {
     fn zero() -> Self {
         0
     }
-    
+
     fn from_f32(val: f32) -> Self {
         (val * 2147483647.0).clamp(-2147483648.0, 2147483647.0) as i32
     }
@@ -391,7 +398,7 @@ impl GeoTiffNumeric for f32 {
     fn zero() -> Self {
         0.0
     }
-    
+
     fn from_f32(val: f32) -> Self {
         val
     }
@@ -401,7 +408,7 @@ impl GeoTiffNumeric for f64 {
     fn zero() -> Self {
         0.0
     }
-    
+
     fn from_f32(val: f32) -> Self {
         val as f64
     }
@@ -570,46 +577,57 @@ impl Shapefile {
     pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
         // Simplified implementation that validates file existence and structure
         // In reality, would use a proper shapefile library to read .shp, .shx, .dbf files
-        
+
         let path = path.as_ref();
-        let stem = path.file_stem()
+        let stem = path
+            .file_stem()
             .ok_or_else(|| IoError::FormatError("Invalid file path".to_string()))?
             .to_string_lossy();
-        
-        let dir = path.parent()
+
+        let dir = path
+            .parent()
             .ok_or_else(|| IoError::FormatError("Invalid directory path".to_string()))?;
-        
+
         // Check for required shapefile components
         let shp_path = dir.join(format!("{}.shp", stem));
         let shx_path = dir.join(format!("{}.shx", stem));
         let dbf_path = dir.join(format!("{}.dbf", stem));
-        
+
         // Validate that required files exist
         if !shp_path.exists() {
-            return Err(IoError::FileError(format!("Shapefile not found: {}", shp_path.display())));
+            return Err(IoError::FileError(format!(
+                "Shapefile not found: {}",
+                shp_path.display()
+            )));
         }
         if !shx_path.exists() {
-            return Err(IoError::FileError(format!("Index file not found: {}", shx_path.display())));
+            return Err(IoError::FileError(format!(
+                "Index file not found: {}",
+                shx_path.display()
+            )));
         }
         if !dbf_path.exists() {
-            return Err(IoError::FileError(format!("Attribute file not found: {}", dbf_path.display())));
+            return Err(IoError::FileError(format!(
+                "Attribute file not found: {}",
+                dbf_path.display()
+            )));
         }
-        
+
         // Read basic file header to validate it's a shapefile
         let mut shp_file = File::open(&shp_path)?;
         let mut header = [0u8; 32];
         shp_file.read_exact(&mut header)?;
-        
+
         // Check shapefile magic number (9994 in big-endian)
         let magic = u32::from_be_bytes([header[0], header[1], header[2], header[3]]);
         if magic != 9994 {
             return Err(IoError::FormatError("Not a valid shapefile".to_string()));
         }
-        
+
         // For now, create sample features based on file validation
         // In a real implementation, we would parse the actual geometries and attributes
         let mut features = Vec::new();
-        
+
         // Add a sample feature indicating successful file validation
         let mut attributes = HashMap::new();
         attributes.insert(
@@ -617,8 +635,8 @@ impl Shapefile {
             AttributeValue::String("true".to_string()),
         );
         attributes.insert(
-            "source_file".to_string(), 
-            AttributeValue::String(path.to_string_lossy().to_string())
+            "source_file".to_string(),
+            AttributeValue::String(path.to_string_lossy().to_string()),
         );
 
         features.push(Feature {
@@ -822,7 +840,7 @@ impl KMLDocument {
     /// Write KML to file
     pub fn write_kml<P: AsRef<Path>>(&self, path: P) -> Result<()> {
         use std::io::Write;
-        
+
         let mut file = File::create(path.as_ref())
             .map_err(|e| IoError::FileError(format!("Failed to create KML file: {}", e)))?;
 
@@ -831,8 +849,7 @@ impl KMLDocument {
             .map_err(|e| IoError::FileError(e.to_string()))?;
         writeln!(file, "<kml xmlns=\"http://www.opengis.net/kml/2.2\">")
             .map_err(|e| IoError::FileError(e.to_string()))?;
-        writeln!(file, "  <Document>")
-            .map_err(|e| IoError::FileError(e.to_string()))?;
+        writeln!(file, "  <Document>").map_err(|e| IoError::FileError(e.to_string()))?;
 
         // Write document name and description
         if let Some(name) = &self.name {
@@ -840,8 +857,12 @@ impl KMLDocument {
                 .map_err(|e| IoError::FileError(e.to_string()))?;
         }
         if let Some(description) = &self.description {
-            writeln!(file, "    <description>{}</description>", xml_escape(description))
-                .map_err(|e| IoError::FileError(e.to_string()))?;
+            writeln!(
+                file,
+                "    <description>{}</description>",
+                xml_escape(description)
+            )
+            .map_err(|e| IoError::FileError(e.to_string()))?;
         }
 
         // Write features
@@ -855,19 +876,17 @@ impl KMLDocument {
         }
 
         // Write KML footer
-        writeln!(file, "  </Document>")
-            .map_err(|e| IoError::FileError(e.to_string()))?;
-        writeln!(file, "</kml>")
-            .map_err(|e| IoError::FileError(e.to_string()))?;
+        writeln!(file, "  </Document>").map_err(|e| IoError::FileError(e.to_string()))?;
+        writeln!(file, "</kml>").map_err(|e| IoError::FileError(e.to_string()))?;
 
         Ok(())
     }
 
     fn write_feature(&self, file: &mut File, feature: &KMLFeature, indent: usize) -> Result<()> {
         use std::io::Write;
-        
+
         let indent_str = "  ".repeat(indent);
-        
+
         writeln!(file, "{}  <Placemark>", indent_str)
             .map_err(|e| IoError::FileError(e.to_string()))?;
 
@@ -877,8 +896,13 @@ impl KMLDocument {
         }
 
         if let Some(description) = &feature.description {
-            writeln!(file, "{}    <description>{}</description>", indent_str, xml_escape(description))
-                .map_err(|e| IoError::FileError(e.to_string()))?;
+            writeln!(
+                file,
+                "{}    <description>{}</description>",
+                indent_str,
+                xml_escape(description)
+            )
+            .map_err(|e| IoError::FileError(e.to_string()))?;
         }
 
         // Write geometry
@@ -892,18 +916,28 @@ impl KMLDocument {
 
     fn write_folder(&self, file: &mut File, folder: &KMLFolder, indent: usize) -> Result<()> {
         use std::io::Write;
-        
+
         let indent_str = "  ".repeat(indent);
-        
+
         writeln!(file, "{}  <Folder>", indent_str)
             .map_err(|e| IoError::FileError(e.to_string()))?;
 
-        writeln!(file, "{}    <name>{}</name>", indent_str, xml_escape(&folder.name))
-            .map_err(|e| IoError::FileError(e.to_string()))?;
+        writeln!(
+            file,
+            "{}    <name>{}</name>",
+            indent_str,
+            xml_escape(&folder.name)
+        )
+        .map_err(|e| IoError::FileError(e.to_string()))?;
 
         if let Some(description) = &folder.description {
-            writeln!(file, "{}    <description>{}</description>", indent_str, xml_escape(description))
-                .map_err(|e| IoError::FileError(e.to_string()))?;
+            writeln!(
+                file,
+                "{}    <description>{}</description>",
+                indent_str,
+                xml_escape(description)
+            )
+            .map_err(|e| IoError::FileError(e.to_string()))?;
         }
 
         // Write features in folder
@@ -924,15 +958,19 @@ impl KMLDocument {
 
     fn write_geometry(&self, file: &mut File, geometry: &Geometry, indent: usize) -> Result<()> {
         use std::io::Write;
-        
+
         let indent_str = "  ".repeat(indent);
 
         match geometry {
             Geometry::Point { x, y } => {
                 writeln!(file, "{}  <Point>", indent_str)
                     .map_err(|e| IoError::FileError(e.to_string()))?;
-                writeln!(file, "{}    <coordinates>{},{}</coordinates>", indent_str, x, y)
-                    .map_err(|e| IoError::FileError(e.to_string()))?;
+                writeln!(
+                    file,
+                    "{}    <coordinates>{},{}</coordinates>",
+                    indent_str, x, y
+                )
+                .map_err(|e| IoError::FileError(e.to_string()))?;
                 writeln!(file, "{}  </Point>", indent_str)
                     .map_err(|e| IoError::FileError(e.to_string()))?;
             }
@@ -1050,18 +1088,21 @@ pub mod geo_utils {
     ) -> Result<(f64, f64)> {
         // Simplified coordinate transformation
         // In a real implementation, would use proper projection libraries like PROJ
-        
+
         match (from_crs.epsg_code, to_crs.epsg_code) {
             (Some(4326), Some(3857)) => {
                 // WGS84 to Web Mercator
                 let x_merc = x * 20037508.34 / 180.0;
-                let y_merc = (90.0 + y).to_radians().tan().ln() / std::f64::consts::PI * 20037508.34;
+                let y_merc =
+                    (90.0 + y).to_radians().tan().ln() / std::f64::consts::PI * 20037508.34;
                 Ok((x_merc, y_merc))
             }
             (Some(3857), Some(4326)) => {
                 // Web Mercator to WGS84
                 let x_wgs = x * 180.0 / 20037508.34;
-                let y_wgs = (std::f64::consts::PI * y / 20037508.34).exp().atan() * 360.0 / std::f64::consts::PI - 90.0;
+                let y_wgs = (std::f64::consts::PI * y / 20037508.34).exp().atan() * 360.0
+                    / std::f64::consts::PI
+                    - 90.0;
                 Ok((x_wgs, y_wgs))
             }
             _ => {

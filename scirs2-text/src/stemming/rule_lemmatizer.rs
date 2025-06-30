@@ -1120,7 +1120,6 @@ mod tests {
     #[test]
     fn test_from_dict_file() {
         use std::fs;
-        use std::io::Write;
 
         // Create a temporary dictionary file
         let dict_content = r#"# This is a comment

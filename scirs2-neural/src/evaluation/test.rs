@@ -309,7 +309,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + std::fmt::Display + Send
                     // Higher dimensional cases: use axis-based concatenation
                     if pred_ndim >= 3 {
                         // For 3D+ tensors (e.g., sequence data, image data)
-                        let pred_slice = combined_preds.slice_axis_mut(
+                        let mut pred_slice = combined_preds.slice_axis_mut(
                             Axis(0),
                             Slice::from(sample_offset..(sample_offset + batch_size)),
                         );
@@ -318,7 +318,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + std::fmt::Display + Send
 
                     if target_ndim >= 3 {
                         // For 3D+ tensors
-                        let target_slice = combined_targets.slice_axis_mut(
+                        let mut target_slice = combined_targets.slice_axis_mut(
                             Axis(0),
                             Slice::from(sample_offset..(sample_offset + batch_size)),
                         );

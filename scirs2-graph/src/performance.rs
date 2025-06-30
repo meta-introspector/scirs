@@ -305,17 +305,22 @@ pub mod simd_ops {
     #[allow(dead_code)]
     pub fn simd_dot_product(a: &[f64], b: &[f64]) -> f64 {
         assert_eq!(a.len(), b.len());
+        let a_view = ndarray::ArrayView1::from(a);
+        let b_view = ndarray::ArrayView1::from(b);
 
         // Use scirs2-core SIMD optimized dot product
-        f64::simd_dot_product(a, b)
+        f64::simd_dot(&a_view, &b_view)
     }
 
     /// SIMD-optimized vector normalization
     #[allow(dead_code)]
     pub fn simd_normalize(vector: &mut [f64]) {
-        let norm = f64::simd_norm(vector);
+        let vector_view = ndarray::ArrayView1::from(&*vector);
+        let norm = f64::simd_norm(&vector_view);
         if norm > 0.0 {
-            f64::simd_scale_assign(vector, 1.0 / norm);
+            for val in vector.iter_mut() {
+                *val /= norm;
+            }
         }
     }
 
@@ -355,7 +360,7 @@ pub mod simd_ops {
         let contrib_view = ndarray::ArrayView1::from(contributions);
         let weights_view = ndarray::ArrayView1::from(weights);
         let weighted_contribs = f64::simd_mul(&contrib_view, &weights_view);
-        
+
         // Manual add-assign since there's no direct simd_add_assign
         for (c, w) in centralities.iter_mut().zip(weighted_contribs.iter()) {
             *c += *w;

@@ -843,4 +843,718 @@ mod tests {
         assert!(config.simd);
         assert!((config.confidence_level - 0.99).abs() < 1e-10);
     }
+
+    #[test]
+    fn test_api_validation() {
+        let framework = APIValidationFramework::new();
+        let signature = APISignature {
+            function_name: "test_function".to_string(),
+            module_path: "scirs2_stats::test".to_string(),
+            parameters: vec![ParameterSpec {
+                name: "data".to_string(),
+                param_type: "ArrayView1<f64>".to_string(),
+                optional: false,
+                default_value: None,
+                description: Some("Input data array".to_string()),
+                constraints: vec![ParameterConstraint::Finite],
+            }],
+            return_type: ReturnTypeSpec {
+                type_name: "f64".to_string(),
+                result_wrapped: true,
+                inner_type: Some("f64".to_string()),
+                error_type: Some("StatsError".to_string()),
+            },
+            error_types: vec!["StatsError".to_string()],
+            documentation: DocumentationSpec {
+                has_doc_comment: true,
+                has_param_docs: true,
+                has_return_docs: true,
+                has_examples: true,
+                has_error_docs: true,
+                scipy_compatibility: Some("Compatible with scipy.stats".to_string()),
+            },
+            performance: PerformanceSpec {
+                time_complexity: Some("O(n)".to_string()),
+                space_complexity: Some("O(1)".to_string()),
+                simd_optimized: true,
+                parallel_processing: true,
+                cache_efficient: true,
+            },
+        };
+
+        let report = framework.validate_api(&signature);
+        assert!(matches!(report.overall_status, ValidationStatus::Passed | ValidationStatus::PassedWithWarnings));
+    }
+}
+
+/// Comprehensive API validation framework for v1.0.0 compliance
+#[derive(Debug)]
+pub struct APIValidationFramework {
+    /// Validation rules registry
+    validation_rules: HashMap<String, Vec<ValidationRule>>,
+    /// Compatibility checkers for SciPy integration
+    compatibility_checkers: HashMap<String, CompatibilityChecker>,
+    /// Performance benchmarks for consistency
+    performance_benchmarks: HashMap<String, PerformanceBenchmark>,
+    /// Error pattern registry for standardization
+    error_patterns: HashMap<String, ErrorPattern>,
+}
+
+/// Validation rule for API consistency
+#[derive(Debug, Clone)]
+pub struct ValidationRule {
+    /// Rule identifier
+    pub id: String,
+    /// Rule description
+    pub description: String,
+    /// Rule category
+    pub category: ValidationCategory,
+    /// Rule severity
+    pub severity: ValidationSeverity,
+}
+
+/// API validation categories
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ValidationCategory {
+    /// Parameter naming consistency
+    ParameterNaming,
+    /// Return type consistency
+    ReturnTypes,
+    /// Error handling consistency
+    ErrorHandling,
+    /// Documentation completeness
+    Documentation,
+    /// Performance characteristics
+    Performance,
+    /// SciPy compatibility
+    ScipyCompatibility,
+    /// Thread safety
+    ThreadSafety,
+    /// Numerical stability
+    NumericalStability,
+}
+
+/// Validation severity levels
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum ValidationSeverity {
+    /// Informational - best practices
+    Info,
+    /// Warning - should be addressed
+    Warning,
+    /// Error - must be fixed for v1.0.0
+    Error,
+    /// Critical - breaking changes
+    Critical,
+}
+
+/// API signature for validation
+#[derive(Debug, Clone)]
+pub struct APISignature {
+    /// Function name
+    pub function_name: String,
+    /// Module path
+    pub module_path: String,
+    /// Parameter specifications
+    pub parameters: Vec<ParameterSpec>,
+    /// Return type specification
+    pub return_type: ReturnTypeSpec,
+    /// Error types that can be returned
+    pub error_types: Vec<String>,
+    /// Documentation completeness
+    pub documentation: DocumentationSpec,
+    /// Performance characteristics
+    pub performance: PerformanceSpec,
+}
+
+/// Parameter specification for validation
+#[derive(Debug, Clone)]
+pub struct ParameterSpec {
+    /// Parameter name
+    pub name: String,
+    /// Parameter type
+    pub param_type: String,
+    /// Whether parameter is optional
+    pub optional: bool,
+    /// Default value if optional
+    pub default_value: Option<String>,
+    /// Parameter description
+    pub description: Option<String>,
+    /// Validation constraints
+    pub constraints: Vec<ParameterConstraint>,
+}
+
+/// Parameter constraint types
+#[derive(Debug, Clone)]
+pub enum ParameterConstraint {
+    /// Must be positive
+    Positive,
+    /// Must be non-negative
+    NonNegative,
+    /// Must be finite
+    Finite,
+    /// Must be in range
+    Range(f64, f64),
+    /// Must be one of specific values
+    OneOf(Vec<String>),
+    /// Must match shape constraints
+    Shape(Vec<Option<usize>>),
+    /// Custom validation function
+    Custom(String),
+}
+
+/// Return type specification for validation
+#[derive(Debug, Clone)]
+pub struct ReturnTypeSpec {
+    /// Return type name
+    pub type_name: String,
+    /// Whether wrapped in Result
+    pub result_wrapped: bool,
+    /// Inner type if Result
+    pub inner_type: Option<String>,
+    /// Error type if Result
+    pub error_type: Option<String>,
+}
+
+/// Documentation specification for validation
+#[derive(Debug, Clone)]
+pub struct DocumentationSpec {
+    /// Has function documentation
+    pub has_doc_comment: bool,
+    /// Has parameter documentation
+    pub has_param_docs: bool,
+    /// Has return documentation
+    pub has_return_docs: bool,
+    /// Has examples
+    pub has_examples: bool,
+    /// Has error documentation
+    pub has_error_docs: bool,
+    /// SciPy compatibility notes
+    pub scipy_compatibility: Option<String>,
+}
+
+/// Performance specification for validation
+#[derive(Debug, Clone)]
+pub struct PerformanceSpec {
+    /// Time complexity
+    pub time_complexity: Option<String>,
+    /// Space complexity
+    pub space_complexity: Option<String>,
+    /// SIMD optimization available
+    pub simd_optimized: bool,
+    /// Parallel processing available
+    pub parallel_processing: bool,
+    /// Cache efficiency
+    pub cache_efficient: bool,
+}
+
+/// Validation result
+#[derive(Debug, Clone)]
+pub struct ValidationResult {
+    /// Validation passed
+    pub passed: bool,
+    /// Validation messages
+    pub messages: Vec<ValidationMessage>,
+    /// Suggested fixes
+    pub suggested_fixes: Vec<String>,
+    /// Related rules
+    pub related_rules: Vec<String>,
+}
+
+/// Validation message
+#[derive(Debug, Clone)]
+pub struct ValidationMessage {
+    /// Message severity
+    pub severity: ValidationSeverity,
+    /// Message text
+    pub message: String,
+    /// Location information
+    pub location: Option<String>,
+    /// Rule that generated this message
+    pub rule_id: String,
+}
+
+/// Compatibility checker for SciPy integration
+#[derive(Debug, Clone)]
+pub struct CompatibilityChecker {
+    /// SciPy function name
+    pub scipy_function: String,
+    /// Parameter mapping
+    pub parameter_mapping: HashMap<String, String>,
+    /// Return type mapping
+    pub return_type_mapping: HashMap<String, String>,
+    /// Known differences
+    pub known_differences: Vec<CompatibilityDifference>,
+}
+
+/// Known compatibility difference
+#[derive(Debug, Clone)]
+pub struct CompatibilityDifference {
+    /// Difference category
+    pub category: DifferenceCategory,
+    /// Description
+    pub description: String,
+    /// Justification
+    pub justification: String,
+    /// Workaround if available
+    pub workaround: Option<String>,
+}
+
+/// Compatibility difference categories
+#[derive(Debug, Clone, Copy)]
+pub enum DifferenceCategory {
+    /// Intentional API improvement
+    Improvement,
+    /// Rust-specific constraint
+    RustConstraint,
+    /// Performance optimization
+    Performance,
+    /// Safety enhancement
+    Safety,
+    /// Unintentional - should be fixed
+    Unintentional,
+}
+
+/// Performance benchmark specification
+#[derive(Debug, Clone)]
+pub struct PerformanceBenchmark {
+    /// Benchmark name
+    pub name: String,
+    /// Expected time complexity
+    pub expected_complexity: ComplexityClass,
+    /// Memory usage characteristics
+    pub memory_usage: MemoryUsagePattern,
+    /// Scalability requirements
+    pub scalability: ScalabilityRequirement,
+}
+
+/// Complexity class for performance expectations
+#[derive(Debug, Clone, Copy)]
+pub enum ComplexityClass {
+    Constant,
+    Logarithmic,
+    Linear,
+    LogLinear,
+    Quadratic,
+    Cubic,
+    Exponential,
+}
+
+/// Memory usage pattern
+#[derive(Debug, Clone, Copy)]
+pub enum MemoryUsagePattern {
+    Constant,
+    Linear,
+    Quadratic,
+    Streaming,
+    OutOfCore,
+}
+
+/// Scalability requirement
+#[derive(Debug, Clone)]
+pub struct ScalabilityRequirement {
+    /// Maximum data size for reasonable performance
+    pub max_data_size: usize,
+    /// Expected parallel scaling efficiency
+    pub parallel_efficiency: f64,
+    /// SIMD acceleration factor
+    pub simd_acceleration: f64,
+}
+
+/// Error pattern for consistent error handling
+#[derive(Debug, Clone)]
+pub struct ErrorPattern {
+    /// Error category
+    pub category: ErrorCategory,
+    /// Error message template
+    pub message_template: String,
+    /// Recovery suggestions
+    pub recovery_suggestions: Vec<String>,
+    /// Related error types
+    pub related_errors: Vec<String>,
+}
+
+/// Error categories for consistent handling
+#[derive(Debug, Clone, Copy)]
+pub enum ErrorCategory {
+    /// Invalid input parameters
+    InvalidInput,
+    /// Numerical computation errors
+    Numerical,
+    /// Memory allocation errors
+    Memory,
+    /// Convergence failures
+    Convergence,
+    /// Dimension mismatch errors
+    DimensionMismatch,
+    /// Not implemented features
+    NotImplemented,
+    /// Internal computation errors
+    Internal,
+}
+
+/// Validation report for an API
+#[derive(Debug)]
+pub struct ValidationReport {
+    /// Function name
+    pub function_name: String,
+    /// Rule validation results
+    pub results: HashMap<String, ValidationResult>,
+    /// Overall validation status
+    pub overall_status: ValidationStatus,
+    /// Summary statistics
+    pub summary: ValidationSummary,
+}
+
+/// Overall validation status
+#[derive(Debug, Clone, Copy)]
+pub enum ValidationStatus {
+    Passed,
+    PassedWithWarnings,
+    Failed,
+    Critical,
+}
+
+/// Validation summary statistics
+#[derive(Debug, Clone)]
+pub struct ValidationSummary {
+    /// Total rules checked
+    pub total_rules: usize,
+    /// Rules passed
+    pub passed: usize,
+    /// Rules with warnings
+    pub warnings: usize,
+    /// Rules with errors
+    pub errors: usize,
+    /// Critical issues
+    pub critical: usize,
+}
+
+impl APIValidationFramework {
+    /// Create new API validation framework
+    pub fn new() -> Self {
+        let mut framework = Self {
+            validation_rules: HashMap::new(),
+            compatibility_checkers: HashMap::new(),
+            performance_benchmarks: HashMap::new(),
+            error_patterns: HashMap::new(),
+        };
+        
+        framework.initialize_default_rules();
+        framework
+    }
+
+    /// Initialize default validation rules for v1.0.0
+    fn initialize_default_rules(&mut self) {
+        // Parameter naming consistency
+        self.add_validation_rule(ValidationRule {
+            id: "param_naming_consistency".to_string(),
+            description: "Parameter names should follow consistent snake_case conventions".to_string(),
+            category: ValidationCategory::ParameterNaming,
+            severity: ValidationSeverity::Warning,
+        });
+
+        // Error handling consistency
+        self.add_validation_rule(ValidationRule {
+            id: "error_handling_consistency".to_string(),
+            description: "Functions should return Result<T, StatsError> for consistency".to_string(),
+            category: ValidationCategory::ErrorHandling,
+            severity: ValidationSeverity::Error,
+        });
+
+        // Documentation completeness
+        self.add_validation_rule(ValidationRule {
+            id: "documentation_completeness".to_string(),
+            description: "All public functions should have complete documentation".to_string(),
+            category: ValidationCategory::Documentation,
+            severity: ValidationSeverity::Warning,
+        });
+
+        // SciPy compatibility
+        self.add_validation_rule(ValidationRule {
+            id: "scipy_compatibility".to_string(),
+            description: "Functions should maintain SciPy compatibility where possible".to_string(),
+            category: ValidationCategory::ScipyCompatibility,
+            severity: ValidationSeverity::Info,
+        });
+
+        // Performance validation
+        self.add_validation_rule(ValidationRule {
+            id: "performance_characteristics".to_string(),
+            description: "Functions should document performance characteristics".to_string(),
+            category: ValidationCategory::Performance,
+            severity: ValidationSeverity::Info,
+        });
+    }
+
+    /// Add a validation rule
+    pub fn add_validation_rule(&mut self, rule: ValidationRule) {
+        let category_key = format!("{:?}", rule.category);
+        self.validation_rules
+            .entry(category_key)
+            .or_insert_with(Vec::new)
+            .push(rule);
+    }
+
+    /// Validate API signature against all rules
+    pub fn validate_api(&self, signature: &APISignature) -> ValidationReport {
+        let mut report = ValidationReport::new(signature.function_name.clone());
+
+        for rules in self.validation_rules.values() {
+            for rule in rules {
+                let result = self.apply_validation_rule(rule, signature);
+                report.add_result(rule.id.clone(), result);
+            }
+        }
+
+        report
+    }
+
+    /// Apply a single validation rule
+    fn apply_validation_rule(&self, rule: &ValidationRule, signature: &APISignature) -> ValidationResult {
+        match rule.category {
+            ValidationCategory::ParameterNaming => self.validate_parameter_naming(signature),
+            ValidationCategory::ErrorHandling => self.validate_error_handling(signature),
+            ValidationCategory::Documentation => self.validate_documentation(signature),
+            ValidationCategory::ScipyCompatibility => self.validate_scipy_compatibility(signature),
+            ValidationCategory::Performance => self.validate_performance(signature),
+            _ => ValidationResult {
+                passed: true,
+                messages: vec![],
+                suggested_fixes: vec![],
+                related_rules: vec![],
+            },
+        }
+    }
+
+    /// Validate parameter naming consistency
+    fn validate_parameter_naming(&self, signature: &APISignature) -> ValidationResult {
+        let mut messages = Vec::new();
+        let mut suggested_fixes = Vec::new();
+        
+        for param in &signature.parameters {
+            // Check for snake_case convention
+            if param.name.contains(char::is_uppercase) || param.name.contains('-') {
+                messages.push(ValidationMessage {
+                    severity: ValidationSeverity::Warning,
+                    message: format!("Parameter '{}' should use snake_case naming", param.name),
+                    location: Some(format!("{}::{}", signature.module_path, signature.function_name)),
+                    rule_id: "param_naming_consistency".to_string(),
+                });
+                suggested_fixes.push(format!("Rename parameter '{}' to snake_case", param.name));
+            }
+        }
+        
+        ValidationResult {
+            passed: messages.is_empty(),
+            messages,
+            suggested_fixes,
+            related_rules: vec!["return_type_consistency".to_string()],
+        }
+    }
+
+    /// Validate error handling consistency
+    fn validate_error_handling(&self, signature: &APISignature) -> ValidationResult {
+        let mut messages = Vec::new();
+        let mut suggested_fixes = Vec::new();
+        
+        if !signature.return_type.result_wrapped {
+            messages.push(ValidationMessage {
+                severity: ValidationSeverity::Error,
+                message: "Function should return Result<T, StatsError> for consistency".to_string(),
+                location: Some(format!("{}::{}", signature.module_path, signature.function_name)),
+                rule_id: "error_handling_consistency".to_string(),
+            });
+            suggested_fixes.push("Wrap return type in Result<T, StatsError>".to_string());
+        }
+        
+        if let Some(error_type) = &signature.return_type.error_type {
+            if error_type != "StatsError" {
+                messages.push(ValidationMessage {
+                    severity: ValidationSeverity::Warning,
+                    message: format!("Non-standard error type '{}' used", error_type),
+                    location: Some(format!("{}::{}", signature.module_path, signature.function_name)),
+                    rule_id: "error_handling_consistency".to_string(),
+                });
+                suggested_fixes.push("Use StatsError for consistency".to_string());
+            }
+        }
+        
+        ValidationResult {
+            passed: messages.is_empty(),
+            messages,
+            suggested_fixes,
+            related_rules: vec!["documentation_completeness".to_string()],
+        }
+    }
+
+    /// Validate documentation completeness
+    fn validate_documentation(&self, signature: &APISignature) -> ValidationResult {
+        let mut messages = Vec::new();
+        let mut suggested_fixes = Vec::new();
+        
+        if !signature.documentation.has_doc_comment {
+            messages.push(ValidationMessage {
+                severity: ValidationSeverity::Warning,
+                message: "Function lacks documentation comment".to_string(),
+                location: Some(format!("{}::{}", signature.module_path, signature.function_name)),
+                rule_id: "documentation_completeness".to_string(),
+            });
+            suggested_fixes.push("Add comprehensive doc comment".to_string());
+        }
+        
+        if !signature.documentation.has_examples {
+            messages.push(ValidationMessage {
+                severity: ValidationSeverity::Info,
+                message: "Function lacks usage examples".to_string(),
+                location: Some(format!("{}::{}", signature.module_path, signature.function_name)),
+                rule_id: "documentation_completeness".to_string(),
+            });
+            suggested_fixes.push("Add usage examples in # Examples section".to_string());
+        }
+        
+        ValidationResult {
+            passed: messages.iter().all(|m| matches!(m.severity, ValidationSeverity::Info)),
+            messages,
+            suggested_fixes,
+            related_rules: vec!["scipy_compatibility".to_string()],
+        }
+    }
+
+    /// Validate SciPy compatibility
+    fn validate_scipy_compatibility(&self, signature: &APISignature) -> ValidationResult {
+        let mut messages = Vec::new();
+        let mut suggested_fixes = Vec::new();
+        
+        // Check for SciPy standard parameter names
+        let scipy_standard_params = ["axis", "ddof", "keepdims", "out", "dtype", "method", "alternative"];
+        let has_scipy_params = signature.parameters.iter()
+            .any(|p| scipy_standard_params.contains(&p.name.as_str()));
+        
+        if has_scipy_params && signature.documentation.scipy_compatibility.is_none() {
+            messages.push(ValidationMessage {
+                severity: ValidationSeverity::Info,
+                message: "Consider documenting SciPy compatibility status".to_string(),
+                location: Some(format!("{}::{}", signature.module_path, signature.function_name)),
+                rule_id: "scipy_compatibility".to_string(),
+            });
+            suggested_fixes.push("Add SciPy compatibility note in documentation".to_string());
+        }
+        
+        ValidationResult {
+            passed: true, // Informational only
+            messages,
+            suggested_fixes,
+            related_rules: vec!["documentation_completeness".to_string()],
+        }
+    }
+
+    /// Validate performance characteristics
+    fn validate_performance(&self, signature: &APISignature) -> ValidationResult {
+        let mut messages = Vec::new();
+        let mut suggested_fixes = Vec::new();
+        
+        if signature.performance.time_complexity.is_none() {
+            messages.push(ValidationMessage {
+                severity: ValidationSeverity::Info,
+                message: "Consider documenting time complexity".to_string(),
+                location: Some(format!("{}::{}", signature.module_path, signature.function_name)),
+                rule_id: "performance_characteristics".to_string(),
+            });
+            suggested_fixes.push("Add time complexity documentation".to_string());
+        }
+        
+        ValidationResult {
+            passed: true, // Informational only
+            messages,
+            suggested_fixes,
+            related_rules: vec![],
+        }
+    }
+}
+
+impl ValidationReport {
+    /// Create new validation report
+    pub fn new(function_name: String) -> Self {
+        Self {
+            function_name,
+            results: HashMap::new(),
+            overall_status: ValidationStatus::Passed,
+            summary: ValidationSummary {
+                total_rules: 0,
+                passed: 0,
+                warnings: 0,
+                errors: 0,
+                critical: 0,
+            },
+        }
+    }
+
+    /// Add validation result
+    pub fn add_result(&mut self, rule_id: String, result: ValidationResult) {
+        self.summary.total_rules += 1;
+        
+        if result.passed {
+            self.summary.passed += 1;
+        } else {
+            let max_severity = result.messages.iter()
+                .map(|m| m.severity)
+                .max()
+                .unwrap_or(ValidationSeverity::Info);
+                
+            match max_severity {
+                ValidationSeverity::Info => {},
+                ValidationSeverity::Warning => {
+                    self.summary.warnings += 1;
+                    if matches!(self.overall_status, ValidationStatus::Passed) {
+                        self.overall_status = ValidationStatus::PassedWithWarnings;
+                    }
+                },
+                ValidationSeverity::Error => {
+                    self.summary.errors += 1;
+                    if !matches!(self.overall_status, ValidationStatus::Critical) {
+                        self.overall_status = ValidationStatus::Failed;
+                    }
+                },
+                ValidationSeverity::Critical => {
+                    self.summary.critical += 1;
+                    self.overall_status = ValidationStatus::Critical;
+                },
+            }
+        }
+        
+        self.results.insert(rule_id, result);
+    }
+
+    /// Generate human-readable report
+    pub fn generate_report(&self) -> String {
+        let mut report = String::new();
+        report.push_str(&format!("API Validation Report for {}\n", self.function_name));
+        report.push_str(&format!("Status: {:?}\n", self.overall_status));
+        report.push_str(&format!("Summary: {} passed, {} warnings, {} errors, {} critical\n\n",
+            self.summary.passed, self.summary.warnings, self.summary.errors, self.summary.critical));
+        
+        for (rule_id, result) in &self.results {
+            if !result.passed {
+                report.push_str(&format!("Rule: {}\n", rule_id));
+                for message in &result.messages {
+                    report.push_str(&format!("  {:?}: {}\n", message.severity, message.message));
+                }
+                if !result.suggested_fixes.is_empty() {
+                    report.push_str("  Suggestions:\n");
+                    for fix in &result.suggested_fixes {
+                        report.push_str(&format!("    - {}\n", fix));
+                    }
+                }
+                report.push('\n');
+            }
+        }
+        
+        report
+    }
+}
+
+impl Default for APIValidationFramework {
+    fn default() -> Self {
+        Self::new()
+    }
 }

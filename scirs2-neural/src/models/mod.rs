@@ -47,6 +47,7 @@ pub trait Model<F: Float + Debug + ScalarOperand> {
     ) -> Result<F>;
 }
 
+// Model architectures
 pub mod architectures;
 pub mod sequential;
 pub mod trainer;

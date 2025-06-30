@@ -36,6 +36,8 @@ use num_traits::Float;
 
 use std::fmt::Debug;
 
+use crate::error::{NdimageError, NdimageResult};
+
 /// Distance metrics for distance transforms
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DistanceMetric {
@@ -485,9 +487,15 @@ where
 ///
 /// # Returns
 ///
-/// A tuple of:
+/// A Result containing a tuple of:
 /// * `Option<Array<f64, D>>` - Distance transform array (if return_distances is true)
 /// * `Option<Array<i32, IxDyn>>` - Index array (if return_indices is true)
+///
+/// # Errors
+///
+/// Returns `NdimageError` if:
+/// * Neither `return_distances` nor `return_indices` is true
+/// * `sampling` length doesn't match input dimensions
 ///
 /// # Examples
 ///
@@ -503,14 +511,14 @@ where
 ///
 /// // Convert to IxDyn for the function call
 /// let input_dyn = input.clone().into_dimensionality::<IxDyn>()?;
-/// let distances = distance_transform_edt(&input_dyn, None, true, false).0?;
+/// let (distances, _) = distance_transform_edt(&input_dyn, None, true, false)?;
 /// ```
 pub fn distance_transform_edt<D>(
     input: &Array<bool, D>,
     sampling: Option<&[f64]>,
     return_distances: bool,
     return_indices: bool,
-) -> (Option<Array<f64, D>>, Option<Array<i32, IxDyn>>)
+) -> NdimageResult<(Option<Array<f64, D>>, Option<Array<i32, IxDyn>>)>
 where
     D: Dimension + 'static,
     D::Pattern: ndarray::NdIndex<D>,
@@ -518,7 +526,9 @@ where
 {
     // Input validation
     if !return_distances && !return_indices {
-        panic!("At least one of return_distances or return_indices must be true");
+        return Err(NdimageError::InvalidInput(
+            "At least one of return_distances or return_indices must be true".to_string()
+        ));
     }
 
     // Handle sampling
@@ -526,7 +536,9 @@ where
     let sampling_vec = match sampling {
         Some(s) => {
             if s.len() != ndim {
-                panic!("Sampling must have the same length as the number of dimensions");
+                return Err(NdimageError::DimensionError(
+                    format!("Sampling must have the same length as the number of dimensions: expected {}, got {}", ndim, s.len())
+                ));
             }
             s.to_vec()
         }
@@ -534,7 +546,7 @@ where
     };
 
     // Use optimized separable algorithm for better performance
-    distance_transform_edt_optimized(input, &sampling_vec, return_distances, return_indices)
+    Ok(distance_transform_edt_optimized(input, &sampling_vec, return_distances, return_indices))
 }
 
 /// Calculate the city block (Manhattan) distance transform of a binary image.
@@ -550,9 +562,15 @@ where
 ///
 /// # Returns
 ///
-/// A tuple of:
+/// A Result containing a tuple of:
 /// * `Option<Array<i32, D>>` - Distance transform array (if return_distances is true)
 /// * `Option<Array<i32, IxDyn>>` - Index array (if return_indices is true)
+///
+/// # Errors
+///
+/// Returns `NdimageError` if:
+/// * Neither `return_distances` nor `return_indices` is true
+/// * `metric` is not one of "cityblock" or "chessboard"
 ///
 /// # Examples
 ///
@@ -568,14 +586,14 @@ where
 ///
 /// // Convert to IxDyn for the function call
 /// let input_dyn = input.clone().into_dimensionality::<IxDyn>()?;
-/// let distances = distance_transform_cdt(&input_dyn, "cityblock", true, false).0?;
+/// let (distances, _) = distance_transform_cdt(&input_dyn, "cityblock", true, false)?;
 /// ```
 pub fn distance_transform_cdt<D>(
     input: &Array<bool, D>,
     metric: &str,
     return_distances: bool,
     return_indices: bool,
-) -> (Option<Array<i32, D>>, Option<Array<i32, IxDyn>>)
+) -> NdimageResult<(Option<Array<i32, D>>, Option<Array<i32, IxDyn>>)>
 where
     D: Dimension + 'static,
     D::Pattern: ndarray::NdIndex<D>,
@@ -583,13 +601,17 @@ where
 {
     // Input validation
     if !return_distances && !return_indices {
-        panic!("At least one of return_distances or return_indices must be true");
+        return Err(NdimageError::InvalidInput(
+            "At least one of return_distances or return_indices must be true".to_string()
+        ));
     }
 
     let metric = match metric {
         "cityblock" => DistanceMetric::CityBlock,
         "chessboard" => DistanceMetric::Chessboard,
-        _ => panic!("Metric must be one of 'cityblock' or 'chessboard'"),
+        _ => return Err(NdimageError::InvalidInput(
+            format!("Metric must be one of 'cityblock' or 'chessboard', got '{}'", metric)
+        )),
     };
 
     // Initialize output arrays
@@ -684,7 +706,7 @@ where
         }
     }
 
-    (distances, indices)
+    Ok((distances, indices))
 }
 
 /// Calculate the distance transform of a binary image using a brute force algorithm.
@@ -699,9 +721,16 @@ where
 ///
 /// # Returns
 ///
-/// A tuple of:
+/// A Result containing a tuple of:
 /// * `Option<Array<f64, D>>` - Distance transform array (if return_distances is true)
 /// * `Option<Array<i32, IxDyn>>` - Index array (if return_indices is true)
+///
+/// # Errors
+///
+/// Returns `NdimageError` if:
+/// * Neither `return_distances` nor `return_indices` is true
+/// * `metric` is not one of "euclidean", "cityblock", or "chessboard"
+/// * `sampling` length doesn't match input dimensions
 ///
 /// # Examples
 ///
@@ -717,7 +746,7 @@ where
 ///
 /// // Convert to IxDyn for the function call
 /// let input_dyn = input.clone().into_dimensionality::<IxDyn>()?;
-/// let distances = distance_transform_bf(&input_dyn, "euclidean", None, true, false).0?;
+/// let (distances, _) = distance_transform_bf(&input_dyn, "euclidean", None, true, false)?;
 /// ```
 pub fn distance_transform_bf<D>(
     input: &Array<bool, D>,
@@ -725,7 +754,7 @@ pub fn distance_transform_bf<D>(
     sampling: Option<&[f64]>,
     return_distances: bool,
     return_indices: bool,
-) -> (Option<Array<f64, D>>, Option<Array<i32, IxDyn>>)
+) -> NdimageResult<(Option<Array<f64, D>>, Option<Array<i32, IxDyn>>)>
 where
     D: Dimension + 'static,
     D::Pattern: ndarray::NdIndex<D>,
@@ -733,14 +762,18 @@ where
 {
     // Input validation
     if !return_distances && !return_indices {
-        panic!("At least one of return_distances or return_indices must be true");
+        return Err(NdimageError::InvalidInput(
+            "At least one of return_distances or return_indices must be true".to_string()
+        ));
     }
 
     let metric = match metric {
         "euclidean" => DistanceMetric::Euclidean,
         "cityblock" => DistanceMetric::CityBlock,
         "chessboard" => DistanceMetric::Chessboard,
-        _ => panic!("Metric must be one of 'euclidean', 'cityblock', or 'chessboard'"),
+        _ => return Err(NdimageError::InvalidInput(
+            format!("Metric must be one of 'euclidean', 'cityblock', or 'chessboard', got '{}'", metric)
+        )),
     };
 
     // Handle sampling
@@ -748,7 +781,9 @@ where
     let sampling_vec = match sampling {
         Some(s) => {
             if s.len() != ndim {
-                panic!("Sampling must have the same length as the number of dimensions");
+                return Err(NdimageError::DimensionError(
+                    format!("Sampling must have the same length as the number of dimensions: expected {}, got {}", ndim, s.len())
+                ));
             }
             s.to_vec()
         }
@@ -858,7 +893,7 @@ where
         }
     }
 
-    (distances, indices)
+    Ok((distances, indices))
 }
 
 #[cfg(test)]
@@ -883,7 +918,8 @@ mod tests {
             .clone()
             .into_dimensionality::<IxDyn>()
             .expect("into_dimensionality should succeed for test");
-        let (distances_option, _) = distance_transform_edt(&input_dyn, None, true, false);
+        let (distances_option, _) = distance_transform_edt(&input_dyn, None, true, false)
+            .expect("Distance transform should succeed");
         let distances = distances_option
             .expect("Expected distances")
             .into_dimensionality::<ndarray::Ix2>()
@@ -919,7 +955,8 @@ mod tests {
             .clone()
             .into_dimensionality::<IxDyn>()
             .expect("into_dimensionality should succeed for test");
-        let (distances_option, _) = distance_transform_cdt(&input_dyn, "cityblock", true, false);
+        let (distances_option, _) = distance_transform_cdt(&input_dyn, "cityblock", true, false)
+            .expect("Distance transform should succeed");
         let distances = distances_option
             .expect("Expected distances")
             .into_dimensionality::<ndarray::Ix2>()
@@ -998,21 +1035,24 @@ mod tests {
             .expect("into_dimensionality should succeed for test");
 
         let (euclidean_option, _) =
-            distance_transform_bf(&input_dyn, "euclidean", None, true, false);
+            distance_transform_bf(&input_dyn, "euclidean", None, true, false)
+                .expect("Distance transform should succeed");
         let euclidean = euclidean_option
             .expect("Expected euclidean distances")
             .into_dimensionality::<ndarray::Ix2>()
             .expect("Failed to convert back to Ix2");
 
         let (cityblock_option, _) =
-            distance_transform_bf(&input_dyn, "cityblock", None, true, false);
+            distance_transform_bf(&input_dyn, "cityblock", None, true, false)
+                .expect("Distance transform should succeed");
         let cityblock = cityblock_option
             .expect("Expected cityblock distances")
             .into_dimensionality::<ndarray::Ix2>()
             .expect("Failed to convert back to Ix2");
 
         let (chessboard_option, _) =
-            distance_transform_bf(&input_dyn, "chessboard", None, true, false);
+            distance_transform_bf(&input_dyn, "chessboard", None, true, false)
+                .expect("Distance transform should succeed");
         let chessboard = chessboard_option
             .expect("Expected chessboard distances")
             .into_dimensionality::<ndarray::Ix2>()

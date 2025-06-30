@@ -775,13 +775,15 @@ impl AdaptationEngine {
 
     fn bayesian_adaptation(
         &mut self,
-        optimizer: &mut BayesianParameterOptimizer,
         parameter_manager: &mut ParameterManager,
         metrics: &PerformanceMetrics,
         config: &SelfTuningConfig,
     ) -> ScirsResult<AdaptationResult> {
-        let suggestions =
-            optimizer.suggest_parameters(parameter_manager.current_values(), metrics)?;
+        let suggestions = if let Some(ref mut optimizer) = self.bayesian_optimizer {
+            optimizer.suggest_parameters(parameter_manager.current_values(), metrics)?
+        } else {
+            return Err(ScirsError::ComputationError("Bayesian optimizer not available".to_string()));
+        };
         let mut changes = Vec::new();
 
         for (name, new_value) in suggestions {
@@ -813,13 +815,9 @@ impl AdaptationEngine {
         if metrics.stability_score < 0.5 {
             // Use performance-based for unstable optimization
             self.performance_based_adaptation(parameter_manager, metrics, config)
-        } else if config.use_bayesian_tuning {
+        } else if config.use_bayesian_tuning && self.bayesian_optimizer.is_some() {
             // Use Bayesian optimization for stable cases
-            if let Some(ref mut optimizer) = self.bayesian_optimizer {
-                self.bayesian_adaptation(optimizer, parameter_manager, metrics, config)
-            } else {
-                self.performance_based_adaptation(parameter_manager, metrics, config)
-            }
+            self.bayesian_adaptation(parameter_manager, metrics, config)
         } else {
             self.performance_based_adaptation(parameter_manager, metrics, config)
         }
@@ -1169,7 +1167,7 @@ impl BayesianParameterOptimizer {
                     // Add small random perturbation for exploration
                     use rand::Rng;
                     let mut rng = rand::rng();
-                    let perturbation_factor = 1.0 + (rng.random_range(-0.1..=0.1));
+                    let perturbation_factor = 1.0 + (rng.gen_range(-0.1..=0.1));
 
                     let perturbed_value = match value {
                         ParameterValue::Float(f) => {

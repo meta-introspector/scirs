@@ -6,13 +6,13 @@
 //! detection, memory usage analysis, and optimization recommendations.
 
 use crate::error::{StatsError, StatsResult};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use num_traits::{Float, FromPrimitive, NumCast};
+use ndarray::{Array1, Array2};
+use num_traits::Float;
 use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 /// Benchmark configuration for different test scenarios
 #[derive(Debug, Clone, Serialize, Deserialize)]

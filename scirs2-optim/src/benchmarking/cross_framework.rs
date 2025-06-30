@@ -3,9 +3,9 @@
 //! This module provides comprehensive benchmarking capabilities to compare
 //! SciRS2 optimizers against their PyTorch and TensorFlow counterparts.
 
-use crate::benchmarking::{BenchmarkResult, TestFunction, VisualizationData};
+use crate::benchmarking::TestFunction;
 use crate::error::{OptimError, Result};
-use ndarray::{Array1, Array2};
+use ndarray::Array1;
 use num_traits::Float;
 // use serde::{Deserialize, Serialize}; // Commented out for now
 use std::collections::HashMap;

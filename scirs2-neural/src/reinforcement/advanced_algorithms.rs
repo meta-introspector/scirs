@@ -126,9 +126,37 @@ impl TD3 {
 
     /// Soft update target networks
     fn soft_update_targets(&mut self) -> Result<()> {
-        // In a complete implementation, this would perform:
-        // target_params = tau * current_params + (1 - tau) * target_params
-        // For now, this is a placeholder
+        // Soft update target critic networks
+        let tau = self.config.tau;
+        
+        // Update target critic 1
+        let current_critic1_params = self.critic1.parameters();
+        let mut target_critic1_params = self.target_critic1.parameters();
+        
+        for (current, target) in current_critic1_params.iter().zip(target_critic1_params.iter_mut()) {
+            // target = tau * current + (1 - tau) * target
+            *target = current * tau + target.clone() * (1.0 - tau);
+        }
+        self.target_critic1.set_parameters(&target_critic1_params)?;
+        
+        // Update target critic 2
+        let current_critic2_params = self.critic2.parameters();
+        let mut target_critic2_params = self.target_critic2.parameters();
+        
+        for (current, target) in current_critic2_params.iter().zip(target_critic2_params.iter_mut()) {
+            *target = current * tau + target.clone() * (1.0 - tau);
+        }
+        self.target_critic2.set_parameters(&target_critic2_params)?;
+        
+        // Update target actor
+        let current_actor_params = self.actor.parameters();
+        let mut target_actor_params = self.target_actor.parameters();
+        
+        for (current, target) in current_actor_params.iter().zip(target_actor_params.iter_mut()) {
+            *target = current * tau + target.clone() * (1.0 - tau);
+        }
+        self.target_actor.set_parameters(&target_actor_params)?;
+        
         Ok(())
     }
 
@@ -263,6 +291,13 @@ impl TD3 {
                 .min(self.config.action_high[i])
         }))
     }
+
+    /// Get model state information
+    #[allow(dead_code)]
+    pub fn get_model_state(&self) -> String {
+        format!("TD3Agent[step_count={}, exploration_noise={}]", 
+                self.step_count, self.config.exploration_noise)
+    }
 }
 
 impl RLAgent for TD3 {
@@ -310,12 +345,6 @@ impl RLAgent for TD3 {
 
     fn exploration_rate(&self) -> f32 {
         self.config.exploration_noise
-    }
-
-    #[allow(dead_code)]
-    fn get_model_state(&self) -> String {
-        format!("TD3Agent[step_count={}, exploration_noise={}]", 
-                self.step_count, self.config.exploration_noise)
     }
 }
 

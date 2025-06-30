@@ -145,7 +145,7 @@ where
     /// Create a new Gaussian mechanism
     pub fn new() -> Self {
         Self {
-            rng: Box::new(rand::thread_rng()),
+            rng: Box::new(rand::rng()),
             _phantom: PhantomData,
         }
     }
@@ -227,7 +227,7 @@ where
     /// Create a new Laplace mechanism
     pub fn new() -> Self {
         Self {
-            rng: Box::new(rand::thread_rng()),
+            rng: Box::new(rand::rng()),
             _phantom: PhantomData,
         }
     }
@@ -309,7 +309,7 @@ where
     /// Create a new exponential mechanism
     pub fn new(quality_function: Box<dyn Fn(&T) -> T + Send + Sync>) -> Self {
         Self {
-            rng: Box::new(rand::thread_rng()),
+            rng: Box::new(rand::rng()),
             quality_function,
             _phantom: PhantomData,
         }

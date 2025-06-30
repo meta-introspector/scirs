@@ -4,11 +4,10 @@
 //! and climate time series data, including temperature records, precipitation,
 //! atmospheric measurements, and other environmental indicators.
 
-use ndarray::{Array1, Array2, ArrayView1, Axis};
-use scirs2_core::error::{Result, ScirsError};
-use scirs2_core::validation::{check_positive, check_finite, check_shape};
+use ndarray::{Array1, Array2};
+use crate::error::{Result, TimeSeriesError};
+use scirs2_core::validation::check_positive;
 use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::collections::HashMap;
 
 /// Climate data anomaly detection methods
@@ -41,9 +40,11 @@ impl TemperatureAnalysis {
         time_stamps: Array1<i64>,
         baseline_years: (i32, i32),
     ) -> Result<Self> {
-        check_finite(&temperatures, "temperatures")?;
+        if temperatures.iter().any(|x| !x.is_finite()) {
+            return Err(TimeSeriesError::InvalidInput("Temperatures contain non-finite values".to_string()));
+        }
         if temperatures.len() != time_stamps.len() {
-            return Err(ScirsError::InvalidInput(
+            return Err(TimeSeriesError::InvalidInput(
                 "Temperature and time arrays must have same length".to_string(),
             ));
         }
@@ -142,7 +143,7 @@ impl TemperatureAnalysis {
     /// Calculate climate normals (30-year averages)
     pub fn climate_normals(&self, window_size: usize) -> Result<Array1<f64>> {
         if window_size > self.temperatures.len() {
-            return Err(ScirsError::InvalidInput(
+            return Err(TimeSeriesError::InvalidInput(
                 "Window size larger than data".to_string(),
             ));
         }
@@ -169,11 +170,13 @@ pub struct PrecipitationAnalysis {
 impl PrecipitationAnalysis {
     /// Create new precipitation analysis
     pub fn new(precipitation: Array1<f64>, time_stamps: Array1<i64>) -> Result<Self> {
-        check_finite(&precipitation, "precipitation")?;
+        if precipitation.iter().any(|x| !x.is_finite()) {
+            return Err(TimeSeriesError::InvalidInput("Precipitation contains non-finite values".to_string()));
+        }
         
         // Check for negative precipitation
         if precipitation.iter().any(|&x| x < 0.0) {
-            return Err(ScirsError::InvalidInput(
+            return Err(TimeSeriesError::InvalidInput(
                 "Precipitation values cannot be negative".to_string(),
             ));
         }
@@ -212,7 +215,7 @@ impl PrecipitationAnalysis {
     /// Calculate Standardized Precipitation Index (SPI)
     pub fn standardized_precipitation_index(&self, window_size: usize) -> Result<Array1<f64>> {
         if window_size > self.precipitation.len() {
-            return Err(ScirsError::InvalidInput(
+            return Err(TimeSeriesError::InvalidInput(
                 "Window size larger than data".to_string(),
             ));
         }
@@ -301,13 +304,19 @@ impl AtmosphericAnalysis {
         wind_direction: Option<Array1<f64>>,
         time_stamps: Array1<i64>,
     ) -> Result<Self> {
-        check_finite(&pressure, "pressure")?;
-        check_finite(&wind_speed, "wind_speed")?;
+        if pressure.iter().any(|x| !x.is_finite()) {
+            return Err(TimeSeriesError::InvalidInput("Pressure contains non-finite values".to_string()));
+        }
+        if wind_speed.iter().any(|x| !x.is_finite()) {
+            return Err(TimeSeriesError::InvalidInput("Wind speed contains non-finite values".to_string()));
+        }
         
         if let Some(ref dir) = wind_direction {
-            check_finite(dir, "wind_direction")?;
+            if dir.iter().any(|x| !x.is_finite()) {
+                return Err(TimeSeriesError::InvalidInput("Wind direction contains non-finite values".to_string()));
+            }
             if dir.iter().any(|&x| x < 0.0 || x >= 360.0) {
-                return Err(ScirsError::InvalidInput(
+                return Err(TimeSeriesError::InvalidInput(
                     "Wind direction must be between 0 and 360 degrees".to_string(),
                 ));
             }
@@ -368,14 +377,14 @@ impl AtmosphericAnalysis {
     /// Calculate wind rose statistics
     pub fn wind_rose_statistics(&self, direction_bins: usize) -> Result<Array2<f64>> {
         let wind_dir = self.wind_direction.as_ref()
-            .ok_or_else(|| ScirsError::InvalidInput("Wind direction data required".to_string()))?;
+            .ok_or_else(|| TimeSeriesError::InvalidInput("Wind direction data required".to_string()))?;
             
         let bin_size = 360.0 / direction_bins as f64;
         let speed_bins = vec![0.0, 5.0, 10.0, 15.0, 20.0, f64::INFINITY];
         
         let mut rose_data = Array2::zeros((direction_bins, speed_bins.len() - 1));
         
-        for (i, (&dir, &speed)) in wind_dir.iter().zip(self.wind_speed.iter()).enumerate() {
+        for (_i, (&dir, &speed)) in wind_dir.iter().zip(self.wind_speed.iter()).enumerate() {
             let dir_bin = ((dir / bin_size).floor() as usize).min(direction_bins - 1);
             
             for (s_bin, window) in speed_bins.windows(2).enumerate() {
@@ -406,7 +415,7 @@ impl ClimateIndices {
         darwin_pressure: &Array1<f64>,
     ) -> Result<Array1<f64>> {
         if tahiti_pressure.len() != darwin_pressure.len() {
-            return Err(ScirsError::InvalidInput(
+            return Err(TimeSeriesError::InvalidInput(
                 "Pressure arrays must have same length".to_string(),
             ));
         }
@@ -433,7 +442,7 @@ impl ClimateIndices {
         iceland_pressure: &Array1<f64>,
     ) -> Result<Array1<f64>> {
         if azores_pressure.len() != iceland_pressure.len() {
-            return Err(ScirsError::InvalidInput(
+            return Err(TimeSeriesError::InvalidInput(
                 "Pressure arrays must have same length".to_string(),
             ));
         }
@@ -458,10 +467,10 @@ impl ClimateIndices {
     pub fn palmer_drought_severity_index(
         precipitation: &Array1<f64>,
         temperature: &Array1<f64>,
-        latitude: f64,
+        _latitude: f64,
     ) -> Result<Array1<f64>> {
         if precipitation.len() != temperature.len() {
-            return Err(ScirsError::InvalidInput(
+            return Err(TimeSeriesError::InvalidInput(
                 "Precipitation and temperature arrays must have same length".to_string(),
             ));
         }
@@ -563,7 +572,7 @@ impl EnvironmentalAnalysis {
                 }
             },
             _ => {
-                return Err(ScirsError::InvalidInput(
+                return Err(TimeSeriesError::InvalidInput(
                     "Anomaly method not yet implemented".to_string(),
                 ));
             }
@@ -595,7 +604,7 @@ impl EnvironmentalAnalysis {
         }
         
         if stress_factors.is_empty() {
-            return Err(ScirsError::InvalidInput(
+            return Err(TimeSeriesError::InvalidInput(
                 "No environmental data available for stress calculation".to_string(),
             ));
         }

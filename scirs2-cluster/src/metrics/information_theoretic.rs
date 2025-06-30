@@ -1840,3 +1840,485 @@ pub mod advanced_validation {
         }
     }
 }
+
+/// Advanced information-theoretic clustering metrics
+pub mod advanced_metrics {
+    use super::*;
+    use std::collections::BTreeMap;
+    
+    /// Calculate Jensen-Shannon divergence for clustering evaluation
+    ///
+    /// Jensen-Shannon divergence is a symmetrized and smoothed version of KL divergence
+    /// that measures the similarity between probability distributions. For clustering,
+    /// it can be used to compare the distribution of clusters between different methods.
+    ///
+    /// # Arguments
+    ///
+    /// * `labels_true` - Ground truth class labels
+    /// * `labels_pred` - Predicted cluster labels
+    ///
+    /// # Returns
+    ///
+    /// The Jensen-Shannon divergence (0 to 1, lower is better)
+    pub fn jensen_shannon_divergence<F>(
+        labels_true: ArrayView1<i32>,
+        labels_pred: ArrayView1<i32>,
+    ) -> Result<F>
+    where
+        F: Float + FromPrimitive + Debug,
+    {
+        if labels_true.len() != labels_pred.len() {
+            return Err(ClusteringError::InvalidInput(
+                "True and predicted labels must have the same length".to_string(),
+            ));
+        }
+        
+        // Convert to probability distributions
+        let p = cluster_distribution(labels_true)?;
+        let q = cluster_distribution(labels_pred)?;
+        
+        // Align distributions (handle different cluster numbers)
+        let (p_aligned, q_aligned) = align_distributions(p, q);
+        
+        // Calculate Jensen-Shannon divergence
+        let js_div = jensen_shannon_divergence_core(p_aligned, q_aligned)?;
+        Ok(js_div)
+    }
+    
+    /// Convert cluster labels to probability distribution
+    fn cluster_distribution<F>(labels: ArrayView1<i32>) -> Result<BTreeMap<i32, F>>
+    where
+        F: Float + FromPrimitive,
+    {
+        let mut counts: BTreeMap<i32, usize> = BTreeMap::new();
+        let total = labels.len();
+        
+        for &label in labels.iter() {
+            if label >= 0 {  // Ignore noise points (negative labels)
+                *counts.entry(label).or_insert(0) += 1;
+            }
+        }
+        
+        let mut distribution = BTreeMap::new();
+        for (label, count) in counts {
+            let prob = F::from(count).unwrap() / F::from(total).unwrap();
+            distribution.insert(label, prob);
+        }
+        
+        Ok(distribution)
+    }
+    
+    /// Align two probability distributions for comparison
+    fn align_distributions<F>(
+        mut p: BTreeMap<i32, F>,
+        mut q: BTreeMap<i32, F>,
+    ) -> (Vec<F>, Vec<F>)
+    where
+        F: Float + Copy,
+    {
+        // Get all unique labels
+        let mut all_labels: Vec<i32> = p.keys().chain(q.keys()).copied().collect();
+        all_labels.sort_unstable();
+        all_labels.dedup();
+        
+        let mut p_aligned = Vec::new();
+        let mut q_aligned = Vec::new();
+        
+        for label in all_labels {
+            p_aligned.push(p.remove(&label).unwrap_or(F::zero()));
+            q_aligned.push(q.remove(&label).unwrap_or(F::zero()));
+        }
+        
+        (p_aligned, q_aligned)
+    }
+    
+    /// Core Jensen-Shannon divergence calculation
+    fn jensen_shannon_divergence_core<F>(p: Vec<F>, q: Vec<F>) -> Result<F>
+    where
+        F: Float + FromPrimitive,
+    {
+        if p.len() != q.len() {
+            return Err(ClusteringError::InvalidInput(
+                "Distributions must have same length".to_string(),
+            ));
+        }
+        
+        let mut js_div = F::zero();
+        let half = F::from(0.5).unwrap();
+        
+        for (p_i, q_i) in p.iter().zip(q.iter()) {
+            let m_i = half * (*p_i + *q_i);
+            
+            if *p_i > F::zero() && m_i > F::zero() {
+                js_div = js_div + half * *p_i * (*p_i / m_i).ln();
+            }
+            
+            if *q_i > F::zero() && m_i > F::zero() {
+                js_div = js_div + half * *q_i * (*q_i / m_i).ln();
+            }
+        }
+        
+        Ok(js_div)
+    }
+    
+    /// Calculate clustering stability using bootstrap resampling
+    ///
+    /// This metric measures how stable a clustering algorithm is by running it
+    /// on multiple bootstrap samples and measuring the consistency of results.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - Input data matrix
+    /// * `clustering_fn` - Function that takes data and returns cluster labels
+    /// * `n_bootstrap` - Number of bootstrap samples to generate
+    /// * `sample_ratio` - Fraction of data to sample in each bootstrap
+    ///
+    /// # Returns
+    ///
+    /// Stability score (0 to 1, higher is better)
+    pub fn clustering_stability<F, ClusterFn>(
+        data: &Array2<F>,
+        clustering_fn: ClusterFn,
+        n_bootstrap: usize,
+        sample_ratio: f64,
+    ) -> Result<F>
+    where
+        F: Float + FromPrimitive + Debug + Send + Sync,
+        ClusterFn: Fn(&Array2<F>) -> Result<Array1<i32>> + Sync,
+    {
+        let n_samples = data.nrows();
+        let sample_size = (n_samples as f64 * sample_ratio) as usize;
+        
+        if sample_size < 2 {
+            return Err(ClusteringError::InvalidInput(
+                "Sample size too small for stability analysis".to_string(),
+            ));
+        }
+        
+        // Generate bootstrap samples and cluster them
+        let mut all_labels = Vec::new();
+        let mut rng = thread_rng();
+        
+        for _ in 0..n_bootstrap {
+            // Bootstrap sampling
+            let mut indices: Vec<usize> = (0..n_samples).collect();
+            indices.shuffle(&mut rng);
+            indices.truncate(sample_size);
+            indices.sort_unstable();
+            
+            // Create bootstrap sample
+            let mut bootstrap_data = Array2::zeros((sample_size, data.ncols()));
+            for (i, &idx) in indices.iter().enumerate() {
+                bootstrap_data.row_mut(i).assign(&data.row(idx));
+            }
+            
+            // Apply clustering
+            let labels = clustering_fn(&bootstrap_data)?;
+            all_labels.push((indices, labels));
+        }
+        
+        // Calculate pairwise stability
+        let mut total_stability = F::zero();
+        let mut n_comparisons = 0;
+        
+        for i in 0..all_labels.len() {
+            for j in (i + 1)..all_labels.len() {
+                let stability = compute_pairwise_stability(&all_labels[i], &all_labels[j])?;
+                total_stability = total_stability + stability;
+                n_comparisons += 1;
+            }
+        }
+        
+        if n_comparisons > 0 {
+            Ok(total_stability / F::from(n_comparisons).unwrap())
+        } else {
+            Ok(F::zero())
+        }
+    }
+    
+    /// Compute stability between two bootstrap clustering results
+    fn compute_pairwise_stability<F>(
+        result1: &(Vec<usize>, Array1<i32>),
+        result2: &(Vec<usize>, Array1<i32>),
+    ) -> Result<F>
+    where
+        F: Float + FromPrimitive + Debug,
+    {
+        let (indices1, labels1) = result1;
+        let (indices2, labels2) = result2;
+        
+        // Find common samples
+        let mut common_samples = Vec::new();
+        let mut map1 = HashMap::new();
+        let mut map2 = HashMap::new();
+        
+        for (pos, &idx) in indices1.iter().enumerate() {
+            map1.insert(idx, pos);
+        }
+        
+        for (pos, &idx) in indices2.iter().enumerate() {
+            if let Some(&pos1) = map1.get(&idx) {
+                map2.insert(idx, pos);
+                common_samples.push((pos1, pos, idx));
+            }
+        }
+        
+        if common_samples.len() < 2 {
+            return Ok(F::zero());
+        }
+        
+        // Extract labels for common samples
+        let mut labels1_common = Array1::zeros(common_samples.len());
+        let mut labels2_common = Array1::zeros(common_samples.len());
+        
+        for (i, &(pos1, pos2, _)) in common_samples.iter().enumerate() {
+            labels1_common[i] = labels1[pos1];
+            labels2_common[i] = labels2[pos2];
+        }
+        
+        // Calculate adjusted mutual information as stability measure
+        adjusted_mutual_info_score(labels1_common.view(), labels2_common.view())
+    }
+    
+    /// Calculate information gain for feature selection in clustering
+    ///
+    /// Information gain measures how much information a feature provides
+    /// about the cluster structure.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - Input data matrix (samples x features)
+    /// * `labels` - Cluster labels
+    /// * `feature_idx` - Index of the feature to evaluate
+    ///
+    /// # Returns
+    ///
+    /// Information gain score (higher is better)
+    pub fn information_gain<F>(
+        data: &Array2<F>,
+        labels: ArrayView1<i32>,
+        feature_idx: usize,
+    ) -> Result<F>
+    where
+        F: Float + FromPrimitive + Debug,
+    {
+        if feature_idx >= data.ncols() {
+            return Err(ClusteringError::InvalidInput(
+                "Feature index out of bounds".to_string(),
+            ));
+        }
+        
+        if data.nrows() != labels.len() {
+            return Err(ClusteringError::InvalidInput(
+                "Data and labels must have same number of samples".to_string(),
+            ));
+        }
+        
+        // Calculate entropy of cluster labels
+        let h_labels = entropy(labels)?;
+        
+        // Discretize the feature
+        let feature_column = data.column(feature_idx);
+        let discretized_feature = discretize_feature(feature_column)?;
+        
+        // Calculate conditional entropy H(Labels | Feature)
+        let h_conditional = conditional_entropy(labels, discretized_feature.view())?;
+        
+        // Information gain = H(Labels) - H(Labels | Feature)
+        Ok(h_labels - h_conditional)
+    }
+    
+    /// Discretize a continuous feature into bins
+    fn discretize_feature<F>(feature: ndarray::ArrayView1<F>) -> Result<Array1<i32>>
+    where
+        F: Float + FromPrimitive,
+    {
+        if feature.is_empty() {
+            return Ok(Array1::zeros(0));
+        }
+        
+        let mut values: Vec<F> = feature.to_vec();
+        values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+        
+        let min_val = values[0];
+        let max_val = values[values.len() - 1];
+        let range = max_val - min_val;
+        
+        if range == F::zero() {
+            return Ok(Array1::zeros(feature.len()));
+        }
+        
+        let n_bins = 10;
+        let bin_width = range / F::from(n_bins).unwrap();
+        
+        let discretized: Vec<i32> = feature
+            .iter()
+            .map(|&val| {
+                let bin = ((val - min_val) / bin_width).to_usize().unwrap_or(0);
+                bin.min(n_bins - 1) as i32
+            })
+            .collect();
+        
+        Ok(Array1::from_vec(discretized))
+    }
+    
+    /// Calculate conditional entropy H(Y | X)
+    fn conditional_entropy<F>(
+        y: ArrayView1<i32>,
+        x: ArrayView1<i32>,
+    ) -> Result<F>
+    where
+        F: Float + FromPrimitive + Debug,
+    {
+        if y.len() != x.len() {
+            return Err(ClusteringError::InvalidInput(
+                "Arrays must have same length".to_string(),
+            ));
+        }
+        
+        let n_samples = y.len();
+        let mut joint_counts: HashMap<(i32, i32), usize> = HashMap::new();
+        let mut x_counts: HashMap<i32, usize> = HashMap::new();
+        
+        // Count occurrences
+        for (&y_val, &x_val) in y.iter().zip(x.iter()) {
+            *joint_counts.entry((x_val, y_val)).or_insert(0) += 1;
+            *x_counts.entry(x_val).or_insert(0) += 1;
+        }
+        
+        let mut h_conditional = F::zero();
+        let n_samples_f = F::from(n_samples).unwrap();
+        
+        // Calculate H(Y | X) = sum_x P(x) * H(Y | X=x)
+        for (&x_val, &x_count) in &x_counts {
+            let p_x = F::from(x_count).unwrap() / n_samples_f;
+            
+            // Calculate H(Y | X=x)
+            let mut h_y_given_x = F::zero();
+            let x_count_f = F::from(x_count).unwrap();
+            
+            for (&(x_joint, y_val), &joint_count) in &joint_counts {
+                if x_joint == x_val {
+                    let p_y_given_x = F::from(joint_count).unwrap() / x_count_f;
+                    if p_y_given_x > F::zero() {
+                        h_y_given_x = h_y_given_x - p_y_given_x * p_y_given_x.ln();
+                    }
+                }
+            }
+            
+            h_conditional = h_conditional + p_x * h_y_given_x;
+        }
+        
+        Ok(h_conditional)
+    }
+    
+    /// Calculate the information cluster quality metric
+    ///
+    /// This metric combines multiple information-theoretic measures to provide
+    /// a comprehensive assessment of clustering quality.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - Input data matrix
+    /// * `labels` - Cluster labels
+    ///
+    /// # Returns
+    ///
+    /// Information cluster quality score (higher is better)
+    pub fn information_cluster_quality<F>(
+        data: &Array2<F>,
+        labels: ArrayView1<i32>,
+    ) -> Result<F>
+    where
+        F: Float + FromPrimitive + Debug,
+    {
+        if data.nrows() != labels.len() {
+            return Err(ClusteringError::InvalidInput(
+                "Data and labels must have same number of samples".to_string(),
+            ));
+        }
+        
+        // Calculate cluster entropy (lower is better for fewer, well-separated clusters)
+        let h_clusters = entropy(labels)?;
+        
+        // Calculate average information gain across all features
+        let mut total_info_gain = F::zero();
+        let n_features = data.ncols();
+        
+        for feature_idx in 0..n_features {
+            let info_gain = information_gain(data, labels, feature_idx)?;
+            total_info_gain = total_info_gain + info_gain;
+        }
+        
+        let avg_info_gain = if n_features > 0 {
+            total_info_gain / F::from(n_features).unwrap()
+        } else {
+            F::zero()
+        };
+        
+        // Calculate within-cluster information content
+        let within_cluster_info = calculate_within_cluster_information(data, labels)?;
+        
+        // Combine metrics (this is a heuristic combination)
+        let quality = avg_info_gain / (F::one() + h_clusters) * within_cluster_info;
+        
+        Ok(quality)
+    }
+    
+    /// Calculate within-cluster information content
+    fn calculate_within_cluster_information<F>(
+        data: &Array2<F>,
+        labels: ArrayView1<i32>,
+    ) -> Result<F>
+    where
+        F: Float + FromPrimitive + Debug,
+    {
+        let mut cluster_data: HashMap<i32, Vec<usize>> = HashMap::new();
+        
+        // Group samples by cluster
+        for (i, &label) in labels.iter().enumerate() {
+            if label >= 0 {  // Ignore noise points
+                cluster_data.entry(label).or_insert_with(Vec::new).push(i);
+            }
+        }
+        
+        let mut total_info = F::zero();
+        let mut total_samples = 0;
+        
+        // Calculate information content within each cluster
+        for (_, sample_indices) in cluster_data {
+            if sample_indices.len() > 1 {
+                let cluster_size = sample_indices.len();
+                
+                // Calculate variance within cluster (as a proxy for information)
+                let mut cluster_variance = F::zero();
+                
+                for feature_idx in 0..data.ncols() {
+                    let feature_values: Vec<F> = sample_indices
+                        .iter()
+                        .map(|&i| data[[i, feature_idx]])
+                        .collect();
+                    
+                    let mean = feature_values.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(cluster_size).unwrap();
+                    let variance = feature_values
+                        .iter()
+                        .map(|&x| (x - mean) * (x - mean))
+                        .fold(F::zero(), |acc, x| acc + x) / F::from(cluster_size).unwrap();
+                    
+                    cluster_variance = cluster_variance + variance;
+                }
+                
+                // Information content is inversely related to variance
+                let cluster_info = F::one() / (F::one() + cluster_variance);
+                total_info = total_info + cluster_info * F::from(cluster_size).unwrap();
+                total_samples += cluster_size;
+            }
+        }
+        
+        if total_samples > 0 {
+            Ok(total_info / F::from(total_samples).unwrap())
+        } else {
+            Ok(F::zero())
+        }
+    }
+}

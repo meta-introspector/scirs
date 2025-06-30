@@ -307,7 +307,7 @@ pub fn denoise_wavelet_1d(
     signal: &Array1<f64>,
     config: &DenoiseConfig,
 ) -> SignalResult<DenoiseResult> {
-    check_finite(&signal.to_vec(), "signal")?;
+    check_finite(signal, "signal")?;
 
     if config.translation_invariant {
         translation_invariant_denoise_1d(signal, config)
@@ -321,7 +321,7 @@ pub fn denoise_non_local_means_1d(
     signal: &Array1<f64>,
     config: &NonLocalMeansConfig,
 ) -> SignalResult<Array1<f64>> {
-    check_finite(&signal.to_vec(), "signal")?;
+    check_finite(signal, "signal")?;
     check_positive(config.patch_size, "patch_size")?;
     check_positive(config.search_window, "search_window")?;
 
@@ -390,7 +390,7 @@ pub fn denoise_total_variation_1d(
     signal: &Array1<f64>,
     config: &TotalVariationConfig,
 ) -> SignalResult<Array1<f64>> {
-    check_finite(&signal.to_vec(), "signal")?;
+    check_finite(signal, "signal")?;
     check_positive(config.lambda, "lambda")?;
 
     let n = signal.len();
@@ -472,7 +472,7 @@ pub fn denoise_bilateral_1d(
     signal: &Array1<f64>,
     config: &BilateralConfig,
 ) -> SignalResult<Array1<f64>> {
-    check_finite(&signal.to_vec(), "signal")?;
+    check_finite(signal, "signal")?;
     check_positive(config.spatial_sigma, "spatial_sigma")?;
     check_positive(config.intensity_sigma, "intensity_sigma")?;
 
@@ -553,7 +553,7 @@ pub fn denoise_bilateral_1d(
 pub fn denoise_wiener_1d(signal: &Array1<f64>, config: &WienerConfig) -> SignalResult<Array1<f64>> {
     use scirs2_fft::{fft, ifft};
 
-    check_finite(&signal.to_vec(), "signal")?;
+    check_finite(signal, "signal")?;
 
     let n = signal.len();
 
@@ -623,7 +623,7 @@ pub fn denoise_adaptive_lms(
     signal: &Array1<f64>,
     config: &AdaptiveLMSConfig,
 ) -> SignalResult<Array1<f64>> {
-    check_finite(&signal.to_vec(), "signal")?;
+    check_finite(signal, "signal")?;
     check_positive(config.filter_length, "filter_length")?;
     check_positive(config.step_size, "step_size")?;
 
@@ -740,6 +740,10 @@ fn standard_denoise_1d(
         retention_rate,
         effective_df,
         risk_estimate,
+        processing_time_ms: 0.0,
+        memory_usage_bytes: 0,
+        stability_score: 1.0,
+        snr_improvement_db: 0.0,
     })
 }
 
@@ -815,6 +819,10 @@ fn translation_invariant_denoise_1d(
         retention_rate,
         effective_df,
         risk_estimate: None,
+        processing_time_ms: 0.0,
+        memory_usage_bytes: 0,
+        stability_score: 1.0,
+        snr_improvement_db: 0.0,
     })
 }
 
@@ -823,7 +831,9 @@ pub fn denoise_wavelet_2d(
     image: &Array2<f64>,
     config: &DenoiseConfig,
 ) -> SignalResult<Denoise2dResult> {
-    check_finite(&image.as_slice().unwrap(), "image")?;
+    for val in image.iter() {
+        check_finite(*val, "image")?;
+    }
 
     let (rows, cols) = image.dim();
     let max_levels = ((rows.min(cols)) as f64).log2().floor() as usize - 1;
@@ -1464,7 +1474,7 @@ pub fn denoise_morphological_opening(
     signal: &Array1<f64>,
     structuring_element_size: usize,
 ) -> SignalResult<Array1<f64>> {
-    check_finite(&signal.to_vec(), "signal")?;
+    check_finite(signal, "signal")?;
     check_positive(structuring_element_size, "structuring_element_size")?;
 
     let radius = structuring_element_size / 2;
@@ -1481,7 +1491,7 @@ pub fn denoise_morphological_closing(
     signal: &Array1<f64>,
     structuring_element_size: usize,
 ) -> SignalResult<Array1<f64>> {
-    check_finite(&signal.to_vec(), "signal")?;
+    check_finite(signal, "signal")?;
     check_positive(structuring_element_size, "structuring_element_size")?;
 
     let radius = structuring_element_size / 2;
@@ -1537,7 +1547,7 @@ pub fn denoise_guided_filter_1d(
     guide: &Array1<f64>,
     config: &GuidedFilterConfig,
 ) -> SignalResult<Array1<f64>> {
-    check_finite(&signal.to_vec(), "signal")?;
+    check_finite(signal, "signal")?;
     check_finite(&guide.to_vec(), "guide")?;
 
     if signal.len() != guide.len() {
@@ -1610,7 +1620,7 @@ fn box_filter(signal: &Array1<f64>, radius: usize) -> Array1<f64> {
 
 /// Median filtering for impulse noise removal
 pub fn denoise_median_1d(signal: &Array1<f64>, window_size: usize) -> SignalResult<Array1<f64>> {
-    check_finite(&signal.to_vec(), "signal")?;
+    check_finite(signal, "signal")?;
     check_positive(window_size, "window_size")?;
 
     if window_size % 2 == 0 {

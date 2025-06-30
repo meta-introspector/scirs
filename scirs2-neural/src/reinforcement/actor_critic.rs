@@ -335,8 +335,14 @@ impl PPO {
                 let values = self.actor_critic.critic.predict_batch(&batch_states)?;
                 let value_loss = (&values - &batch_returns).mapv(|x| x * x).mean().unwrap();
 
-                // Entropy loss (placeholder)
-                let entropy_loss = 0.01;
+                // Entropy loss - encourage exploration
+                let mut entropy_loss = 0.0;
+                for i in 0..batch_states.shape()[0] {
+                    let state = batch_states.row(i);
+                    let entropy = self.compute_policy_entropy(&state)?;
+                    entropy_loss += entropy;
+                }
+                entropy_loss /= batch_states.shape()[0] as f32;
 
                 total_policy_loss += policy_loss / log_probs.len() as f32;
                 total_value_loss += value_loss;
@@ -353,6 +359,30 @@ impl PPO {
             - self.entropy_coef * total_entropy_loss;
 
         Ok((total_policy_loss, total_value_loss, total_loss))
+    }
+
+    /// Compute policy entropy for a given state
+    fn compute_policy_entropy(&self, state: &ArrayView1<f32>) -> Result<f32> {
+        let (params, std_opt) = self.actor_critic.actor.get_distribution_params(state)?;
+        
+        if self.actor_critic.actor.continuous {
+            // For continuous policies (Gaussian), entropy = 0.5 * log(2πeσ²)
+            if let Some(std) = std_opt {
+                let entropy = 0.5 * std.mapv(|s| (2.0 * std::f32::consts::PI * std::f32::consts::E * s * s).ln()).sum();
+                Ok(entropy)
+            } else {
+                Err(crate::error::NeuralError::InvalidArgument(
+                    "Standard deviation not available for continuous policy".to_string(),
+                ))
+            }
+        } else {
+            // For discrete policies (Categorical), entropy = -Σ p(a) * log(p(a))
+            let entropy = -params.iter()
+                .filter(|&&p| p > 0.0)
+                .map(|&p| p * p.ln())
+                .sum::<f32>();
+            Ok(entropy)
+        }
     }
 }
 

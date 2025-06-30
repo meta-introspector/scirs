@@ -250,21 +250,19 @@ impl EWC {
                     diagonal[i] = &diagonal[i] + &(&grad_flat * &grad_flat);
                 }
             }
-        } else {
-            if let Some(ref mut full) = fisher.full {
-                // Update full Fisher matrix
-                for (i, grad) in gradients.iter().enumerate() {
-                    let grad_flat = Array1::from_vec(grad.as_slice().unwrap().to_vec());
-                    let outer_product = grad_flat
-                        .clone()
-                        .insert_axis(Axis(1))
-                        .dot(&grad_flat.insert_axis(Axis(0)));
+        } else if let Some(ref mut full) = fisher.full {
+            // Update full Fisher matrix
+            for (i, grad) in gradients.iter().enumerate() {
+                let grad_flat = Array1::from_vec(grad.as_slice().unwrap().to_vec());
+                let outer_product = grad_flat
+                    .clone()
+                    .insert_axis(Axis(1))
+                    .dot(&grad_flat.insert_axis(Axis(0)));
 
-                    if i >= full.len() {
-                        full.push(outer_product);
-                    } else {
-                        full[i] = &full[i] + &outer_product;
-                    }
+                if i >= full.len() {
+                    full.push(outer_product);
+                } else {
+                    full[i] = &full[i] + &outer_product;
                 }
             }
         }

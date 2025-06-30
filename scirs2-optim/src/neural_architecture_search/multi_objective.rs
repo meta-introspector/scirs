@@ -3,19 +3,18 @@
 //! Implements various multi-objective optimization algorithms including NSGA-II, NSGA-III,
 //! MOEA/D, and other state-of-the-art algorithms for finding Pareto-optimal optimizer architectures.
 
-use ndarray::{Array1, Array2, ArrayBase, Data, Dimension};
+use ndarray::{Array1, Array2};
 use num_traits::Float;
-use std::collections::{HashMap, VecDeque, BTreeMap};
+use std::collections::{HashMap, BTreeMap};
 use std::cmp::Ordering;
 use rand::Rng;
 use serde::{Serialize, Deserialize};
 
 use crate::error::OptimizerError;
 use super::{
-    OptimizerArchitecture, SearchResult, EvaluationResults, EvaluationMetric,
-    MultiObjectiveConfig, ObjectiveConfig, ObjectiveType, OptimizationDirection,
-    UserPreferences, DiversityStrategy, ConstraintHandlingMethod,
-    MultiObjectiveAlgorithm, PreferenceType
+    OptimizerArchitecture, EvaluationMetric, MultiObjectiveConfig, SearchResult, UserPreferences, 
+    ConstraintHandlingMethod, OptimizationDirection, ObjectiveType, ObjectiveConfig,
+    MultiObjectiveAlgorithm, DiversityStrategy
 };
 
 /// Base trait for multi-objective optimizers

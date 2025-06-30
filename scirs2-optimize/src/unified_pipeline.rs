@@ -502,7 +502,7 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
     }
 
     /// Update specific algorithm parameters
-    fn update_algorithm_parameter(&mut self, name: &str, value: f64) -> ScirsResult<()> {
+    fn update_algorithm_parameter(&mut self, _name: &str, _value: f64) -> ScirsResult<()> {
         // Update internal algorithm parameters based on self-tuning
         // This would be algorithm-specific
         Ok(())

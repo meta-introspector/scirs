@@ -108,9 +108,9 @@ impl Default for MultitaperConfig {
 /// let fs = 100.0;
 /// let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
 /// use rand::prelude::*;
-/// let mut rng = rand::rng();
+/// let mut rng = rand::thread_rng();
 /// let signal: Vec<f64> = t.iter()
-///     .map(|&ti| (2.0 * PI * 10.0 * ti).sin() + 0.1 * rng.random_range(0.0..1.0))
+///     .map(|&ti| (2.0 * PI * 10.0 * ti).sin() + 0.1 * rng.gen_range(0.0..1.0))
 ///     .collect();
 ///
 /// // Configure multitaper estimation
@@ -507,7 +507,7 @@ fn compute_tapered_ffts_parallel(
             }
 
             // Compute FFT
-            let spectrum = simd_fft(&tapered, nfft)?;
+            let spectrum = enhanced_simd_fft(&tapered, nfft)?;
 
             // Return power spectrum
             Ok(spectrum.iter().map(|c| c.norm_sqr()).collect())
@@ -1579,9 +1579,13 @@ mod tests {
     }
 
     #[test]
-    fn test_simd_fft() {
+    fn test_enhanced_simd_fft() {
         let signal = vec![1.0, 0.0, -1.0, 0.0];
-        let result = simd_fft(&signal, 4).unwrap();
+        let result = enhanced_simd_fft(&signal, 4).unwrap();
         assert_eq!(result.len(), 4);
+        // Check that result is finite
+        for val in result {
+            assert!(val.is_finite());
+        }
     }
 }

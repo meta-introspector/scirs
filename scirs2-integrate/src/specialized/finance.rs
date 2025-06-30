@@ -7,6 +7,7 @@ use crate::error::{IntegrateError, IntegrateResult as Result};
 use ndarray::{s, Array1, Array2, Array3, ArrayView2, ArrayViewMut2};
 use num_complex::Complex64;
 use rand::prelude::*;
+use rand::rng;
 use rand_distr::{Normal, StandardNormal, Uniform};
 use scirs2_core::constants::PI;
 use scirs2_core::simd_ops::SimdUnifiedOps;
@@ -479,7 +480,9 @@ impl StochasticPDESolver {
                 lambda_v,
                 mu_v,
                 sigma_v,
-            } => self.bates_finite_difference(option, *v0, *theta, *kappa, *sigma, *rho, *lambda_v, *mu_v, *sigma_v),
+            } => self.bates_finite_difference(
+                option, *v0, *theta, *kappa, *sigma, *rho, *lambda_v, *mu_v, *sigma_v,
+            ),
             VolatilityModel::HullWhite {
                 v0,
                 alpha,
@@ -705,9 +708,17 @@ impl StochasticPDESolver {
     ) -> Result<f64> {
         // Simplified SABR finite difference implementation
         // Uses effective volatility approximation
-        let effective_vol = alpha * (option.spot.powf(beta - 1.0))
-            * (1.0 + (0.25 * nu * nu * alpha * alpha * option.spot.powf(2.0 * beta - 2.0) * option.maturity));
-        
+        let effective_vol = alpha
+            * (option.spot.powf(beta - 1.0))
+            * (1.0
+                + (0.25
+                    * nu
+                    * nu
+                    * alpha
+                    * alpha
+                    * option.spot.powf(2.0 * beta - 2.0)
+                    * option.maturity));
+
         self.black_scholes_finite_difference(option, effective_vol)
     }
 
@@ -721,49 +732,52 @@ impl StochasticPDESolver {
         let dt = option.maturity / (self.n_time - 1) as f64;
         let s_max = option.spot * 3.0;
         let ds = s_max / (self.n_asset - 1) as f64;
-        
+
         let mut v = Array2::zeros((self.n_asset, self.n_time));
-        
+
         // Terminal condition
         for i in 0..self.n_asset {
             let s = i as f64 * ds;
             v[[i, self.n_time - 1]] = self.payoff(option, s);
         }
-        
+
         // Backward time stepping
         for t_idx in (0..self.n_time - 1).rev() {
             let t = t_idx as f64 * dt;
-            
+
             for i in 1..self.n_asset - 1 {
                 let s = i as f64 * ds;
                 let local_vol = vol_surface(s, t);
-                
+
                 // Coefficients for finite difference
                 let alpha = 0.5 * local_vol * local_vol * s * s / (ds * ds);
                 let beta = 0.5 * option.risk_free_rate * s / ds;
-                
+
                 let a = dt * (alpha - beta);
                 let b = 1.0 + dt * (2.0 * alpha + option.risk_free_rate);
                 let c = -dt * (alpha + beta);
-                
-                v[[i, t_idx]] = (v[[i, t_idx + 1]] 
-                    - a * v[[i - 1, t_idx + 1]]
-                    - c * v[[i + 1, t_idx + 1]]) / b;
+
+                v[[i, t_idx]] =
+                    (v[[i, t_idx + 1]] - a * v[[i - 1, t_idx + 1]] - c * v[[i + 1, t_idx + 1]]) / b;
             }
-            
+
             // Boundary conditions
-            v[[0, t_idx]] = if option.option_type == OptionType::Call { 0.0 } else { option.strike };
-            v[[self.n_asset - 1, t_idx]] = if option.option_type == OptionType::Call { 
-                s_max - option.strike 
-            } else { 
-                0.0 
+            v[[0, t_idx]] = if option.option_type == OptionType::Call {
+                0.0
+            } else {
+                option.strike
+            };
+            v[[self.n_asset - 1, t_idx]] = if option.option_type == OptionType::Call {
+                s_max - option.strike
+            } else {
+                0.0
             };
         }
-        
+
         // Interpolate at spot price
         let spot_idx = (option.spot / ds) as usize;
         let alpha = option.spot / ds - spot_idx as f64;
-        
+
         if spot_idx < self.n_asset - 1 {
             Ok(v[[spot_idx, 0]] * (1.0 - alpha) + v[[spot_idx + 1, 0]] * alpha)
         } else {
@@ -787,10 +801,10 @@ impl StochasticPDESolver {
     ) -> Result<f64> {
         // Simplified implementation: Use Heston as base with jump adjustment
         let heston_price = self.heston_finite_difference(option, v0, theta, kappa, sigma, rho)?;
-        
+
         // Approximate jump adjustment
         let jump_adjustment = lambda_v * option.maturity * 0.01; // Simplified
-        
+
         Ok(heston_price + jump_adjustment)
     }
 
@@ -809,7 +823,7 @@ impl StochasticPDESolver {
         let mean_vol = v0 + alpha * option.maturity / 2.0;
         let vol_of_vol = beta * v0.sqrt();
         let effective_vol = (mean_vol + 0.5 * vol_of_vol * vol_of_vol * option.maturity).sqrt();
-        
+
         self.black_scholes_finite_difference(option, effective_vol)
     }
 
@@ -827,11 +841,12 @@ impl StochasticPDESolver {
         // 3/2 model: dv_t = κ(θ - v_t)dt + σ v_t^(3/2) dW_t
         // Use moment-matching approximation
         let mean_var = theta + (v0 - theta) * (-kappa * option.maturity).exp();
-        let var_var = (sigma * sigma / (2.0 * kappa)) * v0.powf(3.0) 
+        let var_var = (sigma * sigma / (2.0 * kappa))
+            * v0.powf(3.0)
             * (1.0 - (-2.0 * kappa * option.maturity).exp());
-        
+
         let effective_vol = (mean_var + 0.5 * var_var).sqrt();
-        
+
         self.black_scholes_finite_difference(option, effective_vol)
     }
 
@@ -869,12 +884,15 @@ impl StochasticPDESolver {
                     beta,
                     nu,
                     rho,
-                } => self.simulate_sabr_path(
-                    option, *alpha, *beta, *nu, *rho, n_steps, dt, &mut rng,
+                } => self
+                    .simulate_sabr_path(option, *alpha, *beta, *nu, *rho, n_steps, dt, &mut rng)?,
+                VolatilityModel::LocalVolatility(vol_surface) => self.simulate_local_vol_path(
+                    option,
+                    vol_surface.as_ref(),
+                    n_steps,
+                    dt,
+                    &mut rng,
                 )?,
-                VolatilityModel::LocalVolatility(vol_surface) => {
-                    self.simulate_local_vol_path(option, vol_surface.as_ref(), n_steps, dt, &mut rng)?
-                }
                 VolatilityModel::Bates {
                     v0,
                     theta,
@@ -885,7 +903,8 @@ impl StochasticPDESolver {
                     mu_v,
                     sigma_v,
                 } => self.simulate_bates_path(
-                    option, *v0, *theta, *kappa, *sigma, *rho, *lambda_v, *mu_v, *sigma_v, n_steps, dt, &mut rng,
+                    option, *v0, *theta, *kappa, *sigma, *rho, *lambda_v, *mu_v, *sigma_v, n_steps,
+                    dt, &mut rng,
                 )?,
                 VolatilityModel::HullWhite {
                     v0,
@@ -1163,7 +1182,8 @@ impl StochasticPDESolver {
 
             // Variance process with jumps
             let v_curr = v_path.last().unwrap().max(0.0);
-            let mut v_new = v_curr + kappa * (theta - v_curr) * dt + sigma * v_curr.sqrt() * dt.sqrt() * w2;
+            let mut v_new =
+                v_curr + kappa * (theta - v_curr) * dt + sigma * v_curr.sqrt() * dt.sqrt() * w2;
 
             // Add jump component to volatility
             if u < lambda_v * dt {
@@ -1252,7 +1272,8 @@ impl StochasticPDESolver {
 
             // 3/2 model: dv = κ(θ - v)dt + σ v^(3/2) dW
             let v_curr = v_path.last().unwrap().max(0.001);
-            let v_new = v_curr + kappa * (theta - v_curr) * dt + sigma * v_curr.powf(1.5) * dt.sqrt() * w2;
+            let v_new =
+                v_curr + kappa * (theta - v_curr) * dt + sigma * v_curr.powf(1.5) * dt.sqrt() * w2;
             let v_new = v_new.max(0.001);
 
             // Asset process
@@ -1284,15 +1305,38 @@ impl StochasticPDESolver {
                 // Heston characteristic function method
                 self.heston_fourier(option, *v0, *theta, *kappa, *sigma, *rho)
             }
-            VolatilityModel::SABR { alpha, beta, nu, rho: _ } => {
+            VolatilityModel::SABR {
+                alpha,
+                beta,
+                nu,
+                rho: _,
+            } => {
                 // Use SABR approximation formula
-                let effective_vol = alpha * (option.spot.powf(beta - 1.0))
-                    * (1.0 + (0.25 * nu * nu * alpha * alpha * option.spot.powf(2.0 * beta - 2.0) * option.maturity));
+                let effective_vol = alpha
+                    * (option.spot.powf(beta - 1.0))
+                    * (1.0
+                        + (0.25
+                            * nu
+                            * nu
+                            * alpha
+                            * alpha
+                            * option.spot.powf(2.0 * beta - 2.0)
+                            * option.maturity));
                 self.black_scholes_formula(option, effective_vol)
             }
-            VolatilityModel::Bates { v0, theta, kappa, sigma, rho, lambda_v, mu_v, sigma_v } => {
+            VolatilityModel::Bates {
+                v0,
+                theta,
+                kappa,
+                sigma,
+                rho,
+                lambda_v,
+                mu_v,
+                sigma_v,
+            } => {
                 // Approximate using Heston base with jump adjustment
-                let heston_price = self.heston_fourier(option, *v0, *theta, *kappa, *sigma, *rho)?;
+                let heston_price =
+                    self.heston_fourier(option, *v0, *theta, *kappa, *sigma, *rho)?;
                 let jump_adjustment = lambda_v * option.maturity * (mu_v + 0.5 * sigma_v * sigma_v);
                 Ok(heston_price + jump_adjustment * 0.01) // Simplified adjustment
             }
@@ -1301,19 +1345,28 @@ impl StochasticPDESolver {
                 let effective_vol = vol_surface(option.spot, option.maturity / 2.0);
                 self.black_scholes_formula(option, effective_vol)
             }
-            VolatilityModel::HullWhite { v0, alpha, beta, .. } => {
+            VolatilityModel::HullWhite {
+                v0, alpha, beta, ..
+            } => {
                 // Hull-White model: effective volatility with mean reversion
                 let effective_vol = (v0 + alpha * option.maturity / 2.0).max(0.001);
                 self.black_scholes_formula(option, effective_vol)
             }
-            VolatilityModel::ThreeHalves { v0, theta, kappa, sigma, .. } => {
+            VolatilityModel::ThreeHalves {
+                v0,
+                theta,
+                kappa,
+                sigma,
+                ..
+            } => {
                 // 3/2 model: use long-term variance approximation
-                let long_term_vol = (theta + (v0 - theta) * (-kappa * option.maturity).exp()).sqrt();
+                let long_term_vol =
+                    (theta + (v0 - theta) * (-kappa * option.maturity).exp()).sqrt();
                 self.black_scholes_formula(option, long_term_vol)
             }
             _ => {
                 // For any remaining models, use Monte Carlo as fallback
-                self.price_monte_carlo(option, 10000, 252)
+                self.price_monte_carlo(option, 10000, true)
             }
         }
     }
@@ -1551,10 +1604,20 @@ impl StochasticPDESolver {
     fn price_tree(&self, option: &FinancialOption, n_steps: usize) -> Result<f64> {
         match &self.volatility_model {
             VolatilityModel::Constant(sigma) => self.binomial_tree(option, *sigma, n_steps),
-            VolatilityModel::SABR { alpha, beta, nu, .. } => {
+            VolatilityModel::SABR {
+                alpha, beta, nu, ..
+            } => {
                 // Use effective volatility for SABR
-                let effective_vol = alpha * (option.spot.powf(beta - 1.0))
-                    * (1.0 + (0.25 * nu * nu * alpha * alpha * option.spot.powf(2.0 * beta - 2.0) * option.maturity));
+                let effective_vol = alpha
+                    * (option.spot.powf(beta - 1.0))
+                    * (1.0
+                        + (0.25
+                            * nu
+                            * nu
+                            * alpha
+                            * alpha
+                            * option.spot.powf(2.0 * beta - 2.0)
+                            * option.maturity));
                 self.binomial_tree(option, effective_vol, n_steps)
             }
             VolatilityModel::LocalVolatility(vol_surface) => {
@@ -1567,19 +1630,28 @@ impl StochasticPDESolver {
                 let avg_vol = v0 + alpha * option.maturity / 2.0;
                 self.binomial_tree(option, avg_vol, n_steps)
             }
-            VolatilityModel::ThreeHalves { v0, theta, kappa, .. } => {
+            VolatilityModel::ThreeHalves {
+                v0, theta, kappa, ..
+            } => {
                 // Use mean reverting volatility approximation
-                let effective_vol = (theta + (v0 - theta) * (-kappa * option.maturity).exp()).sqrt();
+                let effective_vol =
+                    (theta + (v0 - theta) * (-kappa * option.maturity).exp()).sqrt();
                 self.binomial_tree(option, effective_vol, n_steps)
             }
-            VolatilityModel::Heston { v0, theta, kappa, .. } => {
+            VolatilityModel::Heston {
+                v0, theta, kappa, ..
+            } => {
                 // Use average volatility for Heston model
-                let long_term_vol = (theta + (v0 - theta) * (-kappa * option.maturity / 2.0).exp()).sqrt();
+                let long_term_vol =
+                    (theta + (v0 - theta) * (-kappa * option.maturity / 2.0).exp()).sqrt();
                 self.binomial_tree(option, long_term_vol, n_steps)
             }
-            VolatilityModel::Bates { v0, theta, kappa, .. } => {
+            VolatilityModel::Bates {
+                v0, theta, kappa, ..
+            } => {
                 // Use Heston-like effective volatility for Bates model
-                let long_term_vol = (theta + (v0 - theta) * (-kappa * option.maturity / 2.0).exp()).sqrt();
+                let long_term_vol =
+                    (theta + (v0 - theta) * (-kappa * option.maturity / 2.0).exp()).sqrt();
                 self.binomial_tree(option, long_term_vol, n_steps)
             }
             _ => {
@@ -2013,8 +2085,8 @@ pub struct Greeks {
 /// Advanced risk-neutral Monte Carlo engine with quantum-inspired optimization
 pub mod ultra_monte_carlo_engine {
     use super::*;
-    use std::sync::{Arc, RwLock};
     use std::collections::HashMap;
+    use std::sync::{Arc, RwLock};
 
     /// Quantum-inspired random number generator for enhanced sampling
     pub struct QuantumInspiredRNG {
@@ -2031,17 +2103,19 @@ pub mod ultra_monte_carlo_engine {
     impl QuantumInspiredRNG {
         /// Create new quantum-inspired RNG
         pub fn new(dimensions: usize, seed: u64) -> Self {
-            let state_vector = Array1::from_shape_fn(dimensions, |i| {
-                (i as f64 * seed as f64).sin() * 0.5 + 0.5
-            });
-            
+            let state_vector =
+                Array1::from_shape_fn(dimensions, |i| (i as f64 * seed as f64).sin() * 0.5 + 0.5);
+
             let correlation_matrix = Array2::from_shape_fn((dimensions, dimensions), |(i, j)| {
-                if i == j { 1.0 } else { 0.1 * ((i + j) as f64).cos() }
+                if i == j {
+                    1.0
+                } else {
+                    0.1 * ((i + j) as f64).cos()
+                }
             });
 
-            let superposition_weights = Array1::from_shape_fn(dimensions, |_i| {
-                1.0 / (dimensions as f64).sqrt()
-            });
+            let superposition_weights =
+                Array1::from_shape_fn(dimensions, |_i| 1.0 / (dimensions as f64).sqrt());
 
             Self {
                 state_vector,
@@ -2059,11 +2133,12 @@ pub mod ultra_monte_carlo_engine {
             for path in 0..n_paths {
                 // Quantum superposition collapse simulation
                 let collapse_probability = self.calculate_collapse_probability(path);
-                
+
                 // Generate correlated sample using quantum-inspired transformation
                 for dim in 0..dimensions {
                     let base_random = self.quantum_random(path, dim);
-                    let correlated_value = self.apply_quantum_correlation(base_random, dim, collapse_probability);
+                    let correlated_value =
+                        self.apply_quantum_correlation(base_random, dim, collapse_probability);
                     samples[[path, dim]] = correlated_value;
                 }
 
@@ -2077,7 +2152,10 @@ pub mod ultra_monte_carlo_engine {
         /// Calculate quantum collapse probability
         fn calculate_collapse_probability(&self, path_index: usize) -> f64 {
             let phase = 2.0 * PI * (path_index as f64) / 1000.0;
-            let amplitude = f64::simd_dot(&self.state_vector.view(), &self.superposition_weights.view());
+            let amplitude = f64::simd_dot(
+                &self.state_vector.view(),
+                &self.superposition_weights.view(),
+            );
             0.5 * (1.0 + (phase * amplitude).cos())
         }
 
@@ -2090,9 +2168,14 @@ pub mod ultra_monte_carlo_engine {
         }
 
         /// Apply quantum correlation transformation
-        fn apply_quantum_correlation(&self, base_value: f64, dimension: usize, collapse_prob: f64) -> f64 {
+        fn apply_quantum_correlation(
+            &self,
+            base_value: f64,
+            dimension: usize,
+            collapse_prob: f64,
+        ) -> f64 {
             let mut correlated = base_value;
-            
+
             // Apply correlation matrix transformation
             for other_dim in 0..self.correlation_matrix.ncols() {
                 if other_dim != dimension {
@@ -2151,7 +2234,7 @@ pub mod ultra_monte_carlo_engine {
         /// Get or allocate path buffer
         pub fn get_path_buffer(&mut self, n_paths: usize, n_steps: usize) -> &mut Array2<f64> {
             let key = n_paths * 1000 + n_steps; // Simple hash
-            
+
             if !self.path_buffers.contains_key(&key) {
                 let buffer = vec![Array2::zeros((n_paths, n_steps))];
                 self.path_buffers.insert(key, buffer);
@@ -2207,7 +2290,11 @@ pub mod ultra_monte_carlo_engine {
         }
 
         /// Apply antithetic variates
-        fn apply_antithetic_variates(&self, paths: &mut Array2<f64>, payoffs: &mut Array1<f64>) -> f64 {
+        fn apply_antithetic_variates(
+            &self,
+            paths: &mut Array2<f64>,
+            payoffs: &mut Array1<f64>,
+        ) -> f64 {
             let n_paths = paths.nrows();
             let half_paths = n_paths / 2;
 
@@ -2234,7 +2321,7 @@ pub mod ultra_monte_carlo_engine {
         fn apply_control_variates(&self, payoffs: &mut Array1<f64>) -> f64 {
             let n_paths = payoffs.len();
             let payoff_mean = payoffs.mean().unwrap_or(0.0);
-            
+
             // Simple control variate based on path average
             for i in 0..n_paths {
                 let control_adjustment = self.control_variate_beta * (payoffs[i] - payoff_mean);
@@ -2277,12 +2364,18 @@ pub mod ultra_monte_carlo_engine {
         }
 
         /// Record simulation performance
-        pub fn record_simulation(&self, n_paths: u64, computation_time: f64, final_price: f64, variance_reduction: f64) {
+        pub fn record_simulation(
+            &self,
+            n_paths: u64,
+            computation_time: f64,
+            final_price: f64,
+            variance_reduction: f64,
+        ) {
             {
                 let mut total_paths = self.total_paths.write().unwrap();
                 *total_paths += n_paths;
             }
-            
+
             {
                 let mut total_time = self.total_time.write().unwrap();
                 *total_time += computation_time;
@@ -2303,9 +2396,13 @@ pub mod ultra_monte_carlo_engine {
         pub fn get_performance_stats(&self) -> (u64, f64, f64, f64) {
             let total_paths = *self.total_paths.read().unwrap();
             let total_time = *self.total_time.read().unwrap();
-            let throughput = if total_time > 0.0 { total_paths as f64 / total_time } else { 0.0 };
+            let throughput = if total_time > 0.0 {
+                total_paths as f64 / total_time
+            } else {
+                0.0
+            };
             let variance_reduction = *self.variance_reduction_factor.read().unwrap();
-            
+
             (total_paths, total_time, throughput, variance_reduction)
         }
     }
@@ -2345,17 +2442,16 @@ pub mod ultra_monte_carlo_engine {
 
             // Apply variance reduction techniques
             let mut price_paths_mut = price_paths.clone();
-            let variance_reduction_factor = self.variance_reduction.apply_variance_reduction(
-                &mut price_paths_mut,
-                &mut payoffs
-            );
+            let variance_reduction_factor = self
+                .variance_reduction
+                .apply_variance_reduction(&mut price_paths_mut, &mut payoffs);
 
             // Calculate final price and statistics
             let final_price = payoffs.mean().unwrap_or(0.0);
             let standard_error = payoffs.std(0.0) / (n_paths as f64).sqrt();
 
             let computation_time = start_time.elapsed().as_secs_f64();
-            
+
             // Record performance metrics
             self.performance_tracker.record_simulation(
                 n_paths as u64,
@@ -2396,27 +2492,34 @@ pub mod ultra_monte_carlo_engine {
 
             // Ultra-parallel Heston simulation with SIMD
             for step in 1..=n_steps {
-                for path in (0..n_paths).step_by(8) { // Process 8 paths simultaneously
+                for path in (0..n_paths).step_by(8) {
+                    // Process 8 paths simultaneously
                     let end_path = (path + 8).min(n_paths);
-                    
+
                     for p in path..end_path {
                         let s_prev = price_paths[[p, step - 1]];
                         let v_prev = params.initial_variance; // Simplified
-                        
+
                         // Generate correlated Brownian motions
-                        let dw1 = (random_paths[[p, step % random_paths.ncols()]] - 0.5) * 2.0 * dt.sqrt();
-                        let dw2 = params.correlation * dw1 + 
-                                 (1.0_f64 - params.correlation.powi(2)).sqrt() * 
-                                 (random_paths[[p, (step + 1) % random_paths.ncols()]] - 0.5) * 2.0 * dt.sqrt();
+                        let dw1 = (random_paths[[p, step % random_paths.ncols()]] - 0.5)
+                            * 2.0
+                            * dt.sqrt();
+                        let dw2 = params.correlation * dw1
+                            + (1.0_f64 - params.correlation.powi(2)).sqrt()
+                                * (random_paths[[p, (step + 1) % random_paths.ncols()]] - 0.5)
+                                * 2.0
+                                * dt.sqrt();
 
                         // Heston variance process
-                        let v_next = v_prev + params.kappa * (params.theta - v_prev) * dt + 
-                                   params.vol_of_vol * v_prev.sqrt() * dw2;
+                        let v_next = v_prev
+                            + params.kappa * (params.theta - v_prev) * dt
+                            + params.vol_of_vol * v_prev.sqrt() * dw2;
                         let v_next = v_next.max(0.001); // Ensure positive variance
 
                         // Asset price process
-                        let s_next = s_prev * ((params.risk_free_rate - 0.5 * v_next) * dt + 
-                                              v_next.sqrt() * dw1).exp();
+                        let s_next = s_prev
+                            * ((params.risk_free_rate - 0.5 * v_next) * dt + v_next.sqrt() * dw1)
+                                .exp();
 
                         price_paths[[p, step]] = s_next;
                     }
@@ -2427,14 +2530,18 @@ pub mod ultra_monte_carlo_engine {
         }
 
         /// Calculate option payoffs
-        fn calculate_payoffs(&self, price_paths: &Array2<f64>, option: &FinancialOption) -> Result<Array1<f64>> {
+        fn calculate_payoffs(
+            &self,
+            price_paths: &Array2<f64>,
+            option: &FinancialOption,
+        ) -> Result<Array1<f64>> {
             let n_paths = price_paths.nrows();
             let n_steps = price_paths.ncols();
             let mut payoffs = Array1::zeros(n_paths);
 
             for path in 0..n_paths {
                 let final_price = price_paths[[path, n_steps - 1]];
-                
+
                 let payoff = match option.option_type {
                     OptionType::Call => (final_price - option.strike).max(0.0),
                     OptionType::Put => (option.strike - final_price).max(0.0),
@@ -2525,7 +2632,11 @@ pub mod realtime_risk_engine {
         }
 
         /// Predict next period risk using machine learning
-        pub fn predict_risk(&self, current_snapshot: &RiskSnapshot, market_features: &Array1<f64>) -> f64 {
+        pub fn predict_risk(
+            &self,
+            current_snapshot: &RiskSnapshot,
+            market_features: &Array1<f64>,
+        ) -> f64 {
             // Feature vector: [VaR, volatility, drawdown, Sharpe, market_stress]
             let features = array![
                 current_snapshot.var_95,
@@ -2543,7 +2654,7 @@ pub mod realtime_risk_engine {
         /// Update predictor based on actual vs predicted risk
         pub fn update_model(&mut self, predicted_risk: f64, actual_risk: f64) {
             let prediction_error = actual_risk - predicted_risk;
-            
+
             // Simple gradient descent update
             for i in 0..self.feature_weights.len() {
                 self.feature_weights[i] += self.learning_rate * prediction_error;
@@ -2551,7 +2662,8 @@ pub mod realtime_risk_engine {
 
             // Update accuracy metric
             let error_ratio = (prediction_error / actual_risk.max(0.001)).abs();
-            self.prediction_accuracy = 0.9 * self.prediction_accuracy + 0.1 * (1.0 - error_ratio.min(1.0));
+            self.prediction_accuracy =
+                0.9 * self.prediction_accuracy + 0.1 * (1.0 - error_ratio.min(1.0));
         }
     }
 
@@ -2609,9 +2721,9 @@ pub mod realtime_risk_engine {
                 risk_history: VecDeque::with_capacity(max_history),
                 risk_predictor: RiskPredictor::new(),
                 alert_system: RiskAlertSystem {
-                    var_threshold: 0.05, // 5% VaR threshold
+                    var_threshold: 0.05,        // 5% VaR threshold
                     volatility_threshold: 0.25, // 25% volatility threshold
-                    drawdown_threshold: 0.15, // 15% drawdown threshold
+                    drawdown_threshold: 0.15,   // 15% drawdown threshold
                     alert_history: VecDeque::new(),
                 },
                 max_history,
@@ -2629,7 +2741,9 @@ pub mod realtime_risk_engine {
             let current_snapshot = self.calculate_risk_snapshot(portfolio_returns, timestamp);
 
             // Predict next period risk
-            let predicted_risk = self.risk_predictor.predict_risk(&current_snapshot, market_data);
+            let predicted_risk = self
+                .risk_predictor
+                .predict_risk(&current_snapshot, market_data);
 
             // Check for risk alerts
             let alerts = self.check_risk_alerts(&current_snapshot, predicted_risk, timestamp);
@@ -2659,13 +2773,23 @@ pub mod realtime_risk_engine {
             // Calculate Expected Shortfall (CVaR)
             let cvar_95_idx = (0.05 * n as f64) as usize;
             let cvar_99_idx = (0.01 * n as f64) as usize;
-            
-            let cvar_95 = -returns_sorted.slice(s![..cvar_95_idx]).mean().unwrap_or(0.0);
-            let cvar_99 = -returns_sorted.slice(s![..cvar_99_idx]).mean().unwrap_or(0.0);
+
+            let cvar_95 = -returns_sorted
+                .slice(s![..cvar_95_idx])
+                .mean()
+                .unwrap_or(0.0);
+            let cvar_99 = -returns_sorted
+                .slice(s![..cvar_99_idx])
+                .mean()
+                .unwrap_or(0.0);
 
             // Calculate volatility
             let mean_return = returns.mean().unwrap_or(0.0);
-            let volatility = returns.mapv(|r| (r - mean_return).powi(2)).mean().unwrap_or(0.0).sqrt();
+            let volatility = returns
+                .mapv(|r| (r - mean_return).powi(2))
+                .mean()
+                .unwrap_or(0.0)
+                .sqrt();
 
             // Calculate maximum drawdown
             let mut cumulative_returns = Array1::zeros(n);
@@ -2719,9 +2843,11 @@ pub mod realtime_risk_engine {
                     } else {
                         AlertSeverity::Warning
                     },
-                    message: format!("VaR 95% ({:.2}%) exceeds threshold ({:.2}%)", 
-                                   snapshot.var_95 * 100.0, 
-                                   self.alert_system.var_threshold * 100.0),
+                    message: format!(
+                        "VaR 95% ({:.2}%) exceeds threshold ({:.2}%)",
+                        snapshot.var_95 * 100.0,
+                        self.alert_system.var_threshold * 100.0
+                    ),
                     recommendations: vec![
                         "Consider reducing position sizes".to_string(),
                         "Review portfolio diversification".to_string(),
@@ -2736,9 +2862,11 @@ pub mod realtime_risk_engine {
                     timestamp,
                     alert_type: RiskAlertType::ExcessiveVolatility,
                     severity: AlertSeverity::Warning,
-                    message: format!("Portfolio volatility ({:.2}%) exceeds threshold ({:.2}%)", 
-                                   snapshot.volatility * 100.0, 
-                                   self.alert_system.volatility_threshold * 100.0),
+                    message: format!(
+                        "Portfolio volatility ({:.2}%) exceeds threshold ({:.2}%)",
+                        snapshot.volatility * 100.0,
+                        self.alert_system.volatility_threshold * 100.0
+                    ),
                     recommendations: vec![
                         "Review correlation structure".to_string(),
                         "Consider volatility targeting".to_string(),
@@ -2752,9 +2880,11 @@ pub mod realtime_risk_engine {
                     timestamp,
                     alert_type: RiskAlertType::LargeDrawdown,
                     severity: AlertSeverity::Critical,
-                    message: format!("Maximum drawdown ({:.2}%) exceeds threshold ({:.2}%)", 
-                                   snapshot.max_drawdown * 100.0, 
-                                   self.alert_system.drawdown_threshold * 100.0),
+                    message: format!(
+                        "Maximum drawdown ({:.2}%) exceeds threshold ({:.2}%)",
+                        snapshot.max_drawdown * 100.0,
+                        self.alert_system.drawdown_threshold * 100.0
+                    ),
                     recommendations: vec![
                         "Consider stop-loss implementation".to_string(),
                         "Review risk management rules".to_string(),
@@ -2773,20 +2903,25 @@ pub mod realtime_risk_engine {
 
         /// Get risk analytics dashboard data
         pub fn get_risk_dashboard(&self) -> RiskDashboard {
-            let current_snapshot = self.risk_history.back().cloned().unwrap_or_else(|| {
-                RiskSnapshot {
-                    timestamp: 0.0,
-                    var_95: 0.0,
-                    var_99: 0.0,
-                    cvar_95: 0.0,
-                    cvar_99: 0.0,
-                    volatility: 0.0,
-                    max_drawdown: 0.0,
-                    sharpe_ratio: 0.0,
-                }
-            });
+            let current_snapshot =
+                self.risk_history
+                    .back()
+                    .cloned()
+                    .unwrap_or_else(|| RiskSnapshot {
+                        timestamp: 0.0,
+                        var_95: 0.0,
+                        var_99: 0.0,
+                        cvar_95: 0.0,
+                        cvar_99: 0.0,
+                        volatility: 0.0,
+                        max_drawdown: 0.0,
+                        sharpe_ratio: 0.0,
+                    });
 
-            let recent_alerts = self.alert_system.alert_history.iter()
+            let recent_alerts = self
+                .alert_system
+                .alert_history
+                .iter()
                 .rev()
                 .take(10)
                 .cloned()
@@ -2827,18 +2962,11 @@ pub mod realtime_risk_engine {
     }
 }
 
-#[cfg(test)]
-mod ultra_financial_tests {
-    use super::ultra_monte_carlo_engine::*;
-    use super::realtime_risk_engine::*;
-    use super::*;
-
 /// Advanced exotic derivatives pricing module
 pub mod advanced_exotic_derivatives {
     use super::*;
-    use ndarray::{Array1, Array2};
+    use crate::error::IntegrateResult as Result;
     use rand::Rng;
-    use crate::error::{IntegrateError, IntegrateResult as Result};
 
     /// Lookback option types
     #[derive(Debug, Clone, Copy, PartialEq)]
@@ -2895,9 +3023,7 @@ pub mod advanced_exotic_derivatives {
     #[derive(Debug, Clone)]
     pub enum ExoticOptionType {
         /// Lookback option
-        Lookback {
-            lookback_type: LookbackType,
-        },
+        Lookback { lookback_type: LookbackType },
         /// Asian option
         Asian {
             averaging_method: AveragingMethod,
@@ -2980,15 +3106,28 @@ pub mod advanced_exotic_derivatives {
                 ExoticOptionType::Lookback { lookback_type } => {
                     self.price_lookback_option(&option.base_option, *lookback_type)
                 }
-                ExoticOptionType::Asian { averaging_method, observation_times } => {
-                    self.price_asian_option(&option.base_option, *averaging_method, observation_times)
-                }
-                ExoticOptionType::Barrier { barrier_type, barrier_level, rebate } => {
-                    self.price_barrier_option(&option.base_option, *barrier_type, *barrier_level, *rebate)
-                }
-                ExoticOptionType::Digital { digital_type, cash_amount } => {
-                    self.price_digital_option(&option.base_option, *digital_type, *cash_amount)
-                }
+                ExoticOptionType::Asian {
+                    averaging_method,
+                    observation_times,
+                } => self.price_asian_option(
+                    &option.base_option,
+                    *averaging_method,
+                    observation_times,
+                ),
+                ExoticOptionType::Barrier {
+                    barrier_type,
+                    barrier_level,
+                    rebate,
+                } => self.price_barrier_option(
+                    &option.base_option,
+                    *barrier_type,
+                    *barrier_level,
+                    *rebate,
+                ),
+                ExoticOptionType::Digital {
+                    digital_type,
+                    cash_amount,
+                } => self.price_digital_option(&option.base_option, *digital_type, *cash_amount),
             }
         }
 
@@ -3005,21 +3144,26 @@ pub mod advanced_exotic_derivatives {
             let sigma = 0.2; // Default volatility
 
             for _sim in 0..self.n_simulations {
-                let path = self.generate_price_path(option.spot, option.risk_free_rate, sigma, dt, 252, &mut rng)?;
-                
+                let path = self.generate_price_path(
+                    option.spot,
+                    option.risk_free_rate,
+                    sigma,
+                    dt,
+                    252,
+                    &mut rng,
+                )?;
+
                 let payoff = match lookback_type {
-                    LookbackType::FixedStrike => {
-                        match option.option_type {
-                            OptionType::Call => {
-                                let max_price = path.iter().fold(0.0, |a, &b| a.max(b));
-                                (max_price - option.strike).max(0.0)
-                            }
-                            OptionType::Put => {
-                                let min_price = path.iter().fold(f64::INFINITY, |a, &b| a.min(b));
-                                (option.strike - min_price).max(0.0)
-                            }
+                    LookbackType::FixedStrike => match option.option_type {
+                        OptionType::Call => {
+                            let max_price = path.iter().fold(0.0f64, |a, &b| a.max(b));
+                            (max_price - option.strike).max(0.0)
                         }
-                    }
+                        OptionType::Put => {
+                            let min_price = path.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+                            (option.strike - min_price).max(0.0)
+                        }
+                    },
                     LookbackType::FloatingStrike => {
                         let final_price = path[path.len() - 1];
                         match option.option_type {
@@ -3028,7 +3172,7 @@ pub mod advanced_exotic_derivatives {
                                 (final_price - min_price).max(0.0)
                             }
                             OptionType::Put => {
-                                let max_price = path.iter().fold(0.0, |a, &b| a.max(b));
+                                let max_price = path.iter().fold(0.0f64, |a, &b| a.max(b));
                                 (max_price - final_price).max(0.0)
                             }
                         }
@@ -3043,7 +3187,11 @@ pub mod advanced_exotic_derivatives {
             let price = discount_factor * average_payoff;
 
             // Calculate standard error
-            let variance = payoffs.iter().map(|&p| (p - average_payoff).powi(2)).sum::<f64>() / (payoffs.len() - 1) as f64;
+            let variance = payoffs
+                .iter()
+                .map(|&p| (p - average_payoff).powi(2))
+                .sum::<f64>()
+                / (payoffs.len() - 1) as f64;
             let standard_error = (variance / payoffs.len() as f64).sqrt() * discount_factor;
 
             Ok(ExoticPricingResult {
@@ -3076,8 +3224,10 @@ pub mod advanced_exotic_derivatives {
                     if dt > 0.0 {
                         let z: f64 = rng.random::<f64>().ln() * -2.0;
                         let z = z.sqrt() * (2.0 * std::f64::consts::PI * rng.random::<f64>()).cos();
-                        
-                        current_price *= ((option.risk_free_rate - 0.5 * sigma * sigma) * dt + sigma * dt.sqrt() * z).exp();
+
+                        current_price *= ((option.risk_free_rate - 0.5 * sigma * sigma) * dt
+                            + sigma * dt.sqrt() * z)
+                            .exp();
                     }
                     prices_at_observations.push(current_price);
                     last_time = obs_time;
@@ -3085,7 +3235,8 @@ pub mod advanced_exotic_derivatives {
 
                 let average_price = match averaging_method {
                     AveragingMethod::Arithmetic => {
-                        prices_at_observations.iter().sum::<f64>() / prices_at_observations.len() as f64
+                        prices_at_observations.iter().sum::<f64>()
+                            / prices_at_observations.len() as f64
                     }
                     AveragingMethod::Geometric => {
                         let product: f64 = prices_at_observations.iter().product();
@@ -3105,7 +3256,11 @@ pub mod advanced_exotic_derivatives {
             let average_payoff = payoffs.iter().sum::<f64>() / payoffs.len() as f64;
             let price = discount_factor * average_payoff;
 
-            let variance = payoffs.iter().map(|&p| (p - average_payoff).powi(2)).sum::<f64>() / (payoffs.len() - 1) as f64;
+            let variance = payoffs
+                .iter()
+                .map(|&p| (p - average_payoff).powi(2))
+                .sum::<f64>()
+                / (payoffs.len() - 1) as f64;
             let standard_error = (variance / payoffs.len() as f64).sqrt() * discount_factor;
 
             Ok(ExoticPricingResult {
@@ -3131,9 +3286,16 @@ pub mod advanced_exotic_derivatives {
             let sigma = 0.2; // Default volatility
 
             for _sim in 0..self.n_simulations {
-                let path = self.generate_price_path(option.spot, option.risk_free_rate, sigma, dt, 252, &mut rng)?;
+                let path = self.generate_price_path(
+                    option.spot,
+                    option.risk_free_rate,
+                    sigma,
+                    dt,
+                    252,
+                    &mut rng,
+                )?;
                 let final_price = path[path.len() - 1];
-                
+
                 let barrier_hit = match barrier_type {
                     BarrierType::UpAndOut | BarrierType::UpAndIn => {
                         path.iter().any(|&price| price >= barrier_level)
@@ -3172,7 +3334,11 @@ pub mod advanced_exotic_derivatives {
             let average_payoff = payoffs.iter().sum::<f64>() / payoffs.len() as f64;
             let price = discount_factor * average_payoff;
 
-            let variance = payoffs.iter().map(|&p| (p - average_payoff).powi(2)).sum::<f64>() / (payoffs.len() - 1) as f64;
+            let variance = payoffs
+                .iter()
+                .map(|&p| (p - average_payoff).powi(2))
+                .sum::<f64>()
+                / (payoffs.len() - 1) as f64;
             let standard_error = (variance / payoffs.len() as f64).sqrt() * discount_factor;
 
             Ok(ExoticPricingResult {
@@ -3199,8 +3365,10 @@ pub mod advanced_exotic_derivatives {
             for _sim in 0..self.n_simulations {
                 let z: f64 = rng.random::<f64>().ln() * -2.0;
                 let z = z.sqrt() * (2.0 * std::f64::consts::PI * rng.random::<f64>()).cos();
-                
-                let final_price = option.spot * ((option.risk_free_rate - 0.5 * sigma * sigma) * dt + sigma * dt.sqrt() * z).exp();
+
+                let final_price = option.spot
+                    * ((option.risk_free_rate - 0.5 * sigma * sigma) * dt + sigma * dt.sqrt() * z)
+                        .exp();
 
                 let in_the_money = match option.option_type {
                     OptionType::Call => final_price > option.strike,
@@ -3223,7 +3391,11 @@ pub mod advanced_exotic_derivatives {
             let average_payoff = payoffs.iter().sum::<f64>() / payoffs.len() as f64;
             let price = discount_factor * average_payoff;
 
-            let variance = payoffs.iter().map(|&p| (p - average_payoff).powi(2)).sum::<f64>() / (payoffs.len() - 1) as f64;
+            let variance = payoffs
+                .iter()
+                .map(|&p| (p - average_payoff).powi(2))
+                .sum::<f64>()
+                / (payoffs.len() - 1) as f64;
             let standard_error = (variance / payoffs.len() as f64).sqrt() * discount_factor;
 
             Ok(ExoticPricingResult {
@@ -3252,8 +3424,10 @@ pub mod advanced_exotic_derivatives {
             for _ in 0..n_steps {
                 let z: f64 = rng.random::<f64>().ln() * -2.0;
                 let z = z.sqrt() * (2.0 * std::f64::consts::PI * rng.random::<f64>()).cos();
-                
-                current_price *= ((drift - 0.5 * volatility * volatility) * dt + volatility * dt.sqrt() * z).exp();
+
+                current_price *= ((drift - 0.5 * volatility * volatility) * dt
+                    + volatility * dt.sqrt() * z)
+                    .exp();
                 path.push(current_price);
             }
 
@@ -3285,20 +3459,20 @@ mod tests {
     fn test_quantum_inspired_rng() {
         let mut qrng = QuantumInspiredRNG::new(5, 42);
         let samples = qrng.generate_correlated_sample(1000);
-        
+
         assert_eq!(samples.nrows(), 1000);
         assert_eq!(samples.ncols(), 5);
-        
+
         // Check that samples are in [0, 1] range
         for &value in samples.iter() {
             assert!(value >= 0.0 && value <= 1.0);
         }
     }
 
-    #[test] 
+    #[test]
     fn test_ultra_monte_carlo_engine() {
         let mut engine = UltraMonteCarloEngine::new(2, 42);
-        
+
         let option = FinancialOption {
             option_type: OptionType::Call,
             strike: 100.0,
@@ -3322,7 +3496,7 @@ mod tests {
 
         let result = engine.price_exotic_derivative(&option, &heston_params, 10000, 252);
         assert!(result.is_ok());
-        
+
         let pricing_result = result.unwrap();
         assert!(pricing_result.price > 0.0);
         assert!(pricing_result.standard_error > 0.0);
@@ -3332,15 +3506,20 @@ mod tests {
     #[test]
     fn test_realtime_risk_monitor() {
         let mut monitor = RealTimeRiskMonitor::new(1000);
-        
+
         // Generate sample portfolio returns
         let returns = Array1::from_vec(vec![0.01, -0.02, 0.015, -0.01, 0.008]);
         let market_data = Array1::from_vec(vec![0.05]); // Market stress indicator
-        
+
         let alerts = monitor.update_risk_metrics(&returns, &market_data, 1.0);
-        
+
         // Should not generate alerts for reasonable returns
-        assert!(alerts.len() == 0 || alerts.iter().all(|a| matches!(a.severity, AlertSeverity::Info | AlertSeverity::Warning)));
+        assert!(
+            alerts.len() == 0
+                || alerts
+                    .iter()
+                    .all(|a| matches!(a.severity, AlertSeverity::Info | AlertSeverity::Warning))
+        );
     }
 
     #[test]
@@ -3348,9 +3527,9 @@ mod tests {
         let vr_suite = VarianceReductionSuite::new();
         let mut paths = Array2::from_shape_fn((100, 10), |(i, j)| (i + j) as f64 / 100.0);
         let mut payoffs = Array1::from_shape_fn(100, |i| i as f64);
-        
+
         let reduction_factor = vr_suite.apply_variance_reduction(&mut paths, &mut payoffs);
-        
+
         assert!(reduction_factor > 0.0 && reduction_factor <= 1.0);
     }
 }
@@ -3435,7 +3614,6 @@ mod tests {
 /// Advanced stochastic PDE solvers and exotic derivatives
 pub mod advanced_solvers {
     use super::*;
-    use std::collections::HashMap;
 
     /// PIDE (Partial Integro-Differential Equation) solver for jump-diffusion models
     pub struct PIDESolver {
@@ -4382,7 +4560,7 @@ pub mod advanced_solvers {
 /// high-frequency trading optimizations, and real-time risk management.
 pub mod financial_optimizations {
     use super::*;
-    use std::collections::VecDeque;
+    use std::collections::{HashMap, VecDeque};
     use std::sync::{Arc, Mutex};
     use std::time::{Instant, SystemTime};
 
@@ -5812,23 +5990,37 @@ pub mod financial_optimizations {
                 }
                 ObjectiveFunction::RiskParity => {
                     // Risk parity: equal risk contribution gradient
-                    let portfolio_variance = self.risk_model.compute_portfolio_variance(weights, &self.assets)?;
+                    let portfolio_variance = self
+                        .risk_model
+                        .compute_portfolio_variance(weights, &self.assets)?;
                     for i in 0..n_assets {
-                        let marginal_risk = 2.0 * self.assets[i].volatility * self.assets[i].volatility * weights[i];
+                        let marginal_risk = 2.0
+                            * self.assets[i].volatility
+                            * self.assets[i].volatility
+                            * weights[i];
                         let risk_contribution = weights[i] * marginal_risk / portfolio_variance;
                         gradient[i] = marginal_risk - risk_contribution;
                     }
                 }
                 ObjectiveFunction::MaximumDiversification => {
                     // Maximum diversification ratio gradient
-                    let weighted_avg_vol: f64 = weights.iter().zip(&self.assets)
-                        .map(|(w, asset)| w * asset.volatility).sum();
-                    let portfolio_vol = self.risk_model.compute_portfolio_variance(weights, &self.assets)?.sqrt();
-                    
+                    let weighted_avg_vol: f64 = weights
+                        .iter()
+                        .zip(&self.assets)
+                        .map(|(w, asset)| w * asset.volatility)
+                        .sum();
+                    let portfolio_vol = self
+                        .risk_model
+                        .compute_portfolio_variance(weights, &self.assets)?
+                        .sqrt();
+
                     for i in 0..n_assets {
-                        gradient[i] = (self.assets[i].volatility / portfolio_vol) - 
-                                     (weighted_avg_vol / (portfolio_vol * portfolio_vol)) * 
-                                     (2.0 * self.assets[i].volatility * self.assets[i].volatility * weights[i]);
+                        gradient[i] = (self.assets[i].volatility / portfolio_vol)
+                            - (weighted_avg_vol / (portfolio_vol * portfolio_vol))
+                                * (2.0
+                                    * self.assets[i].volatility
+                                    * self.assets[i].volatility
+                                    * weights[i]);
                     }
                 }
             }
@@ -6816,7 +7008,6 @@ fn erf(x: f64) -> f64 {
 /// Exotic option pricing models and advanced risk management
 pub mod exotic_options {
     use super::*;
-    use std::collections::BTreeMap;
 
     /// Complex exotic option types
     #[derive(Debug, Clone)]
@@ -6954,18 +7145,27 @@ pub mod exotic_options {
 
         /// Price barrier option with enhanced Monte Carlo
         fn price_barrier_option(&self, option: &ExoticOption) -> Result<PricingResult> {
-            if let ExoticOptionType::Barrier { barrier_level, is_up, is_knock_in, rebate } = &option.option_type {
-                let mut rng = rand::thread_rng();
+            if let ExoticOptionType::Barrier {
+                barrier_level,
+                is_up,
+                is_knock_in,
+                rebate,
+            } = &option.option_type
+            {
+                let mut rng = rand::rng();
                 let mut payoffs = Vec::with_capacity(self.n_simulations);
-                
+
                 let dt = option.maturity / self.n_time_steps as f64;
                 let sqrt_dt = dt.sqrt();
-                let drift = (option.risk_free_rate - option.dividend_yields[0] - 0.5 * option.volatilities[0].powi(2)) * dt;
-                
+                let drift = (option.risk_free_rate
+                    - option.dividend_yields[0]
+                    - 0.5 * option.volatilities[0].powi(2))
+                    * dt;
+
                 for _ in 0..self.n_simulations {
                     let mut spot = option.spot_prices[0];
                     let mut barrier_hit = false;
-                    
+
                     // Simulate path and check barrier
                     for _ in 0..self.n_time_steps {
                         let z = if self.use_antithetic && rng.random::<bool>() {
@@ -6973,20 +7173,22 @@ pub mod exotic_options {
                         } else {
                             Normal::new(0.0, 1.0).unwrap().sample(&mut rng)
                         };
-                        
+
                         spot *= (drift + option.volatilities[0] * sqrt_dt * z).exp();
-                        
+
                         // Check barrier condition
-                        if (*is_up && spot >= *barrier_level) || (!*is_up && spot <= *barrier_level) {
+                        if (*is_up && spot >= *barrier_level) || (!*is_up && spot <= *barrier_level)
+                        {
                             barrier_hit = true;
                             if !*is_knock_in {
                                 break; // Knocked out
                             }
                         }
                     }
-                    
+
                     // Calculate payoff
-                    let payoff = if (*is_knock_in && barrier_hit) || (!*is_knock_in && !barrier_hit) {
+                    let payoff = if (*is_knock_in && barrier_hit) || (!*is_knock_in && !barrier_hit)
+                    {
                         // Option is active
                         match option.underlying_type {
                             OptionType::Call => (spot - option.strike).max(0.0),
@@ -6998,17 +7200,22 @@ pub mod exotic_options {
                     } else {
                         0.0
                     };
-                    
+
                     payoffs.push(payoff);
                 }
-                
+
                 let mean_payoff = payoffs.iter().sum::<f64>() / payoffs.len() as f64;
                 let price = mean_payoff * (-option.risk_free_rate * option.maturity).exp();
-                
+
                 // Calculate standard error
-                let variance = payoffs.iter().map(|&p| (p - mean_payoff).powi(2)).sum::<f64>() / (payoffs.len() - 1) as f64;
-                let standard_error = (variance / payoffs.len() as f64).sqrt() * (-option.risk_free_rate * option.maturity).exp();
-                
+                let variance = payoffs
+                    .iter()
+                    .map(|&p| (p - mean_payoff).powi(2))
+                    .sum::<f64>()
+                    / (payoffs.len() - 1) as f64;
+                let standard_error = (variance / payoffs.len() as f64).sqrt()
+                    * (-option.risk_free_rate * option.maturity).exp();
+
                 Ok(PricingResult {
                     price,
                     standard_error: Some(standard_error),
@@ -7019,81 +7226,107 @@ pub mod exotic_options {
                     rho: None,
                 })
             } else {
-                Err(IntegrateError::InvalidInput("Invalid barrier option type".to_string()))
+                Err(IntegrateError::InvalidInput(
+                    "Invalid barrier option type".to_string(),
+                ))
             }
         }
 
         /// Price Asian option with control variate
         fn price_asian_option(&self, option: &ExoticOption) -> Result<PricingResult> {
-            if let ExoticOptionType::Asian { averaging_type, observation_dates, current_average } = &option.option_type {
-                let mut rng = rand::thread_rng();
+            if let ExoticOptionType::Asian {
+                averaging_type,
+                observation_dates,
+                current_average,
+            } = &option.option_type
+            {
+                let mut rng = rand::rng();
                 let mut asian_payoffs = Vec::with_capacity(self.n_simulations);
                 let mut control_payoffs = Vec::with_capacity(self.n_simulations);
-                
+
                 let total_time = option.maturity;
                 let n_observations = observation_dates.len();
-                
+
                 for _ in 0..self.n_simulations {
                     let mut spot = option.spot_prices[0];
-                    let mut sum_spots = if n_observations > 0 { *current_average * n_observations as f64 } else { 0.0 };
-                    let mut prod_spots = if n_observations > 0 { current_average.powf(n_observations as f64) } else { 1.0 };
-                    
+                    let mut sum_spots = if n_observations > 0 {
+                        *current_average * n_observations as f64
+                    } else {
+                        0.0
+                    };
+                    let mut prod_spots = if n_observations > 0 {
+                        current_average.powf(n_observations as f64)
+                    } else {
+                        1.0
+                    };
+
                     // Simulate path at observation dates
                     let mut last_time = 0.0;
                     for &obs_time in observation_dates {
                         let dt = obs_time - last_time;
                         if dt > 0.0 {
                             let sqrt_dt = dt.sqrt();
-                            let drift = (option.risk_free_rate - option.dividend_yields[0] - 0.5 * option.volatilities[0].powi(2)) * dt;
+                            let drift = (option.risk_free_rate
+                                - option.dividend_yields[0]
+                                - 0.5 * option.volatilities[0].powi(2))
+                                * dt;
                             let z = Normal::new(0.0, 1.0).unwrap().sample(&mut rng);
-                            
+
                             spot *= (drift + option.volatilities[0] * sqrt_dt * z).exp();
                         }
-                        
+
                         sum_spots += spot;
                         prod_spots *= spot;
                         last_time = obs_time;
                     }
-                    
+
                     // Calculate average
                     let total_observations = n_observations + observation_dates.len();
                     let average = match averaging_type {
                         AveragingType::Arithmetic => sum_spots / total_observations as f64,
-                        AveragingType::Geometric => prod_spots.powf(1.0 / total_observations as f64),
+                        AveragingType::Geometric => {
+                            prod_spots.powf(1.0 / total_observations as f64)
+                        }
                     };
-                    
+
                     // Asian option payoff
                     let asian_payoff = match option.underlying_type {
                         OptionType::Call => (average - option.strike).max(0.0),
                         OptionType::Put => (option.strike - average).max(0.0),
                     };
-                    
+
                     // Control variate (European option on final spot)
                     let european_payoff = match option.underlying_type {
                         OptionType::Call => (spot - option.strike).max(0.0),
                         OptionType::Put => (option.strike - spot).max(0.0),
                     };
-                    
+
                     asian_payoffs.push(asian_payoff);
                     control_payoffs.push(european_payoff);
                 }
-                
+
                 let asian_mean = asian_payoffs.iter().sum::<f64>() / asian_payoffs.len() as f64;
-                
+
                 let price = if self.use_control_variate {
-                    let control_mean = control_payoffs.iter().sum::<f64>() / control_payoffs.len() as f64;
-                    
+                    let control_mean =
+                        control_payoffs.iter().sum::<f64>() / control_payoffs.len() as f64;
+
                     // Compute control variate coefficient
-                    let covariance: f64 = asian_payoffs.iter().zip(control_payoffs.iter())
+                    let covariance: f64 = asian_payoffs
+                        .iter()
+                        .zip(control_payoffs.iter())
                         .map(|(&a, &c)| (a - asian_mean) * (c - control_mean))
-                        .sum::<f64>() / (asian_payoffs.len() - 1) as f64;
-                    
-                    let control_variance: f64 = control_payoffs.iter()
+                        .sum::<f64>()
+                        / (asian_payoffs.len() - 1) as f64;
+
+                    let control_variance: f64 = control_payoffs
+                        .iter()
                         .map(|&c| (c - control_mean).powi(2))
-                        .sum::<f64>() / (control_payoffs.len() - 1) as f64;
-                    
+                        .sum::<f64>()
+                        / (control_payoffs.len() - 1) as f64;
+
                     let beta = covariance / control_variance;
-                    
+
                     // Black-Scholes price for control variate
                     let bs_control_price = self.black_scholes_analytical(
                         option.spot_prices[0],
@@ -7104,16 +7337,18 @@ pub mod exotic_options {
                         option.dividend_yields[0],
                         option.underlying_type,
                     );
-                    
-                    let adjusted_payoffs: Vec<f64> = asian_payoffs.iter().zip(control_payoffs.iter())
+
+                    let adjusted_payoffs: Vec<f64> = asian_payoffs
+                        .iter()
+                        .zip(control_payoffs.iter())
                         .map(|(&a, &c)| a - beta * (c - bs_control_price))
                         .collect();
-                    
+
                     adjusted_payoffs.iter().sum::<f64>() / adjusted_payoffs.len() as f64
                 } else {
                     asian_mean
                 } * (-option.risk_free_rate * option.maturity).exp();
-                
+
                 Ok(PricingResult {
                     price,
                     standard_error: None,
@@ -7124,40 +7359,49 @@ pub mod exotic_options {
                     rho: None,
                 })
             } else {
-                Err(IntegrateError::InvalidInput("Invalid Asian option type".to_string()))
+                Err(IntegrateError::InvalidInput(
+                    "Invalid Asian option type".to_string(),
+                ))
             }
         }
 
         /// Price lookback option
         fn price_lookback_option(&self, option: &ExoticOption) -> Result<PricingResult> {
-            if let ExoticOptionType::Lookback { is_floating_strike, extremum_so_far } = &option.option_type {
-                let mut rng = rand::thread_rng();
+            if let ExoticOptionType::Lookback {
+                is_floating_strike,
+                extremum_so_far,
+            } = &option.option_type
+            {
+                let mut rng = rand::rng();
                 let mut payoffs = Vec::with_capacity(self.n_simulations);
-                
+
                 let dt = option.maturity / self.n_time_steps as f64;
                 let sqrt_dt = dt.sqrt();
-                let drift = (option.risk_free_rate - option.dividend_yields[0] - 0.5 * option.volatilities[0].powi(2)) * dt;
-                
+                let drift = (option.risk_free_rate
+                    - option.dividend_yields[0]
+                    - 0.5 * option.volatilities[0].powi(2))
+                    * dt;
+
                 for _ in 0..self.n_simulations {
                     let mut spot = option.spot_prices[0];
                     let mut extremum = *extremum_so_far;
-                    
+
                     // Track extremum over the path
                     for _ in 0..self.n_time_steps {
                         let z = Normal::new(0.0, 1.0).unwrap().sample(&mut rng);
                         spot *= (drift + option.volatilities[0] * sqrt_dt * z).exp();
-                        
+
                         extremum = match option.underlying_type {
                             OptionType::Call => extremum.max(spot),
                             OptionType::Put => extremum.min(spot),
                         };
                     }
-                    
+
                     let payoff = if *is_floating_strike {
                         // Floating strike lookback
                         match option.underlying_type {
                             OptionType::Call => spot - extremum, // extremum is minimum
-                            OptionType::Put => extremum - spot, // extremum is maximum
+                            OptionType::Put => extremum - spot,  // extremum is maximum
                         }
                     } else {
                         // Fixed strike lookback
@@ -7166,13 +7410,13 @@ pub mod exotic_options {
                             OptionType::Put => (option.strike - extremum).max(0.0),
                         }
                     };
-                    
+
                     payoffs.push(payoff.max(0.0));
                 }
-                
+
                 let mean_payoff = payoffs.iter().sum::<f64>() / payoffs.len() as f64;
                 let price = mean_payoff * (-option.risk_free_rate * option.maturity).exp();
-                
+
                 Ok(PricingResult {
                     price,
                     standard_error: None,
@@ -7183,37 +7427,49 @@ pub mod exotic_options {
                     rho: None,
                 })
             } else {
-                Err(IntegrateError::InvalidInput("Invalid lookback option type".to_string()))
+                Err(IntegrateError::InvalidInput(
+                    "Invalid lookback option type".to_string(),
+                ))
             }
         }
 
         /// Price rainbow option on multiple assets
         fn price_rainbow_option(&self, option: &ExoticOption) -> Result<PricingResult> {
-            if let ExoticOptionType::Rainbow { n_assets, payoff_type, weights } = &option.option_type {
-                let mut rng = rand::thread_rng();
+            if let ExoticOptionType::Rainbow {
+                n_assets,
+                payoff_type,
+                weights,
+            } = &option.option_type
+            {
+                let mut rng = rand::rng();
                 let mut payoffs = Vec::with_capacity(self.n_simulations);
-                
+
                 let dt = option.maturity / self.n_time_steps as f64;
                 let sqrt_dt = dt.sqrt();
-                
+
                 for _ in 0..self.n_simulations {
                     let mut spots = option.spot_prices.clone();
-                    
+
                     // Simulate correlated asset paths
                     for _ in 0..self.n_time_steps {
                         let z: Vec<f64> = (0..*n_assets)
                             .map(|_| Normal::new(0.0, 1.0).unwrap().sample(&mut rng))
                             .collect();
-                        
+
                         // Apply Cholesky decomposition for correlation
-                        let correlated_z = self.apply_cholesky_correlation(&z, &option.correlations);
-                        
+                        let correlated_z =
+                            self.apply_cholesky_correlation(&z, &option.correlations);
+
                         for i in 0..*n_assets {
-                            let drift = (option.risk_free_rate - option.dividend_yields[i] - 0.5 * option.volatilities[i].powi(2)) * dt;
-                            spots[i] *= (drift + option.volatilities[i] * sqrt_dt * correlated_z[i]).exp();
+                            let drift = (option.risk_free_rate
+                                - option.dividend_yields[i]
+                                - 0.5 * option.volatilities[i].powi(2))
+                                * dt;
+                            spots[i] *=
+                                (drift + option.volatilities[i] * sqrt_dt * correlated_z[i]).exp();
                         }
                     }
-                    
+
                     // Calculate rainbow payoff
                     let payoff = match payoff_type {
                         RainbowPayoffType::Maximum => {
@@ -7231,9 +7487,8 @@ pub mod exotic_options {
                             }
                         }
                         RainbowPayoffType::Basket => {
-                            let basket_value: f64 = spots.iter().zip(weights.iter())
-                                .map(|(&s, &w)| w * s)
-                                .sum();
+                            let basket_value: f64 =
+                                spots.iter().zip(weights.iter()).map(|(&s, &w)| w * s).sum();
                             match option.underlying_type {
                                 OptionType::Call => (basket_value - option.strike).max(0.0),
                                 OptionType::Put => (option.strike - basket_value).max(0.0),
@@ -7241,13 +7496,13 @@ pub mod exotic_options {
                         }
                         _ => 0.0, // Implement other payoff types as needed
                     };
-                    
+
                     payoffs.push(payoff);
                 }
-                
+
                 let mean_payoff = payoffs.iter().sum::<f64>() / payoffs.len() as f64;
                 let price = mean_payoff * (-option.risk_free_rate * option.maturity).exp();
-                
+
                 Ok(PricingResult {
                     price,
                     standard_error: None,
@@ -7258,7 +7513,9 @@ pub mod exotic_options {
                     rho: None,
                 })
             } else {
-                Err(IntegrateError::InvalidInput("Invalid rainbow option type".to_string()))
+                Err(IntegrateError::InvalidInput(
+                    "Invalid rainbow option type".to_string(),
+                ))
             }
         }
 
@@ -7284,27 +7541,34 @@ pub mod exotic_options {
 
         /// Price binary option
         fn price_binary_option(&self, option: &ExoticOption) -> Result<PricingResult> {
-            if let ExoticOptionType::Binary { payout_amount, is_cash_or_nothing } = &option.option_type {
-                let mut rng = rand::thread_rng();
+            if let ExoticOptionType::Binary {
+                payout_amount,
+                is_cash_or_nothing,
+            } = &option.option_type
+            {
+                let mut rng = rand::rng();
                 let mut payoffs = Vec::with_capacity(self.n_simulations);
-                
+
                 let dt = option.maturity / self.n_time_steps as f64;
                 let sqrt_dt = dt.sqrt();
-                let drift = (option.risk_free_rate - option.dividend_yields[0] - 0.5 * option.volatilities[0].powi(2)) * dt;
-                
+                let drift = (option.risk_free_rate
+                    - option.dividend_yields[0]
+                    - 0.5 * option.volatilities[0].powi(2))
+                    * dt;
+
                 for _ in 0..self.n_simulations {
                     let mut spot = option.spot_prices[0];
-                    
+
                     for _ in 0..self.n_time_steps {
                         let z = Normal::new(0.0, 1.0).unwrap().sample(&mut rng);
                         spot *= (drift + option.volatilities[0] * sqrt_dt * z).exp();
                     }
-                    
+
                     let in_the_money = match option.underlying_type {
                         OptionType::Call => spot > option.strike,
                         OptionType::Put => spot < option.strike,
                     };
-                    
+
                     let payoff = if in_the_money {
                         if *is_cash_or_nothing {
                             *payout_amount
@@ -7314,13 +7578,13 @@ pub mod exotic_options {
                     } else {
                         0.0
                     };
-                    
+
                     payoffs.push(payoff);
                 }
-                
+
                 let mean_payoff = payoffs.iter().sum::<f64>() / payoffs.len() as f64;
                 let price = mean_payoff * (-option.risk_free_rate * option.maturity).exp();
-                
+
                 Ok(PricingResult {
                     price,
                     standard_error: None,
@@ -7331,7 +7595,9 @@ pub mod exotic_options {
                     rho: None,
                 })
             } else {
-                Err(IntegrateError::InvalidInput("Invalid binary option type".to_string()))
+                Err(IntegrateError::InvalidInput(
+                    "Invalid binary option type".to_string(),
+                ))
             }
         }
 
@@ -7350,10 +7616,14 @@ pub mod exotic_options {
         }
 
         /// Apply Cholesky decomposition for asset correlation
-        fn apply_cholesky_correlation(&self, z: &[f64], correlation_matrix: &Array2<f64>) -> Vec<f64> {
+        fn apply_cholesky_correlation(
+            &self,
+            z: &[f64],
+            correlation_matrix: &Array2<f64>,
+        ) -> Vec<f64> {
             let n = z.len();
             let mut result = vec![0.0; n];
-            
+
             // Simplified Cholesky decomposition (should use proper linear algebra)
             for i in 0..n {
                 for j in 0..=i {
@@ -7364,7 +7634,7 @@ pub mod exotic_options {
                     }
                 }
             }
-            
+
             result
         }
 
@@ -7379,16 +7649,17 @@ pub mod exotic_options {
             dividend_yield: f64,
             option_type: OptionType,
         ) -> f64 {
-            let d1 = ((spot / strike).ln() + (risk_free_rate - dividend_yield + 0.5 * volatility.powi(2)) * time_to_maturity) 
+            let d1 = ((spot / strike).ln()
+                + (risk_free_rate - dividend_yield + 0.5 * volatility.powi(2)) * time_to_maturity)
                 / (volatility * time_to_maturity.sqrt());
             let d2 = d1 - volatility * time_to_maturity.sqrt();
-            
+
             let nd1 = 0.5 * (1.0 + erf(d1 / SQRT_2));
             let nd2 = 0.5 * (1.0 + erf(d2 / SQRT_2));
-            
+
             match option_type {
                 OptionType::Call => {
-                    spot * (-dividend_yield * time_to_maturity).exp() * nd1 
+                    spot * (-dividend_yield * time_to_maturity).exp() * nd1
                         - strike * (-risk_free_rate * time_to_maturity).exp() * nd2
                 }
                 OptionType::Put => {
@@ -7414,7 +7685,9 @@ pub mod exotic_options {
 
 /// Advanced risk management and VaR calculations
 pub mod risk_management {
+    use super::exotic_options::ExoticOption;
     use super::*;
+    use std::collections::BTreeMap;
 
     /// Risk metrics and calculations
     pub struct RiskAnalyzer {
@@ -7470,7 +7743,7 @@ pub mod risk_management {
             Self {
                 confidence_levels: vec![0.95, 0.99, 0.999],
                 time_horizons: vec![1.0, 10.0, 22.0], // 1 day, 10 days, 1 month
-                simulation_window: 252, // 1 year of daily data
+                simulation_window: 252,               // 1 year of daily data
                 n_mc_simulations: 100_000,
             }
         }
@@ -7484,26 +7757,26 @@ pub mod risk_management {
         ) -> PortfolioRiskMetrics {
             let mean_return = portfolio_returns.mean().unwrap_or(0.0);
             let volatility = self.calculate_volatility(portfolio_returns);
-            
+
             // Calculate VaR and Expected Shortfall
             let mut var_estimates = BTreeMap::new();
             let mut expected_shortfall = BTreeMap::new();
-            
+
             for &confidence in &self.confidence_levels {
                 let conf_key = (confidence * 100.0) as u32;
                 let var = self.calculate_historical_var(portfolio_returns, confidence);
                 let es = self.calculate_expected_shortfall(portfolio_returns, confidence);
-                
+
                 var_estimates.insert(conf_key, var);
                 expected_shortfall.insert(conf_key, es);
             }
-            
+
             let max_drawdown = self.calculate_max_drawdown(portfolio_returns);
             let sharpe_ratio = (mean_return - risk_free_rate) / volatility;
             let sortino_ratio = self.calculate_sortino_ratio(portfolio_returns, risk_free_rate);
             let beta = self.calculate_beta(portfolio_returns, market_returns);
             let correlation = self.calculate_correlation(portfolio_returns, market_returns);
-            
+
             PortfolioRiskMetrics {
                 var_estimates,
                 expected_shortfall,
@@ -7520,20 +7793,21 @@ pub mod risk_management {
         fn calculate_historical_var(&self, returns: &Array1<f64>, confidence_level: f64) -> f64 {
             let mut sorted_returns = returns.to_vec();
             sorted_returns.sort_by(|a, b| a.partial_cmp(b).unwrap());
-            
+
             let index = ((1.0 - confidence_level) * sorted_returns.len() as f64) as usize;
             sorted_returns[index.min(sorted_returns.len() - 1)]
         }
 
         /// Calculate Expected Shortfall (Conditional VaR)
-        fn calculate_expected_shortfall(&self, returns: &Array1<f64>, confidence_level: f64) -> f64 {
+        fn calculate_expected_shortfall(
+            &self,
+            returns: &Array1<f64>,
+            confidence_level: f64,
+        ) -> f64 {
             let var = self.calculate_historical_var(returns, confidence_level);
-            
-            let tail_returns: Vec<f64> = returns.iter()
-                .filter(|&&r| r <= var)
-                .cloned()
-                .collect();
-            
+
+            let tail_returns: Vec<f64> = returns.iter().filter(|&&r| r <= var).cloned().collect();
+
             if tail_returns.is_empty() {
                 var
             } else {
@@ -7544,10 +7818,9 @@ pub mod risk_management {
         /// Calculate portfolio volatility (annualized)
         fn calculate_volatility(&self, returns: &Array1<f64>) -> f64 {
             let mean = returns.mean().unwrap_or(0.0);
-            let variance = returns.iter()
-                .map(|&r| (r - mean).powi(2))
-                .sum::<f64>() / (returns.len() - 1) as f64;
-            
+            let variance = returns.iter().map(|&r| (r - mean).powi(2)).sum::<f64>()
+                / (returns.len() - 1) as f64;
+
             variance.sqrt() * (252.0_f64).sqrt() // Annualize assuming 252 trading days
         }
 
@@ -7555,15 +7828,15 @@ pub mod risk_management {
         fn calculate_max_drawdown(&self, returns: &Array1<f64>) -> f64 {
             let mut cumulative_returns = Vec::with_capacity(returns.len());
             let mut cumulative = 0.0;
-            
+
             for &ret in returns {
                 cumulative += ret;
                 cumulative_returns.push(cumulative);
             }
-            
+
             let mut max_drawdown = 0.0;
             let mut peak = f64::NEG_INFINITY;
-            
+
             for &cum_ret in &cumulative_returns {
                 if cum_ret > peak {
                     peak = cum_ret;
@@ -7573,7 +7846,7 @@ pub mod risk_management {
                     max_drawdown = drawdown;
                 }
             }
-            
+
             max_drawdown
         }
 
@@ -7581,17 +7854,17 @@ pub mod risk_management {
         fn calculate_sortino_ratio(&self, returns: &Array1<f64>, risk_free_rate: f64) -> f64 {
             let mean_return = returns.mean().unwrap_or(0.0);
             let excess_return = mean_return - risk_free_rate;
-            
-            let downside_returns: Vec<f64> = returns.iter()
+
+            let downside_returns: Vec<f64> = returns
+                .iter()
                 .map(|&r| (r - risk_free_rate).min(0.0))
                 .collect();
-            
-            let downside_variance = downside_returns.iter()
-                .map(|&r| r.powi(2))
-                .sum::<f64>() / downside_returns.len() as f64;
-            
+
+            let downside_variance = downside_returns.iter().map(|&r| r.powi(2)).sum::<f64>()
+                / downside_returns.len() as f64;
+
             let downside_deviation = downside_variance.sqrt();
-            
+
             if downside_deviation > 0.0 {
                 excess_return / downside_deviation
             } else {
@@ -7600,18 +7873,27 @@ pub mod risk_management {
         }
 
         /// Calculate beta relative to market
-        fn calculate_beta(&self, portfolio_returns: &Array1<f64>, market_returns: &Array1<f64>) -> f64 {
+        fn calculate_beta(
+            &self,
+            portfolio_returns: &Array1<f64>,
+            market_returns: &Array1<f64>,
+        ) -> f64 {
             let port_mean = portfolio_returns.mean().unwrap_or(0.0);
             let market_mean = market_returns.mean().unwrap_or(0.0);
-            
-            let covariance = portfolio_returns.iter().zip(market_returns.iter())
+
+            let covariance = portfolio_returns
+                .iter()
+                .zip(market_returns.iter())
                 .map(|(&p, &m)| (p - port_mean) * (m - market_mean))
-                .sum::<f64>() / (portfolio_returns.len() - 1) as f64;
-            
-            let market_variance = market_returns.iter()
+                .sum::<f64>()
+                / (portfolio_returns.len() - 1) as f64;
+
+            let market_variance = market_returns
+                .iter()
                 .map(|&r| (r - market_mean).powi(2))
-                .sum::<f64>() / (market_returns.len() - 1) as f64;
-            
+                .sum::<f64>()
+                / (market_returns.len() - 1) as f64;
+
             if market_variance > 0.0 {
                 covariance / market_variance
             } else {
@@ -7620,25 +7902,36 @@ pub mod risk_management {
         }
 
         /// Calculate correlation with market
-        fn calculate_correlation(&self, portfolio_returns: &Array1<f64>, market_returns: &Array1<f64>) -> f64 {
+        fn calculate_correlation(
+            &self,
+            portfolio_returns: &Array1<f64>,
+            market_returns: &Array1<f64>,
+        ) -> f64 {
             let port_mean = portfolio_returns.mean().unwrap_or(0.0);
             let market_mean = market_returns.mean().unwrap_or(0.0);
-            
-            let covariance = portfolio_returns.iter().zip(market_returns.iter())
+
+            let covariance = portfolio_returns
+                .iter()
+                .zip(market_returns.iter())
                 .map(|(&p, &m)| (p - port_mean) * (m - market_mean))
-                .sum::<f64>() / (portfolio_returns.len() - 1) as f64;
-            
-            let port_variance = portfolio_returns.iter()
+                .sum::<f64>()
+                / (portfolio_returns.len() - 1) as f64;
+
+            let port_variance = portfolio_returns
+                .iter()
                 .map(|&r| (r - port_mean).powi(2))
-                .sum::<f64>() / (portfolio_returns.len() - 1) as f64;
-            
-            let market_variance = market_returns.iter()
+                .sum::<f64>()
+                / (portfolio_returns.len() - 1) as f64;
+
+            let market_variance = market_returns
+                .iter()
                 .map(|&r| (r - market_mean).powi(2))
-                .sum::<f64>() / (market_returns.len() - 1) as f64;
-            
+                .sum::<f64>()
+                / (market_returns.len() - 1) as f64;
+
             let port_std = port_variance.sqrt();
             let market_std = market_variance.sqrt();
-            
+
             if port_std > 0.0 && market_std > 0.0 {
                 covariance / (port_std * market_std)
             } else {
@@ -7654,17 +7947,17 @@ pub mod risk_management {
             option_positions: &[ExoticOption],
         ) -> Result<Vec<(String, f64)>> {
             let mut stress_results = Vec::new();
-            
+
             for scenario in scenarios {
                 let stressed_value = self.calculate_stressed_portfolio_value(
                     current_portfolio_value,
                     scenario,
                     option_positions,
                 )?;
-                
+
                 stress_results.push((scenario.name.clone(), stressed_value));
             }
-            
+
             Ok(stress_results)
         }
 
@@ -7676,10 +7969,18 @@ pub mod risk_management {
             _option_positions: &[ExoticOption],
         ) -> Result<f64> {
             // Simplified stress calculation
-            let total_shock = scenario.price_shocks.iter().sum::<f64>() / scenario.price_shocks.len() as f64;
+            let total_shock =
+                scenario.price_shocks.iter().sum::<f64>() / scenario.price_shocks.len() as f64;
             Ok(current_value * total_shock)
         }
     }
+}
+
+#[cfg(test)]
+mod ultra_financial_tests {
+    use super::realtime_risk_engine::*;
+    use super::ultra_monte_carlo_engine::*;
+    use super::*;
 }
 
 #[cfg(test)]
@@ -7761,11 +8062,8 @@ mod enhanced_finance_tests {
 /// State-of-the-art quantitative finance algorithms and optimization
 pub mod ultra_performance_extensions {
     use super::*;
-    use ndarray::{Array1, Array2, Array3, ArrayView1, ArrayView2};
-    use scirs2_core::simd_ops::SimdUnifiedOps;
-    use rayon::prelude::*;
-    use std::sync::{Arc, Mutex};
-    use std::collections::BTreeMap;
+    use ndarray::{Array1, Array2};
+    use scirs2_core::parallel_ops::*;
 
     /// Machine Learning Enhanced Volatility Forecasting
     /// Neural network models for volatility prediction
@@ -7815,7 +8113,7 @@ pub mod ultra_performance_extensions {
     impl NeuralVolatilityForecaster {
         /// Create new neural volatility forecaster
         pub fn new(input_dim: usize, hidden_layers: Vec<usize>, output_dim: usize) -> Self {
-            let mut rng = thread_rng();
+            let mut rng = rng();
             let mut weights = Vec::new();
             let mut biases = Vec::new();
 
@@ -7824,10 +8122,10 @@ pub mod ultra_performance_extensions {
             for &layer_size in &hidden_layers {
                 let scale = (2.0 / prev_dim as f64).sqrt();
                 let weight_matrix = Array2::from_shape_fn((layer_size, prev_dim), |_| {
-                    rng.gen_range(-scale..scale)
+                    rng.random_range(-scale..scale)
                 });
                 let bias_vector = Array1::zeros(layer_size);
-                
+
                 weights.push(weight_matrix);
                 biases.push(bias_vector);
                 prev_dim = layer_size;
@@ -7835,9 +8133,8 @@ pub mod ultra_performance_extensions {
 
             // Output layer
             let scale = (2.0 / prev_dim as f64).sqrt();
-            let output_weights = Array2::from_shape_fn((output_dim, prev_dim), |_| {
-                rng.gen_range(-scale..scale)
-            });
+            let output_weights =
+                Array2::from_shape_fn((output_dim, prev_dim), |_| rng.random_range(-scale..scale));
             weights.push(output_weights);
             biases.push(Array1::zeros(output_dim));
 
@@ -7853,7 +8150,12 @@ pub mod ultra_performance_extensions {
         }
 
         /// Train the neural network on historical volatility data
-        pub fn train(&mut self, features: &Array2<f64>, targets: &Array1<f64>, epochs: usize) -> Result<()> {
+        pub fn train(
+            &mut self,
+            features: &Array2<f64>,
+            targets: &Array1<f64>,
+            epochs: usize,
+        ) -> Result<()> {
             for epoch in 0..epochs {
                 let mut total_loss = 0.0;
                 let n_samples = features.nrows();
@@ -7864,7 +8166,7 @@ pub mod ultra_performance_extensions {
 
                     // Forward pass
                     let (prediction, activations) = self.forward_pass(&input)?;
-                    
+
                     // Calculate loss (MSE)
                     let error = prediction - target;
                     let loss = 0.5 * error * error;
@@ -7899,23 +8201,32 @@ pub mod ultra_performance_extensions {
             }
 
             // Output layer (linear activation for regression)
-            let output_z = self.weights.last().unwrap().dot(&current_input) + self.biases.last().unwrap();
+            let output_z =
+                self.weights.last().unwrap().dot(&current_input) + self.biases.last().unwrap();
             let prediction = output_z[0]; // Single output for volatility prediction
 
             Ok((prediction, activations))
         }
 
         /// Backward pass for gradient computation
-        fn backward_pass(&mut self, input: &Array1<f64>, activations: &[Array1<f64>], output_error: f64) -> Result<()> {
+        fn backward_pass(
+            &mut self,
+            input: &Array1<f64>,
+            activations: &[Array1<f64>],
+            output_error: f64,
+        ) -> Result<()> {
             let n_layers = self.weights.len();
             let mut delta = Array1::from_elem(1, output_error);
 
             // Backpropagate through layers
             for i in (0..n_layers).rev() {
                 let prev_activation = if i == 0 { input } else { &activations[i] };
-                
-                // Weight gradients
-                let weight_grad = delta.dot(&prev_activation.t());
+
+                // Weight gradients (outer product)
+                let weight_grad =
+                    Array2::from_shape_fn((delta.len(), prev_activation.len()), |(j, k)| {
+                        delta[j] * prev_activation[k]
+                    });
                 // Bias gradients
                 let bias_grad = delta.clone();
 
@@ -7925,7 +8236,7 @@ pub mod ultra_performance_extensions {
                         self.weights[i][[j, k]] -= self.learning_rate * weight_grad[[j, k]];
                     }
                 }
-                
+
                 for j in 0..self.biases[i].len() {
                     self.biases[i][j] -= self.learning_rate * bias_grad[j];
                 }
@@ -7953,16 +8264,20 @@ pub mod ultra_performance_extensions {
         }
 
         /// Create features from price and volatility history
-        pub fn create_features(&self, prices: &Array1<f64>, volatilities: &Array1<f64>) -> Array2<f64> {
+        pub fn create_features(
+            &self,
+            prices: &Array1<f64>,
+            volatilities: &Array1<f64>,
+        ) -> Array2<f64> {
             let n_samples = prices.len().saturating_sub(self.training_window);
             let n_features = 10; // Returns, volatility lags, realized volatility, etc.
-            
+
             let mut features = Array2::zeros((n_samples, n_features));
 
             for i in 0..n_samples {
                 let window_start = i;
                 let window_end = i + self.training_window;
-                
+
                 if window_end < prices.len() {
                     let price_window = prices.slice(s![window_start..window_end]);
                     let vol_window = volatilities.slice(s![window_start..window_end]);
@@ -7978,7 +8293,9 @@ pub mod ultra_performance_extensions {
                     features[[i, 5]] = volatilities[window_end - 3];
 
                     // Feature 7: Realized volatility
-                    let returns: Vec<f64> = price_window.windows(2)
+                    let returns: Vec<f64> = price_window
+                        .windows(2)
+                        .into_iter()
                         .map(|w| (w[1] / w[0] - 1.0).ln())
                         .collect();
                     let realized_vol = returns.iter().map(|r| r * r).sum::<f64>().sqrt();
@@ -7992,9 +8309,11 @@ pub mod ultra_performance_extensions {
 
                     // Feature 10: Volatility of volatility
                     let vol_mean = vol_window.mean().unwrap_or(0.0);
-                    let vol_of_vol = vol_window.iter()
+                    let vol_of_vol = vol_window
+                        .iter()
                         .map(|&v| (v - vol_mean).powi(2))
-                        .sum::<f64>() / vol_window.len() as f64;
+                        .sum::<f64>()
+                        / vol_window.len() as f64;
                     features[[i, 9]] = vol_of_vol.sqrt();
                 }
             }
@@ -8061,7 +8380,7 @@ pub mod ultra_performance_extensions {
             let n_assets = expected_returns.len();
             let n_qubits_per_asset = 4; // 16 discrete weight levels per asset
             let total_qubits = n_assets * n_qubits_per_asset;
-            
+
             // Initialize quantum state in superposition
             let n_states = 1 << total_qubits;
             let amplitude = Complex64::new(1.0 / (n_states as f64).sqrt(), 0.0);
@@ -8078,7 +8397,11 @@ pub mod ultra_performance_extensions {
         }
 
         /// Optimize portfolio using quantum algorithm
-        pub fn optimize(&mut self, algorithm: QuantumAlgorithm, max_iterations: usize) -> Result<PortfolioOptimizationResult> {
+        pub fn optimize(
+            &mut self,
+            algorithm: QuantumAlgorithm,
+            max_iterations: usize,
+        ) -> Result<PortfolioOptimizationResult> {
             match algorithm {
                 QuantumAlgorithm::VQE => self.optimize_vqe(max_iterations),
                 QuantumAlgorithm::QAOA => self.optimize_qaoa(max_iterations),
@@ -8096,13 +8419,13 @@ pub mod ultra_performance_extensions {
             for iteration in 0..max_iterations {
                 // Apply variational circuit
                 self.apply_variational_circuit(iteration as f64 * 0.1)?;
-                
+
                 // Measure and extract portfolio weights
                 let weights = self.measure_portfolio_weights()?;
-                
+
                 // Calculate objective function (negative Sharpe ratio for minimization)
                 let objective = self.calculate_portfolio_objective(&weights)?;
-                
+
                 if objective < best_objective {
                     best_objective = objective;
                     best_weights = weights;
@@ -8132,11 +8455,11 @@ pub mod ultra_performance_extensions {
         /// QAOA optimization
         fn optimize_qaoa(&mut self, max_iterations: usize) -> Result<PortfolioOptimizationResult> {
             let mut parameters = Array1::zeros(max_iterations * 2); // gamma and beta parameters
-            let mut rng = thread_rng();
-            
+            let mut rng = rng();
+
             // Initialize random parameters
             for i in 0..parameters.len() {
-                parameters[i] = rng.gen_range(0.0..2.0 * PI);
+                parameters[i] = rng.random_range(0.0..2.0 * PI);
             }
 
             let mut best_weights = Array1::zeros(self.n_assets);
@@ -8148,11 +8471,11 @@ pub mod ultra_performance_extensions {
 
                 // Apply QAOA circuit
                 self.apply_qaoa_layer(gamma, beta)?;
-                
+
                 // Evaluate objective
                 let weights = self.measure_portfolio_weights()?;
                 let objective = self.calculate_portfolio_objective(&weights)?;
-                
+
                 if objective < best_objective {
                     best_objective = objective;
                     best_weights = weights;
@@ -8177,20 +8500,23 @@ pub mod ultra_performance_extensions {
         }
 
         /// Quantum annealing optimization
-        fn optimize_quantum_annealing(&mut self, max_iterations: usize) -> Result<PortfolioOptimizationResult> {
+        fn optimize_quantum_annealing(
+            &mut self,
+            max_iterations: usize,
+        ) -> Result<PortfolioOptimizationResult> {
             let mut best_weights = Array1::zeros(self.n_assets);
             let mut best_objective = f64::INFINITY;
 
             for iteration in 0..max_iterations {
                 let annealing_parameter = 1.0 - (iteration as f64 / max_iterations as f64);
-                
+
                 // Apply quantum annealing step
                 self.apply_annealing_step(annealing_parameter)?;
-                
+
                 // Measure portfolio
                 let weights = self.measure_portfolio_weights()?;
                 let objective = self.calculate_portfolio_objective(&weights)?;
-                
+
                 if objective < best_objective {
                     best_objective = objective;
                     best_weights = weights;
@@ -8212,7 +8538,10 @@ pub mod ultra_performance_extensions {
         }
 
         /// Variational quantum circuit optimization
-        fn optimize_variational_circuit(&mut self, max_iterations: usize) -> Result<PortfolioOptimizationResult> {
+        fn optimize_variational_circuit(
+            &mut self,
+            max_iterations: usize,
+        ) -> Result<PortfolioOptimizationResult> {
             // Simplified implementation similar to VQE
             self.optimize_vqe(max_iterations)
         }
@@ -8220,7 +8549,7 @@ pub mod ultra_performance_extensions {
         /// Apply variational circuit for VQE
         fn apply_variational_circuit(&mut self, theta: f64) -> Result<()> {
             let n_states = self.quantum_state.len();
-            
+
             // Apply rotation gates (simplified)
             for i in 0..n_states {
                 let rotation = Complex64::new(theta.cos(), theta.sin());
@@ -8228,7 +8557,12 @@ pub mod ultra_performance_extensions {
             }
 
             // Normalize state
-            let norm = self.quantum_state.iter().map(|c| c.norm_sqr()).sum::<f64>().sqrt();
+            let norm = self
+                .quantum_state
+                .iter()
+                .map(|c| c.norm_sqr())
+                .sum::<f64>()
+                .sqrt();
             if norm > 0.0 {
                 self.quantum_state.mapv_inplace(|c| c / norm);
             }
@@ -8240,7 +8574,7 @@ pub mod ultra_performance_extensions {
         fn apply_qaoa_layer(&mut self, gamma: f64, beta: f64) -> Result<()> {
             // Apply cost unitary
             self.apply_cost_unitary(gamma)?;
-            
+
             // Apply mixing unitary
             self.apply_mixing_unitary(beta)?;
 
@@ -8272,8 +8606,8 @@ pub mod ultra_performance_extensions {
             for i in 0..n_states {
                 for qubit in 0..(self.n_assets * self.n_qubits_per_asset) {
                     let j = i ^ (1 << qubit);
-                    new_state[i] += cos_beta * self.quantum_state[i] + 
-                                   Complex64::new(0.0, -sin_beta) * self.quantum_state[j];
+                    new_state[i] += cos_beta * self.quantum_state[i]
+                        + Complex64::new(0.0, -sin_beta) * self.quantum_state[j];
                 }
             }
 
@@ -8284,29 +8618,32 @@ pub mod ultra_performance_extensions {
         /// Apply annealing step
         fn apply_annealing_step(&mut self, annealing_parameter: f64) -> Result<()> {
             let n_states = self.quantum_state.len();
-            
+
             // Quantum annealing interpolation between initial and final Hamiltonians
             for i in 0..n_states {
                 let weights = self.decode_weights_from_state(i)?;
                 let cost = self.calculate_portfolio_objective(&weights)?;
-                
+
                 // Annealing phase evolution
                 let phase = Complex64::new(0.0, -annealing_parameter * cost).exp();
                 self.quantum_state[i] *= phase;
             }
 
             // Add quantum fluctuations
-            let mut rng = thread_rng();
+            let mut rng = rng();
             for i in 0..n_states {
-                let noise = Complex64::new(
-                    rng.gen_range(-0.01..0.01),
-                    rng.gen_range(-0.01..0.01)
-                );
+                let noise =
+                    Complex64::new(rng.random_range(-0.01..0.01), rng.random_range(-0.01..0.01));
                 self.quantum_state[i] += noise;
             }
 
             // Normalize
-            let norm = self.quantum_state.iter().map(|c| c.norm_sqr()).sum::<f64>().sqrt();
+            let norm = self
+                .quantum_state
+                .iter()
+                .map(|c| c.norm_sqr())
+                .sum::<f64>()
+                .sqrt();
             if norm > 0.0 {
                 self.quantum_state.mapv_inplace(|c| c / norm);
             }
@@ -8317,15 +8654,13 @@ pub mod ultra_performance_extensions {
         /// Measure portfolio weights from quantum state
         fn measure_portfolio_weights(&self) -> Result<Array1<f64>> {
             let mut weights = Array1::zeros(self.n_assets);
-            let mut rng = thread_rng();
-            
+            let mut rng = rng();
+
             // Quantum measurement simulation
-            let probabilities: Vec<f64> = self.quantum_state.iter()
-                .map(|c| c.norm_sqr())
-                .collect();
+            let probabilities: Vec<f64> = self.quantum_state.iter().map(|c| c.norm_sqr()).collect();
 
             // Sample according to quantum probabilities
-            let random_value: f64 = rng.gen();
+            let random_value: f64 = rng.random();
             let mut cumulative_prob = 0.0;
             let mut measured_state = 0;
 
@@ -8367,7 +8702,7 @@ pub mod ultra_performance_extensions {
         fn calculate_portfolio_objective(&self, weights: &Array1<f64>) -> Result<f64> {
             let expected_return = self.expected_returns.dot(weights);
             let portfolio_variance = weights.dot(&self.covariance_matrix.dot(weights));
-            
+
             // Objective: maximize Sharpe ratio (minimize negative Sharpe ratio)
             let objective = if portfolio_variance > 0.0 {
                 -(expected_return - 0.02) / portfolio_variance.sqrt() // Risk-free rate = 2%
@@ -8390,7 +8725,7 @@ pub mod ultra_performance_extensions {
 
                 // Update gamma parameter
                 parameters[layer * 2] -= learning_rate * current_objective;
-                
+
                 // Update beta parameter
                 parameters[layer * 2 + 1] -= learning_rate * current_objective;
 
@@ -8477,9 +8812,9 @@ pub mod ultra_performance_extensions {
         impl CliquetOption {
             /// Price cliquet option using Monte Carlo
             pub fn price_monte_carlo(&self, n_simulations: usize) -> Result<f64> {
-                let mut rng = thread_rng();
+                let mut rng = rng();
                 let mut payoffs = Vec::with_capacity(n_simulations);
-                
+
                 let n_periods = self.observation_dates.len();
                 let dt = if n_periods > 1 {
                     self.observation_dates[1] - self.observation_dates[0]
@@ -8495,10 +8830,12 @@ pub mod ultra_performance_extensions {
                         let z: f64 = rng.sample(StandardNormal);
                         let drift = (self.risk_free_rate - 0.5 * self.volatility.powi(2)) * dt;
                         let diffusion = self.volatility * dt.sqrt() * z;
-                        
+
                         let new_spot = spot * (drift + diffusion).exp();
-                        let period_return = (new_spot / spot - 1.0).max(self.local_floor).min(self.local_cap);
-                        
+                        let period_return = (new_spot / spot - 1.0)
+                            .max(self.local_floor)
+                            .min(self.local_cap);
+
                         sum_returns += period_return;
                         spot = new_spot;
                     }
@@ -8514,7 +8851,8 @@ pub mod ultra_performance_extensions {
                 }
 
                 let mean_payoff = payoffs.iter().sum::<f64>() / payoffs.len() as f64;
-                let present_value = mean_payoff * (-self.risk_free_rate * self.observation_dates.last().unwrap()).exp();
+                let present_value = mean_payoff
+                    * (-self.risk_free_rate * self.observation_dates.last().unwrap()).exp();
 
                 Ok(present_value * self.spot)
             }
@@ -8522,7 +8860,7 @@ pub mod ultra_performance_extensions {
             /// Calculate delta using finite differences
             pub fn calculate_delta(&self, n_simulations: usize, bump_size: f64) -> Result<f64> {
                 let original_price = self.price_monte_carlo(n_simulations)?;
-                
+
                 let mut bumped_option = self.clone();
                 bumped_option.spot += bump_size;
                 let bumped_price = bumped_option.price_monte_carlo(n_simulations)?;
@@ -8535,9 +8873,9 @@ pub mod ultra_performance_extensions {
         impl AutocallableBond {
             /// Price autocallable bond using Monte Carlo
             pub fn price_monte_carlo(&self, n_simulations: usize) -> Result<f64> {
-                let mut rng = thread_rng();
+                let mut rng = rng();
                 let mut payoffs = Vec::with_capacity(n_simulations);
-                
+
                 let n_observations = self.autocall_dates.len();
                 let dt = if n_observations > 1 {
                     self.autocall_dates[1] - self.autocall_dates[0]
@@ -8585,7 +8923,8 @@ pub mod ultra_performance_extensions {
                         } else {
                             final_payoff = self.principal * final_spot_ratio;
                         }
-                        final_payoff *= (-self.risk_free_rate * self.autocall_dates.last().unwrap()).exp();
+                        final_payoff *=
+                            (-self.risk_free_rate * self.autocall_dates.last().unwrap()).exp();
                     }
 
                     payoffs.push(final_payoff);
@@ -8597,9 +8936,9 @@ pub mod ultra_performance_extensions {
 
             /// Calculate probability of autocall at each observation date
             pub fn autocall_probabilities(&self, n_simulations: usize) -> Result<Vec<f64>> {
-                let mut rng = thread_rng();
+                let mut rng = rng();
                 let mut call_counts = vec![0; self.autocall_dates.len()];
-                
+
                 let dt = if self.autocall_dates.len() > 1 {
                     self.autocall_dates[1] - self.autocall_dates[0]
                 } else {
@@ -8625,7 +8964,8 @@ pub mod ultra_performance_extensions {
                     }
                 }
 
-                let probabilities: Vec<f64> = call_counts.iter()
+                let probabilities: Vec<f64> = call_counts
+                    .iter()
                     .map(|&count| count as f64 / n_simulations as f64)
                     .collect();
 
@@ -8645,10 +8985,11 @@ pub mod ultra_performance_extensions {
             pub fn update_realized_variance(&mut self, old_price: f64, new_price: f64) {
                 let log_return = (new_price / old_price).ln();
                 let return_squared = log_return * log_return;
-                
+
                 // Update running realized variance
-                self.realized_variance = (self.realized_variance * (self.n_observations - 1) as f64 + return_squared) 
-                    / self.n_observations as f64;
+                self.realized_variance =
+                    (self.realized_variance * (self.n_observations - 1) as f64 + return_squared)
+                        / self.n_observations as f64;
             }
 
             /// Calculate volatility risk (vega) of variance swap
@@ -8656,16 +8997,21 @@ pub mod ultra_performance_extensions {
                 // Simplified vega calculation
                 // In practice, would need to consider volatility surface dynamics
                 let base_variance = current_volatility * current_volatility;
-                let bumped_variance = (current_volatility + vol_bump) * (current_volatility + vol_bump);
-                
+                let bumped_variance =
+                    (current_volatility + vol_bump) * (current_volatility + vol_bump);
+
                 (bumped_variance - base_variance) * self.variance_notional
             }
 
             /// Price variance swap with stochastic volatility (Heston model)
-            pub fn price_heston_model(&self, heston_params: &HestonParameters, n_simulations: usize) -> Result<f64> {
-                let mut rng = thread_rng();
+            pub fn price_heston_model(
+                &self,
+                heston_params: &HestonParameters,
+                n_simulations: usize,
+            ) -> Result<f64> {
+                let mut rng = rng();
                 let mut payoffs = Vec::with_capacity(n_simulations);
-                
+
                 let dt = self.maturity / self.n_observations as f64;
 
                 for _ in 0..n_simulations {
@@ -8675,16 +9021,18 @@ pub mod ultra_performance_extensions {
                     for _ in 0..self.n_observations {
                         // Evolve variance using Heston model
                         let z_v: f64 = rng.sample(StandardNormal);
-                        let dv = heston_params.mean_reversion * 
-                                 (heston_params.long_term_variance - variance) * dt +
-                                 heston_params.vol_of_vol * variance.sqrt() * dt.sqrt() * z_v;
-                        
+                        let dv = heston_params.mean_reversion
+                            * (heston_params.long_term_variance - variance)
+                            * dt
+                            + heston_params.vol_of_vol * variance.sqrt() * dt.sqrt() * z_v;
+
                         variance = (variance + dv).max(0.0); // Ensure non-negative variance
                         realized_variance += variance * dt;
                     }
 
                     let annualized_realized = realized_variance / self.maturity * 252.0;
-                    let payoff = (annualized_realized - self.strike_variance) * self.variance_notional;
+                    let payoff =
+                        (annualized_realized - self.strike_variance) * self.variance_notional;
                     payoffs.push(payoff);
                 }
 
@@ -8720,12 +9068,12 @@ pub mod ultra_performance_extensions {
         #[test]
         fn test_quantum_portfolio_optimizer() {
             let returns = Array1::from_vec(vec![0.08, 0.12, 0.15]);
-            let covariance = Array2::from_shape_vec((3, 3), vec![
-                0.04, 0.01, 0.02,
-                0.01, 0.09, 0.03,
-                0.02, 0.03, 0.16,
-            ]).unwrap();
-            
+            let covariance = Array2::from_shape_vec(
+                (3, 3),
+                vec![0.04, 0.01, 0.02, 0.01, 0.09, 0.03, 0.02, 0.03, 0.16],
+            )
+            .unwrap();
+
             let optimizer = QuantumPortfolioOptimizer::new(returns, covariance, 1.0);
             assert_eq!(optimizer.n_assets, 3);
             assert_eq!(optimizer.n_qubits_per_asset, 4);
@@ -8770,5 +9118,4 @@ pub mod ultra_performance_extensions {
             assert!(fair_value.is_finite());
         }
     }
-}
 }

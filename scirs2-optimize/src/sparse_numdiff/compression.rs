@@ -50,7 +50,7 @@ pub fn compress_jacobian_pattern(
 ///
 /// Two columns can have the same color if they don't both have nonzeros in the same row
 fn color_jacobian_columns(sparsity: &CsrArray<f64>) -> Result<Vec<usize>, OptimizeError> {
-    let (m, n) = sparsity.shape();
+    let (_m, n) = sparsity.shape();
     let mut coloring = vec![0; n];
     
     // For each column, find the lowest color that doesn't conflict

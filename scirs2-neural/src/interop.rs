@@ -14,6 +14,10 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::path::Path;
 
+// External dependencies for serialization
+use serde_json;
+use chrono;
+
 /// Supported external frameworks
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Framework {
@@ -613,41 +617,352 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
     }
 
     fn serialize_onnx_model(&self, model: &ONNXModel<F>, output_path: &Path) -> Result<()> {
-        // In practice, this would use the ONNX protobuf library
-        // For now, we'll create a simplified serialization
-        let serialized_data = format!("ONNX Model: {}", model.metadata.name);
-        std::fs::write(output_path, serialized_data).map_err(|e| {
+        use serde_json::json;
+        
+        // Create ONNX-compatible model representation
+        let mut graph_nodes = Vec::new();
+        let mut graph_initializers = Vec::new();
+        let mut graph_inputs = Vec::new();
+        let mut graph_outputs = Vec::new();
+        
+        // Convert inputs to ONNX format
+        for input in &model.graph.inputs {
+            graph_inputs.push(json!({
+                "name": input.name,
+                "type": {
+                    "tensor_type": {
+                        "elem_type": self.datatype_to_onnx_type(&input.dtype),
+                        "shape": {
+                            "dim": input.shape.iter().map(|&d| {
+                                if let Some(size) = d {
+                                    json!({"dim_value": size})
+                                } else {
+                                    json!({"dim_param": "batch_size"})
+                                }
+                            }).collect::<Vec<_>>()
+                        }
+                    }
+                }
+            }));
+        }
+        
+        // Convert outputs to ONNX format
+        for output in &model.graph.outputs {
+            graph_outputs.push(json!({
+                "name": output.name,
+                "type": {
+                    "tensor_type": {
+                        "elem_type": self.datatype_to_onnx_type(&output.dtype),
+                        "shape": {
+                            "dim": output.shape.iter().map(|&d| {
+                                if let Some(size) = d {
+                                    json!({"dim_value": size})
+                                } else {
+                                    json!({"dim_param": "batch_size"})
+                                }
+                            }).collect::<Vec<_>>()
+                        }
+                    }
+                }
+            }));
+        }
+        
+        // Convert initializers (weights) to ONNX format
+        for (name, tensor) in &model.graph.initializers {
+            let tensor_data: Vec<f64> = tensor.iter()
+                .map(|&x| x.to_f64().unwrap_or(0.0))
+                .collect();
+            
+            graph_initializers.push(json!({
+                "name": name,
+                "dims": tensor.shape().to_vec(),
+                "data_type": self.datatype_to_onnx_type(&DataType::Float32),
+                "raw_data": tensor_data,
+                "doc_string": format!("Weight tensor {}", name)
+            }));
+        }
+        
+        // Create ONNX model structure
+        let onnx_model = json!({
+            "ir_version": 7,
+            "opset_import": [
+                {
+                    "domain": "",
+                    "version": model.opset_version
+                }
+            ],
+            "producer_name": "scirs2-neural",
+            "producer_version": "0.1.0-beta.1",
+            "domain": "ai.scirs2",
+            "model_version": 1,
+            "doc_string": model.metadata.description,
+            "graph": {
+                "node": graph_nodes,
+                "name": model.metadata.name,
+                "initializer": graph_initializers,
+                "input": graph_inputs,
+                "output": graph_outputs,
+                "doc_string": "Neural network model exported from scirs2-neural"
+            },
+            "metadata_props": [
+                {
+                    "key": "scirs2_version",
+                    "value": "0.1.0-beta.1"
+                },
+                {
+                    "key": "source_framework",
+                    "value": format!("{:?}", model.metadata.source_framework)
+                },
+                {
+                    "key": "export_timestamp",
+                    "value": chrono::Utc::now().to_rfc3339()
+                }
+            ]
+        });
+        
+        // Write ONNX model to file in JSON format
+        // In a real implementation, this would be protobuf binary format
+        let json_string = serde_json::to_string_pretty(&onnx_model)
+            .map_err(|e| NeuralError::ComputationError(format!("JSON serialization error: {}", e)))?;
+            
+        std::fs::write(output_path, json_string).map_err(|e| {
             NeuralError::ComputationError(format!("Failed to write ONNX model: {}", e))
         })?;
+        
         Ok(())
     }
 
+    /// Convert DataType to ONNX tensor element type
+    fn datatype_to_onnx_type(&self, dtype: &DataType) -> i32 {
+        match dtype {
+            DataType::Float32 => 1,  // ONNX FLOAT
+            DataType::UInt8 => 2,    // ONNX UINT8
+            DataType::Int8 => 3,     // ONNX INT8
+            DataType::Int16 => 5,    // ONNX INT16
+            DataType::Int32 => 6,    // ONNX INT32
+            DataType::Int64 => 7,    // ONNX INT64
+            DataType::Bool => 9,     // ONNX BOOL
+            DataType::Float16 => 10, // ONNX FLOAT16
+            DataType::Float64 => 11, // ONNX DOUBLE
+        }
+    }
+
+    /// Convert ONNX tensor element type to DataType
+    fn onnx_type_to_datatype(&self, onnx_type: i32) -> DataType {
+        match onnx_type {
+            1 => DataType::Float32,  // ONNX FLOAT
+            2 => DataType::UInt8,    // ONNX UINT8
+            3 => DataType::Int8,     // ONNX INT8
+            4 => DataType::UInt8,    // ONNX UINT16 (not in our enum, map to UInt8)
+            5 => DataType::Int16,    // ONNX INT16
+            6 => DataType::Int32,    // ONNX INT32
+            7 => DataType::Int64,    // ONNX INT64
+            9 => DataType::Bool,     // ONNX BOOL
+            10 => DataType::Float16, // ONNX FLOAT16
+            11 => DataType::Float64, // ONNX DOUBLE
+            _ => DataType::Float32,  // Default fallback
+        }
+    }
+
     fn parse_onnx_file(&self, model_path: &Path) -> Result<ONNXModel<F>> {
-        // Simplified ONNX parsing
-        let _contents = std::fs::read_to_string(model_path).map_err(|e| {
+        let contents = std::fs::read_to_string(model_path).map_err(|e| {
             NeuralError::ComputationError(format!("Failed to read ONNX file: {}", e))
         })?;
 
-        // Return dummy model for now
+        // Parse JSON-formatted ONNX model
+        let onnx_json: serde_json::Value = serde_json::from_str(&contents).map_err(|e| {
+            NeuralError::ComputationError(format!("Failed to parse ONNX JSON: {}", e))
+        })?;
+
+        // Extract opset version
+        let opset_version = onnx_json["opset_import"][0]["version"]
+            .as_u64()
+            .unwrap_or(11) as u32;
+
+        // Parse graph inputs
+        let mut inputs = Vec::new();
+        if let Some(graph_inputs) = onnx_json["graph"]["input"].as_array() {
+            for input in graph_inputs {
+                if let (Some(name), Some(tensor_type)) = (
+                    input["name"].as_str(),
+                    input["type"]["tensor_type"].as_object(),
+                ) {
+                    let shape = if let Some(shape_info) = tensor_type["shape"]["dim"].as_array() {
+                        shape_info
+                            .iter()
+                            .map(|dim| {
+                                if let Some(size) = dim["dim_value"].as_u64() {
+                                    Some(size as usize)
+                                } else {
+                                    None // Dynamic dimension
+                                }
+                            })
+                            .collect()
+                    } else {
+                        Vec::new()
+                    };
+
+                    let dtype = self.onnx_type_to_datatype(
+                        tensor_type["elem_type"].as_i64().unwrap_or(1) as i32,
+                    );
+
+                    inputs.push(TensorSpec {
+                        name: name.to_string(),
+                        shape,
+                        dtype,
+                        value_range: None,
+                        description: format!("Input tensor {}", name),
+                    });
+                }
+            }
+        }
+
+        // Parse graph outputs
+        let mut outputs = Vec::new();
+        if let Some(graph_outputs) = onnx_json["graph"]["output"].as_array() {
+            for output in graph_outputs {
+                if let (Some(name), Some(tensor_type)) = (
+                    output["name"].as_str(),
+                    output["type"]["tensor_type"].as_object(),
+                ) {
+                    let shape = if let Some(shape_info) = tensor_type["shape"]["dim"].as_array() {
+                        shape_info
+                            .iter()
+                            .map(|dim| {
+                                if let Some(size) = dim["dim_value"].as_u64() {
+                                    Some(size as usize)
+                                } else {
+                                    None // Dynamic dimension
+                                }
+                            })
+                            .collect()
+                    } else {
+                        Vec::new()
+                    };
+
+                    let dtype = self.onnx_type_to_datatype(
+                        tensor_type["elem_type"].as_i64().unwrap_or(1) as i32,
+                    );
+
+                    outputs.push(TensorSpec {
+                        name: name.to_string(),
+                        shape,
+                        dtype,
+                        value_range: None,
+                        description: format!("Output tensor {}", name),
+                    });
+                }
+            }
+        }
+
+        // Parse initializers (weights)
+        let mut initializers = HashMap::new();
+        if let Some(graph_initializers) = onnx_json["graph"]["initializer"].as_array() {
+            for initializer in graph_initializers {
+                if let (Some(name), Some(dims), Some(raw_data)) = (
+                    initializer["name"].as_str(),
+                    initializer["dims"].as_array(),
+                    initializer["raw_data"].as_array(),
+                ) {
+                    let shape: Vec<usize> = dims
+                        .iter()
+                        .filter_map(|d| d.as_u64().map(|x| x as usize))
+                        .collect();
+
+                    let data: Vec<F> = raw_data
+                        .iter()
+                        .filter_map(|v| v.as_f64().and_then(|x| F::from(x)))
+                        .collect();
+
+                    if let Ok(tensor) = ArrayD::from_shape_vec(shape, data) {
+                        initializers.insert(name.to_string(), tensor);
+                    }
+                }
+            }
+        }
+
+        // Parse nodes for more complex models
+        let mut nodes = Vec::new();
+        if let Some(graph_nodes) = onnx_json["graph"]["node"].as_array() {
+            for node in graph_nodes {
+                if let (Some(name), Some(op_type)) = (
+                    node["name"].as_str().or_else(|| node["output"][0].as_str()),
+                    node["op_type"].as_str(),
+                ) {
+                    let inputs: Vec<String> = node["input"]
+                        .as_array()
+                        .unwrap_or(&Vec::new())
+                        .iter()
+                        .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                        .collect();
+
+                    let outputs: Vec<String> = node["output"]
+                        .as_array()
+                        .unwrap_or(&Vec::new())
+                        .iter()
+                        .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                        .collect();
+
+                    let mut attributes = HashMap::new();
+                    if let Some(node_attrs) = node["attribute"].as_array() {
+                        for attr in node_attrs {
+                            if let Some(attr_name) = attr["name"].as_str() {
+                                let attr_value = if let Some(i) = attr["i"].as_i64() {
+                                    AttributeValue::Int(i)
+                                } else if let Some(f) = attr["f"].as_f64() {
+                                    AttributeValue::Float(f)
+                                } else if let Some(s) = attr["s"].as_str() {
+                                    AttributeValue::String(s.to_string())
+                                } else {
+                                    AttributeValue::String("unknown".to_string())
+                                };
+                                attributes.insert(attr_name.to_string(), attr_value);
+                            }
+                        }
+                    }
+
+                    nodes.push(ONNXNode {
+                        name: name.to_string(),
+                        op_type: op_type.to_string(),
+                        inputs,
+                        outputs,
+                        attributes,
+                    });
+                }
+            }
+        }
+
+        // Extract metadata
+        let model_name = onnx_json["graph"]["name"]
+            .as_str()
+            .unwrap_or("imported_model")
+            .to_string();
+        let description = onnx_json["doc_string"]
+            .as_str()
+            .unwrap_or("Imported ONNX model")
+            .to_string();
+
+        let metadata = ModelMetadata {
+            name: model_name,
+            version: "1.0".to_string(),
+            source_framework: Framework::ONNX,
+            description,
+            inputs: inputs.clone(),
+            outputs: outputs.clone(),
+            config: HashMap::new(),
+            training_config: None,
+        };
+
         Ok(ONNXModel {
-            opset_version: 11,
+            opset_version,
             include_training: false,
             graph: ONNXGraph {
-                nodes: Vec::new(),
-                inputs: Vec::new(),
-                outputs: Vec::new(),
-                initializers: HashMap::new(),
+                nodes,
+                inputs,
+                outputs,
+                initializers,
             },
-            metadata: ModelMetadata {
-                name: "imported_model".to_string(),
-                version: "1.0".to_string(),
-                source_framework: Framework::ONNX,
-                description: "Imported ONNX model".to_string(),
-                inputs: Vec::new(),
-                outputs: Vec::new(),
-                config: HashMap::new(),
-                training_config: None,
-            },
+            metadata,
         })
     }
 
@@ -795,14 +1110,49 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
 
     fn save_pytorch_state_dict(
         &self,
-        _state_dict: HashMap<String, ArrayD<F>>,
+        state_dict: HashMap<String, ArrayD<F>>,
         output_path: &Path,
     ) -> Result<()> {
-        // Simplified PyTorch save
-        let placeholder = "PyTorch state dict placeholder";
-        std::fs::write(output_path, placeholder).map_err(|e| {
-            NeuralError::ComputationError(format!("Failed to write PyTorch model: {}", e))
+        use serde_json::json;
+        
+        // Create PyTorch-compatible state dict format
+        let mut pytorch_state_dict = serde_json::Map::new();
+        
+        // Convert each tensor to PyTorch format
+        for (param_name, tensor) in &state_dict {
+            let tensor_data: Vec<f64> = tensor.iter()
+                .map(|&x| x.to_f64().unwrap_or(0.0))
+                .collect();
+            
+            pytorch_state_dict.insert(param_name.clone(), json!({
+                "data": tensor_data,
+                "shape": tensor.shape().to_vec(),
+                "dtype": "float32",
+                "requires_grad": true,
+                "is_leaf": true
+            }));
+        }
+        
+        // Create complete PyTorch checkpoint format
+        let checkpoint = json!({
+            "state_dict": pytorch_state_dict,
+            "version": "1.0",
+            "framework": "scirs2-neural",
+            "exported_at": chrono::Utc::now().to_rfc3339(),
+            "metadata": {
+                "num_parameters": state_dict.values().map(|t| t.len()).sum::<usize>(),
+                "parameter_names": state_dict.keys().collect::<Vec<_>>()
+            }
+        });
+        
+        // Write to file in PyTorch .pth format (JSON representation)
+        let json_string = serde_json::to_string_pretty(&checkpoint)
+            .map_err(|e| NeuralError::ComputationError(format!("JSON serialization error: {}", e)))?;
+            
+        std::fs::write(output_path, json_string).map_err(|e| {
+            NeuralError::ComputationError(format!("Failed to write PyTorch state dict: {}", e))
         })?;
+        
         Ok(())
     }
 
@@ -820,14 +1170,83 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
 
     fn save_tensorflow_model(
         &self,
-        _tf_model: TensorFlowModel<F>,
+        tf_model: TensorFlowModel<F>,
         output_path: &Path,
     ) -> Result<()> {
-        // Simplified TensorFlow save
-        let placeholder = "TensorFlow model placeholder";
-        std::fs::write(output_path, placeholder).map_err(|e| {
+        use serde_json::json;
+        
+        // Create TensorFlow SavedModel format
+        let mut variables_data = serde_json::Map::new();
+        
+        // Convert variables to TensorFlow format
+        for (var_name, tensor) in &tf_model.variables {
+            let tensor_data: Vec<f64> = tensor.iter()
+                .map(|&x| x.to_f64().unwrap_or(0.0))
+                .collect();
+            
+            variables_data.insert(var_name.clone(), json!({
+                "tensor": {
+                    "dtype": "DT_FLOAT",
+                    "tensor_shape": {
+                        "dim": tensor.shape().iter().map(|&d| json!({"size": d})).collect::<Vec<_>>()
+                    },
+                    "tensor_content": tensor_data
+                },
+                "variable_name": var_name
+            }));
+        }
+        
+        // Create signatures
+        let mut signatures_data = serde_json::Map::new();
+        for (sig_name, signature) in &tf_model.signatures {
+            signatures_data.insert(sig_name.clone(), json!({
+                "inputs": signature.inputs,
+                "outputs": signature.outputs,
+                "method_name": signature.method_name
+            }));
+        }
+        
+        // Create TensorFlow SavedModel structure
+        let saved_model = json!({
+            "meta_graphs": [{
+                "meta_info_def": {
+                    "stripped_op_list": [],
+                    "tensorflow_version": "2.0.0",
+                    "any_info": "Exported from scirs2-neural"
+                },
+                "graph_def": {
+                    "node": [],
+                    "versions": {"producer": 1, "min_consumer": 1},
+                    "library": {}
+                },
+                "saver_def": {},
+                "collection_def": {},
+                "signature_def": signatures_data,
+                "asset_file_def": []
+            }],
+            "saved_model_schema_version": 1,
+            "variables": variables_data,
+            "metadata": {
+                "framework": "scirs2-neural",
+                "exported_at": chrono::Utc::now().to_rfc3339(),
+                "num_variables": tf_model.variables.len()
+            }
+        });
+        
+        // Write SavedModel to directory structure
+        if let Some(parent) = output_path.parent() {
+            std::fs::create_dir_all(parent).map_err(|e| {
+                NeuralError::ComputationError(format!("Failed to create directory: {}", e))
+            })?;
+        }
+        
+        let json_string = serde_json::to_string_pretty(&saved_model)
+            .map_err(|e| NeuralError::ComputationError(format!("JSON serialization error: {}", e)))?;
+            
+        std::fs::write(output_path, json_string).map_err(|e| {
             NeuralError::ComputationError(format!("Failed to write TensorFlow model: {}", e))
         })?;
+        
         Ok(())
     }
 

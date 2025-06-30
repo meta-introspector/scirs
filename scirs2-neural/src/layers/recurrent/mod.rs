@@ -17,17 +17,17 @@ pub use rnn::{RNNConfig, RecurrentActivation, RNN};
 
 // Common type definitions used across recurrent layers
 use ndarray::{Array, IxDyn};
-use std::cell::RefCell;
+use std::sync::{Arc, RwLock};
 
 /// Type alias for LSTM gate cache (input, forget, output, cell gates)
-pub type LstmGateCache<F> = RefCell<
+pub type LstmGateCache<F> = Arc<RwLock<
     Option<(
         Array<F, IxDyn>,
         Array<F, IxDyn>,
         Array<F, IxDyn>,
         Array<F, IxDyn>,
     )>,
->;
+>>;
 
 /// Type alias for LSTM forward step output (new hidden, new cell, gates)
 pub type LstmStepOutput<F> = (
@@ -42,7 +42,7 @@ pub type LstmStepOutput<F> = (
 );
 
 /// Type alias for GRU gate cache (reset, update, new gates)
-pub type GruGateCache<F> = RefCell<Option<(Array<F, IxDyn>, Array<F, IxDyn>, Array<F, IxDyn>)>>;
+pub type GruGateCache<F> = Arc<RwLock<Option<(Array<F, IxDyn>, Array<F, IxDyn>, Array<F, IxDyn>)>>>;
 
 /// Type alias for GRU forward output (output, gates)
 pub type GruForwardOutput<F> = (

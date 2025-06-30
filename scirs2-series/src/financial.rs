@@ -1205,7 +1205,7 @@ pub mod technical_indicators {
     }
 
     /// Money Flow Index (MFI)
-    pub fn mfi<F: Float + Clone>(
+    pub fn mfi<F: Float + Clone + std::iter::Sum>(
         high: &Array1<F>,
         low: &Array1<F>,
         close: &Array1<F>,
@@ -2940,7 +2940,7 @@ mod tests {
 }
 
 /// Average Directional Index (ADX) - measures trend strength
-pub fn adx<F: Float + Clone>(
+pub fn adx<F: Float + Clone + num_traits::FromPrimitive>(
     high: &Array1<F>,
     low: &Array1<F>,
     close: &Array1<F>,
@@ -3396,7 +3396,7 @@ pub struct GjrGarchParameters<F: Float> {
 
 /// GJR-GARCH model for capturing volatility asymmetry
 #[derive(Debug)]
-pub struct GjrGarchModel<F: Float + Debug> {
+pub struct GjrGarchModel<F: Float + Debug + std::iter::Sum> {
     /// Model parameters
     parameters: Option<GjrGarchParameters<F>>,
     /// Fitted conditional variance
@@ -3405,7 +3405,7 @@ pub struct GjrGarchModel<F: Float + Debug> {
     fitted: bool,
 }
 
-impl<F: Float + Debug + Clone> GjrGarchModel<F> {
+impl<F: Float + Debug + Clone + std::iter::Sum> GjrGarchModel<F> {
     /// Create a new GJR-GARCH model
     pub fn new() -> Self {
         Self {
@@ -3506,7 +3506,7 @@ impl<F: Float + Debug + Clone> GjrGarchModel<F> {
     /// Forecast future volatility
     pub fn forecast(&self, steps: usize) -> Result<Array1<F>> {
         if !self.fitted {
-            return Err(TimeSeriesError::ModelNotFitted);
+            return Err(TimeSeriesError::ModelNotFitted("GARCH model must be fitted before forecasting".to_string()));
         }
 
         let params = self.parameters.as_ref().unwrap();
@@ -3568,7 +3568,7 @@ pub struct AparchParameters<F: Float> {
 
 /// APARCH model for flexible volatility modeling
 #[derive(Debug)]
-pub struct AparchModel<F: Float + Debug> {
+pub struct AparchModel<F: Float + Debug + std::iter::Sum> {
     /// Model parameters
     parameters: Option<AparchParameters<F>>,
     /// Fitted conditional standard deviation
@@ -3577,7 +3577,7 @@ pub struct AparchModel<F: Float + Debug> {
     fitted: bool,
 }
 
-impl<F: Float + Debug + Clone> AparchModel<F> {
+impl<F: Float + Debug + Clone + std::iter::Sum> AparchModel<F> {
     /// Create a new APARCH model
     pub fn new() -> Self {
         Self {
@@ -3796,7 +3796,7 @@ pub mod advanced_technical_indicators {
         let std_multiplier = F::from(config.std_dev_multiplier).unwrap();
 
         for i in 0..output_len {
-            let window = &prices[i..i + config.period];
+            let window = prices.slice(s![i..i + config.period]);
             
             // Calculate moving average
             let ma = match config.ma_type {
@@ -3921,10 +3921,10 @@ pub mod advanced_technical_indicators {
             let window_start = i;
             let window_end = i + config.k_period;
             
-            let highest_high = high[window_start..window_end]
+            let highest_high = high.slice(s![window_start..window_end])
                 .iter()
                 .fold(F::neg_infinity(), |acc, &x| acc.max(x));
-            let lowest_low = low[window_start..window_end]
+            let lowest_low = low.slice(s![window_start..window_end])
                 .iter()
                 .fold(F::infinity(), |acc, &x| acc.min(x));
             
@@ -3947,7 +3947,7 @@ pub mod advanced_technical_indicators {
         let mut percent_d = Array1::zeros(d_output_len);
         
         for i in 0..d_output_len {
-            let k_window = &percent_k[i..i + config.d_period];
+            let k_window = percent_k.slice(s![i..i + config.d_period]);
             percent_d[i] = match config.d_smoothing {
                 MovingAverageType::Simple => {
                     k_window.sum() / F::from(config.d_period).unwrap()
@@ -4046,8 +4046,10 @@ pub mod advanced_technical_indicators {
         // Helper function to calculate highest high and lowest low
         let calculate_hl_midpoint = |period: usize, start_idx: usize| -> F {
             let end_idx = (start_idx + period).min(n);
-            let highest = high[start_idx..end_idx].iter().fold(F::neg_infinity(), |acc, &x| acc.max(x));
-            let lowest = low[start_idx..end_idx].iter().fold(F::infinity(), |acc, &x| acc.min(x));
+            let high_slice = high.slice(s![start_idx..end_idx]);
+            let low_slice = low.slice(s![start_idx..end_idx]);
+            let highest = high_slice.iter().fold(F::neg_infinity(), |acc, &x| acc.max(x));
+            let lowest = low_slice.iter().fold(F::infinity(), |acc, &x| acc.min(x));
             (highest + lowest) / F::from(2.0).unwrap()
         };
 
@@ -4136,6 +4138,7 @@ pub mod advanced_technical_indicators {
             typical_prices[i] = (high[i] + low[i] + close[i]) / three;
         }
 
+        use crate::financial::technical_indicators::sma;
         let sma_tp = sma(&typical_prices, period)?;
         let mut cci = Array1::zeros(sma_tp.len());
         let constant = F::from(0.015).unwrap();
@@ -4161,7 +4164,7 @@ pub mod advanced_technical_indicators {
     }
 
     /// Money Flow Index (MFI)
-    pub fn mfi<F: Float + Clone>(
+    pub fn mfi<F: Float + Clone + std::iter::Sum>(
         high: &Array1<F>,
         low: &Array1<F>,
         close: &Array1<F>,
@@ -4210,8 +4213,8 @@ pub mod advanced_technical_indicators {
 
         for i in 0..mfi.len() {
             let slice = money_flows.slice(s![i..i + period]);
-            let positive_flow = slice.iter().filter(|&&x| x > F::zero()).cloned().sum();
-            let negative_flow = slice.iter().filter(|&&x| x < F::zero()).map(|&x| -x).sum();
+            let positive_flow: F = slice.iter().filter(|&&x| x > F::zero()).cloned().sum();
+            let negative_flow: F = slice.iter().filter(|&&x| x < F::zero()).map(|&x| -x).sum();
 
             if negative_flow > F::zero() {
                 let money_ratio = positive_flow / negative_flow;
@@ -4471,6 +4474,7 @@ pub mod advanced_technical_indicators {
         let fast_alpha = F::from(2.0).unwrap() / F::from(fast_period + 1).unwrap();
         let slow_alpha = F::from(2.0).unwrap() / F::from(slow_period + 1).unwrap();
 
+        use crate::financial::technical_indicators::ema;
         let fast_ema = ema(&ad_line, fast_alpha)?;
         let slow_ema = ema(&ad_line, slow_alpha)?;
 
@@ -4649,7 +4653,7 @@ pub mod risk_metrics {
     }
 
     /// Calculate comprehensive risk metrics for returns data
-    pub fn calculate_risk_metrics<F: Float + Clone>(
+    pub fn calculate_risk_metrics<F: Float + Clone + std::iter::Sum>(
         returns: &Array1<F>,
         config: &RiskConfig,
     ) -> Result<RiskMetrics<F>> {
@@ -4690,7 +4694,7 @@ pub mod risk_metrics {
             .cloned()
             .collect();
         let cvar = if !tail_returns.is_empty() {
-            -tail_returns.iter().sum::<F>() / F::from(tail_returns.len()).unwrap()
+            -tail_returns.into_iter().sum::<F>() / F::from(tail_returns.len()).unwrap()
         } else {
             var
         };

@@ -529,7 +529,7 @@ impl AdvancedQMCGenerator {
 
             let mut uniform = Array1::zeros(dimension);
             for i in 0..dimension {
-                uniform[i] = state.rng.gen::<f64>();
+                uniform[i] = rand::rng().gen::<f64>();
             }
 
             // Apply inverse normal transformation and correlation
@@ -537,10 +537,10 @@ impl AdvancedQMCGenerator {
                 // Inverse normal using Box-Muller approximation
                 if u <= 0.5 {
                     -(-2.0 * u.ln()).sqrt()
-                        * (2.0 * std::f64::consts::PI * state.rng.gen::<f64>()).cos()
+                        * (2.0 * std::f64::consts::PI * rand::rng().gen::<f64>()).cos()
                 } else {
                     (-2.0 * (1.0 - u).ln()).sqrt()
-                        * (2.0 * std::f64::consts::PI * state.rng.gen::<f64>()).cos()
+                        * (2.0 * std::f64::consts::PI * rand::rng().gen::<f64>()).cos()
                 }
             });
 
@@ -554,7 +554,7 @@ impl AdvancedQMCGenerator {
             // Standard LHS
             for i in 0..dimension {
                 let stratum = current_index % 1000; // Simplified stratification
-                let u = state.rng.gen::<f64>();
+                let u = rand::rng().gen::<f64>();
                 point[i] = (stratum as f64 + u) / 1000.0;
             }
         }
@@ -676,7 +676,7 @@ impl AdvancedQMCGenerator {
 
             // Use Faure-Tezuka permutation pattern
             for i in 1..base {
-                let j = rng.gen_range(0..=i);
+                let j = rng.random_range(0..=i);
                 perm.swap(i as usize, j as usize);
             }
 
@@ -718,7 +718,7 @@ impl AdvancedQMCGenerator {
 
             // Enhanced shuffling with bias towards uniformity
             for i in (1..base).rev() {
-                let j = rng.gen_range(0..=i);
+                let j = rng.random_range(0..=i);
                 perm.swap(i as usize, j as usize);
             }
 
@@ -963,7 +963,7 @@ impl AdvancedQMCGenerator {
         for _ in 0..dimension {
             let mut matrix = Array2::zeros((base as usize, base as usize));
             for i in 0..base as usize {
-                let j = rng.gen_range(0..base as usize);
+                let j = rng.random_range(0..base as usize);
                 matrix[[i, j]] = 1;
             }
             matrices.push(matrix);
@@ -1063,7 +1063,7 @@ impl StratifiedSampler {
 
         // Fill remaining samples if needed
         while sample_idx < n_samples {
-            let random_stratum_idx = rng.gen_range(0..total_strata);
+            let random_stratum_idx = rng.random_range(0..total_strata);
             let stratum_indices = self.linear_to_multi_index(random_stratum_idx);
             let point = self.sample_within_stratum(&stratum_indices, &mut rng)?;
 

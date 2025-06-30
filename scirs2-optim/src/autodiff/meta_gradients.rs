@@ -4,12 +4,12 @@
 //! Reptile, and other meta-learning approaches that require gradients of
 //! gradients with respect to meta-parameters.
 
-use ndarray::{Array, Array1, Array2, ArrayBase, Data, Dimension};
+use ndarray::{Array1, Array2, Dimension};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 
 use super::forward_mode::ForwardModeEngine;
-use super::higher_order::{HessianConfig, HigherOrderEngine, HvpMode};
+use super::higher_order::{HessianConfig, HigherOrderEngine};
 use super::reverse_mode::ReverseModeEngine;
 use crate::error::OptimizerError;
 

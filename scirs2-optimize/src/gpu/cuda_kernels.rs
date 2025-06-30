@@ -5,7 +5,7 @@
 
 use crate::error::{ScirsError, ScirsResult};
 use ndarray::{Array1, Array2};
-use scirs2_core::gpu::{GpuArray, GpuContext, GpuKernel, GpuStream};
+use scirs2_core::gpu::{GpuDevice as GpuContext, GpuKernel};
 use std::sync::Arc;
 
 /// CUDA kernel for parallel function evaluation

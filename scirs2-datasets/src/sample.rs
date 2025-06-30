@@ -116,7 +116,7 @@ pub fn load_wine(force_download: bool) -> Result<Dataset> {
     temp_file.write_all(&data).map_err(DatasetsError::IoError)?;
 
     // Load from the temporary file (using CSV loader)
-    let mut dataset = loaders::load_csv(&temp_path, true, Some(0))?;
+    let mut dataset = loaders::load_csv_legacy(&temp_path, true, Some(0))?;
 
     // Add metadata
     let feature_names = vec![

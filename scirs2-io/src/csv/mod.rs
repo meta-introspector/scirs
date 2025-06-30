@@ -1333,7 +1333,7 @@ impl<R: BufRead> StreamingCsvReader<R> {
             return Err(IoError::FormatError("Empty file".to_string()));
         }
 
-        self.headers = Some(parse_csv_line(&header_line.trim(), &self.config.csv_config));
+        self.headers = Some(parse_csv_line(header_line.trim(), &self.config.csv_config));
         self.current_line += 1;
         Ok(())
     }
@@ -1624,7 +1624,7 @@ pub fn read_csv_numeric_streaming<P: AsRef<Path>>(
     })?;
 
     // Get headers from the first successful read
-    let headers = chunks.first().and_then(|_| {
+    let headers = chunks.first().and({
         // This is a simplified approach - in a real implementation,
         // we'd need to preserve headers from the reader
         None

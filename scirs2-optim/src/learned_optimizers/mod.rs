@@ -3,23 +3,21 @@
 //! This module implements learned optimizers that use neural networks (particularly LSTMs)
 //! to learn optimization strategies, enabling meta-learning for automated optimizer design.
 
-use ndarray::{
-    s, Array, Array1, Array2, Array3, ArrayBase, Data, DataMut, Dimension, Ix1, Ix2, Ix3,
-};
+use ndarray::{Array, Array1, Array2, ArrayBase, Data, Dimension, s};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
-use std::sync::{Arc, Mutex};
 
 pub mod lstm_optimizer;
 pub mod meta_learning;
 pub mod neural_architecture_search;
 pub mod transformer_optimizer;
-pub mod adaptive_transformer_enhancement;
-pub mod few_shot_learning_enhancement;
-pub mod few_shot_optimizer;
 pub mod adaptive_nas_system;
+// TODO: Re-enable these modules after fixing remaining compilation issues
+// pub mod adaptive_transformer_enhancement;
+// pub mod few_shot_learning_enhancement;
+// pub mod few_shot_optimizer;
 
-use crate::error::{OptimError, OptimizerError};
+use crate::error::OptimizerError;
 use crate::optimizers::Optimizer;
 
 /// Configuration for learned optimizers
@@ -178,7 +176,7 @@ pub enum MetaOptimizationStrategy {
 }
 
 /// LSTM-based neural optimizer
-pub struct LSTMOptimizer<A: Float> {
+pub struct LSTMOptimizer<A: Float, D: Dimension = ndarray::Ix1> {
     /// Configuration
     config: LearnedOptimizerConfig,
 
@@ -198,7 +196,7 @@ pub struct LSTMOptimizer<A: Float> {
     loss_history: VecDeque<A>,
 
     /// Meta-optimizer for learning the optimizer
-    meta_optimizer: Box<dyn Optimizer<A> + Send + Sync>,
+    meta_optimizer: Box<dyn Optimizer<A, D> + Send + Sync>,
 
     /// Training state
     training_state: MetaTrainingState<A>,
@@ -1098,14 +1096,15 @@ impl<A: Float> Default for AutoSelectionCriteria<A> {
     }
 }
 
-impl<A> LSTMOptimizer<A>
+impl<A, D> LSTMOptimizer<A, D>
 where
     A: Float + Default + Clone + Send + Sync + std::fmt::Debug,
+    D: Dimension,
 {
     /// Create a new LSTM optimizer
     pub fn new(
         config: LearnedOptimizerConfig,
-        meta_optimizer: Box<dyn Optimizer<A> + Send + Sync>,
+        meta_optimizer: Box<dyn Optimizer<A, D> + Send + Sync>,
     ) -> Result<Self, OptimizerError> {
         let cell_state = LSTMState::new(&config)?;
         let parameters = LSTMParameters::new(&config)?;
@@ -1132,15 +1131,15 @@ where
     }
 
     /// Perform learned optimization step
-    pub fn learned_step<S, D>(
+    pub fn learned_step<S, Dim>(
         &mut self,
-        params: &ArrayBase<S, D>,
-        gradients: &ArrayBase<S, D>,
+        params: &ArrayBase<S, Dim>,
+        gradients: &ArrayBase<S, Dim>,
         loss: Option<A>,
-    ) -> Result<Array<A, D>, OptimizerError>
+    ) -> Result<Array<A, Dim>, OptimizerError>
     where
         S: Data<Elem = A>,
-        D: Dimension + Clone,
+        Dim: Dimension + Clone,
     {
         // Convert inputs to 1D for processing
         let flat_params = self.flatten_array(params)?;
@@ -1451,21 +1450,21 @@ where
     }
 
     // Utility functions
-    fn flatten_array<S, D>(&self, array: &ArrayBase<S, D>) -> Result<Array1<A>, OptimizerError>
+    fn flatten_array<S, Dim>(&self, array: &ArrayBase<S, Dim>) -> Result<Array1<A>, OptimizerError>
     where
         S: Data<Elem = A>,
-        D: Dimension,
+        Dim: Dimension,
     {
         Ok(Array1::from_vec(array.iter().cloned().collect()))
     }
 
-    fn reshape_array<D>(
+    fn reshape_array<Dim>(
         &self,
         flat_array: &Array1<A>,
-        shape: D,
-    ) -> Result<Array<A, D>, OptimizerError>
+        shape: Dim,
+    ) -> Result<Array<A, Dim>, OptimizerError>
     where
-        D: Dimension + Clone,
+        Dim: Dimension + Clone,
     {
         // Simplified reshape - in practice would handle arbitrary dimensions
         Array::from_shape_vec(shape, flat_array.to_vec())

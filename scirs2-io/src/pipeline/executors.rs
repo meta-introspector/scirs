@@ -1,5 +1,8 @@
 //! Pipeline execution strategies and executors
 
+#![allow(dead_code)]
+#![allow(missing_docs)]
+
 use super::*;
 use crate::error::Result;
 use crossbeam_channel::Receiver;
@@ -310,7 +313,7 @@ mod tests {
     fn test_streaming_executor() {
         let pipeline: Pipeline<Vec<i32>, Vec<i32>> = Pipeline::new()
             .add_stage(function_stage("double_all", |nums: Vec<i32>| {
-                Ok(nums.into_iter().map(|x| x * 2).collect())
+                Ok(nums.into_iter().map(|x| x * 2).collect::<Vec<_>>())
             }));
 
         let executor = StreamingExecutor::new(2);

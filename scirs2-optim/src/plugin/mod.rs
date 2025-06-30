@@ -1,0 +1,59 @@
+//! Plugin architecture for custom optimizer development
+//!
+//! This module provides a comprehensive plugin system that allows developers to create,
+//! register, and use custom optimizers seamlessly with the existing optimizer ecosystem.
+//!
+//! # Plugin Architecture
+//!
+//! The plugin system consists of several key components:
+//! - Plugin trait definitions for optimizers and extensions
+//! - Plugin registry for discovery and management
+//! - Plugin loader for dynamic loading (when supported)
+//! - Plugin SDK with utilities and helpers
+//! - Plugin validation and testing framework
+//!
+//! # Examples
+//!
+//! ## Creating a Custom Optimizer Plugin
+//!
+//! ```rust
+//! use scirs2_optim::plugin::{OptimizerPlugin, PluginInfo, PluginCapabilities};
+//! use ndarray::Array1;
+//! 
+//! struct MyCustomOptimizer {
+//!     learning_rate: f64,
+//! }
+//! 
+//! impl OptimizerPlugin<f64> for MyCustomOptimizer {
+//!     fn step(&mut self, params: &Array1<f64>, gradients: &Array1<f64>) -> Array1<f64> {
+//!         // Custom optimization logic
+//!         params - &(gradients * self.learning_rate)
+//!     }
+//!     
+//!     fn name(&self) -> &str { "MyCustomOptimizer" }
+//!     fn version(&self) -> &str { "1.0.0" }
+//!     // ... other required methods
+//! }
+//! ```
+
+pub mod core;
+pub mod registry;
+pub mod loader;
+pub mod sdk;
+pub mod validation;
+// Examples are in the examples/ directory
+
+pub use core::*;
+pub use registry::*;
+pub use loader::*;
+pub use sdk::*;
+pub use validation::*;
+
+use crate::error::{OptimError, Result};
+use ndarray::{Array, Array1, Dimension};
+use num_traits::Float;
+use serde::{Deserialize, Serialize};
+use std::any::Any;
+use std::collections::HashMap;
+use std::fmt::Debug;
+use std::path::PathBuf;

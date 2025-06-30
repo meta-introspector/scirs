@@ -324,15 +324,23 @@ impl TRPO {
         let old_log_probs = Array1::from_vec(old_log_probs);
 
         // Compute policy gradient
-        let mut policy_grad = Array1::zeros(100); // Placeholder size
+        let param_count = self.policy.get_parameter_count();
+        let mut policy_grad = Array1::zeros(param_count);
+        
         for i in 0..n {
             let state = states.row(i);
             let action = actions.row(i);
             let advantage = normalized_advantages[i];
 
-            // This would compute actual gradients
-            // For now, using placeholder
+            // Compute log probability gradient with respect to policy parameters
+            let log_prob_grad = self.policy.compute_log_prob_gradient(&state, &action)?;
+            
+            // Weight by advantage and accumulate
+            policy_grad = policy_grad + log_prob_grad * advantage;
         }
+        
+        // Average over batch
+        policy_grad = policy_grad / n as f32;
 
         // Compute natural gradient using conjugate gradient
         let step_dir = self.conjugate_gradient(&states.view(), &policy_grad.view())?;

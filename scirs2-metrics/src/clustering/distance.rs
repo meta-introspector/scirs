@@ -8,6 +8,7 @@ use ndarray::{Array1, ArrayBase, Data, Dimension, Ix1, Ix2};
 use num_traits::{Float, NumCast};
 use std::collections::HashMap;
 use std::ops::{AddAssign, DivAssign};
+use scirs2_core::simd_ops::SimdUnifiedOps;
 
 use crate::error::{MetricsError, Result};
 
@@ -52,7 +53,7 @@ pub fn inter_cluster_distances<F, S1, S2, D>(
     metric: &str,
 ) -> Result<HashMap<(usize, usize), F>>
 where
-    F: Float + NumCast + std::fmt::Debug + ndarray::ScalarOperand + AddAssign + DivAssign,
+    F: Float + NumCast + std::fmt::Debug + ndarray::ScalarOperand + AddAssign + DivAssign + SimdUnifiedOps,
     S1: Data<Elem = F>,
     S2: Data<Elem = usize>,
     D: Dimension,
@@ -172,7 +173,7 @@ pub fn intra_cluster_distances<F, S1, S2, D>(
     metric: &str,
 ) -> Result<HashMap<usize, F>>
 where
-    F: Float + NumCast + std::fmt::Debug + ndarray::ScalarOperand + AddAssign + DivAssign,
+    F: Float + NumCast + std::fmt::Debug + ndarray::ScalarOperand + AddAssign + DivAssign + SimdUnifiedOps,
     S1: Data<Elem = F>,
     S2: Data<Elem = usize>,
     D: Dimension,
@@ -303,7 +304,7 @@ pub fn distance_ratio_index<F, S1, S2, D>(
     metric: &str,
 ) -> Result<F>
 where
-    F: Float + NumCast + std::fmt::Debug + ndarray::ScalarOperand + AddAssign + DivAssign,
+    F: Float + NumCast + std::fmt::Debug + ndarray::ScalarOperand + AddAssign + DivAssign + SimdUnifiedOps,
     S1: Data<Elem = F>,
     S2: Data<Elem = usize>,
     D: Dimension,
@@ -406,7 +407,7 @@ pub fn isolation_index<F, S1, S2, D>(
     metric: &str,
 ) -> Result<F>
 where
-    F: Float + NumCast + std::fmt::Debug + ndarray::ScalarOperand + AddAssign + DivAssign,
+    F: Float + NumCast + std::fmt::Debug + ndarray::ScalarOperand + AddAssign + DivAssign + SimdUnifiedOps,
     S1: Data<Elem = F>,
     S2: Data<Elem = usize>,
     D: Dimension,
@@ -472,50 +473,80 @@ where
 
 fn euclidean_distance<F, S1, S2>(x: &ArrayBase<S1, Ix1>, y: &ArrayBase<S2, Ix1>) -> F
 where
-    F: Float + ndarray::ScalarOperand,
+    F: Float + ndarray::ScalarOperand + SimdUnifiedOps,
     S1: Data<Elem = F>,
     S2: Data<Elem = F>,
 {
-    let mut sum_sq = F::zero();
-    for (a, b) in x.iter().zip(y.iter()) {
-        let diff = *a - *b;
-        sum_sq = sum_sq + diff * diff;
+    // Use SIMD optimizations for contiguous arrays
+    if x.is_standard_layout() && y.is_standard_layout() {
+        let diff = F::simd_sub(&x.view(), &y.view());
+        let squared_diff = F::simd_mul(&diff.view(), &diff.view());
+        F::simd_sum(&squared_diff.view()).sqrt()
+    } else {
+        // Fallback for non-contiguous arrays
+        let mut sum_sq = F::zero();
+        for (a, b) in x.iter().zip(y.iter()) {
+            let diff = *a - *b;
+            sum_sq = sum_sq + diff * diff;
+        }
+        sum_sq.sqrt()
     }
-    sum_sq.sqrt()
 }
 
 fn manhattan_distance<F, S1, S2>(x: &ArrayBase<S1, Ix1>, y: &ArrayBase<S2, Ix1>) -> F
 where
-    F: Float + ndarray::ScalarOperand,
+    F: Float + ndarray::ScalarOperand + SimdUnifiedOps,
     S1: Data<Elem = F>,
     S2: Data<Elem = F>,
 {
-    let mut sum_abs = F::zero();
-    for (a, b) in x.iter().zip(y.iter()) {
-        let diff = *a - *b;
-        sum_abs = sum_abs + diff.abs();
+    // Use SIMD optimizations for contiguous arrays
+    if x.is_standard_layout() && y.is_standard_layout() {
+        let diff = F::simd_sub(&x.view(), &y.view());
+        let abs_diff = F::simd_abs(&diff.view());
+        F::simd_sum(&abs_diff.view())
+    } else {
+        // Fallback for non-contiguous arrays
+        let mut sum_abs = F::zero();
+        for (a, b) in x.iter().zip(y.iter()) {
+            let diff = *a - *b;
+            sum_abs = sum_abs + diff.abs();
+        }
+        sum_abs
     }
-    sum_abs
 }
 
 fn cosine_distance<F, S1, S2>(x: &ArrayBase<S1, Ix1>, y: &ArrayBase<S2, Ix1>) -> F
 where
-    F: Float + ndarray::ScalarOperand,
+    F: Float + ndarray::ScalarOperand + SimdUnifiedOps,
     S1: Data<Elem = F>,
     S2: Data<Elem = F>,
 {
-    let mut dot_product = F::zero();
-    let mut norm_x = F::zero();
-    let mut norm_y = F::zero();
+    // Use SIMD optimizations for contiguous arrays
+    let (dot_product, norm_x, norm_y) = if x.is_standard_layout() && y.is_standard_layout() {
+        let xy = F::simd_mul(&x.view(), &y.view());
+        let dot_product = F::simd_sum(&xy.view());
+        
+        let x_squared = F::simd_mul(&x.view(), &x.view());
+        let norm_x_sq = F::simd_sum(&x_squared.view());
+        
+        let y_squared = F::simd_mul(&y.view(), &y.view());
+        let norm_y_sq = F::simd_sum(&y_squared.view());
+        
+        (dot_product, norm_x_sq.sqrt(), norm_y_sq.sqrt())
+    } else {
+        // Fallback for non-contiguous arrays
+        let mut dot_product = F::zero();
+        let mut norm_x = F::zero();
+        let mut norm_y = F::zero();
 
-    for (a, b) in x.iter().zip(y.iter()) {
-        dot_product = dot_product + (*a * *b);
-        norm_x = norm_x + (*a * *a);
-        norm_y = norm_y + (*b * *b);
-    }
+        for (a, b) in x.iter().zip(y.iter()) {
+            dot_product = dot_product + (*a * *b);
+            norm_x = norm_x + (*a * *a);
+            norm_y = norm_y + (*b * *b);
+        }
 
-    norm_x = norm_x.sqrt();
-    norm_y = norm_y.sqrt();
+        (dot_product, norm_x.sqrt(), norm_y.sqrt())
+    };
 
     if norm_x > F::zero() && norm_y > F::zero() {
         F::one() - (dot_product / (norm_x * norm_y))

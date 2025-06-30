@@ -68,17 +68,17 @@ lazy_static! {
 
     // Number patterns for normalization
     static ref NUMBER_PATTERN: Regex = Regex::new(
-        r"(?i)(?:(?:\b|\s|^)[-+]?(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d+)?(?:[eE][-+]?\d+)?(?:\b|\s|$))"
+        r"(?i)\b[-+]?(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d+)?(?:[eE][-+]?\d+)?\b"
     ).unwrap();
 
     // Currency pattern
     static ref CURRENCY_PATTERN: Regex = Regex::new(
-        r"(?i)(?:[$€£¥₹])\s*(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d{1,2})?|(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d{1,2})?\s*(?:dollars?|euros?|pounds?|yen|rupees?|USD|EUR|GBP|JPY|INR)"
+        r"(?i)(?:[$€£¥₹])[ \t]*(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d{1,2})?|(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d{1,2})?[ \t]*(?:dollars?|euros?|pounds?|yen|rupees?|USD|EUR|GBP|JPY|INR)\b"
     ).unwrap();
 
-    // Percentage pattern
+    // Percentage pattern  
     static ref PERCENTAGE_PATTERN: Regex = Regex::new(
-        r"(?i)(?:\b|\s|^)[-+]?(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d+)?%"
+        r"(?i)\b[-+]?(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d+)?%"
     ).unwrap();
 
     // Ordinal pattern
@@ -115,7 +115,7 @@ lazy_static! {
 
     // Temperature patterns
     static ref TEMPERATURE_PATTERN: Regex = Regex::new(
-        r"(?i)[-+]?(?:\d+\.?\d*|\.\d+)\s*(?:°[CF]|degrees?\s+(?:celsius|fahrenheit|kelvin)|°K)\b"
+        r"(?i)[-+]?(?:\d+\.?\d*|\.\d+)\s*(?:°[CFK]|[CFK](?:\s+degrees?)?\s*(?:celsius|fahrenheit|kelvin)?|degrees?\s+(?:celsius|fahrenheit|kelvin))\b"
     ).unwrap();
 
     // Measurement unit patterns

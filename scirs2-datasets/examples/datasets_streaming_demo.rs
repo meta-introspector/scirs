@@ -610,9 +610,126 @@ fn simulate_model_evaluation() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Simplified memory usage estimation (placeholder)
+/// Get actual memory usage of the current process in MB
 fn get_memory_usage() -> f64 {
-    // In a real implementation, this would use system APIs to get actual memory usage
-    // For demonstration, we return a random value
-    rand::random::<f64>() * 50.0 + 10.0 // 10-60 MB range
+    get_process_memory_usage().unwrap_or_else(|_| {
+        // Fallback to a placeholder if real memory usage cannot be determined
+        rand::random::<f64>() * 50.0 + 10.0 // 10-60 MB range
+    })
+}
+
+/// Platform-specific memory usage implementation
+#[cfg(target_os = "linux")]
+fn get_process_memory_usage() -> Result<f64, Box<dyn std::error::Error>> {
+    use std::fs;
+
+    // Read /proc/self/status to get VmRSS (Resident Set Size)
+    let status = fs::read_to_string("/proc/self/status")?;
+
+    for line in status.lines() {
+        if line.starts_with("VmRSS:") {
+            let parts: Vec<&str> = line.split_whitespace().collect();
+            if parts.len() >= 2 {
+                let kb: f64 = parts[1].parse()?;
+                return Ok(kb / 1024.0); // Convert KB to MB
+            }
+        }
+    }
+
+    Err("VmRSS not found in /proc/self/status".into())
+}
+
+#[cfg(target_os = "macos")]
+fn get_process_memory_usage() -> Result<f64, Box<dyn std::error::Error>> {
+    use std::mem;
+    use std::ptr;
+
+    // Use macOS mach API to get memory info
+    extern "C" {
+        fn mach_task_self() -> u32;
+        fn task_info(
+            target_task: u32,
+            flavor: u32,
+            task_info_out: *mut u8,
+            task_info_outCnt: *mut u32,
+        ) -> i32;
+    }
+
+    const TASK_BASIC_INFO: u32 = 5;
+    const TASK_BASIC_INFO_COUNT: u32 = 5;
+
+    #[repr(C)]
+    struct TaskBasicInfo {
+        suspend_count: u32,
+        virtual_size: u32,
+        resident_size: u32,
+        user_time: u64,
+        system_time: u64,
+    }
+
+    unsafe {
+        let mut info = mem::zeroed::<TaskBasicInfo>();
+        let mut count = TASK_BASIC_INFO_COUNT;
+
+        let result = task_info(
+            mach_task_self(),
+            TASK_BASIC_INFO,
+            &mut info as *mut _ as *mut u8,
+            &mut count,
+        );
+
+        if result == 0 {
+            Ok(info.resident_size as f64 / (1024.0 * 1024.0)) // Convert bytes to MB
+        } else {
+            Err(format!("task_info failed with code {}", result).into())
+        }
+    }
+}
+
+#[cfg(target_os = "windows")]
+fn get_process_memory_usage() -> Result<f64, Box<dyn std::error::Error>> {
+    use std::mem;
+    use std::ptr;
+
+    // Use Windows API to get memory info
+    extern "system" {
+        fn GetCurrentProcess() -> isize;
+        fn GetProcessMemoryInfo(
+            process: isize,
+            counters: *mut ProcessMemoryCounters,
+            cb: u32,
+        ) -> i32;
+    }
+
+    #[repr(C)]
+    struct ProcessMemoryCounters {
+        cb: u32,
+        page_fault_count: u32,
+        peak_working_set_size: usize,
+        working_set_size: usize,
+        quota_peak_paged_pool_usage: usize,
+        quota_paged_pool_usage: usize,
+        quota_peak_non_paged_pool_usage: usize,
+        quota_non_paged_pool_usage: usize,
+        pagefile_usage: usize,
+        peak_pagefile_usage: usize,
+    }
+
+    unsafe {
+        let mut counters = mem::zeroed::<ProcessMemoryCounters>();
+        counters.cb = mem::size_of::<ProcessMemoryCounters>() as u32;
+
+        let result = GetProcessMemoryInfo(GetCurrentProcess(), &mut counters, counters.cb);
+
+        if result != 0 {
+            Ok(counters.working_set_size as f64 / (1024.0 * 1024.0)) // Convert bytes to MB
+        } else {
+            Err("GetProcessMemoryInfo failed".into())
+        }
+    }
+}
+
+#[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+fn get_process_memory_usage() -> Result<f64, Box<dyn std::error::Error>> {
+    Err("Memory usage monitoring not implemented for this platform".into())
 }

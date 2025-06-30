@@ -89,6 +89,7 @@ pub struct ScientificTextProcessor {
     chemical_regex: Regex,
     measurement_regex: Regex,
     abbreviation_map: HashMap<String, String>,
+    #[allow(dead_code)]
     technical_terms: HashSet<String>,
 }
 
@@ -202,6 +203,7 @@ impl ScientificTextProcessor {
     }
 
     /// Extract citations from text
+    #[allow(dead_code)]
     fn extract_citations(&self, text: &str) -> Result<Vec<String>> {
         Ok(self
             .citation_regex
@@ -235,6 +237,7 @@ impl ScientificTextProcessor {
     }
 
     /// Extract chemical formulas
+    #[allow(dead_code)]
     fn extract_chemicals(&self, text: &str) -> Result<Vec<String>> {
         Ok(self
             .chemical_regex
@@ -250,6 +253,7 @@ impl ScientificTextProcessor {
     }
 
     /// Extract scientific measurements
+    #[allow(dead_code)]
     fn extract_measurements(&self, text: &str) -> Result<Vec<String>> {
         Ok(self
             .measurement_regex
@@ -321,6 +325,7 @@ pub struct LegalTextProcessor {
     config: DomainProcessorConfig,
     case_citation_regex: Regex,
     statute_regex: Regex,
+    #[allow(dead_code)]
     legal_terms: HashSet<String>,
     contract_clauses: Vec<String>,
 }
@@ -419,6 +424,7 @@ impl LegalTextProcessor {
     }
 
     /// Extract case citations
+    #[allow(dead_code)]
     fn extract_case_citations(&self, text: &str) -> Result<Vec<String>> {
         Ok(self
             .case_citation_regex
@@ -443,6 +449,7 @@ impl LegalTextProcessor {
     }
 
     /// Extract statute references
+    #[allow(dead_code)]
     fn extract_statutes(&self, text: &str) -> Result<Vec<String>> {
         Ok(self
             .statute_regex
@@ -503,6 +510,7 @@ pub struct MedicalTextProcessor {
     drug_regex: Regex,
     dosage_regex: Regex,
     symptom_regex: Regex,
+    #[allow(dead_code)]
     medical_terms: HashSet<String>,
     abbreviations: HashMap<String, String>,
 }
@@ -612,6 +620,7 @@ impl MedicalTextProcessor {
     }
 
     /// Extract drug names
+    #[allow(dead_code)]
     fn extract_drugs(&self, text: &str) -> Result<Vec<String>> {
         Ok(self
             .drug_regex
@@ -636,6 +645,7 @@ impl MedicalTextProcessor {
     }
 
     /// Extract dosage information
+    #[allow(dead_code)]
     fn extract_dosages(&self, text: &str) -> Result<Vec<String>> {
         Ok(self
             .dosage_regex
@@ -691,7 +701,9 @@ pub struct FinancialTextProcessor {
     financial_instrument_regex: Regex,
     percentage_regex: Regex,
     date_regex: Regex,
+    #[allow(dead_code)]
     financial_terms: HashSet<String>,
+    #[allow(dead_code)]
     currency_codes: HashSet<String>,
 }
 
@@ -700,7 +712,7 @@ impl FinancialTextProcessor {
     pub fn new(config: DomainProcessorConfig) -> Result<Self> {
         // Currency patterns
         let currency_regex = Regex::new(
-            r"\$\d+(?:,\d{3})*(?:\.\d{2})?|\€\d+(?:,\d{3})*(?:\.\d{2})?|\£\d+(?:,\d{3})*(?:\.\d{2})?|USD\s*\d+|EUR\s*\d+|GBP\s*\d+"
+            r"\$\d+(?:,\d{3})*(?:\.\d{2})?|€\d+(?:,\d{3})*(?:\.\d{2})?|£\d+(?:,\d{3})*(?:\.\d{2})?|USD\s*\d+|EUR\s*\d+|GBP\s*\d+"
         ).map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
 
         // Financial instruments
@@ -808,6 +820,7 @@ impl FinancialTextProcessor {
     }
 
     /// Extract currency amounts
+    #[allow(dead_code)]
     fn extract_currencies(&self, text: &str) -> Result<Vec<String>> {
         Ok(self
             .currency_regex
@@ -832,6 +845,7 @@ impl FinancialTextProcessor {
     }
 
     /// Extract financial instruments
+    #[allow(dead_code)]
     fn extract_financial_instruments(&self, text: &str) -> Result<Vec<String>> {
         Ok(self
             .financial_instrument_regex
@@ -944,6 +958,7 @@ impl PatentTextProcessor {
         })
     }
 
+    #[allow(dead_code)]
     fn extract_patent_numbers(&self, text: &str) -> Result<Vec<String>> {
         let mut patent_numbers = Vec::new();
 
@@ -1016,6 +1031,7 @@ impl PatentTextProcessor {
         Ok(entities)
     }
 
+    #[allow(dead_code)]
     fn extract_claim_references(&self, text: &str) -> Result<Vec<String>> {
         let mut claims = Vec::new();
 
@@ -1048,6 +1064,7 @@ impl PatentTextProcessor {
         Ok(entities)
     }
 
+    #[allow(dead_code)]
     fn extract_patent_classifications(&self, text: &str) -> Result<Vec<String>> {
         let mut classifications = Vec::new();
 
@@ -1166,6 +1183,7 @@ impl NewsTextProcessor {
         })
     }
 
+    #[allow(dead_code)]
     fn extract_person_names(&self, text: &str) -> Result<Vec<String>> {
         let mut names = Vec::new();
 
@@ -1185,7 +1203,7 @@ impl NewsTextProcessor {
             let speaker = mat
                 .as_str()
                 .split_whitespace()
-                .take_while(|w| w.chars().next().map_or(false, |c| c.is_uppercase()))
+                .take_while(|w| w.chars().next().is_some_and(|c| c.is_uppercase()))
                 .collect::<Vec<_>>()
                 .join(" ");
             if !speaker.is_empty() {
@@ -1232,6 +1250,7 @@ impl NewsTextProcessor {
         Ok(entities)
     }
 
+    #[allow(dead_code)]
     fn extract_organizations(&self, text: &str) -> Result<Vec<String>> {
         let mut orgs = Vec::new();
 
@@ -1314,6 +1333,7 @@ impl NewsTextProcessor {
         Ok(entities)
     }
 
+    #[allow(dead_code)]
     fn extract_dates(&self, text: &str) -> Result<Vec<String>> {
         let mut dates = Vec::new();
 
@@ -1368,6 +1388,7 @@ impl NewsTextProcessor {
         Ok(entities)
     }
 
+    #[allow(dead_code)]
     fn extract_quotes(&self, text: &str) -> Result<Vec<String>> {
         let mut quotes = Vec::new();
 
@@ -1474,6 +1495,7 @@ impl SocialMediaTextProcessor {
         })
     }
 
+    #[allow(dead_code)]
     fn extract_hashtags(&self, text: &str) -> Result<Vec<String>> {
         let mut hashtags = Vec::new();
 
@@ -1504,6 +1526,7 @@ impl SocialMediaTextProcessor {
         Ok(entities)
     }
 
+    #[allow(dead_code)]
     fn extract_mentions(&self, text: &str) -> Result<Vec<String>> {
         let mut mentions = Vec::new();
 
@@ -1534,6 +1557,7 @@ impl SocialMediaTextProcessor {
         Ok(entities)
     }
 
+    #[allow(dead_code)]
     fn extract_urls(&self, text: &str) -> Result<Vec<String>> {
         let mut urls = Vec::new();
 
@@ -1584,6 +1608,7 @@ impl SocialMediaTextProcessor {
         Ok(entities)
     }
 
+    #[allow(dead_code)]
     fn extract_emojis(&self, text: &str) -> Result<Vec<String>> {
         let mut emojis = Vec::new();
 
@@ -1672,9 +1697,30 @@ impl SocialMediaTextProcessor {
         normalized = normalized.replace("4", "for");
 
         // Handle repeated characters (e.g., "soooo" -> "so")
-        let repeat_pattern = Regex::new(r"(.)\1{2,}")
-            .map_err(|e| TextError::InvalidInput(format!("Invalid regex: {}", e)))?;
-        normalized = repeat_pattern.replace_all(&normalized, "$1$1").to_string();
+        // Using character iteration instead of backreferences
+        let chars: Vec<char> = normalized.chars().collect();
+        let mut result = Vec::new();
+        let mut i = 0;
+        while i < chars.len() {
+            let current_char = chars[i];
+            result.push(current_char);
+            
+            // Count consecutive occurrences
+            let mut count = 1;
+            while i + count < chars.len() && chars[i + count] == current_char {
+                count += 1;
+            }
+            
+            // If more than 2 consecutive, add one more (keeping 2 total)
+            if count > 2 {
+                result.push(current_char);
+            } else if count == 2 {
+                result.push(current_char);
+            }
+            
+            i += count;
+        }
+        normalized = result.into_iter().collect();
 
         Ok(normalized)
     }
@@ -1704,6 +1750,12 @@ pub struct UnifiedDomainProcessor {
     patent_processor: Option<PatentTextProcessor>,
     news_processor: Option<NewsTextProcessor>,
     social_media_processor: Option<SocialMediaTextProcessor>,
+}
+
+impl Default for UnifiedDomainProcessor {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl UnifiedDomainProcessor {
@@ -1934,10 +1986,8 @@ impl UnifiedDomainProcessor {
         ];
         let max_score = scores.iter().max().unwrap();
 
-        if *max_score == 0 {
-            Domain::Scientific // Default fallback
-        } else if sci_score == *max_score {
-            Domain::Scientific
+        if *max_score == 0 || sci_score == *max_score {
+            Domain::Scientific // Default fallback or scientific has max score
         } else if legal_score == *max_score {
             Domain::Legal
         } else if medical_score == *max_score {

@@ -313,15 +313,15 @@ impl OptimizationVisualizer {
     <div class="metric">Final Function Value: <span class="value">{:.6e}</span></div>
     <div class="metric">Initial Function Value: <span class="value">{:.6e}</span></div>
     <div class="metric">Function Improvement: <span class="value">{:.6e}</span></div>
-    <div class="metric">Total Runtime: <span class="value">{:.3f}s</span></div>
+    <div class="metric">Total Runtime: <span class="value">{:.3}s</span></div>
     {}
     
     <h2>Convergence Analysis</h2>
     <table>
         <tr><th>Metric</th><th>Value</th></tr>
         <tr><td>Convergence Rate</td><td>{}</td></tr>
-        <tr><td>Average Iteration Time</td><td>{:.6f}s</td></tr>
-        <tr><td>Function Evaluations per Second</td><td>{:.2f}</td></tr>
+        <tr><td>Average Iteration Time</td><td>{:.6}s</td></tr>
+        <tr><td>Function Evaluations per Second</td><td>{:.2}</td></tr>
     </table>
     
     {}
@@ -341,7 +341,7 @@ impl OptimizationVisualizer {
             },
             trajectory
                 .convergence_rate()
-                .map(|r| format!("{:.6f}", r))
+                .map(|r| format!("{:.6}", r))
                 .unwrap_or_else(|| "N/A".to_string()),
             if trajectory.len() > 1 && !trajectory.times.is_empty() {
                 trajectory.times.last().cloned().unwrap_or(0.0) / trajectory.len() as f64

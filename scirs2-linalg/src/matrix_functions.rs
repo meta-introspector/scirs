@@ -643,7 +643,7 @@ where
 
     // Use threshold to determine if parallel processing is worthwhile
     const PARALLEL_THRESHOLD: usize = 50; // For matrices larger than 50x50
-    
+
     if a.nrows() < PARALLEL_THRESHOLD || a.ncols() < PARALLEL_THRESHOLD {
         // For small matrices, use sequential implementation
         return logm(a);
@@ -683,14 +683,14 @@ where
     }
 
     // Check for diagonal matrix using parallel iteration
-    let is_diagonal = (0..n).into_par_iter().all(|i| {
-        (0..n).all(|j| i == j || a[[i, j]].abs() <= F::epsilon())
-    });
+    let is_diagonal = (0..n)
+        .into_par_iter()
+        .all(|i| (0..n).all(|j| i == j || a[[i, j]].abs() <= F::epsilon()));
 
     if is_diagonal {
         // Check that all diagonal elements are positive
         let all_positive = (0..n).into_par_iter().all(|i| a[[i, i]] > F::zero());
-        
+
         if !all_positive {
             return Err(LinalgError::InvalidInputError(
                 "Cannot compute real logarithm of matrix with non-positive eigenvalues".to_string(),
@@ -698,10 +698,8 @@ where
         }
 
         // Compute diagonal logarithm in parallel
-        let diagonal_values: Vec<F> = (0..n).into_par_iter()
-            .map(|i| a[[i, i]].ln())
-            .collect();
-        
+        let diagonal_values: Vec<F> = (0..n).into_par_iter().map(|i| a[[i, i]].ln()).collect();
+
         let mut result = Array2::zeros((n, n));
         for (i, &val) in diagonal_values.iter().enumerate() {
             result[[i, i]] = val;
@@ -724,9 +722,11 @@ where
     // For general matrices, use parallel matrix operations
     // Check if the matrix is close to the identity
     let identity = Array2::eye(n);
-    let max_diff = (0..n).into_par_iter()
+    let max_diff = (0..n)
+        .into_par_iter()
         .map(|i| {
-            (0..n).map(|j| (a[[i, j]] - identity[[i, j]]).abs())
+            (0..n)
+                .map(|j| (a[[i, j]] - identity[[i, j]]).abs())
                 .fold(F::zero(), |acc, x| if x > acc { x } else { acc })
         })
         .reduce(|| F::zero(), |acc, x| if x > acc { x } else { acc });
@@ -737,13 +737,15 @@ where
         let mut a_scaled = a.to_owned();
 
         while scaling_k < 10 {
-            let max_scaled_diff = (0..n).into_par_iter()
+            let max_scaled_diff = (0..n)
+                .into_par_iter()
                 .map(|i| {
-                    (0..n).map(|j| {
-                        let expected = if i == j { F::one() } else { F::zero() };
-                        (a_scaled[[i, j]] - expected).abs()
-                    })
-                    .fold(F::zero(), |acc, x| if x > acc { x } else { acc })
+                    (0..n)
+                        .map(|j| {
+                            let expected = if i == j { F::one() } else { F::zero() };
+                            (a_scaled[[i, j]] - expected).abs()
+                        })
+                        .fold(F::zero(), |acc, x| if x > acc { x } else { acc })
                 })
                 .reduce(|| F::zero(), |acc, x| if x > acc { x } else { acc });
 
@@ -759,7 +761,8 @@ where
                 }
                 Err(_) => {
                     return Err(LinalgError::ImplementationError(
-                        "Matrix logarithm: Could not compute matrix square root for scaling".to_string(),
+                        "Matrix logarithm: Could not compute matrix square root for scaling"
+                            .to_string(),
                     ));
                 }
             }
@@ -772,15 +775,18 @@ where
         }
 
         // Compute X = A - I in parallel
-        let x_values: Vec<Vec<F>> = (0..n).into_par_iter()
+        let x_values: Vec<Vec<F>> = (0..n)
+            .into_par_iter()
             .map(|i| {
-                (0..n).map(|j| {
-                    let expected = if i == j { F::one() } else { F::zero() };
-                    a_scaled[[i, j]] - expected
-                }).collect()
+                (0..n)
+                    .map(|j| {
+                        let expected = if i == j { F::one() } else { F::zero() };
+                        a_scaled[[i, j]] - expected
+                    })
+                    .collect()
             })
             .collect();
-        
+
         let mut x_scaled = Array2::zeros((n, n));
         for (i, row) in x_values.iter().enumerate() {
             for (j, &val) in row.iter().enumerate() {
@@ -789,18 +795,21 @@ where
         }
 
         // Compute matrix powers in parallel using parallel matrix multiplication
-        let x2_values: Vec<Vec<F>> = (0..n).into_par_iter()
+        let x2_values: Vec<Vec<F>> = (0..n)
+            .into_par_iter()
             .map(|i| {
-                (0..n).map(|j| {
-                    let mut sum = F::zero();
-                    for k in 0..n {
-                        sum += x_scaled[[i, k]] * x_scaled[[k, j]];
-                    }
-                    sum
-                }).collect()
+                (0..n)
+                    .map(|j| {
+                        let mut sum = F::zero();
+                        for k in 0..n {
+                            sum += x_scaled[[i, k]] * x_scaled[[k, j]];
+                        }
+                        sum
+                    })
+                    .collect()
             })
             .collect();
-        
+
         let mut x2 = Array2::zeros((n, n));
         for (i, row) in x2_values.iter().enumerate() {
             for (j, &val) in row.iter().enumerate() {
@@ -808,18 +817,21 @@ where
             }
         }
 
-        let x3_values: Vec<Vec<F>> = (0..n).into_par_iter()
+        let x3_values: Vec<Vec<F>> = (0..n)
+            .into_par_iter()
             .map(|i| {
-                (0..n).map(|j| {
-                    let mut sum = F::zero();
-                    for k in 0..n {
-                        sum += x2[[i, k]] * x_scaled[[k, j]];
-                    }
-                    sum
-                }).collect()
+                (0..n)
+                    .map(|j| {
+                        let mut sum = F::zero();
+                        for k in 0..n {
+                            sum += x2[[i, k]] * x_scaled[[k, j]];
+                        }
+                        sum
+                    })
+                    .collect()
             })
             .collect();
-        
+
         let mut x3 = Array2::zeros((n, n));
         for (i, row) in x3_values.iter().enumerate() {
             for (j, &val) in row.iter().enumerate() {
@@ -828,24 +840,25 @@ where
         }
 
         // Compute the logarithm using Taylor series: log(I+X) = X - X²/2 + X³/3 - ...
-        let result_values: Vec<Vec<F>> = (0..n).into_par_iter()
+        let result_values: Vec<Vec<F>> = (0..n)
+            .into_par_iter()
             .map(|i| {
-                (0..n).map(|j| {
-                    x_scaled[[i, j]] 
-                        - x2[[i, j]] / F::from(2).unwrap()
-                        + x3[[i, j]] / F::from(3).unwrap()
-                }).collect()
+                (0..n)
+                    .map(|j| {
+                        x_scaled[[i, j]] - x2[[i, j]] / F::from(2).unwrap()
+                            + x3[[i, j]] / F::from(3).unwrap()
+                    })
+                    .collect()
             })
             .collect();
 
         // Scale back the result: log(A) = 2^k * log(A^(1/2^k))
         let scale_factor = F::from(1 << scaling_k).unwrap();
-        let scaled_result_values: Vec<Vec<F>> = result_values.into_par_iter()
-            .map(|row| {
-                row.into_iter().map(|val| val * scale_factor).collect()
-            })
+        let scaled_result_values: Vec<Vec<F>> = result_values
+            .into_par_iter()
+            .map(|row| row.into_iter().map(|val| val * scale_factor).collect())
             .collect();
-        
+
         let mut result = Array2::zeros((n, n));
         for (i, row) in scaled_result_values.iter().enumerate() {
             for (j, &val) in row.iter().enumerate() {
@@ -856,15 +869,18 @@ where
         Ok(result)
     } else {
         // Matrix is close to identity, use direct Taylor series
-        let x_values: Vec<Vec<F>> = (0..n).into_par_iter()
+        let x_values: Vec<Vec<F>> = (0..n)
+            .into_par_iter()
             .map(|i| {
-                (0..n).map(|j| {
-                    let expected = if i == j { F::one() } else { F::zero() };
-                    a[[i, j]] - expected
-                }).collect()
+                (0..n)
+                    .map(|j| {
+                        let expected = if i == j { F::one() } else { F::zero() };
+                        a[[i, j]] - expected
+                    })
+                    .collect()
             })
             .collect();
-        
+
         let mut x = Array2::zeros((n, n));
         for (i, row) in x_values.iter().enumerate() {
             for (j, &val) in row.iter().enumerate() {
@@ -873,18 +889,21 @@ where
         }
 
         // Compute powers in parallel
-        let x2_values: Vec<Vec<F>> = (0..n).into_par_iter()
+        let x2_values: Vec<Vec<F>> = (0..n)
+            .into_par_iter()
             .map(|i| {
-                (0..n).map(|j| {
-                    let mut sum = F::zero();
-                    for k in 0..n {
-                        sum += x[[i, k]] * x[[k, j]];
-                    }
-                    sum
-                }).collect()
+                (0..n)
+                    .map(|j| {
+                        let mut sum = F::zero();
+                        for k in 0..n {
+                            sum += x[[i, k]] * x[[k, j]];
+                        }
+                        sum
+                    })
+                    .collect()
             })
             .collect();
-        
+
         let mut x2 = Array2::zeros((n, n));
         for (i, row) in x2_values.iter().enumerate() {
             for (j, &val) in row.iter().enumerate() {
@@ -893,14 +912,15 @@ where
         }
 
         // Compute result using Taylor series
-        let result_values: Vec<Vec<F>> = (0..n).into_par_iter()
+        let result_values: Vec<Vec<F>> = (0..n)
+            .into_par_iter()
             .map(|i| {
-                (0..n).map(|j| {
-                    x[[i, j]] - x2[[i, j]] / F::from(2).unwrap()
-                }).collect()
+                (0..n)
+                    .map(|j| x[[i, j]] - x2[[i, j]] / F::from(2).unwrap())
+                    .collect()
             })
             .collect();
-        
+
         let mut result = Array2::zeros((n, n));
         for (i, row) in result_values.iter().enumerate() {
             for (j, &val) in row.iter().enumerate() {
@@ -1111,7 +1131,7 @@ where
 
     // Use threshold to determine if parallel processing is worthwhile
     const PARALLEL_THRESHOLD: usize = 30; // For matrices larger than 30x30
-    
+
     if a.nrows() < PARALLEL_THRESHOLD || a.ncols() < PARALLEL_THRESHOLD {
         // For small matrices, use sequential implementation
         return sqrtm(a, max_iter, tol);
@@ -1122,11 +1142,7 @@ where
 }
 
 /// Internal implementation of parallel matrix square root computation using Denman-Beavers iteration.
-fn sqrtm_impl_parallel<F>(
-    a: &ArrayView2<F>,
-    max_iter: usize,
-    tol: F,
-) -> LinalgResult<Array2<F>>
+fn sqrtm_impl_parallel<F>(a: &ArrayView2<F>, max_iter: usize, tol: F) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One + Send + Sync,
 {
@@ -1204,14 +1220,11 @@ where
         let half = F::from(0.5).unwrap();
 
         // Compute next iterations using parallel element-wise operations
-        let y_next_values: Vec<Vec<F>> = (0..n).into_par_iter()
-            .map(|i| {
-                (0..n).map(|j| {
-                    half * (y[[i, j]] + z_inv[[i, j]])
-                }).collect()
-            })
+        let y_next_values: Vec<Vec<F>> = (0..n)
+            .into_par_iter()
+            .map(|i| (0..n).map(|j| half * (y[[i, j]] + z_inv[[i, j]])).collect())
             .collect();
-        
+
         let mut y_next = Array2::zeros((n, n));
         for (i, row) in y_next_values.iter().enumerate() {
             for (j, &val) in row.iter().enumerate() {
@@ -1219,14 +1232,11 @@ where
             }
         }
 
-        let z_next_values: Vec<Vec<F>> = (0..n).into_par_iter()
-            .map(|i| {
-                (0..n).map(|j| {
-                    half * (z[[i, j]] + y_inv[[i, j]])
-                }).collect()
-            })
+        let z_next_values: Vec<Vec<F>> = (0..n)
+            .into_par_iter()
+            .map(|i| (0..n).map(|j| half * (z[[i, j]] + y_inv[[i, j]])).collect())
             .collect();
-        
+
         let mut z_next = Array2::zeros((n, n));
         for (i, row) in z_next_values.iter().enumerate() {
             for (j, &val) in row.iter().enumerate() {
@@ -1235,9 +1245,11 @@ where
         }
 
         // Compute error for convergence check using parallel max reduction
-        let error = (0..n).into_par_iter()
+        let error = (0..n)
+            .into_par_iter()
             .map(|i| {
-                (0..n).map(|j| (y_next[[i, j]] - y[[i, j]]).abs())
+                (0..n)
+                    .map(|j| (y_next[[i, j]] - y[[i, j]]).abs())
                     .fold(F::zero(), |acc, x| if x > acc { x } else { acc })
             })
             .reduce(|| F::zero(), |acc, x| if x > acc { x } else { acc });
@@ -2889,6 +2901,388 @@ where
     }
 
     Ok(result)
+}
+
+/// Compute the spectral radius (largest absolute eigenvalue) of a matrix.
+///
+/// The spectral radius ρ(A) is defined as the maximum absolute value of all eigenvalues.
+/// This is important for analyzing convergence properties of iterative methods.
+///
+/// # Arguments
+///
+/// * `a` - Input square matrix
+/// * `workers` - Number of worker threads (None = use default)
+///
+/// # Returns
+///
+/// * Spectral radius ρ(A) = max_i |λ_i|
+///
+/// # Examples
+///
+/// ```no_run
+/// use ndarray::array;
+/// use scirs2_linalg::matrix_functions::spectral_radius;
+///
+/// let a = array![[2.0_f64, 1.0], [0.0, 0.5]];
+/// let rho = spectral_radius(&a.view(), None).unwrap();
+/// // rho should be approximately 2.0
+/// ```
+pub fn spectral_radius<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<F>
+where
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + 'static,
+{
+    use crate::parallel;
+
+    // Configure workers for parallel operations
+    parallel::configure_workers(workers);
+
+    // Parameter validation
+    validate_decomposition(a, "Spectral radius computation", true)?;
+
+    let n = a.nrows();
+
+    // Special case for 1x1 matrix
+    if n == 1 {
+        return Ok(a[[0, 0]].abs());
+    }
+
+    // Compute eigenvalues
+    let eigenvalues = crate::eigen::eigvals(a, workers)?;
+
+    // Find maximum absolute value
+    let mut max_abs = F::zero();
+    for eigenval in eigenvalues.iter() {
+        let abs_val = (eigenval.re * eigenval.re + eigenval.im * eigenval.im).sqrt();
+        if abs_val > max_abs {
+            max_abs = abs_val;
+        }
+    }
+
+    Ok(max_abs)
+}
+
+/// Compute the condition number of a matrix using spectral norm.
+///
+/// The spectral condition number is defined as κ(A) = ||A||₂ * ||A⁻¹||₂ = σ_max / σ_min
+/// where σ_max and σ_min are the largest and smallest singular values.
+///
+/// # Arguments
+///
+/// * `a` - Input square matrix
+/// * `workers` - Number of worker threads (None = use default)
+///
+/// # Returns
+///
+/// * Spectral condition number κ₂(A)
+///
+/// # Examples
+///
+/// ```no_run
+/// use ndarray::array;
+/// use scirs2_linalg::matrix_functions::spectral_condition_number;
+///
+/// let a = array![[1.0_f64, 0.0], [0.0, 1e-12]];
+/// let kappa = spectral_condition_number(&a.view(), None).unwrap();
+/// // kappa should be approximately 1e12
+/// ```
+pub fn spectral_condition_number<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<F>
+where
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + 'static,
+{
+    use crate::parallel;
+
+    // Configure workers for parallel operations
+    parallel::configure_workers(workers);
+
+    // Parameter validation
+    validate_decomposition(a, "Spectral condition number computation", true)?;
+
+    // Compute SVD to get singular values
+    let (_, s, _) = crate::decomposition::svd(a, false, workers)?;
+
+    if s.is_empty() {
+        return Err(LinalgError::ComputationError(
+            "No singular values computed".to_string(),
+        ));
+    }
+
+    let sigma_max = s[0]; // Singular values are sorted in descending order
+    let sigma_min = s[s.len() - 1];
+
+    if sigma_min <= F::epsilon() {
+        // Matrix is singular or near-singular
+        Ok(F::from(1e16).unwrap_or(F::max_value()))
+    } else {
+        Ok(sigma_max / sigma_min)
+    }
+}
+
+/// Compute the polar decomposition A = UH where U is orthogonal/unitary and H is positive semidefinite.
+///
+/// For a square matrix A, the polar decomposition gives A = UH where:
+/// - U is orthogonal (unitary for complex matrices)
+/// - H is Hermitian positive semidefinite
+///
+/// # Arguments
+///
+/// * `a` - Input square matrix
+/// * `workers` - Number of worker threads (None = use default)
+///
+/// # Returns
+///
+/// * Tuple (U, H) representing the polar decomposition
+///
+/// # Examples
+///
+/// ```no_run
+/// use ndarray::array;
+/// use scirs2_linalg::matrix_functions::polar_decomposition;
+///
+/// let a = array![[3.0_f64, 1.0], [1.0, 2.0]];
+/// let (u, h) = polar_decomposition(&a.view(), None).unwrap();
+/// // A = U * H and U is orthogonal, H is positive semidefinite
+/// ```
+pub fn polar_decomposition<F>(
+    a: &ArrayView2<F>,
+    workers: Option<usize>,
+) -> LinalgResult<(Array2<F>, Array2<F>)>
+where
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + 'static,
+{
+    use crate::parallel;
+
+    // Configure workers for parallel operations
+    parallel::configure_workers(workers);
+
+    // Parameter validation
+    validate_decomposition(a, "Polar decomposition", true)?;
+
+    let n = a.nrows();
+
+    // Compute SVD: A = UΣV*
+    let (u_svd, s, vt) = crate::decomposition::svd(a, true, workers)?;
+
+    // Construct H = VΣV* (positive semidefinite part)
+    let mut sigma_matrix = Array2::zeros((n, n));
+    for (i, &sigma) in s.iter().enumerate() {
+        if i < n {
+            sigma_matrix[[i, i]] = sigma;
+        }
+    }
+
+    let v = vt.t();
+    let temp = v.dot(&sigma_matrix);
+    let h = temp.dot(&vt);
+
+    // Construct U = UV* (orthogonal part)
+    let u = u_svd.dot(&vt);
+
+    Ok((u, h))
+}
+
+/// Compute the matrix geometric mean of two positive definite matrices.
+///
+/// For two positive definite matrices A and B, the geometric mean is defined as:
+/// G = A^(1/2) * (A^(-1/2) * B * A^(-1/2))^(1/2) * A^(1/2)
+///
+/// This is useful in Riemannian geometry and optimization on the manifold of SPD matrices.
+///
+/// # Arguments
+///
+/// * `a` - First positive definite matrix
+/// * `b` - Second positive definite matrix
+/// * `workers` - Number of worker threads (None = use default)
+///
+/// # Returns
+///
+/// * Geometric mean of A and B
+///
+/// # Examples
+///
+/// ```no_run
+/// use ndarray::array;
+/// use scirs2_linalg::matrix_functions::geometric_mean_spd;
+///
+/// let a = array![[4.0_f64, 0.0], [0.0, 1.0]];
+/// let b = array![[1.0_f64, 0.0], [0.0, 4.0]];
+/// let g = geometric_mean_spd(&a.view(), &b.view(), None).unwrap();
+/// // G should be approximately [[2.0, 0.0], [0.0, 2.0]]
+/// ```
+pub fn geometric_mean_spd<F>(
+    a: &ArrayView2<F>,
+    b: &ArrayView2<F>,
+    workers: Option<usize>,
+) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + 'static,
+{
+    use crate::parallel;
+
+    // Configure workers for parallel operations
+    parallel::configure_workers(workers);
+
+    // Parameter validation
+    validate_decomposition(a, "Geometric mean computation (matrix A)", true)?;
+    validate_decomposition(b, "Geometric mean computation (matrix B)", true)?;
+
+    if a.nrows() != b.nrows() || a.ncols() != b.ncols() {
+        return Err(LinalgError::ShapeError(
+            "Matrices must have the same dimensions".to_string(),
+        ));
+    }
+
+    let n = a.nrows();
+
+    // Special case for diagonal matrices
+    let mut a_diagonal = true;
+    let mut b_diagonal = true;
+
+    for i in 0..n {
+        for j in 0..n {
+            if i != j {
+                if a[[i, j]].abs() > F::epsilon() {
+                    a_diagonal = false;
+                }
+                if b[[i, j]].abs() > F::epsilon() {
+                    b_diagonal = false;
+                }
+            }
+        }
+    }
+
+    if a_diagonal && b_diagonal {
+        // For diagonal matrices, geometric mean is just geometric mean of diagonal elements
+        let mut result = Array2::zeros((n, n));
+        for i in 0..n {
+            if a[[i, i]] > F::zero() && b[[i, i]] > F::zero() {
+                result[[i, i]] = (a[[i, i]] * b[[i, i]]).sqrt();
+            } else {
+                return Err(LinalgError::ComputationError(
+                    "Matrices must be positive definite".to_string(),
+                ));
+            }
+        }
+        return Ok(result);
+    }
+
+    // General case: use the formula G = A^(1/2) * (A^(-1/2) * B * A^(-1/2))^(1/2) * A^(1/2)
+
+    // Compute A^(1/2) and A^(-1/2)
+    let a_sqrt = spd_matrix_function(a, "sqrt", None)?;
+    let a_inv_sqrt = spd_matrix_function(a, "inv_sqrt", None)?;
+
+    // Compute A^(-1/2) * B * A^(-1/2)
+    let temp1 = a_inv_sqrt.dot(b);
+    let normalized_b = temp1.dot(&a_inv_sqrt);
+
+    // Compute (A^(-1/2) * B * A^(-1/2))^(1/2)
+    let normalized_b_sqrt = spd_matrix_function(&normalized_b.view(), "sqrt", None)?;
+
+    // Final result: A^(1/2) * (A^(-1/2) * B * A^(-1/2))^(1/2) * A^(1/2)
+    let temp2 = a_sqrt.dot(&normalized_b_sqrt);
+    let result = temp2.dot(&a_sqrt);
+
+    Ok(result)
+}
+
+/// Apply Tikhonov regularization to a matrix to improve conditioning.
+///
+/// Tikhonov regularization adds a multiple of the identity matrix: A_reg = A + λI
+/// This is commonly used in ridge regression and to stabilize ill-conditioned problems.
+///
+/// # Arguments
+///
+/// * `a` - Input matrix
+/// * `lambda` - Regularization parameter
+/// * `adaptive` - If true, automatically select lambda based on condition number
+///
+/// # Returns
+///
+/// * Regularized matrix A + λI
+///
+/// # Examples
+///
+/// ```no_run
+/// use ndarray::array;
+/// use scirs2_linalg::matrix_functions::tikhonov_regularization;
+///
+/// let a = array![[1.0_f64, 0.0], [0.0, 1e-12]]; // Ill-conditioned
+/// let a_reg = tikhonov_regularization(&a.view(), 1e-6, false).unwrap();
+/// ```
+pub fn tikhonov_regularization<F>(
+    a: &ArrayView2<F>,
+    lambda: F,
+    adaptive: bool,
+) -> LinalgResult<Array2<F>>
+where
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + 'static,
+{
+    // Parameter validation
+    validate_decomposition(a, "Tikhonov regularization", true)?;
+
+    let n = a.nrows();
+    let mut result = a.to_owned();
+
+    let reg_param = if adaptive {
+        // Adaptive regularization based on condition number estimate
+        let cond_est = crate::eigen::estimate_condition_number(a);
+        if cond_est > F::from(1e12).unwrap() {
+            lambda * F::from(100.0).unwrap()
+        } else if cond_est > F::from(1e8).unwrap() {
+            lambda * F::from(10.0).unwrap()
+        } else {
+            lambda
+        }
+    } else {
+        lambda
+    };
+
+    // Add λI to the diagonal
+    for i in 0..n {
+        result[[i, i]] += reg_param;
+    }
+
+    Ok(result)
+}
+
+/// Compute the nuclear norm (trace norm) of a matrix: ||A||* = ∑ᵢ σᵢ.
+///
+/// The nuclear norm is the sum of singular values and is the convex envelope
+/// of the rank function. It's used in low-rank matrix optimization.
+///
+/// # Arguments
+///
+/// * `a` - Input matrix
+/// * `workers` - Number of worker threads (None = use default)
+///
+/// # Returns
+///
+/// * Nuclear norm ||A||* = ∑ᵢ σᵢ
+///
+/// # Examples
+///
+/// ```no_run
+/// use ndarray::array;
+/// use scirs2_linalg::matrix_functions::nuclear_norm;
+///
+/// let a = array![[3.0_f64, 0.0], [0.0, 1.0]];
+/// let norm = nuclear_norm(&a.view(), None).unwrap();
+/// // Should be 3.0 + 1.0 = 4.0
+/// ```
+pub fn nuclear_norm<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<F>
+where
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + 'static,
+{
+    use crate::parallel;
+
+    // Configure workers for parallel operations
+    parallel::configure_workers(workers);
+
+    // Compute SVD to get singular values
+    let (_, s, _) = crate::decomposition::svd(a, false, workers)?;
+
+    // Sum all singular values
+    Ok(s.iter().fold(F::zero(), |acc, &x| acc + x))
 }
 
 #[cfg(test)]

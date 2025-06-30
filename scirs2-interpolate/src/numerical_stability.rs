@@ -242,12 +242,12 @@ where
 {
     #[cfg(feature = "linalg")]
     {
-        use ndarray_linalg::SVD;
+        use scirs2_linalg::svd;
 
         // Convert to f64 for SVD computation
         let matrix_f64 = matrix.mapv(|x| x.to_f64().unwrap_or(0.0));
 
-        match matrix_f64.svd(false, false) {
+        match svd(&matrix_f64.view(), None) {
             Ok((_, singular_values, _)) => {
                 if singular_values.is_empty() {
                     return Err(InterpolateError::ComputationError(
@@ -828,13 +828,13 @@ where
 {
     #[cfg(feature = "linalg")]
     {
-        use ndarray_linalg::Solve;
+        use scirs2_linalg::solve;
 
         // Convert to f64 for solve
         let matrix_f64 = matrix.mapv(|x| x.to_f64().unwrap_or(0.0));
         let rhs_f64 = rhs.mapv(|x| x.to_f64().unwrap_or(0.0));
 
-        match matrix_f64.solve(&rhs_f64) {
+        match solve(&matrix_f64.view(), &rhs_f64.view(), None) {
             Ok(solution_f64) => {
                 let solution = solution_f64.mapv(|x| {
                     F::from_f64(x).unwrap_or_else(|| F::from(x as f32).unwrap_or(F::zero()))
@@ -929,116 +929,6 @@ where
     }
 
     Ok(x)
-}
-
-/// Advanced edge case analysis for interpolation data
-pub struct EdgeCaseAnalysis<F>
-where
-    F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
-{
-    /// Whether the data points have near-linear dependencies
-    pub has_near_linear_dependencies: bool,
-
-    /// Minimum distance between data points
-    pub min_point_distance: F,
-
-    /// Maximum distance between data points  
-    pub max_point_distance: F,
-
-    /// Ratio of max to min distance (conditioning indicator)
-    pub distance_ratio: F,
-
-    /// Number of points that are too close together
-    pub clustered_points: usize,
-
-    /// Whether data is suitable for interpolation without regularization
-    pub interpolation_feasible: bool,
-
-    /// Recommended minimum regularization based on data characteristics
-    pub recommended_min_regularization: Option<F>,
-
-    /// Analysis of boundary effects
-    pub boundary_analysis: BoundaryAnalysis<F>,
-}
-
-/// Analysis of boundary effects and extrapolation stability
-#[derive(Debug, Clone)]
-pub struct BoundaryAnalysis<F>
-where
-    F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
-{
-    /// Whether boundary points are well-distributed
-    pub boundary_well_distributed: bool,
-
-    /// Distance to nearest boundary for domain center
-    pub min_boundary_distance: F,
-
-    /// Whether extrapolation beyond boundaries is likely to be stable
-    pub extrapolation_stable: bool,
-
-    /// Convex hull volume (if computable)
-    pub convex_hull_volume: Option<F>,
-}
-
-/// Analyze interpolation data for potential edge cases and numerical issues
-pub fn analyze_interpolation_edge_cases<F>(
-    points: &ArrayView2<F>,
-    _values: &ArrayView1<F>,
-) -> InterpolateResult<EdgeCaseAnalysis<F>>
-where
-    F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + 'static,
-{
-    let n_points = points.nrows();
-    let _dim = points.ncols();
-
-    if n_points == 0 {
-        return Err(InterpolateError::InvalidInput {
-            message: "Cannot analyze empty dataset".to_string(),
-        });
-    }
-
-    // Analyze point distances
-    let (min_dist, max_dist, clustered_count) = analyze_point_distances(points)?;
-    let distance_ratio = if min_dist > F::zero() {
-        max_dist / min_dist
-    } else {
-        F::infinity()
-    };
-
-    // Check for near-linear dependencies
-    let has_linear_deps = check_near_linear_dependencies(points)?;
-
-    // Determine interpolation feasibility
-    let feasible = !has_linear_deps
-        && min_dist
-            > machine_epsilon::<F>()
-                * F::from_f64(1e6)
-                    .unwrap_or_else(|| F::from(1e6 as f32).unwrap_or_else(|| F::from(1000000)));
-
-    // Recommend regularization based on data characteristics
-    let recommended_reg = if !feasible
-        || distance_ratio
-            > F::from_f64(1e12)
-                .unwrap_or_else(|| F::from(1e12 as f32).unwrap_or_else(|| F::from(1000000000000)))
-    {
-        Some(suggest_data_based_regularization(min_dist, distance_ratio))
-    } else {
-        None
-    };
-
-    // Analyze boundary effects
-    let boundary_analysis = analyze_boundary_effects(points)?;
-
-    Ok(EdgeCaseAnalysis {
-        has_near_linear_dependencies: has_linear_deps,
-        min_point_distance: min_dist,
-        max_point_distance: max_dist,
-        distance_ratio,
-        clustered_points: clustered_count,
-        interpolation_feasible: feasible,
-        recommended_min_regularization: recommended_reg,
-        boundary_analysis,
-    })
 }
 
 /// Analyze distances between data points to detect clustering issues
@@ -1238,78 +1128,6 @@ where
         extrapolation_stable,
         convex_hull_volume: None, // Could implement convex hull volume calculation
     })
-}
-
-/// Detect potential numerical issues early in interpolation setup
-pub fn early_numerical_warning_system<F>(
-    points: &ArrayView2<F>,
-    values: &ArrayView1<F>,
-    method_name: &str,
-) -> InterpolateResult<Vec<String>>
-where
-    F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + 'static,
-{
-    let mut warnings = Vec::new();
-
-    // Analyze edge cases
-    let edge_analysis = analyze_interpolation_edge_cases(points, values)?;
-
-    if edge_analysis.has_near_linear_dependencies {
-        warnings.push(format!(
-            "{}: Data points have near-linear dependencies, which may cause numerical instability",
-            method_name
-        ));
-    }
-
-    if edge_analysis.clustered_points > 0 {
-        warnings.push(format!(
-            "{}: {} pairs of points are very close together (< machine epsilon * 1e6), consider removing duplicates",
-            method_name, edge_analysis.clustered_points
-        ));
-    }
-
-    if edge_analysis.distance_ratio
-        > F::from_f64(1e12)
-            .unwrap_or_else(|| F::from(1e12 as f32).unwrap_or_else(|| F::from(1000000000000)))
-    {
-        warnings.push(format!(
-            "{}: Large variation in point distances (ratio: {:.2e}), consider data normalization",
-            method_name, edge_analysis.distance_ratio
-        ));
-    }
-
-    if !edge_analysis.interpolation_feasible {
-        warnings.push(format!(
-            "{}: Interpolation may not be feasible without regularization due to data characteristics",
-            method_name
-        ));
-
-        if let Some(reg) = edge_analysis.recommended_min_regularization {
-            warnings.push(format!(
-                "{}: Recommended minimum regularization parameter: {:.2e}",
-                method_name, reg
-            ));
-        }
-    }
-
-    if !edge_analysis.boundary_analysis.extrapolation_stable {
-        warnings.push(format!(
-            "{}: Extrapolation beyond data boundaries may be unstable",
-            method_name
-        ));
-    }
-
-    // Check for non-finite values
-    for (i, &val) in values.iter().enumerate() {
-        if !val.is_finite() {
-            warnings.push(format!(
-                "{}: Non-finite value found at index {}: {}",
-                method_name, i, val
-            ));
-        }
-    }
-
-    Ok(warnings)
 }
 
 /// Comprehensive edge case analysis for interpolation stability

@@ -1659,7 +1659,7 @@ impl RealTimeOptimizer {
     }
     
     /// Optimize for real-time performance
-    pub fn optimize_realtime(&mut self, latency_budget: Duration) -> Result<RTOptimizationResult, OptimizerError> {
+    pub fn optimize_realtime(&mut self, _latency_budget: Duration) -> Result<RTOptimizationResult, OptimizerError> {
         // Implement real-time optimization logic
         Ok(RTOptimizationResult {
             optimization_applied: true,

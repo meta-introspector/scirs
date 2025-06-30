@@ -4,8 +4,8 @@ use crate::error::{NeuralError, Result};
 use crate::layers::Layer;
 use ndarray::{concatenate, Array, Axis, IxDyn, ScalarOperand};
 use num_traits::Float;
-use std::cell::RefCell;
 use std::fmt::Debug;
+use std::sync::{Arc, RwLock};
 
 /// Bidirectional RNN wrapper for recurrent layers
 ///
@@ -39,7 +39,7 @@ use std::fmt::Debug;
 /// // Output should have dimensions [batch_size, seq_len, hidden_size*2]
 /// assert_eq!(output.shape(), &[batch_size, seq_len, 40]);
 /// ```
-pub struct Bidirectional<F: Float + Debug> {
+pub struct Bidirectional<F: Float + Debug + Send + Sync> {
     /// Forward direction layer
     forward_layer: Box<dyn Layer<F> + Send + Sync>,
     /// Backward direction layer (using the same layer type)
@@ -47,10 +47,10 @@ pub struct Bidirectional<F: Float + Debug> {
     /// Name for the layer
     name: Option<String>,
     /// Input cache for backward pass
-    input_cache: RefCell<Option<Array<F, IxDyn>>>,
+    input_cache: Arc<RwLock<Option<Array<F, IxDyn>>>>,
 }
 
-impl<F: Float + Debug + ScalarOperand + 'static> Bidirectional<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Bidirectional<F> {
     /// Create a new bidirectional wrapper
     ///
     /// # Arguments
@@ -71,7 +71,7 @@ impl<F: Float + Debug + ScalarOperand + 'static> Bidirectional<F> {
             forward_layer,
             backward_layer,
             name: name.map(String::from),
-            input_cache: RefCell::new(None),
+            input_cache: Arc::new(RwLock::new(None)),
         })
     }
 
@@ -90,10 +90,10 @@ impl<F: Float + Debug + ScalarOperand + 'static> Bidirectional<F> {
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + 'static> Layer<F> for Bidirectional<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Bidirectional<F> {
     fn forward(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
         // Cache input for backward pass
-        self.input_cache.replace(Some(input.clone()));
+        *self.input_cache.write().unwrap() = Some(input.clone());
 
         // Check input dimensions
         let input_shape = input.shape();
@@ -187,7 +187,7 @@ impl<F: Float + Debug + ScalarOperand + 'static> Layer<F> for Bidirectional<F> {
         grad_output: &Array<F, IxDyn>,
     ) -> Result<Array<F, IxDyn>> {
         // Retrieve cached input
-        let input_ref = self.input_cache.borrow();
+        let input_ref = self.input_cache.read().unwrap();
         if input_ref.is_none() {
             return Err(NeuralError::InferenceError(
                 "No cached input for backward pass. Call forward() first.".to_string(),

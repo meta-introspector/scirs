@@ -452,7 +452,7 @@ impl GenericDistanceMatrix {
         P: SpatialPoint<T> + Send + Sync,
         M: DistanceMetric<T, P> + Send + Sync,
     {
-        use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
+        use scirs2_core::simd_ops::PlatformCapabilities;
         
         let n = points.len();
         let mut matrix = vec![vec![T::zero(); n]; n];
@@ -1620,9 +1620,7 @@ impl<T: SpatialScalar> GenericGMM<T> {
                         
                         covariances[k][i][j] = if count > T::one() {
                             cov_sum / (count - T::one())
-                        } else {
-                            if i == j { T::one() } else { T::zero() }
-                        };
+                        } else if i == j { T::one() } else { T::zero() };
                     }
                 }
                 
@@ -1827,7 +1825,7 @@ impl<T: SpatialScalar> GenericGMM<T> {
         }
         
         // Compute log probability: -0.5 * (k*log(2π) + log|Σ| + (x-μ)ᵀΣ⁻¹(x-μ))
-        let two_pi = T::from(2.0 * std::f64::consts::PI).unwrap_or(T::from(6.28318530718).unwrap());
+        let two_pi = T::from(std::f64::consts::TAU).unwrap_or(T::from(std::f64::consts::TAU).unwrap());
         let log_2pi_k = T::from(n_features).unwrap() * SpatialScalar::ln(two_pi);
         let log_det = SpatialScalar::ln(SpatialScalar::abs(det));
         

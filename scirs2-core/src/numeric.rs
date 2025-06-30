@@ -3,10 +3,10 @@
 //! This module provides traits and utilities for working with numeric types
 //! in scientific computing contexts.
 
+use crate::error::{CoreError, CoreResult, ErrorContext};
 use num_traits::{Float, Num, NumCast, One, Zero};
 use std::fmt::Debug;
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
-use crate::error::{CoreError, CoreResult, ErrorContext};
 
 /// A trait for numeric types that can be used in scientific calculations
 ///
@@ -738,10 +738,14 @@ where
 /// Trait for converting between degrees and radians
 pub trait AngleConversion: Sized {
     /// Convert from degrees to radians
-    fn to_radians(&self) -> CoreResult<Self> where Self: std::marker::Sized;
+    fn to_radians(&self) -> CoreResult<Self>
+    where
+        Self: std::marker::Sized;
 
     /// Convert from radians to degrees
-    fn to_degrees(&self) -> CoreResult<Self> where Self: std::marker::Sized;
+    fn to_degrees(&self) -> CoreResult<Self>
+    where
+        Self: std::marker::Sized;
 }
 
 /// Implement AngleConversion for all RealNumber types
@@ -853,6 +857,343 @@ pub mod stability;
 /// Stable numerical algorithms
 pub mod stable_algorithms;
 
+/// Ultra-optimized SIMD operations for numerical computations
+///
+/// This module provides vectorized implementations of common mathematical operations
+/// using the highest available SIMD instruction sets for maximum performance.
+pub mod ultra_simd {
+    #[allow(unused_imports)]
+    use super::*;
+    
+    #[cfg(target_arch = "x86_64")]
+    use std::arch::x86_64::*;
+    #[cfg(target_arch = "aarch64")]
+    use std::arch::aarch64::*;
+    
+    /// Ultra-fast vectorized addition for f32 arrays
+    #[inline]
+    pub fn add_f32_ultra(a: &[f32], b: &[f32], result: &mut [f32]) {
+        debug_assert_eq!(a.len(), b.len());
+        debug_assert_eq!(a.len(), result.len());
+        
+        let len = a.len();
+        let mut i = 0;
+        
+        // AVX2 path - process 8 elements at a time
+        #[cfg(target_arch = "x86_64")]
+        {
+            if is_x86_feature_detected!("avx2") {
+                unsafe {
+                    while i + 8 <= len {
+                        let va = _mm256_loadu_ps(a.as_ptr().add(i));
+                        let vb = _mm256_loadu_ps(b.as_ptr().add(i));
+                        let vr = _mm256_add_ps(va, vb);
+                        _mm256_storeu_ps(result.as_mut_ptr().add(i), vr);
+                        i += 8;
+                    }
+                }
+            }
+            // SSE path - process 4 elements at a time
+            else if is_x86_feature_detected!("sse") {
+                unsafe {
+                    while i + 4 <= len {
+                        let va = _mm_loadu_ps(a.as_ptr().add(i));
+                        let vb = _mm_loadu_ps(b.as_ptr().add(i));
+                        let vr = _mm_add_ps(va, vb);
+                        _mm_storeu_ps(result.as_mut_ptr().add(i), vr);
+                        i += 4;
+                    }
+                }
+            }
+        }
+        
+        // ARM NEON path - process 4 elements at a time
+        #[cfg(target_arch = "aarch64")]
+        {
+            if std::arch::is_aarch64_feature_detected!("neon") {
+                unsafe {
+                    while i + 4 <= len {
+                        let va = vld1q_f32(a.as_ptr().add(i));
+                        let vb = vld1q_f32(b.as_ptr().add(i));
+                        let vr = vaddq_f32(va, vb);
+                        vst1q_f32(result.as_mut_ptr().add(i), vr);
+                        i += 4;
+                    }
+                }
+            }
+        }
+        
+        // Scalar fallback for remaining elements
+        while i < len {
+            result[i] = a[i] + b[i];
+            i += 1;
+        }
+    }
+    
+    /// Ultra-fast vectorized multiplication for f32 arrays
+    #[inline]
+    pub fn mul_f32_ultra(a: &[f32], b: &[f32], result: &mut [f32]) {
+        debug_assert_eq!(a.len(), b.len());
+        debug_assert_eq!(a.len(), result.len());
+        
+        let len = a.len();
+        let mut i = 0;
+        
+        // AVX2 + FMA path for maximum performance
+        #[cfg(target_arch = "x86_64")]
+        {
+            if is_x86_feature_detected!("avx2") && is_x86_feature_detected!("fma") {
+                unsafe {
+                    while i + 8 <= len {
+                        let va = _mm256_loadu_ps(a.as_ptr().add(i));
+                        let vb = _mm256_loadu_ps(b.as_ptr().add(i));
+                        let vr = _mm256_mul_ps(va, vb);
+                        _mm256_storeu_ps(result.as_mut_ptr().add(i), vr);
+                        i += 8;
+                    }
+                }
+            }
+            else if is_x86_feature_detected!("sse") {
+                unsafe {
+                    while i + 4 <= len {
+                        let va = _mm_loadu_ps(a.as_ptr().add(i));
+                        let vb = _mm_loadu_ps(b.as_ptr().add(i));
+                        let vr = _mm_mul_ps(va, vb);
+                        _mm_storeu_ps(result.as_mut_ptr().add(i), vr);
+                        i += 4;
+                    }
+                }
+            }
+        }
+        
+        // ARM NEON path
+        #[cfg(target_arch = "aarch64")]
+        {
+            if std::arch::is_aarch64_feature_detected!("neon") {
+                unsafe {
+                    while i + 4 <= len {
+                        let va = vld1q_f32(a.as_ptr().add(i));
+                        let vb = vld1q_f32(b.as_ptr().add(i));
+                        let vr = vmulq_f32(va, vb);
+                        vst1q_f32(result.as_mut_ptr().add(i), vr);
+                        i += 4;
+                    }
+                }
+            }
+        }
+        
+        // Scalar fallback
+        while i < len {
+            result[i] = a[i] * b[i];
+            i += 1;
+        }
+    }
+    
+    /// Ultra-fast fused multiply-add (a * b + c) for f32 arrays
+    #[inline]
+    pub fn fma_f32_ultra(a: &[f32], b: &[f32], c: &[f32], result: &mut [f32]) {
+        debug_assert_eq!(a.len(), b.len());
+        debug_assert_eq!(a.len(), c.len());
+        debug_assert_eq!(a.len(), result.len());
+        
+        let len = a.len();
+        let mut i = 0;
+        
+        // AVX2 + FMA path for optimal performance
+        #[cfg(target_arch = "x86_64")]
+        {
+            if is_x86_feature_detected!("avx2") && is_x86_feature_detected!("fma") {
+                unsafe {
+                    while i + 8 <= len {
+                        let va = _mm256_loadu_ps(a.as_ptr().add(i));
+                        let vb = _mm256_loadu_ps(b.as_ptr().add(i));
+                        let vc = _mm256_loadu_ps(c.as_ptr().add(i));
+                        let vr = _mm256_fmadd_ps(va, vb, vc);
+                        _mm256_storeu_ps(result.as_mut_ptr().add(i), vr);
+                        i += 8;
+                    }
+                }
+            }
+            else if is_x86_feature_detected!("sse") {
+                unsafe {
+                    while i + 4 <= len {
+                        let va = _mm_loadu_ps(a.as_ptr().add(i));
+                        let vb = _mm_loadu_ps(b.as_ptr().add(i));
+                        let vc = _mm_loadu_ps(c.as_ptr().add(i));
+                        let vr = _mm_add_ps(_mm_mul_ps(va, vb), vc);
+                        _mm_storeu_ps(result.as_mut_ptr().add(i), vr);
+                        i += 4;
+                    }
+                }
+            }
+        }
+        
+        // ARM NEON path with FMA
+        #[cfg(target_arch = "aarch64")]
+        {
+            if std::arch::is_aarch64_feature_detected!("neon") {
+                unsafe {
+                    while i + 4 <= len {
+                        let va = vld1q_f32(a.as_ptr().add(i));
+                        let vb = vld1q_f32(b.as_ptr().add(i));
+                        let vc = vld1q_f32(c.as_ptr().add(i));
+                        let vr = vfmaq_f32(vc, va, vb);
+                        vst1q_f32(result.as_mut_ptr().add(i), vr);
+                        i += 4;
+                    }
+                }
+            }
+        }
+        
+        // Scalar fallback
+        while i < len {
+            result[i] = a[i] * b[i] + c[i];
+            i += 1;
+        }
+    }
+    
+    /// Ultra-fast vectorized dot product for f32 arrays
+    #[inline]
+    pub fn dot_product_f32_ultra(a: &[f32], b: &[f32]) -> f32 {
+        debug_assert_eq!(a.len(), b.len());
+        
+        let len = a.len();
+        let mut i = 0;
+        let mut sum = 0.0f32;
+        
+        // AVX2 + FMA path for maximum throughput
+        #[cfg(target_arch = "x86_64")]
+        {
+            if is_x86_feature_detected!("avx2") && is_x86_feature_detected!("fma") {
+                unsafe {
+                    let mut acc = _mm256_setzero_ps();
+                    while i + 8 <= len {
+                        let va = _mm256_loadu_ps(a.as_ptr().add(i));
+                        let vb = _mm256_loadu_ps(b.as_ptr().add(i));
+                        acc = _mm256_fmadd_ps(va, vb, acc);
+                        i += 8;
+                    }
+                    // Horizontal sum of 8 floats
+                    let hi = _mm256_extractf128_ps(acc, 1);
+                    let lo = _mm256_castps256_ps128(acc);
+                    let sum4 = _mm_add_ps(hi, lo);
+                    let sum2 = _mm_add_ps(sum4, _mm_movehl_ps(sum4, sum4));
+                    let sum1 = _mm_add_ss(sum2, _mm_shuffle_ps(sum2, sum2, 1));
+                    sum = _mm_cvtss_f32(sum1);
+                }
+            }
+            else if is_x86_feature_detected!("sse") {
+                unsafe {
+                    let mut acc = _mm_setzero_ps();
+                    while i + 4 <= len {
+                        let va = _mm_loadu_ps(a.as_ptr().add(i));
+                        let vb = _mm_loadu_ps(b.as_ptr().add(i));
+                        acc = _mm_add_ps(acc, _mm_mul_ps(va, vb));
+                        i += 4;
+                    }
+                    // Horizontal sum of 4 floats
+                    let sum2 = _mm_add_ps(acc, _mm_movehl_ps(acc, acc));
+                    let sum1 = _mm_add_ss(sum2, _mm_shuffle_ps(sum2, sum2, 1));
+                    sum = _mm_cvtss_f32(sum1);
+                }
+            }
+        }
+        
+        // ARM NEON path with accumulation
+        #[cfg(target_arch = "aarch64")]
+        {
+            if std::arch::is_aarch64_feature_detected!("neon") {
+                unsafe {
+                    let mut acc = vdupq_n_f32(0.0);
+                    while i + 4 <= len {
+                        let va = vld1q_f32(a.as_ptr().add(i));
+                        let vb = vld1q_f32(b.as_ptr().add(i));
+                        acc = vfmaq_f32(acc, va, vb);
+                        i += 4;
+                    }
+                    // Horizontal sum
+                    sum = vaddvq_f32(acc);
+                }
+            }
+        }
+        
+        // Scalar accumulation for remaining elements
+        while i < len {
+            sum += a[i] * b[i];
+            i += 1;
+        }
+        
+        sum
+    }
+    
+    /// Ultra-fast vectorized sum reduction for f32 arrays
+    #[inline]
+    pub fn sum_f32_ultra(data: &[f32]) -> f32 {
+        let len = data.len();
+        let mut i = 0;
+        let mut sum = 0.0f32;
+        
+        // AVX2 path
+        #[cfg(target_arch = "x86_64")]
+        {
+            if is_x86_feature_detected!("avx2") {
+                unsafe {
+                    let mut acc = _mm256_setzero_ps();
+                    while i + 8 <= len {
+                        let v = _mm256_loadu_ps(data.as_ptr().add(i));
+                        acc = _mm256_add_ps(acc, v);
+                        i += 8;
+                    }
+                    // Horizontal sum
+                    let hi = _mm256_extractf128_ps(acc, 1);
+                    let lo = _mm256_castps256_ps128(acc);
+                    let sum4 = _mm_add_ps(hi, lo);
+                    let sum2 = _mm_add_ps(sum4, _mm_movehl_ps(sum4, sum4));
+                    let sum1 = _mm_add_ss(sum2, _mm_shuffle_ps(sum2, sum2, 1));
+                    sum = _mm_cvtss_f32(sum1);
+                }
+            }
+            else if is_x86_feature_detected!("sse") {
+                unsafe {
+                    let mut acc = _mm_setzero_ps();
+                    while i + 4 <= len {
+                        let v = _mm_loadu_ps(data.as_ptr().add(i));
+                        acc = _mm_add_ps(acc, v);
+                        i += 4;
+                    }
+                    let sum2 = _mm_add_ps(acc, _mm_movehl_ps(acc, acc));
+                    let sum1 = _mm_add_ss(sum2, _mm_shuffle_ps(sum2, sum2, 1));
+                    sum = _mm_cvtss_f32(sum1);
+                }
+            }
+        }
+        
+        // ARM NEON path
+        #[cfg(target_arch = "aarch64")]
+        {
+            if std::arch::is_aarch64_feature_detected!("neon") {
+                unsafe {
+                    let mut acc = vdupq_n_f32(0.0);
+                    while i + 4 <= len {
+                        let v = vld1q_f32(data.as_ptr().add(i));
+                        acc = vaddq_f32(acc, v);
+                        i += 4;
+                    }
+                    sum = vaddvq_f32(acc);
+                }
+            }
+        }
+        
+        // Scalar accumulation
+        while i < len {
+            sum += data[i];
+            i += 1;
+        }
+        
+        sum
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -945,11 +1286,11 @@ mod tests {
     #[test]
     fn test_angle_conversion() {
         let degrees: f64 = 180.0;
-        let radians = degrees.to_radians().unwrap();
+        let radians = <f64 as AngleConversion>::to_radians(&degrees).unwrap();
         assert!((radians - std::f64::consts::PI).abs() < 1e-10);
 
         let radians: f64 = std::f64::consts::PI / 2.0;
-        let degrees = radians.to_degrees().unwrap();
+        let degrees = <f64 as AngleConversion>::to_degrees(&radians).unwrap();
         assert!((degrees - 90.0).abs() < 1e-10);
     }
 

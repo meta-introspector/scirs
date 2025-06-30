@@ -12,9 +12,8 @@ use std::collections::{HashMap, HashSet};
 pub struct TopicCoherence {
     /// Window size for co-occurrence counting
     window_size: usize,
-    /// Minimum word frequency
-    #[allow(dead_code)]
-    min_count: usize,
+    /// Minimum word frequency (kept for API compatibility)
+    _min_count: usize,
     /// Epsilon for smoothing
     epsilon: f64,
 }
@@ -23,7 +22,7 @@ impl Default for TopicCoherence {
     fn default() -> Self {
         Self {
             window_size: 10,
-            min_count: 5, // Unused but kept for API compatibility
+_min_count: 5, // Kept for API compatibility
             epsilon: 1e-12,
         }
     }
@@ -225,7 +224,6 @@ impl TopicCoherence {
                 let word_i = topic_words[i];
                 let word_j = topic_words[j];
 
-                let mut _unused = 0; // Placeholder
                 let mut count_j = 0;
                 let mut count_both = 0;
 
@@ -233,10 +231,6 @@ impl TopicCoherence {
                     let has_i = doc_set.contains(word_i);
                     let has_j = doc_set.contains(word_j);
 
-                    // We don't actually use count_i
-                    if has_i {
-                        // No-op
-                    }
                     if has_j {
                         count_j += 1;
                     }

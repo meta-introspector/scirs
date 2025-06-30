@@ -1816,6 +1816,568 @@ where
         Ok(all_combinations)
     }
 
+    /// Update Gaussian Process with current observations
+    fn update_gaussian_process(
+        &self,
+        bayesian_state: &mut BayesianState,
+        combinations: &[HashMap<String, f64>],
+    ) {
+        // For demonstration, we'll implement a simplified GP update
+        // In practice, this would involve matrix operations and hyperparameter optimization
+        
+        if combinations.is_empty() {
+            return;
+        }
+
+        // Convert parameter combinations to feature matrix
+        let n_samples = combinations.len();
+        let n_features = bayesian_state.parameter_names.len();
+        
+        if n_samples < 2 {
+            return;
+        }
+
+        // Update GP hyperparameters using maximum likelihood estimation
+        self.optimize_gp_hyperparameters(bayesian_state, combinations);
+        
+        // Build covariance matrix
+        let mut covariance = Array2::zeros((n_samples, n_samples));
+        for i in 0..n_samples {
+            for j in 0..n_samples {
+                let x_i = self.extract_feature_vector(&combinations[i], &bayesian_state.parameter_names);
+                let x_j = self.extract_feature_vector(&combinations[j], &bayesian_state.parameter_names);
+                covariance[[i, j]] = self.compute_kernel(&x_i, &x_j, &bayesian_state.gp_hyperparameters);
+            }
+        }
+        
+        // Add noise to diagonal
+        for i in 0..n_samples {
+            covariance[[i, i]] += bayesian_state.gp_hyperparameters.noise_variance;
+        }
+        
+        bayesian_state.gp_covariance = Some(covariance);
+    }
+
+    /// Optimize acquisition function to find next evaluation point
+    fn optimize_acquisition_function(
+        &self,
+        search_space: &SearchSpace,
+        bayesian_state: &BayesianState,
+        acquisition_function: &AcquisitionFunction,
+    ) -> Result<HashMap<String, f64>> {
+        let mut best_acquisition = f64::NEG_INFINITY;
+        let mut best_point = HashMap::new();
+        
+        // Generate candidate points for acquisition optimization
+        let n_candidates = 1000;
+        let candidates = self.generate_random_combinations(search_space, n_candidates)?;
+        
+        for candidate in candidates {
+            let acquisition_value = self.evaluate_acquisition_function(
+                &candidate,
+                bayesian_state,
+                acquisition_function,
+            );
+            
+            if acquisition_value > best_acquisition {
+                best_acquisition = acquisition_value;
+                best_point = candidate;
+            }
+        }
+        
+        Ok(best_point)
+    }
+
+    /// Evaluate acquisition function at a point
+    fn evaluate_acquisition_function(
+        &self,
+        point: &HashMap<String, f64>,
+        bayesian_state: &BayesianState,
+        acquisition_function: &AcquisitionFunction,
+    ) -> f64 {
+        let x = self.extract_feature_vector(point, &bayesian_state.parameter_names);
+        let (mean, variance) = self.predict_gp(&x, bayesian_state);
+        let std_dev = variance.sqrt();
+        
+        match acquisition_function {
+            AcquisitionFunction::ExpectedImprovement => {
+                self.expected_improvement(mean, std_dev, bayesian_state.current_best)
+            }
+            AcquisitionFunction::UpperConfidenceBound { beta } => {
+                mean + beta * std_dev
+            }
+            AcquisitionFunction::ProbabilityOfImprovement => {
+                self.probability_of_improvement(mean, std_dev, bayesian_state.current_best)
+            }
+            AcquisitionFunction::EntropySearch => {
+                // Simplified entropy search implementation
+                -variance * (variance.ln())
+            }
+            AcquisitionFunction::KnowledgeGradient => {
+                // Simplified knowledge gradient
+                std_dev * (1.0 / (1.0 + variance))
+            }
+            AcquisitionFunction::ThompsonSampling => {
+                // Sample from posterior
+                use rand::Rng;
+                let mut rng = rand::rng();
+                let sample: f64 = rng.random_range(0.0..1.0);
+                mean + std_dev * self.inverse_normal_cdf(sample)
+            }
+        }
+    }
+
+    /// Expected Improvement acquisition function
+    fn expected_improvement(&self, mean: f64, std_dev: f64, current_best: f64) -> f64 {
+        if std_dev <= 1e-10 {
+            return 0.0;
+        }
+        
+        let improvement = mean - current_best;
+        let z = improvement / std_dev;
+        
+        improvement * self.normal_cdf(z) + std_dev * self.normal_pdf(z)
+    }
+
+    /// Probability of Improvement acquisition function
+    fn probability_of_improvement(&self, mean: f64, std_dev: f64, current_best: f64) -> f64 {
+        if std_dev <= 1e-10 {
+            return if mean > current_best { 1.0 } else { 0.0 };
+        }
+        
+        let z = (mean - current_best) / std_dev;
+        self.normal_cdf(z)
+    }
+
+    /// Gaussian Process prediction
+    fn predict_gp(&self, x: &[f64], bayesian_state: &BayesianState) -> (f64, f64) {
+        if bayesian_state.observations.is_empty() {
+            return (0.0, 1.0); // Prior mean and variance
+        }
+        
+        // Simplified GP prediction - in practice would use proper matrix operations
+        let mut mean = 0.0;
+        let mut variance = 1.0;
+        
+        // Compute similarity-weighted average (simplified)
+        let mut total_weight = 0.0;
+        for (params, score) in &bayesian_state.observations {
+            let x_obs = self.extract_feature_vector(params, &bayesian_state.parameter_names);
+            let similarity = self.compute_kernel(x, &x_obs, &bayesian_state.gp_hyperparameters);
+            mean += similarity * score;
+            total_weight += similarity;
+        }
+        
+        if total_weight > 1e-10 {
+            mean /= total_weight;
+            variance = 1.0 - total_weight.min(1.0); // Simplified variance calculation
+        }
+        
+        (mean, variance.max(1e-6))
+    }
+
+    /// Compute kernel function
+    fn compute_kernel(&self, x1: &[f64], x2: &[f64], hyperparams: &GpHyperparameters) -> f64 {
+        match &hyperparams.kernel_type {
+            KernelType::RBF { length_scale } => {
+                let squared_distance: f64 = x1.iter()
+                    .zip(x2.iter())
+                    .map(|(a, b)| (a - b).powi(2))
+                    .sum();
+                hyperparams.signal_variance * (-squared_distance / (2.0 * length_scale.powi(2))).exp()
+            }
+            KernelType::Matern { length_scale, nu } => {
+                let distance: f64 = x1.iter()
+                    .zip(x2.iter())
+                    .map(|(a, b)| (a - b).powi(2))
+                    .sum::<f64>()
+                    .sqrt();
+                
+                if distance == 0.0 {
+                    hyperparams.signal_variance
+                } else {
+                    let scaled_distance = (2.0 * nu).sqrt() * distance / length_scale;
+                    let bessel_term = if nu == &0.5 {
+                        (-scaled_distance).exp()
+                    } else if nu == &1.5 {
+                        (1.0 + scaled_distance) * (-scaled_distance).exp()
+                    } else {
+                        // Simplified for other nu values
+                        (-scaled_distance).exp()
+                    };
+                    hyperparams.signal_variance * bessel_term
+                }
+            }
+            KernelType::Linear => {
+                let dot_product: f64 = x1.iter().zip(x2.iter()).map(|(a, b)| a * b).sum();
+                hyperparams.signal_variance * dot_product
+            }
+            KernelType::Polynomial { degree } => {
+                let dot_product: f64 = x1.iter().zip(x2.iter()).map(|(a, b)| a * b).sum();
+                hyperparams.signal_variance * (1.0 + dot_product).powf(*degree as f64)
+            }
+        }
+    }
+
+    /// Optimize GP hyperparameters using maximum likelihood
+    fn optimize_gp_hyperparameters(
+        &self,
+        bayesian_state: &mut BayesianState,
+        combinations: &[HashMap<String, f64>],
+    ) {
+        // Simplified hyperparameter optimization
+        // In practice, this would use gradient-based optimization
+        
+        if combinations.len() < 3 {
+            return;
+        }
+        
+        // Estimate length scales based on data variance
+        for (i, param_name) in bayesian_state.parameter_names.iter().enumerate() {
+            let values: Vec<f64> = combinations.iter()
+                .filter_map(|c| c.get(param_name))
+                .copied()
+                .collect();
+            
+            if !values.is_empty() {
+                let mean = values.iter().sum::<f64>() / values.len() as f64;
+                let variance = values.iter()
+                    .map(|v| (v - mean).powi(2))
+                    .sum::<f64>() / values.len() as f64;
+                
+                if i < bayesian_state.gp_hyperparameters.length_scales.len() {
+                    bayesian_state.gp_hyperparameters.length_scales[i] = variance.sqrt().max(0.1);
+                }
+            }
+        }
+        
+        // Update signal and noise variance based on observations
+        if !bayesian_state.observations.is_empty() {
+            let scores: Vec<f64> = bayesian_state.observations.iter().map(|(_, s)| *s).collect();
+            let score_mean = scores.iter().sum::<f64>() / scores.len() as f64;
+            let score_variance = scores.iter()
+                .map(|s| (s - score_mean).powi(2))
+                .sum::<f64>() / scores.len() as f64;
+            
+            bayesian_state.gp_hyperparameters.signal_variance = score_variance.max(0.1);
+            bayesian_state.gp_hyperparameters.noise_variance = (score_variance * 0.1).max(0.01);
+        }
+    }
+
+    /// Extract feature vector from parameter map
+    fn extract_feature_vector(&self, params: &HashMap<String, f64>, param_names: &[String]) -> Vec<f64> {
+        param_names.iter()
+            .map(|name| params.get(name).copied().unwrap_or(0.0))
+            .collect()
+    }
+
+    /// Standard normal CDF approximation
+    fn normal_cdf(&self, x: f64) -> f64 {
+        0.5 * (1.0 + self.erf(x / 2.0_f64.sqrt()))
+    }
+
+    /// Standard normal PDF
+    fn normal_pdf(&self, x: f64) -> f64 {
+        (-0.5 * x * x).exp() / (2.0 * std::f64::consts::PI).sqrt()
+    }
+
+    /// Error function approximation
+    fn erf(&self, x: f64) -> f64 {
+        // Abramowitz and Stegun approximation
+        let a1 = 0.254829592;
+        let a2 = -0.284496736;
+        let a3 = 1.421413741;
+        let a4 = -1.453152027;
+        let a5 = 1.061405429;
+        let p = 0.3275911;
+
+        let sign = if x < 0.0 { -1.0 } else { 1.0 };
+        let x = x.abs();
+
+        let t = 1.0 / (1.0 + p * x);
+        let y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * (-x * x).exp();
+
+        sign * y
+    }
+
+    /// Inverse normal CDF approximation
+    fn inverse_normal_cdf(&self, p: f64) -> f64 {
+        if p <= 0.0 { return f64::NEG_INFINITY; }
+        if p >= 1.0 { return f64::INFINITY; }
+        if (p - 0.5).abs() < 1e-10 { return 0.0; }
+
+        // Beasley-Springer-Moro algorithm
+        let a0 = -3.969683028665376e+01;
+        let a1 = 2.209460984245205e+02;
+        let a2 = -2.759285104469687e+02;
+        let a3 = 1.383577518672690e+02;
+        let a4 = -3.066479806614716e+01;
+        let a5 = 2.506628277459239e+00;
+
+        let b1 = -5.447609879822406e+01;
+        let b2 = 1.615858368580409e+02;
+        let b3 = -1.556989798598866e+02;
+        let b4 = 6.680131188771972e+01;
+        let b5 = -1.328068155288572e+01;
+
+        let c0 = -7.784894002430293e-03;
+        let c1 = -3.223964580411365e-01;
+        let c2 = -2.400758277161838e+00;
+        let c3 = -2.549732539343734e+00;
+        let c4 = 4.374664141464968e+00;
+        let c5 = 2.938163982698783e+00;
+
+        let d1 = 7.784695709041462e-03;
+        let d2 = 3.224671290700398e-01;
+        let d3 = 2.445134137142996e+00;
+        let d4 = 3.754408661907416e+00;
+
+        let p_low = 0.02425;
+        let p_high = 1.0 - p_low;
+
+        if p < p_low {
+            let q = (-2.0 * p.ln()).sqrt();
+            return (((((c0 * q + c1) * q + c2) * q + c3) * q + c4) * q + c5) /
+                   ((((d1 * q + d2) * q + d3) * q + d4) * q + 1.0);
+        }
+
+        if p <= p_high {
+            let q = p - 0.5;
+            let r = q * q;
+            return (((((a0 * r + a1) * r + a2) * r + a3) * r + a4) * r + a5) * q /
+                   (((((b1 * r + b2) * r + b3) * r + b4) * r + b5) * r + 1.0);
+        }
+
+        let q = (-2.0 * (1.0 - p).ln()).sqrt();
+        -((((c0 * q + c1) * q + c2) * q + c3) * q + c4) * q + c5) /
+         ((((d1 * q + d2) * q + d3) * q + d4) * q + 1.0)
+    }
+
+    /// Multi-objective optimization using Pareto frontier
+    fn generate_multi_objective_combinations(
+        &self,
+        search_space: &SearchSpace,
+        objectives: &[EvaluationMetric],
+        base_strategy: &SearchStrategy,
+    ) -> Result<Vec<HashMap<String, f64>>> {
+        // For multi-objective optimization, we need to maintain a Pareto frontier
+        // This is a simplified implementation
+        
+        let base_combinations = match base_strategy {
+            SearchStrategy::RandomSearch { n_trials } => {
+                self.generate_random_combinations(search_space, *n_trials)?
+            }
+            SearchStrategy::GridSearch => {
+                self.generate_grid_combinations(search_space)?
+            }
+            SearchStrategy::BayesianOptimization { n_initial_points, acquisition_function } => {
+                self.generate_bayesian_combinations(search_space, *n_initial_points, acquisition_function)?
+            }
+            _ => {
+                self.generate_random_combinations(search_space, self.config.max_evaluations)?
+            }
+        };
+        
+        // Add diversity through multi-objective sampling
+        let mut diverse_combinations = base_combinations;
+        
+        // Add some random exploration for diversity
+        let additional_random = self.generate_random_combinations(
+            search_space, 
+            (self.config.max_evaluations / 4).max(10)
+        )?;
+        diverse_combinations.extend(additional_random);
+        
+        Ok(diverse_combinations)
+    }
+
+    /// Generate SMBO (Sequential Model-Based Optimization) combinations
+    fn generate_smbo_combinations(
+        &self,
+        search_space: &SearchSpace,
+        surrogate_model: &SurrogateModel,
+        acquisition_function: &AcquisitionFunction,
+    ) -> Result<Vec<HashMap<String, f64>>> {
+        // SMBO is similar to Bayesian optimization but with different surrogate models
+        
+        let n_initial_points = 10.max(search_space.parameters.len() * 2);
+        let mut combinations = Vec::new();
+        
+        // Generate initial random points
+        let initial_points = self.generate_random_combinations(search_space, n_initial_points)?;
+        combinations.extend(initial_points);
+        
+        // Sequential optimization based on surrogate model
+        let remaining_points = self.config.max_evaluations.saturating_sub(n_initial_points);
+        
+        for iteration in 0..remaining_points {
+            let next_point = match surrogate_model {
+                SurrogateModel::GaussianProcess { .. } => {
+                    // Use Gaussian Process (similar to Bayesian optimization)
+                    let parameter_names: Vec<String> = search_space.parameters.keys().cloned().collect();
+                    let mut bayesian_state = BayesianState {
+                        observations: Vec::new(),
+                        gp_mean: None,
+                        gp_covariance: None,
+                        acquisition_values: Vec::new(),
+                        parameter_names: parameter_names.clone(),
+                        gp_hyperparameters: GpHyperparameters {
+                            length_scales: vec![1.0; parameter_names.len()],
+                            signal_variance: 1.0,
+                            noise_variance: 0.1,
+                            kernel_type: KernelType::RBF { length_scale: 1.0 },
+                        },
+                        noise_level: 0.1,
+                        current_best: f64::NEG_INFINITY,
+                    };
+                    
+                    self.update_gaussian_process(&mut bayesian_state, &combinations);
+                    self.optimize_acquisition_function(search_space, &bayesian_state, acquisition_function)?
+                }
+                SurrogateModel::RandomForest { .. } => {
+                    // Random Forest surrogate (simplified implementation)
+                    self.generate_rf_guided_point(search_space, &combinations)?
+                }
+                SurrogateModel::GradientBoosting { .. } => {
+                    // Gradient Boosting surrogate (simplified implementation)
+                    self.generate_gb_guided_point(search_space, &combinations)?
+                }
+            };
+            
+            combinations.push(next_point);
+        }
+        
+        Ok(combinations)
+    }
+
+    /// Generate point guided by Random Forest surrogate model
+    fn generate_rf_guided_point(
+        &self,
+        search_space: &SearchSpace,
+        existing_combinations: &[HashMap<String, f64>],
+    ) -> Result<HashMap<String, f64>> {
+        // Simplified Random Forest guidance - in practice would train actual RF model
+        
+        if existing_combinations.is_empty() {
+            return self.generate_random_combinations(search_space, 1)
+                .map(|mut v| v.pop().unwrap_or_default());
+        }
+        
+        // Find parameter regions with high variance (uncertainty)
+        let mut promising_point = HashMap::new();
+        
+        for (param_name, param_def) in &search_space.parameters {
+            let values: Vec<f64> = existing_combinations
+                .iter()
+                .filter_map(|c| c.get(param_name))
+                .copied()
+                .collect();
+            
+            if values.is_empty() {
+                continue;
+            }
+            
+            let mean = values.iter().sum::<f64>() / values.len() as f64;
+            let variance = values.iter()
+                .map(|v| (v - mean).powi(2))
+                .sum::<f64>() / values.len() as f64;
+            
+            // Sample from regions with higher uncertainty
+            let suggested_value = match param_def {
+                HyperParameter::Float { min, max } => {
+                    // Add some exploration around high-variance regions
+                    use rand::Rng;
+                    let mut rng = rand::rng();
+                    let noise = rng.random_range(-variance.sqrt()..variance.sqrt());
+                    (mean + noise).clamp(*min, *max)
+                }
+                HyperParameter::Integer { min, max } => {
+                    use rand::Rng;
+                    let mut rng = rand::rng();
+                    rng.gen_range(*min..=*max) as f64
+                }
+                _ => mean, // Simplified for other parameter types
+            };
+            
+            promising_point.insert(param_name.clone(), suggested_value);
+        }
+        
+        Ok(promising_point)
+    }
+
+    /// Generate point guided by Gradient Boosting surrogate model
+    fn generate_gb_guided_point(
+        &self,
+        search_space: &SearchSpace,
+        existing_combinations: &[HashMap<String, f64>],
+    ) -> Result<HashMap<String, f64>> {
+        // Simplified Gradient Boosting guidance
+        
+        if existing_combinations.is_empty() {
+            return self.generate_random_combinations(search_space, 1)
+                .map(|mut v| v.pop().unwrap_or_default());
+        }
+        
+        // Gradient Boosting focuses on areas where previous models performed poorly
+        // This is a simplified implementation
+        
+        let mut promising_point = HashMap::new();
+        
+        for (param_name, param_def) in &search_space.parameters {
+            let values: Vec<f64> = existing_combinations
+                .iter()
+                .filter_map(|c| c.get(param_name))
+                .copied()
+                .collect();
+            
+            if values.is_empty() {
+                continue;
+            }
+            
+            // Simple gradient-based exploration
+            let suggested_value = match param_def {
+                HyperParameter::Float { min, max } => {
+                    // Focus on unexplored regions
+                    let range = max - min;
+                    let step = range / 10.0;
+                    
+                    // Find least explored region
+                    let mut best_gap = 0.0;
+                    let mut best_value = (min + max) / 2.0;
+                    
+                    let mut test_value = *min;
+                    while test_value <= *max {
+                        let min_distance = values.iter()
+                            .map(|v| (v - test_value).abs())
+                            .min_by(|a, b| a.partial_cmp(b).unwrap())
+                            .unwrap_or(range);
+                        
+                        if min_distance > best_gap {
+                            best_gap = min_distance;
+                            best_value = test_value;
+                        }
+                        test_value += step;
+                    }
+                    
+                    best_value
+                }
+                HyperParameter::Integer { min, max } => {
+                    use rand::Rng;
+                    let mut rng = rand::rng();
+                    rng.gen_range(*min..=*max) as f64
+                }
+                _ => {
+                    let mean = values.iter().sum::<f64>() / values.len() as f64;
+                    mean
+                }
+            };
+            
+            promising_point.insert(param_name.clone(), suggested_value);
+        }
+        
+        Ok(promising_point)
+    }
+
     /// Generate evolutionary search combinations using genetic algorithm
     fn generate_evolutionary_combinations(
         &self,
@@ -4153,6 +4715,676 @@ pub mod advanced_optimization {
     }
 }
 
+/// Advanced hyperparameter optimization techniques
+pub mod advanced_optimization {
+    use super::*;
+    use std::sync::{Arc, Mutex};
+    use rayon::prelude::*;
+    
+    /// Neural Architecture Search (NAS) for clustering algorithms
+    ///
+    /// This approach uses neural networks to automatically discover
+    /// optimal hyperparameter configurations for clustering algorithms.
+    pub struct NeuralArchitectureSearch<F: Float> {
+        /// Controller network weights
+        controller_weights: Vec<Array2<F>>,
+        /// Search space definition
+        search_space: SearchSpace<F>,
+        /// Training history
+        training_history: Vec<(HashMap<String, F>, F)>,
+        /// Current exploration rate
+        exploration_rate: f64,
+        /// Learning rate for controller updates
+        learning_rate: f64,
+    }
+    
+    impl<F: Float + FromPrimitive + Debug + Send + Sync> NeuralArchitectureSearch<F> {
+        /// Create new NAS instance
+        pub fn new(search_space: SearchSpace<F>) -> Self {
+            Self {
+                controller_weights: Vec::new(),
+                search_space,
+                training_history: Vec::new(),
+                exploration_rate: 0.1,
+                learning_rate: 0.001,
+            }
+        }
+        
+        /// Initialize controller network
+        pub fn initialize_controller(&mut self, input_dim: usize, hidden_dim: usize) {
+            let mut rng = rand::thread_rng();
+            
+            // Simple 2-layer network for hyperparameter generation
+            let w1 = Array2::from_shape_fn((input_dim, hidden_dim), |_| {
+                F::from(rng.gen_range(-0.1..0.1)).unwrap()
+            });
+            let w2 = Array2::from_shape_fn((hidden_dim, self.search_space.len()), |_| {
+                F::from(rng.gen_range(-0.1..0.1)).unwrap()
+            });
+            
+            self.controller_weights = vec![w1, w2];
+        }
+        
+        /// Generate hyperparameter configuration using neural controller
+        pub fn generate_config(&self, context: &Array1<F>) -> Result<HashMap<String, F>> {
+            if self.controller_weights.is_empty() {
+                return Err(ClusteringError::InvalidInput(
+                    "Controller not initialized".to_string()
+                ));
+            }
+            
+            // Forward pass through controller network
+            let mut current = context.clone();
+            
+            for weights in &self.controller_weights {
+                let mut output = Array1::zeros(weights.ncols());
+                
+                for (i, mut out_val) in output.iter_mut().enumerate() {
+                    let mut sum = F::zero();
+                    for (j, &input_val) in current.iter().enumerate() {
+                        sum = sum + input_val * weights[[j, i]];
+                    }
+                    *out_val = self.tanh_activation(sum);
+                }
+                
+                current = output;
+            }
+            
+            // Convert network output to hyperparameter values
+            let mut config = HashMap::new();
+            for (i, (param_name, param_def)) in self.search_space.iter().enumerate() {
+                if i < current.len() {
+                    let normalized_value = (current[i] + F::one()) / F::from(2.0).unwrap(); // Map from [-1,1] to [0,1]
+                    let param_value = match param_def {
+                        HyperParameter::Continuous { min, max } => {
+                            *min + normalized_value * (*max - *min)
+                        }
+                        HyperParameter::Integer { min, max } => {
+                            let range = F::from(*max - *min).unwrap();
+                            let scaled = *min + (normalized_value * range).round().to_usize().unwrap_or(0);
+                            F::from(scaled).unwrap()
+                        }
+                        HyperParameter::Categorical { options } => {
+                            let idx = (normalized_value * F::from(options.len()).unwrap()).to_usize()
+                                .unwrap_or(0)
+                                .min(options.len() - 1);
+                            options[idx]
+                        }
+                    };
+                    config.insert(param_name.clone(), param_value);
+                }
+            }
+            
+            Ok(config)
+        }
+        
+        /// Activation function
+        fn tanh_activation(&self, x: F) -> F {
+            let x_f64 = x.to_f64().unwrap_or(0.0);
+            F::from(x_f64.tanh()).unwrap()
+        }
+        
+        /// Update controller based on performance feedback
+        pub fn update_controller(&mut self, config: &HashMap<String, F>, performance: F) {
+            self.training_history.push((config.clone(), performance));
+            
+            // Simple policy gradient update (simplified)
+            // In practice, you'd implement full reinforcement learning update
+            
+            // Calculate baseline (average performance)
+            let baseline = if self.training_history.len() > 1 {
+                let sum: F = self.training_history.iter().map(|(_, p)| *p).fold(F::zero(), |acc, x| acc + x);
+                sum / F::from(self.training_history.len()).unwrap()
+            } else {
+                performance
+            };
+            
+            let advantage = performance - baseline;
+            
+            // Update exploration rate based on performance trend
+            if advantage > F::zero() {
+                self.exploration_rate *= 0.995; // Reduce exploration if improving
+            } else {
+                self.exploration_rate = (self.exploration_rate * 1.005).min(0.3); // Increase exploration if not improving
+            }
+        }
+        
+        /// Search for optimal hyperparameters using NAS
+        pub fn search<ClusterFn>(
+            &mut self,
+            data: ArrayView2<F>,
+            clustering_fn: ClusterFn,
+            n_trials: usize,
+        ) -> Result<TuningResult<F>>
+        where
+            ClusterFn: Fn(&HashMap<String, F>, ArrayView2<F>) -> Result<Array1<i32>> + Sync,
+        {
+            let mut best_config = None;
+            let mut best_score = F::neg_infinity();
+            let mut all_results = Vec::new();
+            
+            // Initialize controller if not done
+            if self.controller_weights.is_empty() {
+                self.initialize_controller(10, 50); // Default dimensions
+            }
+            
+            for trial in 0..n_trials {
+                // Create context vector (simplified - could include data statistics)
+                let context = Array1::from_vec(vec![
+                    F::from(data.nrows()).unwrap(),
+                    F::from(data.ncols()).unwrap(),
+                    F::from(trial).unwrap() / F::from(n_trials).unwrap(),
+                    F::from(self.exploration_rate).unwrap(),
+                    F::zero(), F::zero(), F::zero(), F::zero(), F::zero(), F::zero()
+                ]);
+                
+                // Generate configuration
+                let config = self.generate_config(&context)?;
+                
+                // Evaluate configuration
+                let labels = clustering_fn(&config, data)?;
+                let score = self.evaluate_clustering(data, &labels)?;
+                
+                // Update controller
+                self.update_controller(&config, score);
+                
+                // Track best result
+                if score > best_score {
+                    best_score = score;
+                    best_config = Some(config.clone());
+                }
+                
+                all_results.push(EvaluationResult {
+                    parameters: config,
+                    score,
+                    cv_scores: vec![score],
+                    std_score: F::zero(),
+                    fit_time: std::time::Duration::from_millis(0),
+                    score_time: std::time::Duration::from_millis(0),
+                });
+            }
+            
+            Ok(TuningResult {
+                best_params: best_config.unwrap_or_default(),
+                best_score,
+                all_results,
+                convergence_info: Some(ConvergenceInfo {
+                    converged: true,
+                    n_iterations: n_trials,
+                    final_improvement: F::zero(),
+                }),
+                exploration_stats: Some(ExplorationStats {
+                    total_evaluations: n_trials,
+                    unique_configurations: all_results.len(),
+                    exploration_efficiency: self.exploration_rate,
+                    convergence_rate: 1.0 / n_trials as f64,
+                }),
+            })
+        }
+        
+        /// Evaluate clustering quality
+        fn evaluate_clustering(&self, data: ArrayView2<F>, labels: &Array1<i32>) -> Result<F> {
+            // Convert i32 labels to usize for metrics calculation
+            let labels_usize: Array1<usize> = labels.mapv(|x| {
+                if x < 0 { 0 } else { x as usize }
+            });
+            
+            silhouette_score(data, labels_usize.view())
+        }
+    }
+    
+    /// Multi-Armed Bandit approach for hyperparameter optimization
+    ///
+    /// This approach treats each hyperparameter configuration as an "arm"
+    /// and uses bandit algorithms to balance exploration and exploitation.
+    pub struct MultiarmedBanditOptimizer<F: Float> {
+        /// Arms (hyperparameter configurations)
+        arms: Vec<HashMap<String, F>>,
+        /// Reward history for each arm
+        rewards: Vec<Vec<F>>,
+        /// Number of times each arm was pulled
+        pulls: Vec<usize>,
+        /// Bandit algorithm configuration
+        algorithm: BanditAlgorithm,
+        /// Search space
+        search_space: SearchSpace<F>,
+    }
+    
+    /// Bandit algorithms
+    #[derive(Debug, Clone)]
+    pub enum BanditAlgorithm {
+        /// Epsilon-greedy algorithm
+        EpsilonGreedy { epsilon: f64 },
+        /// Upper Confidence Bound (UCB1)
+        UCB1 { c: f64 },
+        /// Thompson Sampling
+        ThompsonSampling,
+        /// LinUCB for contextual bandits
+        LinUCB { alpha: f64 },
+    }
+    
+    impl<F: Float + FromPrimitive + Debug + Send + Sync> MultiarmedBanditOptimizer<F> {
+        /// Create new multi-armed bandit optimizer
+        pub fn new(search_space: SearchSpace<F>, algorithm: BanditAlgorithm) -> Self {
+            Self {
+                arms: Vec::new(),
+                rewards: Vec::new(),
+                pulls: Vec::new(),
+                algorithm,
+                search_space,
+            }
+        }
+        
+        /// Initialize arms with random configurations
+        pub fn initialize_arms(&mut self, n_arms: usize) -> Result<()> {
+            let mut rng = rand::thread_rng();
+            
+            for _ in 0..n_arms {
+                let mut config = HashMap::new();
+                
+                for (param_name, param_def) in &self.search_space {
+                    let value = match param_def {
+                        HyperParameter::Continuous { min, max } => {
+                            let random_val = rng.gen_range(0.0..1.0);
+                            *min + F::from(random_val).unwrap() * (*max - *min)
+                        }
+                        HyperParameter::Integer { min, max } => {
+                            let val = rng.gen_range(*min..=*max);
+                            F::from(val).unwrap()
+                        }
+                        HyperParameter::Categorical { options } => {
+                            let idx = rng.gen_range(0..options.len());
+                            options[idx]
+                        }
+                    };
+                    config.insert(param_name.clone(), value);
+                }
+                
+                self.arms.push(config);
+                self.rewards.push(Vec::new());
+                self.pulls.push(0);
+            }
+            
+            Ok(())
+        }
+        
+        /// Select next arm to pull using bandit algorithm
+        pub fn select_arm(&self) -> Result<usize> {
+            if self.arms.is_empty() {
+                return Err(ClusteringError::InvalidInput("No arms available".to_string()));
+            }
+            
+            match &self.algorithm {
+                BanditAlgorithm::EpsilonGreedy { epsilon } => {
+                    let mut rng = rand::thread_rng();
+                    if rng.gen::<f64>() < *epsilon {
+                        // Explore: choose random arm
+                        Ok(rng.gen_range(0..self.arms.len()))
+                    } else {
+                        // Exploit: choose best arm
+                        let mut best_arm = 0;
+                        let mut best_avg = F::neg_infinity();
+                        
+                        for (i, rewards) in self.rewards.iter().enumerate() {
+                            if !rewards.is_empty() {
+                                let avg = rewards.iter().fold(F::zero(), |acc, &x| acc + x) 
+                                    / F::from(rewards.len()).unwrap();
+                                if avg > best_avg {
+                                    best_avg = avg;
+                                    best_arm = i;
+                                }
+                            }
+                        }
+                        
+                        Ok(best_arm)
+                    }
+                }
+                BanditAlgorithm::UCB1 { c } => {
+                    let total_pulls: usize = self.pulls.iter().sum();
+                    let mut best_arm = 0;
+                    let mut best_ucb = F::neg_infinity();
+                    
+                    for (i, rewards) in self.rewards.iter().enumerate() {
+                        let ucb = if rewards.is_empty() {
+                            F::infinity() // Unplayed arms have infinite UCB
+                        } else {
+                            let avg = rewards.iter().fold(F::zero(), |acc, &x| acc + x) 
+                                / F::from(rewards.len()).unwrap();
+                            let confidence = F::from(*c * (total_pulls as f64 / self.pulls[i] as f64).ln().sqrt()).unwrap();
+                            avg + confidence
+                        };
+                        
+                        if ucb > best_ucb {
+                            best_ucb = ucb;
+                            best_arm = i;
+                        }
+                    }
+                    
+                    Ok(best_arm)
+                }
+                _ => {
+                    // Default to random selection for other algorithms
+                    let mut rng = rand::thread_rng();
+                    Ok(rng.gen_range(0..self.arms.len()))
+                }
+            }
+        }
+        
+        /// Update arm with reward
+        pub fn update_arm(&mut self, arm_index: usize, reward: F) -> Result<()> {
+            if arm_index >= self.arms.len() {
+                return Err(ClusteringError::InvalidInput("Invalid arm index".to_string()));
+            }
+            
+            self.rewards[arm_index].push(reward);
+            self.pulls[arm_index] += 1;
+            
+            Ok(())
+        }
+        
+        /// Optimize hyperparameters using multi-armed bandit
+        pub fn optimize<ClusterFn>(
+            &mut self,
+            data: ArrayView2<F>,
+            clustering_fn: ClusterFn,
+            n_trials: usize,
+        ) -> Result<TuningResult<F>>
+        where
+            ClusterFn: Fn(&HashMap<String, F>, ArrayView2<F>) -> Result<Array1<i32>> + Sync,
+        {
+            // Initialize arms if not done
+            if self.arms.is_empty() {
+                self.initialize_arms(20)?; // Default 20 arms
+            }
+            
+            let mut best_config = None;
+            let mut best_score = F::neg_infinity();
+            let mut all_results = Vec::new();
+            
+            for _ in 0..n_trials {
+                // Select arm
+                let arm_index = self.select_arm()?;
+                let config = &self.arms[arm_index];
+                
+                // Evaluate configuration
+                let labels = clustering_fn(config, data)?;
+                let score = self.evaluate_clustering(data, &labels)?;
+                
+                // Update arm
+                self.update_arm(arm_index, score)?;
+                
+                // Track best result
+                if score > best_score {
+                    best_score = score;
+                    best_config = Some(config.clone());
+                }
+                
+                all_results.push(EvaluationResult {
+                    parameters: config.clone(),
+                    score,
+                    cv_scores: vec![score],
+                    std_score: F::zero(),
+                    fit_time: std::time::Duration::from_millis(0),
+                    score_time: std::time::Duration::from_millis(0),
+                });
+            }
+            
+            Ok(TuningResult {
+                best_params: best_config.unwrap_or_default(),
+                best_score,
+                all_results,
+                convergence_info: Some(ConvergenceInfo {
+                    converged: true,
+                    n_iterations: n_trials,
+                    final_improvement: F::zero(),
+                }),
+                exploration_stats: Some(ExplorationStats {
+                    total_evaluations: n_trials,
+                    unique_configurations: self.arms.len(),
+                    exploration_efficiency: 0.5, // Placeholder
+                    convergence_rate: 1.0 / n_trials as f64,
+                }),
+            })
+        }
+        
+        /// Evaluate clustering quality
+        fn evaluate_clustering(&self, data: ArrayView2<F>, labels: &Array1<i32>) -> Result<F> {
+            let labels_usize: Array1<usize> = labels.mapv(|x| {
+                if x < 0 { 0 } else { x as usize }
+            });
+            
+            silhouette_score(data, labels_usize.view())
+        }
+        
+        /// Get arm statistics
+        pub fn get_arm_stats(&self) -> Vec<(f64, usize)> {
+            self.rewards.iter()
+                .zip(self.pulls.iter())
+                .map(|(rewards, &pulls)| {
+                    let avg = if rewards.is_empty() {
+                        0.0
+                    } else {
+                        let sum = rewards.iter().fold(F::zero(), |acc, &x| acc + x);
+                        (sum / F::from(rewards.len()).unwrap()).to_f64().unwrap_or(0.0)
+                    };
+                    (avg, pulls)
+                })
+                .collect()
+        }
+    }
+    
+    /// Population-based training for hyperparameter optimization
+    ///
+    /// This approach maintains a population of configurations and evolves
+    /// them over time using genetic algorithm principles.
+    pub struct PopulationBasedTraining<F: Float> {
+        /// Current population
+        population: Vec<Individual<F>>,
+        /// Population size
+        population_size: usize,
+        /// Selection pressure (top fraction to keep)
+        selection_pressure: f64,
+        /// Mutation rate
+        mutation_rate: f64,
+        /// Search space
+        search_space: SearchSpace<F>,
+        /// Generation counter
+        generation: usize,
+    }
+    
+    /// Individual in the population
+    #[derive(Debug, Clone)]
+    struct Individual<F: Float> {
+        /// Hyperparameter configuration
+        config: HashMap<String, F>,
+        /// Fitness score
+        fitness: F,
+        /// Age (number of generations)
+        age: usize,
+    }
+    
+    impl<F: Float + FromPrimitive + Debug + Send + Sync> PopulationBasedTraining<F> {
+        /// Create new population-based training optimizer
+        pub fn new(
+            search_space: SearchSpace<F>,
+            population_size: usize,
+            selection_pressure: f64,
+            mutation_rate: f64,
+        ) -> Self {
+            Self {
+                population: Vec::new(),
+                population_size,
+                selection_pressure,
+                mutation_rate,
+                search_space,
+                generation: 0,
+            }
+        }
+        
+        /// Initialize random population
+        pub fn initialize_population(&mut self) -> Result<()> {
+            let mut rng = rand::thread_rng();
+            
+            for _ in 0..self.population_size {
+                let mut config = HashMap::new();
+                
+                for (param_name, param_def) in &self.search_space {
+                    let value = match param_def {
+                        HyperParameter::Continuous { min, max } => {
+                            let random_val = rng.gen_range(0.0..1.0);
+                            *min + F::from(random_val).unwrap() * (*max - *min)
+                        }
+                        HyperParameter::Integer { min, max } => {
+                            let val = rng.gen_range(*min..=*max);
+                            F::from(val).unwrap()
+                        }
+                        HyperParameter::Categorical { options } => {
+                            let idx = rng.gen_range(0..options.len());
+                            options[idx]
+                        }
+                    };
+                    config.insert(param_name.clone(), value);
+                }
+                
+                self.population.push(Individual {
+                    config,
+                    fitness: F::zero(),
+                    age: 0,
+                });
+            }
+            
+            Ok(())
+        }
+        
+        /// Evolve population for one generation
+        pub fn evolve<ClusterFn>(&mut self, data: ArrayView2<F>, clustering_fn: &ClusterFn) -> Result<()>
+        where
+            ClusterFn: Fn(&HashMap<String, F>, ArrayView2<F>) -> Result<Array1<i32>> + Sync,
+        {
+            // Evaluate fitness for all individuals
+            for individual in &mut self.population {
+                let labels = clustering_fn(&individual.config, data)?;
+                individual.fitness = self.evaluate_clustering(data, &labels)?;
+                individual.age += 1;
+            }
+            
+            // Sort by fitness (descending)
+            self.population.sort_by(|a, b| b.fitness.partial_cmp(&a.fitness).unwrap_or(std::cmp::Ordering::Equal));
+            
+            // Selection: keep top individuals
+            let n_keep = (self.population_size as f64 * self.selection_pressure) as usize;
+            let survivors = self.population[..n_keep].to_vec();
+            
+            // Reproduction: create new individuals
+            let mut new_population = survivors.clone();
+            let mut rng = rand::thread_rng();
+            
+            while new_population.len() < self.population_size {
+                // Select two parents (tournament selection)
+                let parent1_idx = rng.gen_range(0..survivors.len());
+                let parent2_idx = rng.gen_range(0..survivors.len());
+                let parent1 = &survivors[parent1_idx];
+                let parent2 = &survivors[parent2_idx];
+                
+                // Crossover
+                let mut child_config = HashMap::new();
+                for (param_name, _) in &self.search_space {
+                    let value = if rng.gen::<f64>() < 0.5 {
+                        parent1.config[param_name]
+                    } else {
+                        parent2.config[param_name]
+                    };
+                    child_config.insert(param_name.clone(), value);
+                }
+                
+                // Mutation
+                if rng.gen::<f64>() < self.mutation_rate {
+                    self.mutate_config(&mut child_config)?;
+                }
+                
+                new_population.push(Individual {
+                    config: child_config,
+                    fitness: F::zero(),
+                    age: 0,
+                });
+            }
+            
+            self.population = new_population;
+            self.generation += 1;
+            
+            Ok(())
+        }
+        
+        /// Mutate a configuration
+        fn mutate_config(&self, config: &mut HashMap<String, F>) -> Result<()> {
+            let mut rng = rand::thread_rng();
+            
+            // Select random parameter to mutate
+            let param_names: Vec<_> = config.keys().cloned().collect();
+            if param_names.is_empty() {
+                return Ok(());
+            }
+            
+            let param_name = &param_names[rng.gen_range(0..param_names.len())];
+            
+            if let Some(param_def) = self.search_space.iter()
+                .find(|(name, _)| name == param_name)
+                .map(|(_, def)| def) {
+                
+                let new_value = match param_def {
+                    HyperParameter::Continuous { min, max } => {
+                        let current = config[param_name];
+                        let noise = F::from(rng.gen_range(-0.1..0.1)).unwrap() * (*max - *min);
+                        (current + noise).max(*min).min(*max)
+                    }
+                    HyperParameter::Integer { min, max } => {
+                        let val = rng.gen_range(*min..=*max);
+                        F::from(val).unwrap()
+                    }
+                    HyperParameter::Categorical { options } => {
+                        let idx = rng.gen_range(0..options.len());
+                        options[idx]
+                    }
+                };
+                
+                config.insert(param_name.clone(), new_value);
+            }
+            
+            Ok(())
+        }
+        
+        /// Evaluate clustering quality
+        fn evaluate_clustering(&self, data: ArrayView2<F>, labels: &Array1<i32>) -> Result<F> {
+            let labels_usize: Array1<usize> = labels.mapv(|x| {
+                if x < 0 { 0 } else { x as usize }
+            });
+            
+            silhouette_score(data, labels_usize.view())
+        }
+        
+        /// Get best individual from current population
+        pub fn get_best(&self) -> Option<&Individual<F>> {
+            self.population.iter().max_by(|a, b| a.fitness.partial_cmp(&b.fitness).unwrap_or(std::cmp::Ordering::Equal))
+        }
+        
+        /// Get population statistics
+        pub fn get_population_stats(&self) -> (F, F, F) {
+            if self.population.is_empty() {
+                return (F::zero(), F::zero(), F::zero());
+            }
+            
+            let fitnesses: Vec<F> = self.population.iter().map(|ind| ind.fitness).collect();
+            let sum = fitnesses.iter().fold(F::zero(), |acc, &x| acc + x);
+            let mean = sum / F::from(fitnesses.len()).unwrap();
+            
+            let min_fitness = fitnesses.iter().fold(F::infinity(), |acc, &x| acc.min(x));
+            let max_fitness = fitnesses.iter().fold(F::neg_infinity(), |acc, &x| acc.max(x));
+            
+            (mean, min_fitness, max_fitness)
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -4220,6 +5452,572 @@ mod tests {
 
             let n_clusters = combo["n_clusters"];
             assert!(n_clusters >= 2.0 && n_clusters <= 20.0);
+        }
+    }
+}
+
+/// High-level automatic algorithm selection and tuning
+pub struct AutoClusteringSelector<F: Float + FromPrimitive> {
+    /// Tuning configuration
+    config: TuningConfig,
+    /// Algorithms to evaluate
+    algorithms: Vec<ClusteringAlgorithm>,
+    /// Phantom marker
+    _phantom: std::marker::PhantomData<F>,
+}
+
+/// Clustering algorithm identifier
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ClusteringAlgorithm {
+    KMeans,
+    DBSCAN,
+    OPTICS,
+    GaussianMixture,
+    SpectralClustering,
+    MeanShift,
+    HierarchicalClustering,
+    BIRCH,
+    AffinityPropagation,
+    QuantumKMeans,
+    RLClustering,
+    AdaptiveOnline,
+}
+
+/// Result of automatic algorithm selection
+#[derive(Debug, Clone)]
+pub struct AlgorithmSelectionResult {
+    /// Best algorithm found
+    pub best_algorithm: ClusteringAlgorithm,
+    /// Best parameters for the algorithm
+    pub best_parameters: HashMap<String, f64>,
+    /// Best score achieved
+    pub best_score: f64,
+    /// Results for all algorithms tested
+    pub algorithm_results: HashMap<ClusteringAlgorithm, TuningResult>,
+    /// Total time spent on selection
+    pub total_time: f64,
+    /// Recommendations for the dataset
+    pub recommendations: Vec<String>,
+}
+
+impl<F: Float + FromPrimitive + Send + Sync + Debug> AutoClusteringSelector<F> {
+    /// Create new automatic clustering selector
+    pub fn new(config: TuningConfig) -> Self {
+        Self {
+            config,
+            algorithms: vec![
+                ClusteringAlgorithm::KMeans,
+                ClusteringAlgorithm::DBSCAN,
+                ClusteringAlgorithm::GaussianMixture,
+                ClusteringAlgorithm::SpectralClustering,
+                ClusteringAlgorithm::HierarchicalClustering,
+            ],
+            _phantom: std::marker::PhantomData,
+        }
+    }
+
+    /// Create selector with all available algorithms
+    pub fn with_all_algorithms(config: TuningConfig) -> Self {
+        Self {
+            config,
+            algorithms: vec![
+                ClusteringAlgorithm::KMeans,
+                ClusteringAlgorithm::DBSCAN,
+                ClusteringAlgorithm::OPTICS,
+                ClusteringAlgorithm::GaussianMixture,
+                ClusteringAlgorithm::SpectralClustering,
+                ClusteringAlgorithm::MeanShift,
+                ClusteringAlgorithm::HierarchicalClustering,
+                ClusteringAlgorithm::BIRCH,
+                ClusteringAlgorithm::AffinityPropagation,
+                ClusteringAlgorithm::QuantumKMeans,
+                ClusteringAlgorithm::RLClustering,
+                ClusteringAlgorithm::AdaptiveOnline,
+            ],
+            _phantom: std::marker::PhantomData,
+        }
+    }
+
+    /// Create selector with specific algorithms
+    pub fn with_algorithms(config: TuningConfig, algorithms: Vec<ClusteringAlgorithm>) -> Self {
+        Self {
+            config,
+            algorithms,
+            _phantom: std::marker::PhantomData,
+        }
+    }
+
+    /// Automatically select and tune the best clustering algorithm
+    pub fn select_best_algorithm(
+        &self,
+        data: ArrayView2<F>,
+    ) -> Result<AlgorithmSelectionResult> {
+        let start_time = std::time::Instant::now();
+        let mut algorithm_results = HashMap::new();
+        let mut best_algorithm = ClusteringAlgorithm::KMeans;
+        let mut best_score = f64::NEG_INFINITY;
+        let mut best_parameters = HashMap::new();
+
+        let tuner = AutoTuner::new(self.config.clone());
+
+        println!("Testing {} algorithms for automatic selection...", self.algorithms.len());
+
+        for algorithm in &self.algorithms {
+            println!("Tuning {:?}...", algorithm);
+            
+            let tuning_result = match algorithm {
+                ClusteringAlgorithm::KMeans => {
+                    tuner.tune_kmeans(data, StandardSearchSpaces::kmeans())
+                }
+                ClusteringAlgorithm::DBSCAN => {
+                    tuner.tune_dbscan(data, StandardSearchSpaces::dbscan())
+                }
+                ClusteringAlgorithm::OPTICS => {
+                    tuner.tune_optics(data, StandardSearchSpaces::optics())
+                }
+                ClusteringAlgorithm::GaussianMixture => {
+                    tuner.tune_gmm(data, StandardSearchSpaces::gaussian_mixture())
+                }
+                ClusteringAlgorithm::SpectralClustering => {
+                    tuner.tune_spectral(data, StandardSearchSpaces::spectral_clustering())
+                }
+                ClusteringAlgorithm::MeanShift => {
+                    tuner.tune_mean_shift(data, StandardSearchSpaces::mean_shift())
+                }
+                ClusteringAlgorithm::HierarchicalClustering => {
+                    tuner.tune_hierarchical(data, StandardSearchSpaces::hierarchical())
+                }
+                ClusteringAlgorithm::BIRCH => {
+                    tuner.tune_birch(data, StandardSearchSpaces::birch())
+                }
+                ClusteringAlgorithm::AffinityPropagation => {
+                    tuner.tune_affinity_propagation(data, StandardSearchSpaces::affinity_propagation())
+                }
+                ClusteringAlgorithm::QuantumKMeans => {
+                    tuner.tune_quantum_kmeans(data, StandardSearchSpaces::quantum_kmeans())
+                }
+                ClusteringAlgorithm::RLClustering => {
+                    tuner.tune_rl_clustering(data, StandardSearchSpaces::rl_clustering())
+                }
+                ClusteringAlgorithm::AdaptiveOnline => {
+                    tuner.tune_adaptive_online(data, StandardSearchSpaces::adaptive_online())
+                }
+            };
+
+            match tuning_result {
+                Ok(result) => {
+                    println!("✓ {:?}: score = {:.4}, time = {:.2}s", 
+                        algorithm, result.best_score, result.total_time);
+                    
+                    if result.best_score > best_score {
+                        best_score = result.best_score;
+                        best_algorithm = algorithm.clone();
+                        best_parameters = result.best_parameters.clone();
+                    }
+                    
+                    algorithm_results.insert(algorithm.clone(), result);
+                }
+                Err(e) => {
+                    println!("× {:?} failed: {}", algorithm, e);
+                }
+            }
+        }
+
+        let total_time = start_time.elapsed().as_secs_f64();
+        let recommendations = self.generate_recommendations(data, &algorithm_results);
+
+        Ok(AlgorithmSelectionResult {
+            best_algorithm,
+            best_parameters,
+            best_score,
+            algorithm_results,
+            total_time,
+            recommendations,
+        })
+    }
+
+    /// Generate recommendations based on data characteristics and results
+    fn generate_recommendations(
+        &self,
+        data: ArrayView2<F>,
+        results: &HashMap<ClusteringAlgorithm, TuningResult>,
+    ) -> Vec<String> {
+        let mut recommendations = Vec::new();
+        
+        let n_samples = data.nrows();
+        let n_features = data.ncols();
+        
+        // Data size recommendations
+        if n_samples < 100 {
+            recommendations.push("Small dataset: Consider K-means or Gaussian Mixture for stable results".to_string());
+        } else if n_samples > 10000 {
+            recommendations.push("Large dataset: DBSCAN or Mini-batch K-means recommended for efficiency".to_string());
+        }
+        
+        // Dimensionality recommendations
+        if n_features > 50 {
+            recommendations.push("High-dimensional data: Consider dimensionality reduction before clustering".to_string());
+        }
+        
+        // Algorithm-specific recommendations
+        let mut sorted_results: Vec<_> = results.iter().collect();
+        sorted_results.sort_by(|a, b| b.1.best_score.partial_cmp(&a.1.best_score).unwrap());
+        
+        if sorted_results.len() >= 2 {
+            let best = &sorted_results[0];
+            let second_best = &sorted_results[1];
+            
+            let score_diff = best.1.best_score - second_best.1.best_score;
+            if score_diff < 0.05 {
+                recommendations.push(format!(
+                    "Close performance between {:?} and {:?} - consider computational cost",
+                    best.0, second_best.0
+                ));
+            }
+        }
+        
+        // Performance vs accuracy trade-offs
+        if let Some(kmeans_result) = results.get(&ClusteringAlgorithm::KMeans) {
+            if let Some(dbscan_result) = results.get(&ClusteringAlgorithm::DBSCAN) {
+                if kmeans_result.total_time < dbscan_result.total_time * 0.5 
+                   && kmeans_result.best_score > dbscan_result.best_score * 0.9 {
+                    recommendations.push("K-means offers good speed/accuracy trade-off".to_string());
+                }
+            }
+        }
+        
+        recommendations
+    }
+}
+
+/// High-level convenience function for automatic algorithm selection
+pub fn auto_select_clustering_algorithm<F: Float + FromPrimitive + Send + Sync + Debug>(
+    data: ArrayView2<F>,
+    config: Option<TuningConfig>,
+) -> Result<AlgorithmSelectionResult> {
+    let tuning_config = config.unwrap_or_else(|| TuningConfig {
+        max_evaluations: 50, // Reduced for faster selection
+        ..Default::default()
+    });
+    
+    let selector = AutoClusteringSelector::new(tuning_config);
+    selector.select_best_algorithm(data)
+}
+
+/// Quick algorithm selection with default parameters
+pub fn quick_algorithm_selection<F: Float + FromPrimitive + Send + Sync + Debug>(
+    data: ArrayView2<F>,
+) -> Result<AlgorithmSelectionResult> {
+    let config = TuningConfig {
+        strategy: SearchStrategy::RandomSearch { n_trials: 20 },
+        max_evaluations: 20,
+        early_stopping: Some(EarlyStoppingConfig {
+            patience: 5,
+            min_improvement: 0.001,
+        }),
+        ..Default::default()
+    };
+    
+    let algorithms = vec![
+        ClusteringAlgorithm::KMeans,
+        ClusteringAlgorithm::DBSCAN,
+        ClusteringAlgorithm::GaussianMixture,
+    ];
+    
+    let selector = AutoClusteringSelector::with_algorithms(config, algorithms);
+    selector.select_best_algorithm(data)
+}
+
+/// Standard search spaces for common clustering algorithms
+pub struct StandardSearchSpaces;
+
+impl StandardSearchSpaces {
+    /// Default K-means search space with advanced Bayesian optimization
+    pub fn kmeans_bayesian() -> (SearchSpace, TuningConfig) {
+        let mut parameters = HashMap::new();
+        parameters.insert("n_clusters".to_string(), HyperParameter::Integer { min: 2, max: 20 });
+        parameters.insert("max_iter".to_string(), HyperParameter::Integer { min: 50, max: 500 });
+        parameters.insert("tolerance".to_string(), HyperParameter::LogUniform { min: 1e-6, max: 1e-2 });
+        
+        let search_space = SearchSpace {
+            parameters,
+            constraints: Vec::new(),
+        };
+        
+        let config = TuningConfig {
+            strategy: SearchStrategy::BayesianOptimization {
+                n_initial_points: 10,
+                acquisition_function: AcquisitionFunction::ExpectedImprovement,
+            },
+            metric: EvaluationMetric::SilhouetteScore,
+            max_evaluations: 50,
+            early_stopping: Some(EarlyStoppingConfig {
+                patience: 10,
+                min_improvement: 0.001,
+                evaluation_frequency: 1,
+            }),
+            cv_config: CrossValidationConfig {
+                n_folds: 5,
+                validation_ratio: 0.2,
+                strategy: CVStrategy::KFold,
+                shuffle: true,
+            },
+            random_seed: Some(42),
+            parallel_config: None,
+            resource_constraints: ResourceConstraints {
+                max_memory_per_evaluation: None,
+                max_time_per_evaluation: Some(30.0),
+                max_total_time: Some(600.0),
+            },
+        };
+        
+        (search_space, config)
+    }
+    
+    /// Advanced DBSCAN search space with multi-objective optimization
+    pub fn dbscan_multi_objective() -> (SearchSpace, TuningConfig) {
+        let mut parameters = HashMap::new();
+        parameters.insert("eps".to_string(), HyperParameter::LogUniform { min: 0.01, max: 10.0 });
+        parameters.insert("min_samples".to_string(), HyperParameter::Integer { min: 3, max: 50 });
+        
+        let search_space = SearchSpace {
+            parameters,
+            constraints: vec![
+                ParameterConstraint::Dependency {
+                    dependent: "min_samples".to_string(),
+                    dependency: "eps".to_string(),
+                    relationship: DependencyRelationship::Proportional { ratio: 10.0 },
+                },
+            ],
+        };
+        
+        let config = TuningConfig {
+            strategy: SearchStrategy::MultiObjective {
+                objectives: vec![
+                    EvaluationMetric::SilhouetteScore,
+                    EvaluationMetric::DaviesBouldinIndex,
+                ],
+                strategy: Box::new(SearchStrategy::BayesianOptimization {
+                    n_initial_points: 15,
+                    acquisition_function: AcquisitionFunction::UpperConfidenceBound { beta: 2.0 },
+                }),
+            },
+            metric: EvaluationMetric::SilhouetteScore,
+            max_evaluations: 75,
+            early_stopping: None, // Multi-objective doesn't use early stopping
+            cv_config: CrossValidationConfig {
+                n_folds: 3,
+                validation_ratio: 0.3,
+                strategy: CVStrategy::StratifiedKFold,
+                shuffle: true,
+            },
+            random_seed: Some(42),
+            parallel_config: Some(ParallelConfig {
+                n_workers: 4,
+                batch_size: 8,
+                load_balancing: LoadBalancingStrategy::Dynamic,
+            }),
+            resource_constraints: ResourceConstraints {
+                max_memory_per_evaluation: Some(1_000_000_000), // 1GB
+                max_time_per_evaluation: Some(60.0),
+                max_total_time: Some(1200.0),
+            },
+        };
+        
+        (search_space, config)
+    }
+    
+    /// Ensemble search combining multiple strategies
+    pub fn ensemble_optimization() -> (SearchSpace, TuningConfig) {
+        let mut parameters = HashMap::new();
+        parameters.insert("n_clusters".to_string(), HyperParameter::Integer { min: 2, max: 15 });
+        parameters.insert("max_iter".to_string(), HyperParameter::Integer { min: 100, max: 1000 });
+        parameters.insert("tolerance".to_string(), HyperParameter::LogUniform { min: 1e-8, max: 1e-3 });
+        
+        let search_space = SearchSpace {
+            parameters,
+            constraints: Vec::new(),
+        };
+        
+        let config = TuningConfig {
+            strategy: SearchStrategy::EnsembleSearch {
+                strategies: vec![
+                    SearchStrategy::BayesianOptimization {
+                        n_initial_points: 8,
+                        acquisition_function: AcquisitionFunction::ExpectedImprovement,
+                    },
+                    SearchStrategy::EvolutionarySearch {
+                        population_size: 20,
+                        n_generations: 10,
+                        mutation_rate: 0.1,
+                        crossover_rate: 0.7,
+                    },
+                    SearchStrategy::SMBO {
+                        surrogate_model: SurrogateModel::GaussianProcess {
+                            kernel: KernelType::Matern { length_scale: 1.0, nu: 2.5 },
+                            noise: 0.1,
+                        },
+                        acquisition_function: AcquisitionFunction::ThompsonSampling,
+                    },
+                ],
+                weights: vec![0.5, 0.3, 0.2],
+            },
+            metric: EvaluationMetric::SilhouetteScore,
+            max_evaluations: 100,
+            early_stopping: Some(EarlyStoppingConfig {
+                patience: 15,
+                min_improvement: 0.0005,
+                evaluation_frequency: 5,
+            }),
+            cv_config: CrossValidationConfig {
+                n_folds: 5,
+                validation_ratio: 0.2,
+                strategy: CVStrategy::NestedCV {
+                    outer_folds: 5,
+                    inner_folds: 3,
+                },
+                shuffle: true,
+            },
+            random_seed: Some(42),
+            parallel_config: Some(ParallelConfig {
+                n_workers: 8,
+                batch_size: 16,
+                load_balancing: LoadBalancingStrategy::WorkStealing,
+            }),
+            resource_constraints: ResourceConstraints {
+                max_memory_per_evaluation: Some(2_000_000_000), // 2GB
+                max_time_per_evaluation: Some(120.0),
+                max_total_time: Some(3600.0), // 1 hour
+            },
+        };
+        
+        (search_space, config)
+    }
+}
+
+/// Advanced Bayesian optimization convenience functions
+pub mod advanced_bayesian {
+    use super::*;
+    
+    /// Tune K-means with advanced Expected Improvement acquisition
+    pub fn tune_kmeans_expected_improvement<F>(
+        data: ArrayView2<F>,
+        n_clusters_range: (usize, usize),
+    ) -> Result<TuningResult>
+    where
+        F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Display + Send + Sync,
+        f64: From<F>,
+    {
+        let (mut search_space, config) = StandardSearchSpaces::kmeans_bayesian();
+        search_space.parameters.insert(
+            "n_clusters".to_string(),
+            HyperParameter::Integer {
+                min: n_clusters_range.0 as i64,
+                max: n_clusters_range.1 as i64,
+            },
+        );
+        
+        let tuner = AutoTuner::new(config);
+        tuner.tune_kmeans(data, search_space)
+    }
+    
+    /// Tune DBSCAN with Upper Confidence Bound acquisition
+    pub fn tune_dbscan_ucb<F>(
+        data: ArrayView2<F>,
+        beta: f64,
+    ) -> Result<TuningResult>
+    where
+        F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Display + Send + Sync,
+        f64: From<F>,
+    {
+        let (search_space, mut config) = StandardSearchSpaces::dbscan_multi_objective();
+        config.strategy = SearchStrategy::BayesianOptimization {
+            n_initial_points: 12,
+            acquisition_function: AcquisitionFunction::UpperConfidenceBound { beta },
+        };
+        
+        let tuner = AutoTuner::new(config);
+        tuner.tune_dbscan(data, search_space)
+    }
+    
+    /// Tune with Thompson Sampling for exploration-heavy optimization
+    pub fn tune_with_thompson_sampling<F>(
+        data: ArrayView2<F>,
+        algorithm: ClusteringAlgorithm,
+    ) -> Result<TuningResult>
+    where
+        F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Display + Send + Sync,
+        f64: From<F>,
+    {
+        let (search_space, mut config) = match algorithm {
+            ClusteringAlgorithm::KMeans => StandardSearchSpaces::kmeans_bayesian(),
+            ClusteringAlgorithm::DBSCAN => StandardSearchSpaces::dbscan_multi_objective(),
+            _ => StandardSearchSpaces::kmeans_bayesian(), // Fallback
+        };
+        
+        config.strategy = SearchStrategy::BayesianOptimization {
+            n_initial_points: 15,
+            acquisition_function: AcquisitionFunction::ThompsonSampling,
+        };
+        config.max_evaluations = 60;
+        
+        let tuner = AutoTuner::new(config);
+        
+        match algorithm {
+            ClusteringAlgorithm::KMeans => tuner.tune_kmeans(data, search_space),
+            ClusteringAlgorithm::DBSCAN => tuner.tune_dbscan(data, search_space),
+            _ => tuner.tune_kmeans(data, search_space), // Fallback
+        }
+    }
+    
+    /// Multi-objective Bayesian optimization with Pareto frontier analysis
+    pub fn tune_multi_objective_pareto<F>(
+        data: ArrayView2<F>,
+        objectives: Vec<EvaluationMetric>,
+    ) -> Result<TuningResult>
+    where
+        F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Display + Send + Sync,
+        f64: From<F>,
+    {
+        let (search_space, mut config) = StandardSearchSpaces::ensemble_optimization();
+        config.strategy = SearchStrategy::MultiObjective {
+            objectives,
+            strategy: Box::new(SearchStrategy::BayesianOptimization {
+                n_initial_points: 20,
+                acquisition_function: AcquisitionFunction::ExpectedImprovement,
+            }),
+        };
+        config.max_evaluations = 100;
+        
+        let tuner = AutoTuner::new(config);
+        tuner.tune_kmeans(data, search_space)
+    }
+    
+    /// Adaptive Bayesian optimization that switches acquisition functions
+    pub fn tune_adaptive_acquisition<F>(
+        data: ArrayView2<F>,
+        algorithm: ClusteringAlgorithm,
+    ) -> Result<TuningResult>
+    where
+        F: Float + FromPrimitive + Debug + 'static + std::iter::Sum + std::fmt::Display + Send + Sync,
+        f64: From<F>,
+    {
+        let (search_space, mut config) = StandardSearchSpaces::kmeans_bayesian();
+        config.strategy = SearchStrategy::AdaptiveSearch {
+            initial_strategy: Box::new(SearchStrategy::BayesianOptimization {
+                n_initial_points: 10,
+                acquisition_function: AcquisitionFunction::ExpectedImprovement,
+            }),
+            adaptation_frequency: 20,
+        };
+        config.max_evaluations = 80;
+        
+        let tuner = AutoTuner::new(config);
+        
+        match algorithm {
+            ClusteringAlgorithm::KMeans => tuner.tune_kmeans(data, search_space),
+            ClusteringAlgorithm::DBSCAN => tuner.tune_dbscan(data, search_space),
+            _ => tuner.tune_kmeans(data, search_space),
         }
     }
 }

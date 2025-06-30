@@ -7,7 +7,7 @@
 use super::common::{calculate_output_shape, validate_conv_params, PaddingMode};
 use crate::error::{NeuralError, Result};
 use crate::layers::{Layer, ParamLayer};
-use ndarray::{Array, ArrayView, IxDyn, ScalarOperand};
+use ndarray::{Array, ArrayView, IxDyn, ScalarOperand, Zip};
 use num_traits::Float;
 use rand::Rng;
 use std::fmt::Debug;
@@ -610,20 +610,28 @@ impl<F: Float + Debug + ScalarOperand + Clone + Send + Sync + 'static> Layer<F> 
     }
 
     fn update(&mut self, learning_rate: F) -> Result<()> {
-        // Apply a small update to weights and bias (placeholder)
-        let small_change = F::from(0.001).unwrap();
-        let lr = small_change * learning_rate;
-
-        // Update weights
-        for w in self.weights.iter_mut() {
-            *w = *w - lr;
-        }
+        // Apply gradient-based updates with SIMD acceleration
+        
+        // Update weights using computed gradients
+        Zip::from(&mut self.weights)
+            .and(&self.dweights)
+            .par_for_each(|w, &dw| {
+                *w = *w - learning_rate * dw;
+            });
 
         // Update bias if present
-        if let Some(bias) = &mut self.bias {
-            for b in bias.iter_mut() {
-                *b = *b - lr;
-            }
+        if let (Some(ref mut bias), Some(ref dbias)) = (&mut self.bias, &self.dbias) {
+            Zip::from(bias)
+                .and(dbias)
+                .par_for_each(|b, &db| {
+                    *b = *b - learning_rate * db;
+                });
+        }
+
+        // Reset gradients to zero for next iteration
+        self.dweights.fill(F::zero());
+        if let Some(ref mut dbias) = self.dbias {
+            dbias.fill(F::zero());
         }
 
         Ok(())

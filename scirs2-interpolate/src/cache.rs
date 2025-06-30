@@ -403,7 +403,7 @@ impl<F: Float + FromPrimitive> BSplineCache<F> {
         computer: impl FnOnce() -> F,
     ) -> F {
         self.access_counter += 1;
-        
+
         // Convert BasisCacheKey to internal cache key format
         let tolerance = F::from_f64(self.config.tolerance).unwrap();
         let x = F::from_f64(f64::from_bits(key.x_quantized)).unwrap_or_else(F::zero);
@@ -755,11 +755,11 @@ where
         let knots = self.spline.knots();
         let coeffs = self.spline.coefficients();
         let degree = self.spline.degree();
-        
+
         // Find the knot span using cached lookup
-        let span = self.cache.get_or_compute_span(x, || {
-            self.find_knot_span(x, knots, degree)
-        });
+        let span = self
+            .cache
+            .get_or_compute_span(x, || self.find_knot_span(x, knots, degree));
 
         // Compute basis functions using cache
         let mut result = T::zero();
@@ -772,7 +772,7 @@ where
                     index: basis_index,
                     degree,
                 };
-                
+
                 let basis_value = self.cache.get_or_compute_basis_with_key(basis_key, || {
                     if basis_index < knots.len() - degree - 1 {
                         self.compute_basis_function(x, basis_index, degree, knots)
@@ -780,7 +780,7 @@ where
                         T::zero()
                     }
                 });
-                
+
                 result += coeffs[basis_index] * basis_value;
             }
         }
@@ -800,23 +800,24 @@ where
     fn compute_basis_functions_at_x(&self, x: T, knots: &Array1<T>, degree: usize) -> Array1<T> {
         let span = self.find_knot_span(x, knots, degree);
         let mut basis = Array1::zeros(degree + 1);
-        
+
         // De Boor's algorithm for all basis functions at once
         basis[0] = T::one();
-        
+
         for j in 1..=degree {
             let mut saved = T::zero();
             for r in 0..j {
                 let left_knot_idx = span + 1 - j + r;
                 let right_knot_idx = span + r;
-                
+
                 if left_knot_idx < knots.len() && right_knot_idx + 1 < knots.len() {
                     let alpha = if knots[right_knot_idx + 1] != knots[left_knot_idx] {
-                        (x - knots[left_knot_idx]) / (knots[right_knot_idx + 1] - knots[left_knot_idx])
+                        (x - knots[left_knot_idx])
+                            / (knots[right_knot_idx + 1] - knots[left_knot_idx])
                     } else {
                         T::zero()
                     };
-                    
+
                     let temp = basis[r];
                     basis[r] = saved + (T::one() - alpha) * temp;
                     saved = alpha * temp;
@@ -824,24 +825,27 @@ where
             }
             basis[j] = saved;
         }
-        
+
         basis
     }
 
     /// Optimized batch evaluation using cached computations
-    pub fn evaluate_batch_optimized(&mut self, x_vals: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
+    pub fn evaluate_batch_optimized(
+        &mut self,
+        x_vals: &ArrayView1<T>,
+    ) -> InterpolateResult<Array1<T>> {
         let mut results = Array1::zeros(x_vals.len());
-        
+
         // Pre-warm cache with commonly accessed spans
         for &x in x_vals.iter().take(x_vals.len().min(10)) {
             let _ = self.evaluate_cached(x)?;
         }
-        
+
         // Evaluate all points
         for (i, &x) in x_vals.iter().enumerate() {
             results[i] = self.evaluate_cached(x)?;
         }
-        
+
         Ok(results)
     }
 
@@ -852,9 +856,11 @@ where
 
     /// Optimize cache settings based on usage patterns
     pub fn optimize_cache_settings(&mut self) {
-        let stats = self.cache.stats();
-        let hit_ratio = stats.hit_ratio();
-        
+        let (hit_ratio, total_requests) = {
+            let stats = self.cache.stats();
+            (stats.hit_ratio(), stats.hits + stats.misses)
+        };
+
         // Adjust cache size based on hit ratio
         if hit_ratio < 0.3 && self.cache.config.max_basis_cache_size > 64 {
             // Low hit ratio - reduce cache size
@@ -863,9 +869,9 @@ where
             // High hit ratio - increase cache size
             self.cache.config.max_basis_cache_size *= 2;
         }
-        
+
         // Enable aggressive caching for frequently accessed data
-        if stats.hits + stats.misses > 1000 {
+        if total_requests > 1000 {
             self.cache.config.adaptive_sizing = true;
         }
     }

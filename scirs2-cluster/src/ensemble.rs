@@ -449,7 +449,455 @@ where
 
                 Ok((projected_data, sample_indices))
             }
-            _ => {
+        }
+    }
+
+    /// Extract samples based on indices
+    fn extract_samples(&self, data: ArrayView2<F>, indices: &[usize]) -> Result<Array2<F>> {
+        let n_features = data.ncols();
+        let mut sampled_data = Array2::zeros((indices.len(), n_features));
+
+        for (new_idx, &orig_idx) in indices.iter().enumerate() {
+            if orig_idx >= data.nrows() {
+                return Err(ClusteringError::InvalidInput(
+                    "Sample index out of bounds".to_string(),
+                ));
+            }
+            sampled_data.row_mut(new_idx).assign(&data.row(orig_idx));
+        }
+
+        Ok(sampled_data)
+    }
+
+    /// Extract features based on indices
+    fn extract_features(&self, data: ArrayView2<F>, feature_indices: &[usize]) -> Result<Array2<F>> {
+        let n_samples = data.nrows();
+        let mut feature_data = Array2::zeros((n_samples, feature_indices.len()));
+
+        for (new_idx, &orig_idx) in feature_indices.iter().enumerate() {
+            if orig_idx >= data.ncols() {
+                return Err(ClusteringError::InvalidInput(
+                    "Feature index out of bounds".to_string(),
+                ));
+            }
+            feature_data.column_mut(new_idx).assign(&data.column(orig_idx));
+        }
+
+        Ok(feature_data)
+    }
+
+    /// Apply consensus method to combine clustering results
+    fn apply_consensus(&self, results: &[ClusteringResult], data: ArrayView2<F>) -> Result<EnsembleResult> {
+        match &self.config.consensus_method {
+            ConsensusMethod::MajorityVoting => self.majority_voting_consensus(results, data),
+            ConsensusMethod::WeightedConsensus => self.weighted_consensus(results, data),
+            ConsensusMethod::GraphBased { similarity_threshold } => {
+                self.graph_based_consensus(results, data, *similarity_threshold)
+            }
+            ConsensusMethod::CoAssociation { threshold } => {
+                self.co_association_consensus(results, data, *threshold)
+            }
+            ConsensusMethod::EvidenceAccumulation => self.evidence_accumulation_consensus(results, data),
+            ConsensusMethod::Hierarchical { linkage_method } => {
+                self.hierarchical_consensus(results, data, linkage_method)
+            }
+        }
+    }
+
+    /// Majority voting consensus method
+    fn majority_voting_consensus(&self, results: &[ClusteringResult], data: ArrayView2<F>) -> Result<EnsembleResult> {
+        let n_samples = data.nrows();
+        let mut consensus_labels = Array1::zeros(n_samples);
+        let mut vote_matrix = HashMap::new();
+
+        // Collect votes for each sample
+        for result in results {
+            for (sample_idx, &cluster_label) in result.labels.iter().enumerate() {
+                let entry = vote_matrix.entry(sample_idx).or_insert_with(HashMap::new);
+                *entry.entry(cluster_label).or_insert(0) += 1;
+            }
+        }
+
+        // Determine consensus labels
+        for sample_idx in 0..n_samples {
+            if let Some(votes) = vote_matrix.get(&sample_idx) {
+                let most_voted_cluster = votes
+                    .iter()
+                    .max_by_key(|(_, &count)| count)
+                    .map(|(&cluster, _)| cluster)
+                    .unwrap_or(0);
+                consensus_labels[sample_idx] = most_voted_cluster;
+            }
+        }
+
+        // Calculate confidence and statistics
+        let avg_quality_score = results.iter().map(|r| r.quality_score).sum::<f64>() / results.len() as f64;
+        let consensus_stats = self.calculate_consensus_statistics(results, &consensus_labels)?;
+        let diversity_metrics = self.calculate_diversity_metrics(results)?;
+        let stability_score = self.calculate_stability_score(&consensus_stats);
+
+        Ok(EnsembleResult {
+            consensus_labels,
+            individual_results: results.to_vec(),
+            consensus_stats,
+            diversity_metrics,
+            ensemble_quality: avg_quality_score,
+            stability_score,
+        })
+    }
+
+    /// Weighted consensus method based on quality scores
+    fn weighted_consensus(&self, results: &[ClusteringResult], data: ArrayView2<F>) -> Result<EnsembleResult> {
+        let n_samples = data.nrows();
+        let mut consensus_labels = Array1::zeros(n_samples);
+        let mut weighted_vote_matrix = HashMap::new();
+
+        // Collect weighted votes for each sample
+        for result in results {
+            let weight = result.quality_score.max(0.0); // Ensure non-negative weights
+            for (sample_idx, &cluster_label) in result.labels.iter().enumerate() {
+                let entry = weighted_vote_matrix.entry(sample_idx).or_insert_with(HashMap::new);
+                *entry.entry(cluster_label).or_insert(0.0) += weight;
+            }
+        }
+
+        // Determine consensus labels based on weighted votes
+        for sample_idx in 0..n_samples {
+            if let Some(votes) = weighted_vote_matrix.get(&sample_idx) {
+                let most_voted_cluster = votes
+                    .iter()
+                    .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+                    .map(|(&cluster, _)| cluster)
+                    .unwrap_or(0);
+                consensus_labels[sample_idx] = most_voted_cluster;
+            }
+        }
+
+        // Calculate ensemble score as weighted average
+        let total_weight: f64 = results.iter().map(|r| r.quality_score.max(0.0)).sum();
+        let ensemble_score = if total_weight > 0.0 {
+            results.iter().map(|r| r.quality_score * r.quality_score.max(0.0)).sum::<f64>() / total_weight
+        } else {
+            0.0
+        };
+
+        let consensus_stats = self.calculate_consensus_statistics(results, &consensus_labels)?;
+        let diversity_metrics = self.calculate_diversity_metrics(results)?;
+        let stability_score = self.calculate_stability_score(&consensus_stats);
+
+        Ok(EnsembleResult {
+            consensus_labels,
+            individual_results: results.to_vec(),
+            consensus_stats,
+            diversity_metrics,
+            ensemble_quality: ensemble_score,
+            stability_score,
+        })
+    }
+
+    /// Graph-based consensus method
+    fn graph_based_consensus(&self, results: &[ClusteringResult], data: ArrayView2<F>, similarity_threshold: f64) -> Result<EnsembleResult> {
+        let n_samples = data.nrows();
+        
+        // Build co-association matrix
+        let mut co_association = Array2::zeros((n_samples, n_samples));
+        
+        for result in results {
+            for i in 0..n_samples {
+                for j in i+1..n_samples {
+                    if result.labels[i] == result.labels[j] {
+                        co_association[[i, j]] += 1.0;
+                        co_association[[j, i]] += 1.0;
+                    }
+                }
+            }
+        }
+        
+        // Normalize by number of clusterers
+        co_association /= results.len() as f64;
+        
+        // Create similarity graph
+        let mut similarity_graph = Array2::zeros((n_samples, n_samples));
+        for i in 0..n_samples {
+            for j in 0..n_samples {
+                if co_association[[i, j]] >= similarity_threshold {
+                    similarity_graph[[i, j]] = co_association[[i, j]];
+                }
+            }
+        }
+        
+        // Apply graph clustering (simplified connected components)
+        let mut consensus_labels = Array1::from_elem(n_samples, -1i32);
+        let mut current_cluster = 0i32;
+        let mut visited = vec![false; n_samples];
+        
+        for i in 0..n_samples {
+            if !visited[i] {
+                // BFS to find connected component
+                let mut queue = vec![i];
+                visited[i] = true;
+                consensus_labels[i] = current_cluster;
+                
+                while let Some(node) = queue.pop() {
+                    for j in 0..n_samples {
+                        if !visited[j] && similarity_graph[[node, j]] > 0.0 {
+                            visited[j] = true;
+                            consensus_labels[j] = current_cluster;
+                            queue.push(j);
+                        }
+                    }
+                }
+                current_cluster += 1;
+            }
+        }
+        
+        let avg_quality_score = results.iter().map(|r| r.quality_score).sum::<f64>() / results.len() as f64;
+        let consensus_stats = self.calculate_consensus_statistics(results, &consensus_labels)?;
+        let diversity_metrics = self.calculate_diversity_metrics(results)?;
+        let stability_score = self.calculate_stability_score(&consensus_stats);
+
+        Ok(EnsembleResult {
+            consensus_labels,
+            individual_results: results.to_vec(),
+            consensus_stats,
+            diversity_metrics,
+            ensemble_quality: avg_quality_score,
+            stability_score,
+        })
+    }
+
+    /// Co-association consensus method
+    fn co_association_consensus(&self, results: &[ClusteringResult], data: ArrayView2<F>, threshold: f64) -> Result<EnsembleResult> {
+        // This is similar to graph-based but with different threshold handling
+        self.graph_based_consensus(results, data, threshold)
+    }
+
+    /// Evidence accumulation consensus method
+    fn evidence_accumulation_consensus(&self, results: &[ClusteringResult], data: ArrayView2<F>) -> Result<EnsembleResult> {
+        // Use hierarchical clustering on the co-association matrix
+        self.hierarchical_consensus(results, data, &"ward".to_string())
+    }
+
+    /// Hierarchical consensus method
+    fn hierarchical_consensus(&self, results: &[ClusteringResult], data: ArrayView2<F>, linkage_method: &str) -> Result<EnsembleResult> {
+        let n_samples = data.nrows();
+        
+        // Build co-association matrix as distance matrix
+        let mut co_association = Array2::zeros((n_samples, n_samples));
+        
+        for result in results {
+            for i in 0..n_samples {
+                for j in i+1..n_samples {
+                    if result.labels[i] == result.labels[j] {
+                        co_association[[i, j]] += 1.0;
+                        co_association[[j, i]] += 1.0;
+                    }
+                }
+            }
+        }
+        
+        // Convert to distance matrix (1 - similarity)
+        let mut distance_matrix = Array2::ones((n_samples, n_samples));
+        for i in 0..n_samples {
+            for j in 0..n_samples {
+                distance_matrix[[i, j]] = 1.0 - (co_association[[i, j]] / results.len() as f64);
+            }
+            distance_matrix[[i, i]] = 0.0; // Distance to self is 0
+        }
+        
+        // Apply hierarchical clustering (simplified implementation)
+        // For now, use a simple threshold-based approach
+        let threshold = 0.5;
+        let mut consensus_labels = Array1::from_elem(n_samples, -1i32);
+        let mut current_cluster = 0i32;
+        let mut assigned = vec![false; n_samples];
+        
+        for i in 0..n_samples {
+            if !assigned[i] {
+                consensus_labels[i] = current_cluster;
+                assigned[i] = true;
+                
+                // Find all points within threshold distance
+                for j in (i+1)..n_samples {
+                    if !assigned[j] && distance_matrix[[i, j]] <= threshold {
+                        consensus_labels[j] = current_cluster;
+                        assigned[j] = true;
+                    }
+                }
+                current_cluster += 1;
+            }
+        }
+        
+        let avg_quality_score = results.iter().map(|r| r.quality_score).sum::<f64>() / results.len() as f64;
+        let consensus_stats = self.calculate_consensus_statistics(results, &consensus_labels)?;
+        let diversity_metrics = self.calculate_diversity_metrics(results)?;
+        let stability_score = self.calculate_stability_score(&consensus_stats);
+
+        Ok(EnsembleResult {
+            consensus_labels,
+            individual_results: results.to_vec(),
+            consensus_stats,
+            diversity_metrics,
+            ensemble_quality: avg_quality_score,
+            stability_score,
+        })
+    }
+
+    /// Calculate diversity score between clusterers
+    fn calculate_diversity_score(&self, results: &[ClusteringResult]) -> f64 {
+        if results.len() < 2 {
+            return 0.0;
+        }
+
+        let mut total_diversity = 0.0;
+        let mut count = 0;
+
+        for i in 0..results.len() {
+            for j in (i+1)..results.len() {
+                // Calculate pairwise diversity using adjusted rand index
+                if let Ok(ari) = adjusted_rand_index(
+                    results[i].labels.mapv(|x| x as usize).view(),
+                    results[j].labels.mapv(|x| x as usize).view(),
+                ) {
+                    total_diversity += 1.0 - ari; // Higher diversity means lower agreement
+                    count += 1;
+                }
+            }
+        }
+
+        if count > 0 {
+            total_diversity / count as f64
+        } else {
+            0.0
+        }
+    }
+
+    /// Calculate stability score
+    fn calculate_stability_score(&self, results: &[ClusteringResult], _data: ArrayView2<F>) -> Result<f64> {
+        if results.len() < 2 {
+            return Ok(1.0);
+        }
+
+        let mut stability_sum = 0.0;
+        let mut count = 0;
+
+        for i in 0..results.len() {
+            for j in (i+1)..results.len() {
+                if let Ok(ari) = adjusted_rand_index(
+                    results[i].labels.mapv(|x| x as usize).view(),
+                    results[j].labels.mapv(|x| x as usize).view(),
+                ) {
+                    stability_sum += ari;
+                    count += 1;
+                }
+            }
+        }
+
+        if count > 0 {
+            Ok(stability_sum / count as f64)
+        } else {
+            Ok(0.0)
+        }
+    }
+
+    /// Calculate agreement ratio between clusterers
+    fn calculate_agreement_ratio(&self, results: &[ClusteringResult]) -> f64 {
+        if results.len() < 2 {
+            return 1.0;
+        }
+
+        let n_samples = results[0].labels.len();
+        let mut total_agreements = 0;
+        let mut total_pairs = 0;
+
+        for i in 0..results.len() {
+            for j in (i+1)..results.len() {
+                for sample_idx in 0..n_samples {
+                    if results[i].labels[sample_idx] == results[j].labels[sample_idx] {
+                        total_agreements += 1;
+                    }
+                    total_pairs += 1;
+                }
+            }
+        }
+
+        if total_pairs > 0 {
+            total_agreements as f64 / total_pairs as f64
+        } else {
+            0.0
+        }
+    }
+
+    /// Calculate confidence scores for consensus
+    fn calculate_confidence_scores(&self, vote_matrix: &HashMap<usize, HashMap<i32, usize>>, n_samples: usize) -> Vec<f64> {
+        let mut confidence_scores = vec![0.0; n_samples];
+
+        for sample_idx in 0..n_samples {
+            if let Some(votes) = vote_matrix.get(&sample_idx) {
+                let total_votes: usize = votes.values().sum();
+                let max_votes = votes.values().max().copied().unwrap_or(0);
+                
+                if total_votes > 0 {
+                    confidence_scores[sample_idx] = max_votes as f64 / total_votes as f64;
+                }
+            }
+        }
+
+        confidence_scores
+    }
+
+    /// Calculate weighted confidence scores for consensus
+    fn calculate_weighted_confidence_scores(&self, vote_matrix: &HashMap<usize, HashMap<i32, f64>>, n_samples: usize) -> Vec<f64> {
+        let mut confidence_scores = vec![0.0; n_samples];
+
+        for sample_idx in 0..n_samples {
+            if let Some(votes) = vote_matrix.get(&sample_idx) {
+                let total_votes: f64 = votes.values().sum();
+                let max_votes = votes.values().fold(0.0, |acc, &x| acc.max(x));
+                
+                if total_votes > 0.0 {
+                    confidence_scores[sample_idx] = max_votes / total_votes;
+                }
+            }
+        }
+
+        confidence_scores
+    }
+
+    /// Calculate cluster diversity metrics
+    fn calculate_cluster_diversity(&self, results: &[ClusteringResult]) -> f64 {
+        let cluster_counts: Vec<usize> = results.iter().map(|r| r.n_clusters).collect();
+        
+        if cluster_counts.is_empty() {
+            return 0.0;
+        }
+
+        let mean_clusters = cluster_counts.iter().sum::<usize>() as f64 / cluster_counts.len() as f64;
+        let variance = cluster_counts.iter()
+            .map(|&x| (x as f64 - mean_clusters).powi(2))
+            .sum::<f64>() / cluster_counts.len() as f64;
+        
+        variance.sqrt() / mean_clusters // Coefficient of variation
+    }
+
+    /// Calculate algorithm diversity
+    fn calculate_algorithm_diversity(&self, results: &[ClusteringResult]) -> f64 {
+        let unique_algorithms: HashSet<String> = results.iter()
+            .map(|r| r.algorithm.clone())
+            .collect();
+        
+        unique_algorithms.len() as f64 / results.len() as f64
+    }
+
+    /// Count unique clusters in consensus labels
+    fn count_unique_clusters(&self, labels: &Array1<i32>) -> usize {
+        let mut unique_labels = HashSet::new();
+        for &label in labels {
+            unique_labels.insert(label);
+        }
+        unique_labels.len()
+    }
+}
                 // For any other sampling strategies, fall back to no sampling
                 let sample_indices: Vec<usize> = (0..n_samples).collect();
                 Ok((data.to_owned(), sample_indices))

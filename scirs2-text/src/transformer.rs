@@ -1,7 +1,195 @@
-//! Transformer model architecture components for text processing
+//! # Transformer Architecture Module
 //!
-//! This module provides foundational building blocks for transformer-based models,
-//! including attention mechanisms, position encodings, and transformer blocks.
+//! This module provides a complete implementation of the Transformer architecture,
+//! the foundation of modern language models like BERT, GPT, and T5. It includes
+//! all essential components for building state-of-the-art NLP models.
+//!
+//! ## Overview
+//!
+//! The Transformer architecture revolutionized natural language processing by
+//! introducing the self-attention mechanism. This module implements:
+//!
+//! - **Multi-Head Attention**: Core attention mechanism with multiple attention heads
+//! - **Positional Encoding**: Sinusoidal and learned position representations
+//! - **Encoder-Decoder Architecture**: Full transformer with both encoder and decoder stacks
+//! - **Layer Normalization**: Pre-norm and post-norm variants
+//! - **Feed-Forward Networks**: Position-wise fully connected layers
+//! - **Token Embeddings**: Learnable word and position embeddings
+//!
+//! ## Quick Start
+//!
+//! ```rust
+//! use scirs2_text::transformer::{TransformerModel, TransformerConfig};
+//!
+//! // Configure the transformer
+//! let config = TransformerConfig {
+//!     d_model: 512,           // Model dimension
+//!     n_heads: 8,             // Number of attention heads
+//!     d_ff: 2048,             // Feed-forward dimension
+//!     n_encoder_layers: 6,    // Number of encoder layers
+//!     n_decoder_layers: 6,    // Number of decoder layers
+//!     max_seq_len: 512,       // Maximum sequence length
+//!     dropout: 0.1,           // Dropout rate
+//!     vocab_size: 10000,      // Vocabulary size
+//! };
+//!
+//! // Create the model
+//! let mut transformer = TransformerModel::new(config).unwrap();
+//!
+//! // Example input sequences (token IDs)
+//! let src_seq = vec![1, 2, 3, 4, 0];  // Source sequence with padding
+//! let tgt_seq = vec![1, 5, 6, 0, 0];  // Target sequence with padding
+//!
+//! // Forward pass
+//! let output = transformer.forward(&src_seq, &tgt_seq).unwrap();
+//! println!("Model output shape: {:?}", output.shape());
+//! ```
+//!
+//! ## Building Individual Components
+//!
+//! ### Multi-Head Attention
+//!
+//! ```rust
+//! use scirs2_text::transformer::MultiHeadAttention;
+//! use ndarray::Array2;
+//!
+//! let d_model = 512;
+//! let n_heads = 8;
+//! let mut attention = MultiHeadAttention::new(d_model, n_heads).unwrap();
+//!
+//! // Create dummy input (batch_size=2, seq_len=10, d_model=512)
+//! let input = Array2::zeros((10, 512));
+//! let output = attention.forward(&input, &input, &input, None).unwrap();
+//! ```
+//!
+//! ### Positional Encoding
+//!
+//! ```rust
+//! use scirs2_text::transformer::PositionalEncoding;
+//!
+//! let d_model = 512;
+//! let max_len = 1000;
+//! let pos_encoding = PositionalEncoding::new(d_model, max_len);
+//!
+//! // Apply positional encoding to embeddings
+//! let seq_len = 20;
+//! let embeddings = Array2::zeros((seq_len, d_model));
+//! let encoded = pos_encoding.encode(&embeddings).unwrap();
+//! ```
+//!
+//! ### Complete Encoder
+//!
+//! ```rust
+//! use scirs2_text::transformer::{TransformerEncoder, TransformerConfig};
+//!
+//! let config = TransformerConfig {
+//!     d_model: 256,
+//!     n_heads: 4,
+//!     d_ff: 1024,
+//!     n_encoder_layers: 3,
+//!     dropout: 0.1,
+//!     ..Default::default()
+//! };
+//!
+//! let mut encoder = TransformerEncoder::new(&config).unwrap();
+//! let input = Array2::zeros((50, 256)); // (seq_len, d_model)
+//! let encoded = encoder.forward(&input, None).unwrap();
+//! ```
+//!
+//! ## Advanced Usage
+//!
+//! ### Custom Attention Patterns
+//!
+//! ```rust
+//! use scirs2_text::transformer::MultiHeadAttention;
+//! use ndarray::Array2;
+//!
+//! let mut attention = MultiHeadAttention::new(512, 8).unwrap();
+//!
+//! // Create attention mask for autoregressive generation
+//! let seq_len = 10;
+//! let mut mask = Array2::zeros((seq_len, seq_len));
+//! for i in 0..seq_len {
+//!     for j in (i+1)..seq_len {
+//!         mask[[i, j]] = f64::NEG_INFINITY; // Mask future positions
+//!     }
+//! }
+//!
+//! let query = Array2::zeros((seq_len, 512));
+//! let key = Array2::zeros((seq_len, 512));
+//! let value = Array2::zeros((seq_len, 512));
+//! let output = attention.forward(&query, &key, &value, Some(&mask)).unwrap();
+//! ```
+//!
+//! ### Layer-wise Learning Rate Decay
+//!
+//! ```rust
+//! use scirs2_text::transformer::TransformerModel;
+//!
+//! // Apply different learning rates to different layers
+//! let mut model = TransformerModel::new(config).unwrap();
+//! 
+//! // Typically: deeper layers get smaller learning rates
+//! let base_lr = 1e-4;
+//! for (layer_idx, layer) in model.encoder.layers.iter_mut().enumerate() {
+//!     let layer_lr = base_lr * (0.9_f64).powi(layer_idx as i32);
+//!     // Apply layer_lr to this layer's parameters
+//! }
+//! ```
+//!
+//! ## Architecture Details
+//!
+//! ### Attention Mechanism
+//!
+//! The multi-head attention computes:
+//!
+//! ```text
+//! Attention(Q, K, V) = softmax(QK^T / √d_k)V
+//! MultiHead(Q, K, V) = Concat(head_1, ..., head_h)W^O
+//! where head_i = Attention(QW_i^Q, KW_i^K, VW_i^V)
+//! ```
+//!
+//! ### Positional Encoding
+//!
+//! Uses sinusoidal functions to encode position information:
+//!
+//! ```text
+//! PE(pos, 2i) = sin(pos / 10000^(2i/d_model))
+//! PE(pos, 2i+1) = cos(pos / 10000^(2i/d_model))
+//! ```
+//!
+//! ### Layer Structure
+//!
+//! Each encoder/decoder layer follows the pattern:
+//!
+//! ```text
+//! x = LayerNorm(x + SelfAttention(x))
+//! x = LayerNorm(x + FeedForward(x))
+//! ```
+//!
+//! ## Performance Optimization
+//!
+//! 1. **Gradient Checkpointing**: Trade memory for computation in deep models
+//! 2. **Mixed Precision**: Use FP16 for faster training with minimal quality loss
+//! 3. **Key-Value Caching**: Cache attention keys and values during inference
+//! 4. **Attention Patterns**: Use sparse attention for very long sequences
+//! 5. **Model Parallelism**: Split large models across multiple GPUs
+//!
+//! ## Common Use Cases
+//!
+//! - **Machine Translation**: Encoder-decoder for seq2seq tasks
+//! - **Language Modeling**: Decoder-only for autoregressive generation
+//! - **Text Classification**: Encoder with classification head
+//! - **Question Answering**: Encoder with span prediction heads
+//! - **Text Summarization**: Encoder-decoder with copy mechanism
+//!
+//! ## Best Practices
+//!
+//! 1. **Warmup Learning Rate**: Start with small LR and gradually increase
+//! 2. **Layer Normalization**: Pre-norm generally works better than post-norm
+//! 3. **Residual Connections**: Essential for training deep networks
+//! 4. **Attention Dropout**: Apply dropout to attention weights, not just outputs
+//! 5. **Weight Initialization**: Use Xavier/Glorot initialization for stability
 
 use crate::error::{Result, TextError};
 use ndarray::{s, Array1, Array2, Array3, ArrayView2};
@@ -48,6 +236,7 @@ impl Default for TransformerConfig {
 pub struct PositionalEncoding {
     encodings: Array2<f64>,
     max_len: usize,
+    #[allow(dead_code)]
     d_model: usize,
 }
 
@@ -327,6 +516,7 @@ pub struct TransformerEncoderLayer {
     feed_forward: FeedForward,
     norm1: LayerNorm,
     norm2: LayerNorm,
+    #[allow(dead_code)]
     dropout: f64,
 }
 
@@ -418,6 +608,7 @@ pub struct TransformerDecoderLayer {
     norm1: LayerNorm,
     norm2: LayerNorm,
     norm3: LayerNorm,
+    #[allow(dead_code)]
     dropout: f64,
 }
 
@@ -554,13 +745,36 @@ impl TokenEmbedding {
 
         Ok(result)
     }
+
+    /// Get access to the embedding matrix for serialization
+    pub fn get_embeddings(&self) -> &Array2<f64> {
+        &self.embeddings
+    }
+
+    /// Set the embedding matrix from loaded weights
+    pub fn set_embeddings(&mut self, embeddings: Array2<f64>) -> Result<()> {
+        if embeddings.shape()[0] != self.vocab_size || embeddings.shape()[1] != self.d_model {
+            return Err(TextError::InvalidInput(format!(
+                "Embedding shape {:?} doesn't match expected ({}, {})",
+                embeddings.shape(),
+                self.vocab_size,
+                self.d_model
+            )));
+        }
+        self.embeddings = embeddings;
+        Ok(())
+    }
 }
 
 /// Complete transformer model for text processing
 pub struct TransformerModel {
+    /// Model configuration
     pub config: TransformerConfig,
+    /// Token embedding layer
     pub token_embedding: TokenEmbedding,
+    /// Transformer encoder
     pub encoder: TransformerEncoder,
+    /// Optional transformer decoder
     pub decoder: Option<TransformerDecoder>,
     vocab_to_id: HashMap<String, usize>,
     id_to_vocab: HashMap<usize, String>,
@@ -778,7 +992,6 @@ impl TransformerModel {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use approx::assert_abs_diff_eq;
 
     #[test]
     fn test_positional_encoding() {

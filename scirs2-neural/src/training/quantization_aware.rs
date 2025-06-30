@@ -490,6 +490,7 @@ impl<F: Float + Debug + FromPrimitive + Send + Sync + ndarray::ScalarOperand> Qu
             weight_params,
             activation_params,
             config: self.config.clone(),
+            _phantom: std::marker::PhantomData,
         })
     }
 
@@ -572,6 +573,8 @@ pub struct QuantizedModel<F: Float + Debug> {
     pub activation_params: Vec<QuantizationParams>,
     /// Original configuration
     pub config: QuantizationConfig,
+    /// Phantom data to maintain F parameter
+    _phantom: std::marker::PhantomData<F>,
 }
 
 impl<F: Float + Debug + FromPrimitive> QuantizedModel<F> {

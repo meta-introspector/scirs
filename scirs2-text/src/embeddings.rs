@@ -1,7 +1,129 @@
-//! Word embedding implementations
+//! # Word Embeddings Module
 //!
-//! This module provides implementations for word embeddings, including
-//! Word2Vec (Skip-gram and CBOW models).
+//! This module provides comprehensive implementations for word embeddings, including
+//! Word2Vec with both Skip-gram and CBOW (Continuous Bag of Words) models.
+//!
+//! ## Overview
+//!
+//! Word embeddings are dense vector representations of words that capture semantic 
+//! relationships. This module implements:
+//!
+//! - **Word2Vec Skip-gram**: Predicts context words from a target word
+//! - **Word2Vec CBOW**: Predicts a target word from context words
+//! - **Negative sampling**: Efficient training technique for large vocabularies
+//! - **Hierarchical softmax**: Alternative to negative sampling for optimization
+//!
+//! ## Quick Start
+//!
+//! ```rust
+//! use scirs2_text::embeddings::{Word2Vec, Word2VecConfig, Word2VecAlgorithm};
+//!
+//! // Basic Word2Vec training
+//! let documents = vec![
+//!     "the quick brown fox jumps over the lazy dog",
+//!     "the dog was lazy but the fox was quick",
+//!     "brown fox and lazy dog are common phrases"
+//! ];
+//!
+//! let config = Word2VecConfig {
+//!     algorithm: Word2VecAlgorithm::SkipGram,
+//!     vector_size: 100,
+//!     window_size: 5,
+//!     min_count: 1,
+//!     learning_rate: 0.025,
+//!     epochs: 5,
+//!     negative_samples: 5,
+//!     ..Default::default()
+//! };
+//!
+//! let mut model = Word2Vec::new(config);
+//! model.train(&documents).expect("Training failed");
+//!
+//! // Get word vector
+//! if let Some(vector) = model.get_vector("fox") {
+//!     println!("Vector for 'fox': {:?}", vector);
+//! }
+//!
+//! // Find similar words
+//! let similar = model.most_similar("fox", 3).expect("Failed to find similar words");
+//! for (word, similarity) in similar {
+//!     println!("{}: {:.4}", word, similarity);
+//! }
+//! ```
+//!
+//! ## Advanced Usage
+//!
+//! ### Custom Configuration
+//!
+//! ```rust
+//! use scirs2_text::embeddings::{Word2Vec, Word2VecConfig, Word2VecAlgorithm};
+//!
+//! let config = Word2VecConfig {
+//!     algorithm: Word2VecAlgorithm::CBOW,
+//!     vector_size: 300,        // Larger vectors for better quality
+//!     window_size: 10,         // Larger context window
+//!     min_count: 5,           // Filter rare words
+//!     learning_rate: 0.01,    // Lower learning rate for stability
+//!     epochs: 15,             // More training iterations
+//!     negative_samples: 10,   // More negative samples
+//!     subsample_threshold: 1e-4, // Subsample frequent words
+//!     use_hierarchical_softmax: false,
+//! };
+//! ```
+//!
+//! ### Incremental Training
+//!
+//! ```rust
+//! # use scirs2_text::embeddings::{Word2Vec, Word2VecConfig};
+//! # let mut model = Word2Vec::new(Word2VecConfig::default());
+//! // Initial training
+//! let batch1 = vec!["first batch of documents"];
+//! model.train(&batch1).expect("Training failed");
+//!
+//! // Continue training with new data
+//! let batch2 = vec!["second batch of documents"];
+//! model.train(&batch2).expect("Training failed");
+//! ```
+//!
+//! ### Saving and Loading Models
+//!
+//! ```rust
+//! # use scirs2_text::embeddings::{Word2Vec, Word2VecConfig};
+//! # let mut model = Word2Vec::new(Word2VecConfig::default());
+//! // Save trained model
+//! model.save_to_file("my_model.w2v").expect("Failed to save model");
+//!
+//! // Load model
+//! let loaded_model = Word2Vec::load_from_file("my_model.w2v")
+//!     .expect("Failed to load model");
+//! ```
+//!
+//! ## Performance Tips
+//!
+//! 1. **Vocabulary Size**: Use `min_count` to filter rare words and reduce memory usage
+//! 2. **Vector Dimensions**: Balance between quality (higher dimensions) and speed (lower dimensions)
+//! 3. **Training Algorithm**: Skip-gram works better with rare words, CBOW is faster
+//! 4. **Negative Sampling**: Usually faster than hierarchical softmax for large vocabularies
+//! 5. **Subsampling**: Set `subsample_threshold` to handle frequent words efficiently
+//!
+//! ## Mathematical Background
+//!
+//! ### Skip-gram Model
+//! 
+//! The Skip-gram model maximizes the probability of context words given a target word:
+//! 
+//! P(context|target) = ∏ P(w_context|w_target)
+//!
+//! ### CBOW Model
+//!
+//! The CBOW model predicts a target word from its context:
+//!
+//! P(target|context) = P(w_target|w_context1, w_context2, ...)
+//!
+//! ### Negative Sampling
+//!
+//! Instead of computing the full softmax, negative sampling approximates it by
+//! sampling negative examples, making training much more efficient.
 
 use crate::error::{Result, TextError};
 use crate::tokenize::{Tokenizer, WordTokenizer};
@@ -864,6 +986,64 @@ impl Word2Vec {
 
         Ok(model)
     }
+
+    // Getter methods for model registry serialization
+    
+    /// Get the vocabulary as a vector of strings
+    pub fn get_vocabulary(&self) -> Vec<String> {
+        let mut vocab = Vec::new();
+        for i in 0..self.vocabulary.len() {
+            if let Some(token) = self.vocabulary.get_token(i) {
+                vocab.push(token.to_string());
+            }
+        }
+        vocab
+    }
+
+    /// Get the vector size
+    pub fn get_vector_size(&self) -> usize {
+        self.config.vector_size
+    }
+
+    /// Get the algorithm
+    pub fn get_algorithm(&self) -> Word2VecAlgorithm {
+        self.config.algorithm
+    }
+
+    /// Get the window size
+    pub fn get_window_size(&self) -> usize {
+        self.config.window_size
+    }
+
+    /// Get the minimum count
+    pub fn get_min_count(&self) -> usize {
+        self.config.min_count
+    }
+
+    /// Get the embeddings matrix (input embeddings)
+    pub fn get_embeddings_matrix(&self) -> Option<Array2<f64>> {
+        self.input_embeddings.clone()
+    }
+
+    /// Get the number of negative samples
+    pub fn get_negative_samples(&self) -> usize {
+        self.config.negative_samples
+    }
+
+    /// Get the learning rate
+    pub fn get_learning_rate(&self) -> f64 {
+        self.config.learning_rate
+    }
+
+    /// Get the number of epochs
+    pub fn get_epochs(&self) -> usize {
+        self.config.epochs
+    }
+
+    /// Get the subsampling threshold
+    pub fn get_subsampling_threshold(&self) -> f64 {
+        self.config.subsample
+    }
 }
 
 /// Calculate cosine similarity between two vectors
@@ -919,7 +1099,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Vocabulary size counting issue to be fixed in a future update"]
     fn test_build_vocabulary() {
         let texts = [
             "the quick brown fox jumps over the lazy dog",
@@ -930,13 +1109,13 @@ mod tests {
         let result = model.build_vocabulary(&texts);
         assert!(result.is_ok());
 
-        // Check vocabulary size (unique words)
-        assert_eq!(model.vocabulary.len(), 8);
+        // Check vocabulary size (unique words: "the", "quick", "brown", "fox", "jumps", "over", "lazy", "dog", "a")
+        assert_eq!(model.vocabulary.len(), 9);
 
         // Check that embeddings were initialized
         assert!(model.input_embeddings.is_some());
         assert!(model.output_embeddings.is_some());
-        assert_eq!(model.input_embeddings.as_ref().unwrap().shape(), &[8, 100]);
+        assert_eq!(model.input_embeddings.as_ref().unwrap().shape(), &[9, 100]);
     }
 
     #[test]

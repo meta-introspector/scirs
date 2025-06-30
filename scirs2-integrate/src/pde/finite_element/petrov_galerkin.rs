@@ -635,7 +635,7 @@ mod tests {
                 assert_abs_diff_eq!(diffusion, 0.1);
                 assert!(tau.is_none()); // Auto-compute
             }
-            _ => panic!("Wrong formulation type"),
+            _ => panic!("Expected SUPG formulation type, got {:?}", formulation),
         }
     }
     

@@ -12,7 +12,7 @@ categories = ["science", "mathematics", "algorithms"]
 [dependencies]
 # Core dependencies
 scirs2-core = { workspace = true, features = ["parallel", "simd"] }
-scirs2-sparse = { workspace = true }
+# scirs2-sparse = { workspace = true }  # Temporarily disabled due to compilation issues
 ndarray = { workspace = true }
 num-traits = { workspace = true }
 num-complex = { workspace = true }
@@ -41,10 +41,49 @@ bincode = "1.3"
 tempfile = "3.8"
 criterion = { version = "0.5", features = ["html_reports"] }
 num_cpus = "1.16"
+ctor = "0.2"
 
 [features]
-default = []
+default = ["std"]
+
+# Core features
+std = []
 unstable = []
+
+# Performance features  
+parallel = ["scirs2-core/parallel"]
+simd = ["scirs2-core/simd"]
+gpu = ["scirs2-core/gpu"]
+
+# Algorithm features
+experimental_algorithms = ["unstable"]
+advanced_centrality = []
+neural_networks = []
+
+# I/O features
+extra_formats = []
+compression = []
+
+# Development features
+benchmarks = []
+profiling = []
+validation = []
+
+# Compatibility features
+networkx_compat = []
+igraph_compat = []
+
+# All features (for comprehensive testing)
+full = [
+    "parallel", 
+    "simd", 
+    "advanced_centrality",
+    "extra_formats",
+    "benchmarks",
+    "profiling",
+    "validation",
+    "networkx_compat"
+]
 
 [[example]]
 name = "graph_demo"
@@ -80,4 +119,8 @@ harness = false
 
 [[bench]]
 name = "benchmark_runner"
+harness = false
+
+[[bench]]
+name = "performance_regression"
 harness = false

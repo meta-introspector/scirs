@@ -379,6 +379,98 @@ impl CscMatrix<f64> {
 
         Ok(result)
     }
+
+    /// GPU-accelerated matrix-vector multiplication
+    ///
+    /// This method converts the CSC matrix to CSR format and uses GPU acceleration.
+    /// CSR format is generally more GPU-friendly for SpMV operations.
+    ///
+    /// # Arguments
+    ///
+    /// * `vec` - Vector to multiply with
+    ///
+    /// # Returns
+    ///
+    /// * Result of matrix-vector multiplication
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use scirs2_sparse::csc::CscMatrix;
+    ///
+    /// let rows = vec![0, 0, 1, 2, 2];
+    /// let cols = vec![0, 2, 2, 0, 1];
+    /// let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+    /// let shape = (3, 3);
+    ///
+    /// let matrix = CscMatrix::new(data, rows, cols, shape).unwrap();
+    /// let vec = vec![1.0, 2.0, 3.0];
+    /// let result = matrix.gpu_dot(&vec).unwrap();
+    /// ```
+    pub fn gpu_dot(&self, vec: &[f64]) -> SparseResult<Vec<f64>> {
+        // Convert to CSR and use GPU-accelerated CSR SpMV
+        let csr_matrix = self.to_csr();
+        csr_matrix.gpu_dot(vec)
+    }
+
+    /// GPU-accelerated matrix-vector multiplication with backend selection
+    ///
+    /// # Arguments
+    ///
+    /// * `vec` - Vector to multiply with
+    /// * `backend` - Preferred GPU backend
+    ///
+    /// # Returns
+    ///
+    /// * Result of matrix-vector multiplication
+    pub fn gpu_dot_with_backend(&self, vec: &[f64], backend: crate::gpu_ops::GpuBackend) -> SparseResult<Vec<f64>> {
+        // Convert to CSR and use GPU-accelerated CSR SpMV with specific backend
+        let csr_matrix = self.to_csr();
+        csr_matrix.gpu_dot_with_backend(vec, backend)
+    }
+}
+
+impl<T> CscMatrix<T>
+where
+    T: num_traits::Float + std::fmt::Debug + Copy + Default + crate::gpu_ops::GpuDataType + Send + Sync + 'static,
+{
+    /// GPU-accelerated matrix-vector multiplication for generic floating-point types
+    ///
+    /// # Arguments
+    ///
+    /// * `vec` - Vector to multiply with
+    ///
+    /// # Returns
+    ///
+    /// * Result of matrix-vector multiplication
+    pub fn gpu_dot_generic(&self, vec: &[T]) -> SparseResult<Vec<T>> {
+        // Convert to CSR and use GPU-accelerated CSR SpMV
+        let csr_matrix = self.to_csr();
+        csr_matrix.gpu_dot_generic(vec)
+    }
+
+    /// Check if this matrix should benefit from GPU acceleration
+    ///
+    /// # Returns
+    ///
+    /// * `true` if GPU acceleration is likely to provide benefits
+    pub fn should_use_gpu(&self) -> bool {
+        // Same logic as CSR - use GPU for matrices with significant computation
+        let nnz_threshold = 10000;
+        let density = self.nnz() as f64 / (self.rows * self.cols) as f64;
+        
+        self.nnz() > nnz_threshold && density < 0.5
+    }
+
+    /// Get GPU backend information
+    ///
+    /// # Returns
+    ///
+    /// * Information about available GPU backends
+    pub fn gpu_backend_info() -> SparseResult<(crate::gpu_ops::GpuBackend, String)> {
+        // Delegate to CSR implementation
+        crate::csr::CsrMatrix::<T>::gpu_backend_info()
+    }
 }
 
 #[cfg(test)]
@@ -492,5 +584,94 @@ mod tests {
         let dense_from_csr = csr_matrix.to_dense();
 
         assert_eq!(dense_from_csc, dense_from_csr);
+    }
+
+    #[test]
+    fn test_gpu_dot() {
+        // Create a 3x3 sparse matrix
+        let rows = vec![0, 0, 1, 2, 2];
+        let cols = vec![0, 2, 2, 0, 1];
+        let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let shape = (3, 3);
+
+        let matrix = CscMatrix::new(data, rows, cols, shape).unwrap();
+        let vec = vec![1.0, 2.0, 3.0];
+        
+        // Test GPU-accelerated SpMV
+        let gpu_result = matrix.gpu_dot(&vec);
+        assert!(gpu_result.is_ok(), "GPU SpMV should succeed");
+        
+        if let Ok(result) = gpu_result {
+            let expected = vec![7.0, 9.0, 14.0]; // Same as regular dot product
+            assert_eq!(result.len(), expected.len());
+            for (a, b) in result.iter().zip(expected.iter()) {
+                assert_relative_eq!(a, b, epsilon = 1e-10);
+            }
+        }
+    }
+
+    #[test]
+    fn test_csc_should_use_gpu() {
+        // Small matrix - should not use GPU
+        let small_matrix = CscMatrix::new(
+            vec![1.0, 2.0], 
+            vec![0, 1], 
+            vec![0, 1], 
+            (2, 2)
+        ).unwrap();
+        assert!(!small_matrix.should_use_gpu(), "Small matrix should not use GPU");
+
+        // Large sparse matrix - should use GPU
+        let large_data = vec![1.0; 15000];
+        let large_rows: Vec<usize> = (0..15000).collect();
+        let large_cols: Vec<usize> = (0..15000).collect();
+        let large_matrix = CscMatrix::new(
+            large_data, 
+            large_rows, 
+            large_cols, 
+            (15000, 15000)
+        ).unwrap();
+        assert!(large_matrix.should_use_gpu(), "Large sparse matrix should use GPU");
+    }
+
+    #[test]
+    fn test_csc_gpu_backend_info() {
+        let backend_info = CscMatrix::<f64>::gpu_backend_info();
+        assert!(backend_info.is_ok(), "Should be able to get GPU backend info");
+        
+        if let Ok((backend, name)) = backend_info {
+            assert!(!name.is_empty(), "Backend name should not be empty");
+            // Backend should be one of the supported types
+            match backend {
+                crate::gpu_ops::GpuBackend::Cuda |
+                crate::gpu_ops::GpuBackend::OpenCl |
+                crate::gpu_ops::GpuBackend::Metal |
+                crate::gpu_ops::GpuBackend::Cpu => {},
+            }
+        }
+    }
+
+    #[test]
+    fn test_csc_gpu_dot_generic_f32() {
+        // Test with f32 type
+        let rows = vec![0, 0, 1, 2, 2];
+        let cols = vec![0, 2, 2, 0, 1];
+        let data = vec![1.0f32, 2.0, 3.0, 4.0, 5.0];
+        let shape = (3, 3);
+
+        let matrix = CscMatrix::new(data, rows, cols, shape).unwrap();
+        let vec = vec![1.0f32, 2.0, 3.0];
+        
+        // Test generic GPU SpMV with f32
+        let gpu_result = matrix.gpu_dot_generic(&vec);
+        assert!(gpu_result.is_ok(), "Generic GPU SpMV should succeed");
+        
+        if let Ok(result) = gpu_result {
+            let expected = vec![7.0f32, 9.0, 14.0];
+            assert_eq!(result.len(), expected.len());
+            for (a, b) in result.iter().zip(expected.iter()) {
+                assert_relative_eq!(a, b, epsilon = 1e-6);
+            }
+        }
     }
 }

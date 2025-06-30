@@ -1581,23 +1581,23 @@ fn gamma_complex(z: Complex64) -> Complex64 {
             9.9843695780195716e-6,
             1.5056327351493116e-7,
         ];
-        
+
         let z_shifted = z - Complex64::new(1.0, 0.0);
         let mut x = Complex64::new(coef[0], 0.0);
-        
+
         for i in 1..coef.len() {
             x = x + Complex64::new(coef[i], 0.0) / (z_shifted + Complex64::new(i as f64, 0.0));
         }
-        
+
         let t = z_shifted + Complex64::new(g + 0.5, 0.0);
         let sqrt_2pi = Complex64::new((2.0 * PI).sqrt(), 0.0);
-        
+
         sqrt_2pi * t.powf(z_shifted + Complex64::new(0.5, 0.0)) * (-t).exp() * x
     } else {
         // Use reflection formula for negative real part
         let pi_z = Complex64::new(PI, 0.0) * z;
         let sin_pi_z = pi_z.sin();
-        
+
         if sin_pi_z.norm() < 1e-15 {
             // Pole at negative integer
             Complex64::new(f64::INFINITY, 0.0)

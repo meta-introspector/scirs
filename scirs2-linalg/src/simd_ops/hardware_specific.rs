@@ -415,6 +415,7 @@ unsafe fn neon_matvec_f32(
 
 
 /// Standard fallback dot product
+#[allow(dead_code)]
 fn standard_dot<F>(x: &ArrayView1<F>, y: &ArrayView1<F>) -> F
 where
     F: Float + NumAssign + Zero,
@@ -627,7 +628,7 @@ where
     // Parallel block processing using scirs2_core parallel operations
     let chunks: Vec<(usize, usize)> = (0..workers)
         .map(|worker_id| {
-            let rows_per_worker = (m + workers - 1) / workers;
+            let rows_per_worker = m.div_ceil(workers);
             let start_row = worker_id * rows_per_worker;
             let end_row = ((worker_id + 1) * rows_per_worker).min(m);
             (start_row, end_row)
@@ -635,8 +636,8 @@ where
         .filter(|(start, end)| start < end)
         .collect();
 
-    let results: Vec<Array2<F>> = parallel_map(chunks, |(start_row, end_row)| {
-        let a_block = a.slice(s![start_row..end_row, ..]);
+    let results: Vec<Array2<F>> = parallel_map(&chunks, |(start_row, end_row)| {
+        let a_block = a.slice(s![*start_row..*end_row, ..]);
         hardware_optimized_gemm_block(
             &a_block,
             b,

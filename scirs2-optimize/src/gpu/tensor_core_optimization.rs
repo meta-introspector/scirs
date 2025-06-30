@@ -5,7 +5,8 @@
 
 use crate::error::{ScirsError, ScirsResult};
 use ndarray::{Array1, Array2, ArrayView2};
-use scirs2_core::gpu::{GpuArray, GpuContext, GpuKernel, TensorCoreConfig};
+use scirs2_core::gpu::{GpuDevice as GpuContext, GpuKernel};
+use scirs2_core::tensor_cores::TensorCoreConfig;
 use std::sync::Arc;
 
 /// Tensor Core acceleration configuration

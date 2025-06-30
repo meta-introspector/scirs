@@ -670,7 +670,7 @@ mod tests {
 pub mod fft {
     use super::*;
     use ndarray::{Array1, Array2};
-    use num_traits::{Float, Zero};
+    use num_traits::Float;
     use std::f64::consts::PI;
 
     /// GPU-accelerated FFT processor
@@ -783,7 +783,7 @@ pub mod fft {
                     for j in 0..length / 2 {
                         let u = result[start + j];
                         let v_real = result[start + j + length / 2] * w_real;
-                        let v_imag = result[start + j + length / 2] * w_imag;
+                        let _v_imag = result[start + j + length / 2] * w_imag;
 
                         result[start + j] = u + v_real;
                         result[start + j + length / 2] = u - v_real;
@@ -1081,7 +1081,7 @@ pub mod convolution {
 /// GPU-accelerated BLAS-like operations
 pub mod blas {
     use super::*;
-    use ndarray::{Array1, Array2, s};
+    use ndarray::{Array1, Array2};
 
     /// GPU-accelerated BLAS operations
     #[derive(Debug)]
@@ -1321,7 +1321,7 @@ pub mod algorithms {
         _phantom: std::marker::PhantomData<F>,
     }
 
-    impl<F: Float + Debug + Clone> GpuTimeSeriesProcessor<F> {
+    impl<F: Float + Debug + Clone + num_traits::Zero + num_traits::One + std::iter::Sum + PartialOrd + Copy> GpuTimeSeriesProcessor<F> {
         /// Create new GPU processor
         pub fn new(config: GpuConfig) -> Result<Self> {
             let device_manager = GpuDeviceManager::new()?;

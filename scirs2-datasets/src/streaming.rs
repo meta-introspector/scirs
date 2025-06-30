@@ -550,7 +550,7 @@ where
         // Create channels for work distribution and result collection
         let (work_tx, work_rx) = mpsc::channel();
         let work_rx = Arc::new(Mutex::new(work_rx));
-        
+
         let (result_tx, result_rx) = mpsc::channel();
         let mut worker_handles = Vec::new();
 
@@ -600,14 +600,16 @@ where
         // Send chunks to workers with chunk IDs to maintain order
         let mut chunk_count = 0;
         while let Some(chunk) = iterator.next_chunk()? {
-            work_tx.send(Some((chunk_count, chunk)))
+            work_tx
+                .send(Some((chunk_count, chunk)))
                 .map_err(|e| DatasetsError::Other(format!("Work send error: {}", e)))?;
             chunk_count += 1;
         }
 
         // Send end signals to all workers
         for _ in 0..self.config.num_workers {
-            work_tx.send(None)
+            work_tx
+                .send(None)
                 .map_err(|e| DatasetsError::Other(format!("End signal send error: {}", e)))?;
         }
 
@@ -651,10 +653,13 @@ where
         }
 
         // Convert results to final vector (all should be Some at this point)
-        let final_results: Vec<R> = results
-            .into_iter()
-            .collect::<Option<Vec<R>>>()
-            .ok_or_else(|| DatasetsError::Other("Missing results from parallel processing".to_string()))?;
+        let final_results: Vec<R> =
+            results
+                .into_iter()
+                .collect::<Option<Vec<R>>>()
+                .ok_or_else(|| {
+                    DatasetsError::Other("Missing results from parallel processing".to_string())
+                })?;
 
         Ok(final_results)
     }
@@ -733,7 +738,7 @@ impl Default for StreamTransformer {
 }
 
 /// Convenience functions for common streaming operations
-
+///
 /// Stream a large CSV file
 pub fn stream_csv<P: AsRef<Path>>(path: P, config: StreamConfig) -> Result<StreamingIterator> {
     StreamingIterator::from_csv(path, config)

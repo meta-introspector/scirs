@@ -345,8 +345,9 @@ where
     fn init_halton(&mut self) {
         let primes = vec![2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97];
         
-        for i in 0..self.popsize {
-            for j in 0..self.n_vars {
+        let popsize = self.population.nrows();
+        for i in 0..popsize {
+            for j in 0..self.ndim {
                 // Use the (i+1)th term of the Halton sequence for base primes[j % primes.len()]
                 let base = primes[j % primes.len()];
                 let halton_value = self.halton_number(i + 1, base);
@@ -362,11 +363,12 @@ where
     fn init_sobol(&mut self) {
         // Simplified Sobol sequence using scrambled Van der Corput sequence
         // For a full Sobol implementation, we would need generating matrices
-        let mut sobol_state = SobolState::new(self.n_vars);
+        let mut sobol_state = SobolState::new(self.ndim);
         
-        for i in 0..self.popsize {
+        let popsize = self.population.nrows();
+        for i in 0..popsize {
             let sobol_point = sobol_state.next_point();
-            for j in 0..self.n_vars {
+            for j in 0..self.ndim {
                 // Scale to bounds
                 let (lb, ub) = self.bounds[j];
                 let scaled_value = if j < sobol_point.len() {
@@ -412,7 +414,7 @@ where
                 lb + excess
             } else {
                 // If reflection goes beyond upper bound, use random value in range
-                self.rng.random_range(lb..=ub)
+                self.rng.gen_range(lb..=ub)
             }
         } else {
             // val > ub, reflect around upper bound
@@ -422,7 +424,7 @@ where
                 ub - excess
             } else {
                 // If reflection goes beyond lower bound, use random value in range
-                self.rng.random_range(lb..=ub)
+                self.rng.gen_range(lb..=ub)
             }
         }
     }
@@ -435,7 +437,7 @@ where
         // Select indices for mutation
         let mut indices: Vec<usize> = Vec::with_capacity(5);
         while indices.len() < 5 {
-            let idx = self.rng.random_range(0..popsize);
+            let idx = self.rng.gen_range(0..popsize);
             if idx != candidate_idx && !indices.contains(&idx) {
                 indices.push(idx);
             }
@@ -445,7 +447,7 @@ where
             self.options.mutation.0
         } else {
             self.rng
-                .random_range(self.options.mutation.0..self.options.mutation.1)
+                .gen_range(self.options.mutation.0..self.options.mutation.1)
         };
 
         match self.strategy {
@@ -527,7 +529,7 @@ where
             | Strategy::Rand2Bin
             | Strategy::CurrentToBest1Bin => {
                 // Binomial crossover
-                let randn = self.rng.random_range(0..self.ndim);
+                let randn = self.rng.gen_range(0..self.ndim);
                 for i in 0..self.ndim {
                     if i == randn || self.rng.random::<f64>() < self.options.recombination {
                         trial[i] = mutant[i];
@@ -540,7 +542,7 @@ where
             | Strategy::Rand2Exp
             | Strategy::CurrentToBest1Exp => {
                 // Exponential crossover
-                let randn = self.rng.random_range(0..self.ndim);
+                let randn = self.rng.gen_range(0..self.ndim);
                 let mut i = randn;
                 loop {
                     trial[i] = mutant[i];

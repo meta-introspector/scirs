@@ -436,7 +436,7 @@ pub struct BootstrapResult<F> {
 }
 
 /// Specialized SIMD operations for advanced statistics
-pub trait AdvancedSimdOps<F>: SimdUnifiedOps<F>
+pub trait AdvancedSimdOps<F>: SimdUnifiedOps
 where
     F: Float + NumCast + Zero + One + PartialOrd + Copy + Send + Sync,
 {

@@ -29,11 +29,10 @@
 //! plot.show();
 //! ```
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{Array1, Array2};
 use std::collections::HashMap;
 use std::path::Path;
-use scirs2_core::error::Result;
-use crate::error::TimeSeriesError;
+use crate::error::{Result, TimeSeriesError};
 
 /// Configuration for plot styling and appearance
 #[derive(Debug, Clone)]
@@ -720,7 +719,7 @@ impl SpecializedPlots {
 
     /// Plot seasonal patterns
     pub fn plot_seasonal_patterns(
-        time: &Array1<f64>,
+        _time: &Array1<f64>,
         data: &Array1<f64>,
         period: usize,
         title: &str,
@@ -878,7 +877,7 @@ impl Dashboard {
         ));
 
         // Add each plot section
-        for (i, (section_title, plot)) in self.plots.iter().enumerate() {
+        for (i, (section_title, _plot)) in self.plots.iter().enumerate() {
             html.push_str(&format!(r#"
         <div class="plot-section">
             <div class="plot-title">{}</div>
@@ -1025,7 +1024,7 @@ mod tests {
     fn test_add_series() {
         let mut plot = TimeSeriesPlot::new("Test Plot");
         let time = Array1::linspace(0.0, 10.0, 11);
-        let values = time.mapv(|x| x.sin());
+        let values = time.mapv(|x: f64| x.sin());
         
         let result = plot.add_series("sine", &time, &values, PlotStyle::default());
         assert!(result.is_ok());
@@ -1047,7 +1046,7 @@ mod tests {
     fn test_html_generation() {
         let mut plot = TimeSeriesPlot::new("Test Plot");
         let time = Array1::linspace(0.0, 10.0, 11);
-        let values = time.mapv(|x| x.sin());
+        let values = time.mapv(|x: f64| x.sin());
         
         plot.add_series("sine", &time, &values, PlotStyle::default()).unwrap();
         let html = plot.to_html();
@@ -1062,7 +1061,7 @@ mod tests {
         let mut dashboard = Dashboard::new("Test Dashboard");
         let mut plot = TimeSeriesPlot::new("Sub Plot");
         let time = Array1::linspace(0.0, 10.0, 11);
-        let values = time.mapv(|x| x.sin());
+        let values = time.mapv(|x: f64| x.sin());
         
         plot.add_series("sine", &time, &values, PlotStyle::default()).unwrap();
         dashboard.add_plot("Section 1", plot);

@@ -550,6 +550,7 @@ impl CachedCorpus {
 /// Advanced indexing for fast text search in large corpora
 pub struct CorpusIndex {
     word_to_docs: std::collections::HashMap<String, Vec<usize>>,
+    #[allow(dead_code)]
     doc_to_words: Vec<std::collections::HashSet<String>>,
 }
 
@@ -801,12 +802,19 @@ impl<T: Tokenizer + Send + Sync> AdvancedStreamingProcessor<T> {
 /// Statistics for corpus analysis
 #[derive(Debug, Clone)]
 pub struct CorpusStatistics {
+    /// Total number of documents in the corpus
     pub total_documents: usize,
+    /// Total number of words across all documents
     pub total_words: usize,
+    /// Total number of characters across all documents
     pub total_chars: usize,
+    /// Total number of lines across all documents
     pub total_lines: usize,
+    /// Size of the vocabulary (unique words)
     pub vocabulary_size: usize,
+    /// Average document length in words
     pub avg_doc_length: f64,
+    /// Average words per line
     pub avg_words_per_line: f64,
 }
 
@@ -851,9 +859,13 @@ impl Default for CorpusStatistics {
 /// Statistics for individual documents
 #[derive(Debug, Clone)]
 pub struct DocumentStats {
+    /// Number of characters in the document
     pub char_count: usize,
+    /// Number of words in the document
     pub word_count: usize,
+    /// Number of lines in the document
     pub line_count: usize,
+    /// Number of unique words in the document
     pub unique_words: usize,
 }
 
@@ -1127,7 +1139,7 @@ mod tests {
         assert!(results[2].contains("Processed doc 2"));
 
         // Test memory stats
-        let (current, peak) = processor.memory_stats();
+        let (current, _peak) = processor.memory_stats();
         assert_eq!(current, 0); // Should be deallocated after processing
     }
 
@@ -1182,7 +1194,7 @@ mod tests {
     #[test]
     fn test_corpus_index_edge_cases() {
         let mut file = NamedTempFile::new().unwrap();
-        writeln!(file, "").unwrap(); // Empty document
+        writeln!(file).unwrap(); // Empty document
         writeln!(file, "single").unwrap();
         file.flush().unwrap();
 
@@ -1216,7 +1228,7 @@ mod tests {
         let paths = vec![file1.path(), file2.path()];
         let multi_corpus = MultiFileCorpus::from_files(&paths).unwrap();
 
-        let docs: Result<Vec<_>, _> = multi_corpus.iter().collect();
+        let docs: Result<Vec<_>> = multi_corpus.iter().collect();
         let docs = docs.unwrap();
 
         assert_eq!(docs.len(), 3);

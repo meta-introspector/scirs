@@ -216,14 +216,25 @@ pub fn gamma<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(x: F) -> F 
         return F::infinity();
     }
 
-    // For very small positive values, use a series expansion
-    // around x=0: Γ(x) ≈ 1/x - γ + O(x)
+    // Enhanced handling for very small positive values with higher-order series
+    // around x=0: Γ(x) = 1/x - γ + (γ²/2 + π²/12)x - (γ³/6 + π²γ/12 + ψ₂(1)/6)x² + O(x³)
     if x > F::zero() && x < F::from(1e-8).unwrap() {
         let gamma_euler = F::from(constants::EULER_MASCHERONI).unwrap();
-        return F::one() / x - gamma_euler
-            + F::from(0.5).unwrap()
-                * (gamma_euler * gamma_euler + F::from(std::f64::consts::FRAC_PI_6).unwrap())
-                * x;
+        let pi_squared = F::from(std::f64::consts::PI * std::f64::consts::PI).unwrap();
+
+        // Enhanced series expansion with more terms for better accuracy
+        let c0 = F::one() / x; // Leading singular term
+        let c1 = -gamma_euler; // Linear term
+        let c2 = F::from(0.5).unwrap()
+            * (gamma_euler * gamma_euler + pi_squared / F::from(6.0).unwrap()); // Quadratic term
+
+        // Third-order term for extreme precision near zero
+        let psi2_1 = F::from(2.4041138063191885).unwrap(); // ψ₂(1) = π²/6 + 2ζ(3) where ζ(3) ≈ 1.202
+        let c3 = -(gamma_euler * gamma_euler * gamma_euler / F::from(6.0).unwrap()
+            + pi_squared * gamma_euler / F::from(12.0).unwrap()
+            + psi2_1 / F::from(6.0).unwrap());
+
+        return c0 + c1 + c2 * x + c3 * x * x;
     }
 
     // Handle specific test values exactly
@@ -238,7 +249,7 @@ pub fn gamma<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(x: F) -> F 
         return F::from(1.5112296023228).unwrap();
     }
 
-    // For negative x
+    // For negative x - Enhanced numerical stability for extreme values
     if x < F::zero() {
         // Check if x is very close to a negative integer
         let nearest_int = x_f64.round() as i32;
@@ -246,15 +257,25 @@ pub fn gamma<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(x: F) -> F 
             return F::nan(); // At negative integers, gamma is undefined
         }
 
-        // For values very close to negative integers, use a series approximation
+        // Enhanced handling for extreme negative values with better overflow protection
+        if x < F::from(-1000.0).unwrap() {
+            // For very large negative values, use asymptotic expansion
+            // with enhanced precision to avoid catastrophic cancellation
+            return asymptotic_gamma_large_negative(x);
+        }
+
+        // For values very close to negative integers, use enhanced series approximation
         if nearest_int <= 0 && (x_f64 - nearest_int as f64).abs() < 1e-8 {
-            // For x near -n, use the expansion:
-            // Γ(x) ≈ (-1)^n / (n! * (x+n)) * (1 - (x+n)*H_n + O((x+n)^2))
-            // where H_n is the nth harmonic number
+            // Enhanced expansion with higher-order terms for better accuracy
             let n = -nearest_int;
             let epsilon = x - F::from(nearest_int).unwrap();
 
-            // Compute n! and H_n
+            // Compute n! and H_n with overflow protection
+            if n > 100 {
+                // Use Stirling's approximation for large factorials
+                return stable_gamma_near_large_negative_integer(x, n);
+            }
+
             let mut factorial = F::one();
             let mut harmonic = F::zero();
 
@@ -266,11 +287,22 @@ pub fn gamma<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(x: F) -> F 
 
             let sign = if n % 2 == 0 { F::one() } else { -F::one() };
 
-            return sign / (factorial * epsilon) * (F::one() - epsilon * harmonic);
+            // Enhanced series with second-order correction for better accuracy
+            let leading_term = sign / (factorial * epsilon);
+            let first_correction = F::one() - epsilon * harmonic;
+
+            // Add second-order term: + ε²(H_n² - H_n^(2))/2
+            let harmonic_squared_sum = (1..=n)
+                .map(|i| 1.0 / ((i * i) as f64))
+                .fold(F::zero(), |acc, val| acc + F::from(val).unwrap());
+            let second_correction =
+                epsilon * epsilon * (harmonic * harmonic - harmonic_squared_sum)
+                    / F::from(2.0).unwrap();
+
+            return leading_term * (first_correction + second_correction);
         }
 
-        // Use the reflection formula for other negative values
-        // Γ(x) = π / (sin(πx) · Γ(1-x))
+        // Enhanced reflection formula with better numerical stability
         let pi = F::from(f64::consts::PI).unwrap();
         let sinpix = (pi * x).sin();
 
@@ -279,22 +311,61 @@ pub fn gamma<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(x: F) -> F 
             return F::nan();
         }
 
-        // Apply reflection formula with careful handling of potential overflow
+        // Apply reflection formula with enhanced overflow protection
         if x < F::from(-100.0).unwrap() {
-            // For very negative x, compute using logarithms
-            let log_gamma_1_minus_x = gammaln(F::one() - x);
-            let log_sinpix = (pi * x).sin().abs().ln();
-            let log_pi = pi.ln();
+            // For very negative x, use enhanced logarithmic computation
+            // with better condition number handling
+            let one_minus_x = F::one() - x;
 
-            return (log_pi - log_sinpix - log_gamma_1_minus_x).exp()
-                * (if ((-x_f64).round() as i32) % 2 == 0 {
-                    F::one()
+            // Check if 1-x would cause issues in gammaln
+            if one_minus_x > F::from(171.0).unwrap() {
+                // Use Stirling approximation directly for better stability
+                let log_gamma_1_minus_x = stirling_approximation_ln(one_minus_x);
+                let log_sinpix = enhanced_log_sin_pi_x(x);
+                let log_pi = pi.ln();
+
+                let log_result = log_pi - log_sinpix - log_gamma_1_minus_x;
+
+                // Enhanced sign computation for extreme values
+                let sign: F = enhanced_reflection_sign(x_f64);
+
+                if log_result < F::from(f64::MAX.ln() * 0.9).unwrap() {
+                    return sign * log_result.exp();
                 } else {
-                    -F::one()
-                });
+                    return if sign > F::zero() {
+                        F::infinity()
+                    } else {
+                        F::neg_infinity()
+                    };
+                }
+            } else {
+                let log_gamma_1_minus_x = gammaln(one_minus_x);
+                let log_sinpix = enhanced_log_sin_pi_x(x);
+                let log_pi = pi.ln();
+
+                let sign: F = enhanced_reflection_sign(x_f64);
+                let log_result = log_pi - log_sinpix - log_gamma_1_minus_x;
+
+                if log_result < F::from(f64::MAX.ln() * 0.9).unwrap() {
+                    return sign * log_result.exp();
+                } else {
+                    return if sign > F::zero() {
+                        F::infinity()
+                    } else {
+                        F::neg_infinity()
+                    };
+                }
+            }
         }
 
-        return pi / (sinpix * gamma(F::one() - x));
+        // Standard reflection formula with overflow check
+        let gamma_complement = gamma(F::one() - x);
+        if gamma_complement.is_infinite() {
+            // Handle overflow in reflection formula
+            return F::zero();
+        }
+
+        return pi / (sinpix * gamma_complement);
     }
 
     // Handle integer values exactly
@@ -324,9 +395,18 @@ pub fn gamma<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(x: F) -> F 
         }
     }
 
-    // For large positive x, use Stirling's approximation to avoid overflow
+    // Enhanced threshold for Stirling's approximation with better overflow detection
     if x_f64 > 171.0 {
         return stirling_approximation(x);
+    }
+
+    // Additional safety check for potential overflow in Lanczos approximation
+    if x_f64 > 150.0 {
+        // Check if Lanczos would overflow, if so use Stirling
+        let test_lanczos = improved_lanczos_gamma(F::from(150.0).unwrap());
+        if test_lanczos.is_infinite() || test_lanczos > F::from(1e100).unwrap() {
+            return stirling_approximation(x);
+        }
     }
 
     // For other values, use the Lanczos approximation with enhanced accuracy
@@ -1247,16 +1327,32 @@ pub fn betaln<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(a: F, b: F
 ///
 /// Used for large positive arguments to avoid overflow.
 ///
-/// Stirling's formula: Γ(x) ≈ sqrt(2π/x) * (x/e)^x * (1 + 1/(12x) + ...)
-fn stirling_approximation<F: Float + FromPrimitive>(x: F) -> F {
-    let _x_f64 = x.to_f64().unwrap();
+/// Enhanced Stirling's formula with improved overflow protection and extreme value handling
+fn stirling_approximation<F: Float + FromPrimitive + std::ops::AddAssign>(x: F) -> F {
+    let x_f64 = x.to_f64().unwrap();
+
+    // Enhanced overflow detection for extreme values
+    if x_f64 > 500.0 {
+        // For very large arguments, return infinity immediately to avoid computation errors
+        return F::infinity();
+    }
 
     // To avoid overflow, compute in log space then exponentiate
     let log_gamma = stirling_approximation_ln(x);
 
+    // Enhanced overflow threshold with safety margin
+    let overflow_threshold = F::from(f64::MAX.ln() * 0.8).unwrap(); // More conservative threshold
+
     // Only exponentiate if it won't overflow
-    if log_gamma < F::from(f64::MAX.ln() * 0.9).unwrap() {
-        log_gamma.exp()
+    if log_gamma < overflow_threshold {
+        let result = log_gamma.exp();
+
+        // Additional check for the result itself
+        if result.is_finite() {
+            result
+        } else {
+            F::infinity()
+        }
     } else {
         F::infinity()
     }
@@ -1352,31 +1448,60 @@ fn stirling_approximation<F: Float + FromPrimitive>(x: F) -> F {
 /// - Abramowitz & Stegun, "Handbook", §6.1.40-41  
 /// - Olver, "Asymptotics and Special Functions", Ch. 3
 /// - de Bruijn, "Asymptotic Methods", Ch. 4
-fn stirling_approximation_ln<F: Float + FromPrimitive>(x: F) -> F {
-    let _x_f64 = x.to_f64().unwrap();
+fn stirling_approximation_ln<F: Float + FromPrimitive + std::ops::AddAssign>(x: F) -> F {
+    let x_f64 = x.to_f64().unwrap();
 
-    // Higher precision coefficients for Stirling's series
+    // Enhanced precision coefficients for Stirling's series with more terms
     let p0 = F::from(constants::LOG_SQRT_2PI).unwrap();
-    let p1 = F::from(1.0 / 12.0).unwrap();
-    let p2 = F::from(-1.0 / 360.0).unwrap();
-    let p3 = F::from(1.0 / 1260.0).unwrap();
-    let p4 = F::from(-1.0 / 1680.0).unwrap();
+    let p1 = F::from(1.0 / 12.0).unwrap(); // B₂/(2·1·2!)
+    let p2 = F::from(-1.0 / 360.0).unwrap(); // B₄/(4·3·4!)
+    let p3 = F::from(1.0 / 1260.0).unwrap(); // B₆/(6·5·6!)
+    let p4 = F::from(-1.0 / 1680.0).unwrap(); // B₈/(8·7·8!)
+
+    // Additional higher-order terms for extreme precision
+    let p5 = F::from(1.0 / 1188.0).unwrap(); // B₁₀/(10·9·10!)
+    let p6 = F::from(-691.0 / 360360.0).unwrap(); // B₁₂/(12·11·12!)
+    let p7 = F::from(1.0 / 156.0).unwrap(); // B₁₄/(14·13·14!)
 
     let x_minus_half = x - F::from(0.5).unwrap();
     let log_x = x.ln();
     let x_recip = F::one() / x;
     let x_recip_squared = x_recip * x_recip;
+    let x_recip_fourth = x_recip_squared * x_recip_squared;
 
     // Main formula: (x - 0.5) * log(x) - x + 0.5 * log(2π)
     let result = x_minus_half * log_x - x + p0;
 
-    // Add correction terms for increased accuracy
-    let correction = p1 * x_recip
+    // Enhanced correction terms - adaptively include more terms for extreme values
+    let mut correction = p1 * x_recip
         + p2 * x_recip * x_recip_squared
-        + p3 * x_recip * x_recip_squared * x_recip_squared
-        + p4 * x_recip * x_recip_squared * x_recip_squared * x_recip;
+        + p3 * x_recip * x_recip_fourth
+        + p4 * x_recip * x_recip_fourth * x_recip;
 
-    result + correction
+    // Add higher-order terms for extreme precision when x is large
+    if x_f64 > 20.0 {
+        let _x_recip_sixth = x_recip_fourth * x_recip_squared;
+        let x_recip_eighth = x_recip_fourth * x_recip_fourth;
+
+        correction += p5 * x_recip * x_recip_eighth
+            + p6 * x_recip * x_recip_eighth * x_recip_squared
+            + p7 * x_recip * x_recip_eighth * x_recip_fourth;
+    }
+
+    // Enhanced overflow protection for the final result
+    let final_result = result + correction;
+
+    // Validate result is within reasonable bounds
+    if final_result.is_finite() {
+        final_result
+    } else {
+        // Fallback for extreme cases
+        if x_f64 > 0.0 {
+            F::from(f64::MAX.ln() * 0.9).unwrap()
+        } else {
+            F::from(f64::MIN.ln() * 0.9).unwrap()
+        }
+    }
 }
 
 /// Lanczos approximation for the gamma function with rigorous mathematical foundation.
@@ -1842,6 +1967,234 @@ pub fn betainc_regularized<
         let result = F::one() - improved_continued_fraction_betainc(F::one() - x, b, a)?;
         Ok(result)
     }
+}
+
+/// Asymptotic gamma function for large negative values to avoid overflow
+fn asymptotic_gamma_large_negative<F: Float + FromPrimitive + std::ops::AddAssign>(x: F) -> F {
+    // For very large negative x, use the reflection formula with asymptotic expansions
+    // to avoid catastrophic cancellation
+    let x_f64 = x.to_f64().unwrap();
+    let n = (-x_f64).floor() as i32;
+    let _z = x + F::from(n).unwrap(); // z is the fractional part in [0,1)
+
+    // Use asymptotic expansion for large negative arguments
+    // Γ(x) = π / (sin(πx) * Γ(1-x))
+    // For large |x|, Γ(1-x) ≈ Stirling's approximation
+
+    let pi = F::from(std::f64::consts::PI).unwrap();
+    let one_minus_x = F::one() - x;
+
+    // Use Stirling for the positive large argument
+    let log_gamma_pos = stirling_approximation_ln(one_minus_x);
+    let log_sin_pi_x = enhanced_log_sin_pi_x(x);
+    let log_pi = pi.ln();
+
+    let sign: F = enhanced_reflection_sign(x_f64);
+    let log_result = log_pi - log_sin_pi_x - log_gamma_pos;
+
+    if log_result < F::from(f64::MAX.ln() * 0.9).unwrap() {
+        sign * log_result.exp()
+    } else if sign > F::zero() {
+        F::infinity()
+    } else {
+        F::neg_infinity()
+    }
+}
+
+/// Stable computation for gamma near large negative integers
+fn stable_gamma_near_large_negative_integer<F: Float + FromPrimitive + std::ops::AddAssign>(
+    x: F,
+    n: i32,
+) -> F {
+    let epsilon = x + F::from(n).unwrap();
+
+    // For large n, use logarithmic computation to avoid overflow
+    // Γ(x) ≈ (-1)^n / (n! * ε) where ε = x + n
+
+    // Use Stirling's approximation for log(n!)
+    let n_f = F::from(n as f64).unwrap();
+    let log_n_factorial = stirling_approximation_ln(n_f + F::one());
+
+    let sign = if n % 2 == 0 { F::one() } else { -F::one() };
+    let log_epsilon = epsilon.abs().ln();
+
+    let log_result = -log_n_factorial - log_epsilon;
+
+    if log_result < F::from(f64::MAX.ln() * 0.9).unwrap() {
+        sign / epsilon * log_result.exp()
+    } else if epsilon > F::zero() {
+        if sign > F::zero() {
+            F::infinity()
+        } else {
+            F::neg_infinity()
+        }
+    } else if sign > F::zero() {
+        F::neg_infinity()
+    } else {
+        F::infinity()
+    }
+}
+
+/// Enhanced computation of log(|sin(πx)|) for better numerical stability
+fn enhanced_log_sin_pi_x<F: Float + FromPrimitive>(x: F) -> F {
+    let pi = F::from(std::f64::consts::PI).unwrap();
+    let x_f64 = x.to_f64().unwrap();
+
+    // Reduce x to the fundamental period to improve accuracy
+    let x_reduced = x_f64 - x_f64.floor();
+    let x_red = F::from(x_reduced).unwrap();
+
+    // Use different approaches based on the reduced value
+    if x_reduced < 0.5 {
+        // For x in [0, 0.5), use sin(πx) directly
+        (pi * x_red).sin().abs().ln()
+    } else {
+        // For x in [0.5, 1), use sin(π(1-x)) = sin(πx)
+        let complement = F::one() - x_red;
+        (pi * complement).sin().abs().ln()
+    }
+}
+
+/// Enhanced sign computation for reflection formula with extreme values
+fn enhanced_reflection_sign<F: Float + FromPrimitive>(x_f64: f64) -> F {
+    // For the reflection formula Γ(x) = π / (sin(πx) * Γ(1-x))
+    // The sign depends on both sin(πx) and the parity
+
+    let x_floor = x_f64.floor();
+    let _n = x_floor as i32;
+
+    // sin(πx) has the same sign as sin(π(x - floor(x)))
+    let fractional_part = x_f64 - x_floor;
+
+    if fractional_part == 0.0 {
+        // x is an integer, sin(πx) = 0, return NaN indicator
+        return F::nan();
+    }
+
+    // For negative integers n, the sign alternates
+    // sin(π(x - n)) > 0 when fractional_part ∈ (0, 1)
+    let sin_sign = if fractional_part > 0.0 && fractional_part < 1.0 {
+        F::one()
+    } else {
+        -F::one()
+    };
+
+    // The reflection formula includes division by sin(πx)
+    // So we need 1/sin_sign
+    if sin_sign > F::zero() {
+        F::one()
+    } else {
+        -F::one()
+    }
+}
+
+/// Enhanced numerical validation for extreme gamma function values
+#[allow(dead_code)]
+fn validate_gamma_computation<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(
+    x: F,
+    result: F,
+) -> SpecialResult<F> {
+    let x_f64 = x.to_f64().unwrap();
+
+    // Check for obvious invalid inputs
+    if x.is_nan() {
+        return Err(SpecialError::DomainError("Input x is NaN".to_string()));
+    }
+
+    // Check for negative integers (poles)
+    if x < F::zero() {
+        let nearest_int = x_f64.round() as i32;
+        if nearest_int <= 0 && (x_f64 - nearest_int as f64).abs() < 1e-14 {
+            return Err(SpecialError::DomainError(format!(
+                "Gamma function has a pole at x = {}",
+                x_f64
+            )));
+        }
+    }
+
+    // Enhanced result validation with condition number estimation
+    if result.is_nan() && !x.is_nan() {
+        return Err(SpecialError::ComputationError(format!(
+            "Gamma computation failed for x = {}, result is NaN",
+            x_f64
+        )));
+    }
+
+    // Check for potential overflow/underflow issues
+    if result.is_infinite() {
+        if x_f64 > 171.5 {
+            // Expected overflow for large positive x
+            return Ok(result);
+        } else if x_f64 < 0.0 && (x_f64 - x_f64.round()).abs() < 1e-12 {
+            // Expected overflow near negative integers
+            return Ok(result);
+        } else {
+            return Err(SpecialError::ComputationError(format!(
+                "Unexpected overflow in gamma computation for x = {}",
+                x_f64
+            )));
+        }
+    }
+
+    // Check for potential underflow
+    if result.is_zero() && x_f64 > 0.0 && x_f64 < 171.0 {
+        return Err(SpecialError::ComputationError(format!(
+            "Unexpected underflow in gamma computation for x = {}",
+            x_f64
+        )));
+    }
+
+    // Estimate condition number for numerical stability assessment
+    let condition_estimate = estimate_gamma_condition_number(x);
+    if condition_estimate > 1e12 {
+        #[cfg(feature = "gpu")]
+        log::warn!(
+            "High condition number ({:.2e}) for gamma({}), result may be inaccurate",
+            condition_estimate,
+            x_f64
+        );
+    }
+
+    Ok(result)
+}
+
+/// Estimate condition number for gamma function to assess numerical stability
+#[allow(dead_code)]
+fn estimate_gamma_condition_number<
+    F: Float + FromPrimitive + std::fmt::Debug + std::ops::AddAssign,
+>(
+    x: F,
+) -> f64 {
+    let x_f64 = x.to_f64().unwrap();
+    let h = 1e-8;
+
+    // For condition number estimation: κ = |x * Γ'(x) / Γ(x)|
+    // Use finite differences to approximate Γ'(x)
+    if x_f64 > 0.0 && x_f64 < 100.0 {
+        let gamma_x = gamma(x).to_f64().unwrap();
+        let gamma_x_plus_h = gamma(x + F::from(h).unwrap()).to_f64().unwrap();
+        let gamma_x_minus_h = gamma(x - F::from(h).unwrap()).to_f64().unwrap();
+
+        if gamma_x != 0.0 && gamma_x_plus_h.is_finite() && gamma_x_minus_h.is_finite() {
+            let derivative = (gamma_x_plus_h - gamma_x_minus_h) / (2.0 * h);
+            return (x_f64 * derivative / gamma_x).abs();
+        }
+    }
+
+    // Fallback estimates for special regions
+    if x_f64.abs() < 1e-6 {
+        // Near zero, condition number is approximately 1/|x|
+        return 1.0 / x_f64.abs();
+    } else if x_f64 < 0.0 {
+        let distance_to_pole = (x_f64 - x_f64.round()).abs();
+        if distance_to_pole < 1e-6 {
+            // Near negative integers, condition number becomes very large
+            return 1.0 / distance_to_pole;
+        }
+    }
+
+    // Default reasonable estimate
+    1.0
 }
 
 /// Enhanced continued fraction evaluation for the regularized incomplete beta function.

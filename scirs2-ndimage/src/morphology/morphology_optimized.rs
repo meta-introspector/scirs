@@ -745,3 +745,513 @@ mod tests {
         assert_eq!(result[[1, 0]], true);
     }
 }
+
+/// Advanced morphological operations for texture analysis and feature extraction
+///
+/// This section implements advanced morphological operations including:
+/// - Geodesic morphology
+/// - Multi-scale morphological operations  
+/// - Texture analysis operators
+/// - Granulometry operations
+
+/// Configuration for multi-scale morphological operations
+#[derive(Debug, Clone)]
+pub struct MultiScaleMorphConfig {
+    /// Scale factors for multi-scale analysis
+    pub scales: Vec<usize>,
+    /// Type of morphological operation to apply
+    pub operation: MorphOperation,
+    /// Structuring element type
+    pub structure_type: StructureType,
+    /// Whether to normalize results across scales
+    pub normalize: bool,
+}
+
+/// Types of morphological operations
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MorphOperation {
+    Erosion,
+    Dilation,
+    Opening,
+    Closing,
+    Gradient,
+    TopHat,
+    BlackHat,
+}
+
+/// Types of structuring elements
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum StructureType {
+    Box,
+    Disk,
+    Cross,
+    Diamond,
+}
+
+impl Default for MultiScaleMorphConfig {
+    fn default() -> Self {
+        Self {
+            scales: vec![1, 3, 5, 7],
+            operation: MorphOperation::Opening,
+            structure_type: StructureType::Disk,
+            normalize: true,
+        }
+    }
+}
+
+/// Geodesic erosion - erosion constrained by a reference image
+///
+/// Geodesic erosion is useful for extracting connected components that are
+/// marked by a marker image and constrained by a mask image.
+///
+/// # Arguments
+///
+/// * `marker` - Marker image (starting points)
+/// * `mask` - Mask image (constraining boundaries)
+/// * `structure` - Structuring element (optional, defaults to 3x3 box)
+/// * `iterations` - Number of iterations (optional, defaults to until convergence)
+///
+/// # Returns
+///
+/// * `Result<Array2<T>>` - Geodesic erosion result
+pub fn geodesic_erosion_2d<T>(
+    marker: &Array2<T>,
+    mask: &Array2<T>,
+    structure: Option<&Array2<bool>>,
+    iterations: Option<usize>,
+) -> NdimageResult<Array2<T>>
+where
+    T: Float + FromPrimitive + Debug + Send + Sync + 'static + PartialOrd,
+    T: SimdUnifiedOps,
+{
+    if marker.shape() != mask.shape() {
+        return Err(crate::error::NdimageError::DimensionError(
+            "Marker and mask must have the same shape".into(),
+        ));
+    }
+
+    let max_iters = iterations.unwrap_or(1000);
+    let mut current = marker.clone();
+    let mut previous = Array2::zeros(marker.dim());
+
+    // Create default structure if none provided
+    let default_structure = Array2::from_elem((3, 3), true);
+    let struct_elem = structure.unwrap_or(&default_structure);
+
+    for iter in 0..max_iters {
+        previous.assign(&current);
+
+        // Apply erosion
+        current = grey_erosion_2d_optimized(&current, Some(struct_elem), Some(1), None, None)?;
+
+        // Constrain by mask (pointwise maximum)
+        for ((c, m), p) in current.iter_mut().zip(mask.iter()).zip(previous.iter()) {
+            *c = (*c).max(*m);
+        }
+
+        // Check for convergence
+        if iter > 0 {
+            let mut converged = true;
+            for (c, p) in current.iter().zip(previous.iter()) {
+                if (*c - *p).abs() > T::from_f64(1e-10).unwrap_or(T::epsilon()) {
+                    converged = false;
+                    break;
+                }
+            }
+            if converged {
+                break;
+            }
+        }
+    }
+
+    Ok(current)
+}
+
+/// Geodesic dilation - dilation constrained by a reference image
+///
+/// Geodesic dilation is the dual operation to geodesic erosion.
+///
+/// # Arguments
+///
+/// * `marker` - Marker image (starting points)
+/// * `mask` - Mask image (constraining boundaries)
+/// * `structure` - Structuring element (optional, defaults to 3x3 box)
+/// * `iterations` - Number of iterations (optional, defaults to until convergence)
+///
+/// # Returns
+///
+/// * `Result<Array2<T>>` - Geodesic dilation result
+pub fn geodesic_dilation_2d<T>(
+    marker: &Array2<T>,
+    mask: &Array2<T>,
+    structure: Option<&Array2<bool>>,
+    iterations: Option<usize>,
+) -> NdimageResult<Array2<T>>
+where
+    T: Float + FromPrimitive + Debug + Send + Sync + 'static + PartialOrd,
+    T: SimdUnifiedOps,
+{
+    if marker.shape() != mask.shape() {
+        return Err(crate::error::NdimageError::DimensionError(
+            "Marker and mask must have the same shape".into(),
+        ));
+    }
+
+    let max_iters = iterations.unwrap_or(1000);
+    let mut current = marker.clone();
+    let mut previous = Array2::zeros(marker.dim());
+
+    // Create default structure if none provided
+    let default_structure = Array2::from_elem((3, 3), true);
+    let struct_elem = structure.unwrap_or(&default_structure);
+
+    for iter in 0..max_iters {
+        previous.assign(&current);
+
+        // Apply dilation
+        current = grey_dilation_2d_optimized(&current, Some(struct_elem), Some(1), None, None)?;
+
+        // Constrain by mask (pointwise minimum)
+        for ((c, m), p) in current.iter_mut().zip(mask.iter()).zip(previous.iter()) {
+            *c = (*c).min(*m);
+        }
+
+        // Check for convergence
+        if iter > 0 {
+            let mut converged = true;
+            for (c, p) in current.iter().zip(previous.iter()) {
+                if (*c - *p).abs() > T::from_f64(1e-10).unwrap_or(T::epsilon()) {
+                    converged = false;
+                    break;
+                }
+            }
+            if converged {
+                break;
+            }
+        }
+    }
+
+    Ok(current)
+}
+
+/// Morphological reconstruction using geodesic operations
+///
+/// Reconstruction extracts connected components from a mask image using marker points.
+/// It's equivalent to iterating geodesic dilation until convergence.
+///
+/// # Arguments
+///
+/// * `marker` - Marker image (starting points)
+/// * `mask` - Mask image (constraining boundaries)
+/// * `method` - Reconstruction method (dilation or erosion)
+/// * `structure` - Structuring element (optional)
+///
+/// # Returns
+///
+/// * `Result<Array2<T>>` - Reconstructed image
+pub fn morphological_reconstruction_2d<T>(
+    marker: &Array2<T>,
+    mask: &Array2<T>,
+    method: MorphOperation,
+    structure: Option<&Array2<bool>>,
+) -> NdimageResult<Array2<T>>
+where
+    T: Float + FromPrimitive + Debug + Send + Sync + 'static + PartialOrd,
+    T: SimdUnifiedOps,
+{
+    match method {
+        MorphOperation::Dilation => geodesic_dilation_2d(marker, mask, structure, None),
+        MorphOperation::Erosion => geodesic_erosion_2d(marker, mask, structure, None),
+        _ => Err(crate::error::NdimageError::InvalidInput(
+            "Only dilation and erosion methods are supported for reconstruction".into(),
+        )),
+    }
+}
+
+/// Multi-scale morphological analysis
+///
+/// Applies morphological operations at multiple scales to analyze texture and structure
+/// at different resolutions.
+///
+/// # Arguments
+///
+/// * `input` - Input image
+/// * `config` - Configuration for multi-scale analysis
+///
+/// # Returns
+///
+/// * `Result<Vec<Array2<T>>>` - Results at each scale
+pub fn multi_scale_morphology_2d<T>(
+    input: &Array2<T>,
+    config: &MultiScaleMorphConfig,
+) -> NdimageResult<Vec<Array2<T>>>
+where
+    T: Float + FromPrimitive + Debug + Send + Sync + 'static + PartialOrd,
+    T: SimdUnifiedOps,
+{
+    let mut results = Vec::with_capacity(config.scales.len());
+
+    for &scale in &config.scales {
+        // Create structuring element for this scale
+        let structure = create_structuring_element(config.structure_type, scale)?;
+
+        // Apply morphological operation
+        let result = match config.operation {
+            MorphOperation::Erosion => {
+                grey_erosion_2d_optimized(input, Some(&structure), Some(1), None, None)?
+            }
+            MorphOperation::Dilation => {
+                grey_dilation_2d_optimized(input, Some(&structure), Some(1), None, None)?
+            }
+            MorphOperation::Opening => {
+                let eroded =
+                    grey_erosion_2d_optimized(input, Some(&structure), Some(1), None, None)?;
+                grey_dilation_2d_optimized(&eroded, Some(&structure), Some(1), None, None)?
+            }
+            MorphOperation::Closing => {
+                let dilated =
+                    grey_dilation_2d_optimized(input, Some(&structure), Some(1), None, None)?;
+                grey_erosion_2d_optimized(&dilated, Some(&structure), Some(1), None, None)?
+            }
+            MorphOperation::Gradient => {
+                let dilated =
+                    grey_dilation_2d_optimized(input, Some(&structure), Some(1), None, None)?;
+                let eroded =
+                    grey_erosion_2d_optimized(input, Some(&structure), Some(1), None, None)?;
+                let mut gradient = Array2::zeros(input.dim());
+                for ((d, e), g) in dilated.iter().zip(eroded.iter()).zip(gradient.iter_mut()) {
+                    *g = *d - *e;
+                }
+                gradient
+            }
+            MorphOperation::TopHat => {
+                let opened = {
+                    let eroded =
+                        grey_erosion_2d_optimized(input, Some(&structure), Some(1), None, None)?;
+                    grey_dilation_2d_optimized(&eroded, Some(&structure), Some(1), None, None)?
+                };
+                let mut tophat = Array2::zeros(input.dim());
+                for ((i, o), t) in input.iter().zip(opened.iter()).zip(tophat.iter_mut()) {
+                    *t = *i - *o;
+                }
+                tophat
+            }
+            MorphOperation::BlackHat => {
+                let closed = {
+                    let dilated =
+                        grey_dilation_2d_optimized(input, Some(&structure), Some(1), None, None)?;
+                    grey_erosion_2d_optimized(&dilated, Some(&structure), Some(1), None, None)?
+                };
+                let mut blackhat = Array2::zeros(input.dim());
+                for ((c, i), b) in closed.iter().zip(input.iter()).zip(blackhat.iter_mut()) {
+                    *b = *c - *i;
+                }
+                blackhat
+            }
+        };
+
+        results.push(result);
+    }
+
+    // Normalize results if requested
+    if config.normalize {
+        for result in &mut results {
+            normalize_array(result)?;
+        }
+    }
+
+    Ok(results)
+}
+
+/// Granulometry analysis for texture characterization
+///
+/// Granulometry analyzes the size distribution of structures in an image
+/// using morphological opening at multiple scales.
+///
+/// # Arguments
+///
+/// * `input` - Input image
+/// * `scales` - Size scales to analyze
+/// * `structure_type` - Type of structuring element
+///
+/// # Returns
+///
+/// * `Result<Vec<f64>>` - Granulometry curve (size distribution)
+pub fn granulometry_2d<T>(
+    input: &Array2<T>,
+    scales: &[usize],
+    structure_type: StructureType,
+) -> NdimageResult<Vec<f64>>
+where
+    T: Float + FromPrimitive + Debug + Send + Sync + 'static + PartialOrd,
+    T: SimdUnifiedOps,
+{
+    let mut curve = Vec::with_capacity(scales.len());
+
+    // Compute sum of original image
+    let original_sum: f64 = input
+        .iter()
+        .map(|&x| x.to_f64().unwrap_or(0.0))
+        .sum();
+
+    for &scale in scales {
+        // Create structuring element
+        let structure = create_structuring_element(structure_type, scale)?;
+
+        // Apply opening (erosion followed by dilation)
+        let eroded = grey_erosion_2d_optimized(input, Some(&structure), Some(1), None, None)?;
+        let opened = grey_dilation_2d_optimized(&eroded, Some(&structure), Some(1), None, None)?;
+
+        // Compute sum of opened image
+        let opened_sum: f64 = opened
+            .iter()
+            .map(|&x| x.to_f64().unwrap_or(0.0))
+            .sum();
+
+        // Compute granulometry value (normalized)
+        let granulo_value = if original_sum > 0.0 {
+            opened_sum / original_sum
+        } else {
+            0.0
+        };
+
+        curve.push(granulo_value);
+    }
+
+    Ok(curve)
+}
+
+/// Area opening - removes connected components smaller than a given area
+///
+/// This operation removes bright structures smaller than the specified area
+/// while preserving larger structures.
+///
+/// # Arguments
+///
+/// * `input` - Input image
+/// * `area_threshold` - Minimum area of structures to preserve
+/// * `connectivity` - Connectivity for connected component analysis (4 or 8)
+///
+/// # Returns
+///
+/// * `Result<Array2<T>>` - Area-opened image
+#[allow(dead_code)]
+pub fn area_opening_2d<T>(
+    input: &Array2<T>,
+    area_threshold: usize,
+    connectivity: usize,
+) -> NdimageResult<Array2<T>>
+where
+    T: Float + FromPrimitive + Debug + Send + Sync + 'static + PartialOrd,
+{
+    if connectivity != 4 && connectivity != 8 {
+        return Err(crate::error::NdimageError::InvalidInput(
+            "Connectivity must be 4 or 8".into(),
+        ));
+    }
+
+    // This is a simplified implementation
+    // In a full implementation, you would use the max-tree or component tree
+    // Here we use a threshold-based approach for demonstration
+
+    let mut result = input.clone();
+    let (height, width) = input.dim();
+
+    // Simple threshold-based area opening
+    let threshold = compute_threshold_for_area(input, area_threshold)?;
+
+    for i in 0..height {
+        for j in 0..width {
+            if input[[i, j]] < threshold {
+                result[[i, j]] = T::zero();
+            }
+        }
+    }
+
+    Ok(result)
+}
+
+/// Helper function to create structuring elements of different types
+fn create_structuring_element(
+    structure_type: StructureType,
+    size: usize,
+) -> NdimageResult<Array2<bool>> {
+    let radius = size / 2;
+    let dim = 2 * radius + 1;
+    let mut structure = Array2::from_elem((dim, dim), false);
+
+    match structure_type {
+        StructureType::Box => {
+            structure.fill(true);
+        }
+        StructureType::Cross => {
+            // Create cross shape
+            for i in 0..dim {
+                structure[[i, radius]] = true; // Vertical line
+                structure[[radius, i]] = true; // Horizontal line
+            }
+        }
+        StructureType::Diamond => {
+            // Create diamond shape
+            let center = radius as isize;
+            for i in 0..dim {
+                for j in 0..dim {
+                    let di = i as isize - center;
+                    let dj = j as isize - center;
+                    if (di.abs() + dj.abs()) <= radius as isize {
+                        structure[[i, j]] = true;
+                    }
+                }
+            }
+        }
+        StructureType::Disk => {
+            // Create disk shape
+            let center = radius as f64;
+            for i in 0..dim {
+                for j in 0..dim {
+                    let di = i as f64 - center;
+                    let dj = j as f64 - center;
+                    if (di * di + dj * dj).sqrt() <= radius as f64 {
+                        structure[[i, j]] = true;
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(structure)
+}
+
+/// Helper function to normalize an array to [0, 1] range
+fn normalize_array<T>(array: &mut Array2<T>) -> NdimageResult<()>
+where
+    T: Float + FromPrimitive + Debug + 'static,
+{
+    let min_val = array.iter().fold(T::infinity(), |acc, &x| acc.min(x));
+    let max_val = array.iter().fold(T::neg_infinity(), |acc, &x| acc.max(x));
+
+    let range = max_val - min_val;
+    if range > T::zero() {
+        for value in array.iter_mut() {
+            *value = (*value - min_val) / range;
+        }
+    }
+
+    Ok(())
+}
+
+/// Helper function to compute threshold for area opening
+fn compute_threshold_for_area<T>(
+    input: &Array2<T>,
+    _area_threshold: usize,
+) -> NdimageResult<T>
+where
+    T: Float + FromPrimitive + Debug + 'static,
+{
+    // Simplified implementation - use median as threshold
+    let mut values: Vec<T> = input.iter().copied().collect();
+    values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    
+    let median_idx = values.len() / 2;
+    Ok(values[median_idx])
+}

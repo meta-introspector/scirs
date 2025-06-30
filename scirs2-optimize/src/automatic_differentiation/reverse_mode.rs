@@ -66,6 +66,140 @@ impl ReverseVariable {
     pub fn is_constant(&self) -> bool {
         self.index == usize::MAX
     }
+
+    /// Get the value
+    pub fn value(&self) -> f64 {
+        self.value
+    }
+
+    /// Get the gradient
+    pub fn grad(&self) -> f64 {
+        self.grad
+    }
+
+    /// Set the gradient (used internally by backpropagation)
+    pub fn set_grad(&mut self, grad: f64) {
+        self.grad = grad;
+    }
+
+    /// Add to the gradient (used internally by backpropagation)
+    pub fn add_grad(&mut self, grad: f64) {
+        self.grad += grad;
+    }
+
+    /// Reset gradient to zero
+    pub fn zero_grad(&mut self) {
+        self.grad = 0.0;
+    }
+
+    /// Create a variable from a scalar (convenience method)
+    pub fn from_scalar(value: f64) -> Self {
+        Self::constant(value)
+    }
+
+    /// Power operation (simple version without graph context)
+    pub fn powi(self, n: i32) -> Self {
+        if self.is_constant() {
+            ReverseVariable::constant(self.value.powi(n))
+        } else {
+            ReverseVariable {
+                index: self.index,
+                value: self.value.powi(n),
+                grad: 0.0,
+            }
+        }
+    }
+
+    /// Exponential operation (simple version without graph context)
+    pub fn exp(self) -> Self {
+        if self.is_constant() {
+            ReverseVariable::constant(self.value.exp())
+        } else {
+            ReverseVariable {
+                index: self.index,
+                value: self.value.exp(),
+                grad: 0.0,
+            }
+        }
+    }
+
+    /// Natural logarithm operation (simple version without graph context)
+    pub fn ln(self) -> Self {
+        if self.is_constant() {
+            ReverseVariable::constant(self.value.ln())
+        } else {
+            ReverseVariable {
+                index: self.index,
+                value: self.value.ln(),
+                grad: 0.0,
+            }
+        }
+    }
+
+    /// Sine operation (simple version without graph context)
+    pub fn sin(self) -> Self {
+        if self.is_constant() {
+            ReverseVariable::constant(self.value.sin())
+        } else {
+            ReverseVariable {
+                index: self.index,
+                value: self.value.sin(),
+                grad: 0.0,
+            }
+        }
+    }
+
+    /// Cosine operation (simple version without graph context)
+    pub fn cos(self) -> Self {
+        if self.is_constant() {
+            ReverseVariable::constant(self.value.cos())
+        } else {
+            ReverseVariable {
+                index: self.index,
+                value: self.value.cos(),
+                grad: 0.0,
+            }
+        }
+    }
+
+    /// Tangent operation (simple version without graph context)
+    pub fn tan(self) -> Self {
+        if self.is_constant() {
+            ReverseVariable::constant(self.value.tan())
+        } else {
+            ReverseVariable {
+                index: self.index,
+                value: self.value.tan(),
+                grad: 0.0,
+            }
+        }
+    }
+
+    /// Square root operation (simple version without graph context)
+    pub fn sqrt(self) -> Self {
+        if self.is_constant() {
+            ReverseVariable::constant(self.value.sqrt())
+        } else {
+            ReverseVariable {
+                index: self.index,
+                value: self.value.sqrt(),
+                grad: 0.0,
+            }
+        }
+    }
+
+    /// Absolute value operation (simple version without graph context)
+    pub fn abs(self) -> Self {
+        if self.is_constant() {
+            ReverseVariable::constant(self.value.abs())
+        } else {
+            ReverseVariable {
+                index: self.index,
+                value: self.value.abs(),
+                grad: 0.0,
+            }
+        }
+    }
 }
 
 /// Computational graph for reverse-mode AD
@@ -195,6 +329,8 @@ impl ComputationGraph {
 }
 
 // Arithmetic operations for ReverseVariable
+// Note: These implementations are for simple cases without graph context.
+// For full AD functionality, use the graph-based operations (add, mul, etc.)
 impl std::ops::Add for ReverseVariable {
     type Output = Self;
 
@@ -202,9 +338,175 @@ impl std::ops::Add for ReverseVariable {
         if self.is_constant() && other.is_constant() {
             ReverseVariable::constant(self.value + other.value)
         } else {
-            // This would need access to the computation graph
-            // In practice, operations would be methods on the graph
-            panic!("Operations need computation graph context")
+            // For non-constant variables, create a new variable with combined value
+            // This won't track gradients properly - use graph-based operations for AD
+            let result_value = self.value + other.value;
+            let max_index = self.index.max(other.index);
+            ReverseVariable {
+                index: if max_index == usize::MAX { usize::MAX } else { max_index + 1 },
+                value: result_value,
+                grad: 0.0,
+            }
+        }
+    }
+}
+
+impl std::ops::Sub for ReverseVariable {
+    type Output = Self;
+
+    fn sub(self, other: Self) -> Self {
+        if self.is_constant() && other.is_constant() {
+            ReverseVariable::constant(self.value - other.value)
+        } else {
+            let result_value = self.value - other.value;
+            let max_index = self.index.max(other.index);
+            ReverseVariable {
+                index: if max_index == usize::MAX { usize::MAX } else { max_index + 1 },
+                value: result_value,
+                grad: 0.0,
+            }
+        }
+    }
+}
+
+impl std::ops::Mul for ReverseVariable {
+    type Output = Self;
+
+    fn mul(self, other: Self) -> Self {
+        if self.is_constant() && other.is_constant() {
+            ReverseVariable::constant(self.value * other.value)
+        } else {
+            let result_value = self.value * other.value;
+            let max_index = self.index.max(other.index);
+            ReverseVariable {
+                index: if max_index == usize::MAX { usize::MAX } else { max_index + 1 },
+                value: result_value,
+                grad: 0.0,
+            }
+        }
+    }
+}
+
+impl std::ops::Div for ReverseVariable {
+    type Output = Self;
+
+    fn div(self, other: Self) -> Self {
+        if self.is_constant() && other.is_constant() {
+            ReverseVariable::constant(self.value / other.value)
+        } else {
+            let result_value = self.value / other.value;
+            let max_index = self.index.max(other.index);
+            ReverseVariable {
+                index: if max_index == usize::MAX { usize::MAX } else { max_index + 1 },
+                value: result_value,
+                grad: 0.0,
+            }
+        }
+    }
+}
+
+impl std::ops::Neg for ReverseVariable {
+    type Output = Self;
+
+    fn neg(self) -> Self {
+        if self.is_constant() {
+            ReverseVariable::constant(-self.value)
+        } else {
+            ReverseVariable {
+                index: self.index,
+                value: -self.value,
+                grad: 0.0,
+            }
+        }
+    }
+}
+
+// Scalar operations
+impl std::ops::Add<f64> for ReverseVariable {
+    type Output = Self;
+
+    fn add(self, scalar: f64) -> Self {
+        ReverseVariable {
+            index: self.index,
+            value: self.value + scalar,
+            grad: self.grad,
+        }
+    }
+}
+
+impl std::ops::Sub<f64> for ReverseVariable {
+    type Output = Self;
+
+    fn sub(self, scalar: f64) -> Self {
+        ReverseVariable {
+            index: self.index,
+            value: self.value - scalar,
+            grad: self.grad,
+        }
+    }
+}
+
+impl std::ops::Mul<f64> for ReverseVariable {
+    type Output = Self;
+
+    fn mul(self, scalar: f64) -> Self {
+        ReverseVariable {
+            index: self.index,
+            value: self.value * scalar,
+            grad: self.grad,
+        }
+    }
+}
+
+impl std::ops::Div<f64> for ReverseVariable {
+    type Output = Self;
+
+    fn div(self, scalar: f64) -> Self {
+        ReverseVariable {
+            index: self.index,
+            value: self.value / scalar,
+            grad: self.grad,
+        }
+    }
+}
+
+// Reverse scalar operations (f64 + ReverseVariable, etc.)
+impl std::ops::Add<ReverseVariable> for f64 {
+    type Output = ReverseVariable;
+
+    fn add(self, var: ReverseVariable) -> ReverseVariable {
+        var + self
+    }
+}
+
+impl std::ops::Sub<ReverseVariable> for f64 {
+    type Output = ReverseVariable;
+
+    fn sub(self, var: ReverseVariable) -> ReverseVariable {
+        ReverseVariable {
+            index: var.index,
+            value: self - var.value,
+            grad: var.grad,
+        }
+    }
+}
+
+impl std::ops::Mul<ReverseVariable> for f64 {
+    type Output = ReverseVariable;
+
+    fn mul(self, var: ReverseVariable) -> ReverseVariable {
+        var * self
+    }
+}
+
+impl std::ops::Div<ReverseVariable> for f64 {
+    type Output = ReverseVariable;
+
+    fn div(self, var: ReverseVariable) -> ReverseVariable {
+        ReverseVariable {
+            index: var.index,
+            value: self / var.value,
+            grad: var.grad,
         }
     }
 }
@@ -324,6 +626,94 @@ pub fn cos(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVari
 
     let result_value = input.value.cos();
     let input_grad = -input.value.sin();
+
+    graph.add_unary_op(input, result_value, input_grad)
+}
+
+/// Tangent operation on computation graph
+pub fn tan(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
+    if input.is_constant() {
+        return ReverseVariable::constant(input.value.tan());
+    }
+
+    let result_value = input.value.tan();
+    let cos_val = input.value.cos();
+    let input_grad = 1.0 / (cos_val * cos_val); // sec²(x) = 1/cos²(x)
+
+    graph.add_unary_op(input, result_value, input_grad)
+}
+
+/// Square root operation on computation graph
+pub fn sqrt(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
+    if input.is_constant() {
+        return ReverseVariable::constant(input.value.sqrt());
+    }
+
+    let result_value = input.value.sqrt();
+    let input_grad = 0.5 / result_value; // d/dx(√x) = 1/(2√x)
+
+    graph.add_unary_op(input, result_value, input_grad)
+}
+
+/// Absolute value operation on computation graph
+pub fn abs(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
+    if input.is_constant() {
+        return ReverseVariable::constant(input.value.abs());
+    }
+
+    let result_value = input.value.abs();
+    let input_grad = if input.value >= 0.0 { 1.0 } else { -1.0 };
+
+    graph.add_unary_op(input, result_value, input_grad)
+}
+
+/// Sigmoid operation on computation graph
+pub fn sigmoid(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
+    if input.is_constant() {
+        let exp_val = (-input.value).exp();
+        return ReverseVariable::constant(1.0 / (1.0 + exp_val));
+    }
+
+    let exp_neg_x = (-input.value).exp();
+    let result_value = 1.0 / (1.0 + exp_neg_x);
+    let input_grad = result_value * (1.0 - result_value); // σ'(x) = σ(x)(1-σ(x))
+
+    graph.add_unary_op(input, result_value, input_grad)
+}
+
+/// Hyperbolic tangent operation on computation graph
+pub fn tanh(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
+    if input.is_constant() {
+        return ReverseVariable::constant(input.value.tanh());
+    }
+
+    let result_value = input.value.tanh();
+    let input_grad = 1.0 - result_value * result_value; // d/dx(tanh(x)) = 1 - tanh²(x)
+
+    graph.add_unary_op(input, result_value, input_grad)
+}
+
+/// ReLU (Rectified Linear Unit) operation on computation graph
+pub fn relu(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
+    if input.is_constant() {
+        return ReverseVariable::constant(input.value.max(0.0));
+    }
+
+    let result_value = input.value.max(0.0);
+    let input_grad = if input.value > 0.0 { 1.0 } else { 0.0 };
+
+    graph.add_unary_op(input, result_value, input_grad)
+}
+
+/// Leaky ReLU operation on computation graph
+pub fn leaky_relu(graph: &mut ComputationGraph, input: &ReverseVariable, alpha: f64) -> ReverseVariable {
+    if input.is_constant() {
+        let result = if input.value > 0.0 { input.value } else { alpha * input.value };
+        return ReverseVariable::constant(result);
+    }
+
+    let result_value = if input.value > 0.0 { input.value } else { alpha * input.value };
+    let input_grad = if input.value > 0.0 { 1.0 } else { alpha };
 
     graph.add_unary_op(input, result_value, input_grad)
 }
@@ -854,5 +1244,174 @@ mod tests {
         graph.zero_gradients();
         graph.backward(&cos_x).unwrap();
         assert_abs_diff_eq!(graph.get_gradient(&x), 0.0, epsilon = 1e-10); // d/dx(cos(x)) = -sin(x) = 0 at x=0
+    }
+
+    #[test]
+    fn test_arithmetic_operations_without_graph() {
+        // Test arithmetic operations that work without explicit graph context
+        let a = ReverseVariable::constant(3.0);
+        let b = ReverseVariable::constant(2.0);
+
+        // Test addition
+        let sum = a.clone() + b.clone();
+        assert_abs_diff_eq!(sum.value, 5.0, epsilon = 1e-10);
+        assert!(sum.is_constant());
+
+        // Test subtraction
+        let diff = a.clone() - b.clone();
+        assert_abs_diff_eq!(diff.value, 1.0, epsilon = 1e-10);
+
+        // Test multiplication
+        let product = a.clone() * b.clone();
+        assert_abs_diff_eq!(product.value, 6.0, epsilon = 1e-10);
+
+        // Test division
+        let quotient = a.clone() / b.clone();
+        assert_abs_diff_eq!(quotient.value, 1.5, epsilon = 1e-10);
+
+        // Test negation
+        let neg_a = -a.clone();
+        assert_abs_diff_eq!(neg_a.value, -3.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_scalar_operations() {
+        let var = ReverseVariable::constant(4.0);
+
+        // Test scalar addition
+        let result = var.clone() + 2.0;
+        assert_abs_diff_eq!(result.value, 6.0, epsilon = 1e-10);
+
+        // Test reverse scalar addition
+        let result = 2.0 + var.clone();
+        assert_abs_diff_eq!(result.value, 6.0, epsilon = 1e-10);
+
+        // Test scalar multiplication
+        let result = var.clone() * 3.0;
+        assert_abs_diff_eq!(result.value, 12.0, epsilon = 1e-10);
+
+        // Test scalar division
+        let result = var.clone() / 2.0;
+        assert_abs_diff_eq!(result.value, 2.0, epsilon = 1e-10);
+
+        // Test reverse scalar division
+        let result = 8.0 / var.clone();
+        assert_abs_diff_eq!(result.value, 2.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_mathematical_functions_without_graph() {
+        let var = ReverseVariable::constant(4.0);
+
+        // Test power
+        let result = var.powi(2);
+        assert_abs_diff_eq!(result.value, 16.0, epsilon = 1e-10);
+
+        // Test square root
+        let result = var.sqrt();
+        assert_abs_diff_eq!(result.value, 2.0, epsilon = 1e-10);
+
+        // Test exponential
+        let var_zero = ReverseVariable::constant(0.0);
+        let result = var_zero.exp();
+        assert_abs_diff_eq!(result.value, 1.0, epsilon = 1e-10);
+
+        // Test natural logarithm
+        let var_e = ReverseVariable::constant(std::f64::consts::E);
+        let result = var_e.ln();
+        assert_abs_diff_eq!(result.value, 1.0, epsilon = 1e-10);
+
+        // Test trigonometric functions
+        let var_zero = ReverseVariable::constant(0.0);
+        assert_abs_diff_eq!(var_zero.sin().value, 0.0, epsilon = 1e-10);
+        assert_abs_diff_eq!(var_zero.cos().value, 1.0, epsilon = 1e-10);
+        assert_abs_diff_eq!(var_zero.tan().value, 0.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_advanced_operations_with_graph() {
+        let mut graph = ComputationGraph::new();
+
+        // Test sigmoid function
+        let x = graph.variable(0.0);
+        let sig = sigmoid(&mut graph, &x);
+        assert_abs_diff_eq!(sig.value, 0.5, epsilon = 1e-10); // sigmoid(0) = 0.5
+
+        graph.backward(&sig).unwrap();
+        assert_abs_diff_eq!(graph.get_gradient(&x), 0.25, epsilon = 1e-10); // sigmoid'(0) = 0.25
+
+        // Test ReLU function
+        graph.zero_gradients();
+        let x_pos = graph.variable(2.0);
+        let relu_pos = relu(&mut graph, &x_pos);
+        assert_abs_diff_eq!(relu_pos.value, 2.0, epsilon = 1e-10);
+
+        graph.backward(&relu_pos).unwrap();
+        assert_abs_diff_eq!(graph.get_gradient(&x_pos), 1.0, epsilon = 1e-10); // ReLU'(2) = 1
+
+        // Test ReLU for negative input
+        let mut graph2 = ComputationGraph::new();
+        let x_neg = graph2.variable(-1.0);
+        let relu_neg = relu(&mut graph2, &x_neg);
+        assert_abs_diff_eq!(relu_neg.value, 0.0, epsilon = 1e-10);
+
+        graph2.backward(&relu_neg).unwrap();
+        assert_abs_diff_eq!(graph2.get_gradient(&x_neg), 0.0, epsilon = 1e-10); // ReLU'(-1) = 0
+    }
+
+    #[test]
+    fn test_leaky_relu() {
+        let mut graph = ComputationGraph::new();
+        
+        // Test Leaky ReLU with positive input
+        let x_pos = graph.variable(2.0);
+        let leaky_pos = leaky_relu(&mut graph, &x_pos, 0.01);
+        assert_abs_diff_eq!(leaky_pos.value, 2.0, epsilon = 1e-10);
+
+        graph.backward(&leaky_pos).unwrap();
+        assert_abs_diff_eq!(graph.get_gradient(&x_pos), 1.0, epsilon = 1e-10);
+
+        // Test Leaky ReLU with negative input
+        let mut graph2 = ComputationGraph::new();
+        let x_neg = graph2.variable(-2.0);
+        let leaky_neg = leaky_relu(&mut graph2, &x_neg, 0.01);
+        assert_abs_diff_eq!(leaky_neg.value, -0.02, epsilon = 1e-10);
+
+        graph2.backward(&leaky_neg).unwrap();
+        assert_abs_diff_eq!(graph2.get_gradient(&x_neg), 0.01, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_complex_expression() {
+        let mut graph = ComputationGraph::new();
+
+        // Test complex expression: f(x, y) = sigmoid(x² + y) * tanh(x - y)
+        let x = graph.variable(1.0);
+        let y = graph.variable(0.5);
+
+        let x_squared = mul(&mut graph, &x, &x);
+        let x_sq_plus_y = add(&mut graph, &x_squared, &y);
+        let sig_term = sigmoid(&mut graph, &x_sq_plus_y);
+
+        let x_minus_y = sub(&mut graph, &x, &y);
+        let tanh_term = tanh(&mut graph, &x_minus_y);
+
+        let result = mul(&mut graph, &sig_term, &tanh_term);
+
+        // Verify the computation produces a reasonable result
+        assert!(result.value.is_finite());
+        assert!(result.value > 0.0); // Both sigmoid and tanh(0.5) are positive
+
+        // Test backpropagation
+        graph.backward(&result).unwrap();
+
+        // Gradients should be finite and non-zero
+        let grad_x = graph.get_gradient(&x);
+        let grad_y = graph.get_gradient(&y);
+        
+        assert!(grad_x.is_finite());
+        assert!(grad_y.is_finite());
+        assert!(grad_x != 0.0);
+        assert!(grad_y != 0.0);
     }
 }

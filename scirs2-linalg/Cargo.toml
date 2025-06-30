@@ -94,3 +94,48 @@ harness = false
 path = "benches/tensor_operations_bench_simple.rs"
 required-features = ["tensor_contraction"]
 
+[[bench]]
+name = "attention_bench"
+harness = false
+path = "benches/attention_bench.rs"
+
+[[bench]]
+name = "comprehensive_decomposition_bench"
+harness = false
+path = "benches/comprehensive_decomposition_bench.rs"
+
+[[bench]]
+name = "comprehensive_solvers_bench"
+harness = false
+path = "benches/comprehensive_solvers_bench.rs"
+
+[[bench]]
+name = "matrix_functions_bench"
+harness = false
+path = "benches/matrix_functions_bench.rs"
+
+[[bench]]
+name = "matrix_operations"
+harness = false
+path = "benches/matrix_operations.rs"
+
+[[bench]]
+name = "perf_opt_bench"
+harness = false
+path = "benches/perf_opt_bench.rs"
+
+[[bench]]
+name = "quantization_bench"
+harness = false
+path = "benches/quantization_bench.rs"
+
+[[bench]]
+name = "quantized_solvers_bench"
+harness = false
+path = "benches/quantized_solvers_bench.rs"
+
+[[bench]]
+name = "scipy_compat_benchmarks"
+harness = false
+path = "benches/scipy_compat_benchmarks.rs"
+

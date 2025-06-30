@@ -11,7 +11,7 @@
 use crate::error::{SignalError, SignalResult};
 use crate::lombscargle::{lombscargle, AutoFreqMethod};
 use crate::lombscargle_enhanced::{lombscargle_enhanced, LombScargleConfig, WindowType};
-use crate::lombscargle_simd::lombscargle_simd;
+use crate::lombscargle_simd::simd_lombscargle;
 use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, NumCast};
 use scirs2_core::simd_ops::PlatformCapabilities;

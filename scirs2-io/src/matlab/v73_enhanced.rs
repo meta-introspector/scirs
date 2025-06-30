@@ -4,7 +4,8 @@
 //! which are based on HDF5 format with MATLAB-specific conventions.
 
 use crate::matlab::MatType;
-use ndarray::ArrayD;
+#[allow(unused_imports)]
+use ndarray::{ArrayD, IxDyn};
 use std::collections::HashMap;
 
 #[cfg(feature = "hdf5")]
@@ -50,7 +51,7 @@ impl Default for V73Features {
 #[derive(Debug, Clone)]
 pub enum ExtendedMatType {
     /// Standard MatType
-    Standard(MatType),
+    Standard(Box<MatType>),
     /// MATLAB table
     Table(MatlabTable),
     /// MATLAB categorical array
@@ -128,6 +129,7 @@ pub struct MatlabObject {
 
 /// Enhanced v7.3 MAT file handler
 pub struct V73MatFile {
+    #[allow(dead_code)]
     features: V73Features,
     #[cfg(feature = "hdf5")]
     compression: Option<CompressionOptions>,
@@ -204,7 +206,7 @@ impl V73MatFile {
         ext_type: &ExtendedMatType,
     ) -> Result<()> {
         match ext_type {
-            ExtendedMatType::Standard(mat_type) => self.write_standard_type(file, name, mat_type),
+            ExtendedMatType::Standard(mat_type) => self.write_standard_type(file, name, &mat_type),
             ExtendedMatType::Table(table) => self.write_table(file, name, table),
             ExtendedMatType::Categorical(cat_array) => {
                 self.write_categorical(file, name, cat_array)

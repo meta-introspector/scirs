@@ -16,9 +16,9 @@
 use ndarray::{Array1, Array2};
 use num_complex::Complex64;
 use scirs2_special::*;
+use std::f64::consts::{E, PI};
 use std::io::{self, Write};
 use std::time::Instant;
-use std::f64::consts::{E, PI};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔬 Computational Methods Laboratory");
@@ -76,7 +76,9 @@ fn precision_and_stability_analysis() -> Result<(), Box<dyn std::error::Error>> 
     println!("\n📏 PRECISION AND STABILITY ANALYSIS");
     println!("====================================\n");
 
-    println!("Understanding numerical precision is crucial for reliable special function computation.");
+    println!(
+        "Understanding numerical precision is crucial for reliable special function computation."
+    );
     println!("We'll analyze condition numbers, error propagation, and numerical stability.\n");
 
     pause_for_user()?;
@@ -92,12 +94,12 @@ fn precision_and_stability_analysis() -> Result<(), Box<dyn std::error::Error>> 
     let x_values = vec![0.1, 1.0, 5.0, 10.0, 20.0];
     println!("x      Γ(x)         κ(Γ,x)      Comments");
     println!("----   ----------   ---------   --------");
-    
+
     for &x in &x_values {
         let gamma_x = gamma(x);
         let digamma_x = digamma(x);
         let condition_number = (x * digamma_x).abs();
-        
+
         let comment = if condition_number > 100.0 {
             "Poor conditioning"
         } else if condition_number > 10.0 {
@@ -105,8 +107,11 @@ fn precision_and_stability_analysis() -> Result<(), Box<dyn std::error::Error>> 
         } else {
             "Good conditioning"
         };
-        
-        println!("{:<4.1}   {:<10.6}   {:<9.2}   {}", x, gamma_x, condition_number, comment);
+
+        println!(
+            "{:<4.1}   {:<10.6}   {:<9.2}   {}",
+            x, gamma_x, condition_number, comment
+        );
     }
     println!();
 
@@ -121,23 +126,28 @@ fn precision_and_stability_analysis() -> Result<(), Box<dyn std::error::Error>> 
 
     let alpha1 = 2.4048255577;
     let delta_values = vec![1e-1, 1e-2, 1e-3, 1e-4, 1e-5];
-    
+
     println!("Distance from zero   |J₀(α₁+δ)|   Condition number");
     println!("-----------------   -----------   ----------------");
-    
+
     for &delta in &delta_values {
         let x = alpha1 + delta;
         let j0_val = bessel::j0(x);
         let j1_val = bessel::j1(x);
-        
+
         // Condition number ≈ |x·J₁(x)/J₀(x)|
         let condition_number = if j0_val.abs() > 1e-15 {
             (x * j1_val / j0_val).abs()
         } else {
             f64::INFINITY
         };
-        
-        println!("{:<17.0e}   {:<11.2e}   {:<16.1e}", delta, j0_val.abs(), condition_number);
+
+        println!(
+            "{:<17.0e}   {:<11.2e}   {:<16.1e}",
+            delta,
+            j0_val.abs(),
+            condition_number
+        );
     }
     println!();
     println!("Near zeros, condition numbers explode → catastrophic cancellation!");
@@ -154,7 +164,7 @@ fn precision_and_stability_analysis() -> Result<(), Box<dyn std::error::Error>> 
     let x_values = vec![3.0, 4.0, 5.0, 6.0];
     println!("x     Direct: erf(x)-1    Stable: -erfc(x)   Relative Error");
     println!("---   ----------------    ----------------   --------------");
-    
+
     for &x in &x_values {
         let direct = erf(x) - 1.0;
         let stable = -erfc(x);
@@ -163,9 +173,11 @@ fn precision_and_stability_analysis() -> Result<(), Box<dyn std::error::Error>> 
         } else {
             0.0
         };
-        
-        println!("{:<3.1}   {:<16.10e}    {:<16.10e}   {:<14.2e}", 
-                x, direct, stable, relative_error);
+
+        println!(
+            "{:<3.1}   {:<16.10e}    {:<16.10e}   {:<14.2e}",
+            x, direct, stable, relative_error
+        );
     }
     println!();
     println!("The stable method avoids catastrophic cancellation!");
@@ -184,11 +196,11 @@ fn precision_and_stability_analysis() -> Result<(), Box<dyn std::error::Error>> 
     println!("Testing Γ(x) for large x (near overflow threshold):");
     println!("x       ln Γ(x)        Γ(x)           Status");
     println!("---     --------       --------       ------");
-    
+
     for &x in &large_x_values {
         let ln_gamma_x = gammaln(x);
         let gamma_x = gamma(x);
-        
+
         let status = if gamma_x.is_infinite() {
             "OVERFLOW"
         } else if gamma_x.is_finite() {
@@ -196,9 +208,11 @@ fn precision_and_stability_analysis() -> Result<(), Box<dyn std::error::Error>> 
         } else {
             "NaN"
         };
-        
-        println!("{:<3.0}     {:<8.2}       {:<8.2e}       {}", 
-                x, ln_gamma_x, gamma_x, status);
+
+        println!(
+            "{:<3.0}     {:<8.2}       {:<8.2e}       {}",
+            x, ln_gamma_x, gamma_x, status
+        );
     }
     println!();
     println!("Use ln Γ(x) for large arguments to avoid overflow!");
@@ -284,11 +298,13 @@ fn algorithm_selection_strategies() -> Result<(), Box<dyn std::error::Error>> {
     let test_points = vec![0.1, 1.0, 3.0, 5.0, 8.0];
     println!("x      erf(x) Method      erfc(x) Method     Speed Ratio");
     println!("---    ------------      --------------     -----------");
-    
+
     for &x in &test_points {
         let (erf_method, erfc_method, speed_ratio) = determine_erf_algorithm(x);
-        println!("{:<3.1}    {:<12}      {:<14}     {:<11.1}x", 
-                x, erf_method, erfc_method, speed_ratio);
+        println!(
+            "{:<3.1}    {:<12}      {:<14}     {:<11.1}x",
+            x, erf_method, erfc_method, speed_ratio
+        );
     }
     println!();
 
@@ -327,12 +343,15 @@ fn performance_benchmarking() -> Result<(), Box<dyn std::error::Error>> {
     // Benchmark basic functions
     let n_iterations = 100_000;
     let test_values: Vec<f64> = (0..1000).map(|i| 0.1 + i as f64 * 0.01).collect();
-    
-    println!("Benchmarking {} evaluations of each function:", n_iterations);
+
+    println!(
+        "Benchmarking {} evaluations of each function:",
+        n_iterations
+    );
     println!();
     println!("Function    Time (ms)   Throughput (Meval/s)   Notes");
     println!("--------    ---------   -------------------   -----");
-    
+
     // Gamma function
     let start = Instant::now();
     for _ in 0..n_iterations {
@@ -342,8 +361,11 @@ fn performance_benchmarking() -> Result<(), Box<dyn std::error::Error>> {
     }
     let gamma_time = start.elapsed().as_millis();
     let gamma_throughput = (n_iterations * 100) as f64 / (gamma_time as f64 / 1000.0) / 1_000_000.0;
-    println!("gamma       {:<9}   {:<19.2}   Fast for x > 0", gamma_time, gamma_throughput);
-    
+    println!(
+        "gamma       {:<9}   {:<19.2}   Fast for x > 0",
+        gamma_time, gamma_throughput
+    );
+
     // Error function
     let start = Instant::now();
     for _ in 0..n_iterations {
@@ -353,8 +375,11 @@ fn performance_benchmarking() -> Result<(), Box<dyn std::error::Error>> {
     }
     let erf_time = start.elapsed().as_millis();
     let erf_throughput = (n_iterations * 100) as f64 / (erf_time as f64 / 1000.0) / 1_000_000.0;
-    println!("erf         {:<9}   {:<19.2}   Rational approx", erf_time, erf_throughput);
-    
+    println!(
+        "erf         {:<9}   {:<19.2}   Rational approx",
+        erf_time, erf_throughput
+    );
+
     // Bessel J0
     let start = Instant::now();
     for _ in 0..n_iterations {
@@ -364,8 +389,11 @@ fn performance_benchmarking() -> Result<(), Box<dyn std::error::Error>> {
     }
     let j0_time = start.elapsed().as_millis();
     let j0_throughput = (n_iterations * 100) as f64 / (j0_time as f64 / 1000.0) / 1_000_000.0;
-    println!("bessel_j0   {:<9}   {:<19.2}   Variable algorithms", j0_time, j0_throughput);
-    
+    println!(
+        "bessel_j0   {:<9}   {:<19.2}   Variable algorithms",
+        j0_time, j0_throughput
+    );
+
     println!();
 
     pause_for_user()?;
@@ -379,10 +407,10 @@ fn performance_benchmarking() -> Result<(), Box<dyn std::error::Error>> {
     println!();
     println!("Size      Scalar (ms)   Vector (ms)   Speedup    Efficiency");
     println!("----      -----------   -----------   -------    ----------");
-    
+
     for &size in &array_sizes {
         let data: Vec<f64> = (0..size).map(|i| 1.0 + i as f64 * 0.01).collect();
-        
+
         // Scalar timing
         let start = Instant::now();
         let mut results = Vec::with_capacity(size);
@@ -390,25 +418,31 @@ fn performance_benchmarking() -> Result<(), Box<dyn std::error::Error>> {
             results.push(gamma(x));
         }
         let scalar_time = start.elapsed().as_millis();
-        
+
         // Vectorized timing (simulated)
         let start = Instant::now();
         let _array = Array1::from(data.clone());
         // Would call vectorized gamma here
         for &x in &data {
-            let _ = gamma(x);  // Placeholder
+            let _ = gamma(x); // Placeholder
         }
         let vector_time = start.elapsed().as_millis();
-        
-        let speedup = if vector_time > 0 { 
-            scalar_time as f64 / vector_time as f64 
-        } else { 
-            1.0 
+
+        let speedup = if vector_time > 0 {
+            scalar_time as f64 / vector_time as f64
+        } else {
+            1.0
         };
         let efficiency = speedup / 4.0; // Assuming 4 SIMD lanes
-        
-        println!("{:<4}      {:<11}   {:<11}   {:<7.2}x   {:<10.1}%", 
-                size, scalar_time, vector_time, speedup, efficiency * 100.0);
+
+        println!(
+            "{:<4}      {:<11}   {:<11}   {:<7.2}x   {:<10.1}%",
+            size,
+            scalar_time,
+            vector_time,
+            speedup,
+            efficiency * 100.0
+        );
     }
     println!();
 
@@ -425,7 +459,7 @@ fn performance_benchmarking() -> Result<(), Box<dyn std::error::Error>> {
     let matrix_data: Vec<f64> = (0..matrix_size * matrix_size)
         .map(|i| 1.0 + (i % 100) as f64 * 0.01)
         .collect();
-    
+
     // Row-major access
     let start = Instant::now();
     for row in 0..matrix_size {
@@ -435,8 +469,8 @@ fn performance_benchmarking() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
     let row_major_time = start.elapsed().as_millis();
-    
-    // Column-major access  
+
+    // Column-major access
     let start = Instant::now();
     for col in 0..matrix_size {
         for row in 0..matrix_size {
@@ -445,11 +479,14 @@ fn performance_benchmarking() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
     let col_major_time = start.elapsed().as_millis();
-    
+
     println!("{}x{} matrix access patterns:", matrix_size, matrix_size);
     println!("Row-major:    {} ms (cache-friendly)", row_major_time);
     println!("Column-major: {} ms (cache-unfriendly)", col_major_time);
-    println!("Slowdown:     {:.1}x", col_major_time as f64 / row_major_time as f64);
+    println!(
+        "Slowdown:     {:.1}x",
+        col_major_time as f64 / row_major_time as f64
+    );
     println!();
 
     pause_for_user()?;
@@ -463,35 +500,44 @@ fn performance_benchmarking() -> Result<(), Box<dyn std::error::Error>> {
     let thread_counts = vec![1, 2, 4, 8];
     let array_size = 100000;
     let data: Vec<f64> = (0..array_size).map(|i| 1.0 + i as f64 * 0.001).collect();
-    
+
     println!("Threads   Time (ms)   Speedup   Efficiency");
     println!("-------   ---------   -------   ----------");
-    
+
     let mut baseline_time = 0;
-    
+
     for &threads in &thread_counts {
         // Simulate parallel computation
         let start = Instant::now();
         let chunk_size = array_size / threads;
-        
+
         // Sequential simulation of parallel work
         for chunk in data.chunks(chunk_size) {
             for &x in chunk {
                 let _ = gamma(x);
             }
         }
-        
+
         let time = start.elapsed().as_millis();
-        
+
         if threads == 1 {
             baseline_time = time;
         }
-        
-        let speedup = if time > 0 { baseline_time as f64 / time as f64 } else { 1.0 };
+
+        let speedup = if time > 0 {
+            baseline_time as f64 / time as f64
+        } else {
+            1.0
+        };
         let efficiency = speedup / threads as f64;
-        
-        println!("{:<7}   {:<9}   {:<7.2}x   {:<10.1}%", 
-                threads, time, speedup, efficiency * 100.0);
+
+        println!(
+            "{:<7}   {:<9}   {:<7.2}x   {:<10.1}%",
+            threads,
+            time,
+            speedup,
+            efficiency * 100.0
+        );
     }
     println!();
 
@@ -515,24 +561,26 @@ fn series_vs_asymptotic_analysis() -> Result<(), Box<dyn std::error::Error>> {
     println!();
     println!("x       Exact ln Γ(x)   Taylor Series   Stirling      Taylor Error   Stirling Error");
     println!("---     -------------   -------------   --------      ------------   --------------");
-    
+
     let test_values = vec![0.5, 1.0, 2.0, 5.0, 10.0, 20.0];
-    
+
     for &x in &test_values {
         let exact = gammaln(x);
-        
+
         // Taylor series around x=1: ln Γ(x) ≈ -γ(x-1) + ½π²/6(x-1)² + ...
         let gamma_const = 0.5772156649; // Euler-Mascheroni constant
         let taylor = -gamma_const * (x - 1.0) + (PI * PI / 12.0) * (x - 1.0).powi(2);
-        
+
         // Stirling's formula
         let stirling = (x - 0.5) * x.ln() - x + 0.5 * (2.0 * PI).ln();
-        
+
         let taylor_error = (exact - taylor).abs();
         let stirling_error = (exact - stirling).abs();
-        
-        println!("{:<3.1}     {:<13.6}   {:<13.6}   {:<8.6}      {:<12.2e}   {:<14.2e}", 
-                x, exact, taylor, stirling, taylor_error, stirling_error);
+
+        println!(
+            "{:<3.1}     {:<13.6}   {:<13.6}   {:<8.6}      {:<12.2e}   {:<14.2e}",
+            x, exact, taylor, stirling, taylor_error, stirling_error
+        );
     }
     println!();
     println!("Taylor series: good near x=1, diverges for large x");
@@ -549,33 +597,35 @@ fn series_vs_asymptotic_analysis() -> Result<(), Box<dyn std::error::Error>> {
     println!();
     println!("x       Exact erf(x)    Series (10 terms)  Cont. Frac.   Series Error   CF Error");
     println!("---     ------------    -----------------  -----------   ------------   --------");
-    
+
     let x_values = vec![0.1, 0.5, 1.0, 2.0, 3.0, 5.0];
-    
+
     for &x in &x_values {
         let exact = erf(x);
-        
+
         // Series expansion: erf(x) = (2/√π) Σ (-1)ⁿ x^(2n+1) / (n!(2n+1))
         let mut series = 0.0;
         let two_over_sqrt_pi = 2.0 / PI.sqrt();
         let x_squared = x * x;
         let mut term = x;
         let mut factorial = 1.0;
-        
+
         for n in 0..10 {
             series += if n % 2 == 0 { term } else { -term } / (2 * n + 1) as f64;
             term *= x_squared / (n + 1) as f64;
         }
         series *= two_over_sqrt_pi;
-        
+
         // Continued fraction for erfc(x) - more complex, using approximation
         let cont_frac = exact; // Placeholder - would implement actual CF
-        
+
         let series_error = (exact - series).abs();
         let cf_error = (exact - cont_frac).abs();
-        
-        println!("{:<3.1}     {:<12.8}    {:<17.8}  {:<11.8}   {:<12.2e}   {:<8.2e}", 
-                x, exact, series, cont_frac, series_error, cf_error);
+
+        println!(
+            "{:<3.1}     {:<12.8}    {:<17.8}  {:<11.8}   {:<12.2e}   {:<8.2e}",
+            x, exact, series, cont_frac, series_error, cf_error
+        );
     }
     println!();
 
@@ -593,21 +643,27 @@ fn series_vs_asymptotic_analysis() -> Result<(), Box<dyn std::error::Error>> {
     println!();
     println!("Method              Terms needed   Accuracy achieved");
     println!("------              ------------   -----------------");
-    
+
     // Series expansion analysis
     let exact_j0 = bessel::j0(x_test);
-    
+
     // Power series: slow convergence for large x
     let terms_needed_series = estimate_series_terms_needed(x_test);
-    println!("Power series        {:<12}   {:<17}", terms_needed_series, "Poor for large x");
-    
+    println!(
+        "Power series        {:<12}   {:<17}",
+        terms_needed_series, "Poor for large x"
+    );
+
     // Asymptotic expansion: good for large x
     let terms_needed_asymptotic = estimate_asymptotic_terms_needed(x_test);
-    println!("Asymptotic          {:<12}   {:<17}", terms_needed_asymptotic, "Excellent");
-    
+    println!(
+        "Asymptotic          {:<12}   {:<17}",
+        terms_needed_asymptotic, "Excellent"
+    );
+
     // Continued fraction: moderate convergence
     println!("Continued fraction  {:<12}   {:<17}", "~20", "Good");
-    
+
     println!();
 
     pause_for_user()?;
@@ -670,24 +726,26 @@ fn continued_fractions_workshop() -> Result<(), Box<dyn std::error::Error>> {
     println!("Demonstrating convergence for erfc(2.0):");
     let x = 2.0;
     let exact_erfc = erfc(x);
-    
+
     println!();
     println!("Convergent   Value           Error          Error reduction");
     println!("----------   -----           -----          ---------------");
-    
+
     let mut convergents = Vec::new();
     let mut previous_error = 1.0;
-    
+
     for n in 1..=10 {
         let cf_value = continued_fraction_erfc_approximation(x, n);
         convergents.push(cf_value);
-        
+
         let error = (exact_erfc - cf_value).abs();
         let error_reduction = if n > 1 { previous_error / error } else { 1.0 };
-        
-        println!("{:<10}   {:<11.8}   {:<11.2e}   {:<15.2}", 
-                n, cf_value, error, error_reduction);
-        
+
+        println!(
+            "{:<10}   {:<11.8}   {:<11.2e}   {:<15.2}",
+            n, cf_value, error, error_reduction
+        );
+
         previous_error = error;
     }
     println!();
@@ -793,10 +851,10 @@ fn simd_and_parallel_optimization() -> Result<(), Box<dyn std::error::Error>> {
     let array_sizes = vec![1000, 10000, 100000];
     println!("Array Size   Scalar Time   Vector Time   Speedup");
     println!("----------   -----------   -----------   -------");
-    
+
     for &size in &array_sizes {
         let data: Vec<f64> = (0..size).map(|i| 1.0 + i as f64 * 0.001).collect();
-        
+
         // Scalar timing
         let start = Instant::now();
         let mut results = Vec::with_capacity(size);
@@ -804,7 +862,7 @@ fn simd_and_parallel_optimization() -> Result<(), Box<dyn std::error::Error>> {
             results.push(gamma(x));
         }
         let scalar_time = start.elapsed().as_micros();
-        
+
         // Simulated vectorized timing (would use actual SIMD)
         let start = Instant::now();
         let chunks: Vec<_> = data.chunks(4).collect(); // AVX processes 4 f64s at once
@@ -814,11 +872,13 @@ fn simd_and_parallel_optimization() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
         let vector_time = start.elapsed().as_micros();
-        
+
         let speedup = scalar_time as f64 / vector_time as f64;
-        
-        println!("{:<10}   {:<11}   {:<11}   {:<7.2}x", 
-                size, scalar_time, vector_time, speedup);
+
+        println!(
+            "{:<10}   {:<11}   {:<11}   {:<7.2}x",
+            size, scalar_time, vector_time, speedup
+        );
     }
     println!();
 
@@ -974,7 +1034,7 @@ fn arbitrary_precision_computing() -> Result<(), Box<dyn std::error::Error>> {
     let precisions = vec![64, 128, 256, 512, 1024];
     println!("Precision   Relative Speed   Memory Usage   Typical Use");
     println!("---------   --------------   ------------   -----------");
-    
+
     for &prec in &precisions {
         let relative_speed = (64.0 / prec as f64).powi(2); // Rough approximation
         let memory_usage = prec / 64;
@@ -984,11 +1044,13 @@ fn arbitrary_precision_computing() -> Result<(), Box<dyn std::error::Error>> {
             256 => "Mathematical research",
             512 => "Number theory",
             1024 => "Ultra-high precision",
-            _ => "Specialized applications"
+            _ => "Specialized applications",
         };
-        
-        println!("{:<9}   {:<14.2}x   {:<12}x   {}", 
-                prec, relative_speed, memory_usage, typical_use);
+
+        println!(
+            "{:<9}   {:<14.2}x   {:<12}x   {}",
+            prec, relative_speed, memory_usage, typical_use
+        );
     }
     println!();
 
@@ -1015,7 +1077,7 @@ fn validation_and_testing_methods() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Function      Test point         Expected value               Status");
     println!("--------      ----------         --------------               ------");
-    
+
     let test_cases = vec![
         ("Γ(1)", 1.0, gamma(1.0), 1.0),
         ("Γ(2)", 2.0, gamma(2.0), 1.0),
@@ -1024,17 +1086,19 @@ fn validation_and_testing_methods() -> Result<(), Box<dyn std::error::Error>> {
         ("erf(∞)", f64::INFINITY, 1.0, 1.0), // Limiting case
         ("J₀(0)", 0.0, bessel::j0(0.0), 1.0),
     ];
-    
+
     for (name, input, computed, expected) in test_cases {
         let error = if expected != 0.0 {
             ((computed - expected) / expected).abs()
         } else {
             computed.abs()
         };
-        
+
         let status = if error < 1e-14 { "PASS" } else { "FAIL" };
-        println!("{:<9}     {:<14.1}     {:<24.15}     {}", 
-                name, input, computed, status);
+        println!(
+            "{:<9}     {:<14.1}     {:<24.15}     {}",
+            name, input, computed, status
+        );
     }
     println!();
 
@@ -1049,23 +1113,34 @@ fn validation_and_testing_methods() -> Result<(), Box<dyn std::error::Error>> {
     println!("Testing Γ(x+1) = x·Γ(x) for random x values:");
     let mut property_tests_passed = 0;
     let mut property_tests_total = 0;
-    
+
     for i in 0..10 {
         let x = 0.1 + i as f64 * 0.37; // Semi-random test points
         let left = gamma(x + 1.0);
         let right = x * gamma(x);
         let relative_error = ((left - right) / left).abs();
-        
+
         property_tests_total += 1;
         if relative_error < 1e-14 {
             property_tests_passed += 1;
         }
-        
+
         let status = if relative_error < 1e-14 { "✓" } else { "✗" };
-        println!("x = {:.3}: Γ({:.3}) = {:.6e}, x·Γ({:.3}) = {:.6e}, error = {:.1e} {}", 
-                x, x + 1.0, left, x, right, relative_error, status);
+        println!(
+            "x = {:.3}: Γ({:.3}) = {:.6e}, x·Γ({:.3}) = {:.6e}, error = {:.1e} {}",
+            x,
+            x + 1.0,
+            left,
+            x,
+            right,
+            relative_error,
+            status
+        );
     }
-    println!("Property tests passed: {}/{}", property_tests_passed, property_tests_total);
+    println!(
+        "Property tests passed: {}/{}",
+        property_tests_passed, property_tests_total
+    );
     println!();
 
     pause_for_user()?;
@@ -1078,7 +1153,7 @@ fn validation_and_testing_methods() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Testing erf(x) - 1 vs -erfc(x) for large x:");
     let large_x_values = vec![3.0, 4.0, 5.0, 6.0, 7.0];
-    
+
     for &x in &large_x_values {
         let method1 = erf(x) - 1.0;
         let method2 = -erfc(x);
@@ -1087,7 +1162,7 @@ fn validation_and_testing_methods() -> Result<(), Box<dyn std::error::Error>> {
         } else {
             0.0
         };
-        
+
         let stability = if relative_diff < 1e-12 {
             "Stable"
         } else if relative_diff < 1e-8 {
@@ -1095,9 +1170,11 @@ fn validation_and_testing_methods() -> Result<(), Box<dyn std::error::Error>> {
         } else {
             "Unstable"
         };
-        
-        println!("x = {:.1}: erf(x)-1 = {:.6e}, -erfc(x) = {:.6e}, diff = {:.1e} ({})", 
-                x, method1, method2, relative_diff, stability);
+
+        println!(
+            "x = {:.1}: erf(x)-1 = {:.6e}, -erfc(x) = {:.6e}, diff = {:.1e} ({})",
+            x, method1, method2, relative_diff, stability
+        );
     }
     println!();
 
@@ -1111,17 +1188,17 @@ fn validation_and_testing_methods() -> Result<(), Box<dyn std::error::Error>> {
 
     let array_size = 10000;
     let test_data: Vec<f64> = (0..array_size).map(|i| 1.0 + i as f64 * 0.001).collect();
-    
+
     println!("Function    Baseline (μs)   Current (μs)   Change     Status");
     println!("--------    -------------   ------------   ------     ------");
-    
+
     // Simulate performance tests
     let functions = vec![
         ("gamma", 1000, measure_gamma_performance(&test_data)),
         ("erf", 800, measure_erf_performance(&test_data)),
         ("j0", 1200, measure_j0_performance(&test_data)),
     ];
-    
+
     for (name, baseline, current) in functions {
         let change = (current as f64 / baseline as f64 - 1.0) * 100.0;
         let status = if change.abs() < 5.0 {
@@ -1131,9 +1208,11 @@ fn validation_and_testing_methods() -> Result<(), Box<dyn std::error::Error>> {
         } else {
             "REGRESSION"
         };
-        
-        println!("{:<8}    {:<13}   {:<12}   {:<6.1}%     {}", 
-                name, baseline, current, change, status);
+
+        println!(
+            "{:<8}    {:<13}   {:<12}   {:<6.1}%     {}",
+            name, baseline, current, change, status
+        );
     }
     println!();
 
@@ -1148,11 +1227,11 @@ fn validation_and_testing_methods() -> Result<(), Box<dyn std::error::Error>> {
     println!("Testing Γ(2.5) across different methods:");
     let x_test = 2.5;
     let exact_result = gamma(x_test);
-    
+
     println!("Implementation       Result              Difference");
     println!("--------------       ------              ----------");
     println!("Our library          {:.15}   baseline", exact_result);
-    
+
     // Simulate other implementations
     let other_implementations = vec![
         ("GSL library", exact_result + 1e-15),
@@ -1160,7 +1239,7 @@ fn validation_and_testing_methods() -> Result<(), Box<dyn std::error::Error>> {
         ("SciPy", exact_result + 5e-16),
         ("MPFR (high-prec)", exact_result),
     ];
-    
+
     for (name, value) in other_implementations {
         let diff = (value - exact_result).abs();
         println!("{:<16}     {:.15}   {:.1e}", name, value, diff);
@@ -1195,7 +1274,7 @@ fn pause_for_user() -> Result<(), Box<dyn std::error::Error>> {
 fn test_gamma_algorithm_regions() -> Result<(), Box<dyn std::error::Error>> {
     println!("Algorithm switching demonstration:");
     let test_points = vec![0.1, 1.0, 5.0, 15.0, 50.0];
-    
+
     for &x in &test_points {
         let algorithm = if x < 1e-9 {
             "Taylor series"
@@ -1206,19 +1285,22 @@ fn test_gamma_algorithm_regions() -> Result<(), Box<dyn std::error::Error>> {
         } else {
             "Asymptotic formula"
         };
-        
+
         let result = gamma(x);
-        println!("x = {:<4.1}: Algorithm = {:<20}, Γ(x) = {:.6e}", x, algorithm, result);
+        println!(
+            "x = {:<4.1}: Algorithm = {:<20}, Γ(x) = {:.6e}",
+            x, algorithm, result
+        );
     }
     println!();
-    
+
     Ok(())
 }
 
 fn demonstrate_bessel_algorithm_selection() -> Result<(), Box<dyn std::error::Error>> {
     println!("Bessel function J₀(x) algorithm selection:");
     let x_values = vec![0.5, 2.0, 10.0, 50.0];
-    
+
     for &x in &x_values {
         let algorithm = if x < 5.0 {
             "Power series"
@@ -1227,12 +1309,15 @@ fn demonstrate_bessel_algorithm_selection() -> Result<(), Box<dyn std::error::Er
         } else {
             "Asymptotic expansion"
         };
-        
+
         let result = bessel::j0(x);
-        println!("x = {:<4.1}: Algorithm = {:<18}, J₀(x) = {:.6e}", x, algorithm, result);
+        println!(
+            "x = {:<4.1}: Algorithm = {:<18}, J₀(x) = {:.6e}",
+            x, algorithm, result
+        );
     }
     println!();
-    
+
     Ok(())
 }
 
@@ -1244,15 +1329,17 @@ fn determine_erf_algorithm(x: f64) -> (&'static str, &'static str, f64) {
     } else {
         "Continued frac"
     };
-    
-    let erfc_method = if x < 2.0 {
-        "1 - erf(x)"
+
+    let erfc_method = if x < 2.0 { "1 - erf(x)" } else { "Direct CF" };
+
+    let speed_ratio = if x < 1.0 {
+        1.0
+    } else if x < 2.0 {
+        1.2
     } else {
-        "Direct CF"
+        2.5
     };
-    
-    let speed_ratio = if x < 1.0 { 1.0 } else if x < 2.0 { 1.2 } else { 2.5 };
-    
+
     (erf_method, erfc_method, speed_ratio)
 }
 
@@ -1260,25 +1347,30 @@ fn demonstrate_adaptive_stirling() -> Result<(), Box<dyn std::error::Error>> {
     println!("Adaptive Stirling series for ln Γ(10):");
     let x = 10.0;
     let exact = gammaln(x);
-    
+
     println!("Terms   Approximation      Error          Converged?");
     println!("-----   -------------      -----          ----------");
-    
+
     for n_terms in 1..=8 {
         let approx = stirling_approximation(x, n_terms);
         let error = (exact - approx).abs();
         let converged = error < 1e-12;
-        
-        println!("{:<5}   {:<13.8}      {:<11.2e}   {}", 
-                n_terms, approx, error, if converged { "Yes" } else { "No" });
-        
+
+        println!(
+            "{:<5}   {:<13.8}      {:<11.2e}   {}",
+            n_terms,
+            approx,
+            error,
+            if converged { "Yes" } else { "No" }
+        );
+
         if converged && n_terms >= 3 {
             println!("Optimal terms: {}", n_terms);
             break;
         }
     }
     println!();
-    
+
     Ok(())
 }
 
@@ -1286,12 +1378,12 @@ fn continued_fraction_erfc_approximation(x: f64, n_terms: usize) -> f64 {
     // Simplified continued fraction for erfc(x)
     // Real implementation would be more sophisticated
     let mut cf = 0.0;
-    
+
     // Backward evaluation
     for i in (1..=n_terms).rev() {
         cf = (i as f64 * 0.5) / (x + cf);
     }
-    
+
     (PI.sqrt()).recip() * (-x * x).exp() / (x + cf)
 }
 
@@ -1304,7 +1396,7 @@ fn demonstrate_k0_convergence() -> Result<(), Box<dyn std::error::Error>> {
     println!("Continued fraction  ~15     Excellent");
     println!("Asymptotic (large x) ~5     Very good");
     println!();
-    
+
     Ok(())
 }
 
@@ -1317,7 +1409,7 @@ fn demonstrate_parallel_strategies() -> Result<(), Box<dyn std::error::Error>> {
     println!("Task parallel    4         320         78%");
     println!("Work stealing    4         260         96%");
     println!();
-    
+
     Ok(())
 }
 
@@ -1330,17 +1422,17 @@ fn analyze_memory_patterns() -> Result<(), Box<dyn std::error::Error>> {
     println!("Random access        High           Poor");
     println!("Blocked access       Low            Excellent");
     println!();
-    
+
     Ok(())
 }
 
 fn demonstrate_high_precision_gamma() -> Result<(), Box<dyn std::error::Error>> {
     println!("High-precision Γ(1/3) computation:");
-    println!("Standard f64: {:.15}", gamma(1.0/3.0));
+    println!("Standard f64: {:.15}", gamma(1.0 / 3.0));
     println!("High precision would show more digits...");
     println!("(Actual implementation would use arbitrary precision library)");
     println!();
-    
+
     Ok(())
 }
 
@@ -1370,18 +1462,18 @@ fn measure_j0_performance(data: &[f64]) -> u128 {
 
 fn stirling_approximation(x: f64, n_terms: usize) -> f64 {
     let mut result = (x - 0.5) * x.ln() - x + 0.5 * (2.0 * PI).ln();
-    
+
     // Add Stirling series terms
     let mut term = 1.0 / (12.0 * x);
     result += term;
-    
+
     if n_terms > 1 {
         term *= -1.0 / (10.0 * x * x);
         result += term;
     }
-    
+
     // Add more terms as needed...
-    
+
     result
 }
 

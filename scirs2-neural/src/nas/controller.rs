@@ -1,7 +1,7 @@
 //! NAS controller for building and managing architectures
 
 use crate::error::Result;
-use crate::layers::Layer;
+use crate::layers::{Layer, ParamLayer};
 use crate::models::sequential::Sequential;
 use crate::nas::{
     architecture_encoding::ArchitectureEncoding,
@@ -84,7 +84,7 @@ impl NASController {
                     let input_size = current_shape.iter().product();
                     let mut rng = rand::rng();
                     model.add_layer(crate::layers::Dense::new(
-                        input_size, *units, None, &mut rng,
+                        input_size, *units, &mut rng,
                     )?);
                     current_shape = vec![*units];
                 }
@@ -893,16 +893,75 @@ impl NASController {
 
     /// Count parameters in a model
     pub fn count_parameters(&self, model: &Sequential<f32>) -> Result<usize> {
-        // Simplified implementation
-        // In practice, would iterate through model layers and count parameters
-        Ok(1_000_000) // Placeholder
+        let mut total_params = 0;
+        
+        for layer in model.layers() {
+            // Try to cast to ParamLayer to count parameters
+            if let Some(param_layer) = layer.as_any().downcast_ref::<dyn ParamLayer<f32>>() {
+                for param in param_layer.get_parameters() {
+                    total_params += param.len();
+                }
+            }
+        }
+        
+        Ok(total_params)
     }
 
     /// Estimate FLOPs for a model
     pub fn estimate_flops(&self, model: &Sequential<f32>, input_shape: &[usize]) -> Result<usize> {
-        // Simplified implementation
-        // In practice, would calculate FLOPs based on operations
-        Ok(100_000_000) // Placeholder
+        let mut total_flops = 0;
+        let mut current_shape = input_shape.to_vec();
+        
+        for layer in model.layers() {
+            let layer_type_str = layer.layer_type();
+            
+            match layer_type_str {
+                "Dense" => {
+                    // Dense layer: input_size * output_size * 2 (multiply-add)
+                    if let Some(param_layer) = layer.as_any().downcast_ref::<dyn ParamLayer<f32>>() {
+                        let params = param_layer.get_parameters();
+                        if !params.is_empty() {
+                            let weight_shape = params[0].shape();
+                            if weight_shape.len() >= 2 {
+                                let flops = weight_shape[0] * weight_shape[1] * 2;
+                                total_flops += flops;
+                                current_shape = vec![weight_shape[0]];
+                            }
+                        }
+                    }
+                }
+                "Conv2D" => {
+                    // Conv2D: output_h * output_w * kernel_h * kernel_w * in_channels * out_channels * 2
+                    if let Some(param_layer) = layer.as_any().downcast_ref::<dyn ParamLayer<f32>>() {
+                        let params = param_layer.get_parameters();
+                        if !params.is_empty() {
+                            let weight_shape = params[0].shape();
+                            if weight_shape.len() >= 4 && current_shape.len() >= 3 {
+                                let out_channels = weight_shape[0];
+                                let in_channels = weight_shape[1];
+                                let kernel_h = weight_shape[2];
+                                let kernel_w = weight_shape[3];
+                                
+                                // Assume stride=1, padding=same for simplicity
+                                let output_h = current_shape[0];
+                                let output_w = current_shape[1];
+                                
+                                let flops = output_h * output_w * kernel_h * kernel_w * in_channels * out_channels * 2;
+                                total_flops += flops;
+                                current_shape = vec![output_h, output_w, out_channels];
+                            }
+                        }
+                    }
+                }
+                _ => {
+                    // Other layers (activations, normalization, etc.) have minimal FLOPs
+                    let elements = current_shape.iter().product::<usize>();
+                    total_flops += elements; // Assume 1 FLOP per element
+                }
+            }
+        }
+        
+        Ok(total_flops)
     }
 
     /// Validate an architecture

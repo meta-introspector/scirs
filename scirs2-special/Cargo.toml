@@ -34,6 +34,7 @@ high-precision = ["rug"]               # Arbitrary precision computations
 python-interop = ["regex"]             # Python interoperability features
 plotting = ["plotters"]                # Visualization and plotting support
 interactive = []                       # Interactive visualization (future feature)
+fast-compile = []                      # Enable fast compilation mode for development
 
 # Optional dependencies for advanced features
 [dependencies.futures]

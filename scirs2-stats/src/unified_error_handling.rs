@@ -7,15 +7,14 @@
 use crate::error::{StatsError, StatsResult};
 use crate::error_diagnostics::{
     generate_global_health_report, get_global_statistics, global_monitor, record_global_error,
-    ErrorMonitor, ErrorOccurrence, HealthReport,
+    ErrorMonitor, HealthReport,
 };
 use crate::error_handling_v2::{
-    EnhancedError, ErrorBuilder, ErrorCode, ErrorContext as ErrorContextV2, RecoverySuggestion,
+    EnhancedError, ErrorBuilder, ErrorCode,
 };
-use crate::error_standardization::{ErrorMessages, RecoverySuggestions, StandardizedErrorReporter};
-use scirs2_core::error::CoreResult;
+use crate::error_standardization::{ErrorMessages, StandardizedErrorReporter};
 use scirs2_core::validation::{
-    check_1d, check_finite, check_not_empty, check_positive, check_probabilities,
+    check_finite, check_not_empty, check_positive,
 };
 use std::sync::Once;
 use std::time::Instant;

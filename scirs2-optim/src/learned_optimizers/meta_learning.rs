@@ -4,14 +4,11 @@
 //! learned optimizers, including MAML, Reptile, Meta-SGD, and other advanced
 //! techniques for few-shot optimization and rapid adaptation.
 
-use ndarray::{s, Array, Array1, Array2, Array3, ArrayBase, Axis, Data, DataMut, Dimension};
+use ndarray::{Array1, Array2, Dimension};
 use num_traits::Float;
-use rand::{thread_rng, Rng};
-use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
-use std::sync::{Arc, Mutex, RwLock};
-use std::time::{Duration, Instant};
+use std::collections::{HashMap, VecDeque};
+use std::time::Instant;
 
-use super::{LearnedOptimizerConfig, LearnedOptimizerMetrics, MetaOptimizationStrategy};
 use crate::error::OptimizerError;
 use crate::optimizers::Optimizer;
 
@@ -128,7 +125,7 @@ pub enum MetaLearningAlgorithm {
     GBML,
 
     /// Meta-Learning with Implicit Gradients
-    iMAML,
+    IMaml,
 
     /// Prototypical Networks
     ProtoNet,
@@ -691,15 +688,15 @@ pub struct QueryEvaluationMetrics<T: Float> {
 }
 
 /// MAML implementation
-pub struct MAMLLearner<T: Float> {
+pub struct MAMLLearner<T: Float, D: Dimension> {
     /// MAML configuration
-    config: MAMLConfig,
+    config: MAMLConfig<T>,
 
     /// Inner loop optimizer
-    inner_optimizer: Box<dyn Optimizer<T> + Send + Sync>,
+    inner_optimizer: Box<dyn Optimizer<T, D> + Send + Sync>,
 
     /// Outer loop optimizer
-    outer_optimizer: Box<dyn Optimizer<T> + Send + Sync>,
+    outer_optimizer: Box<dyn Optimizer<T, D> + Send + Sync>,
 
     /// Gradient computation engine
     gradient_engine: GradientComputationEngine<T>,
@@ -713,15 +710,15 @@ pub struct MAMLLearner<T: Float> {
 
 /// MAML configuration
 #[derive(Debug, Clone)]
-pub struct MAMLConfig {
+pub struct MAMLConfig<T: Float> {
     /// Enable second-order gradients
     pub second_order: bool,
 
     /// Inner learning rate
-    pub inner_lr: f64,
+    pub inner_lr: T,
 
     /// Outer learning rate
-    pub outer_lr: f64,
+    pub outer_lr: T,
 
     /// Number of inner steps
     pub inner_steps: usize,
@@ -934,7 +931,7 @@ pub enum HessianComputationMethod {
     FiniteDifference,
     GaussNewton,
     BFGS,
-    L_BFGS,
+    LBfgs,
 }
 
 /// Hessian-vector product engine
@@ -1014,8 +1011,8 @@ impl<T: Float + Default + Clone + Send + Sync> MetaLearningFramework<T> {
             MetaLearningAlgorithm::MAML => {
                 let maml_config = MAMLConfig {
                     second_order: config.second_order,
-                    inner_lr: config.inner_learning_rate,
-                    outer_lr: config.meta_learning_rate,
+                    inner_lr: T::from(config.inner_learning_rate).unwrap(),
+                    outer_lr: T::from(config.meta_learning_rate).unwrap(),
                     inner_steps: config.inner_steps,
                     allow_unused: true,
                     gradient_clip: Some(config.gradient_clip),
@@ -1027,8 +1024,8 @@ impl<T: Float + Default + Clone + Send + Sync> MetaLearningFramework<T> {
                 // Simplified for now
                 let maml_config = MAMLConfig {
                     second_order: false,
-                    inner_lr: config.inner_learning_rate,
-                    outer_lr: config.meta_learning_rate,
+                    inner_lr: T::from(config.inner_learning_rate).unwrap(),
+                    outer_lr: T::from(config.meta_learning_rate).unwrap(),
                     inner_steps: config.inner_steps,
                     allow_unused: true,
                     gradient_clip: Some(config.gradient_clip),
@@ -1313,10 +1310,10 @@ pub struct MetaLearningStatistics<T: Float> {
 }
 
 // MAML implementation
-impl<T: Float + Default + Clone + Send + Sync> MAMLLearner<T> {
-    pub fn new(config: MAMLConfig) -> Result<Self, OptimizerError> {
-        let inner_optimizer = Box::new(crate::optimizers::SGD::new(config.inner_lr));
-        let outer_optimizer = Box::new(crate::optimizers::SGD::new(config.outer_lr));
+impl<T: Float + Default + Clone + Send + Sync, D: Dimension> MAMLLearner<T, D> {
+    pub fn new(config: MAMLConfig<T>) -> Result<Self, OptimizerError> {
+        let inner_optimizer: Box<dyn Optimizer<T, D> + Send + Sync> = Box::new(crate::optimizers::SGD::new(config.inner_lr));
+        let outer_optimizer: Box<dyn Optimizer<T, D> + Send + Sync> = Box::new(crate::optimizers::SGD::new(config.outer_lr));
         let gradient_engine = GradientComputationEngine::new()?;
         let second_order_engine = if config.second_order {
             Some(SecondOrderGradientEngine::new()?)
@@ -1336,7 +1333,7 @@ impl<T: Float + Default + Clone + Send + Sync> MAMLLearner<T> {
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync> MetaLearner<T> for MAMLLearner<T> {
+impl<T: Float + Default + Clone + Send + Sync, D: Dimension> MetaLearner<T> for MAMLLearner<T, D> {
     fn meta_train_step(
         &mut self,
         task_batch: &[MetaTask<T>],
@@ -1496,7 +1493,7 @@ impl<T: Float + Default + Clone + Send + Sync> MetaLearner<T> for MAMLLearner<T>
     }
 }
 
-impl<T: Float + Default + Clone> MAMLLearner<T> {
+impl<T: Float + Default + Clone, D: Dimension> MAMLLearner<T, D> {
     fn compute_support_loss(
         &self,
         task: &MetaTask<T>,
@@ -1729,8 +1726,8 @@ mod tests {
     fn test_maml_config() {
         let config = MAMLConfig {
             second_order: true,
-            inner_lr: 0.01,
-            outer_lr: 0.001,
+            inner_lr: 0.01f64,
+            outer_lr: 0.001f64,
             inner_steps: 5,
             allow_unused: true,
             gradient_clip: Some(1.0),

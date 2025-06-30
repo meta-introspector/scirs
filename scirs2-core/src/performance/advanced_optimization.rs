@@ -429,12 +429,12 @@ impl AdvancedPerformanceOptimizer {
 
         // Generate initial optimization settings
         let mut initial_settings = self.generate_initial_settings(algorithm, input_size);
-        
+
         // Run micro-benchmarks to refine settings
         if input_size >= 1000 {
             initial_settings = self.run_micro_benchmarks(algorithm, input_size, initial_settings);
         }
-        
+
         initial_settings
     }
 
@@ -506,8 +506,10 @@ impl AdvancedPerformanceOptimizer {
                 if chunk_size > 0 && chunk_size <= input_size {
                     let mut test_settings = settings.clone();
                     test_settings.chunk_size = chunk_size;
-                    
-                    if let Some(performance) = self.benchmark_algorithm(algorithm, input_size, &test_settings) {
+
+                    if let Some(performance) =
+                        self.benchmark_algorithm(algorithm, input_size, &test_settings)
+                    {
                         if performance > best_performance {
                             best_performance = performance;
                             best_settings = test_settings;
@@ -531,8 +533,10 @@ impl AdvancedPerformanceOptimizer {
                 let mut test_settings = settings.clone();
                 test_settings.simd_instruction_set = simd_set;
                 test_settings.use_simd = simd_set != SimdInstructionSet::Scalar;
-                
-                if let Some(performance) = self.benchmark_algorithm(algorithm, input_size, &test_settings) {
+
+                if let Some(performance) =
+                    self.benchmark_algorithm(algorithm, input_size, &test_settings)
+                {
                     if performance > best_performance {
                         best_performance = performance;
                         best_settings = test_settings;
@@ -544,13 +548,15 @@ impl AdvancedPerformanceOptimizer {
         // Test different parallelism settings for large inputs
         if input_size >= self.adaptive_thresholds.parallel_threshold {
             let thread_candidates = [1, 2, 4, self.profile.preferred_parallelism];
-            
+
             for &num_threads in &thread_candidates {
                 if num_threads <= self.profile.cpu_cores {
                     let mut test_settings = best_settings.clone();
                     test_settings.num_threads = num_threads;
-                    
-                    if let Some(performance) = self.benchmark_algorithm(algorithm, input_size, &test_settings) {
+
+                    if let Some(performance) =
+                        self.benchmark_algorithm(algorithm, input_size, &test_settings)
+                    {
                         if performance > best_performance {
                             best_performance = performance;
                             best_settings = test_settings;
@@ -603,9 +609,7 @@ impl AdvancedPerformanceOptimizer {
             "vector_add" | "vector_addition" => {
                 self.benchmark_vector_addition(input_size, settings)
             }
-            "dot_product" | "vector_dot" => {
-                self.benchmark_dot_product(input_size, settings)
-            }
+            "dot_product" | "vector_dot" => self.benchmark_dot_product(input_size, settings),
             "matrix_multiply" | "matrix_multiplication" => {
                 self.benchmark_matrix_multiplication(input_size, settings)
             }
@@ -617,13 +621,17 @@ impl AdvancedPerformanceOptimizer {
     }
 
     /// Benchmark vector addition performance
-    fn benchmark_vector_addition(&self, size: usize, settings: &OptimizationSettings) -> Option<f64> {
+    fn benchmark_vector_addition(
+        &self,
+        size: usize,
+        settings: &OptimizationSettings,
+    ) -> Option<f64> {
         use crate::performance::advanced_optimization::profiling::measure_performance;
-        
+
         // Create test vectors
         let a = Array1::from_elem(size, 1.0f64);
         let b = Array1::from_elem(size, 2.0f64);
-        
+
         // Run benchmark
         let (_, duration, _throughput) = measure_performance(|| {
             if settings.use_simd {
@@ -634,7 +642,7 @@ impl AdvancedPerformanceOptimizer {
                 Ok(a.clone() + b.clone())
             }
         });
-        
+
         // Calculate operations per second
         let ops_per_sec = (size as f64) / duration.as_secs_f64();
         Some(ops_per_sec)
@@ -643,11 +651,11 @@ impl AdvancedPerformanceOptimizer {
     /// Benchmark dot product performance
     fn benchmark_dot_product(&self, size: usize, settings: &OptimizationSettings) -> Option<f64> {
         use crate::performance::advanced_optimization::profiling::measure_performance;
-        
+
         // Create test vectors
         let a = Array1::from_elem(size, 1.0f64);
         let b = Array1::from_elem(size, 2.0f64);
-        
+
         // Run benchmark
         let (_, duration, _) = measure_performance(|| {
             if settings.use_simd {
@@ -661,29 +669,34 @@ impl AdvancedPerformanceOptimizer {
                 Ok(sum)
             }
         });
-        
+
         // Calculate operations per second (multiply-accumulate operations)
         let ops_per_sec = (size as f64) / duration.as_secs_f64();
         Some(ops_per_sec)
     }
 
     /// Benchmark matrix multiplication performance
-    fn benchmark_matrix_multiplication(&self, size: usize, settings: &OptimizationSettings) -> Option<f64> {
+    fn benchmark_matrix_multiplication(
+        &self,
+        size: usize,
+        settings: &OptimizationSettings,
+    ) -> Option<f64> {
         use crate::performance::advanced_optimization::profiling::measure_performance;
-        
+
         // For matrix multiplication, size is the dimension (size x size matrices)
         let dim = (size as f64).sqrt() as usize;
-        if dim == 0 { return None; }
-        
+        if dim == 0 {
+            return None;
+        }
+
         // Create test matrices
         let a = Array2::from_elem((dim, dim), 1.0f64);
         let b = Array2::from_elem((dim, dim), 2.0f64);
-        
+
         // Run benchmark
-        let (result, duration, _) = measure_performance(|| {
-            cache_aware_matrix_multiply(&a, &b, settings)
-        });
-        
+        let (result, duration, _) =
+            measure_performance(|| cache_aware_matrix_multiply(&a, &b, settings));
+
         if result.is_ok() {
             // Calculate FLOPS (floating point operations per second)
             let total_ops = 2 * dim * dim * dim; // 2 * n^3 for matrix multiplication
@@ -695,12 +708,16 @@ impl AdvancedPerformanceOptimizer {
     }
 
     /// Generic benchmark for unknown algorithms
-    fn benchmark_generic_operation(&self, size: usize, _settings: &OptimizationSettings) -> Option<f64> {
+    fn benchmark_generic_operation(
+        &self,
+        size: usize,
+        _settings: &OptimizationSettings,
+    ) -> Option<f64> {
         use crate::performance::advanced_optimization::profiling::measure_performance;
-        
+
         // Simple memory access benchmark
         let data = Array1::from_elem(size, 1.0f64);
-        
+
         let (_, duration, _) = measure_performance(|| {
             let mut sum = 0.0f64;
             for value in data.iter() {
@@ -708,7 +725,7 @@ impl AdvancedPerformanceOptimizer {
             }
             sum
         });
-        
+
         // Calculate memory accesses per second
         let ops_per_sec = (size as f64) / duration.as_secs_f64();
         Some(ops_per_sec)

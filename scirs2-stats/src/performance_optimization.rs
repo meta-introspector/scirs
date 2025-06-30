@@ -4,10 +4,9 @@
 //! SIMD vectorization and parallel processing for the advanced statistical
 //! methods implemented in scirs2-stats.
 
-use crate::error::{StatsError, StatsResult as Result};
-use crate::error_handling_v2::ErrorCode;
+use crate::error::StatsResult as Result;
 use crate::mcmc::{
-    MultipleTryMetropolis, ParallelTempering, ProposalDistribution, TargetDistribution,
+    ProposalDistribution, TargetDistribution,
 };
 use crate::multivariate::{
     CCAResult, CanonicalCorrelationAnalysis, LDAResult, LinearDiscriminantAnalysis,
@@ -17,10 +16,8 @@ use crate::{
     validate_or_error,
 };
 
-use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2, Axis};
-use num_traits::{Float, FromPrimitive, NumCast};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps};
-use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
 /// Performance optimization configuration

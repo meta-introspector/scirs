@@ -34,7 +34,7 @@ impl PositionalEncodingFactory {
     /// # Returns
     ///
     /// * Box containing the positional encoding implementation
-    pub fn create<F: Float + Debug + 'static>(
+    pub fn create<F: Float + Debug + Send + Sync + 'static>(
         encoding_type: PositionalEncodingType,
         max_len: usize,
         d_model: usize,
@@ -54,7 +54,7 @@ impl PositionalEncodingFactory {
 }
 
 /// Trait for positional encoding implementations
-pub trait PositionalEncoding<F: Float + Debug> {
+pub trait PositionalEncoding<F: Float + Debug>: Send + Sync {
     /// Apply positional encoding to input embeddings
     ///
     /// # Arguments
@@ -162,7 +162,7 @@ impl<F: Float + Debug + 'static> SinusoidalPositionalEncoding<F> {
     }
 }
 
-impl<F: Float + Debug + 'static> PositionalEncoding<F> for SinusoidalPositionalEncoding<F> {
+impl<F: Float + Debug + Send + Sync + 'static> PositionalEncoding<F> for SinusoidalPositionalEncoding<F> {
     fn forward(&self, embeddings: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
         if embeddings.ndim() < 2 {
             return Err(NeuralError::InferenceError(
@@ -274,7 +274,7 @@ impl<F: Float + Debug + 'static> LearnedPositionalEncoding<F> {
     }
 }
 
-impl<F: Float + Debug + 'static> PositionalEncoding<F> for LearnedPositionalEncoding<F> {
+impl<F: Float + Debug + Send + Sync + 'static> PositionalEncoding<F> for LearnedPositionalEncoding<F> {
     fn forward(&self, embeddings: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
         if embeddings.ndim() < 2 {
             return Err(NeuralError::InferenceError(
@@ -407,7 +407,7 @@ impl<F: Float + Debug + 'static> RelativePositionalEncoding<F> {
     }
 }
 
-impl<F: Float + Debug + 'static> PositionalEncoding<F> for RelativePositionalEncoding<F> {
+impl<F: Float + Debug + Send + Sync + 'static> PositionalEncoding<F> for RelativePositionalEncoding<F> {
     fn forward(&self, embeddings: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
         if embeddings.ndim() < 2 {
             return Err(NeuralError::InferenceError(

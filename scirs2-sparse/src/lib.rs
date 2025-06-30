@@ -97,6 +97,9 @@ pub use dia_array::DiaArray;
 pub mod bsr_array;
 pub use bsr_array::BsrArray;
 
+pub mod banded_array;
+pub use banded_array::BandedArray;
+
 // Symmetric array formats
 pub mod sym_csr;
 pub use sym_csr::{SymCsrArray, SymCsrMatrix};
@@ -125,6 +128,9 @@ pub use dia::DiaMatrix;
 
 pub mod bsr;
 pub use bsr::BsrMatrix;
+
+pub mod banded;
+pub use banded::BandedMatrix;
 
 // Utility functions
 pub mod utils;
@@ -253,10 +259,18 @@ pub use sym_ops::{
 
 // GPU-accelerated operations
 pub mod gpu_ops;
+pub mod gpu_kernel_execution;
+//pub mod gpu_spmv_implementation; // Temporarily disabled for build fixes
 pub use gpu_ops::{
     gpu_sparse_matvec, gpu_sym_sparse_matvec, AdvancedGpuOps, GpuKernelScheduler, GpuMemoryManager,
     GpuOptions, GpuProfiler, OptimizedGpuOps,
 };
+pub use gpu_kernel_execution::{
+    execute_spmv_kernel, execute_symmetric_spmv_kernel, execute_triangular_solve_kernel,
+    GpuKernelConfig, GpuMemoryManager as GpuKernelMemoryManager, GpuPerformanceProfiler,
+    MemoryStrategy, calculate_adaptive_workgroup_size,
+};
+//pub use gpu_spmv_implementation::GpuSpMV; // Temporarily disabled for build fixes
 
 // Memory-efficient algorithms and patterns
 pub mod memory_efficient;

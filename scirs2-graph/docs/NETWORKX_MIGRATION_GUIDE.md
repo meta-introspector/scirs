@@ -1053,15 +1053,437 @@ let pr = sg.streaming_pagerank(0.85, 1e-6, 1000)?; // 1000 nodes in memory
 let components = sg.streaming_connected_components(5000)?; // 5000 node chunks
 ```
 
+## Migration Strategies for Different Use Cases
+
+### Strategy 1: Gradual Migration (Recommended)
+
+For existing Python codebases, migrate incrementally:
+
+1. **Phase 1**: Migrate computationally expensive algorithms
+   ```python
+   # Keep NetworkX for data loading and basic operations
+   import networkx as nx
+   from scirs2_graph_python import scirs2_pagerank  # Python bindings
+   
+   G = nx.read_edgelist('network.txt')
+   
+   # Use scirs2-graph for expensive computation
+   pagerank_scores = scirs2_pagerank(G.edges(), G.number_of_nodes())
+   
+   # Continue using NetworkX for other operations
+   communities = nx.community.louvain_communities(G)
+   ```
+
+2. **Phase 2**: Migrate data structures for performance-critical paths
+3. **Phase 3**: Full migration to Rust for maximum performance
+
+### Strategy 2: Hybrid Approach
+
+Use both libraries based on strengths:
+
+```python
+# analysis_pipeline.py
+import networkx as nx
+import subprocess
+import json
+
+def run_rust_analysis(edge_file, output_file):
+    """Run Rust analysis as subprocess"""
+    cmd = ["./graph_analyzer", edge_file, output_file]
+    subprocess.run(cmd, check=True)
+    
+    with open(output_file, 'r') as f:
+        return json.load(f)
+
+def hybrid_analysis(edge_file):
+    # Use NetworkX for quick prototyping and data exploration
+    G = nx.read_edgelist(edge_file)
+    basic_stats = {
+        'nodes': G.number_of_nodes(),
+        'edges': G.number_of_edges(),
+        'density': nx.density(G),
+    }
+    
+    # Use scirs2-graph for heavy computation
+    rust_results = run_rust_analysis(edge_file, 'rust_output.json')
+    
+    return {**basic_stats, **rust_results}
+```
+
+### Strategy 3: Full Migration
+
+For new projects or when maximum performance is required:
+
+```rust
+// Complete rewrite in Rust
+use scirs2_graph::prelude::*;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let config = AnalysisConfig::from_file("config.toml")?;
+    let analyzer = GraphAnalyzer::new(config);
+    
+    let results = analyzer.analyze_pipeline(&[
+        "load_graph",
+        "compute_centrality", 
+        "detect_communities",
+        "export_results"
+    ]).await?;
+    
+    println!("Analysis completed: {:?}", results);
+    Ok(())
+}
+```
+
+## Edge Cases and Gotchas
+
+### Floating Point Precision
+
+**NetworkX** may use different floating point precision:
+
+```python
+# NetworkX - may use float64 internally
+pr = nx.pagerank(G, alpha=0.85, tol=1e-10)
+```
+
+**scirs2-graph** - specify precision explicitly:
+
+```rust
+// Use f64 for maximum precision
+let pr: HashMap<usize, f64> = pagerank(&g, 0.85, Some(1e-10))?;
+
+// Or use f32 for memory efficiency  
+let pr: HashMap<usize, f32> = pagerank_f32(&g, 0.85_f32, Some(1e-6_f32))?;
+```
+
+### Random Number Generation
+
+**NetworkX:**
+```python
+# Global random state
+import random
+random.seed(42)
+G = nx.erdos_renyi_graph(100, 0.1)
+```
+
+**scirs2-graph:**
+```rust
+// Explicit RNG management
+use rand::{SeedableRng, rngs::StdRng};
+
+let mut rng = StdRng::seed_from_u64(42);
+let g = erdos_renyi_graph(100, 0.1, &mut rng)?;
+```
+
+### Memory Management Differences
+
+**NetworkX** - automatic garbage collection:
+```python
+def analyze_large_graph():
+    G = nx.read_edgelist('huge_graph.txt')
+    result = nx.pagerank(G)
+    return result  # G automatically freed
+```
+
+**scirs2-graph** - explicit memory management:
+```rust
+fn analyze_large_graph() -> Result<HashMap<usize, f64>, GraphError> {
+    let g = io::read_edgelist("huge_graph.txt", false)?;
+    let result = pagerank(&g, 0.85, None)?;
+    // g automatically dropped here
+    Ok(result)
+}
+
+// For very large graphs, consider streaming
+fn analyze_streaming() -> Result<(), GraphError> {
+    let mut stream = GraphStream::from_file("huge_graph.txt")?;
+    let result = stream.streaming_pagerank(0.85, 1e-6)?;
+    Ok(())  // Constant memory usage
+}
+```
+
+## Integration with Python Ecosystem
+
+### Creating Python Bindings
+
+```rust
+// src/python_bindings.rs
+use pyo3::prelude::*;
+use pyo3::types::PyList;
+use scirs2_graph::*;
+
+#[pyfunction]
+fn py_pagerank(edges: &PyList, num_nodes: usize, damping: f64) -> PyResult<Vec<(usize, f64)>> {
+    let mut g = Graph::new();
+    
+    // Convert Python edge list
+    for item in edges.iter() {
+        let edge: (usize, usize, f64) = item.extract()?;
+        g.add_edge(edge.0, edge.1, edge.2).map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("{}", e))
+        })?;
+    }
+    
+    let result = pagerank(&g, damping, Some(1e-6)).map_err(|e| {
+        PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{}", e))
+    })?;
+    
+    Ok(result.into_iter().collect())
+}
+
+#[pymodule]
+fn scirs2_graph_python(_py: Python, m: &PyModule) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(py_pagerank, m)?)?;
+    Ok(())
+}
+```
+
+### Using from Python
+
+```python
+# Install the Python bindings
+# pip install maturin
+# maturin develop
+
+import scirs2_graph_python as sg
+import networkx as nx
+
+# Load graph with NetworkX
+G = nx.karate_club_graph()
+edges = [(u, v, 1.0) for u, v in G.edges()]
+
+# Compute with Rust
+pagerank_scores = sg.py_pagerank(edges, G.number_of_nodes(), 0.85)
+
+print("Top 5 nodes by PageRank:")
+for node, score in sorted(pagerank_scores, key=lambda x: x[1], reverse=True)[:5]:
+    print(f"Node {node}: {score:.4f}")
+```
+
+## Performance Optimization Techniques
+
+### Memory Pool Usage
+
+```rust
+use scirs2_graph::memory::MemoryPool;
+
+// Pre-allocate memory for better performance
+let pool = MemoryPool::with_capacity(1_000_000); // 1M nodes
+
+let g = Graph::with_pool(pool);
+// Faster node/edge allocation
+```
+
+### SIMD Optimization
+
+```rust
+// Enable SIMD features in Cargo.toml
+// [dependencies]
+// scirs2-graph = { version = "0.1.0-beta.1", features = ["simd"] }
+
+// SIMD operations are automatically used for:
+// - Vector operations in centrality calculations
+// - Matrix operations in spectral algorithms
+// - Parallel reductions
+
+let pr = pagerank_simd(&g, 0.85, None)?; // Uses AVX2 if available
+```
+
+### Custom Data Types
+
+```rust
+// Use custom node/edge types for domain-specific optimization
+#[derive(Clone, Copy, Hash, Eq, PartialEq)]
+struct UserId(u32);
+
+#[derive(Clone, Copy)]
+struct Interaction {
+    weight: f32,
+    timestamp: u64,
+}
+
+let social_graph: Graph<UserId, Interaction> = Graph::new();
+```
+
+## Testing Migration Results
+
+### Numerical Validation Framework
+
+```rust
+use approx::assert_relative_eq;
+
+#[cfg(test)]
+mod migration_tests {
+    use super::*;
+    
+    #[test]
+    fn test_pagerank_matches_networkx() {
+        // Load reference data computed with NetworkX
+        let reference_data = load_networkx_reference("pagerank_karate_club.json");
+        
+        // Compute with scirs2-graph
+        let g = load_karate_club_graph();
+        let pr = pagerank(&g, 0.85, Some(1e-6)).unwrap();
+        
+        // Compare results
+        for (node, expected_score) in reference_data {
+            let actual_score = pr[&node];
+            assert_relative_eq!(actual_score, expected_score, epsilon = 1e-5);
+        }
+    }
+    
+    #[test]
+    fn test_community_detection_quality() {
+        let g = load_test_graph();
+        
+        // Compare modularity scores
+        let nx_modularity = 0.4357; // Pre-computed with NetworkX
+        let communities = louvain_communities(&g).unwrap();
+        let scirs_modularity = modularity_score(&g, &communities).unwrap();
+        
+        // scirs2-graph should achieve equal or better modularity
+        assert!(scirs_modularity >= nx_modularity - 1e-6);
+    }
+}
+```
+
+### Performance Regression Testing
+
+```rust
+use criterion::{criterion_group, criterion_main, Criterion};
+
+fn benchmark_migration_performance(c: &mut Criterion) {
+    let graphs = vec![
+        ("small", erdos_renyi_graph(100, 0.1, None).unwrap()),
+        ("medium", erdos_renyi_graph(1000, 0.01, None).unwrap()),
+        ("large", erdos_renyi_graph(10000, 0.001, None).unwrap()),
+    ];
+    
+    for (name, graph) in graphs {
+        c.bench_function(&format!("pagerank_{}", name), |b| {
+            b.iter(|| pagerank(&graph, 0.85, Some(1e-6)))
+        });
+        
+        c.bench_function(&format!("betweenness_{}", name), |b| {
+            b.iter(|| betweenness_centrality(&graph, true))
+        });
+    }
+}
+
+criterion_group!(benches, benchmark_migration_performance);
+criterion_main!(benches);
+```
+
+## Production Deployment Considerations
+
+### Error Handling and Monitoring
+
+```rust
+use tracing::{info, warn, error, instrument};
+use sentry;
+
+#[instrument(skip(graph))]
+async fn production_analysis(graph: &Graph<usize, f64>) -> Result<AnalysisResults, AnalysisError> {
+    // Set up error context
+    sentry::configure_scope(|scope| {
+        scope.set_tag("graph_nodes", graph.node_count());
+        scope.set_tag("graph_edges", graph.edge_count());
+    });
+    
+    // Memory usage monitoring
+    let initial_memory = get_memory_usage();
+    info!("Starting analysis with {} MB memory", initial_memory);
+    
+    // Run analysis with timeouts
+    let result = tokio::time::timeout(
+        Duration::from_secs(300), // 5 minute timeout
+        run_core_analysis(graph)
+    ).await??;
+    
+    let final_memory = get_memory_usage();
+    info!("Analysis completed, memory delta: {} MB", final_memory - initial_memory);
+    
+    Ok(result)
+}
+```
+
+### Configuration Management
+
+```rust
+// config.toml
+[graph_analysis]
+parallel_threads = 8
+memory_limit_gb = 16
+timeout_seconds = 300
+
+[algorithms]
+pagerank_tolerance = 1e-6
+pagerank_max_iterations = 100
+community_resolution = 1.0
+
+[io]
+batch_size = 10000
+compression = true
+```
+
+```rust
+use serde::{Deserialize, Serialize};
+use config::{Config, ConfigError, File, Environment};
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct GraphAnalysisConfig {
+    pub graph_analysis: GraphSettings,
+    pub algorithms: AlgorithmSettings,
+    pub io: IoSettings,
+}
+
+impl GraphAnalysisConfig {
+    pub fn from_env() -> Result<Self, ConfigError> {
+        let mut s = Config::new();
+        
+        // Default configuration
+        s.set_default("graph_analysis.parallel_threads", num_cpus::get())?;
+        s.set_default("algorithms.pagerank_tolerance", 1e-6)?;
+        
+        // Load from file
+        s.merge(File::with_name("config.toml").required(false))?;
+        
+        // Override with environment variables
+        s.merge(Environment::with_prefix("SCIRS2_GRAPH"))?;
+        
+        s.try_into()
+    }
+}
+```
+
 ## Conclusion
 
 Migrating from NetworkX to scirs2-graph offers significant performance benefits for large-scale graph processing. While there are some API differences and current limitations (like node types), the performance gains and type safety make it an excellent choice for production systems requiring high-performance graph analytics.
 
-Key benefits of migration:
+### Key Benefits of Migration:
 - **10-100x performance improvement** for most algorithms
-- **Parallel processing** built-in
-- **Memory efficiency** through zero-cost abstractions
-- **Type safety** preventing runtime errors
-- **Production-ready** with comprehensive error handling
+- **Parallel processing** built-in with automatic load balancing
+- **Memory efficiency** through zero-cost abstractions and smart memory management
+- **Type safety** preventing runtime errors and catching bugs at compile time
+- **Production-ready** with comprehensive error handling and monitoring capabilities
+- **Interoperability** with Python through bindings for gradual migration
 
-For the latest updates and additional examples, see the [scirs2-graph documentation](https://docs.rs/scirs2-graph).
+### Migration Timeline Recommendations:
+
+**Week 1-2**: Environment setup and proof-of-concept migration
+**Week 3-4**: Core algorithm migration and validation
+**Week 5-6**: Performance optimization and integration testing
+**Week 7-8**: Production deployment and monitoring setup
+
+### Success Metrics:
+- [ ] Performance improvement of at least 5x for core algorithms
+- [ ] Memory usage reduction of at least 30%
+- [ ] Numerical accuracy within 1e-6 of NetworkX results
+- [ ] Zero production incidents related to graph processing
+- [ ] Successful handling of 10x larger graphs than before
+
+For the latest updates, migration tools, and additional examples, see:
+- [scirs2-graph documentation](https://docs.rs/scirs2-graph)
+- [Migration examples repository](https://github.com/scirs2/migration-examples)
+- [Performance benchmarks](https://scirs2.github.io/benchmarks)
+- [Community Discord](https://discord.gg/scirs2) for migration support

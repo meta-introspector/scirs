@@ -485,7 +485,7 @@ impl PerspectiveTransform {
         let mut rng = if let Some(seed) = params.seed {
             StdRng::seed_from_u64(seed)
         } else {
-            StdRng::from_entropy()
+            StdRng::from_rng(&mut rand::rng())
         };
 
         let mut best_transform: Option<PerspectiveTransform> = None;
@@ -1056,20 +1056,20 @@ pub fn detect_quad_simd(src: &DynamicImage, threshold: u8) -> Result<[(f64, f64)
     use crate::feature::sobel_edges;
     use crate::preprocessing::gaussian_blur;
     use ndarray::Array2;
-    use scirs2_core::simd_ops::SimdUnifiedOps;
-
+    
     // Convert to grayscale
     let gray = src.to_luma8();
     let (width, height) = gray.dimensions();
 
     // Convert to array for SIMD processing
     let mut image_array = Array2::zeros((height as usize, width as usize));
-    
+
     // SIMD-accelerated image conversion
+    let gray_ref = &gray;
     let pixels: Vec<f32> = (0..height)
-        .flat_map(|y| (0..width).map(move |x| gray.get_pixel(x, y)[0] as f32))
+        .flat_map(|y| (0..width).map(move |x| gray_ref.get_pixel(x, y)[0] as f32))
         .collect();
-    
+
     // Process in SIMD chunks for better performance
     const CHUNK_SIZE: usize = 16;
     for (chunk_idx, chunk) in pixels.chunks(CHUNK_SIZE).enumerate() {
@@ -1085,14 +1085,15 @@ pub fn detect_quad_simd(src: &DynamicImage, threshold: u8) -> Result<[(f64, f64)
     }
 
     // Apply SIMD-accelerated Gaussian blur for noise reduction
-    let gray_dynamic = DynamicImage::ImageLuma8(gray.clone());
+    let gray_dynamic = DynamicImage::ImageLuma8(gray);
     let blurred = gaussian_blur(&gray_dynamic, 2.0)?;
 
     // Perform SIMD-accelerated edge detection
     let edges = sobel_edges(&blurred, 50.0)?;
 
     // SIMD-accelerated binary thresholding
-    let binary_edges = simd_binary_threshold(&edges, threshold)?;
+    let edges_dynamic = DynamicImage::ImageLuma8(edges);
+    let binary_edges = simd_binary_threshold(&edges_dynamic, threshold)?;
 
     // Find contours using SIMD-optimized algorithms
     let contours = find_contours_simd(&binary_edges)?;
@@ -1144,29 +1145,29 @@ pub fn detect_quad_simd(src: &DynamicImage, threshold: u8) -> Result<[(f64, f64)
 ///
 /// * Result containing binary edge map
 fn simd_binary_threshold(image: &DynamicImage, threshold: u8) -> Result<Array2<f64>> {
-    use scirs2_core::simd_ops::SimdUnifiedOps;
     
     let (width, height) = image.dimensions();
     let threshold_f64 = threshold as f64;
-    
+
     // Extract pixel values into a flat array for SIMD processing
     let pixels: Vec<f64> = (0..height)
         .flat_map(|y| (0..width).map(move |x| image.get_pixel(x, y)[0] as f64))
         .collect();
-    
+
     // SIMD thresholding
     const CHUNK_SIZE: usize = 8; // Process 8 f64 values at once
     let mut binary_pixels = Vec::with_capacity(pixels.len());
-    
+
     for chunk in pixels.chunks(CHUNK_SIZE) {
         let pixel_array = Array1::from_vec(chunk.to_vec());
         let threshold_array = Array1::from_elem(chunk.len(), threshold_f64);
-        
-        // SIMD comparison: pixel > threshold ? 1.0 : 0.0
-        let mask = f64::simd_gt(&pixel_array.view(), &threshold_array.view());
-        binary_pixels.extend(mask.iter());
+
+        // Element-wise comparison: pixel > threshold ? 1.0 : 0.0
+        for (&pixel, &thresh) in pixel_array.iter().zip(threshold_array.iter()) {
+            binary_pixels.push(if pixel > thresh { 1.0 } else { 0.0 });
+        }
     }
-    
+
     // Convert back to 2D array
     let mut binary_image = Array2::zeros((height as usize, width as usize));
     for (i, &pixel) in binary_pixels.iter().enumerate() {
@@ -1176,7 +1177,7 @@ fn simd_binary_threshold(image: &DynamicImage, threshold: u8) -> Result<Array2<f
             binary_image[[y, x]] = pixel;
         }
     }
-    
+
     Ok(binary_image)
 }
 
@@ -1201,12 +1202,12 @@ fn find_contours_simd(binary_image: &Array2<f64>) -> Result<Vec<Vec<(f64, f64)>>
 
     // Process image in blocks for better cache locality
     const BLOCK_SIZE: usize = 64;
-    
+
     for block_y in (1..height - 1).step_by(BLOCK_SIZE) {
         for block_x in (1..width - 1).step_by(BLOCK_SIZE) {
             let end_y = (block_y + BLOCK_SIZE).min(height - 1);
             let end_x = (block_x + BLOCK_SIZE).min(width - 1);
-            
+
             // SIMD-accelerated edge pixel detection within block
             for y in block_y..end_y {
                 for x in block_x..end_x {
@@ -1254,9 +1255,14 @@ fn trace_contour_simd(
 
     // 8-connected neighbors
     let directions = [
-        (-1, -1), (0, -1), (1, -1),
-        (-1,  0),          (1,  0),
-        (-1,  1), (0,  1), (1,  1),
+        (-1, -1),
+        (0, -1),
+        (1, -1),
+        (-1, 0),
+        (1, 0),
+        (-1, 1),
+        (0, 1),
+        (1, 1),
     ];
 
     let (height, width) = binary_image.dim();
@@ -1384,18 +1390,18 @@ fn douglas_peucker_simd(points: &[(f64, f64)], epsilon: f64) -> Vec<(f64, f64)> 
     // SIMD-accelerated distance computation for all points
     let start = points[0];
     let end = points[points.len() - 1];
-    
+
     // Extract coordinates for SIMD processing
-    let x_coords: Vec<f64> = points[1..points.len()-1].iter().map(|p| p.0).collect();
-    let y_coords: Vec<f64> = points[1..points.len()-1].iter().map(|p| p.1).collect();
-    
+    let x_coords: Vec<f64> = points[1..points.len() - 1].iter().map(|p| p.0).collect();
+    let y_coords: Vec<f64> = points[1..points.len() - 1].iter().map(|p| p.1).collect();
+
     if x_coords.is_empty() {
         return vec![start, end];
     }
 
     // SIMD computation of distances
     let distances = point_to_line_distances_simd(&x_coords, &y_coords, start, end);
-    
+
     // Find maximum distance
     let (max_index, max_dist) = distances
         .iter()
@@ -1435,7 +1441,6 @@ fn point_to_line_distances_simd(
     line_start: (f64, f64),
     line_end: (f64, f64),
 ) -> Vec<f64> {
-    use scirs2_core::simd_ops::SimdUnifiedOps;
     
     let n = x_coords.len();
     if n == 0 {
@@ -1452,13 +1457,13 @@ fn point_to_line_distances_simd(
         let y_arr = Array1::from_vec(y_coords.to_vec());
         let x1_arr = Array1::from_elem(n, x1);
         let y1_arr = Array1::from_elem(n, y1);
-        
+
         let dx = f64::simd_sub(&x_arr.view(), &x1_arr.view());
         let dy = f64::simd_sub(&y_arr.view(), &y1_arr.view());
         let dx_sq = f64::simd_mul(&dx.view(), &dx.view());
         let dy_sq = f64::simd_mul(&dy.view(), &dy.view());
         let dist_sq = f64::simd_add(&dx_sq.view(), &dy_sq.view());
-        
+
         return dist_sq.mapv(|d| d.sqrt()).to_vec();
     }
 
@@ -1475,21 +1480,21 @@ fn point_to_line_distances_simd(
     let x2_x1 = f64::simd_sub(&x2_arr.view(), &x1_arr.view());
     let x2_y1 = f64::simd_mul(&x2_arr.view(), &y1_arr.view());
     let y2_x1 = f64::simd_mul(&y2_arr.view(), &x1_arr.view());
-    
+
     let term1 = f64::simd_mul(&y2_y1.view(), &x_arr.view());
     let term2 = f64::simd_mul(&x2_x1.view(), &y_arr.view());
     let term3 = f64::simd_sub(&x2_y1.view(), &y2_x1.view());
-    
+
     let numerator_raw = f64::simd_add(
         &f64::simd_sub(&term1.view(), &term2.view()).view(),
-        &term3.view()
+        &term3.view(),
     );
     let numerator = numerator_raw.mapv(|x| x.abs());
 
     // Denominator is constant for all points
     let denominator = line_length_sq.sqrt();
     let denominator_arr = Array1::from_elem(n, denominator);
-    
+
     let distances = f64::simd_div(&numerator.view(), &denominator_arr.view());
     distances.to_vec()
 }
@@ -1519,7 +1524,7 @@ fn find_corner_points_simd(contour: &[(f64, f64)]) -> Vec<(f64, f64)> {
 
     // SIMD-accelerated curvature computation
     let curvatures = compute_curvatures_simd(contour, window_size);
-    
+
     // Find points with high curvature
     for (i, &curvature) in curvatures.iter().enumerate() {
         if curvature > 0.3 {
@@ -1538,7 +1543,7 @@ fn find_corner_points_simd(contour: &[(f64, f64)]) -> Vec<(f64, f64)> {
                 (i, curvatures.get(contour_idx).copied().unwrap_or(0.0))
             })
             .collect();
-        
+
         corner_curvatures.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
         corners = corner_curvatures
             .into_iter()
@@ -1561,28 +1566,27 @@ fn find_corner_points_simd(contour: &[(f64, f64)]) -> Vec<(f64, f64)> {
 ///
 /// * Vector of curvature values for each point
 fn compute_curvatures_simd(contour: &[(f64, f64)], window_size: usize) -> Vec<f64> {
-    use scirs2_core::simd_ops::SimdUnifiedOps;
     
     let n = contour.len();
     let mut curvatures = vec![0.0; n];
-    
+
     // Process points in SIMD-friendly chunks
     const CHUNK_SIZE: usize = 8;
-    
+
     for chunk_start in (0..n).step_by(CHUNK_SIZE) {
         let chunk_end = (chunk_start + CHUNK_SIZE).min(n);
         let chunk_size = chunk_end - chunk_start;
-        
+
         let mut prev_indices = Vec::with_capacity(chunk_size);
         let mut curr_indices = Vec::with_capacity(chunk_size);
         let mut next_indices = Vec::with_capacity(chunk_size);
-        
+
         for i in chunk_start..chunk_end {
             prev_indices.push((i + n - window_size) % n);
             curr_indices.push(i);
             next_indices.push((i + window_size) % n);
         }
-        
+
         // Extract coordinates for SIMD processing
         let prev_x: Vec<f64> = prev_indices.iter().map(|&i| contour[i].0).collect();
         let prev_y: Vec<f64> = prev_indices.iter().map(|&i| contour[i].1).collect();
@@ -1590,7 +1594,7 @@ fn compute_curvatures_simd(contour: &[(f64, f64)], window_size: usize) -> Vec<f6
         let curr_y: Vec<f64> = curr_indices.iter().map(|&i| contour[i].1).collect();
         let next_x: Vec<f64> = next_indices.iter().map(|&i| contour[i].0).collect();
         let next_y: Vec<f64> = next_indices.iter().map(|&i| contour[i].1).collect();
-        
+
         // SIMD vector calculations
         let prev_x_arr = Array1::from_vec(prev_x);
         let prev_y_arr = Array1::from_vec(prev_y);
@@ -1598,32 +1602,32 @@ fn compute_curvatures_simd(contour: &[(f64, f64)], window_size: usize) -> Vec<f6
         let curr_y_arr = Array1::from_vec(curr_y);
         let next_x_arr = Array1::from_vec(next_x);
         let next_y_arr = Array1::from_vec(next_y);
-        
+
         // Compute vectors v1 = curr - prev, v2 = next - curr
         let v1_x = f64::simd_sub(&curr_x_arr.view(), &prev_x_arr.view());
         let v1_y = f64::simd_sub(&curr_y_arr.view(), &prev_y_arr.view());
         let v2_x = f64::simd_sub(&next_x_arr.view(), &curr_x_arr.view());
         let v2_y = f64::simd_sub(&next_y_arr.view(), &curr_y_arr.view());
-        
+
         // Compute dot products and magnitudes
         let dot_product = f64::simd_add(
             &f64::simd_mul(&v1_x.view(), &v2_x.view()).view(),
-            &f64::simd_mul(&v1_y.view(), &v2_y.view()).view()
+            &f64::simd_mul(&v1_y.view(), &v2_y.view()).view(),
         );
-        
+
         let mag1_sq = f64::simd_add(
             &f64::simd_mul(&v1_x.view(), &v1_x.view()).view(),
-            &f64::simd_mul(&v1_y.view(), &v1_y.view()).view()
+            &f64::simd_mul(&v1_y.view(), &v1_y.view()).view(),
         );
         let mag2_sq = f64::simd_add(
             &f64::simd_mul(&v2_x.view(), &v2_x.view()).view(),
-            &f64::simd_mul(&v2_y.view(), &v2_y.view()).view()
+            &f64::simd_mul(&v2_y.view(), &v2_y.view()).view(),
         );
-        
+
         let mag1 = mag1_sq.mapv(|x| x.sqrt());
         let mag2 = mag2_sq.mapv(|x| x.sqrt());
         let magnitude_product = f64::simd_mul(&mag1.view(), &mag2.view());
-        
+
         // Compute curvature as 1 - |cos(angle)|
         for (i, chunk_idx) in (chunk_start..chunk_end).enumerate() {
             let mag_prod = magnitude_product[i];
@@ -1633,7 +1637,7 @@ fn compute_curvatures_simd(contour: &[(f64, f64)], window_size: usize) -> Vec<f6
             }
         }
     }
-    
+
     curvatures
 }
 
@@ -1647,29 +1651,28 @@ fn compute_curvatures_simd(contour: &[(f64, f64)], window_size: usize) -> Vec<f6
 ///
 /// * Total perimeter length
 fn calculate_perimeter_simd(points: &[(f64, f64)]) -> f64 {
-    use scirs2_core::simd_ops::SimdUnifiedOps;
     
     if points.len() < 2 {
         return 0.0;
     }
 
-    let n = points.len();
-    
+    let _n = points.len();
+
     // Extract coordinates
     let x_coords: Vec<f64> = points.iter().map(|p| p.0).collect();
     let y_coords: Vec<f64> = points.iter().map(|p| p.1).collect();
-    
+
     // Create shifted arrays for next points
     let mut next_x = x_coords.clone();
     let mut next_y = y_coords.clone();
     next_x.rotate_left(1);
     next_y.rotate_left(1);
-    
+
     let curr_x_arr = Array1::from_vec(x_coords);
     let curr_y_arr = Array1::from_vec(y_coords);
     let next_x_arr = Array1::from_vec(next_x);
     let next_y_arr = Array1::from_vec(next_y);
-    
+
     // SIMD computation of distances
     let dx = f64::simd_sub(&next_x_arr.view(), &curr_x_arr.view());
     let dy = f64::simd_sub(&next_y_arr.view(), &curr_y_arr.view());
@@ -1677,7 +1680,7 @@ fn calculate_perimeter_simd(points: &[(f64, f64)]) -> f64 {
     let dy_sq = f64::simd_mul(&dy.view(), &dy.view());
     let dist_sq = f64::simd_add(&dx_sq.view(), &dy_sq.view());
     let distances = dist_sq.mapv(|d| d.sqrt());
-    
+
     distances.sum()
 }
 
@@ -1691,23 +1694,21 @@ fn calculate_perimeter_simd(points: &[(f64, f64)]) -> f64 {
 ///
 /// * Area of the quadrilateral
 fn calculate_quad_area_simd(quad: &[(f64, f64); 4]) -> f64 {
-    use scirs2_core::simd_ops::SimdUnifiedOps;
     
     // Extract coordinates
     let x_coords = Array1::from_vec(vec![quad[0].0, quad[1].0, quad[2].0, quad[3].0]);
     let y_coords = Array1::from_vec(vec![quad[0].1, quad[1].1, quad[2].1, quad[3].1]);
-    
+
     // Create shifted arrays for next points
     let next_x = Array1::from_vec(vec![quad[1].0, quad[2].0, quad[3].0, quad[0].0]);
     let next_y = Array1::from_vec(vec![quad[1].1, quad[2].1, quad[3].1, quad[0].1]);
-    
+
     // SIMD shoelace formula computation
     let cross1 = f64::simd_mul(&x_coords.view(), &next_y.view());
     let cross2 = f64::simd_mul(&next_x.view(), &y_coords.view());
     let cross_diff = f64::simd_sub(&cross1.view(), &cross2.view());
-    
-    let area = cross_diff.sum().abs() / 2.0;
-    area
+
+    cross_diff.sum().abs() / 2.0
 }
 
 /// SIMD-accelerated point ordering for quadrilaterals
@@ -1720,9 +1721,8 @@ fn calculate_quad_area_simd(quad: &[(f64, f64); 4]) -> f64 {
 ///
 /// * Quadrilateral points ordered clockwise from top-left
 fn order_quad_points_simd(quad: [(f64, f64); 4]) -> [(f64, f64); 4] {
-    use scirs2_core::simd_ops::SimdUnifiedOps;
     
-    let mut points = quad.to_vec();
+    let points = quad.to_vec();
 
     // Find centroid using SIMD
     let x_coords = Array1::from_vec(points.iter().map(|p| p.0).collect());
@@ -1733,23 +1733,23 @@ fn order_quad_points_simd(quad: [(f64, f64); 4]) -> [(f64, f64); 4] {
     // Sort points by angle from centroid using SIMD-computed angles
     let centered_x = f64::simd_sub(&x_coords.view(), &Array1::from_elem(4, cx).view());
     let centered_y = f64::simd_sub(&y_coords.view(), &Array1::from_elem(4, cy).view());
-    
+
     let mut angles: Vec<(usize, f64)> = centered_x
         .iter()
         .zip(centered_y.iter())
         .enumerate()
         .map(|(i, (&x, &y))| (i, y.atan2(x)))
         .collect();
-    
+
     angles.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
     let sorted_points: Vec<(f64, f64)> = angles.iter().map(|(i, _)| points[*i]).collect();
 
     // Find the top-left point (minimum x + y) using SIMD
     let sums = f64::simd_add(
         &Array1::from_vec(sorted_points.iter().map(|p| p.0).collect()).view(),
-        &Array1::from_vec(sorted_points.iter().map(|p| p.1).collect()).view()
+        &Array1::from_vec(sorted_points.iter().map(|p| p.1).collect()).view(),
     );
-    
+
     let start_idx = sums
         .iter()
         .enumerate()
@@ -1767,6 +1767,7 @@ fn order_quad_points_simd(quad: [(f64, f64); 4]) -> [(f64, f64); 4] {
 }
 
 /// Find contours in a binary edge image
+#[allow(dead_code)]
 fn find_contours(binary_image: &Array2<f64>) -> Result<Vec<Vec<(f64, f64)>>> {
     let (height, width) = binary_image.dim();
     let mut contours = Vec::new();
@@ -1789,6 +1790,7 @@ fn find_contours(binary_image: &Array2<f64>) -> Result<Vec<Vec<(f64, f64)>>> {
 }
 
 /// Trace a contour starting from a given point
+#[allow(dead_code)]
 fn trace_contour(
     binary_image: &Array2<f64>,
     visited: &mut Array2<bool>,
@@ -1847,6 +1849,7 @@ fn trace_contour(
 }
 
 /// Approximate a polygon contour to a quadrilateral using Douglas-Peucker algorithm
+#[allow(dead_code)]
 fn approximate_polygon_to_quad(contour: &[(f64, f64)]) -> Option<[(f64, f64); 4]> {
     if contour.len() < 4 {
         return None;
@@ -1884,6 +1887,7 @@ fn approximate_polygon_to_quad(contour: &[(f64, f64)]) -> Option<[(f64, f64); 4]
 }
 
 /// Douglas-Peucker algorithm for polygon simplification
+#[allow(dead_code)]
 fn douglas_peucker(points: &[(f64, f64)], epsilon: f64) -> Vec<(f64, f64)> {
     if points.len() < 3 {
         return points.to_vec();
@@ -1921,6 +1925,7 @@ fn douglas_peucker(points: &[(f64, f64)], epsilon: f64) -> Vec<(f64, f64)> {
 }
 
 /// Calculate distance from a point to a line segment
+#[allow(dead_code)]
 fn point_to_line_distance(point: (f64, f64), line_start: (f64, f64), line_end: (f64, f64)) -> f64 {
     let (px, py) = point;
     let (x1, y1) = line_start;
@@ -1941,6 +1946,7 @@ fn point_to_line_distance(point: (f64, f64), line_start: (f64, f64), line_end: (
 }
 
 /// Find corner points in a contour by detecting high curvature points
+#[allow(dead_code)]
 fn find_corner_points(contour: &[(f64, f64)]) -> Vec<(f64, f64)> {
     if contour.len() < 8 {
         return contour.to_vec();
@@ -1976,6 +1982,7 @@ fn find_corner_points(contour: &[(f64, f64)]) -> Vec<(f64, f64)> {
 }
 
 /// Calculate curvature at three consecutive points
+#[allow(dead_code)]
 fn calculate_curvature(p1: (f64, f64), p2: (f64, f64), p3: (f64, f64)) -> f64 {
     let v1 = (p2.0 - p1.0, p2.1 - p1.1);
     let v2 = (p3.0 - p2.0, p3.1 - p2.1);
@@ -1996,6 +2003,7 @@ fn calculate_curvature(p1: (f64, f64), p2: (f64, f64), p3: (f64, f64)) -> f64 {
 }
 
 /// Calculate curvature at a specific point in the contour
+#[allow(dead_code)]
 fn calculate_curvature_at_point(contour: &[(f64, f64)], point: (f64, f64)) -> f64 {
     // Find the closest point in the contour
     let mut closest_idx = 0;
@@ -2017,6 +2025,7 @@ fn calculate_curvature_at_point(contour: &[(f64, f64)], point: (f64, f64)) -> f6
 }
 
 /// Calculate perimeter of a polygon
+#[allow(dead_code)]
 fn calculate_perimeter(points: &[(f64, f64)]) -> f64 {
     if points.len() < 2 {
         return 0.0;
@@ -2035,6 +2044,7 @@ fn calculate_perimeter(points: &[(f64, f64)]) -> f64 {
 }
 
 /// Calculate area of a quadrilateral
+#[allow(dead_code)]
 fn calculate_quad_area(quad: &[(f64, f64); 4]) -> f64 {
     // Using the shoelace formula
     let mut area = 0.0;
@@ -2047,6 +2057,7 @@ fn calculate_quad_area(quad: &[(f64, f64); 4]) -> f64 {
 }
 
 /// Order quadrilateral points clockwise starting from top-left
+#[allow(dead_code)]
 fn order_quad_points(quad: [(f64, f64); 4]) -> [(f64, f64); 4] {
     let mut points = quad.to_vec();
 
@@ -2168,7 +2179,6 @@ fn distance(p1: (f64, f64), p2: (f64, f64)) -> f64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::Array1;
     // Imports for potential future color image support
 
     #[test]

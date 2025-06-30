@@ -758,13 +758,11 @@ impl SimdPatternMatcher {
 
         // Check each candidate position for full pattern match
         for pos in candidate_positions {
-            if pos + pattern_bytes.len() <= text_bytes.len() {
-                if Self::compare_bytes_vectorized(
+            if pos + pattern_bytes.len() <= text_bytes.len() && Self::compare_bytes_vectorized(
                     &text_bytes[pos..pos + pattern_bytes.len()],
                     pattern_bytes,
                 ) {
-                    matches.push(pos);
-                }
+                matches.push(pos);
             }
         }
 
@@ -1469,13 +1467,21 @@ impl SimdParallelProcessor {
 /// Result of text analysis
 #[derive(Debug, Clone)]
 pub struct TextAnalysisResult {
+    /// Number of words in the text
     pub word_count: usize,
+    /// Number of characters in the text
     pub char_count: usize,
+    /// Number of lines in the text
     pub line_count: usize,
+    /// Number of sentences in the text
     pub sentence_count: usize,
+    /// Number of letters in the text
     pub letter_count: usize,
+    /// Number of digits in the text
     pub digit_count: usize,
+    /// Number of spaces in the text
     pub space_count: usize,
+    /// Number of other characters in the text
     pub other_count: usize,
 }
 
@@ -1698,7 +1704,7 @@ mod tests {
         assert_eq!(others, 1); // !
 
         // Test with longer text for SIMD path
-        let long_text = ("abc123 !".repeat(100));
+        let long_text = "abc123 !".repeat(100);
         let (l, d, s, o) = VectorizedStringOps::classify_chars_vectorized(&long_text);
         assert_eq!(l, 300); // 3 letters * 100
         assert_eq!(d, 300); // 3 digits * 100
@@ -1720,7 +1726,7 @@ mod tests {
 
         let long_text = "hello world ".repeat(20);
         let reversed_long = VectorizedStringOps::reverse_vectorized(&long_text);
-        assert_eq!(reversed_long.chars().nth(0), Some(' '));
+        assert_eq!(reversed_long.chars().next(), Some(' '));
         assert_eq!(reversed_long.len(), long_text.len());
     }
 
@@ -1752,7 +1758,7 @@ mod tests {
 
         // Test with longer strings
         let prefix = "common_prefix_";
-        let strings5 = vec![
+        let strings5 = [
             format!("{}test1", prefix),
             format!("{}test2", prefix),
             format!("{}test3", prefix),
@@ -1997,13 +2003,13 @@ mod tests {
         assert_eq!(matrix[0].len(), 4);
 
         // Diagonal should be 1.0
-        for i in 0..4 {
-            assert_eq!(matrix[i][i], 1.0);
+        for (i, row) in matrix.iter().enumerate().take(4) {
+            assert_eq!(row[i], 1.0);
         }
 
         // Matrix should be symmetric
-        for i in 0..4 {
-            for j in 0..4 {
+        for (i, row) in matrix.iter().enumerate().take(4) {
+            for (j, _) in row.iter().enumerate().take(4) {
                 assert_eq!(matrix[i][j], matrix[j][i]);
             }
         }

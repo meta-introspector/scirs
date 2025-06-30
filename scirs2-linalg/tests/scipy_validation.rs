@@ -5,7 +5,7 @@
 //! with the standard scientific computing library.
 
 use approx::assert_abs_diff_eq;
-use ndarray::{array, Array2};
+use ndarray::{array, Array2, s};
 use scirs2_linalg::{cholesky, det, inv, lu, matrix_norm, qr, solve, svd};
 
 const TOLERANCE: f64 = 1e-10;
@@ -123,9 +123,27 @@ fn test_svd_against_scipy() {
         assert!(s[i] >= 0.0, "Singular value {} is negative: {}", i, s[i]);
     }
 
-    // TODO: The SVD reconstruction test is failing - our implementation seems to have issues
-    // with the thin SVD shape handling. This needs to be investigated and fixed.
-    // For now, we've verified that U and V are orthogonal and singular values are non-negative.
+    // Test SVD reconstruction: A = U * S * V^T
+    // Create diagonal matrix from singular values
+    let mut s_matrix = Array2::zeros((s.len(), s.len()));
+    for i in 0..s.len() {
+        s_matrix[[i, i]] = s[i];
+    }
+    
+    // Reconstruct matrix: A = U * S * V^T
+    // Handle shape compatibility for thin SVD
+    let reconstructed = if u.ncols() == s.len() && vt.nrows() == s.len() {
+        u.dot(&s_matrix).dot(&vt)
+    } else {
+        // For thin SVD, we might need to handle shapes differently
+        // Take only the relevant columns/rows
+        let u_thin = u.slice(s![.., ..s.len()]).to_owned();
+        let vt_thin = vt.slice(s![..s.len(), ..]).to_owned();
+        u_thin.dot(&s_matrix).dot(&vt_thin)
+    };
+    
+    // Verify reconstruction within tolerance
+    assert_abs_diff_eq!(reconstructed, a, epsilon = TOLERANCE * 10.0); // Slightly higher tolerance for reconstruction
 }
 
 #[test]

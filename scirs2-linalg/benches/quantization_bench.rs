@@ -2,10 +2,11 @@ use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use ndarray::{Array1, Array2, ArrayView2};
 use scirs2_linalg::quantization::{
     calibration::{calibrate_matrix, CalibrationConfig, CalibrationMethod},
-    quantize_matrix, quantize_vector,
-    simd::{simd_quantized_matmul, simd_quantized_matvec},
-    QuantizationMethod,
+    quantize_matrix, quantize_vector, QuantizationMethod,
 };
+
+#[cfg(feature = "simd")]
+use scirs2_linalg::quantization::simd::{simd_quantized_matmul, simd_quantized_matvec};
 use std::hint::black_box;
 
 // Helper functions to generate test data
@@ -113,6 +114,7 @@ fn bench_quantized_ops(c: &mut Criterion) {
             let qb_clone = qb.clone();
             let qb_params_clone = qb_params.clone();
 
+            #[cfg(feature = "simd")]
             group.bench_with_input(
                 BenchmarkId::new("QuantizedMatMul", &id_string),
                 &size,
@@ -136,6 +138,7 @@ fn bench_quantized_ops(c: &mut Criterion) {
             let qa_clone2 = qa.clone();
             let qa_params_clone2 = qa_params.clone();
 
+            #[cfg(feature = "simd")]
             group.bench_with_input(
                 BenchmarkId::new("QuantizedMatVec", &id_string),
                 &size,

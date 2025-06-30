@@ -1327,7 +1327,7 @@ mod tests {
         assert_eq!(result.dim(), (4, 4));
 
         // Check that values are reasonable
-        assert!(result.iter().all(|&x| x >= 0.0 && x <= 5.0));
+        assert!(result.iter().all(|&x| (0.0..=5.0).contains(&x)));
     }
 
     #[test]
@@ -1363,7 +1363,7 @@ mod tests {
             // Check that tone mapped values are in valid range
             assert!(mapped
                 .iter()
-                .all(|&x| x.is_finite() && x >= 0.0 && x <= 1.0));
+                .all(|&x| x.is_finite() && (0.0..=1.0).contains(&x)));
         }
     }
 }

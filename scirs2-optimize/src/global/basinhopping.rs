@@ -24,7 +24,7 @@ fn enforce_bounds_with_reflection<R: Rng>(rng: &mut R, val: f64, lb: f64, ub: f6
             lb + excess
         } else {
             // If reflection goes beyond upper bound, use random value in range
-            rng.random_range(lb..=ub)
+            rng.gen_range(lb..=ub)
         }
     } else {
         // val > ub, reflect around upper bound
@@ -34,7 +34,7 @@ fn enforce_bounds_with_reflection<R: Rng>(rng: &mut R, val: f64, lb: f64, ub: f6
             ub - excess
         } else {
             // If reflection goes beyond lower bound, use random value in range
-            rng.random_range(lb..=ub)
+            rng.gen_range(lb..=ub)
         }
     }
 }

@@ -9,6 +9,7 @@
 use crate::pde::{PDEError, PDEResult};
 use ndarray::{Array1, Array2};
 use std::collections::HashMap;
+use std::sync::Arc;
 
 /// Represents a point type in the irregular domain
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -32,7 +33,7 @@ pub enum BoundaryCondition {
     /// Robin: alpha*u + beta*du/dn = value
     Robin { alpha: f64, beta: f64, value: f64 },
     /// Custom function-based boundary condition
-    Custom(Box<dyn Fn(f64, f64) -> f64 + Send + Sync>),
+    Custom(Arc<dyn Fn(f64, f64) -> f64 + Send + Sync>),
 }
 
 impl std::fmt::Debug for BoundaryCondition {
@@ -62,9 +63,7 @@ impl Clone for BoundaryCondition {
                 beta: *beta,
                 value: *value,
             },
-            BoundaryCondition::Custom(_) => {
-                panic!("Cannot clone custom boundary condition functions")
-            }
+            BoundaryCondition::Custom(func) => BoundaryCondition::Custom(Arc::clone(func)),
         }
     }
 }

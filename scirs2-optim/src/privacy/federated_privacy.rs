@@ -2511,7 +2511,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
 
     /// Sample clients for federated round
     fn sample_clients(&self, available_clients: &[String]) -> Result<Vec<String>, OptimizerError> {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let target_count = self.config.clients_per_round.min(available_clients.len());
 
         match self.config.sampling_strategy {
@@ -2577,7 +2577,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
 
         // Sample proportionally from each group
         let mut selected = Vec::new();
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         for (_, clients) in device_groups {
             if clients.is_empty() {
@@ -2627,7 +2627,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
         // Sample based on weights
         let total_weight: f64 = client_weights.iter().map(|(_, w)| w).sum();
         let mut selected = Vec::new();
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         for _ in 0..target_count {
             if client_weights.is_empty() {
@@ -2658,7 +2658,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
         // Ensure representation from different clusters/groups
         let mut selected = Vec::new();
         let mut remaining_clients = available_clients.to_vec();
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         // First, ensure at least one client from each major cluster
         let clusters = self.get_client_clusters(&remaining_clients);
@@ -4410,7 +4410,7 @@ pub mod secure_aggregation_protocols {
     impl SecureKeyManager {
         fn new() -> Result<Self, OptimizerError> {
             let mut master_key = [0u8; 32];
-            rand::thread_rng().fill(&mut master_key);
+            rand::rng().fill(&mut master_key);
 
             Ok(Self {
                 master_key,
@@ -4951,7 +4951,7 @@ impl<T: Float + Default + Clone + Send + Sync> CompressionEngine<T> {
         gradients: &Array1<T>,
         sparsity_ratio: f64,
     ) -> Result<(Array1<T>, f64), OptimizerError> {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let keep_probability = 1.0 - sparsity_ratio;
 
         let sparse_gradients = gradients.mapv(|x| {

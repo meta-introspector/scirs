@@ -12,7 +12,7 @@ categories = ["science", "data-structures", "algorithms"]
 [dependencies]
 # Core dependencies
 ndarray = { workspace = true }
-scirs2-core = { workspace = true, features = ["cache"] }
+scirs2-core = { workspace = true, features = ["cache", "random", "gpu", "parallel"] }
 rand = { workspace = true }
 rand_distr = { workspace = true }
 thiserror = { workspace = true }

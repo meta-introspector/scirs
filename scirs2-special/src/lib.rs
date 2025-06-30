@@ -86,6 +86,8 @@ mod extended_property_tests;
 mod fresnel;
 mod gamma;
 #[cfg(feature = "gpu")]
+pub mod gpu_context_manager;
+#[cfg(feature = "gpu")]
 pub mod gpu_ops;
 mod hypergeometric;
 mod incomplete_gamma;
@@ -98,6 +100,7 @@ pub mod memory_efficient;
 pub mod optimizations;
 mod orthogonal;
 mod parabolic;
+pub mod performance_benchmarks;
 pub mod physics_engineering;
 pub mod precision;
 mod property_tests;

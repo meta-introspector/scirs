@@ -6,7 +6,7 @@
 pub mod integration;
 
 use crate::IntegrateFloat;
-use ndarray::Array2;
+use ndarray::{Array1, Array2};
 use std::fmt::Debug;
 use std::marker::PhantomData;
 
@@ -378,20 +378,32 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
     }
 
     /// Estimate stiffness ratio using eigenvalues of the Jacobian
-    pub fn estimate_stiffness_from_jacobian(&mut self, _jacobian: &Array2<F>) -> F {
-        // In a real implementation, we would:
-        // 1. Estimate eigenvalues of the Jacobian (or their bounds)
-        // 2. Calculate stiffness ratio as max(abs(eigenvalues))/min(abs(eigenvalues))
-        // 3. Update stiffness indicators based on this ratio
+    pub fn estimate_stiffness_from_jacobian(&mut self, jacobian: &Array2<F>) -> F {
+        // Estimate the largest and smallest eigenvalues to compute stiffness ratio
+        // For efficiency, we use power iteration methods rather than full eigenvalue decomposition
 
-        // For now, this is a placeholder that doesn't actually compute eigenvalues
-        // In practice, for large systems we might use methods like power iteration
-        // to estimate the largest and smallest eigenvalues
+        let n = jacobian.nrows();
+        if n == 0 {
+            return F::one();
+        }
 
-        // Dummy implementation - in reality need eigenvalue computation
-        let stiffness_ratio = F::from_f64(10.0).unwrap(); // placeholder
+        // Estimate largest eigenvalue magnitude using power iteration
+        let max_eigenval_magnitude = self.estimate_largest_eigenvalue_magnitude(jacobian);
+
+        // Estimate smallest eigenvalue magnitude using inverse power iteration
+        let min_eigenval_magnitude = self.estimate_smallest_eigenvalue_magnitude(jacobian);
+
+        // Compute stiffness ratio: ratio of largest to smallest eigenvalue magnitudes
+        let stiffness_ratio = if min_eigenval_magnitude > F::from_f64(1e-14).unwrap() {
+            max_eigenval_magnitude / min_eigenval_magnitude
+        } else {
+            // If minimum eigenvalue is too small, treat as very stiff
+            F::from_f64(1e6).unwrap()
+        };
+
         self.stiffness_ratio = stiffness_ratio;
 
+        // Update stiffness indicators based on the computed ratio
         if stiffness_ratio > F::from_f64(100.0).unwrap() {
             self.stiffness_indicators += 1;
         } else if stiffness_ratio < F::from_f64(10.0).unwrap() {
@@ -399,6 +411,133 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
         }
 
         stiffness_ratio
+    }
+
+    /// Estimate the largest eigenvalue magnitude using power iteration
+    fn estimate_largest_eigenvalue_magnitude(&self, jacobian: &Array2<F>) -> F {
+        let n = jacobian.nrows();
+        let max_iterations = 20;
+        let tolerance = F::from_f64(1e-6).unwrap();
+
+        // Initialize with random vector
+        let mut v = Array1::<F>::from_elem(n, F::one());
+
+        // Normalize
+        let mut norm = (v.dot(&v)).sqrt();
+        if norm > F::from_f64(1e-14).unwrap() {
+            v = &v / norm;
+        }
+
+        let mut eigenvalue = F::zero();
+
+        for _ in 0..max_iterations {
+            // Multiply by matrix: v_new = A * v
+            let mut v_new = Array1::<F>::zeros(n);
+            for i in 0..n {
+                for j in 0..n {
+                    v_new[i] += jacobian[[i, j]] * v[j];
+                }
+            }
+
+            // Compute Rayleigh quotient: eigenvalue = v^T * A * v / v^T * v
+            let new_eigenvalue = v.dot(&v_new);
+
+            // Normalize v_new
+            norm = (v_new.dot(&v_new)).sqrt();
+            if norm > F::from_f64(1e-14).unwrap() {
+                v_new = &v_new / norm;
+            }
+
+            // Check convergence
+            if (new_eigenvalue - eigenvalue).abs() < tolerance {
+                eigenvalue = new_eigenvalue;
+                break;
+            }
+
+            eigenvalue = new_eigenvalue;
+            v = v_new;
+        }
+
+        eigenvalue.abs()
+    }
+
+    /// Estimate the smallest eigenvalue magnitude using inverse power iteration
+    fn estimate_smallest_eigenvalue_magnitude(&self, jacobian: &Array2<F>) -> F {
+        let n = jacobian.nrows();
+        let max_iterations = 20;
+        let tolerance = F::from_f64(1e-6).unwrap();
+
+        // For smallest eigenvalue, we use inverse iteration
+        // We need to solve (A - sigma*I) * v_new = v where sigma is a shift
+        // For simplicity, we use sigma = 0 (pure inverse iteration)
+
+        // Create A matrix for LU decomposition (we'll approximate with A itself)
+        let mut a_copy = jacobian.clone();
+
+        // Add small diagonal regularization to avoid singularity
+        let regularization = F::from_f64(1e-12).unwrap();
+        for i in 0..n {
+            a_copy[[i, i]] += regularization;
+        }
+
+        // Initialize with random vector
+        let mut v = Array1::<F>::from_elem(n, F::one());
+
+        // Normalize
+        let mut norm = (v.dot(&v)).sqrt();
+        if norm > F::from_f64(1e-14).unwrap() {
+            v = &v / norm;
+        }
+
+        let mut eigenvalue = F::zero();
+
+        for _ in 0..max_iterations {
+            // Solve A * v_new = v (inverse iteration step)
+            // For simplicity, we approximate this with a few Richardson iterations
+            let mut v_new = v.clone();
+            let damping = F::from_f64(0.1).unwrap();
+
+            // Richardson iteration: v_new = v_new - damping * (A * v_new - v)
+            for _ in 0..5 {
+                let mut av = Array1::<F>::zeros(n);
+                for i in 0..n {
+                    for j in 0..n {
+                        av[i] += a_copy[[i, j]] * v_new[j];
+                    }
+                }
+
+                for i in 0..n {
+                    v_new[i] -= damping * (av[i] - v[i]);
+                }
+            }
+
+            // Compute Rayleigh quotient
+            let mut av_new = Array1::<F>::zeros(n);
+            for i in 0..n {
+                for j in 0..n {
+                    av_new[i] += jacobian[[i, j]] * v_new[j];
+                }
+            }
+
+            let new_eigenvalue = v_new.dot(&av_new) / v_new.dot(&v_new);
+
+            // Normalize v_new
+            norm = (v_new.dot(&v_new)).sqrt();
+            if norm > F::from_f64(1e-14).unwrap() {
+                v_new = &v_new / norm;
+            }
+
+            // Check convergence
+            if (new_eigenvalue - eigenvalue).abs() < tolerance {
+                eigenvalue = new_eigenvalue;
+                break;
+            }
+
+            eigenvalue = new_eigenvalue;
+            v = v_new;
+        }
+
+        eigenvalue.abs()
     }
 }
 

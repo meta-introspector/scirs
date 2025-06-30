@@ -240,8 +240,6 @@ impl ChunkedArrayWriter {
 /// Out-of-core normalizer implementation
 pub struct OutOfCoreNormalizer {
     method: NormalizationMethod,
-    #[allow(dead_code)]
-    axis: usize,
     // Statistics computed during fit
     stats: Option<NormalizationStats>,
 }
@@ -252,19 +250,16 @@ struct NormalizationStats {
     max: Array1<f64>,
     mean: Array1<f64>,
     std: Array1<f64>,
-    #[allow(dead_code)]
     median: Array1<f64>,
-    #[allow(dead_code)]
     iqr: Array1<f64>,
     count: usize,
 }
 
 impl OutOfCoreNormalizer {
     /// Create a new out-of-core normalizer
-    pub fn new(method: NormalizationMethod, axis: usize) -> Self {
+    pub fn new(method: NormalizationMethod) -> Self {
         OutOfCoreNormalizer {
             method,
-            axis,
             stats: None,
         }
     }
@@ -657,7 +652,7 @@ mod tests {
         let chunks = data.into_iter().map(|chunk| Ok(chunk));
 
         // Fit robust normalizer
-        let mut normalizer = OutOfCoreNormalizer::new(NormalizationMethod::Robust, 0);
+        let mut normalizer = OutOfCoreNormalizer::new(NormalizationMethod::Robust);
         normalizer.fit_chunks(chunks).unwrap();
 
         // Check that statistics were computed
@@ -685,7 +680,7 @@ mod tests {
             Array::from_shape_vec((1, 1), vec![5.0]).unwrap(),
         ];
 
-        let mut normalizer = OutOfCoreNormalizer::new(NormalizationMethod::Robust, 0);
+        let mut normalizer = OutOfCoreNormalizer::new(NormalizationMethod::Robust);
         normalizer
             .fit_chunks(fit_data.into_iter().map(|chunk| Ok(chunk)))
             .unwrap();
@@ -699,7 +694,7 @@ mod tests {
 
     #[test]
     fn test_out_of_core_normalizer_not_fitted() {
-        let normalizer = OutOfCoreNormalizer::new(NormalizationMethod::Robust, 0);
+        let normalizer = OutOfCoreNormalizer::new(NormalizationMethod::Robust);
         let data = vec![Array::zeros((2, 2))];
 
         let result = normalizer.transform_chunks(data.into_iter().map(|chunk| Ok(chunk)));
@@ -709,7 +704,7 @@ mod tests {
 
     #[test]
     fn test_out_of_core_empty_chunks() {
-        let mut normalizer = OutOfCoreNormalizer::new(NormalizationMethod::Robust, 0);
+        let mut normalizer = OutOfCoreNormalizer::new(NormalizationMethod::Robust);
         let empty_chunks: Vec<Result<Array2<f64>>> = vec![];
 
         let result = normalizer.fit_chunks(empty_chunks.into_iter());

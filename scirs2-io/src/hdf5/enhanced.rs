@@ -8,6 +8,9 @@
 //! - Thread-safe operations
 //! - Advanced chunking strategies
 
+#![allow(dead_code)]
+#![allow(missing_docs)]
+
 use crate::error::{IoError, Result};
 use crate::hdf5::{CompressionOptions, DatasetOptions, FileMode, HDF5File};
 #[cfg(feature = "hdf5")]
@@ -784,7 +787,7 @@ pub enum AttributeValue {
 }
 
 /// Scientific metadata container
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ScientificMetadata {
     /// Standard attributes
     pub attributes: BTreeMap<String, AttributeValue>,
@@ -836,21 +839,6 @@ pub struct ProvenanceInfo {
     pub input_files: Vec<String>,
 }
 
-impl Default for ScientificMetadata {
-    fn default() -> Self {
-        Self {
-            attributes: BTreeMap::new(),
-            units: None,
-            scale_factor: None,
-            add_offset: None,
-            fill_value: None,
-            valid_range: None,
-            calibration: None,
-            provenance: None,
-        }
-    }
-}
-
 impl ScientificMetadata {
     /// Create new scientific metadata
     pub fn new() -> Self {
@@ -898,7 +886,7 @@ impl ScientificMetadata {
 }
 
 /// Performance monitoring for HDF5 operations
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct HDF5PerformanceMonitor {
     /// Operation timings
     pub timings: BTreeMap<String, Vec<f64>>,
@@ -938,17 +926,6 @@ pub struct MemoryStats {
     pub deallocation_count: usize,
 }
 
-impl Default for HDF5PerformanceMonitor {
-    fn default() -> Self {
-        Self {
-            timings: BTreeMap::new(),
-            transfer_stats: TransferStats::default(),
-            memory_stats: MemoryStats::default(),
-            compression_efficiency: Vec::new(),
-        }
-    }
-}
-
 impl HDF5PerformanceMonitor {
     /// Create a new performance monitor
     pub fn new() -> Self {
@@ -959,7 +936,7 @@ impl HDF5PerformanceMonitor {
     pub fn record_timing(&mut self, operation: &str, duration_ms: f64) {
         self.timings
             .entry(operation.to_string())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(duration_ms);
     }
 
@@ -1150,8 +1127,8 @@ impl AccessPatternAnalyzer {
                     self.recommendations.push(LayoutOptimization::ColumnMajor);
                 } else {
                     // Mixed access - recommend tiled layout
-                    let tile_width = col_size.max(64).min(512);
-                    let tile_height = row_size.max(64).min(512);
+                    let tile_width = col_size.clamp(64, 512);
+                    let tile_height = row_size.clamp(64, 512);
                     self.recommendations.push(LayoutOptimization::Tiled {
                         tile_width,
                         tile_height,
@@ -1161,7 +1138,7 @@ impl AccessPatternAnalyzer {
                 // Multi-dimensional data - recommend chunked layout
                 let optimal_chunks: Vec<usize> = most_common_region
                     .iter()
-                    .map(|(_, size)| size.max(&64).min(&1024))
+                    .map(|(_, size)| size.clamp(&64, &1024))
                     .cloned()
                     .collect();
                 self.recommendations

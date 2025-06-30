@@ -560,10 +560,10 @@ where
         // Solve the system for coefficients
         #[cfg(feature = "linalg")]
         let coefficients = {
-            use ndarray_linalg::Solve;
+            use scirs2_linalg::solve;
             let xtx_f64 = xtx.mapv(|x| x.to_f64().unwrap());
             let xty_f64 = xty.mapv(|x| x.to_f64().unwrap());
-            match xtx_f64.solve(&xty_f64) {
+            match solve(&xtx_f64.view(), &xty_f64.view(), None) {
                 Ok(c) => c.mapv(|x| F::from_f64(x).unwrap()),
                 Err(_) => {
                     // Fallback: use local weighted mean for numerical stability
@@ -622,9 +622,9 @@ where
         // Try to compute the inverse of X'WX
         #[cfg(feature = "linalg")]
         let xtx_inv = {
-            use ndarray_linalg::Inverse;
+            use scirs2_linalg::inv;
             let xtx_f64 = xtx.mapv(|x| x.to_f64().unwrap());
-            match xtx_f64.inv() {
+            match inv(&xtx_f64.view(), None) {
                 Ok(inv) => inv.mapv(|x| F::from_f64(x).unwrap()),
                 Err(_) => {
                     // If inversion fails, return a simpler result without diagnostics

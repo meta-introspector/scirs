@@ -234,8 +234,9 @@ pub use self::matrix_factorization::{
     cur_decomposition, interpolative_decomposition, nmf, rank_revealing_qr, utv_decomposition,
 };
 pub use self::matrix_functions::{
-    acosm, asinm, atanm, coshm, cosm, expm, logm, logm_parallel, signm, sinhm, sinm, sqrtm,
-    sqrtm_parallel, tanhm, tanm,
+    acosm, asinm, atanm, coshm, cosm, expm, geometric_mean_spd, logm, logm_parallel, nuclear_norm,
+    signm, sinhm, sinm, spectral_condition_number, spectral_radius, sqrtm, sqrtm_parallel, tanhm,
+    tanm, tikhonov_regularization,
 };
 pub use self::matrixfree::{
     block_diagonal_operator, conjugate_gradient as matrix_free_conjugate_gradient,
@@ -359,8 +360,10 @@ pub mod prelude {
         interpolative_decomposition, nmf, rank_revealing_qr, utv_decomposition,
     };
     pub use super::matrix_functions::{
-        acosm, asinm, atanm, coshm, cosm, expm, logm, logm_parallel, matrix_power, signm, sinhm,
-        sinm, sqrtm, sqrtm_parallel, tanhm, tanm,
+        acosm, asinm, atanm, coshm, cosm, expm, geometric_mean_spd, logm, logm_parallel,
+        matrix_power, nuclear_norm, polar_decomposition, signm, sinhm, sinm,
+        spectral_condition_number, spectral_radius, sqrtm, sqrtm_parallel, tanhm, tanm,
+        tikhonov_regularization,
     };
     pub use super::matrixfree::{
         block_diagonal_operator, conjugate_gradient as matrix_free_conjugate_gradient,

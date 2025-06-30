@@ -517,7 +517,7 @@ where
         .unwrap_or(false);
 
     // Function value at x for reference
-    let f0 = func(x);
+    let _f0 = func(x);
 
     if parallel {
         // Parallel implementation using complex step method

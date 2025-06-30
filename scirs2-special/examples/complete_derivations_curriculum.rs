@@ -10,7 +10,7 @@
 //! - Connections to other mathematical concepts
 //! - Interactive verification and exploration
 //!
-//! 
+//!
 //! This is the most comprehensive educational tool for learning special function
 //! theory through rigorous mathematical derivations. The curriculum covers:
 //!

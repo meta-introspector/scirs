@@ -1,9 +1,9 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use scirs2_linalg::{
-    blas_accelerated,
-    simd_ops::{simd_dot_f32, simd_matmul_f32, simd_matvec_f32},
-};
+use scirs2_linalg::blas_accelerated;
+
+#[cfg(feature = "simd")]
+use scirs2_linalg::simd_ops::{simd_dot_f32, simd_matmul_f32, simd_matvec_f32};
 use std::hint::black_box;
 
 fn regular_matmul_f32(a: &ArrayView2<f32>, b: &ArrayView2<f32>) -> Array2<f32> {
@@ -73,6 +73,7 @@ fn bench_matvec(c: &mut Criterion) {
             })
         });
 
+        #[cfg(feature = "simd")]
         group.bench_with_input(BenchmarkId::new("SIMD", size), &size, |b, _| {
             b.iter(|| {
                 black_box(
@@ -82,18 +83,7 @@ fn bench_matvec(c: &mut Criterion) {
         });
 
         group.bench_with_input(BenchmarkId::new("BLAS", size), &size, |b, _| {
-            b.iter(|| {
-                black_box(
-                    blas_accelerated::gemv(
-                        1.0,
-                        &matrix.view(),
-                        &vector.view(),
-                        0.0,
-                        &Array1::<f32>::zeros(matrix.nrows()).view(),
-                    )
-                    .unwrap(),
-                )
-            })
+            b.iter(|| black_box(blas_accelerated::gemv(&matrix.view(), &vector.view()).unwrap()))
         });
     }
 
@@ -116,6 +106,7 @@ fn bench_matmul(c: &mut Criterion) {
             })
         });
 
+        #[cfg(feature = "simd")]
         group.bench_with_input(BenchmarkId::new("SIMD", size), &size, |b, _| {
             b.iter(|| {
                 black_box(
@@ -157,6 +148,7 @@ fn bench_dot(c: &mut Criterion) {
             })
         });
 
+        #[cfg(feature = "simd")]
         group.bench_with_input(BenchmarkId::new("SIMD", size), &size, |b, _| {
             b.iter(|| {
                 black_box(simd_dot_f32(&black_box(vec_a.view()), &black_box(vec_b.view())).unwrap())
