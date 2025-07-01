@@ -239,13 +239,303 @@ async fn handle_connection(
     Ok(())
 }
 
-/// Generate dashboard HTML with live data
+/// AI-driven insights structure
+#[derive(Debug, Clone, serde::Serialize)]
+struct AiInsight {
+    pub insight_type: String,
+    pub message: String,
+    pub confidence: f64,
+    pub severity: String,
+    pub timestamp: u64,
+}
+
+/// Anomaly alert structure
+#[derive(Debug, Clone, serde::Serialize)]
+struct AnomalyAlert {
+    pub metric_name: String,
+    pub anomaly_type: String,
+    pub severity: String,
+    pub value: f64,
+    pub expected_range: (f64, f64),
+    pub timestamp: u64,
+}
+
+/// Performance prediction structure
+#[derive(Debug, Clone, serde::Serialize)]
+struct PerformancePrediction {
+    pub metric_name: String,
+    pub predicted_value: f64,
+    pub confidence_interval: (f64, f64),
+    pub prediction_horizon: u64, // seconds into future
+    pub trend_direction: String,
+}
+
+/// Generate AI-driven insights from metrics data
+fn generate_ai_insights(metrics: &[MetricDataPoint]) -> Vec<AiInsight> {
+    let mut insights = Vec::new();
+
+    if metrics.is_empty() {
+        return insights;
+    }
+
+    // Analyze metric trends
+    let mut metric_groups: std::collections::HashMap<String, Vec<&MetricDataPoint>> =
+        std::collections::HashMap::new();
+    for metric in metrics {
+        metric_groups
+            .entry(metric.name.clone())
+            .or_insert_with(Vec::new)
+            .push(metric);
+    }
+
+    for (metric_name, points) in metric_groups {
+        if points.len() < 3 {
+            continue;
+        }
+
+        // Sort by timestamp
+        let mut sorted_points = points;
+        sorted_points.sort_by_key(|p| p.timestamp);
+
+        // Calculate trend
+        let first_val = sorted_points.first().unwrap().value;
+        let last_val = sorted_points.last().unwrap().value;
+        let change_percent = ((last_val - first_val) / first_val.abs().max(0.001)) * 100.0;
+
+        if change_percent.abs() > 20.0 {
+            let trend_type = if change_percent > 0.0 {
+                "improvement"
+            } else {
+                "degradation"
+            };
+            let severity = if change_percent.abs() > 50.0 {
+                "high"
+            } else {
+                "medium"
+            };
+
+            insights.push(AiInsight {
+                insight_type: "trend_analysis".to_string(),
+                message: format!(
+                    "{} shows significant {} ({:.1}% change)",
+                    metric_name, trend_type, change_percent
+                ),
+                confidence: 0.85,
+                severity: severity.to_string(),
+                timestamp: sorted_points.last().unwrap().timestamp,
+            });
+        }
+
+        // Check for volatility
+        if sorted_points.len() > 5 {
+            let values: Vec<f64> = sorted_points.iter().map(|p| p.value).collect();
+            let mean = values.iter().sum::<f64>() / values.len() as f64;
+            let variance =
+                values.iter().map(|v| (v - mean).powi(2)).sum::<f64>() / values.len() as f64;
+            let std_dev = variance.sqrt();
+            let cv = std_dev / mean.abs().max(0.001); // Coefficient of variation
+
+            if cv > 0.3 {
+                insights.push(AiInsight {
+                    insight_type: "volatility_analysis".to_string(),
+                    message: format!("{} shows high volatility (CV: {:.2})", metric_name, cv),
+                    confidence: 0.75,
+                    severity: "medium".to_string(),
+                    timestamp: sorted_points.last().unwrap().timestamp,
+                });
+            }
+        }
+    }
+
+    // Overall system health insight
+    let avg_values: Vec<f64> = metrics.iter().map(|m| m.value).collect();
+    if !avg_values.is_empty() {
+        let overall_avg = avg_values.iter().sum::<f64>() / avg_values.len() as f64;
+
+        if overall_avg > 0.9 {
+            insights.push(AiInsight {
+                insight_type: "system_health".to_string(),
+                message: "System performance is excellent across all metrics".to_string(),
+                confidence: 0.90,
+                severity: "info".to_string(),
+                timestamp: std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs(),
+            });
+        } else if overall_avg < 0.5 {
+            insights.push(AiInsight {
+                insight_type: "system_health".to_string(),
+                message: "System performance may need attention - multiple metrics below optimal"
+                    .to_string(),
+                confidence: 0.80,
+                severity: "high".to_string(),
+                timestamp: std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs(),
+            });
+        }
+    }
+
+    insights
+}
+
+/// Detect anomalies in metrics data using statistical methods
+fn detect_anomalies(metrics: &[MetricDataPoint]) -> Vec<AnomalyAlert> {
+    let mut alerts = Vec::new();
+
+    if metrics.is_empty() {
+        return alerts;
+    }
+
+    let mut metric_groups: std::collections::HashMap<String, Vec<&MetricDataPoint>> =
+        std::collections::HashMap::new();
+    for metric in metrics {
+        metric_groups
+            .entry(metric.name.clone())
+            .or_insert_with(Vec::new)
+            .push(metric);
+    }
+
+    for (metric_name, points) in metric_groups {
+        if points.len() < 5 {
+            continue;
+        }
+
+        let values: Vec<f64> = points.iter().map(|p| p.value).collect();
+        let mean = values.iter().sum::<f64>() / values.len() as f64;
+        let variance = values.iter().map(|v| (v - mean).powi(2)).sum::<f64>() / values.len() as f64;
+        let std_dev = variance.sqrt();
+
+        // Use z-score for anomaly detection (threshold = 2.5 sigma)
+        let threshold = 2.5;
+
+        for point in &points {
+            let z_score = (point.value - mean) / std_dev.max(0.001);
+
+            if z_score.abs() > threshold {
+                let expected_range = (mean - threshold * std_dev, mean + threshold * std_dev);
+                let severity = if z_score.abs() > 3.0 {
+                    "critical"
+                } else {
+                    "warning"
+                };
+                let anomaly_type = if z_score > 0.0 { "spike" } else { "drop" };
+
+                alerts.push(AnomalyAlert {
+                    metric_name: metric_name.clone(),
+                    anomaly_type: anomaly_type.to_string(),
+                    severity: severity.to_string(),
+                    value: point.value,
+                    expected_range,
+                    timestamp: point.timestamp,
+                });
+            }
+        }
+    }
+
+    alerts
+}
+
+/// Predict future performance using simple linear regression
+fn predict_future_performance(metrics: &[MetricDataPoint]) -> Vec<PerformancePrediction> {
+    let mut predictions = Vec::new();
+
+    if metrics.is_empty() {
+        return predictions;
+    }
+
+    let mut metric_groups: std::collections::HashMap<String, Vec<&MetricDataPoint>> =
+        std::collections::HashMap::new();
+    for metric in metrics {
+        metric_groups
+            .entry(metric.name.clone())
+            .or_insert_with(Vec::new)
+            .push(metric);
+    }
+
+    for (metric_name, points) in metric_groups {
+        if points.len() < 3 {
+            continue;
+        }
+
+        // Sort by timestamp
+        let mut sorted_points = points;
+        sorted_points.sort_by_key(|p| p.timestamp);
+
+        // Simple linear regression
+        let n = sorted_points.len() as f64;
+        let x_values: Vec<f64> = sorted_points
+            .iter()
+            .enumerate()
+            .map(|(i, _)| i as f64)
+            .collect();
+        let y_values: Vec<f64> = sorted_points.iter().map(|p| p.value).collect();
+
+        let sum_x = x_values.iter().sum::<f64>();
+        let sum_y = y_values.iter().sum::<f64>();
+        let sum_xy = x_values
+            .iter()
+            .zip(y_values.iter())
+            .map(|(x, y)| x * y)
+            .sum::<f64>();
+        let sum_x2 = x_values.iter().map(|x| x * x).sum::<f64>();
+
+        let slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x * sum_x);
+        let intercept = (sum_y - slope * sum_x) / n;
+
+        // Predict 5 minutes into the future
+        let prediction_horizon = 300; // 5 minutes in seconds
+        let future_x = n; // Next time point
+        let predicted_value = slope * future_x + intercept;
+
+        // Calculate confidence interval (simplified)
+        let residuals: Vec<f64> = x_values
+            .iter()
+            .zip(y_values.iter())
+            .map(|(x, y)| y - (slope * x + intercept))
+            .collect();
+        let residual_var = residuals.iter().map(|r| r * r).sum::<f64>() / (n - 2.0).max(1.0);
+        let std_error = residual_var.sqrt();
+
+        let confidence_interval = (
+            predicted_value - 1.96 * std_error,
+            predicted_value + 1.96 * std_error,
+        );
+
+        let trend_direction = if slope > 0.01 {
+            "increasing"
+        } else if slope < -0.01 {
+            "decreasing"
+        } else {
+            "stable"
+        };
+
+        predictions.push(PerformancePrediction {
+            metric_name,
+            predicted_value,
+            confidence_interval,
+            prediction_horizon,
+            trend_direction: trend_direction.to_string(),
+        });
+    }
+
+    predictions
+}
+
+/// Generate enhanced dashboard HTML with advanced ultrathink features
 async fn generate_dashboard_html(dashboard: &Arc<InteractiveDashboard>) -> String {
     let metrics = dashboard.get_all_metrics().unwrap_or_default();
     let metric_names = dashboard.get_metric_names().unwrap_or_default();
     let config = &dashboard.config;
 
     let metrics_json = serde_json::to_string(&metrics).unwrap_or_default();
+
+    // Generate AI-driven insights
+    let ai_insights = generate_ai_insights(&metrics);
+    let anomaly_alerts = detect_anomalies(&metrics);
+    let performance_predictions = predict_future_performance(&metrics);
 
     format!(
         r#"

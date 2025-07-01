@@ -8,14 +8,16 @@ use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 
 pub mod adaptive_nas_system;
+pub mod adaptive_transformer_enhancement;
+pub mod few_shot_learning_enhancement;
+pub mod few_shot_optimizer;
 pub mod lstm_optimizer;
 pub mod meta_learning;
 pub mod neural_architecture_search;
 pub mod transformer_optimizer;
-// TODO: Re-enable these modules after fixing remaining compilation issues
-// pub mod adaptive_transformer_enhancement;
-// pub mod few_shot_learning_enhancement;
-// pub mod few_shot_optimizer;
+
+// UltraThink Mode - Advanced AI optimization coordination
+pub mod ultrathink_coordinator;
 
 use crate::error::OptimizerError;
 use crate::optimizers::Optimizer;

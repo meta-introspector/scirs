@@ -6,9 +6,9 @@
 use crate::error::{NeuralError, Result};
 use ndarray::{Array, Axis, IxDyn, ScalarOperand};
 use num_traits::{Float, FromPrimitive};
-use rand::rngs::SmallRng;
+// use rand::rngs::SmallRng;
 use rand::seq::SliceRandom;
-use rand::SeedableRng;
+// use rand::SeedableRng;
 use std::fmt::Debug;
 
 mod augmentation;
@@ -102,7 +102,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> InMemoryDat
 
         // Create shuffled indices
         let mut indices: Vec<usize> = (0..n_samples).collect();
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = rand::rng();
         indices.shuffle(&mut rng);
 
         // Split indices

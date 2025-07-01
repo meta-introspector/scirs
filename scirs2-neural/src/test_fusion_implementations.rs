@@ -10,7 +10,7 @@ mod tests {
 
     #[test]
     fn test_feature_alignment_backward_update() -> crate::error::Result<()> {
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = rand::thread_rng();
         let mut alignment: FeatureAlignment<f32> = FeatureAlignment::new(10, 8, Some("test"))?;
         
         // Test forward pass

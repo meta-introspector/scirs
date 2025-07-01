@@ -13,9 +13,8 @@ use crate::layers::{
 };
 
 use ndarray::{Array, IxDyn, ScalarOperand};
+use ndarray_rand::rand::{rngs::SmallRng, SeedableRng};
 use num_traits::Float;
-use rand::rngs::SmallRng;
-use rand::SeedableRng;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 
@@ -96,7 +95,7 @@ pub struct ConvNeXtBlock<F: Float + Debug + ScalarOperand + Send + Sync> {
 impl<F: Float + Debug + ScalarOperand + Send + Sync> ConvNeXtBlock<F> {
     /// Create a new ConvNeXtBlock
     pub fn new(channels: usize, layer_scale_init_value: f64, drop_path_prob: f64) -> Result<Self> {
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = ndarray_rand::rand::thread_rng();
         let depthwise_conv = Conv2D::<F>::new(
             channels,
             channels,
@@ -315,7 +314,7 @@ pub struct ConvNeXtDownsample<F: Float + Debug + ScalarOperand + Send + Sync> {
 impl<F: Float + Debug + ScalarOperand + Send + Sync> ConvNeXtDownsample<F> {
     /// Create a new ConvNeXtDownsample
     pub fn new(in_channels: usize, out_channels: usize, stride: usize) -> Result<Self> {
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = ndarray_rand::rand::thread_rng();
         let norm = LayerNorm2D::<F>::new::<SmallRng>(in_channels, 1e-6, Some("downsample_norm"))?;
 
         let conv = Conv2D::<F>::new(
@@ -534,7 +533,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> ConvNeXt<F> {
     pub fn new(config: ConvNeXtConfig) -> Result<Self> {
         // Create the stem layer
         let mut stem = Sequential::new();
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = ndarray_rand::rand::thread_rng();
         stem.add(Conv2D::<F>::new(
             config.input_channels,
             config.dims[0],
@@ -573,7 +572,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> ConvNeXt<F> {
         // Create the head if needed
         let head = if config.include_top {
             let mut head_seq = Sequential::new();
-            let mut rng = SmallRng::seed_from_u64(42);
+            let mut rng = ndarray_rand::rand::thread_rng();
             head_seq.add(LayerNorm2D::<F>::new::<SmallRng>(
                 *config.dims.last().unwrap(),
                 1e-6,

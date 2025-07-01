@@ -71,7 +71,7 @@ impl RecurrentActivation {
 /// use rand::SeedableRng;
 ///
 /// // Create an RNN layer with 10 input features and 20 hidden units
-/// let mut rng = SmallRng::seed_from_u64(42);
+/// let mut rng = rand::thread_rng();
 /// let rnn = RNN::new(10, 20, RecurrentActivation::Tanh, &mut rng).unwrap();
 ///
 /// // Forward pass with a batch of 2 samples, sequence length 5, and 10 features
@@ -496,7 +496,7 @@ mod tests {
     #[test]
     fn test_rnn_shape() {
         // Create an RNN layer
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = rand::thread_rng();
         let rnn = RNN::<f64>::new(
             10,                        // input_size
             20,                        // hidden_size

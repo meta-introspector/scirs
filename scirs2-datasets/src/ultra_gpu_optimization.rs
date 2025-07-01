@@ -69,6 +69,8 @@ pub struct UltraKernelConfig {
     vectorization: VectorizationStrategy,
     /// Load balancing method
     load_balancing: LoadBalancingMethod,
+    /// Optimal block size for GPU kernels
+    block_size: usize,
 }
 
 /// Kernel specialization levels

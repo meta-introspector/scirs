@@ -60,7 +60,7 @@ pub use visualization::{
 /// use rand::rngs::SmallRng;
 /// use rand::SeedableRng;
 ///
-/// let mut rng = SmallRng::seed_from_u64(42);
+/// let mut rng = rand::thread_rng();
 /// let shape = IxDyn(&[2, 3]);
 /// let random_matrix = random_normal(shape, 0.0, 1.0, &mut rng).unwrap();
 ///
@@ -170,7 +170,7 @@ pub fn one_hot_encode<F: Float + Debug>(
 /// use rand::rngs::SmallRng;
 /// use rand::SeedableRng;
 ///
-/// let mut rng = SmallRng::seed_from_u64(42);
+/// let mut rng = rand::thread_rng();
 /// let x = arr2(&[[1.0f64, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0]]).into_dyn();
 /// let y = arr2(&[[0.0f64], [1.0], [0.0], [1.0]]).into_dyn();
 ///

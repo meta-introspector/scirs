@@ -2712,28 +2712,28 @@ pub mod ultrathink_optimization {
             &self,
             context: &ExecutionContext,
         ) -> Result<Vec<f64>, OptimizationError> {
-            let mut features = Vec::new();
+            let features = vec![
+                // Data characteristics
+                context.data_size as f64,
+                context.data_type.len() as f64, // Simplified encoding
 
-            // Data characteristics
-            features.push(context.data_size as f64);
-            features.push(context.data_type.len() as f64); // Simplified encoding
+                // System load features
+                context.system_load.cpu_utilization,
+                context.system_load.memory_utilization,
+                context.system_load.io_wait,
+                context.memory_pressure,
 
-            // System load features
-            features.push(context.system_load.cpu_utilization);
-            features.push(context.system_load.memory_utilization);
-            features.push(context.system_load.io_wait);
-            features.push(context.memory_pressure);
+                // Hardware features
+                context.cpu_characteristics.physical_cores as f64,
+                context.cpu_characteristics.logical_cores as f64,
+                context.cpu_characteristics.base_frequency_mhz as f64,
 
-            // Hardware features
-            features.push(context.cpu_characteristics.physical_cores as f64);
-            features.push(context.cpu_characteristics.logical_cores as f64);
-            features.push(context.cpu_characteristics.base_frequency_mhz as f64);
+                // Accelerator availability
+                context.available_accelerators.len() as f64,
 
-            // Accelerator availability
-            features.push(context.available_accelerators.len() as f64);
-
-            // Temperature (if available)
-            features.push(context.temperature_celsius.unwrap_or(50.0) as f64);
+                // Temperature (if available)
+                context.temperature_celsius.unwrap_or(50.0) as f64,
+            ];
 
             Ok(features)
         }
@@ -2838,6 +2838,12 @@ pub mod ultrathink_optimization {
     }
 
     // Implementations for supporting structures
+    impl Default for NeuralPerformancePredictor {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
     impl NeuralPerformancePredictor {
         pub fn new() -> Self {
             Self {
@@ -2865,7 +2871,7 @@ pub mod ultrathink_optimization {
                 memory_usage_bytes: (output[1] * 1024.0 * 1024.0) as usize,
                 throughput_ops_per_sec: output[2] * 1000.0,
                 energy_consumption_j: output[3] * 0.1,
-                cache_hit_rate: output[4].max(0.0).min(1.0),
+                cache_hit_rate: output[4].clamp(0.0, 1.0),
             })
         }
 
@@ -2960,6 +2966,12 @@ pub mod ultrathink_optimization {
         }
     }
 
+    impl Default for StrategyClassifier {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
     impl StrategyClassifier {
         pub fn new() -> Self {
             Self {
@@ -2991,6 +3003,12 @@ pub mod ultrathink_optimization {
 
         pub fn get_strategy_performance(&self) -> HashMap<OptimizationStrategy, f64> {
             self.strategy_confidence.clone()
+        }
+    }
+
+    impl Default for DecisionTree {
+        fn default() -> Self {
+            Self::new()
         }
     }
 
@@ -3077,6 +3095,12 @@ pub mod ultrathink_optimization {
         }
     }
 
+    impl Default for AdaptiveHyperparameterTuner {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
     impl AdaptiveHyperparameterTuner {
         pub fn new() -> Self {
             let mut current_params = HashMap::new();
@@ -3129,6 +3153,12 @@ pub mod ultrathink_optimization {
         }
     }
 
+    impl Default for MultiObjectiveOptimizer {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
     impl MultiObjectiveOptimizer {
         pub fn new() -> Self {
             Self {
@@ -3169,6 +3199,12 @@ pub mod ultrathink_optimization {
         }
     }
 
+    impl Default for ExecutionContextAnalyzer {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
     impl ExecutionContextAnalyzer {
         pub fn new() -> Self {
             Self {
@@ -3177,6 +3213,12 @@ pub mod ultrathink_optimization {
                 performance_predictor: ContextPerformancePredictor::new(),
                 context_history: VecDeque::new(),
             }
+        }
+    }
+
+    impl Default for LearningHistory {
+        fn default() -> Self {
+            Self::new()
         }
     }
 
@@ -3217,6 +3259,12 @@ pub mod ultrathink_optimization {
 
         pub fn get_learning_progress(&self) -> FeatureLearningProgress {
             self.feature_learning_progress.clone()
+        }
+    }
+
+    impl Default for RealTimeMetricsCollector {
+        fn default() -> Self {
+            Self::new()
         }
     }
 

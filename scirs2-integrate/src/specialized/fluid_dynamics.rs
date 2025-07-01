@@ -6583,7 +6583,6 @@ mod ultra_performance_tests {
     use super::neural_adaptive_solver::*;
     use super::streaming_optimization::*;
     use super::ultra_gpu_acceleration::*;
-    use super::*;
 
     #[test]
     fn test_gpu_memory_pool() {

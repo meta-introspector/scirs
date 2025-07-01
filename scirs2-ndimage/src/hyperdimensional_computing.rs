@@ -164,9 +164,12 @@ impl Hypervector {
     }
 
     /// Bundle (superposition) with another hypervector
-    pub fn bundle(&self, other: &Self) -> Self {
+    pub fn bundle(&self, other: &Self) -> NdimageResult<Self> {
         if self.dimension != other.dimension {
-            panic!("Dimension mismatch");
+            return Err(NdimageError::InvalidInput(format!(
+                "Dimension mismatch: {} vs {}",
+                self.dimension, other.dimension
+            )));
         }
 
         let mut result_map = BTreeMap::new();
@@ -188,17 +191,20 @@ impl Hypervector {
 
         let norm = sparse_data.iter().map(|&(_, v)| v * v).sum::<f64>().sqrt();
 
-        Self {
+        Ok(Self {
             sparse_data,
             dimension: self.dimension,
             norm,
-        }
+        })
     }
 
     /// Bind (convolution) with another hypervector
-    pub fn bind(&self, other: &Self) -> Self {
+    pub fn bind(&self, other: &Self) -> NdimageResult<Self> {
         if self.dimension != other.dimension {
-            panic!("Dimension mismatch");
+            return Err(NdimageError::InvalidInput(format!(
+                "Dimension mismatch: {} vs {}",
+                self.dimension, other.dimension
+            )));
         }
 
         let mut result_map = BTreeMap::new();
@@ -218,11 +224,11 @@ impl Hypervector {
 
         let norm = sparse_data.iter().map(|&(_, v)| v * v).sum::<f64>().sqrt();
 
-        Self {
+        Ok(Self {
             sparse_data,
             dimension: self.dimension,
             norm,
-        }
+        })
     }
 
     /// Permute dimensions (for sequence encoding)

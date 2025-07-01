@@ -1296,7 +1296,7 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
-    fn test_So3_exp_log() {
+    fn test_so3_exp_log() {
         let omega = Array1::from_vec(vec![0.1, 0.2, 0.3]);
         let algebra = So3 { omega };
 

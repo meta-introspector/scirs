@@ -29,7 +29,7 @@ use std::fmt::Debug;
 /// use rand::SeedableRng;
 ///
 /// // Create a dense layer with 2 input neurons, 3 output neurons, and ReLU activation
-/// let mut rng = SmallRng::seed_from_u64(42);
+/// let mut rng = rand::thread_rng();
 /// let dense = Dense::new(2, 3, Some("relu"), &mut rng).unwrap();
 ///
 /// // Forward pass with a batch of 2 samples

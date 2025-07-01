@@ -703,13 +703,13 @@ mod tests {
         let mut jac = SparseJacobian::from_pattern(pattern);
 
         // Set some values
-        jac.set(0, 0, 2.0);
-        jac.set(0, 1, -1.0);
-        jac.set(1, 0, -1.0);
-        jac.set(1, 1, 2.0);
-        jac.set(1, 2, -1.0);
-        jac.set(2, 1, -1.0);
-        jac.set(2, 2, 2.0);
+        let _ = jac.set(0, 0, 2.0);
+        let _ = jac.set(0, 1, -1.0);
+        let _ = jac.set(1, 0, -1.0);
+        let _ = jac.set(1, 1, 2.0);
+        let _ = jac.set(1, 2, -1.0);
+        let _ = jac.set(2, 1, -1.0);
+        let _ = jac.set(2, 2, 2.0);
 
         // Test matrix-vector multiplication
         let x = Array1::from_vec(vec![1.0, 2.0, 3.0]);
@@ -727,13 +727,13 @@ mod tests {
         let mut jac = SparseJacobian::from_pattern(pattern);
 
         // Set values
-        jac.set(0, 0, 2.0);
-        jac.set(0, 1, -1.0);
-        jac.set(1, 0, -1.0);
-        jac.set(1, 1, 2.0);
-        jac.set(1, 2, -1.0);
-        jac.set(2, 1, -1.0);
-        jac.set(2, 2, 2.0);
+        let _ = jac.set(0, 0, 2.0);
+        let _ = jac.set(0, 1, -1.0);
+        let _ = jac.set(1, 0, -1.0);
+        let _ = jac.set(1, 1, 2.0);
+        let _ = jac.set(1, 2, -1.0);
+        let _ = jac.set(2, 1, -1.0);
+        let _ = jac.set(2, 2, 2.0);
 
         // Convert to CSR
         let csr = jac.to_csr();

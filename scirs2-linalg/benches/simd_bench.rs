@@ -83,7 +83,8 @@ fn bench_matvec(c: &mut Criterion) {
         });
 
         group.bench_with_input(BenchmarkId::new("BLAS", size), &size, |b, _| {
-            b.iter(|| black_box(blas_accelerated::gemv(&matrix.view(), &vector.view()).unwrap()))
+            let y = Array1::<f32>::zeros(size);
+            b.iter(|| black_box(blas_accelerated::gemv(1.0, &matrix.view(), &vector.view(), 0.0, &y.view()).unwrap()))
         });
     }
 

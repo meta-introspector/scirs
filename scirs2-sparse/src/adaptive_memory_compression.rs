@@ -7,7 +7,8 @@
 use crate::error::{SparseError, SparseResult};
 use num_traits::{Float, NumAssign};
 use std::collections::{HashMap, VecDeque};
-use std::io::{Read, Write};
+// use std::io::{Read, Write}; // TODO: Remove or use when implementing I/O operations
+use std::marker::PhantomData;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
@@ -84,7 +85,7 @@ pub struct AdaptiveMemoryCompressor {
 }
 
 /// Statistics for compression operations
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct CompressionStats {
     pub total_blocks: usize,
     pub compressed_blocks: usize,
@@ -328,6 +329,7 @@ impl AdaptiveMemoryCompressor {
                 compression_ratio: total_size as f64 / compressed_size.max(1) as f64,
                 compression_time,
             },
+            _phantom: PhantomData,
         })
     }
 
@@ -337,7 +339,7 @@ impl AdaptiveMemoryCompressor {
         compressed_matrix: &CompressedMatrix<T>,
     ) -> SparseResult<(Vec<usize>, Vec<usize>, Vec<T>)>
     where
-        T: Float + NumAssign + Send + Sync + Copy + std::fmt::Debug,
+        T: Float + NumAssign + Send + Sync + Copy + std::fmt::Debug + num_traits::FromPrimitive,
     {
         let start_time = std::time::Instant::now();
 
@@ -660,7 +662,7 @@ impl AdaptiveMemoryCompressor {
     fn compress_with_none<T>(
         &self,
         matrix_id: u64,
-        rows: usize,
+        _rows: usize,
         indptr: &[usize],
         indices: &[usize],
         data: &[T],
@@ -1155,7 +1157,7 @@ impl AdaptiveMemoryCompressor {
 
     fn parse_data_values<T>(&self, data: &[u8]) -> SparseResult<Vec<T>>
     where
-        T: Float + NumAssign + Send + Sync + Copy,
+        T: Float + NumAssign + Send + Sync + Copy + num_traits::FromPrimitive,
     {
         if data.len() < 8 {
             return Ok(Vec::new());
@@ -1230,6 +1232,7 @@ impl AdaptiveMemoryCompressor {
                 compression_ratio: 1.0,
                 compression_time: 0.0,
             },
+            _phantom: PhantomData,
         })
     }
 
@@ -1322,6 +1325,7 @@ pub struct CompressedMatrix<T> {
     pub compression_algorithm: CompressionAlgorithm,
     pub block_size: usize,
     pub metadata: CompressionMetadata,
+    _phantom: PhantomData<T>,
 }
 
 /// Compressed block of matrix data

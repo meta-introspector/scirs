@@ -293,21 +293,24 @@ impl<
         // Assess matrix condition before solving
         let condition_report = assess_matrix_condition(&a_matrix.view()).ok();
 
+        // Create working matrix for potential regularization
+        let mut working_matrix = a_matrix.clone();
+
         // Warn about potential numerical issues
         if let Some(ref report) = condition_report {
             match report.stability_level {
                 StabilityLevel::Poor => {
                     // Apply automatic regularization for poorly conditioned matrices
                     let regularization = F::from_f64(1e-8).unwrap_or_else(|| F::epsilon());
-                    for i in 0..a_matrix.nrows() {
-                        a_matrix[[i, i]] += regularization;
+                    for i in 0..working_matrix.nrows() {
+                        working_matrix[[i, i]] += regularization;
                     }
                 }
                 StabilityLevel::Marginal => {
                     // Apply light regularization for marginal conditioning
                     let regularization = F::from_f64(1e-10).unwrap_or_else(|| F::epsilon());
-                    for i in 0..a_matrix.nrows() {
-                        a_matrix[[i, i]] += regularization;
+                    for i in 0..working_matrix.nrows() {
+                        working_matrix[[i, i]] += regularization;
                     }
                 }
                 _ => {}
@@ -316,7 +319,7 @@ impl<
 
         // Solve the linear system with stability monitoring
         let (coefficients, _solve_report) =
-            solve_with_stability_monitoring(a_matrix, &values.to_owned()).or_else(|_| {
+            solve_with_stability_monitoring(&working_matrix, &values.to_owned()).or_else(|_| {
                 // Silently fall back to regularized solver
 
                 // Apply stronger regularization

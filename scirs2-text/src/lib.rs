@@ -103,6 +103,7 @@ pub mod tokenize;
 pub mod topic_coherence;
 pub mod topic_modeling;
 pub mod transformer;
+pub mod ultrathink_text_coordinator;
 pub mod utils;
 pub mod vectorize;
 pub mod visualization;

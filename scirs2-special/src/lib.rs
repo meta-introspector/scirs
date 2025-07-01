@@ -302,7 +302,10 @@ pub use utility::{
     // Statistical functions (SciPy compatibility)
     expit,
     expit_array,
+    expm1_array_utility,
     exprel,
+    gradient,
+    log1p_array_utility,
     log_expit,
     logit,
     logit_array,
@@ -314,8 +317,11 @@ pub use utility::{
     round_array,
     sindg,
     softplus,
+    spherical_distance,
     tandg,
     xlog1py,
+    // Additional convenience functions for SciPy parity
+    xlog1py_scalar,
     xlogy,
 };
 pub use wright::{wright_omega_optimized, wright_omega_real_optimized};

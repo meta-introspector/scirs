@@ -6,7 +6,8 @@
 
 use ndarray::{Array1, Array2, Dimension};
 use num_traits::Float;
-use rand::{rng, Rng};
+use rand::random_range;
+use rand::{random, thread_rng, Rng};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::time::{Duration, Instant};
 
@@ -1381,7 +1382,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
 
         // Crossover
         for i in 0..generation_size {
-            if rng().gen::<f64>() < self.config.crossover_rate {
+            if thread_rng().gen::<f64>() < self.config.crossover_rate {
                 let parent1 = &parents[i * 2];
                 let parent2 = &parents[i * 2 + 1];
 
@@ -1410,7 +1411,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
 
         // Mutation
         for architecture in &mut new_architectures {
-            if rng().gen::<f64>() < self.config.mutation_rate {
+            if thread_rng().gen::<f64>() < self.config.mutation_rate {
                 let mutation_record = self
                     .architecture_generator
                     .mutate(&mut architecture.architecture)?;
@@ -2193,7 +2194,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
             ProgressiveStage::Large => (4, 8, 256),
         };
 
-        let num_layers = rng().gen_range(min_layers..=max_layers);
+        let num_layers = thread_rng().gen_range(min_layers..=max_layers);
         let mut layers = Vec::new();
 
         // Generate layers with progressive complexity
@@ -2250,13 +2251,13 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
         let layer_type = if complexity < 0.3 {
             LayerType::Linear
         } else if complexity < 0.6 {
-            if rng().gen_bool(0.7) {
+            if thread_rng().gen_bool(0.7) {
                 LayerType::Linear
             } else {
                 LayerType::LSTM
             }
         } else if complexity < 0.8 {
-            if rng().gen_bool(0.5) {
+            if thread_rng().gen_bool(0.5) {
                 LayerType::LSTM
             } else {
                 LayerType::Transformer
@@ -2268,7 +2269,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
                 LayerType::Attention,
                 LayerType::LSTM,
             ];
-            layer_types[rng().gen_range(0..layer_types.len())]
+            layer_types[thread_rng().gen_range(0..layer_types.len())]
         };
 
         // Adjust dimensions based on complexity
@@ -2345,7 +2346,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
             ProgressiveStage::Small => {
                 // Add some short skip connections
                 for i in 0..num_layers.saturating_sub(2) {
-                    if rng().gen_bool(0.3) {
+                    if thread_rng().gen_bool(0.3) {
                         connections[[i, i + 2]] = true;
                     }
                 }
@@ -2354,7 +2355,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
                 // Add medium-range skip connections
                 for i in 0..num_layers {
                     for j in (i + 2)..(i + 4).min(num_layers) {
-                        if rng().gen_bool(0.4) {
+                        if thread_rng().gen_bool(0.4) {
                             connections[[i, j]] = true;
                         }
                     }
@@ -2372,7 +2373,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
                             _ => 0.2,     // Long skip connections
                         };
 
-                        if rng().gen_bool(connection_prob) {
+                        if thread_rng().gen_bool(connection_prob) {
                             connections[[i, j]] = true;
                         }
                     }
@@ -2691,11 +2692,11 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
 
             // Apply gradient to weights (simplified update)
             rl_state.controller.weights[layer_idx] = rl_state.controller.weights[layer_idx]
-                .mapv(|w| w + gradient_scale * T::from(rng().gen_range(-0.1..0.1)).unwrap());
+                .mapv(|w| w + gradient_scale * T::from(thread_rng().gen_range(-0.1..0.1)).unwrap());
 
             // Update biases
             rl_state.controller.biases[layer_idx] = rl_state.controller.biases[layer_idx]
-                .mapv(|b| b + gradient_scale * T::from(rng().gen_range(-0.1..0.1)).unwrap());
+                .mapv(|b| b + gradient_scale * T::from(thread_rng().gen_range(-0.1..0.1)).unwrap());
         }
 
         // Update exploration rate (epsilon decay)
@@ -2873,7 +2874,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
             .to_f64()
             .unwrap_or(0.1);
 
-        if rng().gen::<f64>() < exploration_rate {
+        if thread_rng().gen::<f64>() < exploration_rate {
             // Exploration: random action
             self.sample_random_action()
         } else {
@@ -2883,7 +2884,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
     }
 
     fn sample_random_action(&self) -> Result<ArchitectureAction, OptimizerError> {
-        let action_type = rng().gen_range(0..4);
+        let action_type = thread_rng().gen_range(0..4);
 
         match action_type {
             0 => Ok(ArchitectureAction::SelectLayerType(
@@ -2914,7 +2915,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
             cumulative.push(sum.to_f64().unwrap_or(0.0));
         }
 
-        let random_val = rng().gen::<f64>();
+        let random_val = thread_rng().gen::<f64>();
         let selected_index = cumulative
             .iter()
             .position(|&x| x >= random_val)
@@ -2940,22 +2941,22 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
 
     fn sample_random_layer_type(&self) -> LayerType {
         let layer_types = &self.search_space.layer_types;
-        layer_types[rng().gen_range(0..layer_types.len())]
+        layer_types[thread_rng().gen_range(0..layer_types.len())]
     }
 
     fn sample_random_hidden_size(&self) -> usize {
         let hidden_sizes = &self.search_space.hidden_sizes;
-        hidden_sizes[rng().gen_range(0..hidden_sizes.len())]
+        hidden_sizes[thread_rng().gen_range(0..hidden_sizes.len())]
     }
 
     fn sample_random_activation(&self) -> ActivationType {
         let activations = &self.search_space.activation_functions;
-        activations[rng().gen_range(0..activations.len())]
+        activations[thread_rng().gen_range(0..activations.len())]
     }
 
     fn sample_random_connection(&self) -> ConnectionPattern {
         let connections = &self.search_space.connection_patterns;
-        connections[rng().gen_range(0..connections.len())]
+        connections[thread_rng().gen_range(0..connections.len())]
     }
 
     fn action_to_layer_spec(
@@ -3144,7 +3145,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
     ) -> Result<ArchitectureSpec, OptimizerError> {
         // Use Gumbel softmax to sample discrete architectures from continuous space
         let mut layers = Vec::new();
-        let num_layers = 3 + rng().gen_range(0..5); // 3-7 layers
+        let num_layers = 3 + thread_rng().gen_range(0..5); // 3-7 layers
 
         for i in 0..num_layers {
             // Sample layer type using continuous relaxation
@@ -3154,7 +3155,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
                 .or_insert_with(|| {
                     let mut weights = Vec::new();
                     for _ in 0..LayerType::Custom as usize + 1 {
-                        weights.push(T::from(rng().gen::<f64>()).unwrap());
+                        weights.push(T::from(thread_rng().gen::<f64>()).unwrap());
                     }
                     weights
                 });
@@ -3167,7 +3168,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
             } else {
                 layers[i - 1].dimensions.output_dim
             };
-            let output_dim = 64 + rng().gen_range(0..192); // 64-256
+            let output_dim = 64 + thread_rng().gen_range(0..192); // 64-256
 
             let layer_spec = LayerSpec {
                 layer_type: self.index_to_layer_type(layer_type),
@@ -3214,8 +3215,8 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
 
         for &logit in logits {
             // Add Gumbel noise: -log(-log(uniform))
-            let uniform1 = T::from(rng().gen::<f64>().max(1e-10)).unwrap();
-            let uniform2 = T::from(rng().gen::<f64>().max(1e-10)).unwrap();
+            let uniform1 = T::from(thread_rng().gen::<f64>().max(1e-10)).unwrap();
+            let uniform2 = T::from(thread_rng().gen::<f64>().max(1e-10)).unwrap();
             let gumbel_noise = -(-uniform1.ln()).ln();
 
             gumbel_logits.push((logit + gumbel_noise) / temperature);
@@ -3265,7 +3266,7 @@ impl<T: Float + Default + Clone + Send + Sync> NeuralArchitectureSearch<T> {
 
         // Select from Pareto front
         let mut parents = Vec::new();
-        let mut rng = rng();
+        let mut rng = thread_rng();
 
         for _ in 0..2 {
             if !mo_state.pareto_front.is_empty() {
@@ -3639,7 +3640,7 @@ impl<T: Float + Default + Clone> PopulationManager<T> {
         }
 
         let mut parents = Vec::new();
-        let mut rng = rng();
+        let mut rng = thread_rng();
 
         // Tournament selection
         let tournament_size = 3;
@@ -4188,7 +4189,7 @@ impl<T: Float + Default + Clone> SearchStrategy<T> {
 
         Ok(Self {
             strategy_type,
-            rng: Box::new(rand::rng()),
+            rng: Box::new(rand::thread_rng()),
             state,
             optimization_history: Vec::new(),
             best_architectures: Vec::new(),

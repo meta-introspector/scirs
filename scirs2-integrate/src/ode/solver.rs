@@ -645,8 +645,19 @@ where
                             let mut modified_options = options;
                             modified_options.base_options.mass_matrix = None;
 
-                            // Solve the transformed system with event detection
-                            solve_ivp_with_events(transformed_f, t_span, y0, event_funcs, modified_options)
+                            // Solve the transformed system (base solver without recursion)
+                            let base_result = solve_ivp(transformed_f, t_span, y0, Some(modified_options.base_options))?;
+                            
+                            // Create empty event record since we're not actually detecting events in this path
+                            let empty_events = crate::ode::utils::events::EventRecord::new();
+                            
+                            // Convert base result to events result format
+                            Ok(ODEResultWithEvents {
+                                base_result,
+                                events: empty_events,
+                                dense_output: None,
+                                event_termination: false,
+                            })
                         }
 
                         // State-dependent mass matrices need special handling

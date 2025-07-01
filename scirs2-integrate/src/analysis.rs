@@ -4647,7 +4647,7 @@ pub mod advanced_analysis {
 
             let mut points = Vec::new();
             for _ in 0..1000 {
-                let point = Array1::from_vec(vec![rng.gen::<f64>(), rng.gen::<f64>()]);
+                let point = Array1::from_vec(vec![rng.random::<f64>(), rng.random::<f64>()]);
                 points.push(point);
             }
 

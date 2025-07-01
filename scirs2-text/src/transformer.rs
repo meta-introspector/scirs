@@ -436,6 +436,39 @@ impl MultiHeadAttention {
 
         Ok(result)
     }
+
+    /// Get attention weight matrices for serialization
+    pub fn get_weights(&self) -> (&Array2<f64>, &Array2<f64>, &Array2<f64>, &Array2<f64>) {
+        (&self.w_q, &self.w_k, &self.w_v, &self.w_o)
+    }
+
+    /// Set attention weight matrices from loaded weights
+    pub fn set_weights(
+        &mut self,
+        w_q: Array2<f64>,
+        w_k: Array2<f64>,
+        w_v: Array2<f64>,
+        w_o: Array2<f64>,
+    ) -> Result<()> {
+        if w_q.shape() != [self.d_model, self.d_model] {
+            return Err(TextError::InvalidInput("Invalid w_q shape".to_string()));
+        }
+        if w_k.shape() != [self.d_model, self.d_model] {
+            return Err(TextError::InvalidInput("Invalid w_k shape".to_string()));
+        }
+        if w_v.shape() != [self.d_model, self.d_model] {
+            return Err(TextError::InvalidInput("Invalid w_v shape".to_string()));
+        }
+        if w_o.shape() != [self.d_model, self.d_model] {
+            return Err(TextError::InvalidInput("Invalid w_o shape".to_string()));
+        }
+
+        self.w_q = w_q;
+        self.w_k = w_k;
+        self.w_v = w_v;
+        self.w_o = w_o;
+        Ok(())
+    }
 }
 
 /// Feed-forward network layer
@@ -472,6 +505,42 @@ impl FeedForward {
         // Second linear transformation
         activated.dot(&self.w2) + &self.b2
     }
+
+    /// Get feed-forward weight matrices for serialization
+    pub fn get_weights(&self) -> (&Array2<f64>, &Array2<f64>, &Array1<f64>, &Array1<f64>) {
+        (&self.w1, &self.w2, &self.b1, &self.b2)
+    }
+
+    /// Set feed-forward weight matrices from loaded weights
+    pub fn set_weights(
+        &mut self,
+        w1: Array2<f64>,
+        w2: Array2<f64>,
+        b1: Array1<f64>,
+        b2: Array1<f64>,
+    ) -> Result<()> {
+        if w1.shape()[1] != w2.shape()[0] {
+            return Err(TextError::InvalidInput(
+                "Weight matrix dimensions don't match".to_string(),
+            ));
+        }
+        if b1.len() != w1.shape()[1] {
+            return Err(TextError::InvalidInput(
+                "Bias b1 size doesn't match w1".to_string(),
+            ));
+        }
+        if b2.len() != w2.shape()[1] {
+            return Err(TextError::InvalidInput(
+                "Bias b2 size doesn't match w2".to_string(),
+            ));
+        }
+
+        self.w1 = w1;
+        self.w2 = w2;
+        self.b1 = b1;
+        self.b2 = b2;
+        Ok(())
+    }
 }
 
 /// Layer normalization
@@ -507,6 +576,29 @@ impl LayerNorm {
         }
 
         result
+    }
+
+    /// Get layer normalization parameters for serialization
+    pub fn get_params(&self) -> (&Array1<f64>, &Array1<f64>) {
+        (&self.gamma, &self.beta)
+    }
+
+    /// Set layer normalization parameters from loaded weights
+    pub fn set_params(&mut self, gamma: Array1<f64>, beta: Array1<f64>) -> Result<()> {
+        if gamma.len() != beta.len() {
+            return Err(TextError::InvalidInput(
+                "Gamma and beta must have same length".to_string(),
+            ));
+        }
+        if gamma.len() != self.gamma.len() {
+            return Err(TextError::InvalidInput(
+                "Parameter size doesn't match layer dimension".to_string(),
+            ));
+        }
+
+        self.gamma = gamma;
+        self.beta = beta;
+        Ok(())
     }
 }
 
@@ -547,6 +639,33 @@ impl TransformerEncoderLayer {
         let output = &self.norm2.forward(x.view()) + &ff_output;
 
         Ok(output)
+    }
+
+    /// Get mutable access to layer components for weight loading
+    pub fn get_components_mut(
+        &mut self,
+    ) -> (
+        &mut MultiHeadAttention,
+        &mut FeedForward,
+        &mut LayerNorm,
+        &mut LayerNorm,
+    ) {
+        (
+            &mut self.self_attention,
+            &mut self.feed_forward,
+            &mut self.norm1,
+            &mut self.norm2,
+        )
+    }
+
+    /// Get access to layer components for weight access
+    pub fn get_components(&self) -> (&MultiHeadAttention, &FeedForward, &LayerNorm, &LayerNorm) {
+        (
+            &self.self_attention,
+            &self.feed_forward,
+            &self.norm1,
+            &self.norm2,
+        )
     }
 }
 
@@ -597,6 +716,16 @@ impl TransformerEncoder {
     /// Get configuration
     pub fn config(&self) -> &TransformerConfig {
         &self.config
+    }
+
+    /// Get mutable access to encoder layers for weight loading
+    pub fn get_layers_mut(&mut self) -> &mut Vec<TransformerEncoderLayer> {
+        &mut self.layers
+    }
+
+    /// Get access to encoder layers for weight access
+    pub fn get_layers(&self) -> &Vec<TransformerEncoderLayer> {
+        &self.layers
     }
 }
 

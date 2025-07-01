@@ -99,7 +99,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + scirs2_core::simd_ops::Sim
     pub fn new(config: CLIPTextConfig, projection_dim: usize) -> Result<Self> {
         // Token embedding
         let mut token_embedding = Sequential::new();
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = ndarray_rand::rand::thread_rng();
         token_embedding.add(Dense::<F>::new(
             config.vocab_size,
             config.hidden_size,
@@ -316,7 +316,7 @@ impl<
         let vision_transformer = VisionTransformer::<F>::new(config.clone())?;
 
         // Projection layer
-        let mut rng_proj = SmallRng::seed_from_u64(42);
+        let mut rng_proj = ndarray_rand::rand::thread_rng();
         let projection = Dense::<F>::new(config.embed_dim, projection_dim, None, &mut rng_proj)?;
 
         Ok(Self {

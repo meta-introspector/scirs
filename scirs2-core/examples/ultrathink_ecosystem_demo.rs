@@ -12,7 +12,7 @@
 //! - AI-driven workflow optimization
 //! - Quantum-enhanced computation pipelines
 
-use scirs2_core::error::Result;
+use scirs2_core::error::{CoreError, CoreResult, ErrorContext};
 use scirs2_core::ultrathink_ecosystem_integration::{
     EcosystemContext, InterModuleMessage, MessageType, ModulePerformanceMetrics,
     ModuleResourceUsage, Priority, ProcessingContext, ProcessingMetrics, QualityRequirements,
@@ -68,7 +68,7 @@ impl UltrathinkModule for MockNeuralUltrathinkModule {
         ]
     }
 
-    fn initialize_ultrathink(&mut self) -> Result<()> {
+    fn initialize_ultrathink(&mut self) -> CoreResult<()> {
         println!("🧠 Initializing Neural Ultrathink Module...");
         println!("   - Loading neural architectures");
         println!("   - Calibrating adaptive parameters");
@@ -77,10 +77,10 @@ impl UltrathinkModule for MockNeuralUltrathinkModule {
         Ok(())
     }
 
-    fn process_ultrathink(&mut self, input: UltrathinkInput) -> Result<UltrathinkOutput> {
+    fn process_ultrathink(&mut self, input: UltrathinkInput) -> CoreResult<UltrathinkOutput> {
         if !self.initialized {
-            return Err(scirs2_core::error::Error::InvalidInput(
-                "Module not initialized".to_string(),
+            return Err(CoreError::InvalidInput(
+                ErrorContext::new("Module not initialized"),
             ));
         }
 
@@ -134,7 +134,7 @@ impl UltrathinkModule for MockNeuralUltrathinkModule {
         }
     }
 
-    fn optimize_for_ecosystem(&mut self, context: &EcosystemContext) -> Result<()> {
+    fn optimize_for_ecosystem(&mut self, context: &EcosystemContext) -> CoreResult<()> {
         println!("🔧 Neural module optimizing for ecosystem:");
         println!("   - Adjusting batch size based on available memory");
         println!("   - Tuning neural network depth");
@@ -151,7 +151,7 @@ impl UltrathinkModule for MockNeuralUltrathinkModule {
         Ok(())
     }
 
-    fn handle_communication(&mut self, message: InterModuleMessage) -> Result<InterModuleMessage> {
+    fn handle_communication(&mut self, message: InterModuleMessage) -> CoreResult<InterModuleMessage> {
         println!("📨 Neural module received message from {}", message.from);
 
         let response = InterModuleMessage {
@@ -169,7 +169,7 @@ impl UltrathinkModule for MockNeuralUltrathinkModule {
         Ok(response)
     }
 
-    fn shutdown(&mut self) -> Result<()> {
+    fn shutdown(&mut self) -> CoreResult<()> {
         println!("🧠 Shutting down Neural Ultrathink Module...");
         println!("   - Saving neural weights");
         println!("   - Finalizing adaptive parameters");
@@ -216,7 +216,7 @@ impl UltrathinkModule for MockClusteringUltrathinkModule {
         ]
     }
 
-    fn initialize_ultrathink(&mut self) -> Result<()> {
+    fn initialize_ultrathink(&mut self) -> CoreResult<()> {
         println!("🎯 Initializing Clustering Ultrathink Module...");
         println!("   - Loading quantum-neuromorphic algorithms");
         println!("   - Calibrating meta-learning parameters");
@@ -225,10 +225,10 @@ impl UltrathinkModule for MockClusteringUltrathinkModule {
         Ok(())
     }
 
-    fn process_ultrathink(&mut self, input: UltrathinkInput) -> Result<UltrathinkOutput> {
+    fn process_ultrathink(&mut self, input: UltrathinkInput) -> CoreResult<UltrathinkOutput> {
         if !self.initialized {
-            return Err(scirs2_core::error::Error::InvalidInput(
-                "Module not initialized".to_string(),
+            return Err(CoreError::InvalidInput(
+                ErrorContext::new("Module not initialized"),
             ));
         }
 
@@ -290,7 +290,7 @@ impl UltrathinkModule for MockClusteringUltrathinkModule {
         }
     }
 
-    fn optimize_for_ecosystem(&mut self, context: &EcosystemContext) -> Result<()> {
+    fn optimize_for_ecosystem(&mut self, context: &EcosystemContext) -> CoreResult<()> {
         println!("🔧 Clustering module optimizing for ecosystem:");
         println!("   - Adjusting cluster granularity");
         println!("   - Optimizing quantum coherence time");
@@ -302,7 +302,7 @@ impl UltrathinkModule for MockClusteringUltrathinkModule {
         Ok(())
     }
 
-    fn handle_communication(&mut self, message: InterModuleMessage) -> Result<InterModuleMessage> {
+    fn handle_communication(&mut self, message: InterModuleMessage) -> CoreResult<InterModuleMessage> {
         println!(
             "📨 Clustering module received message from {}",
             message.from
@@ -323,7 +323,7 @@ impl UltrathinkModule for MockClusteringUltrathinkModule {
         Ok(response)
     }
 
-    fn shutdown(&mut self) -> Result<()> {
+    fn shutdown(&mut self) -> CoreResult<()> {
         println!("🎯 Shutting down Clustering Ultrathink Module...");
         println!("   - Saving quantum states");
         println!("   - Persisting meta-learning models");
@@ -370,7 +370,7 @@ impl UltrathinkModule for MockIoUltrathinkModule {
         ]
     }
 
-    fn initialize_ultrathink(&mut self) -> Result<()> {
+    fn initialize_ultrathink(&mut self) -> CoreResult<()> {
         println!("💾 Initializing I/O Ultrathink Module...");
         println!("   - Configuring adaptive compression algorithms");
         println!("   - Initializing quantum parallel processors");
@@ -379,10 +379,10 @@ impl UltrathinkModule for MockIoUltrathinkModule {
         Ok(())
     }
 
-    fn process_ultrathink(&mut self, input: UltrathinkInput) -> Result<UltrathinkOutput> {
+    fn process_ultrathink(&mut self, input: UltrathinkInput) -> CoreResult<UltrathinkOutput> {
         if !self.initialized {
-            return Err(scirs2_core::error::Error::InvalidInput(
-                "Module not initialized".to_string(),
+            return Err(CoreError::InvalidInput(
+                ErrorContext::new("Module not initialized"),
             ));
         }
 
@@ -448,7 +448,7 @@ impl UltrathinkModule for MockIoUltrathinkModule {
         }
     }
 
-    fn optimize_for_ecosystem(&mut self, context: &EcosystemContext) -> Result<()> {
+    fn optimize_for_ecosystem(&mut self, context: &EcosystemContext) -> CoreResult<()> {
         println!("🔧 I/O module optimizing for ecosystem:");
         println!("   - Adjusting buffer sizes");
         println!("   - Optimizing compression algorithms");
@@ -460,7 +460,7 @@ impl UltrathinkModule for MockIoUltrathinkModule {
         Ok(())
     }
 
-    fn handle_communication(&mut self, message: InterModuleMessage) -> Result<InterModuleMessage> {
+    fn handle_communication(&mut self, message: InterModuleMessage) -> CoreResult<InterModuleMessage> {
         println!("📨 I/O module received message from {}", message.from);
 
         let response = InterModuleMessage {
@@ -474,7 +474,7 @@ impl UltrathinkModule for MockIoUltrathinkModule {
         Ok(response)
     }
 
-    fn shutdown(&mut self) -> Result<()> {
+    fn shutdown(&mut self) -> CoreResult<()> {
         println!("💾 Shutting down I/O Ultrathink Module...");
         println!("   - Flushing adaptive buffers");
         println!("   - Saving compression models");
@@ -496,7 +496,7 @@ impl UltrathinkWorkflowDemo {
     }
 
     /// Run the complete ultrathink ecosystem demo
-    fn run_demo(&mut self) -> Result<()> {
+    fn run_demo(&mut self) -> CoreResult<()> {
         println!("🚀 SciRS2 Ultrathink Ecosystem Integration Demo");
         println!("================================================\n");
 
@@ -527,7 +527,7 @@ impl UltrathinkWorkflowDemo {
         Ok(())
     }
 
-    fn register_modules(&mut self) -> Result<()> {
+    fn register_modules(&mut self) -> CoreResult<()> {
         println!("📋 Phase 1: Registering Ultrathink Modules");
         println!("==========================================");
 
@@ -553,7 +553,7 @@ impl UltrathinkWorkflowDemo {
         Ok(())
     }
 
-    fn initialize_ecosystem(&mut self) -> Result<()> {
+    fn initialize_ecosystem(&mut self) -> CoreResult<()> {
         println!("\n⚡ Phase 2: Initializing Ultrathink Ecosystem");
         println!("===========================================");
 
@@ -568,7 +568,7 @@ impl UltrathinkWorkflowDemo {
         Ok(())
     }
 
-    fn demonstrate_processing_pipeline(&mut self) -> Result<()> {
+    fn demonstrate_processing_pipeline(&mut self) -> CoreResult<()> {
         println!("\n🔄 Phase 3: Demonstrating Processing Pipeline");
         println!("============================================");
 
@@ -620,7 +620,7 @@ impl UltrathinkWorkflowDemo {
         Ok(())
     }
 
-    fn demonstrate_cross_module_communication(&mut self) -> Result<()> {
+    fn demonstrate_cross_module_communication(&mut self) -> CoreResult<()> {
         println!("\n📡 Phase 4: Cross-Module Communication");
         println!("=====================================");
 
@@ -639,7 +639,7 @@ impl UltrathinkWorkflowDemo {
         Ok(())
     }
 
-    fn demonstrate_performance_optimization(&mut self) -> Result<()> {
+    fn demonstrate_performance_optimization(&mut self) -> CoreResult<()> {
         println!("\n🔧 Phase 5: Performance Optimization");
         println!("===================================");
 
@@ -655,7 +655,7 @@ impl UltrathinkWorkflowDemo {
         Ok(())
     }
 
-    fn demonstrate_monitoring(&mut self) -> Result<()> {
+    fn demonstrate_monitoring(&mut self) -> CoreResult<()> {
         println!("\n📊 Phase 6: Real-time Monitoring");
         println!("===============================");
 
@@ -707,7 +707,7 @@ impl UltrathinkWorkflowDemo {
         Ok(())
     }
 
-    fn show_ecosystem_analytics(&mut self) -> Result<()> {
+    fn show_ecosystem_analytics(&mut self) -> CoreResult<()> {
         println!("\n📊 Phase 7: Ecosystem Analytics");
         println!("==============================");
 
@@ -743,7 +743,7 @@ impl UltrathinkWorkflowDemo {
         Ok(())
     }
 
-    fn graceful_shutdown(&mut self) -> Result<()> {
+    fn graceful_shutdown(&mut self) -> CoreResult<()> {
         println!("\n🔄 Phase 8: Graceful Shutdown");
         println!("============================");
 
@@ -773,7 +773,7 @@ fn generate_test_data(size: usize) -> Vec<u8> {
         .collect()
 }
 
-fn main() -> Result<()> {
+fn main() -> CoreResult<()> {
     println!("🌟 Welcome to SciRS2 Ultrathink Ecosystem Integration!");
     println!("======================================================");
     println!("This demo showcases the full power of coordinated");

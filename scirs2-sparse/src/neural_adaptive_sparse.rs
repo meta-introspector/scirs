@@ -5,6 +5,7 @@
 
 use crate::error::SparseResult;
 use num_traits::{Float, NumAssign};
+use rand::Rng;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::collections::{HashMap, VecDeque};
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -482,9 +483,9 @@ impl NeuralAdaptiveSparseProcessor {
     fn select_strategy_with_rl(&mut self, state: &[f64]) -> OptimizationStrategy {
         if let Some(ref mut rl_agent) = self.rl_agent {
             // Epsilon-greedy exploration
-            if rand::random::<f64>() < self.current_exploration_rate {
+            if rand::rng().random::<f64>() < self.current_exploration_rate {
                 // Explore: random strategy
-                let random_idx = rand::random::<usize>() % self.optimization_strategies.len();
+                let random_idx = rand::rng().random_range(0..self.optimization_strategies.len());
                 self.optimization_strategies[random_idx]
             } else {
                 // Exploit: best strategy according to Q-network
@@ -1411,7 +1412,7 @@ impl RLAgent {
         }
 
         // Update target network periodically
-        if rand::random::<f64>() < 0.01 {
+        if rand::rng().random::<f64>() < 0.01 {
             if let Some(ref mut target_net) = self.target_network {
                 *target_net = self.q_network.clone();
             }
@@ -1482,7 +1483,7 @@ impl ExperienceBuffer {
 
         // Simple random sampling (in practice, prioritized experience replay would be better)
         for _ in 0..batch_size.min(buffer_size) {
-            let idx = rand::random::<usize>() % buffer_size;
+            let idx = rand::rng().random_range(0..buffer_size);
             if let Some(exp) = self.buffer.get(idx) {
                 batch.push(exp.clone());
             }
@@ -1584,7 +1585,7 @@ impl TransformerEncoderLayer {
         x = self.add_and_norm(&x, &ff_output, &self.layer_norm2);
 
         // Apply dropout (simplified)
-        if rand::random::<f64>() < self.dropout_rate {
+        if rand::rng().random::<f64>() < self.dropout_rate {
             for val in &mut x {
                 *val *= 0.9;
             }

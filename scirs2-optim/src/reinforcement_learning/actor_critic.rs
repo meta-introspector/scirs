@@ -881,7 +881,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
         &self,
         critic: &V,
         states: &Array2<T>,
-        actions: &Array2<T>,
+        _actions: &Array2<T>,
     ) -> Result<Array1<T>, OptimizerError> {
         // Simplified Q-value computation
         critic.evaluate_value(states)

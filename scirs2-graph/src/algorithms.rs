@@ -48,13 +48,15 @@ pub use community::{
     louvain_communities_result,
     modularity,
     modularity_optimization_result,
-    parallel_label_propagation_result,
-    parallel_louvain_communities_result,
-    parallel_modularity,
     // Standardized result types - stable for 1.0
     CommunityResult,
     CommunityStructure,
     InfomapResult,
+};
+
+#[cfg(feature = "parallel")]
+pub use community::{
+    parallel_label_propagation_result, parallel_louvain_communities_result, parallel_modularity,
 };
 
 // Legacy community detection APIs - deprecated

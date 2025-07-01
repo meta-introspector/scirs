@@ -809,6 +809,23 @@ impl ClusterManager {
         Ok(registry.get_healthy_nodes())
     }
 
+    /// Get available nodes (returns node_id -> node_info mapping)
+    pub fn get_available_nodes(&self) -> CoreResult<HashMap<String, NodeInfo>> {
+        let registry = self.node_registry.read().map_err(|_| {
+            CoreError::InvalidState(
+                ErrorContext::new("Failed to acquire registry lock")
+                    .with_location(crate::error::ErrorLocation::new(file!(), line!())),
+            )
+        })?;
+
+        let nodes = registry.get_healthy_nodes();
+        let mut node_map = HashMap::new();
+        for node in nodes {
+            node_map.insert(node.id.clone(), node);
+        }
+        Ok(node_map)
+    }
+
     /// Get total cluster compute capacity
     pub fn get_total_capacity(&self) -> CoreResult<ComputeCapacity> {
         let registry = self.node_registry.read().map_err(|_| {

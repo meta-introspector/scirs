@@ -16,7 +16,7 @@
 //! - Performance monitoring and analytics
 //! - Cost optimization strategies
 
-use scirs2_core::error::Result;
+use scirs2_core::error::{CoreError, CoreResult, ErrorContext};
 use scirs2_core::ultrathink_cloud_storage::{
     CloudCredentials, CloudPerformanceAnalytics, CloudProviderConfig, CloudProviderId,
     CloudProviderType, CloudStorageProvider, CostEstimate, CostOperation, CredentialType,
@@ -57,7 +57,7 @@ impl CloudStorageProvider for MockS3Provider {
         CloudProviderType::AmazonS3
     }
 
-    fn initialize(&mut self, config: &CloudProviderConfig) -> Result<()> {
+    fn initialize(&mut self, config: &CloudProviderConfig) -> CoreResult<()> {
         println!("🌐 Initializing {} provider...", self.name);
         println!("   - Region: {}", config.region_config.primary_region);
         println!("   - Encryption: Enabled");
@@ -66,11 +66,11 @@ impl CloudStorageProvider for MockS3Provider {
         Ok(())
     }
 
-    fn upload(&self, request: &UploadRequest) -> Result<UploadResponse> {
+    fn upload(&self, request: &UploadRequest) -> CoreResult<UploadResponse> {
         if !self.initialized {
-            return Err(scirs2_core::error::Error::InvalidInput(
+            return Err(CoreError::InvalidArgument(ErrorContext::new(
                 "Provider not initialized".to_string(),
-            ));
+            )));
         }
 
         let start_time = Instant::now();
@@ -103,11 +103,11 @@ impl CloudStorageProvider for MockS3Provider {
         })
     }
 
-    fn download(&self, request: &DownloadRequest) -> Result<DownloadResponse> {
+    fn download(&self, request: &DownloadRequest) -> CoreResult<DownloadResponse> {
         if !self.initialized {
-            return Err(scirs2_core::error::Error::InvalidInput(
+            return Err(CoreError::InvalidArgument(ErrorContext::new(
                 "Provider not initialized".to_string(),
-            ));
+            )));
         }
 
         let start_time = Instant::now();
@@ -142,11 +142,11 @@ impl CloudStorageProvider for MockS3Provider {
         })
     }
 
-    fn stream(&self, _request: &StreamRequest) -> Result<Box<dyn DataStream>> {
+    fn stream(&self, _request: &StreamRequest) -> CoreResult<Box<dyn DataStream>> {
         Ok(Box::new(MockDataStream::new(1024 * 1024))) // 1MB stream
     }
 
-    fn list_objects(&self, request: &ListRequest) -> Result<ListResponse> {
+    fn list_objects(&self, request: &ListRequest) -> CoreResult<ListResponse> {
         println!("📋 S3 Listing objects in bucket: {}", request.bucket);
 
         Ok(ListResponse {
@@ -157,7 +157,7 @@ impl CloudStorageProvider for MockS3Provider {
         })
     }
 
-    fn delete(&self, request: &DeleteRequest) -> Result<DeleteResponse> {
+    fn delete(&self, request: &DeleteRequest) -> CoreResult<DeleteResponse> {
         println!(
             "🗑️ S3 Deleting {} objects from bucket: {}",
             request.objects.len(),
@@ -170,7 +170,7 @@ impl CloudStorageProvider for MockS3Provider {
         })
     }
 
-    fn get_metadata(&self, request: &MetadataRequest) -> Result<ObjectMetadata> {
+    fn get_metadata(&self, request: &MetadataRequest) -> CoreResult<ObjectMetadata> {
         println!("ℹ️ S3 Getting metadata for object: {}", request.key);
 
         Ok(ObjectMetadata {
@@ -185,7 +185,7 @@ impl CloudStorageProvider for MockS3Provider {
         })
     }
 
-    fn health_check(&self) -> Result<ProviderHealth> {
+    fn health_check(&self) -> CoreResult<ProviderHealth> {
         Ok(ProviderHealth {
             status: HealthStatus::Healthy,
             response_time: Duration::from_millis(50),
@@ -200,7 +200,7 @@ impl CloudStorageProvider for MockS3Provider {
         })
     }
 
-    fn estimate_cost(&self, operation: &CostOperation) -> Result<CostEstimate> {
+    fn estimate_cost(&self, operation: &CostOperation) -> CoreResult<CostEstimate> {
         let base_cost = match operation.operation_type {
             OperationType::Upload => 0.0004, // $0.0004 per 1000 requests
             OperationType::Download => 0.0004,
@@ -252,7 +252,7 @@ impl CloudStorageProvider for MockGCSProvider {
         CloudProviderType::GoogleCloudStorage
     }
 
-    fn initialize(&mut self, config: &CloudProviderConfig) -> Result<()> {
+    fn initialize(&mut self, config: &CloudProviderConfig) -> CoreResult<()> {
         println!("🌐 Initializing {} provider...", self.name);
         println!("   - Region: {}", config.region_config.primary_region);
         println!("   - Service account authentication: Enabled");
@@ -260,7 +260,7 @@ impl CloudStorageProvider for MockGCSProvider {
         Ok(())
     }
 
-    fn upload(&self, request: &UploadRequest) -> Result<UploadResponse> {
+    fn upload(&self, request: &UploadRequest) -> CoreResult<UploadResponse> {
         let start_time = Instant::now();
         let upload_size = request.data.len();
         let simulated_delay = Duration::from_millis((upload_size / 2048).max(5) as u64); // GCS is faster
@@ -289,7 +289,7 @@ impl CloudStorageProvider for MockGCSProvider {
         })
     }
 
-    fn download(&self, request: &DownloadRequest) -> Result<DownloadResponse> {
+    fn download(&self, request: &DownloadRequest) -> CoreResult<DownloadResponse> {
         let simulated_data = vec![24u8; 1024 * 8]; // 8KB of data
 
         Ok(DownloadResponse {
@@ -309,11 +309,11 @@ impl CloudStorageProvider for MockGCSProvider {
         })
     }
 
-    fn stream(&self, _request: &StreamRequest) -> Result<Box<dyn DataStream>> {
+    fn stream(&self, _request: &StreamRequest) -> CoreResult<Box<dyn DataStream>> {
         Ok(Box::new(MockDataStream::new(512 * 1024))) // 512KB stream
     }
 
-    fn list_objects(&self, _request: &ListRequest) -> Result<ListResponse> {
+    fn list_objects(&self, _request: &ListRequest) -> CoreResult<ListResponse> {
         Ok(ListResponse {
             objects: vec![],
             common_prefixes: vec![],
@@ -322,14 +322,14 @@ impl CloudStorageProvider for MockGCSProvider {
         })
     }
 
-    fn delete(&self, _request: &DeleteRequest) -> Result<DeleteResponse> {
+    fn delete(&self, _request: &DeleteRequest) -> CoreResult<DeleteResponse> {
         Ok(DeleteResponse {
             deleted: vec![],
             errors: vec![],
         })
     }
 
-    fn get_metadata(&self, request: &MetadataRequest) -> Result<ObjectMetadata> {
+    fn get_metadata(&self, request: &MetadataRequest) -> CoreResult<ObjectMetadata> {
         Ok(ObjectMetadata {
             key: request.key.clone(),
             size: 2048,
@@ -342,7 +342,7 @@ impl CloudStorageProvider for MockGCSProvider {
         })
     }
 
-    fn health_check(&self) -> Result<ProviderHealth> {
+    fn health_check(&self) -> CoreResult<ProviderHealth> {
         Ok(ProviderHealth {
             status: HealthStatus::Healthy,
             response_time: Duration::from_millis(40),
@@ -357,7 +357,7 @@ impl CloudStorageProvider for MockGCSProvider {
         })
     }
 
-    fn estimate_cost(&self, operation: &CostOperation) -> Result<CostEstimate> {
+    fn estimate_cost(&self, operation: &CostOperation) -> CoreResult<CostEstimate> {
         let base_cost = match operation.operation_type {
             OperationType::Upload => 0.0005,
             OperationType::Download => 0.0004,
@@ -401,7 +401,7 @@ impl MockDataStream {
 }
 
 impl DataStream for MockDataStream {
-    fn read(&mut self, buffer: &mut [u8]) -> Result<usize> {
+    fn read(&mut self, buffer: &mut [u8]) -> CoreResult<usize> {
         let available = self.data.len() - self.position;
         let to_read = buffer.len().min(available);
 
@@ -415,13 +415,13 @@ impl DataStream for MockDataStream {
         Ok(to_read)
     }
 
-    fn write(&mut self, data: &[u8]) -> Result<usize> {
+    fn write(&mut self, data: &[u8]) -> CoreResult<usize> {
         // Simulate write by expanding buffer
         self.data.extend_from_slice(data);
         Ok(data.len())
     }
 
-    fn seek(&mut self, position: u64) -> Result<u64> {
+    fn seek(&mut self, position: u64) -> CoreResult<u64> {
         self.position = (position as usize).min(self.data.len());
         Ok(self.position as u64)
     }
@@ -434,7 +434,7 @@ impl DataStream for MockDataStream {
         Some(self.data.len() as u64)
     }
 
-    fn close(&mut self) -> Result<()> {
+    fn close(&mut self) -> CoreResult<()> {
         self.position = 0;
         Ok(())
     }
@@ -470,7 +470,7 @@ impl UltrathinkCloudStorageDemo {
     }
 
     /// Run the complete cloud storage demo
-    fn run_demo(&mut self) -> Result<()> {
+    fn run_demo(&mut self) -> CoreResult<()> {
         println!("🚀 SciRS2 Ultrathink Cloud Storage Framework Demo");
         println!("==================================================\n");
 
@@ -501,7 +501,7 @@ impl UltrathinkCloudStorageDemo {
         Ok(())
     }
 
-    fn register_providers(&mut self) -> Result<()> {
+    fn register_providers(&mut self) -> CoreResult<()> {
         println!("📋 Phase 1: Registering Cloud Storage Providers");
         println!("===============================================");
 
@@ -622,7 +622,7 @@ impl UltrathinkCloudStorageDemo {
         Ok(())
     }
 
-    fn demonstrate_basic_operations(&mut self) -> Result<()> {
+    fn demonstrate_basic_operations(&mut self) -> CoreResult<()> {
         println!("\n\n🔧 Phase 2: Basic Operations");
         println!("============================");
 
@@ -707,7 +707,7 @@ impl UltrathinkCloudStorageDemo {
         Ok(())
     }
 
-    fn demonstrate_adaptive_streaming(&mut self) -> Result<()> {
+    fn demonstrate_adaptive_streaming(&mut self) -> CoreResult<()> {
         println!("\n\n🌊 Phase 3: Adaptive Streaming");
         println!("==============================");
 
@@ -770,7 +770,7 @@ impl UltrathinkCloudStorageDemo {
         Ok(())
     }
 
-    fn demonstrate_multi_cloud_operations(&mut self) -> Result<()> {
+    fn demonstrate_multi_cloud_operations(&mut self) -> CoreResult<()> {
         println!("\n\n☁️  Phase 4: Multi-Cloud Operations");
         println!("===================================");
 
@@ -849,7 +849,7 @@ impl UltrathinkCloudStorageDemo {
         Ok(())
     }
 
-    fn demonstrate_performance_optimization(&mut self) -> Result<()> {
+    fn demonstrate_performance_optimization(&mut self) -> CoreResult<()> {
         println!("\n\n🚀 Phase 5: Performance Optimization");
         println!("====================================");
 
@@ -925,7 +925,7 @@ impl UltrathinkCloudStorageDemo {
         Ok(())
     }
 
-    fn demonstrate_cost_analytics(&mut self) -> Result<()> {
+    fn demonstrate_cost_analytics(&mut self) -> CoreResult<()> {
         println!("\n\n💰 Phase 6: Cost Analytics");
         println!("==========================");
 
@@ -998,7 +998,7 @@ impl UltrathinkCloudStorageDemo {
         Ok(())
     }
 
-    fn demonstrate_advanced_features(&mut self) -> Result<()> {
+    fn demonstrate_advanced_features(&mut self) -> CoreResult<()> {
         println!("\n\n🔬 Phase 7: Advanced Features");
         println!("=============================");
 
@@ -1040,7 +1040,7 @@ impl UltrathinkCloudStorageDemo {
         Ok(())
     }
 
-    fn show_analytics_summary(&mut self) -> Result<()> {
+    fn show_analytics_summary(&mut self) -> CoreResult<()> {
         println!("\n\n📈 Phase 8: Analytics Summary");
         println!("=============================");
 
@@ -1122,7 +1122,7 @@ fn generate_test_data(size: usize) -> Vec<u8> {
     data
 }
 
-fn main() -> Result<()> {
+fn main() -> CoreResult<()> {
     println!("🌟 Welcome to SciRS2 Ultrathink Cloud Storage!");
     println!("===============================================");
     println!("This demo showcases advanced cloud storage capabilities");

@@ -1640,7 +1640,7 @@ mod tests {
             b: array![[1.0], [1.0]],
             c: array![[1.0, 0.0]],
             d: array![[0.0]],
-            dt: None,
+            dt: false,
         };
 
         let result = analyze_controllability(&ss).unwrap();
@@ -1655,7 +1655,7 @@ mod tests {
             b: array![[1.0], [0.0]],
             c: array![[1.0, 0.0]],
             d: array![[0.0]],
-            dt: None,
+            dt: false,
         };
 
         let result = analyze_stability(&ss).unwrap();

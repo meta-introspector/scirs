@@ -885,7 +885,7 @@ pub fn dawsn<F: Float + FromPrimitive>(x: F) -> F {
         let x_inv = abs_x.recip();
         let x_inv2 = x_inv * x_inv;
         let x_inv4 = x_inv2 * x_inv2;
-        let x_inv6 = x_inv4 * x_inv2;
+        let _x_inv6 = x_inv4 * x_inv2;
 
         let series = F::one()
             + x_inv2

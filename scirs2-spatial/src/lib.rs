@@ -855,7 +855,7 @@ mod utils;
 pub mod quantum_inspired;
 pub use quantum_inspired::{
     QuantumAmplitude, QuantumClusterer, QuantumNearestNeighbor, QuantumSpatialOptimizer,
-    QuantumState,
+    QuantumState, QuantumTSPSolution, QuantumTSPSolver,
 };
 
 // Neuromorphic computing acceleration for brain-inspired spatial processing

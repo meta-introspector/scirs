@@ -446,7 +446,7 @@ mod integration_tests {
     #[test]
     pub fn test_full_ultrathink_mode_integration() {
         // Create all ultrathink mode components
-        let gpu_accelerator = UltraGPUAccelerator::<f64>::new().unwrap();
+        let _gpu_accelerator = UltraGPUAccelerator::<f64>::new().unwrap();
         let memory_optimizer = UltraMemoryOptimizer::<f64>::new().unwrap();
         let simd_accelerator = UltraSimdAccelerator::<f64>::new().unwrap();
         let adaptive_optimizer = RealTimeAdaptiveOptimizer::<f64>::new().unwrap();

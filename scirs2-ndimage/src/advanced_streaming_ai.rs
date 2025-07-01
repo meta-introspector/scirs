@@ -1131,7 +1131,13 @@ mod tests {
             MemoryManagementStrategy::Optimistic { .. } => {
                 // Expected for low pressure
             }
-            _ => panic!("Unexpected strategy for low pressure"),
+            _ => {
+                assert!(
+                    false,
+                    "Expected Optimistic strategy for low pressure, got: {:?}",
+                    result
+                );
+            }
         }
     }
 }

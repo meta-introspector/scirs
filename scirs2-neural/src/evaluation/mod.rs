@@ -173,10 +173,10 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + std::fmt::Display + Send
         // Generate indices
         let mut indices: Vec<usize> = (0..dataset.len()).collect();
         if self.config.shuffle {
-            use rand::rngs::SmallRng;
+            // use rand::rngs::SmallRng;
             use rand::seq::SliceRandom;
-            use rand::SeedableRng;
-            let mut rng = SmallRng::seed_from_u64(42);
+            // use rand::SeedableRng;
+            let mut rng = rand::rng();
             indices.shuffle(&mut rng);
         }
 

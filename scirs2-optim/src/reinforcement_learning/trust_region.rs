@@ -299,7 +299,7 @@ impl<T: Float, P: PolicyNetwork<T>> TrustRegionOptimizer<T, P> {
     }
 
     /// Apply parameter update to policy network
-    fn apply_parameter_update(&mut self, update: &Array1<T>) -> Result<(), OptimizerError> {
+    fn apply_parameter_update(&mut self, _update: &Array1<T>) -> Result<(), OptimizerError> {
         // In practice, this would update the policy network parameters
         // For now, we just store the update
         Ok(())

@@ -2765,6 +2765,1322 @@ impl<F: Float + Debug + Clone + FromPrimitive> EnhancedTransformerBlock<F> {
     }
 }
 
+/// **ULTRATHINK MODE: NEXT-GENERATION ATTENTION MECHANISMS**
+
+/// Ring Attention for distributed computation across multiple devices
+#[derive(Debug)]
+pub struct RingAttention<F: Float + Debug> {
+    /// Model dimension
+    model_dim: usize,
+    /// Number of attention heads
+    num_heads: usize,
+    /// Head dimension
+    head_dim: usize,
+    /// Ring size (number of devices/partitions)
+    ring_size: usize,
+    /// Current device rank
+    device_rank: usize,
+    /// Query, Key, Value projections
+    w_qkv: Array2<F>,
+    /// Output projection
+    w_output: Array2<F>,
+    /// Communication buffer for ring rotation
+    comm_buffer: Array3<F>,
+}
+
+impl<F: Float + Debug + Clone + FromPrimitive> RingAttention<F> {
+    /// Create new Ring Attention layer
+    pub fn new(
+        model_dim: usize,
+        num_heads: usize,
+        ring_size: usize,
+        device_rank: usize,
+    ) -> crate::error::Result<Self> {
+        if model_dim % num_heads != 0 {
+            return Err(crate::error::TimeSeriesError::InvalidInput(
+                "Model dimension must be divisible by number of heads".to_string(),
+            ));
+        }
+
+        let head_dim = model_dim / num_heads;
+        let scale = F::from(2.0).unwrap() / F::from(model_dim).unwrap();
+        let std_dev = scale.sqrt();
+
+        // QKV projection dimension is 3 times model_dim for query, key, value
+        let w_qkv = LSTMCell::random_matrix(3 * model_dim, model_dim, std_dev);
+        let w_output = LSTMCell::random_matrix(model_dim, model_dim, std_dev);
+
+        // Communication buffer for ring rotation (max sequence length estimation)
+        let max_seq_len = 1024;
+        let comm_buffer = Array3::zeros((ring_size, max_seq_len, model_dim));
+
+        Ok(Self {
+            model_dim,
+            num_heads,
+            head_dim,
+            ring_size,
+            device_rank,
+            w_qkv,
+            w_output,
+            comm_buffer,
+        })
+    }
+
+    /// Forward pass with distributed ring attention
+    pub fn forward(&self, input: &Array2<F>) -> crate::error::Result<Array2<F>> {
+        let (seq_len, _) = input.dim();
+
+        // Project to QKV
+        let qkv = self.linear_transform(input, &self.w_qkv);
+        let (queries, keys, values) = self.split_qkv(&qkv, seq_len);
+
+        // Partition sequence across ring devices
+        let local_seq_len = seq_len / self.ring_size;
+        let start_idx = self.device_rank * local_seq_len;
+        let end_idx = ((self.device_rank + 1) * local_seq_len).min(seq_len);
+
+        // Local queries (this device)
+        let local_queries = self.extract_sequence_slice(&queries, start_idx, end_idx);
+
+        // Initialize attention output
+        let mut attention_output = Array2::zeros((end_idx - start_idx, self.model_dim));
+
+        // Ring rotation: compute attention with each device's keys/values
+        for ring_step in 0..self.ring_size {
+            let key_device = (self.device_rank + ring_step) % self.ring_size;
+            let key_start = key_device * local_seq_len;
+            let key_end = ((key_device + 1) * local_seq_len).min(seq_len);
+
+            // Extract keys and values for this ring step
+            let ring_keys = self.extract_sequence_slice(&keys, key_start, key_end);
+            let ring_values = self.extract_sequence_slice(&values, key_start, key_end);
+
+            // Compute partial attention
+            let partial_attention = self.compute_ring_attention(
+                &local_queries,
+                &ring_keys,
+                &ring_values,
+                key_start,
+                start_idx,
+            )?;
+
+            // Accumulate attention output
+            attention_output = self.add_attention_outputs(&attention_output, &partial_attention);
+        }
+
+        // Apply output projection
+        let output = self.linear_transform(&attention_output, &self.w_output);
+        Ok(output)
+    }
+
+    /// Compute attention for a specific ring segment
+    fn compute_ring_attention(
+        &self,
+        queries: &Array2<F>,
+        keys: &Array2<F>,
+        values: &Array2<F>,
+        key_offset: usize,
+        query_offset: usize,
+    ) -> crate::error::Result<Array2<F>> {
+        let (q_seq_len, _) = queries.dim();
+        let (k_seq_len, _) = keys.dim();
+
+        // Reshape for multi-head attention
+        let q_heads = self.reshape_for_heads(queries, q_seq_len);
+        let k_heads = self.reshape_for_heads(keys, k_seq_len);
+        let v_heads = self.reshape_for_heads(values, k_seq_len);
+
+        let mut head_outputs = Vec::new();
+
+        for head in 0..self.num_heads {
+            let q_head = self.get_head_slice(&q_heads, head, q_seq_len);
+            let k_head = self.get_head_slice(&k_heads, head, k_seq_len);
+            let v_head = self.get_head_slice(&v_heads, head, k_seq_len);
+
+            let head_output = self.single_head_ring_attention(
+                &q_head,
+                &k_head,
+                &v_head,
+                key_offset,
+                query_offset,
+            )?;
+            head_outputs.push(head_output);
+        }
+
+        // Concatenate heads
+        let concatenated = self.concatenate_ring_heads(&head_outputs, q_seq_len);
+        Ok(concatenated)
+    }
+
+    /// Single head attention with ring positioning
+    fn single_head_ring_attention(
+        &self,
+        queries: &Array2<F>,
+        keys: &Array2<F>,
+        values: &Array2<F>,
+        key_offset: usize,
+        query_offset: usize,
+    ) -> crate::error::Result<Array2<F>> {
+        let (q_len, _) = queries.dim();
+        let (k_len, _) = keys.dim();
+        let scale = F::one() / F::from(self.head_dim as f64).unwrap().sqrt();
+
+        // Compute attention scores
+        let mut scores = Array2::zeros((q_len, k_len));
+        for i in 0..q_len {
+            for j in 0..k_len {
+                let mut dot_product = F::zero();
+                for k in 0..self.head_dim {
+                    if k < queries.ncols() && k < keys.ncols() {
+                        dot_product = dot_product + queries[[i, k]] * keys[[j, k]];
+                    }
+                }
+                scores[[i, j]] = dot_product * scale;
+            }
+        }
+
+        // Apply causal mask with global positioning
+        for i in 0..q_len {
+            for j in 0..k_len {
+                let global_query_pos = query_offset + i;
+                let global_key_pos = key_offset + j;
+                if global_key_pos > global_query_pos {
+                    scores[[i, j]] = F::neg_infinity();
+                }
+            }
+        }
+
+        // Softmax
+        let attention_weights = self.softmax_ring(&scores);
+
+        // Apply attention to values
+        let mut output = Array2::zeros((q_len, self.head_dim));
+        for i in 0..q_len {
+            for k in 0..self.head_dim.min(values.ncols()) {
+                let mut weighted_sum = F::zero();
+                for j in 0..k_len.min(values.nrows()) {
+                    weighted_sum = weighted_sum + attention_weights[[i, j]] * values[[j, k]];
+                }
+                output[[i, k]] = weighted_sum;
+            }
+        }
+
+        Ok(output)
+    }
+
+    // Helper methods for Ring Attention
+    fn linear_transform(&self, input: &Array2<F>, weights: &Array2<F>) -> Array2<F> {
+        let (seq_len, input_dim) = input.dim();
+        let output_dim = weights.nrows();
+        let mut output = Array2::zeros((seq_len, output_dim));
+
+        for i in 0..seq_len {
+            for j in 0..output_dim {
+                let mut sum = F::zero();
+                for k in 0..input_dim.min(weights.ncols()) {
+                    sum = sum + input[[i, k]] * weights[[j, k]];
+                }
+                output[[i, j]] = sum;
+            }
+        }
+        output
+    }
+
+    fn split_qkv(&self, qkv: &Array2<F>, seq_len: usize) -> (Array2<F>, Array2<F>, Array2<F>) {
+        let dim = self.model_dim;
+        let mut q = Array2::zeros((seq_len, dim));
+        let mut k = Array2::zeros((seq_len, dim));
+        let mut v = Array2::zeros((seq_len, dim));
+
+        for i in 0..seq_len {
+            for j in 0..dim {
+                if j < qkv.ncols() {
+                    q[[i, j]] = qkv[[i, j]];
+                }
+                if j + dim < qkv.ncols() {
+                    k[[i, j]] = qkv[[i, j + dim]];
+                }
+                if j + 2 * dim < qkv.ncols() {
+                    v[[i, j]] = qkv[[i, j + 2 * dim]];
+                }
+            }
+        }
+
+        (q, k, v)
+    }
+
+    fn extract_sequence_slice(&self, tensor: &Array2<F>, start: usize, end: usize) -> Array2<F> {
+        let (seq_len, dim) = tensor.dim();
+        let actual_start = start.min(seq_len);
+        let actual_end = end.min(seq_len);
+        let slice_len = actual_end - actual_start;
+
+        let mut slice = Array2::zeros((slice_len, dim));
+        for i in 0..slice_len {
+            for j in 0..dim {
+                slice[[i, j]] = tensor[[actual_start + i, j]];
+            }
+        }
+        slice
+    }
+
+    fn reshape_for_heads(&self, tensor: &Array2<F>, seq_len: usize) -> Array3<F> {
+        let mut reshaped = Array3::zeros((self.num_heads, seq_len, self.head_dim));
+
+        for head in 0..self.num_heads {
+            for seq in 0..seq_len {
+                for dim in 0..self.head_dim {
+                    let original_dim = head * self.head_dim + dim;
+                    if original_dim < tensor.ncols() {
+                        reshaped[[head, seq, dim]] = tensor[[seq, original_dim]];
+                    }
+                }
+            }
+        }
+        reshaped
+    }
+
+    fn get_head_slice(&self, tensor: &Array3<F>, head: usize, seq_len: usize) -> Array2<F> {
+        let mut slice = Array2::zeros((seq_len, self.head_dim));
+
+        for seq in 0..seq_len {
+            for dim in 0..self.head_dim {
+                slice[[seq, dim]] = tensor[[head, seq, dim]];
+            }
+        }
+        slice
+    }
+
+    fn concatenate_ring_heads(&self, heads: &[Array2<F>], seq_len: usize) -> Array2<F> {
+        let mut concatenated = Array2::zeros((seq_len, self.model_dim));
+
+        for (h, head_output) in heads.iter().enumerate() {
+            for i in 0..seq_len.min(head_output.nrows()) {
+                for j in 0..self.head_dim.min(head_output.ncols()) {
+                    let output_idx = h * self.head_dim + j;
+                    if output_idx < concatenated.ncols() {
+                        concatenated[[i, output_idx]] = head_output[[i, j]];
+                    }
+                }
+            }
+        }
+        concatenated
+    }
+
+    fn add_attention_outputs(&self, a: &Array2<F>, b: &Array2<F>) -> Array2<F> {
+        let (rows, cols) = a.dim();
+        let mut result = Array2::zeros((rows, cols));
+
+        for i in 0..rows {
+            for j in 0..cols {
+                let val_a = a[[i, j]];
+                let val_b = if i < b.nrows() && j < b.ncols() {
+                    b[[i, j]]
+                } else {
+                    F::zero()
+                };
+                result[[i, j]] = val_a + val_b;
+            }
+        }
+        result
+    }
+
+    fn softmax_ring(&self, input: &Array2<F>) -> Array2<F> {
+        let (rows, cols) = input.dim();
+        let mut output = Array2::zeros((rows, cols));
+
+        for i in 0..rows {
+            // Find maximum for numerical stability
+            let mut max_val = F::neg_infinity();
+            for j in 0..cols {
+                if input[[i, j]] > max_val {
+                    max_val = input[[i, j]];
+                }
+            }
+
+            // Compute exponentials and sum
+            let mut sum = F::zero();
+            for j in 0..cols {
+                let exp_val = (input[[i, j]] - max_val).exp();
+                output[[i, j]] = exp_val;
+                sum = sum + exp_val;
+            }
+
+            // Normalize
+            for j in 0..cols {
+                output[[i, j]] = output[[i, j]] / sum;
+            }
+        }
+        output
+    }
+}
+
+/// Hyena Attention: Subquadratic attention alternative with convolution
+#[derive(Debug)]
+pub struct HyenaAttention<F: Float + Debug> {
+    /// Model dimension
+    model_dim: usize,
+    /// Filter order (number of convolution layers)
+    order: usize,
+    /// Maximum sequence length
+    max_seq_len: usize,
+    /// Input projection
+    input_proj: Array2<F>,
+    /// Filter projections for each order
+    filter_projs: Vec<Array2<F>>,
+    /// Convolution kernels
+    conv_kernels: Vec<Array1<F>>,
+    /// Output projection
+    output_proj: Array2<F>,
+    /// Positional encoding
+    pos_encoding: Array2<F>,
+}
+
+impl<F: Float + Debug + Clone + FromPrimitive> HyenaAttention<F> {
+    /// Create new Hyena Attention layer
+    pub fn new(model_dim: usize, order: usize, max_seq_len: usize) -> Self {
+        let scale = F::from(2.0).unwrap() / F::from(model_dim).unwrap();
+        let std_dev = scale.sqrt();
+
+        // Input projection to order + 1 dimensions
+        let input_proj = LSTMCell::random_matrix((order + 1) * model_dim, model_dim, std_dev);
+
+        // Filter projections for each order
+        let mut filter_projs = Vec::new();
+        for _ in 0..order {
+            filter_projs.push(LSTMCell::random_matrix(model_dim, model_dim, std_dev));
+        }
+
+        // Convolution kernels (learnable filters)
+        let mut conv_kernels = Vec::new();
+        let kernel_size = (max_seq_len / 4).max(16); // Adaptive kernel size
+        for _ in 0..order {
+            let mut kernel = Array1::zeros(kernel_size);
+            for i in 0..kernel_size {
+                let val = ((i * 17) % 1000) as f64 / 1000.0 - 0.5;
+                kernel[i] = F::from(val).unwrap() * std_dev;
+            }
+            conv_kernels.push(kernel);
+        }
+
+        let output_proj = LSTMCell::random_matrix(model_dim, model_dim, std_dev);
+
+        // Positional encoding
+        let mut pos_encoding = Array2::zeros((max_seq_len, model_dim));
+        for pos in 0..max_seq_len {
+            for i in 0..model_dim / 2 {
+                let angle = F::from(pos as f64).unwrap()
+                    / F::from(10000.0)
+                        .unwrap()
+                        .powf(F::from(2.0 * i as f64 / model_dim as f64).unwrap());
+
+                pos_encoding[[pos, 2 * i]] = angle.sin();
+                if 2 * i + 1 < model_dim {
+                    pos_encoding[[pos, 2 * i + 1]] = angle.cos();
+                }
+            }
+        }
+
+        Self {
+            model_dim,
+            order,
+            max_seq_len,
+            input_proj,
+            filter_projs,
+            conv_kernels,
+            output_proj,
+            pos_encoding,
+        }
+    }
+
+    /// Forward pass through Hyena attention
+    pub fn forward(&self, input: &Array2<F>) -> crate::error::Result<Array2<F>> {
+        let (seq_len, _) = input.dim();
+
+        // Add positional encoding
+        let input_with_pos = self.add_positional_encoding(input);
+
+        // Project input to order + 1 branches
+        let projected = self.linear_transform(&input_with_pos, &self.input_proj);
+        let branches = self.split_into_branches(&projected, seq_len);
+
+        // First branch is the data branch (no convolution)
+        let mut result = branches[0].clone();
+
+        // Apply convolution and gating for each order
+        for order_idx in 1..=self.order {
+            if order_idx < branches.len() {
+                // Apply convolution to the branch
+                let conv_output = self.apply_convolution(&branches[order_idx], order_idx - 1);
+
+                // Apply filter projection
+                let filtered =
+                    self.linear_transform(&conv_output, &self.filter_projs[order_idx - 1]);
+
+                // Element-wise multiplication (gating)
+                result = self.element_wise_multiply(&result, &filtered);
+            }
+        }
+
+        // Apply output projection
+        let output = self.linear_transform(&result, &self.output_proj);
+        Ok(output)
+    }
+
+    /// Add positional encoding to input
+    fn add_positional_encoding(&self, input: &Array2<F>) -> Array2<F> {
+        let (seq_len, model_dim) = input.dim();
+        let mut output = input.clone();
+
+        let actual_seq_len = seq_len.min(self.max_seq_len);
+        let actual_dim = model_dim.min(self.model_dim);
+
+        for i in 0..actual_seq_len {
+            for j in 0..actual_dim {
+                output[[i, j]] = output[[i, j]] + self.pos_encoding[[i, j]];
+            }
+        }
+
+        output
+    }
+
+    /// Split projected input into branches
+    fn split_into_branches(&self, projected: &Array2<F>, seq_len: usize) -> Vec<Array2<F>> {
+        let mut branches = Vec::new();
+
+        for branch_idx in 0..=self.order {
+            let mut branch = Array2::zeros((seq_len, self.model_dim));
+            for i in 0..seq_len {
+                for j in 0..self.model_dim {
+                    let proj_idx = branch_idx * self.model_dim + j;
+                    if proj_idx < projected.ncols() {
+                        branch[[i, j]] = projected[[i, proj_idx]];
+                    }
+                }
+            }
+            branches.push(branch);
+        }
+
+        branches
+    }
+
+    /// Apply convolution to a branch
+    fn apply_convolution(&self, input: &Array2<F>, kernel_idx: usize) -> Array2<F> {
+        let (seq_len, model_dim) = input.dim();
+        let kernel = &self.conv_kernels[kernel_idx];
+        let kernel_size = kernel.len();
+        let mut output = Array2::zeros((seq_len, model_dim));
+
+        // Apply 1D convolution along sequence dimension for each feature
+        for feat in 0..model_dim {
+            for i in 0..seq_len {
+                let mut conv_sum = F::zero();
+                let mut weight_sum = F::zero();
+
+                for k in 0..kernel_size {
+                    let input_idx = i as i32 - k as i32 + kernel_size as i32 / 2;
+                    if input_idx >= 0 && (input_idx as usize) < seq_len {
+                        conv_sum = conv_sum + kernel[k] * input[[input_idx as usize, feat]];
+                        weight_sum = weight_sum + kernel[k].abs();
+                    }
+                }
+
+                // Normalize by the sum of applied weights
+                output[[i, feat]] = if weight_sum > F::zero() {
+                    conv_sum / weight_sum
+                } else {
+                    F::zero()
+                };
+            }
+        }
+
+        output
+    }
+
+    /// Element-wise multiplication of two arrays
+    fn element_wise_multiply(&self, a: &Array2<F>, b: &Array2<F>) -> Array2<F> {
+        let (rows, cols) = a.dim();
+        let mut result = Array2::zeros((rows, cols));
+
+        for i in 0..rows {
+            for j in 0..cols {
+                let val_b = if i < b.nrows() && j < b.ncols() {
+                    b[[i, j]]
+                } else {
+                    F::one() // Identity for missing elements
+                };
+                result[[i, j]] = a[[i, j]] * val_b;
+            }
+        }
+
+        result
+    }
+
+    /// Linear transformation helper
+    fn linear_transform(&self, input: &Array2<F>, weights: &Array2<F>) -> Array2<F> {
+        let (seq_len, input_dim) = input.dim();
+        let output_dim = weights.nrows();
+        let mut output = Array2::zeros((seq_len, output_dim));
+
+        for i in 0..seq_len {
+            for j in 0..output_dim {
+                let mut sum = F::zero();
+                for k in 0..input_dim.min(weights.ncols()) {
+                    sum = sum + input[[i, k]] * weights[[j, k]];
+                }
+                output[[i, j]] = sum;
+            }
+        }
+
+        output
+    }
+}
+
+/// Retrieval-Augmented Time Series (RATS) for enhanced forecasting
+#[derive(Debug)]
+pub struct RetrievalAugmentedTimeSeries<F: Float + Debug> {
+    /// Encoder for time series embedding
+    encoder: MultiHeadAttention<F>,
+    /// Memory bank of historical patterns
+    memory_bank: Array2<F>,
+    /// Memory keys for retrieval
+    memory_keys: Array2<F>,
+    /// Memory values (patterns)
+    memory_values: Array2<F>,
+    /// Retrieval attention mechanism
+    retrieval_attention: MultiHeadAttention<F>,
+    /// Cross-attention for pattern integration
+    cross_attention: MultiHeadAttention<F>,
+    /// Decoder for final prediction
+    decoder: FeedForwardNetwork<F>,
+    /// Dimensions
+    model_dim: usize,
+    memory_size: usize,
+    pattern_dim: usize,
+}
+
+impl<F: Float + Debug + Clone + FromPrimitive> RetrievalAugmentedTimeSeries<F> {
+    /// Create new RATS model
+    pub fn new(
+        model_dim: usize,
+        num_heads: usize,
+        memory_size: usize,
+        pattern_dim: usize,
+    ) -> crate::error::Result<Self> {
+        let encoder = MultiHeadAttention::new(model_dim, num_heads)?;
+        let retrieval_attention = MultiHeadAttention::new(pattern_dim, num_heads)?;
+        let cross_attention = MultiHeadAttention::new(model_dim, num_heads)?;
+
+        let decoder = FeedForwardNetwork::new(
+            model_dim + pattern_dim,
+            model_dim * 4,
+            ActivationFunction::ReLU,
+        );
+
+        // Initialize memory bank with random patterns
+        let scale = F::from(2.0).unwrap() / F::from(pattern_dim).unwrap();
+        let std_dev = scale.sqrt();
+
+        let memory_bank = LSTMCell::random_matrix(memory_size, pattern_dim, std_dev);
+        let memory_keys = LSTMCell::random_matrix(memory_size, model_dim, std_dev);
+        let memory_values = memory_bank.clone();
+
+        Ok(Self {
+            encoder,
+            memory_bank,
+            memory_keys,
+            memory_values,
+            retrieval_attention,
+            cross_attention,
+            decoder,
+            model_dim,
+            memory_size,
+            pattern_dim,
+        })
+    }
+
+    /// Forward pass with retrieval-augmented forecasting
+    pub fn forward(&self, input: &Array2<F>) -> crate::error::Result<Array2<F>> {
+        let (_seq_len, _) = input.dim();
+
+        // Encode input time series
+        let encoded = self.encoder.forward(input)?;
+
+        // Create query from encoded representation (use last timestep)
+        let query = self.create_query_from_encoded(&encoded);
+
+        // Retrieve relevant patterns from memory
+        let retrieved_patterns = self.retrieve_patterns(&query)?;
+
+        // Apply cross-attention to integrate retrieved patterns
+        let integrated = self.integrate_patterns(&encoded, &retrieved_patterns)?;
+
+        // Decode to final prediction
+        let output = self.decoder.forward(&integrated);
+
+        Ok(output)
+    }
+
+    /// Create retrieval query from encoded representation
+    fn create_query_from_encoded(&self, encoded: &Array2<F>) -> Array2<F> {
+        let (seq_len, model_dim) = encoded.dim();
+
+        // Use attention pooling to create a single query vector
+        let mut query = Array2::zeros((1, model_dim));
+
+        // Simple average pooling (can be enhanced with learned pooling)
+        for j in 0..model_dim {
+            let mut sum = F::zero();
+            for i in 0..seq_len {
+                sum = sum + encoded[[i, j]];
+            }
+            query[[0, j]] = sum / F::from(seq_len).unwrap();
+        }
+
+        query
+    }
+
+    /// Retrieve relevant patterns from memory bank
+    fn retrieve_patterns(&self, query: &Array2<F>) -> crate::error::Result<Array2<F>> {
+        let (_, model_dim) = query.dim();
+
+        // Compute similarity scores with memory keys
+        let mut similarity_scores = Array1::zeros(self.memory_size);
+
+        for i in 0..self.memory_size {
+            let mut dot_product = F::zero();
+            for j in 0..model_dim.min(self.memory_keys.ncols()) {
+                dot_product = dot_product + query[[0, j]] * self.memory_keys[[i, j]];
+            }
+
+            // Cosine similarity
+            let query_norm = self.compute_norm(&query.row(0).to_owned());
+            let key_norm = self.compute_norm(&self.memory_keys.row(i).to_owned());
+
+            similarity_scores[i] = if query_norm > F::zero() && key_norm > F::zero() {
+                dot_product / (query_norm * key_norm)
+            } else {
+                F::zero()
+            };
+        }
+
+        // Apply softmax to get retrieval probabilities
+        let retrieval_probs = self.softmax_1d(&similarity_scores);
+
+        // Weighted combination of memory patterns
+        let mut retrieved = Array2::zeros((1, self.pattern_dim));
+        for i in 0..self.memory_size {
+            let weight = retrieval_probs[i];
+            for j in 0..self.pattern_dim.min(self.memory_values.ncols()) {
+                retrieved[[0, j]] = retrieved[[0, j]] + weight * self.memory_values[[i, j]];
+            }
+        }
+
+        Ok(retrieved)
+    }
+
+    /// Integrate retrieved patterns with encoded input
+    fn integrate_patterns(
+        &self,
+        encoded: &Array2<F>,
+        patterns: &Array2<F>,
+    ) -> crate::error::Result<Array2<F>> {
+        let (seq_len, model_dim) = encoded.dim();
+        let (_, pattern_dim) = patterns.dim();
+
+        // Expand patterns to sequence length
+        let mut expanded_patterns = Array2::zeros((seq_len, pattern_dim));
+        for i in 0..seq_len {
+            for j in 0..pattern_dim {
+                expanded_patterns[[i, j]] = patterns[[0, j]];
+            }
+        }
+
+        // Concatenate encoded input with retrieved patterns
+        let mut integrated = Array2::zeros((seq_len, model_dim + pattern_dim));
+
+        for i in 0..seq_len {
+            // Copy encoded features
+            for j in 0..model_dim {
+                integrated[[i, j]] = encoded[[i, j]];
+            }
+            // Copy pattern features
+            for j in 0..pattern_dim {
+                integrated[[i, model_dim + j]] = expanded_patterns[[i, j]];
+            }
+        }
+
+        Ok(integrated)
+    }
+
+    /// Update memory bank with new patterns (for online learning)
+    pub fn update_memory(&mut self, new_pattern: &Array1<F>, pattern_key: &Array1<F>) {
+        // Simple replacement strategy: replace oldest entry
+        // In practice, this could use more sophisticated strategies
+        let replace_idx = 0; // For simplicity, always replace first entry
+
+        // Update memory bank
+        for j in 0..self.pattern_dim.min(new_pattern.len()) {
+            self.memory_bank[[replace_idx, j]] = new_pattern[j];
+            self.memory_values[[replace_idx, j]] = new_pattern[j];
+        }
+
+        // Update memory keys
+        for j in 0..self.model_dim.min(pattern_key.len()) {
+            self.memory_keys[[replace_idx, j]] = pattern_key[j];
+        }
+    }
+
+    // Helper methods
+    fn compute_norm(&self, vector: &Array1<F>) -> F {
+        let mut sum_squares = F::zero();
+        for &val in vector {
+            sum_squares = sum_squares + val * val;
+        }
+        sum_squares.sqrt()
+    }
+
+    fn softmax_1d(&self, input: &Array1<F>) -> Array1<F> {
+        let mut output = Array1::zeros(input.len());
+
+        // Find maximum for numerical stability
+        let mut max_val = F::neg_infinity();
+        for &val in input {
+            if val > max_val {
+                max_val = val;
+            }
+        }
+
+        // Compute exponentials and sum
+        let mut sum = F::zero();
+        for (i, &val) in input.iter().enumerate() {
+            let exp_val = (val - max_val).exp();
+            output[i] = exp_val;
+            sum = sum + exp_val;
+        }
+
+        // Normalize
+        for val in output.iter_mut() {
+            *val = *val / sum;
+        }
+
+        output
+    }
+}
+
+/// Ultra-Advanced Quantum Attention with Quantum Superposition States
+#[derive(Debug)]
+pub struct QuantumSuperpositionAttention<F: Float + Debug> {
+    /// Model dimension
+    model_dim: usize,
+    /// Number of quantum attention heads
+    num_heads: usize,
+    /// Quantum state dimension (number of qubits)
+    num_qubits: usize,
+    /// Quantum state projections
+    quantum_proj: Array2<F>,
+    /// Quantum gate parameters
+    quantum_gates: Vec<Array2<F>>,
+    /// Classical attention for comparison
+    classical_attention: MultiHeadAttention<F>,
+    /// Quantum-classical fusion weights
+    fusion_weights: Array1<F>,
+}
+
+impl<F: Float + Debug + Clone + FromPrimitive> QuantumSuperpositionAttention<F> {
+    /// Create new Quantum Superposition Attention
+    pub fn new(
+        model_dim: usize,
+        num_heads: usize,
+        num_qubits: usize,
+    ) -> crate::error::Result<Self> {
+        let scale = F::from(2.0).unwrap() / F::from(model_dim).unwrap();
+        let std_dev = scale.sqrt();
+
+        let quantum_dim = 1 << num_qubits; // 2^num_qubits
+        let quantum_proj = LSTMCell::random_matrix(quantum_dim, model_dim, std_dev);
+
+        // Create quantum gates (Pauli-X, Pauli-Y, Pauli-Z, Hadamard approximations)
+        let mut quantum_gates = Vec::new();
+        for _ in 0..4 {
+            quantum_gates.push(LSTMCell::random_matrix(quantum_dim, quantum_dim, std_dev));
+        }
+
+        let classical_attention = MultiHeadAttention::new(model_dim, num_heads)?;
+
+        // Fusion weights for quantum-classical combination
+        let mut fusion_weights = Array1::zeros(2);
+        fusion_weights[0] = F::from(0.7).unwrap(); // Classical weight
+        fusion_weights[1] = F::from(0.3).unwrap(); // Quantum weight
+
+        Ok(Self {
+            model_dim,
+            num_heads,
+            num_qubits,
+            quantum_proj,
+            quantum_gates,
+            classical_attention,
+            fusion_weights,
+        })
+    }
+
+    /// Forward pass with quantum superposition attention
+    pub fn forward(&self, input: &Array2<F>) -> crate::error::Result<Array2<F>> {
+        // Classical attention branch
+        let classical_output = self.classical_attention.forward(input)?;
+
+        // Quantum attention branch
+        let quantum_output = self.quantum_attention_branch(input)?;
+
+        // Fuse quantum and classical outputs
+        let fused_output = self.fuse_quantum_classical(&classical_output, &quantum_output);
+
+        Ok(fused_output)
+    }
+
+    /// Quantum attention computation
+    fn quantum_attention_branch(&self, input: &Array2<F>) -> crate::error::Result<Array2<F>> {
+        let (_seq_len, _) = input.dim();
+
+        // Project to quantum state space
+        let quantum_states = self.project_to_quantum_space(input);
+
+        // Apply quantum superposition operations
+        let superposed_states = self.apply_quantum_superposition(&quantum_states)?;
+
+        // Apply quantum attention mechanism
+        let quantum_attended = self.quantum_attention_mechanism(&superposed_states)?;
+
+        // Project back to classical space
+        let classical_output = self.project_to_classical_space(&quantum_attended);
+
+        Ok(classical_output)
+    }
+
+    /// Project input to quantum state space
+    fn project_to_quantum_space(&self, input: &Array2<F>) -> Array2<F> {
+        let (seq_len, _) = input.dim();
+        let quantum_dim = 1 << self.num_qubits;
+        let mut quantum_states = Array2::zeros((seq_len, quantum_dim));
+
+        // Project each timestep to quantum space
+        for i in 0..seq_len {
+            for j in 0..quantum_dim {
+                let mut projection = F::zero();
+                for k in 0..self.model_dim.min(self.quantum_proj.ncols()) {
+                    projection = projection + input[[i, k]] * self.quantum_proj[[j, k]];
+                }
+                quantum_states[[i, j]] = projection;
+            }
+        }
+
+        // Normalize to create valid quantum states
+        self.normalize_quantum_states(&quantum_states)
+    }
+
+    /// Apply quantum superposition using quantum gates
+    fn apply_quantum_superposition(&self, states: &Array2<F>) -> crate::error::Result<Array2<F>> {
+        let mut superposed = states.clone();
+
+        // Apply quantum gates sequentially
+        for gate in &self.quantum_gates {
+            superposed = self.apply_quantum_gate(&superposed, gate);
+        }
+
+        Ok(superposed)
+    }
+
+    /// Apply a quantum gate to states
+    fn apply_quantum_gate(&self, states: &Array2<F>, gate: &Array2<F>) -> Array2<F> {
+        let (seq_len, quantum_dim) = states.dim();
+        let mut output = Array2::zeros((seq_len, quantum_dim));
+
+        for i in 0..seq_len {
+            for j in 0..quantum_dim {
+                let mut gate_output = F::zero();
+                for k in 0..quantum_dim.min(gate.ncols()) {
+                    gate_output = gate_output + gate[[j, k]] * states[[i, k]];
+                }
+                output[[i, j]] = gate_output;
+            }
+        }
+
+        // Re-normalize after gate application
+        self.normalize_quantum_states(&output)
+    }
+
+    /// Quantum attention mechanism using quantum interference
+    fn quantum_attention_mechanism(&self, states: &Array2<F>) -> crate::error::Result<Array2<F>> {
+        let (seq_len, quantum_dim) = states.dim();
+        let mut attended = Array2::zeros((seq_len, quantum_dim));
+
+        // Quantum interference-based attention
+        for i in 0..seq_len {
+            for j in 0..quantum_dim {
+                let mut interference_sum = F::zero();
+
+                // Compute quantum interference with all other timesteps
+                for k in 0..seq_len {
+                    let amplitude_product = states[[i, j]] * states[[k, j]];
+                    let phase_factor = F::from(
+                        ((i * quantum_dim + j) as f64 * std::f64::consts::PI / quantum_dim as f64)
+                            .cos(),
+                    )
+                    .unwrap();
+
+                    interference_sum = interference_sum + amplitude_product * phase_factor;
+                }
+
+                attended[[i, j]] = interference_sum / F::from(seq_len).unwrap();
+            }
+        }
+
+        Ok(attended)
+    }
+
+    /// Project quantum states back to classical space
+    fn project_to_classical_space(&self, quantum_states: &Array2<F>) -> Array2<F> {
+        let (seq_len, _) = quantum_states.dim();
+        let mut classical_output = Array2::zeros((seq_len, self.model_dim));
+
+        // Project each quantum state back to classical model dimension
+        for i in 0..seq_len {
+            for j in 0..self.model_dim {
+                let mut projection = F::zero();
+
+                // Weighted combination of quantum amplitudes
+                for k in 0..quantum_states.ncols().min(self.quantum_proj.nrows()) {
+                    let weight = if j < self.quantum_proj.ncols() {
+                        self.quantum_proj[[k, j]]
+                    } else {
+                        F::zero()
+                    };
+                    projection = projection + quantum_states[[i, k]] * weight;
+                }
+
+                classical_output[[i, j]] = projection;
+            }
+        }
+
+        classical_output
+    }
+
+    /// Normalize quantum states to ensure valid probability amplitudes
+    fn normalize_quantum_states(&self, states: &Array2<F>) -> Array2<F> {
+        let (seq_len, quantum_dim) = states.dim();
+        let mut normalized = Array2::zeros((seq_len, quantum_dim));
+
+        for i in 0..seq_len {
+            // Compute norm for this timestep
+            let mut norm_squared = F::zero();
+            for j in 0..quantum_dim {
+                norm_squared = norm_squared + states[[i, j]] * states[[i, j]];
+            }
+
+            let norm = norm_squared.sqrt();
+
+            // Normalize if norm is non-zero
+            if norm > F::zero() {
+                for j in 0..quantum_dim {
+                    normalized[[i, j]] = states[[i, j]] / norm;
+                }
+            }
+        }
+
+        normalized
+    }
+
+    /// Fuse quantum and classical attention outputs
+    fn fuse_quantum_classical(&self, classical: &Array2<F>, quantum: &Array2<F>) -> Array2<F> {
+        let (seq_len, model_dim) = classical.dim();
+        let mut fused = Array2::zeros((seq_len, model_dim));
+
+        let classical_weight = self.fusion_weights[0];
+        let quantum_weight = self.fusion_weights[1];
+
+        for i in 0..seq_len {
+            for j in 0..model_dim {
+                let classical_val = classical[[i, j]];
+                let quantum_val = if i < quantum.nrows() && j < quantum.ncols() {
+                    quantum[[i, j]]
+                } else {
+                    F::zero()
+                };
+
+                fused[[i, j]] = classical_weight * classical_val + quantum_weight * quantum_val;
+            }
+        }
+
+        fused
+    }
+
+    /// Adaptive fusion weight adjustment based on quantum coherence
+    pub fn adjust_fusion_weights(&mut self, quantum_coherence: F) {
+        // Adjust weights based on quantum coherence measure
+        let coherence_factor = quantum_coherence.min(F::one()).max(F::zero());
+
+        self.fusion_weights[0] = F::one() - coherence_factor * F::from(0.5).unwrap();
+        self.fusion_weights[1] = coherence_factor * F::from(0.5).unwrap();
+
+        // Ensure weights sum to 1
+        let weight_sum = self.fusion_weights[0] + self.fusion_weights[1];
+        if weight_sum > F::zero() {
+            self.fusion_weights[0] = self.fusion_weights[0] / weight_sum;
+            self.fusion_weights[1] = self.fusion_weights[1] / weight_sum;
+        }
+    }
+}
+
+/// Speculative Decoding for Ultra-Fast Inference
+#[derive(Debug)]
+pub struct SpeculativeDecoder<F: Float + Debug> {
+    /// Main model (larger, more accurate)
+    main_model: EnhancedTransformerBlock<F>,
+    /// Draft model (smaller, faster)
+    draft_model: EnhancedTransformerBlock<F>,
+    /// Acceptance threshold for speculative tokens
+    acceptance_threshold: F,
+    /// Maximum number of speculative steps
+    max_speculative_steps: usize,
+    /// Cache for efficient computation
+    kv_cache: Option<(Array3<F>, Array3<F>)>, // (keys, values)
+}
+
+impl<F: Float + Debug + Clone + FromPrimitive> SpeculativeDecoder<F> {
+    /// Create new Speculative Decoder
+    pub fn new(
+        main_model_dim: usize,
+        draft_model_dim: usize,
+        num_heads: usize,
+        max_speculative_steps: usize,
+        acceptance_threshold: F,
+    ) -> crate::error::Result<Self> {
+        let main_model = EnhancedTransformerBlock::new(
+            main_model_dim,
+            num_heads,
+            main_model_dim * 4,
+            "flash", // Use flash attention for main model
+            true,    // Use RoPE
+        )?;
+
+        let draft_model = EnhancedTransformerBlock::new(
+            draft_model_dim,
+            num_heads / 2, // Fewer heads for draft model
+            draft_model_dim * 2,
+            "multiquery", // Use more efficient MQA for draft model
+            false,        // No RoPE for speed
+        )?;
+
+        Ok(Self {
+            main_model,
+            draft_model,
+            acceptance_threshold,
+            max_speculative_steps,
+            kv_cache: None,
+        })
+    }
+
+    /// Generate sequence with speculative decoding
+    pub fn generate_speculative(
+        &mut self,
+        input: &Array2<F>,
+        target_length: usize,
+    ) -> crate::error::Result<Array2<F>> {
+        let (initial_seq_len, model_dim) = input.dim();
+        let mut current_sequence = input.clone();
+
+        while current_sequence.nrows() < initial_seq_len + target_length {
+            // Speculative phase: generate candidates with draft model
+            let draft_candidates = self.draft_phase(&current_sequence)?;
+
+            // Verification phase: verify candidates with main model
+            let accepted_tokens = self.verification_phase(&current_sequence, &draft_candidates)?;
+
+            // Append accepted tokens to sequence
+            current_sequence = self.append_tokens(&current_sequence, &accepted_tokens);
+
+            // Break if no tokens were accepted (fallback to single token generation)
+            if accepted_tokens.is_empty() {
+                let single_token = self.generate_single_token(&current_sequence)?;
+                current_sequence = self.append_tokens(&current_sequence, &[single_token]);
+            }
+        }
+
+        // Trim to target length
+        let final_seq_len = (initial_seq_len + target_length).min(current_sequence.nrows());
+        let mut result = Array2::zeros((final_seq_len, model_dim));
+        for i in 0..final_seq_len {
+            for j in 0..model_dim {
+                result[[i, j]] = current_sequence[[i, j]];
+            }
+        }
+
+        Ok(result)
+    }
+
+    /// Draft phase: generate candidate tokens with draft model
+    fn draft_phase(&self, input: &Array2<F>) -> crate::error::Result<Vec<Array1<F>>> {
+        let mut candidates = Vec::new();
+        let mut current_input = input.clone();
+
+        for _ in 0..self.max_speculative_steps {
+            // Process with draft model (reduced dimensionality)
+            let draft_input = self.reduce_dimensionality(&current_input);
+            let draft_output = self.draft_model.forward(&draft_input)?;
+
+            // Extract next token prediction
+            let next_token = self.extract_next_token(&draft_output);
+            candidates.push(next_token.clone());
+
+            // Append to input for next iteration
+            current_input = self.append_token_to_sequence(&current_input, &next_token);
+        }
+
+        Ok(candidates)
+    }
+
+    /// Verification phase: verify candidates with main model
+    fn verification_phase(
+        &self,
+        base_sequence: &Array2<F>,
+        candidates: &[Array1<F>],
+    ) -> crate::error::Result<Vec<Array1<F>>> {
+        let mut accepted = Vec::new();
+        let mut verification_input = base_sequence.clone();
+
+        for candidate in candidates {
+            // Process with main model
+            let main_output = self.main_model.forward(&verification_input)?;
+            let main_prediction = self.extract_next_token(&main_output);
+
+            // Compute acceptance probability
+            let acceptance_prob = self.compute_acceptance_probability(&main_prediction, candidate);
+
+            if acceptance_prob >= self.acceptance_threshold {
+                accepted.push(candidate.clone());
+                verification_input = self.append_token_to_sequence(&verification_input, candidate);
+            } else {
+                // Reject this and all subsequent candidates
+                break;
+            }
+        }
+
+        Ok(accepted)
+    }
+
+    /// Generate single token with main model (fallback)
+    fn generate_single_token(&self, input: &Array2<F>) -> crate::error::Result<Array1<F>> {
+        let output = self.main_model.forward(input)?;
+        Ok(self.extract_next_token(&output))
+    }
+
+    /// Reduce dimensionality for draft model
+    fn reduce_dimensionality(&self, input: &Array2<F>) -> Array2<F> {
+        let (seq_len, full_dim) = input.dim();
+        let reduced_dim = full_dim / 2; // Simple reduction strategy
+
+        let mut reduced = Array2::zeros((seq_len, reduced_dim));
+        for i in 0..seq_len {
+            for j in 0..reduced_dim {
+                reduced[[i, j]] = input[[i, j]];
+            }
+        }
+        reduced
+    }
+
+    /// Extract next token from model output
+    fn extract_next_token(&self, output: &Array2<F>) -> Array1<F> {
+        let (seq_len, model_dim) = output.dim();
+        let mut next_token = Array1::zeros(model_dim);
+
+        // Use last timestep as next token prediction
+        if seq_len > 0 {
+            for j in 0..model_dim {
+                next_token[j] = output[[seq_len - 1, j]];
+            }
+        }
+
+        next_token
+    }
+
+    /// Compute acceptance probability for speculative token
+    fn compute_acceptance_probability(&self, main_pred: &Array1<F>, candidate: &Array1<F>) -> F {
+        // Compute cosine similarity as acceptance criterion
+        let mut dot_product = F::zero();
+        let mut main_norm_sq = F::zero();
+        let mut candidate_norm_sq = F::zero();
+
+        let min_len = main_pred.len().min(candidate.len());
+
+        for i in 0..min_len {
+            dot_product = dot_product + main_pred[i] * candidate[i];
+            main_norm_sq = main_norm_sq + main_pred[i] * main_pred[i];
+            candidate_norm_sq = candidate_norm_sq + candidate[i] * candidate[i];
+        }
+
+        let main_norm = main_norm_sq.sqrt();
+        let candidate_norm = candidate_norm_sq.sqrt();
+
+        if main_norm > F::zero() && candidate_norm > F::zero() {
+            dot_product / (main_norm * candidate_norm)
+        } else {
+            F::zero()
+        }
+    }
+
+    /// Append token to sequence
+    fn append_token_to_sequence(&self, sequence: &Array2<F>, token: &Array1<F>) -> Array2<F> {
+        let (seq_len, model_dim) = sequence.dim();
+        let token_dim = token.len().min(model_dim);
+
+        let mut extended = Array2::zeros((seq_len + 1, model_dim));
+
+        // Copy original sequence
+        for i in 0..seq_len {
+            for j in 0..model_dim {
+                extended[[i, j]] = sequence[[i, j]];
+            }
+        }
+
+        // Append token
+        for j in 0..token_dim {
+            extended[[seq_len, j]] = token[j];
+        }
+
+        extended
+    }
+
+    /// Append multiple tokens to sequence
+    fn append_tokens(&self, sequence: &Array2<F>, tokens: &[Array1<F>]) -> Array2<F> {
+        let mut result = sequence.clone();
+        for token in tokens {
+            result = self.append_token_to_sequence(&result, token);
+        }
+        result
+    }
+
+    /// Update acceptance threshold based on performance
+    pub fn update_acceptance_threshold(&mut self, acceptance_rate: F) {
+        let target_rate = F::from(0.7).unwrap(); // Target 70% acceptance rate
+        let learning_rate = F::from(0.01).unwrap();
+
+        // Adjust threshold to maintain target acceptance rate
+        if acceptance_rate < target_rate {
+            // Lower threshold to accept more tokens
+            self.acceptance_threshold = self.acceptance_threshold - learning_rate;
+        } else if acceptance_rate > target_rate + F::from(0.1).unwrap() {
+            // Raise threshold to be more selective
+            self.acceptance_threshold = self.acceptance_threshold + learning_rate;
+        }
+
+        // Clamp to reasonable range
+        self.acceptance_threshold = self
+            .acceptance_threshold
+            .max(F::from(0.1).unwrap())
+            .min(F::from(0.95).unwrap());
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -3330,5 +4646,204 @@ mod tests {
             // Norms should be approximately equal (rotation preserves magnitude)
             assert_abs_diff_eq!(input_norm, output_norm, epsilon = 1e-10);
         }
+    }
+
+    // **ULTRATHINK MODE: NEXT-GENERATION TESTS**
+
+    #[test]
+    fn test_ring_attention() {
+        let ring_attn = RingAttention::<f64>::new(
+            32, // model_dim
+            4,  // num_heads
+            2,  // ring_size
+            0,  // device_rank
+        )
+        .unwrap();
+
+        let input =
+            Array2::from_shape_vec((16, 32), (0..512).map(|i| i as f64 * 0.001).collect()).unwrap();
+
+        let output = ring_attn.forward(&input).unwrap();
+
+        // Ring attention should handle distributed computation
+        assert_eq!(output.dim(), (8, 32)); // Half sequence due to ring partitioning
+        assert!(output.sum().abs() > 1e-10);
+    }
+
+    #[test]
+    fn test_hyena_attention() {
+        let hyena = HyenaAttention::<f64>::new(
+            64,  // model_dim
+            3,   // order
+            128, // max_seq_len
+        );
+
+        let input =
+            Array2::from_shape_vec((12, 64), (0..768).map(|i| i as f64 * 0.001).collect()).unwrap();
+
+        let output = hyena.forward(&input).unwrap();
+        assert_eq!(output.dim(), (12, 64));
+
+        // Hyena should provide subquadratic attention alternative
+        assert!(output.sum().abs() > 1e-10);
+    }
+
+    #[test]
+    fn test_retrieval_augmented_time_series() {
+        let rats = RetrievalAugmentedTimeSeries::<f64>::new(
+            32, // model_dim
+            4,  // num_heads
+            64, // memory_size
+            16, // pattern_dim
+        )
+        .unwrap();
+
+        let input =
+            Array2::from_shape_vec((10, 32), (0..320).map(|i| i as f64 * 0.01).collect()).unwrap();
+
+        let output = rats.forward(&input).unwrap();
+        assert_eq!(output.dim(), (10, 48)); // model_dim + pattern_dim
+
+        // RAG should enhance forecasting with retrieved patterns
+        assert!(output.sum().abs() > 1e-10);
+    }
+
+    #[test]
+    fn test_quantum_superposition_attention() {
+        let quantum_attn = QuantumSuperpositionAttention::<f64>::new(
+            32, // model_dim
+            4,  // num_heads
+            3,  // num_qubits
+        )
+        .unwrap();
+
+        let input =
+            Array2::from_shape_vec((8, 32), (0..256).map(|i| i as f64 * 0.005).collect()).unwrap();
+
+        let output = quantum_attn.forward(&input).unwrap();
+        assert_eq!(output.dim(), (8, 32));
+
+        // Quantum attention should fuse quantum and classical computation
+        assert!(output.sum().abs() > 1e-10);
+    }
+
+    #[test]
+    fn test_speculative_decoder() {
+        let mut spec_decoder = SpeculativeDecoder::<f64>::new(
+            64,      // main_model_dim
+            32,      // draft_model_dim
+            8,       // num_heads
+            3,       // max_speculative_steps
+            0.7_f64, // acceptance_threshold
+        )
+        .unwrap();
+
+        let input =
+            Array2::from_shape_vec((5, 64), (0..320).map(|i| i as f64 * 0.002).collect()).unwrap();
+
+        let output = spec_decoder.generate_speculative(&input, 3).unwrap();
+        assert_eq!(output.dim(), (8, 64)); // 5 + 3 = 8
+
+        // Speculative decoding should generate extended sequences
+        assert!(output.sum().abs() > 1e-10);
+    }
+
+    #[test]
+    fn test_quantum_coherence_adaptation() {
+        let mut quantum_attn = QuantumSuperpositionAttention::<f64>::new(16, 2, 2).unwrap();
+
+        // Test adaptive fusion weight adjustment
+        let initial_classical_weight = quantum_attn.fusion_weights[0];
+        quantum_attn.adjust_fusion_weights(0.8); // High coherence
+        let new_classical_weight = quantum_attn.fusion_weights[0];
+
+        // High coherence should increase quantum weight (decrease classical)
+        assert!(new_classical_weight < initial_classical_weight);
+
+        // Weights should still sum to 1
+        let weight_sum = quantum_attn.fusion_weights[0] + quantum_attn.fusion_weights[1];
+        assert_abs_diff_eq!(weight_sum, 1.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_retrieval_memory_update() {
+        let mut rats = RetrievalAugmentedTimeSeries::<f64>::new(16, 2, 32, 8).unwrap();
+
+        let new_pattern = Array1::from_vec((0..8).map(|i| i as f64 * 0.1).collect());
+        let pattern_key = Array1::from_vec((0..16).map(|i| (i as f64).sin()).collect());
+
+        // Update memory with new pattern
+        rats.update_memory(&new_pattern, &pattern_key);
+
+        // Memory should be updated (test by verifying it doesn't crash)
+        let input =
+            Array2::from_shape_vec((5, 16), (0..80).map(|i| i as f64 * 0.02).collect()).unwrap();
+
+        let output = rats.forward(&input).unwrap();
+        assert_eq!(output.dim(), (5, 24)); // 16 + 8
+    }
+
+    #[test]
+    fn test_hyena_convolution_properties() {
+        let hyena = HyenaAttention::<f64>::new(32, 2, 64);
+
+        let input =
+            Array2::from_shape_vec((8, 32), (0..256).map(|i| i as f64 * 0.01).collect()).unwrap();
+
+        let output1 = hyena.forward(&input).unwrap();
+
+        // Test with different input to verify convolution behavior
+        let input2 =
+            Array2::from_shape_vec((8, 32), (0..256).map(|i| -i as f64 * 0.01).collect()).unwrap();
+
+        let output2 = hyena.forward(&input2).unwrap();
+
+        // Outputs should be different for different inputs
+        let diff: f64 = output1
+            .iter()
+            .zip(output2.iter())
+            .map(|(a, b)| (a - b).abs())
+            .sum();
+        assert!(diff > 1e-6);
+    }
+
+    #[test]
+    fn test_speculative_acceptance_threshold_adaptation() {
+        let mut spec_decoder = SpeculativeDecoder::<f64>::new(32, 16, 4, 2, 0.5).unwrap();
+
+        let initial_threshold = spec_decoder.acceptance_threshold;
+
+        // Simulate low acceptance rate
+        spec_decoder.update_acceptance_threshold(0.3);
+        assert!(spec_decoder.acceptance_threshold < initial_threshold);
+
+        // Simulate high acceptance rate
+        spec_decoder.update_acceptance_threshold(0.9);
+        assert!(spec_decoder.acceptance_threshold > initial_threshold);
+    }
+
+    #[test]
+    fn test_ring_attention_partitioning() {
+        // Test different device ranks
+        let ring_attn_device0 = RingAttention::<f64>::new(16, 2, 4, 0).unwrap();
+        let ring_attn_device1 = RingAttention::<f64>::new(16, 2, 4, 1).unwrap();
+
+        let input =
+            Array2::from_shape_vec((16, 16), (0..256).map(|i| i as f64 * 0.01).collect()).unwrap();
+
+        let output0 = ring_attn_device0.forward(&input).unwrap();
+        let output1 = ring_attn_device1.forward(&input).unwrap();
+
+        // Different devices should process different sequence partitions
+        assert_eq!(output0.dim(), (4, 16)); // 16/4 = 4 per device
+        assert_eq!(output1.dim(), (4, 16));
+
+        // Outputs should be different for different device ranks
+        let diff: f64 = output0
+            .iter()
+            .zip(output1.iter())
+            .map(|(a, b)| (a - b).abs())
+            .sum();
+        assert!(diff > 1e-6);
     }
 }

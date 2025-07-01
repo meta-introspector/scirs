@@ -30,7 +30,7 @@
 //! use rand::SeedableRng;
 //!
 //! # fn train_model() -> scirs2_neural::error::Result<()> {
-//! let mut rng = SmallRng::seed_from_u64(42);
+//! let mut rng = rand::thread_rng();
 //!
 //! // Create a simple model
 //! let mut model: Sequential<f32> = Sequential::new();

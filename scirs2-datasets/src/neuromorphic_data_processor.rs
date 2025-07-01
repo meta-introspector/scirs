@@ -6,7 +6,7 @@
 
 use crate::error::{DatasetsError, Result};
 use crate::utils::Dataset;
-use ndarray::{Array1, Array2, Array3, Axis};
+use ndarray::{s, Array1, Array2, Array3, Axis};
 use rand::prelude::*;
 use rand::thread_rng;
 use std::collections::HashMap;

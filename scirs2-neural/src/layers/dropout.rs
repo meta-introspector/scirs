@@ -28,7 +28,7 @@ use std::sync::{Arc, RwLock};
 /// use rand::SeedableRng;
 ///
 /// // Create a dropout layer with 0.5 dropout probability
-/// let mut rng = SmallRng::seed_from_u64(42);
+/// let mut rng = rand::thread_rng();
 /// let dropout = Dropout::new(0.5, &mut rng).unwrap();
 ///
 /// // Forward pass with a batch of 2 samples, 10 features
@@ -281,7 +281,7 @@ mod tests {
     #[test]
     fn test_dropout_shape() {
         // Set up dropout
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = rand::thread_rng();
         let dropout = Dropout::<f64>::new(0.5, &mut rng).unwrap();
 
         // Create a batch of inputs
@@ -299,7 +299,7 @@ mod tests {
     #[test]
     fn test_dropout_training_mode() {
         // Set up dropout
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = rand::thread_rng();
         let mut dropout = Dropout::<f64>::new(0.5, &mut rng).unwrap();
 
         // Ensure training mode
@@ -336,7 +336,7 @@ mod tests {
     #[test]
     fn test_dropout_inference_mode() {
         // Set up dropout
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = rand::thread_rng();
         let mut dropout = Dropout::<f64>::new(0.5, &mut rng).unwrap();
 
         // Set to inference mode
@@ -359,7 +359,7 @@ mod tests {
     #[test]
     fn test_dropout_zero_probability() {
         // Set up dropout with p=0 (no dropout)
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = rand::thread_rng();
         let dropout = Dropout::<f64>::new(0.0, &mut rng).unwrap();
 
         // Create a batch of inputs
@@ -379,7 +379,7 @@ mod tests {
     #[test]
     fn test_dropout_backward() {
         // Set up dropout
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = rand::thread_rng();
         let dropout = Dropout::<f64>::new(0.5, &mut rng).unwrap();
 
         // Create a batch of inputs

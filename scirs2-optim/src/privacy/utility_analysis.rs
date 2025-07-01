@@ -1134,8 +1134,8 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
     #[allow(dead_code)]
     pub fn analyze<D: Data<Elem = T> + Sync, Dim: Dimension>(
         &mut self,
-        data: &ArrayBase<D, Dim>,
-        model_fn: impl Fn(&ArrayBase<D, Dim>, &PrivacyConfiguration<T>) -> Result<T, OptimizerError>
+        _data: &ArrayBase<D, Dim>,
+        _model_fn: impl Fn(&ArrayBase<D, Dim>, &PrivacyConfiguration<T>) -> Result<T, OptimizerError>
             + Sync,
     ) -> Result<PrivacyUtilityResults<T>, OptimizerError> {
         // Implementation would go here
@@ -1232,9 +1232,9 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
     #[allow(dead_code)]
     pub fn optimize_budget_allocation(
         &self,
-        total_budget: &PrivacyBudget,
-        iterations: usize,
-        utility_threshold: T,
+        _total_budget: &PrivacyBudget,
+        _iterations: usize,
+        _utility_threshold: T,
     ) -> Result<BudgetAllocation<T>, OptimizerError> {
         // Implementation would go here
         todo!("Implementation of budget allocation optimization")
@@ -1392,10 +1392,10 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
     #[allow(dead_code)]
     pub fn evaluate_robustness<D: Data<Elem = T> + Sync, Dim: Dimension>(
         &self,
-        data: &ArrayBase<D, Dim>,
-        model_fn: impl Fn(&ArrayBase<D, Dim>, &PrivacyConfiguration<T>) -> Result<T, OptimizerError>
+        _data: &ArrayBase<D, Dim>,
+        _model_fn: impl Fn(&ArrayBase<D, Dim>, &PrivacyConfiguration<T>) -> Result<T, OptimizerError>
             + Sync,
-        config: &PrivacyConfiguration<T>,
+        _config: &PrivacyConfiguration<T>,
     ) -> Result<RobustnessResults<T>, OptimizerError> {
         // Implementation would go here
         todo!("Implementation of robustness evaluation")
@@ -1405,8 +1405,8 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
     #[allow(dead_code)]
     pub fn predict_utility_degradation(
         &self,
-        privacy_parameters: &[T],
-        historical_data: &[(T, T)],
+        _privacy_parameters: &[T],
+        _historical_data: &[(T, T)],
     ) -> Result<Vec<DegradationPrediction<T>>, OptimizerError> {
         // Implementation would go here
         todo!("Implementation of utility degradation prediction")
@@ -1416,8 +1416,8 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
     #[allow(dead_code)]
     pub fn assess_privacy_risk<D: Data<Elem = T> + Sync, Dim: Dimension>(
         &self,
-        data: &ArrayBase<D, Dim>,
-        config: &PrivacyConfiguration<T>,
+        _data: &ArrayBase<D, Dim>,
+        _config: &PrivacyConfiguration<T>,
     ) -> Result<PrivacyRiskAssessment<T>, OptimizerError> {
         // Implementation would go here
         todo!("Implementation of privacy risk assessment")
@@ -1427,8 +1427,8 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
     #[allow(dead_code)]
     pub fn perform_statistical_tests(
         &self,
-        results: &[(T, T)],
-        baseline: &[(T, T)],
+        _results: &[(T, T)],
+        _baseline: &[(T, T)],
     ) -> Result<StatisticalTestResults<T>, OptimizerError> {
         // Implementation would go here
         todo!("Implementation of statistical significance testing")

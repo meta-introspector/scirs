@@ -28,7 +28,7 @@ use std::sync::{Arc, RwLock};
 ///
 /// // Create a 2D convolutional layer with 3 input channels, 8 output channels
 /// // and a 3x3 kernel
-/// let mut rng = SmallRng::seed_from_u64(42);
+/// let mut rng = rand::thread_rng();
 /// let conv = Conv2D::new(3, 8, (3, 3), (1, 1), PaddingMode::Same, &mut rng).unwrap();
 ///
 /// // Forward pass with a batch of 2 samples, each with 3 channels and size 32x32

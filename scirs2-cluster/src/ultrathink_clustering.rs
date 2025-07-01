@@ -40,7 +40,7 @@
 //!     .with_continual_adaptation(true)
 //!     .with_multi_objective_optimization(true);
 //!
-//! let result = ultrathink.cluster(&data.view()).await?;
+//! let result = ultrathink.cluster(&data.view())?;
 //! println!("Ultrathink clusters: {:?}", result.clusters);
 //! println!("AI advantage: {:.2}x speedup", result.ai_speedup);
 //! println!("Quantum advantage: {:.2}x optimization", result.quantum_advantage);
@@ -285,33 +285,51 @@ impl UltrathinkClusterer {
     }
 
     /// Perform ultrathink clustering
-    pub async fn cluster(&mut self, data: &ArrayView2<f64>) -> Result<UltrathinkClusteringResult> {
+    pub fn cluster(&mut self, data: &ArrayView2<f64>) -> Result<UltrathinkClusteringResult> {
+        // Input validation
+        if data.is_empty() {
+            return Err(ClusteringError::InvalidInput("Input data cannot be empty".to_string()));
+        }
+        if data.nrows() < 2 {
+            return Err(ClusteringError::InvalidInput("Need at least 2 data points for clustering".to_string()));
+        }
+        if data.ncols() == 0 {
+            return Err(ClusteringError::InvalidInput("Data must have at least one feature".to_string()));
+        }
+        
+        // Check for NaN or infinite values
+        for value in data.iter() {
+            if !value.is_finite() {
+                return Err(ClusteringError::InvalidInput("Data contains NaN or infinite values".to_string()));
+            }
+        }
+        
         let start_time = Instant::now();
         
         // Phase 1: AI-driven algorithm selection
         let selected_algorithm = if self.ai_selection {
-            self.ai_selector.select_optimal_algorithm(data).await?
+            self.ai_selector.select_optimal_algorithm(data)?
         } else {
             "quantum_neuromorphic_kmeans".to_string()
         };
 
         // Phase 2: Meta-learning optimization
         let optimized_params = if self.meta_learning {
-            self.meta_optimizer.optimize_hyperparameters(data, &selected_algorithm).await?
+            self.meta_optimizer.optimize_hyperparameters(data, &selected_algorithm)?
         } else {
             self.get_default_parameters(&selected_algorithm)
         };
 
         // Phase 3: Quantum-neuromorphic clustering
         let (clusters, centroids, quantum_metrics) = if self.quantum_neuromorphic {
-            self.quantum_neural_processor.cluster_quantum_neuromorphic(data, &optimized_params).await?
+            self.quantum_neural_processor.cluster_quantum_neuromorphic(data, &optimized_params)?
         } else {
             self.fallback_classical_clustering(data, &optimized_params)?
         };
 
         // Phase 4: Continual adaptation
         if self.continual_adaptation {
-            self.adaptation_engine.adapt_to_results(data, &clusters, &quantum_metrics).await?;
+            self.adaptation_engine.adapt_to_results(data, &clusters, &quantum_metrics)?;
         }
 
         let execution_time = start_time.elapsed().as_secs_f64();
@@ -426,6 +444,16 @@ impl UltrathinkClusterer {
         let k = params.num_clusters.unwrap_or(2);
         let n_features = data.ncols();
         
+        // Validate cluster count
+        if k < 1 {
+            return Err(ClusteringError::InvalidInput("Number of clusters must be at least 1".to_string()));
+        }
+        if k > data.nrows() {
+            return Err(ClusteringError::InvalidInput(
+                format!("Number of clusters ({}) cannot exceed number of data points ({})", k, data.nrows())
+            ));
+        }
+        
         // Simple k-means implementation
         let mut centroids = Array2::zeros((k, n_features));
         let mut clusters = Array1::zeros(data.nrows());
@@ -488,7 +516,7 @@ impl AIClusteringSelector {
         }
     }
 
-    pub async fn select_optimal_algorithm(&mut self, data: &ArrayView2<f64>) -> Result<String> {
+    pub fn select_optimal_algorithm(&mut self, data: &ArrayView2<f64>) -> Result<String> {
         // AI algorithm selection logic
         let data_characteristics = self.analyze_data_characteristics(data);
         let predicted_performance = self.predict_algorithm_performance(&data_characteristics);
@@ -496,7 +524,7 @@ impl AIClusteringSelector {
         // Select best algorithm based on multi-objective criteria
         let best_algorithm = predicted_performance
             .iter()
-            .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+            .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
             .map(|(alg, _)| alg.clone())
             .unwrap_or_else(|| "quantum_neuromorphic_kmeans".to_string());
 
@@ -504,21 +532,260 @@ impl AIClusteringSelector {
     }
 
     fn analyze_data_characteristics(&self, data: &ArrayView2<f64>) -> DataCharacteristics {
+        let n_samples = data.nrows();
+        let n_features = data.ncols();
+        
+        // Calculate actual sparsity
+        let total_elements = (n_samples * n_features) as f64;
+        let non_zero_elements = data.iter().filter(|&&x| x.abs() > 1e-10).count() as f64;
+        let sparsity = 1.0 - (non_zero_elements / total_elements);
+        
+        // Estimate noise level using inter-quartile range method
+        let mut values: Vec<f64> = data.iter().cloned().collect();
+        values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+        
+        let q1_idx = values.len() / 4;
+        let q3_idx = 3 * values.len() / 4;
+        let iqr = if q3_idx < values.len() && q1_idx < values.len() {
+            values[q3_idx] - values[q1_idx]
+        } else {
+            1.0
+        };
+        
+        // Normalize noise estimate
+        let data_range = values.last().unwrap_or(&1.0) - values.first().unwrap_or(&0.0);
+        let noise_level = if data_range > 0.0 {
+            (iqr / data_range).min(1.0)
+        } else {
+            0.1
+        };
+        
+        // Calculate cluster tendency using Hopkins statistic approximation
+        let cluster_tendency = self.estimate_cluster_tendency(data);
+        
         DataCharacteristics {
-            n_samples: data.nrows(),
-            n_features: data.ncols(),
-            sparsity: 0.1, // Simplified
-            noise_level: 0.05, // Simplified
-            cluster_tendency: 0.8, // Simplified
+            n_samples,
+            n_features,
+            sparsity: sparsity as f32,
+            noise_level: noise_level as f32,
+            cluster_tendency: cluster_tendency as f32,
+        }
+    }
+    
+    fn estimate_cluster_tendency(&self, data: &ArrayView2<f64>) -> f64 {
+        // Simplified Hopkins statistic for cluster tendency
+        let sample_size = (data.nrows() / 10).max(5).min(50);
+        let mut random_distances = Vec::new();
+        let mut data_distances = Vec::new();
+        
+        // Calculate some random point distances
+        for i in 0..sample_size {
+            if i < data.nrows() {
+                let point = data.row(i);
+                
+                // Find nearest neighbor distance in data
+                let mut min_distance = f64::INFINITY;
+                for j in 0..data.nrows() {
+                    if i != j {
+                        let other_point = data.row(j);
+                        let distance = euclidean_distance(&point, &other_point);
+                        if distance < min_distance {
+                            min_distance = distance;
+                        }
+                    }
+                }
+                data_distances.push(min_distance);
+                
+                // Generate random point in data space and find its nearest neighbor
+                let mut random_point = Array1::zeros(data.ncols());
+                for j in 0..data.ncols() {
+                    let col_values: Vec<f64> = data.column(j).iter().cloned().collect();
+                    let min_val = col_values.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+                    let max_val = col_values.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+                    random_point[j] = min_val + (max_val - min_val) * (i as f64 / sample_size as f64);
+                }
+                
+                let mut min_random_distance = f64::INFINITY;
+                for j in 0..data.nrows() {
+                    let data_point = data.row(j);
+                    let distance = euclidean_distance(&random_point.view(), &data_point);
+                    if distance < min_random_distance {
+                        min_random_distance = distance;
+                    }
+                }
+                random_distances.push(min_random_distance);
+            }
+        }
+        
+        // Calculate modified Hopkins statistic
+        let sum_random: f64 = random_distances.iter().sum();
+        let sum_data: f64 = data_distances.iter().sum();
+        let total_sum = sum_random + sum_data;
+        
+        if total_sum > 0.0 {
+            sum_random / total_sum
+        } else {
+            0.5 // Neutral tendency if no distance info
         }
     }
 
     fn predict_algorithm_performance(&self, characteristics: &DataCharacteristics) -> Vec<(String, f64)> {
-        vec![
-            ("quantum_neuromorphic_kmeans".to_string(), 0.95),
-            ("ai_adaptive_clustering".to_string(), 0.87),
-            ("meta_learned_clustering".to_string(), 0.82),
-        ]
+        let mut performance_predictions = Vec::new();
+        
+        // Quantum-neuromorphic K-means performance model
+        let quantum_score = self.predict_quantum_neuromorphic_performance(characteristics);
+        performance_predictions.push(("quantum_neuromorphic_kmeans".to_string(), quantum_score));
+        
+        // AI adaptive clustering performance model
+        let adaptive_score = self.predict_adaptive_clustering_performance(characteristics);
+        performance_predictions.push(("ai_adaptive_clustering".to_string(), adaptive_score));
+        
+        // Meta-learned clustering performance model
+        let meta_score = self.predict_meta_learned_performance(characteristics);
+        performance_predictions.push(("meta_learned_clustering".to_string(), meta_score));
+        
+        // Classical K-means baseline
+        let classical_score = self.predict_classical_kmeans_performance(characteristics);
+        performance_predictions.push(("classical_kmeans".to_string(), classical_score));
+        
+        performance_predictions
+    }
+    
+    fn predict_quantum_neuromorphic_performance(&self, characteristics: &DataCharacteristics) -> f64 {
+        let mut score = 0.7; // Base score
+        
+        // Quantum algorithms perform better with higher dimensional data
+        if characteristics.n_features > 10 {
+            score += 0.1;
+        }
+        if characteristics.n_features > 50 {
+            score += 0.1;
+        }
+        
+        // Better performance with complex cluster structures
+        if characteristics.cluster_tendency > 0.6 {
+            score += 0.1;
+        }
+        
+        // Handle noise well
+        if characteristics.noise_level > 0.3 {
+            score += 0.05; // Quantum algorithms can handle uncertainty
+        }
+        
+        // Penalty for very sparse data
+        if characteristics.sparsity > 0.8 {
+            score -= 0.1;
+        }
+        
+        // Scale bonus for larger datasets
+        if characteristics.n_samples > 1000 {
+            score += 0.05;
+        }
+        
+        score.max(0.0).min(1.0)
+    }
+    
+    fn predict_adaptive_clustering_performance(&self, characteristics: &DataCharacteristics) -> f64 {
+        let mut score = 0.65; // Base score
+        
+        // Adaptive algorithms excel with varied cluster densities
+        if characteristics.cluster_tendency > 0.4 && characteristics.cluster_tendency < 0.8 {
+            score += 0.15; // Sweet spot for adaptation
+        }
+        
+        // Good performance with moderate noise
+        if characteristics.noise_level > 0.1 && characteristics.noise_level < 0.4 {
+            score += 0.1;
+        }
+        
+        // Handle high-dimensional data reasonably well
+        if characteristics.n_features > 20 {
+            score += 0.05;
+        } else if characteristics.n_features > 100 {
+            score -= 0.05; // Curse of dimensionality
+        }
+        
+        // Penalty for very sparse data
+        if characteristics.sparsity > 0.9 {
+            score -= 0.15;
+        }
+        
+        // Bonus for medium-sized datasets
+        if characteristics.n_samples > 500 && characteristics.n_samples < 10000 {
+            score += 0.1;
+        }
+        
+        score.max(0.0).min(1.0)
+    }
+    
+    fn predict_meta_learned_performance(&self, characteristics: &DataCharacteristics) -> f64 {
+        let mut score = 0.6; // Base score
+        
+        // Meta-learning improves with experience (simulated based on data complexity)
+        let complexity_factor = (characteristics.n_features as f32 * characteristics.cluster_tendency) / 100.0;
+        score += (complexity_factor * 0.2) as f64;
+        
+        // Better with structured data
+        if characteristics.cluster_tendency > 0.7 {
+            score += 0.15;
+        }
+        
+        // Moderate performance with noisy data
+        if characteristics.noise_level < 0.2 {
+            score += 0.1;
+        } else if characteristics.noise_level > 0.5 {
+            score -= 0.1;
+        }
+        
+        // Handle sparsity moderately well
+        if characteristics.sparsity > 0.5 {
+            score -= 0.05;
+        }
+        
+        // Bonus for larger datasets (more learning opportunities)
+        if characteristics.n_samples > 2000 {
+            score += 0.1;
+        }
+        
+        score.max(0.0).min(1.0)
+    }
+    
+    fn predict_classical_kmeans_performance(&self, characteristics: &DataCharacteristics) -> f64 {
+        let mut score = 0.5; // Base score
+        
+        // Classical K-means works well with well-separated clusters
+        if characteristics.cluster_tendency > 0.8 {
+            score += 0.2;
+        } else if characteristics.cluster_tendency < 0.3 {
+            score -= 0.2;
+        }
+        
+        // Sensitive to noise
+        if characteristics.noise_level < 0.1 {
+            score += 0.15;
+        } else if characteristics.noise_level > 0.3 {
+            score -= 0.2;
+        }
+        
+        // Curse of dimensionality penalty
+        if characteristics.n_features > 50 {
+            score -= 0.1;
+        }
+        if characteristics.n_features > 200 {
+            score -= 0.2;
+        }
+        
+        // Sparsity penalty
+        if characteristics.sparsity > 0.7 {
+            score -= 0.15;
+        }
+        
+        // Efficient for larger datasets
+        if characteristics.n_samples > 1000 {
+            score += 0.05;
+        }
+        
+        score.max(0.0).min(1.0)
     }
 }
 
@@ -542,7 +809,7 @@ impl QuantumNeuromorphicProcessor {
         }
     }
 
-    pub async fn cluster_quantum_neuromorphic(
+    pub fn cluster_quantum_neuromorphic(
         &mut self,
         data: &ArrayView2<f64>,
         params: &OptimizationParameters,
@@ -555,7 +822,7 @@ impl QuantumNeuromorphicProcessor {
         self.initialize_quantum_neurons(k, n_features);
         
         // Quantum-enhanced clustering
-        let (clusters, centroids) = self.perform_quantum_neuromorphic_clustering(data, k).await?;
+        let (clusters, centroids) = self.perform_quantum_neuromorphic_clustering(data, k)?;
         
         let metrics = QuantumNeuromorphicMetrics {
             quantum_advantage: 2.5,
@@ -574,27 +841,63 @@ impl QuantumNeuromorphicProcessor {
 
     fn initialize_quantum_neurons(&mut self, num_neurons: usize, input_dim: usize) {
         self.quantum_spiking_neurons.clear();
+        
+        // Create quantum entanglement matrix
+        self.entanglement_matrix = Array2::zeros((num_neurons, num_neurons));
+        
         for i in 0..num_neurons {
+            // Initialize with quantum superposition state
+            let phase = 2.0 * PI * i as f64 / num_neurons as f64;
+            let amplitude = 1.0 / (num_neurons as f64).sqrt();
+            
+            // Random synaptic weights with quantum-inspired initialization
+            let mut synaptic_weights = Array1::zeros(input_dim);
+            for j in 0..input_dim {
+                let weight_phase = 2.0 * PI * (i + j) as f64 / (num_neurons + input_dim) as f64;
+                synaptic_weights[j] = weight_phase.cos() * 0.5 + 0.5; // Normalized to [0, 1]
+            }
+            
             let neuron = QuantumSpikingNeuron {
-                membrane_potential: -70.0,
-                threshold: -55.0,
-                reset_potential: -70.0,
-                quantum_state: Complex64::new(1.0 / (num_neurons as f64).sqrt(), 0.0),
-                coherence_time: 100.0,
-                entanglement_strength: 0.5,
-                synaptic_weights: Array1::ones(input_dim),
+                membrane_potential: -70.0 + (phase.sin() * 5.0), // Variable resting potential
+                threshold: -55.0 + (phase.cos() * 3.0), // Variable threshold
+                reset_potential: -75.0 + (phase.sin() * 2.0),
+                quantum_state: Complex64::from_polar(amplitude, phase),
+                coherence_time: 100.0 + (phase.sin() * 20.0), // Variable coherence
+                entanglement_strength: 0.3 + (phase.cos() * 0.4), // Variable entanglement
+                synaptic_weights,
                 plasticity_trace: 0.0,
-                spike_history: VecDeque::new(),
+                spike_history: VecDeque::with_capacity(50),
             };
             self.quantum_spiking_neurons.push(neuron);
+            
+            // Initialize entanglement matrix with quantum correlations
+            for j in 0..num_neurons {
+                if i != j {
+                    let entanglement = ((i as f64 - j as f64).abs() / num_neurons as f64).exp() * 0.1;
+                    self.entanglement_matrix[[i, j]] = Complex64::new(entanglement, 0.0);
+                }
+            }
         }
+        
+        // Update global quantum state
+        self.update_global_quantum_state();
     }
 
-    async fn perform_quantum_neuromorphic_clustering(
+    fn perform_quantum_neuromorphic_clustering(
         &mut self,
         data: &ArrayView2<f64>,
         k: usize,
     ) -> Result<(Array1<usize>, Array2<f64>)> {
+        // Additional validation for quantum processing
+        if k == 0 {
+            return Err(ClusteringError::InvalidInput("Number of clusters cannot be zero".to_string()));
+        }
+        if self.quantum_spiking_neurons.len() < k {
+            return Err(ClusteringError::InvalidInput(
+                "Insufficient quantum neurons for clustering".to_string()
+            ));
+        }
+        
         // Simplified quantum-neuromorphic clustering
         let n_features = data.ncols();
         let mut centroids = Array2::zeros((k, n_features));
@@ -614,11 +917,21 @@ impl QuantumNeuromorphicProcessor {
             let mut best_cluster = 0;
             
             for (cluster_id, centroid) in centroids.outer_iter().enumerate() {
-                // Quantum-enhanced distance calculation
+                // Quantum-enhanced distance calculation with error handling
                 let quantum_factor = self.quantum_spiking_neurons[cluster_id].quantum_state.norm_sqr();
-                let distance = euclidean_distance(&point, &centroid) / (1.0 + quantum_factor);
+                let base_distance = euclidean_distance(&point, &centroid);
                 
-                if distance < min_distance {
+                // Ensure quantum factor doesn't cause division by zero or invalid results
+                let quantum_enhancement = if quantum_factor.is_finite() && quantum_factor >= 0.0 {
+                    1.0 + quantum_factor
+                } else {
+                    1.0
+                };
+                
+                let distance = base_distance / quantum_enhancement;
+                
+                // Validate distance calculation
+                if distance.is_finite() && distance >= 0.0 && distance < min_distance {
                     min_distance = distance;
                     best_cluster = cluster_id;
                 }
@@ -633,30 +946,114 @@ impl QuantumNeuromorphicProcessor {
         Ok((clusters, centroids))
     }
 
+    /// Update the global quantum state based on individual neuron states
+    fn update_global_quantum_state(&mut self) {
+        let num_neurons = self.quantum_spiking_neurons.len();
+        if num_neurons == 0 {
+            return;
+        }
+        
+        // Initialize global quantum state
+        self.global_quantum_state.cluster_amplitudes = Array1::zeros(num_neurons);
+        self.global_quantum_state.phase_matrix = Array2::zeros((num_neurons, num_neurons));
+        
+        // Calculate superposition of all neuron states
+        for (i, neuron) in self.quantum_spiking_neurons.iter().enumerate() {
+            self.global_quantum_state.cluster_amplitudes[i] = neuron.quantum_state;
+            
+            // Calculate phase relationships
+            for (j, other_neuron) in self.quantum_spiking_neurons.iter().enumerate() {
+                if i != j {
+                    let phase_diff = neuron.quantum_state.arg() - other_neuron.quantum_state.arg();
+                    self.global_quantum_state.phase_matrix[[i, j]] = Complex64::from_polar(1.0, phase_diff);
+                }
+            }
+        }
+        
+        // Update entanglement connections based on current state
+        self.global_quantum_state.entanglement_connections.clear();
+        for i in 0..num_neurons {
+            for j in i+1..num_neurons {
+                let entanglement_strength = self.entanglement_matrix[[i, j]].norm();
+                if entanglement_strength > 0.05 {
+                    self.global_quantum_state.entanglement_connections.push((i, j, entanglement_strength));
+                }
+            }
+        }
+    }
+
     fn update_quantum_neuromorphic_state(&mut self, cluster_id: usize, point: &ArrayView1<f64>) {
         if let Some(neuron) = self.quantum_spiking_neurons.get_mut(cluster_id) {
-            // Update membrane potential based on input
-            let input_current = point.iter().sum::<f64>() / point.len() as f64;
-            neuron.membrane_potential += input_current * 0.1;
+            // Calculate weighted input current using synaptic weights
+            let mut weighted_input = 0.0;
+            for (i, &value) in point.iter().enumerate() {
+                if i < neuron.synaptic_weights.len() {
+                    weighted_input += value * neuron.synaptic_weights[i];
+                }
+            }
+            weighted_input /= point.len() as f64;
             
-            // Check for spike
-            if neuron.membrane_potential > neuron.threshold {
+            // Neuromorphic membrane dynamics
+            let leak_current = (neuron.membrane_potential - neuron.reset_potential) * 0.05;
+            neuron.membrane_potential += weighted_input * 0.2 - leak_current;
+            
+            // Apply quantum coherence effects
+            let coherence_factor = (-1.0 / neuron.coherence_time).exp();
+            let quantum_modulation = neuron.quantum_state.norm() * coherence_factor * 2.0;
+            neuron.membrane_potential += quantum_modulation;
+            
+            // Check for spike with quantum uncertainty
+            let spike_probability = 1.0 / (1.0 + (-(neuron.membrane_potential - neuron.threshold) * 2.0).exp());
+            let spike_occurred = spike_probability > 0.5; // Simplified threshold
+            
+            if spike_occurred {
                 neuron.membrane_potential = neuron.reset_potential;
                 neuron.spike_history.push_back(1.0);
                 
-                // Update quantum state with spike
-                let phase_shift = PI * 0.1;
-                let new_amplitude = neuron.quantum_state.norm() * 1.05;
-                neuron.quantum_state = Complex64::from_polar(new_amplitude, phase_shift);
+                // Quantum state evolution on spike
+                let phase_increment = PI * (neuron.entanglement_strength + 0.1);
+                let amplitude_boost = 1.0 + neuron.entanglement_strength * 0.1;
+                let current_phase = neuron.quantum_state.arg();
+                let current_amplitude = neuron.quantum_state.norm() * amplitude_boost;
+                
+                neuron.quantum_state = Complex64::from_polar(
+                    current_amplitude.min(1.0), // Keep amplitude normalized
+                    current_phase + phase_increment
+                );
+                
+                // Update plasticity trace (STDP-like)
+                neuron.plasticity_trace += 0.1;
+                
+                // Apply synaptic plasticity
+                for (i, &input_val) in point.iter().enumerate() {
+                    if i < neuron.synaptic_weights.len() {
+                        let weight_change = neuron.plasticity_trace * input_val * 0.01;
+                        neuron.synaptic_weights[i] = (neuron.synaptic_weights[i] + weight_change).max(0.0).min(1.0);
+                    }
+                }
             } else {
                 neuron.spike_history.push_back(0.0);
+                
+                // Gradual quantum decoherence
+                let decoherence_rate = 1.0 / neuron.coherence_time;
+                let current_amplitude = neuron.quantum_state.norm() * (1.0 - decoherence_rate * 0.01);
+                neuron.quantum_state = Complex64::from_polar(
+                    current_amplitude.max(0.1),
+                    neuron.quantum_state.arg()
+                );
             }
             
+            // Plasticity trace decay
+            neuron.plasticity_trace *= 0.95;
+            
             // Maintain spike history size
-            if neuron.spike_history.len() > 100 {
+            if neuron.spike_history.len() > 50 {
                 neuron.spike_history.pop_front();
             }
         }
+        
+        // Update global quantum state after individual neuron update
+        self.update_global_quantum_state();
     }
 }
 
@@ -680,7 +1077,7 @@ impl MetaLearningClusterOptimizer {
         }
     }
 
-    pub async fn optimize_hyperparameters(
+    pub fn optimize_hyperparameters(
         &mut self,
         data: &ArrayView2<f64>,
         algorithm: &str,
@@ -693,11 +1090,11 @@ impl MetaLearningClusterOptimizer {
         
         // Few-shot learning from similar tasks
         if !similar_tasks.is_empty() {
-            params = self.few_shot_learner.adapt_parameters(&similar_tasks, data).await?;
+            params = self.few_shot_learner.adapt_parameters(&similar_tasks, data)?;
         }
         
         // MAML adaptation
-        params = self.maml_adapt(params, data).await?;
+        params = self.maml_adapt(params, data)?;
         
         Ok(params)
     }
@@ -740,7 +1137,7 @@ impl MetaLearningClusterOptimizer {
         }
     }
 
-    async fn maml_adapt(&self, mut params: OptimizationParameters, data: &ArrayView2<f64>) -> Result<OptimizationParameters> {
+    fn maml_adapt(&self, mut params: OptimizationParameters, data: &ArrayView2<f64>) -> Result<OptimizationParameters> {
         // Simplified MAML adaptation
         params.learning_rate *= self.maml_params.inner_learning_rate;
         params.num_clusters = Some(self.estimate_optimal_clusters(data));
@@ -755,12 +1152,23 @@ impl MetaLearningClusterOptimizer {
 }
 
 // Supporting data structures with simplified implementations
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct OptimizationParameters {
     pub num_clusters: Option<usize>,
     pub learning_rate: f64,
     pub max_iterations: usize,
     pub tolerance: f64,
+}
+
+impl Default for OptimizationParameters {
+    fn default() -> Self {
+        Self {
+            num_clusters: None,
+            learning_rate: 0.01,
+            max_iterations: 100,
+            tolerance: 1e-6,
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -848,7 +1256,7 @@ pub struct ClusteringPerformanceRecord;
 pub struct ContinualAdaptationEngine;
 impl ContinualAdaptationEngine {
     pub fn new() -> Self { Self }
-    pub async fn adapt_to_results(&mut self, _data: &ArrayView2<f64>, _clusters: &Array1<usize>, _metrics: &QuantumNeuromorphicMetrics) -> Result<()> {
+    pub fn adapt_to_results(&mut self, _data: &ArrayView2<f64>, _clusters: &Array1<usize>, _metrics: &QuantumNeuromorphicMetrics) -> Result<()> {
         Ok(())
     }
 }
@@ -877,7 +1285,7 @@ pub struct MetaLearningEpisode;
 pub struct FewShotClusterLearner;
 impl FewShotClusterLearner {
     pub fn new() -> Self { Self }
-    pub async fn adapt_parameters(&self, _similar_tasks: &[String], _data: &ArrayView2<f64>) -> Result<OptimizationParameters> {
+    pub fn adapt_parameters(&self, _similar_tasks: &[String], _data: &ArrayView2<f64>) -> Result<OptimizationParameters> {
         Ok(OptimizationParameters::default())
     }
 }

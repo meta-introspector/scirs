@@ -7897,9 +7897,7 @@ pub mod risk_management {
 }
 
 #[cfg(test)]
-mod ultra_financial_tests {
-    use super::*;
-}
+mod ultra_financial_tests {}
 
 #[cfg(test)]
 mod enhanced_finance_tests {

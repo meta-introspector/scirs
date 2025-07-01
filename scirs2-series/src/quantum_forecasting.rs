@@ -1290,12 +1290,9 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum<F>> QuantumEnsemb
         learning_rate: F,
     ) -> Result<()> {
         // Train individual models
+        let num_models = self.models.len();
         for (model_idx, model) in self.models.iter_mut().enumerate() {
-            println!(
-                "Training quantum model {}/{}",
-                model_idx + 1,
-                self.models.len()
-            );
+            println!("Training quantum model {}/{}", model_idx + 1, num_models);
             model.train(training_data, max_iterations / 2, learning_rate)?;
         }
 
@@ -1860,8 +1857,8 @@ pub struct PerformanceMetrics<F: Float> {
 }
 
 /// Quantum advantage metrics
-#[derive(Debug)]
-pub struct AdvantageMetrics<F: Float + Debug> {
+#[derive(Debug, Clone)]
+pub struct AdvantageMetrics<F: Float + Debug + Clone> {
     /// Speedup over classical
     pub speedup: F,
     /// Accuracy improvement
@@ -1872,7 +1869,7 @@ pub struct AdvantageMetrics<F: Float + Debug> {
     pub advantage_threshold: usize,
 }
 
-impl<F: Float + Debug + Clone + FromPrimitive> QuantumAdvantagePredictor<F> {
+impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum<F>> QuantumAdvantagePredictor<F> {
     /// Create new quantum advantage predictor
     pub fn new(num_features: usize, num_qubits: usize) -> Self {
         let feature_map = QuantumFeatureMap {
@@ -2005,8 +2002,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumAdvantagePredictor<F> {
         for (features, target) in test_data.iter().take(100) {
             // Limit for demo
             if let Ok(quantum_output) = self.qml_model.vqc.forward(features) {
-                let prediction =
-                    quantum_output.iter().sum::<F>() / F::from(quantum_output.len()).unwrap();
+                let prediction = quantum_output.iter().copied().sum::<F>()
+                    / F::from(quantum_output.len()).unwrap();
                 let error = prediction - *target;
                 total_error = total_error + error * error;
                 valid_predictions += 1;

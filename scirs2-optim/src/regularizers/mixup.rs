@@ -75,7 +75,7 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive> MixUp<A> {
 
         // Use simple uniform distribution to approximate Beta for simplicity
         // For actual Beta distribution, we'd need more complex sampling
-        let x: f64 = rng.gen_range(0.0..1.0);
+        let x: f64 = rng.random_range(0.0..1.0);
         A::from_f64(x).unwrap()
     }
 
@@ -249,7 +249,7 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive> CutMix<A> {
 
         // For simplicity, we use a uniform distribution between 0 and 1
         // A proper Beta distribution would be used in a production implementation
-        let x: f64 = rng.gen_range(0.0..1.0);
+        let x: f64 = rng.random_range(0.0..1.0);
         A::from_f64(x).unwrap()
     }
 

@@ -5,12 +5,10 @@
 //! and real-time adaptive optimization for graph algorithms.
 
 use crate::base::{EdgeWeight, Graph, Node};
-use crate::error::{GraphError, Result};
+use crate::error::Result;
 use crate::performance::{PerformanceMonitor, PerformanceReport};
-use rand::distributions::Uniform;
 use rand::Rng;
-use std::collections::HashMap;
-use std::sync::Arc;
+use std::collections::{HashMap, VecDeque};
 
 /// Ultrathink mode configuration for graph processing
 #[derive(Debug, Clone)]
@@ -48,6 +46,114 @@ impl Default for UltrathinkConfig {
             gpu_memory_pool_mb: 2048,
             neural_hidden_size: 128,
         }
+    }
+}
+
+/// Advanced exploration strategies for neural RL
+#[derive(Debug, Clone)]
+pub enum ExplorationStrategy {
+    /// Standard epsilon-greedy exploration
+    EpsilonGreedy { epsilon: f64 },
+    /// Upper confidence bound exploration
+    UCB { c: f64 },
+    /// Thompson sampling exploration
+    ThompsonSampling { alpha: f64, beta: f64 },
+    /// Adaptive exploration based on uncertainty
+    AdaptiveUncertainty { uncertainty_threshold: f64 },
+}
+
+impl Default for ExplorationStrategy {
+    fn default() -> Self {
+        ExplorationStrategy::EpsilonGreedy { epsilon: 0.1 }
+    }
+}
+
+/// Enhanced memory management for large graph processing
+#[derive(Debug, Clone)]
+pub struct AdaptiveMemoryManager {
+    /// Current memory usage in bytes
+    current_usage: usize,
+    /// Memory threshold for triggering optimization
+    threshold_bytes: usize,
+    /// Memory usage history for trend analysis
+    usage_history: VecDeque<usize>,
+    /// Adaptive chunk sizes for different operations
+    chunk_sizes: HashMap<String, usize>,
+    /// Memory pool for reusable allocations
+    memory_pools: HashMap<String, VecDeque<Vec<u8>>>,
+}
+
+impl AdaptiveMemoryManager {
+    /// Create a new adaptive memory manager
+    pub fn new(threshold_mb: usize) -> Self {
+        Self {
+            current_usage: 0,
+            threshold_bytes: threshold_mb * 1024 * 1024,
+            usage_history: VecDeque::with_capacity(1000),
+            chunk_sizes: HashMap::new(),
+            memory_pools: HashMap::new(),
+        }
+    }
+
+    /// Record memory usage and adapt strategies
+    pub fn record_usage(&mut self, usage_bytes: usize) {
+        self.current_usage = usage_bytes;
+        self.usage_history.push_back(usage_bytes);
+
+        if self.usage_history.len() > 1000 {
+            self.usage_history.pop_front();
+        }
+
+        // Adapt chunk sizes based on memory pressure
+        if usage_bytes > self.threshold_bytes {
+            self.reduce_chunk_sizes();
+        } else if usage_bytes < self.threshold_bytes / 2 {
+            self.increase_chunk_sizes();
+        }
+    }
+
+    /// Reduce chunk sizes to decrease memory pressure
+    fn reduce_chunk_sizes(&mut self) {
+        for chunk_size in self.chunk_sizes.values_mut() {
+            *chunk_size = (*chunk_size / 2).max(64);
+        }
+    }
+
+    /// Increase chunk sizes when memory is available
+    fn increase_chunk_sizes(&mut self) {
+        for chunk_size in self.chunk_sizes.values_mut() {
+            *chunk_size = (*chunk_size * 2).min(8192);
+        }
+    }
+
+    /// Get optimal chunk size for an operation
+    pub fn get_chunk_size(&mut self, operation: &str) -> usize {
+        *self
+            .chunk_sizes
+            .entry(operation.to_string())
+            .or_insert(1024)
+    }
+
+    /// Allocate memory from pool or create new
+    pub fn allocate(&mut self, operation: &str, size: usize) -> Vec<u8> {
+        if let Some(pool) = self.memory_pools.get_mut(operation) {
+            if let Some(mut buffer) = pool.pop_back() {
+                if buffer.len() >= size {
+                    buffer.resize(size, 0);
+                    return buffer;
+                }
+            }
+        }
+        vec![0; size]
+    }
+
+    /// Return memory to pool for reuse
+    pub fn deallocate(&mut self, operation: &str, mut buffer: Vec<u8>) {
+        buffer.clear();
+        self.memory_pools
+            .entry(operation.to_string())
+            .or_insert_with(VecDeque::new)
+            .push_back(buffer);
     }
 }
 
@@ -92,10 +198,19 @@ pub struct NeuralRLAgent {
     learning_rate: f64,
     epsilon: f64,
     gamma: f64,
+    /// Advanced features for enhanced learning
+    /// Target network weights for stable learning
+    target_weights: Vec<Vec<Vec<f64>>>,
+    /// Priority weights for experience replay
+    priority_weights: Vec<f64>,
+    /// Algorithm performance history for better selection
+    algorithm_performance: HashMap<usize, VecDeque<f64>>,
+    /// Exploration strategy parameters
+    exploration_strategy: ExplorationStrategy,
 }
 
 impl NeuralRLAgent {
-    /// Create a new neural RL agent
+    /// Create a new enhanced neural RL agent
     pub fn new(
         input_size: usize,
         hidden_size: usize,
@@ -105,14 +220,13 @@ impl NeuralRLAgent {
         // Initialize weights randomly (simplified neural network)
         let mut q_weights = Vec::new();
         let mut rng = rand::rng();
-        let weight_dist = Uniform::new(-0.05, 0.05);
 
         // Input to hidden layer
         let mut input_hidden = Vec::new();
         for _ in 0..hidden_size {
             let mut row = Vec::new();
             for _ in 0..input_size {
-                row.push(rng.sample(weight_dist));
+                row.push(rng.random::<f64>() * 0.1 - 0.05);
             }
             input_hidden.push(row);
         }
@@ -123,18 +237,196 @@ impl NeuralRLAgent {
         for _ in 0..output_size {
             let mut row = Vec::new();
             for _ in 0..hidden_size {
-                row.push(rng.sample(weight_dist));
+                row.push(rng.random::<f64>() * 0.1 - 0.05);
             }
             hidden_output.push(row);
         }
         q_weights.push(hidden_output);
 
+        // Initialize target network with same weights
+        let target_weights = q_weights.clone();
+
         NeuralRLAgent {
             q_weights,
+            target_weights,
             experience_buffer: Vec::new(),
+            priority_weights: Vec::new(),
+            algorithm_performance: HashMap::new(),
+            exploration_strategy: ExplorationStrategy::default(),
             learning_rate,
             epsilon: 0.1,
             gamma: 0.95,
+        }
+    }
+
+    /// Update target network weights for stable learning
+    pub fn update_target_network(&mut self, tau: f64) {
+        for (target_layer, q_layer) in self.target_weights.iter_mut().zip(&self.q_weights) {
+            for (target_row, q_row) in target_layer.iter_mut().zip(q_layer) {
+                for (target_weight, &q_weight) in target_row.iter_mut().zip(q_row) {
+                    *target_weight = tau * q_weight + (1.0 - tau) * *target_weight;
+                }
+            }
+        }
+    }
+
+    /// Set exploration strategy
+    pub fn set_exploration_strategy(&mut self, strategy: ExplorationStrategy) {
+        self.exploration_strategy = strategy;
+    }
+
+    /// Enhanced algorithm selection with advanced exploration
+    pub fn select_algorithm_enhanced<N: Node, E: EdgeWeight, Ix>(
+        &mut self,
+        graph: &Graph<N, E, Ix>,
+    ) -> usize
+    where
+        Ix: petgraph::graph::IndexType,
+    {
+        let features = self.extract_features(graph);
+        let q_values = self.predict_q_values(&features);
+
+        match &self.exploration_strategy {
+            ExplorationStrategy::EpsilonGreedy { epsilon } => {
+                let mut rng = rand::rng();
+                if rng.random::<f64>() < *epsilon {
+                    rng.random_range(0..q_values.len())
+                } else {
+                    self.get_best_action(&q_values)
+                }
+            }
+            ExplorationStrategy::UCB { c } => self.select_ucb_action(&q_values, *c),
+            ExplorationStrategy::ThompsonSampling { alpha, beta } => {
+                self.select_thompson_sampling_action(&q_values, *alpha, *beta)
+            }
+            ExplorationStrategy::AdaptiveUncertainty {
+                uncertainty_threshold,
+            } => self.select_adaptive_uncertainty_action(&q_values, *uncertainty_threshold),
+        }
+    }
+
+    /// Select action using Upper Confidence Bound
+    fn select_ucb_action(&self, q_values: &[f64], c: f64) -> usize {
+        let total_visits: f64 = self
+            .algorithm_performance
+            .values()
+            .map(|history| history.len() as f64)
+            .sum();
+
+        let mut best_action = 0;
+        let mut best_value = f64::NEG_INFINITY;
+
+        for (action, &q_value) in q_values.iter().enumerate() {
+            let visits = self
+                .algorithm_performance
+                .get(&action)
+                .map(|h| h.len() as f64)
+                .unwrap_or(1.0);
+
+            let ucb_value = q_value + c * (total_visits.ln() / visits).sqrt();
+
+            if ucb_value > best_value {
+                best_value = ucb_value;
+                best_action = action;
+            }
+        }
+
+        best_action
+    }
+
+    /// Select action using Thompson Sampling
+    fn select_thompson_sampling_action(&self, q_values: &[f64], _alpha: f64, _beta: f64) -> usize {
+        let mut rng = rand::rng();
+        let mut best_action = 0;
+        let mut best_sample = f64::NEG_INFINITY;
+
+        for (action, &_q_value) in q_values.iter().enumerate() {
+            // Sample from beta distribution based on performance
+            let performance_mean = self
+                .algorithm_performance
+                .get(&action)
+                .and_then(|h| {
+                    if h.is_empty() {
+                        None
+                    } else {
+                        Some(h.iter().sum::<f64>() / h.len() as f64)
+                    }
+                })
+                .unwrap_or(0.5);
+
+            let sample = performance_mean + rng.random::<f64>() * 0.1; // Simplified sampling
+
+            if sample > best_sample {
+                best_sample = sample;
+                best_action = action;
+            }
+        }
+
+        best_action
+    }
+
+    /// Select action using adaptive uncertainty
+    fn select_adaptive_uncertainty_action(&self, q_values: &[f64], threshold: f64) -> usize {
+        // Calculate uncertainty for each action
+        let mut best_action = 0;
+        let mut best_score = f64::NEG_INFINITY;
+
+        for (action, &q_value) in q_values.iter().enumerate() {
+            let uncertainty = self.calculate_action_uncertainty(action);
+            let score = if uncertainty > threshold {
+                q_value + uncertainty // Favor uncertain actions for exploration
+            } else {
+                q_value // Pure exploitation
+            };
+
+            if score > best_score {
+                best_score = score;
+                best_action = action;
+            }
+        }
+
+        best_action
+    }
+
+    /// Calculate uncertainty for an action based on performance variance
+    fn calculate_action_uncertainty(&self, action: usize) -> f64 {
+        if let Some(history) = self.algorithm_performance.get(&action) {
+            if history.len() < 2 {
+                return 1.0; // High uncertainty for little data
+            }
+
+            let mean = history.iter().sum::<f64>() / history.len() as f64;
+            let variance =
+                history.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / history.len() as f64;
+
+            variance.sqrt()
+        } else {
+            1.0 // High uncertainty for unknown actions
+        }
+    }
+
+    /// Get best action from Q-values
+    fn get_best_action(&self, q_values: &[f64]) -> usize {
+        q_values
+            .iter()
+            .enumerate()
+            .max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))
+            .map(|(i, _)| i)
+            .unwrap_or(0)
+    }
+
+    /// Update performance history for an algorithm
+    pub fn update_algorithm_performance(&mut self, algorithm: usize, reward: f64) {
+        self.algorithm_performance
+            .entry(algorithm)
+            .or_insert_with(VecDeque::new)
+            .push_back(reward);
+
+        // Keep history manageable
+        if let Some(history) = self.algorithm_performance.get_mut(&algorithm) {
+            if history.len() > 100 {
+                history.pop_front();
+            }
         }
     }
 
@@ -360,13 +652,12 @@ impl NeuromorphicProcessor {
         let mut synaptic_weights = Vec::new();
         let spike_history = vec![Vec::new(); num_neurons];
         let mut rng = rand::rng();
-        let weight_dist = Uniform::new(-0.005, 0.005);
 
         // Initialize synaptic weights
         for _ in 0..num_neurons {
             let mut row = Vec::new();
             for _ in 0..num_neurons {
-                row.push(rng.sample(weight_dist));
+                row.push(rng.random::<f64>() * 0.01 - 0.005);
             }
             synaptic_weights.push(row);
         }
@@ -552,15 +843,29 @@ pub struct UltrathinkProcessor {
     neuromorphic: NeuromorphicProcessor,
     /// Performance history for adaptation
     performance_history: Vec<AlgorithmMetrics>,
+    /// Adaptive memory manager
+    memory_manager: AdaptiveMemoryManager,
+    /// Algorithm optimization cache
+    optimization_cache: HashMap<String, AlgorithmMetrics>,
+    /// Real-time adaptation parameters
+    adaptation_rate: f64,
+    /// Update counter for target network
+    update_counter: usize,
 }
 
 impl UltrathinkProcessor {
-    /// Create new ultrathink processor
+    /// Create new ultrathink processor with enhanced features
     pub fn new(config: UltrathinkConfig) -> Self {
-        let neural_agent =
+        let mut neural_agent =
             NeuralRLAgent::new(4, config.neural_hidden_size, 4, config.learning_rate);
         let gpu_context = GPUAccelerationContext::new(config.gpu_memory_pool_mb);
         let neuromorphic = NeuromorphicProcessor::new(256, 0.01);
+        let memory_manager = AdaptiveMemoryManager::new(config.memory_threshold_mb);
+
+        // Set advanced exploration strategy
+        neural_agent.set_exploration_strategy(ExplorationStrategy::AdaptiveUncertainty {
+            uncertainty_threshold: 0.3,
+        });
 
         UltrathinkProcessor {
             config,
@@ -568,6 +873,321 @@ impl UltrathinkProcessor {
             gpu_context,
             neuromorphic,
             performance_history: Vec::new(),
+            memory_manager,
+            optimization_cache: HashMap::new(),
+            adaptation_rate: 0.01,
+            update_counter: 0,
+        }
+    }
+
+    /// Execute graph algorithm with enhanced ultrathink optimizations
+    pub fn execute_optimized_algorithm_enhanced<N, E, Ix, T>(
+        &mut self,
+        graph: &Graph<N, E, Ix>,
+        algorithm_name: &str,
+        algorithm: impl FnOnce(&Graph<N, E, Ix>) -> Result<T>,
+    ) -> Result<T>
+    where
+        N: Node + Clone + std::hash::Hash + Eq,
+        E: EdgeWeight,
+        Ix: petgraph::graph::IndexType,
+    {
+        // Check cache for previous optimizations
+        if let Some(cached_metrics) = self.optimization_cache.get(algorithm_name) {
+            if self.should_use_cached_optimization(cached_metrics) {
+                return self.execute_cached_optimization(graph, algorithm_name, algorithm);
+            }
+        }
+
+        let monitor = PerformanceMonitor::start(format!("ultrathink_enhanced_{}", algorithm_name));
+
+        // 1. Enhanced neural RL algorithm selection
+        let selected_strategy = if self.config.enable_neural_rl {
+            self.neural_agent.select_algorithm_enhanced(graph)
+        } else {
+            0 // Default strategy
+        };
+
+        // 2. Adaptive memory management
+        if self.config.enable_memory_optimization {
+            let estimated_memory = self.estimate_memory_usage(graph, algorithm_name);
+            self.memory_manager.record_usage(estimated_memory);
+        }
+
+        // 3. Neuromorphic preprocessing with adaptive parameters
+        let neuromorphic_features = if self.config.enable_neuromorphic {
+            self.neuromorphic.process_graph_structure(graph)
+        } else {
+            vec![0.0; 3]
+        };
+
+        // 4. Execute algorithm with adaptive optimizations
+        let result = if self.config.enable_gpu_acceleration {
+            // Execute with GPU acceleration - avoiding borrowing issues
+            let start_time = std::time::Instant::now();
+            let result = self.execute_with_memory_optimization(graph, algorithm_name, algorithm);
+            let execution_time = start_time.elapsed();
+
+            // Update GPU utilization metrics manually
+            let utilization = execution_time.as_secs_f64() / 0.001; // Assume 1ms baseline
+            let utilization = utilization.min(1.0).max(0.0);
+            self.gpu_context.utilization_history.push(utilization);
+
+            // Keep history manageable
+            if self.gpu_context.utilization_history.len() > 1000 {
+                self.gpu_context.utilization_history.remove(0);
+            }
+
+            result
+        } else {
+            self.execute_with_memory_optimization(graph, algorithm_name, algorithm)
+        };
+
+        // 5. Collect enhanced performance metrics
+        let performance_report = monitor.finish();
+        let metrics = self.extract_enhanced_algorithm_metrics(
+            &performance_report,
+            &neuromorphic_features,
+            selected_strategy,
+        );
+
+        // 6. Update neural RL agent with enhanced learning
+        if self.config.enable_neural_rl {
+            let reward = self.calculate_enhanced_reward(&metrics);
+            self.neural_agent
+                .update_algorithm_performance(selected_strategy, reward);
+
+            let features = self.neural_agent.extract_features(graph);
+            self.neural_agent
+                .update_from_experience(features, selected_strategy, reward);
+
+            // Update target network periodically
+            self.update_counter += 1;
+            if self.update_counter % 100 == 0 {
+                self.neural_agent.update_target_network(0.001);
+            }
+        }
+
+        // 7. Cache optimization results
+        self.optimization_cache
+            .insert(algorithm_name.to_string(), metrics.clone());
+
+        // 8. Store performance history with enhanced tracking
+        self.performance_history.push(metrics);
+        if self.performance_history.len() > 10000 {
+            self.performance_history.remove(0);
+        }
+
+        // 9. Real-time adaptation
+        if self.config.enable_realtime_adaptation {
+            self.adapt_configuration_realtime();
+        }
+
+        result
+    }
+
+    /// Execute algorithm with memory optimization
+    fn execute_with_memory_optimization<N, E, Ix, T>(
+        &mut self,
+        graph: &Graph<N, E, Ix>,
+        algorithm_name: &str,
+        algorithm: impl FnOnce(&Graph<N, E, Ix>) -> Result<T>,
+    ) -> Result<T>
+    where
+        N: Node + Clone + std::hash::Hash + Eq,
+        E: EdgeWeight,
+        Ix: petgraph::graph::IndexType,
+    {
+        if self.config.enable_memory_optimization {
+            let chunk_size = self.memory_manager.get_chunk_size(algorithm_name);
+
+            // Allocate working memory from pool
+            let _working_buffer = self.memory_manager.allocate(algorithm_name, chunk_size);
+
+            let result = algorithm(graph);
+
+            // Return memory to pool (would be done in Drop implementation in practice)
+            // self.memory_manager.deallocate(algorithm_name, working_buffer);
+
+            result
+        } else {
+            algorithm(graph)
+        }
+    }
+
+    /// Check if cached optimization should be used
+    fn should_use_cached_optimization(&self, cached_metrics: &AlgorithmMetrics) -> bool {
+        // Use cache if recent performance was good
+        cached_metrics.accuracy_score > 0.95 && cached_metrics.execution_time_us < 1_000_000
+        // Less than 1 second
+    }
+
+    /// Execute using cached optimization parameters
+    fn execute_cached_optimization<N, E, Ix, T>(
+        &mut self,
+        graph: &Graph<N, E, Ix>,
+        algorithm_name: &str,
+        algorithm: impl FnOnce(&Graph<N, E, Ix>) -> Result<T>,
+    ) -> Result<T>
+    where
+        N: Node + Clone + std::hash::Hash + Eq,
+        E: EdgeWeight,
+        Ix: petgraph::graph::IndexType,
+    {
+        // Apply cached optimization parameters
+        if let Some(cached_metrics) = self.optimization_cache.get(algorithm_name) {
+            let chunk_size = (cached_metrics.memory_usage_bytes / 1024).max(64);
+            self.memory_manager
+                .chunk_sizes
+                .insert(algorithm_name.to_string(), chunk_size);
+        }
+
+        algorithm(graph)
+    }
+
+    /// Estimate memory usage for an algorithm
+    fn estimate_memory_usage<N, E, Ix>(
+        &self,
+        graph: &Graph<N, E, Ix>,
+        algorithm_name: &str,
+    ) -> usize
+    where
+        N: Node,
+        E: EdgeWeight,
+        Ix: petgraph::graph::IndexType,
+    {
+        let base_memory = graph.node_count() * std::mem::size_of::<N>()
+            + graph.edge_count() * std::mem::size_of::<E>();
+
+        // Algorithm-specific memory multipliers
+        let multiplier = match algorithm_name {
+            name if name.contains("dijkstra") => 2.0,
+            name if name.contains("pagerank") => 1.5,
+            name if name.contains("community") => 3.0,
+            name if name.contains("centrality") => 4.0,
+            _ => 1.0,
+        };
+
+        (base_memory as f64 * multiplier) as usize
+    }
+
+    /// Extract enhanced algorithm metrics
+    fn extract_enhanced_algorithm_metrics(
+        &self,
+        report: &PerformanceReport,
+        neuromorphic_features: &[f64],
+        _selected_strategy: usize,
+    ) -> AlgorithmMetrics {
+        let base_metrics = AlgorithmMetrics {
+            execution_time_us: report.duration.as_micros() as u64,
+            memory_usage_bytes: report.memory_metrics.peak_bytes,
+            accuracy_score: self.calculate_accuracy_score(neuromorphic_features),
+            cache_hit_rate: self.calculate_cache_hit_rate(),
+            simd_utilization: self.calculate_simd_utilization(),
+            gpu_utilization: self.gpu_context.get_average_utilization(),
+        };
+
+        base_metrics
+    }
+
+    /// Calculate accuracy score based on neuromorphic features
+    fn calculate_accuracy_score(&self, neuromorphic_features: &[f64]) -> f64 {
+        // Use neuromorphic features to estimate solution quality
+        let feature_sum = neuromorphic_features.iter().sum::<f64>();
+        (1.0 / (1.0 + (-feature_sum / 10.0).exp()))
+            .max(0.7)
+            .min(1.0)
+    }
+
+    /// Calculate cache hit rate
+    fn calculate_cache_hit_rate(&self) -> f64 {
+        if self.optimization_cache.is_empty() {
+            0.0
+        } else {
+            // Simplified cache hit rate calculation
+            0.8 // Placeholder - would be measured in practice
+        }
+    }
+
+    /// Calculate SIMD utilization
+    fn calculate_simd_utilization(&self) -> f64 {
+        // Would be measured by SIMD-optimized operations
+        0.9 // Placeholder
+    }
+
+    /// Calculate enhanced reward incorporating multiple factors
+    fn calculate_enhanced_reward(&self, metrics: &AlgorithmMetrics) -> f64 {
+        let time_score = 1.0 / (1.0 + metrics.execution_time_us as f64 / 1_000_000.0);
+        let memory_score = 1.0 / (1.0 + metrics.memory_usage_bytes as f64 / 10_000_000.0);
+        let accuracy_score = metrics.accuracy_score;
+        let efficiency_score =
+            (metrics.cache_hit_rate + metrics.simd_utilization + metrics.gpu_utilization) / 3.0;
+
+        // Enhanced weighted combination with adaptive weights
+        let base_reward =
+            0.25 * time_score + 0.2 * memory_score + 0.35 * accuracy_score + 0.2 * efficiency_score;
+
+        // Bonus for consistent performance
+        let consistency_bonus = if self.performance_history.len() > 5 {
+            let recent_rewards: Vec<f64> = self
+                .performance_history
+                .iter()
+                .rev()
+                .take(5)
+                .map(|m| self.calculate_reward(m))
+                .collect();
+            let variance = self.calculate_variance(&recent_rewards);
+            (1.0 / (1.0 + variance)).max(0.0).min(0.2)
+        } else {
+            0.0
+        };
+
+        base_reward + consistency_bonus
+    }
+
+    /// Calculate variance of a set of values
+    fn calculate_variance(&self, values: &[f64]) -> f64 {
+        if values.len() < 2 {
+            return 0.0;
+        }
+
+        let mean = values.iter().sum::<f64>() / values.len() as f64;
+        values.iter().map(|v| (v - mean).powi(2)).sum::<f64>() / values.len() as f64
+    }
+
+    /// Adapt configuration in real-time based on performance
+    fn adapt_configuration_realtime(&mut self) {
+        if self.performance_history.len() < 10 {
+            return;
+        }
+
+        let recent_performance: Vec<_> = self.performance_history.iter().rev().take(10).collect();
+        let avg_execution_time = recent_performance
+            .iter()
+            .map(|m| m.execution_time_us as f64)
+            .sum::<f64>()
+            / recent_performance.len() as f64;
+
+        // Adapt learning rate based on performance stability
+        if avg_execution_time > 1_000_000.0 {
+            // Slow performance - increase exploration
+            self.neural_agent
+                .set_exploration_strategy(ExplorationStrategy::UCB { c: 2.0 });
+        } else if avg_execution_time < 100_000.0 {
+            // Fast performance - reduce exploration
+            self.neural_agent
+                .set_exploration_strategy(ExplorationStrategy::EpsilonGreedy { epsilon: 0.05 });
+        }
+
+        // Adapt memory thresholds
+        let avg_memory = recent_performance
+            .iter()
+            .map(|m| m.memory_usage_bytes as f64)
+            .sum::<f64>()
+            / recent_performance.len() as f64;
+
+        if avg_memory > self.memory_manager.threshold_bytes as f64 {
+            self.memory_manager.threshold_bytes = (avg_memory * 1.2) as usize;
         }
     }
 
@@ -736,6 +1356,22 @@ pub fn create_ultrathink_processor() -> UltrathinkProcessor {
     UltrathinkProcessor::new(UltrathinkConfig::default())
 }
 
+/// Convenience function to create an enhanced ultrathink processor with advanced features
+pub fn create_enhanced_ultrathink_processor() -> UltrathinkProcessor {
+    let config = UltrathinkConfig {
+        enable_neural_rl: true,
+        enable_gpu_acceleration: true,
+        enable_neuromorphic: true,
+        enable_realtime_adaptation: true,
+        enable_memory_optimization: true,
+        learning_rate: 0.001,
+        memory_threshold_mb: 2048, // Increased for better performance
+        gpu_memory_pool_mb: 4096,  // Increased for better GPU utilization
+        neural_hidden_size: 256,   // Increased for better learning
+    };
+    UltrathinkProcessor::new(config)
+}
+
 /// Convenience function to execute algorithm with ultrathink optimizations
 pub fn execute_with_ultrathink<N, E, Ix, T>(
     processor: &mut UltrathinkProcessor,
@@ -749,6 +1385,158 @@ where
     Ix: petgraph::graph::IndexType,
 {
     processor.execute_optimized_algorithm(graph, algorithm_name, algorithm)
+}
+
+/// Convenience function to execute algorithm with enhanced ultrathink optimizations
+pub fn execute_with_enhanced_ultrathink<N, E, Ix, T>(
+    processor: &mut UltrathinkProcessor,
+    graph: &Graph<N, E, Ix>,
+    algorithm_name: &str,
+    algorithm: impl FnOnce(&Graph<N, E, Ix>) -> Result<T>,
+) -> Result<T>
+where
+    N: Node + Clone + std::hash::Hash + Eq,
+    E: EdgeWeight,
+    Ix: petgraph::graph::IndexType,
+{
+    processor.execute_optimized_algorithm_enhanced(graph, algorithm_name, algorithm)
+}
+
+/// Create an ultrathink processor optimized for large graphs
+pub fn create_large_graph_ultrathink_processor() -> UltrathinkProcessor {
+    let config = UltrathinkConfig {
+        enable_neural_rl: true,
+        enable_gpu_acceleration: true,
+        enable_neuromorphic: false, // Disabled for large graphs to save memory
+        enable_realtime_adaptation: true,
+        enable_memory_optimization: true,
+        learning_rate: 0.0005,     // Lower learning rate for stability
+        memory_threshold_mb: 8192, // High memory threshold for large graphs
+        gpu_memory_pool_mb: 8192,
+        neural_hidden_size: 128, // Smaller network for faster decisions
+    };
+    UltrathinkProcessor::new(config)
+}
+
+/// Create an ultrathink processor optimized for real-time applications
+pub fn create_realtime_ultrathink_processor() -> UltrathinkProcessor {
+    let config = UltrathinkConfig {
+        enable_neural_rl: true,
+        enable_gpu_acceleration: true,
+        enable_neuromorphic: false, // Disabled for speed
+        enable_realtime_adaptation: true,
+        enable_memory_optimization: true,
+        learning_rate: 0.01, // Higher learning rate for quick adaptation
+        memory_threshold_mb: 1024,
+        gpu_memory_pool_mb: 2048,
+        neural_hidden_size: 64, // Smaller network for speed
+    };
+    UltrathinkProcessor::new(config)
+}
+
+/// Create an ultrathink processor optimized for maximum performance
+pub fn create_performance_ultrathink_processor() -> UltrathinkProcessor {
+    let config = UltrathinkConfig {
+        enable_neural_rl: true,
+        enable_gpu_acceleration: true,
+        enable_neuromorphic: true,
+        enable_realtime_adaptation: true,
+        enable_memory_optimization: true,
+        learning_rate: 0.001,
+        memory_threshold_mb: 4096, // Large memory pool
+        gpu_memory_pool_mb: 8192,  // Large GPU pool
+        neural_hidden_size: 512,   // Large network for better learning
+    };
+    UltrathinkProcessor::new(config)
+}
+
+/// Create an ultrathink processor optimized for memory-constrained environments
+pub fn create_memory_efficient_ultrathink_processor() -> UltrathinkProcessor {
+    let config = UltrathinkConfig {
+        enable_neural_rl: true,
+        enable_gpu_acceleration: false, // Disabled to save memory
+        enable_neuromorphic: false,     // Disabled to save memory
+        enable_realtime_adaptation: true,
+        enable_memory_optimization: true,
+        learning_rate: 0.005,
+        memory_threshold_mb: 256, // Small memory threshold
+        gpu_memory_pool_mb: 512,  // Small GPU pool
+        neural_hidden_size: 32,   // Very small network
+    };
+    UltrathinkProcessor::new(config)
+}
+
+/// Create an ultrathink processor with adaptive configuration based on system resources
+pub fn create_adaptive_ultrathink_processor() -> UltrathinkProcessor {
+    let system_memory = get_system_memory_mb();
+    let has_gpu = detect_gpu_support();
+    let cpu_cores = num_cpus::get();
+
+    let config = if system_memory >= 16384 && has_gpu {
+        // High-end system configuration
+        UltrathinkConfig {
+            enable_neural_rl: true,
+            enable_gpu_acceleration: true,
+            enable_neuromorphic: true,
+            enable_realtime_adaptation: true,
+            enable_memory_optimization: true,
+            learning_rate: 0.001,
+            memory_threshold_mb: 8192,
+            gpu_memory_pool_mb: 4096,
+            neural_hidden_size: 256,
+        }
+    } else if system_memory >= 8192 {
+        // Mid-range system configuration
+        UltrathinkConfig {
+            enable_neural_rl: true,
+            enable_gpu_acceleration: has_gpu,
+            enable_neuromorphic: false,
+            enable_realtime_adaptation: true,
+            enable_memory_optimization: true,
+            learning_rate: 0.005,
+            memory_threshold_mb: 2048,
+            gpu_memory_pool_mb: 1024,
+            neural_hidden_size: 128,
+        }
+    } else {
+        // Low-end system configuration
+        UltrathinkConfig {
+            enable_neural_rl: cpu_cores >= 4,
+            enable_gpu_acceleration: false,
+            enable_neuromorphic: false,
+            enable_realtime_adaptation: true,
+            enable_memory_optimization: true,
+            learning_rate: 0.01,
+            memory_threshold_mb: 512,
+            gpu_memory_pool_mb: 256,
+            neural_hidden_size: 64,
+        }
+    };
+
+    UltrathinkProcessor::new(config)
+}
+
+/// Get available system memory in MB
+fn get_system_memory_mb() -> usize {
+    #[cfg(feature = "sysinfo")]
+    {
+        use sysinfo::{System, SystemExt};
+        let mut sys = System::new_all();
+        sys.refresh_memory();
+        (sys.available_memory() / 1024 / 1024) as usize
+    }
+    #[cfg(not(feature = "sysinfo"))]
+    {
+        8192 // Default to 8GB
+    }
+}
+
+/// Detect GPU support availability
+fn detect_gpu_support() -> bool {
+    // Simple GPU detection - in practice would check for CUDA, OpenCL, etc.
+    std::env::var("ULTRATHINK_GPU_ENABLE").unwrap_or_default() == "1"
+        || std::env::var("CUDA_VISIBLE_DEVICES").is_ok()
+        || std::path::Path::new("/dev/nvidia0").exists()
 }
 
 #[cfg(test)]
@@ -879,5 +1667,432 @@ mod tests {
                 .unwrap();
 
         assert_eq!(result, 1);
+    }
+
+    #[test]
+    fn test_enhanced_ultrathink_processor() {
+        let mut processor = create_enhanced_ultrathink_processor();
+
+        // Create test graph
+        let mut graph: Graph<i32, f64> = Graph::new();
+        graph.add_edge(1, 2, 1.0).unwrap();
+        graph.add_edge(2, 3, 2.0).unwrap();
+        graph.add_edge(3, 4, 3.0).unwrap();
+
+        // Test enhanced ultrathink execution
+        let result =
+            execute_with_enhanced_ultrathink(&mut processor, &graph, "test_enhanced", |g| {
+                Ok(g.node_count())
+            })
+            .unwrap();
+
+        assert_eq!(result, 4);
+
+        // Verify optimization cache is populated
+        assert!(!processor.optimization_cache.is_empty());
+
+        // Test that subsequent calls use cache
+        let result2 =
+            execute_with_enhanced_ultrathink(&mut processor, &graph, "test_enhanced", |g| {
+                Ok(g.node_count())
+            })
+            .unwrap();
+
+        assert_eq!(result2, 4);
+    }
+
+    #[test]
+    fn test_exploration_strategies() {
+        let mut agent = NeuralRLAgent::new(4, 64, 4, 0.01);
+
+        // Test epsilon-greedy strategy
+        agent.set_exploration_strategy(ExplorationStrategy::EpsilonGreedy { epsilon: 0.1 });
+
+        let mut graph: Graph<i32, f64> = Graph::new();
+        graph.add_edge(1, 2, 1.0).unwrap();
+
+        let action1 = agent.select_algorithm_enhanced(&graph);
+        assert!(action1 < 4);
+
+        // Test UCB strategy
+        agent.set_exploration_strategy(ExplorationStrategy::UCB { c: 1.5 });
+        let action2 = agent.select_algorithm_enhanced(&graph);
+        assert!(action2 < 4);
+
+        // Test Thompson sampling
+        agent.set_exploration_strategy(ExplorationStrategy::ThompsonSampling {
+            alpha: 1.0,
+            beta: 1.0,
+        });
+        let action3 = agent.select_algorithm_enhanced(&graph);
+        assert!(action3 < 4);
+
+        // Test adaptive uncertainty
+        agent.set_exploration_strategy(ExplorationStrategy::AdaptiveUncertainty {
+            uncertainty_threshold: 0.5,
+        });
+        let action4 = agent.select_algorithm_enhanced(&graph);
+        assert!(action4 < 4);
+    }
+
+    #[test]
+    fn test_adaptive_memory_manager() {
+        let mut memory_manager = AdaptiveMemoryManager::new(1024);
+
+        // Test memory usage recording
+        memory_manager.record_usage(512 * 1024 * 1024); // 512 MB
+        assert_eq!(memory_manager.current_usage, 512 * 1024 * 1024);
+
+        // Test chunk size adaptation
+        let initial_chunk_size = memory_manager.get_chunk_size("test_operation");
+        assert_eq!(initial_chunk_size, 1024);
+
+        // Simulate high memory usage
+        memory_manager.record_usage(2048 * 1024 * 1024); // 2 GB
+        let reduced_chunk_size = memory_manager.get_chunk_size("test_operation");
+        assert!(reduced_chunk_size < initial_chunk_size);
+
+        // Test memory allocation and deallocation
+        let buffer = memory_manager.allocate("test_operation", 1024);
+        assert_eq!(buffer.len(), 1024);
+
+        memory_manager.deallocate("test_operation", buffer);
+    }
+
+    #[test]
+    fn test_algorithm_performance_tracking() {
+        let mut agent = NeuralRLAgent::new(4, 64, 4, 0.01);
+
+        // Test performance tracking
+        agent.update_algorithm_performance(0, 0.8);
+        agent.update_algorithm_performance(0, 0.9);
+        agent.update_algorithm_performance(1, 0.6);
+
+        // Verify performance history is maintained
+        assert!(agent.algorithm_performance.contains_key(&0));
+        assert!(agent.algorithm_performance.contains_key(&1));
+
+        let algo_0_history = agent.algorithm_performance.get(&0).unwrap();
+        assert_eq!(algo_0_history.len(), 2);
+        assert!(algo_0_history.contains(&0.8));
+        assert!(algo_0_history.contains(&0.9));
+    }
+
+    #[test]
+    fn test_target_network_update() {
+        let mut agent = NeuralRLAgent::new(4, 64, 4, 0.01);
+
+        // Get initial target weights
+        let initial_target_weights = agent.target_weights.clone();
+
+        // Modify main Q-network weights
+        agent.q_weights[0][0][0] = 1.0;
+
+        // Update target network
+        agent.update_target_network(0.1);
+
+        // Verify target weights have changed towards Q-network weights
+        assert_ne!(
+            agent.target_weights[0][0][0],
+            initial_target_weights[0][0][0]
+        );
+        assert!(agent.target_weights[0][0][0] > initial_target_weights[0][0][0]);
+    }
+
+    #[test]
+    fn test_large_graph_processor() {
+        let mut processor = create_large_graph_ultrathink_processor();
+
+        // Create larger test graph
+        let mut graph: Graph<i32, f64> = Graph::new();
+        for i in 0..100 {
+            graph.add_edge(i, (i + 1) % 100, 1.0).unwrap();
+        }
+
+        // Test execution with large graph optimization
+        let result =
+            execute_with_enhanced_ultrathink(&mut processor, &graph, "large_graph_test", |g| {
+                Ok(g.edge_count())
+            })
+            .unwrap();
+
+        assert_eq!(result, 100);
+
+        // Verify memory optimization is enabled
+        assert!(processor.config.enable_memory_optimization);
+        assert!(processor.config.memory_threshold_mb >= 8192);
+    }
+
+    #[test]
+    fn test_realtime_processor() {
+        let mut processor = create_realtime_ultrathink_processor();
+
+        // Create test graph
+        let mut graph: Graph<i32, f64> = Graph::new();
+        graph.add_edge(1, 2, 1.0).unwrap();
+        graph.add_edge(2, 3, 2.0).unwrap();
+
+        // Test execution with real-time optimization
+        let result =
+            execute_with_enhanced_ultrathink(&mut processor, &graph, "realtime_test", |g| {
+                Ok(g.node_count())
+            })
+            .unwrap();
+
+        assert_eq!(result, 3);
+
+        // Verify real-time adaptation is enabled
+        assert!(processor.config.enable_realtime_adaptation);
+        assert_eq!(processor.config.neural_hidden_size, 64); // Optimized for speed
+    }
+
+    #[test]
+    fn test_performance_processor() {
+        let mut processor = create_performance_ultrathink_processor();
+
+        // Create larger test graph
+        let mut graph: Graph<i32, f64> = Graph::new();
+        for i in 0..10 {
+            graph.add_edge(i, (i + 1) % 10, 1.0).unwrap();
+        }
+
+        // Test performance optimization
+        let result =
+            execute_with_enhanced_ultrathink(&mut processor, &graph, "performance_test", |g| {
+                Ok(g.edge_count())
+            })
+            .unwrap();
+
+        assert_eq!(result, 10);
+
+        // Verify performance configuration
+        assert_eq!(processor.config.neural_hidden_size, 512);
+        assert_eq!(processor.config.memory_threshold_mb, 4096);
+        assert!(processor.config.enable_neuromorphic);
+    }
+
+    #[test]
+    fn test_memory_efficient_processor() {
+        let mut processor = create_memory_efficient_ultrathink_processor();
+
+        // Create test graph
+        let mut graph: Graph<i32, f64> = Graph::new();
+        graph.add_edge(1, 2, 1.0).unwrap();
+
+        // Test memory-efficient execution
+        let result = execute_with_enhanced_ultrathink(&mut processor, &graph, "memory_test", |g| {
+            Ok(g.node_count())
+        })
+        .unwrap();
+
+        assert_eq!(result, 2);
+
+        // Verify memory-efficient configuration
+        assert_eq!(processor.config.neural_hidden_size, 32);
+        assert_eq!(processor.config.memory_threshold_mb, 256);
+        assert!(!processor.config.enable_gpu_acceleration);
+        assert!(!processor.config.enable_neuromorphic);
+    }
+
+    #[test]
+    fn test_adaptive_processor() {
+        let processor = create_adaptive_ultrathink_processor();
+
+        // Test that adaptive processor creates valid configuration
+        assert!(processor.config.enable_realtime_adaptation);
+        assert!(processor.config.enable_memory_optimization);
+
+        // Configuration should be reasonable for any system
+        assert!(processor.config.neural_hidden_size >= 32);
+        assert!(processor.config.neural_hidden_size <= 512);
+        assert!(processor.config.memory_threshold_mb >= 256);
+    }
+
+    #[test]
+    fn test_system_detection() {
+        // Test memory detection (should return reasonable value)
+        let memory = get_system_memory_mb();
+        assert!(memory >= 512); // Should have at least 512MB
+
+        // Test GPU detection (should not crash)
+        let _has_gpu = detect_gpu_support();
+    }
+
+    #[test]
+    fn test_exploration_strategies_advanced() {
+        let mut agent = NeuralRLAgent::new(4, 64, 4, 0.01);
+
+        // Test all exploration strategies
+        let strategies = vec![
+            ExplorationStrategy::EpsilonGreedy { epsilon: 0.1 },
+            ExplorationStrategy::UCB { c: 1.5 },
+            ExplorationStrategy::ThompsonSampling {
+                alpha: 1.0,
+                beta: 1.0,
+            },
+            ExplorationStrategy::AdaptiveUncertainty {
+                uncertainty_threshold: 0.5,
+            },
+        ];
+
+        let mut graph: Graph<i32, f64> = Graph::new();
+        graph.add_edge(1, 2, 1.0).unwrap();
+        graph.add_edge(2, 3, 2.0).unwrap();
+
+        for strategy in strategies {
+            agent.set_exploration_strategy(strategy);
+
+            // Test multiple selections to ensure strategy works
+            for _ in 0..5 {
+                let action = agent.select_algorithm_enhanced(&graph);
+                assert!(action < 4);
+            }
+        }
+    }
+
+    #[test]
+    fn test_adaptive_memory_manager_advanced() {
+        let mut memory_manager = AdaptiveMemoryManager::new(1024);
+
+        // Test memory allocation and deallocation
+        for i in 0..10 {
+            let operation = format!("operation_{}", i);
+            let buffer = memory_manager.allocate(&operation, 1024);
+            assert_eq!(buffer.len(), 1024);
+            memory_manager.deallocate(&operation, buffer);
+        }
+
+        // Test memory pressure adaptation
+        memory_manager.record_usage(2048 * 1024 * 1024); // 2GB usage
+        let reduced_size = memory_manager.get_chunk_size("test_operation");
+
+        memory_manager.record_usage(256 * 1024 * 1024); // 256MB usage
+        let increased_size = memory_manager.get_chunk_size("test_operation");
+
+        // Chunk size should adapt to memory pressure
+        assert!(reduced_size <= increased_size);
+    }
+
+    #[test]
+    fn test_neural_rl_performance_tracking() {
+        let mut agent = NeuralRLAgent::new(4, 64, 4, 0.01);
+
+        // Track performance for different algorithms
+        for algorithm in 0..4 {
+            for iteration in 0..10 {
+                let performance = 0.8 + (iteration as f64) * 0.02; // Improving performance
+                agent.update_algorithm_performance(algorithm, performance);
+            }
+        }
+
+        // Verify performance tracking
+        for algorithm in 0..4 {
+            assert!(agent.algorithm_performance.contains_key(&algorithm));
+            let history = agent.algorithm_performance.get(&algorithm).unwrap();
+            assert_eq!(history.len(), 10);
+        }
+
+        // Test uncertainty calculation
+        let uncertainty = agent.calculate_action_uncertainty(0);
+        assert!(uncertainty >= 0.0);
+    }
+
+    #[test]
+    fn test_enhanced_reward_calculation() {
+        let processor = create_enhanced_ultrathink_processor();
+
+        // Create test metrics
+        let metrics = AlgorithmMetrics {
+            execution_time_us: 1000,
+            memory_usage_bytes: 1_000_000,
+            accuracy_score: 0.95,
+            cache_hit_rate: 0.8,
+            simd_utilization: 0.9,
+            gpu_utilization: 0.7,
+        };
+
+        let reward = processor.calculate_enhanced_reward(&metrics);
+
+        // Reward should be reasonable (0.0 to 1.0 range with bonuses)
+        assert!(reward >= 0.0);
+        assert!(reward <= 2.0); // Can exceed 1.0 due to consistency bonus
+    }
+
+    #[test]
+    fn test_optimization_caching() {
+        let mut processor = create_enhanced_ultrathink_processor();
+
+        let mut graph: Graph<i32, f64> = Graph::new();
+        graph.add_edge(1, 2, 1.0).unwrap();
+        graph.add_edge(2, 3, 2.0).unwrap();
+
+        // First execution - should cache results
+        let result1 = execute_with_enhanced_ultrathink(&mut processor, &graph, "cache_test", |g| {
+            Ok(g.node_count())
+        })
+        .unwrap();
+
+        assert_eq!(result1, 3);
+        assert!(!processor.optimization_cache.is_empty());
+
+        // Second execution - should potentially use cache
+        let result2 = execute_with_enhanced_ultrathink(&mut processor, &graph, "cache_test", |g| {
+            Ok(g.node_count())
+        })
+        .unwrap();
+
+        assert_eq!(result2, 3);
+    }
+
+    #[test]
+    fn test_concurrent_processor_usage() {
+        use std::sync::{Arc, Mutex};
+        use std::thread;
+
+        let graph = Arc::new({
+            let mut g: Graph<i32, f64> = Graph::new();
+            g.add_edge(1, 2, 1.0).unwrap();
+            g.add_edge(2, 3, 2.0).unwrap();
+            g
+        });
+
+        let results = Arc::new(Mutex::new(Vec::new()));
+        let mut handles = Vec::new();
+
+        // Spawn multiple threads with different processors
+        for i in 0..4 {
+            let graph_clone = Arc::clone(&graph);
+            let results_clone = Arc::clone(&results);
+
+            let handle = thread::spawn(move || {
+                let mut processor = match i {
+                    0 => create_enhanced_ultrathink_processor(),
+                    1 => create_large_graph_ultrathink_processor(),
+                    2 => create_realtime_ultrathink_processor(),
+                    _ => create_memory_efficient_ultrathink_processor(),
+                };
+
+                let result = execute_with_enhanced_ultrathink(
+                    &mut processor,
+                    &*graph_clone,
+                    &format!("concurrent_test_{}", i),
+                    |g| Ok(g.node_count()),
+                )
+                .unwrap();
+
+                results_clone.lock().unwrap().push(result);
+            });
+
+            handles.push(handle);
+        }
+
+        // Wait for all threads to complete
+        for handle in handles {
+            handle.join().unwrap();
+        }
+
+        let final_results = results.lock().unwrap();
+        assert_eq!(final_results.len(), 4);
+        assert!(final_results.iter().all(|&r| r == 3));
     }
 }

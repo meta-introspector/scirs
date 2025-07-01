@@ -36,7 +36,7 @@ pub struct GRUConfig {
 /// use rand::SeedableRng;
 ///
 /// // Create a GRU layer with 10 input features and 20 hidden units
-/// let mut rng = SmallRng::seed_from_u64(42);
+/// let mut rng = rand::thread_rng();
 /// let gru = GRU::new(10, 20, &mut rng).unwrap();
 ///
 /// // Forward pass with a batch of 2 samples, sequence length 5, and 10 features
@@ -525,7 +525,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for
 //     #[test]
 // //     fn test_gru_shape() {
 // //         // Create a GRU layer
-// //         let mut rng = SmallRng::seed_from_u64(42);
+// //         let mut rng = rand::thread_rng();
 // //         let gru = GRU::<f64>::new(
 // //             10, // input_size
 // //             20, // hidden_size

@@ -222,8 +222,20 @@ fn explore_bessel_zeros() {
     println!("────────|──────────");
 
     let zeros = match n {
-        0 => j0_zeros(num_zeros),
-        1 => j1_zeros(num_zeros),
+        0 => match j0_zeros::<f64>(num_zeros) {
+            Ok(z) => z,
+            Err(e) => {
+                println!("Error computing J₀ zeros: {}", e);
+                return;
+            }
+        },
+        1 => match j1_zeros::<f64>(num_zeros) {
+            Ok(z) => z,
+            Err(e) => {
+                println!("Error computing J₁ zeros: {}", e);
+                return;
+            }
+        },
         _ => {
             println!("Only n=0 and n=1 supported for zero finding in this demo.");
             return;
@@ -234,7 +246,7 @@ fn explore_bessel_zeros() {
         println!("{:6}  | {:8.6}", i + 1, zero);
 
         // Verify it's actually a zero
-        let function_value = match n {
+        let function_value: f64 = match n {
             0 => j0(*zero),
             1 => j1(*zero),
             _ => 0.0,
@@ -498,8 +510,20 @@ fn drum_vibration_demo() {
     println!("-----------|----------------|------------");
 
     // Calculate first few modes
-    let zeros_j0 = j0_zeros(3);
-    let zeros_j1 = j1_zeros(3);
+    let zeros_j0 = match j0_zeros::<f64>(3) {
+        Ok(z) => z,
+        Err(e) => {
+            println!("Error computing J₀ zeros: {}", e);
+            return;
+        }
+    };
+    let zeros_j1 = match j1_zeros::<f64>(3) {
+        Ok(z) => z,
+        Err(e) => {
+            println!("Error computing J₁ zeros: {}", e);
+            return;
+        }
+    };
 
     for (n, &zero) in zeros_j0.iter().enumerate() {
         let k = zero / (radius / 100.0); // Convert cm to m
@@ -547,7 +571,13 @@ fn heat_conduction_demo() {
     io::stdout().flush().unwrap();
     let time: f64 = get_user_input().parse().unwrap_or(10.0);
 
-    let zeros = j0_zeros(5);
+    let zeros = match j0_zeros::<f64>(5) {
+        Ok(z) => z,
+        Err(e) => {
+            println!("Error computing J₀ zeros: {}", e);
+            return;
+        }
+    };
 
     println!("\nTemperature decay at center (r=0) vs time:");
     println!("(Relative to initial temperature T₀)");
@@ -588,8 +618,20 @@ fn waveguide_demo() {
     println!("--------|-------------------|---------------");
 
     // TE modes (use Bessel function zeros)
-    let zeros_j0 = j0_zeros(2);
-    let zeros_j1 = j1_zeros(3);
+    let zeros_j0 = match j0_zeros::<f64>(2) {
+        Ok(z) => z,
+        Err(e) => {
+            println!("Error computing J₀ zeros: {}", e);
+            return;
+        }
+    };
+    let zeros_j1 = match j1_zeros::<f64>(3) {
+        Ok(z) => z,
+        Err(e) => {
+            println!("Error computing J₁ zeros: {}", e);
+            return;
+        }
+    };
 
     // TE₀₁ mode (first zero of J₁)
     let fc_te01 = zeros_j1[0] * c / (2.0 * std::f64::consts::PI * radius) / 1e9;
@@ -637,15 +679,27 @@ fn quantum_mechanics_demo() {
     println!("State (m,k,n) | Energy | Description");
     println!("--------------|--------|------------");
 
-    let zeros_j0 = j0_zeros(3);
-    let zeros_j1 = j1_zeros(2);
+    let zeros_j0 = match j0_zeros::<f64>(3) {
+        Ok(z) => z,
+        Err(e) => {
+            println!("Error computing J₀ zeros: {}", e);
+            return;
+        }
+    };
+    let zeros_j1 = match j1_zeros::<f64>(2) {
+        Ok(z) => z,
+        Err(e) => {
+            println!("Error computing J₁ zeros: {}", e);
+            return;
+        }
+    };
 
     let mut energies = Vec::new();
 
     // Ground state and some excited states
     for n_z in 1..=3 {
         for (k_idx, &zero) in zeros_j0.iter().enumerate() {
-            let k_r = zero * bohr / radius;
+            let k_r: f64 = zero * bohr / radius;
             let k_z = n_z as f64 * std::f64::consts::PI * bohr / height;
             let energy = hbar.powi(2) / (2.0 * mass) * (k_r.powi(2) + k_z.powi(2));
             energies.push((
@@ -656,7 +710,7 @@ fn quantum_mechanics_demo() {
         }
 
         for (k_idx, &zero) in zeros_j1.iter().enumerate() {
-            let k_r = zero * bohr / radius;
+            let k_r: f64 = zero * bohr / radius;
             let k_z = n_z as f64 * std::f64::consts::PI * bohr / height;
             let energy = hbar.powi(2) / (2.0 * mass) * (k_r.powi(2) + k_z.powi(2));
             energies.push((

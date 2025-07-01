@@ -42,6 +42,7 @@
 
 use ndarray::{Array, Dimension, IxDyn};
 use rand::prelude::*;
+use rand::rngs::StdRng;
 use rand::SeedableRng;
 use rand_distr::{Distribution, Uniform};
 use std::cell::RefCell;

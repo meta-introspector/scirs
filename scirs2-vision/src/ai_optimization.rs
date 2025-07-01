@@ -14,6 +14,7 @@
 
 #![allow(dead_code)]
 
+use crate::error::Result;
 use rand::prelude::*;
 use rand::rng;
 use std::collections::{HashMap, VecDeque};
@@ -350,6 +351,20 @@ impl RLParameterOptimizer {
                 self.update_q_values(experience.clone());
             }
         }
+    }
+
+    /// Initialize RL optimizer
+    pub async fn initialize_rl_optimizer(&mut self) -> Result<()> {
+        // Reset experience buffer
+        self.experience_buffer.clear();
+
+        // Reset Q-values to initial state
+        self.q_table = HashMap::new();
+
+        // Reset learning parameters to defaults
+        self.learning_params = RLLearningParams::default();
+
+        Ok(())
     }
 }
 
@@ -1078,6 +1093,20 @@ impl NeuralArchitectureSearch {
     /// Advance to next iteration
     pub fn next_iteration(&mut self) {
         self.current_iteration += 1;
+    }
+
+    /// Initialize search space
+    pub async fn initialize_search_space(&mut self) -> Result<()> {
+        // Reset candidate architectures
+        self.candidate_architectures.clear();
+
+        // Reset performance database
+        self.performance_db.clear();
+
+        // Reset iteration counter
+        self.current_iteration = 0;
+
+        Ok(())
     }
 }
 

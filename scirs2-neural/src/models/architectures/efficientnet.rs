@@ -10,8 +10,7 @@ use crate::error::{NeuralError, Result};
 use crate::layers::{BatchNorm, Conv2D, Dense, Dropout, Layer, PaddingMode};
 use ndarray::{Array, IxDyn, ScalarOperand};
 use num_traits::Float;
-use rand::rngs::SmallRng;
-use rand::SeedableRng;
+use rand::{rngs::SmallRng, SeedableRng};
 use std::fmt::Debug;
 
 /// Swish activation function used in EfficientNet
@@ -567,7 +566,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for MBConvBlock<F>
         // Skip connection
         if self.has_skip_connection {
             // Apply stochastic depth (drop connect)
-            let mut rng = rand::rng();
+            let mut rng = SmallRng::seed_from_u64(42);
             x = self.drop_connect(&x, &mut rng);
 
             // Add skip connection

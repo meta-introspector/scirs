@@ -3,9 +3,9 @@
 //! This module provides advanced few-shot learning capabilities for learned optimizers,
 //! enabling rapid adaptation to new optimization tasks with minimal data.
 
-use ndarray::{Array1, Array2, Array3, ArrayBase, Data, Dimension, s};
+use ndarray::{s, Array1, Array2, Array3, ArrayBase, Data, Dimension};
 use num_traits::Float;
-use std::collections::{HashMap, VecDeque, BTreeMap};
+use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::time::Instant;
 
 use super::{LearnedOptimizerConfig, MetaOptimizationStrategy};
@@ -15,25 +15,25 @@ use crate::error::OptimizerError;
 pub struct FewShotLearningEnhancement<T: Float> {
     /// Support set manager
     support_set_manager: SupportSetManager<T>,
-    
+
     /// Few-shot meta-learner
     meta_learner: FewShotMetaLearner<T>,
-    
+
     /// Prototype network
     prototype_network: PrototypeNetwork<T>,
-    
+
     /// Similarity matcher
     similarity_matcher: SimilarityMatcher<T>,
-    
+
     /// Task distribution analyzer
     task_analyzer: TaskDistributionAnalyzer<T>,
-    
+
     /// Adaptation controller
     adaptation_controller: AdaptationController<T>,
-    
+
     /// Few-shot configuration
     config: FewShotConfig<T>,
-    
+
     /// Performance tracker
     performance_tracker: FewShotPerformanceTracker<T>,
 }
@@ -43,58 +43,58 @@ pub struct FewShotLearningEnhancement<T: Float> {
 pub struct FewShotConfig<T: Float> {
     /// Number of support examples per class
     pub support_size: usize,
-    
+
     /// Number of query examples per class
     pub query_size: usize,
-    
+
     /// Number of ways (classes) in few-shot tasks
     pub n_way: usize,
-    
+
     /// Number of shots (examples per class)
     pub n_shot: usize,
-    
+
     /// Meta-learning rate for few-shot adaptation
     pub meta_learning_rate: T,
-    
+
     /// Inner loop learning rate
     pub inner_learning_rate: T,
-    
+
     /// Number of inner loop steps
     pub inner_steps: usize,
-    
+
     /// Use second-order gradients
     pub second_order: bool,
-    
+
     /// Temperature for similarity computation
     pub temperature: T,
-    
+
     /// Prototype update method
     pub prototype_update_method: PrototypeUpdateMethod,
-    
+
     /// Distance metric for similarity
     pub distance_metric: DistanceMetric,
-    
+
     /// Enable episodic training
     pub episodic_training: bool,
-    
+
     /// Enable curriculum learning
     pub curriculum_learning: bool,
-    
+
     /// Enable data augmentation
     pub data_augmentation: bool,
-    
+
     /// Augmentation strategies
     pub augmentation_strategies: Vec<AugmentationStrategy>,
-    
+
     /// Enable meta-regularization
     pub meta_regularization: bool,
-    
+
     /// Regularization strength
     pub regularization_strength: T,
-    
+
     /// Enable task-specific adaptation
     pub task_specific_adaptation: bool,
-    
+
     /// Adaptation memory size
     pub adaptation_memory_size: usize,
 }
@@ -104,16 +104,16 @@ pub struct FewShotConfig<T: Float> {
 pub struct SupportSetManager<T: Float> {
     /// Current support sets
     support_sets: HashMap<String, SupportSet<T>>,
-    
+
     /// Support set statistics
     statistics: SupportSetStatistics<T>,
-    
+
     /// Selection strategy
     selection_strategy: SupportSetSelectionStrategy,
-    
+
     /// Quality assessor
     quality_assessor: SupportSetQualityAssessor<T>,
-    
+
     /// Cache for processed support sets
     processed_cache: HashMap<String, ProcessedSupportSet<T>>,
 }
@@ -123,16 +123,16 @@ pub struct SupportSetManager<T: Float> {
 pub struct SupportSet<T: Float> {
     /// Examples in the support set
     pub examples: Vec<Example<T>>,
-    
+
     /// Labels for each example
     pub labels: Vec<usize>,
-    
+
     /// Task metadata
     pub task_metadata: TaskMetadata,
-    
+
     /// Set quality metrics
     pub quality_metrics: SupportSetQuality<T>,
-    
+
     /// Creation timestamp
     pub timestamp: Instant,
 }
@@ -142,16 +142,16 @@ pub struct SupportSet<T: Float> {
 pub struct Example<T: Float> {
     /// Feature vector
     pub features: Array1<T>,
-    
+
     /// Context features (if any)
     pub context: Option<Array1<T>>,
-    
+
     /// Example weight
     pub weight: T,
-    
+
     /// Difficulty score
     pub difficulty: Option<T>,
-    
+
     /// Augmentation applied
     pub augmented: bool,
 }
@@ -161,16 +161,16 @@ pub struct Example<T: Float> {
 pub struct TaskMetadata {
     /// Task identifier
     pub task_id: String,
-    
+
     /// Task type
     pub task_type: FewShotTaskType,
-    
+
     /// Domain information
     pub domain: String,
-    
+
     /// Complexity score
     pub complexity: f64,
-    
+
     /// Task creation time
     pub creation_time: Instant,
 }
@@ -180,19 +180,19 @@ pub struct TaskMetadata {
 pub enum FewShotTaskType {
     /// Classification task
     Classification,
-    
+
     /// Regression task
     Regression,
-    
+
     /// Sequence learning
     SequenceLearning,
-    
+
     /// Reinforcement learning
     ReinforcementLearning,
-    
+
     /// Optimization task
     Optimization,
-    
+
     /// Custom task type
     Custom,
 }
@@ -202,16 +202,16 @@ pub enum FewShotTaskType {
 pub struct SupportSetQuality<T: Float> {
     /// Diversity score
     pub diversity: T,
-    
+
     /// Representativeness score
     pub representativeness: T,
-    
+
     /// Difficulty balance
     pub difficulty_balance: T,
-    
+
     /// Coverage score
     pub coverage: T,
-    
+
     /// Overall quality
     pub overall_quality: T,
 }
@@ -221,16 +221,16 @@ pub struct SupportSetQuality<T: Float> {
 pub struct FewShotMetaLearner<T: Float> {
     /// Meta-network parameters
     meta_parameters: MetaParameters<T>,
-    
+
     /// Episode memory
     episode_memory: EpisodeMemory<T>,
-    
+
     /// Learning algorithm
     learning_algorithm: FewShotLearningAlgorithm,
-    
+
     /// Gradient computer
     gradient_computer: MetaGradientComputer<T>,
-    
+
     /// Adaptation engine
     adaptation_engine: FastAdaptationEngine<T>,
 }
@@ -240,16 +240,16 @@ pub struct FewShotMetaLearner<T: Float> {
 pub struct PrototypeNetwork<T: Float> {
     /// Prototype embeddings
     pub prototypes: Array2<T>,
-    
+
     /// Prototype weights
     pub prototype_weights: Array1<T>,
-    
+
     /// Update rule
     pub update_rule: PrototypeUpdateRule<T>,
-    
+
     /// Distance computer
     pub distance_computer: DistanceComputer<T>,
-    
+
     /// Prototype history
     pub prototype_history: VecDeque<Array2<T>>,
 }
@@ -259,16 +259,16 @@ pub struct PrototypeNetwork<T: Float> {
 pub struct SimilarityMatcher<T: Float> {
     /// Similarity computer
     similarity_computer: SimilarityComputer<T>,
-    
+
     /// Task embeddings
     task_embeddings: HashMap<String, Array1<T>>,
-    
+
     /// Similarity cache
     similarity_cache: SimilarityCache<T>,
-    
+
     /// Matching threshold
     matching_threshold: T,
-    
+
     /// Similarity metrics
     similarity_metrics: Vec<SimilarityMetric>,
 }
@@ -278,13 +278,13 @@ pub struct SimilarityMatcher<T: Float> {
 pub struct TaskDistributionAnalyzer<T: Float> {
     /// Task distribution estimator
     distribution_estimator: TaskDistributionEstimator<T>,
-    
+
     /// Novelty detector
     novelty_detector: TaskNoveltyDetector<T>,
-    
+
     /// Difficulty estimator
     difficulty_estimator: TaskDifficultyEstimator<T>,
-    
+
     /// Distribution history
     distribution_history: VecDeque<TaskDistribution<T>>,
 }
@@ -294,16 +294,16 @@ pub struct TaskDistributionAnalyzer<T: Float> {
 pub struct AdaptationController<T: Float> {
     /// Adaptation strategy
     strategy: AdaptationStrategy<T>,
-    
+
     /// Adaptation rate controller
     rate_controller: AdaptationRateController<T>,
-    
+
     /// Stopping criterion
     stopping_criterion: StoppingCriterion<T>,
-    
+
     /// Adaptation memory
     adaptation_memory: AdaptationMemory<T>,
-    
+
     /// Performance monitor
     performance_monitor: AdaptationPerformanceMonitor<T>,
 }
@@ -313,13 +313,13 @@ pub struct AdaptationController<T: Float> {
 pub struct FewShotPerformanceTracker<T: Float> {
     /// Episode performance history
     episode_performance: VecDeque<EpisodePerformance<T>>,
-    
+
     /// Task-specific performance
     task_performance: HashMap<String, TaskPerformance<T>>,
-    
+
     /// Overall metrics
     overall_metrics: FewShotMetrics<T>,
-    
+
     /// Performance trends
     performance_trends: PerformanceTrends<T>,
 }
@@ -329,16 +329,16 @@ pub struct FewShotPerformanceTracker<T: Float> {
 pub enum PrototypeUpdateMethod {
     /// Simple averaging
     SimpleAverage,
-    
+
     /// Exponential moving average
     ExponentialMovingAverage,
-    
+
     /// Attention-weighted update
     AttentionWeighted,
-    
+
     /// Gradient-based update
     GradientBased,
-    
+
     /// Learned update rule
     Learned,
 }
@@ -348,16 +348,16 @@ pub enum PrototypeUpdateMethod {
 pub enum DistanceMetric {
     /// Euclidean distance
     Euclidean,
-    
+
     /// Cosine distance
     Cosine,
-    
+
     /// Mahalanobis distance
     Mahalanobis,
-    
+
     /// Learned metric
     Learned,
-    
+
     /// Chi-squared distance
     ChiSquared,
 }
@@ -367,19 +367,19 @@ pub enum DistanceMetric {
 pub enum SupportSetSelectionStrategy {
     /// Random selection
     Random,
-    
+
     /// Diverse selection
     Diverse,
-    
+
     /// Representative selection
     Representative,
-    
+
     /// Hard examples
     HardExamples,
-    
+
     /// Balanced selection
     Balanced,
-    
+
     /// Curriculum-based
     Curriculum,
 }
@@ -389,16 +389,16 @@ pub enum SupportSetSelectionStrategy {
 pub enum AugmentationStrategy {
     /// Noise injection
     NoiseInjection,
-    
+
     /// Feature perturbation
     FeaturePerturbation,
-    
+
     /// Mixup augmentation
     Mixup,
-    
+
     /// Manifold mixup
     ManifoldMixup,
-    
+
     /// Learned augmentation
     LearnedAugmentation,
 }
@@ -408,22 +408,22 @@ pub enum AugmentationStrategy {
 pub enum FewShotLearningAlgorithm {
     /// Model-Agnostic Meta-Learning (MAML)
     MAML,
-    
+
     /// Prototypical Networks
     Prototypical,
-    
+
     /// Relation Networks
     Relation,
-    
+
     /// Matching Networks
     Matching,
-    
+
     /// Meta-SGD
     MetaSGD,
-    
+
     /// Reptile
     Reptile,
-    
+
     /// FOMAML (First-Order MAML)
     FOMAML,
 }
@@ -433,16 +433,16 @@ pub enum FewShotLearningAlgorithm {
 pub enum SimilarityMetric {
     /// Cosine similarity
     Cosine,
-    
+
     /// Pearson correlation
     Pearson,
-    
+
     /// Mutual information
     MutualInformation,
-    
+
     /// Earth mover's distance
     EarthMover,
-    
+
     /// KL divergence
     KLDivergence,
 }
@@ -452,13 +452,13 @@ pub enum SimilarityMetric {
 pub struct MetaParameters<T: Float> {
     /// Initial parameters
     pub initial_params: HashMap<String, Array1<T>>,
-    
+
     /// Meta-learned initialization
     pub meta_init: HashMap<String, Array1<T>>,
-    
+
     /// Learning rate parameters
     pub lr_params: HashMap<String, T>,
-    
+
     /// Adaptation parameters
     pub adaptation_params: HashMap<String, Array1<T>>,
 }
@@ -468,13 +468,13 @@ pub struct MetaParameters<T: Float> {
 pub struct EpisodeMemory<T: Float> {
     /// Recent episodes
     episodes: VecDeque<Episode<T>>,
-    
+
     /// Episode features
     episode_features: HashMap<String, Array1<T>>,
-    
+
     /// Memory capacity
     capacity: usize,
-    
+
     /// Retrieval mechanism
     retrieval_mechanism: MemoryRetrievalMechanism,
 }
@@ -484,16 +484,16 @@ pub struct EpisodeMemory<T: Float> {
 pub struct Episode<T: Float> {
     /// Episode identifier
     pub id: String,
-    
+
     /// Support set
     pub support_set: SupportSet<T>,
-    
+
     /// Query set
     pub query_set: Vec<Example<T>>,
-    
+
     /// Episode performance
     pub performance: EpisodePerformance<T>,
-    
+
     /// Adaptation trajectory
     pub adaptation_trajectory: Vec<AdaptationStep<T>>,
 }
@@ -503,16 +503,16 @@ pub struct Episode<T: Float> {
 pub struct EpisodePerformance<T: Float> {
     /// Initial performance
     pub initial_performance: T,
-    
+
     /// Final performance
     pub final_performance: T,
-    
+
     /// Adaptation speed
     pub adaptation_speed: T,
-    
+
     /// Convergence quality
     pub convergence_quality: T,
-    
+
     /// Generalization gap
     pub generalization_gap: T,
 }
@@ -522,16 +522,16 @@ pub struct EpisodePerformance<T: Float> {
 pub struct AdaptationStep<T: Float> {
     /// Step number
     pub step: usize,
-    
+
     /// Parameters at this step
     pub parameters: HashMap<String, Array1<T>>,
-    
+
     /// Performance at this step
     pub performance: T,
-    
+
     /// Gradient norm
     pub gradient_norm: T,
-    
+
     /// Learning rate used
     pub learning_rate: T,
 }
@@ -541,13 +541,13 @@ pub struct AdaptationStep<T: Float> {
 pub struct MetaGradientComputer<T: Float> {
     /// Gradient computation method
     computation_method: GradientComputationMethod,
-    
+
     /// Second-order gradient support
     second_order_support: bool,
-    
+
     /// Gradient cache
     gradient_cache: HashMap<String, Array1<T>>,
-    
+
     /// Computational graph
     computational_graph: ComputationalGraph<T>,
 }
@@ -557,13 +557,13 @@ pub struct MetaGradientComputer<T: Float> {
 pub struct FastAdaptationEngine<T: Float> {
     /// Adaptation algorithm
     algorithm: FastAdaptationAlgorithm,
-    
+
     /// Optimization trajectory
     optimization_trajectory: Vec<OptimizationState<T>>,
-    
+
     /// Convergence detector
     convergence_detector: ConvergenceDetector<T>,
-    
+
     /// Early stopping mechanism
     early_stopping: EarlyStoppingMechanism<T>,
 }
@@ -573,10 +573,10 @@ pub struct FastAdaptationEngine<T: Float> {
 pub struct PrototypeUpdateRule<T: Float> {
     /// Update method
     method: PrototypeUpdateMethod,
-    
+
     /// Update parameters
     parameters: HashMap<String, T>,
-    
+
     /// Update history
     update_history: VecDeque<PrototypeUpdate<T>>,
 }
@@ -586,13 +586,13 @@ pub struct PrototypeUpdateRule<T: Float> {
 pub struct DistanceComputer<T: Float> {
     /// Distance metric
     metric: DistanceMetric,
-    
+
     /// Metric parameters
     parameters: HashMap<String, T>,
-    
+
     /// Distance cache
     distance_cache: HashMap<String, T>,
-    
+
     /// Normalization method
     normalization: DistanceNormalization,
 }
@@ -602,13 +602,13 @@ pub struct DistanceComputer<T: Float> {
 pub struct SimilarityComputer<T: Float> {
     /// Similarity metrics
     metrics: Vec<SimilarityMetric>,
-    
+
     /// Metric weights
     metric_weights: Array1<T>,
-    
+
     /// Similarity cache
     cache: HashMap<String, T>,
-    
+
     /// Computation parameters
     parameters: SimilarityParameters<T>,
 }
@@ -618,13 +618,13 @@ pub struct SimilarityComputer<T: Float> {
 pub struct SimilarityCache<T: Float> {
     /// Cached similarities
     cache: HashMap<(String, String), T>,
-    
+
     /// Cache hit rate
     hit_rate: f64,
-    
+
     /// Cache capacity
     capacity: usize,
-    
+
     /// Eviction policy
     eviction_policy: CacheEvictionPolicy,
 }
@@ -634,13 +634,13 @@ pub struct SimilarityCache<T: Float> {
 pub struct TaskDistributionEstimator<T: Float> {
     /// Distribution model
     distribution_model: DistributionModel<T>,
-    
+
     /// Parameter estimates
     parameter_estimates: HashMap<String, T>,
-    
+
     /// Estimation confidence
     confidence: T,
-    
+
     /// Sample history
     sample_history: VecDeque<TaskSample<T>>,
 }
@@ -650,13 +650,13 @@ pub struct TaskDistributionEstimator<T: Float> {
 pub struct TaskNoveltyDetector<T: Float> {
     /// Novelty threshold
     novelty_threshold: T,
-    
+
     /// Reference distribution
     reference_distribution: TaskDistribution<T>,
-    
+
     /// Novelty history
     novelty_history: VecDeque<NoveltyScore<T>>,
-    
+
     /// Detection algorithm
     detection_algorithm: NoveltyDetectionAlgorithm,
 }
@@ -666,13 +666,13 @@ pub struct TaskNoveltyDetector<T: Float> {
 pub struct TaskDifficultyEstimator<T: Float> {
     /// Difficulty model
     difficulty_model: DifficultyModel<T>,
-    
+
     /// Feature extractor
     feature_extractor: DifficultyFeatureExtractor<T>,
-    
+
     /// Difficulty cache
     difficulty_cache: HashMap<String, T>,
-    
+
     /// Estimation history
     estimation_history: VecDeque<DifficultyEstimate<T>>,
 }
@@ -682,13 +682,13 @@ pub struct TaskDifficultyEstimator<T: Float> {
 pub struct TaskDistribution<T: Float> {
     /// Distribution parameters
     pub parameters: HashMap<String, T>,
-    
+
     /// Distribution type
     pub distribution_type: DistributionType,
-    
+
     /// Confidence bounds
     pub confidence_bounds: (T, T),
-    
+
     /// Sample size
     pub sample_size: usize,
 }
@@ -698,13 +698,13 @@ pub struct TaskDistribution<T: Float> {
 pub struct SupportSetStatistics<T: Float> {
     /// Total support sets
     pub total_sets: usize,
-    
+
     /// Average quality
     pub average_quality: T,
-    
+
     /// Quality variance
     pub quality_variance: T,
-    
+
     /// Size distribution
     pub size_distribution: Vec<usize>,
 }
@@ -713,10 +713,10 @@ pub struct SupportSetStatistics<T: Float> {
 pub struct SupportSetQualityAssessor<T: Float> {
     /// Quality metrics
     metrics: Vec<QualityMetric>,
-    
+
     /// Assessment method
     method: QualityAssessmentMethod,
-    
+
     /// Quality thresholds
     thresholds: HashMap<String, T>,
 }
@@ -725,13 +725,13 @@ pub struct SupportSetQualityAssessor<T: Float> {
 pub struct ProcessedSupportSet<T: Float> {
     /// Processed features
     features: Array2<T>,
-    
+
     /// Feature statistics
     statistics: FeatureStatistics<T>,
-    
+
     /// Processing timestamp
     timestamp: Instant,
-    
+
     /// Processing metadata
     metadata: ProcessingMetadata,
 }
@@ -781,10 +781,10 @@ pub enum GradientComputationMethod {
 pub struct ComputationalGraph<T: Float> {
     /// Graph nodes
     nodes: Vec<GraphNode<T>>,
-    
+
     /// Graph edges
     edges: Vec<GraphEdge>,
-    
+
     /// Execution order
     execution_order: Vec<usize>,
 }
@@ -793,13 +793,13 @@ pub struct ComputationalGraph<T: Float> {
 pub struct GraphNode<T: Float> {
     /// Node ID
     id: usize,
-    
+
     /// Operation type
     operation: OperationType,
-    
+
     /// Node value
     value: Option<Array1<T>>,
-    
+
     /// Gradient
     gradient: Option<Array1<T>>,
 }
@@ -808,10 +808,10 @@ pub struct GraphNode<T: Float> {
 pub struct GraphEdge {
     /// Source node
     source: usize,
-    
+
     /// Target node
     target: usize,
-    
+
     /// Edge weight
     weight: f64,
 }
@@ -838,13 +838,13 @@ pub enum FastAdaptationAlgorithm {
 pub struct OptimizationState<T: Float> {
     /// Current parameters
     parameters: HashMap<String, Array1<T>>,
-    
+
     /// Current performance
     performance: T,
-    
+
     /// Optimization step
     step: usize,
-    
+
     /// Convergence measure
     convergence_measure: T,
 }
@@ -853,13 +853,13 @@ pub struct OptimizationState<T: Float> {
 pub struct ConvergenceDetector<T: Float> {
     /// Convergence criteria
     criteria: Vec<ConvergenceCriterion<T>>,
-    
+
     /// Detection threshold
     threshold: T,
-    
+
     /// History window
     history_window: usize,
-    
+
     /// Detection history
     detection_history: VecDeque<bool>,
 }
@@ -868,13 +868,13 @@ pub struct ConvergenceDetector<T: Float> {
 pub struct EarlyStoppingMechanism<T: Float> {
     /// Patience parameter
     patience: usize,
-    
+
     /// Best performance seen
     best_performance: T,
-    
+
     /// Steps since improvement
     steps_since_improvement: usize,
-    
+
     /// Stopping criterion
     stopping_criterion: StoppingCriterion<T>,
 }
@@ -883,13 +883,13 @@ pub struct EarlyStoppingMechanism<T: Float> {
 pub struct PrototypeUpdate<T: Float> {
     /// Update timestamp
     timestamp: Instant,
-    
+
     /// Old prototypes
     old_prototypes: Array2<T>,
-    
+
     /// New prototypes
     new_prototypes: Array2<T>,
-    
+
     /// Update magnitude
     update_magnitude: T,
 }
@@ -907,10 +907,10 @@ pub enum DistanceNormalization {
 pub struct SimilarityParameters<T: Float> {
     /// Temperature parameter
     temperature: T,
-    
+
     /// Scaling factors
     scaling_factors: Array1<T>,
-    
+
     /// Bias terms
     bias_terms: Array1<T>,
 }
@@ -936,13 +936,13 @@ pub enum DistributionModel<T> {
 pub struct TaskSample<T: Float> {
     /// Sample features
     features: Array1<T>,
-    
+
     /// Sample label
     label: Option<usize>,
-    
+
     /// Sample weight
     weight: T,
-    
+
     /// Sample timestamp
     timestamp: Instant,
 }
@@ -951,13 +951,13 @@ pub struct TaskSample<T: Float> {
 pub struct NoveltyScore<T: Float> {
     /// Novelty value
     score: T,
-    
+
     /// Confidence
     confidence: T,
-    
+
     /// Detection timestamp
     timestamp: Instant,
-    
+
     /// Task identifier
     task_id: String,
 }
@@ -974,10 +974,10 @@ pub enum NoveltyDetectionAlgorithm {
 pub struct DifficultyModel<T: Float> {
     /// Model parameters
     parameters: HashMap<String, T>,
-    
+
     /// Model type
     model_type: DifficultyModelType,
-    
+
     /// Training history
     training_history: Vec<DifficultyTrainingExample<T>>,
 }
@@ -986,10 +986,10 @@ pub struct DifficultyModel<T: Float> {
 pub struct DifficultyFeatureExtractor<T: Float> {
     /// Feature dimensions
     feature_dims: usize,
-    
+
     /// Extraction method
     method: FeatureExtractionMethod,
-    
+
     /// Feature cache
     cache: HashMap<String, Array1<T>>,
 }
@@ -998,13 +998,13 @@ pub struct DifficultyFeatureExtractor<T: Float> {
 pub struct DifficultyEstimate<T: Float> {
     /// Estimated difficulty
     difficulty: T,
-    
+
     /// Confidence interval
     confidence_interval: (T, T),
-    
+
     /// Estimation method
     method: DifficultyEstimationMethod,
-    
+
     /// Task features
     task_features: Array1<T>,
 }
@@ -1032,13 +1032,13 @@ pub enum DifficultyModelType {
 pub struct DifficultyTrainingExample<T: Float> {
     /// Example features
     features: Array1<T>,
-    
+
     /// True difficulty
     true_difficulty: T,
-    
+
     /// Prediction
     predicted_difficulty: Option<T>,
-    
+
     /// Example weight
     weight: T,
 }
@@ -1064,13 +1064,13 @@ pub enum DifficultyEstimationMethod {
 pub struct ConvergenceCriterion<T: Float> {
     /// Criterion type
     criterion_type: ConvergenceCriterionType,
-    
+
     /// Threshold value
     threshold: T,
-    
+
     /// Window size
     window_size: usize,
-    
+
     /// Criterion weight
     weight: T,
 }
@@ -1087,13 +1087,13 @@ pub enum ConvergenceCriterionType {
 pub struct StoppingCriterion<T: Float> {
     /// Maximum iterations
     max_iterations: usize,
-    
+
     /// Performance threshold
     performance_threshold: T,
-    
+
     /// Improvement threshold
     improvement_threshold: T,
-    
+
     /// Time budget
     time_budget: Option<std::time::Duration>,
 }
@@ -1112,10 +1112,10 @@ pub enum MemoryRetrievalMechanism {
 pub struct AdaptationStrategy<T: Float> {
     /// Strategy type
     strategy_type: AdaptationStrategyType,
-    
+
     /// Strategy parameters
     parameters: HashMap<String, T>,
-    
+
     /// Strategy history
     history: VecDeque<AdaptationResult<T>>,
 }
@@ -1124,13 +1124,13 @@ pub struct AdaptationStrategy<T: Float> {
 pub struct AdaptationRateController<T: Float> {
     /// Base learning rate
     base_rate: T,
-    
+
     /// Current learning rate
     current_rate: T,
-    
+
     /// Rate schedule
     schedule: LearningRateSchedule,
-    
+
     /// Adaptive control
     adaptive_control: bool,
 }
@@ -1139,10 +1139,10 @@ pub struct AdaptationRateController<T: Float> {
 pub struct AdaptationMemory<T: Float> {
     /// Memory entries
     entries: VecDeque<AdaptationMemoryEntry<T>>,
-    
+
     /// Memory capacity
     capacity: usize,
-    
+
     /// Access patterns
     access_patterns: HashMap<String, usize>,
 }
@@ -1151,13 +1151,13 @@ pub struct AdaptationMemory<T: Float> {
 pub struct AdaptationPerformanceMonitor<T: Float> {
     /// Performance history
     performance_history: VecDeque<T>,
-    
+
     /// Monitoring window
     window_size: usize,
-    
+
     /// Performance trends
     trends: PerformanceTrends<T>,
-    
+
     /// Alert thresholds
     alert_thresholds: HashMap<String, T>,
 }
@@ -1166,13 +1166,13 @@ pub struct AdaptationPerformanceMonitor<T: Float> {
 pub struct TaskPerformance<T: Float> {
     /// Task identifier
     task_id: String,
-    
+
     /// Performance metrics
     metrics: HashMap<String, T>,
-    
+
     /// Performance history
     history: VecDeque<T>,
-    
+
     /// Adaptation statistics
     adaptation_stats: AdaptationStatistics<T>,
 }
@@ -1181,16 +1181,16 @@ pub struct TaskPerformance<T: Float> {
 pub struct FewShotMetrics<T: Float> {
     /// Average performance across tasks
     avg_performance: T,
-    
+
     /// Performance variance
     performance_variance: T,
-    
+
     /// Adaptation speed
     avg_adaptation_speed: T,
-    
+
     /// Success rate
     success_rate: T,
-    
+
     /// Generalization score
     generalization_score: T,
 }
@@ -1199,13 +1199,13 @@ pub struct FewShotMetrics<T: Float> {
 pub struct PerformanceTrends<T: Float> {
     /// Trend direction
     trend_direction: TrendDirection,
-    
+
     /// Trend strength
     trend_strength: T,
-    
+
     /// Volatility measure
     volatility: T,
-    
+
     /// Trend confidence
     confidence: T,
 }
@@ -1223,13 +1223,13 @@ pub enum AdaptationStrategyType {
 pub struct AdaptationResult<T: Float> {
     /// Adaptation success
     success: bool,
-    
+
     /// Performance improvement
     improvement: T,
-    
+
     /// Adaptation time
     adaptation_time: std::time::Duration,
-    
+
     /// Final performance
     final_performance: T,
 }
@@ -1247,16 +1247,16 @@ pub enum LearningRateSchedule {
 pub struct AdaptationMemoryEntry<T: Float> {
     /// Entry ID
     id: String,
-    
+
     /// Task context
     task_context: Array1<T>,
-    
+
     /// Adaptation parameters
     adaptation_params: HashMap<String, T>,
-    
+
     /// Performance achieved
     performance: T,
-    
+
     /// Entry timestamp
     timestamp: Instant,
 }
@@ -1265,13 +1265,13 @@ pub struct AdaptationMemoryEntry<T: Float> {
 pub struct AdaptationStatistics<T: Float> {
     /// Average adaptation time
     avg_adaptation_time: std::time::Duration,
-    
+
     /// Adaptation success rate
     success_rate: T,
-    
+
     /// Average improvement
     avg_improvement: T,
-    
+
     /// Adaptation variance
     adaptation_variance: T,
 }
@@ -1327,7 +1327,7 @@ impl<T: Float> FewShotLearningEnhancement<T> {
             config,
         })
     }
-    
+
     /// Perform few-shot adaptation to new task
     pub fn adapt_to_task(
         &mut self,
@@ -1335,47 +1335,48 @@ impl<T: Float> FewShotLearningEnhancement<T> {
         task_id: String,
     ) -> Result<AdaptationResult<T>, OptimizerError> {
         let start_time = Instant::now();
-        
+
         // Analyze task distribution
         let task_analysis = self.task_analyzer.analyze_task(&support_set)?;
-        
+
         // Find similar tasks
-        let similar_tasks = self.similarity_matcher.find_similar_tasks(&task_id, &support_set)?;
-        
+        let similar_tasks = self
+            .similarity_matcher
+            .find_similar_tasks(&task_id, &support_set)?;
+
         // Initialize adaptation from similar tasks
         let initial_params = self.initialize_from_similar_tasks(&similar_tasks)?;
-        
+
         // Perform rapid adaptation
-        let adaptation_result = self.adaptation_controller.adapt(
-            &support_set,
-            initial_params,
-            &self.config,
-        )?;
-        
+        let adaptation_result =
+            self.adaptation_controller
+                .adapt(&support_set, initial_params, &self.config)?;
+
         // Update performance tracking
         self.performance_tracker.record_adaptation(
             &task_id,
             &adaptation_result,
             start_time.elapsed(),
         )?;
-        
+
         // Update support set manager
-        self.support_set_manager.add_support_set(task_id.clone(), support_set)?;
-        
+        self.support_set_manager
+            .add_support_set(task_id.clone(), support_set)?;
+
         Ok(adaptation_result)
     }
-    
+
     /// Get performance metrics
     pub fn get_performance_metrics(&self) -> &FewShotMetrics<T> {
         &self.performance_tracker.overall_metrics
     }
-    
+
     /// Update meta-parameters based on episode
     pub fn meta_update(&mut self, episode: Episode<T>) -> Result<(), OptimizerError> {
         self.meta_learner.update_from_episode(episode)?;
         Ok(())
     }
-    
+
     fn initialize_from_similar_tasks(
         &self,
         _similar_tasks: &[String],
@@ -1396,8 +1397,12 @@ impl<T: Float> SupportSetManager<T> {
             processed_cache: HashMap::new(),
         })
     }
-    
-    fn add_support_set(&mut self, task_id: String, support_set: SupportSet<T>) -> Result<(), OptimizerError> {
+
+    fn add_support_set(
+        &mut self,
+        task_id: String,
+        support_set: SupportSet<T>,
+    ) -> Result<(), OptimizerError> {
         self.support_sets.insert(task_id, support_set);
         Ok(())
     }
@@ -1413,7 +1418,7 @@ impl<T: Float> FewShotMetaLearner<T> {
             adaptation_engine: FastAdaptationEngine::new(),
         })
     }
-    
+
     fn update_from_episode(&mut self, episode: Episode<T>) -> Result<(), OptimizerError> {
         self.episode_memory.add_episode(episode)?;
         // Update meta-parameters based on episode
@@ -1443,14 +1448,17 @@ impl<T: Float> SimilarityMatcher<T> {
             similarity_metrics: vec![SimilarityMetric::Cosine, SimilarityMetric::Pearson],
         })
     }
-    
+
     fn find_similar_tasks(
         &self,
         _task_id: &str,
         _support_set: &SupportSet<T>,
     ) -> Result<Vec<String>, OptimizerError> {
         // Simplified implementation
-        Ok(vec!["similar_task_1".to_string(), "similar_task_2".to_string()])
+        Ok(vec![
+            "similar_task_1".to_string(),
+            "similar_task_2".to_string(),
+        ])
     }
 }
 
@@ -1463,8 +1471,11 @@ impl<T: Float> TaskDistributionAnalyzer<T> {
             distribution_history: VecDeque::new(),
         })
     }
-    
-    fn analyze_task(&mut self, _support_set: &SupportSet<T>) -> Result<TaskDistribution<T>, OptimizerError> {
+
+    fn analyze_task(
+        &mut self,
+        _support_set: &SupportSet<T>,
+    ) -> Result<TaskDistribution<T>, OptimizerError> {
         // Simplified implementation
         Ok(TaskDistribution {
             parameters: HashMap::new(),
@@ -1485,7 +1496,7 @@ impl<T: Float> AdaptationController<T> {
             performance_monitor: AdaptationPerformanceMonitor::new(100),
         })
     }
-    
+
     fn adapt(
         &mut self,
         _support_set: &SupportSet<T>,
@@ -1511,7 +1522,7 @@ impl<T: Float> FewShotPerformanceTracker<T> {
             performance_trends: PerformanceTrends::default(),
         })
     }
-    
+
     fn record_adaptation(
         &mut self,
         task_id: &str,
@@ -1519,24 +1530,28 @@ impl<T: Float> FewShotPerformanceTracker<T> {
         _duration: std::time::Duration,
     ) -> Result<(), OptimizerError> {
         // Update task-specific performance
-        let task_perf = self.task_performance.entry(task_id.to_string())
+        let task_perf = self
+            .task_performance
+            .entry(task_id.to_string())
             .or_insert_with(|| TaskPerformance::new(task_id.to_string()));
-        
+
         task_perf.update_with_result(result);
-        
+
         // Update overall metrics
         self.update_overall_metrics();
-        
+
         Ok(())
     }
-    
+
     fn update_overall_metrics(&mut self) {
         // Simplified metric computation
         if !self.task_performance.is_empty() {
-            let performances: Vec<T> = self.task_performance.values()
+            let performances: Vec<T> = self
+                .task_performance
+                .values()
                 .map(|tp| tp.metrics.get("performance").copied().unwrap_or(T::zero()))
                 .collect();
-            
+
             let sum: T = performances.iter().cloned().sum();
             let count = T::from(performances.len()).unwrap();
             self.overall_metrics.avg_performance = sum / count;
@@ -1586,7 +1601,7 @@ impl<T: Float> EpisodeMemory<T> {
             retrieval_mechanism: MemoryRetrievalMechanism::MostSimilar,
         }
     }
-    
+
     fn add_episode(&mut self, episode: Episode<T>) -> Result<(), OptimizerError> {
         if self.episodes.len() >= self.capacity {
             self.episodes.pop_front();
@@ -1712,14 +1727,12 @@ impl<T: Float> ComputationalGraph<T> {
 impl<T: Float> ConvergenceDetector<T> {
     fn new() -> Self {
         Self {
-            criteria: vec![
-                ConvergenceCriterion {
-                    criterion_type: ConvergenceCriterionType::GradientNorm,
-                    threshold: T::from(1e-6).unwrap(),
-                    window_size: 10,
-                    weight: T::one(),
-                }
-            ],
+            criteria: vec![ConvergenceCriterion {
+                criterion_type: ConvergenceCriterionType::GradientNorm,
+                threshold: T::from(1e-6).unwrap(),
+                window_size: 10,
+                weight: T::one(),
+            }],
             threshold: T::from(1e-6).unwrap(),
             history_window: 10,
             detection_history: VecDeque::new(),
@@ -1789,11 +1802,12 @@ impl<T: Float> TaskPerformance<T> {
             adaptation_stats: AdaptationStatistics::default(),
         }
     }
-    
+
     fn update_with_result(&mut self, result: &AdaptationResult<T>) {
-        self.metrics.insert("performance".to_string(), result.final_performance);
+        self.metrics
+            .insert("performance".to_string(), result.final_performance);
         self.history.push_back(result.final_performance);
-        
+
         // Maintain history size
         if self.history.len() > 100 {
             self.history.pop_front();
@@ -1899,16 +1913,14 @@ mod tests {
 
     #[test]
     fn test_support_set_creation() {
-        let examples = vec![
-            Example {
-                features: Array1::zeros(10),
-                context: None,
-                weight: 1.0,
-                difficulty: None,
-                augmented: false,
-            }
-        ];
-        
+        let examples = vec![Example {
+            features: Array1::zeros(10),
+            context: None,
+            weight: 1.0,
+            difficulty: None,
+            augmented: false,
+        }];
+
         let support_set = SupportSet {
             examples,
             labels: vec![0],
@@ -1928,7 +1940,7 @@ mod tests {
             },
             timestamp: Instant::now(),
         };
-        
+
         assert_eq!(support_set.examples.len(), 1);
         assert_eq!(support_set.labels.len(), 1);
     }

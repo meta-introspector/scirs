@@ -6,6 +6,7 @@
 
 use crate::error::SparseResult;
 use num_traits::{Float, NumAssign};
+use rand::Rng;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -432,7 +433,7 @@ impl QuantumSparseProcessor {
                 (-delta_energy / current_temperature).exp()
             };
 
-            if rand::random::<f64>() < acceptance_probability {
+            if rand::rng().random::<f64>() < acceptance_probability {
                 processing_order = new_order;
             }
 
@@ -477,10 +478,10 @@ impl QuantumSparseProcessor {
             CoherenceModel::Exponential => {
                 let decoherence_factor =
                     (-self.config.decoherence_rate * self.quantum_state.evolution_time).exp();
+                let coherence_len = self.quantum_state.coherence_factors.len();
                 for (i, amplitude) in self.quantum_state.amplitudes.iter_mut().enumerate() {
                     *amplitude *= decoherence_factor;
-                    self.quantum_state.coherence_factors
-                        [i % self.quantum_state.coherence_factors.len()] = decoherence_factor;
+                    self.quantum_state.coherence_factors[i % coherence_len] = decoherence_factor;
                 }
             }
             CoherenceModel::Gaussian => {
@@ -684,18 +685,18 @@ impl QuantumSparseProcessor {
             NoiseModel::PhaseDamping => {
                 let gamma = self.config.decoherence_rate * 0.1;
                 for (i, phase) in self.quantum_state.phases.iter_mut().enumerate() {
-                    let random_phase = (rand::random::<f64>() - 0.5) * gamma;
+                    let random_phase = (rand::rng().random::<f64>() - 0.5) * gamma;
                     *phase += random_phase;
                     // Apply phase noise to amplitude
                     if i < self.quantum_state.amplitudes.len() {
-                        self.quantum_state.amplitudes[i] *= (1.0 - gamma / 2.0);
+                        self.quantum_state.amplitudes[i] *= 1.0 - gamma / 2.0;
                     }
                 }
             }
             NoiseModel::Depolarizing => {
                 let p = self.config.decoherence_rate * 0.05;
                 for amplitude in &mut self.quantum_state.amplitudes {
-                    if rand::random::<f64>() < p {
+                    if rand::rng().random::<f64>() < p {
                         *amplitude *= 0.5; // Depolarizing effect
                     }
                 }
@@ -708,7 +709,7 @@ impl QuantumSparseProcessor {
                 for (i, amplitude) in self.quantum_state.amplitudes.iter_mut().enumerate() {
                     *amplitude *= (1.0 - gamma_amp).sqrt();
                     if i < self.quantum_state.phases.len() {
-                        let random_phase = (rand::random::<f64>() - 0.5) * gamma_phase;
+                        let random_phase = (rand::rng().random::<f64>() - 0.5) * gamma_phase;
                         self.quantum_state.phases[i] += random_phase;
                     }
                 }
@@ -721,14 +722,23 @@ impl QuantumSparseProcessor {
         // Detect errors using syndrome measurements
         self.detect_error_syndromes();
 
-        // Correct detected errors
-        for syndrome in &mut self.quantum_state.error_syndromes {
-            if !syndrome.correction_applied
-                && syndrome.detection_probability > self.config.error_correction_threshold
-            {
-                self.apply_error_correction(syndrome);
-                syndrome.correction_applied = true;
-            }
+        // Collect syndromes that need correction
+        let syndromes_to_correct: Vec<_> = self
+            .quantum_state
+            .error_syndromes
+            .iter()
+            .enumerate()
+            .filter(|(_, syndrome)| {
+                !syndrome.correction_applied
+                    && syndrome.detection_probability > self.config.error_correction_threshold
+            })
+            .map(|(i, syndrome)| (i, syndrome.clone()))
+            .collect();
+
+        // Apply corrections
+        for (index, syndrome) in syndromes_to_correct {
+            self.apply_error_correction(&syndrome);
+            self.quantum_state.error_syndromes[index].correction_applied = true;
         }
 
         // Update logical qubit fidelities
@@ -777,14 +787,14 @@ impl QuantumSparseProcessor {
     /// Classify the type of quantum error
     fn classify_error_type(
         &self,
-        logical_qubit: &LogicalQubit,
+        _logical_qubit: &LogicalQubit,
         syndrome_strength: f64,
     ) -> QuantumError {
         // Simplified error classification based on syndrome patterns
         if syndrome_strength > 0.8 {
             QuantumError::BitPhaseFlip
         } else if syndrome_strength > 0.5 {
-            if rand::random::<f64>() > 0.5 {
+            if rand::rng().random::<f64>() > 0.5 {
                 QuantumError::BitFlip
             } else {
                 QuantumError::PhaseFlip

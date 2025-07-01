@@ -33,7 +33,7 @@ mod tests {
     #[test]
     fn test_conv2d_shape() {
         // Create a 2D convolutional layer
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = rand::thread_rng();
         let conv = Conv2D::<f64>::new(
             3,                 // in_channels
             8,                 // out_channels
@@ -61,7 +61,7 @@ mod tests {
     #[test]
     fn test_conv2d_valid_padding() {
         // Create a 2D convolutional layer with Valid padding
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = rand::thread_rng();
         let conv = Conv2D::<f64>::new(
             3,                  // in_channels
             8,                  // out_channels
@@ -373,7 +373,7 @@ mod adaptive_pooling_tests {
     #[test]
     fn test_layer_descriptions() {
         // Test conv2d description
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = rand::thread_rng();
         let conv = Conv2D::<f64>::new(3, 8, (3, 3), (1, 1), PaddingMode::Same, &mut rng).unwrap();
         let desc = conv.layer_description();
         assert!(desc.contains("Conv2D"));
@@ -394,7 +394,7 @@ mod adaptive_pooling_tests {
 
     #[test]
     fn test_parameter_counts() {
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = rand::thread_rng();
 
         // Conv2D should have parameters
         let conv = Conv2D::<f64>::new(3, 8, (3, 3), (1, 1), PaddingMode::Same, &mut rng).unwrap();
@@ -413,7 +413,7 @@ mod adaptive_pooling_tests {
 
     #[test]
     fn test_layer_types() {
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = rand::thread_rng();
 
         let conv = Conv2D::<f64>::new(3, 8, (3, 3), (1, 1), PaddingMode::Same, &mut rng).unwrap();
         assert_eq!(conv.layer_type(), "Conv2D");

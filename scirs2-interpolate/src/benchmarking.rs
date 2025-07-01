@@ -202,7 +202,7 @@ pub struct SystemInfo {
     pub simd_capabilities: Vec<String>,
 }
 
-impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static>
+impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static + std::ops::AddAssign + std::ops::SubAssign + std::fmt::LowerExp>
     InterpolationBenchmarkSuite<T>
 {
     /// Create a new benchmark suite
@@ -244,7 +244,8 @@ impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static>
     fn benchmark_1d_methods(&mut self) -> InterpolateResult<()> {
         println!("Benchmarking 1D interpolation methods...");
 
-        for &size in &self.config.data_sizes {
+        let data_sizes = self.config.data_sizes.clone();
+        for &size in &data_sizes {
             let x = self.generate_test_data_1d(size)?;
             let y = self.evaluate_test_function(&x.view());
             let x_new = self.generate_query_points_1d(size / 2)?;
@@ -261,7 +262,7 @@ impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static>
 
             // PCHIP interpolation
             self.benchmark_method("pchip_1d", size, || {
-                crate::interp1d::pchip_interpolate(&x.view(), &y.view(), &x_new.view())
+                crate::interp1d::pchip_interpolate(&x.view(), &y.view(), &x_new.view(), false)
             })?;
         }
 
@@ -272,13 +273,14 @@ impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static>
     fn benchmark_advanced_methods(&mut self) -> InterpolateResult<()> {
         println!("Benchmarking advanced interpolation methods...");
 
-        for &size in &self.config.data_sizes {
+        let data_sizes = self.config.data_sizes.clone();
+        for &size in &data_sizes {
             if size > 10_000 {
                 continue; // Skip large sizes for expensive methods
             }
 
             let x = self.generate_test_data_2d(size)?;
-            let y = self.evaluate_test_function_2d(&x);
+            let y = self.evaluate_test_function_2d(&x.view());
             let x_new = self.generate_query_points_2d(size / 4)?;
 
             // RBF interpolation
@@ -313,7 +315,8 @@ impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static>
     fn benchmark_spline_methods(&mut self) -> InterpolateResult<()> {
         println!("Benchmarking spline methods...");
 
-        for &size in &self.config.data_sizes {
+        let data_sizes = self.config.data_sizes.clone();
+        for &size in &data_sizes {
             let x = self.generate_test_data_1d(size)?;
             let y = self.evaluate_test_function(&x.view());
             let x_new = self.generate_query_points_1d(size / 2)?;
@@ -339,7 +342,8 @@ impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static>
     fn benchmark_simd_optimizations(&mut self) -> InterpolateResult<()> {
         println!("Benchmarking SIMD optimizations...");
 
-        for &size in &self.config.data_sizes {
+        let data_sizes = self.config.data_sizes.clone();
+        for &size in &data_sizes {
             let x = self.generate_test_data_1d(size)?;
             let y = self.evaluate_test_function(&x.view());
             let x_new = self.generate_query_points_1d(size)?;
@@ -374,7 +378,8 @@ impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static>
     fn benchmark_streaming_methods(&mut self) -> InterpolateResult<()> {
         println!("Benchmarking streaming methods...");
 
-        for &size in &self.config.data_sizes {
+        let data_sizes = self.config.data_sizes.clone();
+        for &size in &data_sizes {
             if size > 50_000 {
                 continue; // Skip very large sizes for streaming tests
             }
@@ -843,7 +848,7 @@ impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static> Enhance
         println!("Starting SciPy 1.13+ compatibility validation...");
 
         let mut compatibility_results = Vec::new();
-        let mut performance_comparisons = Vec::new();
+        let performance_comparisons = Vec::new();
         let mut accuracy_validations = Vec::new();
 
         // Test 1D interpolation methods against SciPy reference
@@ -1380,7 +1385,8 @@ impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static> StressT
     fn test_memory_pressure(&mut self) -> InterpolateResult<()> {
         println!("Testing memory pressure...");
 
-        for &size in &self.config.data_sizes {
+        let data_sizes = self.config.data_sizes.clone();
+        for &size in &data_sizes {
             if size < 100_000 {
                 continue; // Only test memory pressure on large datasets
             }

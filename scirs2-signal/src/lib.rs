@@ -79,6 +79,7 @@ pub mod dwt;
 pub mod dwt2d;
 pub mod dwt2d_advanced_algorithms;
 pub mod dwt2d_advanced_features;
+pub mod dwt2d_boundary_enhanced;
 pub mod dwt2d_enhanced;
 pub mod dwt2d_image;
 pub mod dwt2d_ultra_refined;
@@ -102,6 +103,7 @@ pub mod kalman;
 pub mod lombscargle;
 pub mod lombscargle_advanced_validation;
 pub mod lombscargle_comprehensive_validation;
+pub mod lombscargle_edge_case_validation;
 pub mod lombscargle_enhanced;
 pub mod lombscargle_enhanced_validation;
 pub mod lombscargle_enhanced_validation_improvements;
@@ -136,6 +138,7 @@ pub mod resample;
 pub mod robust;
 pub mod savgol;
 pub mod scipy_validation;
+pub mod scipy_validation_comprehensive;
 pub mod separation;
 pub mod simd_advanced;
 pub mod simd_ops;
@@ -153,6 +156,7 @@ pub mod sysid_enhanced;
 pub mod sysid_robust_enhancements;
 pub mod sysid_ultra_enhanced;
 pub mod tv;
+pub mod ultrathink_comprehensive_validation;
 pub mod validation_runner;
 pub mod waveforms;
 pub mod wavelet_vis;
@@ -271,6 +275,12 @@ pub use parametric_enhanced::{
     enhanced_parametric_estimation, DiagnosticStats, EnhancedParametricResult,
     ModelSelectionResult, ModelType, ParametricConfig,
 };
+pub use parametric_ultra_enhanced::{
+    adaptive_ar_spectral_estimation, comprehensive_parametric_validation,
+    high_resolution_spectral_estimation as ultra_high_resolution_spectral_estimation, multitaper_parametric_estimation,
+    robust_parametric_spectral_estimation, ultra_enhanced_arma, ultra_enhanced_arma_spectrum,
+    ConvergenceInfo, ModelDiagnostics, PerformanceStats, UltraEnhancedARMAResult,
+};
 pub use peak::{find_peaks, peak_prominences, peak_widths};
 pub use realtime::{
     CircularBuffer, GainProcessor, LockFreeRingBuffer, MovingAverageProcessor, RealtimeConfig,
@@ -332,6 +342,12 @@ pub use dwt2d_advanced_features::{
     advanced_wavelet_denoising, AdvancedWaveletConfig, AdvancedWaveletResult, DenoisingMetrics,
     EdgeMetrics, TextureFeatures, ThresholdMethod, ThresholdSelection,
 };
+pub use dwt2d_boundary_enhanced::{
+    dwt2d_decompose_enhanced, dwt2d_reconstruct_enhanced, generate_boundary_report,
+    wavedec2_enhanced, waverec2_enhanced, AdaptiveBoundaryParams, ArtifactMeasures,
+    BoundaryConfig2D, BoundaryInfo2D, BoundaryMode2D, BoundaryPreprocessing,
+    BoundaryQualityMetrics, EnhancedDWT2DDecomposition, ExtensionInfo, WindowType, WindowingConfig,
+};
 pub use swt::{iswt, swt, swt_decompose, swt_reconstruct};
 pub use swt2d::{iswt2d, swt2d, swt2d_decompose, swt2d_reconstruct, Swt2dResult};
 pub use wavelets::{
@@ -360,6 +376,9 @@ pub use wpt::{
     get_level_coefficients, reconstruct_from_nodes, wp_decompose, WaveletPacket, WaveletPacketTree,
 };
 pub use wpt2d::{wpt2d_full, wpt2d_selective, WaveletPacket2D, WaveletPacketTree2D};
+pub use wpt_ultra_validation::{
+    run_ultra_wpt_validation, UltraWptValidationResult,
+};
 
 // LTI systems functions
 pub use lti::system::{c2d, ss, tf, zpk};
@@ -475,6 +494,12 @@ pub use sswt::{
 pub use scipy_validation::{
     generate_validation_report, load_reference_data, validate_all, ValidationConfig,
     ValidationResults, ValidationSummary, ValidationTestResult,
+};
+
+// Ultrathink comprehensive validation
+pub use ultrathink_comprehensive_validation::{
+    generate_ultrathink_report, run_ultrathink_comprehensive_validation, PerformanceImprovements,
+    UltrathinkValidationResult,
 };
 
 #[cfg(test)]

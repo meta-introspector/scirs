@@ -472,7 +472,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> PolicyGradientOptimizer<
     /// Update networks with computed losses
     fn update_networks_with_loss(
         &mut self,
-        total_loss: T,
+        _total_loss: T,
         policy_loss: T,
         value_loss: T,
     ) -> Result<(), OptimizerError> {

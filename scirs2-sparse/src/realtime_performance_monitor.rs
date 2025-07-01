@@ -4,11 +4,11 @@
 //! for all ultrathink mode processors, including quantum-inspired, neural-adaptive,
 //! and hybrid processors.
 
-use crate::adaptive_memory_compression::{AdaptiveMemoryCompressor, MemoryStats};
+use crate::adaptive_memory_compression::MemoryStats;
 use crate::error::SparseResult;
-use crate::neural_adaptive_sparse::{NeuralAdaptiveSparseProcessor, NeuralProcessorStats};
-use crate::quantum_inspired_sparse::{QuantumProcessorStats, QuantumSparseProcessor};
-use crate::quantum_neural_hybrid::{QuantumNeuralHybridProcessor, QuantumNeuralHybridStats};
+use crate::neural_adaptive_sparse::NeuralProcessorStats;
+use crate::quantum_inspired_sparse::QuantumProcessorStats;
+use crate::quantum_neural_hybrid::QuantumNeuralHybridStats;
 use std::collections::{HashMap, VecDeque};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
@@ -106,7 +106,7 @@ pub enum ProcessorType {
 }
 
 /// Aggregated performance metrics
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 struct AggregatedMetrics {
     avg_execution_time: f64,
     avg_throughput: f64,
@@ -344,7 +344,6 @@ pub struct PredictionPoint {
 }
 
 /// Registry of monitored processors
-#[derive(Debug)]
 struct ProcessorRegistry {
     quantum_processors: HashMap<String, Box<dyn QuantumProcessorMonitor>>,
     neural_processors: HashMap<String, Box<dyn NeuralProcessorMonitor>>,
@@ -587,7 +586,7 @@ impl RealTimePerformanceMonitor {
     }
 
     /// Get performance forecast
-    pub fn get_forecast(&self, metric_name: &str, horizon: usize) -> Option<Forecast> {
+    pub fn get_forecast(&self, metric_name: &str, _horizon: usize) -> Option<Forecast> {
         if let Ok(prediction_engine) = self.prediction_engine.lock() {
             prediction_engine.forecast_cache.get(metric_name).cloned()
         } else {
@@ -720,45 +719,31 @@ impl RealTimePerformanceMonitor {
                 return;
             }
 
-            let samples = &history.samples;
-            let count = samples.len() as f64;
+            let count = history.samples.len() as f64;
 
-            history.aggregated_metrics.avg_execution_time =
-                samples.iter().map(|s| s.execution_time_ms).sum::<f64>() / count;
-
-            history.aggregated_metrics.avg_throughput = samples
-                .iter()
-                .map(|s| s.throughput_ops_per_sec)
-                .sum::<f64>()
-                / count;
-
-            history.aggregated_metrics.avg_memory_usage =
-                samples.iter().map(|s| s.memory_usage_mb).sum::<f64>() / count;
-
-            history.aggregated_metrics.avg_cache_hit_ratio =
-                samples.iter().map(|s| s.cache_hit_ratio).sum::<f64>() / count;
-
-            history.aggregated_metrics.avg_error_rate =
-                samples.iter().map(|s| s.error_rate).sum::<f64>() / count;
-
-            history.aggregated_metrics.peak_throughput = samples
-                .iter()
-                .map(|s| s.throughput_ops_per_sec)
-                .fold(0.0, f64::max);
-
-            history.aggregated_metrics.min_execution_time = samples
-                .iter()
-                .map(|s| s.execution_time_ms)
-                .fold(f64::INFINITY, f64::min);
-
-            history.aggregated_metrics.total_operations = samples.len();
+            // Calculate all metrics first before updating the struct
+            let avg_execution_time = history.samples.iter().map(|s| s.execution_time_ms).sum::<f64>() / count;
+            let avg_throughput = history.samples.iter().map(|s| s.throughput_ops_per_sec).sum::<f64>() / count;
+            let avg_memory_usage = history.samples.iter().map(|s| s.memory_usage_mb).sum::<f64>() / count;
+            let avg_cache_hit_ratio = history.samples.iter().map(|s| s.cache_hit_ratio).sum::<f64>() / count;
+            let avg_error_rate = history.samples.iter().map(|s| s.error_rate).sum::<f64>() / count;
+            let peak_throughput = history.samples.iter().map(|s| s.throughput_ops_per_sec).fold(0.0, f64::max);
+            let min_execution_time = history.samples.iter().map(|s| s.execution_time_ms).fold(f64::INFINITY, f64::min);
+            let total_operations = history.samples.len();
 
             // Calculate efficiency score
-            history.aggregated_metrics.efficiency_score =
-                (history.aggregated_metrics.avg_throughput
-                    * history.aggregated_metrics.avg_cache_hit_ratio)
-                    / (history.aggregated_metrics.avg_execution_time + 1.0)
-                    * (1.0 - history.aggregated_metrics.avg_error_rate);
+            let efficiency_score = (avg_throughput * avg_cache_hit_ratio) / (avg_execution_time + 1.0) * (1.0 - avg_error_rate);
+
+            // Now update all the metrics
+            history.aggregated_metrics.avg_execution_time = avg_execution_time;
+            history.aggregated_metrics.avg_throughput = avg_throughput;
+            history.aggregated_metrics.avg_memory_usage = avg_memory_usage;
+            history.aggregated_metrics.avg_cache_hit_ratio = avg_cache_hit_ratio;
+            history.aggregated_metrics.avg_error_rate = avg_error_rate;
+            history.aggregated_metrics.peak_throughput = peak_throughput;
+            history.aggregated_metrics.min_execution_time = min_execution_time;
+            history.aggregated_metrics.total_operations = total_operations;
+            history.aggregated_metrics.efficiency_score = efficiency_score;
         }
     }
 
@@ -768,26 +753,19 @@ impl RealTimePerformanceMonitor {
                 return;
             }
 
-            let recent_samples: Vec<_> = history.samples.iter().rev().take(100).collect();
+            // Clone recent samples to avoid borrow checker issues
+            let recent_samples: Vec<_> = history.samples.iter().rev().take(100).cloned().collect();
 
-            // Update execution time trend
-            let execution_times: Vec<f64> =
-                recent_samples.iter().map(|s| s.execution_time_ms).collect();
-            history.trend_analysis.execution_time_trend =
-                Self::calculate_linear_trend(&execution_times);
+            // Calculate all trends first
+            let execution_times: Vec<f64> = recent_samples.iter().map(|s| s.execution_time_ms).collect();
+            let execution_time_trend = Self::calculate_linear_trend(&execution_times);
 
-            // Update throughput trend
-            let throughputs: Vec<f64> = recent_samples
-                .iter()
-                .map(|s| s.throughput_ops_per_sec)
-                .collect();
-            history.trend_analysis.throughput_trend = Self::calculate_linear_trend(&throughputs);
+            let throughputs: Vec<f64> = recent_samples.iter().map(|s| s.throughput_ops_per_sec).collect();
+            let throughput_trend = Self::calculate_linear_trend(&throughputs);
 
-            // Update memory trend
             let memory_usage: Vec<f64> = recent_samples.iter().map(|s| s.memory_usage_mb).collect();
-            history.trend_analysis.memory_trend = Self::calculate_linear_trend(&memory_usage);
+            let memory_trend = Self::calculate_linear_trend(&memory_usage);
 
-            // Update efficiency trend
             let efficiency: Vec<f64> = recent_samples
                 .iter()
                 .map(|s| {
@@ -795,7 +773,13 @@ impl RealTimePerformanceMonitor {
                         * (1.0 - s.error_rate)
                 })
                 .collect();
-            history.trend_analysis.efficiency_trend = Self::calculate_linear_trend(&efficiency);
+            let efficiency_trend = Self::calculate_linear_trend(&efficiency);
+
+            // Now update the trends
+            history.trend_analysis.execution_time_trend = execution_time_trend;
+            history.trend_analysis.throughput_trend = throughput_trend;
+            history.trend_analysis.memory_trend = memory_trend;
+            history.trend_analysis.efficiency_trend = efficiency_trend;
 
             // Update anomaly detection
             history.trend_analysis.anomaly_detection.update(&efficiency);
@@ -950,7 +934,7 @@ impl RealTimePerformanceMonitor {
     fn run_adaptive_optimization(
         history: &Arc<Mutex<PerformanceHistory>>,
         adaptation_engine: &Arc<Mutex<AdaptationEngine>>,
-        processor_registry: &Arc<Mutex<ProcessorRegistry>>,
+        _processor_registry: &Arc<Mutex<ProcessorRegistry>>,
     ) {
         // Simplified adaptive optimization
         if let (Ok(history), Ok(mut adaptation_engine)) = (history.lock(), adaptation_engine.lock())

@@ -935,6 +935,1142 @@ impl<F: Float + Debug + Clone + FromPrimitive> MemristiveNetwork<F> {
     }
 }
 
+/// **ULTRATHINK MODE: NEXT-GENERATION NEUROMORPHIC COMPUTING**
+
+/// Bio-Realistic Dendritic Computation Model
+#[derive(Debug)]
+pub struct DendriticComputationUnit<F: Float + Debug> {
+    /// Dendritic tree structure
+    dendritic_tree: DendriticTree<F>,
+    /// Synaptic inputs along dendrites
+    synaptic_inputs: Vec<SynapticInput<F>>,
+    /// Dendritic spine dynamics
+    spine_dynamics: Vec<SpineDynamics<F>>,
+    /// Active dendritic currents
+    active_currents: HashMap<DendriticCurrent, F>,
+    /// Calcium concentration dynamics
+    calcium_dynamics: CalciumDynamics<F>,
+}
+
+/// Dendritic tree topology
+#[derive(Debug, Clone)]
+pub struct DendriticTree<F: Float + Debug> {
+    /// Tree nodes representing dendritic segments
+    segments: Vec<DendriticSegment<F>>,
+    /// Connectivity between segments
+    connections: Vec<DendriticConnection>,
+    /// Somatic distance for each segment
+    soma_distances: Array1<F>,
+    /// Segment diameters
+    diameters: Array1<F>,
+}
+
+/// Individual dendritic segment
+#[derive(Debug, Clone)]
+pub struct DendriticSegment<F: Float + Debug> {
+    /// Segment ID
+    id: usize,
+    /// Membrane potential
+    voltage: F,
+    /// Length of segment
+    length: F,
+    /// Surface area
+    surface_area: F,
+    /// Ion channel densities
+    channel_densities: HashMap<IonChannel, F>,
+    /// Local calcium concentration
+    calcium_concentration: F,
+}
+
+/// Dendritic connections between segments
+#[derive(Debug, Clone)]
+pub struct DendriticConnection {
+    /// Source segment
+    from_segment: usize,
+    /// Target segment
+    to_segment: usize,
+    /// Axial resistance
+    resistance: f64,
+    /// Connection strength
+    coupling_strength: f64,
+}
+
+/// Types of ion channels in dendrites
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub enum IonChannel {
+    /// Voltage-gated sodium channels
+    VGSodium,
+    /// Voltage-gated potassium channels
+    VGPotassium,
+    /// Voltage-gated calcium channels (L-type)
+    VGCalciumL,
+    /// Voltage-gated calcium channels (T-type)
+    VGCalciumT,
+    /// Hyperpolarization-activated cation channels
+    HCN,
+    /// A-type potassium channels
+    KA,
+    /// SK-type calcium-activated potassium channels
+    SK,
+    /// BK-type calcium-activated potassium channels
+    BK,
+}
+
+/// Types of active dendritic currents
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub enum DendriticCurrent {
+    /// Persistent sodium current
+    INaP,
+    /// L-type calcium current
+    ICaL,
+    /// T-type calcium current
+    ICaT,
+    /// A-type potassium current
+    IKA,
+    /// Delayed rectifier potassium current
+    IKdr,
+    /// Calcium-activated potassium current
+    IKCa,
+    /// Hyperpolarization-activated current
+    Ih,
+}
+
+/// Synaptic input to dendritic segment
+#[derive(Debug, Clone)]
+pub struct SynapticInput<F: Float + Debug> {
+    /// Input location on dendritic tree
+    segment_id: usize,
+    /// Distance from soma
+    soma_distance: F,
+    /// Synaptic weight
+    weight: F,
+    /// Synaptic conductance
+    conductance: F,
+    /// Reversal potential
+    reversal_potential: F,
+    /// Synaptic time constants
+    tau_rise: F,
+    tau_decay: F,
+    /// NMDA/AMPA ratio
+    nmda_ampa_ratio: F,
+}
+
+/// Dendritic spine dynamics
+#[derive(Debug, Clone)]
+pub struct SpineDynamics<F: Float + Debug> {
+    /// Spine head volume
+    head_volume: F,
+    /// Spine neck resistance
+    neck_resistance: F,
+    /// Calcium compartmentalization
+    calcium_compartment: F,
+    /// Plasticity state variables
+    plasticity_variables: PlasticityVariables<F>,
+    /// Spine maturation state
+    maturation_level: F,
+}
+
+/// Plasticity variables for dendritic spines
+#[derive(Debug, Clone)]
+pub struct PlasticityVariables<F: Float + Debug> {
+    /// CaMKII autophosphorylation level
+    camkii_phosphorylation: F,
+    /// Protein synthesis activity
+    protein_synthesis: F,
+    /// AMPA receptor trafficking
+    ampa_trafficking: F,
+    /// Spine size scaling factor
+    size_scaling: F,
+}
+
+/// Calcium dynamics in dendritic compartments
+#[derive(Debug, Clone)]
+pub struct CalciumDynamics<F: Float + Debug> {
+    /// Intracellular calcium concentration
+    ca_concentration: Array1<F>,
+    /// Calcium buffer concentrations
+    buffer_concentrations: HashMap<CalciumBuffer, Array1<F>>,
+    /// Calcium pumps and exchangers
+    pump_activities: HashMap<CalciumPump, F>,
+    /// Calcium diffusion coefficients
+    diffusion_coefficients: Array1<F>,
+}
+
+/// Types of calcium buffers
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub enum CalciumBuffer {
+    /// Calmodulin
+    Calmodulin,
+    /// Parvalbumin
+    Parvalbumin,
+    /// Calbindin
+    Calbindin,
+    /// Fixed buffers
+    FixedBuffer,
+}
+
+/// Types of calcium pumps and exchangers
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub enum CalciumPump {
+    /// Plasma membrane calcium ATPase
+    PMCA,
+    /// Sodium-calcium exchanger
+    NCX,
+    /// Sarco/endoplasmic reticulum calcium ATPase
+    SERCA,
+}
+
+impl<F: Float + Debug + Clone + FromPrimitive> DendriticComputationUnit<F> {
+    /// Create new dendritic computation unit
+    pub fn new(num_segments: usize, tree_topology: TreeTopology) -> Self {
+        let dendritic_tree = Self::create_dendritic_tree(num_segments, tree_topology);
+        let synaptic_inputs = Vec::new();
+        let spine_dynamics = Vec::new();
+        
+        let mut active_currents = HashMap::new();
+        active_currents.insert(DendriticCurrent::INaP, F::zero());
+        active_currents.insert(DendriticCurrent::ICaL, F::zero());
+        active_currents.insert(DendriticCurrent::IKA, F::zero());
+        
+        let calcium_dynamics = CalciumDynamics {
+            ca_concentration: Array1::from_elem(num_segments, F::from(0.0001).unwrap()), // 100 nM baseline
+            buffer_concentrations: HashMap::new(),
+            pump_activities: HashMap::new(),
+            diffusion_coefficients: Array1::from_elem(num_segments, F::from(0.22).unwrap()), // μm²/ms
+        };
+        
+        Self {
+            dendritic_tree,
+            synaptic_inputs,
+            spine_dynamics,
+            active_currents,
+            calcium_dynamics,
+        }
+    }
+
+    /// Create dendritic tree structure
+    fn create_dendritic_tree(num_segments: usize, topology: TreeTopology) -> DendriticTree<F> {
+        let mut segments = Vec::new();
+        let mut connections = Vec::new();
+        let mut soma_distances = Array1::zeros(num_segments);
+        let mut diameters = Array1::zeros(num_segments);
+
+        for i in 0..num_segments {
+            let mut channel_densities = HashMap::new();
+            
+            // Distance-dependent channel densities
+            let distance_factor = F::from(i as f64 / num_segments as f64).unwrap();
+            
+            channel_densities.insert(IonChannel::VGSodium, F::from(120.0).unwrap() * (F::one() - distance_factor * F::from(0.5).unwrap()));
+            channel_densities.insert(IonChannel::VGPotassium, F::from(36.0).unwrap());
+            channel_densities.insert(IonChannel::VGCalciumL, F::from(0.4).unwrap() * distance_factor);
+            channel_densities.insert(IonChannel::HCN, F::from(0.1).unwrap() * distance_factor);
+
+            let segment = DendriticSegment {
+                id: i,
+                voltage: F::from(-70.0).unwrap(), // Resting potential
+                length: F::from(10.0).unwrap(),   // μm
+                surface_area: F::from(314.16).unwrap(), // μm² (π*d*L for d=10μm)
+                channel_densities,
+                calcium_concentration: F::from(0.0001).unwrap(), // 100 nM
+            };
+
+            segments.push(segment);
+            soma_distances[i] = F::from(i as f64 * 10.0).unwrap(); // 10 μm per segment
+            diameters[i] = F::from(2.0).unwrap() / (F::one() + distance_factor); // Tapering diameter
+        }
+
+        // Create connections based on topology
+        match topology {
+            TreeTopology::Linear => {
+                for i in 0..(num_segments - 1) {
+                    connections.push(DendriticConnection {
+                        from_segment: i,
+                        to_segment: i + 1,
+                        resistance: 100.0, // MΩ
+                        coupling_strength: 1.0,
+                    });
+                }
+            }
+            TreeTopology::Branched => {
+                // Create binary tree structure
+                for i in 0..num_segments / 2 {
+                    if 2 * i + 1 < num_segments {
+                        connections.push(DendriticConnection {
+                            from_segment: i,
+                            to_segment: 2 * i + 1,
+                            resistance: 150.0,
+                            coupling_strength: 0.8,
+                        });
+                    }
+                    if 2 * i + 2 < num_segments {
+                        connections.push(DendriticConnection {
+                            from_segment: i,
+                            to_segment: 2 * i + 2,
+                            resistance: 150.0,
+                            coupling_strength: 0.8,
+                        });
+                    }
+                }
+            }
+        }
+
+        DendriticTree {
+            segments,
+            connections,
+            soma_distances,
+            diameters,
+        }
+    }
+
+    /// Simulate dendritic computation with active properties
+    pub fn simulate_dendritic_integration(
+        &mut self,
+        input_currents: &Array1<F>,
+        dt: F,
+    ) -> crate::error::Result<Array1<F>> {
+        let num_segments = self.dendritic_tree.segments.len();
+        let mut voltages = Array1::zeros(num_segments);
+
+        // Update each dendritic segment
+        for (i, segment) in self.dendritic_tree.segments.iter_mut().enumerate() {
+            // Collect currents for this segment
+            let mut total_current = F::zero();
+
+            // External input current
+            if i < input_currents.len() {
+                total_current = total_current + input_currents[i];
+            }
+
+            // Active ionic currents
+            total_current = total_current + self.compute_active_currents(segment, i)?;
+
+            // Synaptic currents
+            total_current = total_current + self.compute_synaptic_currents(i)?;
+
+            // Axial currents from neighboring segments
+            total_current = total_current + self.compute_axial_currents(i)?;
+
+            // Update membrane potential
+            let cm = F::from(1.0).unwrap(); // μF/cm²
+            let dv = total_current / cm * dt;
+            segment.voltage = segment.voltage + dv;
+
+            voltages[i] = segment.voltage;
+
+            // Update calcium dynamics
+            self.update_calcium_dynamics(i, dt)?;
+        }
+
+        Ok(voltages)
+    }
+
+    /// Compute active ionic currents for a segment
+    fn compute_active_currents(
+        &self,
+        segment: &DendriticSegment<F>,
+        segment_id: usize,
+    ) -> crate::error::Result<F> {
+        let mut total_current = F::zero();
+        let v = segment.voltage;
+        let ca = segment.calcium_concentration;
+
+        // Voltage-gated sodium current (persistent)
+        if let Some(&density) = segment.channel_densities.get(&IonChannel::VGSodium) {
+            let e_na = F::from(50.0).unwrap(); // mV
+            let m_inf = F::one() / (F::one() + (-(v + F::from(38.0).unwrap()) / F::from(7.0).unwrap()).exp());
+            let i_na_p = density * m_inf * (v - e_na);
+            total_current = total_current - i_na_p * F::from(0.01).unwrap(); // Small persistent component
+        }
+
+        // L-type calcium current
+        if let Some(&density) = segment.channel_densities.get(&IonChannel::VGCalciumL) {
+            let e_ca = F::from(120.0).unwrap(); // mV
+            let m_inf = F::one() / (F::one() + (-(v + F::from(10.0).unwrap()) / F::from(5.0).unwrap()).exp());
+            let i_ca_l = density * m_inf * m_inf * (v - e_ca);
+            total_current = total_current - i_ca_l;
+        }
+
+        // A-type potassium current
+        if let Some(&density) = segment.channel_densities.get(&IonChannel::KA) {
+            let e_k = F::from(-85.0).unwrap(); // mV
+            let m_inf = F::one() / (F::one() + (-(v + F::from(60.0).unwrap()) / F::from(8.5).unwrap()).exp());
+            let h_inf = F::one() / (F::one() + ((v + F::from(78.0).unwrap()) / F::from(6.0).unwrap()).exp());
+            let i_ka = density * m_inf * m_inf * m_inf * h_inf * (v - e_k);
+            total_current = total_current - i_ka;
+        }
+
+        // Calcium-activated potassium current
+        let ca_factor = ca / (ca + F::from(0.001).unwrap()); // Half-activation at 1 μM
+        let i_k_ca = F::from(2.0).unwrap() * ca_factor * (v - F::from(-85.0).unwrap());
+        total_current = total_current - i_k_ca;
+
+        Ok(total_current)
+    }
+
+    /// Compute synaptic currents
+    fn compute_synaptic_currents(&self, segment_id: usize) -> crate::error::Result<F> {
+        let mut total_current = F::zero();
+
+        for input in &self.synaptic_inputs {
+            if input.segment_id == segment_id {
+                let segment_voltage = self.dendritic_tree.segments[segment_id].voltage;
+                let driving_force = segment_voltage - input.reversal_potential;
+                let synaptic_current = input.conductance * driving_force;
+                total_current = total_current - synaptic_current;
+            }
+        }
+
+        Ok(total_current)
+    }
+
+    /// Compute axial currents between segments
+    fn compute_axial_currents(&self, segment_id: usize) -> crate::error::Result<F> {
+        let mut total_current = F::zero();
+        let segment_voltage = self.dendritic_tree.segments[segment_id].voltage;
+
+        for connection in &self.dendritic_tree.connections {
+            let mut current = F::zero();
+            let resistance = F::from(connection.resistance).unwrap();
+
+            if connection.from_segment == segment_id {
+                // Current flowing out to target segment
+                let target_voltage = self.dendritic_tree.segments[connection.to_segment].voltage;
+                current = (segment_voltage - target_voltage) / resistance;
+                total_current = total_current - current; // Outward current
+            } else if connection.to_segment == segment_id {
+                // Current flowing in from source segment
+                let source_voltage = self.dendritic_tree.segments[connection.from_segment].voltage;
+                current = (source_voltage - segment_voltage) / resistance;
+                total_current = total_current + current; // Inward current
+            }
+        }
+
+        Ok(total_current)
+    }
+
+    /// Update calcium dynamics in dendritic compartments
+    fn update_calcium_dynamics(&mut self, segment_id: usize, dt: F) -> crate::error::Result<()> {
+        if segment_id >= self.dendritic_tree.segments.len() {
+            return Ok(());
+        }
+
+        let segment = &mut self.dendritic_tree.segments[segment_id];
+        let ca_current = self.compute_calcium_influx(segment)?;
+        
+        // Calcium influx from voltage-gated channels
+        let ca_influx = -ca_current / (F::from(2.0).unwrap() * F::from(96485.0).unwrap()); // Convert current to flux
+        
+        // Calcium removal by pumps and buffers
+        let ca_removal = self.compute_calcium_removal(segment_id)?;
+        
+        // Update calcium concentration
+        let dca = (ca_influx - ca_removal) * dt;
+        segment.calcium_concentration = (segment.calcium_concentration + dca).max(F::from(0.00005).unwrap()); // Minimum 50 nM
+        
+        // Update calcium in dynamics array
+        if segment_id < self.calcium_dynamics.ca_concentration.len() {
+            self.calcium_dynamics.ca_concentration[segment_id] = segment.calcium_concentration;
+        }
+
+        Ok(())
+    }
+
+    /// Compute calcium influx from voltage-gated channels
+    fn compute_calcium_influx(&self, segment: &DendriticSegment<F>) -> crate::error::Result<F> {
+        let mut ca_current = F::zero();
+        let v = segment.voltage;
+
+        // L-type calcium channels
+        if let Some(&density) = segment.channel_densities.get(&IonChannel::VGCalciumL) {
+            let e_ca = F::from(120.0).unwrap();
+            let m_inf = F::one() / (F::one() + (-(v + F::from(10.0).unwrap()) / F::from(5.0).unwrap()).exp());
+            ca_current = ca_current + density * m_inf * m_inf * (v - e_ca);
+        }
+
+        // T-type calcium channels
+        if let Some(&density) = segment.channel_densities.get(&IonChannel::VGCalciumT) {
+            let e_ca = F::from(120.0).unwrap();
+            let m_inf = F::one() / (F::one() + (-(v + F::from(50.0).unwrap()) / F::from(7.4).unwrap()).exp());
+            let h_inf = F::one() / (F::one() + ((v + F::from(78.0).unwrap()) / F::from(5.0).unwrap()).exp());
+            ca_current = ca_current + density * m_inf * m_inf * h_inf * (v - e_ca);
+        }
+
+        Ok(ca_current)
+    }
+
+    /// Compute calcium removal by pumps and buffers
+    fn compute_calcium_removal(&self, segment_id: usize) -> crate::error::Result<F> {
+        if segment_id >= self.calcium_dynamics.ca_concentration.len() {
+            return Ok(F::zero());
+        }
+
+        let ca = self.calcium_dynamics.ca_concentration[segment_id];
+        
+        // PMCA pump (plasma membrane calcium ATPase)
+        let k_pmca = F::from(0.1).unwrap(); // 1/ms
+        let ca_pmca = F::from(0.0005).unwrap(); // 0.5 μM
+        let pmca_removal = k_pmca * ca / (ca + ca_pmca);
+
+        // NCX (sodium-calcium exchanger)
+        let k_ncx = F::from(0.05).unwrap(); // 1/ms
+        let ncx_removal = k_ncx * ca;
+
+        // Buffer binding (simplified)
+        let k_buffer = F::from(0.02).unwrap(); // 1/ms
+        let buffer_removal = k_buffer * ca;
+
+        Ok(pmca_removal + ncx_removal + buffer_removal)
+    }
+
+    /// Add synaptic input to specific dendritic location
+    pub fn add_synaptic_input(
+        &mut self,
+        segment_id: usize,
+        weight: F,
+        input_type: SynapticType,
+    ) -> crate::error::Result<()> {
+        if segment_id >= self.dendritic_tree.segments.len() {
+            return Err(crate::error::TimeSeriesError::InvalidInput(
+                "Segment ID out of bounds".to_string(),
+            ));
+        }
+
+        let soma_distance = self.dendritic_tree.soma_distances[segment_id];
+        
+        let (conductance, reversal_potential, tau_rise, tau_decay, nmda_ampa_ratio) = match input_type {
+            SynapticType::Excitatory => {
+                (F::from(0.1).unwrap(), F::zero(), F::from(0.2).unwrap(), F::from(2.0).unwrap(), F::from(0.3).unwrap())
+            }
+            SynapticType::Inhibitory => {
+                (F::from(0.2).unwrap(), F::from(-70.0).unwrap(), F::from(0.5).unwrap(), F::from(5.0).unwrap(), F::zero())
+            }
+        };
+
+        let synaptic_input = SynapticInput {
+            segment_id,
+            soma_distance,
+            weight,
+            conductance,
+            reversal_potential,
+            tau_rise,
+            tau_decay,
+            nmda_ampa_ratio,
+        };
+
+        self.synaptic_inputs.push(synaptic_input);
+        Ok(())
+    }
+}
+
+/// Types of dendritic tree topologies
+#[derive(Debug, Clone)]
+pub enum TreeTopology {
+    /// Linear chain of segments
+    Linear,
+    /// Branched tree structure
+    Branched,
+}
+
+/// Types of synaptic inputs
+#[derive(Debug, Clone)]
+pub enum SynapticType {
+    /// Excitatory input (glutamate)
+    Excitatory,
+    /// Inhibitory input (GABA)
+    Inhibitory,
+}
+
+/// Synaptic Vesicle Dynamics for Ultra-Realistic Synaptic Transmission
+#[derive(Debug)]
+pub struct SynapticVesicleDynamics<F: Float + Debug> {
+    /// Readily releasable pool (RRP)
+    rrp_vesicles: usize,
+    /// Recycling pool
+    recycling_pool: usize,
+    /// Reserve pool
+    reserve_pool: usize,
+    /// Vesicle release probability
+    release_probability: F,
+    /// Vesicle replenishment rates
+    replenishment_rates: VesicleReplenishmentRates<F>,
+    /// Calcium cooperativity
+    calcium_cooperativity: F,
+    /// Short-term plasticity parameters
+    stp_parameters: ShortTermPlasticityParams<F>,
+}
+
+/// Vesicle replenishment rates between pools
+#[derive(Debug, Clone)]
+pub struct VesicleReplenishmentRates<F: Float> {
+    /// Reserve to recycling pool rate
+    reserve_to_recycling: F,
+    /// Recycling to RRP rate
+    recycling_to_rrp: F,
+    /// Endocytosis rate
+    endocytosis_rate: F,
+    /// Exocytosis rate
+    exocytosis_rate: F,
+}
+
+/// Short-term plasticity parameters
+#[derive(Debug, Clone)]
+pub struct ShortTermPlasticityParams<F: Float> {
+    /// Facilitation time constant
+    tau_facilitation: F,
+    /// Depression time constant
+    tau_depression: F,
+    /// Facilitation strength
+    facilitation_strength: F,
+    /// Initial depression level
+    initial_depression: F,
+}
+
+impl<F: Float + Debug + Clone + FromPrimitive> SynapticVesicleDynamics<F> {
+    /// Create new synaptic vesicle dynamics
+    pub fn new(initial_vesicles: usize) -> Self {
+        Self {
+            rrp_vesicles: initial_vesicles / 3,
+            recycling_pool: initial_vesicles / 3,
+            reserve_pool: initial_vesicles / 3,
+            release_probability: F::from(0.3).unwrap(),
+            replenishment_rates: VesicleReplenishmentRates {
+                reserve_to_recycling: F::from(0.01).unwrap(), // 1/s
+                recycling_to_rrp: F::from(0.1).unwrap(),      // 1/s
+                endocytosis_rate: F::from(0.05).unwrap(),     // 1/s
+                exocytosis_rate: F::from(1.0).unwrap(),       // 1/s
+            },
+            calcium_cooperativity: F::from(4.0).unwrap(), // Hill coefficient
+            stp_parameters: ShortTermPlasticityParams {
+                tau_facilitation: F::from(100.0).unwrap(),   // ms
+                tau_depression: F::from(500.0).unwrap(),     // ms
+                facilitation_strength: F::from(0.1).unwrap(),
+                initial_depression: F::from(1.0).unwrap(),
+            },
+        }
+    }
+
+    /// Simulate vesicle release and dynamics
+    pub fn simulate_vesicle_release(
+        &mut self,
+        calcium_concentration: F,
+        dt: F,
+    ) -> crate::error::Result<usize> {
+        // Calculate release probability based on calcium
+        let ca_factor = calcium_concentration.powf(self.calcium_cooperativity);
+        let k_half = F::from(0.001).unwrap(); // Half-activation at 1 μM
+        let effective_release_prob = self.release_probability * ca_factor / (ca_factor + k_half.powf(self.calcium_cooperativity));
+
+        // Number of vesicles released
+        let vesicles_released = if self.rrp_vesicles > 0 {
+            let release_rate = effective_release_prob * F::from(self.rrp_vesicles).unwrap() * dt;
+            let released = release_rate.to_usize().unwrap_or(0).min(self.rrp_vesicles);
+            self.rrp_vesicles -= released;
+            released
+        } else {
+            0
+        };
+
+        // Update vesicle pools
+        self.update_vesicle_pools(dt)?;
+
+        Ok(vesicles_released)
+    }
+
+    /// Update vesicle pool dynamics
+    fn update_vesicle_pools(&mut self, dt: F) -> crate::error::Result<()> {
+        // Reserve pool -> Recycling pool
+        let reserve_to_recycling = (F::from(self.reserve_pool).unwrap() * 
+                                   self.replenishment_rates.reserve_to_recycling * dt)
+                                   .to_usize().unwrap_or(0)
+                                   .min(self.reserve_pool);
+        self.reserve_pool -= reserve_to_recycling;
+        self.recycling_pool += reserve_to_recycling;
+
+        // Recycling pool -> RRP
+        let recycling_to_rrp = (F::from(self.recycling_pool).unwrap() * 
+                               self.replenishment_rates.recycling_to_rrp * dt)
+                               .to_usize().unwrap_or(0)
+                               .min(self.recycling_pool);
+        self.recycling_pool -= recycling_to_rrp;
+        self.rrp_vesicles += recycling_to_rrp;
+
+        Ok(())
+    }
+
+    /// Apply short-term plasticity
+    pub fn apply_short_term_plasticity(
+        &mut self,
+        inter_spike_interval: F,
+    ) -> crate::error::Result<()> {
+        // Facilitation
+        let facilitation_decay = (-inter_spike_interval / self.stp_parameters.tau_facilitation).exp();
+        let facilitation_increment = self.stp_parameters.facilitation_strength * 
+                                    (F::one() - self.release_probability);
+        self.release_probability = self.release_probability * facilitation_decay + facilitation_increment;
+
+        // Depression
+        let depression_factor = (-inter_spike_interval / self.stp_parameters.tau_depression).exp();
+        let depression_recovery = (F::one() - self.stp_parameters.initial_depression) * 
+                                 (F::one() - depression_factor);
+        self.release_probability = self.release_probability * (self.stp_parameters.initial_depression + depression_recovery);
+
+        // Clamp release probability
+        self.release_probability = self.release_probability.max(F::from(0.01).unwrap()).min(F::from(0.99).unwrap());
+
+        Ok(())
+    }
+}
+
+/// Intel Loihi-Style Neuromorphic Architecture Simulation
+#[derive(Debug)]
+pub struct LoihiStyleNeuromorphicChip<F: Float + Debug> {
+    /// Neuromorphic cores
+    cores: Vec<NeuromorphicCore<F>>,
+    /// Inter-core connectivity
+    inter_core_routing: Array2<F>,
+    /// Spike routing fabric
+    spike_router: SpikeRouter,
+    /// On-chip learning engines
+    learning_engines: Vec<OnChipLearningEngine<F>>,
+    /// Power management
+    power_manager: PowerManager<F>,
+}
+
+/// Individual neuromorphic core (like Loihi core)
+#[derive(Debug)]
+pub struct NeuromorphicCore<F: Float + Debug> {
+    /// Core ID
+    core_id: usize,
+    /// Compartments (neurons)
+    compartments: Vec<LoihiCompartment<F>>,
+    /// Synaptic memory
+    synaptic_memory: Array2<F>,
+    /// Dendrite accumulators
+    dendrite_accumulators: Array1<F>,
+    /// Axon outputs
+    axon_outputs: Vec<bool>,
+    /// Learning traces
+    learning_traces: HashMap<usize, LearningTrace<F>>,
+}
+
+/// Loihi-style compartment (neuron)
+#[derive(Debug, Clone)]
+pub struct LoihiCompartment<F: Float + Debug> {
+    /// Compartment state variables
+    voltage: F,
+    current: F,
+    /// Bias current
+    bias: F,
+    /// Voltage decay (leak)
+    voltage_decay: F,
+    /// Current decay
+    current_decay: F,
+    /// Spike threshold
+    threshold: F,
+    /// Refractory period
+    refractory_delay: usize,
+    /// Refractory counter
+    refractory_counter: usize,
+}
+
+/// Spike routing for inter-core communication
+#[derive(Debug)]
+pub struct SpikeRouter {
+    /// Routing table
+    routing_table: HashMap<(usize, usize), Vec<(usize, usize)>>, // (src_core, src_axon) -> [(dst_core, dst_compartment)]
+    /// Spike buffers
+    spike_buffers: HashMap<usize, Vec<SpikePacket>>,
+    /// Routing latency
+    routing_latency: usize,
+}
+
+/// Spike packet for inter-core communication
+#[derive(Debug, Clone)]
+pub struct SpikePacket {
+    /// Source core
+    src_core: usize,
+    /// Source axon
+    src_axon: usize,
+    /// Destination core
+    dst_core: usize,
+    /// Destination compartment
+    dst_compartment: usize,
+    /// Spike weight
+    weight: i16,
+    /// Timestamp
+    timestamp: u64,
+}
+
+/// On-chip learning engine
+#[derive(Debug)]
+pub struct OnChipLearningEngine<F: Float + Debug> {
+    /// Learning rule type
+    learning_rule: OnChipLearningRule,
+    /// Learning parameters
+    parameters: HashMap<String, F>,
+    /// Trace storage
+    traces: HashMap<usize, LearningTrace<F>>,
+}
+
+/// Types of on-chip learning rules
+#[derive(Debug, Clone)]
+pub enum OnChipLearningRule {
+    /// Spike-timing dependent plasticity
+    STDP,
+    /// Reward-modulated STDP
+    RewardSTDP,
+    /// Voltage-dependent plasticity
+    VoltagePlasticity,
+    /// Homeostatic plasticity
+    Homeostatic,
+}
+
+/// Learning trace for plasticity
+#[derive(Debug, Clone)]
+pub struct LearningTrace<F: Float> {
+    /// Trace value
+    value: F,
+    /// Decay time constant
+    tau: F,
+    /// Last update time
+    last_update: u64,
+}
+
+/// Power management for neuromorphic chip
+#[derive(Debug)]
+pub struct PowerManager<F: Float + Debug> {
+    /// Power consumption per core
+    core_power: Array1<F>,
+    /// Total power budget
+    power_budget: F,
+    /// Dynamic voltage scaling
+    voltage_scaling: Array1<F>,
+    /// Clock gating enables
+    clock_gating: Array1<bool>,
+    /// Power measurement history
+    power_history: Vec<F>,
+}
+
+impl<F: Float + Debug + Clone + FromPrimitive> LoihiStyleNeuromorphicChip<F> {
+    /// Create new Loihi-style neuromorphic chip
+    pub fn new(num_cores: usize, compartments_per_core: usize) -> Self {
+        let mut cores = Vec::new();
+        
+        for core_id in 0..num_cores {
+            let core = NeuromorphicCore::new(core_id, compartments_per_core);
+            cores.push(core);
+        }
+
+        let inter_core_routing = Array2::zeros((num_cores, num_cores));
+        let spike_router = SpikeRouter::new();
+        let learning_engines = vec![OnChipLearningEngine::new(OnChipLearningRule::STDP)];
+        let power_manager = PowerManager::new(num_cores);
+
+        Self {
+            cores,
+            inter_core_routing,
+            spike_router,
+            learning_engines,
+            power_manager,
+        }
+    }
+
+    /// Process one time step across all cores
+    pub fn process_timestep(&mut self, input_spikes: &[SpikePacket]) -> crate::error::Result<Vec<SpikePacket>> {
+        let mut output_spikes = Vec::new();
+
+        // Distribute input spikes to cores
+        self.distribute_input_spikes(input_spikes)?;
+
+        // Process each core
+        for core in &mut self.cores {
+            let core_output = core.process_timestep()?;
+            output_spikes.extend(core_output);
+        }
+
+        // Route spikes between cores
+        let routed_spikes = self.spike_router.route_spikes(&output_spikes)?;
+
+        // Update power consumption
+        self.power_manager.update_power_consumption(&self.cores)?;
+
+        Ok(routed_spikes)
+    }
+
+    /// Distribute input spikes to appropriate cores
+    fn distribute_input_spikes(&mut self, input_spikes: &[SpikePacket]) -> crate::error::Result<()> {
+        for spike in input_spikes {
+            if spike.dst_core < self.cores.len() {
+                self.cores[spike.dst_core].receive_spike(spike)?;
+            }
+        }
+        Ok(())
+    }
+
+    /// Configure inter-core connectivity
+    pub fn configure_inter_core_routing(
+        &mut self,
+        src_core: usize,
+        dst_core: usize,
+        weight: F,
+    ) -> crate::error::Result<()> {
+        if src_core >= self.cores.len() || dst_core >= self.cores.len() {
+            return Err(crate::error::TimeSeriesError::InvalidInput(
+                "Core index out of bounds".to_string(),
+            ));
+        }
+
+        self.inter_core_routing[[src_core, dst_core]] = weight;
+        Ok(())
+    }
+}
+
+impl<F: Float + Debug + Clone + FromPrimitive> NeuromorphicCore<F> {
+    /// Create new neuromorphic core
+    pub fn new(core_id: usize, num_compartments: usize) -> Self {
+        let mut compartments = Vec::new();
+        
+        for _ in 0..num_compartments {
+            compartments.push(LoihiCompartment {
+                voltage: F::zero(),
+                current: F::zero(),
+                bias: F::zero(),
+                voltage_decay: F::from(0.95).unwrap(), // Decay factor
+                current_decay: F::from(0.9).unwrap(),
+                threshold: F::from(100.0).unwrap(),
+                refractory_delay: 2,
+                refractory_counter: 0,
+            });
+        }
+
+        let synaptic_memory = Array2::zeros((num_compartments, num_compartments));
+        let dendrite_accumulators = Array1::zeros(num_compartments);
+        let axon_outputs = vec![false; num_compartments];
+        let learning_traces = HashMap::new();
+
+        Self {
+            core_id,
+            compartments,
+            synaptic_memory,
+            dendrite_accumulators,
+            axon_outputs,
+            learning_traces,
+        }
+    }
+
+    /// Process one timestep for this core
+    pub fn process_timestep(&mut self) -> crate::error::Result<Vec<SpikePacket>> {
+        let mut output_spikes = Vec::new();
+
+        // Update compartment dynamics
+        for (comp_id, compartment) in self.compartments.iter_mut().enumerate() {
+            // Update refractory counter
+            if compartment.refractory_counter > 0 {
+                compartment.refractory_counter -= 1;
+                continue;
+            }
+
+            // Add dendrite accumulator to current
+            compartment.current = compartment.current + self.dendrite_accumulators[comp_id];
+
+            // Update voltage
+            compartment.voltage = compartment.voltage * compartment.voltage_decay + 
+                                 compartment.current + compartment.bias;
+
+            // Update current decay
+            compartment.current = compartment.current * compartment.current_decay;
+
+            // Check for spike
+            if compartment.voltage >= compartment.threshold {
+                compartment.voltage = F::zero(); // Reset voltage
+                compartment.refractory_counter = compartment.refractory_delay;
+                self.axon_outputs[comp_id] = true;
+
+                // Create output spike packet
+                let spike_packet = SpikePacket {
+                    src_core: self.core_id,
+                    src_axon: comp_id,
+                    dst_core: 0, // Will be routed later
+                    dst_compartment: 0,
+                    weight: 1,
+                    timestamp: 0, // Would be set by global timer
+                };
+                output_spikes.push(spike_packet);
+            } else {
+                self.axon_outputs[comp_id] = false;
+            }
+
+            // Reset dendrite accumulator
+            self.dendrite_accumulators[comp_id] = F::zero();
+        }
+
+        Ok(output_spikes)
+    }
+
+    /// Receive spike from another core or external input
+    pub fn receive_spike(&mut self, spike: &SpikePacket) -> crate::error::Result<()> {
+        if spike.dst_compartment < self.dendrite_accumulators.len() {
+            self.dendrite_accumulators[spike.dst_compartment] = 
+                self.dendrite_accumulators[spike.dst_compartment] + F::from(spike.weight).unwrap();
+        }
+        Ok(())
+    }
+}
+
+impl SpikeRouter {
+    /// Create new spike router
+    pub fn new() -> Self {
+        Self {
+            routing_table: HashMap::new(),
+            spike_buffers: HashMap::new(),
+            routing_latency: 1,
+        }
+    }
+
+    /// Route spikes between cores
+    pub fn route_spikes(&mut self, input_spikes: &[SpikePacket]) -> crate::error::Result<Vec<SpikePacket>> {
+        let mut routed_spikes = Vec::new();
+
+        for spike in input_spikes {
+            let key = (spike.src_core, spike.src_axon);
+            if let Some(destinations) = self.routing_table.get(&key) {
+                for &(dst_core, dst_compartment) in destinations {
+                    let mut routed_spike = spike.clone();
+                    routed_spike.dst_core = dst_core;
+                    routed_spike.dst_compartment = dst_compartment;
+                    routed_spikes.push(routed_spike);
+                }
+            }
+        }
+
+        Ok(routed_spikes)
+    }
+
+    /// Configure routing entry
+    pub fn add_routing_entry(
+        &mut self,
+        src_core: usize,
+        src_axon: usize,
+        destinations: Vec<(usize, usize)>,
+    ) {
+        self.routing_table.insert((src_core, src_axon), destinations);
+    }
+}
+
+impl<F: Float + Debug + Clone + FromPrimitive> OnChipLearningEngine<F> {
+    /// Create new on-chip learning engine
+    pub fn new(learning_rule: OnChipLearningRule) -> Self {
+        let mut parameters = HashMap::new();
+        
+        match learning_rule {
+            OnChipLearningRule::STDP => {
+                parameters.insert("tau_plus".to_string(), F::from(20.0).unwrap());
+                parameters.insert("tau_minus".to_string(), F::from(20.0).unwrap());
+                parameters.insert("a_plus".to_string(), F::from(0.01).unwrap());
+                parameters.insert("a_minus".to_string(), F::from(0.01).unwrap());
+            }
+            _ => {
+                // Other learning rules would have their own parameters
+            }
+        }
+
+        Self {
+            learning_rule,
+            parameters,
+            traces: HashMap::new(),
+        }
+    }
+
+    /// Apply learning rule to synaptic weight
+    pub fn apply_learning(
+        &mut self,
+        pre_spike_time: u64,
+        post_spike_time: u64,
+        current_weight: F,
+    ) -> crate::error::Result<F> {
+        match self.learning_rule {
+            OnChipLearningRule::STDP => {
+                let dt = post_spike_time as i64 - pre_spike_time as i64;
+                let tau_plus = self.parameters.get("tau_plus").unwrap_or(&F::from(20.0).unwrap());
+                let tau_minus = self.parameters.get("tau_minus").unwrap_or(&F::from(20.0).unwrap());
+                let a_plus = self.parameters.get("a_plus").unwrap_or(&F::from(0.01).unwrap());
+                let a_minus = self.parameters.get("a_minus").unwrap_or(&F::from(0.01).unwrap());
+
+                let weight_change = if dt > 0 {
+                    // Post before pre -> LTP
+                    *a_plus * (-F::from(dt as f64).unwrap() / *tau_plus).exp()
+                } else if dt < 0 {
+                    // Pre before post -> LTD
+                    -*a_minus * (F::from(dt as f64).unwrap() / *tau_minus).exp()
+                } else {
+                    F::zero()
+                };
+
+                Ok(current_weight + weight_change)
+            }
+            _ => Ok(current_weight), // Other rules would be implemented here
+        }
+    }
+}
+
+impl<F: Float + Debug + Clone + FromPrimitive> PowerManager<F> {
+    /// Create new power manager
+    pub fn new(num_cores: usize) -> Self {
+        Self {
+            core_power: Array1::from_elem(num_cores, F::from(0.1).unwrap()), // 0.1W per core
+            power_budget: F::from(10.0).unwrap(), // 10W total budget
+            voltage_scaling: Array1::from_elem(num_cores, F::one()),
+            clock_gating: vec![false; num_cores],
+            power_history: Vec::new(),
+        }
+    }
+
+    /// Update power consumption based on core activity
+    pub fn update_power_consumption(&mut self, cores: &[NeuromorphicCore<F>]) -> crate::error::Result<()> {
+        let mut total_power = F::zero();
+
+        for (i, core) in cores.iter().enumerate() {
+            if i < self.core_power.len() {
+                // Calculate dynamic power based on spike activity
+                let spike_count = core.axon_outputs.iter().filter(|&&x| x).count();
+                let dynamic_power = F::from(spike_count as f64).unwrap() * F::from(0.001).unwrap(); // 1mW per spike
+                let static_power = F::from(0.05).unwrap(); // 50mW static power
+                
+                self.core_power[i] = static_power + dynamic_power;
+                total_power = total_power + self.core_power[i];
+            }
+        }
+
+        // Apply power management if over budget
+        if total_power > self.power_budget {
+            self.apply_power_management()?;
+        }
+
+        self.power_history.push(total_power);
+        Ok(())
+    }
+
+    /// Apply power management strategies
+    fn apply_power_management(&mut self) -> crate::error::Result<()> {
+        // Dynamic voltage and frequency scaling
+        for i in 0..self.voltage_scaling.len() {
+            if self.core_power[i] > F::from(0.2).unwrap() {
+                self.voltage_scaling[i] = F::from(0.8).unwrap(); // Reduce voltage
+            } else {
+                self.voltage_scaling[i] = F::one();
+            }
+        }
+
+        // Clock gating for inactive cores
+        for i in 0..self.clock_gating.len() {
+            self.clock_gating[i] = self.core_power[i] < F::from(0.06).unwrap(); // Gate if low activity
+        }
+
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

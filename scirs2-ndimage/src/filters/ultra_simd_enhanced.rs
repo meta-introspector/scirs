@@ -503,7 +503,7 @@ where
                     }
 
                     // Use quickselect for median (more efficient than full sort)
-                    let median = quickselect_median(&mut values);
+                    let median = quickselect_median(&mut values).unwrap_or(T::zero());
                     output[(y, x)] = median;
                     x += 1;
                 }
@@ -579,7 +579,7 @@ where
                 }
             }
 
-            let median = quickselect_median(&mut values);
+            let median = quickselect_median(&mut values).unwrap_or(T::zero());
             output[(y, x)] = median;
         }
     }
@@ -669,7 +669,7 @@ fn mirror_coordinate(coord: isize, size: usize) -> usize {
 }
 
 /// Optimized quickselect algorithm for median finding
-fn quickselect_median<T>(values: &mut [T]) -> T
+fn quickselect_median<T>(values: &mut [T]) -> Option<T>
 where
     T: PartialOrd + Clone,
 {
@@ -677,10 +677,10 @@ where
     let target = len / 2;
 
     if len == 0 {
-        panic!("Cannot find median of empty array");
+        return None;
     }
 
-    quickselect(values, target).clone()
+    Some(quickselect(values, target).clone())
 }
 
 fn quickselect<T>(values: &mut [T], k: usize) -> &T
@@ -814,11 +814,11 @@ mod tests {
     fn test_quickselect_median() {
         let mut values = vec![5.0, 2.0, 8.0, 1.0, 9.0];
         let median = quickselect_median(&mut values);
-        assert_eq!(median, 5.0);
+        assert_eq!(median, Some(5.0));
 
         let mut even_values = vec![4.0, 2.0, 7.0, 1.0];
         let median_even = quickselect_median(&mut even_values);
         // For even length, this returns the "upper median"
-        assert!(median_even == 4.0 || median_even == 2.0);
+        assert!(median_even == Some(4.0) || median_even == Some(2.0));
     }
 }

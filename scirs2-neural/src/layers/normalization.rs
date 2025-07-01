@@ -27,7 +27,7 @@ use std::sync::{Arc, RwLock};
 /// use rand::SeedableRng;
 ///
 /// // Create a layer normalization layer for a 64-dimensional feature space
-/// let mut rng = SmallRng::seed_from_u64(42);
+/// let mut rng = rand::thread_rng();
 /// let layer_norm = LayerNorm::new(64, 1e-5, &mut rng).unwrap();
 ///
 /// // Forward pass with a batch of 2 samples, sequence length 3
@@ -659,7 +659,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for
 /// use rand::SeedableRng;
 ///
 /// // Create a batch normalization layer for 3 channels
-/// let mut rng = SmallRng::seed_from_u64(42);
+/// let mut rng = rand::thread_rng();
 /// let batch_norm = BatchNorm::new(3, 0.9, 1e-5, &mut rng).unwrap();
 ///
 /// // Forward pass with a batch of 2 samples, 3 channels, 4x4 spatial dimensions
@@ -1220,7 +1220,7 @@ mod tests {
     #[test]
     fn test_layer_norm_shape() {
         // Set up layer normalization
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = rand::thread_rng();
         let layer_norm = LayerNorm::<f64>::new(64, 1e-5, &mut rng).unwrap();
 
         // Create a batch of inputs
@@ -1239,7 +1239,7 @@ mod tests {
     #[test]
     fn test_layer_norm_normalization() {
         // Set up layer normalization
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = rand::thread_rng();
         let d_model = 10;
         let layer_norm = LayerNorm::<f64>::new(d_model, 1e-5, &mut rng).unwrap();
 
@@ -1280,7 +1280,7 @@ mod tests {
     #[test]
     fn test_batch_norm_shape() {
         // Set up batch normalization
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = rand::thread_rng();
         let batch_norm = BatchNorm::<f64>::new(3, 0.9, 1e-5, &mut rng).unwrap();
 
         // Create a batch of inputs (batch_size, channels, height, width)
@@ -1300,7 +1300,7 @@ mod tests {
     #[test]
     fn test_batch_norm_training_mode() {
         // Set up batch normalization
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = rand::thread_rng();
         let mut batch_norm = BatchNorm::<f64>::new(3, 0.9, 1e-5, &mut rng).unwrap();
 
         // Ensure we're in training mode
@@ -1371,7 +1371,7 @@ mod tests {
     #[test]
     fn test_batch_norm_inference_mode() {
         // Set up batch normalization
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = rand::thread_rng();
         let mut batch_norm = BatchNorm::<f64>::new(3, 0.9, 1e-5, &mut rng).unwrap();
 
         // Create input with different values per channel

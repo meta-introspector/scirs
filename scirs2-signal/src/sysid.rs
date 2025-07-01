@@ -71,7 +71,7 @@ use crate::parametric::{estimate_ar, estimate_arma, ARMethod, OrderSelection};
 use crate::spectral::welch;
 use crate::window::get_window;
 
-use ndarray::{Array1, Array2, Axis};
+use ndarray::{s, Array1, Array2, Axis};
 use num_complex::Complex64;
 use std::f64::consts::PI;
 

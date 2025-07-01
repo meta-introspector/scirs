@@ -36,7 +36,9 @@ fn main() -> CoreResult<()> {
 }
 
 /// Demonstrate AI optimization for scientific computing workloads
-fn demonstrate_scientific_computing_optimization(ai_engine: &AIOptimizationEngine) -> Result<()> {
+fn demonstrate_scientific_computing_optimization(
+    ai_engine: &AIOptimizationEngine,
+) -> CoreResult<()> {
     println!("🔬 Scientific Computing Optimization");
     println!("===================================");
 
@@ -101,7 +103,7 @@ fn demonstrate_scientific_computing_optimization(ai_engine: &AIOptimizationEngin
 }
 
 /// Demonstrate real-time learning capabilities
-fn demonstrate_real_time_learning(ai_engine: &AIOptimizationEngine) -> Result<()> {
+fn demonstrate_real_time_learning(ai_engine: &AIOptimizationEngine) -> CoreResult<()> {
     println!("\n\n🎯 Real-time Learning Demonstration");
     println!("===================================");
 
@@ -143,7 +145,7 @@ fn demonstrate_real_time_learning(ai_engine: &AIOptimizationEngine) -> Result<()
 }
 
 /// Demonstrate multi-objective optimization
-fn demonstrate_multi_objective_optimization(ai_engine: &AIOptimizationEngine) -> Result<()> {
+fn demonstrate_multi_objective_optimization(ai_engine: &AIOptimizationEngine) -> CoreResult<()> {
     println!("\n\n🎯 Multi-Objective Optimization");
     println!("===============================");
 
@@ -191,7 +193,7 @@ fn demonstrate_multi_objective_optimization(ai_engine: &AIOptimizationEngine) ->
 }
 
 /// Demonstrate analytics and insights
-fn demonstrate_analytics_and_insights(ai_engine: &AIOptimizationEngine) -> Result<()> {
+fn demonstrate_analytics_and_insights(ai_engine: &AIOptimizationEngine) -> CoreResult<()> {
     println!("\n\n📈 AI Optimization Analytics");
     println!("============================");
 
@@ -283,7 +285,7 @@ fn simulate_execution_and_learning(
     ai_engine: &AIOptimizationEngine,
     context: &ExecutionContext,
     recommendation: &AIOptimizationRecommendation,
-) -> Result<()> {
+) -> CoreResult<()> {
     // Simulate actual execution with some variance
     let variance_factor = 0.9 + (Instant::now().elapsed().as_nanos() % 200) as f64 / 1000.0;
 

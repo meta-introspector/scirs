@@ -5,9 +5,9 @@ use crate::error::Result;
 use ndarray::{Array, IxDyn, ScalarOperand};
 use num_integer::div_ceil;
 use num_traits::{Float, FromPrimitive};
-use rand::rngs::SmallRng;
+// use rand::rngs::SmallRng;
 use rand::seq::SliceRandom;
-use rand::SeedableRng;
+// use rand::SeedableRng;
 use std::fmt::Debug;
 use std::marker::PhantomData;
 
@@ -65,7 +65,7 @@ impl<
     /// Reset the data loader state
     pub fn reset(&mut self) {
         if self.shuffle {
-            let mut rng = SmallRng::seed_from_u64(42);
+            let mut rng = rand::rng();
             self.indices.shuffle(&mut rng);
         }
 

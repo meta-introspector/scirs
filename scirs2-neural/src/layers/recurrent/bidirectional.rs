@@ -22,7 +22,7 @@ use std::sync::{Arc, RwLock};
 /// use rand::SeedableRng;
 ///
 /// // Create RNN layers for forward and backward directions
-/// let mut rng = SmallRng::seed_from_u64(42);
+/// let mut rng = rand::thread_rng();
 /// let forward_rnn = RNN::new(10, 20, RecurrentActivation::Tanh, &mut rng).unwrap();
 /// let backward_rnn = RNN::new(10, 20, RecurrentActivation::Tanh, &mut rng).unwrap();
 ///

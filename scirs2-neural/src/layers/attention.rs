@@ -75,7 +75,7 @@ impl Default for AttentionConfig {
 /// use rand::SeedableRng;
 ///
 /// // Create multi-head attention with 2 heads and 64-dim embeddings
-/// let mut rng = SmallRng::seed_from_u64(42);
+/// let mut rng = rand::thread_rng();
 /// let config = AttentionConfig {
 ///     num_heads: 2,
 ///     head_dim: 32,
@@ -1178,7 +1178,7 @@ mod tests {
     #[test]
     fn test_multi_head_attention_shape() {
         // Set up MHA with 2 heads
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = rand::thread_rng();
         let config = AttentionConfig {
             num_heads: 2,
             head_dim: 32,
@@ -1204,7 +1204,7 @@ mod tests {
     #[test]
     fn test_self_attention() {
         // Set up self-attention
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = rand::thread_rng();
         let config = AttentionConfig {
             num_heads: 2,
             head_dim: 32,
@@ -1230,7 +1230,7 @@ mod tests {
     #[test]
     fn test_causal_attention() {
         // Set up MHA with causal masking
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = rand::thread_rng();
         let config = AttentionConfig {
             num_heads: 2,
             head_dim: 32,

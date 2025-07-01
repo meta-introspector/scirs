@@ -814,20 +814,21 @@ impl<F: IntegrateFloat + SimdUnifiedOps> UltraSimdAccelerator<F> {
         operation: MixedPrecisionOperation,
     ) -> IntegrateResult<Array1<F>> {
         // Convert to f16 for computation, then back to F
-        let f16_data: Vec<half::f16> = data
-            .iter()
-            .map(|&x| half::f16::from_f64(x.to_f64().unwrap_or(0.0)))
-            .collect();
+        let f16_data: Array1<half::f16> = Array1::from_vec(
+            data.iter()
+                .map(|&x| half::f16::from_f64(x.to_f64().unwrap_or(0.0)))
+                .collect(),
+        );
 
         // Perform SIMD operations in f16 precision
         let result_f16 = match operation {
             MixedPrecisionOperation::Addition => self.half_precision_vector_add(&f16_data)?,
             MixedPrecisionOperation::Multiplication => self.half_precision_vector_mul(&f16_data)?,
             MixedPrecisionOperation::DotProduct => {
-                vec![self.half_precision_dot_product(&f16_data, &f16_data)?]
+                Array1::from_vec(vec![self.half_precision_dot_product(&f16_data, &f16_data)?])
             }
             MixedPrecisionOperation::Reduction => {
-                vec![self.half_precision_reduction(&f16_data)?]
+                Array1::from_vec(vec![self.half_precision_reduction(&f16_data)?])
             }
             MixedPrecisionOperation::MatrixMultiply => {
                 // For now, fallback to element-wise multiplication
@@ -850,10 +851,11 @@ impl<F: IntegrateFloat + SimdUnifiedOps> UltraSimdAccelerator<F> {
         operation: MixedPrecisionOperation,
     ) -> IntegrateResult<Array1<F>> {
         // Convert to f32 for computation, then back to F
-        let f32_data: Vec<f32> = data
-            .iter()
-            .map(|&x| x.to_f64().unwrap_or(0.0) as f32)
-            .collect();
+        let f32_data: Array1<f32> = Array1::from_vec(
+            data.iter()
+                .map(|&x| x.to_f64().unwrap_or(0.0) as f32)
+                .collect(),
+        );
 
         // Perform SIMD operations in f32 precision
         let result_f32 = match operation {
@@ -861,11 +863,11 @@ impl<F: IntegrateFloat + SimdUnifiedOps> UltraSimdAccelerator<F> {
             MixedPrecisionOperation::Multiplication => {
                 self.single_precision_vector_mul(&f32_data)?
             }
-            MixedPrecisionOperation::DotProduct => {
-                vec![self.single_precision_dot_product(&f32_data, &f32_data)?]
-            }
+            MixedPrecisionOperation::DotProduct => Array1::from_vec(vec![
+                self.single_precision_dot_product(&f32_data, &f32_data)?
+            ]),
             MixedPrecisionOperation::Reduction => {
-                vec![self.single_precision_reduction(&f32_data)?]
+                Array1::from_vec(vec![self.single_precision_reduction(&f32_data)?])
             }
             MixedPrecisionOperation::MatrixMultiply => {
                 // For now, fallback to element-wise multiplication
@@ -888,7 +890,8 @@ impl<F: IntegrateFloat + SimdUnifiedOps> UltraSimdAccelerator<F> {
         operation: MixedPrecisionOperation,
     ) -> IntegrateResult<Array1<F>> {
         // Use native F64 precision for computation
-        let f64_data: Vec<f64> = data.iter().map(|&x| x.to_f64().unwrap_or(0.0)).collect();
+        let f64_data: Array1<f64> =
+            Array1::from_vec(data.iter().map(|&x| x.to_f64().unwrap_or(0.0)).collect());
 
         // Perform SIMD operations in f64 precision
         let result_f64 = match operation {
@@ -897,10 +900,10 @@ impl<F: IntegrateFloat + SimdUnifiedOps> UltraSimdAccelerator<F> {
                 self.double_precision_vector_mul(&f64_data)?
             }
             MixedPrecisionOperation::DotProduct => {
-                vec![self.double_precision_dot_product(&f64_data, &f64_data)?]
+                Array1::from_vec(vec![self.double_precision_reduction(&f64_data)?])
             }
             MixedPrecisionOperation::Reduction => {
-                vec![self.double_precision_reduction(&f64_data)?]
+                Array1::from_vec(vec![self.double_precision_reduction(&f64_data)?])
             }
             MixedPrecisionOperation::MatrixMultiply => {
                 // For now, fallback to element-wise multiplication
@@ -915,6 +918,49 @@ impl<F: IntegrateFloat + SimdUnifiedOps> UltraSimdAccelerator<F> {
             .collect();
 
         Ok(result)
+    }
+
+    fn analyze_error_sensitivity(
+        &self,
+        data: &ArrayView1<F>,
+        operation: &MixedPrecisionOperation,
+    ) -> f64 {
+        // Analyze the sensitivity of the operation to numerical errors
+        let magnitude_range = data
+            .iter()
+            .fold((F::infinity(), -F::infinity()), |(min, max), &x| {
+                (min.min(x.abs()), max.max(x.abs()))
+            });
+
+        let condition_number =
+            magnitude_range.1.to_f64().unwrap_or(1.0) / magnitude_range.0.to_f64().unwrap_or(1.0);
+
+        match operation {
+            MixedPrecisionOperation::DotProduct => condition_number.sqrt(),
+            MixedPrecisionOperation::Reduction => condition_number * 0.5,
+            MixedPrecisionOperation::MatrixMultiply => condition_number,
+            MixedPrecisionOperation::Addition => condition_number * 0.3,
+            MixedPrecisionOperation::Multiplication => condition_number * 0.7,
+        }
+    }
+
+    fn determine_optimal_precision(
+        &self,
+        data_range: (f64, f64),
+        error_sensitivity: f64,
+    ) -> PrecisionLevel {
+        let (min_val, max_val) = data_range;
+        let dynamic_range = max_val / min_val.max(1e-300);
+
+        if error_sensitivity < 10.0 && dynamic_range < 1e3 {
+            PrecisionLevel::Half
+        } else if error_sensitivity < 100.0 && dynamic_range < 1e6 {
+            PrecisionLevel::Single
+        } else if error_sensitivity < 1000.0 {
+            PrecisionLevel::Double
+        } else {
+            PrecisionLevel::Mixed
+        }
     }
 
     fn adaptive_mixed_precision_computation(
@@ -944,7 +990,7 @@ impl<F: IntegrateFloat + SimdUnifiedOps> UltraSimdAccelerator<F> {
             }
             PrecisionLevel::Mixed => {
                 // Use mixed precision within the same computation
-                self.hierarchical_mixed_precision_computation(data, operation)
+                self.adaptive_mixed_precision_computation(data, operation)
             }
         }
     }
@@ -1352,179 +1398,124 @@ impl<F: IntegrateFloat> BlendOperation<F> {
 
 // Additional SIMD helper methods implementation
 impl<F: IntegrateFloat + SimdUnifiedOps> UltraSimdAccelerator<F> {
-    // Additional helper methods for SIMD operations
-    fn ultra_scalar_multiply_inplace(
-        &self,
-        data: &mut Array1<F>,
-        scalar: F,
-    ) -> IntegrateResult<()> {
-        if F::simd_available() {
-            *data = F::simd_scalar_mul(&data.view(), scalar);
-        } else {
-            data.mapv_inplace(|x| x * scalar);
-        }
-        Ok(())
-    }
+    fn analyze_data_range(&self, data: &ArrayView1<F>) -> (f64, f64) {
+        let mut min_val = F::infinity();
+        let mut max_val = -F::infinity();
 
-    fn ultra_vector_add_scalar(
-        &self,
-        result: &mut Array1<F>,
-        a: &ArrayView1<F>,
-        b: &ArrayView1<F>,
-        scalar: F,
-    ) -> IntegrateResult<()> {
-        if F::simd_available() {
-            let scaled_b = F::simd_scalar_mul(b, scalar);
-            *result = F::simd_add(a, &scaled_b.view());
-        } else {
-            for i in 0..a.len() {
-                result[i] = a[i] + scalar * b[i];
+        for &value in data.iter() {
+            let abs_value = value.abs();
+            if abs_value < min_val {
+                min_val = abs_value;
+            }
+            if abs_value > max_val {
+                max_val = abs_value;
             }
         }
-        Ok(())
+
+        (
+            min_val.to_f64().unwrap_or(0.0),
+            max_val.to_f64().unwrap_or(1.0),
+        )
     }
 
-    fn ultra_rk4_combine(
-        &self,
-        result: &mut Array1<F>,
-        y: &ArrayView1<F>,
-        k1: &ArrayView1<F>,
-        k2: &ArrayView1<F>,
-        k3: &ArrayView1<F>,
-        k4: &ArrayView1<F>,
-    ) -> IntegrateResult<()> {
-        let one_sixth = F::from(1.0 / 6.0).unwrap();
-        let two = F::from(2.0).unwrap();
-
-        if F::simd_available() {
-            // Vectorized RK4 combination
-            let k2_scaled = F::simd_scalar_mul(k2, two);
-            let k3_scaled = F::simd_scalar_mul(k3, two);
-            let k1_plus_k4 = F::simd_add(k1, k4);
-            let k23_sum = F::simd_add(&k2_scaled.view(), &k3_scaled.view());
-            let all_k = F::simd_add(&k1_plus_k4.view(), &k23_sum.view());
-            let weighted_k = F::simd_scalar_mul(&all_k.view(), one_sixth);
-            *result = F::simd_add(y, &weighted_k.view());
-        } else {
-            for i in 0..y.len() {
-                result[i] = y[i] + one_sixth * (k1[i] + two * k2[i] + two * k3[i] + k4[i]);
-            }
+    fn single_precision_vector_mul(&self, data: &Array1<f32>) -> IntegrateResult<Array1<f32>> {
+        // Element-wise multiplication with itself for demo
+        let mut result = Array1::zeros(data.len());
+        for i in 0..data.len() {
+            result[i] = data[i] * data[i];
         }
-        Ok(())
+        Ok(result)
     }
 
-    fn simd_dot_product_multi_accumulator(
+    fn double_precision_vector_add(&self, data: &Array1<f64>) -> IntegrateResult<Array1<f64>> {
+        // Add data with itself for demo
+        let mut result = Array1::zeros(data.len());
+        for i in 0..data.len() {
+            result[i] = data[i] + data[i];
+        }
+        Ok(result)
+    }
+
+    fn double_precision_vector_mul(&self, data: &Array1<f64>) -> IntegrateResult<Array1<f64>> {
+        // Element-wise multiplication with itself for demo
+        let mut result = Array1::zeros(data.len());
+        for i in 0..data.len() {
+            result[i] = data[i] * data[i];
+        }
+        Ok(result)
+    }
+
+    fn double_precision_reduction(&self, data: &Array1<f64>) -> IntegrateResult<f64> {
+        Ok(data.iter().sum())
+    }
+
+    fn single_precision_vector_add(&self, data: &Array1<f32>) -> IntegrateResult<Array1<f32>> {
+        // Add data with itself for demo
+        let mut result = Array1::zeros(data.len());
+        for i in 0..data.len() {
+            result[i] = data[i] + data[i];
+        }
+        Ok(result)
+    }
+
+    fn single_precision_dot_product(
         &self,
-        a: &ArrayView1<F>,
-        b: &ArrayView1<F>,
-    ) -> IntegrateResult<F> {
-        let mut acc0 = F::zero();
-        let mut acc1 = F::zero();
-        let mut acc2 = F::zero();
-        let mut acc3 = F::zero();
-
-        let main_len = a.len() & !3; // Round down to multiple of 4
-
-        for i in (0..main_len).step_by(4) {
-            acc0 = acc0 + a[i] * b[i];
-            acc1 = acc1 + a[i + 1] * b[i + 1];
-            acc2 = acc2 + a[i + 2] * b[i + 2];
-            acc3 = acc3 + a[i + 3] * b[i + 3];
+        a: &Array1<f32>,
+        b: &Array1<f32>,
+    ) -> IntegrateResult<f32> {
+        let mut sum = 0.0f32;
+        for i in 0..a.len().min(b.len()) {
+            sum += a[i] * b[i];
         }
-
-        let mut sum = acc0 + acc1 + acc2 + acc3;
-
-        // Handle remainder
-        for i in main_len..a.len() {
-            sum = sum + a[i] * b[i];
-        }
-
         Ok(sum)
     }
 
-    fn scalar_dot_product_multi_accumulator(
+    fn single_precision_reduction(&self, data: &Array1<f32>) -> IntegrateResult<f32> {
+        Ok(data.iter().sum())
+    }
+
+    fn half_precision_vector_add(
         &self,
-        a: &ArrayView1<F>,
-        b: &ArrayView1<F>,
-    ) -> IntegrateResult<F> {
-        // Same implementation as SIMD version for scalar fallback
-        self.simd_dot_product_multi_accumulator(a, b)
-    }
-
-    fn avx512_tree_reduction_sum(&self, data: &ArrayView1<F>) -> IntegrateResult<F> {
-        // For now, fallback to SIMD tree reduction
-        self.simd_tree_reduction_sum(data)
-    }
-
-    fn simd_tree_reduction_sum(&self, data: &ArrayView1<F>) -> IntegrateResult<F> {
-        if data.is_empty() {
-            return Ok(F::zero());
+        data: &Array1<half::f16>,
+    ) -> IntegrateResult<Array1<half::f16>> {
+        // Add data with itself for demo
+        let mut result = Array1::from_vec(vec![half::f16::ZERO; data.len()]);
+        for i in 0..data.len() {
+            result[i] = data[i] + data[i];
         }
-
-        // Tree reduction using multiple accumulators
-        let mut working_data: Vec<F> = data.to_vec();
-
-        while working_data.len() > 1 {
-            let mut next_level = Vec::with_capacity((working_data.len() + 1) / 2);
-
-            for chunk in working_data.chunks(2) {
-                if chunk.len() == 2 {
-                    next_level.push(chunk[0] + chunk[1]);
-                } else {
-                    next_level.push(chunk[0]);
-                }
-            }
-
-            working_data = next_level;
-        }
-
-        Ok(working_data[0])
+        Ok(result)
     }
 
-    fn predicated_simd_conditional(
+    fn half_precision_vector_mul(
         &self,
-        result: &mut Array1<F>,
-        a: &ArrayView1<F>,
-        b: &ArrayView1<F>,
-        condition: impl Fn(F, F) -> bool,
-        true_op: impl Fn(F, F) -> F,
-        false_op: impl Fn(F, F) -> F,
-    ) -> IntegrateResult<()> {
-        // Fallback to scalar implementation for predicated operations
-        for i in 0..a.len() {
-            let a_val = a[i];
-            let b_val = b[i];
-            result[i] = if condition(a_val, b_val) {
-                true_op(a_val, b_val)
-            } else {
-                false_op(a_val, b_val)
-            };
+        data: &Array1<half::f16>,
+    ) -> IntegrateResult<Array1<half::f16>> {
+        // Element-wise multiplication with itself for demo
+        let mut result = Array1::from_vec(vec![half::f16::ZERO; data.len()]);
+        for i in 0..data.len() {
+            result[i] = data[i] * data[i];
         }
-        Ok(())
+        Ok(result)
     }
 
-    fn hardware_gather(
+    fn half_precision_dot_product(
         &self,
-        result: &mut Array1<F>,
-        data: &ArrayView1<F>,
-        indices: &[usize],
-    ) -> IntegrateResult<()> {
-        // Fallback to software gather for now
-        self.software_gather_with_prefetch(result, data, indices)
+        a: &Array1<half::f16>,
+        b: &Array1<half::f16>,
+    ) -> IntegrateResult<half::f16> {
+        let mut sum = half::f16::ZERO;
+        for i in 0..a.len().min(b.len()) {
+            sum += a[i] * b[i];
+        }
+        Ok(sum)
     }
 
-    fn software_gather_with_prefetch(
-        &self,
-        result: &mut Array1<F>,
-        data: &ArrayView1<F>,
-        indices: &[usize],
-    ) -> IntegrateResult<()> {
-        for (i, &index) in indices.iter().enumerate() {
-            if index < data.len() && i < result.len() {
-                result[i] = data[index];
-            }
+    fn half_precision_reduction(&self, data: &Array1<half::f16>) -> IntegrateResult<half::f16> {
+        let mut sum = half::f16::ZERO;
+        for &val in data.iter() {
+            sum += val;
         }
-        Ok(())
+        Ok(sum)
     }
 }
 

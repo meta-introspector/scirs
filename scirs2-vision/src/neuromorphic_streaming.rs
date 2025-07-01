@@ -15,7 +15,6 @@
 
 use crate::error::Result;
 use crate::streaming::{Frame, ProcessingStage};
-use crate::FrameMetadata;
 use ndarray::{Array1, Array2, ArrayView2};
 use rand::prelude::*;
 use rand::rng;
@@ -1138,6 +1137,27 @@ impl AdaptiveNeuromorphicPipeline {
             active_clusters: event_stats.active_clusters,
         }
     }
+
+    /// Initialize adaptive learning capabilities
+    pub async fn initialize_adaptive_learning(&mut self) -> Result<()> {
+        // Reset performance history for fresh learning
+        self.performance_history.clear();
+
+        // Initialize optimal processing mode
+        self.processing_mode = NeuromorphicMode::Balanced;
+
+        // Reset adaptation parameters to defaults
+        self.adaptation_params = AdaptationParams {
+            performance_threshold: 0.8,
+            energy_budget: 1.0,
+            learning_rate: 0.01,
+            min_accuracy: 0.6,
+        };
+
+        // Edge detector and event processor initialization handled in constructor
+
+        Ok(())
+    }
 }
 
 /// Comprehensive neuromorphic processing statistics
@@ -1212,7 +1232,7 @@ mod tests {
         let mut detector = NeuromorphicEdgeDetector::new(64);
 
         let frame = Frame {
-            data: Array2::from_shape_fn((8, 8), |(y, x)| if x > 4 { 1.0 } else { 0.0 }),
+            data: Array2::from_shape_fn((8, 8), |(_y, x)| if x > 4 { 1.0 } else { 0.0 }),
             timestamp: Instant::now(),
             index: 0,
             metadata: Some(FrameMetadata {

@@ -8,8 +8,8 @@ use crate::layers::{Dense, Dropout, Layer, LayerNorm, Sequential};
 
 use ndarray::{Array, Axis, IxDyn, ScalarOperand};
 use num_traits::Float;
-use rand::rngs::SmallRng;
-use rand::SeedableRng;
+// use rand::rngs::SmallRng;
+// use rand::SeedableRng;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 
@@ -63,10 +63,10 @@ pub struct FeatureAlignment<F: Float + Debug + ScalarOperand + Send + Sync> {
 impl<F: Float + Debug + ScalarOperand + Send + Sync> FeatureAlignment<F> {
     /// Create a new FeatureAlignment module
     pub fn new(input_dim: usize, output_dim: usize, _name: Option<&str>) -> Result<Self> {
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = ndarray_rand::rand::thread_rng();
         let projection = Dense::<F>::new(input_dim, output_dim, None, &mut rng)?;
 
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = ndarray_rand::rand::thread_rng();
         let norm = LayerNorm::<F>::new(output_dim, 1e-6, &mut rng)?;
 
         Ok(Self {
@@ -158,7 +158,7 @@ pub struct CrossModalAttention<F: Float + Debug + ScalarOperand + Send + Sync> {
 impl<F: Float + Debug + ScalarOperand + Send + Sync> CrossModalAttention<F> {
     /// Create a new CrossModalAttention module
     pub fn new(query_dim: usize, key_dim: usize, hidden_dim: usize) -> Result<Self> {
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = ndarray_rand::rand::thread_rng();
 
         let query_proj = Dense::<F>::new(query_dim, hidden_dim, None, &mut rng)?;
 
@@ -342,7 +342,7 @@ pub struct FiLMModule<F: Float + Debug + ScalarOperand + Send + Sync> {
 impl<F: Float + Debug + ScalarOperand + Send + Sync> FiLMModule<F> {
     /// Create a new FiLMModule
     pub fn new(feature_dim: usize, cond_dim: usize) -> Result<Self> {
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = ndarray_rand::rand::thread_rng();
         let gamma_proj = Dense::<F>::new(cond_dim, feature_dim, None, &mut rng)?;
 
         let beta_proj = Dense::<F>::new(cond_dim, feature_dim, None, &mut rng)?;
@@ -449,7 +449,7 @@ pub struct BilinearFusion<F: Float + Debug + ScalarOperand + Send + Sync> {
 impl<F: Float + Debug + ScalarOperand + Send + Sync> BilinearFusion<F> {
     /// Create a new BilinearFusion module
     pub fn new(dim_a: usize, dim_b: usize, output_dim: usize, rank: usize) -> Result<Self> {
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = ndarray_rand::rand::thread_rng();
         let proj_a = Dense::<F>::new(dim_a, rank, None, &mut rng)?;
 
         let proj_b = Dense::<F>::new(dim_b, rank, None, &mut rng)?;
@@ -669,7 +669,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> FeatureFusion<F> {
             _ => config.hidden_dim,
         };
 
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = ndarray_rand::rand::thread_rng();
         post_fusion.add(Dense::<F>::new(
             post_fusion_input_dim,
             config.hidden_dim * 2,
@@ -678,11 +678,11 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> FeatureFusion<F> {
         )?);
 
         if config.dropout_rate > 0.0 {
-            let mut rng = SmallRng::seed_from_u64(42);
+            let mut rng = ndarray_rand::rand::thread_rng();
             post_fusion.add(Dropout::<F>::new(config.dropout_rate, &mut rng)?);
         }
 
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = ndarray_rand::rand::thread_rng();
         post_fusion.add(Dense::<F>::new(
             config.hidden_dim * 2,
             config.hidden_dim,
@@ -692,7 +692,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> FeatureFusion<F> {
 
         // Create classifier if needed
         let classifier = if config.include_head {
-            let mut rng = SmallRng::seed_from_u64(42);
+            let mut rng = ndarray_rand::rand::thread_rng();
             Some(Dense::<F>::new(
                 config.hidden_dim,
                 config.num_classes,

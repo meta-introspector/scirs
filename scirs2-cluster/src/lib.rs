@@ -272,6 +272,11 @@ pub use quantum_clustering::{
     quantum_annealing_clustering, CoolingSchedule, QuantumAnnealingConfig, QuantumAnnealingClustering,
 };
 
+// Re-export ultrathink clustering capabilities
+pub use ultrathink_clustering::{
+    UltrathinkClusterer, UltrathinkClusteringResult, UltrathinkConfig, UltrathinkPerformanceMetrics,
+};
+
 // Re-export advanced benchmarking capabilities
 pub use advanced_benchmarking::{
     AdvancedBenchmark, BenchmarkConfig, BenchmarkResults, AlgorithmBenchmark, AlgorithmComparison,

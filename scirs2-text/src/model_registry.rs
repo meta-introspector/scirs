@@ -956,30 +956,80 @@ impl RegistrableModel for crate::transformer::TransformerModel {
         weights.insert("positional_embeddings".to_string(), pos_embed_weights);
         shapes.insert("positional_embeddings".to_string(), pos_embed_shape);
 
-        // Serialize all encoder layers (placeholder - would need access to internal weights)
+        // Serialize all encoder layers with real weights
         for i in 0..self.config.n_encoder_layers {
-            // Placeholder for attention weights
-            let attn_weight_size = self.config.d_model * self.config.d_model * 4; // Q, K, V, O
-            let attn_weights = vec![0.0f64; attn_weight_size];
-            let attn_shape = vec![self.config.d_model, self.config.d_model * 4];
-            weights.insert(format!("encoder_{}_attention", i), attn_weights);
-            shapes.insert(format!("encoder_{}_attention", i), attn_shape);
+            let layer = &self.encoder.get_layers()[i];
+            let (attention, ff, ln1, ln2) = layer.get_components();
 
-            // Placeholder for feedforward weights
-            let ff_weight_size = self.config.d_model * self.config.d_ff * 2; // W1, W2
-            let ff_weights = vec![0.0f64; ff_weight_size];
-            let ff_shape = vec![self.config.d_model, self.config.d_ff * 2];
-            weights.insert(format!("encoder_{}_feedforward", i), ff_weights);
-            shapes.insert(format!("encoder_{}_feedforward", i), ff_shape);
+            // Serialize attention weights
+            let (w_q, w_k, w_v, w_o) = attention.get_weights();
+            weights.insert(
+                format!("encoder_{}_attention_wq", i),
+                w_q.as_slice().unwrap().to_vec(),
+            );
+            shapes.insert(format!("encoder_{}_attention_wq", i), w_q.shape().to_vec());
+            weights.insert(
+                format!("encoder_{}_attention_wk", i),
+                w_k.as_slice().unwrap().to_vec(),
+            );
+            shapes.insert(format!("encoder_{}_attention_wk", i), w_k.shape().to_vec());
+            weights.insert(
+                format!("encoder_{}_attention_wv", i),
+                w_v.as_slice().unwrap().to_vec(),
+            );
+            shapes.insert(format!("encoder_{}_attention_wv", i), w_v.shape().to_vec());
+            weights.insert(
+                format!("encoder_{}_attention_wo", i),
+                w_o.as_slice().unwrap().to_vec(),
+            );
+            shapes.insert(format!("encoder_{}_attention_wo", i), w_o.shape().to_vec());
 
-            // Placeholder for layer norm parameters
-            let ln_weights = vec![1.0f64; self.config.d_model];
-            let ln_shape = vec![self.config.d_model];
-            weights.insert(format!("encoder_{}_ln1", i), ln_weights.clone());
-            shapes.insert(format!("encoder_{}_ln1", i), ln_shape.clone());
+            // Serialize feedforward weights
+            let (w1, w2, b1, b2) = ff.get_weights();
+            weights.insert(
+                format!("encoder_{}_ff_w1", i),
+                w1.as_slice().unwrap().to_vec(),
+            );
+            shapes.insert(format!("encoder_{}_ff_w1", i), w1.shape().to_vec());
+            weights.insert(
+                format!("encoder_{}_ff_w2", i),
+                w2.as_slice().unwrap().to_vec(),
+            );
+            shapes.insert(format!("encoder_{}_ff_w2", i), w2.shape().to_vec());
+            weights.insert(
+                format!("encoder_{}_ff_b1", i),
+                b1.as_slice().unwrap().to_vec(),
+            );
+            shapes.insert(format!("encoder_{}_ff_b1", i), vec![b1.len()]);
+            weights.insert(
+                format!("encoder_{}_ff_b2", i),
+                b2.as_slice().unwrap().to_vec(),
+            );
+            shapes.insert(format!("encoder_{}_ff_b2", i), vec![b2.len()]);
 
-            weights.insert(format!("encoder_{}_ln2", i), ln_weights);
-            shapes.insert(format!("encoder_{}_ln2", i), ln_shape);
+            // Serialize layer norm parameters
+            let (gamma1, beta1) = ln1.get_params();
+            let (gamma2, beta2) = ln2.get_params();
+            weights.insert(
+                format!("encoder_{}_ln1_gamma", i),
+                gamma1.as_slice().unwrap().to_vec(),
+            );
+            shapes.insert(format!("encoder_{}_ln1_gamma", i), vec![gamma1.len()]);
+            weights.insert(
+                format!("encoder_{}_ln1_beta", i),
+                beta1.as_slice().unwrap().to_vec(),
+            );
+            shapes.insert(format!("encoder_{}_ln1_beta", i), vec![beta1.len()]);
+            weights.insert(
+                format!("encoder_{}_ln2_gamma", i),
+                gamma2.as_slice().unwrap().to_vec(),
+            );
+            shapes.insert(format!("encoder_{}_ln2_gamma", i), vec![gamma2.len()]);
+            weights.insert(
+                format!("encoder_{}_ln2_beta", i),
+                beta2.as_slice().unwrap().to_vec(),
+            );
+            shapes.insert(format!("encoder_{}_ln2_beta", i), vec![beta2.len()]);
         }
 
         // Serialize all decoder layers (placeholder - would need access to internal weights)
@@ -1025,12 +1075,22 @@ impl RegistrableModel for crate::transformer::TransformerModel {
         shapes.insert("output_projection".to_string(), output_shape);
 
         // Serialize vocabulary
-        let _vocabulary = Some(self.vocabulary());
+        let (vocab_to_id, id_to_vocab) = self.vocabulary();
+        let vocabulary = Some(
+            (0..vocab_to_id.len())
+                .map(|i| {
+                    id_to_vocab
+                        .get(&i)
+                        .cloned()
+                        .unwrap_or_else(|| format!("unk_{}", i))
+                })
+                .collect(),
+        );
 
         Ok(SerializableModelData {
             weights,
             shapes,
-            vocabulary: None, // Could include vocabulary if available
+            vocabulary,
             config,
         })
     }
@@ -1135,55 +1195,90 @@ impl RegistrableModel for crate::transformer::TransformerModel {
 
         // Restore encoder layer weights
         for i in 0..config.n_encoder_layers {
+            let encoder_layers = model.encoder.get_layers_mut();
+            let (attention, ff, ln1, ln2) = encoder_layers[i].get_components_mut();
+
             // Restore attention weights
-            if let (Some(attn_weights), Some(attn_shape)) = (
-                data.weights.get(&format!("encoder_{}_attention", i)),
-                data.shapes.get(&format!("encoder_{}_attention", i)),
+            if let (
+                Some(wq_weights),
+                Some(wq_shape),
+                Some(wk_weights),
+                Some(wk_shape),
+                Some(wv_weights),
+                Some(wv_shape),
+                Some(wo_weights),
+                Some(wo_shape),
+            ) = (
+                data.weights.get(&format!("encoder_{}_attention_wq", i)),
+                data.shapes.get(&format!("encoder_{}_attention_wq", i)),
+                data.weights.get(&format!("encoder_{}_attention_wk", i)),
+                data.shapes.get(&format!("encoder_{}_attention_wk", i)),
+                data.weights.get(&format!("encoder_{}_attention_wv", i)),
+                data.shapes.get(&format!("encoder_{}_attention_wv", i)),
+                data.weights.get(&format!("encoder_{}_attention_wo", i)),
+                data.shapes.get(&format!("encoder_{}_attention_wo", i)),
             ) {
-                let _attn_array = ndarray::Array::from_shape_vec(
-                    ndarray::IxDyn(attn_shape),
-                    attn_weights.clone(),
-                )
-                .map_err(|e| TextError::InvalidInput(format!("Invalid attention shape: {}", e)))?;
-                // TODO: Restore encoder attention weights when available
-                // model.encoder_layers[i].set_attention_weights(attn_array)?;
+                let w_q =
+                    ndarray::Array::from_shape_vec((wq_shape[0], wq_shape[1]), wq_weights.clone())
+                        .map_err(|e| TextError::InvalidInput(format!("Invalid wq shape: {}", e)))?;
+                let w_k =
+                    ndarray::Array::from_shape_vec((wk_shape[0], wk_shape[1]), wk_weights.clone())
+                        .map_err(|e| TextError::InvalidInput(format!("Invalid wk shape: {}", e)))?;
+                let w_v =
+                    ndarray::Array::from_shape_vec((wv_shape[0], wv_shape[1]), wv_weights.clone())
+                        .map_err(|e| TextError::InvalidInput(format!("Invalid wv shape: {}", e)))?;
+                let w_o =
+                    ndarray::Array::from_shape_vec((wo_shape[0], wo_shape[1]), wo_weights.clone())
+                        .map_err(|e| TextError::InvalidInput(format!("Invalid wo shape: {}", e)))?;
+
+                attention.set_weights(w_q, w_k, w_v, w_o)?;
             }
 
             // Restore feedforward weights
-            if let (Some(ff_weights), Some(ff_shape)) = (
-                data.weights.get(&format!("encoder_{}_feedforward", i)),
-                data.shapes.get(&format!("encoder_{}_feedforward", i)),
+            if let (
+                Some(w1_weights),
+                Some(w1_shape),
+                Some(w2_weights),
+                Some(w2_shape),
+                Some(b1_weights),
+                Some(b2_weights),
+            ) = (
+                data.weights.get(&format!("encoder_{}_ff_w1", i)),
+                data.shapes.get(&format!("encoder_{}_ff_w1", i)),
+                data.weights.get(&format!("encoder_{}_ff_w2", i)),
+                data.shapes.get(&format!("encoder_{}_ff_w2", i)),
+                data.weights.get(&format!("encoder_{}_ff_b1", i)),
+                data.weights.get(&format!("encoder_{}_ff_b2", i)),
             ) {
-                let _ff_array =
-                    ndarray::Array::from_shape_vec(ndarray::IxDyn(ff_shape), ff_weights.clone())
-                        .map_err(|e| {
-                            TextError::InvalidInput(format!("Invalid feedforward shape: {}", e))
-                        })?;
-                // TODO: Restore encoder feedforward weights when available
-                // model.encoder_layers[i].set_feedforward_weights(ff_array)?;
+                let w1 =
+                    ndarray::Array::from_shape_vec((w1_shape[0], w1_shape[1]), w1_weights.clone())
+                        .map_err(|e| TextError::InvalidInput(format!("Invalid w1 shape: {}", e)))?;
+                let w2 =
+                    ndarray::Array::from_shape_vec((w2_shape[0], w2_shape[1]), w2_weights.clone())
+                        .map_err(|e| TextError::InvalidInput(format!("Invalid w2 shape: {}", e)))?;
+                let b1 = ndarray::Array::from_vec(b1_weights.clone());
+                let b2 = ndarray::Array::from_vec(b2_weights.clone());
+
+                ff.set_weights(w1, w2, b1, b2)?;
             }
 
-            // Restore layer norm weights
-            for (layer_norm_name, _setter) in &[
-                ("ln1", "set_layer_norm1_weights"),
-                ("ln2", "set_layer_norm2_weights"),
-            ] {
-                if let (Some(ln_weights), Some(ln_shape)) = (
-                    data.weights
-                        .get(&format!("encoder_{}_{}", i, layer_norm_name)),
-                    data.shapes
-                        .get(&format!("encoder_{}_{}", i, layer_norm_name)),
-                ) {
-                    let _ln_array = ndarray::Array::from_shape_vec(
-                        ndarray::IxDyn(ln_shape),
-                        ln_weights.clone(),
-                    )
-                    .map_err(|e| {
-                        TextError::InvalidInput(format!("Invalid layer norm shape: {}", e))
-                    })?;
-                    // Note: In a real implementation, we'd call the setter method
-                    // model.encoder_layers[i].setter(ln_array)?;
-                }
+            // Restore layer norm parameters
+            if let (Some(gamma1_weights), Some(beta1_weights)) = (
+                data.weights.get(&format!("encoder_{}_ln1_gamma", i)),
+                data.weights.get(&format!("encoder_{}_ln1_beta", i)),
+            ) {
+                let gamma1 = ndarray::Array::from_vec(gamma1_weights.clone());
+                let beta1 = ndarray::Array::from_vec(beta1_weights.clone());
+                ln1.set_params(gamma1, beta1)?;
+            }
+
+            if let (Some(gamma2_weights), Some(beta2_weights)) = (
+                data.weights.get(&format!("encoder_{}_ln2_gamma", i)),
+                data.weights.get(&format!("encoder_{}_ln2_beta", i)),
+            ) {
+                let gamma2 = ndarray::Array::from_vec(gamma2_weights.clone());
+                let beta2 = ndarray::Array::from_vec(beta2_weights.clone());
+                ln2.set_params(gamma2, beta2)?;
             }
         }
 

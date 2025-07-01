@@ -5,6 +5,7 @@
 
 use crate::error::{SignalError, SignalResult};
 use ndarray::{s, Array1, Array2, ArrayView1, Axis};
+use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::check_finite;

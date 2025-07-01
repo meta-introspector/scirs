@@ -204,6 +204,7 @@ pub use visual_slam::{
 // Re-export ultrathink integration functionality
 pub use ultrathink_integration::{
     batch_process_ultrathink, process_with_ultrathink_mode, realtime_ultrathink_stream,
-    EmergentBehavior, FusionQuality, NeuralQuantumHybridProcessor, PerformanceMetrics,
-    UltrathinkProcessingResult, UncertaintyQuantification as UltrathinkUncertaintyQuantification,
+    CrossModuleUltrathinkProcessingResult, EmergentBehavior, FusionQuality,
+    NeuralQuantumHybridProcessor, PerformanceMetrics, UltrathinkProcessingResult,
+    UncertaintyQuantification as UltrathinkUncertaintyQuantification,
 };

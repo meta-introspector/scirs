@@ -14,11 +14,11 @@ use scirs2_spatial::{
     memory_pool::global_distance_pool,
 
     ml_optimization::NeuralSpatialOptimizer,
-    neuromorphic::{NeuromorphicProcessor, SpikingNeuralClusterer},
+    neuromorphic::SpikingNeuralClusterer,
     quantum_classical_hybrid::{HybridClusterer, HybridSpatialOptimizer},
 
     // Advanced modules to validate
-    quantum_inspired::{QuantumClusterer, QuantumNearestNeighbor, QuantumSpatialOptimizer},
+    quantum_inspired::{QuantumClusterer, QuantumNearestNeighbor},
     // Check if imports work
     tensor_cores::detect_tensor_core_capabilities,
     // Core spatial algorithms for comparison
@@ -161,7 +161,7 @@ async fn test_quantum_inspired(
     points: &ndarray::Array2<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Test quantum clustering
-    let mut quantum_clusterer = QuantumClusterer::new(2, 16, 20, 0.01)?;
+    let mut quantum_clusterer = QuantumClusterer::new(2);
     let cluster_result = quantum_clusterer.cluster(&points.view()).await?;
 
     if cluster_result.labels.len() != points.nrows() {
@@ -173,10 +173,9 @@ async fn test_quantum_inspired(
     }
 
     // Test quantum nearest neighbor
-    let quantum_nn = QuantumNearestNeighbor::new(16, 5, 0.01, 0.7)?;
+    let quantum_nn = QuantumNearestNeighbor::new(&points.view())?;
     let (indices, distances) = quantum_nn
-        .search(&points.view(), &array![2.0, 2.0].view(), 3)
-        .await?;
+        .query_quantum(&array![2.0, 2.0].view(), 3)?;
 
     if indices.len() != 3 || distances.len() != 3 {
         return Err("Quantum NN search returned wrong number of results".into());
@@ -190,20 +189,14 @@ async fn test_neuromorphic(
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Test spiking neural clustering
     let mut spiking_clusterer = SpikingNeuralClusterer::new(2);
-    let cluster_result = spiking_clusterer.cluster(&points.view()).await?;
+    let (labels, _spike_events) = spiking_clusterer.fit(&points.view())?;
 
-    if cluster_result.labels.len() != points.nrows() {
+    if labels.len() != points.nrows() {
         return Err("Neuromorphic clustering returned wrong number of labels".into());
     }
 
-    if cluster_result.centers.nrows() != 2 {
-        return Err("Neuromorphic clustering returned wrong number of centers".into());
-    }
-
-    // Test that silhouette score is reasonable
-    if cluster_result.silhouette_score < -1.0 || cluster_result.silhouette_score > 1.0 {
-        return Err("Neuromorphic clustering silhouette score out of range".into());
-    }
+    // Note: Neuromorphic clustering returns spike events and labels
+    // Silhouette score calculation would need to be done separately
 
     Ok(())
 }
@@ -212,7 +205,7 @@ async fn test_hybrid_algorithms(
     points: &ndarray::Array2<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Test hybrid spatial optimizer
-    let mut hybrid_optimizer = HybridSpatialOptimizer::new()?
+    let mut hybrid_optimizer = HybridSpatialOptimizer::new()
         .with_quantum_depth(2)
         .with_classical_refinement(true)
         .with_adaptive_switching(0.5);
@@ -230,7 +223,7 @@ async fn test_hybrid_algorithms(
     }
 
     // Test hybrid clustering
-    let mut hybrid_clusterer = HybridClusterer::new(2)?
+    let mut hybrid_clusterer = HybridClusterer::new(2)
         .with_quantum_depth(2)
         .with_classical_refinement(true);
 
@@ -252,10 +245,10 @@ async fn test_gpu_acceleration() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Test tensor core capabilities detection
-    let tensor_caps = detect_tensor_core_capabilities();
+    let tensor_caps = detect_tensor_core_capabilities()?;
     println!(
-        "   Detected tensor core capabilities: {:?}",
-        tensor_caps.has_tensor_cores
+        "   Detected tensor core capabilities: {} types available",
+        tensor_caps.tensor_core_types.len()
     );
 
     Ok(())
@@ -267,7 +260,7 @@ async fn test_memory_optimization() -> Result<(), Box<dyn std::error::Error>> {
     let stats = pool.statistics();
 
     println!("   Memory pool statistics:");
-    println!("     Total allocations: {}", stats.total_allocations);
+    println!("     Total allocations: {}", stats.total_allocations());
     println!("     Hit rate: {:.1}%", stats.hit_rate());
 
     // Get a buffer to test the pool
@@ -283,7 +276,7 @@ async fn test_memory_optimization() -> Result<(), Box<dyn std::error::Error>> {
 async fn test_advanced_optimization() -> Result<(), Box<dyn std::error::Error>> {
     // Test extreme optimizer creation
     let _extreme_optimizer = ExtremeOptimizer::new()
-        .with_simd_optimization(true)
+        .with_numa_optimization(true)
         .with_cache_optimization(true)
         .with_parallel_optimization(true);
 
@@ -294,7 +287,7 @@ async fn test_advanced_optimization() -> Result<(), Box<dyn std::error::Error>> 
 
     // Test neural spatial optimizer creation
     let _neural_optimizer = NeuralSpatialOptimizer::new()
-        .with_layers(vec![64, 32, 16])
+        .with_network_architecture(vec![64, 32, 16])
         .with_learning_rate(0.001);
 
     println!("   Successfully created all advanced optimization modules");

@@ -333,7 +333,7 @@ mod tests {
     #[test]
     fn test_transformer_train() {
         // Set up transformer with small configuration for testing
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = rand::thread_rng();
         let config = TransformerConfig {
             d_model: 64,
             n_encoder_layers: 2,
@@ -367,7 +367,7 @@ mod tests {
     #[test]
     fn test_transformer_inference() {
         // Set up transformer with small configuration for testing
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = rand::thread_rng();
         let config = TransformerConfig {
             d_model: 64,
             n_encoder_layers: 1,
@@ -401,7 +401,7 @@ mod tests {
     #[test]
     fn test_encoder_only() {
         // Set up transformer with small configuration for testing
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = rand::thread_rng();
         let config = TransformerConfig {
             d_model: 64,
             n_encoder_layers: 1,

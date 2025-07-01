@@ -437,7 +437,7 @@ impl<T: Float, P: PolicyNetwork<T>> NaturalPolicyGradient<T, P> {
     }
 
     /// Update policy network parameters
-    fn update_policy_parameters(&mut self, update: &Array1<T>) -> Result<(), OptimizerError> {
+    fn update_policy_parameters(&mut self, _update: &Array1<T>) -> Result<(), OptimizerError> {
         // Placeholder for actual parameter update
         // In practice, this would modify the policy network weights
         Ok(())

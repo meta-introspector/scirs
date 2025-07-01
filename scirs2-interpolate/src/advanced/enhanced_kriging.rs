@@ -552,16 +552,19 @@ where
         let n_points = points.shape()[0];
         let n_dims = points.shape()[1];
 
-        let (n_basis, basis_fn) = match trend_fn {
-            TrendFunction::Constant => (1, |_x: &ArrayView1<F>| vec![F::one()]),
-            TrendFunction::Linear => (1 + n_dims, |x: &ArrayView1<F>| {
-                let mut basis = vec![F::one()];
-                basis.extend(x.iter().cloned());
-                basis
-            }),
+        let (n_basis, basis_fn): (usize, Box<dyn Fn(&ArrayView1<F>) -> Vec<F>>) = match trend_fn {
+            TrendFunction::Constant => (1, Box::new(|_x: &ArrayView1<F>| vec![F::one()])),
+            TrendFunction::Linear => (
+                1 + n_dims,
+                Box::new(|x: &ArrayView1<F>| {
+                    let mut basis = vec![F::one()];
+                    basis.extend(x.iter().cloned());
+                    basis
+                }),
+            ),
             TrendFunction::Quadratic => (
                 1 + n_dims + n_dims * (n_dims + 1) / 2,
-                |x: &ArrayView1<F>| {
+                Box::new(|x: &ArrayView1<F>| {
                     let mut basis = vec![F::one()];
                     // Linear terms
                     basis.extend(x.iter().cloned());
@@ -572,13 +575,14 @@ where
                         }
                     }
                     basis
-                },
+                }),
             ),
             TrendFunction::Custom(degree) => {
                 let n_basis = Self::compute_polynomial_basis_size(n_dims, degree);
-                (n_basis, |x: &ArrayView1<F>| {
-                    Self::compute_polynomial_basis(x, degree)
-                })
+                (
+                    n_basis,
+                    Box::new(move |x: &ArrayView1<F>| Self::compute_polynomial_basis(x, degree)),
+                )
             }
         };
 

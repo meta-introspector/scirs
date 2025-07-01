@@ -308,12 +308,12 @@ impl UltrathinkJitDemo {
                 compiled_kernel.metadata.target_arch
             );
             println!(
-                "   - Instruction count: {}",
-                compiled_kernel.performance.instruction_count
+                "   - Execution samples: {}",
+                compiled_kernel.performance.execution_times.len()
             );
             println!(
                 "   - Cache efficiency: {:.1}%",
-                (1.0 - compiled_kernel.performance.cache_miss_rate) * 100.0
+                compiled_kernel.performance.cache_hit_rates.l1_hit_rate * 100.0
             );
 
             // Simulate kernel execution for performance measurement
@@ -368,8 +368,8 @@ impl UltrathinkJitDemo {
 
             // Estimate performance for this matrix size
             let flops = (size * size * size * 2) as f64; // 2n³ operations
-            let estimated_time =
-                flops / (compiled_kernel.performance.instruction_count as f64 * 1e9);
+            let estimated_instructions = flops; // Approximate 1 instruction per operation
+            let estimated_time = estimated_instructions / 1e9; // Assume 1 GHz frequency
             println!(
                 "   - Estimated execution time: {:.2} ms",
                 estimated_time * 1000.0
@@ -426,8 +426,18 @@ impl UltrathinkJitDemo {
             );
 
             // Estimate throughput
-            let estimated_throughput =
-                1.0 / compiled_kernel.performance.avg_execution_time.as_secs_f64();
+            let avg_execution_time = if !compiled_kernel.performance.execution_times.is_empty() {
+                compiled_kernel
+                    .performance
+                    .execution_times
+                    .iter()
+                    .sum::<Duration>()
+                    .as_secs_f64()
+                    / compiled_kernel.performance.execution_times.len() as f64
+            } else {
+                0.001 // Default 1ms if no data
+            };
+            let estimated_throughput = 1.0 / avg_execution_time;
             println!(
                 "   - Estimated throughput: {:.0} operations/sec",
                 estimated_throughput
@@ -816,8 +826,11 @@ impl UltrathinkJitDemo {
         println!("   ⚡ Simulating execution...");
 
         // Simulate execution time based on complexity
-        let execution_time =
-            Duration::from_micros((kernel.performance.instruction_count / 1000).max(10));
+        let execution_time = if !kernel.performance.execution_times.is_empty() {
+            *kernel.performance.execution_times.first().unwrap()
+        } else {
+            Duration::from_millis(10) // Default 10ms simulation
+        };
 
         std::thread::sleep(execution_time);
 

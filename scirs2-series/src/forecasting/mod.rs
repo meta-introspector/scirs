@@ -2016,7 +2016,9 @@ pub mod ensemble {
             // Generate predictions for each model
             if config.use_moving_average {
                 let window = std::cmp::min(12, train_data.len() / 2);
-                if let Ok(forecast) = super::moving_average_forecast(&train_data, window, horizon) {
+                if let Ok(forecast) =
+                    super::moving_average_forecast(&train_data, window, horizon, 0.95)
+                {
                     fold_predictions.push(forecast.forecast);
                 } else {
                     fold_predictions.push(Array1::zeros(horizon));
@@ -2026,7 +2028,7 @@ pub mod ensemble {
             if config.use_exp_smoothing {
                 let params = super::ExpSmoothingParams::default();
                 if let Ok(forecast) =
-                    super::exponential_smoothing_forecast(&train_data, &params, horizon)
+                    super::exponential_smoothing_forecast(&train_data, params.alpha, horizon, 0.95)
                 {
                     fold_predictions.push(forecast.forecast);
                 } else {
@@ -2042,7 +2044,9 @@ pub mod ensemble {
                     seasonal_period: Some(12),
                     ..Default::default()
                 };
-                if let Ok(forecast) = super::holt_winters_forecast(&train_data, &params, horizon) {
+                if let Ok(forecast) =
+                    super::holt_winters_forecast(&train_data, &params, horizon, 0.95)
+                {
                     fold_predictions.push(forecast.forecast);
                 } else {
                     fold_predictions.push(Array1::zeros(horizon));
@@ -2056,7 +2060,7 @@ pub mod ensemble {
                     q: 1,
                     ..Default::default()
                 };
-                if let Ok(forecast) = super::arima_forecast(&train_data, &params, horizon) {
+                if let Ok(forecast) = super::arima_forecast(&train_data, &params, horizon, 0.95) {
                     fold_predictions.push(forecast.forecast);
                 } else {
                     fold_predictions.push(Array1::zeros(horizon));

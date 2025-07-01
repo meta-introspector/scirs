@@ -3129,3 +3129,481 @@ impl QuantumSpatialPatternMatcher {
         Ok(matches)
     }
 }
+
+/// Quantum-inspired Traveling Salesman Problem solver
+///
+/// Uses quantum annealing principles and QAOA to solve TSP instances with
+/// exponential speedup potential for certain problem structures.
+#[derive(Debug, Clone)]
+pub struct QuantumTSPSolver {
+    /// Number of cities
+    num_cities: usize,
+    /// Distance matrix between cities
+    distance_matrix: Array2<f64>,
+    /// Quantum annealing schedule
+    annealing_schedule: Vec<f64>,
+    /// Number of Trotter slices for quantum simulation
+    num_trotter_slices: usize,
+    /// QAOA circuit depth
+    qaoa_depth: usize,
+    /// Quantum register size (log2 of search space)
+    num_qubits: usize,
+    /// Current best solution
+    best_solution: Option<(Vec<usize>, f64)>,
+    /// Quantum state evolution
+    quantum_state: Option<QuantumState>,
+}
+
+/// TSP solution with quantum metrics
+#[derive(Debug, Clone)]
+pub struct QuantumTSPSolution {
+    /// Tour path (sequence of city indices)
+    pub tour: Vec<usize>,
+    /// Total tour distance
+    pub distance: f64,
+    /// Quantum fidelity of the solution
+    pub quantum_fidelity: f64,
+    /// Number of quantum iterations
+    pub quantum_iterations: usize,
+    /// Classical optimization steps
+    pub classical_refinements: usize,
+}
+
+impl QuantumTSPSolver {
+    /// Create a new quantum TSP solver
+    pub fn new(distance_matrix: Array2<f64>) -> SpatialResult<Self> {
+        let (n_cities, _) = distance_matrix.dim();
+
+        if n_cities < 3 {
+            return Err(SpatialError::InvalidInput(
+                "TSP requires at least 3 cities".to_string(),
+            ));
+        }
+
+        // Calculate quantum register size (log2 of factorial search space)
+        let num_qubits = (n_cities as f64).log2().ceil() as usize * n_cities;
+
+        // Create quantum annealing schedule (exponential cooling)
+        let num_steps = 1000;
+        let annealing_schedule: Vec<f64> = (0..num_steps)
+            .map(|i| {
+                let t = i as f64 / (num_steps - 1) as f64;
+                (-10.0 * t).exp() // Exponential cooling from 1.0 to ~0
+            })
+            .collect();
+
+        Ok(Self {
+            num_cities: n_cities,
+            distance_matrix,
+            annealing_schedule,
+            num_trotter_slices: 100,
+            qaoa_depth: 8,
+            num_qubits,
+            best_solution: None,
+            quantum_state: None,
+        })
+    }
+
+    /// Configure quantum annealing parameters
+    pub fn with_annealing_config(mut self, num_trotter_slices: usize, qaoa_depth: usize) -> Self {
+        self.num_trotter_slices = num_trotter_slices;
+        self.qaoa_depth = qaoa_depth;
+        self
+    }
+
+    /// Solve TSP using quantum-inspired optimization
+    pub async fn solve_quantum(&mut self) -> SpatialResult<QuantumTSPSolution> {
+        // Initialize quantum state in equal superposition
+        self.initialize_quantum_superposition()?;
+
+        // Apply quantum annealing with adiabatic evolution
+        let quantum_solution = self.quantum_annealing_evolution().await?;
+
+        // Apply QAOA refinement for better solution quality
+        let qaoa_refined = self.qaoa_refinement(&quantum_solution).await?;
+
+        // Classical post-processing for final optimization
+        let final_solution = self.classical_refinement(&qaoa_refined).await?;
+
+        self.best_solution = Some((final_solution.tour.clone(), final_solution.distance));
+
+        Ok(final_solution)
+    }
+
+    /// Initialize quantum state in equal superposition over valid tours
+    fn initialize_quantum_superposition(&mut self) -> SpatialResult<()> {
+        let state_size = 1 << self.num_qubits;
+        let mut amplitudes = Array1::zeros(state_size);
+
+        // Create equal superposition over valid TSP configurations
+        let valid_states = self.generate_valid_tsp_states()?;
+        let amplitude = (1.0 / valid_states.len() as f64).sqrt();
+
+        for state_idx in valid_states {
+            if state_idx < state_size {
+                amplitudes[state_idx] = Complex64::new(amplitude, 0.0);
+            }
+        }
+
+        self.quantum_state = Some(QuantumState::new(amplitudes)?);
+        Ok(())
+    }
+
+    /// Generate valid TSP state encodings
+    fn generate_valid_tsp_states(&self) -> SpatialResult<Vec<usize>> {
+        let mut valid_states = Vec::new();
+
+        // Generate subset of valid permutations (for large problems, use sampling)
+        if self.num_cities <= 8 {
+            // Exact enumeration for small problems
+            let mut cities: Vec<usize> = (0..self.num_cities).collect();
+            self.generate_permutations(&mut cities, 0, &mut valid_states);
+        } else {
+            // Heuristic sampling for large problems
+            for _ in 0..1000 {
+                let tour = self.generate_random_valid_tour();
+                let encoded = self.encode_tour_to_quantum_state(&tour)?;
+                valid_states.push(encoded);
+            }
+        }
+
+        Ok(valid_states)
+    }
+
+    /// Generate all permutations recursively
+    fn generate_permutations(
+        &self,
+        cities: &mut Vec<usize>,
+        start: usize,
+        valid_states: &mut Vec<usize>,
+    ) {
+        if start == cities.len() {
+            if let Ok(encoded) = self.encode_tour_to_quantum_state(cities) {
+                valid_states.push(encoded);
+            }
+            return;
+        }
+
+        for i in start..cities.len() {
+            cities.swap(start, i);
+            self.generate_permutations(cities, start + 1, valid_states);
+            cities.swap(start, i);
+        }
+    }
+
+    /// Generate a random valid tour
+    fn generate_random_valid_tour(&self) -> Vec<usize> {
+        let mut tour: Vec<usize> = (0..self.num_cities).collect();
+
+        // Fisher-Yates shuffle
+        let mut rng = rng();
+        for i in (1..tour.len()).rev() {
+            let j = rng.random_range(0..=i);
+            tour.swap(i, j);
+        }
+
+        tour
+    }
+
+    /// Encode tour permutation to quantum state index
+    fn encode_tour_to_quantum_state(&self, tour: &[usize]) -> SpatialResult<usize> {
+        let mut encoded = 0;
+        let mut base = 1;
+
+        // Use factorial number system encoding
+        for (i, &city) in tour.iter().enumerate() {
+            encoded += city * base;
+            base *= self.num_cities - i;
+        }
+
+        Ok(encoded % (1 << self.num_qubits))
+    }
+
+    /// Quantum annealing evolution using Trotter decomposition
+    async fn quantum_annealing_evolution(&mut self) -> SpatialResult<QuantumTSPSolution> {
+        let mut current_state = self.quantum_state.as_ref().unwrap().clone();
+
+        for (step, &temperature) in self.annealing_schedule.iter().enumerate() {
+            // Apply Trotter evolution step
+            current_state = self.apply_trotter_evolution(&current_state, temperature)?;
+
+            // Measure progress periodically
+            if step % 100 == 0 {
+                let partial_solution = self.extract_best_tour_from_state(&current_state)?;
+
+                // Update best solution if improved
+                if let Some((_, best_dist)) = &self.best_solution {
+                    if partial_solution.distance < *best_dist {
+                        self.best_solution =
+                            Some((partial_solution.tour.clone(), partial_solution.distance));
+                    }
+                } else {
+                    self.best_solution =
+                        Some((partial_solution.tour.clone(), partial_solution.distance));
+                }
+            }
+        }
+
+        // Extract final solution from quantum state
+        let final_solution = self.extract_best_tour_from_state(&current_state)?;
+
+        Ok(QuantumTSPSolution {
+            tour: final_solution.tour,
+            distance: final_solution.distance,
+            quantum_fidelity: self.compute_solution_fidelity(&current_state)?,
+            quantum_iterations: self.annealing_schedule.len(),
+            classical_refinements: 0,
+        })
+    }
+
+    /// Apply Trotter evolution step
+    fn apply_trotter_evolution(
+        &self,
+        state: &QuantumState,
+        temperature: f64,
+    ) -> SpatialResult<QuantumState> {
+        let dt = 0.01;
+        let mut evolved_amplitudes = state.amplitudes.clone();
+
+        // Apply transverse field (quantum tunneling)
+        let transverse_strength = temperature;
+        for i in 0..evolved_amplitudes.len() {
+            // Simulate quantum tunneling between states
+            let tunneling_phase = Complex64::new(0.0, -transverse_strength * dt);
+            evolved_amplitudes[i] *= tunneling_phase.exp();
+        }
+
+        // Apply longitudinal field (problem Hamiltonian)
+        for i in 0..evolved_amplitudes.len() {
+            let tour = self.decode_quantum_state_to_tour(i)?;
+            let energy = self.compute_tour_energy(&tour);
+            let longitudinal_phase = Complex64::new(0.0, energy * (1.0 - temperature) * dt);
+            evolved_amplitudes[i] *= longitudinal_phase.exp();
+        }
+
+        // Renormalize
+        let norm: f64 = evolved_amplitudes
+            .iter()
+            .map(|a| a.norm_sqr())
+            .sum::<f64>()
+            .sqrt();
+        if norm > 1e-12 {
+            evolved_amplitudes.mapv_inplace(|a| a / norm);
+        }
+
+        Ok(QuantumState::new(evolved_amplitudes)?)
+    }
+
+    /// Decode quantum state index to tour
+    fn decode_quantum_state_to_tour(&self, state_idx: usize) -> SpatialResult<Vec<usize>> {
+        // Decode from factorial number system
+        let mut remaining = state_idx;
+        let mut tour = Vec::new();
+        let mut available: Vec<usize> = (0..self.num_cities).collect();
+
+        for i in 0..self.num_cities {
+            let factorial = (1..=(self.num_cities - i)).product::<usize>();
+            let idx = remaining / factorial;
+            remaining %= factorial;
+
+            if idx < available.len() {
+                tour.push(available.remove(idx));
+            } else {
+                tour.push(available.remove(0));
+            }
+        }
+
+        Ok(tour)
+    }
+
+    /// Compute tour energy (total distance)
+    fn compute_tour_energy(&self, tour: &[usize]) -> f64 {
+        if tour.len() != self.num_cities {
+            return f64::INFINITY;
+        }
+
+        let mut total_distance = 0.0;
+        for i in 0..tour.len() {
+            let from = tour[i];
+            let to = tour[(i + 1) % tour.len()];
+            total_distance += self.distance_matrix[[from, to]];
+        }
+        total_distance
+    }
+
+    /// Extract best tour from quantum state by measurement
+    fn extract_best_tour_from_state(
+        &self,
+        state: &QuantumState,
+    ) -> SpatialResult<QuantumTSPSolution> {
+        let mut best_tour = Vec::new();
+        let mut best_distance = f64::INFINITY;
+        let mut best_probability = 0.0;
+
+        // Sample from quantum state based on amplitude probabilities
+        for (state_idx, amplitude) in state.amplitudes.iter().enumerate() {
+            let probability = amplitude.norm_sqr();
+
+            if probability > 1e-12 {
+                let tour = self.decode_quantum_state_to_tour(state_idx)?;
+                let distance = self.compute_tour_energy(&tour);
+
+                // Weight by quantum probability
+                let weighted_distance = distance / probability;
+
+                if weighted_distance < best_distance && tour.len() == self.num_cities {
+                    best_tour = tour;
+                    best_distance = distance;
+                    best_probability = probability;
+                }
+            }
+        }
+
+        if best_tour.is_empty() {
+            best_tour = self.generate_random_valid_tour();
+            best_distance = self.compute_tour_energy(&best_tour);
+        }
+
+        Ok(QuantumTSPSolution {
+            tour: best_tour,
+            distance: best_distance,
+            quantum_fidelity: best_probability,
+            quantum_iterations: 0,
+            classical_refinements: 0,
+        })
+    }
+
+    /// Compute solution fidelity
+    fn compute_solution_fidelity(&self, state: &QuantumState) -> SpatialResult<f64> {
+        // Compute fidelity as max amplitude probability
+        let max_probability = state
+            .amplitudes
+            .iter()
+            .map(|a| a.norm_sqr())
+            .fold(0.0, f64::max);
+
+        Ok(max_probability)
+    }
+
+    /// QAOA refinement for better solution quality
+    async fn qaoa_refinement(
+        &self,
+        solution: &QuantumTSPSolution,
+    ) -> SpatialResult<QuantumTSPSolution> {
+        let mut refined = solution.clone();
+
+        // Apply QAOA variational optimization
+        for layer in 0..self.qaoa_depth {
+            let gamma = PI * (layer + 1) as f64 / self.qaoa_depth as f64;
+            let beta = PI * 0.5 * (layer + 1) as f64 / self.qaoa_depth as f64;
+
+            // Apply problem Hamiltonian
+            refined = self.apply_problem_hamiltonian(&refined, gamma)?;
+
+            // Apply mixing Hamiltonian
+            refined = self.apply_mixing_hamiltonian(&refined, beta)?;
+        }
+
+        Ok(refined)
+    }
+
+    /// Apply problem Hamiltonian (cost function)
+    fn apply_problem_hamiltonian(
+        &self,
+        solution: &QuantumTSPSolution,
+        gamma: f64,
+    ) -> SpatialResult<QuantumTSPSolution> {
+        let mut improved = solution.clone();
+
+        // Local search moves guided by quantum phase
+        for i in 0..solution.tour.len() {
+            for j in (i + 2)..solution.tour.len() {
+                // Try 2-opt move
+                let mut new_tour = solution.tour.clone();
+                new_tour[i..=j].reverse();
+
+                let new_distance = self.compute_tour_energy(&new_tour);
+                let phase_factor = (-gamma * new_distance).cos();
+
+                // Accept move with quantum probability
+                if phase_factor > 0.5 && new_distance < improved.distance {
+                    improved.tour = new_tour;
+                    improved.distance = new_distance;
+                }
+            }
+        }
+
+        Ok(improved)
+    }
+
+    /// Apply mixing Hamiltonian (exploration)
+    fn apply_mixing_hamiltonian(
+        &self,
+        solution: &QuantumTSPSolution,
+        beta: f64,
+    ) -> SpatialResult<QuantumTSPSolution> {
+        let mut mixed = solution.clone();
+
+        // Quantum tunneling between nearby solutions
+        let mut rng = rng();
+
+        if beta > 0.5 {
+            // High mixing: explore more diverse solutions
+            for _ in 0..5 {
+                let i = rng.random_range(0..mixed.tour.len());
+                let j = rng.random_range(0..mixed.tour.len());
+
+                if i != j {
+                    mixed.tour.swap(i, j);
+                    let new_distance = self.compute_tour_energy(&mixed.tour);
+
+                    // Accept with quantum probability
+                    let quantum_prob = (-beta * (new_distance - solution.distance).abs()).exp();
+                    if new_distance < mixed.distance || rng.random_range(0.0..1.0) < quantum_prob {
+                        mixed.distance = new_distance;
+                    } else {
+                        // Revert
+                        mixed.tour.swap(i, j);
+                    }
+                }
+            }
+        }
+
+        Ok(mixed)
+    }
+
+    /// Classical refinement using local search
+    async fn classical_refinement(
+        &self,
+        solution: &QuantumTSPSolution,
+    ) -> SpatialResult<QuantumTSPSolution> {
+        let mut refined = solution.clone();
+        let mut improved = true;
+        let mut refinements = 0;
+
+        // 2-opt local search until no improvement
+        while improved && refinements < 100 {
+            improved = false;
+
+            for i in 0..refined.tour.len() {
+                for j in (i + 2)..refined.tour.len() {
+                    let mut new_tour = refined.tour.clone();
+                    new_tour[i..=j].reverse();
+
+                    let new_distance = self.compute_tour_energy(&new_tour);
+
+                    if new_distance < refined.distance {
+                        refined.tour = new_tour;
+                        refined.distance = new_distance;
+                        improved = true;
+                    }
+                }
+            }
+
+            refinements += 1;
+        }
+
+        refined.classical_refinements = refinements;
+        Ok(refined)
+    }
+}

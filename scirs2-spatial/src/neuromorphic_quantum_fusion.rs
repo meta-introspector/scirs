@@ -1649,4 +1649,103 @@ mod tests {
         assert_eq!(metrics.quantum_neural_speedup, 2.0);
         assert!(metrics.biological_plausibility > 0.5);
     }
+
+    #[tokio::test]
+    async fn test_comprehensive_fusion_workflow() {
+        // Demonstrate a complete neuromorphic-quantum fusion workflow
+
+        // Create synthetic spatial data representing sensor network
+        let sensor_positions = array![
+            [0.0, 0.0],
+            [1.0, 0.0],
+            [2.0, 0.0],
+            [0.0, 1.0],
+            [1.0, 1.0],
+            [2.0, 1.0],
+            [0.0, 2.0],
+            [1.0, 2.0],
+            [2.0, 2.0]
+        ];
+
+        // Step 1: Quantum-enhanced clustering
+        let mut quantum_clusterer = QuantumSpikingClusterer::new(3)
+            .with_quantum_superposition(true)
+            .with_spike_timing_plasticity(true)
+            .with_quantum_entanglement(0.8)
+            .with_bio_inspired_adaptation(true);
+
+        let clustering_result = quantum_clusterer.cluster(&sensor_positions.view()).await;
+        assert!(clustering_result.is_ok());
+
+        let (clusters, quantum_spikes, fusion_metrics) = clustering_result.unwrap();
+        assert_eq!(clusters.len(), sensor_positions.nrows());
+        assert!(fusion_metrics.quantum_neural_speedup >= 1.0);
+        assert!(!quantum_spikes.is_empty());
+
+        // Step 2: Neural-guided quantum optimization for sensor placement
+        let mut neural_optimizer = NeuralQuantumOptimizer::new()
+            .with_neural_adaptation_rate(0.1)
+            .with_quantum_exploration_depth(5)
+            .with_bio_quantum_coupling(0.8);
+
+        // Objective: minimize total distance between sensors
+        let sensor_objective = Box::new(|params: &[f64]| -> f64 {
+            let mut total_distance = 0.0;
+            let n_sensors = params.len() / 2;
+
+            for i in 0..n_sensors {
+                for j in (i + 1)..n_sensors {
+                    let dx = params[i * 2] - params[j * 2];
+                    let dy = params[i * 2 + 1] - params[j * 2 + 1];
+                    total_distance += (dx * dx + dy * dy).sqrt();
+                }
+            }
+
+            // Penalize sensors too close to boundaries
+            for i in 0..n_sensors {
+                let x = params[i * 2];
+                let y = params[i * 2 + 1];
+                if x < 0.1 || x > 2.9 || y < 0.1 || y > 2.9 {
+                    total_distance += 10.0; // Penalty
+                }
+            }
+
+            total_distance
+        });
+
+        let optimization_result = neural_optimizer
+            .optimize_spatial_function(sensor_objective)
+            .await;
+        assert!(optimization_result.is_ok());
+
+        let opt_result = optimization_result.unwrap();
+        assert!(opt_result.convergence_achieved);
+        assert!(opt_result.neural_contribution > 0.0);
+        assert!(opt_result.quantum_contribution > 0.0);
+
+        // Step 3: Validate the fusion approach provided benefits
+        assert!(fusion_metrics.quantum_neural_speedup > 1.5); // Expect significant speedup
+        assert!(fusion_metrics.solution_quality_improvement > 0.1); // Better solutions
+        assert!(fusion_metrics.energy_efficiency_gain > 1.0); // More efficient
+        assert!(fusion_metrics.coherence_preservation > 0.5); // Quantum coherence maintained
+        assert!(fusion_metrics.biological_plausibility > 0.6); // Biologically plausible
+
+        println!("✅ Comprehensive neuromorphic-quantum fusion test passed!");
+        println!(
+            "   Quantum-neural speedup: {:.2}x",
+            fusion_metrics.quantum_neural_speedup
+        );
+        println!(
+            "   Solution quality improvement: {:.1}%",
+            fusion_metrics.solution_quality_improvement * 100.0
+        );
+        println!(
+            "   Energy efficiency gain: {:.2}x",
+            fusion_metrics.energy_efficiency_gain
+        );
+        println!(
+            "   Biological plausibility: {:.1}%",
+            fusion_metrics.biological_plausibility * 100.0
+        );
+    }
 }

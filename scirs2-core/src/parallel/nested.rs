@@ -5,7 +5,8 @@
 
 use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
 use crate::parallel::scheduler::{SchedulerConfigBuilder, WorkStealingScheduler};
-use crate::parallel_ops::*;
+use rayon::iter::ParallelIterator;
+use rayon::prelude::*;
 use std::cell::RefCell;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, RwLock};

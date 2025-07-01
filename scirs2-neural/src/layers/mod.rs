@@ -46,7 +46,7 @@
 //! use rand::SeedableRng;
 //!
 //! # fn example() -> scirs2_neural::error::Result<()> {
-//! let mut rng = SmallRng::seed_from_u64(42);
+//! let mut rng = rand::thread_rng();
 //!
 //! // Create a dense layer: 784 inputs -> 128 outputs with ReLU activation
 //! let dense = Dense::<f64>::new(784, 128, Some("relu"), &mut rng)?;
@@ -74,7 +74,7 @@
 //! use rand::SeedableRng;
 //!
 //! # fn example() -> scirs2_neural::error::Result<()> {
-//! let mut rng = SmallRng::seed_from_u64(42);
+//! let mut rng = rand::thread_rng();
 //! let mut model: Sequential<f32> = Sequential::new();
 //!
 //! // Build a multi-layer network
@@ -107,7 +107,7 @@
 //! use rand::SeedableRng;
 //!
 //! # fn example() -> scirs2_neural::error::Result<()> {
-//! let mut rng = SmallRng::seed_from_u64(42);
+//! let mut rng = rand::thread_rng();
 //!
 //! // Create conv layer: 3 input channels -> 32 output channels, 3x3 kernel
 //! let conv = Conv2D::<f64>::new(3, 32, (3, 3), (1, 1), PaddingMode::Same, &mut rng)?;
@@ -135,7 +135,7 @@
 //! use rand::SeedableRng;
 //!
 //! # fn example() -> scirs2_neural::error::Result<()> {
-//! let mut rng = SmallRng::seed_from_u64(42);
+//! let mut rng = rand::thread_rng();
 //! let dropout = Dropout::<f64>::new(0.5, &mut rng)?;
 //! let mut batchnorm = BatchNorm::<f64>::new(128, 0.9, 1e-5, &mut rng)?;
 //!
@@ -232,7 +232,7 @@ use std::fmt::Debug;
 /// use rand::SeedableRng;
 ///
 /// # fn example() -> scirs2_neural::error::Result<()> {
-/// let mut rng = SmallRng::seed_from_u64(42);
+/// let mut rng = rand::thread_rng();
 /// let mut layer = Dense::<f64>::new(10, 5, None, &mut rng)?;
 ///
 /// let input = Array::zeros((2, 10)).into_dyn();
@@ -268,7 +268,7 @@ pub trait Layer<F: Float + Debug + ScalarOperand>: Send + Sync {
     /// use rand::SeedableRng;
     ///
     /// # fn example() -> scirs2_neural::error::Result<()> {
-    /// let mut rng = SmallRng::seed_from_u64(42);
+    /// let mut rng = rand::thread_rng();
     /// let layer = Dense::<f64>::new(3, 2, Some("relu"), &mut rng)?;
     ///
     /// let input = Array::from_shape_vec((1, 3), vec![1.0, 2.0, 3.0])?.into_dyn();
@@ -301,7 +301,7 @@ pub trait Layer<F: Float + Debug + ScalarOperand>: Send + Sync {
     /// use rand::SeedableRng;
     ///
     /// # fn example() -> scirs2_neural::error::Result<()> {
-    /// let mut rng = SmallRng::seed_from_u64(42);
+    /// let mut rng = rand::thread_rng();
     /// let layer = Dense::<f64>::new(3, 2, None, &mut rng)?;
     ///
     /// let input = Array::zeros((1, 3)).into_dyn();
@@ -336,7 +336,7 @@ pub trait Layer<F: Float + Debug + ScalarOperand>: Send + Sync {
     /// use rand::SeedableRng;
     ///
     /// # fn example() -> scirs2_neural::error::Result<()> {
-    /// let mut rng = SmallRng::seed_from_u64(42);
+    /// let mut rng = rand::thread_rng();
     /// let mut layer = Dense::<f64>::new(3, 2, None, &mut rng)?;
     ///
     /// // Simulate forward/backward pass
@@ -377,7 +377,7 @@ pub trait Layer<F: Float + Debug + ScalarOperand>: Send + Sync {
     /// use rand::SeedableRng;
     ///
     /// # fn example() -> scirs2_neural::error::Result<()> {
-    /// let mut rng = SmallRng::seed_from_u64(42);
+    /// let mut rng = rand::thread_rng();
     /// let layer = Dense::<f64>::new(3, 2, None, &mut rng)?;
     ///
     /// let params = layer.params();
@@ -426,7 +426,7 @@ pub trait Layer<F: Float + Debug + ScalarOperand>: Send + Sync {
     /// use rand::rngs::SmallRng;
     /// use rand::SeedableRng;
     ///
-    /// let mut rng = SmallRng::seed_from_u64(42);
+    /// let mut rng = rand::thread_rng();
     /// let mut dropout = Dropout::<f32>::new(0.5, &mut rng).unwrap();
     /// assert!(dropout.is_training()); // Default is training mode
     ///
@@ -554,7 +554,7 @@ pub enum LayerConfig {
 /// use rand::SeedableRng;
 ///
 /// # fn example() -> scirs2_neural::error::Result<()> {
-/// let mut rng = SmallRng::seed_from_u64(42);
+/// let mut rng = rand::thread_rng();
 /// let mut model: Sequential<f32> = Sequential::new();
 ///
 /// // Build a 3-layer classifier for MNIST (28x28 = 784 inputs, 10 classes)
@@ -585,7 +585,7 @@ pub enum LayerConfig {
 /// use rand::SeedableRng;
 ///
 /// # fn example() -> scirs2_neural::error::Result<()> {
-/// let mut rng = SmallRng::seed_from_u64(42);
+/// let mut rng = rand::thread_rng();
 /// let mut cnn: Sequential<f32> = Sequential::new();
 ///
 /// // Convolutional feature extractor
@@ -618,7 +618,7 @@ pub enum LayerConfig {
 /// use rand::SeedableRng;
 ///
 /// # fn example() -> scirs2_neural::error::Result<()> {
-/// let mut rng = SmallRng::seed_from_u64(42);
+/// let mut rng = rand::thread_rng();
 /// let mut model: Sequential<f32> = Sequential::new();
 /// model.add_layer(Dense::new(10, 5, Some("relu"), &mut rng)?);
 /// model.add_layer(Dropout::new(0.5, &mut rng)?); // 50% dropout

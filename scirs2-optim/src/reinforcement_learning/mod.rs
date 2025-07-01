@@ -245,7 +245,7 @@ impl<T: Float> TrajectoryBatch<T> {
             // Convert Vec<bool> back to Array1<bool>
             let dones_array = Array1::from_vec(dones);
 
-            let mut mini_batch = TrajectoryBatch {
+            let mini_batch = TrajectoryBatch {
                 observations: obs,
                 actions: acts,
                 log_probs,

@@ -5,6 +5,7 @@
 
 use crate::error::{SpecialError, SpecialResult};
 use crate::gamma::{betainc_regularized, gamma};
+use crate::incomplete_gamma::{gammainc, gammaincc};
 use crate::validation::{check_finite, check_probability};
 use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, FromPrimitive};
@@ -197,7 +198,7 @@ pub fn bdtri<T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign 
 ///
 /// # Returns
 /// P(X <= k) where X ~ Poisson(lambda)
-pub fn pdtr<T: Float + FromPrimitive + Display + Debug + AddAssign>(
+pub fn pdtr<T: Float + FromPrimitive + Display + Debug + AddAssign + MulAssign>(
     k: usize,
     lambda: T,
 ) -> SpecialResult<T> {
@@ -209,22 +210,18 @@ pub fn pdtr<T: Float + FromPrimitive + Display + Debug + AddAssign>(
     }
 
     // Use the regularized incomplete gamma function
-    // P(X <= k) = Q(k+1, lambda) = gammaincc(k+1, lambda)
+    // P(X <= k) = P(k+1, lambda) = gammainc(k+1, lambda)
     let k_plus_1 = T::from_usize(k + 1).unwrap();
 
-    // For now, use the complementary relationship with gamma
-    // This should be replaced with proper gammaincc when implemented
-    let gamma_full = gamma(k_plus_1);
-    let gamma_inc = gamma_incomplete_lower(k_plus_1, lambda)?;
-
-    Ok(gamma_inc / gamma_full)
+    // Use proper gammainc implementation
+    gammainc(k_plus_1, lambda)
 }
 
 /// Poisson survival function
 ///
 /// # Returns
 /// P(X > k) where X ~ Poisson(lambda)
-pub fn pdtrc<T: Float + FromPrimitive + Display + Debug + AddAssign>(
+pub fn pdtrc<T: Float + FromPrimitive + Display + Debug + AddAssign + MulAssign>(
     k: usize,
     lambda: T,
 ) -> SpecialResult<T> {
@@ -235,12 +232,11 @@ pub fn pdtrc<T: Float + FromPrimitive + Display + Debug + AddAssign>(
         ));
     }
 
-    // P(X > k) = P(k+1, lambda) = gammainc(k+1, lambda)
+    // P(X > k) = Q(k+1, lambda) = gammaincc(k+1, lambda)
     let k_plus_1 = T::from_usize(k + 1).unwrap();
-    let gamma_full = gamma(k_plus_1);
-    let gamma_inc = gamma_incomplete_upper(k_plus_1, lambda)?;
 
-    Ok(gamma_inc / gamma_full)
+    // Use proper gammaincc implementation
+    gammaincc(k_plus_1, lambda)
 }
 
 // Chi-square distribution functions
@@ -774,8 +770,7 @@ fn kolmogorov_inverse_enhanced_bisection<T: Float + FromPrimitive + Display>(
     Ok((low + high) / T::from_f64(2.0).unwrap())
 }
 
-// Helper functions for incomplete gamma (simplified versions)
-// These should be replaced with proper implementations
+// Note: Obsolete helper functions removed - now using proper incomplete_gamma module
 
 fn gamma_incomplete_lower<T: Float + FromPrimitive + Debug + AddAssign>(
     a: T,

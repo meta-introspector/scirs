@@ -784,7 +784,7 @@ mod tests {
     #[test]
     fn test_feed_forward_shape() {
         // Set up feed-forward network
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = rand::thread_rng();
         let d_model = 64;
         let d_ff = 256;
         let ff = FeedForward::<f64>::new(d_model, d_ff, 0.1, &mut rng).unwrap();
@@ -804,7 +804,7 @@ mod tests {
     #[test]
     fn test_encoder_layer_shape() {
         // Set up encoder layer
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = rand::thread_rng();
         let d_model = 64;
         let n_heads = 4;
         let d_ff = 256;
@@ -830,7 +830,7 @@ mod tests {
     #[test]
     fn test_encoder_stack_shape() {
         // Set up encoder
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = rand::thread_rng();
         let d_model = 64;
         let n_layers = 2;
         let n_heads = 4;

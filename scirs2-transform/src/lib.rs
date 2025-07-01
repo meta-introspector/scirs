@@ -70,6 +70,10 @@ pub mod image;
 /// Utility functions and helpers for data transformation
 pub mod utils;
 
+/// Test module for ultrathink implementations
+#[cfg(test)]
+mod ultrathink_test;
+
 /// Performance optimizations and enhanced implementations
 pub mod performance;
 
@@ -195,13 +199,15 @@ pub use auto_feature_engineering::{
 // Quantum optimization exports
 pub use quantum_optimization::{
     QuantumHyperparameterTuner, QuantumInspiredOptimizer, QuantumParticle,
-    QuantumTransformationOptimizer,
+    QuantumTransformationOptimizer, UltraThinkQuantumMetrics, UltraThinkQuantumOptimizer,
+    UltraThinkQuantumParams,
 };
 
 // Neuromorphic computing exports
 pub use neuromorphic_adaptation::{
     NeuromorphicAdaptationNetwork, NeuromorphicMemorySystem, NeuromorphicTransformationSystem,
-    SpikingNeuron, SystemState, TransformationEpisode,
+    SpikingNeuron, SystemState, TransformationEpisode, UltraThinkNeuromorphicMetrics,
+    UltraThinkNeuromorphicProcessor,
 };
 
 // Production monitoring exports

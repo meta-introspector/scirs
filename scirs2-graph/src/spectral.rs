@@ -8,6 +8,7 @@
 
 use ndarray::{s, Array1, Array2, ArrayView1, ArrayViewMut1};
 use rand::Rng;
+#[cfg(feature = "parallel")]
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 

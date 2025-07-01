@@ -1029,7 +1029,7 @@ mod tests {
 
         // Add noise
         use rand::prelude::*;
-        let mut rng = thread_rng();
+        let mut rng = rand::rng();
         let noisy_signal: Vec<f64> = clean_signal
             .iter()
             .map(|&s| s + 0.1 * rng.gen_range(-1.0..1.0))

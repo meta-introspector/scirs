@@ -2808,6 +2808,12 @@ impl PrefetchEngine {
     }
 }
 
+impl Default for IntelligentCacheSystem {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl IntelligentCacheSystem {
     pub fn new() -> Self {
         Self {
@@ -2890,6 +2896,12 @@ impl IntelligentCacheSystem {
             }
         }
         Ok(None)
+    }
+}
+
+impl Default for DataOptimizationEngine {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -3062,7 +3074,7 @@ impl DataOptimizationEngine {
                 let printable_count = data
                     .iter()
                     .take(100)
-                    .filter(|&&b| b >= 32 && b <= 126 || b == 9 || b == 10 || b == 13)
+                    .filter(|&&b| (32..=126).contains(&b) || b == 9 || b == 10 || b == 13)
                     .count();
 
                 if printable_count > 80 {
@@ -3116,8 +3128,14 @@ impl DataOptimizationEngine {
         }
 
         let compression_ratio = compressed.len() as f64 / original.len() as f64;
-        let quality_score = (1.0 - compression_ratio).max(0.0).min(1.0);
+        let quality_score = (1.0 - compression_ratio).clamp(0.0, 1.0);
         Ok(quality_score)
+    }
+}
+
+impl Default for ParallelTransferManager {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -3139,6 +3157,12 @@ impl ParallelTransferManager {
                 queue_efficiency: 0.0,
             },
         }
+    }
+}
+
+impl Default for CloudSecurityManager {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -3200,6 +3224,12 @@ impl CloudSecurityManager {
     }
 }
 
+impl Default for CloudStorageMonitoring {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CloudStorageMonitoring {
     pub fn new() -> Self {
         Self {
@@ -3257,6 +3287,12 @@ impl CloudStorageMonitoring {
                 enabled: true,
             }],
         }
+    }
+}
+
+impl Default for CloudPerformanceAnalytics {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

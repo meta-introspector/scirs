@@ -493,7 +493,7 @@ mod tests {
     #[test]
     fn test_decoder_layer_shape() {
         // Set up decoder layer
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = rand::thread_rng();
         let d_model = 64;
         let n_heads = 4;
         let d_ff = 256;
@@ -526,7 +526,7 @@ mod tests {
     #[test]
     fn test_decoder_stack_shape() {
         // Set up decoder
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = rand::thread_rng();
         let d_model = 64;
         let n_layers = 2;
         let n_heads = 4;
@@ -561,7 +561,7 @@ mod tests {
     #[test]
     fn test_decoder_causal_attention() {
         // Set up decoder layer
-        let mut rng = SmallRng::seed_from_u64(42);
+        let mut rng = rand::thread_rng();
         let d_model = 64;
         let n_heads = 4;
         let d_ff = 256;

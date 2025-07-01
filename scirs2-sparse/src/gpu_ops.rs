@@ -3161,13 +3161,13 @@ mod tests {
         let options = GpuOptions::default();
 
         // Small matrix should not use GPU
-        assert!(!should_use_gpu::<f64>(100, 100, 500, &options));
+        assert!(!should_use_gpu(100, 100, 500, &options));
 
         // Large matrix should use GPU (if dense enough)
-        assert!(should_use_gpu::<f64>(2000, 2000, 400000, &options));
+        assert!(should_use_gpu(2000, 2000, 400000, &options));
 
         // Large but very sparse matrix should not use GPU
-        assert!(!should_use_gpu::<f64>(2000, 2000, 100, &options));
+        assert!(!should_use_gpu(2000, 2000, 100, &options));
     }
 
     #[test]
