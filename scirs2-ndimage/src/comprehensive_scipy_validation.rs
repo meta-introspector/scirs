@@ -5,7 +5,7 @@
 //! module. It includes precision testing, edge case validation, and regression
 //! testing to ensure numerical correctness and compatibility.
 
-use crate::error::Result;
+use crate::error::NdimageResult;
 use crate::filters::*;
 use crate::interpolation::*;
 use crate::measurements::*;

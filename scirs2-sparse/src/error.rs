@@ -87,6 +87,14 @@ pub enum SparseError {
     /// Compression error
     #[error("Compression error: {0}")]
     CompressionError(String),
+
+    /// I/O error with custom message
+    #[error("I/O error: {0}")]
+    Io(String),
+
+    /// Block not found error
+    #[error("Block not found: {0}")]
+    BlockNotFound(String),
 }
 
 /// Result type for sparse matrix/array operations

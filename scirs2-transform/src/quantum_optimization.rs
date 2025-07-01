@@ -8,6 +8,8 @@ use crate::error::{Result, TransformError};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use rand::Rng;
 use scirs2_core::validation::{check_finite, check_not_empty};
+use scirs2_core::simd_ops::SimdUnifiedOps;
+use scirs2_core::parallel_ops::*;
 use std::collections::HashMap;
 
 /// Quantum-inspired particle for optimization
@@ -63,16 +65,17 @@ impl QuantumInspiredOptimizer {
             ));
         }
 
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut particles = Vec::with_capacity(population_size);
 
         // Initialize quantum particles
         for _ in 0..population_size {
             let position: Array1<f64> =
-                Array1::from_iter(bounds.iter().map(|(min, max)| rng.gen_range(*min..*max)));
+                Array1::from_iter(bounds.iter().map(|(min, max)| rng.random_range(*min..*max)));
 
             let velocity = Array1::zeros(dimension);
-            let superposition = Array1::from_iter((0..dimension).map(|_| rng.gen_range(0.0..1.0)));
+            let superposition =
+                Array1::from_iter((0..dimension).map(|_| rng.random_range(0.0..1.0)));
 
             particles.push(QuantumParticle {
                 position: position.clone(),
@@ -80,8 +83,8 @@ impl QuantumInspiredOptimizer {
                 best_position: position,
                 best_fitness: f64::NEG_INFINITY,
                 superposition,
-                phase: rng.gen_range(0.0..2.0 * std::f64::consts::PI),
-                entanglement: rng.gen_range(0.0..1.0),
+                phase: rng.random_range(0.0..2.0 * std::f64::consts::PI),
+                entanglement: rng.random_range(0.0..1.0),
             });
         }
 
@@ -102,7 +105,7 @@ impl QuantumInspiredOptimizer {
     where
         F: Fn(&Array1<f64>) -> f64,
     {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         for iteration in 0..self.max_iterations {
             // Update quantum states and evaluate fitness
@@ -134,7 +137,7 @@ impl QuantumInspiredOptimizer {
             self.update_quantum_entanglement()?;
 
             // Quantum collapse with probability
-            if rng.gen::<f64>() < self.collapse_probability {
+            if rng.random_range(0.0..1.0) < self.collapse_probability {
                 self.quantum_collapse()?;
             }
 
@@ -196,18 +199,18 @@ impl QuantumInspiredOptimizer {
 
     /// Quantum collapse operation
     fn quantum_collapse(&mut self) -> Result<()> {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         for particle in &mut self.particles {
             // Collapse superposition with probability
             for i in 0..particle.superposition.len() {
-                if rng.gen::<f64>() < 0.3 {
-                    particle.superposition[i] = if rng.gen::<bool>() { 1.0 } else { 0.0 };
+                if rng.random_range(0.0..1.0) < 0.3 {
+                    particle.superposition[i] = if rng.random_range(0.0..1.0) < 0.5 { 1.0 } else { 0.0 };
                 }
             }
 
             // Reset quantum phase
-            particle.phase = rng.gen_range(0.0..2.0 * std::f64::consts::PI);
+            particle.phase = rng.random_range(0.0..2.0 * std::f64::consts::PI);
         }
 
         Ok(())
@@ -687,7 +690,7 @@ impl UltraThinkQuantumOptimizer {
             ));
         }
 
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut particles = Vec::with_capacity(population_size);
         let parallel_chunks = num_cpus::get().min(8);
 
@@ -695,12 +698,13 @@ impl UltraThinkQuantumOptimizer {
         for _ in 0..population_size {
             let position: Array1<f64> = Array1::from_iter(bounds.iter().map(|(min, max)| {
                 // Use Sobol sequence for better initial distribution
-                let uniform = rng.gen_range(0.0..1.0);
+                let uniform = rng.random_range(0.0..1.0);
                 min + uniform * (max - min)
             }));
 
             let velocity = Array1::zeros(dimension);
-            let superposition = Array1::from_iter((0..dimension).map(|_| rng.gen_range(0.0..1.0)));
+            let superposition =
+                Array1::from_iter((0..dimension).map(|_| rng.random_range(0.0..1.0)));
 
             particles.push(QuantumParticle {
                 position: position.clone(),
@@ -708,8 +712,8 @@ impl UltraThinkQuantumOptimizer {
                 best_position: position,
                 best_fitness: f64::NEG_INFINITY,
                 superposition,
-                phase: rng.gen_range(0.0..2.0 * std::f64::consts::PI),
-                entanglement: rng.gen_range(0.0..1.0),
+                phase: rng.random_range(0.0..2.0 * std::f64::consts::PI),
+                entanglement: rng.random_range(0.0..1.0),
             });
         }
 
@@ -854,7 +858,7 @@ impl UltraThinkQuantumOptimizer {
             let social_component = &self.global_best_position - &particle.position;
 
             // Update velocity with quantum-inspired modifications
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
             let c1 = 2.0 * particle.entanglement; // Cognitive coefficient
             let c2 = 2.0 * (1.0 - particle.entanglement); // Social coefficient
             let w = 0.9 - 0.5 * (i as f64 / self.particles.len() as f64); // Inertia weight
@@ -871,7 +875,7 @@ impl UltraThinkQuantumOptimizer {
                     + c2 * r2 * social_component[j];
 
                 // Apply quantum tunneling effect
-                if rng.gen::<f64>() < self.adaptive_params.tunneling_probability {
+                if rng.random_range(0.0..1.0) < self.adaptive_params.tunneling_probability {
                     particle.velocity[j] *= 2.0; // Quantum tunneling boost
                 }
             }
@@ -898,7 +902,7 @@ impl UltraThinkQuantumOptimizer {
         let progress = iteration as f64 / max_iterations as f64;
 
         // ✅ ULTRATHINK OPTIMIZATION: Adaptive quantum collapse
-        if rand::thread_rng().gen::<f64>() < self.adaptive_params.collapse_probability {
+        if rand::rng().random_range(0.0..1.0) < self.adaptive_params.collapse_probability {
             self.quantum_collapse_ultra()?;
         }
 
@@ -940,7 +944,7 @@ impl UltraThinkQuantumOptimizer {
 
     /// ✅ ULTRATHINK MODE: Advanced quantum collapse with selective decoherence
     fn quantum_collapse_ultra(&mut self) -> Result<()> {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         for particle in &mut self.particles {
             // ✅ ULTRATHINK OPTIMIZATION: Selective collapse based on fitness
@@ -951,15 +955,15 @@ impl UltraThinkQuantumOptimizer {
             };
 
             for i in 0..particle.superposition.len() {
-                if rng.gen::<f64>() < collapse_strength {
-                    particle.superposition[i] = if rng.gen::<bool>() { 1.0 } else { 0.0 };
+                if rng.random_range(0.0..1.0) < collapse_strength {
+                    particle.superposition[i] = if rng.random_range(0.0..1.0) < 0.5 { 1.0 } else { 0.0 };
                 }
             }
 
             // ✅ ULTRATHINK OPTIMIZATION: Quantum phase reset with memory
             let phase_reset_prob = collapse_strength * 0.5;
-            if rng.gen::<f64>() < phase_reset_prob {
-                particle.phase = rng.gen_range(0.0..2.0 * std::f64::consts::PI);
+            if rng.random_range(0.0..1.0) < phase_reset_prob {
+                particle.phase = rng.random_range(0.0..2.0 * std::f64::consts::PI);
             }
         }
 

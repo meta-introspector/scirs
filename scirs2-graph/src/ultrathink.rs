@@ -1520,7 +1520,7 @@ pub fn create_adaptive_ultrathink_processor() -> UltrathinkProcessor {
 fn get_system_memory_mb() -> usize {
     #[cfg(feature = "sysinfo")]
     {
-        use sysinfo::{System, SystemExt};
+        use sysinfo::System;
         let mut sys = System::new_all();
         sys.refresh_memory();
         (sys.available_memory() / 1024 / 1024) as usize

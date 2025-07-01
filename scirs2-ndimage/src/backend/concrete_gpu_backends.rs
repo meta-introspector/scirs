@@ -14,9 +14,14 @@ use ndarray::{Array, ArrayView, Dimension, Ix2};
 use num_traits::{Float, FromPrimitive};
 
 use crate::backend::gpu_acceleration_framework::{
-    CompiledKernel, CudaBufferHandle, CudaKernelHandle, GpuBuffer, GpuBufferHandle, KernelHandle,
-    OpenCLBufferHandle, OpenCLKernelHandle,
+    CompiledKernel, GpuBuffer, GpuBufferHandle, KernelHandle,
 };
+
+#[cfg(feature = "cuda")]
+use crate::backend::gpu_acceleration_framework::{CudaBufferHandle, CudaKernelHandle};
+
+#[cfg(feature = "opencl")]
+use crate::backend::gpu_acceleration_framework::{OpenCLBufferHandle, OpenCLKernelHandle};
 use crate::error::{NdimageError, NdimageResult};
 
 /// CUDA backend implementation

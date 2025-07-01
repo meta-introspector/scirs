@@ -939,7 +939,7 @@ pub enum EvaluationStatus {
     InProgress,
 }
 
-impl<T: Float> PrivateHyperparameterOptimizer<T> {
+impl<T: Float + 'static> PrivateHyperparameterOptimizer<T> {
     /// Create new private hyperparameter optimizer
     pub fn new(
         config: PrivateHPOConfig<T>,
@@ -1392,8 +1392,8 @@ impl<T: Float> NoisyOptimizer<T> for PrivateBayesianOptimization<T> {
 
     fn update(
         &mut self,
-        config: &ParameterConfiguration<T>,
-        result: &HPOResult<T>,
+        _config: &ParameterConfiguration<T>,
+        _result: &HPOResult<T>,
         _privacy_budget: &PrivacyBudget,
     ) -> Result<(), OptimizerError> {
         // Update Gaussian process model with new data point
@@ -1593,7 +1593,7 @@ impl<T: Float> PrivateObjective<T> {
     }
 
     pub fn evaluate(
-        &self,
+        &mut self,
         config: &ParameterConfiguration<T>,
         privacy_budget: &PrivacyBudget,
     ) -> Result<HPOResult<T>, OptimizerError> {

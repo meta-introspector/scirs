@@ -195,15 +195,15 @@ impl SimdDistanceMetrics {
 
         // Use unified SIMD operations for distance calculation
         let diff = F::simd_sub(&a.view(), &b.view());
-        let squared_diff = F::simd_mul(&diff, &diff);
-        let distance = F::simd_sum(&squared_diff).sqrt();
+        let squared_diff = F::simd_mul(&diff.view(), &diff.view());
+        let distance = F::simd_sum(&squared_diff.view()).sqrt();
         Ok(distance)
     }
 
     /// Compute Manhattan distance using SIMD
     pub fn manhattan_distance_simd<F>(&self, a: &Array1<F>, b: &Array1<F>) -> Result<F>
     where
-        F: Float + SimdUnifiedOps + std::fmt::Debug + 'static,
+        F: Float + SimdUnifiedOps + std::fmt::Debug + 'static + std::iter::Sum,
     {
         if a.len() != b.len() {
             return Err(MetricsError::InvalidInput(
@@ -220,8 +220,8 @@ impl SimdDistanceMetrics {
 
         // Use unified SIMD operations for Manhattan distance
         let diff = F::simd_sub(&a.view(), &b.view());
-        let abs_diff = F::simd_abs(&diff);
-        let distance = F::simd_sum(&abs_diff);
+        let abs_diff = F::simd_abs(&diff.view());
+        let distance = F::simd_sum(&abs_diff.view());
         Ok(distance)
     }
 
@@ -307,7 +307,7 @@ impl SimdDistanceMetrics {
 
     fn manhattan_distance_standard<F>(&self, a: &Array1<F>, b: &Array1<F>) -> Result<F>
     where
-        F: Float + std::fmt::Debug,
+        F: Float + std::fmt::Debug + std::iter::Sum,
     {
         let sum: F = a.iter().zip(b.iter()).map(|(x, y)| (*x - *y).abs()).sum();
         Ok(sum)

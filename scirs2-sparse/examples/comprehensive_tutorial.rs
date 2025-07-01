@@ -9,7 +9,7 @@ use scirs2_sparse::{
     csr_array::CsrArray,
     error::SparseResult,
     linalg::{
-        bicgstab, cg, condest, gcrot, gmres, lu_decomposition_with_options,
+        bicgstab, cg, gcrot, gmres, lu_decomposition_with_options,
         pivoted_cholesky_decomposition, tfqmr, twonormest_enhanced, AsLinearOperator,
         BiCGSTABOptions, CGOptions, GCROTOptions, GMRESOptions, IdentityOperator, LUOptions,
         LinearOperator, PivotingStrategy, TFQMROptions,

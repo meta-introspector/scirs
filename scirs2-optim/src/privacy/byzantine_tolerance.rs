@@ -4,7 +4,7 @@
 //! tolerate malicious participants in federated learning scenarios.
 
 use crate::error::OptimizerError;
-use ndarray::{Array1, Array2, ArrayBase, Data, Dimension};
+use ndarray::{Array1, Array2, Dimension};
 use num_traits::Float;
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -272,11 +272,12 @@ pub struct VerificationRule<T: Float> {
 impl<T: Float> ByzantineTolerantAggregator<T> {
     /// Create new Byzantine tolerant aggregator
     pub fn new(config: ByzantineConfig) -> Self {
+        let anomaly_threshold = config.anomaly_threshold;
         Self {
             config,
             reputation_scores: HashMap::new(),
             behavior_history: HashMap::new(),
-            anomaly_detector: AnomalyDetector::new(config.anomaly_threshold),
+            anomaly_detector: AnomalyDetector::new(anomaly_threshold),
             statistics_engine: StatisticalAnalysis::new(100), // 100-round window
             gradient_verifier: GradientVerifier::new(),
         }

@@ -698,15 +698,27 @@ impl AdaptiveStatsAllocator {
 
     /// Optimize memory pools based on usage patterns
     pub fn optimize_pools(&mut self) -> StatsResult<()> {
-        if let Ok(analyzer) = self.allocation_patterns.read() {
-            for (operation_type, pattern) in analyzer.pattern_cache.iter() {
-                if pattern.confidence > 0.8 {
-                    // Create specialized pool for high-confidence patterns
-                    let pool_name = format!("specialized_{}", operation_type);
-                    let optimal_size = (pattern.typical_size * 100).max(64 * 1024);
-                    self.create_memory_pool(&pool_name, optimal_size)?;
-                }
+        // Collect the data first to avoid borrow checker issues
+        let pools_to_create: Vec<(String, usize)> = {
+            if let Ok(analyzer) = self.allocation_patterns.read() {
+                analyzer
+                    .pattern_cache
+                    .iter()
+                    .filter(|(_, pattern)| pattern.confidence > 0.8)
+                    .map(|(operation_type, pattern)| {
+                        let pool_name = format!("specialized_{}", operation_type);
+                        let optimal_size = (pattern.typical_size * 100).max(64 * 1024);
+                        (pool_name, optimal_size)
+                    })
+                    .collect()
+            } else {
+                Vec::new()
             }
+        };
+
+        // Now create the pools
+        for (pool_name, optimal_size) in pools_to_create {
+            self.create_memory_pool(&pool_name, optimal_size)?;
         }
         Ok(())
     }

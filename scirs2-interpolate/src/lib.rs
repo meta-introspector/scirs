@@ -221,6 +221,7 @@ pub mod stress_testing;
 pub mod tension;
 pub mod tensor;
 pub mod timeseries;
+pub mod ultrathink_coordinator;
 pub mod utils;
 pub mod voronoi;
 
@@ -242,6 +243,14 @@ pub mod scipy_complete_parity;
 pub mod scipy_parity_completion;
 
 // Re-exports for convenience
+
+// Ultrathink mode coordinator for advanced AI-driven optimization
+pub use ultrathink_coordinator::{
+    create_ultrathink_interpolation_coordinator,
+    create_ultrathink_interpolation_coordinator_with_config, InterpolationPerformanceMetrics,
+    InterpolationRecommendation, UltrathinkInterpolationConfig, UltrathinkInterpolationCoordinator,
+};
+
 pub use adaptive_gp::{
     make_adaptive_gp, AdaptiveGPConfig, AdaptiveGaussianProcess, GPStats, KernelHyperparameters,
     KernelModel, KernelType as GPKernelType,

@@ -209,7 +209,7 @@ impl Synapse {
 
 impl SpikingNeuralNetwork {
     /// Create a new spiking neural network
-    pub fn new(config: NeuromorphicConfig, num_parameters: usize) -> Self {
+    pub fn new(config: NeuromorphicConfig, _num_parameters: usize) -> Self {
         let mut neurons = Vec::with_capacity(config.num_neurons);
         for _ in 0..config.num_neurons {
             neurons.push(SpikingNeuron::new(&config));
@@ -229,13 +229,14 @@ impl SpikingNeuralNetwork {
             }
         }
 
+        let num_neurons = config.num_neurons;
         Self {
             config,
             neurons,
             synapses,
             current_time: 0.0,
             spike_history: VecDeque::with_capacity(10000),
-            population_activity: Array1::zeros(config.num_neurons),
+            population_activity: Array1::zeros(num_neurons),
         }
     }
 
@@ -283,14 +284,18 @@ impl SpikingNeuralNetwork {
     pub fn simulate_step(&mut self, objective_feedback: f64) -> Result<Vec<usize>> {
         let mut spiked_neurons = Vec::new();
 
+        // Collect inputs for all neurons first to avoid borrow checker issues
+        let inputs: Vec<(f64, f64)> = (0..self.neurons.len())
+            .map(|neuron_idx| {
+                let synaptic_input = self.compute_synaptic_input(neuron_idx);
+                let feedback_input = self.compute_feedback_input(neuron_idx, objective_feedback);
+                (synaptic_input, feedback_input)
+            })
+            .collect();
+
         // Update all neurons
         for (neuron_idx, neuron) in self.neurons.iter_mut().enumerate() {
-            // Compute synaptic input
-            let synaptic_input = self.compute_synaptic_input(neuron_idx);
-
-            // Add objective-based feedback
-            let feedback_input = self.compute_feedback_input(neuron_idx, objective_feedback);
-
+            let (synaptic_input, feedback_input) = inputs[neuron_idx];
             let total_input = synaptic_input + feedback_input;
 
             // Update neuron

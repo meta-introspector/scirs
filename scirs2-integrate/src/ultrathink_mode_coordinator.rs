@@ -112,10 +112,17 @@ impl<
     /// Create a new ultrathink mode coordinator
     pub fn new(config: UltrathinkModeConfig) -> IntegrateResult<Self> {
         let gpu_accelerator = if config.enable_gpu {
-            Arc::new(Mutex::new(UltraGPUAccelerator::new()?))
+            // Try to create GPU accelerator, fallback to CPU mode if GPU not available
+            match UltraGPUAccelerator::new() {
+                Ok(accelerator) => Arc::new(Mutex::new(accelerator)),
+                Err(_) => {
+                    // GPU not available, use CPU fallback mode
+                    Arc::new(Mutex::new(UltraGPUAccelerator::new_with_cpu_fallback()?))
+                }
+            }
         } else {
-            // Create a dummy accelerator for interface consistency
-            Arc::new(Mutex::new(UltraGPUAccelerator::new()?))
+            // Create a CPU fallback accelerator for interface consistency
+            Arc::new(Mutex::new(UltraGPUAccelerator::new_with_cpu_fallback()?))
         };
 
         let memory_optimizer = Arc::new(Mutex::new(UltraMemoryOptimizer::new()?));
@@ -178,8 +185,7 @@ impl<
         // Step 3: Real-time adaptation
         if self.config.enable_adaptive_optimization {
             let adaptive_optimizer = self.adaptive_optimizer.lock().unwrap();
-            let _adaptation_result =
-                self.apply_adaptive_optimization(&adaptive_optimizer, &start_time.elapsed())?;
+            self.apply_adaptive_optimization(&adaptive_optimizer, &start_time.elapsed())?;
             optimizations_applied.push("Real-time adaptation".to_string());
         }
 

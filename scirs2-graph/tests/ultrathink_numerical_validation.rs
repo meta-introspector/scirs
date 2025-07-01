@@ -398,6 +398,518 @@ fn generate_validation_report(results: &[ValidationResult]) -> String {
     report
 }
 
+/// Advanced algorithm-specific validation tests
+fn generate_algorithm_validation_tests() -> Vec<AlgorithmValidationTest> {
+    let mut tests = Vec::new();
+
+    // PageRank validation
+    tests.push(create_pagerank_validation_test());
+    
+    // Centrality measures validation
+    tests.push(create_centrality_validation_test());
+    
+    // Shortest path validation
+    tests.push(create_shortest_path_validation_test());
+    
+    // Community detection validation
+    tests.push(create_community_detection_validation_test());
+    
+    // Connected components validation
+    tests.push(create_connected_components_validation_test());
+
+    tests
+}
+
+#[derive(Debug, Clone)]
+struct AlgorithmValidationTest {
+    name: String,
+    graph: Graph<usize, f64>,
+    reference_implementation: fn(&Graph<usize, f64>) -> Result<ValidationOutput, String>,
+    ultrathink_implementation: fn(&Graph<usize, f64>, &mut UltrathinkProcessor) -> Result<ValidationOutput, String>,
+    tolerance: f64,
+    description: String,
+}
+
+#[derive(Debug, Clone)]
+enum ValidationOutput {
+    FloatArray(Vec<f64>),
+    IntArray(Vec<usize>),
+    Float(f64),
+    Integer(usize),
+    FloatMap(HashMap<usize, f64>),
+    IntMap(HashMap<usize, usize>),
+}
+
+/// Create PageRank validation test
+fn create_pagerank_validation_test() -> AlgorithmValidationTest {
+    // Create a simple 4-node graph with known PageRank values
+    let mut graph = Graph::new();
+    graph.add_edge(0, 1, 1.0).unwrap();
+    graph.add_edge(1, 2, 1.0).unwrap();
+    graph.add_edge(2, 0, 1.0).unwrap();
+    graph.add_edge(3, 0, 1.0).unwrap();
+
+    AlgorithmValidationTest {
+        name: "pagerank_validation".to_string(),
+        graph,
+        reference_implementation: |g| {
+            // Simple reference PageRank implementation
+            let nodes: Vec<_> = g.nodes().collect();
+            let n = nodes.len();
+            let damping = 0.85;
+            let mut ranks = vec![1.0 / n as f64; n];
+            let mut new_ranks = vec![0.0; n];
+
+            for _ in 0..100 { // iterations
+                for (i, &node) in nodes.iter().enumerate() {
+                    let out_degree = g.out_degree(node) as f64;
+                    if out_degree > 0.0 {
+                        let contribution = ranks[i] / out_degree;
+                        for neighbor in g.neighbors(node) {
+                            if let Some(neighbor_idx) = nodes.iter().position(|&n| n == neighbor) {
+                                new_ranks[neighbor_idx] += damping * contribution;
+                            }
+                        }
+                    }
+                }
+                
+                // Add random jump probability
+                for rank in &mut new_ranks {
+                    *rank += (1.0 - damping) / n as f64;
+                }
+                
+                ranks = new_ranks.clone();
+                new_ranks.fill(0.0);
+            }
+            
+            Ok(ValidationOutput::FloatArray(ranks))
+        },
+        ultrathink_implementation: |g, processor| {
+            let result = execute_with_enhanced_ultrathink(processor, g, "pagerank_validation", |graph| {
+                use scirs2_graph::measures::pagerank;
+                pagerank(graph, 0.85, Some(100), Some(1e-8))
+            });
+            
+            match result {
+                Ok(pagerank_map) => {
+                    let nodes: Vec<_> = g.nodes().collect();
+                    let ranks: Vec<f64> = nodes.iter()
+                        .map(|&node| pagerank_map.get(&node).copied().unwrap_or(0.0))
+                        .collect();
+                    Ok(ValidationOutput::FloatArray(ranks))
+                },
+                Err(e) => Err(format!("PageRank failed: {:?}", e)),
+            }
+        },
+        tolerance: 1e-3,
+        description: "Validates PageRank algorithm accuracy against reference implementation".to_string(),
+    }
+}
+
+/// Create centrality measures validation test
+fn create_centrality_validation_test() -> AlgorithmValidationTest {
+    // Create a star graph for centrality testing
+    let mut graph = Graph::new();
+    for i in 1..6 {
+        graph.add_edge(0, i, 1.0).unwrap();
+    }
+
+    AlgorithmValidationTest {
+        name: "centrality_validation".to_string(),
+        graph,
+        reference_implementation: |g| {
+            // Reference degree centrality (simple: just the degree)
+            let nodes: Vec<_> = g.nodes().collect();
+            let centralities: Vec<f64> = nodes.iter()
+                .map(|&node| g.degree(node) as f64)
+                .collect();
+            Ok(ValidationOutput::FloatArray(centralities))
+        },
+        ultrathink_implementation: |g, processor| {
+            let result = execute_with_enhanced_ultrathink(processor, g, "centrality_validation", |graph| {
+                use scirs2_graph::algorithms::centrality::degree_centrality;
+                degree_centrality(graph)
+            });
+            
+            match result {
+                Ok(centrality_map) => {
+                    let nodes: Vec<_> = g.nodes().collect();
+                    let centralities: Vec<f64> = nodes.iter()
+                        .map(|&node| centrality_map.get(&node).copied().unwrap_or(0.0))
+                        .collect();
+                    Ok(ValidationOutput::FloatArray(centralities))
+                },
+                Err(e) => Err(format!("Centrality calculation failed: {:?}", e)),
+            }
+        },
+        tolerance: EPSILON,
+        description: "Validates degree centrality calculation".to_string(),
+    }
+}
+
+/// Create shortest path validation test
+fn create_shortest_path_validation_test() -> AlgorithmValidationTest {
+    // Create a simple path graph
+    let mut graph = Graph::new();
+    graph.add_edge(0, 1, 2.0).unwrap();
+    graph.add_edge(1, 2, 3.0).unwrap();
+    graph.add_edge(2, 3, 1.0).unwrap();
+    graph.add_edge(0, 3, 10.0).unwrap(); // Longer direct path
+
+    AlgorithmValidationTest {
+        name: "shortest_path_validation".to_string(),
+        graph,
+        reference_implementation: |g| {
+            // Reference shortest path using simple Dijkstra
+            let source = 0;
+            let target = 3;
+            let nodes: Vec<_> = g.nodes().collect();
+            let mut distances = HashMap::new();
+            
+            for &node in &nodes {
+                distances.insert(node, if node == source { 0.0 } else { f64::INFINITY });
+            }
+            
+            let mut unvisited: std::collections::BinaryHeap<std::cmp::Reverse<(usize, f64)>> = std::collections::BinaryHeap::new();
+            unvisited.push(std::cmp::Reverse((source, 0.0)));
+            
+            while let Some(std::cmp::Reverse((current, current_dist))) = unvisited.pop() {
+                if current == target {
+                    break;
+                }
+                
+                if current_dist > *distances.get(&current).unwrap() {
+                    continue;
+                }
+                
+                for neighbor in g.neighbors(current) {
+                    if let Some(edge) = g.find_edge(current, neighbor) {
+                        let weight = *g.edge_weight(edge).unwrap();
+                        let new_dist = current_dist + weight;
+                        
+                        if new_dist < *distances.get(&neighbor).unwrap() {
+                            distances.insert(neighbor, new_dist);
+                            unvisited.push(std::cmp::Reverse((neighbor, new_dist)));
+                        }
+                    }
+                }
+            }
+            
+            Ok(ValidationOutput::Float(*distances.get(&target).unwrap()))
+        },
+        ultrathink_implementation: |g, processor| {
+            let result = execute_with_enhanced_ultrathink(processor, g, "shortest_path_validation", |graph| {
+                use scirs2_graph::algorithms::paths::shortest_path_dijkstra;
+                shortest_path_dijkstra(graph, 0)
+            });
+            
+            match result {
+                Ok(distances) => {
+                    let target_distance = distances.get(&3).copied().unwrap_or(f64::INFINITY);
+                    Ok(ValidationOutput::Float(target_distance))
+                },
+                Err(e) => Err(format!("Shortest path failed: {:?}", e)),
+            }
+        },
+        tolerance: 1e-10,
+        description: "Validates shortest path algorithm (Dijkstra) accuracy".to_string(),
+    }
+}
+
+/// Create community detection validation test
+fn create_community_detection_validation_test() -> AlgorithmValidationTest {
+    // Create a graph with two obvious communities
+    let mut graph = Graph::new();
+    
+    // Community 1: nodes 0, 1, 2
+    graph.add_edge(0, 1, 1.0).unwrap();
+    graph.add_edge(1, 2, 1.0).unwrap();
+    graph.add_edge(2, 0, 1.0).unwrap();
+    
+    // Community 2: nodes 3, 4, 5
+    graph.add_edge(3, 4, 1.0).unwrap();
+    graph.add_edge(4, 5, 1.0).unwrap();
+    graph.add_edge(5, 3, 1.0).unwrap();
+    
+    // Weak connection between communities
+    graph.add_edge(2, 3, 0.1).unwrap();
+
+    AlgorithmValidationTest {
+        name: "community_detection_validation".to_string(),
+        graph,
+        reference_implementation: |g| {
+            // Simple reference: return number of connected components
+            let nodes: Vec<_> = g.nodes().collect();
+            let mut visited = std::collections::HashSet::new();
+            let mut components = 0;
+            
+            for &node in &nodes {
+                if !visited.contains(&node) {
+                    // BFS to find all nodes in this component
+                    let mut queue = std::collections::VecDeque::new();
+                    queue.push_back(node);
+                    visited.insert(node);
+                    
+                    while let Some(current) = queue.pop_front() {
+                        for neighbor in g.neighbors(current) {
+                            if !visited.contains(&neighbor) {
+                                visited.insert(neighbor);
+                                queue.push_back(neighbor);
+                            }
+                        }
+                    }
+                    components += 1;
+                }
+            }
+            
+            Ok(ValidationOutput::Integer(components))
+        },
+        ultrathink_implementation: |g, processor| {
+            let result = execute_with_enhanced_ultrathink(processor, g, "community_validation", |graph| {
+                use scirs2_graph::algorithms::community::louvain_communities;
+                louvain_communities(graph, None)
+            });
+            
+            match result {
+                Ok(communities) => Ok(ValidationOutput::Integer(communities.len())),
+                Err(e) => Err(format!("Community detection failed: {:?}", e)),
+            }
+        },
+        tolerance: 0.0, // Exact match expected for component count
+        description: "Validates community detection algorithm".to_string(),
+    }
+}
+
+/// Create connected components validation test
+fn create_connected_components_validation_test() -> AlgorithmValidationTest {
+    // Create a graph with multiple disconnected components
+    let mut graph = Graph::new();
+    
+    // Component 1: 0-1-2
+    graph.add_edge(0, 1, 1.0).unwrap();
+    graph.add_edge(1, 2, 1.0).unwrap();
+    
+    // Component 2: 3-4
+    graph.add_edge(3, 4, 1.0).unwrap();
+    
+    // Component 3: isolated node 5 (will be added when we add edges)
+
+    AlgorithmValidationTest {
+        name: "connected_components_validation".to_string(),
+        graph,
+        reference_implementation: |g| {
+            // Reference implementation: find connected components
+            let nodes: Vec<_> = g.nodes().collect();
+            let mut visited = std::collections::HashSet::new();
+            let mut components = Vec::new();
+            
+            for &node in &nodes {
+                if !visited.contains(&node) {
+                    let mut component = Vec::new();
+                    let mut queue = std::collections::VecDeque::new();
+                    queue.push_back(node);
+                    visited.insert(node);
+                    
+                    while let Some(current) = queue.pop_front() {
+                        component.push(current);
+                        for neighbor in g.neighbors(current) {
+                            if !visited.contains(&neighbor) {
+                                visited.insert(neighbor);
+                                queue.push_back(neighbor);
+                            }
+                        }
+                    }
+                    components.push(component);
+                }
+            }
+            
+            Ok(ValidationOutput::Integer(components.len()))
+        },
+        ultrathink_implementation: |g, processor| {
+            let result = execute_with_enhanced_ultrathink(processor, g, "components_validation", |graph| {
+                use scirs2_graph::algorithms::connectivity::connected_components;
+                connected_components(graph)
+            });
+            
+            match result {
+                Ok(components) => Ok(ValidationOutput::Integer(components.len())),
+                Err(e) => Err(format!("Connected components failed: {:?}", e)),
+            }
+        },
+        tolerance: 0.0, // Exact match expected
+        description: "Validates connected components algorithm".to_string(),
+    }
+}
+
+/// Run comprehensive algorithm validation
+fn run_algorithm_validation() -> Vec<AlgorithmValidationResult> {
+    let tests = generate_algorithm_validation_tests();
+    let mut results = Vec::new();
+    
+    println!("🧮 Running comprehensive algorithm validation tests...");
+    println!("===================================================");
+    
+    let mut processors = vec![
+        ("enhanced", create_enhanced_ultrathink_processor()),
+        ("performance", create_performance_ultrathink_processor()),
+        ("memory_efficient", create_memory_efficient_ultrathink_processor()),
+        ("adaptive", create_adaptive_ultrathink_processor()),
+    ];
+    
+    for test in &tests {
+        println!("\n📊 Testing algorithm: {}", test.name);
+        println!("   Description: {}", test.description);
+        
+        for (processor_name, processor) in &mut processors {
+            println!("   🔧 Testing with {} processor...", processor_name);
+            
+            let result = validate_algorithm(test, processor, processor_name);
+            println!("     Accuracy: {:.6}", result.accuracy);
+            
+            results.push(result);
+        }
+    }
+    
+    results
+}
+
+#[derive(Debug, Clone)]
+struct AlgorithmValidationResult {
+    test_name: String,
+    processor_name: String,
+    accuracy: f64,
+    reference_output: String,
+    optimized_output: String,
+    error_message: Option<String>,
+}
+
+/// Validate a single algorithm test
+fn validate_algorithm(
+    test: &AlgorithmValidationTest,
+    processor: &mut UltrathinkProcessor,
+    processor_name: &str,
+) -> AlgorithmValidationResult {
+    // Run reference implementation
+    let reference_result = (test.reference_implementation)(&test.graph);
+    
+    // Run ultrathink implementation
+    let optimized_result = (test.ultrathink_implementation)(&test.graph, processor);
+    
+    let (accuracy, ref_output, opt_output, error) = match (reference_result, optimized_result) {
+        (Ok(ref_val), Ok(opt_val)) => {
+            let acc = calculate_validation_accuracy(&ref_val, &opt_val, test.tolerance);
+            (acc, format!("{:?}", ref_val), format!("{:?}", opt_val), None)
+        },
+        (Ok(ref_val), Err(e)) => {
+            (0.0, format!("{:?}", ref_val), "ERROR".to_string(), Some(e))
+        },
+        (Err(e1), Ok(opt_val)) => {
+            (0.0, "ERROR".to_string(), format!("{:?}", opt_val), Some(e1))
+        },
+        (Err(e1), Err(e2)) => {
+            (0.0, "ERROR".to_string(), "ERROR".to_string(), Some(format!("{} | {}", e1, e2)))
+        },
+    };
+    
+    AlgorithmValidationResult {
+        test_name: test.name.clone(),
+        processor_name: processor_name.to_string(),
+        accuracy,
+        reference_output: ref_output,
+        optimized_output: opt_output,
+        error_message: error,
+    }
+}
+
+/// Calculate accuracy between two validation outputs
+fn calculate_validation_accuracy(reference: &ValidationOutput, optimized: &ValidationOutput, tolerance: f64) -> f64 {
+    match (reference, optimized) {
+        (ValidationOutput::Float(r), ValidationOutput::Float(o)) => {
+            if (r - o).abs() < tolerance { 1.0 } else { 1.0 / (1.0 + (r - o).abs()) }
+        },
+        (ValidationOutput::Integer(r), ValidationOutput::Integer(o)) => {
+            if r == o { 1.0 } else { 0.0 }
+        },
+        (ValidationOutput::FloatArray(r), ValidationOutput::FloatArray(o)) => {
+            if r.len() != o.len() { return 0.0; }
+            let errors: Vec<f64> = r.iter().zip(o.iter())
+                .map(|(rv, ov)| (rv - ov).abs())
+                .collect();
+            let avg_error = errors.iter().sum::<f64>() / errors.len() as f64;
+            if avg_error < tolerance { 1.0 } else { 1.0 / (1.0 + avg_error) }
+        },
+        _ => 0.0, // Type mismatch
+    }
+}
+
+/// Generate comprehensive algorithm validation report
+fn generate_algorithm_validation_report(results: &[AlgorithmValidationResult]) -> String {
+    let mut report = String::new();
+    report.push_str("=== Comprehensive Algorithm Validation Report ===\n\n");
+    
+    // Overall statistics
+    let total_tests = results.len();
+    let high_accuracy_tests = results.iter().filter(|r| r.accuracy > 0.99).count();
+    let medium_accuracy_tests = results.iter().filter(|r| r.accuracy > 0.95 && r.accuracy <= 0.99).count();
+    let low_accuracy_tests = results.iter().filter(|r| r.accuracy <= 0.95).count();
+    let failed_tests = results.iter().filter(|r| r.error_message.is_some()).count();
+    
+    let avg_accuracy = results.iter().map(|r| r.accuracy).sum::<f64>() / total_tests as f64;
+    
+    report.push_str(&format!("📊 Overall Statistics:\n"));
+    report.push_str(&format!("   Total Tests: {}\n", total_tests));
+    report.push_str(&format!("   High Accuracy (>99%): {}\n", high_accuracy_tests));
+    report.push_str(&format!("   Medium Accuracy (95-99%): {}\n", medium_accuracy_tests));
+    report.push_str(&format!("   Low Accuracy (<95%): {}\n", low_accuracy_tests));
+    report.push_str(&format!("   Failed Tests: {}\n", failed_tests));
+    report.push_str(&format!("   Average Accuracy: {:.6}\n\n", avg_accuracy));
+    
+    // Results by algorithm
+    let mut algorithm_stats: HashMap<String, Vec<&AlgorithmValidationResult>> = HashMap::new();
+    for result in results {
+        algorithm_stats.entry(result.test_name.clone()).or_insert_with(Vec::new).push(result);
+    }
+    
+    report.push_str("📈 Results by Algorithm:\n");
+    for (algorithm, algorithm_results) in &algorithm_stats {
+        let algorithm_avg = algorithm_results.iter().map(|r| r.accuracy).sum::<f64>() / algorithm_results.len() as f64;
+        let algorithm_passing = algorithm_results.iter().filter(|r| r.accuracy > 0.95).count();
+        
+        report.push_str(&format!("   {}: {:.6} avg accuracy, {}/{} passing\n", 
+            algorithm, algorithm_avg, algorithm_passing, algorithm_results.len()));
+    }
+    
+    // Results by processor
+    let mut processor_stats: HashMap<String, Vec<&AlgorithmValidationResult>> = HashMap::new();
+    for result in results {
+        processor_stats.entry(result.processor_name.clone()).or_insert_with(Vec::new).push(result);
+    }
+    
+    report.push_str("\n🔧 Results by Processor:\n");
+    for (processor, processor_results) in &processor_stats {
+        let processor_avg = processor_results.iter().map(|r| r.accuracy).sum::<f64>() / processor_results.len() as f64;
+        let processor_passing = processor_results.iter().filter(|r| r.accuracy > 0.95).count();
+        
+        report.push_str(&format!("   {}: {:.6} avg accuracy, {}/{} passing\n", 
+            processor, processor_avg, processor_passing, processor_results.len()));
+    }
+    
+    // Detailed results
+    report.push_str("\n📋 Detailed Results:\n");
+    for result in results {
+        report.push_str(&format!("\n{}::{} - Accuracy: {:.6}\n", 
+            result.test_name, result.processor_name, result.accuracy));
+        if let Some(error) = &result.error_message {
+            report.push_str(&format!("   ❌ Error: {}\n", error));
+        } else {
+            report.push_str(&format!("   ✅ Reference: {}\n", result.reference_output));
+            report.push_str(&format!("   ⚡ Optimized: {}\n", result.optimized_output));
+        }
+    }
+    
+    report
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

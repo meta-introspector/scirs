@@ -202,6 +202,9 @@ pub struct GradientContext<T: Float> {
 
     /// Create computation graph
     pub create_graph: bool,
+
+    /// Type parameter marker
+    _phantom: std::marker::PhantomData<T>,
 }
 
 impl<T: Float + Default + Clone> Default for GradientContext<T> {

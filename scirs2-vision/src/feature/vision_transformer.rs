@@ -646,7 +646,7 @@ impl MLP {
 
     /// GELU activation function
     fn gelu(&self, input: &Array2<f32>) -> Array2<f32> {
-        input.mapv(|x| 0.5 * x * (1.0 + (x * 0.7978845608 * (1.0 + 0.044715 * x * x)).tanh()))
+        input.mapv(|x| 0.5 * x * (1.0 + (x * 0.797_884_6 * (1.0 + 0.044715 * x * x)).tanh()))
     }
 }
 
@@ -1135,7 +1135,7 @@ impl CrossAttentionMatcher {
     fn extract_matches(&self, scores: &Array2<f32>) -> Result<Vec<(usize, f32)>> {
         let mut matches = Vec::new();
 
-        for (_i, row) in scores.rows().into_iter().enumerate() {
+        for row in scores.rows().into_iter() {
             if let Some((j, &score)) = row
                 .iter()
                 .enumerate()

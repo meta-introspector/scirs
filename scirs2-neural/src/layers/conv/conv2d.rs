@@ -9,7 +9,7 @@ use crate::error::{NeuralError, Result};
 use crate::layers::{Layer, ParamLayer};
 use ndarray::{Array, ArrayView, IxDyn, ScalarOperand, Zip};
 use num_traits::Float;
-use rand::Rng;
+use ndarray_rand::rand::Rng;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 
@@ -170,7 +170,7 @@ impl<F: Float + Debug + ScalarOperand + Clone + Send + Sync + 'static> Conv2D<F>
         ];
         let weights_vec: Vec<F> = (0..weights_shape.iter().product::<usize>())
             .map(|_| {
-                let val = F::from(rng.random_range(-1.0..1.0)).unwrap_or_else(|| {
+                let val = F::from(rng.gen_range(-1.0..1.0)).unwrap_or_else(|| {
                     // Log error but continue with zero value
                     eprintln!("Failed to convert random value");
                     F::zero()

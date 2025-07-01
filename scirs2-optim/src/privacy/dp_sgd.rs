@@ -4,7 +4,7 @@
 //! and privacy budget tracking for training machine learning models with
 //! formal privacy guarantees.
 
-use ndarray::{Array, Array1, Array2, ArrayBase, Data, DataMut, Dimension};
+use ndarray::{Array, ArrayBase, Data, DataMut, Dimension};
 use ndarray_rand::rand_distr::{Distribution, Normal};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};

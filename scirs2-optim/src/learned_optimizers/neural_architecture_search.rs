@@ -6,8 +6,7 @@
 
 use ndarray::{Array1, Array2, Dimension};
 use num_traits::Float;
-use rand::random_range;
-use rand::{random, thread_rng, Rng};
+use rand::{thread_rng, Rng};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::time::{Duration, Instant};
 

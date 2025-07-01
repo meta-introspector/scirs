@@ -600,7 +600,7 @@ impl<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + std::default::Default> 
         for i in 0..128 {
             let mut sum = self.weights.layer1_biases[i];
             for j in 0..64 {
-                sum = sum + self.weights.layer1_weights[[i, j]] * input[j];
+                sum += self.weights.layer1_weights[[i, j]] * input[j];
             }
             // Mish activation: x * tanh(ln(1 + exp(x)))
             let mish_val = sum * (F::one() + (-sum).exp()).ln().tanh();
@@ -612,7 +612,7 @@ impl<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + std::default::Default> 
         for i in 0..64 {
             let mut sum = self.weights.layer2_biases[i];
             for j in 0..128 {
-                sum = sum + self.weights.layer2_weights[[i, j]] * layer1_output[j];
+                sum += self.weights.layer2_weights[[i, j]] * layer1_output[j];
             }
             // Swish activation: x / (1 + exp(-x))
             let swish_val = sum / (F::one() + (-sum).exp());
@@ -624,7 +624,7 @@ impl<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + std::default::Default> 
         for i in 0..32 {
             let mut sum = self.weights.advantage_biases[i];
             for j in 0..64 {
-                sum = sum + self.weights.advantage_weights[[i, j]] * layer2_output[j];
+                sum += self.weights.advantage_weights[[i, j]] * layer2_output[j];
             }
             advantage_values[i] = sum;
         }
@@ -632,7 +632,7 @@ impl<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + std::default::Default> 
         // State value computation
         let mut state_value = self.weights.value_bias;
         for j in 0..64 {
-            state_value = state_value + self.weights.value_weights[j] * layer2_output[j];
+            state_value += self.weights.value_weights[j] * layer2_output[j];
         }
 
         // Combine advantage and value: Q(s,a) = V(s) + A(s,a) - mean(A(s,:))

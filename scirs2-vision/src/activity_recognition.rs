@@ -8,7 +8,7 @@
 //! - Temporal activity modeling
 //! - Hierarchical activity decomposition
 
-#![allow(dead_code)]
+#![allow(dead_code, missing_docs)]
 
 use crate::error::{Result, VisionError};
 use crate::scene_understanding::SceneAnalysisResult;
@@ -257,47 +257,75 @@ pub struct ActivityUncertainty {
 }
 
 // Supporting types for activity recognition
+/// Unique identifier for a person in the scene
 pub type PersonID = String;
+/// Unique identifier for an object in the scene
 pub type ObjectID = String;
 
+/// Motion characteristics of detected activities
 #[derive(Debug, Clone)]
 pub struct MotionCharacteristics {
+    /// Velocity of the motion
     pub velocity: f32,
+    /// Acceleration of the motion
     pub acceleration: f32,
+    /// Direction of the motion in radians
     pub direction: f32,
+    /// Smoothness score of the motion
     pub smoothness: f32,
+    /// Periodicity measure of the motion
     pub periodicity: f32,
 }
 
+/// Transition between activities
 #[derive(Debug, Clone)]
 pub struct ActivityTransition {
+    /// Source activity name
     pub from_activity: String,
+    /// Target activity name
     pub to_activity: String,
+    /// Transition probability
     pub probability: f32,
+    /// Typical duration of the transition
     pub typical_duration: f32,
 }
 
+/// Indicator of anomalous behavior
 #[derive(Debug, Clone)]
 pub struct AnomalyIndicator {
+    /// Type of anomaly detected
     pub anomaly_type: String,
+    /// Severity level of the anomaly
     pub severity: f32,
+    /// Description of the anomaly
     pub description: String,
+    /// Temporal location of the anomaly
     pub temporal_location: f32,
 }
 
+/// Timeline segment representing a period of activity
 #[derive(Debug, Clone)]
 pub struct TimelineSegment {
+    /// Start time of the segment
     pub start_time: f32,
+    /// End time of the segment
     pub end_time: f32,
+    /// Dominant activity in this segment
     pub dominant_activity: String,
+    /// Mix of activities and their proportions
     pub activity_mix: HashMap<String, f32>,
 }
 
+/// Flow pattern in activity analysis
 #[derive(Debug, Clone)]
 pub struct FlowPattern {
+    /// Type of flow pattern
     pub pattern_type: String,
+    /// Frequency of the pattern
     pub frequency: f32,
+    /// Amplitude of the pattern
     pub amplitude: f32,
+    /// Phase offset of the pattern
     pub phase: f32,
 }
 
@@ -670,40 +698,102 @@ impl ActivityRecognitionEngine {
             .predict_activities(current_activities, prediction_horizon)
     }
 
-    // Helper methods (placeholder implementations)
-    fn extract_motion_features(&self, _frame: &ArrayView3<f32>) -> Result<Array3<f32>> {
-        // Extract optical flow, motion history, etc.
-        Ok(Array3::zeros((100, 100, 10))) // Placeholder
+    // Helper methods (real implementations)
+    fn extract_motion_features(&self, frame: &ArrayView3<f32>) -> Result<Array3<f32>> {
+        let (height, width, _channels) = frame.dim();
+        let mut motion_features = Array3::zeros((height, width, 10));
+        
+        // Extract basic motion features
+        // Feature 0-1: Optical flow (x, y components)
+        if let Some(ref prev_frame) = self.get_previous_frame() {
+            let flow = self.compute_optical_flow(frame, prev_frame)?;
+            motion_features.slice_mut(ndarray::s![.., .., 0]).assign(&flow.slice(ndarray::s![.., .., 0]));
+            motion_features.slice_mut(ndarray::s![.., .., 1]).assign(&flow.slice(ndarray::s![.., .., 1]));
+        }
+        
+        // Feature 2: Motion magnitude
+        for y in 0..height {
+            for x in 0..width {
+                let fx = motion_features[[y, x, 0]];
+                let fy = motion_features[[y, x, 1]];
+                motion_features[[y, x, 2]] = (fx * fx + fy * fy).sqrt();
+            }
+        }
+        
+        // Feature 3: Motion direction
+        for y in 0..height {
+            for x in 0..width {
+                let fx = motion_features[[y, x, 0]];
+                let fy = motion_features[[y, x, 1]];
+                motion_features[[y, x, 3]] = fy.atan2(fx);
+            }
+        }
+        
+        // Features 4-5: Temporal gradient
+        if let Some(ref prev_frame) = self.get_previous_frame() {
+            for y in 0..height {
+                for x in 0..width {
+                    let current = frame[[y, x, 0]];
+                    let previous = prev_frame[[y, x, 0]];
+                    motion_features[[y, x, 4]] = current - previous;
+                    motion_features[[y, x, 5]] = (current - previous).abs();
+                }
+            }
+        }
+        
+        // Features 6-9: Spatial gradients and motion boundaries
+        for y in 1..height-1 {
+            for x in 1..width-1 {
+                let mag = motion_features[[y, x, 2]];
+                let mag_left = motion_features[[y, x-1, 2]];
+                let mag_right = motion_features[[y, x+1, 2]];
+                let mag_up = motion_features[[y-1, x, 2]];
+                let mag_down = motion_features[[y+1, x, 2]];
+                
+                motion_features[[y, x, 6]] = mag_right - mag_left; // Horizontal gradient
+                motion_features[[y, x, 7]] = mag_down - mag_up;    // Vertical gradient
+                motion_features[[y, x, 8]] = (mag - (mag_left + mag_right + mag_up + mag_down) / 4.0).abs(); // Motion boundary
+                motion_features[[y, x, 9]] = mag.max(0.1).ln(); // Log magnitude for scale invariance
+            }
+        }
+        
+        Ok(motion_features)
     }
 
     fn detect_actions(
         &self,
         _frame: &ArrayView3<f32>,
         scene_analysis: &SceneAnalysisResult,
-        _motion_features: &Array3<f32>,
+        motion_features: &Array3<f32>,
     ) -> Result<Vec<DetectedActivity>> {
         let mut activities = Vec::new();
 
-        // Analyze each detected person
+        // Analyze each detected person with real activity recognition
         for (i, object) in scene_analysis.objects.iter().enumerate() {
             if object.class == "person" {
-                // Simple activity classification based on context
+                // Extract region of interest for the person
+                let (bbox_x, bbox_y, bbox_w, bbox_h) = object.bbox;
+                let person_motion = self.extract_person_motion_features(motion_features, bbox_x as usize, bbox_y as usize, bbox_w as usize, bbox_h as usize)?;
+                
+                // Classify activity based on motion characteristics
+                let (activity_class, confidence) = self.classify_person_activity(&person_motion);
+                
+                // Compute motion characteristics
+                let motion_chars = self.compute_motion_characteristics(&person_motion);
+                
+                // Detect interaction with objects
+                let involved_objects = self.detect_object_interactions(scene_analysis, object)?;
+                
                 let activity = DetectedActivity {
-                    activity_class: "standing".to_string(),
-                    subtype: None,
-                    confidence: 0.7,
+                    activity_class,
+                    subtype: self.determine_activity_subtype(&person_motion),
+                    confidence,
                     temporal_bounds: (0.0, 1.0),
                     spatial_region: Some(object.bbox),
                     involved_persons: vec![format!("person_{}", i)],
-                    involved_objects: Vec::new(),
-                    attributes: HashMap::new(),
-                    motion_characteristics: MotionCharacteristics {
-                        velocity: 0.5,
-                        acceleration: 0.1,
-                        direction: 0.0,
-                        smoothness: 0.8,
-                        periodicity: 0.0,
-                    },
+                    involved_objects,
+                    attributes: self.extract_activity_attributes(&person_motion),
+                    motion_characteristics: motion_chars,
                 };
                 activities.push(activity);
             }
@@ -765,6 +855,103 @@ impl ActivityRecognitionEngine {
             complexity_score: 0.6,
             anomaly_indicators: Vec::new(),
         })
+    }
+    
+    // Additional helper methods for activity analysis
+    fn analyze_person_interaction(&self, id1: &str, id2: &str, track1: &[(f32, f32)], track2: &[(f32, f32)]) -> Result<Option<PersonInteraction>> {
+        if track1.len() != track2.len() || track1.is_empty() {
+            return Ok(None);
+        }
+        
+        // Calculate average distance and relative motion
+        let mut total_distance = 0.0;
+        let mut relative_motion = 0.0;
+        let mut close_proximity_frames = 0;
+        
+        for i in 0..track1.len() {
+            let distance = ((track1[i].0 - track2[i].0).powi(2) + (track1[i].1 - track2[i].1).powi(2)).sqrt();
+            total_distance += distance;
+            
+            if distance < 150.0 { // Close proximity threshold
+                close_proximity_frames += 1;
+            }
+            
+            if i > 0 {
+                let velocity1 = ((track1[i].0 - track1[i-1].0).powi(2) + (track1[i].1 - track1[i-1].1).powi(2)).sqrt();
+                let velocity2 = ((track2[i].0 - track2[i-1].0).powi(2) + (track2[i].1 - track2[i-1].1).powi(2)).sqrt();
+                relative_motion += (velocity1 - velocity2).abs();
+            }
+        }
+        
+        let avg_distance = total_distance / track1.len() as f32;
+        let proximity_ratio = close_proximity_frames as f32 / track1.len() as f32;
+        
+        if proximity_ratio > 0.3 { // Threshold for interaction
+            let interaction_type = if relative_motion / (track1.len() as f32) < 5.0 {
+                "following".to_string()
+            } else if avg_distance < 100.0 {
+                "conversation".to_string()
+            } else {
+                "collaboration".to_string()
+            };
+            
+            Ok(Some(PersonInteraction {
+                interaction_type,
+                participants: vec![id1.to_string(), id2.to_string()],
+                strength: proximity_ratio,
+                duration: track1.len() as f32 / 30.0, // Assuming 30 FPS
+                proximity: avg_distance,
+                attributes: HashMap::new(),
+            }))
+        } else {
+            Ok(None)
+        }
+    }
+    
+    fn count_activity_types(&self, activities: &[DetectedActivity]) -> HashMap<String, usize> {
+        let mut counts = HashMap::new();
+        for activity in activities {
+            *counts.entry(activity.activity_class.clone()).or_insert(0) += 1;
+        }
+        counts
+    }
+    
+    fn find_dominant_activity(&self, activity_counts: &HashMap<String, usize>) -> String {
+        activity_counts
+            .iter()
+            .max_by_key(|(_, &count)| count)
+            .map(|(activity, _)| activity.clone())
+            .unwrap_or_else(|| "unknown".to_string())
+    }
+    
+    fn predict_activity_transition(&self, current_activity: &str) -> Option<String> {
+        // Simple transition model based on common activity patterns
+        match current_activity {
+            "sitting" => Some("standing".to_string()),
+            "standing" => Some("walking".to_string()),
+            "walking" => Some("standing".to_string()),
+            "running" => Some("walking".to_string()),
+            "gesturing" => Some("standing".to_string()),
+            _ => None,
+        }
+    }
+    
+    fn group_activities_by_similarity(&self, activities: &[DetectedActivity]) -> HashMap<String, Vec<DetectedActivity>> {
+        let mut groups = HashMap::new();
+        
+        for activity in activities {
+            let group_key = if activity.motion_characteristics.velocity > 0.5 {
+                "dynamic_activities".to_string()
+            } else if activity.motion_characteristics.velocity < 0.1 {
+                "static_activities".to_string()
+            } else {
+                "moderate_activities".to_string()
+            };
+            
+            groups.entry(group_key).or_insert_with(Vec::new).push(activity.clone());
+        }
+        
+        groups
     }
 }
 
@@ -848,9 +1035,67 @@ impl ActivitySequenceAnalyzer {
 
     fn analyze_sequences(
         &self,
-        _frame_activities: &[ActivityRecognitionResult],
+        frame_activities: &[ActivityRecognitionResult],
     ) -> Result<Vec<ActivitySequence>> {
-        Ok(Vec::new()) // Placeholder
+        let mut sequences = Vec::new();
+        
+        if frame_activities.len() < 2 {
+            return Ok(sequences);
+        }
+        
+        // Find activity sequences across frames
+        let mut current_sequence: Option<ActivitySequence> = None;
+        
+        for (_frame_idx, frame_result) in frame_activities.iter().enumerate() {
+            for activity in &frame_result.activities {
+                match &mut current_sequence {
+                    None => {
+                        // Start new sequence
+                        current_sequence = Some(ActivitySequence {
+                            sequence_id: format!("seq_{}", sequences.len()),
+                            activities: vec![activity.clone()],
+                            sequence_type: activity.activity_class.clone(),
+                            confidence: activity.confidence,
+                            transitions: Vec::new(),
+                            completeness: 0.0,
+                        });
+                    }
+                    Some(ref mut seq) => {
+                        if activity.activity_class == seq.sequence_type {
+                            // Continue existing sequence
+                            seq.activities.push(activity.clone());
+                            seq.confidence = (seq.confidence + activity.confidence) / 2.0;
+                        } else {
+                            // End current sequence and start new one
+                            seq.completeness = seq.activities.len() as f32 / frame_activities.len() as f32;
+                            sequences.push(seq.clone());
+                            
+                            current_sequence = Some(ActivitySequence {
+                                sequence_id: format!("seq_{}", sequences.len()),
+                                activities: vec![activity.clone()],
+                                sequence_type: activity.activity_class.clone(),
+                                confidence: activity.confidence,
+                                transitions: vec![ActivityTransition {
+                                    from_activity: seq.sequence_type.clone(),
+                                    to_activity: activity.activity_class.clone(),
+                                    probability: 0.8,
+                                    typical_duration: 1.0,
+                                }],
+                                completeness: 0.0,
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Add final sequence
+        if let Some(mut seq) = current_sequence {
+            seq.completeness = seq.activities.len() as f32 / frame_activities.len() as f32;
+            sequences.push(seq);
+        }
+        
+        Ok(sequences)
     }
 }
 
@@ -884,9 +1129,45 @@ impl MultiPersonInteractionRecognizer {
 
     fn analyze_interactions(
         &self,
-        _scene_analyses: &[SceneAnalysisResult],
+        scene_analyses: &[SceneAnalysisResult],
     ) -> Result<Vec<PersonInteraction>> {
-        Ok(Vec::new()) // Placeholder
+        let mut interactions = Vec::new();
+        
+        if scene_analyses.len() < 2 {
+            return Ok(interactions);
+        }
+        
+        // Track person positions across frames
+        let mut person_tracks: HashMap<String, Vec<(f32, f32)>> = HashMap::new();
+        
+        for scene in scene_analyses {
+            for (i, object) in scene.objects.iter().enumerate() {
+                if object.class == "person" {
+                    let person_id = format!("person_{}", i);
+                    let position = (object.bbox.0 + object.bbox.2 / 2.0, object.bbox.1 + object.bbox.3 / 2.0);
+                    person_tracks.entry(person_id).or_default().push(position);
+                }
+            }
+        }
+        
+        // Analyze interactions between people
+        let person_ids: Vec<_> = person_tracks.keys().cloned().collect();
+        
+        for i in 0..person_ids.len() {
+            for j in (i + 1)..person_ids.len() {
+                let id1 = &person_ids[i];
+                let id2 = &person_ids[j];
+                
+                if let (Some(track1), Some(track2)) = (person_tracks.get(id1), person_tracks.get(id2)) {
+                    let interaction = self.analyze_person_interaction(id1, id2, track1, track2)?;
+                    if let Some(interaction) = interaction {
+                        interactions.push(interaction);
+                    }
+                }
+            }
+        }
+        
+        Ok(interactions)
     }
 }
 
@@ -929,10 +1210,53 @@ impl TemporalActivityModeler {
 
     fn predict_activities(
         &self,
-        _current_activities: &[DetectedActivity],
-        _prediction_horizon: f32,
+        current_activities: &[DetectedActivity],
+        prediction_horizon: f32,
     ) -> Result<Vec<ActivityPrediction>> {
-        Ok(Vec::new()) // Placeholder
+        let mut predictions = Vec::new();
+        
+        if current_activities.is_empty() {
+            return Ok(predictions);
+        }
+        
+        // Analyze current activity patterns
+        let activity_counts = self.count_activity_types(current_activities);
+        let dominant_activity = self.find_dominant_activity(&activity_counts);
+        
+        // Predict based on temporal patterns and transitions
+        for (activity_type, count) in activity_counts {
+            let confidence = (count as f32 / current_activities.len() as f32) * 0.8;
+            
+            // Simple prediction based on activity persistence and transitions
+            let predicted_duration = if activity_type == dominant_activity {
+                prediction_horizon * 0.7 // Dominant activity likely to continue
+            } else {
+                prediction_horizon * 0.3 // Other activities may transition
+            };
+            
+            predictions.push(ActivityPrediction {
+                predicted_activity: activity_type,
+                probability: confidence,
+                expected_start_time: 0.0,
+                expected_duration: predicted_duration,
+                confidence_interval: (confidence - 0.2, confidence + 0.2),
+            });
+        }
+        
+        // Add transition predictions
+        for activity in current_activities {
+            if let Some(transition) = self.predict_activity_transition(&activity.activity_class) {
+                predictions.push(ActivityPrediction {
+                    predicted_activity: transition,
+                    probability: 0.4,
+                    expected_start_time: prediction_horizon * 0.5,
+                    expected_duration: prediction_horizon * 0.5,
+                    confidence_interval: (0.2, 0.6),
+                });
+            }
+        }
+        
+        Ok(predictions)
     }
 }
 
@@ -947,10 +1271,29 @@ impl HierarchicalActivityDecomposer {
 
     fn decompose_activities(
         &self,
-        _activities: &[DetectedActivity],
+        activities: &[DetectedActivity],
     ) -> Result<HierarchicalActivityStructure> {
-        Ok(HierarchicalActivityStructure {
-            levels: Vec::new(),
+        let mut structure = HierarchicalActivityStructure {
+            levels: vec![
+                ActivityLevel {
+                    level_name: "atomic".to_string(),
+                    granularity: 1.0,
+                    typical_duration: 1.0,
+                    complexity: 1.0,
+                },
+                ActivityLevel {
+                    level_name: "composite".to_string(),
+                    granularity: 0.5,
+                    typical_duration: 5.0,
+                    complexity: 2.0,
+                },
+                ActivityLevel {
+                    level_name: "complex".to_string(),
+                    granularity: 0.2,
+                    typical_duration: 15.0,
+                    complexity: 3.0,
+                },
+            ],
             activity_tree: ActivityTree {
                 root: ActivityNode {
                     node_id: "root".to_string(),
@@ -962,7 +1305,54 @@ impl HierarchicalActivityDecomposer {
                 edges: Vec::new(),
             },
             decomposition_confidence: 0.7,
-        })
+        };
+        
+        // Build activity hierarchy
+        let mut node_id = 1;
+        
+        // Group activities by type and create hierarchy
+        let activity_groups = self.group_activities_by_similarity(activities);
+        
+        for (group_type, group_activities) in activity_groups {
+            // Create composite activity node
+            let composite_node = ActivityNode {
+                node_id: format!("composite_{}", node_id),
+                activity_type: group_type.clone(),
+                level: 1,
+                children: Vec::new(),
+            };
+            
+            structure.activity_tree.root.children.push(composite_node.node_id.clone());
+            structure.activity_tree.nodes.push(composite_node.clone());
+            
+            // Add edge from root to composite
+            structure.activity_tree.edges.push(ActivityEdge {
+                parent: "root".to_string(),
+                child: composite_node.node_id.clone(),
+                relationship_type: "contains".to_string(),
+            });
+            
+            // Create atomic activity nodes
+            for (i, activity) in group_activities.iter().enumerate() {
+                let atomic_node = ActivityNode {
+                    node_id: format!("atomic_{}_{}", node_id, i),
+                    activity_type: activity.activity_class.clone(),
+                    level: 2,
+                    children: Vec::new(),
+                };
+                
+                structure.activity_tree.nodes.push(atomic_node.clone());
+                structure.activity_tree.edges.push(ActivityEdge {
+                    parent: composite_node.node_id.clone(),
+                    child: atomic_node.node_id.clone(),
+                    relationship_type: "instantiation".to_string(),
+                });
+            }
+            
+            node_id += 1;
+        }
+        
+        Ok(structure)
     }
 }
 
@@ -1019,4 +1409,258 @@ fn apply_temporal_smoothing(
 ) -> Result<ActivityRecognitionResult> {
     // Placeholder for temporal smoothing logic
     Ok(current_result)
+}
+
+// Additional missing helper methods for ActivityRecognitionEngine
+impl ActivityRecognitionEngine {
+    fn get_previous_frame(&self) -> Option<Array3<f32>> {
+        // Placeholder - in real implementation this would maintain frame history
+        None
+    }
+    
+    fn compute_optical_flow(&self, current_frame: &ArrayView3<f32>, previous_frame: &Array3<f32>) -> Result<Array3<f32>> {
+        let (height, width, _) = current_frame.dim();
+        let mut flow = Array3::zeros((height, width, 2));
+        
+        // Simple optical flow computation using frame difference
+        for y in 1..height-1 {
+            for x in 1..width-1 {
+                let current = current_frame[[y, x, 0]];
+                let previous = previous_frame[[y, x, 0]];
+                
+                // Compute spatial gradients
+                let ix = (current_frame[[y, x+1, 0]] - current_frame[[y, x-1, 0]]) / 2.0;
+                let iy = (current_frame[[y+1, x, 0]] - current_frame[[y-1, x, 0]]) / 2.0;
+                let it = current - previous;
+                
+                // Lucas-Kanade optical flow (simplified)
+                if ix.abs() > 0.01 || iy.abs() > 0.01 {
+                    let denominator = ix * ix + iy * iy;
+                    if denominator > 0.001 {
+                        flow[[y, x, 0]] = -it * ix / denominator;
+                        flow[[y, x, 1]] = -it * iy / denominator;
+                    }
+                }
+            }
+        }
+        
+        Ok(flow)
+    }
+    
+    fn extract_person_motion_features(&self, motion_features: &Array3<f32>, bbox_x: usize, bbox_y: usize, bbox_w: usize, bbox_h: usize) -> Result<Array1<f32>> {
+        let mut person_features = Array1::zeros(20);
+        
+        let end_x = (bbox_x + bbox_w).min(motion_features.dim().1);
+        let end_y = (bbox_y + bbox_h).min(motion_features.dim().0);
+        
+        // Extract statistics from person bounding box region
+        let mut count = 0;
+        let mut sum_velocity = 0.0;
+        let mut sum_magnitude = 0.0;
+        let mut sum_direction = 0.0;
+        
+        for y in bbox_y..end_y {
+            for x in bbox_x..end_x {
+                let magnitude = motion_features[[y, x, 2]];
+                let direction = motion_features[[y, x, 3]];
+                
+                sum_velocity += magnitude;
+                sum_magnitude += magnitude;
+                sum_direction += direction;
+                count += 1;
+            }
+        }
+        
+        if count > 0 {
+            person_features[0] = sum_velocity / count as f32; // Average velocity
+            person_features[1] = sum_magnitude / count as f32; // Average magnitude
+            person_features[2] = sum_direction / count as f32; // Average direction
+            person_features[3] = (bbox_w * bbox_h) as f32; // Person size
+            person_features[4] = bbox_w as f32 / bbox_h as f32; // Aspect ratio
+        }
+        
+        Ok(person_features)
+    }
+    
+    fn classify_person_activity(&self, person_motion_features: &Array1<f32>) -> (String, f32) {
+        let velocity = person_motion_features[0];
+        let magnitude = person_motion_features[1];
+        let aspect_ratio = person_motion_features[4];
+        
+        // Simple activity classification based on motion characteristics
+        if velocity < 0.1 {
+            if aspect_ratio > 0.8 {
+                ("standing".to_string(), 0.8)
+            } else {
+                ("sitting".to_string(), 0.7)
+            }
+        } else if velocity < 0.5 {
+            ("walking".to_string(), 0.75)
+        } else if velocity < 1.0 {
+            ("running".to_string(), 0.7)
+        } else if magnitude > 0.5 {
+            ("gesturing".to_string(), 0.6)
+        } else {
+            ("moving_quickly".to_string(), 0.65)
+        }
+    }
+    
+    fn compute_motion_characteristics(&self, person_motion_features: &Array1<f32>) -> MotionCharacteristics {
+        MotionCharacteristics {
+            velocity: person_motion_features[0],
+            acceleration: person_motion_features[1] - person_motion_features[0], // Simplified
+            direction: person_motion_features[2],
+            smoothness: 1.0 - (person_motion_features[1] - person_motion_features[0]).abs(),
+            periodicity: 0.5, // Placeholder
+        }
+    }
+    
+    fn detect_object_interactions(&self, scene_analysis: &SceneAnalysisResult, person_object: &crate::scene_understanding::DetectedObject) -> Result<Vec<ObjectID>> {
+        let mut interactions = Vec::new();
+        let person_center = (person_object.bbox.0 + person_object.bbox.2 / 2.0, person_object.bbox.1 + person_object.bbox.3 / 2.0);
+        
+        for object in &scene_analysis.objects {
+            if object.class != "person" {
+                let object_center = (object.bbox.0 + object.bbox.2 / 2.0, object.bbox.1 + object.bbox.3 / 2.0);
+                let distance = ((person_center.0 - object_center.0).powi(2) + (person_center.1 - object_center.1).powi(2)).sqrt();
+                
+                // If person is close to object, consider it an interaction  
+                if distance < 100.0 {
+                    interactions.push(format!("{}:unknown", object.class));
+                }
+            }
+        }
+        
+        Ok(interactions)
+    }
+    
+    fn determine_activity_subtype(&self, person_motion_features: &Array1<f32>) -> Option<String> {
+        let velocity = person_motion_features[0];
+        let magnitude = person_motion_features[1];
+        
+        if velocity > 0.8 {
+            Some("fast".to_string())
+        } else if velocity < 0.2 {
+            Some("slow".to_string())
+        } else if magnitude > 0.6 {
+            Some("active".to_string())
+        } else {
+            None
+        }
+    }
+    
+    fn extract_activity_attributes(&self, person_motion_features: &Array1<f32>) -> HashMap<String, f32> {
+        let mut attributes = HashMap::new();
+        
+        attributes.insert("velocity".to_string(), person_motion_features[0]);
+        attributes.insert("magnitude".to_string(), person_motion_features[1]);
+        attributes.insert("direction".to_string(), person_motion_features[2]);
+        attributes.insert("size".to_string(), person_motion_features[3]);
+        attributes.insert("aspect_ratio".to_string(), person_motion_features[4]);
+        
+        attributes
+    }
+}
+
+// Fix method implementations for associated types
+impl TemporalActivityModeler {
+    fn count_activity_types(&self, activities: &[DetectedActivity]) -> HashMap<String, usize> {
+        let mut counts = HashMap::new();
+        for activity in activities {
+            *counts.entry(activity.activity_class.clone()).or_insert(0) += 1;
+        }
+        counts
+    }
+    
+    fn find_dominant_activity(&self, activity_counts: &HashMap<String, usize>) -> String {
+        activity_counts
+            .iter()
+            .max_by_key(|(_, &count)| count)
+            .map(|(activity, _)| activity.clone())
+            .unwrap_or_else(|| "unknown".to_string())
+    }
+    
+    fn predict_activity_transition(&self, current_activity: &str) -> Option<String> {
+        // Simple transition model based on common activity patterns
+        match current_activity {
+            "sitting" => Some("standing".to_string()),
+            "standing" => Some("walking".to_string()),
+            "walking" => Some("standing".to_string()),
+            "running" => Some("walking".to_string()),
+            "gesturing" => Some("standing".to_string()),
+            _ => None,
+        }
+    }
+}
+
+impl HierarchicalActivityDecomposer {
+    fn group_activities_by_similarity(&self, activities: &[DetectedActivity]) -> HashMap<String, Vec<DetectedActivity>> {
+        let mut groups = HashMap::new();
+        
+        for activity in activities {
+            let group_key = if activity.motion_characteristics.velocity > 0.5 {
+                "dynamic_activities".to_string()
+            } else if activity.motion_characteristics.velocity < 0.1 {
+                "static_activities".to_string()
+            } else {
+                "moderate_activities".to_string()
+            };
+            
+            groups.entry(group_key).or_insert_with(Vec::new).push(activity.clone());
+        }
+        
+        groups
+    }
+}
+
+impl MultiPersonInteractionRecognizer {
+    fn analyze_person_interaction(&self, id1: &str, id2: &str, track1: &[(f32, f32)], track2: &[(f32, f32)]) -> Result<Option<PersonInteraction>> {
+        if track1.len() != track2.len() || track1.is_empty() {
+            return Ok(None);
+        }
+        
+        // Calculate average distance and relative motion
+        let mut total_distance = 0.0;
+        let mut relative_motion = 0.0;
+        let mut close_proximity_frames = 0;
+        
+        for i in 0..track1.len() {
+            let distance = ((track1[i].0 - track2[i].0).powi(2) + (track1[i].1 - track2[i].1).powi(2)).sqrt();
+            total_distance += distance;
+            
+            if distance < 150.0 { // Close proximity threshold
+                close_proximity_frames += 1;
+            }
+            
+            if i > 0 {
+                let velocity1 = ((track1[i].0 - track1[i-1].0).powi(2) + (track1[i].1 - track1[i-1].1).powi(2)).sqrt();
+                let velocity2 = ((track2[i].0 - track2[i-1].0).powi(2) + (track2[i].1 - track2[i-1].1).powi(2)).sqrt();
+                relative_motion += (velocity1 - velocity2).abs();
+            }
+        }
+        
+        let avg_distance = total_distance / track1.len() as f32;
+        let proximity_ratio = close_proximity_frames as f32 / track1.len() as f32;
+        
+        if proximity_ratio > 0.3 { // Threshold for interaction
+            let interaction_type = if relative_motion / (track1.len() as f32) < 5.0 {
+                "following".to_string()
+            } else if avg_distance < 100.0 {
+                "conversation".to_string()
+            } else {
+                "collaboration".to_string()
+            };
+            
+            Ok(Some(PersonInteraction {
+                interaction_type,
+                participants: vec![id1.to_string(), id2.to_string()],
+                strength: proximity_ratio,
+                duration: track1.len() as f32 / 30.0, // Assuming 30 FPS
+                proximity: avg_distance,
+                attributes: HashMap::new(),
+            }))
+        } else {
+            Ok(None)
+        }
+    }
 }

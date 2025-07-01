@@ -543,10 +543,10 @@ mod tests {
 
     #[test]
     fn test_isolated_vertices() {
-        // Create a graph with isolated vertices
-        let rows = vec![0];
-        let cols = vec![1];
-        let data = vec![1.0];
+        // Create a graph with isolated vertices (symmetric for undirected graph)
+        let rows = vec![0, 1];
+        let cols = vec![1, 0];
+        let data = vec![1.0, 1.0];
         let graph = CsrArray::from_triplets(&rows, &cols, &data, (4, 4), false).unwrap();
 
         let (n_components, labels) = connected_components(&graph, false, "weak", true).unwrap();

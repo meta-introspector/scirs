@@ -1141,7 +1141,6 @@ pub fn get_memory_report() -> MemoryReport {
 }
 
 use std::sync::atomic::{AtomicBool, AtomicUsize};
-use std::sync::Mutex;
 
 #[cfg(test)]
 mod tests {

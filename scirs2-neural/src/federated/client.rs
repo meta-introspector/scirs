@@ -138,7 +138,7 @@ impl FederatedClient {
         // Shuffle indices
         let mut indices: Vec<usize> = (0..num_samples).collect();
         use rand::prelude::*;
-        indices.shuffle(&mut rand::rng());
+        indices.shuffle(&mut ndarray_rand::rand::thread_rng());
 
         for batch_idx in 0..num_batches {
             let start = batch_idx * self.config.batch_size;
@@ -288,7 +288,7 @@ impl FederatedClient {
             let noise_scale = clip_threshold * (2.0 * (1.0 / accountant.delta).ln()).sqrt()
                 / accountant.max_epsilon;
             let noise_dist = Normal::new(0.0, noise_scale).unwrap();
-            let mut rng = rand::rng();
+            let mut rng = ndarray_rand::rand::thread_rng();
 
             for update in &mut updates {
                 for elem in update.iter_mut() {

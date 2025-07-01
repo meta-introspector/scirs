@@ -50,7 +50,7 @@
 //! let processed_events = processor.process_events(&events)?;
 //! ```
 
-use crate::error::SpatialResult;
+use crate::error::{SpatialResult, SpatialError};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use std::collections::{HashMap, VecDeque};
 // Constants removed - not used in this module
@@ -963,6 +963,912 @@ impl CompetitiveNeuralClusterer {
         }
 
         centers
+    }
+}
+
+/// Advanced homeostatic plasticity for neuromorphic spatial learning
+#[derive(Debug, Clone)]
+pub struct HomeostaticNeuralClusterer {
+    /// Number of clusters (output neurons)
+    num_clusters: usize,
+    /// Input dimension
+    input_dim: usize,
+    /// Output neurons with homeostatic mechanisms
+    output_neurons: Vec<HomeostaticNeuron>,
+    /// Synaptic weights
+    weights: Array2<f64>,
+    /// Global inhibition strength
+    #[allow(dead_code)]
+    global_inhibition: f64,
+    /// Learning rate adaptation parameters
+    learning_rate_adaptation: LearningRateAdaptation,
+    /// Metaplasticity parameters
+    metaplasticity: MetaplasticityController,
+    /// Multi-timescale adaptation
+    multi_timescale: MultiTimescaleAdaptation,
+}
+
+/// Homeostatic neuron with intrinsic plasticity
+#[derive(Debug, Clone)]
+pub struct HomeostaticNeuron {
+    /// Current membrane potential
+    membrane_potential: f64,
+    /// Spike threshold (adaptive)
+    #[allow(dead_code)]
+    threshold: f64,
+    /// Target firing rate
+    target_firing_rate: f64,
+    /// Actual firing rate (exponential moving average)
+    actual_firing_rate: f64,
+    /// Intrinsic excitability
+    intrinsic_excitability: f64,
+    /// Homeostatic time constant
+    homeostatic_tau: f64,
+    /// Spike history for rate computation
+    spike_history: VecDeque<f64>,
+    /// Synaptic scaling factor
+    synaptic_scaling: f64,
+    /// Membrane time constant
+    membrane_tau: f64,
+    /// Last spike time
+    last_spike_time: f64,
+}
+
+/// Learning rate adaptation mechanism (duplicate removed)
+
+/// Metaplasticity controller for flexible learning
+#[derive(Debug, Clone)]
+pub struct MetaplasticityController {
+    /// Metaplastic variables for each synapse
+    metaplastic_variables: Array2<f64>,
+    /// Metaplastic time constant
+    meta_tau: f64,
+    /// Plasticity threshold
+    #[allow(dead_code)]
+    plasticity_threshold: f64,
+    /// LTP/LTD balance factor
+    #[allow(dead_code)]
+    ltp_ltd_balance: f64,
+    /// Activity-dependent scaling
+    #[allow(dead_code)]
+    activity_scaling: f64,
+}
+
+/// Multi-timescale adaptation for different learning phases
+#[derive(Debug, Clone)]
+pub struct MultiTimescaleAdaptation {
+    /// Fast adaptation (seconds to minutes)
+    fast_adaptation: AdaptationScale,
+    /// Medium adaptation (minutes to hours)
+    medium_adaptation: AdaptationScale,
+    /// Slow adaptation (hours to days)
+    slow_adaptation: AdaptationScale,
+    /// Current timescale weights
+    timescale_weights: Array1<f64>,
+}
+
+/// Individual adaptation scale
+#[derive(Debug, Clone)]
+pub struct AdaptationScale {
+    /// Time constant for this scale
+    time_constant: f64,
+    /// Adaptation strength
+    #[allow(dead_code)]
+    adaptation_strength: f64,
+    /// Memory trace
+    memory_trace: f64,
+    /// Decay factor
+    #[allow(dead_code)]
+    decay_factor: f64,
+}
+
+impl HomeostaticNeuralClusterer {
+    /// Create new homeostatic neural clusterer
+    pub fn new(num_clusters: usize, input_dim: usize) -> Self {
+        let mut output_neurons = Vec::new();
+        for _ in 0..num_clusters {
+            output_neurons.push(HomeostaticNeuron::new());
+        }
+
+        let weights = Array2::zeros((num_clusters, input_dim));
+        
+        let learning_rate_adaptation = LearningRateAdaptation::new(0.01);
+        let metaplasticity = MetaplasticityController::new(num_clusters, input_dim);
+        let multi_timescale = MultiTimescaleAdaptation::new();
+
+        Self {
+            num_clusters,
+            input_dim,
+            output_neurons,
+            weights,
+            global_inhibition: 0.1,
+            learning_rate_adaptation,
+            metaplasticity,
+            multi_timescale,
+        }
+    }
+
+    /// Configure homeostatic parameters
+    pub fn with_homeostatic_params(
+        mut self,
+        target_firing_rate: f64,
+        homeostatic_tau: f64,
+    ) -> Self {
+        for neuron in &mut self.output_neurons {
+            neuron.target_firing_rate = target_firing_rate;
+            neuron.homeostatic_tau = homeostatic_tau;
+        }
+        self
+    }
+
+    /// Fit homeostatic clustering model
+    pub fn fit(
+        &mut self,
+        points: &ArrayView2<f64>,
+        epochs: usize,
+    ) -> SpatialResult<Array1<usize>> {
+        let (n_samples, n_features) = points.dim();
+        
+        if n_features != self.input_dim {
+            return Err(SpatialError::InvalidInput(
+                "Input dimension mismatch".to_string(),
+            ));
+        }
+
+        // Initialize weights randomly
+        self.initialize_weights()?;
+
+        let mut assignments = Array1::zeros(n_samples);
+        let current_time = 0.0;
+        let dt = 0.001; // 1ms time step
+
+        for epoch in 0..epochs {
+            let mut epoch_error = 0.0;
+
+            for (sample_idx, sample) in points.outer_iter().enumerate() {
+                // Forward pass with homeostatic mechanisms
+                let (winner_idx, neuron_activities) = self.forward_pass_homeostatic(
+                    &sample,
+                    current_time + (epoch * n_samples + sample_idx) as f64 * dt,
+                )?;
+
+                assignments[sample_idx] = winner_idx;
+
+                // Compute reconstruction error
+                let reconstruction = self.weights.row(winner_idx);
+                let error: f64 = sample.iter()
+                    .zip(reconstruction.iter())
+                    .map(|(&x, &w)| (x - w).powi(2))
+                    .sum();
+                epoch_error += error;
+
+                // Homeostatic learning update
+                self.homeostatic_learning_update(
+                    &sample,
+                    winner_idx,
+                    &neuron_activities,
+                    error,
+                    current_time + (epoch * n_samples + sample_idx) as f64 * dt,
+                )?;
+            }
+
+            // Update learning rate based on performance
+            self.learning_rate_adaptation.update_learning_rate(epoch_error / n_samples as f64);
+
+            // Update multi-timescale adaptation
+            self.multi_timescale.update(epoch_error / n_samples as f64, dt * n_samples as f64);
+
+            // Homeostatic updates at end of epoch
+            self.update_homeostatic_mechanisms(dt * n_samples as f64)?;
+        }
+
+        Ok(assignments)
+    }
+
+    /// Get cluster centers (weights)
+    pub fn get_cluster_centers(&self) -> Array2<f64> {
+        self.weights.clone()
+    }
+
+    /// Forward pass with homeostatic mechanisms
+    fn forward_pass_homeostatic(
+        &mut self,
+        input: &ArrayView1<f64>,
+        current_time: f64,
+    ) -> SpatialResult<(usize, Array1<f64>)> {
+        let mut activities = Array1::zeros(self.num_clusters);
+
+        // Compute neural activities with homeostatic modulation
+        for (neuron_idx, neuron) in self.output_neurons.iter_mut().enumerate() {
+            let weights_row = self.weights.row(neuron_idx);
+            
+            // Compute dot product (synaptic input)
+            let synaptic_input: f64 = input.iter()
+                .zip(weights_row.iter())
+                .map(|(&x, &w)| x * w)
+                .sum();
+
+            // Apply synaptic scaling
+            let scaled_input = synaptic_input * neuron.synaptic_scaling;
+
+            // Update membrane potential
+            neuron.update_membrane_potential(scaled_input, current_time);
+
+            // Apply intrinsic excitability modulation
+            let modulated_potential = neuron.membrane_potential * neuron.intrinsic_excitability;
+            activities[neuron_idx] = modulated_potential;
+        }
+
+        // Find winner (highest activity)
+        let winner_idx = activities
+            .iter()
+            .enumerate()
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+            .map(|(i, _)| i)
+            .unwrap_or(0);
+
+        // Update firing rates
+        self.output_neurons[winner_idx].record_spike(current_time);
+
+        Ok((winner_idx, activities))
+    }
+
+    /// Initialize weights randomly
+    fn initialize_weights(&mut self) -> SpatialResult<()> {
+        use rand::Rng;
+        let mut rng = rand::rng();
+
+        for mut row in self.weights.outer_iter_mut() {
+            for weight in row.iter_mut() {
+                *weight = rng.random_range(0.0..1.0);
+            }
+            
+            // Normalize weights
+            let norm: f64 = row.iter().map(|&w| w * w).sum::<f64>().sqrt();
+            if norm > 0.0 {
+                for weight in row.iter_mut() {
+                    *weight /= norm;
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Homeostatic learning update
+    fn homeostatic_learning_update(
+        &mut self,
+        input: &ArrayView1<f64>,
+        winner_idx: usize,
+        activities: &Array1<f64>,
+        error: f64,
+        current_time: f64,
+    ) -> SpatialResult<()> {
+        // Get current learning rate
+        let learning_rate = self.learning_rate_adaptation.base_rate;
+
+        // Apply metaplasticity
+        let meta_modulation = self.metaplasticity.compute_modulation(winner_idx, error);
+
+        // Apply multi-timescale adaptation
+        let timescale_modulation = self.multi_timescale.get_adaptation_factor();
+
+        // Combined learning rate
+        let effective_learning_rate = learning_rate * meta_modulation * timescale_modulation;
+
+        // Update winner weights (competitive learning with homeostatic modulation)
+        let winner_neuron = &self.output_neurons[winner_idx];
+        let homeostatic_factor = winner_neuron.get_homeostatic_factor();
+
+        for (weight, &input_val) in self.weights.row_mut(winner_idx).iter_mut().zip(input.iter()) {
+            let weight_update = effective_learning_rate * homeostatic_factor * (input_val - *weight);
+            *weight += weight_update;
+        }
+
+        // Update metaplasticity variables
+        self.metaplasticity.update_metaplastic_variables(winner_idx, activities, current_time);
+
+        Ok(())
+    }
+
+    /// Update homeostatic mechanisms
+    fn update_homeostatic_mechanisms(&mut self, dt: f64) -> SpatialResult<()> {
+        for neuron in &mut self.output_neurons {
+            neuron.update_homeostatic_mechanisms(dt);
+        }
+        Ok(())
+    }
+}
+
+impl HomeostaticNeuron {
+    /// Create new homeostatic neuron
+    fn new() -> Self {
+        Self {
+            membrane_potential: 0.0,
+            threshold: 1.0,
+            target_firing_rate: 0.1,
+            actual_firing_rate: 0.0,
+            intrinsic_excitability: 1.0,
+            homeostatic_tau: 1000.0, // 1 second
+            spike_history: VecDeque::new(),
+            synaptic_scaling: 1.0,
+            membrane_tau: 10.0, // 10ms
+            last_spike_time: -1000.0,
+        }
+    }
+
+    /// Update membrane potential
+    fn update_membrane_potential(&mut self, input: f64, current_time: f64) {
+        let dt = current_time - self.last_spike_time;
+        
+        // Leaky integrate-and-fire dynamics
+        let decay = (-dt / self.membrane_tau).exp();
+        self.membrane_potential = self.membrane_potential * decay + input;
+    }
+
+    /// Record spike and update firing rate
+    fn record_spike(&mut self, current_time: f64) {
+        self.spike_history.push_back(current_time);
+        
+        // Keep only recent spikes (last 1 second)
+        while let Some(&front_time) = self.spike_history.front() {
+            if current_time - front_time > 1000.0 {
+                self.spike_history.pop_front();
+            } else {
+                break;
+            }
+        }
+
+        // Update actual firing rate (exponential moving average)
+        let instantaneous_rate = self.spike_history.len() as f64 / 1000.0; // spikes per ms
+        let alpha = 1.0 / self.homeostatic_tau;
+        self.actual_firing_rate = (1.0 - alpha) * self.actual_firing_rate + alpha * instantaneous_rate;
+    }
+
+    /// Update homeostatic mechanisms
+    fn update_homeostatic_mechanisms(&mut self, dt: f64) {
+        // Intrinsic plasticity: adjust excitability to maintain target firing rate
+        let rate_error = self.target_firing_rate - self.actual_firing_rate;
+        let excitability_update = 0.001 * rate_error * dt;
+        self.intrinsic_excitability += excitability_update;
+        self.intrinsic_excitability = self.intrinsic_excitability.max(0.1).min(10.0);
+
+        // Synaptic scaling: global scaling of all synapses
+        let scaling_rate = 0.0001;
+        let scaling_update = scaling_rate * rate_error * dt;
+        self.synaptic_scaling += scaling_update;
+        self.synaptic_scaling = self.synaptic_scaling.max(0.1).min(10.0);
+    }
+
+    /// Get homeostatic factor for learning modulation
+    fn get_homeostatic_factor(&self) -> f64 {
+        // Higher factor when firing rate is below target (need to strengthen synapses)
+        let rate_ratio = self.actual_firing_rate / self.target_firing_rate.max(1e-6);
+        (2.0 / (1.0 + rate_ratio)).max(0.1).min(10.0)
+    }
+}
+
+impl LearningRateAdaptation {
+    /// Create new learning rate adaptation
+    fn new(base_rate: f64) -> Self {
+        Self {
+            base_rate: base_rate,
+            adaptation_factor: 0.1,
+            performance_history: VecDeque::new(),
+            adaptation_threshold: 0.1,
+            max_rate: 0.1,
+            min_rate: 1e-6,
+        }
+    }
+
+    /// Update learning rate based on performance
+    fn update_learning_rate(&mut self, current_error: f64) {
+        self.performance_history.push_back(current_error);
+        
+        // Keep only recent errors
+        if self.performance_history.len() > 100 {
+            self.performance_history.pop_front();
+        }
+
+        // Adapt learning rate based on error trend
+        if self.performance_history.len() >= 2 {
+            let recent_avg = self.performance_history.iter().rev().take(10).sum::<f64>() / 10.0;
+            let older_avg = self.performance_history.iter().rev().skip(10).take(10).sum::<f64>() / 10.0;
+            
+            let performance_ratio = if older_avg > 0.0 {
+                recent_avg / older_avg
+            } else {
+                1.0
+            };
+
+            // Adapt learning rate
+            if performance_ratio < 0.95 {
+                // Performance improving - increase learning rate slightly
+                self.base_rate *= 1.01;
+            } else if performance_ratio > 1.05 {
+                // Performance degrading - decrease learning rate
+                self.base_rate *= 0.99;
+            }
+
+            // Apply bounds
+            self.base_rate = self.base_rate
+                .max(self.min_rate)
+                .min(self.max_rate);
+        }
+    }
+}
+
+impl MetaplasticityController {
+    /// Create new metaplasticity controller
+    fn new(num_clusters: usize, input_dim: usize) -> Self {
+        Self {
+            metaplastic_variables: Array2::ones((num_clusters, input_dim)),
+            meta_tau: 10000.0, // 10 seconds
+            plasticity_threshold: 0.5,
+            ltp_ltd_balance: 1.0,
+            activity_scaling: 1.0,
+        }
+    }
+
+    /// Compute metaplastic modulation
+    fn compute_modulation(&self, neuron_idx: usize, error: f64) -> f64 {
+        let meta_var_avg = self.metaplastic_variables.row(neuron_idx).mean().unwrap_or(1.0);
+        
+        // Higher metaplastic variable means lower plasticity (harder to change)
+        let modulation = 1.0 / (1.0 + meta_var_avg);
+        
+        // Scale by error magnitude
+        modulation * (1.0 + error.abs()).ln()
+    }
+
+    /// Update metaplastic variables
+    fn update_metaplastic_variables(
+        &mut self,
+        winner_idx: usize,
+        activities: &Array1<f64>,
+        _current_time: f64,
+    ) {
+        let dt = 1.0; // Assume 1ms updates
+        let decay_factor = (-dt / self.meta_tau).exp();
+
+        // Update metaplastic variables for winner
+        for meta_var in self.metaplastic_variables.row_mut(winner_idx).iter_mut() {
+            *meta_var = *meta_var * decay_factor + (1.0 - decay_factor) * activities[winner_idx];
+        }
+    }
+}
+
+impl MultiTimescaleAdaptation {
+    /// Create new multi-timescale adaptation
+    fn new() -> Self {
+        Self {
+            fast_adaptation: AdaptationScale::new(1.0, 1.0),      // 1ms timescale
+            medium_adaptation: AdaptationScale::new(1000.0, 0.5), // 1s timescale
+            slow_adaptation: AdaptationScale::new(60000.0, 0.1),  // 1min timescale
+            timescale_weights: Array1::from(vec![0.5, 0.3, 0.2]),
+        }
+    }
+
+    /// Update all adaptation scales
+    fn update(&mut self, error: f64, dt: f64) {
+        self.fast_adaptation.update(error, dt);
+        self.medium_adaptation.update(error, dt);
+        self.slow_adaptation.update(error, dt);
+    }
+
+    /// Get combined adaptation factor
+    fn get_adaptation_factor(&self) -> f64 {
+        let fast_factor = self.fast_adaptation.memory_trace;
+        let medium_factor = self.medium_adaptation.memory_trace;
+        let slow_factor = self.slow_adaptation.memory_trace;
+
+        self.timescale_weights[0] * fast_factor +
+        self.timescale_weights[1] * medium_factor +
+        self.timescale_weights[2] * slow_factor
+    }
+}
+
+impl AdaptationScale {
+    /// Create new adaptation scale
+    fn new(time_constant: f64, adaptation_strength: f64) -> Self {
+        Self {
+            time_constant,
+            adaptation_strength,
+            memory_trace: 1.0,
+            decay_factor: 0.999,
+        }
+    }
+
+    /// Update this adaptation scale
+    fn update(&mut self, error: f64, dt: f64) {
+        let decay = (-dt / self.time_constant).exp();
+        self.memory_trace = self.memory_trace * decay + (1.0 - decay) * (1.0 - error);
+        self.memory_trace = self.memory_trace.max(0.0).min(2.0);
+    }
+}
+
+/// Advanced bio-inspired spatial clustering with dendritic computation
+#[derive(Debug, Clone)]
+pub struct DendriticSpatialClusterer {
+    /// Number of output neurons
+    num_neurons: usize,
+    /// Input dimension
+    input_dim: usize,
+    /// Neurons with dendritic compartments
+    neurons: Vec<DendriticNeuron>,
+    /// Lateral connections between neurons
+    lateral_connections: Array2<f64>,
+    /// Global learning parameters
+    global_learning_params: GlobalLearningParams,
+}
+
+/// Neuron with dendritic compartments for non-linear processing
+#[derive(Debug, Clone)]
+pub struct DendriticNeuron {
+    /// Dendritic compartments
+    dendrites: Vec<DendriticCompartment>,
+    /// Soma (cell body)
+    soma: SomaCompartment,
+    /// Axon output
+    axon_output: f64,
+    /// Neuron position in space
+    position: Array1<f64>,
+}
+
+/// Individual dendritic compartment
+#[derive(Debug, Clone)]
+pub struct DendriticCompartment {
+    /// Synaptic weights to this compartment
+    weights: Array1<f64>,
+    /// Compartment activation
+    activation: f64,
+    /// Local learning rule parameters
+    local_learning_params: LocalLearningParams,
+    /// NMDA-like non-linearity threshold
+    nmda_threshold: f64,
+    /// Compartment time constant
+    #[allow(dead_code)]
+    time_constant: f64,
+}
+
+/// Soma compartment for integration
+#[derive(Debug, Clone)]
+pub struct SomaCompartment {
+    /// Membrane potential
+    membrane_potential: f64,
+    /// Spike threshold
+    threshold: f64,
+    /// Refractory period
+    #[allow(dead_code)]
+    refractory_period: f64,
+    /// Time since last spike
+    #[allow(dead_code)]
+    time_since_spike: f64,
+}
+
+/// Global learning parameters
+#[derive(Debug, Clone)]
+pub struct GlobalLearningParams {
+    /// Base learning rate
+    learning_rate: f64,
+    /// Competition strength
+    #[allow(dead_code)]
+    competition_strength: f64,
+    /// Lateral inhibition radius
+    #[allow(dead_code)]
+    inhibition_radius: f64,
+    /// Plasticity modulation
+    #[allow(dead_code)]
+    plasticity_modulation: f64,
+}
+
+/// Local learning parameters for dendritic compartments
+#[derive(Debug, Clone)]
+pub struct LocalLearningParams {
+    /// Local learning rate
+    #[allow(dead_code)]
+    local_rate: f64,
+    /// Heterosynaptic depression
+    #[allow(dead_code)]
+    heterosynaptic_depression: f64,
+    /// Activity-dependent scaling
+    activity_scaling: f64,
+}
+
+impl DendriticSpatialClusterer {
+    /// Create new dendritic spatial clusterer
+    pub fn new(num_neurons: usize, input_dim: usize, dendrites_per_neuron: usize) -> Self {
+        let mut neurons = Vec::new();
+        for i in 0..num_neurons {
+            let position = Array1::from(vec![
+                (i as f64) / (num_neurons as f64), // Simple 1D arrangement
+                0.0,
+            ]);
+            neurons.push(DendriticNeuron::new(input_dim, dendrites_per_neuron, position));
+        }
+
+        let lateral_connections = Array2::zeros((num_neurons, num_neurons));
+        let global_learning_params = GlobalLearningParams::new();
+
+        Self {
+            num_neurons,
+            input_dim,
+            neurons,
+            lateral_connections,
+            global_learning_params,
+        }
+    }
+
+    /// Fit dendritic clustering model
+    pub fn fit(
+        &mut self,
+        points: &ArrayView2<f64>,
+        epochs: usize,
+    ) -> SpatialResult<Array1<usize>> {
+        let (n_samples, n_features) = points.dim();
+        
+        if n_features != self.input_dim {
+            return Err(SpatialError::InvalidInput(
+                "Input dimension mismatch".to_string(),
+            ));
+        }
+
+        self.initialize_lateral_connections()?;
+        let mut assignments = Array1::zeros(n_samples);
+
+        for _epoch in 0..epochs {
+            for (sample_idx, sample) in points.outer_iter().enumerate() {
+                // Forward pass through dendritic computation
+                let neuron_outputs = self.dendritic_forward_pass(&sample)?;
+
+                // Find winning neuron
+                let winner_idx = neuron_outputs
+                    .iter()
+                    .enumerate()
+                    .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+                    .map(|(i, _)| i)
+                    .unwrap_or(0);
+
+                assignments[sample_idx] = winner_idx;
+
+                // Dendritic learning update
+                self.dendritic_learning_update(&sample, winner_idx, &neuron_outputs)?;
+            }
+        }
+
+        Ok(assignments)
+    }
+
+    /// Get cluster centers (average dendritic weights)
+    pub fn get_cluster_centers(&self) -> Array2<f64> {
+        let mut centers = Array2::zeros((self.num_neurons, self.input_dim));
+        
+        for (neuron_idx, neuron) in self.neurons.iter().enumerate() {
+            let center = neuron.get_average_weights();
+            centers.row_mut(neuron_idx).assign(&center);
+        }
+        
+        centers
+    }
+
+    /// Forward pass with dendritic computation
+    fn dendritic_forward_pass(&mut self, input: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
+        let mut outputs = Array1::zeros(self.num_neurons);
+
+        for (neuron_idx, neuron) in self.neurons.iter_mut().enumerate() {
+            let neuron_output = neuron.compute_output(input)?;
+            outputs[neuron_idx] = neuron_output;
+        }
+
+        Ok(outputs)
+    }
+
+    /// Initialize lateral connections
+    fn initialize_lateral_connections(&mut self) -> SpatialResult<()> {
+        for i in 0..self.num_neurons {
+            for j in 0..self.num_neurons {
+                if i != j {
+                    let distance = self.compute_neuron_distance(i, j);
+                    // Mexican hat connectivity: nearby excitation, distant inhibition
+                    let connection_strength = if distance < 0.2 {
+                        0.1 * (-distance.powi(2) / 0.02).exp() // Excitation
+                    } else {
+                        -0.05 * (-distance.powi(2) / 0.1).exp() // Inhibition
+                    };
+                    self.lateral_connections[[i, j]] = connection_strength;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// Compute distance between neurons
+    fn compute_neuron_distance(&self, i: usize, j: usize) -> f64 {
+        let pos_i = &self.neurons[i].position;
+        let pos_j = &self.neurons[j].position;
+        
+        pos_i.iter()
+            .zip(pos_j.iter())
+            .map(|(&a, &b)| (a - b).powi(2))
+            .sum::<f64>()
+            .sqrt()
+    }
+
+    /// Dendritic learning update
+    fn dendritic_learning_update(
+        &mut self,
+        input: &ArrayView1<f64>,
+        winner_idx: usize,
+        _outputs: &Array1<f64>,
+    ) -> SpatialResult<()> {
+        // Update winner neuron
+        self.neurons[winner_idx].update_synapses(input, true, &self.global_learning_params)?;
+
+        Ok(())
+    }
+}
+
+impl DendriticNeuron {
+    /// Create new dendritic neuron
+    fn new(input_dim: usize, num_dendrites: usize, position: Array1<f64>) -> Self {
+        let mut dendrites = Vec::new();
+        for _ in 0..num_dendrites {
+            dendrites.push(DendriticCompartment::new(input_dim));
+        }
+
+        let soma = SomaCompartment::new();
+
+        Self {
+            dendrites,
+            soma,
+            axon_output: 0.0,
+            position,
+        }
+    }
+
+    /// Compute neuron output through dendritic computation
+    fn compute_output(&mut self, input: &ArrayView1<f64>) -> SpatialResult<f64> {
+        // Compute dendritic activations
+        let mut dendritic_inputs = Vec::new();
+        for dendrite in &mut self.dendrites {
+            let activation = dendrite.compute_activation(input)?;
+            dendritic_inputs.push(activation);
+        }
+
+        // Integrate in soma
+        let soma_input: f64 = dendritic_inputs.iter().sum();
+        self.soma.membrane_potential += soma_input;
+
+        // Apply non-linearity and generate output
+        let output = if self.soma.membrane_potential > self.soma.threshold {
+            self.soma.membrane_potential = 0.0; // Reset after spike
+            1.0
+        } else {
+            (self.soma.membrane_potential / self.soma.threshold).max(0.0)
+        };
+
+        self.axon_output = output;
+        Ok(output)
+    }
+
+    /// Update synaptic weights
+    fn update_synapses(
+        &mut self,
+        input: &ArrayView1<f64>,
+        is_winner: bool,
+        global_params: &GlobalLearningParams,
+    ) -> SpatialResult<()> {
+        let modulation = if is_winner { 1.0 } else { 0.1 };
+
+        for dendrite in &mut self.dendrites {
+            dendrite.update_weights(input, modulation * global_params.learning_rate)?;
+        }
+
+        Ok(())
+    }
+
+    /// Get average weights across all dendrites
+    fn get_average_weights(&self) -> Array1<f64> {
+        let input_dim = self.dendrites[0].weights.len();
+        let mut avg_weights = Array1::zeros(input_dim);
+
+        for dendrite in &self.dendrites {
+            avg_weights = avg_weights + &dendrite.weights;
+        }
+
+        avg_weights / self.dendrites.len() as f64
+    }
+}
+
+impl DendriticCompartment {
+    /// Create new dendritic compartment
+    fn new(input_dim: usize) -> Self {
+        use rand::Rng;
+        let mut rng = rand::rng();
+        
+        let mut weights = Array1::zeros(input_dim);
+        for weight in weights.iter_mut() {
+            *weight = rng.random_range(0.0..1.0);
+        }
+
+        let local_learning_params = LocalLearningParams::new();
+
+        Self {
+            weights,
+            activation: 0.0,
+            local_learning_params,
+            nmda_threshold: 0.5,
+            time_constant: 10.0,
+        }
+    }
+
+    /// Compute compartment activation with NMDA-like non-linearity
+    fn compute_activation(&mut self, input: &ArrayView1<f64>) -> SpatialResult<f64> {
+        // Linear integration
+        let linear_sum: f64 = input.iter()
+            .zip(self.weights.iter())
+            .map(|(&x, &w)| x * w)
+            .sum();
+
+        // NMDA-like non-linearity: threshold and supralinear amplification
+        let activation = if linear_sum > self.nmda_threshold {
+            linear_sum + 0.5 * (linear_sum - self.nmda_threshold).powi(2)
+        } else {
+            0.1 * linear_sum // Subthreshold leakage
+        };
+
+        self.activation = activation;
+        Ok(activation)
+    }
+
+    /// Update compartment weights
+    fn update_weights(&mut self, input: &ArrayView1<f64>, learning_rate: f64) -> SpatialResult<()> {
+        for (weight, &input_val) in self.weights.iter_mut().zip(input.iter()) {
+            // Activity-dependent learning with local modulation
+            let local_modulation = self.activation * self.local_learning_params.activity_scaling;
+            let weight_update = learning_rate * local_modulation * (input_val - *weight);
+            *weight += weight_update;
+
+            // Apply bounds
+            *weight = weight.max(0.0).min(2.0);
+        }
+
+        Ok(())
+    }
+}
+
+impl SomaCompartment {
+    /// Create new soma compartment
+    fn new() -> Self {
+        Self {
+            membrane_potential: 0.0,
+            threshold: 1.0,
+            refractory_period: 2.0,
+            time_since_spike: 0.0,
+        }
+    }
+}
+
+impl GlobalLearningParams {
+    /// Create new global learning parameters
+    fn new() -> Self {
+        Self {
+            learning_rate: 0.01,
+            competition_strength: 1.0,
+            inhibition_radius: 0.3,
+            plasticity_modulation: 1.0,
+        }
+    }
+}
+
+impl LocalLearningParams {
+    /// Create new local learning parameters
+    fn new() -> Self {
+        Self {
+            local_rate: 1.0,
+            heterosynaptic_depression: 0.001,
+            activity_scaling: 1.0,
+        }
     }
 }
 
@@ -2767,6 +3673,38 @@ mod tests {
         let mut clusterer = CompetitiveNeuralClusterer::new(2, 2);
 
         let result = clusterer.fit(&points.view(), 50);
+        assert!(result.is_ok());
+
+        let assignments = result.unwrap();
+        assert_eq!(assignments.len(), 4);
+
+        let centers = clusterer.get_cluster_centers();
+        assert_eq!(centers.nrows(), 2);
+        assert_eq!(centers.ncols(), 2);
+    }
+
+    #[test]
+    fn test_homeostatic_neural_clusterer() {
+        let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
+        let mut clusterer = HomeostaticNeuralClusterer::new(2, 2);
+
+        let result = clusterer.fit(&points.view(), 20);
+        assert!(result.is_ok());
+
+        let assignments = result.unwrap();
+        assert_eq!(assignments.len(), 4);
+
+        let centers = clusterer.get_cluster_centers();
+        assert_eq!(centers.nrows(), 2);
+        assert_eq!(centers.ncols(), 2);
+    }
+
+    #[test]
+    fn test_dendritic_spatial_clusterer() {
+        let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
+        let mut clusterer = DendriticSpatialClusterer::new(2, 2, 3);
+
+        let result = clusterer.fit(&points.view(), 20);
         assert!(result.is_ok());
 
         let assignments = result.unwrap();

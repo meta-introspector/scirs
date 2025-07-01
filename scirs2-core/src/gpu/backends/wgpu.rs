@@ -8,6 +8,7 @@ use std::sync::{Arc, Mutex};
 use crate::gpu::{GpuBufferImpl, GpuCompilerImpl, GpuContextImpl, GpuError, GpuKernelImpl};
 
 #[cfg(feature = "wgpu_backend")]
+#[allow(unused_imports)]
 use wgpu::{
     util::DeviceExt, Backends, Buffer, BufferDescriptor, BufferUsages, ComputePipeline, Device,
     DeviceDescriptor, Features, Instance, InstanceDescriptor, Limits, PowerPreference, Queue,

@@ -270,7 +270,7 @@ pub use gpu::{
 };
 pub use jit_optimization::{optimize_function, FunctionPattern, JitCompiler, JitOptions, JitStats};
 pub use learned_optimizers::{
-    learned_optimize, meta_learning_optimize, ActivationType, AdaptationStatistics,
+    learned_optimize, ActivationType, AdaptationStatistics,
     AdaptiveNASSystem, AdaptiveTransformerOptimizer, FewShotLearningOptimizer,
     LearnedHyperparameterTuner, LearnedOptimizationConfig, LearnedOptimizer, MetaOptimizerState,
     NeuralAdaptiveOptimizer, OptimizationNetwork, OptimizationProblem, ParameterDistribution,
@@ -299,7 +299,7 @@ pub use quantum_inspired::{
 };
 pub use reinforcement_learning::{
     actor_critic_optimize, bandit_optimize, evolutionary_optimize, meta_learning_optimize,
-    policy_gradient_optimize, policy_gradient_optimize, BanditOptimizer, EvolutionaryStrategy,
+    policy_gradient_optimize, BanditOptimizer, EvolutionaryStrategy,
     Experience, MetaLearningOptimizer, OptimizationAction, OptimizationState, QLearningOptimizer,
     RLOptimizationConfig, RLOptimizer,
 };
@@ -389,7 +389,7 @@ pub mod prelude {
         optimize_function, FunctionPattern, JitCompiler, JitOptions, JitStats,
     };
     pub use crate::learned_optimizers::{
-        few_shot_learning_optimize, learned_optimize, ActivationType, AdaptationStatistics,
+        learned_optimize, ActivationType, AdaptationStatistics,
         AdaptiveNASSystem, AdaptiveTransformerOptimizer, FewShotLearningOptimizer,
         LearnedHyperparameterTuner, LearnedOptimizationConfig, LearnedOptimizer,
         MetaOptimizerState, NeuralAdaptiveOptimizer, OptimizationNetwork, OptimizationProblem,
@@ -426,8 +426,8 @@ pub mod prelude {
     };
     pub use crate::reinforcement_learning::{
         bandit_optimize, evolutionary_optimize, meta_learning_optimize, policy_gradient_optimize,
-        ActorCriticOptimizer, BanditOptimizer, EvolutionaryStrategy, Experience,
-        MetaLearningOptimizer, OptimizationAction, OptimizationState, PolicyGradientOptimizer,
+        BanditOptimizer, EvolutionaryStrategy, Experience,
+        MetaLearningOptimizer, OptimizationAction, OptimizationState,
         QLearningOptimizer, RLOptimizationConfig, RLOptimizer,
     };
     pub use crate::result::OptimizeResults;

@@ -4,7 +4,7 @@
 //! including adaptive sequence processing, memory-efficient attention mechanisms,
 //! and dynamic architecture adaptation for complex optimization landscapes.
 
-use ndarray::{s, Array1, Array2, Array3, ArrayBase, Data, Dimension};
+use ndarray::{Array1, Array2, Array3, Dimension};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 use std::time::Instant;

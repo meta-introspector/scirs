@@ -6,7 +6,7 @@
 use crate::error::{NeuralError, Result};
 use crate::reinforcement::environments::{Action, Environment, Info, Observation, Reward};
 use ndarray::prelude::*;
-use rand::Rng;
+use ndarray_rand::rand::Rng;
 use std::collections::HashMap;
 
 /// Multi-agent environment trait
@@ -67,7 +67,7 @@ impl MultiAgentGridWorld {
         let mut goal_positions = Vec::new();
 
         // Place agents randomly
-        let mut rng = rand::rng();
+        let mut rng = ndarray_rand::rand::thread_rng();
         for _ in 0..num_agents {
             let x = rng.random_range(0..width);
             let y = rng.random_range(0..height);
@@ -207,7 +207,7 @@ impl MultiAgentEnvironment for MultiAgentGridWorld {
 
     fn reset(&mut self) -> Result<Vec<Observation>> {
         // Reset agent and goal positions
-        let mut rng = rand::rng();
+        let mut rng = ndarray_rand::rand::thread_rng();
 
         for i in 0..self.agent_positions.len() {
             // Reset agent position
@@ -410,7 +410,7 @@ impl PursuitEvasion {
         max_speed: f32,
         capture_radius: f32,
     ) -> Self {
-        let mut rng = rand::rng();
+        let mut rng = ndarray_rand::rand::thread_rng();
 
         let mut pursuers = Vec::new();
         for _ in 0..num_pursuers {
@@ -516,7 +516,7 @@ impl MultiAgentEnvironment for PursuitEvasion {
     }
 
     fn reset(&mut self) -> Result<Vec<Observation>> {
-        let mut rng = rand::rng();
+        let mut rng = ndarray_rand::rand::thread_rng();
 
         // Reset pursuers
         for pursuer in &mut self.pursuers {

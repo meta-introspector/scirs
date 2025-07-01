@@ -8,8 +8,6 @@ use crate::error::{DatasetsError, Result};
 use crate::utils::Dataset;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::SimdUnifiedOps;
-use std::collections::HashMap;
 
 /// Ultra-advanced dataset quality metrics
 #[derive(Debug, Clone)]

@@ -16,7 +16,6 @@ use std::hash::Hash;
 use std::io::{BufReader, BufWriter, Write};
 use std::path::Path;
 use std::sync::atomic::AtomicUsize;
-use std::sync::Arc;
 
 /// Configuration for Node2Vec embedding algorithm
 #[derive(Debug, Clone)]
@@ -275,7 +274,7 @@ impl<N: Node> NegativeSampler<N> {
         let vocabulary: Vec<N> = graph.nodes().into_iter().cloned().collect();
         let node_degrees = vocabulary
             .iter()
-            .map(|node| graph.degree(node).unwrap_or(0) as f64)
+            .map(|node| graph.degree(node) as f64)
             .collect::<Vec<_>>();
 
         // Use subsampling with power 0.75 as in Word2Vec
@@ -378,21 +377,15 @@ impl Embedding {
             ));
         }
 
-        // Use SIMD optimized cosine similarity when available
-        if self.vector.len() >= 4 {
-            let similarity = f64::simd_cosine_similarity(&self.vector, &other.vector);
-            Ok(similarity)
-        } else {
-            // Fallback for small vectors
-            let dot_product: f64 = self
-                .vector
-                .iter()
-                .zip(other.vector.iter())
-                .map(|(a, b)| a * b)
-                .sum();
+        let dot_product: f64 = self
+            .vector
+            .iter()
+            .zip(other.vector.iter())
+            .map(|(a, b)| a * b)
+            .sum();
 
-            let norm_a = self.norm();
-            let norm_b = other.norm();
+        let norm_a = self.norm();
+        let norm_b = other.norm();
 
             if norm_a == 0.0 || norm_b == 0.0 {
                 Ok(0.0)
@@ -404,12 +397,7 @@ impl Embedding {
 
     /// Calculate L2 norm of the embedding (SIMD optimized)
     pub fn norm(&self) -> f64 {
-        if self.vector.len() >= 4 {
-            f64::simd_norm(&self.vector)
-        } else {
-            // Fallback for small vectors
-            self.vector.iter().map(|x| x * x).sum::<f64>().sqrt()
-        }
+        self.vector.iter().map(|x| x * x).sum::<f64>().sqrt()
     }
 
     /// Normalize the embedding to unit length
@@ -451,18 +439,12 @@ impl Embedding {
             ));
         }
 
-        // Use SIMD optimization from scirs2-core when available
-        if self.vector.len() >= 4 {
-            let dot = f64::simd_dot_product(&self.vector, &other.vector);
-            Ok(dot)
-        } else {
-            // Fallback for small vectors
-            let dot: f64 = self
-                .vector
-                .iter()
-                .zip(other.vector.iter())
-                .map(|(a, b)| a * b)
-                .sum();
+        let dot: f64 = self
+            .vector
+            .iter()
+            .zip(other.vector.iter())
+            .map(|(a, b)| a * b)
+            .sum();
             Ok(dot)
         }
     }
@@ -474,14 +456,8 @@ impl Embedding {
 
     /// Update embedding using gradient (SIMD optimized)
     pub fn update_gradient(&mut self, gradient: &[f64], learning_rate: f64) {
-        if self.vector.len() >= 4 && gradient.len() >= 4 {
-            // Use SIMD optimized gradient update
-            f64::simd_scaled_add_assign(&mut self.vector, gradient, -learning_rate);
-        } else {
-            // Fallback for small vectors
-            for (emb, &grad) in self.vector.iter_mut().zip(gradient.iter()) {
-                *emb -= learning_rate * grad;
-            }
+        for (emb, &grad) in self.vector.iter_mut().zip(gradient.iter()) {
+            *emb -= learning_rate * grad;
         }
     }
 }
@@ -835,18 +811,8 @@ impl<N: Node> EmbeddingModel<N> {
                         let positive_error = 1.0 - positive_prob;
 
                         // Add positive contribution
-                        if self.dimensions >= 4 {
-                            let mut temp_gradient = vec![0.0; self.dimensions];
-                            f64::simd_scaled_add(
-                                &mut temp_gradient,
-                                &context_emb.vector,
-                                positive_error,
-                            );
-                            f64::simd_add_assign(&mut accumulated_gradient, &temp_gradient);
-                        } else {
-                            for i in 0..self.dimensions {
-                                accumulated_gradient[i] += positive_error * context_emb.vector[i];
-                            }
+                        for i in 0..self.dimensions {
+                            accumulated_gradient[i] += positive_error * context_emb.vector[i];
                         }
 
                         // Negative sampling
@@ -864,19 +830,9 @@ impl<N: Node> EmbeddingModel<N> {
                                 let negative_prob = Embedding::sigmoid(negative_score);
                                 let negative_error = -negative_prob;
 
-                                if self.dimensions >= 4 {
-                                    let mut temp_gradient = vec![0.0; self.dimensions];
-                                    f64::simd_scaled_add(
-                                        &mut temp_gradient,
-                                        &neg_context_emb.vector,
-                                        negative_error,
-                                    );
-                                    f64::simd_add_assign(&mut accumulated_gradient, &temp_gradient);
-                                } else {
-                                    for i in 0..self.dimensions {
-                                        accumulated_gradient[i] +=
-                                            negative_error * neg_context_emb.vector[i];
-                                    }
+                                for i in 0..self.dimensions {
+                                    accumulated_gradient[i] +=
+                                        negative_error * neg_context_emb.vector[i];
                                 }
                             }
                         }
@@ -1252,7 +1208,7 @@ impl<N: Node> EmbeddingModel<N> {
             }
 
             let node = parts[0].to_string();
-            let vector: Result<Vec<f64>, _> = parts[1..].iter().map(|s| s.parse::<f64>()).collect();
+            let vector: std::result::Result<Vec<f64>, std::num::ParseFloatError> = parts[1..].iter().map(|s| s.parse::<f64>()).collect();
 
             match vector {
                 Ok(v) => {
@@ -1925,7 +1881,7 @@ pub struct FastGraphEmbedding<N: Node> {
     pub pool_index: AtomicUsize,
 }
 
-impl<N: Node + Clone + Hash + Eq> FastGraphEmbedding<N> {
+impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> FastGraphEmbedding<N> {
     pub fn new(dimensions: usize, quality_factor: usize) -> Self {
         let pool_size = 1000; // Preallocate 1000 vectors
         let mut memory_pool = Vec::with_capacity(pool_size);
@@ -1938,7 +1894,7 @@ impl<N: Node + Clone + Hash + Eq> FastGraphEmbedding<N> {
         let projection_size = dimensions * quality_factor;
         let mut projection_matrix = Vec::new();
         for _ in 0..projection_size {
-            let row: Vec<f32> = (0..dimensions).map(|_| rng.gen_range(-1.0..1.0)).collect();
+            let row: Vec<f32> = (0..dimensions).map(|_| rng.random_range(-1.0..1.0)).collect();
             projection_matrix.push(row);
         }
 
@@ -2065,24 +2021,12 @@ impl<N: Node + Clone + Hash + Eq> FastGraphEmbedding<N> {
         E: EdgeWeight + Into<f64> + Send + Sync,
         Ix: petgraph::graph::IndexType + Send + Sync,
     {
-        use std::sync::Mutex;
+        let mut final_results = HashMap::new();
+        for node in nodes {
+            let embedding = self.compute_fast_embedding(graph, node, 50)?;
+            final_results.insert(node.clone(), embedding);
+        }
 
-        let results = Arc::new(Mutex::new(HashMap::new()));
-
-        nodes.par_chunks(100).try_for_each(|chunk| -> Result<()> {
-            let mut local_results = HashMap::new();
-
-            for node in chunk {
-                let embedding = self.compute_fast_embedding(graph, node, 50)?;
-                local_results.insert(node.clone(), embedding);
-            }
-
-            let mut global_results = results.lock().unwrap();
-            global_results.extend(local_results);
-            Ok(())
-        })?;
-
-        let final_results = Arc::try_unwrap(results).unwrap().into_inner().unwrap();
         Ok(final_results)
     }
 }
@@ -2194,7 +2138,7 @@ impl<N: Node + Clone + Hash + Eq> Graph2Vec<N> {
         let mut rng = rand::rng();
         for graph_id in graph_patterns.keys() {
             let embedding: Vec<f64> = (0..self.dimensions)
-                .map(|_| rng.gen_range(-0.1..0.1))
+                .map(|_| rng.random_range(-0.1..0.1))
                 .collect();
             self.graph_embeddings.insert(graph_id.clone(), embedding);
         }

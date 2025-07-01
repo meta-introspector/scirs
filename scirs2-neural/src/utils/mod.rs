@@ -7,7 +7,7 @@
 use crate::error::{NeuralError, Result};
 use ndarray::{Array, Dimension};
 use num_traits::Float;
-use rand::Rng;
+use ndarray_rand::rand::Rng;
 use std::fmt::Debug;
 
 /// Terminal color utilities for visualization
@@ -86,8 +86,8 @@ pub fn random_normal<F: Float + Debug, R: Rng>(
     let values: Vec<F> = (0..size)
         .map(|_| {
             // Box-Muller transform to generate normal distribution
-            let u1 = rng.random_range(0.0..1.0);
-            let u2 = rng.random_range(0.0..1.0);
+            let u1 = rng.gen_range(0.0..1.0);
+            let u2 = rng.gen_range(0.0..1.0);
 
             let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
             let val = mean_f64 + std_f64 * z;
@@ -234,7 +234,7 @@ pub fn train_test_split<F: Float + Debug, R: Rng>(
     if shuffle {
         // Fisher-Yates shuffle
         for i in (1..n_samples).rev() {
-            let j = rng.random_range(0..=i);
+            let j = rng.gen_range(0..=i);
             indices.swap(i, j);
         }
     }

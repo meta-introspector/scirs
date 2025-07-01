@@ -3189,10 +3189,8 @@ impl<T: Float> ArchitectureCandidateGenerator<T> {
         let mut rec_stack = vec![false; n];
 
         for i in 0..n {
-            if !visited[i] {
-                if self.has_cycle_util(i, &mut visited, &mut rec_stack, connections)? {
-                    return Ok(true);
-                }
+            if !visited[i] && self.has_cycle_util(i, &mut visited, &mut rec_stack, connections)? {
+                return Ok(true);
             }
         }
 

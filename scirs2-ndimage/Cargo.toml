@@ -12,7 +12,7 @@ categories = ["science", "mathematics", "algorithms"]
 [dependencies]
 # Core dependencies
 scirs2-core = { workspace = true, features = ["validation", "memory_efficient"] }
-scirs2-interpolate = { workspace = true }
+# scirs2-interpolate = { workspace = true }
 scirs2-fft = { workspace = true }
 ndarray = { workspace = true }
 num-traits = { workspace = true }
@@ -26,6 +26,9 @@ lazy_static = { workspace = true }
 rayon = { workspace = true }
 num_cpus = { workspace = true }
 rand = { workspace = true }
+regex = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
 
 [features]
 default = []

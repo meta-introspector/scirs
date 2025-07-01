@@ -420,7 +420,7 @@ impl<'a> InteriorPointSolver<'a> {
         }
 
         // Solve KKT system
-        let solution = solve_linear_system(&kkt_matrix, &rhs)?;
+        let solution = solve(&kkt_matrix, &rhs)?;
 
         // Extract components
         let dx = solution.slice(ndarray::s![0..self.n]).to_owned();
@@ -621,7 +621,7 @@ impl<'a> InteriorPointSolver<'a> {
         }
 
         // Solve KKT system
-        let solution = solve_linear_system(&kkt_matrix, &rhs)?;
+        let solution = solve(&kkt_matrix, &rhs)?;
 
         // Extract components
         self.extract_direction_components(&solution)
@@ -711,7 +711,7 @@ impl<'a> InteriorPointSolver<'a> {
         }
 
         // Solve KKT system
-        let solution = solve_linear_system(&kkt_matrix, &rhs)?;
+        let solution = solve(&kkt_matrix, &rhs)?;
 
         // Extract components and combine with predictor step
         let (dx_cor, ds_cor, dlambda_eq_cor, dlambda_ineq_cor) =
@@ -852,7 +852,7 @@ impl<'a> InteriorPointSolver<'a> {
 }
 
 /// Solve linear system using LU decomposition from scirs2-linalg
-fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> Result<Array1<f64>, OptimizeError> {
+fn solve(a: &Array2<f64>, b: &Array1<f64>) -> Result<Array1<f64>, OptimizeError> {
     use scirs2_linalg::solve::solve;
 
     solve(&a.view(), &b.view(), None)

@@ -795,7 +795,7 @@ impl ApiStabilizationAnalyzer {
     /// Analyze a specific trait
     fn analyze_trait(&self, trait_item: &ApiTrait) -> InterpolateResult<ApiAnalysisResult> {
         let mut issues = Vec::new();
-        let mut recommendations = Vec::new();
+        let recommendations = Vec::new();
         let mut risk_factors = Vec::new();
 
         if trait_item.experimental && !self.config.allow_experimental_features {
@@ -859,7 +859,7 @@ impl ApiStabilizationAnalyzer {
     /// Analyze a specific module
     fn analyze_module(&self, module: &ApiModule) -> InterpolateResult<ApiAnalysisResult> {
         let mut issues = Vec::new();
-        let mut recommendations = Vec::new();
+        let recommendations = Vec::new();
         let mut risk_factors = Vec::new();
 
         if module.experimental && !self.config.allow_experimental_features {
@@ -979,7 +979,7 @@ impl ApiStabilizationAnalyzer {
 
         // Check for experimental features that might become breaking changes
         for result in &self.analysis_results {
-            if let Some(experimental_issue) = result
+            if let Some(_experimental_issue) = result
                 .issues
                 .iter()
                 .find(|i| i.description.contains("experimental"))

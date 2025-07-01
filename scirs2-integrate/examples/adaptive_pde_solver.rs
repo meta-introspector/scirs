@@ -332,7 +332,7 @@ impl AdaptivePDESolver {
     }
 
     /// Finalize and get performance report
-    pub fn finalize(mut self) -> (PerformanceAnalyzer, SolverStatistics) {
+    pub fn finalize(self) -> (PerformanceAnalyzer, SolverStatistics) {
         let final_cell_count = self.count_active_cells();
         let metrics = self.profiler.finalize();
         let stats = SolverStatistics {

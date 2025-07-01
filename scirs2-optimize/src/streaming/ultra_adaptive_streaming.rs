@@ -13,6 +13,7 @@ use super::{
     StreamingStats,
 };
 use crate::error::OptimizeError;
+use ndarray::s;
 use ndarray::{Array1, Array2, ArrayView1};
 use scirs2_core::error::CoreResult as Result;
 use scirs2_core::simd_ops::SimdUnifiedOps;
@@ -687,7 +688,7 @@ impl<T: StreamingObjective> UltraAdaptiveStreamingOptimizer<T> {
 
         // Elastic net (combination of L1 and L2)
         let alpha = 0.5;
-        let elastic_net_reg = alpha * l1_factor + (1.0 - alpha) * l2_factor;
+        let _elastic_net_reg = alpha * l1_factor + (1.0 - alpha) * l2_factor;
 
         // Adaptive gradient clipping
         let gradient_norm = regularized.mapv(|x| x * x).sum().sqrt();
@@ -721,7 +722,7 @@ impl<T: StreamingObjective> UltraAdaptiveStreamingOptimizer<T> {
     }
 
     /// Adaptive hyperparameter tuning
-    fn adaptive_hyperparameter_tuning(&mut self, context: &Array1<f64>) -> Result<()> {
+    fn adaptive_hyperparameter_tuning(&mut self, _context: &Array1<f64>) -> Result<()> {
         // Tune learning rate based on performance
         if self.performance_tracker.is_stagnant() {
             self.config.learning_rate *= 1.1; // Increase learning rate
@@ -827,7 +828,7 @@ impl<T: StreamingObjective + Clone> StreamingOptimizer for UltraAdaptiveStreamin
 // (In a real implementation, these would be fully developed)
 
 impl MultiScaleTemporalMemory {
-    fn new(param_size: usize) -> Self {
+    fn new(_param_size: usize) -> Self {
         Self {
             short_term: VecDeque::with_capacity(100),
             medium_term: VecDeque::with_capacity(50),

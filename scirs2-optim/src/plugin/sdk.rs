@@ -6,12 +6,10 @@
 use super::core::*;
 use crate::benchmarking::cross_platform_tester::{PerformanceBaseline, PlatformTarget};
 use crate::error::{OptimError, Result};
-use ndarray::{Array1, Array2, Axis};
+use ndarray::Array1;
 use num_traits::Float;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::Debug;
-use std::marker::PhantomData;
 
 /// Base optimizer plugin implementation with common functionality
 #[derive(Debug)]
@@ -431,7 +429,7 @@ min_rust_version = "1.70.0"
         }
 
         let execution_time = start_time.elapsed();
-        let avg_memory = total_memory / test_data.len();
+        let _avg_memory = total_memory / test_data.len();
 
         PerformanceBaseline {
             reference_platform: PlatformTarget::LinuxX64,

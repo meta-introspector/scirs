@@ -210,7 +210,7 @@ fn demonstrate_adaptive_streaming(dataset: &Dataset) -> Result<(), Box<dyn std::
 
     // Simulate streaming data
     println!("📡 Simulating data stream...");
-    let data = dataset.data();
+    let data = &dataset.data;
     let chunk_size = 20;
     let num_chunks = (data.nrows() / chunk_size).min(10); // Limit for demo
 

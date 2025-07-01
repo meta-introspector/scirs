@@ -80,6 +80,50 @@ pub mod advanced;
 /// * **Continual Learning** - Adapt to changing data distributions in real-time
 /// * **Bio-Quantum Clustering** - Nature-inspired quantum clustering algorithms
 pub mod ultrathink_clustering;
+/// Enhanced visualization specifically for ultrathink clustering results.
+///
+/// This module provides specialized visualization capabilities for ultrathink clustering,
+/// including quantum state visualization, neuromorphic adaptation plots, and AI algorithm
+/// selection insights with real-time interactive capabilities.
+///
+/// # Features
+///
+/// * **Quantum State Visualization**: Real-time coherence and entanglement plots
+/// * **Neuromorphic Adaptation**: Spiking neuron activity and plasticity visualization
+/// * **AI Algorithm Selection**: Performance predictions and selection insights
+/// * **Performance Dashboard**: Comprehensive metrics comparison with classical methods
+/// * **Export Capabilities**: Multiple formats including interactive HTML and JSON
+pub mod ultrathink_visualization;
+/// Enhanced Ultrathink Features - Advanced AI-Driven Clustering Extensions
+///
+/// This module extends the ultrathink clustering capabilities with cutting-edge
+/// features including deep learning integration, quantum-inspired algorithms,
+/// and advanced ensemble methods for superior clustering performance.
+///
+/// # Revolutionary Deep Learning Features
+///
+/// * **Transformer-Based Embeddings** - Deep representations using attention mechanisms
+/// * **Graph Neural Networks** - Complex relationship modeling through graph convolutions
+/// * **Reinforcement Learning** - Adaptive clustering strategy optimization
+/// * **Neural Architecture Search** - Automatic design of optimal clustering networks
+/// * **Deep Ensemble Methods** - Robust clustering through uncertainty quantification
+/// * **Advanced Uncertainty Estimation** - Confidence intervals and reliability metrics
+pub mod ultrathink_enhanced_features;
+/// Ultrathink GPU and Distributed Computing Extensions
+///
+/// This module provides GPU acceleration and distributed computing capabilities
+/// for ultrathink clustering, enabling massive scalability and performance
+/// improvements for large-scale clustering tasks.
+///
+/// # High-Performance Computing Features
+///
+/// * **GPU Acceleration** - CUDA/OpenCL/ROCm GPU acceleration with automatic fallback
+/// * **Distributed Computing** - Multi-node clustering with fault tolerance
+/// * **Hybrid GPU-Distributed** - Combined GPU and distributed processing
+/// * **Advanced Memory Management** - Optimized GPU memory allocation and transfer
+/// * **Load Balancing** - Dynamic workload distribution across nodes
+/// * **Fault Tolerance** - Automatic recovery from worker node failures
+pub mod ultrathink_gpu_distributed;
 /// Advanced benchmarking and performance profiling system.
 ///
 /// This module provides cutting-edge benchmarking capabilities for clustering algorithms,
@@ -100,6 +144,7 @@ pub mod advanced_benchmarking;
 pub mod affinity;
 pub mod birch;
 pub mod density;
+pub mod quantum_clustering;
 /// Distributed clustering algorithms for large-scale datasets.
 ///
 /// This module provides distributed implementations of clustering algorithms that can
@@ -275,6 +320,31 @@ pub use quantum_clustering::{
 // Re-export ultrathink clustering capabilities
 pub use ultrathink_clustering::{
     UltrathinkClusterer, UltrathinkClusteringResult, UltrathinkConfig, UltrathinkPerformanceMetrics,
+};
+
+// Re-export ultrathink visualization capabilities
+pub use ultrathink_visualization::{
+    UltrathinkVisualizer, UltrathinkVisualizationConfig, UltrathinkVisualizationOutput,
+    QuantumColorScheme, VisualizationExportFormat, QuantumCoherencePlot, NeuromorphicAdaptationPlot,
+    AISelectionPlot, PerformanceDashboard, ClusterPlot, visualize_ultrathink_results,
+    create_ultrathink_visualization_report,
+};
+
+// Re-export enhanced ultrathink features
+pub use ultrathink_enhanced_features::{
+    DeepUltrathinkClusterer, DeepUltrathinkResult, TransformerClusterEmbedder,
+    GraphNeuralNetworkProcessor, ReinforcementLearningAgent, NeuralArchitectureSearchEngine,
+    DeepEnsembleCoordinator, GraphStructureInsights, SpectralProperties,
+    OptimalArchitecture, EnsembleConsensus,
+};
+
+// Re-export GPU and distributed ultrathink features
+pub use ultrathink_gpu_distributed::{
+    GpuUltrathinkClusterer, DistributedUltrathinkClusterer, HybridGpuDistributedClusterer,
+    GpuUltrathinkResult, DistributedUltrathinkResult, HybridGpuDistributedResult,
+    GpuAccelerationConfig, GpuDeviceSelection, GpuMemoryStrategy, GpuOptimizationLevel,
+    WorkerNodeConfig, CoordinationStrategy, GpuAccelerationMetrics, DistributedProcessingMetrics,
+    LoadBalancingStats, CommunicationOverhead, WorkerPerformanceStats,
 };
 
 // Re-export advanced benchmarking capabilities

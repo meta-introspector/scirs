@@ -239,7 +239,7 @@ impl UltraThinkCoordinator {
         let processing_time = start.elapsed();
 
         let processed_data_for_metrics = processed_data.clone();
-        
+
         Ok(StrategyResult {
             strategy_type: StrategyType::NeuralAdaptive,
             processed_data,
@@ -257,7 +257,7 @@ impl UltraThinkCoordinator {
         let processing_time = start.elapsed();
 
         let processed_data_for_metrics = processed_data.clone();
-        
+
         Ok(StrategyResult {
             strategy_type: StrategyType::QuantumInspired,
             processed_data,
@@ -270,7 +270,7 @@ impl UltraThinkCoordinator {
     /// Execute GPU accelerated processing strategy
     fn execute_gpu_accelerated_strategy(&self, data: &[u8]) -> Result<StrategyResult> {
         let start = Instant::now();
-        
+
         #[cfg(feature = "gpu")]
         let processed_data = {
             let gpu_processor_guard = self.gpu_processor.read().unwrap();
@@ -283,7 +283,7 @@ impl UltraThinkCoordinator {
                 self.process_with_simd_fallback(data)?
             }
         };
-        
+
         #[cfg(not(feature = "gpu"))]
         let processed_data = self.process_with_simd_fallback(data)?;
 
@@ -306,7 +306,7 @@ impl UltraThinkCoordinator {
         let processing_time = start.elapsed();
 
         let processed_data_for_metrics = processed_data.clone();
-        
+
         Ok(StrategyResult {
             strategy_type: StrategyType::SimdOptimized,
             processed_data,
@@ -943,11 +943,16 @@ enum ProcessingStrategy {
     },
 }
 
+/// Types of processing strategies available in Ultra-Think mode
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum StrategyType {
+    /// Neural adaptive processing with reinforcement learning
     NeuralAdaptive,
+    /// Quantum-inspired parallel processing with superposition algorithms
     QuantumInspired,
+    /// GPU-accelerated processing with multiple backend support
     GpuAccelerated,
+    /// SIMD-optimized processing for vectorized operations
     SimdOptimized,
 }
 
@@ -960,28 +965,44 @@ struct StrategyResult {
     quality_metrics: QualityMetrics,
 }
 
+/// Quality metrics for evaluating processing results
 #[derive(Debug, Clone)]
 pub struct QualityMetrics {
-    data_integrity: f32,
-    compression_efficiency: f32,
-    processing_accuracy: f32,
-    memory_efficiency: f32,
-    overall_quality: f32,
+    /// Data integrity score (0.0 to 1.0)
+    pub data_integrity: f32,
+    /// Compression efficiency score (0.0 to 1.0)
+    pub compression_efficiency: f32,
+    /// Processing accuracy score (0.0 to 1.0)
+    pub processing_accuracy: f32,
+    /// Memory usage efficiency score (0.0 to 1.0)
+    pub memory_efficiency: f32,
+    /// Overall quality score combining all metrics (0.0 to 1.0)
+    pub overall_quality: f32,
 }
 
+/// Adaptive improvements achieved through Ultra-Think processing
 #[derive(Debug, Clone)]
 pub struct AdaptiveImprovements {
-    efficiency_gain: f32,
-    strategy_optimization: f32,
-    resource_utilization: f32,
-    learning_acceleration: f32,
+    /// Efficiency gain achieved (improvement ratio)
+    pub efficiency_gain: f32,
+    /// Strategy optimization improvement (0.0 to 1.0)
+    pub strategy_optimization: f32,
+    /// Resource utilization efficiency (0.0 to 1.0)
+    pub resource_utilization: f32,
+    /// Learning acceleration factor
+    pub learning_acceleration: f32,
 }
 
+/// Intelligence level of the processing system
 #[derive(Debug, Clone, Copy)]
 pub enum IntelligenceLevel {
+    /// Basic processing with minimal optimization
     Basic,
+    /// Adaptive processing with simple learning
     Adaptive,
+    /// Intelligent processing with advanced optimization
     Intelligent,
+    /// Ultra-Think mode with maximum intelligence and learning
     UltraThink,
 }
 
@@ -993,26 +1014,43 @@ enum OptimizationMode {
     UltraThink,
 }
 
+/// Result of Ultra-Think processing with comprehensive metrics
 #[derive(Debug, Clone)]
 pub struct ProcessingResult {
+    /// Processed data output
     pub data: Vec<u8>,
+    /// Strategy that was used for processing
     pub strategy_used: StrategyType,
+    /// Total processing time taken
     pub processing_time: Duration,
+    /// Efficiency score of the processing (0.0 to 1.0)
     pub efficiency_score: f32,
+    /// Quality metrics of the processing result
     pub quality_metrics: QualityMetrics,
+    /// Intelligence level used for processing
     pub intelligence_level: IntelligenceLevel,
+    /// Adaptive improvements achieved during processing
     pub adaptive_improvements: AdaptiveImprovements,
 }
 
+/// Comprehensive statistics for Ultra-Think system performance
 #[derive(Debug, Clone)]
 pub struct UltraThinkStatistics {
+    /// Statistics from neural adaptation processing
     pub neural_adaptation_stats: crate::neural_adaptive_io::AdaptationStats,
+    /// Performance statistics from quantum-inspired processing
     pub quantum_performance_stats: QuantumPerformanceStats,
+    /// Statistics from performance intelligence analysis
     pub performance_intelligence_stats: PerformanceIntelligenceStats,
+    /// Total number of operations processed by the system
     pub total_operations_processed: usize,
+    /// Average intelligence level used across operations
     pub average_intelligence_level: IntelligenceLevel,
+    /// Number of emergent behaviors detected by the system
     pub emergent_behaviors_detected: usize,
+    /// Accuracy of meta-learning predictions (0.0 to 1.0)
     pub meta_learning_accuracy: f32,
+    /// Overall system efficiency score (0.0 to 1.0)
     pub overall_system_efficiency: f32,
 }
 
@@ -1063,10 +1101,14 @@ impl PerformanceIntelligence {
     }
 }
 
+/// Statistics for performance intelligence analysis
 #[derive(Debug, Clone)]
 pub struct PerformanceIntelligenceStats {
+    /// Total number of performance analyses conducted
     pub total_analyses: usize,
+    /// Accuracy of performance predictions (0.0 to 1.0)
     pub prediction_accuracy: f32,
+    /// Success rate of optimization attempts (0.0 to 1.0)
     pub optimization_success_rate: f32,
 }
 
@@ -1187,7 +1229,7 @@ mod tests {
 
     #[test]
     fn test_processing_strategy_execution() {
-        let mut coordinator = UltraThinkCoordinator::new().unwrap();
+        let coordinator = UltraThinkCoordinator::new().unwrap();
         let test_data = vec![1, 2, 3, 4, 5];
 
         let result = coordinator

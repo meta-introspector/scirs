@@ -6,12 +6,12 @@
 
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2};
-use num_traits::{Float, NumCast};
-use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
+use num_traits::Float;
+use scirs2_core::parallel_ops::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, RwLock};
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, Instant, SystemTime};
 
 /// Production deployment configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]

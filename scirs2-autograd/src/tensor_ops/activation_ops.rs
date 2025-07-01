@@ -27,7 +27,7 @@ pub struct Softmax {
     pub axis: isize,
 }
 
-#[cfg(feature = "mkl")]
+#[cfg(feature = "blas")]
 fn fast_sigmoid_impl<F: Float>(x: &NdArrayView<F>) -> NdArray<F> {
     let half = F::from(0.5).unwrap();
     unsafe {

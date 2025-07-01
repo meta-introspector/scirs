@@ -467,7 +467,7 @@ impl PersonalizedFL {
     ) -> Result<()> {
         // Simple k-means on label distributions
         use rand::prelude::*;
-        let mut rng = rand::rng();
+        let mut rng = ndarray_rand::rand::thread_rng();
 
         // Initialize cluster assignments randomly
         for &client_id in client_ids {

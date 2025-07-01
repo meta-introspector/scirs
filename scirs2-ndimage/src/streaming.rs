@@ -5,6 +5,7 @@
 
 use ndarray::{Array, ArrayView, ArrayViewMut, Dimension, Ix2, Ix3, IxDyn, ShapeBuilder, Slice};
 use num_traits::{Float, FromPrimitive};
+use rayon::prelude::*;
 use std::fmt::Debug;
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Read, Seek, SeekFrom, Write};
@@ -153,7 +154,7 @@ where
         if is_parallel_enabled() {
             let chunks: Vec<_> = self.chunk_iterator(shape, &chunk_dims).collect();
 
-            par_iter(&chunks).try_for_each(|chunk_info| {
+            chunks.par_iter().try_for_each(|chunk_info| {
                 let chunk = self.extract_chunk(input, chunk_info)?;
                 let result = op.apply_chunk(&chunk.view())?;
 

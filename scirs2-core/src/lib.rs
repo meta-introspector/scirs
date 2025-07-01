@@ -159,6 +159,9 @@ pub mod ultrathink_distributed_computing;
 // Ultrathink Cloud Storage Framework
 pub mod ultrathink_cloud_storage;
 
+// Ultrathink Tensor Cores and Automatic Kernel Tuning Framework
+pub mod ultrathink_tensor_cores;
+
 // Benchmarking module
 #[cfg(feature = "benchmarking")]
 pub mod benchmarking;
@@ -343,7 +346,7 @@ pub use crate::quantum_optimization::{
 
 // Ultrathink JIT Compilation re-exports
 pub use crate::ultrathink_jit_compilation::{
-    AdaptiveCodeGenerator, CompilationStatistics, CompiledKernel, JitAnalytics, JitCompilerConfig,
+    AdaptiveCodeGenerator, CompilationStatistics, JitAnalytics, JitCompilerConfig,
     JitProfiler, KernelCache, KernelMetadata, KernelPerformance, LlvmCompilationEngine,
     OptimizationResults, PerformanceImprovement, RuntimeOptimizer, UltrathinkJitCompiler,
 };

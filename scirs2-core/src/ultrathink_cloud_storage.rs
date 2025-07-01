@@ -1477,7 +1477,7 @@ impl UltrathinkCloudStorageCoordinator {
         // Check cache first
         if self.config.enable_intelligent_caching {
             if let Some(cached_data) = self.check_cache(&request.key)? {
-                return Ok(self.create_response_from_cache(cached_data, start_time)?);
+                return self.create_response_from_cache(cached_data, start_time);
             }
         }
 
@@ -1491,7 +1491,7 @@ impl UltrathinkCloudStorageCoordinator {
 
         // Update cache
         if self.config.enable_intelligent_caching {
-            self.update_cache_on_download(&request, &response)?;
+            self.update_cache_on_download(request, &response)?;
         }
 
         // Update analytics
@@ -2692,6 +2692,12 @@ pub struct StreamMetrics {
     throughput_history: Vec<ThroughputMeasurement>,
 }
 
+impl Default for StreamMetrics {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl StreamMetrics {
     pub fn new() -> Self {
         Self {
@@ -2743,6 +2749,12 @@ pub struct ThroughputMeasurement {
 
 // Implementation stubs for complex sub-modules
 
+impl Default for AdaptiveStreamingEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl AdaptiveStreamingEngine {
     pub fn new() -> Self {
         Self {
@@ -2752,6 +2764,12 @@ impl AdaptiveStreamingEngine {
             buffer_optimizer: BufferOptimizer::new(),
             prefetch_engine: PrefetchEngine::new(),
         }
+    }
+}
+
+impl Default for BufferOptimizer {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -2779,6 +2797,12 @@ impl BufferOptimizer {
                 update_frequency: Duration::from_secs(60),
             },
         }
+    }
+}
+
+impl Default for PrefetchEngine {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

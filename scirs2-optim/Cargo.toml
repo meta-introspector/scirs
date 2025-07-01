@@ -33,6 +33,7 @@ uuid = { version = "1.6", features = ["v4", "serde"] }
 futures = { version = "0.3", features = ["executor"] }
 chrono = { version = "0.4", features = ["serde"] }
 clap = { version = "4.4", features = ["derive"] }
+rsa = { version = "0.9", optional = true }
 
 [[bin]]
 name = "performance_regression_tester"
@@ -82,5 +83,7 @@ approx = { workspace = true }
 default = []
 # GPU acceleration support
 gpu = ["scirs2-core/gpu"]
+# Cryptographic functionality for plugin security
+crypto = ["dep:rsa"]
 # Temporarily removed optim_integration to avoid circular dependency
 metrics_integration = ["dep:scirs2-metrics", "scirs2-metrics/optim_integration"]

@@ -7,7 +7,7 @@ use crate::error::{NeuralError, Result};
 use crate::layers::{Layer, ParamLayer};
 use ndarray::{Array, ArrayView, IxDyn, ScalarOperand};
 use num_traits::Float;
-use rand::Rng;
+use ndarray_rand::rand::Rng;
 use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::sync::{Arc, RwLock};
@@ -78,7 +78,7 @@ pub struct LayerNorm2D<F: Float + Debug + Send + Sync> {
 impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LayerNorm2D<F> {
     /// Create a new 2D layer normalization layer
     pub fn new<R: Rng>(channels: usize, eps: f64, name: Option<&str>) -> Result<Self> {
-        let layer_norm = LayerNorm::new(channels, eps, &mut rand::rng())?;
+        let layer_norm = LayerNorm::new(channels, eps, &mut ndarray_rand::rand::thread_rng())?;
 
         Ok(Self {
             channels,

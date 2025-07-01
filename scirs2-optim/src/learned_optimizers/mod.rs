@@ -1100,7 +1100,7 @@ impl<A: Float> Default for AutoSelectionCriteria<A> {
 
 impl<A, D> LSTMOptimizer<A, D>
 where
-    A: Float + Default + Clone + Send + Sync + std::fmt::Debug,
+    A: Float + Default + Clone + Send + Sync + std::fmt::Debug + 'static,
     D: Dimension,
 {
     /// Create a new LSTM optimizer

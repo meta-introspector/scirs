@@ -9,9 +9,8 @@
 //! scirs2-autograd = {"<version>", features = ["blas", "<blas-implementation-choice>"] }
 //! ```
 //! `<blas-implementation-choice>` must be one of the following:
-//! - `accelerate` macOS only
-//! - `intel-mkl` Intel/AMD CPU only. Includes Vector Mathematics (VM) ops
 //! - `openblas`
+//! - `netlib`
 //!
 //! ## Features
 //! ### Reverse-mode automatic differentiation using lazy tensors

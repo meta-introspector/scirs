@@ -2818,7 +2818,7 @@ impl ProofOfStakeConsensus {
         let total_active_stake: u64 = active_validators.iter().map(|v| v.stake).sum();
         let mut random_point = self.randomness_seed % total_active_stake;
 
-        for validator in active_validators {
+        for validator in &active_validators {
             if random_point < validator.stake {
                 self.current_validator = Some(validator.node_id.clone());
                 // Update randomness for next selection
@@ -4439,6 +4439,30 @@ impl DistributedClusterOrchestrator {
                     .collect();
                 self.decommission_nodes(node_ids_to_remove)?;
             }
+            ScalingAction::ScaleTo(target_count) => {
+                let current_count = self.nodes.len();
+                if target_count > current_count {
+                    let diff = target_count - current_count;
+                    self.provision_new_nodes(diff)?;
+                } else if target_count < current_count {
+                    let diff = current_count - target_count;
+                    let mut node_ids_to_remove: Vec<String> = self
+                        .nodes
+                        .iter()
+                        .take(diff)
+                        .map(|node| node.node_id.clone())
+                        .collect();
+                    self.decommission_nodes(node_ids_to_remove)?;
+                }
+            }
+            ScalingAction::Custom(action_desc) => {
+                // Handle custom scaling actions based on the description
+                // This could be extended to parse and execute custom scaling logic
+                return Err(MetricsError::ComputationError(format!(
+                    "Custom scaling action not implemented: {}",
+                    action_desc
+                )));
+            }
             ScalingAction::NoAction => {
                 // No action needed
             }
@@ -4452,7 +4476,9 @@ impl DistributedClusterOrchestrator {
         let mut node_health = Vec::new();
         let mut unhealthy_nodes = Vec::new();
 
-        for node in &mut self.nodes {
+        // Clone nodes to avoid borrow conflicts
+        let nodes_to_check = self.nodes.clone();
+        for node in &nodes_to_check {
             let health = self.check_node_health(node)?;
             if health.status != HealthStatus::Healthy {
                 unhealthy_nodes.push(node.node_id.clone());
@@ -4612,27 +4638,38 @@ impl DistributedClusterOrchestrator {
     }
 
     fn collect_cluster_metrics(&self) -> ClusterMetrics {
+        let mut node_metrics = HashMap::new();
+
+        for node in &self.nodes {
+            let node_metric = NodeMetrics {
+                cpu_usage: node.workload.cpu_utilization,
+                memory_usage: node.workload.memory_utilization,
+                disk_usage: 0.0, // Default value
+                network_io: 0.0, // Default value
+                active_connections: node.workload.active_jobs,
+                response_time: Duration::from_millis(50), // Default response time
+                error_rate: 0.0,                          // Default error rate
+                throughput: 0.0,                          // Default throughput
+            };
+            node_metrics.insert(node.node_id.clone(), node_metric);
+        }
+
+        let global_load = self
+            .nodes
+            .iter()
+            .map(|n| n.workload.cpu_utilization)
+            .sum::<f64>()
+            / self.nodes.len() as f64;
+
+        let task_queue_length = self.nodes.iter().map(|n| n.workload.active_jobs).sum();
+
+        let response_time = Duration::from_millis(100); // Default response time
+
         ClusterMetrics {
-            total_nodes: self.nodes.len(),
-            healthy_nodes: self
-                .nodes
-                .iter()
-                .filter(|n| n.health.status == HealthStatus::Healthy)
-                .count(),
-            average_cpu_utilization: self
-                .nodes
-                .iter()
-                .map(|n| n.workload.cpu_utilization)
-                .sum::<f64>()
-                / self.nodes.len() as f64,
-            average_memory_utilization: self
-                .nodes
-                .iter()
-                .map(|n| n.workload.memory_utilization)
-                .sum::<f64>()
-                / self.nodes.len() as f64,
-            total_active_jobs: self.nodes.iter().map(|n| n.workload.active_jobs).sum(),
-            timestamp: SystemTime::now(),
+            node_metrics,
+            global_load,
+            task_queue_length,
+            response_time,
         }
     }
 

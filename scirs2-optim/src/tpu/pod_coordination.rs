@@ -1030,8 +1030,9 @@ impl OptimizerError {
 const RESOURCE_UNAVAILABLE: &str = "Resources unavailable";
 
 impl OptimizerError {
-    pub const ResourceUnavailable: Self =
-        OptimizerError::ConfigurationError("Resources unavailable".to_string());
+    pub fn resource_unavailable() -> Self {
+        OptimizerError::ConfigurationError("Resources unavailable".to_string())
+    }
 }
 
 impl<T: Float + Default + Clone + Send + Sync> TPUPodCoordinator<T> {
@@ -1727,12 +1728,97 @@ impl LoadBalancer {
                     .collect()
             }
             LoadBalancingAlgorithm::WeightedRoundRobin => {
-                // TODO: Implement weighted round robin based on device capacity
-                available_devices.iter().take(4).cloned().collect()
+                // Implement weighted round robin based on device capacity
+                let mut weighted_devices: Vec<_> = available_devices
+                    .iter()
+                    .filter_map(|&device_id| {
+                        device_availability.get(&device_id).map(|availability| {
+                            // Calculate weight based on available capacity
+                            let capacity_weight = availability.compute_capacity;
+                            let memory_weight = availability.available_memory as f64 / (16.0 * 1024.0 * 1024.0 * 1024.0); // Normalize to 16GB
+                            let load_weight = 1.0 - availability.current_load;
+                            let bandwidth_weight = availability.communication_bandwidth / 100.0; // Normalize to 100 GB/s
+                            
+                            let combined_weight = (capacity_weight + memory_weight + load_weight + bandwidth_weight) / 4.0;
+                            (device_id, combined_weight)
+                        })
+                    })
+                    .collect();
+
+                // Sort by weight (highest first)
+                weighted_devices.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+
+                // Select devices based on weighted round robin
+                let mut selected = Vec::new();
+                let total_weight: f64 = weighted_devices.iter().map(|(_, weight)| weight).sum();
+                
+                if total_weight > 0.0 {
+                    let mut accumulated_weight = 0.0;
+                    let weight_per_device = total_weight / 4.0; // Target 4 devices
+                    
+                    for (device_id, weight) in &weighted_devices {
+                        accumulated_weight += weight;
+                        if accumulated_weight >= weight_per_device * (selected.len() + 1) as f64 {
+                            selected.push(*device_id);
+                            if selected.len() >= 4 {
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // Fill remaining slots if needed
+                    while selected.len() < 4 && selected.len() < weighted_devices.len() {
+                        for (device_id, _) in &weighted_devices {
+                            if !selected.contains(device_id) {
+                                selected.push(*device_id);
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                selected
             }
             LoadBalancingAlgorithm::CapacityBased => {
-                // TODO: Implement capacity-based selection
-                available_devices.iter().take(4).cloned().collect()
+                // Implement capacity-based selection prioritizing highest capacity devices
+                let mut capacity_ranked_devices: Vec<_> = available_devices
+                    .iter()
+                    .filter_map(|&device_id| {
+                        device_availability.get(&device_id).map(|availability| {
+                            // Calculate comprehensive capacity score
+                            let compute_score = availability.compute_capacity;
+                            let memory_score = availability.available_memory as f64 / (32_u64 * 1024 * 1024 * 1024) as f64; // Normalize to 32GB max
+                            let bandwidth_score = availability.communication_bandwidth / 200.0; // Normalize to 200 GB/s max
+                            let load_efficiency = (1.0 - availability.current_load).max(0.1); // Avoid division by zero
+                            
+                            // Weighted capacity score prioritizing compute > memory > bandwidth
+                            let capacity_score = (
+                                compute_score * 0.5 +      // 50% weight on compute capacity
+                                memory_score * 0.3 +       // 30% weight on memory capacity  
+                                bandwidth_score * 0.2      // 20% weight on communication bandwidth
+                            ) * load_efficiency;           // Adjusted by current load efficiency
+                            
+                            (device_id, capacity_score)
+                        })
+                    })
+                    .collect();
+
+                // Sort by capacity score (highest first)
+                capacity_ranked_devices.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+
+                // Select top capacity devices up to limit
+                let selected_devices: Vec<DeviceId> = capacity_ranked_devices
+                    .into_iter()
+                    .take(4) // Take top 4 highest capacity devices
+                    .map(|(device_id, _)| device_id)
+                    .collect();
+
+                // If we have fewer than 4 devices, ensure we have at least one
+                if selected_devices.is_empty() && !available_devices.is_empty() {
+                    vec![available_devices[0]]
+                } else {
+                    selected_devices
+                }
             }
         }
     }

@@ -262,10 +262,10 @@ impl<T: Float + FromPrimitive + Debug + Clone, D: Dimension> InPlaceOp<T, D> for
 }
 
 /// Memory-efficient array slicing that avoids copies when possible
-pub fn slice_efficiently<T, D, S>(
-    array: &ArrayBase<S, D>,
+pub fn slice_efficiently<'a, T, D, S>(
+    array: &'a ArrayBase<S, D>,
     slice_info: &[std::ops::Range<usize>],
-) -> ArrayView<T, D>
+) -> ArrayView<'a, T, D>
 where
     T: Float,
     D: Dimension,

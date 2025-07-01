@@ -83,48 +83,8 @@ pub struct UltrathinkClusterer {
     adaptation_engine: ContinualAdaptationEngine,
 }
 
-/// AI-driven clustering algorithm selector
-#[derive(Debug)]
-pub struct AIClusteringSelector {
-    /// Available clustering algorithms
-    algorithm_knowledge: ClusteringKnowledgeBase,
-    /// Neural network for algorithm selection
-    selection_network: AlgorithmSelectionNetwork,
-    /// Reinforcement learning agent
-    rl_agent: ClusteringRLAgent,
-    /// Performance prediction models
-    performance_models: HashMap<String, PerformancePredictionModel>,
-}
 
-/// Quantum-neuromorphic clustering processor
-#[derive(Debug)]
-pub struct QuantumNeuromorphicProcessor {
-    /// Quantum-enhanced spiking neurons
-    quantum_spiking_neurons: Vec<QuantumSpikingNeuron>,
-    /// Global quantum state
-    global_quantum_state: QuantumClusterState,
-    /// Neuromorphic adaptation parameters
-    neuromorphic_params: NeuromorphicParameters,
-    /// Quantum entanglement matrix
-    entanglement_matrix: Array2<Complex64>,
-    /// Bio-inspired plasticity rules
-    plasticity_rules: BioplasticityRules,
-}
 
-/// Meta-learning cluster optimizer
-#[derive(Debug)]
-pub struct MetaLearningClusterOptimizer {
-    /// Model-agnostic meta-learning (MAML) parameters
-    maml_params: MAMLParameters,
-    /// Task embeddings
-    task_embeddings: HashMap<String, Array1<f64>>,
-    /// Meta-learning history
-    meta_learning_history: VecDeque<MetaLearningEpisode>,
-    /// Few-shot learning capability
-    few_shot_learner: FewShotClusterLearner,
-    /// Transfer learning engine
-    transfer_engine: TransferLearningEngine,
-}
 
 /// Quantum-enhanced spiking neuron for clustering
 #[derive(Debug, Clone)]
@@ -566,9 +526,9 @@ impl AIClusteringSelector {
         DataCharacteristics {
             n_samples,
             n_features,
-            sparsity: sparsity as f32,
-            noise_level: noise_level as f32,
-            cluster_tendency: cluster_tendency as f32,
+            sparsity,
+            noise_level,
+            cluster_tendency,
         }
     }
     
@@ -667,9 +627,9 @@ impl AIClusteringSelector {
             score += 0.1;
         }
         
-        // Handle noise well
+        // Handle noise well - enhanced quantum noise resistance
         if characteristics.noise_level > 0.3 {
-            score += 0.05; // Quantum algorithms can handle uncertainty
+            score += 0.08; // Improved quantum uncertainty handling
         }
         
         // Penalty for very sparse data
@@ -677,12 +637,44 @@ impl AIClusteringSelector {
             score -= 0.1;
         }
         
-        // Scale bonus for larger datasets
+        // Scale bonus for larger datasets with quantum scaling advantage
         if characteristics.n_samples > 1000 {
-            score += 0.05;
+            score += 0.08;
+        }
+        if characteristics.n_samples > 10000 {
+            score += 0.12; // Quantum parallelism advantage
         }
         
+        // Advanced quantum coherence factor
+        let coherence_factor = self.calculate_quantum_coherence_factor(characteristics);
+        score += coherence_factor * 0.15;
+        
+        // Neuromorphic adaptation bonus for temporal patterns
+        let temporal_factor = self.estimate_temporal_complexity(characteristics);
+        score += temporal_factor * 0.1;
+        
         score.max(0.0).min(1.0)
+    }
+    
+    /// Calculate quantum coherence factor based on data characteristics
+    fn calculate_quantum_coherence_factor(&self, characteristics: &DataCharacteristics) -> f64 {
+        // Quantum coherence benefits from structured, low-noise data
+        let structure_score = characteristics.cluster_tendency;
+        let noise_penalty = characteristics.noise_level;
+        let dimensionality_bonus = (characteristics.n_features as f64 / 100.0).min(1.0);
+        
+        (structure_score - noise_penalty * 0.5 + dimensionality_bonus * 0.3)
+            .max(0.0)
+            .min(1.0)
+    }
+    
+    /// Estimate temporal complexity for neuromorphic adaptation
+    fn estimate_temporal_complexity(&self, characteristics: &DataCharacteristics) -> f64 {
+        // Neuromorphic systems excel with complex, dynamic patterns
+        let complexity = characteristics.cluster_tendency * characteristics.sparsity;
+        let adaptation_potential = 1.0 - characteristics.noise_level;
+        
+        (complexity + adaptation_potential) / 2.0
     }
     
     fn predict_adaptive_clustering_performance(&self, characteristics: &DataCharacteristics) -> f64 {
@@ -898,52 +890,283 @@ impl QuantumNeuromorphicProcessor {
             ));
         }
         
-        // Simplified quantum-neuromorphic clustering
+        // Enhanced quantum-neuromorphic clustering with iterative refinement
         let n_features = data.ncols();
+        let max_iterations = 50;
+        let convergence_threshold = 1e-6;
+        
         let mut centroids = Array2::zeros((k, n_features));
         let mut clusters = Array1::zeros(data.nrows());
+        let mut prev_centroids = centroids.clone();
         
-        // Initialize centroids with quantum-enhanced positions
-        for i in 0..k {
-            for j in 0..n_features {
-                let quantum_enhancement = self.quantum_spiking_neurons[i].quantum_state.norm();
-                centroids[[i, j]] = data[[i % data.nrows(), j]] * quantum_enhancement;
-            }
-        }
+        // Initialize centroids with quantum-enhanced k-means++ strategy
+        self.quantum_enhanced_initialization(data, &mut centroids)?;
         
-        // Quantum-neuromorphic assignment
-        for (idx, point) in data.outer_iter().enumerate() {
-            let mut min_distance = f64::INFINITY;
-            let mut best_cluster = 0;
-            
-            for (cluster_id, centroid) in centroids.outer_iter().enumerate() {
-                // Quantum-enhanced distance calculation with error handling
-                let quantum_factor = self.quantum_spiking_neurons[cluster_id].quantum_state.norm_sqr();
-                let base_distance = euclidean_distance(&point, &centroid);
+        for iteration in 0..max_iterations {
+            // Quantum-neuromorphic assignment with entanglement-aware distances
+            for (idx, point) in data.outer_iter().enumerate() {
+                let mut min_distance = f64::INFINITY;
+                let mut best_cluster = 0;
                 
-                // Ensure quantum factor doesn't cause division by zero or invalid results
-                let quantum_enhancement = if quantum_factor.is_finite() && quantum_factor >= 0.0 {
-                    1.0 + quantum_factor
-                } else {
-                    1.0
-                };
-                
-                let distance = base_distance / quantum_enhancement;
-                
-                // Validate distance calculation
-                if distance.is_finite() && distance >= 0.0 && distance < min_distance {
-                    min_distance = distance;
-                    best_cluster = cluster_id;
+                for (cluster_id, centroid) in centroids.outer_iter().enumerate() {
+                    // Advanced quantum-enhanced distance with entanglement
+                    let distance = self.calculate_quantum_entangled_distance(
+                        &point, &centroid, cluster_id, idx
+                    )?;
+                    
+                    if distance < min_distance {
+                        min_distance = distance;
+                        best_cluster = cluster_id;
+                    }
                 }
+                
+                clusters[idx] = best_cluster;
+                
+                // Update quantum state with spike-timing dependent plasticity
+                self.update_quantum_neuromorphic_state_enhanced(best_cluster, &point, iteration);
             }
             
-            clusters[idx] = best_cluster;
+            // Update centroids with quantum coherence weighting
+            prev_centroids.assign(&centroids);
+            self.update_quantum_coherent_centroids(data, &clusters, &mut centroids)?;
             
-            // Update quantum state based on assignment
-            self.update_quantum_neuromorphic_state(best_cluster, &point);
+            // Apply quantum decoherence simulation
+            self.simulate_quantum_decoherence(iteration as f64 / max_iterations as f64);
+            
+            // Check convergence with quantum uncertainty
+            let centroid_shift = self.calculate_quantum_weighted_shift(&centroids, &prev_centroids);
+            if centroid_shift < convergence_threshold {
+                break;
+            }
         }
 
         Ok((clusters, centroids))
+    }
+    
+    /// Quantum-enhanced k-means++ initialization
+    fn quantum_enhanced_initialization(
+        &mut self,
+        data: &ArrayView2<f64>,
+        centroids: &mut Array2<f64>,
+    ) -> Result<()> {
+        let k = centroids.nrows();
+        let n_samples = data.nrows();
+        
+        if k == 0 || n_samples == 0 {
+            return Ok(());
+        }
+        
+        // Choose first centroid randomly with quantum bias
+        let first_idx = (self.quantum_spiking_neurons[0].quantum_state.norm() * n_samples as f64) as usize % n_samples;
+        centroids.row_mut(0).assign(&data.row(first_idx));
+        
+        // Choose remaining centroids with quantum-enhanced D^2 sampling
+        for i in 1..k {
+            let mut distances = Array1::zeros(n_samples);
+            let mut total_distance = 0.0;
+            
+            for (idx, point) in data.outer_iter().enumerate() {
+                let mut min_dist = f64::INFINITY;
+                
+                for j in 0..i {
+                    let centroid = centroids.row(j);
+                    let dist = euclidean_distance(&point, &centroid);
+                    
+                    // Apply quantum enhancement to distance
+                    let quantum_factor = self.quantum_spiking_neurons[j].quantum_state.norm();
+                    let enhanced_dist = dist * (1.0 + quantum_factor * 0.1);
+                    
+                    if enhanced_dist < min_dist {
+                        min_dist = enhanced_dist;
+                    }
+                }
+                
+                distances[idx] = min_dist * min_dist; // D^2 sampling
+                total_distance += distances[idx];
+            }
+            
+            if total_distance > 0.0 {
+                // Quantum-weighted random selection
+                let quantum_random = self.quantum_spiking_neurons[i].quantum_state.norm() % 1.0;
+                let target = quantum_random * total_distance;
+                let mut cumulative = 0.0;
+                
+                for (idx, &dist) in distances.iter().enumerate() {
+                    cumulative += dist;
+                    if cumulative >= target {
+                        centroids.row_mut(i).assign(&data.row(idx));
+                        break;
+                    }
+                }
+            }
+        }
+        
+        Ok(())
+    }
+    
+    /// Calculate quantum-entangled distance between points
+    fn calculate_quantum_entangled_distance(
+        &self,
+        point: &ArrayView1<f64>,
+        centroid: &ArrayView1<f64>,
+        cluster_id: usize,
+        point_idx: usize,
+    ) -> Result<f64> {
+        let base_distance = euclidean_distance(point, centroid);
+        
+        // Quantum enhancement factors
+        let quantum_factor = self.quantum_spiking_neurons[cluster_id].quantum_state.norm_sqr();
+        let entanglement_factor = self.quantum_spiking_neurons[cluster_id].entanglement_strength;
+        
+        // Neuromorphic spike history influence
+        let spike_influence = self.calculate_spike_history_influence(cluster_id);
+        
+        // Quantum uncertainty principle effects
+        let uncertainty_factor = self.calculate_quantum_uncertainty(point, cluster_id);
+        
+        // Combined quantum-neuromorphic distance
+        let quantum_enhancement = 1.0 + quantum_factor * 0.2 - entanglement_factor * 0.1;
+        let neuromorphic_modulation = 1.0 + spike_influence * 0.15;
+        let uncertainty_adjustment = 1.0 + uncertainty_factor * 0.05;
+        
+        let enhanced_distance = base_distance * quantum_enhancement * neuromorphic_modulation * uncertainty_adjustment;
+        
+        Ok(enhanced_distance.max(0.0))
+    }
+    
+    /// Calculate spike history influence on clustering
+    fn calculate_spike_history_influence(&self, cluster_id: usize) -> f64 {
+        if let Some(neuron) = self.quantum_spiking_neurons.get(cluster_id) {
+            if neuron.spike_history.is_empty() {
+                return 0.0;
+            }
+            
+            // Calculate recent spike activity
+            let recent_spikes: f64 = neuron.spike_history.iter().take(10).sum();
+            let spike_rate = recent_spikes / neuron.spike_history.len().min(10) as f64;
+            
+            // Higher spike rates indicate active learning
+            spike_rate * neuron.plasticity_trace
+        } else {
+            0.0
+        }
+    }
+    
+    /// Calculate quantum uncertainty effects
+    fn calculate_quantum_uncertainty(&self, point: &ArrayView1<f64>, cluster_id: usize) -> f64 {
+        if let Some(neuron) = self.quantum_spiking_neurons.get(cluster_id) {
+            // Position uncertainty based on quantum coherence
+            let coherence = neuron.quantum_state.norm();
+            let momentum_uncertainty = 1.0 / coherence.max(0.1); // Heisenberg-like principle
+            
+            // Feature space uncertainty
+            let feature_variance = point.var(0.0);
+            let uncertainty = momentum_uncertainty * feature_variance.sqrt();
+            
+            // Normalize uncertainty
+            (uncertainty / (1.0 + uncertainty)).min(0.5)
+        } else {
+            0.0
+        }
+    }
+    
+    /// Update centroids with quantum coherence weighting
+    fn update_quantum_coherent_centroids(
+        &self,
+        data: &ArrayView2<f64>,
+        clusters: &Array1<usize>,
+        centroids: &mut Array2<f64>,
+    ) -> Result<()> {
+        let k = centroids.nrows();
+        
+        for cluster_id in 0..k {
+            let mut cluster_points = Vec::new();
+            let mut quantum_weights = Vec::new();
+            
+            // Collect points and their quantum weights
+            for (idx, &point_cluster) in clusters.iter().enumerate() {
+                if point_cluster == cluster_id {
+                    cluster_points.push(data.row(idx));
+                    
+                    // Calculate quantum weight based on coherence and spike activity
+                    let weight = if let Some(neuron) = self.quantum_spiking_neurons.get(cluster_id) {
+                        let coherence_weight = neuron.quantum_state.norm();
+                        let spike_weight = 1.0 + neuron.plasticity_trace;
+                        coherence_weight * spike_weight
+                    } else {
+                        1.0
+                    };
+                    quantum_weights.push(weight);
+                }
+            }
+            
+            if !cluster_points.is_empty() {
+                // Calculate quantum-weighted centroid
+                let total_weight: f64 = quantum_weights.iter().sum();
+                if total_weight > 0.0 {
+                    let mut weighted_centroid = Array1::zeros(centroids.ncols());
+                    
+                    for (point, weight) in cluster_points.iter().zip(quantum_weights.iter()) {
+                        weighted_centroid = weighted_centroid + &(point.to_owned() * *weight);
+                    }
+                    
+                    weighted_centroid /= total_weight;
+                    centroids.row_mut(cluster_id).assign(&weighted_centroid);
+                }
+            }
+        }
+        
+        Ok(())
+    }
+    
+    /// Simulate quantum decoherence over time
+    fn simulate_quantum_decoherence(&mut self, progress: f64) {
+        for neuron in &mut self.quantum_spiking_neurons {
+            // Gradual decoherence with environmental interaction
+            let decoherence_rate = 1.0 / neuron.coherence_time;
+            let environmental_factor = 1.0 + progress * 0.1; // Increasing environmental noise
+            
+            let current_amplitude = neuron.quantum_state.norm();
+            let new_amplitude = current_amplitude * (1.0 - decoherence_rate * environmental_factor * 0.01);
+            
+            // Maintain minimum coherence for stability
+            let bounded_amplitude = new_amplitude.max(0.1).min(1.0);
+            
+            neuron.quantum_state = Complex64::from_polar(
+                bounded_amplitude,
+                neuron.quantum_state.arg()
+            );
+        }
+    }
+    
+    /// Calculate quantum-weighted centroid shift for convergence
+    fn calculate_quantum_weighted_shift(
+        &self,
+        current: &Array2<f64>,
+        previous: &Array2<f64>,
+    ) -> f64 {
+        let mut total_shift = 0.0;
+        let mut total_weight = 0.0;
+        
+        for i in 0..current.nrows() {
+            let centroid_shift = euclidean_distance(&current.row(i), &previous.row(i));
+            
+            // Weight shift by quantum coherence
+            let weight = if let Some(neuron) = self.quantum_spiking_neurons.get(i) {
+                neuron.quantum_state.norm()
+            } else {
+                1.0
+            };
+            
+            total_shift += centroid_shift * weight;
+            total_weight += weight;
+        }
+        
+        if total_weight > 0.0 {
+            total_shift / total_weight
+        } else {
+            0.0
+        }
     }
 
     /// Update the global quantum state based on individual neuron states
@@ -980,6 +1203,108 @@ impl QuantumNeuromorphicProcessor {
                 }
             }
         }
+    }
+
+    fn update_quantum_neuromorphic_state_enhanced(&mut self, cluster_id: usize, point: &ArrayView1<f64>, iteration: usize) {
+        if let Some(neuron) = self.quantum_spiking_neurons.get_mut(cluster_id) {
+            // Calculate weighted input current using synaptic weights
+            let mut weighted_input = 0.0;
+            for (i, &value) in point.iter().enumerate() {
+                if i < neuron.synaptic_weights.len() {
+                    weighted_input += value * neuron.synaptic_weights[i];
+                }
+            }
+            weighted_input /= point.len() as f64;
+            
+            // Enhanced neuromorphic membrane dynamics with adaptation
+            let leak_current = (neuron.membrane_potential - neuron.reset_potential) * 0.05;
+            let adaptation_factor = 1.0 + (iteration as f64 / 100.0) * 0.1; // Increasing adaptation
+            neuron.membrane_potential += weighted_input * 0.2 * adaptation_factor - leak_current;
+            
+            // Apply quantum coherence effects with temporal evolution
+            let coherence_factor = (-1.0 / neuron.coherence_time).exp();
+            let temporal_phase = 2.0 * PI * iteration as f64 / 50.0; // Oscillating quantum field
+            let quantum_modulation = neuron.quantum_state.norm() * coherence_factor * 2.0 * temporal_phase.cos();
+            neuron.membrane_potential += quantum_modulation;
+            
+            // Enhanced spike detection with quantum uncertainty
+            let base_threshold = neuron.threshold;
+            let quantum_threshold_shift = neuron.quantum_state.im * 2.0; // Imaginary part affects threshold
+            let adaptive_threshold = base_threshold + quantum_threshold_shift;
+            
+            let spike_probability = 1.0 / (1.0 + (-(neuron.membrane_potential - adaptive_threshold) * 2.0).exp());
+            let quantum_random = (neuron.quantum_state.norm() * 1000.0) % 1.0; // Quantum randomness
+            let spike_occurred = spike_probability > quantum_random.max(0.3); // Quantum-enhanced threshold
+            
+            if spike_occurred {
+                neuron.membrane_potential = neuron.reset_potential;
+                neuron.spike_history.push_back(1.0);
+                
+                // Enhanced quantum state evolution on spike with entanglement
+                let phase_increment = PI * (neuron.entanglement_strength + 0.1);
+                let amplitude_boost = 1.0 + neuron.entanglement_strength * 0.15;
+                let temporal_phase_shift = iteration as f64 * 0.01; // Temporal quantum evolution
+                
+                let current_phase = neuron.quantum_state.arg() + temporal_phase_shift;
+                let current_amplitude = (neuron.quantum_state.norm() * amplitude_boost).min(1.0);
+                
+                neuron.quantum_state = Complex64::from_polar(
+                    current_amplitude,
+                    current_phase + phase_increment
+                );
+                
+                // Enhanced plasticity with meta-learning
+                let meta_learning_rate = 0.1 * (1.0 + iteration as f64 / 1000.0); // Increasing meta-learning
+                neuron.plasticity_trace += meta_learning_rate;
+                
+                // Advanced synaptic plasticity with quantum entanglement
+                for (i, &input_val) in point.iter().enumerate() {
+                    if i < neuron.synaptic_weights.len() {
+                        let hebbian_term = neuron.plasticity_trace * input_val * 0.01;
+                        let quantum_term = neuron.quantum_state.re * input_val * 0.005; // Real part influence
+                        let entanglement_term = neuron.entanglement_strength * input_val * 0.003;
+                        
+                        let total_weight_change = hebbian_term + quantum_term + entanglement_term;
+                        neuron.synaptic_weights[i] = (neuron.synaptic_weights[i] + total_weight_change)
+                            .max(0.0).min(2.0); // Expanded weight range
+                    }
+                }
+                
+                // Update entanglement strength based on successful clustering
+                neuron.entanglement_strength = (neuron.entanglement_strength + 0.01).min(1.0);
+                
+            } else {
+                neuron.spike_history.push_back(0.0);
+                
+                // Enhanced quantum decoherence with environmental interaction
+                let decoherence_rate = 1.0 / neuron.coherence_time;
+                let environmental_noise = (iteration as f64 * 0.1).sin() * 0.01; // Environmental fluctuations
+                let total_decoherence = decoherence_rate + environmental_noise.abs();
+                
+                let current_amplitude = neuron.quantum_state.norm() * (1.0 - total_decoherence * 0.01);
+                neuron.quantum_state = Complex64::from_polar(
+                    current_amplitude.max(0.1),
+                    neuron.quantum_state.arg()
+                );
+                
+                // Gradual entanglement decay without spikes
+                neuron.entanglement_strength *= 0.999;
+            }
+            
+            // Enhanced plasticity trace decay with quantum coherence influence
+            let coherence_influence = neuron.quantum_state.norm();
+            let decay_rate = 0.95 + coherence_influence * 0.04; // Higher coherence = slower decay
+            neuron.plasticity_trace *= decay_rate;
+            
+            // Maintain spike history size with adaptive window
+            let max_history_size = 50 + (iteration / 10).min(50); // Growing memory with learning
+            if neuron.spike_history.len() > max_history_size {
+                neuron.spike_history.pop_front();
+            }
+        }
+        
+        // Update global quantum state after individual neuron update
+        self.update_global_quantum_state();
     }
 
     fn update_quantum_neuromorphic_state(&mut self, cluster_id: usize, point: &ArrayView1<f64>) {

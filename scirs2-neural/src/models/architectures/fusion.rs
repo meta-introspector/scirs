@@ -8,8 +8,6 @@ use crate::layers::{Dense, Dropout, Layer, LayerNorm, Sequential};
 
 use ndarray::{Array, Axis, IxDyn, ScalarOperand};
 use num_traits::Float;
-// use rand::rngs::SmallRng;
-// use rand::SeedableRng;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 

@@ -65,7 +65,7 @@ impl<
     /// Reset the data loader state
     pub fn reset(&mut self) {
         if self.shuffle {
-            let mut rng = rand::rng();
+            let mut rng = ndarray_rand::rand::thread_rng();
             self.indices.shuffle(&mut rng);
         }
 

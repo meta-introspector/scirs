@@ -11,10 +11,26 @@
 //! - Spectral graph theory
 //! - Support for graph neural networks
 //!
-//! ## Stability
+//! ## API Stability and Versioning
 //!
-//! This module follows semantic versioning. Most APIs are stable and covered
-//! by our compatibility guarantee. Experimental features are clearly marked.
+//! scirs2-graph follows strict semantic versioning with clear stability guarantees:
+//!
+//! ### Stability Classifications
+//! - ✅ **Stable**: Core APIs guaranteed until next major version (2.0.0)
+//! - ⚠️ **Experimental**: May change in minor versions, marked with `#[cfg(feature = "experimental")]`
+//! - 📋 **Deprecated**: Will be removed in next major version, use alternatives
+//!
+//! ### Version Guarantees
+//! - **MAJOR** (1.x.x → 2.x.x): Breaking changes to stable APIs allowed
+//! - **MINOR** (1.0.x → 1.1.x): New features, deprecations only (no breaks to stable APIs)
+//! - **PATCH** (1.0.0 → 1.0.1): Bug fixes only, no API changes
+//!
+//! ### Stable Core APIs (v0.1.0-beta.1+)
+//! - Graph data structures (`Graph`, `DiGraph`, `MultiGraph`)
+//! - Basic algorithms (traversal, shortest paths, connectivity)
+//! - Graph generators and I/O operations
+//! - Community detection with `_result` suffix functions
+//! - Error handling and core types
 
 #![warn(missing_docs)]
 
@@ -36,6 +52,8 @@ pub mod performance;
 pub mod spectral;
 pub mod temporal;
 pub mod ultrathink;
+// pub mod ultrathink_memory_profiler;
+// pub mod ultrathink_numerical_validation;
 pub mod weighted;
 
 // Re-export stable APIs for 1.0
@@ -168,49 +186,49 @@ pub use algorithms::{
 
 // Add deprecation warnings for legacy functions
 #[deprecated(
-    since = "0.1.0-beta.2",
+    since = "0.1.0-beta.1",
     note = "Use `dijkstra_path` for future compatibility. This function will return PathResult in v1.0"
 )]
 pub use algorithms::shortest_path;
 
 #[deprecated(
-    since = "0.1.0-beta.2",
+    since = "0.1.0-beta.1",
     note = "Use `louvain_communities_result` instead"
 )]
 pub use algorithms::louvain_communities;
 
 #[deprecated(
-    since = "0.1.0-beta.2",
+    since = "0.1.0-beta.1",
     note = "Use `label_propagation_result` instead"
 )]
 pub use algorithms::label_propagation;
 
 #[deprecated(
-    since = "0.1.0-beta.2",
+    since = "0.1.0-beta.1",
     note = "Use `fluid_communities_result` instead"
 )]
 pub use algorithms::fluid_communities;
 
 #[deprecated(
-    since = "0.1.0-beta.2",
+    since = "0.1.0-beta.1",
     note = "Use `hierarchical_communities_result` instead"
 )]
 pub use algorithms::hierarchical_communities;
 
 #[deprecated(
-    since = "0.1.0-beta.2",
+    since = "0.1.0-beta.1",
     note = "Use `modularity_optimization_result` instead"
 )]
 pub use algorithms::modularity_optimization;
 
 #[deprecated(
-    since = "0.1.0-beta.2",
+    since = "0.1.0-beta.1",
     note = "Use `greedy_modularity_optimization_result` instead"
 )]
 pub use algorithms::greedy_modularity_optimization;
 
 #[deprecated(
-    since = "0.1.0-beta.2",
+    since = "0.1.0-beta.1",
     note = "Use `parallel_louvain_communities_result` instead"
 )]
 pub use algorithms::parallel_louvain_communities;
@@ -289,3 +307,17 @@ pub use ultrathink::{
     create_ultrathink_processor, execute_with_ultrathink, AlgorithmMetrics, GPUAccelerationContext,
     NeuralRLAgent, NeuromorphicProcessor, UltrathinkConfig, UltrathinkProcessor, UltrathinkStats,
 };
+
+// Ultrathink memory profiling - experimental
+// pub use ultrathink_memory_profiler::{
+//     EfficiencyAnalysis, MemoryProfile, MemoryProfilerConfig, 
+//     MemoryStats as UltrathinkMemoryStats, // Renamed to avoid conflict
+//     OptimizationOpportunity, OptimizationType, UltrathinkMemoryProfiler,
+// };
+
+// Ultrathink numerical validation - experimental
+// pub use ultrathink_numerical_validation::{
+//     create_comprehensive_validation_suite, run_quick_validation, UltrathinkNumericalValidator,
+//     ValidationAlgorithm, ValidationConfig, ValidationReport, ValidationResult,
+//     ValidationTolerances,
+// };

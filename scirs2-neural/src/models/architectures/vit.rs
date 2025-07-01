@@ -11,7 +11,7 @@ use crate::error::{NeuralError, Result};
 use crate::layers::{Dense, Dropout, Layer, LayerNorm, MultiHeadAttention, PatchEmbedding};
 use ndarray::{Array, IxDyn, ScalarOperand};
 use num_traits::Float;
-use rand::SeedableRng;
+use ndarray_rand::rand::SeedableRng;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 

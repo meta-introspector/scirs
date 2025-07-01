@@ -11,7 +11,7 @@
 //! - **Memristive Networks**: Hardware-aware plastic synaptic connections
 //! - **Neuromorphic Chips Simulation**: Intel Loihi and IBM TrueNorth-style processing
 
-use ndarray::{Array1, Array2, Array3};
+use ndarray::{Array1, Array2};
 use num_traits::{Float, FromPrimitive};
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;

@@ -1185,20 +1185,17 @@ impl AdvancedGpuOrchestrator {
             total_memory: 8 * 1024 * 1024 * 1024,     // 8GB
             available_memory: 7 * 1024 * 1024 * 1024, // 7GB
             multiprocessor_count: 68,
-            warp_size: 32,
             max_threads_per_block: 1024,
-            max_shared_memory: 48 * 1024,
-            memory_bandwidth: 900_000_000_000, // 900 GB/s
-            clock_rate: 1815000,               // 1.815 GHz
+            supports_double_precision: true,
         }])
     }
 
     /// Execute metrics computation across multiple GPUs
-    pub fn compute_metrics_distributed<'a, F>(
+    pub fn compute_metrics_distributed<F>(
         &mut self,
-        y_true_batch: ArrayView2<'a, F>,
-        y_pred_batch: ArrayView2<'a, F>,
-        metrics: &'a [&'a str],
+        y_true_batch: ArrayView2<F>,
+        y_pred_batch: ArrayView2<F>,
+        metrics: &[&str],
     ) -> Result<Vec<HashMap<String, F>>>
     where
         F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum + 'static,
@@ -1218,8 +1215,8 @@ impl AdvancedGpuOrchestrator {
                 .slice(ndarray::s![start_idx..end_idx, ..])
                 .to_owned();
 
-            // Clone metrics for the task
-            let metrics_clone = metrics.to_vec();
+            // Clone metrics for the task - convert to owned strings
+            let metrics_clone: Vec<String> = metrics.iter().map(|&s| s.to_string()).collect();
             let performance_monitor = Arc::clone(&self.performance_monitor);
 
             // Create thread task for this device
@@ -1227,8 +1224,9 @@ impl AdvancedGpuOrchestrator {
                 let start_time = Instant::now();
 
                 // Simulate GPU computation (in real implementation, this would be actual GPU kernels)
+                let metrics_refs: Vec<&str> = metrics_clone.iter().map(|s| s.as_str()).collect();
                 let result =
-                    Self::compute_on_device(device_id, y_true_slice, y_pred_slice, &metrics_clone);
+                    Self::compute_on_device(device_id, y_true_slice, y_pred_slice, &metrics_refs);
 
                 let execution_time = start_time.elapsed();
                 performance_monitor.record_execution_time(device_id, execution_time);
@@ -1269,10 +1267,7 @@ impl AdvancedGpuOrchestrator {
         std::thread::sleep(std::time::Duration::from_micros(10));
 
         // Use SIMD-accelerated computation to simulate GPU parallel processing
-        let simd_results = scirs2_core::simd_ops::SimdUnifiedOps::simd_process_batch(
-            &y_true.to_owned().into_raw_vec(),
-            &y_pred.to_owned().into_raw_vec(),
-        );
+        // Process each row separately since SIMD operations work on 1D arrays
 
         for i in 0..batch_size {
             let mut sample_metrics = HashMap::new();

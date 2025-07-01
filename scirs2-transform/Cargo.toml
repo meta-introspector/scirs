@@ -17,7 +17,7 @@ harness = false
 # Core dependencies
 scirs2-core = { workspace = true, features = ["validation", "parallel", "simd"] }
 scirs2-linalg = { workspace = true }
-scirs2-stats = { workspace = true }
+# scirs2-stats = { workspace = true }  # Temporarily disabled due to compilation errors
 scirs2-fft = { workspace = true }
 ndarray = { workspace = true }
 ndarray-rand = { workspace = true }

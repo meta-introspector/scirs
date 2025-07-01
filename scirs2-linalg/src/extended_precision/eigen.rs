@@ -1012,21 +1012,22 @@ where
     (sorted_d, sorted_z)
 }
 
-/// Ultra-precision eigenvalue solver targeting 1e-10+ accuracy
+/// Ultra-precision eigenvalue solver targeting 1e-12+ accuracy (ultrathink mode)
 ///
 /// This function implements state-of-the-art numerical techniques for achieving
 /// ultra-high precision eigenvalue computation, including:
 /// - Kahan summation for compensated arithmetic
 /// - Multiple-stage Rayleigh quotient iteration
 /// - Newton's method eigenvalue correction
-/// - Adaptive tolerance based on matrix conditioning
+/// - Ultra-aggressive adaptive tolerance based on matrix conditioning 
 /// - Enhanced Gram-Schmidt orthogonalization
+/// - Automatic ultra-precision activation for high precision targets
 ///
 /// # Parameters
 ///
 /// * `a` - Input symmetric matrix
 /// * `max_iter` - Maximum number of iterations (default: 500)
-/// * `target_precision` - Target precision (default: 1e-10)
+/// * `target_precision` - Target precision (default: 1e-12, ultrathink mode enhancement)
 /// * `auto_detect` - Automatically activate ultra-precision for challenging matrices
 ///
 /// # Returns
@@ -1077,22 +1078,27 @@ where
 
     let _n = a.nrows();
     let max_iter = max_iter.unwrap_or(500);
-    let target_precision = target_precision.unwrap_or(A::from(1e-10).unwrap());
+    let target_precision = target_precision.unwrap_or(A::from(1e-12).unwrap());
 
     // Compute matrix condition number for adaptive tolerance selection
     let condition_number = estimate_condition_number(a)?;
 
-    // Adaptive tolerance selection based on matrix conditioning
+    // Ultra-aggressive adaptive tolerance selection for 1e-12+ accuracy
     let adaptive_tolerance = if condition_number > A::from(1e12).unwrap() {
         target_precision * A::from(100.0).unwrap() // Relax tolerance for ill-conditioned matrices
+    } else if condition_number < A::from(1e3).unwrap() {
+        target_precision * A::from(0.01).unwrap() // Ultra-tight tolerance for extremely well-conditioned matrices
     } else if condition_number < A::from(1e6).unwrap() {
         target_precision * A::from(0.1).unwrap() // Tighter tolerance for well-conditioned matrices
     } else {
         target_precision
     };
 
-    // Auto-detect if ultra-precision mode should be activated
-    let use_ultra_precision = auto_detect && condition_number > A::from(1e12).unwrap();
+    // Auto-detect if ultra-precision mode should be activated (more aggressive in ultrathink mode)
+    let use_ultra_precision = auto_detect && (
+        condition_number > A::from(1e12).unwrap() || 
+        target_precision <= A::from(1e-11).unwrap() // Activate for high precision targets
+    );
 
     if use_ultra_precision {
         ultra_precision_solver_internal(a, max_iter, adaptive_tolerance)

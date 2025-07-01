@@ -6,8 +6,7 @@
 
 use crate::error::{DatasetsError, Result};
 use crate::gpu::{GpuBackend, GpuContext};
-use crate::utils::Dataset;
-use ndarray::{Array1, Array2, Axis};
+use ndarray::{Array2, Axis};
 // Use local GPU implementation to avoid feature flag issues
 // TODO: Re-enable core GPU integration when features are stabilized
 #[cfg(feature = "parallel")]
@@ -203,7 +202,7 @@ impl UltraGpuOptimizer {
             Ok(self.profile_to_kernel_config(&profile))
         } else {
             // Use default configuration
-            Ok(self.default_kernel_config(gpu_context.backend()))
+            Ok(self.default_kernel_config(gpu_context.backend().clone()))
         }
     }
 
@@ -218,8 +217,8 @@ impl UltraGpuOptimizer {
 
         // Determine optimal block size based on GPU architecture
         let optimal_block_size = match backend {
-            GpuBackend::Cuda => self.tune_cuda_block_size(data_shape),
-            GpuBackend::OpenCl => self.tune_opencl_work_group_size(data_shape),
+            GpuBackend::Cuda { .. } => self.tune_cuda_block_size(data_shape),
+            GpuBackend::OpenCl { .. } => self.tune_opencl_work_group_size(data_shape),
             _ => 256, // Default for other backends
         };
 
@@ -386,29 +385,33 @@ impl UltraGpuOptimizer {
             memory_pattern,
             vectorization,
             load_balancing,
+            block_size: 256,
         }
     }
 
     /// Get default kernel configuration for a backend
     fn default_kernel_config(&self, backend: GpuBackend) -> UltraKernelConfig {
         match backend {
-            GpuBackend::Cuda => UltraKernelConfig {
+            GpuBackend::Cuda { .. } => UltraKernelConfig {
                 specialization_level: SpecializationLevel::HardwareOptimized,
                 memory_pattern: MemoryAccessPattern::Sequential,
                 vectorization: VectorizationStrategy::Vector4,
                 load_balancing: LoadBalancingMethod::Dynamic,
+                block_size: 512,
             },
-            GpuBackend::OpenCl => UltraKernelConfig {
+            GpuBackend::OpenCl { .. } => UltraKernelConfig {
                 specialization_level: SpecializationLevel::Basic,
                 memory_pattern: MemoryAccessPattern::Sequential,
                 vectorization: VectorizationStrategy::Vector2,
                 load_balancing: LoadBalancingMethod::Static,
+                block_size: 256,
             },
             _ => UltraKernelConfig {
                 specialization_level: SpecializationLevel::Basic,
                 memory_pattern: MemoryAccessPattern::Sequential,
                 vectorization: VectorizationStrategy::Scalar,
                 load_balancing: LoadBalancingMethod::Static,
+                block_size: 128,
             },
         }
     }
@@ -438,8 +441,8 @@ impl UltraGpuOptimizer {
         config: &UltraKernelConfig,
     ) -> Result<Array2<f64>> {
         match gpu_context.backend() {
-            GpuBackend::Cuda => self.execute_cuda_generation(rows, cols, distribution, config),
-            GpuBackend::OpenCl => self.execute_opencl_generation(rows, cols, distribution, config),
+            GpuBackend::Cuda { .. } => self.execute_cuda_generation(rows, cols, distribution, config),
+            GpuBackend::OpenCl { .. } => self.execute_opencl_generation(rows, cols, distribution, config),
             _ => self.execute_cpu_fallback(rows, cols, distribution),
         }
     }

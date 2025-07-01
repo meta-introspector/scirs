@@ -311,6 +311,12 @@ pub struct WorkflowState {
     pub stage_times: HashMap<String, Duration>,
 }
 
+impl Default for WorkflowState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl WorkflowState {
     pub fn new() -> Self {
         Self {
@@ -372,6 +378,12 @@ pub struct OptimizationContext {
     pub final_quality_score: f64,
     pub confidence_score: f64,
     pub stages_completed: usize,
+}
+
+impl Default for OptimizationContext {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl OptimizationContext {
@@ -1242,7 +1254,7 @@ impl UltrathinkEcosystemCoordinator {
         if data_size_mb > 100.0 {
             // Large data - prefer distributed or cloud-capable modules
             if capabilities.contains(&"distributed_computing".to_string()) {
-                return 4.0;
+                4.0
             } else if capabilities.contains(&"cloud_storage".to_string()) {
                 return 3.0;
             } else {
@@ -1608,7 +1620,7 @@ impl UltrathinkEcosystemCoordinator {
         }
 
         // Fallback to first available module
-        modules.keys().next().map(|s| s.clone()).ok_or_else(|| {
+        modules.keys().next().cloned().ok_or_else(|| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(
                 "No modules available".to_string(),
             ))
@@ -1774,14 +1786,14 @@ impl UltrathinkEcosystemCoordinator {
         let data_size_gb = input.data.len() as f64 / (1024.0 * 1024.0 * 1024.0);
 
         Ok(ResourceRequirements {
-            cpu_cores: (data_size_gb * 2.0).max(1.0).min(16.0) as usize,
-            memory_gb: (data_size_gb * 3.0).max(0.5).min(64.0) as usize,
+            cpu_cores: (data_size_gb * 2.0).clamp(1.0, 16.0) as usize,
+            memory_gb: (data_size_gb * 3.0).clamp(0.5, 64.0) as usize,
             gpu_count: if input.context.operation_type.contains("tensor") {
                 1
             } else {
                 0
             },
-            disk_space_gb: (data_size_gb * 1.5).max(1.0).min(100.0) as usize,
+            disk_space_gb: (data_size_gb * 1.5).clamp(1.0, 100.0) as usize,
             specialized_requirements: if input.context.operation_type.contains("tensor") {
                 vec![SpecializedRequirement {
                     unit_type: SpecializedUnit::TensorCore,
@@ -2132,6 +2144,12 @@ pub struct EcosystemPerformanceReport {
 
 // Implementation of supporting structures
 
+impl Default for EcosystemPerformanceMonitor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl EcosystemPerformanceMonitor {
     pub fn new() -> Self {
         Self {
@@ -2277,6 +2295,12 @@ impl EcosystemPerformanceMonitor {
     }
 }
 
+impl Default for EcosystemResourceManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl EcosystemResourceManager {
     pub fn new() -> Self {
         Self {
@@ -2376,6 +2400,12 @@ impl EcosystemResourceManager {
         }
 
         Ok(())
+    }
+}
+
+impl Default for ModuleCommunicationHub {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -2684,7 +2714,10 @@ impl ModuleCommunicationHub {
 
                 // Find other stages that can run in parallel with this one
                 for other_stage in stages {
-                    if other_stage.name != stage.name && !processed_stages.contains(&other_stage.name) && self.can_run_in_parallel(&stage.name, &other_stage.name, workflow)? {
+                    if other_stage.name != stage.name
+                        && !processed_stages.contains(&other_stage.name)
+                        && self.can_run_in_parallel(&stage.name, &other_stage.name, workflow)?
+                    {
                         group.push(other_stage.name.clone());
                         processed_stages.insert(other_stage.name.clone());
                     }
@@ -2763,8 +2796,10 @@ impl ModuleCommunicationHub {
         let mut recursion_stack = HashSet::new();
 
         for stage in &workflow.stages {
-            if !visited.contains(&stage.name) && self.has_cycle(&stage.name, workflow, &mut visited, &mut recursion_stack)? {
-                return Err(CoreError::InvalidInput(ErrorContext::new(&format!(
+            if !visited.contains(&stage.name)
+                && self.has_cycle(&stage.name, workflow, &mut visited, &mut recursion_stack)?
+            {
+                return Err(CoreError::InvalidInput(ErrorContext::new(format!(
                     "Circular dependency detected involving stage '{}'",
                     stage.name
                 ))));
@@ -2775,6 +2810,7 @@ impl ModuleCommunicationHub {
     }
 
     /// Recursive helper for cycle detection
+    #[allow(clippy::only_used_in_recursion)]
     fn has_cycle(
         &self,
         stage_name: &str,

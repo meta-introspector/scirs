@@ -96,7 +96,7 @@ impl CartPole {
 impl Environment for CartPole {
     fn reset(&mut self) -> Result<Observation> {
         use rand_distr::{Distribution, Uniform};
-        let mut rng = rand::rng();
+        let mut rng = ndarray_rand::rand::thread_rng();
         let uniform = Uniform::new(-0.05, 0.05);
 
         self.state = Array1::from_vec(vec![
@@ -194,7 +194,7 @@ impl MountainCar {
 impl Environment for MountainCar {
     fn reset(&mut self) -> Result<Observation> {
         use rand_distr::{Distribution, Uniform};
-        let mut rng = rand::rng();
+        let mut rng = ndarray_rand::rand::thread_rng();
 
         self.position = Uniform::new(-0.6, -0.4).sample(&mut rng);
         self.velocity = 0.0;
@@ -300,7 +300,7 @@ impl Pendulum {
 impl Environment for Pendulum {
     fn reset(&mut self) -> Result<Observation> {
         use rand_distr::{Distribution, Uniform};
-        let mut rng = rand::rng();
+        let mut rng = ndarray_rand::rand::thread_rng();
 
         self.theta = Uniform::new(-std::f32::consts::PI, std::f32::consts::PI).sample(&mut rng);
         self.theta_dot = Uniform::new(-1.0, 1.0).sample(&mut rng);

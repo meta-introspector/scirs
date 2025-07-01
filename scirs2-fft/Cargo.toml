@@ -15,6 +15,7 @@ helper = []
 window = []
 minimal = []
 parallel = []
+serde = [] # Serialization support
 cuda = [] # Optional CUDA support for GPU acceleration (dependencies disabled)
 hip = [] # Optional ROCm/HIP support for AMD GPU acceleration
 sycl = [] # Optional SYCL support for cross-platform GPU acceleration

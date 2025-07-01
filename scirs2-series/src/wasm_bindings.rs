@@ -17,9 +17,9 @@ use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "wasm")]
 use crate::{
-    anomaly::AnomalyDetector,
-    arima_models::{ARIMAConfig, ARIMAModel},
-    decomposition::STLDecomposition,
+    anomaly::{detect_anomalies, AnomalyMethod, AnomalyOptions},
+    arima_models::{ArimaModel, ArimaSelectionOptions, SarimaParams},
+    decomposition::{stl_decompose, STLOptions},
     error::Result,
     forecasting::neural::NeuralForecaster,
     utils::*,
@@ -115,8 +115,8 @@ impl TimeSeriesData {
 #[cfg(feature = "wasm")]
 #[wasm_bindgen]
 pub struct WasmARIMA {
-    model: Option<ARIMAModel>,
-    config: ARIMAConfig,
+    model: Option<ArimaModel<f64>>,
+    config: SarimaParams,
 }
 
 #[cfg(feature = "wasm")]
@@ -125,22 +125,10 @@ impl WasmARIMA {
     /// Create a new ARIMA model
     #[wasm_bindgen(constructor)]
     pub fn new(p: usize, d: usize, q: usize) -> WasmARIMA {
-        let config = ARIMAConfig {
-            p,
-            d,
-            q,
-            seasonal_p: 0,
-            seasonal_d: 0,
-            seasonal_q: 0,
-            seasonal_period: 0,
-            trend: Some("c".to_string()),
-            enforce_stationarity: true,
-            enforce_invertibility: true,
-            concentrate_scale: false,
-            dates: None,
-            freq: None,
-            missing: "none".to_string(),
-            validate_specification: true,
+        let config = SarimaParams {
+            pdq: (p, d, q),
+            seasonal_pdq: (0, 0, 0),
+            seasonal_period: 1,
         };
 
         WasmARIMA {
@@ -454,13 +442,23 @@ impl WasmAutoARIMA {
         let max_sq = max_seasonal_q.unwrap_or(0);
         let s_period = seasonal_period.unwrap_or(0);
 
-        let best_config = js_result!(crate::arima_models::auto_arima(
-            &arr, max_p, max_d, max_q, seasonal, max_sp, max_sd, max_sq, s_period
-        ))?;
+        let options = crate::arima_models::ArimaSelectionOptions {
+            max_p,
+            max_d,
+            max_q,
+            seasonal,
+            seasonal_period: if seasonal { seasonal_period } else { None },
+            max_seasonal_p: max_sp,
+            max_seasonal_d: max_sd,
+            max_seasonal_q: max_sq,
+            ..Default::default()
+        };
+        
+        let (model, params) = js_result!(crate::arima_models::auto_arima(&arr, &options))?;
 
         Ok(WasmARIMA {
-            model: None,
-            config: best_config,
+            model: Some(model),
+            config: params,
         })
     }
 }

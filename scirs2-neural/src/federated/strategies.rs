@@ -74,7 +74,7 @@ impl ClientSelection for RandomSelection {
         let mut rng = if let Some(seed) = self.seed {
             StdRng::seed_from_u64(seed)
         } else {
-            StdRng::from_rng(&mut rand::rng()).unwrap()
+            StdRng::from_rng(&mut ndarray_rand::rand::thread_rng()).unwrap()
         };
 
         let mut clients = available_clients.to_vec();
@@ -206,7 +206,7 @@ impl ClientSelection for PowerAwareSelection {
         // Randomly sample from eligible clients if we have more than needed
         use rand::prelude::*;
         if eligible_clients.len() > num_select {
-            let mut rng = rand::rng();
+            let mut rng = ndarray_rand::rand::thread_rng();
             eligible_clients.partial_shuffle(&mut rng, num_select);
         }
 
@@ -282,7 +282,7 @@ impl ClientSelection for DiversitySelection {
 
         // Select from each cluster
         use rand::prelude::*;
-        let mut rng = rand::rng();
+        let mut rng = ndarray_rand::rand::thread_rng();
 
         for (cluster_id, mut clients) in cluster_groups {
             clients.shuffle(&mut rng);
@@ -332,7 +332,7 @@ impl StratifiedSampling {
 impl SamplingStrategy for StratifiedSampling {
     fn sample(&self, data_size: usize, _round: usize) -> Result<Vec<usize>> {
         use rand::prelude::*;
-        let mut rng = rand::rng();
+        let mut rng = ndarray_rand::rand::thread_rng();
 
         let sample_size = (data_size as f32 * self.sample_fraction) as usize;
         let mut indices: Vec<usize> = (0..data_size).collect();

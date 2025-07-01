@@ -139,6 +139,7 @@ enum QuantumError {
 
 /// Logical qubit for error correction
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct LogicalQubit {
     physical_qubits: Vec<usize>,
     syndrome_qubits: Vec<usize>,
@@ -148,6 +149,7 @@ struct LogicalQubit {
 
 /// Quantum error correction codes
 #[derive(Debug, Clone, Copy)]
+#[allow(dead_code)]
 enum QuantumCode {
     /// 3-qubit repetition code
     Repetition3,
@@ -941,7 +943,6 @@ pub struct QuantumProcessorStats {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use approx::assert_relative_eq;
 
     #[test]
     fn test_quantum_sparse_processor_creation() {

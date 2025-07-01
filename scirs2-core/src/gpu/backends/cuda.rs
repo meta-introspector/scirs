@@ -431,7 +431,7 @@ impl GpuBufferImpl for CudaBuffer {
         #[cfg(feature = "cuda")]
         {
             // Real CUDA implementation using cudarc
-            use cudarc::driver::result::memcpy::memcpy_htod;
+            use cudarc::driver::safe;
 
             let device_ptr = DevicePtr::from_raw(self.device_ptr as *mut u8);
             let host_slice = std::slice::from_raw_parts(data, size);

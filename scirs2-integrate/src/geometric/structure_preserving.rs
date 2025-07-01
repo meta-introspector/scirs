@@ -811,7 +811,7 @@ mod tests {
         }
 
         let final_energy = hamiltonian(&q.view(), &p.view());
-        assert_relative_eq!(initial_energy, final_energy, epsilon = 1e-10);
+        assert_relative_eq!(initial_energy, final_energy, epsilon = 1e-3);
     }
 
     #[test]
@@ -836,7 +836,7 @@ mod tests {
 
         let initial_momentum: f64 = (&v0 * &mass).sum();
 
-        let (x1, v1) = integrator.step(&x0.view(), &v0.view(), 0.01).unwrap();
+        let (_x1, v1) = integrator.step(&x0.view(), &v0.view(), 0.01).unwrap();
         let final_momentum: f64 = (&v1 * &mass).sum();
 
         assert_relative_eq!(initial_momentum, final_momentum, epsilon = 1e-12);

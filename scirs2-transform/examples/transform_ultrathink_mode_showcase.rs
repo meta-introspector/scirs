@@ -48,7 +48,7 @@ fn generate_synthetic_dataset(
     n_features: usize,
 ) -> Result<Array2<f64>, Box<dyn std::error::Error>> {
     use rand::Rng;
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     let mut data = Array2::zeros((n_samples, n_features));
 
@@ -56,17 +56,17 @@ fn generate_synthetic_dataset(
         for j in 0..n_features {
             // Create data with different characteristics
             let value = match j % 5 {
-                0 => rng.gen_range(-10.0..10.0), // Normal range
-                1 => rng.gen_range(0.0..1000.0), // Large scale
+                0 => rng.random_range(-10.0..10.0), // Normal range
+                1 => rng.random_range(0.0..1000.0), // Large scale
                 2 => {
-                    if rng.gen::<f64>() < 0.1 {
-                        rng.gen_range(100.0..200.0)
+                    if rng.random_range(0.0..1.0) < 0.1 {
+                        rng.random_range(100.0..200.0)
                     } else {
                         0.0
                     }
                 } // Sparse with outliers
-                3 => rng.gen_range(0.0..1.0).powi(3), // Skewed distribution
-                _ => rng.gen_range(-1.0..1.0),   // Standard range
+                3 => rng.random_range(0.0..1.0).powi(3), // Skewed distribution
+                _ => rng.random_range(-1.0..1.0),   // Standard range
             };
             data[[i, j]] = value;
         }

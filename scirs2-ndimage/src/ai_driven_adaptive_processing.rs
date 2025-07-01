@@ -12,6 +12,7 @@
 
 use ndarray::{Array, Array1, Array2, Array3, Array4, ArrayView2, ArrayViewMut2, Axis, Zip};
 use num_traits::{Float, FromPrimitive, One, Zero};
+use rand::Rng;
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::f64::consts::PI;
 
@@ -233,6 +234,19 @@ pub enum AlgorithmType {
     ConsciousnessSimulation,
     UltrathinkFusion,
     CustomAI,
+}
+
+/// Processing Algorithm Variants
+#[derive(Debug, Clone)]
+pub enum ProcessingAlgorithm {
+    AdaptiveGaussianFilter,
+    IntelligentEdgeDetection,
+    AIEnhancedMedianFilter,
+    SmartBilateralFilter,
+    ContextAwareNoiseReduction,
+    AdaptiveMorphology,
+    IntelligentSegmentation,
+    AIFeatureExtraction,
 }
 
 /// Processing Action (for reinforcement learning)
@@ -1493,7 +1507,9 @@ fn select_best_strategy(
     } else {
         0.05
     };
-    let random_factor: f64 = fastrand::f64(); // Simple random number
+    use rand::Rng;
+    let mut rng = rand::thread_rng();
+    let random_factor: f64 = rng.gen(); // Simple random number
 
     let selected_strategy = if random_factor < exploration_rate && scored_strategies.len() > 1 {
         // Exploration: occasionally select a suboptimal strategy to learn

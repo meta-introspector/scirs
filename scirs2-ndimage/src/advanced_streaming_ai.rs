@@ -15,7 +15,7 @@
 //! - **Bandwidth Adaptation**: Network-aware streaming for distributed processing
 //! - **Error Recovery AI**: Intelligent fault tolerance and recovery strategies
 
-use ndarray::{Array, Array1, Array2, Array3, ArrayView, ArrayViewMut, Dimension, Ix2, Ix3, IxDyn};
+use ndarray::{Array, Array1, Array2, Array3, ArrayView, ArrayView2, ArrayViewMut, Dimension, Ix2, Ix3, IxDyn};
 use num_traits::{Float, FromPrimitive, One, Zero};
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::sync::{Arc, Mutex, RwLock};

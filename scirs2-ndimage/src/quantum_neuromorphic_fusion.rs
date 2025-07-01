@@ -15,7 +15,7 @@
 //! - **Quantum Attention Mechanisms**: Bio-inspired quantum attention for feature selection
 //! - **Quantum-Enhanced Temporal Coding**: Temporal spike patterns with quantum interference
 
-use ndarray::{Array, Array1, Array2, Array3, Array4, ArrayView2, ArrayViewMut2, Axis, Zip};
+use ndarray::{s, Array, Array1, Array2, Array3, Array4, ArrayView2, ArrayViewMut2, Axis, Zip};
 use num_complex::Complex;
 use num_traits::{Float, FromPrimitive, One, Zero};
 use std::collections::{HashMap, VecDeque};
@@ -140,7 +140,7 @@ where
 
         // Quantum memory consolidation
         if t % config.consolidation_cycles == 0 {
-            quantum_memory_consolidation(&mut quantum_network, config)?;
+            quantum_network_memory_consolidation(&mut quantum_network, config)?;
         }
     }
 
@@ -612,7 +612,7 @@ fn apply_quantum_stdp_learning(
     Ok(())
 }
 
-fn quantum_memory_consolidation(
+fn quantum_network_memory_consolidation(
     network: &mut [Array2<QuantumSpikingNeuron>],
     config: &QuantumNeuromorphicConfig,
 ) -> NdimageResult<()> {

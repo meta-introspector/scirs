@@ -306,7 +306,7 @@ mod tests {
         let palette = ColorPalette::Custom(custom_colors.clone());
         match palette {
             ColorPalette::Custom(colors) => assert_eq!(colors, custom_colors),
-            _ => panic!("Expected custom color palette"),
+            _ => assert!(false, "Expected custom color palette"),
         }
     }
 
@@ -359,7 +359,7 @@ mod tests {
                 assert_eq!(t.background, "#ffffff");
                 assert_eq!(t.primary, "#007bff");
             }
-            _ => panic!("Expected custom theme"),
+            _ => assert!(false, "Expected custom theme"),
         }
     }
 }

@@ -187,6 +187,40 @@ impl<T: Float + Debug + FromPrimitive + Zero> OnlineSplineInterpolator<T> {
         }
     }
 
+    /// Add a new point to the streaming interpolator
+    pub fn add_point(&mut self, x: T, y: T) -> InterpolateResult<()> {
+        check_finite(&[x.to_f64().unwrap_or(0.0), y.to_f64().unwrap_or(0.0)], "input point")?;
+        
+        let point = StreamingPoint {
+            x,
+            y,
+            timestamp: Instant::now(),
+        };
+
+        // Check for outliers
+        if !self.is_outlier(&point) {
+            self.points.push_back(point);
+            self.stats.points_added += 1;
+        } else {
+            self.stats.outliers_detected += 1;
+            return Ok(()); // Skip outlier
+        }
+
+        // Maintain memory bounds
+        if self.points.len() > self.config.max_points {
+            self.points.pop_front();
+            self.stats.points_removed += 1;
+        }
+
+        // Update model if needed
+        if (self.stats.points_added - self.last_update_count) >= self.config.update_frequency {
+            self.update_spline_coefficients()?;
+            self.last_update_count = self.stats.points_added;
+        }
+
+        Ok(())
+    }
+
     /// Check if a point is an outlier based on statistical analysis
     fn is_outlier(&self, point: &StreamingPoint<T>) -> bool {
         if self.points.len() < 3 {

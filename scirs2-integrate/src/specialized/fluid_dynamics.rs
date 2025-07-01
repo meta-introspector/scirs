@@ -4039,7 +4039,7 @@ pub mod turbulence_models {
             let solver = LESolver::new(8, 8, 8, 0.1, 0.1, 0.1, SGSModel::WALE);
 
             let velocity = vec![
-                Array2::from_shape_fn((8, 8), |(i, j)| (i as f64 * 0.1).sin()),
+                Array2::from_shape_fn((8, 8), |(i, _j)| (i as f64 * 0.1).sin()),
                 Array2::zeros((8, 8)),
                 Array2::zeros((8, 8)),
             ];
@@ -6591,7 +6591,7 @@ mod ultra_performance_tests {
         assert_eq!(buffer.size(), 1024);
 
         pool.deallocate_buffer(buffer);
-        let (current, peak) = pool.get_usage_stats();
+        let (_current, peak) = pool.get_usage_stats();
         assert_eq!(peak, 1024);
     }
 
@@ -6657,7 +6657,7 @@ mod compressible_tests {
 
     #[test]
     fn test_adaptive_timestep() {
-        let mut solver = CompressibleFlowSolver::new(5, 5, 5, 0.1, 0.1, 0.1);
+        let solver = CompressibleFlowSolver::new(5, 5, 5, 0.1, 0.1, 0.1);
         let state = solver.initialize_state();
 
         let dt = solver.calculate_adaptive_timestep(&state);

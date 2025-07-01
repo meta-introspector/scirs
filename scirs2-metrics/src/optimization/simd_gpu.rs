@@ -234,11 +234,11 @@ impl SimdMetrics {
             ));
         }
 
-        if self.enable_simd && self.capabilities.supports_simd() {
+        if self.enable_simd && self.capabilities.simd_available {
             // Use SIMD operations
-            let squared_diff = F::simd_sub(y_true, y_pred)?;
-            let squared = F::simd_mul(&squared_diff.view(), &squared_diff.view())?;
-            let sum = F::simd_sum(&squared.view())?;
+            let squared_diff = F::simd_sub(y_true, y_pred);
+            let squared = F::simd_mul(&squared_diff.view(), &squared_diff.view());
+            let sum = F::simd_sum(&squared.view());
             Ok(sum / F::from(y_true.len()).unwrap())
         } else {
             // Fallback to scalar implementation
@@ -257,10 +257,10 @@ impl SimdMetrics {
             ));
         }
 
-        if self.enable_simd && self.capabilities.supports_simd() {
-            let diff = F::simd_sub(y_true, y_pred)?;
-            let abs_diff = F::simd_abs(&diff.view())?;
-            let sum = F::simd_sum(&abs_diff.view())?;
+        if self.enable_simd && self.capabilities.simd_available {
+            let diff = F::simd_sub(y_true, y_pred);
+            let abs_diff = F::simd_abs(&diff.view());
+            let sum = F::simd_sum(&abs_diff.view());
             Ok(sum / F::from(y_true.len()).unwrap())
         } else {
             self.scalar_mae(y_true, y_pred)
@@ -278,22 +278,22 @@ impl SimdMetrics {
             ));
         }
 
-        if self.enable_simd && self.capabilities.supports_simd() {
+        if self.enable_simd && self.capabilities.simd_available {
             // Compute mean of y_true using SIMD
-            let mean_true = F::simd_sum(y_true)? / F::from(y_true.len()).unwrap();
+            let mean_true = F::simd_sum(y_true) / F::from(y_true.len()).unwrap();
 
             // Create array filled with mean value
             let mean_array = Array1::from_elem(y_true.len(), mean_true);
 
             // Compute SS_tot = sum((y_true - mean)²)
-            let diff_from_mean = F::simd_sub(y_true, &mean_array.view())?;
-            let squared_diff_mean = F::simd_mul(&diff_from_mean.view(), &diff_from_mean.view())?;
-            let ss_tot = F::simd_sum(&squared_diff_mean.view())?;
+            let diff_from_mean = F::simd_sub(y_true, &mean_array.view());
+            let squared_diff_mean = F::simd_mul(&diff_from_mean.view(), &diff_from_mean.view());
+            let ss_tot = F::simd_sum(&squared_diff_mean.view());
 
             // Compute SS_res = sum((y_true - y_pred)²)
-            let residuals = F::simd_sub(y_true, y_pred)?;
-            let squared_residuals = F::simd_mul(&residuals.view(), &residuals.view())?;
-            let ss_res = F::simd_sum(&squared_residuals.view())?;
+            let residuals = F::simd_sub(y_true, y_pred);
+            let squared_residuals = F::simd_mul(&residuals.view(), &residuals.view());
+            let ss_res = F::simd_sum(&squared_residuals.view());
 
             if ss_tot == F::zero() {
                 Ok(F::zero())
@@ -316,30 +316,30 @@ impl SimdMetrics {
             ));
         }
 
-        if self.enable_simd && self.capabilities.supports_simd() {
+        if self.enable_simd && self.capabilities.simd_available {
             let n = F::from(x.len()).unwrap();
 
             // Compute means using SIMD
-            let mean_x = F::simd_sum(x)? / n;
-            let mean_y = F::simd_sum(y)? / n;
+            let mean_x = F::simd_sum(x) / n;
+            let mean_y = F::simd_sum(y) / n;
 
             // Create mean arrays
             let mean_x_array = Array1::from_elem(x.len(), mean_x);
             let mean_y_array = Array1::from_elem(y.len(), mean_y);
 
             // Compute deviations
-            let dev_x = F::simd_sub(x, &mean_x_array.view())?;
-            let dev_y = F::simd_sub(y, &mean_y_array.view())?;
+            let dev_x = F::simd_sub(x, &mean_x_array.view());
+            let dev_y = F::simd_sub(y, &mean_y_array.view());
 
             // Compute covariance and variances
-            let cov_xy = F::simd_mul(&dev_x.view(), &dev_y.view())?;
-            let sum_cov = F::simd_sum(&cov_xy.view())?;
+            let cov_xy = F::simd_mul(&dev_x.view(), &dev_y.view());
+            let sum_cov = F::simd_sum(&cov_xy.view());
 
-            let var_x = F::simd_mul(&dev_x.view(), &dev_x.view())?;
-            let var_y = F::simd_mul(&dev_y.view(), &dev_y.view())?;
+            let var_x = F::simd_mul(&dev_x.view(), &dev_x.view());
+            let var_y = F::simd_mul(&dev_y.view(), &dev_y.view());
 
-            let sum_var_x = F::simd_sum(&var_x.view())?;
-            let sum_var_y = F::simd_sum(&var_y.view())?;
+            let sum_var_x = F::simd_sum(&var_x.view());
+            let sum_var_y = F::simd_sum(&var_y.view());
 
             let denom = (sum_var_x * sum_var_y).sqrt();
             if denom > F::zero() {
@@ -368,7 +368,7 @@ impl SimdMetrics {
         let mut ema = Array1::zeros(values.len());
         ema[0] = values[0];
 
-        if self.enable_simd && self.capabilities.supports_simd() && values.len() > 4 {
+        if self.enable_simd && self.capabilities.simd_available && values.len() > 4 {
             // Vectorized EMA computation for chunks
             let chunk_size = 4; // Process 4 elements at a time
             let one_minus_alpha = F::one() - alpha;
@@ -384,10 +384,10 @@ impl SimdMetrics {
                     let alpha_array = Array1::from_elem(chunk_size, alpha);
                     let one_minus_alpha_array = Array1::from_elem(chunk_size, one_minus_alpha);
 
-                    let weighted_values = F::simd_mul(&current_values.view(), &alpha_array.view())?;
+                    let weighted_values = F::simd_mul(&current_values.view(), &alpha_array.view());
                     let weighted_prev =
-                        F::simd_mul(&prev_ema.view(), &one_minus_alpha_array.view())?;
-                    let chunk_ema = F::simd_add(&weighted_values.view(), &weighted_prev.view())?;
+                        F::simd_mul(&prev_ema.view(), &one_minus_alpha_array.view());
+                    let chunk_ema = F::simd_add(&weighted_values.view(), &weighted_prev.view());
 
                     for j in 0..chunk_size {
                         ema[i + j] = chunk_ema[j];
@@ -414,10 +414,10 @@ impl SimdMetrics {
     where
         F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum,
     {
-        if self.enable_simd && self.capabilities.supports_simd() {
+        if self.enable_simd && self.capabilities.simd_available {
             // Use fast SIMD approximations for logarithms
             let log_values = self.simd_fast_log(values)?;
-            let log_sum = F::simd_sum(&log_values.view())?;
+            let log_sum = F::simd_sum(&log_values.view());
             let log_product = log_sum; // log(a*b*c) = log(a) + log(b) + log(c)
             let geometric_mean = (log_sum / F::from(values.len()).unwrap()).exp();
 
@@ -472,7 +472,7 @@ impl SimdMetrics {
         let mut traces = Vec::with_capacity(matrices.len());
         let mut eigenvalue_sums = Vec::with_capacity(matrices.len());
 
-        if self.enable_simd && self.capabilities.supports_simd() {
+        if self.enable_simd && self.capabilities.simd_available {
             // Parallel processing of matrix operations
             use scirs2_core::parallel_ops::*;
 
@@ -1022,7 +1022,7 @@ impl SimdMetrics {
         results.scalar_time = scalar_time;
 
         // Benchmark SIMD implementation
-        if self.capabilities.supports_simd() {
+        if self.capabilities.simd_available {
             let start = Instant::now();
             for _ in 0..iterations {
                 let _ = self.simd_mse(y_true, y_pred)?;

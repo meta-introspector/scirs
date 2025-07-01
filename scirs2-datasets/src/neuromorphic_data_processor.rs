@@ -6,10 +6,9 @@
 
 use crate::error::{DatasetsError, Result};
 use crate::utils::Dataset;
-use ndarray::{s, Array1, Array2, Array3, Axis};
+use ndarray::{s, Array1, Array2, Array3};
 use rand::prelude::*;
-use rand::thread_rng;
-use std::collections::HashMap;
+use rand::{SeedableRng, rngs::StdRng};
 use std::time::{Duration, Instant};
 
 /// Neuromorphic data processor using spiking neural networks
@@ -170,7 +169,7 @@ impl NeuromorphicProcessor {
         simulation_time: Duration,
         random_seed: Option<u64>,
     ) -> Result<NeuromorphicTransform> {
-        let data = dataset.data();
+        let data = &dataset.data;
         let n_samples = data.nrows();
         let n_features = data.ncols();
 
@@ -347,9 +346,10 @@ impl NeuromorphicProcessor {
             for post_idx in self.network_config.input_neurons
                 ..(self.network_config.input_neurons + self.network_config.hidden_neurons)
             {
-                if rng.gen::<f64>() < self.network_config.connection_probability {
-                    let weight = (rng.gen::<f64>() - 0.5) * 2.0 * self.plasticity_config.max_weight;
-                    let delay = Duration::from_millis(rng.gen_range(1..=5));
+                if rng.random::<f64>() < self.network_config.connection_probability {
+                    let weight =
+                        (rng.random::<f64>() - 0.5) * 2.0 * self.plasticity_config.max_weight;
+                    let delay = Duration::from_millis(rng.random_range(1..=5));
 
                     network[pre_idx].push(Synapse {
                         weight,
@@ -375,7 +375,7 @@ impl NeuromorphicProcessor {
         sample: &ndarray::ArrayView1<f64>,
         network: &mut Vec<Vec<Synapse>>,
         time_steps: usize,
-        rng: &mut StdRng,
+        _rng: &mut StdRng,
     ) -> Result<(Array2<f64>, f64)> {
         let n_neurons = self.network_config.hidden_neurons;
         let mut spike_pattern = Array2::zeros((time_steps, n_neurons));
@@ -431,14 +431,14 @@ impl NeuromorphicProcessor {
         &self,
         sample: &ndarray::ArrayView1<f64>,
         neuron_states: &mut [NeuronState],
-        time_idx: usize,
+        _time_idx: usize,
     ) -> Result<()> {
         // Convert input features to spike trains using rate encoding
         for (feature_idx, &feature_value) in sample.iter().enumerate() {
             if feature_idx < self.network_config.input_neurons {
                 // Rate encoding: higher values = higher spike probability
                 let spike_probability = (feature_value.abs().tanh() + 1.0) / 2.0;
-                let spike_current = if rand::thread_rng().gen::<f64>() < spike_probability {
+                let spike_current = if rand::rng().random::<f64>() < spike_probability {
                     0.5 * feature_value.signum()
                 } else {
                     0.0
@@ -528,7 +528,7 @@ impl NeuromorphicProcessor {
 
         // Use network weights to influence feature generation
         for feature_idx in 0..n_features {
-            let mut feature_value = rng.gen::<f64>() - 0.5;
+            let mut feature_value = rng.random::<f64>() - 0.5;
 
             // Neural network influence
             if feature_idx < network.len() {
@@ -561,7 +561,7 @@ impl NeuromorphicProcessor {
             .unwrap_or(0);
 
         // Add some noise for variability
-        let noise = rng.gen::<f64>() * 0.1 - 0.05;
+        let noise = rng.random::<f64>() * 0.1 - 0.05;
         Ok(max_feature_idx as f64 + noise)
     }
 
@@ -603,7 +603,7 @@ impl NeuromorphicProcessor {
     fn temporal_spike_processing(
         &self,
         input: &Array1<f64>,
-        network: &mut Vec<Vec<Synapse>>,
+        _network: &mut Vec<Vec<Synapse>>,
         time_idx: usize,
         _rng: &mut StdRng,
     ) -> Result<Array1<f64>> {
@@ -660,10 +660,11 @@ impl NeuromorphicProcessor {
         for pre_idx in start_hidden..end_hidden {
             for post_idx in start_hidden..end_hidden {
                 if pre_idx != post_idx
-                    && rng.gen::<f64>() < self.network_config.connection_probability * 0.5
+                    && rng.random::<f64>() < self.network_config.connection_probability * 0.5
                 {
-                    let weight = (rng.gen::<f64>() - 0.5) * self.plasticity_config.max_weight * 0.5;
-                    let delay = Duration::from_millis(rng.gen_range(2..=10));
+                    let weight =
+                        (rng.random::<f64>() - 0.5) * self.plasticity_config.max_weight * 0.5;
+                    let delay = Duration::from_millis(rng.random_range(2..=10));
 
                     network[pre_idx].push(Synapse {
                         weight,

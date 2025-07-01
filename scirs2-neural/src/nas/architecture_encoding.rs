@@ -115,26 +115,26 @@ impl GraphEncoding {
 
     /// Create a random graph encoding
     pub fn random(rng: &mut impl rand::Rng) -> Result<Self> {
-        let num_nodes = rng.gen_range(3..=8);
+        let num_nodes = rng.random_range(3..=8);
         let mut nodes = Vec::with_capacity(num_nodes);
         
         // Create input node
         nodes.push(NodeType {
-            layer_type: LayerType::Dense(rng.gen_range(64..=256)),
+            layer_type: LayerType::Dense(rng.random_range(64..=256)),
             is_input: true,
             is_output: false,
         });
         
         // Create hidden nodes
         for _ in 1..num_nodes - 1 {
-            let layer_type = match rng.gen_range(0..5) {
-                0 => LayerType::Dense(rng.gen_range(32..=512)),
+            let layer_type = match rng.random_range(0..5) {
+                0 => LayerType::Dense(rng.random_range(32..=512)),
                 1 => LayerType::Conv2D {
-                    filters: rng.gen_range(16..=256),
+                    filters: rng.random_range(16..=256),
                     kernel_size: (3, 3),
                     stride: (1, 1),
                 },
-                2 => LayerType::Dropout(rng.gen_range(0.1..0.5)),
+                2 => LayerType::Dropout(rng.random_range(0.1..0.5)),
                 3 => LayerType::BatchNorm,
                 _ => LayerType::Activation("relu".to_string()),
             };
@@ -148,7 +148,7 @@ impl GraphEncoding {
         
         // Create output node
         nodes.push(NodeType {
-            layer_type: LayerType::Dense(rng.gen_range(1..=10)),
+            layer_type: LayerType::Dense(rng.random_range(1..=10)),
             is_input: false,
             is_output: true,
         });
@@ -207,15 +207,15 @@ impl GraphEncoding {
             if !node.is_input && !node.is_output && rng.gen_bool(rate as f64) {
                 match &mut node.layer_type {
                     LayerType::Dense(ref mut units) => {
-                        *units = rng.gen_range(32..=512);
+                        *units = rng.random_range(32..=512);
                     }
                     LayerType::Conv2D { ref mut filters, ref mut kernel_size, ref mut stride } => {
-                        *filters = rng.gen_range(16..=256);
+                        *filters = rng.random_range(16..=256);
                         *kernel_size = self.choose_kernel_size(rng);
                         *stride = self.choose_stride(rng);
                     }
                     LayerType::Dropout(ref mut rate) => {
-                        *rate = rng.gen_range(0.1..0.5);
+                        *rate = rng.random_range(0.1..0.5);
                     }
                     _ => {}
                 }
@@ -256,30 +256,30 @@ impl GraphEncoding {
 
     fn choose_kernel_size(&self, rng: &mut impl rand::Rng) -> (usize, usize) {
         let sizes = [(1, 1), (3, 3), (5, 5), (7, 7)];
-        let idx = rng.gen_range(0..sizes.len());
+        let idx = rng.random_range(0..sizes.len());
         sizes[idx]
     }
 
     fn choose_stride(&self, rng: &mut impl rand::Rng) -> (usize, usize) {
         let strides = [(1, 1), (2, 2)];
-        let idx = rng.gen_range(0..strides.len());
+        let idx = rng.random_range(0..strides.len());
         strides[idx]
     }
 
     fn choose_random_layer_type(&self, rng: &mut impl rand::Rng) -> LayerType {
         let layer_types = [
-            LayerType::Dense(rng.gen_range(32..=512)),
+            LayerType::Dense(rng.random_range(32..=512)),
             LayerType::Conv2D {
-                filters: rng.gen_range(16..=256),
+                filters: rng.random_range(16..=256),
                 kernel_size: self.choose_kernel_size(rng),
                 stride: self.choose_stride(rng),
             },
-            LayerType::Dropout(rng.gen_range(0.1..0.5)),
+            LayerType::Dropout(rng.random_range(0.1..0.5)),
             LayerType::BatchNorm,
             LayerType::Activation("relu".to_string()),
         ];
         
-        let idx = rng.gen_range(0..layer_types.len());
+        let idx = rng.random_range(0..layer_types.len());
         layer_types[idx].clone()
     }
 
@@ -362,8 +362,8 @@ impl GraphEncoding {
         });
         
         // Connect the new node
-        let from_idx = rng.gen_range(0..new_size - 1);
-        let to_idx = rng.gen_range(0..new_size - 1);
+        let from_idx = rng.random_range(0..new_size - 1);
+        let to_idx = rng.random_range(0..new_size - 1);
         mutated.edges[from_idx][new_size - 1] = true;
         mutated.edges[new_size - 1][to_idx] = true;
         
@@ -509,7 +509,7 @@ impl ArchitectureEncoding for GraphEncoding {
 
     fn mutate(&self, mutation_rate: f32) -> Result<Box<dyn ArchitectureEncoding>> {
         use rand::prelude::*;
-        let mut rng = rand::rng();
+        let mut rng = ndarray_rand::rand::thread_rng();
         let mut mutated = self.clone();
 
         // Adaptive mutation rate based on architecture complexity
@@ -517,7 +517,7 @@ impl ArchitectureEncoding for GraphEncoding {
         let adaptive_rate = mutation_rate * (1.0 + complexity_factor * 0.5);
 
         // Multi-type mutation strategy
-        let mutation_type = rng.gen_range(0..5);
+        let mutation_type = rng.random_range(0..5);
         
         match mutation_type {
             0 => self.mutate_layer_types(&mut mutated, adaptive_rate, &mut rng)?,
@@ -537,7 +537,7 @@ impl ArchitectureEncoding for GraphEncoding {
         let other_vec = other.to_vector();
         
         use rand::prelude::*;
-        let mut rng = rand::rng();
+        let mut rng = ndarray_rand::rand::thread_rng();
         
         // Create a mixed vector
         let min_len = self_vec.len().min(other_vec.len());
@@ -630,17 +630,17 @@ impl SequentialEncoding {
     }
 
     pub fn random(rng: &mut impl rand::Rng) -> Result<Self> {
-        let num_layers = rng.gen_range(3..=10);
+        let num_layers = rng.random_range(3..=10);
         let mut layers = Vec::with_capacity(num_layers);
         
         // Input layer
-        layers.push(LayerType::Dense(rng.gen_range(64..=512)));
+        layers.push(LayerType::Dense(rng.random_range(64..=512)));
         
         // Hidden layers
         for _ in 1..num_layers - 1 {
-            let layer_type = match rng.gen_range(0..4) {
-                0 => LayerType::Dense(rng.gen_range(32..=512)),
-                1 => LayerType::Dropout(rng.gen_range(0.1..0.5)),
+            let layer_type = match rng.random_range(0..4) {
+                0 => LayerType::Dense(rng.random_range(32..=512)),
+                1 => LayerType::Dropout(rng.random_range(0.1..0.5)),
                 2 => LayerType::BatchNorm,
                 _ => LayerType::Activation("relu".to_string()),
             };
@@ -648,7 +648,7 @@ impl SequentialEncoding {
         }
         
         // Output layer
-        layers.push(LayerType::Dense(rng.gen_range(1..=10)));
+        layers.push(LayerType::Dense(rng.random_range(1..=10)));
         
         Ok(Self { layers })
     }
@@ -754,7 +754,7 @@ impl ArchitectureEncoding for SequentialEncoding {
 
     fn mutate(&self, mutation_rate: f32) -> Result<Box<dyn ArchitectureEncoding>> {
         use rand::prelude::*;
-        let mut rng = rand::rng();
+        let mut rng = ndarray_rand::rand::thread_rng();
         let mut mutated = self.clone();
         
         // Mutate existing layers
@@ -762,13 +762,13 @@ impl ArchitectureEncoding for SequentialEncoding {
             if rng.gen_bool(mutation_rate as f64) {
                 match layer {
                     LayerType::Dense(ref mut units) => {
-                        *units = rng.gen_range(32..=512);
+                        *units = rng.random_range(32..=512);
                     }
                     LayerType::Conv2D { ref mut filters, .. } => {
-                        *filters = rng.gen_range(16..=256);
+                        *filters = rng.random_range(16..=256);
                     }
                     LayerType::Dropout(ref mut rate) => {
-                        *rate = rng.gen_range(0.1..0.5);
+                        *rate = rng.random_range(0.1..0.5);
                     }
                     _ => {}
                 }
@@ -779,17 +779,17 @@ impl ArchitectureEncoding for SequentialEncoding {
         if rng.gen_bool(mutation_rate as f64 * 0.1) {
             if mutated.layers.len() < 15 && rng.gen_bool(0.7) {
                 // Add layer
-                let pos = rng.gen_range(1..mutated.layers.len());
-                let new_layer = match rng.gen_range(0..4) {
-                    0 => LayerType::Dense(rng.gen_range(32..=512)),
-                    1 => LayerType::Dropout(rng.gen_range(0.1..0.5)),
+                let pos = rng.random_range(1..mutated.layers.len());
+                let new_layer = match rng.random_range(0..4) {
+                    0 => LayerType::Dense(rng.random_range(32..=512)),
+                    1 => LayerType::Dropout(rng.random_range(0.1..0.5)),
                     2 => LayerType::BatchNorm,
                     _ => LayerType::Activation("relu".to_string()),
                 };
                 mutated.layers.insert(pos, new_layer);
             } else if mutated.layers.len() > 3 {
                 // Remove layer (but not first or last)
-                let pos = rng.gen_range(1..mutated.layers.len() - 1);
+                let pos = rng.random_range(1..mutated.layers.len() - 1);
                 mutated.layers.remove(pos);
             }
         }
@@ -801,14 +801,14 @@ impl ArchitectureEncoding for SequentialEncoding {
         // Try to convert other to SequentialEncoding
         if other.to_string().contains("SequentialEncoding") {
             use rand::prelude::*;
-            let mut rng = rand::rng();
+            let mut rng = ndarray_rand::rand::thread_rng();
             
             // Get the vector representations
             let self_vec = self.to_vector();
             let other_vec = other.to_vector();
             
             // Simple crossover point
-            let crossover_point = rng.gen_range(1..self_vec.len().min(other_vec.len()));
+            let crossover_point = rng.random_range(1..self_vec.len().min(other_vec.len()));
             
             let mut child_vec = Vec::new();
             child_vec.extend_from_slice(&self_vec[..crossover_point]);
@@ -907,7 +907,7 @@ mod tests {
 
     #[test]
     fn test_random_generation() {
-        let mut rng = rand::rng();
+        let mut rng = ndarray_rand::rand::thread_rng();
         let seq_encoding = SequentialEncoding::random(&mut rng).unwrap();
         assert!(seq_encoding.layers.len() >= 3);
         assert!(seq_encoding.layers.len() <= 10);

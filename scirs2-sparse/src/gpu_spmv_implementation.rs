@@ -160,9 +160,40 @@ impl GpuSpMV {
             + NumAssign
             + SimdUnifiedOps,
     {
-        // TODO: Implement proper CUDA acceleration once GPU API is stable
-        // For now, fall back to optimized CPU implementation
-        self.spmv_cpu_optimized(rows, indptr, indices, data, x)
+        #[cfg(feature = "gpu")]
+        {
+            use crate::gpu_ops::{GpuBufferExt, SpMVKernel};
+
+            // Create GPU buffers
+            let indptr_buffer = self.device.create_buffer(indptr)?;
+            let indices_buffer = self.device.create_buffer(indices)?;
+            let data_buffer = self.device.create_buffer(data)?;
+            let x_buffer = self.device.create_buffer(x)?;
+            let mut y_buffer = self.device.create_buffer_zeros::<T>(rows)?;
+
+            // Compile and execute CUDA kernel
+            let kernel = SpMVKernel::new(&self.device, [256, 1, 1])?;
+            kernel.execute(
+                &self.device,
+                rows,
+                x.len(),
+                &indptr_buffer,
+                &indices_buffer,
+                &data_buffer,
+                &x_buffer,
+                &mut y_buffer,
+            )?;
+
+            // Copy results back to host
+            let result = y_buffer.to_host()?;
+            Ok(result)
+        }
+
+        #[cfg(not(feature = "gpu"))]
+        {
+            // Fall back to optimized CPU implementation when GPU feature is not enabled
+            self.spmv_cpu_optimized(rows, indptr, indices, data, x)
+        }
     }
 
     /// OpenCL-accelerated SpMV implementation
@@ -186,9 +217,41 @@ impl GpuSpMV {
             + NumAssign
             + SimdUnifiedOps,
     {
-        // TODO: Implement proper OpenCL acceleration once GPU API is stable
-        // For now, fall back to optimized CPU implementation
-        self.spmv_cpu_optimized(rows, indptr, indices, data, x)
+        #[cfg(feature = "gpu")]
+        {
+            use crate::gpu_ops::{GpuBufferExt, SpMVKernel};
+
+            // Create GPU buffers for OpenCL
+            let indptr_buffer = self.device.create_buffer(indptr)?;
+            let indices_buffer = self.device.create_buffer(indices)?;
+            let data_buffer = self.device.create_buffer(data)?;
+            let x_buffer = self.device.create_buffer(x)?;
+            let mut y_buffer = self.device.create_buffer_zeros::<T>(rows)?;
+
+            // Compile and execute OpenCL kernel with workgroup optimization
+            let kernel = SpMVKernel::new(&self.device, [128, 1, 1])?;
+            kernel.execute(
+                &self.device,
+                rows,
+                x.len(),
+                &indptr_buffer,
+                &indices_buffer,
+                &data_buffer,
+                &x_buffer,
+                &mut y_buffer,
+            )?;
+
+            // Wait for completion and copy results back
+            self.device.finish_queue()?;
+            let result = y_buffer.to_host()?;
+            Ok(result)
+        }
+
+        #[cfg(not(feature = "gpu"))]
+        {
+            // Fall back to optimized CPU implementation when GPU feature is not enabled
+            self.spmv_cpu_optimized(rows, indptr, indices, data, x)
+        }
     }
 
     /// Metal-accelerated SpMV implementation  
@@ -212,9 +275,41 @@ impl GpuSpMV {
             + NumAssign
             + SimdUnifiedOps,
     {
-        // TODO: Implement proper Metal acceleration once GPU API is stable
-        // For now, fall back to optimized CPU implementation
-        self.spmv_cpu_optimized(rows, indptr, indices, data, x)
+        #[cfg(feature = "gpu")]
+        {
+            use crate::gpu_ops::{GpuBufferExt, SpMVKernel};
+
+            // Create GPU buffers for Metal
+            let indptr_buffer = self.device.create_buffer(indptr)?;
+            let indices_buffer = self.device.create_buffer(indices)?;
+            let data_buffer = self.device.create_buffer(data)?;
+            let x_buffer = self.device.create_buffer(x)?;
+            let mut y_buffer = self.device.create_buffer_zeros::<T>(rows)?;
+
+            // Compile and execute Metal kernel with simdgroup optimization
+            let kernel = SpMVKernel::new(&self.device, [256, 1, 1])?;
+            kernel.execute(
+                &self.device,
+                rows,
+                x.len(),
+                &indptr_buffer,
+                &indices_buffer,
+                &data_buffer,
+                &x_buffer,
+                &mut y_buffer,
+            )?;
+
+            // Commit command buffer and wait for completion
+            self.device.commit_and_wait()?;
+            let result = y_buffer.to_host()?;
+            Ok(result)
+        }
+
+        #[cfg(not(feature = "gpu"))]
+        {
+            // Fall back to optimized CPU implementation when GPU feature is not enabled
+            self.spmv_cpu_optimized(rows, indptr, indices, data, x)
+        }
     }
 
     /// Optimized CPU fallback implementation
@@ -404,7 +499,7 @@ mod tests {
     #[test]
     fn test_backend_info() {
         let gpu_spmv = GpuSpMV::default();
-        let (backend, name) = gpu_spmv.backend_info();
+        let (_backend, name) = gpu_spmv.backend_info();
         assert!(!name.is_empty(), "Backend name should not be empty");
     }
 }

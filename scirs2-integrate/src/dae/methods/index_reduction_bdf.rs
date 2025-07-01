@@ -238,7 +238,7 @@ where
             // Numerical differentiation of the residual
             let t_plus = t0 + h;
             let mut y_plus = y0.clone();
-            y_plus[i] = y_plus[i] + h;
+            y_plus[i] += h;
 
             let residual_base = f(t0, y0.view(), y_prime0.view());
             let residual_plus = f(t_plus, y_plus.view(), y_prime0.view());

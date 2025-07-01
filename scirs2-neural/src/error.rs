@@ -37,6 +37,22 @@ pub enum NeuralError {
     DistributedError(String),
     /// Configuration error
     ConfigError(String),
+    /// Allocation error
+    AllocationError(String),
+    /// Device error
+    DeviceError(String),
+    /// Device not found error
+    DeviceNotFound(String),
+    /// Resource exhausted error
+    ResourceExhausted(String),
+    /// Invalid state error
+    InvalidState(String),
+    /// Not implemented error (alternative name)
+    NotImplemented(String),
+    /// Memory error
+    MemoryError(String),
+    /// Feature not enabled error
+    FeatureNotEnabled(String),
     /// Other error
     Other(String),
 }
@@ -58,6 +74,14 @@ impl fmt::Display for NeuralError {
             NeuralError::DimensionMismatch(msg) => write!(f, "Dimension mismatch: {}", msg),
             NeuralError::DistributedError(msg) => write!(f, "Distributed training error: {}", msg),
             NeuralError::ConfigError(msg) => write!(f, "Configuration error: {}", msg),
+            NeuralError::AllocationError(msg) => write!(f, "Allocation error: {}", msg),
+            NeuralError::DeviceError(msg) => write!(f, "Device error: {}", msg),
+            NeuralError::DeviceNotFound(msg) => write!(f, "Device not found: {}", msg),
+            NeuralError::ResourceExhausted(msg) => write!(f, "Resource exhausted: {}", msg),
+            NeuralError::InvalidState(msg) => write!(f, "Invalid state: {}", msg),
+            NeuralError::NotImplemented(msg) => write!(f, "Not implemented: {}", msg),
+            NeuralError::MemoryError(msg) => write!(f, "Memory error: {}", msg),
+            NeuralError::FeatureNotEnabled(msg) => write!(f, "Feature not enabled: {}", msg),
             NeuralError::Other(msg) => write!(f, "Error: {}", msg),
         }
     }

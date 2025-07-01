@@ -10,7 +10,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 
 #[cfg(feature = "crypto")]
 use rsa::{PaddingScheme, PublicKey, RsaPublicKey};
@@ -326,11 +325,11 @@ pub struct SignatureVerificationConfig {
 /// Signature algorithms
 #[derive(Debug, Clone, Copy)]
 pub enum SignatureAlgorithm {
-    RSA2048_SHA256,
-    RSA3072_SHA256,
-    RSA4096_SHA256,
-    ECDSA_P256_SHA256,
-    ECDSA_P384_SHA384,
+    Rsa2048Sha256,
+    Rsa3072Sha256,
+    Rsa4096Sha256,
+    EcdsaP256Sha256,
+    EcdsaP384Sha384,
     Ed25519,
 }
 
@@ -506,11 +505,12 @@ pub enum ThreatType {
 impl PluginLoader {
     /// Create a new plugin loader
     pub fn new(config: LoaderConfig) -> Self {
+        let security_manager = SecurityManager::new(config.security_policy.clone());
         Self {
             config,
+            security_manager,
             loaded_plugins: HashMap::new(),
             dependency_graph: DependencyGraph::new(),
-            security_manager: SecurityManager::new(config.security_policy.clone()),
         }
     }
 
@@ -706,9 +706,11 @@ impl PluginLoader {
     pub fn discover_plugins(&mut self) -> Result<Vec<PluginLoadResult>> {
         let mut results = Vec::new();
 
-        for directory in &self.config.plugin_directories {
+        // Clone directories to avoid borrowing conflicts
+        let directories = self.config.plugin_directories.clone();
+        for directory in directories {
             if directory.exists() && directory.is_dir() {
-                let discovered = self.discover_plugins_in_directory(directory)?;
+                let discovered = self.discover_plugins_in_directory(&directory)?;
                 results.extend(discovered);
             }
         }
@@ -1517,7 +1519,7 @@ impl CryptographicValidator {
     fn verify_plugin_signature(
         &self,
         path: &Path,
-        metadata: &PluginMetadata,
+        _metadata: &PluginMetadata,
     ) -> Result<SignatureVerificationResult> {
         // Look for signature file (plugin.sig or similar)
         let sig_path = path

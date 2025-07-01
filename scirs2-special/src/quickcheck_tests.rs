@@ -99,26 +99,26 @@ impl Arbitrary for ReasonableComplex {
 /// Helper function to run QuickCheck tests with custom configuration
 pub fn run_quickcheck_test<F, P>(prop: F, config: &TestConfig) -> bool
 where
-    F: Fn(P) -> bool,
-    P: Arbitrary + Clone + Send + 'static,
+    F: Fn(P) -> bool + Send + Sync + 'static,
+    P: Arbitrary + Clone + Send + std::fmt::Debug + 'static,
 {
     QuickCheck::new()
         .tests(config.test_count)
         .max_tests(config.max_iterations)
-        .quickcheck(prop as fn(P) -> bool);
+        .quickcheck(prop);
     true
 }
 
 /// Helper function to run QuickCheck tests that return TestResult
 pub fn run_quickcheck_test_result<F, P>(prop: F, config: &TestConfig) -> bool
 where
-    F: Fn(P) -> TestResult,
-    P: Arbitrary + Clone + Send + 'static,
+    F: Fn(P) -> TestResult + Send + Sync + 'static,
+    P: Arbitrary + Clone + Send + std::fmt::Debug + 'static,
 {
     QuickCheck::new()
         .tests(config.test_count)
         .max_tests(config.max_iterations)
-        .quickcheck(prop as fn(P) -> TestResult);
+        .quickcheck(prop);
     true
 }
 
@@ -239,9 +239,9 @@ mod bessel_properties {
             return true;
         }
 
-        let jn_minus_1 = crate::bessel::jn(n - 1, x);
-        let jn = crate::bessel::jn(n, x);
-        let jn_plus_1 = crate::bessel::jn(n + 1, x);
+        let jn_minus_1 = crate::bessel::jn((n - 1) as i32, x);
+        let jn = crate::bessel::jn(n as i32, x);
+        let jn_plus_1 = crate::bessel::jn((n + 1) as i32, x);
 
         let expected = (2.0 * n as f64 / x) * jn - jn_minus_1;
 
@@ -491,7 +491,7 @@ pub fn run_all_quickcheck_tests() {
 
 #[cfg(test)]
 mod integration {
-    use super::{run_quickcheck_test, TestConfig};
+    use super::TestConfig;
 
     #[test]
     fn test_quickcheck_infrastructure() {

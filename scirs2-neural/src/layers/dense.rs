@@ -5,8 +5,8 @@ use crate::error::{NeuralError, Result};
 use crate::layers::{Layer, ParamLayer};
 use ndarray::{s, Array, IxDyn, ScalarOperand};
 use ndarray_rand::rand::distributions::{Distribution, Uniform};
+use ndarray_rand::rand::Rng;
 use num_traits::Float;
-use rand::Rng;
 use std::fmt::Debug;
 
 // SIMD optimizations using scirs2-core
@@ -116,7 +116,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Dense<F> {
     /// # Returns
     ///
     /// * A new dense layer
-    pub fn new<R: Rng + rand::RngCore + ndarray_rand::rand::RngCore>(
+    pub fn new<R: ndarray_rand::rand::Rng + ndarray_rand::rand::RngCore>(
         input_dim: usize,
         output_dim: usize,
         activation_name: Option<&str>,

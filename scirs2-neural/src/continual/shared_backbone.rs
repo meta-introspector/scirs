@@ -30,7 +30,7 @@ impl SharedBackbone {
                 current_dim,
                 layer_size,
                 Some("relu"),
-                &mut rand::rng(),
+                &mut ndarray_rand::rand::thread_rng(),
             )?;
             layers.push(Box::new(dense_layer));
             current_dim = layer_size;
@@ -165,7 +165,7 @@ impl TaskSpecificHead {
                 current_dim,
                 layer_size,
                 Some("relu"),
-                &mut rand::rng(),
+                &mut ndarray_rand::rand::thread_rng(),
             )?;
             layers.push(Box::new(dense_layer));
             current_dim = layer_size;
@@ -183,7 +183,7 @@ impl TaskSpecificHead {
             current_dim,
             output_dim,
             output_activation,
-            &mut rand::rng(),
+            &mut ndarray_rand::rand::thread_rng(),
         )?;
         layers.push(Box::new(output_layer));
 

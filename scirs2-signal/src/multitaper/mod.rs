@@ -26,7 +26,9 @@ pub use psd::{multitaper_spectrogram, pmtm};
 pub use utils::{coherence, multitaper_filtfilt};
 pub use validation::{
     validate_multitaper_comprehensive, validate_multitaper_robustness,
-    validate_multitaper_with_simd, validate_simd_operations, ConvergenceMetrics,
+    validate_multitaper_with_simd, validate_simd_operations, 
+    validate_numerical_precision_enhanced, validate_parameter_consistency,
+    run_comprehensive_enhanced_validation, ConvergenceMetrics,
     EnhancedMultitaperValidationResult, MultitaperValidationResult, PerformanceScalingMetrics,
     TestSignalConfig,
 };

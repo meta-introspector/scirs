@@ -5,13 +5,11 @@
 
 use super::core::*;
 use crate::error::{OptimError, Result};
-use ndarray::Array1;
 use num_traits::Float;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{Mutex, RwLock};
 
 /// Central plugin registry for managing all optimizer plugins
 #[derive(Debug)]
@@ -154,19 +152,19 @@ pub struct CacheStats {
 /// Registry event listener trait
 pub trait RegistryEventListener: Debug + Send + Sync {
     /// Called when a plugin is registered
-    fn on_plugin_registered(&mut self, info: &PluginInfo) {}
+    fn on_plugin_registered(&mut self, _info: &PluginInfo) {}
 
     /// Called when a plugin is unregistered
-    fn on_plugin_unregistered(&mut self, name: &str) {}
+    fn on_plugin_unregistered(&mut self, _name: &str) {}
 
     /// Called when a plugin is loaded
-    fn on_plugin_loaded(&mut self, name: &str) {}
+    fn on_plugin_loaded(&mut self, _name: &str) {}
 
     /// Called when a plugin fails to load
-    fn on_plugin_load_failed(&mut self, name: &str, error: &str) {}
+    fn on_plugin_load_failed(&mut self, _name: &str, _error: &str) {}
 
     /// Called when a plugin is enabled/disabled
-    fn on_plugin_status_changed(&mut self, name: &str, status: &PluginStatus) {}
+    fn on_plugin_status_changed(&mut self, _name: &str, _status: &PluginStatus) {}
 }
 
 /// Plugin search query

@@ -12,7 +12,7 @@
 //! - Multi-part upload/download support
 //! - Intelligent caching and prefetching
 
-use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
+use crate::error::{CoreError, ErrorContext, ErrorLocation};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
@@ -20,6 +20,7 @@ use std::time::{Duration, SystemTime};
 use thiserror::Error;
 
 #[cfg(feature = "async")]
+#[allow(unused_imports)]
 use tokio::io::{AsyncRead, AsyncWrite};
 
 #[cfg(feature = "async")]
@@ -1405,6 +1406,7 @@ pub mod utils {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[allow(unused_imports)]
     use tempfile::tempdir;
 
     #[test]

@@ -79,9 +79,9 @@ impl UltrathinkModule for MockNeuralUltrathinkModule {
 
     fn process_ultrathink(&mut self, input: UltrathinkInput) -> CoreResult<UltrathinkOutput> {
         if !self.initialized {
-            return Err(CoreError::InvalidInput(
-                ErrorContext::new("Module not initialized"),
-            ));
+            return Err(CoreError::InvalidInput(ErrorContext::new(
+                "Module not initialized",
+            )));
         }
 
         let start_time = Instant::now();
@@ -151,7 +151,10 @@ impl UltrathinkModule for MockNeuralUltrathinkModule {
         Ok(())
     }
 
-    fn handle_communication(&mut self, message: InterModuleMessage) -> CoreResult<InterModuleMessage> {
+    fn handle_communication(
+        &mut self,
+        message: InterModuleMessage,
+    ) -> CoreResult<InterModuleMessage> {
         println!("📨 Neural module received message from {}", message.from);
 
         let response = InterModuleMessage {
@@ -227,9 +230,9 @@ impl UltrathinkModule for MockClusteringUltrathinkModule {
 
     fn process_ultrathink(&mut self, input: UltrathinkInput) -> CoreResult<UltrathinkOutput> {
         if !self.initialized {
-            return Err(CoreError::InvalidInput(
-                ErrorContext::new("Module not initialized"),
-            ));
+            return Err(CoreError::InvalidInput(ErrorContext::new(
+                "Module not initialized",
+            )));
         }
 
         let start_time = Instant::now();
@@ -302,7 +305,10 @@ impl UltrathinkModule for MockClusteringUltrathinkModule {
         Ok(())
     }
 
-    fn handle_communication(&mut self, message: InterModuleMessage) -> CoreResult<InterModuleMessage> {
+    fn handle_communication(
+        &mut self,
+        message: InterModuleMessage,
+    ) -> CoreResult<InterModuleMessage> {
         println!(
             "📨 Clustering module received message from {}",
             message.from
@@ -381,9 +387,9 @@ impl UltrathinkModule for MockIoUltrathinkModule {
 
     fn process_ultrathink(&mut self, input: UltrathinkInput) -> CoreResult<UltrathinkOutput> {
         if !self.initialized {
-            return Err(CoreError::InvalidInput(
-                ErrorContext::new("Module not initialized"),
-            ));
+            return Err(CoreError::InvalidInput(ErrorContext::new(
+                "Module not initialized",
+            )));
         }
 
         let start_time = Instant::now();
@@ -460,7 +466,10 @@ impl UltrathinkModule for MockIoUltrathinkModule {
         Ok(())
     }
 
-    fn handle_communication(&mut self, message: InterModuleMessage) -> CoreResult<InterModuleMessage> {
+    fn handle_communication(
+        &mut self,
+        message: InterModuleMessage,
+    ) -> CoreResult<InterModuleMessage> {
         println!("📨 I/O module received message from {}", message.from);
 
         let response = InterModuleMessage {

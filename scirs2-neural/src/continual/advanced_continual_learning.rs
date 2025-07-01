@@ -77,7 +77,7 @@ impl TaskColumn {
                 current_dim,
                 layer_size,
                 Some("relu"),
-                &mut rand::rng(),
+                &mut ndarray_rand::rand::thread_rng(),
             )?;
             layers.push(Box::new(layer));
             current_dim = layer_size;
@@ -88,7 +88,7 @@ impl TaskColumn {
             current_dim,
             output_dim,
             Some("softmax"),
-            &mut rand::rng(),
+            &mut ndarray_rand::rand::thread_rng(),
         )?;
         layers.push(Box::new(output_layer));
 
@@ -189,8 +189,8 @@ impl LateralConnection {
         target_dim: usize,
     ) -> Result<Self> {
         let weights = Array2::from_shape_fn((target_dim, source_dim), |_| {
-            use rand::Rng;
-            rand::rng().random_range(-0.1..0.1)
+            use ndarray_rand::rand::Rng;
+            ndarray_rand::rand::thread_rng().random_range(-0.1..0.1)
         });
 
         let adapter = if source_dim != target_dim {
@@ -198,7 +198,7 @@ impl LateralConnection {
                 source_dim,
                 target_dim,
                 None,
-                &mut rand::rng(),
+                &mut ndarray_rand::rand::thread_rng(),
             )?)
         } else {
             None

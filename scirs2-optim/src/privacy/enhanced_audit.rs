@@ -4,7 +4,7 @@
 //! and formal verification components for privacy-preserving machine learning.
 
 use crate::error::OptimizerError;
-use ndarray::{Array1, ArrayBase, Data, Dimension};
+use ndarray::{Array1, Dimension};
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
@@ -1415,8 +1415,8 @@ impl AuditTrail {
             }
         }
 
-        if let Some(ref event_type) = criteria.event_type {
-            if !matches!(event.event_type, event_type) {
+        if let Some(ref _event_type) = criteria.event_type {
+            if !matches!(&event.event_type, _event_type) {
                 return false;
             }
         }
@@ -1771,7 +1771,7 @@ impl RegulatoryComplianceChecker {
         &self,
         frameworks: &[ComplianceFramework],
         period: ReportingPeriod,
-        audit_trail: &AuditTrail,
+        _audit_trail: &AuditTrail,
     ) -> Result<ComplianceReport, OptimizerError> {
         let report = ComplianceReport {
             id: format!("report_{}", self.reports.len()),

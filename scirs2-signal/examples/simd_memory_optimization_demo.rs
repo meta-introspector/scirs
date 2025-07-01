@@ -10,6 +10,10 @@ use scirs2_signal::{
         benchmark_simd_operations, simd_apply_window, simd_autocorrelation, simd_cross_correlation,
         simd_fir_filter, SimdConfig,
     },
+    simd_memory_optimization::{
+        benchmark_simd_memory_operations, simd_optimized_convolution, simd_optimized_fir_filter,
+        SimdMemoryConfig,
+    },
 };
 use std::f64::consts::PI;
 use std::fs::File;
@@ -39,6 +43,9 @@ fn main() -> SignalResult<()> {
 
     // Demo 7: Memory-optimized spectrogram
     demo_memory_optimized_spectrogram()?;
+
+    // Demo 8: Ultrathink Mode SIMD Memory Optimization
+    demo_ultrathink_simd_memory()?;
 
     println!("\nDemo completed successfully!");
     Ok(())
@@ -456,6 +463,194 @@ fn demo_memory_optimized_spectrogram() -> SignalResult<()> {
     // Clean up
     let _ = std::fs::remove_file(input_file);
     let _ = std::fs::remove_file(output_file);
+
+    Ok(())
+}
+
+fn demo_ultrathink_simd_memory() -> SignalResult<()> {
+    println!("\n8. Ultrathink Mode SIMD Memory Optimization");
+    println!("===========================================");
+
+    // Configure advanced SIMD memory optimization
+    let config = SimdMemoryConfig {
+        enable_simd: true,
+        enable_parallel: true,
+        cache_block_size: 16384,
+        vector_size: 8,
+        memory_alignment: 64,
+        enable_prefetch: true,
+    };
+
+    println!("🚀 Ultrathink Mode Configuration:");
+    println!("  - SIMD Vectorization: {}", config.enable_simd);
+    println!("  - Parallel Processing: {}", config.enable_parallel);
+    println!("  - Cache Block Size: {} bytes", config.cache_block_size);
+    println!("  - Vector Size: {}", config.vector_size);
+    println!("  - Memory Alignment: {} bytes", config.memory_alignment);
+
+    // Generate large test signal
+    let signal_size = 100_000;
+    let signal: Vec<f64> = (0..signal_size)
+        .map(|i| {
+            let t = i as f64 / signal_size as f64;
+            let freq1 = 50.0;
+            let freq2 = 120.0;
+            (2.0 * PI * freq1 * t).sin() + 0.5 * (2.0 * PI * freq2 * t).sin()
+        })
+        .collect();
+
+    // Generate filter kernel
+    let kernel_size = 512;
+    let kernel: Vec<f64> = (0..kernel_size)
+        .map(|i| {
+            let x = (i as f64 - kernel_size as f64 / 2.0) / (kernel_size as f64 / 8.0);
+            (-x * x / 2.0).exp() / (2.0 * PI).sqrt()
+        })
+        .collect();
+
+    println!("\n📊 Test Data:");
+    println!("  - Signal size: {} samples", signal_size);
+    println!("  - Kernel size: {} samples", kernel_size);
+    println!(
+        "  - Expected output size: {} samples",
+        signal_size + kernel_size - 1
+    );
+
+    // Test SIMD-optimized convolution
+    println!("\n🔄 Testing SIMD-Optimized Convolution...");
+    let signal_array = ndarray::Array1::from_vec(signal.clone());
+    let kernel_array = ndarray::Array1::from_vec(kernel.clone());
+
+    let conv_result =
+        simd_optimized_convolution(&signal_array.view(), &kernel_array.view(), &config)?;
+
+    println!("✅ Convolution Results:");
+    println!(
+        "  - Processing time: {:.2} ms",
+        conv_result.processing_time_ms
+    );
+    println!(
+        "  - Memory efficiency: {:.1}%",
+        conv_result.memory_efficiency * 100.0
+    );
+    println!(
+        "  - SIMD acceleration: {:.1}x",
+        conv_result.simd_acceleration
+    );
+    println!(
+        "  - Cache hit ratio: {:.1}%",
+        conv_result.cache_hit_ratio * 100.0
+    );
+    println!("  - Output samples: {}", conv_result.data.len());
+
+    // Test SIMD-optimized FIR filtering
+    println!("\n🎛️  Testing SIMD-Optimized FIR Filter...");
+    let fir_coeffs: Vec<f64> = (0..64)
+        .map(|i| {
+            let n = i as f64 - 31.5;
+            if n == 0.0 {
+                0.3 // Lowpass cutoff
+            } else {
+                let sinc = (PI * 0.3 * n).sin() / (PI * n);
+                let window = 0.54 - 0.46 * (2.0 * PI * i as f64 / 63.0).cos();
+                sinc * window
+            }
+        })
+        .collect();
+
+    let fir_coeffs_array = ndarray::Array1::from_vec(fir_coeffs);
+
+    let fir_result =
+        simd_optimized_fir_filter(&signal_array.view(), &fir_coeffs_array.view(), &config)?;
+
+    println!("✅ FIR Filter Results:");
+    println!(
+        "  - Processing time: {:.2} ms",
+        fir_result.processing_time_ms
+    );
+    println!(
+        "  - Memory efficiency: {:.1}%",
+        fir_result.memory_efficiency * 100.0
+    );
+    println!(
+        "  - SIMD acceleration: {:.1}x",
+        fir_result.simd_acceleration
+    );
+    println!(
+        "  - Cache hit ratio: {:.1}%",
+        fir_result.cache_hit_ratio * 100.0
+    );
+
+    // Performance benchmarking across different sizes
+    println!("\n📈 Performance Benchmarking...");
+    let test_sizes = vec![1000, 5000, 10000, 50000];
+
+    let benchmark_results = benchmark_simd_memory_operations(&test_sizes, &config)?;
+
+    println!("Signal Size | Processing Time | Speedup");
+    println!("------------|-----------------|--------");
+    for (size, time, speedup) in benchmark_results {
+        println!("{:>11} | {:>15.2} ms | {:>6.1}x", size, time, speedup);
+    }
+
+    // Calculate total performance metrics
+    let total_operations = signal_size * 2; // Convolution + FIR
+    let total_time = conv_result.processing_time_ms + fir_result.processing_time_ms;
+    let throughput = (total_operations as f64) / (total_time / 1000.0);
+
+    println!("\n🎯 Ultrathink Mode Performance Summary:");
+    println!("  - Total operations: {} samples", total_operations);
+    println!("  - Total processing time: {:.2} ms", total_time);
+    println!("  - Throughput: {:.0} samples/second", throughput);
+    println!(
+        "  - Average acceleration: {:.1}x",
+        (conv_result.simd_acceleration + fir_result.simd_acceleration) / 2.0
+    );
+    println!(
+        "  - Average memory efficiency: {:.1}%",
+        (conv_result.memory_efficiency + fir_result.memory_efficiency) * 50.0
+    );
+
+    println!("\n⚡ Optimizations Applied:");
+    println!("  ✓ SIMD vectorization for parallel computation");
+    println!("  ✓ Cache-friendly memory access patterns");
+    println!("  ✓ Memory alignment for optimal SIMD performance");
+    println!("  ✓ Adaptive block sizing for cache efficiency");
+    println!("  ✓ Prefetching for improved memory bandwidth");
+
+    // Verify correctness with a simple test
+    println!("\n🔍 Correctness Verification:");
+    let small_signal = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+    let small_kernel = vec![1.0, 0.5];
+    let small_signal_array = ndarray::Array1::from_vec(small_signal);
+    let small_kernel_array = ndarray::Array1::from_vec(small_kernel);
+
+    let small_result = simd_optimized_convolution(
+        &small_signal_array.view(),
+        &small_kernel_array.view(),
+        &config,
+    )?;
+
+    // Expected: [1.0, 2.5, 4.0, 5.5, 7.0, 2.5]
+    let expected = vec![1.0, 2.5, 4.0, 5.5, 7.0, 2.5];
+    let mut all_correct = true;
+
+    for (i, (&actual, &expected_val)) in small_result.data.iter().zip(expected.iter()).enumerate() {
+        let error = (actual - expected_val).abs();
+        if error > 1e-10 {
+            println!(
+                "  ❌ Mismatch at index {}: got {:.6}, expected {:.6}",
+                i, actual, expected_val
+            );
+            all_correct = false;
+        }
+    }
+
+    if all_correct {
+        println!("  ✅ All values match expected results!");
+    }
+
+    println!("\n🚀 Ultrathink Mode SIMD Memory Optimization completed!");
 
     Ok(())
 }

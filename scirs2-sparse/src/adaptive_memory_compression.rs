@@ -7,10 +7,21 @@
 use crate::error::{SparseError, SparseResult};
 use num_traits::{Float, NumAssign};
 use std::collections::{HashMap, VecDeque};
-// use std::io::{Read, Write}; // TODO: Remove or use when implementing I/O operations
+use std::fs::{File, OpenOptions};
+use std::io::{Read, Write};
 use std::marker::PhantomData;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
+
+#[cfg(unix)]
+use std::os::unix::fs::FileExt;
+
+// Memory mapping support
+#[cfg(unix)]
+
+#[cfg(windows)]
+use std::os::windows::fs::FileExt;
 
 /// Configuration for adaptive memory compression
 #[derive(Debug, Clone)]
@@ -74,6 +85,7 @@ impl Default for AdaptiveCompressionConfig {
 }
 
 /// Adaptive memory compression manager
+#[allow(dead_code)]
 pub struct AdaptiveMemoryCompressor {
     config: AdaptiveCompressionConfig,
     memory_usage: AtomicUsize,
@@ -102,6 +114,7 @@ pub struct CompressionStats {
 
 /// Block cache for frequently accessed data
 #[derive(Debug)]
+#[allow(dead_code)]
 struct BlockCache {
     cache: HashMap<BlockId, CachedBlock>,
     access_order: VecDeque<BlockId>,
@@ -111,6 +124,7 @@ struct BlockCache {
 
 /// Cached block information
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct CachedBlock {
     data: Vec<u8>,
     compressed: bool,
@@ -121,14 +135,47 @@ struct CachedBlock {
 
 /// Block identifier
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-struct BlockId {
+pub struct BlockId {
     matrix_id: u64,
     block_row: usize,
     block_col: usize,
 }
 
+impl std::fmt::Display for BlockId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}_{}-{}", self.matrix_id, self.block_row, self.block_col)
+    }
+}
+
+impl BlockId {
+    /// Convert BlockId to u64 for serialization (using a hash-like approach)
+    pub fn to_u64(&self) -> u64 {
+        // Simple hash combining the fields
+        let hash = (self.matrix_id as u64)
+            .wrapping_mul(1000000)
+            .wrapping_add((self.block_row as u64) * 1000)
+            .wrapping_add(self.block_col as u64);
+        hash
+    }
+    
+    /// Create BlockId from u64 (for deserialization)
+    pub fn from_u64(value: u64) -> Self {
+        // This is a simplified reverse operation - in practice you'd want a proper bijection
+        let matrix_id = value / 1000000;
+        let remainder = value % 1000000;
+        let block_row = (remainder / 1000) as usize;
+        let block_col = (remainder % 1000) as usize;
+        Self {
+            matrix_id,
+            block_row,
+            block_col,
+        }
+    }
+}
+
 /// Access pattern tracking
 #[derive(Debug, Default)]
+#[allow(dead_code)]
 struct AccessTracker {
     access_patterns: HashMap<BlockId, AccessPattern>,
     temporal_patterns: VecDeque<AccessEvent>,
@@ -138,6 +185,7 @@ struct AccessTracker {
 
 /// Access pattern for a block
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct AccessPattern {
     access_count: usize,
     last_access: u64,
@@ -150,6 +198,7 @@ struct AccessPattern {
 
 /// Access event for pattern analysis
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct AccessEvent {
     block_id: BlockId,
     timestamp: u64,
@@ -158,6 +207,7 @@ struct AccessEvent {
 
 /// Type of access
 #[derive(Debug, Clone, Copy)]
+#[allow(dead_code)]
 enum AccessType {
     Read,
     Write,
@@ -166,6 +216,7 @@ enum AccessType {
 
 /// Hierarchical compression level
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct CompressionLevel {
     level: u8,
     compression_ratio: f64,
@@ -176,6 +227,7 @@ struct CompressionLevel {
 
 /// Out-of-core memory manager
 #[derive(Debug)]
+#[allow(dead_code)]
 struct OutOfCoreManager {
     temp_dir: String,
     file_counter: AtomicUsize,
@@ -185,13 +237,103 @@ struct OutOfCoreManager {
 
 /// Memory-mapped file wrapper
 #[derive(Debug)]
+#[allow(dead_code)]
 struct MemoryMappedFile {
-    #[allow(dead_code)]
-    file_path: String,
-    #[allow(dead_code)]
+    file_path: PathBuf,
+    file: File,
     size: usize,
-    #[allow(dead_code)]
     mapped: bool,
+    // Memory mapping would require unsafe code and platform-specific implementation
+    // For now, we'll use buffered I/O as a safe alternative
+    _phantom: PhantomData<()>,
+}
+
+impl MemoryMappedFile {
+    /// Create a new memory-mapped file
+    #[allow(dead_code)]
+    fn new(file_path: PathBuf, size: usize) -> SparseResult<Self> {
+        let file = OpenOptions::new()
+            .create(true)
+            .read(true)
+            .write(true)
+            .open(&file_path)
+            .map_err(|e| SparseError::Io(format!("Failed to create file {:?}: {}", file_path, e)))?;
+
+        // Set file size if creating new file
+        file.set_len(size as u64)
+            .map_err(|e| SparseError::Io(format!("Failed to set file size: {}", e)))?;
+
+        Ok(Self {
+            file_path,
+            file,
+            size,
+            mapped: true, // We'll treat buffered I/O as "mapped" for this implementation
+            _phantom: PhantomData,
+        })
+    }
+
+    /// Read data from the mapped file at offset
+    #[allow(dead_code)]
+    fn read_at(&self, offset: usize, buffer: &mut [u8]) -> SparseResult<usize> {
+        #[cfg(unix)]
+        {
+            self.file.read_at(buffer, offset as u64)
+                .map_err(|e| SparseError::Io(format!("Failed to read at offset {}: {}", offset, e)))
+        }
+        
+        #[cfg(windows)]
+        {
+            let mut file_ref = &self.file;
+            file_ref.seek_read(buffer, offset as u64)
+                .map_err(|e| SparseError::Io(format!("Failed to read at offset {}: {}", offset, e)))
+        }
+        
+        #[cfg(not(any(unix, windows)))]
+        {
+            // Fallback for other platforms - use regular seeking
+            let mut file_clone = self.file.try_clone()
+                .map_err(|e| SparseError::Io(format!("Failed to clone file handle: {}", e)))?;
+            file_clone.seek(SeekFrom::Start(offset as u64))
+                .map_err(|e| SparseError::Io(format!("Failed to seek to offset {}: {}", offset, e)))?;
+            file_clone.read(buffer)
+                .map_err(|e| SparseError::Io(format!("Failed to read data: {}", e)))
+        }
+    }
+
+    /// Write data to the mapped file at offset
+    #[allow(dead_code)]
+    fn write_at(&self, offset: usize, data: &[u8]) -> SparseResult<usize> {
+        #[cfg(unix)]
+        {
+            self.file.write_at(data, offset as u64)
+                .map_err(|e| SparseError::Io(format!("Failed to write at offset {}: {}", offset, e)))
+        }
+        
+        #[cfg(windows)]
+        {
+            let mut file_ref = &self.file;
+            file_ref.seek_write(data, offset as u64)
+                .map_err(|e| SparseError::Io(format!("Failed to write at offset {}: {}", offset, e)))
+        }
+        
+        #[cfg(not(any(unix, windows)))]
+        {
+            // Fallback for other platforms - use regular seeking
+            let mut file_clone = self.file.try_clone()
+                .map_err(|e| SparseError::Io(format!("Failed to clone file handle: {}", e)))?;
+            file_clone.seek(SeekFrom::Start(offset as u64))
+                .map_err(|e| SparseError::Io(format!("Failed to seek to offset {}: {}", offset, e)))?;
+            file_clone.write(data)
+                .map_err(|e| SparseError::Io(format!("Failed to write data: {}", e)))
+        }
+    }
+
+    /// Flush data to disk
+    #[allow(dead_code)]
+    fn flush(&self) -> SparseResult<()> {
+        self.file.sync_all()
+            .map_err(|e| SparseError::Io(format!("Failed to flush file: {}", e)))
+    }
 }
 
 impl AdaptiveMemoryCompressor {
@@ -834,8 +976,48 @@ impl AdaptiveMemoryCompressor {
     where
         T: Float + NumAssign + Send + Sync + Copy + std::fmt::Debug,
     {
-        // Simplified Huffman implementation (placeholder)
-        self.compress_with_none(matrix_id, _rows, indptr, indices, data)
+        let mut blocks = Vec::new();
+
+        // Apply Huffman compression to indices (most beneficial for sparse data)
+        let compressed_indices = self.apply_huffman_compression(indices)?;
+
+        blocks.push(CompressedBlock {
+            block_id: BlockId {
+                matrix_id,
+                block_row: 0,
+                block_col: 0,
+            },
+            block_type: BlockType::IndPtr,
+            compressed_data: self.serialize_indptr(indptr)?,
+            original_size: std::mem::size_of_val(indptr),
+            compression_level: 0,
+        });
+
+        blocks.push(CompressedBlock {
+            block_id: BlockId {
+                matrix_id,
+                block_row: 0,
+                block_col: 1,
+            },
+            block_type: BlockType::Indices,
+            compressed_data: compressed_indices,
+            original_size: std::mem::size_of_val(indices),
+            compression_level: 2,
+        });
+
+        blocks.push(CompressedBlock {
+            block_id: BlockId {
+                matrix_id,
+                block_row: 0,
+                block_col: 2,
+            },
+            block_type: BlockType::Data,
+            compressed_data: self.serialize_data(data)?,
+            original_size: std::mem::size_of_val(data),
+            compression_level: 0,
+        });
+
+        Ok(blocks)
     }
 
     fn compress_with_lz77<T>(
@@ -849,8 +1031,49 @@ impl AdaptiveMemoryCompressor {
     where
         T: Float + NumAssign + Send + Sync + Copy + std::fmt::Debug,
     {
-        // Simplified LZ77 implementation (placeholder)
-        self.compress_with_none(matrix_id, _rows, indptr, indices, data)
+        let mut blocks = Vec::new();
+
+        // Apply LZ77 compression to all components
+        let compressed_indptr = self.apply_lz77_compression(indptr)?;
+        let compressed_indices = self.apply_lz77_compression(indices)?;
+
+        blocks.push(CompressedBlock {
+            block_id: BlockId {
+                matrix_id,
+                block_row: 0,
+                block_col: 0,
+            },
+            block_type: BlockType::IndPtr,
+            compressed_data: compressed_indptr,
+            original_size: std::mem::size_of_val(indptr),
+            compression_level: 3,
+        });
+
+        blocks.push(CompressedBlock {
+            block_id: BlockId {
+                matrix_id,
+                block_row: 0,
+                block_col: 1,
+            },
+            block_type: BlockType::Indices,
+            compressed_data: compressed_indices,
+            original_size: std::mem::size_of_val(indices),
+            compression_level: 3,
+        });
+
+        blocks.push(CompressedBlock {
+            block_id: BlockId {
+                matrix_id,
+                block_row: 0,
+                block_col: 2,
+            },
+            block_type: BlockType::Data,
+            compressed_data: self.serialize_data(data)?,
+            original_size: std::mem::size_of_val(data),
+            compression_level: 0,
+        });
+
+        Ok(blocks)
     }
 
     fn compress_with_sparse_optimized<T>(
@@ -1061,6 +1284,456 @@ impl AdaptiveMemoryCompressor {
         self.apply_delta_compression(indices)
     }
 
+    fn apply_huffman_compression(&self, data: &[usize]) -> SparseResult<Vec<u8>> {
+        if data.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        // Build frequency table
+        let mut frequency = HashMap::new();
+        for &value in data {
+            *frequency.entry(value).or_insert(0) += 1;
+        }
+
+        // Build Huffman tree (simplified - priority queue would be better)
+        let mut huffman_codes = HashMap::new();
+        let mut sorted_freq: Vec<_> = frequency.into_iter().collect();
+        sorted_freq.sort_by_key(|&(_, freq)| freq);
+
+        // Assign codes based on frequency (simplified Huffman coding)
+        let mut code_length = 1u8;
+        let mut codes_assigned = 0u32;
+        let _total_symbols = sorted_freq.len();
+
+        for (value, _freq) in sorted_freq {
+            // Simple code assignment - in practice, this would be a proper Huffman tree
+            let code = codes_assigned;
+            huffman_codes.insert(value, (code, code_length));
+            codes_assigned += 1;
+
+            // Increase code length when we've used half the available codes
+            if codes_assigned >= (1 << code_length) / 2 && code_length < 16 {
+                code_length += 1;
+            }
+        }
+
+        // Encode data
+        let mut compressed = Vec::new();
+
+        // Store the huffman table size and codes first
+        compressed.extend_from_slice(&huffman_codes.len().to_le_bytes());
+        for (&value, &(code, length)) in &huffman_codes {
+            compressed.extend_from_slice(&value.to_le_bytes());
+            compressed.extend_from_slice(&code.to_le_bytes());
+            compressed.push(length as u8);
+        }
+
+        // Store original data length
+        compressed.extend_from_slice(&data.len().to_le_bytes());
+
+        // Encode actual data (simplified bit packing)
+        let mut bit_buffer = 0u64;
+        let mut bit_count = 0;
+
+        for &value in data {
+            if let Some(&(code, length)) = huffman_codes.get(&value) {
+                bit_buffer |= (code as u64) << bit_count;
+                bit_count += length as usize;
+
+                // Flush complete bytes
+                while bit_count >= 8 {
+                    compressed.push((bit_buffer & 0xFF) as u8);
+                    bit_buffer >>= 8;
+                    bit_count -= 8;
+                }
+            }
+        }
+
+        // Flush remaining bits
+        if bit_count > 0 {
+            compressed.push((bit_buffer & 0xFF) as u8);
+        }
+
+        Ok(compressed)
+    }
+
+    fn apply_lz77_compression(&self, data: &[usize]) -> SparseResult<Vec<u8>> {
+        if data.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let mut compressed = Vec::new();
+
+        // Store original length
+        compressed.extend_from_slice(&data.len().to_le_bytes());
+
+        // LZ77 parameters
+        const WINDOW_SIZE: usize = 4096;
+        const LOOKAHEAD_SIZE: usize = 256;
+        const MIN_MATCH_LENGTH: usize = 3;
+
+        // Convert usize data to bytes for processing
+        let mut byte_data = Vec::new();
+        for &value in data {
+            byte_data.extend_from_slice(&value.to_le_bytes());
+        }
+
+        let mut pos = 0;
+        while pos < byte_data.len() {
+            let mut best_match_length = 0;
+            let mut best_match_distance = 0;
+
+            // Search for matches in the sliding window
+            let window_start = pos.saturating_sub(WINDOW_SIZE);
+            let lookahead_end = (pos + LOOKAHEAD_SIZE).min(byte_data.len());
+
+            // Find the longest match
+            for search_pos in window_start..pos {
+                let mut match_length = 0;
+                let max_length = (lookahead_end - pos).min(pos - search_pos);
+
+                while match_length < max_length
+                    && byte_data[search_pos + match_length] == byte_data[pos + match_length]
+                {
+                    match_length += 1;
+                }
+
+                if match_length >= MIN_MATCH_LENGTH && match_length > best_match_length {
+                    best_match_length = match_length;
+                    best_match_distance = pos - search_pos;
+                }
+            }
+
+            if best_match_length >= MIN_MATCH_LENGTH {
+                // Encode (distance, length, next_char)
+                compressed.push(1); // Flag for match
+                compressed.extend_from_slice(&best_match_distance.to_le_bytes());
+                compressed.extend_from_slice(&best_match_length.to_le_bytes());
+
+                // Next character after the match
+                let next_pos = pos + best_match_length;
+                if next_pos < byte_data.len() {
+                    compressed.push(byte_data[next_pos]);
+                    pos = next_pos + 1;
+                } else {
+                    pos = next_pos;
+                }
+            } else {
+                // Encode literal
+                compressed.push(0); // Flag for literal
+                compressed.push(byte_data[pos]);
+                pos += 1;
+            }
+        }
+
+        Ok(compressed)
+    }
+
+    // Decompression methods
+
+    fn decompress_rle(&self, compressed: &[u8]) -> SparseResult<Vec<u8>> {
+        if compressed.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let mut decompressed = Vec::new();
+        let mut pos = 0;
+
+        while pos + 16 <= compressed.len() {
+            // Read value and run length
+            let value = usize::from_le_bytes([
+                compressed[pos],
+                compressed[pos + 1],
+                compressed[pos + 2],
+                compressed[pos + 3],
+                compressed[pos + 4],
+                compressed[pos + 5],
+                compressed[pos + 6],
+                compressed[pos + 7],
+            ]);
+            let run_length = usize::from_le_bytes([
+                compressed[pos + 8],
+                compressed[pos + 9],
+                compressed[pos + 10],
+                compressed[pos + 11],
+                compressed[pos + 12],
+                compressed[pos + 13],
+                compressed[pos + 14],
+                compressed[pos + 15],
+            ]);
+
+            // Expand the run
+            for _ in 0..run_length {
+                decompressed.extend_from_slice(&value.to_le_bytes());
+            }
+
+            pos += 16;
+        }
+
+        Ok(decompressed)
+    }
+
+    fn decompress_delta(&self, compressed: &[u8]) -> SparseResult<Vec<u8>> {
+        if compressed.len() < 8 {
+            return Ok(Vec::new());
+        }
+
+        let mut decompressed = Vec::new();
+        let mut pos = 0;
+
+        // Read first value
+        let first_value = usize::from_le_bytes([
+            compressed[pos],
+            compressed[pos + 1],
+            compressed[pos + 2],
+            compressed[pos + 3],
+            compressed[pos + 4],
+            compressed[pos + 5],
+            compressed[pos + 6],
+            compressed[pos + 7],
+        ]);
+        decompressed.extend_from_slice(&first_value.to_le_bytes());
+        pos += 8;
+
+        let mut current_value = first_value;
+
+        // Read and apply deltas
+        while pos + 8 <= compressed.len() {
+            let delta = usize::from_le_bytes([
+                compressed[pos],
+                compressed[pos + 1],
+                compressed[pos + 2],
+                compressed[pos + 3],
+                compressed[pos + 4],
+                compressed[pos + 5],
+                compressed[pos + 6],
+                compressed[pos + 7],
+            ]);
+
+            current_value = current_value.wrapping_add(delta);
+            decompressed.extend_from_slice(&current_value.to_le_bytes());
+            pos += 8;
+        }
+
+        Ok(decompressed)
+    }
+
+    fn decompress_huffman(&self, compressed: &[u8]) -> SparseResult<Vec<u8>> {
+        if compressed.len() < 8 {
+            return Ok(Vec::new());
+        }
+
+        let mut pos = 0;
+
+        // Read huffman table size
+        let table_size = usize::from_le_bytes([
+            compressed[pos],
+            compressed[pos + 1],
+            compressed[pos + 2],
+            compressed[pos + 3],
+            compressed[pos + 4],
+            compressed[pos + 5],
+            compressed[pos + 6],
+            compressed[pos + 7],
+        ]);
+        pos += 8;
+
+        // Read huffman table
+        let mut huffman_decode = HashMap::new();
+        for _ in 0..table_size {
+            if pos + 17 > compressed.len() {
+                break;
+            }
+
+            let value = usize::from_le_bytes([
+                compressed[pos],
+                compressed[pos + 1],
+                compressed[pos + 2],
+                compressed[pos + 3],
+                compressed[pos + 4],
+                compressed[pos + 5],
+                compressed[pos + 6],
+                compressed[pos + 7],
+            ]);
+            let code = usize::from_le_bytes([
+                compressed[pos + 8],
+                compressed[pos + 9],
+                compressed[pos + 10],
+                compressed[pos + 11],
+                compressed[pos + 12],
+                compressed[pos + 13],
+                compressed[pos + 14],
+                compressed[pos + 15],
+            ]);
+            let length = compressed[pos + 16] as usize;
+
+            huffman_decode.insert((code, length), value);
+            pos += 17;
+        }
+
+        if pos + 8 > compressed.len() {
+            return Ok(Vec::new());
+        }
+
+        // Read original data length
+        let data_length = usize::from_le_bytes([
+            compressed[pos],
+            compressed[pos + 1],
+            compressed[pos + 2],
+            compressed[pos + 3],
+            compressed[pos + 4],
+            compressed[pos + 5],
+            compressed[pos + 6],
+            compressed[pos + 7],
+        ]);
+        pos += 8;
+
+        // Decode data (simplified bit unpacking)
+        let mut decompressed = Vec::new();
+        let mut bit_buffer = 0u64;
+        let mut bit_count = 0;
+        let mut decoded_count = 0;
+
+        while pos < compressed.len() && decoded_count < data_length {
+            // Fill bit buffer
+            if bit_count < 32 && pos < compressed.len() {
+                bit_buffer |= (compressed[pos] as u64) << bit_count;
+                bit_count += 8;
+                pos += 1;
+            }
+
+            // Try to decode a symbol
+            let mut found = false;
+            for length in 1..=16 {
+                if bit_count >= length {
+                    let code = (bit_buffer & ((1 << length) - 1)) as usize;
+                    if let Some(&value) = huffman_decode.get(&(code, length)) {
+                        decompressed.extend_from_slice(&value.to_le_bytes());
+                        decoded_count += 1;
+                        bit_buffer >>= length;
+                        bit_count -= length;
+                        found = true;
+                        break;
+                    }
+                }
+            }
+
+            if !found {
+                // Skip a bit if no match found (error recovery)
+                if bit_count > 0 {
+                    bit_buffer >>= 1;
+                    bit_count -= 1;
+                } else {
+                    break;
+                }
+            }
+        }
+
+        Ok(decompressed)
+    }
+
+    fn decompress_lz77(&self, compressed: &[u8]) -> SparseResult<Vec<u8>> {
+        if compressed.len() < 8 {
+            return Ok(Vec::new());
+        }
+
+        let mut pos = 0;
+
+        // Read original length
+        let original_length = usize::from_le_bytes([
+            compressed[pos],
+            compressed[pos + 1],
+            compressed[pos + 2],
+            compressed[pos + 3],
+            compressed[pos + 4],
+            compressed[pos + 5],
+            compressed[pos + 6],
+            compressed[pos + 7],
+        ]);
+        pos += 8;
+
+        let mut decompressed = Vec::new();
+
+        while pos < compressed.len() {
+            if pos >= compressed.len() {
+                break;
+            }
+
+            let flag = compressed[pos];
+            pos += 1;
+
+            if flag == 1 {
+                // Match: read distance and length
+                if pos + 16 > compressed.len() {
+                    break;
+                }
+
+                let distance = usize::from_le_bytes([
+                    compressed[pos],
+                    compressed[pos + 1],
+                    compressed[pos + 2],
+                    compressed[pos + 3],
+                    compressed[pos + 4],
+                    compressed[pos + 5],
+                    compressed[pos + 6],
+                    compressed[pos + 7],
+                ]);
+                let length = usize::from_le_bytes([
+                    compressed[pos + 8],
+                    compressed[pos + 9],
+                    compressed[pos + 10],
+                    compressed[pos + 11],
+                    compressed[pos + 12],
+                    compressed[pos + 13],
+                    compressed[pos + 14],
+                    compressed[pos + 15],
+                ]);
+                pos += 16;
+
+                // Copy from previous position
+                let start_pos = decompressed.len().saturating_sub(distance);
+                for i in 0..length {
+                    if start_pos + i < decompressed.len() {
+                        let byte_to_copy = decompressed[start_pos + i];
+                        decompressed.push(byte_to_copy);
+                    }
+                }
+
+                // Add next character if available
+                if pos < compressed.len() {
+                    decompressed.push(compressed[pos]);
+                    pos += 1;
+                }
+            } else {
+                // Literal: copy directly
+                if pos < compressed.len() {
+                    decompressed.push(compressed[pos]);
+                    pos += 1;
+                }
+            }
+        }
+
+        // Convert back to usize array format and then to bytes
+        let mut result = Vec::new();
+        let usize_count = original_length;
+        let bytes_per_usize = std::mem::size_of::<usize>();
+
+        result.extend_from_slice(&usize_count.to_le_bytes());
+
+        for chunk in decompressed.chunks(bytes_per_usize) {
+            if chunk.len() == bytes_per_usize {
+                result.extend_from_slice(chunk);
+            } else {
+                // Pad incomplete chunk
+                let mut padded = chunk.to_vec();
+                padded.resize(bytes_per_usize, 0);
+                result.extend_from_slice(&padded);
+            }
+        }
+
+        Ok(result)
+    }
+
     // Serialization methods
 
     fn serialize_indptr(&self, indptr: &[usize]) -> SparseResult<Vec<u8>> {
@@ -1114,10 +1787,36 @@ impl AdaptiveMemoryCompressor {
     fn decompress_block(
         &self,
         block: &CompressedBlock,
-        _algorithm: CompressionAlgorithm,
+        algorithm: CompressionAlgorithm,
     ) -> SparseResult<Vec<u8>> {
-        // For now, assume data is already decompressed (placeholder)
-        Ok(block.compressed_data.clone())
+        match block.compression_level {
+            0 => {
+                // No compression - return as-is
+                Ok(block.compressed_data.clone())
+            }
+            1 => {
+                // RLE or Delta compression
+                match block.block_type {
+                    BlockType::Indices => self.decompress_rle(&block.compressed_data),
+                    BlockType::IndPtr => self.decompress_delta(&block.compressed_data),
+                    _ => Ok(block.compressed_data.clone()),
+                }
+            }
+            2 => {
+                // Huffman compression
+                match algorithm {
+                    CompressionAlgorithm::Huffman => {
+                        self.decompress_huffman(&block.compressed_data)
+                    }
+                    _ => self.decompress_delta(&block.compressed_data),
+                }
+            }
+            3 => {
+                // LZ77 compression
+                self.decompress_lz77(&block.compressed_data)
+            }
+            _ => Ok(block.compressed_data.clone()),
+        }
     }
 
     fn parse_indptr_data(&self, data: &[u8]) -> SparseResult<Vec<usize>> {
@@ -1311,6 +2010,223 @@ impl OutOfCoreManager {
             memory_mapped_files: HashMap::new(),
         })
     }
+
+    /// Write compressed block to disk
+    #[allow(dead_code)]
+    fn write_block_to_disk(&mut self, block: &CompressedBlock) -> SparseResult<String> {
+        let file_id = self.file_counter.fetch_add(1, Ordering::Relaxed);
+        let file_name = format!("block_{}_{}.dat", block.block_id, file_id);
+        let file_path = Path::new(&self.temp_dir).join(&file_name);
+
+        // Create and write to file
+        let mut file = File::create(&file_path)
+            .map_err(|e| SparseError::Io(format!("Failed to create file {:?}: {}", file_path, e)))?;
+
+        // Write block header
+        let header = BlockHeader {
+            block_id: block.block_id.clone(),
+            block_type: block.block_type as u8,
+            original_size: block.original_size,
+            compressed_size: block.compressed_data.len(),
+            compression_level: block.compression_level,
+        };
+
+        file.write_all(&header.serialize())
+            .map_err(|e| SparseError::Io(format!("Failed to write header: {}", e)))?;
+
+        // Write compressed data
+        file.write_all(&block.compressed_data)
+            .map_err(|e| SparseError::Io(format!("Failed to write data: {}", e)))?;
+
+        file.flush()
+            .map_err(|e| SparseError::Io(format!("Failed to flush file: {}", e)))?;
+
+        // Track the file
+        self.active_files.insert(block.block_id.clone(), file_name.clone());
+
+        Ok(file_name)
+    }
+
+    /// Read compressed block from disk
+    #[allow(dead_code)]
+    fn read_block_from_disk(&self, block_id: BlockId) -> SparseResult<CompressedBlock> {
+        let file_name = self.active_files.get(&block_id)
+            .ok_or_else(|| SparseError::BlockNotFound(format!("Block {} not found on disk", block_id)))?;
+
+        let file_path = Path::new(&self.temp_dir).join(file_name);
+        let mut file = File::open(&file_path)
+            .map_err(|e| SparseError::Io(format!("Failed to open file {:?}: {}", file_path, e)))?;
+
+        // Read block header
+        let mut header_bytes = vec![0u8; std::mem::size_of::<BlockHeaderSerialized>()];
+        file.read_exact(&mut header_bytes)
+            .map_err(|e| SparseError::Io(format!("Failed to read header: {}", e)))?;
+
+        let header = BlockHeader::deserialize(&header_bytes)?;
+
+        // Read compressed data
+        let mut compressed_data = vec![0u8; header.compressed_size];
+        file.read_exact(&mut compressed_data)
+            .map_err(|e| SparseError::Io(format!("Failed to read data: {}", e)))?;
+
+        Ok(CompressedBlock {
+            block_id: header.block_id,
+            block_type: match header.block_type {
+                0 => BlockType::IndPtr,
+                1 => BlockType::Indices,
+                2 => BlockType::Data,
+                3 => BlockType::Combined,
+                _ => BlockType::Combined,
+            },
+            compressed_data,
+            original_size: header.original_size,
+            compression_level: header.compression_level,
+        })
+    }
+
+    /// Create memory-mapped file for large blocks
+    #[allow(dead_code)]
+    fn create_memory_mapped_file(&mut self, block_id: BlockId, size: usize) -> SparseResult<String> {
+        let file_id = self.file_counter.fetch_add(1, Ordering::Relaxed);
+        let file_name = format!("mmap_{}_{}.dat", block_id, file_id);
+        let file_path = Path::new(&self.temp_dir).join(&file_name);
+
+        let mapped_file = MemoryMappedFile::new(file_path, size)?;
+        self.memory_mapped_files.insert(file_name.clone(), mapped_file);
+        self.active_files.insert(block_id, file_name.clone());
+
+        Ok(file_name)
+    }
+
+    /// Write data to memory-mapped file
+    #[allow(dead_code)]
+    fn write_to_mapped_file(&self, file_name: &str, offset: usize, data: &[u8]) -> SparseResult<()> {
+        if let Some(mapped_file) = self.memory_mapped_files.get(file_name) {
+            mapped_file.write_at(offset, data)?;
+            mapped_file.flush()?;
+            Ok(())
+        } else {
+            Err(SparseError::Io(format!("Memory-mapped file {} not found", file_name)))
+        }
+    }
+
+    /// Read data from memory-mapped file
+    #[allow(dead_code)]
+    fn read_from_mapped_file(&self, file_name: &str, offset: usize, size: usize) -> SparseResult<Vec<u8>> {
+        if let Some(mapped_file) = self.memory_mapped_files.get(file_name) {
+            let mut buffer = vec![0u8; size];
+            let bytes_read = mapped_file.read_at(offset, &mut buffer)?;
+            buffer.truncate(bytes_read);
+            Ok(buffer)
+        } else {
+            Err(SparseError::Io(format!("Memory-mapped file {} not found", file_name)))
+        }
+    }
+
+    /// Remove block from disk
+    #[allow(dead_code)]
+    fn remove_block(&mut self, block_id: BlockId) -> SparseResult<()> {
+        if let Some(file_name) = self.active_files.remove(&block_id) {
+            let file_path = Path::new(&self.temp_dir).join(&file_name);
+            
+            // Remove from memory-mapped files if it exists
+            self.memory_mapped_files.remove(&file_name);
+            
+            // Remove file from disk
+            std::fs::remove_file(&file_path)
+                .map_err(|e| SparseError::Io(format!("Failed to remove file {:?}: {}", file_path, e)))?;
+        }
+        Ok(())
+    }
+
+    /// Get total disk usage
+    #[allow(dead_code)]
+    fn get_disk_usage(&self) -> SparseResult<usize> {
+        let mut total_size = 0;
+        for file_name in self.active_files.values() {
+            let file_path = Path::new(&self.temp_dir).join(file_name);
+            if let Ok(metadata) = std::fs::metadata(&file_path) {
+                total_size += metadata.len() as usize;
+            }
+        }
+        Ok(total_size)
+    }
+
+    /// Cleanup all temporary files
+    #[allow(dead_code)]
+    fn cleanup(&mut self) -> SparseResult<()> {
+        for file_name in self.active_files.values() {
+            let file_path = Path::new(&self.temp_dir).join(file_name);
+            let _ = std::fs::remove_file(&file_path); // Ignore errors during cleanup
+        }
+        self.active_files.clear();
+        self.memory_mapped_files.clear();
+        Ok(())
+    }
+}
+
+/// Block header for disk storage
+#[derive(Debug)]
+#[allow(dead_code)]
+struct BlockHeader {
+    block_id: BlockId,
+    block_type: u8,
+    original_size: usize,
+    compressed_size: usize,
+    compression_level: u8,
+}
+
+/// Serialized block header (fixed size for disk storage)
+#[repr(C)]
+#[allow(dead_code)]
+struct BlockHeaderSerialized {
+    block_id: u64,
+    block_type: u8,
+    original_size: u64,
+    compressed_size: u64,
+    compression_level: u8,
+    padding: [u8; 6], // Ensure 8-byte alignment
+}
+
+impl BlockHeader {
+    #[allow(dead_code)]
+    fn serialize(&self) -> Vec<u8> {
+        let serialized = BlockHeaderSerialized {
+            block_id: self.block_id.to_u64(),
+            block_type: self.block_type,
+            original_size: self.original_size as u64,
+            compressed_size: self.compressed_size as u64,
+            compression_level: self.compression_level,
+            padding: [0; 6],
+        };
+
+        // Convert to bytes
+        unsafe {
+            let ptr = &serialized as *const BlockHeaderSerialized as *const u8;
+            std::slice::from_raw_parts(ptr, std::mem::size_of::<BlockHeaderSerialized>()).to_vec()
+        }
+    }
+
+    #[allow(dead_code)]
+    fn deserialize(data: &[u8]) -> SparseResult<Self> {
+        if data.len() < std::mem::size_of::<BlockHeaderSerialized>() {
+            return Err(SparseError::Io("Invalid header size".to_string()));
+        }
+
+        // Convert from bytes
+        let serialized: BlockHeaderSerialized = unsafe {
+            let ptr = data.as_ptr() as *const BlockHeaderSerialized;
+            ptr.read()
+        };
+
+        Ok(BlockHeader {
+            block_id: BlockId::from_u64(serialized.block_id),
+            block_type: serialized.block_type,
+            original_size: serialized.original_size as usize,
+            compressed_size: serialized.compressed_size as usize,
+            compression_level: serialized.compression_level,
+        })
+    }
 }
 
 // Data structures
@@ -1358,6 +2274,7 @@ pub struct CompressionMetadata {
 
 /// Compression strategy
 #[derive(Debug)]
+#[allow(dead_code)]
 struct CompressionStrategy {
     algorithm: CompressionAlgorithm,
     block_size: usize,
@@ -1409,7 +2326,6 @@ struct CacheStats {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use approx::assert_relative_eq;
 
     #[test]
     fn test_adaptive_compressor_creation() {

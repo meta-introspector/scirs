@@ -21,6 +21,28 @@ pub enum OptimError {
     InvalidPrivacyConfig(String),
     /// Privacy accounting error
     PrivacyAccountingError(String),
+    /// Configuration error
+    ConfigurationError(String),
+    /// Invalid state error
+    InvalidState(String),
+    /// Monitoring error
+    MonitoringError(String),
+    /// Analysis error
+    AnalysisError(String),
+    /// Unsupported operation
+    UnsupportedOperation(String),
+    /// Resource error
+    ResourceError(String),
+    /// Resource unavailable error
+    ResourceUnavailable(String),
+    /// Execution error
+    ExecutionError(String),
+    /// Environment error
+    Environment(String),
+    /// Lock error
+    LockError(String),
+    /// Thread error
+    ThreadError(String),
     /// Other error
     Other(String),
 }
@@ -50,12 +72,52 @@ impl fmt::Display for OptimError {
             OptimError::PrivacyAccountingError(msg) => {
                 write!(f, "Privacy accounting error: {}", msg)
             }
+            OptimError::ConfigurationError(msg) => {
+                write!(f, "Configuration error: {}", msg)
+            }
+            OptimError::InvalidState(msg) => {
+                write!(f, "Invalid state error: {}", msg)
+            }
+            OptimError::MonitoringError(msg) => {
+                write!(f, "Monitoring error: {}", msg)
+            }
+            OptimError::AnalysisError(msg) => {
+                write!(f, "Analysis error: {}", msg)
+            }
+            OptimError::UnsupportedOperation(msg) => {
+                write!(f, "Unsupported operation: {}", msg)
+            }
+            OptimError::ResourceError(msg) => {
+                write!(f, "Resource error: {}", msg)
+            }
+            OptimError::ResourceUnavailable(msg) => {
+                write!(f, "Resource unavailable: {}", msg)
+            }
+            OptimError::ExecutionError(msg) => {
+                write!(f, "Execution error: {}", msg)
+            }
+            OptimError::Environment(msg) => {
+                write!(f, "Environment error: {}", msg)
+            }
+            OptimError::LockError(msg) => {
+                write!(f, "Lock error: {}", msg)
+            }
+            OptimError::ThreadError(msg) => {
+                write!(f, "Thread error: {}", msg)
+            }
             OptimError::Other(msg) => write!(f, "Error: {}", msg),
         }
     }
 }
 
 impl Error for OptimError {}
+
+/// From implementations for common error types
+impl From<std::time::SystemTimeError> for OptimError {
+    fn from(error: std::time::SystemTimeError) -> Self {
+        OptimError::Other(format!("System time error: {}", error))
+    }
+}
 
 /// Result type for ML optimization operations
 pub type Result<T> = std::result::Result<T, OptimError>;

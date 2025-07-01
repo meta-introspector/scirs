@@ -4,11 +4,10 @@
 //! the eigenvectors of a graph Laplacian to embed data points in a lower-dimensional space.
 //! It's particularly effective for data that lies on a non-linear manifold.
 
-use ndarray::{Array1, Array2, ArrayBase, Axis, Data, Ix2};
+use ndarray::{Array1, Array2, ArrayBase, Data, Ix2};
 use num_traits::{Float, NumCast};
 use scirs2_core::validation::{check_positive, check_shape};
 use scirs2_linalg::eigh;
-use std::collections::BinaryHeap;
 
 use crate::error::{Result, TransformError};
 

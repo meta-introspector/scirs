@@ -42,7 +42,7 @@ pub struct TransformerOptimizer<T: Float> {
     memory_manager: TransformerMemoryManager<T>,
     
     /// Configuration
-    config: TransformerOptimizerConfig<T>,
+    config: TransformerBasedOptimizerConfig<T>,
     
     /// Performance tracking
     performance_tracker: TransformerPerformanceTracker<T>,
@@ -2401,9 +2401,9 @@ pub struct GCStatistics {
     pause_time: Duration,
 }
 
-/// Transformer optimizer configuration
+/// Transformer-based optimizer configuration
 #[derive(Debug, Clone)]
-pub struct TransformerOptimizerConfig<T: Float> {
+pub struct TransformerBasedOptimizerConfig<T: Float> {
     /// Model dimension
     pub model_dim: usize,
     
@@ -2708,7 +2708,7 @@ pub struct TransformerOptimizerState<T: Float> {
 
 impl<T: Float> TransformerOptimizer<T> {
     /// Create new transformer optimizer
-    pub fn new(config: TransformerOptimizerConfig<T>) -> Result<Self, OptimizerError> {
+    pub fn new(config: TransformerBasedOptimizerConfig<T>) -> Result<Self, OptimizerError> {
         let transformer = TransformerArchitecture::new(&config)?;
         let positional_encoding = PositionalEncoding::new(
             PositionalEncodingType::Sinusoidal,
@@ -3167,7 +3167,7 @@ impl<T: Float> ResidualConnections<T> {
 
 // Implementation stubs for major components
 impl<T: Float> TransformerArchitecture<T> {
-    fn new(config: &TransformerOptimizerConfig<T>) -> Result<Self, OptimizerError> {
+    fn new(config: &TransformerBasedOptimizerConfig<T>) -> Result<Self, OptimizerError> {
         let mut layers = Vec::new();
         
         // Create transformer layers
@@ -3305,7 +3305,7 @@ impl<T: Float> PositionalEncoding<T> {
 }
 
 impl<T: Float> MultiHeadAttention<T> {
-    fn new(config: &TransformerOptimizerConfig<T>) -> Result<Self, OptimizerError> {
+    fn new(config: &TransformerBasedOptimizerConfig<T>) -> Result<Self, OptimizerError> {
         Self::new_with_config(config.model_dim, config.num_heads, config.dropout_rate)
     }
     
@@ -4019,7 +4019,7 @@ impl<T: Float> TemporalProcessor<T> {
 impl<T: Float> GeneratorNetwork<T> {
     fn new() -> Result<Self, OptimizerError> {
         Ok(Self {
-            encoder: TransformerArchitecture::new(&TransformerOptimizerConfig::default())?,
+            encoder: TransformerArchitecture::new(&TransformerBasedOptimizerConfig::default())?,
             decoder: RuleDecoder::new()?,
             context_integration: ContextIntegration::new()?,
         })
@@ -4314,7 +4314,7 @@ mod tests {
     
     #[test]
     fn test_transformer_optimizer_config() {
-        let config = TransformerOptimizerConfig::<f64> {
+        let config = TransformerBasedOptimizerConfig::<f64> {
             model_dim: 512,
             num_heads: 8,
             num_layers: 6,

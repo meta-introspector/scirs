@@ -1381,7 +1381,7 @@ where
         + Copy,
 {
     use rand::prelude::*;
-    let mut rng = rand::rng();
+    let mut rng = ndarray_rand::rand::thread_rng();
     let noise_std_f = F::from(noise_std).unwrap();
     
     let mut accumulated_attribution = ArrayD::zeros(input.raw_dim());
@@ -1458,7 +1458,7 @@ where
         + Copy,
 {
     use rand::prelude::*;
-    let mut rng = rand::rng();
+    let mut rng = ndarray_rand::rand::thread_rng();
     
     let mut accumulated_attribution = ArrayD::zeros(input.raw_dim());
     
@@ -1806,7 +1806,7 @@ where
         .into_par_iter()
         .map(|_| {
             use rand::prelude::*;
-            let mut rng = rand::rng();
+            let mut rng = ndarray_rand::rand::thread_rng();
             input.mapv(|_| {
                 let gaussian: f64 = rng.sample(StandardNormal);
                 F::from(gaussian).unwrap() * noise_std_f

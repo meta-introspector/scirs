@@ -278,7 +278,7 @@ impl TD3 {
     /// Sample noise for exploration or target smoothing
     fn sample_noise(&self, size: usize, std: f32) -> Array1<f32> {
         use rand_distr::{Distribution, Normal};
-        let mut rng = rand::rng();
+        let mut rng = ndarray_rand::rand::thread_rng();
         let normal = Normal::new(0.0, std).unwrap();
 
         Array1::from_shape_fn(size, |_| normal.sample(&mut rng))
@@ -1194,7 +1194,7 @@ impl ExplorationStrategy {
                 if rand::random::<f32>() < epsilon {
                     // Random action
                     use rand::prelude::*;
-                    let mut rng = rand::rng();
+                    let mut rng = ndarray_rand::rand::thread_rng();
                     Ok(rng.random_range(0..q_values.len()))
                 } else {
                     // Greedy action
@@ -1225,7 +1225,7 @@ impl ExplorationStrategy {
             ExplorationStrategyType::ThompsonSampling => {
                 // Thompson Sampling (simplified)
                 use rand_distr::{Distribution, Normal};
-                let mut rng = rand::rng();
+                let mut rng = ndarray_rand::rand::thread_rng();
                 let normal = Normal::new(0.0, 1.0).unwrap();
 
                 let mut sampled_values = Array1::zeros(q_values.len());
@@ -1243,7 +1243,7 @@ impl ExplorationStrategy {
             ExplorationStrategyType::NoiseInjection => {
                 // Add noise to Q-values
                 use rand_distr::{Distribution, Normal};
-                let mut rng = rand::rng();
+                let mut rng = ndarray_rand::rand::thread_rng();
                 let normal = Normal::new(0.0, self.config.noise_std).unwrap();
 
                 let mut noisy_values = q_values.clone();
@@ -1385,7 +1385,7 @@ impl MADDPG {
             if training {
                 // Add exploration noise
                 use rand_distr::{Distribution, Normal};
-                let mut rng = rand::rng();
+                let mut rng = ndarray_rand::rand::thread_rng();
                 let normal = Normal::new(0.0, self.config.exploration_noise).unwrap();
 
                 for a in action.iter_mut() {

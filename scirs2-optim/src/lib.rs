@@ -151,6 +151,11 @@ pub use hardware_aware::{
     ParallelizationStrategy, PartitionStrategy, PerformanceProfiler, PrecisionStrategy,
     QuantizationSupport, ResourceMonitor, SIMDSupport, TPUVersion, TuningStrategy,
 };
+pub use learned_optimizers::ultrathink_coordinator::{
+    LandscapeFeatures, OptimizationContext as UltraThinkOptimizationContext,
+    OptimizationRecommendation, OptimizerCapabilities, PerformanceSnapshot, UltraThinkConfig,
+    UltraThinkCoordinator, UltraThinkResult,
+};
 pub use learned_optimizers::{
     LSTMOptimizer, LearnedOptimizerConfig, LearnedOptimizerMetrics, LearnedOptimizerState,
     MetaOptimizationStrategy, NeuralOptimizerType, TransferResults,
@@ -174,10 +179,14 @@ pub use neural_integration::{
     ParameterOptimizer, ParameterType,
 };
 pub use plugin::{
-    create_basic_capabilities, create_plugin_info, BaseOptimizerPlugin, OptimizerPlugin,
-    OptimizerPluginFactory, PluginCapabilities, PluginCategory, PluginInfo, PluginLoader,
-    PluginRegistry, PluginTester, PluginValidationFramework,
+    OptimizerPlugin, PluginCapabilities, PluginLoader,
+    PluginRegistry, PluginValidationFramework,
 };
+pub use plugin::core::{
+    create_basic_capabilities, create_plugin_info, OptimizerPluginFactory,
+    PluginCategory, PluginInfo,
+};
+pub use plugin::sdk::{BaseOptimizerPlugin, PluginTester};
 // Macro is exported at crate root via #[macro_export]
 pub use online_learning::{
     ColumnGrowthStrategy, LearningRateAdaptation, LifelongOptimizer, LifelongStats,

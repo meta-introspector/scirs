@@ -4,12 +4,8 @@
 //! to create a hybrid optimization approach that leverages the best of both paradigms.
 
 use crate::error::SparseResult;
-use crate::neural_adaptive_sparse::{
-    NeuralAdaptiveConfig, NeuralAdaptiveSparseProcessor,
-};
-use crate::quantum_inspired_sparse::{
-    QuantumSparseConfig, QuantumSparseProcessor,
-};
+use crate::neural_adaptive_sparse::{NeuralAdaptiveConfig, NeuralAdaptiveSparseProcessor};
+use crate::quantum_inspired_sparse::{QuantumSparseConfig, QuantumSparseProcessor};
 use num_traits::{Float, NumAssign};
 use rand::Rng;
 use scirs2_core::simd_ops::SimdUnifiedOps;
@@ -91,6 +87,7 @@ struct HybridState {
 
 /// Decision made by the hybrid system
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct HybridDecision {
     timestamp: u64,
     strategy_used: HybridProcessingMode,
@@ -113,6 +110,7 @@ enum HybridProcessingMode {
 
 /// Performance fusion mechanism
 #[derive(Debug)]
+#[allow(dead_code)]
 struct PerformanceFusion {
     quantum_metrics: Vec<f64>,
     neural_metrics: Vec<f64>,
@@ -123,6 +121,7 @@ struct PerformanceFusion {
 
 /// Result of performance fusion
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct FusionResult {
     fused_performance: f64,
     quantum_weight: f64,
@@ -132,6 +131,7 @@ struct FusionResult {
 
 /// Hybrid memory system combining quantum and neural memories
 #[derive(Debug)]
+#[allow(dead_code)]
 struct HybridMemory {
     quantum_states: HashMap<String, Vec<f64>>,
     neural_patterns: HashMap<String, Vec<f64>>,
@@ -353,7 +353,8 @@ impl QuantumNeuralHybridProcessor {
                 y[i] = num_traits::cast(
                     quantum_weight * quantum_result[i].into()
                         + neural_weight * neural_result[i].into(),
-                ).unwrap_or(T::zero());
+                )
+                .unwrap_or(T::zero());
             }
         } else {
             y.copy_from_slice(&quantum_result);
@@ -398,7 +399,8 @@ impl QuantumNeuralHybridProcessor {
             for i in 0..rows {
                 let current_val: f64 = y[i].into();
                 let enhancement: f64 = quantum_enhancement[i].into();
-                y[i] = num_traits::cast(current_val + enhancement_strength * enhancement).unwrap_or(T::zero());
+                y[i] = num_traits::cast(current_val + enhancement_strength * enhancement)
+                    .unwrap_or(T::zero());
             }
         }
 
@@ -443,7 +445,8 @@ impl QuantumNeuralHybridProcessor {
         for i in 0..rows {
             y[i] = num_traits::cast(
                 quantum_weight * quantum_result[i].into() + neural_weight * neural_result[i].into(),
-            ).unwrap_or(T::zero());
+            )
+            .unwrap_or(T::zero());
         }
 
         Ok(())
@@ -500,7 +503,8 @@ impl QuantumNeuralHybridProcessor {
             }
 
             // Adaptive blending
-            y[row] = num_traits::cast(quantum_ratio * quantum_sum + neural_ratio * neural_sum).unwrap_or(T::zero());
+            y[row] = num_traits::cast(quantum_ratio * quantum_sum + neural_ratio * neural_sum)
+                .unwrap_or(T::zero());
         }
 
         Ok(())
@@ -624,7 +628,8 @@ impl QuantumNeuralHybridProcessor {
 
         // Add slight exploration
         let exploration = 0.05;
-        self.performance_fusion.fusion_weights[0] += (rand::rng().random::<f64>() - 0.5) * exploration;
+        self.performance_fusion.fusion_weights[0] +=
+            (rand::rng().random::<f64>() - 0.5) * exploration;
         self.performance_fusion.fusion_weights[1] = 1.0 - self.performance_fusion.fusion_weights[0];
 
         // Clamp weights

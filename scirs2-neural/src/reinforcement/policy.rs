@@ -123,7 +123,7 @@ impl Policy for PolicyNetwork {
             // Sample from Gaussian distribution
             let std = std.unwrap();
             let mut action = Array1::zeros(self.action_dim);
-            let mut rng = rand::rng();
+            let mut rng = ndarray_rand::rand::thread_rng();
 
             for i in 0..self.action_dim {
                 let normal = Normal::new(params[i] as f64, std[i] as f64).map_err(|e| {
@@ -138,7 +138,7 @@ impl Policy for PolicyNetwork {
             Ok(action)
         } else {
             // Sample from categorical distribution
-            let mut rng = rand::rng();
+            let mut rng = ndarray_rand::rand::thread_rng();
             let uniform: f32 = rand::Rng::random(&mut rng);
             let mut cumsum = 0.0;
             let mut action_idx = 0;

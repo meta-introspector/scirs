@@ -125,7 +125,7 @@ impl ReplayBuffer {
             )));
         }
 
-        let mut rng = rand::rng();
+        let mut rng = ndarray_rand::rand::thread_rng();
         let indices: Vec<usize> = (0..self.buffer.len())
             .collect::<Vec<_>>()
             .choose_multiple(&mut rng, batch_size)
@@ -332,7 +332,7 @@ impl PrioritizedReplayBuffer {
     fn sample_indices(&self, probs: &[f32], batch_size: usize) -> Result<Vec<usize>> {
         use rand::prelude::*;
         use rand_distr::weighted::WeightedIndex;
-        let mut rng = rand::rng();
+        let mut rng = ndarray_rand::rand::thread_rng();
 
         let dist = WeightedIndex::new(probs).map_err(|e| {
             crate::error::NeuralError::InvalidArgument(format!("Invalid weights: {}", e))

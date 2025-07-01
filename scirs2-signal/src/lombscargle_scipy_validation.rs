@@ -16,6 +16,7 @@ use crate::lombscargle_enhanced::{lombscargle_enhanced, LombScargleConfig, Windo
 use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, NumCast};
 use rand::prelude::*;
+use rand::Rng;
 use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::HashMap;
 use std::f64::consts::PI;

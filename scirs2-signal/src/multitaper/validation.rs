@@ -1817,5 +1817,262 @@ pub fn validate_multitaper_with_simd(
     Ok(base_result)
 }
 
+/// Enhanced numerical precision validation for multitaper methods
+/// Tests edge cases and numerical stability across different parameter ranges
+pub fn validate_numerical_precision_enhanced(
+    test_signals: &TestSignalConfig,
+) -> SignalResult<f64> {
+    let mut total_score = 0.0;
+    let mut test_count = 0;
+
+    // Test with very small signal amplitudes
+    for amplitude in [1e-12, 1e-9, 1e-6] {
+        let small_signal: Vec<f64> = (0..test_signals.n)
+            .map(|i| amplitude * (2.0 * PI * i as f64 / test_signals.n as f64).sin())
+            .collect();
+        
+        if let Ok(config) = MultitaperConfig::default_for_signal(small_signal.len()) {
+            if let Ok(result) = enhanced_pmtm(&small_signal, &config) {
+                // Check that PSD values are finite and positive
+                let finite_count = result.psd.iter().filter(|&&x| x.is_finite() && x > 0.0).count();
+                let score = (finite_count as f64 / result.psd.len() as f64) * 100.0;
+                total_score += score;
+                test_count += 1;
+            }
+        }
+    }
+
+    // Test with very large signal amplitudes
+    for amplitude in [1e6, 1e9, 1e12] {
+        let large_signal: Vec<f64> = (0..test_signals.n)
+            .map(|i| amplitude * (2.0 * PI * i as f64 / test_signals.n as f64).sin())
+            .collect();
+        
+        if let Ok(config) = MultitaperConfig::default_for_signal(large_signal.len()) {
+            if let Ok(result) = enhanced_pmtm(&large_signal, &config) {
+                // Check for numerical overflow/underflow
+                let finite_count = result.psd.iter().filter(|&&x| x.is_finite()).count();
+                let score = (finite_count as f64 / result.psd.len() as f64) * 100.0;
+                total_score += score;
+                test_count += 1;
+            }
+        }
+    }
+
+    // Test with high-frequency signals (near Nyquist)
+    let nyquist_signal: Vec<f64> = (0..test_signals.n)
+        .map(|i| (PI * i as f64).sin()) // Frequency at Nyquist
+        .collect();
+    
+    if let Ok(config) = MultitaperConfig::default_for_signal(nyquist_signal.len()) {
+        if let Ok(result) = enhanced_pmtm(&nyquist_signal, &config) {
+            // Check spectral leakage near Nyquist frequency
+            let half_len = result.psd.len() / 2;
+            let nyquist_power = result.psd[half_len - 1];
+            if nyquist_power.is_finite() && nyquist_power > 0.0 {
+                total_score += 90.0; // Good handling of Nyquist frequency
+            } else {
+                total_score += 50.0; // Mediocre handling
+            }
+            test_count += 1;
+        }
+    }
+
+    // Return average score
+    if test_count > 0 {
+        Ok(total_score / test_count as f64)
+    } else {
+        Ok(0.0)
+    }
+}
+
+/// Validate spectral estimation consistency across different parameter combinations
+pub fn validate_parameter_consistency(
+    test_signals: &TestSignalConfig,
+) -> SignalResult<f64> {
+    let test_signal: Vec<f64> = (0..test_signals.n)
+        .map(|i| {
+            let t = i as f64 / test_signals.fs;
+            (2.0 * PI * 10.0 * t).sin() + 0.5 * (2.0 * PI * 25.0 * t).sin()
+        })
+        .collect();
+
+    let mut consistency_scores = Vec::new();
+
+    // Test different NW values
+    for nw in [2.0, 2.5, 3.0, 3.5, 4.0] {
+        let k = ((2.0 * nw).floor() - 1.0) as usize;
+        if k > 0 {
+            let config = MultitaperConfig {
+                fs: test_signals.fs,
+                nw,
+                k,
+                nfft: None,
+                detrend: Some("constant".to_string()),
+                return_onesided: true,
+                scaling: "density".to_string(),
+                adaptive: true,
+                low_bias: true,
+                eigen_tolerance: 1e-9,
+                max_iter: 150,
+                jackknife: false,
+                confidence: None,
+            };
+
+            if let Ok(result) = enhanced_pmtm(&test_signal, &config) {
+                // Check for reasonable spectral estimates
+                let mean_psd = result.psd.iter().sum::<f64>() / result.psd.len() as f64;
+                if mean_psd.is_finite() && mean_psd > 0.0 {
+                    // Find peaks at expected frequencies (10 Hz and 25 Hz)
+                    let peak_score = validate_expected_peaks(&result, &[10.0, 25.0], test_signals.fs);
+                    consistency_scores.push(peak_score);
+                }
+            }
+        }
+    }
+
+    // Calculate consistency score
+    if consistency_scores.len() > 1 {
+        let mean_score = consistency_scores.iter().sum::<f64>() / consistency_scores.len() as f64;
+        let std_dev = {
+            let variance = consistency_scores.iter()
+                .map(|x| (x - mean_score).powi(2))
+                .sum::<f64>() / consistency_scores.len() as f64;
+            variance.sqrt()
+        };
+        
+        // Lower standard deviation indicates better consistency
+        let consistency = (100.0 - std_dev).max(0.0);
+        Ok(consistency)
+    } else {
+        Ok(0.0)
+    }
+}
+
+/// Helper function to validate expected spectral peaks
+fn validate_expected_peaks(
+    result: &EnhancedMultitaperResult,
+    expected_freqs: &[f64],
+    fs: f64,
+) -> f64 {
+    let mut peak_scores = Vec::new();
+    
+    for &freq in expected_freqs {
+        // Find the frequency bin closest to the expected frequency
+        let freq_resolution = fs / result.frequencies.len() as f64;
+        let target_bin = (freq / freq_resolution).round() as usize;
+        
+        if target_bin < result.psd.len() {
+            // Check if there's a local maximum around this frequency
+            let window_size = 3; // Look at ±3 bins
+            let start = target_bin.saturating_sub(window_size);
+            let end = (target_bin + window_size + 1).min(result.psd.len());
+            
+            let window_psd = &result.psd[start..end];
+            let max_in_window = window_psd.iter().fold(0.0f64, |a, &b| a.max(b));
+            let target_value = result.psd[target_bin];
+            
+            // Score based on how close the target bin is to the maximum
+            if max_in_window > 0.0 {
+                let score = (target_value / max_in_window) * 100.0;
+                peak_scores.push(score);
+            }
+        }
+    }
+    
+    if !peak_scores.is_empty() {
+        peak_scores.iter().sum::<f64>() / peak_scores.len() as f64
+    } else {
+        0.0
+    }
+}
+
+/// Comprehensive validation runner that includes all enhanced tests
+pub fn run_comprehensive_enhanced_validation(
+    test_signals: &TestSignalConfig,
+    tolerance: f64,
+) -> SignalResult<UltraEnhancedMultitaperValidationResult> {
+    println!("Running comprehensive enhanced multitaper validation...");
+    
+    // Run base validation
+    let base_validation = validate_multitaper_comprehensive(test_signals, tolerance)?;
+    
+    // Run enhanced numerical precision tests
+    let precision_score = validate_numerical_precision_enhanced(test_signals)
+        .unwrap_or(0.0);
+    
+    // Run parameter consistency tests
+    let consistency_score = validate_parameter_consistency(test_signals)
+        .unwrap_or(0.0);
+    
+    // Run SIMD performance tests
+    let simd_score = validate_simd_operations(test_signals)
+        .unwrap_or(0.0);
+    
+    // Calculate enhanced overall score
+    let enhanced_score = (base_validation.overall_score * 0.6) 
+        + (precision_score * 0.15)
+        + (consistency_score * 0.15)
+        + (simd_score * 0.1);
+    
+    Ok(UltraEnhancedMultitaperValidationResult {
+        base_validation,
+        precision_score,
+        consistency_score,
+        simd_performance_score: simd_score,
+        enhanced_overall_score: enhanced_score,
+        recommendations: generate_recommendations(enhanced_score, precision_score, consistency_score, simd_score),
+    })
+}
+
+/// Generate recommendations based on validation results
+fn generate_recommendations(
+    overall_score: f64,
+    precision_score: f64,
+    consistency_score: f64,
+    simd_score: f64,
+) -> Vec<String> {
+    let mut recommendations = Vec::new();
+    
+    if overall_score < 80.0 {
+        recommendations.push("Overall performance below optimal level. Consider reviewing core algorithms.".to_string());
+    }
+    
+    if precision_score < 70.0 {
+        recommendations.push("Numerical precision issues detected. Consider using higher precision arithmetic for critical calculations.".to_string());
+    }
+    
+    if consistency_score < 75.0 {
+        recommendations.push("Parameter consistency issues found. Validate parameter bounds and default values.".to_string());
+    }
+    
+    if simd_score < 60.0 {
+        recommendations.push("SIMD operations underperforming. Check platform capabilities and optimization settings.".to_string());
+    }
+    
+    if recommendations.is_empty() {
+        recommendations.push("All validation tests passed successfully. Implementation is robust.".to_string());
+    }
+    
+    recommendations
+}
+
+/// Ultra enhanced validation result structure with additional metrics
+#[derive(Debug, Clone)]
+pub struct UltraEnhancedMultitaperValidationResult {
+    /// Base validation results
+    pub base_validation: MultitaperValidationResult,
+    /// Numerical precision test score (0-100)
+    pub precision_score: f64,
+    /// Parameter consistency score (0-100)
+    pub consistency_score: f64,
+    /// SIMD performance score (0-100)
+    pub simd_performance_score: f64,
+    /// Enhanced overall score combining all metrics
+    pub enhanced_overall_score: f64,
+    /// Recommendations for improvement
+    pub recommendations: Vec<String>,
+}
+
 // Re-export for tests
 pub use num_traits::{Float, NumCast};

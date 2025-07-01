@@ -1577,11 +1577,44 @@ impl TPUMemoryPool {
     pub fn free(&mut self, block: MemoryBlock) -> Result<()> {
         self.allocated_size = self.allocated_size.saturating_sub(block.size);
 
-        // Add block back to free list
+        // Add block back to free list and coalesce adjacent blocks
         self.free_blocks.push_back(block);
-
-        // TODO: Implement block coalescing for better memory management
+        self.coalesce_free_blocks();
 
         Ok(())
+    }
+
+    /// Coalesce adjacent free blocks to reduce fragmentation
+    fn coalesce_free_blocks(&mut self) {
+        // Sort free blocks by offset
+        let mut blocks: Vec<MemoryBlock> = self.free_blocks.drain(..).collect();
+        blocks.sort_by_key(|b| b.offset);
+
+        let mut coalesced_blocks = VecDeque::new();
+        
+        if blocks.is_empty() {
+            return;
+        }
+
+        let mut current_block = blocks[0].clone();
+        
+        for block in blocks.into_iter().skip(1) {
+            // Check if blocks are adjacent and in the same memory space
+            if current_block.offset + current_block.size == block.offset 
+                && current_block.memory_space == block.memory_space 
+                && current_block.alignment == block.alignment {
+                // Merge blocks
+                current_block.size += block.size;
+            } else {
+                // Add current block to coalesced list and start new block
+                coalesced_blocks.push_back(current_block);
+                current_block = block;
+            }
+        }
+        
+        // Add the final block
+        coalesced_blocks.push_back(current_block);
+        
+        self.free_blocks = coalesced_blocks;
     }
 }

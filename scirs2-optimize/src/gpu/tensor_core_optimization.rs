@@ -332,14 +332,14 @@ impl TensorCoreOptimizer {
     /// Perform optimized matrix multiplication using Tensor Cores
     pub fn gemm(
         &self,
-        a: &GpuArray<f64>,
-        b: &GpuArray<f64>,
-        c: &mut GpuArray<f64>,
+        a: &Array2<f64>,
+        b: &Array2<f64>,
+        c: &mut Array2<f64>,
         alpha: f64,
         beta: f64,
     ) -> ScirsResult<()> {
-        let (m, k1) = a.shape();
-        let (k2, n) = b.shape();
+        let (m, k1) = a.dim();
+        let (k2, n) = b.dim();
 
         if k1 != k2 {
             return Err(ScirsError::InvalidInput(
@@ -403,9 +403,9 @@ impl TensorCoreOptimizer {
     /// Perform batch matrix multiplication using Tensor Cores
     pub fn batch_gemm(
         &self,
-        a_batch: &[&GpuArray<f64>],
-        b_batch: &[&GpuArray<f64>],
-        c_batch: &mut [&mut GpuArray<f64>],
+        a_batch: &[&Array2<f64>],
+        b_batch: &[&Array2<f64>],
+        c_batch: &mut [&mut Array2<f64>],
         alpha_batch: &[f64],
         beta_batch: &[f64],
     ) -> ScirsResult<()> {
@@ -493,9 +493,9 @@ impl TensorCoreOptimizer {
     /// Compute gradients using Tensor Core acceleration
     pub fn compute_gradients(
         &self,
-        jacobian: &GpuArray<f64>,
-        residuals: &GpuArray<f64>,
-    ) -> ScirsResult<GpuArray<f64>> {
+        jacobian: &Array2<f64>,
+        residuals: &Array1<f64>,
+    ) -> ScirsResult<Array1<f64>> {
         let (n_points, n_dims) = jacobian.shape();
         let gradients = self.context.allocate_array::<f64>(&[n_dims, 1])?;
 
@@ -527,7 +527,7 @@ impl TensorCoreOptimizer {
     }
 
     /// Check if gradient clipping is needed and apply it
-    pub fn clip_gradients(&self, gradients: &mut GpuArray<f64>) -> ScirsResult<()> {
+    pub fn clip_gradients(&self, gradients: &mut Array1<f64>) -> ScirsResult<()> {
         if let Some(threshold) = self.config.gradient_clip_threshold {
             // Compute gradient norm
             let grad_norm_squared = self.context.dot(gradients, gradients)?;
@@ -552,7 +552,7 @@ impl TensorCoreOptimizer {
     }
 
     /// Check if computation overflowed (for AMP)
-    pub fn check_overflow(&self, tensor: &GpuArray<f64>) -> ScirsResult<bool> {
+    pub fn check_overflow(&self, tensor: &Array2<f64>) -> ScirsResult<bool> {
         // Check for infinite or NaN values
         self.context.has_nan_or_inf(tensor)
     }

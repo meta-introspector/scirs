@@ -8,7 +8,7 @@ use num_traits::Float;
 use rand::Rng;
 use std::collections::{HashMap, VecDeque};
 
-use super::{EvaluationMetric, OptimizerArchitecture, SearchResult, SearchSpaceConfig};
+use super::{ComponentType, EvaluationMetric, OptimizerArchitecture, SearchResult, SearchSpaceConfig};
 use crate::error::OptimizerError;
 
 /// Base trait for all search strategies
@@ -311,7 +311,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<
         search_space: &SearchSpaceConfig,
         _history: &VecDeque<SearchResult<T>>,
     ) -> Result<OptimizerArchitecture<T>, OptimizerError> {
-        use super::{ComponentType, OptimizerComponent};
+        use super::OptimizerComponent;
 
         // Randomly select number of components
         let num_components = self.rng.gen_range(1..=5);
@@ -700,7 +700,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> ReinforcementLe
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<T>
+impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + 'static> SearchStrategy<T>
     for ReinforcementLearningSearch<T>
 {
     fn initialize(&mut self, _search_space: &SearchSpaceConfig) -> Result<(), OptimizerError> {
@@ -805,7 +805,7 @@ impl<T: Float + Default + Clone> ReinforcementLearningSearch<T> {
         _actions: &Array1<T>,
         search_space: &SearchSpaceConfig,
     ) -> Result<OptimizerArchitecture<T>, OptimizerError> {
-        use super::{ComponentType, OptimizerComponent};
+        use super::OptimizerComponent;
 
         // Simplified decoding - randomly select for now
         let component_config = &search_space.optimizer_components[0];
@@ -848,7 +848,7 @@ impl<T: Float + Default> Default for SearchStrategyStatistics<T> {
 }
 
 // Implementation stubs for complex components
-impl<T: Float + Default + Clone> ControllerNetwork<T> {
+impl<T: Float + Default + Clone + 'static> ControllerNetwork<T> {
     fn new(hidden_size: usize, num_layers: usize) -> Self {
         let mut lstm_weights = Vec::new();
         let mut lstm_biases = Vec::new();
@@ -1014,7 +1014,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> DifferentiableS
     }
 
     fn discretize_architecture(&self, weights: &Array3<T>) -> OptimizerArchitecture<T> {
-        use super::{ComponentType, OptimizerComponent};
+        use super::OptimizerComponent;
 
         let mut components = Vec::new();
 
@@ -1437,7 +1437,7 @@ impl<T: Float + Default> GPKernel<T> {
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> NeuralPredictorSearch<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + 'static> NeuralPredictorSearch<T> {
     pub fn new(
         predictor_architecture: Vec<usize>,
         embedding_dim: usize,
@@ -1491,7 +1491,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> NeuralPredictor
             let (prediction, _) = self
                 .predictor_network
                 .forward_with_uncertainty(encoded_arch)?;
-            let loss = (prediction - target_performance).powf(T::from(2.0).unwrap());
+            let _loss = (prediction - target_performance).powf(T::from(2.0).unwrap());
 
             // Simplified gradient update
             self.predictor_network.backward_update(
@@ -1542,7 +1542,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> NeuralPredictor
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<T>
+impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + 'static> SearchStrategy<T>
     for NeuralPredictorSearch<T>
 {
     fn initialize(&mut self, _search_space: &SearchSpaceConfig) -> Result<(), OptimizerError> {
@@ -1640,7 +1640,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<
 }
 
 // Implementation for supporting components
-impl<T: Float + Default + Clone> PredictorNetwork<T> {
+impl<T: Float + Default + Clone + 'static> PredictorNetwork<T> {
     fn new(architecture: Vec<usize>) -> Self {
         let mut layers = Vec::new();
         for i in 0..architecture.len() - 1 {
@@ -1702,7 +1702,7 @@ impl<T: Float + Default + Clone> PredictorNetwork<T> {
     }
 }
 
-impl<T: Float + Default + Clone> PredictorLayer<T> {
+impl<T: Float + Default + Clone + 'static> PredictorLayer<T> {
     fn new(input_size: usize, output_size: usize) -> Self {
         Self {
             weights: Array2::zeros((output_size, input_size)),

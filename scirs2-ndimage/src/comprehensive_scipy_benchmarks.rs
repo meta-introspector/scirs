@@ -14,8 +14,9 @@ use ndarray::{Array, Array1, Array2, Array3, ArrayView2, Ix2};
 use num_traits::{Float, FromPrimitive};
 
 use crate::error::{NdimageError, NdimageResult};
-use crate::filters::{gaussian_filter, median_filter, uniform_filter, BoundaryMode};
-use crate::measurements::{center_of_mass, label_objects};
+use crate::filters::{gaussian_filter, median_filter, uniform_filter};
+use crate::measurements::{center_of_mass};
+use crate::interpolation::BoundaryMode;
 use crate::morphology::{binary_dilation, binary_erosion, distance_transform_edt};
 use crate::performance_profiler::{PerformanceProfiler, ProfilerConfig};
 

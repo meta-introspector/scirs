@@ -4,6 +4,7 @@
 //! choose optimal settings for transformations based on data characteristics
 //! and system resources.
 
+#[cfg(feature = "distributed")]
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -11,7 +12,8 @@ use crate::error::{Result, TransformError};
 use crate::utils::ProcessingStrategy;
 
 /// System resource information
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "distributed", derive(Serialize, Deserialize))]
 pub struct SystemResources {
     /// Available memory in MB
     pub memory_mb: usize,
@@ -105,7 +107,8 @@ impl SystemResources {
 }
 
 /// Data characteristics for optimization decisions
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "distributed", derive(Serialize, Deserialize))]
 pub struct DataCharacteristics {
     /// Number of samples
     pub n_samples: usize,
@@ -231,7 +234,8 @@ impl DataCharacteristics {
 }
 
 /// Optimization configuration for a specific transformation
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "distributed", derive(Serialize, Deserialize))]
 pub struct OptimizationConfig {
     /// Processing strategy to use
     pub processing_strategy: ProcessingStrategy,
@@ -991,7 +995,7 @@ impl ConfigurationPredictor {
     pub fn predict_optimal_config(
         &self,
         state: &str,
-        transformation_type: &str,
+        _transformation_type: &str,
         _user_params: &HashMap<String, f64>,
     ) -> Result<OptimizationConfig> {
         // Extract features from state
@@ -1101,7 +1105,7 @@ impl AdaptiveParameterTuner {
         self.current_state = state.to_string();
 
         // Apply epsilon-greedy policy for parameter exploration
-        if rand::thread_rng().gen::<f64>() < self.exploration_rate {
+        if rand::rng().random_range(0.0..1.0) < self.exploration_rate {
             // Explore: randomly adjust parameters
             config = self.explore_parameters(config)?;
         } else {
@@ -1114,19 +1118,19 @@ impl AdaptiveParameterTuner {
 
     /// Explore by randomly adjusting parameters
     fn explore_parameters(&self, mut config: OptimizationConfig) -> Result<OptimizationConfig> {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         // Randomly adjust memory limit (±20%)
-        let memory_factor = rng.gen_range(0.8..1.2);
+        let memory_factor = rng.random_range(0.8..1.2);
         config.memory_limit_mb = (config.memory_limit_mb as f64 * memory_factor) as usize;
 
         // Randomly toggle parallelism
-        if rng.gen::<f64>() < 0.3 {
+        if rng.random_range(0.0..1.0) < 0.3 {
             config.use_parallel = !config.use_parallel;
         }
 
         // Randomly adjust chunk size (±50%)
-        let chunk_factor = rng.gen_range(0.5..1.5);
+        let chunk_factor = rng.random_range(0.5..1.5);
         config.chunk_size = (config.chunk_size as f64 * chunk_factor) as usize;
 
         Ok(config)

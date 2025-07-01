@@ -3607,3 +3607,696 @@ impl QuantumTSPSolver {
         Ok(refined)
     }
 }
+
+/// Quantum kernel methods for spatial classification and regression
+#[derive(Debug, Clone)]
+pub struct QuantumKernelMachine {
+    /// Quantum feature map depth
+    feature_map_depth: usize,
+    /// Number of qubits for encoding
+    num_qubits: usize,
+    /// Kernel parameters
+    kernel_params: QuantumKernelParams,
+    /// Training data in quantum feature space
+    quantum_training_data: Vec<QuantumState>,
+    /// Training labels
+    training_labels: Array1<f64>,
+    /// Support vectors (quantum states)
+    support_vectors: Vec<QuantumState>,
+    /// Support vector coefficients
+    support_coefficients: Array1<f64>,
+}
+
+/// Quantum kernel parameters
+#[derive(Debug, Clone)]
+pub struct QuantumKernelParams {
+    /// Feature map type
+    pub feature_map_type: QuantumFeatureMapType,
+    /// Entangling gate type
+    pub entangling_gate: QuantumGateType,
+    /// Number of feature map layers
+    pub num_layers: usize,
+    /// Regularization parameter
+    pub regularization: f64,
+    /// Quantum noise level
+    pub noise_level: f64,
+}
+
+/// Types of quantum feature maps
+#[derive(Debug, Clone)]
+pub enum QuantumFeatureMapType {
+    /// Z-feature map (rotation around Z-axis)
+    ZFeatureMap,
+    /// ZZ-feature map (entangling Z rotations)
+    ZZFeatureMap,
+    /// Pauli feature map (X, Y, Z rotations)
+    PauliFeatureMap,
+    /// Custom feature map with arbitrary gates
+    CustomFeatureMap(Vec<QuantumGateType>),
+}
+
+/// Quantum gate types for feature maps
+#[derive(Debug, Clone)]
+pub enum QuantumGateType {
+    /// Pauli-X rotation
+    RX(f64),
+    /// Pauli-Y rotation
+    RY(f64),
+    /// Pauli-Z rotation
+    RZ(f64),
+    /// Controlled-Z gate
+    CZ,
+    /// Controlled-X gate (CNOT)
+    CNOT,
+    /// Hadamard gate
+    H,
+}
+
+impl QuantumKernelMachine {
+    /// Create new quantum kernel machine
+    pub fn new(num_qubits: usize, feature_map_depth: usize) -> Self {
+        let kernel_params = QuantumKernelParams {
+            feature_map_type: QuantumFeatureMapType::ZZFeatureMap,
+            entangling_gate: QuantumGateType::CZ,
+            num_layers: feature_map_depth,
+            regularization: 0.001,
+            noise_level: 0.0,
+        };
+
+        Self {
+            feature_map_depth,
+            num_qubits,
+            kernel_params,
+            quantum_training_data: Vec::new(),
+            training_labels: Array1::zeros(0),
+            support_vectors: Vec::new(),
+            support_coefficients: Array1::zeros(0),
+        }
+    }
+
+    /// Configure quantum kernel parameters
+    pub fn with_kernel_params(mut self, params: QuantumKernelParams) -> Self {
+        self.kernel_params = params;
+        self
+    }
+
+    /// Train quantum support vector machine
+    pub fn fit_qsvm(
+        &mut self,
+        points: &ArrayView2<f64>,
+        labels: &ArrayView1<f64>,
+    ) -> SpatialResult<()> {
+        let (n_samples, _) = points.dim();
+        
+        if n_samples != labels.len() {
+            return Err(SpatialError::InvalidInput(
+                "Number of samples must match number of labels".to_string(),
+            ));
+        }
+
+        // Encode training data into quantum feature space
+        self.quantum_training_data = Vec::new();
+        for i in 0..n_samples {
+            let point = points.row(i);
+            let quantum_state = self.encode_classical_data(&point)?;
+            self.quantum_training_data.push(quantum_state);
+        }
+        
+        self.training_labels = labels.to_owned();
+
+        // Compute quantum kernel matrix
+        let kernel_matrix = self.compute_quantum_kernel_matrix()?;
+
+        // Solve quantum SVM optimization problem using SMO algorithm
+        let (support_indices, coefficients) = self.solve_qsvm_optimization(&kernel_matrix)?;
+
+        // Store support vectors and coefficients
+        self.support_vectors = support_indices
+            .iter()
+            .map(|&i| self.quantum_training_data[i].clone())
+            .collect();
+        self.support_coefficients = coefficients;
+
+        Ok(())
+    }
+
+    /// Encode classical data point into quantum feature space
+    fn encode_classical_data(&self, point: &ArrayView1<f64>) -> SpatialResult<QuantumState> {
+        let mut quantum_state = QuantumState::zero_state(self.num_qubits);
+
+        // Apply feature map encoding
+        match &self.kernel_params.feature_map_type {
+            QuantumFeatureMapType::ZFeatureMap => {
+                self.apply_z_feature_map(&mut quantum_state, point)?;
+            }
+            QuantumFeatureMapType::ZZFeatureMap => {
+                self.apply_zz_feature_map(&mut quantum_state, point)?;
+            }
+            QuantumFeatureMapType::PauliFeatureMap => {
+                self.apply_pauli_feature_map(&mut quantum_state, point)?;
+            }
+            QuantumFeatureMapType::CustomFeatureMap(gates) => {
+                self.apply_custom_feature_map(&mut quantum_state, point, gates)?;
+            }
+        }
+
+        // Add quantum noise if specified
+        if self.kernel_params.noise_level > 0.0 {
+            self.add_quantum_noise(&mut quantum_state)?;
+        }
+
+        Ok(quantum_state)
+    }
+
+    /// Apply Z-feature map encoding
+    fn apply_z_feature_map(
+        &self,
+        state: &mut QuantumState,
+        point: &ArrayView1<f64>,
+    ) -> SpatialResult<()> {
+        for layer in 0..self.kernel_params.num_layers {
+            // Hadamard gates for superposition
+            for qubit in 0..self.num_qubits {
+                state.hadamard(qubit)?;
+            }
+
+            // Z-rotations encoding classical data
+            for (i, &value) in point.iter().enumerate() {
+                if i < self.num_qubits {
+                    let angle = value * PI * (layer + 1) as f64;
+                    state.phase_rotation(i, angle)?;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// Apply ZZ-feature map with entangling gates
+    fn apply_zz_feature_map(
+        &self,
+        state: &mut QuantumState,
+        point: &ArrayView1<f64>,
+    ) -> SpatialResult<()> {
+        for _layer in 0..self.kernel_params.num_layers {
+            // Hadamard gates
+            for qubit in 0..self.num_qubits {
+                state.hadamard(qubit)?;
+            }
+
+            // Single-qubit Z-rotations
+            for (i, &value) in point.iter().enumerate() {
+                if i < self.num_qubits {
+                    let angle = value * PI;
+                    state.phase_rotation(i, angle)?;
+                }
+            }
+
+            // Entangling ZZ-rotations
+            for i in 0..self.num_qubits.saturating_sub(1) {
+                let data_product = if i < point.len() && i + 1 < point.len() {
+                    point[i] * point[i + 1]
+                } else {
+                    1.0
+                };
+                let angle = data_product * PI * 0.5;
+                state.controlled_rotation(i, i + 1, angle)?;
+            }
+        }
+        Ok(())
+    }
+
+    /// Apply Pauli feature map with X, Y, Z rotations
+    fn apply_pauli_feature_map(
+        &self,
+        state: &mut QuantumState,
+        point: &ArrayView1<f64>,
+    ) -> SpatialResult<()> {
+        for _layer in 0..self.kernel_params.num_layers {
+            for (i, &value) in point.iter().enumerate() {
+                if i < self.num_qubits {
+                    // X rotation
+                    let x_angle = value * PI * 0.3;
+                    state.hadamard(i)?;
+                    state.phase_rotation(i, x_angle)?;
+                    state.hadamard(i)?;
+
+                    // Y rotation (implemented as RZ-RX-RZ sequence)
+                    let y_angle = value * PI * 0.3;
+                    state.phase_rotation(i, PI / 2.0)?;
+                    state.hadamard(i)?;
+                    state.phase_rotation(i, y_angle)?;
+                    state.hadamard(i)?;
+                    state.phase_rotation(i, -PI / 2.0)?;
+
+                    // Z rotation
+                    let z_angle = value * PI * 0.4;
+                    state.phase_rotation(i, z_angle)?;
+                }
+            }
+
+            // Add entangling gates
+            for i in 0..self.num_qubits.saturating_sub(1) {
+                state.controlled_rotation(i, i + 1, PI / 4.0)?;
+            }
+        }
+        Ok(())
+    }
+
+    /// Apply custom feature map
+    fn apply_custom_feature_map(
+        &self,
+        state: &mut QuantumState,
+        point: &ArrayView1<f64>,
+        gates: &[QuantumGateType],
+    ) -> SpatialResult<()> {
+        for (i, gate) in gates.iter().enumerate() {
+            let qubit = i % self.num_qubits;
+            match gate {
+                QuantumGateType::RX(angle) => {
+                    let data_angle = if i < point.len() { point[i] * angle } else { *angle };
+                    // RX implementation using Hadamard and RZ
+                    state.hadamard(qubit)?;
+                    state.phase_rotation(qubit, data_angle)?;
+                    state.hadamard(qubit)?;
+                }
+                QuantumGateType::RY(angle) => {
+                    let data_angle = if i < point.len() { point[i] * angle } else { *angle };
+                    // RY implementation
+                    state.phase_rotation(qubit, PI / 2.0)?;
+                    state.hadamard(qubit)?;
+                    state.phase_rotation(qubit, data_angle)?;
+                    state.hadamard(qubit)?;
+                    state.phase_rotation(qubit, -PI / 2.0)?;
+                }
+                QuantumGateType::RZ(angle) => {
+                    let data_angle = if i < point.len() { point[i] * angle } else { *angle };
+                    state.phase_rotation(qubit, data_angle)?;
+                }
+                QuantumGateType::H => {
+                    state.hadamard(qubit)?;
+                }
+                QuantumGateType::CNOT => {
+                    let target = (qubit + 1) % self.num_qubits;
+                    state.controlled_rotation(qubit, target, PI)?;
+                }
+                QuantumGateType::CZ => {
+                    let target = (qubit + 1) % self.num_qubits;
+                    state.controlled_rotation(qubit, target, PI)?;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// Add quantum noise to simulate realistic quantum devices
+    fn add_quantum_noise(&self, state: &mut QuantumState) -> SpatialResult<()> {
+        use rand::Rng;
+        let mut rng = rng();
+
+        for qubit in 0..self.num_qubits {
+            if rng.random_range(0.0..1.0) < self.kernel_params.noise_level {
+                // Apply random Pauli noise
+                let noise_type = rng.random_range(0..3);
+                match noise_type {
+                    0 => {
+                        // Bit flip (X gate)
+                        state.hadamard(qubit)?;
+                        state.phase_rotation(qubit, PI)?;
+                        state.hadamard(qubit)?;
+                    }
+                    1 => {
+                        // Phase flip (Z gate)
+                        state.phase_rotation(qubit, PI)?;
+                    }
+                    2 => {
+                        // Y gate (combination of X and Z)
+                        state.phase_rotation(qubit, PI / 2.0)?;
+                        state.hadamard(qubit)?;
+                        state.phase_rotation(qubit, PI)?;
+                        state.hadamard(qubit)?;
+                        state.phase_rotation(qubit, -PI / 2.0)?;
+                    }
+                    _ => {}
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// Compute quantum kernel matrix for all training samples
+    fn compute_quantum_kernel_matrix(&self) -> SpatialResult<Array2<f64>> {
+        let n_samples = self.quantum_training_data.len();
+        let mut kernel_matrix = Array2::zeros((n_samples, n_samples));
+
+        for i in 0..n_samples {
+            for j in i..n_samples {
+                let kernel_value = self.compute_quantum_kernel(
+                    &self.quantum_training_data[i],
+                    &self.quantum_training_data[j],
+                )?;
+                kernel_matrix[[i, j]] = kernel_value;
+                kernel_matrix[[j, i]] = kernel_value; // Symmetric matrix
+            }
+        }
+
+        Ok(kernel_matrix)
+    }
+
+    /// Compute quantum kernel between two quantum states
+    fn compute_quantum_kernel(
+        &self,
+        state1: &QuantumState,
+        state2: &QuantumState,
+    ) -> SpatialResult<f64> {
+        if state1.num_qubits != state2.num_qubits {
+            return Err(SpatialError::InvalidInput(
+                "Quantum states must have same number of qubits".to_string(),
+            ));
+        }
+
+        // Compute fidelity between quantum states
+        let fidelity = self.compute_quantum_fidelity(state1, state2);
+        
+        // Apply kernel transformation
+        Ok(fidelity.abs())
+    }
+
+    /// Compute quantum fidelity between two states
+    fn compute_quantum_fidelity(&self, state1: &QuantumState, state2: &QuantumState) -> f64 {
+        // Fidelity = |⟨ψ₁|ψ₂⟩|²
+        let overlap = state1
+            .amplitudes
+            .iter()
+            .zip(state2.amplitudes.iter())
+            .map(|(a, b)| a.conj() * b)
+            .sum::<Complex64>();
+        
+        overlap.norm_sqr()
+    }
+
+    /// Solve quantum SVM optimization using simplified SMO algorithm
+    fn solve_qsvm_optimization(
+        &self,
+        kernel_matrix: &Array2<f64>,
+    ) -> SpatialResult<(Vec<usize>, Array1<f64>)> {
+        let n_samples = kernel_matrix.nrows();
+        let mut alpha = Array1::<f64>::zeros(n_samples);
+        let regularization = self.kernel_params.regularization;
+        
+        // Simplified SMO algorithm - select support vectors with non-zero alphas
+        for i in 0..n_samples {
+            for j in (i + 1)..n_samples {
+                if self.training_labels[i] != self.training_labels[j] {
+                    // Different labels - potential support vector pair
+                    let k_ii = kernel_matrix[[i, i]];
+                    let k_jj = kernel_matrix[[j, j]];
+                    let k_ij = kernel_matrix[[i, j]];
+                    
+                    let eta = k_ii + k_jj - 2.0 * k_ij;
+                    if eta > 0.0 {
+                        let delta = (self.training_labels[i] - self.training_labels[j]) / eta;
+                        alpha[i] += delta.min(regularization);
+                        alpha[j] -= delta.min(regularization);
+                    }
+                }
+            }
+        }
+
+        // Extract support vectors (non-zero alphas)
+        let mut support_indices = Vec::new();
+        let mut support_coefficients = Vec::new();
+        
+        for (i, &coeff) in alpha.iter().enumerate() {
+            if coeff.abs() > 1e-6 {
+                support_indices.push(i);
+                support_coefficients.push(coeff * self.training_labels[i]);
+            }
+        }
+
+        Ok((support_indices, Array1::from(support_coefficients)))
+    }
+
+    /// Predict using trained quantum SVM
+    pub fn predict(&self, point: &ArrayView1<f64>) -> SpatialResult<f64> {
+        if self.support_vectors.is_empty() {
+            return Err(SpatialError::InvalidInput(
+                "Model must be trained before prediction".to_string(),
+            ));
+        }
+
+        // Encode test point into quantum feature space
+        let quantum_test_point = self.encode_classical_data(point)?;
+
+        // Compute prediction using support vectors
+        let mut prediction = 0.0;
+        for (i, support_vector) in self.support_vectors.iter().enumerate() {
+            let kernel_value = self.compute_quantum_kernel(&quantum_test_point, support_vector)?;
+            prediction += self.support_coefficients[i] * kernel_value;
+        }
+
+        Ok(prediction)
+    }
+
+    /// Compute quantum advantage metric
+    pub fn quantum_advantage(&self) -> f64 {
+        // Simplified quantum advantage metric based on entanglement and superposition
+        let num_qubits = self.num_qubits as f64;
+        let feature_depth = self.feature_map_depth as f64;
+        
+        // Theoretical quantum advantage scales exponentially with qubits
+        let exponential_advantage = 2.0_f64.powf(num_qubits / 4.0);
+        let depth_advantage = (1.0 + feature_depth).ln();
+        
+        exponential_advantage * depth_advantage
+    }
+}
+
+/// Quantum variational classifier for spatial pattern recognition
+#[derive(Debug, Clone)]
+pub struct QuantumVariationalClassifier {
+    /// Number of qubits
+    num_qubits: usize,
+    /// Circuit depth
+    circuit_depth: usize,
+    /// Variational parameters
+    parameters: Array1<f64>,
+    /// Parameter optimizer
+    optimizer: QuantumParameterOptimizer,
+    /// Classification threshold
+    threshold: f64,
+}
+
+/// Quantum parameter optimizer for variational algorithms
+#[derive(Debug, Clone)]
+pub struct QuantumParameterOptimizer {
+    /// Learning rate
+    learning_rate: f64,
+    /// Momentum coefficient
+    momentum: f64,
+    /// Parameter gradients
+    gradients: Array1<f64>,
+    /// Momentum buffer
+    momentum_buffer: Array1<f64>,
+    /// Optimization iterations
+    iterations: usize,
+}
+
+impl QuantumVariationalClassifier {
+    /// Create new quantum variational classifier
+    pub fn new(num_qubits: usize, circuit_depth: usize) -> Self {
+        let num_params = num_qubits * circuit_depth * 3; // 3 rotation angles per qubit per layer
+        let parameters = Array1::zeros(num_params);
+        
+        let optimizer = QuantumParameterOptimizer {
+            learning_rate: 0.01,
+            momentum: 0.9,
+            gradients: Array1::zeros(num_params),
+            momentum_buffer: Array1::zeros(num_params),
+            iterations: 0,
+        };
+
+        Self {
+            num_qubits,
+            circuit_depth,
+            parameters,
+            optimizer,
+            threshold: 0.0,
+        }
+    }
+
+    /// Train variational quantum classifier
+    pub fn fit(
+        &mut self,
+        points: &ArrayView2<f64>,
+        labels: &ArrayView1<f64>,
+        max_iterations: usize,
+    ) -> SpatialResult<()> {
+        use rand::Rng;
+        let mut rng = rng();
+
+        // Initialize parameters randomly
+        for param in self.parameters.iter_mut() {
+            *param = rng.random_range(-PI..PI);
+        }
+
+        for iteration in 0..max_iterations {
+            let mut total_cost = 0.0;
+            let mut total_gradients = Array1::zeros(self.parameters.len());
+
+            // Batch gradient computation
+            for (_sample_idx, (point, &label)) in points.outer_iter().zip(labels.iter()).enumerate() {
+                // Forward pass
+                let prediction = self.forward_pass(&point)?;
+                
+                // Compute loss (squared error)
+                let error = prediction - label;
+                total_cost += error * error;
+
+                // Compute gradients using parameter shift rule
+                let gradients = self.compute_parameter_shift_gradients(&point, error)?;
+                total_gradients = total_gradients + gradients;
+            }
+
+            // Update parameters using optimizer
+            self.optimizer.update_parameters(&mut self.parameters, &total_gradients)?;
+
+            // Check convergence
+            if iteration % 10 == 0 {
+                let avg_cost = total_cost / points.nrows() as f64;
+                if avg_cost < 1e-6 {
+                    break;
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Forward pass through variational quantum circuit
+    fn forward_pass(&self, point: &ArrayView1<f64>) -> SpatialResult<f64> {
+        let mut quantum_state = QuantumState::zero_state(self.num_qubits);
+
+        // Data encoding layer
+        for (i, &value) in point.iter().enumerate() {
+            if i < self.num_qubits {
+                let angle = value * PI;
+                quantum_state.phase_rotation(i, angle)?;
+            }
+        }
+
+        // Variational layers
+        for layer in 0..self.circuit_depth {
+            let param_offset = layer * self.num_qubits * 3;
+
+            // Single-qubit rotations
+            for qubit in 0..self.num_qubits {
+                let rx_angle = self.parameters[param_offset + qubit * 3];
+                let ry_angle = self.parameters[param_offset + qubit * 3 + 1];
+                let rz_angle = self.parameters[param_offset + qubit * 3 + 2];
+
+                // Apply rotations
+                quantum_state.hadamard(qubit)?;
+                quantum_state.phase_rotation(qubit, rx_angle)?;
+                quantum_state.hadamard(qubit)?;
+
+                quantum_state.phase_rotation(qubit, PI / 2.0)?;
+                quantum_state.hadamard(qubit)?;
+                quantum_state.phase_rotation(qubit, ry_angle)?;
+                quantum_state.hadamard(qubit)?;
+                quantum_state.phase_rotation(qubit, -PI / 2.0)?;
+
+                quantum_state.phase_rotation(qubit, rz_angle)?;
+            }
+
+            // Entangling layer
+            for qubit in 0..self.num_qubits.saturating_sub(1) {
+                quantum_state.controlled_rotation(qubit, qubit + 1, PI / 4.0)?;
+            }
+        }
+
+        // Measurement expectation value
+        let expectation = self.compute_expectation_value(&quantum_state)?;
+        Ok(expectation)
+    }
+
+    /// Compute expectation value for measurement
+    fn compute_expectation_value(&self, state: &QuantumState) -> SpatialResult<f64> {
+        // Measure in Z basis for first qubit
+        let prob_0 = (0..state.amplitudes.len())
+            .filter(|&i| (i & 1) == 0)
+            .map(|i| state.probability(i))
+            .sum::<f64>();
+        
+        let prob_1 = (0..state.amplitudes.len())
+            .filter(|&i| (i & 1) == 1)
+            .map(|i| state.probability(i))
+            .sum::<f64>();
+
+        Ok(prob_0 - prob_1) // Expectation value: +1 for |0⟩, -1 for |1⟩
+    }
+
+    /// Compute gradients using parameter shift rule
+    fn compute_parameter_shift_gradients(
+        &self,
+        point: &ArrayView1<f64>,
+        error: f64,
+    ) -> SpatialResult<Array1<f64>> {
+        let mut gradients = Array1::zeros(self.parameters.len());
+        let shift = PI / 2.0;
+
+        for (param_idx, &param) in self.parameters.iter().enumerate() {
+            // Create shifted parameter vectors
+            let mut params_plus = self.parameters.clone();
+            let mut params_minus = self.parameters.clone();
+            params_plus[param_idx] = param + shift;
+            params_minus[param_idx] = param - shift;
+
+            // Temporarily update parameters for gradient computation
+            let _original_params = self.parameters.clone();
+            
+            // Forward pass with positive shift
+            let mut temp_classifier = self.clone();
+            temp_classifier.parameters = params_plus;
+            let output_plus = temp_classifier.forward_pass(point)?;
+
+            // Forward pass with negative shift
+            temp_classifier.parameters = params_minus;
+            let output_minus = temp_classifier.forward_pass(point)?;
+
+            // Parameter shift rule: gradient = (f(θ + π/2) - f(θ - π/2)) / 2
+            gradients[param_idx] = error * (output_plus - output_minus) / 2.0;
+        }
+
+        Ok(gradients)
+    }
+
+    /// Predict using trained variational classifier
+    pub fn predict(&self, point: &ArrayView1<f64>) -> SpatialResult<f64> {
+        let output = self.forward_pass(point)?;
+        Ok(if output > self.threshold { 1.0 } else { -1.0 })
+    }
+}
+
+impl QuantumParameterOptimizer {
+    /// Update parameters using momentum-based optimization
+    fn update_parameters(
+        &mut self,
+        parameters: &mut Array1<f64>,
+        gradients: &Array1<f64>,
+    ) -> SpatialResult<()> {
+        self.iterations += 1;
+
+        for i in 0..parameters.len() {
+            // Update momentum buffer
+            self.momentum_buffer[i] = 
+                self.momentum * self.momentum_buffer[i] - self.learning_rate * gradients[i];
+            
+            // Update parameters
+            parameters[i] += self.momentum_buffer[i];
+        }
+
+        // Store gradients for monitoring
+        self.gradients = gradients.clone();
+        Ok(())
+    }
+}

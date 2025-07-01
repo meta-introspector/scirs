@@ -264,7 +264,7 @@ where
     // Compute row scaling factors for scaled partial pivoting
     let mut row_scales = vec![T::one(); n];
     if matches!(opts.pivoting, PivotingStrategy::ScaledPartial) {
-        for i in 0..n {
+        for (i, scale) in row_scales.iter_mut().enumerate().take(n) {
             let row_data = working_matrix.get_row(i);
             let max_val =
                 row_data
@@ -272,7 +272,7 @@ where
                     .map(|&v| v.abs())
                     .fold(T::zero(), |a, b| if a > b { a } else { b });
             if max_val > T::zero() {
-                row_scales[i] = max_val;
+                *scale = max_val;
             }
         }
     }
@@ -295,10 +295,10 @@ where
         {
             col_perm.swap(k, pivot_col);
             // When columns are swapped, we need to update all matrix elements
-            for i in 0..n {
-                let temp = working_matrix.get(row_perm[i], k);
-                working_matrix.set(row_perm[i], k, working_matrix.get(row_perm[i], pivot_col));
-                working_matrix.set(row_perm[i], pivot_col, temp);
+            for &row_idx in row_perm.iter().take(n) {
+                let temp = working_matrix.get(row_idx, k);
+                working_matrix.set(row_idx, k, working_matrix.get(row_idx, pivot_col));
+                working_matrix.set(row_idx, pivot_col, temp);
             }
         }
 
@@ -317,8 +317,7 @@ where
         }
 
         // Eliminate below pivot
-        for i in (k + 1)..n {
-            let actual_row_i = row_perm[i];
+        for &actual_row_i in row_perm.iter().take(n).skip(k + 1) {
             let factor = working_matrix.get(actual_row_i, actual_pivot_col) / pivot_value;
 
             if !factor.is_zero() {
@@ -818,8 +817,7 @@ where
     let mut pivot_idx = k;
 
     // Look for largest diagonal element among remaining rows
-    for i in k..n {
-        let actual_i = perm[i];
+    for (i, &actual_i) in perm.iter().enumerate().take(n).skip(k) {
         let diag_val = matrix.get(actual_i, actual_i).abs();
 
         if diag_val > max_val {
@@ -858,8 +856,8 @@ where
         vals.push(T::one());
 
         // Add below-diagonal elements
-        for j in 0..i {
-            let val = matrix.get(actual_i, perm[j]);
+        for (j, &perm_j) in perm.iter().enumerate().take(i) {
+            let val = matrix.get(actual_i, perm_j);
             if val != T::zero() {
                 rows.push(i);
                 cols.push(j);
@@ -1188,8 +1186,8 @@ where
             let mut max_val = T::zero();
             let mut pivot_row = k;
 
-            for i in k..n {
-                let actual_row = row_perm[i];
+            for (idx, &actual_row) in row_perm.iter().enumerate().skip(k).take(n - k) {
+                let i = k + idx;
                 let val = matrix.get(actual_row, col_perm[k]).abs();
                 if val > max_val {
                     max_val = val;
@@ -1206,8 +1204,8 @@ where
             let mut max_val = T::zero();
             let mut pivot_row = k;
 
-            for i in k..n {
-                let actual_row = row_perm[i];
+            for (idx, &actual_row) in row_perm.iter().enumerate().skip(k).take(n - k) {
+                let i = k + idx;
                 let val = matrix.get(actual_row, col_perm[k]).abs();
                 if val > max_val {
                     max_val = val;
@@ -1228,8 +1226,8 @@ where
             let mut max_ratio = T::zero();
             let mut pivot_row = k;
 
-            for i in k..n {
-                let actual_row = row_perm[i];
+            for (idx, &actual_row) in row_perm.iter().enumerate().skip(k).take(n - k) {
+                let i = k + idx;
                 let val = matrix.get(actual_row, col_perm[k]).abs();
                 let scale = row_scales[actual_row];
 
@@ -1250,10 +1248,10 @@ where
             let mut pivot_row = k;
             let mut pivot_col = k;
 
-            for i in k..n {
-                let actual_row = row_perm[i];
-                for j in k..n {
-                    let actual_col = col_perm[j];
+            for (i_idx, &actual_row) in row_perm.iter().enumerate().skip(k).take(n - k) {
+                let i = k + i_idx;
+                for (j_idx, &actual_col) in col_perm.iter().enumerate().skip(k).take(n - k) {
+                    let j = k + j_idx;
                     let val = matrix.get(actual_row, actual_col).abs();
                     if val > max_val {
                         max_val = val;
@@ -1273,8 +1271,8 @@ where
             let mut max_val = T::zero();
 
             // Start with partial pivoting in column k
-            for i in k..n {
-                let actual_row = row_perm[i];
+            for (idx, &actual_row) in row_perm.iter().enumerate().skip(k).take(n - k) {
+                let i = k + idx;
                 let val = matrix.get(actual_row, col_perm[k]).abs();
                 if val > max_val {
                     max_val = val;
@@ -1287,8 +1285,8 @@ where
                 let actual_best_row = row_perm[best_row];
                 let mut col_max = T::zero();
 
-                for j in k..n {
-                    let actual_col = col_perm[j];
+                for (idx, &actual_col) in col_perm.iter().enumerate().skip(k).take(n - k) {
+                    let j = k + idx;
                     let val = matrix.get(actual_best_row, actual_col).abs();
                     if val > col_max {
                         col_max = val;
@@ -1301,8 +1299,8 @@ where
                 if col_max > max_val * improvement_threshold {
                     // Recompute row pivot for the new column
                     max_val = T::zero();
-                    for i in k..n {
-                        let actual_row = row_perm[i];
+                    for (idx, &actual_row) in row_perm.iter().enumerate().skip(k).take(n - k) {
+                        let i = k + idx;
                         let val = matrix.get(actual_row, col_perm[best_col]).abs();
                         if val > max_val {
                             max_val = val;

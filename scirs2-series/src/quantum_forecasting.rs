@@ -2143,10 +2143,10 @@ mod quantum_advanced_tests {
         assert_eq!(pred_interference.len(), 2);
 
         // Different methods should produce different results
-        let mut different = false;
+        let mut _different = false;
         for i in 0..2 {
             if (pred_voting[i] - pred_interference[i]).abs() > 1e-6 {
-                different = true;
+                _different = true;
                 break;
             }
         }
@@ -2231,11 +2231,11 @@ mod quantum_advanced_tests {
         let mut quantum_state = QuantumState::<f64>::new(3);
         quantum_state.create_superposition();
 
-        let correction_applied = qec.detect_and_correct(&mut quantum_state).unwrap();
+        let _correction_applied = qec.detect_and_correct(&mut quantum_state).unwrap();
         // Should attempt correction for superposition state
 
         // Test error statistics
-        let (total, success_rate, confidence) = qec.get_error_statistics();
+        let (_total, success_rate, confidence) = qec.get_error_statistics();
         assert!(success_rate >= 0.0 && success_rate <= 1.0);
         assert!(confidence >= 0.0 && confidence <= 1.0);
 
@@ -2282,8 +2282,8 @@ mod quantum_advanced_tests {
         assert_eq!(advantage_metrics.advantage_threshold, 1000);
 
         // Test quantum advantage detection
-        let has_advantage_small = qap.has_quantum_advantage(100);
-        let has_advantage_large = qap.has_quantum_advantage(2000);
+        let _has_advantage_small = qap.has_quantum_advantage(100);
+        let _has_advantage_large = qap.has_quantum_advantage(2000);
 
         // Small problems typically don't show quantum advantage
         // Large problems might (depends on speedup and accuracy)
@@ -2291,7 +2291,7 @@ mod quantum_advanced_tests {
 
     #[test]
     fn test_quantum_encoding_strategies() {
-        let feature_map = QuantumFeatureMap::<f64> {
+        let _feature_map = QuantumFeatureMap::<f64> {
             encoding: QuantumEncoding::AngleEncoding,
             num_qubits: 3,
             parameters: Array2::zeros((3, 3)),

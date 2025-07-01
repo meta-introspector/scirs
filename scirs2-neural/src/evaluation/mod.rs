@@ -176,7 +176,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + std::fmt::Display + Send
             // use rand::rngs::SmallRng;
             use rand::seq::SliceRandom;
             // use rand::SeedableRng;
-            let mut rng = rand::rng();
+            let mut rng = ndarray_rand::rand::thread_rng();
             indices.shuffle(&mut rng);
         }
 

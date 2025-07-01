@@ -45,20 +45,20 @@ fn main() {
 
             println!("Maximum orthogonality error: {:.2e}", max_ortho_error);
 
-            // Check if we meet the 1e-10 precision requirement
-            if max_error < 1e-10 && max_ortho_error < 1e-10 {
+            // Check if we meet the 1e-12 precision requirement (ultrathink mode)
+            if max_error < 1e-12 && max_ortho_error < 1e-12 {
                 println!("✅ SUCCESS: All precision requirements met!");
             } else {
                 println!("❌ PRECISION ISSUE:");
-                if max_error >= 1e-10 {
+                if max_error >= 1e-12 {
                     println!(
-                        "   A*V = V*Λ error {:.2e} exceeds 1e-10 tolerance",
+                        "   A*V = V*Λ error {:.2e} exceeds 1e-12 tolerance",
                         max_error
                     );
                 }
-                if max_ortho_error >= 1e-10 {
+                if max_ortho_error >= 1e-12 {
                     println!(
-                        "   Orthogonality error {:.2e} exceeds 1e-10 tolerance",
+                        "   Orthogonality error {:.2e} exceeds 1e-12 tolerance",
                         max_ortho_error
                     );
                 }

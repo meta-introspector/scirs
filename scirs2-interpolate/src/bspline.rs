@@ -2019,7 +2019,7 @@ where
         }
 
         // Get the derivative spline
-        let deriv_spline = self.derivative(order)?;
+        let deriv_spline = self.derivative_spline(order)?;
         deriv_spline.evaluate(x)
     }
 }

@@ -15,7 +15,7 @@ use crate::utils::positional_encoding::{PositionalEncoding, SinusoidalPositional
 
 use ndarray::{Array, Axis, IxDyn, ScalarOperand};
 use num_traits::Float;
-use rand::{rngs::SmallRng, SeedableRng};
+use ndarray_rand::rand::{rngs::SmallRng, SeedableRng};
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 

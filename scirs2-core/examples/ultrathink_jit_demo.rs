@@ -16,14 +16,13 @@
 //! - Cross-platform code generation
 //! - Real-time performance monitoring and analytics
 
-use scirs2_core::error::Result;
+use scirs2_core::error::CoreResult;
 use scirs2_core::ultrathink_jit_compilation::{
-    CompiledKernel, JitAnalytics, JitCompilerConfig, KernelMetadata, OptimizationResults,
-    PerformanceImprovement, UltrathinkJitCompiler,
+    CompiledKernel, JitCompilerConfig, UltrathinkJitCompiler,
 };
 use std::time::{Duration, Instant};
 
-fn main() -> Result<()> {
+fn main() -> CoreResult<()> {
     println!("🚀 SciRS2 Ultrathink JIT Compilation Framework Demo");
     println!("====================================================\n");
 
@@ -43,7 +42,7 @@ struct UltrathinkJitDemo {
 
 impl UltrathinkJitDemo {
     /// Create a new JIT demonstration
-    fn new() -> Result<Self> {
+    fn new() -> CoreResult<Self> {
         // Configure JIT compiler for maximum performance
         let config = JitCompilerConfig {
             enable_aggressive_optimization: true,
@@ -72,7 +71,7 @@ impl UltrathinkJitDemo {
     }
 
     /// Run the complete JIT compilation demo
-    fn run_demo(&self) -> Result<()> {
+    fn run_demo(&self) -> CoreResult<()> {
         println!("📋 Demo Overview:");
         println!("  - Mathematical kernel compilation");
         println!("  - Matrix operations optimization");
@@ -108,7 +107,7 @@ impl UltrathinkJitDemo {
     }
 
     /// Demonstrate basic kernel compilation
-    fn demonstrate_basic_compilation(&self) -> Result<()> {
+    fn demonstrate_basic_compilation(&self) -> CoreResult<()> {
         println!("🔧 Phase 1: Basic Kernel Compilation");
         println!("====================================");
 
@@ -133,10 +132,7 @@ impl UltrathinkJitDemo {
             "   - Machine code size: {} bytes",
             compiled_scalar.compiled_module.machine_code.len()
         );
-        println!(
-            "   - Optimization level: {}",
-            compiled_scalar.metadata.optimization_level
-        );
+        println!("   - Kernel name: {}", compiled_scalar.metadata.name);
 
         // Vector addition kernel with SIMD optimization
         let vector_kernel = r#"
@@ -165,7 +161,7 @@ impl UltrathinkJitDemo {
     }
 
     /// Demonstrate mathematical kernel compilation
-    fn demonstrate_mathematical_kernels(&self) -> Result<()> {
+    fn demonstrate_mathematical_kernels(&self) -> CoreResult<()> {
         println!("\n\n🧮 Phase 2: Mathematical Kernels");
         println!("=================================");
 
@@ -303,10 +299,7 @@ impl UltrathinkJitDemo {
                 "   - Compilation time: {:.2} ms",
                 compilation_time.as_millis()
             );
-            println!(
-                "   - Target architecture: {}",
-                compiled_kernel.metadata.target_arch
-            );
+            println!("   - Target architecture: native");
             println!(
                 "   - Execution samples: {}",
                 compiled_kernel.performance.execution_times.len()
@@ -324,7 +317,7 @@ impl UltrathinkJitDemo {
     }
 
     /// Demonstrate matrix operations
-    fn demonstrate_matrix_operations(&self) -> Result<()> {
+    fn demonstrate_matrix_operations(&self) -> CoreResult<()> {
         println!("\n\n🔢 Phase 3: Matrix Operations");
         println!("=============================");
 
@@ -380,7 +373,7 @@ impl UltrathinkJitDemo {
     }
 
     /// Demonstrate signal processing kernels
-    fn demonstrate_signal_processing(&self) -> Result<()> {
+    fn demonstrate_signal_processing(&self) -> CoreResult<()> {
         println!("\n\n📡 Phase 4: Signal Processing Kernels");
         println!("=====================================");
 
@@ -448,7 +441,7 @@ impl UltrathinkJitDemo {
     }
 
     /// Demonstrate performance profiling
-    fn demonstrate_performance_profiling(&self) -> Result<()> {
+    fn demonstrate_performance_profiling(&self) -> CoreResult<()> {
         println!("\n\n📈 Phase 5: Performance Profiling");
         println!("==================================");
 
@@ -514,7 +507,7 @@ impl UltrathinkJitDemo {
     }
 
     /// Demonstrate adaptive optimization
-    fn demonstrate_adaptive_optimization(&self) -> Result<()> {
+    fn demonstrate_adaptive_optimization(&self) -> CoreResult<()> {
         println!("\n\n🧠 Phase 6: Adaptive Optimization");
         println!("==================================");
 
@@ -559,7 +552,7 @@ impl UltrathinkJitDemo {
     }
 
     /// Demonstrate caching system
-    fn demonstrate_caching_system(&self) -> Result<()> {
+    fn demonstrate_caching_system(&self) -> CoreResult<()> {
         println!("\n\n💾 Phase 7: Intelligent Caching");
         println!("===============================");
 
@@ -610,7 +603,7 @@ impl UltrathinkJitDemo {
     }
 
     /// Demonstrate analytics and insights
-    fn demonstrate_analytics(&self) -> Result<()> {
+    fn demonstrate_analytics(&self) -> CoreResult<()> {
         println!("\n\n📊 Phase 8: Analytics and Insights");
         println!("==================================");
 
@@ -721,7 +714,7 @@ impl UltrathinkJitDemo {
             ret void
         }}
         "#,
-            size, size, size, size, size, size, size, size
+            size, size, size, size, size, size, size
         )
     }
 
@@ -778,7 +771,7 @@ impl UltrathinkJitDemo {
                 ret void
             }
             "#.to_string(),
-            
+
             "fir_filter" => r#"
             define double @fir_filter(double* %input, double* %coeffs, i32 %taps, i32 %delay) {
             entry:
@@ -812,7 +805,7 @@ impl UltrathinkJitDemo {
                 ret double %result
             }
             "#.to_string(),
-            
+
             _ => r#"
             define double @default_signal_kernel(double %input) {
                 ret double %input
@@ -822,7 +815,7 @@ impl UltrathinkJitDemo {
     }
 
     /// Simulate kernel execution for performance measurement
-    fn simulate_kernel_execution(&self, kernel: &CompiledKernel) -> Result<()> {
+    fn simulate_kernel_execution(&self, kernel: &CompiledKernel) -> CoreResult<()> {
         println!("   ⚡ Simulating execution...");
 
         // Simulate execution time based on complexity

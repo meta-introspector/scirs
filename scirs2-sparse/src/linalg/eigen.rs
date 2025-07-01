@@ -1350,8 +1350,8 @@ where
             indices.insert(insert_pos, i);
 
             // Update indptr for all subsequent rows
-            for j in (i + 1)..=n {
-                indptr[j] += 1;
+            for indptr_item in indptr.iter_mut().take(n + 1).skip(i + 1) {
+                *indptr_item += 1;
             }
         }
     }
@@ -1654,7 +1654,7 @@ enum SolverType {
     /// Cholesky factorization (for positive definite matrices)
     Cholesky,
     /// LDLT factorization (for symmetric indefinite matrices)
-    LDLT,
+    Ldlt,
     /// Iterative solver (fallback)
     Iterative,
 }
@@ -1665,7 +1665,7 @@ where
     T: Float + Debug + Copy + 'static + std::iter::Sum,
 {
     Cholesky(crate::linalg::decomposition::CholeskyResult<T>),
-    LDLT(crate::linalg::decomposition::LDLTResult<T>),
+    Ldlt(crate::linalg::decomposition::LDLTResult<T>),
 }
 
 impl<T> EnhancedShiftInvertSolver<T>
@@ -1707,8 +1707,8 @@ where
             if ldlt_result.success {
                 return Ok(Self {
                     matrix: matrix.clone(),
-                    factorization: Some(FactorizationData::LDLT(ldlt_result)),
-                    solver_type: SolverType::LDLT,
+                    factorization: Some(FactorizationData::Ldlt(ldlt_result)),
+                    solver_type: SolverType::Ldlt,
                 });
             }
         }
@@ -1730,7 +1730,7 @@ where
     pub fn solve(&self, b: &Array1<T>) -> SparseResult<Array1<T>> {
         match &self.factorization {
             Some(FactorizationData::Cholesky(chol)) => self.solve_with_cholesky(chol, b),
-            Some(FactorizationData::LDLT(ldlt)) => self.solve_with_ldlt(ldlt, b),
+            Some(FactorizationData::Ldlt(ldlt)) => self.solve_with_ldlt(ldlt, b),
             None => self.solve_iteratively(b),
         }
     }

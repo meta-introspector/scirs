@@ -4,7 +4,7 @@ use crate::error::{NeuralError, Result};
 use crate::layers::{Layer, ParamLayer};
 use ndarray::{Array, ArrayView, Ix2, IxDyn, ScalarOperand};
 use num_traits::Float;
-use rand::Rng;
+use ndarray_rand::rand::Rng;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 
@@ -151,7 +151,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> RNN<F> {
         // Initialize input-to-hidden weights
         let mut weight_ih_vec: Vec<F> = Vec::with_capacity(hidden_size * input_size);
         for _ in 0..(hidden_size * input_size) {
-            let rand_val = rng.random_range(-1.0..1.0);
+            let rand_val = rng.gen_range(-1.0..1.0);
             let val = F::from(rand_val).ok_or_else(|| {
                 NeuralError::InvalidArchitecture("Failed to convert random value".to_string())
             })?;
@@ -166,7 +166,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> RNN<F> {
         // Initialize hidden-to-hidden weights
         let mut weight_hh_vec: Vec<F> = Vec::with_capacity(hidden_size * hidden_size);
         for _ in 0..(hidden_size * hidden_size) {
-            let rand_val = rng.random_range(-1.0..1.0);
+            let rand_val = rng.gen_range(-1.0..1.0);
             let val = F::from(rand_val).ok_or_else(|| {
                 NeuralError::InvalidArchitecture("Failed to convert random value".to_string())
             })?;

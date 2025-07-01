@@ -11,7 +11,7 @@ use super::noise_mechanisms::{
 };
 use super::{AccountingMethod, DifferentialPrivacyConfig, NoiseMechanism, PrivacyBudget};
 use crate::error::OptimizerError;
-use ndarray::{Array, Array1, Array2, ArrayBase, Data, DataMut, Dimension};
+use ndarray::{Array1, Array2, Dimension};
 use num_traits::Float;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha20Rng;
@@ -19,7 +19,8 @@ use std::collections::{HashMap, VecDeque};
 
 // Additional imports for advanced federated learning
 use scirs2_core::parallel_ops::*;
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::Arc;
+#[allow(unused_imports)]
 use std::thread;
 
 /// Federated differential privacy coordinator

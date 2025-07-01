@@ -203,7 +203,7 @@ impl UltraAdvancedSTDP {
         self.calcium_concentration = self.calcium_concentration.min(1.0);
     }
 
-    fn update_metaplasticity(&mut self, current_time: f64, objective_improvement: f64) {
+    fn update_metaplasticity(&mut self, _current_time: f64, objective_improvement: f64) {
         // Store recent activity
         self.recent_activity.push_back(objective_improvement);
         if self.recent_activity.len() > 1000 {
@@ -229,7 +229,7 @@ impl UltraAdvancedSTDP {
         }
     }
 
-    fn update_homeostasis(&mut self, pre_spike: bool, post_spike: bool, dt: f64) {
+    fn update_homeostasis(&mut self, _pre_spike: bool, post_spike: bool, dt: f64) {
         // Update current firing rate estimate
         let spike_rate = if post_spike { 1.0 / dt } else { 0.0 };
         self.current_firing_rate = 0.999 * self.current_firing_rate + 0.001 * spike_rate;
@@ -314,7 +314,7 @@ impl UltraAdvancedSTDP {
         &self,
         pre_spike: bool,
         post_spike: bool,
-        current_weight: f64,
+        _current_weight: f64,
     ) -> f64 {
         if !pre_spike && !post_spike {
             return 0.0;
@@ -608,7 +608,7 @@ impl UltraSTDPNetwork {
     fn encode_parameters_to_spikes(
         &self,
         params: &Array1<f64>,
-        current_time: f64,
+        _current_time: f64,
     ) -> Vec<Vec<bool>> {
         let mut spike_patterns = Vec::new();
 

@@ -16,6 +16,8 @@
 
 use crate::error::Result;
 use crate::streaming::{Frame, ProcessingStage};
+#[cfg(test)]
+use crate::streaming::FrameMetadata;
 use ndarray::{Array1, Array2};
 use rand::prelude::*;
 use rand::rng;

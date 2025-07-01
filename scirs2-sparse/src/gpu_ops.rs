@@ -740,21 +740,19 @@ impl SpMVKernel {
         if rows > 1000 {
             use scirs2_core::parallel_ops::*;
 
-            let results: Vec<T> = (0..rows)
-                .into_par_iter()
-                .map(|row| {
-                    let mut sum = T::zero();
-                    let start = indptr_slice[row];
-                    let end = indptr_slice[row + 1];
+            let row_indices: Vec<usize> = (0..rows).collect();
+            let results: Vec<T> = parallel_map(&row_indices, |&row| {
+                let mut sum = T::zero();
+                let start = indptr_slice[row];
+                let end = indptr_slice[row + 1];
 
-                    // Vectorized inner loop when possible using SIMD
-                    for idx in start..end {
-                        let col = indices_slice[idx];
-                        sum = sum + data_slice[idx] * x_slice[col];
-                    }
-                    sum
-                })
-                .collect();
+                // Vectorized inner loop when possible using SIMD
+                for idx in start..end {
+                    let col = indices_slice[idx];
+                    sum = sum + data_slice[idx] * x_slice[col];
+                }
+                sum
+            });
 
             // Copy results back to y_slice
             for (i, result) in results.into_iter().enumerate() {

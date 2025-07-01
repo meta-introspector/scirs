@@ -722,61 +722,106 @@ pub struct ArchitectureSearchSpace {
 #[derive(Debug, Clone, PartialEq)]
 pub enum LayerType {
     /// Convolutional layer
-    Convolution { kernel_size: usize, stride: usize },
+    Convolution { 
+        /// Size of the convolution kernel
+        kernel_size: usize, 
+        /// Stride of the convolution
+        stride: usize 
+    },
     /// Separable convolution
-    SeparableConv { kernel_size: usize },
+    SeparableConv { 
+        /// Size of the convolution kernel
+        kernel_size: usize 
+    },
     /// Dilated convolution
-    DilatedConv { kernel_size: usize, dilation: usize },
+    DilatedConv { 
+        /// Size of the convolution kernel
+        kernel_size: usize, 
+        /// Dilation factor
+        dilation: usize 
+    },
     /// Depthwise convolution
-    DepthwiseConv { kernel_size: usize },
+    DepthwiseConv { 
+        /// Size of the convolution kernel
+        kernel_size: usize 
+    },
     /// Pooling layer
-    Pooling { pool_type: PoolingType, size: usize },
+    Pooling { 
+        /// Type of pooling operation
+        pool_type: PoolingType, 
+        /// Size of the pooling window
+        size: usize 
+    },
     /// Normalization layer
-    Normalization { norm_type: NormalizationType },
+    Normalization { 
+        /// Type of normalization
+        norm_type: NormalizationType 
+    },
     /// Attention mechanism
-    Attention { attention_type: AttentionType },
+    Attention { 
+        /// Type of attention mechanism
+        attention_type: AttentionType 
+    },
 }
 
 /// Pooling types
 #[derive(Debug, Clone, PartialEq)]
 pub enum PoolingType {
+    /// Maximum pooling
     Max,
+    /// Average pooling
     Average,
+    /// Adaptive pooling
     Adaptive,
 }
 
 /// Normalization types
 #[derive(Debug, Clone, PartialEq)]
 pub enum NormalizationType {
+    /// Batch normalization
     Batch,
+    /// Layer normalization
     Layer,
+    /// Instance normalization
     Instance,
 }
 
 /// Attention types
 #[derive(Debug, Clone, PartialEq)]
 pub enum AttentionType {
+    /// Self-attention mechanism
     SelfAttention,
+    /// Cross-attention mechanism
     CrossAttention,
+    /// Spatial attention
     Spatial,
 }
 
 /// Activation function types
 #[derive(Debug, Clone, PartialEq)]
 pub enum ActivationType {
+    /// ReLU activation
     ReLU,
+    /// Leaky ReLU activation
     LeakyReLU,
+    /// Swish activation
     Swish,
+    /// GELU activation
     GELU,
+    /// Mish activation
     Mish,
 }
 
 /// Connection patterns
 #[derive(Debug, Clone, PartialEq)]
 pub enum ConnectionType {
+    /// Sequential connections
     Sequential,
+    /// Skip connections
     Skip,
+    /// Dense connections
     Dense,
+    /// Attention-based connections
     Attention,
 }
 
@@ -816,18 +861,30 @@ pub enum SearchStrategy {
     /// Random search
     Random,
     /// Evolutionary search
-    Evolutionary { population_size: usize },
+    Evolutionary { 
+        /// Size of the evolutionary population
+        population_size: usize 
+    },
     /// Reinforcement learning-based
-    ReinforcementLearning { controller_params: RLLearningParams },
+    ReinforcementLearning { 
+        /// Parameters for RL controller
+        controller_params: RLLearningParams 
+    },
     /// Bayesian optimization
-    BayesianOptimization { acquisition_fn: AcquisitionFunction },
+    BayesianOptimization { 
+        /// Acquisition function to use
+        acquisition_fn: AcquisitionFunction 
+    },
 }
 
 /// Acquisition functions for Bayesian optimization
 #[derive(Debug, Clone)]
 pub enum AcquisitionFunction {
+    /// Expected improvement acquisition
     ExpectedImprovement,
+    /// Upper confidence bound acquisition
     UpperConfidenceBound,
+    /// Probability of improvement acquisition
     ProbabilityOfImprovement,
 }
 
@@ -1165,11 +1222,24 @@ pub enum ModelType {
     /// Linear regression
     LinearRegression,
     /// ARIMA model
-    ARIMA { p: usize, d: usize, q: usize },
+    ARIMA { 
+        /// Autoregressive order
+        p: usize, 
+        /// Degree of differencing
+        d: usize, 
+        /// Moving average order
+        q: usize 
+    },
     /// Neural network
-    NeuralNetwork { hidden_layers: Vec<usize> },
+    NeuralNetwork { 
+        /// Sizes of hidden layers
+        hidden_layers: Vec<usize> 
+    },
     /// Ensemble method
-    Ensemble { models: Vec<ModelType> },
+    Ensemble { 
+        /// Component models in the ensemble
+        models: Vec<ModelType> 
+    },
 }
 
 /// Scaling prediction
@@ -1426,17 +1496,24 @@ pub struct ScalingRecommendation {
 /// Resource types for scaling
 #[derive(Debug, Clone)]
 pub enum ResourceType {
+    /// CPU resources
     CPU,
+    /// Memory resources
     Memory,
+    /// GPU resources
     GPU,
+    /// Network resources
     Network,
 }
 
 /// Scaling actions
 #[derive(Debug, Clone)]
 pub enum ScalingAction {
+    /// Scale up resources
     ScaleUp,
+    /// Scale down resources
     ScaleDown,
+    /// Maintain current resource levels
     Maintain,
 }
 

@@ -6,7 +6,7 @@ use crate::utils::Dataset;
 use ndarray::{Array1, Array2};
 use rand::prelude::*;
 use rand::rngs::StdRng;
-use rand::thread_rng;
+use rand::rng;
 use rand_distr::Distribution;
 // Use local GPU implementation instead of core to avoid feature flag issues
 use crate::gpu::GpuBackend as LocalGpuBackend;
@@ -65,7 +65,7 @@ pub fn make_classification(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -194,7 +194,7 @@ pub fn make_regression(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -282,7 +282,7 @@ pub fn make_time_series(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -389,7 +389,7 @@ pub fn make_blobs(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -480,7 +480,7 @@ pub fn make_spirals(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -556,7 +556,7 @@ pub fn make_moons(n_samples: usize, noise: f64, random_seed: Option<u64>) -> Res
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -652,7 +652,7 @@ pub fn make_circles(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -738,7 +738,7 @@ pub fn make_swiss_roll(n_samples: usize, noise: f64, random_seed: Option<u64>) -
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -830,7 +830,7 @@ pub fn make_anisotropic_blobs(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -967,7 +967,7 @@ pub fn make_hierarchical_clusters(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -1090,7 +1090,7 @@ pub fn inject_missing_data(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -1187,7 +1187,7 @@ pub fn inject_outliers(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -1301,7 +1301,7 @@ pub fn add_time_series_noise(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -1654,7 +1654,7 @@ fn make_classification_gpu_impl(
 /// Generate a chunk of classification data on GPU
 #[allow(dead_code)]
 fn generate_classification_chunk_gpu(
-    gpu_context: &GpuContext,
+    _gpu_context: &GpuContext,
     n_samples: usize,
     n_features: usize,
     n_classes: usize,
@@ -1746,7 +1746,7 @@ fn generate_classification_chunk_gpu(
 
 /// GPU-optimized classification data generation using buffer operations
 fn generate_classification_gpu_optimized(
-    gpu_context: &GpuContext,
+    _gpu_context: &GpuContext,
     centroids: &[f64],
     n_samples: usize,
     n_features: usize,
@@ -1758,134 +1758,58 @@ fn generate_classification_gpu_optimized(
     // For now, use CPU-based implementation since core GPU features are not available
     // TODO: Implement proper GPU acceleration when core GPU features are stabilized
 
-    // Create GPU buffers for data and targets
-    let data_buffer = gpu_context.create_buffer::<f64>(n_samples * n_features);
-    let targets_buffer = gpu_context.create_buffer::<f64>(n_samples);
-    let centroids_buffer = gpu_context.create_buffer_from_slice(centroids);
+    // CPU fallback implementation since GPU features are not available
+    use rand_distr::Distribution;
+    let normal = rand_distr::Normal::new(0.0, 1.0).unwrap();
+    
+    let mut data = vec![0.0; n_samples * n_features];
+    let mut targets = vec![0.0; n_samples];
 
-    // Generate random seeds for each sample on GPU
-    let mut seeds: Vec<u64> = (0..n_samples).map(|_| rng.random::<u64>()).collect();
-    let seeds_buffer = gpu_context.create_buffer_from_slice(&seeds);
-
-    // Use GPU kernels for parallel data generation
-    gpu_context.execute(|compiler| {
-        // Compile the classification generation kernel
-        let kernel_source = r#"
-            #version 450
-            layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
-            
-            layout(set = 0, binding = 0) buffer DataBuffer {
-                double data[];
+    // Samples per class
+    let samples_per_class = n_samples / n_classes;
+    let remainder = n_samples % n_classes;
+    
+    let mut sample_idx = 0;
+    
+    for class in 0..n_classes {
+        let n_samples_class = if class < remainder {
+            samples_per_class + 1
+        } else {
+            samples_per_class
+        };
+        
+        // Samples per cluster within this class
+        let samples_per_cluster = n_samples_class / n_clusters_per_class;
+        let cluster_remainder = n_samples_class % n_clusters_per_class;
+        
+        for cluster in 0..n_clusters_per_class {
+            let n_samples_cluster = if cluster < cluster_remainder {
+                samples_per_cluster + 1
+            } else {
+                samples_per_cluster
             };
             
-            layout(set = 0, binding = 1) buffer TargetsBuffer {
-                double targets[];
-            };
+            let centroid_idx = class * n_clusters_per_class + cluster;
             
-            layout(set = 0, binding = 2) buffer CentroidsBuffer {
-                double centroids[];
-            };
-            
-            layout(set = 0, binding = 3) buffer SeedsBuffer {
-                uint64_t seeds[];
-            };
-            
-            layout(push_constant) uniform Params {
-                uint n_samples;
-                uint n_features;
-                uint n_classes;
-                uint n_clusters_per_class;
-                uint n_informative;
-            } params;
-            
-            // Simple pseudo-random number generator
-            uint wang_hash(uint seed) {
-                seed = (seed ^ 61u) ^ (seed >> 16u);
-                seed *= 9u;
-                seed = seed ^ (seed >> 4u);
-                seed *= 0x27d4eb2du;
-                seed = seed ^ (seed >> 15u);
-                return seed;
-            }
-            
-            double random_normal(uint seed, uint index) {
-                uint h1 = wang_hash(seed + index);
-                uint h2 = wang_hash(seed + index + 1u);
-                double u1 = double(h1) / double(0xFFFFFFFFu);
-                double u2 = double(h2) / double(0xFFFFFFFFu);
-                
-                // Box-Muller transform
-                return sqrt(-2.0 * log(u1)) * cos(6.28318530718 * u2);
-            }
-            
-            void main() {
-                uint sample_idx = gl_GlobalInvocationID.x;
-                if (sample_idx >= params.n_samples) return;
-                
-                uint seed = uint(seeds[sample_idx]);
-                
-                // Determine class and cluster for this sample
-                uint samples_per_class = params.n_samples / params.n_classes;
-                uint remainder = params.n_samples % params.n_classes;
-                
-                uint class_id = 0;
-                uint cumulative_samples = 0;
-                
-                for (uint c = 0; c < params.n_classes; c++) {
-                    uint n_samples_class = (c < remainder) ? samples_per_class + 1 : samples_per_class;
-                    if (sample_idx < cumulative_samples + n_samples_class) {
-                        class_id = c;
-                        break;
-                    }
-                    cumulative_samples += n_samples_class;
-                }
-                
-                uint local_sample_idx = sample_idx - cumulative_samples;
-                uint samples_per_cluster = (samples_per_class + ((class_id < remainder) ? 1 : 0)) / params.n_clusters_per_class;
-                uint cluster_id = local_sample_idx / samples_per_cluster;
-                
-                uint centroid_idx = class_id * params.n_clusters_per_class + cluster_id;
-                
-                // Generate informative features around centroid
-                for (uint j = 0; j < params.n_informative; j++) {
-                    double centroid_val = centroids[centroid_idx * params.n_informative + j];
-                    double noise = random_normal(seed, j) * 0.3;
-                    data[sample_idx * params.n_features + j] = centroid_val + noise;
+            for _ in 0..n_samples_cluster {
+                // Generate informative features around cluster centroid
+                for j in 0..n_informative {
+                    let centroid_val = centroids[centroid_idx * n_informative + j];
+                    data[sample_idx * n_features + j] = centroid_val + 0.3 * normal.sample(rng);
                 }
                 
                 // Generate noise features
-                for (uint j = params.n_informative; j < params.n_features; j++) {
-                    data[sample_idx * params.n_features + j] = random_normal(seed, j + 1000u);
+                for j in n_informative..n_features {
+                    data[sample_idx * n_features + j] = normal.sample(rng);
                 }
                 
-                // Set target
-                targets[sample_idx] = double(class_id);
+                targets[sample_idx] = class as f64;
+                sample_idx += 1;
             }
-        "#;
-
-        let kernel = compiler.compile(kernel_source)?;
-
-        // Set kernel parameters
-        kernel.set_buffer("data", &data_buffer);
-        kernel.set_buffer("targets", &targets_buffer);
-        kernel.set_buffer("centroids", &centroids_buffer);
-        kernel.set_buffer("seeds", &seeds_buffer);
-        kernel.set_u32("n_samples", n_samples as u32);
-        kernel.set_u32("n_features", n_features as u32);
-        kernel.set_u32("n_classes", n_classes as u32);
-        kernel.set_u32("n_clusters_per_class", n_clusters_per_class as u32);
-        kernel.set_u32("n_informative", n_informative as u32);
-
-        // Dispatch the kernel
-        let work_groups = [(n_samples + 255) / 256, 1, 1];
-        kernel.dispatch(work_groups);
-
-        Ok(())
-    }).map_err(|e| DatasetsError::Other(format!("GPU kernel execution failed: {}", e)))?;
-
-    // Copy results back to CPU
-    let data = data_buffer.to_vec();
-    let targets = targets_buffer.to_vec();
+        }
+    }
+    
+    // TODO: Future GPU implementation placeholder - currently using CPU fallback
 
     Ok((data, targets))
 }
@@ -2012,7 +1936,7 @@ fn make_regression_gpu_impl(
 /// Generate a chunk of regression data on GPU
 #[allow(dead_code)]
 fn generate_regression_chunk_gpu(
-    gpu_context: &GpuContext,
+    _gpu_context: &GpuContext,
     n_samples: usize,
     n_features: usize,
     n_informative: usize,
@@ -2069,7 +1993,7 @@ fn generate_regression_chunk_gpu(
 
 /// GPU-optimized regression data generation using buffer operations and matrix multiplication
 fn generate_regression_gpu_optimized(
-    gpu_context: &GpuContext,
+    _gpu_context: &GpuContext,
     data: &[f64],
     coefficients: &[f64],
     n_samples: usize,
@@ -2081,109 +2005,30 @@ fn generate_regression_gpu_optimized(
     // For now, use CPU-based implementation since core GPU features are not available
     // TODO: Implement proper GPU acceleration when core GPU features are stabilized
 
-    // Create GPU buffers
-    let data_buffer = gpu_context.create_buffer_from_slice(data);
-    let coefficients_buffer = gpu_context.create_buffer_from_slice(coefficients);
-    let targets_buffer = gpu_context.create_buffer::<f64>(n_samples);
+    // CPU fallback implementation since GPU features are not available
+    use rand_distr::Distribution;
+    let normal = rand_distr::Normal::new(0.0, 1.0).unwrap();
+    
+    let mut targets = vec![0.0; n_samples];
+    
+    // Matrix multiplication for regression targets
+    for i in 0..n_samples {
+        let mut target = 0.0;
+        for j in 0..n_informative {
+            target += data[i * n_features + j] * coefficients[j];
+        }
+        
+        // Add noise
+        if noise > 0.0 {
+            target += noise * normal.sample(rng);
+        }
+        
+        targets[i] = target;
+    }
 
-    // Generate noise seeds for each sample
-    let noise_seeds: Vec<u64> = (0..n_samples).map(|_| rng.random::<u64>()).collect();
-    let noise_seeds_buffer = gpu_context.create_buffer_from_slice(&noise_seeds);
-
-    // Use GPU kernel for parallel matrix multiplication and noise addition
-    gpu_context
-        .execute(|compiler| {
-            let kernel_source = r#"
-            #version 450
-            layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
-            
-            layout(set = 0, binding = 0) buffer DataBuffer {
-                double data[];
-            };
-            
-            layout(set = 0, binding = 1) buffer CoefficientsBuffer {
-                double coefficients[];
-            };
-            
-            layout(set = 0, binding = 2) buffer TargetsBuffer {
-                double targets[];
-            };
-            
-            layout(set = 0, binding = 3) buffer NoiseSeedsBuffer {
-                uint64_t noise_seeds[];
-            };
-            
-            layout(push_constant) uniform Params {
-                uint n_samples;
-                uint n_features;
-                uint n_informative;
-                double noise_std;
-            } params;
-            
-            // Pseudo-random number generator for noise
-            uint wang_hash(uint seed) {
-                seed = (seed ^ 61u) ^ (seed >> 16u);
-                seed *= 9u;
-                seed = seed ^ (seed >> 4u);
-                seed *= 0x27d4eb2du;
-                seed = seed ^ (seed >> 15u);
-                return seed;
-            }
-            
-            double random_normal(uint seed) {
-                uint h1 = wang_hash(seed);
-                uint h2 = wang_hash(seed + 1u);
-                double u1 = double(h1) / double(0xFFFFFFFFu);
-                double u2 = double(h2) / double(0xFFFFFFFFu);
-                
-                // Box-Muller transform
-                return sqrt(-2.0 * log(u1)) * cos(6.28318530718 * u2);
-            }
-            
-            void main() {
-                uint sample_idx = gl_GlobalInvocationID.x;
-                if (sample_idx >= params.n_samples) return;
-                
-                // Perform matrix multiplication for this sample
-                double target_val = 0.0;
-                for (uint j = 0; j < params.n_informative; j++) {
-                    target_val += data[sample_idx * params.n_features + j] * coefficients[j];
-                }
-                
-                // Add Gaussian noise
-                uint noise_seed = uint(noise_seeds[sample_idx]);
-                double noise = random_normal(noise_seed) * params.noise_std;
-                target_val += noise;
-                
-                targets[sample_idx] = target_val;
-            }
-        "#;
-
-            let kernel = compiler.compile(kernel_source)?;
-
-            // Set kernel parameters
-            kernel.set_buffer("data", &data_buffer);
-            kernel.set_buffer("coefficients", &coefficients_buffer);
-            kernel.set_buffer("targets", &targets_buffer);
-            kernel.set_buffer("noise_seeds", &noise_seeds_buffer);
-            kernel.set_u32("n_samples", n_samples as u32);
-            kernel.set_u32("n_features", n_features as u32);
-            kernel.set_u32("n_informative", n_informative as u32);
-            kernel.set_f64("noise_std", noise);
-
-            // Dispatch the kernel
-            let work_groups = [(n_samples + 255) / 256, 1, 1];
-            kernel.dispatch(work_groups);
-
-            Ok(())
-        })
-        .map_err(|e| {
-            DatasetsError::Other(format!("GPU regression kernel execution failed: {}", e))
-        })?;
-
-    // Copy results back to CPU
-    let targets = targets_buffer.to_vec();
     let data_vec = data.to_vec();
+
+    // TODO: Future GPU implementation placeholder - currently using CPU fallback
 
     Ok((data_vec, targets))
 }
@@ -2331,7 +2176,7 @@ fn make_blobs_gpu_impl(
 
 /// GPU-optimized blob center generation using parallel kernels
 fn generate_blobs_center_gpu(
-    gpu_context: &GpuContext,
+    _gpu_context: &GpuContext,
     centers: &Array2<f64>,
     center_idx: usize,
     n_samples_center: usize,
@@ -2343,11 +2188,30 @@ fn generate_blobs_center_gpu(
     // TODO: Implement proper GPU acceleration when core GPU features are stabilized
 
     // Extract center coordinates for this specific center
-    let center_coords: Vec<f64> = (0..n_features).map(|j| centers[[center_idx, j]]).collect();
+    let _center_coords: Vec<f64> = (0..n_features).map(|j| centers[[center_idx, j]]).collect();
 
-    // Create GPU buffers
-    let center_buffer = gpu_context.create_buffer_from_slice(&center_coords);
-    let data_buffer = gpu_context.create_buffer::<f64>(n_samples_center * n_features);
+    // CPU fallback implementation since GPU features are not available
+    use rand_distr::Distribution;
+    let normal = rand_distr::Normal::new(0.0, cluster_std).unwrap();
+    
+    let mut result = Vec::with_capacity(n_samples_center);
+    
+    for _ in 0..n_samples_center {
+        let mut sample = Vec::with_capacity(n_features);
+        for j in 0..n_features {
+            let center_val = centers[[center_idx, j]];
+            let noise = normal.sample(rng);
+            sample.push(center_val + noise);
+        }
+        result.push(sample);
+    }
+    
+    return Ok(result);
+    
+    // TODO: GPU implementation placeholder - using CPU fallback above
+    /*
+    let _center_buffer = (); // gpu_context.create_buffer_from_slice(&center_coords);
+    let _data_buffer = (); // gpu_context.create_buffer::<f64>(n_samples_center * n_features);
 
     // Generate random seeds for each sample
     let seeds: Vec<u64> = (0..n_samples_center).map(|_| rng.random::<u64>()).collect();
@@ -2457,7 +2321,7 @@ fn generate_blobs_center_gpu(
         result.push(sample);
     }
 
-    Ok(result)
+    */
 }
 
 /// Check if GPU is available for acceleration
@@ -2528,7 +2392,7 @@ pub fn make_s_curve(n_samples: usize, noise: f64, random_seed: Option<u64>) -> R
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -2581,7 +2445,7 @@ pub fn make_swiss_roll_advanced(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -2650,7 +2514,7 @@ pub fn make_severed_sphere(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -2708,7 +2572,7 @@ pub fn make_twin_peaks(n_samples: usize, noise: f64, random_seed: Option<u64>) -
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -2779,7 +2643,7 @@ pub fn make_helix(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -2831,7 +2695,7 @@ pub fn make_intersecting_manifolds(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -2917,7 +2781,7 @@ pub fn make_torus(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };

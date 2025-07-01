@@ -55,15 +55,20 @@ impl AdvancedPatternRecognizer {
 
         // Pre-compute data characteristics to avoid borrow conflicts
         let data_characteristics = self.characterize_data(data);
-        
-        // Run through specialized pattern networks
+
+        // Collect network analysis results first
+        let mut network_results = Vec::new();
         for network in &mut self.pattern_networks {
             let score = network.analyze(&features)?;
             let pattern_type = network.pattern_type.clone();
-            
-            // Check if pattern is novel (need to do this before inserting into pattern_scores)
+            network_results.push((pattern_type, score));
+        }
+
+        // Now process results without mutable borrow conflicts
+        for (pattern_type, score) in network_results {
+            // Check if pattern is novel
             let is_novel = self.is_novel_pattern(&pattern_type, score);
-            
+
             pattern_scores.insert(pattern_type.clone(), score);
 
             // Detect emergent patterns
@@ -82,8 +87,8 @@ impl AdvancedPatternRecognizer {
 
         // Cross-correlate patterns for meta-patterns
         let meta_patterns = self.detect_meta_patterns(&pattern_scores)?;
-        let optimization_recommendations = self
-            .generate_optimization_recommendations(&pattern_scores);
+        let optimization_recommendations =
+            self.generate_optimization_recommendations(&pattern_scores);
 
         Ok(AdvancedPatternAnalysis {
             pattern_scores,
@@ -97,23 +102,40 @@ impl AdvancedPatternRecognizer {
 
     /// Extract multi-scale features from data
     fn extract_multiscale_features(&self, data: &[u8]) -> Result<Array2<f32>> {
-        let mut features = Vec::new();
+        // Extract features for each scale separately to ensure consistent dimensions
+        let byte_features = self.extract_byte_level_features(data);
+        let local_features_4 = self.extract_local_structure_features(data, 4);
+        let local_features_16 = self.extract_local_structure_features(data, 16);
+        let global_features = self.extract_global_structure_features(data);
 
-        // Scale 1: Byte-level features
-        features.extend(self.extract_byte_level_features(data));
+        // Find the maximum number of features to ensure consistent dimensions
+        let max_features = [
+            byte_features.len(),
+            local_features_4.len(),
+            local_features_16.len(),
+            global_features.len(),
+        ]
+        .into_iter()
+        .max()
+        .unwrap_or(0);
 
-        // Scale 2: Local structure features (4-byte windows)
-        features.extend(self.extract_local_structure_features(data, 4));
+        // Create padded feature vectors and build the 2D array
+        let mut padded_features = Vec::with_capacity(4 * max_features);
+        
+        // Helper function to pad a feature vector
+        let pad_features = |mut features: Vec<f32>, target_len: usize| {
+            features.resize(target_len, 0.0);
+            features
+        };
+        
+        // Add all feature scales with consistent padding
+        padded_features.extend(pad_features(byte_features, max_features));
+        padded_features.extend(pad_features(local_features_4, max_features));
+        padded_features.extend(pad_features(local_features_16, max_features));
+        padded_features.extend(pad_features(global_features, max_features));
 
-        // Scale 3: Medium structure features (16-byte windows)
-        features.extend(self.extract_local_structure_features(data, 16));
-
-        // Scale 4: Global structure features
-        features.extend(self.extract_global_structure_features(data));
-
-        // Convert to 2D array (features x scales)
-        let feature_count = features.len() / 4;
-        let feature_array = Array2::from_shape_vec((4, feature_count), features)
+        // Convert to 2D array (4 scales x max_features)
+        let feature_array = Array2::from_shape_vec((4, max_features), padded_features)
             .map_err(|e| IoError::Other(format!("Feature extraction error: {}", e)))?;
 
         Ok(feature_array)
@@ -409,7 +431,7 @@ impl AdvancedPatternRecognizer {
         pattern_scores: &HashMap<String, f32>,
     ) -> Result<()> {
         let data_characteristics = self.characterize_data(data);
-        
+
         for (pattern_type, &score) in pattern_scores {
             let metadata = self
                 .pattern_database
@@ -795,44 +817,70 @@ impl PatternNetwork {
 
 // Supporting data structures
 
+/// Complete analysis result from advanced pattern recognition
 #[derive(Debug, Clone)]
 pub struct AdvancedPatternAnalysis {
+    /// Scores for each detected pattern type, ranging from 0.0 to 1.0
     pub pattern_scores: HashMap<String, f32>,
+    /// List of emergent patterns discovered during analysis
     pub emergent_patterns: Vec<EmergentPattern>,
+    /// Meta-patterns formed by correlations between multiple pattern types
     pub meta_patterns: Vec<MetaPattern>,
+    /// Overall complexity index of the analyzed data (0.0 to 1.0)
     pub complexity_index: f32,
+    /// Predictability score indicating how predictable the data is (0.0 to 1.0)
     pub predictability_score: f32,
+    /// Optimization recommendations based on the pattern analysis
     pub optimization_recommendations: Vec<OptimizationRecommendation>,
 }
 
+/// Represents an emergent pattern discovered during data analysis
 #[derive(Debug, Clone)]
 pub struct EmergentPattern {
+    /// Type of the emergent pattern that was discovered
     pub pattern_type: String,
+    /// Confidence score for the pattern detection (0.0 to 1.0)
     pub confidence: f32,
+    /// Timestamp when the pattern was discovered
     pub discovered_at: Instant,
+    /// Characteristics of the data where the pattern was found
     pub data_characteristics: DataCharacteristics,
 }
 
+/// Represents a meta-pattern formed by correlations between multiple pattern types
 #[derive(Debug, Clone)]
 pub struct MetaPattern {
+    /// Combination of pattern types that form this meta-pattern
     pub pattern_combination: Vec<String>,
+    /// Strength of correlation between the combined patterns (0.0 to 1.0)
     pub correlation_strength: f32,
+    /// Type of synergy observed between the patterns
     pub synergy_type: SynergyType,
 }
 
+/// Types of synergy between different patterns
 #[derive(Debug, Clone)]
 pub enum SynergyType {
+    /// Patterns that reinforce compression effectiveness
     ReinforcingCompression,
+    /// Patterns with contrasted randomness characteristics
     ContrastedRandomness,
+    /// Patterns that exhibit hierarchical structure relationships
     HierarchicalStructure,
+    /// Unknown or undefined synergy type
     Unknown,
 }
 
+/// Represents an optimization recommendation based on pattern analysis
 #[derive(Debug, Clone)]
 pub struct OptimizationRecommendation {
+    /// Type of optimization that is recommended
     pub optimization_type: String,
+    /// Explanation of why this optimization is recommended
     pub reason: String,
+    /// Expected performance improvement ratio (e.g., 0.25 = 25% improvement)
     pub expected_improvement: f32,
+    /// Confidence level in this recommendation (0.0 to 1.0)
     pub confidence: f32,
 }
 
@@ -847,10 +895,15 @@ struct PatternMetadata {
 }
 
 #[derive(Debug, Clone)]
+/// Statistical characteristics of data for pattern analysis
 pub struct DataCharacteristics {
+    /// Size of the data in bytes
     pub size: usize,
+    /// Shannon entropy of the data (0.0 to 1.0, normalized)
     pub entropy: f32,
+    /// Arithmetic mean of the data values
     pub mean: f32,
+    /// Statistical variance of the data values
     pub variance: f32,
 }
 

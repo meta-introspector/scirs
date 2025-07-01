@@ -149,7 +149,7 @@ pub use scaling_simd::{SimdMaxAbsScaler, SimdRobustScaler, SimdStandardScaler};
 
 pub use graph::{
     adjacency_to_edge_list, edge_list_to_adjacency, ActivationType, DeepWalk, GraphAutoencoder,
-    LaplacianType, Node2Vec, SpectralEmbedding,
+    LaplacianType, Node2Vec,
 };
 pub use image::{
     resize_images, rgb_to_grayscale, BlockNorm, HOGDescriptor, ImageNormMethod, ImageNormalizer,
@@ -165,7 +165,7 @@ pub use out_of_core::{
     OutOfCoreTransformer,
 };
 pub use performance::{
-    EnhancedPCA, EnhancedStandardScaler, PerformanceStats, UltraFastMemoryPool, UltraFastPCA,
+    EnhancedPCA, EnhancedStandardScaler, UltraFastMemoryPool, UltraFastPCA,
 };
 pub use streaming::{
     OutlierMethod, StreamingFeatureSelector, StreamingMinMaxScaler, StreamingOutlierDetector,

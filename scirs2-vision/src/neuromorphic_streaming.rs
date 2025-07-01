@@ -15,6 +15,8 @@
 
 use crate::error::Result;
 use crate::streaming::{Frame, ProcessingStage};
+#[cfg(test)]
+use crate::streaming::FrameMetadata;
 use ndarray::{Array1, Array2, ArrayView2};
 use rand::prelude::*;
 use rand::rng;
@@ -624,8 +626,9 @@ pub struct EventDrivenProcessor {
 /// Pixel change event
 #[derive(Debug, Clone)]
 pub struct PixelEvent {
-    /// Pixel coordinates
+    /// X pixel coordinate
     pub x: usize,
+    /// Y pixel coordinate
     pub y: usize,
     /// Change magnitude
     pub magnitude: f32,
@@ -1189,17 +1192,20 @@ mod tests {
     fn test_spiking_neuron() {
         let mut neuron = SpikingNeuron::new();
 
-        // Test with high input current
-        let spiked = neuron.update(1.0, 50.0);
+        // Test with moderate input current (should not spike)
+        let spiked = neuron.update(1.0, 10.0);
+        assert!(!spiked);
         assert!(neuron.membrane_potential > neuron.resting_potential);
 
-        // Test spike generation
+        // Test spike generation with high current
+        let mut spike_occurred = false;
         for _ in 0..100 {
             if neuron.update(1.0, 100.0) {
-                assert!(spiked);
+                spike_occurred = true;
                 break;
             }
         }
+        assert!(spike_occurred);
     }
 
     #[test]

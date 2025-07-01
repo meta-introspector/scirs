@@ -8,7 +8,7 @@ use crate::error::{NeuralError, Result};
 use crate::layers::{Layer, ParamLayer};
 use ndarray::{s, Array, ArrayView, IxDyn, ScalarOperand};
 use num_traits::Float;
-use rand::Rng;
+use ndarray_rand::rand::Rng;
 use std::fmt::Debug;
 use std::sync::RwLock;
 
@@ -202,7 +202,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps>
         let mut create_weight_matrix = |size: usize| -> Result<Array<F, IxDyn>> {
             let weights_vec: Vec<F> = (0..(d_model * size))
                 .map(|_| {
-                    let val = F::from(rng.random_range(-1.0..1.0)).ok_or_else(|| {
+                    let val = F::from(rng.gen_range(-1.0..1.0)).ok_or_else(|| {
                         NeuralError::InvalidArchitecture(
                             "Failed to convert random value".to_string(),
                         )

@@ -4,6 +4,7 @@
 //! used across different scirs2 modules for consistent thread management
 //! and resource control.
 
+use rayon::prelude::*;
 use scirs2_core::parallel_ops::*;
 use std::sync::{Arc, Mutex, OnceLock};
 
@@ -91,7 +92,7 @@ pub fn set_worker_info(info: WorkerInfo) {
 }
 
 /// Parallel iterator with thread pool integration
-pub trait ParallelIteratorExt: par_iter::ParallelIterator {
+pub trait ParallelIteratorExt: rayon::prelude::ParallelIterator {
     /// Configure the number of threads for this operation
     fn with_threads(self, num_threads: usize) -> Self;
 

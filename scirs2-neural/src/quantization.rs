@@ -450,11 +450,10 @@ impl QuantizationAwareTraining {
 
     /// Simulate quantization noise for better training
     pub fn add_quantization_noise(&self, tensor: &ArrayD<f32>, noise_scale: f32) -> ArrayD<f32> {
-        use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = ndarray_rand::rand::thread_rng();
 
         tensor.mapv(|x| {
-            let noise = rng.random::<f32>() - 0.5; // Uniform noise [-0.5, 0.5]
+            let noise = rng.gen::<f32>() - 0.5; // Uniform noise [-0.5, 0.5]
             x + noise * noise_scale
         })
     }

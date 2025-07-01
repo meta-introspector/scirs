@@ -8,6 +8,7 @@ use std::error::Error;
 use super::{MetricVisualizer, PlotType, VisualizationData, VisualizationMetadata};
 use crate::error::{MetricsError, Result};
 use ndarray::{Array1, Array2, ArrayBase, Data, Ix1, Ix2};
+use rand::prelude::*;
 
 /// Learning curve data
 ///
@@ -477,7 +478,7 @@ where
     let mut validation_scores = Vec::new();
 
     use scirs2_core::simd_ops::SimdUnifiedOps;
-    let mut rng = fastrand::Rng::new();
+    let mut rng = rand::rng();
 
     // Create cross-validation folds
     let fold_size = x.nrows() / cv;
@@ -491,7 +492,7 @@ where
         for fold in 0..cv {
             // Shuffle indices for this fold
             for i in 0..indices.len() {
-                let j = rng.usize(0..indices.len());
+                let j = rng.gen_range(0..indices.len());
                 indices.swap(i, j);
             }
 

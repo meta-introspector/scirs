@@ -17,7 +17,7 @@ use crate::backend::gpu_acceleration_framework::{
 };
 use crate::backend::{Backend, BackendConfig, DeviceManager};
 use crate::error::{NdimageError, NdimageResult};
-use crate::filters::BoundaryMode;
+use crate::interpolation::BoundaryMode;
 
 /// High-level GPU operations manager for ndimage
 pub struct GpuOperations {

@@ -61,6 +61,7 @@ pub use error::{SignalError, SignalResult};
 // Signal processing module structure
 pub mod adaptive;
 pub mod advanced_filter;
+pub mod benchmarking;
 pub mod bss;
 pub mod convolve;
 pub mod convolve_parallel;
@@ -78,6 +79,7 @@ pub mod detrend;
 pub mod dwt;
 pub mod dwt2d;
 pub mod dwt2d_advanced_algorithms;
+pub mod dwt2d_advanced_denoising;
 pub mod dwt2d_advanced_features;
 pub mod dwt2d_boundary_enhanced;
 pub mod dwt2d_enhanced;
@@ -113,7 +115,9 @@ pub mod lombscargle_ultra_validation;
 pub mod lombscargle_validation;
 pub mod lti;
 pub mod lti_analysis_enhanced;
+pub mod lti_enhanced_system_identification;
 pub mod lti_response;
+pub mod lti_ultra_controllability_observability;
 pub mod median;
 pub mod memory_efficient;
 pub mod memory_optimized;
@@ -141,6 +145,7 @@ pub mod scipy_validation;
 pub mod scipy_validation_comprehensive;
 pub mod separation;
 pub mod simd_advanced;
+pub mod simd_memory_optimization;
 pub mod simd_ops;
 pub mod sparse;
 pub mod spectral;
@@ -277,9 +282,10 @@ pub use parametric_enhanced::{
 };
 pub use parametric_ultra_enhanced::{
     adaptive_ar_spectral_estimation, comprehensive_parametric_validation,
-    high_resolution_spectral_estimation as ultra_high_resolution_spectral_estimation, multitaper_parametric_estimation,
-    robust_parametric_spectral_estimation, ultra_enhanced_arma, ultra_enhanced_arma_spectrum,
-    ConvergenceInfo, ModelDiagnostics, PerformanceStats, UltraEnhancedARMAResult,
+    high_resolution_spectral_estimation as ultra_high_resolution_spectral_estimation,
+    multitaper_parametric_estimation, robust_parametric_spectral_estimation, ultra_enhanced_arma,
+    ultra_enhanced_arma_spectrum, ConvergenceInfo, ModelDiagnostics, PerformanceStats,
+    UltraEnhancedARMAResult,
 };
 pub use peak::{find_peaks, peak_prominences, peak_widths};
 pub use realtime::{
@@ -297,6 +303,10 @@ pub use separation::{
 pub use simd_advanced::{
     benchmark_simd_operations, simd_apply_window, simd_autocorrelation, simd_complex_fft_butterfly,
     simd_cross_correlation, simd_fir_filter, SimdConfig,
+};
+pub use simd_memory_optimization::{
+    benchmark_simd_memory_operations, simd_memory_efficient_fft, simd_optimized_convolution,
+    simd_optimized_fir_filter, simd_optimized_matrix_multiply, SimdMemoryConfig, SimdMemoryResult,
 };
 pub use simd_ops::{simd_autocorrelation_enhanced, AutocorrelationMetrics};
 pub use sparse::{
@@ -338,6 +348,11 @@ pub use multitaper::{
 
 // Wavelet transform functions already re-exported above
 pub use dwt2d::{dwt2d_decompose, dwt2d_reconstruct, wavedec2, waverec2, Dwt2dResult};
+pub use dwt2d_advanced_denoising::{
+    advanced_wavelet_denoise_2d, context_adaptive_denoise, multiscale_edge_preserving_denoise,
+    simd_threshold_coefficients, AdvancedDenoisingConfig, DenoisingMethod, NoiseEstimationMethod,
+    ThresholdStrategy, WaveletDenoising2dResult,
+};
 pub use dwt2d_advanced_features::{
     advanced_wavelet_denoising, AdvancedWaveletConfig, AdvancedWaveletResult, DenoisingMetrics,
     EdgeMetrics, TextureFeatures, ThresholdMethod, ThresholdSelection,
@@ -376,9 +391,7 @@ pub use wpt::{
     get_level_coefficients, reconstruct_from_nodes, wp_decompose, WaveletPacket, WaveletPacketTree,
 };
 pub use wpt2d::{wpt2d_full, wpt2d_selective, WaveletPacket2D, WaveletPacketTree2D};
-pub use wpt_ultra_validation::{
-    run_ultra_wpt_validation, UltraWptValidationResult,
-};
+pub use wpt_ultra_validation::{run_ultra_wpt_validation, UltraWptValidationResult};
 
 // LTI systems functions
 pub use lti::system::{c2d, ss, tf, zpk};
@@ -387,6 +400,22 @@ pub use lti::{
     complete_kalman_decomposition, compute_lyapunov_gramians, matrix_condition_number,
     systems_equivalent, ControlObservabilityAnalysis, ControllabilityAnalysis, KalmanDecomposition,
     KalmanStructure, LtiSystem, ObservabilityAnalysis, StateSpace, TransferFunction, ZerosPoleGain,
+};
+
+// Enhanced LTI system identification functions
+pub use lti_enhanced_system_identification::{
+    ultra_enhanced_system_identification, UltraEnhancedSysIdConfig, UltraEnhancedSysIdResult,
+    ParameterWithUncertainty, UltraValidationMetrics, SystemModel, PerformanceMetrics,
+    StructureSelectionResults, AdaptationResults,
+};
+
+// Ultra-enhanced controllability and observability analysis
+pub use lti_ultra_controllability_observability::{
+    ultra_controllability_observability_analysis, UltraAnalysisConfig, 
+    UltraControllabilityObservabilityResult, UltraControllabilityAnalysis,
+    UltraObservabilityAnalysis, GeometricAnalysis, TemporalDynamicsAnalysis,
+    MultiScaleAnalysis, RealTimeMonitoring, QuantumInspiredMetrics,
+    OptimizationLevel, AnalysisPerformanceMetrics,
 };
 
 // LTI system functions (using what's available)
@@ -407,7 +436,7 @@ pub use detrend::{detrend, detrend_axis, detrend_poly};
 pub use denoise::{denoise_wavelet, ThresholdSelect};
 
 // 2D Wavelet image processing functions
-pub use dwt2d_image::{compress_image, denoise_image, detect_edges, DenoisingMethod};
+pub use dwt2d_image::{compress_image, denoise_image, detect_edges, DenoisingMethod as ImageDenoisingMethod};
 
 // Wavelet visualization utilities
 pub use wavelet_vis::{
@@ -501,6 +530,13 @@ pub use ultrathink_comprehensive_validation::{
     generate_ultrathink_report, run_ultrathink_comprehensive_validation, PerformanceImprovements,
     UltrathinkValidationResult,
 };
+
+// Comprehensive performance benchmarking
+pub use benchmarking::{
+    run_comprehensive_benchmarks, run_quick_benchmark, BenchmarkConfig, BenchmarkResult,
+    BenchmarkSuite, BenchmarkSummary, EfficiencyMetrics, MemoryUsageStats, SystemInfo,
+};
+pub use memory_optimized::TimingStats;
 
 #[cfg(test)]
 mod tests {

@@ -436,3 +436,7 @@ pub use ultrathink_coordinator::{
     AdaptiveImprovements, IntelligenceLevel, PerformanceIntelligenceStats, ProcessingResult,
     QualityMetrics, StrategyType, UltraThinkCoordinator, UltraThinkStatistics,
 };
+pub use ultrathink_enhanced_algorithms::{
+    AdvancedPatternAnalysis, AdvancedPatternRecognizer, DataCharacteristics, EmergentPattern,
+    MetaPattern, OptimizationRecommendation, SynergyType,
+};

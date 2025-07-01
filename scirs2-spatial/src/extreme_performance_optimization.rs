@@ -1049,7 +1049,10 @@ impl UltrafastDistanceMatrix {
                         let point_j = points.row(j);
 
                         // Use SIMD-accelerated Euclidean distance
-                        let distance = simd_euclidean_distance(point_i.as_slice().unwrap(), point_j.as_slice().unwrap())?;
+                        let distance = simd_euclidean_distance(
+                            point_i.as_slice().unwrap(),
+                            point_j.as_slice().unwrap(),
+                        )?;
 
                         result[[i, j]] = distance;
                         result[[j, i]] = distance; // Symmetric matrix

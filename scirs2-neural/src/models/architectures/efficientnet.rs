@@ -10,7 +10,7 @@ use crate::error::{NeuralError, Result};
 use crate::layers::{BatchNorm, Conv2D, Dense, Dropout, Layer, PaddingMode};
 use ndarray::{Array, IxDyn, ScalarOperand};
 use num_traits::Float;
-use rand::{rngs::SmallRng, SeedableRng};
+use ndarray_rand::rand::{rngs::SmallRng, SeedableRng};
 use std::fmt::Debug;
 
 /// Swish activation function used in EfficientNet

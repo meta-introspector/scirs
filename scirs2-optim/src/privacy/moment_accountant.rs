@@ -366,14 +366,14 @@ impl MomentsAccountant {
         order: usize,
         mechanism: &MechanismParameters,
     ) -> Result<f64, OptimizerError> {
-        let lambda = order as f64;
+        let _lambda = order as f64;
         let q = mechanism.sampling_probability;
         let sigma = mechanism.noise_multiplier;
         let sensitivity = mechanism.sensitivity;
 
         // Adjust for sensitivity
         let effective_sigma = sigma / sensitivity;
-        let variance = effective_sigma * effective_sigma;
+        let _variance = effective_sigma * effective_sigma;
 
         // Use the same enhanced computation as before
         let result = if q < 1e-6 {
@@ -602,7 +602,7 @@ impl MomentsAccountant {
     }
 
     /// Assess how tight the privacy bounds are
-    fn assess_bound_tightness(&self, log_moments: &HashMap<usize, f64>, epsilon: f64) -> f64 {
+    fn assess_bound_tightness(&self, _log_moments: &HashMap<usize, f64>, epsilon: f64) -> f64 {
         // Compare with basic composition bound
         let steps = 1; // Normalized to single step
         let basic_composition_epsilon =
@@ -771,7 +771,7 @@ impl MomentsAccountant {
 impl MomentCoefficients {
     fn new(max_order: usize) -> Self {
         let mut binomial_coeffs = HashMap::new();
-        let mut power_cache = HashMap::new();
+        let power_cache = HashMap::new();
         let mut log_factorials = Vec::new();
 
         // Precompute log factorials

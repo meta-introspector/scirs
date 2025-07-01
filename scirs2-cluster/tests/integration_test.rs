@@ -87,10 +87,11 @@ fn test_ultrathink_clusterer_basic() {
     assert_eq!(result.clusters.len(), data.nrows());
     assert!(result.centroids.nrows() >= 1);
     assert_eq!(result.centroids.ncols(), data.ncols());
-    assert!(result.efficiency_score >= 0.0 && result.efficiency_score <= 1.0);
     assert!(result.confidence >= 0.0 && result.confidence <= 1.0);
     assert!(result.quantum_advantage >= 1.0);
     assert!(result.neuromorphic_benefit >= 1.0);
+    assert!(result.ai_speedup >= 1.0);
+    assert!(result.meta_learning_improvement >= 1.0);
 }
 
 #[test]

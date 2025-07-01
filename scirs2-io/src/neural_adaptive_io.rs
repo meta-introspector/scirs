@@ -202,9 +202,7 @@ impl OptimizationDecisions {
         base_buffer_size: usize,
     ) -> ConcreteOptimizationParams {
         ConcreteOptimizationParams {
-            thread_count: ((self.thread_count_factor * 16.0).ceil() as usize)
-                .max(1)
-                .min(32),
+            thread_count: ((self.thread_count_factor * 16.0).ceil() as usize).clamp(1, 32),
             buffer_size: ((self.buffer_size_factor * base_buffer_size as f32) as usize).max(4096),
             compression_level: (self.compression_level * 9.0) as u32,
             use_cache: self.cache_priority > 0.5,

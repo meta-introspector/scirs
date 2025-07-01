@@ -14,10 +14,7 @@ use scirs2_core::{
     simd_ops::{PlatformCapabilities, SimdUnifiedOps},
 };
 use std::collections::VecDeque;
-use std::sync::{
-    atomic::{AtomicUsize, Ordering},
-    Arc, Mutex,
-};
+use std::sync::{atomic::AtomicUsize, Arc, Mutex};
 use std::thread;
 
 /// Advanced parallel processing configuration
@@ -420,7 +417,7 @@ where
         D: Data<Elem = F> + Sync + Send,
     {
         // Use cache-oblivious algorithm for optimal performance
-        self.mean_cache_oblivious(x, 0, x.len())
+        Self::mean_cache_oblivious_static(x, 0, x.len())
     }
 
     fn mean_cache_oblivious<D>(
@@ -431,6 +428,19 @@ where
     ) -> StatsResult<F>
     where
         D: Data<Elem = F> + Sync + Send,
+    {
+        Self::mean_cache_oblivious_static(x, start, len)
+    }
+
+    // Static version that can be used in threads
+    fn mean_cache_oblivious_static<D>(
+        x: &ArrayBase<D, Ix1>,
+        start: usize,
+        len: usize,
+    ) -> StatsResult<F>
+    where
+        D: Data<Elem = F> + Sync + Send,
+        F: Float + Send + Sync + 'static,
     {
         const CACHE_THRESHOLD: usize = 1024; // Empirically determined threshold
 
@@ -443,11 +453,11 @@ where
             // Divide and conquer
             let mid = len / 2;
             let left_future = std::thread::spawn({
-                let x = x.clone(); // Clone the view
-                move || self.mean_cache_oblivious(&x, start, mid)
+                let x = x.clone(); // Clone the array view
+                move || Self::mean_cache_oblivious_static(&x, start, mid)
             });
 
-            let right_result = self.mean_cache_oblivious(x, start + mid, len - mid)?;
+            let right_result = Self::mean_cache_oblivious_static(x, start + mid, len - mid)?;
             let left_result = left_future.join().unwrap()?;
 
             // Combine results weighted by size

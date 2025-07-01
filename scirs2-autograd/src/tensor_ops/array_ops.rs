@@ -1,6 +1,6 @@
 use crate::ndarray;
 use crate::ndarray_ext;
-#[cfg(feature = "mkl")]
+#[cfg(feature = "blas")]
 use crate::ndarray_ext::NdArrayViewMut;
 use crate::ndarray_ext::{NdArray, NdArrayView};
 use crate::op;
@@ -491,7 +491,7 @@ impl<T: Float> op::Op<T> for GatherGrad {
     }
 }
 
-#[cfg(feature = "mkl")]
+#[cfg(feature = "blas")]
 pub(crate) fn inplace_add_impl<F: Float>(mut a: NdArrayViewMut<F>, b: &NdArrayView<F>) {
     use crate::same_type;
     use crate::tensor_ops::blas_ffi::{vdAdd, vsAdd, MklInt};

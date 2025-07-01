@@ -112,31 +112,41 @@ impl ComputationCache {
 
     /// Get reusable gradient buffer
     pub fn get_gradient_buffer(&mut self, size: usize) -> &mut Array1<f64> {
-        self.resize_buffer(&mut self.gradient_buffer, size);
+        if self.gradient_buffer.len() < size {
+            self.gradient_buffer = Array1::zeros(size);
+        }
         &mut self.gradient_buffer
     }
 
     /// Get reusable feature buffer
     pub fn get_feature_buffer(&mut self, size: usize) -> &mut Array1<f64> {
-        self.resize_buffer(&mut self.feature_buffer, size);
+        if self.feature_buffer.len() < size {
+            self.feature_buffer = Array1::zeros(size);
+        }
         &mut self.feature_buffer
     }
 
     /// Get reusable parameter buffer
     pub fn get_param_buffer(&mut self, size: usize) -> &mut Array1<f64> {
-        self.resize_buffer(&mut self.param_buffer, size);
+        if self.param_buffer.len() < size {
+            self.param_buffer = Array1::zeros(size);
+        }
         &mut self.param_buffer
     }
 
     /// Get network output buffer
     pub fn get_network_output_buffer(&mut self, size: usize) -> &mut Array1<f64> {
-        self.resize_buffer(&mut self.network_output_buffer, size);
+        if self.network_output_buffer.len() < size {
+            self.network_output_buffer = Array1::zeros(size);
+        }
         &mut self.network_output_buffer
     }
 
     /// Get temporary buffer
     pub fn get_temp_buffer(&mut self, size: usize) -> &mut Array1<f64> {
-        self.resize_buffer(&mut self.temp_buffer, size);
+        if self.temp_buffer.len() < size {
+            self.temp_buffer = Array1::zeros(size);
+        }
         &mut self.temp_buffer
     }
 

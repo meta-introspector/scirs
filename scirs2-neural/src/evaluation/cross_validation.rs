@@ -130,7 +130,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + std::fmt::Display + Send
                         let mut rng = rand::rngs::StdRng::seed_from_u64(seed);
                         indices.shuffle(&mut rng);
                     } else {
-                        let mut rng = rand::rng();
+                        let mut rng = ndarray_rand::rand::thread_rng();
                         indices.shuffle(&mut rng);
                     }
                 }
@@ -228,7 +228,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + std::fmt::Display + Send
                             let mut rng = rand::rngs::StdRng::seed_from_u64(seed);
                             indices.shuffle(&mut rng);
                         } else {
-                            let mut rng = rand::rng();
+                            let mut rng = ndarray_rand::rand::thread_rng();
                             indices.shuffle(&mut rng);
                         }
                     }
@@ -303,7 +303,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + std::fmt::Display + Send
                         let mut rng = rand::rngs::StdRng::seed_from_u64(seed);
                         indices.shuffle(&mut rng);
                     } else {
-                        let mut rng = rand::rng();
+                        let mut rng = ndarray_rand::rand::thread_rng();
                         indices.shuffle(&mut rng);
                     }
                 }
@@ -362,7 +362,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + std::fmt::Display + Send
                         if let Some(mut rng) = rng_with_seed.clone() {
                             shuffled.shuffle(&mut rng);
                         } else {
-                            let mut rng = rand::rng();
+                            let mut rng = ndarray_rand::rand::thread_rng();
                             shuffled.shuffle(&mut rng);
                         }
                     }

@@ -15,7 +15,7 @@
 //! - **STDP Learning** (Spike-Timing Dependent Plasticity) for unsupervised feature learning
 //! - **Address-Event Representation** for efficient sparse image encoding
 
-use ndarray::{Array, Array1, Array2, Array3, ArrayView2, ArrayViewMut2, Axis, Zip};
+use ndarray::{s, Array, Array1, Array2, Array3, ArrayView2, ArrayViewMut2, Axis, Zip};
 use num_traits::{Float, FromPrimitive, One, Zero};
 use std::collections::{HashMap, VecDeque};
 use std::f64::consts::PI;

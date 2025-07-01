@@ -99,7 +99,7 @@ pub struct GpuOptimizationContext {
 impl GpuOptimizationContext {
     /// Create a new GPU optimization context
     pub fn new(config: GpuOptimizationConfig) -> ScirsResult<Self> {
-        let context = Arc::new(config.device);
+        let context = Arc::new(config.device.clone());
         let memory_pool = memory_management::GpuMemoryPool::new_stub();
 
         Ok(Self {

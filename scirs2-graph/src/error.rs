@@ -10,7 +10,7 @@ use thiserror::Error;
 ///
 /// Provides detailed error information with context and suggestions for recovery.
 /// All errors include location information when possible.
-#[derive(Error, Debug, Clone, PartialEq)]
+#[derive(Error, Debug)]
 pub enum GraphError {
     /// Node not found in the graph
     #[error("Node {node} not found in graph with {graph_size} nodes. Context: {context}")]
@@ -24,10 +24,10 @@ pub enum GraphError {
     },
 
     /// Edge not found in the graph
-    #[error("Edge ({source}, {target}) not found in graph. Context: {context}")]
+    #[error("Edge ({src_node}, {target}) not found in graph. Context: {context}")]
     EdgeNotFound {
         /// Source node of the edge
-        source: String,
+        src_node: String,
         /// Target node of the edge
         target: String,
         /// Additional context about the operation
@@ -107,11 +107,11 @@ pub enum GraphError {
 
     /// No path exists between nodes
     #[error(
-        "No path found from {source} to {target} in graph with {nodes} nodes and {edges} edges"
+        "No path found from {src_node} to {target} in graph with {nodes} nodes and {edges} edges"
     )]
     NoPath {
         /// Source node
-        source: String,
+        src_node: String,
         /// Target node
         target: String,
         /// Number of nodes in graph
@@ -211,6 +211,10 @@ pub enum GraphError {
     /// Computation error (legacy error for backward compatibility)
     #[error("Computation error: {0}")]
     ComputationError(String),
+
+    /// Generic error for backward compatibility
+    #[error("{0}")]
+    Other(String),
 }
 
 impl GraphError {
@@ -239,7 +243,7 @@ impl GraphError {
     /// Create an EdgeNotFound error with minimal context
     pub fn edge_not_found<S: fmt::Display, T: fmt::Display>(source: S, target: T) -> Self {
         Self::EdgeNotFound {
-            source: source.to_string(),
+            src_node: source.to_string(),
             target: target.to_string(),
             context: "Edge lookup operation".to_string(),
         }
@@ -252,7 +256,7 @@ impl GraphError {
         context: &str,
     ) -> Self {
         Self::EdgeNotFound {
-            source: source.to_string(),
+            src_node: source.to_string(),
             target: target.to_string(),
             context: context.to_string(),
         }
@@ -332,7 +336,7 @@ impl GraphError {
         edges: usize,
     ) -> Self {
         Self::NoPath {
-            source: source.to_string(),
+            src_node: source.to_string(),
             target: target.to_string(),
             nodes,
             edges,

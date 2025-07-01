@@ -389,8 +389,9 @@ pub use scipy_benchmark_comparison::{
     PerformanceRating, ScipyBenchmarkComparison, ScipyComparisonConfig, ScipyComparisonReport,
 };
 pub use ultra_parallel_stats::{
-    create_ultra_parallel_processor as create_ultra_parallel_stats_processor, mean_ultra_parallel, variance_ultra_parallel,
-    LoadBalancingAlgorithm, ParallelExecutionMetrics as UltraParallelExecutionMetrics, ParallelPerformanceAnalysis,
+    create_ultra_parallel_processor as create_ultra_parallel_stats_processor, mean_ultra_parallel,
+    variance_ultra_parallel, LoadBalancingAlgorithm,
+    ParallelExecutionMetrics as UltraParallelExecutionMetrics, ParallelPerformanceAnalysis,
     PerformanceRating as UltraParallelPerformanceRating,
     UltraParallelConfig as UltraParallelStatsConfig, UltraParallelResult,
     UltraParallelStatsProcessor, WorkStealingStrategy,
@@ -518,6 +519,7 @@ pub mod ultrathink_numerical_stability;
 pub mod ultrathink_parallel_enhancements;
 pub mod ultrathink_property_tests;
 pub mod ultrathink_simd_optimizations;
+pub mod ultrathink_unified_processor;
 pub use descriptive::*;
 pub use descriptive_simd::{descriptive_stats_simd, mean_simd, std_simd, variance_simd};
 pub use dispersion_simd::{
@@ -694,7 +696,8 @@ pub use topological_ultra_advanced::{
 pub use ultra_parallel_advanced::{
     HardwareConfig, MemoryConfig as UltraMemoryConfig, MemoryUsageStats, OptimizationConfig,
     ParallelStrategy, PerformanceMetrics as UltraPerformanceMetrics,
-    UltraParallelConfig as UltraParallelAdvancedConfig, UltraParallelProcessor as UltraParallelAdvancedProcessor,
+    UltraParallelConfig as UltraParallelAdvancedConfig,
+    UltraParallelProcessor as UltraParallelAdvancedProcessor,
 };
 pub use ultra_simd_advanced::{
     ultra_mean_f32, ultra_mean_f64, CacheAwareVectorProcessor, MemoryPattern, UltraSimdConfig,
@@ -719,12 +722,12 @@ pub use ultrathink_numerical_stability::{
     UltrathinkNumericalStabilityAnalyzer,
 };
 pub use ultrathink_parallel_enhancements::{
-    create_configured_ultra_parallel_processor as create_configured_ultrathink_parallel_processor, 
+    create_configured_ultra_parallel_processor as create_configured_ultrathink_parallel_processor,
     create_ultra_parallel_processor as create_ultrathink_parallel_processor,
-    LoadBalancingStrategy as UltrathinkLoadBalancingStrategy, MatrixOperationType, 
-    ParallelExecutionMetrics as UltrathinkParallelExecutionMetrics,
-    ParallelPerformanceAnalytics, TimeSeriesOperation, UltraParallelBatchResult,
-    UltraParallelMatrixResult, UltraParallelProcessor as UltrathinkParallelProcessor, UltraParallelTimeSeriesResult,
+    LoadBalancingStrategy as UltrathinkLoadBalancingStrategy, MatrixOperationType,
+    ParallelExecutionMetrics as UltrathinkParallelExecutionMetrics, ParallelPerformanceAnalytics,
+    TimeSeriesOperation, UltraParallelBatchResult, UltraParallelMatrixResult,
+    UltraParallelProcessor as UltrathinkParallelProcessor, UltraParallelTimeSeriesResult,
     UltrathinkParallelConfig,
 };
 pub use ultrathink_property_tests::{
@@ -733,8 +736,14 @@ pub use ultrathink_property_tests::{
 };
 pub use ultrathink_simd_optimizations::{
     ultra_batch_statistics, ultra_matrix_operations, ultra_moving_window_stats,
-    ultra_quantiles_simd, MatrixOperation as UltrathinkMatrixOperation, MovingWindowResult, UltraBatchStats,
-    UltrathinkSimdConfig,
+    ultra_quantiles_simd, MatrixOperation as UltrathinkMatrixOperation, MovingWindowResult,
+    UltraBatchStats, UltrathinkSimdConfig,
+};
+pub use ultrathink_unified_processor::{
+    create_configured_ultrathink_processor, create_ultrathink_processor, OptimizationMode,
+    ProcessingStrategy, UltrathinkComprehensiveResult, UltrathinkMatrixResult,
+    UltrathinkPerformanceAnalytics, UltrathinkProcessorConfig, UltrathinkTimeSeriesResult,
+    UltrathinkUnifiedProcessor,
 };
 
 // MCMC module

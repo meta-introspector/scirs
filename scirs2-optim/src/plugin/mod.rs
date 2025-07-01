@@ -43,17 +43,9 @@ pub mod sdk;
 pub mod validation;
 // Examples are in the examples/ directory
 
-pub use core::*;
-pub use loader::*;
-pub use registry::*;
-pub use sdk::*;
-pub use validation::*;
+pub use core::{OptimizerPlugin, PluginCapabilities, PluginMetadata as CorePluginMetadata};
+pub use loader::{PluginLoader, LoaderConfig, PluginLoadResult, ValidationRule as LoaderValidationRule, PluginMetadata as LoaderPluginMetadata};
+pub use registry::{PluginRegistry, RegistryConfig};
+pub use sdk::{PluginSDK, ValidationRule as SDKValidationRule};
+pub use validation::{PluginValidationFramework, ValidationConfig};
 
-use crate::error::{OptimError, Result};
-use ndarray::{Array, Array1, Dimension};
-use num_traits::Float;
-use serde::{Deserialize, Serialize};
-use std::any::Any;
-use std::collections::HashMap;
-use std::fmt::Debug;
-use std::path::PathBuf;

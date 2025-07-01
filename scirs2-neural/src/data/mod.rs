@@ -102,7 +102,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> InMemoryDat
 
         // Create shuffled indices
         let mut indices: Vec<usize> = (0..n_samples).collect();
-        let mut rng = rand::rng();
+        let mut rng = ndarray_rand::rand::thread_rng();
         indices.shuffle(&mut rng);
 
         // Split indices

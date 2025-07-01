@@ -246,7 +246,7 @@ impl<T: StreamingObjective> IncrementalNewton<T> {
                             reg_hessian[[i, i]] += self.regularization;
                         }
 
-                        match solve_linear_system(&reg_hessian, &(-gradient)) {
+                        match solve(&reg_hessian, &(-gradient)) {
                             Ok(direction) => return Ok(direction),
                             Err(_) => {
                                 // Fall back to inverse Hessian approximation

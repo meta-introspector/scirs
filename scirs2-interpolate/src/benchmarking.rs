@@ -14,6 +14,7 @@
 //! - **Production workload simulation**: Real-world scenario benchmarks
 
 use crate::error::InterpolateResult;
+use crate::streaming::StreamingInterpolator;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::collections::HashMap;
@@ -202,9 +203,7 @@ pub struct SystemInfo {
     pub simd_capabilities: Vec<String>,
 }
 
-impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static + std::ops::AddAssign + std::ops::SubAssign + std::fmt::LowerExp>
-    InterpolationBenchmarkSuite<T>
-{
+impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp> InterpolationBenchmarkSuite<T> {
     /// Create a new benchmark suite
     pub fn new(config: BenchmarkConfig) -> Self {
         Self {
@@ -324,14 +323,13 @@ impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static + std::o
             // Cubic spline
             self.benchmark_method("cubic_spline", size, || {
                 let spline = crate::spline::CubicSpline::new(&x.view(), &y.view())?;
-                spline.evaluate_batch(&x_new.view())
+                spline.evaluate_array(&x_new.view())
             })?;
 
             // B-spline
             self.benchmark_method("bspline", size, || {
-                let knots = crate::bspline::generate_knots(&x.view(), 3, "uniform")?;
-                let bspline = crate::bspline::make_interp_bspline(&x.view(), &y.view(), &knots, 3)?;
-                bspline.evaluate_batch(&x_new.view())
+                let bspline = crate::bspline::make_interp_bspline(&x.view(), &y.view(), 3, crate::bspline::ExtrapolateMode::Extrapolate)?;
+                bspline.evaluate_array(&x_new.view())
             })?;
         }
 
@@ -362,10 +360,10 @@ impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static + std::o
                 self.benchmark_method("simd_bspline", size, || {
                     let knots = crate::bspline::generate_knots(&x.view(), 3, "uniform")?;
                     crate::simd_optimized::simd_bspline_batch_evaluate(
-                        &x_new.view(),
+                        &knots.view(),
                         &y.view(),
-                        &knots,
                         3,
+                        &x_new.view(),
                     )
                 })?;
             }
@@ -393,15 +391,7 @@ impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static + std::o
                     let x = T::from_usize(i).unwrap() / T::from_usize(size).unwrap();
                     let y = x * x; // Simple quadratic function
 
-                    let point = crate::streaming::StreamingPoint {
-                        x,
-                        y,
-                        timestamp: Instant::now(),
-                        quality: 1.0,
-                        metadata: HashMap::new(),
-                    };
-
-                    interpolator.add_point(point)?;
+                    interpolator.add_point(x, y)?;
                 }
 
                 // Make predictions
@@ -450,7 +440,7 @@ impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static + std::o
         let min_time = *times.first().unwrap();
         let max_time = *times.last().unwrap();
         let mean_time = Duration::from_nanos(
-            times.iter().map(|d| d.as_nanos()).sum::<u128>() / times.len() as u128,
+            (times.iter().map(|d| d.as_nanos()).sum::<u128>() / times.len() as u128) as u64,
         );
         let median_time = times[times.len() / 2];
 
@@ -604,11 +594,11 @@ impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static + std::o
                 results.iter().map(|r| r.timing.throughput).sum::<f64>() / results.len() as f64;
 
             let avg_time = Duration::from_nanos(
-                results
+                (results
                     .iter()
                     .map(|r| r.timing.mean_time.as_nanos())
                     .sum::<u128>()
-                    / results.len() as u128,
+                    / results.len() as u128) as u64,
             );
 
             performance_summary.insert(method.clone(), (avg_throughput, avg_time));
@@ -637,7 +627,7 @@ impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static + std::o
         }
 
         // Find fastest method for each data size
-        let mut size_to_best_method = HashMap::new();
+        let mut size_to_best_method: HashMap<usize, (String, f64)> = HashMap::new();
         for result in &self.results {
             let key = result.data_size;
             let current_best = size_to_best_method.get(&key);
@@ -744,7 +734,7 @@ impl<T: Float + Display> BenchmarkReport<T> {
 /// Create and run a comprehensive benchmark suite
 pub fn run_comprehensive_benchmarks<T>() -> InterpolateResult<BenchmarkReport<T>>
 where
-    T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static,
+    T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static + crate::traits::InterpolationFloat,
 {
     let config = BenchmarkConfig::default();
     let mut suite = InterpolationBenchmarkSuite::new(config);
@@ -756,7 +746,7 @@ pub fn run_benchmarks_with_config<T>(
     config: BenchmarkConfig,
 ) -> InterpolateResult<BenchmarkReport<T>>
 where
-    T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static,
+    T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static + crate::traits::InterpolationFloat,
 {
     let mut suite = InterpolationBenchmarkSuite::new(config);
     suite.run_comprehensive_benchmarks()
@@ -765,7 +755,7 @@ where
 /// Run quick performance validation (subset of benchmarks)
 pub fn run_quick_validation<T>() -> InterpolateResult<BenchmarkReport<T>>
 where
-    T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static,
+    T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static + crate::traits::InterpolationFloat,
 {
     let config = BenchmarkConfig {
         data_sizes: vec![1_000, 10_000],
@@ -785,7 +775,7 @@ where
 /// Enhanced SciPy 1.13+ compatibility validation suite
 pub fn validate_scipy_1_13_compatibility<T>() -> InterpolateResult<SciPyCompatibilityReport<T>>
 where
-    T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static,
+    T: crate::traits::InterpolationFloat + std::fmt::LowerExp,
 {
     let config = BenchmarkConfig {
         data_sizes: vec![100, 1_000, 10_000, 100_000, 1_000_000],
@@ -805,7 +795,7 @@ where
 /// Enhanced stress testing for production readiness
 pub fn run_stress_testing<T>() -> InterpolateResult<StressTestReport<T>>
 where
-    T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static,
+    T: crate::traits::InterpolationFloat + std::fmt::LowerExp + std::panic::UnwindSafe + std::panic::RefUnwindSafe,
 {
     let config = StressTestConfig {
         data_sizes: vec![10_000, 100_000, 1_000_000, 10_000_000],
@@ -831,7 +821,7 @@ pub struct EnhancedBenchmarkSuite<T: Float> {
     memory_tracker: MemoryTracker,
 }
 
-impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static> EnhancedBenchmarkSuite<T> {
+impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp> EnhancedBenchmarkSuite<T> {
     pub fn new(config: BenchmarkConfig) -> Self {
         Self {
             config,
@@ -890,7 +880,7 @@ impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static> Enhance
         accuracy_validations: &mut Vec<AccuracyValidation<T>>,
     ) -> InterpolateResult<()> {
         let x = self.generate_scipy_test_data_1d(size)?;
-        let y = self.evaluate_scipy_reference_function(&x);
+        let y = self.evaluate_scipy_reference_function(&x.view());
         let x_new = self.generate_scipy_query_points_1d(size / 2)?;
 
         // Test linear interpolation
@@ -898,7 +888,7 @@ impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static> Enhance
             crate::interp1d::linear_interpolate(&x.view(), &y.view(), &x_new.view())?;
         let scipy_linear = self.get_scipy_reference("linear_1d", &x, &y, &x_new)?;
 
-        let accuracy = self.calculate_accuracy_metrics(&linear_result, &scipy_linear);
+        let accuracy = self.calculate_accuracy_metrics(linear_result.as_slice().unwrap(), &scipy_linear);
         accuracy_validations.push(AccuracyValidation {
             method: "linear_1d".to_string(),
             data_size: size,
@@ -925,15 +915,15 @@ impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static> Enhance
         accuracy_validations: &mut Vec<AccuracyValidation<T>>,
     ) -> InterpolateResult<()> {
         let x = self.generate_scipy_test_data_1d(size)?;
-        let y = self.evaluate_scipy_reference_function(&x);
+        let y = self.evaluate_scipy_reference_function(&x.view());
         let x_new = self.generate_scipy_query_points_1d(size / 2)?;
 
         // Test cubic spline
         let spline = crate::spline::CubicSpline::new(&x.view(), &y.view())?;
-        let spline_result = spline.evaluate_batch(&x_new.view())?;
+        let spline_result = spline.evaluate_array(&x_new.view())?;
         let scipy_cubic = self.get_scipy_reference("cubic_spline", &x, &y, &x_new)?;
 
-        let accuracy = self.calculate_accuracy_metrics(&spline_result, &scipy_cubic);
+        let accuracy = self.calculate_accuracy_metrics(spline_result.as_slice().unwrap(), &scipy_cubic);
         accuracy_validations.push(AccuracyValidation {
             method: "cubic_spline".to_string(),
             data_size: size,
@@ -964,19 +954,20 @@ impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static> Enhance
         }
 
         let x = self.generate_scipy_test_data_2d(size)?;
-        let y = self.evaluate_scipy_reference_function_2d(&x);
+        let y = self.evaluate_scipy_reference_function_2d(&x.view());
         let x_new = self.generate_scipy_query_points_2d(size / 4)?;
 
         // Test RBF interpolation
-        let mut rbf = crate::advanced::rbf::RBFInterpolator::new(
+        let rbf = crate::advanced::rbf::RBFInterpolator::new(
+            &x.view(),
+            &y.view(),
             crate::advanced::rbf::RBFKernel::Gaussian,
             T::from_f64(1.0).unwrap(),
         )?;
-        rbf.fit(&x.view(), &y.view())?;
-        let rbf_result = rbf.predict(&x_new.view())?;
+        let rbf_result = rbf.interpolate(&x_new.view())?;
         let scipy_rbf = self.get_scipy_reference_2d("rbf_gaussian", &x, &y, &x_new)?;
 
-        let accuracy = self.calculate_accuracy_metrics(&rbf_result, &scipy_rbf);
+        let accuracy = self.calculate_accuracy_metrics(rbf_result.as_slice().unwrap(), &scipy_rbf);
         accuracy_validations.push(AccuracyValidation {
             method: "rbf_gaussian".to_string(),
             data_size: size,
@@ -1074,7 +1065,7 @@ impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static> Enhance
             "cubic_1d" => crate::interp1d::cubic_interpolate(&x.view(), &y.view(), &x_new.view()),
             "cubic_spline" => {
                 let spline = crate::spline::CubicSpline::new(&x.view(), &y.view())?;
-                spline.evaluate_batch(&x_new.view())
+                spline.evaluate_array(&x_new.view())
             }
             _ => Err(crate::InterpolateError::NotImplemented(format!(
                 "SciPy reference for {}",
@@ -1093,12 +1084,13 @@ impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static> Enhance
         // Placeholder for 2D SciPy reference implementations
         match method {
             "rbf_gaussian" => {
-                let mut rbf = crate::advanced::rbf::RBFInterpolator::new(
+                let rbf = crate::advanced::rbf::RBFInterpolator::new(
+                    &x.view(),
+                    &y.view(),
                     crate::advanced::rbf::RBFKernel::Gaussian,
                     T::from_f64(1.0).unwrap(),
                 )?;
-                rbf.fit(&x.view(), &y.view())?;
-                rbf.predict(&x_new.view())
+                rbf.interpolate(&x_new.view())
             }
             _ => Err(crate::InterpolateError::NotImplemented(format!(
                 "SciPy 2D reference for {}",
@@ -1228,7 +1220,7 @@ pub struct MemoryComparison {
 }
 
 /// Stress testing infrastructure
-pub struct StressTester<T: Float> {
+pub struct StressTester<T: crate::traits::InterpolationFloat> {
     config: StressTestConfig,
     results: Vec<StressTestResult<T>>,
 }
@@ -1246,7 +1238,7 @@ pub struct StressTestConfig {
     pub max_test_duration_minutes: usize,
 }
 
-impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static> StressTester<T> {
+impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp + std::panic::UnwindSafe + std::panic::RefUnwindSafe> StressTester<T> {
     pub fn new(config: StressTestConfig) -> Self {
         Self {
             config,
@@ -1308,6 +1300,7 @@ impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static> StressT
             },
             execution_time: Duration::from_millis(1), // Would measure actual time
             memory_usage_mb: 0.0,                     // Would measure actual memory
+            _phantom: std::marker::PhantomData,
         });
 
         // Test with very small values
@@ -1327,6 +1320,7 @@ impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static> StressT
             },
             execution_time: Duration::from_millis(1),
             memory_usage_mb: 0.0,
+            _phantom: std::marker::PhantomData,
         });
 
         Ok(())
@@ -1357,6 +1351,7 @@ impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static> StressT
             },
             execution_time: Duration::from_millis(1),
             memory_usage_mb: 0.0,
+            _phantom: std::marker::PhantomData,
         });
 
         // Test with duplicate points
@@ -1377,6 +1372,7 @@ impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static> StressT
             },
             execution_time: Duration::from_millis(1),
             memory_usage_mb: 0.0,
+            _phantom: std::marker::PhantomData,
         });
 
         Ok(())
@@ -1410,6 +1406,7 @@ impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static> StressT
                 },
                 execution_time: start_time.elapsed(),
                 memory_usage_mb: (size * std::mem::size_of::<T>() * 3) as f64 / (1024.0 * 1024.0),
+                _phantom: std::marker::PhantomData,
             });
         }
 
@@ -1464,6 +1461,7 @@ impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static> StressT
             },
             execution_time: Duration::from_millis(100), // Would measure actual time
             memory_usage_mb: 0.0,
+            _phantom: std::marker::PhantomData,
         });
 
         Ok(())
@@ -1495,6 +1493,7 @@ impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static> StressT
             },
             execution_time: Duration::from_millis(10),
             memory_usage_mb: 0.0,
+            _phantom: std::marker::PhantomData,
         });
 
         Ok(())
@@ -1502,7 +1501,7 @@ impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static> StressT
 }
 
 #[derive(Debug, Clone)]
-pub struct StressTestResult<T: Float> {
+pub struct StressTestResult<T: crate::traits::InterpolationFloat> {
     pub test_name: String,
     pub passed: bool,
     pub error_message: Option<String>,
@@ -1512,7 +1511,7 @@ pub struct StressTestResult<T: Float> {
 }
 
 #[derive(Debug, Clone)]
-pub struct StressTestReport<T: Float> {
+pub struct StressTestReport<T: crate::traits::InterpolationFloat> {
     pub total_tests: usize,
     pub passed_tests: usize,
     pub failed_tests: usize,

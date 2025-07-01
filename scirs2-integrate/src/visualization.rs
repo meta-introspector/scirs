@@ -3,6 +3,8 @@
 //! This module provides tools for visualizing results from various solvers,
 //! including phase space plots, bifurcation diagrams, and field visualizations.
 
+#![allow(dead_code)]
+
 use crate::analysis::{BasinAnalysis, BifurcationPoint};
 use crate::error::{IntegrateError, IntegrateResult as Result};
 use crate::ode::ODEResult;
@@ -1578,7 +1580,7 @@ impl BifurcationDiagramGenerator {
                 }
             } else {
                 // Chaotic - sample representative points
-                let sample_rate = states.len() / 20.max(1);
+                let sample_rate = states.len() / 20;
                 for i in (0..states.len()).step_by(sample_rate) {
                     representative_states.push(states[i]);
                 }
@@ -3023,7 +3025,7 @@ pub mod advanced_visualization {
             let mut animator = AnimatedVisualizer::new();
 
             // Create mock ODE result
-            let mut ode_result: ODEResult<f64> = ODEResult {
+            let ode_result: ODEResult<f64> = ODEResult {
                 t: vec![0.0, 0.1, 0.2, 0.3, 0.4],
                 y: vec![
                     Array1::from(vec![0.0, 0.0]),
@@ -4871,7 +4873,7 @@ impl ConvergenceVisualizer {
             [0.9290, 0.6940, 0.1250], // Yellow
             [0.4940, 0.1840, 0.5560], // Purple
             [0.4660, 0.6740, 0.1880], // Green
-            [0.3010, 0.7450, 0.9330], // Cyan
+            [0.3011, 0.7450, 0.9330], // Cyan
             [0.6350, 0.0780, 0.1840], // Red
         ];
 
@@ -5617,13 +5619,13 @@ impl MultiMetricTracker {
         // Add to metrics
         self.metrics
             .entry(metric_name.to_string())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(value);
 
         // Add to time points
         self.time_points
             .entry(metric_name.to_string())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(time);
 
         // Update statistics

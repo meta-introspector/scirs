@@ -11,7 +11,7 @@ use crate::error::{NeuralError, Result};
 use crate::layers::{Dense, Dropout, Embedding, EmbeddingConfig, Layer, LayerNorm};
 use ndarray::{Array, IxDyn, ScalarOperand};
 use num_traits::Float;
-use rand::SeedableRng;
+use ndarray_rand::rand::SeedableRng;
 use std::fmt::Debug;
 
 /// Configuration for a GPT model

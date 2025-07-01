@@ -10,6 +10,8 @@ use crate::error::{Result, TransformError};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use rand::Rng;
 use scirs2_core::validation::{check_finite, check_not_empty, check_positive};
+use scirs2_core::simd_ops::SimdUnifiedOps;
+use scirs2_core::parallel_ops::*;
 use std::collections::{HashMap, VecDeque};
 
 /// Spiking neuron model for neuromorphic processing
@@ -42,7 +44,7 @@ pub struct SpikingNeuron {
 impl SpikingNeuron {
     /// Create a new spiking neuron
     pub fn new(n_inputs: usize, threshold: f64) -> Self {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         SpikingNeuron {
             membrane_potential: 0.0,
@@ -52,7 +54,7 @@ impl SpikingNeuron {
             refractory_period: 2.0,
             refractory_counter: 0.0,
             spike_history: VecDeque::with_capacity(100),
-            synaptic_weights: Array1::from_iter((0..n_inputs).map(|_| rng.gen_range(-0.5..0.5))),
+            synaptic_weights: Array1::from_iter((0..n_inputs).map(|_| rng.random_range(-0.5..0.5))),
             learning_rate: 0.01,
             ltp_trace: 0.0,
             ltd_trace: 0.0,
@@ -163,7 +165,7 @@ pub struct NeuromorphicAdaptationNetwork {
 impl NeuromorphicAdaptationNetwork {
     /// Create a new neuromorphic adaptation network
     pub fn new(input_size: usize, hidden_size: usize, output_size: usize) -> Self {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         // Initialize neuron layers
         let input_neurons: Vec<SpikingNeuron> = (0..input_size)
@@ -185,14 +187,14 @@ impl NeuromorphicAdaptationNetwork {
         // Connect input to hidden
         for i in 0..input_size {
             for j in input_size..(input_size + hidden_size) {
-                connectivity[[i, j]] = rng.gen_range(-0.3..0.3);
+                connectivity[[i, j]] = rng.random_range(-0.3..0.3);
             }
         }
 
         // Connect hidden to output
         for i in input_size..(input_size + hidden_size) {
             for j in (input_size + hidden_size)..total_neurons {
-                connectivity[[i, j]] = rng.gen_range(-0.3..0.3);
+                connectivity[[i, j]] = rng.random_range(-0.3..0.3);
             }
         }
 

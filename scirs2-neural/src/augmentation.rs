@@ -9,7 +9,7 @@
 use crate::error::{NeuralError, Result};
 use ndarray::{Array, ArrayD, Axis};
 use num_traits::Float;
-use rand::Rng;
+use ndarray_rand::rand::Rng;
 use std::collections::HashMap;
 use std::fmt::Debug;
 
@@ -444,7 +444,7 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
         let batch_size = images.shape()[0];
 
         for _i in 0..batch_size {
-            let _angle = rand::rng().random_range(min_angle..=max_angle);
+            let _angle = ndarray_rand::rand::thread_rng().random_range(min_angle..=max_angle);
             // Apply rotation (simplified - just return original for now)
             // Real implementation would use affine transformations
         }
@@ -465,7 +465,7 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
         let batch_size = images.shape()[0];
 
         for _i in 0..batch_size {
-            let _scale = rand::rng().random_range(min_scale..=max_scale);
+            let _scale = ndarray_rand::rand::thread_rng().random_range(min_scale..=max_scale);
             // Apply scaling (simplified - just return original for now)
             // Real implementation would use interpolation
         }
@@ -500,8 +500,8 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
         let mut result = Array::zeros((batch_size, channels, crop_height, crop_width));
 
         for i in 0..batch_size {
-            let start_h = rand::rng().random_range(0..=(height - crop_height));
-            let start_w = rand::rng().random_range(0..=(width - crop_width));
+            let start_h = ndarray_rand::rand::thread_rng().random_range(0..=(height - crop_height));
+            let start_w = ndarray_rand::rand::thread_rng().random_range(0..=(width - crop_width));
 
             let crop = images.slice(ndarray::s![
                 i,
@@ -528,14 +528,14 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
         // Apply brightness adjustment
         if let Some(bright_factor) = brightness {
             let factor =
-                F::from(1.0 + rand::rng().random_range(-bright_factor..=bright_factor)).unwrap();
+                F::from(1.0 + ndarray_rand::rand::thread_rng().random_range(-bright_factor..=bright_factor)).unwrap();
             result = result * factor;
         }
 
         // Apply contrast adjustment
         if let Some(contrast_factor) = contrast {
             let factor =
-                F::from(1.0 + rand::rng().random_range(-contrast_factor..=contrast_factor))
+                F::from(1.0 + ndarray_rand::rand::thread_rng().random_range(-contrast_factor..=contrast_factor))
                     .unwrap();
             let mean = result.mean().unwrap_or(F::zero());
             result = (result - mean) * factor + mean;
@@ -558,7 +558,7 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
 
         if rand::random::<f64>() < probability {
             let noise = images.mapv(|_| {
-                let noise_val = rand::rng().random_range(-3.0 * std..=3.0 * std) + mean;
+                let noise_val = ndarray_rand::rand::thread_rng().random_range(-3.0 * std..=3.0 * std) + mean;
                 F::from(noise_val).unwrap_or(F::zero())
             });
             result = result + noise;
@@ -589,17 +589,17 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
 
         for i in 0..batch_size {
             if rand::random::<f64>() < probability {
-                let area_ratio = rand::rng().random_range(area_ratio_range.0..=area_ratio_range.1);
+                let area_ratio = ndarray_rand::rand::thread_rng().random_range(area_ratio_range.0..=area_ratio_range.1);
                 let aspect_ratio =
-                    rand::rng().random_range(aspect_ratio_range.0..=aspect_ratio_range.1);
+                    ndarray_rand::rand::thread_rng().random_range(aspect_ratio_range.0..=aspect_ratio_range.1);
 
                 let target_area = (height * width) as f64 * area_ratio;
                 let mask_height = ((target_area * aspect_ratio).sqrt() as usize).min(height);
                 let mask_width = ((target_area / aspect_ratio).sqrt() as usize).min(width);
 
                 if mask_height > 0 && mask_width > 0 {
-                    let start_h = rand::rng().random_range(0..=(height - mask_height));
-                    let start_w = rand::rng().random_range(0..=(width - mask_width));
+                    let start_h = ndarray_rand::rand::thread_rng().random_range(0..=(height - mask_height));
+                    let start_w = ndarray_rand::rand::thread_rng().random_range(0..=(width - mask_width));
 
                     result
                         .slice_mut(ndarray::s![
@@ -631,7 +631,7 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
             // Apply simple noise as a placeholder for elastic deformation
             let noise_factor = F::from(0.01).unwrap();
             let noise = images.mapv(|_| {
-                let noise_val = rand::rng().random_range(-0.05..=0.05);
+                let noise_val = ndarray_rand::rand::thread_rng().random_range(-0.05..=0.05);
                 F::from(noise_val).unwrap_or(F::zero())
             });
             result = result + noise * noise_factor;
@@ -658,7 +658,7 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
         // Create random permutation of indices
         let mut indices: Vec<usize> = (0..batch_size).collect();
         for i in 0..batch_size {
-            let j = rand::rng().random_range(0..batch_size);
+            let j = ndarray_rand::rand::thread_rng().random_range(0..batch_size);
             indices.swap(i, j);
         }
 
@@ -713,7 +713,7 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
         }
 
         let _lambda = self.sample_beta_distribution(alpha)?;
-        let cut_ratio = rand::rng().random_range(cut_ratio_range.0..=cut_ratio_range.1);
+        let cut_ratio = ndarray_rand::rand::thread_rng().random_range(cut_ratio_range.0..=cut_ratio_range.1);
 
         let height = images.shape()[2];
         let width = images.shape()[3];
@@ -727,7 +727,7 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
         // Create random permutation
         let mut indices: Vec<usize> = (0..batch_size).collect();
         for i in 0..batch_size {
-            let j = rand::rng().random_range(0..batch_size);
+            let j = ndarray_rand::rand::thread_rng().random_range(0..batch_size);
             indices.swap(i, j);
         }
 
@@ -735,8 +735,8 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
             let j = indices[i];
 
             // Random cut position
-            let start_h = rand::rng().random_range(0..=(height - cut_height));
-            let start_w = rand::rng().random_range(0..=(width - cut_width));
+            let start_h = ndarray_rand::rand::thread_rng().random_range(0..=(height - cut_height));
+            let start_w = ndarray_rand::rand::thread_rng().random_range(0..=(width - cut_width));
 
             // Cut and paste
             let patch = images.slice(ndarray::s![

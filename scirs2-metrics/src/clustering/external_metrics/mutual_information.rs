@@ -163,7 +163,12 @@ where
                 mutual_info / max_entropy
             }
         }
-        _ => unreachable!(), // Already validated
+        _ => {
+            return Err(MetricsError::InvalidInput(format!(
+                "Invalid average_method: {}",
+                average_method
+            )))
+        }
     };
 
     // Clamp to [0, 1] range to avoid numerical issues
@@ -372,7 +377,12 @@ where
                 (mutual_info - emi) / (max_h - emi)
             }
         }
-        _ => unreachable!(), // Already validated
+        _ => {
+            return Err(MetricsError::InvalidInput(format!(
+                "Invalid average_method: {}",
+                average_method
+            )))
+        }
     };
 
     // Clamp to [0, 1] range to avoid numerical issues

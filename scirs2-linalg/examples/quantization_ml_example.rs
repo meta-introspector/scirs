@@ -4,7 +4,7 @@
 //! typical machine learning model operations like matrix multiplication.
 
 use ndarray::Array2;
-use rand::{rng, Rng};
+use rand::{thread_rng, Rng};
 use rand_distr::{Distribution, Normal};
 use scirs2_linalg::quantization::calibration::{
     calibrate_matrix, CalibrationConfig, CalibrationMethod,

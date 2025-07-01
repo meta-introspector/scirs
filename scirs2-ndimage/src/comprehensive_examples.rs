@@ -4,7 +4,7 @@
 //! for all major functionality in scirs2-ndimage. It serves as both
 //! educational material and validation of the API usability.
 
-use crate::error::Result;
+use crate::error::NdimageResult;
 use crate::features::*;
 use crate::filters::*;
 use crate::interpolation::*;

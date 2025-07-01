@@ -195,13 +195,54 @@ pub struct PerformanceThresholds {
 impl<F: IntegrateFloat + GpuDataType> UltraGPUAccelerator<F> {
     /// Create a new ultra-performance GPU accelerator
     pub fn new() -> IntegrateResult<Self> {
-        let context = Arc::new(Mutex::new(gpu::GpuContext::new(GpuBackend::Cuda).map_err(
-            |e| IntegrateError::ComputationError(format!("GPU context creation failed: {:?}", e)),
-        )?));
+        // Try to create GPU context, fallback gracefully if not available
+        let context = match gpu::GpuContext::new(GpuBackend::Cuda) {
+            Ok(ctx) => Arc::new(Mutex::new(ctx)),
+            Err(_) => {
+                // Try OpenCL as fallback
+                match gpu::GpuContext::new(GpuBackend::OpenCL) {
+                    Ok(ctx) => Arc::new(Mutex::new(ctx)),
+                    Err(_) => {
+                        // Create a dummy context for CPU fallback mode
+                        return Err(IntegrateError::ComputationError(
+                            "GPU acceleration not available - no CUDA or OpenCL support detected. Using CPU fallback.".to_string()
+                        ));
+                    }
+                }
+            }
+        };
+
         let memory_pool = Arc::new(Mutex::new(UltraGPUMemoryPool::new()?));
         let kernel_cache = Arc::new(Mutex::new(HashMap::new()));
         let multi_gpu_config = MultiGpuConfiguration::detect_and_configure()?;
         let performance_monitor = Arc::new(Mutex::new(RealTimeGpuMonitor::new()));
+
+        Ok(UltraGPUAccelerator {
+            context,
+            memory_pool,
+            kernel_cache,
+            multi_gpu_config,
+            performance_monitor,
+        })
+    }
+
+    /// Create a new GPU accelerator with CPU fallback mode
+    pub fn new_with_cpu_fallback() -> IntegrateResult<Self> {
+        // Create a minimal GPU accelerator that works in CPU fallback mode
+        let memory_pool = Arc::new(Mutex::new(UltraGPUMemoryPool::new_cpu_fallback()?));
+        let kernel_cache = Arc::new(Mutex::new(HashMap::new()));
+        let multi_gpu_config = MultiGpuConfiguration::cpu_fallback_config()?;
+        let performance_monitor = Arc::new(Mutex::new(RealTimeGpuMonitor::new()));
+
+        // Create a dummy context for CPU mode
+        let context = Arc::new(Mutex::new(gpu::GpuContext::new(GpuBackend::Cpu).map_err(
+            |e| {
+                IntegrateError::ComputationError(format!(
+                    "CPU fallback context creation failed: {:?}",
+                    e
+                ))
+            },
+        )?));
 
         Ok(UltraGPUAccelerator {
             context,
@@ -618,7 +659,7 @@ impl<F: IntegrateFloat + GpuDataType> UltraGPUAccelerator<F> {
 
     /// Calculate optimal grid size for given problem size and block size
     fn calculate_grid_size(&self, problem_size: usize, block_size: usize) -> (usize, usize, usize) {
-        let grid_size = (problem_size + block_size - 1) / block_size;
+        let grid_size = problem_size.div_ceil(block_size);
         (grid_size, 1, 1)
     }
 
@@ -724,6 +765,19 @@ impl<F: IntegrateFloat + GpuDataType> UltraGPUMemoryPool<F> {
             available_blocks: Vec::new(),
             allocated_blocks: HashMap::new(),
             total_memory: 0,
+            used_memory: 0,
+            fragmentation_ratio: 0.0,
+            defrag_threshold: 0.3,
+            block_counter: 0,
+        })
+    }
+
+    /// Create a new memory pool with CPU fallback mode
+    pub fn new_cpu_fallback() -> IntegrateResult<Self> {
+        Ok(UltraGPUMemoryPool {
+            available_blocks: Vec::new(),
+            allocated_blocks: HashMap::new(),
+            total_memory: 1024 * 1024 * 1024, // 1GB virtual CPU memory
             used_memory: 0,
             fragmentation_ratio: 0.0,
             defrag_threshold: 0.3,
@@ -874,6 +928,29 @@ impl MultiGpuConfiguration {
         let load_balancing = LoadBalancingStrategy::Adaptive;
         let communication_channels = Vec::new(); // Would be initialized with actual GPU channels
         let workload_ratios = Self::calculate_initial_ratios(&devices);
+
+        Ok(MultiGpuConfiguration {
+            devices,
+            load_balancing,
+            communication_channels,
+            workload_ratios,
+        })
+    }
+
+    /// Create a CPU fallback configuration
+    pub fn cpu_fallback_config() -> IntegrateResult<Self> {
+        let devices = vec![GpuDeviceInfo {
+            device_id: 0,
+            name: "CPU Fallback Mode".to_string(),
+            total_memory: 8 * 1024 * 1024 * 1024, // 8GB system RAM
+            compute_capability: (1, 0),           // Minimal capability
+            multiprocessor_count: num_cpus::get(),
+            max_threads_per_block: 1,
+            current_load: 0.0,
+        }];
+        let load_balancing = LoadBalancingStrategy::RoundRobin;
+        let communication_channels = Vec::new();
+        let workload_ratios = vec![1.0];
 
         Ok(MultiGpuConfiguration {
             devices,

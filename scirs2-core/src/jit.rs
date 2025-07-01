@@ -12,7 +12,8 @@
 //! - Kernel caching and reuse
 //! - Performance profiling and auto-tuning
 
-use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
+use crate::error::{CoreError, ErrorContext, ErrorLocation};
+#[allow(unused_imports)]
 use crate::gpu::{GpuBackend, GpuContext, GpuError};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, RwLock};

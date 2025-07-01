@@ -23,7 +23,7 @@ use crate::layers::{
     ThreadSafeRNN,
     ThreadSafeRecurrentActivation,
 };
-use rand::SeedableRng;
+use ndarray_rand::rand::SeedableRng;
 
 use ndarray::{Array, Axis, IxDyn, ScalarOperand};
 use num_traits::Float;

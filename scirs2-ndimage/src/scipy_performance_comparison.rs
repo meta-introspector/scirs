@@ -5,7 +5,7 @@
 //! It includes timing comparisons, numerical accuracy validation, and
 //! comprehensive API compatibility verification.
 
-use crate::error::Result;
+use crate::error::NdimageResult;
 use crate::filters::*;
 use crate::interpolation::*;
 use crate::measurements::*;

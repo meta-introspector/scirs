@@ -16,7 +16,7 @@ use crate::error::{NeuralError, Result};
 use crate::layers::{BatchNorm, Conv2D, Dense, Dropout, Layer, PaddingMode};
 use ndarray::{Array, IxDyn, ScalarOperand};
 use num_traits::Float;
-use rand::SeedableRng;
+use ndarray_rand::rand::SeedableRng;
 use std::fmt::Debug;
 
 /// ReLU6 activation function (min(max(x, 0), 6))

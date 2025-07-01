@@ -3363,17 +3363,421 @@ pub struct TaskSpecificModule<F: Float> {
 
 #[derive(Debug)]
 pub struct SensoryMemoryBuffer<F: Float> {
-    _phantom: std::marker::PhantomData<F>,
+    /// Buffer capacity
+    capacity: usize,
+    /// Current data in buffer
+    data: VecDeque<Array1<F>>,
+    /// Decay rate for sensory memory
+    decay_rate: F,
+    /// Creation timestamps for decay calculation
+    timestamps: VecDeque<Instant>,
+}
+
+impl<F: Float + Send + Sync> SensoryMemoryBuffer<F> {
+    /// Create new sensory memory buffer
+    pub fn new(capacity: usize, decay_rate: F) -> Self {
+        Self {
+            capacity,
+            data: VecDeque::with_capacity(capacity),
+            decay_rate,
+            timestamps: VecDeque::with_capacity(capacity),
+        }
+    }
+
+    /// Add new sensory input
+    pub fn add_input(&mut self, input: Array1<F>) {
+        if self.data.len() >= self.capacity {
+            self.data.pop_front();
+            self.timestamps.pop_front();
+        }
+        self.data.push_back(input);
+        self.timestamps.push_back(Instant::now());
+    }
+
+    /// Get current buffer contents with decay applied
+    pub fn get_current_state(&self) -> Vec<Array1<F>> {
+        let now = Instant::now();
+        self.data
+            .iter()
+            .zip(self.timestamps.iter())
+            .map(|(data, timestamp)| {
+                let elapsed = now.duration_since(*timestamp).as_secs_f64();
+                let decay_factor = (-self.decay_rate.to_f64().unwrap() * elapsed).exp();
+                data * F::from(decay_factor).unwrap()
+            })
+            .collect()
+    }
+
+    /// Clear old entries based on decay threshold
+    pub fn prune_old_entries(&mut self, threshold: F) {
+        let now = Instant::now();
+        while let Some(timestamp) = self.timestamps.front() {
+            let elapsed = now.duration_since(*timestamp).as_secs_f64();
+            let decay_factor = (-self.decay_rate.to_f64().unwrap() * elapsed).exp();
+            if F::from(decay_factor).unwrap() < threshold {
+                self.data.pop_front();
+                self.timestamps.pop_front();
+            } else {
+                break;
+            }
+        }
+    }
 }
 
 #[derive(Debug)]
 pub struct ShortTermMemoryWithChunking<F: Float> {
-    _phantom: std::marker::PhantomData<F>,
+    /// Memory chunks organized by pattern similarity
+    chunks: HashMap<String, Vec<Array1<F>>>,
+    /// Chunk access frequencies for prioritization
+    access_counts: HashMap<String, usize>,
+    /// Maximum capacity per chunk
+    max_chunk_size: usize,
+    /// Maximum number of chunks
+    max_chunks: usize,
+    /// Similarity threshold for chunk assignment
+    similarity_threshold: F,
+}
+
+impl<F: Float + Send + Sync + std::iter::Sum> ShortTermMemoryWithChunking<F> {
+    /// Create new short-term memory with chunking
+    pub fn new(max_chunk_size: usize, max_chunks: usize, similarity_threshold: F) -> Self {
+        Self {
+            chunks: HashMap::new(),
+            access_counts: HashMap::new(),
+            max_chunk_size,
+            max_chunks,
+            similarity_threshold,
+        }
+    }
+
+    /// Store new pattern in appropriate chunk
+    pub fn store_pattern(&mut self, pattern: Array1<F>) -> Result<()> {
+        let best_chunk = self.find_best_chunk(&pattern)?;
+        
+        let chunk_key = match best_chunk {
+            Some(key) => key,
+            None => {
+                // Create new chunk if under limit
+                if self.chunks.len() < self.max_chunks {
+                    let new_key = format!("chunk_{}", self.chunks.len());
+                    self.chunks.insert(new_key.clone(), Vec::new());
+                    self.access_counts.insert(new_key.clone(), 0);
+                    new_key
+                } else {
+                    // Replace least accessed chunk
+                    let lru_key = self.access_counts
+                        .iter()
+                        .min_by_key(|(_, &count)| count)
+                        .map(|(key, _)| key.clone())
+                        .ok_or_else(|| MetricsError::ComputationError("No chunks available".to_string()))?;
+                    self.chunks.get_mut(&lru_key).unwrap().clear();
+                    lru_key
+                }
+            }
+        };
+
+        // Add pattern to chunk
+        let chunk = self.chunks.get_mut(&chunk_key).unwrap();
+        if chunk.len() >= self.max_chunk_size {
+            chunk.remove(0); // Remove oldest
+        }
+        chunk.push(pattern);
+        *self.access_counts.get_mut(&chunk_key).unwrap() += 1;
+
+        Ok(())
+    }
+
+    /// Find best matching chunk for a pattern
+    fn find_best_chunk(&self, pattern: &Array1<F>) -> Result<Option<String>> {
+        let mut best_match: Option<(String, F)> = None;
+
+        for (key, chunk_patterns) in &self.chunks {
+            if chunk_patterns.is_empty() {
+                continue;
+            }
+
+            // Calculate average similarity to chunk
+            let mut total_similarity = F::zero();
+            for chunk_pattern in chunk_patterns {
+                let similarity = self.calculate_cosine_similarity(pattern, chunk_pattern)?;
+                total_similarity = total_similarity + similarity;
+            }
+            let avg_similarity = total_similarity / F::from(chunk_patterns.len()).unwrap();
+
+            if avg_similarity > self.similarity_threshold {
+                match &best_match {
+                    None => best_match = Some((key.clone(), avg_similarity)),
+                    Some((_, best_sim)) => {
+                        if avg_similarity > *best_sim {
+                            best_match = Some((key.clone(), avg_similarity));
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(best_match.map(|(key, _)| key))
+    }
+
+    /// Calculate cosine similarity between two patterns
+    fn calculate_cosine_similarity(&self, a: &Array1<F>, b: &Array1<F>) -> Result<F> {
+        if a.len() != b.len() {
+            return Err(MetricsError::InvalidInput("Pattern lengths must match".to_string()));
+        }
+
+        let dot_product: F = a.iter().zip(b.iter()).map(|(&x, &y)| x * y).sum();
+        let norm_a: F = a.iter().map(|&x| x * x).sum::<F>().sqrt();
+        let norm_b: F = b.iter().map(|&x| x * x).sum::<F>().sqrt();
+
+        if norm_a == F::zero() || norm_b == F::zero() {
+            Ok(F::zero())
+        } else {
+            Ok(dot_product / (norm_a * norm_b))
+        }
+    }
+
+    /// Retrieve patterns from a specific chunk
+    pub fn get_chunk_patterns(&self, chunk_key: &str) -> Option<&Vec<Array1<F>>> {
+        self.chunks.get(chunk_key)
+    }
+
+    /// Get all chunk keys sorted by access frequency
+    pub fn get_chunks_by_frequency(&self) -> Vec<String> {
+        let mut chunks: Vec<_> = self.access_counts.iter().collect();
+        chunks.sort_by(|a, b| b.1.cmp(a.1));
+        chunks.into_iter().map(|(key, _)| key.clone()).collect()
+    }
 }
 
 #[derive(Debug)]
 pub struct LongTermMemoryHierarchy<F: Float> {
-    _phantom: std::marker::PhantomData<F>,
+    /// Episodic memory for experiences
+    episodic_memory: HashMap<String, EpisodicMemoryEntry<F>>,
+    /// Semantic memory for concepts
+    semantic_memory: HashMap<String, SemanticMemoryEntry<F>>,
+    /// Procedural memory for learned procedures
+    procedural_memory: HashMap<String, ProceduralMemoryEntry<F>>,
+    /// Memory consolidation scheduler
+    consolidation_schedule: VecDeque<ConsolidationTask>,
+    /// Memory access statistics
+    access_stats: HashMap<String, MemoryAccessStats>,
+}
+
+#[derive(Debug, Clone)]
+pub struct EpisodicMemoryEntry<F: Float> {
+    /// The experience data
+    pub data: Array1<F>,
+    /// Context information
+    pub context: HashMap<String, String>,
+    /// Emotional valence
+    pub emotional_valence: F,
+    /// Storage timestamp
+    pub timestamp: SystemTime,
+    /// Retrieval count
+    pub retrieval_count: usize,
+}
+
+#[derive(Debug, Clone)]
+pub struct SemanticMemoryEntry<F: Float> {
+    /// Concept representation
+    pub concept: Array1<F>,
+    /// Associated concepts
+    pub associations: Vec<String>,
+    /// Confidence level
+    pub confidence: F,
+    /// Last updated
+    pub last_updated: SystemTime,
+}
+
+#[derive(Debug, Clone)]
+pub struct ProceduralMemoryEntry<F: Float> {
+    /// Procedure steps
+    pub steps: Vec<Array1<F>>,
+    /// Success rate
+    pub success_rate: F,
+    /// Execution count
+    pub execution_count: usize,
+    /// Last executed
+    pub last_executed: SystemTime,
+}
+
+#[derive(Debug, Clone)]
+pub struct ConsolidationTask {
+    /// Memory type
+    pub memory_type: String,
+    /// Memory key
+    pub key: String,
+    /// Scheduled time
+    pub scheduled_time: SystemTime,
+    /// Priority
+    pub priority: u8,
+}
+
+#[derive(Debug, Clone)]
+pub struct MemoryAccessStats {
+    /// Access count
+    pub access_count: usize,
+    /// Last access time
+    pub last_access: SystemTime,
+    /// Average access interval
+    pub avg_access_interval: Duration,
+}
+
+impl<F: Float + Send + Sync> LongTermMemoryHierarchy<F> {
+    /// Create new long-term memory hierarchy
+    pub fn new() -> Self {
+        Self {
+            episodic_memory: HashMap::new(),
+            semantic_memory: HashMap::new(),
+            procedural_memory: HashMap::new(),
+            consolidation_schedule: VecDeque::new(),
+            access_stats: HashMap::new(),
+        }
+    }
+
+    /// Store episodic memory
+    pub fn store_episode(&mut self, key: String, data: Array1<F>, context: HashMap<String, String>, emotional_valence: F) {
+        let entry = EpisodicMemoryEntry {
+            data,
+            context,
+            emotional_valence,
+            timestamp: SystemTime::now(),
+            retrieval_count: 0,
+        };
+        self.episodic_memory.insert(key.clone(), entry);
+        self.update_access_stats(&key);
+        self.schedule_consolidation("episodic".to_string(), key, 1);
+    }
+
+    /// Store semantic concept
+    pub fn store_concept(&mut self, key: String, concept: Array1<F>, associations: Vec<String>, confidence: F) {
+        let entry = SemanticMemoryEntry {
+            concept,
+            associations,
+            confidence,
+            last_updated: SystemTime::now(),
+        };
+        self.semantic_memory.insert(key.clone(), entry);
+        self.update_access_stats(&key);
+        self.schedule_consolidation("semantic".to_string(), key, 2);
+    }
+
+    /// Store procedural knowledge
+    pub fn store_procedure(&mut self, key: String, steps: Vec<Array1<F>>, success_rate: F) {
+        let entry = ProceduralMemoryEntry {
+            steps,
+            success_rate,
+            execution_count: 0,
+            last_executed: SystemTime::now(),
+        };
+        self.procedural_memory.insert(key.clone(), entry);
+        self.update_access_stats(&key);
+        self.schedule_consolidation("procedural".to_string(), key, 3);
+    }
+
+    /// Retrieve episodic memory
+    pub fn retrieve_episode(&mut self, key: &str) -> Option<&mut EpisodicMemoryEntry<F>> {
+        if let Some(entry) = self.episodic_memory.get_mut(key) {
+            entry.retrieval_count += 1;
+            self.update_access_stats(key);
+            Some(entry)
+        } else {
+            None
+        }
+    }
+
+    /// Update access statistics
+    fn update_access_stats(&mut self, key: &str) {
+        let now = SystemTime::now();
+        let stats = self.access_stats.entry(key.to_string()).or_insert(MemoryAccessStats {
+            access_count: 0,
+            last_access: now,
+            avg_access_interval: Duration::from_secs(0),
+        });
+        
+        if stats.access_count > 0 {
+            let interval = now.duration_since(stats.last_access).unwrap_or(Duration::from_secs(0));
+            stats.avg_access_interval = Duration::from_nanos(
+                (stats.avg_access_interval.as_nanos() * stats.access_count as u128 + interval.as_nanos()) 
+                / (stats.access_count as u128 + 1)
+            );
+        }
+        
+        stats.access_count += 1;
+        stats.last_access = now;
+    }
+
+    /// Schedule memory consolidation
+    fn schedule_consolidation(&mut self, memory_type: String, key: String, priority: u8) {
+        let task = ConsolidationTask {
+            memory_type,
+            key,
+            scheduled_time: SystemTime::now() + Duration::from_secs(3600), // 1 hour delay
+            priority,
+        };
+        
+        // Insert in priority order
+        let mut inserted = false;
+        for i in 0..self.consolidation_schedule.len() {
+            if self.consolidation_schedule[i].priority < priority {
+                self.consolidation_schedule.insert(i, task);
+                inserted = true;
+                break;
+            }
+        }
+        if !inserted {
+            self.consolidation_schedule.push_back(task);
+        }
+    }
+
+    /// Process pending consolidation tasks
+    pub fn process_consolidation(&mut self) -> usize {
+        let now = SystemTime::now();
+        let mut processed = 0;
+        
+        while let Some(task) = self.consolidation_schedule.front() {
+            if task.scheduled_time <= now {
+                let task = self.consolidation_schedule.pop_front().unwrap();
+                // Perform consolidation (strengthening memory traces)
+                self.consolidate_memory(&task);
+                processed += 1;
+            } else {
+                break;
+            }
+        }
+        
+        processed
+    }
+
+    /// Consolidate specific memory
+    fn consolidate_memory(&mut self, task: &ConsolidationTask) {
+        match task.memory_type.as_str() {
+            "episodic" => {
+                if let Some(entry) = self.episodic_memory.get_mut(&task.key) {
+                    // Strengthen based on retrieval count and emotional valence
+                    let strength_factor = F::one() + entry.emotional_valence.abs() * F::from(0.1).unwrap();
+                    entry.data = &entry.data * strength_factor;
+                }
+            }
+            "semantic" => {
+                if let Some(entry) = self.semantic_memory.get_mut(&task.key) {
+                    // Increase confidence through consolidation
+                    entry.confidence = (entry.confidence + F::from(0.05).unwrap()).min(F::one());
+                    entry.last_updated = SystemTime::now();
+                }
+            }
+            "procedural" => {
+                if let Some(entry) = self.procedural_memory.get_mut(&task.key) {
+                    // Enhance procedure based on success rate
+                    let enhancement = entry.success_rate * F::from(0.02).unwrap();
+                    for step in &mut entry.steps {
+                        *step = &*step * (F::one() + enhancement);
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
 }
 
 #[derive(Debug)]

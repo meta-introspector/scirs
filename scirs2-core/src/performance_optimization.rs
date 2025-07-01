@@ -2716,21 +2716,17 @@ pub mod ultrathink_optimization {
                 // Data characteristics
                 context.data_size as f64,
                 context.data_type.len() as f64, // Simplified encoding
-
                 // System load features
                 context.system_load.cpu_utilization,
                 context.system_load.memory_utilization,
                 context.system_load.io_wait,
                 context.memory_pressure,
-
                 // Hardware features
                 context.cpu_characteristics.physical_cores as f64,
                 context.cpu_characteristics.logical_cores as f64,
                 context.cpu_characteristics.base_frequency_mhz as f64,
-
                 // Accelerator availability
                 context.available_accelerators.len() as f64,
-
                 // Temperature (if available)
                 context.temperature_celsius.unwrap_or(50.0) as f64,
             ];
@@ -2835,6 +2831,33 @@ pub mod ultrathink_optimization {
         HyperparameterOptimizationFailed(String),
         #[error("Context analysis failed: {0}")]
         ContextAnalysisFailed(String),
+    }
+
+    /// Convert from OptimizationError to CoreError
+    impl From<OptimizationError> for crate::error::CoreError {
+        fn from(err: OptimizationError) -> Self {
+            use crate::error::{CoreError, ErrorContext};
+            match err {
+                OptimizationError::InsufficientData(msg) => CoreError::ComputationError(
+                    ErrorContext::new(format!("Insufficient optimization data: {}", msg)),
+                ),
+                OptimizationError::PredictionFailed(msg) => CoreError::ComputationError(
+                    ErrorContext::new(format!("Optimization prediction failed: {}", msg)),
+                ),
+                OptimizationError::ClassificationFailed(msg) => CoreError::ComputationError(
+                    ErrorContext::new(format!("Strategy classification failed: {}", msg)),
+                ),
+                OptimizationError::HyperparameterOptimizationFailed(msg) => {
+                    CoreError::ComputationError(ErrorContext::new(format!(
+                        "Hyperparameter optimization failed: {}",
+                        msg
+                    )))
+                }
+                OptimizationError::ContextAnalysisFailed(msg) => CoreError::ComputationError(
+                    ErrorContext::new(format!("Context analysis failed: {}", msg)),
+                ),
+            }
+        }
     }
 
     // Implementations for supporting structures
@@ -3306,6 +3329,12 @@ pub mod ultrathink_optimization {
         }
     }
 
+    impl Default for FeatureNormalizer {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
     impl FeatureNormalizer {
         pub fn new() -> Self {
             Self {
@@ -3331,6 +3360,12 @@ pub mod ultrathink_optimization {
         }
     }
 
+    impl Default for GaussianProcessModel {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
     impl GaussianProcessModel {
         pub fn new() -> Self {
             Self {
@@ -3349,6 +3384,12 @@ pub mod ultrathink_optimization {
         }
     }
 
+    impl Default for WorkloadClassifier {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
     impl WorkloadClassifier {
         pub fn new() -> Self {
             Self {
@@ -3358,12 +3399,24 @@ pub mod ultrathink_optimization {
         }
     }
 
+    impl Default for ContextPerformancePredictor {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
     impl ContextPerformancePredictor {
         pub fn new() -> Self {
             Self {
                 prediction_models: HashMap::new(),
                 ensemble_weights: vec![0.25, 0.25, 0.25, 0.25],
             }
+        }
+    }
+
+    impl Default for SystemProfiler {
+        fn default() -> Self {
+            Self::new()
         }
     }
 

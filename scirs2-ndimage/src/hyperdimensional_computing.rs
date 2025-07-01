@@ -16,7 +16,7 @@
 //! - **Real-Time Processing**: Ultra-fast associative memory operations
 //! - **Compositional Reasoning**: Ability to compose and decompose concepts
 
-use ndarray::{Array, Array1, Array2, Array3, ArrayView1, ArrayView2, Axis, Zip};
+use ndarray::{s, Array, Array1, Array2, Array3, ArrayView1, ArrayView2, Axis, Zip};
 use num_traits::{Float, FromPrimitive, One, Zero};
 use rand::Rng;
 use std::collections::hash_map::DefaultHasher;

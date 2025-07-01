@@ -215,15 +215,15 @@ impl<F: Float> FloatKey<F> {
     }
 }
 
-impl<F: Float + FromPrimitive> PartialEq for FloatKey<F> {
+impl<F: crate::traits::InterpolationFloat> PartialEq for FloatKey<F> {
     fn eq(&self, other: &Self) -> bool {
         (self.value - other.value).abs() <= self.tolerance
     }
 }
 
-impl<F: Float + FromPrimitive> Eq for FloatKey<F> {}
+impl<F: crate::traits::InterpolationFloat> Eq for FloatKey<F> {}
 
-impl<F: Float + FromPrimitive> Hash for FloatKey<F> {
+impl<F: crate::traits::InterpolationFloat> Hash for FloatKey<F> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         // Quantize the float to the tolerance for consistent hashing
         let quantized = (self.value / self.tolerance).round() * self.tolerance;
@@ -324,14 +324,14 @@ impl<T> CacheEntry<T> {
     }
 }
 
-impl<F: Float + FromPrimitive> Default for BSplineCache<F> {
+impl<F: crate::traits::InterpolationFloat> Default for BSplineCache<F> {
     fn default() -> Self {
         Self::new(CacheConfig::default())
     }
 }
 
 #[allow(dead_code)]
-impl<F: Float + FromPrimitive> BSplineCache<F> {
+impl<F: crate::traits::InterpolationFloat> BSplineCache<F> {
     /// Create a new B-spline cache with the given configuration
     pub fn new(config: CacheConfig) -> Self {
         Self {
@@ -637,21 +637,7 @@ where
 #[allow(dead_code)]
 impl<T> CachedBSpline<T>
 where
-    T: Float
-        + FromPrimitive
-        + Debug
-        + Display
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + AddAssign
-        + SubAssign
-        + MulAssign
-        + DivAssign
-        + RemAssign
-        + Zero
-        + Copy,
+    T: crate::traits::InterpolationFloat,
 {
     /// Create a new cached B-spline
     ///
@@ -752,7 +738,7 @@ where
     /// Evaluate with cache optimization for basis functions
     fn evaluate_with_cache_optimization(&mut self, x: T) -> InterpolateResult<T> {
         // Get knot vector and coefficients from the underlying spline
-        let knots = self.spline.knots();
+        let knots = self.spline.knot_vector();
         let coeffs = self.spline.coefficients();
         let degree = self.spline.degree();
 
@@ -1019,7 +1005,7 @@ pub struct DistanceMatrixCache<F: Float> {
     stats: CacheStats,
 }
 
-impl<F: Float + FromPrimitive> DistanceMatrixCache<F> {
+impl<F: crate::traits::InterpolationFloat> DistanceMatrixCache<F> {
     /// Create a new distance matrix cache
     pub fn new(config: CacheConfig) -> Self {
         Self {
@@ -1135,21 +1121,7 @@ pub fn make_cached_bspline<T>(
     extrapolate: ExtrapolateMode,
 ) -> InterpolateResult<CachedBSpline<T>>
 where
-    T: Float
-        + FromPrimitive
-        + Debug
-        + Display
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + AddAssign
-        + SubAssign
-        + MulAssign
-        + DivAssign
-        + RemAssign
-        + Zero
-        + Copy,
+    T: crate::traits::InterpolationFloat,
 {
     let cache = BSplineCache::default();
     CachedBSpline::new(knots, coeffs, degree, extrapolate, cache)
@@ -1164,21 +1136,7 @@ pub fn make_cached_bspline_with_config<T>(
     cache_config: CacheConfig,
 ) -> InterpolateResult<CachedBSpline<T>>
 where
-    T: Float
-        + FromPrimitive
-        + Debug
-        + Display
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Mul<Output = T>
-        + Div<Output = T>
-        + AddAssign
-        + SubAssign
-        + MulAssign
-        + DivAssign
-        + RemAssign
-        + Zero
-        + Copy,
+    T: crate::traits::InterpolationFloat,
 {
     let cache = BSplineCache::new(cache_config);
     CachedBSpline::new(knots, coeffs, degree, extrapolate, cache)

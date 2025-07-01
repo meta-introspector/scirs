@@ -6,15 +6,11 @@
 //! networks, synaptic plasticity, and biological learning mechanisms.
 
 use crate::error::{DatasetsError, Result};
-use crate::neuromorphic_data_processor::{
-    NetworkTopology, NeuromorphicProcessor, SynapticPlasticity,
-};
+use crate::neuromorphic_data_processor::NeuromorphicProcessor;
 use crate::quantum_enhanced_generators::QuantumDatasetGenerator;
 use crate::utils::Dataset;
-use ndarray::{s, Array1, Array2, Array3, Array4, Axis};
-use rand::prelude::*;
-use rand::thread_rng;
-use std::collections::HashMap;
+use ndarray::{s, Array1, Array2, Array3};
+use rand::{Rng, SeedableRng, rngs::StdRng};
 use std::f64::consts::PI;
 use std::time::{Duration, Instant};
 
@@ -167,7 +163,7 @@ impl QuantumNeuromorphicFusion {
 
         let mut rng = match random_seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_entropy(),
+            None => StdRng::from_rng(&mut rand::rng()).unwrap(),
         };
 
         // Initialize quantum-biological hybrid network
@@ -281,7 +277,7 @@ impl QuantumNeuromorphicFusion {
         quantum_interference: bool,
         random_seed: Option<u64>,
     ) -> Result<QuantumBioFusionResult> {
-        let data = dataset.data();
+        let data = &dataset.data;
         let n_samples = data.nrows();
         let n_features = data.ncols();
 
@@ -293,7 +289,7 @@ impl QuantumNeuromorphicFusion {
 
         let mut rng = match random_seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_entropy(),
+            None => StdRng::from_rng(&mut rand::rng()).unwrap(),
         };
 
         // Initialize quantum-biological network for transformation
@@ -379,7 +375,8 @@ impl QuantumNeuromorphicFusion {
 
             // Assign transformed target
             transformed_targets[sample_idx] = dataset
-                .targets()
+                .target
+                .as_ref()
                 .map(|targets| targets[sample_idx])
                 .unwrap_or(sample_learning.tanh());
 
@@ -536,7 +533,7 @@ impl QuantumNeuromorphicFusion {
         &self,
         neurons: &mut [QuantumNeuron],
         _synapses: &[QuantumSynapse],
-        time_step: usize,
+        _time_step: usize,
         rng: &mut StdRng,
     ) -> Result<()> {
         for neuron in neurons.iter_mut() {
@@ -628,7 +625,7 @@ impl QuantumNeuromorphicFusion {
     fn quantum_bio_learning(
         &self,
         synapses: &mut [QuantumSynapse],
-        spike_response: &Array1<f64>,
+        _spike_response: &Array1<f64>,
         time_step: usize,
     ) -> Result<f64> {
         let mut total_learning = 0.0;

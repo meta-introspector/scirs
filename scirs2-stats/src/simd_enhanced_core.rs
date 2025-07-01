@@ -5,9 +5,9 @@
 //! with additional performance optimizations and adaptive algorithms.
 
 use crate::error::StatsResult;
-use crate::error_standardization::{ErrorMessages, ErrorValidator};
-use ndarray::{Array1, ArrayBase, ArrayView1, Data, Ix1, Ix2};
-use num_traits::{Float, NumCast, One, Zero};
+use crate::error_standardization::ErrorMessages;
+use ndarray::{Array1, ArrayBase, Data, Ix1};
+use num_traits::{Float, NumCast, Zero};
 use scirs2_core::simd_ops::{AutoOptimizer, PlatformCapabilities, SimdUnifiedOps};
 
 /// Enhanced SIMD-optimized mean calculation with adaptive algorithms

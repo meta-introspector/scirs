@@ -6,7 +6,7 @@ use crate::layers::{Layer, ParamLayer};
 use ndarray::{Array, ArrayView, Ix2, IxDyn, ScalarOperand};
 use ndarray_rand::rand::distributions::{Distribution, Uniform};
 use num_traits::Float;
-use rand::Rng;
+use ndarray_rand::rand::Rng;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 

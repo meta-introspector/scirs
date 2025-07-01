@@ -938,7 +938,7 @@ pub enum ErrorHandling {
 }
 
 /// GPU performance statistics
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct GpuPerformanceStats {
     /// Total GPU operations performed
     pub total_operations: u64,
@@ -1379,7 +1379,7 @@ impl AdvancedGpuComputer {
         metrics: &[&str],
     ) -> Result<GpuComputeResults<Vec<HashMap<String, F>>>>
     where
-        F: Float + SimdUnifiedOps + Send + Sync + NumCast,
+        F: Float + SimdUnifiedOps + Send + Sync + NumCast + std::iter::Sum,
     {
         let start_time = Instant::now();
         let _batch_size = y_true_batch.nrows();
@@ -1561,7 +1561,7 @@ impl AdvancedGpuComputer {
         metrics: &[&str],
     ) -> Result<(Vec<HashMap<String, F>>, KernelMetrics, TransferMetrics)>
     where
-        F: Float + NumCast,
+        F: Float + NumCast + std::iter::Sum,
     {
         let opencl_ctx = self.opencl_context.as_ref().ok_or_else(|| {
             MetricsError::ComputationError("OpenCL context not available".to_string())
@@ -1642,7 +1642,7 @@ impl AdvancedGpuComputer {
         metrics: &[&str],
     ) -> Result<Vec<HashMap<String, F>>>
     where
-        F: Float + SimdUnifiedOps + Send + Sync,
+        F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum,
     {
         use scirs2_core::parallel_ops::*;
 
@@ -1821,12 +1821,12 @@ impl AdvancedGpuComputer {
     // SIMD implementations
     fn simd_mse<F>(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F>
     where
-        F: Float + SimdUnifiedOps,
+        F: Float + SimdUnifiedOps + std::iter::Sum,
     {
-        if self.capabilities.supports_simd() {
-            let diff = F::simd_sub(y_true, y_pred)?;
-            let squared = F::simd_mul(&diff.view(), &diff.view())?;
-            let sum = F::simd_sum(&squared.view())?;
+        if self.capabilities.simd_available {
+            let diff = F::simd_sub(y_true, y_pred);
+            let squared = F::simd_mul(&diff.view(), &diff.view());
+            let sum = F::simd_sum(&squared.view());
             Ok(sum / F::from(y_true.len()).unwrap())
         } else {
             let mse = y_true
@@ -1841,12 +1841,12 @@ impl AdvancedGpuComputer {
 
     fn simd_mae<F>(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F>
     where
-        F: Float + SimdUnifiedOps,
+        F: Float + SimdUnifiedOps + std::iter::Sum,
     {
-        if self.capabilities.supports_simd() {
-            let diff = F::simd_sub(y_true, y_pred)?;
-            let abs_diff = F::simd_abs(&diff.view())?;
-            let sum = F::simd_sum(&abs_diff.view())?;
+        if self.capabilities.simd_available {
+            let diff = F::simd_sub(y_true, y_pred);
+            let abs_diff = F::simd_abs(&diff.view());
+            let sum = F::simd_sum(&abs_diff.view());
             Ok(sum / F::from(y_true.len()).unwrap())
         } else {
             let mae = y_true
@@ -1861,19 +1861,19 @@ impl AdvancedGpuComputer {
 
     fn simd_r2_score<F>(&self, y_true: &ArrayView1<F>, y_pred: &ArrayView1<F>) -> Result<F>
     where
-        F: Float + SimdUnifiedOps,
+        F: Float + SimdUnifiedOps + std::iter::Sum,
     {
-        if self.capabilities.supports_simd() {
-            let mean_true = F::simd_sum(y_true)? / F::from(y_true.len()).unwrap();
+        if self.capabilities.simd_available {
+            let mean_true = F::simd_sum(y_true) / F::from(y_true.len()).unwrap();
             let mean_array = Array1::from_elem(y_true.len(), mean_true);
 
-            let diff_from_mean = F::simd_sub(y_true, &mean_array.view())?;
-            let squared_diff_mean = F::simd_mul(&diff_from_mean.view(), &diff_from_mean.view())?;
-            let ss_tot = F::simd_sum(&squared_diff_mean.view())?;
+            let diff_from_mean = F::simd_sub(y_true, &mean_array.view());
+            let squared_diff_mean = F::simd_mul(&diff_from_mean.view(), &diff_from_mean.view());
+            let ss_tot = F::simd_sum(&squared_diff_mean.view());
 
-            let residuals = F::simd_sub(y_true, y_pred)?;
-            let squared_residuals = F::simd_mul(&residuals.view(), &residuals.view())?;
-            let ss_res = F::simd_sum(&squared_residuals.view())?;
+            let residuals = F::simd_sub(y_true, y_pred);
+            let squared_residuals = F::simd_mul(&residuals.view(), &residuals.view());
+            let ss_res = F::simd_sum(&squared_residuals.view());
 
             if ss_tot == F::zero() {
                 Ok(F::zero())
@@ -1887,27 +1887,27 @@ impl AdvancedGpuComputer {
 
     fn simd_correlation<F>(&self, x: &ArrayView1<F>, y: &ArrayView1<F>) -> Result<F>
     where
-        F: Float + SimdUnifiedOps,
+        F: Float + SimdUnifiedOps + std::iter::Sum,
     {
-        if self.capabilities.supports_simd() {
+        if self.capabilities.simd_available {
             let n = F::from(x.len()).unwrap();
-            let mean_x = F::simd_sum(x)? / n;
-            let mean_y = F::simd_sum(y)? / n;
+            let mean_x = F::simd_sum(x) / n;
+            let mean_y = F::simd_sum(y) / n;
 
             let mean_x_array = Array1::from_elem(x.len(), mean_x);
             let mean_y_array = Array1::from_elem(y.len(), mean_y);
 
-            let dev_x = F::simd_sub(x, &mean_x_array.view())?;
-            let dev_y = F::simd_sub(y, &mean_y_array.view())?;
+            let dev_x = F::simd_sub(x, &mean_x_array.view());
+            let dev_y = F::simd_sub(y, &mean_y_array.view());
 
-            let cov_xy = F::simd_mul(&dev_x.view(), &dev_y.view())?;
-            let sum_cov = F::simd_sum(&cov_xy.view())?;
+            let cov_xy = F::simd_mul(&dev_x.view(), &dev_y.view());
+            let sum_cov = F::simd_sum(&cov_xy.view());
 
-            let var_x = F::simd_mul(&dev_x.view(), &dev_x.view())?;
-            let var_y = F::simd_mul(&dev_y.view(), &dev_y.view())?;
+            let var_x = F::simd_mul(&dev_x.view(), &dev_x.view());
+            let var_y = F::simd_mul(&dev_y.view(), &dev_y.view());
 
-            let sum_var_x = F::simd_sum(&var_x.view())?;
-            let sum_var_y = F::simd_sum(&var_y.view())?;
+            let sum_var_x = F::simd_sum(&var_x.view());
+            let sum_var_y = F::simd_sum(&var_y.view());
 
             let denom = (sum_var_x * sum_var_y).sqrt();
             if denom > F::zero() {
@@ -1955,7 +1955,7 @@ impl AdvancedGpuComputer {
     pub fn get_performance_stats(&self) -> GpuPerformanceStats {
         self.performance_stats
             .lock()
-            .map(|stats| stats.clone())
+            .map(|stats| (*stats).clone())
             .unwrap_or_default()
     }
 
@@ -2167,7 +2167,7 @@ impl AdvancedGpuComputer {
         metrics: &[&str],
     ) -> Result<Vec<HashMap<String, F>>>
     where
-        F: Float + NumCast + Send + Sync,
+        F: Float + NumCast + Send + Sync + std::iter::Sum,
     {
         let batch_size = y_true_batch.nrows();
         let mut results = Vec::with_capacity(batch_size);
@@ -2198,7 +2198,7 @@ impl AdvancedGpuComputer {
     /// Execute GPU MAE computation
     pub fn execute_gpu_mae<F>(&self, y_true: &Array1<F>, y_pred: &Array1<F>) -> Result<F>
     where
-        F: Float + NumCast,
+        F: Float + NumCast + std::iter::Sum,
     {
         // Similar implementation to MSE but using MAE kernel
         // For brevity, falling back to CPU computation here
@@ -2214,7 +2214,7 @@ impl AdvancedGpuComputer {
     /// Execute GPU R² computation
     pub fn execute_gpu_r2<F>(&self, y_true: &Array1<F>, y_pred: &Array1<F>) -> Result<F>
     where
-        F: Float + NumCast,
+        F: Float + NumCast + std::iter::Sum,
     {
         // Similar implementation to MSE but using R² kernel
         // For brevity, falling back to CPU computation here
@@ -2252,7 +2252,7 @@ impl Default for AdvancedGpuComputer {
         Self::new(GpuComputeConfig::default()).unwrap_or_else(|_| Self {
             cuda_context: None,
             opencl_context: None,
-            capabilities: PlatformCapabilities::default(),
+            capabilities: PlatformCapabilities::detect(),
             performance_stats: Arc::new(Mutex::new(GpuPerformanceStats::default())),
             config: GpuComputeConfig::default(),
         })

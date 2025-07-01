@@ -34,7 +34,8 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<
 }
 use crate::filters::{gaussian_filter, median_filter, uniform_filter, BorderMode};
 use crate::interpolation::{rotate, zoom, InterpolationOrder};
-use crate::measurements::{center_of_mass, label, moments};
+use crate::measurements::{center_of_mass, moments};
+use crate::morphology::label;
 use crate::morphology::{binary_closing, binary_opening, grey_dilation, grey_erosion};
 
 /// Medical imaging functions

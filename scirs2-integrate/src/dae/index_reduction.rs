@@ -972,7 +972,7 @@ impl<
             if max_norm > F::from_f64(1e-12).unwrap() {
                 // Normalize the k-th column
                 for i in k..m {
-                    a[[i, k]] = a[[i, k]] / max_norm;
+                    a[[i, k]] /= max_norm;
                 }
 
                 // Orthogonalize subsequent columns

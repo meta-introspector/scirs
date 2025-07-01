@@ -856,6 +856,9 @@ pub mod quantum_inspired;
 pub use quantum_inspired::{
     QuantumAmplitude, QuantumClusterer, QuantumNearestNeighbor, QuantumSpatialOptimizer,
     QuantumState, QuantumTSPSolution, QuantumTSPSolver,
+    // Advanced quantum machine learning components
+    QuantumKernelMachine, QuantumKernelParams, QuantumFeatureMapType, QuantumGateType,
+    QuantumVariationalClassifier, QuantumParameterOptimizer,
 };
 
 // Neuromorphic computing acceleration for brain-inspired spatial processing
@@ -863,6 +866,11 @@ pub mod neuromorphic;
 pub use neuromorphic::{
     CompetitiveNeuralClusterer, NeuromorphicProcessor, SpikeEvent, SpikingNeuralClusterer,
     SpikingNeuron, Synapse,
+    // Advanced neuromorphic learning algorithms
+    HomeostaticNeuralClusterer, HomeostaticNeuron, LearningRateAdaptation,
+    MetaplasticityController, MultiTimescaleAdaptation, AdaptationScale,
+    DendriticSpatialClusterer, DendriticNeuron, DendriticCompartment,
+    SomaCompartment, GlobalLearningParams, LocalLearningParams,
 };
 
 // Advanced GPU tensor core utilization for maximum performance

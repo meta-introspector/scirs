@@ -28,7 +28,7 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<
 }
 
 /// Helper function for safe array to slice conversion
-fn safe_as_slice<T, D: Dimension>(array: &ArrayView<T, D>) -> NdimageResult<&[T]> {
+fn safe_as_slice<'a, T, D: Dimension>(array: &'a ArrayView<T, D>) -> NdimageResult<&'a [T]> {
     array.as_slice().ok_or_else(|| {
         NdimageError::ComputationError("Failed to convert array to contiguous slice".to_string())
     })

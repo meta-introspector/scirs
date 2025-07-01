@@ -28,6 +28,7 @@ fastrand = { workspace = true }
 # Optional dependencies for features
 pyo3 = { workspace = true, optional = true }
 numpy = { workspace = true, optional = true }
+serde = { workspace = true, optional = true, features = ["derive"] }
 
 [dev-dependencies]
 approx = { workspace = true }
@@ -55,6 +56,9 @@ parallel = ["scirs2-core/parallel"]
 
 # Enable scipy comparison benchmarks (requires Python with scipy/numpy)
 scipy-comparison = ["pyo3", "numpy"]
+
+# Enable serialization support for data structures
+serde = ["dep:serde"]
 
 [[bench]]
 name = "basic_interpolation"

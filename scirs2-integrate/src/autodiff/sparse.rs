@@ -412,9 +412,10 @@ impl<F: IntegrateFloat + Send + Sync> CSRJacobian<F> {
         let mut result = Array1::zeros(self.n_rows);
 
         // Parallel row-wise computation
+        let chunk_size = (self.n_rows / scirs2_core::parallel_ops::num_threads()).max(1);
         let chunks: Vec<_> = (0..self.n_rows)
             .collect::<Vec<_>>()
-            .par_chunks(self.n_rows / scirs2_core::parallel_ops::num_threads().max(1))
+            .par_chunks(chunk_size)
             .map(|rows| {
                 let mut local_result = Array1::zeros(rows.len());
                 for (local_idx, &row) in rows.iter().enumerate() {

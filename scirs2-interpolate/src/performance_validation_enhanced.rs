@@ -255,25 +255,25 @@ pub struct MemoryBaseline {
 pub struct SimdBaseline {
     /// SIMD speedup factor over scalar
     pub speedup_factor: f32,
-    /// SIMD utilization percentage
-    pub utilization_percentage: f32,
+    /// SIMD instruction utilization
+    pub instruction_utilization: f32,
     /// Instruction set used
     pub instruction_set: String,
-    /// Vector width utilization
-    pub vector_utilization: f32,
+    /// Vector lane utilization
+    pub lane_utilization: f32,
 }
 
 /// Accuracy baseline metrics
 #[derive(Debug, Clone)]
 pub struct AccuracyBaseline {
     /// Maximum absolute error
-    pub max_absolute_error: f64,
+    pub max_abs_error: f64,
     /// Mean absolute error
-    pub mean_absolute_error: f64,
+    pub mean_abs_error: f64,
     /// Root mean square error
     pub rmse: f64,
     /// Relative error percentage
-    pub relative_error_percent: f64,
+    pub relative_error_pct: f64,
 }
 
 /// Test conditions for baseline
@@ -1709,18 +1709,18 @@ impl<T: InterpolationFloat> StableReleaseValidator<T> {
                                 average_usage: 0,
                                 efficiency_ratio: 1.0,
                                 leak_analysis: LeakAnalysis {
-                                    detected_leaks: 0,
-                                    severity: IssueSeverity::None,
+                                    leaks_detected: false,
                                     growth_rate: 0.0,
-                                    confidence: 100.0,
+                                    suspicious_patterns: Vec::new(),
+                                    unfreed_memory: 0,
                                 },
                             },
                             simd: None,
                             accuracy: AccuracyMetrics {
-                                max_absolute_error: mae,
-                                mean_absolute_error: mae,
+                                max_abs_error: mae,
+                                mean_abs_error: mae,
                                 rmse: mae,
-                                relative_error_percent: mae * 100.0,
+                                relative_error_pct: mae * 100.0,
                             },
                             status: if mae < 1e-6 {
                                 ValidationStatus::Passed
@@ -1793,18 +1793,18 @@ impl<T: InterpolationFloat> StableReleaseValidator<T> {
                         average_usage: 0,
                         efficiency_ratio: 1.0,
                         leak_analysis: LeakAnalysis {
-                            detected_leaks: 0,
-                            severity: IssueSeverity::None,
+                            leaks_detected: false,
                             growth_rate: 0.0,
-                            confidence: 100.0,
+                            suspicious_patterns: Vec::new(),
+                            unfreed_memory: 0,
                         },
                     },
                     simd: None,
                     accuracy: AccuracyMetrics {
-                        max_absolute_error: 0.0,
-                        mean_absolute_error: 0.0,
+                        max_abs_error: 0.0,
+                        mean_abs_error: 0.0,
                         rmse: 0.0,
-                        relative_error_percent: 0.0,
+                        relative_error_pct: 0.0,
                     },
                     status: ValidationStatus::Passed,
                     issues: Vec::new(),
@@ -1850,18 +1850,18 @@ impl<T: InterpolationFloat> StableReleaseValidator<T> {
                         average_usage: 0,
                         efficiency_ratio: 1.0,
                         leak_analysis: LeakAnalysis {
-                            detected_leaks: 0,
-                            severity: IssueSeverity::None,
+                            leaks_detected: false,
                             growth_rate: 0.0,
-                            confidence: 100.0,
+                            suspicious_patterns: Vec::new(),
+                            unfreed_memory: 0,
                         },
                     },
                     simd: None,
                     accuracy: AccuracyMetrics {
-                        max_absolute_error: 0.0,
-                        mean_absolute_error: 0.0,
+                        max_abs_error: 0.0,
+                        mean_abs_error: 0.0,
                         rmse: 0.0,
-                        relative_error_percent: 0.0,
+                        relative_error_pct: 0.0,
                     },
                     status: ValidationStatus::Passed,
                     issues: Vec::new(),
@@ -1908,18 +1908,18 @@ impl<T: InterpolationFloat> StableReleaseValidator<T> {
                         average_usage: 0,
                         efficiency_ratio: 1.0,
                         leak_analysis: LeakAnalysis {
-                            detected_leaks: 0,
-                            severity: IssueSeverity::None,
+                            leaks_detected: false,
                             growth_rate: 0.0,
-                            confidence: 100.0,
+                            suspicious_patterns: Vec::new(),
+                            unfreed_memory: 0,
                         },
                     },
                     simd: None,
                     accuracy: AccuracyMetrics {
-                        max_absolute_error: 0.0,
-                        mean_absolute_error: 0.0,
+                        max_abs_error: 0.0,
+                        mean_abs_error: 0.0,
                         rmse: 0.0,
-                        relative_error_percent: 0.0,
+                        relative_error_pct: 0.0,
                     },
                     status: ValidationStatus::Passed,
                     issues: Vec::new(),
@@ -1954,23 +1954,25 @@ impl<T: InterpolationFloat> StableReleaseValidator<T> {
                 average_usage: 512 * 1024,
                 efficiency_ratio: 0.9,
                 leak_analysis: LeakAnalysis {
-                    detected_leaks: 0,
-                    severity: IssueSeverity::None,
+                    leaks_detected: false,
                     growth_rate: 0.0,
-                    confidence: 100.0,
+                    suspicious_patterns: Vec::new(),
+                    unfreed_memory: 0,
                 },
             },
             simd: Some(SimdMetrics {
                 speedup_factor: 2.5,
-                utilization_percentage: 85.0,
+                instruction_utilization: 85.0,
+                lane_utilization: 90.0,
                 instruction_set: "AVX2".to_string(),
-                vector_utilization: 90.0,
+                per_instruction_set: HashMap::new(),
             }),
             accuracy: AccuracyMetrics {
-                max_absolute_error: 1e-12,
-                mean_absolute_error: 1e-14,
+                max_abs_error: 1e-12,
+                mean_abs_error: 1e-14,
                 rmse: 1e-13,
-                relative_error_percent: 0.001,
+                relative_error_pct: 0.001,
+                r_squared: 0.999,
             },
             status: ValidationStatus::Passed,
             issues: Vec::new(),
@@ -2340,7 +2342,7 @@ impl<T: InterpolationFloat> StableReleaseValidator<T> {
         let min_time = times[0];
         let max_time = times[times.len() - 1];
         let mean_time = Duration::from_nanos(
-            times.iter().map(|d| d.as_nanos()).sum::<u128>() / times.len() as u128,
+            (times.iter().map(|d| d.as_nanos()).sum::<u128>() / times.len() as u128).try_into().unwrap_or(u64::MAX),
         );
         let median_time = times[times.len() / 2];
 

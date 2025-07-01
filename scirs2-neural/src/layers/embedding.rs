@@ -5,7 +5,7 @@
 
 use ndarray::{Array, ArrayBase, Data, Dimension, Ix1, IxDyn, ScalarOperand};
 use num_traits::Float;
-use rand::prelude::*;
+use ndarray_rand::rand::Rng;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 
@@ -89,9 +89,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Embedding<F> {
         let weight_shape = IxDyn(&[config.num_embeddings, config.embedding_dim]);
 
         // Use standard distribution and scale it
-        let mut rng = rand::rng();
+        let mut rng = ndarray_rand::rand::thread_rng();
         let mut weight = Array::from_shape_fn(weight_shape.clone(), |_| {
-            let value: f64 = rng.random::<f64>();
+            let value: f64 = rng.gen::<f64>();
             // Scale to approximate normal distribution N(0, 1)
             let scaled_value = (value * 2.0 - 1.0) * 0.5;
             F::from(scaled_value).unwrap()
@@ -184,9 +184,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Embedding<F> {
     /// Reset parameters of the embedding layer
     pub fn reset_parameters(&mut self) -> Result<()> {
         // Re-initialize weights with standard normal distribution
-        let mut rng = rand::rng();
+        let mut rng = ndarray_rand::rand::thread_rng();
         for item in self.weight.iter_mut() {
-            *item = F::from(rng.random::<f64>()).unwrap();
+            *item = F::from(rng.gen::<f64>()).unwrap();
         }
 
         // Set padding_idx embeddings to zero if specified
@@ -1099,7 +1099,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for PatchEmbedding
 mod tests {
     use super::*;
     use ndarray::Array2;
-    use rand::Rng;
+    use ndarray_rand::rand::Rng;
 
     #[test]
     fn test_embedding_creation() {
@@ -1224,7 +1224,7 @@ mod tests {
         assert_eq!(patch_emb.num_patches(), 16); // 4x4 patches of 8x8 in a 32x32 image
 
         // Create random input
-        let mut rand_gen = rand::rng();
+        let mut rand_gen = ndarray_rand::rand::thread_rng();
         let input = Array::from_shape_fn(IxDyn(&[2, 3, 32, 32]), |_| rand_gen.random::<f32>());
 
         // Forward pass

@@ -597,6 +597,131 @@ impl UltrathinkNumericalStabilityAnalyzer {
         warnings
     }
 
+    /// Test stability of a specific function with given data
+    pub fn test_function_stability<F, E>(
+        &mut self,
+        function_name: &str,
+        data: &ArrayView1<F>,
+        function: impl Fn(&ArrayView1<F>) -> Result<F, E>,
+    ) -> Result<StabilityTestResult, E>
+    where
+        F: Float + NumCast + Copy + PartialOrd + std::fmt::Debug,
+        E: std::fmt::Debug,
+    {
+        let mut issues = Vec::new();
+        let mut warnings = Vec::new();
+        let mut metrics = HashMap::new();
+        
+        // Test 1: Basic function execution
+        let base_result = function(data)?;
+        metrics.insert("base_result".to_string(), base_result.to_f64().unwrap());
+        
+        // Test 2: Stability under data permutation
+        let mut data_vec: Vec<F> = data.iter().cloned().collect();
+        data_vec.reverse();
+        let reversed_data = Array1::from_vec(data_vec);
+        
+        // Only test commutative operations (like mean, variance)
+        if function_name == "mean" || function_name == "variance" || function_name == "std" {
+            if let Ok(reversed_result) = function(&reversed_data.view()) {
+                let diff = (base_result.to_f64().unwrap() - reversed_result.to_f64().unwrap()).abs();
+                metrics.insert("permutation_error".to_string(), diff);
+                
+                if diff > self.config.relative_tolerance {
+                    issues.push(format!(
+                        "Function {} not stable under permutation: error = {:.2e}",
+                        function_name, diff
+                    ));
+                }
+            }
+        }
+        
+        // Test 3: Scaling stability for scale-invariant functions
+        if function_name == "correlation" || function_name == "pearson_r" {
+            let scale = F::from(2.0).unwrap();
+            let scaled_data: Array1<F> = data.map(|&x| x * scale);
+            
+            if let Ok(scaled_result) = function(&scaled_data.view()) {
+                let diff = (base_result.to_f64().unwrap() - scaled_result.to_f64().unwrap()).abs();
+                metrics.insert("scaling_error".to_string(), diff);
+                
+                if diff > self.config.relative_tolerance {
+                    issues.push(format!(
+                        "Function {} not scale-invariant: error = {:.2e}",
+                        function_name, diff
+                    ));
+                }
+            }
+        }
+        
+        // Test 4: Finite result check
+        if !base_result.is_finite() {
+            issues.push(format!("Function {} returned non-finite value", function_name));
+        }
+        
+        let result = StabilityTestResult {
+            passed: issues.is_empty(),
+            issues,
+            warnings,
+            metrics,
+        };
+        
+        // Store result
+        self.test_results.insert(function_name.to_string(), result.clone());
+        
+        Ok(result)
+    }
+
+    /// Test extreme values handling for a function
+    pub fn test_extreme_values<F, E>(
+        &mut self,
+        function_name: &str,
+        function: impl Fn(&ArrayView1<F>) -> Result<F, E>,
+    ) -> Result<StabilityTestResult, E>
+    where
+        F: Float + NumCast + Copy + PartialOrd + std::fmt::Debug,
+        E: std::fmt::Debug,
+    {
+        let mut issues = Vec::new();
+        let mut warnings = Vec::new();
+        let mut metrics = HashMap::new();
+        
+        // Test with extreme values
+        let extreme_data = Array1::from_vec(vec![
+            F::from(f64::MAX / 1e6).unwrap(),
+            F::from(f64::MIN / 1e6).unwrap(),
+            F::from(1e-100).unwrap(),
+            F::from(-1e-100).unwrap(),
+            F::zero(),
+        ]);
+        
+        match function(&extreme_data.view()) {
+            Ok(result) => {
+                metrics.insert("extreme_result".to_string(), result.to_f64().unwrap());
+                
+                if !result.is_finite() {
+                    issues.push(format!(
+                        "Function {} returned non-finite result with extreme values",
+                        function_name
+                    ));
+                }
+            }
+            Err(_) => {
+                warnings.push(format!(
+                    "Function {} failed with extreme values (may be expected)",
+                    function_name
+                ));
+            }
+        }
+        
+        Ok(StabilityTestResult {
+            passed: issues.is_empty(),
+            issues,
+            warnings,
+            metrics,
+        })
+    }
+
     /// Get comprehensive stability report
     pub fn get_stability_report(&self) -> HashMap<String, StabilityTestResult> {
         self.test_results.clone()

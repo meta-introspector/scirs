@@ -378,7 +378,7 @@ fn ai_optimization_demo(frames: &[Frame]) -> Result<()> {
     println!(
         "        - Optimized {} parameters across {} generations",
         best_genome.genes.len(),
-        genetic_optimizer.current_generation
+        genetic_optimizer.get_generation_stats().len()
     );
     println!("        - Found optimal speed/quality trade-off");
 

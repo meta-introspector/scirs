@@ -165,7 +165,7 @@ impl Memristor {
 
     /// Simmons tunnel barrier model
     fn update_simmons_model(&mut self, voltage: f64, dt: f64) {
-        let beta = 0.8; // Barrier modification parameter
+        let _beta = 0.8; // Barrier modification parameter
         let v_th = 0.16; // Threshold voltage
 
         if voltage.abs() > v_th {
@@ -414,10 +414,10 @@ impl MemristiveCrossbar {
     }
 
     /// Compensate for sneak path currents
-    fn compensate_sneak_paths(&self, output: &mut Array1<f64>, input: &ArrayView1<f64>) {
+    fn compensate_sneak_paths(&self, output: &mut Array1<f64>, _input: &ArrayView1<f64>) {
         // Simplified sneak path compensation
         // In practice, this would involve solving Kirchhoff's laws
-        let avg_conductance = self.calculate_average_conductance();
+        let _avg_conductance = self.calculate_average_conductance();
         let sneak_compensation_factor = 0.95; // Empirical factor
 
         for i in 0..output.len() {
@@ -525,7 +525,7 @@ impl MemristiveCrossbar {
             for j in 0..self.cols {
                 if !self.fault_map[[i, j]] {
                     // Read current conductance
-                    let target_conductance = self.memristors[i][j].conductance();
+                    let _target_conductance = self.memristors[i][j].conductance();
 
                     // Apply refresh pulse to maintain conductance
                     let refresh_voltage = 0.1; // Small refresh voltage
@@ -837,7 +837,7 @@ where
     // Initialize crossbar with weights
     for i in 0..rows {
         for j in 0..cols {
-            let target_conductance = initial_weights[[i, j]].abs() * 1e-3; // Scale to conductance
+            let _target_conductance = initial_weights[[i, j]].abs() * 1e-3; // Scale to conductance
             let voltage = if initial_weights[[i, j]] > 0.0 {
                 1.0
             } else {

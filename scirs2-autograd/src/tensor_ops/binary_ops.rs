@@ -19,7 +19,7 @@ pub struct DivOp;
 pub struct MaybeReduceSum;
 pub struct MaybeBroadcast;
 
-#[cfg(feature = "mkl")]
+#[cfg(feature = "blas")]
 macro_rules! bin_op_same_shape {
     ($vms_op:ident, $vmd_op:ident, $std_op:tt, $a:expr, $b:expr) => {
         unsafe {
@@ -358,7 +358,7 @@ macro_rules! impl_bin_op_forward {
                     }
 
                     // Fallback to MKL if available
-                    #[cfg(feature = "mkl")]
+                    #[cfg(feature = "blas")]
                     {
                         use crate::{tensor_ops::blas_ffi::*, same_type};
                         bin_op_same_shape!($vms_op, $vmd_op, $bin_op, x0, x1)

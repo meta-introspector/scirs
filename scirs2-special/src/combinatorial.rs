@@ -85,6 +85,74 @@ pub fn double_factorial(n: u32) -> SpecialResult<f64> {
     Ok(result)
 }
 
+/// Computes the double factorial n!! (alias for SciPy compatibility).
+///
+/// This is an alias for `double_factorial` to match SciPy's `factorial2` function.
+///
+/// # Arguments
+///
+/// * `n` - The number for which to compute the double factorial
+///
+/// # Returns
+///
+/// * `SpecialResult<f64>` - The double factorial n!!
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::factorial2;
+///
+/// assert_eq!(factorial2(5).unwrap(), 15.0); // 5 × 3 × 1
+/// assert_eq!(factorial2(6).unwrap(), 48.0); // 6 × 4 × 2
+/// ```
+pub fn factorial2(n: u32) -> SpecialResult<f64> {
+    double_factorial(n)
+}
+
+/// Computes the k-factorial (multi-factorial) of n.
+///
+/// The k-factorial of n is the product of positive integers up to n
+/// that are congruent to n modulo k.
+/// For example, the 3-factorial of 8 is 8×5×2.
+///
+/// # Arguments
+///
+/// * `n` - The number for which to compute the k-factorial
+/// * `k` - The step size (must be positive)
+///
+/// # Returns
+///
+/// * `SpecialResult<f64>` - The k-factorial of n
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::factorialk;
+///
+/// assert_eq!(factorialk(8, 3).unwrap(), 80.0); // 8 × 5 × 2
+/// assert_eq!(factorialk(5, 2).unwrap(), 15.0); // 5 × 3 × 1
+/// assert_eq!(factorialk(6, 2).unwrap(), 48.0); // 6 × 4 × 2 (same as double factorial)
+/// ```
+pub fn factorialk(n: u32, k: u32) -> SpecialResult<f64> {
+    if k == 0 {
+        return Err(crate::SpecialError::ValueError(
+            "k must be positive".to_string(),
+        ));
+    }
+
+    if n == 0 {
+        return Ok(1.0);
+    }
+
+    let mut result = 1.0;
+    let mut i = n;
+    while i > 0 {
+        result *= i as f64;
+        i = i.saturating_sub(k);
+    }
+    Ok(result)
+}
+
 /// Computes the binomial coefficient "n choose k".
 ///
 /// The binomial coefficient C(n,k) = n! / (k! × (n-k)!) represents
@@ -184,6 +252,31 @@ pub fn permutations(n: u32, k: u32) -> SpecialResult<f64> {
     }
 }
 
+/// Computes the number of permutations (alias for SciPy compatibility).
+///
+/// This is an alias for `permutations` to match SciPy's `perm` function.
+///
+/// # Arguments
+///
+/// * `n` - Total number of items
+/// * `k` - Number of items to arrange
+///
+/// # Returns
+///
+/// * `SpecialResult<f64>` - The number of permutations P(n,k)
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::perm;
+///
+/// assert_eq!(perm(5, 2).unwrap(), 20.0);
+/// assert_eq!(perm(10, 3).unwrap(), 720.0);
+/// ```
+pub fn perm(n: u32, k: u32) -> SpecialResult<f64> {
+    permutations(n, k)
+}
+
 /// Computes the Stirling number of the first kind.
 ///
 /// The unsigned Stirling number of the first kind s(n,k) counts
@@ -270,6 +363,31 @@ pub fn stirling_second(n: u32, k: u32) -> SpecialResult<f64> {
     }
 
     Ok(dp[n as usize][k as usize])
+}
+
+/// Computes the Stirling number of the second kind (alias for SciPy compatibility).
+///
+/// This is an alias for `stirling_second` to match SciPy's `stirling2` function.
+///
+/// # Arguments
+///
+/// * `n` - Number of elements
+/// * `k` - Number of subsets
+///
+/// # Returns
+///
+/// * `SpecialResult<f64>` - The Stirling number S(n,k)
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::stirling2;
+///
+/// assert_eq!(stirling2(4, 2).unwrap(), 7.0);
+/// assert_eq!(stirling2(5, 3).unwrap(), 25.0);
+/// ```
+pub fn stirling2(n: u32, k: u32) -> SpecialResult<f64> {
+    stirling_second(n, k)
 }
 
 /// Computes the Bell number B(n).
@@ -603,6 +721,31 @@ mod tests {
     }
 
     #[test]
+    fn test_factorial2() {
+        assert_eq!(factorial2(0).unwrap(), 1.0);
+        assert_eq!(factorial2(5).unwrap(), 15.0); // 5 × 3 × 1
+        assert_eq!(factorial2(6).unwrap(), 48.0); // 6 × 4 × 2
+
+        // Test that factorial2 is the same as double_factorial
+        assert_eq!(factorial2(8).unwrap(), double_factorial(8).unwrap());
+    }
+
+    #[test]
+    fn test_factorialk() {
+        assert_eq!(factorialk(0, 1).unwrap(), 1.0);
+        assert_eq!(factorialk(8, 3).unwrap(), 80.0); // 8 × 5 × 2
+        assert_eq!(factorialk(5, 2).unwrap(), 15.0); // 5 × 3 × 1
+        assert_eq!(factorialk(6, 2).unwrap(), 48.0); // 6 × 4 × 2 (same as double factorial)
+        assert_eq!(factorialk(9, 4).unwrap(), 45.0); // 9 × 5 × 1
+
+        // Test k=1 (should be regular factorial)
+        assert_eq!(factorialk(5, 1).unwrap(), factorial(5).unwrap());
+
+        // Test error case
+        assert!(factorialk(5, 0).is_err());
+    }
+
+    #[test]
     fn test_binomial() {
         assert_eq!(binomial(5, 2).unwrap(), 10.0);
         assert_eq!(binomial(10, 3).unwrap(), 120.0);
@@ -623,6 +766,15 @@ mod tests {
     }
 
     #[test]
+    fn test_perm() {
+        assert_eq!(perm(5, 2).unwrap(), 20.0);
+        assert_eq!(perm(10, 3).unwrap(), 720.0);
+
+        // Test that perm is the same as permutations
+        assert_eq!(perm(7, 3).unwrap(), permutations(7, 3).unwrap());
+    }
+
+    #[test]
     fn test_stirling_first() {
         assert_eq!(stirling_first(0, 0).unwrap(), 1.0);
         assert_eq!(stirling_first(4, 2).unwrap(), 11.0);
@@ -638,6 +790,15 @@ mod tests {
         assert_eq!(stirling_second(5, 3).unwrap(), 25.0);
         assert_eq!(stirling_second(3, 0).unwrap(), 0.0);
         assert_eq!(stirling_second(0, 3).unwrap(), 0.0);
+    }
+
+    #[test]
+    fn test_stirling2() {
+        assert_eq!(stirling2(4, 2).unwrap(), 7.0);
+        assert_eq!(stirling2(5, 3).unwrap(), 25.0);
+
+        // Test that stirling2 is the same as stirling_second
+        assert_eq!(stirling2(6, 3).unwrap(), stirling_second(6, 3).unwrap());
     }
 
     #[test]

@@ -7,7 +7,7 @@ use crate::error::{NeuralError, Result};
 use crate::layers::{AttentionConfig, Layer, LayerNorm, ParamLayer, SelfAttention};
 use ndarray::{Array, IxDyn, ScalarOperand};
 use num_traits::Float;
-use rand::Rng;
+use ndarray_rand::rand::Rng;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
@@ -133,7 +133,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + SimdUnifiedOps> 
          -> Result<Array<F, IxDyn>> {
             let weights_vec: Vec<F> = (0..(input_size * output_size))
                 .map(|_| {
-                    let val = F::from(rng.random_range(-1.0..1.0)).ok_or_else(|| {
+                    let val = F::from(rng.gen_range(-1.0..1.0)).ok_or_else(|| {
                         NeuralError::InvalidArchitecture(
                             "Failed to convert random value".to_string(),
                         )

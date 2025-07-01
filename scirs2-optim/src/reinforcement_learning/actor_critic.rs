@@ -478,7 +478,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
         &mut self,
         experiences: &[Experience<T>],
     ) -> Result<ActorCriticMetrics<T>, OptimizerError> {
-        let batch_size = experiences.len();
+        let _batch_size = experiences.len();
 
         // Extract batch data
         let states = self.extract_states(experiences)?;
@@ -489,7 +489,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
 
         // Update critics
         let mut critic_losses = Vec::new();
-        for (i, critic) in self.critics.iter().enumerate() {
+        for (_i, critic) in self.critics.iter().enumerate() {
             let q_values = self.compute_q_values(critic, &states, &actions)?;
             let target_q = self.compute_target_q_sac(&next_states, &rewards, &dones)?;
 
@@ -532,7 +532,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
         &mut self,
         experiences: &[Experience<T>],
     ) -> Result<ActorCriticMetrics<T>, OptimizerError> {
-        let batch_size = experiences.len();
+        let _batch_size = experiences.len();
 
         // Extract batch data
         let states = self.extract_states(experiences)?;
@@ -608,7 +608,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
             }
 
             // Update both critics
-            for (i, critic) in self.critics.iter().enumerate().take(2) {
+            for (_i, critic) in self.critics.iter().enumerate().take(2) {
                 let q_values = self.compute_q_values(critic, &states, &actions)?;
                 let critic_loss = self.compute_critic_loss(&q_values, &td_targets)?;
                 critic_losses.push(critic_loss);
@@ -642,7 +642,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
         &mut self,
         experiences: &[Experience<T>],
     ) -> Result<ActorCriticMetrics<T>, OptimizerError> {
-        let batch_size = experiences.len();
+        let _batch_size = experiences.len();
 
         // Extract batch data
         let states = self.extract_states(experiences)?;
@@ -889,9 +889,9 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
 
     fn compute_target_q_sac(
         &self,
-        next_states: &Array2<T>,
+        _next_states: &Array2<T>,
         rewards: &Array1<T>,
-        dones: &Array1<bool>,
+        _dones: &Array1<bool>,
     ) -> Result<Array1<T>, OptimizerError> {
         // Simplified target Q computation for SAC
         Ok(rewards.clone())

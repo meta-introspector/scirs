@@ -4,8 +4,7 @@
 //! providing intelligent diagnostics, performance-aware suggestions, and
 //! adaptive recovery strategies.
 
-use crate::error::{StatsError, StatsResult};
-use crate::error_standardization::ErrorMessages;
+use crate::error::StatsError;
 use std::time::{Duration, Instant};
 
 /// Ultrathink-specific error context with performance tracking

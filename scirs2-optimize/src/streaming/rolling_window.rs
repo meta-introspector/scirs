@@ -195,7 +195,7 @@ impl<T: StreamingObjective> RollingWindowOptimizer<T> {
         }
 
         // Solve normal equations
-        match scirs2_linalg::solve_linear_system(xtx, xty) {
+        match scirs2_linalg::solve(xtx, xty) {
             Ok(solution) => {
                 self.parameters = solution;
                 Ok(())
@@ -247,7 +247,7 @@ impl<T: StreamingObjective> RollingWindowOptimizer<T> {
         }
 
         // Solve weighted normal equations
-        match scirs2_linalg::solve_linear_system(weighted_xtx, weighted_xty) {
+        match scirs2_linalg::solve(weighted_xtx, weighted_xty) {
             Ok(solution) => {
                 self.parameters = solution;
                 Ok(())

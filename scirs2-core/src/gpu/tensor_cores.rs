@@ -55,6 +55,8 @@ pub enum TensorCoreOp {
     Attention,
     /// Sparse matrix operations
     SparseOps,
+    /// Element-wise operations
+    Elementwise,
     /// Custom tensor operation
     Custom(&'static str),
 }
@@ -141,6 +143,7 @@ pub enum TensorCoreError {
 }
 
 /// Tensor core manager for handling hardware acceleration
+#[derive(Debug)]
 pub struct TensorCoreManager {
     backend: GpuBackend,
     capabilities: TensorCoreCapabilities,
@@ -439,6 +442,19 @@ pub struct TensorOperation {
     pub mixed_precision: bool,
     /// Sparsity pattern if applicable
     pub sparsity: Option<SparsePattern>,
+}
+
+impl Default for TensorOperation {
+    fn default() -> Self {
+        Self {
+            op_type: TensorCoreOp::MatrixMultiply,
+            input_type: TensorDataType::Float32,
+            output_type: TensorDataType::Float32,
+            dimensions: (1, 1, 1),
+            mixed_precision: false,
+            sparsity: None,
+        }
+    }
 }
 
 /// Sparsity patterns for sparse tensor operations

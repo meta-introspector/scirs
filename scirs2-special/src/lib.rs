@@ -73,6 +73,8 @@ pub mod arbitrary_precision;
 pub mod array_ops;
 pub mod bessel;
 mod bessel_zeros;
+mod boxcox;
+mod carlson;
 mod combinatorial;
 mod constants;
 pub mod convenience;
@@ -120,6 +122,7 @@ mod utility;
 mod validation;
 #[cfg(feature = "plotting")]
 pub mod visualization;
+mod voigt;
 mod wright;
 mod wright_bessel;
 mod wright_simplified;
@@ -186,9 +189,14 @@ pub use bessel_zeros::{
     y1_zeros,
     yn_zeros,
 };
+pub use boxcox::{
+    boxcox, boxcox1p, boxcox_array, boxcox1p_array, inv_boxcox, inv_boxcox1p, inv_boxcox_array,
+    inv_boxcox1p_array,
+};
+pub use carlson::{elliprc, elliprd, elliprf, elliprf_array, elliprg, elliprj};
 pub use combinatorial::{
-    bell_number, bernoulli_number, binomial, double_factorial, euler_number, factorial,
-    permutations, stirling_first, stirling_second,
+    bell_number, bernoulli_number, binomial, double_factorial, euler_number, factorial, factorial2,
+    factorialk, perm, permutations, stirling2, stirling_first, stirling_second,
 };
 pub use coulomb::{coulomb_f, coulomb_g, coulomb_h_minus, coulomb_h_plus, coulomb_phase_shift};
 pub use distributions::{
@@ -323,6 +331,10 @@ pub use utility::{
     // Additional convenience functions for SciPy parity
     xlog1py_scalar,
     xlogy,
+};
+pub use voigt::{
+    pseudo_voigt, voigt_profile, voigt_profile_array, voigt_profile_fwhm, voigt_profile_fwhm_array,
+    voigt_profile_normalized,
 };
 pub use wright::{wright_omega_optimized, wright_omega_real_optimized};
 pub use wright_bessel::{wright_bessel, wright_bessel_complex, wright_bessel_zeros};

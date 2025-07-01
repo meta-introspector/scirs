@@ -9,7 +9,7 @@ use std::fmt::Debug;
 use std::path::Path;
 
 use scirs2_core::error::CoreResult;
-use scirs2_core::memory_efficient::adaptive::AdaptiveChunking;
+use scirs2_core::memory_efficient::AdaptiveChunking;
 use scirs2_core::memory_efficient::{
     chunk_wise_op, create_mmap,
     zerocopy::{self, ZeroCopyOps},
@@ -208,12 +208,13 @@ where
 struct GaussianProcessorV2;
 
 impl<T: Float, D: Dimension> crate::chunked_v2::ChunkProcessorV2<T, D> for GaussianProcessorV2 {
-    fn process_chunk(
+    fn create_processor(
         &self,
-        _chunk: ArrayView<T, D>,
-        _chunk_idx: usize,
-    ) -> NdimageResult<Array<T, D>> {
-        unreachable!("Should use closure-based processing")
+    ) -> Box<dyn Fn(&ArrayView<T, IxDyn>) -> scirs2_core::error::CoreResult<Array<T, IxDyn>> + Send + Sync> {
+        Box::new(|chunk| {
+            // Placeholder implementation
+            Ok(chunk.to_owned().into_dyn())
+        })
     }
 
     fn required_overlap(&self) -> usize {
@@ -345,12 +346,13 @@ where
 struct BilateralProcessorV2;
 
 impl<T: Float> crate::chunked_v2::ChunkProcessorV2<T, Ix2> for BilateralProcessorV2 {
-    fn process_chunk(
+    fn create_processor(
         &self,
-        _chunk: ArrayView<T, Ix2>,
-        _chunk_idx: usize,
-    ) -> NdimageResult<Array<T, Ix2>> {
-        unreachable!("Should use closure-based processing")
+    ) -> Box<dyn Fn(&ArrayView<T, IxDyn>) -> scirs2_core::error::CoreResult<Array<T, IxDyn>> + Send + Sync> {
+        Box::new(|chunk| {
+            // Placeholder implementation
+            Ok(chunk.to_owned().into_dyn())
+        })
     }
 
     fn required_overlap(&self) -> usize {

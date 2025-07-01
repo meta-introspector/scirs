@@ -277,7 +277,7 @@ where
         let neg_g = -&g;
 
         // Simple matrix inversion for the step
-        let step = match solve_linear_system(&jt_j, &neg_g) {
+        let step = match solve(&jt_j, &neg_g) {
             Some(s) => s,
             None => {
                 // Matrix is singular, increase lambda and try again
@@ -384,7 +384,7 @@ where
 
 /// Simple linear system solver using Gaussian elimination
 /// For a real implementation, use a more robust approach
-fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> Option<Array1<f64>> {
+fn solve(a: &Array2<f64>, b: &Array1<f64>) -> Option<Array1<f64>> {
     use scirs2_linalg::solve::solve;
 
     solve(&a.view(), &b.view(), None).ok()
@@ -597,7 +597,7 @@ fn compute_trust_region_step(
     let sd_step = &sd_dir * (delta / sd_norm);
 
     // Try to compute the Gauss-Newton step by solving J^T*J * step = -g
-    let gn_step = match solve_linear_system(jt_j, &sd_dir) {
+    let gn_step = match solve(jt_j, &sd_dir) {
         Some(step) => step,
         None => {
             // If the system is singular, just return the steepest descent step
@@ -939,7 +939,7 @@ fn compute_dogbox_step(
     let sd_norm = sd_norm_sq.sqrt();
 
     // Try to compute Gauss-Newton step for free variables
-    let gn_step_free = match solve_linear_system(&jt_j_free, &sd_dir_free) {
+    let gn_step_free = match solve(&jt_j_free, &sd_dir_free) {
         Some(step) => step,
         None => {
             // If singular, use steepest descent

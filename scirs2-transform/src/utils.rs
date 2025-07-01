@@ -4,7 +4,7 @@
 //! for data transformation tasks, including data validation, memory optimization,
 //! and performance helpers.
 
-use ndarray::{Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Data, Ix1, Ix2};
+use ndarray::{Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Data, Ix2, par_azip};
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::{check_finite, check_not_empty};

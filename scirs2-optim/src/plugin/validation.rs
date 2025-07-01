@@ -5,8 +5,7 @@
 
 use super::core::*;
 use super::sdk::*;
-use crate::error::{OptimError, Result};
-use ndarray::{Array1, Array2, Axis};
+use ndarray::Array1;
 use num_traits::Float;
 use std::collections::HashMap;
 use std::fmt::Debug;

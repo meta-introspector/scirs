@@ -3,12 +3,11 @@
 //! This module provides advanced few-shot learning capabilities for learned optimizers,
 //! enabling rapid adaptation to new optimization tasks with minimal data.
 
-use ndarray::{s, Array1, Array2, Array3, ArrayBase, Data, Dimension};
+use ndarray::{Array1, Array2, Dimension};
 use num_traits::Float;
-use std::collections::{BTreeMap, HashMap, VecDeque};
+use std::collections::{HashMap, VecDeque};
 use std::time::Instant;
 
-use super::{LearnedOptimizerConfig, MetaOptimizationStrategy};
 use crate::error::OptimizerError;
 
 /// Few-Shot Learning Enhancement System for Learned Optimizers

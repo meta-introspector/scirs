@@ -707,7 +707,7 @@ pub enum MultiObjectiveAlgorithm {
     MOEAD,
     SPEA2,
     IBEA,
-    SMS_EMOA,
+    SmsEmoa,
     HypE,
     WeightedSum,
     EpsilonConstraint,
@@ -1514,10 +1514,10 @@ impl<T: Float> NeuralArchitectureSearch<T> {
                 r.evaluation_results
                     .metric_scores
                     .get(&metric)
-                    .unwrap_or(&T::zero())
+                    .copied()
+                    .unwrap_or(T::zero())
             })
-            .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-            .copied()
+            .max_by(|a, b| a.partial_cmp(&b).unwrap_or(std::cmp::Ordering::Equal))
             .unwrap_or(T::zero());
 
         let first_score = recent_results
@@ -1768,7 +1768,7 @@ impl<T: Float> NeuralArchitectureSearch<T> {
         eval_time: Duration,
     ) -> Result<ResourceUsage<T>, OptimizerError> {
         let mut memory_gb = T::from(0.1).unwrap(); // Base memory
-        let mut cpu_time_seconds = T::from(eval_time.as_secs_f64()).unwrap();
+        let cpu_time_seconds = T::from(eval_time.as_secs_f64()).unwrap();
         let mut gpu_time_seconds = T::zero();
         let mut model_params = 0;
 

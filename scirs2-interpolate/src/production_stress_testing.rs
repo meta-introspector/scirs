@@ -887,7 +887,7 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
         let x = Array1::linspace(T::zero(), T::from_f64(10.0).unwrap(), size);
         let mut y = Array1::zeros(size);
 
-        for (i, &xi) in x.iter().enumerate() {
+        for (i, &_xi) in x.iter().enumerate() {
             y[i] = if i % 2 == 0 {
                 T::from_f64(1e10).unwrap()
             } else {

@@ -377,7 +377,7 @@ fn solve_trust_region_bounds(
     let neg_gradient = -gradient;
 
     // Try to solve normal equations
-    let gn_step = if let Some(step) = solve_linear_system(&jt_j, &neg_gradient) {
+    let gn_step = if let Some(step) = solve(&jt_j, &neg_gradient) {
         step
     } else {
         // Use gradient descent as fallback
@@ -425,7 +425,7 @@ fn compute_predicted_reduction(jac: &Array2<f64>, res: &Array1<f64>, step: &Arra
 }
 
 /// Simple linear system solver (same as in other modules)
-fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> Option<Array1<f64>> {
+fn solve(a: &Array2<f64>, b: &Array1<f64>) -> Option<Array1<f64>> {
     use scirs2_linalg::solve::solve;
 
     solve(&a.view(), &b.view(), None).ok()

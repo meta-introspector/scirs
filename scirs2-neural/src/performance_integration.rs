@@ -1345,7 +1345,19 @@ impl Default for UnifiedStats {
 
 impl Default for UnifiedPerformanceManager {
     fn default() -> Self {
-        Self::new().unwrap_or_else(|_| panic!("Failed to create UnifiedPerformanceManager"))
+        Self::new().unwrap_or_else(|_| {
+            // Fallback to minimal manager with basic CPU configuration
+            use std::collections::HashMap;
+            UnifiedPerformanceManager {
+                cpu_optimizer: None, // Will use basic CPU operations
+                jit_compiler: None,
+                tpu_runtime: None,
+                gpu_accelerator: None,
+                metrics: UnifiedMetrics::default(),
+                preferred_strategy: OptimizationChoice::CPUSerial,
+                strategy_distribution: HashMap::new(),
+            }
+        })
     }
 }
 

@@ -1162,7 +1162,7 @@ mod tests {
         let custom = AxisScale::Custom("symlog".to_string());
         match custom {
             AxisScale::Custom(name) => assert_eq!(name, "symlog"),
-            _ => panic!("Expected custom scale"),
+            _ => assert!(false, "Expected custom scale"),
         }
     }
 
@@ -1208,7 +1208,7 @@ mod tests {
 
         match rolling {
             UpdateMode::Rolling(size) => assert_eq!(size, 100),
-            _ => panic!("Expected rolling update mode"),
+            _ => assert!(false, "Expected rolling update mode"),
         }
     }
 

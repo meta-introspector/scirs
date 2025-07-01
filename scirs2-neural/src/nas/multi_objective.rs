@@ -554,13 +554,13 @@ impl MultiObjectiveOptimizer {
     /// Tournament selection for parent selection
     fn tournament_selection(&self) -> Result<&MultiObjectiveSolution> {
         use rand::prelude::*;
-        let mut rng = rand::rng();
+        let mut rng = ndarray_rand::rand::thread_rng();
 
         let tournament_size = 3;
-        let mut best_idx = rng.gen_range(0..self.population.len());
+        let mut best_idx = rng.random_range(0..self.population.len());
 
         for _ in 1..tournament_size {
-            let candidate_idx = rng.gen_range(0..self.population.len());
+            let candidate_idx = rng.random_range(0..self.population.len());
 
             // Compare based on dominance and crowding distance
             if self.is_better(&self.population[candidate_idx], &self.population[best_idx]) {
@@ -621,7 +621,7 @@ impl MultiObjectiveOptimizer {
     /// Generate random architecture for initialization
     fn generate_random_architecture(&self) -> Result<Arc<dyn ArchitectureEncoding>> {
         use rand::prelude::*;
-        let mut rng = rand::rng();
+        let mut rng = ndarray_rand::rand::thread_rng();
 
         let encoding = crate::nas::architecture_encoding::SequentialEncoding::random(&mut rng)?;
         Ok(Arc::new(encoding) as Arc<dyn ArchitectureEncoding>)
@@ -825,7 +825,7 @@ impl MultiObjectiveOptimizer {
         let mut dominated_count = 0;
 
         use rand::prelude::*;
-        let mut rng = rand::rng();
+        let mut rng = ndarray_rand::rand::thread_rng();
 
         // Define the bounds for sampling
         let mut lower_bounds = vec![f64::INFINITY; self.config.objectives.len()];
@@ -847,7 +847,7 @@ impl MultiObjectiveOptimizer {
             let mut sample_point = vec![0.0; self.config.objectives.len()];
             
             for i in 0..sample_point.len() {
-                sample_point[i] = rng.gen_range(lower_bounds[i]..=upper_bounds[i]);
+                sample_point[i] = rng.random_range(lower_bounds[i]..=upper_bounds[i]);
             }
 
             // Check if sample point is dominated by any solution in Pareto front
@@ -1124,14 +1124,14 @@ impl MultiObjectiveOptimizer {
     /// Select a neighbor for crossover in MOEA/D
     fn select_neighbor(&self, index: usize) -> Result<usize> {
         use rand::prelude::*;
-        let mut rng = rand::rng();
+        let mut rng = ndarray_rand::rand::thread_rng();
         
         // For simplicity, select a random neighbor within a neighborhood
         let neighborhood_size = 10.min(self.population.len());
         let start = index.saturating_sub(neighborhood_size / 2);
         let end = (index + neighborhood_size / 2).min(self.population.len() - 1);
         
-        let neighbor_idx = rng.gen_range(start..=end);
+        let neighbor_idx = rng.random_range(start..=end);
         if neighbor_idx == index && end > start {
             Ok(if neighbor_idx == start { end } else { start })
         } else {

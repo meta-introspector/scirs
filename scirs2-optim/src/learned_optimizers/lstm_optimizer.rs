@@ -1425,7 +1425,6 @@ impl<T: Float + Default + Clone> HistoryBuffer<T> {
 }
 
 /// Additional implementations for other components...
-
 /// Results from optimization state analysis
 #[derive(Debug, Clone)]
 pub struct OptimizationStateAnalysis<T: Float> {

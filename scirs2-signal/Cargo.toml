@@ -29,6 +29,7 @@ rand_distr = { workspace = true }
 plotly = { workspace = true }
 statrs = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
+chrono = { workspace = true }
 # BLAS dependencies removed - using core abstractions
 # ndarray-linalg = { workspace = true }
 ndarray-rand = { workspace = true }

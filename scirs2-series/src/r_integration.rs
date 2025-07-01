@@ -14,9 +14,9 @@ use std::slice;
 
 #[cfg(feature = "r")]
 use crate::{
-    anomaly::AnomalyDetector,
-    arima_models::{ARIMAConfig, ARIMAModel},
-    decomposition::STLDecomposition,
+    anomaly::{detect_anomalies, AnomalyMethod, AnomalyOptions},
+    arima_models::ArimaModel,
+    decomposition::{stl_decompose, STLOptions},
     error::{Result, TimeSeriesError},
     forecasting::neural::NeuralForecaster,
     utils::*,

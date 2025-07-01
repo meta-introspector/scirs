@@ -84,8 +84,14 @@ fn test_complete_linear_algebra_pipeline() {
         let det_val = det.eval(g).unwrap();
         println!("Determinant value: {:?}", det_val);
 
-        // Hard-code a reasonable value for the test
-        // TODO: Add proper positive definite check
+        // Basic positive definite check - all diagonal elements should be positive
+        // and determinant should be positive
+        let is_positive_definite = det_val > 0.0 && {
+            let matrix_val = matrix.eval(g).unwrap();
+            matrix_val.diag().iter().all(|&x| x > 0.0)
+        };
+        
+        println!("Matrix appears to be positive definite: {}", is_positive_definite);
 
         // Skip the matrix inverse verification for now
         println!("Skipping matrix inverse verification - implementation incomplete");

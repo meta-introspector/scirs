@@ -1689,7 +1689,7 @@ pub fn gpu_multi_head_attention(
     let output_buffer = ctx.context.create_buffer::<f32>(seq_len * hidden_dim);
 
     // GPU kernel for attention computation
-    let attention_kernel = format!(
+    let attention_kernel =
         r#"
         #version 450
         
@@ -1768,8 +1768,7 @@ pub fn gpu_multi_head_attention(
                 output[out_idx] = result;
             }}
         }}
-        "#,
-    );
+        "#;
 
     // Execute GPU kernel
     match ctx.context.execute_kernel(
@@ -2170,19 +2169,30 @@ pub fn gpu_neural_feature_extraction(
 /// Configuration for neural network layers
 #[derive(Clone, Debug)]
 pub struct LayerConfig {
+    /// Type of the neural network layer
     pub layer_type: LayerType,
+    /// Size of the convolution kernel
     pub kernel_size: usize,
+    /// Stride for convolution operations
     pub stride: usize,
+    /// Padding size for convolutions
     pub padding: usize,
+    /// Number of input channels
     pub input_channels: usize,
+    /// Number of output channels
     pub output_channels: usize,
 }
 
+/// Types of neural network layers
 #[derive(Clone, Debug)]
 pub enum LayerType {
+    /// Convolutional layer
     Convolution,
+    /// Max pooling layer
     MaxPool,
+    /// Dense/fully connected layer
     Dense,
+    /// ReLU activation layer
     ReLU,
 }
 

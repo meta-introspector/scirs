@@ -236,7 +236,7 @@ impl<F: IntegrateFloat> GaussLegendreQuadrature<F> {
 
         // Sort nodes and weights by increasing node values
         let mut node_weight_pairs: Vec<(F, F)> =
-            nodes.into_iter().zip(weights.into_iter()).collect();
+            nodes.into_iter().zip(weights).collect();
         node_weight_pairs.sort_by(|a, b| {
             a.0.to_f64()
                 .unwrap_or(0.0)

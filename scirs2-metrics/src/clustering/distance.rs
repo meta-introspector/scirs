@@ -127,7 +127,12 @@ where
                 "euclidean" => euclidean_distance(centroid_i, centroid_j),
                 "manhattan" => manhattan_distance(centroid_i, centroid_j),
                 "cosine" => cosine_distance(centroid_i, centroid_j),
-                _ => unreachable!(), // Already checked above
+                _ => {
+                    return Err(MetricsError::InvalidInput(format!(
+                        "Unsupported metric: {}",
+                        metric
+                    )))
+                }
             };
 
             distances.insert((label_i, label_j), distance);
@@ -257,7 +262,12 @@ where
                     "euclidean" => euclidean_distance(&sample, centroid),
                     "manhattan" => manhattan_distance(&sample, centroid),
                     "cosine" => cosine_distance(&sample, centroid),
-                    _ => unreachable!(), // Already checked above
+                    _ => {
+                        return Err(MetricsError::InvalidInput(format!(
+                            "Unsupported metric: {}",
+                            metric
+                        )))
+                    }
                 };
 
                 total_distance += distance;

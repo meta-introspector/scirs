@@ -62,10 +62,10 @@
 //! ```
 
 use crate::error::{InterpolateError, InterpolateResult};
+use crate::traits::InterpolationFloat;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
-use std::fmt::{Debug, Display};
-use std::ops::{AddAssign, SubAssign};
+use std::fmt::Debug;
 
 /// Boundary conditions for cubic spline interpolation
 ///
@@ -243,7 +243,7 @@ enum IntegrationRegion {
 /// This implementation is designed to be compatible with SciPy's CubicSpline,
 /// providing the same interface and functionality where possible.
 #[derive(Debug, Clone)]
-pub struct CubicSpline<F: Float + FromPrimitive> {
+pub struct CubicSpline<F: crate::traits::InterpolationFloat> {
     /// X coordinates (must be sorted)
     x: Array1<F>,
     /// Y coordinates
@@ -256,13 +256,13 @@ pub struct CubicSpline<F: Float + FromPrimitive> {
 
 /// Builder for cubic splines with custom boundary conditions
 #[derive(Debug, Clone)]
-pub struct CubicSplineBuilder<F: Float + FromPrimitive> {
+pub struct CubicSplineBuilder<F: crate::traits::InterpolationFloat> {
     x: Option<Array1<F>>,
     y: Option<Array1<F>>,
     boundary_condition: SplineBoundaryCondition,
 }
 
-impl<F: Float + FromPrimitive + Debug> CubicSplineBuilder<F> {
+impl<F: crate::traits::InterpolationFloat> CubicSplineBuilder<F> {
     /// Create a new builder
     pub fn new() -> Self {
         Self {
@@ -340,7 +340,7 @@ impl<F: Float + FromPrimitive + Debug> CubicSplineBuilder<F> {
     }
 }
 
-impl<F: Float + FromPrimitive + Debug + Display + ToString + AddAssign> CubicSpline<F> {
+impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
     /// Create a new builder for cubic splines
     pub fn builder() -> CubicSplineBuilder<F> {
         CubicSplineBuilder::new()
@@ -404,6 +404,16 @@ impl<F: Float + FromPrimitive + Debug + Display + ToString + AddAssign> CubicSpl
             y: y.to_owned(),
             coeffs,
         })
+    }
+
+    /// Get the x coordinates
+    pub fn x(&self) -> &Array1<F> {
+        &self.x
+    }
+
+    /// Get the y coordinates  
+    pub fn y(&self) -> &Array1<F> {
+        &self.y
     }
 
     /// Create a new cubic spline with not-a-knot boundary conditions
@@ -2456,7 +2466,7 @@ impl<F: Float + FromPrimitive + Debug + Display + ToString + AddAssign> CubicSpl
 /// Compute the coefficients for a natural cubic spline
 ///
 /// Natural boundary conditions: second derivative is zero at the endpoints
-fn compute_natural_cubic_spline<F: Float + FromPrimitive + Debug>(
+fn compute_natural_cubic_spline<F: crate::traits::InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
 ) -> InterpolateResult<Array2<F>> {
@@ -2587,7 +2597,7 @@ fn compute_natural_cubic_spline<F: Float + FromPrimitive + Debug>(
 ///
 /// Not-a-knot boundary conditions: third derivative is continuous across the
 /// first and last interior knots
-fn compute_not_a_knot_cubic_spline<F: Float + FromPrimitive + Debug>(
+fn compute_not_a_knot_cubic_spline<F: crate::traits::InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
 ) -> InterpolateResult<Array2<F>> {
@@ -2746,7 +2756,7 @@ fn compute_not_a_knot_cubic_spline<F: Float + FromPrimitive + Debug>(
 /// Compute the coefficients for a clamped cubic spline
 ///
 /// Clamped boundary conditions: first derivative specified at endpoints
-fn compute_clamped_cubic_spline<F: Float + FromPrimitive + Debug>(
+fn compute_clamped_cubic_spline<F: crate::traits::InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
     left_deriv: F,
@@ -2863,7 +2873,7 @@ fn compute_clamped_cubic_spline<F: Float + FromPrimitive + Debug>(
 /// Compute the coefficients for a periodic cubic spline
 ///
 /// Periodic boundary conditions: function and derivatives match at endpoints
-fn compute_periodic_cubic_spline<F: Float + FromPrimitive + Debug>(
+fn compute_periodic_cubic_spline<F: crate::traits::InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
 ) -> InterpolateResult<Array2<F>> {
@@ -2969,7 +2979,7 @@ fn compute_periodic_cubic_spline<F: Float + FromPrimitive + Debug>(
 }
 
 /// Compute the coefficients for a cubic spline with specified second derivatives
-fn compute_second_derivative_cubic_spline<F: Float + FromPrimitive + Debug>(
+fn compute_second_derivative_cubic_spline<F: crate::traits::InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
     left_d2: F,
@@ -3076,7 +3086,7 @@ fn compute_second_derivative_cubic_spline<F: Float + FromPrimitive + Debug>(
 }
 
 /// Compute the coefficients for a parabolic runout cubic spline
-fn compute_parabolic_runout_cubic_spline<F: Float + FromPrimitive + Debug>(
+fn compute_parabolic_runout_cubic_spline<F: crate::traits::InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
 ) -> InterpolateResult<Array2<F>> {
@@ -3180,7 +3190,12 @@ fn compute_parabolic_runout_cubic_spline<F: Float + FromPrimitive + Debug>(
 /// Integrate a cubic polynomial segment from a to b
 ///
 /// The polynomial is defined as: p(x) = a + b*(x-x0) + c*(x-x0)^2 + d*(x-x0)^3
-fn integrate_segment<F: Float + FromPrimitive>(coeffs: &Array1<F>, x0: F, a: F, b: F) -> F {
+fn integrate_segment<F: crate::traits::InterpolationFloat>(
+    coeffs: &Array1<F>,
+    x0: F,
+    a: F,
+    b: F,
+) -> F {
     // Shift to x-x0 coordinates
     let a_shifted = a - x0;
     let b_shifted = b - x0;
@@ -3260,7 +3275,7 @@ fn root_far_enough<F: Float>(roots: &[F], candidate: F, tolerance: F) -> bool {
 /// let y_interp = spline.evaluate(1.5).unwrap();
 /// println!("Interpolated value at x=1.5: {}", y_interp);
 /// ```
-pub fn make_interp_spline<F: Float + FromPrimitive + Debug>(
+pub fn make_interp_spline<F: InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
     bc_type: &str,
@@ -3296,16 +3311,7 @@ pub fn make_interp_spline<F: Float + FromPrimitive + Debug>(
 // Implementation of SplineInterpolator trait for CubicSpline
 impl<F> crate::traits::SplineInterpolator<F> for CubicSpline<F>
 where
-    F: Float
-        + FromPrimitive
-        + Debug
-        + Display
-        + AddAssign
-        + SubAssign
-        + Send
-        + Sync
-        + 'static
-        + crate::traits::InterpolationFloat,
+    F: crate::traits::InterpolationFloat,
 {
     fn derivative(
         &self,
@@ -3429,16 +3435,7 @@ where
 
 impl<F> crate::traits::Interpolator<F> for CubicSpline<F>
 where
-    F: Float
-        + FromPrimitive
-        + Debug
-        + Display
-        + AddAssign
-        + SubAssign
-        + Send
-        + Sync
-        + 'static
-        + crate::traits::InterpolationFloat,
+    F: crate::traits::InterpolationFloat,
 {
     fn evaluate(&self, query_points: &ArrayView2<F>) -> crate::InterpolateResult<Vec<F>> {
         if query_points.ncols() != 1 {
@@ -3507,7 +3504,7 @@ where
 /// // Integrate over interval
 /// let integral = cs.integrate_scipy(0.0, 3.0).unwrap();
 /// ```
-pub fn cubic_spline_scipy<F: Float + FromPrimitive + Debug>(
+pub fn cubic_spline_scipy<F: InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
     bc_type: &str,

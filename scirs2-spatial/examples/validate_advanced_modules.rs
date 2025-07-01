@@ -174,8 +174,7 @@ async fn test_quantum_inspired(
 
     // Test quantum nearest neighbor
     let quantum_nn = QuantumNearestNeighbor::new(&points.view())?;
-    let (indices, distances) = quantum_nn
-        .query_quantum(&array![2.0, 2.0].view(), 3)?;
+    let (indices, distances) = quantum_nn.query_quantum(&array![2.0, 2.0].view(), 3)?;
 
     if indices.len() != 3 || distances.len() != 3 {
         return Err("Quantum NN search returned wrong number of results".into());

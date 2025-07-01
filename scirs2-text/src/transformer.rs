@@ -299,18 +299,10 @@ impl MultiHeadAttention {
         // Initialize weight matrices with Xavier initialization
         let scale = (2.0 / d_model as f64).sqrt();
 
-        let w_q = Array2::from_shape_fn((d_model, d_model), |_| {
-            (rng().random::<f64>() - 0.5) * 2.0 * scale
-        });
-        let w_k = Array2::from_shape_fn((d_model, d_model), |_| {
-            (rng().random::<f64>() - 0.5) * 2.0 * scale
-        });
-        let w_v = Array2::from_shape_fn((d_model, d_model), |_| {
-            (rng().random::<f64>() - 0.5) * 2.0 * scale
-        });
-        let w_o = Array2::from_shape_fn((d_model, d_model), |_| {
-            (rng().random::<f64>() - 0.5) * 2.0 * scale
-        });
+        let w_q = Array2::from_shape_fn((d_model, d_model), |_| rng().random_range(-scale..scale));
+        let w_k = Array2::from_shape_fn((d_model, d_model), |_| rng().random_range(-scale..scale));
+        let w_v = Array2::from_shape_fn((d_model, d_model), |_| rng().random_range(-scale..scale));
+        let w_o = Array2::from_shape_fn((d_model, d_model), |_| rng().random_range(-scale..scale));
 
         Ok(Self {
             d_model,
@@ -484,12 +476,8 @@ impl FeedForward {
     pub fn new(d_model: usize, d_ff: usize) -> Self {
         let scale = (2.0 / d_model as f64).sqrt();
 
-        let w1 = Array2::from_shape_fn((d_model, d_ff), |_| {
-            (rng().random::<f64>() - 0.5) * 2.0 * scale
-        });
-        let w2 = Array2::from_shape_fn((d_ff, d_model), |_| {
-            (rng().random::<f64>() - 0.5) * 2.0 * scale
-        });
+        let w1 = Array2::from_shape_fn((d_model, d_ff), |_| rng().random_range(-scale..scale));
+        let w2 = Array2::from_shape_fn((d_ff, d_model), |_| rng().random_range(-scale..scale));
         let b1 = Array1::zeros(d_ff);
         let b2 = Array1::zeros(d_model);
 
@@ -847,9 +835,8 @@ impl TokenEmbedding {
     /// Create new token embedding layer
     pub fn new(vocab_size: usize, d_model: usize) -> Self {
         let scale = (1.0 / d_model as f64).sqrt();
-        let embeddings = Array2::from_shape_fn((vocab_size, d_model), |_| {
-            (rng().random::<f64>() - 0.5) * 2.0 * scale
-        });
+        let embeddings =
+            Array2::from_shape_fn((vocab_size, d_model), |_| rng().random_range(-scale..scale));
 
         Self {
             embeddings,

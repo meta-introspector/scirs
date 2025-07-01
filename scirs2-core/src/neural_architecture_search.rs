@@ -1531,7 +1531,7 @@ impl NeuralArchitectureSearch {
                 };
 
                 let projection_flops = sequence_length as u64 * hidden_dim * hidden_dim * 2;
-                (num_heads * single_head_flops) + projection_flops as u64
+                (num_heads * single_head_flops) + projection_flops
             }
 
             LayerType::BatchNorm => {

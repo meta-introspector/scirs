@@ -755,12 +755,10 @@ where
                         } else {
                             ((1.0 + x).powf(lambda) - 1.0) / lambda
                         }
+                    } else if (2.0 - lambda).abs() < 1e-10 {
+                        -((-x + 1.0).ln())
                     } else {
-                        if (2.0 - lambda).abs() < 1e-10 {
-                            -((-x + 1.0).ln())
-                        } else {
-                            -((-x + 1.0).powf(2.0 - lambda) - 1.0) / (2.0 - lambda)
-                        }
+                        -((-x + 1.0).powf(2.0 - lambda) - 1.0) / (2.0 - lambda)
                     }
                 }
                 _ => unreachable!(), // Already validated above
@@ -871,14 +869,12 @@ fn compute_log_likelihood(data: &[f64], lambda: f64, method: &str) -> Result<f64
                         let jacobian = (1.0 + x).ln();
                         (y, jacobian)
                     }
+                } else if (2.0 - lambda).abs() < 1e-10 {
+                    (-((-x + 1.0).ln()), -(1.0 - x).ln())
                 } else {
-                    if (2.0 - lambda).abs() < 1e-10 {
-                        (-((-x + 1.0).ln()), -(1.0 - x).ln())
-                    } else {
-                        let y = -((-x + 1.0).powf(2.0 - lambda) - 1.0) / (2.0 - lambda);
-                        let jacobian = -(1.0 - x).ln();
-                        (y, jacobian)
-                    }
+                    let y = -((-x + 1.0).powf(2.0 - lambda) - 1.0) / (2.0 - lambda);
+                    let jacobian = -(1.0 - x).ln();
+                    (y, jacobian)
                 };
                 (y, jacobian)
             }
@@ -960,93 +956,6 @@ fn golden_section_search(
     Ok((a + b) / 2.0)
 }
 
-/// ```
-/// use ndarray::array;
-/// use scirs2_transform::features::power_transform;
-///
-/// let data = array![[1.0, 2.0, 3.0],
-///                   [4.0, 5.0, 6.0],
-///                   [7.0, 8.0, 9.0]];
-///                   
-/// let transformed = power_transform(&data, "yeo-johnson", true).unwrap();
-/// ```
-pub fn power_transform<S>(
-    array: &ArrayBase<S, Ix2>,
-    method: &str,
-    standardize: bool,
-) -> Result<Array2<f64>>
-where
-    S: Data,
-    S::Elem: Float + NumCast,
-{
-    let array_f64 = array.mapv(|x| num_traits::cast::<S::Elem, f64>(x).unwrap_or(0.0));
-
-    if !array_f64.is_standard_layout() {
-        return Err(TransformError::InvalidInput(
-            "Input array must be in standard memory layout".to_string(),
-        ));
-    }
-
-    if method != "yeo-johnson" && method != "box-cox" {
-        return Err(TransformError::InvalidInput(
-            "method must be 'yeo-johnson' or 'box-cox'".to_string(),
-        ));
-    }
-
-    if method == "box-cox" {
-        // Box-Cox requires strictly positive data
-        if array_f64.iter().any(|&x| x <= 0.0) {
-            return Err(TransformError::InvalidInput(
-                "Box-Cox transformation requires strictly positive data".to_string(),
-            ));
-        }
-    }
-
-    let shape = array_f64.shape();
-    let n_samples = shape[0];
-    let n_features = shape[1];
-
-    let mut transformed = Array2::zeros((n_samples, n_features));
-
-    // For each feature, find the optimal lambda and apply the transformation
-    for j in 0..n_features {
-        let feature = array_f64.column(j).to_vec();
-
-        // Maximum likelihood estimation of lambda
-        let lambda = estimate_optimal_lambda(&feature, method)?;
-
-        // Apply the transformation
-        for i in 0..n_samples {
-            let x = array_f64[[i, j]];
-
-            transformed[[i, j]] = if method == "yeo-johnson" {
-                yeo_johnson_transform(x, lambda)
-            } else {
-                box_cox_transform(x, lambda)
-            };
-        }
-
-        // Standardize if requested
-        if standardize {
-            let mean = transformed.column(j).sum() / n_samples as f64;
-            let variance = transformed
-                .column(j)
-                .iter()
-                .map(|&x| (x - mean).powi(2))
-                .sum::<f64>()
-                / n_samples as f64;
-            let std_dev = variance.sqrt();
-
-            if std_dev > EPSILON {
-                for i in 0..n_samples {
-                    transformed[[i, j]] = (transformed[[i, j]] - mean) / std_dev;
-                }
-            }
-        }
-    }
-
-    Ok(transformed)
-}
 
 /// Apply Yeo-Johnson transformation to a single value
 fn yeo_johnson_transform(x: f64, lambda: f64) -> f64 {

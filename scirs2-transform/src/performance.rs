@@ -3,15 +3,13 @@
 //! This module provides optimized implementations of common transformation algorithms
 //! with memory efficiency, SIMD acceleration, and adaptive processing strategies.
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
+use ndarray::{Array1, Array2, ArrayView2, Axis, par_azip};
 use rand::Rng;
 use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_finite, check_not_empty, check_positive};
-use std::sync::Arc;
 
 use crate::error::{Result, TransformError};
-use crate::utils::{DataChunker, PerfUtils, ProcessingStrategy, StatUtils, TypeConverter};
+use crate::utils::{DataChunker, PerfUtils, ProcessingStrategy, StatUtils};
 
 /// Enhanced standardization with adaptive processing
 pub struct EnhancedStandardScaler {
@@ -889,8 +887,8 @@ impl EnhancedPCA {
         for i in 0..rows {
             for j in 0..cols {
                 // Box-Muller transform to generate Gaussian from uniform
-                let u1 = rng.gen::<f64>();
-                let u2 = rng.gen::<f64>();
+                let u1 = rng.random_range(0.0..1.0);
+                let u2 = rng.random_range(0.0..1.0);
 
                 // Ensure u1 is not zero to avoid log(0)
                 let u1 = if u1 == 0.0 { f64::EPSILON } else { u1 };
@@ -1069,7 +1067,7 @@ impl EnhancedPCA {
         // Start with a random vector
         use rand::Rng;
         let mut rng = rand::rng();
-        let mut vector: Array1<f64> = Array1::from_shape_fn(n, |_| rng.gen::<f64>() - 0.5);
+        let mut vector: Array1<f64> = Array1::from_shape_fn(n, |_| rng.random_range(0.0..1.0) - 0.5);
 
         // Normalize the initial vector
         let norm = vector.dot(&vector).sqrt();
@@ -1568,6 +1566,8 @@ mod tests {
         assert!(total_explained <= 1.0 + 1e-10);
     }
 }
+// REMOVED: Duplicate UltraFastMemoryPool - keeping the advanced version below
+/*
 /// Ultra-high performance memory pool for repeated transformations
 pub struct UltraFastMemoryPool {
     /// Pre-allocated transformation buffers
@@ -1909,13 +1909,13 @@ impl UltraFastPCA {
 
         // Generate random matrix with optimized random number generation
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut omega = Array2::zeros((n_features, n_random));
 
         // Use SIMD-friendly initialization
         for mut column in omega.columns_mut() {
             for val in column.iter_mut() {
-                *val = rng.gen::<f64>() - 0.5;
+                *val = rng.random_range(0.0..1.0) - 0.5;
             }
         }
 
@@ -2307,8 +2307,8 @@ impl UltraFastPCA {
 
         // Initialize with normalized random vector
         use rand::Rng;
-        let mut rng = rand::thread_rng();
-        let mut vector: Array1<f64> = Array1::from_shape_fn(n, |_| rng.gen::<f64>() - 0.5);
+        let mut rng = rand::rng();
+        let mut vector: Array1<f64> = Array1::from_shape_fn(n, |_| rng.random_range(0.0..1.0) - 0.5);
 
         // Initial normalization
         let initial_norm = vector.dot(&vector).sqrt();
@@ -2677,8 +2677,8 @@ impl CacheOptimizedAlgorithms {
 
         // Initialize random vector
         use rand::Rng;
-        let mut rng = rand::thread_rng();
-        let mut vector: Array1<f64> = Array1::from_shape_fn(n, |_| rng.gen::<f64>() - 0.5);
+        let mut rng = rand::rng();
+        let mut vector: Array1<f64> = Array1::from_shape_fn(n, |_| rng.random_range(0.0..1.0) - 0.5);
 
         // Normalize
         let norm = Self::blocked_norm(&vector, block_size)?;
@@ -2781,6 +2781,7 @@ impl CacheOptimizedAlgorithms {
         Ok(())
     }
 }
+*/
 
 /// ✅ ULTRATHINK MODE: Advanced memory pool for ultra-fast processing
 /// This provides cache-efficient memory management for repeated transformations

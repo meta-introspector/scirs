@@ -199,7 +199,7 @@ impl FederatedLearning {
     /// Select clients for a round
     fn select_clients(&self) -> Result<Vec<usize>> {
         use rand::prelude::*;
-        let mut rng = rand::rng();
+        let mut rng = ndarray_rand::rand::thread_rng();
 
         match self.config.client_selection.as_str() {
             "random" => {

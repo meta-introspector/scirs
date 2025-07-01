@@ -216,7 +216,7 @@ fn min_max_grad<'g, T: Float>(
     ctx.append_input_grad(1, Some(mul(selected_b, gy)));
 }
 
-#[cfg(all(feature = "blas", feature = "intel-mkl"))]
+#[cfg(feature = "blas")]
 macro_rules! elem_wise_vm_or_std {
     ($vms_op:ident, $vmd_op:ident, $closure:expr, $ctx:expr) => {
         let x = $ctx.input(0);
@@ -247,7 +247,7 @@ macro_rules! elem_wise_vm_or_std {
     };
 }
 
-#[cfg(all(feature = "blas", feature = "intel-mkl"))]
+#[cfg(feature = "blas")]
 macro_rules! elem_wise_vm_with_param_or_std {
     ($vms_op:ident, $vmd_op:ident, $std_name:ident, $param:expr, $ctx:expr) => {
         let x = $ctx.input(0);
@@ -427,7 +427,7 @@ impl<T: Float> op::Op<T> for Transpose {
     }
 }
 
-#[cfg(all(feature = "blas", feature = "intel-mkl"))]
+#[cfg(feature = "blas")]
 pub(crate) fn inplace_add_impl<F: Float>(mut a: NdArray<F>, b: &NdArray<F>) -> NdArray<F> {
     unsafe {
         if same_type::<F, f32>() {
@@ -453,7 +453,7 @@ pub(crate) fn inplace_add_impl<F: Float>(mut a: NdArray<F>, b: &NdArray<F>) -> N
     a
 }
 
-#[cfg(all(feature = "blas", feature = "intel-mkl"))]
+#[cfg(feature = "blas")]
 pub(crate) fn fast_inplace_exp_impl<F: Float>(x: &mut NdArray<F>) {
     unsafe {
         if same_type::<F, f32>() {
@@ -474,7 +474,7 @@ pub(crate) fn fast_inplace_exp_impl<F: Float>(x: &mut NdArray<F>) {
     }
 }
 
-#[cfg(all(feature = "blas", feature = "intel-mkl"))]
+#[cfg(feature = "blas")]
 pub(crate) fn fast_inplace_ln_impl<F: Float>(x: &mut NdArray<F>) {
     unsafe {
         if same_type::<F, f32>() {
@@ -520,11 +520,11 @@ pub fn logsumexp_forward<T: Float>(x: &NdArrayView<T>, axis: isize, keep_dims: b
     let exp = {
         // subtract `max` to prevent overflow of exp
         let mut tmp = x - max;
-        #[cfg(all(feature = "blas", feature = "intel-mkl"))]
+        #[cfg(feature = "blas")]
         {
             fast_inplace_exp_impl(&mut tmp);
         }
-        #[cfg(not(all(feature = "blas", feature = "intel-mkl")))]
+        #[cfg(not(feature = "blas"))]
         {
             tmp.mapv_inplace(move |a| a.exp());
         }
@@ -537,12 +537,12 @@ pub fn logsumexp_forward<T: Float>(x: &NdArrayView<T>, axis: isize, keep_dims: b
         .into_shape_with_order(ndarray::IxDyn(reduced_shape))
         .unwrap();
 
-    #[cfg(all(feature = "blas", feature = "intel-mkl"))]
+    #[cfg(feature = "blas")]
     {
         fast_inplace_ln_impl(&mut sum);
         inplace_add_impl(sum, max)
     }
-    #[cfg(not(all(feature = "blas", feature = "intel-mkl")))]
+    #[cfg(not(feature = "blas"))]
     {
         sum.mapv_inplace(move |a| a.ln());
         sum += max;
@@ -664,7 +664,7 @@ impl<T: Float> op::Op<T> for Exp10 {
     fn compute(&self, ctx: &mut op::ComputeContext<T>) -> Result<(), op::OpError> {
         let ten = T::from(10).unwrap();
 
-        #[cfg(not(all(feature = "blas", feature = "intel-mkl")))]
+        #[cfg(not(feature = "blas"))]
         {
             let ret = ctx.input(0).map(move |&a| ten.powf(a));
             ctx.append_output(ret);

@@ -26,6 +26,14 @@ pub type OptimGpuBuffer<T> = GpuBuffer<T>;
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex};
 
+/// GPU memory information structure
+#[derive(Debug, Clone)]
+pub struct GpuMemoryInfo {
+    pub total: usize,
+    pub free: usize,
+    pub used: usize,
+}
+
 /// GPU memory pool for efficient allocation and reuse
 pub struct GpuMemoryPool {
     context: Arc<GpuContext>,
@@ -484,7 +492,7 @@ pub mod optimization {
         /// Optimize memory pool sizes based on usage patterns
         fn optimize_pool_sizes(&mut self, stats: &MemoryStats) -> ScirsResult<()> {
             // Analyze usage patterns and adjust pool sizes
-            for (&size, &count) in &stats.pool_sizes {
+            for (&_size, &count) in &stats.pool_sizes {
                 if count > self.config.max_pool_size {
                     // Pool is too large, consider reducing
                     self.optimization_stats.pool_optimizations += 1;

@@ -18,7 +18,6 @@ use crate::extrapolation::ExtrapolationMethod;
 use crate::spline::CubicSpline;
 use crate::traits::InterpolationFloat;
 use ndarray::{Array1, Array2, ArrayView1};
-use num_traits::FromPrimitive;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -143,6 +142,7 @@ pub struct SciPyBSpline<
 ///
 /// Ensures exact compatibility with SciPy.interpolate.CubicSpline including
 /// all method signatures, parameters, and behaviors.
+#[derive(Clone)]
 pub struct SciPyCubicSpline<T: InterpolationFloat> {
     /// Internal cubic spline implementation
     inner: CubicSpline<T>,
@@ -596,8 +596,8 @@ impl<T: InterpolationFloat> SciPyBSpline<T> {
             // Check bounds and return error for out-of-bounds points
             let mut result = Array1::zeros(x.len());
             for (i, &xi) in x.iter().enumerate() {
-                if xi < self.inner.knots()[0]
-                    || xi > self.inner.knots()[self.inner.knots().len() - 1]
+                if xi < self.inner.knot_vector()[0]
+                    || xi > self.inner.knot_vector()[self.inner.knot_vector().len() - 1]
                 {
                     return Err(InterpolateError::OutOfBounds(format!(
                         "Point {} is outside the B-spline domain",
@@ -612,12 +612,12 @@ impl<T: InterpolationFloat> SciPyBSpline<T> {
 
     /// Compute derivative (SciPy interface)
     pub fn derivative(&self, nu: usize) -> InterpolateResult<SciPyBSpline<T>> {
-        let deriv_inner = self.inner.derivative(nu)?;
-        Ok(Self {
-            inner: deriv_inner,
-            extrapolate: self.extrapolate,
-            axis: self.axis,
-        })
+        // TODO: Implement derivative spline construction
+        // For now, return not implemented error
+        let _ = nu; // Suppress unused variable warning
+        Err(InterpolateError::NotImplemented(
+            "BSpline derivative spline construction not yet implemented".to_string(),
+        ))
     }
 
     /// Compute antiderivative (SciPy interface)
@@ -729,7 +729,7 @@ impl<T: InterpolationFloat> SciPyCubicSpline<T> {
 
     /// Compute derivative (SciPy interface)
     pub fn derivative(&self, nu: Option<usize>) -> InterpolateResult<SciPyCubicSpline<T>> {
-        let order = nu.unwrap_or(1);
+        let _order = nu.unwrap_or(1);
 
         // For cubic splines, we need to create a new spline representing the derivative
         // This is a simplified implementation - a full version would reconstruct the spline
@@ -738,7 +738,7 @@ impl<T: InterpolationFloat> SciPyCubicSpline<T> {
 
     /// Compute antiderivative (SciPy interface)
     pub fn antiderivative(&self, nu: Option<usize>) -> InterpolateResult<SciPyCubicSpline<T>> {
-        let order = nu.unwrap_or(1);
+        let _order = nu.unwrap_or(1);
         let antideriv_inner = self.inner.antiderivative()?;
 
         Ok(Self {
@@ -757,9 +757,9 @@ impl<T: InterpolationFloat> SciPyCubicSpline<T> {
     /// Solve for x values where spline equals y (SciPy interface)
     pub fn solve(
         &self,
-        y: T,
-        discontinuity: Option<bool>,
-        extrapolate: Option<bool>,
+        _y: T,
+        _discontinuity: Option<bool>,
+        _extrapolate: Option<bool>,
     ) -> InterpolateResult<Vec<T>> {
         // This would implement root-finding for spline(x) - y = 0
         // Simplified implementation for now
@@ -868,7 +868,7 @@ impl SciPyInterpolate {
         c: Array2<T>,
         x: Array1<T>,
         extrapolate: Option<bool>,
-        axis: Option<i32>,
+        _axis: Option<i32>,
     ) -> InterpolateResult<PPoly<T>> {
         let extrap_mode = if extrapolate.unwrap_or(true) {
             ExtrapolationMethod::Linear

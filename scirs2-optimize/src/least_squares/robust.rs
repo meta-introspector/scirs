@@ -430,7 +430,7 @@ where
         let neg_jt_wr = -weighted_jac.t().dot(&weighted_res);
 
         // Solve for step
-        match solve_linear_system(&jt_wj, &neg_jt_wr) {
+        match solve(&jt_wj, &neg_jt_wr) {
             Some(step) => {
                 // Take the step
                 let mut line_search_alpha = 1.0;
@@ -534,7 +534,7 @@ fn compute_robust_cost<L: RobustLoss>(residuals: &Array1<f64>, loss: &L) -> f64 
 }
 
 /// Simple linear system solver (same as in least_squares.rs)
-fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> Option<Array1<f64>> {
+fn solve(a: &Array2<f64>, b: &Array1<f64>) -> Option<Array1<f64>> {
     use scirs2_linalg::solve::solve;
 
     solve(&a.view(), &b.view(), None).ok()

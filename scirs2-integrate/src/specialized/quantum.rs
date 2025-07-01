@@ -4064,7 +4064,7 @@ pub mod quantum_algorithms {
 
             // Should have a state vector with correct dimensions
             assert_eq!(final_state.len(), 1 << 7); // 7 qubits for Steane code
-            assert!(error_prob >= 0.0 && error_prob <= 1.0);
+            assert!((0.0..=1.0).contains(&error_prob));
 
             // Estimate logical error rate
             let logical_error_rate = qec.estimate_logical_error_rate();
@@ -4661,7 +4661,7 @@ impl AdvancedBasisSets {
             // Haar wavelet as example
             for i in 0..n_points {
                 let x_val = scaled_x[i];
-                let wavelet_val = if x_val >= 0.0 && x_val < 0.5 {
+                let wavelet_val = if (0.0..0.5).contains(&x_val) {
                     param.coefficient
                 } else if x_val >= 0.5 && x_val < 1.0 {
                     -param.coefficient
@@ -5680,10 +5680,8 @@ impl VariationalQuantumEigensolver {
             }
 
             // Convergence check
-            if iteration > 10 && iteration % 10 == 0 {
-                if gradients.iter().all(|&g| g.abs() < 1e-6) {
-                    break;
-                }
+            if iteration > 10 && iteration % 10 == 0 && gradients.iter().all(|&g| g.abs() < 1e-6) {
+                break;
             }
         }
 

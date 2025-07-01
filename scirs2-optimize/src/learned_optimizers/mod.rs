@@ -14,6 +14,8 @@ use ndarray::{Array1, Array2, ArrayView1};
 use scirs2_core::error::CoreResult;
 use std::collections::HashMap;
 
+type Result<T> = std::result::Result<T, OptimizeError>;
+
 pub mod adaptive_nas_system;
 pub mod adaptive_transformer_enhancement;
 pub mod few_shot_learning_enhancement;

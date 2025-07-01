@@ -423,7 +423,7 @@ fn bench_matrix_properties(c: &mut Criterion) {
         });
 
         group.bench_with_input(BenchmarkId::new("cond_basic", size), &matrix, |b, m| {
-            b.iter(|| cond(&m.view(), None, None).unwrap())
+            b.iter(|| cond(&m.view(), None, Some(1)).unwrap())
         });
 
         // Matrix rank
@@ -432,7 +432,7 @@ fn bench_matrix_properties(c: &mut Criterion) {
         });
 
         group.bench_with_input(BenchmarkId::new("rank_basic", size), &matrix, |b, m| {
-            b.iter(|| matrix_rank(&m.view(), None, None).unwrap())
+            b.iter(|| matrix_rank(&m.view(), None, Some(1)).unwrap())
         });
 
         // Pseudoinverse (smaller sizes)

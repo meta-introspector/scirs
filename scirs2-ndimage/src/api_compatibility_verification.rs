@@ -5,7 +5,7 @@
 //! It includes parameter validation, behavior verification, and migration
 //! guidance for any incompatibilities.
 
-use crate::error::Result;
+use crate::error::NdimageResult;
 use crate::filters::*;
 use crate::interpolation::*;
 use crate::measurements::*;

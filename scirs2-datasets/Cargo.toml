@@ -39,3 +39,4 @@ tempfile = { workspace = true }
 [features]
 default = []
 download = ["reqwest", "futures-util", "tokio"]
+parallel = ["scirs2-core/parallel"]

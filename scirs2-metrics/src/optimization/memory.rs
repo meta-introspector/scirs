@@ -520,7 +520,6 @@ pub struct ZeroCopyArrayViewMut<'a, T> {
 }
 
 /// Memory buffer for zero-copy operations
-#[derive(Debug)]
 pub struct ZeroCopyBuffer<T> {
     /// Raw data pointer
     data: NonNull<T>,
@@ -535,7 +534,7 @@ pub struct ZeroCopyBuffer<T> {
 }
 
 /// Custom allocator trait for different allocation strategies
-pub trait CustomAllocator: Send + Sync {
+pub trait CustomAllocator: Send + Sync + std::fmt::Debug {
     /// Allocate memory with specific alignment
     fn allocate(&self, size: usize, alignment: usize) -> Result<NonNull<u8>>;
 
@@ -559,7 +558,6 @@ pub trait CustomAllocator: Send + Sync {
 }
 
 /// Thread-local memory allocator for high-performance scenarios
-#[derive(Debug)]
 pub struct ThreadLocalAllocator {
     /// Thread-local memory pools
     local_pools: std::thread::LocalKey<UnsafeCell<HashMap<usize, Vec<NonNull<u8>>>>>,
@@ -615,7 +613,7 @@ pub struct BuddyAllocator {
 }
 
 /// Memory statistics tracking
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct MemoryStats {
     /// Total bytes allocated
     pub total_allocated: AtomicUsize,
@@ -634,7 +632,7 @@ pub struct MemoryStats {
 }
 
 /// Pool-specific statistics
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct PoolStatistics {
     /// Hits (successful allocations from pool)
     pub hits: AtomicUsize,
@@ -647,7 +645,7 @@ pub struct PoolStatistics {
 }
 
 /// SIMD allocation statistics
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct SimdStats {
     /// SIMD allocations by alignment
     pub allocations_by_alignment: HashMap<usize, AtomicUsize>,
@@ -658,7 +656,7 @@ pub struct SimdStats {
 }
 
 /// Arena allocator statistics
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct ArenaStats {
     /// Number of arenas created
     pub arenas_created: AtomicUsize,
@@ -671,7 +669,7 @@ pub struct ArenaStats {
 }
 
 /// Memory mapping statistics
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct MappingStats {
     /// Number of active mappings
     pub active_mappings: AtomicUsize,
@@ -684,7 +682,7 @@ pub struct MappingStats {
 }
 
 /// Lock-free recycler statistics
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct RecyclerStats {
     /// Successful recycles
     pub successful_recycles: AtomicUsize,
@@ -697,7 +695,7 @@ pub struct RecyclerStats {
 }
 
 /// General allocator statistics
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct AllocatorStats {
     /// Allocation requests
     pub allocation_requests: AtomicUsize,
@@ -712,7 +710,7 @@ pub struct AllocatorStats {
 }
 
 /// Slab allocator statistics
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct SlabStats {
     /// Slabs allocated
     pub slabs_allocated: AtomicUsize,
@@ -725,7 +723,7 @@ pub struct SlabStats {
 }
 
 /// Buddy allocator statistics
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct BuddyStats {
     /// Allocations by order
     pub allocations_by_order: Vec<AtomicUsize>,

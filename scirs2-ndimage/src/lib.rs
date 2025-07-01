@@ -4,6 +4,7 @@
 //! It includes filters, interpolation, measurements, morphology, feature detection, and segmentation functions.
 
 // Public modules
+pub mod adaptive_ultrathink_optimizer;
 pub mod advanced_streaming_ai;
 pub mod ai_driven_adaptive_processing;
 pub mod analysis;
@@ -297,4 +298,14 @@ pub use self::neuromorphic_computing::{
     event_driven_processing, homeostatic_adaptive_filter, liquid_state_machine,
     spiking_neural_network_filter, stdp_unsupervised_learning, temporal_coding_feature_extraction,
     Event, NeuromorphicConfig, PlasticSynapse, SpikingNeuron,
+};
+
+// Ultrathink fusion core exports
+pub use self::ultrathink_fusion_core::{
+    enhanced_quantum_consciousness_evolution, enhanced_meta_learning_with_temporal_fusion,
+    quantum_aware_resource_scheduling_optimization, ultrathink_fusion_processing, UltrathinkConfig,
+    UltrathinkState, QuantumConsciousnessEvolution, ConsciousnessState, ConsciousnessComplexity,
+    QuantumCoherenceOptimizer, CoherenceStrategy, EnhancedMetaLearningSystem, TemporalMemoryFusion,
+    HierarchicalLearner, StrategyEvolution, MetaLearningTracker, AdaptiveMemoryConsolidation,
+    QuantumAwareResourceScheduler, WorkloadCharacteristics, ResourceSchedulingDecision,
 };

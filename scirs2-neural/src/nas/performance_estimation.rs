@@ -204,13 +204,13 @@ impl SuperNetEstimator {
     /// Sample a random architecture for training
     fn sample_random_architecture(&self) -> Vec<String> {
         use rand::prelude::*;
-        let mut rng = rand::rng();
+        let mut rng = ndarray_rand::rand::thread_rng();
 
         let mut architecture = Vec::new();
-        let num_layers = rng.gen_range(3..8);
+        let num_layers = rng.random_range(3..8);
 
         for _ in 0..num_layers {
-            let layer_type = match rng.gen_range(0..4) {
+            let layer_type = match rng.random_range(0..4) {
                 0 => format!("dense_{}", [64, 128, 256, 512].choose(&mut rng).unwrap()),
                 1 => format!("conv_{}", [32, 64, 128, 256].choose(&mut rng).unwrap()),
                 2 => "dropout".to_string(),

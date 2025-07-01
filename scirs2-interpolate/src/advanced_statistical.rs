@@ -17,8 +17,8 @@
 
 use crate::error::{InterpolateError, InterpolateResult};
 use ndarray::{s, Array1, Array2, Array3, ArrayView1, ArrayView2, ScalarOperand};
-use num_traits::{Float, FromPrimitive};
-use std::fmt::{Debug, Display};
+use num_traits::Float;
+use std::fmt::Debug;
 
 /// Configuration for functional data analysis interpolation
 #[derive(Debug, Clone)]
@@ -71,7 +71,7 @@ pub struct FunctionalDataInterpolator<T: Float + ScalarOperand> {
     fitted: bool,
 }
 
-impl<T: Float + FromPrimitive + Debug + Display + ScalarOperand> FunctionalDataInterpolator<T> {
+impl<T: crate::traits::InterpolationFloat + ScalarOperand> FunctionalDataInterpolator<T> {
     /// Create a new functional data interpolator
     pub fn new(config: FDAConfig) -> Self {
         Self {
@@ -379,11 +379,9 @@ pub struct MultiOutputInterpolator<T: Float + ScalarOperand> {
     fitted: bool,
 }
 
-impl<T: Float + FromPrimitive + Debug + Display + ScalarOperand + 'static>
-    MultiOutputInterpolator<T>
-{
+impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static> MultiOutputInterpolator<T> {
     /// Create a new multi-output interpolator
-    pub fn new(input_dim: usize, output_dim: usize, n_basis_per_dim: usize) -> Self {
+    pub fn new(input_dim: usize, output_dim: usize, _n_basis_per_dim: usize) -> Self {
         Self {
             input_dim,
             output_dim,
@@ -706,7 +704,7 @@ pub struct PiecewisePolynomialInterpolator<T: Float + ScalarOperand> {
     fitted: bool,
 }
 
-impl<T: Float + FromPrimitive + Debug + Display + ScalarOperand + 'static>
+impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static>
     PiecewisePolynomialInterpolator<T>
 {
     /// Create a new piecewise polynomial interpolator
@@ -1062,16 +1060,14 @@ impl<T: Float + FromPrimitive + Debug + Display + ScalarOperand + 'static>
 }
 
 /// Create a new functional data analysis interpolator
-pub fn make_fda_interpolator<T: Float + FromPrimitive + Debug + Display + ScalarOperand>(
+pub fn make_fda_interpolator<T: crate::traits::InterpolationFloat + ScalarOperand>(
     config: Option<FDAConfig>,
 ) -> FunctionalDataInterpolator<T> {
     FunctionalDataInterpolator::new(config.unwrap_or_default())
 }
 
 /// Create a new multi-output interpolator
-pub fn make_multi_output_interpolator<
-    T: Float + FromPrimitive + Debug + Display + ScalarOperand,
->(
+pub fn make_multi_output_interpolator<T: crate::traits::InterpolationFloat + ScalarOperand>(
     input_dim: usize,
     output_dim: usize,
     n_basis_per_dim: Option<usize>,
@@ -1081,7 +1077,7 @@ pub fn make_multi_output_interpolator<
 
 /// Create a new piecewise polynomial interpolator
 pub fn make_piecewise_polynomial_interpolator<
-    T: Float + FromPrimitive + Debug + Display + ScalarOperand,
+    T: crate::traits::InterpolationFloat + ScalarOperand,
 >(
     max_degree: Option<usize>,
     min_points_per_segment: Option<usize>,

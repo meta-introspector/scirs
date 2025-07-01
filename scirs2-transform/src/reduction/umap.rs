@@ -3,7 +3,7 @@
 //! UMAP is a non-linear dimensionality reduction technique that can be used for
 //! visualization similarly to t-SNE, but also for general non-linear dimension reduction.
 
-use ndarray::{Array2, ArrayBase, ArrayView2, Data, Ix2};
+use ndarray::{Array2, ArrayBase, Data, Ix2};
 use num_traits::{Float, NumCast};
 use rand::{Rng, SeedableRng};
 use scirs2_core::validation::{check_positive, check_shape};
@@ -248,7 +248,7 @@ impl UMAP {
         let mut embedding = Array2::zeros((n_samples, self.n_components));
         for i in 0..n_samples {
             for j in 0..self.n_components {
-                embedding[[i, j]] = rng.gen::<f64>() * 10.0 - 5.0;
+                embedding[[i, j]] = rng.random_range(0.0..1.0) * 10.0 - 5.0;
             }
         }
 

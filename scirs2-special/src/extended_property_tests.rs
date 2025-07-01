@@ -6,7 +6,7 @@
 
 #![cfg(test)]
 
-use num_complex::Complex64;
+use num_complex::{Complex64, ComplexFloat};
 use quickcheck::{Arbitrary, Gen, TestResult};
 use quickcheck_macros::quickcheck;
 use std::f64;
@@ -394,11 +394,11 @@ mod spherical_harmonics_properties {
         let theta_val = (theta.0 + 1.0) * f64::consts::PI / 2.0; // Map to [0, π]
         let phi_val = phi % (2.0 * f64::consts::PI);
 
-        let y_lm = sph_harm(l as usize, m, theta_val, phi_val);
+        let y_lm = crate::spherical_harmonics::sph_harm_complex(l as usize, m, theta_val, phi_val);
 
         // For m=0, Y_l0 should be real
         match y_lm {
-            Ok(val) => TestResult::from_bool(val.im.abs() < 1e-14),
+            Ok((re, im)) => TestResult::from_bool(im.abs() < 1e-14),
             Err(_) => TestResult::discard(),
         }
     }
@@ -421,11 +421,13 @@ mod spherical_harmonics_properties {
         let theta_val = theta.abs() % f64::consts::PI;
         let phi_val = phi % (2.0 * f64::consts::PI);
 
-        let y_lm = sph_harm(l as usize, m, theta_val, phi_val);
-        let y_l_neg_m = sph_harm(l as usize, -m, theta_val, phi_val);
+        let y_lm = crate::spherical_harmonics::sph_harm_complex(l as usize, m as i32, theta_val, phi_val);
+        let y_l_neg_m = crate::spherical_harmonics::sph_harm_complex(l as usize, -(m as i32), theta_val, phi_val);
 
         match (y_lm, y_l_neg_m) {
-            (Ok(val1), Ok(val2)) => {
+            (Ok((re1, im1)), Ok((re2, im2))) => {
+                let val1 = Complex64::new(re1, im1);
+                let val2 = Complex64::new(re2, im2);
                 let expected = if m % 2 == 0 {
                     val1.conj()
                 } else {
@@ -484,8 +486,11 @@ mod hypergeometric_properties {
             return TestResult::discard();
         }
 
-        let result = hyp1f1(0.0, b_val, z);
-        TestResult::from_bool(approx_eq(result, 1.0, 1e-10))
+        let result = crate::hypergeometric::hyp1f1(0.0, b_val, z);
+        match result {
+            Ok(val) => TestResult::from_bool(approx_eq(val, 1.0, 1e-10)),
+            Err(_) => TestResult::discard(),
+        }
     }
 
     #[quickcheck]

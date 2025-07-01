@@ -4,9 +4,10 @@
 //! meta-learning to select optimal transformations for given datasets.
 
 use crate::error::{Result, TransformError};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use scirs2_core::validation::{check_finite, check_not_empty, check_positive};
-use std::collections::{HashMap, VecDeque};
+use ndarray::{Array1, ArrayView1, ArrayView2};
+use scirs2_core::validation::{check_finite, check_not_empty};
+use scirs2_fft::ultrathink_coordinator::OptimizationWeights;
+use std::collections::HashMap;
 
 #[cfg(feature = "auto-feature-engineering")]
 use tch::{nn, Device, Tensor};
@@ -585,7 +586,7 @@ impl AutoFeatureEngineer {
             return Ok(0.0);
         }
 
-        let n = x.len() as f64;
+        let _n = x.len() as f64;
         let mean_x = x.mean().ok_or_else(|| {
             TransformError::ComputationError("Failed to compute mean of x".to_string())
         })?;
@@ -1169,13 +1170,13 @@ impl AdvancedMetaLearningSystem {
 
         // Sample random points and compute distances
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let sample_size = 100.min(n_samples);
         let mut distances = Vec::new();
 
         for _ in 0..sample_size {
-            let i = rng.gen_range(0..n_samples);
-            let j = rng.gen_range(0..n_samples);
+            let i = rng.random_range(0..n_samples);
+            let j = rng.random_range(0..n_samples);
             if i != j {
                 let dist = self.euclidean_distance(&x.row(i), &x.row(j));
                 distances.push(dist);
@@ -1221,7 +1222,7 @@ impl AdvancedMetaLearningSystem {
         }
 
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let sample_size = 10.min(n_samples / 2);
 
         // Generate random points in the data space
@@ -1243,7 +1244,7 @@ impl AdvancedMetaLearningSystem {
             // Random point in data space
             let mut random_point = vec![0.0; n_features];
             for j in 0..n_features {
-                random_point[j] = rng.gen_range(min_vals[j]..=max_vals[j]);
+                random_point[j] = rng.random_range(min_vals[j]..=max_vals[j]);
             }
 
             // Find nearest neighbor distance for random point
@@ -1255,7 +1256,7 @@ impl AdvancedMetaLearningSystem {
             u_distances.push(min_dist_u);
 
             // Random data point
-            let random_idx = rng.gen_range(0..n_samples);
+            let random_idx = rng.random_range(0..n_samples);
             let data_point = x.row(random_idx).to_vec();
 
             // Find nearest neighbor distance for data point
@@ -1290,12 +1291,12 @@ impl AdvancedMetaLearningSystem {
 
         // Sample pairs of features to avoid O(n²) complexity
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let max_pairs = 50.min((n_features * (n_features - 1)) / 2);
 
         for _ in 0..max_pairs {
-            let i = rng.gen_range(0..n_features);
-            let j = rng.gen_range(0..n_features);
+            let i = rng.random_range(0..n_features);
+            let j = rng.random_range(0..n_features);
             if i != j {
                 let mi = self.estimate_mutual_information(&x.column(i), &x.column(j))?;
                 mi_sum += mi;
@@ -1466,10 +1467,10 @@ impl AdvancedMetaLearningSystem {
 
         // For high-dimensional data, use sampling approach
         let sample_size = 1000.min(n_samples);
+        use rand::rng;
         use rand::seq::SliceRandom;
-        use rand::thread_rng;
 
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let indices: Vec<usize> = (0..n_samples)
             .collect::<Vec<_>>()
             .choose_multiple(&mut rng, sample_size)
@@ -1657,11 +1658,11 @@ impl AdvancedMetaLearningSystem {
         // Sample pairs to avoid O(n²) complexity for large feature sets
         let max_pairs = 100.min((n_features * (n_features - 1)) / 2);
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         for _ in 0..max_pairs {
-            let i = rng.gen_range(0..n_features);
-            let j = rng.gen_range(0..n_features);
+            let i = rng.random_range(0..n_features);
+            let j = rng.random_range(0..n_features);
 
             if i != j {
                 let col_i = x.column(i);
@@ -1730,10 +1731,10 @@ impl AdvancedMetaLearningSystem {
 
         // Build correlation adjacency matrix (sampled)
         let sample_size = 20.min(n_features);
+        use rand::rng;
         use rand::seq::SliceRandom;
-        use rand::thread_rng;
 
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let sampled_features: Vec<usize> = (0..n_features)
             .collect::<Vec<_>>()
             .choose_multiple(&mut rng, sample_size)

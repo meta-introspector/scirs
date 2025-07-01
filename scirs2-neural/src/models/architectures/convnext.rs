@@ -13,7 +13,7 @@ use crate::layers::{
 };
 
 use ndarray::{Array, IxDyn, ScalarOperand};
-use ndarray_rand::rand::{rngs::SmallRng, SeedableRng};
+use ndarray_rand::rand::rngs::SmallRng;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;

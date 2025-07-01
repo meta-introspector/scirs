@@ -88,7 +88,7 @@ fn demonstrate_scientific_computing_optimization(
             println!("   Optimal Chunk Size: {:.0}", params);
         }
 
-        if let Some(solution) = recommendation.multi_objective_solution {
+        if let Some(ref solution) = recommendation.multi_objective_solution {
             println!(
                 "   Multi-objective Score: {:.3}",
                 solution.objectives.iter().sum::<f64>() / solution.objectives.len() as f64

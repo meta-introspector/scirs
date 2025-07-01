@@ -979,7 +979,7 @@ where
         })
         .collect();
 
-    for iteration in 0..max_iter {
+    for _iteration in 0..max_iter {
         // Parallel computation of new PageRank values
         let new_pagerank = Arc::new(Mutex::new(Array1::<f64>::from_elem(
             n,
@@ -1010,10 +1010,10 @@ where
 
         let new_pagerank = Arc::try_unwrap(new_pagerank).unwrap().into_inner().unwrap();
 
-        // Parallel convergence check
+        // Convergence check
         let diff = pagerank
-            .par_iter()
-            .zip(new_pagerank.par_iter())
+            .iter()
+            .zip(new_pagerank.iter())
             .map(|(old, new)| (new - old).abs())
             .sum::<f64>();
 
@@ -1025,11 +1025,11 @@ where
         pagerank = new_pagerank;
     }
 
-    // Parallel conversion to HashMap
+    // Conversion to HashMap
     let result: HashMap<N, f64> = nodes
-        .par_iter()
+        .iter()
         .enumerate()
-        .map(|(i, node)| (node.clone(), pagerank[i]))
+        .map(|(i, node)| ((*node).clone(), pagerank[i]))
         .collect();
 
     Ok(result)

@@ -20,7 +20,7 @@ use std::collections::HashMap;
 
 #[cfg(feature = "python")]
 use crate::{
-    arima_models::{ArimaConfig, ArimaModel},
+    arima_models::ArimaModel,
     error::{Result, TimeSeriesError},
     utils::*,
 };

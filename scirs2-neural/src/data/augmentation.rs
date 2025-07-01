@@ -3,7 +3,7 @@
 use crate::error::Result;
 use ndarray::{Array, IxDyn, ScalarOperand};
 use num_traits::Float;
-use rand::Rng;
+use ndarray_rand::rand::Rng;
 use std::fmt::Debug;
 
 /// Trait for data augmentation
@@ -31,7 +31,7 @@ impl<F: Float + Debug + ScalarOperand> GaussianNoise<F> {
 
 impl<F: Float + Debug + ScalarOperand> Augmentation<F> for GaussianNoise<F> {
     fn apply(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
-        let mut rng = rand::rng();
+        let mut rng = ndarray_rand::rand::thread_rng();
         let mut result = input.clone();
 
         for item in result.iter_mut() {
@@ -74,7 +74,7 @@ impl<F: Float + Debug + ScalarOperand> RandomErasing<F> {
 
 impl<F: Float + Debug + ScalarOperand> Augmentation<F> for RandomErasing<F> {
     fn apply(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
-        let mut rng = rand::rng();
+        let mut rng = ndarray_rand::rand::thread_rng();
         let mut result = input.clone();
 
         // Only apply augmentation based on probability
@@ -144,7 +144,7 @@ impl<F: Float + Debug + ScalarOperand> RandomHorizontalFlip<F> {
 
 impl<F: Float + Debug + ScalarOperand> Augmentation<F> for RandomHorizontalFlip<F> {
     fn apply(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
-        let mut rng = rand::rng();
+        let mut rng = ndarray_rand::rand::thread_rng();
         let mut result = input.clone();
 
         // Only apply augmentation based on probability

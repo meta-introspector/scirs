@@ -1070,7 +1070,7 @@ impl StressMemoryProfiler {
 
     /// Measure memory recovery time after stress
     pub fn measure_recovery_time(&mut self, stress_end_time: Instant) {
-        let recovery_start_memory = self.base_monitor.current_memory_bytes;
+        let _recovery_start_memory = self.base_monitor.current_memory_bytes;
 
         // Monitor memory for recovery (simplified - would need async monitoring in practice)
         let recovery_time = Instant::now().duration_since(stress_end_time);

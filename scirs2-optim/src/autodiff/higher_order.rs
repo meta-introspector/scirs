@@ -1311,6 +1311,7 @@ pub struct ComputationProfiler<T: Float> {
     hvp_timings: Vec<ComputationTiming>,
     jacobian_timings: Vec<ComputationTiming>,
     total_computations: usize,
+    _phantom: std::marker::PhantomData<T>,
 }
 
 #[derive(Debug, Clone)]
@@ -1339,6 +1340,7 @@ impl<T: Float + Default + Clone> ComputationProfiler<T> {
             hvp_timings: Vec::new(),
             jacobian_timings: Vec::new(),
             total_computations: 0,
+            _phantom: std::marker::PhantomData,
         }
     }
 

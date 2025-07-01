@@ -18,14 +18,13 @@
 
 use scirs2_core::error::{CoreError, CoreResult, ErrorContext};
 use scirs2_core::ultrathink_cloud_storage::{
-    CloudCredentials, CloudPerformanceAnalytics, CloudProviderConfig, CloudProviderId,
-    CloudProviderType, CloudStorageProvider, CostEstimate, CostOperation, CredentialType,
-    DataStream, DeleteRequest, DeleteResponse, DownloadOptions, DownloadRequest, DownloadResponse,
-    EncryptionAlgorithm, HealthStatus, ListRequest, ListResponse, MetadataRequest, ObjectMetadata,
-    OperationType, ProviderHealth, ProviderPerformanceSettings, ProviderSecuritySettings,
-    RegionConfig, RetryStrategy, StreamOptions, StreamRequest, TransferPerformance,
-    UltrathinkCloudConfig, UltrathinkCloudStorageCoordinator, UploadOptions, UploadRequest,
-    UploadResponse,
+    CloudCredentials, CloudProviderConfig, CloudProviderId, CloudProviderType,
+    CloudStorageProvider, CostEstimate, CostOperation, CredentialType, DataStream, DeleteRequest,
+    DeleteResponse, DownloadOptions, DownloadRequest, DownloadResponse, EncryptionAlgorithm,
+    HealthStatus, ListRequest, ListResponse, MetadataRequest, ObjectMetadata, OperationType,
+    ProviderHealth, ProviderPerformanceSettings, ProviderSecuritySettings, RegionConfig,
+    RetryStrategy, StreamOptions, StreamRequest, TransferPerformance, UltrathinkCloudConfig,
+    UltrathinkCloudStorageCoordinator, UploadOptions, UploadRequest, UploadResponse,
 };
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -35,6 +34,7 @@ use std::time::{Duration, Instant};
 struct MockS3Provider {
     name: String,
     initialized: bool,
+    #[allow(dead_code)]
     operation_count: u64,
 }
 

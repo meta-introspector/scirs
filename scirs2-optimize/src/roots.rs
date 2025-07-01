@@ -294,7 +294,7 @@ where
         }
 
         // Solve the linear system J * delta = -f
-        let delta = match solve_linear_system(&jac, &(-&f)) {
+        let delta = match solve(&jac, &(-&f)) {
             Some(d) => d,
             None => {
                 // Singular Jacobian, try a different approach
@@ -402,7 +402,7 @@ where
 }
 
 /// Solves a linear system Ax = b using LU decomposition
-fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> Option<Array1<f64>> {
+fn solve(a: &Array2<f64>, b: &Array1<f64>) -> Option<Array1<f64>> {
     use scirs2_linalg::solve::solve;
 
     solve(&a.view(), &b.view(), None).ok()
@@ -483,7 +483,7 @@ where
         }
 
         // Solve the linear system J * delta = -f
-        let delta = match solve_linear_system(&jac, &(-&f)) {
+        let delta = match solve(&jac, &(-&f)) {
             Some(d) => d,
             None => {
                 // Singular Jacobian, try a different approach
@@ -698,7 +698,7 @@ where
         }
 
         // Solve the linear system J * delta = -f
-        let delta = match solve_linear_system(&jac, &(-&f)) {
+        let delta = match solve(&jac, &(-&f)) {
             Some(d) => d,
             None => {
                 // Singular Jacobian, try a different approach
@@ -970,7 +970,7 @@ where
         }
 
         // Solve (J^T * J + λ * I) * delta = -J^T * f
-        let delta = match solve_linear_system(&jtj, &(-&jtf)) {
+        let delta = match solve(&jtj, &(-&jtf)) {
             Some(d) => d,
             None => {
                 // Increase damping and try again
@@ -978,7 +978,7 @@ where
                 for i in 0..n {
                     jtj[[i, i]] += lambda;
                 }
-                match solve_linear_system(&jtj, &(-&jtf)) {
+                match solve(&jtj, &(-&jtf)) {
                     Some(d) => d,
                     None => {
                         // If still singular, use steepest descent

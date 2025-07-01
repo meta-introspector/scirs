@@ -3,7 +3,7 @@
 use crate::error::{NeuralError, Result};
 use ndarray::{Array, Dimension, IxDyn};
 use num_traits::Float;
-use rand::Rng;
+use ndarray_rand::rand::Rng;
 use std::fmt::Debug;
 
 /// Initialization strategies for neural network weights
@@ -69,7 +69,7 @@ impl Initializer {
             Initializer::Uniform { min, max } => {
                 let values: Vec<F> = (0..size)
                     .map(|_| {
-                        let val = rng.random_range(*min..*max);
+                        let val = rng.gen_range(*min..*max);
                         F::from(val).ok_or_else(|| {
                             NeuralError::InvalidArchitecture(
                                 "Failed to convert random value".to_string(),
@@ -86,8 +86,8 @@ impl Initializer {
                 let values: Vec<F> = (0..size)
                     .map(|_| {
                         // Box-Muller transform to generate normal distribution
-                        let u1 = rng.random_range(0.0..1.0);
-                        let u2 = rng.random_range(0.0..1.0);
+                        let u1 = rng.gen_range(0.0..1.0);
+                        let u2 = rng.gen_range(0.0..1.0);
 
                         let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
                         let val = mean + std * z;
@@ -109,7 +109,7 @@ impl Initializer {
 
                 let values: Vec<F> = (0..size)
                     .map(|_| {
-                        let val = rng.random_range(-limit..limit);
+                        let val = rng.gen_range(-limit..limit);
                         F::from(val).ok_or_else(|| {
                             NeuralError::InvalidArchitecture(
                                 "Failed to convert random value".to_string(),
@@ -128,8 +128,8 @@ impl Initializer {
                 let values: Vec<F> = (0..size)
                     .map(|_| {
                         // Box-Muller transform to generate normal distribution
-                        let u1 = rng.random_range(0.0..1.0);
-                        let u2 = rng.random_range(0.0..1.0);
+                        let u1 = rng.gen_range(0.0..1.0);
+                        let u2 = rng.gen_range(0.0..1.0);
 
                         let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
                         let val = std * z;
@@ -152,8 +152,8 @@ impl Initializer {
                 let values: Vec<F> = (0..size)
                     .map(|_| {
                         // Box-Muller transform to generate normal distribution
-                        let u1 = rng.random_range(0.0..1.0);
-                        let u2 = rng.random_range(0.0..1.0);
+                        let u1 = rng.gen_range(0.0..1.0);
+                        let u2 = rng.gen_range(0.0..1.0);
 
                         let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
                         let val = std * z;
@@ -196,6 +196,6 @@ pub fn xavier_uniform<F: Float + Debug>(shape: IxDyn) -> Result<Array<F, IxDyn>>
         _ => shape[1],
     };
 
-    let mut rng = rand::rng();
+    let mut rng = ndarray_rand::rand::thread_rng();
     Initializer::Xavier.initialize(shape, fan_in, fan_out, &mut rng)
 }

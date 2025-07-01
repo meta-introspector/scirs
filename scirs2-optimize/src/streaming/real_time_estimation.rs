@@ -234,7 +234,7 @@ impl<T: StreamingObjective> RealTimeEstimator<T> {
         }
 
         // Solve normal equations
-        match scirs2_linalg::solve_linear_system(&xtx, &xty) {
+        match scirs2_linalg::solve(&xtx, &xty) {
             Ok(solution) => {
                 self.parameters = solution;
                 // Update covariance as pseudo-inverse of X^T X

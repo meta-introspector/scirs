@@ -230,6 +230,31 @@ impl UltraParallelProcessor {
         self.parallel_time_series_computation(data, window_size, operations, optimal_threads)
     }
 
+    /// Parallel mean computation with optimized chunking
+    pub fn parallel_mean<F, D>(&self, data: &ArrayBase<D, Ix1>) -> StatsResult<F>
+    where
+        F: Float + NumCast + Send + Sync + Copy + PartialOrd,
+        D: Data<Elem = F> + Sync,
+    {
+        let n = data.len();
+        
+        if n == 0 {
+            return Err(ErrorMessages::empty_array("data"));
+        }
+        
+        let chunk_size = (n / self.config.max_threads).max(self.config.min_chunk_size);
+        
+        // Parallel sum computation
+        let chunk_sums: Vec<F> = par_chunks(data.as_slice().unwrap(), chunk_size)
+            .map(|chunk| chunk.iter().fold(F::zero(), |acc, &val| acc + val))
+            .collect();
+        
+        let total_sum = chunk_sums.into_iter().fold(F::zero(), |acc, sum| acc + sum);
+        let mean = total_sum / F::from(n).unwrap();
+        
+        Ok(mean)
+    }
+
     /// Get performance analytics for optimization
     pub fn get_performance_analytics(&self) -> ParallelPerformanceAnalytics {
         let history = self.performance_history.lock().unwrap();
@@ -506,67 +531,351 @@ impl UltraParallelProcessor {
 
     fn parallel_row_statistics<F, D>(
         &self,
-        _data: &ArrayBase<D, Ix2>,
+        data: &ArrayBase<D, Ix2>,
     ) -> StatsResult<UltraParallelMatrixResult<F>>
     where
-        F: Float + NumCast + Send + Sync + Copy,
+        F: Float + NumCast + Send + Sync + Copy + PartialOrd,
         D: Data<Elem = F> + Sync,
     {
-        Err(StatsError::not_implemented(
-            "Parallel row statistics not yet implemented",
-        ))
+        let (n_rows, n_cols) = data.dim();
+        
+        if n_rows == 0 || n_cols == 0 {
+            return Err(ErrorMessages::empty_array("data"));
+        }
+
+        // Create result matrix: each row contains [mean, variance, min, max] for that row
+        let mut result = Array2::<F>::zeros((n_rows, 4));
+        
+        // Parallel computation across rows
+        let results: Vec<_> = parallel_map(
+            (0..n_rows).collect(),
+            |&row_idx| {
+                let row = data.row(row_idx);
+                
+                // Compute statistics for this row
+                let mut sum = F::zero();
+                let mut sum_squares = F::zero();
+                let mut min_val = row[0];
+                let mut max_val = row[0];
+                
+                for &val in row.iter() {
+                    sum = sum + val;
+                    sum_squares = sum_squares + val * val;
+                    if val < min_val {
+                        min_val = val;
+                    }
+                    if val > max_val {
+                        max_val = val;
+                    }
+                }
+                
+                let n_f = F::from(n_cols).unwrap();
+                let mean = sum / n_f;
+                let variance = (sum_squares / n_f) - (mean * mean);
+                
+                (row_idx, mean, variance, min_val, max_val)
+            }
+        ).collect();
+        
+        // Fill result matrix
+        for (row_idx, mean, variance, min_val, max_val) in results {
+            result[[row_idx, 0]] = mean;
+            result[[row_idx, 1]] = variance;
+            result[[row_idx, 2]] = min_val;
+            result[[row_idx, 3]] = max_val;
+        }
+        
+        Ok(UltraParallelMatrixResult {
+            result,
+            operation_type: MatrixOperationType::RowStatistics,
+            execution_metrics: None,
+        })
     }
 
     fn parallel_column_statistics<F, D>(
         &self,
-        _data: &ArrayBase<D, Ix2>,
+        data: &ArrayBase<D, Ix2>,
     ) -> StatsResult<UltraParallelMatrixResult<F>>
     where
-        F: Float + NumCast + Send + Sync + Copy,
+        F: Float + NumCast + Send + Sync + Copy + PartialOrd,
         D: Data<Elem = F> + Sync,
     {
-        Err(StatsError::not_implemented(
-            "Parallel column statistics not yet implemented",
-        ))
+        let (n_rows, n_cols) = data.dim();
+        
+        if n_rows == 0 || n_cols == 0 {
+            return Err(ErrorMessages::empty_array("data"));
+        }
+
+        // Create result matrix: each row contains [mean, variance, min, max] for that column
+        let mut result = Array2::<F>::zeros((n_cols, 4));
+        
+        // Parallel computation across columns
+        let results: Vec<_> = parallel_map(
+            (0..n_cols).collect(),
+            |&col_idx| {
+                let col = data.column(col_idx);
+                
+                // Compute statistics for this column
+                let mut sum = F::zero();
+                let mut sum_squares = F::zero();
+                let mut min_val = col[0];
+                let mut max_val = col[0];
+                
+                for &val in col.iter() {
+                    sum = sum + val;
+                    sum_squares = sum_squares + val * val;
+                    if val < min_val {
+                        min_val = val;
+                    }
+                    if val > max_val {
+                        max_val = val;
+                    }
+                }
+                
+                let n_f = F::from(n_rows).unwrap();
+                let mean = sum / n_f;
+                let variance = (sum_squares / n_f) - (mean * mean);
+                
+                (col_idx, mean, variance, min_val, max_val)
+            }
+        ).collect();
+        
+        // Fill result matrix
+        for (col_idx, mean, variance, min_val, max_val) in results {
+            result[[col_idx, 0]] = mean;
+            result[[col_idx, 1]] = variance;
+            result[[col_idx, 2]] = min_val;
+            result[[col_idx, 3]] = max_val;
+        }
+        
+        Ok(UltraParallelMatrixResult {
+            result,
+            operation_type: MatrixOperationType::ColumnStatistics,
+            execution_metrics: None,
+        })
     }
 
     fn parallel_covariance_matrix<F, D>(
         &self,
-        _data: &ArrayBase<D, Ix2>,
+        data: &ArrayBase<D, Ix2>,
     ) -> StatsResult<UltraParallelMatrixResult<F>>
     where
-        F: Float + NumCast + Send + Sync + Copy,
+        F: Float + NumCast + Send + Sync + Copy + PartialOrd,
         D: Data<Elem = F> + Sync,
     {
-        Err(StatsError::not_implemented(
-            "Parallel covariance matrix not yet implemented",
-        ))
+        let (n_rows, n_cols) = data.dim();
+        
+        if n_rows == 0 || n_cols == 0 {
+            return Err(ErrorMessages::empty_array("data"));
+        }
+        
+        if n_rows < 2 {
+            return Err(ErrorMessages::insufficient_data(
+                "covariance matrix", 2, n_rows
+            ));
+        }
+
+        // First compute column means in parallel
+        let means: Vec<F> = parallel_map(
+            (0..n_cols).collect(),
+            |&col_idx| {
+                let col = data.column(col_idx);
+                col.iter().fold(F::zero(), |acc, &val| acc + val) / F::from(n_rows).unwrap()
+            }
+        ).collect();
+        
+        // Create result covariance matrix
+        let mut result = Array2::<F>::zeros((n_cols, n_cols));
+        
+        // Compute covariance matrix elements in parallel
+        // For efficiency, only compute upper triangular part and mirror
+        let indices: Vec<(usize, usize)> = (0..n_cols)
+            .flat_map(|i| (i..n_cols).map(move |j| (i, j)))
+            .collect();
+            
+        let covariances: Vec<_> = parallel_map(
+            indices,
+            |&(i, j)| {
+                let col_i = data.column(i);
+                let col_j = data.column(j);
+                let mean_i = means[i];
+                let mean_j = means[j];
+                
+                let mut covariance = F::zero();
+                for (&val_i, &val_j) in col_i.iter().zip(col_j.iter()) {
+                    covariance = covariance + (val_i - mean_i) * (val_j - mean_j);
+                }
+                
+                // Use sample covariance (n-1 denominator)
+                covariance = covariance / F::from(n_rows - 1).unwrap();
+                
+                (i, j, covariance)
+            }
+        ).collect();
+        
+        // Fill the covariance matrix (symmetric)
+        for (i, j, cov) in covariances {
+            result[[i, j]] = cov;
+            if i != j {
+                result[[j, i]] = cov;
+            }
+        }
+        
+        Ok(UltraParallelMatrixResult {
+            result,
+            operation_type: MatrixOperationType::CovarianceMatrix,
+            execution_metrics: None,
+        })
     }
 
     fn parallel_correlation_matrix<F, D>(
         &self,
-        _data: &ArrayBase<D, Ix2>,
+        data: &ArrayBase<D, Ix2>,
     ) -> StatsResult<UltraParallelMatrixResult<F>>
     where
-        F: Float + NumCast + Send + Sync + Copy,
+        F: Float + NumCast + Send + Sync + Copy + PartialOrd,
         D: Data<Elem = F> + Sync,
     {
-        Err(StatsError::not_implemented(
-            "Parallel correlation matrix not yet implemented",
-        ))
+        let (n_rows, n_cols) = data.dim();
+        
+        if n_rows == 0 || n_cols == 0 {
+            return Err(ErrorMessages::empty_array("data"));
+        }
+        
+        if n_rows < 2 {
+            return Err(ErrorMessages::insufficient_data(
+                "correlation matrix", 2, n_rows
+            ));
+        }
+
+        // First compute column means and standard deviations in parallel
+        let stats: Vec<(F, F)> = parallel_map(
+            (0..n_cols).collect(),
+            |&col_idx| {
+                let col = data.column(col_idx);
+                let n_f = F::from(n_rows).unwrap();
+                
+                // Compute mean
+                let mean = col.iter().fold(F::zero(), |acc, &val| acc + val) / n_f;
+                
+                // Compute standard deviation
+                let variance = col.iter()
+                    .map(|&val| {
+                        let diff = val - mean;
+                        diff * diff
+                    })
+                    .fold(F::zero(), |acc, sq_diff| acc + sq_diff) / F::from(n_rows - 1).unwrap();
+                let std_dev = variance.sqrt();
+                
+                (mean, std_dev)
+            }
+        ).collect();
+        
+        // Create result correlation matrix
+        let mut result = Array2::<F>::zeros((n_cols, n_cols));
+        
+        // Set diagonal to 1.0 (perfect self-correlation)
+        for i in 0..n_cols {
+            result[[i, i]] = F::one();
+        }
+        
+        // Compute correlation matrix elements in parallel
+        // Only compute upper triangular part and mirror
+        let indices: Vec<(usize, usize)> = (0..n_cols)
+            .flat_map(|i| ((i+1)..n_cols).map(move |j| (i, j)))
+            .collect();
+            
+        let correlations: Vec<_> = parallel_map(
+            indices,
+            |&(i, j)| {
+                let col_i = data.column(i);
+                let col_j = data.column(j);
+                let (mean_i, std_i) = stats[i];
+                let (mean_j, std_j) = stats[j];
+                
+                // Check for zero variance
+                if std_i == F::zero() || std_j == F::zero() {
+                    return (i, j, F::zero()); // Undefined correlation, set to 0
+                }
+                
+                // Compute Pearson correlation coefficient
+                let mut covariance = F::zero();
+                for (&val_i, &val_j) in col_i.iter().zip(col_j.iter()) {
+                    covariance = covariance + (val_i - mean_i) * (val_j - mean_j);
+                }
+                
+                covariance = covariance / F::from(n_rows - 1).unwrap();
+                let correlation = covariance / (std_i * std_j);
+                
+                (i, j, correlation)
+            }
+        ).collect();
+        
+        // Fill the correlation matrix (symmetric)
+        for (i, j, corr) in correlations {
+            result[[i, j]] = corr;
+            result[[j, i]] = corr;
+        }
+        
+        Ok(UltraParallelMatrixResult {
+            result,
+            operation_type: MatrixOperationType::CorrelationMatrix,
+            execution_metrics: None,
+        })
     }
 
     fn parallel_distance_matrix<F, D>(
         &self,
-        _data: &ArrayBase<D, Ix2>,
+        data: &ArrayBase<D, Ix2>,
     ) -> StatsResult<UltraParallelMatrixResult<F>>
     where
-        F: Float + NumCast + Send + Sync + Copy,
+        F: Float + NumCast + Send + Sync + Copy + PartialOrd,
         D: Data<Elem = F> + Sync,
     {
-        Err(StatsError::not_implemented(
-            "Parallel distance matrix not yet implemented",
-        ))
+        let (n_rows, n_cols) = data.dim();
+        
+        if n_rows == 0 || n_cols == 0 {
+            return Err(ErrorMessages::empty_array("data"));
+        }
+
+        // Create result distance matrix (symmetric, zero diagonal)
+        let mut result = Array2::<F>::zeros((n_rows, n_rows));
+        
+        // Compute distance matrix elements in parallel
+        // Only compute upper triangular part and mirror (distance is symmetric)
+        let indices: Vec<(usize, usize)> = (0..n_rows)
+            .flat_map(|i| ((i+1)..n_rows).map(move |j| (i, j)))
+            .collect();
+            
+        let distances: Vec<_> = parallel_map(
+            indices,
+            |&(i, j)| {
+                let row_i = data.row(i);
+                let row_j = data.row(j);
+                
+                // Compute Euclidean distance
+                let mut sum_sq_diff = F::zero();
+                for (&val_i, &val_j) in row_i.iter().zip(row_j.iter()) {
+                    let diff = val_i - val_j;
+                    sum_sq_diff = sum_sq_diff + diff * diff;
+                }
+                
+                let distance = sum_sq_diff.sqrt();
+                (i, j, distance)
+            }
+        ).collect();
+        
+        // Fill the distance matrix (symmetric, diagonal is zero)
+        for (i, j, dist) in distances {
+            result[[i, j]] = dist;
+            result[[j, i]] = dist;
+        }
+        
+        Ok(UltraParallelMatrixResult {
+            result,
+            operation_type: MatrixOperationType::DistanceMatrix,
+            execution_metrics: None,
+        })
     }
 
     fn determine_time_series_threads(&self, num_windows: usize, window_size: usize) -> usize {
@@ -577,18 +886,118 @@ impl UltraParallelProcessor {
 
     fn parallel_time_series_computation<F, D>(
         &self,
-        _data: &ArrayBase<D, Ix1>,
-        _window_size: usize,
-        _operations: &[TimeSeriesOperation],
+        data: &ArrayBase<D, Ix1>,
+        window_size: usize,
+        operations: &[TimeSeriesOperation],
         _threads: usize,
     ) -> StatsResult<UltraParallelTimeSeriesResult<F>>
     where
-        F: Float + NumCast + Send + Sync + Copy,
+        F: Float + NumCast + Send + Sync + Copy + PartialOrd,
         D: Data<Elem = F> + Sync,
     {
-        Err(StatsError::not_implemented(
-            "Parallel time series not yet implemented",
-        ))
+        let n = data.len();
+        
+        if n == 0 {
+            return Err(ErrorMessages::empty_array("data"));
+        }
+        
+        if window_size == 0 {
+            return Err(ErrorMessages::non_positive_value(
+                "window_size", window_size as f64
+            ));
+        }
+        
+        if window_size > n {
+            return Err(ErrorMessages::insufficient_data(
+                "time series analysis", window_size, n
+            ));
+        }
+
+        let num_windows = n - window_size + 1;
+        let mut results = Vec::new();
+        
+        // Process each operation type
+        for &operation in operations {
+            let window_results: Vec<F> = match operation {
+                TimeSeriesOperation::MovingAverage => {
+                    parallel_map(
+                        (0..num_windows).collect(),
+                        |&start_idx| {
+                            let window = data.slice(ndarray::s![start_idx..start_idx + window_size]);
+                            window.iter().fold(F::zero(), |acc, &val| acc + val) / F::from(window_size).unwrap()
+                        }
+                    ).collect()
+                },
+                TimeSeriesOperation::MovingVariance => {
+                    parallel_map(
+                        (0..num_windows).collect(),
+                        |&start_idx| {
+                            let window = data.slice(ndarray::s![start_idx..start_idx + window_size]);
+                            
+                            // Compute mean
+                            let mean = window.iter().fold(F::zero(), |acc, &val| acc + val) / F::from(window_size).unwrap();
+                            
+                            // Compute variance
+                            let variance = window.iter()
+                                .map(|&val| {
+                                    let diff = val - mean;
+                                    diff * diff
+                                })
+                                .fold(F::zero(), |acc, sq_diff| acc + sq_diff) / F::from(window_size - 1).unwrap();
+                            
+                            variance
+                        }
+                    ).collect()
+                },
+                TimeSeriesOperation::MovingMin => {
+                    parallel_map(
+                        (0..num_windows).collect(),
+                        |&start_idx| {
+                            let window = data.slice(ndarray::s![start_idx..start_idx + window_size]);
+                            window.iter().fold(F::infinity(), |acc, &val| acc.min(val))
+                        }
+                    ).collect()
+                },
+                TimeSeriesOperation::MovingMax => {
+                    parallel_map(
+                        (0..num_windows).collect(),
+                        |&start_idx| {
+                            let window = data.slice(ndarray::s![start_idx..start_idx + window_size]);
+                            window.iter().fold(F::neg_infinity(), |acc, &val| acc.max(val))
+                        }
+                    ).collect()
+                },
+                TimeSeriesOperation::MovingMedian => {
+                    parallel_map(
+                        (0..num_windows).collect(),
+                        |&start_idx| {
+                            let window = data.slice(ndarray::s![start_idx..start_idx + window_size]);
+                            
+                            // Simple median computation (not optimal for sliding windows)
+                            let mut sorted_window: Vec<F> = window.iter().cloned().collect();
+                            sorted_window.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                            
+                            if window_size % 2 == 1 {
+                                sorted_window[window_size / 2]
+                            } else {
+                                let mid1 = sorted_window[window_size / 2 - 1];
+                                let mid2 = sorted_window[window_size / 2];
+                                (mid1 + mid2) / F::from(2.0).unwrap()
+                            }
+                        }
+                    ).collect()
+                },
+            };
+            
+            results.push(Array1::from_vec(window_results));
+        }
+        
+        Ok(UltraParallelTimeSeriesResult {
+            results,
+            operations: operations.to_vec(),
+            window_size,
+            execution_metrics: None,
+        })
     }
 }
 

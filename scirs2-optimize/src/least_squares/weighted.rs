@@ -259,7 +259,7 @@ where
         let neg_gradient = -&gradient;
 
         // Solve for step
-        match solve_linear_system(&jtw_j, &neg_gradient) {
+        match solve(&jtw_j, &neg_gradient) {
             Some(step) => {
                 // Simple line search
                 let mut alpha = 1.0;
@@ -349,7 +349,7 @@ where
 }
 
 /// Simple linear system solver (same as in robust.rs)
-fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> Option<Array1<f64>> {
+fn solve(a: &Array2<f64>, b: &Array1<f64>) -> Option<Array1<f64>> {
     use scirs2_linalg::solve::solve;
 
     solve(&a.view(), &b.view(), None).ok()

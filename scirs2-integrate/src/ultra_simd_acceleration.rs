@@ -303,9 +303,7 @@ impl<F: IntegrateFloat + SimdUnifiedOps> UltraSimdAccelerator<F> {
         }
 
         // Use multiple accumulators to reduce dependency chains
-        if self.simd_capabilities.avx512_support.foundation {
-            self.simd_dot_product_multi_accumulator(a, b)
-        } else if F::simd_available() {
+        if self.simd_capabilities.avx512_support.foundation || F::simd_available() {
             self.simd_dot_product_multi_accumulator(a, b)
         } else {
             // Scalar with multiple accumulators

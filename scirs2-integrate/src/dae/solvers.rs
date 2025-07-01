@@ -1129,8 +1129,8 @@ where
     }
 
     // Use stricter tolerances for index-2 systems
-    modified_options.rtol = modified_options.rtol * F::from_f64(0.1).unwrap();
-    modified_options.atol = modified_options.atol * F::from_f64(0.1).unwrap();
+    modified_options.rtol *= F::from_f64(0.1).unwrap();
+    modified_options.atol *= F::from_f64(0.1).unwrap();
 
     bdf_semi_explicit_dae(f, g, t_span, x0, y0, modified_options)
 }
@@ -1159,8 +1159,8 @@ where
     }
 
     // Use very strict tolerances for index-3 systems
-    modified_options.rtol = modified_options.rtol * F::from_f64(0.01).unwrap();
-    modified_options.atol = modified_options.atol * F::from_f64(0.01).unwrap();
+    modified_options.rtol *= F::from_f64(0.01).unwrap();
+    modified_options.atol *= F::from_f64(0.01).unwrap();
 
     // Increase maximum iterations for Newton solver
     modified_options.max_newton_iterations = modified_options.max_newton_iterations.max(50);
@@ -1202,7 +1202,7 @@ where
 
         // Add penalty terms to differential equations
         for i in 0..result.len().min(constraint_violation.len()) {
-            result[i] = result[i] - penalty_factor * constraint_violation[i];
+            result[i] -= penalty_factor * constraint_violation[i];
         }
 
         result
@@ -1311,6 +1311,6 @@ where
         }
 
         // Reduce step size and try again
-        h = h * F::from_f64(0.5).unwrap();
+        h *= F::from_f64(0.5).unwrap();
     }
 }

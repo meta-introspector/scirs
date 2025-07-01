@@ -761,7 +761,7 @@ impl AdaptationEngine {
         agent: &mut ReinforcementLearningAgent,
         parameter_manager: &mut ParameterManager,
         metrics: &PerformanceMetrics,
-        config: &SelfTuningConfig,
+        _config: &SelfTuningConfig,
     ) -> ScirsResult<AdaptationResult> {
         let action = agent.select_action(metrics);
         let changes = agent.apply_action(action, parameter_manager)?;

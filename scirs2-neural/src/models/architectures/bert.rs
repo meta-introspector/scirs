@@ -14,7 +14,7 @@ use num_traits::Float;
 use std::fmt::Debug;
 
 // Import the RngCore trait (use the version from layers/dropout.rs)
-use rand::RngCore;
+use ndarray_rand::rand::RngCore;
 
 // Dummy RNG to work around version conflicts
 #[derive(Debug)]
@@ -29,6 +29,10 @@ impl RngCore for DummyRng {
     }
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         dest.fill(42);
+    }
+    fn try_fill_bytes(&mut self, dest: &mut [u8]) -> std::result::Result<(), ndarray_rand::rand::Error> {
+        dest.fill(42);
+        Ok(())
     }
 }
 

@@ -13,8 +13,8 @@ use scirs2_io::error::Result;
 use scirs2_io::neural_adaptive_io::{
     NeuralAdaptiveIoController, PerformanceFeedback, SystemMetrics, UltraThinkIoProcessor,
 };
-use scirs2_io::quantum_inspired_io::{QuantumIoParams, QuantumParallelProcessor, QuantumState};
-use std::time::{Duration, Instant};
+use scirs2_io::quantum_inspired_io::QuantumParallelProcessor;
+use std::time::Instant;
 
 fn main() -> Result<()> {
     println!("🚀 SciRS2-IO Ultrathink Mode Comprehensive Showcase");
@@ -147,7 +147,7 @@ fn demonstrate_neural_adaptive_io() -> Result<()> {
             error_rate: 0.01 * (1.0 - decisions.compression_level),
         };
 
-        controller.record_performance(metrics, decisions, feedback)?;
+        controller.record_performance(metrics, decisions, feedback.clone())?;
 
         println!("  Simulated Performance:");
         println!("    Throughput: {:.1} MB/s", feedback.throughput_mbps);
@@ -397,7 +397,7 @@ fn demonstrate_adaptive_learning() -> Result<()> {
         available_memory_ratio: 0.4,
     };
 
-    let mut baseline_performance = 40.0;
+    let baseline_performance = 40.0;
 
     for iteration in 1..=10 {
         // Slightly vary the metrics to simulate real conditions
@@ -426,7 +426,7 @@ fn demonstrate_adaptive_learning() -> Result<()> {
             error_rate: 0.02 / (iteration as f32),
         };
 
-        controller.record_performance(varied_metrics, decisions, feedback)?;
+        controller.record_performance(varied_metrics, decisions, feedback.clone())?;
 
         println!(
             "  Iteration {}: Throughput {:.1} MB/s, Latency {:.1} ms",

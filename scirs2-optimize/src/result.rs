@@ -3,6 +3,7 @@
 //! This module defines the common result structures for optimization algorithms.
 
 use ndarray::Array1;
+use num_traits;
 use std::fmt;
 
 /// A structure that contains the results of an optimization.

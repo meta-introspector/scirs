@@ -1909,12 +1909,12 @@ mod tests {
 
         match specific {
             HeadSelection::Specific(heads) => assert_eq!(heads.len(), 3),
-            _ => panic!("Expected specific head selection"),
+            _ => assert!(false, "Expected specific head selection"),
         }
 
         match top_k {
             HeadSelection::TopK(k) => assert_eq!(k, 5),
-            _ => panic!("Expected top-k head selection"),
+            _ => assert!(false, "Expected top-k head selection"),
         }
 
         match range {
@@ -1922,7 +1922,7 @@ mod tests {
                 assert_eq!(start, 2);
                 assert_eq!(end, 8);
             }
-            _ => panic!("Expected range head selection"),
+            _ => assert!(false, "Expected range head selection"),
         }
     }
 
@@ -1941,7 +1941,7 @@ mod tests {
 
         match weighted {
             HeadAggregation::WeightedMean(weights) => assert_eq!(weights.len(), 2),
-            _ => panic!("Expected weighted mean aggregation"),
+            _ => assert!(false, "Expected weighted mean aggregation"),
         }
     }
 
@@ -1971,17 +1971,17 @@ mod tests {
 
         match image {
             ExportFormat::Image(ImageFormat::PNG) => {}
-            _ => panic!("Expected PNG image format"),
+            _ => assert!(false, "Expected PNG image format"),
         }
 
         match data {
             ExportFormat::Data(DataFormat::JSON) => {}
-            _ => panic!("Expected JSON data format"),
+            _ => assert!(false, "Expected JSON data format"),
         }
 
         match video {
             ExportFormat::Video(VideoFormat::MP4) => {}
-            _ => panic!("Expected MP4 video format"),
+            _ => assert!(false, "Expected MP4 video format"),
         }
     }
 

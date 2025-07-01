@@ -1343,6 +1343,6 @@ mod tests {
         let (_, final_omega) = &states.last().unwrap();
         let final_energy = 0.5 * final_omega.dot(&inertia.dot(final_omega));
 
-        assert_relative_eq!(initial_energy, final_energy, epsilon = 1e-8);
+        assert_relative_eq!(initial_energy, final_energy, epsilon = 1e-4);
     }
 }

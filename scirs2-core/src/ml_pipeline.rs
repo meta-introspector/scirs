@@ -13,7 +13,7 @@
 //! - Performance monitoring and A/B testing
 //! - Integration with distributed computing and cloud storage
 
-use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
+use crate::error::{CoreError, ErrorContext, ErrorLocation};
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant, SystemTime};
@@ -23,6 +23,7 @@ use thiserror::Error;
 use rayon::prelude::*;
 
 #[cfg(feature = "async")]
+#[allow(unused_imports)]
 use tokio::sync::{mpsc, oneshot};
 
 /// ML pipeline error types

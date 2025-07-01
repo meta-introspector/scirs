@@ -26,6 +26,7 @@ use crate::quantum_inspired::{
 };
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1};
+use rand::Rng;
 use scirs2_core::error::CoreResult as Result;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
@@ -605,7 +606,7 @@ impl UltrathinkCoordinator {
             let recent_improvement = self.compute_recent_improvement_rate();
 
             // Update confidences based on improvement rate
-            for (strategy, confidence) in self.state.strategy_confidences.iter_mut() {
+            for (_strategy, confidence) in self.state.strategy_confidences.iter_mut() {
                 if recent_improvement > 0.0 {
                     *confidence = (*confidence * 0.9 + 0.1).min(1.0);
                 } else {
@@ -677,7 +678,7 @@ impl UltrathinkCoordinator {
                     .len()
                     .min(quantum_opt.quantum_state.basis_states.ncols())
                 {
-                    let noise = (rand::random::<f64>() - 0.5) * 0.1;
+                    let noise = (rand::rng().random::<f64>() - 0.5) * 0.1;
                     quantum_opt.quantum_state.basis_states[[i, j]] = best_solution[j] + noise;
                 }
             }
@@ -685,7 +686,9 @@ impl UltrathinkCoordinator {
 
         if let Some(neuro_opt) = self.neuromorphic_optimizer.as_mut() {
             // Encode best solution into neuromorphic network
-            neuro_opt.network().encode_parameters(&best_solution.view());
+            neuro_opt
+                .network_mut()
+                .encode_parameters(&best_solution.view());
         }
 
         Ok(())

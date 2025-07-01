@@ -144,6 +144,19 @@ pub struct PerformanceMetrics {
     pub cache_metrics: CacheMetrics,
 }
 
+impl Default for PerformanceMetrics {
+    fn default() -> Self {
+        Self {
+            execution_time: Duration::from_millis(0),
+            throughput: 0.0,
+            memory_bandwidth_util: 0.0,
+            compute_utilization: 0.0,
+            energy_efficiency: None,
+            cache_metrics: CacheMetrics::default(),
+        }
+    }
+}
+
 /// Cache performance metrics
 #[derive(Debug, Clone, Default)]
 pub struct CacheMetrics {
@@ -155,6 +168,10 @@ pub struct CacheMetrics {
     pub shared_memory_conflicts: usize,
     /// Global memory coalescing efficiency
     pub coalescing_efficiency: f64,
+    /// Memory throughput in GB/s
+    pub memory_throughput: f64,
+    /// Cache pressure indicator
+    pub cache_pressure: f64,
 }
 
 /// Auto-tuning strategy configuration
@@ -262,6 +279,7 @@ pub struct TuningResult {
 }
 
 /// Automatic kernel tuner
+#[derive(Debug)]
 pub struct AutoTuner {
     backend: GpuBackend,
     strategy: TuningStrategy,

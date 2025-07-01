@@ -244,17 +244,17 @@ impl SearchSpace {
     /// Sample a random architecture from the search space
     pub fn sample(&self) -> Result<Architecture> {
         use rand::prelude::*;
-        let mut rng = rand::rng();
+        let mut rng = ndarray_rand::rand::thread_rng();
         let mut layers = Vec::new();
         let mut connections = Vec::new();
 
         // Sample number of layers
-        let num_layers = rng.gen_range(self.config.min_layers..=self.config.max_layers);
+        let num_layers = rng.random_range(self.config.min_layers..=self.config.max_layers);
 
         // Sample layers
         for i in 0..num_layers {
             if let Some(layer_choice) = self.layer_choices.get(i) {
-                let idx = rng.gen_range(0..layer_choice.choices.len());
+                let idx = rng.random_range(0..layer_choice.choices.len());
                 layers.push(layer_choice.choices[idx].clone());
             }
         }
@@ -318,14 +318,14 @@ impl SearchSpace {
     /// Mutate an architecture
     pub fn mutate(&self, architecture: &Architecture, mutation_rate: f32) -> Result<Architecture> {
         use rand::prelude::*;
-        let mut rng = rand::rng();
+        let mut rng = ndarray_rand::rand::thread_rng();
         let mut mutated = architecture.clone();
 
         // Mutate layers
         for (i, layer) in mutated.layers.iter_mut().enumerate() {
             if rng.gen::<f32>() < mutation_rate {
                 if let Some(layer_choice) = self.layer_choices.get(i) {
-                    let idx = rng.gen_range(0..layer_choice.choices.len());
+                    let idx = rng.random_range(0..layer_choice.choices.len());
                     *layer = layer_choice.choices[idx].clone();
                 }
             }
@@ -337,12 +337,12 @@ impl SearchSpace {
                 // Add a layer
                 let pos = mutated.layers.len();
                 if let Some(layer_choice) = self.layer_choices.get(pos) {
-                    let idx = rng.gen_range(0..layer_choice.choices.len());
+                    let idx = rng.random_range(0..layer_choice.choices.len());
                     mutated.layers.push(layer_choice.choices[idx].clone());
                 }
             } else if mutated.layers.len() > self.config.min_layers {
                 // Remove a layer
-                let idx = rng.gen_range(0..mutated.layers.len());
+                let idx = rng.random_range(0..mutated.layers.len());
                 mutated.layers.remove(idx);
                 // Update connections
                 mutated.connections.retain(|(i, j)| *i != idx && *j != idx);
@@ -400,12 +400,12 @@ impl SearchSpace {
         parent2: &Architecture,
     ) -> Result<Architecture> {
         use rand::prelude::*;
-        let mut rng = rand::rng();
+        let mut rng = ndarray_rand::rand::thread_rng();
 
         // Determine child length
         let min_len = parent1.layers.len().min(parent2.layers.len());
         let max_len = parent1.layers.len().max(parent2.layers.len());
-        let child_len = rng.gen_range(min_len..=max_len);
+        let child_len = rng.random_range(min_len..=max_len);
 
         let mut child_layers = Vec::new();
         let mut child_connections = Vec::new();

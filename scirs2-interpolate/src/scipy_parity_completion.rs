@@ -1068,7 +1068,7 @@ impl<T: InterpolationFloat> SciPyParityCompletion<T> {
             .filter(|r| matches!(r.status, CompletionStatus::Failed))
             .count();
 
-        let deferred_features = self
+        let _deferred_features = self
             .completion_results
             .iter()
             .filter(|r| matches!(r.status, CompletionStatus::Deferred))

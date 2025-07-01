@@ -123,7 +123,7 @@ impl Sobol {
 
         // For higher dimensions, use primitive polynomials and initial direction numbers
         // This is a simplified set for up to 10 dimensions
-        let primitive_polynomials = vec![
+        let primitive_polynomials = [
             0,  // dimension 0 (not used)
             0,  // dimension 1 (powers of 2)
             3,  // x + 1

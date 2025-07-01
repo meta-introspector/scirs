@@ -7,7 +7,7 @@ use crate::error::{NeuralError, Result};
 use crate::layers::{Layer, ParamLayer};
 use ndarray::{Array, ArrayView, IxDyn, ScalarOperand, s, Array2, Axis};
 use num_traits::Float;
-use rand::Rng;
+use ndarray_rand::rand::Rng;
 use std::sync::RwLock;
 use std::fmt::Debug;
 

@@ -667,7 +667,7 @@ pub mod presets {
     use super::*;
 
     /// Create configuration for high-performance distributed optimization
-    pub fn distributed_gpu_config(num_processes: usize) -> UnifiedOptimizationConfig {
+    pub fn distributed_gpu_config(_num_processes: usize) -> UnifiedOptimizationConfig {
         UnifiedOptimizationConfig {
             use_distributed: true,
             distributed_config: Some(crate::distributed::DistributedConfig {

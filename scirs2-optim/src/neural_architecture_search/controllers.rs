@@ -504,7 +504,7 @@ pub struct ControllerGenome<T: Float> {
     performance_history: Vec<T>,
 }
 
-impl<T: Float + Default + Clone + Send + Sync> RNNController<T> {
+impl<T: Float + Default + Clone + Send + Sync + 'static> RNNController<T> {
     /// Create new RNN controller
     pub fn new(
         hidden_size: usize,
@@ -694,7 +694,7 @@ impl<T: Float + Default + Clone + Send + Sync> RNNController<T> {
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync> ArchitectureController<T> for RNNController<T> {
+impl<T: Float + Default + Clone + Send + Sync + 'static> ArchitectureController<T> for RNNController<T> {
     fn initialize(&mut self, search_space: &SearchSpaceConfig) -> Result<(), OptimizerError> {
         self.search_space = Some(search_space.clone());
 
@@ -800,7 +800,7 @@ impl<T: Float + Default + Clone + Send + Sync> ArchitectureController<T> for RNN
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync> RNNController<T> {
+impl<T: Float + Default + Clone + Send + Sync + 'static> RNNController<T> {
     fn architecture_to_sequence(
         &self,
         architecture: &OptimizerArchitecture<T>,
@@ -1033,7 +1033,7 @@ impl<T: Float + Default + Clone + Send + Sync> ArchitectureController<T> for Ran
 }
 
 // Implementation helpers for layers
-impl<T: Float + Default + Clone> RNNLayer<T> {
+impl<T: Float + Default + Clone + 'static> RNNLayer<T> {
     fn new(
         layer_type: RNNType,
         input_size: usize,
@@ -1151,7 +1151,7 @@ impl<T: Float + Default + Clone> RNNLayer<T> {
     }
 }
 
-impl<T: Float + Default + Clone> OutputLayer<T> {
+impl<T: Float + Default + Clone + 'static> OutputLayer<T> {
     fn new(
         input_size: usize,
         output_size: usize,

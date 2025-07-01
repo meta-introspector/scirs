@@ -142,6 +142,7 @@ impl Graph {
 }
 
 /// Parameters for graph cuts segmentation
+#[derive(Clone)]
 pub struct GraphCutsParams {
     /// Weight for smoothness term (pairwise potentials)
     pub lambda: f64,
@@ -435,7 +436,6 @@ impl<T: Float + FromPrimitive + Debug> InteractiveGraphCuts<T> {
     }
 }
 
-#[derive(Clone)]
 impl GraphCutsParams {
     /// Create parameters optimized for grayscale images
     pub fn for_grayscale() -> Self {

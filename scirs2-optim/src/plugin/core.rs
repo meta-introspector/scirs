@@ -4,13 +4,12 @@
 //! must implement to integrate with the plugin system.
 
 use crate::error::{OptimError, Result};
-use ndarray::{Array, Array1, Array2, Dimension};
+use ndarray::{Array1, Array2};
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
-use std::any::{Any, TypeId};
+use std::any::Any;
 use std::collections::HashMap;
 use std::fmt::Debug;
-use std::sync::Arc;
 use std::time::Duration;
 
 /// Main trait for optimizer plugins

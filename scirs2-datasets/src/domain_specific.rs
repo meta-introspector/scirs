@@ -12,6 +12,7 @@
 use std::collections::HashMap;
 
 use ndarray::{Array1, Array2};
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 
 use crate::cache::DatasetCache;
