@@ -1,6 +1,6 @@
 //! Quantum-Inspired Optimization Algorithms for SciRS2
 //!
-//! This module implements cutting-edge optimization algorithms inspired by quantum 
+//! This module implements cutting-edge optimization algorithms inspired by quantum
 //! computing principles, including quantum annealing, quantum evolutionary algorithms,
 //! and quantum-inspired metaheuristics for solving complex optimization problems.
 //!
@@ -61,7 +61,7 @@ impl QuantumState {
         let norm_squared: f64 = amplitudes.iter().map(|a| a * a).sum();
         if (norm_squared - 1.0).abs() > 1e-10 {
             return Err(CoreError::ValidationError(crate::error::ErrorContext::new(
-                "Quantum state amplitudes must be normalized".to_string()
+                "Quantum state amplitudes must be normalized".to_string(),
             )));
         }
 
@@ -79,10 +79,10 @@ impl QuantumState {
         if axis < self.amplitudes.len() {
             let cos_half = (angle / 2.0).cos();
             let sin_half = (angle / 2.0).sin();
-            
+
             let old_amp = self.amplitudes[axis];
             let old_phase = self.phases[axis];
-            
+
             self.amplitudes[axis] = cos_half * old_amp;
             self.phases[axis] = old_phase + sin_half;
         }
@@ -93,7 +93,7 @@ impl QuantumState {
         if qubit < self.amplitudes.len() {
             let sqrt_2_inv = 1.0 / 2.0_f64.sqrt();
             self.amplitudes[qubit] *= sqrt_2_inv;
-            
+
             // Create superposition by distributing amplitude
             if qubit + 1 < self.amplitudes.len() {
                 self.amplitudes[qubit + 1] = self.amplitudes[qubit];
@@ -106,7 +106,7 @@ impl QuantumState {
     pub fn measure(&mut self) -> usize {
         // Update measurement probabilities based on current amplitudes
         let total_prob: f64 = self.amplitudes.iter().map(|a| a * a).sum();
-        
+
         for i in 0..self.measurement_probs.len() {
             self.measurement_probs[i] = (self.amplitudes[i] * self.amplitudes[i]) / total_prob;
         }
@@ -114,7 +114,7 @@ impl QuantumState {
         // Simulate measurement using cumulative probability
         let rand_val: f64 = self.pseudo_random();
         let mut cumulative_prob = 0.0;
-        
+
         for (i, &prob) in self.measurement_probs.iter().enumerate() {
             cumulative_prob += prob;
             if rand_val <= cumulative_prob {
@@ -125,7 +125,7 @@ impl QuantumState {
                 return i;
             }
         }
-        
+
         // Fallback to last state
         self.amplitudes.len() - 1
     }
@@ -134,12 +134,12 @@ impl QuantumState {
     fn pseudo_random(&self) -> f64 {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
-        
+
         let mut hasher = DefaultHasher::new();
         for amp in &self.amplitudes {
             amp.to_bits().hash(&mut hasher);
         }
-        
+
         let hash_val = hasher.finish();
         (hash_val % 10000) as f64 / 10000.0
     }
@@ -156,14 +156,14 @@ impl QuantumState {
     pub fn entropy(&self) -> f64 {
         let total_prob: f64 = self.amplitudes.iter().map(|a| a * a).sum();
         let mut entropy = 0.0;
-        
+
         for amp in &self.amplitudes {
             let prob = (amp * amp) / total_prob;
             if prob > 0.0 {
                 entropy -= prob * prob.ln();
             }
         }
-        
+
         entropy
     }
 }
@@ -229,7 +229,7 @@ impl QuantumOptimizer {
     ) -> CoreResult<Self> {
         if dimensions == 0 {
             return Err(CoreError::ValidationError(crate::error::ErrorContext::new(
-                "Optimization dimensions must be > 0".to_string()
+                "Optimization dimensions must be > 0".to_string(),
             )));
         }
 
@@ -261,12 +261,12 @@ impl QuantumOptimizer {
     {
         if bounds.len() != self.dimensions {
             return Err(CoreError::ValidationError(crate::error::ErrorContext::new(
-                "Bounds length must match optimization dimensions".to_string()
+                "Bounds length must match optimization dimensions".to_string(),
             )));
         }
 
         let start_time = Instant::now();
-        
+
         match self.strategy {
             QuantumStrategy::QuantumAnnealing => {
                 self.quantum_annealing(&objective_fn, bounds, max_iterations)?
@@ -311,7 +311,7 @@ impl QuantumOptimizer {
     {
         let mut current_solution = self.initialize_solution(bounds);
         let mut current_fitness = objective_fn(&current_solution);
-        
+
         if current_fitness < self.best_fitness {
             self.best_fitness = current_fitness;
             self.best_solution = current_solution.clone();
@@ -336,7 +336,7 @@ impl QuantumOptimizer {
             // Acceptance criterion with quantum interference
             if self.accept_solution(current_fitness, new_fitness, iteration, max_iterations) {
                 current_fitness = new_fitness;
-                
+
                 if new_fitness < self.best_fitness {
                     self.best_fitness = new_fitness;
                     self.best_solution = current_solution.clone();
@@ -347,7 +347,10 @@ impl QuantumOptimizer {
 
             // Update temperature
             self.quantum_params.temperature *= self.quantum_params.cooling_rate;
-            self.quantum_params.temperature = self.quantum_params.temperature.max(self.quantum_params.min_temperature);
+            self.quantum_params.temperature = self
+                .quantum_params
+                .temperature
+                .max(self.quantum_params.min_temperature);
 
             // Periodic quantum measurement
             if iteration % self.quantum_params.measurement_interval == 0 {
@@ -384,7 +387,7 @@ impl QuantumOptimizer {
                     .map(|individual| objective_fn(individual))
                     .collect();
             }
-            
+
             #[cfg(not(feature = "parallel"))]
             {
                 for (i, individual) in population.iter().enumerate() {
@@ -438,7 +441,7 @@ impl QuantumOptimizer {
             // Evaluate particles
             for (i, particle) in particles.iter().enumerate() {
                 let fitness = objective_fn(particle);
-                
+
                 if fitness < personal_best_fitness[i] {
                     personal_best_fitness[i] = fitness;
                     personal_best[i] = particle.clone();
@@ -466,7 +469,7 @@ impl QuantumOptimizer {
                 // Update position with quantum superposition
                 for (d, bound) in bounds.iter().enumerate().take(self.dimensions) {
                     particles[i][d] += velocities[i][d];
-                    
+
                     // Apply quantum interference
                     let quantum_effect = self.calculate_quantum_interference(i, d);
                     particles[i][d] += quantum_effect;
@@ -504,9 +507,17 @@ impl QuantumOptimizer {
 
             for i in 0..self.population_size {
                 // Select three random individuals (different from current)
-                let mut indices = (0..self.population_size).filter(|&x| x != i).collect::<Vec<_>>();
-                indices.sort_by(|_, _| if self.state.pseudo_random() > 0.5 { std::cmp::Ordering::Greater } else { std::cmp::Ordering::Less });
-                
+                let mut indices = (0..self.population_size)
+                    .filter(|&x| x != i)
+                    .collect::<Vec<_>>();
+                indices.sort_by(|_, _| {
+                    if self.state.pseudo_random() > 0.5 {
+                        std::cmp::Ordering::Greater
+                    } else {
+                        std::cmp::Ordering::Less
+                    }
+                });
+
                 if indices.len() >= 3 {
                     let a = indices[0];
                     let b = indices[1];
@@ -515,19 +526,23 @@ impl QuantumOptimizer {
                     // Create mutant vector with quantum enhancement
                     let mut mutant = vec![0.0; self.dimensions];
                     for d in 0..self.dimensions {
-                        mutant[d] = population[a][d] + f_factor * (population[b][d] - population[c][d]);
-                        
+                        mutant[d] =
+                            population[a][d] + f_factor * (population[b][d] - population[c][d]);
+
                         // Add quantum fluctuation
-                        let quantum_fluctuation = self.calculate_quantum_fluctuation(d, iteration, max_iterations);
+                        let quantum_fluctuation =
+                            self.calculate_quantum_fluctuation(d, iteration, max_iterations);
                         mutant[d] += quantum_fluctuation;
-                        
+
                         mutant[d] = mutant[d].clamp(bounds[d].0, bounds[d].1);
                     }
 
                     // Crossover with quantum probability
                     let mut trial = population[i].clone();
-                    let random_index = (self.state.pseudo_random() * self.dimensions as f64) as usize % self.dimensions;
-                    
+                    let random_index = (self.state.pseudo_random() * self.dimensions as f64)
+                        as usize
+                        % self.dimensions;
+
                     for d in 0..self.dimensions {
                         let quantum_cr = self.calculate_quantum_crossover_probability(d, iteration);
                         if self.state.pseudo_random() < quantum_cr || d == random_index {
@@ -541,7 +556,7 @@ impl QuantumOptimizer {
 
                     if trial_fitness <= current_fitness {
                         new_population[i] = trial.clone();
-                        
+
                         if trial_fitness < self.best_fitness {
                             self.best_fitness = trial_fitness;
                             self.best_solution = trial;
@@ -569,7 +584,7 @@ impl QuantumOptimizer {
     {
         // Initialize in superposition state
         self.state = QuantumState::new_uniform(self.dimensions);
-        
+
         // Apply Hadamard gates to create uniform superposition
         for i in 0..self.dimensions.min(self.state.amplitudes.len()) {
             self.state.apply_hadamard(i);
@@ -577,10 +592,10 @@ impl QuantumOptimizer {
 
         for iteration in 0..max_iterations {
             self.generation = iteration;
-            
+
             // Adiabatic evolution parameter
             let s = iteration as f64 / max_iterations as f64;
-            
+
             // Interpolate between initial and problem Hamiltonian
             let h_initial_weight = 1.0 - s;
             let h_problem_weight = s;
@@ -595,8 +610,13 @@ impl QuantumOptimizer {
             }
 
             // Update quantum state based on problem Hamiltonian
-            self.evolve_adiabatic_hamiltonian(&solution, fitness, h_initial_weight, h_problem_weight);
-            
+            self.evolve_adiabatic_hamiltonian(
+                &solution,
+                fitness,
+                h_initial_weight,
+                h_problem_weight,
+            );
+
             self.convergence_history.push(self.best_fitness);
 
             // Apply small random rotations to maintain exploration
@@ -635,7 +655,7 @@ impl QuantumOptimizer {
             for layer in 0..p_layers {
                 // Apply problem Hamiltonian
                 self.apply_problem_hamiltonian(gamma_params[layer], objective_fn, bounds);
-                
+
                 // Apply mixer Hamiltonian
                 self.apply_mixer_hamiltonian(beta_params[layer]);
             }
@@ -684,43 +704,49 @@ impl QuantumOptimizer {
 
     fn quantum_tunnel(&self, current: &[f64], bounds: &[(f64, f64)]) -> Vec<f64> {
         let mut new_solution = current.to_vec();
-        
+
         // Quantum tunneling allows escaping local minima
         for i in 0..self.dimensions {
             if self.state.pseudo_random() < 0.3 {
                 let range = bounds[i].1 - bounds[i].0;
                 let tunnel_distance = range * 0.1 * self.state.pseudo_random();
-                
+
                 if self.state.pseudo_random() < 0.5 {
                     new_solution[i] += tunnel_distance;
                 } else {
                     new_solution[i] -= tunnel_distance;
                 }
-                
+
                 new_solution[i] = new_solution[i].clamp(bounds[i].0, bounds[i].1);
             }
         }
-        
+
         new_solution
     }
 
     fn anneal_move(&self, current: &[f64], bounds: &[(f64, f64)]) -> Vec<f64> {
         let mut new_solution = current.to_vec();
-        
+
         for i in 0..self.dimensions {
             if self.state.pseudo_random() < 0.5 {
                 let range = bounds[i].1 - bounds[i].0;
                 let step_size = range * 0.01 * self.quantum_params.temperature;
-                
+
                 new_solution[i] += step_size * (self.state.pseudo_random() - 0.5);
                 new_solution[i] = new_solution[i].clamp(bounds[i].0, bounds[i].1);
             }
         }
-        
+
         new_solution
     }
 
-    fn accept_solution(&self, current_fitness: f64, new_fitness: f64, _iteration: usize, _max_iterations: usize) -> bool {
+    fn accept_solution(
+        &self,
+        current_fitness: f64,
+        new_fitness: f64,
+        _iteration: usize,
+        _max_iterations: usize,
+    ) -> bool {
         if new_fitness <= current_fitness {
             return true;
         }
@@ -729,7 +755,7 @@ impl QuantumOptimizer {
         let delta = new_fitness - current_fitness;
         let quantum_factor = 1.0 + 0.1 * self.state.entropy();
         let probability = (-delta / (self.quantum_params.temperature * quantum_factor)).exp();
-        
+
         self.state.pseudo_random() < probability
     }
 
@@ -741,9 +767,15 @@ impl QuantumOptimizer {
                 self.state.amplitudes[i] = normalized.sqrt();
             }
         }
-        
+
         // Renormalize amplitudes
-        let norm: f64 = self.state.amplitudes.iter().map(|a| a * a).sum::<f64>().sqrt();
+        let norm: f64 = self
+            .state
+            .amplitudes
+            .iter()
+            .map(|a| a * a)
+            .sum::<f64>()
+            .sqrt();
         if norm > 0.0 {
             for amp in &mut self.state.amplitudes {
                 *amp /= norm;
@@ -751,72 +783,93 @@ impl QuantumOptimizer {
         }
     }
 
-    fn quantum_reproduction(&self, population: &[Vec<f64>], fitness_values: &[f64], bounds: &[(f64, f64)]) -> Vec<Vec<f64>> {
+    fn quantum_reproduction(
+        &self,
+        population: &[Vec<f64>],
+        fitness_values: &[f64],
+        bounds: &[(f64, f64)],
+    ) -> Vec<Vec<f64>> {
         let mut new_population = Vec::with_capacity(self.population_size);
-        
+
         // Quantum selection based on interference
         for _ in 0..self.population_size {
             let parent1_idx = self.quantum_selection(fitness_values);
             let parent2_idx = self.quantum_selection(fitness_values);
-            
-            let offspring = self.quantum_crossover(&population[parent1_idx], &population[parent2_idx], bounds);
+
+            let offspring =
+                self.quantum_crossover(&population[parent1_idx], &population[parent2_idx], bounds);
             new_population.push(offspring);
         }
-        
+
         new_population
     }
 
     fn quantum_selection(&self, fitness_values: &[f64]) -> usize {
         // Convert fitness to selection probabilities (lower fitness = higher probability)
-        let max_fitness = fitness_values.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
-        let adjusted_fitness: Vec<f64> = fitness_values.iter()
+        let max_fitness = fitness_values
+            .iter()
+            .cloned()
+            .fold(f64::NEG_INFINITY, f64::max);
+        let adjusted_fitness: Vec<f64> = fitness_values
+            .iter()
             .map(|&f| max_fitness - f + 1.0)
             .collect();
-        
+
         let total_fitness: f64 = adjusted_fitness.iter().sum();
         let mut cumulative_prob = 0.0;
         let rand_val = self.state.pseudo_random();
-        
+
         for (i, &fitness) in adjusted_fitness.iter().enumerate() {
             cumulative_prob += fitness / total_fitness;
             if rand_val <= cumulative_prob {
                 return i;
             }
         }
-        
+
         fitness_values.len() - 1
     }
 
-    fn quantum_crossover(&self, parent1: &[f64], parent2: &[f64], bounds: &[(f64, f64)]) -> Vec<f64> {
+    fn quantum_crossover(
+        &self,
+        parent1: &[f64],
+        parent2: &[f64],
+        bounds: &[(f64, f64)],
+    ) -> Vec<f64> {
         let mut offspring = vec![0.0; self.dimensions];
-        
+
         for i in 0..self.dimensions {
             // Quantum superposition crossover
             let alpha = self.state.pseudo_random();
             let quantum_interference = (2.0 * PI * alpha).sin() * 0.1;
-            
+
             offspring[i] = alpha * parent1[i] + (1.0 - alpha) * parent2[i] + quantum_interference;
             offspring[i] = offspring[i].clamp(bounds[i].0, bounds[i].1);
         }
-        
+
         offspring
     }
 
-    fn apply_quantum_mutations(&self, population: &mut [Vec<f64>], bounds: &[(f64, f64)], iteration: usize, max_iterations: usize) {
+    fn apply_quantum_mutations(
+        &self,
+        population: &mut [Vec<f64>],
+        bounds: &[(f64, f64)],
+        iteration: usize,
+        max_iterations: usize,
+    ) {
         let mutation_rate = 0.1 * (1.0 - iteration as f64 / max_iterations as f64);
-        
+
         for individual in population.iter_mut() {
             for i in 0..self.dimensions {
                 if self.state.pseudo_random() < mutation_rate {
                     let range = bounds[i].1 - bounds[i].0;
                     let quantum_step = range * 0.05 * self.state.pseudo_random();
-                    
+
                     if self.state.pseudo_random() < 0.5 {
                         individual[i] += quantum_step;
                     } else {
                         individual[i] -= quantum_step;
                     }
-                    
+
                     individual[i] = individual[i].clamp(bounds[i].0, bounds[i].1);
                 }
             }
@@ -835,19 +888,19 @@ impl QuantumOptimizer {
         let w = 0.9 - 0.5 * iteration as f64 / max_iterations as f64; // Decreasing inertia
         let c1 = 2.0; // Cognitive coefficient
         let c2 = 2.0; // Social coefficient
-        
+
         for i in 0..self.dimensions {
             let r1 = self.state.pseudo_random();
             let r2 = self.state.pseudo_random();
-            
+
             // Quantum enhancement: add phase information
             let quantum_phase = self.state.phases.get(i).unwrap_or(&0.0);
             let quantum_factor = 1.0 + 0.1 * quantum_phase.cos();
-            
+
             velocity[i] = w * velocity[i] * quantum_factor
                 + c1 * r1 * (personal_best[i] - position[i])
                 + c2 * r2 * (global_best[i] - position[i]);
-                
+
             // Velocity clamping
             velocity[i] = velocity[i].clamp(-1.0, 1.0);
         }
@@ -869,22 +922,28 @@ impl QuantumOptimizer {
             for i in 0..self.dimensions.min(self.state.amplitudes.len()) {
                 let values: Vec<f64> = particles.iter().map(|p| p[i]).collect();
                 let mean = values.iter().sum::<f64>() / values.len() as f64;
-                let variance = values.iter().map(|v| (v - mean).powi(2)).sum::<f64>() / values.len() as f64;
-                
+                let variance =
+                    values.iter().map(|v| (v - mean).powi(2)).sum::<f64>() / values.len() as f64;
+
                 // Update amplitude based on diversity
                 self.state.amplitudes[i] = (1.0 / (1.0 + variance)).sqrt();
             }
         }
     }
 
-    fn calculate_quantum_fluctuation(&self, dimension: usize, iteration: usize, max_iterations: usize) -> f64 {
+    fn calculate_quantum_fluctuation(
+        &self,
+        dimension: usize,
+        iteration: usize,
+        max_iterations: usize,
+    ) -> f64 {
         let progress = iteration as f64 / max_iterations as f64;
         let amplitude = if dimension < self.state.amplitudes.len() {
             self.state.amplitudes[dimension]
         } else {
             1.0
         };
-        
+
         amplitude * (1.0 - progress) * 0.01 * (self.state.pseudo_random() - 0.5)
     }
 
@@ -895,7 +954,7 @@ impl QuantumOptimizer {
         } else {
             0.0
         };
-        
+
         (base_cr + quantum_modulation).clamp(0.0, 1.0)
     }
 
@@ -912,16 +971,22 @@ impl QuantumOptimizer {
             .collect()
     }
 
-    fn evolve_adiabatic_hamiltonian(&mut self, solution: &[f64], fitness: f64, h_initial: f64, h_problem: f64) {
+    fn evolve_adiabatic_hamiltonian(
+        &mut self,
+        solution: &[f64],
+        fitness: f64,
+        h_initial: f64,
+        h_problem: f64,
+    ) {
         // Simplified adiabatic evolution
         #[allow(clippy::needless_range_loop)]
         for i in 0..self.dimensions.min(self.state.amplitudes.len()) {
             let energy_contribution = fitness * solution[i] * h_problem;
             let mixing_contribution = h_initial;
-            
+
             let total_energy = energy_contribution + mixing_contribution;
             let rotation_angle = -total_energy * 0.01; // Small rotation
-            
+
             self.state.apply_rotation(rotation_angle, i);
         }
     }
@@ -932,7 +997,7 @@ impl QuantumOptimizer {
     {
         let solution = self.extract_solution_from_quantum_state(bounds);
         let fitness = objective_fn(&solution);
-        
+
         #[allow(clippy::needless_range_loop)]
         for i in 0..self.dimensions.min(self.state.amplitudes.len()) {
             let rotation_angle = gamma * fitness * solution[i] * 0.001;
@@ -947,7 +1012,11 @@ impl QuantumOptimizer {
         }
     }
 
-    fn decode_measurement_to_solution(&self, measurement: usize, bounds: &[(f64, f64)]) -> Vec<f64> {
+    fn decode_measurement_to_solution(
+        &self,
+        measurement: usize,
+        bounds: &[(f64, f64)],
+    ) -> Vec<f64> {
         (0..self.dimensions)
             .map(|i| {
                 let normalized_value = ((measurement + i) % (1 << 10)) as f64 / (1 << 10) as f64;
@@ -956,13 +1025,18 @@ impl QuantumOptimizer {
             .collect()
     }
 
-    fn update_qaoa_parameters(&self, gamma_params: &mut [f64], beta_params: &mut [f64], iteration: usize) {
+    fn update_qaoa_parameters(
+        &self,
+        gamma_params: &mut [f64],
+        beta_params: &mut [f64],
+        iteration: usize,
+    ) {
         let step_size = 0.01 * (1.0 - iteration as f64 / 1000.0);
-        
+
         for i in 0..gamma_params.len() {
             gamma_params[i] += step_size * (self.state.pseudo_random() - 0.5);
             gamma_params[i] = gamma_params[i].clamp(0.0, PI);
-            
+
             beta_params[i] += step_size * (self.state.pseudo_random() - 0.5);
             beta_params[i] = beta_params[i].clamp(0.0, PI);
         }
@@ -1004,13 +1078,19 @@ impl OptimizationResult {
         if self.convergence_history.len() < 10 {
             return false;
         }
-        
-        let last_10: Vec<f64> = self.convergence_history.iter().rev().take(10).cloned().collect();
+
+        let last_10: Vec<f64> = self
+            .convergence_history
+            .iter()
+            .rev()
+            .take(10)
+            .cloned()
+            .collect();
         let variance = {
             let mean = last_10.iter().sum::<f64>() / last_10.len() as f64;
             last_10.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / last_10.len() as f64
         };
-        
+
         variance < tolerance
     }
 
@@ -1019,10 +1099,10 @@ impl OptimizationResult {
         if self.convergence_history.len() < 2 {
             return 0.0;
         }
-        
+
         let initial = self.convergence_history[0];
         let final_val = self.best_fitness;
-        
+
         if initial == final_val {
             1.0
         } else {
@@ -1040,7 +1120,7 @@ mod tests {
         let state = QuantumState::new_uniform(4);
         assert_eq!(state.amplitudes.len(), 4);
         assert_eq!(state.phases.len(), 4);
-        
+
         // Check normalization
         let norm_squared: f64 = state.amplitudes.iter().map(|a| a * a).sum();
         assert!((norm_squared - 1.0).abs() < 1e-10);
@@ -1051,7 +1131,7 @@ mod tests {
         let mut state = QuantumState::new_uniform(4);
         let measurement = state.measure();
         assert!(measurement < 4);
-        
+
         // After measurement, state should be collapsed
         let non_zero_count = state.amplitudes.iter().filter(|&&a| a > 0.0).count();
         assert_eq!(non_zero_count, 1);
@@ -1061,7 +1141,7 @@ mod tests {
     fn test_quantum_optimizer_creation() {
         let optimizer = QuantumOptimizer::new(5, QuantumStrategy::QuantumAnnealing, Some(20));
         assert!(optimizer.is_ok());
-        
+
         let opt = optimizer.unwrap();
         assert_eq!(opt.dimensions, 5);
         assert_eq!(opt.population_size, 20);
@@ -1070,14 +1150,15 @@ mod tests {
 
     #[test]
     fn test_quantum_optimization_simple() {
-        let mut optimizer = QuantumOptimizer::new(2, QuantumStrategy::QuantumAnnealing, Some(10)).unwrap();
-        
+        let mut optimizer =
+            QuantumOptimizer::new(2, QuantumStrategy::QuantumAnnealing, Some(10)).unwrap();
+
         // Simple sphere function: f(x) = x1² + x2²
         let objective = |x: &[f64]| x.iter().map(|xi| xi * xi).sum();
         let bounds = vec![(-5.0, 5.0), (-5.0, 5.0)];
-        
+
         let result = optimizer.optimize(objective, &bounds, 50).unwrap();
-        
+
         assert!(result.best_fitness >= 0.0);
         assert_eq!(result.best_solution.len(), 2);
         assert!(result.iterations_performed > 0);
@@ -1086,14 +1167,15 @@ mod tests {
 
     #[test]
     fn test_quantum_annealing_optimization() {
-        let mut optimizer = QuantumOptimizer::new(1, QuantumStrategy::QuantumAnnealing, None).unwrap();
-        
+        let mut optimizer =
+            QuantumOptimizer::new(1, QuantumStrategy::QuantumAnnealing, None).unwrap();
+
         // Simple quadratic: f(x) = (x - 2)²
         let objective = |x: &[f64]| (x[0] - 2.0).powi(2);
         let bounds = vec![(-5.0, 5.0)]; // Smaller search space
-        
+
         let result = optimizer.optimize(objective, &bounds, 300).unwrap(); // More iterations
-        
+
         // Should make progress (test that algorithm works, not exact convergence)
         assert!(result.best_fitness >= 0.0); // Basic sanity check
         assert!(result.best_fitness < 25.0); // Very relaxed - just check it's better than worst case
@@ -1104,8 +1186,9 @@ mod tests {
 
     #[test]
     fn test_quantum_evolutionary_optimization() {
-        let mut optimizer = QuantumOptimizer::new(2, QuantumStrategy::QuantumEvolutionary, Some(20)).unwrap();
-        
+        let mut optimizer =
+            QuantumOptimizer::new(2, QuantumStrategy::QuantumEvolutionary, Some(20)).unwrap();
+
         // Rosenbrock function: f(x, y) = (a-x)² + b(y-x²)²
         let objective = |x: &[f64]| {
             let a = 1.0;
@@ -1113,9 +1196,9 @@ mod tests {
             (a - x[0]).powi(2) + b * (x[1] - x[0].powi(2)).powi(2)
         };
         let bounds = vec![(-5.0, 5.0), (-5.0, 5.0)];
-        
+
         let result = optimizer.optimize(objective, &bounds, 100).unwrap();
-        
+
         // Should make progress toward minimum at (1, 1)
         assert!(result.best_fitness < 100.0);
         assert_eq!(result.strategy_used, QuantumStrategy::QuantumEvolutionary);
@@ -1128,7 +1211,8 @@ mod tests {
         // convergence_rate = (initial - final) / initial = (10.0 - 0.5) / 10.0 = 0.95 > 0.9
         let convergence_history = vec![
             10.0, 5.0, // Initial high values
-            0.505, 0.504, 0.503, 0.502, 0.501, 0.5008, 0.5006, 0.5004, 0.5002, 0.5001 // Last 10 with low variance
+            0.505, 0.504, 0.503, 0.502, 0.501, 0.5008, 0.5006, 0.5004, 0.5002,
+            0.5001, // Last 10 with low variance
         ];
         let result = OptimizationResult {
             best_solution: vec![1.0, 1.0],
@@ -1139,7 +1223,7 @@ mod tests {
             strategy_used: QuantumStrategy::QuantumAnnealing,
             quantum_state_entropy: 0.5,
         };
-        
+
         assert!(result.has_converged(0.01));
         assert!(result.convergence_rate() > 0.9);
     }
@@ -1147,18 +1231,18 @@ mod tests {
     #[test]
     fn test_quantum_state_operations() {
         let mut state = QuantumState::new_uniform(2);
-        
+
         // Test Hadamard gate
         state.apply_hadamard(0);
-        
+
         // Test rotation
         state.apply_rotation(PI / 4.0, 0);
-        
+
         // Test entanglement
         state.entangle(0, 1, 0.5);
         assert_eq!(state.entanglement_matrix[0][1], 0.5);
         assert_eq!(state.entanglement_matrix[1][0], 0.5);
-        
+
         // Test entropy calculation
         let entropy = state.entropy();
         assert!(entropy >= 0.0);
@@ -1183,31 +1267,36 @@ mod tests {
             QuantumStrategy::AdiabaticQuantum,
             QuantumStrategy::QAOA,
         ];
-        
+
         for strategy in strategies {
             let optimizer = QuantumOptimizer::new(2, strategy, Some(10));
-            assert!(optimizer.is_ok(), "Failed to create optimizer for strategy {:?}", strategy);
+            assert!(
+                optimizer.is_ok(),
+                "Failed to create optimizer for strategy {:?}",
+                strategy
+            );
         }
     }
 
     #[test]
     #[cfg(feature = "parallel")]
     fn test_parallel_evaluation() {
-        let mut optimizer = QuantumOptimizer::new(3, QuantumStrategy::QuantumEvolutionary, Some(20)).unwrap();
-        
+        let mut optimizer =
+            QuantumOptimizer::new(3, QuantumStrategy::QuantumEvolutionary, Some(20)).unwrap();
+
         // Function that benefits from parallel evaluation
         let objective = |x: &[f64]| {
             // Simulate some computation
             std::thread::sleep(Duration::from_millis(1));
             x.iter().map(|xi| xi * xi).sum::<f64>()
         };
-        
+
         let bounds = vec![(-2.0, 2.0), (-2.0, 2.0), (-2.0, 2.0)];
-        
+
         let start = Instant::now();
         let result = optimizer.optimize(objective, &bounds, 20).unwrap();
         let elapsed = start.elapsed();
-        
+
         // Should complete in reasonable time with parallelization
         assert!(elapsed < Duration::from_secs(5));
         assert!(result.best_fitness >= 0.0);

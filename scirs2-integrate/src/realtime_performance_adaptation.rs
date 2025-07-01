@@ -152,6 +152,35 @@ pub struct PerformanceMetrics {
     convergence_rate: f64,
 }
 
+impl PerformanceMetrics {
+    /// Create a new PerformanceMetrics instance
+    pub fn new(
+        timestamp: Instant,
+        step_time: Duration,
+        throughput: f64,
+        memory_usage: usize,
+        cpu_utilization: f64,
+        gpu_utilization: f64,
+        cache_hit_rate: f64,
+        network_bandwidth: f64,
+        error_accuracy: f64,
+        convergence_rate: f64,
+    ) -> Self {
+        Self {
+            timestamp,
+            step_time,
+            throughput,
+            memory_usage,
+            cpu_utilization,
+            gpu_utilization,
+            cache_hit_rate,
+            network_bandwidth,
+            error_accuracy,
+            convergence_rate,
+        }
+    }
+}
+
 /// Algorithm performance characteristics
 #[derive(Debug, Clone)]
 pub struct AlgorithmCharacteristics<F: IntegrateFloat> {
@@ -296,7 +325,7 @@ impl<F: IntegrateFloat + Default> RealTimeAdaptiveOptimizer<F> {
         current_allocation: &ResourceAllocation,
         performance_target: &PerformanceTarget,
     ) -> IntegrateResult<ResourceReallocationPlan> {
-        let mut resource_manager = self.resource_manager.lock().unwrap();
+        let resource_manager = self.resource_manager.lock().unwrap();
 
         // Analyze current resource utilization
         let utilization_analysis = resource_manager.analyze_utilization(current_allocation)?;
@@ -465,12 +494,12 @@ impl<F: IntegrateFloat + Default> RealTimeAdaptiveOptimizer<F> {
     /// Start optimization loop
     fn start_optimization_loop(&self, strategy: AdaptationStrategy<F>) -> IntegrateResult<()> {
         let monitor = self.performance_monitor.clone();
-        let selector = self.algorithm_selector.clone();
-        let resource_manager = self.resource_manager.clone();
-        let predictor = self.performance_predictor.clone();
-        let ml_optimizer = self.ml_optimizer.clone();
+        let _selector = self.algorithm_selector.clone();
+        let _resource_manager = self.resource_manager.clone();
+        let _predictor = self.performance_predictor.clone();
+        let _ml_optimizer = self.ml_optimizer.clone();
         let anomaly_detector = self.anomaly_detector.clone();
-        let config_adapter = self.config_adapter.clone();
+        let _config_adapter = self.config_adapter.clone();
 
         thread::spawn(move || {
             loop {

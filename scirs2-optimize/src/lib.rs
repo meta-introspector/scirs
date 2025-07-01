@@ -222,6 +222,7 @@ pub mod simd_ops;
 pub mod sparse_numdiff; // Refactored into a module with submodules
 pub mod stochastic;
 pub mod streaming;
+pub mod ultrathink_coordinator;
 pub mod unconstrained;
 pub mod unified_pipeline;
 pub mod visualization;
@@ -269,7 +270,7 @@ pub use gpu::{
 };
 pub use jit_optimization::{optimize_function, FunctionPattern, JitCompiler, JitOptions, JitStats};
 pub use learned_optimizers::{
-    few_shot_learning_optimize, learned_optimize, ActivationType, AdaptationStatistics,
+    learned_optimize, meta_learning_optimize, ActivationType, AdaptationStatistics,
     AdaptiveNASSystem, AdaptiveTransformerOptimizer, FewShotLearningOptimizer,
     LearnedHyperparameterTuner, LearnedOptimizationConfig, LearnedOptimizer, MetaOptimizerState,
     NeuralAdaptiveOptimizer, OptimizationNetwork, OptimizationProblem, ParameterDistribution,
@@ -297,9 +298,9 @@ pub use quantum_inspired::{
     QuantumAnnealingSchedule, QuantumInspiredOptimizer, QuantumOptimizationStats, QuantumState,
 };
 pub use reinforcement_learning::{
-    bandit_optimize, evolutionary_optimize, meta_learning_optimize, policy_gradient_optimize,
-    ActorCriticOptimizer, BanditOptimizer, EvolutionaryStrategy, Experience, MetaLearningOptimizer,
-    OptimizationAction, OptimizationState, PolicyGradientOptimizer, QLearningOptimizer,
+    actor_critic_optimize, bandit_optimize, evolutionary_optimize, meta_learning_optimize,
+    policy_gradient_optimize, policy_gradient_optimize, BanditOptimizer, EvolutionaryStrategy,
+    Experience, MetaLearningOptimizer, OptimizationAction, OptimizationState, QLearningOptimizer,
     RLOptimizationConfig, RLOptimizer,
 };
 pub use roots::root;
@@ -317,15 +318,19 @@ pub use stochastic::{
 };
 pub use streaming::{
     exponentially_weighted_rls, incremental_bfgs, incremental_lbfgs,
-    incremental_lbfgs_linear_regression, kalman_filter_estimator, online_linear_regression,
-    online_logistic_regression, real_time_linear_regression, recursive_least_squares,
-    rolling_window_gradient_descent, rolling_window_least_squares,
+    incremental_lbfgs_linear_regression, kalman_filter_estimator, online_gradient_descent,
+    online_linear_regression, online_logistic_regression, real_time_linear_regression,
+    recursive_least_squares, rolling_window_gradient_descent, rolling_window_least_squares,
     rolling_window_linear_regression, rolling_window_weighted_least_squares,
     streaming_trust_region_linear_regression, streaming_trust_region_logistic_regression,
     IncrementalNewton, IncrementalNewtonMethod, LinearRegressionObjective,
-    LogisticRegressionObjective, OnlineGradientDescent, RealTimeEstimator, RealTimeMethod,
-    RollingWindowOptimizer, StreamingConfig, StreamingDataPoint, StreamingObjective,
-    StreamingOptimizer, StreamingStats, StreamingTrustRegion,
+    LogisticRegressionObjective, RealTimeEstimator, RealTimeMethod, RollingWindowOptimizer,
+    StreamingConfig, StreamingDataPoint, StreamingObjective, StreamingOptimizer, StreamingStats,
+    StreamingTrustRegion,
+};
+pub use ultrathink_coordinator::{
+    ultrathink_optimize, StrategyPerformance, UltrathinkConfig, UltrathinkCoordinator,
+    UltrathinkStats, UltrathinkStrategy,
 };
 pub use unconstrained::{minimize, Bounds};
 pub use unified_pipeline::{
@@ -437,15 +442,19 @@ pub mod prelude {
     pub use crate::sparse_numdiff::{sparse_hessian, sparse_jacobian, SparseFiniteDiffOptions};
     pub use crate::streaming::{
         exponentially_weighted_rls, incremental_bfgs, incremental_lbfgs,
-        incremental_lbfgs_linear_regression, kalman_filter_estimator, online_linear_regression,
-        online_logistic_regression, real_time_linear_regression, recursive_least_squares,
-        rolling_window_gradient_descent, rolling_window_least_squares,
+        incremental_lbfgs_linear_regression, kalman_filter_estimator, online_gradient_descent,
+        online_linear_regression, online_logistic_regression, real_time_linear_regression,
+        recursive_least_squares, rolling_window_gradient_descent, rolling_window_least_squares,
         rolling_window_linear_regression, rolling_window_weighted_least_squares,
         streaming_trust_region_linear_regression, streaming_trust_region_logistic_regression,
         IncrementalNewton, IncrementalNewtonMethod, LinearRegressionObjective,
-        LogisticRegressionObjective, OnlineGradientDescent, RealTimeEstimator, RealTimeMethod,
-        RollingWindowOptimizer, StreamingConfig, StreamingDataPoint, StreamingObjective,
-        StreamingOptimizer, StreamingStats, StreamingTrustRegion,
+        LogisticRegressionObjective, RealTimeEstimator, RealTimeMethod, RollingWindowOptimizer,
+        StreamingConfig, StreamingDataPoint, StreamingObjective, StreamingOptimizer,
+        StreamingStats, StreamingTrustRegion,
+    };
+    pub use crate::ultrathink_coordinator::{
+        ultrathink_optimize, StrategyPerformance, UltrathinkConfig, UltrathinkCoordinator,
+        UltrathinkStats, UltrathinkStrategy,
     };
     pub use crate::unconstrained::{minimize, Bounds, Method as UnconstrainedMethod, Options};
     pub use crate::unified_pipeline::{

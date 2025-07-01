@@ -479,7 +479,7 @@ pub use ultrathink_mode_coordinator::{
 };
 // Neural Reinforcement Learning Step Control exports
 pub use neural_rl_step_control::{
-    DeepQNetwork, Experience, NeuralRLStepController, NetworkWeights, PrioritizedExperienceReplay,
+    DeepQNetwork, Experience, NetworkWeights, NeuralRLStepController, PrioritizedExperienceReplay,
     RLEvaluationResults, StateFeatureExtractor, StepSizePrediction, TrainingConfiguration,
     TrainingResult,
 };

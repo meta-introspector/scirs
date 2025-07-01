@@ -26,10 +26,11 @@ pub struct QLearningOptimizer {
 impl QLearningOptimizer {
     /// Create new Q-learning optimizer
     pub fn new(config: RLOptimizationConfig, num_params: usize) -> Self {
+        let exploration_rate = config.exploration_rate;
         Self {
             config,
             q_table: HashMap::new(),
-            exploration_rate: config.exploration_rate,
+            exploration_rate,
             best_params: Array1::zeros(num_params),
             best_objective: f64::INFINITY,
         }

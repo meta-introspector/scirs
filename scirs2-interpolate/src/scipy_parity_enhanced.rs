@@ -11,10 +11,8 @@
 //! - **Performance comparison**: Validate performance against SciPy
 //! - **API consistency**: Maintain consistent naming and behavior
 
-use crate::error::{InterpolateError, InterpolateResult};
+use crate::error::InterpolateResult;
 use crate::traits::InterpolationFloat;
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use std::collections::HashMap;
 use std::fmt;
 
 /// SciPy parity analyzer and implementer

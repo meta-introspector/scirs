@@ -884,11 +884,11 @@ pub fn spence(x: f64) -> SpecialResult<f64> {
     // Spence's function is related to the dilogarithm Li₂(x)
     // spence(x) = Li₂(1-x) for x <= 1
     // For other ranges, we use functional equations
-    
+
     if x.is_nan() {
         return Err(SpecialError::DomainError("Input is NaN".to_string()));
     }
-    
+
     if x.is_infinite() {
         if x > 0.0 {
             return Ok(f64::NEG_INFINITY);
@@ -902,12 +902,12 @@ pub fn spence(x: f64) -> SpecialResult<f64> {
         // spence(0) = π²/6
         return Ok(std::f64::consts::PI.powi(2) / 6.0);
     }
-    
+
     if x == 1.0 {
         // spence(1) = 0
         return Ok(0.0);
     }
-    
+
     if x == -1.0 {
         // spence(-1) = -π²/12
         return Ok(-std::f64::consts::PI.powi(2) / 12.0);
@@ -915,7 +915,7 @@ pub fn spence(x: f64) -> SpecialResult<f64> {
 
     // Use the relation spence(x) = Li₂(1-x)
     // But handle different ranges to ensure numerical stability
-    
+
     if x <= 1.0 {
         // Direct computation: spence(x) = Li₂(1-x)
         polylog(2.0, 1.0 - x)
@@ -925,7 +925,7 @@ pub fn spence(x: f64) -> SpecialResult<f64> {
         let li2_x = polylog(2.0, x)?;
         let ln_x = x.ln();
         let ln_1_minus_x = (1.0 - x).ln();
-        
+
         Ok(pi_sq_6 - li2_x - ln_x * ln_1_minus_x)
     } else {
         // For x > 2, use the inversion formula
@@ -935,7 +935,7 @@ pub fn spence(x: f64) -> SpecialResult<f64> {
         let li2_inv = polylog(2.0, inv_x)?;
         let ln_x = x.ln();
         let pi_sq_6 = std::f64::consts::PI.powi(2) / 6.0;
-        
+
         Ok(-li2_inv - pi_sq_6 - ln_x * ln_x / 2.0)
     }
 }

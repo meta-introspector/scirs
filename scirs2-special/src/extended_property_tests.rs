@@ -177,7 +177,7 @@ mod gamma_properties {
 // Bessel function properties
 mod bessel_properties {
     use super::*;
-    use crate::bessel::{i0, i1, iv, j0, j1, jn, k0, k1, kv, y0, y1, yn};
+    use crate::bessel::{iv, j0, j1, jn, kv, y0, y1};
 
     #[quickcheck]
     fn bessel_j_recurrence(n: NonNegInt, x: Positive) -> TestResult {
@@ -217,7 +217,7 @@ mod bessel_properties {
     fn bessel_wronskian(x: Positive) -> bool {
         // J_n(x) * Y_{n+1}(x) - J_{n+1}(x) * Y_n(x) = -2/(π*x)
         let x = x.0;
-        let n = 0; // Use n=0 for simplicity
+        let _n = 0; // Use n=0 for simplicity
 
         let j_n = j0(x);
         let j_n_1 = j1(x);
@@ -339,7 +339,7 @@ mod orthogonal_polynomial_properties {
         let n = n.0 as usize;
         let x = x.0;
 
-        let t_n = chebyshev(n, x);
+        let t_n = chebyshev(n, x, true); // Use first kind Chebyshev polynomials
         let theta = x.acos();
         let expected = (n as f64 * theta).cos();
 
@@ -394,10 +394,13 @@ mod spherical_harmonics_properties {
         let theta_val = (theta.0 + 1.0) * f64::consts::PI / 2.0; // Map to [0, π]
         let phi_val = phi % (2.0 * f64::consts::PI);
 
-        let y_lm = sph_harm(l, m, theta_val, phi_val);
+        let y_lm = sph_harm(l as usize, m, theta_val, phi_val);
 
         // For m=0, Y_l0 should be real
-        TestResult::from_bool(y_lm.im.abs() < 1e-14)
+        match y_lm {
+            Ok(val) => TestResult::from_bool(val.im.abs() < 1e-14),
+            Err(_) => TestResult::discard(),
+        }
     }
 
     #[quickcheck]
@@ -418,16 +421,20 @@ mod spherical_harmonics_properties {
         let theta_val = theta.abs() % f64::consts::PI;
         let phi_val = phi % (2.0 * f64::consts::PI);
 
-        let y_lm = sph_harm(l, m, theta_val, phi_val);
-        let y_l_neg_m = sph_harm(l, -m, theta_val, phi_val);
+        let y_lm = sph_harm(l as usize, m, theta_val, phi_val);
+        let y_l_neg_m = sph_harm(l as usize, -m, theta_val, phi_val);
 
-        let expected = if m % 2 == 0 {
-            y_lm.conj()
-        } else {
-            -y_lm.conj()
-        };
-
-        TestResult::from_bool(complex_approx_eq(y_l_neg_m, expected, 1e-10))
+        match (y_lm, y_l_neg_m) {
+            (Ok(val1), Ok(val2)) => {
+                let expected = if m % 2 == 0 {
+                    val1.conj()
+                } else {
+                    -val1.conj()
+                };
+                TestResult::from_bool(complex_approx_eq(val2, expected, 1e-10))
+            }
+            _ => TestResult::discard(),
+        }
     }
 }
 

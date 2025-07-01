@@ -203,7 +203,10 @@ pub fn ginv<T: LinalgScalar + Float + Send + Sync>(a: &ArrayView2<T>) -> LinalgR
 }
 
 /// Generic matrix norm (only for real floats)
-pub fn gnorm<T: LinalgScalar + Float + Send + Sync>(a: &ArrayView2<T>, norm_type: &str) -> LinalgResult<T> {
+pub fn gnorm<T: LinalgScalar + Float + Send + Sync>(
+    a: &ArrayView2<T>,
+    norm_type: &str,
+) -> LinalgResult<T> {
     crate::norm::matrix_norm(a, norm_type, None)
 }
 
@@ -249,7 +252,9 @@ pub struct GenericEigen<T: LinalgScalar> {
 }
 
 /// Generic eigendecomposition (only for real floats, returns complex)
-pub fn geig<T: LinalgScalar + Float + Send + Sync>(a: &ArrayView2<T>) -> LinalgResult<GenericEigen<T>> {
+pub fn geig<T: LinalgScalar + Float + Send + Sync>(
+    a: &ArrayView2<T>,
+) -> LinalgResult<GenericEigen<T>> {
     let (eigenvalues, eigenvectors) = crate::eigen::eig(a, None)?;
     Ok(GenericEigen {
         eigenvalues,

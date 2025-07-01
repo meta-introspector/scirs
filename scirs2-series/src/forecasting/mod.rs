@@ -1622,7 +1622,8 @@ pub mod ensemble {
         // Generate forecasts from different models
         if config.use_moving_average {
             let window = std::cmp::min(12, data.len() / 2);
-            if let Ok(forecast) = super::moving_average_forecast(data, window, config.horizon) {
+            if let Ok(forecast) = super::moving_average_forecast(data, window, config.horizon, 0.95)
+            {
                 individual_forecasts.push(forecast.forecast);
                 model_names.push("MovingAverage".to_string());
             }
@@ -1631,7 +1632,7 @@ pub mod ensemble {
         if config.use_exp_smoothing {
             let params = super::ExpSmoothingParams::default();
             if let Ok(forecast) =
-                super::exponential_smoothing_forecast(data, &params, config.horizon)
+                super::exponential_smoothing_forecast(data, params.alpha, config.horizon, 0.95)
             {
                 individual_forecasts.push(forecast.forecast);
                 model_names.push("ExponentialSmoothing".to_string());
@@ -1646,7 +1647,8 @@ pub mod ensemble {
                 seasonal_period: Some(12),
                 ..Default::default()
             };
-            if let Ok(forecast) = super::holt_winters_forecast(data, &params, config.horizon) {
+            if let Ok(forecast) = super::holt_winters_forecast(data, &params, config.horizon, 0.95)
+            {
                 individual_forecasts.push(forecast.forecast);
                 model_names.push("HoltWinters".to_string());
             }
@@ -1659,7 +1661,7 @@ pub mod ensemble {
                 q: 1,
                 ..Default::default()
             };
-            if let Ok(forecast) = super::arima_forecast(data, &params, config.horizon) {
+            if let Ok(forecast) = super::arima_forecast(data, &params, config.horizon, 0.95) {
                 individual_forecasts.push(forecast.forecast);
                 model_names.push("ARIMA".to_string());
             }
@@ -1763,7 +1765,7 @@ pub mod ensemble {
         if config.use_moving_average {
             let window = std::cmp::min(12, train_data.len() / 2);
             if let Ok(forecast) =
-                super::moving_average_forecast(&train_data, window, config.horizon)
+                super::moving_average_forecast(&train_data, window, config.horizon, 0.95)
             {
                 let error = calculate_mse(&forecast.forecast, &validation_data);
                 individual_forecasts.push(forecast.forecast);
@@ -1774,9 +1776,12 @@ pub mod ensemble {
 
         if config.use_exp_smoothing {
             let params = super::ExpSmoothingParams::default();
-            if let Ok(forecast) =
-                super::exponential_smoothing_forecast(&train_data, &params, config.horizon)
-            {
+            if let Ok(forecast) = super::exponential_smoothing_forecast(
+                &train_data,
+                params.alpha,
+                config.horizon,
+                0.95,
+            ) {
                 let error = calculate_mse(&forecast.forecast, &validation_data);
                 individual_forecasts.push(forecast.forecast);
                 model_names.push("ExponentialSmoothing".to_string());
@@ -1792,7 +1797,8 @@ pub mod ensemble {
                 seasonal_period: Some(12),
                 ..Default::default()
             };
-            if let Ok(forecast) = super::holt_winters_forecast(&train_data, &params, config.horizon)
+            if let Ok(forecast) =
+                super::holt_winters_forecast(&train_data, &params, config.horizon, 0.95)
             {
                 let error = calculate_mse(&forecast.forecast, &validation_data);
                 individual_forecasts.push(forecast.forecast);
@@ -1808,7 +1814,8 @@ pub mod ensemble {
                 q: 1,
                 ..Default::default()
             };
-            if let Ok(forecast) = super::arima_forecast(&train_data, &params, config.horizon) {
+            if let Ok(forecast) = super::arima_forecast(&train_data, &params, config.horizon, 0.95)
+            {
                 let error = calculate_mse(&forecast.forecast, &validation_data);
                 individual_forecasts.push(forecast.forecast);
                 model_names.push("ARIMA".to_string());
@@ -1837,7 +1844,8 @@ pub mod ensemble {
 
         if config.use_moving_average && model_names.contains(&"MovingAverage".to_string()) {
             let window = std::cmp::min(12, data.len() / 2);
-            if let Ok(forecast) = super::moving_average_forecast(data, window, config.horizon) {
+            if let Ok(forecast) = super::moving_average_forecast(data, window, config.horizon, 0.95)
+            {
                 final_forecasts.push(forecast.forecast);
             }
         }
@@ -1845,7 +1853,7 @@ pub mod ensemble {
         if config.use_exp_smoothing && model_names.contains(&"ExponentialSmoothing".to_string()) {
             let params = super::ExpSmoothingParams::default();
             if let Ok(forecast) =
-                super::exponential_smoothing_forecast(data, &params, config.horizon)
+                super::exponential_smoothing_forecast(data, params.alpha, config.horizon, 0.95)
             {
                 final_forecasts.push(forecast.forecast);
             }
@@ -1859,7 +1867,8 @@ pub mod ensemble {
                 seasonal_period: Some(12),
                 ..Default::default()
             };
-            if let Ok(forecast) = super::holt_winters_forecast(data, &params, config.horizon) {
+            if let Ok(forecast) = super::holt_winters_forecast(data, &params, config.horizon, 0.95)
+            {
                 final_forecasts.push(forecast.forecast);
             }
         }
@@ -1871,7 +1880,7 @@ pub mod ensemble {
                 q: 1,
                 ..Default::default()
             };
-            if let Ok(forecast) = super::arima_forecast(data, &params, config.horizon) {
+            if let Ok(forecast) = super::arima_forecast(data, &params, config.horizon, 0.95) {
                 final_forecasts.push(forecast.forecast);
             }
         }
@@ -2113,7 +2122,8 @@ pub mod ensemble {
 
         if config.use_moving_average {
             let window = std::cmp::min(12, data.len() / 2);
-            if let Ok(forecast) = super::moving_average_forecast(data, window, config.horizon) {
+            if let Ok(forecast) = super::moving_average_forecast(data, window, config.horizon, 0.95)
+            {
                 final_forecasts.push(forecast.forecast);
             }
         }
@@ -2121,7 +2131,7 @@ pub mod ensemble {
         if config.use_exp_smoothing {
             let params = super::ExpSmoothingParams::default();
             if let Ok(forecast) =
-                super::exponential_smoothing_forecast(data, &params, config.horizon)
+                super::exponential_smoothing_forecast(data, params.alpha, config.horizon, 0.95)
             {
                 final_forecasts.push(forecast.forecast);
             }
@@ -2135,7 +2145,8 @@ pub mod ensemble {
                 seasonal_period: Some(12),
                 ..Default::default()
             };
-            if let Ok(forecast) = super::holt_winters_forecast(data, &params, config.horizon) {
+            if let Ok(forecast) = super::holt_winters_forecast(data, &params, config.horizon, 0.95)
+            {
                 final_forecasts.push(forecast.forecast);
             }
         }
@@ -2147,7 +2158,7 @@ pub mod ensemble {
                 q: 1,
                 ..Default::default()
             };
-            if let Ok(forecast) = super::arima_forecast(data, &params, config.horizon) {
+            if let Ok(forecast) = super::arima_forecast(data, &params, config.horizon, 0.95) {
                 final_forecasts.push(forecast.forecast);
             }
         }

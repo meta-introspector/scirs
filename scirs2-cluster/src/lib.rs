@@ -63,6 +63,23 @@
 /// * **Dynamic Cluster Management**: Creates, merges, and removes clusters automatically
 /// * **Quantum Annealing**: Simulated quantum annealing for global optimization
 pub mod advanced;
+/// Ultrathink Clustering - AI-Driven Quantum-Neuromorphic Clustering (Ultrathink Mode)
+///
+/// This module represents the pinnacle of clustering intelligence, combining
+/// AI-driven algorithm selection with quantum-neuromorphic fusion algorithms
+/// to achieve unprecedented clustering performance. It leverages meta-learning,
+/// neural architecture search, and bio-quantum computing paradigms.
+///
+/// # Revolutionary Ultrathink Features
+///
+/// * **AI-Driven Clustering Selection** - Automatically select optimal clustering algorithms
+/// * **Quantum-Neuromorphic Clustering** - Fusion of quantum and spiking neural networks
+/// * **Meta-Learning Optimization** - Learn optimal hyperparameters from experience
+/// * **Adaptive Resource Allocation** - Dynamic GPU/CPU/QPU resource management
+/// * **Multi-Objective Clustering** - Optimize for accuracy, speed, and interpretability
+/// * **Continual Learning** - Adapt to changing data distributions in real-time
+/// * **Bio-Quantum Clustering** - Nature-inspired quantum clustering algorithms
+pub mod ultrathink_clustering;
 /// Advanced benchmarking and performance profiling system.
 ///
 /// This module provides cutting-edge benchmarking capabilities for clustering algorithms,
@@ -248,6 +265,11 @@ pub use advanced::{
     RLClustering, RLClusteringConfig, RewardFunction, TransferLearningClustering,
     TransferLearningConfig, DeepClusteringConfig, DeepEmbeddedClustering, VariationalDeepEmbedding,
     QAOAConfig, QAOAClustering, QAOACostFunction, VQEConfig, VQEClustering, VQEAnsatz,
+};
+
+// Re-export quantum clustering from quantum_clustering module
+pub use quantum_clustering::{
+    quantum_annealing_clustering, CoolingSchedule, QuantumAnnealingConfig, QuantumAnnealingClustering,
 };
 
 // Re-export advanced benchmarking capabilities

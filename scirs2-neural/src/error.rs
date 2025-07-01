@@ -35,6 +35,8 @@ pub enum NeuralError {
     DimensionMismatch(String),
     /// Distributed training error
     DistributedError(String),
+    /// Configuration error
+    ConfigError(String),
     /// Other error
     Other(String),
 }
@@ -55,6 +57,7 @@ impl fmt::Display for NeuralError {
             NeuralError::ComputationError(msg) => write!(f, "Computation error: {}", msg),
             NeuralError::DimensionMismatch(msg) => write!(f, "Dimension mismatch: {}", msg),
             NeuralError::DistributedError(msg) => write!(f, "Distributed training error: {}", msg),
+            NeuralError::ConfigError(msg) => write!(f, "Configuration error: {}", msg),
             NeuralError::Other(msg) => write!(f, "Error: {}", msg),
         }
     }

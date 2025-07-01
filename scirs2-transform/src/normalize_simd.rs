@@ -42,7 +42,7 @@ impl AdaptiveBlockSizer {
     {
         let element_size = std::mem::size_of::<F>();
         let data_size = data_shape.iter().product::<usize>() * element_size;
-        
+
         // Adaptive block sizing based on data size and cache characteristics
         let optimal_block_size = if data_size <= L1_CACHE_SIZE / 4 {
             // Small data: use larger blocks for better vectorization
@@ -54,23 +54,23 @@ impl AdaptiveBlockSizer {
             // Large data: smaller blocks to maintain cache locality
             64
         };
-        
+
         let use_cache_alignment = data_size > L1_CACHE_SIZE;
         let prefetch_distance = if data_size > L2_CACHE_SIZE { 8 } else { 4 };
-        
+
         AdaptiveBlockSizer {
             optimal_block_size,
             use_cache_alignment,
             prefetch_distance,
         }
     }
-    
+
     /// Get cache-aligned block size
     pub fn get_aligned_block_size(&self, dimension_size: usize) -> usize {
         if self.use_cache_alignment {
             // Align to cache line boundaries
-            let cache_aligned = (self.optimal_block_size + CACHE_LINE_SIZE - 1) 
-                & !(CACHE_LINE_SIZE - 1);
+            let cache_aligned =
+                (self.optimal_block_size + CACHE_LINE_SIZE - 1) & !(CACHE_LINE_SIZE - 1);
             cache_aligned.min(dimension_size)
         } else {
             self.optimal_block_size.min(dimension_size)
@@ -225,18 +225,10 @@ where
     let mut normalized = Array2::zeros((shape[0], shape[1]));
 
     match method {
-        NormalizationMethod::MinMax => {
-            simd_normalize_block_minmax(array, &mut normalized, axis)?
-        }
-        NormalizationMethod::ZScore => {
-            simd_normalize_block_zscore(array, &mut normalized, axis)?
-        }
-        NormalizationMethod::L2 => {
-            simd_normalize_block_l2(array, &mut normalized, axis)?
-        }
-        NormalizationMethod::MaxAbs => {
-            simd_normalize_block_maxabs(array, &mut normalized, axis)?
-        }
+        NormalizationMethod::MinMax => simd_normalize_block_minmax(array, &mut normalized, axis)?,
+        NormalizationMethod::ZScore => simd_normalize_block_zscore(array, &mut normalized, axis)?,
+        NormalizationMethod::L2 => simd_normalize_block_l2(array, &mut normalized, axis)?,
+        NormalizationMethod::MaxAbs => simd_normalize_block_maxabs(array, &mut normalized, axis)?,
         _ => {
             // Fall back to non-SIMD implementation for other methods
             return Err(TransformError::InvalidInput(
@@ -260,7 +252,8 @@ where
 {
     let shape = array.shape();
     let block_sizer = AdaptiveBlockSizer::new::<F>(&[shape[0], shape[1]]);
-    let block_size = block_sizer.get_aligned_block_size(if axis == 0 { shape[1] } else { shape[0] });
+    let block_size =
+        block_sizer.get_aligned_block_size(if axis == 0 { shape[1] } else { shape[0] });
 
     if axis == 0 {
         // Column-wise normalization with block processing
@@ -270,7 +263,7 @@ where
         // First pass: compute global min/max for each column in blocks
         for block_start in (0..shape[1]).step_by(block_size) {
             let block_end = (block_start + block_size).min(shape[1]);
-            
+
             for j in block_start..block_end {
                 let col = array.column(j);
                 let col_array = col.to_owned();
@@ -282,12 +275,12 @@ where
         // Second pass: normalize using pre-computed min/max
         for block_start in (0..shape[1]).step_by(block_size) {
             let block_end = (block_start + block_size).min(shape[1]);
-            
+
             for j in block_start..block_end {
                 let col = array.column(j);
                 let col_array = col.to_owned();
                 let range = global_maxs[j] - global_mins[j];
-                
+
                 if range.abs() <= F::from(EPSILON).unwrap() {
                     // Constant feature
                     for i in 0..shape[0] {
@@ -299,7 +292,7 @@ where
                     let range_array = Array1::from_elem(shape[0], range);
                     let centered = F::simd_sub(&col_array.view(), &min_array.view());
                     let norm_col = F::simd_div(&centered.view(), &range_array.view());
-                    
+
                     for i in 0..shape[0] {
                         normalized[[i, j]] = norm_col[i];
                     }
@@ -310,12 +303,12 @@ where
         // Row-wise normalization with block processing
         for block_start in (0..shape[0]).step_by(block_size) {
             let block_end = (block_start + block_size).min(shape[0]);
-            
+
             for i in block_start..block_end {
                 let row = array.row(i);
                 let row_array = row.to_owned();
                 let norm_row = simd_minmax_normalize_1d(&row_array)?;
-                
+
                 for j in 0..shape[1] {
                     normalized[[i, j]] = norm_row[j];
                 }
@@ -337,7 +330,8 @@ where
 {
     let shape = array.shape();
     let block_sizer = AdaptiveBlockSizer::new::<F>(&[shape[0], shape[1]]);
-    let block_size = block_sizer.get_aligned_block_size(if axis == 0 { shape[1] } else { shape[0] });
+    let block_size =
+        block_sizer.get_aligned_block_size(if axis == 0 { shape[1] } else { shape[0] });
 
     if axis == 0 {
         // Column-wise normalization
@@ -348,21 +342,21 @@ where
         // First pass: compute means and standard deviations
         for block_start in (0..shape[1]).step_by(block_size) {
             let block_end = (block_start + block_size).min(shape[1]);
-            
+
             for j in block_start..block_end {
                 let col = array.column(j);
                 let col_array = col.to_owned();
-                
+
                 // Compute mean
                 global_means[j] = F::simd_sum(&col_array.view()) / n_samples_f;
-                
+
                 // Compute standard deviation
                 let mean_array = Array1::from_elem(shape[0], global_means[j]);
                 let centered = F::simd_sub(&col_array.view(), &mean_array.view());
                 let squared = F::simd_mul(&centered.view(), &centered.view());
                 let variance = F::simd_sum(&squared.view()) / n_samples_f;
                 global_stds[j] = variance.sqrt();
-                
+
                 // Avoid division by zero
                 if global_stds[j] <= F::from(EPSILON).unwrap() {
                     global_stds[j] = F::one();
@@ -373,11 +367,11 @@ where
         // Second pass: normalize using pre-computed statistics
         for block_start in (0..shape[1]).step_by(block_size) {
             let block_end = (block_start + block_size).min(shape[1]);
-            
+
             for j in block_start..block_end {
                 let col = array.column(j);
                 let col_array = col.to_owned();
-                
+
                 if global_stds[j] <= F::from(EPSILON).unwrap() {
                     // Constant feature
                     for i in 0..shape[0] {
@@ -389,7 +383,7 @@ where
                     let std_array = Array1::from_elem(shape[0], global_stds[j]);
                     let centered = F::simd_sub(&col_array.view(), &mean_array.view());
                     let norm_col = F::simd_div(&centered.view(), &std_array.view());
-                    
+
                     for i in 0..shape[0] {
                         normalized[[i, j]] = norm_col[i];
                     }
@@ -400,12 +394,12 @@ where
         // Row-wise normalization with block processing
         for block_start in (0..shape[0]).step_by(block_size) {
             let block_end = (block_start + block_size).min(shape[0]);
-            
+
             for i in block_start..block_end {
                 let row = array.row(i);
                 let row_array = row.to_owned();
                 let norm_row = simd_zscore_normalize_1d(&row_array)?;
-                
+
                 for j in 0..shape[1] {
                     normalized[[i, j]] = norm_row[j];
                 }
@@ -427,18 +421,19 @@ where
 {
     let shape = array.shape();
     let block_sizer = AdaptiveBlockSizer::new::<F>(&[shape[0], shape[1]]);
-    let block_size = block_sizer.get_aligned_block_size(if axis == 0 { shape[1] } else { shape[0] });
+    let block_size =
+        block_sizer.get_aligned_block_size(if axis == 0 { shape[1] } else { shape[0] });
 
     if axis == 0 {
         // Column-wise L2 normalization
         for block_start in (0..shape[1]).step_by(block_size) {
             let block_end = (block_start + block_size).min(shape[1]);
-            
+
             for j in block_start..block_end {
                 let col = array.column(j);
                 let col_array = col.to_owned();
                 let norm_col = simd_l2_normalize_1d(&col_array)?;
-                
+
                 for i in 0..shape[0] {
                     normalized[[i, j]] = norm_col[i];
                 }
@@ -448,12 +443,12 @@ where
         // Row-wise L2 normalization with SIMD optimization
         for block_start in (0..shape[0]).step_by(block_size) {
             let block_end = (block_start + block_size).min(shape[0]);
-            
+
             for i in block_start..block_end {
                 let row = array.row(i);
                 let row_array = row.to_owned();
                 let l2_norm = F::simd_norm(&row_array.view());
-                
+
                 if l2_norm <= F::from(EPSILON).unwrap() {
                     // Zero vector
                     for j in 0..shape[1] {
@@ -463,7 +458,7 @@ where
                     // Vectorized division
                     let norm_array = Array1::from_elem(shape[1], l2_norm);
                     let norm_row = F::simd_div(&row_array.view(), &norm_array.view());
-                    
+
                     for j in 0..shape[1] {
                         normalized[[i, j]] = norm_row[j];
                     }
@@ -486,18 +481,19 @@ where
 {
     let shape = array.shape();
     let block_sizer = AdaptiveBlockSizer::new::<F>(&[shape[0], shape[1]]);
-    let block_size = block_sizer.get_aligned_block_size(if axis == 0 { shape[1] } else { shape[0] });
+    let block_size =
+        block_sizer.get_aligned_block_size(if axis == 0 { shape[1] } else { shape[0] });
 
     if axis == 0 {
         // Column-wise max-abs normalization
         for block_start in (0..shape[1]).step_by(block_size) {
             let block_end = (block_start + block_size).min(shape[1]);
-            
+
             for j in block_start..block_end {
                 let col = array.column(j);
                 let col_array = col.to_owned();
                 let norm_col = simd_maxabs_normalize_1d(&col_array)?;
-                
+
                 for i in 0..shape[0] {
                     normalized[[i, j]] = norm_col[i];
                 }
@@ -507,13 +503,13 @@ where
         // Row-wise max-abs normalization with SIMD optimization
         for block_start in (0..shape[0]).step_by(block_size) {
             let block_end = (block_start + block_size).min(shape[0]);
-            
+
             for i in block_start..block_end {
                 let row = array.row(i);
                 let row_array = row.to_owned();
                 let abs_array = F::simd_abs(&row_array.view());
                 let max_abs = F::simd_max_element(&abs_array.view());
-                
+
                 if max_abs <= F::from(EPSILON).unwrap() {
                     // All zeros
                     for j in 0..shape[1] {
@@ -523,7 +519,7 @@ where
                     // Vectorized division
                     let max_abs_array = Array1::from_elem(shape[1], max_abs);
                     let norm_row = F::simd_div(&row_array.view(), &max_abs_array.view());
-                    
+
                     for j in 0..shape[1] {
                         normalized[[i, j]] = norm_row[j];
                     }
@@ -533,7 +529,6 @@ where
     }
     Ok(())
 }
-
 
 /// Advanced SIMD normalization with automatic optimization selection
 pub fn simd_normalize_adaptive<S, F>(
@@ -547,7 +542,7 @@ where
 {
     let shape = array.shape();
     let data_size = shape[0] * shape[1] * std::mem::size_of::<F>();
-    
+
     // Choose optimal strategy based on data characteristics
     if data_size > L2_CACHE_SIZE {
         // Large data: use chunked processing with memory optimization
@@ -578,22 +573,22 @@ where
     let shape = array.shape();
     let element_size = std::mem::size_of::<F>();
     let max_elements_per_batch = (batch_size_mb * 1024 * 1024) / element_size;
-    
+
     if shape[0] * shape[1] <= max_elements_per_batch {
         // Small enough for single batch
         return simd_normalize_adaptive(array, method, axis);
     }
-    
+
     let mut normalized = Array2::zeros((shape[0], shape[1]));
-    
+
     if axis == 0 {
         // Column-wise: batch by columns
         let cols_per_batch = max_elements_per_batch / shape[0];
         for col_start in (0..shape[1]).step_by(cols_per_batch) {
             let col_end = (col_start + cols_per_batch).min(shape[1]);
-            let batch_view = array.slice(ndarray::s\![.., col_start..col_end]);
+            let batch_view = array.slice(ndarray::s![.., col_start..col_end]);
             let batch_normalized = simd_normalize_adaptive(&batch_view, method, axis)?;
-            
+
             for (j_local, j_global) in (col_start..col_end).enumerate() {
                 for i in 0..shape[0] {
                     normalized[[i, j_global]] = batch_normalized[[i, j_local]];
@@ -605,9 +600,9 @@ where
         let rows_per_batch = max_elements_per_batch / shape[1];
         for row_start in (0..shape[0]).step_by(rows_per_batch) {
             let row_end = (row_start + rows_per_batch).min(shape[0]);
-            let batch_view = array.slice(ndarray::s\![row_start..row_end, ..]);
+            let batch_view = array.slice(ndarray::s![row_start..row_end, ..]);
             let batch_normalized = simd_normalize_adaptive(&batch_view, method, axis)?;
-            
+
             for (i_local, i_global) in (row_start..row_end).enumerate() {
                 for j in 0..shape[1] {
                     normalized[[i_global, j]] = batch_normalized[[i_local, j]];
@@ -615,7 +610,7 @@ where
             }
         }
     }
-    
+
     Ok(normalized)
 }
 
@@ -631,17 +626,17 @@ where
 {
     let shape = array.shape();
     let mut normalized = Array2::zeros((shape[0], shape[1]));
-    
+
     let block_sizer = AdaptiveBlockSizer::new::<F>(&[shape[0], shape[1]]);
     let chunk_size = block_sizer.optimal_block_size * 4; // Larger chunks for big data
-    
+
     if axis == 0 {
         // Process in column chunks
         for chunk_start in (0..shape[1]).step_by(chunk_size) {
             let chunk_end = (chunk_start + chunk_size).min(shape[1]);
-            let chunk_view = array.slice(ndarray::s\![.., chunk_start..chunk_end]);
+            let chunk_view = array.slice(ndarray::s![.., chunk_start..chunk_end]);
             let chunk_normalized = simd_normalize_array(&chunk_view, method, axis)?;
-            
+
             for (j_local, j_global) in (chunk_start..chunk_end).enumerate() {
                 for i in 0..shape[0] {
                     normalized[[i, j_global]] = chunk_normalized[[i, j_local]];
@@ -652,9 +647,9 @@ where
         // Process in row chunks
         for chunk_start in (0..shape[0]).step_by(chunk_size) {
             let chunk_end = (chunk_start + chunk_size).min(shape[0]);
-            let chunk_view = array.slice(ndarray::s\![chunk_start..chunk_end, ..]);
+            let chunk_view = array.slice(ndarray::s![chunk_start..chunk_end, ..]);
             let chunk_normalized = simd_normalize_array(&chunk_view, method, axis)?;
-            
+
             for (i_local, i_global) in (chunk_start..chunk_end).enumerate() {
                 for j in 0..shape[1] {
                     normalized[[i_global, j]] = chunk_normalized[[i_local, j]];
@@ -662,7 +657,7 @@ where
             }
         }
     }
-    
+
     Ok(normalized)
 }
 
@@ -685,10 +680,10 @@ where
         let shape = array.shape();
         let mut normalized = Array2::zeros((shape[0], shape[1]));
         let small_block_size = 32; // Smaller blocks for tall matrices
-        
+
         for block_start in (0..shape[0]).step_by(small_block_size) {
             let block_end = (block_start + small_block_size).min(shape[0]);
-            
+
             for i in block_start..block_end {
                 let row = array.row(i);
                 let row_array = row.to_owned();
@@ -697,17 +692,20 @@ where
                     NormalizationMethod::ZScore => simd_zscore_normalize_1d(&row_array)?,
                     NormalizationMethod::L2 => simd_l2_normalize_1d(&row_array)?,
                     NormalizationMethod::MaxAbs => simd_maxabs_normalize_1d(&row_array)?,
-                    _ => return Err(TransformError::InvalidInput(
-                        "Unsupported normalization method for tall matrix optimization".to_string(),
-                    )),
+                    _ => {
+                        return Err(TransformError::InvalidInput(
+                            "Unsupported normalization method for tall matrix optimization"
+                                .to_string(),
+                        ))
+                    }
                 };
-                
+
                 for j in 0..shape[1] {
                     normalized[[i, j]] = norm_row[j];
                 }
             }
         }
-        
+
         Ok(normalized)
     }
 }
@@ -731,10 +729,10 @@ where
         let shape = array.shape();
         let mut normalized = Array2::zeros((shape[0], shape[1]));
         let wide_block_size = 128; // Larger blocks for wide matrices
-        
+
         for block_start in (0..shape[1]).step_by(wide_block_size) {
             let block_end = (block_start + wide_block_size).min(shape[1]);
-            
+
             for j in block_start..block_end {
                 let col = array.column(j);
                 let col_array = col.to_owned();
@@ -743,17 +741,20 @@ where
                     NormalizationMethod::ZScore => simd_zscore_normalize_1d(&col_array)?,
                     NormalizationMethod::L2 => simd_l2_normalize_1d(&col_array)?,
                     NormalizationMethod::MaxAbs => simd_maxabs_normalize_1d(&col_array)?,
-                    _ => return Err(TransformError::InvalidInput(
-                        "Unsupported normalization method for wide matrix optimization".to_string(),
-                    )),
+                    _ => {
+                        return Err(TransformError::InvalidInput(
+                            "Unsupported normalization method for wide matrix optimization"
+                                .to_string(),
+                        ))
+                    }
                 };
-                
+
                 for i in 0..shape[0] {
                     normalized[[i, j]] = norm_col[i];
                 }
             }
         }
-        
+
         Ok(normalized)
     }
 }

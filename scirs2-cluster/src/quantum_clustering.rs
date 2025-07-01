@@ -1081,6 +1081,334 @@ pub fn vqe_clustering<F: Float + FromPrimitive + Debug>(
     Ok((assignments, energy))
 }
 
+/// Configuration for quantum annealing clustering
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct QuantumAnnealingConfig {
+    /// Initial temperature for annealing
+    pub initial_temperature: f64,
+    /// Final temperature for annealing
+    pub final_temperature: f64,
+    /// Number of annealing steps
+    pub annealing_steps: usize,
+    /// Cooling schedule type
+    pub cooling_schedule: CoolingSchedule,
+    /// Number of Monte Carlo sweeps per temperature
+    pub mc_sweeps: usize,
+    /// Random seed for reproducibility
+    pub random_seed: Option<u64>,
+}
+
+/// Cooling schedule types for quantum annealing
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum CoolingSchedule {
+    /// Linear cooling schedule
+    Linear,
+    /// Exponential cooling schedule
+    Exponential,
+    /// Logarithmic cooling schedule
+    Logarithmic,
+    /// Custom power law cooling
+    PowerLaw(f64),
+}
+
+impl Default for QuantumAnnealingConfig {
+    fn default() -> Self {
+        Self {
+            initial_temperature: 10.0,
+            final_temperature: 0.01,
+            annealing_steps: 1000,
+            cooling_schedule: CoolingSchedule::Exponential,
+            mc_sweeps: 100,
+            random_seed: None,
+        }
+    }
+}
+
+/// Quantum annealing clustering algorithm
+///
+/// Implements simulated quantum annealing for clustering by encoding the clustering
+/// problem as an Ising model and using quantum tunneling effects to escape local minima.
+pub struct QuantumAnnealingClustering<F: Float> {
+    config: QuantumAnnealingConfig,
+    n_clusters: usize,
+    ising_matrix: Option<Array2<f64>>,
+    spin_configuration: Option<Array1<i8>>,
+    best_configuration: Option<Array1<i8>>,
+    best_energy: Option<f64>,
+    temperature_schedule: Vec<f64>,
+    fitted: bool,
+}
+
+impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
+    /// Create a new quantum annealing clustering instance
+    pub fn new(n_clusters: usize, config: QuantumAnnealingConfig) -> Self {
+        Self {
+            config,
+            n_clusters,
+            ising_matrix: None,
+            spin_configuration: None,
+            best_configuration: None,
+            best_energy: None,
+            temperature_schedule: Vec::new(),
+            fitted: false,
+        }
+    }
+
+    /// Fit the quantum annealing clustering model
+    pub fn fit(&mut self, data: ArrayView2<F>) -> Result<()> {
+        let (n_samples, _) = data.dim();
+        
+        if n_samples == 0 {
+            return Err(ClusteringError::InvalidInput("Data cannot be empty".to_string()));
+        }
+
+        // Build Ising model from data
+        self.build_ising_model(data)?;
+        
+        // Initialize spin configuration
+        self.initialize_spins(n_samples)?;
+        
+        // Create temperature schedule
+        self.create_temperature_schedule();
+        
+        // Run quantum annealing
+        self.run_annealing()?;
+        
+        self.fitted = true;
+        Ok(())
+    }
+
+    /// Build Ising model encoding of the clustering problem
+    fn build_ising_model(&mut self, data: ArrayView2<F>) -> Result<()> {
+        let n_samples = data.nrows();
+        // Use log encoding: ceil(log2(n_clusters)) qubits per sample
+        let qubits_per_sample = (self.n_clusters as f64).log2().ceil() as usize;
+        let total_qubits = n_samples * qubits_per_sample;
+        
+        self.ising_matrix = Some(Array2::zeros((total_qubits, total_qubits)));
+        let ising_matrix = self.ising_matrix.as_mut().unwrap();
+        
+        // Build interaction matrix based on data similarities
+        for i in 0..n_samples {
+            for j in i+1..n_samples {
+                let distance = euclidean_distance(data.row(i), data.row(j)).to_f64().unwrap();
+                let similarity = (-distance / 2.0).exp(); // Gaussian similarity
+                
+                // Add interactions between qubits representing these samples
+                for qi in 0..qubits_per_sample {
+                    for qj in 0..qubits_per_sample {
+                        let qubit_i = i * qubits_per_sample + qi;
+                        let qubit_j = j * qubits_per_sample + qj;
+                        
+                        // Ising interaction: encourage similar samples to have similar spin patterns
+                        ising_matrix[[qubit_i, qubit_j]] = similarity;
+                        ising_matrix[[qubit_j, qubit_i]] = similarity;
+                    }
+                }
+            }
+        }
+        
+        Ok(())
+    }
+
+    /// Initialize random spin configuration
+    fn initialize_spins(&mut self, n_samples: usize) -> Result<()> {
+        let qubits_per_sample = (self.n_clusters as f64).log2().ceil() as usize;
+        let total_qubits = n_samples * qubits_per_sample;
+        
+        use rand::Rng;
+        let mut rng = if let Some(seed) = self.config.random_seed {
+            use rand::SeedableRng;
+            rand::rngs::StdRng::seed_from_u64(seed)
+        } else {
+            rand::rng()
+        };
+        
+        let mut spins = Array1::zeros(total_qubits);
+        for i in 0..total_qubits {
+            spins[i] = if rng.random::<f64>() > 0.5 { 1 } else { -1 };
+        }
+        
+        self.spin_configuration = Some(spins.clone());
+        self.best_configuration = Some(spins);
+        self.best_energy = Some(self.calculate_ising_energy(&self.spin_configuration.as_ref().unwrap()));
+        
+        Ok(())
+    }
+
+    /// Create temperature schedule for annealing
+    fn create_temperature_schedule(&mut self) {
+        let mut schedule = Vec::with_capacity(self.config.annealing_steps);
+        
+        for step in 0..self.config.annealing_steps {
+            let progress = step as f64 / (self.config.annealing_steps - 1) as f64;
+            
+            let temperature = match self.config.cooling_schedule {
+                CoolingSchedule::Linear => {
+                    self.config.initial_temperature * (1.0 - progress) + 
+                    self.config.final_temperature * progress
+                }
+                CoolingSchedule::Exponential => {
+                    self.config.initial_temperature * 
+                    (self.config.final_temperature / self.config.initial_temperature).powf(progress)
+                }
+                CoolingSchedule::Logarithmic => {
+                    self.config.initial_temperature / (1.0 + progress.ln())
+                }
+                CoolingSchedule::PowerLaw(alpha) => {
+                    self.config.initial_temperature * (1.0 - progress).powf(alpha)
+                }
+            };
+            
+            schedule.push(temperature.max(self.config.final_temperature));
+        }
+        
+        self.temperature_schedule = schedule;
+    }
+
+    /// Run quantum annealing optimization
+    fn run_annealing(&mut self) -> Result<()> {
+        use rand::Rng;
+        let mut rng = if let Some(seed) = self.config.random_seed {
+            use rand::SeedableRng;
+            rand::rngs::StdRng::seed_from_u64(seed)
+        } else {
+            rand::rng()
+        };
+        
+        let spins = self.spin_configuration.as_mut().unwrap();
+        let n_qubits = spins.len();
+        
+        for temperature in &self.temperature_schedule {
+            for _ in 0..self.config.mc_sweeps {
+                // Monte Carlo sweep with quantum tunneling
+                for qubit in 0..n_qubits {
+                    // Calculate energy change for flipping this qubit
+                    let delta_e = self.calculate_flip_energy_change(spins, qubit);
+                    
+                    // Quantum tunneling probability (includes classical thermal + quantum effects)
+                    let tunnel_probability = self.quantum_tunnel_probability(delta_e, *temperature);
+                    
+                    if rng.random::<f64>() < tunnel_probability {
+                        spins[qubit] *= -1; // Flip spin
+                        
+                        // Update best configuration if we found a better one
+                        let current_energy = self.calculate_ising_energy(spins);
+                        if current_energy < self.best_energy.unwrap() {
+                            self.best_energy = Some(current_energy);
+                            self.best_configuration = Some(spins.clone());
+                        }
+                    }
+                }
+            }
+        }
+        
+        Ok(())
+    }
+
+    /// Calculate energy change for flipping a single qubit
+    fn calculate_flip_energy_change(&self, spins: &Array1<i8>, qubit: usize) -> f64 {
+        let ising_matrix = self.ising_matrix.as_ref().unwrap();
+        let current_spin = spins[qubit];
+        
+        let mut delta_e = 0.0;
+        
+        // Calculate interaction energy change
+        for j in 0..spins.len() {
+            if j != qubit {
+                delta_e += 2.0 * (current_spin as f64) * (spins[j] as f64) * ising_matrix[[qubit, j]];
+            }
+        }
+        
+        delta_e
+    }
+
+    /// Calculate quantum tunneling probability
+    fn quantum_tunnel_probability(&self, delta_e: f64, temperature: f64) -> f64 {
+        if delta_e <= 0.0 {
+            1.0 // Always accept if energy decreases
+        } else {
+            // Enhanced probability including quantum tunneling effects
+            let classical_prob = (-delta_e / temperature).exp();
+            let quantum_enhancement = 0.1 * (-delta_e / (2.0 * temperature)).exp(); // Simplified quantum correction
+            (classical_prob + quantum_enhancement).min(1.0)
+        }
+    }
+
+    /// Calculate total Ising energy
+    fn calculate_ising_energy(&self, spins: &Array1<i8>) -> f64 {
+        let ising_matrix = self.ising_matrix.as_ref().unwrap();
+        let mut energy = 0.0;
+        
+        for i in 0..spins.len() {
+            for j in i+1..spins.len() {
+                energy -= ising_matrix[[i, j]] * (spins[i] as f64) * (spins[j] as f64);
+            }
+        }
+        
+        energy
+    }
+
+    /// Convert spin configuration to cluster assignments
+    fn spins_to_clusters(&self, spins: &Array1<i8>) -> Array1<usize> {
+        let n_samples = spins.len() / (self.n_clusters as f64).log2().ceil() as usize;
+        let qubits_per_sample = (self.n_clusters as f64).log2().ceil() as usize;
+        let mut assignments = Array1::zeros(n_samples);
+        
+        for sample in 0..n_samples {
+            let mut cluster_id = 0;
+            for bit in 0..qubits_per_sample {
+                let qubit_idx = sample * qubits_per_sample + bit;
+                if spins[qubit_idx] > 0 {
+                    cluster_id += 1 << bit;
+                }
+            }
+            assignments[sample] = (cluster_id % self.n_clusters);
+        }
+        
+        assignments
+    }
+
+    /// Predict cluster assignments
+    pub fn predict(&self, data: ArrayView2<F>) -> Result<Array1<usize>> {
+        if !self.fitted {
+            return Err(ClusteringError::InvalidInput(
+                "Model must be fitted before prediction".to_string()
+            ));
+        }
+        
+        let best_spins = self.best_configuration.as_ref().unwrap();
+        Ok(self.spins_to_clusters(best_spins))
+    }
+
+    /// Get the best energy found
+    pub fn best_energy(&self) -> Option<f64> {
+        self.best_energy
+    }
+
+    /// Get the temperature schedule used
+    pub fn temperature_schedule(&self) -> &[f64] {
+        &self.temperature_schedule
+    }
+}
+
+/// Quantum annealing clustering with default configuration
+pub fn quantum_annealing_clustering<F: Float + FromPrimitive + Debug>(
+    data: ArrayView2<F>,
+    n_clusters: usize,
+) -> Result<(Array1<usize>, f64)> {
+    let config = QuantumAnnealingConfig::default();
+    let mut annealer = QuantumAnnealingClustering::new(n_clusters, config);
+    annealer.fit(data)?;
+    
+    let assignments = annealer.predict(data)?;
+    let energy = annealer.best_energy().unwrap_or(0.0);
+    
+    Ok((assignments, energy))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1133,5 +1461,84 @@ mod tests {
         let (assignments, energy) = result.unwrap();
         assert_eq!(assignments.len(), 4);
         assert!(energy.is_finite());
+    }
+
+    #[test]
+    fn test_quantum_annealing_creation() {
+        let config = QuantumAnnealingConfig::default();
+        let annealer: QuantumAnnealingClustering<f64> = QuantumAnnealingClustering::new(2, config);
+        assert_eq!(annealer.n_clusters, 2);
+        assert!(!annealer.fitted);
+    }
+
+    #[test]
+    fn test_quantum_annealing_config_defaults() {
+        let config = QuantumAnnealingConfig::default();
+        assert_eq!(config.initial_temperature, 10.0);
+        assert_eq!(config.final_temperature, 0.01);
+        assert_eq!(config.annealing_steps, 1000);
+        assert_eq!(config.cooling_schedule, CoolingSchedule::Exponential);
+    }
+
+    #[test]
+    fn test_cooling_schedules() {
+        let linear = CoolingSchedule::Linear;
+        let exponential = CoolingSchedule::Exponential;
+        let logarithmic = CoolingSchedule::Logarithmic;
+        let power_law = CoolingSchedule::PowerLaw(2.0);
+        
+        assert_eq!(linear, CoolingSchedule::Linear);
+        assert_eq!(exponential, CoolingSchedule::Exponential);
+        assert_eq!(logarithmic, CoolingSchedule::Logarithmic);
+        assert_eq!(power_law, CoolingSchedule::PowerLaw(2.0));
+    }
+
+    #[test]
+    fn test_small_quantum_annealing_clustering() {
+        let data = Array2::from_shape_vec((4, 2), vec![
+            1.0, 1.0,
+            1.1, 1.1,
+            5.0, 5.0,
+            5.1, 5.1,
+        ]).unwrap();
+
+        let result = quantum_annealing_clustering(data.view(), 2);
+        assert!(result.is_ok());
+        
+        let (assignments, energy) = result.unwrap();
+        assert_eq!(assignments.len(), 4);
+        assert!(energy.is_finite());
+    }
+
+    #[test]
+    fn test_quantum_annealing_with_custom_config() {
+        let data = Array2::from_shape_vec((6, 2), vec![
+            0.0, 0.0,
+            0.1, 0.1,
+            0.2, 0.2,
+            5.0, 5.0,
+            5.1, 5.1,
+            5.2, 5.2,
+        ]).unwrap();
+
+        let config = QuantumAnnealingConfig {
+            initial_temperature: 5.0,
+            final_temperature: 0.1,
+            annealing_steps: 100,
+            cooling_schedule: CoolingSchedule::Linear,
+            mc_sweeps: 10,
+            random_seed: Some(42),
+        };
+
+        let mut annealer = QuantumAnnealingClustering::new(2, config);
+        let result = annealer.fit(data.view());
+        assert!(result.is_ok());
+
+        let assignments = annealer.predict(data.view());
+        assert!(assignments.is_ok());
+        assert_eq!(assignments.unwrap().len(), 6);
+        
+        assert!(annealer.best_energy().is_some());
+        assert_eq!(annealer.temperature_schedule().len(), 100);
     }
 }

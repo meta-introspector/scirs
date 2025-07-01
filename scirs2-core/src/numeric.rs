@@ -864,21 +864,21 @@ pub mod stable_algorithms;
 pub mod ultra_simd {
     #[allow(unused_imports)]
     use super::*;
-    
-    #[cfg(target_arch = "x86_64")]
-    use std::arch::x86_64::*;
+
     #[cfg(target_arch = "aarch64")]
     use std::arch::aarch64::*;
-    
+    #[cfg(target_arch = "x86_64")]
+    use std::arch::x86_64::*;
+
     /// Ultra-fast vectorized addition for f32 arrays
     #[inline]
     pub fn add_f32_ultra(a: &[f32], b: &[f32], result: &mut [f32]) {
         debug_assert_eq!(a.len(), b.len());
         debug_assert_eq!(a.len(), result.len());
-        
+
         let len = a.len();
         let mut i = 0;
-        
+
         // AVX2 path - process 8 elements at a time
         #[cfg(target_arch = "x86_64")]
         {
@@ -906,7 +906,7 @@ pub mod ultra_simd {
                 }
             }
         }
-        
+
         // ARM NEON path - process 4 elements at a time
         #[cfg(target_arch = "aarch64")]
         {
@@ -922,23 +922,23 @@ pub mod ultra_simd {
                 }
             }
         }
-        
+
         // Scalar fallback for remaining elements
         while i < len {
             result[i] = a[i] + b[i];
             i += 1;
         }
     }
-    
+
     /// Ultra-fast vectorized multiplication for f32 arrays
     #[inline]
     pub fn mul_f32_ultra(a: &[f32], b: &[f32], result: &mut [f32]) {
         debug_assert_eq!(a.len(), b.len());
         debug_assert_eq!(a.len(), result.len());
-        
+
         let len = a.len();
         let mut i = 0;
-        
+
         // AVX2 + FMA path for maximum performance
         #[cfg(target_arch = "x86_64")]
         {
@@ -952,8 +952,7 @@ pub mod ultra_simd {
                         i += 8;
                     }
                 }
-            }
-            else if is_x86_feature_detected!("sse") {
+            } else if is_x86_feature_detected!("sse") {
                 unsafe {
                     while i + 4 <= len {
                         let va = _mm_loadu_ps(a.as_ptr().add(i));
@@ -965,7 +964,7 @@ pub mod ultra_simd {
                 }
             }
         }
-        
+
         // ARM NEON path
         #[cfg(target_arch = "aarch64")]
         {
@@ -981,24 +980,24 @@ pub mod ultra_simd {
                 }
             }
         }
-        
+
         // Scalar fallback
         while i < len {
             result[i] = a[i] * b[i];
             i += 1;
         }
     }
-    
+
     /// Ultra-fast fused multiply-add (a * b + c) for f32 arrays
     #[inline]
     pub fn fma_f32_ultra(a: &[f32], b: &[f32], c: &[f32], result: &mut [f32]) {
         debug_assert_eq!(a.len(), b.len());
         debug_assert_eq!(a.len(), c.len());
         debug_assert_eq!(a.len(), result.len());
-        
+
         let len = a.len();
         let mut i = 0;
-        
+
         // AVX2 + FMA path for optimal performance
         #[cfg(target_arch = "x86_64")]
         {
@@ -1013,8 +1012,7 @@ pub mod ultra_simd {
                         i += 8;
                     }
                 }
-            }
-            else if is_x86_feature_detected!("sse") {
+            } else if is_x86_feature_detected!("sse") {
                 unsafe {
                     while i + 4 <= len {
                         let va = _mm_loadu_ps(a.as_ptr().add(i));
@@ -1027,7 +1025,7 @@ pub mod ultra_simd {
                 }
             }
         }
-        
+
         // ARM NEON path with FMA
         #[cfg(target_arch = "aarch64")]
         {
@@ -1044,23 +1042,23 @@ pub mod ultra_simd {
                 }
             }
         }
-        
+
         // Scalar fallback
         while i < len {
             result[i] = a[i] * b[i] + c[i];
             i += 1;
         }
     }
-    
+
     /// Ultra-fast vectorized dot product for f32 arrays
     #[inline]
     pub fn dot_product_f32_ultra(a: &[f32], b: &[f32]) -> f32 {
         debug_assert_eq!(a.len(), b.len());
-        
+
         let len = a.len();
         let mut i = 0;
         let mut sum = 0.0f32;
-        
+
         // AVX2 + FMA path for maximum throughput
         #[cfg(target_arch = "x86_64")]
         {
@@ -1081,8 +1079,7 @@ pub mod ultra_simd {
                     let sum1 = _mm_add_ss(sum2, _mm_shuffle_ps(sum2, sum2, 1));
                     sum = _mm_cvtss_f32(sum1);
                 }
-            }
-            else if is_x86_feature_detected!("sse") {
+            } else if is_x86_feature_detected!("sse") {
                 unsafe {
                     let mut acc = _mm_setzero_ps();
                     while i + 4 <= len {
@@ -1098,7 +1095,7 @@ pub mod ultra_simd {
                 }
             }
         }
-        
+
         // ARM NEON path with accumulation
         #[cfg(target_arch = "aarch64")]
         {
@@ -1116,23 +1113,23 @@ pub mod ultra_simd {
                 }
             }
         }
-        
+
         // Scalar accumulation for remaining elements
         while i < len {
             sum += a[i] * b[i];
             i += 1;
         }
-        
+
         sum
     }
-    
+
     /// Ultra-fast vectorized sum reduction for f32 arrays
     #[inline]
     pub fn sum_f32_ultra(data: &[f32]) -> f32 {
         let len = data.len();
         let mut i = 0;
         let mut sum = 0.0f32;
-        
+
         // AVX2 path
         #[cfg(target_arch = "x86_64")]
         {
@@ -1152,8 +1149,7 @@ pub mod ultra_simd {
                     let sum1 = _mm_add_ss(sum2, _mm_shuffle_ps(sum2, sum2, 1));
                     sum = _mm_cvtss_f32(sum1);
                 }
-            }
-            else if is_x86_feature_detected!("sse") {
+            } else if is_x86_feature_detected!("sse") {
                 unsafe {
                     let mut acc = _mm_setzero_ps();
                     while i + 4 <= len {
@@ -1167,7 +1163,7 @@ pub mod ultra_simd {
                 }
             }
         }
-        
+
         // ARM NEON path
         #[cfg(target_arch = "aarch64")]
         {
@@ -1183,13 +1179,13 @@ pub mod ultra_simd {
                 }
             }
         }
-        
+
         // Scalar accumulation
         while i < len {
             sum += data[i];
             i += 1;
         }
-        
+
         sum
     }
 }

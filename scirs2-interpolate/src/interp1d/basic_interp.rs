@@ -64,11 +64,11 @@ use std::fmt::Debug;
 /// # use scirs2_interpolate::interp1d::basic_interp::nearest_interp;
 /// let x = array![1.0, 2.0, 3.0];
 /// let y = array![10.0, 20.0, 30.0];
-/// 
+///
 /// // Interpolate at x=1.3 (closer to x[0]=1.0)
 /// let result = nearest_interp(&x.view(), &y.view(), 0, 1.3).unwrap();
 /// assert_eq!(result, 10.0);
-/// 
+///
 /// // Interpolate at x=1.7 (closer to x[1]=2.0)  
 /// let result = nearest_interp(&x.view(), &y.view(), 0, 1.7).unwrap();
 /// assert_eq!(result, 20.0);
@@ -133,11 +133,11 @@ pub(crate) fn nearest_interp<F: Float>(
 /// # use scirs2_interpolate::interp1d::basic_interp::linear_interp;
 /// let x = array![1.0, 2.0, 3.0];
 /// let y = array![10.0, 20.0, 30.0];
-/// 
+///
 /// // Interpolate at x=1.5 (midpoint between x[0] and x[1])
 /// let result = linear_interp(&x.view(), &y.view(), 0, 1.5).unwrap();
 /// assert_eq!(result, 15.0); // Exactly halfway between y[0]=10 and y[1]=20
-/// 
+///
 /// // Interpolate at x=1.25 (25% of the way from x[0] to x[1])
 /// let result = linear_interp(&x.view(), &y.view(), 0, 1.25).unwrap();
 /// assert_eq!(result, 12.5);
@@ -179,8 +179,8 @@ pub(crate) fn linear_interp<F: Float>(
 /// Perform cubic interpolation using four-point Lagrange polynomial
 ///
 /// Constructs a cubic polynomial through four data points using Lagrange interpolation.
-/// This method provides C0 continuity and higher-order accuracy compared to linear 
-/// interpolation, making it suitable when smooth curves and good approximation of 
+/// This method provides C0 continuity and higher-order accuracy compared to linear
+/// interpolation, making it suitable when smooth curves and good approximation of
 /// derivatives are important.
 ///
 /// # Computational Complexity
@@ -192,8 +192,8 @@ pub(crate) fn linear_interp<F: Float>(
 ///
 /// Uses Lagrange interpolation with four points to construct a cubic polynomial:
 /// P(x) = y₀L₀(x) + y₁L₁(x) + y₂L₂(x) + y₃L₃(x)
-/// 
-/// Where Lᵢ(x) are Lagrange basis polynomials. The method automatically handles 
+///
+/// Where Lᵢ(x) are Lagrange basis polynomials. The method automatically handles
 /// boundary conditions by adjusting point selection near data endpoints.
 ///
 /// # Arguments
@@ -222,7 +222,7 @@ pub(crate) fn linear_interp<F: Float>(
 /// # use scirs2_interpolate::interp1d::basic_interp::cubic_interp;
 /// let x = array![0.0, 1.0, 2.0, 3.0, 4.0];
 /// let y = array![0.0, 1.0, 8.0, 27.0, 64.0]; // y = x³
-/// 
+///
 /// // Interpolate at x=1.5
 /// let result = cubic_interp(&x.view(), &y.view(), 1, 1.5).unwrap();
 /// // Should be close to 1.5³ = 3.375

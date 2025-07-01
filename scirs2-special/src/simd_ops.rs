@@ -99,7 +99,7 @@ fn simd_gamma_approx_f32(x: &[f32]) -> Vec<f32> {
 
     for i in 0..x.len() {
         let xi = x[i];
-        
+
         if xi <= 0.0 {
             result[i] = f32::NAN;
         } else if xi < 0.5 {
@@ -113,12 +113,12 @@ fn simd_gamma_approx_f32(x: &[f32]) -> Vec<f32> {
             // Use recurrence relation if xi is large to bring it into optimal range
             let mut z = xi;
             let mut result_mult = 1.0;
-            
+
             while z > 1.5 {
                 z -= 1.0;
                 result_mult *= z;
             }
-            
+
             result[i] = lanczos_gamma_f32(z) * result_mult;
         }
     }
@@ -143,15 +143,15 @@ fn lanczos_gamma_f32(z: f32) -> f32 {
     ];
 
     let sqrt_2pi = (2.0 * std::f32::consts::PI).sqrt();
-    
+
     let mut ag = LANCZOS_COEFFS[0];
     for i in 1..LANCZOS_COEFFS.len() {
         ag += LANCZOS_COEFFS[i] / (z + i as f32 - 1.0);
     }
-    
+
     let term1 = sqrt_2pi * ag / z;
     let term2 = ((z + G - 0.5) / std::f32::consts::E).powf(z - 0.5);
-    
+
     term1 * term2
 }
 
@@ -182,7 +182,7 @@ fn simd_gamma_approx_f64(x: &[f64]) -> Vec<f64> {
 
     for i in 0..x.len() {
         let xi = x[i];
-        
+
         if xi <= 0.0 {
             result[i] = f64::NAN;
         } else if xi < 0.5 {
@@ -196,12 +196,12 @@ fn simd_gamma_approx_f64(x: &[f64]) -> Vec<f64> {
             // Use recurrence relation for moderate values
             let mut z = xi;
             let mut result_mult = 1.0;
-            
+
             while z > 1.5 {
                 z -= 1.0;
                 result_mult *= z;
             }
-            
+
             result[i] = lanczos_gamma_f64(z) * result_mult;
         } else {
             // For very large values, use asymptotic expansion or fall back to scalar
@@ -236,15 +236,15 @@ fn lanczos_gamma_f64(z: f64) -> f64 {
     ];
 
     let sqrt_2pi = (2.0 * std::f64::consts::PI).sqrt();
-    
+
     let mut ag = LANCZOS_COEFFS[0];
     for i in 1..LANCZOS_COEFFS.len() {
         ag += LANCZOS_COEFFS[i] / (z + i as f64 - 1.0);
     }
-    
+
     let term1 = sqrt_2pi * ag / z;
     let term2 = ((z + G - 0.5) / std::f64::consts::E).powf(z - 0.5);
-    
+
     term1 * term2
 }
 

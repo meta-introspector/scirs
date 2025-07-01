@@ -1605,10 +1605,10 @@ where
 
             for (name, param) in &search_space.parameters {
                 let value = match param {
-                    HyperParameter::Integer { min, max } => rng.gen_range(*min..=*max) as f64,
-                    HyperParameter::Float { min, max } => rng.gen_range(*min..=*max),
+                    HyperParameter::Integer { min, max } => rng.random_range(*min..=*max) as f64,
+                    HyperParameter::Float { min, max } => rng.random_range(*min..=*max),
                     HyperParameter::Categorical { choices } => {
-                        rng.gen_range(0..choices.len()) as f64
+                        rng.random_range(0..choices.len()) as f64
                     }
                     HyperParameter::Boolean => {
                         if rng.gen_bool(0.5) {
@@ -1620,11 +1620,11 @@ where
                     HyperParameter::LogUniform { min, max } => {
                         let log_min = min.ln();
                         let log_max = max.ln();
-                        let log_value = rng.gen_range(log_min..=log_max);
+                        let log_value = rng.random_range(log_min..=log_max);
                         log_value.exp()
                     }
                     HyperParameter::IntegerChoices { choices } => {
-                        let idx = rng.gen_range(0..choices.len());
+                        let idx = rng.random_range(0..choices.len());
                         choices[idx] as f64
                     }
                 };
@@ -2149,7 +2149,7 @@ where
         }
 
         let q = (-2.0 * (1.0 - p).ln()).sqrt();
-        -((((c0 * q + c1) * q + c2) * q + c3) * q + c4) * q + c5) /
+        (-((((c0 * q + c1) * q + c2) * q + c3) * q + c4) * q + c5)) /
          ((((d1 * q + d2) * q + d3) * q + d4) * q + 1.0)
     }
 
@@ -2294,7 +2294,7 @@ where
                 HyperParameter::Integer { min, max } => {
                     use rand::Rng;
                     let mut rng = rand::rng();
-                    rng.gen_range(*min..=*max) as f64
+                    rng.random_range(*min..=*max) as f64
                 }
                 _ => mean, // Simplified for other parameter types
             };
@@ -2364,7 +2364,7 @@ where
                 HyperParameter::Integer { min, max } => {
                     use rand::Rng;
                     let mut rng = rand::rng();
-                    rng.gen_range(*min..=*max) as f64
+                    rng.random_range(*min..=*max) as f64
                 }
                 _ => {
                     let mean = values.iter().sum::<f64>() / values.len() as f64;
@@ -2456,7 +2456,7 @@ where
         let mut best_individual = None;
 
         for _ in 0..tournament_size {
-            let idx = rng.gen_range(0..population.len());
+            let idx = rng.random_range(0..population.len());
             let individual = &population[idx];
 
             // In a real implementation, we would evaluate fitness here
@@ -2550,10 +2550,10 @@ where
                     }
                     HyperParameter::Integer { min, max } => {
                         // Random reset mutation for discrete parameters
-                        rng.gen_range(*min..=*max) as f64
+                        rng.random_range(*min..=*max) as f64
                     }
                     HyperParameter::Categorical { choices } => {
-                        rng.gen_range(0..choices.len()) as f64
+                        rng.random_range(0..choices.len()) as f64
                     }
                     HyperParameter::Boolean => {
                         if rng.gen_bool(0.5) {
@@ -2565,11 +2565,11 @@ where
                     HyperParameter::LogUniform { min, max } => {
                         let log_min = min.ln();
                         let log_max = max.ln();
-                        let log_val = rng.gen_range(log_min..=log_max);
+                        let log_val = rng.random_range(log_min..=log_max);
                         log_val.exp()
                     }
                     HyperParameter::IntegerChoices { choices } => {
-                        let idx = rng.gen_range(0..choices.len());
+                        let idx = rng.random_range(0..choices.len());
                         choices[idx] as f64
                     }
                 };
@@ -2889,7 +2889,7 @@ where
         search_space: &SearchSpace,
         n_points: usize,
     ) -> Result<Vec<HashMap<String, f64>>> {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut combinations = Vec::new();
 
         let param_names: Vec<String> = search_space.parameters.keys().cloned().collect();
@@ -3102,7 +3102,7 @@ where
         n_candidates: usize,
     ) -> Result<Vec<HashMap<String, f64>>> {
         let mut candidates = Vec::new();
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         // Find top performing regions from observations (placeholder)
         let n_centers = std::cmp::min(5, n_candidates / 10);
@@ -3120,11 +3120,11 @@ where
                     let perturbed_value = match param_spec {
                         HyperParameter::Float { min, max } => {
                             let noise_scale = (max - min) * 0.1; // 10% of range
-                            let noise = rng.gen_range(-noise_scale..noise_scale);
+                            let noise = rng.random_range(-noise_scale..noise_scale);
                             (center_value + noise).clamp(*min, *max)
                         }
                         HyperParameter::Integer { min, max } => {
-                            let noise = rng.gen_range(-2..=2);
+                            let noise = rng.random_range(-2..=2);
                             (center_value + noise as f64)
                                 .round()
                                 .clamp(*min as f64, *max as f64)
@@ -3186,8 +3186,8 @@ where
             }
             AcquisitionFunction::ThompsonSampling => {
                 // Thompson sampling: sample from posterior
-                let mut rng = rand::thread_rng();
-                mean + std_dev * rng.gen_range(-1.0..1.0)
+                let mut rng = rand::rng();
+                mean + std_dev * rng.random_range(-1.0..1.0)
             }
         }
     }
@@ -4431,13 +4431,13 @@ pub mod advanced_optimization {
             &self,
             search_space: &SearchSpace,
         ) -> Result<HashMap<String, f64>> {
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
             let mut params = HashMap::new();
 
             for (name, param) in &search_space.parameters {
                 let value = match param {
-                    HyperParameter::Float { min, max } => rng.gen_range(*min..*max),
-                    HyperParameter::Integer { min, max } => rng.gen_range(*min..*max) as f64,
+                    HyperParameter::Float { min, max } => rng.random_range(*min..*max),
+                    HyperParameter::Integer { min, max } => rng.random_range(*min..*max) as f64,
                     _ => 1.0, // Stub
                 };
                 params.insert(name.clone(), value);
@@ -4752,14 +4752,14 @@ pub mod advanced_optimization {
         
         /// Initialize controller network
         pub fn initialize_controller(&mut self, input_dim: usize, hidden_dim: usize) {
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
             
             // Simple 2-layer network for hyperparameter generation
             let w1 = Array2::from_shape_fn((input_dim, hidden_dim), |_| {
-                F::from(rng.gen_range(-0.1..0.1)).unwrap()
+                F::from(rng.random_range(-0.1..0.1)).unwrap()
             });
             let w2 = Array2::from_shape_fn((hidden_dim, self.search_space.len()), |_| {
-                F::from(rng.gen_range(-0.1..0.1)).unwrap()
+                F::from(rng.random_range(-0.1..0.1)).unwrap()
             });
             
             self.controller_weights = vec![w1, w2];
@@ -4977,7 +4977,7 @@ pub mod advanced_optimization {
         
         /// Initialize arms with random configurations
         pub fn initialize_arms(&mut self, n_arms: usize) -> Result<()> {
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
             
             for _ in 0..n_arms {
                 let mut config = HashMap::new();
@@ -4985,15 +4985,15 @@ pub mod advanced_optimization {
                 for (param_name, param_def) in &self.search_space {
                     let value = match param_def {
                         HyperParameter::Continuous { min, max } => {
-                            let random_val = rng.gen_range(0.0..1.0);
+                            let random_val = rng.random_range(0.0..1.0);
                             *min + F::from(random_val).unwrap() * (*max - *min)
                         }
                         HyperParameter::Integer { min, max } => {
-                            let val = rng.gen_range(*min..=*max);
+                            let val = rng.random_range(*min..=*max);
                             F::from(val).unwrap()
                         }
                         HyperParameter::Categorical { options } => {
-                            let idx = rng.gen_range(0..options.len());
+                            let idx = rng.random_range(0..options.len());
                             options[idx]
                         }
                     };
@@ -5016,10 +5016,10 @@ pub mod advanced_optimization {
             
             match &self.algorithm {
                 BanditAlgorithm::EpsilonGreedy { epsilon } => {
-                    let mut rng = rand::thread_rng();
+                    let mut rng = rand::rng();
                     if rng.gen::<f64>() < *epsilon {
                         // Explore: choose random arm
-                        Ok(rng.gen_range(0..self.arms.len()))
+                        Ok(rng.random_range(0..self.arms.len()))
                     } else {
                         // Exploit: choose best arm
                         let mut best_arm = 0;
@@ -5064,8 +5064,8 @@ pub mod advanced_optimization {
                 }
                 _ => {
                     // Default to random selection for other algorithms
-                    let mut rng = rand::thread_rng();
-                    Ok(rng.gen_range(0..self.arms.len()))
+                    let mut rng = rand::rng();
+                    Ok(rng.random_range(0..self.arms.len()))
                 }
             }
         }
@@ -5223,7 +5223,7 @@ pub mod advanced_optimization {
         
         /// Initialize random population
         pub fn initialize_population(&mut self) -> Result<()> {
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
             
             for _ in 0..self.population_size {
                 let mut config = HashMap::new();
@@ -5231,15 +5231,15 @@ pub mod advanced_optimization {
                 for (param_name, param_def) in &self.search_space {
                     let value = match param_def {
                         HyperParameter::Continuous { min, max } => {
-                            let random_val = rng.gen_range(0.0..1.0);
+                            let random_val = rng.random_range(0.0..1.0);
                             *min + F::from(random_val).unwrap() * (*max - *min)
                         }
                         HyperParameter::Integer { min, max } => {
-                            let val = rng.gen_range(*min..=*max);
+                            let val = rng.random_range(*min..=*max);
                             F::from(val).unwrap()
                         }
                         HyperParameter::Categorical { options } => {
-                            let idx = rng.gen_range(0..options.len());
+                            let idx = rng.random_range(0..options.len());
                             options[idx]
                         }
                     };
@@ -5277,12 +5277,12 @@ pub mod advanced_optimization {
             
             // Reproduction: create new individuals
             let mut new_population = survivors.clone();
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
             
             while new_population.len() < self.population_size {
                 // Select two parents (tournament selection)
-                let parent1_idx = rng.gen_range(0..survivors.len());
-                let parent2_idx = rng.gen_range(0..survivors.len());
+                let parent1_idx = rng.random_range(0..survivors.len());
+                let parent2_idx = rng.random_range(0..survivors.len());
                 let parent1 = &survivors[parent1_idx];
                 let parent2 = &survivors[parent2_idx];
                 
@@ -5317,7 +5317,7 @@ pub mod advanced_optimization {
         
         /// Mutate a configuration
         fn mutate_config(&self, config: &mut HashMap<String, F>) -> Result<()> {
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
             
             // Select random parameter to mutate
             let param_names: Vec<_> = config.keys().cloned().collect();
@@ -5325,7 +5325,7 @@ pub mod advanced_optimization {
                 return Ok(());
             }
             
-            let param_name = &param_names[rng.gen_range(0..param_names.len())];
+            let param_name = &param_names[rng.random_range(0..param_names.len())];
             
             if let Some(param_def) = self.search_space.iter()
                 .find(|(name, _)| name == param_name)
@@ -5334,15 +5334,15 @@ pub mod advanced_optimization {
                 let new_value = match param_def {
                     HyperParameter::Continuous { min, max } => {
                         let current = config[param_name];
-                        let noise = F::from(rng.gen_range(-0.1..0.1)).unwrap() * (*max - *min);
+                        let noise = F::from(rng.random_range(-0.1..0.1)).unwrap() * (*max - *min);
                         (current + noise).max(*min).min(*max)
                     }
                     HyperParameter::Integer { min, max } => {
-                        let val = rng.gen_range(*min..=*max);
+                        let val = rng.random_range(*min..=*max);
                         F::from(val).unwrap()
                     }
                     HyperParameter::Categorical { options } => {
-                        let idx = rng.gen_range(0..options.len());
+                        let idx = rng.random_range(0..options.len());
                         options[idx]
                     }
                 };

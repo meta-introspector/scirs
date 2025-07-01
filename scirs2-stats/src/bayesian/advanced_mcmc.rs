@@ -447,7 +447,7 @@ impl NoUTurnSampler {
         let current_log_prob = target.log_density(&current_pos.view())?;
 
         // Take a few leapfrog steps (simplified)
-        let n_steps = 2_usize.pow(rng.random_range(1..=self.max_tree_depth.min(4)));
+        let n_steps = 2_usize.pow(rng.gen_range(1..=self.max_tree_depth.min(4)));
 
         for _ in 0..n_steps {
             // Simplified leapfrog step

@@ -82,7 +82,7 @@ impl GpuBackend {
                 {
                     false
                 }
-            },
+            }
             GpuBackend::Rocm => cfg!(feature = "rocm"), // Would use ROCm runtime check
             GpuBackend::Wgpu => {
                 #[cfg(feature = "wgpu_backend")]
@@ -94,7 +94,7 @@ impl GpuBackend {
                 {
                     false
                 }
-            },
+            }
             GpuBackend::Metal => {
                 #[cfg(all(feature = "metal", target_os = "macos"))]
                 {
@@ -105,7 +105,7 @@ impl GpuBackend {
                 {
                     false
                 }
-            },
+            }
             GpuBackend::OpenCL => {
                 #[cfg(feature = "opencl")]
                 {
@@ -116,7 +116,7 @@ impl GpuBackend {
                 {
                     false
                 }
-            },
+            }
             GpuBackend::Cpu => true,
         }
     }
@@ -774,8 +774,12 @@ impl GpuContext {
     ) -> Result<(), GpuError> {
         // For now, provide a basic implementation that logs the execution
         // In a real implementation, this would compile and execute the kernel
-        eprintln!("GPU kernel execution (source length: {}, buffers: {}, work_groups: {:?})", 
-                 source.len(), buffers.len(), work_groups);
+        eprintln!(
+            "GPU kernel execution (source length: {}, buffers: {}, work_groups: {:?})",
+            source.len(),
+            buffers.len(),
+            work_groups
+        );
         eprintln!("Int params: {:?}", int_params);
         eprintln!("Float params: {:?}", float_params);
         Ok(())

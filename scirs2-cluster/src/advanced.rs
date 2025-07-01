@@ -204,7 +204,7 @@ impl<F: Float + FromPrimitive + Debug> QuantumKMeans<F> {
     fn quantum_noise(&self) -> F {
         // Simplified quantum noise generation
         let uniform = Uniform::new(-1.0, 1.0);
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         F::from(uniform.sample(&mut rng)).unwrap()
     }
 
@@ -922,7 +922,7 @@ impl<F: Float + FromPrimitive + Debug> RLClustering<F> {
             ));
         }
 
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut exploration_rate = self.config.exploration_rate;
         let mut best_reward = f64::NEG_INFINITY;
         let mut best_assignments = vec![0; n_samples];
@@ -933,7 +933,7 @@ impl<F: Float + FromPrimitive + Debug> RLClustering<F> {
 
             // Initialize random assignment
             for i in 0..n_samples {
-                current_assignments[i] = rng.gen_range(0..self.config.n_actions.min(n_samples));
+                current_assignments[i] = rng.random_range(0..self.config.n_actions.min(n_samples));
             }
 
             // Episode simulation
@@ -943,7 +943,7 @@ impl<F: Float + FromPrimitive + Debug> RLClustering<F> {
                 // Choose action (cluster assignment)
                 let action = if rng.gen::<f64>() < exploration_rate {
                     // Exploration
-                    rng.gen_range(0..self.config.n_actions.min(n_samples))
+                    rng.random_range(0..self.config.n_actions.min(n_samples))
                 } else {
                     // Exploitation
                     self.choose_best_action(state)
@@ -1690,13 +1690,13 @@ impl<F: Float + FromPrimitive + Debug + 'static> DeepEmbeddedClustering<F> {
 
     /// Initialize neural network weights
     pub fn initialize_weights(&mut self, input_dim: usize) -> Result<()> {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         
         // Initialize encoder
         let mut prev_dim = input_dim;
         for &dim in &self.config.encoder_dims {
             let weight = Array2::from_shape_fn((prev_dim, dim), |_| {
-                F::from(rng.gen_range(-0.1..0.1)).unwrap()
+                F::from(rng.random_range(-0.1..0.1)).unwrap()
             });
             let bias = Array1::zeros(dim);
             
@@ -1707,7 +1707,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> DeepEmbeddedClustering<F> {
         
         // Add final embedding layer
         let embedding_weight = Array2::from_shape_fn((prev_dim, self.config.embedding_dim), |_| {
-            F::from(rng.gen_range(-0.1..0.1)).unwrap()
+            F::from(rng.random_range(-0.1..0.1)).unwrap()
         });
         let embedding_bias = Array1::zeros(self.config.embedding_dim);
         self.encoder_weights.push(embedding_weight);
@@ -1717,7 +1717,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> DeepEmbeddedClustering<F> {
         prev_dim = self.config.embedding_dim;
         for &dim in &self.config.decoder_dims {
             let weight = Array2::from_shape_fn((prev_dim, dim), |_| {
-                F::from(rng.gen_range(-0.1..0.1)).unwrap()
+                F::from(rng.random_range(-0.1..0.1)).unwrap()
             });
             let bias = Array1::zeros(dim);
             
@@ -1728,7 +1728,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> DeepEmbeddedClustering<F> {
         
         // Add final reconstruction layer
         let output_weight = Array2::from_shape_fn((prev_dim, input_dim), |_| {
-            F::from(rng.gen_range(-0.1..0.1)).unwrap()
+            F::from(rng.random_range(-0.1..0.1)).unwrap()
         });
         let output_bias = Array1::zeros(input_dim);
         self.decoder_weights.push(output_weight);
@@ -2136,15 +2136,15 @@ pub struct QAOAClustering<F: Float + FromPrimitive> {
 impl<F: Float + FromPrimitive + Debug + 'static> QAOAClustering<F> {
     /// Create new QAOA clustering instance
     pub fn new(n_clusters: usize, config: QAOAConfig) -> Self {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         
         // Initialize QAOA parameters randomly
         let gamma_params = Array1::from_shape_fn(config.p_layers, |_| {
-            F::from(rng.gen_range(0.0..std::f64::consts::PI)).unwrap()
+            F::from(rng.random_range(0.0..std::f64::consts::PI)).unwrap()
         });
         
         let beta_params = Array1::from_shape_fn(config.p_layers, |_| {
-            F::from(rng.gen_range(0.0..std::f64::consts::PI / 2.0)).unwrap()
+            F::from(rng.random_range(0.0..std::f64::consts::PI / 2.0)).unwrap()
         });
         
         Self {
@@ -2376,7 +2376,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> QAOAClustering<F> {
         if let Some(ref state) = &self.quantum_state {
             let n_qubits = (state.len() as f64).log2() as usize;
             let mut assignments = Array1::zeros(n_qubits);
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
             
             // Sample from probability distribution
             for _shot in 0..self.config.n_shots {
@@ -2517,11 +2517,11 @@ pub struct VQEClustering<F: Float + FromPrimitive> {
 impl<F: Float + FromPrimitive + Debug + 'static> VQEClustering<F> {
     /// Create new VQE clustering instance
     pub fn new(n_clusters: usize, config: VQEConfig) -> Self {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         
         // Initialize variational parameters
         let params = Array1::from_shape_fn(config.n_params, |_| {
-            F::from(rng.gen_range(0.0..2.0 * std::f64::consts::PI)).unwrap()
+            F::from(rng.random_range(0.0..2.0 * std::f64::consts::PI)).unwrap()
         });
         
         Self {

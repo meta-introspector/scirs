@@ -151,16 +151,6 @@ pub mod metadata;
 /// - Dataset utilities for ML pipelines
 /// - Seamless integration with ndarray
 pub mod ml_framework;
-/// Neural-adaptive I/O optimization with ultrathink-level intelligence
-///
-/// Provides AI-driven adaptive optimization for I/O operations:
-/// - Machine learning-based performance optimization
-/// - Dynamic parameter adaptation based on system metrics
-/// - Neural network-driven decision making for resource allocation
-/// - Real-time performance feedback and learning
-/// - Ultra-high performance processing with adaptive algorithms
-/// - SIMD-accelerated neural inference for low-latency decisions
-pub mod neural_adaptive_io;
 /// Data pipeline APIs
 ///
 /// Provides memory-mapped file operations for efficient handling of large arrays:
@@ -224,6 +214,16 @@ pub mod netcdf;
 /// println!("Network client created for file operations");
 /// ```
 pub mod network;
+/// Neural-adaptive I/O optimization with ultrathink-level intelligence
+///
+/// Provides AI-driven adaptive optimization for I/O operations:
+/// - Machine learning-based performance optimization
+/// - Dynamic parameter adaptation based on system metrics
+/// - Neural network-driven decision making for resource allocation
+/// - Real-time performance feedback and learning
+/// - Ultra-high performance processing with adaptive algorithms
+/// - SIMD-accelerated neural inference for low-latency decisions
+pub mod neural_adaptive_io;
 /// Out-of-core processing for terabyte-scale datasets
 ///
 /// Provides infrastructure for processing datasets too large for memory:

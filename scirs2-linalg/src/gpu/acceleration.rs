@@ -530,7 +530,9 @@ where
 }
 
 /// Global GPU acceleration instance for convenience
-static GLOBAL_GPU_FRAMEWORK: std::sync::OnceLock<Arc<Mutex<Option<GpuAccelerationFramework<f64>>>>> = std::sync::OnceLock::new();
+static GLOBAL_GPU_FRAMEWORK: std::sync::OnceLock<
+    Arc<Mutex<Option<GpuAccelerationFramework<f64>>>>,
+> = std::sync::OnceLock::new();
 
 /// Initialize global GPU acceleration (call once at startup)
 pub fn initialize_global_gpu_acceleration() -> LinalgResult<()> {

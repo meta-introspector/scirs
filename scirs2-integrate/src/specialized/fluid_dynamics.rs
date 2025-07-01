@@ -1521,7 +1521,7 @@ pub mod cfd_optimizations {
             /// Solve omega transport equation
             fn solve_omega_equation(
                 &mut self,
-                velocity: &[Array3<f64>],
+                _velocity: &[Array3<f64>],
                 nu: f64,
                 dt: f64,
                 dx: f64,
@@ -6231,7 +6231,7 @@ pub mod multiphase_flow {
         fn apply_plic_advection(
             &self,
             current_vf: f64,
-            normal: &[f64; 3],
+            _normal: &[f64; 3],
             velocity: &[Array3<f64>],
             i: usize,
             j: usize,
@@ -6415,7 +6415,7 @@ pub mod multiphase_flow {
 
         /// Solve momentum equation with surface tension forces
         fn solve_momentum_equation(&self, state: &mut MultiphaseFlowState) -> Result<()> {
-            let (nx, ny, nz) = self.grid_dims;
+            let (_nx, _ny, _nz) = self.grid_dims;
 
             // Apply surface tension forces using Continuum Surface Force (CSF) model
             if self.use_continuum_surface_force {
@@ -6842,7 +6842,7 @@ pub mod advanced_gpu_acceleration {
         fn gpu_advection_kernel(
             &self,
             u_star: &mut Array2<f64>,
-            v_star: &mut Array2<f64>,
+            _v_star: &mut Array2<f64>,
             u: &Array2<f64>,
             v: &Array2<f64>,
             params: &NavierStokesParams,
@@ -6892,7 +6892,7 @@ pub mod advanced_gpu_acceleration {
 
             // Store original values for Laplacian computation
             let u_orig = u_star.clone();
-            let v_orig = v_star.clone();
+            let _v_orig = v_star.clone();
 
             // Parallel diffusion computation
             u_star
@@ -6966,7 +6966,7 @@ pub mod advanced_gpu_acceleration {
         fn gpu_pressure_correction_kernel(
             &self,
             u_new: &mut Array2<f64>,
-            v_new: &mut Array2<f64>,
+            _v_new: &mut Array2<f64>,
             pressure: &Array2<f64>,
             params: &NavierStokesParams,
         ) -> Result<()> {
@@ -7048,7 +7048,7 @@ pub mod advanced_gpu_acceleration {
     impl StreamingComputeManager {
         /// Create new streaming compute manager
         pub fn new(memory_budget_gb: f64) -> Self {
-            let memory_budget = (memory_budget_gb * 1024.0 * 1024.0 * 1024.0) as usize;
+            let _memory_budget = (memory_budget_gb * 1024.0 * 1024.0 * 1024.0) as usize;
             let n_streams = 4; // Default to 4 streams
 
             Self {
@@ -7276,13 +7276,13 @@ pub mod advanced_cfd_enhancements {
         }
 
         /// Calculate enstrophy (vorticity magnitude squared)
-        pub fn calculate_enstrophy(&self, state: &DNSState) -> f64 {
+        pub fn calculate_enstrophy(&self, _state: &DNSState) -> f64 {
             let mut enstrophy = 0.0;
             let (nx, ny, nz) = self.grid_resolution;
 
-            for i in 0..nx {
-                for j in 0..ny {
-                    for k in 0..nz {
+            for _i in 0..nx {
+                for _j in 0..ny {
+                    for _k in 0..nz {
                         // Calculate vorticity components (simplified finite differences)
                         let omega_x = 0.0; // dwdy - dvdz
                         let omega_y = 0.0; // dudz - dwdx

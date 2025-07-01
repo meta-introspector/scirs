@@ -904,7 +904,9 @@ impl JITCompiler {
             }
             ElementWiseOp::Abs => {
                 code.push_str("    __m256 input_vec = _mm256_loadu_ps(&input0[i]);\n");
-                code.push_str("    __m256 result = _mm256_andnot_ps(_mm256_set1_ps(-0.0f), input_vec);\n");
+                code.push_str(
+                    "    __m256 result = _mm256_andnot_ps(_mm256_set1_ps(-0.0f), input_vec);\n",
+                );
                 code.push_str("    _mm256_storeu_ps(&output[i], result);\n");
             }
             ElementWiseOp::ReLU => {
@@ -1074,7 +1076,7 @@ impl JITCompiler {
     fn generate_vectorized_activation(
         &self,
         activation: &ActivationType,
-        total_elements: usize,
+        _total_elements: usize,
     ) -> Result<String> {
         let mut code = String::new();
 
@@ -1094,15 +1096,21 @@ impl JITCompiler {
                 code.push_str(
                     "    __m256 neg_input = _mm256_sub_ps(_mm256_setzero_ps(), input_vec);\n",
                 );
-                code.push_str("    // Approximate exp using polynomial (AVX doesn't have native exp)\n");
-                code.push_str("    __m256 exp_neg = _mm256_add_ps(_mm256_set1_ps(1.0f), neg_input);\n");
+                code.push_str(
+                    "    // Approximate exp using polynomial (AVX doesn't have native exp)\n",
+                );
+                code.push_str(
+                    "    __m256 exp_neg = _mm256_add_ps(_mm256_set1_ps(1.0f), neg_input);\n",
+                );
                 code.push_str(
                     "    __m256 result = _mm256_div_ps(one, _mm256_add_ps(one, exp_neg));\n",
                 );
             }
             ActivationType::Tanh => {
                 // Tanh approximation: x / (1 + |x|) for simplicity
-                code.push_str("    __m256 abs_input = _mm256_andnot_ps(_mm256_set1_ps(-0.0f), input_vec);\n");
+                code.push_str(
+                    "    __m256 abs_input = _mm256_andnot_ps(_mm256_set1_ps(-0.0f), input_vec);\n",
+                );
                 code.push_str("    __m256 one = _mm256_set1_ps(1.0f);\n");
                 code.push_str("    __m256 result = _mm256_div_ps(input_vec, _mm256_add_ps(one, abs_input));\n");
             }
@@ -1121,7 +1129,7 @@ impl JITCompiler {
     fn generate_scalar_activation(
         &self,
         activation: &ActivationType,
-        total_elements: usize,
+        _total_elements: usize,
     ) -> String {
         let mut code = String::new();
 
@@ -1285,7 +1293,9 @@ impl JITCompiler {
         inputs: &[&ArrayD<F>],
     ) -> Result<()> {
         if inputs.is_empty() {
-            return Err(NeuralError::InvalidInput("No inputs provided".to_string()));
+            return Err(NeuralError::InvalidArgument(
+                "No inputs provided".to_string(),
+            ));
         }
 
         // Additional validation logic would go here
@@ -1293,25 +1303,26 @@ impl JITCompiler {
     }
 
     /// Execute kernel using optimized fallback implementations
-    fn execute_kernel_placeholder<F: Float + Debug>(
+    fn execute_kernel_placeholder<F: Float + Debug + 'static>(
         &self,
         inputs: &[&ArrayD<F>],
         output_shape: &[usize],
     ) -> Result<ArrayD<F>> {
         if inputs.is_empty() {
-            return Err(NeuralError::InvalidInput("No inputs provided".to_string()));
+            return Err(NeuralError::InvalidArgument(
+                "No inputs provided".to_string(),
+            ));
         }
 
         // Use optimized fallback implementations based on operation type
         // This provides functional JIT execution while we build the compilation infrastructure
-        use scirs2_core::simd_ops::SimdUnifiedOps;
-        
+
         if inputs.len() == 2 && inputs[0].len() == inputs[1].len() {
             // Element-wise operation
             let mut output = Array::zeros(output_shape).into_dyn();
             let input0 = inputs[0];
             let input1 = inputs[1];
-            
+
             // Use SIMD-accelerated element-wise operations
             let flat_input0 = input0.as_slice().ok_or_else(|| {
                 NeuralError::ComputationError("Input 0 not contiguous".to_string())
@@ -1322,23 +1333,23 @@ impl JITCompiler {
             let flat_output = output.as_slice_mut().ok_or_else(|| {
                 NeuralError::ComputationError("Output not contiguous".to_string())
             })?;
-            
+
             // Convert to f32 for SIMD operations (simplified for now)
             if std::any::TypeId::of::<F>() == std::any::TypeId::of::<f32>() {
                 unsafe {
                     let input0_f32 = std::slice::from_raw_parts(
                         flat_input0.as_ptr() as *const f32,
-                        flat_input0.len()
+                        flat_input0.len(),
                     );
                     let input1_f32 = std::slice::from_raw_parts(
                         flat_input1.as_ptr() as *const f32,
-                        flat_input1.len()
+                        flat_input1.len(),
                     );
                     let output_f32 = std::slice::from_raw_parts_mut(
                         flat_output.as_mut_ptr() as *mut f32,
-                        flat_output.len()
+                        flat_output.len(),
                     );
-                    
+
                     // Use SIMD-accelerated addition as default
                     for i in 0..output_f32.len() {
                         output_f32[i] = input0_f32[i] + input1_f32[i];
@@ -1350,25 +1361,29 @@ impl JITCompiler {
                     flat_output[i] = flat_input0[i] + flat_input1[i];
                 }
             }
-            
+
             Ok(output)
         } else if inputs.len() == 1 {
             // Unary operation (activation, etc.)
             let mut output = Array::zeros(output_shape).into_dyn();
             let input0 = inputs[0];
-            
-            let flat_input = input0.as_slice().ok_or_else(|| {
-                NeuralError::ComputationError("Input not contiguous".to_string())
-            })?;
+
+            let flat_input = input0
+                .as_slice()
+                .ok_or_else(|| NeuralError::ComputationError("Input not contiguous".to_string()))?;
             let flat_output = output.as_slice_mut().ok_or_else(|| {
                 NeuralError::ComputationError("Output not contiguous".to_string())
             })?;
-            
+
             // Default to ReLU activation
             for i in 0..flat_output.len() {
-                flat_output[i] = if flat_input[i] > F::zero() { flat_input[i] } else { F::zero() };
+                flat_output[i] = if flat_input[i] > F::zero() {
+                    flat_input[i]
+                } else {
+                    F::zero()
+                };
             }
-            
+
             Ok(output)
         } else {
             // Complex operations - return identity for now

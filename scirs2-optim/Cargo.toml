@@ -29,7 +29,6 @@ serde_json = { workspace = true }
 serde_yaml = { version = "0.9" }
 num_cpus = { workspace = true }
 rand_chacha = "0.3"
-rayon = "1.8"
 uuid = { version = "1.6", features = ["v4", "serde"] }
 futures = { version = "0.3", features = ["executor"] }
 chrono = { version = "0.4", features = ["serde"] }
@@ -70,6 +69,10 @@ path = "src/bin/security_audit_scanner.rs"
 [[bin]]
 name = "dependency-vulnerability-scanner"
 path = "src/bin/dependency_vulnerability_scanner.rs"
+
+[[bin]]
+name = "validate_ultrathink"
+path = "src/bin/validate_ultrathink.rs"
 
 [dev-dependencies]
 plotters = { workspace = true }

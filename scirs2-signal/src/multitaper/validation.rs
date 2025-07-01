@@ -8,14 +8,14 @@
 
 // use super::dpss_enhanced::validate_dpss_implementation; // Commented out for now
 use super::psd::pmtm;
-use super::{enhanced_pmtm, EnhancedMultitaperResult, MultitaperConfig};
+use super::{enhanced_pmtm, MultitaperConfig};
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2};
+// Note: Array1, Array2 imports removed as unused
 use num_complex::Complex64;
 use rand::prelude::*;
 use rand::Rng;
 use scirs2_core::simd_ops::SimdUnifiedOps;
-use scirs2_core::validation::{check_finite, check_positive};
+// Note: validation imports removed as unused
 use std::f64::consts::PI;
 use std::time::Instant;
 
@@ -255,7 +255,13 @@ fn validate_dpss_comprehensive(n: usize, nw: f64, k: usize) -> SignalResult<Dpss
     }
 
     // Check eigenvalue ordering (should be descending)
-    let eigenvalue_ordering_valid = eigenvalues.windows(2).all(|w| w[0] >= w[1]);
+    let mut eigenvalue_ordering_valid = true;
+    for w in eigenvalues.windows(2) {
+        if w[0] < w[1] {
+            eigenvalue_ordering_valid = false;
+            break;
+        }
+    }
 
     // Check symmetry of first taper (should be symmetric for even n)
     let first_taper = tapers.row(0);
@@ -316,7 +322,7 @@ fn validate_spectral_accuracy(
         let noise_std = 1.0 / snr_linear.sqrt();
         let noisy_signal: Vec<f64> = signal
             .iter()
-            .map(|&s| s + noise_std * rng.gen_range(-1.0..1.0))
+            .map(|&s| s + noise_std * rng.random_range(-1.0..1.0))
             .collect();
 
         let result = enhanced_pmtm(&noisy_signal, &config)?;
@@ -529,6 +535,7 @@ fn benchmark_performance(test_signals: &TestSignalConfig) -> SignalResult<Perfor
             Some(test_signals.k),
             None,
             Some(true),
+            Some(false),
         )?;
     }
     let standard_time_ms = start.elapsed().as_secs_f64() * 100.0; // Convert to ms per iteration
@@ -593,13 +600,14 @@ fn cross_validate_with_reference(
         .collect();
 
     // Standard implementation (as reference)
-    let (ref_freqs, ref_psd) = pmtm(
+    let (ref_freqs, ref_psd, _, _) = pmtm(
         &signal,
         Some(test_signals.fs),
         Some(test_signals.nw),
         Some(test_signals.k),
         None,
         Some(true),
+        Some(false),
     )?;
 
     // Enhanced implementation
@@ -730,7 +738,7 @@ fn validate_confidence_intervals(
         // Add noise
         let noisy_signal: Vec<f64> = signal
             .iter()
-            .map(|&s| s + 0.1 * rng.gen_range(-1.0..1.0))
+            .map(|&s| s + 0.1 * rng.random_range(-1.0..1.0))
             .collect();
 
         let result = enhanced_pmtm(&noisy_signal, config)?;
@@ -840,7 +848,7 @@ pub fn generate_test_signal(
 
         TestSignalType::WhiteNoise => {
             // White Gaussian noise
-            (0..n).map(|_| rng.gen_range(-1.0..1.0)).collect()
+            (0..n).map(|_| rng.random_range(-1.0..1.0)).collect()
         }
 
         TestSignalType::ColoredNoise => {
@@ -852,7 +860,7 @@ pub fn generate_test_signal(
             let mut prev2 = 0.0;
 
             for i in 0..n {
-                let innovation = rng.gen_range(-1.0..1.0);
+                let innovation = rng.random_range(-1.0..1.0);
                 signal[i] = a1 * prev1 + a2 * prev2 + innovation;
                 prev2 = prev1;
                 prev1 = signal[i];
@@ -904,7 +912,7 @@ pub fn generate_test_signal(
 
         Ok(signal
             .into_iter()
-            .map(|s| s + noise_std * rng.gen_range(-1.0..1.0))
+            .map(|s| s + noise_std * rng.random_range(-1.0..1.0))
             .collect())
     } else {
         Ok(signal)
@@ -1122,13 +1130,14 @@ fn cross_validate_with_multiple_references(
         let signal = generate_test_signal(test_signals, *signal_type, false)?;
 
         // Standard implementation (reference)
-        let (ref_freqs, ref_psd) = pmtm(
+        let (ref_freqs, ref_psd, _, _) = pmtm(
             &signal,
             Some(test_signals.fs),
             Some(test_signals.nw),
             Some(test_signals.k),
             None,
             Some(true),
+            Some(false),
         )?;
 
         // Enhanced implementation
@@ -1179,8 +1188,8 @@ fn compute_relative_errors(ref_psd: &[f64], test_psd: &[f64]) -> Vec<f64> {
     ref_psd
         .iter()
         .zip(test_psd.iter())
-        .filter(|(&&r, _)| r > 1e-10)
-        .map(|(&&r, &&t)| (r - t).abs() / r)
+        .filter(|(&r, _)| r > 1e-10)
+        .map(|(&r, &t)| (r - t).abs() / r)
         .collect()
 }
 
@@ -1614,7 +1623,10 @@ pub fn validate_simd_operations(test_signals: &TestSignalConfig) -> SignalResult
         .map_err(|e| SignalError::ComputationError(format!("SIMD shape error: {}", e)))?;
 
     // Test SIMD multiplication
-    f64::simd_mul(&signal_view, &window_view, &result_view);
+    let simd_result = f64::simd_mul(&signal_view, &window_view);
+    for (i, &val) in simd_result.iter().enumerate() {
+        result[i] = val;
+    }
 
     // Validate SIMD multiplication results
     let mut max_error = 0.0;
@@ -1636,7 +1648,10 @@ pub fn validate_simd_operations(test_signals: &TestSignalConfig) -> SignalResult
     let add_result_view = ndarray::ArrayView1::from_shape(signal.len(), &mut add_result)
         .map_err(|e| SignalError::ComputationError(format!("SIMD add shape error: {}", e)))?;
 
-    f64::simd_add(&signal_view, &window_view, &add_result_view);
+    let add_simd_result = f64::simd_add(&signal_view, &window_view);
+    for (i, &val) in add_simd_result.iter().enumerate() {
+        add_result[i] = val;
+    }
 
     let mut add_max_error = 0.0;
     for (i, (&original, &simd_result)) in signal.iter().zip(add_result.iter()).enumerate() {
@@ -1657,7 +1672,10 @@ pub fn validate_simd_operations(test_signals: &TestSignalConfig) -> SignalResult
     let sub_result_view = ndarray::ArrayView1::from_shape(signal.len(), &mut sub_result)
         .map_err(|e| SignalError::ComputationError(format!("SIMD sub shape error: {}", e)))?;
 
-    f64::simd_sub(&signal_view, &window_view, &sub_result_view);
+    let sub_simd_result = f64::simd_sub(&signal_view, &window_view);
+    for (i, &val) in sub_simd_result.iter().enumerate() {
+        sub_result[i] = val;
+    }
 
     let mut sub_max_error = 0.0;
     for (i, (&original, &simd_result)) in signal.iter().zip(sub_result.iter()).enumerate() {

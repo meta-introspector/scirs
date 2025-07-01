@@ -133,13 +133,14 @@ impl PolynomialFeatures {
 
         if self.degree > 10 {
             return Err(TransformError::InvalidInput(
-                "Degree > 10 may cause numerical overflow. Please use a smaller degree.".to_string(),
+                "Degree > 10 may cause numerical overflow. Please use a smaller degree."
+                    .to_string(),
             ));
         }
 
         // Check for potential overflow before computing output features
         let n_output_features = self.n_output_features(n_features);
-        
+
         // Prevent excessive memory usage
         if n_output_features > 100_000 {
             return Err(TransformError::MemoryError(format!(
@@ -205,7 +206,7 @@ impl PolynomialFeatures {
                                 if p > 0 {
                                     let base = array[[i, j]];
                                     let powered = base.powi(p as i32);
-                                    
+
                                     // Check for overflow/underflow
                                     if !powered.is_finite() {
                                         return Err(TransformError::ComputationError(format!(
@@ -213,9 +214,9 @@ impl PolynomialFeatures {
                                             base, p, i, j
                                         )));
                                     }
-                                    
+
                                     val *= powered;
-                                    
+
                                     // Additional overflow check after multiplication
                                     if !val.is_finite() {
                                         return Err(TransformError::ComputationError(format!(
@@ -270,7 +271,8 @@ impl PolynomialFeatures {
         for &val in result.iter() {
             if !val.is_finite() {
                 return Err(TransformError::ComputationError(
-                    "Output contains non-finite values. This may be due to numerical overflow.".to_string(),
+                    "Output contains non-finite values. This may be due to numerical overflow."
+                        .to_string(),
                 ));
             }
         }

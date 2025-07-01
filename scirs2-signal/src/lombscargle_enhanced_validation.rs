@@ -2426,7 +2426,9 @@ fn test_cross_validation(
     let f_true = 8.0;
     let signal: Vec<f64> = t
         .iter()
-        .map(|&ti| (2.0 * PI * f_true * ti).sin() + 0.1 * rand::thread_rng().random_range(-1.0..1.0))
+        .map(|&ti| {
+            (2.0 * PI * f_true * ti).sin() + 0.1 * rand::thread_rng().random_range(-1.0..1.0)
+        })
         .collect();
 
     // K-fold cross-validation (k=5)
@@ -3804,8 +3806,7 @@ fn test_cross_validation_extended(
     let mut freq_estimates = Vec::new();
 
     for _ in 0..n_realizations {
-        let realization_noise: Vec<f64> =
-            (0..n).map(|_| 0.1 * rng.gen_range(-1.0..1.0)).collect();
+        let realization_noise: Vec<f64> = (0..n).map(|_| 0.1 * rng.gen_range(-1.0..1.0)).collect();
 
         let realization_y: Vec<f64> = clean_signal
             .iter()

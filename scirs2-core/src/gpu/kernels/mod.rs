@@ -263,6 +263,14 @@ impl KernelRegistry {
         registry.register(Box::new(complex::ComplexConjugateKernel::new()));
         registry.register(Box::new(complex::ComplexMatMulKernel::new()));
 
+        // Register RK4 integration kernels for ultrathink mode
+        registry.register(Box::new(create_rk4_stage1_kernel()));
+        registry.register(Box::new(create_rk4_stage2_kernel()));
+        registry.register(Box::new(create_rk4_stage3_kernel()));
+        registry.register(Box::new(create_rk4_stage4_kernel()));
+        registry.register(Box::new(create_rk4_combine_kernel()));
+        registry.register(Box::new(create_error_estimate_kernel()));
+
         registry
     }
 
@@ -298,4 +306,136 @@ impl Default for KernelRegistry {
     fn default() -> Self {
         Self::with_default_kernels()
     }
+}
+
+/// Create RK4 Stage 1 kernel for ultrathink mode GPU acceleration
+fn create_rk4_stage1_kernel() -> BaseKernel {
+    let cuda_source = include_str!("rk4_stage1.cu");
+    let metadata = KernelMetadata {
+        workgroup_size: [256, 1, 1],
+        local_memory_usage: 0,
+        supports_tensor_cores: false,
+        operation_type: OperationType::ComputeIntensive,
+        backend_metadata: HashMap::new(),
+    };
+
+    BaseKernel::new(
+        "rk4_stage1",
+        cuda_source,
+        cuda_source, // Use CUDA source for ROCm (HIP compatible)
+        "",          // WGPU source not implemented yet
+        "",          // Metal source not implemented yet
+        cuda_source, // Use CUDA source for OpenCL (with minor modifications)
+        metadata,
+    )
+}
+
+/// Create RK4 Stage 2 kernel for ultrathink mode GPU acceleration
+fn create_rk4_stage2_kernel() -> BaseKernel {
+    let cuda_source = include_str!("rk4_stage2.cu");
+    let metadata = KernelMetadata {
+        workgroup_size: [256, 1, 1],
+        local_memory_usage: 0,
+        supports_tensor_cores: false,
+        operation_type: OperationType::ComputeIntensive,
+        backend_metadata: HashMap::new(),
+    };
+
+    BaseKernel::new(
+        "rk4_stage2",
+        cuda_source,
+        cuda_source,
+        "",
+        "",
+        cuda_source,
+        metadata,
+    )
+}
+
+/// Create RK4 Stage 3 kernel for ultrathink mode GPU acceleration
+fn create_rk4_stage3_kernel() -> BaseKernel {
+    let cuda_source = include_str!("rk4_stage3.cu");
+    let metadata = KernelMetadata {
+        workgroup_size: [256, 1, 1],
+        local_memory_usage: 0,
+        supports_tensor_cores: false,
+        operation_type: OperationType::ComputeIntensive,
+        backend_metadata: HashMap::new(),
+    };
+
+    BaseKernel::new(
+        "rk4_stage3",
+        cuda_source,
+        cuda_source,
+        "",
+        "",
+        cuda_source,
+        metadata,
+    )
+}
+
+/// Create RK4 Stage 4 kernel for ultrathink mode GPU acceleration
+fn create_rk4_stage4_kernel() -> BaseKernel {
+    let cuda_source = include_str!("rk4_stage4.cu");
+    let metadata = KernelMetadata {
+        workgroup_size: [256, 1, 1],
+        local_memory_usage: 0,
+        supports_tensor_cores: false,
+        operation_type: OperationType::ComputeIntensive,
+        backend_metadata: HashMap::new(),
+    };
+
+    BaseKernel::new(
+        "rk4_stage4",
+        cuda_source,
+        cuda_source,
+        "",
+        "",
+        cuda_source,
+        metadata,
+    )
+}
+
+/// Create RK4 Combination kernel for ultrathink mode GPU acceleration
+fn create_rk4_combine_kernel() -> BaseKernel {
+    let cuda_source = include_str!("rk4_combine.cu");
+    let metadata = KernelMetadata {
+        workgroup_size: [256, 1, 1],
+        local_memory_usage: 0,
+        supports_tensor_cores: false,
+        operation_type: OperationType::MemoryIntensive,
+        backend_metadata: HashMap::new(),
+    };
+
+    BaseKernel::new(
+        "rk4_combine",
+        cuda_source,
+        cuda_source,
+        "",
+        "",
+        cuda_source,
+        metadata,
+    )
+}
+
+/// Create Error Estimation kernel for adaptive step size control
+fn create_error_estimate_kernel() -> BaseKernel {
+    let cuda_source = include_str!("error_estimate.cu");
+    let metadata = KernelMetadata {
+        workgroup_size: [256, 1, 1],
+        local_memory_usage: 1024, // Shared memory for reduction
+        supports_tensor_cores: false,
+        operation_type: OperationType::ComputeIntensive,
+        backend_metadata: HashMap::new(),
+    };
+
+    BaseKernel::new(
+        "error_estimate",
+        cuda_source,
+        cuda_source,
+        "",
+        "",
+        cuda_source,
+        metadata,
+    )
 }

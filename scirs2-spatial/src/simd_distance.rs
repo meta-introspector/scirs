@@ -489,7 +489,10 @@ pub mod ultra_simd_clustering {
         }
 
         /// Ultra-optimized SIMD K-means clustering
-        pub fn fit(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<(Array2<f64>, Array1<usize>)> {
+        pub fn fit(
+            &self,
+            points: &ArrayView2<'_, f64>,
+        ) -> SpatialResult<(Array2<f64>, Array1<usize>)> {
             let n_points = points.nrows();
             let n_dims = points.ncols();
 

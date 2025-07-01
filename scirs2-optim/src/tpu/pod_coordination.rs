@@ -1821,7 +1821,7 @@ impl TopologyManager {
 }
 
 impl<T: Float + Default + Clone> CommunicationManager<T> {
-    pub fn new(config: &PodCoordinationConfig) -> Result<Self, OptimizerError> {
+    pub fn new(_config: &PodCoordinationConfig) -> Result<Self, OptimizerError> {
         Ok(Self {
             active_communications: HashMap::new(),
             scheduler: HashMap::new(),
@@ -1880,7 +1880,7 @@ impl<T: Float + Default + Clone> CommunicationManager<T> {
 }
 
 impl SynchronizationManager {
-    pub fn new(config: &PodCoordinationConfig) -> Result<Self, OptimizerError> {
+    pub fn new(_config: &PodCoordinationConfig) -> Result<Self, OptimizerError> {
         Ok(Self {
             active_barriers: HashMap::new(),
             sync_events: VecDeque::new(),
@@ -1950,7 +1950,7 @@ impl PodLoadBalancer {
 }
 
 impl FaultToleranceManager {
-    pub fn new(config: &PodCoordinationConfig) -> Result<Self, OptimizerError> {
+    pub fn new(_config: &PodCoordinationConfig) -> Result<Self, OptimizerError> {
         Ok(Self {
             failure_detector: FailureDetector {
                 monitored_devices: HashSet::new(),

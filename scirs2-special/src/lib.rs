@@ -80,12 +80,12 @@ mod coulomb;
 pub mod cross_validation;
 mod distributions;
 pub mod edge_case_tests;
-mod elliptic;
-pub mod extended_scipy_validation;
 mod ellipsoidal;
+mod elliptic;
 mod erf;
 #[cfg(test)]
 mod extended_property_tests;
+pub mod extended_scipy_validation;
 mod fresnel;
 mod gamma;
 #[cfg(feature = "gpu")]
@@ -140,18 +140,18 @@ pub use bessel::{
     iv,
     ive,
     j0,
-    j0e,
     // Derivatives of Bessel functions
     j0_prime,
+    j0e,
     j1,
-    j1e,
     j1_prime,
+    j1e,
     jn,
-    jne,
     jn_prime,
+    jne,
     jv,
-    jve,
     jv_prime,
+    jve,
     k0,
     k0e,
     k1,
@@ -162,14 +162,14 @@ pub use bessel::{
     spherical_jn,
     spherical_yn,
     y0,
-    y0e,
     y0_prime,
+    y0e,
     y1,
-    y1e,
     y1_prime,
+    y1e,
     yn,
-    yne,
     yn_prime,
+    yne,
 };
 pub use bessel_zeros::{
     besselpoly,
@@ -221,13 +221,13 @@ pub use distributions::{
     // Student's t distribution
     stdtr,
 };
-pub use elliptic::{
-    elliptic_e, elliptic_e_inc, elliptic_f, elliptic_k, elliptic_pi, jacobi_cn, jacobi_dn,
-    jacobi_sn,
-};
 pub use ellipsoidal::{
     ellip_harm, ellip_harm_2, ellip_harm_array, ellip_harm_coefficients, ellip_harm_complex,
     ellip_normal,
+};
+pub use elliptic::{
+    elliptic_e, elliptic_e_inc, elliptic_f, elliptic_k, elliptic_pi, jacobi_cn, jacobi_dn,
+    jacobi_sn,
 };
 pub use fresnel::{
     fresnel, fresnel_complex, fresnelc, fresnels, mod_fresnel_minus, mod_fresnel_plus,
@@ -299,10 +299,10 @@ pub use utility::{
     exp10,
     exp10_array,
     exp2,
-    exprel,
     // Statistical functions (SciPy compatibility)
     expit,
     expit_array,
+    exprel,
     log_expit,
     logit,
     logit_array,

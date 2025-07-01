@@ -433,8 +433,8 @@ fn test_numerical_stability(config: &ValidationConfig) -> SignalResult<Stability
 
     for _ in 0..n_outliers {
         let idx = rng.gen_range(0..n);
-        contaminated[idx] += rng.gen_range(-10.0..10.0)
-            * contaminated.iter().map(|x| x.abs()).fold(0.0, f64::max);
+        contaminated[idx] +=
+            rng.gen_range(-10.0..10.0) * contaminated.iter().map(|x| x.abs()).fold(0.0, f64::max);
     }
 
     let (ar_robust, _, _) = estimate_ar(&contaminated, 3, ARMethod::Burg)?;

@@ -742,21 +742,22 @@ impl VisualSLAMSystem {
     ) -> Result<SLAMResult> {
         // Extract and track features
         let features = self.feature_tracker.extract_and_track_features(frame)?;
-        
+
         // Estimate camera pose
         let pose = self.pose_estimator.estimate_pose(&features, timestamp)?;
-        
+
         // Update 3D map
         let map_update = self.map_builder.update_map(&features, &pose)?;
-        
+
         // Check for loop closures
         let loop_closures = self.loop_detector.detect_closures(&features, &pose)?;
-        
+
         // Perform bundle adjustment if needed
         if !loop_closures.is_empty() {
-            self.bundle_adjuster.optimize_map(&map_update, &loop_closures)?;
+            self.bundle_adjuster
+                .optimize_map(&map_update, &loop_closures)?;
         }
-        
+
         // Update semantic map if scene analysis is available
         let semantic_map = if let Some(scene) = scene_analysis {
             self.semantic_mapper.update_semantic_map(scene, &pose)?
@@ -773,7 +774,7 @@ impl VisualSLAMSystem {
                 },
             }
         };
-        
+
         // Build result
         Ok(SLAMResult {
             trajectory: CameraTrajectory {
@@ -809,7 +810,7 @@ impl VisualSLAMSystem {
                 reconstruction_accuracy: 0.85,
             },
             performance_stats: SLAMPerformanceStats {
-                processing_times: vec![0.033], // 30 FPS
+                processing_times: vec![0.033],   // 30 FPS
                 memory_usage: vec![1024 * 1024], // 1 MB
                 tracking_success_rate: 0.95,
                 loop_closure_rate: 0.1,
@@ -843,32 +844,38 @@ impl VisualSLAMSystem {
                 overall_quality: 0.0,
             },
         };
-        
+
         let mut all_loop_closures = Vec::new();
         let mut pose_uncertainties = Vec::new();
-        
+
         // Process each frame
         for (i, (frame, &timestamp)) in frames.iter().zip(timestamps.iter()).enumerate() {
             let scene_analysis = scene_analyses.and_then(|analyses| analyses.get(i));
             let frame_result = self.process_frame(frame, timestamp, scene_analysis)?;
-            
+
             // Accumulate results
-            trajectory.timestamps.extend(frame_result.trajectory.timestamps);
+            trajectory
+                .timestamps
+                .extend(frame_result.trajectory.timestamps);
             trajectory.poses.extend(frame_result.trajectory.poses);
-            trajectory.covariances.extend(frame_result.trajectory.covariances);
+            trajectory
+                .covariances
+                .extend(frame_result.trajectory.covariances);
             all_loop_closures.extend(frame_result.loop_closures);
             pose_uncertainties.extend(frame_result.pose_uncertainty);
         }
-        
+
         // Global optimization after processing all frames
-        let final_map = self.bundle_adjuster.global_optimization(&trajectory, &all_loop_closures)?;
-        
+        let final_map = self
+            .bundle_adjuster
+            .global_optimization(&trajectory, &all_loop_closures)?;
+
         // Compute trajectory smoothness metrics
         trajectory.smoothness_metrics = self.compute_trajectory_metrics(&trajectory)?;
-        
+
         // Build final semantic map
         let final_semantic_map = self.semantic_mapper.finalize_semantic_map()?;
-        
+
         Ok(SLAMResult {
             trajectory,
             map_3d: final_map,
@@ -889,7 +896,7 @@ impl VisualSLAMSystem {
     ) -> Result<SLAMResult> {
         // Adapt processing based on available time budget
         self.adapt_processing_parameters(processing_budget)?;
-        
+
         // Process frame with adaptive parameters
         self.process_frame(frame, timestamp, None)
     }
@@ -902,16 +909,16 @@ impl VisualSLAMSystem {
     ) -> Result<()> {
         // Initialize pose estimator
         self.pose_estimator.initialize(camera_calibration)?;
-        
+
         // Initialize map with first frame
         self.map_builder.initialize(first_frame)?;
-        
+
         // Initialize feature tracker
         self.feature_tracker.initialize(first_frame)?;
-        
+
         // Initialize loop detector
         self.loop_detector.initialize()?;
-        
+
         Ok(())
     }
 
@@ -934,7 +941,10 @@ impl VisualSLAMSystem {
         Ok(())
     }
 
-    fn compute_trajectory_metrics(&self, _trajectory: &CameraTrajectory) -> Result<TrajectoryMetrics> {
+    fn compute_trajectory_metrics(
+        &self,
+        _trajectory: &CameraTrajectory,
+    ) -> Result<TrajectoryMetrics> {
         // Compute various trajectory quality metrics
         Ok(TrajectoryMetrics {
             smoothness_score: 0.85,
@@ -961,7 +971,7 @@ impl VisualSLAMSystem {
 
     fn compute_performance_stats(&self) -> Result<SLAMPerformanceStats> {
         Ok(SLAMPerformanceStats {
-            processing_times: vec![0.033; 100], // 30 FPS average
+            processing_times: vec![0.033; 100],        // 30 FPS average
             memory_usage: vec![10 * 1024 * 1024; 100], // 10 MB average
             tracking_success_rate: 0.95,
             loop_closure_rate: 0.12,
@@ -1045,7 +1055,10 @@ impl Map3DBuilder {
         Self {
             map_representation: MapRepresentationType::PointCloud,
             keyframe_strategy: KeyframeStrategy {
-                selection_criteria: vec![KeyframeCriterion::TranslationDistance, KeyframeCriterion::FeatureOverlap],
+                selection_criteria: vec![
+                    KeyframeCriterion::TranslationDistance,
+                    KeyframeCriterion::FeatureOverlap,
+                ],
                 min_keyframe_distance: 0.5,
                 max_keyframe_interval: 2.0,
                 quality_threshold: 0.7,
@@ -1126,7 +1139,11 @@ impl LoopClosureDetector {
         Ok(())
     }
 
-    fn detect_closures(&self, _features: &[Feature2D], _pose: &CameraPose) -> Result<Vec<LoopClosure>> {
+    fn detect_closures(
+        &self,
+        _features: &[Feature2D],
+        _pose: &CameraPose,
+    ) -> Result<Vec<LoopClosure>> {
         Ok(Vec::new()) // Placeholder
     }
 }
@@ -1154,7 +1171,11 @@ impl BundleAdjustmentOptimizer {
         Ok(())
     }
 
-    fn global_optimization(&mut self, _trajectory: &CameraTrajectory, _loop_closures: &[LoopClosure]) -> Result<Map3D> {
+    fn global_optimization(
+        &mut self,
+        _trajectory: &CameraTrajectory,
+        _loop_closures: &[LoopClosure],
+    ) -> Result<Map3D> {
         Ok(Map3D {
             landmarks: Vec::new(),
             structure: MapStructure {
@@ -1233,7 +1254,11 @@ impl SemanticMapper {
         }
     }
 
-    fn update_semantic_map(&mut self, _scene: &SceneAnalysisResult, _pose: &CameraPose) -> Result<SemanticMap> {
+    fn update_semantic_map(
+        &mut self,
+        _scene: &SceneAnalysisResult,
+        _pose: &CameraPose,
+    ) -> Result<SemanticMap> {
         Ok(SemanticMap {
             semantic_objects: Vec::new(),
             object_relationships: Vec::new(),
@@ -1289,7 +1314,10 @@ impl SLAMKnowledgeBase {
             failure_recovery: FailureRecoveryParams {
                 failure_detection_threshold: 0.3,
                 recovery_strategies: Vec::new(),
-                re_initialization_triggers: vec!["tracking_loss".to_string(), "low_features".to_string()],
+                re_initialization_triggers: vec![
+                    "tracking_loss".to_string(),
+                    "low_features".to_string(),
+                ],
             },
             performance_metrics: PerformanceMetrics {
                 tracking_accuracy_metrics: HashMap::new(),
@@ -1313,12 +1341,12 @@ pub fn process_visual_slam(
     scene_analyses: Option<&[SceneAnalysisResult]>,
 ) -> Result<SLAMResult> {
     let mut slam_system = VisualSLAMSystem::new();
-    
+
     // Initialize with first frame
     if !frames.is_empty() {
         slam_system.initialize(&frames[0], camera_calibration)?;
     }
-    
+
     // Process sequence
     slam_system.process_sequence(frames, timestamps, scene_analyses)
 }

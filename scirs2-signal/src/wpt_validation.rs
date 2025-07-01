@@ -149,11 +149,14 @@ where
     }
 
     // Additional robustness checks
-    let dynamic_range = signal_f64.iter().cloned().fold(f64::NEG_INFINITY, f64::max) 
-                      - signal_f64.iter().cloned().fold(f64::INFINITY, f64::min);
-    
+    let dynamic_range = signal_f64.iter().cloned().fold(f64::NEG_INFINITY, f64::max)
+        - signal_f64.iter().cloned().fold(f64::INFINITY, f64::min);
+
     if dynamic_range > 1e12 {
-        eprintln!("Warning: Very large dynamic range ({:.2e}). Consider normalizing the signal.", dynamic_range);
+        eprintln!(
+            "Warning: Very large dynamic range ({:.2e}). Consider normalizing the signal.",
+            dynamic_range
+        );
     }
 
     // Check for potential issues with the selected wavelet
@@ -1406,7 +1409,7 @@ fn validate_wavelet_compatibility(
     max_level: usize,
 ) -> SignalResult<Vec<String>> {
     let mut warnings = Vec::new();
-    
+
     // Get wavelet properties
     let filter_length = match wavelet.get_filter_length() {
         Ok(len) => len,
@@ -1429,7 +1432,7 @@ fn validate_wavelet_compatibility(
 
     // Analyze signal characteristics for wavelet suitability
     let signal_length = signal.len();
-    
+
     // Check if signal has appropriate frequency content for the selected wavelet
     if let Ok(spectral_info) = analyze_signal_spectrum(signal) {
         match wavelet {
@@ -1500,33 +1503,37 @@ fn validate_wavelet_compatibility(
 /// Analyze signal spectrum to provide wavelet selection guidance
 fn analyze_signal_spectrum(signal: &[f64]) -> SignalResult<SpectralInfo> {
     let n = signal.len();
-    
+
     // Compute basic spectral characteristics using autocorrelation-based approach
     // This is a simplified analysis - full implementation would use FFT
-    
+
     // Estimate smoothness by looking at consecutive differences
     let mut diff_sum = 0.0;
     let mut diff_count = 0;
     for i in 1..n {
-        diff_sum += (signal[i] - signal[i-1]).abs();
+        diff_sum += (signal[i] - signal[i - 1]).abs();
         diff_count += 1;
     }
-    let avg_diff = if diff_count > 0 { diff_sum / diff_count as f64 } else { 0.0 };
-    
+    let avg_diff = if diff_count > 0 {
+        diff_sum / diff_count as f64
+    } else {
+        0.0
+    };
+
     // Estimate signal variance
     let mean = signal.iter().sum::<f64>() / n as f64;
     let variance = signal.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / n as f64;
-    
+
     // Estimate high frequency content (simplified)
     let mut high_freq_energy = 0.0;
     let mut total_energy = 0.0;
-    
+
     for i in 1..n {
-        let local_diff = (signal[i] - signal[i-1]).powi(2);
+        let local_diff = (signal[i] - signal[i - 1]).powi(2);
         high_freq_energy += local_diff;
         total_energy += signal[i].powi(2);
     }
-    
+
     let high_freq_content = if total_energy > 1e-15 {
         high_freq_energy / total_energy
     } else {
@@ -1543,11 +1550,15 @@ fn analyze_signal_spectrum(signal: &[f64]) -> SignalResult<SpectralInfo> {
     // Estimate regularity using second-order differences
     let mut second_diff_sum = 0.0;
     for i in 2..n {
-        let second_diff = signal[i] - 2.0 * signal[i-1] + signal[i-2];
+        let second_diff = signal[i] - 2.0 * signal[i - 1] + signal[i - 2];
         second_diff_sum += second_diff.abs();
     }
-    let avg_second_diff = if n > 2 { second_diff_sum / (n - 2) as f64 } else { 0.0 };
-    
+    let avg_second_diff = if n > 2 {
+        second_diff_sum / (n - 2) as f64
+    } else {
+        0.0
+    };
+
     let regularity = if avg_diff > 1e-15 {
         1.0 / (1.0 + avg_second_diff / avg_diff)
     } else {
@@ -1598,7 +1609,7 @@ mod tests {
         let signal = vec![1.0, 2.0, 3.0, 2.0, 1.0, 0.0, -1.0, -2.0];
         let warnings = validate_wavelet_compatibility(&signal, Wavelet::DB(8), 3);
         assert!(warnings.is_ok());
-        
+
         // Should warn about signal being too short for DB8 with 3 levels
         let warning_list = warnings.unwrap();
         assert!(!warning_list.is_empty());
@@ -1607,13 +1618,11 @@ mod tests {
     #[test]
     fn test_spectral_analysis() {
         // Test with smooth signal
-        let smooth_signal: Vec<f64> = (0..64)
-            .map(|i| (i as f64 / 64.0).powi(2))
-            .collect();
-        
+        let smooth_signal: Vec<f64> = (0..64).map(|i| (i as f64 / 64.0).powi(2)).collect();
+
         let info = analyze_signal_spectrum(&smooth_signal);
         assert!(info.is_ok());
-        
+
         let spectral_info = info.unwrap();
         assert!(spectral_info.smoothness > 0.5); // Should be detected as smooth
     }
@@ -1624,7 +1633,7 @@ mod tests {
         let constant_signal = vec![5.0; 128];
         let result = validate_wpt(&constant_signal, Wavelet::Haar, 2, 1e-10);
         assert!(result.is_err()); // Should fail for constant signal
-        
+
         // Test very short signal
         let short_signal = vec![1.0, 2.0];
         let result = validate_wpt(&short_signal, Wavelet::DB(4), 3, 1e-10);

@@ -174,7 +174,11 @@ impl<N: Node, E: EdgeWeight, Ix: IndexType> Graph<N, E, Ix> {
                 .collect();
             Ok(neighbors)
         } else {
-            Err(GraphError::node_not_found_with_context(format!("{:?}", node), self.node_count(), "neighbors"))
+            Err(GraphError::node_not_found_with_context(
+                format!("{:?}", node),
+                self.node_count(),
+                "neighbors",
+            ))
         }
     }
 

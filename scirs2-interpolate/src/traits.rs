@@ -6,14 +6,26 @@
 use ndarray::{ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::{Debug, Display, LowerExp};
-use std::ops::{AddAssign, SubAssign};
+use std::ops::{AddAssign, DivAssign, MulAssign, RemAssign, SubAssign};
 
 /// Standard floating-point type for interpolation operations
 ///
 /// This trait combines all the common bounds needed for interpolation algorithms,
 /// providing a single consistent constraint across the library.
 pub trait InterpolationFloat:
-    Float + FromPrimitive + Debug + Display + LowerExp + AddAssign + SubAssign + Send + Sync + 'static
+    Float
+    + FromPrimitive
+    + Debug
+    + Display
+    + LowerExp
+    + AddAssign
+    + SubAssign
+    + MulAssign
+    + DivAssign
+    + RemAssign
+    + Send
+    + Sync
+    + 'static
 {
     /// Default epsilon value for this floating-point type
     fn default_epsilon() -> Self {

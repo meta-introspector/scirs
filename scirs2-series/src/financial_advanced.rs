@@ -343,8 +343,8 @@ impl<F: Float + Debug + Clone + std::iter::Sum + num_traits::FromPrimitive> Risk
             })
             .collect();
 
-        let downside_variance =
-            negative_returns.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(negative_returns.len()).unwrap();
+        let downside_variance = negative_returns.iter().fold(F::zero(), |acc, &x| acc + x)
+            / F::from(negative_returns.len()).unwrap();
         let downside_deviation = downside_variance.sqrt();
 
         if downside_deviation == F::zero() {

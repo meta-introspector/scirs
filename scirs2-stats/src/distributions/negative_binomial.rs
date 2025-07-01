@@ -363,7 +363,7 @@ impl<F: Float + NumCast> NegativeBinomial<F> {
     /// assert_eq!(samples.len(), 10);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let mut samples = Vec::with_capacity(size);
 
         // For integer r, we can use a sum of geometric variables
@@ -375,7 +375,7 @@ impl<F: Float + NumCast> NegativeBinomial<F> {
                 let mut sum = 0;
                 for _ in 0..r_usize {
                     // Generate geometric random variable (# failures before first success)
-                    let u: f64 = rng.random_range(0.0..1.0);
+                    let u: f64 = rng.gen_range(0.0..1.0);
                     let p_f64 = <f64 as num_traits::NumCast>::from(self.p).unwrap();
                     let geom_sample = (u.ln() / (1.0 - p_f64).ln()).floor() as usize;
                     sum += geom_sample;

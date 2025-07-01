@@ -84,11 +84,11 @@ impl ClusterMetrics {
     pub fn total_nodes(&self) -> usize {
         self.node_metrics.len()
     }
-    
+
     pub fn total_cpu_usage(&self) -> f64 {
         self.node_metrics.values().map(|m| m.cpu_usage).sum()
     }
-    
+
     pub fn total_memory_usage(&self) -> f64 {
         self.node_metrics.values().map(|m| m.memory_usage).sum()
     }
@@ -359,24 +359,33 @@ impl AutoScalingController {
         let avg_cpu = metrics.total_cpu_usage() / metrics.total_nodes() as f64;
         let avg_memory = metrics.total_memory_usage() / metrics.total_nodes() as f64;
 
-        if avg_cpu > self.config.cpu_scale_up_threshold || avg_memory > self.config.memory_scale_up_threshold {
+        if avg_cpu > self.config.cpu_scale_up_threshold
+            || avg_memory > self.config.memory_scale_up_threshold
+        {
             if metrics.total_nodes() < self.config.max_nodes {
                 return Ok(ScalingDecision {
                     action: ScalingAction::ScaleUp(1),
                     target_nodes: metrics.total_nodes() + 1,
-                    reason: format!("High resource usage: CPU {:.1}%, Memory {:.1}%", avg_cpu, avg_memory),
+                    reason: format!(
+                        "High resource usage: CPU {:.1}%, Memory {:.1}%",
+                        avg_cpu, avg_memory
+                    ),
                     confidence: 0.8,
                 });
             }
-        } else if avg_cpu < self.config.cpu_scale_down_threshold && avg_memory < self.config.memory_scale_down_threshold {
-            if metrics.total_nodes() > self.config.min_nodes {
-                return Ok(ScalingDecision {
-                    action: ScalingAction::ScaleDown(1),
-                    target_nodes: metrics.total_nodes() - 1,
-                    reason: format!("Low resource usage: CPU {:.1}%, Memory {:.1}%", avg_cpu, avg_memory),
-                    confidence: 0.8,
-                });
-            }
+        } else if avg_cpu < self.config.cpu_scale_down_threshold
+            && avg_memory < self.config.memory_scale_down_threshold
+            && metrics.total_nodes() > self.config.min_nodes
+        {
+            return Ok(ScalingDecision {
+                action: ScalingAction::ScaleDown(1),
+                target_nodes: metrics.total_nodes() - 1,
+                reason: format!(
+                    "Low resource usage: CPU {:.1}%, Memory {:.1}%",
+                    avg_cpu, avg_memory
+                ),
+                confidence: 0.8,
+            });
         }
 
         Ok(ScalingDecision {
@@ -910,7 +919,10 @@ impl std::fmt::Display for TaskType {
             TaskType::MetricsComputation { metric_names, .. } => {
                 write!(f, "MetricsComputation({})", metric_names.join(","))
             }
-            TaskType::DataMigration { source_shard, target_shard } => {
+            TaskType::DataMigration {
+                source_shard,
+                target_shard,
+            } => {
                 write!(f, "DataMigration({} -> {})", source_shard, target_shard)
             }
             TaskType::HealthCheck { node_id } => {
@@ -1288,7 +1300,7 @@ pub struct ClusterHealth {
 }
 
 /// Health status levels
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum HealthStatus {
     Healthy,
     Warning,
@@ -3834,7 +3846,7 @@ impl AutoScalingManager {
                     self.schedule_scale_down_operation(self.current_nodes - target_nodes)?;
                 }
             }
-            ScalingAction::Custom(action) => {
+            ScalingAction::Custom(ref action) => {
                 println!("Executing custom scaling action: {}", action);
             }
         }
@@ -4417,8 +4429,15 @@ impl DistributedClusterOrchestrator {
             ScalingAction::ScaleUp(count) => {
                 self.provision_new_nodes(count)?;
             }
-            ScalingAction::ScaleDown(nodes) => {
-                self.decommission_nodes(nodes)?;
+            ScalingAction::ScaleDown(count) => {
+                // Select nodes to decommission (e.g., least loaded nodes)
+                let mut node_ids_to_remove: Vec<String> = self
+                    .nodes
+                    .iter()
+                    .take(count)
+                    .map(|node| node.node_id.clone())
+                    .collect();
+                self.decommission_nodes(node_ids_to_remove)?;
             }
             ScalingAction::NoAction => {
                 // No action needed
@@ -4640,7 +4659,7 @@ impl DistributedClusterOrchestrator {
         Ok(())
     }
 
-    fn check_node_health(&self, node: &ClusterNode) -> Result<NodeHealth> {
+    fn check_node_health(&self, _node: &ClusterNode) -> Result<NodeHealth> {
         // Simplified health check
         Ok(NodeHealth {
             status: HealthStatus::Healthy,
@@ -4786,11 +4805,11 @@ impl AdvancedWorkScheduler {
         }
     }
 
-    fn select_nodes(
+    fn select_nodes<'a>(
         &self,
         job: &ScheduledJob,
-        available_nodes: &[ClusterNode],
-    ) -> Result<Vec<&ClusterNode>> {
+        available_nodes: &'a [ClusterNode],
+    ) -> Result<Vec<&'a ClusterNode>> {
         // Simplified node selection based on resource requirements
         let suitable_nodes: Vec<&ClusterNode> = available_nodes
             .iter()

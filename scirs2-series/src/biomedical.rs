@@ -6,7 +6,6 @@
 
 use crate::error::{Result, TimeSeriesError};
 use ndarray::{Array1, Array2, ArrayView1};
-use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::check_positive;
 use std::collections::HashMap;
 
@@ -148,7 +147,7 @@ impl ECGAnalysis {
                 metrics.insert("RMSSD".to_string(), rmssd);
 
                 // SDNN: Standard deviation of NN intervals
-                let mean_rr = rr_intervals.mean().unwrap();
+                let _mean_rr = rr_intervals.mean().unwrap();
                 let sdnn = rr_intervals.std(0.0) * 1000.0; // ms
                 metrics.insert("SDNN".to_string(), sdnn);
 
@@ -434,8 +433,8 @@ impl EEGAnalysis {
     fn calculate_band_power(
         &self,
         signal: &ArrayView1<f64>,
-        low_freq: f64,
-        high_freq: f64,
+        _low_freq: f64,
+        _high_freq: f64,
     ) -> Result<f64> {
         // Simplified power calculation using variance as proxy
         // In real implementation, would use FFT and integrate power spectrum
@@ -604,7 +603,7 @@ impl EMGAnalysis {
             ));
         }
 
-        let n = x.len() as f64;
+        let _n = x.len() as f64;
         let x_mean = x.mean().unwrap();
         let y_mean = y.mean().unwrap();
 
@@ -737,7 +736,7 @@ impl BiomedicalAnalysis {
         let mut sync_metrics = HashMap::new();
 
         // Example: ECG-EEG synchronization (heart-brain coupling)
-        if let (Some(ref ecg), Some(ref eeg)) = (&self.ecg, &self.eeg) {
+        if let (Some(ref _ecg), Some(ref _eeg)) = (&self.ecg, &self.eeg) {
             // This would implement phase coupling analysis between cardiac and neural signals
             // Simplified implementation
             sync_metrics.insert("ECG_EEG_Coupling".to_string(), 0.5);

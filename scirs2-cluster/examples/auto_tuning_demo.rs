@@ -367,7 +367,7 @@ fn create_high_dimensional_data(n_samples: usize, n_features: usize) -> Array2<f
         // Signal dimensions
         for dim in 0..signal_dims {
             let cluster_id = dim % 3;
-            let value = cluster_id as f64 * 3.0 + rng.gen_range(-1.0..1.0);
+            let value = cluster_id as f64 * 3.0 + rng.random_range(-1.0..1.0);
             data.push(value);
         }
 

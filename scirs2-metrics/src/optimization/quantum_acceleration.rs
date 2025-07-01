@@ -828,13 +828,16 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         let learning_rate = 0.01;
         let epsilon = 1e-6;
 
+        // Clone parameters once to avoid borrowing conflicts
+        let original_params = parameters.to_vec();
+
         for (i, param) in parameters.iter_mut().enumerate() {
             // Compute gradient using finite differences
             let original_param = *param;
 
-            // Create copies for evaluation to avoid borrowing conflicts
-            let mut params_plus = parameters.to_vec();
-            let mut params_minus = parameters.to_vec();
+            // Create copies for evaluation
+            let mut params_plus = original_params.clone();
+            let mut params_minus = original_params.clone();
 
             params_plus[i] = original_param + epsilon;
             params_minus[i] = original_param - epsilon;

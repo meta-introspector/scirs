@@ -373,9 +373,10 @@ pub use memory_optimization_advanced::{
     MemoryOptimizationReport, MemoryOptimizationSuite, MemoryProfile, StreamingStatsCalculator,
 };
 pub use memory_optimization_enhanced::{
-    create_enhanced_memory_optimizer, create_configured_memory_optimizer, 
-    EnhancedMemoryOptimizer, GarbageCollectionResult, MemoryStatistics as EnhancedMemoryStatistics,
-    OptimizationRecommendation as EnhancedOptimizationRecommendation, MemoryOptimizationConfig as EnhancedMemoryConfig,
+    create_configured_memory_optimizer, create_enhanced_memory_optimizer, EnhancedMemoryOptimizer,
+    GarbageCollectionResult, MemoryOptimizationConfig as EnhancedMemoryConfig,
+    MemoryStatistics as EnhancedMemoryStatistics,
+    OptimizationRecommendation as EnhancedOptimizationRecommendation,
 };
 pub use performance_optimization::{
     OptimizedCanonicalCorrelationAnalysis, OptimizedLinearDiscriminantAnalysis,
@@ -510,15 +511,15 @@ mod ultra_simd_comprehensive;
 mod ultra_simd_enhanced;
 pub use descriptive::*;
 pub use descriptive_simd::{descriptive_stats_simd, mean_simd, std_simd, variance_simd};
-pub use simd_enhanced_core::{
-    comprehensive_stats_simd as comprehensive_stats_enhanced, correlation_simd_enhanced, 
-    mean_enhanced, variance_enhanced, ComprehensiveStats,
-};
 pub use dispersion_simd::{
     coefficient_of_variation_simd, gini_simd, iqr_simd, mad_simd, median_abs_deviation_simd,
     percentile_range_simd, range_simd, sem_simd,
 };
 pub use moments_simd::{kurtosis_simd, moment_simd, moments_batch_simd, skewness_simd};
+pub use simd_enhanced_core::{
+    comprehensive_stats_simd as comprehensive_stats_enhanced, correlation_simd_enhanced,
+    mean_enhanced, variance_enhanced, ComprehensiveStats,
+};
 
 // Property-based testing framework
 pub use adaptive_memory_ultra_advanced::{
@@ -554,7 +555,8 @@ pub use memory_optimized_advanced::{
     cache_oblivious_matrix_mult, corrcoef_memory_aware, pca_memory_efficient,
     streaming_covariance_matrix, streaming_histogram_adaptive, streaming_pca_enhanced,
     streaming_quantiles_p2, streaming_regression_enhanced,
-    AdaptiveMemoryManager as AdvancedMemoryManager, MemoryConstraints, MemoryStatistics as AdvancedMemoryStatistics, PCAResult,
+    AdaptiveMemoryManager as AdvancedMemoryManager, MemoryConstraints,
+    MemoryStatistics as AdvancedMemoryStatistics, PCAResult,
 };
 pub use memory_optimized_v2::{
     mean_zero_copy, variance_cache_aware, LazyStats, MemoryConfig, MemoryPool, StreamingCovariance,
@@ -583,6 +585,11 @@ pub use parallel_advanced_v3::{
     AdvancedParallelConfig, ParallelBatchProcessor, ParallelCrossValidator, ParallelMatrixOps,
     ParallelMonteCarlo,
 };
+pub use parallel_enhanced_advanced::{
+    create_advanced_parallel_processor, create_configured_parallel_processor,
+    AdvancedParallelConfig as EnhancedAdvancedParallelConfig, AdvancedParallelProcessor,
+    ChunkStrategy,
+};
 pub use parallel_enhanced_v2::{
     bootstrap_parallel_enhanced, mean_parallel_enhanced, variance_parallel_enhanced, ParallelConfig,
 };
@@ -590,10 +597,6 @@ pub use parallel_enhanced_v4::{
     bootstrap_parallel_ultra, correlation_matrix_parallel_ultra, mean_parallel_ultra,
     variance_parallel_ultra, EnhancedParallelConfig, EnhancedParallelProcessor,
     MatrixParallelResult,
-};
-pub use parallel_enhanced_advanced::{
-    create_advanced_parallel_processor, create_configured_parallel_processor,
-    AdvancedParallelConfig as EnhancedAdvancedParallelConfig, AdvancedParallelProcessor, ChunkStrategy,
 };
 pub use parallel_stats::{
     bootstrap_parallel, corrcoef_parallel, mean_parallel, quantiles_parallel,
@@ -632,8 +635,8 @@ pub use simd_enhanced_v3::{
 pub use simd_enhanced_v4::{
     batch_normalize_simd, comprehensive_stats_simd, covariance_matrix_simd,
     exponential_moving_average_simd, outlier_detection_zscore_simd, quantiles_batch_simd,
-    robust_statistics_simd as robust_stats_v4_simd, sliding_window_stats_simd, ComprehensiveStats as V4ComprehensiveStats,
-    RobustStats, SlidingWindowStats,
+    robust_statistics_simd as robust_stats_v4_simd, sliding_window_stats_simd,
+    ComprehensiveStats as V4ComprehensiveStats, RobustStats, SlidingWindowStats,
 };
 pub use simd_enhanced_v5::{
     rolling_statistics_simd, BootstrapResult, BootstrapStatistic, KernelType as V5KernelType,

@@ -1227,7 +1227,8 @@ impl DistributedSpatialCluster {
                 if let Some(ref kdtree) = local_index.local_index.kdtree {
                     // Check if query point is within local bounds
                     if local_index.local_index.bounds.contains(query_point) {
-                        let (indices, distances) = kdtree.query(query_point.as_slice().unwrap(), k)?;
+                        let (indices, distances) =
+                            kdtree.query(query_point.as_slice().unwrap(), k)?;
 
                         for (idx, dist) in indices.iter().zip(distances.iter()) {
                             all_neighbors.push((*idx, *dist));

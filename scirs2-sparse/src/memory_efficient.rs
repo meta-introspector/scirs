@@ -106,7 +106,7 @@ where
     let element_size = std::mem::size_of::<T>();
 
     // Process matrix in chunks
-    let num_chunks = (rows + chunk_size - 1) / chunk_size;
+    let num_chunks = rows.div_ceil(chunk_size);
 
     for chunk_idx in 0..num_chunks {
         let row_start = chunk_idx * chunk_size;

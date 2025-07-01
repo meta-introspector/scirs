@@ -14,6 +14,7 @@
 use ndarray::{Array1, Array2, Array3};
 use num_complex::Complex;
 use num_traits::{Float, FromPrimitive};
+use std::collections::HashMap;
 use std::fmt::Debug;
 
 use crate::error::{Result, TimeSeriesError};
@@ -1077,7 +1078,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuralNetwork<F> {
                         // For simplicity, use a fixed gradient approximation
                         // In a real implementation, you'd compute the actual gradient
                         let loss_plus = F::from(0.1).unwrap(); // Placeholder
-                        
+
                         // Restore and perturb in opposite direction
                         layer.circuit.parameters[[layer_p, qubit, param]] =
                             layer.circuit.parameters[[layer_p, qubit, param]]
@@ -1125,7 +1126,7 @@ pub enum QuantumEnsembleMethod {
     QuantumInterference,
 }
 
-impl<F: Float + Debug + Clone + FromPrimitive> QuantumEnsemble<F> {
+impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum<F>> QuantumEnsemble<F> {
     /// Create new quantum ensemble
     pub fn new(
         num_models: usize,
@@ -1299,7 +1300,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumEnsemble<F> {
         }
 
         // Optimize ensemble weights
-        self.optimize_ensemble_weights(training_data, max_iterations / 2)?;
+        self.optimize_ensemble_weights(training_data)?;
 
         Ok(())
     }
@@ -1315,7 +1316,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumEnsemble<F> {
         // Objective function: minimize ensemble prediction error
         let objective = |weights: &Array1<F>| -> F {
             // Normalize weights
-            let weight_sum: F = weights.iter().sum();
+            let weight_sum: F = weights.iter().cloned().sum();
             let normalized_weights: Array1<F> = if weight_sum > F::zero() {
                 weights.mapv(|w| w / weight_sum)
             } else {
@@ -1354,7 +1355,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumEnsemble<F> {
         let optimal_weights = optimizer.optimize(objective)?;
 
         // Normalize and update model weights
-        let weight_sum: F = optimal_weights.iter().sum();
+        let weight_sum: F = optimal_weights.iter().cloned().sum();
         for i in 0..num_models {
             if i < optimal_weights.len() && weight_sum > F::zero() {
                 self.model_weights[i] = optimal_weights[i] / weight_sum;
@@ -1364,6 +1365,717 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumEnsemble<F> {
         }
 
         Ok(())
+    }
+}
+
+/// Quantum Tensor Network for Ultra-Advanced Time Series Analysis
+#[derive(Debug)]
+pub struct QuantumTensorNetwork<F: Float + Debug> {
+    /// Tensor network nodes
+    nodes: Vec<TensorNode<F>>,
+    /// Connection topology
+    connections: Vec<TensorConnection>,
+    /// Virtual bond dimensions
+    bond_dimensions: HashMap<usize, usize>,
+    /// Maximum entanglement entropy
+    max_entanglement: F,
+}
+
+/// Individual tensor node in the network
+#[derive(Debug, Clone)]
+pub struct TensorNode<F: Float + Debug> {
+    /// Node identifier
+    id: usize,
+    /// Tensor data
+    tensor: Array3<Complex<F>>,
+    /// Physical bonds (to data)
+    physical_bonds: Vec<usize>,
+    /// Virtual bonds (to other tensors)
+    virtual_bonds: Vec<usize>,
+    /// Node position in network
+    position: (usize, usize),
+}
+
+/// Connection between tensor nodes
+#[derive(Debug, Clone)]
+pub struct TensorConnection {
+    /// Source node
+    from_node: usize,
+    /// Target node  
+    to_node: usize,
+    /// Bond dimension
+    bond_dim: usize,
+    /// Connection strength
+    strength: f64,
+}
+
+impl<F: Float + Debug + Clone + FromPrimitive> QuantumTensorNetwork<F> {
+    /// Create new quantum tensor network for time series
+    pub fn new(sequence_length: usize, bond_dimension: usize) -> Self {
+        let mut nodes = Vec::new();
+        let mut connections = Vec::new();
+        let mut bond_dimensions = HashMap::new();
+
+        // Create chain topology for time series
+        for i in 0..sequence_length {
+            let node = TensorNode {
+                id: i,
+                tensor: Array3::zeros((2, bond_dimension, bond_dimension)), // 2 for qubit
+                physical_bonds: vec![i],
+                virtual_bonds: if i == 0 {
+                    vec![1]
+                } else if i == sequence_length - 1 {
+                    vec![i - 1]
+                } else {
+                    vec![i - 1, i + 1]
+                },
+                position: (i, 0),
+            };
+            nodes.push(node);
+
+            // Add connection to next node
+            if i < sequence_length - 1 {
+                connections.push(TensorConnection {
+                    from_node: i,
+                    to_node: i + 1,
+                    bond_dim: bond_dimension,
+                    strength: 1.0,
+                });
+                bond_dimensions.insert(i, bond_dimension);
+            }
+        }
+
+        Self {
+            nodes,
+            connections,
+            bond_dimensions,
+            max_entanglement: F::from(2.0).unwrap().ln(), // log(2) for qubits
+        }
+    }
+
+    /// Encode time series data into tensor network
+    pub fn encode_time_series(&mut self, data: &Array1<F>) -> Result<()> {
+        for (i, &value) in data.iter().enumerate().take(self.nodes.len()) {
+            // Encode data value into tensor using quantum embedding
+            let angle = value * F::from(std::f64::consts::PI).unwrap();
+            let cos_half = (angle / F::from(2.0).unwrap()).cos();
+            let sin_half = (angle / F::from(2.0).unwrap()).sin();
+
+            // Set tensor elements for quantum state |ψ⟩ = cos(θ/2)|0⟩ + sin(θ/2)|1⟩
+            self.nodes[i].tensor[[0, 0, 0]] = Complex::new(cos_half, F::zero());
+            self.nodes[i].tensor[[1, 0, 0]] = Complex::new(sin_half, F::zero());
+        }
+
+        Ok(())
+    }
+
+    /// Contract tensor network to extract quantum features
+    pub fn contract_network(&self) -> Result<Array1<F>> {
+        let num_nodes = self.nodes.len();
+        let mut result = Array1::zeros(num_nodes);
+
+        // Simplified contraction - measure expectation values
+        for (i, node) in self.nodes.iter().enumerate() {
+            let mut expectation = F::zero();
+
+            // Calculate ⟨ψ|Z|ψ⟩ for Pauli-Z measurement
+            for bond in 0..node.tensor.shape()[1].min(node.tensor.shape()[2]) {
+                let prob_0 = node.tensor[[0, bond, bond]].norm_sqr();
+                let prob_1 = node.tensor[[1, bond, bond]].norm_sqr();
+                expectation = expectation + prob_0 - prob_1;
+            }
+
+            result[i] = expectation / F::from(node.tensor.shape()[1]).unwrap();
+        }
+
+        Ok(result)
+    }
+
+    /// Optimize tensor network using variational methods
+    pub fn variational_optimization(
+        &mut self,
+        target_data: &Array1<F>,
+        max_iterations: usize,
+    ) -> Result<F> {
+        let mut best_loss = F::from(f64::INFINITY).unwrap();
+
+        for iteration in 0..max_iterations {
+            // Forward pass
+            let prediction = self.contract_network()?;
+
+            // Compute loss
+            let mut loss = F::zero();
+            for i in 0..prediction.len().min(target_data.len()) {
+                let diff = prediction[i] - target_data[i];
+                loss = loss + diff * diff;
+            }
+            loss = loss / F::from(prediction.len().min(target_data.len())).unwrap();
+
+            if loss < best_loss {
+                best_loss = loss;
+            }
+
+            // Update tensors using gradient-free optimization
+            self.update_tensors_variational(iteration)?;
+        }
+
+        Ok(best_loss)
+    }
+
+    /// Update tensor parameters using variational approach
+    fn update_tensors_variational(&mut self, iteration: usize) -> Result<()> {
+        let learning_rate = F::from(0.01).unwrap();
+        let perturbation_scale = F::from(0.1).unwrap();
+
+        for (node_idx, node) in self.nodes.iter_mut().enumerate() {
+            // Apply small random perturbations to tensor elements
+            for i in 0..node.tensor.shape()[0] {
+                for j in 0..node.tensor.shape()[1] {
+                    for k in 0..node.tensor.shape()[2] {
+                        let perturbation = F::from(
+                            ((iteration + node_idx + i + j + k) % 1000) as f64 / 1000.0 - 0.5,
+                        )
+                        .unwrap()
+                            * perturbation_scale;
+
+                        node.tensor[[i, j, k]] = Complex::new(
+                            node.tensor[[i, j, k]].re + perturbation * learning_rate,
+                            node.tensor[[i, j, k]].im,
+                        );
+                    }
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Calculate entanglement entropy between regions
+    pub fn calculate_entanglement_entropy(
+        &self,
+        region_a: &[usize],
+        region_b: &[usize],
+    ) -> Result<F> {
+        // Simplified entanglement calculation
+        let mut entropy = F::zero();
+
+        for &node_a in region_a {
+            for &node_b in region_b {
+                if node_a < self.nodes.len() && node_b < self.nodes.len() {
+                    // Calculate mutual information between nodes
+                    let node_a_ref = &self.nodes[node_a];
+                    let node_b_ref = &self.nodes[node_b];
+
+                    // Simplified calculation using tensor overlap
+                    let mut overlap = Complex::new(F::zero(), F::zero());
+                    let min_dim = node_a_ref.tensor.shape()[1].min(node_b_ref.tensor.shape()[1]);
+
+                    for i in 0..min_dim {
+                        for j in 0..min_dim {
+                            overlap = overlap
+                                + node_a_ref.tensor[[0, i, j]].conj()
+                                    * node_b_ref.tensor[[0, i, j]]
+                                + node_a_ref.tensor[[1, i, j]].conj()
+                                    * node_b_ref.tensor[[1, i, j]];
+                        }
+                    }
+
+                    let overlap_magnitude = overlap.norm();
+                    if overlap_magnitude > F::zero() {
+                        entropy = entropy - overlap_magnitude * overlap_magnitude.ln();
+                    }
+                }
+            }
+        }
+
+        // Normalize by region sizes
+        let normalization = F::from((region_a.len() * region_b.len()) as f64).unwrap();
+        Ok(entropy / normalization)
+    }
+}
+
+/// Quantum Error Correction for Noisy Quantum Time Series Processing
+#[derive(Debug)]
+pub struct QuantumErrorCorrection<F: Float + Debug> {
+    /// Error correction code type
+    code_type: ErrorCorrectionCode,
+    /// Number of physical qubits
+    physical_qubits: usize,
+    /// Number of logical qubits
+    logical_qubits: usize,
+    /// Error rates
+    error_rates: ErrorRates<F>,
+    /// Syndrome detection results
+    syndromes: Vec<SyndromeResult<F>>,
+}
+
+/// Types of quantum error correction codes
+#[derive(Debug, Clone)]
+pub enum ErrorCorrectionCode {
+    /// Surface code for 2D grid
+    SurfaceCode,
+    /// Repetition code
+    RepetitionCode,
+    /// Shor's 9-qubit code
+    ShorCode,
+    /// Steane 7-qubit code
+    SteaneCode,
+}
+
+/// Error rates for different types of quantum errors
+#[derive(Debug, Clone)]
+pub struct ErrorRates<F: Float> {
+    /// Bit flip error rate
+    pub bit_flip: F,
+    /// Phase flip error rate  
+    pub phase_flip: F,
+    /// Depolarization error rate
+    pub depolarization: F,
+    /// Measurement error rate
+    pub measurement: F,
+}
+
+/// Syndrome detection result
+#[derive(Debug, Clone)]
+pub struct SyndromeResult<F: Float> {
+    /// Detected error pattern
+    pub error_pattern: Vec<bool>,
+    /// Error probability
+    pub error_probability: F,
+    /// Correction applied
+    pub correction_applied: bool,
+    /// Confidence in correction
+    pub correction_confidence: F,
+}
+
+impl<F: Float + Debug + Clone + FromPrimitive> QuantumErrorCorrection<F> {
+    /// Create new quantum error correction system
+    pub fn new(code_type: ErrorCorrectionCode, logical_qubits: usize) -> Self {
+        let physical_qubits = match code_type {
+            ErrorCorrectionCode::RepetitionCode => logical_qubits * 3,
+            ErrorCorrectionCode::ShorCode => logical_qubits * 9,
+            ErrorCorrectionCode::SteaneCode => logical_qubits * 7,
+            ErrorCorrectionCode::SurfaceCode => {
+                // Estimate for surface code
+                let distance = (logical_qubits as f64).sqrt().ceil() as usize * 2 + 1;
+                distance * distance
+            }
+        };
+
+        Self {
+            code_type,
+            physical_qubits,
+            logical_qubits,
+            error_rates: ErrorRates {
+                bit_flip: F::from(0.001).unwrap(),
+                phase_flip: F::from(0.001).unwrap(),
+                depolarization: F::from(0.002).unwrap(),
+                measurement: F::from(0.01).unwrap(),
+            },
+            syndromes: Vec::new(),
+        }
+    }
+
+    /// Detect and correct errors in quantum state
+    pub fn detect_and_correct(&mut self, quantum_state: &mut QuantumState<F>) -> Result<bool> {
+        // Simulate error detection
+        let syndrome = self.measure_syndrome(quantum_state)?;
+
+        if self.has_correctable_error(&syndrome) {
+            self.apply_correction(quantum_state, &syndrome)?;
+            return Ok(true);
+        }
+
+        Ok(false)
+    }
+
+    /// Measure error syndrome
+    fn measure_syndrome(&self, quantum_state: &QuantumState<F>) -> Result<SyndromeResult<F>> {
+        let mut error_pattern = vec![false; self.physical_qubits];
+        let mut error_probability = F::zero();
+
+        // Simplified syndrome measurement
+        for i in 0..self.physical_qubits.min(quantum_state.amplitudes.len()) {
+            let amplitude = quantum_state.amplitudes[i];
+            let probability = amplitude.norm_sqr();
+
+            // Check if probability deviates from expected values
+            let expected_prob = F::one() / F::from(quantum_state.amplitudes.len()).unwrap();
+            let deviation = (probability - expected_prob).abs();
+
+            if deviation > F::from(0.1).unwrap() {
+                error_pattern[i] = true;
+                error_probability = error_probability + deviation;
+            }
+        }
+
+        Ok(SyndromeResult {
+            error_pattern,
+            error_probability,
+            correction_applied: false,
+            correction_confidence: F::zero(),
+        })
+    }
+
+    /// Check if error is correctable
+    fn has_correctable_error(&self, syndrome: &SyndromeResult<F>) -> bool {
+        let error_count = syndrome.error_pattern.iter().filter(|&&x| x).count();
+
+        match self.code_type {
+            ErrorCorrectionCode::RepetitionCode => error_count <= 1,
+            ErrorCorrectionCode::ShorCode => error_count <= 4,
+            ErrorCorrectionCode::SteaneCode => error_count <= 3,
+            ErrorCorrectionCode::SurfaceCode => error_count <= self.physical_qubits / 4,
+        }
+    }
+
+    /// Apply quantum error correction
+    fn apply_correction(
+        &mut self,
+        quantum_state: &mut QuantumState<F>,
+        syndrome: &SyndromeResult<F>,
+    ) -> Result<()> {
+        // Simplified error correction - normalize amplitudes
+        let mut total_prob = F::zero();
+        for amplitude in quantum_state.amplitudes.iter() {
+            total_prob = total_prob + amplitude.norm_sqr();
+        }
+
+        if total_prob > F::zero() {
+            let normalization = total_prob.sqrt();
+            for amplitude in quantum_state.amplitudes.iter_mut() {
+                *amplitude = *amplitude / Complex::new(normalization, F::zero());
+            }
+        }
+
+        // Record correction
+        let mut corrected_syndrome = syndrome.clone();
+        corrected_syndrome.correction_applied = true;
+        corrected_syndrome.correction_confidence = F::from(0.95).unwrap();
+        self.syndromes.push(corrected_syndrome);
+
+        Ok(())
+    }
+
+    /// Get error correction statistics
+    pub fn get_error_statistics(&self) -> (usize, F, F) {
+        let total_corrections = self.syndromes.len();
+        let successful_corrections = self
+            .syndromes
+            .iter()
+            .filter(|s| s.correction_applied)
+            .count();
+
+        let success_rate = if total_corrections > 0 {
+            F::from(successful_corrections).unwrap() / F::from(total_corrections).unwrap()
+        } else {
+            F::zero()
+        };
+
+        let avg_confidence = if successful_corrections > 0 {
+            self.syndromes
+                .iter()
+                .filter(|s| s.correction_applied)
+                .map(|s| s.correction_confidence)
+                .fold(F::zero(), |acc, x| acc + x)
+                / F::from(successful_corrections).unwrap()
+        } else {
+            F::zero()
+        };
+
+        (total_corrections, success_rate, avg_confidence)
+    }
+}
+
+/// Quantum Advantage Algorithm for Specific Time Series Problems
+#[derive(Debug)]
+pub struct QuantumAdvantagePredictor<F: Float + Debug> {
+    /// Quantum feature map
+    feature_map: QuantumFeatureMap<F>,
+    /// Quantum machine learning model
+    qml_model: QuantumMLModel<F>,
+    /// Classical comparison baseline
+    classical_baseline: ClassicalBaseline<F>,
+    /// Advantage metrics
+    advantage_metrics: AdvantageMetrics<F>,
+}
+
+/// Quantum feature mapping strategies
+#[derive(Debug)]
+pub struct QuantumFeatureMap<F: Float + Debug> {
+    /// Encoding strategy
+    encoding: QuantumEncoding,
+    /// Number of qubits for encoding
+    num_qubits: usize,
+    /// Feature transformation parameters
+    parameters: Array2<F>,
+}
+
+/// Quantum encoding strategies
+#[derive(Debug, Clone)]
+pub enum QuantumEncoding {
+    /// Amplitude encoding
+    AmplitudeEncoding,
+    /// Angle encoding  
+    AngleEncoding,
+    /// Basis encoding
+    BasisEncoding,
+    /// Quantum Random Access Memory (QRAM)
+    QRAM,
+}
+
+/// Quantum machine learning model
+#[derive(Debug)]
+pub struct QuantumMLModel<F: Float + Debug> {
+    /// Variational quantum circuit
+    vqc: VariationalQuantumCircuit<F>,
+    /// Quantum kernels
+    kernels: Vec<QuantumKernel<F>>,
+    /// Model parameters
+    parameters: Array1<F>,
+}
+
+/// Classical baseline for comparison
+#[derive(Debug)]
+pub struct ClassicalBaseline<F: Float + Debug> {
+    /// Linear regression coefficients
+    linear_weights: Array1<F>,
+    /// Neural network weights (simplified)
+    nn_weights: Array2<F>,
+    /// Performance metrics
+    performance: PerformanceMetrics<F>,
+}
+
+/// Performance metrics for quantum vs classical comparison
+#[derive(Debug, Clone)]
+pub struct PerformanceMetrics<F: Float> {
+    /// Mean squared error
+    pub mse: F,
+    /// Training time
+    pub training_time: F,
+    /// Inference time
+    pub inference_time: F,
+    /// Memory usage
+    pub memory_usage: F,
+}
+
+/// Quantum advantage metrics
+#[derive(Debug)]
+pub struct AdvantageMetrics<F: Float + Debug> {
+    /// Speedup over classical
+    pub speedup: F,
+    /// Accuracy improvement
+    pub accuracy_improvement: F,
+    /// Memory efficiency gain
+    pub memory_efficiency: F,
+    /// Problem size where advantage appears
+    pub advantage_threshold: usize,
+}
+
+impl<F: Float + Debug + Clone + FromPrimitive> QuantumAdvantagePredictor<F> {
+    /// Create new quantum advantage predictor
+    pub fn new(num_features: usize, num_qubits: usize) -> Self {
+        let feature_map = QuantumFeatureMap {
+            encoding: QuantumEncoding::AngleEncoding,
+            num_qubits,
+            parameters: Array2::zeros((num_qubits, 3)),
+        };
+
+        let qml_model = QuantumMLModel {
+            vqc: VariationalQuantumCircuit::new(num_qubits, 3, num_features),
+            kernels: vec![QuantumKernel::new(
+                num_qubits,
+                QuantumKernelType::FeatureMap,
+            )],
+            parameters: Array1::zeros(num_qubits * 3),
+        };
+
+        let classical_baseline = ClassicalBaseline {
+            linear_weights: Array1::zeros(num_features),
+            nn_weights: Array2::zeros((num_features, 10)),
+            performance: PerformanceMetrics {
+                mse: F::zero(),
+                training_time: F::zero(),
+                inference_time: F::zero(),
+                memory_usage: F::zero(),
+            },
+        };
+
+        Self {
+            feature_map,
+            qml_model,
+            classical_baseline,
+            advantage_metrics: AdvantageMetrics {
+                speedup: F::one(),
+                accuracy_improvement: F::zero(),
+                memory_efficiency: F::one(),
+                advantage_threshold: 1000,
+            },
+        }
+    }
+
+    /// Train and evaluate quantum advantage
+    pub fn evaluate_quantum_advantage(
+        &mut self,
+        training_data: &[(Array1<F>, F)],
+        test_data: &[(Array1<F>, F)],
+    ) -> Result<AdvantageMetrics<F>> {
+        // Train quantum model
+        let quantum_start = std::time::Instant::now();
+        self.train_quantum_model(training_data)?;
+        let quantum_train_time = quantum_start.elapsed().as_secs_f64();
+
+        // Train classical baseline
+        let classical_start = std::time::Instant::now();
+        self.train_classical_baseline(training_data)?;
+        let classical_train_time = classical_start.elapsed().as_secs_f64();
+
+        // Evaluate on test data
+        let quantum_performance = self.evaluate_quantum_model(test_data)?;
+        let classical_performance = self.evaluate_classical_model(test_data)?;
+
+        // Calculate advantage metrics
+        self.advantage_metrics.speedup =
+            F::from(classical_train_time / quantum_train_time.max(0.001)).unwrap();
+        self.advantage_metrics.accuracy_improvement =
+            (classical_performance.mse - quantum_performance.mse) / classical_performance.mse;
+        self.advantage_metrics.memory_efficiency = classical_performance.memory_usage
+            / quantum_performance
+                .memory_usage
+                .max(F::from(0.001).unwrap());
+
+        Ok(self.advantage_metrics.clone())
+    }
+
+    /// Train quantum model
+    fn train_quantum_model(&mut self, training_data: &[(Array1<F>, F)]) -> Result<()> {
+        // Simplified quantum training using variational methods
+        for _epoch in 0..10 {
+            for (features, _target) in training_data.iter().take(100) {
+                // Limit for demo
+                let _quantum_features = self.qml_model.vqc.forward(features)?;
+                // Gradient updates would go here in full implementation
+            }
+        }
+        Ok(())
+    }
+
+    /// Train classical baseline
+    fn train_classical_baseline(&mut self, training_data: &[(Array1<F>, F)]) -> Result<()> {
+        // Simple linear regression
+        let n = training_data.len();
+        if n == 0 {
+            return Ok(());
+        }
+
+        let feature_dim = training_data[0].0.len();
+        let mut x_matrix = Array2::zeros((n, feature_dim));
+        let mut y_vector = Array1::zeros(n);
+
+        for (i, (features, target)) in training_data.iter().enumerate() {
+            for j in 0..feature_dim.min(features.len()) {
+                x_matrix[[i, j]] = features[j];
+            }
+            y_vector[i] = *target;
+        }
+
+        // Simplified normal equation: w = (X^T X)^(-1) X^T y
+        // For demo purposes, use simple average
+        for j in 0..feature_dim.min(self.classical_baseline.linear_weights.len()) {
+            let mut sum = F::zero();
+            for i in 0..n {
+                sum = sum + x_matrix[[i, j]];
+            }
+            self.classical_baseline.linear_weights[j] = sum / F::from(n).unwrap();
+        }
+
+        Ok(())
+    }
+
+    /// Evaluate quantum model performance
+    fn evaluate_quantum_model(
+        &self,
+        test_data: &[(Array1<F>, F)],
+    ) -> Result<PerformanceMetrics<F>> {
+        let mut total_error = F::zero();
+        let mut valid_predictions = 0;
+
+        let start_time = std::time::Instant::now();
+
+        for (features, target) in test_data.iter().take(100) {
+            // Limit for demo
+            if let Ok(quantum_output) = self.qml_model.vqc.forward(features) {
+                let prediction =
+                    quantum_output.iter().sum::<F>() / F::from(quantum_output.len()).unwrap();
+                let error = prediction - *target;
+                total_error = total_error + error * error;
+                valid_predictions += 1;
+            }
+        }
+
+        let inference_time = start_time.elapsed().as_secs_f64();
+
+        let mse = if valid_predictions > 0 {
+            total_error / F::from(valid_predictions).unwrap()
+        } else {
+            F::from(f64::INFINITY).unwrap()
+        };
+
+        Ok(PerformanceMetrics {
+            mse,
+            training_time: F::zero(), // Would be tracked separately
+            inference_time: F::from(inference_time).unwrap(),
+            memory_usage: F::from(self.qml_model.vqc.num_qubits * 8).unwrap(), // Simplified
+        })
+    }
+
+    /// Evaluate classical model performance
+    fn evaluate_classical_model(
+        &self,
+        test_data: &[(Array1<F>, F)],
+    ) -> Result<PerformanceMetrics<F>> {
+        let mut total_error = F::zero();
+        let mut valid_predictions = 0;
+
+        let start_time = std::time::Instant::now();
+
+        for (features, target) in test_data.iter().take(100) {
+            // Limit for demo
+            // Simple linear prediction
+            let mut prediction = F::zero();
+            for i in 0..features
+                .len()
+                .min(self.classical_baseline.linear_weights.len())
+            {
+                prediction = prediction + features[i] * self.classical_baseline.linear_weights[i];
+            }
+
+            let error = prediction - *target;
+            total_error = total_error + error * error;
+            valid_predictions += 1;
+        }
+
+        let inference_time = start_time.elapsed().as_secs_f64();
+
+        let mse = if valid_predictions > 0 {
+            total_error / F::from(valid_predictions).unwrap()
+        } else {
+            F::from(f64::INFINITY).unwrap()
+        };
+
+        Ok(PerformanceMetrics {
+            mse,
+            training_time: F::zero(),
+            inference_time: F::from(inference_time).unwrap(),
+            memory_usage: F::from(self.classical_baseline.linear_weights.len() * 8).unwrap(),
+        })
+    }
+
+    /// Determine if quantum advantage exists for given problem size
+    pub fn has_quantum_advantage(&self, problem_size: usize) -> bool {
+        problem_size >= self.advantage_metrics.advantage_threshold
+            && self.advantage_metrics.speedup > F::one()
+            && self.advantage_metrics.accuracy_improvement > F::zero()
     }
 }
 
@@ -1478,5 +2190,176 @@ mod quantum_advanced_tests {
         for &val in &tanh_output {
             assert!(val >= -1.0 && val <= 1.0);
         }
+    }
+
+    #[test]
+    fn test_quantum_tensor_network() {
+        let mut qtn = QuantumTensorNetwork::<f64>::new(5, 3);
+
+        // Test network structure
+        assert_eq!(qtn.nodes.len(), 5);
+        assert_eq!(qtn.connections.len(), 4); // Chain topology
+
+        // Test data encoding
+        let data = Array1::from_vec(vec![0.1, 0.2, 0.3, 0.4, 0.5]);
+        qtn.encode_time_series(&data).unwrap();
+
+        // Test network contraction
+        let features = qtn.contract_network().unwrap();
+        assert_eq!(features.len(), 5);
+
+        // Test variational optimization
+        let target = Array1::from_vec(vec![0.15, 0.25, 0.35, 0.45, 0.55]);
+        let final_loss = qtn.variational_optimization(&target, 10).unwrap();
+        assert!(final_loss >= 0.0);
+
+        // Test entanglement entropy calculation
+        let region_a = vec![0, 1];
+        let region_b = vec![3, 4];
+        let entropy = qtn
+            .calculate_entanglement_entropy(&region_a, &region_b)
+            .unwrap();
+        assert!(entropy >= 0.0);
+    }
+
+    #[test]
+    fn test_quantum_error_correction() {
+        let mut qec = QuantumErrorCorrection::<f64>::new(ErrorCorrectionCode::RepetitionCode, 2);
+
+        // Test error correction system properties
+        assert_eq!(qec.physical_qubits, 6); // 2 logical * 3 physical for repetition code
+        assert_eq!(qec.logical_qubits, 2);
+
+        // Test error detection and correction
+        let mut quantum_state = QuantumState::<f64>::new(3);
+        quantum_state.create_superposition();
+
+        let correction_applied = qec.detect_and_correct(&mut quantum_state).unwrap();
+        // Should attempt correction for superposition state
+
+        // Test error statistics
+        let (total, success_rate, confidence) = qec.get_error_statistics();
+        assert!(success_rate >= 0.0 && success_rate <= 1.0);
+        assert!(confidence >= 0.0 && confidence <= 1.0);
+
+        // Test different error correction codes
+        let qec_shor = QuantumErrorCorrection::<f64>::new(ErrorCorrectionCode::ShorCode, 1);
+        assert_eq!(qec_shor.physical_qubits, 9); // Shor's 9-qubit code
+
+        let qec_steane = QuantumErrorCorrection::<f64>::new(ErrorCorrectionCode::SteaneCode, 1);
+        assert_eq!(qec_steane.physical_qubits, 7); // Steane 7-qubit code
+    }
+
+    #[test]
+    fn test_quantum_advantage_predictor() {
+        let mut qap = QuantumAdvantagePredictor::<f64>::new(4, 3);
+
+        // Generate synthetic training and test data
+        let mut training_data = Vec::new();
+        let mut test_data = Vec::new();
+
+        for i in 0..20 {
+            let features = Array1::from_vec(vec![
+                i as f64 * 0.1,
+                (i as f64 * 0.2).sin(),
+                (i as f64 * 0.3).cos(),
+                i as f64 * 0.05,
+            ]);
+            let target = features.sum() / features.len() as f64;
+
+            if i < 15 {
+                training_data.push((features, target));
+            } else {
+                test_data.push((features, target));
+            }
+        }
+
+        // Evaluate quantum advantage
+        let advantage_metrics = qap
+            .evaluate_quantum_advantage(&training_data, &test_data)
+            .unwrap();
+
+        // Check advantage metrics are reasonable
+        assert!(advantage_metrics.speedup >= 0.0);
+        assert!(advantage_metrics.memory_efficiency >= 0.0);
+        assert_eq!(advantage_metrics.advantage_threshold, 1000);
+
+        // Test quantum advantage detection
+        let has_advantage_small = qap.has_quantum_advantage(100);
+        let has_advantage_large = qap.has_quantum_advantage(2000);
+
+        // Small problems typically don't show quantum advantage
+        // Large problems might (depends on speedup and accuracy)
+    }
+
+    #[test]
+    fn test_quantum_encoding_strategies() {
+        let feature_map = QuantumFeatureMap::<f64> {
+            encoding: QuantumEncoding::AngleEncoding,
+            num_qubits: 3,
+            parameters: Array2::zeros((3, 3)),
+        };
+
+        // Test different encoding types
+        let angle_encoding = QuantumEncoding::AngleEncoding;
+        let amplitude_encoding = QuantumEncoding::AmplitudeEncoding;
+        let basis_encoding = QuantumEncoding::BasisEncoding;
+        let qram_encoding = QuantumEncoding::QRAM;
+
+        // All should be valid encoding strategies
+        match angle_encoding {
+            QuantumEncoding::AngleEncoding => assert!(true),
+            _ => assert!(false),
+        }
+
+        match amplitude_encoding {
+            QuantumEncoding::AmplitudeEncoding => assert!(true),
+            _ => assert!(false),
+        }
+
+        match basis_encoding {
+            QuantumEncoding::BasisEncoding => assert!(true),
+            _ => assert!(false),
+        }
+
+        match qram_encoding {
+            QuantumEncoding::QRAM => assert!(true),
+            _ => assert!(false),
+        }
+    }
+
+    #[test]
+    fn test_performance_metrics() {
+        let metrics = PerformanceMetrics::<f64> {
+            mse: 0.1,
+            training_time: 1.5,
+            inference_time: 0.001,
+            memory_usage: 512.0,
+        };
+
+        assert_eq!(metrics.mse, 0.1);
+        assert_eq!(metrics.training_time, 1.5);
+        assert_eq!(metrics.inference_time, 0.001);
+        assert_eq!(metrics.memory_usage, 512.0);
+    }
+
+    #[test]
+    fn test_quantum_error_rates() {
+        let error_rates = ErrorRates::<f64> {
+            bit_flip: 0.001,
+            phase_flip: 0.001,
+            depolarization: 0.002,
+            measurement: 0.01,
+        };
+
+        // Verify all error rates are reasonable (between 0 and 1)
+        assert!(error_rates.bit_flip >= 0.0 && error_rates.bit_flip <= 1.0);
+        assert!(error_rates.phase_flip >= 0.0 && error_rates.phase_flip <= 1.0);
+        assert!(error_rates.depolarization >= 0.0 && error_rates.depolarization <= 1.0);
+        assert!(error_rates.measurement >= 0.0 && error_rates.measurement <= 1.0);
+
+        // Measurement errors should typically be higher than gate errors
+        assert!(error_rates.measurement > error_rates.bit_flip);
+        assert!(error_rates.measurement > error_rates.phase_flip);
     }
 }

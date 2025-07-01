@@ -2,18 +2,18 @@
 //!
 //! This module provides enhanced numerical robustness and advanced analysis capabilities
 //! for Linear Time-Invariant system controllability and observability properties.
-//! 
+//!
 //! Key Features:
 //! - Numerically robust matrix computations using SVD-based methods
-//! - Sensitivity analysis to parameter perturbations 
+//! - Sensitivity analysis to parameter perturbations
 //! - Structured perturbation analysis for real-world robustness
 //! - Performance-oriented controllability/observability metrics
 //! - Frequency-domain controllability/observability measures
 //! - Advanced condition assessment and uncertainty quantification
 //! - Multi-scale Gramian analysis for different time horizons
 
+use super::analysis::{ControllabilityAnalysis, KalmanDecomposition, ObservabilityAnalysis};
 use super::systems::StateSpace;
-use super::analysis::{ControllabilityAnalysis, ObservabilityAnalysis, KalmanDecomposition};
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_complex::Complex64;
@@ -359,7 +359,7 @@ pub fn robust_control_observability_analysis(
     check_finite(&ss.b, "B matrix")?;
     check_finite(&ss.c, "C matrix")?;
     check_finite(&ss.d, "D matrix")?;
-    
+
     let n = ss.n_states;
     if n == 0 {
         return Err(SignalError::ValueError("Empty state matrix".to_string()));
@@ -367,22 +367,22 @@ pub fn robust_control_observability_analysis(
 
     // Enhanced controllability analysis
     let enhanced_controllability = enhanced_controllability_analysis(ss, config)?;
-    
+
     // Enhanced observability analysis
     let enhanced_observability = enhanced_observability_analysis(ss, config)?;
-    
+
     // Sensitivity analysis
     let sensitivity_analysis = compute_sensitivity_analysis(ss, config)?;
-    
+
     // Structured perturbation analysis
     let structured_analysis = structured_perturbation_analysis(ss, config)?;
-    
+
     // Performance-oriented metrics
     let performance_metrics = compute_performance_oriented_metrics(ss, config)?;
-    
+
     // Frequency-domain analysis
     let frequency_analysis = frequency_domain_analysis(ss, config)?;
-    
+
     // Calculate overall robustness score
     let robustness_score = calculate_robustness_score(
         &enhanced_controllability,
@@ -390,7 +390,7 @@ pub fn robust_control_observability_analysis(
         &sensitivity_analysis,
         &structured_analysis,
     );
-    
+
     // Identify critical issues
     let robustness_issues = identify_robustness_issues(
         &enhanced_controllability,
@@ -458,22 +458,22 @@ fn enhanced_controllability_analysis(
 ) -> SignalResult<EnhancedControllabilityAnalysis> {
     let n = ss.n_states;
     let m = ss.n_inputs;
-    
+
     // Build controllability matrix using robust numerics
     let controllability_matrix = build_controllability_matrix_robust(ss)?;
-    
+
     // Basic analysis (for compatibility)
     let basic_analysis = crate::lti::analysis::analyze_controllability(ss)?;
-    
+
     // SVD-based analysis
     let svd_analysis = svd_controllability_analysis(&controllability_matrix, config)?;
-    
+
     // Numerical conditioning assessment
     let conditioning = assess_numerical_conditioning(&controllability_matrix, config)?;
-    
+
     // Mode controllability degrees
     let mode_controllability_degrees = compute_mode_controllability_degrees(ss, config)?;
-    
+
     // Minimum energy analysis
     let minimum_energy_analysis = compute_minimum_energy_analysis(ss, config)?;
 
@@ -493,22 +493,22 @@ fn enhanced_observability_analysis(
 ) -> SignalResult<EnhancedObservabilityAnalysis> {
     let n = ss.n_states;
     let p = ss.n_outputs;
-    
+
     // Build observability matrix using robust numerics
     let observability_matrix = build_observability_matrix_robust(ss)?;
-    
+
     // Basic analysis (for compatibility)
     let basic_analysis = crate::lti::analysis::analyze_observability(ss)?;
-    
+
     // SVD-based analysis
     let svd_analysis = svd_observability_analysis(&observability_matrix, config)?;
-    
+
     // Numerical conditioning assessment
     let conditioning = assess_numerical_conditioning(&observability_matrix, config)?;
-    
+
     // Mode observability degrees
     let mode_observability_degrees = compute_mode_observability_degrees(ss, config)?;
-    
+
     // Minimum variance analysis
     let minimum_variance_analysis = compute_minimum_variance_analysis(ss, config)?;
 
@@ -525,32 +525,34 @@ fn enhanced_observability_analysis(
 fn build_controllability_matrix_robust(ss: &StateSpace) -> SignalResult<Array2<f64>> {
     let n = ss.n_states;
     let m = ss.n_inputs;
-    
+
     if n == 0 || m == 0 {
-        return Err(SignalError::ValueError("Invalid matrix dimensions".to_string()));
+        return Err(SignalError::ValueError(
+            "Invalid matrix dimensions".to_string(),
+        ));
     }
-    
+
     // Convert to proper matrix format
     let a_matrix = Array2::from_shape_vec((n, n), ss.a.clone())
         .map_err(|_| SignalError::ValueError("Invalid A matrix shape".to_string()))?;
     let b_matrix = Array2::from_shape_vec((n, m), ss.b.clone())
         .map_err(|_| SignalError::ValueError("Invalid B matrix shape".to_string()))?;
-    
+
     // Build controllability matrix: [B AB A²B ... A^(n-1)B]
     let mut controllability = Array2::zeros((n, n * m));
     let mut current_ab = b_matrix.clone();
-    
+
     // Place B in first m columns
     for i in 0..n {
         for j in 0..m {
             controllability[[i, j]] = current_ab[[i, j]];
         }
     }
-    
+
     // Compute and place AB, A²B, ..., A^(n-1)B
     for k in 1..n {
         current_ab = a_matrix.dot(&current_ab);
-        
+
         let start_col = k * m;
         for i in 0..n {
             for j in 0..m {
@@ -560,7 +562,7 @@ fn build_controllability_matrix_robust(ss: &StateSpace) -> SignalResult<Array2<f
             }
         }
     }
-    
+
     Ok(controllability)
 }
 
@@ -568,32 +570,34 @@ fn build_controllability_matrix_robust(ss: &StateSpace) -> SignalResult<Array2<f
 fn build_observability_matrix_robust(ss: &StateSpace) -> SignalResult<Array2<f64>> {
     let n = ss.n_states;
     let p = ss.n_outputs;
-    
+
     if n == 0 || p == 0 {
-        return Err(SignalError::ValueError("Invalid matrix dimensions".to_string()));
+        return Err(SignalError::ValueError(
+            "Invalid matrix dimensions".to_string(),
+        ));
     }
-    
+
     // Convert to proper matrix format
     let a_matrix = Array2::from_shape_vec((n, n), ss.a.clone())
         .map_err(|_| SignalError::ValueError("Invalid A matrix shape".to_string()))?;
     let c_matrix = Array2::from_shape_vec((p, n), ss.c.clone())
         .map_err(|_| SignalError::ValueError("Invalid C matrix shape".to_string()))?;
-    
+
     // Build observability matrix: [C; CA; CA²; ...; CA^(n-1)]
     let mut observability = Array2::zeros((n * p, n));
     let mut current_ca = c_matrix.clone();
-    
+
     // Place C in first p rows
     for i in 0..p {
         for j in 0..n {
             observability[[i, j]] = current_ca[[i, j]];
         }
     }
-    
+
     // Compute and place CA, CA², ..., CA^(n-1)
     for k in 1..n {
         current_ca = current_ca.dot(&a_matrix);
-        
+
         let start_row = k * p;
         for i in 0..p {
             for j in 0..n {
@@ -603,7 +607,7 @@ fn build_observability_matrix_robust(ss: &StateSpace) -> SignalResult<Array2<f64
             }
         }
     }
-    
+
     Ok(observability)
 }
 
@@ -613,12 +617,12 @@ fn svd_controllability_analysis(
     config: &RobustAnalysisConfig,
 ) -> SignalResult<SvdControllabilityAnalysis> {
     let (m, n) = controllability_matrix.dim();
-    
+
     // Simplified SVD computation (placeholder for full implementation)
     let mut singular_values = Array1::zeros(m.min(n));
     let mut left_singular_vectors = Array2::eye(m);
     let mut right_singular_vectors = Array2::eye(n);
-    
+
     // Compute singular values (simplified implementation)
     // In practice, would use sophisticated SVD algorithms
     for i in 0..m.min(n) {
@@ -628,7 +632,7 @@ fn svd_controllability_analysis(
         }
         singular_values[i] = sum.sqrt();
     }
-    
+
     // Sort singular values in descending order
     let mut sv_with_indices: Vec<(f64, usize)> = singular_values
         .iter()
@@ -636,39 +640,39 @@ fn svd_controllability_analysis(
         .map(|(i, &sv)| (sv, i))
         .collect();
     sv_with_indices.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
-    
+
     for (i, &(sv, _)) in sv_with_indices.iter().enumerate() {
         if i < singular_values.len() {
             singular_values[i] = sv;
         }
     }
-    
+
     // Determine numerical rank
     let max_sv = singular_values[0];
     let numerical_rank = singular_values
         .iter()
         .take_while(|&&sv| sv > config.numerical_tolerance * max_sv)
         .count();
-    
+
     // Effective rank based on condition number
     let condition_number = if singular_values[numerical_rank.saturating_sub(1)] > 1e-15 {
         max_sv / singular_values[numerical_rank.saturating_sub(1)]
     } else {
         f64::INFINITY
     };
-    
+
     let effective_rank = if condition_number < 1e12 {
         numerical_rank
     } else {
         numerical_rank.saturating_sub(1)
     };
-    
+
     // Compute singular value gaps
     let mut gaps = Array1::zeros(singular_values.len().saturating_sub(1));
     for i in 0..gaps.len() {
         gaps[i] = singular_values[i] - singular_values[i + 1];
     }
-    
+
     Ok(SvdControllabilityAnalysis {
         singular_values,
         left_singular_vectors,
@@ -685,12 +689,12 @@ fn svd_observability_analysis(
     config: &RobustAnalysisConfig,
 ) -> SignalResult<SvdObservabilityAnalysis> {
     let (m, n) = observability_matrix.dim();
-    
+
     // Simplified SVD computation (placeholder for full implementation)
     let mut singular_values = Array1::zeros(m.min(n));
     let mut left_singular_vectors = Array2::eye(m);
     let mut right_singular_vectors = Array2::eye(n);
-    
+
     // Compute singular values (simplified implementation)
     for i in 0..m.min(n) {
         let mut sum = 0.0;
@@ -699,7 +703,7 @@ fn svd_observability_analysis(
         }
         singular_values[i] = sum.sqrt();
     }
-    
+
     // Sort singular values in descending order
     let mut sv_with_indices: Vec<(f64, usize)> = singular_values
         .iter()
@@ -707,39 +711,39 @@ fn svd_observability_analysis(
         .map(|(i, &sv)| (sv, i))
         .collect();
     sv_with_indices.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
-    
+
     for (i, &(sv, _)) in sv_with_indices.iter().enumerate() {
         if i < singular_values.len() {
             singular_values[i] = sv;
         }
     }
-    
+
     // Determine numerical rank
     let max_sv = singular_values[0];
     let numerical_rank = singular_values
         .iter()
         .take_while(|&&sv| sv > config.numerical_tolerance * max_sv)
         .count();
-    
+
     // Effective rank based on condition number
     let condition_number = if singular_values[numerical_rank.saturating_sub(1)] > 1e-15 {
         max_sv / singular_values[numerical_rank.saturating_sub(1)]
     } else {
         f64::INFINITY
     };
-    
+
     let effective_rank = if condition_number < 1e12 {
         numerical_rank
     } else {
         numerical_rank.saturating_sub(1)
     };
-    
+
     // Compute singular value gaps
     let mut gaps = Array1::zeros(singular_values.len().saturating_sub(1));
     for i in 0..gaps.len() {
         gaps[i] = singular_values[i] - singular_values[i + 1];
     }
-    
+
     Ok(SvdObservabilityAnalysis {
         singular_values,
         left_singular_vectors,
@@ -756,7 +760,7 @@ fn assess_numerical_conditioning(
     config: &RobustAnalysisConfig,
 ) -> SignalResult<NumericalConditioning> {
     let (m, n) = matrix.dim();
-    
+
     // Compute Frobenius norm
     let mut frobenius_norm_sq = 0.0;
     for i in 0..m {
@@ -765,21 +769,21 @@ fn assess_numerical_conditioning(
         }
     }
     let frobenius_norm = frobenius_norm_sq.sqrt();
-    
+
     // Simplified condition number estimates
     let condition_number_2 = estimate_condition_number_2_norm(matrix);
     let condition_number_f = frobenius_norm * (m.min(n) as f64).sqrt();
-    
+
     // Distance to singularity (simplified estimate)
     let distance_to_singularity = 1.0 / condition_number_2;
-    
+
     // Stability margin
     let stability_margin = if condition_number_2 < 1e12 {
         1.0 - (condition_number_2.log10() / 12.0)
     } else {
         0.0
     };
-    
+
     Ok(NumericalConditioning {
         condition_number_2,
         condition_number_f,
@@ -792,11 +796,11 @@ fn assess_numerical_conditioning(
 /// Estimate 2-norm condition number
 fn estimate_condition_number_2_norm(matrix: &Array2<f64>) -> f64 {
     let (m, n) = matrix.dim();
-    
+
     // Simplified power iteration for largest singular value
     let max_iter = 50;
     let mut v = Array1::ones(n);
-    
+
     for _ in 0..max_iter {
         // Compute A^T * A * v
         let mut atav = Array1::zeros(n);
@@ -809,14 +813,14 @@ fn estimate_condition_number_2_norm(matrix: &Array2<f64>) -> f64 {
                 atav[i] += ata_ij * v[j];
             }
         }
-        
+
         // Normalize
         let norm = atav.iter().map(|x| x.powi(2)).sum::<f64>().sqrt();
         if norm > 1e-12 {
             v = atav / norm;
         }
     }
-    
+
     // Estimate largest singular value
     let mut max_sv_sq = 0.0;
     for i in 0..n {
@@ -829,10 +833,10 @@ fn estimate_condition_number_2_norm(matrix: &Array2<f64>) -> f64 {
         }
     }
     let max_sv = max_sv_sq.sqrt();
-    
+
     // Simplified estimate for smallest singular value
     let min_sv = estimate_smallest_singular_value(matrix);
-    
+
     if min_sv > 1e-15 {
         max_sv / min_sv
     } else {
@@ -843,7 +847,7 @@ fn estimate_condition_number_2_norm(matrix: &Array2<f64>) -> f64 {
 /// Estimate smallest singular value (simplified)
 fn estimate_smallest_singular_value(matrix: &Array2<f64>) -> f64 {
     let (m, n) = matrix.dim();
-    
+
     // Simplified estimate using Frobenius norm
     let mut frobenius_norm_sq = 0.0;
     for i in 0..m {
@@ -851,7 +855,7 @@ fn estimate_smallest_singular_value(matrix: &Array2<f64>) -> f64 {
             frobenius_norm_sq += matrix[[i, j]].powi(2);
         }
     }
-    
+
     let dimension = (m * n) as f64;
     (frobenius_norm_sq / dimension).sqrt()
 }
@@ -862,25 +866,25 @@ fn compute_mode_controllability_degrees(
     _config: &RobustAnalysisConfig,
 ) -> SignalResult<Array1<f64>> {
     let n = ss.n_states;
-    
+
     // Simplified implementation - compute controllability degree for each state
     let mut degrees = Array1::zeros(n);
-    
+
     // Compute A matrix in proper format
     let a_matrix = Array2::from_shape_vec((n, n), ss.a.clone())
         .map_err(|_| SignalError::ValueError("Invalid A matrix shape".to_string()))?;
     let b_matrix = Array2::from_shape_vec((n, ss.n_inputs), ss.b.clone())
         .map_err(|_| SignalError::ValueError("Invalid B matrix shape".to_string()))?;
-    
+
     // For each state, compute how well it can be controlled
     for i in 0..n {
         let mut controllability_measure = 0.0;
-        
+
         // Sum of squared input influence for this state
         for j in 0..ss.n_inputs {
             controllability_measure += b_matrix[[i, j]].powi(2);
         }
-        
+
         // Add indirect controllability through state coupling
         for k in 0..n {
             if k != i {
@@ -890,16 +894,16 @@ fn compute_mode_controllability_degrees(
                 }
             }
         }
-        
+
         degrees[i] = controllability_measure.sqrt();
     }
-    
+
     // Normalize
     let max_degree = degrees.iter().cloned().fold(0.0, f64::max);
     if max_degree > 1e-12 {
         degrees /= max_degree;
     }
-    
+
     Ok(degrees)
 }
 
@@ -909,25 +913,25 @@ fn compute_mode_observability_degrees(
     _config: &RobustAnalysisConfig,
 ) -> SignalResult<Array1<f64>> {
     let n = ss.n_states;
-    
+
     // Simplified implementation - compute observability degree for each state
     let mut degrees = Array1::zeros(n);
-    
+
     // Compute A and C matrices in proper format
     let a_matrix = Array2::from_shape_vec((n, n), ss.a.clone())
         .map_err(|_| SignalError::ValueError("Invalid A matrix shape".to_string()))?;
     let c_matrix = Array2::from_shape_vec((ss.n_outputs, n), ss.c.clone())
         .map_err(|_| SignalError::ValueError("Invalid C matrix shape".to_string()))?;
-    
+
     // For each state, compute how well it can be observed
     for i in 0..n {
         let mut observability_measure = 0.0;
-        
+
         // Sum of squared output influence for this state
         for j in 0..ss.n_outputs {
             observability_measure += c_matrix[[j, i]].powi(2);
         }
-        
+
         // Add indirect observability through state coupling
         for k in 0..n {
             if k != i {
@@ -937,16 +941,16 @@ fn compute_mode_observability_degrees(
                 }
             }
         }
-        
+
         degrees[i] = observability_measure.sqrt();
     }
-    
+
     // Normalize
     let max_degree = degrees.iter().cloned().fold(0.0, f64::max);
     if max_degree > 1e-12 {
         degrees /= max_degree;
     }
-    
+
     Ok(degrees)
 }
 
@@ -957,14 +961,14 @@ fn compute_minimum_energy_analysis(
 ) -> SignalResult<MinimumEnergyAnalysis> {
     let n = ss.n_states;
     let m = ss.n_inputs;
-    
+
     // Simplified minimum energy analysis
     let min_control_energy = 1.0; // Placeholder
     let energy_distribution = Array1::ones(m) / (m as f64);
     let time_varying_energy = Array1::ones(10); // 10 time points
     let optimal_control_directions = Array2::eye(m);
     let gramian_condition_number = 1.0; // Placeholder
-    
+
     Ok(MinimumEnergyAnalysis {
         min_control_energy,
         energy_distribution,
@@ -981,14 +985,14 @@ fn compute_minimum_variance_analysis(
 ) -> SignalResult<MinimumVarianceAnalysis> {
     let n = ss.n_states;
     let p = ss.n_outputs;
-    
+
     // Simplified minimum variance analysis
     let min_estimation_variance = 1.0; // Placeholder
     let variance_distribution = Array1::ones(p) / (p as f64);
     let time_varying_variance = Array1::ones(10); // 10 time points
     let optimal_sensing_directions = Array2::eye(p);
     let gramian_condition_number = 1.0; // Placeholder
-    
+
     Ok(MinimumVarianceAnalysis {
         min_estimation_variance,
         variance_distribution,
@@ -1014,14 +1018,14 @@ fn compute_sensitivity_analysis(
             max_observability_perturbation: f64::INFINITY,
         });
     }
-    
+
     let n = ss.n_states;
     let m = ss.n_inputs;
     let p = ss.n_outputs;
-    
+
     // Simplified sensitivity analysis using finite differences
     let perturbation = 1e-6;
-    
+
     // Sensitivity of controllability to A matrix
     let mut ctrl_sens_a = Array2::zeros((n, n));
     for i in 0..n {
@@ -1029,24 +1033,24 @@ fn compute_sensitivity_analysis(
             // Perturb A[i,j] and compute change in controllability measure
             let mut perturbed_ss = ss.clone();
             perturbed_ss.a[i * n + j] += perturbation;
-            
+
             // Simplified controllability measure (Frobenius norm of controllability matrix)
             let original_measure = compute_controllability_measure(ss)?;
             let perturbed_measure = compute_controllability_measure(&perturbed_ss)?;
-            
+
             ctrl_sens_a[[i, j]] = (perturbed_measure - original_measure) / perturbation;
         }
     }
-    
+
     // Similar computations for other sensitivities (simplified)
     let controllability_sensitivity_b = Array2::zeros((n, m));
     let observability_sensitivity_a = Array2::zeros((n, n));
     let observability_sensitivity_c = Array2::zeros((p, n));
-    
+
     // Compute maximum tolerable perturbations
     let max_controllability_perturbation = 0.1; // Placeholder
     let max_observability_perturbation = 0.1; // Placeholder
-    
+
     Ok(SensitivityAnalysisResults {
         controllability_sensitivity_a: ctrl_sens_a,
         controllability_sensitivity_b,
@@ -1060,7 +1064,7 @@ fn compute_sensitivity_analysis(
 /// Compute simplified controllability measure
 fn compute_controllability_measure(ss: &StateSpace) -> SignalResult<f64> {
     let controllability_matrix = build_controllability_matrix_robust(ss)?;
-    
+
     // Compute Frobenius norm as controllability measure
     let mut norm_sq = 0.0;
     let (m, n) = controllability_matrix.dim();
@@ -1069,7 +1073,7 @@ fn compute_controllability_measure(ss: &StateSpace) -> SignalResult<f64> {
             norm_sq += controllability_matrix[[i, j]].powi(2);
         }
     }
-    
+
     Ok(norm_sq.sqrt())
 }
 
@@ -1117,7 +1121,7 @@ fn structured_perturbation_analysis(
             },
         });
     }
-    
+
     // Placeholder for structured analysis
     Ok(StructuredPerturbationAnalysis {
         multiplicative_robustness: MultiplcativeRobustness {
@@ -1164,7 +1168,7 @@ fn compute_performance_oriented_metrics(
 ) -> SignalResult<PerformanceOrientedMetrics> {
     let minimum_energy_control = compute_minimum_energy_analysis(ss, config)?;
     let minimum_variance_estimation = compute_minimum_variance_analysis(ss, config)?;
-    
+
     // Control effort analysis
     let control_effort_analysis = ControlEffortAnalysis {
         max_control_effort: 1.0,
@@ -1176,7 +1180,7 @@ fn compute_performance_oriented_metrics(
             performance_degradation: 0.1,
         },
     };
-    
+
     // Estimation accuracy analysis
     let estimation_accuracy_analysis = EstimationAccuracyAnalysis {
         worst_case_error: 0.2,
@@ -1188,7 +1192,7 @@ fn compute_performance_oriented_metrics(
             worst_case_noise: Array1::ones(ss.n_outputs) * 0.1,
         },
     };
-    
+
     Ok(PerformanceOrientedMetrics {
         minimum_energy_control,
         minimum_variance_estimation,
@@ -1204,20 +1208,20 @@ fn frequency_domain_analysis(
 ) -> SignalResult<FrequencyDomainAnalysis> {
     let num_freq = config.num_frequency_points;
     let (f_min, f_max) = config.frequency_range;
-    
+
     // Generate logarithmically spaced frequencies
     let mut frequencies = Array1::zeros(num_freq);
     let log_step = (f_max / f_min).ln() / (num_freq - 1) as f64;
     for i in 0..num_freq {
         frequencies[i] = f_min * (i as f64 * log_step).exp();
     }
-    
+
     // Placeholder computations for frequency-domain measures
     let frequency_controllability = Array1::ones(num_freq) * 0.9;
     let frequency_observability = Array1::ones(num_freq) * 0.85;
     let frequency_hankel_sv = Array2::ones((num_freq, 5)); // 5 Hankel singular values
     let frequency_condition_numbers = Array1::ones(num_freq) * 10.0;
-    
+
     Ok(FrequencyDomainAnalysis {
         frequencies,
         frequency_controllability,
@@ -1236,7 +1240,7 @@ fn calculate_robustness_score(
 ) -> f64 {
     // Weighted combination of different robustness measures
     let mut score = 0.0;
-    
+
     // Controllability contribution (25%)
     let ctrl_score = if controllability.basic_analysis.is_controllable {
         controllability.conditioning.stability_margin
@@ -1244,7 +1248,7 @@ fn calculate_robustness_score(
         0.0
     };
     score += 0.25 * ctrl_score;
-    
+
     // Observability contribution (25%)
     let obs_score = if observability.basic_analysis.is_observable {
         observability.conditioning.stability_margin
@@ -1252,15 +1256,15 @@ fn calculate_robustness_score(
         0.0
     };
     score += 0.25 * obs_score;
-    
+
     // Sensitivity robustness (25%)
     let sens_score = (1.0 / (1.0 + sensitivity.max_controllability_perturbation.recip())).min(1.0);
     score += 0.25 * sens_score;
-    
+
     // Structured robustness (25%)
     let struct_score = structured.multiplicative_robustness.stability_margin;
     score += 0.25 * struct_score;
-    
+
     // Convert to 0-100 scale
     (score * 100.0).max(0.0).min(100.0)
 }
@@ -1274,39 +1278,39 @@ fn identify_robustness_issues(
     _config: &RobustAnalysisConfig,
 ) -> Vec<String> {
     let mut issues = Vec::new();
-    
+
     // Check controllability issues
     if !controllability.basic_analysis.is_controllable {
         issues.push("System is not completely controllable".to_string());
     } else if controllability.conditioning.condition_number_2 > 1e10 {
         issues.push("Controllability matrix is very ill-conditioned".to_string());
     }
-    
+
     // Check observability issues
     if !observability.basic_analysis.is_observable {
         issues.push("System is not completely observable".to_string());
     } else if observability.conditioning.condition_number_2 > 1e10 {
         issues.push("Observability matrix is very ill-conditioned".to_string());
     }
-    
+
     // Check sensitivity issues
     if sensitivity.max_controllability_perturbation < 0.01 {
         issues.push("System controllability is very sensitive to parameter changes".to_string());
     }
-    
+
     if sensitivity.max_observability_perturbation < 0.01 {
         issues.push("System observability is very sensitive to parameter changes".to_string());
     }
-    
+
     // Check structured robustness issues
     if structured.multiplicative_robustness.stability_margin < 0.1 {
         issues.push("System has poor robustness to multiplicative uncertainties".to_string());
     }
-    
+
     if structured.additive_robustness.max_perturbation_norm < 0.01 {
         issues.push("System has poor robustness to additive uncertainties".to_string());
     }
-    
+
     issues
 }
 
@@ -1314,47 +1318,61 @@ fn identify_robustness_issues(
 mod tests {
     use super::*;
     use crate::lti::systems::StateSpace;
-    
+
     #[test]
     fn test_robust_controllability_analysis() {
         // Create a simple controllable system
         let ss = StateSpace::new(
             vec![-1.0, 0.0, 1.0, -2.0], // 2x2 A matrix
-            vec![1.0, 0.0],             // 2x1 B matrix  
+            vec![1.0, 0.0],             // 2x1 B matrix
             vec![1.0, 0.0],             // 1x2 C matrix
             vec![0.0],                  // 1x1 D matrix
             None,
-        ).unwrap();
-        
+        )
+        .unwrap();
+
         let config = RobustAnalysisConfig::default();
         let analysis = robust_control_observability_analysis(&ss, &config).unwrap();
-        
+
         // Basic checks
-        assert!(analysis.enhanced_controllability.basic_analysis.state_dimension > 0);
-        assert!(analysis.enhanced_observability.basic_analysis.state_dimension > 0);
+        assert!(
+            analysis
+                .enhanced_controllability
+                .basic_analysis
+                .state_dimension
+                > 0
+        );
+        assert!(
+            analysis
+                .enhanced_observability
+                .basic_analysis
+                .state_dimension
+                > 0
+        );
         assert!(analysis.robustness_score >= 0.0);
         assert!(analysis.robustness_score <= 100.0);
     }
-    
+
     #[test]
     fn test_svd_controllability_analysis() {
-        let controllability_matrix = Array2::from_shape_vec((2, 4), vec![1.0, 0.0, -1.0, 0.0, 0.0, 1.0, 0.0, -2.0]).unwrap();
+        let controllability_matrix =
+            Array2::from_shape_vec((2, 4), vec![1.0, 0.0, -1.0, 0.0, 0.0, 1.0, 0.0, -2.0]).unwrap();
         let config = RobustAnalysisConfig::default();
-        
+
         let analysis = svd_controllability_analysis(&controllability_matrix, &config).unwrap();
-        
+
         assert_eq!(analysis.singular_values.len(), 2);
         assert!(analysis.numerical_rank <= 2);
         assert!(analysis.effective_rank <= analysis.numerical_rank);
     }
-    
+
     #[test]
     fn test_numerical_conditioning() {
         let matrix = Array2::eye(3);
         let config = RobustAnalysisConfig::default();
-        
+
         let conditioning = assess_numerical_conditioning(&matrix, &config).unwrap();
-        
+
         // Identity matrix should be well-conditioned
         assert!(conditioning.condition_number_2 >= 1.0);
         assert!(conditioning.condition_number_2 < 10.0);

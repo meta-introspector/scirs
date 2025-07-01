@@ -767,25 +767,24 @@ impl<T: Tokenizer + Send + Sync> AdvancedStreamingProcessor<T> {
         // Clone tokenizer to avoid borrow conflict
         let tokenizer = self.tokenizer.clone_box();
 
-        self
-            .process_corpus_parallel(corpus, move |doc, _idx| {
-                let tokens = tokenizer.tokenize(doc)?;
-                let char_count = doc.chars().count();
-                let word_count = tokens.len();
-                let line_count = doc.lines().count();
+        self.process_corpus_parallel(corpus, move |doc, _idx| {
+            let tokens = tokenizer.tokenize(doc)?;
+            let char_count = doc.chars().count();
+            let word_count = tokens.len();
+            let line_count = doc.lines().count();
 
-                Ok(DocumentStats {
-                    char_count,
-                    word_count,
-                    line_count,
-                    unique_words: tokens
-                        .into_iter()
-                        .collect::<std::collections::HashSet<_>>()
-                        .len(),
-                })
-            })?
-            .into_iter()
-            .for_each(|doc_stats| stats.add_document(doc_stats));
+            Ok(DocumentStats {
+                char_count,
+                word_count,
+                line_count,
+                unique_words: tokens
+                    .into_iter()
+                    .collect::<std::collections::HashSet<_>>()
+                    .len(),
+            })
+        })?
+        .into_iter()
+        .for_each(|doc_stats| stats.add_document(doc_stats));
 
         Ok(stats)
     }

@@ -15,7 +15,6 @@
 //! - Quantum annealing for adaptive parameter optimization
 
 use crate::error::Result;
-use crate::FrameMetadata;
 use crate::streaming::{Frame, ProcessingStage};
 use ndarray::{Array1, Array2};
 use rand::prelude::*;

@@ -78,7 +78,11 @@ where
 {
     let n = x.len();
     if n <= ddof {
-        return Err(ErrorMessages::insufficient_data("variance calculation", ddof + 1, n));
+        return Err(ErrorMessages::insufficient_data(
+            "variance calculation",
+            ddof + 1,
+            n,
+        ));
     }
 
     // First compute the mean

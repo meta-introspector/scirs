@@ -8,9 +8,9 @@ use crate::error::{OptimError, Result};
 use crate::optimizers::*;
 use crate::schedulers::*;
 use ndarray::{Array, Array1, Array2, Dimension, ScalarOperand};
-use std::fmt::Debug;
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
+use std::fmt::Debug;
 use std::time::{Duration, Instant};
 
 /// Configuration for self-tuning optimization

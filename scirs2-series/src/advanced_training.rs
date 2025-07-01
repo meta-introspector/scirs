@@ -105,7 +105,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> MAML<F> 
         let mut adapted_params = self.parameters.clone();
 
         for _ in 0..self.inner_steps {
-            let loss = self.forward(&adapted_params, &task.support_x, &task.support_y)?;
+            let _loss = self.forward(&adapted_params, &task.support_x, &task.support_y)?;
             let gradients = self.compute_gradients(&adapted_params, task)?;
             adapted_params = adapted_params - gradients * self.inner_lr;
         }
@@ -238,7 +238,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> MAML<F> 
         task: &TaskData<F>,
     ) -> Result<Array2<F>> {
         // Simplified meta-gradient computation
-        let meta_loss = self.forward(adapted_params, &task.query_x, &task.query_y)?;
+        let _meta_loss = self.forward(adapted_params, &task.query_x, &task.query_y)?;
         self.compute_gradients(
             adapted_params,
             &TaskData {
@@ -1635,7 +1635,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> Hyperpar
     }
 
     /// Grid search implementation (simplified)
-    fn grid_search(&self, trial: usize) -> Result<HyperparameterSet<F>> {
+    fn grid_search(&self, _trial: usize) -> Result<HyperparameterSet<F>> {
         // For simplicity, use random search with some structure
         self.random_search()
     }
@@ -1683,7 +1683,11 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> Hyperpar
             return Ok(F::zero());
         }
 
-        let sum: F = self.history.iter().map(|step| step.score).fold(F::zero(), |acc, x| acc + x);
+        let sum: F = self
+            .history
+            .iter()
+            .map(|step| step.score)
+            .fold(F::zero(), |acc, x| acc + x);
         Ok(sum / F::from(self.history.len()).unwrap())
     }
 

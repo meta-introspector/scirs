@@ -44,10 +44,26 @@ pub mod quantum_inspired_streaming;
 pub mod transform;
 
 // Advanced ultrathink-mode modules - future development features
+pub mod activity_recognition;
 pub mod scene_understanding;
 pub mod visual_reasoning;
-pub mod activity_recognition;
 pub mod visual_slam;
+
+// Cross-module ultrathink coordination
+/// Ultrathink Integration - Cross-Module AI Coordination
+///
+/// This module provides the highest level of AI integration across all SciRS2 modules,
+/// combining quantum-inspired processing, neuromorphic computing, advanced AI optimization,
+/// and cross-module coordination into a unified ultrathink processing framework.
+///
+/// # Features
+///
+/// * **Cross-Module Coordination** - Unified ultrathink across vision, clustering, spatial, neural
+/// * **Global Optimization** - Multi-objective optimization across all modules
+/// * **Unified Meta-Learning** - Cross-module transfer learning and adaptation
+/// * **Resource Management** - Optimal allocation of computational resources
+/// * **Performance Tracking** - Comprehensive monitoring and optimization
+pub mod ultrathink_integration;
 
 // Comment out problematic modules during tests to focus on fixing other issues
 #[cfg(not(test))]
@@ -165,22 +181,29 @@ pub use ai_optimization::{
 // Re-export advanced ultrathink-mode features
 pub use scene_understanding::{
     analyze_scene_with_reasoning, ContextualReasoningEngine, DetectedObject as SceneObject,
-    SceneAnalysisResult, SceneGraph, SceneUnderstandingEngine, SpatialRelation, SpatialRelationType,
-    TemporalInfo,
+    SceneAnalysisResult, SceneGraph, SceneUnderstandingEngine, SpatialRelation,
+    SpatialRelationType, TemporalInfo,
 };
 
 pub use visual_reasoning::{
-    perform_advanced_visual_reasoning, QueryType, ReasoningAnswer, ReasoningStep, VisualReasoningEngine,
-    VisualReasoningQuery, VisualReasoningResult, UncertaintyQuantification,
+    perform_advanced_visual_reasoning, QueryType, ReasoningAnswer, ReasoningStep,
+    UncertaintyQuantification, VisualReasoningEngine, VisualReasoningQuery, VisualReasoningResult,
 };
 
 pub use activity_recognition::{
     monitor_activities_realtime, recognize_activities_comprehensive, ActivityRecognitionEngine,
-    ActivityRecognitionResult, ActivitySequence, ActivitySummary as ActivitySceneSummary, DetectedActivity,
-    MotionCharacteristics, PersonInteraction, TemporalActivityModeler,
+    ActivityRecognitionResult, ActivitySequence, ActivitySummary as ActivitySceneSummary,
+    DetectedActivity, MotionCharacteristics, PersonInteraction, TemporalActivityModeler,
 };
 
 pub use visual_slam::{
     process_visual_slam, process_visual_slam_realtime, CameraPose, CameraTrajectory, LoopClosure,
     Map3D, SLAMResult, SLAMSystemState, SemanticMap, VisualSLAMSystem,
+};
+
+// Re-export ultrathink integration functionality
+pub use ultrathink_integration::{
+    batch_process_ultrathink, process_with_ultrathink_mode, realtime_ultrathink_stream,
+    EmergentBehavior, FusionQuality, NeuralQuantumHybridProcessor, PerformanceMetrics,
+    UltrathinkProcessingResult, UncertaintyQuantification as UltrathinkUncertaintyQuantification,
 };

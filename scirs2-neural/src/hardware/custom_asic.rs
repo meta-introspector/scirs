@@ -387,7 +387,7 @@ impl CustomASIC {
 
                 // Validate dimensions
                 if input_channels != kernel_channels {
-                    return Err(crate::error::NeuralError::InvalidInput(format!(
+                    return Err(crate::error::NeuralError::InvalidArgument(format!(
                         "Input channels ({}) must match kernel channels ({})",
                         input_channels, kernel_channels
                     )));

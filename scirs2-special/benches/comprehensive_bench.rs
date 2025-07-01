@@ -11,10 +11,15 @@ use scirs2_special::{
     // Gamma functions
     beta,
     bi,
+    chi,
+    ci,
+    dawsn,
     digamma,
     // Error functions
     erf,
     erfc,
+    erfcx,
+    erfi,
     gamma,
     gammaln,
     // Bessel functions
@@ -25,7 +30,15 @@ use scirs2_special::{
     jv,
     // Lambert W
     lambert_w_real,
+    polygamma,
+    shi,
+    shichi,
+    // Logarithmic integrals
+    si,
+    sici,
+    spence,
     spherical_jn,
+    wofz,
 };
 use std::fs;
 use std::path::Path;
@@ -323,6 +336,90 @@ fn bench_memory_usage(c: &mut Criterion) {
     group.finish();
 }
 
+fn bench_ultrathink_functions(c: &mut Criterion) {
+    let mut group = c.benchmark_group("ultrathink_functions");
+
+    // Dawson's integral benchmarks
+    group.bench_function("dawsn", |b| {
+        b.iter(|| {
+            for i in -50..51 {
+                let x = i as f64 * 0.1;
+                black_box(dawsn(black_box(x)));
+            }
+        })
+    });
+
+    // Polygamma function (trigamma)
+    group.bench_function("polygamma", |b| {
+        b.iter(|| {
+            for i in 0..100 {
+                let x = i as f64 * 0.1 + 1.0;
+                black_box(polygamma(black_box(1), black_box(x)));
+            }
+        })
+    });
+
+    // Scaled error functions
+    group.bench_function("erfcx", |b| {
+        b.iter(|| {
+            for i in 0..100 {
+                let x = i as f64 * 0.1;
+                black_box(erfcx(black_box(x)));
+            }
+        })
+    });
+
+    group.bench_function("erfi", |b| {
+        b.iter(|| {
+            for i in 0..100 {
+                let x = i as f64 * 0.1;
+                black_box(erfi(black_box(x)));
+            }
+        })
+    });
+
+    // Faddeeva function
+    group.bench_function("wofz", |b| {
+        b.iter(|| {
+            for i in 0..100 {
+                let x = i as f64 * 0.1;
+                black_box(wofz(black_box(x)));
+            }
+        })
+    });
+
+    // Sine and cosine integrals
+    group.bench_function("sici", |b| {
+        b.iter(|| {
+            for i in 1..101 {
+                let x = i as f64 * 0.1;
+                black_box(sici(black_box(x)));
+            }
+        })
+    });
+
+    group.bench_function("shichi", |b| {
+        b.iter(|| {
+            for i in 1..101 {
+                let x = i as f64 * 0.1;
+                black_box(shichi(black_box(x)));
+            }
+        })
+    });
+
+    // Spence function (dilogarithm)
+    group.bench_function("spence", |b| {
+        b.iter(|| {
+            for i in 1..51 {
+                let x = i as f64 * 0.1 + 0.1;
+                black_box(spence(black_box(x)));
+            }
+        })
+    });
+
+    group.finish();
+}
+
 criterion_group!(
     comprehensive_benches,
     bench_bessel_comprehensive,
@@ -330,6 +427,7 @@ criterion_group!(
     bench_error_functions,
     bench_airy_functions,
     bench_lambert_w,
+    bench_ultrathink_functions,
     bench_array_like_operations,
     bench_array_vs_scalar,
     bench_memory_usage

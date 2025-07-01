@@ -105,7 +105,7 @@ where
     // Enhanced SIMD processing with optimized implementations
     if options.use_parallel && rows >= options.parallel_threshold {
         // Parallel SIMD processing implementation
-        let chunk_size = (rows + 3) / 4; // Divide into 4 chunks for good load balancing
+        let chunk_size = rows.div_ceil(4); // Divide into 4 chunks for good load balancing
         let row_chunks: Vec<_> = (0..rows)
             .collect::<Vec<_>>()
             .chunks(chunk_size)

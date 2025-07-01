@@ -563,7 +563,10 @@ impl<N: Node> EmbeddingModel<N> {
     where
         N: Clone,
     {
-        let target_embedding = self.embeddings.get(node).ok_or(GraphError::node_not_found("node"))?;
+        let target_embedding = self
+            .embeddings
+            .get(node)
+            .ok_or(GraphError::node_not_found("node"))?;
 
         let mut similarities = Vec::new();
 

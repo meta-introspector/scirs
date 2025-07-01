@@ -11,7 +11,10 @@
 //! - Advanced model validation and diagnostics
 
 use crate::error::{SignalError, SignalResult};
-use crate::parametric::{ARMethod, OrderSelection, compute_parameter_change, detect_spectral_peaks, update_robust_weights};
+use crate::parametric::{
+    compute_parameter_change, detect_spectral_peaks, update_robust_weights, ARMethod,
+    OrderSelection,
+};
 use crate::parametric_advanced::compute_eigendecomposition;
 use ndarray::{s, Array1, Array2, Axis};
 use num_complex::Complex64;
@@ -740,6 +743,8 @@ pub enum CombinationMethod {
     SimpleAverage,
     WeightedAverage,
     AdaptiveWeighting,
+    Average,
+    Median,
 }
 
 impl Default for MultitaperParametricConfig {
@@ -1908,4 +1913,345 @@ mod tests {
         assert!(psd.iter().all(|&x| x > 0.0));
         assert!(psd.iter().all(|&x| x.is_finite()));
     }
+}
+
+/// Compute AR power spectral density from AR coefficients
+///
+/// This function computes the power spectral density for an autoregressive (AR) model
+/// using the transfer function approach with enhanced numerical stability.
+///
+/// # Arguments
+///
+/// * `ar_coeffs` - AR coefficients [1, a1, a2, ..., ap]
+/// * `noise_variance` - Noise variance estimate
+/// * `frequencies` - Frequency grid for PSD computation
+///
+/// # Returns
+///
+/// * Power spectral density values
+fn compute_ar_psd(
+    ar_coeffs: &Array1<f64>,
+    noise_variance: f64,
+    frequencies: &[f64],
+) -> SignalResult<Vec<f64>> {
+    let n_freqs = frequencies.len();
+    let mut psd = Vec::with_capacity(n_freqs);
+
+    let fs = if frequencies.len() > 1 {
+        2.0 * frequencies.last().unwrap()
+    } else {
+        1.0
+    };
+
+    for &freq in frequencies {
+        // Compute H(e^{j2πf/fs}) where H(z) = 1 / (1 + a1*z^-1 + a2*z^-2 + ...)
+        let omega = 2.0 * std::f64::consts::PI * freq / fs;
+
+        // Compute |H(e^{jω})|² = 1 / |1 + Σ a_k e^{-jkω}|²
+        let mut real_part = ar_coeffs[0]; // Should be 1.0
+        let mut imag_part = 0.0;
+
+        for (k, &ak) in ar_coeffs.iter().enumerate().skip(1) {
+            let k_omega = k as f64 * omega;
+            real_part += ak * k_omega.cos();
+            imag_part -= ak * k_omega.sin(); // Note: negative for z^{-k}
+        }
+
+        let h_magnitude_squared = 1.0 / (real_part * real_part + imag_part * imag_part);
+
+        // PSD = σ² * |H(e^{jω})|²
+        let psd_value = noise_variance * h_magnitude_squared;
+        psd.push(psd_value);
+    }
+
+    Ok(psd)
+}
+
+/// Compute ARMA power spectral density from AR and MA coefficients
+///
+/// This function computes the power spectral density for an ARMA model
+/// using the transfer function approach H(z) = B(z) / A(z).
+///
+/// # Arguments
+///
+/// * `ar_coeffs` - AR coefficients [1, a1, a2, ..., ap]
+/// * `ma_coeffs` - MA coefficients [1, b1, b2, ..., bq]
+/// * `noise_variance` - Noise variance estimate
+/// * `frequencies` - Frequency grid for PSD computation
+///
+/// # Returns
+///
+/// * Power spectral density values
+fn compute_arma_psd(
+    ar_coeffs: &Array1<f64>,
+    ma_coeffs: &Array1<f64>,
+    noise_variance: f64,
+    frequencies: &[f64],
+) -> SignalResult<Vec<f64>> {
+    let n_freqs = frequencies.len();
+    let mut psd = Vec::with_capacity(n_freqs);
+
+    let fs = if frequencies.len() > 1 {
+        2.0 * frequencies.last().unwrap()
+    } else {
+        1.0
+    };
+
+    for &freq in frequencies {
+        let omega = 2.0 * std::f64::consts::PI * freq / fs;
+
+        // Compute AR part: A(e^{jω}) = 1 + Σ a_k e^{-jkω}
+        let mut ar_real = ar_coeffs[0]; // Should be 1.0
+        let mut ar_imag = 0.0;
+
+        for (k, &ak) in ar_coeffs.iter().enumerate().skip(1) {
+            let k_omega = k as f64 * omega;
+            ar_real += ak * k_omega.cos();
+            ar_imag -= ak * k_omega.sin();
+        }
+
+        // Compute MA part: B(e^{jω}) = 1 + Σ b_k e^{-jkω}
+        let mut ma_real = ma_coeffs[0]; // Should be 1.0
+        let mut ma_imag = 0.0;
+
+        for (k, &bk) in ma_coeffs.iter().enumerate().skip(1) {
+            let k_omega = k as f64 * omega;
+            ma_real += bk * k_omega.cos();
+            ma_imag -= bk * k_omega.sin();
+        }
+
+        // Compute |H(e^{jω})|² = |B(e^{jω})|² / |A(e^{jω})|²
+        let ma_magnitude_squared = ma_real * ma_real + ma_imag * ma_imag;
+        let ar_magnitude_squared = ar_real * ar_real + ar_imag * ar_imag;
+
+        let h_magnitude_squared = ma_magnitude_squared / ar_magnitude_squared;
+
+        // PSD = σ² * |H(e^{jω})|²
+        let psd_value = noise_variance * h_magnitude_squared;
+        psd.push(psd_value);
+    }
+
+    Ok(psd)
+}
+
+/// Generate frequency grid for spectral analysis
+///
+/// Creates a frequency grid from 0 to fs/2 (Nyquist frequency) for
+/// one-sided spectrum computation.
+///
+/// # Arguments
+///
+/// * `n_freqs` - Number of frequency points
+/// * `fs` - Sampling frequency
+///
+/// # Returns
+///
+/// * Frequency vector
+fn generate_frequency_grid(n_freqs: usize, fs: f64) -> Vec<f64> {
+    let nyquist = fs / 2.0;
+    (0..n_freqs)
+        .map(|i| i as f64 * nyquist / (n_freqs - 1) as f64)
+        .collect()
+}
+
+/// Combine multiple spectral estimates using specified method
+///
+/// This function combines multiple PSD estimates from different tapers
+/// or different estimation methods into a single robust estimate.
+///
+/// # Arguments
+///
+/// * `spectral_estimates` - Vector of individual PSD estimates
+/// * `combination_method` - Method for combining estimates
+///
+/// # Returns
+///
+/// * Combined PSD estimate
+fn combine_multitaper_spectra(
+    spectral_estimates: &[Vec<f64>],
+    combination_method: CombinationMethod,
+) -> SignalResult<Vec<f64>> {
+    if spectral_estimates.is_empty() {
+        return Err(SignalError::ValueError(
+            "No spectral estimates provided".to_string(),
+        ));
+    }
+
+    let n_freqs = spectral_estimates[0].len();
+    let mut combined_psd = vec![0.0; n_freqs];
+
+    match combination_method {
+        CombinationMethod::SimpleAverage | CombinationMethod::Average => {
+            // Simple arithmetic mean
+            for psd in spectral_estimates {
+                for (i, &val) in psd.iter().enumerate() {
+                    combined_psd[i] += val;
+                }
+            }
+            for val in &mut combined_psd {
+                *val /= spectral_estimates.len() as f64;
+            }
+        }
+        CombinationMethod::Median => {
+            // Robust median combination
+            for i in 0..n_freqs {
+                let mut values: Vec<f64> = spectral_estimates.iter().map(|psd| psd[i]).collect();
+                values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+
+                combined_psd[i] = if values.len() % 2 == 0 {
+                    (values[values.len() / 2 - 1] + values[values.len() / 2]) / 2.0
+                } else {
+                    values[values.len() / 2]
+                };
+            }
+        }
+        CombinationMethod::WeightedAverage => {
+            // Weighted by inverse variance (assuming equal weights for now)
+            for psd in spectral_estimates {
+                for (i, &val) in psd.iter().enumerate() {
+                    combined_psd[i] += val;
+                }
+            }
+            for val in &mut combined_psd {
+                *val /= spectral_estimates.len() as f64;
+            }
+        }
+        CombinationMethod::AdaptiveWeighting => {
+            // Adaptive weighting based on local spectral characteristics
+            // For now, fall back to weighted average
+            for psd in spectral_estimates {
+                for (i, &val) in psd.iter().enumerate() {
+                    combined_psd[i] += val;
+                }
+            }
+            for val in &mut combined_psd {
+                *val /= spectral_estimates.len() as f64;
+            }
+        }
+    }
+
+    Ok(combined_psd)
+}
+
+/// Compute confidence intervals for multitaper spectral estimates
+///
+/// Computes confidence intervals based on the chi-squared distribution
+/// of the spectral estimates from multiple tapers.
+///
+/// # Arguments
+///
+/// * `spectral_estimates` - Vector of individual PSD estimates
+/// * `confidence_level` - Confidence level (e.g., 0.95 for 95%)
+///
+/// # Returns
+///
+/// * Tuple of (lower bounds, upper bounds)
+fn compute_multitaper_confidence_intervals(
+    spectral_estimates: &[Vec<f64>],
+    confidence_level: f64,
+) -> SignalResult<(Vec<f64>, Vec<f64>)> {
+    if spectral_estimates.is_empty() {
+        return Err(SignalError::ValueError(
+            "No spectral estimates provided".to_string(),
+        ));
+    }
+
+    let n_freqs = spectral_estimates[0].len();
+    let k = spectral_estimates.len() as f64;
+    let dof = 2.0 * k; // Degrees of freedom for chi-squared distribution
+
+    // Chi-squared critical values for confidence interval
+    let alpha = 1.0 - confidence_level;
+    let chi2_lower = dof / chi_squared_inverse_cdf(1.0 - alpha / 2.0, dof);
+    let chi2_upper = dof / chi_squared_inverse_cdf(alpha / 2.0, dof);
+
+    let mut lower_bounds = Vec::with_capacity(n_freqs);
+    let mut upper_bounds = Vec::with_capacity(n_freqs);
+
+    for i in 0..n_freqs {
+        // Compute mean PSD at this frequency
+        let mean_psd: f64 = spectral_estimates.iter().map(|psd| psd[i]).sum::<f64>() / k;
+
+        lower_bounds.push(mean_psd * chi2_lower);
+        upper_bounds.push(mean_psd * chi2_upper);
+    }
+
+    Ok((lower_bounds, upper_bounds))
+}
+
+/// Simple approximation for chi-squared inverse CDF
+///
+/// This is a simplified approximation suitable for confidence intervals.
+/// For production use, consider using a more accurate implementation.
+fn chi_squared_inverse_cdf(p: f64, dof: f64) -> f64 {
+    // Wilson-Hilferty approximation for chi-squared distribution
+    let h = 2.0 / (9.0 * dof);
+    let z = normal_inverse_cdf(p);
+
+    let term = 1.0 - h + z * (h * 2.0).sqrt();
+    dof * term.powi(3)
+}
+
+/// Simple approximation for standard normal inverse CDF
+fn normal_inverse_cdf(p: f64) -> f64 {
+    // Beasley-Springer-Moro algorithm approximation
+    let a0 = 2.50662823884;
+    let a1 = -18.61500062529;
+    let a2 = 41.39119773534;
+    let a3 = -25.44106049637;
+
+    let b1 = -8.47351093090;
+    let b2 = 23.08336743743;
+    let b3 = -21.06224101826;
+    let b4 = 3.13082909833;
+
+    if p < 0.5 {
+        let y = (2.0 * p).ln();
+        let x = y + ((a3 * y + a2) * y + a1) * y + a0;
+        let x = x / (((b4 * y + b3) * y + b2) * y + b1);
+        -x
+    } else {
+        let y = (-2.0 * (1.0 - p).ln()).sqrt();
+        let x = y + ((a3 * y + a2) * y + a1) * y + a0;
+        let x = x / (((b4 * y + b3) * y + b2) * y + b1);
+        x
+    }
+}
+
+/// Extract eigenvalues from DPSS tapers
+///
+/// Extracts or estimates the concentration eigenvalues for DPSS tapers
+/// used in multitaper analysis.
+///
+/// # Arguments
+///
+/// * `tapers` - DPSS taper matrix
+/// * `nw` - Time-bandwidth product
+///
+/// # Returns
+///
+/// * Vector of eigenvalues
+fn extract_taper_eigenvalues(tapers: &Array2<f64>, nw: f64) -> SignalResult<Vec<f64>> {
+    let k = tapers.nrows();
+
+    // For DPSS tapers, eigenvalues are approximately given by
+    // the concentration ratio λ_k ≈ (1 + cos(πk/(2NW+1))) / 2
+    let mut eigenvalues = Vec::with_capacity(k);
+
+    for i in 0..k {
+        let lambda = if i == 0 {
+            // First eigenvalue is very close to 1
+            1.0 - 1e-10
+        } else {
+            // Approximate eigenvalue formula
+            let arg = std::f64::consts::PI * (i + 1) as f64 / (2.0 * nw + 1.0);
+            (1.0 + arg.cos()) / 2.0
+        };
+        eigenvalues.push(lambda.max(1e-15)); // Ensure positive
+    }
+
+    // Sort in descending order (highest concentration first)
+    eigenvalues.sort_by(|a, b| b.partial_cmp(a).unwrap());
+
+    Ok(eigenvalues)
 }

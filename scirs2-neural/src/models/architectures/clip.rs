@@ -15,6 +15,7 @@ use crate::utils::positional_encoding::{PositionalEncoding, SinusoidalPositional
 
 use ndarray::{Array, Axis, IxDyn, ScalarOperand};
 use num_traits::Float;
+use rand::{rngs::SmallRng, SeedableRng};
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 
@@ -74,7 +75,9 @@ impl Default for CLIPTextConfig {
 
 /// Text encoder for CLIP model
 #[derive(Debug, Clone)]
-pub struct CLIPTextEncoder<F: Float + Debug + ScalarOperand + Send + Sync + 'static + scirs2_core::simd_ops::SimdUnifiedOps> {
+pub struct CLIPTextEncoder<
+    F: Float + Debug + ScalarOperand + Send + Sync + 'static + scirs2_core::simd_ops::SimdUnifiedOps,
+> {
     /// Token embedding
     pub token_embedding: Sequential<F>,
     /// Position embedding
@@ -89,12 +92,14 @@ pub struct CLIPTextEncoder<F: Float + Debug + ScalarOperand + Send + Sync + 'sta
     pub config: CLIPTextConfig,
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync> CLIPTextEncoder<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + scirs2_core::simd_ops::SimdUnifiedOps>
+    CLIPTextEncoder<F>
+{
     /// Create a new CLIPTextEncoder
     pub fn new(config: CLIPTextConfig, projection_dim: usize) -> Result<Self> {
         // Token embedding
         let mut token_embedding = Sequential::new();
-        let mut rng = rand::rng();
+        let mut rng = SmallRng::seed_from_u64(42);
         token_embedding.add(Dense::<F>::new(
             config.vocab_size,
             config.hidden_size,
@@ -125,8 +130,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> CLIPTextEncoder<F> {
         let layer_norm = LayerNorm::<F>::new(config.hidden_size, config.layer_norm_eps, &mut rng)?;
 
         // Projection
-        let mut rng_proj = rand::rng();
-        let projection = Dense::<F>::new(config.hidden_size, projection_dim, None, &mut rng_proj)?;
+        let projection = Dense::<F>::new(config.hidden_size, projection_dim, None, &mut rng)?;
 
         Ok(Self {
             token_embedding,
@@ -139,7 +143,16 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> CLIPTextEncoder<F> {
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for CLIPTextEncoder<F> {
+impl<
+        F: Float
+            + Debug
+            + ScalarOperand
+            + Send
+            + Sync
+            + scirs2_core::simd_ops::SimdUnifiedOps
+            + 'static,
+    > Layer<F> for CLIPTextEncoder<F>
+{
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -212,8 +225,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for CLIP
             grad = layer.backward(&grad, &grad)?;
         }
 
-        // Backward through position embedding
-        grad = self.position_embedding.backward(&grad, &grad)?;
+        // TODO: Backward through position embedding when backward method is implemented
+        // grad = self.position_embedding.backward(&grad, &grad)?;
 
         // Backward through token embedding
         let grad_input = self.token_embedding.backward(input, &grad)?;
@@ -278,21 +291,32 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for CLIP
 
 /// Vision encoder for CLIP model (uses Vision Transformer)
 #[derive(Debug, Clone)]
-pub struct CLIPVisionEncoder<F: Float + Debug + ScalarOperand + Send + Sync + 'static + scirs2_core::simd_ops::SimdUnifiedOps> {
+pub struct CLIPVisionEncoder<
+    F: Float + Debug + ScalarOperand + Send + Sync + 'static + scirs2_core::simd_ops::SimdUnifiedOps,
+> {
     /// Vision Transformer
     pub vision_transformer: VisionTransformer<F>,
     /// Final projection layer
     pub projection: Dense<F>,
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + scirs2_core::simd_ops::SimdUnifiedOps> CLIPVisionEncoder<F> {
+impl<
+        F: Float
+            + Debug
+            + ScalarOperand
+            + Send
+            + Sync
+            + 'static
+            + scirs2_core::simd_ops::SimdUnifiedOps,
+    > CLIPVisionEncoder<F>
+{
     /// Create a new CLIPVisionEncoder
     pub fn new(config: ViTConfig, projection_dim: usize) -> Result<Self> {
         // Create ViT with a clone of the config to avoid ownership issues
         let vision_transformer = VisionTransformer::<F>::new(config.clone())?;
 
         // Projection layer
-        let mut rng_proj = rand::rng();
+        let mut rng_proj = SmallRng::seed_from_u64(42);
         let projection = Dense::<F>::new(config.embed_dim, projection_dim, None, &mut rng_proj)?;
 
         Ok(Self {
@@ -302,7 +326,16 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + scirs2_core::sim
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for CLIPVisionEncoder<F> {
+impl<
+        F: Float
+            + Debug
+            + ScalarOperand
+            + Send
+            + Sync
+            + 'static
+            + scirs2_core::simd_ops::SimdUnifiedOps,
+    > Layer<F> for CLIPVisionEncoder<F>
+{
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -366,7 +399,9 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for CLIP
 
 /// CLIP model implementation
 #[derive(Debug, Clone)]
-pub struct CLIP<F: Float + Debug + ScalarOperand + Send + Sync + 'static> {
+pub struct CLIP<
+    F: Float + Debug + ScalarOperand + Send + Sync + 'static + scirs2_core::simd_ops::SimdUnifiedOps,
+> {
     /// Vision encoder
     pub vision_encoder: CLIPVisionEncoder<F>,
     /// Text encoder
@@ -379,7 +414,16 @@ pub struct CLIP<F: Float + Debug + ScalarOperand + Send + Sync + 'static> {
     pub logit_scale: F,
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> CLIP<F> {
+impl<
+        F: Float
+            + Debug
+            + ScalarOperand
+            + Send
+            + Sync
+            + 'static
+            + scirs2_core::simd_ops::SimdUnifiedOps,
+    > CLIP<F>
+{
     /// Create a new CLIP model
     pub fn new(config: CLIPConfig) -> Result<Self> {
         // Create vision encoder
@@ -392,7 +436,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> CLIP<F> {
 
         // Create classifier if needed
         let classifier = if config.include_head {
-            let mut rng_cls = rand::rng();
+            let mut rng_cls = SmallRng::seed_from_u64(42);
             Some(Dense::<F>::new(
                 config.projection_dim,
                 config.num_classes,
@@ -532,7 +576,16 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> CLIP<F> {
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for CLIP<F> {
+impl<
+        F: Float
+            + Debug
+            + ScalarOperand
+            + Send
+            + Sync
+            + 'static
+            + scirs2_core::simd_ops::SimdUnifiedOps,
+    > Layer<F> for CLIP<F>
+{
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }

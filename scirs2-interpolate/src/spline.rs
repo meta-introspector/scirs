@@ -87,7 +87,7 @@ pub enum SplineBoundaryCondition {
     /// Natural spline boundary condition (default)
     ///
     /// Sets the second derivative to zero at both endpoints: S''(x₀) = S''(xₙ) = 0
-    /// 
+    ///
     /// **Mathematical properties:**
     /// - Minimizes the integral of the second derivative (curvature)
     /// - Results in the "most relaxed" curve shape
@@ -123,7 +123,7 @@ pub enum SplineBoundaryCondition {
     /// Clamped (Complete) spline with specified endpoint derivatives
     ///
     /// Specifies the first derivative at both endpoints: S'(x₀) = dy₀, S'(xₙ) = dyₙ
-    /// 
+    ///
     /// **Parameters:**
     /// - First value: left endpoint derivative S'(x₀)
     /// - Second value: right endpoint derivative S'(xₙ)
@@ -380,7 +380,11 @@ impl<F: Float + FromPrimitive + Debug + Display + ToString + AddAssign> CubicSpl
         }
 
         if x.len() < 3 {
-            return Err(InterpolateError::insufficient_points(3, x.len(), "cubic spline"));
+            return Err(InterpolateError::insufficient_points(
+                3,
+                x.len(),
+                "cubic spline",
+            ));
         }
 
         // Check that x is sorted
@@ -421,7 +425,11 @@ impl<F: Float + FromPrimitive + Debug + Display + ToString + AddAssign> CubicSpl
         }
 
         if x.len() < 4 {
-            return Err(InterpolateError::insufficient_points(4, x.len(), "not-a-knot cubic spline"));
+            return Err(InterpolateError::insufficient_points(
+                4,
+                x.len(),
+                "not-a-knot cubic spline",
+            ));
         }
 
         // Check that x is sorted
@@ -469,7 +477,11 @@ impl<F: Float + FromPrimitive + Debug + Display + ToString + AddAssign> CubicSpl
         }
 
         if x.len() < 3 {
-            return Err(InterpolateError::insufficient_points(3, x.len(), "cubic spline"));
+            return Err(InterpolateError::insufficient_points(
+                3,
+                x.len(),
+                "cubic spline",
+            ));
         }
 
         // Check that x is sorted
@@ -510,7 +522,11 @@ impl<F: Float + FromPrimitive + Debug + Display + ToString + AddAssign> CubicSpl
         }
 
         if x.len() < 3 {
-            return Err(InterpolateError::insufficient_points(3, x.len(), "cubic spline"));
+            return Err(InterpolateError::insufficient_points(
+                3,
+                x.len(),
+                "cubic spline",
+            ));
         }
 
         // Check that x is sorted
@@ -570,7 +586,11 @@ impl<F: Float + FromPrimitive + Debug + Display + ToString + AddAssign> CubicSpl
         }
 
         if x.len() < 3 {
-            return Err(InterpolateError::insufficient_points(3, x.len(), "cubic spline"));
+            return Err(InterpolateError::insufficient_points(
+                3,
+                x.len(),
+                "cubic spline",
+            ));
         }
 
         // Check that x is sorted
@@ -611,7 +631,11 @@ impl<F: Float + FromPrimitive + Debug + Display + ToString + AddAssign> CubicSpl
         }
 
         if x.len() < 3 {
-            return Err(InterpolateError::insufficient_points(3, x.len(), "cubic spline"));
+            return Err(InterpolateError::insufficient_points(
+                3,
+                x.len(),
+                "cubic spline",
+            ));
         }
 
         // Check that x is sorted
@@ -1166,12 +1190,12 @@ impl<F: Float + FromPrimitive + Debug + Display + ToString + AddAssign> CubicSpl
     /// let x = Array1::from(vec![0.0, 1.0, 2.0, 3.0]);
     /// let y = Array1::from(vec![0.0, 1.0, 4.0, 9.0]);
     /// let spline = CubicSpline::natural(&x.view(), &y.view()).unwrap();
-    /// 
+    ///
     /// // Integrate within domain
     /// let integral1 = spline.integrate_with_extrapolation(0.5, 2.5, None).unwrap();
-    /// 
+    ///
     /// // Integrate with extrapolation beyond domain
-    /// let integral2 = spline.integrate_with_extrapolation(-1.0, 4.0, 
+    /// let integral2 = spline.integrate_with_extrapolation(-1.0, 4.0,
     ///     Some(ExtrapolateMode::Extrapolate)).unwrap();
     /// ```
     pub fn integrate_with_extrapolation(
@@ -1186,14 +1210,14 @@ impl<F: Float + FromPrimitive + Debug + Display + ToString + AddAssign> CubicSpl
 
         let x_min = self.x[0];
         let x_max = self.x[self.x.len() - 1];
-        
+
         // Determine extrapolation mode
         let extrap_mode = extrapolate.unwrap_or(crate::interp1d::ExtrapolateMode::Error);
-        
+
         // Check if we need extrapolation
         let a_outside = a < x_min || a > x_max;
         let b_outside = b < x_min || b > x_max;
-        
+
         if (a_outside || b_outside) && extrap_mode == crate::interp1d::ExtrapolateMode::Error {
             return Err(InterpolateError::out_of_domain_with_suggestion(
                 if a_outside { a } else { b },
@@ -1203,39 +1227,40 @@ impl<F: Float + FromPrimitive + Debug + Display + ToString + AddAssign> CubicSpl
                 "Use ExtrapolateMode::Extrapolate or ExtrapolateMode::Nearest to enable integration beyond spline domain"
             ));
         }
-        
+
         // If both points are within domain, use standard integration
         if !a_outside && !b_outside {
             return self.integrate(a, b);
         }
-        
+
         // Handle extrapolation cases
         let mut total_integral = F::zero();
         let effective_a = a.min(b);
         let effective_b = a.max(b);
         let sign = if b >= a { F::one() } else { -F::one() };
-        
+
         // Split integration into regions
-        let region_bounds = self.compute_integration_regions(effective_a, effective_b, x_min, x_max);
-        
+        let region_bounds =
+            self.compute_integration_regions(effective_a, effective_b, x_min, x_max);
+
         for (start, end, region_type) in region_bounds {
             let region_integral = match region_type {
                 IntegrationRegion::Interior => {
                     // Use standard spline integration
                     self.integrate(start, end)?
-                },
+                }
                 IntegrationRegion::LeftExtrapolation => {
                     // Extrapolate using left endpoint
                     self.integrate_left_extrapolation(start, end, extrap_mode)?
-                },
+                }
                 IntegrationRegion::RightExtrapolation => {
-                    // Extrapolate using right endpoint  
+                    // Extrapolate using right endpoint
                     self.integrate_right_extrapolation(start, end, extrap_mode)?
-                },
+                }
             };
             total_integral = total_integral + region_integral;
         }
-        
+
         Ok(sign * total_integral)
     }
 
@@ -1248,7 +1273,7 @@ impl<F: Float + FromPrimitive + Debug + Display + ToString + AddAssign> CubicSpl
         x_max: F,
     ) -> Vec<(F, F, IntegrationRegion)> {
         let mut regions = Vec::new();
-        
+
         if a < x_min {
             if b <= x_min {
                 // Entirely in left extrapolation
@@ -1276,7 +1301,7 @@ impl<F: Float + FromPrimitive + Debug + Display + ToString + AddAssign> CubicSpl
             // Entirely in right extrapolation
             regions.push((a, b, IntegrationRegion::RightExtrapolation));
         }
-        
+
         regions
     }
 
@@ -1289,25 +1314,27 @@ impl<F: Float + FromPrimitive + Debug + Display + ToString + AddAssign> CubicSpl
     ) -> InterpolateResult<F> {
         let x_min = self.x[0];
         let y_min = self.y[0];
-        
+
         match mode {
             crate::interp1d::ExtrapolateMode::Nearest => {
                 // Constant extrapolation
                 Ok(y_min * (b - a))
-            },
+            }
             crate::interp1d::ExtrapolateMode::Extrapolate => {
                 // Linear extrapolation using derivative at left endpoint
                 let derivative = self.derivative(x_min, 1)?;
                 // Integrate: y_min + derivative * (x - x_min) from a to b
                 let linear_term = y_min * (b - a);
-                let quadratic_term = derivative * ((b - x_min) * (b - x_min) - (a - x_min) * (a - x_min)) / (F::one() + F::one());
+                let quadratic_term = derivative
+                    * ((b - x_min) * (b - x_min) - (a - x_min) * (a - x_min))
+                    / (F::one() + F::one());
                 Ok(linear_term + quadratic_term)
-            },
+            }
             _ => Err(InterpolateError::invalid_parameter_with_suggestion(
                 "extrapolate",
                 format!("{:?}", mode),
                 "left extrapolation integration",
-                "Use ExtrapolateMode::Nearest or ExtrapolateMode::Extrapolate"
+                "Use ExtrapolateMode::Nearest or ExtrapolateMode::Extrapolate",
             )),
         }
     }
@@ -1321,25 +1348,27 @@ impl<F: Float + FromPrimitive + Debug + Display + ToString + AddAssign> CubicSpl
     ) -> InterpolateResult<F> {
         let x_max = self.x[self.x.len() - 1];
         let y_max = self.y[self.y.len() - 1];
-        
+
         match mode {
             crate::interp1d::ExtrapolateMode::Nearest => {
                 // Constant extrapolation
                 Ok(y_max * (b - a))
-            },
+            }
             crate::interp1d::ExtrapolateMode::Extrapolate => {
                 // Linear extrapolation using derivative at right endpoint
                 let derivative = self.derivative(x_max, 1)?;
                 // Integrate: y_max + derivative * (x - x_max) from a to b
                 let linear_term = y_max * (b - a);
-                let quadratic_term = derivative * ((b - x_max) * (b - x_max) - (a - x_max) * (a - x_max)) / (F::one() + F::one());
+                let quadratic_term = derivative
+                    * ((b - x_max) * (b - x_max) - (a - x_max) * (a - x_max))
+                    / (F::one() + F::one());
                 Ok(linear_term + quadratic_term)
-            },
+            }
             _ => Err(InterpolateError::invalid_parameter_with_suggestion(
                 "extrapolate",
                 format!("{:?}", mode),
                 "right extrapolation integration",
-                "Use ExtrapolateMode::Nearest or ExtrapolateMode::Extrapolate"
+                "Use ExtrapolateMode::Nearest or ExtrapolateMode::Extrapolate",
             )),
         }
     }

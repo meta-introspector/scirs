@@ -420,7 +420,9 @@ fn compute_gershgorin_radius<F: Float + NumAssign>(a: &ArrayView2<F>) -> Option<
 
 /// Estimate the number of near-zero eigenvalues using Sylvester's criterion
 /// This is an approximation for symmetric matrices
-fn estimate_near_zero_eigenvalues<F: Float + NumAssign + std::iter::Sum + Send + Sync + ndarray::ScalarOperand>(
+fn estimate_near_zero_eigenvalues<
+    F: Float + NumAssign + std::iter::Sum + Send + Sync + ndarray::ScalarOperand,
+>(
     a: &ArrayView2<F>,
 ) -> Option<usize> {
     if a.nrows() != a.ncols() || a.nrows() == 0 {
@@ -455,7 +457,14 @@ fn estimate_near_zero_eigenvalues<F: Float + NumAssign + std::iter::Sum + Send +
 #[allow(dead_code)]
 pub fn advanced_stability_check<F>(a: &ArrayView2<F>) -> StabilityReport<F>
 where
-    F: Float + NumAssign + std::iter::Sum + fmt::Display + ToPrimitive + ndarray::ScalarOperand + Send + Sync,
+    F: Float
+        + NumAssign
+        + std::iter::Sum
+        + fmt::Display
+        + ToPrimitive
+        + ndarray::ScalarOperand
+        + Send
+        + Sync,
 {
     let mut report = StabilityReport {
         is_stable: true,
@@ -534,7 +543,9 @@ where
 
 /// Estimate the numerical rank of a matrix
 #[allow(dead_code)]
-fn estimate_numerical_rank<F: Float + NumAssign + std::iter::Sum + Send + Sync + ndarray::ScalarOperand>(
+fn estimate_numerical_rank<
+    F: Float + NumAssign + std::iter::Sum + Send + Sync + ndarray::ScalarOperand,
+>(
     a: &ArrayView2<F>,
 ) -> Option<usize> {
     if a.nrows() != a.ncols() {

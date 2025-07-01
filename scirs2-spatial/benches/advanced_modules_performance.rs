@@ -10,33 +10,34 @@ use std::time::Duration;
 use tokio::runtime::Runtime;
 
 use scirs2_spatial::{
-    // Classical algorithms for comparison
-    KDTree, distance::{euclidean, pdist},
-    
-    // Advanced algorithms to benchmark
-    quantum_inspired::{QuantumClusterer, QuantumNearestNeighbor},
+    distance::{euclidean, pdist},
+
+    gpu_accel::is_gpu_acceleration_available,
+    memory_pool::global_distance_pool,
     neuromorphic::SpikingNeuralClusterer,
     quantum_classical_hybrid::{HybridClusterer, HybridSpatialOptimizer},
-    
+
+    // Advanced algorithms to benchmark
+    quantum_inspired::{QuantumClusterer, QuantumNearestNeighbor},
     // Performance optimizations
-    simd_distance::{simd_euclidean_distance_batch, parallel_pdist},
-    memory_pool::global_distance_pool,
-    gpu_accel::is_gpu_acceleration_available,
+    simd_distance::{parallel_pdist, simd_euclidean_distance_batch},
+    // Classical algorithms for comparison
+    KDTree,
 };
 
 /// Generate test datasets for benchmarking
 struct BenchmarkDatasets {
-    small_clustered: Array2<f64>,    // 100 points, 2D
-    medium_clustered: Array2<f64>,   // 1000 points, 2D
-    large_clustered: Array2<f64>,    // 5000 points, 2D
-    high_dim_medium: Array2<f64>,    // 500 points, 10D
-    high_dim_large: Array2<f64>,     // 1000 points, 20D
+    small_clustered: Array2<f64>,  // 100 points, 2D
+    medium_clustered: Array2<f64>, // 1000 points, 2D
+    large_clustered: Array2<f64>,  // 5000 points, 2D
+    high_dim_medium: Array2<f64>,  // 500 points, 10D
+    high_dim_large: Array2<f64>,   // 1000 points, 20D
 }
 
 impl BenchmarkDatasets {
     fn new() -> Self {
         let mut rng = StdRng::seed_from_u64(42);
-        
+
         Self {
             small_clustered: Self::generate_clustered_data(&mut rng, 100, 3, 2),
             medium_clustered: Self::generate_clustered_data(&mut rng, 1000, 5, 2),
@@ -45,25 +46,30 @@ impl BenchmarkDatasets {
             high_dim_large: Self::generate_clustered_data(&mut rng, 1000, 8, 20),
         }
     }
-    
-    fn generate_clustered_data(rng: &mut StdRng, n_points: usize, n_clusters: usize, dims: usize) -> Array2<f64> {
+
+    fn generate_clustered_data(
+        rng: &mut StdRng,
+        n_points: usize,
+        n_clusters: usize,
+        dims: usize,
+    ) -> Array2<f64> {
         let mut points = Array2::zeros((n_points, dims));
-        
+
         // Generate cluster centers
         let cluster_centers: Vec<Vec<f64>> = (0..n_clusters)
             .map(|_| (0..dims).map(|_| rng.gen_range(-50.0..50.0)).collect())
             .collect();
-        
+
         // Assign points to clusters with noise
         for i in 0..n_points {
             let cluster_idx = i % n_clusters;
             let center = &cluster_centers[cluster_idx];
-            
+
             for j in 0..dims {
                 points[[i, j]] = center[j] + rng.gen_range(-5.0..5.0);
             }
         }
-        
+
         points
     }
 }
@@ -72,10 +78,10 @@ impl BenchmarkDatasets {
 fn benchmark_clustering(c: &mut Criterion) {
     let datasets = BenchmarkDatasets::new();
     let rt = Runtime::new().unwrap();
-    
+
     let mut group = c.benchmark_group("Clustering");
     group.measurement_time(Duration::from_secs(30));
-    
+
     // Test different dataset sizes
     let test_cases = vec![
         ("small_100pts", &datasets.small_clustered, 3),
@@ -83,10 +89,10 @@ fn benchmark_clustering(c: &mut Criterion) {
         ("large_5000pts", &datasets.large_clustered, 8),
         ("highdim_500pts_10d", &datasets.high_dim_medium, 5),
     ];
-    
+
     for (name, data, n_clusters) in test_cases {
         group.throughput(Throughput::Elements(data.nrows() as u64));
-        
+
         // Benchmark classical k-means (using neuromorphic as baseline since no pure classical k-means)
         group.bench_with_input(
             BenchmarkId::new("classical_baseline", name),
@@ -99,7 +105,7 @@ fn benchmark_clustering(c: &mut Criterion) {
                 });
             },
         );
-        
+
         // Benchmark quantum clustering
         group.bench_with_input(
             BenchmarkId::new("quantum", name),
@@ -111,7 +117,7 @@ fn benchmark_clustering(c: &mut Criterion) {
                 });
             },
         );
-        
+
         // Benchmark neuromorphic clustering
         group.bench_with_input(
             BenchmarkId::new("neuromorphic", name),
@@ -123,14 +129,15 @@ fn benchmark_clustering(c: &mut Criterion) {
                 });
             },
         );
-        
+
         // Benchmark hybrid clustering
         group.bench_with_input(
             BenchmarkId::new("hybrid", name),
             &(data, n_clusters),
             |b, (data, n_clusters)| {
                 b.to_async(&rt).iter(|| async {
-                    let mut clusterer = HybridClusterer::new(*n_clusters).unwrap()
+                    let mut clusterer = HybridClusterer::new(*n_clusters)
+                        .unwrap()
                         .with_quantum_depth(3)
                         .with_classical_refinement(true);
                     clusterer.cluster(&data.view()).await.unwrap()
@@ -138,7 +145,7 @@ fn benchmark_clustering(c: &mut Criterion) {
             },
         );
     }
-    
+
     group.finish();
 }
 
@@ -146,22 +153,22 @@ fn benchmark_clustering(c: &mut Criterion) {
 fn benchmark_nearest_neighbor(c: &mut Criterion) {
     let datasets = BenchmarkDatasets::new();
     let rt = Runtime::new().unwrap();
-    
+
     let mut group = c.benchmark_group("NearestNeighbor");
     group.measurement_time(Duration::from_secs(20));
-    
+
     let test_cases = vec![
         ("small_100pts", &datasets.small_clustered),
         ("medium_1000pts", &datasets.medium_clustered),
         ("large_5000pts", &datasets.large_clustered),
     ];
-    
+
     for (name, data) in test_cases {
         group.throughput(Throughput::Elements(data.nrows() as u64));
-        
+
         let query_point = vec![0.0, 0.0];
         let k = 5;
-        
+
         // Benchmark classical KDTree
         group.bench_with_input(
             BenchmarkId::new("classical_kdtree", name),
@@ -173,7 +180,7 @@ fn benchmark_nearest_neighbor(c: &mut Criterion) {
                 });
             },
         );
-        
+
         // Benchmark quantum nearest neighbor
         group.bench_with_input(
             BenchmarkId::new("quantum_nn", name),
@@ -182,30 +189,33 @@ fn benchmark_nearest_neighbor(c: &mut Criterion) {
                 b.to_async(&rt).iter(|| async {
                     let quantum_nn = QuantumNearestNeighbor::new(32, 10, 0.01, 0.7).unwrap();
                     let query_array = ndarray::Array1::from_vec(query_point.clone());
-                    quantum_nn.search(&data.view(), &query_array.view(), *k).await.unwrap()
+                    quantum_nn
+                        .search(&data.view(), &query_array.view(), *k)
+                        .await
+                        .unwrap()
                 });
             },
         );
     }
-    
+
     group.finish();
 }
 
 /// Benchmark distance computation methods
 fn benchmark_distance_computation(c: &mut Criterion) {
     let datasets = BenchmarkDatasets::new();
-    
+
     let mut group = c.benchmark_group("DistanceComputation");
     group.measurement_time(Duration::from_secs(15));
-    
+
     let test_cases = vec![
         ("medium_1000pts", &datasets.medium_clustered),
         ("large_5000pts", &datasets.large_clustered),
     ];
-    
+
     for (name, data) in test_cases {
         group.throughput(Throughput::Elements((data.nrows() * data.nrows()) as u64));
-        
+
         // Benchmark classical pairwise distances
         group.bench_with_input(
             BenchmarkId::new("classical_pdist", name),
@@ -214,22 +224,18 @@ fn benchmark_distance_computation(c: &mut Criterion) {
                 b.iter(|| pdist(data, euclidean));
             },
         );
-        
+
         // Benchmark SIMD-accelerated distances
-        group.bench_with_input(
-            BenchmarkId::new("simd_pdist", name),
-            data,
-            |b, data| {
-                b.iter(|| parallel_pdist(&data.view(), "euclidean").unwrap());
-            },
-        );
-        
+        group.bench_with_input(BenchmarkId::new("simd_pdist", name), data, |b, data| {
+            b.iter(|| parallel_pdist(&data.view(), "euclidean").unwrap());
+        });
+
         // Benchmark batch SIMD distances
         if data.nrows() >= 2 {
             let half = data.nrows() / 2;
             let data1 = data.slice(ndarray::s![..half, ..]).to_owned();
             let data2 = data.slice(ndarray::s![half.., ..]).to_owned();
-            
+
             group.bench_with_input(
                 BenchmarkId::new("simd_batch", name),
                 &(data1, data2),
@@ -239,7 +245,7 @@ fn benchmark_distance_computation(c: &mut Criterion) {
             );
         }
     }
-    
+
     group.finish();
 }
 
@@ -247,10 +253,10 @@ fn benchmark_distance_computation(c: &mut Criterion) {
 fn benchmark_memory_optimization(c: &mut Criterion) {
     let datasets = BenchmarkDatasets::new();
     let rt = Runtime::new().unwrap();
-    
+
     let mut group = c.benchmark_group("MemoryOptimization");
     group.measurement_time(Duration::from_secs(10));
-    
+
     // Test memory pool performance
     group.bench_function("memory_pool_allocation", |b| {
         b.iter(|| {
@@ -259,7 +265,7 @@ fn benchmark_memory_optimization(c: &mut Criterion) {
             // Buffer automatically returns to pool on drop
         });
     });
-    
+
     // Test memory-efficient clustering
     group.bench_with_input(
         BenchmarkId::new("memory_efficient_clustering", "large_5000pts"),
@@ -269,75 +275,67 @@ fn benchmark_memory_optimization(c: &mut Criterion) {
                 // Clear pool statistics
                 let pool = global_distance_pool();
                 let _stats_before = pool.statistics();
-                
+
                 let mut clusterer = SpikingNeuralClusterer::new(8);
                 let _result = clusterer.cluster(&data.view()).await.unwrap();
-                
+
                 let _stats_after = pool.statistics();
                 // Memory pool usage is tracked internally
             });
         },
     );
-    
+
     group.finish();
 }
 
 /// Benchmark scalability across different problem sizes
 fn benchmark_scalability(c: &mut Criterion) {
     let rt = Runtime::new().unwrap();
-    
+
     let mut group = c.benchmark_group("Scalability");
     group.measurement_time(Duration::from_secs(25));
-    
+
     // Test different problem sizes
     let sizes = vec![50, 100, 500, 1000, 2000];
-    
+
     for size in sizes {
         let mut rng = StdRng::seed_from_u64(42);
         let data = BenchmarkDatasets::generate_clustered_data(&mut rng, size, 3, 2);
-        
+
         group.throughput(Throughput::Elements(size as u64));
-        
+
         // Classical approach
-        group.bench_with_input(
-            BenchmarkId::new("classical", size),
-            &data,
-            |b, data| {
-                b.iter(|| {
-                    let kdtree = KDTree::new(data).unwrap();
-                    kdtree.query(&[0.0, 0.0], 5).unwrap()
-                });
-            },
-        );
-        
+        group.bench_with_input(BenchmarkId::new("classical", size), &data, |b, data| {
+            b.iter(|| {
+                let kdtree = KDTree::new(data).unwrap();
+                kdtree.query(&[0.0, 0.0], 5).unwrap()
+            });
+        });
+
         // Quantum approach
-        group.bench_with_input(
-            BenchmarkId::new("quantum", size),
-            &data,
-            |b, data| {
-                b.to_async(&rt).iter(|| async {
-                    let quantum_nn = QuantumNearestNeighbor::new(16, 5, 0.01, 0.7).unwrap();
-                    let query = ndarray::Array1::from_vec(vec![0.0, 0.0]);
-                    quantum_nn.search(&data.view(), &query.view(), 5).await.unwrap()
-                });
-            },
-        );
-        
+        group.bench_with_input(BenchmarkId::new("quantum", size), &data, |b, data| {
+            b.to_async(&rt).iter(|| async {
+                let quantum_nn = QuantumNearestNeighbor::new(16, 5, 0.01, 0.7).unwrap();
+                let query = ndarray::Array1::from_vec(vec![0.0, 0.0]);
+                quantum_nn
+                    .search(&data.view(), &query.view(), 5)
+                    .await
+                    .unwrap()
+            });
+        });
+
         // Neuromorphic approach (clustering)
-        if size <= 1000 { // Limit for reasonable benchmark time
-            group.bench_with_input(
-                BenchmarkId::new("neuromorphic", size),
-                &data,
-                |b, data| {
-                    b.to_async(&rt).iter(|| async {
-                        let mut clusterer = SpikingNeuralClusterer::new(3);
-                        clusterer.cluster(&data.view()).await.unwrap()
-                    });
-                },
-            );
+        if size <= 1000 {
+            // Limit for reasonable benchmark time
+            group.bench_with_input(BenchmarkId::new("neuromorphic", size), &data, |b, data| {
+                b.to_async(&rt).iter(|| async {
+                    let mut clusterer = SpikingNeuralClusterer::new(3);
+                    clusterer.cluster(&data.view()).await.unwrap()
+                });
+            });
         }
     }
-    
+
     group.finish();
 }
 
@@ -347,13 +345,13 @@ fn benchmark_gpu_acceleration(c: &mut Criterion) {
         println!("GPU acceleration not available, skipping GPU benchmarks");
         return;
     }
-    
+
     let datasets = BenchmarkDatasets::new();
     let rt = Runtime::new().unwrap();
-    
+
     let mut group = c.benchmark_group("GPUAcceleration");
     group.measurement_time(Duration::from_secs(15));
-    
+
     // GPU vs CPU comparison for large datasets
     group.bench_with_input(
         BenchmarkId::new("cpu_clustering", "large_5000pts"),
@@ -365,10 +363,10 @@ fn benchmark_gpu_acceleration(c: &mut Criterion) {
             });
         },
     );
-    
+
     // Note: GPU-specific benchmarks would require actual GPU implementations
     // This is a placeholder for when GPU kernels are fully implemented
-    
+
     group.finish();
 }
 
@@ -376,18 +374,18 @@ fn benchmark_gpu_acceleration(c: &mut Criterion) {
 fn benchmark_high_dimensional(c: &mut Criterion) {
     let datasets = BenchmarkDatasets::new();
     let rt = Runtime::new().unwrap();
-    
+
     let mut group = c.benchmark_group("HighDimensional");
     group.measurement_time(Duration::from_secs(20));
-    
+
     let test_cases = vec![
         ("10d_500pts", &datasets.high_dim_medium),
         ("20d_1000pts", &datasets.high_dim_large),
     ];
-    
+
     for (name, data) in test_cases {
         group.throughput(Throughput::Elements(data.nrows() as u64));
-        
+
         // Test quantum advantage in high dimensions
         group.bench_with_input(
             BenchmarkId::new("quantum_highdim", name),
@@ -399,7 +397,7 @@ fn benchmark_high_dimensional(c: &mut Criterion) {
                 });
             },
         );
-        
+
         // Test neuromorphic performance in high dimensions
         group.bench_with_input(
             BenchmarkId::new("neuromorphic_highdim", name),
@@ -412,7 +410,7 @@ fn benchmark_high_dimensional(c: &mut Criterion) {
             },
         );
     }
-    
+
     group.finish();
 }
 

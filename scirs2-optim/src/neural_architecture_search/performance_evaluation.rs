@@ -3,15 +3,14 @@
 //! Provides comprehensive evaluation metrics, benchmarking suites,
 //! and performance prediction capabilities for optimizer architectures.
 
-use ndarray::{Array1, Array2, ArrayBase, Data, Dimension};
+use ndarray::{Array1, Array2};
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant, SystemTime};
 
 use super::{
-    BenchmarkDataset, EvaluationConfig, EvaluationMetric, EvaluationResults, OptimizerArchitecture,
-    ResourceUsage, StatisticalTestingConfig,
+    EvaluationConfig, EvaluationMetric, EvaluationResults, OptimizerArchitecture, ResourceUsage,
 };
 use crate::error::OptimizerError;
 

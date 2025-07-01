@@ -215,7 +215,7 @@ impl<F: Float + NumCast + FloatConst> Hypergeometric<F> {
     ///
     /// An array of random samples
     pub fn rvs(&self, size: usize) -> StatsResult<Array1<F>> {
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let mut samples = Array1::zeros(size);
 
         for i in 0..size {
@@ -230,7 +230,7 @@ impl<F: Float + NumCast + FloatConst> Hypergeometric<F> {
                 }
 
                 let p_success = success_remaining as f64 / population_remaining as f64;
-                if rng.random_range(0.0..1.0) < p_success {
+                if rng.gen_range(0.0..1.0) < p_success {
                     successes += 1;
                     success_remaining -= 1;
                 } else {

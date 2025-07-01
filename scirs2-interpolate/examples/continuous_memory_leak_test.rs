@@ -7,10 +7,10 @@ use ndarray::{Array1, Array2};
 use scirs2_interpolate::{
     advanced::rbf::RBFInterpolator,
     advanced::rbf::RBFKernel,
-    memory_monitor::{start_monitoring, get_global_stats, MemoryMonitor},
-    spline::{CubicSpline, SplineBoundaryCondition},
-    interp1d::{linear_interpolate, Interp1d, InterpolationMethod},
     error::InterpolateResult,
+    interp1d::{linear_interpolate, Interp1d, InterpolationMethod},
+    memory_monitor::{get_global_stats, start_monitoring, MemoryMonitor},
+    spline::{CubicSpline, SplineBoundaryCondition},
 };
 use std::thread;
 use std::time::{Duration, Instant};
@@ -37,7 +37,7 @@ impl Default for MemoryTestConfig {
             check_interval_ms: 1000,    // Check every second
             max_memory_growth_mb: 10,   // Allow up to 10MB growth
             iterations_per_cycle: 100,  // 100 operations per cycle
-            data_size: 1000,           // 1000 data points
+            data_size: 1000,            // 1000 data points
         }
     }
 }
@@ -83,13 +83,19 @@ impl ContinuousMemoryTester {
     /// Run the continuous memory leak test
     pub fn run_test(&mut self) -> InterpolateResult<MemoryTestResults> {
         println!("Starting continuous memory leak test...");
-        println!("Test duration: {} seconds", self.config.test_duration_seconds);
+        println!(
+            "Test duration: {} seconds",
+            self.config.test_duration_seconds
+        );
         println!("Check interval: {} ms", self.config.check_interval_ms);
-        println!("Max allowed growth: {} MB", self.config.max_memory_growth_mb);
+        println!(
+            "Max allowed growth: {} MB",
+            self.config.max_memory_growth_mb
+        );
 
         // Start monitoring
         start_monitoring();
-        
+
         let start_time = Instant::now();
         let test_duration = Duration::from_secs(self.config.test_duration_seconds);
         let check_interval = Duration::from_millis(self.config.check_interval_ms);
@@ -100,7 +106,10 @@ impl ContinuousMemoryTester {
         let mut peak_memory = initial_memory;
         let mut total_operations = 0u64;
 
-        println!("Initial memory usage: {:.2} MB", initial_memory as f64 / 1_048_576.0);
+        println!(
+            "Initial memory usage: {:.2} MB",
+            initial_memory as f64 / 1_048_576.0
+        );
 
         // Generate test data once to avoid repeated allocation
         let test_data = self.generate_test_data();
@@ -173,9 +182,8 @@ impl ContinuousMemoryTester {
         });
 
         // Generate evaluation points
-        let eval_points: Array1<f64> = Array1::from_shape_fn(50, |i| {
-            i as f64 * (n - 1) as f64 / 49.0 + 0.5
-        });
+        let eval_points: Array1<f64> =
+            Array1::from_shape_fn(50, |i| i as f64 * (n - 1) as f64 / 49.0 + 0.5);
 
         TestData { x, y, eval_points }
     }
@@ -187,7 +195,8 @@ impl ContinuousMemoryTester {
 
         // Test 1: Linear interpolation
         {
-            let interp = Interp1d::new(&data.x.view(), &data.y.view(), InterpolationMethod::Linear)?;
+            let interp =
+                Interp1d::new(&data.x.view(), &data.y.view(), InterpolationMethod::Linear)?;
             for &eval_point in data.eval_points.iter() {
                 let _ = interp.evaluate(eval_point)?;
             }
@@ -195,7 +204,11 @@ impl ContinuousMemoryTester {
 
         // Test 2: Cubic spline interpolation
         {
-            let spline = CubicSpline::new(&data.x.view(), &data.y.view(), SplineBoundaryCondition::Natural)?;
+            let spline = CubicSpline::new(
+                &data.x.view(),
+                &data.y.view(),
+                SplineBoundaryCondition::Natural,
+            )?;
             for &eval_point in data.eval_points.iter() {
                 let _ = spline.evaluate(eval_point);
             }
@@ -219,9 +232,11 @@ impl ContinuousMemoryTester {
 
         // Track in monitor
         if cycle_growth > 0 {
-            self.monitor.track_allocation(cycle_growth as usize, "interpolation_cycle");
+            self.monitor
+                .track_allocation(cycle_growth as usize, "interpolation_cycle");
         } else if cycle_growth < 0 {
-            self.monitor.track_deallocation((-cycle_growth) as usize, "interpolation_cycle");
+            self.monitor
+                .track_deallocation((-cycle_growth) as usize, "interpolation_cycle");
         }
 
         Ok(())
@@ -232,26 +247,49 @@ impl ContinuousMemoryTester {
         println!("\n" + "=".repeat(60).as_str());
         println!("CONTINUOUS MEMORY LEAK TEST RESULTS");
         println!("=".repeat(60));
-        
-        println!("Test Duration: {:.1} seconds", results.test_duration.as_secs_f64());
+
+        println!(
+            "Test Duration: {:.1} seconds",
+            results.test_duration.as_secs_f64()
+        );
         println!("Total Operations: {}", results.total_operations);
-        println!("Operations per Second: {:.1}", results.total_operations as f64 / results.test_duration.as_secs_f64());
-        
+        println!(
+            "Operations per Second: {:.1}",
+            results.total_operations as f64 / results.test_duration.as_secs_f64()
+        );
+
         println!("\nMemory Usage:");
-        println!("  Initial Memory: {:.2} MB", results.initial_memory as f64 / 1_048_576.0);
-        println!("  Final Memory:   {:.2} MB", results.final_memory as f64 / 1_048_576.0);
-        println!("  Peak Memory:    {:.2} MB", results.peak_memory as f64 / 1_048_576.0);
-        println!("  Memory Growth:  {:+.2} MB", results.memory_growth as f64 / 1_048_576.0);
-        
+        println!(
+            "  Initial Memory: {:.2} MB",
+            results.initial_memory as f64 / 1_048_576.0
+        );
+        println!(
+            "  Final Memory:   {:.2} MB",
+            results.final_memory as f64 / 1_048_576.0
+        );
+        println!(
+            "  Peak Memory:    {:.2} MB",
+            results.peak_memory as f64 / 1_048_576.0
+        );
+        println!(
+            "  Memory Growth:  {:+.2} MB",
+            results.memory_growth as f64 / 1_048_576.0
+        );
+
         println!("\nPerformance Metrics:");
         println!("  Operations per MB: {:.1}", results.operations_per_mb);
-        println!("  Memory Efficiency: {:.2}%", 
-                (results.operations_per_mb / 1000.0 * 100.0).min(100.0));
+        println!(
+            "  Memory Efficiency: {:.2}%",
+            (results.operations_per_mb / 1000.0 * 100.0).min(100.0)
+        );
 
         println!("\nLeak Detection:");
         if results.leak_detected {
             println!("  ❌ MEMORY LEAK DETECTED");
-            println!("  Memory growth exceeded threshold of {} MB", self.config.max_memory_growth_mb);
+            println!(
+                "  Memory growth exceeded threshold of {} MB",
+                self.config.max_memory_growth_mb
+            );
         } else {
             println!("  ✅ NO MEMORY LEAKS DETECTED");
             println!("  Memory usage remained within acceptable bounds");
@@ -280,27 +318,36 @@ fn main() -> InterpolateResult<()> {
 
     // Configuration for different test scenarios
     let configs = vec![
-        ("Quick Test", MemoryTestConfig {
-            test_duration_seconds: 30,
-            check_interval_ms: 1000,
-            max_memory_growth_mb: 5,
-            iterations_per_cycle: 50,
-            data_size: 100,
-        }),
-        ("Standard Test", MemoryTestConfig {
-            test_duration_seconds: 120,
-            check_interval_ms: 2000,
-            max_memory_growth_mb: 10,
-            iterations_per_cycle: 100,
-            data_size: 500,
-        }),
-        ("Stress Test", MemoryTestConfig {
-            test_duration_seconds: 300,
-            check_interval_ms: 5000,
-            max_memory_growth_mb: 20,
-            iterations_per_cycle: 200,
-            data_size: 1000,
-        }),
+        (
+            "Quick Test",
+            MemoryTestConfig {
+                test_duration_seconds: 30,
+                check_interval_ms: 1000,
+                max_memory_growth_mb: 5,
+                iterations_per_cycle: 50,
+                data_size: 100,
+            },
+        ),
+        (
+            "Standard Test",
+            MemoryTestConfig {
+                test_duration_seconds: 120,
+                check_interval_ms: 2000,
+                max_memory_growth_mb: 10,
+                iterations_per_cycle: 100,
+                data_size: 500,
+            },
+        ),
+        (
+            "Stress Test",
+            MemoryTestConfig {
+                test_duration_seconds: 300,
+                check_interval_ms: 5000,
+                max_memory_growth_mb: 20,
+                iterations_per_cycle: 200,
+                data_size: 1000,
+            },
+        ),
     ];
 
     let mut all_passed = true;

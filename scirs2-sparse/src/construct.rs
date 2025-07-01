@@ -486,7 +486,7 @@ where
         + Sync
         + 'static,
 {
-    if density < 0.0 || density > 1.0 {
+    if !(0.0..=1.0).contains(&density) {
         return Err(SparseError::ValueError(
             "Density must be between 0.0 and 1.0".to_string(),
         ));

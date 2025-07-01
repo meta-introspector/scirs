@@ -516,10 +516,7 @@ impl Normalizer {
             },
         };
 
-        Normalizer {
-            axis,
-            params,
-        }
+        Normalizer { axis, params }
     }
 
     /// Fits the normalizer to the input data

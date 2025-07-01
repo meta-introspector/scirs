@@ -288,8 +288,9 @@ impl VisionTransformer {
 
         // Skip class token (index 0) and reshape patch tokens
         let patch_features = features.slice(s![1.., ..]);
-        let dense_features =
-            patch_features.to_shape((num_patches_h, num_patches_w, self.config.hidden_dim))?.to_owned();
+        let dense_features = patch_features
+            .to_shape((num_patches_h, num_patches_w, self.config.hidden_dim))?
+            .to_owned();
 
         Ok(dense_features)
     }
@@ -1222,7 +1223,12 @@ impl CrossAttentionLayer {
         // Simplified cross-attention - reuse self-attention but with different inputs
         // In a full implementation, we'd have separate Q, K, V projections
         let combined = ndarray::stack![Axis(0), q_input.view(), k_input.view()];
-        let combined_2d = combined.to_shape((combined.shape()[0] * combined.shape()[1], combined.shape()[2]))?.to_owned();
+        let combined_2d = combined
+            .to_shape((
+                combined.shape()[0] * combined.shape()[1],
+                combined.shape()[2],
+            ))?
+            .to_owned();
         let output = self.cross_attention.forward(&combined_2d)?;
         let q_output = output.slice(s![..q_input.shape()[0], ..]);
         Ok(q_output.to_owned())

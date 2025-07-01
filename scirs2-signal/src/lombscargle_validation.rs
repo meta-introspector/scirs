@@ -2987,7 +2987,10 @@ fn calculate_comprehensive_score_enhanced(
 }
 
 /// Enhanced precision validation for Lomb-Scargle periodogram
-fn validate_enhanced_precision(implementation: &str, tolerance: f64) -> SignalResult<SingleTestResult> {
+fn validate_enhanced_precision(
+    implementation: &str,
+    tolerance: f64,
+) -> SignalResult<SingleTestResult> {
     let mut issues = Vec::new();
     let mut errors = Vec::new();
 
@@ -2997,7 +3000,7 @@ fn validate_enhanced_precision(implementation: &str, tolerance: f64) -> SignalRe
     let f_signal = 17.0; // Non-integer frequency to test precision
     let phase = 0.7854; // π/4 for phase test
     let amplitude = 2.5;
-    
+
     // Generate high-precision time series
     let dt = 1.0 / fs;
     let t: Vec<f64> = (0..n).map(|i| i as f64 * dt).collect();
@@ -3052,7 +3055,11 @@ fn validate_enhanced_precision(implementation: &str, tolerance: f64) -> SignalRe
             let (_, p, _) = lombscargle_enhanced(&t_uneven, &signal_uneven, &config)?;
             p
         }
-        _ => return Err(SignalError::ValueError("Unknown implementation".to_string())),
+        _ => {
+            return Err(SignalError::ValueError(
+                "Unknown implementation".to_string(),
+            ))
+        }
     };
 
     // Find peak and validate precision
@@ -3066,16 +3073,18 @@ fn validate_enhanced_precision(implementation: &str, tolerance: f64) -> SignalRe
     // Calculate theoretical power (for normalized Lomb-Scargle)
     let theoretical_power = amplitude * amplitude / 2.0; // For sine wave
     let power_error = (peak_power - theoretical_power).abs() / theoretical_power;
-    
+
     let freq_error = (peak_freq - f_signal).abs() / f_signal;
     errors.push(freq_error);
     errors.push(power_error);
 
     // Validate frequency precision
-    if freq_error > tolerance * 0.1 { // Higher precision requirement
+    if freq_error > tolerance * 0.1 {
+        // Higher precision requirement
         issues.push(format!(
             "High-precision frequency error {:.2e} exceeds strict tolerance {:.2e}",
-            freq_error, tolerance * 0.1
+            freq_error,
+            tolerance * 0.1
         ));
     }
 
@@ -3095,9 +3104,12 @@ fn validate_enhanced_precision(implementation: &str, tolerance: f64) -> SignalRe
             spurious_peaks += 1;
         }
     }
-    
+
     if spurious_peaks > 2 {
-        issues.push(format!("Too many spurious peaks detected: {}", spurious_peaks));
+        issues.push(format!(
+            "Too many spurious peaks detected: {}",
+            spurious_peaks
+        ));
     }
 
     Ok(SingleTestResult {
@@ -3109,7 +3121,10 @@ fn validate_enhanced_precision(implementation: &str, tolerance: f64) -> SignalRe
 }
 
 /// Cross-validation with multiple reference implementations
-fn validate_cross_reference_implementation(implementation: &str, tolerance: f64) -> SignalResult<SingleTestResult> {
+fn validate_cross_reference_implementation(
+    implementation: &str,
+    tolerance: f64,
+) -> SignalResult<SingleTestResult> {
     let mut issues = Vec::new();
     let mut errors = Vec::new();
 
@@ -3118,8 +3133,8 @@ fn validate_cross_reference_implementation(implementation: &str, tolerance: f64)
     let fs = 64.0;
     let frequencies = vec![5.0, 13.0, 21.0];
     let amplitudes = vec![1.0, 2.0, 0.5];
-    let phases = vec![0.0, PI/3.0, PI/2.0];
-    
+    let phases = vec![0.0, PI / 3.0, PI / 2.0];
+
     // Generate complex test signal
     let dt = 1.0 / fs;
     let t: Vec<f64> = (0..n).map(|i| i as f64 * dt).collect();
@@ -3140,7 +3155,8 @@ fn validate_cross_reference_implementation(implementation: &str, tolerance: f64)
     let mut signal_uneven = Vec::new();
     let mut rng = rand::rng();
     for i in 0..n {
-        if rng.random_range(0.0..1.0) > 0.3 { // Keep 70% of samples
+        if rng.random_range(0.0..1.0) > 0.3 {
+            // Keep 70% of samples
             t_uneven.push(t[i]);
             signal_uneven.push(signal[i]);
         }
@@ -3173,7 +3189,11 @@ fn validate_cross_reference_implementation(implementation: &str, tolerance: f64)
             let (f, p, _) = lombscargle_enhanced(&t_uneven, &signal_uneven, &config)?;
             (f, p)
         }
-        _ => return Err(SignalError::ValueError("Unknown implementation".to_string())),
+        _ => {
+            return Err(SignalError::ValueError(
+                "Unknown implementation".to_string(),
+            ))
+        }
     };
 
     // Compute with reference implementation (standard algorithm)
@@ -3190,11 +3210,13 @@ fn validate_cross_reference_implementation(implementation: &str, tolerance: f64)
 
     // Compare results
     for (i, (&p1, &p2)) in power1.iter().zip(power2.iter()).enumerate() {
-        if p2 > 1e-15 { // Avoid division by very small numbers
+        if p2 > 1e-15 {
+            // Avoid division by very small numbers
             let relative_error = (p1 - p2).abs() / p2;
             errors.push(relative_error);
-            
-            if relative_error > tolerance * 10.0 { // More lenient for cross-validation
+
+            if relative_error > tolerance * 10.0 {
+                // More lenient for cross-validation
                 issues.push(format!(
                     "Cross-validation error at frequency {:.3} Hz: {:.2e}",
                     freqs1[i], relative_error
@@ -3206,25 +3228,32 @@ fn validate_cross_reference_implementation(implementation: &str, tolerance: f64)
     // Find peaks in both implementations
     let peaks1 = find_peaks(&power1, 0.1);
     let peaks2 = find_peaks(&power2, 0.1);
-    
+
     if peaks1.len() != peaks2.len() {
         issues.push(format!(
             "Different number of peaks detected: {} vs {}",
-            peaks1.len(), peaks2.len()
+            peaks1.len(),
+            peaks2.len()
         ));
     }
 
     // Validate that main signal frequencies are detected
     for &target_freq in &frequencies {
-        let closest_idx1 = freqs1.iter()
+        let closest_idx1 = freqs1
+            .iter()
             .enumerate()
-            .min_by(|(_, &f1), (_, &f2)| (f1 - target_freq).abs().partial_cmp(&(f2 - target_freq).abs()).unwrap())
+            .min_by(|(_, &f1), (_, &f2)| {
+                (f1 - target_freq)
+                    .abs()
+                    .partial_cmp(&(f2 - target_freq).abs())
+                    .unwrap()
+            })
             .map(|(i, _)| i)
             .unwrap();
-            
+
         let closest_freq1 = freqs1[closest_idx1];
         let freq_error = (closest_freq1 - target_freq).abs() / target_freq;
-        
+
         if freq_error > tolerance {
             issues.push(format!(
                 "Target frequency {:.1} Hz not accurately detected: found {:.3} Hz (error: {:.2e})",
@@ -3248,13 +3277,13 @@ fn find_peaks(power: &[f64], threshold: f64) -> Vec<usize> {
     let mut peaks = Vec::new();
     let max_power = power.iter().cloned().fold(0.0, f64::max);
     let min_height = max_power * threshold;
-    
-    for i in 1..power.len()-1 {
-        if power[i] > power[i-1] && power[i] > power[i+1] && power[i] > min_height {
+
+    for i in 1..power.len() - 1 {
+        if power[i] > power[i - 1] && power[i] > power[i + 1] && power[i] > min_height {
             peaks.push(i);
         }
     }
-    
+
     peaks
 }
 

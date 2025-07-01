@@ -86,11 +86,15 @@ where
         return Err(ErrorMessages::empty_array("x"));
     }
     if n <= ddof {
-        return Err(ErrorMessages::insufficient_data("variance calculation", ddof + 1, n));
+        return Err(ErrorMessages::insufficient_data(
+            "variance calculation",
+            ddof + 1,
+            n,
+        ));
     }
 
     let optimizer = AutoOptimizer::new();
-    
+
     // Use Welford's algorithm with SIMD acceleration for large arrays
     if n > 1000 && optimizer.should_use_simd(n) {
         welford_variance_simd(x, ddof)
@@ -100,12 +104,14 @@ where
         let sum_sq_dev = if optimizer.should_use_simd(n) {
             simd_sum_squared_deviations(x, mean)
         } else {
-            x.iter().map(|&val| {
-                let dev = val - mean;
-                dev * dev
-            }).fold(F::zero(), |acc, val| acc + val)
+            x.iter()
+                .map(|&val| {
+                    let dev = val - mean;
+                    dev * dev
+                })
+                .fold(F::zero(), |acc, val| acc + val)
         };
-        
+
         Ok(sum_sq_dev / F::from(n - ddof).unwrap())
     }
 }
@@ -124,8 +130,8 @@ where
 ///
 /// * The Pearson correlation coefficient
 pub fn correlation_simd_enhanced<F, D1, D2>(
-    x: &ArrayBase<D1, Ix1>, 
-    y: &ArrayBase<D2, Ix1>
+    x: &ArrayBase<D1, Ix1>,
+    y: &ArrayBase<D2, Ix1>,
 ) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync,
@@ -168,8 +174,8 @@ where
 ///
 /// * A struct containing mean, variance, std, skewness, and kurtosis
 pub fn comprehensive_stats_simd<F, D>(
-    x: &ArrayBase<D, Ix1>, 
-    ddof: usize
+    x: &ArrayBase<D, Ix1>,
+    ddof: usize,
 ) -> StatsResult<ComprehensiveStats<F>>
 where
     F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync + std::fmt::Debug,
@@ -180,7 +186,11 @@ where
         return Err(ErrorMessages::empty_array("x"));
     }
     if n <= ddof {
-        return Err(ErrorMessages::insufficient_data("comprehensive statistics", ddof + 1, n));
+        return Err(ErrorMessages::insufficient_data(
+            "comprehensive statistics",
+            ddof + 1,
+            n,
+        ));
     }
 
     let optimizer = AutoOptimizer::new();
@@ -192,7 +202,7 @@ where
         let mean = mean_enhanced(x)?;
         let variance = variance_enhanced(x, ddof)?;
         let std = variance.sqrt();
-        
+
         // For small arrays, skewness and kurtosis calculations might not benefit from SIMD
         Ok(ComprehensiveStats {
             mean,
@@ -225,24 +235,24 @@ where
     D: Data<Elem = F>,
 {
     const CHUNK_SIZE: usize = 8192; // Cache-friendly chunk size
-    
+
     let mut sum = F::zero();
     let mut compensation = F::zero();
-    
+
     for chunk in x.chunks(CHUNK_SIZE) {
         let chunk_sum = if optimizer.should_use_simd(chunk.len()) {
             F::simd_sum(&chunk)
         } else {
             chunk.iter().fold(F::zero(), |acc, &val| acc + val)
         };
-        
+
         // Kahan compensation
         let y = chunk_sum - compensation;
         let t = sum + y;
         compensation = (t - sum) - y;
         sum = t;
     }
-    
+
     sum
 }
 
@@ -255,16 +265,16 @@ where
     let n = x.len();
     let mut mean = F::zero();
     let mut m2 = F::zero();
-    
+
     // Process in SIMD-friendly chunks
     const SIMD_CHUNK: usize = 8;
     let full_chunks = n / SIMD_CHUNK;
-    
+
     for i in 0..full_chunks {
         let start = i * SIMD_CHUNK;
         let end = (i + 1) * SIMD_CHUNK;
         let chunk = x.slice(ndarray::s![start..end]);
-        
+
         // Update mean and M2 using vectorized operations
         for (j, &val) in chunk.iter().enumerate() {
             let count = F::from(start + j + 1).unwrap();
@@ -274,7 +284,7 @@ where
             m2 = m2 + delta * delta2;
         }
     }
-    
+
     // Handle remaining elements
     for (i, &val) in x.iter().enumerate().skip(full_chunks * SIMD_CHUNK) {
         let count = F::from(i + 1).unwrap();
@@ -283,7 +293,7 @@ where
         let delta2 = val - mean;
         m2 = m2 + delta * delta2;
     }
-    
+
     Ok(m2 / F::from(n - ddof).unwrap())
 }
 
@@ -300,8 +310,8 @@ where
 
 /// Full SIMD correlation calculation
 fn simd_correlation_full<F, D1, D2>(
-    x: &ArrayBase<D1, Ix1>, 
-    y: &ArrayBase<D2, Ix1>
+    x: &ArrayBase<D1, Ix1>,
+    y: &ArrayBase<D2, Ix1>,
 ) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Copy,
@@ -310,39 +320,39 @@ where
 {
     let n = x.len();
     let n_f = F::from(n).unwrap();
-    
+
     // Compute means using SIMD
     let mean_x = F::simd_sum(&x.view()) / n_f;
     let mean_y = F::simd_sum(&y.view()) / n_f;
-    
+
     // Create mean arrays for vectorized operations
     let mean_x_array = Array1::from_elem(n, mean_x);
     let mean_y_array = Array1::from_elem(n, mean_y);
-    
+
     // Compute deviations
     let dev_x = F::simd_sub(&x.view(), &mean_x_array.view());
     let dev_y = F::simd_sub(&y.view(), &mean_y_array.view());
-    
+
     // Compute correlation components
     let sum_xy = F::simd_mul(&dev_x, &dev_y).sum();
     let sum_x2 = F::simd_mul(&dev_x, &dev_x).sum();
     let sum_y2 = F::simd_mul(&dev_y, &dev_y).sum();
-    
+
     // Check for zero variances
     if sum_x2 <= F::epsilon() || sum_y2 <= F::epsilon() {
         return Err(ErrorMessages::numerical_instability(
             "correlation calculation",
-            "One or both variables have zero variance"
+            "One or both variables have zero variance",
         ));
     }
-    
+
     Ok(sum_xy / (sum_x2 * sum_y2).sqrt())
 }
 
 /// Optimized scalar correlation for smaller arrays
 fn scalar_correlation_optimized<F, D1, D2>(
-    x: &ArrayBase<D1, Ix1>, 
-    y: &ArrayBase<D2, Ix1>
+    x: &ArrayBase<D1, Ix1>,
+    y: &ArrayBase<D2, Ix1>,
 ) -> StatsResult<F>
 where
     F: Float + NumCast + Copy,
@@ -351,14 +361,14 @@ where
 {
     let n = x.len();
     let n_f = F::from(n).unwrap();
-    
+
     // Single-pass algorithm to minimize memory access
     let mut sum_x = F::zero();
     let mut sum_y = F::zero();
     let mut sum_xy = F::zero();
     let mut sum_x2 = F::zero();
     let mut sum_y2 = F::zero();
-    
+
     for (x_val, y_val) in x.iter().zip(y.iter()) {
         sum_x = sum_x + *x_val;
         sum_y = sum_y + *y_val;
@@ -366,28 +376,28 @@ where
         sum_x2 = sum_x2 + (*x_val) * (*x_val);
         sum_y2 = sum_y2 + (*y_val) * (*y_val);
     }
-    
+
     let mean_x = sum_x / n_f;
     let mean_y = sum_y / n_f;
-    
+
     let numerator = sum_xy - n_f * mean_x * mean_y;
     let denom_x = sum_x2 - n_f * mean_x * mean_x;
     let denom_y = sum_y2 - n_f * mean_y * mean_y;
-    
+
     if denom_x <= F::epsilon() || denom_y <= F::epsilon() {
         return Err(ErrorMessages::numerical_instability(
             "correlation calculation",
-            "One or both variables have zero variance"
+            "One or both variables have zero variance",
         ));
     }
-    
+
     Ok(numerator / (denom_x * denom_y).sqrt())
 }
 
 /// Single-pass comprehensive statistics with SIMD
 fn simd_comprehensive_single_pass<F, D>(
     x: &ArrayBase<D, Ix1>,
-    ddof: usize
+    ddof: usize,
 ) -> StatsResult<ComprehensiveStats<F>>
 where
     F: Float + NumCast + SimdUnifiedOps + Copy + std::fmt::Debug,
@@ -395,40 +405,40 @@ where
 {
     let n = x.len();
     let n_f = F::from(n).unwrap();
-    
+
     // First pass: compute mean
     let mean = F::simd_sum(&x.view()) / n_f;
-    
+
     // Create mean array for vectorized operations
     let mean_array = Array1::from_elem(n, mean);
     let deviations = F::simd_sub(&x.view(), &mean_array.view());
-    
+
     // Compute powers of deviations using SIMD
     let dev_squared = F::simd_mul(&deviations, &deviations);
     let dev_cubed = F::simd_mul(&dev_squared, &deviations);
     let dev_fourth = F::simd_mul(&dev_squared, &dev_squared);
-    
+
     // Sum the moments
     let m2 = dev_squared.sum();
     let m3 = dev_cubed.sum();
     let m4 = dev_fourth.sum();
-    
+
     let variance = m2 / F::from(n - ddof).unwrap();
     let std = variance.sqrt();
-    
+
     // Calculate skewness and kurtosis
     let skewness = if variance > F::epsilon() {
         (m3 / n_f) / variance.powf(F::from(1.5).unwrap())
     } else {
         F::zero()
     };
-    
+
     let kurtosis = if variance > F::epsilon() {
         (m4 / n_f) / (variance * variance) - F::from(3.0).unwrap()
     } else {
         F::zero()
     };
-    
+
     Ok(ComprehensiveStats {
         mean,
         variance,

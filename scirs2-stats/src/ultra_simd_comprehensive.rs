@@ -662,7 +662,7 @@ where
 
     /// SIMD-optimized row means computation
     fn simd_row_means(&self, data: &ArrayView2<F>) -> StatsResult<Array1<F>> {
-        let (n_rows, n_cols) = data.dim();
+        let (n_rows, _n_cols) = data.dim();
         let mut row_means = Array1::zeros(n_rows);
 
         for i in 0..n_rows {
@@ -675,7 +675,7 @@ where
 
     /// SIMD-optimized column means computation
     fn simd_column_means(&self, data: &ArrayView2<F>) -> StatsResult<Array1<F>> {
-        let (n_rows, n_cols) = data.dim();
+        let (_n_rows, n_cols) = data.dim();
         let mut col_means = Array1::zeros(n_cols);
 
         for j in 0..n_cols {

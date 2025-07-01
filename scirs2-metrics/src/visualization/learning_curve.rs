@@ -418,42 +418,237 @@ where
     )
 }
 
-/// Generate a learning curve with simplified interface (backward compatibility)
+/// Generate a learning curve with real model evaluation (ultrathink mode)
 ///
-/// This function provides a simplified interface for learning curve generation
-/// using default configuration.
+/// This function provides a sophisticated interface for learning curve generation
+/// that actually trains and evaluates models on different training set sizes.
 ///
 /// # Arguments
 ///
 /// * `X` - Feature matrix
 /// * `y` - Target values
-/// * `model` - Model to evaluate (placeholder, not used in simulation)
+/// * `model` - Model to evaluate (now properly utilized)
 /// * `train_sizes` - Training set sizes to evaluate
 /// * `cv` - Number of cross-validation folds
 /// * `scoring` - Scoring metric to use
 ///
 /// # Returns
 ///
-/// * A LearningCurveVisualizer
+/// * A LearningCurveVisualizer with real performance curves
 pub fn learning_curve<T, S1, S2>(
     x: &ArrayBase<S1, Ix2>,
     y: &ArrayBase<S2, Ix1>,
-    _model: &impl Clone,
+    model: &impl ModelEvaluator<T>,
     train_sizes: &[usize],
     cv: usize,
     scoring: impl Into<String>,
 ) -> Result<LearningCurveVisualizer>
 where
-    T: Clone + 'static,
+    T: Clone + 'static + num_traits::Float + Send + Sync + std::fmt::Debug,
     S1: Data<Elem = T>,
     S2: Data<Elem = T>,
 {
-    let config = LearningCurveConfig {
-        cv_folds: cv,
-        ..Default::default()
-    };
+    let scoring_str = scoring.into();
 
-    learning_curve_realistic(x, y, train_sizes, config, scoring)
+    // Validate inputs
+    if x.nrows() != y.len() {
+        return Err(MetricsError::InvalidInput(
+            "Feature matrix and target vector must have same number of samples".to_string(),
+        ));
+    }
+
+    if train_sizes.is_empty() {
+        return Err(MetricsError::InvalidInput(
+            "Training sizes cannot be empty".to_string(),
+        ));
+    }
+
+    let max_size = train_sizes.iter().max().unwrap();
+    if *max_size > x.nrows() {
+        return Err(MetricsError::InvalidInput(format!(
+            "Maximum training size ({}) exceeds available samples ({})",
+            max_size,
+            x.nrows()
+        )));
+    }
+
+    // Generate actual learning curves using cross-validation
+    let mut train_scores = Vec::new();
+    let mut validation_scores = Vec::new();
+
+    use scirs2_core::simd_ops::SimdUnifiedOps;
+    let mut rng = fastrand::Rng::new();
+
+    // Create cross-validation folds
+    let fold_size = x.nrows() / cv;
+    let mut indices: Vec<usize> = (0..x.nrows()).collect();
+
+    for &size in train_sizes {
+        let mut train_fold_scores = Vec::new();
+        let mut val_fold_scores = Vec::new();
+
+        // Perform cross-validation for this training size
+        for fold in 0..cv {
+            // Shuffle indices for this fold
+            for i in 0..indices.len() {
+                let j = rng.usize(0..indices.len());
+                indices.swap(i, j);
+            }
+
+            // Split data for this fold
+            let val_start = fold * fold_size;
+            let val_end = std::cmp::min((fold + 1) * fold_size, x.nrows());
+
+            let mut train_indices = Vec::new();
+            let mut val_indices = Vec::new();
+
+            for (i, &idx) in indices.iter().enumerate() {
+                if i >= val_start && i < val_end {
+                    val_indices.push(idx);
+                } else if train_indices.len() < size {
+                    train_indices.push(idx);
+                }
+            }
+
+            // Create training and validation sets
+            let train_x = extract_rows(x, &train_indices);
+            let train_y = extract_elements(y, &train_indices);
+            let val_x = extract_rows(x, &val_indices);
+            let val_y = extract_elements(y, &val_indices);
+
+            // Train model and evaluate
+            let trained_model = model.fit(&train_x, &train_y)?;
+
+            // Evaluate on training set
+            let train_pred = trained_model.predict(&train_x)?;
+            let train_score = evaluate_predictions(&train_y, &train_pred, &scoring_str)?;
+            train_fold_scores.push(train_score);
+
+            // Evaluate on validation set
+            let val_pred = trained_model.predict(&val_x)?;
+            let val_score = evaluate_predictions(&val_y, &val_pred, &scoring_str)?;
+            val_fold_scores.push(val_score);
+        }
+
+        train_scores.push(train_fold_scores);
+        validation_scores.push(val_fold_scores);
+    }
+
+    learning_curve_visualization(
+        train_sizes.to_vec(),
+        train_scores,
+        validation_scores,
+        scoring_str,
+    )
+}
+
+/// Trait for models that can be evaluated in learning curves
+pub trait ModelEvaluator<T> {
+    type TrainedModel: ModelPredictor<T>;
+
+    fn fit(&self, x: &Array2<T>, y: &Array1<T>) -> Result<Self::TrainedModel>;
+}
+
+/// Trait for trained models that can make predictions
+pub trait ModelPredictor<T> {
+    fn predict(&self, x: &Array2<T>) -> Result<Array1<T>>;
+}
+
+/// Extract specific rows from a 2D array
+fn extract_rows<T, S>(arr: &ArrayBase<S, Ix2>, indices: &[usize]) -> Array2<T>
+where
+    T: Clone,
+    S: Data<Elem = T>,
+{
+    let mut result = Array2::zeros((indices.len(), arr.ncols()));
+    for (i, &idx) in indices.iter().enumerate() {
+        result.row_mut(i).assign(&arr.row(idx));
+    }
+    result
+}
+
+/// Extract specific elements from a 1D array
+fn extract_elements<T, S>(arr: &ArrayBase<S, Ix1>, indices: &[usize]) -> Array1<T>
+where
+    T: Clone,
+    S: Data<Elem = T>,
+{
+    let mut result = Array1::zeros(indices.len());
+    for (i, &idx) in indices.iter().enumerate() {
+        result[i] = arr[idx].clone();
+    }
+    result
+}
+
+/// Evaluate predictions using the specified scoring metric
+fn evaluate_predictions<T>(y_true: &Array1<T>, y_pred: &Array1<T>, scoring: &str) -> Result<f64>
+where
+    T: Clone + num_traits::Float + Send + Sync + std::fmt::Debug,
+{
+    match scoring.to_lowercase().as_str() {
+        "accuracy" => {
+            // For classification: count exact matches
+            let correct = y_true
+                .iter()
+                .zip(y_pred.iter())
+                .filter(|(t, p)| (*t - **p).abs() < T::from(0.5).unwrap())
+                .count();
+            Ok(correct as f64 / y_true.len() as f64)
+        }
+        "mse" | "mean_squared_error" => {
+            // Mean squared error
+            let mse = y_true
+                .iter()
+                .zip(y_pred.iter())
+                .map(|(t, p)| (*t - *p) * (*t - *p))
+                .fold(T::zero(), |acc, x| acc + x)
+                / T::from(y_true.len()).unwrap();
+            Ok(mse.to_f64().unwrap_or(0.0))
+        }
+        "mae" | "mean_absolute_error" => {
+            // Mean absolute error
+            let mae = y_true
+                .iter()
+                .zip(y_pred.iter())
+                .map(|(t, p)| (*t - *p).abs())
+                .fold(T::zero(), |acc, x| acc + x)
+                / T::from(y_true.len()).unwrap();
+            Ok(mae.to_f64().unwrap_or(0.0))
+        }
+        "r2" | "r2_score" => {
+            // R² score
+            let mean_true = y_true.iter().cloned().fold(T::zero(), |acc, x| acc + x)
+                / T::from(y_true.len()).unwrap();
+
+            let ss_tot = y_true
+                .iter()
+                .map(|&t| (t - mean_true) * (t - mean_true))
+                .fold(T::zero(), |acc, x| acc + x);
+
+            let ss_res = y_true
+                .iter()
+                .zip(y_pred.iter())
+                .map(|(&t, &p)| (t - p) * (t - p))
+                .fold(T::zero(), |acc, x| acc + x);
+
+            if ss_tot == T::zero() {
+                Ok(0.0)
+            } else {
+                let r2 = T::one() - ss_res / ss_tot;
+                Ok(r2.to_f64().unwrap_or(0.0))
+            }
+        }
+        _ => {
+            // Default to MSE for unknown metrics
+            let mse = y_true
+                .iter()
+                .zip(y_pred.iter())
+                .map(|(t, p)| (*t - *p) * (*t - *p))
+                .fold(T::zero(), |acc, x| acc + x)
+                / T::from(y_true.len()).unwrap();
+            Ok(mse.to_f64().unwrap_or(0.0))
+        }
+    }
 }
 
 /// Generate learning curves for different scenarios for comparison

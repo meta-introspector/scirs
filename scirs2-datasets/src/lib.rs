@@ -124,12 +124,16 @@ pub mod stability;
 mod method_resolution_test;
 
 pub mod adaptive_streaming_engine;
+pub mod neuromorphic_data_processor;
+pub mod quantum_enhanced_generators;
+pub mod quantum_neuromorphic_fusion;
 
 // Re-export commonly used functionality
 pub use adaptive_streaming_engine::{
-    create_adaptive_engine, create_adaptive_engine_with_config, AdaptiveStreamingEngine,
-    AlertSeverity, AlertType, DataCharacteristics, MemoryStrategy, PatternType, PerformanceMetrics,
-    QualityAlert, QualityMetrics, StreamChunk, AdaptiveStreamConfig, TrendDirection, TrendIndicators,
+    create_adaptive_engine, create_adaptive_engine_with_config, AdaptiveStreamConfig,
+    AdaptiveStreamingEngine, AlertSeverity, AlertType, DataCharacteristics, MemoryStrategy,
+    PatternType, PerformanceMetrics, QualityAlert, QualityMetrics, StreamChunk, TrendDirection,
+    TrendIndicators,
 };
 pub use advanced_generators::{
     make_adversarial_examples, make_anomaly_dataset, make_continual_learning_dataset,
@@ -197,6 +201,18 @@ pub use loaders::{
     load_csv, load_csv_legacy, load_csv_parallel, load_csv_streaming, load_json, load_raw,
     save_json, CsvConfig, DatasetChunkIterator, StreamingConfig,
 };
+pub use neuromorphic_data_processor::{
+    create_neuromorphic_processor, create_neuromorphic_processor_with_topology, NetworkTopology,
+    NeuromorphicProcessor, NeuromorphicTransform, SynapticPlasticity,
+};
+pub use quantum_enhanced_generators::{
+    make_quantum_blobs, make_quantum_classification, make_quantum_regression,
+    QuantumDatasetGenerator,
+};
+pub use quantum_neuromorphic_fusion::{
+    create_fusion_with_params, create_quantum_neuromorphic_fusion, QuantumBioFusionResult,
+    QuantumInterference, QuantumNeuromorphicFusion,
+};
 pub use real_world::{
     list_real_world_datasets, load_adult, load_california_housing, load_heart_disease,
     load_red_wine_quality, load_titanic, RealWorldConfig, RealWorldDatasets,
@@ -209,9 +225,9 @@ pub use streaming::{
 };
 pub use toy::*;
 pub use ultra_gpu_optimization::{
-    benchmark_ultra_performance, generate_ultra_matrix, BenchmarkResult, DataLayout,
-    LoadBalancingMethod, MemoryAccessPattern, PerformanceBenchmarkResults, SpecializationLevel,
-    UltraGpuOptimizer, UltraKernelConfig, VectorizationStrategy,
+    benchmark_ultra_performance, generate_ultra_matrix, BenchmarkResult as UltraBenchmarkResult,
+    DataLayout, LoadBalancingMethod, MemoryAccessPattern, PerformanceBenchmarkResults,
+    SpecializationLevel, UltraGpuOptimizer, UltraKernelConfig, VectorizationStrategy,
 };
 pub use utils::{
     analyze_dataset_ultra, create_balanced_dataset, create_binned_features,

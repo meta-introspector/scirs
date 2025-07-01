@@ -3006,11 +3006,16 @@ impl AdaptiveChunking {
             &self.performance_history[self.performance_history.len().saturating_sub(10)..];
 
         // Group entries by chunk size and calculate statistics
-        let mut chunk_performance: std::collections::HashMap<usize, Vec<f64>> = std::collections::HashMap::new();
-        
+        let mut chunk_performance: std::collections::HashMap<usize, Vec<f64>> =
+            std::collections::HashMap::new();
+
         for entry in recent_entries {
-            let throughput = entry.work_complexity / (entry.execution_time_ns as f64 / 1_000_000_000.0);
-            chunk_performance.entry(entry.chunk_size).or_default().push(throughput);
+            let throughput =
+                entry.work_complexity / (entry.execution_time_ns as f64 / 1_000_000_000.0);
+            chunk_performance
+                .entry(entry.chunk_size)
+                .or_default()
+                .push(throughput);
         }
 
         // Find optimal chunk size considering both performance and stability
@@ -3023,11 +3028,13 @@ impl AdaptiveChunking {
             }
 
             let mean_throughput: f64 = throughputs.iter().sum::<f64>() / throughputs.len() as f64;
-            let variance: f64 = throughputs.iter()
+            let variance: f64 = throughputs
+                .iter()
                 .map(|&t| (t - mean_throughput).powi(2))
-                .sum::<f64>() / throughputs.len() as f64;
+                .sum::<f64>()
+                / throughputs.len() as f64;
             let std_dev = variance.sqrt();
-            
+
             // Score considering both performance (mean) and stability (inverse of std_dev)
             // Higher throughput is better, lower variance is better
             let stability_factor = 1.0 / (1.0 + std_dev / mean_throughput); // Coefficient of variation
@@ -3054,7 +3061,8 @@ impl AdaptiveChunking {
         let mut hasher = DefaultHasher::new();
         self.performance_history.len().hash(&mut hasher);
         let pseudo_random = (hasher.finish() % 1000) as f64 / 1000.0;
-        let exploration_offset = (pseudo_random - 0.5) * exploration_factor * best_chunk_size as f64;
+        let exploration_offset =
+            (pseudo_random - 0.5) * exploration_factor * best_chunk_size as f64;
 
         let target_size = best_chunk_size as f64 + exploration_offset;
         let current_size = self.current_chunk_size as f64;
@@ -3080,38 +3088,38 @@ impl AdaptiveChunking {
 
     /// Predict optimal chunk size for a given matrix operation without execution
     pub fn predict_optimal_chunk_size(
-        &self, 
+        &self,
         matrix_size: (usize, usize),
         operation_type: MatrixOperationType,
-        num_workers: usize
+        num_workers: usize,
     ) -> usize {
         // Base prediction using matrix characteristics
         let (rows, cols) = matrix_size;
         let total_elements = rows * cols;
-        
+
         let base_chunk_size = match operation_type {
             MatrixOperationType::MatrixVectorMultiplication => {
                 // For matvec, chunk by rows to maintain cache locality
                 (rows / num_workers).clamp(16, 1024)
-            },
+            }
             MatrixOperationType::MatrixMatrixMultiplication => {
                 // For matmul, consider both dimensions and target block sizes for cache efficiency
                 let target_block_elements = 4096; // Good for L1 cache (32KB / 8 bytes)
                 let elements_per_worker = total_elements / num_workers;
                 elements_per_worker.min(target_block_elements).max(64)
-            },
+            }
             MatrixOperationType::Decomposition => {
                 // Decompositions have irregular patterns, use smaller chunks for better load balancing
                 (rows / (num_workers * 4)).clamp(8, 256)
-            },
+            }
             MatrixOperationType::EigenComputation => {
                 // Eigenvalue computations are typically iterative and memory-intensive
                 (rows / (num_workers * 2)).clamp(16, 512)
-            },
+            }
             MatrixOperationType::IterativeSolver => {
                 // Iterative solvers benefit from larger chunks to amortize synchronization costs
                 (rows / num_workers).clamp(32, 2048)
-            },
+            }
         };
 
         // Adjust based on historical performance if available
@@ -3122,7 +3130,8 @@ impl AdaptiveChunking {
                 // Consider operations on matrices within 20% size difference as "similar"
                 let size_ratio = (total_elements as f64) / entry.work_complexity;
                 if size_ratio > 0.8 && size_ratio < 1.2 {
-                    let throughput = entry.work_complexity / (entry.execution_time_ns as f64 / 1_000_000_000.0);
+                    let throughput =
+                        entry.work_complexity / (entry.execution_time_ns as f64 / 1_000_000_000.0);
                     similar_performance.push((entry.chunk_size, throughput));
                 }
             }
@@ -3134,17 +3143,20 @@ impl AdaptiveChunking {
                     .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
                     .map(|&(chunk_size, _)| chunk_size)
                     .unwrap_or(base_chunk_size);
-                
+
                 // Blend base prediction with historical optimum
                 let blend_factor = 0.7; // Favor historical data
-                let predicted = (base_chunk_size as f64 * (1.0 - blend_factor) + 
-                                historical_optimum as f64 * blend_factor) as usize;
-                
+                let predicted = (base_chunk_size as f64 * (1.0 - blend_factor)
+                    + historical_optimum as f64 * blend_factor)
+                    as usize;
+
                 return predicted.max(self.min_chunk_size).min(self.max_chunk_size);
             }
         }
 
-        base_chunk_size.max(self.min_chunk_size).min(self.max_chunk_size)
+        base_chunk_size
+            .max(self.min_chunk_size)
+            .min(self.max_chunk_size)
     }
 
     /// Get performance statistics

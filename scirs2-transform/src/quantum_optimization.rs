@@ -3,12 +3,12 @@
 //! This module implements quantum-inspired algorithms for optimizing
 //! data transformation pipelines with advanced metaheuristics.
 
+use crate::auto_feature_engineering::{TransformationConfig, TransformationType};
 use crate::error::{Result, TransformError};
-use crate::auto_feature_engineering::{TransformationType, TransformationConfig};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use rand::Rng;
 use scirs2_core::validation::{check_finite, check_not_empty};
 use std::collections::HashMap;
-use rand::Rng;
 
 /// Quantum-inspired particle for optimization
 #[derive(Debug, Clone)]
@@ -63,19 +63,16 @@ impl QuantumInspiredOptimizer {
             ));
         }
 
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let mut particles = Vec::with_capacity(population_size);
 
         // Initialize quantum particles
         for _ in 0..population_size {
-            let position: Array1<f64> = Array1::from_iter(
-                bounds.iter().map(|(min, max)| rng.random_range(*min..*max))
-            );
-            
+            let position: Array1<f64> =
+                Array1::from_iter(bounds.iter().map(|(min, max)| rng.gen_range(*min..*max)));
+
             let velocity = Array1::zeros(dimension);
-            let superposition = Array1::from_iter(
-                (0..dimension).map(|_| rng.random_range(0.0..1.0))
-            );
+            let superposition = Array1::from_iter((0..dimension).map(|_| rng.gen_range(0.0..1.0)));
 
             particles.push(QuantumParticle {
                 position: position.clone(),
@@ -83,8 +80,8 @@ impl QuantumInspiredOptimizer {
                 best_position: position,
                 best_fitness: f64::NEG_INFINITY,
                 superposition,
-                phase: rng.random_range(0.0..2.0 * std::f64::consts::PI),
-                entanglement: rng.random_range(0.0..1.0),
+                phase: rng.gen_range(0.0..2.0 * std::f64::consts::PI),
+                entanglement: rng.gen_range(0.0..1.0),
             });
         }
 
@@ -137,7 +134,7 @@ impl QuantumInspiredOptimizer {
             self.update_quantum_entanglement()?;
 
             // Quantum collapse with probability
-            if rng.random::<f64>() < self.collapse_probability {
+            if rng.gen::<f64>() < self.collapse_probability {
                 self.quantum_collapse()?;
             }
 
@@ -154,14 +151,14 @@ impl QuantumInspiredOptimizer {
     /// Apply quantum superposition to particle position
     fn apply_quantum_superposition(&self, particle: &QuantumParticle) -> Result<Array1<f64>> {
         let mut quantum_position = particle.position.clone();
-        
+
         for i in 0..quantum_position.len() {
             // Quantum wave function collapse
             let wave_amplitude = particle.superposition[i] * particle.phase.cos();
             let quantum_offset = wave_amplitude * particle.entanglement;
-            
+
             quantum_position[i] += quantum_offset;
-            
+
             // Enforce bounds
             let (min_bound, max_bound) = self.bounds[i];
             quantum_position[i] = quantum_position[i].max(min_bound).min(max_bound);
@@ -173,22 +170,24 @@ impl QuantumInspiredOptimizer {
     /// Update quantum entanglement between particles
     fn update_quantum_entanglement(&mut self) -> Result<()> {
         let n_particles = self.particles.len();
-        
+
         for i in 0..n_particles {
             // Calculate entanglement with global best
             let distance_to_global = (&self.particles[i].position - &self.global_best_position)
                 .mapv(|x| x * x)
                 .sum()
                 .sqrt();
-            
+
             // Update entanglement based on distance and quantum correlation
-            let max_distance = self.bounds.iter()
+            let max_distance = self
+                .bounds
+                .iter()
                 .map(|(min, max)| (max - min).powi(2))
                 .sum::<f64>()
                 .sqrt();
-            
+
             let normalized_distance = distance_to_global / max_distance.max(1e-10);
-            self.particles[i].entanglement = 
+            self.particles[i].entanglement =
                 self.entanglement_strength * (1.0 - normalized_distance).max(0.0);
         }
 
@@ -198,17 +197,17 @@ impl QuantumInspiredOptimizer {
     /// Quantum collapse operation
     fn quantum_collapse(&mut self) -> Result<()> {
         let mut rng = rand::thread_rng();
-        
+
         for particle in &mut self.particles {
             // Collapse superposition with probability
             for i in 0..particle.superposition.len() {
-                if rng.random::<f64>() < 0.3 {
-                    particle.superposition[i] = if rng.random::<bool>() { 1.0 } else { 0.0 };
+                if rng.gen::<f64>() < 0.3 {
+                    particle.superposition[i] = if rng.gen::<bool>() { 1.0 } else { 0.0 };
                 }
             }
-            
+
             // Reset quantum phase
-            particle.phase = rng.random_range(0.0..2.0 * std::f64::consts::PI);
+            particle.phase = rng.gen_range(0.0..2.0 * std::f64::consts::PI);
         }
 
         Ok(())
@@ -217,7 +216,7 @@ impl QuantumInspiredOptimizer {
     /// Decay superposition over time
     fn decay_superposition(&mut self, iteration: usize) {
         let decay_factor = self.decay_rate.powi(iteration as i32);
-        
+
         for particle in &mut self.particles {
             particle.superposition.mapv_inplace(|x| x * decay_factor);
         }
@@ -226,10 +225,10 @@ impl QuantumInspiredOptimizer {
     /// Adapt quantum parameters during optimization
     fn adapt_quantum_parameters(&mut self, iteration: usize) {
         let progress = iteration as f64 / self.max_iterations as f64;
-        
+
         // Adaptive collapse probability (higher early, lower late)
         self.collapse_probability = 0.2 * (1.0 - progress) + 0.05 * progress;
-        
+
         // Adaptive entanglement strength
         self.entanglement_strength = 0.5 * (1.0 - progress) + 0.1 * progress;
     }
@@ -250,11 +249,11 @@ impl QuantumTransformationOptimizer {
     pub fn new() -> Result<Self> {
         // Define parameter bounds for different transformations
         let bounds = vec![
-            (0.0, 1.0),   // General normalization parameter
-            (0.1, 10.0),  // Scale factor
-            (1.0, 10.0),  // Polynomial degree
-            (0.0, 1.0),   // Threshold parameter
-            (0.0, 1.0),   // Regularization parameter
+            (0.0, 1.0),  // General normalization parameter
+            (0.1, 10.0), // Scale factor
+            (1.0, 10.0), // Polynomial degree
+            (0.0, 1.0),  // Threshold parameter
+            (0.0, 1.0),  // Regularization parameter
         ];
 
         let quantum_optimizer = QuantumInspiredOptimizer::new(5, 50, bounds, 100)?;
@@ -269,7 +268,7 @@ impl QuantumTransformationOptimizer {
         ];
 
         let mut parameter_mappings = HashMap::new();
-        
+
         // Define parameter mappings
         parameter_mappings.insert(
             TransformationType::PowerTransformer,
@@ -305,21 +304,22 @@ impl QuantumTransformationOptimizer {
         let objective = move |params: &Array1<f64>| -> f64 {
             // Convert parameters to transformation configs
             let configs = self.params_to_configs(params);
-            
+
             // Simulate transformation pipeline performance
-            let performance_score = self.evaluate_pipeline_performance(&data_clone.view(), &configs);
-            
+            let performance_score =
+                self.evaluate_pipeline_performance(&data_clone.view(), &configs);
+
             // Multi-objective score combining performance and efficiency
             let efficiency_score = self.compute_efficiency_score(&configs);
             let robustness_score = self.compute_robustness_score(&configs);
-            
+
             // Weighted combination
             0.6 * performance_score + 0.3 * efficiency_score + 0.1 * robustness_score
         };
 
         // Run quantum optimization
         let (optimal_params, _best_fitness) = self.quantum_optimizer.optimize(objective)?;
-        
+
         // Convert optimal parameters back to transformation configs
         Ok(self.params_to_configs(&optimal_params))
     }
@@ -327,7 +327,7 @@ impl QuantumTransformationOptimizer {
     /// Convert parameter vector to transformation configurations
     fn params_to_configs(&self, params: &Array1<f64>) -> Vec<TransformationConfig> {
         let mut configs = Vec::new();
-        
+
         // Parameter 0: StandardScaler usage probability
         if params[0] > 0.5 {
             configs.push(TransformationConfig {
@@ -374,16 +374,19 @@ impl QuantumTransformationOptimizer {
     }
 
     /// Evaluate pipeline performance (simplified simulation)
-    fn evaluate_pipeline_performance(&self, _data: &ArrayView2<f64>, configs: &[TransformationConfig]) -> f64 {
+    fn evaluate_pipeline_performance(
+        &self,
+        _data: &ArrayView2<f64>,
+        configs: &[TransformationConfig],
+    ) -> f64 {
         if configs.is_empty() {
             return 0.0;
         }
 
         // Simulate pipeline performance based on transformation complexity
         let complexity_penalty = configs.len() as f64 * 0.1;
-        let base_score = configs.iter()
-            .map(|c| c.expected_performance)
-            .sum::<f64>() / configs.len() as f64;
+        let base_score =
+            configs.iter().map(|c| c.expected_performance).sum::<f64>() / configs.len() as f64;
 
         (base_score - complexity_penalty).max(0.0).min(1.0)
     }
@@ -398,10 +401,18 @@ impl QuantumTransformationOptimizer {
             (TransformationType::PowerTransformer, 0.7),
             (TransformationType::PolynomialFeatures, 0.5),
             (TransformationType::PCA, 0.8),
-        ].iter().cloned().collect::<HashMap<_, _>>();
+        ]
+        .iter()
+        .cloned()
+        .collect::<HashMap<_, _>>();
 
-        let total_efficiency: f64 = configs.iter()
-            .map(|c| complexity_weights.get(&c.transformation_type).unwrap_or(&0.5))
+        let total_efficiency: f64 = configs
+            .iter()
+            .map(|c| {
+                complexity_weights
+                    .get(&c.transformation_type)
+                    .unwrap_or(&0.5)
+            })
             .sum();
 
         if configs.is_empty() {
@@ -421,10 +432,18 @@ impl QuantumTransformationOptimizer {
             (TransformationType::PowerTransformer, 0.7),
             (TransformationType::PolynomialFeatures, 0.4),
             (TransformationType::PCA, 0.9),
-        ].iter().cloned().collect::<HashMap<_, _>>();
+        ]
+        .iter()
+        .cloned()
+        .collect::<HashMap<_, _>>();
 
-        let total_robustness: f64 = configs.iter()
-            .map(|c| robustness_weights.get(&c.transformation_type).unwrap_or(&0.5))
+        let total_robustness: f64 = configs
+            .iter()
+            .map(|c| {
+                robustness_weights
+                    .get(&c.transformation_type)
+                    .unwrap_or(&0.5)
+            })
             .sum();
 
         if configs.is_empty() {
@@ -487,34 +506,34 @@ impl QuantumHyperparameterTuner {
         let data_clone = data.to_owned();
         let validation_clone = validation_data.to_owned();
         let t_type = self.transformation_type.clone();
-        
+
         let objective = move |params: &Array1<f64>| -> f64 {
             // Create configuration with current parameters
             let config = Self::params_to_config(&t_type, params);
-            
+
             // Simulate transformation and compute performance
             let performance = Self::simulate_transformation_performance(
                 &data_clone.view(),
                 &validation_clone.view(),
                 &config,
             );
-            
+
             performance
         };
 
         // Run quantum optimization
         let (optimal_params, _) = self.optimizer.optimize(objective)?;
-        
+
         // Convert optimal parameters to configuration
         let optimal_config = Self::params_to_config(&self.transformation_type, &optimal_params);
-        
+
         Ok(optimal_config.parameters)
     }
 
     /// Convert parameter vector to transformation configuration
     fn params_to_config(t_type: &TransformationType, params: &Array1<f64>) -> TransformationConfig {
         let mut parameters = HashMap::new();
-        
+
         match t_type {
             TransformationType::PowerTransformer => {
                 parameters.insert("lambda".to_string(), params[0]);

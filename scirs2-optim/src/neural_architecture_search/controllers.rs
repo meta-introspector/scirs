@@ -6,7 +6,6 @@
 use ndarray::{s, Array1, Array2, Dimension};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
-use std::sync::Arc;
 
 use super::{
     architecture_space::{ComponentType, OptimizerComponent},

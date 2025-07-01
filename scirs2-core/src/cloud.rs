@@ -22,6 +22,9 @@ use thiserror::Error;
 #[cfg(feature = "async")]
 use tokio::io::{AsyncRead, AsyncWrite};
 
+#[cfg(feature = "async")]
+use async_trait::async_trait;
+
 /// Cloud storage error types
 #[derive(Error, Debug)]
 pub enum CloudError {
@@ -160,10 +163,12 @@ pub enum CloudCredentials {
 impl CloudCredentials {
     /// Create AWS credentials from environment variables
     pub fn aws_from_env() -> Result<Self, CloudError> {
-        let access_key_id = std::env::var("AWS_ACCESS_KEY_ID")
-            .map_err(|_| CloudError::AuthenticationError("AWS_ACCESS_KEY_ID not found".to_string()))?;
-        let secret_access_key = std::env::var("AWS_SECRET_ACCESS_KEY")
-            .map_err(|_| CloudError::AuthenticationError("AWS_SECRET_ACCESS_KEY not found".to_string()))?;
+        let access_key_id = std::env::var("AWS_ACCESS_KEY_ID").map_err(|_| {
+            CloudError::AuthenticationError("AWS_ACCESS_KEY_ID not found".to_string())
+        })?;
+        let secret_access_key = std::env::var("AWS_SECRET_ACCESS_KEY").map_err(|_| {
+            CloudError::AuthenticationError("AWS_SECRET_ACCESS_KEY not found".to_string())
+        })?;
         let session_token = std::env::var("AWS_SESSION_TOKEN").ok();
         let region = std::env::var("AWS_REGION").unwrap_or_else(|_| "us-east-1".to_string());
 
@@ -177,10 +182,15 @@ impl CloudCredentials {
 
     /// Create Google Cloud credentials from environment variables
     pub fn google_from_env() -> Result<Self, CloudError> {
-        let service_account_key = std::env::var("GOOGLE_APPLICATION_CREDENTIALS")
-            .map_err(|_| CloudError::AuthenticationError("GOOGLE_APPLICATION_CREDENTIALS not found".to_string()))?;
-        let project_id = std::env::var("GOOGLE_CLOUD_PROJECT")
-            .map_err(|_| CloudError::AuthenticationError("GOOGLE_CLOUD_PROJECT not found".to_string()))?;
+        let service_account_key =
+            std::env::var("GOOGLE_APPLICATION_CREDENTIALS").map_err(|_| {
+                CloudError::AuthenticationError(
+                    "GOOGLE_APPLICATION_CREDENTIALS not found".to_string(),
+                )
+            })?;
+        let project_id = std::env::var("GOOGLE_CLOUD_PROJECT").map_err(|_| {
+            CloudError::AuthenticationError("GOOGLE_CLOUD_PROJECT not found".to_string())
+        })?;
 
         Ok(CloudCredentials::Google {
             service_account_key,
@@ -190,10 +200,12 @@ impl CloudCredentials {
 
     /// Create Azure credentials from environment variables
     pub fn azure_from_env() -> Result<Self, CloudError> {
-        let account_name = std::env::var("AZURE_STORAGE_ACCOUNT")
-            .map_err(|_| CloudError::AuthenticationError("AZURE_STORAGE_ACCOUNT not found".to_string()))?;
-        let account_key = std::env::var("AZURE_STORAGE_KEY")
-            .map_err(|_| CloudError::AuthenticationError("AZURE_STORAGE_KEY not found".to_string()))?;
+        let account_name = std::env::var("AZURE_STORAGE_ACCOUNT").map_err(|_| {
+            CloudError::AuthenticationError("AZURE_STORAGE_ACCOUNT not found".to_string())
+        })?;
+        let account_key = std::env::var("AZURE_STORAGE_KEY").map_err(|_| {
+            CloudError::AuthenticationError("AZURE_STORAGE_KEY not found".to_string())
+        })?;
         let sas_token = std::env::var("AZURE_STORAGE_SAS_TOKEN").ok();
 
         Ok(CloudCredentials::Azure {
@@ -379,6 +391,7 @@ pub struct ListResult {
 
 /// Cloud storage backend trait
 #[cfg(feature = "async")]
+#[async_trait]
 pub trait CloudStorageBackend: Send + Sync {
     /// Upload a file to cloud storage
     async fn upload_file(
@@ -405,16 +418,10 @@ pub trait CloudStorageBackend: Send + Sync {
     ) -> Result<CloudObjectMetadata, CloudError>;
 
     /// Download data to memory
-    async fn download_data(
-        &self,
-        remote_key: &str,
-    ) -> Result<Vec<u8>, CloudError>;
+    async fn download_data(&self, remote_key: &str) -> Result<Vec<u8>, CloudError>;
 
     /// Get object metadata
-    async fn get_metadata(
-        &self,
-        remote_key: &str,
-    ) -> Result<CloudObjectMetadata, CloudError>;
+    async fn get_metadata(&self, remote_key: &str) -> Result<CloudObjectMetadata, CloudError>;
 
     /// Check if object exists
     async fn exists(&self, remote_key: &str) -> Result<bool, CloudError>;
@@ -490,7 +497,8 @@ impl CloudCache {
     }
 
     fn put_metadata(&mut self, key: String, metadata: CloudObjectMetadata) {
-        self.metadata_cache.insert(key, (metadata, SystemTime::now()));
+        self.metadata_cache
+            .insert(key, (metadata, SystemTime::now()));
     }
 
     fn invalidate(&mut self, key: &str) {
@@ -507,7 +515,9 @@ impl CloudStorageClient {
     pub fn new(config: CloudConfig) -> Result<Self, CloudError> {
         let backend = Self::create_backend(&config)?;
         let cache = if config.enable_cache {
-            Some(Arc::new(Mutex::new(CloudCache::new(Duration::from_secs(300)))))
+            Some(Arc::new(Mutex::new(CloudCache::new(Duration::from_secs(
+                300,
+            )))))
         } else {
             None
         };
@@ -525,12 +535,8 @@ impl CloudStorageClient {
             CloudProvider::AwsS3 | CloudProvider::S3Compatible => {
                 Ok(Box::new(S3Backend::new(config.clone())?))
             }
-            CloudProvider::GoogleCloud => {
-                Ok(Box::new(GoogleCloudBackend::new(config.clone())?))
-            }
-            CloudProvider::AzureBlob => {
-                Ok(Box::new(AzureBackend::new(config.clone())?))
-            }
+            CloudProvider::GoogleCloud => Ok(Box::new(GoogleCloudBackend::new(config.clone())?)),
+            CloudProvider::AzureBlob => Ok(Box::new(AzureBackend::new(config.clone())?)),
         }
     }
 
@@ -542,11 +548,17 @@ impl CloudStorageClient {
         remote_key: &str,
         options: TransferOptions,
     ) -> Result<CloudObjectMetadata, CloudError> {
-        let result = self.backend.upload_file(local_path.as_ref(), remote_key, options).await?;
-        
+        let result = self
+            .backend
+            .upload_file(local_path.as_ref(), remote_key, options)
+            .await?;
+
         // Update cache
         if let Some(cache) = &self.cache {
-            cache.lock().unwrap().put_metadata(remote_key.to_string(), result.clone());
+            cache
+                .lock()
+                .unwrap()
+                .put_metadata(remote_key.to_string(), result.clone());
         }
 
         Ok(result)
@@ -560,7 +572,9 @@ impl CloudStorageClient {
         local_path: P,
         options: TransferOptions,
     ) -> Result<CloudObjectMetadata, CloudError> {
-        self.backend.download_file(remote_key, local_path.as_ref(), options).await
+        self.backend
+            .download_file(remote_key, local_path.as_ref(), options)
+            .await
     }
 
     /// Upload data from memory
@@ -572,10 +586,13 @@ impl CloudStorageClient {
         options: TransferOptions,
     ) -> Result<CloudObjectMetadata, CloudError> {
         let result = self.backend.upload_data(data, remote_key, options).await?;
-        
+
         // Update cache
         if let Some(cache) = &self.cache {
-            cache.lock().unwrap().put_metadata(remote_key.to_string(), result.clone());
+            cache
+                .lock()
+                .unwrap()
+                .put_metadata(remote_key.to_string(), result.clone());
         }
 
         Ok(result)
@@ -602,7 +619,10 @@ impl CloudStorageClient {
 
         // Update cache
         if let Some(cache) = &self.cache {
-            cache.lock().unwrap().put_metadata(remote_key.to_string(), metadata.clone());
+            cache
+                .lock()
+                .unwrap()
+                .put_metadata(remote_key.to_string(), metadata.clone());
         }
 
         Ok(metadata)
@@ -618,7 +638,7 @@ impl CloudStorageClient {
     #[cfg(feature = "async")]
     pub async fn delete_object(&self, remote_key: &str) -> Result<(), CloudError> {
         let result = self.backend.delete_object(remote_key).await;
-        
+
         // Invalidate cache
         if let Some(cache) = &self.cache {
             cache.lock().unwrap().invalidate(remote_key);
@@ -635,7 +655,9 @@ impl CloudStorageClient {
         max_keys: Option<usize>,
         continuation_token: Option<&str>,
     ) -> Result<ListResult, CloudError> {
-        self.backend.list_objects(prefix, max_keys, continuation_token).await
+        self.backend
+            .list_objects(prefix, max_keys, continuation_token)
+            .await
     }
 
     /// Copy an object
@@ -646,11 +668,17 @@ impl CloudStorageClient {
         dest_key: &str,
         options: TransferOptions,
     ) -> Result<CloudObjectMetadata, CloudError> {
-        let result = self.backend.copy_object(source_key, dest_key, options).await?;
-        
+        let result = self
+            .backend
+            .copy_object(source_key, dest_key, options)
+            .await?;
+
         // Update cache for destination
         if let Some(cache) = &self.cache {
-            cache.lock().unwrap().put_metadata(dest_key.to_string(), result.clone());
+            cache
+                .lock()
+                .unwrap()
+                .put_metadata(dest_key.to_string(), result.clone());
         }
 
         Ok(result)
@@ -664,7 +692,9 @@ impl CloudStorageClient {
         expiration: Duration,
         method: HttpMethod,
     ) -> Result<String, CloudError> {
-        self.backend.generate_presigned_url(remote_key, expiration, method).await
+        self.backend
+            .generate_presigned_url(remote_key, expiration, method)
+            .await
     }
 
     /// Clear all cached data
@@ -690,7 +720,11 @@ impl S3Backend {
         // Validate S3 configuration
         match &config.credentials {
             CloudCredentials::Aws { .. } | CloudCredentials::Anonymous => {}
-            _ => return Err(CloudError::InvalidConfiguration("Invalid credentials for S3".to_string())),
+            _ => {
+                return Err(CloudError::InvalidConfiguration(
+                    "Invalid credentials for S3".to_string(),
+                ))
+            }
         }
 
         Ok(Self { config })
@@ -698,6 +732,7 @@ impl S3Backend {
 }
 
 #[cfg(feature = "async")]
+#[async_trait]
 impl CloudStorageBackend for S3Backend {
     async fn upload_file(
         &self,
@@ -707,7 +742,7 @@ impl CloudStorageBackend for S3Backend {
     ) -> Result<CloudObjectMetadata, CloudError> {
         // In a real implementation, this would use the AWS SDK or reqwest
         // to perform the actual upload with proper authentication
-        
+
         // For now, simulate the operation
         let file_size = std::fs::metadata(local_path)
             .map_err(|e| CloudError::UploadError(format!("Failed to read file metadata: {}", e)))?
@@ -878,7 +913,11 @@ impl GoogleCloudBackend {
         // Validate GCS configuration
         match &config.credentials {
             CloudCredentials::Google { .. } | CloudCredentials::Anonymous => {}
-            _ => return Err(CloudError::InvalidConfiguration("Invalid credentials for GCS".to_string())),
+            _ => {
+                return Err(CloudError::InvalidConfiguration(
+                    "Invalid credentials for GCS".to_string(),
+                ))
+            }
         }
 
         Ok(Self { config })
@@ -886,6 +925,7 @@ impl GoogleCloudBackend {
 }
 
 #[cfg(feature = "async")]
+#[async_trait]
 impl CloudStorageBackend for GoogleCloudBackend {
     async fn upload_file(
         &self,
@@ -1054,7 +1094,11 @@ impl AzureBackend {
         // Validate Azure configuration
         match &config.credentials {
             CloudCredentials::Azure { .. } | CloudCredentials::Anonymous => {}
-            _ => return Err(CloudError::InvalidConfiguration("Invalid credentials for Azure".to_string())),
+            _ => {
+                return Err(CloudError::InvalidConfiguration(
+                    "Invalid credentials for Azure".to_string(),
+                ))
+            }
         }
 
         Ok(Self { config })
@@ -1062,6 +1106,7 @@ impl AzureBackend {
 }
 
 #[cfg(feature = "async")]
+#[async_trait]
 impl CloudStorageBackend for AzureBackend {
     async fn upload_file(
         &self,
@@ -1256,7 +1301,9 @@ pub mod utils {
         if recursive {
             visit_dir(local_dir, &mut files).map_err(|e| CloudError::UploadError(e.to_string()))?;
         } else {
-            for entry in std::fs::read_dir(local_dir).map_err(|e| CloudError::UploadError(e.to_string()))? {
+            for entry in
+                std::fs::read_dir(local_dir).map_err(|e| CloudError::UploadError(e.to_string()))?
+            {
                 let entry = entry.map_err(|e| CloudError::UploadError(e.to_string()))?;
                 let path = entry.path();
                 if path.is_file() {
@@ -1266,11 +1313,14 @@ pub mod utils {
         }
 
         for file_path in files {
-            let relative_path = file_path.strip_prefix(local_dir)
+            let relative_path = file_path
+                .strip_prefix(local_dir)
                 .map_err(|e| CloudError::UploadError(e.to_string()))?;
             let remote_key = format!("{}/{}", remote_prefix, relative_path.to_string_lossy());
 
-            client.upload_file(&file_path, &remote_key, TransferOptions::default()).await?;
+            client
+                .upload_file(&file_path, &remote_key, TransferOptions::default())
+                .await?;
             uploaded_count += 1;
         }
 
@@ -1288,18 +1338,30 @@ pub mod utils {
         let mut continuation_token = None;
 
         loop {
-            let result = client.list_objects(Some(remote_prefix), Some(1000), continuation_token.as_deref()).await?;
+            let result = client
+                .list_objects(
+                    Some(remote_prefix),
+                    Some(1000),
+                    continuation_token.as_deref(),
+                )
+                .await?;
 
             for object in &result.objects {
-                let relative_path = object.key.strip_prefix(remote_prefix).unwrap_or(&object.key);
+                let relative_path = object
+                    .key
+                    .strip_prefix(remote_prefix)
+                    .unwrap_or(&object.key);
                 let local_path = local_dir.join(relative_path);
 
                 // Create parent directories
                 if let Some(parent) = local_path.parent() {
-                    std::fs::create_dir_all(parent).map_err(|e| CloudError::DownloadError(e.to_string()))?;
+                    std::fs::create_dir_all(parent)
+                        .map_err(|e| CloudError::DownloadError(e.to_string()))?;
                 }
 
-                client.download_file(&object.key, &local_path, TransferOptions::default()).await?;
+                client
+                    .download_file(&object.key, &local_path, TransferOptions::default())
+                    .await?;
                 downloaded_count += 1;
             }
 
@@ -1322,7 +1384,9 @@ pub mod utils {
         let mut continuation_token = None;
 
         loop {
-            let result = client.list_objects(prefix, Some(1000), continuation_token.as_deref()).await?;
+            let result = client
+                .list_objects(prefix, Some(1000), continuation_token.as_deref())
+                .await?;
 
             for object in &result.objects {
                 total_size += object.size;
@@ -1357,7 +1421,7 @@ mod tests {
     #[test]
     fn test_cloud_config_builders() {
         let creds = CloudCredentials::Anonymous;
-        
+
         let s3_config = CloudConfig::aws_s3("test-bucket".to_string(), creds.clone());
         assert_eq!(s3_config.provider, CloudProvider::AwsS3);
         assert_eq!(s3_config.bucket, "test-bucket");
@@ -1376,7 +1440,10 @@ mod tests {
             .with_timeout(Duration::from_secs(60))
             .with_multipart(50 * 1024 * 1024, 4 * 1024 * 1024);
 
-        assert_eq!(config.endpoint, Some("https://custom.endpoint.com".to_string()));
+        assert_eq!(
+            config.endpoint,
+            Some("https://custom.endpoint.com".to_string())
+        );
         assert_eq!(config.timeout, Duration::from_secs(60));
         assert_eq!(config.multipart_threshold, 50 * 1024 * 1024);
         assert_eq!(config.chunk_size, 4 * 1024 * 1024);
@@ -1399,7 +1466,10 @@ mod tests {
 
         // Test data upload
         let data = b"test data";
-        let result = backend.upload_data(data, "test-upload", TransferOptions::default()).await.unwrap();
+        let result = backend
+            .upload_data(data, "test-upload", TransferOptions::default())
+            .await
+            .unwrap();
         assert_eq!(result.key, "test-upload");
         assert_eq!(result.size, data.len() as u64);
 
@@ -1413,7 +1483,10 @@ mod tests {
         assert!(list_result.objects.len() <= 5);
 
         // Test presigned URL generation
-        let url = backend.generate_presigned_url("test-key", Duration::from_secs(3600), HttpMethod::Get).await.unwrap();
+        let url = backend
+            .generate_presigned_url("test-key", Duration::from_secs(3600), HttpMethod::Get)
+            .await
+            .unwrap();
         assert!(url.contains("test-key"));
         assert!(url.contains("expires=3600"));
     }
@@ -1434,18 +1507,26 @@ mod tests {
 
         // Test upload
         let data = b"test data for client";
-        let result = client.upload_data(data, "client-test", TransferOptions::default()).await.unwrap();
+        let result = client
+            .upload_data(data, "client-test", TransferOptions::default())
+            .await
+            .unwrap();
         assert_eq!(result.size, data.len() as u64);
     }
 
     #[test]
     fn test_transfer_options() {
         let mut options = TransferOptions::default();
-        options.metadata.insert("custom-key".to_string(), "custom-value".to_string());
+        options
+            .metadata
+            .insert("custom-key".to_string(), "custom-value".to_string());
         options.content_type = Some("text/plain".to_string());
         options.overwrite = true;
 
-        assert_eq!(options.metadata.get("custom-key"), Some(&"custom-value".to_string()));
+        assert_eq!(
+            options.metadata.get("custom-key"),
+            Some(&"custom-value".to_string())
+        );
         assert_eq!(options.content_type, Some("text/plain".to_string()));
         assert!(options.overwrite);
     }

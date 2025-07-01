@@ -25,19 +25,13 @@ pub use scirs2_core::gpu::{
 
 // Fallback types when GPU feature is not enabled
 #[cfg(not(feature = "gpu"))]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum GpuBackend {
+    #[default]
     Cpu,
     Cuda,
     OpenCl,
     Metal,
-}
-
-#[cfg(not(feature = "gpu"))]
-impl Default for GpuBackend {
-    fn default() -> Self {
-        GpuBackend::Cpu
-    }
 }
 
 #[cfg(not(feature = "gpu"))]
@@ -1954,7 +1948,7 @@ where
     }
 
     // Check if we should use GPU acceleration
-    let use_gpu = should_use_gpu::<T>(rows, cols, matrix.nnz(), &options);
+    let use_gpu = should_use_gpu(rows, cols, matrix.nnz(), &options);
 
     if use_gpu {
         // Try GPU acceleration first
@@ -2003,7 +1997,7 @@ where
     }
 
     // Check if we should use GPU acceleration
-    let use_gpu = should_use_gpu::<T>(rows, cols, matrix.nnz(), &options);
+    let use_gpu = should_use_gpu(rows, cols, matrix.nnz(), &options);
 
     if use_gpu {
         // Try GPU acceleration first
@@ -2021,10 +2015,7 @@ where
 }
 
 /// Check if GPU acceleration should be used
-fn should_use_gpu<T>(rows: usize, cols: usize, nnz: usize, options: &GpuOptions) -> bool
-where
-    T: Float + Debug + Copy + 'static,
-{
+fn should_use_gpu(rows: usize, cols: usize, nnz: usize, options: &GpuOptions) -> bool {
     // Only use GPU for matrices larger than the threshold
     let matrix_size = std::cmp::max(rows, cols);
 
@@ -2389,7 +2380,7 @@ impl AdvancedGpuOps {
         }
 
         // Check if GPU acceleration should be used
-        let use_gpu = should_use_gpu::<T>(a_rows, b_cols, a.nnz() + b.nnz(), &options);
+        let use_gpu = should_use_gpu(a_rows, b_cols, a.nnz() + b.nnz(), &options);
 
         if use_gpu {
             match Self::gpu_spmm_impl(a, b, &options) {
@@ -2459,13 +2450,13 @@ impl AdvancedGpuOps {
         let c_data: Vec<T> = c_data_buffer.to_host_range(0..actual_nnz)?;
 
         // Create result CSR matrix
-        Ok(CsrArray::new(
+        CsrArray::new(
             Array1::from_vec(c_data),
             Array1::from_vec(c_indices),
             Array1::from_vec(c_indptr),
             (a_rows, b_cols),
         )
-        .map_err(|e| GpuError::new(&e.to_string()))?)
+        .map_err(|e| GpuError::new(&e.to_string()))
     }
 
     /// CPU fallback for sparse matrix multiplication
@@ -2530,12 +2521,12 @@ impl AdvancedGpuOps {
             result_indptr.push(result_data.len());
         }
 
-        Ok(CsrArray::new(
+        CsrArray::new(
             Array1::from_vec(result_data),
             Array1::from_vec(result_indices),
             Array1::from_vec(result_indptr),
             (a_rows, b_cols),
-        )?)
+        )
     }
 
     /// GPU-accelerated sparse triangular solve
@@ -2562,7 +2553,7 @@ impl AdvancedGpuOps {
         }
 
         // Check if GPU acceleration should be used
-        let use_gpu = should_use_gpu::<T>(rows, cols, l.nnz(), &options);
+        let use_gpu = should_use_gpu(rows, cols, l.nnz(), &options);
 
         if use_gpu {
             match Self::gpu_triangular_solve_impl(l, b, &options) {

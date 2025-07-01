@@ -2520,7 +2520,7 @@ impl MolecularGraphMetrics {
         let n_nitrogens = descriptors[5].to_f64().unwrap_or(0.0).max(0.0);
 
         // Basic heuristics for valence validity
-        let total_heavy_atoms = n_carbons + n_nitrogens + 
+        let total_heavy_atoms = n_carbons + n_nitrogens +
                                (if n_desc > 6 { descriptors[6].to_f64().unwrap_or(0.0) } else { 0.0 }) + // oxygen
                                (if n_desc > 7 { descriptors[7].to_f64().unwrap_or(0.0) } else { 0.0 }); // sulfur
 

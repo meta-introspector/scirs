@@ -48,7 +48,7 @@ impl Default for MemoryOptimizationConfig {
     fn default() -> Self {
         Self {
             max_memory_bytes: Some(1024 * 1024 * 1024), // 1GB default
-            chunk_size: 65536, // 64K samples
+            chunk_size: 65536,                          // 64K samples
             overlap_size: 1024,
             use_memory_pool: true,
             pool_size: 16,
@@ -87,7 +87,7 @@ impl MemoryPool {
                 }
             }
         }
-        
+
         // Allocate new buffer if pool is empty or buffers are too small
         vec![0.0; size]
     }
@@ -163,7 +163,7 @@ impl StreamingProcessor {
         while pos < signal_len {
             let chunk_end = (pos + chunk_size).min(signal_len);
             let chunk_with_overlap_end = (chunk_end + overlap).min(signal_len);
-            
+
             // Extract chunk with overlap
             let chunk_data: Vec<f64> = signal[pos..chunk_with_overlap_end]
                 .iter()
@@ -172,17 +172,17 @@ impl StreamingProcessor {
 
             // Process chunk
             let chunk_result = processor(&chunk_data)?;
-            
+
             // Extract valid portion (remove overlap)
             let valid_start = if pos == 0 { 0 } else { overlap };
             let valid_end = chunk_result.len().min(chunk_end - pos + valid_start);
-            
+
             if valid_start < valid_end {
                 result.extend_from_slice(&chunk_result[valid_start..valid_end]);
             }
-            
+
             pos = chunk_end;
-            
+
             // Update memory usage tracking
             if self.config.monitor_memory {
                 self.current_memory_usage = result.capacity() * 8;
@@ -193,11 +193,7 @@ impl StreamingProcessor {
     }
 
     /// Out-of-core processing for extremely large signals
-    fn process_out_of_core<F, T>(
-        &mut self,
-        signal: &[T],
-        processor: F,
-    ) -> SignalResult<Vec<f64>>
+    fn process_out_of_core<F, T>(&mut self, signal: &[T], processor: F) -> SignalResult<Vec<f64>>
     where
         F: Fn(&[f64]) -> SignalResult<Vec<f64>> + Sync,
         T: Float + NumCast + Debug + Send + Sync,
@@ -218,14 +214,14 @@ impl StreamingProcessor {
 
         let processor = |chunk: &[f64]| -> SignalResult<Vec<f64>> {
             let mut result = vec![0.0; chunk.len() + kernel.len() - 1];
-            
+
             // Optimized convolution implementation
             for (i, &chunk_val) in chunk.iter().enumerate() {
                 for (j, &kernel_val) in kernel.iter().enumerate() {
                     result[i + j] += chunk_val * kernel_val;
                 }
             }
-            
+
             Ok(result)
         };
 
@@ -242,27 +238,27 @@ impl StreamingProcessor {
         // For large signals, use chunked FFT with overlap-add
         let chunk_size = self.config.chunk_size.next_power_of_two();
         let overlap = chunk_size / 4; // 25% overlap
-        
+
         let mut result = Vec::new();
         let mut pos = 0;
 
         while pos < signal.len() {
             let chunk_end = (pos + chunk_size).min(signal.len());
             let chunk = &signal[pos..chunk_end];
-            
+
             // Pad chunk to power of 2 for efficient FFT
             let mut padded_chunk = vec![0.0; chunk_size];
             padded_chunk[..chunk.len()].copy_from_slice(chunk);
-            
+
             // Convert to complex and perform FFT
             let complex_chunk: Vec<num_complex::Complex<f64>> = padded_chunk
                 .iter()
                 .map(|&x| num_complex::Complex::new(x, 0.0))
                 .collect();
-            
+
             // Simple DFT for demonstration (replace with efficient FFT)
             let chunk_fft = simple_dft(&complex_chunk);
-            
+
             // Add to result with overlap handling
             if pos == 0 {
                 result = chunk_fft;
@@ -277,7 +273,7 @@ impl StreamingProcessor {
                 // Append non-overlapping part
                 result.extend_from_slice(&chunk_fft[overlap..]);
             }
-            
+
             pos += chunk_size - overlap;
         }
 
@@ -297,7 +293,7 @@ impl StreamingProcessor {
 
         if a[0] == 0.0 {
             return Err(SignalError::ValueError(
-                "First denominator coefficient cannot be zero".to_string()
+                "First denominator coefficient cannot be zero".to_string(),
             ));
         }
 
@@ -310,10 +306,10 @@ impl StreamingProcessor {
             let mut output = vec![0.0; chunk.len()];
             let filter_order = a_norm.len().max(b_norm.len());
             let mut state = vec![0.0; filter_order];
-            
+
             for (i, &input_val) in chunk.iter().enumerate() {
                 let mut output_val = 0.0;
-                
+
                 // FIR part
                 for (j, &b_coeff) in b_norm.iter().enumerate() {
                     if i >= j {
@@ -322,7 +318,7 @@ impl StreamingProcessor {
                         output_val += b_coeff * state[state.len() - 1 - (j - 1 - i)];
                     }
                 }
-                
+
                 // IIR part
                 for (j, &a_coeff) in a_norm.iter().enumerate() {
                     if i > j {
@@ -331,10 +327,10 @@ impl StreamingProcessor {
                         output_val -= a_coeff * state[state.len() - 1 - (j - i)];
                     }
                 }
-                
+
                 output[i] = output_val;
             }
-            
+
             // Update state for next chunk
             let state_len = state.len();
             for i in 0..state_len {
@@ -342,7 +338,7 @@ impl StreamingProcessor {
                     state[state_len - 1 - i] = chunk[chunk.len() - 1 - i];
                 }
             }
-            
+
             Ok(output)
         };
 
@@ -354,7 +350,11 @@ impl StreamingProcessor {
         MemoryStats {
             current_usage: self.current_memory_usage,
             max_allowed: self.config.max_memory_bytes,
-            pool_usage: self.memory_pool.as_ref().map(|p| p.get_usage()).unwrap_or(0),
+            pool_usage: self
+                .memory_pool
+                .as_ref()
+                .map(|p| p.get_usage())
+                .unwrap_or(0),
             chunk_size: self.config.chunk_size,
         }
     }
@@ -373,7 +373,7 @@ pub struct MemoryStats {
 fn simple_dft(input: &[num_complex::Complex<f64>]) -> Vec<num_complex::Complex<f64>> {
     let n = input.len();
     let mut output = vec![num_complex::Complex::zero(); n];
-    
+
     for k in 0..n {
         for (j, &x_j) in input.iter().enumerate() {
             let angle = -2.0 * std::f64::consts::PI * (k * j) as f64 / n as f64;
@@ -381,7 +381,7 @@ fn simple_dft(input: &[num_complex::Complex<f64>]) -> Vec<num_complex::Complex<f
             output[k] += x_j * twiddle;
         }
     }
-    
+
     output
 }
 
@@ -398,20 +398,20 @@ impl CacheOptimizedOps {
         let (rows, cols) = matrix.dim();
         if cols != vector.len() {
             return Err(SignalError::ValueError(
-                "Matrix columns must match vector length".to_string()
+                "Matrix columns must match vector length".to_string(),
             ));
         }
-        
+
         let mut result = Array1::zeros(rows);
         let block_size = cache_line_size / 8; // f64 size
-        
+
         // Block-based computation for cache efficiency
         for row_block in (0..rows).step_by(block_size) {
             let row_end = (row_block + block_size).min(rows);
-            
+
             for col_block in (0..cols).step_by(block_size) {
                 let col_end = (col_block + block_size).min(cols);
-                
+
                 for row in row_block..row_end {
                     let mut sum = 0.0;
                     for col in col_block..col_end {
@@ -421,25 +421,22 @@ impl CacheOptimizedOps {
                 }
             }
         }
-        
+
         Ok(result)
     }
 
     /// Cache-efficient array transpose
-    pub fn cache_friendly_transpose(
-        input: &Array2<f64>,
-        cache_line_size: usize,
-    ) -> Array2<f64> {
+    pub fn cache_friendly_transpose(input: &Array2<f64>, cache_line_size: usize) -> Array2<f64> {
         let (rows, cols) = input.dim();
         let mut output = Array2::zeros((cols, rows));
         let block_size = cache_line_size / 8; // f64 size
-        
+
         for row_block in (0..rows).step_by(block_size) {
             let row_end = (row_block + block_size).min(rows);
-            
+
             for col_block in (0..cols).step_by(block_size) {
                 let col_end = (col_block + block_size).min(cols);
-                
+
                 for row in row_block..row_end {
                     for col in col_block..col_end {
                         output[[col, row]] = input[[row, col]];
@@ -447,7 +444,7 @@ impl CacheOptimizedOps {
                 }
             }
         }
-        
+
         output
     }
 }
@@ -460,14 +457,14 @@ mod tests {
     #[test]
     fn test_memory_pool() {
         let pool = MemoryPool::new(4);
-        
+
         // Get buffer from pool
         let buffer1 = pool.get_buffer(1000);
         assert_eq!(buffer1.len(), 1000);
-        
+
         // Return buffer to pool
         pool.return_buffer(buffer1);
-        
+
         // Get buffer again (should reuse)
         let buffer2 = pool.get_buffer(500);
         assert_eq!(buffer2.len(), 500);
@@ -480,22 +477,24 @@ mod tests {
             overlap_size: 10,
             ..Default::default()
         };
-        
+
         let mut processor = StreamingProcessor::new(config);
-        
+
         // Create test signal
         let signal: Vec<f64> = (0..1000)
             .map(|i| (2.0 * PI * i as f64 / 100.0).sin())
             .collect();
-        
+
         // Simple identity processor for testing
         let identity_processor = |chunk: &[f64]| Ok(chunk.to_vec());
-        
-        let result = processor.process_signal_streaming(&signal, identity_processor).unwrap();
-        
+
+        let result = processor
+            .process_signal_streaming(&signal, identity_processor)
+            .unwrap();
+
         // Result should be approximately the same as input
         assert_eq!(result.len(), signal.len());
-        
+
         for (original, processed) in signal.iter().zip(result.iter()).take(10) {
             assert!((original - processed).abs() < 1e-10);
         }
@@ -508,17 +507,19 @@ mod tests {
             overlap_size: 5,
             ..Default::default()
         };
-        
+
         let mut processor = StreamingProcessor::new(config);
-        
+
         let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let kernel = vec![0.5, 0.5];
-        
-        let result = processor.memory_optimized_convolution(&signal, &kernel).unwrap();
-        
+
+        let result = processor
+            .memory_optimized_convolution(&signal, &kernel)
+            .unwrap();
+
         // Check expected convolution length
         assert_eq!(result.len(), signal.len() + kernel.len() - 1);
-        
+
         // Check some expected values
         assert!((result[0] - 0.5).abs() < 1e-10); // 1.0 * 0.5
         assert!((result[1] - 1.5).abs() < 1e-10); // 1.0 * 0.5 + 2.0 * 0.5
@@ -527,12 +528,12 @@ mod tests {
     #[test]
     fn test_cache_friendly_operations() {
         use ndarray::arr2;
-        
+
         let matrix = arr2(&[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]);
         let vector = Array1::from_vec(vec![1.0, 2.0, 3.0]);
-        
+
         let result = CacheOptimizedOps::cache_friendly_matvec(&matrix, &vector, 64).unwrap();
-        
+
         // Expected: [1*1 + 2*2 + 3*3, 4*1 + 5*2 + 6*3] = [14, 32]
         assert!((result[0] - 14.0).abs() < 1e-10);
         assert!((result[1] - 32.0).abs() < 1e-10);
@@ -542,7 +543,7 @@ mod tests {
     fn test_memory_stats() {
         let config = MemoryOptimizationConfig::default();
         let processor = StreamingProcessor::new(config);
-        
+
         let stats = processor.get_memory_stats();
         assert!(stats.max_allowed.is_some());
         assert_eq!(stats.chunk_size, 65536);

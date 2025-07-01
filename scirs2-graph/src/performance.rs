@@ -300,10 +300,10 @@ pub mod simd_ops {
         // Convert slices to ArrayView1 for SIMD operations
         let a_view = ndarray::ArrayView1::from(a);
         let b_view = ndarray::ArrayView1::from(b);
-        
+
         // Use scirs2-core SIMD operations for optimal performance
         let result = f64::simd_add(&a_view, &b_view);
-        
+
         // Convert back to Vec<f64>
         result.to_vec()
     }

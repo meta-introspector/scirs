@@ -1066,7 +1066,8 @@ impl UltraParallelDistanceMatrix {
 
         // Create channel for collecting results
         type DistanceResult = (usize, usize, f64);
-        let (result_sender, result_receiver): (Sender<DistanceResult>, Receiver<DistanceResult>) = channel();
+        let (result_sender, result_receiver): (Sender<DistanceResult>, Receiver<DistanceResult>) =
+            channel();
 
         // Create distance matrix context
         let _distance_context = DistanceMatrixContext {

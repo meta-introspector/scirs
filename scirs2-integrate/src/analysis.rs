@@ -1500,9 +1500,9 @@ impl BifurcationAnalyzer {
     /// Compute tangent vector for continuation
     fn compute_tangent_vector<F>(
         &self,
-        system: &F,
+        _system: &F,
         point: &Array1<f64>,
-        parameter: f64,
+        _parameter: f64,
     ) -> Result<Array1<f64>>
     where
         F: Fn(&Array1<f64>, f64) -> Array1<f64>,

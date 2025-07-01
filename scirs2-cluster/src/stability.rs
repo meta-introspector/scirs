@@ -807,7 +807,7 @@ pub mod advanced {
             k: usize,
         ) -> Result<StabilityResult<F>> {
             let mut all_stability_scores = Vec::new();
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
 
             // Get baseline clustering
             let (baseline_centroids, baseline_labels) = kmeans2(
@@ -910,8 +910,8 @@ pub mod advanced {
                     let n_outliers = (n_samples as f64 * outlier_rate) as usize;
 
                     for _ in 0..n_outliers {
-                        let sample_idx = rng.gen_range(0..n_samples);
-                        let feature_idx = rng.gen_range(0..data.shape()[1]);
+                        let sample_idx = rng.random_range(0..n_samples);
+                        let feature_idx = rng.random_range(0..data.shape()[1]);
                         let outlier_value = rng.gen::<f64>() * outlier_magnitude;
                         perturbed[[sample_idx, feature_idx]] = F::from(outlier_value).unwrap();
                     }

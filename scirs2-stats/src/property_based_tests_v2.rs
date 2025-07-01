@@ -354,8 +354,8 @@ where
 
             // Test linearity: mean(a*X + b) = a*mean(X) + b
             if let Ok(original_mean) = crate::descriptive::mean(&data.view()) {
-                let a = self.rng.random_range(0.1..10.0);
-                let b = self.rng.random_range(-5.0..5.0);
+                let a = self.rng.gen_range(0.1..10.0);
+                let b = self.rng.gen_range(-5.0..5.0);
                 
                 let transformed_data = data.mapv(|x| a * x + b);
                 
@@ -457,7 +457,7 @@ where
 
             // Test variance scaling: var(a*X) = a²*var(X)
             if let Ok(original_var) = crate::descriptive::var(&data.view(), 1) {
-                let a = self.rng.random_range(0.1..5.0);
+                let a = self.rng.gen_range(0.1..5.0);
                 let scaled_data = data.mapv(|x| a * x);
                 
                 if let Ok(scaled_var) = crate::descriptive::var(&scaled_data.view(), 1) {
@@ -570,11 +570,11 @@ where
             let start_time = std::time::Instant::now();
             
             // Generate symmetric data around zero
-            let n = self.rng.random_range(self.config.min_data_size..=self.config.max_data_size);
+            let n = self.rng.gen_range(self.config.min_data_size..=self.config.max_data_size);
             let mut data = Vec::new();
             
             for _ in 0..n/2 {
-                let value = self.rng.random_range(-5.0..5.0);
+                let value = self.rng.gen_range(-5.0..5.0);
                 data.push(value);
                 data.push(-value); // Add symmetric value
             }
@@ -640,7 +640,7 @@ where
             let start_time = std::time::Instant::now();
             
             // Generate normal-like data (should have kurtosis ≈ 0 for Fisher definition)
-            let n = self.rng.random_range(self.config.min_data_size..=self.config.max_data_size);
+            let n = self.rng.gen_range(self.config.min_data_size..=self.config.max_data_size);
             let data: Vec<f64> = (0..n)
                 .map(|_| {
                     // Box-Muller transform for normal distribution
@@ -910,9 +910,9 @@ where
     // Helper methods
 
     fn generate_random_array(&mut self) -> StatsResult<Array1<f64>> {
-        let size = self.rng.random_range(self.config.min_data_size..=self.config.max_data_size);
+        let size = self.rng.gen_range(self.config.min_data_size..=self.config.max_data_size);
         let data: Vec<f64> = (0..size)
-            .map(|_| self.rng.random_range(-100.0..100.0))
+            .map(|_| self.rng.gen_range(-100.0..100.0))
             .collect();
         Ok(Array1::from_vec(data))
     }

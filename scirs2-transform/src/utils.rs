@@ -38,12 +38,12 @@ impl DataChunker {
         // Estimate memory per sample (8 bytes per f64 element + overhead)
         let bytes_per_sample = n_features * std::mem::size_of::<f64>() + 64; // 64 bytes overhead
         let max_samples_in_memory = (self.max_memory_mb * 1024 * 1024) / bytes_per_sample;
-        
+
         let chunk_size = max_samples_in_memory
             .min(self.preferred_chunk_size)
             .max(self.min_chunk_size)
             .min(n_samples);
-            
+
         chunk_size
     }
 
@@ -73,11 +73,11 @@ impl Iterator for ChunkIterator {
         if self.current >= self.total {
             return None;
         }
-        
+
         let start = self.current;
         let end = (self.current + self.chunk_size).min(self.total);
         self.current = end;
-        
+
         Some((start, end))
     }
 }
@@ -93,7 +93,7 @@ impl TypeConverter {
         S: Data<Elem = T>,
     {
         check_not_empty(array, "array")?;
-        
+
         let result = if array.is_standard_layout() {
             // Use parallel processing for large arrays
             if array.len() > 10000 {
@@ -105,14 +105,14 @@ impl TypeConverter {
             // Handle non-standard layout
             let shape = array.shape();
             let mut result = Array2::zeros((shape[0], shape[1]));
-            
+
             par_azip!((mut out in result.view_mut(), &inp in array) {
                 *out = num_traits::cast::<T, f64>(inp).unwrap_or(0.0);
             });
-            
+
             result
         };
-        
+
         // Validate result for non-finite values
         check_finite(&result, "converted_array")?;
         Ok(result)
@@ -121,13 +121,13 @@ impl TypeConverter {
     /// Convert f32 array to f64 with SIMD optimization
     pub fn f32_to_f64_simd(array: &ArrayView2<f32>) -> Result<Array2<f64>> {
         check_not_empty(array, "array")?;
-        
+
         let result = if array.len() > 10000 {
             array.par_mapv(|x| x as f64)
         } else {
             array.mapv(|x| x as f64)
         };
-        
+
         check_finite(&result, "converted_array")?;
         Ok(result)
     }
@@ -136,17 +136,17 @@ impl TypeConverter {
     pub fn f64_to_f32_safe(array: &ArrayView2<f64>) -> Result<Array2<f32>> {
         check_not_empty(array, "array")?;
         check_finite(array, "array")?;
-        
+
         let result = array.try_mapv(|&x| {
             if x.abs() > f32::MAX as f64 {
                 Err(TransformError::DataValidationError(
-                    "Value too large for f32 conversion".to_string()
+                    "Value too large for f32 conversion".to_string(),
                 ))
             } else {
                 Ok(x as f32)
             }
         })?;
-        
+
         Ok(result)
     }
 }
@@ -159,29 +159,27 @@ impl StatUtils {
     pub fn robust_stats(data: &ArrayView1<f64>) -> Result<(f64, f64)> {
         check_not_empty(data, "data")?;
         check_finite(data, "data")?;
-        
+
         let mut sorted_data = data.to_vec();
         sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-        
+
         let n = sorted_data.len();
         let median = if n % 2 == 0 {
             (sorted_data[n / 2 - 1] + sorted_data[n / 2]) / 2.0
         } else {
             sorted_data[n / 2]
         };
-        
+
         // Calculate MAD (Median Absolute Deviation)
-        let mut deviations: Vec<f64> = sorted_data.iter()
-            .map(|&x| (x - median).abs())
-            .collect();
+        let mut deviations: Vec<f64> = sorted_data.iter().map(|&x| (x - median).abs()).collect();
         deviations.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-        
+
         let mad = if n % 2 == 0 {
             (deviations[n / 2 - 1] + deviations[n / 2]) / 2.0
         } else {
             deviations[n / 2]
         };
-        
+
         Ok((median, mad))
     }
 
@@ -189,11 +187,11 @@ impl StatUtils {
     pub fn robust_stats_columns(data: &ArrayView2<f64>) -> Result<(Array1<f64>, Array1<f64>)> {
         check_not_empty(data, "data")?;
         check_finite(data, "data")?;
-        
+
         let n_features = data.ncols();
         let mut medians = Array1::zeros(n_features);
         let mut mads = Array1::zeros(n_features);
-        
+
         // Use parallel processing for multiple columns
         let stats: Result<Vec<_>> = (0..n_features)
             .into_par_iter()
@@ -202,14 +200,14 @@ impl StatUtils {
                 Self::robust_stats(&col)
             })
             .collect();
-            
+
         let stats = stats?;
-        
+
         for (j, (median, mad)) in stats.into_iter().enumerate() {
             medians[j] = median;
             mads[j] = mad;
         }
-        
+
         Ok((medians, mads))
     }
 
@@ -217,48 +215,49 @@ impl StatUtils {
     pub fn detect_outliers_iqr(data: &ArrayView1<f64>, factor: f64) -> Result<Vec<bool>> {
         check_not_empty(data, "data")?;
         check_finite(data, "data")?;
-        
+
         if factor <= 0.0 {
             return Err(TransformError::InvalidInput(
-                "Outlier factor must be positive".to_string()
+                "Outlier factor must be positive".to_string(),
             ));
         }
-        
+
         let mut sorted_data = data.to_vec();
         sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-        
+
         let n = sorted_data.len();
         let q1_idx = n / 4;
         let q3_idx = 3 * n / 4;
-        
+
         let q1 = sorted_data[q1_idx];
         let q3 = sorted_data[q3_idx];
         let iqr = q3 - q1;
-        
+
         let lower_bound = q1 - factor * iqr;
         let upper_bound = q3 + factor * iqr;
-        
-        let outliers = data.iter()
+
+        let outliers = data
+            .iter()
             .map(|&x| x < lower_bound || x > upper_bound)
             .collect();
-            
+
         Ok(outliers)
     }
 
     /// Calculate data quality score
     pub fn data_quality_score(data: &ArrayView2<f64>) -> Result<f64> {
         check_not_empty(data, "data")?;
-        
+
         let total_elements = data.len() as f64;
-        
+
         // Count finite values
         let finite_count = data.iter().filter(|&&x| x.is_finite()).count() as f64;
         let finite_ratio = finite_count / total_elements;
-        
+
         // Count unique values per column (diversity score)
         let n_features = data.ncols();
         let mut diversity_scores = Vec::with_capacity(n_features);
-        
+
         for j in 0..n_features {
             let col = data.column(j);
             let mut unique_values = std::collections::HashSet::new();
@@ -269,7 +268,7 @@ impl StatUtils {
                     unique_values.insert(rounded);
                 }
             }
-            
+
             let diversity = if col.len() > 0 {
                 unique_values.len() as f64 / col.len() as f64
             } else {
@@ -277,16 +276,16 @@ impl StatUtils {
             };
             diversity_scores.push(diversity);
         }
-        
+
         let avg_diversity = if diversity_scores.is_empty() {
             0.0
         } else {
             diversity_scores.iter().sum::<f64>() / diversity_scores.len() as f64
         };
-        
+
         // Combine scores with weights
         let quality_score = 0.7 * finite_ratio + 0.3 * avg_diversity;
-        
+
         Ok(quality_score.max(0.0).min(1.0))
     }
 }
@@ -317,7 +316,7 @@ impl<T: Clone + Default> ArrayMemoryPool<T> {
     /// Get an array from the pool or create a new one
     pub fn get_array(&mut self, rows: usize, cols: usize) -> Array2<T> {
         let size_key = (rows, cols);
-        
+
         if let Some(arrays) = self.available_arrays.get_mut(&size_key) {
             if let Some(array) = arrays.pop() {
                 let array_size = rows * cols * std::mem::size_of::<T>();
@@ -325,7 +324,7 @@ impl<T: Clone + Default> ArrayMemoryPool<T> {
                 return array;
             }
         }
-        
+
         // Create new array if none available
         Array2::default((rows, cols))
     }
@@ -335,16 +334,19 @@ impl<T: Clone + Default> ArrayMemoryPool<T> {
         let (rows, cols) = array.dim();
         let size_key = (rows, cols);
         let array_size = rows * cols * std::mem::size_of::<T>();
-        
+
         // Check memory limits
         if self.current_memory + array_size > self.memory_limit {
             return; // Drop the array
         }
-        
+
         // Zero out the array for reuse
         array.fill(T::default());
-        
-        let arrays = self.available_arrays.entry(size_key).or_insert_with(Vec::new);
+
+        let arrays = self
+            .available_arrays
+            .entry(size_key)
+            .or_insert_with(Vec::new);
         if arrays.len() < self.max_per_size {
             arrays.push(array);
             self.current_memory += array_size;
@@ -369,107 +371,107 @@ pub struct ValidationUtils;
 impl ValidationUtils {
     /// Validate that a parameter is within reasonable bounds
     pub fn validate_parameter_bounds(
-        value: f64, 
-        min: f64, 
-        max: f64, 
-        param_name: &str
+        value: f64,
+        min: f64,
+        max: f64,
+        param_name: &str,
     ) -> Result<()> {
         if !value.is_finite() {
-            return Err(TransformError::InvalidInput(
-                format!("{} must be finite", param_name)
-            ));
+            return Err(TransformError::InvalidInput(format!(
+                "{} must be finite",
+                param_name
+            )));
         }
-        
+
         if value < min || value > max {
-            return Err(TransformError::InvalidInput(
-                format!("{} must be between {} and {}, got {}", param_name, min, max, value)
-            ));
+            return Err(TransformError::InvalidInput(format!(
+                "{} must be between {} and {}, got {}",
+                param_name, min, max, value
+            )));
         }
-        
+
         Ok(())
     }
 
     /// Validate array dimensions for compatibility
     pub fn validate_dimensions_compatible(
-        shape1: &[usize], 
-        shape2: &[usize], 
-        operation: &str
+        shape1: &[usize],
+        shape2: &[usize],
+        operation: &str,
     ) -> Result<()> {
         if shape1.len() != shape2.len() {
-            return Err(TransformError::InvalidInput(
-                format!(
-                    "Incompatible dimensions for {}: {:?} vs {:?}", 
-                    operation, shape1, shape2
-                )
-            ));
+            return Err(TransformError::InvalidInput(format!(
+                "Incompatible dimensions for {}: {:?} vs {:?}",
+                operation, shape1, shape2
+            )));
         }
-        
+
         for (i, (&dim1, &dim2)) in shape1.iter().zip(shape2.iter()).enumerate() {
             if dim1 != dim2 {
-                return Err(TransformError::InvalidInput(
-                    format!(
-                        "Dimension {} mismatch for {}: {} vs {}", 
-                        i, operation, dim1, dim2
-                    )
-                ));
+                return Err(TransformError::InvalidInput(format!(
+                    "Dimension {} mismatch for {}: {} vs {}",
+                    i, operation, dim1, dim2
+                )));
             }
         }
-        
+
         Ok(())
     }
 
     /// Validate that data is suitable for a specific transformation
     pub fn validate_data_for_transformation(
-        data: &ArrayView2<f64>, 
-        transformation: &str
+        data: &ArrayView2<f64>,
+        transformation: &str,
     ) -> Result<()> {
         check_not_empty(data, "data")?;
         check_finite(data, "data")?;
-        
+
         let (n_samples, n_features) = data.dim();
-        
+
         match transformation {
             "pca" => {
                 if n_samples < 2 {
                     return Err(TransformError::InvalidInput(
-                        "PCA requires at least 2 samples".to_string()
+                        "PCA requires at least 2 samples".to_string(),
                     ));
                 }
                 if n_features < 1 {
                     return Err(TransformError::InvalidInput(
-                        "PCA requires at least 1 feature".to_string()
+                        "PCA requires at least 1 feature".to_string(),
                     ));
                 }
-            },
+            }
             "standardization" => {
                 // Check for constant features
                 for j in 0..n_features {
                     let col = data.column(j);
                     let variance = col.var(0.0);
                     if variance < 1e-15 {
-                        return Err(TransformError::DataValidationError(
-                            format!("Feature {} has zero variance and cannot be standardized", j)
-                        ));
+                        return Err(TransformError::DataValidationError(format!(
+                            "Feature {} has zero variance and cannot be standardized",
+                            j
+                        )));
                     }
                 }
-            },
+            }
             "normalization" => {
                 // Check for zero-norm rows
                 for i in 0..n_samples {
                     let row = data.row(i);
                     let norm = row.iter().map(|&x| x * x).sum::<f64>().sqrt();
                     if norm < 1e-15 {
-                        return Err(TransformError::DataValidationError(
-                            format!("Sample {} has zero norm and cannot be normalized", i)
-                        ));
+                        return Err(TransformError::DataValidationError(format!(
+                            "Sample {} has zero norm and cannot be normalized",
+                            i
+                        )));
                     }
                 }
-            },
+            }
             _ => {
                 // Generic validation
             }
         }
-        
+
         Ok(())
     }
 }
@@ -480,31 +482,31 @@ pub struct PerfUtils;
 impl PerfUtils {
     /// Estimate memory usage for an operation
     pub fn estimate_memory_usage(
-        input_shape: &[usize], 
-        output_shape: &[usize], 
-        operation: &str
+        input_shape: &[usize],
+        output_shape: &[usize],
+        operation: &str,
     ) -> usize {
         let input_size = input_shape.iter().product::<usize>() * std::mem::size_of::<f64>();
         let output_size = output_shape.iter().product::<usize>() * std::mem::size_of::<f64>();
-        
+
         let overhead = match operation {
-            "pca" => input_size * 2, // Covariance matrix + temporaries
+            "pca" => input_size * 2,              // Covariance matrix + temporaries
             "standardization" => input_size / 10, // Just statistics
-            "polynomial" => output_size / 2, // Temporary computations
-            _ => input_size / 4, // Default overhead
+            "polynomial" => output_size / 2,      // Temporary computations
+            _ => input_size / 4,                  // Default overhead
         };
-        
+
         input_size + output_size + overhead
     }
 
     /// Estimate computation time based on data size and operation
     pub fn estimate_computation_time(
-        n_samples: usize, 
-        n_features: usize, 
-        operation: &str
+        n_samples: usize,
+        n_features: usize,
+        operation: &str,
     ) -> std::time::Duration {
         use std::time::Duration;
-        
+
         let base_time_ns = match operation {
             "pca" => (n_samples as u64) * (n_features as u64).pow(2) / 1000, // O(n*m^2)
             "standardization" => (n_samples as u64) * (n_features as u64) / 100, // O(n*m)
@@ -512,21 +514,23 @@ impl PerfUtils {
             "polynomial" => (n_samples as u64) * (n_features as u64).pow(3) / 10000, // O(n*m^3)
             _ => (n_samples as u64) * (n_features as u64) / 100,
         };
-        
+
         Duration::from_nanos(base_time_ns.max(1000)) // At least 1 microsecond
     }
 
     /// Choose optimal processing strategy based on data characteristics
     pub fn choose_processing_strategy(
-        n_samples: usize, 
-        n_features: usize, 
-        available_memory_mb: usize
+        n_samples: usize,
+        n_features: usize,
+        available_memory_mb: usize,
     ) -> ProcessingStrategy {
-        let estimated_memory_mb = (n_samples * n_features * std::mem::size_of::<f64>()) / (1024 * 1024);
-        
+        let estimated_memory_mb =
+            (n_samples * n_features * std::mem::size_of::<f64>()) / (1024 * 1024);
+
         if estimated_memory_mb > available_memory_mb {
             ProcessingStrategy::OutOfCore {
-                chunk_size: (available_memory_mb * 1024 * 1024) / (n_features * std::mem::size_of::<f64>())
+                chunk_size: (available_memory_mb * 1024 * 1024)
+                    / (n_features * std::mem::size_of::<f64>()),
             }
         } else if n_samples > 10000 && n_features > 100 {
             ProcessingStrategy::Parallel
@@ -569,7 +573,7 @@ mod tests {
         let chunker = DataChunker::new(1); // 1MB - small for testing
         let chunks: Vec<_> = chunker.chunk_indices(1000, 10).collect();
         assert!(!chunks.is_empty());
-        
+
         // Verify complete coverage
         let total_covered = chunks.iter().map(|(start, end)| end - start).sum::<usize>();
         assert_eq!(total_covered, 1000);
@@ -601,10 +605,11 @@ mod tests {
 
     #[test]
     fn test_data_quality_score() {
-        let good_data = Array2::from_shape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
+        let good_data =
+            Array2::from_shape_vec((10, 3), (0..30).map(|x| x as f64).collect()).unwrap();
         let quality = StatUtils::data_quality_score(&good_data.view()).unwrap();
         assert!(quality > 0.5); // Should have reasonable quality
-        
+
         let bad_data = Array2::from_elem((10, 3), f64::NAN);
         let quality = StatUtils::data_quality_score(&bad_data.view()).unwrap();
         assert!(quality < 0.5); // Should have poor quality due to NaN values
@@ -613,13 +618,13 @@ mod tests {
     #[test]
     fn test_memory_pool() {
         let mut pool = ArrayMemoryPool::<f64>::new(10, 2);
-        
+
         // Get and return arrays
         let array1 = pool.get_array(10, 5);
         assert_eq!(array1.shape(), &[10, 5]);
-        
+
         pool.return_array(array1);
-        
+
         let array2 = pool.get_array(10, 5);
         assert_eq!(array2.shape(), &[10, 5]);
     }
@@ -629,20 +634,24 @@ mod tests {
         // Test parameter bounds validation
         assert!(ValidationUtils::validate_parameter_bounds(0.5, 0.0, 1.0, "test").is_ok());
         assert!(ValidationUtils::validate_parameter_bounds(1.5, 0.0, 1.0, "test").is_err());
-        
+
         // Test dimension compatibility
-        assert!(ValidationUtils::validate_dimensions_compatible(&[10, 5], &[10, 5], "test").is_ok());
-        assert!(ValidationUtils::validate_dimensions_compatible(&[10, 5], &[10, 6], "test").is_err());
+        assert!(
+            ValidationUtils::validate_dimensions_compatible(&[10, 5], &[10, 5], "test").is_ok()
+        );
+        assert!(
+            ValidationUtils::validate_dimensions_compatible(&[10, 5], &[10, 6], "test").is_err()
+        );
     }
 
     #[test]
     fn test_performance_utils() {
         let memory = PerfUtils::estimate_memory_usage(&[1000, 100], &[1000, 50], "pca");
         assert!(memory > 0);
-        
+
         let time = PerfUtils::estimate_computation_time(1000, 100, "pca");
         assert!(time.as_nanos() > 0);
-        
+
         let strategy = PerfUtils::choose_processing_strategy(10000, 100, 100);
         matches!(strategy, ProcessingStrategy::Parallel);
     }

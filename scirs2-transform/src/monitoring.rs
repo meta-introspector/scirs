@@ -182,18 +182,36 @@ impl TransformationMonitor {
 
         #[cfg(feature = "monitoring")]
         {
-            metrics_registry.register(Box::new(prometheus_metrics.drift_detections.clone()))
-                .map_err(|e| TransformError::ComputationError(format!("Failed to register counter: {}", e)))?;
-            metrics_registry.register(Box::new(prometheus_metrics.processing_time.clone()))
-                .map_err(|e| TransformError::ComputationError(format!("Failed to register histogram: {}", e)))?;
-            metrics_registry.register(Box::new(prometheus_metrics.memory_usage.clone()))
-                .map_err(|e| TransformError::ComputationError(format!("Failed to register gauge: {}", e)))?;
-            metrics_registry.register(Box::new(prometheus_metrics.error_rate.clone()))
-                .map_err(|e| TransformError::ComputationError(format!("Failed to register gauge: {}", e)))?;
-            metrics_registry.register(Box::new(prometheus_metrics.throughput.clone()))
-                .map_err(|e| TransformError::ComputationError(format!("Failed to register gauge: {}", e)))?;
-            metrics_registry.register(Box::new(prometheus_metrics.data_quality.clone()))
-                .map_err(|e| TransformError::ComputationError(format!("Failed to register gauge: {}", e)))?;
+            metrics_registry
+                .register(Box::new(prometheus_metrics.drift_detections.clone()))
+                .map_err(|e| {
+                    TransformError::ComputationError(format!("Failed to register counter: {}", e))
+                })?;
+            metrics_registry
+                .register(Box::new(prometheus_metrics.processing_time.clone()))
+                .map_err(|e| {
+                    TransformError::ComputationError(format!("Failed to register histogram: {}", e))
+                })?;
+            metrics_registry
+                .register(Box::new(prometheus_metrics.memory_usage.clone()))
+                .map_err(|e| {
+                    TransformError::ComputationError(format!("Failed to register gauge: {}", e))
+                })?;
+            metrics_registry
+                .register(Box::new(prometheus_metrics.error_rate.clone()))
+                .map_err(|e| {
+                    TransformError::ComputationError(format!("Failed to register gauge: {}", e))
+                })?;
+            metrics_registry
+                .register(Box::new(prometheus_metrics.throughput.clone()))
+                .map_err(|e| {
+                    TransformError::ComputationError(format!("Failed to register gauge: {}", e))
+                })?;
+            metrics_registry
+                .register(Box::new(prometheus_metrics.data_quality.clone()))
+                .map_err(|e| {
+                    TransformError::ComputationError(format!("Failed to register gauge: {}", e))
+                })?;
         }
 
         Ok(TransformationMonitor {
@@ -1060,7 +1078,11 @@ pub struct EnsembleAnomalyDetector {
 #[cfg(feature = "monitoring")]
 impl EnsembleAnomalyDetector {
     /// Create a new ensemble anomaly detector
-    pub fn new(detector_weights: HashMap<String, f64>, voting_threshold: f64, confidence_threshold: f64) -> Self {
+    pub fn new(
+        detector_weights: HashMap<String, f64>,
+        voting_threshold: f64,
+        confidence_threshold: f64,
+    ) -> Self {
         EnsembleAnomalyDetector {
             detector_weights,
             voting_threshold,
@@ -1077,7 +1099,7 @@ impl EnsembleAnomalyDetector {
         // Placeholder ensemble detection logic
         // In a full implementation, this would combine results from multiple detectors
         // using voting, weighted averaging, or other ensemble methods
-        
+
         // For now, return empty results
         Ok(vec![])
     }
@@ -1227,7 +1249,11 @@ impl AdvancedAnomalyDetector {
     }
 
     /// Add a time series detector for a metric
-    pub fn add_time_series_detector(&mut self, metric_name: String, detector: TimeSeriesAnomalyDetector) {
+    pub fn add_time_series_detector(
+        &mut self,
+        metric_name: String,
+        detector: TimeSeriesAnomalyDetector,
+    ) {
         self.time_series_detectors.insert(metric_name, detector);
     }
 
@@ -1237,7 +1263,10 @@ impl AdvancedAnomalyDetector {
     }
 
     /// Detect anomalies in new data
-    pub fn detect_anomalies(&mut self, metrics: &HashMap<String, f64>) -> Result<Vec<AnomalyRecord>> {
+    pub fn detect_anomalies(
+        &mut self,
+        metrics: &HashMap<String, f64>,
+    ) -> Result<Vec<AnomalyRecord>> {
         let mut anomalies = Vec::new();
         let timestamp = current_timestamp();
 
@@ -1284,26 +1313,32 @@ impl AdvancedAnomalyDetector {
     /// Get anomaly patterns and insights
     pub fn get_anomaly_insights(&self, lookback_hours: u64) -> AnomalyInsights {
         let cutoff_time = current_timestamp() - (lookback_hours * 3600);
-        let recent_anomalies: Vec<_> = self.anomaly_history
+        let recent_anomalies: Vec<_> = self
+            .anomaly_history
             .iter()
             .filter(|a| a.timestamp >= cutoff_time)
             .collect();
 
         let total_anomalies = recent_anomalies.len();
-        let critical_anomalies = recent_anomalies.iter()
+        let critical_anomalies = recent_anomalies
+            .iter()
             .filter(|a| a.severity == AnomalySeverity::Critical)
             .count();
-        
+
         // Calculate anomaly frequency by metric
         let mut metric_frequencies = HashMap::new();
         for anomaly in &recent_anomalies {
-            *metric_frequencies.entry(anomaly.metric_name.clone()).or_insert(0) += 1;
+            *metric_frequencies
+                .entry(anomaly.metric_name.clone())
+                .or_insert(0) += 1;
         }
 
         // Calculate anomaly frequency by detection method
         let mut method_frequencies = HashMap::new();
         for anomaly in &recent_anomalies {
-            *method_frequencies.entry(anomaly.detection_method.clone()).or_insert(0) += 1;
+            *method_frequencies
+                .entry(anomaly.detection_method.clone())
+                .or_insert(0) += 1;
         }
 
         // Identify trending anomalies
@@ -1332,7 +1367,9 @@ impl AdvancedAnomalyDetector {
 
         for anomaly in anomalies {
             if current_time - anomaly.timestamp <= recent_threshold {
-                *recent_counts.entry(anomaly.metric_name.clone()).or_insert(0) += 1;
+                *recent_counts
+                    .entry(anomaly.metric_name.clone())
+                    .or_insert(0) += 1;
             }
         }
 
@@ -1349,11 +1386,11 @@ impl AdvancedAnomalyDetector {
             FeedbackType::FalsePositive => {
                 // Increase thresholds for the detector that generated this anomaly
                 self.adjust_thresholds_for_detector(&feedback.detection_method, 0.1)?;
-            },
+            }
             FeedbackType::FalseNegative => {
                 // Decrease thresholds for the detector
                 self.adjust_thresholds_for_detector(&feedback.detection_method, -0.1)?;
-            },
+            }
             FeedbackType::ConfirmedAnomaly => {
                 // No adjustment needed, but can be used for retraining
             }
@@ -1361,7 +1398,11 @@ impl AdvancedAnomalyDetector {
         Ok(())
     }
 
-    fn adjust_thresholds_for_detector(&mut self, detection_method: &str, adjustment: f64) -> Result<()> {
+    fn adjust_thresholds_for_detector(
+        &mut self,
+        detection_method: &str,
+        adjustment: f64,
+    ) -> Result<()> {
         // Adjust thresholds based on feedback
         match detection_method {
             "statistical" => {
@@ -1369,15 +1410,18 @@ impl AdvancedAnomalyDetector {
                     detector.z_score_threshold += adjustment;
                     detector.z_score_threshold = detector.z_score_threshold.max(1.5).min(5.0);
                 }
-            },
+            }
             "ml" => {
                 // Adjust ML detector parameters
                 for detector in self.ml_detectors.values_mut() {
                     detector.isolation_forest_config.contamination += adjustment * 0.01;
-                    detector.isolation_forest_config.contamination = 
-                        detector.isolation_forest_config.contamination.max(0.01).min(0.5);
+                    detector.isolation_forest_config.contamination = detector
+                        .isolation_forest_config
+                        .contamination
+                        .max(0.01)
+                        .min(0.5);
                 }
-            },
+            }
             _ => {}
         }
         Ok(())
@@ -1398,7 +1442,12 @@ impl StatisticalDetector {
     }
 
     /// Detect anomaly using statistical methods
-    pub fn detect_anomaly(&mut self, value: f64, metric_name: &str, timestamp: u64) -> Result<Option<AnomalyRecord>> {
+    pub fn detect_anomaly(
+        &mut self,
+        value: f64,
+        metric_name: &str,
+        timestamp: u64,
+    ) -> Result<Option<AnomalyRecord>> {
         // Add value to window
         self.data_window.push_back(value);
         if self.data_window.len() > self.max_window_size {
@@ -1411,15 +1460,15 @@ impl StatisticalDetector {
         }
 
         let values: Vec<f64> = self.data_window.iter().copied().collect();
-        
+
         // Z-score based detection
         let mean = values.iter().sum::<f64>() / values.len() as f64;
         let variance = values.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / values.len() as f64;
         let std_dev = variance.sqrt();
-        
+
         if std_dev > 0.0 {
             let z_score = (value - mean) / std_dev;
-            
+
             if z_score.abs() > self.z_score_threshold {
                 let severity = if z_score.abs() > 4.0 {
                     AnomalySeverity::Critical
@@ -1442,7 +1491,10 @@ impl StatisticalDetector {
                         ("mean".to_string(), mean.to_string()),
                         ("std_dev".to_string(), std_dev.to_string()),
                         ("z_score".to_string(), z_score.to_string()),
-                    ].iter().cloned().collect(),
+                    ]
+                    .iter()
+                    .cloned()
+                    .collect(),
                 }));
             }
         }
@@ -1450,24 +1502,24 @@ impl StatisticalDetector {
         // IQR based detection
         let mut sorted_values = values.clone();
         sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-        
+
         let q1_idx = sorted_values.len() / 4;
         let q3_idx = (3 * sorted_values.len()) / 4;
         let q1 = sorted_values[q1_idx];
         let q3 = sorted_values[q3_idx];
         let iqr = q3 - q1;
-        
+
         if iqr > 0.0 {
             let lower_bound = q1 - self.iqr_multiplier * iqr;
             let upper_bound = q3 + self.iqr_multiplier * iqr;
-            
+
             if value < lower_bound || value > upper_bound {
                 let distance_from_bounds = if value < lower_bound {
                     lower_bound - value
                 } else {
                     value - upper_bound
                 };
-                
+
                 let severity = if distance_from_bounds > 3.0 * iqr {
                     AnomalySeverity::Critical
                 } else if distance_from_bounds > 2.0 * iqr {
@@ -1489,8 +1541,14 @@ impl StatisticalDetector {
                         ("q1".to_string(), q1.to_string()),
                         ("q3".to_string(), q3.to_string()),
                         ("iqr".to_string(), iqr.to_string()),
-                        ("distance_from_bounds".to_string(), distance_from_bounds.to_string()),
-                    ].iter().cloned().collect(),
+                        (
+                            "distance_from_bounds".to_string(),
+                            distance_from_bounds.to_string(),
+                        ),
+                    ]
+                    .iter()
+                    .cloned()
+                    .collect(),
                 }));
             }
         }
@@ -1524,7 +1582,12 @@ impl MLAnomalyDetector {
     }
 
     /// Detect anomaly using ML methods
-    pub fn detect_anomaly(&mut self, value: f64, metric_name: &str, timestamp: u64) -> Result<Option<AnomalyRecord>> {
+    pub fn detect_anomaly(
+        &mut self,
+        value: f64,
+        metric_name: &str,
+        timestamp: u64,
+    ) -> Result<Option<AnomalyRecord>> {
         // Add to training data
         self.training_data.push_back(vec![value]);
         if self.training_data.len() > 1000 {
@@ -1538,8 +1601,9 @@ impl MLAnomalyDetector {
 
         // Simplified isolation forest implementation
         let anomaly_score = self.simplified_isolation_forest_score(value)?;
-        
-        if anomaly_score > 0.6 { // Threshold for anomaly
+
+        if anomaly_score > 0.6 {
+            // Threshold for anomaly
             let severity = if anomaly_score > 0.9 {
                 AnomalySeverity::Critical
             } else if anomaly_score > 0.8 {
@@ -1559,8 +1623,14 @@ impl MLAnomalyDetector {
                 severity,
                 context: [
                     ("isolation_score".to_string(), anomaly_score.to_string()),
-                    ("training_samples".to_string(), self.training_data.len().to_string()),
-                ].iter().cloned().collect(),
+                    (
+                        "training_samples".to_string(),
+                        self.training_data.len().to_string(),
+                    ),
+                ]
+                .iter()
+                .cloned()
+                .collect(),
             }));
         }
 
@@ -1570,17 +1640,20 @@ impl MLAnomalyDetector {
     /// Simplified isolation forest scoring
     fn simplified_isolation_forest_score(&self, value: f64) -> Result<f64> {
         let data: Vec<f64> = self.training_data.iter().map(|v| v[0]).collect();
-        
+
         // Calculate percentile rank as a simple anomaly score
         let mut sorted_data = data.clone();
         sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-        
-        let position = sorted_data.iter().position(|&x| x >= value).unwrap_or(sorted_data.len());
+
+        let position = sorted_data
+            .iter()
+            .position(|&x| x >= value)
+            .unwrap_or(sorted_data.len());
         let percentile = position as f64 / sorted_data.len() as f64;
-        
+
         // Anomaly score based on distance from median
         let distance_from_median = (percentile - 0.5).abs() * 2.0;
-        
+
         Ok(distance_from_median)
     }
 }
@@ -1606,14 +1679,19 @@ impl TimeSeriesAnomalyDetector {
     }
 
     /// Detect anomaly using time series methods
-    pub fn detect_anomaly(&mut self, value: f64, metric_name: &str, timestamp: u64) -> Result<Option<AnomalyRecord>> {
+    pub fn detect_anomaly(
+        &mut self,
+        value: f64,
+        metric_name: &str,
+        timestamp: u64,
+    ) -> Result<Option<AnomalyRecord>> {
         // Add to time series data
         self.time_series_data.push_back(TimeSeriesPoint {
             timestamp,
             value,
             metadata: HashMap::new(),
         });
-        
+
         if self.time_series_data.len() > 1000 {
             self.time_series_data.pop_front();
         }
@@ -1625,8 +1703,9 @@ impl TimeSeriesAnomalyDetector {
 
         // Simple change point detection
         let anomaly_score = self.detect_change_point(value)?;
-        
-        if anomaly_score > 2.0 { // Threshold for anomaly
+
+        if anomaly_score > 2.0 {
+            // Threshold for anomaly
             let severity = if anomaly_score > 5.0 {
                 AnomalySeverity::Critical
             } else if anomaly_score > 4.0 {
@@ -1646,8 +1725,14 @@ impl TimeSeriesAnomalyDetector {
                 severity,
                 context: [
                     ("change_point_score".to_string(), anomaly_score.to_string()),
-                    ("window_size".to_string(), self.change_point_config.window_size.to_string()),
-                ].iter().cloned().collect(),
+                    (
+                        "window_size".to_string(),
+                        self.change_point_config.window_size.to_string(),
+                    ),
+                ]
+                .iter()
+                .cloned()
+                .collect(),
             }));
         }
 
@@ -1656,12 +1741,16 @@ impl TimeSeriesAnomalyDetector {
 
     /// Simple change point detection
     fn detect_change_point(&self, current_value: f64) -> Result<f64> {
-        let window_size = self.change_point_config.window_size.min(self.time_series_data.len());
+        let window_size = self
+            .change_point_config
+            .window_size
+            .min(self.time_series_data.len());
         if window_size < 10 {
             return Ok(0.0);
         }
 
-        let recent_data: Vec<f64> = self.time_series_data
+        let recent_data: Vec<f64> = self
+            .time_series_data
             .iter()
             .rev()
             .take(window_size)
@@ -1678,14 +1767,17 @@ impl TimeSeriesAnomalyDetector {
 
         let mean1 = first_half.iter().sum::<f64>() / first_half.len() as f64;
         let mean2 = second_half.iter().sum::<f64>() / second_half.len() as f64;
-        
-        let var1 = first_half.iter().map(|x| (x - mean1).powi(2)).sum::<f64>() / first_half.len() as f64;
-        let var2 = second_half.iter().map(|x| (x - mean2).powi(2)).sum::<f64>() / second_half.len() as f64;
-        
+
+        let var1 =
+            first_half.iter().map(|x| (x - mean1).powi(2)).sum::<f64>() / first_half.len() as f64;
+        let var2 =
+            second_half.iter().map(|x| (x - mean2).powi(2)).sum::<f64>() / second_half.len() as f64;
+
         let pooled_std = ((var1 + var2) / 2.0).sqrt();
-        
+
         if pooled_std > 0.0 {
-            let t_statistic = (mean2 - mean1).abs() / (pooled_std * (2.0 / window_size as f64).sqrt());
+            let t_statistic =
+                (mean2 - mean1).abs() / (pooled_std * (2.0 / window_size as f64).sqrt());
             Ok(t_statistic)
         } else {
             Ok(0.0)

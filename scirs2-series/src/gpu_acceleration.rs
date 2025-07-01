@@ -24,6 +24,27 @@ pub struct GpuConfig {
     pub use_half_precision: bool,
     /// Enable asynchronous execution
     pub enable_async: bool,
+    /// Tensor cores configuration
+    pub tensor_cores: TensorCoresConfig,
+    /// Memory allocation strategy
+    pub memory_strategy: MemoryStrategy,
+    /// Enable dynamic batch sizing
+    pub dynamic_batching: bool,
+    /// Graph optimization level
+    pub graph_optimization: GraphOptimizationLevel,
+}
+
+/// Graph optimization levels for GPU computation
+#[derive(Debug, Clone, Copy)]
+pub enum GraphOptimizationLevel {
+    /// No optimization
+    None,
+    /// Basic optimization
+    Basic,
+    /// Extended optimization
+    Extended,
+    /// Maximum optimization (may increase compile time)
+    Maximum,
 }
 
 impl Default for GpuConfig {
@@ -35,6 +56,10 @@ impl Default for GpuConfig {
             batch_size: 1024,
             use_half_precision: false,
             enable_async: true,
+            tensor_cores: TensorCoresConfig::default(),
+            memory_strategy: MemoryStrategy::OnDemand,
+            dynamic_batching: true,
+            graph_optimization: GraphOptimizationLevel::Extended,
         }
     }
 }
@@ -87,6 +112,115 @@ pub struct GpuCapabilities {
     pub supports_tensor_cores: bool,
     /// Maximum threads per block
     pub max_threads_per_block: usize,
+    /// Tensor cores generation
+    pub tensor_cores_generation: Option<TensorCoresGeneration>,
+    /// Memory bandwidth (GB/s)
+    pub memory_bandwidth: f64,
+    /// Peak tensor performance (TOPS)
+    pub tensor_performance: Option<f64>,
+}
+
+/// Tensor cores generation and capabilities
+#[derive(Debug, Clone, Copy)]
+pub enum TensorCoresGeneration {
+    /// First generation (V100)
+    V1,
+    /// Second generation (T4, RTX 20xx)
+    V2,
+    /// Third generation (A100, RTX 30xx)
+    V3,
+    /// Fourth generation (H100, RTX 40xx)
+    V4,
+}
+
+impl TensorCoresGeneration {
+    /// Get supported data types for this generation
+    pub fn supported_data_types(&self) -> Vec<TensorDataType> {
+        match self {
+            TensorCoresGeneration::V1 => vec![TensorDataType::FP16],
+            TensorCoresGeneration::V2 => vec![TensorDataType::FP16, TensorDataType::INT8],
+            TensorCoresGeneration::V3 => vec![
+                TensorDataType::FP16,
+                TensorDataType::BF16,
+                TensorDataType::INT8,
+                TensorDataType::INT4,
+                TensorDataType::FP64,
+            ],
+            TensorCoresGeneration::V4 => vec![
+                TensorDataType::FP16,
+                TensorDataType::BF16,
+                TensorDataType::INT8,
+                TensorDataType::INT4,
+                TensorDataType::FP8,
+                TensorDataType::FP64,
+            ],
+        }
+    }
+
+    /// Get matrix dimensions supported by tensor cores
+    pub fn supported_matrix_dimensions(&self) -> Vec<(usize, usize, usize)> {
+        match self {
+            TensorCoresGeneration::V1 => vec![(16, 16, 16)],
+            TensorCoresGeneration::V2 => vec![(16, 16, 16), (8, 32, 16), (32, 8, 16)],
+            TensorCoresGeneration::V3 | TensorCoresGeneration::V4 => vec![
+                (16, 16, 16),
+                (8, 32, 16),
+                (32, 8, 16),
+                (16, 8, 8),
+                (8, 8, 4),
+            ],
+        }
+    }
+}
+
+/// Tensor data types supported by tensor cores
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum TensorDataType {
+    /// 16-bit floating point
+    FP16,
+    /// 16-bit brain floating point
+    BF16,
+    /// 8-bit floating point (FP8)
+    FP8,
+    /// 64-bit floating point
+    FP64,
+    /// 8-bit integer
+    INT8,
+    /// 4-bit integer
+    INT4,
+}
+
+/// Tensor cores optimization configuration
+#[derive(Debug, Clone)]
+pub struct TensorCoresConfig {
+    /// Enable tensor cores acceleration
+    pub enabled: bool,
+    /// Preferred data type for computation
+    pub data_type: TensorDataType,
+    /// Matrix dimensions to use for tiling
+    pub tile_size: (usize, usize, usize),
+    /// Enable mixed precision training
+    pub mixed_precision: bool,
+    /// Loss scaling for mixed precision
+    pub loss_scale: f32,
+    /// Enable automatic mixed precision
+    pub auto_mixed_precision: bool,
+    /// Minimum matrix size to use tensor cores
+    pub min_matrix_size: usize,
+}
+
+impl Default for TensorCoresConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            data_type: TensorDataType::FP16,
+            tile_size: (16, 16, 16),
+            mixed_precision: true,
+            loss_scale: 65536.0,
+            auto_mixed_precision: true,
+            min_matrix_size: 512,
+        }
+    }
 }
 
 /// Trait for GPU-accelerated time series operations
@@ -323,6 +457,9 @@ impl GpuDeviceManager {
                 supports_fp16: false,
                 supports_tensor_cores: false,
                 max_threads_per_block: 1,
+                tensor_cores_generation: None,
+                memory_bandwidth: 100.0, // GB/s - rough estimate for system memory
+                tensor_performance: None,
             });
         }
 
@@ -378,6 +515,9 @@ impl GpuDeviceManager {
                     supports_fp16: true,
                     supports_tensor_cores: true,
                     max_threads_per_block: 1024,
+                    tensor_cores_generation: Some(TensorCoresGeneration::V3), // A100 is gen 3
+                    memory_bandwidth: 1555.0,                                 // GB/s for A100
+                    tensor_performance: Some(312.0),                          // TOPS for A100 BF16
                 }]);
             }
         }
@@ -408,6 +548,9 @@ impl GpuDeviceManager {
                     supports_fp16: true,
                     supports_tensor_cores: false,
                     max_threads_per_block: 256,
+                    tensor_cores_generation: None,
+                    memory_bandwidth: 500.0, // GB/s estimate
+                    tensor_performance: None,
                 }]);
             }
         }
@@ -429,6 +572,9 @@ impl GpuDeviceManager {
                     supports_fp16: true,
                     supports_tensor_cores: true, // Neural Engine
                     max_threads_per_block: 1024,
+                    tensor_cores_generation: Some(TensorCoresGeneration::V3), // Apple Silicon Neural Engine
+                    memory_bandwidth: 400.0,                                  // GB/s for M1 Pro/Max
+                    tensor_performance: Some(15.8), // TOPS for M1 Neural Engine
                 }]);
             }
         }
@@ -450,8 +596,11 @@ impl GpuDeviceManager {
                     memory: 32 * 1024 * 1024 * 1024, // 32GB simulated
                     multiprocessors: 120,
                     supports_fp16: true,
-                    supports_tensor_cores: false,
+                    supports_tensor_cores: false, // AMD uses Matrix Cores, not Tensor Cores
                     max_threads_per_block: 1024,
+                    tensor_cores_generation: None, // AMD has MFMA instructions instead
+                    memory_bandwidth: 1600.0,      // GB/s for MI250X
+                    tensor_performance: Some(383.0), // TOPS for MI250X BF16
                 }]);
             }
         }
@@ -663,6 +812,49 @@ mod tests {
         assert!(config.use_half_precision); // Should be true for large data
         assert!(config.enable_memory_optimization);
         assert_eq!(config.memory_pool_size, Some(available_memory / 2));
+        assert!(config.tensor_cores.enabled); // Should be enabled by default
+        assert!(config.dynamic_batching);
+    }
+
+    #[test]
+    fn test_tensor_cores_generation() {
+        let v3 = TensorCoresGeneration::V3;
+        let supported_types = v3.supported_data_types();
+
+        assert!(supported_types.contains(&TensorDataType::FP16));
+        assert!(supported_types.contains(&TensorDataType::BF16));
+        assert!(supported_types.contains(&TensorDataType::INT8));
+
+        let dimensions = v3.supported_matrix_dimensions();
+        assert!(dimensions.contains(&(16, 16, 16)));
+        assert!(dimensions.len() > 1); // Should support multiple dimensions
+    }
+
+    #[test]
+    fn test_tensor_cores_config() {
+        let config = TensorCoresConfig::default();
+
+        assert!(config.enabled);
+        assert_eq!(config.data_type, TensorDataType::FP16);
+        assert!(config.mixed_precision);
+        assert_eq!(config.tile_size, (16, 16, 16));
+        assert_eq!(config.min_matrix_size, 512);
+    }
+
+    #[test]
+    fn test_device_capabilities_with_tensor_cores() {
+        let manager = GpuDeviceManager::new().unwrap();
+        let devices = manager.get_devices();
+
+        // Should have at least one device (CPU fallback)
+        assert!(!devices.is_empty());
+
+        // Check CPU fallback doesn't claim tensor cores support
+        let cpu_device = &devices[0];
+        assert_eq!(cpu_device.backend, GpuBackend::CpuFallback);
+        assert!(!cpu_device.supports_tensor_cores);
+        assert!(cpu_device.tensor_cores_generation.is_none());
+        assert!(cpu_device.memory_bandwidth > 0.0);
     }
 }
 
@@ -1326,6 +1518,382 @@ pub mod blas {
             }
 
             Ok(())
+        }
+    }
+
+    /// Tensor Cores optimized BLAS operations
+    #[derive(Debug)]
+    pub struct TensorCoresBLAS<F: Float + Debug> {
+        /// Base BLAS operations
+        base_blas: GpuBLAS<F>,
+        /// Tensor cores configuration
+        tensor_config: TensorCoresConfig,
+        /// Device capabilities
+        device_capabilities: GpuCapabilities,
+    }
+
+    impl<F: Float + Debug + Clone + num_traits::Zero + num_traits::One> TensorCoresBLAS<F> {
+        /// Create new tensor cores BLAS processor
+        pub fn new(config: GpuConfig, device_capabilities: GpuCapabilities) -> Result<Self> {
+            let base_blas = GpuBLAS::new(config.clone());
+
+            if !device_capabilities.supports_tensor_cores {
+                return Err(TimeSeriesError::NotImplemented(
+                    "Device does not support tensor cores".to_string(),
+                ));
+            }
+
+            Ok(Self {
+                base_blas,
+                tensor_config: config.tensor_cores,
+                device_capabilities,
+            })
+        }
+
+        /// Tensor cores optimized matrix multiplication (GEMM)
+        pub fn tensor_gemm(
+            &self,
+            alpha: F,
+            a: &Array2<F>,
+            b: &Array2<F>,
+            beta: F,
+            c: &mut Array2<F>,
+        ) -> Result<()> {
+            let (m, k1) = a.dim();
+            let (k2, n) = b.dim();
+
+            if k1 != k2 {
+                return Err(TimeSeriesError::DimensionMismatch {
+                    expected: k1,
+                    actual: k2,
+                });
+            }
+
+            let k = k1;
+
+            // Check if matrix is large enough to benefit from tensor cores
+            if m < self.tensor_config.min_matrix_size
+                || n < self.tensor_config.min_matrix_size
+                || k < self.tensor_config.min_matrix_size
+            {
+                // Fall back to regular GEMM for small matrices
+                return self.base_blas.gemm(alpha, a, b, beta, c);
+            }
+
+            // Use tensor cores optimized tiling
+            let (tile_m, tile_n, tile_k) = self.get_optimal_tile_size(m, n, k);
+
+            // Tensor cores optimized tiled matrix multiplication
+            for i_tile in (0..m).step_by(tile_m) {
+                for j_tile in (0..n).step_by(tile_n) {
+                    for k_tile in (0..k).step_by(tile_k) {
+                        let i_end = (i_tile + tile_m).min(m);
+                        let j_end = (j_tile + tile_n).min(n);
+                        let k_end = (k_tile + tile_k).min(k);
+
+                        // Process tile with tensor cores acceleration
+                        self.process_tensor_tile(
+                            alpha,
+                            a,
+                            b,
+                            beta,
+                            c,
+                            (i_tile, i_end),
+                            (j_tile, j_end),
+                            (k_tile, k_end),
+                        )?;
+                    }
+                }
+            }
+
+            Ok(())
+        }
+
+        /// Get optimal tile size for tensor cores
+        fn get_optimal_tile_size(&self, m: usize, n: usize, k: usize) -> (usize, usize, usize) {
+            if let Some(generation) = self.device_capabilities.tensor_cores_generation {
+                let supported_dims = generation.supported_matrix_dimensions();
+
+                // Find best tile size based on matrix dimensions and supported sizes
+                for &(tile_m, tile_n, tile_k) in &supported_dims {
+                    if tile_m <= m && tile_n <= n && tile_k <= k {
+                        // Scale up tile size for larger matrices
+                        let scale_factor = ((m / tile_m).min(n / tile_n).min(k / tile_k)).max(1);
+                        return (
+                            tile_m * scale_factor,
+                            tile_n * scale_factor,
+                            tile_k * scale_factor,
+                        );
+                    }
+                }
+
+                // Default to first supported size if none fits perfectly
+                supported_dims[0]
+            } else {
+                // Fallback for devices without tensor cores
+                (32, 32, 32)
+            }
+        }
+
+        /// Process single tile with tensor cores optimization
+        fn process_tensor_tile(
+            &self,
+            alpha: F,
+            a: &Array2<F>,
+            b: &Array2<F>,
+            beta: F,
+            c: &mut Array2<F>,
+            (i_start, i_end): (usize, usize),
+            (j_start, j_end): (usize, usize),
+            (k_start, k_end): (usize, usize),
+        ) -> Result<()> {
+            // Simulate tensor cores acceleration with optimized memory access patterns
+            // In real implementation, this would use WMMA (Warp Matrix Multiply Accumulate) intrinsics
+
+            for i in i_start..i_end {
+                for j in j_start..j_end {
+                    let mut sum = F::zero();
+
+                    // Vectorized accumulation simulating tensor cores
+                    // Real tensor cores process multiple elements simultaneously
+                    let chunk_size = 4; // Simulate 4-way vectorization
+                    let chunks = (k_end - k_start) / chunk_size;
+
+                    // Process chunks of 4 for better "tensor core" utilization
+                    for chunk in 0..chunks {
+                        let mut chunk_sum = F::zero();
+                        let base_k = k_start + chunk * chunk_size;
+
+                        for offset in 0..chunk_size {
+                            let k_idx = base_k + offset;
+                            if k_idx < k_end && k_idx < a.ncols() && k_idx < b.nrows() {
+                                chunk_sum = chunk_sum + a[[i, k_idx]] * b[[k_idx, j]];
+                            }
+                        }
+                        sum = sum + chunk_sum;
+                    }
+
+                    // Process remainder
+                    for k_idx in (k_start + chunks * chunk_size)..k_end {
+                        if k_idx < a.ncols() && k_idx < b.nrows() {
+                            sum = sum + a[[i, k_idx]] * b[[k_idx, j]];
+                        }
+                    }
+
+                    // Apply mixed precision if enabled
+                    if self.tensor_config.mixed_precision {
+                        // Simulate mixed precision computation
+                        // In real implementation, accumulation would be in FP32 even with FP16 inputs
+                        c[[i, j]] = alpha * sum + beta * c[[i, j]];
+                    } else {
+                        c[[i, j]] = alpha * sum + beta * c[[i, j]];
+                    }
+                }
+            }
+
+            Ok(())
+        }
+
+        /// Mixed precision matrix multiplication with automatic loss scaling
+        pub fn mixed_precision_gemm(
+            &self,
+            alpha: F,
+            a: &Array2<F>,
+            b: &Array2<F>,
+            beta: F,
+            c: &mut Array2<F>,
+        ) -> Result<()> {
+            if !self.tensor_config.mixed_precision {
+                return self.tensor_gemm(alpha, a, b, beta, c);
+            }
+
+            // Simulate mixed precision computation
+            // 1. Convert inputs to lower precision (simulated)
+            // 2. Perform computation with tensor cores
+            // 3. Convert result back to higher precision
+
+            // Apply loss scaling for gradient stability
+            let scaled_alpha = alpha * F::from(self.tensor_config.loss_scale).unwrap();
+
+            // Perform computation with scaled alpha
+            self.tensor_gemm(scaled_alpha, a, b, beta, c)?;
+
+            // Unscale the result
+            let unscale_factor = F::one() / F::from(self.tensor_config.loss_scale).unwrap();
+            for elem in c.iter_mut() {
+                *elem = *elem * unscale_factor;
+            }
+
+            Ok(())
+        }
+
+        /// Batch tensor cores GEMM for multiple matrix multiplications
+        pub fn batch_tensor_gemm(
+            &self,
+            alpha: F,
+            a_batch: &[Array2<F>],
+            b_batch: &[Array2<F>],
+            beta: F,
+            c_batch: &mut [Array2<F>],
+        ) -> Result<()> {
+            if a_batch.len() != b_batch.len() || b_batch.len() != c_batch.len() {
+                return Err(TimeSeriesError::InvalidInput(
+                    "Batch sizes must match".to_string(),
+                ));
+            }
+
+            // Parallel batch processing optimized for tensor cores
+            for ((a, b), c) in a_batch.iter().zip(b_batch.iter()).zip(c_batch.iter_mut()) {
+                self.tensor_gemm(alpha, a, b, beta, c)?;
+            }
+
+            Ok(())
+        }
+
+        /// Optimized tensor cores convolution using GEMM
+        pub fn tensor_convolution_gemm(
+            &self,
+            input: &Array2<F>,
+            kernel: &Array2<F>,
+            stride: usize,
+        ) -> Result<Array2<F>> {
+            let (input_height, input_width) = input.dim();
+            let (kernel_height, kernel_width) = kernel.dim();
+
+            let output_height = (input_height - kernel_height) / stride + 1;
+            let output_width = (input_width - kernel_width) / stride + 1;
+
+            // Convert convolution to GEMM using im2col transformation
+            let col_matrix = self.im2col_transform(input, kernel_height, kernel_width, stride)?;
+            let kernel_matrix = kernel
+                .view()
+                .into_shape((1, kernel_height * kernel_width))
+                .unwrap();
+
+            let mut output_matrix = Array2::zeros((1, output_height * output_width));
+
+            // Use tensor cores for the GEMM operation
+            self.tensor_gemm(
+                F::one(),
+                &kernel_matrix.to_owned(),
+                &col_matrix,
+                F::zero(),
+                &mut output_matrix,
+            )?;
+
+            // Reshape to output format
+            Ok(output_matrix
+                .into_shape((output_height, output_width))
+                .unwrap())
+        }
+
+        /// Im2col transformation for convolution
+        fn im2col_transform(
+            &self,
+            input: &Array2<F>,
+            kernel_height: usize,
+            kernel_width: usize,
+            stride: usize,
+        ) -> Result<Array2<F>> {
+            let (input_height, input_width) = input.dim();
+            let output_height = (input_height - kernel_height) / stride + 1;
+            let output_width = (input_width - kernel_width) / stride + 1;
+
+            let mut col_matrix =
+                Array2::zeros((kernel_height * kernel_width, output_height * output_width));
+
+            let mut col_idx = 0;
+            for out_y in 0..output_height {
+                for out_x in 0..output_width {
+                    let mut row_idx = 0;
+                    for ky in 0..kernel_height {
+                        for kx in 0..kernel_width {
+                            let input_y = out_y * stride + ky;
+                            let input_x = out_x * stride + kx;
+
+                            if input_y < input_height && input_x < input_width {
+                                col_matrix[[row_idx, col_idx]] = input[[input_y, input_x]];
+                            }
+                            row_idx += 1;
+                        }
+                    }
+                    col_idx += 1;
+                }
+            }
+
+            Ok(col_matrix)
+        }
+
+        /// Check if tensor cores can be used for given operation
+        pub fn can_use_tensor_cores(&self, m: usize, n: usize, k: usize) -> bool {
+            if !self.tensor_config.enabled || !self.device_capabilities.supports_tensor_cores {
+                return false;
+            }
+
+            // Check minimum size requirements
+            if m < self.tensor_config.min_matrix_size
+                || n < self.tensor_config.min_matrix_size
+                || k < self.tensor_config.min_matrix_size
+            {
+                return false;
+            }
+
+            // Check if dimensions are compatible with tensor cores
+            if let Some(generation) = self.device_capabilities.tensor_cores_generation {
+                let supported_dims = generation.supported_matrix_dimensions();
+                for &(tile_m, tile_n, tile_k) in &supported_dims {
+                    if m % tile_m == 0 && n % tile_n == 0 && k % tile_k == 0 {
+                        return true;
+                    }
+                }
+            }
+
+            false
+        }
+
+        /// Get tensor cores performance estimate
+        pub fn estimate_tensor_performance(&self, m: usize, n: usize, k: usize) -> Option<f64> {
+            if !self.can_use_tensor_cores(m, n, k) {
+                return None;
+            }
+
+            if let Some(peak_tops) = self.device_capabilities.tensor_performance {
+                // Estimate actual performance based on matrix size and efficiency
+                let total_ops = 2.0 * m as f64 * n as f64 * k as f64; // GEMM operations
+                let efficiency = self.estimate_efficiency(m, n, k);
+                let estimated_tops = peak_tops * efficiency;
+
+                Some(total_ops / (estimated_tops * 1e12)) // Time in seconds
+            } else {
+                None
+            }
+        }
+
+        /// Estimate tensor cores efficiency for given matrix dimensions
+        fn estimate_efficiency(&self, m: usize, n: usize, k: usize) -> f64 {
+            if let Some(generation) = self.device_capabilities.tensor_cores_generation {
+                let (opt_m, opt_n, opt_k) = self.get_optimal_tile_size(m, n, k);
+
+                // Higher efficiency for matrices that align well with tensor core tiles
+                let m_efficiency = (m % opt_m) as f64 / opt_m as f64;
+                let n_efficiency = (n % opt_n) as f64 / opt_n as f64;
+                let k_efficiency = (k % opt_k) as f64 / opt_k as f64;
+
+                let alignment_efficiency =
+                    (1.0 - m_efficiency) * (1.0 - n_efficiency) * (1.0 - k_efficiency);
+
+                // Base efficiency depends on generation
+                let base_efficiency = match generation {
+                    TensorCoresGeneration::V1 => 0.7,
+                    TensorCoresGeneration::V2 => 0.8,
+                    TensorCoresGeneration::V3 => 0.9,
+                    TensorCoresGeneration::V4 => 0.95,
+                };
+
+                base_efficiency * alignment_efficiency.max(0.5) // Minimum 50% efficiency
+            } else {
+                0.5 // Default efficiency without tensor cores
+            }
         }
     }
 }
@@ -2106,7 +2674,7 @@ pub mod algorithms {
         }
     }
 
-    impl<F: Float + Debug + Clone> GpuFeatureExtractor<F> {
+    impl<F: Float + Debug + Clone + std::iter::Sum> GpuFeatureExtractor<F> {
         pub fn new(config: GpuConfig, feature_config: FeatureConfig) -> Result<Self> {
             let processor = GpuTimeSeriesProcessor::new(config)?;
             Ok(Self {

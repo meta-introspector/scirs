@@ -72,6 +72,9 @@ pub mod tpu;
 // Unified performance integration
 pub mod performance_integration;
 
+// Ultrathink Mode Coordinator
+pub mod ultrathink_coordinator;
+
 // Re-export the error type
 pub use error::{Error, NeuralError, Result};
 
@@ -124,5 +127,11 @@ pub mod prelude {
     // Unified performance optimization
     pub use crate::performance_integration::{
         AutoOptimizationStrategy, OptimizationChoice, UnifiedPerformanceManager,
+    };
+
+    // Ultrathink Mode Coordinator
+    pub use crate::ultrathink_coordinator::{
+        AdaptiveConfig, DeviceType, MemoryStrategy, OptimizationConfig, PerformanceReport,
+        UltrathinkCoordinator,
     };
 }

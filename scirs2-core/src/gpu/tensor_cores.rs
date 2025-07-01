@@ -498,7 +498,7 @@ where
 
     // Generate optimized kernel for this configuration
     let kernel_source = generate_tensor_core_gemm_kernel(manager, m, n, k)?;
-    
+
     // Execute tensor core GEMM
     execute_tensor_core_operation(manager, &kernel_source, a, b, c, m, n, k)?;
 
@@ -517,10 +517,16 @@ fn generate_tensor_core_gemm_kernel(
     let use_mixed_precision = manager.config().use_mixed_precision;
 
     match manager.backend {
-        GpuBackend::Cuda => generate_cuda_tensor_core_kernel(data_type, tile_size, m, n, k, use_mixed_precision),
-        GpuBackend::Rocm => generate_rocm_matrix_core_kernel(data_type, tile_size, m, n, k, use_mixed_precision),
+        GpuBackend::Cuda => {
+            generate_cuda_tensor_core_kernel(data_type, tile_size, m, n, k, use_mixed_precision)
+        }
+        GpuBackend::Rocm => {
+            generate_rocm_matrix_core_kernel(data_type, tile_size, m, n, k, use_mixed_precision)
+        }
         GpuBackend::Metal => generate_metal_mps_kernel(data_type, tile_size, m, n, k),
-        _ => Err(TensorCoreError::UnsupportedOperation(TensorCoreOp::MatrixMultiply)),
+        _ => Err(TensorCoreError::UnsupportedOperation(
+            TensorCoreOp::MatrixMultiply,
+        )),
     }
 }
 
@@ -542,9 +548,14 @@ fn generate_cuda_tensor_core_kernel(
         _ => return Err(TensorCoreError::UnsupportedDataType(data_type.clone())),
     };
 
-    let accumulator_type = if use_mixed_precision { "float" } else { dtype_str };
+    let accumulator_type = if use_mixed_precision {
+        "float"
+    } else {
+        dtype_str
+    };
 
-    Ok(format!(r#"
+    Ok(format!(
+        r#"
 #include <cuda_fp16.h>
 #include <cuda_bf16.h>
 #include <mma.h>
@@ -633,9 +644,14 @@ fn generate_rocm_matrix_core_kernel(
         _ => return Err(TensorCoreError::UnsupportedDataType(data_type.clone())),
     };
 
-    let accumulator_type = if use_mixed_precision { "float" } else { dtype_str };
+    let accumulator_type = if use_mixed_precision {
+        "float"
+    } else {
+        dtype_str
+    };
 
-    Ok(format!(r#"
+    Ok(format!(
+        r#"
 #include <hip/hip_runtime.h>
 #include <hip/hip_fp16.h>
 
@@ -731,7 +747,8 @@ fn generate_metal_mps_kernel(
         _ => return Err(TensorCoreError::UnsupportedDataType(data_type.clone())),
     };
 
-    Ok(format!(r#"
+    Ok(format!(
+        r#"
 #include <metal_stdlib>
 using namespace metal;
 
@@ -790,7 +807,7 @@ where
     let tile_size = manager.config().tile_size;
     let grid_dim_x = n.div_ceil(tile_size.1);
     let grid_dim_y = m.div_ceil(tile_size.0);
-    
+
     eprintln!("Executing tensor core GEMM:");
     eprintln!("  Kernel source length: {} characters", kernel_source.len());
     eprintln!("  Dimensions: {}x{}x{}", m, n, k);
@@ -798,7 +815,7 @@ where
     eprintln!("  Tile size: {:?}", tile_size);
     eprintln!("  Backend: {:?}", manager.backend);
     eprintln!("  Data type: {}", manager.config().data_type);
-    
+
     // Placeholder for actual kernel execution
     Ok(())
 }

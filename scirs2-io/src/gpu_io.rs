@@ -3652,11 +3652,13 @@ pub enum StabilityRating {
 /// UltraThink AI-driven GPU optimization with advanced machine learning
 pub mod ultrathink_gpu_optimization {
     use super::*;
-    use crate::neural_adaptive_io::{NeuralAdaptiveIoController, SystemMetrics, OptimizationDecisions};
-    use crate::quantum_inspired_io::{QuantumParallelProcessor, QuantumIoParams};
+    use crate::neural_adaptive_io::{
+        NeuralAdaptiveIoController, OptimizationDecisions, SystemMetrics,
+    };
+    use crate::quantum_inspired_io::{QuantumIoParams, QuantumParallelProcessor};
+    use std::collections::VecDeque;
     use std::sync::{Arc, RwLock};
     use std::time::{Duration, Instant};
-    use std::collections::VecDeque;
 
     /// Advanced AI-driven GPU optimization controller with ultrathink capabilities
     pub struct UltraThinkGpuController {
@@ -3678,7 +3680,7 @@ pub mod ultrathink_gpu_optimization {
         /// Create a new ultrathink GPU controller
         pub fn new() -> Result<Self> {
             let gpu_device = GpuDevice::new(GpuIoProcessor::detect_optimal_backend()?, 0);
-            
+
             Ok(Self {
                 neural_controller: Arc::new(RwLock::new(NeuralAdaptiveIoController::new())),
                 quantum_processor: Arc::new(RwLock::new(QuantumParallelProcessor::new(8))),
@@ -3695,7 +3697,7 @@ pub mod ultrathink_gpu_optimization {
             T: GpuDataType + Clone,
         {
             let start_time = Instant::now();
-            
+
             // Phase 1: Neural-adaptive system analysis
             let system_metrics = self.collect_advanced_system_metrics()?;
             let neural_decisions = {
@@ -3711,13 +3713,19 @@ pub mod ultrathink_gpu_optimization {
 
             // Phase 3: AI-driven GPU resource allocation
             let gpu_config = self.optimize_gpu_resources(&neural_decisions, data.len())?;
-            
+
             // Phase 4: Ultra-parallel GPU processing with adaptive algorithms
-            let result = self.execute_ultrathink_gpu_processing(&quantum_enhanced_data, &gpu_config)?;
+            let result =
+                self.execute_ultrathink_gpu_processing(&quantum_enhanced_data, &gpu_config)?;
 
             // Phase 5: Performance feedback and continuous learning
             let processing_time = start_time.elapsed();
-            self.record_ultrathink_performance(&system_metrics, &neural_decisions, processing_time, &result)?;
+            self.record_ultrathink_performance(
+                &system_metrics,
+                &neural_decisions,
+                processing_time,
+                &result,
+            )?;
 
             Ok(result)
         }
@@ -3740,10 +3748,10 @@ pub mod ultrathink_gpu_optimization {
         {
             // Convert data to bytes for quantum processing
             let data_bytes = self.serialize_array_for_quantum(data)?;
-            
+
             // Apply quantum-inspired algorithms
             let quantum_optimized = quantum_processor.process_quantum_parallel(&data_bytes)?;
-            
+
             // Convert back to original format
             self.deserialize_quantum_to_array(&quantum_optimized, data.raw_dim())
         }
@@ -3755,12 +3763,16 @@ pub mod ultrathink_gpu_optimization {
             data_size: usize,
         ) -> Result<UltraGpuConfig> {
             let memory_manager = self.memory_manager.read().unwrap();
-            
+
             Ok(UltraGpuConfig {
                 compute_units: (neural_decisions.thread_count_factor * 64.0) as u32,
                 memory_pool_size: memory_manager.calculate_optimal_pool_size(data_size),
                 pipeline_depth: (neural_decisions.cache_priority * 16.0) as u32,
-                simd_width: if neural_decisions.simd_factor > 0.5 { 256 } else { 128 },
+                simd_width: if neural_decisions.simd_factor > 0.5 {
+                    256
+                } else {
+                    128
+                },
                 precision_mode: if neural_decisions.compression_level > 0.7 {
                     UltraPrecisionMode::Mixed
                 } else {
@@ -3780,10 +3792,10 @@ pub mod ultrathink_gpu_optimization {
         {
             // Create ultra-optimized GPU buffers
             let input_buffer = self.create_ultra_optimized_buffer(data, config)?;
-            
+
             // Apply AI-driven processing kernels
             let processed_buffer = self.apply_ai_processing_kernels(&input_buffer, config)?;
-            
+
             // Extract results with memory optimization
             self.extract_optimized_results(&processed_buffer, data.raw_dim())
         }
@@ -3868,7 +3880,7 @@ pub mod ultrathink_gpu_optimization {
             T: GpuDataType,
         {
             let throughput = result.len() as f32 / processing_time.as_secs_f32();
-            
+
             // Record in performance monitor
             {
                 let mut monitor = self.performance_monitor.write().unwrap();
@@ -3894,8 +3906,16 @@ pub mod ultrathink_gpu_optimization {
         /// Get ultrathink performance statistics
         pub fn get_ultrathink_stats(&self) -> UltraThinkStats {
             let monitor = self.performance_monitor.read().unwrap();
-            let neural_stats = self.neural_controller.read().unwrap().get_adaptation_stats();
-            let quantum_stats = self.quantum_processor.read().unwrap().get_performance_stats();
+            let neural_stats = self
+                .neural_controller
+                .read()
+                .unwrap()
+                .get_adaptation_stats();
+            let quantum_stats = self
+                .quantum_processor
+                .read()
+                .unwrap()
+                .get_performance_stats();
 
             UltraThinkStats {
                 total_operations: monitor.operation_count,
@@ -3977,11 +3997,16 @@ pub mod ultrathink_gpu_optimization {
             }
         }
 
-        fn record_operation(&mut self, processing_time: Duration, throughput: f32, data_size: usize) {
+        fn record_operation(
+            &mut self,
+            processing_time: Duration,
+            throughput: f32,
+            data_size: usize,
+        ) {
             self.operation_count += 1;
             self.total_throughput += throughput;
             self.total_processing_time += processing_time;
-            
+
             // Update efficiency metrics
             self.gpu_utilization = 0.9; // High GPU utilization
             self.memory_efficiency = 0.8; // Good memory efficiency
@@ -4119,7 +4144,7 @@ pub mod ultrathink_gpu_optimization {
         fn test_gpu_performance_monitor() {
             let mut monitor = GpuPerformanceMonitor::new();
             monitor.record_operation(Duration::from_millis(10), 1000.0, 1024);
-            
+
             assert_eq!(monitor.operation_count, 1);
             assert!(monitor.avg_throughput_gbps() > 0.0);
         }
@@ -4128,7 +4153,7 @@ pub mod ultrathink_gpu_optimization {
         fn test_adaptive_memory_manager() {
             let manager = AdaptiveGpuMemoryManager::new();
             let optimal_size = manager.calculate_optimal_pool_size(1024);
-            
+
             assert!(optimal_size > 1024);
             assert!(optimal_size % 4096 == 0); // Check alignment
         }

@@ -62,7 +62,7 @@ use std::f64::consts::PI;
 /// let n = 2;
 /// let p = 1;
 /// let s = 1.5;
-/// 
+///
 /// let result = ellip_harm(h2, k2, n, p, s);
 /// println!("E_{}^{}({}) = {:?}", n, p, s, result);
 /// ```
@@ -73,22 +73,22 @@ pub fn ellip_harm(h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResult
             "Parameters h² and k² must be non-negative".to_string(),
         ));
     }
-    
+
     if p > n {
         return Err(SpecialError::ValueError(
             "Order p must not exceed degree n".to_string(),
         ));
     }
-    
+
     if s <= 0.0 {
         return Err(SpecialError::ValueError(
             "Coordinate parameter s must be positive".to_string(),
         ));
     }
-    
+
     // For the basic case, we use the connection to Legendre functions
     // and elliptic integrals. This is a simplified implementation.
-    
+
     // Convert to mu parameter for ellipsoidal coordinates with numerical stability
     let mu = if s > 1e10 {
         // For very large s, use asymptotic approximation
@@ -99,10 +99,10 @@ pub fn ellip_harm(h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResult
     } else {
         s.sqrt()
     };
-    
+
     // Ensure mu is in valid range for Legendre functions
     let mu_clamped = mu.clamp(-1.0, 1.0);
-    
+
     // Compute the associated Legendre function P_n^p(mu) with numerical stability
     let legendre = if p == 0 {
         // For order 0, use regular Legendre polynomial which is more stable
@@ -117,32 +117,34 @@ pub fn ellip_harm(h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResult
             legendre_val
         }
     };
-    
+
     // Apply correction factors for ellipsoidal geometry with stability checks
     let h_factor = if h2 > 0.0 && h2 < 10.0 {
         let correction = h2 * (n as f64 + 0.5) / (2.0 * n as f64 + 1.0);
-        if correction < 100.0 {  // Prevent extreme corrections
+        if correction < 100.0 {
+            // Prevent extreme corrections
             1.0 + correction
         } else {
-            1.0 + 100.0  // Cap the correction
+            1.0 + 100.0 // Cap the correction
         }
     } else {
         1.0
     };
-    
+
     let k_factor = if k2 > 0.0 && k2 < 10.0 && p > 0 {
         let correction = k2 * p as f64 / (n as f64 + 1.0);
-        if correction < 100.0 {  // Prevent extreme corrections
+        if correction < 100.0 {
+            // Prevent extreme corrections
             1.0 + correction
         } else {
-            1.0 + 100.0  // Cap the correction
+            1.0 + 100.0 // Cap the correction
         }
     } else {
         1.0
     };
-    
+
     let result = legendre * h_factor * k_factor;
-    
+
     // Final stability check
     if result.is_finite() {
         Ok(result)
@@ -186,7 +188,7 @@ pub fn ellip_harm(h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResult
 /// let n = 3;
 /// let p = 2;
 /// let s = 2.0;
-/// 
+///
 /// let result = ellip_harm_2(h2, k2, n, p, s);
 /// println!("F_{}^{}({}) = {:?}", n, p, s, result);
 /// ```
@@ -197,24 +199,24 @@ pub fn ellip_harm_2(h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResu
             "Parameters h² and k² must be non-negative".to_string(),
         ));
     }
-    
+
     if p > n {
         return Err(SpecialError::ValueError(
             "Order p must not exceed degree n".to_string(),
         ));
     }
-    
+
     if s <= 0.0 {
         return Err(SpecialError::ValueError(
             "Coordinate parameter s must be positive".to_string(),
         ));
     }
-    
+
     // The second kind functions are related to the first kind
     // but with different normalization and asymptotic behavior
-    
+
     let first_kind = ellip_harm(h2, k2, n, p, s)?;
-    
+
     // Apply transformation for second kind with numerical stability
     let s_squared = s * s;
     let nu = if s_squared > 1.0 {
@@ -228,18 +230,19 @@ pub fn ellip_harm_2(h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResu
         // For s² ≤ 1, use complex branch or return zero
         0.0
     };
-    
+
     let q_factor = if nu > 1e-15 {
         let exp_arg = -nu;
-        if exp_arg > -100.0 {  // Prevent underflow
+        if exp_arg > -100.0 {
+            // Prevent underflow
             exp_arg.exp() / (2.0 * nu)
         } else {
-            0.0  // Exponentially small
+            0.0 // Exponentially small
         }
     } else {
         0.5
     };
-    
+
     // Compute normalization with overflow protection
     let normalization = if n >= p {
         let num = 2.0 * n as f64 + 1.0;
@@ -252,14 +255,14 @@ pub fn ellip_harm_2(h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResu
             let correction = ((2.0 * (n - p) as f64 + 1.0) / (2.0 * (n + p) as f64 + 1.0)).sqrt();
             stirling_ratio * correction
         };
-        
+
         num * factorial_ratio
     } else {
-        0.0  // Invalid case
+        0.0 // Invalid case
     };
-    
+
     let result = first_kind * q_factor * normalization;
-    
+
     // Stability check
     if result.is_finite() {
         Ok(result)
@@ -299,7 +302,7 @@ pub fn ellip_harm_2(h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResu
 /// let k2 = 0.05;
 /// let n = 4;
 /// let p = 3;
-/// 
+///
 /// let norm = ellip_normal(h2, k2, n, p);
 /// println!("N_{}^{}({}, {}) = {:?}", n, p, h2, k2, norm);
 /// ```
@@ -310,30 +313,31 @@ pub fn ellip_normal(h2: f64, k2: f64, n: usize, p: usize) -> SpecialResult<f64> 
             "Parameters h² and k² must be non-negative".to_string(),
         ));
     }
-    
+
     if p > n {
         return Err(SpecialError::ValueError(
             "Order p must not exceed degree n".to_string(),
         ));
     }
-    
+
     // Basic normalization from spherical harmonic theory
-    let spherical_norm = ((2.0 * n as f64 + 1.0) / (4.0 * PI) * 
-                         factorial(n - p) as f64 / factorial(n + p) as f64).sqrt();
-    
+    let spherical_norm = ((2.0 * n as f64 + 1.0) / (4.0 * PI) * factorial(n - p) as f64
+        / factorial(n + p) as f64)
+        .sqrt();
+
     // Ellipsoidal corrections
     let h_correction = if h2 > 0.0 {
         (1.0 + h2 * (n as f64 * n as f64 + n as f64 + 0.5) / (2.0 * n as f64 + 1.0)).sqrt()
     } else {
         1.0
     };
-    
+
     let k_correction = if k2 > 0.0 && p > 0 {
         (1.0 + k2 * p as f64 * (p as f64 + 1.0) / (2.0 * n as f64 + 1.0)).sqrt()
     } else {
         1.0
     };
-    
+
     Ok(spherical_norm * h_correction * k_correction)
 }
 
@@ -365,7 +369,7 @@ pub fn ellip_normal(h2: f64, k2: f64, n: usize, p: usize) -> SpecialResult<f64> 
 /// let n = 2;
 /// let p = 1;
 /// let s_values = Array1::linspace(1.0, 3.0, 10);
-/// 
+///
 /// let result = ellip_harm_array(h2, k2, n, p, &s_values.view());
 /// println!("Ellipsoidal harmonics: {:?}", result);
 /// ```
@@ -377,11 +381,11 @@ pub fn ellip_harm_array(
     s_array: &ArrayView1<f64>,
 ) -> SpecialResult<Array1<f64>> {
     let mut result = Array1::zeros(s_array.len());
-    
+
     for (i, &s) in s_array.iter().enumerate() {
         result[i] = ellip_harm(h2, k2, n, p, s)?;
     }
-    
+
     Ok(result)
 }
 
@@ -416,7 +420,7 @@ pub fn ellip_harm_array(
 /// let k2 = 0.05;
 /// let max_n = 5;
 /// let max_p = 3;
-/// 
+///
 /// let coeffs = ellip_harm_coefficients(h2, k2, max_n, max_p);
 /// println!("Expansion coefficients shape: {:?}", coeffs.unwrap().dim());
 /// ```
@@ -432,26 +436,26 @@ pub fn ellip_harm_coefficients(
             "Parameters h² and k² must be non-negative".to_string(),
         ));
     }
-    
+
     if max_order > max_degree {
         return Err(SpecialError::ValueError(
             "Maximum order cannot exceed maximum degree".to_string(),
         ));
     }
-    
+
     let mut coefficients = Array2::zeros((max_degree + 1, max_order + 1));
-    
+
     for n in 0..=max_degree {
         for p in 0..=max_order.min(n) {
             // Compute normalization-based coefficients
             let norm = ellip_normal(h2, k2, n, p)?;
-            
+
             // Basic coefficient computation (simplified)
             let base_coeff = (2.0 * n as f64 + 1.0) / (4.0 * PI);
             coefficients[[n, p]] = base_coeff * norm;
         }
     }
-    
+
     Ok(coefficients)
 }
 
@@ -484,7 +488,7 @@ pub fn ellip_harm_coefficients(
 /// let n = 2;
 /// let p = 1;
 /// let z = Complex64::new(1.5, 0.5);
-/// 
+///
 /// let result = ellip_harm_complex(h2, k2, n, p, z);
 /// println!("Complex ellipsoidal harmonic: {:?}", result);
 /// ```
@@ -501,12 +505,12 @@ pub fn ellip_harm_complex(
             "Order p must not exceed degree n".to_string(),
         ));
     }
-    
+
     // For complex case, we use analytical continuation
     // This is a simplified implementation
-    
+
     let mu = z.sqrt();
-    
+
     // Complex Legendre function (simplified approximation)
     let legendre_complex = if p == 0 {
         // P_n(z) for complex z
@@ -515,7 +519,7 @@ pub fn ellip_harm_complex(
         // Associated Legendre function P_n^p(z)
         associated_legendre_complex(n, p, mu)
     };
-    
+
     // Apply complex correction factors
     let h_factor = Complex64::new(1.0, 0.0) + h2 * (n as f64 + 0.5) / (2.0 * n as f64 + 1.0);
     let k_factor = if p > 0 {
@@ -523,7 +527,7 @@ pub fn ellip_harm_complex(
     } else {
         Complex64::new(1.0, 0.0)
     };
-    
+
     Ok(legendre_complex * h_factor * k_factor)
 }
 
@@ -546,13 +550,13 @@ fn legendre_polynomial_complex(n: usize, z: Complex64) -> Complex64 {
             // Use recurrence relation: (n+1)*P_{n+1}(z) = (2n+1)*z*P_n(z) - n*P_{n-1}(z)
             let mut p0 = Complex64::new(1.0, 0.0);
             let mut p1 = z;
-            
+
             for k in 1..n {
                 let p2 = ((2 * k + 1) as f64 * z * p1 - k as f64 * p0) / (k + 1) as f64;
                 p0 = p1;
                 p1 = p2;
             }
-            
+
             p1
         }
     }
@@ -563,16 +567,16 @@ fn associated_legendre_complex(n: usize, p: usize, z: Complex64) -> Complex64 {
     if p == 0 {
         return legendre_polynomial_complex(n, z);
     }
-    
+
     // Simplified implementation using differentiation formula
     // P_n^p(z) = (-1)^p * (1-z²)^{p/2} * d^p/dz^p P_n(z)
-    
+
     let factor = (Complex64::new(1.0, 0.0) - z * z).powf(p as f64 / 2.0);
     let base_poly = legendre_polynomial_complex(n, z);
-    
+
     // Apply approximate differentiation (simplified)
     let diff_factor = factorial(n + p) as f64 / factorial(n - p) as f64;
-    
+
     factor * base_poly * diff_factor / (2.0_f64.powi(p as i32) * factorial(p) as f64)
 }
 
@@ -580,7 +584,7 @@ fn associated_legendre_complex(n: usize, p: usize, z: Complex64) -> Complex64 {
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    
+
     #[test]
     fn test_ellip_harm_basic() {
         // Test basic properties
@@ -589,14 +593,14 @@ mod tests {
         let n = 2;
         let p = 1;
         let s = 1.5;
-        
+
         let result = ellip_harm(h2, k2, n, p, s).unwrap();
         assert!(result.is_finite());
-        
+
         // Test that result is reasonable
         assert!(result.abs() < 100.0);
     }
-    
+
     #[test]
     fn test_ellip_harm_validation() {
         // Test parameter validation
@@ -605,7 +609,7 @@ mod tests {
         assert!(ellip_harm(0.1, 0.05, 2, 3, 1.5).is_err()); // p > n
         assert!(ellip_harm(0.1, 0.05, 2, 1, -1.5).is_err()); // negative s
     }
-    
+
     #[test]
     fn test_ellip_harm_2() {
         let h2 = 0.05;
@@ -613,23 +617,23 @@ mod tests {
         let n = 3;
         let p = 2;
         let s = 2.0;
-        
+
         let result = ellip_harm_2(h2, k2, n, p, s).unwrap();
         assert!(result.is_finite());
     }
-    
+
     #[test]
     fn test_ellip_normal() {
         let h2 = 0.1;
         let k2 = 0.05;
         let n = 4;
         let p = 3;
-        
+
         let norm = ellip_normal(h2, k2, n, p).unwrap();
         assert!(norm > 0.0);
         assert!(norm.is_finite());
     }
-    
+
     #[test]
     fn test_ellip_harm_array() {
         let h2 = 0.1;
@@ -637,22 +641,22 @@ mod tests {
         let n = 2;
         let p = 1;
         let s_values = Array1::linspace(1.0, 3.0, 10);
-        
+
         let result = ellip_harm_array(h2, k2, n, p, &s_values.view()).unwrap();
         assert_eq!(result.len(), 10);
         assert!(result.iter().all(|&x| x.is_finite()));
     }
-    
+
     #[test]
     fn test_ellip_harm_coefficients() {
         let h2 = 0.1;
         let k2 = 0.05;
         let max_n = 5;
         let max_p = 3;
-        
+
         let coeffs = ellip_harm_coefficients(h2, k2, max_n, max_p).unwrap();
         assert_eq!(coeffs.dim(), (6, 4)); // (max_n+1, max_p+1)
-        
+
         // Check that coefficients are finite
         for row in coeffs.axis_iter(ndarray::Axis(0)) {
             for &coeff in row.iter() {
@@ -660,7 +664,7 @@ mod tests {
             }
         }
     }
-    
+
     #[test]
     fn test_ellip_harm_complex() {
         let h2 = Complex64::new(0.1, 0.02);
@@ -668,11 +672,11 @@ mod tests {
         let n = 2;
         let p = 1;
         let z = Complex64::new(1.5, 0.5);
-        
+
         let result = ellip_harm_complex(h2, k2, n, p, z).unwrap();
         assert!(result.norm().is_finite());
     }
-    
+
     #[test]
     fn test_spherical_limit() {
         // Test that ellipsoidal harmonics reduce to spherical harmonics
@@ -682,10 +686,10 @@ mod tests {
         let n = 2;
         let p = 0;
         let s = 1.0; // cos(θ) = 1, θ = 0
-        
+
         let ellip_result = ellip_harm(h2, k2, n, p, s).unwrap();
         let legendre_result = orthogonal::legendre(n, 1.0);
-        
+
         // Should be approximately equal in the spherical limit
         assert_relative_eq!(ellip_result, legendre_result, epsilon = 1e-10);
     }

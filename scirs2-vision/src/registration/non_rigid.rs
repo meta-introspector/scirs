@@ -22,25 +22,25 @@ fn lstsq(
     _rcond: Option<f64>,
 ) -> std::result::Result<LstsqResult, String> {
     let (m, n) = a.dim();
-    
+
     if m != b.len() {
         return Err("Matrix dimensions don't match".to_string());
     }
-    
+
     // For overdetermined systems (m >= n), use normal equations: A^T * A * x = A^T * b
     if m >= n {
         // Compute A^T
         let at = a.t();
-        
+
         // Compute A^T * A
         let ata = at.dot(a);
-        
+
         // Compute A^T * b
         let atb = at.dot(b);
-        
+
         // Solve the system using simple Gaussian elimination
         let x = solve_linear_system(&ata.view(), &atb.view())?;
-        
+
         Ok(LstsqResult { x })
     } else {
         // Underdetermined system - use minimum norm solution
@@ -60,7 +60,7 @@ fn solve_linear_system(
     if a.ncols() != n || b.len() != n {
         return Err("Matrix must be square and match vector dimension".to_string());
     }
-    
+
     // Create augmented matrix [A | b]
     let mut aug = Array2::zeros((n, n + 1));
     for i in 0..n {
@@ -69,7 +69,7 @@ fn solve_linear_system(
         }
         aug[[i, n]] = b[i];
     }
-    
+
     // Forward elimination
     for i in 0..n {
         // Find pivot
@@ -79,7 +79,7 @@ fn solve_linear_system(
                 max_row = k;
             }
         }
-        
+
         // Swap rows
         if max_row != i {
             for j in 0..=n {
@@ -88,12 +88,12 @@ fn solve_linear_system(
                 aug[[max_row, j]] = tmp;
             }
         }
-        
+
         // Check for singular matrix
         if aug[[i, i]].abs() < 1e-14 {
             return Err("Matrix is singular".to_string());
         }
-        
+
         // Eliminate column
         for k in (i + 1)..n {
             let factor = aug[[k, i]] / aug[[i, i]];
@@ -102,7 +102,7 @@ fn solve_linear_system(
             }
         }
     }
-    
+
     // Back substitution
     let mut x = Array1::zeros(n);
     for i in (0..n).rev() {
@@ -112,7 +112,7 @@ fn solve_linear_system(
         }
         x[i] /= aug[[i, i]];
     }
-    
+
     Ok(x)
 }
 

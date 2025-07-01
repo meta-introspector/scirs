@@ -597,6 +597,48 @@ where
     UltraEnhancedSimdProcessor::new(UltraSimdConfig::default())
 }
 
+/// Create SIMD processor optimized for specific hardware platform
+pub fn create_platform_optimized_simd_processor<F>(
+    target_platform: TargetPlatform,
+) -> StatsResult<UltraEnhancedSimdProcessor<F>>
+where
+    F: Float + NumCast + Copy + Send + Sync + 'static,
+{
+    let config = match target_platform {
+        TargetPlatform::IntelAvx512 => UltraSimdConfig {
+            vectorization_level: VectorizationLevel::Maximum,
+            cache_optimization: CacheOptimizationStrategy::L3Optimized,
+            prefetch_strategy: PrefetchStrategy::Aggressive,
+            loop_unrolling: true,
+            ..UltraSimdConfig::default()
+        },
+        TargetPlatform::AmdZen => UltraSimdConfig {
+            vectorization_level: VectorizationLevel::Balanced,
+            cache_optimization: CacheOptimizationStrategy::L2Optimized,
+            prefetch_strategy: PrefetchStrategy::Conservative,
+            ..UltraSimdConfig::default()
+        },
+        TargetPlatform::ArmNeon => UltraSimdConfig {
+            vectorization_level: VectorizationLevel::Conservative,
+            cache_optimization: CacheOptimizationStrategy::PowerEfficient,
+            mixed_precision: true,
+            ..UltraSimdConfig::default()
+        },
+        TargetPlatform::Generic => UltraSimdConfig::default(),
+    };
+
+    UltraEnhancedSimdProcessor::new(config)
+}
+
+/// Target hardware platforms for optimization
+#[derive(Debug, Clone, Copy)]
+pub enum TargetPlatform {
+    IntelAvx512,
+    AmdZen,
+    ArmNeon,
+    Generic,
+}
+
 /// Create an ultra-enhanced SIMD processor optimized for performance
 pub fn create_performance_optimized_simd_processor<F>() -> StatsResult<UltraEnhancedSimdProcessor<F>>
 where
@@ -640,5 +682,117 @@ where
 }
 
 // Type aliases for common use cases
-pub type F64UltraSimdProcessor = UltraEnhancedSimdProcessor<f64>;
 pub type F32UltraSimdProcessor = UltraEnhancedSimdProcessor<f32>;
+pub type F64UltraSimdProcessor = UltraEnhancedSimdProcessor<f64>;
+
+/// Machine learning-based algorithm selection for SIMD operations
+impl<F> UltraEnhancedSimdProcessor<F>
+where
+    F: Float + NumCast + Copy + Send + Sync + 'static,
+{
+    /// Predict optimal algorithm based on data characteristics
+    pub fn predict_optimal_algorithm(
+        &self,
+        data_size: usize,
+        data_variance: F,
+    ) -> OptimalAlgorithm {
+        // Simple ML-inspired decision tree for algorithm selection
+        if data_size < 100 {
+            OptimalAlgorithm::Scalar
+        } else if data_size < 1000 {
+            if data_variance < F::from(1.0).unwrap() {
+                OptimalAlgorithm::SimdBasic
+            } else {
+                OptimalAlgorithm::SimdStable
+            }
+        } else if data_size < 10000 {
+            OptimalAlgorithm::SimdOptimized
+        } else {
+            // For very large datasets, use parallel SIMD
+            OptimalAlgorithm::ParallelSimd
+        }
+    }
+
+    /// Advanced cache-aware statistical computation
+    pub fn cache_aware_mean(&self, data: &ArrayView1<F>) -> StatsResult<F> {
+        let cache_line_size = 64; // bytes
+        let elements_per_line = cache_line_size / std::mem::size_of::<F>();
+
+        if data.len() < elements_per_line {
+            // Data fits in one cache line, use simple algorithm
+            Ok(data.iter().copied().sum::<F>() / F::from(data.len()).unwrap())
+        } else {
+            // Use cache-blocked algorithm
+            let mut sum = F::zero();
+            let mut count = 0;
+
+            for chunk in data.chunks(elements_per_line) {
+                // Process each cache line worth of data
+                sum = sum + chunk.iter().copied().sum::<F>();
+                count += chunk.len();
+            }
+
+            Ok(sum / F::from(count).unwrap())
+        }
+    }
+
+    /// Adaptive prefetching for statistical operations
+    pub fn adaptive_prefetch_variance(&self, data: &ArrayView1<F>, ddof: usize) -> StatsResult<F> {
+        if data.len() <= ddof {
+            return Err(StatsError::InvalidArgument(
+                "Insufficient degrees of freedom".to_string(),
+            ));
+        }
+
+        // Calculate mean with prefetching
+        let mean = self.cache_aware_mean(data)?;
+
+        // Calculate variance with adaptive prefetching
+        let prefetch_distance = match data.len() {
+            0..=1000 => 1,
+            1001..=10000 => 4,
+            _ => 8,
+        };
+
+        let mut sum_sq_diff = F::zero();
+        for (i, &value) in data.iter().enumerate() {
+            // Software prefetching
+            if i + prefetch_distance < data.len() {
+                // In real implementation, would use prefetch intrinsics
+                let _prefetch_hint = data[i + prefetch_distance];
+            }
+
+            let diff = value - mean;
+            sum_sq_diff = sum_sq_diff + diff * diff;
+        }
+
+        let n = F::from(data.len() - ddof).unwrap();
+        Ok(sum_sq_diff / n)
+    }
+
+    /// Auto-tuning for SIMD parameters based on runtime characteristics
+    pub fn auto_tune_parameters(&mut self, sample_data: &ArrayView1<F>) -> StatsResult<()> {
+        let data_size = sample_data.len();
+
+        // Benchmark different vectorization levels
+        let start = std::time::Instant::now();
+        let _ = self.cache_aware_mean(sample_data)?;
+        let conservative_time = start.elapsed();
+
+        // Update configuration based on performance
+        if conservative_time.as_nanos() < 1000 {
+            // Fast enough, prioritize numerical stability
+            self.config.numerical_stability = NumericalStabilityLevel::Stable;
+            self.config.vectorization_level = VectorizationLevel::Conservative;
+        } else {
+            // Need more performance
+            self.config.vectorization_level = VectorizationLevel::Aggressive;
+            self.config.prefetch_strategy = PrefetchStrategy::Aggressive;
+        }
+
+        // Update performance statistics
+        self.update_performance_stats("auto_tune", conservative_time.as_nanos() as u64);
+
+        Ok(())
+    }
+}

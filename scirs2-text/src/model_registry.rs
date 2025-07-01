@@ -1157,8 +1157,8 @@ impl RegistrableModel for crate::transformer::TransformerModel {
                 let _ff_array =
                     ndarray::Array::from_shape_vec(ndarray::IxDyn(ff_shape), ff_weights.clone())
                         .map_err(|e| {
-                        TextError::InvalidInput(format!("Invalid feedforward shape: {}", e))
-                    })?;
+                            TextError::InvalidInput(format!("Invalid feedforward shape: {}", e))
+                        })?;
                 // TODO: Restore encoder feedforward weights when available
                 // model.encoder_layers[i].set_feedforward_weights(ff_array)?;
             }

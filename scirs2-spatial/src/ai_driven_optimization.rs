@@ -41,10 +41,10 @@
 //!     .with_multi_objective_optimization(true);
 //!
 //! // AI automatically selects optimal algorithm and parameters
-//! let (optimal_algorithm, parameters, performance_prediction) = 
+//! let (optimal_algorithm, parameters, performance_prediction) =
 //!     ai_selector.select_optimal_algorithm(&points.view(), "clustering").await?;
-//! 
-//! println!("AI selected: {} with performance prediction: {:.3}", 
+//!
+//! println!("AI selected: {} with performance prediction: {:.3}",
 //!          optimal_algorithm, performance_prediction.expected_accuracy);
 //!
 //! // Meta-learning optimizer that learns from experience
@@ -557,9 +557,9 @@ pub struct MetaLearningModel {
 /// Meta-learning architectures
 #[derive(Debug, Clone)]
 pub enum MetaLearningArchitecture {
-    MAML,     // Model-Agnostic Meta-Learning
-    Reptile,  // Reptile algorithm
-    ProtoNet, // Prototypical Networks
+    MAML,        // Model-Agnostic Meta-Learning
+    Reptile,     // Reptile algorithm
+    ProtoNet,    // Prototypical Networks
     MatchingNet, // Matching Networks
     Custom(String),
 }
@@ -600,31 +600,31 @@ impl AIAlgorithmSelector {
             meta_learner: MetaLearningModel::new(),
         }
     }
-    
+
     /// Enable meta-learning
     pub fn with_meta_learning(mut self, enabled: bool) -> Self {
         self.meta_learning = enabled;
         self
     }
-    
+
     /// Enable neural architecture search
     pub fn with_neural_architecture_search(mut self, enabled: bool) -> Self {
         self.neural_architecture_search = enabled;
         self
     }
-    
+
     /// Enable real-time adaptation
     pub fn with_real_time_adaptation(mut self, enabled: bool) -> Self {
         self.real_time_adaptation = enabled;
         self
     }
-    
+
     /// Enable multi-objective optimization
     pub fn with_multi_objective_optimization(mut self, enabled: bool) -> Self {
         self.multi_objective = enabled;
         self
     }
-    
+
     /// Select optimal algorithm using AI
     pub async fn select_optimal_algorithm(
         &mut self,
@@ -633,47 +633,57 @@ impl AIAlgorithmSelector {
     ) -> SpatialResult<(String, HashMap<String, f64>, PerformancePrediction)> {
         // Analyze data characteristics
         let data_characteristics = self.analyze_data_characteristics(data).await?;
-        
+
         // Generate algorithm candidates
-        let candidates = self.generate_algorithm_candidates(task_type, &data_characteristics).await?;
-        
+        let candidates = self
+            .generate_algorithm_candidates(task_type, &data_characteristics)
+            .await?;
+
         // Predict performance for each candidate
         let mut performance_predictions = Vec::new();
         for candidate in &candidates {
-            let prediction = self.predict_performance(candidate, &data_characteristics).await?;
+            let prediction = self
+                .predict_performance(candidate, &data_characteristics)
+                .await?;
             performance_predictions.push((candidate.clone(), prediction));
         }
-        
+
         // Select optimal algorithm using multi-objective optimization
         let optimal_selection = if self.multi_objective {
-            self.multi_objective_selection(&performance_predictions).await?
+            self.multi_objective_selection(&performance_predictions)
+                .await?
         } else {
-            self.single_objective_selection(&performance_predictions).await?
+            self.single_objective_selection(&performance_predictions)
+                .await?
         };
-        
+
         // Update meta-learning model
         if self.meta_learning {
-            self.update_meta_learning_model(&data_characteristics, &optimal_selection).await?;
+            self.update_meta_learning_model(&data_characteristics, &optimal_selection)
+                .await?;
         }
-        
+
         Ok(optimal_selection)
     }
-    
+
     /// Analyze data characteristics using AI
-    async fn analyze_data_characteristics(&mut self, data: &ArrayView2<'_, f64>) -> SpatialResult<DataCharacteristics> {
+    async fn analyze_data_characteristics(
+        &mut self,
+        data: &ArrayView2<'_, f64>,
+    ) -> SpatialResult<DataCharacteristics> {
         let (num_points, dimensionality) = data.dim();
-        
+
         // Basic statistics
         let density = self.calculate_data_density(data);
         let noise_level = self.estimate_noise_level(data);
         let outlier_ratio = self.detect_outlier_ratio(data);
-        
+
         // Cluster structure analysis using graph neural network
         let cluster_structure = self.analyze_cluster_structure(data).await?;
-        
+
         // Correlation analysis
         let correlations = self.compute_correlation_matrix(data);
-        
+
         Ok(DataCharacteristics {
             num_points,
             dimensionality,
@@ -684,48 +694,50 @@ impl AIAlgorithmSelector {
             correlations,
         })
     }
-    
+
     /// Calculate data density
     fn calculate_data_density(&self, data: &ArrayView2<'_, f64>) -> f64 {
         let (n_points, n_dims) = data.dim();
-        
+
         // Estimate volume using bounding box
         let mut min_coords = Array1::from_elem(n_dims, f64::INFINITY);
         let mut max_coords = Array1::from_elem(n_dims, f64::NEG_INFINITY);
-        
+
         for point in data.outer_iter() {
             for (i, &coord) in point.iter().enumerate() {
                 min_coords[i] = min_coords[i].min(coord);
                 max_coords[i] = max_coords[i].max(coord);
             }
         }
-        
-        let volume: f64 = min_coords.iter()
+
+        let volume: f64 = min_coords
+            .iter()
             .zip(max_coords.iter())
             .map(|(&min_val, &max_val)| (max_val - min_val).max(1e-10))
             .product();
-        
+
         n_points as f64 / volume
     }
-    
+
     /// Estimate noise level
     fn estimate_noise_level(&self, data: &ArrayView2<'_, f64>) -> f64 {
         let (n_points, _) = data.dim();
-        
+
         if n_points < 5 {
             return 0.0;
         }
-        
+
         // Use nearest neighbor distances to estimate noise
         let mut total_variance = 0.0;
         let k = 5.min(n_points - 1);
-        
+
         for (i, point) in data.outer_iter().enumerate() {
             let mut distances = Vec::new();
-            
+
             for (j, other_point) in data.outer_iter().enumerate() {
                 if i != j {
-                    let distance: f64 = point.iter()
+                    let distance: f64 = point
+                        .iter()
                         .zip(other_point.iter())
                         .map(|(&a, &b)| (a - b).powi(2))
                         .sum::<f64>()
@@ -733,40 +745,43 @@ impl AIAlgorithmSelector {
                     distances.push(distance);
                 }
             }
-            
+
             distances.sort_by(|a, b| a.partial_cmp(b).unwrap());
-            
+
             if distances.len() >= k {
                 let mean_knn_dist: f64 = distances[..k].iter().sum::<f64>() / k as f64;
-                let variance: f64 = distances[..k].iter()
+                let variance: f64 = distances[..k]
+                    .iter()
                     .map(|&d| (d - mean_knn_dist).powi(2))
-                    .sum::<f64>() / k as f64;
-                
+                    .sum::<f64>()
+                    / k as f64;
+
                 total_variance += variance;
             }
         }
-        
+
         (total_variance / n_points as f64).sqrt()
     }
-    
+
     /// Detect outlier ratio
     fn detect_outlier_ratio(&self, data: &ArrayView2<'_, f64>) -> f64 {
         let (n_points, _) = data.dim();
-        
+
         if n_points < 10 {
             return 0.0;
         }
-        
+
         // Use distance-based outlier detection
         let mut outlier_count = 0;
         let k = 5.min(n_points - 1);
-        
+
         for (i, point) in data.outer_iter().enumerate() {
             let mut distances = Vec::new();
-            
+
             for (j, other_point) in data.outer_iter().enumerate() {
                 if i != j {
-                    let distance: f64 = point.iter()
+                    let distance: f64 = point
+                        .iter()
                         .zip(other_point.iter())
                         .map(|(&a, &b)| (a - b).powi(2))
                         .sum::<f64>()
@@ -774,19 +789,20 @@ impl AIAlgorithmSelector {
                     distances.push(distance);
                 }
             }
-            
+
             distances.sort_by(|a, b| a.partial_cmp(b).unwrap());
-            
+
             if distances.len() >= k {
                 let mean_knn_dist: f64 = distances[..k].iter().sum::<f64>() / k as f64;
-                
+
                 // Calculate global mean distance
                 let global_distances: Vec<f64> = (0..n_points)
                     .flat_map(|i| {
-                        (i+1..n_points).map(move |j| {
+                        (i + 1..n_points).map(move |j| {
                             let point_i = data.row(i);
                             let point_j = data.row(j);
-                            point_i.iter()
+                            point_i
+                                .iter()
                                 .zip(point_j.iter())
                                 .map(|(&a, &b)| (a - b).powi(2))
                                 .sum::<f64>()
@@ -794,30 +810,34 @@ impl AIAlgorithmSelector {
                         })
                     })
                     .collect();
-                
-                let global_mean = global_distances.iter().sum::<f64>() / global_distances.len() as f64;
-                
+
+                let global_mean =
+                    global_distances.iter().sum::<f64>() / global_distances.len() as f64;
+
                 // Point is outlier if its k-NN distance is much larger than global average
                 if mean_knn_dist > global_mean * 2.0 {
                     outlier_count += 1;
                 }
             }
         }
-        
+
         outlier_count as f64 / n_points as f64
     }
-    
+
     /// Analyze cluster structure using graph neural network
-    async fn analyze_cluster_structure(&mut self, data: &ArrayView2<'_, f64>) -> SpatialResult<ClusterStructure> {
+    async fn analyze_cluster_structure(
+        &mut self,
+        data: &ArrayView2<'_, f64>,
+    ) -> SpatialResult<ClusterStructure> {
         // Simplified cluster structure analysis
         // In a full implementation, this would use the graph neural network
-        
+
         let (n_points, _) = data.dim();
-        
+
         // Estimate number of clusters using elbow method approximation
         let mut estimated_clusters = 1;
         let mut best_score = f64::INFINITY;
-        
+
         for k in 1..=10.min(n_points) {
             let score = self.calculate_kmeans_score(data, k);
             if score < best_score {
@@ -825,12 +845,12 @@ impl AIAlgorithmSelector {
                 estimated_clusters = k;
             }
         }
-        
+
         // Calculate separation and compactness
         let separation = self.calculate_cluster_separation(data, estimated_clusters);
         let compactness = self.calculate_cluster_compactness(data, estimated_clusters);
         let regularity = self.calculate_cluster_regularity(data);
-        
+
         Ok(ClusterStructure {
             estimated_clusters,
             separation,
@@ -838,179 +858,187 @@ impl AIAlgorithmSelector {
             regularity,
         })
     }
-    
+
     /// Calculate K-means score for cluster estimation
     fn calculate_kmeans_score(&self, data: &ArrayView2<'_, f64>, k: usize) -> f64 {
         // Simplified K-means score calculation
         let (n_points, n_dims) = data.dim();
-        
+
         if k >= n_points {
             return f64::INFINITY;
         }
-        
+
         // Initialize centroids randomly
         let mut centroids = Array2::zeros((k, n_dims));
         for i in 0..k {
             let point_idx = (i * n_points / k) % n_points;
             centroids.row_mut(i).assign(&data.row(point_idx));
         }
-        
+
         // Calculate within-cluster sum of squares
         let mut wcss = 0.0;
-        
+
         for point in data.outer_iter() {
             let mut min_distance = f64::INFINITY;
-            
+
             for centroid in centroids.outer_iter() {
-                let distance: f64 = point.iter()
+                let distance: f64 = point
+                    .iter()
                     .zip(centroid.iter())
                     .map(|(&a, &b)| (a - b).powi(2))
                     .sum();
-                
+
                 min_distance = min_distance.min(distance);
             }
-            
+
             wcss += min_distance;
         }
-        
+
         wcss
     }
-    
+
     /// Calculate cluster separation
     fn calculate_cluster_separation(&self, data: &ArrayView2<'_, f64>, k: usize) -> f64 {
         // Simplified separation calculation
         if k <= 1 {
             return 1.0;
         }
-        
+
         // Use average inter-cluster distance as proxy
         let (n_points, _) = data.dim();
         let points_per_cluster = n_points / k;
-        
+
         let mut total_separation = 0.0;
         let mut comparisons = 0;
-        
+
         for cluster1 in 0..k {
-            for cluster2 in (cluster1+1)..k {
+            for cluster2 in (cluster1 + 1)..k {
                 let start1 = cluster1 * points_per_cluster;
                 let end1 = ((cluster1 + 1) * points_per_cluster).min(n_points);
                 let start2 = cluster2 * points_per_cluster;
                 let end2 = ((cluster2 + 1) * points_per_cluster).min(n_points);
-                
+
                 let mut cluster_distance = 0.0;
                 let mut count = 0;
-                
+
                 for i in start1..end1 {
                     for j in start2..end2 {
-                        let distance: f64 = data.row(i).iter()
+                        let distance: f64 = data
+                            .row(i)
+                            .iter()
                             .zip(data.row(j).iter())
                             .map(|(&a, &b)| (a - b).powi(2))
                             .sum::<f64>()
                             .sqrt();
-                        
+
                         cluster_distance += distance;
                         count += 1;
                     }
                 }
-                
+
                 if count > 0 {
                     total_separation += cluster_distance / count as f64;
                     comparisons += 1;
                 }
             }
         }
-        
+
         if comparisons > 0 {
             total_separation / comparisons as f64
         } else {
             1.0
         }
     }
-    
+
     /// Calculate cluster compactness
     fn calculate_cluster_compactness(&self, data: &ArrayView2<'_, f64>, k: usize) -> f64 {
         // Simplified compactness calculation
         let (n_points, _) = data.dim();
         let points_per_cluster = n_points / k;
-        
+
         let mut total_compactness = 0.0;
-        
+
         for cluster in 0..k {
             let start = cluster * points_per_cluster;
             let end = ((cluster + 1) * points_per_cluster).min(n_points);
-            
+
             if end > start {
                 let mut intra_distance = 0.0;
                 let mut count = 0;
-                
+
                 for i in start..end {
-                    for j in (i+1)..end {
-                        let distance: f64 = data.row(i).iter()
+                    for j in (i + 1)..end {
+                        let distance: f64 = data
+                            .row(i)
+                            .iter()
                             .zip(data.row(j).iter())
                             .map(|(&a, &b)| (a - b).powi(2))
                             .sum::<f64>()
                             .sqrt();
-                        
+
                         intra_distance += distance;
                         count += 1;
                     }
                 }
-                
+
                 if count > 0 {
                     total_compactness += intra_distance / count as f64;
                 }
             }
         }
-        
+
         1.0 / (1.0 + total_compactness / k as f64) // Higher compactness = lower average intra-cluster distance
     }
-    
+
     /// Calculate cluster regularity
     fn calculate_cluster_regularity(&self, data: &ArrayView2<'_, f64>) -> f64 {
         // Simplified regularity calculation based on point distribution
         let (n_points, _n_dims) = data.dim();
-        
+
         if n_points < 4 {
             return 1.0;
         }
-        
+
         // Calculate variance in nearest neighbor distances
         let mut nn_distances = Vec::new();
-        
+
         for (i, point) in data.outer_iter().enumerate() {
             let mut min_distance = f64::INFINITY;
-            
+
             for (j, other_point) in data.outer_iter().enumerate() {
                 if i != j {
-                    let distance: f64 = point.iter()
+                    let distance: f64 = point
+                        .iter()
                         .zip(other_point.iter())
                         .map(|(&a, &b)| (a - b).powi(2))
                         .sum::<f64>()
                         .sqrt();
-                    
+
                     min_distance = min_distance.min(distance);
                 }
             }
-            
+
             nn_distances.push(min_distance);
         }
-        
+
         let mean_distance = nn_distances.iter().sum::<f64>() / nn_distances.len() as f64;
-        let variance = nn_distances.iter()
+        let variance = nn_distances
+            .iter()
             .map(|&d| (d - mean_distance).powi(2))
-            .sum::<f64>() / nn_distances.len() as f64;
-        
+            .sum::<f64>()
+            / nn_distances.len() as f64;
+
         1.0 / (1.0 + variance.sqrt() / mean_distance) // Higher regularity = lower coefficient of variation
     }
-    
+
     /// Compute correlation matrix
     fn compute_correlation_matrix(&self, data: &ArrayView2<'_, f64>) -> Array2<f64> {
         let (n_points, n_dims) = data.dim();
         let mut correlations = Array2::zeros((n_dims, n_dims));
-        
+
         // Calculate means
         let means: Array1<f64> = data.mean_axis(Axis(0)).unwrap();
-        
+
         // Calculate correlation coefficients
         for i in 0..n_dims {
             for j in 0..n_dims {
@@ -1020,16 +1048,16 @@ impl AIAlgorithmSelector {
                     let mut numerator = 0.0;
                     let mut sum_sq_i = 0.0;
                     let mut sum_sq_j = 0.0;
-                    
+
                     for k in 0..n_points {
                         let diff_i = data[[k, i]] - means[i];
                         let diff_j = data[[k, j]] - means[j];
-                        
+
                         numerator += diff_i * diff_j;
                         sum_sq_i += diff_i * diff_i;
                         sum_sq_j += diff_j * diff_j;
                     }
-                    
+
                     let denominator = (sum_sq_i * sum_sq_j).sqrt();
                     correlations[[i, j]] = if denominator > 1e-10 {
                         numerator / denominator
@@ -1039,10 +1067,10 @@ impl AIAlgorithmSelector {
                 }
             }
         }
-        
+
         correlations
     }
-    
+
     /// Generate algorithm candidates
     async fn generate_algorithm_candidates(
         &self,
@@ -1050,14 +1078,15 @@ impl AIAlgorithmSelector {
         data_characteristics: &DataCharacteristics,
     ) -> SpatialResult<Vec<AlgorithmCandidate>> {
         let mut candidates = Vec::new();
-        
+
         // Get algorithms for task type
         let relevant_algorithms = self.get_algorithms_for_task(task_type);
-        
+
         for algorithm in relevant_algorithms {
             // Generate parameter variations
-            let parameter_sets = self.generate_parameter_variations(&algorithm, data_characteristics);
-            
+            let parameter_sets =
+                self.generate_parameter_variations(&algorithm, data_characteristics);
+
             for parameters in parameter_sets {
                 candidates.push(AlgorithmCandidate {
                     algorithm: algorithm.clone(),
@@ -1065,10 +1094,10 @@ impl AIAlgorithmSelector {
                 });
             }
         }
-        
+
         Ok(candidates)
     }
-    
+
     /// Get algorithms for specific task
     fn get_algorithms_for_task(&self, task_type: &str) -> Vec<String> {
         match task_type {
@@ -1094,7 +1123,7 @@ impl AIAlgorithmSelector {
             _ => vec!["default".to_string()],
         }
     }
-    
+
     /// Generate parameter variations for algorithm
     fn generate_parameter_variations(
         &self,
@@ -1102,7 +1131,7 @@ impl AIAlgorithmSelector {
         data_characteristics: &DataCharacteristics,
     ) -> Vec<HashMap<String, f64>> {
         let mut parameter_sets = Vec::new();
-        
+
         match algorithm {
             "kmeans" => {
                 for k in 2..=10.min(data_characteristics.num_points / 2) {
@@ -1112,7 +1141,7 @@ impl AIAlgorithmSelector {
                     params.insert("tol".to_string(), 1e-6);
                     parameter_sets.push(params);
                 }
-            },
+            }
             "dbscan" => {
                 for eps in [0.1, 0.5, 1.0, 2.0] {
                     for min_samples in [3, 5, 10] {
@@ -1122,16 +1151,16 @@ impl AIAlgorithmSelector {
                         parameter_sets.push(params);
                     }
                 }
-            },
+            }
             _ => {
                 // Default parameters
                 parameter_sets.push(HashMap::new());
             }
         }
-        
+
         parameter_sets
     }
-    
+
     /// Predict performance for algorithm candidate
     async fn predict_performance(
         &self,
@@ -1140,8 +1169,11 @@ impl AIAlgorithmSelector {
     ) -> SpatialResult<PerformancePrediction> {
         // Use neural network to predict performance
         let input_features = self.encode_features(candidate, data_characteristics);
-        let prediction = self.neural_networks.performance_network.predict(&input_features)?;
-        
+        let prediction = self
+            .neural_networks
+            .performance_network
+            .predict(&input_features)?;
+
         Ok(PerformancePrediction {
             expected_accuracy: prediction[0],
             expected_time_ms: prediction[1].max(0.1),
@@ -1150,9 +1182,13 @@ impl AIAlgorithmSelector {
             confidence: prediction[4].clamp(0.0, 1.0),
         })
     }
-    
+
     /// Encode features for neural network input
-    fn encode_features(&self, candidate: &AlgorithmCandidate, data_characteristics: &DataCharacteristics) -> Array1<f64> {
+    fn encode_features(
+        &self,
+        candidate: &AlgorithmCandidate,
+        data_characteristics: &DataCharacteristics,
+    ) -> Array1<f64> {
         let mut features = vec![
             (data_characteristics.num_points as f64).ln(),
             data_characteristics.dimensionality as f64,
@@ -1163,7 +1199,7 @@ impl AIAlgorithmSelector {
             data_characteristics.cluster_structure.separation,
             data_characteristics.cluster_structure.compactness,
         ];
-        
+
         // Algorithm features (simplified encoding)
         let algorithm_id = match candidate.algorithm.as_str() {
             "kmeans" => 1.0,
@@ -1174,16 +1210,16 @@ impl AIAlgorithmSelector {
             _ => 0.0,
         };
         features.push(algorithm_id);
-        
+
         // Parameter features
         for param_name in ["k", "eps", "min_samples", "max_iter", "tol"] {
             let value = candidate.parameters.get(param_name).unwrap_or(&0.0);
             features.push(*value);
         }
-        
+
         Array1::from(features)
     }
-    
+
     /// Multi-objective algorithm selection
     async fn multi_objective_selection(
         &self,
@@ -1192,54 +1228,64 @@ impl AIAlgorithmSelector {
         // Pareto-optimal selection considering accuracy, speed, and memory
         let mut best_score = -f64::INFINITY;
         let mut best_selection = None;
-        
+
         for (candidate, prediction) in predictions {
             // Multi-objective score combining different criteria
             let accuracy_weight = 0.4;
             let speed_weight = 0.3;
             let memory_weight = 0.2;
             let energy_weight = 0.1;
-            
+
             let speed_score = 1.0 / (1.0 + prediction.expected_time_ms / 1000.0);
             let memory_score = 1.0 / (1.0 + prediction.expected_memory_mb / 1000.0);
             let energy_score = 1.0 / (1.0 + prediction.expected_energy_j);
-            
-            let total_score = accuracy_weight * prediction.expected_accuracy +
-                            speed_weight * speed_score +
-                            memory_weight * memory_score +
-                            energy_weight * energy_score;
-            
+
+            let total_score = accuracy_weight * prediction.expected_accuracy
+                + speed_weight * speed_score
+                + memory_weight * memory_score
+                + energy_weight * energy_score;
+
             if total_score > best_score {
                 best_score = total_score;
                 best_selection = Some((candidate.clone(), prediction.clone()));
             }
         }
-        
+
         if let Some((candidate, prediction)) = best_selection {
             Ok((candidate.algorithm, candidate.parameters, prediction))
         } else {
-            Err(SpatialError::InvalidInput("No valid algorithm candidates".to_string()))
+            Err(SpatialError::InvalidInput(
+                "No valid algorithm candidates".to_string(),
+            ))
         }
     }
-    
+
     /// Single-objective algorithm selection
     async fn single_objective_selection(
         &self,
         predictions: &[(AlgorithmCandidate, PerformancePrediction)],
     ) -> SpatialResult<(String, HashMap<String, f64>, PerformancePrediction)> {
         // Select based on highest expected accuracy
-        let best = predictions.iter()
-            .max_by(|(_, pred1), (_, pred2)| {
-                pred1.expected_accuracy.partial_cmp(&pred2.expected_accuracy).unwrap()
-            });
-        
+        let best = predictions.iter().max_by(|(_, pred1), (_, pred2)| {
+            pred1
+                .expected_accuracy
+                .partial_cmp(&pred2.expected_accuracy)
+                .unwrap()
+        });
+
         if let Some((candidate, prediction)) = best {
-            Ok((candidate.algorithm.clone(), candidate.parameters.clone(), prediction.clone()))
+            Ok((
+                candidate.algorithm.clone(),
+                candidate.parameters.clone(),
+                prediction.clone(),
+            ))
         } else {
-            Err(SpatialError::InvalidInput("No valid algorithm candidates".to_string()))
+            Err(SpatialError::InvalidInput(
+                "No valid algorithm candidates".to_string(),
+            ))
         }
     }
-    
+
     /// Update meta-learning model
     async fn update_meta_learning_model(
         &mut self,
@@ -1260,14 +1306,14 @@ impl AIAlgorithmSelector {
                 success: true,
             },
         };
-        
+
         self.meta_learner.task_history.push(task_metadata);
-        
+
         // Limit history size
         if self.meta_learner.task_history.len() > 1000 {
             self.meta_learner.task_history.remove(0);
         }
-        
+
         Ok(())
     }
 }
@@ -1342,30 +1388,33 @@ impl MetaLearningOptimizer {
             adaptation_history: Vec::new(),
         }
     }
-    
+
     /// Enable continual learning
     pub fn with_continual_learning(mut self, enabled: bool) -> Self {
         self.continual_learning = enabled;
         self
     }
-    
+
     /// Enable transformer embeddings
     pub fn with_transformer_embeddings(mut self, enabled: bool) -> Self {
         self.transformer_embeddings = enabled;
         self
     }
-    
+
     /// Enable graph neural networks
     pub fn with_graph_neural_networks(mut self, enabled: bool) -> Self {
         self.graph_neural_networks = enabled;
         self
     }
-    
+
     /// Optimize spatial task using meta-learning
-    pub async fn optimize_spatial_task(&mut self, _data: &ArrayView2<'_, f64>) -> SpatialResult<MetaOptimizationResult> {
+    pub async fn optimize_spatial_task(
+        &mut self,
+        _data: &ArrayView2<'_, f64>,
+    ) -> SpatialResult<MetaOptimizationResult> {
         // Implement meta-learning optimization
         // This is a simplified implementation
-        
+
         let result = MetaOptimizationResult {
             optimal_algorithm: "meta_optimized_algorithm".to_string(),
             learned_parameters: HashMap::new(),
@@ -1378,7 +1427,7 @@ impl MetaLearningOptimizer {
             },
             adaptation_steps: 5,
         };
-        
+
         Ok(result)
     }
 }
@@ -1427,7 +1476,7 @@ impl NeuralNetwork {
             training_history: Vec::new(),
         }
     }
-    
+
     fn predict(&self, _input: &Array1<f64>) -> SpatialResult<Array1<f64>> {
         // Simplified neural network prediction
         Ok(Array1::from(vec![0.5, 100.0, 50.0, 1.0, 0.8])) // Dummy prediction
@@ -1496,55 +1545,64 @@ impl MetaLearningModel {
 mod tests {
     use super::*;
     use ndarray::array;
-    
+
     #[tokio::test]
     async fn test_ai_algorithm_selector() {
         let mut selector = AIAlgorithmSelector::new()
             .with_meta_learning(true)
             .with_neural_architecture_search(true);
-        
+
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
-        
-        let result = selector.select_optimal_algorithm(&points.view(), "clustering").await;
+
+        let result = selector
+            .select_optimal_algorithm(&points.view(), "clustering")
+            .await;
         assert!(result.is_ok());
-        
+
         let (algorithm, _parameters, prediction) = result.unwrap();
         assert!(!algorithm.is_empty());
         assert!(prediction.expected_accuracy >= 0.0 && prediction.expected_accuracy <= 1.0);
         assert!(prediction.confidence >= 0.0 && prediction.confidence <= 1.0);
     }
-    
+
     #[tokio::test]
     async fn test_data_characteristics_analysis() {
         let mut selector = AIAlgorithmSelector::new();
-        let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0], [10.0, 10.0], [11.0, 10.0]];
-        
+        let points = array![
+            [0.0, 0.0],
+            [1.0, 0.0],
+            [0.0, 1.0],
+            [1.0, 1.0],
+            [10.0, 10.0],
+            [11.0, 10.0]
+        ];
+
         let characteristics = selector.analyze_data_characteristics(&points.view()).await;
         assert!(characteristics.is_ok());
-        
+
         let chars = characteristics.unwrap();
         assert_eq!(chars.num_points, 6);
         assert_eq!(chars.dimensionality, 2);
         assert!(chars.density > 0.0);
         assert!(chars.outlier_ratio >= 0.0 && chars.outlier_ratio <= 1.0);
     }
-    
+
     #[tokio::test]
     async fn test_meta_learning_optimizer() {
         let mut optimizer = MetaLearningOptimizer::new()
             .with_continual_learning(true)
             .with_transformer_embeddings(true);
-        
+
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
-        
+
         let result = optimizer.optimize_spatial_task(&points.view()).await;
         assert!(result.is_ok());
-        
+
         let meta_result = result.unwrap();
         assert!(!meta_result.optimal_algorithm.is_empty());
         assert!(meta_result.adaptation_steps > 0);
     }
-    
+
     #[test]
     fn test_performance_prediction() {
         let prediction = PerformancePrediction {
@@ -1554,23 +1612,23 @@ mod tests {
             expected_energy_j: 1.0,
             confidence: 0.9,
         };
-        
+
         assert!(prediction.expected_accuracy > 0.9);
         assert!(prediction.expected_time_ms > 0.0);
         assert!(prediction.confidence > 0.8);
     }
-    
+
     #[test]
     fn test_algorithm_candidate() {
         let mut parameters = HashMap::new();
         parameters.insert("k".to_string(), 3.0);
         parameters.insert("max_iter".to_string(), 100.0);
-        
+
         let candidate = AlgorithmCandidate {
             algorithm: "kmeans".to_string(),
             parameters,
         };
-        
+
         assert_eq!(candidate.algorithm, "kmeans");
         assert_eq!(candidate.parameters.len(), 2);
         assert_eq!(candidate.parameters["k"], 3.0);

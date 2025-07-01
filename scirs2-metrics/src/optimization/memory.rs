@@ -1009,7 +1009,7 @@ impl ArenaAllocator {
     }
 
     /// Allocate from the arena
-    pub fn allocate(&self, size: usize, alignment: usize) -> Result<NonNull<u8>> {
+    pub fn allocate(&mut self, size: usize, alignment: usize) -> Result<NonNull<u8>> {
         let mut arena = self.current_arena.lock().unwrap();
 
         if let Ok(ptr) = arena.allocate(size, alignment) {

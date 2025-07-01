@@ -4,8 +4,8 @@
 //! issues that need to be addressed before the stable release.
 
 use scirs2_interpolate::api_stabilization_enhanced::{
-    analyze_api_for_stable_release, quick_api_analysis, StabilizationConfig, StrictnessLevel,
-    analyze_api_with_config,
+    analyze_api_for_stable_release, analyze_api_with_config, quick_api_analysis,
+    StabilizationConfig, StrictnessLevel,
 };
 use scirs2_interpolate::InterpolateResult;
 
@@ -22,14 +22,23 @@ fn main() -> InterpolateResult<()> {
             println!("Stable Items: {}", report.stable_items);
             println!("Unstable Items: {}", report.unstable_items);
             println!("Consistency Score: {:.2}", report.consistency_score);
-            println!("Documentation Coverage: {:.1}%", report.documentation_coverage);
+            println!(
+                "Documentation Coverage: {:.1}%",
+                report.documentation_coverage
+            );
             println!("Breaking Changes: {}", report.breaking_changes.len());
             println!("Critical Issues: {}", report.critical_issues.len());
 
             if !report.critical_issues.is_empty() {
                 println!("\n=== CRITICAL ISSUES (BLOCKING STABLE RELEASE) ===");
                 for (i, issue) in report.critical_issues.iter().enumerate() {
-                    println!("{}. [{}] {} - {}", i + 1, issue.category, issue.location, issue.description);
+                    println!(
+                        "{}. [{}] {} - {}",
+                        i + 1,
+                        issue.category,
+                        issue.location,
+                        issue.description
+                    );
                     if let Some(resolution) = &issue.suggested_resolution {
                         println!("   Resolution: {}", resolution);
                     }
@@ -69,14 +78,16 @@ fn main() -> InterpolateResult<()> {
         }
         Err(e) => {
             println!("Failed to run API analysis: {}", e);
-            
+
             // Try quick analysis as fallback
             println!("\nTrying quick analysis as fallback...");
             match quick_api_analysis() {
                 Ok(report) => {
                     println!("Quick analysis completed successfully");
-                    println!("Total Items: {}, Stable: {}, Unstable: {}", 
-                        report.total_items, report.stable_items, report.unstable_items);
+                    println!(
+                        "Total Items: {}, Stable: {}, Unstable: {}",
+                        report.total_items, report.stable_items, report.unstable_items
+                    );
                 }
                 Err(e2) => {
                     println!("Quick analysis also failed: {}", e2);
@@ -100,7 +111,10 @@ fn main() -> InterpolateResult<()> {
             println!("Custom analysis (relaxed constraints):");
             println!("  Overall Readiness: {:?}", report.overall_readiness);
             println!("  Critical Issues: {}", report.critical_issues.len());
-            println!("  Documentation Coverage: {:.1}%", report.documentation_coverage);
+            println!(
+                "  Documentation Coverage: {:.1}%",
+                report.documentation_coverage
+            );
         }
         Err(e) => {
             println!("Custom analysis failed: {}", e);

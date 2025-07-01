@@ -2296,8 +2296,10 @@ fn fallback_multi_head_attention(
             });
 
         // Apply attention to values: attention_weights @ V
-        let head_output =
-            crate::simd_ops::simd_matmul_attention_ultra(&attention_weights.view(), &v_head.view())?;
+        let head_output = crate::simd_ops::simd_matmul_attention_ultra(
+            &attention_weights.view(),
+            &v_head.view(),
+        )?;
 
         // Copy head output to final output
         output

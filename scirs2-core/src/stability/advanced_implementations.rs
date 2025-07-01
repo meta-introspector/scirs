@@ -26,9 +26,9 @@ impl FormalVerificationEngine {
     /// Start formal verification for an API contract
     pub fn verify_contract(&self, contract: &ApiContract) -> CoreResult<()> {
         let task_id = format!("{}::{}", contract.module, contract.api_name);
-        
+
         let properties = self.extract_verification_properties(contract);
-        
+
         let task = VerificationTask {
             api_name: contract.api_name.clone(),
             module: contract.module.clone(),
@@ -36,25 +36,25 @@ impl FormalVerificationEngine {
             status: VerificationStatus::InProgress,
             started_at: Instant::now(),
         };
-        
+
         {
             let mut tasks = self.verification_tasks.lock().unwrap();
             tasks.insert(task_id.clone(), task);
         }
-        
+
         // Spawn verification thread (simplified for demonstration)
         let tasks_clone = Arc::clone(&self.verification_tasks);
         let results_clone = Arc::clone(&self.results_cache);
-        
+
         thread::spawn(move || {
             let result = Self::perform_verification(&task_id, &tasks_clone);
-            
+
             // Store result
             {
                 let mut results = results_clone.write().unwrap();
                 results.insert(task_id.clone(), result);
             }
-            
+
             // Update task status
             {
                 let mut tasks = tasks_clone.lock().unwrap();
@@ -63,24 +63,27 @@ impl FormalVerificationEngine {
                 }
             }
         });
-        
+
         Ok(())
     }
-    
+
     /// Extract verification properties from contract
     fn extract_verification_properties(&self, contract: &ApiContract) -> Vec<VerificationProperty> {
         let mut properties = Vec::new();
-        
+
         // Performance properties
         properties.push(VerificationProperty {
             name: "performance_bound".to_string(),
             specification: format!(
-                "execution_time <= {:?}", 
-                contract.performance.max_execution_time.unwrap_or(Duration::from_secs(1))
+                "execution_time <= {:?}",
+                contract
+                    .performance
+                    .max_execution_time
+                    .unwrap_or(Duration::from_secs(1))
             ),
             property_type: PropertyType::Safety,
         });
-        
+
         // Memory properties
         if let Some(max_memory) = contract.memory.max_memory {
             properties.push(VerificationProperty {
@@ -89,7 +92,7 @@ impl FormalVerificationEngine {
                 property_type: PropertyType::Safety,
             });
         }
-        
+
         // Thread safety properties
         if contract.concurrency.thread_safety == ThreadSafety::ThreadSafe {
             properties.push(VerificationProperty {
@@ -98,25 +101,28 @@ impl FormalVerificationEngine {
                 property_type: PropertyType::Safety,
             });
         }
-        
+
         properties
     }
-    
+
     /// Perform actual verification (simplified)
-    fn perform_verification(task_id: &str, tasks: &Arc<Mutex<HashMap<String, VerificationTask>>>) -> VerificationResult {
+    fn perform_verification(
+        task_id: &str,
+        tasks: &Arc<Mutex<HashMap<String, VerificationTask>>>,
+    ) -> VerificationResult {
         // In a real implementation, this would use formal verification tools
         // like CBMC, KLEE, or custom model checkers
-        
+
         let start_time = Instant::now();
-        
+
         // Simulate verification process
         thread::sleep(Duration::from_millis(100));
-        
+
         let task = {
             let tasks_guard = tasks.lock().unwrap();
             tasks_guard.get(task_id).cloned()
         };
-        
+
         if let Some(task) = task {
             VerificationResult {
                 verified: true, // Simplified - always pass
@@ -135,17 +141,17 @@ impl FormalVerificationEngine {
             }
         }
     }
-    
+
     /// Get verification status for an API
     pub fn get_verification_status(&self, api_name: &str, module: &str) -> VerificationStatus {
         let task_id = format!("{}::{}", module, api_name);
-        
+
         if let Ok(tasks) = self.verification_tasks.lock() {
             if let Some(task) = tasks.get(&task_id) {
                 return task.status;
             }
         }
-        
+
         VerificationStatus::NotVerified
     }
 
@@ -172,11 +178,12 @@ impl FormalVerificationEngine {
             if tasks.is_empty() {
                 return 0.0;
             }
-            
-            let verified_count = tasks.values()
+
+            let verified_count = tasks
+                .values()
                 .filter(|task| task.status == VerificationStatus::Verified)
                 .count();
-            
+
             (verified_count as f64 / tasks.len() as f64) * 100.0
         } else {
             0.0
@@ -188,7 +195,7 @@ impl RuntimeContractValidator {
     /// Create a new runtime contract validator
     pub fn new() -> (Self, Receiver<MonitoringEvent>) {
         let (sender, receiver) = mpsc::channel();
-        
+
         let validator = Self {
             contracts: Arc::new(RwLock::new(HashMap::new())),
             event_sender: sender,
@@ -205,19 +212,19 @@ impl RuntimeContractValidator {
                 fault_history: Vec::new(),
             })),
         };
-        
+
         (validator, receiver)
     }
-    
+
     /// Register a contract for runtime validation
     pub fn register_contract(&self, contract: ApiContract) {
         let key = format!("{}::{}", contract.module, contract.api_name);
-        
+
         if let Ok(mut contracts) = self.contracts.write() {
             contracts.insert(key, contract);
         }
     }
-    
+
     /// Validate API call against contract in real-time
     pub fn validate_api_call(
         &self,
@@ -227,34 +234,35 @@ impl RuntimeContractValidator {
     ) -> CoreResult<()> {
         let start_time = Instant::now();
         let key = format!("{}::{}", module, api_name);
-        
+
         // Update statistics
         {
             if let Ok(mut stats) = self.stats.lock() {
                 stats.total_validations += 1;
             }
         }
-        
+
         // Inject chaos if enabled
         self.maybe_inject_chaos(api_name, module)?;
-        
+
         // Get contract
         let contract = {
             if let Ok(contracts) = self.contracts.read() {
                 contracts.get(&key).cloned()
             } else {
                 return Err(CoreError::ValidationError(ErrorContext::new(
-                    "Cannot access contracts for validation".to_string()
+                    "Cannot access contracts for validation".to_string(),
                 )));
             }
         };
-        
+
         let contract = contract.ok_or_else(|| {
             CoreError::ValidationError(ErrorContext::new(format!(
-                "No contract found for {}::{}", module, api_name
+                "No contract found for {}::{}",
+                module, api_name
             )))
         })?;
-        
+
         // Validate performance contract
         if let Some(max_time) = contract.performance.max_execution_time {
             if call_context.execution_time > max_time {
@@ -270,7 +278,7 @@ impl RuntimeContractValidator {
                 )?;
             }
         }
-        
+
         // Validate memory contract
         if let Some(max_memory) = contract.memory.max_memory {
             if call_context.memory_usage > max_memory {
@@ -286,22 +294,23 @@ impl RuntimeContractValidator {
                 )?;
             }
         }
-        
+
         // Update statistics
         let validation_time = start_time.elapsed();
         {
             if let Ok(mut stats) = self.stats.lock() {
                 let total = stats.total_validations as f64;
                 let prev_avg = stats.avg_validation_time.as_nanos() as f64;
-                let new_avg = (prev_avg * (total - 1.0) + validation_time.as_nanos() as f64) / total;
+                let new_avg =
+                    (prev_avg * (total - 1.0) + validation_time.as_nanos() as f64) / total;
                 stats.avg_validation_time = Duration::from_nanos(new_avg as u64);
                 stats.success_rate = (total - stats.violations_detected as f64) / total;
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Enable chaos engineering
     pub fn enable_chaos_engineering(&self, fault_probability: f64) {
         if let Ok(mut controller) = self.chaos_controller.lock() {
@@ -309,23 +318,26 @@ impl RuntimeContractValidator {
             controller.fault_probability = fault_probability.clamp(0.0, 1.0);
         }
     }
-    
+
     /// Maybe inject a chaos fault
     fn maybe_inject_chaos(&self, api_name: &str, module: &str) -> CoreResult<()> {
         if let Ok(mut controller) = self.chaos_controller.lock() {
             if !controller.enabled {
                 return Ok(());
             }
-            
+
             // Generate random number for fault probability
             let mut hasher = DefaultHasher::new();
             api_name.hash(&mut hasher);
             module.hash(&mut hasher);
-            SystemTime::now().duration_since(SystemTime::UNIX_EPOCH)
-                .unwrap_or_default().as_nanos().hash(&mut hasher);
-            
+            SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_nanos()
+                .hash(&mut hasher);
+
             let rand_val = (hasher.finish() % 10000) as f64 / 10000.0;
-            
+
             if rand_val < controller.fault_probability {
                 // Inject a random fault
                 let fault = match rand_val * 4.0 {
@@ -334,10 +346,12 @@ impl RuntimeContractValidator {
                     x if x < 3.0 => ChaosFault::CpuThrottling(0.5),
                     _ => ChaosFault::RandomFailure(0.1),
                 };
-                
+
                 controller.active_faults.push(fault.clone());
-                controller.fault_history.push((Instant::now(), fault.clone()));
-                
+                controller
+                    .fault_history
+                    .push((Instant::now(), fault.clone()));
+
                 // Send monitoring event
                 let event = MonitoringEvent {
                     timestamp: Instant::now(),
@@ -353,9 +367,9 @@ impl RuntimeContractValidator {
                     },
                     thread_id: format!("{:?}", thread::current().id()),
                 };
-                
+
                 let _ = self.event_sender.send(event);
-                
+
                 // Actually inject the fault
                 match fault {
                     ChaosFault::LatencyInjection(delay) => {
@@ -364,7 +378,7 @@ impl RuntimeContractValidator {
                     ChaosFault::RandomFailure(prob) => {
                         if rand_val < prob {
                             return Err(CoreError::ValidationError(ErrorContext::new(
-                                "Chaos engineering: Random failure injected".to_string()
+                                "Chaos engineering: Random failure injected".to_string(),
                             )));
                         }
                     }
@@ -372,10 +386,10 @@ impl RuntimeContractValidator {
                 }
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Report a contract violation
     fn report_violation(
         &self,
@@ -391,7 +405,7 @@ impl RuntimeContractValidator {
                 stats.success_rate = (total - stats.violations_detected as f64) / total;
             }
         }
-        
+
         // Send monitoring event
         let event = MonitoringEvent {
             timestamp: Instant::now(),
@@ -407,14 +421,15 @@ impl RuntimeContractValidator {
             },
             thread_id: format!("{:?}", thread::current().id()),
         };
-        
+
         let _ = self.event_sender.send(event);
-        
+
         // Return error for critical violations
         if violation.severity >= ViolationSeverity::High {
             return Err(CoreError::ValidationError(ErrorContext::new(format!(
                 "Critical contract violation in {}::{}: {} (expected: {}, actual: {})",
-                module, api_name, 
+                module,
+                api_name,
                 match violation.violation_type {
                     ViolationType::Performance => "Performance",
                     ViolationType::Memory => "Memory",
@@ -422,13 +437,14 @@ impl RuntimeContractValidator {
                     ViolationType::Concurrency => "Concurrency",
                     ViolationType::Behavioral => "Behavioral",
                 },
-                violation.expected, violation.actual
+                violation.expected,
+                violation.actual
             ))));
         }
-        
+
         Ok(())
     }
-    
+
     /// Get validation statistics
     pub fn get_statistics(&self) -> Option<ValidationStatistics> {
         self.stats.lock().ok().map(|stats| stats.clone())
@@ -486,7 +502,7 @@ impl AdvancedPerformanceModeler {
             training_status: Arc::new(Mutex::new(HashMap::new())),
         }
     }
-    
+
     /// Record a performance measurement
     pub fn record_measurement(
         &self,
@@ -502,20 +518,20 @@ impl AdvancedPerformanceModeler {
             performance,
             system_state,
         };
-        
+
         if let Ok(mut history) = self.performance_history.write() {
             history.push(data_point);
-            
+
             // Limit history size to prevent unbounded growth
             if history.len() > 10000 {
                 history.remove(0);
             }
         }
-        
+
         // Trigger model retraining if enough new data
         self.maybe_retrain_model(api_name);
     }
-    
+
     /// Predict performance for given input characteristics
     pub fn predict_performance(
         &self,
@@ -531,53 +547,50 @@ impl AdvancedPerformanceModeler {
                     ModelType::LinearRegression => {
                         // Use linear model: slope * x + intercept
                         if model.parameters.len() >= 2 {
-                            model.parameters[0] * input_characteristics.size as f64 + model.parameters[1]
+                            model.parameters[0] * input_characteristics.size as f64
+                                + model.parameters[1]
                         } else {
                             (input_characteristics.size as f64).sqrt()
                         }
                     }
-                    ModelType::PolynomialRegression => {
-                        (input_characteristics.size as f64).sqrt()
-                    }
+                    ModelType::PolynomialRegression => (input_characteristics.size as f64).sqrt(),
                     _ => (input_characteristics.size as f64).sqrt(),
                 };
-                
+
                 let scaled_time = Duration::from_nanos(
-                    (base_time.as_nanos() as f64 * size_factor.max(1.0)) as u64
+                    (base_time.as_nanos() as f64 * size_factor.max(1.0)) as u64,
                 );
-                
+
                 return Some(RuntimePerformanceMetrics {
                     execution_time: scaled_time,
                     memory_usage: input_characteristics.size * 8, // Assume 8 bytes per element
                     cpu_usage: system_state.cpu_utilization * 1.1, // Slightly higher
-                    cache_hit_rate: 0.8, // Assume good cache performance
+                    cache_hit_rate: 0.8,                          // Assume good cache performance
                     thread_count: 1,
                 });
             }
         }
-        
+
         None
     }
-    
+
     /// Maybe retrain model if conditions are met
     fn maybe_retrain_model(&self, api_name: &str) {
         // Check if enough new data points exist
         let should_retrain = {
             if let Ok(history) = self.performance_history.read() {
-                let api_data_points = history.iter()
-                    .filter(|dp| dp.api_name == api_name)
-                    .count();
+                let api_data_points = history.iter().filter(|dp| dp.api_name == api_name).count();
                 api_data_points > 100 && (api_data_points % 50 == 0)
             } else {
                 false
             }
         };
-        
+
         if should_retrain {
             self.train_model(api_name);
         }
     }
-    
+
     /// Train a performance prediction model
     fn train_model(&self, api_name: &str) {
         // Set training status
@@ -586,17 +599,18 @@ impl AdvancedPerformanceModeler {
                 status.insert(api_name.to_string(), TrainingStatus::InProgress);
             }
         }
-        
+
         let api_name = api_name.to_string();
         let history_clone = Arc::clone(&self.performance_history);
         let models_clone = Arc::clone(&self.prediction_models);
         let status_clone = Arc::clone(&self.training_status);
-        
+
         // Spawn training thread
         thread::spawn(move || {
             let training_data = {
                 if let Ok(history) = history_clone.read() {
-                    history.iter()
+                    history
+                        .iter()
                         .filter(|dp| dp.api_name == api_name)
                         .cloned()
                         .collect::<Vec<_>>()
@@ -604,7 +618,7 @@ impl AdvancedPerformanceModeler {
                     Vec::new()
                 }
             };
-            
+
             if training_data.len() < 10 {
                 // Not enough data
                 if let Ok(mut status) = status_clone.lock() {
@@ -612,43 +626,47 @@ impl AdvancedPerformanceModeler {
                 }
                 return;
             }
-            
+
             // Simple linear regression model (simplified)
             let mut sum_x = 0.0;
             let mut sum_y = 0.0;
             let mut sum_xy = 0.0;
             let mut sum_x2 = 0.0;
             let n = training_data.len() as f64;
-            
+
             for dp in &training_data {
                 let x = dp.input_characteristics.size as f64;
                 let y = dp.performance.execution_time.as_nanos() as f64;
-                
+
                 sum_x += x;
                 sum_y += y;
                 sum_xy += x * y;
                 sum_x2 += x * x;
             }
-            
+
             let slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x * sum_x);
             let intercept = (sum_y - slope * sum_x) / n;
-            
+
             // Calculate accuracy (R-squared)
             let y_mean = sum_y / n;
             let mut ss_tot = 0.0;
             let mut ss_res = 0.0;
-            
+
             for dp in &training_data {
                 let x = dp.input_characteristics.size as f64;
                 let y = dp.performance.execution_time.as_nanos() as f64;
                 let y_pred = slope * x + intercept;
-                
+
                 ss_tot += (y - y_mean).powi(2);
                 ss_res += (y - y_pred).powi(2);
             }
-            
-            let r_squared = if ss_tot > 0.0 { 1.0 - (ss_res / ss_tot) } else { 0.0 };
-            
+
+            let r_squared = if ss_tot > 0.0 {
+                1.0 - (ss_res / ss_tot)
+            } else {
+                0.0
+            };
+
             let model = PerformancePredictionModel {
                 model_type: ModelType::LinearRegression,
                 parameters: vec![slope, intercept],
@@ -656,14 +674,14 @@ impl AdvancedPerformanceModeler {
                 training_data_size: training_data.len(),
                 last_updated: Instant::now(),
             };
-            
+
             // Store the trained model
             {
                 if let Ok(mut models) = models_clone.write() {
                     models.insert(api_name.clone(), model);
                 }
             }
-            
+
             // Update training status
             {
                 if let Ok(mut status) = status_clone.lock() {
@@ -672,11 +690,14 @@ impl AdvancedPerformanceModeler {
             }
         });
     }
-    
+
     /// Get training status for an API
     pub fn get_training_status(&self, api_name: &str) -> TrainingStatus {
         if let Ok(status) = self.training_status.lock() {
-            status.get(api_name).copied().unwrap_or(TrainingStatus::NotStarted)
+            status
+                .get(api_name)
+                .copied()
+                .unwrap_or(TrainingStatus::NotStarted)
         } else {
             TrainingStatus::NotStarted
         }
@@ -694,9 +715,7 @@ impl AdvancedPerformanceModeler {
     /// Get number of data points for an API
     pub fn get_data_points_count(&self, api_name: &str) -> usize {
         if let Ok(history) = self.performance_history.read() {
-            history.iter()
-                .filter(|dp| dp.api_name == api_name)
-                .count()
+            history.iter().filter(|dp| dp.api_name == api_name).count()
         } else {
             0
         }
@@ -717,21 +736,21 @@ impl ImmutableAuditTrail {
             current_hash: Arc::new(RwLock::new("0".to_string())),
         }
     }
-    
+
     /// Add a new audit record
     pub fn add_record(&self, data: AuditData) -> CoreResult<()> {
         let timestamp = SystemTime::now();
-        
+
         let previous_hash = {
             if let Ok(hash) = self.current_hash.read() {
                 hash.clone()
             } else {
                 return Err(CoreError::ValidationError(ErrorContext::new(
-                    "Cannot access current hash".to_string()
+                    "Cannot access current hash".to_string(),
                 )));
             }
         };
-        
+
         // Create record
         let mut record = AuditRecord {
             timestamp,
@@ -740,79 +759,95 @@ impl ImmutableAuditTrail {
             signature: String::new(), // Would be populated by digital signature
             record_hash: String::new(),
         };
-        
+
         // Calculate record hash
         record.record_hash = self.calculate_record_hash(&record);
-        
+
         // Add digital signature (simplified)
         record.signature = format!("sig_{}", record.record_hash);
-        
+
         // Add to chain
         {
             if let Ok(mut chain) = self.audit_chain.write() {
                 chain.push(record.clone());
             } else {
                 return Err(CoreError::ValidationError(ErrorContext::new(
-                    "Cannot access audit chain".to_string()
+                    "Cannot access audit chain".to_string(),
                 )));
             }
         }
-        
+
         // Update current hash
         {
             if let Ok(mut hash) = self.current_hash.write() {
                 *hash = record.record_hash;
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Calculate cryptographic hash of a record
     fn calculate_record_hash(&self, record: &AuditRecord) -> String {
         let mut hasher = DefaultHasher::new();
-        
-        record.timestamp.duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap_or_default().as_nanos().hash(&mut hasher);
+
+        record
+            .timestamp
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos()
+            .hash(&mut hasher);
         record.previous_hash.hash(&mut hasher);
-        
+
         // Hash the data (simplified)
         match &record.data {
             AuditData::ContractRegistration(name) => name.hash(&mut hasher),
-            AuditData::ContractValidation { api_name, module, result } => {
+            AuditData::ContractValidation {
+                api_name,
+                module,
+                result,
+            } => {
                 api_name.hash(&mut hasher);
                 module.hash(&mut hasher);
                 result.hash(&mut hasher);
             }
-            AuditData::PerformanceMeasurement { api_name, module, metrics } => {
+            AuditData::PerformanceMeasurement {
+                api_name,
+                module,
+                metrics,
+            } => {
                 api_name.hash(&mut hasher);
                 module.hash(&mut hasher);
                 metrics.hash(&mut hasher);
             }
-            AuditData::ViolationDetection { api_name, module, violation } => {
+            AuditData::ViolationDetection {
+                api_name,
+                module,
+                violation,
+            } => {
                 api_name.hash(&mut hasher);
                 module.hash(&mut hasher);
                 violation.hash(&mut hasher);
             }
         }
-        
+
         format!("{:x}", hasher.finish())
     }
-    
+
     /// Verify the integrity of the audit trail
     pub fn verify_integrity(&self) -> bool {
         if let Ok(chain) = self.audit_chain.read() {
             if chain.is_empty() {
                 return true;
             }
-            
+
             for (i, record) in chain.iter().enumerate() {
                 // Verify hash
                 let expected_hash = self.calculate_record_hash(record);
                 if record.record_hash != expected_hash {
                     return false;
                 }
-                
+
                 // Verify chain linkage
                 if i > 0 {
                     let prev_record = &chain[i - 1];
@@ -821,13 +856,13 @@ impl ImmutableAuditTrail {
                     }
                 }
             }
-            
+
             true
         } else {
             false
         }
     }
-    
+
     /// Get audit trail length
     pub fn len(&self) -> usize {
         if let Ok(chain) = self.audit_chain.read() {
@@ -836,7 +871,7 @@ impl ImmutableAuditTrail {
             0
         }
     }
-    
+
     /// Check if audit trail is empty
     pub fn is_empty(&self) -> bool {
         self.len() == 0
@@ -856,13 +891,15 @@ impl ImmutableAuditTrail {
     #[cfg(feature = "serde")]
     pub fn export_trail(&self) -> CoreResult<String> {
         if let Ok(chain) = self.audit_chain.read() {
-            serde_json::to_string_pretty(&*chain)
-                .map_err(|e| CoreError::ValidationError(ErrorContext::new(format!(
-                    "Failed to serialize audit trail: {}", e
-                ))))
+            serde_json::to_string_pretty(&*chain).map_err(|e| {
+                CoreError::ValidationError(ErrorContext::new(format!(
+                    "Failed to serialize audit trail: {}",
+                    e
+                )))
+            })
         } else {
             Err(CoreError::ValidationError(ErrorContext::new(
-                "Cannot access audit chain for export".to_string()
+                "Cannot access audit chain for export".to_string(),
             )))
         }
     }
@@ -905,11 +942,11 @@ impl SystemState {
     /// Create new system state
     pub fn new() -> Self {
         Self {
-            cpu_utilization: 0.5, // Default 50%
+            cpu_utilization: 0.5,    // Default 50%
             memory_utilization: 0.6, // Default 60%
-            io_load: 0.1, // Default low
-            network_load: 0.05, // Default very low
-            temperature: 65.0, // Default temperature in Celsius
+            io_load: 0.1,            // Default low
+            network_load: 0.05,      // Default very low
+            temperature: 65.0,       // Default temperature in Celsius
         }
     }
 
@@ -940,7 +977,7 @@ mod tests {
     fn test_formal_verification_engine() {
         let engine = FormalVerificationEngine::new();
         assert_eq!(engine.get_verification_coverage(), 0.0);
-        
+
         // Test with a mock contract
         let contract = ApiContract {
             api_name: "test_api".to_string(),
@@ -987,9 +1024,9 @@ mod tests {
             },
             deprecation: None,
         };
-        
+
         engine.verify_contract(&contract).unwrap();
-        
+
         // Initially should be in progress
         assert_eq!(
             engine.get_verification_status("test_api", "test_module"),
@@ -1000,7 +1037,7 @@ mod tests {
     #[test]
     fn test_runtime_contract_validator() {
         let (validator, _receiver) = RuntimeContractValidator::new();
-        
+
         let stats = validator.get_statistics().unwrap();
         assert_eq!(stats.total_validations, 0);
         assert_eq!(stats.violations_detected, 0);
@@ -1010,7 +1047,7 @@ mod tests {
     #[test]
     fn test_performance_modeler() {
         let modeler = AdvancedPerformanceModeler::new();
-        
+
         let input_chars = InputCharacteristics::new(1000, "f64".to_string());
         let system_state = SystemState::new();
         let performance = RuntimePerformanceMetrics {
@@ -1020,11 +1057,19 @@ mod tests {
             cache_hit_rate: 0.8,
             thread_count: 1,
         };
-        
-        modeler.record_measurement("test_api", input_chars.clone(), performance, system_state.clone());
-        
+
+        modeler.record_measurement(
+            "test_api",
+            input_chars.clone(),
+            performance,
+            system_state.clone(),
+        );
+
         assert_eq!(modeler.get_data_points_count("test_api"), 1);
-        assert_eq!(modeler.get_training_status("test_api"), TrainingStatus::NotStarted);
+        assert_eq!(
+            modeler.get_training_status("test_api"),
+            TrainingStatus::NotStarted
+        );
     }
 
     #[test]
@@ -1032,10 +1077,10 @@ mod tests {
         let trail = ImmutableAuditTrail::new();
         assert!(trail.is_empty());
         assert!(trail.verify_integrity());
-        
+
         let data = AuditData::ContractRegistration("test::api".to_string());
         trail.add_record(data).unwrap();
-        
+
         assert_eq!(trail.len(), 1);
         assert!(trail.verify_integrity());
     }
@@ -1045,7 +1090,7 @@ mod tests {
         let chars = InputCharacteristics::matrix(10, 10);
         assert_eq!(chars.size, 100);
         assert_eq!(chars.memory_layout, "row_major");
-        
+
         let vector_chars = InputCharacteristics::vector(50);
         assert_eq!(vector_chars.size, 50);
         assert_eq!(vector_chars.access_pattern, "sequential");

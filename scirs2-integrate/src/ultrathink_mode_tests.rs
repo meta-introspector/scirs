@@ -409,18 +409,20 @@ mod performance_adaptation_tests {
         let optimizer = RealTimeAdaptiveOptimizer::<f64>::new().unwrap();
 
         // Create mock performance metrics
-        let metrics = vec![crate::realtime_performance_adaptation::PerformanceMetrics {
-            timestamp: std::time::Instant::now(),
-            step_time: Duration::from_millis(10),
-            throughput: 100.0,
-            memory_usage: 1024 * 1024,
-            cpu_utilization: 50.0,
-            gpu_utilization: 30.0,
-            cache_hit_rate: 0.9,
-            network_bandwidth: 1000.0,
-            error_accuracy: 1e-10,
-            convergence_rate: 0.95,
-        }];
+        let metrics = vec![
+            crate::realtime_performance_adaptation::PerformanceMetrics::new(
+                std::time::Instant::now(),
+                Duration::from_millis(10),
+                100.0,
+                1024 * 1024,
+                50.0,
+                30.0,
+                0.9,
+                1000.0,
+                1e-10,
+                0.95,
+            ),
+        ];
 
         let result = optimizer.anomaly_detection_and_recovery(&metrics);
         assert!(

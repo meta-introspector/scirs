@@ -3,9 +3,8 @@
 //! This module implements progressive search strategies that gradually increase
 //! complexity and search space as the search progresses.
 
-use super::{NASConfig, SearchResults};
+use super::NASConfig;
 use crate::error::OptimizerError;
-use ndarray::Array1;
 use num_traits::Float;
 use std::collections::HashMap;
 use std::time::Duration;

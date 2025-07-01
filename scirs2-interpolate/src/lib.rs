@@ -465,8 +465,9 @@ pub use simd_performance_validation::{
 // Comprehensive SIMD validation exports for 0.1.0 stable release
 pub use simd_comprehensive_validation::{
     quick_simd_validation, validate_simd_performance, validate_simd_with_config,
-    AccuracyValidationResult, CpuArchitecture, InstructionSet, PerformanceSummary,
-    SimdPerformanceResult, SimdPerformanceValidator as ComprehensiveSimdValidator,
+    AccuracyValidationResult, CpuArchitecture, InstructionSet,
+    PerformanceSummary as SimdPerformanceSummary, SimdPerformanceResult,
+    SimdPerformanceValidator as ComprehensiveSimdValidator,
     SimdValidationConfig as ComprehensiveSimdConfig, SimdValidationReport, SimdValidationResult,
     SystemSimdCapabilities,
 };

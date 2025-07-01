@@ -175,7 +175,11 @@ where
         + Debug
         + std::ops::AddAssign
         + std::ops::SubAssign
-        + std::ops::MulAssign + std::default::Default + std::iter::Sum + ndarray::ScalarOperand + std::ops::DivAssign,
+        + std::ops::MulAssign
+        + std::default::Default
+        + std::iter::Sum
+        + ndarray::ScalarOperand
+        + std::ops::DivAssign,
 {
     match solver_type {
         LinearSolverType::Direct => solve_linear_system(a, b),
@@ -237,7 +241,9 @@ where
         + std::ops::SubAssign
         + std::ops::MulAssign
         + Default
-        + std::iter::Sum + ndarray::ScalarOperand + std::ops::DivAssign,
+        + std::iter::Sum
+        + ndarray::ScalarOperand
+        + std::ops::DivAssign,
 {
     let n = a.nrows();
     if n != a.ncols() {

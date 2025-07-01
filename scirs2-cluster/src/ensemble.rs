@@ -249,7 +249,7 @@ where
             silhouette_score(data_f64.view(), consensus_labels.view()).unwrap_or(0.0);
 
         // Calculate stability score
-        let stability_score = self.calculate_stability_score(&consensus_stats);
+        let stability_score = self.calculate_consensus_stability_score(&consensus_stats);
 
         let total_time = start_time.elapsed().as_secs_f64();
 
@@ -326,7 +326,7 @@ where
                 let mut indices = Vec::new();
 
                 for _ in 0..sample_size {
-                    indices.push(rng.gen_range(0..n_samples));
+                    indices.push(rng.random_range(0..n_samples));
                 }
 
                 let sampled_data = self.extract_samples(data, &indices)?;
@@ -351,7 +351,7 @@ where
                 let mut sample_indices = Vec::new();
 
                 for _ in 0..sample_size {
-                    sample_indices.push(rng.gen_range(0..n_samples));
+                    sample_indices.push(rng.random_range(0..n_samples));
                 }
 
                 // Then apply feature sampling
@@ -395,7 +395,7 @@ where
                     NoiseType::Outliers { outlier_ratio } => {
                         let n_outliers = (n_samples as f64 * outlier_ratio) as usize;
                         for _ in 0..n_outliers {
-                            let outlier_idx = rng.gen_range(0..n_samples);
+                            let outlier_idx = rng.random_range(0..n_samples);
                             for j in 0..n_features {
                                 let outlier_value = F::from(rng.gen::<f64>() * 10.0 - 5.0).unwrap();
                                 noisy_data[[outlier_idx, j]] = outlier_value;
@@ -534,7 +534,7 @@ where
         let avg_quality_score = results.iter().map(|r| r.quality_score).sum::<f64>() / results.len() as f64;
         let consensus_stats = self.calculate_consensus_statistics(results, &consensus_labels)?;
         let diversity_metrics = self.calculate_diversity_metrics(results)?;
-        let stability_score = self.calculate_stability_score(&consensus_stats);
+        let stability_score = self.calculate_consensus_stability_score(&consensus_stats);
 
         Ok(EnsembleResult {
             consensus_labels,
@@ -583,7 +583,7 @@ where
 
         let consensus_stats = self.calculate_consensus_statistics(results, &consensus_labels)?;
         let diversity_metrics = self.calculate_diversity_metrics(results)?;
-        let stability_score = self.calculate_stability_score(&consensus_stats);
+        let stability_score = self.calculate_consensus_stability_score(&consensus_stats);
 
         Ok(EnsembleResult {
             consensus_labels,
@@ -654,7 +654,7 @@ where
         let avg_quality_score = results.iter().map(|r| r.quality_score).sum::<f64>() / results.len() as f64;
         let consensus_stats = self.calculate_consensus_statistics(results, &consensus_labels)?;
         let diversity_metrics = self.calculate_diversity_metrics(results)?;
-        let stability_score = self.calculate_stability_score(&consensus_stats);
+        let stability_score = self.calculate_consensus_stability_score(&consensus_stats);
 
         Ok(EnsembleResult {
             consensus_labels,
@@ -731,7 +731,7 @@ where
         let avg_quality_score = results.iter().map(|r| r.quality_score).sum::<f64>() / results.len() as f64;
         let consensus_stats = self.calculate_consensus_statistics(results, &consensus_labels)?;
         let diversity_metrics = self.calculate_diversity_metrics(results)?;
-        let stability_score = self.calculate_stability_score(&consensus_stats);
+        let stability_score = self.calculate_consensus_stability_score(&consensus_stats);
 
         Ok(EnsembleResult {
             consensus_labels,
@@ -773,6 +773,7 @@ where
     }
 
     /// Calculate stability score
+    #[allow(dead_code)]
     fn calculate_stability_score(&self, results: &[ClusteringResult], _data: ArrayView2<F>) -> Result<f64> {
         if results.len() < 2 {
             return Ok(1.0);
@@ -898,12 +899,6 @@ where
         unique_labels.len()
     }
 }
-                // For any other sampling strategies, fall back to no sampling
-                let sample_indices: Vec<usize> = (0..n_samples).collect();
-                Ok((data.to_owned(), sample_indices))
-            }
-        }
-    }
 
     /// Extract samples based on indices
     fn extract_samples(&self, data: ArrayView2<F>, indices: &[usize]) -> Result<Array2<F>> {
@@ -960,7 +955,7 @@ where
             }
             _ => {
                 // Default to K-means with random k
-                let k = rng.gen_range(2..=10);
+                let k = rng.random_range(2..=10);
                 let algorithm = ClusteringAlgorithm::KMeans { k_range: (k, k) };
                 let mut parameters = HashMap::new();
                 parameters.insert("k".to_string(), k.to_string());
@@ -979,32 +974,32 @@ where
 
         match algorithm {
             ClusteringAlgorithm::KMeans { k_range } => {
-                let k = rng.gen_range(k_range.0..=k_range.1);
+                let k = rng.random_range(k_range.0..=k_range.1);
                 parameters.insert("k".to_string(), k.to_string());
             }
             ClusteringAlgorithm::DBSCAN {
                 eps_range,
                 min_samples_range,
             } => {
-                let eps = rng.gen_range(eps_range.0..=eps_range.1);
-                let min_samples = rng.gen_range(min_samples_range.0..=min_samples_range.1);
+                let eps = rng.random_range(eps_range.0..=eps_range.1);
+                let min_samples = rng.random_range(min_samples_range.0..=min_samples_range.1);
                 parameters.insert("eps".to_string(), eps.to_string());
                 parameters.insert("min_samples".to_string(), min_samples.to_string());
             }
             ClusteringAlgorithm::MeanShift { bandwidth_range } => {
-                let bandwidth = rng.gen_range(bandwidth_range.0..=bandwidth_range.1);
+                let bandwidth = rng.random_range(bandwidth_range.0..=bandwidth_range.1);
                 parameters.insert("bandwidth".to_string(), bandwidth.to_string());
             }
             ClusteringAlgorithm::Hierarchical { methods } => {
-                let method = &methods[rng.gen_range(0..methods.len())];
+                let method = &methods[rng.random_range(0..methods.len())];
                 parameters.insert("method".to_string(), method.clone());
             }
             ClusteringAlgorithm::Spectral { k_range } => {
-                let k = rng.gen_range(k_range.0..=k_range.1);
+                let k = rng.random_range(k_range.0..=k_range.1);
                 parameters.insert("k".to_string(), k.to_string());
             }
             ClusteringAlgorithm::AffinityPropagation { damping_range } => {
-                let damping = rng.gen_range(damping_range.0..=damping_range.1);
+                let damping = rng.random_range(damping_range.0..=damping_range.1);
                 parameters.insert("damping".to_string(), damping.to_string());
             }
         }
@@ -1022,10 +1017,10 @@ where
 
         for (param_name, range) in parameter_ranges {
             let value = match range {
-                ParameterRange::Integer(min, max) => rng.gen_range(*min..=*max).to_string(),
-                ParameterRange::Float(min, max) => rng.gen_range(*min..=*max).to_string(),
+                ParameterRange::Integer(min, max) => rng.random_range(*min..=*max).to_string(),
+                ParameterRange::Float(min, max) => rng.random_range(*min..=*max).to_string(),
                 ParameterRange::Categorical(choices) => {
-                    choices[rng.gen_range(0..choices.len())].clone()
+                    choices[rng.random_range(0..choices.len())].clone()
                 }
                 ParameterRange::Boolean => rng.gen_bool(0.5).to_string(),
             };
@@ -1749,8 +1744,8 @@ where
         })
     }
 
-    /// Calculate stability score for the ensemble
-    fn calculate_stability_score(&self, consensus_stats: &ConsensusStatistics) -> f64 {
+    /// Calculate consensus stability score for the ensemble
+    fn calculate_consensus_stability_score(&self, consensus_stats: &ConsensusStatistics) -> f64 {
         // Use average consensus strength as stability score
         consensus_stats.consensus_strength.mean().unwrap_or(0.0)
     }
@@ -2643,11 +2638,11 @@ pub mod advanced_ensemble {
         ) -> Result<Array1<f64>> {
             // Simplified MCMC update (Metropolis-Hastings)
             let mut new_weights = current_weights.clone();
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
 
             // Propose new weights with small random perturbations
             for weight in new_weights.iter_mut() {
-                let perturbation = rng.gen_range(-0.05..0.05);
+                let perturbation = rng.random_range(-0.05..0.05);
                 *weight = (*weight + perturbation).max(0.01).min(0.99);
             }
 
@@ -3269,7 +3264,7 @@ fn apply_differential_privacy(
     // Apply differential privacy mechanisms to the clustering result
     // For now, just add small amount of noise to consensus labels
     use rand::thread_rng;
-    let mut rng = thread_rng();
+    let mut rng = rng();
 
     for label in result.consensus_labels.iter_mut() {
         if rng.gen::<f64>() < 0.05 {

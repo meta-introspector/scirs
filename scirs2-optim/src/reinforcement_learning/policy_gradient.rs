@@ -495,13 +495,13 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> PolicyGradientOptimizer<
 
         // 3. Update network parameters
         self.update_policy_parameters(&clipped_policy_grads)?;
-        if let Some(val_grads) = clipped_value_grads {
-            self.update_value_parameters(&val_grads)?;
+        if let Some(ref val_grads) = clipped_value_grads {
+            self.update_value_parameters(val_grads)?;
         }
 
         // 4. Update gradient norms in metrics
         self.metrics.policy_grad_norm = self.compute_gradient_norm(&clipped_policy_grads);
-        if let Some(val_grads) = &clipped_value_grads {
+        if let Some(ref val_grads) = clipped_value_grads {
             self.metrics.value_grad_norm = self.compute_gradient_norm(val_grads);
         }
 

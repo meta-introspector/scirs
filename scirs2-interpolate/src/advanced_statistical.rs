@@ -16,9 +16,8 @@
 //! - **Compositional data**: Interpolation for constrained positive data (simplex)
 
 use crate::error::{InterpolateError, InterpolateResult};
-use ndarray::{s, Array1, Array2, Array3, ArrayView1, ArrayView2};
-use num_traits::{Float, FromPrimitive, One, Zero};
-use scirs2_core::validation::check_shape;
+use ndarray::{s, Array1, Array2, Array3, ArrayView1, ArrayView2, ScalarOperand};
+use num_traits::{Float, FromPrimitive};
 use std::fmt::{Debug, Display};
 
 /// Configuration for functional data analysis interpolation
@@ -64,7 +63,7 @@ pub enum BasisType {
 ///
 /// Treats the input data as samples from an underlying functional curve
 /// and fits a smooth functional representation using basis expansion.
-pub struct FunctionalDataInterpolator<T: Float> {
+pub struct FunctionalDataInterpolator<T: Float + ScalarOperand> {
     config: FDAConfig,
     basis_coefficients: Option<Array2<T>>,
     domain: (T, T),
@@ -72,7 +71,7 @@ pub struct FunctionalDataInterpolator<T: Float> {
     fitted: bool,
 }
 
-impl<T: Float + FromPrimitive + Debug + Display> FunctionalDataInterpolator<T> {
+impl<T: Float + FromPrimitive + Debug + Display + ScalarOperand> FunctionalDataInterpolator<T> {
     /// Create a new functional data interpolator
     pub fn new(config: FDAConfig) -> Self {
         Self {
@@ -94,7 +93,13 @@ impl<T: Float + FromPrimitive + Debug + Display> FunctionalDataInterpolator<T> {
         let n_curves = y.ncols();
 
         // Validate inputs
-        check_shape(y, (Some(n_points), None), "y")?;
+        if y.nrows() != n_points {
+            return Err(InterpolateError::invalid_input(format!(
+                "y must have {} rows to match x length, got {}",
+                n_points,
+                y.nrows()
+            )));
+        }
 
         // Set domain
         self.domain = (
@@ -360,7 +365,7 @@ impl<T: Float + FromPrimitive + Debug + Display> FunctionalDataInterpolator<T> {
 ///
 /// Simultaneously interpolates multiple response variables while
 /// accounting for correlations between outputs.
-pub struct MultiOutputInterpolator<T: Float> {
+pub struct MultiOutputInterpolator<T: Float + ScalarOperand> {
     /// Input dimension
     input_dim: usize,
     /// Output dimension
@@ -374,14 +379,16 @@ pub struct MultiOutputInterpolator<T: Float> {
     fitted: bool,
 }
 
-impl<T: Float + FromPrimitive + Debug + Display> MultiOutputInterpolator<T> {
+impl<T: Float + FromPrimitive + Debug + Display + ScalarOperand + 'static>
+    MultiOutputInterpolator<T>
+{
     /// Create a new multi-output interpolator
     pub fn new(input_dim: usize, output_dim: usize, n_basis_per_dim: usize) -> Self {
         Self {
             input_dim,
             output_dim,
             parameters: None,
-            basis_functions: vec![Vec::new(); input_dim],
+            basis_functions: (0..input_dim).map(|_| Vec::new()).collect(),
             correlation_matrix: None,
             fitted: false,
         }
@@ -422,7 +429,7 @@ impl<T: Float + FromPrimitive + Debug + Display> MultiOutputInterpolator<T> {
 
         for output_idx in 0..output_dim {
             let y_output = y.column(output_idx);
-            let params = self.fit_ridge_regression(&feature_matrix, &y_output)?;
+            let params = self.fit_ridge_regression(&feature_matrix, &y_output.to_owned())?;
             for (param_idx, &param) in params.iter().enumerate() {
                 parameters[[output_idx, param_idx, 0]] = param;
             }
@@ -515,7 +522,7 @@ impl<T: Float + FromPrimitive + Debug + Display> MultiOutputInterpolator<T> {
         }
 
         // Compute tensor product
-        let total_features = all_basis_values.iter().map(|bv| bv.len()).product();
+        let total_features: usize = all_basis_values.iter().map(|bv| bv.len()).product();
         let mut features = Array1::zeros(total_features);
 
         let mut feature_idx = 0;
@@ -685,7 +692,7 @@ impl<T: Float + FromPrimitive + Debug + Display> MultiOutputInterpolator<T> {
 }
 
 /// Piecewise polynomial interpolator with automatic breakpoint detection
-pub struct PiecewisePolynomialInterpolator<T: Float> {
+pub struct PiecewisePolynomialInterpolator<T: Float + ScalarOperand> {
     /// Maximum polynomial degree for each piece
     max_degree: usize,
     /// Minimum number of points per segment
@@ -699,7 +706,9 @@ pub struct PiecewisePolynomialInterpolator<T: Float> {
     fitted: bool,
 }
 
-impl<T: Float + FromPrimitive + Debug + Display> PiecewisePolynomialInterpolator<T> {
+impl<T: Float + FromPrimitive + Debug + Display + ScalarOperand + 'static>
+    PiecewisePolynomialInterpolator<T>
+{
     /// Create a new piecewise polynomial interpolator
     pub fn new(max_degree: usize, min_points_per_segment: usize, breakpoint_penalty: T) -> Self {
         Self {
@@ -1053,14 +1062,16 @@ impl<T: Float + FromPrimitive + Debug + Display> PiecewisePolynomialInterpolator
 }
 
 /// Create a new functional data analysis interpolator
-pub fn make_fda_interpolator<T: Float + FromPrimitive + Debug + Display>(
+pub fn make_fda_interpolator<T: Float + FromPrimitive + Debug + Display + ScalarOperand>(
     config: Option<FDAConfig>,
 ) -> FunctionalDataInterpolator<T> {
     FunctionalDataInterpolator::new(config.unwrap_or_default())
 }
 
 /// Create a new multi-output interpolator
-pub fn make_multi_output_interpolator<T: Float + FromPrimitive + Debug + Display>(
+pub fn make_multi_output_interpolator<
+    T: Float + FromPrimitive + Debug + Display + ScalarOperand,
+>(
     input_dim: usize,
     output_dim: usize,
     n_basis_per_dim: Option<usize>,
@@ -1069,7 +1080,9 @@ pub fn make_multi_output_interpolator<T: Float + FromPrimitive + Debug + Display
 }
 
 /// Create a new piecewise polynomial interpolator
-pub fn make_piecewise_polynomial_interpolator<T: Float + FromPrimitive + Debug + Display>(
+pub fn make_piecewise_polynomial_interpolator<
+    T: Float + FromPrimitive + Debug + Display + ScalarOperand,
+>(
     max_degree: Option<usize>,
     min_points_per_segment: Option<usize>,
     breakpoint_penalty: Option<T>,

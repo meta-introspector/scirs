@@ -23,7 +23,7 @@ use opencl3::platform::get_platforms;
 #[cfg(feature = "opencl")]
 use opencl3::program::Program;
 #[cfg(feature = "opencl")]
-use opencl3::types::{CL_BLOCKING};
+use opencl3::types::CL_BLOCKING;
 
 // Fallback types for when OpenCL is not available
 #[cfg(not(feature = "opencl"))]
@@ -135,29 +135,26 @@ impl OpenCLContext {
         #[cfg(feature = "opencl")]
         {
             // Real OpenCL implementation
-            let platforms = get_platforms().map_err(|e| {
-                GpuError::Other(format!("Failed to get OpenCL platforms: {}", e))
-            })?;
+            let platforms = get_platforms()
+                .map_err(|e| GpuError::Other(format!("Failed to get OpenCL platforms: {}", e)))?;
 
             if platforms.is_empty() {
                 return Err(GpuError::Other("No OpenCL platforms found".to_string()));
             }
 
-            let devices = get_all_devices(CL_DEVICE_TYPE_GPU).map_err(|e| {
-                GpuError::Other(format!("Failed to get OpenCL GPU devices: {}", e))
-            })?;
+            let devices = get_all_devices(CL_DEVICE_TYPE_GPU)
+                .map_err(|e| GpuError::Other(format!("Failed to get OpenCL GPU devices: {}", e)))?;
 
             if devices.is_empty() {
                 return Err(GpuError::Other("No OpenCL GPU devices found".to_string()));
             }
 
             let device = devices[0];
-            let context = Context::from_device(&device).map_err(|e| {
-                GpuError::Other(format!("Failed to create OpenCL context: {}", e))
-            })?;
+            let context = Context::from_device(&device)
+                .map_err(|e| GpuError::Other(format!("Failed to create OpenCL context: {}", e)))?;
 
-            let queue = CommandQueue::create_default(&context, CL_QUEUE_PROFILING_ENABLE)
-                .map_err(|e| {
+            let queue =
+                CommandQueue::create_default(&context, CL_QUEUE_PROFILING_ENABLE).map_err(|e| {
                     GpuError::Other(format!("Failed to create OpenCL command queue: {}", e))
                 })?;
 
@@ -214,10 +211,16 @@ impl OpenCLContext {
         {
             // Real OpenCL implementation
             let program = Program::create_and_build_from_source(&self.context, source, "")
-                .map_err(|e| GpuError::Other(format!("OpenCL kernel compilation failed for {}: {}", name, e)))?;
+                .map_err(|e| {
+                    GpuError::Other(format!(
+                        "OpenCL kernel compilation failed for {}: {}",
+                        name, e
+                    ))
+                })?;
 
-            let kernel = Kernel::create(&program, name)
-                .map_err(|e| GpuError::Other(format!("Failed to create OpenCL kernel {}: {}", name, e)))?;
+            let kernel = Kernel::create(&program, name).map_err(|e| {
+                GpuError::Other(format!("Failed to create OpenCL kernel {}: {}", name, e))
+            })?;
 
             Ok(OpenCLKernel {
                 kernel,
@@ -270,7 +273,10 @@ impl OpenCLContext {
     }
 
     #[cfg(not(feature = "opencl"))]
-    fn create_command_queue(_context: CLContext, _device: CLDeviceId) -> Result<CLCommandQueue, GpuError> {
+    fn create_command_queue(
+        _context: CLContext,
+        _device: CLDeviceId,
+    ) -> Result<CLCommandQueue, GpuError> {
         // Stub implementation
         Ok(0x3 as CLCommandQueue)
     }
@@ -310,8 +316,11 @@ impl GpuContextImpl for OpenCLContext {
             Ok(buffer) => buffer,
             Err(e) => {
                 // Log the OpenCL allocation failure and create a CPU fallback
-                eprintln!("Warning: OpenCL buffer allocation failed ({}), creating CPU fallback buffer", e);
-                
+                eprintln!(
+                    "Warning: OpenCL buffer allocation failed ({}), creating CPU fallback buffer",
+                    e
+                );
+
                 #[cfg(feature = "opencl")]
                 {
                     // Create a CPU fallback buffer when OpenCL memory is exhausted
@@ -457,7 +466,7 @@ impl GpuKernelImpl for OpenCLKernelHandle {
             let kernels = self.compiled_kernels.lock().unwrap();
             if let Some(kernel) = kernels.get(&self.kernel_name) {
                 let params = self.params.lock().unwrap();
-                
+
                 // Set kernel parameters
                 let mut execute_kernel = ExecuteKernel::new(&kernel.kernel);
                 for (_i, param) in params.iter().enumerate() {
@@ -523,9 +532,10 @@ impl GpuBufferImpl for OpenCLBuffer {
             if data.len() > self.size {
                 return Err(GpuError::Other("Data size exceeds buffer size".to_string()));
             }
-            
+
             // Real OpenCL implementation - write data to buffer
-            self.queue.enqueue_write_buffer(&self.device_buffer, CL_BLOCKING, 0, data, &[])
+            self.queue
+                .enqueue_write_buffer(&self.device_buffer, CL_BLOCKING, 0, data, &[])
                 .map_err(|e| GpuError::Other(format!("OpenCL buffer write failed: {}", e)))?;
             Ok(())
         }
@@ -546,10 +556,11 @@ impl GpuBufferImpl for OpenCLBuffer {
             if data.len() > self.size {
                 return Err(GpuError::Other("Data size exceeds buffer size".to_string()));
             }
-            
+
             // Real OpenCL implementation - read data from buffer
             unsafe {
-                self.queue.enqueue_read_buffer(&self.device_buffer, CL_BLOCKING, 0, data, &[])
+                self.queue
+                    .enqueue_read_buffer(&self.device_buffer, CL_BLOCKING, 0, data, &[])
                     .map_err(|e| GpuError::Other(format!("OpenCL buffer read failed: {}", e)))?;
             }
             Ok(())
@@ -600,12 +611,15 @@ impl GpuBufferImpl for OpenCLCpuFallbackBuffer {
             eprintln!("Warning: OpenCL CPU fallback buffer copy_from_host size mismatch");
             return;
         }
-        
+
         // Since this is a CPU fallback, we can use safe Rust internally
         let _data_slice = std::slice::from_raw_parts(data, size);
         // We can't mutate self.data directly since &self is immutable
         // In a real implementation, this would require interior mutability
-        eprintln!("Warning: CPU fallback buffer copy_from_host called (size: {})", size);
+        eprintln!(
+            "Warning: CPU fallback buffer copy_from_host called (size: {})",
+            size
+        );
     }
 
     unsafe fn copy_to_host(&self, data: *mut u8, size: usize) {
@@ -613,13 +627,16 @@ impl GpuBufferImpl for OpenCLCpuFallbackBuffer {
             eprintln!("Warning: OpenCL CPU fallback buffer copy_to_host size mismatch");
             return;
         }
-        
+
         // Copy from CPU buffer to host
         let data_slice = std::slice::from_raw_parts_mut(data, size);
         let copy_size = size.min(self.data.len());
         data_slice[..copy_size].copy_from_slice(&self.data[..copy_size]);
-        
-        eprintln!("Warning: CPU fallback buffer copy_to_host called (size: {})", size);
+
+        eprintln!(
+            "Warning: CPU fallback buffer copy_to_host called (size: {})",
+            size
+        );
     }
 
     fn device_ptr(&self) -> u64 {
@@ -648,7 +665,7 @@ struct OpenCLMemoryPool {
     available_buffers: HashMap<usize, Vec<Buffer<u8>>>,
     #[cfg(not(feature = "opencl"))]
     available_buffers: HashMap<usize, Vec<CLMem>>,
-    
+
     // Advanced memory management features
     size_classes: Vec<usize>,
     allocation_stats: HashMap<usize, AllocationStats>,
@@ -657,7 +674,7 @@ struct OpenCLMemoryPool {
     used_size: usize,
     peak_used_size: usize,
     fragmentation_ratio: f64,
-    
+
     // Cache-aware allocation tracking
     recent_allocations: std::collections::VecDeque<(usize, std::time::Instant)>,
     hot_sizes: std::collections::BTreeSet<usize>,
@@ -693,7 +710,7 @@ impl OpenCLMemoryPool {
             .map(|i| 1usize << i)
             .filter(|&size| size <= total_size)
             .collect();
-        
+
         Self {
             available_buffers: HashMap::new(),
             size_classes,
@@ -707,7 +724,7 @@ impl OpenCLMemoryPool {
             hot_sizes: std::collections::BTreeSet::new(),
         }
     }
-    
+
     /// Get the appropriate size class for a requested size
     fn get_size_class(&self, requested_size: usize) -> usize {
         self.size_classes
@@ -719,32 +736,34 @@ impl OpenCLMemoryPool {
                 ((requested_size + 4095) / 4096) * 4096
             })
     }
-    
+
     /// Update memory pressure and trigger cleanup if needed
     fn update_memory_pressure(&mut self) {
         let pressure = self.used_size as f64 / self.total_size as f64;
-        
+
         if pressure > self.memory_pressure_threshold {
             self.cleanup_cold_buffers();
             self.defragment_if_needed();
         }
-        
+
         // Update fragmentation ratio
-        let total_available = self.available_buffers
+        let total_available = self
+            .available_buffers
             .values()
             .map(|buffers| buffers.len())
             .sum::<usize>();
-        
+
         if total_available > 0 {
-            self.fragmentation_ratio = 1.0 - (self.used_size as f64 / (self.used_size + total_available * 1024) as f64);
+            self.fragmentation_ratio =
+                1.0 - (self.used_size as f64 / (self.used_size + total_available * 1024) as f64);
         }
     }
-    
+
     /// Remove buffers that haven't been used recently
     fn cleanup_cold_buffers(&mut self) {
         let now = std::time::Instant::now();
         let cold_threshold = Duration::from_secs(30); // 30 seconds
-        
+
         // Clean up old allocation tracking
         while let Some(&(_, timestamp)) = self.recent_allocations.front() {
             if now.duration_since(timestamp) > cold_threshold {
@@ -753,13 +772,13 @@ impl OpenCLMemoryPool {
                 break;
             }
         }
-        
+
         // Update hot sizes based on recent allocations
         self.hot_sizes.clear();
         for &(size, _) in &self.recent_allocations {
             self.hot_sizes.insert(self.get_size_class(size));
         }
-        
+
         // Remove buffers for size classes that are not hot
         for (size_class, buffers) in &mut self.available_buffers {
             if !self.hot_sizes.contains(size_class) && buffers.len() > 2 {
@@ -771,7 +790,7 @@ impl OpenCLMemoryPool {
             }
         }
     }
-    
+
     /// Defragment memory if fragmentation ratio is too high
     fn defragment_if_needed(&mut self) {
         if self.fragmentation_ratio > 0.3 {
@@ -785,29 +804,34 @@ impl OpenCLMemoryPool {
             }
         }
     }
-    
+
     /// Update allocation statistics
     fn update_allocation_stats(&mut self, size_class: usize, allocated: bool) {
-        let stats = self.allocation_stats.entry(size_class).or_insert_with(|| AllocationStats {
-            total_allocations: 0,
-            total_deallocations: 0,
-            total_bytes_allocated: 0,
-            average_lifetime: Duration::new(0, 0),
-            peak_concurrent_allocations: 0,
-            current_allocations: 0,
-        });
-        
+        let stats = self
+            .allocation_stats
+            .entry(size_class)
+            .or_insert_with(|| AllocationStats {
+                total_allocations: 0,
+                total_deallocations: 0,
+                total_bytes_allocated: 0,
+                average_lifetime: Duration::new(0, 0),
+                peak_concurrent_allocations: 0,
+                current_allocations: 0,
+            });
+
         if allocated {
             stats.total_allocations += 1;
             stats.total_bytes_allocated += size_class as u64;
             stats.current_allocations += 1;
-            stats.peak_concurrent_allocations = stats.peak_concurrent_allocations.max(stats.current_allocations);
+            stats.peak_concurrent_allocations = stats
+                .peak_concurrent_allocations
+                .max(stats.current_allocations);
         } else {
             stats.total_deallocations += 1;
             stats.current_allocations = stats.current_allocations.saturating_sub(1);
         }
     }
-    
+
     /// Get memory pool statistics for monitoring
     fn get_pool_statistics(&self) -> PoolStatistics {
         PoolStatistics {
@@ -824,24 +848,25 @@ impl OpenCLMemoryPool {
     #[cfg(feature = "opencl")]
     fn allocate(&mut self, size: usize) -> Option<Buffer<u8>> {
         let size_class = self.get_size_class(size);
-        
+
         // Try to find a suitable buffer in the pool
         if let Some(buffers) = self.available_buffers.get_mut(&size_class) {
             if let Some(buffer) = buffers.pop() {
                 self.used_size += size_class;
                 self.peak_used_size = self.peak_used_size.max(self.used_size);
-                
+
                 // Track this allocation
-                self.recent_allocations.push_back((size, std::time::Instant::now()));
+                self.recent_allocations
+                    .push_back((size, std::time::Instant::now()));
                 if self.recent_allocations.len() > 1000 {
                     self.recent_allocations.pop_front();
                 }
                 self.hot_sizes.insert(size_class);
-                
+
                 // Update statistics
                 self.update_allocation_stats(size_class, true);
                 self.update_memory_pressure();
-                
+
                 return Some(buffer);
             }
         }

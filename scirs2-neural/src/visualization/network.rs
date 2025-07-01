@@ -7,7 +7,6 @@ use super::config::{ImageFormat, VisualizationConfig};
 use crate::error::{NeuralError, Result};
 use crate::models::sequential::Sequential;
 
-use ndarray::{Array, IxDyn, ScalarOperand};
 use num_traits::Float;
 use serde::Serialize;
 use std::fmt::Debug;

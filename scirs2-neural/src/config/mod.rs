@@ -201,7 +201,14 @@ impl ModelConfig {
 
     /// Create a model from this configuration
     pub fn create_model<
-        F: num_traits::Float + std::fmt::Debug + num_traits::NumAssign + 'static,
+        F: num_traits::Float
+            + std::fmt::Debug
+            + num_traits::NumAssign
+            + ndarray::ScalarOperand
+            + Send
+            + Sync
+            + 'static
+            + scirs2_core::simd_ops::SimdUnifiedOps,
     >(
         &self,
     ) -> Result<Box<dyn crate::layers::Layer<F> + Send + Sync>> {

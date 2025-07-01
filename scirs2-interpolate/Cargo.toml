@@ -23,6 +23,7 @@ num_cpus = { workspace = true }
 ordered-float = { workspace = true }
 rand = { workspace = true }
 rand_distr = { workspace = true }
+fastrand = { workspace = true }
 
 # Optional dependencies for features
 pyo3 = { workspace = true, optional = true }

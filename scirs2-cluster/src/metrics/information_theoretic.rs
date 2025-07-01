@@ -992,7 +992,7 @@ pub mod advanced_validation {
             Self {
                 n_bootstrap,
                 sample_fraction,
-                rng: thread_rng(),
+                rng: rng(),
                 _phantom: std::marker::PhantomData,
             }
         }
@@ -1015,9 +1015,9 @@ pub mod advanced_validation {
                 .into_par_iter()
                 .map(|_| {
                     // Create bootstrap sample indices
-                    let mut rng = thread_rng();
+                    let mut rng = rng();
                     let indices: Vec<usize> = (0..sample_size)
-                        .map(|_| rng.gen_range(0..n_samples))
+                        .map(|_| rng.random_range(0..n_samples))
                         .collect();
 
                     // Extract bootstrap sample
@@ -1126,10 +1126,10 @@ pub mod advanced_validation {
                         .map(|_| {
                             let n_samples = data.nrows();
                             let sample_size = (n_samples as f64 * self.sample_fraction) as usize;
-                            let mut rng = thread_rng();
+                            let mut rng = rng();
 
                             let indices: Vec<usize> = (0..sample_size)
-                                .map(|_| rng.gen_range(0..n_samples))
+                                .map(|_| rng.random_range(0..n_samples))
                                 .collect();
 
                             let mut bootstrap_data = Array2::zeros((sample_size, data.ncols()));
@@ -1997,7 +1997,7 @@ pub mod advanced_metrics {
         
         // Generate bootstrap samples and cluster them
         let mut all_labels = Vec::new();
-        let mut rng = thread_rng();
+        let mut rng = rng();
         
         for _ in 0..n_bootstrap {
             // Bootstrap sampling

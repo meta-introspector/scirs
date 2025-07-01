@@ -72,7 +72,10 @@ pub fn test_dawson_integral_properties() -> Result<(), String> {
     let d1 = dawsn(1.0);
     println!("  dawsn(1.0) = {:.16}, reference ≈ 0.5380795069127684", d1);
     // For now, just check our implementation is reasonable
-    assert!(d1 > 0.5 && d1 < 0.6, "dawsn(1.0) should be approximately 0.54");
+    assert!(
+        d1 > 0.5 && d1 < 0.6,
+        "dawsn(1.0) should be approximately 0.54"
+    );
 
     // Test asymptotic behavior for large x: D(x) ~ 1/(2x)
     for &x in &[10.0f64, 20.0, 50.0] {
@@ -112,17 +115,23 @@ pub fn test_polygamma_properties() -> Result<(), String> {
     // polygamma(1, 1) = π²/6 (Basel problem solution)
     let pi_squared_over_6 = std::f64::consts::PI.powi(2) / 6.0;
     let psi1_1: f64 = polygamma(1, 1.0);
-    println!("  polygamma(1, 1.0) = {:.16}, expected π²/6 ≈ {:.16}", psi1_1, pi_squared_over_6);
+    println!(
+        "  polygamma(1, 1.0) = {:.16}, expected π²/6 ≈ {:.16}",
+        psi1_1, pi_squared_over_6
+    );
     // There seems to be a sign issue in our implementation, so let's check the absolute value
     assert_relative_eq!(psi1_1.abs(), pi_squared_over_6, epsilon = 1e-3);
 
     // Test monotonicity for polygamma(1, x) = trigamma(x)
     // trigamma(x) should be decreasing in absolute value for x > 0 (considering our sign issue)
-    let x_vals = vec![1.0f64, 2.0, 3.0, 4.0, 5.0];
+    let x_vals = [1.0f64, 2.0, 3.0, 4.0, 5.0];
     for i in 1..x_vals.len() {
         let psi1_prev = polygamma(1, x_vals[i - 1]).abs();
         let psi1_curr = polygamma(1, x_vals[i]).abs();
-        assert!(psi1_curr < psi1_prev, "polygamma(1,x) should be decreasing in absolute value");
+        assert!(
+            psi1_curr < psi1_prev,
+            "polygamma(1,x) should be decreasing in absolute value"
+        );
     }
 
     // Test basic functionality for various orders
@@ -130,7 +139,12 @@ pub fn test_polygamma_properties() -> Result<(), String> {
     for n in 1..=4 {
         for &x in &[1.0f64, 2.0, 5.0] {
             let psi_n = polygamma(n, x);
-            assert!(psi_n.is_finite(), "polygamma({}, {}) should be finite", n, x);
+            assert!(
+                psi_n.is_finite(),
+                "polygamma({}, {}) should be finite",
+                n,
+                x
+            );
         }
     }
 
@@ -147,7 +161,11 @@ pub fn test_numerical_stability() -> Result<(), String> {
     for &x in &small_vals {
         let d_val = dawsn(x);
         assert!(d_val.is_finite(), "dawsn({}) should be finite", x);
-        assert!(d_val.abs() < 1.0, "dawsn({}) should be bounded for small x", x);
+        assert!(
+            d_val.abs() < 1.0,
+            "dawsn({}) should be bounded for small x",
+            x
+        );
     }
 
     // Test moderately large values
@@ -155,7 +173,11 @@ pub fn test_numerical_stability() -> Result<(), String> {
     for &x in &large_vals {
         let d_val = dawsn(x);
         assert!(d_val.is_finite(), "dawsn({}) should be finite", x);
-        assert!(d_val.abs() < 1.0, "dawsn({}) should be bounded for large x", x);
+        assert!(
+            d_val.abs() < 1.0,
+            "dawsn({}) should be bounded for large x",
+            x
+        );
 
         // Test exponentially scaled Bessel functions don't overflow
         assert!(j0e(x).is_finite(), "j0e({}) should be finite", x);
@@ -169,7 +191,12 @@ pub fn test_numerical_stability() -> Result<(), String> {
     for n in 0..=10 {
         for &x in &[1.0f64, 2.0, 10.0] {
             let psi_n = polygamma(n, x);
-            assert!(psi_n.is_finite(), "polygamma({}, {}) should be finite", n, x);
+            assert!(
+                psi_n.is_finite(),
+                "polygamma({}, {}) should be finite",
+                n,
+                x
+            );
         }
     }
 
@@ -185,7 +212,7 @@ pub fn test_reference_values() -> Result<(), String> {
     let dawson_ref_values = vec![
         (0.0, 0.0),
         (0.5, 0.4226714001222706), // From our implementation
-        (1.0, 0.5033690243900353),  // From our implementation
+        (1.0, 0.5033690243900353), // From our implementation
     ];
 
     for (x, expected) in dawson_ref_values {

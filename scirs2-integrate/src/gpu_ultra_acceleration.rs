@@ -218,7 +218,7 @@ impl<F: IntegrateFloat + GpuDataType> UltraGPUAccelerator<F> {
         t: F,
         y: &ArrayView1<F>,
         h: F,
-        f: impl Fn(F, &ArrayView1<F>) -> IntegrateResult<Array1<F>>,
+        _f: impl Fn(F, &ArrayView1<F>) -> IntegrateResult<Array1<F>>,
     ) -> IntegrateResult<Array1<F>> {
         let start_time = Instant::now();
 

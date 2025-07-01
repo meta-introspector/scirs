@@ -161,7 +161,11 @@ where
 
     /// Set an element (unchecked for performance)
     pub fn set_unchecked(&mut self, row: usize, col: usize, value: T) {
-        if let Some(band_idx) = self.ku.checked_add(row).and_then(|sum| sum.checked_sub(col)) {
+        if let Some(band_idx) = self
+            .ku
+            .checked_add(row)
+            .and_then(|sum| sum.checked_sub(col))
+        {
             if band_idx < self.data.nrows() {
                 self.data[[band_idx, col]] = value;
             }
@@ -399,7 +403,11 @@ where
             return T::zero();
         }
 
-        if let Some(band_idx) = self.ku.checked_add(row).and_then(|sum| sum.checked_sub(col)) {
+        if let Some(band_idx) = self
+            .ku
+            .checked_add(row)
+            .and_then(|sum| sum.checked_sub(col))
+        {
             if band_idx < self.kl + self.ku + 1 && col < self.shape.1 {
                 self.data[[band_idx, col]]
             } else {

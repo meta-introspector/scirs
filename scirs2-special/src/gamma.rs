@@ -2885,7 +2885,7 @@ pub mod complex {
 /// Polygamma function - the nth derivative of the digamma function.
 ///
 /// This function computes the polygamma function ψ^(n)(x), which is defined as:
-/// 
+///
 /// ```text
 /// ψ^(n)(x) = d^(n+1)/dx^(n+1) ln Γ(x) = d^n/dx^n ψ(x)
 /// ```
@@ -2930,7 +2930,18 @@ pub mod complex {
 /// let psi1_1 = polygamma(1, 1.0f64);
 /// assert!((psi1_1 - 1.6449340668).abs() < 1e-8);
 /// ```
-pub fn polygamma<F: Float + FromPrimitive + std::fmt::Debug + std::ops::AddAssign + std::ops::SubAssign + std::ops::MulAssign + std::ops::DivAssign>(n: u32, x: F) -> F {
+pub fn polygamma<
+    F: Float
+        + FromPrimitive
+        + std::fmt::Debug
+        + std::ops::AddAssign
+        + std::ops::SubAssign
+        + std::ops::MulAssign
+        + std::ops::DivAssign,
+>(
+    n: u32,
+    x: F,
+) -> F {
     // Handle special cases
     if x <= F::zero() {
         return F::nan();
@@ -2944,37 +2955,45 @@ pub fn polygamma<F: Float + FromPrimitive + std::fmt::Debug + std::ops::AddAssig
     // For large x, use asymptotic expansion
     if x > F::from(20.0).unwrap() {
         // Asymptotic series: ψ^(n)(x) ~ (-1)^(n+1) n!/x^(n+1) * [1 + (n+1)/(2x) + ...]
-        let sign = if n % 2 == 0 { F::one() } else { -F::one() };
+        let sign = if (n + 1) % 2 == 0 {
+            F::one()
+        } else {
+            -F::one()
+        };
         let n_factorial = factorial_f(n);
         let x_power = x.powi(n as i32 + 1);
-        
+
         let leading_term = sign * F::from(n_factorial).unwrap() / x_power;
-        
+
         // Add first correction term
         let correction = F::from(n + 1).unwrap() / (F::from(2.0).unwrap() * x);
-        
+
         return leading_term * (F::one() + correction);
     }
 
     // For moderate x, use the series representation
     // ψ^(n)(x) = (-1)^(n+1) n! Σ[k=0..∞] 1/(x+k)^(n+1)
-    let sign = if n % 2 == 0 { F::one() } else { -F::one() };
+    let sign = if (n + 1) % 2 == 0 {
+        F::one()
+    } else {
+        -F::one()
+    };
     let n_factorial = factorial_f(n);
-    
+
     let mut sum = F::zero();
     let n_plus_1 = n + 1;
-    
+
     // Sum the series
     for k in 0..1000 {
         let term = (x + F::from(k).unwrap()).powi(-(n_plus_1 as i32));
-        sum = sum + term;
-        
+        sum += term;
+
         // Check for convergence
         if term < F::from(1e-15).unwrap() * sum.abs() {
             break;
         }
     }
-    
+
     sign * F::from(n_factorial).unwrap() * sum
 }
 

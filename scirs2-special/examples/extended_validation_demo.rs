@@ -11,7 +11,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=====================================\n");
 
     println!("This demo runs comprehensive validation tests for:");
-    println!("• Exponentially scaled Bessel functions (j0e, j1e, y0e, y1e, i0e, i1e, k0e, k1e, etc.)");
+    println!(
+        "• Exponentially scaled Bessel functions (j0e, j1e, y0e, y1e, i0e, i1e, k0e, k1e, etc.)"
+    );
     println!("• Dawson's integral function (dawsn)");
     println!("• Polygamma function (polygamma)");
     println!("• Numerical stability and accuracy validation");

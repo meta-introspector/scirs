@@ -1014,7 +1014,7 @@ impl EcosystemIntegrationTester {
     /// Run comprehensive ecosystem integration tests
     pub fn run_ecosystem_tests(&self) -> CoreResult<EcosystemTestResult> {
         let start_time = Instant::now();
-        
+
         let mut result = EcosystemTestResult {
             overall_passed: false,
             duration: Duration::from_secs(0),
@@ -1051,16 +1051,35 @@ impl EcosystemIntegrationTester {
     }
 
     /// Test compatibility with all scirs2 modules
-    fn test_all_module_compatibility(&self) -> CoreResult<HashMap<String, ModuleCompatibilityResult>> {
+    fn test_all_module_compatibility(
+        &self,
+    ) -> CoreResult<HashMap<String, ModuleCompatibilityResult>> {
         let mut results = HashMap::new();
-        
+
         let all_modules = vec![
-            "scirs2-linalg", "scirs2-stats", "scirs2-optimize", "scirs2-integrate",
-            "scirs2-interpolate", "scirs2-fft", "scirs2-signal", "scirs2-sparse",
-            "scirs2-spatial", "scirs2-cluster", "scirs2-ndimage", "scirs2-io",
-            "scirs2-datasets", "scirs2-autograd", "scirs2-neural", "scirs2-optim",
-            "scirs2-graph", "scirs2-transform", "scirs2-metrics", "scirs2-text",
-            "scirs2-vision", "scirs2-series", "scirs2-special",
+            "scirs2-linalg",
+            "scirs2-stats",
+            "scirs2-optimize",
+            "scirs2-integrate",
+            "scirs2-interpolate",
+            "scirs2-fft",
+            "scirs2-signal",
+            "scirs2-sparse",
+            "scirs2-spatial",
+            "scirs2-cluster",
+            "scirs2-ndimage",
+            "scirs2-io",
+            "scirs2-datasets",
+            "scirs2-autograd",
+            "scirs2-neural",
+            "scirs2-optim",
+            "scirs2-graph",
+            "scirs2-transform",
+            "scirs2-metrics",
+            "scirs2-text",
+            "scirs2-vision",
+            "scirs2-series",
+            "scirs2-special",
         ];
 
         for module_name in all_modules {
@@ -1072,9 +1091,12 @@ impl EcosystemIntegrationTester {
     }
 
     /// Test compatibility with a specific module
-    fn test_module_compatibility(&self, module_name: &str) -> CoreResult<ModuleCompatibilityResult> {
+    fn test_module_compatibility(
+        &self,
+        module_name: &str,
+    ) -> CoreResult<ModuleCompatibilityResult> {
         let start_time = Instant::now();
-        
+
         let mut result = ModuleCompatibilityResult {
             module_name: module_name.to_string(),
             api_compatible: false,
@@ -1088,25 +1110,37 @@ impl EcosystemIntegrationTester {
         // Test API compatibility
         result.api_compatible = self.test_api_compatibility_for_module(module_name)?;
         if !result.api_compatible {
-            result.issues.push(format!("API incompatibility detected in {}", module_name));
+            result
+                .issues
+                .push(format!("API incompatibility detected in {}", module_name));
         }
 
         // Test feature compatibility
         result.feature_compatible = self.test_feature_compatibility_for_module(module_name)?;
         if !result.feature_compatible {
-            result.issues.push(format!("Feature incompatibility detected in {}", module_name));
+            result.issues.push(format!(
+                "Feature incompatibility detected in {}",
+                module_name
+            ));
         }
 
         // Test version compatibility
         result.version_compatible = self.test_version_compatibility_for_module(module_name)?;
         if !result.version_compatible {
-            result.issues.push(format!("Version incompatibility detected in {}", module_name));
+            result.issues.push(format!(
+                "Version incompatibility detected in {}",
+                module_name
+            ));
         }
 
         // Test performance compatibility
-        result.performance_compatible = self.test_performance_compatibility_for_module(module_name)?;
+        result.performance_compatible =
+            self.test_performance_compatibility_for_module(module_name)?;
         if !result.performance_compatible {
-            result.issues.push(format!("Performance degradation detected in {}", module_name));
+            result.issues.push(format!(
+                "Performance degradation detected in {}",
+                module_name
+            ));
         }
 
         result.duration = start_time.elapsed();
@@ -1186,9 +1220,11 @@ impl EcosystemIntegrationTester {
     fn measure_ecosystem_performance(&self) -> CoreResult<EcosystemPerformanceResult> {
         let baseline_time = Duration::from_millis(100);
         let ecosystem_time = Duration::from_millis(120);
-        
-        let overhead_percent = ((ecosystem_time.as_nanos() as f64 - baseline_time.as_nanos() as f64)
-            / baseline_time.as_nanos() as f64) * 100.0;
+
+        let overhead_percent = ((ecosystem_time.as_nanos() as f64
+            - baseline_time.as_nanos() as f64)
+            / baseline_time.as_nanos() as f64)
+            * 100.0;
 
         Ok(EcosystemPerformanceResult {
             baseline_performance: baseline_time,
@@ -1218,12 +1254,17 @@ impl EcosystemIntegrationTester {
     }
 
     /// Test a specific integration chain
-    fn test_integration_chain(&self, source: &str, intermediate: &str, target: &str) -> CoreResult<IntegrationChainResult> {
+    fn test_integration_chain(
+        &self,
+        source: &str,
+        intermediate: &str,
+        target: &str,
+    ) -> CoreResult<IntegrationChainResult> {
         let start_time = Instant::now();
-        
+
         // Simulate data flow through the chain
         let success = true; // In real implementation, would test actual data flow
-        
+
         Ok(IntegrationChainResult {
             source_module: source.to_string(),
             intermediate_module: intermediate.to_string(),
@@ -1236,7 +1277,10 @@ impl EcosystemIntegrationTester {
     }
 
     /// Generate ecosystem recommendations
-    fn generate_ecosystem_recommendations(&self, result: &EcosystemTestResult) -> CoreResult<Vec<String>> {
+    fn generate_ecosystem_recommendations(
+        &self,
+        result: &EcosystemTestResult,
+    ) -> CoreResult<Vec<String>> {
         let mut recommendations = Vec::new();
 
         // Check overall health
@@ -1255,7 +1299,8 @@ impl EcosystemIntegrationTester {
         }
 
         // Check module compatibility
-        let incompatible_modules: Vec<_> = result.module_compatibility
+        let incompatible_modules: Vec<_> = result
+            .module_compatibility
             .iter()
             .filter(|(_, compat)| !compat.api_compatible)
             .map(|(name, _)| name.clone())
@@ -1269,7 +1314,8 @@ impl EcosystemIntegrationTester {
         }
 
         if recommendations.is_empty() {
-            recommendations.push("Ecosystem integration is healthy - continue monitoring".to_string());
+            recommendations
+                .push("Ecosystem integration is healthy - continue monitoring".to_string());
         }
 
         Ok(recommendations)
@@ -1280,25 +1326,56 @@ impl EcosystemIntegrationTester {
         result.workspace_health.healthy
             && result.dependency_validation.valid
             && result.performance_impact.acceptable
-            && result.module_compatibility.values().all(|c| c.api_compatible)
+            && result
+                .module_compatibility
+                .values()
+                .all(|c| c.api_compatible)
             && result.integration_chains.iter().all(|c| c.successful)
     }
 
     // Implementation stubs for detailed testing methods
-    fn test_api_compatibility_for_module(&self, _module_name: &str) -> CoreResult<bool> { Ok(true) }
-    fn test_feature_compatibility_for_module(&self, _module_name: &str) -> CoreResult<bool> { Ok(true) }
-    fn test_version_compatibility_for_module(&self, _module_name: &str) -> CoreResult<bool> { Ok(true) }
-    fn test_performance_compatibility_for_module(&self, _module_name: &str) -> CoreResult<bool> { Ok(true) }
-    fn check_dependency_conflicts(&self) -> CoreResult<Vec<String>> { Ok(vec![]) }
-    fn check_version_mismatches(&self) -> CoreResult<Vec<String>> { Ok(vec![]) }
-    fn check_missing_dependencies(&self) -> CoreResult<Vec<String>> { Ok(vec![]) }
-    fn check_circular_dependencies(&self) -> CoreResult<Vec<String>> { Ok(vec![]) }
-    fn check_dependency_security(&self) -> CoreResult<Vec<String>> { Ok(vec![]) }
-    fn check_build_status(&self) -> CoreResult<BuildStatus> { Ok(BuildStatus::Success) }
-    fn calculate_test_coverage(&self) -> CoreResult<f64> { Ok(95.0) }
-    fn calculate_documentation_coverage(&self) -> CoreResult<f64> { Ok(92.0) }
-    fn calculate_code_quality_score(&self) -> CoreResult<f64> { Ok(88.0) }
-    fn run_performance_benchmarks(&self) -> CoreResult<Vec<String>> { Ok(vec!["All benchmarks passed".to_string()]) }
+    fn test_api_compatibility_for_module(&self, _module_name: &str) -> CoreResult<bool> {
+        Ok(true)
+    }
+    fn test_feature_compatibility_for_module(&self, _module_name: &str) -> CoreResult<bool> {
+        Ok(true)
+    }
+    fn test_version_compatibility_for_module(&self, _module_name: &str) -> CoreResult<bool> {
+        Ok(true)
+    }
+    fn test_performance_compatibility_for_module(&self, _module_name: &str) -> CoreResult<bool> {
+        Ok(true)
+    }
+    fn check_dependency_conflicts(&self) -> CoreResult<Vec<String>> {
+        Ok(vec![])
+    }
+    fn check_version_mismatches(&self) -> CoreResult<Vec<String>> {
+        Ok(vec![])
+    }
+    fn check_missing_dependencies(&self) -> CoreResult<Vec<String>> {
+        Ok(vec![])
+    }
+    fn check_circular_dependencies(&self) -> CoreResult<Vec<String>> {
+        Ok(vec![])
+    }
+    fn check_dependency_security(&self) -> CoreResult<Vec<String>> {
+        Ok(vec![])
+    }
+    fn check_build_status(&self) -> CoreResult<BuildStatus> {
+        Ok(BuildStatus::Success)
+    }
+    fn calculate_test_coverage(&self) -> CoreResult<f64> {
+        Ok(95.0)
+    }
+    fn calculate_documentation_coverage(&self) -> CoreResult<f64> {
+        Ok(92.0)
+    }
+    fn calculate_code_quality_score(&self) -> CoreResult<f64> {
+        Ok(88.0)
+    }
+    fn run_performance_benchmarks(&self) -> CoreResult<Vec<String>> {
+        Ok(vec!["All benchmarks passed".to_string()])
+    }
 }
 
 /// Result of ecosystem integration testing
@@ -1392,12 +1469,18 @@ pub fn create_comprehensive_ecosystem_suite() -> CoreResult<TestSuite> {
         let result = ecosystem_tester.run_ecosystem_tests()?;
 
         if result.overall_passed {
-            Ok(TestResult::success(result.duration, result.module_compatibility.len()))
+            Ok(TestResult::success(
+                result.duration,
+                result.module_compatibility.len(),
+            ))
         } else {
             Ok(TestResult::failure(
                 result.duration,
                 result.module_compatibility.len(),
-                format!("Ecosystem integration failed: {}", result.recommendations.join("; ")),
+                format!(
+                    "Ecosystem integration failed: {}",
+                    result.recommendations.join("; ")
+                ),
             ))
         }
     });
@@ -1501,12 +1584,18 @@ pub fn create_default_integration_suite() -> CoreResult<TestSuite> {
         let result = ecosystem_tester.run_ecosystem_tests()?;
 
         if result.overall_passed {
-            Ok(TestResult::success(result.duration, result.module_compatibility.len()))
+            Ok(TestResult::success(
+                result.duration,
+                result.module_compatibility.len(),
+            ))
         } else {
             Ok(TestResult::failure(
                 result.duration,
                 result.module_compatibility.len(),
-                format!("Ecosystem test failed: {}", result.recommendations.join("; ")),
+                format!(
+                    "Ecosystem test failed: {}",
+                    result.recommendations.join("; ")
+                ),
             ))
         }
     });
@@ -1582,9 +1671,11 @@ mod tests {
     fn test_ecosystem_integration_tester() {
         let config = IntegrationTestConfig::default();
         let tester = EcosystemIntegrationTester::new(config);
-        
-        let result = tester.run_ecosystem_tests().expect("Failed to run ecosystem tests");
-        
+
+        let result = tester
+            .run_ecosystem_tests()
+            .expect("Failed to run ecosystem tests");
+
         assert!(result.duration > Duration::from_secs(0));
         assert!(!result.module_compatibility.is_empty());
         assert!(!result.recommendations.is_empty());
@@ -1674,8 +1765,9 @@ mod tests {
 
     #[test]
     fn test_comprehensive_ecosystem_suite() {
-        let suite = create_comprehensive_ecosystem_suite().expect("Failed to create comprehensive suite");
-        
+        let suite =
+            create_comprehensive_ecosystem_suite().expect("Failed to create comprehensive suite");
+
         // Should have ecosystem integration test
         let results = suite.run().expect("Failed to run comprehensive suite");
         assert!(!results.is_empty());

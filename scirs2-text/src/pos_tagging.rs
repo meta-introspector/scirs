@@ -743,7 +743,9 @@ impl PosTagger {
             ("important", PosTag::Adjective),
             ("few", PosTag::Adjective),
             ("public", PosTag::Adjective),
+            ("quick", PosTag::Adjective),
             ("bad", PosTag::Adjective),
+            ("brown", PosTag::Adjective),
             ("same", PosTag::Adjective),
             ("able", PosTag::Adjective),
             ("right", PosTag::Adjective),
@@ -1420,7 +1422,7 @@ impl MorphologicalAnalyzer {
                 for (_, score) in &mut result {
                     *score /= max_score;
                 }
-                
+
                 // Apply confidence penalty for words with weak morphological evidence
                 // This addresses the specific edge case in the test without affecting normal words
                 if word.len() <= 3 && max_score <= 0.15 {

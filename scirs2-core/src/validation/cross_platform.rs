@@ -51,8 +51,8 @@ pub enum CpuArchitecture {
     ARM,     // 32-bit ARM
     RISCV64,
     PowerPC64,
-    Wasm32,  // WebAssembly 32-bit
-    Wasm64,  // WebAssembly 64-bit
+    Wasm32, // WebAssembly 32-bit
+    Wasm64, // WebAssembly 64-bit
     Other(u32),
 }
 
@@ -190,9 +190,9 @@ impl CrossPlatformValidator {
             Endianness::Big
         };
 
-        let path_separator = if cfg!(windows) { 
-            '\\' 
-        } else { 
+        let path_separator = if cfg!(windows) {
+            '\\'
+        } else {
             '/' // Unix-style paths for all non-Windows platforms (including WASM)
         };
 
@@ -504,9 +504,9 @@ impl CrossPlatformValidator {
         }
 
         // General warning about WASM file system limitations
-        result.warnings.push(
-            "WebAssembly environment has limited file system access".to_string(),
-        );
+        result
+            .warnings
+            .push("WebAssembly environment has limited file system access".to_string());
     }
 
     /// Validate numeric value considering platform-specific floating-point behavior
@@ -890,12 +890,12 @@ mod tests {
     #[test]
     fn test_wasm_specific_features() {
         let validator = CrossPlatformValidator::new().unwrap();
-        
+
         // Test WASM-specific feature detection
         let _wasm_simd = validator.is_feature_available(PlatformFeature::WasmSimd128);
         let _thread_support = validator.is_feature_available(PlatformFeature::ThreadSupport);
         let _fs_access = validator.is_feature_available(PlatformFeature::FileSystemAccess);
-        
+
         // These should return boolean values without panicking
         // Test passes if we reach here without panicking
     }
@@ -903,18 +903,18 @@ mod tests {
     #[test]
     fn test_wasm_path_validation() {
         let mut validator = CrossPlatformValidator::new().unwrap();
-        
+
         // Simulate WASM environment for testing
         // Note: This test will behave differently on actual WASM vs native platforms
-        
+
         // Test relative path (should be okay in WASM)
         let _result = validator.validate_file_path("data/input.txt");
         // Should be valid but may have warnings in WASM
-        
+
         // Test sandbox escape attempt
         let _result = validator.validate_file_path("../../../etc/passwd");
         // This would be rejected in actual WASM validation
-        
+
         // Just ensure these don't panic
         // Test passes if we reach here without panicking
     }
@@ -922,33 +922,33 @@ mod tests {
     #[test]
     fn test_platform_memory_limits() {
         let validator = CrossPlatformValidator::new().unwrap();
-        
+
         // Test that memory allocation validation considers platform architecture
         let small_alloc = validator.platform_info().page_size * 2;
         let large_alloc = 2usize.pow(30); // 1GB
-        
+
         // These should not panic
         let mut validator_mut = CrossPlatformValidator::new().unwrap();
         let _small_result = validator_mut.validate_memory_allocation(small_alloc, "test");
         let _large_result = validator_mut.validate_memory_allocation(large_alloc, "test");
-        
+
         // Test passes if we reach here without panicking
     }
 
     #[test]
     fn test_simd_capabilities_cross_platform() {
         let mut validator = CrossPlatformValidator::new().unwrap();
-        
+
         // Test SIMD validation across different architectures
         let result = validator.validate_simd_operation("generic_add", 64);
         assert!(result.is_valid); // Should be supported on all platforms
-        
+
         let _result = validator.validate_simd_operation("avx2_multiply", 256);
         // Result depends on platform - should not panic
-        
+
         let _result = validator.validate_simd_operation("neon_add", 128);
         // Result depends on platform - should not panic
-        
+
         // Test passes if we reach here without panicking
     }
 }

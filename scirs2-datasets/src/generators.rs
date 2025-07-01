@@ -5,8 +5,8 @@ use crate::gpu::{GpuContext, GpuDeviceInfo};
 use crate::utils::Dataset;
 use ndarray::{Array1, Array2};
 use rand::prelude::*;
-use rand::rng;
 use rand::rngs::StdRng;
+use rand::thread_rng;
 use rand_distr::Distribution;
 // Use local GPU implementation instead of core to avoid feature flag issues
 use crate::gpu::GpuBackend as LocalGpuBackend;
@@ -65,7 +65,7 @@ pub fn make_classification(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -194,7 +194,7 @@ pub fn make_regression(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -282,7 +282,7 @@ pub fn make_time_series(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -389,7 +389,7 @@ pub fn make_blobs(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -480,7 +480,7 @@ pub fn make_spirals(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -556,7 +556,7 @@ pub fn make_moons(n_samples: usize, noise: f64, random_seed: Option<u64>) -> Res
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -652,7 +652,7 @@ pub fn make_circles(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -738,7 +738,7 @@ pub fn make_swiss_roll(n_samples: usize, noise: f64, random_seed: Option<u64>) -
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -830,7 +830,7 @@ pub fn make_anisotropic_blobs(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -967,7 +967,7 @@ pub fn make_hierarchical_clusters(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -1090,7 +1090,7 @@ pub fn inject_missing_data(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -1187,7 +1187,7 @@ pub fn inject_outliers(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -1301,7 +1301,7 @@ pub fn add_time_series_noise(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -1759,16 +1759,16 @@ fn generate_classification_gpu_optimized(
     // TODO: Implement proper GPU acceleration when core GPU features are stabilized
 
     // Create GPU buffers for data and targets
-    let data_buffer = core_gpu_context.create_buffer::<f64>(n_samples * n_features);
-    let targets_buffer = core_gpu_context.create_buffer::<f64>(n_samples);
-    let centroids_buffer = core_gpu_context.create_buffer_from_slice(centroids);
+    let data_buffer = gpu_context.create_buffer::<f64>(n_samples * n_features);
+    let targets_buffer = gpu_context.create_buffer::<f64>(n_samples);
+    let centroids_buffer = gpu_context.create_buffer_from_slice(centroids);
 
     // Generate random seeds for each sample on GPU
-    let mut seeds: Vec<u64> = (0..n_samples).map(|_| rng.next_u64()).collect();
-    let seeds_buffer = core_gpu_context.create_buffer_from_slice(&seeds);
+    let mut seeds: Vec<u64> = (0..n_samples).map(|_| rng.random::<u64>()).collect();
+    let seeds_buffer = gpu_context.create_buffer_from_slice(&seeds);
 
     // Use GPU kernels for parallel data generation
-    core_gpu_context.execute(|compiler| {
+    gpu_context.execute(|compiler| {
         // Compile the classification generation kernel
         let kernel_source = r#"
             #version 450
@@ -1862,9 +1862,9 @@ fn generate_classification_gpu_optimized(
                 targets[sample_idx] = double(class_id);
             }
         "#;
-        
+
         let kernel = compiler.compile(kernel_source)?;
-        
+
         // Set kernel parameters
         kernel.set_buffer("data", &data_buffer);
         kernel.set_buffer("targets", &targets_buffer);
@@ -1875,11 +1875,11 @@ fn generate_classification_gpu_optimized(
         kernel.set_u32("n_classes", n_classes as u32);
         kernel.set_u32("n_clusters_per_class", n_clusters_per_class as u32);
         kernel.set_u32("n_informative", n_informative as u32);
-        
+
         // Dispatch the kernel
         let work_groups = [(n_samples + 255) / 256, 1, 1];
         kernel.dispatch(work_groups);
-        
+
         Ok(())
     }).map_err(|e| DatasetsError::Other(format!("GPU kernel execution failed: {}", e)))?;
 
@@ -2082,16 +2082,16 @@ fn generate_regression_gpu_optimized(
     // TODO: Implement proper GPU acceleration when core GPU features are stabilized
 
     // Create GPU buffers
-    let data_buffer = core_gpu_context.create_buffer_from_slice(data);
-    let coefficients_buffer = core_gpu_context.create_buffer_from_slice(coefficients);
-    let targets_buffer = core_gpu_context.create_buffer::<f64>(n_samples);
+    let data_buffer = gpu_context.create_buffer_from_slice(data);
+    let coefficients_buffer = gpu_context.create_buffer_from_slice(coefficients);
+    let targets_buffer = gpu_context.create_buffer::<f64>(n_samples);
 
     // Generate noise seeds for each sample
-    let noise_seeds: Vec<u64> = (0..n_samples).map(|_| rng.next_u64()).collect();
-    let noise_seeds_buffer = core_gpu_context.create_buffer_from_slice(&noise_seeds);
+    let noise_seeds: Vec<u64> = (0..n_samples).map(|_| rng.random::<u64>()).collect();
+    let noise_seeds_buffer = gpu_context.create_buffer_from_slice(&noise_seeds);
 
     // Use GPU kernel for parallel matrix multiplication and noise addition
-    core_gpu_context
+    gpu_context
         .execute(|compiler| {
             let kernel_source = r#"
             #version 450
@@ -2346,15 +2346,15 @@ fn generate_blobs_center_gpu(
     let center_coords: Vec<f64> = (0..n_features).map(|j| centers[[center_idx, j]]).collect();
 
     // Create GPU buffers
-    let center_buffer = core_gpu_context.create_buffer_from_slice(&center_coords);
-    let data_buffer = core_gpu_context.create_buffer::<f64>(n_samples_center * n_features);
+    let center_buffer = gpu_context.create_buffer_from_slice(&center_coords);
+    let data_buffer = gpu_context.create_buffer::<f64>(n_samples_center * n_features);
 
     // Generate random seeds for each sample
-    let seeds: Vec<u64> = (0..n_samples_center).map(|_| rng.next_u64()).collect();
-    let seeds_buffer = core_gpu_context.create_buffer_from_slice(&seeds);
+    let seeds: Vec<u64> = (0..n_samples_center).map(|_| rng.random::<u64>()).collect();
+    let seeds_buffer = gpu_context.create_buffer_from_slice(&seeds);
 
     // Use GPU kernel for parallel sample generation around center
-    core_gpu_context
+    gpu_context
         .execute(|compiler| {
             let kernel_source = r#"
             #version 450
@@ -2528,7 +2528,7 @@ pub fn make_s_curve(n_samples: usize, noise: f64, random_seed: Option<u64>) -> R
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -2581,7 +2581,7 @@ pub fn make_swiss_roll_advanced(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -2650,7 +2650,7 @@ pub fn make_severed_sphere(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -2708,7 +2708,7 @@ pub fn make_twin_peaks(n_samples: usize, noise: f64, random_seed: Option<u64>) -
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -2779,7 +2779,7 @@ pub fn make_helix(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -2831,7 +2831,7 @@ pub fn make_intersecting_manifolds(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -2917,7 +2917,7 @@ pub fn make_torus(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };

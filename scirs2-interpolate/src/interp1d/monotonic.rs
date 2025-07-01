@@ -99,7 +99,11 @@ impl<F: Float + FromPrimitive + Debug> MonotonicInterpolator<F> {
         }
 
         if x.len() < 2 {
-            return Err(InterpolateError::insufficient_points(2, x.len(), "monotonic interpolation"));
+            return Err(InterpolateError::insufficient_points(
+                2,
+                x.len(),
+                "monotonic interpolation",
+            ));
         }
 
         // Check that x is sorted

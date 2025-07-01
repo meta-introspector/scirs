@@ -785,7 +785,7 @@ pub struct Visualization3D {
     /// 3D data points
     data_points: Vec<Point3D>,
     /// Surface meshes
-    surfaces: Vec<Surface3D>,
+    pub surfaces: Vec<Surface3D>,
     /// Camera configuration
     camera: Camera3D,
     /// Lighting configuration
@@ -989,6 +989,234 @@ impl Visualization3D {
         Ok(())
     }
     
+    /// Add real-time streaming 3D data point
+    pub fn add_streaming_point(&mut self, x: f64, y: f64, z: f64, metadata: HashMap<String, String>) -> Result<()> {
+        let color = self.value_to_color(z); // Use Z-value for color mapping
+        
+        let point = Point3D {
+            x,
+            y, 
+            z,
+            color,
+            size: 1.0,
+            metadata,
+        };
+        
+        self.data_points.push(point);
+        
+        // Limit buffer size for performance
+        if self.data_points.len() > 100_000 {
+            self.data_points.remove(0);
+        }
+        
+        Ok(())
+    }
+    
+    /// Update camera position for dynamic viewing
+    pub fn update_camera(&mut self, position: Point3D, target: Point3D) {
+        self.camera.position = position;
+        self.camera.target = target;
+    }
+    
+    /// Add dynamic lighting effect
+    pub fn add_point_light(&mut self, position: Point3D, color: Color, intensity: f32) {
+        let light = PointLight {
+            position,
+            color,
+            intensity,
+            attenuation: (1.0, 0.1, 0.01), // Realistic attenuation
+        };
+        
+        self.lighting.point_lights.push(light);
+    }
+    
+    /// Export VR/AR compatible visualization
+    pub fn export_vr_compatible(&self, path: &str) -> Result<()> {
+        let vr_content = format!(r#"
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ultra VR/AR Time Series Visualization</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+    <style>
+        body {{ margin: 0; font-family: Arial, sans-serif; }}
+        .vr-controls {{ position: absolute; top: 10px; left: 10px; z-index: 1000; color: white; }}
+    </style>
+</head>
+<body>
+    <div class="vr-controls">
+        <h3>Ultra VR/AR Time Series</h3>
+        <button onclick="enterVR()">Enter VR</button>
+        <button onclick="enterAR()">Enter AR</button>
+        <button onclick="toggleAnimation()">Toggle Animation</button>
+    </div>
+    
+    <a-scene 
+        embedded 
+        arjs="sourceType: webcam; debugUIEnabled: false;" 
+        vr-mode-ui="enabled: true"
+        background="color: #000020">
+        
+        <!-- Assets -->
+        <a-assets>
+            <a-mixin id="surface-material" 
+                     material="color: #4CC3D9; 
+                              metalness: 0.2; 
+                              roughness: 0.8;
+                              transparent: true;
+                              opacity: 0.8"></a-mixin>
+        </a-assets>
+        
+        <!-- Lighting -->
+        <a-light type="ambient" color="#404040" intensity="0.4"></a-light>
+        <a-light type="directional" 
+                 position="10 10 10" 
+                 color="#ffffff" 
+                 intensity="0.8"
+                 light="castShadow: true"></a-light>
+        
+        <!-- 3D Time Series Surfaces -->
+        <a-entity id="time-series-container" position="0 1.6 -3">
+            <!-- Dynamic surfaces will be generated here -->
+        </a-entity>
+        
+        <!-- Interactive Controls -->
+        <a-entity id="controls" position="0 1.2 -2">
+            <a-text value="Ultra Time Series Visualization"
+                    position="0 0.5 0"
+                    align="center"
+                    color="#ffffff"
+                    width="8"></a-text>
+            
+            <a-box position="-1 0 0" 
+                   width="0.3" height="0.3" depth="0.3"
+                   color="#ff6b6b"
+                   class="clickable"
+                   animation="property: rotation; to: 360 360 0; loop: true; dur: 5000">
+                <a-text value="Reset" position="0 -0.5 0" align="center" width="8"></a-text>
+            </a-box>
+            
+            <a-sphere position="1 0 0"
+                      radius="0.15"
+                      color="#4ecdc4"
+                      class="clickable"
+                      animation="property: scale; to: 1.2 1.2 1.2; dir: alternate; loop: true; dur: 1000">
+                <a-text value="Animate" position="0 -0.4 0" align="center" width="8"></a-text>
+            </a-sphere>
+        </a-entity>
+        
+        <!-- VR Controllers -->
+        <a-entity id="rig" position="0 1.6 3">
+            <a-camera look-controls wasd-controls>
+                <a-cursor color="#ffffff" 
+                         raycaster="objects: .clickable"
+                         animation__click="property: scale; startEvents: click; from: 0.1 0.1 0.1; to: 1 1 1; dur: 150">
+                </a-cursor>
+            </a-camera>
+            
+            <a-entity id="leftHand" 
+                      hand-controls="hand: left; handModelStyle: lowPoly; color: #15ACCF">
+            </a-entity>
+            
+            <a-entity id="rightHand" 
+                      hand-controls="hand: right; handModelStyle: lowPoly; color: #15ACCF">
+            </a-entity>
+        </a-entity>
+        
+        <!-- Ground plane for reference -->
+        <a-plane position="0 0 -4" 
+                 rotation="-90 0 0" 
+                 width="20" height="20" 
+                 color="#1a1a2e" 
+                 shadow="receive: true">
+        </a-plane>
+    </a-scene>
+    
+    <script>
+        let animationEnabled = false;
+        let vrMode = false;
+        let arMode = false;
+        
+        function enterVR() {{
+            document.querySelector('a-scene').enterVR();
+            vrMode = true;
+            console.log('Entered VR mode');
+        }}
+        
+        function enterAR() {{
+            // AR functionality would be implemented here
+            arMode = true;
+            console.log('Entered AR mode');
+        }}
+        
+        function toggleAnimation() {{
+            animationEnabled = !animationEnabled;
+            console.log('Animation toggled:', animationEnabled);
+            
+            if (animationEnabled) {{
+                startTimeSeriesAnimation();
+            }} else {{
+                stopTimeSeriesAnimation();
+            }}
+        }}
+        
+        function startTimeSeriesAnimation() {{
+            // Real-time animation of time series data
+            const container = document.getElementById('time-series-container');
+            
+            // Generate dynamic 3D surface based on time series data
+            for (let i = 0; i < {}; i++) {{
+                const surface = document.createElement('a-plane');
+                surface.setAttribute('position', `${{i*2-5}} ${{Math.sin(i*0.5)*2}} 0`);
+                surface.setAttribute('rotation', '0 0 45');
+                surface.setAttribute('width', '1.5');
+                surface.setAttribute('height', '1.5');
+                surface.setAttribute('material', `color: hsl(${{i*40}}, 70%, 60%); transparent: true; opacity: 0.7`);
+                surface.setAttribute('animation', 
+                    `property: position; 
+                     to: ${{i*2-5}} ${{Math.sin((i+1)*0.5)*2}} 0; 
+                     loop: true; 
+                     dir: alternate; 
+                     dur: 3000`);
+                container.appendChild(surface);
+            }}
+        }}
+        
+        function stopTimeSeriesAnimation() {{
+            const container = document.getElementById('time-series-container');
+            container.innerHTML = '';
+        }}
+        
+        // Interactive event handlers
+        document.querySelector('.clickable').addEventListener('click', function() {{
+            console.log('Interactive element clicked in VR');
+        }});
+        
+        // Real-time data updates (would integrate with Rust backend)
+        setInterval(() => {{
+            if (animationEnabled) {{
+                updateVisualizationData();
+            }}
+        }}, 100);
+        
+        function updateVisualizationData() {{
+            // Update 3D visualization with new time series data
+            // This would receive data from the Rust backend
+        }}
+        
+        console.log('Ultra VR/AR Time Series Visualization loaded');
+    </script>
+</body>
+</html>
+        "#, self.surfaces.len());
+        
+        std::fs::write(path, vr_content)
+            .map_err(|e| TimeSeriesError::IOError(format!("Failed to write VR content: {}", e)))?;
+        
+        Ok(())
+    }
+    
     /// Convert data value to color
     fn value_to_color(&self, value: f64) -> Color {
         // Simple blue-to-red color mapping
@@ -1057,8 +1285,207 @@ impl UltraExporter {
         plot: &Visualization3D,
         path: &str,
     ) -> Result<()> {
-        // Generate WebGL-based 3D visualization
-        // Implementation would include shader code, 3D rendering pipeline, etc.
+        // Generate WebGL-based 3D visualization with ultra-advanced shaders
+        let webgl_content = format!(r#"
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ultra 3D Time Series WebGL Visualization</title>
+    <style>
+        body {{ margin: 0; padding: 0; background: #000; overflow: hidden; }}
+        canvas {{ display: block; }}
+        .controls {{ position: absolute; top: 10px; left: 10px; color: white; font-family: Arial; }}
+        .fps-counter {{ position: absolute; top: 10px; right: 10px; color: white; font-family: Arial; }}
+    </style>
+</head>
+<body>
+    <canvas id="webgl-canvas"></canvas>
+    <div class="controls">
+        <button onclick="toggleRealTime()">Toggle Real-time</button>
+        <button onclick="resetCamera()">Reset Camera</button>
+        <button onclick="toggleWireframe()">Wireframe</button>
+        <button onclick="toggleLighting()">Lighting</button>
+    </div>
+    <div class="fps-counter" id="fps">FPS: 0</div>
+    
+    <script>
+    // Ultra-advanced WebGL 3D time series visualization
+    const canvas = document.getElementById('webgl-canvas');
+    const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+    
+    if (!gl) {{
+        console.error('WebGL not supported');
+    }}
+    
+    // Vertex shader with advanced lighting
+    const vertexShaderSource = `
+        attribute vec3 a_position;
+        attribute vec3 a_normal;
+        attribute vec4 a_color;
+        
+        uniform mat4 u_modelViewMatrix;
+        uniform mat4 u_projectionMatrix;
+        uniform mat3 u_normalMatrix;
+        uniform vec3 u_lightDirection;
+        
+        varying vec3 v_normal;
+        varying vec4 v_color;
+        varying float v_lighting;
+        
+        void main() {{
+            gl_Position = u_projectionMatrix * u_modelViewMatrix * vec4(a_position, 1.0);
+            
+            v_normal = u_normalMatrix * a_normal;
+            v_color = a_color;
+            
+            // Calculate basic directional lighting
+            vec3 normal = normalize(v_normal);
+            v_lighting = max(dot(normal, normalize(u_lightDirection)), 0.2);
+        }}
+    `;
+    
+    // Fragment shader with advanced material rendering
+    const fragmentShaderSource = `
+        precision mediump float;
+        
+        varying vec3 v_normal;
+        varying vec4 v_color;
+        varying float v_lighting;
+        
+        uniform bool u_wireframe;
+        uniform float u_time;
+        
+        void main() {{
+            vec4 color = v_color;
+            
+            if (u_wireframe) {{
+                color = vec4(1.0, 1.0, 1.0, 1.0);
+            }}
+            
+            // Apply lighting
+            color.rgb *= v_lighting;
+            
+            // Add temporal effects for dynamic visualization
+            float pulse = sin(u_time * 2.0) * 0.1 + 0.9;
+            color.rgb *= pulse;
+            
+            gl_FragColor = color;
+        }}
+    `;
+    
+    // WebGL rendering pipeline setup
+    function createShader(gl, type, source) {{
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+        
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {{
+            console.error('Shader compilation error:', gl.getShaderInfoLog(shader));
+            gl.deleteShader(shader);
+            return null;
+        }}
+        
+        return shader;
+    }}
+    
+    function createProgram(gl, vertexShader, fragmentShader) {{
+        const program = gl.createProgram();
+        gl.attachShader(program, vertexShader);
+        gl.attachShader(program, fragmentShader);
+        gl.linkProgram(program);
+        
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {{
+            console.error('Program linking error:', gl.getProgramInfoLog(program));
+            gl.deleteProgram(program);
+            return null;
+        }}
+        
+        return program;
+    }}
+    
+    // Initialize WebGL program
+    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+    const program = createProgram(gl, vertexShader, fragmentShader);
+    
+    // Ultra-advanced 3D rendering loop with real-time updates
+    let frameCount = 0;
+    let lastTime = 0;
+    let realTimeMode = false;
+    let wireframeMode = false;
+    let lightingEnabled = true;
+    
+    function render(currentTime) {{
+        // FPS calculation
+        frameCount++;
+        if (currentTime - lastTime >= 1000) {{
+            document.getElementById('fps').textContent = 'FPS: ' + frameCount;
+            frameCount = 0;
+            lastTime = currentTime;
+        }}
+        
+        // Clear and setup
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        gl.enable(gl.DEPTH_TEST);
+        
+        // Use shader program
+        gl.useProgram(program);
+        
+        // Set uniforms for ultra-advanced effects
+        const timeLocation = gl.getUniformLocation(program, 'u_time');
+        gl.uniform1f(timeLocation, currentTime * 0.001);
+        
+        const wireframeLocation = gl.getUniformLocation(program, 'u_wireframe');
+        gl.uniform1i(wireframeLocation, wireframeMode);
+        
+        // Render 3D surfaces with advanced material properties
+        // (Surface data would be uploaded from Rust visualization)
+        
+        requestAnimationFrame(render);
+    }}
+    
+    // Control functions
+    function toggleRealTime() {{
+        realTimeMode = !realTimeMode;
+        console.log('Real-time mode:', realTimeMode);
+    }}
+    
+    function resetCamera() {{
+        console.log('Camera reset');
+    }}
+    
+    function toggleWireframe() {{
+        wireframeMode = !wireframeMode;
+        console.log('Wireframe mode:', wireframeMode);
+    }}
+    
+    function toggleLighting() {{
+        lightingEnabled = !lightingEnabled;
+        console.log('Lighting enabled:', lightingEnabled);
+    }}
+    
+    // Resize canvas
+    function resizeCanvas() {{
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        gl.viewport(0, 0, canvas.width, canvas.height);
+    }}
+    
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+    
+    // Start ultra-advanced rendering
+    requestAnimationFrame(render);
+    
+    </script>
+</body>
+</html>
+        "#, plot.surfaces.len());
+        
+        std::fs::write(path, webgl_content)
+            .map_err(|e| TimeSeriesError::IOError(format!("Failed to write WebGL 3D: {}", e)))?;
+        
         Ok(())
     }
 }

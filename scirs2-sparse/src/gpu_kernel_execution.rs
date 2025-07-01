@@ -207,7 +207,7 @@ fn calculate_optimal_dimensions(
     let optimal_workgroup = match backend {
         GpuBackend::Cuda => {
             // NVIDIA GPUs prefer multiples of 32 (warp size)
-            let warp_aligned = ((workgroup_size[0] + 31) / 32) * 32;
+            let warp_aligned = workgroup_size[0].div_ceil(32) * 32;
             [warp_aligned.min(1024), 1, 1] // Max 1024 threads per block
         }
         GpuBackend::OpenCl => {
@@ -220,7 +220,7 @@ fn calculate_optimal_dimensions(
         }
         GpuBackend::Metal => {
             // Apple GPUs prefer multiples of 32 (simdgroup size)
-            let simd_aligned = ((workgroup_size[0] + 31) / 32) * 32;
+            let simd_aligned = workgroup_size[0].div_ceil(32) * 32;
             [simd_aligned.min(1024), 1, 1]
         }
         GpuBackend::Cpu => {
@@ -229,10 +229,8 @@ fn calculate_optimal_dimensions(
         }
     };
 
-    let global_size = vec![
-        (problem_size + optimal_workgroup[0] as usize - 1) / optimal_workgroup[0] as usize
-            * optimal_workgroup[0] as usize,
-    ];
+    let global_size =
+        vec![problem_size.div_ceil(optimal_workgroup[0] as usize) * optimal_workgroup[0] as usize];
     let local_size = vec![optimal_workgroup[0] as usize];
 
     (global_size, local_size)
@@ -1084,17 +1082,17 @@ impl GpuMemoryManager {
             GpuBackend::Cuda => {
                 // CUDA prefers 128-byte aligned access
                 let alignment = 128 / std::mem::size_of::<usize>();
-                (size + alignment - 1) / alignment * alignment
+                size.div_ceil(alignment) * alignment
             }
             GpuBackend::OpenCl => {
                 // OpenCL typically prefers 64-byte alignment
                 let alignment = 64 / std::mem::size_of::<usize>();
-                (size + alignment - 1) / alignment * alignment
+                size.div_ceil(alignment) * alignment
             }
             GpuBackend::Metal => {
                 // Metal prefers 16-byte alignment
                 let alignment = 16 / std::mem::size_of::<usize>();
-                (size + alignment - 1) / alignment * alignment
+                size.div_ceil(alignment) * alignment
             }
             GpuBackend::Cpu => size,
         }

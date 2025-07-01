@@ -79,6 +79,14 @@ pub enum SparseError {
     /// Invalid format error
     #[error("Invalid format: {0}")]
     InvalidFormat(String),
+
+    /// I/O error
+    #[error("I/O error: {0}")]
+    IoError(#[from] std::io::Error),
+
+    /// Compression error
+    #[error("Compression error: {0}")]
+    CompressionError(String),
 }
 
 /// Result type for sparse matrix/array operations
@@ -173,7 +181,11 @@ impl SparseError {
     }
 
     /// Create a dimension mismatch error with helpful context
-    pub fn dimension_mismatch_with_context(expected: usize, found: usize, _operation: &str) -> Self {
+    pub fn dimension_mismatch_with_context(
+        expected: usize,
+        found: usize,
+        _operation: &str,
+    ) -> Self {
         SparseError::DimensionMismatch { expected, found }
     }
 

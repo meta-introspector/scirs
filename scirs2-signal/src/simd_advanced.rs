@@ -2860,6 +2860,10 @@ unsafe fn sse_weighted_average_spectra(
 }
 
 #[target_feature(enable = "sse4.1")]
-unsafe fn sse_apply_window_v2(signal: &[f64], window: &[f64], result: &mut [f64]) -> SignalResult<()> {
+unsafe fn sse_apply_window_v2(
+    signal: &[f64],
+    window: &[f64],
+    result: &mut [f64],
+) -> SignalResult<()> {
     scalar_apply_window(signal, window, result)
 }

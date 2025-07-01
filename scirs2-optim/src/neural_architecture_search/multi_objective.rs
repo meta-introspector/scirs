@@ -1103,6 +1103,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd>
     }
 }
 
+// Implementation of helper methods for NSGA2
 impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd> NSGA2<T> {
     fn tournament_selection(
         &self,

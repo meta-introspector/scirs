@@ -106,35 +106,69 @@ impl RuleBasedNER {
     /// Create a new rule-based NER with basic knowledge
     pub fn with_basic_knowledge() -> Self {
         let mut ner = Self::new();
-        
+
         // Add common person names and titles
         ner.add_person_names(vec![
-            "Tim Cook".to_string(), "Satya Nadella".to_string(), "Elon Musk".to_string(),
-            "Jeff Bezos".to_string(), "Mark Zuckerberg".to_string(), "Bill Gates".to_string(),
-            "Sundar Pichai".to_string(), "Andy Jassy".to_string(), "Susan Wojcicki".to_string(),
-            "Reed Hastings".to_string(), "Jensen Huang".to_string(), "Lisa Su".to_string(),
+            "Tim Cook".to_string(),
+            "Satya Nadella".to_string(),
+            "Elon Musk".to_string(),
+            "Jeff Bezos".to_string(),
+            "Mark Zuckerberg".to_string(),
+            "Bill Gates".to_string(),
+            "Sundar Pichai".to_string(),
+            "Andy Jassy".to_string(),
+            "Susan Wojcicki".to_string(),
+            "Reed Hastings".to_string(),
+            "Jensen Huang".to_string(),
+            "Lisa Su".to_string(),
         ]);
-        
+
         // Add common organizations
         ner.add_organizations(vec![
-            "Apple Inc.".to_string(), "Apple".to_string(), "Microsoft Corporation".to_string(), 
-            "Microsoft".to_string(), "Google".to_string(), "Alphabet Inc.".to_string(),
-            "Amazon".to_string(), "Meta".to_string(), "Facebook".to_string(), "Tesla".to_string(),
-            "Netflix".to_string(), "NVIDIA".to_string(), "AMD".to_string(), "Intel".to_string(),
-            "IBM".to_string(), "Oracle".to_string(), "Salesforce".to_string(),
+            "Apple Inc.".to_string(),
+            "Apple".to_string(),
+            "Microsoft Corporation".to_string(),
+            "Microsoft".to_string(),
+            "Google".to_string(),
+            "Alphabet Inc.".to_string(),
+            "Amazon".to_string(),
+            "Meta".to_string(),
+            "Facebook".to_string(),
+            "Tesla".to_string(),
+            "Netflix".to_string(),
+            "NVIDIA".to_string(),
+            "AMD".to_string(),
+            "Intel".to_string(),
+            "IBM".to_string(),
+            "Oracle".to_string(),
+            "Salesforce".to_string(),
         ]);
-        
+
         // Add common locations
         ner.add_locations(vec![
-            "San Francisco".to_string(), "New York".to_string(), "London".to_string(),
-            "Tokyo".to_string(), "Paris".to_string(), "Berlin".to_string(), "Sydney".to_string(),
-            "Toronto".to_string(), "Singapore".to_string(), "Hong Kong".to_string(),
-            "Los Angeles".to_string(), "Chicago".to_string(), "Boston".to_string(),
-            "Seattle".to_string(), "Austin".to_string(), "Denver".to_string(),
-            "California".to_string(), "New York".to_string(), "Texas".to_string(),
-            "Washington".to_string(), "Florida".to_string(),
+            "San Francisco".to_string(),
+            "New York".to_string(),
+            "London".to_string(),
+            "Tokyo".to_string(),
+            "Paris".to_string(),
+            "Berlin".to_string(),
+            "Sydney".to_string(),
+            "Toronto".to_string(),
+            "Singapore".to_string(),
+            "Hong Kong".to_string(),
+            "Los Angeles".to_string(),
+            "Chicago".to_string(),
+            "Boston".to_string(),
+            "Seattle".to_string(),
+            "Austin".to_string(),
+            "Denver".to_string(),
+            "California".to_string(),
+            "New York".to_string(),
+            "Texas".to_string(),
+            "Washington".to_string(),
+            "Florida".to_string(),
         ]);
-        
+
         ner
     }
 
@@ -225,10 +259,15 @@ impl RuleBasedNER {
             let entity_lower = entity_name.to_lowercase();
             if let Some(start) = text_lower.find(&entity_lower) {
                 // Verify word boundaries
-                let at_word_start = start == 0 || !text.chars().nth(start - 1).unwrap_or(' ').is_alphanumeric();
-                let at_word_end = start + entity_name.len() >= text.len() || 
-                    !text.chars().nth(start + entity_name.len()).unwrap_or(' ').is_alphanumeric();
-                
+                let at_word_start =
+                    start == 0 || !text.chars().nth(start - 1).unwrap_or(' ').is_alphanumeric();
+                let at_word_end = start + entity_name.len() >= text.len()
+                    || !text
+                        .chars()
+                        .nth(start + entity_name.len())
+                        .unwrap_or(' ')
+                        .is_alphanumeric();
+
                 if at_word_start && at_word_end {
                     entities.push(Entity {
                         text: text[start..start + entity_name.len()].to_string(),
@@ -245,10 +284,15 @@ impl RuleBasedNER {
             let entity_lower = entity_name.to_lowercase();
             if let Some(start) = text_lower.find(&entity_lower) {
                 // Verify word boundaries
-                let at_word_start = start == 0 || !text.chars().nth(start - 1).unwrap_or(' ').is_alphanumeric();
-                let at_word_end = start + entity_name.len() >= text.len() || 
-                    !text.chars().nth(start + entity_name.len()).unwrap_or(' ').is_alphanumeric();
-                
+                let at_word_start =
+                    start == 0 || !text.chars().nth(start - 1).unwrap_or(' ').is_alphanumeric();
+                let at_word_end = start + entity_name.len() >= text.len()
+                    || !text
+                        .chars()
+                        .nth(start + entity_name.len())
+                        .unwrap_or(' ')
+                        .is_alphanumeric();
+
                 if at_word_start && at_word_end {
                     entities.push(Entity {
                         text: text[start..start + entity_name.len()].to_string(),
@@ -265,10 +309,15 @@ impl RuleBasedNER {
             let entity_lower = entity_name.to_lowercase();
             if let Some(start) = text_lower.find(&entity_lower) {
                 // Verify word boundaries
-                let at_word_start = start == 0 || !text.chars().nth(start - 1).unwrap_or(' ').is_alphanumeric();
-                let at_word_end = start + entity_name.len() >= text.len() || 
-                    !text.chars().nth(start + entity_name.len()).unwrap_or(' ').is_alphanumeric();
-                
+                let at_word_start =
+                    start == 0 || !text.chars().nth(start - 1).unwrap_or(' ').is_alphanumeric();
+                let at_word_end = start + entity_name.len() >= text.len()
+                    || !text
+                        .chars()
+                        .nth(start + entity_name.len())
+                        .unwrap_or(' ')
+                        .is_alphanumeric();
+
                 if at_word_start && at_word_end {
                     entities.push(Entity {
                         text: text[start..start + entity_name.len()].to_string(),
@@ -702,9 +751,11 @@ impl EntityLinker {
 
         // Add aliases to alias map (store in lowercase for case-insensitive lookup)
         for alias in &entry.aliases {
-            self.alias_map.insert(alias.to_lowercase(), canonical.clone());
+            self.alias_map
+                .insert(alias.to_lowercase(), canonical.clone());
         }
-        self.alias_map.insert(canonical.to_lowercase(), canonical.clone());
+        self.alias_map
+            .insert(canonical.to_lowercase(), canonical.clone());
 
         self.knowledge_base.insert(canonical, entry);
     }
@@ -1601,7 +1652,6 @@ mod tests {
         let text = "Apple Inc. announced that Tim Cook will visit London on January 15, 2024. Contact: info@apple.com";
         let info = pipeline.extract(text).unwrap();
 
-
         assert!(!info.entities.is_empty());
         assert!(info
             .entities
@@ -1655,7 +1705,7 @@ mod tests {
 
         // Create test entities
         let mut entities = vec![Entity {
-            text: "Apple".to_string(),  // Fixed case to match alias
+            text: "Apple".to_string(), // Fixed case to match alias
             entity_type: EntityType::Organization,
             start: 0,
             end: 5,
@@ -1713,7 +1763,6 @@ mod tests {
 
         let text = "Microsoft Corp. announced today that CEO Satya Nadella will visit New York next week. He will meet with partners.";
         let info = pipeline.extract_advanced(text).unwrap();
-
 
         // Should extract basic entities
         assert!(!info.entities.is_empty());
@@ -1777,7 +1826,6 @@ mod tests {
             .extract_structured_information(&documents, &pipeline)
             .unwrap();
 
-
         // Should have processed all documents
         assert_eq!(result.documents.len(), 3);
 
@@ -1786,7 +1834,7 @@ mod tests {
 
         // Should have clustered similar entities
         assert!(!result.entity_clusters.is_empty());
-        
+
         // Topics may or may not be found depending on key phrase extraction
         // The main functionality (entity extraction) is working correctly
     }

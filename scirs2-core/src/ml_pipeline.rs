@@ -241,7 +241,10 @@ impl DataBatch {
     }
 
     /// Extract feature matrix for ML processing
-    pub fn extract_feature_matrix(&self, feature_names: &[String]) -> Result<Vec<Vec<f64>>, MLPipelineError> {
+    pub fn extract_feature_matrix(
+        &self,
+        feature_names: &[String],
+    ) -> Result<Vec<Vec<f64>>, MLPipelineError> {
         let mut matrix = Vec::new();
 
         for sample in &self.samples {
@@ -251,14 +254,16 @@ impl DataBatch {
                     if let Some(numeric_value) = value.as_f64() {
                         row.push(numeric_value);
                     } else {
-                        return Err(MLPipelineError::FeatureError(
-                            format!("Feature '{}' is not numeric", feature_name)
-                        ));
+                        return Err(MLPipelineError::FeatureError(format!(
+                            "Feature '{}' is not numeric",
+                            feature_name
+                        )));
                     }
                 } else {
-                    return Err(MLPipelineError::FeatureError(
-                        format!("Feature '{}' not found in sample", feature_name)
-                    ));
+                    return Err(MLPipelineError::FeatureError(format!(
+                        "Feature '{}' not found in sample",
+                        feature_name
+                    )));
                 }
             }
             matrix.push(row);
@@ -364,13 +369,13 @@ impl FeatureTransformer {
     /// Apply transformation to data
     pub fn transform(&self, batch: DataBatch) -> Result<DataBatch, MLPipelineError> {
         let start_time = Instant::now();
-        
+
         let mut transformed_batch = DataBatch::new();
         transformed_batch.metadata = batch.metadata;
 
         for sample in batch.samples {
             let mut transformed_sample = sample.clone();
-            
+
             match &self.transform_type {
                 TransformType::MinMaxScaler => {
                     self.apply_minmax_transform(&mut transformed_sample)?;
@@ -385,19 +390,26 @@ impl FeatureTransformer {
                     self.apply_power_transform(&mut transformed_sample, *power)?;
                 }
                 _ => {
-                    return Err(MLPipelineError::FeatureError(
-                        format!("Transform type {:?} not implemented", self.transform_type)
-                    ));
+                    return Err(MLPipelineError::FeatureError(format!(
+                        "Transform type {:?} not implemented",
+                        self.transform_type
+                    )));
                 }
             }
-            
+
             transformed_batch.add_sample(transformed_sample);
         }
 
         // Update metrics
         let processing_time = start_time.elapsed().as_millis() as f64;
-        self.metrics.lock().unwrap().insert("processing_time_ms".to_string(), processing_time);
-        self.metrics.lock().unwrap().insert("samples_processed".to_string(), transformed_batch.size() as f64);
+        self.metrics
+            .lock()
+            .unwrap()
+            .insert("processing_time_ms".to_string(), processing_time);
+        self.metrics.lock().unwrap().insert(
+            "samples_processed".to_string(),
+            transformed_batch.size() as f64,
+        );
 
         Ok(transformed_batch)
     }
@@ -417,8 +429,14 @@ impl FeatureTransformer {
                 }
             }
 
-            self.parameters.insert(format!("{}_min", feature_name), FeatureValue::Float64(min_val));
-            self.parameters.insert(format!("{}_max", feature_name), FeatureValue::Float64(max_val));
+            self.parameters.insert(
+                format!("{}_min", feature_name),
+                FeatureValue::Float64(min_val),
+            );
+            self.parameters.insert(
+                format!("{}_max", feature_name),
+                FeatureValue::Float64(max_val),
+            );
         }
 
         Ok(())
@@ -439,11 +457,18 @@ impl FeatureTransformer {
 
             if !values.is_empty() {
                 let mean = values.iter().sum::<f64>() / values.len() as f64;
-                let variance = values.iter().map(|v| (v - mean).powi(2)).sum::<f64>() / values.len() as f64;
+                let variance =
+                    values.iter().map(|v| (v - mean).powi(2)).sum::<f64>() / values.len() as f64;
                 let std_dev = variance.sqrt();
 
-                self.parameters.insert(format!("{}_mean", feature_name), FeatureValue::Float64(mean));
-                self.parameters.insert(format!("{}_std", feature_name), FeatureValue::Float64(std_dev));
+                self.parameters.insert(
+                    format!("{}_mean", feature_name),
+                    FeatureValue::Float64(mean),
+                );
+                self.parameters.insert(
+                    format!("{}_std", feature_name),
+                    FeatureValue::Float64(std_dev),
+                );
             }
         }
 
@@ -464,7 +489,7 @@ impl FeatureTransformer {
             let categories: Vec<_> = unique_values.into_iter().collect();
             self.parameters.insert(
                 format!("{}_categories", feature_name),
-                FeatureValue::Array(categories.into_iter().map(FeatureValue::String).collect())
+                FeatureValue::Array(categories.into_iter().map(FeatureValue::String).collect()),
             );
         }
 
@@ -494,7 +519,7 @@ impl FeatureTransformer {
             for (category, label) in &label_map {
                 self.parameters.insert(
                     format!("{}_{}_label", feature_name, category),
-                    FeatureValue::Int64(*label)
+                    FeatureValue::Int64(*label),
                 );
             }
         }
@@ -509,11 +534,15 @@ impl FeatureTransformer {
                 if let Some(numeric_value) = value.as_f64() {
                     let min_key = format!("{}_min", feature_name);
                     let max_key = format!("{}_max", feature_name);
-                    
-                    let min_val = self.parameters.get(&min_key)
+
+                    let min_val = self
+                        .parameters
+                        .get(&min_key)
                         .and_then(|v| v.as_f64())
                         .unwrap_or(0.0);
-                    let max_val = self.parameters.get(&max_key)
+                    let max_val = self
+                        .parameters
+                        .get(&max_key)
                         .and_then(|v| v.as_f64())
                         .unwrap_or(1.0);
 
@@ -523,7 +552,9 @@ impl FeatureTransformer {
                         0.0
                     };
 
-                    sample.features.insert(feature_name.clone(), FeatureValue::Float64(scaled_value));
+                    sample
+                        .features
+                        .insert(feature_name.clone(), FeatureValue::Float64(scaled_value));
                 }
             }
         }
@@ -538,11 +569,15 @@ impl FeatureTransformer {
                 if let Some(numeric_value) = value.as_f64() {
                     let mean_key = format!("{}_mean", feature_name);
                     let std_key = format!("{}_std", feature_name);
-                    
-                    let mean = self.parameters.get(&mean_key)
+
+                    let mean = self
+                        .parameters
+                        .get(&mean_key)
                         .and_then(|v| v.as_f64())
                         .unwrap_or(0.0);
-                    let std_dev = self.parameters.get(&std_key)
+                    let std_dev = self
+                        .parameters
+                        .get(&std_key)
                         .and_then(|v| v.as_f64())
                         .unwrap_or(1.0);
 
@@ -552,7 +587,10 @@ impl FeatureTransformer {
                         0.0
                     };
 
-                    sample.features.insert(feature_name.clone(), FeatureValue::Float64(standardized_value));
+                    sample.features.insert(
+                        feature_name.clone(),
+                        FeatureValue::Float64(standardized_value),
+                    );
                 }
             }
         }
@@ -567,11 +605,14 @@ impl FeatureTransformer {
                 if let Some(numeric_value) = value.as_f64() {
                     if numeric_value > 0.0 {
                         let log_value = numeric_value.ln();
-                        sample.features.insert(feature_name.clone(), FeatureValue::Float64(log_value));
+                        sample
+                            .features
+                            .insert(feature_name.clone(), FeatureValue::Float64(log_value));
                     } else {
-                        return Err(MLPipelineError::FeatureError(
-                            format!("Cannot apply log transform to non-positive value: {}", numeric_value)
-                        ));
+                        return Err(MLPipelineError::FeatureError(format!(
+                            "Cannot apply log transform to non-positive value: {}",
+                            numeric_value
+                        )));
                     }
                 }
             }
@@ -581,12 +622,19 @@ impl FeatureTransformer {
     }
 
     /// Apply power transformation
-    fn apply_power_transform(&self, sample: &mut DataSample, power: f64) -> Result<(), MLPipelineError> {
+    fn apply_power_transform(
+        &self,
+        sample: &mut DataSample,
+        power: f64,
+    ) -> Result<(), MLPipelineError> {
         for feature_name in &self.input_features {
             if let Some(value) = sample.features.get(feature_name).cloned() {
                 if let Some(numeric_value) = value.as_f64() {
                     let transformed_value = numeric_value.powf(power);
-                    sample.features.insert(feature_name.clone(), FeatureValue::Float64(transformed_value));
+                    sample.features.insert(
+                        feature_name.clone(),
+                        FeatureValue::Float64(transformed_value),
+                    );
                 }
             }
         }
@@ -617,7 +665,7 @@ impl PipelineNode for FeatureTransformer {
     fn validate(&self) -> Result<(), MLPipelineError> {
         if self.input_features.is_empty() {
             return Err(MLPipelineError::ConfigurationError(
-                "No input features specified".to_string()
+                "No input features specified".to_string(),
             ));
         }
 
@@ -685,18 +733,21 @@ impl ModelPredictor {
     /// Make predictions on a batch
     pub fn predict(&self, batch: DataBatch) -> Result<DataBatch, MLPipelineError> {
         let start_time = Instant::now();
-        
+
         let mut prediction_batch = DataBatch::new();
         prediction_batch.metadata = batch.metadata;
 
         for sample in batch.samples {
             let mut prediction_sample = sample.clone();
-            
+
             // Extract features for prediction
-            let feature_values: Vec<f64> = self.input_features
+            let feature_values: Vec<f64> = self
+                .input_features
                 .iter()
                 .map(|feature_name| {
-                    sample.features.get(feature_name)
+                    sample
+                        .features
+                        .get(feature_name)
                         .and_then(|v| v.as_f64())
                         .unwrap_or(0.0)
                 })
@@ -704,23 +755,28 @@ impl ModelPredictor {
 
             // Make prediction (simplified implementation)
             let prediction = self.make_prediction(&feature_values)?;
-            
+
             // Add prediction to sample
             for (i, output_feature) in self.output_features.iter().enumerate() {
                 let pred_value = prediction.get(i).copied().unwrap_or(0.0);
-                prediction_sample.features.insert(
-                    output_feature.clone(),
-                    FeatureValue::Float64(pred_value)
-                );
+                prediction_sample
+                    .features
+                    .insert(output_feature.clone(), FeatureValue::Float64(pred_value));
             }
-            
+
             prediction_batch.add_sample(prediction_sample);
         }
 
         // Update metrics
         let processing_time = start_time.elapsed().as_millis() as f64;
-        self.metrics.lock().unwrap().insert("inference_time_ms".to_string(), processing_time);
-        self.metrics.lock().unwrap().insert("samples_predicted".to_string(), prediction_batch.size() as f64);
+        self.metrics
+            .lock()
+            .unwrap()
+            .insert("inference_time_ms".to_string(), processing_time);
+        self.metrics.lock().unwrap().insert(
+            "samples_predicted".to_string(),
+            prediction_batch.size() as f64,
+        );
 
         Ok(prediction_batch)
     }
@@ -742,14 +798,14 @@ impl ModelPredictor {
             }
             ModelType::RandomForest => {
                 // Mock ensemble prediction
-                let prediction = features.iter().map(|&x| x.abs()).sum::<f64>() / features.len() as f64;
+                let prediction =
+                    features.iter().map(|&x| x.abs()).sum::<f64>() / features.len() as f64;
                 Ok(vec![prediction])
             }
-            _ => {
-                Err(MLPipelineError::InferenceError(
-                    format!("Model type {:?} not implemented", self.model_type)
-                ))
-            }
+            _ => Err(MLPipelineError::InferenceError(format!(
+                "Model type {:?} not implemented",
+                self.model_type
+            ))),
         }
     }
 }
@@ -774,19 +830,19 @@ impl PipelineNode for ModelPredictor {
     fn validate(&self) -> Result<(), MLPipelineError> {
         if self.input_features.is_empty() {
             return Err(MLPipelineError::ConfigurationError(
-                "No input features specified for model".to_string()
+                "No input features specified for model".to_string(),
             ));
         }
 
         if self.output_features.is_empty() {
             return Err(MLPipelineError::ConfigurationError(
-                "No output features specified for model".to_string()
+                "No output features specified for model".to_string(),
             ));
         }
 
         if self.model_data.is_empty() {
             return Err(MLPipelineError::ModelError(
-                "No model data loaded".to_string()
+                "No model data loaded".to_string(),
             ));
         }
 
@@ -842,7 +898,10 @@ pub enum ErrorStrategy {
     /// Continue processing, skip failed samples
     SkipErrors,
     /// Retry failed operations
-    RetryWithBackoff { max_retries: u32, base_delay: Duration },
+    RetryWithBackoff {
+        max_retries: u32,
+        base_delay: Duration,
+    },
 }
 
 /// Monitoring configuration
@@ -919,55 +978,58 @@ impl MLPipeline {
 
         // Validate batch size
         if batch.size() > self.config.max_batch_size {
-            return Err(MLPipelineError::ValidationError(
-                format!("Batch size {} exceeds maximum {}", batch.size(), self.config.max_batch_size)
-            ));
+            return Err(MLPipelineError::ValidationError(format!(
+                "Batch size {} exceeds maximum {}",
+                batch.size(),
+                self.config.max_batch_size
+            )));
         }
 
         // Execute nodes in dependency order
         let execution_order = self.get_execution_order()?;
-        
+
         for node_name in execution_order {
             if let Some(node) = self.nodes.iter().find(|n| n.name() == node_name) {
                 let node_start = Instant::now();
-                
+
                 match node.process(batch) {
                     Ok(processed_batch) => {
                         batch = processed_batch;
-                        
+
                         // Update node metrics
                         let node_time = node_start.elapsed();
                         self.update_node_metrics(node_name, node_time, batch.size());
                     }
-                    Err(e) => {
-                        match &self.config.error_strategy {
-                            ErrorStrategy::FailFast => return Err(e),
-                            ErrorStrategy::SkipErrors => {
-                                eprintln!("Node {} failed: {}, continuing...", node_name, e);
-                                continue;
-                            }
-                            ErrorStrategy::RetryWithBackoff { max_retries, base_delay } => {
-                                let mut retries = 0;
-                                loop {
-                                    if retries >= *max_retries {
-                                        return Err(e);
+                    Err(e) => match &self.config.error_strategy {
+                        ErrorStrategy::FailFast => return Err(e),
+                        ErrorStrategy::SkipErrors => {
+                            eprintln!("Node {} failed: {}, continuing...", node_name, e);
+                            continue;
+                        }
+                        ErrorStrategy::RetryWithBackoff {
+                            max_retries,
+                            base_delay,
+                        } => {
+                            let mut retries = 0;
+                            loop {
+                                if retries >= *max_retries {
+                                    return Err(e);
+                                }
+
+                                std::thread::sleep(*base_delay * 2_u32.pow(retries));
+
+                                match node.process(batch.clone()) {
+                                    Ok(processed_batch) => {
+                                        batch = processed_batch;
+                                        break;
                                     }
-                                    
-                                    std::thread::sleep(*base_delay * 2_u32.pow(retries));
-                                    
-                                    match node.process(batch.clone()) {
-                                        Ok(processed_batch) => {
-                                            batch = processed_batch;
-                                            break;
-                                        }
-                                        Err(_) => {
-                                            retries += 1;
-                                        }
+                                    Err(_) => {
+                                        retries += 1;
                                     }
                                 }
                             }
                         }
-                    }
+                    },
                 }
             }
         }
@@ -1005,7 +1067,7 @@ impl MLPipeline {
     ) -> Result<(), MLPipelineError> {
         if visiting.contains(node_name) {
             return Err(MLPipelineError::DependencyError(
-                "Circular dependency detected".to_string()
+                "Circular dependency detected".to_string(),
             ));
         }
 
@@ -1031,10 +1093,19 @@ impl MLPipeline {
     /// Update node-specific metrics
     fn update_node_metrics(&self, node_name: &str, processing_time: Duration, batch_size: usize) {
         if let Ok(mut metrics) = self.pipeline_metrics.write() {
-            let node_metrics = metrics.node_metrics.entry(node_name.to_string()).or_insert_with(HashMap::new);
-            node_metrics.insert("processing_time_ms".to_string(), processing_time.as_millis() as f64);
+            let node_metrics = metrics
+                .node_metrics
+                .entry(node_name.to_string())
+                .or_insert_with(HashMap::new);
+            node_metrics.insert(
+                "processing_time_ms".to_string(),
+                processing_time.as_millis() as f64,
+            );
             node_metrics.insert("batch_size".to_string(), batch_size as f64);
-            node_metrics.insert("throughput".to_string(), batch_size as f64 / processing_time.as_secs_f64());
+            node_metrics.insert(
+                "throughput".to_string(),
+                batch_size as f64 / processing_time.as_secs_f64(),
+            );
         }
     }
 
@@ -1043,14 +1114,16 @@ impl MLPipeline {
         if let Ok(mut metrics) = self.pipeline_metrics.write() {
             metrics.samples_processed += batch_size as u64;
             metrics.total_processing_time += processing_time;
-            
+
             if !success {
                 metrics.error_count += 1;
             }
 
             let total_executions = metrics.samples_processed as f64 / batch_size as f64;
-            metrics.success_rate = (total_executions - metrics.error_count as f64) / total_executions;
-            metrics.throughput = metrics.samples_processed as f64 / metrics.total_processing_time.as_secs_f64();
+            metrics.success_rate =
+                (total_executions - metrics.error_count as f64) / total_executions;
+            metrics.throughput =
+                metrics.samples_processed as f64 / metrics.total_processing_time.as_secs_f64();
             metrics.last_updated = SystemTime::now();
         }
     }
@@ -1109,7 +1182,9 @@ impl StreamingProcessor {
         {
             let mut running = self.is_running.lock().unwrap();
             if *running {
-                return Err(MLPipelineError::ExecutionError("Processor already running".to_string()));
+                return Err(MLPipelineError::ExecutionError(
+                    "Processor already running".to_string(),
+                ));
             }
             *running = true;
         }
@@ -1264,7 +1339,10 @@ pub mod utils {
     }
 
     /// Calculate feature statistics for a batch
-    pub fn calculate_feature_statistics(batch: &DataBatch, feature_name: &str) -> Option<(f64, f64, f64, f64)> {
+    pub fn calculate_feature_statistics(
+        batch: &DataBatch,
+        feature_name: &str,
+    ) -> Option<(f64, f64, f64, f64)> {
         let mut values = Vec::new();
 
         for sample in &batch.samples {
@@ -1280,7 +1358,7 @@ pub mod utils {
         }
 
         values.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        
+
         let mean = values.iter().sum::<f64>() / values.len() as f64;
         let variance = values.iter().map(|v| (v - mean).powi(2)).sum::<f64>() / values.len() as f64;
         let std_dev = variance.sqrt();
@@ -1413,7 +1491,7 @@ mod tests {
     fn test_utils_sample_batch_creation() {
         let feature_names = vec!["feature1".to_string(), "feature2".to_string()];
         let batch = utils::create_sample_batch(10, &feature_names);
-        
+
         assert_eq!(batch.size(), 10);
         assert!(!batch.is_empty());
 
@@ -1429,10 +1507,10 @@ mod tests {
     fn test_feature_statistics() {
         let feature_names = vec!["feature1".to_string()];
         let batch = utils::create_sample_batch(100, &feature_names);
-        
+
         let stats = utils::calculate_feature_statistics(&batch, "feature1").unwrap();
         let (mean, std_dev, min, max) = stats;
-        
+
         assert!(mean >= 0.0);
         assert!(std_dev >= 0.0);
         assert!(min <= max);

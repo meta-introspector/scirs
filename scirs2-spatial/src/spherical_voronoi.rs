@@ -523,18 +523,21 @@ impl SphericalVoronoi {
         // Simple rank computation - count linearly independent columns
         // This is a basic implementation; in practice, you'd use SVD
         let eps = tol.max(1e-12);
-        
+
         // For simplicity, approximate rank as min(npoints-1, ndim)
         // In a more sophisticated implementation, we'd perform SVD or QR decomposition
         let mut rank = (npoints - 1).min(ndim);
-        
+
         // Apply tolerance check - if all points are nearly identical, rank is 0
         let mut max_distance = 0.0;
         for i in 1..npoints {
-            let distance: f64 = (0..ndim).map(|j| centered[[i, j]].powi(2)).sum::<f64>().sqrt();
+            let distance: f64 = (0..ndim)
+                .map(|j| centered[[i, j]].powi(2))
+                .sum::<f64>()
+                .sqrt();
             max_distance = max_distance.max(distance);
         }
-        
+
         if max_distance < eps {
             rank = 0;
         }

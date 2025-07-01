@@ -292,7 +292,15 @@ where
     B: Float + NumAssign + Debug + 'static,
     C: Float + NumAssign + Debug + 'static,
     H: Float + NumAssign + Debug + 'static + std::iter::Sum + ndarray::ScalarOperand + Send + Sync,
-    W: Float + NumAssign + Debug + 'static + std::iter::Sum + One + Send + Sync + ndarray::ScalarOperand,
+    W: Float
+        + NumAssign
+        + Debug
+        + 'static
+        + std::iter::Sum
+        + One
+        + Send
+        + Sync
+        + ndarray::ScalarOperand,
     A: NumCast,
     B: NumCast,
     C: NumCast,

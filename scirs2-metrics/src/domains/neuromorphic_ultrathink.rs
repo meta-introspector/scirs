@@ -1516,9 +1516,70 @@ impl NetworkTopology {
 
 impl<F: Float> SpikingNeuralNetwork<F> {
     fn new(topology: NetworkTopology, config: &NeuromorphicConfig) -> Result<Self> {
-        // Create placeholder network
-        let layers = Vec::new();
-        let synapses = SynapticConnections::new();
+        // Create real neuromorphic network with proper initialization
+        let mut layers = Vec::new();
+        
+        // Initialize layers with actual neurons
+        for &layer_size in &topology.layer_sizes {
+            let mut neurons = Vec::new();
+            for i in 0..layer_size {
+                let neuron_type = if layers.is_empty() {
+                    NeuronType::Input
+                } else if layers.len() == topology.layer_sizes.len() - 1 {
+                    NeuronType::Output
+                } else if i % 5 == 0 { // 20% inhibitory neurons
+                    NeuronType::Inhibitory
+                } else {
+                    NeuronType::Excitatory
+                };
+                
+                let neuron = SpikingNeuron {
+                    id: neurons.len(),
+                    membrane_potential: F::from(-70.0).unwrap(), // Resting potential
+                    resting_potential: F::from(-70.0).unwrap(),
+                    threshold: F::from(config.spike_threshold).unwrap(),
+                    capacitance: F::from(1.0).unwrap(),
+                    resistance: F::from(10.0).unwrap(),
+                    time_since_spike: Duration::from_secs(0),
+                    refractory_period: config.refractory_period,
+                    spike_train: VecDeque::new(),
+                    adaptive_threshold: AdaptiveThreshold {
+                        base_threshold: F::from(config.spike_threshold).unwrap(),
+                        adaptation: F::zero(),
+                        adaptation_rate: F::from(0.01).unwrap(),
+                        decay_time_constant: Duration::from_millis(100),
+                        last_update: Instant::now(),
+                    },
+                    neuron_type,
+                };
+                neurons.push(neuron);
+            }
+            
+            let layer = NeuronLayer {
+                neurons,
+                layer_params: LayerParameters {
+                    excitatory_ratio: F::from(0.8).unwrap(),
+                    noise_level: F::from(0.01).unwrap(),
+                    neuromodulators: HashMap::new(),
+                    learning_rules: vec![LearningRule::STDP {
+                        window_size: Duration::from_millis(50),
+                        ltp_amplitude: 0.1,
+                        ltd_amplitude: -0.05,
+                    }],
+                },
+                lateral_inhibition: LateralInhibition {
+                    strength: F::from(0.2).unwrap(),
+                    radius: 5,
+                    pattern: InhibitionPattern::Gaussian { sigma: 2.0 },
+                },
+            };
+            layers.push(layer);
+        }
+        
+        // Initialize synaptic connections
+        let mut synapses = SynapticConnections::new();
+        synapses.initialize_connections(&topology, &layers, config)?;
+        
         let current_time = Duration::from_secs(0);
         let spike_history = SpikeHistory::new();
         let network_state = NetworkState::new();
@@ -1533,48 +1594,328 @@ impl<F: Float> SpikingNeuralNetwork<F> {
         })
     }
     
-    fn inject_spikes(&mut self, _neuron_id: usize, _spikes: &[Instant]) -> Result<()> {
-        // Placeholder implementation
+    fn inject_spikes(&mut self, neuron_id: usize, spikes: &[Instant]) -> Result<()> {
+        // Find the layer and neuron index
+        let mut global_neuron_idx = 0;
+        let mut target_layer = None;
+        let mut local_neuron_idx = None;
+        
+        for (layer_idx, layer) in self.layers.iter().enumerate() {
+            if neuron_id >= global_neuron_idx && neuron_id < global_neuron_idx + layer.neurons.len() {
+                target_layer = Some(layer_idx);
+                local_neuron_idx = Some(neuron_id - global_neuron_idx);
+                break;
+            }
+            global_neuron_idx += layer.neurons.len();
+        }
+        
+        if let (Some(layer_idx), Some(local_idx)) = (target_layer, local_neuron_idx) {
+            // Add spikes to the neuron's spike train
+            for &spike_time in spikes {
+                self.layers[layer_idx].neurons[local_idx].spike_train.push_back(spike_time);
+                
+                // Record in spike history
+                if !self.spike_history.spikes_by_neuron.contains_key(&neuron_id) {
+                    self.spike_history.spikes_by_neuron.insert(neuron_id, VecDeque::new());
+                }
+                self.spike_history.spikes_by_neuron.get_mut(&neuron_id)
+                    .unwrap()
+                    .push_back(spike_time);
+            }
+        }
+        
         Ok(())
     }
     
-    fn update_membrane_potentials(&mut self, _time_step: Duration) -> Result<()> {
-        // Placeholder implementation
+    fn update_membrane_potentials(&mut self, time_step: Duration) -> Result<()> {
+        use scirs2_core::simd_ops::SimdUnifiedOps;
+        
+        let dt = time_step.as_secs_f64();
+        let now = Instant::now();
+        
+        // Update membrane potentials for all neurons using Leaky Integrate-and-Fire model
+        for layer in &mut self.layers {
+            for neuron in &mut layer.neurons {
+                // Check if in refractory period
+                if neuron.time_since_spike < neuron.refractory_period {
+                    neuron.time_since_spike += time_step;
+                    continue;
+                }
+                
+                // Integrate membrane potential: dV/dt = (-(V - V_rest) + I) / (RC)
+                let leak_current = -(neuron.membrane_potential - neuron.resting_potential);
+                let input_current = self.calculate_input_current(neuron, &layer.layer_params)?;
+                let noise_current = layer.layer_params.noise_level * F::from(fastrand::f64()).unwrap();
+                
+                let total_current = input_current + noise_current;
+                let membrane_change = (leak_current + total_current) * F::from(dt).unwrap() / 
+                    (neuron.resistance * neuron.capacitance);
+                
+                neuron.membrane_potential = neuron.membrane_potential + membrane_change;
+                
+                // Update adaptive threshold
+                self.update_adaptive_threshold(neuron, time_step)?;
+                
+                // Apply lateral inhibition
+                self.apply_lateral_inhibition(neuron, &layer.lateral_inhibition)?;
+                
+                neuron.time_since_spike += time_step;
+            }
+        }
+        
+        self.current_time += time_step;
         Ok(())
     }
     
     fn check_for_spikes(&mut self) -> Result<Vec<usize>> {
-        // Placeholder implementation
-        Ok(Vec::new())
+        let mut spiking_neurons = Vec::new();
+        let mut global_neuron_idx = 0;
+        let now = Instant::now();
+        
+        for layer in &mut self.layers {
+            for (local_idx, neuron) in layer.neurons.iter_mut().enumerate() {
+                let current_threshold = neuron.adaptive_threshold.base_threshold + 
+                    neuron.adaptive_threshold.adaptation;
+                
+                // Check if membrane potential exceeds threshold
+                if neuron.membrane_potential >= current_threshold {
+                    spiking_neurons.push(global_neuron_idx + local_idx);
+                    
+                    // Reset membrane potential and start refractory period
+                    neuron.membrane_potential = neuron.resting_potential;
+                    neuron.time_since_spike = Duration::from_secs(0);
+                    
+                    // Add to spike train
+                    neuron.spike_train.push_back(now);
+                    
+                    // Update adaptive threshold (spike-triggered adaptation)
+                    neuron.adaptive_threshold.adaptation = neuron.adaptive_threshold.adaptation + 
+                        neuron.adaptive_threshold.adaptation_rate;
+                    neuron.adaptive_threshold.last_update = now;
+                    
+                    // Maintain spike train size
+                    if neuron.spike_train.len() > 1000 {
+                        neuron.spike_train.pop_front();
+                    }
+                }
+            }
+            global_neuron_idx += layer.neurons.len();
+        }
+        
+        // Record spikes in network history
+        if !spiking_neurons.is_empty() {
+            let current_spike_rate = spiking_neurons.len() as f64 / 
+                self.layers.iter().map(|l| l.neurons.len()).sum::<usize>() as f64;
+            self.spike_history.population_spike_rate.push_back(current_spike_rate);
+            
+            // Maintain history window
+            if self.spike_history.population_spike_rate.len() > 10000 {
+                self.spike_history.population_spike_rate.pop_front();
+            }
+        }
+        
+        Ok(spiking_neurons)
     }
     
     fn get_membrane_potentials(&self) -> Result<Array1<F>> {
-        // Placeholder implementation
-        Ok(Array1::zeros(100))
+        let total_neurons = self.layers.iter().map(|l| l.neurons.len()).sum();
+        let mut potentials = Array1::zeros(total_neurons);
+        
+        let mut idx = 0;
+        for layer in &self.layers {
+            for neuron in &layer.neurons {
+                potentials[idx] = neuron.membrane_potential;
+                idx += 1;
+            }
+        }
+        
+        Ok(potentials)
     }
     
-    fn update_synaptic_states(&mut self, _time_step: Duration) -> Result<()> {
-        // Placeholder implementation
+    fn update_synaptic_states(&mut self, time_step: Duration) -> Result<()> {
+        let dt = time_step.as_secs_f64();
+        
+        // Update short-term dynamics for all synapses
+        for synapse in self.synapses.connections.values_mut() {
+            // Update facilitation and depression variables
+            let tau_f = synapse.short_term_dynamics.tau_facilitation.as_secs_f64();
+            let tau_d = synapse.short_term_dynamics.tau_depression.as_secs_f64();
+            
+            // Exponential decay
+            synapse.short_term_dynamics.facilitation = synapse.short_term_dynamics.facilitation * 
+                F::from((-dt / tau_f).exp()).unwrap();
+            synapse.short_term_dynamics.depression = synapse.short_term_dynamics.depression * 
+                F::from((-dt / tau_d).exp()).unwrap();
+                
+            // Update utilization (simplified model)
+            synapse.short_term_dynamics.utilization = synapse.short_term_dynamics.facilitation * 
+                (F::one() - synapse.short_term_dynamics.depression);
+            
+            // Update plasticity state eligibility trace
+            synapse.plasticity_state.eligibility_trace = synapse.plasticity_state.eligibility_trace * 
+                F::from(0.99).unwrap(); // Exponential decay
+        }
+        
         Ok(())
     }
     
     fn get_synaptic_weights(&self) -> Result<Array2<F>> {
-        // Placeholder implementation
-        Ok(Array2::zeros((100, 100)))
+        let total_neurons = self.layers.iter().map(|l| l.neurons.len()).sum();
+        let mut weights = Array2::zeros((total_neurons, total_neurons));
+        
+        for ((pre, post), synapse) in &self.synapses.connections {
+            weights[[*pre, *post]] = synapse.weight;
+        }
+        
+        Ok(weights)
     }
     
     fn get_current_activity(&self) -> Result<Array1<F>> {
-        // Placeholder implementation
-        Ok(Array1::zeros(100))
+        let total_neurons = self.layers.iter().map(|l| l.neurons.len()).sum();
+        let mut activity = Array1::zeros(total_neurons);
+        let now = Instant::now();
+        let window = Duration::from_millis(100); // 100ms window
+        
+        let mut idx = 0;
+        for layer in &self.layers {
+            for neuron in &layer.neurons {
+                // Count spikes in recent window
+                let recent_spikes = neuron.spike_train.iter()
+                    .filter(|&&spike_time| now.duration_since(spike_time) < window)
+                    .count();
+                
+                activity[idx] = F::from(recent_spikes).unwrap() / F::from(window.as_secs_f64()).unwrap();
+                idx += 1;
+            }
+        }
+        
+        Ok(activity)
     }
     
-    fn increase_connectivity(&mut self, _factor: f64) -> Result<()> {
-        // Placeholder implementation
+    fn increase_connectivity(&mut self, factor: f64) -> Result<()> {
+        // Add new random connections
+        let total_neurons = self.layers.iter().map(|l| l.neurons.len()).sum();
+        let mut rng = fastrand::Rng::new();
+        
+        // Calculate number of new connections to add
+        let current_connections = self.synapses.connections.len();
+        let new_connections = (current_connections as f64 * factor) as usize;
+        
+        for _ in 0..new_connections {
+            let pre_neuron = rng.usize(0..total_neurons);
+            let post_neuron = rng.usize(0..total_neurons);
+            
+            if pre_neuron != post_neuron && !self.synapses.connections.contains_key(&(pre_neuron, post_neuron)) {
+                let weight = F::from(rng.f64() * 0.1 - 0.05).unwrap(); // Random weight [-0.05, 0.05]
+                let synapse_type = if weight > F::zero() {
+                    SynapseType::Excitatory
+                } else {
+                    SynapseType::Inhibitory
+                };
+                
+                let synapse = Synapse {
+                    weight,
+                    pre_neuron,
+                    post_neuron,
+                    synapse_type,
+                    plasticity_state: PlasticityState {
+                        ltp_level: F::zero(),
+                        ltd_level: F::zero(),
+                        meta_threshold: F::from(0.5).unwrap(),
+                        eligibility_trace: F::zero(),
+                        last_spike_diff: Duration::from_secs(0),
+                    },
+                    short_term_dynamics: ShortTermDynamics {
+                        facilitation: F::zero(),
+                        depression: F::zero(),
+                        utilization: F::from(0.2).unwrap(),
+                        tau_facilitation: Duration::from_millis(500),
+                        tau_depression: Duration::from_millis(1000),
+                    },
+                };
+                
+                self.synapses.connections.insert((pre_neuron, post_neuron), synapse);
+                self.synapses.delays.insert((pre_neuron, post_neuron), Duration::from_millis(1));
+            }
+        }
+        
         Ok(())
+    }
+    
+    // Helper methods for neuromorphic computation
+    fn calculate_input_current(&self, neuron: &SpikingNeuron<F>, _layer_params: &LayerParameters<F>) -> Result<F> {
+        let mut total_current = F::zero();
+        
+        // Calculate synaptic input current
+        for ((pre, post), synapse) in &self.synapses.connections {
+            if *post == neuron.id {
+                // Check if presynaptic neuron spiked recently
+                if let Some(pre_layer) = self.find_neuron_layer(*pre) {
+                    if let Some(pre_neuron) = self.get_neuron_by_id(*pre) {
+                        // Check for recent spikes (within synaptic delay)
+                        let delay = self.synapses.delays.get(&(*pre, *post))
+                            .unwrap_or(&Duration::from_millis(1));
+                        
+                        let recent_spike = pre_neuron.spike_train.iter()
+                            .find(|&&spike_time| {
+                                let elapsed = Instant::now().duration_since(spike_time);
+                                elapsed >= *delay && elapsed < *delay + Duration::from_millis(2)
+                            });
+                        
+                        if recent_spike.is_some() {
+                            let synaptic_current = synapse.weight * synapse.short_term_dynamics.utilization;
+                            total_current = total_current + synaptic_current;
+                        }
+                    }
+                }
+            }
+        }
+        
+        Ok(total_current)
+    }
+    
+    fn update_adaptive_threshold(&self, neuron: &mut SpikingNeuron<F>, time_step: Duration) -> Result<()> {
+        let dt = time_step.as_secs_f64();
+        let tau = neuron.adaptive_threshold.decay_time_constant.as_secs_f64();
+        
+        // Exponential decay of adaptation
+        let decay_factor = F::from((-dt / tau).exp()).unwrap();
+        neuron.adaptive_threshold.adaptation = neuron.adaptive_threshold.adaptation * decay_factor;
+        
+        Ok(())
+    }
+    
+    fn apply_lateral_inhibition(&self, _neuron: &mut SpikingNeuron<F>, _inhibition: &LateralInhibition<F>) -> Result<()> {
+        // Simplified lateral inhibition implementation
+        // In a full implementation, this would apply spatial inhibition patterns
+        Ok(())
+    }
+    
+    fn find_neuron_layer(&self, neuron_id: usize) -> Option<usize> {
+        let mut global_idx = 0;
+        for (layer_idx, layer) in self.layers.iter().enumerate() {
+            if neuron_id >= global_idx && neuron_id < global_idx + layer.neurons.len() {
+                return Some(layer_idx);
+            }
+            global_idx += layer.neurons.len();
+        }
+        None
+    }
+    
+    fn get_neuron_by_id(&self, neuron_id: usize) -> Option<&SpikingNeuron<F>> {
+        let mut global_idx = 0;
+        for layer in &self.layers {
+            if neuron_id >= global_idx && neuron_id < global_idx + layer.neurons.len() {
+                let local_idx = neuron_id - global_idx;
+                return Some(&layer.neurons[local_idx]);
+            }
+            global_idx += layer.neurons.len();
+        }
+        None
     }
 }
 
-// Placeholder implementations for other complex types
+// Implementations for complex subsystem types
 impl<F: Float> SynapticConnections<F> {
     fn new() -> Self {
         Self {
@@ -1582,6 +1923,214 @@ impl<F: Float> SynapticConnections<F> {
             delays: HashMap::new(),
             topology: ConnectionTopology::new(),
         }
+    }
+    
+    fn initialize_connections(&mut self, topology: &NetworkTopology, layers: &[NeuronLayer<F>], config: &NeuromorphicConfig) -> Result<()> {
+        let mut global_pre_idx = 0;
+        let mut rng = fastrand::Rng::new();
+        
+        // Create connections between consecutive layers
+        for (layer_idx, pattern) in topology.connection_patterns.iter().enumerate() {
+            let pre_layer_size = topology.layer_sizes[layer_idx];
+            let post_layer_size = topology.layer_sizes[layer_idx + 1];
+            let mut global_post_idx = topology.layer_sizes[..=layer_idx].iter().sum::<usize>();
+            
+            match pattern {
+                ConnectionPattern::FullyConnected => {
+                    // Connect every neuron in pre-layer to every neuron in post-layer
+                    for pre_local in 0..pre_layer_size {
+                        for post_local in 0..post_layer_size {
+                            let pre_global = global_pre_idx + pre_local;
+                            let post_global = global_post_idx + post_local;
+                            
+                            // Determine connection strength based on neuron types
+                            let pre_neuron = &layers[layer_idx].neurons[pre_local];
+                            let post_neuron = &layers[layer_idx + 1].neurons[post_local];
+                            
+                            let weight = match (&pre_neuron.neuron_type, &post_neuron.neuron_type) {
+                                (NeuronType::Excitatory, _) => F::from(rng.f64() * 0.1).unwrap(),
+                                (NeuronType::Inhibitory, _) => F::from(-rng.f64() * 0.1).unwrap(),
+                                _ => F::from((rng.f64() - 0.5) * 0.05).unwrap(),
+                            };
+                            
+                            let synapse_type = match pre_neuron.neuron_type {
+                                NeuronType::Excitatory => SynapseType::Excitatory,
+                                NeuronType::Inhibitory => SynapseType::Inhibitory,
+                                _ => SynapseType::Excitatory,
+                            };
+                            
+                            let synapse = Synapse {
+                                weight,
+                                pre_neuron: pre_global,
+                                post_neuron: post_global,
+                                synapse_type,
+                                plasticity_state: PlasticityState {
+                                    ltp_level: F::zero(),
+                                    ltd_level: F::zero(),
+                                    meta_threshold: F::from(0.5).unwrap(),
+                                    eligibility_trace: F::zero(),
+                                    last_spike_diff: Duration::from_secs(0),
+                                },
+                                short_term_dynamics: ShortTermDynamics {
+                                    facilitation: F::zero(),
+                                    depression: F::zero(),
+                                    utilization: F::from(0.2).unwrap(),
+                                    tau_facilitation: Duration::from_millis(500),
+                                    tau_depression: Duration::from_millis(1000),
+                                },
+                            };
+                            
+                            // Random synaptic delay within specified range
+                            let min_delay = config.synaptic_delay_range.0;
+                            let max_delay = config.synaptic_delay_range.1;
+                            let delay_range = max_delay.saturating_sub(min_delay);
+                            let delay = min_delay + Duration::from_nanos(
+                                (rng.f64() * delay_range.as_nanos() as f64) as u64
+                            );
+                            
+                            self.connections.insert((pre_global, post_global), synapse);
+                            self.delays.insert((pre_global, post_global), delay);
+                        }
+                    }
+                }
+                ConnectionPattern::SparseRandom { probability } => {
+                    // Connect with given probability
+                    for pre_local in 0..pre_layer_size {
+                        for post_local in 0..post_layer_size {
+                            if rng.f64() < *probability {
+                                let pre_global = global_pre_idx + pre_local;
+                                let post_global = global_post_idx + post_local;
+                                
+                                let weight = F::from((rng.f64() - 0.5) * 0.1).unwrap();
+                                let synapse_type = if weight > F::zero() {
+                                    SynapseType::Excitatory
+                                } else {
+                                    SynapseType::Inhibitory
+                                };
+                                
+                                let synapse = Synapse {
+                                    weight,
+                                    pre_neuron: pre_global,
+                                    post_neuron: post_global,
+                                    synapse_type,
+                                    plasticity_state: PlasticityState {
+                                        ltp_level: F::zero(),
+                                        ltd_level: F::zero(),
+                                        meta_threshold: F::from(0.5).unwrap(),
+                                        eligibility_trace: F::zero(),
+                                        last_spike_diff: Duration::from_secs(0),
+                                    },
+                                    short_term_dynamics: ShortTermDynamics {
+                                        facilitation: F::zero(),
+                                        depression: F::zero(),
+                                        utilization: F::from(0.2).unwrap(),
+                                        tau_facilitation: Duration::from_millis(500),
+                                        tau_depression: Duration::from_millis(1000),
+                                    },
+                                };
+                                
+                                let delay = Duration::from_millis(rng.u64(1..20));
+                                self.connections.insert((pre_global, post_global), synapse);
+                                self.delays.insert((pre_global, post_global), delay);
+                            }
+                        }
+                    }
+                }
+                _ => {
+                    // For other patterns, use sparse random with 0.1 probability
+                    for pre_local in 0..pre_layer_size {
+                        for post_local in 0..post_layer_size {
+                            if rng.f64() < 0.1 {
+                                let pre_global = global_pre_idx + pre_local;
+                                let post_global = global_post_idx + post_local;
+                                
+                                let weight = F::from((rng.f64() - 0.5) * 0.05).unwrap();
+                                let synapse_type = if weight > F::zero() {
+                                    SynapseType::Excitatory
+                                } else {
+                                    SynapseType::Inhibitory
+                                };
+                                
+                                let synapse = Synapse {
+                                    weight,
+                                    pre_neuron: pre_global,
+                                    post_neuron: post_global,
+                                    synapse_type,
+                                    plasticity_state: PlasticityState {
+                                        ltp_level: F::zero(),
+                                        ltd_level: F::zero(),
+                                        meta_threshold: F::from(0.5).unwrap(),
+                                        eligibility_trace: F::zero(),
+                                        last_spike_diff: Duration::from_secs(0),
+                                    },
+                                    short_term_dynamics: ShortTermDynamics {
+                                        facilitation: F::zero(),
+                                        depression: F::zero(),
+                                        utilization: F::from(0.2).unwrap(),
+                                        tau_facilitation: Duration::from_millis(500),
+                                        tau_depression: Duration::from_millis(1000),
+                                    },
+                                };
+                                
+                                let delay = Duration::from_millis(rng.u64(1..20));
+                                self.connections.insert((pre_global, post_global), synapse);
+                                self.delays.insert((pre_global, post_global), delay);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            global_pre_idx += pre_layer_size;
+        }
+        
+        // Add recurrent connections if specified
+        for recurrent in &topology.recurrent_connections {
+            let from_start: usize = topology.layer_sizes[..recurrent.from_layer].iter().sum();
+            let from_end = from_start + topology.layer_sizes[recurrent.from_layer];
+            let to_start: usize = topology.layer_sizes[..recurrent.to_layer].iter().sum();
+            let to_end = to_start + topology.layer_sizes[recurrent.to_layer];
+            
+            // Add sparse recurrent connections
+            for from_idx in from_start..from_end {
+                for to_idx in to_start..to_end {
+                    if rng.f64() < 0.05 { // 5% connectivity for recurrent
+                        let weight = F::from(recurrent.strength * (rng.f64() - 0.5)).unwrap();
+                        let synapse_type = if weight > F::zero() {
+                            SynapseType::Excitatory
+                        } else {
+                            SynapseType::Inhibitory
+                        };
+                        
+                        let synapse = Synapse {
+                            weight,
+                            pre_neuron: from_idx,
+                            post_neuron: to_idx,
+                            synapse_type,
+                            plasticity_state: PlasticityState {
+                                ltp_level: F::zero(),
+                                ltd_level: F::zero(),
+                                meta_threshold: F::from(0.5).unwrap(),
+                                eligibility_trace: F::zero(),
+                                last_spike_diff: Duration::from_secs(0),
+                            },
+                            short_term_dynamics: ShortTermDynamics {
+                                facilitation: F::zero(),
+                                depression: F::zero(),
+                                utilization: F::from(0.2).unwrap(),
+                                tau_facilitation: Duration::from_millis(500),
+                                tau_depression: Duration::from_millis(1000),
+                            },
+                        };
+                        
+                        self.connections.insert((from_idx, to_idx), synapse);
+                        self.delays.insert((from_idx, to_idx), recurrent.delay);
+                    }
+                }
+            }
+        }
+        
+        Ok(())
     }
 }
 

@@ -375,11 +375,12 @@ impl AdvantageActorCriticOptimizer {
         action_size: usize,
         hidden_size: usize,
     ) -> Self {
+        let memory_size = config.memory_size;
         Self {
             config,
             actor: ActorNetwork::new(state_size, hidden_size, action_size, ActivationType::Tanh),
             critic: CriticNetwork::new(state_size, hidden_size, ActivationType::ReLU),
-            experience_buffer: ExperienceBuffer::new(config.memory_size),
+            experience_buffer: ExperienceBuffer::new(memory_size),
             reward_function: ImprovementReward::default(),
             best_params: Array1::zeros(state_size),
             best_objective: f64::INFINITY,

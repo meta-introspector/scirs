@@ -12,8 +12,7 @@
 //! - **Tutorial creation**: Step-by-step learning materials
 //! - **Best practices documentation**: Usage recommendations and patterns
 
-use crate::error::{InterpolateError, InterpolateResult};
-use std::collections::HashMap;
+use crate::error::InterpolateResult;
 use std::fmt;
 
 /// Documentation enhancement analyzer for stable release

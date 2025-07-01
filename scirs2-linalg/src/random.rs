@@ -222,7 +222,16 @@ where
 /// ```
 pub fn orthogonal<F>(n: usize, seed: Option<u64>) -> Array2<F>
 where
-    F: Float + NumAssign + FromPrimitive + Clone + std::fmt::Debug + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
+    F: Float
+        + NumAssign
+        + FromPrimitive
+        + Clone
+        + std::fmt::Debug
+        + Sum
+        + Send
+        + Sync
+        + ndarray::ScalarOperand
+        + 'static,
 {
     // Generate a random matrix with standard normal distribution
     let a = normal(n, n, F::zero(), F::one(), seed);
@@ -271,7 +280,16 @@ where
 /// ```
 pub fn spd<F>(n: usize, min_eigenval: F, max_eigenval: F, seed: Option<u64>) -> Array2<F>
 where
-    F: Float + NumAssign + FromPrimitive + Clone + std::fmt::Debug + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
+    F: Float
+        + NumAssign
+        + FromPrimitive
+        + Clone
+        + std::fmt::Debug
+        + Sum
+        + Send
+        + Sync
+        + ndarray::ScalarOperand
+        + 'static,
 {
     // Generate a random matrix
     let a = normal(n, n, F::zero(), F::one(), seed);
@@ -611,7 +629,16 @@ where
 /// ```
 pub fn with_condition_number<F>(n: usize, condition_number: F, seed: Option<u64>) -> Array2<F>
 where
-    F: Float + NumAssign + FromPrimitive + Clone + std::fmt::Debug + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
+    F: Float
+        + NumAssign
+        + FromPrimitive
+        + Clone
+        + std::fmt::Debug
+        + Sum
+        + Send
+        + Sync
+        + ndarray::ScalarOperand
+        + 'static,
 {
     // Validate condition number
     if condition_number < F::one() {
@@ -686,7 +713,16 @@ where
 /// ```
 pub fn with_eigenvalues<F>(eigenvalues: &Array1<F>, seed: Option<u64>) -> Array2<F>
 where
-    F: Float + NumAssign + FromPrimitive + Clone + std::fmt::Debug + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
+    F: Float
+        + NumAssign
+        + FromPrimitive
+        + Clone
+        + std::fmt::Debug
+        + Sum
+        + Send
+        + Sync
+        + ndarray::ScalarOperand
+        + 'static,
 {
     let n = eigenvalues.len();
 
@@ -849,7 +885,16 @@ where
 /// ```
 pub fn random_correlation<F>(n: usize, seed: Option<u64>) -> Array2<F>
 where
-    F: Float + NumAssign + FromPrimitive + Clone + std::fmt::Debug + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
+    F: Float
+        + NumAssign
+        + FromPrimitive
+        + Clone
+        + std::fmt::Debug
+        + Sum
+        + Send
+        + Sync
+        + ndarray::ScalarOperand
+        + 'static,
 {
     // Generate a random matrix with n rows and n/2 + 1 columns
     // (ensures that the resulting matrix is full rank)
@@ -911,7 +956,16 @@ where
 /// ```
 pub fn low_rank<F>(rows: usize, cols: usize, rank: usize, seed: Option<u64>) -> Array2<F>
 where
-    F: Float + NumAssign + FromPrimitive + Clone + std::fmt::Debug + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
+    F: Float
+        + NumAssign
+        + FromPrimitive
+        + Clone
+        + std::fmt::Debug
+        + Sum
+        + Send
+        + Sync
+        + ndarray::ScalarOperand
+        + 'static,
 {
     if rank > rows.min(cols) {
         panic!("Rank must be less than or equal to min(rows, cols)");

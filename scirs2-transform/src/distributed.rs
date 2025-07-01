@@ -8,11 +8,11 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "distributed")]
 use std::collections::HashMap;
 #[cfg(feature = "distributed")]
+use std::collections::VecDeque;
+#[cfg(feature = "distributed")]
 use std::sync::Arc;
 #[cfg(feature = "distributed")]
 use tokio::sync::{mpsc, RwLock};
-#[cfg(feature = "distributed")]
-use std::collections::VecDeque;
 
 use crate::error::{Result, TransformError};
 use ndarray::{Array2, ArrayView2};
@@ -190,16 +190,17 @@ impl DistributedCoordinator {
             .values()
             .map(|node| {
                 let mut score = 0.0;
-                
+
                 // Base resource scoring
-                score += node.memory_gb * 2.0;  // Memory is 2x important
+                score += node.memory_gb * 2.0; // Memory is 2x important
                 score += node.cpu_cores as f64 * 1.5; // CPU cores are 1.5x important
-                
+
                 // Task-specific bonus scoring
                 match task {
                     DistributedTask::Fit { data_partition, .. } => {
                         // Fit tasks are memory intensive
-                        let data_size_gb = (data_partition.len() * std::mem::size_of::<Vec<f64>>()) as f64 
+                        let data_size_gb = (data_partition.len() * std::mem::size_of::<Vec<f64>>())
+                            as f64
                             / (1024.0 * 1024.0 * 1024.0);
                         if node.memory_gb > data_size_gb * 3.0 {
                             score += 5.0; // Bonus for sufficient memory
@@ -207,17 +208,20 @@ impl DistributedCoordinator {
                         if node.has_gpu {
                             score += 3.0; // GPU bonus for matrix operations
                         }
-                    },
+                    }
                     DistributedTask::Transform { .. } => {
                         // Transform tasks benefit from CPU and GPU
                         score += node.cpu_cores as f64 * 0.5;
                         if node.has_gpu {
                             score += 8.0; // Higher GPU bonus for transforms
                         }
-                    },
-                    DistributedTask::Aggregate { partial_results, .. } => {
+                    }
+                    DistributedTask::Aggregate {
+                        partial_results, ..
+                    } => {
                         // Aggregation is network and memory intensive
-                        let total_data_gb = partial_results.iter()
+                        let total_data_gb = partial_results
+                            .iter()
                             .map(|r| r.len() as f64 / (1024.0 * 1024.0 * 1024.0))
                             .sum::<f64>();
                         if node.memory_gb > total_data_gb * 2.0 {
@@ -226,21 +230,24 @@ impl DistributedCoordinator {
                         score += node.cpu_cores as f64 * 0.3; // Less CPU intensive
                     }
                 }
-                
+
                 // Network latency consideration (simplified)
-                let network_penalty = if node.address.starts_with("192.168") || 
-                                        node.address.starts_with("10.") ||
-                                        node.address == "localhost" {
+                let network_penalty = if node.address.starts_with("192.168")
+                    || node.address.starts_with("10.")
+                    || node.address == "localhost"
+                {
                     0.0 // Local network
                 } else {
                     -2.0 // Remote network penalty
                 };
                 score += network_penalty;
-                
+
                 (node.clone(), score)
             })
             .max_by(|(_, score_a), (_, score_b)| {
-                score_a.partial_cmp(score_b).unwrap_or(std::cmp::Ordering::Equal)
+                score_a
+                    .partial_cmp(score_b)
+                    .unwrap_or(std::cmp::Ordering::Equal)
             })
             .map(|(node, _)| node)
     }
@@ -249,9 +256,9 @@ impl DistributedCoordinator {
     async fn send_task_to_node(node: &NodeInfo, task: &DistributedTask) -> Result<Vec<u8>> {
         const MAX_RETRIES: usize = 3;
         const RETRY_DELAY_MS: u64 = 1000;
-        
+
         let mut last_error = None;
-        
+
         for attempt in 0..MAX_RETRIES {
             match Self::send_task_to_node_once(node, task).await {
                 Ok(result) => return Ok(result),
@@ -265,12 +272,12 @@ impl DistributedCoordinator {
                 }
             }
         }
-        
+
         Err(last_error.unwrap_or_else(|| {
             TransformError::DistributedError("Unknown error in task execution".to_string())
         }))
     }
-    
+
     /// Single attempt to send task to remote node
     async fn send_task_to_node_once(node: &NodeInfo, task: &DistributedTask) -> Result<Vec<u8>> {
         // Validate node availability
@@ -291,11 +298,11 @@ impl DistributedCoordinator {
 
         // Construct endpoint URL with validation
         let url = format!("http://{}:{}/api/execute", node.address, node.port);
-        
+
         // For now, execute locally with simulated network delay
         // In a real implementation, this would use an HTTP client like reqwest
         let start_time = std::time::Instant::now();
-        
+
         let result = match task {
             DistributedTask::Fit {
                 task_id: _,
@@ -333,15 +340,16 @@ impl DistributedCoordinator {
 
         // Validate execution time doesn't exceed timeout
         let elapsed = start_time.elapsed();
-        if elapsed.as_secs() > 300 { // 5 minute timeout
+        if elapsed.as_secs() > 300 {
+            // 5 minute timeout
             return Err(TransformError::DistributedError(
-                "Task execution timeout exceeded".to_string()
+                "Task execution timeout exceeded".to_string(),
             ));
         }
 
         Ok(result)
     }
-    
+
     /// Compress data for network transmission
     fn compress_data(data: &[u8]) -> Result<Vec<u8>> {
         // Simple compression simulation - in real implementation use zlib/gzip
@@ -352,20 +360,21 @@ impl DistributedCoordinator {
             Ok(data.to_vec())
         }
     }
-    
+
     /// Calculate realistic network delay based on data size and node location
     fn calculate_network_delay(data: &[u8], node: &NodeInfo) -> u64 {
         let data_size_mb = data.len() as f64 / (1024.0 * 1024.0);
-        
+
         // Base latency depending on network location
-        let base_latency_ms = if node.address.starts_with("192.168") || 
-                                 node.address.starts_with("10.") ||
-                                 node.address == "localhost" {
+        let base_latency_ms = if node.address.starts_with("192.168")
+            || node.address.starts_with("10.")
+            || node.address == "localhost"
+        {
             5 // Local network - 5ms base latency
         } else {
             50 // Internet - 50ms base latency
         };
-        
+
         // Transfer time based on assumed bandwidth
         let bandwidth_mbps = if node.address == "localhost" {
             1000.0 // 1 Gbps for localhost
@@ -374,9 +383,9 @@ impl DistributedCoordinator {
         } else {
             10.0 // 10 Mbps for WAN
         };
-        
+
         let transfer_time_ms = (data_size_mb / bandwidth_mbps * 1000.0) as u64;
-        
+
         base_latency_ms + transfer_time_ms
     }
 
@@ -693,46 +702,47 @@ impl DistributedPCA {
     async fn partition_data(&self, x: &ArrayView2<f64>) -> Result<Vec<Vec<Vec<f64>>>> {
         let (n_samples, n_features) = x.dim();
         let nodes = self.coordinator.nodes.read().await;
-        
+
         match &self.coordinator.config.partitioning_strategy {
-            PartitioningStrategy::RowWise => {
-                self.partition_rowwise(x, &*nodes).await
-            },
-            PartitioningStrategy::ColumnWise => {
-                self.partition_columnwise(x, &*nodes).await
-            },
+            PartitioningStrategy::RowWise => self.partition_rowwise(x, &*nodes).await,
+            PartitioningStrategy::ColumnWise => self.partition_columnwise(x, &*nodes).await,
             PartitioningStrategy::BlockWise { block_size } => {
                 self.partition_blockwise(x, &*nodes, *block_size).await
-            },
-            PartitioningStrategy::Adaptive => {
-                self.partition_adaptive(x, &*nodes).await
             }
+            PartitioningStrategy::Adaptive => self.partition_adaptive(x, &*nodes).await,
         }
     }
-    
+
     /// Row-wise partitioning with load balancing
-    async fn partition_rowwise(&self, x: &ArrayView2<f64>, nodes: &HashMap<NodeId, NodeInfo>) -> Result<Vec<Vec<Vec<f64>>>> {
+    async fn partition_rowwise(
+        &self,
+        x: &ArrayView2<f64>,
+        nodes: &HashMap<NodeId, NodeInfo>,
+    ) -> Result<Vec<Vec<Vec<f64>>>> {
         let (n_samples, _) = x.dim();
         let n_nodes = nodes.len();
-        
+
         if n_nodes == 0 {
-            return Err(TransformError::DistributedError("No nodes available".to_string()));
+            return Err(TransformError::DistributedError(
+                "No nodes available".to_string(),
+            ));
         }
-        
+
         // Calculate node weights based on their capabilities
-        let total_capacity: f64 = nodes.values()
+        let total_capacity: f64 = nodes
+            .values()
             .map(|node| node.memory_gb + node.cpu_cores as f64)
             .sum();
-        
+
         let mut partitions = Vec::new();
         let mut current_row = 0;
-        
+
         for node in nodes.values() {
             let node_capacity = node.memory_gb + node.cpu_cores as f64;
             let capacity_ratio = node_capacity / total_capacity;
             let rows_for_node = ((n_samples as f64 * capacity_ratio) as usize).max(1);
             let end_row = (current_row + rows_for_node).min(n_samples);
-            
+
             if current_row < end_row {
                 let partition = x.slice(ndarray::s![current_row..end_row, ..]);
                 let partition_vec: Vec<Vec<f64>> = partition
@@ -743,31 +753,37 @@ impl DistributedPCA {
                 partitions.push(partition_vec);
                 current_row = end_row;
             }
-            
+
             if current_row >= n_samples {
                 break;
             }
         }
-        
+
         Ok(partitions)
     }
-    
+
     /// Column-wise partitioning for feature-parallel processing
-    async fn partition_columnwise(&self, x: &ArrayView2<f64>, nodes: &HashMap<NodeId, NodeInfo>) -> Result<Vec<Vec<Vec<f64>>>> {
+    async fn partition_columnwise(
+        &self,
+        x: &ArrayView2<f64>,
+        nodes: &HashMap<NodeId, NodeInfo>,
+    ) -> Result<Vec<Vec<Vec<f64>>>> {
         let (n_samples, n_features) = x.dim();
         let n_nodes = nodes.len();
-        
+
         if n_nodes == 0 {
-            return Err(TransformError::DistributedError("No nodes available".to_string()));
+            return Err(TransformError::DistributedError(
+                "No nodes available".to_string(),
+            ));
         }
-        
+
         let features_per_node = (n_features + n_nodes - 1) / n_nodes;
         let mut partitions = Vec::new();
-        
+
         for i in 0..n_nodes {
             let start_col = i * features_per_node;
             let end_col = ((i + 1) * features_per_node).min(n_features);
-            
+
             if start_col < end_col {
                 let partition = x.slice(ndarray::s![.., start_col..end_col]);
                 let partition_vec: Vec<Vec<f64>> = partition
@@ -778,78 +794,84 @@ impl DistributedPCA {
                 partitions.push(partition_vec);
             }
         }
-        
+
         Ok(partitions)
     }
-    
+
     /// Block-wise partitioning for 2D parallelism
     async fn partition_blockwise(
-        &self, 
-        x: &ArrayView2<f64>, 
+        &self,
+        x: &ArrayView2<f64>,
         nodes: &HashMap<NodeId, NodeInfo>,
-        block_size: (usize, usize)
+        block_size: (usize, usize),
     ) -> Result<Vec<Vec<Vec<f64>>>> {
         let (n_samples, n_features) = x.dim();
         let (block_rows, block_cols) = block_size;
         let n_nodes = nodes.len();
-        
+
         if n_nodes == 0 {
-            return Err(TransformError::DistributedError("No nodes available".to_string()));
+            return Err(TransformError::DistributedError(
+                "No nodes available".to_string(),
+            ));
         }
-        
+
         let blocks_per_row = (n_features + block_cols - 1) / block_cols;
         let blocks_per_col = (n_samples + block_rows - 1) / block_rows;
         let total_blocks = blocks_per_row * blocks_per_col;
-        
+
         // Distribute blocks across nodes
         let blocks_per_node = (total_blocks + n_nodes - 1) / n_nodes;
         let mut partitions = Vec::new();
         let mut block_idx = 0;
-        
+
         for _node_idx in 0..n_nodes {
             let mut node_partition = Vec::new();
-            
+
             for _ in 0..blocks_per_node {
                 if block_idx >= total_blocks {
                     break;
                 }
-                
+
                 let block_row = block_idx / blocks_per_row;
                 let block_col = block_idx % blocks_per_row;
-                
+
                 let start_row = block_row * block_rows;
                 let end_row = ((block_row + 1) * block_rows).min(n_samples);
                 let start_col = block_col * block_cols;
                 let end_col = ((block_col + 1) * block_cols).min(n_features);
-                
+
                 if start_row < end_row && start_col < end_col {
                     let block = x.slice(ndarray::s![start_row..end_row, start_col..end_col]);
                     for row in block.rows() {
                         node_partition.push(row.to_vec());
                     }
                 }
-                
+
                 block_idx += 1;
             }
-            
+
             if !node_partition.is_empty() {
                 partitions.push(node_partition);
             }
         }
-        
+
         Ok(partitions)
     }
-    
+
     /// Adaptive partitioning based on data characteristics and node capabilities
-    async fn partition_adaptive(&self, x: &ArrayView2<f64>, nodes: &HashMap<NodeId, NodeInfo>) -> Result<Vec<Vec<Vec<f64>>>> {
+    async fn partition_adaptive(
+        &self,
+        x: &ArrayView2<f64>,
+        nodes: &HashMap<NodeId, NodeInfo>,
+    ) -> Result<Vec<Vec<Vec<f64>>>> {
         let (n_samples, n_features) = x.dim();
-        
+
         // Analyze data characteristics
         let data_density = self.calculate_data_density(x)?;
         let feature_correlation = self.estimate_feature_correlation(x)?;
-        let data_size_gb = (n_samples * n_features * std::mem::size_of::<f64>()) as f64 
+        let data_size_gb = (n_samples * n_features * std::mem::size_of::<f64>()) as f64
             / (1024.0 * 1024.0 * 1024.0);
-        
+
         // Choose optimal strategy based on data and node characteristics
         if n_features > n_samples * 2 && feature_correlation < 0.3 {
             // High dimensional, low correlation -> column-wise partitioning
@@ -863,18 +885,18 @@ impl DistributedPCA {
             self.partition_rowwise(x, nodes).await
         }
     }
-    
+
     /// Calculate data density (ratio of non-zero elements)
     fn calculate_data_density(&self, x: &ArrayView2<f64>) -> Result<f64> {
         let total_elements = x.len();
         let non_zero_elements = x.iter().filter(|&&val| val != 0.0).count();
         Ok(non_zero_elements as f64 / total_elements as f64)
     }
-    
+
     /// Estimate average feature correlation
     fn estimate_feature_correlation(&self, x: &ArrayView2<f64>) -> Result<f64> {
         let (_, n_features) = x.dim();
-        
+
         // Sample a subset of feature pairs for efficiency
         let max_pairs = 100;
         let actual_pairs = if n_features < 15 {
@@ -882,28 +904,24 @@ impl DistributedPCA {
         } else {
             max_pairs
         };
-        
+
         if actual_pairs == 0 {
             return Ok(0.0);
         }
-        
+
         let mut correlation_sum = 0.0;
-        let step = if n_features > 15 {
-            n_features / 10
-        } else {
-            1
-        };
-        
+        let step = if n_features > 15 { n_features / 10 } else { 1 };
+
         let mut pair_count = 0;
         for i in (0..n_features).step_by(step) {
             for j in ((i + 1)..n_features).step_by(step) {
                 if pair_count >= max_pairs {
                     break;
                 }
-                
+
                 let col_i = x.column(i);
                 let col_j = x.column(j);
-                
+
                 if let Ok(corr) = self.quick_correlation(&col_i, &col_j) {
                     correlation_sum += corr.abs();
                     pair_count += 1;
@@ -913,28 +931,32 @@ impl DistributedPCA {
                 break;
             }
         }
-        
+
         Ok(if pair_count > 0 {
             correlation_sum / pair_count as f64
         } else {
             0.0
         })
     }
-    
+
     /// Quick correlation calculation for adaptive partitioning
-    fn quick_correlation(&self, x: &ndarray::ArrayView1<f64>, y: &ndarray::ArrayView1<f64>) -> Result<f64> {
+    fn quick_correlation(
+        &self,
+        x: &ndarray::ArrayView1<f64>,
+        y: &ndarray::ArrayView1<f64>,
+    ) -> Result<f64> {
         if x.len() != y.len() || x.len() < 2 {
             return Ok(0.0);
         }
-        
+
         let n = x.len() as f64;
         let mean_x = x.sum() / n;
         let mean_y = y.sum() / n;
-        
+
         let mut numerator = 0.0;
         let mut sum_sq_x = 0.0;
         let mut sum_sq_y = 0.0;
-        
+
         for (&xi, &yi) in x.iter().zip(y.iter()) {
             let dx = xi - mean_x;
             let dy = yi - mean_y;
@@ -942,34 +964,39 @@ impl DistributedPCA {
             sum_sq_x += dx * dx;
             sum_sq_y += dy * dy;
         }
-        
+
         let denominator = (sum_sq_x * sum_sq_y).sqrt();
-        
+
         if denominator < f64::EPSILON {
             Ok(0.0)
         } else {
             Ok((numerator / denominator).max(-1.0).min(1.0))
         }
     }
-    
+
     /// Calculate optimal block size based on data and node characteristics
-    fn calculate_optimal_block_size(&self, x: &ArrayView2<f64>, nodes: &HashMap<NodeId, NodeInfo>) -> Result<(usize, usize)> {
+    fn calculate_optimal_block_size(
+        &self,
+        x: &ArrayView2<f64>,
+        nodes: &HashMap<NodeId, NodeInfo>,
+    ) -> Result<(usize, usize)> {
         let (n_samples, n_features) = x.dim();
-        
+
         // Find average node memory capacity
-        let avg_memory_gb = nodes.values()
-            .map(|node| node.memory_gb)
-            .sum::<f64>() / nodes.len() as f64;
-        
+        let avg_memory_gb =
+            nodes.values().map(|node| node.memory_gb).sum::<f64>() / nodes.len() as f64;
+
         // Calculate optimal block size to fit in memory with safety margin
         let memory_per_block_gb = avg_memory_gb * 0.3; // Use 30% of available memory
         let elements_per_block = (memory_per_block_gb * 1024.0 * 1024.0 * 1024.0 / 8.0) as usize; // 8 bytes per f64
-        
+
         // Calculate square-ish blocks
         let block_side = (elements_per_block as f64).sqrt() as usize;
         let block_rows = block_side.min(n_samples / 2).max(100);
-        let block_cols = (elements_per_block / block_rows).min(n_features / 2).max(10);
-        
+        let block_cols = (elements_per_block / block_rows)
+            .min(n_features / 2)
+            .max(10);
+
         Ok((block_rows, block_cols))
     }
 }
@@ -1102,7 +1129,7 @@ impl CircuitBreaker {
     /// Check if circuit breaker allows the operation
     pub fn can_execute(&mut self) -> bool {
         let current_time = current_timestamp();
-        
+
         match self.state {
             CircuitBreakerState::Closed => true,
             CircuitBreakerState::Open => {
@@ -1113,7 +1140,7 @@ impl CircuitBreaker {
                 } else {
                     false
                 }
-            },
+            }
             CircuitBreakerState::HalfOpen => true,
         }
     }
@@ -1123,14 +1150,14 @@ impl CircuitBreaker {
         match self.state {
             CircuitBreakerState::Closed => {
                 self.failure_count = 0;
-            },
+            }
             CircuitBreakerState::HalfOpen => {
                 self.success_count += 1;
                 if self.success_count >= self.success_threshold {
                     self.state = CircuitBreakerState::Closed;
                     self.failure_count = 0;
                 }
-            },
+            }
             CircuitBreakerState::Open => {
                 // Should not happen
             }
@@ -1140,18 +1167,18 @@ impl CircuitBreaker {
     /// Record a failed operation
     pub fn record_failure(&mut self) {
         self.last_failure_timestamp = current_timestamp();
-        
+
         match self.state {
             CircuitBreakerState::Closed => {
                 self.failure_count += 1;
                 if self.failure_count >= self.failure_threshold {
                     self.state = CircuitBreakerState::Open;
                 }
-            },
+            }
             CircuitBreakerState::HalfOpen => {
                 self.state = CircuitBreakerState::Open;
                 self.failure_count = self.failure_threshold;
-            },
+            }
             CircuitBreakerState::Open => {
                 // Already open
             }
@@ -1199,24 +1226,27 @@ impl EnhancedDistributedCoordinator {
         auto_scaling_config: AutoScalingConfig,
     ) -> Result<Self> {
         let base_coordinator = DistributedCoordinator::new(config).await?;
-        
+
         let mut node_health = HashMap::new();
         let mut circuit_breakers = HashMap::new();
-        
+
         // Initialize health monitoring for all nodes
         for node in &base_coordinator.config.nodes {
-            node_health.insert(node.id.clone(), NodeHealth {
-                node_id: node.id.clone(),
-                status: NodeStatus::Healthy,
-                cpu_utilization: 0.0,
-                memory_utilization: 0.0,
-                network_latency_ms: 0.0,
-                error_rate: 0.0,
-                last_check_timestamp: current_timestamp(),
-                consecutive_failures: 0,
-                task_completion_rate: 0.0,
-            });
-            
+            node_health.insert(
+                node.id.clone(),
+                NodeHealth {
+                    node_id: node.id.clone(),
+                    status: NodeStatus::Healthy,
+                    cpu_utilization: 0.0,
+                    memory_utilization: 0.0,
+                    network_latency_ms: 0.0,
+                    error_rate: 0.0,
+                    last_check_timestamp: current_timestamp(),
+                    consecutive_failures: 0,
+                    task_completion_rate: 0.0,
+                },
+            );
+
             circuit_breakers.insert(node.id.clone(), CircuitBreaker::new(3, 2, 60));
         }
 
@@ -1248,41 +1278,40 @@ impl EnhancedDistributedCoordinator {
         let interval = self.health_check_interval;
 
         tokio::spawn(async move {
-            let mut health_check_interval = tokio::time::interval(
-                tokio::time::Duration::from_secs(interval)
-            );
+            let mut health_check_interval =
+                tokio::time::interval(tokio::time::Duration::from_secs(interval));
 
             loop {
                 health_check_interval.tick().await;
-                
+
                 let nodes_guard = nodes.read().await;
                 for (node_id, node_info) in nodes_guard.iter() {
                     let health_result = Self::check_node_health(node_info).await;
-                    
+
                     let mut health_guard = node_health.write().await;
                     let mut breakers_guard = circuit_breakers.write().await;
-                    
+
                     if let Some(health) = health_guard.get_mut(node_id) {
                         match health_result {
                             Ok(new_health) => {
                                 *health = new_health;
                                 health.consecutive_failures = 0;
-                                
+
                                 if let Some(breaker) = breakers_guard.get_mut(node_id) {
                                     breaker.record_success();
                                 }
-                            },
+                            }
                             Err(_) => {
                                 health.consecutive_failures += 1;
                                 health.last_check_timestamp = current_timestamp();
-                                
+
                                 // Update status based on failure count
                                 health.status = if health.consecutive_failures >= 3 {
                                     NodeStatus::Failed
                                 } else {
                                     NodeStatus::Degraded
                                 };
-                                
+
                                 if let Some(breaker) = breakers_guard.get_mut(node_id) {
                                     breaker.record_failure();
                                 }
@@ -1309,21 +1338,22 @@ impl EnhancedDistributedCoordinator {
 
         tokio::spawn(async move {
             let mut scaling_interval = tokio::time::interval(
-                tokio::time::Duration::from_secs(60) // Check every minute
+                tokio::time::Duration::from_secs(60), // Check every minute
             );
 
             loop {
                 scaling_interval.tick().await;
-                
+
                 // Collect current performance metrics
                 let health_guard = node_health.read().await;
                 let mut current_metrics = HashMap::new();
-                
+
                 for (node_id, health) in health_guard.iter() {
-                    if health.status == NodeStatus::Healthy || health.status == NodeStatus::Degraded {
+                    if health.status == NodeStatus::Healthy || health.status == NodeStatus::Degraded
+                    {
                         current_metrics.insert(
-                            node_id.clone(), 
-                            (health.cpu_utilization, health.memory_utilization)
+                            node_id.clone(),
+                            (health.cpu_utilization, health.memory_utilization),
                         );
                     }
                 }
@@ -1339,25 +1369,25 @@ impl EnhancedDistributedCoordinator {
                 // Make scaling decision if we have enough data
                 if history_guard.len() >= config.measurement_window {
                     let scaling_decision = Self::make_scaling_decision(&*history_guard, &config);
-                    
+
                     if let Some(action) = scaling_decision {
                         let last_action_guard = last_scaling_action.read().await;
                         let current_time = current_timestamp();
-                        
+
                         if current_time - *last_action_guard > config.cooldown_seconds {
                             drop(last_action_guard);
-                            
+
                             match action {
                                 ScalingAction::ScaleUp => {
                                     println!("Auto-scaling: Scaling up cluster");
                                     // Implementation would add new nodes
-                                },
+                                }
                                 ScalingAction::ScaleDown => {
                                     println!("Auto-scaling: Scaling down cluster");
                                     // Implementation would remove nodes
                                 }
                             }
-                            
+
                             let mut last_action_guard = last_scaling_action.write().await;
                             *last_action_guard = current_time;
                         }
@@ -1377,31 +1407,36 @@ impl EnhancedDistributedCoordinator {
 
         tokio::spawn(async move {
             let mut retry_interval = tokio::time::interval(
-                tokio::time::Duration::from_secs(10) // Process retries every 10 seconds
+                tokio::time::Duration::from_secs(10), // Process retries every 10 seconds
             );
 
             loop {
                 retry_interval.tick().await;
-                
+
                 let mut queue_guard = retry_queue.write().await;
                 let mut tasks_to_retry = Vec::new();
-                
+
                 // Process all tasks in retry queue
                 while let Some((task, retry_count)) = queue_guard.pop_front() {
                     if retry_count < max_attempts {
                         tasks_to_retry.push((task, retry_count));
                     } else {
-                        println!("Task {:?} exceeded maximum retry attempts", 
-                            Self::get_task_id(&task));
+                        println!(
+                            "Task {:?} exceeded maximum retry attempts",
+                            Self::get_task_id(&task)
+                        );
                     }
                 }
                 drop(queue_guard);
 
                 // Retry tasks
                 for (task, retry_count) in tasks_to_retry {
-                    println!("Retrying task {:?} (attempt {})", 
-                        Self::get_task_id(&task), retry_count + 1);
-                    
+                    println!(
+                        "Retrying task {:?} (attempt {})",
+                        Self::get_task_id(&task),
+                        retry_count + 1
+                    );
+
                     // Implementation would resubmit task with incremented retry count
                     // For now, just log the retry attempt
                 }
@@ -1415,11 +1450,11 @@ impl EnhancedDistributedCoordinator {
     async fn check_node_health(node_info: &NodeInfo) -> Result<NodeHealth> {
         // Simulate health check - in real implementation, this would make HTTP requests
         tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
-        
+
         // Simulate varying health metrics
         use rand::Rng;
         let mut rng = rand::thread_rng();
-        
+
         Ok(NodeHealth {
             node_id: node_info.id.clone(),
             status: NodeStatus::Healthy,
@@ -1493,14 +1528,14 @@ impl EnhancedDistributedCoordinator {
 
         if healthy_nodes.is_empty() {
             return Err(TransformError::DistributedError(
-                "No healthy nodes available for task execution".to_string()
+                "No healthy nodes available for task execution".to_string(),
             ));
         }
         drop(health_guard);
 
         // Try to submit task with circuit breaker protection
         let result = self.try_submit_with_circuit_breaker(task.clone()).await;
-        
+
         match result {
             Ok(_) => Ok(()),
             Err(_) => {
@@ -1515,21 +1550,21 @@ impl EnhancedDistributedCoordinator {
     /// Try to submit task with circuit breaker protection
     async fn try_submit_with_circuit_breaker(&self, task: DistributedTask) -> Result<()> {
         let breakers_guard = self.circuit_breakers.read().await;
-        
+
         // Find a node with an open circuit breaker
         for (node_id, breaker) in breakers_guard.iter() {
             if breaker.can_execute() {
                 // Try to submit to this node
                 let result = self.base_coordinator.submit_task(task.clone()).await;
                 drop(breakers_guard);
-                
+
                 let mut breakers_guard = self.circuit_breakers.write().await;
                 if let Some(breaker) = breakers_guard.get_mut(node_id) {
                     match result {
                         Ok(_) => {
                             breaker.record_success();
                             return Ok(());
-                        },
+                        }
                         Err(_e) => {
                             breaker.record_failure();
                             continue;
@@ -1540,7 +1575,7 @@ impl EnhancedDistributedCoordinator {
         }
 
         Err(TransformError::DistributedError(
-            "All circuit breakers are open".to_string()
+            "All circuit breakers are open".to_string(),
         ))
     }
 
@@ -1548,7 +1583,7 @@ impl EnhancedDistributedCoordinator {
     pub async fn get_cluster_health(&self) -> ClusterHealthSummary {
         let health_guard = self.node_health.read().await;
         let breakers_guard = self.circuit_breakers.read().await;
-        
+
         let mut healthy_nodes = 0;
         let mut degraded_nodes = 0;
         let mut failed_nodes = 0;
@@ -1563,10 +1598,10 @@ impl EnhancedDistributedCoordinator {
                 NodeStatus::Failed => failed_nodes += 1,
                 _ => {}
             }
-            
+
             total_cpu_utilization += health.cpu_utilization;
             total_memory_utilization += health.memory_utilization;
-            
+
             if let Some(breaker) = breakers_guard.get(node_id) {
                 if breaker.get_state() == "open" {
                     open_circuit_breakers += 1;
@@ -1575,21 +1610,21 @@ impl EnhancedDistributedCoordinator {
         }
 
         let total_nodes = health_guard.len();
-        
+
         ClusterHealthSummary {
             total_nodes,
             healthy_nodes,
             degraded_nodes,
             failed_nodes,
-            average_cpu_utilization: if total_nodes > 0 { 
-                total_cpu_utilization / total_nodes as f64 
-            } else { 
-                0.0 
+            average_cpu_utilization: if total_nodes > 0 {
+                total_cpu_utilization / total_nodes as f64
+            } else {
+                0.0
             },
-            average_memory_utilization: if total_nodes > 0 { 
-                total_memory_utilization / total_nodes as f64 
-            } else { 
-                0.0 
+            average_memory_utilization: if total_nodes > 0 {
+                total_memory_utilization / total_nodes as f64
+            } else {
+                0.0
             },
             open_circuit_breakers,
             auto_scaling_enabled: self.auto_scaling_config.enabled,

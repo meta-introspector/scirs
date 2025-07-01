@@ -542,16 +542,16 @@ impl ActivityRecognitionEngine {
     ) -> Result<ActivityRecognitionResult> {
         // Extract motion features
         let motion_features = self.extract_motion_features(frame)?;
-        
+
         // Detect individual actions
         let detected_actions = self.detect_actions(frame, scene_analysis, &motion_features)?;
-        
+
         // Classify context
         let context = self.context_classifier.classify_context(scene_analysis)?;
-        
+
         // Enhance detection with context
         let enhanced_activities = self.enhance_with_context(&detected_actions, &context)?;
-        
+
         // Create result
         Ok(ActivityRecognitionResult {
             activities: enhanced_activities,
@@ -599,17 +599,21 @@ impl ActivityRecognitionEngine {
         }
 
         // Temporal sequence analysis
-        let sequences = self.sequence_analyzer.analyze_sequences(&frame_activities)?;
-        
+        let sequences = self
+            .sequence_analyzer
+            .analyze_sequences(&frame_activities)?;
+
         // Multi-person interaction analysis
-        let interactions = self.interaction_recognizer.analyze_interactions(scene_analyses)?;
-        
+        let interactions = self
+            .interaction_recognizer
+            .analyze_interactions(scene_analyses)?;
+
         // Build comprehensive timeline
         let timeline = self.build_activity_timeline(&frame_activities)?;
-        
+
         // Overall scene summary
         let scene_summary = self.summarize_sequence_activities(&frame_activities)?;
-        
+
         // Aggregate activities from all frames
         let all_activities: Vec<DetectedActivity> = frame_activities
             .into_iter()
@@ -643,7 +647,8 @@ impl ActivityRecognitionEngine {
         &self,
         scene_sequence: &[SceneAnalysisResult],
     ) -> Result<Vec<PersonInteraction>> {
-        self.interaction_recognizer.analyze_interactions(scene_sequence)
+        self.interaction_recognizer
+            .analyze_interactions(scene_sequence)
     }
 
     /// Recognize hierarchical activity structure
@@ -651,7 +656,8 @@ impl ActivityRecognitionEngine {
         &self,
         activities: &[DetectedActivity],
     ) -> Result<HierarchicalActivityStructure> {
-        self.hierarchical_decomposer.decompose_activities(activities)
+        self.hierarchical_decomposer
+            .decompose_activities(activities)
     }
 
     /// Predict future activities based on current sequence
@@ -660,7 +666,8 @@ impl ActivityRecognitionEngine {
         current_activities: &[DetectedActivity],
         prediction_horizon: f32,
     ) -> Result<Vec<ActivityPrediction>> {
-        self.temporal_modeler.predict_activities(current_activities, prediction_horizon)
+        self.temporal_modeler
+            .predict_activities(current_activities, prediction_horizon)
     }
 
     // Helper methods (placeholder implementations)
@@ -676,7 +683,7 @@ impl ActivityRecognitionEngine {
         _motion_features: &Array3<f32>,
     ) -> Result<Vec<DetectedActivity>> {
         let mut activities = Vec::new();
-        
+
         // Analyze each detected person
         for (i, object) in scene_analysis.objects.iter().enumerate() {
             if object.class == "person" {
@@ -701,7 +708,7 @@ impl ActivityRecognitionEngine {
                 activities.push(activity);
             }
         }
-        
+
         Ok(activities)
     }
 
@@ -714,11 +721,17 @@ impl ActivityRecognitionEngine {
         Ok(activities.to_vec())
     }
 
-    fn detect_frame_interactions(&self, _scene_analysis: &SceneAnalysisResult) -> Result<Vec<PersonInteraction>> {
+    fn detect_frame_interactions(
+        &self,
+        _scene_analysis: &SceneAnalysisResult,
+    ) -> Result<Vec<PersonInteraction>> {
         Ok(Vec::new()) // Placeholder
     }
 
-    fn summarize_frame_activities(&self, _scene_analysis: &SceneAnalysisResult) -> Result<ActivitySummary> {
+    fn summarize_frame_activities(
+        &self,
+        _scene_analysis: &SceneAnalysisResult,
+    ) -> Result<ActivitySummary> {
         Ok(ActivitySummary {
             dominant_activity: "static_scene".to_string(),
             diversity_index: 0.3,
@@ -729,7 +742,10 @@ impl ActivityRecognitionEngine {
         })
     }
 
-    fn build_activity_timeline(&self, _frame_activities: &[ActivityRecognitionResult]) -> Result<ActivityTimeline> {
+    fn build_activity_timeline(
+        &self,
+        _frame_activities: &[ActivityRecognitionResult],
+    ) -> Result<ActivityTimeline> {
         Ok(ActivityTimeline {
             segments: Vec::new(),
             resolution: 1.0 / 30.0, // 30 FPS
@@ -737,7 +753,10 @@ impl ActivityRecognitionEngine {
         })
     }
 
-    fn summarize_sequence_activities(&self, _frame_activities: &[ActivityRecognitionResult]) -> Result<ActivitySummary> {
+    fn summarize_sequence_activities(
+        &self,
+        _frame_activities: &[ActivityRecognitionResult],
+    ) -> Result<ActivitySummary> {
         Ok(ActivitySummary {
             dominant_activity: "general_activity".to_string(),
             diversity_index: 0.5,
@@ -800,7 +819,11 @@ impl ActionDetector {
     fn new(name: &str) -> Self {
         Self {
             name: name.to_string(),
-            action_types: vec!["walking".to_string(), "sitting".to_string(), "standing".to_string()],
+            action_types: vec![
+                "walking".to_string(),
+                "sitting".to_string(),
+                "standing".to_string(),
+            ],
             confidence_threshold: 0.5,
             temporal_window: 30,
             feature_method: "optical_flow".to_string(),
@@ -823,7 +846,10 @@ impl ActivitySequenceAnalyzer {
         }
     }
 
-    fn analyze_sequences(&self, _frame_activities: &[ActivityRecognitionResult]) -> Result<Vec<ActivitySequence>> {
+    fn analyze_sequences(
+        &self,
+        _frame_activities: &[ActivityRecognitionResult],
+    ) -> Result<Vec<ActivitySequence>> {
         Ok(Vec::new()) // Placeholder
     }
 }
@@ -831,7 +857,10 @@ impl ActivitySequenceAnalyzer {
 impl MultiPersonInteractionRecognizer {
     fn new() -> Self {
         Self {
-            interaction_types: vec![InteractionType::Conversation, InteractionType::Collaboration],
+            interaction_types: vec![
+                InteractionType::Conversation,
+                InteractionType::Collaboration,
+            ],
             tracking_params: PersonTrackingParams {
                 max_tracking_distance: 50.0,
                 identity_confidence_threshold: 0.8,
@@ -853,7 +882,10 @@ impl MultiPersonInteractionRecognizer {
         }
     }
 
-    fn analyze_interactions(&self, _scene_analyses: &[SceneAnalysisResult]) -> Result<Vec<PersonInteraction>> {
+    fn analyze_interactions(
+        &self,
+        _scene_analyses: &[SceneAnalysisResult],
+    ) -> Result<Vec<PersonInteraction>> {
         Ok(Vec::new()) // Placeholder
     }
 }
@@ -868,7 +900,10 @@ impl ContextAwareActivityClassifier {
         }
     }
 
-    fn classify_context(&self, _scene_analysis: &SceneAnalysisResult) -> Result<ContextClassification> {
+    fn classify_context(
+        &self,
+        _scene_analysis: &SceneAnalysisResult,
+    ) -> Result<ContextClassification> {
         Ok(ContextClassification {
             scene_type: "indoor".to_string(),
             environment_factors: HashMap::new(),
@@ -910,7 +945,10 @@ impl HierarchicalActivityDecomposer {
         }
     }
 
-    fn decompose_activities(&self, _activities: &[DetectedActivity]) -> Result<HierarchicalActivityStructure> {
+    fn decompose_activities(
+        &self,
+        _activities: &[DetectedActivity],
+    ) -> Result<HierarchicalActivityStructure> {
         Ok(HierarchicalActivityStructure {
             levels: Vec::new(),
             activity_tree: ActivityTree {
@@ -949,7 +987,7 @@ pub fn recognize_activities_comprehensive(
     scene_analyses: &[SceneAnalysisResult],
 ) -> Result<ActivityRecognitionResult> {
     let engine = ActivityRecognitionEngine::new();
-    
+
     if frames.len() == 1 {
         engine.recognize_frame_activities(&frames[0], &scene_analyses[0])
     } else {
@@ -965,12 +1003,12 @@ pub fn monitor_activities_realtime(
 ) -> Result<ActivityRecognitionResult> {
     let engine = ActivityRecognitionEngine::new();
     let mut result = engine.recognize_frame_activities(current_frame, scene_analysis)?;
-    
+
     // Apply temporal smoothing if history is available
     if let Some(history) = activity_history {
         result = apply_temporal_smoothing(result, history)?;
     }
-    
+
     Ok(result)
 }
 

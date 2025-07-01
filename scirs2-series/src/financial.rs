@@ -4708,7 +4708,8 @@ pub mod risk_metrics {
         // Conditional Value at Risk (CVaR/Expected Shortfall)
         let tail_returns: Vec<F> = sorted_returns.iter().take(var_index + 1).cloned().collect();
         let cvar = if !tail_returns.is_empty() {
-            -tail_returns.into_iter().sum::<F>() / F::from(tail_returns.len()).unwrap()
+            let tail_len = tail_returns.len();
+            -tail_returns.into_iter().sum::<F>() / F::from(tail_len).unwrap()
         } else {
             var
         };

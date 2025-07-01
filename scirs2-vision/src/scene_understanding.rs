@@ -300,22 +300,22 @@ impl SceneUnderstandingEngine {
     pub fn analyze_scene(&self, image: &ArrayView3<f32>) -> Result<SceneAnalysisResult> {
         // Multi-scale semantic segmentation
         let segmentation_map = self.perform_semantic_segmentation(image)?;
-        
+
         // Object detection and feature extraction
         let objects = self.detect_objects(image)?;
-        
+
         // Spatial relationship analysis
         let relationships = self.analyze_spatial_relationships(&objects)?;
-        
+
         // Scene classification
         let (scene_class, scene_confidence) = self.classify_scene(image, &objects)?;
-        
+
         // Scene graph construction
         let scene_graph = self.build_scene_graph(&objects, &relationships)?;
-        
+
         // Contextual reasoning
         let reasoning_results = self.perform_reasoning(&objects, &relationships, &scene_class)?;
-        
+
         Ok(SceneAnalysisResult {
             objects,
             relationships,
@@ -334,27 +334,24 @@ impl SceneUnderstandingEngine {
         frames: &[ArrayView3<f32>],
     ) -> Result<Vec<SceneAnalysisResult>> {
         let mut results = Vec::new();
-        
+
         for (frame_idx, frame) in frames.iter().enumerate() {
             // Analyze individual frame
             let mut frame_result = self.analyze_scene(frame)?;
-            
+
             // Add temporal analysis
             if frame_idx > 0 {
-                let temporal_info = self.analyze_temporal_changes(
-                    frame,
-                    &frames[..frame_idx],
-                    frame_idx,
-                )?;
+                let temporal_info =
+                    self.analyze_temporal_changes(frame, &frames[..frame_idx], frame_idx)?;
                 frame_result.temporal_info = Some(temporal_info);
             }
-            
+
             results.push(frame_result);
         }
-        
+
         // Post-process for temporal consistency
         self.enforce_temporal_consistency(&mut results)?;
-        
+
         Ok(results)
     }
 
@@ -362,36 +359,36 @@ impl SceneUnderstandingEngine {
     fn perform_semantic_segmentation(&self, image: &ArrayView3<f32>) -> Result<Array2<u32>> {
         let (height, width, _) = image.dim();
         let mut segmentation_map = Array2::zeros((height, width));
-        
+
         // Multi-scale segmentation for enhanced accuracy
         for scale_factor in &[0.5, 1.0, 1.5, 2.0] {
             let scaled_result = self.segment_at_scale(image, *scale_factor)?;
             self.merge_segmentation_results(&mut segmentation_map, &scaled_result)?;
         }
-        
+
         // Post-processing for spatial consistency
         self.enforce_spatial_consistency(&mut segmentation_map)?;
-        
+
         Ok(segmentation_map)
     }
 
     /// Detect objects with rich feature extraction
     fn detect_objects(&self, image: &ArrayView3<f32>) -> Result<Vec<DetectedObject>> {
         let mut objects = Vec::new();
-        
+
         // Multi-scale object detection
         let detection_results = self.object_detector.detect_multi_scale(image)?;
-        
+
         for detection in detection_results {
             // Extract rich features for each object
             let features = self.extract_object_features(image, &detection.bbox)?;
-            
+
             // Compute object mask
             let mask = self.compute_object_mask(image, &detection)?;
-            
+
             // Analyze object attributes
             let attributes = self.analyze_object_attributes(image, &detection, &features)?;
-            
+
             objects.push(DetectedObject {
                 class: detection.class,
                 bbox: detection.bbox,
@@ -401,14 +398,17 @@ impl SceneUnderstandingEngine {
                 attributes,
             });
         }
-        
+
         Ok(objects)
     }
 
     /// Analyze spatial relationships between objects
-    fn analyze_spatial_relationships(&self, objects: &[DetectedObject]) -> Result<Vec<SpatialRelation>> {
+    fn analyze_spatial_relationships(
+        &self,
+        objects: &[DetectedObject],
+    ) -> Result<Vec<SpatialRelation>> {
         let mut relationships = Vec::new();
-        
+
         for (i, obj1) in objects.iter().enumerate() {
             for (j, obj2) in objects.iter().enumerate() {
                 if i != j {
@@ -417,10 +417,10 @@ impl SceneUnderstandingEngine {
                 }
             }
         }
-        
+
         // Filter relationships based on confidence
         relationships.retain(|r| r.confidence > 0.5);
-        
+
         Ok(relationships)
     }
 
@@ -432,16 +432,16 @@ impl SceneUnderstandingEngine {
     ) -> Result<(String, f32)> {
         // Extract global scene features
         let global_features = self.extract_global_features(image)?;
-        
+
         // Analyze object composition
         let object_composition = self.analyze_object_composition(objects)?;
-        
+
         // Combine features for scene classification
         let scene_features = self.combine_scene_features(&global_features, &object_composition)?;
-        
+
         // Perform classification
         let (scene_class, confidence) = self.classify_from_features(&scene_features)?;
-        
+
         Ok((scene_class, confidence))
     }
 
@@ -490,14 +490,16 @@ impl SceneUnderstandingEngine {
         scene_class: &str,
     ) -> Result<Vec<ReasoningResult>> {
         let mut results = Vec::new();
-        
+
         // Apply reasoning rules
         for rule in &self.reasoning_engine.rules {
-            if let Some(result) = self.apply_reasoning_rule(rule, objects, relationships, scene_class)? {
+            if let Some(result) =
+                self.apply_reasoning_rule(rule, objects, relationships, scene_class)?
+            {
                 results.push(result);
             }
         }
-        
+
         Ok(results)
     }
 
@@ -506,7 +508,11 @@ impl SceneUnderstandingEngine {
         Ok(Array2::zeros((100, 100))) // Placeholder
     }
 
-    fn merge_segmentation_results(&self, _base: &mut Array2<u32>, _new: &Array2<u32>) -> Result<()> {
+    fn merge_segmentation_results(
+        &self,
+        _base: &mut Array2<u32>,
+        _new: &Array2<u32>,
+    ) -> Result<()> {
         Ok(()) // Placeholder
     }
 
@@ -514,15 +520,28 @@ impl SceneUnderstandingEngine {
         Ok(()) // Placeholder
     }
 
-    fn extract_object_features(&self, _image: &ArrayView3<f32>, _bbox: &(f32, f32, f32, f32)) -> Result<Array2<f32>> {
+    fn extract_object_features(
+        &self,
+        _image: &ArrayView3<f32>,
+        _bbox: &(f32, f32, f32, f32),
+    ) -> Result<Array2<f32>> {
         Ok(Array2::zeros((1, 256))) // Placeholder
     }
 
-    fn compute_object_mask(&self, _image: &ArrayView3<f32>, _detection: &DetectionResult) -> Result<Array2<bool>> {
+    fn compute_object_mask(
+        &self,
+        _image: &ArrayView3<f32>,
+        _detection: &DetectionResult,
+    ) -> Result<Array2<bool>> {
         Ok(Array2::from_elem((50, 50), false)) // Placeholder
     }
 
-    fn analyze_object_attributes(&self, _image: &ArrayView3<f32>, _detection: &DetectionResult, _features: &Array2<f32>) -> Result<HashMap<String, f32>> {
+    fn analyze_object_attributes(
+        &self,
+        _image: &ArrayView3<f32>,
+        _detection: &DetectionResult,
+        _features: &Array2<f32>,
+    ) -> Result<HashMap<String, f32>> {
         Ok(HashMap::new()) // Placeholder
     }
 
@@ -534,7 +553,11 @@ impl SceneUnderstandingEngine {
         Ok(Array2::zeros((1, 128))) // Placeholder
     }
 
-    fn combine_scene_features(&self, _global: &Array2<f32>, _composition: &Array2<f32>) -> Result<Array2<f32>> {
+    fn combine_scene_features(
+        &self,
+        _global: &Array2<f32>,
+        _composition: &Array2<f32>,
+    ) -> Result<Array2<f32>> {
         Ok(Array2::zeros((1, 640))) // Placeholder
     }
 
@@ -673,12 +696,12 @@ pub fn analyze_scene_with_reasoning(
 ) -> Result<SceneAnalysisResult> {
     let engine = SceneUnderstandingEngine::new();
     let mut result = engine.analyze_scene(image)?;
-    
+
     // Apply contextual reasoning if previous context is available
     if let Some(prev_context) = context {
         result = apply_contextual_enhancement(&result, prev_context)?;
     }
-    
+
     Ok(result)
 }
 

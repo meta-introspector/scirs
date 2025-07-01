@@ -611,12 +611,12 @@ impl ResidualBlock1D {
         let skip_out = if let Some(ref projection) = self.skip_projection {
             // Project input to match output channels: (seq_len, input_channels) -> (seq_len, output_channels)
             let projected = input.dot(&projection.t());
-            
+
             // Handle sequence length mismatch due to convolutions
             // Each convolution reduces length by (kernel_size - 1), so total reduction is 2 * (kernel_size - 1)
             let conv_output_len = bn2_out.shape()[0];
             let skip_len = projected.shape()[0];
-            
+
             if conv_output_len < skip_len {
                 // Take center slice of skip connection to match conv output length
                 let start = (skip_len - conv_output_len) / 2;
@@ -629,9 +629,9 @@ impl ResidualBlock1D {
             // Direct skip connection - handle sequence length mismatch
             let conv_output_len = bn2_out.shape()[0];
             let skip_len = input.shape()[0];
-            
+
             if conv_output_len < skip_len {
-                // Take center slice of input to match conv output length  
+                // Take center slice of input to match conv output length
                 let start = (skip_len - conv_output_len) / 2;
                 let end = start + conv_output_len;
                 input.slice(s![start..end, ..]).to_owned()

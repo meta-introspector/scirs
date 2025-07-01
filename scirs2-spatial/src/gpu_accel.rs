@@ -442,8 +442,7 @@ impl GpuDevice {
 
     /// Get detailed CUDA device information
     #[cfg(feature = "cuda")]
-    fn get_cuda_device_info(
-    ) -> GpuDeviceInfoResult {
+    fn get_cuda_device_info() -> GpuDeviceInfoResult {
         use std::process::Command;
 
         let mut device_names = Vec::new();
@@ -520,8 +519,7 @@ impl GpuDevice {
 
     /// Get detailed ROCm device information
     #[cfg(feature = "rocm")]
-    fn get_rocm_device_info(
-    ) -> GpuDeviceInfoResult {
+    fn get_rocm_device_info() -> GpuDeviceInfoResult {
         use std::process::Command;
 
         let mut device_names = Vec::new();
@@ -585,8 +583,7 @@ impl GpuDevice {
 
     /// Get detailed Vulkan device information
     #[cfg(feature = "vulkan")]
-    fn get_vulkan_device_info(
-    ) -> GpuDeviceInfoResult {
+    fn get_vulkan_device_info() -> GpuDeviceInfoResult {
         use std::process::Command;
 
         let mut device_names = Vec::new();
@@ -622,8 +619,7 @@ impl GpuDevice {
 
     #[cfg(not(feature = "cuda"))]
     #[allow(dead_code)]
-    fn get_cuda_device_info(
-    ) -> GpuDeviceInfoResult {
+    fn get_cuda_device_info() -> GpuDeviceInfoResult {
         Ok((Vec::new(), Vec::new()))
     }
 
@@ -635,15 +631,13 @@ impl GpuDevice {
 
     #[cfg(not(feature = "rocm"))]
     #[allow(dead_code)]
-    fn get_rocm_device_info(
-    ) -> GpuDeviceInfoResult {
+    fn get_rocm_device_info() -> GpuDeviceInfoResult {
         Ok((Vec::new(), Vec::new()))
     }
 
     #[cfg(not(feature = "vulkan"))]
     #[allow(dead_code)]
-    fn get_vulkan_device_info(
-    ) -> GpuDeviceInfoResult {
+    fn get_vulkan_device_info() -> GpuDeviceInfoResult {
         Ok((Vec::new(), Vec::new()))
     }
 }

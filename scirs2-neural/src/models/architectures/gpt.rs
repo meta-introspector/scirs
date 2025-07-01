@@ -524,7 +524,7 @@ struct GptMlp<F: Float + Debug + ScalarOperand + Send + Sync> {
     /// Second dense layer
     fc2: Dense<F>,
     /// Activation function
-    activation_fn: Box<dyn Fn(F) -> F>,
+    activation_fn: Box<dyn Fn(F) -> F + Send + Sync>,
     /// Dropout
     dropout: Dropout<F>,
 }
@@ -538,7 +538,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> GptMlp<F> {
         let fc2 = Dense::new(config.intermediate_size, config.hidden_size, None, &mut rng)?;
 
         // Activation function
-        let activation_fn: Box<dyn Fn(F) -> F> = match config.hidden_act.as_str() {
+        let activation_fn: Box<dyn Fn(F) -> F + Send + Sync> = match config.hidden_act.as_str() {
             "gelu" => Box::new(|x: F| {
                 // Approximation of GELU
                 let x3 = x * x * x;

@@ -87,13 +87,18 @@ where
     if x.is_empty() {
         return Err(ErrorMessages::empty_array("x"));
     }
-    
+
     if weights.is_empty() {
         return Err(ErrorMessages::empty_array("weights"));
     }
 
     if x.len() != weights.len() {
-        return Err(ErrorMessages::length_mismatch("x", x.len(), "weights", weights.len()));
+        return Err(ErrorMessages::length_mismatch(
+            "x",
+            x.len(),
+            "weights",
+            weights.len(),
+        ));
     }
 
     // Calculate weighted sum
@@ -102,7 +107,10 @@ where
 
     for (val, weight) in x.iter().zip(weights.iter()) {
         if weight.is_negative() {
-            return Err(ErrorMessages::non_positive_value("weight", weight.to_f64().unwrap_or(0.0)));
+            return Err(ErrorMessages::non_positive_value(
+                "weight",
+                weight.to_f64().unwrap_or(0.0),
+            ));
         }
 
         weighted_sum = weighted_sum + (*val * *weight);
@@ -210,7 +218,11 @@ where
     }
 
     if x.len() <= ddof {
-        return Err(ErrorMessages::insufficient_data("variance calculation", ddof + 1, x.len()));
+        return Err(ErrorMessages::insufficient_data(
+            "variance calculation",
+            ddof + 1,
+            x.len(),
+        ));
     }
 
     // Calculate the mean

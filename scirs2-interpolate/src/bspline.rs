@@ -1313,7 +1313,7 @@ where
         return Err(InterpolateError::insufficient_points(
             k + 1,
             x.len(),
-            &format!("degree {} B-spline", k)
+            &format!("degree {} B-spline", k),
         ));
     }
 
@@ -1917,7 +1917,25 @@ where
 
         Ok(extrema)
     }
+}
 
+// Additional methods for BSpline (SciPy-compatible interface)
+impl<T> BSpline<T>
+where
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Display
+        + AddAssign
+        + SubAssign
+        + MulAssign
+        + DivAssign
+        + RemAssign
+        + Send
+        + Sync
+        + 'static
+        + crate::traits::InterpolationFloat,
+{
     /// Get knot vector (SciPy-compatible interface)
     pub fn t(&self) -> &Array1<T> {
         &self.t
@@ -1985,17 +2003,6 @@ where
                 )));
             }
             result[i] = self.derivative_at(x, order)?;
-        }
-
-        Ok(result)
-    }
-
-    /// Evaluate at multiple points (SciPy-compatible)
-    pub fn evaluate_array(&self, x_new: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
-        let mut result = Array1::zeros(x_new.len());
-
-        for (i, &x) in x_new.iter().enumerate() {
-            result[i] = self.evaluate(x)?;
         }
 
         Ok(result)

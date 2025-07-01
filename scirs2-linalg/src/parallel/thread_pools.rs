@@ -328,18 +328,22 @@ impl ThreadPoolManager {
     }
 
     /// Auto-optimize thread pool configurations based on historical performance
-    pub fn auto_optimize_pools(&self) -> LinalgResult<Vec<(ThreadPoolProfile, AdvancedThreadPoolConfig)>> {
+    pub fn auto_optimize_pools(
+        &self,
+    ) -> LinalgResult<Vec<(ThreadPoolProfile, AdvancedThreadPoolConfig)>> {
         let pools = self.active_pools.read().unwrap();
         let mut optimizations = Vec::new();
 
         for (profile, pool) in pools.iter() {
             let stats = pool.get_stats();
-            
+
             // Analyze performance metrics to suggest optimizations
             let current_config = {
                 let configs = self.pool_configs.read().unwrap();
-                configs.get(profile).cloned().unwrap_or_else(|| {
-                    AdvancedThreadPoolConfig {
+                configs
+                    .get(profile)
+                    .cloned()
+                    .unwrap_or_else(|| AdvancedThreadPoolConfig {
                         base_config: ThreadPoolConfig {
                             profile: profile.clone(),
                             ..Default::default()
@@ -358,8 +362,7 @@ impl ThreadPoolManager {
                             prediction_model: PredictionModelParams::default(),
                             characteristic_tracking: true,
                         },
-                    }
-                })
+                    })
             };
 
             let mut optimized_config = current_config.clone();
@@ -367,21 +370,25 @@ impl ThreadPoolManager {
             // Optimize based on performance metrics
             if stats.thread_pool_stats.total_tasks > 100 {
                 // Sufficient data for optimization
-                
+
                 // Optimize thread count based on CPU utilization
                 if stats.thread_pool_stats.thread_utilization < 0.6 {
                     // Low CPU utilization - might benefit from fewer threads to reduce overhead
-                    optimized_config.base_config.active_threads = 
+                    optimized_config.base_config.active_threads =
                         (optimized_config.base_config.active_threads as f64 * 0.8) as usize;
-                } else if stats.thread_pool_stats.thread_utilization > 0.9 && stats.thread_pool_stats.queue_length > 2 {
+                } else if stats.thread_pool_stats.thread_utilization > 0.9
+                    && stats.thread_pool_stats.queue_length > 2
+                {
                     // High CPU utilization with queuing - might benefit from more threads
-                    optimized_config.base_config.active_threads = 
+                    optimized_config.base_config.active_threads =
                         (optimized_config.base_config.active_threads as f64 * 1.2) as usize;
                 }
 
                 // Optimize dynamic sizing thresholds based on performance
                 if stats.thread_pool_stats.total_tasks > 500 {
-                    let task_completion_variance = stats.max_task_duration.saturating_sub(stats.min_task_duration);
+                    let task_completion_variance = stats
+                        .max_task_duration
+                        .saturating_sub(stats.min_task_duration);
                     if task_completion_variance > Duration::from_millis(100) {
                         // High variance suggests need for more aggressive scaling
                         optimized_config.dynamic_sizing.scale_up_threshold = 0.7;
@@ -400,11 +407,11 @@ impl ThreadPoolManager {
                         if optimized_config.base_config.affinity == AffinityStrategy::None {
                             optimized_config.base_config.affinity = AffinityStrategy::NumaSpread;
                         }
-                    },
+                    }
                     ThreadPoolProfile::MemoryBound => {
                         // Memory-bound tasks benefit from NUMA awareness
                         optimized_config.base_config.affinity = AffinityStrategy::NumaCompact;
-                    },
+                    }
                     _ => {}
                 }
 
@@ -418,9 +425,12 @@ impl ThreadPoolManager {
                 }
 
                 // Only suggest optimization if there's meaningful change
-                if optimized_config.base_config != current_config.base_config ||
-                   optimized_config.dynamic_sizing.scale_up_threshold != current_config.dynamic_sizing.scale_up_threshold ||
-                   optimized_config.workload_adaptation.learning_rate != current_config.workload_adaptation.learning_rate {
+                if optimized_config.base_config != current_config.base_config
+                    || optimized_config.dynamic_sizing.scale_up_threshold
+                        != current_config.dynamic_sizing.scale_up_threshold
+                    || optimized_config.workload_adaptation.learning_rate
+                        != current_config.workload_adaptation.learning_rate
+                {
                     optimizations.push((profile.clone(), optimized_config));
                 }
             }
@@ -430,9 +440,12 @@ impl ThreadPoolManager {
     }
 
     /// Apply auto-optimization suggestions
-    pub fn apply_optimizations(&self, optimizations: Vec<(ThreadPoolProfile, AdvancedThreadPoolConfig)>) {
+    pub fn apply_optimizations(
+        &self,
+        optimizations: Vec<(ThreadPoolProfile, AdvancedThreadPoolConfig)>,
+    ) {
         let mut configs = self.pool_configs.write().unwrap();
-        
+
         for (profile, config) in optimizations {
             configs.insert(profile, config);
         }

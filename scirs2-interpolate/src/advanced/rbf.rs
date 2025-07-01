@@ -526,6 +526,119 @@ impl<
             .as_ref()
             .map(|report| report.is_well_conditioned)
     }
+
+    /// Create a new RBF interpolator without training data (two-phase initialization)
+    ///
+    /// This constructor creates an uninitialized interpolator that must be fitted
+    /// using the `fit()` method before it can be used for prediction.
+    ///
+    /// # Arguments
+    ///
+    /// * `kernel` - RBF kernel function to use
+    /// * `epsilon` - Shape parameter for the kernel
+    ///
+    /// # Returns
+    ///
+    /// A new uninitialized `RBFInterpolator` object
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use scirs2_interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
+    /// let mut rbf = RBFInterpolator::new_unfitted(RBFKernel::Gaussian, 1.0f64);
+    /// // Use rbf.fit() to train the interpolator before prediction
+    /// ```
+    pub fn new_unfitted(kernel: RBFKernel, epsilon: F) -> Self {
+        Self {
+            points: Array2::zeros((0, 0)),
+            coefficients: Array1::zeros(0),
+            kernel,
+            epsilon,
+            condition_report: None,
+        }
+    }
+
+    /// Fit the RBF interpolator to training data
+    ///
+    /// This method trains the interpolator on the provided points and values.
+    /// After fitting, the interpolator can be used for prediction.
+    ///
+    /// # Arguments
+    ///
+    /// * `points` - Coordinates of sample points
+    /// * `values` - Values at the sample points
+    ///
+    /// # Returns
+    ///
+    /// Result indicating success or failure
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ndarray::{array, Array2};
+    /// use scirs2_interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
+    ///
+    /// let mut rbf = RBFInterpolator::new_unfitted(RBFKernel::Gaussian, 1.0f64);
+    ///
+    /// let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
+    /// let values = array![0.0, 1.0, 1.0];
+    ///
+    /// rbf.fit(&points.view(), &values.view()).unwrap();
+    /// ```
+    pub fn fit(&mut self, points: &ArrayView2<F>, values: &ArrayView1<F>) -> InterpolateResult<()> {
+        // Create a new interpolator with the provided data
+        let fitted = Self::new_impl(points, values, self.kernel, self.epsilon, false, 0)?;
+
+        // Update our internal state
+        self.points = fitted.points;
+        self.coefficients = fitted.coefficients;
+        self.condition_report = fitted.condition_report;
+
+        Ok(())
+    }
+
+    /// Predict values at new points
+    ///
+    /// This method interpolates values at the provided query points using the
+    /// fitted RBF interpolator.
+    ///
+    /// # Arguments
+    ///
+    /// * `query_points` - Points at which to interpolate values
+    ///
+    /// # Returns
+    ///
+    /// Interpolated values at the query points
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ndarray::{array, Array2};
+    /// use scirs2_interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
+    ///
+    /// let mut rbf = RBFInterpolator::new_unfitted(RBFKernel::Gaussian, 1.0f64);
+    ///
+    /// let points = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0]).unwrap();
+    /// let values = array![0.0, 1.0, 1.0];
+    ///
+    /// rbf.fit(&points.view(), &values.view()).unwrap();
+    ///
+    /// let query_points = Array2::from_shape_vec((1, 2), vec![0.5, 0.5]).unwrap();
+    /// let result = rbf.predict(&query_points.view()).unwrap();
+    /// ```
+    pub fn predict(&self, query_points: &ArrayView2<F>) -> InterpolateResult<Array1<F>> {
+        // Check if the interpolator has been fitted
+        if self.points.is_empty() {
+            return Err(InterpolateError::shape_mismatch(
+                "Interpolator must be fitted before prediction".to_string(),
+                "Call fit() method first".to_string(),
+                "RBF interpolator prediction",
+            ));
+        }
+
+        // Use the existing interpolate method
+        self.interpolate(query_points)
+    }
 }
 
 // Enhanced solver for the linear system Ax = b with numerical stability checks

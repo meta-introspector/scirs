@@ -332,14 +332,14 @@ impl<F: Float + NumAssign + Sum + 'static + Debug> LinearOperator<F>
         }
 
         let mut result = vec![F::zero(); self.matrix.shape().1];
-        
+
         // Iterate through each row of the matrix
         for (row_idx, &x_val) in x.iter().enumerate() {
             if x_val != F::zero() {
                 // Get row data for this row
                 let row_start = self.matrix.get_indptr()[row_idx];
                 let row_end = self.matrix.get_indptr()[row_idx + 1];
-                
+
                 for idx in row_start..row_end {
                     let col_idx = self.matrix.get_indices()[idx];
                     let data_val = self.matrix.get_data()[idx];
@@ -347,7 +347,7 @@ impl<F: Float + NumAssign + Sum + 'static + Debug> LinearOperator<F>
                 }
             }
         }
-        
+
         Ok(result)
     }
 
@@ -362,7 +362,9 @@ impl<F: Float + NumAssign + Sum + 'static + Debug> AsLinearOperator<F> for CsrMa
     }
 }
 
-impl<F: Float + NumAssign + Sum + 'static + Debug> AsLinearOperator<F> for crate::csr_array::CsrArray<F> {
+impl<F: Float + NumAssign + Sum + 'static + Debug> AsLinearOperator<F>
+    for crate::csr_array::CsrArray<F>
+{
     fn as_linear_operator(&self) -> Box<dyn LinearOperator<F>> {
         Box::new(MatrixLinearOperator::new(self.clone()))
     }

@@ -164,7 +164,7 @@ where
     M: Model<F> + Sync,
 {
     if inputs.ndim() < 2 {
-        return Err(NeuralError::InvalidInput(
+        return Err(NeuralError::InvalidArgument(
             "Batch attribution requires at least 2D input (batch, features)".to_string(),
         ));
     }

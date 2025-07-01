@@ -1668,7 +1668,7 @@ impl AccelerationManager {
     pub fn new(config: AccelerationConfig) -> Self {
         Self { config }
     }
-    
+
     pub fn default() -> Self {
         Self::new(AccelerationConfig::default())
     }

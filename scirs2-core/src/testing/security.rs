@@ -585,7 +585,7 @@ impl VulnerabilityAssessment {
     /// Perform comprehensive security audit
     pub fn perform_security_audit(&self) -> CoreResult<SecurityAuditReport> {
         let start_time = Instant::now();
-        
+
         let mut report = SecurityAuditReport {
             audit_timestamp: std::time::SystemTime::now(),
             total_tests: 0,
@@ -600,30 +600,30 @@ impl VulnerabilityAssessment {
 
         // Dependency vulnerability scan
         self.scan_dependencies(&mut report)?;
-        
+
         // Code security analysis
         self.analyze_code_security(&mut report)?;
-        
+
         // Configuration security check
         self.check_configuration_security(&mut report)?;
-        
+
         // Third-party integration security
         self.assess_third_party_security(&mut report)?;
 
         report.duration = start_time.elapsed();
         report.overall_score = self.calculate_security_score(&report);
         report.security_level = self.determine_security_level(report.overall_score);
-        
+
         Ok(report)
     }
 
     /// Scan dependencies for known vulnerabilities
     fn scan_dependencies(&self, report: &mut SecurityAuditReport) -> CoreResult<()> {
         report.total_tests += 1;
-        
+
         // Check for known vulnerable dependencies
         let vulnerable_deps = self.check_vulnerable_dependencies()?;
-        
+
         if vulnerable_deps.is_empty() {
             report.passed_tests += 1;
         } else {
@@ -641,17 +641,17 @@ impl VulnerabilityAssessment {
                 });
             }
         }
-        
+
         Ok(())
     }
 
     /// Analyze code security patterns
     fn analyze_code_security(&self, report: &mut SecurityAuditReport) -> CoreResult<()> {
         report.total_tests += 1;
-        
+
         // Static analysis for security patterns
         let security_issues = self.perform_static_analysis()?;
-        
+
         if security_issues.is_empty() {
             report.passed_tests += 1;
         } else {
@@ -660,46 +660,50 @@ impl VulnerabilityAssessment {
                 report.vulnerabilities.push(issue);
             }
         }
-        
+
         Ok(())
     }
 
     /// Check configuration security
     fn check_configuration_security(&self, report: &mut SecurityAuditReport) -> CoreResult<()> {
         report.total_tests += 1;
-        
+
         let config_issues = self.audit_configuration()?;
-        
+
         if config_issues.is_empty() {
             report.passed_tests += 1;
-            report.recommendations.push("Configuration security: PASS".to_string());
+            report
+                .recommendations
+                .push("Configuration security: PASS".to_string());
         } else {
             report.failed_tests += 1;
             for issue in config_issues {
                 report.vulnerabilities.push(issue);
             }
         }
-        
+
         Ok(())
     }
 
     /// Assess third-party integration security
     fn assess_third_party_security(&self, report: &mut SecurityAuditReport) -> CoreResult<()> {
         report.total_tests += 1;
-        
+
         // Check for insecure third-party integrations
         let integration_issues = self.check_third_party_integrations()?;
-        
+
         if integration_issues.is_empty() {
             report.passed_tests += 1;
-            report.recommendations.push("Third-party integrations: SECURE".to_string());
+            report
+                .recommendations
+                .push("Third-party integrations: SECURE".to_string());
         } else {
             report.failed_tests += 1;
             for issue in integration_issues {
                 report.vulnerabilities.push(issue);
             }
         }
-        
+
         Ok(())
     }
 
@@ -714,29 +718,30 @@ impl VulnerabilityAssessment {
     fn perform_static_analysis(&self) -> CoreResult<Vec<SecurityVulnerability>> {
         // Check for common security anti-patterns
         // This is a simplified version - real implementation would use AST analysis
-        
+
         // Check for potential unsafe blocks (already audited in Rust)
         let vulnerabilities = vec![SecurityVulnerability {
             id: "SAFE-001".to_string(),
             severity: SecuritySeverity::Info,
             category: SecurityCategory::MemorySafety,
             title: "Memory Safety Analysis".to_string(),
-            description: "Rust's type system prevents most memory safety vulnerabilities".to_string(),
+            description: "Rust's type system prevents most memory safety vulnerabilities"
+                .to_string(),
             affected_component: "core".to_string(),
             cve_id: None,
             mitigation: "Continue using Rust's safe abstractions".to_string(),
         }];
-        
+
         Ok(vulnerabilities)
     }
 
     /// Audit configuration security
     fn audit_configuration(&self) -> CoreResult<Vec<SecurityVulnerability>> {
         let issues = Vec::new();
-        
+
         // Check for insecure default configurations
         // This would check actual config files in a real implementation
-        
+
         // For now, assume secure configuration
         Ok(issues)
     }
@@ -744,11 +749,11 @@ impl VulnerabilityAssessment {
     /// Check third-party integrations
     fn check_third_party_integrations(&self) -> CoreResult<Vec<SecurityVulnerability>> {
         let issues = Vec::new();
-        
+
         // Check for insecure external API usage
         // Check for unencrypted communications
         // Check for insecure authentication methods
-        
+
         // For now, assume secure integrations
         Ok(issues)
     }
@@ -758,9 +763,9 @@ impl VulnerabilityAssessment {
         if report.total_tests == 0 {
             return 0.0;
         }
-        
+
         let base_score = (report.passed_tests as f64 / report.total_tests as f64) * 100.0;
-        
+
         // Reduce score based on vulnerability severity
         let mut penalty = 0.0;
         for vuln in &report.vulnerabilities {
@@ -772,7 +777,7 @@ impl VulnerabilityAssessment {
                 SecuritySeverity::Info => penalty += 0.0,
             }
         }
-        
+
         (base_score - penalty).max(0.0)
     }
 
@@ -846,7 +851,6 @@ pub struct VulnerableDependency {
     /// CVE identifier
     pub cve_id: Option<String>,
 }
-
 
 /// High-level security testing utilities
 pub struct SecurityTestUtils;
@@ -973,8 +977,9 @@ impl SecurityTestUtils {
             let assessment = VulnerabilityAssessment::new(security_config_clone3.clone());
             let report = assessment.perform_security_audit()?;
 
-            if report.security_level == SecurityLevel::Insecure 
-                || report.security_level == SecurityLevel::Vulnerable {
+            if report.security_level == SecurityLevel::Insecure
+                || report.security_level == SecurityLevel::Vulnerable
+            {
                 return Ok(TestResult::failure(
                     report.duration,
                     report.total_tests,
@@ -1061,7 +1066,7 @@ mod tests {
     #[test]
     fn test_security_score_calculation() {
         let assessment = VulnerabilityAssessment::new(SecurityTestConfig::default());
-        
+
         // Test with no vulnerabilities
         let report = SecurityAuditReport {
             audit_timestamp: std::time::SystemTime::now(),
@@ -1074,10 +1079,10 @@ mod tests {
             security_level: SecurityLevel::Secure,
             duration: Duration::from_secs(1),
         };
-        
+
         let score = assessment.calculate_security_score(&report);
         assert_eq!(score, 100.0);
-        
+
         // Test with critical vulnerability
         let report_with_critical = SecurityAuditReport {
             audit_timestamp: std::time::SystemTime::now(),
@@ -1099,7 +1104,7 @@ mod tests {
             security_level: SecurityLevel::Secure,
             duration: Duration::from_secs(1),
         };
-        
+
         let score_with_critical = assessment.calculate_security_score(&report_with_critical);
         assert!(score_with_critical < 100.0);
         assert!(score_with_critical >= 0.0);
@@ -1108,11 +1113,26 @@ mod tests {
     #[test]
     fn test_security_level_determination() {
         let assessment = VulnerabilityAssessment::new(SecurityTestConfig::default());
-        
-        assert_eq!(assessment.determine_security_level(100.0), SecurityLevel::Hardened);
-        assert_eq!(assessment.determine_security_level(90.0), SecurityLevel::Secure);
-        assert_eq!(assessment.determine_security_level(75.0), SecurityLevel::Weak);
-        assert_eq!(assessment.determine_security_level(60.0), SecurityLevel::Vulnerable);
-        assert_eq!(assessment.determine_security_level(30.0), SecurityLevel::Insecure);
+
+        assert_eq!(
+            assessment.determine_security_level(100.0),
+            SecurityLevel::Hardened
+        );
+        assert_eq!(
+            assessment.determine_security_level(90.0),
+            SecurityLevel::Secure
+        );
+        assert_eq!(
+            assessment.determine_security_level(75.0),
+            SecurityLevel::Weak
+        );
+        assert_eq!(
+            assessment.determine_security_level(60.0),
+            SecurityLevel::Vulnerable
+        );
+        assert_eq!(
+            assessment.determine_security_level(30.0),
+            SecurityLevel::Insecure
+        );
     }
 }

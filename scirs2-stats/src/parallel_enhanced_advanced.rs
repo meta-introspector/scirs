@@ -8,13 +8,16 @@ use crate::error::StatsResult;
 use crate::error_standardization::ErrorMessages;
 use crate::simd_enhanced_core::{mean_enhanced, variance_enhanced, ComprehensiveStats};
 use ndarray::{Array1, Array2, ArrayBase, ArrayView1, Data, Ix1, Ix2};
-use num_traits::{Float, NumCast, Zero, One};
+use num_traits::{Float, NumCast, One, Zero};
 use scirs2_core::{
     parallel_ops::*,
     simd_ops::{PlatformCapabilities, SimdUnifiedOps},
 };
-use std::sync::{Arc, Mutex, atomic::{AtomicUsize, Ordering}};
 use std::collections::VecDeque;
+use std::sync::{
+    atomic::{AtomicUsize, Ordering},
+    Arc, Mutex,
+};
 use std::thread;
 
 /// Advanced parallel processing configuration
@@ -85,14 +88,23 @@ pub enum ParallelResult<F: Float> {
     Histogram(Vec<usize>),
 }
 
-impl<F> AdvancedParallelProcessor<F> 
+impl<F> AdvancedParallelProcessor<F>
 where
-    F: Float + NumCast + Send + Sync + SimdUnifiedOps + Copy + 'static + Zero + One + std::fmt::Debug,
+    F: Float
+        + NumCast
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + Copy
+        + 'static
+        + Zero
+        + One
+        + std::fmt::Debug,
 {
     /// Create a new advanced parallel processor
     pub fn new(config: AdvancedParallelConfig) -> Self {
         let capabilities = PlatformCapabilities::detect();
-        
+
         Self {
             config,
             capabilities,
@@ -104,9 +116,10 @@ where
 
     /// Initialize the thread pool with optimal configuration
     pub fn initialize(&mut self) -> StatsResult<()> {
-        let num_threads = self.config.num_threads.unwrap_or_else(|| {
-            self.optimal_thread_count()
-        });
+        let num_threads = self
+            .config
+            .num_threads
+            .unwrap_or_else(|| self.optimal_thread_count());
 
         self.thread_pool = Some(ThreadPool::new(num_threads, self.config.clone())?);
         Ok(())
@@ -122,7 +135,7 @@ where
         }
 
         let n = x.len();
-        
+
         // Use sequential processing for small arrays
         if n < self.config.parallel_threshold {
             return mean_enhanced(x);
@@ -139,9 +152,9 @@ where
 
     /// Compute variance using advanced parallel processing with numerical stability
     pub fn variance_parallel_advanced<D>(
-        &self, 
-        x: &ArrayBase<D, Ix1>, 
-        ddof: usize
+        &self,
+        x: &ArrayBase<D, Ix1>,
+        ddof: usize,
     ) -> StatsResult<F>
     where
         D: Data<Elem = F> + Sync + Send,
@@ -151,7 +164,11 @@ where
             return Err(ErrorMessages::empty_array("x"));
         }
         if n <= ddof {
-            return Err(ErrorMessages::insufficient_data("variance calculation", ddof + 1, n));
+            return Err(ErrorMessages::insufficient_data(
+                "variance calculation",
+                ddof + 1,
+                n,
+            ));
         }
 
         if n < self.config.parallel_threshold {
@@ -163,24 +180,25 @@ where
     }
 
     /// Compute correlation matrix in parallel for multivariate data
-    pub fn correlation_matrix_parallel<D>(
-        &self, 
-        data: &ArrayBase<D, Ix2>
-    ) -> StatsResult<Array2<F>>
+    pub fn correlation_matrix_parallel<D>(&self, data: &ArrayBase<D, Ix2>) -> StatsResult<Array2<F>>
     where
         D: Data<Elem = F> + Sync + Send,
     {
         let (n_samples, n_features) = data.dim();
-        
+
         if n_samples == 0 {
             return Err(ErrorMessages::empty_array("data"));
         }
         if n_features == 0 {
-            return Err(ErrorMessages::insufficient_data("correlation matrix", 2, n_features));
+            return Err(ErrorMessages::insufficient_data(
+                "correlation matrix",
+                2,
+                n_features,
+            ));
         }
 
         let mut correlation_matrix = Array2::eye(n_features);
-        
+
         // Parallel computation of upper triangle
         if n_features > 4 && n_samples > self.config.parallel_threshold {
             self.correlation_matrix_parallel_upper_triangle(data, &mut correlation_matrix)?;
@@ -202,7 +220,7 @@ where
     pub fn batch_statistics_parallel<D>(
         &self,
         x: &ArrayBase<D, Ix1>,
-        ddof: usize
+        ddof: usize,
     ) -> StatsResult<ComprehensiveStats<F>>
     where
         D: Data<Elem = F> + Sync + Send,
@@ -212,7 +230,11 @@ where
             return Err(ErrorMessages::empty_array("x"));
         }
         if n <= ddof {
-            return Err(ErrorMessages::insufficient_data("comprehensive statistics", ddof + 1, n));
+            return Err(ErrorMessages::insufficient_data(
+                "comprehensive statistics",
+                ddof + 1,
+                n,
+            ));
         }
 
         if n < self.config.parallel_threshold {
@@ -230,7 +252,7 @@ where
         x: &ArrayBase<D, Ix1>,
         n_samples: usize,
         statistic_fn: impl Fn(&ArrayView1<F>) -> F + Send + Sync + Clone,
-        seed: Option<u64>
+        seed: Option<u64>,
     ) -> StatsResult<Array1<F>>
     where
         D: Data<Elem = F> + Sync + Send,
@@ -242,9 +264,12 @@ where
             return Err(ErrorMessages::insufficient_data("bootstrap", 1, 0));
         }
 
-        let num_threads = self.config.num_threads.unwrap_or_else(|| self.optimal_thread_count());
+        let num_threads = self
+            .config
+            .num_threads
+            .unwrap_or_else(|| self.optimal_thread_count());
         let samples_per_thread = (n_samples + num_threads - 1) / num_threads;
-        
+
         // Parallel bootstrap computation with work stealing
         self.bootstrap_work_stealing(x, n_samples, samples_per_thread, statistic_fn, seed)
     }
@@ -255,7 +280,7 @@ where
         let logical_cores = std::thread::available_parallelism()
             .map(|n| n.get())
             .unwrap_or(4);
-        
+
         // Account for hyperthreading - usually optimal to use physical cores
         let physical_cores = if self.capabilities.has_hyperthreading() {
             logical_cores / 2
@@ -277,12 +302,16 @@ where
         D: Data<Elem = F> + Sync + Send,
     {
         let n = x.len();
-        let num_threads = self.config.num_threads.unwrap_or_else(|| self.optimal_thread_count());
+        let num_threads = self
+            .config
+            .num_threads
+            .unwrap_or_else(|| self.optimal_thread_count());
         let initial_chunk_size = (n + num_threads - 1) / num_threads;
-        
+
         // Create work queue with initial chunks
-        let work_queue: Arc<Mutex<VecDeque<(usize, usize)>>> = Arc::new(Mutex::new(VecDeque::new()));
-        
+        let work_queue: Arc<Mutex<VecDeque<(usize, usize)>>> =
+            Arc::new(Mutex::new(VecDeque::new()));
+
         for i in 0..num_threads {
             let start = i * initial_chunk_size;
             let end = ((i + 1) * initial_chunk_size).min(n);
@@ -298,19 +327,20 @@ where
             for _ in 0..num_threads {
                 let work_queue = Arc::clone(&work_queue);
                 let partial_sums = Arc::clone(&partial_sums);
-                
+
                 s.spawn(move |_| {
                     let mut local_sum = F::zero();
-                    
+
                     while let Some((start, end)) = work_queue.lock().unwrap().pop_front() {
                         // Process chunk
                         unsafe {
-                            let slice = std::slice::from_raw_parts(data_ptr.add(start), end - start);
+                            let slice =
+                                std::slice::from_raw_parts(data_ptr.add(start), end - start);
                             for &val in slice {
                                 local_sum = local_sum + val;
                             }
                         }
-                        
+
                         // Split remaining work if chunk was large
                         if end - start > 1000 {
                             let mid = (start + end) / 2;
@@ -319,13 +349,18 @@ where
                             }
                         }
                     }
-                    
+
                     partial_sums.lock().unwrap().push(local_sum);
                 });
             }
-        }).unwrap();
+        })
+        .unwrap();
 
-        let total_sum = partial_sums.lock().unwrap().iter().fold(F::zero(), |acc, &val| acc + val);
+        let total_sum = partial_sums
+            .lock()
+            .unwrap()
+            .iter()
+            .fold(F::zero(), |acc, &val| acc + val);
         Ok(total_sum / F::from(n).unwrap())
     }
 
@@ -335,11 +370,11 @@ where
     {
         let n = x.len();
         let element_size = std::mem::size_of::<F>();
-        
+
         // Adaptive chunk size based on cache hierarchy
         let l1_cache = 32 * 1024; // 32KB L1 cache (typical)
         let l2_cache = 256 * 1024; // 256KB L2 cache (typical)
-        
+
         let chunk_size = if n * element_size <= l1_cache {
             n // Fits in L1, no chunking needed
         } else if n * element_size <= l2_cache {
@@ -349,14 +384,19 @@ where
         };
 
         let num_chunks = (n + chunk_size - 1) / chunk_size;
-        let num_threads = self.config.num_threads.unwrap_or_else(|| self.optimal_thread_count());
-        
+        let num_threads = self
+            .config
+            .num_threads
+            .unwrap_or_else(|| self.optimal_thread_count());
+
         // Use thread pool for processing
-        let chunks: Vec<_> = (0..num_chunks).map(|i| {
-            let start = i * chunk_size;
-            let end = ((i + 1) * chunk_size).min(n);
-            x.slice(ndarray::s![start..end])
-        }).collect();
+        let chunks: Vec<_> = (0..num_chunks)
+            .map(|i| {
+                let start = i * chunk_size;
+                let end = ((i + 1) * chunk_size).min(n);
+                x.slice(ndarray::s![start..end])
+            })
+            .collect();
 
         let partial_sums: Vec<F> = chunks
             .into_par_iter()
@@ -369,7 +409,9 @@ where
             })
             .collect();
 
-        let total_sum = partial_sums.into_iter().fold(F::zero(), |acc, val| acc + val);
+        let total_sum = partial_sums
+            .into_iter()
+            .fold(F::zero(), |acc, val| acc + val);
         Ok(total_sum / F::from(n).unwrap())
     }
 
@@ -381,12 +423,17 @@ where
         self.mean_cache_oblivious(x, 0, x.len())
     }
 
-    fn mean_cache_oblivious<D>(&self, x: &ArrayBase<D, Ix1>, start: usize, len: usize) -> StatsResult<F>
+    fn mean_cache_oblivious<D>(
+        &self,
+        x: &ArrayBase<D, Ix1>,
+        start: usize,
+        len: usize,
+    ) -> StatsResult<F>
     where
         D: Data<Elem = F> + Sync + Send,
     {
         const CACHE_THRESHOLD: usize = 1024; // Empirically determined threshold
-        
+
         if len <= CACHE_THRESHOLD {
             // Base case: compute directly
             let slice = x.slice(ndarray::s![start..start + len]);
@@ -399,15 +446,15 @@ where
                 let x = x.clone(); // Clone the view
                 move || self.mean_cache_oblivious(&x, start, mid)
             });
-            
+
             let right_result = self.mean_cache_oblivious(x, start + mid, len - mid)?;
             let left_result = left_future.join().unwrap()?;
-            
+
             // Combine results weighted by size
             let left_weight = F::from(mid).unwrap();
             let right_weight = F::from(len - mid).unwrap();
             let total_weight = F::from(len).unwrap();
-            
+
             Ok((left_result * left_weight + right_result * right_weight) / total_weight)
         }
     }
@@ -417,7 +464,8 @@ where
         D: Data<Elem = F> + Sync + Send,
     {
         let n = x.len();
-        let chunks: Vec<_> = x.exact_chunks(chunk_size)
+        let chunks: Vec<_> = x
+            .exact_chunks(chunk_size)
             .into_iter()
             .chain(if n % chunk_size != 0 {
                 vec![x.slice(ndarray::s![n - (n % chunk_size)..])]
@@ -431,7 +479,9 @@ where
             .map(|chunk| chunk.iter().fold(F::zero(), |acc, &val| acc + val))
             .collect();
 
-        let total_sum = partial_sums.into_iter().fold(F::zero(), |acc, val| acc + val);
+        let total_sum = partial_sums
+            .into_iter()
+            .fold(F::zero(), |acc, val| acc + val);
         Ok(total_sum / F::from(n).unwrap())
     }
 
@@ -441,7 +491,10 @@ where
     {
         // Parallel Welford's algorithm implementation
         let n = x.len();
-        let num_threads = self.config.num_threads.unwrap_or_else(|| self.optimal_thread_count());
+        let num_threads = self
+            .config
+            .num_threads
+            .unwrap_or_else(|| self.optimal_thread_count());
         let chunk_size = (n + num_threads - 1) / num_threads;
 
         let results: Vec<(F, F, usize)> = (0..num_threads)
@@ -449,7 +502,7 @@ where
             .map(|i| {
                 let start = i * chunk_size;
                 let end = ((i + 1) * chunk_size).min(n);
-                
+
                 if start >= end {
                     return (F::zero(), F::zero(), 0);
                 }
@@ -486,13 +539,14 @@ where
                 let count_a_f = F::from(count_a).unwrap();
                 let count_b_f = F::from(count_b).unwrap();
                 let total_count_f = F::from(total_count).unwrap();
-                
+
                 let delta = mean_b - mean_a;
                 let combined_mean = (mean_a * count_a_f + mean_b * count_b_f) / total_count_f;
-                let combined_m2 = m2_a + m2_b + delta * delta * count_a_f * count_b_f / total_count_f;
+                let combined_m2 =
+                    m2_a + m2_b + delta * delta * count_a_f * count_b_f / total_count_f;
 
                 (combined_mean, combined_m2, total_count)
-            }
+            },
         );
 
         Ok(final_m2.1 / F::from(n - ddof).unwrap())
@@ -501,16 +555,16 @@ where
     fn correlation_matrix_parallel_upper_triangle<D>(
         &self,
         data: &ArrayBase<D, Ix2>,
-        correlation_matrix: &mut Array2<F>
+        correlation_matrix: &mut Array2<F>,
     ) -> StatsResult<()>
     where
         D: Data<Elem = F> + Sync + Send,
     {
         let (_, n_features) = data.dim();
-        
+
         // Generate pairs for upper triangle
         let pairs: Vec<(usize, usize)> = (0..n_features)
-            .flat_map(|i| (i+1..n_features).map(move |j| (i, j)))
+            .flat_map(|i| (i + 1..n_features).map(move |j| (i, j)))
             .collect();
 
         let results: Vec<((usize, usize), F)> = pairs
@@ -518,7 +572,8 @@ where
             .map(|(i, j)| {
                 let x = data.column(i);
                 let y = data.column(j);
-                let corr = crate::simd_enhanced_core::correlation_simd_enhanced(&x, &y).unwrap_or(F::zero());
+                let corr = crate::simd_enhanced_core::correlation_simd_enhanced(&x, &y)
+                    .unwrap_or(F::zero());
                 ((i, j), corr)
             })
             .collect();
@@ -534,15 +589,15 @@ where
     fn correlation_matrix_sequential<D>(
         &self,
         data: &ArrayBase<D, Ix2>,
-        correlation_matrix: &mut Array2<F>
+        correlation_matrix: &mut Array2<F>,
     ) -> StatsResult<()>
     where
         D: Data<Elem = F> + Sync + Send,
     {
         let (_, n_features) = data.dim();
-        
+
         for i in 0..n_features {
-            for j in i+1..n_features {
+            for j in i + 1..n_features {
                 let x = data.column(i);
                 let y = data.column(j);
                 let corr = crate::simd_enhanced_core::correlation_simd_enhanced(&x, &y)?;
@@ -556,13 +611,16 @@ where
     fn comprehensive_stats_single_pass_parallel<D>(
         &self,
         x: &ArrayBase<D, Ix1>,
-        ddof: usize
+        ddof: usize,
     ) -> StatsResult<ComprehensiveStats<F>>
     where
         D: Data<Elem = F> + Sync + Send,
     {
         let n = x.len();
-        let num_threads = self.config.num_threads.unwrap_or_else(|| self.optimal_thread_count());
+        let num_threads = self
+            .config
+            .num_threads
+            .unwrap_or_else(|| self.optimal_thread_count());
         let chunk_size = (n + num_threads - 1) / num_threads;
 
         // Parallel computation of all moments
@@ -571,7 +629,7 @@ where
             .map(|i| {
                 let start = i * chunk_size;
                 let end = ((i + 1) * chunk_size).min(n);
-                
+
                 if start >= end {
                     return (F::zero(), F::zero(), F::zero(), F::zero(), 0);
                 }
@@ -579,20 +637,20 @@ where
                 let chunk = x.slice(ndarray::s![start..end]);
                 let count = chunk.len();
                 let count_f = F::from(count).unwrap();
-                
+
                 // Single pass computation of all moments
                 let mean = chunk.iter().fold(F::zero(), |acc, &val| acc + val) / count_f;
-                
-                let (m2, m3, m4) = chunk.iter().fold(
-                    (F::zero(), F::zero(), F::zero()),
-                    |(m2, m3, m4), &val| {
-                        let dev = val - mean;
-                        let dev2 = dev * dev;
-                        let dev3 = dev2 * dev;
-                        let dev4 = dev2 * dev2;
-                        (m2 + dev2, m3 + dev3, m4 + dev4)
-                    }
-                );
+
+                let (m2, m3, m4) =
+                    chunk
+                        .iter()
+                        .fold((F::zero(), F::zero(), F::zero()), |(m2, m3, m4), &val| {
+                            let dev = val - mean;
+                            let dev2 = dev * dev;
+                            let dev3 = dev2 * dev;
+                            let dev4 = dev2 * dev2;
+                            (m2 + dev2, m3 + dev3, m4 + dev4)
+                        });
 
                 (mean, m2, m3, m4, count)
             })
@@ -614,23 +672,29 @@ where
                 let count_f = F::from(count).unwrap();
                 let count_acc_f = F::from(count_acc).unwrap();
                 let total_count_f = F::from(total_count).unwrap();
-                
+
                 let combined_mean = (mean_acc * count_acc_f + mean * count_f) / total_count_f;
-                
+
                 // For simplicity, recalculate moments (could be optimized further)
-                (combined_mean, m2_acc + m2, m3_acc + m3, m4_acc + m4, total_count)
-            }
+                (
+                    combined_mean,
+                    m2_acc + m2,
+                    m3_acc + m3,
+                    m4_acc + m4,
+                    total_count,
+                )
+            },
         );
 
         let variance = total_m2 / F::from(n - ddof).unwrap();
         let std = variance.sqrt();
-        
+
         let skewness = if variance > F::epsilon() {
             (total_m3 / F::from(n).unwrap()) / variance.powf(F::from(1.5).unwrap())
         } else {
             F::zero()
         };
-        
+
         let kurtosis = if variance > F::epsilon() {
             (total_m4 / F::from(n).unwrap()) / (variance * variance) - F::from(3.0).unwrap()
         } else {
@@ -653,20 +717,23 @@ where
         n_samples: usize,
         samples_per_thread: usize,
         statistic_fn: impl Fn(&ArrayView1<F>) -> F + Send + Sync + Clone,
-        seed: Option<u64>
+        seed: Option<u64>,
     ) -> StatsResult<Array1<F>>
     where
         D: Data<Elem = F> + Sync + Send,
     {
         use rand::{Rng, SeedableRng};
         use rand_chacha::ChaCha8Rng;
-        
-        let num_threads = self.config.num_threads.unwrap_or_else(|| self.optimal_thread_count());
+
+        let num_threads = self
+            .config
+            .num_threads
+            .unwrap_or_else(|| self.optimal_thread_count());
         let mut results = Vec::with_capacity(n_samples);
-        
+
         let data_vec: Vec<F> = x.iter().cloned().collect();
         let data_arc = Arc::new(data_vec);
-        
+
         let partial_results: Arc<Mutex<Vec<F>>> = Arc::new(Mutex::new(Vec::new()));
 
         crossbeam::scope(|s| {
@@ -674,41 +741,39 @@ where
                 let data_arc = Arc::clone(&data_arc);
                 let partial_results = Arc::clone(&partial_results);
                 let statistic_fn = statistic_fn.clone();
-                
+
                 s.spawn(move |_| {
                     let mut rng = if let Some(seed) = seed {
                         ChaCha8Rng::seed_from_u64(seed + thread_id as u64)
                     } else {
                         ChaCha8Rng::from_entropy()
                     };
-                    
+
                     let mut local_results = Vec::with_capacity(samples_per_thread);
                     let n_data = data_arc.len();
-                    
+
                     for _ in 0..samples_per_thread {
                         // Generate bootstrap sample
-                        let bootstrap_indices: Vec<usize> = (0..n_data)
-                            .map(|_| rng.gen_range(0..n_data))
-                            .collect();
-                        
-                        let bootstrap_sample: Vec<F> = bootstrap_indices
-                            .into_iter()
-                            .map(|i| data_arc[i])
-                            .collect();
-                        
+                        let bootstrap_indices: Vec<usize> =
+                            (0..n_data).map(|_| rng.gen_range(0..n_data)).collect();
+
+                        let bootstrap_sample: Vec<F> =
+                            bootstrap_indices.into_iter().map(|i| data_arc[i]).collect();
+
                         let sample_array = Array1::from(bootstrap_sample);
                         let statistic = statistic_fn(&sample_array.view());
                         local_results.push(statistic);
                     }
-                    
+
                     partial_results.lock().unwrap().extend(local_results);
                 });
             }
-        }).unwrap();
+        })
+        .unwrap();
 
         let mut all_results = partial_results.lock().unwrap();
         all_results.truncate(n_samples); // Ensure exact number of samples
-        
+
         Ok(Array1::from(all_results.clone()))
     }
 }
@@ -738,10 +803,10 @@ impl ThreadPool {
 
         for id in 0..size {
             let receiver = Arc::clone(&receiver);
-            
+
             let worker = thread::spawn(move || loop {
                 let message = receiver.lock().unwrap().recv().unwrap();
-                
+
                 match message {
                     Message::NewJob(job) => {
                         job();
@@ -751,7 +816,7 @@ impl ThreadPool {
                     }
                 }
             });
-            
+
             workers.push(worker);
         }
 
@@ -784,17 +849,35 @@ impl Drop for ThreadPool {
 /// Convenience function to create an advanced parallel processor
 pub fn create_advanced_parallel_processor<F>() -> AdvancedParallelProcessor<F>
 where
-    F: Float + NumCast + Send + Sync + SimdUnifiedOps + Copy + 'static + Zero + One + std::fmt::Debug,
+    F: Float
+        + NumCast
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + Copy
+        + 'static
+        + Zero
+        + One
+        + std::fmt::Debug,
 {
     AdvancedParallelProcessor::new(AdvancedParallelConfig::default())
 }
 
 /// Convenience function to create a processor with custom configuration
 pub fn create_configured_parallel_processor<F>(
-    config: AdvancedParallelConfig
+    config: AdvancedParallelConfig,
 ) -> AdvancedParallelProcessor<F>
 where
-    F: Float + NumCast + Send + Sync + SimdUnifiedOps + Copy + 'static + Zero + One + std::fmt::Debug,
+    F: Float
+        + NumCast
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + Copy
+        + 'static
+        + Zero
+        + One
+        + std::fmt::Debug,
 {
     AdvancedParallelProcessor::new(config)
 }

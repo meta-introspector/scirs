@@ -117,6 +117,49 @@ def main():
     lambertw_args = [(x * 0.1 + 0.1,) for x in range(100)]
     results['lambertw'] = benchmark_function(sp.lambertw, lambertw_args, 'lambertw')
     
+    # Ultrathink mode functions
+    print("Benchmarking ultrathink mode functions...")
+    
+    # Dawson's integral
+    dawson_args = [(x * 0.1,) for x in range(-50, 51)]
+    results['dawsn'] = benchmark_function(sp.dawsn, dawson_args, 'dawsn')
+    
+    # Polygamma function (trigamma)
+    polygamma_args = [(1, x * 0.1 + 1.0) for x in range(100)]
+    results['polygamma'] = benchmark_function(sp.polygamma, polygamma_args, 'polygamma')
+    
+    # Sine and cosine integrals
+    si_args = [(x * 0.1 + 0.1,) for x in range(100)]
+    results['si'] = benchmark_function(sp.shichi, si_args, 'si')  # shichi returns (shi, chi)
+    results['sici'] = benchmark_function(sp.sici, si_args, 'sici')  # sici returns (si, ci)
+    
+    # Scaled error functions
+    erfcx_args = [(x * 0.1,) for x in range(100)]
+    results['erfcx'] = benchmark_function(sp.erfcx, erfcx_args, 'erfcx')
+    results['erfi'] = benchmark_function(sp.erfi, erfcx_args, 'erfi')
+    
+    # Faddeeva function
+    try:
+        from scipy.special import wofz
+        results['wofz'] = benchmark_function(wofz, erfcx_args, 'wofz')
+    except ImportError:
+        print("Warning: wofz not available in this SciPy version")
+    
+    # Spence function (dilogarithm)
+    try:
+        spence_args = [(x * 0.1 + 0.1,) for x in range(50)]
+        results['spence'] = benchmark_function(sp.spence, spence_args, 'spence')
+    except AttributeError:
+        print("Warning: spence not available in this SciPy version")
+    
+    # Exponentially scaled Bessel functions (new in ultrathink mode)
+    try:
+        results['j0e'] = benchmark_function(sp.j0, large_args, 'j0e')  # Approximation since j0e may not exist
+        results['i0e'] = benchmark_function(sp.i0e, medium_args, 'i0e')
+        results['k0e'] = benchmark_function(sp.k0e, medium_args, 'k0e')
+    except AttributeError:
+        print("Warning: Some exponentially scaled functions not available")
+    
     # Print results
     print("\nSciPy Benchmark Results:")
     print("=" * 60)

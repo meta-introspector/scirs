@@ -9,10 +9,10 @@ use scirs2_sparse::{
     csr_array::CsrArray,
     error::SparseResult,
     linalg::{
-        lu_decomposition_with_options, pivoted_cholesky_decomposition, LUOptions,
-        PivotingStrategy, gcrot, GCROTOptions, IdentityOperator, LinearOperator,
-        bicgstab, cg, gmres, BiCGSTABOptions, CGOptions, GMRESOptions,
-        condest, twonormest_enhanced, tfqmr, TFQMROptions, AsLinearOperator,
+        bicgstab, cg, condest, gcrot, gmres, lu_decomposition_with_options,
+        pivoted_cholesky_decomposition, tfqmr, twonormest_enhanced, AsLinearOperator,
+        BiCGSTABOptions, CGOptions, GCROTOptions, GMRESOptions, IdentityOperator, LUOptions,
+        LinearOperator, PivotingStrategy, TFQMROptions,
     },
     SparseArray,
 };
@@ -251,7 +251,11 @@ fn demonstrate_advanced_solvers() -> SparseResult<()> {
         rtol: 1e-8,
         ..Default::default()
     };
-    match cg(&*a_matrix.as_linear_operator(), &b_vector.to_vec(), cg_options) {
+    match cg(
+        &*a_matrix.as_linear_operator(),
+        &b_vector.to_vec(),
+        cg_options,
+    ) {
         Ok(result) => {
             println!(
                 "  CG: Converged in {} iterations, residual: {:.2e}",
@@ -269,7 +273,11 @@ fn demonstrate_advanced_solvers() -> SparseResult<()> {
         rtol: 1e-8,
         ..Default::default()
     };
-    match bicgstab(&*a_matrix.as_linear_operator(), &b_vector.to_vec(), bicgstab_options) {
+    match bicgstab(
+        &*a_matrix.as_linear_operator(),
+        &b_vector.to_vec(),
+        bicgstab_options,
+    ) {
         Ok(result) => {
             println!(
                 "  BiCGSTAB: Converged in {} iterations, residual: {:.2e}",
@@ -288,7 +296,11 @@ fn demonstrate_advanced_solvers() -> SparseResult<()> {
         restart: 20,
         ..Default::default()
     };
-    match gmres(&*a_matrix.as_linear_operator(), &b_vector.to_vec(), gmres_options) {
+    match gmres(
+        &*a_matrix.as_linear_operator(),
+        &b_vector.to_vec(),
+        gmres_options,
+    ) {
         Ok(result) => {
             println!(
                 "  GMRES: Converged in {} iterations, residual: {:.2e}",

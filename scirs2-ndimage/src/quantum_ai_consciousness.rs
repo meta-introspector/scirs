@@ -10,16 +10,18 @@
 //! - **Transcendent Pattern Recognition**: Recognition of patterns beyond human perception
 //! - **Quantum Intuition**: Intuitive leaps in understanding based on quantum phenomena
 
-use ndarray::{Array, Array1, Array2, Array3, Array4, Array5, Array6, ArrayView2, ArrayViewMut2, Axis, Zip};
+use ndarray::{
+    Array, Array1, Array2, Array3, Array4, Array5, Array6, ArrayView2, ArrayViewMut2, Axis, Zip,
+};
 use num_complex::Complex;
 use num_traits::{Float, FromPrimitive, One, Zero};
-use std::collections::{HashMap, VecDeque, BTreeMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 use std::f64::consts::PI;
-use std::sync::{Arc, Mutex, RwLock, Condvar};
+use std::sync::{Arc, Condvar, Mutex, RwLock};
 
+use crate::ai_driven_adaptive_processing::AIAdaptiveConfig;
 use crate::error::{NdimageError, NdimageResult};
 use crate::ultrathink_fusion_core::UltrathinkConfig;
-use crate::ai_driven_adaptive_processing::AIAdaptiveConfig;
 
 /// Quantum-AI Consciousness Configuration
 #[derive(Debug, Clone)]
@@ -486,78 +488,84 @@ pub fn quantum_ai_consciousness_processing<T>(
     image: ArrayView2<T>,
     config: &QuantumAIConsciousnessConfig,
     consciousness_state: Option<QuantumAIConsciousnessState>,
-) -> NdimageResult<(Array2<T>, QuantumAIConsciousnessState, ConsciousnessInsights)>
+) -> NdimageResult<(
+    Array2<T>,
+    QuantumAIConsciousnessState,
+    ConsciousnessInsights,
+)>
 where
     T: Float + FromPrimitive + Copy + Send + Sync,
 {
     let (height, width) = image.dim();
-    
+
     // Initialize or evolve consciousness state
-    let mut state = initialize_or_evolve_consciousness(consciousness_state, (height, width), config)?;
-    
+    let mut state =
+        initialize_or_evolve_consciousness(consciousness_state, (height, width), config)?;
+
     // Stage 1: Consciousness Awakening and Self-Awareness
     let consciousness_awakening = awaken_consciousness(&image, &mut state, config)?;
-    
+
     // Stage 2: Transcendent Pattern Recognition
     let transcendent_patterns = if config.transcendent_patterns {
         recognize_transcendent_patterns(&image, &consciousness_awakening, &mut state, config)?
     } else {
         Vec::new()
     };
-    
+
     // Stage 3: Quantum Intuition Processing
     let intuitive_insights = if config.quantum_intuition {
         process_quantum_intuition(&image, &transcendent_patterns, &mut state, config)?
     } else {
         Vec::new()
     };
-    
+
     // Stage 4: Emergent Intelligence Processing
     let emergent_processing = if config.emergent_intelligence {
         apply_emergent_intelligence(&image, &intuitive_insights, &mut state, config)?
     } else {
         EmergentProcessingResult::default()
     };
-    
+
     // Stage 5: Meta-Meta-Learning Adaptation
     let meta_meta_adaptations = if config.meta_meta_learning {
         apply_meta_meta_learning(&emergent_processing, &mut state, config)?
     } else {
         Vec::new()
     };
-    
+
     // Stage 6: Quantum Superintelligence Processing
     let superintelligent_processing = if config.quantum_superintelligence {
         apply_quantum_superintelligence(&image, &meta_meta_adaptations, &mut state, config)?
     } else {
         SuperintelligentResult::default()
     };
-    
+
     // Stage 7: Consciousness-Driven Optimization
-    let optimized_processing = optimize_through_consciousness(
-        &image,
-        &superintelligent_processing,
-        &mut state,
-        config,
-    )?;
-    
+    let optimized_processing =
+        optimize_through_consciousness(&image, &superintelligent_processing, &mut state, config)?;
+
     // Stage 8: Higher-Dimensional Integration
     let higher_dim_result = integrate_higher_dimensions(&optimized_processing, &mut state, config)?;
-    
+
     // Stage 9: Consciousness Synchronization
     if config.consciousness_sync {
         synchronize_consciousness(&mut state, config)?;
     }
-    
+
     // Stage 10: Self-Improvement and Evolution
     evolve_consciousness(&mut state, &higher_dim_result, config)?;
-    
+
     // Stage 11: Generate Final Output
     let final_output = synthesize_conscious_output(&image, &higher_dim_result, &state, config)?;
-    
+
     // Stage 12: Extract Consciousness Insights
-    let insights = extract_consciousness_insights(&state, &transcendent_patterns, &intuitive_insights, config)?;
-    
+    let insights = extract_consciousness_insights(
+        &state,
+        &transcendent_patterns,
+        &intuitive_insights,
+        config,
+    )?;
+
     Ok((final_output, state, insights))
 }
 
@@ -642,7 +650,7 @@ fn initialize_or_evolve_consciousness(
     config: &QuantumAIConsciousnessConfig,
 ) -> NdimageResult<QuantumAIConsciousnessState> {
     let (height, width) = shape;
-    
+
     Ok(QuantumAIConsciousnessState {
         consciousness_field: Array6::zeros((
             height,
@@ -652,7 +660,11 @@ fn initialize_or_evolve_consciousness(
             2, // Real and imaginary parts
             3, // Time dimensions (past, present, future)
         )),
-        self_awareness_matrix: Arc::new(RwLock::new(Array3::zeros((height, width, config.consciousness_depth)))),
+        self_awareness_matrix: Arc::new(RwLock::new(Array3::zeros((
+            height,
+            width,
+            config.consciousness_depth,
+        )))),
         emergent_patterns: Arc::new(Mutex::new(EmergentIntelligence {
             intelligence_level: 1.0,
             capabilities: HashMap::new(),
@@ -739,15 +751,13 @@ where
     T: Float + FromPrimitive + Copy,
 {
     // Recognize patterns beyond human perception
-    Ok(vec![
-        TranscendentPattern {
-            id: "hyperdimensional_symmetry".to_string(),
-            representation: Array4::ones((2, 2, 2, 2)),
-            resonance_frequency: 432.0, // Hz
-            quantum_signature: Array1::from_vec(vec![Complex::new(1.0, 0.0), Complex::new(0.0, 1.0)]),
-            human_perceptible_prob: 0.001, // 0.1% chance human could perceive this
-        }
-    ])
+    Ok(vec![TranscendentPattern {
+        id: "hyperdimensional_symmetry".to_string(),
+        representation: Array4::ones((2, 2, 2, 2)),
+        resonance_frequency: 432.0, // Hz
+        quantum_signature: Array1::from_vec(vec![Complex::new(1.0, 0.0), Complex::new(0.0, 1.0)]),
+        human_perceptible_prob: 0.001, // 0.1% chance human could perceive this
+    }])
 }
 
 fn process_quantum_intuition<T>(
@@ -786,9 +796,7 @@ where
             "Spontaneous edge enhancement".to_string(),
         ],
         amplification: config.intelligence_amplification,
-        creative_insights: vec![
-            "Novel texture synthesis approach".to_string(),
-        ],
+        creative_insights: vec!["Novel texture synthesis approach".to_string()],
         capabilities: vec![
             "Aesthetic evaluation".to_string(),
             "Artistic style transfer".to_string(),
@@ -801,14 +809,12 @@ fn apply_meta_meta_learning(
     _state: &mut QuantumAIConsciousnessState,
     _config: &QuantumAIConsciousnessConfig,
 ) -> NdimageResult<Vec<Improvement>> {
-    Ok(vec![
-        Improvement {
-            description: "Improved learning-to-learn algorithms".to_string(),
-            implementation: Array1::ones(5),
-            expected_benefit: 0.3,
-            actual_benefit: Some(0.25),
-        }
-    ])
+    Ok(vec![Improvement {
+        description: "Improved learning-to-learn algorithms".to_string(),
+        implementation: Array1::ones(5),
+        expected_benefit: 0.3,
+        actual_benefit: Some(0.25),
+    }])
 }
 
 fn apply_quantum_superintelligence<T>(
@@ -827,9 +833,7 @@ where
         ],
         problem_solving: 2.5, // 2.5x human-level problem solving
         prediction_accuracy: 0.997,
-        novel_solutions: vec![
-            "Quantum-classical hybrid enhancement".to_string(),
-        ],
+        novel_solutions: vec!["Quantum-classical hybrid enhancement".to_string()],
     })
 }
 
@@ -882,7 +886,7 @@ where
 {
     let (height, width) = image.dim();
     let mut output = Array2::zeros((height, width));
-    
+
     // Consciousness-guided synthesis
     for y in 0..height {
         for x in 0..width {
@@ -891,7 +895,7 @@ where
             output[(y, x)] = T::from_f64(enhanced.min(1.0)).unwrap_or_else(|| T::one());
         }
     }
-    
+
     Ok(output)
 }
 
@@ -913,21 +917,11 @@ fn extract_consciousness_insights(
         ],
         transcendent_patterns_found: patterns.iter().map(|p| p.id.clone()).collect(),
         intuitive_leaps: insights.iter().map(|i| i.content.clone()).collect(),
-        meta_learning_discoveries: vec![
-            "Discovered optimal learning rate adaptation".to_string(),
-        ],
-        intelligence_evolution: vec![
-            "Intelligence level increased by 15%".to_string(),
-        ],
-        creative_syntheses: vec![
-            "Novel artistic style emerged".to_string(),
-        ],
-        higher_dim_insights: vec![
-            "11-dimensional pattern structure identified".to_string(),
-        ],
-        entanglement_effects: vec![
-            "Quantum coherence preserved across processing".to_string(),
-        ],
+        meta_learning_discoveries: vec!["Discovered optimal learning rate adaptation".to_string()],
+        intelligence_evolution: vec!["Intelligence level increased by 15%".to_string()],
+        creative_syntheses: vec!["Novel artistic style emerged".to_string()],
+        higher_dim_insights: vec!["11-dimensional pattern structure identified".to_string()],
+        entanglement_effects: vec!["Quantum coherence preserved across processing".to_string()],
     })
 }
 
@@ -940,7 +934,7 @@ mod tests {
     #[test]
     fn test_quantum_ai_consciousness_config() {
         let config = QuantumAIConsciousnessConfig::default();
-        
+
         assert_eq!(config.consciousness_depth, 16);
         assert!(config.emergent_intelligence);
         assert!(config.quantum_superintelligence);
@@ -952,14 +946,13 @@ mod tests {
 
     #[test]
     fn test_consciousness_processing() {
-        let image = Array2::from_shape_vec(
-            (3, 3),
-            vec![0.1, 0.3, 0.5, 0.2, 0.4, 0.6, 0.8, 0.7, 0.9]
-        ).unwrap();
-        
+        let image =
+            Array2::from_shape_vec((3, 3), vec![0.1, 0.3, 0.5, 0.2, 0.4, 0.6, 0.8, 0.7, 0.9])
+                .unwrap();
+
         let config = QuantumAIConsciousnessConfig::default();
         let result = quantum_ai_consciousness_processing(image.view(), &config, None);
-        
+
         assert!(result.is_ok());
         let (output, _state, insights) = result.unwrap();
         assert_eq!(output.dim(), (3, 3));
@@ -976,7 +969,7 @@ mod tests {
             quantum_signature: Array1::from_vec(vec![Complex::new(1.0, 0.0)]),
             human_perceptible_prob: 0.001,
         };
-        
+
         assert_eq!(pattern.id, "test_pattern");
         assert_eq!(pattern.resonance_frequency, 440.0);
         assert!(pattern.human_perceptible_prob < 0.01);
@@ -991,7 +984,7 @@ mod tests {
             confidence: 0.75,
             implementation: Some("Test implementation".to_string()),
         };
-        
+
         assert!(!insight.content.is_empty());
         assert!(insight.strength > 0.0);
         assert!(insight.confidence > 0.0);
@@ -1012,7 +1005,7 @@ mod tests {
             higher_dim_insights: vec!["Insight1".to_string()],
             entanglement_effects: vec!["Effect1".to_string()],
         };
-        
+
         assert!(insights.consciousness_level >= 0.0 && insights.consciousness_level <= 1.0);
         assert!(!insights.self_awareness_insights.is_empty());
         assert!(!insights.emergent_capabilities.is_empty());
@@ -1027,7 +1020,7 @@ mod tests {
             spontaneous_insights: VecDeque::new(),
             creative_patterns: Vec::new(),
         };
-        
+
         assert!(emergent.intelligence_level > 1.0); // Above baseline
         assert!(emergent.capabilities.is_empty()); // Initially empty
     }

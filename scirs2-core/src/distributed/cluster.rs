@@ -14,6 +14,9 @@ use std::time::{Duration, Instant, SystemTime};
 #[cfg(feature = "logging")]
 use log;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 /// Global cluster manager instance
 static GLOBAL_CLUSTER_MANAGER: std::sync::OnceLock<Arc<ClusterManager>> =
     std::sync::OnceLock::new();
@@ -1208,45 +1211,46 @@ impl ResourceAllocator {
     fn optimize_best_fit(&mut self) -> CoreResult<()> {
         // Best-fit optimization: minimize resource fragmentation by allocating
         // to nodes that most closely match the resource requirements
-        
+
         // Get all current allocations sorted by resource usage
-        let mut allocations: Vec<(TaskId, ResourceAllocation)> = 
-            self.allocations.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
-        
+        let mut allocations: Vec<(TaskId, ResourceAllocation)> = self
+            .allocations
+            .iter()
+            .map(|(k, v)| (k.clone(), v.clone()))
+            .collect();
+
         // Sort allocations by total resource "weight" (descending)
         // This helps identify heavy allocations that could be better placed
         allocations.sort_by(|a, b| {
-            let weight_a = a.1.allocated_resources.cpu_cores 
-                + a.1.allocated_resources.memory_gb 
+            let weight_a = a.1.allocated_resources.cpu_cores
+                + a.1.allocated_resources.memory_gb
                 + a.1.allocated_resources.gpu_count * 4  // Weight GPUs more heavily
                 + a.1.allocated_resources.disk_space_gb / 10; // Weight disk less
-            let weight_b = b.1.allocated_resources.cpu_cores 
-                + b.1.allocated_resources.memory_gb 
+            let weight_b = b.1.allocated_resources.cpu_cores
+                + b.1.allocated_resources.memory_gb
                 + b.1.allocated_resources.gpu_count * 4
                 + b.1.allocated_resources.disk_space_gb / 10;
             weight_b.cmp(&weight_a)
         });
-        
+
         // Optimization strategy: consolidate small allocations onto fewer nodes
         // and ensure large allocations get dedicated resources
-        
+
         // Track optimization improvements
         let mut optimizations_made = 0;
         let fragmentation_score_before = self.calculate_fragmentation_score();
-        
+
         // Group allocations by size category
-        let (large_allocations, medium_allocations, small_allocations): (
-            Vec<_>, Vec<_>, Vec<_>
-        ) = {
+        let (large_allocations, medium_allocations, small_allocations): (Vec<_>, Vec<_>, Vec<_>) = {
             let mut large = Vec::new();
             let mut medium = Vec::new();
             let mut small = Vec::new();
-            
+
             for (task_id, allocation) in allocations {
-                let total_resources = allocation.allocated_resources.cpu_cores 
-                    + allocation.allocated_resources.memory_gb 
+                let total_resources = allocation.allocated_resources.cpu_cores
+                    + allocation.allocated_resources.memory_gb
                     + allocation.allocated_resources.gpu_count * 4;
-                
+
                 if total_resources >= 32 {
                     large.push((task_id.clone(), allocation.clone()));
                 } else if total_resources >= 8 {
@@ -1255,11 +1259,11 @@ impl ResourceAllocator {
                     small.push((task_id.clone(), allocation.clone()));
                 }
             }
-            
+
             (large, medium, small)
         };
-        
-        // Best-fit strategy for large allocations: 
+
+        // Best-fit strategy for large allocations:
         // Ensure they get dedicated, high-capacity nodes
         for (task_id, allocation) in large_allocations {
             if allocation.assigned_nodes.len() > 1 {
@@ -1269,7 +1273,7 @@ impl ResourceAllocator {
                 }
             }
         }
-        
+
         // Best-fit strategy for medium allocations:
         // Pair them efficiently to minimize waste
         for (task_id, allocation) in medium_allocations {
@@ -1277,7 +1281,7 @@ impl ResourceAllocator {
                 optimizations_made += 1;
             }
         }
-        
+
         // Best-fit strategy for small allocations:
         // Pack them tightly onto shared nodes
         for (task_id, allocation) in small_allocations {
@@ -1285,11 +1289,11 @@ impl ResourceAllocator {
                 optimizations_made += 1;
             }
         }
-        
+
         // Calculate improvement
         let _fragmentation_score_after = self.calculate_fragmentation_score();
         let _improvement = fragmentation_score_before - _fragmentation_score_after;
-        
+
         if optimizations_made > 0 {
             #[cfg(feature = "logging")]
             log::info!(
@@ -1297,36 +1301,37 @@ impl ResourceAllocator {
                 optimizations_made, _improvement
             );
         }
-        
+
         Ok(())
     }
 
     fn optimize_load_balanced(&mut self) -> CoreResult<()> {
         // Load-balanced optimization: distribute workload evenly across nodes
         // to prevent hot spots and maximize overall cluster throughput
-        
+
         // Calculate current load distribution across nodes
         let mut node_loads = HashMap::new();
         let mut total_load = 0.0;
-        
+
         // Calculate load for each node based on current allocations
         for allocation in self.allocations.values() {
             for node_id in &allocation.assigned_nodes {
-                let load_weight = self.calculate_allocation_load_weight(&allocation.allocated_resources);
+                let load_weight =
+                    self.calculate_allocation_load_weight(&allocation.allocated_resources);
                 *node_loads.entry(node_id.clone()).or_insert(0.0) += load_weight;
                 total_load += load_weight;
             }
         }
-        
+
         // Identify the target load per node (assuming uniform node capabilities)
         let num_active_nodes = node_loads.len().max(1);
         let target_load_per_node = total_load / num_active_nodes as f64;
         let load_variance_threshold = target_load_per_node * 0.15; // 15% variance allowed
-        
+
         // Find overloaded and underloaded nodes
         let mut overloaded_nodes = Vec::new();
         let mut underloaded_nodes = Vec::new();
-        
+
         for (node_id, &current_load) in &node_loads {
             let load_diff = current_load - target_load_per_node;
             if load_diff > load_variance_threshold {
@@ -1335,86 +1340,91 @@ impl ResourceAllocator {
                 underloaded_nodes.push((node_id.clone(), current_load, -load_diff));
             }
         }
-        
+
         // Sort by load difference (most extreme first)
         overloaded_nodes.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap());
         underloaded_nodes.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap());
-        
+
         let mut rebalancing_actions = 0;
         let initial_variance = self.calculate_load_variance(&node_loads);
-        
+
         // Rebalancing algorithm: move allocations from overloaded to underloaded nodes
         for (overloaded_node, _overloaded_amount, _) in overloaded_nodes {
             // Find allocations on this overloaded node that can be moved
             let moveable_allocations = self.find_moveable_allocations(&overloaded_node);
-            
+
             for (task_id, allocation) in moveable_allocations {
                 // Find the best underloaded node for this allocation
-                if let Some((target_node, _)) = self.find_best_target_node(
-                    &allocation.allocated_resources, 
-                    &underloaded_nodes
-                ) {
+                if let Some((target_node, _)) =
+                    self.find_best_target_node(&allocation.allocated_resources, &underloaded_nodes)
+                {
                     // Attempt to move the allocation
                     if self.attempt_allocation_migration(&task_id, &target_node)? {
                         rebalancing_actions += 1;
-                        
+
                         // Update node loads tracking
-                        let allocation_weight = self.calculate_allocation_load_weight(&allocation.allocated_resources);
+                        let allocation_weight =
+                            self.calculate_allocation_load_weight(&allocation.allocated_resources);
                         if let Some(old_load) = node_loads.get_mut(&overloaded_node) {
                             *old_load -= allocation_weight;
                         }
                         if let Some(new_load) = node_loads.get_mut(&target_node) {
                             *new_load += allocation_weight;
                         }
-                        
+
                         // Check if we've balanced enough
-                        if node_loads.get(&overloaded_node).copied().unwrap_or(0.0) 
-                            <= target_load_per_node + load_variance_threshold {
+                        if node_loads.get(&overloaded_node).copied().unwrap_or(0.0)
+                            <= target_load_per_node + load_variance_threshold
+                        {
                             break; // This node is now balanced
                         }
                     }
                 }
             }
         }
-        
+
         // Secondary optimization: spread single large allocations across multiple nodes
-        let single_node_allocations: Vec<(TaskId, ResourceAllocation)> = 
-            self.allocations.iter()
-                .filter(|(_, allocation)| allocation.assigned_nodes.len() == 1)
-                .map(|(k, v)| (k.clone(), v.clone()))
-                .collect();
-        
+        let single_node_allocations: Vec<(TaskId, ResourceAllocation)> = self
+            .allocations
+            .iter()
+            .filter(|(_, allocation)| allocation.assigned_nodes.len() == 1)
+            .map(|(k, v)| (k.clone(), v.clone()))
+            .collect();
+
         for (task_id, allocation) in single_node_allocations {
-            let load_weight = self.calculate_allocation_load_weight(&allocation.allocated_resources);
-            if load_weight > target_load_per_node * 0.6 { // Large allocation
+            let load_weight =
+                self.calculate_allocation_load_weight(&allocation.allocated_resources);
+            if load_weight > target_load_per_node * 0.6 {
+                // Large allocation
                 if self.attempt_allocation_spreading(&task_id, &allocation)? {
                     rebalancing_actions += 1;
                 }
             }
         }
-        
+
         // Calculate improvement in load balance
         let final_variance = self.calculate_load_variance(&node_loads);
         let _variance_improvement = initial_variance - final_variance;
-        
+
         if rebalancing_actions > 0 {
             #[cfg(feature = "logging")]
             log::info!(
                 "Load-balanced optimization completed: {} rebalancing actions, \
                  load variance improved by {:.2}",
-                rebalancing_actions, _variance_improvement
+                rebalancing_actions,
+                _variance_improvement
             );
         }
-        
+
         Ok(())
     }
 
     pub fn get_available_capacity(&self) -> ComputeCapacity {
         self.available_resources.clone()
     }
-    
+
     // Helper methods for optimization algorithms
-    
+
     fn calculate_fragmentation_score(&self) -> f64 {
         // Calculate how fragmented the resource allocation is
         // Lower score = better (less fragmented)
@@ -1422,56 +1432,64 @@ impl ResourceAllocator {
         if total_allocated_resources == 0.0 {
             return 0.0;
         }
-        
+
         // Count allocations that are split across multiple nodes
-        let split_allocations = self.allocations.values()
+        let split_allocations = self
+            .allocations
+            .values()
             .filter(|alloc| alloc.assigned_nodes.len() > 1)
             .count() as f64;
-        
+
         // Calculate average resource utilization efficiency
         let mut total_efficiency = 0.0;
         for allocation in self.allocations.values() {
-            let resource_efficiency = self.calculate_resource_efficiency(&allocation.allocated_resources);
+            let resource_efficiency =
+                self.calculate_resource_efficiency(&allocation.allocated_resources);
             total_efficiency += resource_efficiency;
         }
         let avg_efficiency = total_efficiency / total_allocated_resources;
-        
+
         // Fragmentation score: high split ratio + low efficiency = high fragmentation
         let split_ratio = split_allocations / total_allocated_resources;
         (split_ratio * 0.6 + (1.0 - avg_efficiency) * 0.4) * 100.0
     }
-    
+
     fn calculate_resource_efficiency(&self, resources: &ComputeCapacity) -> f64 {
         // Calculate how efficiently resources are being used
         // 1.0 = perfect efficiency, 0.0 = completely inefficient
-        
+
         // Check resource balance (CPU:Memory:GPU ratio)
         let cpu_ratio = resources.cpu_cores as f64;
         let _memory_ratio = resources.memory_gb as f64 / 4.0; // Assume 4GB per CPU core is balanced
         let gpu_ratio = resources.gpu_count as f64 * 8.0; // Each GPU equivalent to 8 CPU cores
-        
+
         let total_compute = cpu_ratio + gpu_ratio;
         let balanced_memory = total_compute * 4.0;
-        
+
         // Efficiency is higher when memory allocation matches compute needs
         let memory_efficiency = if resources.memory_gb as f64 > 0.0 {
-            balanced_memory.min(resources.memory_gb as f64) / balanced_memory.max(resources.memory_gb as f64)
+            balanced_memory.min(resources.memory_gb as f64)
+                / balanced_memory.max(resources.memory_gb as f64)
         } else {
             1.0
         };
-        
+
         // Also consider if resources are "too small" (overhead penalty)
         let scale_efficiency = if total_compute < 2.0 {
             total_compute / 2.0 // Penalty for very small allocations
         } else {
             1.0
         };
-        
+
         let combined_efficiency = memory_efficiency * 0.7 + scale_efficiency * 0.3;
         combined_efficiency.min(1.0)
     }
-    
-    fn attempt_consolidation(&mut self, _task_id: &TaskId, _allocation: &ResourceAllocation) -> CoreResult<bool> {
+
+    fn attempt_consolidation(
+        &mut self,
+        _task_id: &TaskId,
+        _allocation: &ResourceAllocation,
+    ) -> CoreResult<bool> {
         // Attempt to consolidate a multi-node allocation onto fewer nodes
         // For now, return false indicating no consolidation was possible
         // In a real implementation, this would:
@@ -1480,19 +1498,27 @@ impl ResourceAllocator {
         // 3. Migrate the allocation if beneficial
         Ok(false)
     }
-    
-    fn attempt_best_fit_pairing(&mut self, _task_id: &TaskId, _allocation: &ResourceAllocation) -> CoreResult<bool> {
+
+    fn attempt_best_fit_pairing(
+        &mut self,
+        _task_id: &TaskId,
+        _allocation: &ResourceAllocation,
+    ) -> CoreResult<bool> {
         // Attempt to pair medium allocations efficiently
         // For now, return false indicating no pairing optimization was made
         Ok(false)
     }
-    
-    fn attempt_small_allocation_packing(&mut self, _task_id: &TaskId, _allocation: &ResourceAllocation) -> CoreResult<bool> {
+
+    fn attempt_small_allocation_packing(
+        &mut self,
+        _task_id: &TaskId,
+        _allocation: &ResourceAllocation,
+    ) -> CoreResult<bool> {
         // Attempt to pack small allocations tightly onto shared nodes
         // For now, return false indicating no packing optimization was made
         Ok(false)
     }
-    
+
     fn calculate_allocation_load_weight(&self, resources: &ComputeCapacity) -> f64 {
         // Calculate the "load weight" of an allocation for load balancing
         // Higher weight = more demanding allocation
@@ -1500,46 +1526,54 @@ impl ResourceAllocator {
         let memory_weight = resources.memory_gb as f64 * 0.25; // Memory is less constraining than CPU
         let gpu_weight = resources.gpu_count as f64 * 8.0; // GPUs are very constraining
         let disk_weight = resources.disk_space_gb as f64 * 0.01; // Disk is least constraining
-        
+
         cpu_weight + memory_weight + gpu_weight + disk_weight
     }
-    
+
     fn calculate_load_variance(&self, node_loads: &HashMap<String, f64>) -> f64 {
         // Calculate variance in load distribution across nodes
         if node_loads.len() <= 1 {
             return 0.0;
         }
-        
+
         let total_load: f64 = node_loads.values().sum();
         let mean_load = total_load / node_loads.len() as f64;
-        
-        let variance = node_loads.values()
+
+        let variance = node_loads
+            .values()
             .map(|&load| (load - mean_load).powi(2))
-            .sum::<f64>() / node_loads.len() as f64;
-        
+            .sum::<f64>()
+            / node_loads.len() as f64;
+
         variance.sqrt() // Return standard deviation
     }
-    
+
     fn find_moveable_allocations(&self, node_id: &str) -> Vec<(TaskId, ResourceAllocation)> {
         // Find allocations on a specific node that can potentially be moved
-        self.allocations.iter()
+        self.allocations
+            .iter()
             .filter(|(_, allocation)| allocation.assigned_nodes.contains(&node_id.to_string()))
             .map(|(task_id, allocation)| (task_id.clone(), allocation.clone()))
             .collect()
     }
-    
+
     fn find_best_target_node(
-        &self, 
-        _resources: &ComputeCapacity, 
-        underloaded_nodes: &[(String, f64, f64)]
+        &self,
+        _resources: &ComputeCapacity,
+        underloaded_nodes: &[(String, f64, f64)],
     ) -> Option<(String, f64)> {
         // Find the best underloaded node to receive an allocation
         // For now, just return the most underloaded node
-        underloaded_nodes.first()
+        underloaded_nodes
+            .first()
             .map(|(node_id, load, _)| (node_id.clone(), *load))
     }
-    
-    fn attempt_allocation_migration(&mut self, _task_id: &TaskId, _target_node: &str) -> CoreResult<bool> {
+
+    fn attempt_allocation_migration(
+        &mut self,
+        _task_id: &TaskId,
+        _target_node: &str,
+    ) -> CoreResult<bool> {
         // Attempt to migrate an allocation to a different node
         // For now, return false indicating migration wasn't performed
         // In a real implementation, this would:
@@ -1548,8 +1582,12 @@ impl ResourceAllocator {
         // 3. Perform the actual migration
         Ok(false)
     }
-    
-    fn attempt_allocation_spreading(&mut self, _task_id: &TaskId, _allocation: &ResourceAllocation) -> CoreResult<bool> {
+
+    fn attempt_allocation_spreading(
+        &mut self,
+        _task_id: &TaskId,
+        _allocation: &ResourceAllocation,
+    ) -> CoreResult<bool> {
         // Attempt to spread a large allocation across multiple nodes
         // For now, return false indicating spreading wasn't performed
         Ok(false)
@@ -1636,11 +1674,16 @@ pub struct NodeInfo {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum NodeType {
     Master,
     Worker,
     Storage,
     Compute,
+    ComputeOptimized,
+    MemoryOptimized,
+    StorageOptimized,
+    General,
 }
 
 #[derive(Debug, Clone)]
@@ -1666,12 +1709,18 @@ impl Default for NodeCapabilities {
     }
 }
 
-#[derive(Debug, Clone)]
+/// Specialized computing units available on a node
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum SpecializedUnit {
     TensorCore,
+    QuantumProcessor,
+    VectorUnit,
+    CryptoAccelerator,
+    NeuralProcessingUnit,
     Fpga,
     Asic,
-    QuantumProcessor,
+    CustomAsic(u32),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1841,7 +1890,8 @@ pub struct ResourceRequirements {
     pub specialized_requirements: Vec<SpecializedRequirement>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct SpecializedRequirement {
     pub unit_type: SpecializedUnit,
     pub count: usize,

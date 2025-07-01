@@ -280,7 +280,7 @@ where
         // Generate bootstrap sample
         let mut bootstrap_sample = Array1::zeros(n);
         for j in 0..n {
-            let idx = rng.random_range(0..n);
+            let idx = rng.gen_range(0..n);
             bootstrap_sample[j] = data[idx];
         }
 

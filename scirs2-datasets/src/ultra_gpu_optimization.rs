@@ -480,12 +480,12 @@ impl UltraGpuOptimizer {
         // Simulate GPU memory allocation and kernel execution
         // In a real implementation, this would use actual CUDA APIs
         let total_elements = rows * cols;
-        
+
         // GPU memory allocation (simulated)
         let gpu_memory_required = total_elements * std::mem::size_of::<f64>();
         if gpu_memory_required > self.get_available_gpu_memory() {
             return Err(DatasetsError::ComputationError(
-                "Insufficient GPU memory for operation".to_string()
+                "Insufficient GPU memory for operation".to_string(),
             ));
         }
 
@@ -496,7 +496,7 @@ impl UltraGpuOptimizer {
         // Execute distribution-specific kernel
         let kernel_name = match distribution {
             "normal" => "curand_normal_kernel",
-            "uniform" => "curand_uniform_kernel", 
+            "uniform" => "curand_uniform_kernel",
             "exponential" => "curand_exponential_kernel",
             _ => "curand_uniform_kernel", // Default
         };
@@ -504,7 +504,7 @@ impl UltraGpuOptimizer {
         // Simulate kernel execution with realistic timing
         let execution_time = self.estimate_cuda_kernel_time(total_elements, kernel_name);
         std::thread::sleep(std::time::Duration::from_nanos(
-            (execution_time * 1_000_000.0) as u64
+            (execution_time * 1_000_000.0) as u64,
         ));
 
         // Generate result using optimized CPU method as GPU simulation
@@ -520,7 +520,7 @@ impl UltraGpuOptimizer {
     fn apply_gpu_memory_coalescing_optimization(&self, data: &mut Array2<f64>) {
         // Simulate memory access pattern optimization that would occur on GPU
         let (_rows, _cols) = data.dim();
-        
+
         // For GPU efficiency, ensure data access patterns are optimized
         // This is a simulation of what actual GPU kernels would achieve
         for row in data.axis_iter_mut(Axis(0)) {
@@ -539,24 +539,29 @@ impl UltraGpuOptimizer {
     /// Estimate CUDA kernel execution time based on operation
     fn estimate_cuda_kernel_time(&self, elements: usize, kernel_name: &str) -> f64 {
         let base_time_per_element = match kernel_name {
-            "curand_normal_kernel" => 0.001,     // microseconds per element
+            "curand_normal_kernel" => 0.001, // microseconds per element
             "curand_uniform_kernel" => 0.0008,
             "curand_exponential_kernel" => 0.0012,
             _ => 0.001,
         };
-        
+
         // GPU parallel efficiency factor
         let parallel_efficiency = 0.85; // 85% efficiency
         let gpu_cores = 2048.0; // Simulate modern GPU
-        
+
         let serial_time = elements as f64 * base_time_per_element;
         let parallel_time = serial_time / (gpu_cores * parallel_efficiency);
-        
+
         parallel_time.max(0.01) // Minimum 0.01ms overhead
     }
 
     /// Cache GPU performance data for adaptive optimization
-    fn cache_gpu_performance(&self, operation: &str, elements: usize, duration: std::time::Duration) {
+    fn cache_gpu_performance(
+        &self,
+        operation: &str,
+        elements: usize,
+        duration: std::time::Duration,
+    ) {
         if let Ok(mut cache) = self.performance_cache.lock() {
             let key = format!("{}_{}", operation, elements);
             let profile = GpuPerformanceProfile {
@@ -586,20 +591,25 @@ impl UltraGpuOptimizer {
         let bytes_transferred = elements * std::mem::size_of::<f64>() * 2; // Read + Write
         let duration_secs = duration.as_secs_f64();
         if duration_secs > 0.0 {
-            bytes_transferred as f64 / duration_secs / (1024.0 * 1024.0 * 1024.0) // GB/s
+            bytes_transferred as f64 / duration_secs / (1024.0 * 1024.0 * 1024.0)
+        // GB/s
         } else {
             0.0
         }
     }
 
     /// Calculate performance score from actual timing
-    fn calculate_performance_score_from_timing(&self, elements: usize, duration: std::time::Duration) -> f64 {
+    fn calculate_performance_score_from_timing(
+        &self,
+        elements: usize,
+        duration: std::time::Duration,
+    ) -> f64 {
         let elements_per_second = if duration.as_secs_f64() > 0.0 {
             elements as f64 / duration.as_secs_f64()
         } else {
             0.0
         };
-        
+
         // Normalize to a 0-100 score (100M elements/sec = 100 points)
         (elements_per_second / 1_000_000.0).min(100.0)
     }
@@ -621,7 +631,11 @@ impl UltraGpuOptimizer {
         match self.execute_real_opencl_kernel(rows, cols, distribution, config) {
             Ok(result) => {
                 // Cache performance data for future optimizations
-                self.cache_gpu_performance("opencl_generation", total_elements, start_time.elapsed());
+                self.cache_gpu_performance(
+                    "opencl_generation",
+                    total_elements,
+                    start_time.elapsed(),
+                );
                 Ok(result)
             }
             Err(_) => {
@@ -640,26 +654,27 @@ impl UltraGpuOptimizer {
         config: &UltraKernelConfig,
     ) -> Result<Array2<f64>> {
         let total_elements = rows * cols;
-        
+
         // OpenCL memory allocation (simulated)
         let gpu_memory_required = total_elements * std::mem::size_of::<f64>();
         if gpu_memory_required > self.get_available_gpu_memory() {
             return Err(DatasetsError::ComputationError(
-                "Insufficient GPU memory for OpenCL operation".to_string()
+                "Insufficient GPU memory for OpenCL operation".to_string(),
             ));
         }
 
         // OpenCL work group optimization
         let work_group_size = config.block_size.min(256); // OpenCL typical max
-        let global_work_size = (total_elements + work_group_size - 1) / work_group_size * work_group_size;
+        let global_work_size =
+            (total_elements + work_group_size - 1) / work_group_size * work_group_size;
 
         // Distribution-specific OpenCL kernel selection
         let kernel_source = self.generate_opencl_kernel_source(distribution);
-        
+
         // Simulate OpenCL kernel compilation and execution
         let execution_time = self.estimate_opencl_kernel_time(total_elements, distribution);
         std::thread::sleep(std::time::Duration::from_nanos(
-            (execution_time * 1_000_000.0) as u64
+            (execution_time * 1_000_000.0) as u64,
         ));
 
         // Generate result using optimized CPU method as OpenCL simulation
@@ -723,37 +738,37 @@ impl UltraGpuOptimizer {
     /// Estimate OpenCL kernel execution time
     fn estimate_opencl_kernel_time(&self, elements: usize, distribution: &str) -> f64 {
         let base_time_per_element = match distribution {
-            "normal" => 0.0015,      // microseconds per element (more complex than CUDA)
+            "normal" => 0.0015, // microseconds per element (more complex than CUDA)
             "uniform" => 0.0012,
             "exponential" => 0.0018,
             _ => 0.0012,
         };
-        
+
         // OpenCL typically has more overhead than CUDA
         let parallel_efficiency = 0.75; // 75% efficiency (lower than CUDA)
         let gpu_compute_units = 32.0; // Typical OpenCL compute units
         let work_items_per_cu = 64.0;
-        
+
         let total_work_items = gpu_compute_units * work_items_per_cu;
         let serial_time = elements as f64 * base_time_per_element;
         let parallel_time = serial_time / (total_work_items * parallel_efficiency);
-        
+
         parallel_time.max(0.02) // Minimum 0.02ms overhead (higher than CUDA)
     }
 
     /// Apply OpenCL-specific memory optimizations
     fn apply_opencl_memory_optimizations(&self, data: &mut Array2<f64>, work_group_size: usize) {
         let (rows, cols) = data.dim();
-        
+
         // Simulate OpenCL local memory optimization
         let optimal_tile_size = work_group_size.min(16); // Typical tile size for OpenCL
-        
+
         // Process in tiles that fit OpenCL work group size
         for row_chunk in (0..rows).step_by(optimal_tile_size) {
             let end_row = (row_chunk + optimal_tile_size).min(rows);
             for col_chunk in (0..cols).step_by(optimal_tile_size) {
                 let end_col = (col_chunk + optimal_tile_size).min(cols);
-                
+
                 // Simulate tiled processing that would occur in OpenCL local memory
                 for row in row_chunk..end_row {
                     for col in col_chunk..end_col {

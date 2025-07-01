@@ -151,7 +151,7 @@ fn color_hessian_columns(sparsity: &CsrArray<f64>) -> Result<Vec<usize>, Optimiz
             let prev_neighbors = &adjacency[prev_col];
 
             // Check if columns are distance <= 2 apart
-            let distance_conflict = 
+            let distance_conflict =
                 // Distance 1: directly connected
                 neighbors.contains(&prev_col) ||
                 // Distance 2: share a common neighbor

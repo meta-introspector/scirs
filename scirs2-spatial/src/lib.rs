@@ -854,31 +854,29 @@ mod utils;
 // Quantum-inspired spatial algorithms for cutting-edge optimization
 pub mod quantum_inspired;
 pub use quantum_inspired::{
-    QuantumClusterer, QuantumNearestNeighbor, QuantumSpatialOptimizer, QuantumState,
-    QuantumAmplitude,
+    QuantumAmplitude, QuantumClusterer, QuantumNearestNeighbor, QuantumSpatialOptimizer,
+    QuantumState,
 };
 
 // Neuromorphic computing acceleration for brain-inspired spatial processing
 pub mod neuromorphic;
 pub use neuromorphic::{
-    SpikingNeuralClusterer, NeuromorphicProcessor, CompetitiveNeuralClusterer,
-    SpikeEvent, SpikingNeuron, Synapse,
+    CompetitiveNeuralClusterer, NeuromorphicProcessor, SpikeEvent, SpikingNeuralClusterer,
+    SpikingNeuron, Synapse,
 };
 
 // Advanced GPU tensor core utilization for maximum performance
 pub mod tensor_cores;
 pub use tensor_cores::{
-    TensorCoreDistanceMatrix, TensorCoreClustering, TensorCoreCapabilities,
-    PrecisionMode, TensorLayout, GpuArchitecture, TensorCoreType,
-    detect_tensor_core_capabilities,
+    detect_tensor_core_capabilities, GpuArchitecture, PrecisionMode, TensorCoreCapabilities,
+    TensorCoreClustering, TensorCoreDistanceMatrix, TensorCoreType, TensorLayout,
 };
 
 // Machine learning-based spatial optimization and adaptive algorithms
 pub mod ml_optimization;
 pub use ml_optimization::{
-    NeuralSpatialOptimizer, ReinforcementLearningSelector, ClusteringParameters,
-    ActivationFunction, DistanceMetric, SpatialAlgorithm, DataState,
-    Experience, ClusteringResult,
+    ActivationFunction, ClusteringParameters, ClusteringResult, DataState, DistanceMetric,
+    Experience, NeuralSpatialOptimizer, ReinforcementLearningSelector, SpatialAlgorithm,
 };
 
 // Distributed spatial computing framework for massive scale processing
@@ -899,22 +897,22 @@ pub use adaptive_selection::{
 // Quantum-classical hybrid algorithms for unprecedented performance breakthroughs
 pub mod quantum_classical_hybrid;
 pub use quantum_classical_hybrid::{
-    HybridSpatialOptimizer, HybridClusterer, HybridOptimizationResult,
-    HybridClusteringMetrics, HybridPerformanceMetrics, OptimizationStepResult,
+    HybridClusterer, HybridClusteringMetrics, HybridOptimizationResult, HybridPerformanceMetrics,
+    HybridSpatialOptimizer, OptimizationStepResult,
 };
 
 // Neuromorphic-quantum fusion algorithms for revolutionary bio-quantum computing
 pub mod neuromorphic_quantum_fusion;
 pub use neuromorphic_quantum_fusion::{
-    QuantumSpikingClusterer, NeuralQuantumOptimizer, QuantumSpikingNeuron,
-    QuantumSpikeEvent, QuantumSpikePattern, FusionMetrics, NeuralQuantumOptimizationResult,
+    FusionMetrics, NeuralQuantumOptimizationResult, NeuralQuantumOptimizer, QuantumSpikeEvent,
+    QuantumSpikePattern, QuantumSpikingClusterer, QuantumSpikingNeuron,
 };
 
 // Next-generation GPU architecture support for future computing paradigms
 pub mod next_gen_gpu_architecture;
 pub use next_gen_gpu_architecture::{
-    QuantumGpuProcessor, PhotonicAccelerator, NextGenGpuArchitecture,
-    QuantumProcessingUnit, PhotonicProcessingUnit, NextGenPerformanceMetrics,
+    NextGenGpuArchitecture, NextGenPerformanceMetrics, PhotonicAccelerator, PhotonicProcessingUnit,
+    QuantumGpuProcessor, QuantumProcessingUnit,
 };
 
 // Generic traits and algorithms for flexible spatial computing
@@ -933,19 +931,19 @@ pub use generic_algorithms::{
 // AI-driven algorithm selection and optimization for intelligent spatial computing
 pub mod ai_driven_optimization;
 pub use ai_driven_optimization::{
-    AIAlgorithmSelector, MetaLearningOptimizer, AlgorithmKnowledgeBase, AlgorithmMetadata,
-    PerformanceModel, ComplexityModel, PredictionNetworks, ReinforcementLearningAgent,
-    PerformanceRecord, MetaLearningModel, TaskMetadata, AlgorithmCandidate, 
-    AdaptationRecord, MetaOptimizationResult,
+    AIAlgorithmSelector, AdaptationRecord, AlgorithmCandidate, AlgorithmKnowledgeBase,
+    AlgorithmMetadata, ComplexityModel, MetaLearningModel, MetaLearningOptimizer,
+    MetaOptimizationResult, PerformanceModel, PerformanceRecord, PredictionNetworks,
+    ReinforcementLearningAgent, TaskMetadata,
 };
 
 // Extreme performance optimization pushing spatial computing beyond current limits
 pub mod extreme_performance_optimization;
 pub use extreme_performance_optimization::{
-    ExtremeOptimizer, UltrafastDistanceMatrix, SelfOptimizingAlgorithm, ExtremePerformanceMetrics,
-    HardwarePerformanceCounters, NumaTopologyInfo, CacheHierarchyInfo, JitCompiler,
-    ExtremeMemoryAllocator, OptimizationRecord, LockFreeSpatialStructures,
-    CacheObliviousSpatialAlgorithms, create_ultimate_optimizer, benchmark_extreme_optimizations,
+    benchmark_extreme_optimizations, create_ultimate_optimizer, CacheHierarchyInfo,
+    CacheObliviousSpatialAlgorithms, ExtremeMemoryAllocator, ExtremeOptimizer,
+    ExtremePerformanceMetrics, HardwarePerformanceCounters, JitCompiler, LockFreeSpatialStructures,
+    NumaTopologyInfo, OptimizationRecord, SelfOptimizingAlgorithm, UltrafastDistanceMatrix,
 };
 
 #[cfg(test)]

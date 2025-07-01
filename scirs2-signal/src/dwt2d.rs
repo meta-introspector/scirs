@@ -512,14 +512,15 @@ where
     let mut nan_count = 0;
     let mut inf_count = 0;
     let mut extreme_count = 0;
-    
+
     for ((i, j), &val) in data.indexed_iter() {
         match num_traits::cast::cast::<T, f64>(val) {
             Some(converted) => {
                 // Check for NaN, infinity, and extreme values
                 if converted.is_nan() {
                     nan_count += 1;
-                    if nan_count <= 5 { // Limit error messages
+                    if nan_count <= 5 {
+                        // Limit error messages
                         eprintln!("Warning: NaN detected at position ({}, {})", i, j);
                     }
                     data_f64[[i, j]] = 0.0; // Replace NaN with 0
@@ -529,11 +530,18 @@ where
                         eprintln!("Warning: Infinity detected at position ({}, {})", i, j);
                     }
                     // Replace infinity with large but finite value
-                    data_f64[[i, j]] = if converted.is_sign_positive() { 1e10 } else { -1e10 };
+                    data_f64[[i, j]] = if converted.is_sign_positive() {
+                        1e10
+                    } else {
+                        -1e10
+                    };
                 } else if converted.abs() > 1e12 {
                     extreme_count += 1;
                     if extreme_count <= 5 {
-                        eprintln!("Warning: Extreme value {} detected at position ({}, {})", converted, i, j);
+                        eprintln!(
+                            "Warning: Extreme value {} detected at position ({}, {})",
+                            converted, i, j
+                        );
                     }
                     data_f64[[i, j]] = converted;
                 } else {

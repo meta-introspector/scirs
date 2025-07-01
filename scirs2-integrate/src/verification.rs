@@ -1388,7 +1388,7 @@ mod tests {
         assert_abs_diff_eq!(trig_error, 0.0);
 
         // Test with custom names
-        let named_system = SystemVerification::with_names(vec![
+        let named_system: SystemVerification<f64> = SystemVerification::with_names(vec![
             "Polynomial".to_string(),
             "Trigonometric".to_string(),
         ]);

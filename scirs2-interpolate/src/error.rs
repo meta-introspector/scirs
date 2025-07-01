@@ -120,6 +120,12 @@ impl From<ndarray::ShapeError> for InterpolateError {
     }
 }
 
+impl From<scirs2_core::CoreError> for InterpolateError {
+    fn from(err: scirs2_core::CoreError) -> Self {
+        InterpolateError::ComputationError(err.to_string())
+    }
+}
+
 /// Result type for interpolation operations
 pub type InterpolateResult<T> = Result<T, InterpolateError>;
 
@@ -198,6 +204,11 @@ impl InterpolateError {
     /// Create a numerical stability error
     pub fn numerical_instability(context: &str, details: &str) -> Self {
         Self::NumericalError(format!("Numerical instability in {}: {}", context, details))
+    }
+
+    /// Create a numerical error
+    pub fn numerical_error(message: impl Into<String>) -> Self {
+        Self::NumericalError(message.into())
     }
 
     /// Create an insufficient data points error

@@ -10,15 +10,15 @@
 //! - Performance monitoring and profiling
 
 use crate::error::{NeuralError, Result};
-use crate::jit::{JITCompiler, JITOperation, TargetArchitecture};
+use crate::jit::{JITCompiler, JITOperation};
 use crate::performance::{PerformanceOptimizer, PerformanceStats};
-use crate::tpu::{TPUDevice, TPUOperation, TPURuntime};
+use crate::tpu::{TPUOperation, TPURuntime};
 use ndarray::ArrayD;
 use num_traits::Float;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::iter::Sum;
-use std::ops::{Add, Div};
+use std::ops::Div;
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
 
@@ -376,22 +376,28 @@ impl UnifiedPerformanceManager {
                             if inputs.len() >= 2 {
                                 let a_f32 = inputs[0].mapv(|x| x.to_f32().unwrap_or(0.0));
                                 let b_f32 = inputs[1].mapv(|x| x.to_f32().unwrap_or(0.0));
-                                let result = SIMDOperations::simd_matmul_f32(&a_f32.view(), &b_f32.view())?;
+                                let result =
+                                    SIMDOperations::simd_matmul_f32(&a_f32.view(), &b_f32.view())?;
                                 let result_f = result.mapv(|x| F::from(x).unwrap_or(F::zero()));
                                 Ok(vec![result_f])
                             } else {
-                                Err(NeuralError::InvalidInput("MatMul requires 2 inputs".to_string()))
+                                Err(NeuralError::InvalidArgument(
+                                    "MatMul requires 2 inputs".to_string(),
+                                ))
                             }
                         }
                         "elementwise_add" => {
                             if inputs.len() >= 2 {
                                 let a_f32 = inputs[0].mapv(|x| x.to_f32().unwrap_or(0.0));
                                 let b_f32 = inputs[1].mapv(|x| x.to_f32().unwrap_or(0.0));
-                                let result = SIMDOperations::simd_add_f32(&a_f32.view(), &b_f32.view())?;
+                                let result =
+                                    SIMDOperations::simd_add_f32(&a_f32.view(), &b_f32.view())?;
                                 let result_f = result.mapv(|x| F::from(x).unwrap_or(F::zero()));
                                 Ok(vec![result_f])
                             } else {
-                                Err(NeuralError::InvalidInput("ElementwiseAdd requires 2 inputs".to_string()))
+                                Err(NeuralError::InvalidArgument(
+                                    "ElementwiseAdd requires 2 inputs".to_string(),
+                                ))
                             }
                         }
                         "relu" => {
@@ -401,7 +407,9 @@ impl UnifiedPerformanceManager {
                                 let result_f = result.mapv(|x| F::from(x).unwrap_or(F::zero()));
                                 Ok(vec![result_f])
                             } else {
-                                Err(NeuralError::InvalidInput("ReLU requires 1 input".to_string()))
+                                Err(NeuralError::InvalidArgument(
+                                    "ReLU requires 1 input".to_string(),
+                                ))
                             }
                         }
                         "conv2d" => {
@@ -410,16 +418,18 @@ impl UnifiedPerformanceManager {
                                 let kernel_f32 = inputs[1].mapv(|x| x.to_f32().unwrap_or(0.0));
                                 // Use default stride and padding for now
                                 let result = SIMDOperations::simd_conv2d_f32(
-                                    &input_f32.view(), 
-                                    &kernel_f32.view(), 
-                                    None, 
-                                    (1, 1), 
-                                    (0, 0)
+                                    &input_f32.view(),
+                                    &kernel_f32.view(),
+                                    None,
+                                    (1, 1),
+                                    (0, 0),
                                 )?;
                                 let result_f = result.mapv(|x| F::from(x).unwrap_or(F::zero()));
                                 Ok(vec![result_f])
                             } else {
-                                Err(NeuralError::InvalidInput("Conv2D requires 2 inputs".to_string()))
+                                Err(NeuralError::InvalidArgument(
+                                    "Conv2D requires 2 inputs".to_string(),
+                                ))
                             }
                         }
                         _ => Err(NeuralError::NotImplemented(format!(
@@ -447,7 +457,7 @@ impl UnifiedPerformanceManager {
                             let result_f = result.mapv(|x| F::from(x).unwrap_or(F::zero()));
                             Ok(vec![result_f])
                         } else {
-                            Err(NeuralError::InvalidInput(
+                            Err(NeuralError::InvalidArgument(
                                 "MatMul requires 2 inputs".to_string(),
                             ))
                         }
@@ -457,12 +467,18 @@ impl UnifiedPerformanceManager {
                             let input_f32 = inputs[0].mapv(|x| x.to_f32().unwrap_or(0.0));
                             let kernel_f32 = inputs[1].mapv(|x| x.to_f32().unwrap_or(0.0));
                             let result = self.cpu_optimizer.optimized_conv2d(
-                                &input_f32, &kernel_f32, None, (1, 1), (0, 0)
+                                &input_f32,
+                                &kernel_f32,
+                                None,
+                                (1, 1),
+                                (0, 0),
                             )?;
                             let result_f = result.mapv(|x| F::from(x).unwrap_or(F::zero()));
                             Ok(vec![result_f])
                         } else {
-                            Err(NeuralError::InvalidInput("Conv2D requires 2 inputs".to_string()))
+                            Err(NeuralError::InvalidArgument(
+                                "Conv2D requires 2 inputs".to_string(),
+                            ))
                         }
                     }
                     _ => Err(NeuralError::NotImplemented(format!(
@@ -487,7 +503,9 @@ impl UnifiedPerformanceManager {
                         let result_f = result.mapv(|x| F::from(x).unwrap_or(F::zero()));
                         Ok(vec![result_f])
                     } else {
-                        Err(NeuralError::InvalidInput("No inputs provided".to_string()))
+                        Err(NeuralError::InvalidArgument(
+                            "No inputs provided".to_string(),
+                        ))
                     }
                 } else {
                     Err(NeuralError::DeviceError(
@@ -526,11 +544,9 @@ impl UnifiedPerformanceManager {
                     NeuralError::NotImplemented("No hybrid strategies provided".to_string())
                 }))
             }
-            OptimizationChoice::GPU => {
-                Err(NeuralError::NotImplemented(
-                    "GPU acceleration not yet implemented".to_string(),
-                ))
-            }
+            OptimizationChoice::GPU => Err(NeuralError::NotImplemented(
+                "GPU acceleration not yet implemented".to_string(),
+            )),
         }
     }
 
@@ -657,7 +673,7 @@ impl UnifiedPerformanceManager {
                         transpose_b: false,
                     })
                 } else {
-                    Err(NeuralError::InvalidInput(
+                    Err(NeuralError::InvalidArgument(
                         "MatMul requires 2 inputs".to_string(),
                     ))
                 }
@@ -668,7 +684,7 @@ impl UnifiedPerformanceManager {
                         shape: inputs[0].shape().to_vec(),
                     })
                 } else {
-                    Err(NeuralError::InvalidInput(
+                    Err(NeuralError::InvalidArgument(
                         "ElementwiseAdd requires 2 inputs".to_string(),
                     ))
                 }
@@ -679,7 +695,7 @@ impl UnifiedPerformanceManager {
                         shape: inputs[0].shape().to_vec(),
                     })
                 } else {
-                    Err(NeuralError::InvalidInput(
+                    Err(NeuralError::InvalidArgument(
                         "ReLU requires 1 input".to_string(),
                     ))
                 }
@@ -693,7 +709,7 @@ impl UnifiedPerformanceManager {
                         padding: (0, 0),
                     })
                 } else {
-                    Err(NeuralError::InvalidInput(
+                    Err(NeuralError::InvalidArgument(
                         "Conv2D requires 2 inputs".to_string(),
                     ))
                 }
@@ -705,7 +721,7 @@ impl UnifiedPerformanceManager {
                         eps: 1e-5,
                     })
                 } else {
-                    Err(NeuralError::InvalidInput(
+                    Err(NeuralError::InvalidArgument(
                         "BatchNorm requires 1 input".to_string(),
                     ))
                 }
@@ -717,7 +733,7 @@ impl UnifiedPerformanceManager {
                         axis: -1,
                     })
                 } else {
-                    Err(NeuralError::InvalidInput(
+                    Err(NeuralError::InvalidArgument(
                         "Softmax requires 1 input".to_string(),
                     ))
                 }
@@ -750,9 +766,7 @@ impl UnifiedPerformanceManager {
                 eps: 1e-5,
                 momentum: 0.1,
             }),
-            "softmax" => Ok(TPUOperation::Softmax {
-                axis: -1,
-            }),
+            "softmax" => Ok(TPUOperation::Softmax { axis: -1 }),
             "reduce_sum" => Ok(TPUOperation::ReduceSum {
                 axis: None,
                 keepdims: false,
@@ -761,9 +775,7 @@ impl UnifiedPerformanceManager {
                 axis: None,
                 keepdims: false,
             }),
-            "transpose" => Ok(TPUOperation::Transpose {
-                axes: None,
-            }),
+            "transpose" => Ok(TPUOperation::Transpose { axes: None }),
             "reshape" => Ok(TPUOperation::Reshape),
             _ => Err(NeuralError::NotImplemented(format!(
                 "TPU operation {} not supported",
@@ -786,7 +798,7 @@ impl UnifiedPerformanceManager {
                 if !inputs.is_empty() {
                     Ok(vec![inputs[0].shape().to_vec()])
                 } else {
-                    Err(NeuralError::InvalidInput(
+                    Err(NeuralError::InvalidArgument(
                         "Cannot infer output shapes without inputs".to_string(),
                     ))
                 }
@@ -806,7 +818,7 @@ impl UnifiedPerformanceManager {
                     let result = self.serial_matmul(inputs[0], inputs[1])?;
                     Ok(vec![result])
                 } else {
-                    Err(NeuralError::InvalidInput(
+                    Err(NeuralError::InvalidArgument(
                         "MatMul requires 2 inputs".to_string(),
                     ))
                 }
@@ -816,7 +828,7 @@ impl UnifiedPerformanceManager {
                     let result = self.serial_elementwise_add(inputs[0], inputs[1])?;
                     Ok(vec![result])
                 } else {
-                    Err(NeuralError::InvalidInput(
+                    Err(NeuralError::InvalidArgument(
                         "ElementwiseAdd requires 2 inputs".to_string(),
                     ))
                 }
@@ -826,7 +838,7 @@ impl UnifiedPerformanceManager {
                     let result = self.serial_relu(inputs[0]);
                     Ok(vec![result])
                 } else {
-                    Err(NeuralError::InvalidInput(
+                    Err(NeuralError::InvalidArgument(
                         "ReLU requires 1 input".to_string(),
                     ))
                 }
@@ -836,7 +848,7 @@ impl UnifiedPerformanceManager {
                     let result = self.serial_reduce_sum(inputs[0]);
                     Ok(vec![result])
                 } else {
-                    Err(NeuralError::InvalidInput(
+                    Err(NeuralError::InvalidArgument(
                         "ReduceSum requires 1 input".to_string(),
                     ))
                 }
@@ -846,7 +858,7 @@ impl UnifiedPerformanceManager {
                     let result = self.serial_reduce_mean(inputs[0]);
                     Ok(vec![result])
                 } else {
-                    Err(NeuralError::InvalidInput(
+                    Err(NeuralError::InvalidArgument(
                         "ReduceMean requires 1 input".to_string(),
                     ))
                 }
@@ -861,7 +873,7 @@ impl UnifiedPerformanceManager {
     /// Simple serial matrix multiplication
     fn serial_matmul<F: Float + Debug>(&self, a: &ArrayD<F>, b: &ArrayD<F>) -> Result<ArrayD<F>> {
         if a.ndim() != 2 || b.ndim() != 2 {
-            return Err(NeuralError::InvalidInput(
+            return Err(NeuralError::InvalidArgument(
                 "Matrix multiplication requires 2D arrays".to_string(),
             ));
         }
@@ -891,7 +903,11 @@ impl UnifiedPerformanceManager {
     }
 
     /// Simple serial elementwise addition
-    fn serial_elementwise_add<F: Float + Debug>(&self, a: &ArrayD<F>, b: &ArrayD<F>) -> Result<ArrayD<F>> {
+    fn serial_elementwise_add<F: Float + Debug>(
+        &self,
+        a: &ArrayD<F>,
+        b: &ArrayD<F>,
+    ) -> Result<ArrayD<F>> {
         if a.shape() != b.shape() {
             return Err(NeuralError::DimensionMismatch(
                 "Arrays must have the same shape for elementwise addition".to_string(),
@@ -918,7 +934,10 @@ impl UnifiedPerformanceManager {
     }
 
     /// Simple serial reduction mean
-    fn serial_reduce_mean<F: Float + Debug + Sum + Div<Output = F>>(&self, input: &ArrayD<F>) -> ArrayD<F> {
+    fn serial_reduce_mean<F: Float + Debug + Sum + Div<Output = F>>(
+        &self,
+        input: &ArrayD<F>,
+    ) -> ArrayD<F> {
         let sum_value: F = input.iter().copied().sum();
         let count = F::from(input.len()).unwrap_or_else(|| F::one());
         let mean_value = sum_value / count;

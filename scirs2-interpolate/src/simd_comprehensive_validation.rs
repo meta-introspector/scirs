@@ -14,10 +14,9 @@
 //! - **Regression detection**: Detect performance regressions in SIMD code
 //! - **Numerical accuracy verification**: Ensure SIMD maintains numerical precision
 
-use crate::error::{InterpolateError, InterpolateResult};
-use crate::simd_optimized::{get_simd_config, is_simd_available, SimdConfig};
+use crate::error::InterpolateResult;
 use crate::traits::InterpolationFloat;
-use ndarray::{Array1, Array2, ArrayView1};
+use ndarray::Array1;
 use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::time::{Duration, Instant};
@@ -704,6 +703,9 @@ impl<T: InterpolationFloat> SimdPerformanceValidator<T> {
             ValidationStatus::Failed
         };
 
+        let recommendations =
+            self.generate_operation_recommendations(operation, &performance_results);
+
         Ok(SimdValidationResult {
             test_name: operation.to_string(),
             test_category: category,
@@ -711,8 +713,7 @@ impl<T: InterpolationFloat> SimdPerformanceValidator<T> {
             performance_results,
             accuracy_results: Some(accuracy_result),
             issues,
-            recommendations: self
-                .generate_operation_recommendations(operation, &performance_results),
+            recommendations,
         })
     }
 

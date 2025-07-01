@@ -1346,7 +1346,7 @@ impl StochasticPDESolver {
                 self.black_scholes_formula(option, effective_vol)
             }
             VolatilityModel::HullWhite {
-                v0, alpha, beta, ..
+                v0, alpha, beta: _, ..
             } => {
                 // Hull-White model: effective volatility with mean reversion
                 let effective_vol = (v0 + alpha * option.maturity / 2.0).max(0.001);
@@ -1356,17 +1356,13 @@ impl StochasticPDESolver {
                 v0,
                 theta,
                 kappa,
-                sigma,
+                sigma: _,
                 ..
             } => {
                 // 3/2 model: use long-term variance approximation
                 let long_term_vol =
                     (theta + (v0 - theta) * (-kappa * option.maturity).exp()).sqrt();
                 self.black_scholes_formula(option, long_term_vol)
-            }
-            _ => {
-                // For any remaining models, use Monte Carlo as fallback
-                self.price_monte_carlo(option, 10000, true)
             }
         }
     }
@@ -1653,11 +1649,6 @@ impl StochasticPDESolver {
                 let long_term_vol =
                     (theta + (v0 - theta) * (-kappa * option.maturity / 2.0).exp()).sqrt();
                 self.binomial_tree(option, long_term_vol, n_steps)
-            }
-            _ => {
-                // For any other models, use constant volatility assumption
-                let default_vol = 0.2; // 20% default volatility
-                self.binomial_tree(option, default_vol, n_steps)
             }
         }
     }
@@ -3454,7 +3445,10 @@ pub mod advanced_exotic_derivatives {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{QuantumInspiredRNG, UltraMonteCarloEngine, RealTimeRiskMonitor, AlertSeverity, VarianceReductionSuite};
+    use crate::{
+        AlertSeverity, QuantumInspiredRNG, RealTimeRiskMonitor, UltraMonteCarloEngine,
+        VarianceReductionSuite,
+    };
 
     #[test]
     fn test_quantum_inspired_rng() {
@@ -5908,7 +5902,7 @@ pub mod financial_optimizations {
                         gradient[i] = -2.0 * self.assets[i].volatility * self.assets[i].volatility;
                     }
                 }
-                ObjectiveFunction::MaximizeReturn { target_risk } => {
+                ObjectiveFunction::MaximizeReturn { target_risk: _ } => {
                     // Maximize return gradient subject to risk constraint
                     for i in 0..n_assets {
                         gradient[i] = self.assets[i].expected_return;
@@ -7170,7 +7164,7 @@ pub mod exotic_options {
                 let mut asian_payoffs = Vec::with_capacity(self.n_simulations);
                 let mut control_payoffs = Vec::with_capacity(self.n_simulations);
 
-                let total_time = option.maturity;
+                let _total_time = option.maturity;
                 let n_observations = observation_dates.len();
 
                 for _ in 0..self.n_simulations {
@@ -8576,7 +8570,6 @@ pub mod ultra_performance_extensions {
 
         /// Measure portfolio weights from quantum state
         fn measure_portfolio_weights(&self) -> Result<Array1<f64>> {
-            let mut weights = Array1::zeros(self.n_assets);
             let mut rng = rng();
 
             // Quantum measurement simulation
@@ -8596,7 +8589,7 @@ pub mod ultra_performance_extensions {
             }
 
             // Decode weights from measured state
-            weights = self.decode_weights_from_state(measured_state)?;
+            let mut weights = self.decode_weights_from_state(measured_state)?;
 
             // Normalize weights to sum to 1
             let total_weight = weights.sum();
@@ -8639,7 +8632,7 @@ pub mod ultra_performance_extensions {
         /// Update QAOA parameters (simplified gradient descent)
         fn update_qaoa_parameters(&self, parameters: &mut Array1<f64>, layer: usize) -> Result<()> {
             let learning_rate = 0.01;
-            let epsilon = 1e-6;
+            let _epsilon = 1e-6;
 
             if layer > 0 {
                 // Numerical gradient estimation
@@ -8749,7 +8742,7 @@ pub mod ultra_performance_extensions {
                     let mut spot = self.spot;
                     let mut sum_returns = 0.0;
 
-                    for i in 0..n_periods {
+                    for _i in 0..n_periods {
                         let z: f64 = rng.sample(StandardNormal);
                         let drift = (self.risk_free_rate - 0.5 * self.volatility.powi(2)) * dt;
                         let diffusion = self.volatility * dt.sqrt() * z;

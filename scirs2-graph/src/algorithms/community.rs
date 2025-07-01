@@ -1776,7 +1776,6 @@ where
         .collect()
 }
 
-
 /// Parallel implementation of label propagation community detection
 ///
 /// Uses parallel processing to speed up the label propagation algorithm
@@ -1803,7 +1802,8 @@ where
     let mut labels: HashMap<N, usize> = HashMap::new();
 
     // Initialize labels (parallel)
-    nodes.par_iter()
+    nodes
+        .par_iter()
         .enumerate()
         .map(|(i, node)| (node.clone(), i))
         .collect_into_vec(&mut labels.into_par_iter().collect());
@@ -1816,12 +1816,13 @@ where
         shuffled_nodes.shuffle(&mut rng);
 
         // Parallel label updates
-        let updates: Vec<(N, usize)> = shuffled_nodes.par_iter()
+        let updates: Vec<(N, usize)> = shuffled_nodes
+            .par_iter()
             .filter_map(|node| {
                 if let Ok(neighbors) = graph.neighbors(node) {
                     // Count neighbor labels in parallel
                     let mut label_counts: HashMap<usize, usize> = HashMap::new();
-                    
+
                     for neighbor in neighbors {
                         if let Some(&label) = labels.get(&neighbor) {
                             *label_counts.entry(label).or_insert(0) += 1;
@@ -1829,9 +1830,8 @@ where
                     }
 
                     // Find most frequent label
-                    if let Some((&most_frequent_label, _)) = label_counts
-                        .iter()
-                        .max_by_key(|&(_, count)| count)
+                    if let Some((&most_frequent_label, _)) =
+                        label_counts.iter().max_by_key(|&(_, count)| count)
                     {
                         let current_label = labels.get(node).copied().unwrap_or(0);
                         if most_frequent_label != current_label {
@@ -1856,7 +1856,10 @@ where
     // Convert to communities
     let mut communities: HashMap<usize, HashSet<N>> = HashMap::new();
     for (node, label) in &labels {
-        communities.entry(*label).or_insert_with(HashSet::new).insert(node.clone());
+        communities
+            .entry(*label)
+            .or_insert_with(HashSet::new)
+            .insert(node.clone());
     }
 
     let communities_vec: Vec<HashSet<N>> = communities.into_values().collect();
@@ -1901,18 +1904,23 @@ where
     let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
 
     // Parallel computation of modularity
-    let modularity_sum: f64 = nodes.par_iter()
+    let modularity_sum: f64 = nodes
+        .par_iter()
         .flat_map(|node_i| {
             nodes.par_iter().map(move |node_j| {
                 let comm_i = communities.get(node_i).copied().unwrap_or(0);
                 let comm_j = communities.get(node_j).copied().unwrap_or(0);
 
                 if comm_i == comm_j {
-                    let a_ij = if graph.has_edge(node_i, node_j) { 1.0 } else { 0.0 };
+                    let a_ij = if graph.has_edge(node_i, node_j) {
+                        1.0
+                    } else {
+                        0.0
+                    };
                     let degree_i = graph.degree(node_i).unwrap_or(0) as f64;
                     let degree_j = graph.degree(node_j).unwrap_or(0) as f64;
                     let expected = (degree_i * degree_j) / two_m;
-                    
+
                     a_ij - expected
                 } else {
                     0.0

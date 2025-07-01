@@ -1584,9 +1584,10 @@ impl<F: Float> PerformanceMonitor<F> {
             recall: F::zero(),    // Would be calculated from confusion matrix
             f1_score: F::zero(),  // Would be calculated from confusion matrix
             processing_time: now.duration_since(
-                self.performance_history.back()
+                self.performance_history
+                    .back()
                     .map(|p| p.timestamp)
-                    .unwrap_or_else(|| now - Duration::from_millis(1))
+                    .unwrap_or_else(|| now - Duration::from_millis(1)),
             ),
             memory_usage: std::mem::size_of::<StreamingStatistics<F>>(),
             window_size: 1000, // Would come from actual window manager

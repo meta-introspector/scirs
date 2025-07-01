@@ -68,7 +68,11 @@ where
     }
 
     if x.len() < 3 {
-        return Err(InterpolateError::insufficient_points(3, x.len(), "interpolation error estimation"));
+        return Err(InterpolateError::insufficient_points(
+            3,
+            x.len(),
+            "interpolation error estimation",
+        ));
     }
 
     let mut sum_squared_error = F::zero();

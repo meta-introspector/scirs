@@ -1076,7 +1076,7 @@ where
     /// Topological statistical inference
     fn topological_inference(
         &self,
-        points: &ArrayView2<F>,
+        _points: &ArrayView2<F>,
         persistence_diagrams: &HashMap<usize, PersistenceDiagram<F>>,
     ) -> StatsResult<TopologicalInferenceResults<F>> {
         let mut test_statistics = HashMap::new();
@@ -1209,7 +1209,7 @@ where
         Ok(TopologicalMLResult {
             topological_features: encoded_features,
             kernel_matrix,
-            signatures,
+            signatures: signatures.clone(),
             prediction_result,
             clustering_result,
             feature_importance,
@@ -1222,7 +1222,7 @@ where
         &self,
         data: &ArrayView2<F>,
     ) -> StatsResult<TopologicalFeatures<F>> {
-        let (n_samples, n_features) = data.dim();
+        let (_n_samples, n_features) = data.dim();
 
         // Persistent homology features
         let persistence_features = self.extract_persistence_features(data)?;
@@ -1370,11 +1370,11 @@ where
 
             for feature in features {
                 // Map to image coordinates
-                let birth_coord = (feature.birth / max_val * F::from(resolution as f64).unwrap())
+                let _birth_coord = (feature.birth / max_val * F::from(resolution as f64).unwrap())
                     .to_usize()
                     .unwrap_or(0)
                     .min(resolution - 1);
-                let death_coord = (feature.death / max_val * F::from(resolution as f64).unwrap())
+                let _death_coord = (feature.death / max_val * F::from(resolution as f64).unwrap())
                     .to_usize()
                     .unwrap_or(0)
                     .min(resolution - 1);

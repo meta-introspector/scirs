@@ -471,8 +471,6 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> EvolutionarySea
         parent1: &OptimizerArchitecture<T>,
         parent2: &OptimizerArchitecture<T>,
     ) -> Result<OptimizerArchitecture<T>, OptimizerError> {
-        use super::{ComponentType, OptimizerComponent};
-
         let mut child_components = Vec::new();
         let max_len = parent1.components.len().max(parent2.components.len());
 
@@ -716,8 +714,6 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<
         search_space: &SearchSpaceConfig,
         _history: &VecDeque<SearchResult<T>>,
     ) -> Result<OptimizerArchitecture<T>, OptimizerError> {
-        use super::{ComponentType, OptimizerComponent};
-
         // Use controller to generate architecture
         let state = self.encode_search_space(search_space)?;
         let actions = self.controller_network.forward(&state)?;

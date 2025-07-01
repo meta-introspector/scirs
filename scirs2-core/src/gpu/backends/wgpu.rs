@@ -9,10 +9,9 @@ use crate::gpu::{GpuBufferImpl, GpuCompilerImpl, GpuContextImpl, GpuError, GpuKe
 
 #[cfg(feature = "wgpu_backend")]
 use wgpu::{
-    Backends, Buffer, BufferUsages, ComputePipeline, 
-    Device, DeviceDescriptor, Features, Instance, InstanceDescriptor, 
-    Limits, Queue, RequestAdapterOptions, ShaderModuleDescriptor, 
-    ShaderSource, PowerPreference, BufferDescriptor, util::DeviceExt,
+    util::DeviceExt, Backends, Buffer, BufferDescriptor, BufferUsages, ComputePipeline, Device,
+    DeviceDescriptor, Features, Instance, InstanceDescriptor, Limits, PowerPreference, Queue,
+    RequestAdapterOptions, ShaderModuleDescriptor, ShaderSource,
 };
 
 // Fallback types for when WebGPU is not available
@@ -190,11 +189,14 @@ impl WebGPUContext {
 
             // Try to get an adapter (this is async, so we use a simple runtime check)
             pollster::block_on(async {
-                instance.request_adapter(&RequestAdapterOptions {
-                    power_preference: PowerPreference::default(),
-                    compatible_surface: None,
-                    force_fallback_adapter: false,
-                }).await.is_some()
+                instance
+                    .request_adapter(&RequestAdapterOptions {
+                        power_preference: PowerPreference::default(),
+                        compatible_surface: None,
+                        force_fallback_adapter: false,
+                    })
+                    .await
+                    .is_some()
             })
         }
         #[cfg(not(feature = "wgpu_backend"))]
@@ -217,14 +219,16 @@ impl WebGPUContext {
             // Extract entry point from source or use default
             let entry_point = Self::extract_entry_point(source).unwrap_or("main");
 
-            let compute_pipeline = self.device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
-                label: Some(&format!("{}_pipeline", name)),
-                layout: None,
-                module: &shader_module,
-                entry_point: Some(entry_point),
-                compilation_options: Default::default(),
-                cache: None,
-            });
+            let compute_pipeline =
+                self.device
+                    .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+                        label: Some(&format!("{}_pipeline", name)),
+                        layout: None,
+                        module: &shader_module,
+                        entry_point: Some(entry_point),
+                        compilation_options: Default::default(),
+                        cache: None,
+                    });
 
             Ok(WebGPUShader {
                 pipeline: compute_pipeline,
@@ -285,22 +289,22 @@ impl WebGPUContext {
     /// Extract the entry point function name from WGSL source code
     fn extract_entry_point(source: &str) -> Option<&str> {
         let lines: Vec<&str> = source.lines().collect();
-        
+
         for (i, line) in lines.iter().enumerate() {
             let trimmed = line.trim();
-            
+
             // Check if this line contains @compute
             if trimmed.contains("@compute") {
                 // The function might be on the same line or the next line
                 let mut search_line = trimmed;
                 let mut search_idx = i;
-                
+
                 // If @compute and function are not on the same line, check next line
                 if !search_line.contains("fn ") && search_idx + 1 < lines.len() {
                     search_idx += 1;
                     search_line = lines[search_idx].trim();
                 }
-                
+
                 // Extract function name
                 if let Some(start) = search_line.find("fn ") {
                     let remaining = &search_line[start + 3..];
@@ -311,7 +315,7 @@ impl WebGPUContext {
                 }
             }
         }
-        
+
         None
     }
 }
@@ -338,8 +342,11 @@ impl GpuContextImpl for WebGPUContext {
             Ok(buffer) => buffer,
             Err(e) => {
                 // Log the WebGPU allocation failure and create a CPU fallback
-                eprintln!("Warning: WebGPU buffer allocation failed ({}), creating CPU fallback buffer", e);
-                
+                eprintln!(
+                    "Warning: WebGPU buffer allocation failed ({}), creating CPU fallback buffer",
+                    e
+                );
+
                 #[cfg(feature = "wgpu_backend")]
                 {
                     // Create a CPU fallback buffer with minimal size for WebGPU compatibility
@@ -500,22 +507,25 @@ impl GpuKernelImpl for WebGPUKernelHandle {
             let shaders = self.compiled_shaders.lock().unwrap();
             if let Some(shader) = shaders.get(&self.shader_name) {
                 let params = self.params.lock().unwrap();
-                
+
                 // Create command encoder
-                let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                    label: Some("Compute Command Encoder"),
-                });
-                
+                let mut encoder =
+                    self.device
+                        .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                            label: Some("Compute Command Encoder"),
+                        });
+
                 // Begin compute pass
                 {
-                    let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
-                        label: Some("Compute Pass"),
-                        timestamp_writes: None,
-                    });
-                    
+                    let mut compute_pass =
+                        encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+                            label: Some("Compute Pass"),
+                            timestamp_writes: None,
+                        });
+
                     // Set the compute pipeline
                     compute_pass.set_pipeline(&shader.pipeline);
-                    
+
                     // Create and set bind groups with buffers and uniforms
                     let bind_group = self.create_bind_group(&shader, &params);
                     match bind_group {
@@ -526,16 +536,23 @@ impl GpuKernelImpl for WebGPUKernelHandle {
                             eprintln!("Warning: Failed to create bind group for shader {}: {}. Dispatching without bind groups.", self.shader_name, e);
                         }
                     }
-                    
+
                     // Dispatch the compute shader
-                    compute_pass.dispatch_workgroups(work_groups[0], work_groups[1], work_groups[2]);
+                    compute_pass.dispatch_workgroups(
+                        work_groups[0],
+                        work_groups[1],
+                        work_groups[2],
+                    );
                 }
-                
+
                 // Submit the command buffer
                 let command_buffer = encoder.finish();
                 self.queue.submit(std::iter::once(command_buffer));
-                
-                eprintln!("WebGPU compute shader {} dispatched with workgroups: {:?}", self.shader_name, work_groups);
+
+                eprintln!(
+                    "WebGPU compute shader {} dispatched with workgroups: {:?}",
+                    self.shader_name, work_groups
+                );
             }
         }
         #[cfg(not(feature = "wgpu_backend"))]
@@ -545,7 +562,6 @@ impl GpuKernelImpl for WebGPUKernelHandle {
             eprintln!("Work groups: {:?}", work_groups);
         }
     }
-
 }
 
 /// WebGPU buffer implementation
@@ -579,13 +595,16 @@ impl GpuBufferImpl for WebGPUBuffer {
             // Validate data size
             if size > self.size {
                 // In unsafe context, we can't return an error, so we'll just log and return
-                eprintln!("Warning: Data size {} exceeds buffer size {}", size, self.size);
+                eprintln!(
+                    "Warning: Data size {} exceeds buffer size {}",
+                    size, self.size
+                );
                 return;
             }
-            
+
             // Convert raw pointer to slice for WebGPU API
             let data_slice = std::slice::from_raw_parts(data, size);
-            
+
             // Real WebGPU implementation - write data to buffer
             self.queue.write_buffer(&self.device_buffer, 0, data_slice);
         }
@@ -593,7 +612,10 @@ impl GpuBufferImpl for WebGPUBuffer {
         {
             // Fallback implementation - just validate
             if size > self.size {
-                eprintln!("Warning: Data size {} exceeds buffer size {}", size, self.size);
+                eprintln!(
+                    "Warning: Data size {} exceeds buffer size {}",
+                    size, self.size
+                );
             }
             // In fallback mode, we just simulate the operation
         }
@@ -604,14 +626,19 @@ impl GpuBufferImpl for WebGPUBuffer {
         {
             // Validate data size
             if size > self.size {
-                eprintln!("Warning: Data size {} exceeds buffer size {}", size, self.size);
+                eprintln!(
+                    "Warning: Data size {} exceeds buffer size {}",
+                    size, self.size
+                );
                 return;
             }
-            
+
             // WebGPU buffer reading typically requires async operations and mapping
             // For now, we can't properly implement this in an unsafe synchronous context
-            eprintln!("Warning: WebGPU buffer reading requires async support - not yet implemented");
-            
+            eprintln!(
+                "Warning: WebGPU buffer reading requires async support - not yet implemented"
+            );
+
             // Zero out the data as a placeholder
             let data_slice = std::slice::from_raw_parts_mut(data, size);
             data_slice.fill(0);
@@ -620,9 +647,12 @@ impl GpuBufferImpl for WebGPUBuffer {
         {
             // Fallback implementation - just validate and zero out
             if size > self.size {
-                eprintln!("Warning: Data size {} exceeds buffer size {}", size, self.size);
+                eprintln!(
+                    "Warning: Data size {} exceeds buffer size {}",
+                    size, self.size
+                );
             }
-            
+
             // Zero out the data as a placeholder
             let data_slice = std::slice::from_raw_parts_mut(data, size);
             data_slice.fill(0);
@@ -682,12 +712,15 @@ impl GpuBufferImpl for WebGPUCpuFallbackBuffer {
             eprintln!("Warning: WebGPU CPU fallback buffer copy_from_host size mismatch");
             return;
         }
-        
+
         // Since this is a CPU fallback, we can use safe Rust internally
         let _data_slice = std::slice::from_raw_parts(data, size);
         // We can't mutate self.data directly since &self is immutable
         // In a real implementation, this would require interior mutability
-        eprintln!("Warning: CPU fallback buffer copy_from_host called (size: {})", size);
+        eprintln!(
+            "Warning: CPU fallback buffer copy_from_host called (size: {})",
+            size
+        );
     }
 
     unsafe fn copy_to_host(&self, data: *mut u8, size: usize) {
@@ -695,13 +728,16 @@ impl GpuBufferImpl for WebGPUCpuFallbackBuffer {
             eprintln!("Warning: WebGPU CPU fallback buffer copy_to_host size mismatch");
             return;
         }
-        
+
         // Copy from CPU buffer to host
         let data_slice = std::slice::from_raw_parts_mut(data, size);
         let copy_size = size.min(self.data.len());
         data_slice[..copy_size].copy_from_slice(&self.data[..copy_size]);
-        
-        eprintln!("Warning: CPU fallback buffer copy_to_host called (size: {})", size);
+
+        eprintln!(
+            "Warning: CPU fallback buffer copy_to_host called (size: {})",
+            size
+        );
     }
 
     fn device_ptr(&self) -> u64 {

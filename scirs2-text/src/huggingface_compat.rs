@@ -821,11 +821,7 @@ impl FillMaskPipeline {
 
         // Get context words
         let left_context: Vec<&str> = if mask_index > 0 {
-            words[..mask_index]
-                .iter()
-                .rev()
-                .take(3).copied()
-                .collect()
+            words[..mask_index].iter().rev().take(3).copied().collect()
         } else {
             vec![]
         };
@@ -1380,7 +1376,8 @@ impl HfHub {
     "num_hidden_layers": 12,
     "vocab_size": 30522,
     "max_position_embeddings": 512
-}"#.to_string()
+}"#
+                    .to_string()
                     .into_bytes()
                 }
             }
@@ -1402,7 +1399,8 @@ impl HfHub {
     "unk_token": "[UNK]",
     "bos_token": "[CLS]",
     "eos_token": "[SEP]"
-}"#.to_string()
+}"#
+                    .to_string()
                     .into_bytes()
                 }
             }
@@ -1703,9 +1701,7 @@ impl TextGenerationPipeline {
             "results",
         ];
 
-        let max_new_tokens = self.max_length
-            .saturating_sub(prompt_words.len())
-            .min(20);
+        let max_new_tokens = self.max_length.saturating_sub(prompt_words.len()).min(20);
 
         for _ in 0..max_new_tokens {
             let last_word = generated

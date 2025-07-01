@@ -1560,7 +1560,7 @@ impl BifurcationDiagramGenerator {
     fn analyze_1d_attractor(&self, states: &[f64]) -> Result<AttractorInfo> {
         // Detect fixed points
         let mut representative_states = Vec::new();
-        let mut unique_states = states.clone().to_vec();
+        let mut unique_states = states.to_vec();
         unique_states.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
         unique_states.dedup_by(|a, b| (*a - *b).abs() < self.fixed_point_tolerance);
 
@@ -5321,7 +5321,7 @@ impl ConvergenceVisualizationEngine {
         let x_data = Array1::from_vec(time_data.clone());
         let y_data = Array1::from_vec(metric_data.clone());
 
-        let smoothed_curve = if include_smoothing {
+        let _smoothed_curve = if include_smoothing {
             Some(self.smooth_data(&y_data)?)
         } else {
             None

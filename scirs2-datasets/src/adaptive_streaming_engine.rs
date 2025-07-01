@@ -6,7 +6,7 @@
 use crate::error::{DatasetsError, Result};
 use crate::utils::Dataset;
 use ndarray::{Array1, Array2, Axis};
-use rand::{Rng, rng};
+use rand::{rng, Rng};
 // Use rayon directly for parallel operations to avoid feature flag issues
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
@@ -30,7 +30,7 @@ pub struct AdaptiveStreamingEngine {
 
 /// Stream processing configuration
 #[derive(Debug, Clone)]
-pub struct AdaptiveAdaptiveStreamConfig {
+pub struct AdaptiveStreamConfig {
     /// Maximum buffer size in bytes
     max_buffer_size: usize,
     /// Processing batch size
@@ -1075,18 +1075,18 @@ impl QuantumInspiredOptimizer {
     /// Apply quantum tunneling for exploration
     fn apply_quantum_tunneling(&mut self) {
         for state in &mut self.quantum_states {
-            if rng().gen::<f64>() < self.annealing_params.tunneling_probability {
+            if rng().random::<f64>() < self.annealing_params.tunneling_probability {
                 // Quantum tunneling: randomly perturb configuration
                 for config_amp in &mut state.config_superposition {
-                    if rng().gen::<f64>() < 0.1 {
+                    if rng().random::<f64>() < 0.1 {
                         // Tunnel to nearby configuration space
                         config_amp.config.optimal_batch_size = (config_amp.config.optimal_batch_size
                             as f64
-                            * (1.0 + (rng().gen::<f64>() - 0.5) * 0.2))
+                            * (1.0 + (rng().random::<f64>() - 0.5) * 0.2))
                             as usize;
                         config_amp.config.optimal_buffer_size =
                             (config_amp.config.optimal_buffer_size as f64
-                                * (1.0 + (rng().gen::<f64>() - 0.5) * 0.2))
+                                * (1.0 + (rng().random::<f64>() - 0.5) * 0.2))
                                 as usize;
                     }
                 }
@@ -1147,7 +1147,7 @@ impl QuantumInspiredOptimizer {
         }
 
         // Quantum measurement - probabilistic state selection
-        let random_value = rng().gen::<f64>();
+        let random_value = rng().random::<f64>();
         let mut cumulative_prob = 0.0;
 
         for (i, &prob) in self.measurement_probabilities.iter().enumerate() {
@@ -1185,26 +1185,26 @@ impl QuantumOptimizationState {
         let config_superposition = (0..4)
             .map(|_| ConfigurationAmplitude {
                 config: OptimizationConfig {
-                    optimal_batch_size: rng().gen_range(500..2000),
-                    optimal_buffer_size: rng().gen_range(5000..20000),
-                    num_workers: rng().gen_range(1..9),
-                    memory_strategy: match rng().gen_range(0..4) {
+                    optimal_batch_size: rng().random_range(500..2000),
+                    optimal_buffer_size: rng().random_range(5000..20000),
+                    num_workers: rng().random_range(1..9),
+                    memory_strategy: match rng().random_range(0..4) {
                         0 => MemoryStrategy::Conservative,
                         1 => MemoryStrategy::Balanced,
                         2 => MemoryStrategy::Aggressive,
                         _ => MemoryStrategy::Adaptive,
                     },
                 },
-                amplitude: (rng().gen::<f64>(), rng().gen::<f64>()),
-                phase: rng().gen::<f64>() * 2.0 * std::f64::consts::PI,
+                amplitude: (rng().random::<f64>(), rng().random::<f64>()),
+                phase: rng().random::<f64>() * 2.0 * std::f64::consts::PI,
             })
             .collect();
 
         Self {
             config_superposition,
-            energy: rng().gen::<f64>() * 10.0,
-            coherence_time: Duration::from_millis(rng().gen_range(100..1000)),
-            entanglement_degree: rng().gen::<f64>(),
+            energy: rng().random::<f64>() * 10.0,
+            coherence_time: Duration::from_millis(rng().random_range(100..1000)),
+            entanglement_degree: rng().random::<f64>(),
         }
     }
 }
@@ -1519,7 +1519,7 @@ impl NeuralAdaptiveSystem {
             }
             ChangeType::ModifyLayerSize => {
                 if !self.neural_network.layers.is_empty() {
-                    let layer_idx = rng().gen_range(0..self.neural_network.layers.len());
+                    let layer_idx = rng().random_range(0..self.neural_network.layers.len());
                     self.neural_network.modify_layer_size(layer_idx, 32);
                 }
             }
@@ -1776,7 +1776,7 @@ impl NeuralLayer {
         layer_type: LayerType,
     ) -> Self {
         let weights = Array2::from_shape_fn((output_size, input_size), |_| {
-            rng().gen::<f64>() * 0.01 - 0.005 // Small random initialization
+            rng().random::<f64>() * 0.01 - 0.005 // Small random initialization
         });
 
         let bias = Array1::zeros(output_size);
@@ -1835,14 +1835,14 @@ impl NeuralLayer {
     fn update_weights(&mut self, learning_rate: f64, _momentum: f64) {
         // Simplified weight update (in real implementation, this would use gradients)
         let weight_update = Array2::from_shape_fn(self.weights.dim(), |_| {
-            (rng().gen::<f64>() - 0.5) * learning_rate * 0.001
+            (rng().random::<f64>() - 0.5) * learning_rate * 0.001
         });
 
         self.weights = &self.weights - &weight_update;
 
         // Simple bias update
         let bias_update = Array1::from_shape_fn(self.bias.len(), |_| {
-            (rng().gen::<f64>() - 0.5) * learning_rate * 0.001
+            (rng().random::<f64>() - 0.5) * learning_rate * 0.001
         });
 
         self.bias = &self.bias - &bias_update;
@@ -1854,7 +1854,7 @@ impl NeuralLayer {
 
         // Create new weights matrix with different input size
         self.weights = Array2::from_shape_fn((output_size, new_input_size), |_| {
-            rng().gen::<f64>() * 0.01 - 0.005
+            rng().random::<f64>() * 0.01 - 0.005
         });
     }
 }

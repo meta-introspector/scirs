@@ -14,7 +14,7 @@
 
 use crate::error::{InterpolateError, InterpolateResult};
 use crate::traits::InterpolationFloat;
-use ndarray::{Array1, Array2, ArrayView1};
+use ndarray::{Array1, ArrayView1};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 

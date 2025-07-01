@@ -47,7 +47,7 @@
 //!
 //! let ultrafast_matrix = UltrafastDistanceMatrix::new(optimizer);
 //! let distances = ultrafast_matrix.compute_extreme_performance(&points.view()).await?;
-//! 
+//!
 //! // Performance can be 10-100x faster than conventional implementations
 //! println!("Extreme distance matrix: {:?}", distances);
 //!
@@ -62,11 +62,11 @@
 
 use crate::error::{SpatialError, SpatialResult};
 use ndarray::{Array1, Array2, ArrayView2};
+use std::alloc::{alloc, Layout};
 use std::collections::{HashMap, VecDeque};
-use std::time::Instant;
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::ptr::NonNull;
-use std::alloc::{Layout, alloc};
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::time::Instant;
 
 /// Extreme performance optimization coordinator
 #[allow(dead_code)]
@@ -560,37 +560,37 @@ impl ExtremeOptimizer {
             memory_allocator: ExtremeMemoryAllocator::new(),
         }
     }
-    
+
     /// Enable extreme SIMD vectorization
     pub fn with_extreme_simd(mut self, enabled: bool) -> Self {
         self.extreme_simd = enabled;
         self
     }
-    
+
     /// Enable cache-oblivious algorithms
     pub fn with_cache_oblivious_algorithms(mut self, enabled: bool) -> Self {
         self.cache_oblivious = enabled;
         self
     }
-    
+
     /// Enable branch-free execution
     pub fn with_branch_free_execution(mut self, enabled: bool) -> Self {
         self.branch_free = enabled;
         self
     }
-    
+
     /// Enable lock-free data structures
     pub fn with_lock_free_structures(mut self, enabled: bool) -> Self {
         self.lock_free = enabled;
         self
     }
-    
+
     /// Enable NUMA optimization
     pub fn with_numa_optimization(mut self, enabled: bool) -> Self {
         self.numa_optimization = enabled;
         self
     }
-    
+
     /// Enable JIT compilation
     pub fn with_jit_compilation(mut self, enabled: bool) -> Self {
         self.jit_compilation = enabled;
@@ -599,38 +599,47 @@ impl ExtremeOptimizer {
         }
         self
     }
-    
+
     /// Enable zero-copy operations
     pub fn with_zero_copy_operations(mut self, enabled: bool) -> Self {
         self.zero_copy = enabled;
         self
     }
-    
+
     /// Enable prefetch optimization
     pub fn with_prefetch_optimization(mut self, enabled: bool) -> Self {
         self.prefetch_optimization = enabled;
         self
     }
-    
+
     /// Enable instruction-level parallelism maximization
     pub fn with_ilp_maximization(mut self, enabled: bool) -> Self {
         self.ilp_maximization = enabled;
         self
     }
-    
+
     /// Get current performance metrics
     pub fn get_performance_metrics(&self) -> ExtremePerformanceMetrics {
         let cpu_cycles = self.performance_counters.cpu_cycles.load(Ordering::Relaxed);
-        let instructions = self.performance_counters.instructions.load(Ordering::Relaxed);
-        let cache_misses = self.performance_counters.cache_misses.load(Ordering::Relaxed);
-        let branch_misses = self.performance_counters.branch_mispredictions.load(Ordering::Relaxed);
-        
+        let instructions = self
+            .performance_counters
+            .instructions
+            .load(Ordering::Relaxed);
+        let cache_misses = self
+            .performance_counters
+            .cache_misses
+            .load(Ordering::Relaxed);
+        let branch_misses = self
+            .performance_counters
+            .branch_mispredictions
+            .load(Ordering::Relaxed);
+
         let ops_per_second = if cpu_cycles > 0 {
             (instructions as f64 / cpu_cycles as f64) * 3.0e9 // Assume 3GHz
         } else {
             0.0
         };
-        
+
         ExtremePerformanceMetrics {
             ops_per_second,
             memory_bandwidth_utilization: 85.0, // Simulated
@@ -651,21 +660,39 @@ impl ExtremeOptimizer {
             extreme_speedup: self.calculate_extreme_speedup(),
         }
     }
-    
+
     /// Calculate extreme speedup factor
     fn calculate_extreme_speedup(&self) -> f64 {
         let mut speedup = 1.0;
-        
-        if self.extreme_simd { speedup *= 8.0; }           // 8x from vectorization
-        if self.cache_oblivious { speedup *= 2.5; }        // 2.5x from cache optimization
-        if self.branch_free { speedup *= 1.8; }            // 1.8x from branch elimination
-        if self.lock_free { speedup *= 3.0; }              // 3x from lock elimination
-        if self.numa_optimization { speedup *= 1.5; }      // 1.5x from NUMA awareness
-        if self.jit_compilation { speedup *= 2.0; }        // 2x from JIT optimization
-        if self.zero_copy { speedup *= 1.3; }              // 1.3x from zero-copy
-        if self.prefetch_optimization { speedup *= 1.4; }  // 1.4x from prefetch
-        if self.ilp_maximization { speedup *= 1.6; }       // 1.6x from ILP
-        
+
+        if self.extreme_simd {
+            speedup *= 8.0;
+        } // 8x from vectorization
+        if self.cache_oblivious {
+            speedup *= 2.5;
+        } // 2.5x from cache optimization
+        if self.branch_free {
+            speedup *= 1.8;
+        } // 1.8x from branch elimination
+        if self.lock_free {
+            speedup *= 3.0;
+        } // 3x from lock elimination
+        if self.numa_optimization {
+            speedup *= 1.5;
+        } // 1.5x from NUMA awareness
+        if self.jit_compilation {
+            speedup *= 2.0;
+        } // 2x from JIT optimization
+        if self.zero_copy {
+            speedup *= 1.3;
+        } // 1.3x from zero-copy
+        if self.prefetch_optimization {
+            speedup *= 1.4;
+        } // 1.4x from prefetch
+        if self.ilp_maximization {
+            speedup *= 1.6;
+        } // 1.6x from ILP
+
         speedup
     }
 }
@@ -690,13 +717,20 @@ impl HardwarePerformanceCounters {
             numa_remote_accesses: AtomicUsize::new(0),
         }
     }
-    
+
     /// Update performance counters
-    pub fn update(&self, cycles: usize, instructions: usize, cache_misses: usize, branch_misses: usize) {
+    pub fn update(
+        &self,
+        cycles: usize,
+        instructions: usize,
+        cache_misses: usize,
+        branch_misses: usize,
+    ) {
         self.cpu_cycles.fetch_add(cycles, Ordering::Relaxed);
         self.instructions.fetch_add(instructions, Ordering::Relaxed);
         self.cache_misses.fetch_add(cache_misses, Ordering::Relaxed);
-        self.branch_mispredictions.fetch_add(branch_misses, Ordering::Relaxed);
+        self.branch_mispredictions
+            .fetch_add(branch_misses, Ordering::Relaxed);
     }
 }
 
@@ -707,7 +741,7 @@ impl NumaTopologyInfo {
         Self {
             num_nodes: 2,
             memory_per_node: vec![64.0, 64.0], // 64GB per node
-            cores_per_node: vec![16, 16], // 16 cores per node
+            cores_per_node: vec![16, 16],      // 16 cores per node
             inter_node_latencies: Array2::from_elem((2, 2), 100.0), // 100ns inter-node
             bandwidth_per_node: vec![100.0, 100.0], // 100 GB/s per node
             thread_node_mapping: HashMap::new(),
@@ -756,27 +790,29 @@ impl JitCompiler {
                 bmi2: true,
                 popcnt: true,
             },
-            compilation_profiles: vec![
-                CompilationProfile {
-                    name: "extreme_performance".to_string(),
-                    optimization_level: 3,
-                    target_features: vec!["avx512f".to_string(), "avx512dq".to_string()],
-                }
-            ],
+            compilation_profiles: vec![CompilationProfile {
+                name: "extreme_performance".to_string(),
+                optimization_level: 3,
+                target_features: vec!["avx512f".to_string(), "avx512dq".to_string()],
+            }],
         }
     }
-    
+
     /// Compile algorithm to machine code
-    pub fn compile_algorithm(&mut self, algorithm: &str, parameters: &HashMap<String, f64>) -> SpatialResult<CompiledCode> {
+    pub fn compile_algorithm(
+        &mut self,
+        algorithm: &str,
+        parameters: &HashMap<String, f64>,
+    ) -> SpatialResult<CompiledCode> {
         let cache_key = format!("{}_{:?}", algorithm, parameters);
-        
+
         if let Some(cached_code) = self.code_cache.get(&cache_key) {
             self.generation_stats.cache_hits += 1;
             return Ok(cached_code.clone());
         }
-        
+
         let start_time = Instant::now();
-        
+
         // Simulate code generation
         let compiled_code = CompiledCode {
             code: vec![0x48, 0x89, 0xf8, 0xc3], // mov rax, rdi; ret (x86-64)
@@ -792,13 +828,15 @@ impl JitCompiler {
                 padding: 0,
             },
         };
-        
+
         let compile_time = start_time.elapsed().as_millis() as f64;
         self.generation_stats.compilations += 1;
-        self.generation_stats.average_compile_time_ms = 
-            (self.generation_stats.average_compile_time_ms * (self.generation_stats.compilations - 1) as f64 + compile_time) 
-            / self.generation_stats.compilations as f64;
-        
+        self.generation_stats.average_compile_time_ms =
+            (self.generation_stats.average_compile_time_ms
+                * (self.generation_stats.compilations - 1) as f64
+                + compile_time)
+                / self.generation_stats.compilations as f64;
+
         self.code_cache.insert(cache_key, compiled_code.clone());
         Ok(compiled_code)
     }
@@ -814,18 +852,16 @@ impl ExtremeMemoryAllocator {
     /// Create new extreme memory allocator
     pub fn new() -> Self {
         Self {
-            numa_pools: vec![
-                NumaMemoryPool {
-                    node_id: 0,
-                    free_blocks: VecDeque::new(),
-                    allocated_blocks: HashMap::new(),
-                    stats: PoolStatistics {
-                        allocations: 0,
-                        deallocations: 0,
-                        peak_usage: 0,
-                    },
-                }
-            ],
+            numa_pools: vec![NumaMemoryPool {
+                node_id: 0,
+                free_blocks: VecDeque::new(),
+                allocated_blocks: HashMap::new(),
+                stats: PoolStatistics {
+                    allocations: 0,
+                    deallocations: 0,
+                    peak_usage: 0,
+                },
+            }],
             huge_page_allocator: HugePageAllocator {
                 page_size: 2 * 1024 * 1024, // 2MB huge pages
                 allocated_pages: 0,
@@ -837,30 +873,35 @@ impl ExtremeMemoryAllocator {
             object_pools: HashMap::new(),
             prefetch_controller: PrefetchController {
                 prefetch_distance: 64,
-                prefetch_patterns: vec![
-                    PrefetchPattern {
-                        stride: 64,
-                        locality: TemporalLocality::High,
-                    }
-                ],
+                prefetch_patterns: vec![PrefetchPattern {
+                    stride: 64,
+                    locality: TemporalLocality::High,
+                }],
             },
         }
     }
-    
+
     /// Allocate NUMA-aware memory
-    pub fn numa_alloc(&mut self, size: usize, alignment: usize, preferred_node: usize) -> SpatialResult<NonNull<u8>> {
+    pub fn numa_alloc(
+        &mut self,
+        size: usize,
+        alignment: usize,
+        preferred_node: usize,
+    ) -> SpatialResult<NonNull<u8>> {
         // Simulate NUMA-aware allocation
         let layout = Layout::from_size_align(size, alignment)
             .map_err(|_| SpatialError::InvalidInput("Invalid memory layout".to_string()))?;
-        
+
         let ptr = unsafe { alloc(layout) };
         if ptr.is_null() {
-            return Err(SpatialError::InvalidInput("Memory allocation failed".to_string()));
+            return Err(SpatialError::InvalidInput(
+                "Memory allocation failed".to_string(),
+            ));
         }
-        
+
         let non_null_ptr = NonNull::new(ptr)
             .ok_or_else(|| SpatialError::InvalidInput("Null pointer from allocator".to_string()))?;
-        
+
         // Update statistics
         if let Some(pool) = self.numa_pools.get_mut(0) {
             pool.stats.allocations += 1;
@@ -872,10 +913,10 @@ impl ExtremeMemoryAllocator {
                     alignment,
                     numa_node: preferred_node,
                     ref_count: 1,
-                }
+                },
             );
         }
-        
+
         Ok(non_null_ptr)
     }
 }
@@ -908,41 +949,52 @@ impl UltrafastDistanceMatrix {
             },
         }
     }
-    
+
     /// Compute distance matrix with extreme performance optimizations
-    pub async fn compute_extreme_performance(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
+    pub async fn compute_extreme_performance(
+        &self,
+        points: &ArrayView2<'_, f64>,
+    ) -> SpatialResult<Array2<f64>> {
         let (n_points, n_dims) = points.dim();
-        
+
         // Initialize performance counters
         let _start_time = Instant::now();
-        let start_cycles = self.optimizer.performance_counters.cpu_cycles.load(Ordering::Relaxed);
-        
+        let start_cycles = self
+            .optimizer
+            .performance_counters
+            .cpu_cycles
+            .load(Ordering::Relaxed);
+
         // Allocate result matrix with optimal memory layout
         let mut distance_matrix = Array2::zeros((n_points, n_points));
-        
+
         // Use extreme vectorization if enabled
         if self.optimizer.extreme_simd {
-            self.compute_vectorized_distances(points, &mut distance_matrix).await?;
+            self.compute_vectorized_distances(points, &mut distance_matrix)
+                .await?;
         }
-        
+
         // Apply cache-oblivious algorithms if enabled
         if self.optimizer.cache_oblivious {
-            self.apply_cache_oblivious_optimization(&mut distance_matrix).await?;
+            self.apply_cache_oblivious_optimization(&mut distance_matrix)
+                .await?;
         }
-        
+
         // Use branch-free implementations if enabled
         if self.optimizer.branch_free {
-            self.apply_branch_free_optimization(points, &mut distance_matrix).await?;
+            self.apply_branch_free_optimization(points, &mut distance_matrix)
+                .await?;
         }
-        
+
         // Use lock-free structures if enabled
         if self.optimizer.lock_free {
-            self.apply_lock_free_optimization(&mut distance_matrix).await?;
+            self.apply_lock_free_optimization(&mut distance_matrix)
+                .await?;
         }
-        
+
         // Simulate ultra-high performance computation
         for i in 0..n_points {
-            for j in (i+1)..n_points {
+            for j in (i + 1)..n_points {
                 let mut dist_sq = 0.0;
                 for k in 0..n_dims {
                     let diff = points[[i, k]] - points[[j, k]];
@@ -953,47 +1005,64 @@ impl UltrafastDistanceMatrix {
                 distance_matrix[[j, i]] = dist;
             }
         }
-        
+
         // Update performance counters
-        let end_cycles = self.optimizer.performance_counters.cpu_cycles.load(Ordering::Relaxed);
+        let end_cycles = self
+            .optimizer
+            .performance_counters
+            .cpu_cycles
+            .load(Ordering::Relaxed);
         let cycles_used = end_cycles - start_cycles;
         let instructions = n_points * n_points * n_dims * 4; // Rough estimate
-        self.optimizer.performance_counters.update(cycles_used, instructions, 0, 0);
-        
+        self.optimizer
+            .performance_counters
+            .update(cycles_used, instructions, 0, 0);
+
         Ok(distance_matrix)
     }
-    
+
     /// Apply extreme vectorization
-    async fn compute_vectorized_distances(&self, points: &ArrayView2<'_, f64>, result: &mut Array2<f64>) -> SpatialResult<()> {
+    async fn compute_vectorized_distances(
+        &self,
+        points: &ArrayView2<'_, f64>,
+        result: &mut Array2<f64>,
+    ) -> SpatialResult<()> {
         // Simulate extreme SIMD vectorization
         let (n_points, _) = points.dim();
-        
+
         // Simulate AVX-512 vectorized computation (processes 8 doubles at once)
         for i in 0..n_points {
-            for j in (i+1)..n_points {
+            for j in (i + 1)..n_points {
                 // In a real implementation, this would use actual SIMD intrinsics
                 result[[i, j]] = 1.0; // Placeholder
                 result[[j, i]] = 1.0;
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// Apply cache-oblivious optimization
-    async fn apply_cache_oblivious_optimization(&self, matrix: &mut Array2<f64>) -> SpatialResult<()> {
+    async fn apply_cache_oblivious_optimization(
+        &self,
+        matrix: &mut Array2<f64>,
+    ) -> SpatialResult<()> {
         // Simulate cache-oblivious matrix operations
         let _ = matrix; // Placeholder
         Ok(())
     }
-    
+
     /// Apply branch-free optimization
-    async fn apply_branch_free_optimization(&self, points: &ArrayView2<'_, f64>, result: &mut Array2<f64>) -> SpatialResult<()> {
+    async fn apply_branch_free_optimization(
+        &self,
+        points: &ArrayView2<'_, f64>,
+        result: &mut Array2<f64>,
+    ) -> SpatialResult<()> {
         // Simulate branch-free implementations
         let _ = (points, result); // Placeholder
         Ok(())
     }
-    
+
     /// Apply lock-free optimization
     async fn apply_lock_free_optimization(&self, matrix: &mut Array2<f64>) -> SpatialResult<()> {
         // Simulate lock-free concurrent operations
@@ -1023,61 +1092,68 @@ impl SelfOptimizingAlgorithm {
             },
         }
     }
-    
+
     /// Enable hardware performance counter feedback
     pub fn with_hardware_counter_feedback(mut self, enabled: bool) -> Self {
         self.hardware_feedback = enabled;
         self
     }
-    
+
     /// Enable runtime code generation
     pub fn with_runtime_code_generation(mut self, enabled: bool) -> Self {
         self.runtime_codegen = enabled;
         self
     }
-    
+
     /// Enable adaptive memory patterns
     pub fn with_adaptive_memory_patterns(mut self, enabled: bool) -> Self {
         self.adaptive_memory = enabled;
         self
     }
-    
+
     /// Auto-optimize and execute algorithm
-    pub async fn auto_optimize_and_execute(&mut self, data: &ArrayView2<'_, f64>) -> SpatialResult<Array1<usize>> {
+    pub async fn auto_optimize_and_execute(
+        &mut self,
+        data: &ArrayView2<'_, f64>,
+    ) -> SpatialResult<Array1<usize>> {
         let initial_metrics = self.measure_baseline_performance(data).await?;
-        
+
         // Apply optimizations based on hardware feedback
         if self.hardware_feedback {
             self.optimize_based_on_hardware_counters().await?;
         }
-        
+
         // Generate optimized code at runtime
         if self.runtime_codegen {
             self.generate_optimized_code(data).await?;
         }
-        
+
         // Adapt memory access patterns
         if self.adaptive_memory {
             self.optimize_memory_patterns(data).await?;
         }
-        
+
         // Execute optimized algorithm
         let result = self.execute_optimized_algorithm(data).await?;
-        
+
         // Measure final performance and update model
         let final_metrics = self.measure_final_performance(data).await?;
-        self.update_performance_model(initial_metrics, final_metrics).await?;
-        
+        self.update_performance_model(initial_metrics, final_metrics)
+            .await?;
+
         Ok(result)
     }
-    
+
     /// Measure baseline performance
-    async fn measure_baseline_performance(&self, data: &ArrayView2<'_, f64>) -> SpatialResult<ExtremePerformanceMetrics> {
+    async fn measure_baseline_performance(
+        &self,
+        data: &ArrayView2<'_, f64>,
+    ) -> SpatialResult<ExtremePerformanceMetrics> {
         let start_time = Instant::now();
-        
+
         // Simulate baseline measurement
         let _ = data;
-        
+
         let _elapsed = start_time.elapsed();
         Ok(ExtremePerformanceMetrics {
             ops_per_second: 1e6,
@@ -1091,7 +1167,7 @@ impl SelfOptimizingAlgorithm {
             extreme_speedup: 1.0,
         })
     }
-    
+
     /// Optimize based on hardware counters
     async fn optimize_based_on_hardware_counters(&mut self) -> SpatialResult<()> {
         // Simulate hardware-guided optimization
@@ -1122,39 +1198,45 @@ impl SelfOptimizingAlgorithm {
             },
             success: true,
         });
-        
+
         Ok(())
     }
-    
+
     /// Generate optimized code
     async fn generate_optimized_code(&mut self, data: &ArrayView2<'_, f64>) -> SpatialResult<()> {
         let _ = data; // Placeholder
         Ok(())
     }
-    
+
     /// Optimize memory patterns
     async fn optimize_memory_patterns(&mut self, data: &ArrayView2<'_, f64>) -> SpatialResult<()> {
         let _ = data; // Placeholder
         Ok(())
     }
-    
+
     /// Execute optimized algorithm
-    async fn execute_optimized_algorithm(&self, data: &ArrayView2<'_, f64>) -> SpatialResult<Array1<usize>> {
+    async fn execute_optimized_algorithm(
+        &self,
+        data: &ArrayView2<'_, f64>,
+    ) -> SpatialResult<Array1<usize>> {
         let (n_points, _) = data.dim();
-        
+
         // Simulate clustering with extreme optimizations
         let mut assignments = Array1::zeros(n_points);
         for i in 0..n_points {
             assignments[i] = i % 2; // Simple 2-cluster assignment
         }
-        
+
         Ok(assignments)
     }
-    
+
     /// Measure final performance
-    async fn measure_final_performance(&self, data: &ArrayView2<'_, f64>) -> SpatialResult<ExtremePerformanceMetrics> {
+    async fn measure_final_performance(
+        &self,
+        data: &ArrayView2<'_, f64>,
+    ) -> SpatialResult<ExtremePerformanceMetrics> {
         let _ = data;
-        
+
         Ok(ExtremePerformanceMetrics {
             ops_per_second: 5e6, // 5x improvement
             memory_bandwidth_utilization: 95.0,
@@ -1167,20 +1249,22 @@ impl SelfOptimizingAlgorithm {
             extreme_speedup: 10.0, // 10x total speedup
         })
     }
-    
+
     /// Update performance model
     async fn update_performance_model(
-        &mut self, 
-        _before: ExtremePerformanceMetrics, 
-        after: ExtremePerformanceMetrics
+        &mut self,
+        _before: ExtremePerformanceMetrics,
+        after: ExtremePerformanceMetrics,
     ) -> SpatialResult<()> {
         self.performance_model.accuracy = 0.95;
-        self.performance_model.predictions.push(PerformancePrediction {
-            metric: "speedup".to_string(),
-            value: after.extreme_speedup,
-            confidence: 0.9,
-        });
-        
+        self.performance_model
+            .predictions
+            .push(PerformancePrediction {
+                metric: "speedup".to_string(),
+                value: after.extreme_speedup,
+                confidence: 0.9,
+            });
+
         Ok(())
     }
 }
@@ -1200,19 +1284,21 @@ pub fn create_ultimate_optimizer() -> ExtremeOptimizer {
 }
 
 /// Benchmark extreme performance optimizations
-pub async fn benchmark_extreme_optimizations(data: &ArrayView2<'_, f64>) -> SpatialResult<ExtremePerformanceMetrics> {
+pub async fn benchmark_extreme_optimizations(
+    data: &ArrayView2<'_, f64>,
+) -> SpatialResult<ExtremePerformanceMetrics> {
     let optimizer = create_ultimate_optimizer();
     let ultrafast_matrix = UltrafastDistanceMatrix::new(optimizer);
-    
+
     let start_time = Instant::now();
     let _distances = ultrafast_matrix.compute_extreme_performance(data).await?;
     let elapsed = start_time.elapsed();
-    
+
     // Calculate performance metrics
     let (n_points, _) = data.dim();
     let operations = n_points * (n_points - 1) / 2; // Pairwise distances
     let ops_per_second = operations as f64 / elapsed.as_secs_f64();
-    
+
     Ok(ExtremePerformanceMetrics {
         ops_per_second,
         memory_bandwidth_utilization: 95.0,
@@ -1230,7 +1316,7 @@ pub async fn benchmark_extreme_optimizations(data: &ArrayView2<'_, f64>) -> Spat
 mod tests {
     use super::*;
     use ndarray::array;
-    
+
     #[test]
     fn test_extreme_optimizer_creation() {
         let optimizer = ExtremeOptimizer::new();
@@ -1238,30 +1324,30 @@ mod tests {
         assert!(!optimizer.cache_oblivious);
         assert!(!optimizer.branch_free);
     }
-    
+
     #[test]
     fn test_optimizer_configuration() {
         let optimizer = ExtremeOptimizer::new()
             .with_extreme_simd(true)
             .with_cache_oblivious_algorithms(true)
             .with_branch_free_execution(true);
-        
+
         assert!(optimizer.extreme_simd);
         assert!(optimizer.cache_oblivious);
         assert!(optimizer.branch_free);
     }
-    
+
     #[test]
     fn test_performance_counters() {
         let counters = HardwarePerformanceCounters::new();
         counters.update(1000, 800, 50, 10);
-        
+
         assert_eq!(counters.cpu_cycles.load(Ordering::Relaxed), 1000);
         assert_eq!(counters.instructions.load(Ordering::Relaxed), 800);
         assert_eq!(counters.cache_misses.load(Ordering::Relaxed), 50);
         assert_eq!(counters.branch_mispredictions.load(Ordering::Relaxed), 10);
     }
-    
+
     #[test]
     fn test_numa_topology_detection() {
         let topology = NumaTopologyInfo::detect();
@@ -1269,7 +1355,7 @@ mod tests {
         assert_eq!(topology.memory_per_node.len(), 2);
         assert_eq!(topology.cores_per_node.len(), 2);
     }
-    
+
     #[test]
     fn test_cache_hierarchy_detection() {
         let cache = CacheHierarchyInfo::detect();
@@ -1277,7 +1363,7 @@ mod tests {
         assert_eq!(cache.l2_size_kb, 256);
         assert_eq!(cache.cache_line_size, 64);
     }
-    
+
     #[test]
     fn test_jit_compiler_creation() {
         let compiler = JitCompiler::new();
@@ -1285,71 +1371,73 @@ mod tests {
         assert!(compiler.target_features.avx2);
         assert!(compiler.target_features.fma);
     }
-    
+
     #[tokio::test]
     async fn test_jit_compilation() {
         let mut compiler = JitCompiler::new();
         let mut params = HashMap::new();
         params.insert("k".to_string(), 3.0);
-        
+
         let result = compiler.compile_algorithm("kmeans", &params);
         assert!(result.is_ok());
-        
+
         let code = result.unwrap();
         assert!(!code.code.is_empty());
         assert_eq!(code.entry_point, 0);
     }
-    
+
     #[test]
     fn test_extreme_memory_allocator() {
         let mut allocator = ExtremeMemoryAllocator::new();
         let result = allocator.numa_alloc(1024, 64, 0);
         assert!(result.is_ok());
-        
+
         // Check that allocation was recorded
         assert_eq!(allocator.numa_pools[0].stats.allocations, 1);
     }
-    
+
     #[tokio::test]
     async fn test_ultrafast_distance_matrix() {
         let optimizer = ExtremeOptimizer::new()
             .with_extreme_simd(true)
             .with_cache_oblivious_algorithms(true);
-        
+
         let matrix_computer = UltrafastDistanceMatrix::new(optimizer);
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
-        
-        let result = matrix_computer.compute_extreme_performance(&points.view()).await;
+
+        let result = matrix_computer
+            .compute_extreme_performance(&points.view())
+            .await;
         assert!(result.is_ok());
-        
+
         let distances = result.unwrap();
         assert_eq!(distances.shape(), &[4, 4]);
-        
+
         // Diagonal should be zero
         for i in 0..4 {
             assert_eq!(distances[[i, i]], 0.0);
         }
     }
-    
+
     #[tokio::test]
     async fn test_self_optimizing_algorithm() {
         let mut algorithm = SelfOptimizingAlgorithm::new("clustering")
             .with_hardware_counter_feedback(true)
             .with_runtime_code_generation(true)
             .with_adaptive_memory_patterns(true);
-        
+
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
-        
+
         let result = algorithm.auto_optimize_and_execute(&points.view()).await;
         assert!(result.is_ok());
-        
+
         let assignments = result.unwrap();
         assert_eq!(assignments.len(), 4);
-        
+
         // Check that optimization history was recorded
         assert!(!algorithm.optimization_history.is_empty());
     }
-    
+
     #[test]
     fn test_ultimate_optimizer_creation() {
         let optimizer = create_ultimate_optimizer();
@@ -1363,35 +1451,37 @@ mod tests {
         assert!(optimizer.prefetch_optimization);
         assert!(optimizer.ilp_maximization);
     }
-    
+
     #[tokio::test]
     async fn test_extreme_performance_benchmark() {
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
-        
+
         let result = benchmark_extreme_optimizations(&points.view()).await;
         assert!(result.is_ok());
-        
+
         let metrics = result.unwrap();
         assert!(metrics.ops_per_second > 0.0);
         assert!(metrics.extreme_speedup >= 1.0);
         assert!(metrics.cache_hit_ratio >= 90.0);
         assert!(metrics.simd_utilization >= 90.0);
     }
-    
+
     #[test]
     fn test_extreme_speedup_calculation() {
         let optimizer = create_ultimate_optimizer();
         let speedup = optimizer.calculate_extreme_speedup();
-        
+
         // Should be a very high speedup with all optimizations
         assert!(speedup > 100.0); // Expect > 100x speedup with all optimizations
     }
-    
+
     #[test]
     fn test_performance_metrics() {
         let optimizer = create_ultimate_optimizer();
-        optimizer.performance_counters.update(1000000, 900000, 5000, 1000);
-        
+        optimizer
+            .performance_counters
+            .update(1000000, 900000, 5000, 1000);
+
         let metrics = optimizer.get_performance_metrics();
         assert!(metrics.ops_per_second > 0.0);
         assert!(metrics.cache_hit_ratio > 90.0);

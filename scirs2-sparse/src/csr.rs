@@ -592,7 +592,7 @@ where
         for (row_idx, result_val) in result.iter_mut().enumerate() {
             let start = self.indptr[row_idx];
             let end = self.indptr[row_idx + 1];
-            
+
             for idx in start..end {
                 let col = self.indices[idx];
                 *result_val += self.data[idx] * vec[col];

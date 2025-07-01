@@ -521,7 +521,7 @@ impl Kernel for MatMulKernel {
 
     fn validate_inputs(&self, inputs: &[&DeviceBuffer]) -> Result<()> {
         if inputs.len() != 2 {
-            return Err(NeuralError::InvalidInput(
+            return Err(NeuralError::InvalidArgument(
                 "MatMul kernel requires exactly 2 input buffers".to_string(),
             ));
         }
@@ -530,14 +530,14 @@ impl Kernel for MatMulKernel {
         let expected_b_size = self.k * self.n * std::mem::size_of::<f32>();
 
         if inputs[0].size != expected_a_size {
-            return Err(NeuralError::InvalidInput(format!(
+            return Err(NeuralError::InvalidArgument(format!(
                 "Input A size mismatch: expected {}, got {}",
                 expected_a_size, inputs[0].size
             )));
         }
 
         if inputs[1].size != expected_b_size {
-            return Err(NeuralError::InvalidInput(format!(
+            return Err(NeuralError::InvalidArgument(format!(
                 "Input B size mismatch: expected {}, got {}",
                 expected_b_size, inputs[1].size
             )));
@@ -566,17 +566,17 @@ impl MatMulKernel {
     pub fn execute_cpu(&self, a: &[f32], b: &[f32], c: &mut [f32]) -> Result<()> {
         // Validate input sizes
         if a.len() != self.m * self.k {
-            return Err(NeuralError::InvalidInput(
+            return Err(NeuralError::InvalidArgument(
                 "Matrix A size mismatch".to_string(),
             ));
         }
         if b.len() != self.k * self.n {
-            return Err(NeuralError::InvalidInput(
+            return Err(NeuralError::InvalidArgument(
                 "Matrix B size mismatch".to_string(),
             ));
         }
         if c.len() != self.m * self.n {
-            return Err(NeuralError::InvalidInput(
+            return Err(NeuralError::InvalidArgument(
                 "Matrix C size mismatch".to_string(),
             ));
         }
@@ -713,7 +713,7 @@ impl Accelerator for CPUAccelerator {
         if kernel.name() == "matmul_f32" {
             if let Some(matmul_kernel) = kernel.as_any().downcast_ref::<MatMulKernel>() {
                 if inputs.len() != 2 || outputs.len() != 1 {
-                    return Err(NeuralError::InvalidInput(
+                    return Err(NeuralError::InvalidArgument(
                         "MatMul requires 2 inputs and 1 output".to_string(),
                     ));
                 }
@@ -970,6 +970,9 @@ impl Accelerator for CUDAAccelerator {
             used: 0,
             available: self.capabilities.total_memory,
             reserved: 0,
+            allocation_count: 0,
+            peak_usage: 0,
+            fragmentation: 0.0,
         })
     }
 
@@ -989,6 +992,11 @@ impl Accelerator for CUDAAccelerator {
             occupancy: 0.8,
             memory_throughput: 500.0,
             compute_throughput: 30.0,
+            energy_consumption: 3.0,
+            cache_hit_ratio: 0.85,
+            instruction_throughput: 800.0,
+            register_usage: 0.7,
+            shared_memory_usage: 0,
         })
     }
 }
@@ -1096,6 +1104,9 @@ impl Accelerator for MetalAccelerator {
             used: 0,
             available: self.capabilities.total_memory,
             reserved: 0,
+            allocation_count: 0,
+            peak_usage: 0,
+            fragmentation: 0.0,
         })
     }
 
@@ -1115,6 +1126,11 @@ impl Accelerator for MetalAccelerator {
             occupancy: 0.7,
             memory_throughput: 200.0,
             compute_throughput: 8.0,
+            energy_consumption: 15.0,
+            cache_hit_ratio: 0.75,
+            instruction_throughput: 500.0,
+            register_usage: 0.6,
+            shared_memory_usage: 0,
         })
     }
 }
@@ -1230,6 +1246,9 @@ impl Accelerator for ROCmAccelerator {
             used: 0,
             available: self.capabilities.total_memory,
             reserved: 0,
+            allocation_count: 0,
+            peak_usage: 0,
+            fragmentation: 0.0,
         })
     }
 
@@ -1249,6 +1268,11 @@ impl Accelerator for ROCmAccelerator {
             occupancy: 0.85,
             memory_throughput: 800.0,
             compute_throughput: 45.0,
+            energy_consumption: 8.0,
+            cache_hit_ratio: 0.88,
+            instruction_throughput: 1200.0,
+            register_usage: 0.8,
+            shared_memory_usage: 0,
         })
     }
 }
@@ -1364,6 +1388,9 @@ impl Accelerator for OneAPIAccelerator {
             used: 0,
             available: self.capabilities.total_memory,
             reserved: 0,
+            allocation_count: 0,
+            peak_usage: 0,
+            fragmentation: 0.0,
         })
     }
 
@@ -1383,6 +1410,11 @@ impl Accelerator for OneAPIAccelerator {
             occupancy: 0.75,
             memory_throughput: 400.0,
             compute_throughput: 20.0,
+            energy_consumption: 12.0,
+            cache_hit_ratio: 0.82,
+            instruction_throughput: 700.0,
+            register_usage: 0.65,
+            shared_memory_usage: 0,
         })
     }
 }
@@ -1498,6 +1530,9 @@ impl Accelerator for FPGAAccelerator {
             used: 0,
             available: self.capabilities.total_memory,
             reserved: 0,
+            allocation_count: 0,
+            peak_usage: 0,
+            fragmentation: 0.0,
         })
     }
 
@@ -1517,6 +1552,11 @@ impl Accelerator for FPGAAccelerator {
             occupancy: 1.0,
             memory_throughput: 80.0,
             compute_throughput: 4.0,
+            energy_consumption: 25.0,
+            cache_hit_ratio: 0.70,
+            instruction_throughput: 200.0,
+            register_usage: 0.9,
+            shared_memory_usage: 0,
         })
     }
 }
@@ -1632,6 +1672,9 @@ impl Accelerator for TPUAccelerator {
             used: 0,
             available: self.capabilities.total_memory,
             reserved: 0,
+            allocation_count: 0,
+            peak_usage: 0,
+            fragmentation: 0.0,
         })
     }
 
@@ -1651,6 +1694,11 @@ impl Accelerator for TPUAccelerator {
             occupancy: 0.95,
             memory_throughput: 1000.0,
             compute_throughput: 250.0,
+            energy_consumption: 4.0,
+            cache_hit_ratio: 0.92,
+            instruction_throughput: 1800.0,
+            register_usage: 0.85,
+            shared_memory_usage: 0,
         })
     }
 }

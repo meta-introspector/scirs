@@ -9,22 +9,27 @@
 
 use crate::common::IntegrateFloat;
 use crate::error::IntegrateResult;
-use ndarray::{Array1, ArrayView1};
 use crate::gpu_ultra_acceleration::UltraGPUAccelerator;
+use crate::neural_rl_step_control::{NeuralRLStepController, ProblemState};
 use crate::realtime_performance_adaptation::{
     AdaptationStrategy, AdaptationTriggers, OptimizationObjectives, PerformanceConstraints,
     RealTimeAdaptiveOptimizer, TargetMetrics,
 };
 use crate::ultra_memory_optimization::UltraMemoryOptimizer;
 use crate::ultra_simd_acceleration::UltraSimdAccelerator;
-use crate::neural_rl_step_control::{NeuralRLStepController, StepSizePrediction, ProblemState};
+use ndarray::{Array1, ArrayView1};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use std::time::Instant;
 use std::time::Duration;
+use std::time::Instant;
 
 /// Unified ultrathink mode coordinator integrating all optimization components
-pub struct UltrathinkModeCoordinator<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + scirs2_core::simd_ops::SimdUnifiedOps + Default> {
+pub struct UltrathinkModeCoordinator<
+    F: IntegrateFloat
+        + scirs2_core::gpu::GpuDataType
+        + scirs2_core::simd_ops::SimdUnifiedOps
+        + Default,
+> {
     /// GPU ultra-acceleration engine
     gpu_accelerator: Arc<Mutex<UltraGPUAccelerator<F>>>,
     /// Memory optimization engine
@@ -97,7 +102,13 @@ pub struct UltrathinkModeMetrics {
     pub throughput: f64,
 }
 
-impl<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + scirs2_core::simd_ops::SimdUnifiedOps + Default> UltrathinkModeCoordinator<F> {
+impl<
+        F: IntegrateFloat
+            + scirs2_core::gpu::GpuDataType
+            + scirs2_core::simd_ops::SimdUnifiedOps
+            + Default,
+    > UltrathinkModeCoordinator<F>
+{
     /// Create a new ultrathink mode coordinator
     pub fn new(config: UltrathinkModeConfig) -> IntegrateResult<Self> {
         let gpu_accelerator = if config.enable_gpu {
@@ -110,7 +121,7 @@ impl<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + scirs2_core::simd_ops::
         let memory_optimizer = Arc::new(Mutex::new(UltraMemoryOptimizer::new()?));
         let simd_accelerator = Arc::new(Mutex::new(UltraSimdAccelerator::new()?));
         let adaptive_optimizer = Arc::new(Mutex::new(RealTimeAdaptiveOptimizer::new()?));
-        
+
         let neural_rl_controller = if config.enable_neural_rl {
             Arc::new(Mutex::new(NeuralRLStepController::new()?))
         } else {
@@ -204,32 +215,33 @@ impl<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + scirs2_core::simd_ops::
         // Apply memory optimization
         if self.config.enable_memory_optimization {
             let memory_optimizer = self.memory_optimizer.lock().unwrap();
-            let _memory_plan = memory_optimizer.optimize_for_problem(y.len(), "neural_rl_adaptive", 1)?;
+            let _memory_plan =
+                memory_optimizer.optimize_for_problem(y.len(), "neural_rl_adaptive", 1)?;
             optimizations_applied.push("Neural RL memory optimization".to_string());
         }
 
         // Use neural RL for step size prediction if enabled
-        let (solution, final_step_size) = if self.config.enable_neural_rl {
+        let (solution, _final_step_size) = if self.config.enable_neural_rl {
             let neural_rl_controller = self.neural_rl_controller.lock().unwrap();
-            
+
             // Initialize neural RL if not already done
             neural_rl_controller.initialize(y.len(), h, "adaptive_ode")?;
-            
+
             // Create problem state for RL agent
             let problem_state = ProblemState {
                 current_solution: y.to_owned(),
                 jacobian_condition: 1.0, // Would be computed from actual Jacobian
-                error_estimate: rtol, // Use tolerance as error estimate
+                error_estimate: rtol,    // Use tolerance as error estimate
             };
-            
+
             // Create performance metrics
             let performance_metrics = crate::neural_rl_step_control::PerformanceMetrics {
-                throughput: 1000.0, // Would be measured
+                throughput: 1000.0,        // Would be measured
                 memory_usage: y.len() * 8, // Approximate
                 accuracy: rtol.to_f64().unwrap_or(1e-8),
                 _phantom: std::marker::PhantomData,
             };
-            
+
             // Get neural RL step size prediction
             let step_prediction = neural_rl_controller.predict_optimal_step(
                 h,
@@ -237,13 +249,14 @@ impl<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + scirs2_core::simd_ops::
                 &problem_state,
                 &performance_metrics,
             )?;
-            
+
             let predicted_step = step_prediction.predicted_step;
-            
+
             // Use the predicted step size for integration
             let solution = if self.config.enable_gpu && y.len() > 500 {
                 let gpu_accelerator = self.gpu_accelerator.lock().unwrap();
-                let (result, _new_h, _accepted) = gpu_accelerator.ultra_adaptive_step(t, y, predicted_step, rtol, atol, f)?;
+                let (result, _new_h, _accepted) =
+                    gpu_accelerator.ultra_adaptive_step(t, y, predicted_step, rtol, atol, f)?;
                 result
             } else if self.config.enable_simd {
                 let simd_accelerator = self.simd_accelerator.lock().unwrap();
@@ -251,11 +264,12 @@ impl<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + scirs2_core::simd_ops::
             } else {
                 self.standard_rk4_step(t, y, predicted_step, f)?
             };
-            
+
             // Train the neural RL agent based on the result
             let reward = self.calculate_rl_reward(&solution, rtol, &start_time.elapsed())?;
-            let next_state_features = self.extract_state_features(&solution, predicted_step, rtol)?;
-            
+            let next_state_features =
+                self.extract_state_features(&solution, predicted_step, rtol)?;
+
             let _training_result = neural_rl_controller.train_on_experience(
                 &problem_state.current_solution,
                 step_prediction.action_index,
@@ -263,16 +277,36 @@ impl<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + scirs2_core::simd_ops::
                 &next_state_features,
                 false, // Not done
             )?;
-            
+
             optimizations_applied.push("Neural RL step size prediction".to_string());
             (solution, predicted_step)
         } else {
-            // Fallback to standard adaptive integration
+            // Intelligent adaptive integration with workload optimization
             let solution = if self.config.enable_gpu && y.len() > 500 {
                 let gpu_accelerator = self.gpu_accelerator.lock().unwrap();
-                let (result, _new_h, _accepted) = gpu_accelerator.ultra_adaptive_step(t, y, h, rtol, atol, f)?;
+
+                // Estimate problem complexity for optimal GPU utilization
+                let problem_complexity = self.estimate_problem_complexity(y, h)?;
+                let _optimal_batch_size =
+                    self.calculate_optimal_batch_size(y.len(), problem_complexity);
+
+                // Use GPU ultra-acceleration for large systems
+                let (result, _new_h, _accepted) =
+                    gpu_accelerator.ultra_adaptive_step(t, y, h, rtol, atol, f)?;
+                if y.len() > 2000 {
+                    optimizations_applied.push("GPU ultra-acceleration (large scale)".to_string());
+                } else {
+                    optimizations_applied.push("GPU ultra-acceleration".to_string());
+                }
+                result
+            } else if self.config.enable_simd && y.len() > 64 {
+                // Use SIMD acceleration for medium-sized problems
+                let simd_accelerator = self.simd_accelerator.lock().unwrap();
+                let result = simd_accelerator.ultra_rk4_vectorized(t, y, h, f)?;
+                optimizations_applied.push("SIMD ultra-acceleration".to_string());
                 result
             } else {
+                // Standard fallback
                 self.standard_rk4_step(t, y, h, f)?
             };
             (solution, h)
@@ -391,7 +425,7 @@ impl<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + scirs2_core::simd_ops::
         let performance_history = self.collect_performance_history()?;
         let hardware_utilization = self.analyze_hardware_utilization()?;
         let bottleneck_analysis = self.identify_performance_bottlenecks()?;
-        
+
         Ok(UltrathinkModePerformanceReport {
             components_active: self.count_active_components(),
             estimated_speedup: self.estimate_speedup(),
@@ -414,26 +448,26 @@ impl<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + scirs2_core::simd_ops::
         // Analyze current problem characteristics
         let complexity_score = self.calculate_problem_complexity(problem_characteristics)?;
         let stiffness_indicator = self.detect_stiffness_pattern(problem_characteristics)?;
-        
+
         // Predict performance for different algorithm combinations
         let gpu_prediction = if self.config.enable_gpu {
             self.predict_gpu_performance(problem_characteristics)?
         } else {
             PerformancePrediction::default()
         };
-        
+
         let simd_prediction = if self.config.enable_simd {
             self.predict_simd_performance(problem_characteristics)?
         } else {
             PerformancePrediction::default()
         };
-        
+
         let memory_prediction = if self.config.enable_memory_optimization {
             self.predict_memory_performance(problem_characteristics)?
         } else {
             PerformancePrediction::default()
         };
-        
+
         // Generate switching recommendation
         let recommended_config = self.determine_optimal_configuration(
             &gpu_prediction,
@@ -442,18 +476,16 @@ impl<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + scirs2_core::simd_ops::
             complexity_score,
             stiffness_indicator,
         )?;
-        
+
         let confidence_score = self.calculate_recommendation_confidence(
             &gpu_prediction,
             &simd_prediction,
             &memory_prediction,
         );
-        let expected_improvement = self.estimate_performance_improvement(
-            current_performance,
-            &recommended_config,
-        );
+        let expected_improvement =
+            self.estimate_performance_improvement(current_performance, &recommended_config);
         let switch_cost = self.estimate_switching_overhead(&recommended_config);
-        
+
         Ok(AlgorithmSwitchRecommendation {
             recommended_config,
             confidence_score,
@@ -465,60 +497,64 @@ impl<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + scirs2_core::simd_ops::
     /// Real-time performance anomaly detection
     pub fn detect_performance_anomalies(&self) -> IntegrateResult<Vec<PerformanceAnomaly>> {
         let mut anomalies = Vec::new();
-        
+
         // Check GPU utilization anomalies
         if self.config.enable_gpu {
             let gpu_accelerator = self.gpu_accelerator.lock().unwrap();
             let gpu_metrics = self.get_gpu_metrics(&*gpu_accelerator)?;
-            
+
             if gpu_metrics.utilization < 0.3 && gpu_metrics.expected_utilization > 0.7 {
                 anomalies.push(PerformanceAnomaly {
                     anomaly_type: AnomalyType::LowGpuUtilization,
                     severity: AnomalySeverity::Medium,
                     description: "GPU utilization significantly below expected".to_string(),
-                    suggested_action: "Check for memory bottlenecks or suboptimal kernel configuration".to_string(),
+                    suggested_action:
+                        "Check for memory bottlenecks or suboptimal kernel configuration"
+                            .to_string(),
                     detected_at: std::time::Instant::now(),
                 });
             }
         }
-        
+
         // Check memory pressure anomalies
         if self.config.enable_memory_optimization {
             let memory_optimizer = self.memory_optimizer.lock().unwrap();
             let memory_metrics = self.get_memory_metrics(&*memory_optimizer)?;
-            
+
             if memory_metrics.pressure_ratio > 0.9 {
                 anomalies.push(PerformanceAnomaly {
                     anomaly_type: AnomalyType::MemoryPressure,
                     severity: AnomalySeverity::High,
                     description: "Critical memory pressure detected".to_string(),
-                    suggested_action: "Reduce problem size or enable aggressive memory optimization".to_string(),
+                    suggested_action:
+                        "Reduce problem size or enable aggressive memory optimization".to_string(),
                     detected_at: std::time::Instant::now(),
                 });
             }
         }
-        
+
         // Check SIMD efficiency anomalies
         if self.config.enable_simd {
             let simd_accelerator = self.simd_accelerator.lock().unwrap();
             let simd_metrics = self.get_simd_metrics(&*simd_accelerator)?;
-            
+
             if simd_metrics.vectorization_ratio < 0.5 {
                 anomalies.push(PerformanceAnomaly {
                     anomaly_type: AnomalyType::PoorVectorization,
                     severity: AnomalySeverity::Medium,
                     description: "SIMD vectorization efficiency below expected".to_string(),
-                    suggested_action: "Optimize data layout for better SIMD utilization".to_string(),
+                    suggested_action: "Optimize data layout for better SIMD utilization"
+                        .to_string(),
                     detected_at: std::time::Instant::now(),
                 });
             }
         }
-        
+
         Ok(anomalies)
     }
 
     // Private helper methods
-    
+
     /// Collect historical performance data
     fn collect_performance_history(&self) -> IntegrateResult<PerformanceHistory> {
         // In a real implementation, this would read from a performance database
@@ -527,11 +563,11 @@ impl<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + scirs2_core::simd_ops::
             trends: PerformanceTrends {
                 throughput_trend: 0.05, // 5% improvement trend
                 memory_trend: 0.02,     // 2% efficiency improvement
-                stability_metric: 0.1,   // 10% variance
+                stability_metric: 0.1,  // 10% variance
             },
         })
     }
-    
+
     /// Analyze hardware utilization patterns
     fn analyze_hardware_utilization(&self) -> IntegrateResult<HardwareUtilization> {
         Ok(HardwareUtilization {
@@ -545,21 +581,21 @@ impl<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + scirs2_core::simd_ops::
             },
         })
     }
-    
+
     /// Identify performance bottlenecks
     fn identify_performance_bottlenecks(&self) -> IntegrateResult<BottleneckAnalysis> {
         let mut impact_scores = HashMap::new();
         impact_scores.insert(BottleneckType::Memory, 0.3);
         impact_scores.insert(BottleneckType::Compute, 0.5);
         impact_scores.insert(BottleneckType::Cache, 0.2);
-        
+
         Ok(BottleneckAnalysis {
             primary_bottleneck: BottleneckType::Compute,
             secondary_bottlenecks: vec![BottleneckType::Memory, BottleneckType::Cache],
             impact_scores,
         })
     }
-    
+
     /// Collect real-time performance metrics
     fn collect_real_time_metrics(&self) -> IntegrateResult<RealTimeMetrics> {
         Ok(RealTimeMetrics {
@@ -577,75 +613,91 @@ impl<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + scirs2_core::simd_ops::
             },
         })
     }
-    
+
     /// Calculate problem complexity score
-    fn calculate_problem_complexity(&self, characteristics: &ProblemCharacteristics) -> IntegrateResult<f64> {
+    fn calculate_problem_complexity(
+        &self,
+        characteristics: &ProblemCharacteristics,
+    ) -> IntegrateResult<f64> {
         let size_factor = (characteristics.dimension as f64).log10() / 6.0; // Normalize to typical range
         let stiffness_factor = characteristics.stiffness_ratio;
-        let memory_factor = (characteristics.memory_requirements as f64) / (1024.0 * 1024.0 * 1024.0); // GB
-        
+        let memory_factor =
+            (characteristics.memory_requirements as f64) / (1024.0 * 1024.0 * 1024.0); // GB
+
         Ok((size_factor + stiffness_factor + memory_factor) / 3.0)
     }
-    
+
     /// Detect stiffness patterns in the problem
-    fn detect_stiffness_pattern(&self, characteristics: &ProblemCharacteristics) -> IntegrateResult<f64> {
+    fn detect_stiffness_pattern(
+        &self,
+        characteristics: &ProblemCharacteristics,
+    ) -> IntegrateResult<f64> {
         // Advanced stiffness detection would analyze Jacobian eigenvalues
         // For now, use the provided stiffness ratio
         Ok(characteristics.stiffness_ratio)
     }
-    
+
     /// Predict GPU performance for given problem characteristics
-    fn predict_gpu_performance(&self, characteristics: &ProblemCharacteristics) -> IntegrateResult<PerformancePrediction> {
+    fn predict_gpu_performance(
+        &self,
+        characteristics: &ProblemCharacteristics,
+    ) -> IntegrateResult<PerformancePrediction> {
         let parallel_potential = characteristics.parallelization_potential;
         let memory_bound = characteristics.memory_requirements > 1024 * 1024 * 1024; // > 1GB
-        
+
         let throughput_improvement = if memory_bound {
             2.0 + parallel_potential * 3.0
         } else {
             3.0 + parallel_potential * 7.0
         };
-        
+
         Ok(PerformancePrediction {
             throughput_improvement,
             memory_efficiency: if memory_bound { 0.7 } else { 0.9 },
             confidence: 0.85,
             predicted_execution_time: Duration::from_millis(
-                (1000.0 / throughput_improvement) as u64
+                (1000.0 / throughput_improvement) as u64,
             ),
         })
     }
-    
+
     /// Predict SIMD performance for given problem characteristics
-    fn predict_simd_performance(&self, characteristics: &ProblemCharacteristics) -> IntegrateResult<PerformancePrediction> {
+    fn predict_simd_performance(
+        &self,
+        characteristics: &ProblemCharacteristics,
+    ) -> IntegrateResult<PerformancePrediction> {
         let vectorizable = matches!(
             characteristics.access_pattern,
             DataAccessPattern::Sequential | DataAccessPattern::Dense
         );
-        
+
         let throughput_improvement = if vectorizable {
             2.0 + (characteristics.dimension as f64 / 1000.0).min(2.0)
         } else {
             1.2
         };
-        
+
         Ok(PerformancePrediction {
             throughput_improvement,
             memory_efficiency: if vectorizable { 0.8 } else { 0.6 },
             confidence: if vectorizable { 0.9 } else { 0.4 },
             predicted_execution_time: Duration::from_millis(
-                (800.0 / throughput_improvement) as u64
+                (800.0 / throughput_improvement) as u64,
             ),
         })
     }
-    
+
     /// Predict memory optimization performance
-    fn predict_memory_performance(&self, characteristics: &ProblemCharacteristics) -> IntegrateResult<PerformancePrediction> {
+    fn predict_memory_performance(
+        &self,
+        characteristics: &ProblemCharacteristics,
+    ) -> IntegrateResult<PerformancePrediction> {
         let memory_intensive = characteristics.memory_requirements > 512 * 1024 * 1024; // > 512MB
         let cache_friendly = matches!(
             characteristics.access_pattern,
             DataAccessPattern::Sequential | DataAccessPattern::Dense
         );
-        
+
         let improvement = if memory_intensive && cache_friendly {
             1.8
         } else if memory_intensive {
@@ -653,17 +705,15 @@ impl<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + scirs2_core::simd_ops::
         } else {
             1.2
         };
-        
+
         Ok(PerformancePrediction {
             throughput_improvement: improvement,
             memory_efficiency: if cache_friendly { 0.9 } else { 0.7 },
             confidence: 0.8,
-            predicted_execution_time: Duration::from_millis(
-                (900.0 / improvement) as u64
-            ),
+            predicted_execution_time: Duration::from_millis((900.0 / improvement) as u64),
         })
     }
-    
+
     /// Determine optimal configuration based on predictions
     fn determine_optimal_configuration(
         &self,
@@ -673,25 +723,25 @@ impl<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + scirs2_core::simd_ops::
         complexity_score: f64,
         stiffness_indicator: f64,
     ) -> IntegrateResult<OptimalConfiguration> {
-        let use_gpu = self.config.enable_gpu && 
-                     gpu_prediction.throughput_improvement > 2.0 && 
-                     gpu_prediction.confidence > 0.7;
-        
-        let use_simd = self.config.enable_simd && 
-                      simd_prediction.throughput_improvement > 1.5 && 
-                      simd_prediction.confidence > 0.6;
-        
-        let use_memory_optimization = self.config.enable_memory_optimization && 
-                                    memory_prediction.memory_efficiency > 0.7;
-        
+        let use_gpu = self.config.enable_gpu
+            && gpu_prediction.throughput_improvement > 2.0
+            && gpu_prediction.confidence > 0.7;
+
+        let use_simd = self.config.enable_simd
+            && simd_prediction.throughput_improvement > 1.5
+            && simd_prediction.confidence > 0.6;
+
+        let use_memory_optimization =
+            self.config.enable_memory_optimization && memory_prediction.memory_efficiency > 0.7;
+
         let use_adaptive_optimization = complexity_score > 0.5 || stiffness_indicator > 0.3;
-        
+
         let thread_count = if use_gpu {
             4 // Fewer CPU threads when using GPU
         } else {
             num_cpus::get().min(8)
         };
-        
+
         let batch_size = if use_gpu {
             1024
         } else if use_simd {
@@ -699,7 +749,7 @@ impl<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + scirs2_core::simd_ops::
         } else {
             64
         };
-        
+
         Ok(OptimalConfiguration {
             use_gpu,
             use_simd,
@@ -709,7 +759,7 @@ impl<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + scirs2_core::simd_ops::
             batch_size,
         })
     }
-    
+
     /// Calculate confidence in algorithm recommendation
     fn calculate_recommendation_confidence(
         &self,
@@ -723,20 +773,22 @@ impl<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + scirs2_core::simd_ops::
             simd_prediction.confidence,
             memory_prediction.confidence,
         ];
-        
-        weights.iter().zip(confidences.iter())
+
+        weights
+            .iter()
+            .zip(confidences.iter())
             .map(|(w, c)| w * c)
             .sum()
     }
-    
+
     /// Estimate performance improvement from recommended configuration
     fn estimate_performance_improvement(
         &self,
-        current_performance: &PerformanceMetrics,
+        _current_performance: &PerformanceMetrics,
         recommended_config: &OptimalConfiguration,
     ) -> f64 {
         let mut improvement = 1.0;
-        
+
         if recommended_config.use_gpu {
             improvement *= 3.0;
         }
@@ -749,18 +801,21 @@ impl<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + scirs2_core::simd_ops::
         if recommended_config.use_adaptive_optimization {
             improvement *= 1.2;
         }
-        
+
         improvement
     }
-    
+
     /// Estimate overhead cost of switching algorithms
     fn estimate_switching_overhead(&self, _recommended_config: &OptimalConfiguration) -> Duration {
         // Switching overhead includes initialization time, memory transfers, etc.
         Duration::from_millis(50)
     }
-    
+
     /// Get GPU-specific performance metrics
-    fn get_gpu_metrics(&self, _gpu_accelerator: &UltraGPUAccelerator<F>) -> IntegrateResult<GpuMetrics> {
+    fn get_gpu_metrics(
+        &self,
+        _gpu_accelerator: &UltraGPUAccelerator<F>,
+    ) -> IntegrateResult<GpuMetrics> {
         Ok(GpuMetrics {
             utilization: 0.75,
             expected_utilization: 0.85,
@@ -768,9 +823,12 @@ impl<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + scirs2_core::simd_ops::
             kernel_efficiency: 0.90,
         })
     }
-    
+
     /// Get memory-specific performance metrics
-    fn get_memory_metrics(&self, _memory_optimizer: &UltraMemoryOptimizer<F>) -> IntegrateResult<MemoryMetrics> {
+    fn get_memory_metrics(
+        &self,
+        _memory_optimizer: &UltraMemoryOptimizer<F>,
+    ) -> IntegrateResult<MemoryMetrics> {
         Ok(MemoryMetrics {
             pressure_ratio: 0.65,
             allocation_rate: 1000.0,
@@ -778,9 +836,12 @@ impl<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + scirs2_core::simd_ops::
             cache_miss_rate: 0.05,
         })
     }
-    
+
     /// Get SIMD-specific performance metrics
-    fn get_simd_metrics(&self, _simd_accelerator: &UltraSimdAccelerator<F>) -> IntegrateResult<SimdMetrics> {
+    fn get_simd_metrics(
+        &self,
+        _simd_accelerator: &UltraSimdAccelerator<F>,
+    ) -> IntegrateResult<SimdMetrics> {
         Ok(SimdMetrics {
             vectorization_ratio: 0.75,
             instruction_efficiency: 0.85,
@@ -925,7 +986,8 @@ impl<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + scirs2_core::simd_ops::
 
         if !self.config.enable_neural_rl {
             recommendations.push(
-                "Enable neural RL step control for intelligent adaptive step size optimization".to_string(),
+                "Enable neural RL step control for intelligent adaptive step size optimization"
+                    .to_string(),
             );
         }
 
@@ -937,19 +999,28 @@ impl<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + scirs2_core::simd_ops::
     }
 
     /// Calculate reward for neural RL training based on solution quality
-    fn calculate_rl_reward(&self, solution: &Array1<F>, target_error: F, execution_time: &Duration) -> IntegrateResult<F> {
+    fn calculate_rl_reward(
+        &self,
+        solution: &Array1<F>,
+        target_error: F,
+        execution_time: &Duration,
+    ) -> IntegrateResult<F> {
         // Multi-objective reward calculation
-        
+
         // Accuracy reward: higher for lower error
         let accuracy_reward = if solution.iter().any(|&x| x.is_nan() || x.is_infinite()) {
             F::from(-10.0).unwrap() // Heavy penalty for invalid solutions
         } else {
-            let solution_norm = solution.iter().map(|&x| x * x).fold(F::zero(), |acc, x| acc + x).sqrt();
+            let solution_norm = solution
+                .iter()
+                .map(|&x| x * x)
+                .fold(F::zero(), |acc, x| acc + x)
+                .sqrt();
             let error_estimate = solution_norm * target_error;
             let accuracy_score = (-error_estimate.to_f64().unwrap_or(1.0).ln().max(-10.0)).min(5.0);
             F::from(accuracy_score).unwrap_or(F::zero())
         };
-        
+
         // Efficiency reward: higher for faster execution
         let efficiency_reward = {
             let time_ms = execution_time.as_millis() as f64;
@@ -960,36 +1031,43 @@ impl<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + scirs2_core::simd_ops::
             };
             F::from(efficiency_score).unwrap_or(F::zero())
         };
-        
+
         // Stability reward: penalty for extreme step sizes
         let stability_reward = F::from(1.0).unwrap(); // Would check step size reasonableness
-        
+
         // Combine rewards with weights
-        let total_reward = accuracy_reward * F::from(0.5).unwrap() + 
-                          efficiency_reward * F::from(0.3).unwrap() + 
-                          stability_reward * F::from(0.2).unwrap();
-        
+        let total_reward = accuracy_reward * F::from(0.5).unwrap()
+            + efficiency_reward * F::from(0.3).unwrap()
+            + stability_reward * F::from(0.2).unwrap();
+
         Ok(total_reward)
     }
 
     /// Extract state features for neural RL agent
-    fn extract_state_features(&self, solution: &Array1<F>, step_size: F, error: F) -> IntegrateResult<Array1<F>> {
+    fn extract_state_features(
+        &self,
+        solution: &Array1<F>,
+        step_size: F,
+        error: F,
+    ) -> IntegrateResult<Array1<F>> {
         let mut features = Array1::zeros(64);
-        
+
         // Solution statistics (first 16 features)
         if !solution.is_empty() {
             let mean = solution.mean().unwrap_or(F::zero());
-            let max_val = solution.iter().fold(F::neg_infinity(), |acc, &x| acc.max(x));
+            let max_val = solution
+                .iter()
+                .fold(F::neg_infinity(), |acc, &x| acc.max(x));
             let min_val = solution.iter().fold(F::infinity(), |acc, &x| acc.min(x));
             let range = max_val - min_val;
-            
+
             features[0] = mean;
             features[1] = max_val;
             features[2] = min_val;
             features[3] = range;
             features[4] = step_size;
             features[5] = error;
-            
+
             // Fill remaining features with solution sample or zeros
             for i in 6..16 {
                 if i - 6 < solution.len() {
@@ -997,23 +1075,77 @@ impl<F: IntegrateFloat + scirs2_core::gpu::GpuDataType + scirs2_core::simd_ops::
                 }
             }
         }
-        
+
         // Problem characteristics (features 16-32)
         features[16] = F::from(solution.len()).unwrap_or(F::zero());
         features[17] = step_size.ln().max(F::from(-10.0).unwrap());
         features[18] = error.ln().max(F::from(-20.0).unwrap());
-        
+
         // Performance indicators (features 32-48)
         let estimated_complexity = F::from(solution.len() as f64).unwrap().sqrt();
         features[32] = estimated_complexity;
-        
+
         // Temporal features (features 48-64) - would include error history, step history, etc.
         // For now, initialize with current values
         for i in 48..64 {
             features[i] = if i % 2 == 0 { step_size } else { error };
         }
-        
+
         Ok(features)
+    }
+
+    /// Estimate problem complexity for optimization decisions
+    fn estimate_problem_complexity(&self, y: &ArrayView1<F>, h: F) -> IntegrateResult<f64> {
+        let system_size = y.len() as f64;
+        let step_size = h.to_f64().unwrap_or(0.01);
+
+        // Complexity heuristics based on system characteristics
+        let size_factor = (system_size / 1000.0).min(1.0);
+        let step_factor = if step_size < 1e-6 {
+            1.0
+        } else {
+            (1e-3 / step_size).min(1.0)
+        };
+        let stiffness_factor = self.estimate_stiffness_ratio(y)?;
+
+        // Combined complexity score (0.0 to 1.0)
+        let complexity = (0.4 * size_factor + 0.3 * step_factor + 0.3 * stiffness_factor).min(1.0);
+        Ok(complexity)
+    }
+
+    /// Calculate optimal batch size based on problem characteristics  
+    fn calculate_optimal_batch_size(&self, system_size: usize, complexity: f64) -> usize {
+        // Base batch size on system size and complexity
+        let base_batch = if system_size > 5000 {
+            128
+        } else if system_size > 1000 {
+            64
+        } else {
+            32
+        };
+
+        // Adjust for complexity
+        let complexity_factor = 1.0 + complexity * 0.5;
+        ((base_batch as f64 * complexity_factor) as usize)
+            .min(512)
+            .max(16)
+    }
+
+    /// Estimate stiffness ratio for problem characterization
+    fn estimate_stiffness_ratio(&self, y: &ArrayView1<F>) -> IntegrateResult<f64> {
+        // Simplified stiffness estimation based on solution characteristics
+        let variance = y
+            .iter()
+            .map(|&val| {
+                let v = val.to_f64().unwrap_or(0.0);
+                v * v
+            })
+            .sum::<f64>()
+            / y.len() as f64;
+
+        // Higher variance often indicates more complex dynamics
+        let stiffness_estimate = (variance / (1.0 + variance)).min(1.0);
+        Ok(stiffness_estimate)
     }
 }
 
@@ -1407,11 +1539,15 @@ mod tests {
         let rtol = 1e-6;
         let atol = 1e-8;
 
-        let result = coordinator.neural_rl_adaptive_integration(t, &y.view(), h, rtol, atol, ode_func);
+        let result =
+            coordinator.neural_rl_adaptive_integration(t, &y.view(), h, rtol, atol, ode_func);
         assert!(result.is_ok());
 
         let ultrathink_result = result.unwrap();
         assert_eq!(ultrathink_result.solution.len(), y.len());
-        assert!(ultrathink_result.optimizations_applied.iter().any(|opt| opt.contains("Neural RL")));
+        assert!(ultrathink_result
+            .optimizations_applied
+            .iter()
+            .any(|opt| opt.contains("Neural RL")));
     }
 }

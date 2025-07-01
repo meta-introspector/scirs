@@ -315,7 +315,7 @@ fn compute_determinant<F: IntegrateFloat>(matrix: &ArrayView2<F>) -> F {
 
 /// Estimate condition number using iterative methods
 fn estimate_condition_number<F: IntegrateFloat>(matrix: &ArrayView2<F>) -> F {
-    let n = matrix.nrows();
+    let _n = matrix.nrows();
 
     // Estimate largest eigenvalue magnitude of A^T * A using power iteration
     let max_singular_val_sq = estimate_largest_eigenvalue_ata(matrix);

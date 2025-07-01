@@ -3,12 +3,14 @@
 //! This module implements brain-inspired computing paradigms for adaptive
 //! data transformation with spiking neural networks and plasticity mechanisms.
 
+use crate::auto_feature_engineering::{
+    DatasetMetaFeatures, TransformationConfig, TransformationType,
+};
 use crate::error::{Result, TransformError};
-use crate::auto_feature_engineering::{TransformationType, TransformationConfig, DatasetMetaFeatures};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use rand::Rng;
 use scirs2_core::validation::{check_finite, check_not_empty, check_positive};
 use std::collections::{HashMap, VecDeque};
-use rand::Rng;
 
 /// Spiking neuron model for neuromorphic processing
 #[derive(Debug, Clone)]
@@ -40,8 +42,8 @@ pub struct SpikingNeuron {
 impl SpikingNeuron {
     /// Create a new spiking neuron
     pub fn new(n_inputs: usize, threshold: f64) -> Self {
-        let mut rng = rand::rng();
-        
+        let mut rng = rand::thread_rng();
+
         SpikingNeuron {
             membrane_potential: 0.0,
             threshold,
@@ -50,9 +52,7 @@ impl SpikingNeuron {
             refractory_period: 2.0,
             refractory_counter: 0.0,
             spike_history: VecDeque::with_capacity(100),
-            synaptic_weights: Array1::from_iter(
-                (0..n_inputs).map(|_| rng.random_range(-0.5..0.5))
-            ),
+            synaptic_weights: Array1::from_iter((0..n_inputs).map(|_| rng.gen_range(-0.5..0.5))),
             learning_rate: 0.01,
             ltp_trace: 0.0,
             ltd_trace: 0.0,
@@ -69,7 +69,7 @@ impl SpikingNeuron {
 
         // Compute synaptic input
         let synaptic_input = inputs.dot(&self.synaptic_weights);
-        
+
         // Update membrane potential with leaky integration
         let decay = (-dt / self.tau_membrane).exp();
         self.membrane_potential = self.membrane_potential * decay + synaptic_input * (1.0 - decay);
@@ -79,16 +79,16 @@ impl SpikingNeuron {
             // Generate spike
             self.membrane_potential = self.reset_potential;
             self.refractory_counter = self.refractory_period;
-            
+
             // Update spike history
             if self.spike_history.len() >= 100 {
                 self.spike_history.pop_front();
             }
             self.spike_history.push_back(1.0);
-            
+
             // Update plasticity traces
             self.ltp_trace += 1.0;
-            
+
             true
         } else {
             // No spike
@@ -96,11 +96,11 @@ impl SpikingNeuron {
                 self.spike_history.pop_front();
             }
             self.spike_history.push_back(0.0);
-            
+
             // Decay plasticity traces
             self.ltp_trace *= 0.95;
             self.ltd_trace *= 0.95;
-            
+
             false
         }
     }
@@ -111,7 +111,7 @@ impl SpikingNeuron {
             for (i, &pre_time) in pre_spike_times.iter().enumerate() {
                 if i < self.synaptic_weights.len() {
                     let delta_t = post_time - pre_time;
-                    
+
                     // STDP learning rule
                     let weight_change = if delta_t > 0.0 {
                         // LTP: pre before post
@@ -120,9 +120,9 @@ impl SpikingNeuron {
                         // LTD: post before pre
                         -self.learning_rate * (delta_t / 20.0).exp()
                     };
-                    
+
                     self.synaptic_weights[i] += weight_change;
-                    
+
                     // Weight bounds
                     self.synaptic_weights[i] = self.synaptic_weights[i].max(-1.0).min(1.0);
                 }
@@ -163,17 +163,17 @@ pub struct NeuromorphicAdaptationNetwork {
 impl NeuromorphicAdaptationNetwork {
     /// Create a new neuromorphic adaptation network
     pub fn new(input_size: usize, hidden_size: usize, output_size: usize) -> Self {
-        let mut rng = rand::rng();
-        
+        let mut rng = rand::thread_rng();
+
         // Initialize neuron layers
         let input_neurons: Vec<SpikingNeuron> = (0..input_size)
             .map(|_| SpikingNeuron::new(1, 1.0))
             .collect();
-        
+
         let hidden_neurons: Vec<SpikingNeuron> = (0..hidden_size)
             .map(|_| SpikingNeuron::new(input_size, 1.5))
             .collect();
-        
+
         let output_neurons: Vec<SpikingNeuron> = (0..output_size)
             .map(|_| SpikingNeuron::new(hidden_size, 2.0))
             .collect();
@@ -181,18 +181,18 @@ impl NeuromorphicAdaptationNetwork {
         // Initialize connectivity matrix
         let total_neurons = input_size + hidden_size + output_size;
         let mut connectivity = Array2::zeros((total_neurons, total_neurons));
-        
+
         // Connect input to hidden
         for i in 0..input_size {
             for j in input_size..(input_size + hidden_size) {
-                connectivity[[i, j]] = rng.random_range(-0.3..0.3);
+                connectivity[[i, j]] = rng.gen_range(-0.3..0.3);
             }
         }
-        
+
         // Connect hidden to output
         for i in input_size..(input_size + hidden_size) {
             for j in (input_size + hidden_size)..total_neurons {
-                connectivity[[i, j]] = rng.random_range(-0.3..0.3);
+                connectivity[[i, j]] = rng.gen_range(-0.3..0.3);
             }
         }
 
@@ -209,13 +209,16 @@ impl NeuromorphicAdaptationNetwork {
     }
 
     /// Process input through neuromorphic network
-    pub fn process_input(&mut self, meta_features: &DatasetMetaFeatures) -> Result<Vec<TransformationConfig>> {
+    pub fn process_input(
+        &mut self,
+        meta_features: &DatasetMetaFeatures,
+    ) -> Result<Vec<TransformationConfig>> {
         // Convert meta-features to spike patterns
         let input_pattern = self.meta_features_to_spikes(meta_features)?;
-        
+
         // Simulate network dynamics
         let output_spikes = self.simulate_network_dynamics(&input_pattern)?;
-        
+
         // Convert output spikes to transformation recommendations
         self.spikes_to_transformations(&output_spikes)
     }
@@ -237,10 +240,11 @@ impl NeuromorphicAdaptationNetwork {
         ];
 
         if features.len() != self.input_neurons.len() {
-            return Err(TransformError::InvalidInput(
-                format!("Feature size mismatch: expected {}, got {}", 
-                        self.input_neurons.len(), features.len())
-            ));
+            return Err(TransformError::InvalidInput(format!(
+                "Feature size mismatch: expected {}, got {}",
+                self.input_neurons.len(),
+                features.len()
+            )));
         }
 
         Ok(Array1::from_vec(features))
@@ -250,51 +254,58 @@ impl NeuromorphicAdaptationNetwork {
     fn simulate_network_dynamics(&mut self, input_pattern: &Array1<f64>) -> Result<Array1<f64>> {
         let simulation_steps = 100;
         let mut output_accumulator = Array1::zeros(self.output_neurons.len());
-        
+
         for _step in 0..simulation_steps {
             // Update input neurons
             for (i, neuron) in self.input_neurons.iter_mut().enumerate() {
                 let input = Array1::from_elem(1, input_pattern[i]);
                 neuron.update(&input, self.time_step);
             }
-            
+
             // Update hidden neurons
-            let input_spikes: Array1<f64> = self.input_neurons.iter()
+            let input_spikes: Array1<f64> = self
+                .input_neurons
+                .iter()
                 .map(|n| if n.get_spike_rate() > 0.5 { 1.0 } else { 0.0 })
                 .collect();
-            
+
             for neuron in &mut self.hidden_neurons {
                 neuron.update(&input_spikes, self.time_step);
             }
-            
+
             // Update output neurons
-            let hidden_spikes: Array1<f64> = self.hidden_neurons.iter()
+            let hidden_spikes: Array1<f64> = self
+                .hidden_neurons
+                .iter()
                 .map(|n| if n.get_spike_rate() > 0.5 { 1.0 } else { 0.0 })
                 .collect();
-            
+
             for (i, neuron) in self.output_neurons.iter_mut().enumerate() {
                 let spike = neuron.update(&hidden_spikes, self.time_step);
                 if spike {
                     output_accumulator[i] += 1.0;
                 }
             }
-            
+
             // Apply homeostatic scaling
             self.apply_homeostatic_scaling();
         }
-        
+
         // Normalize output
         let max_spikes = simulation_steps as f64;
         output_accumulator.mapv_inplace(|x| x / max_spikes);
-        
+
         Ok(output_accumulator)
     }
 
     /// Convert output spikes to transformation recommendations
-    fn spikes_to_transformations(&self, output_spikes: &Array1<f64>) -> Result<Vec<TransformationConfig>> {
+    fn spikes_to_transformations(
+        &self,
+        output_spikes: &Array1<f64>,
+    ) -> Result<Vec<TransformationConfig>> {
         let mut transformations = Vec::new();
         let threshold = 0.3; // Spike rate threshold for recommendation
-        
+
         let transformation_types = vec![
             TransformationType::StandardScaler,
             TransformationType::MinMaxScaler,
@@ -311,7 +322,7 @@ impl NeuromorphicAdaptationNetwork {
         for (i, &spike_rate) in output_spikes.iter().enumerate() {
             if spike_rate > threshold && i < transformation_types.len() {
                 let mut parameters = HashMap::new();
-                
+
                 // Set adaptive parameters based on spike rate
                 match &transformation_types[i] {
                     TransformationType::PCA => {
@@ -349,19 +360,28 @@ impl NeuromorphicAdaptationNetwork {
     fn apply_homeostatic_scaling(&mut self) {
         let target_activity = 0.1; // Target average activity
         let scaling_rate = 0.001;
-        
+
         // Calculate current activity levels
-        let input_activity = self.input_neurons.iter()
+        let input_activity = self
+            .input_neurons
+            .iter()
             .map(|n| n.get_spike_rate())
-            .sum::<f64>() / self.input_neurons.len() as f64;
-        
-        let hidden_activity = self.hidden_neurons.iter()
+            .sum::<f64>()
+            / self.input_neurons.len() as f64;
+
+        let hidden_activity = self
+            .hidden_neurons
+            .iter()
             .map(|n| n.get_spike_rate())
-            .sum::<f64>() / self.hidden_neurons.len() as f64;
-        
-        let output_activity = self.output_neurons.iter()
+            .sum::<f64>()
+            / self.hidden_neurons.len() as f64;
+
+        let output_activity = self
+            .output_neurons
+            .iter()
             .map(|n| n.get_spike_rate())
-            .sum::<f64>() / self.output_neurons.len() as f64;
+            .sum::<f64>()
+            / self.output_neurons.len() as f64;
 
         // Apply scaling to maintain target activity
         if input_activity > target_activity * 2.0 {
@@ -403,8 +423,9 @@ impl NeuromorphicAdaptationNetwork {
         performance: f64,
     ) -> Result<()> {
         // Store in history
-        self.transformation_history.push_back((meta_features, transformations, performance));
-        
+        self.transformation_history
+            .push_back((meta_features, transformations, performance));
+
         // Keep history size manageable
         if self.transformation_history.len() > 1000 {
             self.transformation_history.pop_front();
@@ -412,23 +433,24 @@ impl NeuromorphicAdaptationNetwork {
 
         // Apply reinforcement learning to network weights
         self.apply_reinforcement_learning(performance)?;
-        
+
         Ok(())
     }
 
     /// Apply reinforcement learning based on performance feedback
     fn apply_reinforcement_learning(&mut self, performance: f64) -> Result<()> {
         let reward = (performance - 0.5) * 2.0; // Normalize to [-1, 1]
-        
+
         // Update connectivity based on reward
         let learning_factor = self.adaptation_rate * reward;
-        
+
         // Strengthen connections if positive reward, weaken if negative
         for i in 0..self.connectivity.nrows() {
             for j in 0..self.connectivity.ncols() {
                 if self.connectivity[[i, j]] != 0.0 {
-                    self.connectivity[[i, j]] += learning_factor * self.connectivity[[i, j]].signum();
-                    
+                    self.connectivity[[i, j]] +=
+                        learning_factor * self.connectivity[[i, j]].signum();
+
                     // Keep weights bounded
                     self.connectivity[[i, j]] = self.connectivity[[i, j]].max(-1.0).min(1.0);
                 }
@@ -445,15 +467,17 @@ impl NeuromorphicAdaptationNetwork {
         }
 
         // Calculate recent performance trend
-        let recent_performances: Vec<f64> = self.transformation_history
+        let recent_performances: Vec<f64> = self
+            .transformation_history
             .iter()
             .rev()
             .take(10)
             .map(|(_, _, perf)| *perf)
             .collect();
-        
-        let avg_performance = recent_performances.iter().sum::<f64>() / recent_performances.len() as f64;
-        
+
+        let avg_performance =
+            recent_performances.iter().sum::<f64>() / recent_performances.len() as f64;
+
         // Adapt learning rates based on performance
         if avg_performance > 0.8 {
             // High performance: reduce exploration
@@ -522,28 +546,34 @@ impl NeuromorphicMemorySystem {
     /// Create a new neuromorphic memory system
     pub fn new() -> Self {
         let mut semantic_memory = HashMap::new();
-        
-        // Initialize basic semantic concepts
-        semantic_memory.insert("normalization".to_string(), SemanticConcept {
-            name: "normalization".to_string(),
-            transformation_types: vec![
-                TransformationType::StandardScaler,
-                TransformationType::MinMaxScaler,
-                TransformationType::RobustScaler,
-            ],
-            activation: 1.0,
-            associations: HashMap::new(),
-        });
 
-        semantic_memory.insert("dimensionality_reduction".to_string(), SemanticConcept {
-            name: "dimensionality_reduction".to_string(),
-            transformation_types: vec![
-                TransformationType::PCA,
-                TransformationType::VarianceThreshold,
-            ],
-            activation: 1.0,
-            associations: HashMap::new(),
-        });
+        // Initialize basic semantic concepts
+        semantic_memory.insert(
+            "normalization".to_string(),
+            SemanticConcept {
+                name: "normalization".to_string(),
+                transformation_types: vec![
+                    TransformationType::StandardScaler,
+                    TransformationType::MinMaxScaler,
+                    TransformationType::RobustScaler,
+                ],
+                activation: 1.0,
+                associations: HashMap::new(),
+            },
+        );
+
+        semantic_memory.insert(
+            "dimensionality_reduction".to_string(),
+            SemanticConcept {
+                name: "dimensionality_reduction".to_string(),
+                transformation_types: vec![
+                    TransformationType::PCA,
+                    TransformationType::VarianceThreshold,
+                ],
+                activation: 1.0,
+                associations: HashMap::new(),
+            },
+        );
 
         NeuromorphicMemorySystem {
             episodic_memory: Vec::new(),
@@ -569,17 +599,21 @@ impl NeuromorphicMemorySystem {
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap()
                 .as_secs(),
-            memory_strength: if outcome > self.consolidation_threshold { 1.0 } else { 0.5 },
+            memory_strength: if outcome > self.consolidation_threshold {
+                1.0
+            } else {
+                0.5
+            },
         };
 
         self.episodic_memory.push(episode);
-        
+
         // Apply memory decay to old episodes
         self.apply_memory_decay();
-        
+
         // Consolidate successful episodes
         self.consolidate_memories()?;
-        
+
         Ok(())
     }
 
@@ -589,7 +623,8 @@ impl NeuromorphicMemorySystem {
         query_context: &DatasetMetaFeatures,
         k: usize,
     ) -> Result<Vec<&TransformationEpisode>> {
-        let mut similarities: Vec<(usize, f64)> = self.episodic_memory
+        let mut similarities: Vec<(usize, f64)> = self
+            .episodic_memory
             .iter()
             .enumerate()
             .map(|(i, episode)| {
@@ -617,13 +652,15 @@ impl NeuromorphicMemorySystem {
         }
 
         // Remove very weak memories
-        self.episodic_memory.retain(|episode| episode.memory_strength > 0.1);
+        self.episodic_memory
+            .retain(|episode| episode.memory_strength > 0.1);
     }
 
     /// Consolidate successful memories into semantic concepts
     fn consolidate_memories(&mut self) -> Result<()> {
         // Find highly successful episodes
-        let successful_episodes: Vec<&TransformationEpisode> = self.episodic_memory
+        let successful_episodes: Vec<&TransformationEpisode> = self
+            .episodic_memory
             .iter()
             .filter(|episode| episode.outcome > self.consolidation_threshold)
             .collect();
@@ -639,11 +676,13 @@ impl NeuromorphicMemorySystem {
     /// Extract semantic patterns from successful episodes
     fn extract_semantic_patterns(&mut self, episode: &TransformationEpisode) -> Result<()> {
         // Analyze transformation sequence patterns
-        let sequence_pattern = self.analyze_transformation_sequence(&episode.transformation_sequence);
-        
+        let sequence_pattern =
+            self.analyze_transformation_sequence(&episode.transformation_sequence);
+
         // Update semantic concepts based on patterns
         for (concept_name, concept) in &mut self.semantic_memory {
-            let pattern_match = self.compute_pattern_match(&sequence_pattern, &concept.transformation_types);
+            let pattern_match =
+                self.compute_pattern_match(&sequence_pattern, &concept.transformation_types);
             if pattern_match > 0.5 {
                 concept.activation = (concept.activation + episode.outcome * pattern_match) / 2.0;
             }
@@ -653,16 +692,27 @@ impl NeuromorphicMemorySystem {
     }
 
     /// Analyze transformation sequence for patterns
-    fn analyze_transformation_sequence(&self, sequence: &[TransformationConfig]) -> Vec<TransformationType> {
-        sequence.iter().map(|config| config.transformation_type.clone()).collect()
+    fn analyze_transformation_sequence(
+        &self,
+        sequence: &[TransformationConfig],
+    ) -> Vec<TransformationType> {
+        sequence
+            .iter()
+            .map(|config| config.transformation_type.clone())
+            .collect()
     }
 
     /// Compute pattern match between sequence and concept
-    fn compute_pattern_match(&self, sequence: &[TransformationType], concept_types: &[TransformationType]) -> f64 {
-        let matches = sequence.iter()
+    fn compute_pattern_match(
+        &self,
+        sequence: &[TransformationType],
+        concept_types: &[TransformationType],
+    ) -> f64 {
+        let matches = sequence
+            .iter()
             .filter(|&t| concept_types.contains(t))
             .count();
-        
+
         if sequence.is_empty() {
             0.0
         } else {
@@ -671,7 +721,11 @@ impl NeuromorphicMemorySystem {
     }
 
     /// Compute similarity between contexts
-    fn compute_context_similarity(&self, context1: &DatasetMetaFeatures, context2: &DatasetMetaFeatures) -> f64 {
+    fn compute_context_similarity(
+        &self,
+        context1: &DatasetMetaFeatures,
+        context2: &DatasetMetaFeatures,
+    ) -> f64 {
         // Simplified similarity based on key features
         let features1 = vec![
             context1.sparsity,
@@ -680,7 +734,7 @@ impl NeuromorphicMemorySystem {
             context1.variance_ratio,
             context1.outlier_ratio,
         ];
-        
+
         let features2 = vec![
             context2.sparsity,
             context2.mean_correlation,
@@ -690,7 +744,11 @@ impl NeuromorphicMemorySystem {
         ];
 
         // Compute cosine similarity
-        let dot_product: f64 = features1.iter().zip(features2.iter()).map(|(&a, &b)| a * b).sum();
+        let dot_product: f64 = features1
+            .iter()
+            .zip(features2.iter())
+            .map(|(&a, &b)| a * b)
+            .sum();
         let norm1: f64 = features1.iter().map(|&x| x * x).sum::<f64>().sqrt();
         let norm2: f64 = features2.iter().map(|&x| x * x).sum::<f64>().sqrt();
 
@@ -741,17 +799,23 @@ impl NeuromorphicTransformationSystem {
     }
 
     /// Process data and recommend transformations using neuromorphic computing
-    pub fn recommend_transformations(&mut self, meta_features: &DatasetMetaFeatures) -> Result<Vec<TransformationConfig>> {
+    pub fn recommend_transformations(
+        &mut self,
+        meta_features: &DatasetMetaFeatures,
+    ) -> Result<Vec<TransformationConfig>> {
         // Retrieve similar cases from memory
-        let similar_episodes = self.memory_system.retrieve_similar_episodes(meta_features, 5)?;
-        
+        let similar_episodes = self
+            .memory_system
+            .retrieve_similar_episodes(meta_features, 5)?;
+
         // Use adaptation network for current recommendation
         let mut network_recommendations = self.adaptation_network.process_input(meta_features)?;
-        
+
         // Integrate memory-based recommendations
         if !similar_episodes.is_empty() {
             let memory_recommendations = self.extract_memory_recommendations(&similar_episodes);
-            network_recommendations = self.integrate_recommendations(network_recommendations, memory_recommendations)?;
+            network_recommendations =
+                self.integrate_recommendations(network_recommendations, memory_recommendations)?;
         }
 
         // Update system state
@@ -768,30 +832,38 @@ impl NeuromorphicTransformationSystem {
         performance: f64,
     ) -> Result<()> {
         // Store in memory system
-        self.memory_system.store_episode(meta_features.clone(), transformations.clone(), performance)?;
-        
+        self.memory_system.store_episode(
+            meta_features.clone(),
+            transformations.clone(),
+            performance,
+        )?;
+
         // Update adaptation network
-        self.adaptation_network.learn_from_feedback(meta_features, transformations, performance)?;
-        
+        self.adaptation_network
+            .learn_from_feedback(meta_features, transformations, performance)?;
+
         // Trigger adaptive reconfiguration if needed
         if performance < 0.3 {
             self.adaptation_network.adaptive_reconfiguration()?;
         }
 
         // Update system performance level
-        self.system_state.performance_level = 
+        self.system_state.performance_level =
             (self.system_state.performance_level * 0.9) + (performance * 0.1);
 
         Ok(())
     }
 
     /// Extract recommendations from memory episodes
-    fn extract_memory_recommendations(&self, episodes: &[&TransformationEpisode]) -> Vec<TransformationConfig> {
+    fn extract_memory_recommendations(
+        &self,
+        episodes: &[&TransformationEpisode],
+    ) -> Vec<TransformationConfig> {
         let mut transformation_votes: HashMap<TransformationType, (f64, usize)> = HashMap::new();
-        
+
         for episode in episodes {
             let weight = episode.memory_strength * episode.outcome;
-            
+
             for transformation in &episode.transformation_sequence {
                 let entry = transformation_votes
                     .entry(transformation.transformation_type.clone())
@@ -804,12 +876,10 @@ impl NeuromorphicTransformationSystem {
         // Convert votes to recommendations
         let mut recommendations: Vec<_> = transformation_votes
             .into_iter()
-            .map(|(t_type, (total_weight, count))| {
-                TransformationConfig {
-                    transformation_type: t_type,
-                    parameters: HashMap::new(),
-                    expected_performance: total_weight / count as f64,
-                }
+            .map(|(t_type, (total_weight, count))| TransformationConfig {
+                transformation_type: t_type,
+                parameters: HashMap::new(),
+                expected_performance: total_weight / count as f64,
             })
             .collect();
 
@@ -873,7 +943,7 @@ impl NeuromorphicTransformationSystem {
     /// Update system state based on current conditions
     fn update_system_state(&mut self) {
         // Update memory utilization
-        self.system_state.memory_utilization = 
+        self.system_state.memory_utilization =
             self.memory_system.episodic_memory.len() as f64 / 1000.0;
 
         // Update energy level (simulated)

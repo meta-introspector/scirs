@@ -194,6 +194,10 @@ pub enum CoreError {
     #[error("{0}")]
     InvalidArgument(ErrorContext),
 
+    /// Invalid input error
+    #[error("{0}")]
+    InvalidInput(ErrorContext),
+
     /// Permission error (insufficient permissions)
     #[error("{0}")]
     PermissionError(ErrorContext),

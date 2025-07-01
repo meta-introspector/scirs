@@ -574,7 +574,7 @@ mod tests {
         let x = 0.5;
         let result = itj0y0::<f64>(x, 0);
         assert!(result.is_ok(), "itj0y0 should work for n=0, x=0.5");
-        let (int1, int2) = result.unwrap();
+        let (int1, _int2) = result.unwrap();
         // Should be negative values based on the formula
         assert!(int1 < 0.0, "First integral should be negative for n=0");
 

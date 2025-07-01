@@ -470,7 +470,7 @@ impl VisualReasoningEngine {
         // Initialize reasoning process
         let mut reasoning_steps = Vec::new();
         let mut evidence = Vec::new();
-        
+
         // Step 1: Query understanding and decomposition
         let decomposed_query = self.decompose_query(query)?;
         reasoning_steps.push(ReasoningStep {
@@ -495,11 +495,21 @@ impl VisualReasoningEngine {
 
         // Step 3: Apply reasoning based on query type
         let (answer, step_evidence, alternatives) = match query.query_type {
-            QueryType::WhatIsHappening => self.reason_what_is_happening(scene_analysis, &visual_features)?,
-            QueryType::WhyIsHappening => self.reason_why_is_happening(scene_analysis, &visual_features)?,
-            QueryType::WhatWillHappenNext => self.reason_what_will_happen_next(scene_analysis, context, &visual_features)?,
-            QueryType::HowAreObjectsRelated => self.reason_object_relationships(scene_analysis, &visual_features)?,
-            QueryType::CausalRelationshipQuery => self.reason_causal_relationships(scene_analysis, &visual_features)?,
+            QueryType::WhatIsHappening => {
+                self.reason_what_is_happening(scene_analysis, &visual_features)?
+            }
+            QueryType::WhyIsHappening => {
+                self.reason_why_is_happening(scene_analysis, &visual_features)?
+            }
+            QueryType::WhatWillHappenNext => {
+                self.reason_what_will_happen_next(scene_analysis, context, &visual_features)?
+            }
+            QueryType::HowAreObjectsRelated => {
+                self.reason_object_relationships(scene_analysis, &visual_features)?
+            }
+            QueryType::CausalRelationshipQuery => {
+                self.reason_causal_relationships(scene_analysis, &visual_features)?
+            }
             _ => (
                 ReasoningAnswer::Text("Query type not fully implemented yet".to_string()),
                 Vec::new(),
@@ -531,13 +541,17 @@ impl VisualReasoningEngine {
     ) -> Result<CausalInferenceResult> {
         // Extract temporal patterns
         let temporal_patterns = self.extract_temporal_patterns(scene_sequence)?;
-        
+
         // Build causal graph
-        let causal_graph = self.causal_inference.build_causal_graph(&temporal_patterns)?;
-        
+        let causal_graph = self
+            .causal_inference
+            .build_causal_graph(&temporal_patterns)?;
+
         // Perform causal inference
-        let causal_effects = self.causal_inference.infer_effects(&causal_graph, causal_query)?;
-        
+        let causal_effects = self
+            .causal_inference
+            .infer_effects(&causal_graph, causal_query)?;
+
         Ok(CausalInferenceResult {
             causal_graph,
             effects: causal_effects,
@@ -552,17 +566,19 @@ impl VisualReasoningEngine {
         target_scenes: &[SceneAnalysisResult],
     ) -> Result<Vec<AnalogyResult>> {
         let mut analogies = Vec::new();
-        
+
         for target_scene in target_scenes {
-            let analogy = self.analogical_reasoning.find_analogy(source_scene, target_scene)?;
+            let analogy = self
+                .analogical_reasoning
+                .find_analogy(source_scene, target_scene)?;
             if analogy.similarity_score > 0.6 {
                 analogies.push(analogy);
             }
         }
-        
+
         // Sort by similarity score
         analogies.sort_by(|a, b| b.similarity_score.partial_cmp(&a.similarity_score).unwrap());
-        
+
         Ok(analogies)
     }
 
@@ -585,24 +601,27 @@ impl VisualReasoningEngine {
         }])
     }
 
-    fn extract_reasoning_features(&self, scene_analysis: &SceneAnalysisResult) -> Result<Array1<f32>> {
+    fn extract_reasoning_features(
+        &self,
+        scene_analysis: &SceneAnalysisResult,
+    ) -> Result<Array1<f32>> {
         // Extract multi-level features for reasoning
         let mut features = Vec::new();
-        
+
         // Object-level features
         for object in &scene_analysis.objects {
             features.extend(object.features.iter().cloned());
         }
-        
+
         // Relationship features
         for relationship in &scene_analysis.relationships {
             features.push(relationship.confidence);
             features.extend(relationship.parameters.values().cloned());
         }
-        
+
         // Scene-level features
         features.push(scene_analysis.scene_confidence);
-        
+
         Ok(Array1::from_vec(features))
     }
 
@@ -614,7 +633,7 @@ impl VisualReasoningEngine {
         // Analyze dominant activities and interactions
         let activities = self.identify_activities(scene_analysis)?;
         let description = format!("Detected activities: {}", activities.join(", "));
-        
+
         let evidence = vec![Evidence {
             evidence_type: "object_detection".to_string(),
             description: format!("Found {} objects in scene", scene_analysis.objects.len()),
@@ -622,12 +641,8 @@ impl VisualReasoningEngine {
             visual_anchors: Vec::new(),
             temporal_anchors: Vec::new(),
         }];
-        
-        Ok((
-            ReasoningAnswer::Text(description),
-            evidence,
-            Vec::new(),
-        ))
+
+        Ok((ReasoningAnswer::Text(description), evidence, Vec::new()))
     }
 
     fn reason_why_is_happening(
@@ -637,7 +652,7 @@ impl VisualReasoningEngine {
     ) -> Result<(ReasoningAnswer, Vec<Evidence>, Vec<AlternativeHypothesis>)> {
         // Apply causal reasoning
         let causal_explanations = self.generate_causal_explanations(scene_analysis)?;
-        
+
         Ok((
             ReasoningAnswer::Text(causal_explanations),
             Vec::new(),
@@ -656,12 +671,8 @@ impl VisualReasoningEngine {
         } else {
             "Insufficient temporal context for prediction".to_string()
         };
-        
-        Ok((
-            ReasoningAnswer::Text(prediction),
-            Vec::new(),
-            Vec::new(),
-        ))
+
+        Ok((ReasoningAnswer::Text(prediction), Vec::new(), Vec::new()))
     }
 
     fn reason_object_relationships(
@@ -673,7 +684,7 @@ impl VisualReasoningEngine {
             "Found {} spatial relationships between objects",
             scene_analysis.relationships.len()
         );
-        
+
         Ok((
             ReasoningAnswer::Text(relationships_desc),
             Vec::new(),
@@ -687,7 +698,7 @@ impl VisualReasoningEngine {
         _features: &Array1<f32>,
     ) -> Result<(ReasoningAnswer, Vec<Evidence>, Vec<AlternativeHypothesis>)> {
         let causal_analysis = self.analyze_causal_structure(scene_analysis)?;
-        
+
         Ok((
             ReasoningAnswer::Text(causal_analysis),
             Vec::new(),
@@ -695,11 +706,19 @@ impl VisualReasoningEngine {
         ))
     }
 
-    fn estimate_overall_confidence(&self, _steps: &[ReasoningStep], _evidence: &[Evidence]) -> Result<f32> {
+    fn estimate_overall_confidence(
+        &self,
+        _steps: &[ReasoningStep],
+        _evidence: &[Evidence],
+    ) -> Result<f32> {
         Ok(0.75) // Placeholder
     }
 
-    fn quantify_uncertainty(&self, _answer: &ReasoningAnswer, _evidence: &[Evidence]) -> Result<UncertaintyQuantification> {
+    fn quantify_uncertainty(
+        &self,
+        _answer: &ReasoningAnswer,
+        _evidence: &[Evidence],
+    ) -> Result<UncertaintyQuantification> {
         Ok(UncertaintyQuantification {
             epistemic_uncertainty: 0.2,
             aleatoric_uncertainty: 0.1,
@@ -708,7 +727,10 @@ impl VisualReasoningEngine {
         })
     }
 
-    fn extract_temporal_patterns(&self, _sequence: &[SceneAnalysisResult]) -> Result<TemporalPatterns> {
+    fn extract_temporal_patterns(
+        &self,
+        _sequence: &[SceneAnalysisResult],
+    ) -> Result<TemporalPatterns> {
         Ok(TemporalPatterns {
             patterns: Vec::new(),
             temporal_graph: TemporalGraph {
@@ -720,7 +742,7 @@ impl VisualReasoningEngine {
 
     fn identify_activities(&self, scene_analysis: &SceneAnalysisResult) -> Result<Vec<String>> {
         let mut activities = Vec::new();
-        
+
         // Analyze object combinations and spatial relationships
         for object in &scene_analysis.objects {
             match object.class.as_str() {
@@ -730,19 +752,29 @@ impl VisualReasoningEngine {
                 _ => {}
             }
         }
-        
+
         if activities.is_empty() {
             activities.push("static_scene".to_string());
         }
-        
+
         Ok(activities)
     }
 
-    fn generate_causal_explanations(&self, _scene_analysis: &SceneAnalysisResult) -> Result<String> {
-        Ok("Scene appears to be in its current state due to normal object placement patterns".to_string())
+    fn generate_causal_explanations(
+        &self,
+        _scene_analysis: &SceneAnalysisResult,
+    ) -> Result<String> {
+        Ok(
+            "Scene appears to be in its current state due to normal object placement patterns"
+                .to_string(),
+        )
     }
 
-    fn predict_future_events(&self, _scene: &SceneAnalysisResult, _context: &[SceneAnalysisResult]) -> Result<String> {
+    fn predict_future_events(
+        &self,
+        _scene: &SceneAnalysisResult,
+        _context: &[SceneAnalysisResult],
+    ) -> Result<String> {
         Ok("Based on temporal patterns, the scene is likely to remain stable".to_string())
     }
 
@@ -901,7 +933,11 @@ impl AnalogicalReasoningEngine {
         }
     }
 
-    fn find_analogy(&self, _source: &SceneAnalysisResult, _target: &SceneAnalysisResult) -> Result<AnalogyResult> {
+    fn find_analogy(
+        &self,
+        _source: &SceneAnalysisResult,
+        _target: &SceneAnalysisResult,
+    ) -> Result<AnalogyResult> {
         Ok(AnalogyResult {
             similarity_score: 0.7,
             matching_patterns: Vec::new(),
@@ -973,13 +1009,13 @@ pub fn perform_advanced_visual_reasoning(
     context: Option<&[SceneAnalysisResult]>,
 ) -> Result<VisualReasoningResult> {
     let engine = VisualReasoningEngine::new();
-    
+
     let query = VisualReasoningQuery {
         query_type: QueryType::WhatIsHappening, // Default, could be inferred from question
         question: question.to_string(),
         parameters: HashMap::new(),
         context_requirements: Vec::new(),
     };
-    
+
     engine.process_query(&query, scene, context)
 }

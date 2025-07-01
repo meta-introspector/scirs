@@ -688,26 +688,26 @@ pub mod opencl {
     type ClUInt = u32;
     type ClULong = u64;
     type ClBool = u32;
-    
+
     // Thread-safe wrapper for OpenCL raw pointers
     #[derive(Debug, Clone, Copy)]
     struct SafeClPtr(*mut std::ffi::c_void);
-    
+
     // SAFETY: In a real implementation, OpenCL handles are thread-safe
     // These are mock implementations for testing purposes
     unsafe impl Send for SafeClPtr {}
     unsafe impl Sync for SafeClPtr {}
-    
+
     impl SafeClPtr {
         fn new(ptr: *mut std::ffi::c_void) -> Self {
             Self(ptr)
         }
-        
+
         fn as_ptr(self) -> *mut std::ffi::c_void {
             self.0
         }
     }
-    
+
     type ClPlatformId = SafeClPtr;
     type ClDeviceId = SafeClPtr;
     type ClContext = SafeClPtr;

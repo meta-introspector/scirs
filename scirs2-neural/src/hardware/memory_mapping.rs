@@ -134,7 +134,7 @@ impl MemoryMapper {
 
             Ok(allocation)
         } else {
-            Err(crate::error::NeuralError::AllocationError(
+            Err(crate::error::NeuralError::ComputationError(
                 "No suitable buffer in pool".to_string(),
             ))
         }

@@ -581,7 +581,7 @@ impl<F: IntegrateFloat> UltraMemoryOptimizer<F> {
     fn allocate_l3_optimized(
         &self,
         size: usize,
-        strategy: AllocationStrategy,
+        _strategy: AllocationStrategy,
     ) -> IntegrateResult<OptimizedMemoryRegion<F>> {
         let mut hierarchy = self.hierarchy_manager.write().unwrap();
 
@@ -620,7 +620,7 @@ impl<F: IntegrateFloat> UltraMemoryOptimizer<F> {
     fn allocate_numa_optimized(
         &self,
         size: usize,
-        strategy: AllocationStrategy,
+        _strategy: AllocationStrategy,
     ) -> IntegrateResult<OptimizedMemoryRegion<F>> {
         let numa_manager = self.numa_manager.read().unwrap();
         let optimal_node = numa_manager.select_optimal_node(size)?;
@@ -672,7 +672,7 @@ impl<F: IntegrateFloat> UltraMemoryOptimizer<F> {
     fn allocate_gpu_optimized(
         &self,
         size: usize,
-        strategy: AllocationStrategy,
+        _strategy: AllocationStrategy,
     ) -> IntegrateResult<OptimizedMemoryRegion<F>> {
         let mut hierarchy = self.hierarchy_manager.write().unwrap();
 
@@ -926,7 +926,7 @@ impl<F: IntegrateFloat> AllocationPredictor<F> {
     fn predict_optimal_allocation(
         &self,
         size: usize,
-        memory_type: MemoryType,
+        _memory_type: MemoryType,
     ) -> IntegrateResult<AllocationStrategy> {
         // Simplified prediction logic
         let memory_tier = if size < 1024 {

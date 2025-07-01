@@ -246,7 +246,7 @@ impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static>
 
         for &size in &self.config.data_sizes {
             let x = self.generate_test_data_1d(size)?;
-            let y = self.evaluate_test_function(&x);
+            let y = self.evaluate_test_function(&x.view());
             let x_new = self.generate_query_points_1d(size / 2)?;
 
             // Linear interpolation
@@ -283,23 +283,26 @@ impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static>
 
             // RBF interpolation
             self.benchmark_method("rbf_gaussian", size, || {
-                let mut rbf = crate::advanced::rbf::RBFInterpolator::new(
+                let mut rbf = crate::advanced::rbf::RBFInterpolator::new_unfitted(
                     crate::advanced::rbf::RBFKernel::Gaussian,
                     T::from_f64(1.0).unwrap(),
-                )?;
+                );
                 rbf.fit(&x.view(), &y.view())?;
                 rbf.predict(&x_new.view())
             })?;
 
             // Kriging interpolation
             self.benchmark_method("kriging", size, || {
-                let mut kriging = crate::advanced::kriging::make_kriging_interpolator(
-                    crate::advanced::kriging::CovarianceFunction::Gaussian,
-                    T::from_f64(1.0).unwrap(),
-                    T::from_f64(0.1).unwrap(),
+                let kriging = crate::advanced::kriging::make_kriging_interpolator(
+                    &x.view(),
+                    &y.view(),
+                    crate::advanced::kriging::CovarianceFunction::SquaredExponential,
+                    T::from_f64(1.0).unwrap(), // sigma_sq
+                    T::from_f64(1.0).unwrap(), // length_scale
+                    T::from_f64(0.1).unwrap(), // nugget
+                    T::from_f64(1.0).unwrap(), // alpha
                 )?;
-                kriging.fit(&x.view(), &y.view())?;
-                kriging.predict(&x_new.view())
+                Ok(kriging.predict(&x_new.view())?.value)
             })?;
         }
 
@@ -312,7 +315,7 @@ impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static>
 
         for &size in &self.config.data_sizes {
             let x = self.generate_test_data_1d(size)?;
-            let y = self.evaluate_test_function(&x);
+            let y = self.evaluate_test_function(&x.view());
             let x_new = self.generate_query_points_1d(size / 2)?;
 
             // Cubic spline
@@ -338,7 +341,7 @@ impl<T: Float + FromPrimitive + Debug + Display + Send + Sync + 'static>
 
         for &size in &self.config.data_sizes {
             let x = self.generate_test_data_1d(size)?;
-            let y = self.evaluate_test_function(&x);
+            let y = self.evaluate_test_function(&x.view());
             let x_new = self.generate_query_points_1d(size)?;
 
             // SIMD distance matrix computation

@@ -52,7 +52,7 @@ where
     if x.is_empty() {
         return Err(ErrorMessages::empty_array("x"));
     }
-    
+
     if y.is_empty() {
         return Err(ErrorMessages::empty_array("y"));
     }
@@ -142,7 +142,7 @@ where
     if x.is_empty() {
         return Err(ErrorMessages::empty_array("x"));
     }
-    
+
     if y.is_empty() {
         return Err(ErrorMessages::empty_array("y"));
     }
@@ -260,7 +260,7 @@ where
     if x.is_empty() {
         return Err(ErrorMessages::empty_array("x"));
     }
-    
+
     if y.is_empty() {
         return Err(ErrorMessages::empty_array("y"));
     }
@@ -376,7 +376,7 @@ where
     if x.is_empty() {
         return Err(ErrorMessages::empty_array("x"));
     }
-    
+
     if y.is_empty() {
         return Err(ErrorMessages::empty_array("y"));
     }
@@ -384,9 +384,14 @@ where
     if x.len() != y.len() {
         return Err(ErrorMessages::length_mismatch("x", x.len(), "y", y.len()));
     }
-    
+
     if x.len() != z.shape()[0] {
-        return Err(ErrorMessages::length_mismatch("x/y", x.len(), "z rows", z.shape()[0]));
+        return Err(ErrorMessages::length_mismatch(
+            "x/y",
+            x.len(),
+            "z rows",
+            z.shape()[0],
+        ));
     }
 
     // First, compute residuals by regressing out the control variables
@@ -694,7 +699,12 @@ where
 {
     // Check that arrays have the same length
     if binary.len() != continuous.len() {
-        return Err(ErrorMessages::length_mismatch("binary", binary.len(), "continuous", continuous.len()));
+        return Err(ErrorMessages::length_mismatch(
+            "binary",
+            binary.len(),
+            "continuous",
+            continuous.len(),
+        ));
     }
 
     // Check that arrays are not empty
@@ -706,7 +716,8 @@ where
     for &val in binary.iter() {
         if val != F::zero() && val != F::one() {
             return Err(crate::error::StatsError::InvalidArgument(
-                "Binary variable must contain only 0 and 1 values for point-biserial correlation.".to_string(),
+                "Binary variable must contain only 0 and 1 values for point-biserial correlation."
+                    .to_string(),
             ));
         }
     }
@@ -726,7 +737,8 @@ where
     // Handle case where all values are the same
     if n1 == 0 || n0 == 0 {
         return Err(crate::error::StatsError::InvalidArgument(
-            "Binary variable must have at least one 0 and one 1 for meaningful correlation.".to_string(),
+            "Binary variable must have at least one 0 and one 1 for meaningful correlation."
+                .to_string(),
         ));
     }
 
@@ -1155,7 +1167,7 @@ where
     if x.is_empty() {
         return Err(ErrorMessages::empty_array("x"));
     }
-    
+
     if y.is_empty() {
         return Err(ErrorMessages::empty_array("y"));
     }
@@ -1168,7 +1180,11 @@ where
 
     // Need at least 2 observations
     if n < 2 {
-        return Err(ErrorMessages::insufficient_data("correlation analysis", 2, n));
+        return Err(ErrorMessages::insufficient_data(
+            "correlation analysis",
+            2,
+            n,
+        ));
     }
 
     // Validate alternative parameter

@@ -610,7 +610,11 @@ pub fn i0e<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// ```
 pub fn i1e<F: Float + FromPrimitive + Debug>(x: F) -> F {
     let abs_x = x.abs();
-    let sign = if x.is_sign_positive() { F::one() } else { -F::one() };
+    let sign = if x.is_sign_positive() {
+        F::one()
+    } else {
+        -F::one()
+    };
     sign * i1(abs_x) * (-abs_x).exp()
 }
 

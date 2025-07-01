@@ -2410,7 +2410,7 @@ pub mod benchmark {
         /// Generate synthetic clustering data
         fn generate_synthetic_data(&self, n_samples: usize, n_features: usize) -> Array2<f64> {
             use rand::distributions::{Distribution, Normal};
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
             let normal = Normal::new(0.0, 1.0);
 
             Array2::from_shape_fn((n_samples, n_features), |_| {
@@ -2656,13 +2656,13 @@ pub mod accelerated {
         fn smart_initialization(&self, data: ArrayView2<f64>, k: usize) -> Result<Array2<f64>> {
             use rand::prelude::*;
             
-            let mut rng = thread_rng();
+            let mut rng = rng();
             let n_samples = data.nrows();
             let n_features = data.ncols();
             let mut centers = Array2::zeros((k, n_features));
 
             // Choose first center randomly
-            let first_idx = rng.gen_range(0..n_samples);
+            let first_idx = rng.random_range(0..n_samples);
             centers.row_mut(0).assign(&data.row(first_idx));
 
             // Choose remaining centers using K-means++ algorithm
@@ -2707,13 +2707,13 @@ pub mod accelerated {
             let n_samples = data.nrows();
             let sample_size = (n_samples / 10).min(1000).max(100);
             
-            let mut rng = thread_rng();
+            let mut rng = rng();
             let mut distances = Vec::new();
             
             // Sample random pairs and calculate distances
             for _ in 0..sample_size {
-                let i = rng.gen_range(0..n_samples);
-                let j = rng.gen_range(0..n_samples);
+                let i = rng.random_range(0..n_samples);
+                let j = rng.random_range(0..n_samples);
                 if i != j {
                     let dist = data.row(i).iter()
                         .zip(data.row(j).iter())
@@ -2736,4 +2736,665 @@ pub mod accelerated {
             self.context.get_stats()
         }
     }
+
+/// Automatic CPU/GPU algorithm selection system
+///
+/// This system intelligently chooses between CPU and GPU implementations
+/// based on data characteristics, hardware capabilities, and algorithm complexity.
+#[derive(Debug)]
+pub struct AutomaticAlgorithmSelector {
+    /// GPU context for hardware information
+    gpu_context: Option<GpuContext>,
+    /// Performance profile cache
+    performance_cache: HashMap<String, PerformanceProfile>,
+    /// System capabilities
+    system_capabilities: SystemCapabilities,
+    /// Selection strategy
+    strategy: SelectionStrategy,
+}
+
+/// Performance profile for algorithm execution
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct PerformanceProfile {
+    /// Execution time on CPU (seconds)
+    pub cpu_time: f64,
+    /// Execution time on GPU (seconds)
+    pub gpu_time: Option<f64>,
+    /// Memory usage on CPU (bytes)
+    pub cpu_memory: usize,
+    /// Memory usage on GPU (bytes)
+    pub gpu_memory: Option<usize>,
+    /// Data characteristics when measured
+    pub data_characteristics: DataCharacteristics,
+    /// Timestamp of measurement
+    pub measured_at: std::time::SystemTime,
+}
+
+/// Data characteristics for algorithm selection
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct DataCharacteristics {
+    /// Number of samples
+    pub n_samples: usize,
+    /// Number of features
+    pub n_features: usize,
+    /// Data sparsity (fraction of zeros)
+    pub sparsity: f64,
+    /// Data type size in bytes
+    pub element_size: usize,
+    /// Whether data has good spatial locality
+    pub spatial_locality: bool,
+    /// Estimated computational complexity
+    pub complexity_score: f64,
+}
+
+/// System hardware capabilities
+#[derive(Debug, Clone)]
+pub struct SystemCapabilities {
+    /// Number of CPU cores
+    pub cpu_cores: usize,
+    /// CPU cache size (L3) in bytes
+    pub cpu_cache_size: usize,
+    /// System RAM in bytes
+    pub system_ram: usize,
+    /// GPU devices available
+    pub gpu_devices: Vec<GpuDevice>,
+    /// SIMD instruction set availability
+    pub simd_capabilities: Vec<String>,
+}
+
+/// Algorithm selection strategy
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum SelectionStrategy {
+    /// Minimize execution time
+    MinimizeTime,
+    /// Minimize memory usage
+    MinimizeMemory,
+    /// Balance time and memory
+    Balanced,
+    /// Prefer GPU when possible
+    PreferGpu,
+    /// Prefer CPU for reliability
+    PreferCpu,
+    /// Adaptive based on workload
+    Adaptive,
+}
+
+/// Algorithm execution recommendation
+#[derive(Debug, Clone)]
+pub struct AlgorithmRecommendation {
+    /// Recommended execution target
+    pub target: ExecutionTarget,
+    /// Confidence in recommendation (0.0 to 1.0)
+    pub confidence: f64,
+    /// Expected performance metrics
+    pub expected_performance: ExpectedPerformance,
+    /// Reasoning for the recommendation
+    pub reasoning: String,
+    /// Fallback recommendations
+    pub fallback_options: Vec<ExecutionTarget>,
+}
+
+/// Execution target specification
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum ExecutionTarget {
+    /// CPU execution with specified parallelism
+    Cpu { num_threads: usize },
+    /// GPU execution with specified device
+    Gpu { device_id: u32, batch_size: usize },
+    /// Hybrid CPU+GPU execution
+    Hybrid { cpu_threads: usize, gpu_device: u32 },
+    /// Auto-selected based on runtime conditions
+    Auto,
+}
+
+/// Expected performance metrics
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct ExpectedPerformance {
+    /// Estimated execution time (seconds)
+    pub execution_time: f64,
+    /// Estimated memory usage (bytes)
+    pub memory_usage: usize,
+    /// Estimated power consumption (watts)
+    pub power_consumption: f64,
+    /// Accuracy impact (if any)
+    pub accuracy_impact: f64,
+}
+
+impl AutomaticAlgorithmSelector {
+    /// Create new automatic algorithm selector
+    pub fn new(strategy: SelectionStrategy) -> Result<Self> {
+        let gpu_context = GpuContext::new_auto().ok();
+        let system_capabilities = SystemCapabilities::detect()?;
+        
+        Ok(Self {
+            gpu_context,
+            performance_cache: HashMap::new(),
+            system_capabilities,
+            strategy,
+        })
+    }
+
+    /// Create selector with automatic strategy selection
+    pub fn new_auto() -> Result<Self> {
+        Self::new(SelectionStrategy::Adaptive)
+    }
+
+    /// Analyze data characteristics for algorithm selection
+    pub fn analyze_data<F: Float>(&self, data: ArrayView2<F>) -> DataCharacteristics {
+        let n_samples = data.nrows();
+        let n_features = data.ncols();
+        let total_elements = n_samples * n_features;
+        
+        // Calculate data sparsity
+        let mut zero_count = 0;
+        for elem in data.iter() {
+            if elem.is_zero() {
+                zero_count += 1;
+            }
+        }
+        let sparsity = zero_count as f64 / total_elements as f64;
+        
+        // Estimate spatial locality by checking adjacent element similarity
+        let mut locality_score = 0.0;
+        let mut comparisons = 0;
+        
+        for i in 0..n_samples.min(100) { // Sample to avoid expensive computation
+            for j in 1..n_features {
+                let curr = data[[i, j]];
+                let prev = data[[i, j-1]];
+                if !curr.is_zero() && !prev.is_zero() {
+                    let diff = (curr - prev).abs();
+                    let avg = (curr.abs() + prev.abs()) / F::from(2.0).unwrap();
+                    if !avg.is_zero() {
+                        locality_score += (F::one() - (diff / avg)).to_f64().unwrap_or(0.0);
+                        comparisons += 1;
+                    }
+                }
+            }
+        }
+        
+        let spatial_locality = if comparisons > 0 {
+            locality_score / comparisons as f64 > 0.7
+        } else {
+            false
+        };
+        
+        // Estimate computational complexity
+        let complexity_score = (n_samples as f64).log2() * (n_features as f64).log2() 
+            + if sparsity > 0.5 { sparsity * 0.3 } else { 1.0 };
+        
+        DataCharacteristics {
+            n_samples,
+            n_features,
+            sparsity,
+            element_size: std::mem::size_of::<F>(),
+            spatial_locality,
+            complexity_score,
+        }
+    }
+
+    /// Get algorithm recommendation for K-means clustering
+    pub fn recommend_kmeans<F: Float>(
+        &self, 
+        data: ArrayView2<F>, 
+        k: usize,
+        max_iterations: usize
+    ) -> AlgorithmRecommendation {
+        let data_chars = self.analyze_data(data);
+        let cache_key = format!("kmeans_{}_{}_{}_{}", 
+            data_chars.n_samples, data_chars.n_features, k, max_iterations);
+        
+        // Check performance cache
+        if let Some(profile) = self.performance_cache.get(&cache_key) {
+            return self.make_recommendation_from_profile(profile, &data_chars);
+        }
+        
+        // Analyze algorithm requirements
+        let memory_per_iteration = data_chars.n_samples * data_chars.element_size * 2 
+            + k * data_chars.n_features * data_chars.element_size;
+        let total_memory_estimate = memory_per_iteration * 3; // Working memory
+        
+        let computational_intensity = data_chars.n_samples as f64 * k as f64 * 
+            data_chars.n_features as f64 * max_iterations as f64;
+        
+        // Decision logic based on characteristics
+        let recommendation = if computational_intensity > 1e8 && 
+            self.gpu_context.as_ref().map_or(false, |ctx| 
+                ctx.is_optimal_for_data_size(total_memory_estimate)) {
+            
+            // High computational load + sufficient GPU memory → GPU
+            let device = self.gpu_context.as_ref().unwrap().select_best_device().unwrap();
+            let batch_size = device.available_memory / (memory_per_iteration * 2);
+            
+            AlgorithmRecommendation {
+                target: ExecutionTarget::Gpu { 
+                    device_id: device.device_id, 
+                    batch_size: batch_size.max(1)
+                },
+                confidence: 0.85,
+                expected_performance: ExpectedPerformance {
+                    execution_time: computational_intensity / (device.compute_units as f64 * 1e6),
+                    memory_usage: total_memory_estimate,
+                    power_consumption: 150.0, // Typical GPU power draw
+                    accuracy_impact: 0.0,
+                },
+                reasoning: format!(
+                    "High computational intensity ({:.2e}) with sufficient GPU memory ({:.1} GB available)",
+                    computational_intensity, device.available_memory as f64 / 1e9
+                ),
+                fallback_options: vec![
+                    ExecutionTarget::Cpu { num_threads: self.system_capabilities.cpu_cores }
+                ],
+            }
+        } else if data_chars.n_samples > 10000 && data_chars.sparsity < 0.3 {
+            // Large dense data → Multi-threaded CPU
+            let num_threads = if data_chars.spatial_locality { 
+                self.system_capabilities.cpu_cores 
+            } else { 
+                (self.system_capabilities.cpu_cores / 2).max(1) 
+            };
+            
+            AlgorithmRecommendation {
+                target: ExecutionTarget::Cpu { num_threads },
+                confidence: 0.80,
+                expected_performance: ExpectedPerformance {
+                    execution_time: computational_intensity / (num_threads as f64 * 1e5),
+                    memory_usage: total_memory_estimate,
+                    power_consumption: 25.0 * num_threads as f64,
+                    accuracy_impact: 0.0,
+                },
+                reasoning: format!(
+                    "Large dense dataset ({} samples, {:.1}% sparsity) suits multi-threaded CPU",
+                    data_chars.n_samples, data_chars.sparsity * 100.0
+                ),
+                fallback_options: vec![
+                    ExecutionTarget::Cpu { num_threads: 1 }
+                ],
+            }
+        } else {
+            // Default to single-threaded CPU for small/sparse data
+            AlgorithmRecommendation {
+                target: ExecutionTarget::Cpu { num_threads: 1 },
+                confidence: 0.75,
+                expected_performance: ExpectedPerformance {
+                    execution_time: computational_intensity / 1e5,
+                    memory_usage: total_memory_estimate,
+                    power_consumption: 25.0,
+                    accuracy_impact: 0.0,
+                },
+                reasoning: "Small or sparse dataset suitable for single-threaded CPU execution".to_string(),
+                fallback_options: vec![
+                    ExecutionTarget::Cpu { num_threads: self.system_capabilities.cpu_cores }
+                ],
+            }
+        };
+        
+        recommendation
+    }
+
+    /// Get algorithm recommendation for hierarchical clustering
+    pub fn recommend_hierarchical<F: Float>(
+        &self,
+        data: ArrayView2<F>,
+        linkage_method: &str
+    ) -> AlgorithmRecommendation {
+        let data_chars = self.analyze_data(data);
+        
+        // Hierarchical clustering has O(n³) complexity for naive implementation
+        let computational_intensity = (data_chars.n_samples as f64).powi(3);
+        let memory_requirement = data_chars.n_samples * data_chars.n_samples * data_chars.element_size;
+        
+        if data_chars.n_samples > 5000 {
+            // Large datasets need optimized approaches
+            if self.gpu_context.as_ref().map_or(false, |ctx| 
+                ctx.is_optimal_for_data_size(memory_requirement * 2)) {
+                
+                let device = self.gpu_context.as_ref().unwrap().select_best_device().unwrap();
+                
+                AlgorithmRecommendation {
+                    target: ExecutionTarget::Gpu { 
+                        device_id: device.device_id, 
+                        batch_size: (device.available_memory / memory_requirement).max(1)
+                    },
+                    confidence: 0.70,
+                    expected_performance: ExpectedPerformance {
+                        execution_time: computational_intensity / (device.compute_units as f64 * 5e5),
+                        memory_usage: memory_requirement * 2,
+                        power_consumption: 180.0,
+                        accuracy_impact: 0.0,
+                    },
+                    reasoning: format!(
+                        "Large dataset ({} samples) with O(n³) complexity benefits from GPU acceleration",
+                        data_chars.n_samples
+                    ),
+                    fallback_options: vec![
+                        ExecutionTarget::Cpu { num_threads: self.system_capabilities.cpu_cores }
+                    ],
+                }
+            } else {
+                AlgorithmRecommendation {
+                    target: ExecutionTarget::Cpu { num_threads: self.system_capabilities.cpu_cores },
+                    confidence: 0.65,
+                    expected_performance: ExpectedPerformance {
+                        execution_time: computational_intensity / (self.system_capabilities.cpu_cores as f64 * 1e4),
+                        memory_usage: memory_requirement,
+                        power_consumption: 40.0 * self.system_capabilities.cpu_cores as f64,
+                        accuracy_impact: 0.0,
+                    },
+                    reasoning: "Large dataset requires multi-threaded CPU with memory optimization".to_string(),
+                    fallback_options: vec![
+                        ExecutionTarget::Cpu { num_threads: 1 }
+                    ],
+                }
+            }
+        } else {
+            // Small to medium datasets
+            AlgorithmRecommendation {
+                target: ExecutionTarget::Cpu { num_threads: (self.system_capabilities.cpu_cores / 2).max(1) },
+                confidence: 0.85,
+                expected_performance: ExpectedPerformance {
+                    execution_time: computational_intensity / 5e4,
+                    memory_usage: memory_requirement,
+                    power_consumption: 20.0,
+                    accuracy_impact: 0.0,
+                },
+                reasoning: "Medium-sized dataset suitable for moderate CPU parallelism".to_string(),
+                fallback_options: vec![
+                    ExecutionTarget::Cpu { num_threads: 1 }
+                ],
+            }
+        }
+    }
+
+    /// Get algorithm recommendation for DBSCAN clustering  
+    pub fn recommend_dbscan<F: Float>(
+        &self,
+        data: ArrayView2<F>,
+        eps: f64,
+        min_samples: usize
+    ) -> AlgorithmRecommendation {
+        let data_chars = self.analyze_data(data);
+        
+        // DBSCAN has variable complexity depending on data distribution
+        // Worst case: O(n²), best case with spatial indexing: O(n log n)
+        let expected_neighbors = (data_chars.n_samples as f64 * eps * eps).min(data_chars.n_samples as f64);
+        let computational_intensity = data_chars.n_samples as f64 * expected_neighbors;
+        
+        let neighbor_search_memory = data_chars.n_samples * data_chars.n_features * data_chars.element_size * 2;
+        
+        if data_chars.n_samples > 50000 && data_chars.spatial_locality {
+            // Large datasets with good spatial locality → GPU with spatial indexing
+            if let Some(ref gpu_ctx) = self.gpu_context {
+                if gpu_ctx.is_optimal_for_data_size(neighbor_search_memory) {
+                    let device = gpu_ctx.select_best_device().unwrap();
+                    
+                    return AlgorithmRecommendation {
+                        target: ExecutionTarget::Gpu { 
+                            device_id: device.device_id, 
+                            batch_size: (device.available_memory / neighbor_search_memory).max(1)
+                        },
+                        confidence: 0.80,
+                        expected_performance: ExpectedPerformance {
+                            execution_time: computational_intensity / (device.compute_units as f64 * 1e6),
+                            memory_usage: neighbor_search_memory,
+                            power_consumption: 160.0,
+                            accuracy_impact: 0.0,
+                        },
+                        reasoning: format!(
+                            "Large dataset ({} samples) with spatial locality benefits from GPU neighbor search",
+                            data_chars.n_samples
+                        ),
+                        fallback_options: vec![
+                            ExecutionTarget::Cpu { num_threads: self.system_capabilities.cpu_cores }
+                        ],
+                    };
+                }
+            }
+        }
+        
+        // Default CPU recommendation with appropriate parallelism
+        let num_threads = if data_chars.n_samples > 10000 {
+            self.system_capabilities.cpu_cores
+        } else {
+            (self.system_capabilities.cpu_cores / 2).max(1)
+        };
+        
+        AlgorithmRecommendation {
+            target: ExecutionTarget::Cpu { num_threads },
+            confidence: 0.75,
+            expected_performance: ExpectedPerformance {
+                execution_time: computational_intensity / (num_threads as f64 * 2e5),
+                memory_usage: neighbor_search_memory / 2,
+                power_consumption: 30.0 * num_threads as f64,
+                accuracy_impact: 0.0,
+            },
+            reasoning: format!(
+                "DBSCAN on {} samples with eps={:.3} using optimized neighbor search",
+                data_chars.n_samples, eps
+            ),
+            fallback_options: vec![
+                ExecutionTarget::Cpu { num_threads: 1 }
+            ],
+        }
+    }
+
+    /// Make recommendation from cached performance profile
+    fn make_recommendation_from_profile(
+        &self,
+        profile: &PerformanceProfile,
+        current_data: &DataCharacteristics
+    ) -> AlgorithmRecommendation {
+        // Scale performance based on data size differences
+        let size_factor = (current_data.n_samples * current_data.n_features) as f64 /
+            (profile.data_characteristics.n_samples * profile.data_characteristics.n_features) as f64;
+        
+        let cpu_time_scaled = profile.cpu_time * size_factor;
+        let gpu_time_scaled = profile.gpu_time.map(|t| t * size_factor);
+        
+        match (&gpu_time_scaled, &self.strategy) {
+            (Some(gpu_time), _) if gpu_time < &cpu_time_scaled => {
+                // GPU is faster
+                if let Some(ref gpu_ctx) = self.gpu_context {
+                    if let Some(device) = gpu_ctx.select_best_device() {
+                        return AlgorithmRecommendation {
+                            target: ExecutionTarget::Gpu { device_id: device.device_id, batch_size: 1024 },
+                            confidence: 0.90,
+                            expected_performance: ExpectedPerformance {
+                                execution_time: *gpu_time,
+                                memory_usage: profile.gpu_memory.unwrap_or(profile.cpu_memory),
+                                power_consumption: 150.0,
+                                accuracy_impact: 0.0,
+                            },
+                            reasoning: "Based on cached performance profile - GPU is faster".to_string(),
+                            fallback_options: vec![
+                                ExecutionTarget::Cpu { num_threads: self.system_capabilities.cpu_cores }
+                            ],
+                        };
+                    }
+                }
+            }
+            _ => {}
+        }
+        
+        // Default to CPU
+        AlgorithmRecommendation {
+            target: ExecutionTarget::Cpu { num_threads: self.system_capabilities.cpu_cores },
+            confidence: 0.85,
+            expected_performance: ExpectedPerformance {
+                execution_time: cpu_time_scaled,
+                memory_usage: profile.cpu_memory,
+                power_consumption: 30.0 * self.system_capabilities.cpu_cores as f64,
+                accuracy_impact: 0.0,
+            },
+            reasoning: "Based on cached performance profile - CPU is optimal".to_string(),
+            fallback_options: vec![
+                ExecutionTarget::Cpu { num_threads: 1 }
+            ],
+        }
+    }
+
+    /// Update performance cache with new measurements
+    pub fn update_performance_cache(
+        &mut self,
+        algorithm: &str,
+        data_characteristics: DataCharacteristics,
+        cpu_time: f64,
+        gpu_time: Option<f64>,
+        cpu_memory: usize,
+        gpu_memory: Option<usize>
+    ) {
+        let cache_key = format!("{}_{}_{}", 
+            algorithm, data_characteristics.n_samples, data_characteristics.n_features);
+        
+        let profile = PerformanceProfile {
+            cpu_time,
+            gpu_time,
+            cpu_memory,
+            gpu_memory,
+            data_characteristics,
+            measured_at: std::time::SystemTime::now(),
+        };
+        
+        self.performance_cache.insert(cache_key, profile);
+    }
+
+    /// Get system capabilities
+    pub fn get_system_capabilities(&self) -> &SystemCapabilities {
+        &self.system_capabilities
+    }
+
+    /// Check if GPU acceleration is available
+    pub fn is_gpu_available(&self) -> bool {
+        self.gpu_context.as_ref().map_or(false, |ctx| ctx.is_gpu_available())
+    }
+}
+
+impl SystemCapabilities {
+    /// Detect system hardware capabilities
+    pub fn detect() -> Result<Self> {
+        let cpu_cores = std::thread::available_parallelism()
+            .map(|p| p.get())
+            .unwrap_or(1);
+        
+        // Detect CPU cache size (simplified)
+        let cpu_cache_size = Self::detect_cpu_cache_size();
+        
+        // Detect system RAM (simplified)
+        let system_ram = Self::detect_system_ram();
+        
+        // Detect GPU devices
+        let gpu_devices = if let Ok(ctx) = GpuContext::new_auto() {
+            ctx.devices.clone()
+        } else {
+            vec![]
+        };
+        
+        // Detect SIMD capabilities
+        let simd_capabilities = Self::detect_simd_capabilities();
+        
+        Ok(Self {
+            cpu_cores,
+            cpu_cache_size,
+            system_ram,
+            gpu_devices,
+            simd_capabilities,
+        })
+    }
+    
+    fn detect_cpu_cache_size() -> usize {
+        // Simplified cache detection - in reality would use cpuid or /proc/cpuinfo
+        16 * 1024 * 1024 // Assume 16MB L3 cache
+    }
+    
+    fn detect_system_ram() -> usize {
+        // Simplified RAM detection
+        #[cfg(target_os = "linux")]
+        {
+            if let Ok(meminfo) = std::fs::read_to_string("/proc/meminfo") {
+                for line in meminfo.lines() {
+                    if line.starts_with("MemTotal:") {
+                        if let Some(kb_str) = line.split_whitespace().nth(1) {
+                            if let Ok(kb) = kb_str.parse::<usize>() {
+                                return kb * 1024; // Convert to bytes
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Default fallback
+        8 * 1024 * 1024 * 1024 // 8GB
+    }
+    
+    fn detect_simd_capabilities() -> Vec<String> {
+        let mut capabilities = Vec::new();
+        
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        {
+            if is_x86_feature_detected!("avx2") {
+                capabilities.push("AVX2".to_string());
+            }
+            if is_x86_feature_detected!("avx") {
+                capabilities.push("AVX".to_string());
+            }
+            if is_x86_feature_detected!("sse4.2") {
+                capabilities.push("SSE4.2".to_string());
+            }
+        }
+        
+        #[cfg(target_arch = "aarch64")]
+        {
+            if is_aarch64_feature_detected!("neon") {
+                capabilities.push("NEON".to_string());
+            }
+        }
+        
+        capabilities
+    }
+}
+
+/// Convenience function for automatic algorithm selection
+pub fn select_optimal_algorithm<F: Float>(
+    data: ArrayView2<F>,
+    algorithm: &str,
+    parameters: &HashMap<String, serde_json::Value>
+) -> Result<AlgorithmRecommendation> {
+    let selector = AutomaticAlgorithmSelector::new_auto()?;
+    
+    match algorithm {
+        "kmeans" => {
+            let k = parameters.get("k")
+                .and_then(|v| v.as_u64())
+                .unwrap_or(2) as usize;
+            let max_iter = parameters.get("max_iterations")
+                .and_then(|v| v.as_u64())
+                .unwrap_or(100) as usize;
+            Ok(selector.recommend_kmeans(data, k, max_iter))
+        }
+        "hierarchical" => {
+            let linkage = parameters.get("linkage")
+                .and_then(|v| v.as_str())
+                .unwrap_or("ward");
+            Ok(selector.recommend_hierarchical(data, linkage))
+        }
+        "dbscan" => {
+            let eps = parameters.get("eps")
+                .and_then(|v| v.as_f64())
+                .unwrap_or(0.5);
+            let min_samples = parameters.get("min_samples")
+                .and_then(|v| v.as_u64())
+                .unwrap_or(5) as usize;
+            Ok(selector.recommend_dbscan(data, eps, min_samples))
+        }
+        _ => Err(ClusteringError::InvalidInput(
+            format!("Unknown algorithm: {}", algorithm)
+        ))
+    }
+}
 }

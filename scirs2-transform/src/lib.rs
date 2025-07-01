@@ -130,12 +130,15 @@ pub use time_series::{FourierFeatures, LagFeatures, TimeSeriesFeatures, WaveletF
 
 #[cfg(feature = "simd")]
 pub use normalize_simd::{
-    simd_l2_normalize_1d, simd_maxabs_normalize_1d, simd_minmax_normalize_1d, simd_normalize_array,
-    simd_normalize_adaptive, simd_normalize_batch, simd_zscore_normalize_1d, AdaptiveBlockSizer,
+    simd_l2_normalize_1d, simd_maxabs_normalize_1d, simd_minmax_normalize_1d,
+    simd_normalize_adaptive, simd_normalize_array, simd_normalize_batch, simd_zscore_normalize_1d,
+    AdaptiveBlockSizer,
 };
 
 #[cfg(feature = "simd")]
-pub use features_simd::{simd_binarize, simd_polynomial_features_optimized, simd_power_transform, SimdPolynomialFeatures};
+pub use features_simd::{
+    simd_binarize, simd_polynomial_features_optimized, simd_power_transform, SimdPolynomialFeatures,
+};
 
 #[cfg(feature = "simd")]
 pub use scaling_simd::{SimdMaxAbsScaler, SimdRobustScaler, SimdStandardScaler};
@@ -148,9 +151,17 @@ pub use image::{
     resize_images, rgb_to_grayscale, BlockNorm, HOGDescriptor, ImageNormMethod, ImageNormalizer,
     PatchExtractor,
 };
+pub use optimization_config::{
+    AdaptiveParameterTuner, AutoTuner, ConfigurationPredictor, DataCharacteristics,
+    OptimizationConfig, OptimizationReport, PerformanceMetric, SystemMonitor, SystemResources,
+    TransformationRecommendation, UltraThinkConfigOptimizer,
+};
 pub use out_of_core::{
     csv_chunks, ChunkedArrayReader, ChunkedArrayWriter, OutOfCoreConfig, OutOfCoreNormalizer,
     OutOfCoreTransformer,
+};
+pub use performance::{
+    EnhancedPCA, EnhancedStandardScaler, PerformanceStats, UltraFastMemoryPool, UltraFastPCA,
 };
 pub use streaming::{
     OutlierMethod, StreamingFeatureSelector, StreamingMinMaxScaler, StreamingOutlierDetector,
@@ -162,24 +173,17 @@ pub use utils::{
     ArrayMemoryPool, DataChunker, PerfUtils, ProcessingStrategy, StatUtils, TypeConverter,
     ValidationUtils,
 };
-pub use performance::{EnhancedPCA, EnhancedStandardScaler, PerformanceStats, UltraFastMemoryPool, UltraFastPCA};
-pub use optimization_config::{
-    AutoTuner, DataCharacteristics, OptimizationConfig, OptimizationReport, SystemResources,
-    TransformationRecommendation,
-};
 
 // GPU acceleration exports
 #[cfg(feature = "gpu")]
-pub use gpu::{
-    AdvancedGpuPCA, GpuMatrixOps, GpuMemoryPool, GpuPCA, GpuTSNE, MultiGpuCoordinator,
-};
+pub use gpu::{AdvancedGpuPCA, GpuMatrixOps, GpuMemoryPool, GpuPCA, GpuTSNE, MultiGpuCoordinator};
 
 // Distributed processing exports
 #[cfg(feature = "distributed")]
 pub use distributed::{
     AutoScalingConfig, CircuitBreaker, ClusterHealthSummary, DistributedConfig,
-    DistributedCoordinator, DistributedPCA, EnhancedDistributedCoordinator, NodeHealth,
-    NodeInfo, NodeStatus, PartitioningStrategy,
+    DistributedCoordinator, DistributedPCA, EnhancedDistributedCoordinator, NodeHealth, NodeInfo,
+    NodeStatus, PartitioningStrategy,
 };
 
 // Automated feature engineering exports
@@ -190,14 +194,14 @@ pub use auto_feature_engineering::{
 
 // Quantum optimization exports
 pub use quantum_optimization::{
-    QuantumInspiredOptimizer, QuantumTransformationOptimizer, QuantumHyperparameterTuner,
-    QuantumParticle,
+    QuantumHyperparameterTuner, QuantumInspiredOptimizer, QuantumParticle,
+    QuantumTransformationOptimizer,
 };
 
 // Neuromorphic computing exports
 pub use neuromorphic_adaptation::{
-    NeuromorphicTransformationSystem, NeuromorphicAdaptationNetwork, NeuromorphicMemorySystem,
-    SpikingNeuron, TransformationEpisode, SystemState,
+    NeuromorphicAdaptationNetwork, NeuromorphicMemorySystem, NeuromorphicTransformationSystem,
+    SpikingNeuron, SystemState, TransformationEpisode,
 };
 
 // Production monitoring exports

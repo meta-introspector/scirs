@@ -167,10 +167,42 @@ where
             mass_matrix::solve_mass_system(&mass_matrix, t, y.view(), f_current.view())?
         };
 
-        // Use explicit Euler-like initial guess that respects the mass matrix structure
+        // Improved initial guess using predictor-corrector approach
+        // This provides a better starting point for Newton iteration
         let mut k1 = y.clone() + dy.clone() * (h * c1);
         let mut k2 = y.clone() + dy.clone() * (h * c2);
         let mut k3 = y.clone() + dy.clone() * h;
+
+        // For mass matrix systems, refine the initial guess with one predictor step
+        if mass_matrix.matrix_type != MassMatrixType::Identity {
+            // Compute better initial derivatives
+            let f1_pred = f(t1, k1.view());
+            let f2_pred = f(t2, k2.view());
+            let f3_pred = f(t3, k3.view());
+
+            // Solve for derivatives through mass matrix
+            let k1_prime_pred =
+                mass_matrix::solve_mass_system(&mass_matrix, t1, k1.view(), f1_pred.view())?;
+            let k2_prime_pred =
+                mass_matrix::solve_mass_system(&mass_matrix, t2, k2.view(), f2_pred.view())?;
+            let k3_prime_pred =
+                mass_matrix::solve_mass_system(&mass_matrix, t3, k3.view(), f3_pred.view())?;
+
+            // Refine initial guess using Radau coefficients
+            k1 = y.clone()
+                + (k1_prime_pred.clone() * a11
+                    + k2_prime_pred.clone() * a12
+                    + k3_prime_pred.clone() * a13)
+                    * h;
+            k2 = y.clone()
+                + (k1_prime_pred.clone() * a21
+                    + k2_prime_pred.clone() * a22
+                    + k3_prime_pred.clone() * a23)
+                    * h;
+            k3 = y.clone() + (k1_prime_pred * a31 + k2_prime_pred * a32 + k3_prime_pred * a33) * h;
+
+            func_evals += 3;
+        }
 
         // Weights for error estimation
         let error_weights = calculate_error_weights(&y, atol, rtol);
@@ -400,11 +432,14 @@ where
                         Some(m) => {
                             // CORRECTED Newton system for mass matrix DAEs:
                             // For the Radau method with mass matrix M(t,y) * y' = f(t,y)
-                            // The Newton correction dk for stage k should satisfy:
-                            // (M - h * a_ii * ∂f/∂y) * dk = -residual
+                            // The stages satisfy: k_i = y + h * sum(a_ij * k'_j) where M * k'_j = f(t_j, k_j)
+                            // The residual is: R_i = k_i - y - h * sum(a_ij * k'_j)
                             //
-                            // This is the standard form for implicit RK methods with mass matrices
-                            // where ∂f/∂y is the Jacobian of the right-hand side function f
+                            // The Newton system derivation:
+                            // For k'_j = M^(-1) * f(t_j, k_j), we have d(k'_j)/dk_j = M^(-1) * ∂f/∂y
+                            // So dR_i/dk_i = I - h * a_ii * M^(-1) * ∂f/∂y
+                            // The Newton correction satisfies: (I - h * a_ii * M^(-1) * J) * dk = -R
+                            // Multiplying by M: (M - h * a_ii * J) * dk = -M * R
 
                             let mut newton_matrix = m.clone();
 
@@ -415,8 +450,14 @@ where
                                 }
                             }
 
-                            // The RHS is -residual (standard Newton method)
-                            let rhs = residual * (-F::one());
+                            // CORRECTED RHS: The right-hand side should be -M * residual, not just -residual
+                            // This is the key fix for the Newton iteration convergence
+                            let mut rhs = Array1::<F>::zeros(n_dim);
+                            for i in 0..n_dim {
+                                for j in 0..n_dim {
+                                    rhs[i] -= m[[i, j]] * residual[j];
+                                }
+                            }
 
                             // Solve with iterative improvement for better numerical stability
                             let solve_with_conditioning =

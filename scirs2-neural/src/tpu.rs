@@ -628,7 +628,7 @@ impl TPURuntime {
                     .split(',')
                     .filter_map(|s| s.trim().parse().ok())
                     .collect();
-                
+
                 for device_id in device_ids {
                     devices.push(Self::create_simulated_device(device_id)?);
                 }
@@ -663,7 +663,10 @@ impl TPURuntime {
         if let Ok(worker_id) = std::env::var("TPU_WORKER_ID") {
             if let Ok(id) = worker_id.parse::<u32>() {
                 // In multi-worker setup, each worker gets a subset of devices
-                devices = devices.into_iter().filter(|d| d.device_id % 8 == id).collect();
+                devices = devices
+                    .into_iter()
+                    .filter(|d| d.device_id % 8 == id)
+                    .collect();
             }
         }
 
@@ -703,12 +706,14 @@ impl TPURuntime {
         // Parse names like "v4-8", "v3-32", etc.
         if let Some(caps) = regex::Regex::new(r"v(\d+)-(\d+)")
             .unwrap()
-            .captures(tpu_name) 
+            .captures(tpu_name)
         {
             let version = caps.get(1).unwrap().as_str();
-            let cores = caps.get(2).unwrap().as_str().parse::<u32>()
-                .map_err(|_| NeuralError::InvalidInput("Invalid TPU core count".to_string()))?;
-            
+            let cores =
+                caps.get(2).unwrap().as_str().parse::<u32>().map_err(|_| {
+                    NeuralError::InvalidArgument("Invalid TPU core count".to_string())
+                })?;
+
             let generation = match version {
                 "2" => TPUGeneration::V2,
                 "3" => TPUGeneration::V3,
@@ -716,7 +721,7 @@ impl TPURuntime {
                 "5" => TPUGeneration::V5,
                 _ => TPUGeneration::Custom(format!("v{}", version)),
             };
-            
+
             Ok((generation, cores))
         } else {
             // Default fallback
@@ -761,10 +766,10 @@ impl TPURuntime {
     /// Get memory per core for TPU generation
     fn get_memory_per_core(generation: &TPUGeneration) -> usize {
         match generation {
-            TPUGeneration::V2 => 8 * 1024 * 1024 * 1024,   // 8GB
-            TPUGeneration::V3 => 16 * 1024 * 1024 * 1024,  // 16GB  
-            TPUGeneration::V4 => 32 * 1024 * 1024 * 1024,  // 32GB
-            TPUGeneration::V5 => 64 * 1024 * 1024 * 1024,  // 64GB
+            TPUGeneration::V2 => 8 * 1024 * 1024 * 1024,  // 8GB
+            TPUGeneration::V3 => 16 * 1024 * 1024 * 1024, // 16GB
+            TPUGeneration::V4 => 32 * 1024 * 1024 * 1024, // 32GB
+            TPUGeneration::V5 => 64 * 1024 * 1024 * 1024, // 64GB
             TPUGeneration::Custom(_) => 16 * 1024 * 1024 * 1024, // Default 16GB
         }
     }
@@ -772,10 +777,10 @@ impl TPURuntime {
     /// Get peak TOPS for TPU generation
     fn get_peak_tops(generation: &TPUGeneration) -> f64 {
         match generation {
-            TPUGeneration::V2 => 45.0,   // 45 TOPS
-            TPUGeneration::V3 => 123.0,  // 123 TOPS
-            TPUGeneration::V4 => 275.0,  // 275 TOPS
-            TPUGeneration::V5 => 459.0,  // 459 TOPS (estimated)
+            TPUGeneration::V2 => 45.0,         // 45 TOPS
+            TPUGeneration::V3 => 123.0,        // 123 TOPS
+            TPUGeneration::V4 => 275.0,        // 275 TOPS
+            TPUGeneration::V5 => 459.0,        // 459 TOPS (estimated)
             TPUGeneration::Custom(_) => 100.0, // Conservative estimate
         }
     }
@@ -784,7 +789,7 @@ impl TPURuntime {
     pub fn configure_pod(&mut self, pod_config: TPUPodConfig) -> Result<()> {
         // Validate pod configuration
         if pod_config.total_cores == 0 {
-            return Err(NeuralError::InvalidInput(
+            return Err(NeuralError::InvalidArgument(
                 "Pod must have at least one core".to_string(),
             ));
         }
@@ -962,6 +967,9 @@ impl TPURuntime {
                     ElementWiseTPUOp::Multiply => "multiply",
                     ElementWiseTPUOp::Subtract => "subtract",
                     ElementWiseTPUOp::Divide => "divide",
+                    ElementWiseTPUOp::Maximum => "maximum",
+                    ElementWiseTPUOp::Minimum => "minimum",
+                    ElementWiseTPUOp::Power => "power",
                 };
 
                 hlo.push_str(&format!("  ROOT result = f32[?] {}(arg0, arg1)\n", op_name));
@@ -972,6 +980,55 @@ impl TPURuntime {
             TPUOperation::Convolution { .. } => {
                 // Simplified convolution HLO
                 Ok("HloModule conv\nENTRY computation {\n  input = f32[?,?,?,?] parameter(0)\n  weight = f32[?,?,?,?] parameter(1)\n  ROOT result = f32[?,?,?,?] convolution(input, weight), window={size=3x3}, dim_labels=b01f_01io->b01f\n}\n".to_string())
+            }
+            TPUOperation::Activation { activation } => {
+                let mut hlo = String::new();
+                hlo.push_str("HloModule activation\n");
+                hlo.push_str("ENTRY computation {\n");
+                hlo.push_str("  arg0 = f32[?] parameter(0)\n");
+
+                let op_name = match activation {
+                    TPUActivationType::ReLU => "maximum(arg0, constant(0))",
+                    TPUActivationType::Sigmoid => "logistic(arg0)",
+                    TPUActivationType::Tanh => "tanh(arg0)",
+                    TPUActivationType::GELU => "multiply(arg0, multiply(constant(0.5), add(constant(1), tanh(multiply(constant(0.7978845608), add(arg0, multiply(constant(0.044715), power(arg0, constant(3))))))))",
+                    TPUActivationType::Swish => "multiply(arg0, logistic(arg0))",
+                    TPUActivationType::Softmax => "divide(exponential(arg0), reduce(exponential(arg0), constant(0), add))",
+                };
+
+                hlo.push_str(&format!("  ROOT result = f32[?] {}\n", op_name));
+                hlo.push_str("}\n");
+                Ok(hlo)
+            }
+            TPUOperation::Reduction {
+                reduction,
+                axes,
+                keep_dims: _,
+            } => {
+                let mut hlo = String::new();
+                hlo.push_str("HloModule reduction\n");
+                hlo.push_str("ENTRY computation {\n");
+                hlo.push_str("  arg0 = f32[?] parameter(0)\n");
+
+                let (op_name, init_value) = match reduction {
+                    TPUReductionType::Sum => ("add", "0"),
+                    TPUReductionType::Mean => ("add", "0"), // Will divide by count later
+                    TPUReductionType::Max => ("maximum", "-inf"),
+                    TPUReductionType::Min => ("minimum", "inf"),
+                    TPUReductionType::Product => ("multiply", "1"),
+                };
+
+                let axes_str = axes
+                    .iter()
+                    .map(|&axis| axis.to_string())
+                    .collect::<Vec<_>>()
+                    .join(",");
+                hlo.push_str(&format!(
+                    "  ROOT result = f32[?] reduce(arg0, constant({}), {}), dimensions={{{}}}\n",
+                    init_value, op_name, axes_str
+                ));
+                hlo.push_str("}\n");
+                Ok(hlo)
             }
         }
     }
@@ -1033,7 +1090,7 @@ impl TPURuntime {
                 ..
             } => {
                 if inputs.len() < 2 {
-                    return Err(NeuralError::InvalidInput(
+                    return Err(NeuralError::InvalidArgument(
                         "MatMul requires 2 inputs".to_string(),
                     ));
                 }
@@ -1048,7 +1105,7 @@ impl TPURuntime {
             }
             TPUOperation::ElementWise { .. } => {
                 if inputs.is_empty() {
-                    return Err(NeuralError::InvalidInput(
+                    return Err(NeuralError::InvalidArgument(
                         "ElementWise requires at least 1 input".to_string(),
                     ));
                 }
@@ -1056,12 +1113,56 @@ impl TPURuntime {
             }
             TPUOperation::Convolution { .. } => {
                 if inputs.is_empty() {
-                    return Err(NeuralError::InvalidInput(
+                    return Err(NeuralError::InvalidArgument(
                         "Convolution requires at least 1 input".to_string(),
                     ));
                 }
                 // Simplified - return input shape (should calculate actual output shape)
                 Ok(vec![inputs[0].shape().to_vec()])
+            }
+            TPUOperation::Activation { .. } => {
+                if inputs.is_empty() {
+                    return Err(NeuralError::InvalidArgument(
+                        "Activation requires at least 1 input".to_string(),
+                    ));
+                }
+                // Activation functions preserve input shape
+                Ok(vec![inputs[0].shape().to_vec()])
+            }
+            TPUOperation::Reduction {
+                axes, keep_dims, ..
+            } => {
+                if inputs.is_empty() {
+                    return Err(NeuralError::InvalidArgument(
+                        "Reduction requires at least 1 input".to_string(),
+                    ));
+                }
+
+                let input_shape = inputs[0].shape();
+                let mut output_shape = input_shape.to_vec();
+
+                // Remove or keep dimensions based on axes and keep_dims
+                if *keep_dims {
+                    // Keep dimensions but set size to 1 for reduced axes
+                    for &axis in axes {
+                        if axis < output_shape.len() {
+                            output_shape[axis] = 1;
+                        }
+                    }
+                } else {
+                    // Remove dimensions in reverse order to avoid index issues
+                    let mut sorted_axes = axes.clone();
+                    sorted_axes.sort_unstable();
+                    sorted_axes.reverse();
+
+                    for &axis in &sorted_axes {
+                        if axis < output_shape.len() {
+                            output_shape.remove(axis);
+                        }
+                    }
+                }
+
+                Ok(vec![output_shape])
             }
         }
     }
@@ -1085,34 +1186,6 @@ impl TPURuntime {
             })
             .collect())
     }
-}
-
-/// TPU-specific operations that can be compiled and executed
-#[derive(Debug, Clone)]
-pub enum TPUOperation<F: Float + Debug> {
-    /// Matrix multiplication
-    MatMul {
-        transpose_a: bool,
-        transpose_b: bool,
-        _phantom: std::marker::PhantomData<F>,
-    },
-    /// Element-wise operations
-    ElementWise { op: ElementWiseTPUOp },
-    /// Convolution operation
-    Convolution {
-        stride: Vec<usize>,
-        padding: Vec<usize>,
-        dilation: Vec<usize>,
-    },
-}
-
-/// Element-wise operations supported on TPU
-#[derive(Debug, Clone)]
-pub enum ElementWiseTPUOp {
-    Add,
-    Multiply,
-    Subtract,
-    Divide,
 }
 
 impl XLACompiler {
@@ -1510,460 +1583,5 @@ impl TPUMemoryPool {
         // TODO: Implement block coalescing for better memory management
 
         Ok(())
-    }
-}
-
-impl TPUMemoryManager {
-    /// Create new memory manager for given devices
-    pub fn new(devices: &[TPUDevice]) -> Result<Self> {
-        let mut memory_pools = HashMap::new();
-        
-        for device in devices {
-            let pool = TPUMemoryPool::new(device.device_id, device.memory_per_core * device.num_cores as usize)?;
-            memory_pools.insert(device.device_id, pool);
-        }
-
-        Ok(Self {
-            devices: devices.to_vec(),
-            memory_pools,
-            allocations: Arc::new(RwLock::new(HashMap::new())),
-            stats: Arc::new(RwLock::new(TPUMemoryStats::default())),
-        })
-    }
-
-    /// Allocate memory on specified device
-    pub fn allocate(&mut self, device_id: u32, size: usize, memory_space: TPUMemorySpace) -> Result<AllocationId> {
-        let pool = self.memory_pools.get_mut(&device_id)
-            .ok_or_else(|| NeuralError::DeviceError(format!("Device {} not found", device_id)))?;
-
-        let block = pool.allocate(size, memory_space)?;
-        let allocation_id = AllocationId(self.generate_allocation_id());
-
-        let allocation = TPUAllocation {
-            id: allocation_id,
-            device_id,
-            block,
-            allocated_at: std::time::Instant::now(),
-            ref_count: Arc::new(Mutex::new(1)),
-        };
-
-        if let Ok(mut allocations) = self.allocations.write() {
-            allocations.insert(allocation_id, allocation);
-        }
-
-        // Update statistics
-        if let Ok(mut stats) = self.stats.write() {
-            stats.total_allocations += 1;
-            stats.active_allocations += 1;
-            stats.current_memory_usage += size;
-            if stats.current_memory_usage > stats.peak_memory_usage {
-                stats.peak_memory_usage = stats.current_memory_usage;
-            }
-        }
-
-        Ok(allocation_id)
-    }
-
-    /// Free memory allocation
-    pub fn free(&mut self, allocation_id: AllocationId) -> Result<()> {
-        let allocation = {
-            if let Ok(mut allocations) = self.allocations.write() {
-                allocations.remove(&allocation_id)
-            } else {
-                return Err(NeuralError::MemoryError("Failed to access allocations".to_string()));
-            }
-        };
-
-        if let Some(allocation) = allocation {
-            let pool = self.memory_pools.get_mut(&allocation.device_id)
-                .ok_or_else(|| NeuralError::DeviceError(format!("Device {} not found", allocation.device_id)))?;
-
-            pool.deallocate(allocation.block)?;
-
-            // Update statistics
-            if let Ok(mut stats) = self.stats.write() {
-                stats.active_allocations -= 1;
-                stats.current_memory_usage = stats.current_memory_usage.saturating_sub(allocation.block.size);
-            }
-
-            Ok(())
-        } else {
-            Err(NeuralError::MemoryError(format!("Allocation {:?} not found", allocation_id)))
-        }
-    }
-
-    /// Generate unique allocation ID
-    fn generate_allocation_id(&self) -> u64 {
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_nanos() as u64
-    }
-}
-
-impl TPUMemoryPool {
-    /// Create new memory pool for device
-    pub fn new(device_id: u32, total_size: usize) -> Result<Self> {
-        let mut free_blocks = VecDeque::new();
-        
-        // Initialize with one large free block
-        free_blocks.push_back(MemoryBlock {
-            offset: 0,
-            size: total_size,
-            memory_space: TPUMemorySpace::HBM,
-            alignment: 64,
-        });
-
-        Ok(Self {
-            device_id,
-            free_blocks,
-            allocated_blocks: HashMap::new(),
-            total_size,
-            allocated_size: 0,
-        })
-    }
-
-    /// Allocate a memory block
-    pub fn allocate(&mut self, size: usize, memory_space: TPUMemorySpace) -> Result<MemoryBlock> {
-        // Find a suitable free block
-        let mut block_index = None;
-        for (i, block) in self.free_blocks.iter().enumerate() {
-            if block.size >= size && block.memory_space == memory_space {
-                block_index = Some(i);
-                break;
-            }
-        }
-
-        if let Some(index) = block_index {
-            let mut free_block = self.free_blocks.remove(index).unwrap();
-            
-            // Create allocated block
-            let allocated_block = MemoryBlock {
-                offset: free_block.offset,
-                size,
-                memory_space,
-                alignment: free_block.alignment,
-            };
-
-            // If there's remaining space, create a new free block
-            if free_block.size > size {
-                free_block.offset += size;
-                free_block.size -= size;
-                self.free_blocks.push_back(free_block);
-            }
-
-            self.allocated_size += size;
-            Ok(allocated_block)
-        } else {
-            Err(NeuralError::MemoryError(format!(
-                "Unable to allocate {} bytes on device {}",
-                size, self.device_id
-            )))
-        }
-    }
-
-    /// Deallocate a memory block
-    pub fn deallocate(&mut self, block: MemoryBlock) -> Result<()> {
-        self.allocated_size = self.allocated_size.saturating_sub(block.size);
-        
-        // Add block back to free blocks (simplified - no coalescing)
-        self.free_blocks.push_back(block);
-        
-        Ok(())
-    }
-}
-
-impl TPUScheduler {
-    /// Create a new TPU scheduler
-    pub fn new(devices: Vec<TPUDevice>, policy: SchedulingPolicy) -> Result<Self> {
-        Ok(Self {
-            devices,
-            task_queue: Arc::new(Mutex::new(VecDeque::new())),
-            running_tasks: Arc::new(RwLock::new(HashMap::new())),
-            stats: Arc::new(RwLock::new(TPUSchedulingStats::default())),
-            policy,
-        })
-    }
-
-    /// Execute a task on the best available device
-    pub fn execute_task(&self, task: TPUTask) -> Result<TaskResult> {
-        let start_time = std::time::Instant::now();
-
-        // Select device for task
-        let device_id = self.select_device(&task)?;
-
-        // Create running task
-        let running_task = RunningTask {
-            task: task.clone(),
-            device_id,
-            started_at: start_time,
-            expected_completion: start_time + Duration::from_micros(task.kernel.metadata.estimated_execution_time_us),
-        };
-
-        // Add to running tasks
-        if let Ok(mut running_tasks) = self.running_tasks.write() {
-            running_tasks.insert(task.task_id, running_task);
-        }
-
-        // Simulate task execution
-        let result = self.simulate_task_execution(&task, device_id)?;
-
-        // Remove from running tasks
-        if let Ok(mut running_tasks) = self.running_tasks.write() {
-            running_tasks.remove(&task.task_id);
-        }
-
-        // Update statistics
-        let execution_time = start_time.elapsed();
-        self.update_task_stats(&task, &result, execution_time);
-
-        Ok(result)
-    }
-
-    /// Execute a task (blocking)
-    pub fn execute_task(&self, task: TPUTask) -> Result<TaskResult> {
-        // Select device based on scheduling policy
-        let device_id = self.select_device(&task)?;
-
-        // Simulate task execution
-        let start_time = Instant::now();
-
-        // In a real implementation, this would execute the compiled kernel on the TPU
-        let execution_result = self.simulate_task_execution(&task, device_id)?;
-
-        let execution_time = start_time.elapsed();
-
-        // Update statistics
-        self.update_task_stats(&task, &execution_result, execution_time);
-
-        Ok(execution_result)
-    }
-
-    /// Select device for task execution
-    fn select_device(&self, task: &TPUTask) -> Result<u32> {
-        match &self.policy {
-            SchedulingPolicy::LoadBalance => {
-                // Select device with lowest utilization
-                self.devices
-                    .iter()
-                    .min_by(|a, b| a.utilization.partial_cmp(&b.utilization).unwrap())
-                    .map(|d| d.device_id)
-                    .ok_or_else(|| NeuralError::DeviceError("No available devices".to_string()))
-            }
-            SchedulingPolicy::RoundRobin => {
-                // Simple round-robin selection
-                let device_index = (task.task_id.0 as usize) % self.devices.len();
-                Ok(self.devices[device_index].device_id)
-            }
-            _ => {
-                // Default to first available device
-                self.devices
-                    .first()
-                    .map(|d| d.device_id)
-                    .ok_or_else(|| NeuralError::DeviceError("No available devices".to_string()))
-            }
-        }
-    }
-
-    /// Simulate task execution (placeholder)
-    fn simulate_task_execution(&self, task: &TPUTask, device_id: u32) -> Result<TaskResult> {
-        // Simulate execution time based on kernel estimates
-        let execution_time =
-            Duration::from_micros(task.kernel.metadata.estimated_execution_time_us);
-
-        // Simulate successful execution
-        let outputs = task
-            .output_shapes
-            .iter()
-            .map(|shape| TPUTensor {
-                data: ndarray::Array::zeros(shape.as_slice()).into_dyn(),
-                spec: TensorSpec {
-                    shape: shape.clone(),
-                    dtype: TPUDataType::F32,
-                    layout: None,
-                },
-                device_id: Some(device_id),
-                allocation_id: None,
-            })
-            .collect();
-
-        Ok(TaskResult::Success {
-            outputs,
-            execution_time,
-            device_utilization: 0.8, // Simulated utilization
-        })
-    }
-
-    /// Update task execution statistics
-    fn update_task_stats(&self, _task: &TPUTask, result: &TaskResult, execution_time: Duration) {
-        if let Ok(mut stats) = self.stats.write() {
-            stats.total_tasks += 1;
-
-            match result {
-                TaskResult::Success { .. } => {
-                    stats.completed_tasks += 1;
-                    stats.avg_execution_time_ms = (stats.avg_execution_time_ms
-                        * (stats.completed_tasks - 1) as f64
-                        + execution_time.as_millis() as f64)
-                        / stats.completed_tasks as f64;
-                }
-                TaskResult::Error { .. } => stats.failed_tasks += 1,
-                TaskResult::Timeout { .. } => stats.timeout_tasks += 1,
-            }
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_tpu_device_creation() {
-        let device = TPUDevice {
-            device_id: 0,
-            device_name: "TPU v4".to_string(),
-            generation: TPUGeneration::V4,
-            num_cores: 4,
-            memory_per_core: 16 * 1024 * 1024 * 1024,
-            peak_tops: 275.0,
-            available: true,
-            utilization: 0.0,
-            temperature: 45.0,
-        };
-
-        assert_eq!(device.device_id, 0);
-        assert_eq!(device.generation, TPUGeneration::V4);
-        assert!(device.available);
-    }
-
-    #[test]
-    fn test_xla_compiler_creation() {
-        let compiler = XLACompiler::new(TPUGeneration::V4);
-        assert!(compiler.is_ok());
-    }
-
-    #[test]
-    fn test_tpu_memory_manager() {
-        let devices = vec![TPUDevice {
-            device_id: 0,
-            device_name: "Test TPU".to_string(),
-            generation: TPUGeneration::V4,
-            num_cores: 1,
-            memory_per_core: 1024 * 1024, // 1MB
-            peak_tops: 100.0,
-            available: true,
-            utilization: 0.0,
-            temperature: 40.0,
-        }];
-
-        let memory_manager = TPUMemoryManager::new(&devices);
-        assert!(memory_manager.is_ok());
-    }
-
-    #[test]
-    fn test_tpu_scheduler() {
-        let devices = vec![TPUDevice {
-            device_id: 0,
-            device_name: "Test TPU".to_string(),
-            generation: TPUGeneration::V4,
-            num_cores: 1,
-            memory_per_core: 1024 * 1024,
-            peak_tops: 100.0,
-            available: true,
-            utilization: 0.0,
-            temperature: 40.0,
-        }];
-
-        let scheduler = TPUScheduler::new(devices, SchedulingPolicy::LoadBalance);
-        assert!(scheduler.is_ok());
-    }
-
-    #[test]
-    fn test_xla_program_creation() {
-        let program = XLAProgram {
-            hlo_text:
-                "HloModule test\nENTRY computation {\n  ROOT result = f32[10] parameter(0)\n}\n"
-                    .to_string(),
-            input_specs: vec![TensorSpec {
-                shape: vec![10],
-                dtype: TPUDataType::F32,
-                layout: None,
-            }],
-            output_specs: vec![TensorSpec {
-                shape: vec![10],
-                dtype: TPUDataType::F32,
-                layout: None,
-            }],
-            program_id: "test_program".to_string(),
-        };
-
-        assert!(!program.hlo_text.is_empty());
-        assert_eq!(program.input_specs.len(), 1);
-        assert_eq!(program.output_specs.len(), 1);
-    }
-
-    #[test]
-    fn test_tpu_tensor_creation() {
-        let data = ndarray::Array::zeros((2, 3)).into_dyn();
-        let tensor = TPUTensor {
-            data: data.mapv(|_| 1.0f32),
-            spec: TensorSpec {
-                shape: vec![2, 3],
-                dtype: TPUDataType::F32,
-                layout: None,
-            },
-            device_id: Some(0),
-            allocation_id: None,
-        };
-
-        assert_eq!(tensor.spec.shape, vec![2, 3]);
-        assert_eq!(tensor.spec.dtype, TPUDataType::F32);
-        assert_eq!(tensor.device_id, Some(0));
-    }
-
-    #[test]
-    fn test_tpu_operation_matmul() {
-        let operation: TPUOperation<f32> = TPUOperation::MatMul {
-            transpose_a: false,
-            transpose_b: true,
-            _phantom: std::marker::PhantomData,
-        };
-
-        match operation {
-            TPUOperation::MatMul {
-                transpose_a,
-                transpose_b,
-                ..
-            } => {
-                assert!(!transpose_a);
-                assert!(transpose_b);
-            }
-            _ => panic!("Expected MatMul operation"),
-        }
-    }
-
-    #[test]
-    fn test_memory_pool_allocation() {
-        let mut pool = TPUMemoryPool::new(0, 1024 * 1024).unwrap(); // 1MB pool
-
-        let block = pool.allocate(1024, TPUMemorySpace::HBM);
-        assert!(block.is_ok());
-
-        let allocated_block = block.unwrap();
-        assert_eq!(allocated_block.size, 1024);
-        assert_eq!(allocated_block.memory_space, TPUMemorySpace::HBM);
-    }
-
-    #[test]
-    fn test_tpu_generation_comparison() {
-        assert_eq!(TPUGeneration::V4, TPUGeneration::V4);
-        assert_ne!(TPUGeneration::V3, TPUGeneration::V4);
-
-        let custom = TPUGeneration::Custom("test".to_string());
-        match custom {
-            TPUGeneration::Custom(name) => assert_eq!(name, "test"),
-            _ => panic!("Expected custom generation"),
-        }
     }
 }

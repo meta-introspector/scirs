@@ -7,11 +7,11 @@
 use crate::error::{InterpolateError, InterpolateResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 
 /// Prediction result from Kriging interpolation
 #[derive(Debug, Clone)]
-pub struct PredictionResult<F: Float + FromPrimitive> {
+pub struct PredictionResult<F: Float + FromPrimitive + Display> {
     /// Predicted values
     pub value: Array1<F>,
     /// Prediction variance (uncertainty)
@@ -38,7 +38,7 @@ pub enum CovarianceFunction {
 /// Implements ordinary Kriging (Gaussian process regression with a constant mean).
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
-pub struct KrigingInterpolator<F: Float + FromPrimitive> {
+pub struct KrigingInterpolator<F: Float + FromPrimitive + Display> {
     /// Points coordinates
     points: Array2<F>,
     /// Values at points
@@ -61,7 +61,7 @@ pub struct KrigingInterpolator<F: Float + FromPrimitive> {
     mean: F,
 }
 
-impl<F: Float + FromPrimitive + Debug> KrigingInterpolator<F> {
+impl<F: Float + FromPrimitive + Debug + std::fmt::Display> KrigingInterpolator<F> {
     /// Create a new Kriging interpolator
     ///
     /// # Arguments
@@ -164,7 +164,7 @@ impl<F: Float + FromPrimitive + Debug> KrigingInterpolator<F> {
                 "alpha",
                 alpha,
                 "rational quadratic Kriging",
-                "must be positive (shape parameter: typical values 0.5-2.0, try 1.0 as default)"
+                "must be positive (shape parameter: typical values 0.5-2.0, try 1.0 as default)",
             ));
         }
 
@@ -468,7 +468,7 @@ impl<F: Float + FromPrimitive + Debug> KrigingInterpolator<F> {
 /// println!("Interpolated value at (0.25, 0.25): {}", result.value[0]);
 /// println!("Prediction variance: {}", result.variance[0]);
 /// ```
-pub fn make_kriging_interpolator<F: Float + FromPrimitive + Debug>(
+pub fn make_kriging_interpolator<F: Float + FromPrimitive + Debug + Display>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
     cov_fn: CovarianceFunction,

@@ -59,7 +59,7 @@ where
     if use_work_stealing {
         // Use work-stealing scheduler for large matrices
         use crate::parallel::parallel_cholesky_work_stealing;
-        return parallel_cholesky_work_stealing(a, workers.unwrap());
+        parallel_cholesky_work_stealing(a, workers.unwrap())
     } else {
         // Configure OpenMP thread count if workers specified
         // Note: This affects BLAS/LAPACK operations that use OpenMP
@@ -154,14 +154,14 @@ where
         // Use work-stealing scheduler for large matrices
         use crate::parallel::parallel_lu_work_stealing;
         let (l, u, piv) = parallel_lu_work_stealing(a, workers.unwrap())?;
-        
+
         // Convert Array1<usize> permutation to Array2<F> permutation matrix
         let n = a.nrows();
         let mut p = Array2::<F>::zeros((n, n));
         for (i, &piv_index) in piv.iter().enumerate() {
             p[[i, piv_index]] = F::one();
         }
-        
+
         return Ok((p, l, u));
     }
 

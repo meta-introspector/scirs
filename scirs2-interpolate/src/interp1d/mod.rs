@@ -110,7 +110,11 @@ impl<F: Float + FromPrimitive + Debug> Interp1d<F> {
         }
 
         if x.len() < 2 {
-            return Err(InterpolateError::insufficient_points(2, x.len(), "interpolation"));
+            return Err(InterpolateError::insufficient_points(
+                2,
+                x.len(),
+                "interpolation",
+            ));
         }
 
         // Check that x is sorted
@@ -124,7 +128,11 @@ impl<F: Float + FromPrimitive + Debug> Interp1d<F> {
 
         // For cubic interpolation, need at least 4 points
         if method == InterpolationMethod::Cubic && x.len() < 4 {
-            return Err(InterpolateError::insufficient_points(4, x.len(), "cubic interpolation"));
+            return Err(InterpolateError::insufficient_points(
+                4,
+                x.len(),
+                "cubic interpolation",
+            ));
         }
 
         Ok(Interp1d {

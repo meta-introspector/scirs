@@ -35,6 +35,7 @@ pub mod memory;
 pub mod performance;
 pub mod spectral;
 pub mod temporal;
+pub mod ultrathink;
 pub mod weighted;
 
 // Re-export stable APIs for 1.0
@@ -138,17 +139,12 @@ pub use algorithms::{
 // Parallel algorithms - stable for 1.0 when parallel feature is enabled
 #[cfg(feature = "parallel")]
 pub use algorithms::{
-    parallel_louvain_communities_result,
-    parallel_label_propagation_result,
-    parallel_modularity,
+    parallel_label_propagation_result, parallel_louvain_communities_result, parallel_modularity,
 };
 
 // Parallel spectral operations - stable for 1.0 when parallel feature is enabled
 #[cfg(feature = "parallel")]
-pub use spectral::{
-    parallel_spectral_clustering,
-    parallel_laplacian,
-};
+pub use spectral::{parallel_laplacian, parallel_spectral_clustering};
 
 // Experimental algorithms - unstable, may change in future versions
 pub use algorithms::{
@@ -286,4 +282,10 @@ pub use layout::{circular_layout, hierarchical_layout, spectral_layout, spring_l
 pub use temporal::{
     temporal_betweenness_centrality, temporal_reachability, TemporalGraph, TemporalPath,
     TimeInstant, TimeInterval,
+};
+
+// Ultrathink mode optimizations - experimental but stable API
+pub use ultrathink::{
+    create_ultrathink_processor, execute_with_ultrathink, AlgorithmMetrics, GPUAccelerationContext,
+    NeuralRLAgent, NeuromorphicProcessor, UltrathinkConfig, UltrathinkProcessor, UltrathinkStats,
 };

@@ -8,10 +8,13 @@
 
 use crate::error::StatsResult;
 use num_traits::{Float, NumCast};
-use std::collections::{HashMap, VecDeque, BTreeMap};
-use std::sync::{Arc, Mutex, RwLock, atomic::{AtomicUsize, Ordering}};
-use std::time::{Duration, Instant};
+use std::collections::{BTreeMap, HashMap, VecDeque};
+use std::sync::{
+    atomic::{AtomicUsize, Ordering},
+    Arc, Mutex, RwLock,
+};
 use std::thread;
+use std::time::{Duration, Instant};
 
 /// Advanced memory optimizer with intelligent resource management
 pub struct EnhancedMemoryOptimizer {
@@ -79,9 +82,9 @@ pub struct MemoryPressureThresholds {
 impl Default for MemoryPressureThresholds {
     fn default() -> Self {
         Self {
-            low: 0.5,      // 50%
-            medium: 0.7,   // 70%
-            high: 0.85,    // 85%
+            low: 0.5,       // 50%
+            medium: 0.7,    // 70%
+            high: 0.85,     // 85%
             critical: 0.95, // 95%
         }
     }
@@ -399,9 +402,9 @@ impl EnhancedMemoryOptimizer {
         let monitor = self.monitor.read().unwrap();
         let current_usage = monitor.current_usage.load(Ordering::Relaxed);
         let peak_usage = monitor.peak_usage.load(Ordering::Relaxed);
-        
+
         let pressure = self.calculate_memory_pressure(current_usage);
-        
+
         MemoryStatistics {
             current_usage,
             peak_usage,
@@ -414,19 +417,20 @@ impl EnhancedMemoryOptimizer {
     }
 
     /// Optimize memory layout for statistical computation
-    pub fn optimize_for_computation<F>(&self, data_size: usize, operation: &str) -> OptimizationRecommendation
+    pub fn optimize_for_computation<F>(
+        &self,
+        data_size: usize,
+        operation: &str,
+    ) -> OptimizationRecommendation
     where
         F: Float + NumCast,
     {
         let current_conditions = self.assess_memory_conditions();
         let algorithm_selector = self.algorithm_selector.read().unwrap();
-        
+
         // Select optimal algorithm based on memory conditions
-        let recommended_algorithm = algorithm_selector.select_algorithm(
-            operation,
-            data_size,
-            &current_conditions
-        );
+        let recommended_algorithm =
+            algorithm_selector.select_algorithm(operation, data_size, &current_conditions);
 
         // Determine optimal memory layout
         let memory_layout = self.determine_optimal_layout(data_size, &current_conditions);
@@ -487,15 +491,13 @@ impl EnhancedMemoryOptimizer {
         let monitor = Arc::clone(&self.monitor);
         let interval = self.config.monitoring_interval;
 
-        thread::spawn(move || {
-            loop {
-                thread::sleep(interval);
-                
-                let mut monitor = monitor.write().unwrap();
-                monitor.update_memory_metrics();
-                monitor.analyze_trends();
-                monitor.update_performance_metrics();
-            }
+        thread::spawn(move || loop {
+            thread::sleep(interval);
+
+            let mut monitor = monitor.write().unwrap();
+            monitor.update_memory_metrics();
+            monitor.analyze_trends();
+            monitor.update_performance_metrics();
         });
 
         Ok(())
@@ -553,7 +555,11 @@ impl EnhancedMemoryOptimizer {
         }
     }
 
-    fn determine_optimal_layout(&self, data_size: usize, conditions: &MemoryConditions) -> MemoryLayout {
+    fn determine_optimal_layout(
+        &self,
+        data_size: usize,
+        conditions: &MemoryConditions,
+    ) -> MemoryLayout {
         match conditions.pressure {
             MemoryPressure::Low => MemoryLayout::Contiguous,
             MemoryPressure::Medium => MemoryLayout::Chunked(self.optimal_chunk_size(data_size)),
@@ -563,9 +569,11 @@ impl EnhancedMemoryOptimizer {
     }
 
     fn recommend_cache_strategy(&self, data_size: usize, operation: &str) -> CacheStrategy {
-        if data_size < 1024 * 1024 { // 1MB
+        if data_size < 1024 * 1024 {
+            // 1MB
             CacheStrategy::Aggressive
-        } else if data_size < 100 * 1024 * 1024 { // 100MB
+        } else if data_size < 100 * 1024 * 1024 {
+            // 100MB
             CacheStrategy::Selective
         } else {
             CacheStrategy::Minimal
@@ -582,7 +590,11 @@ impl EnhancedMemoryOptimizer {
         }
     }
 
-    fn estimate_memory_requirements(&self, data_size: usize, operation: &str) -> MemoryRequirements {
+    fn estimate_memory_requirements(
+        &self,
+        data_size: usize,
+        operation: &str,
+    ) -> MemoryRequirements {
         let base_memory = data_size * std::mem::size_of::<f64>();
         let overhead_multiplier = match operation {
             "mean" => 1.1,
@@ -600,7 +612,11 @@ impl EnhancedMemoryOptimizer {
     }
 
     fn get_current_memory_usage(&self) -> usize {
-        self.monitor.read().unwrap().current_usage.load(Ordering::Relaxed)
+        self.monitor
+            .read()
+            .unwrap()
+            .current_usage
+            .load(Ordering::Relaxed)
     }
 
     fn cleanup_cache(&self) -> StatsResult<usize> {
@@ -785,7 +801,12 @@ impl MemoryAwareSelector {
         }
     }
 
-    fn select_algorithm(&self, operation: &str, data_size: usize, conditions: &MemoryConditions) -> String {
+    fn select_algorithm(
+        &self,
+        operation: &str,
+        data_size: usize,
+        conditions: &MemoryConditions,
+    ) -> String {
         // Select optimal algorithm based on memory conditions
         match conditions.pressure {
             MemoryPressure::Low => format!("{}_full", operation),
@@ -869,6 +890,8 @@ pub fn create_enhanced_memory_optimizer() -> EnhancedMemoryOptimizer {
 }
 
 /// Create an enhanced memory optimizer with custom configuration
-pub fn create_configured_memory_optimizer(config: MemoryOptimizationConfig) -> EnhancedMemoryOptimizer {
+pub fn create_configured_memory_optimizer(
+    config: MemoryOptimizationConfig,
+) -> EnhancedMemoryOptimizer {
     EnhancedMemoryOptimizer::new(config)
 }

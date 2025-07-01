@@ -1677,7 +1677,7 @@ fn test_variable_star_simulation(rng: &mut impl Rng) -> SignalResult<f64> {
     let magnitudes: Vec<f64> = times
         .iter()
         .map(|&t| {
-            15.0 + 0.5 * (2.0 * PI * freq * t).sin() + 
+            15.0 + 0.5 * (2.0 * PI * freq * t).sin() +
             0.1 * (2.0 * PI * 2.0 * freq * t).sin() + // Harmonic
             0.05 * rng.gen::<f64>() // Noise
         })

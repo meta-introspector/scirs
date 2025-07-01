@@ -763,17 +763,16 @@ where
 {
     let zero = T::zero();
     let one = T::one();
-    
+
     if p <= zero || p >= one {
         return Err(SpecialError::ValueError(format!(
             "logit requires p in (0, 1), got {:?}",
             p
         )));
     }
-    
+
     Ok((p / (one - p)).ln())
 }
-
 
 /// Array version of expit function
 ///
@@ -819,7 +818,6 @@ where
 {
     x.mapv(|val| logit(val).unwrap_or(T::nan()))
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -902,7 +900,7 @@ mod tests {
         assert_relative_eq!(expit(0.0), 0.5, epsilon = 1e-10);
         assert!(expit(10.0) > 0.99);
         assert!(expit(-10.0) < 0.01);
-        
+
         // Test numerical stability
         assert!(!expit(1000.0).is_infinite());
         assert!(!expit(-1000.0).is_nan());
@@ -913,7 +911,7 @@ mod tests {
         assert_relative_eq!(logit(0.5).unwrap(), 0.0, epsilon = 1e-10);
         assert!(logit(0.9).unwrap() > 0.0);
         assert!(logit(0.1).unwrap() < 0.0);
-        
+
         // Test edge cases
         assert!(logit(0.0).is_err());
         assert!(logit(1.0).is_err());
@@ -931,18 +929,17 @@ mod tests {
         }
     }
 
-
     #[test]
     fn test_array_functions() {
         use ndarray::array;
-        
+
         // Test expit_array
         let input = array![0.0, 1.0, -1.0];
         let result = expit_array(&input.view());
         assert_relative_eq!(result[0], 0.5, epsilon = 1e-10);
         assert!(result[1] > 0.7);
         assert!(result[2] < 0.3);
-        
+
         // Test logit_array
         let prob_input = array![0.1, 0.5, 0.9];
         let logit_result = logit_array(&prob_input.view());

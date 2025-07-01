@@ -1247,7 +1247,8 @@ pub fn simd_non_maximum_suppression_ultra(
         // SIMD threshold filtering
         let threshold_vec = vec![threshold; width];
         let threshold_arr = ndarray::arr1(&threshold_vec);
-        let above_threshold_mask: Vec<bool> = current_row.iter()
+        let above_threshold_mask: Vec<bool> = current_row
+            .iter()
             .zip(threshold_arr.iter())
             .map(|(&val, &thresh)| val > thresh)
             .collect();

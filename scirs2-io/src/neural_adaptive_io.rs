@@ -90,7 +90,12 @@ impl NeuralIoNetwork {
     }
 
     /// Update network weights based on performance feedback
-    pub fn update_weights(&mut self, _input: &Array1<f32>, target: &Array1<f32>, prediction: &Array1<f32>) -> Result<()> {
+    pub fn update_weights(
+        &mut self,
+        _input: &Array1<f32>,
+        target: &Array1<f32>,
+        prediction: &Array1<f32>,
+    ) -> Result<()> {
         let error = target - prediction;
         let learning_scaled = self.learning_rate * 0.1; // Conservative learning rate
 
@@ -191,9 +196,15 @@ impl OptimizationDecisions {
     }
 
     /// Convert to concrete parameters
-    pub fn to_concrete_params(&self, _base_thread_count: usize, base_buffer_size: usize) -> ConcreteOptimizationParams {
+    pub fn to_concrete_params(
+        &self,
+        _base_thread_count: usize,
+        base_buffer_size: usize,
+    ) -> ConcreteOptimizationParams {
         ConcreteOptimizationParams {
-            thread_count: ((self.thread_count_factor * 16.0).ceil() as usize).max(1).min(32),
+            thread_count: ((self.thread_count_factor * 16.0).ceil() as usize)
+                .max(1)
+                .min(32),
             buffer_size: ((self.buffer_size_factor * base_buffer_size as f32) as usize).max(4096),
             compression_level: (self.compression_level * 9.0) as u32,
             use_cache: self.cache_priority > 0.5,
@@ -253,7 +264,8 @@ impl PerformanceFeedback {
 /// Neural adaptive I/O controller
 pub struct NeuralAdaptiveIoController {
     network: Arc<RwLock<NeuralIoNetwork>>,
-    performance_history: Arc<RwLock<VecDeque<(SystemMetrics, OptimizationDecisions, PerformanceFeedback)>>>,
+    performance_history:
+        Arc<RwLock<VecDeque<(SystemMetrics, OptimizationDecisions, PerformanceFeedback)>>>,
     baseline_performance: Arc<RwLock<Option<f32>>>,
     adaptation_interval: Duration,
     last_adaptation: Arc<RwLock<Instant>>,
@@ -263,7 +275,7 @@ impl NeuralAdaptiveIoController {
     /// Create a new neural adaptive I/O controller
     pub fn new() -> Self {
         let network = Arc::new(RwLock::new(NeuralIoNetwork::new(8, 16, 5)));
-        
+
         Self {
             network,
             performance_history: Arc::new(RwLock::new(VecDeque::with_capacity(1000))),
@@ -274,7 +286,10 @@ impl NeuralAdaptiveIoController {
     }
 
     /// Get optimization decisions based on current system metrics
-    pub fn get_optimization_decisions(&self, metrics: &SystemMetrics) -> Result<OptimizationDecisions> {
+    pub fn get_optimization_decisions(
+        &self,
+        metrics: &SystemMetrics,
+    ) -> Result<OptimizationDecisions> {
         let network = self.network.read().unwrap();
         let input = metrics.to_input_vector();
         let output = network.forward(&input)?;
@@ -282,7 +297,12 @@ impl NeuralAdaptiveIoController {
     }
 
     /// Record performance feedback and adapt the network
-    pub fn record_performance(&self, metrics: SystemMetrics, decisions: OptimizationDecisions, feedback: PerformanceFeedback) -> Result<()> {
+    pub fn record_performance(
+        &self,
+        metrics: SystemMetrics,
+        decisions: OptimizationDecisions,
+        feedback: PerformanceFeedback,
+    ) -> Result<()> {
         // Update performance history
         {
             let mut history = self.performance_history.write().unwrap();
@@ -322,18 +342,18 @@ impl NeuralAdaptiveIoController {
     fn adapt_network(&self) -> Result<()> {
         let history = self.performance_history.read().unwrap();
         let baseline = self.baseline_performance.read().unwrap();
-        
+
         if let Some(baseline_throughput) = *baseline {
             let mut network = self.network.write().unwrap();
-            
+
             // Use the last 10 entries for training
             let recent_entries: Vec<_> = history.iter().rev().take(10).collect();
-            
+
             for (metrics, _decisions, feedback) in recent_entries {
                 let input = metrics.to_input_vector();
                 let current_output = network.forward(&input).unwrap_or_else(|_| Array1::zeros(5));
                 let target = feedback.to_target_vector(baseline_throughput);
-                
+
                 network.update_weights(&input, &target, &current_output)?;
             }
         }
@@ -345,7 +365,7 @@ impl NeuralAdaptiveIoController {
     pub fn get_adaptation_stats(&self) -> AdaptationStats {
         let history = self.performance_history.read().unwrap();
         let baseline = self.baseline_performance.read().unwrap();
-        
+
         let recent_performance: Vec<f32> = history
             .iter()
             .rev()
@@ -414,14 +434,14 @@ impl UltraThinkIoProcessor {
     /// Process data with neural-adaptive optimization
     pub fn process_data_adaptive(&mut self, data: &[u8]) -> Result<Vec<u8>> {
         let start_time = Instant::now();
-        
+
         // Get current system metrics
         let metrics = self.get_system_metrics();
-        
+
         // Get optimization decisions from neural network
         let decisions = self.controller.get_optimization_decisions(&metrics)?;
         let concrete_params = decisions.to_concrete_params(4, 64 * 1024);
-        
+
         // Update current parameters
         {
             let mut params = self.current_params.write().unwrap();
@@ -430,28 +450,34 @@ impl UltraThinkIoProcessor {
 
         // Process data with optimized parameters
         let result = self.process_with_params(data, &concrete_params)?;
-        
+
         // Record performance feedback
         let processing_time = start_time.elapsed();
-        let throughput = (data.len() as f32) / (processing_time.as_secs_f32() * 1024.0 * 1024.0);
-        
+        let throughput =
+            (data.len() as f32) / (processing_time.as_secs_f64() as f32 * 1024.0 * 1024.0);
+
         let feedback = PerformanceFeedback {
             throughput_mbps: throughput,
             latency_ms: processing_time.as_millis() as f32,
             cpu_efficiency: 0.8, // Simplified - would measure actual CPU efficiency
             memory_efficiency: 0.7, // Simplified - would measure actual memory efficiency
-            error_rate: 0.0, // No errors in this example
+            error_rate: 0.0,     // No errors in this example
         };
 
-        self.controller.record_performance(metrics, decisions, feedback)?;
-        
+        self.controller
+            .record_performance(metrics, decisions, feedback)?;
+
         Ok(result)
     }
 
     /// Process data with specific parameters
-    fn process_with_params(&self, data: &[u8], params: &ConcreteOptimizationParams) -> Result<Vec<u8>> {
+    fn process_with_params(
+        &self,
+        data: &[u8],
+        params: &ConcreteOptimizationParams,
+    ) -> Result<Vec<u8>> {
         let mut result = Vec::with_capacity(data.len());
-        
+
         if params.use_simd && data.len() >= 32 {
             // SIMD-accelerated processing
             let simd_result = self.process_simd_optimized(data)?;
@@ -474,10 +500,10 @@ impl UltraThinkIoProcessor {
         // Convert to f32 for SIMD operations
         let float_data: Vec<f32> = data.iter().map(|&x| x as f32).collect();
         let array = Array1::from(float_data);
-        
+
         // Apply SIMD operations
         let processed = f32::simd_add(&array.view(), &Array1::ones(array.len()).view());
-        
+
         // Convert back to u8
         let result: Vec<u8> = processed.iter().map(|&x| (x as u8).min(255)).collect();
         Ok(result)
@@ -543,7 +569,7 @@ mod tests {
         let output = Array1::from(vec![0.8, 0.6, 0.4, 0.9, 0.7]);
         let decisions = OptimizationDecisions::from_output_vector(&output);
         let params = decisions.to_concrete_params(4, 64 * 1024);
-        
+
         assert!(params.thread_count >= 1 && params.thread_count <= 32);
         assert!(params.buffer_size >= 4096);
         assert!(params.compression_level <= 9);

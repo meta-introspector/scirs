@@ -837,7 +837,11 @@ impl AdaptiveAlgorithmSelector {
     }
 
     /// Compute cache key for data and context
-    fn compute_cache_key(&self, data: &ArrayView2<'_, f64>, context: &SelectionContext) -> CacheKey {
+    fn compute_cache_key(
+        &self,
+        data: &ArrayView2<'_, f64>,
+        context: &SelectionContext,
+    ) -> CacheKey {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
 

@@ -815,6 +815,10 @@ impl SimdPatternMatcher {
         pattern: &str,
         max_distance: usize,
     ) -> Vec<(usize, usize)> {
+        if pattern.is_empty() || text.is_empty() {
+            return Vec::new();
+        }
+
         if !SimdStringOps::is_available() || pattern.len() > 64 {
             return Self::fuzzy_search_scalar(text, pattern, max_distance);
         }
@@ -823,19 +827,34 @@ impl SimdPatternMatcher {
         let pattern_len = pattern.len();
 
         // Sliding window approach with SIMD-accelerated distance calculation
-        for start in 0..=text.len().saturating_sub(pattern_len) {
-            let end = (start + pattern_len + max_distance).min(text.len());
+        // Check all possible starting positions
+        for start in 0..text.len() {
+            let mut best_distance = usize::MAX;
+            let mut best_match_found = false;
 
-            for len in pattern_len.saturating_sub(max_distance)..=(end - start) {
+            // Try different window lengths around the pattern length
+            let min_len = pattern_len.saturating_sub(max_distance).max(1);
+            let max_len = pattern_len + max_distance;
+
+            for len in min_len..=max_len {
                 if start + len <= text.len() {
                     let window = &text[start..start + len];
                     let distance = Self::edit_distance_simd(window, pattern);
 
-                    if distance <= max_distance {
-                        matches.push((start, distance));
-                        break; // Take the first match for this position
+                    if distance <= max_distance && distance < best_distance {
+                        best_distance = distance;
+                        best_match_found = true;
+
+                        // If we find an exact match, we can break early
+                        if distance == 0 {
+                            break;
+                        }
                     }
                 }
+            }
+
+            if best_match_found {
+                matches.push((start, best_distance));
             }
         }
 
@@ -891,22 +910,41 @@ impl SimdPatternMatcher {
 
     /// Scalar fallback for fuzzy search
     fn fuzzy_search_scalar(text: &str, pattern: &str, max_distance: usize) -> Vec<(usize, usize)> {
+        if pattern.is_empty() || text.is_empty() {
+            return Vec::new();
+        }
+
         let mut matches = Vec::new();
         let pattern_len = pattern.len();
 
-        for start in 0..=text.len().saturating_sub(pattern_len) {
-            let end = (start + pattern_len + max_distance).min(text.len());
+        // Check all possible starting positions
+        for start in 0..text.len() {
+            let mut best_distance = usize::MAX;
+            let mut best_match_found = false;
 
-            for len in pattern_len.saturating_sub(max_distance)..=(end - start) {
+            // Try different window lengths around the pattern length
+            let min_len = pattern_len.saturating_sub(max_distance).max(1);
+            let max_len = pattern_len + max_distance;
+
+            for len in min_len..=max_len {
                 if start + len <= text.len() {
                     let window = &text[start..start + len];
                     let distance = SimdEditDistance::levenshtein(window, pattern);
 
-                    if distance <= max_distance {
-                        matches.push((start, distance));
-                        break;
+                    if distance <= max_distance && distance < best_distance {
+                        best_distance = distance;
+                        best_match_found = true;
+
+                        // If we find an exact match, we can break early
+                        if distance == 0 {
+                            break;
+                        }
                     }
                 }
+            }
+
+            if best_match_found {
+                matches.push((start, best_distance));
             }
         }
 
@@ -951,9 +989,7 @@ impl SimdPatternMatcher {
         let wildcard_byte = wildcard as u8;
 
         // Vectorizable comparison
-        for (&text_byte, &pattern_byte) in
-            text_bytes.iter().zip(pattern_bytes.iter())
-        {
+        for (&text_byte, &pattern_byte) in text_bytes.iter().zip(pattern_bytes.iter()) {
             if pattern_byte != wildcard_byte && text_byte != pattern_byte {
                 return false;
             }
@@ -1311,9 +1347,7 @@ impl SimdTextNormalizer {
             .collect::<String>();
 
         // Then apply byte-level SIMD processing for other normalizations
-        VectorizedStringOps::transform_bytes_vectorized(&normalized_chars, |byte| {
-            byte
-        })
+        VectorizedStringOps::transform_bytes_vectorized(&normalized_chars, |byte| byte)
     }
 
     /// Scalar fallback for normalization
@@ -1795,6 +1829,47 @@ mod tests {
         // Check that we found some matches with distance <= 1
         assert!(matches.iter().any(|(_, distance)| *distance == 0)); // exact match
         assert!(matches.iter().any(|(_, distance)| *distance == 1)); // fuzzy match
+
+        // Verify the exact match is at position 0
+        let exact_matches: Vec<_> = matches
+            .iter()
+            .filter(|(_, distance)| *distance == 0)
+            .collect();
+        assert!(!exact_matches.is_empty());
+        assert!(exact_matches.iter().any(|(pos, _)| *pos == 0));
+    }
+
+    #[test]
+    fn test_simd_pattern_matcher_fuzzy_search_edge_cases() {
+        // Test exact match only
+        let exact_text = "hello";
+        let exact_matches = SimdPatternMatcher::fuzzy_search_vectorized(exact_text, "hello", 1);
+        assert_eq!(exact_matches.len(), 1);
+        assert_eq!(exact_matches[0], (0, 0)); // Exact match at position 0 with distance 0
+
+        // Test no matches within distance
+        let no_match_text = "goodbye world";
+        let no_matches = SimdPatternMatcher::fuzzy_search_vectorized(no_match_text, "hello", 1);
+        assert!(no_matches.is_empty());
+
+        // Test empty pattern
+        let empty_pattern_matches = SimdPatternMatcher::fuzzy_search_vectorized("hello", "", 1);
+        assert!(empty_pattern_matches.is_empty());
+
+        // Test empty text
+        let empty_text_matches = SimdPatternMatcher::fuzzy_search_vectorized("", "hello", 1);
+        assert!(empty_text_matches.is_empty());
+
+        // Test overlapping matches should be handled correctly
+        let overlap_text = "hellohello";
+        let overlap_matches = SimdPatternMatcher::fuzzy_search_vectorized(overlap_text, "hello", 0);
+        // Should find exact matches at positions 0 and 5
+        assert!(overlap_matches
+            .iter()
+            .any(|(pos, distance)| *pos == 0 && *distance == 0));
+        assert!(overlap_matches
+            .iter()
+            .any(|(pos, distance)| *pos == 5 && *distance == 0));
     }
 
     #[test]

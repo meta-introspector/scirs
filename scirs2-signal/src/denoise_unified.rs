@@ -708,17 +708,17 @@ fn detect_artifacts(original: &Array1<f64>, denoised: &Array1<f64>) -> f64 {
         let orig_change = (original[i + 1] - original[i - 1]).abs();
         if orig_change > 0.1 {
             // Check for oscillations in denoised signal around this point
-            let denoised_oscillation = ((denoised[i - 2] - denoised[i]) +
-                                        (denoised[i + 2] - denoised[i])).abs();
-            let orig_smoothness = ((original[i - 2] - original[i]) +
-                                   (original[i + 2] - original[i])).abs();
+            let denoised_oscillation =
+                ((denoised[i - 2] - denoised[i]) + (denoised[i + 2] - denoised[i])).abs();
+            let orig_smoothness =
+                ((original[i - 2] - original[i]) + (original[i + 2] - original[i])).abs();
 
             if orig_smoothness > 1e-10 && denoised_oscillation > orig_smoothness * 2.0 {
                 ringing_score += 1.0;
             }
         }
     }
-    
+
     if n > 4 {
         ringing_score /= (n - 4) as f64;
         artifact_score += 0.2 * ringing_score.min(1.0);
@@ -765,17 +765,17 @@ pub fn denoise_non_local_means(
     filtering_strength: f64,
 ) -> SignalResult<Array1<f64>> {
     let n = signal.len();
-    
+
     if n == 0 {
         return Err(SignalError::ValueError("Input signal is empty".to_string()));
     }
-    
+
     if patch_size >= n {
         return Err(SignalError::ValueError(
             "Patch size must be smaller than signal length".to_string(),
         ));
     }
-    
+
     if search_window > n {
         return Err(SignalError::ValueError(
             "Search window must not exceed signal length".to_string(),
@@ -801,10 +801,10 @@ pub fn denoise_non_local_means(
         for j in search_start..search_end {
             // Calculate patch distance
             let distance = calculate_patch_distance(signal, i, j, patch_size);
-            
+
             // Calculate weight using Gaussian kernel
             let weight = (-distance / h_sq).exp();
-            
+
             weighted_sum += weight * signal[j];
             weight_sum += weight;
         }
@@ -821,27 +821,22 @@ pub fn denoise_non_local_means(
 }
 
 /// Calculate distance between patches centered at positions i and j
-fn calculate_patch_distance(
-    signal: &Array1<f64>,
-    i: usize,
-    j: usize,
-    patch_size: usize,
-) -> f64 {
+fn calculate_patch_distance(signal: &Array1<f64>, i: usize, j: usize, patch_size: usize) -> f64 {
     let n = signal.len();
     let half_patch = patch_size / 2;
-    
+
     let i_start = if i >= half_patch { i - half_patch } else { 0 };
     let i_end = (i + half_patch + 1).min(n);
     let j_start = if j >= half_patch { j - half_patch } else { 0 };
     let j_end = (j + half_patch + 1).min(n);
-    
+
     let mut distance = 0.0;
     let mut count = 0;
-    
+
     // Compare overlapping parts of patches
     let start_offset = (i_start as i32 - j_start as i32).abs() as usize;
     let min_len = (i_end - i_start).min(j_end - j_start);
-    
+
     for k in start_offset..min_len {
         if i_start + k < n && j_start + k < n {
             let diff = signal[i_start + k] - signal[j_start + k];
@@ -849,7 +844,7 @@ fn calculate_patch_distance(
             count += 1;
         }
     }
-    
+
     if count > 0 {
         distance / count as f64
     } else {

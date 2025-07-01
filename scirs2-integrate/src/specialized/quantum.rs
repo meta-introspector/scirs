@@ -2261,7 +2261,7 @@ pub mod quantum_algorithms {
             let max_iterations = 1000;
             let param_perturbation = 0.1;
 
-            for iteration in 0..max_iterations {
+            for _iteration in 0..max_iterations {
                 // Generate neighboring solution
                 let mut new_params = current_params.clone();
                 for i in 0..new_params.len() {
@@ -6603,7 +6603,7 @@ pub mod gpu_acceleration {
 
             /// Execute Grover's algorithm
             pub fn search(&self) -> Result<(Array1<Complex64>, Vec<usize>)> {
-                let n = 1 << self.n_qubits;
+                let _n = 1 << self.n_qubits;
                 let optimal_iterations = self.calculate_optimal_iterations();
 
                 // Initialize uniform superposition |+⟩^⊗n

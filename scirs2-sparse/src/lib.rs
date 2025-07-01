@@ -288,21 +288,41 @@ pub use simd_ops::{
 // Parallel vector operations for iterative solvers
 pub mod parallel_vector_ops;
 pub use parallel_vector_ops::{
-    parallel_axpy, parallel_dot, parallel_linear_combination, parallel_norm2, parallel_sparse_matvec_csr,
-    parallel_vector_add, parallel_vector_copy, parallel_vector_scale, parallel_vector_sub, 
-    ultrathink_sparse_matvec_csr, ParallelVectorOptions,
+    parallel_axpy, parallel_dot, parallel_linear_combination, parallel_norm2,
+    parallel_sparse_matvec_csr, parallel_vector_add, parallel_vector_copy, parallel_vector_scale,
+    parallel_vector_sub, ultrathink_sparse_matvec_csr, ParallelVectorOptions,
 };
 
 // Quantum-inspired sparse matrix operations (ultrathink mode)
 pub mod quantum_inspired_sparse;
 pub use quantum_inspired_sparse::{
-    QuantumSparseConfig, QuantumSparseProcessor, QuantumProcessorStats, QuantumStrategy,
+    QuantumProcessorStats, QuantumSparseConfig, QuantumSparseProcessor, QuantumStrategy,
 };
 
 // Neural-adaptive sparse matrix operations (ultrathink mode)
 pub mod neural_adaptive_sparse;
 pub use neural_adaptive_sparse::{
     NeuralAdaptiveConfig, NeuralAdaptiveSparseProcessor, NeuralProcessorStats, OptimizationStrategy,
+};
+
+// Quantum-Neural hybrid optimization (ultrathink mode)
+pub mod quantum_neural_hybrid;
+pub use quantum_neural_hybrid::{
+    HybridStrategy, QuantumNeuralConfig, QuantumNeuralHybridProcessor, QuantumNeuralHybridStats,
+};
+
+// Adaptive memory compression for ultra-large sparse matrices (ultrathink mode)
+pub mod adaptive_memory_compression;
+pub use adaptive_memory_compression::{
+    AdaptiveCompressionConfig, AdaptiveMemoryCompressor, CompressedMatrix, CompressionAlgorithm,
+    MemoryStats,
+};
+
+// Real-time performance monitoring and adaptation (ultrathink mode)
+pub mod realtime_performance_monitor;
+pub use realtime_performance_monitor::{
+    Alert, AlertSeverity, Forecast, PerformanceMetrics, PerformanceMonitorConfig,
+    PerformanceSample, ProcessorType, RealTimePerformanceMonitor,
 };
 
 // Compressed sparse graph algorithms

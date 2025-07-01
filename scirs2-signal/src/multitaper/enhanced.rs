@@ -12,7 +12,7 @@
 
 use super::windows::dpss;
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, ArrayView1, Axis};
+use ndarray::{Array1, Array2, ArrayView1};
 use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
@@ -203,7 +203,15 @@ where
                   x_f64.len(), config.nw);
     }
 
-    check_finite(&x_f64, "signal")?;
+    // Validate that all values are finite
+    for (i, &val) in x_f64.iter().enumerate() {
+        if !val.is_finite() {
+            return Err(SignalError::ValueError(format!(
+                "Non-finite value at index {}: {}",
+                i, val
+            )));
+        }
+    }
 
     let n = x_f64.len();
     let nfft = config.nfft.unwrap_or(next_power_of_two(n));
@@ -340,7 +348,7 @@ fn compute_tapered_ffts_simd(
 
     // Get SIMD capabilities for optimal performance
     let caps = PlatformCapabilities::detect();
-    let use_advanced_simd = caps.has_avx2 || caps.has_avx512;
+    let use_advanced_simd = caps.simd_available;
 
     // Enhanced memory management for large datasets
     let memory_efficient = k > 20 || n > 50_000;
@@ -538,7 +546,7 @@ fn try_advanced_simd_tapering(
     let config = SimdConfig::default();
     let taper_vec: Vec<f64> = taper.iter().copied().collect();
 
-    simd_apply_window(signal, &taper_vec, tapered, &config)
+    simd_apply_window(signal, &taper_vec, tapered, &config).map_err(|e| format!("{}", e).into())
 }
 
 /// Try basic SIMD tapering with error recovery
@@ -551,7 +559,10 @@ fn try_basic_simd_tapering(
     let tapered_view = ArrayView1::from_shape(signal.len(), tapered)
         .map_err(|e| SignalError::ComputationError(format!("Shape error: {}", e)))?;
 
-    f64::simd_mul(&signal_view, taper, &tapered_view);
+    let result = f64::simd_mul(&signal_view, taper);
+    for (i, &val) in result.iter().enumerate() {
+        tapered[i] = val;
+    }
     Ok(())
 }
 
@@ -563,22 +574,22 @@ fn try_chunked_simd_tapering(
 ) -> SignalResult<()> {
     let chunk_size = 256; // Optimal chunk size for most SIMD implementations
 
-    for (chunk_idx, (sig_chunk, tap_chunk, out_chunk)) in signal
+    for (chunk_idx, chunk_data) in signal
         .chunks(chunk_size)
         .zip(taper.as_slice().unwrap().chunks(chunk_size))
         .zip(tapered.chunks_mut(chunk_size))
         .enumerate()
     {
+        let ((sig_chunk, tap_chunk), out_chunk) = chunk_data;
         let sig_view = ArrayView1::from(sig_chunk);
         let tap_view = ArrayView1::from(tap_chunk);
-        let out_view = ArrayView1::from_shape(sig_chunk.len(), out_chunk).map_err(|e| {
-            SignalError::ComputationError(format!(
-                "Chunked SIMD shape error at chunk {}: {}",
-                chunk_idx, e
-            ))
-        })?;
 
-        f64::simd_mul(&sig_view, &tap_view, &out_view);
+        let result = f64::simd_mul(&sig_view, &tap_view);
+        for (i, &val) in result.iter().enumerate() {
+            if i < out_chunk.len() {
+                out_chunk[i] = val;
+            }
+        }
     }
 
     Ok(())
@@ -671,7 +682,7 @@ fn enhanced_simd_fft(x: &[f64], nfft: usize) -> SignalResult<Vec<Complex64>> {
     }
 
     // Use rustfft with enhanced error handling and performance optimization
-    use rustfft::{num_complex::Complex, FftPlanner};
+    use rustfft::FftPlanner;
 
     let mut planner = FftPlanner::new();
 
@@ -1431,7 +1442,7 @@ fn estimate_signal_complexity(signal: &[f64]) -> f64 {
     let high_freq_ratio = high_freq_energy / variance.max(1e-12);
 
     // Combine factors for complexity score
-    let complexity = 1.0 + 
+    let complexity = 1.0 +
         (dynamic_range / 10.0).min(2.0) +  // Dynamic range contribution
         (high_freq_ratio * 5.0).min(2.0); // High frequency contribution
 
@@ -1489,7 +1500,15 @@ where
         })
         .collect::<SignalResult<Vec<f64>>>()?;
 
-    check_finite(&x_f64, "signal")?;
+    // Validate that all values are finite
+    for (i, &val) in x_f64.iter().enumerate() {
+        if !val.is_finite() {
+            return Err(SignalError::ValueError(format!(
+                "Non-finite value at index {}: {}",
+                i, val
+            )));
+        }
+    }
 
     let n = x_f64.len();
     let window_size = config.window_size;

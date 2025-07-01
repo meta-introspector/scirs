@@ -229,7 +229,7 @@ pub enum KernelLanguage {
 }
 
 /// Data types for kernel parameters
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DataType {
     /// 8-bit signed integer
     I8,
@@ -508,7 +508,7 @@ pub enum OptimizationStrategy {
 pub trait OptimizationModel: Send + Sync {
     /// Predict optimal strategy for a kernel
     fn predict_strategy(&self, kernel_features: &KernelFeatures) -> OptimizationStrategy;
-    
+
     /// Update model with feedback
     fn update_model(&mut self, kernel_features: &KernelFeatures, result: &OptimizationResult);
 }
@@ -612,13 +612,19 @@ impl JitCompiler {
     /// Create a new JIT compiler
     pub fn new(config: JitConfig) -> Result<Self, JitError> {
         let mut backends = HashMap::new();
-        
+
         // Initialize available backends
         if config.backend == JitBackend::Llvm || config.backend == JitBackend::NativeCode {
-            backends.insert(JitBackend::Llvm, Box::new(LlvmBackend::new()?) as Box<dyn JitBackendImpl>);
+            backends.insert(
+                JitBackend::Llvm,
+                Box::new(LlvmBackend::new()?) as Box<dyn JitBackendImpl>,
+            );
         }
-        
-        backends.insert(JitBackend::Interpreter, Box::new(InterpreterBackend::new()) as Box<dyn JitBackendImpl>);
+
+        backends.insert(
+            JitBackend::Interpreter,
+            Box::new(InterpreterBackend::new()) as Box<dyn JitBackendImpl>,
+        );
 
         let cache = Arc::new(RwLock::new(KernelCache::new(config.max_cache_size)));
         let profiler = Arc::new(Mutex::new(KernelProfiler::new(config.enable_profiling)));
@@ -646,10 +652,11 @@ impl JitCompiler {
         }
 
         // Get backend
-        let backend = self.backends.get(&self.config.backend)
-            .ok_or_else(|| JitError::BackendNotSupported { 
-                backend: format!("{:?}", self.config.backend) 
-            })?;
+        let backend = self.backends.get(&self.config.backend).ok_or_else(|| {
+            JitError::BackendNotSupported {
+                backend: format!("{:?}", self.config.backend),
+            }
+        })?;
 
         // Compile kernel
         let compiled_kernel = backend.compile_kernel(&source, &self.config)?;
@@ -673,16 +680,21 @@ impl JitCompiler {
         // Get compiled kernel from cache
         let kernel = {
             let cache = self.cache.read().unwrap();
-            cache.get(kernel_id).ok_or_else(|| JitError::CacheError(
-                format!("Kernel not found in cache: {}", kernel_id)
-            ))?.clone()
+            cache
+                .get(kernel_id)
+                .ok_or_else(|| {
+                    JitError::CacheError(format!("Kernel not found in cache: {}", kernel_id))
+                })?
+                .clone()
         };
 
         // Get backend
-        let backend = self.backends.get(&kernel.backend)
-            .ok_or_else(|| JitError::BackendNotSupported { 
-                backend: format!("{:?}", kernel.backend) 
-            })?;
+        let backend =
+            self.backends
+                .get(&kernel.backend)
+                .ok_or_else(|| JitError::BackendNotSupported {
+                    backend: format!("{:?}", kernel.backend),
+                })?;
 
         // Execute kernel
         let profile = backend.execute_kernel(&kernel, inputs, outputs)?;
@@ -764,7 +776,8 @@ impl KernelCache {
         if let Some(kernel) = self.kernels.get(kernel_id) {
             // Update access tracking
             *self.access_counts.entry(kernel_id.to_string()).or_insert(0) += 1;
-            self.last_accessed.insert(kernel_id.to_string(), Instant::now());
+            self.last_accessed
+                .insert(kernel_id.to_string(), Instant::now());
             Some(kernel)
         } else {
             None
@@ -789,9 +802,7 @@ impl KernelCache {
 
     /// Evict least recently used kernel
     fn evict_lru(&mut self) {
-        if let Some((lru_id, _)) = self.last_accessed
-            .iter()
-            .min_by_key(|(_, &time)| time) {
+        if let Some((lru_id, _)) = self.last_accessed.iter().min_by_key(|(_, &time)| time) {
             let lru_id = lru_id.clone();
             if let Some(kernel) = self.kernels.remove(&lru_id) {
                 self.current_size -= kernel.binary.len();
@@ -818,7 +829,9 @@ impl KernelCache {
             0.0
         };
 
-        let mut top_kernels: Vec<_> = self.access_counts.iter()
+        let mut top_kernels: Vec<_> = self
+            .access_counts
+            .iter()
             .map(|(id, count)| (id.clone(), *count))
             .collect();
         top_kernels.sort_by(|a, b| b.1.cmp(&a.1));
@@ -850,7 +863,8 @@ impl KernelProfiler {
             return;
         }
 
-        self.profiles.entry(kernel_id.to_string())
+        self.profiles
+            .entry(kernel_id.to_string())
             .or_insert_with(Vec::new)
             .push(profile);
     }
@@ -882,7 +896,11 @@ impl AdaptiveOptimizer {
     }
 
     /// Optimize a kernel
-    pub fn optimize_kernel(&self, _kernel_id: &str, _config: &JitConfig) -> Result<String, JitError> {
+    pub fn optimize_kernel(
+        &self,
+        _kernel_id: &str,
+        _config: &JitConfig,
+    ) -> Result<String, JitError> {
         // Placeholder - would apply learned optimizations
         Err(JitError::OptimizationError("Not implemented".to_string()))
     }
@@ -898,9 +916,7 @@ impl LlvmBackend {
     /// Create new LLVM backend
     pub fn new() -> Result<Self, JitError> {
         // In a real implementation, this would initialize LLVM
-        Ok(Self {
-            context: Some(()),
-        })
+        Ok(Self { context: Some(()) })
     }
 }
 
@@ -912,15 +928,15 @@ impl JitBackendImpl for LlvmBackend {
     ) -> Result<CompiledKernel, JitError> {
         // Placeholder implementation
         let compilation_start = Instant::now();
-        
+
         // In a real implementation, this would:
         // 1. Parse the source code
         // 2. Generate LLVM IR
         // 3. Apply optimizations
         // 4. Generate machine code
-        
+
         let compilation_time = compilation_start.elapsed();
-        
+
         Ok(CompiledKernel {
             id: source.id.clone(),
             binary: vec![0; 1024], // Placeholder binary
@@ -947,10 +963,10 @@ impl JitBackendImpl for LlvmBackend {
     ) -> Result<ExecutionProfile, JitError> {
         // Placeholder implementation
         let start = Instant::now();
-        
+
         // Simulate execution
         std::thread::sleep(Duration::from_micros(100));
-        
+
         Ok(ExecutionProfile {
             timestamp: start,
             execution_time: start.elapsed(),
@@ -968,12 +984,17 @@ impl JitBackendImpl for LlvmBackend {
     fn get_capabilities(&self) -> BackendCapabilities {
         BackendCapabilities {
             supported_types: vec![
-                DataType::I32, DataType::I64, DataType::F32, DataType::F64,
+                DataType::I32,
+                DataType::I64,
+                DataType::F32,
+                DataType::F64,
                 DataType::Vec4(Box::new(DataType::F32)),
             ],
             optimization_levels: vec![
-                OptimizationLevel::None, OptimizationLevel::O1, 
-                OptimizationLevel::O2, OptimizationLevel::O3,
+                OptimizationLevel::None,
+                OptimizationLevel::O1,
+                OptimizationLevel::O2,
+                OptimizationLevel::O3,
             ],
             max_kernel_size: None,
             supports_debugging: true,
@@ -1001,14 +1022,14 @@ impl JitBackendImpl for InterpreterBackend {
     ) -> Result<CompiledKernel, JitError> {
         // For interpreter, "compilation" is just validation
         let compilation_start = Instant::now();
-        
+
         // Basic validation
         if source.source.is_empty() {
             return Err(JitError::InvalidKernelSource("Empty source".to_string()));
         }
-        
+
         let compilation_time = compilation_start.elapsed();
-        
+
         Ok(CompiledKernel {
             id: source.id.clone(),
             binary: source.source.as_bytes().to_vec(),
@@ -1035,10 +1056,10 @@ impl JitBackendImpl for InterpreterBackend {
     ) -> Result<ExecutionProfile, JitError> {
         // Placeholder interpreter execution
         let start = Instant::now();
-        
+
         // Simulate interpretation
         std::thread::sleep(Duration::from_micros(500));
-        
+
         Ok(ExecutionProfile {
             timestamp: start,
             execution_time: start.elapsed(),
@@ -1055,9 +1076,7 @@ impl JitBackendImpl for InterpreterBackend {
 
     fn get_capabilities(&self) -> BackendCapabilities {
         BackendCapabilities {
-            supported_types: vec![
-                DataType::I32, DataType::F32, DataType::F64, DataType::Bool,
-            ],
+            supported_types: vec![DataType::I32, DataType::F32, DataType::F64, DataType::Bool],
             optimization_levels: vec![OptimizationLevel::None],
             max_kernel_size: Some(1024 * 1024), // 1MB limit for interpreter
             supports_debugging: true,
@@ -1077,14 +1096,15 @@ pub mod jit_dsl {
         input_type: DataType,
         output_type: DataType,
     ) -> KernelSource {
-        let source = format!(r#"
+        let source = format!(
+            r#"
 kernel void arithmetic_op(global {input_type}* input, global {output_type}* output, int size) {{
     int idx = get_global_id(0);
     if (idx < size) {{
         output[idx] = {operation}(input[idx]);
     }}
 }}
-"#, 
+"#,
             input_type = format!("{:?}", input_type).to_lowercase(),
             output_type = format!("{:?}", output_type).to_lowercase(),
             operation = operation
@@ -1102,11 +1122,9 @@ kernel void arithmetic_op(global {input_type}* input, global {output_type}* outp
     }
 
     /// Create a reduction kernel
-    pub fn create_reduction_kernel(
-        operation: &str,
-        data_type: DataType,
-    ) -> KernelSource {
-        let source = format!(r#"
+    pub fn create_reduction_kernel(operation: &str, data_type: DataType) -> KernelSource {
+        let source = format!(
+            r#"
 kernel void reduction_op(global {data_type}* input, global {data_type}* output, int size) {{
     local {data_type} shared_data[256];
     int tid = get_local_id(0);
@@ -1204,7 +1222,7 @@ mod tests {
     #[test]
     fn test_kernel_cache() {
         let mut cache = KernelCache::new(1024 * 1024); // 1MB cache
-        
+
         let kernel = CompiledKernel {
             id: "test".to_string(),
             binary: vec![0; 1024],
@@ -1231,7 +1249,7 @@ mod tests {
     fn test_interpreter_backend() {
         let backend = InterpreterBackend::new();
         assert!(backend.is_available());
-        
+
         let capabilities = backend.get_capabilities();
         assert!(!capabilities.supported_types.is_empty());
         assert!(capabilities.supports_debugging);
@@ -1243,9 +1261,9 @@ mod tests {
             backend: JitBackend::Interpreter,
             ..Default::default()
         };
-        
+
         let compiler = JitCompiler::new(config).unwrap();
-        
+
         let source = KernelSource {
             id: "test_kernel".to_string(),
             source: "void test() { /* test kernel */ }".to_string(),

@@ -47,7 +47,11 @@ where
     }
 
     if x.len() < 3 && !bias {
-        return Err(ErrorMessages::insufficient_data("unbiased skewness calculation", 3, x.len()));
+        return Err(ErrorMessages::insufficient_data(
+            "unbiased skewness calculation",
+            3,
+            x.len(),
+        ));
     }
 
     let n = x.len();

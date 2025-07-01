@@ -805,7 +805,7 @@ impl GpuMemoryPool {
     /// Allocate GPU memory from the pool
     pub fn allocate(&mut self, shape: &[usize]) -> Result<GpuArray> {
         let size = shape.iter().product::<usize>() * std::mem::size_of::<f64>();
-        
+
         // Check if we have available block of this size
         if let Some(blocks) = self.available_blocks.get_mut(&size) {
             if let Some(block) = blocks.pop() {
@@ -819,10 +819,10 @@ impl GpuMemoryPool {
         if self.total_allocated + size > self.max_capacity {
             // Try to free some memory
             self.garbage_collect()?;
-            
+
             if self.total_allocated + size > self.max_capacity {
                 return Err(TransformError::ComputationError(
-                    "GPU memory pool capacity exceeded".to_string()
+                    "GPU memory pool capacity exceeded".to_string(),
                 ));
             }
         }
@@ -844,7 +844,7 @@ impl GpuMemoryPool {
     /// Deallocate GPU memory back to the pool
     pub fn deallocate(&mut self, block: GpuArray) -> Result<()> {
         let size = block.size() * std::mem::size_of::<f64>();
-        
+
         // Add to available blocks for reuse
         self.available_blocks
             .entry(size)
@@ -860,7 +860,7 @@ impl GpuMemoryPool {
         for (_, blocks) in self.available_blocks.iter_mut() {
             blocks.clear();
         }
-        
+
         // Force CUDA to free unused memory
         // Note: This would be implemented using actual CUDA memory management calls
         Ok(())
@@ -894,10 +894,10 @@ impl MultiGpuCoordinator {
     /// Create a new multi-GPU coordinator
     pub fn new(max_memory_per_device_gb: f64) -> Result<Self> {
         let device_count = Self::get_device_count()?;
-        
+
         if device_count == 0 {
             return Err(TransformError::ComputationError(
-                "No CUDA-capable devices found".to_string()
+                "No CUDA-capable devices found".to_string(),
             ));
         }
 
@@ -908,13 +908,14 @@ impl MultiGpuCoordinator {
         for device_id in 0..device_count {
             let context = CudaContext::new().map_err(|e| {
                 TransformError::ComputationError(format!(
-                    "Failed to initialize CUDA context for device {}: {}", device_id, e
+                    "Failed to initialize CUDA context for device {}: {}",
+                    device_id, e
                 ))
             })?;
-            
+
             let pool = GpuMemoryPool::new(max_memory_per_device_gb)?;
             let memory_capacity = Self::get_device_memory_capacity(device_id)?;
-            
+
             devices.push(context);
             memory_pools.push(pool);
             device_weights.push(memory_capacity); // Weight by memory capacity
@@ -955,7 +956,7 @@ impl MultiGpuCoordinator {
         // Check if selected device has enough memory
         let required_bytes = (data_size_mb * 1024.0 * 1024.0) as usize;
         let (allocated, _, capacity) = self.memory_pools[best_device].get_memory_stats();
-        
+
         if allocated + required_bytes > capacity {
             return Err(TransformError::ComputationError(format!(
                 "Insufficient GPU memory on device {}. Required: {} MB, Available: {} MB",
@@ -1002,7 +1003,10 @@ impl MultiGpuCoordinator {
 
     /// Get memory statistics for all devices
     pub fn get_all_memory_stats(&self) -> Vec<(usize, usize, usize)> {
-        self.memory_pools.iter().map(|pool| pool.get_memory_stats()).collect()
+        self.memory_pools
+            .iter()
+            .map(|pool| pool.get_memory_stats())
+            .collect()
     }
 }
 
@@ -1026,7 +1030,7 @@ impl AdvancedGpuPCA {
     /// Create a new advanced GPU PCA with optimizations
     pub fn new(n_components: usize, use_multi_gpu: bool) -> Result<Self> {
         let base_pca = GpuPCA::new(n_components)?;
-        
+
         let multi_gpu = if use_multi_gpu {
             Some(MultiGpuCoordinator::new(4.0)?) // 4GB per device
         } else {
@@ -1063,9 +1067,9 @@ impl AdvancedGpuPCA {
     /// Fit PCA with advanced optimizations for large datasets
     pub fn fit_large_dataset(&mut self, x: &ArrayView2<f64>) -> Result<()> {
         let (n_samples, n_features) = x.dim();
-        
+
         // Determine if we need batch processing
-        let estimated_memory_gb = (n_samples * n_features * std::mem::size_of::<f64>()) as f64 
+        let estimated_memory_gb = (n_samples * n_features * std::mem::size_of::<f64>()) as f64
             / (1024.0 * 1024.0 * 1024.0);
 
         if estimated_memory_gb > 2.0 {
@@ -1093,7 +1097,7 @@ impl AdvancedGpuPCA {
         for batch_idx in 0..n_batches {
             let start_idx = batch_idx * self.batch_size;
             let end_idx = ((batch_idx + 1) * self.batch_size).min(n_samples);
-            
+
             if start_idx >= end_idx {
                 break;
             }
@@ -1103,11 +1107,11 @@ impl AdvancedGpuPCA {
 
             // Update running statistics
             self.update_running_statistics(
-                &batch, 
-                &mut running_mean, 
-                &mut running_cov, 
+                &batch,
+                &mut running_mean,
+                &mut running_cov,
                 &mut total_samples,
-                batch_size
+                batch_size,
             )?;
         }
 
@@ -1122,13 +1126,13 @@ impl AdvancedGpuPCA {
 
     /// Fit using multi-GPU processing
     fn fit_with_multi_gpu(
-        &mut self, 
-        x: &ArrayView2<f64>, 
-        multi_gpu: &mut MultiGpuCoordinator
+        &mut self,
+        x: &ArrayView2<f64>,
+        multi_gpu: &mut MultiGpuCoordinator,
     ) -> Result<()> {
         let (n_samples, n_features) = x.dim();
         let n_devices = multi_gpu.device_count();
-        
+
         if n_devices < 2 {
             return self.base_pca.fit(x);
         }
@@ -1150,7 +1154,7 @@ impl AdvancedGpuPCA {
             }
 
             let device_data = x.slice(ndarray::s![start_idx..end_idx, ..]);
-            
+
             // Process on specific GPU device
             let result = self.process_on_device(&device_data, device_id, multi_gpu)?;
             partial_results.push(result);
@@ -1168,46 +1172,46 @@ impl AdvancedGpuPCA {
         multi_gpu: &mut MultiGpuCoordinator,
     ) -> Result<(Array1<f64>, Array2<f64>)> {
         let (n_samples, n_features) = data.dim();
-        
+
         // Allocate memory on specific device
         let gpu_data = multi_gpu.allocate_on_device(device_id, &[n_samples, n_features])?;
-        
+
         // Transfer data to device
         // Note: This would use device-specific CUDA context
-        
+
         // Compute local mean
         let local_mean = data.mean_axis(ndarray::Axis(0)).unwrap();
-        
+
         // Compute local covariance contribution
         let centered_data = data - &local_mean.insert_axis(ndarray::Axis(0));
         let local_cov = centered_data.t().dot(&centered_data) / (n_samples - 1) as f64;
-        
+
         Ok((local_mean, local_cov))
     }
 
     /// Aggregate results from multiple GPU devices
     fn aggregate_multi_gpu_results(
         &mut self,
-        partial_results: Vec<(Array1<f64>, Array2<f64>)>
+        partial_results: Vec<(Array1<f64>, Array2<f64>)>,
     ) -> Result<()> {
         if partial_results.is_empty() {
             return Err(TransformError::ComputationError(
-                "No partial results to aggregate".to_string()
+                "No partial results to aggregate".to_string(),
             ));
         }
 
         let n_features = partial_results[0].0.len();
         let mut global_mean = Array1::zeros(n_features);
         let mut global_cov = Array2::zeros((n_features, n_features));
-        
+
         // Weighted average of means and covariances
         let total_partitions = partial_results.len() as f64;
-        
+
         for (local_mean, local_cov) in partial_results {
             global_mean += &local_mean;
             global_cov += &local_cov;
         }
-        
+
         global_mean /= total_partitions;
         global_cov /= total_partitions;
 
@@ -1225,7 +1229,7 @@ impl AdvancedGpuPCA {
         batch_size: usize,
     ) -> Result<()> {
         let batch_mean = batch.mean_axis(ndarray::Axis(0)).unwrap();
-        
+
         if *total_samples == 0 {
             // First batch
             *running_mean = batch_mean;
@@ -1236,19 +1240,22 @@ impl AdvancedGpuPCA {
             let old_total = *total_samples as f64;
             let new_total = (old_total + batch_size as f64);
             let delta = &batch_mean - running_mean;
-            
-            *running_mean = (running_mean.clone() * old_total + &batch_mean * batch_size as f64) / new_total;
-            
+
+            *running_mean =
+                (running_mean.clone() * old_total + &batch_mean * batch_size as f64) / new_total;
+
             // Update running covariance (Welford's online algorithm extension)
             let centered_batch = batch - &batch_mean.insert_axis(ndarray::Axis(0));
             let batch_cov = centered_batch.t().dot(&centered_batch);
-            
-            let mean_correction = delta.insert_axis(ndarray::Axis(1)).dot(&delta.insert_axis(ndarray::Axis(0))) 
+
+            let mean_correction = delta
+                .insert_axis(ndarray::Axis(1))
+                .dot(&delta.insert_axis(ndarray::Axis(0)))
                 * (old_total * batch_size as f64 / new_total);
-            
+
             *running_cov = running_cov.clone() + batch_cov + mean_correction;
         }
-        
+
         *total_samples += batch_size;
         Ok(())
     }
@@ -1257,42 +1264,41 @@ impl AdvancedGpuPCA {
     fn compute_components_from_covariance(
         &mut self,
         covariance: &Array2<f64>,
-        mean: &Array1<f64>
+        mean: &Array1<f64>,
     ) -> Result<()> {
         // Use the base PCA's CUDA context for eigendecomposition
         let cuda_ctx = self.base_pca.cuda_context.as_ref().unwrap();
-        
+
         // Transfer covariance matrix to GPU
         let gpu_cov = GpuArray::from_ndarray(&covariance.view(), cuda_ctx)?;
-        
+
         // Compute eigendecomposition
         let (gpu_eigenvalues, gpu_eigenvectors) = gpu_cov.eigh()?;
-        
+
         // Sort and select top components
-        let (gpu_eigenvalues_sorted, gpu_eigenvectors_sorted) = gpu_eigenvalues
-            .sort_with_vectors(&gpu_eigenvectors, false)?;
-            
-        let gpu_components = gpu_eigenvectors_sorted
-            .slice((.., ..self.base_pca.n_components))?;
-        let gpu_explained_var = gpu_eigenvalues_sorted
-            .slice(..self.base_pca.n_components)?;
-        
+        let (gpu_eigenvalues_sorted, gpu_eigenvectors_sorted) =
+            gpu_eigenvalues.sort_with_vectors(&gpu_eigenvectors, false)?;
+
+        let gpu_components = gpu_eigenvectors_sorted.slice((.., ..self.base_pca.n_components))?;
+        let gpu_explained_var = gpu_eigenvalues_sorted.slice(..self.base_pca.n_components)?;
+
         // Transfer back to host
         let components_host = gpu_components.to_ndarray()?;
         let explained_var_host = gpu_explained_var.to_ndarray()?;
-        
+
         // Update base PCA with results
         self.base_pca.components = Some(components_host.t().to_owned());
         self.base_pca.explained_variance = Some(explained_var_host);
         self.base_pca.mean = Some(mean.clone());
-        
+
         Ok(())
     }
 
     /// Transform data using optimized GPU processing
     pub fn transform_optimized(&self, x: &ArrayView2<f64>) -> Result<Array2<f64>> {
         let (n_samples, _) = x.dim();
-        let estimated_memory_gb = (n_samples * std::mem::size_of::<f64>()) as f64 / (1024.0 * 1024.0 * 1024.0);
+        let estimated_memory_gb =
+            (n_samples * std::mem::size_of::<f64>()) as f64 / (1024.0 * 1024.0 * 1024.0);
 
         if estimated_memory_gb > 1.0 {
             // Use batch processing for large transforms
@@ -1312,7 +1318,7 @@ impl AdvancedGpuPCA {
         for batch_idx in 0..n_batches {
             let start_idx = batch_idx * self.batch_size;
             let end_idx = ((batch_idx + 1) * self.batch_size).min(n_samples);
-            
+
             if start_idx >= end_idx {
                 break;
             }
@@ -1324,18 +1330,21 @@ impl AdvancedGpuPCA {
 
         // Concatenate results
         if results.is_empty() {
-            return Err(TransformError::ComputationError("No batches processed".to_string()));
+            return Err(TransformError::ComputationError(
+                "No batches processed".to_string(),
+            ));
         }
 
         let n_components = results[0].ncols();
         let total_samples = results.iter().map(|r| r.nrows()).sum();
-        
+
         let mut combined = Array2::zeros((total_samples, n_components));
         let mut current_row = 0;
-        
+
         for result in results {
             let batch_rows = result.nrows();
-            combined.slice_mut(ndarray::s![current_row..current_row + batch_rows, ..])
+            combined
+                .slice_mut(ndarray::s![current_row..current_row + batch_rows, ..])
                 .assign(&result);
             current_row += batch_rows;
         }

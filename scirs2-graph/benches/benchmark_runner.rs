@@ -44,6 +44,7 @@ impl Default for BenchmarkConfig {
                 "large_graph_stress".to_string(),
                 "advanced_algorithms".to_string(),
                 "performance_optimizations".to_string(),
+                "ultrathink_benchmarks".to_string(),
             ],
             output_dir: "benchmark_results".to_string(),
             generate_html: true,

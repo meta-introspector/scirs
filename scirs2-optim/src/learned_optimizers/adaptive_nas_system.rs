@@ -5240,8 +5240,8 @@ impl Default for ResourceConstraints {
         Self {
             max_memory: Some(16 * 1024 * 1024 * 1024), // 16 GB in bytes
             max_training_time: Some(Duration::from_secs(24 * 3600)), // 24 hours
-            max_flops: Some(1_000_000_000_000), // 1 trillion FLOPS
-            energy_budget: Some(10.0), // 10 kWh
+            max_flops: Some(1_000_000_000_000),        // 1 trillion FLOPS
+            energy_budget: Some(10.0),                 // 10 kWh
         }
     }
 }

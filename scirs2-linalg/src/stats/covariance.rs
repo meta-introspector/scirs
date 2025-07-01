@@ -138,7 +138,15 @@ pub fn mahalanobis_distance<F>(
     cov: &ArrayView2<F>,
 ) -> LinalgResult<F>
 where
-    F: Float + Zero + num_traits::One + num_traits::NumAssign + std::iter::Sum + Send + Sync + ndarray::ScalarOperand + 'static,
+    F: Float
+        + Zero
+        + num_traits::One
+        + num_traits::NumAssign
+        + std::iter::Sum
+        + Send
+        + Sync
+        + ndarray::ScalarOperand
+        + 'static,
 {
     if x.len() != mean.len() || x.len() != cov.nrows() || x.len() != cov.ncols() {
         return Err(LinalgError::ShapeError(format!(

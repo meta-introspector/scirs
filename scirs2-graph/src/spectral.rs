@@ -983,10 +983,12 @@ where
     let laplacian_matrix = parallel_laplacian(graph, laplacian_type)?;
 
     // Compute the eigenvectors using parallel eigenvalue computation
-    let (_eigenvalues, _eigenvectors) = parallel_compute_smallest_eigenvalues(&laplacian_matrix, n_clusters)
-        .map_err(|e| GraphError::LinAlgError {
-            operation: "parallel_spectral_clustering_eigenvalues".to_string(),
-            details: e,
+    let (_eigenvalues, _eigenvectors) =
+        parallel_compute_smallest_eigenvalues(&laplacian_matrix, n_clusters).map_err(|e| {
+            GraphError::LinAlgError {
+                operation: "parallel_spectral_clustering_eigenvalues".to_string(),
+                details: e,
+            }
         })?;
 
     // For now, return random assignments (placeholder for full k-means clustering implementation)
@@ -1016,9 +1018,10 @@ where
     // Get adjacency matrix and convert to f64 in parallel
     let adj_mat = graph.adjacency_matrix();
     let mut adj_f64 = Array2::<f64>::zeros((n, n));
-    
+
     // Parallel conversion of adjacency matrix
-    adj_f64.axis_iter_mut(ndarray::Axis(0))
+    adj_f64
+        .axis_iter_mut(ndarray::Axis(0))
         .into_par_iter()
         .enumerate()
         .for_each(|(i, mut row)| {
@@ -1036,13 +1039,14 @@ where
             let mut laplacian = Array2::<f64>::zeros((n, n));
 
             // Parallel computation of Laplacian matrix
-            laplacian.axis_iter_mut(ndarray::Axis(0))
+            laplacian
+                .axis_iter_mut(ndarray::Axis(0))
                 .into_par_iter()
                 .enumerate()
                 .for_each(|(i, mut row)| {
                     // Set diagonal to degree
                     row[i] = degrees[i] as f64;
-                    
+
                     // Subtract adjacency values
                     for j in 0..n {
                         if i != j {
@@ -1058,7 +1062,8 @@ where
             let mut normalized = Array2::<f64>::zeros((n, n));
 
             // Compute D^(-1/2) in parallel
-            let d_inv_sqrt: Vec<f64> = degrees.par_iter()
+            let d_inv_sqrt: Vec<f64> = degrees
+                .par_iter()
                 .map(|&degree| {
                     let deg_f64 = degree as f64;
                     if deg_f64 > 0.0 {
@@ -1070,7 +1075,8 @@ where
                 .collect();
 
             // Parallel computation of normalized Laplacian
-            normalized.axis_iter_mut(ndarray::Axis(0))
+            normalized
+                .axis_iter_mut(ndarray::Axis(0))
                 .into_par_iter()
                 .enumerate()
                 .for_each(|(i, mut row)| {
@@ -1090,7 +1096,8 @@ where
             let mut random_walk = Array2::<f64>::zeros((n, n));
 
             // Parallel computation of random walk Laplacian
-            random_walk.axis_iter_mut(ndarray::Axis(0))
+            random_walk
+                .axis_iter_mut(ndarray::Axis(0))
                 .into_par_iter()
                 .enumerate()
                 .for_each(|(i, mut row)| {
@@ -1206,7 +1213,7 @@ fn parallel_deflated_lanczos_iteration(
     // Simplified iteration for this implementation
     // In a full implementation, this would use parallel Lanczos tridiagonalization
     let eigenvalue = 0.1; // Placeholder
-    
+
     Ok((eigenvalue, v))
 }
 
@@ -1235,7 +1242,8 @@ fn parallel_axpy(alpha: f64, x: &ArrayView1<f64>, y: &mut ArrayViewMut1<f64>) {
 #[cfg(feature = "parallel")]
 fn parallel_random_clustering(n: usize, k: usize) -> Vec<usize> {
     // Generate cluster assignments in parallel
-    (0..n).into_par_iter()
+    (0..n)
+        .into_par_iter()
         .map(|_i| {
             let mut rng = rand::rng();
             rng.random_range(0..k)

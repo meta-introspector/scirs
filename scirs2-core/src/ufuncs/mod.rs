@@ -4,9 +4,9 @@
 //! similar to `NumPy`'s ufuncs, allowing for vectorized element-wise operations with
 //! automatic broadcasting.
 
+use crate::error::{CoreError, CoreResult, ErrorLocation};
 use ndarray::{Array, ArrayView, Ix1, Ix2};
 use std::ops;
-use crate::error::{CoreError, CoreResult, ErrorLocation};
 
 /// Common mathematical operations for numerical arrays (1D)
 pub mod math {
@@ -652,10 +652,12 @@ pub mod reduction {
 
                         Ok(result)
                     }
-                    _ => return Err(CoreError::ValueError {
-                        message: format!("Invalid axis {} for 2D array: must be 0 or 1", ax),
-                        location: ErrorLocation::here(),
-                    }),
+                    _ => {
+                        return Err(CoreError::ValueError {
+                            message: format!("Invalid axis {} for 2D array: must be 0 or 1", ax),
+                            location: ErrorLocation::here(),
+                        })
+                    }
                 }
             }
             None => {

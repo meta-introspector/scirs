@@ -14,8 +14,8 @@
 //! - Energy-efficient processing inspired by biological neurons
 
 use crate::error::Result;
-use crate::FrameMetadata;
 use crate::streaming::{Frame, ProcessingStage};
+use crate::FrameMetadata;
 use ndarray::{Array1, Array2, ArrayView2};
 use rand::prelude::*;
 use rand::rng;

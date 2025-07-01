@@ -66,6 +66,7 @@ cranelift-frontend = { workspace = true, optional = true }  # JIT compiler front
 
 # Async runtime for async error handling
 tokio = { workspace = true, optional = true }  # Async runtime for async error handling
+async-trait = { workspace = true, optional = true }  # For object-safe async traits
 
 # GPU backend dependencies
 # Note: metal and objc2-metal-performance-shaders are macOS-specific, moved to target-specific section
@@ -116,7 +117,7 @@ cache = ["cached"]  # Caching and memoization functionality
 validation = ["regex"]  # Validation utilities
 cross_platform = ["libc", "sysinfo"]  # Cross-platform validation and compatibility
 logging = ["log"]  # Structured logging and diagnostics
-async = ["tokio"]  # Async error handling and recovery mechanisms
+async = ["tokio", "async-trait"]  # Async error handling and recovery mechanisms
 gpu = []  # GPU acceleration abstractions
 cuda = ["gpu", "dep:cudarc"]  # CUDA-specific GPU acceleration
 opencl = ["gpu", "dep:opencl3"]  # OpenCL-specific GPU acceleration

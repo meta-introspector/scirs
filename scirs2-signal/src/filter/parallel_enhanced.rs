@@ -73,7 +73,7 @@ where
     T: Float + NumCast + Debug + Send + Sync + 'static,
 {
     check_positive(x.len(), "signal length")?;
-    
+
     if a.is_empty() || a[0] == 0.0 {
         return Err(SignalError::ValueError(
             "First denominator coefficient cannot be zero".to_string(),
@@ -81,11 +81,13 @@ where
     }
 
     let signal_len = x.len();
-    
+
     // Memory usage estimation and adaptive configuration
     let estimated_memory_mb = estimate_memory_usage(signal_len, b.len(), a.len());
-    let use_memory_optimized = config.memory_optimized || 
-        config.memory_limit_mb.map_or(false, |limit| estimated_memory_mb > limit);
+    let use_memory_optimized = config.memory_optimized
+        || config
+            .memory_limit_mb
+            .map_or(false, |limit| estimated_memory_mb > limit);
 
     if use_memory_optimized && signal_len > 100_000 {
         enhanced_filtfilt_memory_optimized(b, a, x, config)
@@ -105,7 +107,8 @@ where
     T: Float + NumCast + Debug + Send + Sync + 'static,
 {
     // Convert input to f64 efficiently
-    let x_f64: Vec<f64> = x.iter()
+    let x_f64: Vec<f64> = x
+        .iter()
         .map(|&val| NumCast::from(val).unwrap_or(0.0))
         .collect();
 
@@ -115,22 +118,24 @@ where
 
     // Forward filtering with adaptive chunking
     let forward_result = adaptive_parallel_filter(&x_padded, b, a, config)?;
-    
+
     // Backward filtering
     let mut backward_input = forward_result;
     backward_input.reverse();
-    
+
     let mut backward_result = adaptive_parallel_filter(&backward_input, b, a, config)?;
     backward_result.reverse();
 
     // Remove padding and return result
     let start = padlen;
     let end = padlen + x.len();
-    
+
     if end <= backward_result.len() {
         Ok(backward_result[start..end].to_vec())
     } else {
-        Err(SignalError::ValueError("Invalid padding calculation".to_string()))
+        Err(SignalError::ValueError(
+            "Invalid padding calculation".to_string(),
+        ))
     }
 }
 
@@ -146,44 +151,46 @@ where
 {
     let signal_len = x.len();
     let optimal_chunk_size = calculate_memory_optimal_chunk_size(
-        signal_len, 
-        b.len(), 
-        a.len(), 
-        config.memory_limit_mb.unwrap_or(1024)
+        signal_len,
+        b.len(),
+        a.len(),
+        config.memory_limit_mb.unwrap_or(1024),
     );
 
     let mut result = Vec::with_capacity(signal_len);
     let padlen = calculate_optimal_padlen(b.len(), a.len());
-    
+
     // Process signal in memory-efficient chunks
     for chunk_start in (0..signal_len).step_by(optimal_chunk_size) {
         let chunk_end = (chunk_start + optimal_chunk_size).min(signal_len);
         let chunk_with_overlap_start = chunk_start.saturating_sub(padlen);
         let chunk_with_overlap_end = (chunk_end + padlen).min(signal_len);
-        
+
         // Extract chunk with padding
         let chunk_x: Vec<f64> = x[chunk_with_overlap_start..chunk_with_overlap_end]
             .iter()
             .map(|&val| NumCast::from(val).unwrap_or(0.0))
             .collect();
-        
+
         // Apply enhanced filtfilt to chunk
         let chunk_config = ParallelFilterConfig {
             memory_optimized: false, // Already memory-optimized at this level
             ..config.clone()
         };
-        
+
         let chunk_result = enhanced_filtfilt_standard(b, a, &chunk_x, &chunk_config)?;
-        
+
         // Extract the valid portion (without overlap)
         let valid_start = if chunk_start == 0 { 0 } else { padlen };
-        let valid_end = chunk_result.len().min(chunk_end - chunk_start + valid_start);
-        
+        let valid_end = chunk_result
+            .len()
+            .min(chunk_end - chunk_start + valid_start);
+
         if valid_start < valid_end {
             result.extend_from_slice(&chunk_result[valid_start..valid_end]);
         }
     }
-    
+
     Ok(result)
 }
 
@@ -195,8 +202,12 @@ fn adaptive_parallel_filter(
     config: &ParallelFilterConfig,
 ) -> SignalResult<Vec<f64>> {
     let signal_len = x.len();
-    let num_threads = config.num_threads.unwrap_or_else(|| thread::available_parallelism().map(|n| n.get()).unwrap_or(1));
-    
+    let num_threads = config.num_threads.unwrap_or_else(|| {
+        thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(1)
+    });
+
     // Calculate adaptive chunk size
     let chunk_size = if let Some(size) = config.chunk_size {
         size
@@ -212,7 +223,7 @@ fn adaptive_parallel_filter(
     // Parallel processing with overlap handling
     let overlap = (b.len() + a.len()).max(10);
     let chunks = create_overlapped_chunks(x, chunk_size, overlap);
-    
+
     // Process chunks in parallel
     let processed_chunks: Result<Vec<_>, _> = chunks
         .into_par_iter()
@@ -223,7 +234,7 @@ fn adaptive_parallel_filter(
         .collect();
 
     let processed_chunks = processed_chunks?;
-    
+
     // Merge chunks with overlap resolution
     merge_overlapped_chunks(processed_chunks, signal_len, overlap)
 }
@@ -238,20 +249,20 @@ fn apply_iir_filter_simd(
     let n = x.len();
     let nb = b.len();
     let na = a.len();
-    
+
     let mut y = vec![0.0; n];
-    
+
     // Normalize coefficients
     let a0 = a[0];
     let b_norm: Vec<f64> = b.iter().map(|&bi| bi / a0).collect();
     let a_norm: Vec<f64> = a[1..].iter().map(|&ai| ai / a0).collect();
-    
+
     if use_simd && PlatformCapabilities::detect().supports_simd() {
         apply_iir_filter_simd_optimized(&mut y, x, &b_norm, &a_norm)?;
     } else {
         apply_iir_filter_scalar(&mut y, x, &b_norm, &a_norm);
     }
-    
+
     Ok(y)
 }
 
@@ -265,7 +276,7 @@ fn apply_iir_filter_simd_optimized(
     let n = x.len();
     let nb = b.len();
     let na = a.len();
-    
+
     for i in 0..n {
         // Feedforward (FIR) part
         let mut sum = 0.0;
@@ -274,48 +285,43 @@ fn apply_iir_filter_simd_optimized(
                 sum += b[j] * x[i - j];
             }
         }
-        
+
         // Feedback (IIR) part - cannot easily vectorize due to dependencies
         for j in 0..na {
             if i > j {
                 sum -= a[j] * y[i - j - 1];
             }
         }
-        
+
         y[i] = sum;
     }
-    
+
     Ok(())
 }
 
 /// Scalar IIR filter implementation
-fn apply_iir_filter_scalar(
-    y: &mut [f64],
-    x: &[f64],
-    b: &[f64],
-    a: &[f64],
-) {
+fn apply_iir_filter_scalar(y: &mut [f64], x: &[f64], b: &[f64], a: &[f64]) {
     let n = x.len();
     let nb = b.len();
     let na = a.len();
-    
+
     for i in 0..n {
         let mut sum = 0.0;
-        
+
         // Feedforward part
         for j in 0..nb {
             if i >= j {
                 sum += b[j] * x[i - j];
             }
         }
-        
+
         // Feedback part
         for j in 0..na {
             if i > j {
                 sum -= a[j] * y[i - j - 1];
             }
         }
-        
+
         y[i] = sum;
     }
 }
@@ -328,19 +334,19 @@ fn create_overlapped_chunks(
 ) -> Vec<(Vec<f64>, usize, usize)> {
     let mut chunks = Vec::new();
     let data_len = data.len();
-    
+
     let mut start = 0;
     while start < data_len {
         let end = (start + chunk_size).min(data_len);
         let chunk_start = start.saturating_sub(overlap);
         let chunk_end = (end + overlap).min(data_len);
-        
+
         let chunk_data = data[chunk_start..chunk_end].to_vec();
         chunks.push((chunk_data, start, end));
-        
+
         start = end;
     }
-    
+
     chunks
 }
 
@@ -351,20 +357,20 @@ fn merge_overlapped_chunks(
     overlap: usize,
 ) -> SignalResult<Vec<f64>> {
     let mut result = vec![0.0; total_len];
-    
+
     for (chunk_data, chunk_start) in chunks {
         let valid_start = if chunk_start == 0 { 0 } else { overlap };
         let valid_end = chunk_data.len();
         let result_start = chunk_start;
         let result_end = (result_start + valid_end - valid_start).min(total_len);
-        
+
         if result_start < result_end && valid_start < valid_end {
             let copy_len = result_end - result_start;
             result[result_start..result_end]
                 .copy_from_slice(&chunk_data[valid_start..valid_start + copy_len]);
         }
     }
-    
+
     Ok(result)
 }
 
@@ -376,26 +382,28 @@ fn calculate_optimal_padlen(nb: usize, na: usize) -> usize {
 /// Apply edge padding to minimize boundary effects
 fn apply_edge_padding(x: &[f64], padlen: usize) -> SignalResult<Vec<f64>> {
     if x.len() < 2 {
-        return Err(SignalError::ValueError("Signal too short for padding".to_string()));
+        return Err(SignalError::ValueError(
+            "Signal too short for padding".to_string(),
+        ));
     }
-    
+
     let mut padded = Vec::with_capacity(x.len() + 2 * padlen);
-    
+
     // Reflection padding at the start
     for i in 0..padlen {
         let idx = (padlen - 1 - i).min(x.len() - 1);
         padded.push(2.0 * x[0] - x[idx]);
     }
-    
+
     // Original signal
     padded.extend_from_slice(x);
-    
+
     // Reflection padding at the end
     for i in 0..padlen {
         let idx = (x.len() - 1 - i.min(x.len() - 1)).max(0);
         padded.push(2.0 * x[x.len() - 1] - x[idx]);
     }
-    
+
     Ok(padded)
 }
 
@@ -417,7 +425,7 @@ fn calculate_adaptive_chunk_size(
 ) -> usize {
     let filter_complexity = nb + na;
     let base_chunk_size = signal_len / num_threads;
-    
+
     // Adjust based on filter complexity
     let adjusted_size = if filter_complexity > 50 {
         base_chunk_size / 2
@@ -426,7 +434,7 @@ fn calculate_adaptive_chunk_size(
     } else {
         base_chunk_size
     };
-    
+
     adjusted_size.max(1000).min(50000) // Reasonable bounds
 }
 
@@ -440,7 +448,7 @@ fn calculate_memory_optimal_chunk_size(
     let filter_memory_factor = (nb + na) * 8; // bytes per sample for filter state
     let available_bytes = memory_limit_mb * 1024 * 1024;
     let max_chunk_samples = available_bytes / (64 + filter_memory_factor); // 64 bytes per sample overhead
-    
+
     max_chunk_samples.min(signal_len).max(1000) // Minimum chunk size for efficiency
 }
 
@@ -454,11 +462,13 @@ mod tests {
     fn test_enhanced_parallel_filtfilt_basic() {
         let b = vec![0.1, 0.2, 0.1];
         let a = vec![1.0, -0.5, 0.3];
-        let x = (0..1000).map(|i| (2.0 * PI * i as f64 / 100.0).sin()).collect::<Vec<_>>();
-        
+        let x = (0..1000)
+            .map(|i| (2.0 * PI * i as f64 / 100.0).sin())
+            .collect::<Vec<_>>();
+
         let config = ParallelFilterConfig::default();
         let result = enhanced_parallel_filtfilt(&b, &a, &x, &config).unwrap();
-        
+
         assert_eq!(result.len(), x.len());
         assert!(result.iter().all(|&val| val.is_finite()));
     }
@@ -467,14 +477,16 @@ mod tests {
     fn test_memory_optimized_processing() {
         let b = vec![0.1, 0.2, 0.1];
         let a = vec![1.0, -0.5, 0.3];
-        let x = (0..200_000).map(|i| (2.0 * PI * i as f64 / 1000.0).sin()).collect::<Vec<_>>();
-        
+        let x = (0..200_000)
+            .map(|i| (2.0 * PI * i as f64 / 1000.0).sin())
+            .collect::<Vec<_>>();
+
         let config = ParallelFilterConfig {
             memory_optimized: true,
             memory_limit_mb: Some(10), // Force memory optimization
             ..Default::default()
         };
-        
+
         let result = enhanced_parallel_filtfilt(&b, &a, &x, &config).unwrap();
         assert_eq!(result.len(), x.len());
     }
@@ -485,7 +497,7 @@ mod tests {
         let num_threads = 4;
         let nb = 5;
         let na = 5;
-        
+
         let chunk_size = calculate_adaptive_chunk_size(signal_len, num_threads, nb, na);
         assert!(chunk_size >= 1000);
         assert!(chunk_size <= 50000);

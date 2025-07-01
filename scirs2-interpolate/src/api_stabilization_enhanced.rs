@@ -12,8 +12,7 @@
 //! - **Deprecation tracking**: Manage deprecated features
 //! - **Semantic versioning compliance**: Ensure API follows semver
 
-use crate::error::{InterpolateError, InterpolateResult};
-use std::collections::{HashMap, HashSet};
+use crate::error::InterpolateResult;
 use std::fmt;
 
 /// Enhanced API stabilization analyzer for 0.1.0 stable release
@@ -924,7 +923,7 @@ impl ApiStabilizationAnalyzer {
 
     /// Assess naming consistency
     fn assess_naming_consistency(&self, name: &str, item_type: &str) -> f32 {
-        let mut score = 1.0;
+        let mut score: f32 = 1.0;
 
         match item_type {
             "function" => {
@@ -971,7 +970,7 @@ impl ApiStabilizationAnalyzer {
             _ => {}
         }
 
-        score.max(0.0)
+        score.max(0.0f32)
     }
 
     /// Detect potential breaking changes

@@ -144,8 +144,20 @@ pub mod stability;
 pub mod versioning;
 
 // Advanced optimization and AI features
-pub mod quantum_optimization;
 pub mod neural_architecture_search;
+pub mod quantum_optimization;
+
+// Ultrathink Mode Ecosystem Integration
+pub mod ultrathink_ecosystem_integration;
+
+// Ultrathink JIT Compilation Framework
+pub mod ultrathink_jit_compilation;
+
+// Ultrathink Distributed Computing Framework
+pub mod ultrathink_distributed_computing;
+
+// Ultrathink Cloud Storage Framework
+pub mod ultrathink_cloud_storage;
 
 // Benchmarking module
 #[cfg(feature = "benchmarking")]
@@ -170,9 +182,11 @@ pub use crate::error::*;
 pub use crate::gpu::*;
 pub use crate::io::*;
 #[cfg(feature = "jit")]
+pub use crate::jit::DataType as JitDataType;
+#[cfg(feature = "jit")]
 pub use crate::jit::{
-    JitBackend, JitCompiler, JitConfig, JitError, KernelSource, CompiledKernel, 
-    OptimizationLevel, ExecutionProfile, TargetArchitecture, DataType, KernelLanguage,
+    CompiledKernel, ExecutionProfile, JitBackend, JitCompiler, JitConfig, JitError, KernelLanguage,
+    KernelSource, OptimizationLevel, TargetArchitecture,
 };
 #[cfg(feature = "logging")]
 pub use crate::logging::*;
@@ -254,10 +268,12 @@ pub use crate::metrics::{
     HealthStatus, Histogram, MetricPoint, MetricType, MetricValue, Timer,
 };
 #[cfg(feature = "ml_pipeline")]
+pub use crate::ml_pipeline::DataType as MLDataType;
+#[cfg(feature = "ml_pipeline")]
 pub use crate::ml_pipeline::{
-    DataBatch, DataSample, DataType, FeatureConstraint, FeatureSchema, FeatureTransformer,
-    FeatureValue, MLPipeline, MLPipelineError, ModelPredictor, ModelType, PipelineConfig,
-    PipelineMetrics, PipelineNode, TransformType,
+    DataBatch, DataSample, FeatureConstraint, FeatureSchema, FeatureTransformer, FeatureValue,
+    MLPipeline, MLPipelineError, ModelPredictor, ModelType, PipelineConfig, PipelineMetrics,
+    PipelineNode, TransformType,
 };
 pub use crate::numeric::*;
 #[cfg(feature = "parallel")]
@@ -295,17 +311,20 @@ pub use crate::validation::{
 };
 
 #[cfg(feature = "data_validation")]
+pub use crate::validation::data::DataType as ValidationDataType;
+#[cfg(feature = "data_validation")]
 pub use crate::validation::data::{
-    Constraint, DataType, FieldDefinition, ValidationConfig, ValidationError, ValidationResult,
+    Constraint, FieldDefinition, ValidationConfig, ValidationError, ValidationResult,
     ValidationRule, ValidationSchema, Validator,
 };
 
 // Production-level feature re-exports
 pub use crate::observability::{audit, tracing};
 pub use crate::stability::{
-    StabilityLevel, ApiContract, PerformanceContract, NumericalContract, ConcurrencyContract,
-    MemoryContract, StabilityGuaranteeManager, has_long_term_stability, validate_stability_requirements,
-    global_stability_manager, UsageContext, BreakingChange, BreakingChangeType,
+    global_stability_manager, has_long_term_stability, validate_stability_requirements,
+    ApiContract, BreakingChange, BreakingChangeType, ConcurrencyContract, MemoryContract,
+    NumericalContract, PerformanceContract, StabilityGuaranteeManager, StabilityLevel,
+    UsageContext,
 };
 pub use crate::versioning::{
     compatibility, deprecation, migration, negotiation, semantic, ApiVersion, CompatibilityLevel,
@@ -313,14 +332,29 @@ pub use crate::versioning::{
 };
 
 // Advanced optimization and AI feature re-exports
-pub use crate::quantum_optimization::{
-    QuantumOptimizer, QuantumStrategy, QuantumState, OptimizationResult,
-    QuantumParameters,
-};
 pub use crate::neural_architecture_search::{
-    NeuralArchitectureSearch, NASStrategy, SearchSpace, Architecture, ArchitecturePerformance,
-    OptimizationObjectives, HardwareConstraints, LayerType, ActivationType, OptimizerType,
-    ConnectionType, SearchResults,
+    ActivationType, Architecture, ArchitecturePerformance, ConnectionType, HardwareConstraints,
+    LayerType, NASStrategy, NeuralArchitectureSearch, OptimizationObjectives, OptimizerType,
+    SearchResults, SearchSpace,
+};
+pub use crate::quantum_optimization::{
+    OptimizationResult, QuantumOptimizer, QuantumParameters, QuantumState, QuantumStrategy,
+};
+
+// Ultrathink JIT Compilation re-exports
+pub use crate::ultrathink_jit_compilation::{
+    AdaptiveCodeGenerator, CompilationStatistics, CompiledKernel, JitAnalytics, JitCompilerConfig,
+    JitProfiler, KernelCache, KernelMetadata, KernelPerformance, LlvmCompilationEngine,
+    OptimizationResults, PerformanceImprovement, RuntimeOptimizer, UltrathinkJitCompiler,
+};
+
+// Ultrathink Cloud Storage re-exports
+pub use crate::ultrathink_cloud_storage::{
+    AdaptiveStreamingEngine, CloudPerformanceAnalytics, CloudProviderConfig, CloudProviderId,
+    CloudProviderType, CloudSecurityManager, CloudStorageMonitoring, CloudStorageProvider,
+    DataOptimizationEngine, DownloadRequest, DownloadResponse, IntelligentCacheSystem,
+    ParallelTransferManager, StreamRequest, UltrathinkCloudConfig,
+    UltrathinkCloudStorageCoordinator, UploadRequest, UploadResponse,
 };
 
 // Benchmarking re-exports

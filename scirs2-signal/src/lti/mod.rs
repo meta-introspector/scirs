@@ -100,7 +100,7 @@
 //! println!("Controllable: {}", robust_analysis.enhanced_controllability.basic_analysis.is_controllable);
 //! println!("Observable: {}", robust_analysis.enhanced_observability.basic_analysis.is_observable);
 //! println!("Condition Number: {:.2e}", robust_analysis.enhanced_controllability.conditioning.condition_number_2);
-//! 
+//!
 //! // Check for critical issues
 //! if !robust_analysis.robustness_issues.is_empty() {
 //!     println!("Critical Issues:");
@@ -136,7 +136,7 @@ pub use analysis::{
 
 // Re-export robust analysis functions and types
 pub use robust_analysis::{
-    robust_control_observability_analysis, AdditiveRobustness, ConfidenceIntervals, 
+    robust_control_observability_analysis, AdditiveRobustness, ConfidenceIntervals,
     ControlEffortAnalysis, EnhancedControllabilityAnalysis, EnhancedObservabilityAnalysis,
     EstimationAccuracyAnalysis, FrequencyDomainAnalysis, MinimumEnergyAnalysis,
     MinimumVarianceAnalysis, MonteCarloRobustnessResults, MultiplcativeRobustness,

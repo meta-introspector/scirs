@@ -18,7 +18,7 @@ use rand_chacha::ChaCha20Rng;
 use std::collections::{HashMap, VecDeque};
 
 // Additional imports for advanced federated learning
-use rayon::prelude::*;
+use scirs2_core::parallel_ops::*;
 use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
 

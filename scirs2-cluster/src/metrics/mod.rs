@@ -1792,7 +1792,7 @@ pub mod ensemble {
 
             // Sample with replacement
             let bootstrap_indices: Vec<usize> = (0..n_samples)
-                .map(|_| indices[rng.gen_range(0..n_samples)])
+                .map(|_| indices[rng.random_range(0..n_samples)])
                 .collect();
 
             // Extract bootstrap sample
@@ -1951,7 +1951,7 @@ pub mod advanced_stability {
     where
         F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
     {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let n_samples = data.shape()[0];
         let subsample_size = (n_samples as f64 * subsample_ratio) as usize;
 
@@ -2094,7 +2094,7 @@ pub mod advanced_stability {
     where
         F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
     {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut noise_stabilities = Vec::new();
 
         // Reference clustering on original data
@@ -2124,7 +2124,7 @@ pub mod advanced_stability {
                 // Add noise to data
                 let mut noisy_data = data.to_owned();
                 for element in noisy_data.iter_mut() {
-                    let noise = rng.gen_range(-current_noise..current_noise);
+                    let noise = rng.random_range(-current_noise..current_noise);
                     *element = *element + F::from(noise).unwrap();
                 }
 
@@ -2179,7 +2179,7 @@ pub mod advanced_stability {
     where
         F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
     {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let n_features = data.shape()[1];
         let mut subspace_stabilities = Vec::new();
 

@@ -4,7 +4,7 @@
 //! with proper error handling, memory management, and multi-backend support.
 
 use crate::error::{SparseError, SparseResult};
-use crate::gpu_ops::{GpuDevice, GpuDataType, GpuBackend};
+use crate::gpu_ops::{GpuBackend, GpuDataType, GpuDevice};
 use num_traits::{Float, NumAssign};
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::fmt::Debug;
@@ -21,172 +21,230 @@ impl GpuSpMV {
     pub fn new() -> SparseResult<Self> {
         // Try to initialize GPU backends in order of preference
         let (device, backend) = Self::initialize_best_backend()?;
-        
+
         Ok(Self { device, backend })
     }
-    
+
     /// Create a new GPU SpMV instance with specified backend
     pub fn with_backend(backend: GpuBackend) -> SparseResult<Self> {
-        let device = GpuDevice::get_default(backend)
-            .map_err(|e| SparseError::ComputationError(format!("Failed to initialize GPU device: {}", e)))?;
-            
+        let device = GpuDevice::get_default(backend).map_err(|e| {
+            SparseError::ComputationError(format!("Failed to initialize GPU device: {}", e))
+        })?;
+
         Ok(Self { device, backend })
     }
-    
+
     /// Initialize the best available GPU backend
     fn initialize_best_backend() -> SparseResult<(GpuDevice, GpuBackend)> {
         // Try backends in order of performance preference
         let backends_to_try = [
             GpuBackend::Cuda,   // Best performance on NVIDIA GPUs
-            GpuBackend::Metal,  // Best performance on Apple Silicon  
+            GpuBackend::Metal,  // Best performance on Apple Silicon
             GpuBackend::OpenCl, // Good cross-platform compatibility
             GpuBackend::Cpu,    // Fallback option
         ];
-        
+
         for &backend in &backends_to_try {
             if let Ok(device) = GpuDevice::get_default(backend) {
                 return Ok((device, backend));
             }
         }
-        
-        Err(SparseError::ComputationError("No GPU backend available".to_string()))
+
+        Err(SparseError::ComputationError(
+            "No GPU backend available".to_string(),
+        ))
     }
-    
+
     /// Execute sparse matrix-vector multiplication: y = A * x
-    pub fn spmv<T>(&self, 
-                   rows: usize,
-                   cols: usize,
-                   indptr: &[usize], 
-                   indices: &[usize],
-                   data: &[T], 
-                   x: &[T]) -> SparseResult<Vec<T>>
+    pub fn spmv<T>(
+        &self,
+        rows: usize,
+        cols: usize,
+        indptr: &[usize],
+        indices: &[usize],
+        data: &[T],
+        x: &[T],
+    ) -> SparseResult<Vec<T>>
     where
-        T: Float + Debug + Copy + Default + GpuDataType + Send + Sync + 'static + NumAssign + SimdUnifiedOps,
+        T: Float
+            + Debug
+            + Copy
+            + Default
+            + GpuDataType
+            + Send
+            + Sync
+            + 'static
+            + NumAssign
+            + SimdUnifiedOps,
     {
         // Validate input dimensions
         self.validate_spmv_inputs(rows, cols, indptr, indices, data, x)?;
-        
+
         // Execute GPU-accelerated SpMV based on backend
         match self.backend {
             GpuBackend::Cuda => self.spmv_cuda(rows, indptr, indices, data, x),
-            GpuBackend::OpenCl => self.spmv_opencl(rows, indptr, indices, data, x), 
+            GpuBackend::OpenCl => self.spmv_opencl(rows, indptr, indices, data, x),
             GpuBackend::Metal => self.spmv_metal(rows, indptr, indices, data, x),
             GpuBackend::Cpu => self.spmv_cpu_optimized(rows, indptr, indices, data, x),
         }
     }
-    
+
     /// Validate SpMV input parameters
-    fn validate_spmv_inputs<T>(&self,
-                              rows: usize,
-                              cols: usize, 
-                              indptr: &[usize],
-                              indices: &[usize],
-                              data: &[T],
-                              x: &[T]) -> SparseResult<()>
+    fn validate_spmv_inputs<T>(
+        &self,
+        rows: usize,
+        cols: usize,
+        indptr: &[usize],
+        indices: &[usize],
+        data: &[T],
+        x: &[T],
+    ) -> SparseResult<()>
     where
         T: Float + Debug,
     {
         if indptr.len() != rows + 1 {
-            return Err(SparseError::InvalidFormat(
-                format!("indptr length {} does not match rows + 1 = {}", indptr.len(), rows + 1)
-            ));
+            return Err(SparseError::InvalidFormat(format!(
+                "indptr length {} does not match rows + 1 = {}",
+                indptr.len(),
+                rows + 1
+            )));
         }
-        
+
         if indices.len() != data.len() {
-            return Err(SparseError::InvalidFormat(
-                format!("indices length {} does not match data length {}", indices.len(), data.len())
-            ));
+            return Err(SparseError::InvalidFormat(format!(
+                "indices length {} does not match data length {}",
+                indices.len(),
+                data.len()
+            )));
         }
-        
+
         if x.len() != cols {
-            return Err(SparseError::InvalidFormat(
-                format!("x length {} does not match cols {}", x.len(), cols)
-            ));
+            return Err(SparseError::InvalidFormat(format!(
+                "x length {} does not match cols {}",
+                x.len(),
+                cols
+            )));
         }
-        
+
         // Validate that all indices are within bounds
         for &idx in indices {
             if idx >= cols {
-                return Err(SparseError::InvalidFormat(
-                    format!("Column index {} exceeds cols {}", idx, cols)
-                ));
+                return Err(SparseError::InvalidFormat(format!(
+                    "Column index {} exceeds cols {}",
+                    idx, cols
+                )));
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// CUDA-accelerated SpMV implementation
-    fn spmv_cuda<T>(&self,
-                    rows: usize,
-                    indptr: &[usize],
-                    indices: &[usize], 
-                    data: &[T],
-                    x: &[T]) -> SparseResult<Vec<T>>
+    fn spmv_cuda<T>(
+        &self,
+        rows: usize,
+        indptr: &[usize],
+        indices: &[usize],
+        data: &[T],
+        x: &[T],
+    ) -> SparseResult<Vec<T>>
     where
-        T: Float + Debug + Copy + Default + GpuDataType + Send + Sync + 'static + NumAssign + SimdUnifiedOps,
+        T: Float
+            + Debug
+            + Copy
+            + Default
+            + GpuDataType
+            + Send
+            + Sync
+            + 'static
+            + NumAssign
+            + SimdUnifiedOps,
     {
         // TODO: Implement proper CUDA acceleration once GPU API is stable
         // For now, fall back to optimized CPU implementation
         self.spmv_cpu_optimized(rows, indptr, indices, data, x)
     }
-    
+
     /// OpenCL-accelerated SpMV implementation
-    fn spmv_opencl<T>(&self,
-                      rows: usize,
-                      indptr: &[usize],
-                      indices: &[usize],
-                      data: &[T],
-                      x: &[T]) -> SparseResult<Vec<T>>
+    fn spmv_opencl<T>(
+        &self,
+        rows: usize,
+        indptr: &[usize],
+        indices: &[usize],
+        data: &[T],
+        x: &[T],
+    ) -> SparseResult<Vec<T>>
     where
-        T: Float + Debug + Copy + Default + GpuDataType + Send + Sync + 'static + NumAssign + SimdUnifiedOps,
+        T: Float
+            + Debug
+            + Copy
+            + Default
+            + GpuDataType
+            + Send
+            + Sync
+            + 'static
+            + NumAssign
+            + SimdUnifiedOps,
     {
         // TODO: Implement proper OpenCL acceleration once GPU API is stable
         // For now, fall back to optimized CPU implementation
         self.spmv_cpu_optimized(rows, indptr, indices, data, x)
     }
-    
+
     /// Metal-accelerated SpMV implementation  
-    fn spmv_metal<T>(&self,
-                     rows: usize,
-                     indptr: &[usize],
-                     indices: &[usize],
-                     data: &[T],
-                     x: &[T]) -> SparseResult<Vec<T>>
+    fn spmv_metal<T>(
+        &self,
+        rows: usize,
+        indptr: &[usize],
+        indices: &[usize],
+        data: &[T],
+        x: &[T],
+    ) -> SparseResult<Vec<T>>
     where
-        T: Float + Debug + Copy + Default + GpuDataType + Send + Sync + 'static + NumAssign + SimdUnifiedOps,
+        T: Float
+            + Debug
+            + Copy
+            + Default
+            + GpuDataType
+            + Send
+            + Sync
+            + 'static
+            + NumAssign
+            + SimdUnifiedOps,
     {
         // TODO: Implement proper Metal acceleration once GPU API is stable
         // For now, fall back to optimized CPU implementation
         self.spmv_cpu_optimized(rows, indptr, indices, data, x)
     }
-    
+
     /// Optimized CPU fallback implementation
-    fn spmv_cpu_optimized<T>(&self,
-                             rows: usize,
-                             indptr: &[usize],
-                             indices: &[usize], 
-                             data: &[T],
-                             x: &[T]) -> SparseResult<Vec<T>>
+    fn spmv_cpu_optimized<T>(
+        &self,
+        rows: usize,
+        indptr: &[usize],
+        indices: &[usize],
+        data: &[T],
+        x: &[T],
+    ) -> SparseResult<Vec<T>>
     where
         T: Float + Debug + Copy + Default + Send + Sync + NumAssign + SimdUnifiedOps,
     {
         let mut y = vec![T::zero(); rows];
-        
+
         // Use parallel processing for CPU implementation
         #[cfg(feature = "parallel")]
         {
             use crate::parallel_vector_ops::parallel_sparse_matvec_csr;
             parallel_sparse_matvec_csr(&mut y, rows, indptr, indices, data, x, None);
         }
-        
+
         #[cfg(not(feature = "parallel"))]
         {
             for row in 0..rows {
                 let mut sum = T::zero();
                 let start = indptr[row];
                 let end = indptr[row + 1];
-                
+
                 for idx in start..end {
                     let col = indices[idx];
                     sum = sum + data[idx] * x[col];
@@ -194,10 +252,10 @@ impl GpuSpMV {
                 y[row] = sum;
             }
         }
-        
+
         Ok(y)
     }
-    
+
     /// Get CUDA kernel source code
     #[allow(dead_code)]
     fn get_cuda_spmv_kernel_source(&self) -> String {
@@ -224,9 +282,10 @@ impl GpuSpMV {
             
             y[row] = sum;
         }
-        "#.to_string()
+        "#
+        .to_string()
     }
-    
+
     /// Get OpenCL kernel source code
     #[allow(dead_code)]
     fn get_opencl_spmv_kernel_source(&self) -> String {
@@ -253,10 +312,11 @@ impl GpuSpMV {
             
             y[row] = sum;
         }
-        "#.to_string()
+        "#
+        .to_string()
     }
-    
-    /// Get Metal kernel source code 
+
+    /// Get Metal kernel source code
     #[allow(dead_code)]
     fn get_metal_spmv_kernel_source(&self) -> String {
         r#"
@@ -285,9 +345,10 @@ impl GpuSpMV {
             
             y[row] = sum;
         }
-        "#.to_string()
+        "#
+        .to_string()
     }
-    
+
     /// Get information about the current GPU backend
     pub fn backend_info(&self) -> (GpuBackend, String) {
         let backend_name = match self.backend {
@@ -296,7 +357,7 @@ impl GpuSpMV {
             GpuBackend::Metal => "Apple Metal",
             GpuBackend::Cpu => "CPU Fallback",
         };
-        
+
         (self.backend, backend_name.to_string())
     }
 }
@@ -316,27 +377,30 @@ impl Default for GpuSpMV {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_gpu_spmv_creation() {
         let gpu_spmv = GpuSpMV::new();
-        assert!(gpu_spmv.is_ok(), "Should be able to create GPU SpMV instance");
+        assert!(
+            gpu_spmv.is_ok(),
+            "Should be able to create GPU SpMV instance"
+        );
     }
-    
-    #[test] 
+
+    #[test]
     fn test_cpu_fallback_spmv() {
         let gpu_spmv = GpuSpMV::with_backend(GpuBackend::Cpu).unwrap();
-        
+
         // Simple test matrix: [[1, 2], [0, 3]]
         let indptr = vec![0, 2, 3];
         let indices = vec![0, 1, 1];
         let data = vec![1.0, 2.0, 3.0];
         let x = vec![1.0, 1.0];
-        
+
         let result = gpu_spmv.spmv(2, 2, &indptr, &indices, &data, &x).unwrap();
         assert_eq!(result, vec![3.0, 3.0]); // [1*1 + 2*1, 3*1] = [3, 3]
     }
-    
+
     #[test]
     fn test_backend_info() {
         let gpu_spmv = GpuSpMV::default();

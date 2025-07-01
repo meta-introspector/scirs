@@ -461,7 +461,7 @@ impl UltraParallelConfig {
         use std::time::Instant;
 
         // Allocate test arrays
-        let mut source = vec![1.0f64; size / 8]; // size in bytes / 8 bytes per f64
+        let source = vec![1.0f64; size / 8]; // size in bytes / 8 bytes per f64
         let mut dest = vec![0.0f64; size / 8];
 
         // Warm up the memory
@@ -701,7 +701,7 @@ where
         T: Fn(&ArrayView2<F>) -> StatsResult<R> + Send + Sync + Clone + 'static,
         R: Send + Sync + 'static,
     {
-        let (rows, cols) = data.dim();
+        let (rows, _cols) = data.dim();
         let num_threads = self.config.hardware.cpu_cores;
         let chunk_size = (rows + num_threads - 1) / num_threads;
 
@@ -737,7 +737,7 @@ where
         R: Send + Sync + 'static,
     {
         // Use SIMD-optimized operations from ultra_simd_comprehensive
-        let simd_processor =
+        let _simd_processor =
             crate::ultra_simd_comprehensive::UltraComprehensiveSimdProcessor::<F>::new();
 
         // For now, delegate to standard processing
@@ -900,9 +900,9 @@ impl ThreadPool {
 impl Worker {
     fn new(
         id: usize,
-        work_queue: Arc<Mutex<VecDeque<Task>>>,
-        shutdown: Arc<AtomicBool>,
-        active_workers: Arc<AtomicUsize>,
+        _work_queue: Arc<Mutex<VecDeque<Task>>>,
+        _shutdown: Arc<AtomicBool>,
+        _active_workers: Arc<AtomicUsize>,
     ) -> Self {
         Self {
             id,
@@ -1072,7 +1072,7 @@ impl ThreadPool {
 }
 
 impl Worker {
-    fn new(id: usize, work_queue: Arc<Mutex<VecDeque<Task>>>, shutdown: Arc<AtomicBool>) -> Self {
+    fn new(id: usize, _work_queue: Arc<Mutex<VecDeque<Task>>>, _shutdown: Arc<AtomicBool>) -> Self {
         Self {
             id,
             thread: None, // Would spawn actual worker thread
