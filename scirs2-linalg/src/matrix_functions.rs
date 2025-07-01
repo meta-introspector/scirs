@@ -42,7 +42,7 @@ use crate::validation::validate_decomposition;
 /// ```
 pub fn expm<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand,
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     use crate::parallel;
 
@@ -279,7 +279,7 @@ where
 /// ```
 pub fn logm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + One,
+    F: Float + NumAssign + Sum + One + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     logm_impl(a)
 }
@@ -287,7 +287,7 @@ where
 /// Internal implementation of matrix logarithm computation.
 fn logm_impl<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + One,
+    F: Float + NumAssign + Sum + One + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     if a.nrows() != a.ncols() {
         return Err(LinalgError::ShapeError(format!(
@@ -634,7 +634,7 @@ where
 /// ```
 pub fn logm_parallel<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + One + Send + Sync,
+    F: Float + NumAssign + Sum + One + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     use crate::parallel;
 
@@ -656,7 +656,7 @@ where
 /// Internal implementation of parallel matrix logarithm computation.
 fn logm_impl_parallel<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + One + Send + Sync,
+    F: Float + NumAssign + Sum + One + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     use scirs2_core::parallel_ops::*;
 
@@ -964,7 +964,7 @@ where
 /// ```
 pub fn sqrtm<F>(a: &ArrayView2<F>, max_iter: usize, tol: F) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + One,
+    F: Float + NumAssign + Sum + One + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     sqrtm_impl(a, max_iter, tol)
 }
@@ -972,7 +972,7 @@ where
 /// Internal implementation of matrix square root computation.
 fn sqrtm_impl<F>(a: &ArrayView2<F>, max_iter: usize, tol: F) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + One,
+    F: Float + NumAssign + Sum + One + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     if a.nrows() != a.ncols() {
         return Err(LinalgError::ShapeError(format!(
@@ -1122,7 +1122,7 @@ pub fn sqrtm_parallel<F>(
     workers: Option<usize>,
 ) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + One + Send + Sync,
+    F: Float + NumAssign + Sum + One + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     use crate::parallel;
 
@@ -1144,7 +1144,7 @@ where
 /// Internal implementation of parallel matrix square root computation using Denman-Beavers iteration.
 fn sqrtm_impl_parallel<F>(a: &ArrayView2<F>, max_iter: usize, tol: F) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + One + Send + Sync,
+    F: Float + NumAssign + Sum + One + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     use scirs2_core::parallel_ops::*;
 
@@ -1306,7 +1306,7 @@ where
 /// ```
 pub fn cosm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + One,
+    F: Float + NumAssign + Sum + One + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     if a.nrows() != a.ncols() {
         return Err(LinalgError::ShapeError(format!(
@@ -1406,7 +1406,7 @@ where
 /// ```
 pub fn sinm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + One,
+    F: Float + NumAssign + Sum + One + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     if a.nrows() != a.ncols() {
         return Err(LinalgError::ShapeError(format!(
@@ -1510,7 +1510,7 @@ where
 /// ```
 pub fn tanm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + One,
+    F: Float + NumAssign + Sum + One + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     if a.nrows() != a.ncols() {
         return Err(LinalgError::ShapeError(format!(
@@ -1571,7 +1571,7 @@ where
 /// ```
 pub fn matrix_power<F>(a: &ArrayView2<F>, p: F) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + One + 'static,
+    F: Float + NumAssign + Sum + One + 'static + Send + Sync + ndarray::ScalarOperand,
 {
     if a.nrows() != a.ncols() {
         return Err(LinalgError::ShapeError(format!(
@@ -1748,7 +1748,7 @@ where
 /// ```
 pub fn softmax<F>(a: &ArrayView2<F>, axis: Option<usize>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand,
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     let (m, n) = a.dim();
     let mut result = Array2::<F>::zeros((m, n));
@@ -1849,7 +1849,7 @@ where
 /// ```
 pub fn sigmoid<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + One + ndarray::ScalarOperand,
+    F: Float + NumAssign + One + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     let mut result = Array2::<F>::zeros(a.raw_dim());
 
@@ -1893,7 +1893,7 @@ where
 /// ```
 pub fn fractional_matrix_power<F>(a: &ArrayView2<F>, p: F, method: &str) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + 'static,
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + 'static + Send + Sync,
 {
     let n = a.nrows();
     if n != a.ncols() {
@@ -1977,7 +1977,7 @@ pub fn spd_matrix_function<F>(
     param: Option<F>,
 ) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + 'static,
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + 'static + Send + Sync,
 {
     // Check if matrix is symmetric
     let n = a.nrows();
@@ -2100,7 +2100,7 @@ fn is_integer<F: Float>(x: F) -> bool {
 /// Compute power of upper triangular matrix using specialized algorithm
 fn upper_triangular_power<F>(t: &Array2<F>, p: F) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand,
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     let n = t.nrows();
     let mut result = Array2::<F>::eye(n);
@@ -2138,7 +2138,7 @@ where
 /// Padé approximation for fractional powers
 fn pade_fractional_power<F>(a: &ArrayView2<F>, p: F) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand,
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     // This is a simplified implementation
     // Full implementation would use more sophisticated Padé approximants
@@ -2152,7 +2152,7 @@ where
 /// Compute inverse of triangular matrix
 fn triangular_inverse<F>(l: &Array2<F>, lower: bool) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + One + ndarray::ScalarOperand,
+    F: Float + NumAssign + One + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     let n = l.nrows();
     let mut l_inv = Array2::<F>::zeros((n, n));
@@ -2485,7 +2485,7 @@ mod tests {
 /// ```
 pub fn coshm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand,
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     if a.nrows() != a.ncols() {
         return Err(LinalgError::ShapeError(format!(
@@ -2540,7 +2540,7 @@ where
 /// ```
 pub fn sinhm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand,
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     if a.nrows() != a.ncols() {
         return Err(LinalgError::ShapeError(format!(
@@ -2595,7 +2595,7 @@ where
 /// ```
 pub fn tanhm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand,
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     if a.nrows() != a.ncols() {
         return Err(LinalgError::ShapeError(format!(
@@ -2642,7 +2642,7 @@ where
 /// ```
 pub fn signm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand,
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     if a.nrows() != a.ncols() {
         return Err(LinalgError::ShapeError(format!(
@@ -2710,7 +2710,7 @@ where
 /// * Matrix inverse cosine of a
 pub fn acosm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand,
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     if a.nrows() != a.ncols() {
         return Err(LinalgError::ShapeError(format!(
@@ -2766,7 +2766,7 @@ where
 /// * Matrix inverse sine of a
 pub fn asinm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand,
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     if a.nrows() != a.ncols() {
         return Err(LinalgError::ShapeError(format!(
@@ -2848,7 +2848,7 @@ where
 /// * Matrix inverse tangent of a
 pub fn atanm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand,
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     if a.nrows() != a.ncols() {
         return Err(LinalgError::ShapeError(format!(
@@ -2929,7 +2929,7 @@ where
 /// ```
 pub fn spectral_radius<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<F>
 where
-    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + 'static,
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + 'static + Send + Sync,
 {
     use crate::parallel;
 
@@ -2987,7 +2987,7 @@ where
 /// ```
 pub fn spectral_condition_number<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<F>
 where
-    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + 'static,
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + 'static + Send + Sync,
 {
     use crate::parallel;
 
@@ -3047,7 +3047,7 @@ pub fn polar_decomposition<F>(
     workers: Option<usize>,
 ) -> LinalgResult<(Array2<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + 'static,
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + 'static + Send + Sync,
 {
     use crate::parallel;
 
@@ -3114,7 +3114,7 @@ pub fn geometric_mean_spd<F>(
     workers: Option<usize>,
 ) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + 'static,
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + 'static + Send + Sync,
 {
     use crate::parallel;
 
@@ -3215,7 +3215,7 @@ pub fn tikhonov_regularization<F>(
     adaptive: bool,
 ) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + 'static,
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + 'static + Send + Sync,
 {
     // Parameter validation
     validate_decomposition(a, "Tikhonov regularization", true)?;
@@ -3271,7 +3271,7 @@ where
 /// ```
 pub fn nuclear_norm<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<F>
 where
-    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + 'static,
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + 'static + Send + Sync,
 {
     use crate::parallel;
 

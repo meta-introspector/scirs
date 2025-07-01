@@ -11,7 +11,8 @@
 //! - Advanced model validation and diagnostics
 
 use crate::error::{SignalError, SignalResult};
-use crate::parametric::{ARMethod, OrderSelection};
+use crate::parametric::{ARMethod, OrderSelection, compute_parameter_change, detect_spectral_peaks, update_robust_weights};
+use crate::parametric_advanced::compute_eigendecomposition;
 use ndarray::{s, Array1, Array2, Axis};
 use num_complex::Complex64;
 use num_traits::{Float, NumCast};

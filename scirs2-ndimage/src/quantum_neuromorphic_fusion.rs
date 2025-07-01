@@ -17,13 +17,13 @@
 
 use ndarray::{Array, Array1, Array2, Array3, Array4, ArrayView2, ArrayViewMut2, Axis, Zip};
 use num_complex::Complex;
-use num_traits::{Float, FromPrimitive, Zero, One};
+use num_traits::{Float, FromPrimitive, One, Zero};
 use std::collections::{HashMap, VecDeque};
 use std::f64::consts::PI;
 
 use crate::error::{NdimageError, NdimageResult};
+use crate::neuromorphic_computing::{Event, NeuromorphicConfig, SpikingNeuron};
 use crate::quantum_inspired::{QuantumConfig, QuantumState};
-use crate::neuromorphic_computing::{NeuromorphicConfig, SpikingNeuron, Event};
 
 /// Configuration for quantum-neuromorphic fusion algorithms
 #[derive(Debug, Clone)]
@@ -111,48 +111,42 @@ where
     T: Float + FromPrimitive + Copy + Send + Sync,
 {
     let (height, width) = image.dim();
-    
+
     // Initialize quantum-neuromorphic network
     let mut quantum_network = initialize_quantum_snn(network_layers, height, width, config)?;
-    
+
     // Convert image to quantum spike patterns
     let quantum_spike_trains = image_to_quantum_spike_trains(&image, time_steps, config)?;
-    
+
     // Process through quantum-neuromorphic network
-    let mut output_states = Array4::zeros((
-        time_steps, 
-        config.quantum_states_per_neuron,
-        height, 
-        width
-    ));
-    
+    let mut output_states =
+        Array4::zeros((time_steps, config.quantum_states_per_neuron, height, width));
+
     for t in 0..time_steps {
         // Extract quantum input states
         let input_states = quantum_spike_trains.slice(s![t, .., .., ..]);
-        
+
         // Quantum-neuromorphic forward propagation
-        let layer_output = quantum_neuromorphic_forward_pass(
-            &mut quantum_network, 
-            &input_states, 
-            config, 
-            t
-        )?;
-        
+        let layer_output =
+            quantum_neuromorphic_forward_pass(&mut quantum_network, &input_states, config, t)?;
+
         // Store quantum output states
-        output_states.slice_mut(s![t, .., .., ..]).assign(&layer_output);
-        
+        output_states
+            .slice_mut(s![t, .., .., ..])
+            .assign(&layer_output);
+
         // Apply quantum-enhanced plasticity
         apply_quantum_stdp_learning(&mut quantum_network, config, t)?;
-        
+
         // Quantum memory consolidation
         if t % config.consolidation_cycles == 0 {
             quantum_memory_consolidation(&mut quantum_network, config)?;
         }
     }
-    
+
     // Convert quantum states back to classical image
     let result = quantum_states_to_image(output_states.view(), config)?;
-    
+
     Ok(result)
 }
 
@@ -168,47 +162,45 @@ where
     T: Float + FromPrimitive + Copy + Send + Sync,
 {
     let (height, width) = image.dim();
-    let mut entanglement_network = Array2::from_elem((height, width), QuantumSpikingNeuron::default());
-    
+    let mut entanglement_network =
+        Array2::from_elem((height, width), QuantumSpikingNeuron::default());
+
     // Initialize quantum entanglement connections
     initialize_bio_quantum_entanglement(&mut entanglement_network, config)?;
-    
+
     // Process through bio-quantum entanglement
     for y in 0..height {
         for x in 0..width {
             let pixel_value = image[(y, x)].to_f64().unwrap_or(0.0);
             let neuron = &mut entanglement_network[(y, x)];
-            
+
             // Convert pixel to quantum state
             let quantum_input = pixel_to_quantum_state(pixel_value, config)?;
-            
+
             // Update quantum amplitudes with biological constraints
             update_bio_quantum_amplitudes(neuron, &quantum_input, config)?;
-            
+
             // Process entangled correlations
-            let entangled_response = process_entangled_correlations(
-                neuron, 
-                &entanglement_network, 
-                (y, x), 
-                config
-            )?;
-            
+            let entangled_response =
+                process_entangled_correlations(neuron, &entanglement_network, (y, x), config)?;
+
             // Apply neuromorphic temporal dynamics
             apply_neuromorphic_quantum_dynamics(neuron, entangled_response, config)?;
         }
     }
-    
+
     // Extract processed image from quantum states
     let mut processed_image = Array2::zeros((height, width));
     for y in 0..height {
         for x in 0..width {
             let neuron = &entanglement_network[(y, x)];
             let classical_output = quantum_state_to_classical_output(neuron, config)?;
-            processed_image[(y, x)] = T::from_f64(classical_output)
-                .ok_or_else(|| NdimageError::ComputationError("Type conversion failed".to_string()))?;
+            processed_image[(y, x)] = T::from_f64(classical_output).ok_or_else(|| {
+                NdimageError::ComputationError("Type conversion failed".to_string())
+            })?;
         }
     }
-    
+
     Ok(processed_image)
 }
 
@@ -225,44 +217,43 @@ where
     T: Float + FromPrimitive + Copy + Send + Sync,
 {
     if image_sequence.is_empty() {
-        return Err(NdimageError::InvalidInput("Empty image sequence".to_string()));
+        return Err(NdimageError::InvalidInput(
+            "Empty image sequence".to_string(),
+        ));
     }
-    
+
     let (height, width) = image_sequence[0].dim();
-    
+
     // Initialize bio-quantum reservoir
     let mut quantum_reservoir = initialize_bio_quantum_reservoir(reservoir_size, config)?;
-    
+
     // Process sequence through bio-quantum dynamics
     let mut quantum_liquid_states = Vec::new();
-    
+
     for (t, image) in image_sequence.iter().enumerate() {
         // Convert image to bio-quantum input currents
         let bio_quantum_currents = image_to_bio_quantum_currents(image, config)?;
-        
+
         // Update reservoir with bio-quantum dynamics
         update_bio_quantum_reservoir_dynamics(
-            &mut quantum_reservoir, 
-            &bio_quantum_currents, 
+            &mut quantum_reservoir,
+            &bio_quantum_currents,
             config,
-            t
+            t,
         )?;
-        
+
         // Capture quantum liquid state with biological constraints
         let quantum_state = capture_bio_quantum_reservoir_state(&quantum_reservoir, config)?;
         quantum_liquid_states.push(quantum_state);
-        
+
         // Apply quantum decoherence with biological timing
         apply_biological_quantum_decoherence(&mut quantum_reservoir, config, t)?;
     }
-    
+
     // Bio-quantum readout with attention mechanisms
-    let processed_image = bio_quantum_readout_with_attention(
-        &quantum_liquid_states, 
-        (height, width), 
-        config
-    )?;
-    
+    let processed_image =
+        bio_quantum_readout_with_attention(&quantum_liquid_states, (height, width), config)?;
+
     Ok(processed_image)
 }
 
@@ -279,54 +270,50 @@ where
     T: Float + FromPrimitive + Copy + Send + Sync,
 {
     let (height, width) = image.dim();
-    
+
     // Initialize quantum-homeostatic network
-    let mut quantum_homeostatic_network = Array2::from_elem(
-        (height, width), 
-        QuantumSpikingNeuron::default()
-    );
-    
+    let mut quantum_homeostatic_network =
+        Array2::from_elem((height, width), QuantumSpikingNeuron::default());
+
     let mut processed_image = Array2::zeros((height, width));
-    
+
     // Adaptive quantum-biological processing
     for epoch in 0..adaptation_epochs {
-        for y in 1..height-1 {
-            for x in 1..width-1 {
+        for y in 1..height - 1 {
+            for x in 1..width - 1 {
                 let neuron = &mut quantum_homeostatic_network[(y, x)];
-                
+
                 // Extract local neighborhood
                 let neighborhood = extract_neighborhood(&image, (y, x), 3)?;
-                
+
                 // Convert to quantum states
                 let quantum_neighborhood = neighborhood_to_quantum_states(&neighborhood, config)?;
-                
+
                 // Apply quantum homeostatic processing
                 let quantum_output = apply_quantum_homeostatic_processing(
-                    neuron, 
-                    &quantum_neighborhood, 
+                    neuron,
+                    &quantum_neighborhood,
                     config,
-                    epoch
+                    epoch,
                 )?;
-                
+
                 // Update classical output with quantum-biological constraints
-                let classical_output = quantum_to_classical_with_homeostasis(
-                    quantum_output, 
-                    neuron, 
-                    config
-                )?;
-                
-                processed_image[(y, x)] = T::from_f64(classical_output)
-                    .ok_or_else(|| NdimageError::ComputationError("Type conversion failed".to_string()))?;
-                
+                let classical_output =
+                    quantum_to_classical_with_homeostasis(quantum_output, neuron, config)?;
+
+                processed_image[(y, x)] = T::from_f64(classical_output).ok_or_else(|| {
+                    NdimageError::ComputationError("Type conversion failed".to_string())
+                })?;
+
                 // Update quantum homeostatic parameters
                 update_quantum_homeostatic_parameters(neuron, classical_output, config, epoch)?;
             }
         }
-        
+
         // Global quantum coherence regulation
         regulate_global_quantum_coherence(&mut quantum_homeostatic_network, config, epoch)?;
     }
-    
+
     Ok(processed_image)
 }
 
@@ -342,45 +329,53 @@ where
     T: Float + FromPrimitive + Copy + Send + Sync,
 {
     if learned_patterns.is_empty() {
-        return Err(NdimageError::InvalidInput("No patterns for consolidation".to_string()));
+        return Err(NdimageError::InvalidInput(
+            "No patterns for consolidation".to_string(),
+        ));
     }
-    
+
     let (height, width) = learned_patterns[0].dim();
-    
+
     // Initialize quantum memory states
     let mut quantum_memory = Array2::zeros((height, width));
-    
+
     // Convert patterns to quantum memory traces
     let mut quantum_traces = Vec::new();
     for pattern in learned_patterns {
         let quantum_trace = pattern_to_quantum_trace(pattern, config)?;
         quantum_traces.push(quantum_trace);
     }
-    
+
     // Sleep-inspired consolidation cycles
     for consolidation_cycle in 0..config.consolidation_cycles {
         // Slow-wave sleep phase: global coherence optimization
         let slow_wave_enhancement = slow_wave_quantum_consolidation(&quantum_traces, config)?;
-        
+
         // REM sleep phase: pattern replay and interference
-        let rem_enhancement = rem_quantum_consolidation(&quantum_traces, config, consolidation_cycle)?;
-        
+        let rem_enhancement =
+            rem_quantum_consolidation(&quantum_traces, config, consolidation_cycle)?;
+
         // Combine consolidation effects
         for y in 0..height {
             for x in 0..width {
                 let slow_wave_contrib = slow_wave_enhancement[(y, x)];
                 let rem_contrib = rem_enhancement[(y, x)];
-                
+
                 // Quantum interference between sleep phases
-                quantum_memory[(y, x)] = slow_wave_contrib + rem_contrib * 
-                    Complex::new(0.0, (consolidation_cycle as f64 * PI / config.consolidation_cycles as f64).cos());
+                quantum_memory[(y, x)] = slow_wave_contrib
+                    + rem_contrib
+                        * Complex::new(
+                            0.0,
+                            (consolidation_cycle as f64 * PI / config.consolidation_cycles as f64)
+                                .cos(),
+                        );
             }
         }
-        
+
         // Apply quantum decoherence with biological constraints
         apply_sleep_quantum_decoherence(&mut quantum_memory, config, consolidation_cycle)?;
     }
-    
+
     Ok(quantum_memory)
 }
 
@@ -397,62 +392,55 @@ where
     T: Float + FromPrimitive + Copy + Send + Sync,
 {
     let (height, width) = image.dim();
-    
+
     // Initialize quantum attention network
     let mut attention_gates = Array2::zeros((height, width));
-    let mut quantum_attention_states = Array3::zeros((
-        attention_queries.len(), 
-        height, 
-        width
-    ));
-    
+    let mut quantum_attention_states = Array3::zeros((attention_queries.len(), height, width));
+
     // Process each attention query
     for (query_idx, query) in attention_queries.iter().enumerate() {
         // Create quantum attention query
         let quantum_query = create_quantum_attention_query(query, config)?;
-        
+
         // Apply quantum attention to image
         for y in 0..height {
             for x in 0..width {
                 let pixel_value = image[(y, x)].to_f64().unwrap_or(0.0);
-                
+
                 // Quantum attention computation
-                let attention_amplitude = compute_quantum_attention(
-                    pixel_value, 
-                    &quantum_query, 
-                    (y, x), 
-                    config
-                )?;
-                
+                let attention_amplitude =
+                    compute_quantum_attention(pixel_value, &quantum_query, (y, x), config)?;
+
                 // Bio-inspired attention gating
                 let bio_attention_gate = apply_bio_attention_gate(
-                    attention_amplitude, 
-                    &attention_gates, 
-                    (y, x), 
-                    config
+                    attention_amplitude,
+                    &attention_gates,
+                    (y, x),
+                    config,
                 )?;
-                
+
                 quantum_attention_states[(query_idx, y, x)] = bio_attention_gate;
                 attention_gates[(y, x)] = bio_attention_gate.max(attention_gates[(y, x)]);
             }
         }
     }
-    
+
     // Combine attention-modulated responses
     let mut attended_image = Array2::zeros((height, width));
     for y in 0..height {
         for x in 0..width {
             let original_pixel = image[(y, x)].to_f64().unwrap_or(0.0);
             let attention_strength = attention_gates[(y, x)];
-            
+
             // Quantum attention modulation
             let modulated_pixel = original_pixel * attention_strength;
-            
-            attended_image[(y, x)] = T::from_f64(modulated_pixel)
-                .ok_or_else(|| NdimageError::ComputationError("Type conversion failed".to_string()))?;
+
+            attended_image[(y, x)] = T::from_f64(modulated_pixel).ok_or_else(|| {
+                NdimageError::ComputationError("Type conversion failed".to_string())
+            })?;
         }
     }
-    
+
     Ok(attended_image)
 }
 
@@ -465,18 +453,18 @@ fn initialize_quantum_snn(
     config: &QuantumNeuromorphicConfig,
 ) -> NdimageResult<Vec<Array2<QuantumSpikingNeuron>>> {
     let mut network = Vec::new();
-    
+
     for &_layer_size in layers {
         let mut layer = Array2::from_elem((height, width), QuantumSpikingNeuron::default());
-        
+
         // Initialize quantum states for each neuron
         for neuron in layer.iter_mut() {
             initialize_quantum_neuron_states(neuron, config)?;
         }
-        
+
         network.push(layer);
     }
-    
+
     Ok(network)
 }
 
@@ -485,17 +473,15 @@ fn initialize_quantum_neuron_states(
     config: &QuantumNeuromorphicConfig,
 ) -> NdimageResult<()> {
     let num_states = config.quantum_states_per_neuron;
-    
+
     // Initialize in equal superposition
     let amplitude = Complex::new((1.0 / num_states as f64).sqrt(), 0.0);
     neuron.quantum_amplitudes = Array1::from_elem(num_states, amplitude);
-    
+
     // Initialize coherence matrix
-    neuron.coherence_matrix = Array2::from_elem(
-        (num_states, num_states), 
-        amplitude * amplitude.conj()
-    );
-    
+    neuron.coherence_matrix =
+        Array2::from_elem((num_states, num_states), amplitude * amplitude.conj());
+
     Ok(())
 }
 
@@ -510,29 +496,27 @@ where
     let (height, width) = image.dim();
     let num_states = config.quantum_states_per_neuron;
     let mut quantum_spike_trains = Array4::zeros((time_steps, num_states, height, width));
-    
+
     // Convert pixel intensities to quantum spike patterns
     for y in 0..height {
         for x in 0..width {
             let intensity = image[(y, x)].to_f64().unwrap_or(0.0);
-            
+
             for t in 0..time_steps {
                 for state in 0..num_states {
                     // Create quantum spike based on intensity and state
                     let phase = 2.0 * PI * state as f64 / num_states as f64;
                     let amplitude = intensity * (t as f64 / time_steps as f64).exp();
-                    
-                    let quantum_spike = Complex::new(
-                        amplitude * phase.cos(),
-                        amplitude * phase.sin()
-                    );
-                    
+
+                    let quantum_spike =
+                        Complex::new(amplitude * phase.cos(), amplitude * phase.sin());
+
                     quantum_spike_trains[(t, state, y, x)] = quantum_spike;
                 }
             }
         }
     }
-    
+
     Ok(quantum_spike_trains)
 }
 
@@ -544,42 +528,47 @@ fn quantum_neuromorphic_forward_pass(
 ) -> NdimageResult<Array3<Complex<f64>>> {
     let (num_states, height, width) = input_states.dim();
     let mut output_states = Array3::zeros((num_states, height, width));
-    
+
     if !network.is_empty() {
         let layer = &mut network[0];
-        
+
         for y in 0..height {
             for x in 0..width {
                 let neuron = &mut layer[(y, x)];
-                
+
                 // Update quantum amplitudes with input
                 for state in 0..num_states {
                     let input_amplitude = input_states[(state, y, x)];
-                    
+
                     // Quantum-neuromorphic dynamics
                     let decay = Complex::new(
                         (-1.0 / config.neuromorphic.tau_membrane).exp(),
-                        (-1.0 / config.coherence_time).exp()
+                        (-1.0 / config.coherence_time).exp(),
                     );
-                    
-                    neuron.quantum_amplitudes[state] = 
-                        neuron.quantum_amplitudes[state] * decay + 
-                        input_amplitude * Complex::new(config.quantum_bio_coupling, 0.0);
-                    
+
+                    neuron.quantum_amplitudes[state] = neuron.quantum_amplitudes[state] * decay
+                        + input_amplitude * Complex::new(config.quantum_bio_coupling, 0.0);
+
                     output_states[(state, y, x)] = neuron.quantum_amplitudes[state];
                 }
-                
+
                 // Update classical neuron properties
-                let classical_input = input_states.slice(s![0, y, x]).iter()
+                let classical_input = input_states
+                    .slice(s![0, y, x])
+                    .iter()
                     .map(|c| c.norm())
                     .sum::<f64>();
-                
+
                 neuron.classical_neuron.synaptic_current = classical_input;
-                update_classical_neuron_dynamics(&mut neuron.classical_neuron, config, current_time)?;
+                update_classical_neuron_dynamics(
+                    &mut neuron.classical_neuron,
+                    config,
+                    current_time,
+                )?;
             }
         }
     }
-    
+
     Ok(output_states)
 }
 
@@ -593,24 +582,25 @@ fn apply_quantum_stdp_learning(
             // Update quantum traces
             let trace_decay = Complex::new(
                 (-1.0 / config.neuromorphic.tau_synaptic).exp(),
-                (-config.decoherence_rate).exp()
+                (-config.decoherence_rate).exp(),
             );
-            
+
             for amplitude in neuron.quantum_amplitudes.iter_mut() {
                 *amplitude = *amplitude * trace_decay;
             }
-            
+
             // Apply STDP to quantum coherence
             if let Some(&last_spike_time) = neuron.classical_neuron.spike_times.back() {
                 if current_time.saturating_sub(last_spike_time) < config.neuromorphic.stdp_window {
-                    let stdp_strength = config.neuromorphic.learning_rate * 
-                        (-(current_time.saturating_sub(last_spike_time)) as f64 / 
-                         config.neuromorphic.stdp_window as f64).exp();
-                    
+                    let stdp_strength = config.neuromorphic.learning_rate
+                        * (-(current_time.saturating_sub(last_spike_time)) as f64
+                            / config.neuromorphic.stdp_window as f64)
+                            .exp();
+
                     // Enhance quantum coherence for recent spikes
                     for i in 0..neuron.coherence_matrix.nrows() {
                         for j in 0..neuron.coherence_matrix.ncols() {
-                            neuron.coherence_matrix[(i, j)] *= 
+                            neuron.coherence_matrix[(i, j)] *=
                                 Complex::new(1.0 + stdp_strength, 0.0);
                         }
                     }
@@ -618,7 +608,7 @@ fn apply_quantum_stdp_learning(
             }
         }
     }
-    
+
     Ok(())
 }
 
@@ -629,32 +619,35 @@ fn quantum_memory_consolidation(
     for layer in network {
         for neuron in layer.iter_mut() {
             // Store current quantum state in memory
-            neuron.quantum_memory.push_back(neuron.quantum_amplitudes.clone());
-            
+            neuron
+                .quantum_memory
+                .push_back(neuron.quantum_amplitudes.clone());
+
             // Limit memory size
             if neuron.quantum_memory.len() > config.consolidation_cycles * 2 {
                 neuron.quantum_memory.pop_front();
             }
-            
+
             // Apply consolidation to quantum states
             if neuron.quantum_memory.len() > 1 {
                 let mut consolidated_amplitudes = Array1::zeros(config.quantum_states_per_neuron);
-                
+
                 for memory_state in &neuron.quantum_memory {
                     for (i, &amplitude) in memory_state.iter().enumerate() {
-                        consolidated_amplitudes[i] += amplitude / neuron.quantum_memory.len() as f64;
+                        consolidated_amplitudes[i] +=
+                            amplitude / neuron.quantum_memory.len() as f64;
                     }
                 }
-                
+
                 // Apply consolidation with quantum interference
                 for i in 0..config.quantum_states_per_neuron {
-                    neuron.quantum_amplitudes[i] = 
+                    neuron.quantum_amplitudes[i] =
                         (neuron.quantum_amplitudes[i] + consolidated_amplitudes[i]) / 2.0;
                 }
             }
         }
     }
-    
+
     Ok(())
 }
 
@@ -667,34 +660,35 @@ where
 {
     let (time_steps, num_states, height, width) = quantum_states.dim();
     let mut image = Array2::zeros((height, width));
-    
+
     // Convert quantum states to classical image
     for y in 0..height {
         for x in 0..width {
             let mut total_amplitude = 0.0;
             let mut total_weight = 0.0;
-            
+
             for t in 0..time_steps {
                 for state in 0..num_states {
                     let amplitude = quantum_states[(t, state, y, x)].norm();
                     let temporal_weight = (-(t as f64) / config.coherence_time).exp();
-                    
+
                     total_amplitude += amplitude * temporal_weight;
                     total_weight += temporal_weight;
                 }
             }
-            
+
             let normalized_amplitude = if total_weight > 0.0 {
                 total_amplitude / total_weight
             } else {
                 0.0
             };
-            
-            image[(y, x)] = T::from_f64(normalized_amplitude)
-                .ok_or_else(|| NdimageError::ComputationError("Type conversion failed".to_string()))?;
+
+            image[(y, x)] = T::from_f64(normalized_amplitude).ok_or_else(|| {
+                NdimageError::ComputationError("Type conversion failed".to_string())
+            })?;
         }
     }
-    
+
     Ok(image)
 }
 
@@ -708,14 +702,15 @@ fn update_classical_neuron_dynamics(
     // Membrane potential update
     let decay = (-1.0 / config.neuromorphic.tau_membrane).exp();
     neuron.membrane_potential = neuron.membrane_potential * decay + neuron.synaptic_current;
-    
+
     // Spike generation
-    if neuron.membrane_potential > config.neuromorphic.spike_threshold && 
-       neuron.time_since_spike > config.neuromorphic.refractory_period {
+    if neuron.membrane_potential > config.neuromorphic.spike_threshold
+        && neuron.time_since_spike > config.neuromorphic.refractory_period
+    {
         neuron.membrane_potential = 0.0;
         neuron.time_since_spike = 0;
         neuron.spike_times.push_back(current_time);
-        
+
         // Limit spike history
         if neuron.spike_times.len() > config.neuromorphic.stdp_window {
             neuron.spike_times.pop_front();
@@ -723,7 +718,7 @@ fn update_classical_neuron_dynamics(
     } else {
         neuron.time_since_spike += 1;
     }
-    
+
     Ok(())
 }
 
@@ -970,13 +965,13 @@ fn apply_bio_attention_gate(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::Array2;
     use approx::assert_abs_diff_eq;
+    use ndarray::Array2;
 
     #[test]
     fn test_quantum_neuromorphic_config_default() {
         let config = QuantumNeuromorphicConfig::default();
-        
+
         assert_eq!(config.coherence_time, 50.0);
         assert_eq!(config.quantum_bio_coupling, 0.3);
         assert_eq!(config.quantum_states_per_neuron, 4);
@@ -986,7 +981,7 @@ mod tests {
     #[test]
     fn test_quantum_spiking_neuron_default() {
         let neuron = QuantumSpikingNeuron::default();
-        
+
         assert_eq!(neuron.quantum_amplitudes.len(), 4);
         assert_eq!(neuron.coherence_matrix.dim(), (4, 4));
         assert!(neuron.entanglement_partners.is_empty());
@@ -994,37 +989,28 @@ mod tests {
 
     #[test]
     fn test_quantum_spiking_neural_network() {
-        let image = Array2::from_shape_vec((3, 3), vec![
-            0.1, 0.5, 0.9,
-            0.2, 0.6, 0.8,
-            0.3, 0.7, 0.4
-        ]).unwrap();
-        
+        let image =
+            Array2::from_shape_vec((3, 3), vec![0.1, 0.5, 0.9, 0.2, 0.6, 0.8, 0.3, 0.7, 0.4])
+                .unwrap();
+
         let layers = vec![1];
         let config = QuantumNeuromorphicConfig::default();
-        
-        let result = quantum_spiking_neural_network(
-            image.view(), 
-            &layers, 
-            &config, 
-            5
-        ).unwrap();
-        
+
+        let result = quantum_spiking_neural_network(image.view(), &layers, &config, 5).unwrap();
+
         assert_eq!(result.dim(), (3, 3));
         assert!(result.iter().all(|&x| x.is_finite()));
     }
 
     #[test]
     fn test_neuromorphic_quantum_entanglement() {
-        let image = Array2::from_shape_vec((3, 3), vec![
-            1.0, 0.5, 0.0,
-            0.8, 0.3, 0.2,
-            0.6, 0.9, 0.1
-        ]).unwrap();
-        
+        let image =
+            Array2::from_shape_vec((3, 3), vec![1.0, 0.5, 0.0, 0.8, 0.3, 0.2, 0.6, 0.9, 0.1])
+                .unwrap();
+
         let config = QuantumNeuromorphicConfig::default();
         let result = neuromorphic_quantum_entanglement(image.view(), &config).unwrap();
-        
+
         assert_eq!(result.dim(), (3, 3));
         assert!(result.iter().all(|&x| x.is_finite()));
     }
@@ -1033,49 +1019,50 @@ mod tests {
     fn test_bio_quantum_reservoir_computing() {
         let image1 = Array2::from_shape_vec((2, 2), vec![0.1, 0.2, 0.3, 0.4]).unwrap();
         let image2 = Array2::from_shape_vec((2, 2), vec![0.5, 0.6, 0.7, 0.8]).unwrap();
-        
+
         let sequence = vec![image1.view(), image2.view()];
         let config = QuantumNeuromorphicConfig::default();
-        
+
         let result = bio_quantum_reservoir_computing(&sequence, 10, &config).unwrap();
-        
+
         assert_eq!(result.dim(), (2, 2));
         assert!(result.iter().all(|&x| x.is_finite()));
     }
 
     #[test]
     fn test_quantum_homeostatic_adaptation() {
-        let image = Array2::from_shape_vec((4, 4), (0..16).map(|x| x as f64 / 16.0).collect()).unwrap();
-        
+        let image =
+            Array2::from_shape_vec((4, 4), (0..16).map(|x| x as f64 / 16.0).collect()).unwrap();
+
         let config = QuantumNeuromorphicConfig::default();
         let result = quantum_homeostatic_adaptation(image.view(), &config, 3).unwrap();
-        
+
         assert_eq!(result.dim(), (4, 4));
         assert!(result.iter().all(|&x| x.is_finite()));
     }
 
     #[test]
     fn test_consciousness_inspired_global_workspace() {
-        let image = Array2::from_shape_vec((3, 3), vec![
-            0.1, 0.5, 0.9,
-            0.3, 0.7, 0.2,
-            0.8, 0.4, 0.6
-        ]).unwrap();
-        
+        let image =
+            Array2::from_shape_vec((3, 3), vec![0.1, 0.5, 0.9, 0.3, 0.7, 0.2, 0.8, 0.4, 0.6])
+                .unwrap();
+
         let config = QuantumNeuromorphicConfig::default();
         let result = consciousness_inspired_global_workspace(image.view(), &config).unwrap();
-        
+
         assert_eq!(result.dim(), (3, 3));
         assert!(result.iter().all(|&x| x.is_finite()));
     }
 
     #[test]
     fn test_integrated_information_processing() {
-        let image = Array2::from_shape_vec((4, 4), (0..16).map(|x| x as f64 / 16.0).collect()).unwrap();
-        
+        let image =
+            Array2::from_shape_vec((4, 4), (0..16).map(|x| x as f64 / 16.0).collect()).unwrap();
+
         let config = QuantumNeuromorphicConfig::default();
-        let (result, phi_measure) = integrated_information_processing(image.view(), &config).unwrap();
-        
+        let (result, phi_measure) =
+            integrated_information_processing(image.view(), &config).unwrap();
+
         assert_eq!(result.dim(), (4, 4));
         assert!(result.iter().all(|&x| x.is_finite()));
         assert!(phi_measure >= 0.0);
@@ -1083,21 +1070,22 @@ mod tests {
 
     #[test]
     fn test_predictive_coding_hierarchy() {
-        let image = Array2::from_shape_vec((4, 4), (0..16).map(|x| x as f64 / 16.0).collect()).unwrap();
-        
+        let image =
+            Array2::from_shape_vec((4, 4), (0..16).map(|x| x as f64 / 16.0).collect()).unwrap();
+
         let config = QuantumNeuromorphicConfig::default();
         let result = predictive_coding_hierarchy(image.view(), &[4, 8, 4], &config).unwrap();
-        
+
         assert_eq!(result.prediction.dim(), (4, 4));
         assert!(result.prediction.iter().all(|&x| x.is_finite()));
         assert!(result.prediction_error >= 0.0);
     }
 }
 
-//! # Consciousness-Inspired Quantum-Neuromorphic Algorithms
-//! 
-//! This section implements cutting-edge algorithms inspired by theories of consciousness,
-//! integrating them with quantum-neuromorphic processing for unprecedented cognitive capabilities.
+// # Consciousness-Inspired Quantum-Neuromorphic Algorithms
+//
+// This section implements cutting-edge algorithms inspired by theories of consciousness,
+// integrating them with quantum-neuromorphic processing for unprecedented cognitive capabilities.
 
 /// Configuration for consciousness-inspired processing
 #[derive(Debug, Clone)]
@@ -1147,46 +1135,39 @@ where
 {
     let (height, width) = image.dim();
     let consciousness_config = ConsciousnessConfig::default();
-    
+
     // Initialize global workspace modules
     let mut perceptual_module = Array2::zeros((height, width));
     let mut attention_module = Array2::zeros((height, width));
     let mut memory_module = Array2::zeros((height, width));
     let mut consciousness_workspace = Array2::zeros((height, width));
-    
+
     // Stage 1: Unconscious parallel processing in specialized modules
     for y in 0..height {
         for x in 0..width {
             let pixel_value = image[(y, x)].to_f64().unwrap_or(0.0);
-            
+
             // Perceptual processing (edge detection, features)
-            let perceptual_activation = unconscious_perceptual_processing(
-                pixel_value, 
-                &image, 
-                (y, x), 
-                config
-            )?;
+            let perceptual_activation =
+                unconscious_perceptual_processing(pixel_value, &image, (y, x), config)?;
             perceptual_module[(y, x)] = perceptual_activation;
-            
+
             // Attention schema processing
             let attention_activation = attention_schema_processing(
                 pixel_value,
                 &perceptual_module,
                 (y, x),
-                &consciousness_config
+                &consciousness_config,
             )?;
             attention_module[(y, x)] = attention_activation;
-            
+
             // Memory trace activation
-            let memory_activation = memory_trace_activation(
-                pixel_value,
-                perceptual_activation,
-                &consciousness_config
-            )?;
+            let memory_activation =
+                memory_trace_activation(pixel_value, perceptual_activation, &consciousness_config)?;
             memory_module[(y, x)] = memory_activation;
         }
     }
-    
+
     // Stage 2: Competition for global workspace access
     for y in 0..height {
         for x in 0..width {
@@ -1194,26 +1175,26 @@ where
                 perceptual_module[(y, x)],
                 attention_module[(y, x)],
                 memory_module[(y, x)],
-                &consciousness_config
+                &consciousness_config,
             )?;
-            
+
             // Global broadcast threshold - only "conscious" information proceeds
             if coalition_strength > consciousness_config.broadcast_threshold {
                 consciousness_workspace[(y, x)] = coalition_strength;
-                
+
                 // Global broadcasting - influence all modules
                 global_broadcast_influence(
                     &mut perceptual_module,
-                    &mut attention_module, 
+                    &mut attention_module,
                     &mut memory_module,
                     (y, x),
                     coalition_strength,
-                    &consciousness_config
+                    &consciousness_config,
                 )?;
             }
         }
     }
-    
+
     // Stage 3: Conscious integration and response generation
     let mut conscious_output = Array2::zeros((height, width));
     for y in 0..height {
@@ -1223,14 +1204,15 @@ where
                 perceptual_module[(y, x)],
                 attention_module[(y, x)],
                 memory_module[(y, x)],
-                &consciousness_config
+                &consciousness_config,
             )?;
-            
-            conscious_output[(y, x)] = T::from_f64(integrated_response)
-                .ok_or_else(|| NdimageError::ComputationError("Consciousness integration failed".to_string()))?;
+
+            conscious_output[(y, x)] = T::from_f64(integrated_response).ok_or_else(|| {
+                NdimageError::ComputationError("Consciousness integration failed".to_string())
+            })?;
         }
     }
-    
+
     Ok(conscious_output)
 }
 
@@ -1251,15 +1233,15 @@ where
 {
     let (height, width) = image.dim();
     let consciousness_config = ConsciousnessConfig::default();
-    
+
     // Initialize quantum-neuromorphic network for IIT analysis
     let mut phi_network = Array3::zeros((height, width, 4)); // 4 quantum states per neuron
-    
+
     // Convert image to quantum-neuromorphic representation
     for y in 0..height {
         for x in 0..width {
             let pixel_value = image[(y, x)].to_f64().unwrap_or(0.0);
-            
+
             // Encode as quantum superposition states
             let quantum_encoding = encode_pixel_to_quantum_states(pixel_value, config)?;
             for (i, &amplitude) in quantum_encoding.iter().enumerate() {
@@ -1267,38 +1249,38 @@ where
             }
         }
     }
-    
+
     // Calculate integrated information Φ
     let mut total_phi = 0.0;
     let mut phi_processed_image = Array2::zeros((height, width));
-    
+
     // Analyze each possible bipartition of the system
     for partition_size in 1..=((height * width) / 2) {
         let bipartitions = generate_bipartitions(&phi_network, partition_size)?;
-        
+
         for (part_a, part_b) in bipartitions {
             // Calculate effective information
             let ei_whole = calculate_effective_information(&phi_network, &consciousness_config)?;
-            let ei_parts = calculate_effective_information(&part_a, &consciousness_config)? +
-                          calculate_effective_information(&part_b, &consciousness_config)?;
-            
+            let ei_parts = calculate_effective_information(&part_a, &consciousness_config)?
+                + calculate_effective_information(&part_b, &consciousness_config)?;
+
             // Φ = EI(whole) - EI(parts)
             let phi_contribution = (ei_whole - ei_parts).max(0.0);
             total_phi += phi_contribution;
-            
+
             // Apply Φ-weighted processing
             apply_phi_weighted_processing(
                 &mut phi_processed_image,
                 &phi_network,
                 phi_contribution,
-                &consciousness_config
+                &consciousness_config,
             )?;
         }
     }
-    
+
     // Normalize by number of bipartitions
     total_phi /= calculate_num_bipartitions(height * width) as f64;
-    
+
     // Convert back to output format
     for y in 0..height {
         for x in 0..width {
@@ -1306,7 +1288,7 @@ where
                 .ok_or_else(|| NdimageError::ComputationError("Φ conversion failed".to_string()))?;
         }
     }
-    
+
     Ok((phi_processed_image, total_phi))
 }
 
@@ -1336,18 +1318,18 @@ where
 {
     let (height, width) = image.dim();
     let consciousness_config = ConsciousnessConfig::default();
-    
+
     if hierarchy_sizes.is_empty() {
         return Err(NdimageError::InvalidInput("Empty hierarchy".to_string()));
     }
-    
+
     // Initialize hierarchical predictive network
     let mut hierarchical_levels = Vec::new();
     let mut prediction_errors = Vec::new();
-    
+
     // Build hierarchy from image up
     let mut current_representation = image.to_owned().mapv(|x| x.to_f64().unwrap_or(0.0));
-    
+
     for (level, &level_size) in hierarchy_sizes.iter().enumerate() {
         // Generate predictions from higher levels
         let level_predictions = if level == 0 {
@@ -1359,57 +1341,53 @@ where
                 &hierarchical_levels[level - 1],
                 &current_representation,
                 level_size,
-                &consciousness_config
+                &consciousness_config,
             )?
         };
-        
+
         // Calculate prediction error
         let pred_error = calculate_prediction_error(
             &current_representation,
             &level_predictions,
-            &consciousness_config
+            &consciousness_config,
         )?;
         prediction_errors.push(pred_error);
-        
+
         // Update representations based on prediction error
         let updated_representation = update_representation_with_error(
             &current_representation,
             &level_predictions,
             pred_error,
-            &consciousness_config
+            &consciousness_config,
         )?;
-        
+
         hierarchical_levels.push(level_predictions);
         current_representation = updated_representation;
     }
-    
+
     // Generate final prediction through top-down processing
     let mut final_prediction = hierarchical_levels.last().unwrap().clone();
-    
+
     // Top-down prediction refinement
     for level in (0..hierarchical_levels.len()).rev() {
         final_prediction = refine_prediction_top_down(
             &final_prediction,
             &hierarchical_levels[level],
             prediction_errors[level],
-            &consciousness_config
+            &consciousness_config,
         )?;
     }
-    
+
     // Calculate precision weights based on prediction confidence
-    let precision_weights = calculate_precision_weights(
-        &prediction_errors,
-        &consciousness_config
-    )?;
-    
+    let precision_weights = calculate_precision_weights(&prediction_errors, &consciousness_config)?;
+
     // Calculate total prediction error
-    let total_prediction_error = prediction_errors.iter().sum::<f64>() / prediction_errors.len() as f64;
-    
+    let total_prediction_error =
+        prediction_errors.iter().sum::<f64>() / prediction_errors.len() as f64;
+
     // Convert final prediction to output type
-    let output_prediction = final_prediction.mapv(|x| {
-        T::from_f64(x).unwrap_or_else(|| T::zero())
-    });
-    
+    let output_prediction = final_prediction.mapv(|x| T::from_f64(x).unwrap_or_else(|| T::zero()));
+
     Ok(PredictiveCodingResult {
         prediction: output_prediction,
         prediction_error: total_prediction_error,
@@ -1440,77 +1418,75 @@ where
 {
     let (height, width) = image.dim();
     let consciousness_config = ConsciousnessConfig::default();
-    
+
     // Initialize meta-cognitive monitoring system
     let mut metacognitive_output = Array2::zeros((height, width));
     let mut confidence_map = Array2::zeros((height, width));
     let mut effort_map = Array2::zeros((height, width));
     let mut error_monitoring_map = Array2::zeros((height, width));
-    
+
     // Monitor processing at each location
     for y in 0..height {
         for x in 0..width {
             let pixel_value = image[(y, x)].to_f64().unwrap_or(0.0);
-            
+
             // Confidence monitoring: how certain is the system about its processing?
             let confidence = calculate_processing_confidence(
                 pixel_value,
                 processing_history,
                 (y, x),
-                &consciousness_config
+                &consciousness_config,
             )?;
             confidence_map[(y, x)] = confidence;
-            
+
             // Effort monitoring: how much computational effort is being expended?
-            let effort = calculate_processing_effort(
-                processing_history,
-                (y, x),
-                &consciousness_config
-            )?;
+            let effort =
+                calculate_processing_effort(processing_history, (y, x), &consciousness_config)?;
             effort_map[(y, x)] = effort;
-            
+
             // Error monitoring: is the system detecting anomalies or conflicts?
             let error_signal = calculate_error_monitoring_signal(
                 pixel_value,
                 processing_history,
                 (y, x),
-                &consciousness_config
+                &consciousness_config,
             )?;
             error_monitoring_map[(y, x)] = error_signal;
-            
+
             // Meta-cognitive integration
             let metacognitive_value = integrate_metacognitive_signals(
                 confidence,
                 effort,
                 error_signal,
-                &consciousness_config
+                &consciousness_config,
             )?;
-            
-            metacognitive_output[(y, x)] = T::from_f64(metacognitive_value)
-                .ok_or_else(|| NdimageError::ComputationError("Meta-cognitive integration failed".to_string()))?;
+
+            metacognitive_output[(y, x)] = T::from_f64(metacognitive_value).ok_or_else(|| {
+                NdimageError::ComputationError("Meta-cognitive integration failed".to_string())
+            })?;
         }
     }
-    
+
     // Calculate global meta-cognitive state
     let global_confidence = confidence_map.mean().unwrap_or(0.0);
     let global_effort = effort_map.mean().unwrap_or(0.0);
     let global_error_monitoring = error_monitoring_map.mean().unwrap_or(0.0);
-    
+
     // Self-awareness index: how aware is the system of its own processing?
     let self_awareness_index = calculate_self_awareness_index(
         global_confidence,
         global_effort,
         global_error_monitoring,
-        &consciousness_config
+        &consciousness_config,
     )?;
-    
+
     let metacognitive_state = MetaCognitiveState {
         confidence_level: global_confidence,
         processing_effort: global_effort,
         error_monitoring: global_error_monitoring,
         self_awareness_index,
     };
-    
+
     Ok((metacognitive_output, metacognitive_state))
 }
 
@@ -1526,46 +1502,46 @@ where
     T: Float + FromPrimitive + Copy + Send + Sync,
 {
     let consciousness_config = ConsciousnessConfig::default();
-    
+
     if image_sequence.is_empty() {
-        return Err(NdimageError::InvalidInput("Empty image sequence".to_string()));
+        return Err(NdimageError::InvalidInput(
+            "Empty image sequence".to_string(),
+        ));
     }
-    
+
     let (height, width) = image_sequence[0].dim();
     let window_size = consciousness_config.temporal_binding_window;
-    
+
     // Initialize temporal binding buffers
     let mut binding_windows = VecDeque::new();
     let mut consciousness_moments = Vec::new();
-    
+
     // Process each frame through temporal binding
     for (t, current_image) in image_sequence.iter().enumerate() {
         // Convert to temporal representation
         let temporal_frame = image_to_temporal_representation(current_image, t, config)?;
         binding_windows.push_back(temporal_frame);
-        
+
         // Maintain binding window size
         if binding_windows.len() > window_size {
             binding_windows.pop_front();
         }
-        
+
         // Create consciousness moment when window is full
         if binding_windows.len() == window_size {
-            let consciousness_moment = create_consciousness_moment(
-                &binding_windows,
-                &consciousness_config
-            )?;
+            let consciousness_moment =
+                create_consciousness_moment(&binding_windows, &consciousness_config)?;
             consciousness_moments.push(consciousness_moment);
         }
     }
-    
+
     // Integrate consciousness moments into final output
     let final_conscious_state = integrate_consciousness_moments(
         &consciousness_moments,
         (height, width),
-        &consciousness_config
+        &consciousness_config,
     )?;
-    
+
     Ok(final_conscious_state)
 }
 
@@ -1582,35 +1558,39 @@ where
 {
     let (y, x) = position;
     let (height, width) = image.dim();
-    
+
     // Parallel unconscious processing (edge detection, texture, etc.)
     let mut activation = 0.0;
-    
+
     // Edge detection component
     if y > 0 && y < height - 1 && x > 0 && x < width - 1 {
         let neighbors = [
-            image[(y-1, x-1)].to_f64().unwrap_or(0.0),
-            image[(y-1, x)].to_f64().unwrap_or(0.0),
-            image[(y-1, x+1)].to_f64().unwrap_or(0.0),
-            image[(y, x-1)].to_f64().unwrap_or(0.0),
-            image[(y, x+1)].to_f64().unwrap_or(0.0),
-            image[(y+1, x-1)].to_f64().unwrap_or(0.0),
-            image[(y+1, x)].to_f64().unwrap_or(0.0),
-            image[(y+1, x+1)].to_f64().unwrap_or(0.0),
+            image[(y - 1, x - 1)].to_f64().unwrap_or(0.0),
+            image[(y - 1, x)].to_f64().unwrap_or(0.0),
+            image[(y - 1, x + 1)].to_f64().unwrap_or(0.0),
+            image[(y, x - 1)].to_f64().unwrap_or(0.0),
+            image[(y, x + 1)].to_f64().unwrap_or(0.0),
+            image[(y + 1, x - 1)].to_f64().unwrap_or(0.0),
+            image[(y + 1, x)].to_f64().unwrap_or(0.0),
+            image[(y + 1, x + 1)].to_f64().unwrap_or(0.0),
         ];
-        
-        let gradient = neighbors.iter().map(|&n| (pixel_value - n).abs()).sum::<f64>() / 8.0;
+
+        let gradient = neighbors
+            .iter()
+            .map(|&n| (pixel_value - n).abs())
+            .sum::<f64>()
+            / 8.0;
         activation += gradient * 0.3;
     }
-    
+
     // Texture component
     let texture_response = pixel_value * (pixel_value * PI).sin().abs();
     activation += texture_response * 0.4;
-    
+
     // Quantum coherence component
     let quantum_phase = pixel_value * config.quantum.entanglement_strength * PI;
     activation += quantum_phase.cos().abs() * 0.3;
-    
+
     Ok(activation)
 }
 
@@ -1622,10 +1602,10 @@ fn attention_schema_processing(
 ) -> NdimageResult<f64> {
     let (y, x) = position;
     let (height, width) = perceptual_module.dim();
-    
+
     // Attention schema: model of the attention process itself
     let local_perceptual_strength = perceptual_module[(y, x)];
-    
+
     // Calculate attention competition
     let mut attention_competition = 0.0;
     let window_size = 3;
@@ -1633,7 +1613,7 @@ fn attention_schema_processing(
     let end_y = (y + window_size + 1).min(height);
     let start_x = x.saturating_sub(window_size);
     let end_x = (x + window_size + 1).min(width);
-    
+
     for ny in start_y..end_y {
         for nx in start_x..end_x {
             if ny != y || nx != x {
@@ -1641,11 +1621,11 @@ fn attention_schema_processing(
             }
         }
     }
-    
+
     // Winner-take-all attention mechanism
     let attention_strength = local_perceptual_strength / (1.0 + attention_competition * 0.1);
     let attention_activation = attention_strength * config.attention_schema_strength;
-    
+
     Ok(attention_activation)
 }
 
@@ -1657,7 +1637,7 @@ fn memory_trace_activation(
     // Simple memory trace based on activation patterns
     let memory_strength = perceptual_activation * pixel_value;
     let memory_trace = memory_strength * (1.0 - (-memory_strength * 2.0).exp());
-    
+
     Ok(memory_trace.min(1.0))
 }
 
@@ -1682,20 +1662,21 @@ fn global_broadcast_influence(
 ) -> NdimageResult<()> {
     let (height, width) = perceptual_module.dim();
     let (source_y, source_x) = broadcast_source;
-    
+
     // Global broadcasting influences all modules
     for y in 0..height {
         for x in 0..width {
-            let distance = ((y as f64 - source_y as f64).powi(2) + 
-                           (x as f64 - source_x as f64).powi(2)).sqrt();
+            let distance = ((y as f64 - source_y as f64).powi(2)
+                + (x as f64 - source_x as f64).powi(2))
+            .sqrt();
             let influence = strength * (-distance * 0.1).exp();
-            
+
             perceptual_module[(y, x)] += influence * 0.1;
             attention_module[(y, x)] += influence * 0.2;
             memory_module[(y, x)] += influence * 0.15;
         }
     }
-    
+
     Ok(())
 }
 
@@ -1716,20 +1697,20 @@ fn encode_pixel_to_quantum_states(
     config: &QuantumNeuromorphicConfig,
 ) -> NdimageResult<Array1<f64>> {
     let mut quantum_states = Array1::zeros(4);
-    
+
     // Encode as quantum superposition
     let angle = pixel_value * PI * 2.0;
     quantum_states[0] = angle.cos().abs(); // |0⟩ state
     quantum_states[1] = angle.sin().abs(); // |1⟩ state
     quantum_states[2] = (angle.cos() * angle.sin()).abs(); // superposition
     quantum_states[3] = (pixel_value * config.quantum.entanglement_strength).min(1.0); // entangled
-    
+
     // Normalize
     let norm = quantum_states.sum();
     if norm > 0.0 {
         quantum_states /= norm;
     }
-    
+
     Ok(quantum_states)
 }
 
@@ -1738,7 +1719,7 @@ fn calculate_effective_information(
     config: &ConsciousnessConfig,
 ) -> NdimageResult<f64> {
     let (height, width, states) = system.dim();
-    
+
     // Calculate entropy of the system
     let mut total_entropy = 0.0;
     for y in 0..height {
@@ -1751,7 +1732,7 @@ fn calculate_effective_information(
             }
         }
     }
-    
+
     // Effective information is related to entropy difference
     Ok(total_entropy / (height * width * states) as f64)
 }
@@ -1762,19 +1743,19 @@ fn generate_bipartitions(
 ) -> NdimageResult<Vec<(Array3<f64>, Array3<f64>)>> {
     let (height, width, states) = network.dim();
     let total_elements = height * width;
-    
+
     if partition_size >= total_elements {
         return Ok(Vec::new());
     }
-    
+
     // For simplicity, generate a few representative bipartitions
     let mut bipartitions = Vec::new();
-    
+
     // Spatial bipartition (left/right)
     let mid_x = width / 2;
     let mut part_a = Array3::zeros((height, mid_x, states));
     let mut part_b = Array3::zeros((height, width - mid_x, states));
-    
+
     for y in 0..height {
         for x in 0..mid_x {
             for s in 0..states {
@@ -1787,9 +1768,9 @@ fn generate_bipartitions(
             }
         }
     }
-    
+
     bipartitions.push((part_a, part_b));
-    
+
     Ok(bipartitions)
 }
 
@@ -1800,7 +1781,7 @@ fn apply_phi_weighted_processing(
     config: &ConsciousnessConfig,
 ) -> NdimageResult<()> {
     let (height, width, states) = network.dim();
-    
+
     for y in 0..height {
         for x in 0..width {
             let mut integrated_value = 0.0;
@@ -1810,7 +1791,7 @@ fn apply_phi_weighted_processing(
             output[(y, x)] += integrated_value / states as f64;
         }
     }
-    
+
     Ok(())
 }
 
@@ -1825,20 +1806,25 @@ fn generate_sensory_predictions(
 ) -> NdimageResult<Array2<f64>> {
     let (height, width) = representation.dim();
     let mut predictions = Array2::zeros((height, width));
-    
+
     // Simple predictive model based on local patterns
-    for y in 1..height-1 {
-        for x in 1..width-1 {
+    for y in 1..height - 1 {
+        for x in 1..width - 1 {
             let neighbors = [
-                representation[(y-1, x-1)], representation[(y-1, x)], representation[(y-1, x+1)],
-                representation[(y, x-1)],                                representation[(y, x+1)],
-                representation[(y+1, x-1)], representation[(y+1, x)], representation[(y+1, x+1)]
+                representation[(y - 1, x - 1)],
+                representation[(y - 1, x)],
+                representation[(y - 1, x + 1)],
+                representation[(y, x - 1)],
+                representation[(y, x + 1)],
+                representation[(y + 1, x - 1)],
+                representation[(y + 1, x)],
+                representation[(y + 1, x + 1)],
             ];
-            
+
             predictions[(y, x)] = neighbors.iter().sum::<f64>() / 8.0;
         }
     }
-    
+
     Ok(predictions)
 }
 
@@ -1851,7 +1837,7 @@ fn generate_hierarchical_predictions(
     // Generate predictions from higher-level representations
     let (height, width) = current_level.dim();
     let mut predictions = Array2::zeros((height, width));
-    
+
     for y in 0..height {
         for x in 0..width {
             let higher_value = higher_level[(y, x)];
@@ -1859,7 +1845,7 @@ fn generate_hierarchical_predictions(
             predictions[(y, x)] = prediction;
         }
     }
-    
+
     Ok(predictions)
 }
 
@@ -1892,8 +1878,8 @@ fn refine_prediction_top_down(
     config: &ConsciousnessConfig,
 ) -> NdimageResult<Array2<f64>> {
     let refinement_strength = 0.3;
-    let refined = higher_prediction * (1.0 - refinement_strength) + 
-                 level_prediction * refinement_strength;
+    let refined =
+        higher_prediction * (1.0 - refinement_strength) + level_prediction * refinement_strength;
     Ok(refined)
 }
 
@@ -1904,10 +1890,10 @@ fn calculate_precision_weights(
     let height = 4; // Default size
     let width = 4;
     let mut weights = Array2::zeros((height, width));
-    
+
     let avg_error = errors.iter().sum::<f64>() / errors.len() as f64;
     let precision = 1.0 / (1.0 + avg_error);
-    
+
     weights.fill(precision);
     Ok(weights)
 }
@@ -1919,11 +1905,11 @@ fn calculate_processing_confidence(
     config: &ConsciousnessConfig,
 ) -> NdimageResult<f64> {
     let (y, x) = position;
-    
+
     if history.is_empty() {
         return Ok(0.5); // Default confidence
     }
-    
+
     // Calculate variance in processing history
     let mut values = Vec::new();
     for frame in history {
@@ -1931,14 +1917,14 @@ fn calculate_processing_confidence(
             values.push(frame[(y, x)]);
         }
     }
-    
+
     if values.is_empty() {
         return Ok(0.5);
     }
-    
+
     let mean = values.iter().sum::<f64>() / values.len() as f64;
     let variance = values.iter().map(|v| (v - mean).powi(2)).sum::<f64>() / values.len() as f64;
-    
+
     // Higher confidence with lower variance
     let confidence = 1.0 / (1.0 + variance);
     Ok(confidence)
@@ -1950,21 +1936,24 @@ fn calculate_processing_effort(
     config: &ConsciousnessConfig,
 ) -> NdimageResult<f64> {
     let (y, x) = position;
-    
+
     if history.len() < 2 {
         return Ok(0.0);
     }
-    
+
     // Calculate temporal derivatives as proxy for effort
     let mut total_change = 0.0;
     for i in 1..history.len() {
-        if y < history[i].nrows() && x < history[i].ncols() &&
-           y < history[i-1].nrows() && x < history[i-1].ncols() {
-            let change = (history[i][(y, x)] - history[i-1][(y, x)]).abs();
+        if y < history[i].nrows()
+            && x < history[i].ncols()
+            && y < history[i - 1].nrows()
+            && x < history[i - 1].ncols()
+        {
+            let change = (history[i][(y, x)] - history[i - 1][(y, x)]).abs();
             total_change += change;
         }
     }
-    
+
     Ok(total_change / (history.len() - 1) as f64)
 }
 
@@ -1975,11 +1964,11 @@ fn calculate_error_monitoring_signal(
     config: &ConsciousnessConfig,
 ) -> NdimageResult<f64> {
     let (y, x) = position;
-    
+
     if history.is_empty() {
         return Ok(0.0);
     }
-    
+
     // Calculate deviation from expected pattern
     let mut deviations = Vec::new();
     for frame in history {
@@ -1988,11 +1977,11 @@ fn calculate_error_monitoring_signal(
             deviations.push(deviation);
         }
     }
-    
+
     if deviations.is_empty() {
         return Ok(0.0);
     }
-    
+
     let mean_deviation = deviations.iter().sum::<f64>() / deviations.len() as f64;
     Ok(mean_deviation.min(1.0))
 }
@@ -2004,9 +1993,7 @@ fn integrate_metacognitive_signals(
     config: &ConsciousnessConfig,
 ) -> NdimageResult<f64> {
     // Integrate meta-cognitive signals
-    let metacognitive_value = confidence * 0.4 + 
-                             (1.0 - effort) * 0.3 + 
-                             (1.0 - error_signal) * 0.3;
+    let metacognitive_value = confidence * 0.4 + (1.0 - effort) * 0.3 + (1.0 - error_signal) * 0.3;
     Ok(metacognitive_value.min(1.0))
 }
 
@@ -2031,13 +2018,13 @@ where
 {
     let (height, width) = image.dim();
     let temporal_depth = 8; // Multiple temporal channels
-    
+
     let mut temporal_rep = Array3::zeros((height, width, temporal_depth));
-    
+
     for y in 0..height {
         for x in 0..width {
             let pixel_value = image[(y, x)].to_f64().unwrap_or(0.0);
-            
+
             // Encode temporal information
             for d in 0..temporal_depth {
                 let temporal_phase = (timestamp as f64 + d as f64) * PI / temporal_depth as f64;
@@ -2045,7 +2032,7 @@ where
             }
         }
     }
-    
+
     Ok(temporal_rep)
 }
 
@@ -2054,28 +2041,33 @@ fn create_consciousness_moment(
     config: &ConsciousnessConfig,
 ) -> NdimageResult<Array2<f64>> {
     if binding_window.is_empty() {
-        return Err(NdimageError::InvalidInput("Empty binding window".to_string()));
+        return Err(NdimageError::InvalidInput(
+            "Empty binding window".to_string(),
+        ));
     }
-    
+
     let (height, width, depth) = binding_window[0].dim();
     let mut consciousness_moment = Array2::zeros((height, width));
-    
+
     // Integrate temporal binding window
     for y in 0..height {
         for x in 0..width {
             let mut temporal_integration = 0.0;
-            
+
             for (t, frame) in binding_window.iter().enumerate() {
                 for d in 0..depth {
-                    let weight = ((t as f64 - binding_window.len() as f64 / 2.0).abs()).exp().recip();
+                    let weight = ((t as f64 - binding_window.len() as f64 / 2.0).abs())
+                        .exp()
+                        .recip();
                     temporal_integration += frame[(y, x, d)] * weight;
                 }
             }
-            
-            consciousness_moment[(y, x)] = temporal_integration / (binding_window.len() * depth) as f64;
+
+            consciousness_moment[(y, x)] =
+                temporal_integration / (binding_window.len() * depth) as f64;
         }
     }
-    
+
     Ok(consciousness_moment)
 }
 
@@ -2089,15 +2081,15 @@ where
 {
     let (height, width) = output_shape;
     let mut integrated = Array2::zeros((height, width));
-    
+
     for moment in moments {
         integrated = integrated + moment;
     }
-    
+
     if !moments.is_empty() {
         integrated /= moments.len() as f64;
     }
-    
+
     // Convert to output type
     let output = integrated.mapv(|x| T::from_f64(x).unwrap_or_else(|| T::zero()));
     Ok(output)

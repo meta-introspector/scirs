@@ -699,6 +699,132 @@ fn enhanced_asymptotic_jn<F: Float + FromPrimitive>(n: i32, x: F) -> F {
     }
 }
 
+/// Exponentially scaled Bessel function of the first kind of order 0.
+///
+/// This function computes j0e(x) = j0(x) * exp(-abs(x.imag)) for complex x,
+/// which prevents overflow for large arguments while preserving relative accuracy.
+///
+/// For real arguments, this is simply j0(x) since exp(-0) = 1.
+///
+/// # Arguments
+///
+/// * `x` - Input value
+///
+/// # Returns
+///
+/// * J₀ₑ(x) Exponentially scaled Bessel function value
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::bessel::first_kind::j0e;
+///
+/// // For real arguments, j0e(x) = j0(x)
+/// let x = 2.0f64;
+/// let result = j0e(x);
+/// assert!(result.is_finite());
+/// ```
+pub fn j0e<F: Float + FromPrimitive + Debug>(x: F) -> F {
+    // For real arguments, the imaginary part is zero, so exp(-abs(0)) = 1
+    // Therefore j0e(x) = j0(x) for real x
+    j0(x)
+}
+
+/// Exponentially scaled Bessel function of the first kind of order 1.
+///
+/// This function computes j1e(x) = j1(x) * exp(-abs(x.imag)) for complex x,
+/// which prevents overflow for large arguments while preserving relative accuracy.
+///
+/// For real arguments, this is simply j1(x) since exp(-0) = 1.
+///
+/// # Arguments
+///
+/// * `x` - Input value
+///
+/// # Returns
+///
+/// * J₁ₑ(x) Exponentially scaled Bessel function value
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::bessel::first_kind::j1e;
+///
+/// // For real arguments, j1e(x) = j1(x)
+/// let x = 2.0f64;
+/// let result = j1e(x);
+/// assert!(result.is_finite());
+/// ```
+pub fn j1e<F: Float + FromPrimitive + Debug>(x: F) -> F {
+    // For real arguments, the imaginary part is zero, so exp(-abs(0)) = 1
+    // Therefore j1e(x) = j1(x) for real x
+    j1(x)
+}
+
+/// Exponentially scaled Bessel function of the first kind of integer order n.
+///
+/// This function computes jne(n, x) = jn(n, x) * exp(-abs(x.imag)) for complex x,
+/// which prevents overflow for large arguments while preserving relative accuracy.
+///
+/// For real arguments, this is simply jn(n, x) since exp(-0) = 1.
+///
+/// # Arguments
+///
+/// * `n` - Order (integer)
+/// * `x` - Input value
+///
+/// # Returns
+///
+/// * Jₙₑ(x) Exponentially scaled Bessel function value
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::bessel::first_kind::jne;
+///
+/// // For real arguments, jne(n, x) = jn(n, x)
+/// let x = 2.0f64;
+/// let result = jne(5, x);
+/// assert!(result.is_finite());
+/// ```
+pub fn jne<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
+    // For real arguments, the imaginary part is zero, so exp(-abs(0)) = 1
+    // Therefore jne(n, x) = jn(n, x) for real x
+    jn(n, x)
+}
+
+/// Exponentially scaled Bessel function of the first kind of arbitrary real order.
+///
+/// This function computes jve(v, x) = jv(v, x) * exp(-abs(x.imag)) for complex x,
+/// which prevents overflow for large arguments while preserving relative accuracy.
+///
+/// For real arguments, this is simply jv(v, x) since exp(-0) = 1.
+///
+/// # Arguments
+///
+/// * `v` - Order (any real number)
+/// * `x` - Input value
+///
+/// # Returns
+///
+/// * Jᵥₑ(x) Exponentially scaled Bessel function value
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::bessel::first_kind::jve;
+///
+/// // For real arguments, jve(v, x) = jv(v, x)
+/// let x = 2.0f64;
+/// let result = jve(0.5, x);
+/// assert!(result.is_finite());
+/// ```
+pub fn jve<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) -> F {
+    // For real arguments, the imaginary part is zero, so exp(-abs(0)) = 1
+    // Therefore jve(v, x) = jv(v, x) for real x
+    jv(v, x)
+}
+
 // Helper function to return maximum of two values.
 fn max<T: PartialOrd>(a: T, b: T) -> T {
     if a > b {

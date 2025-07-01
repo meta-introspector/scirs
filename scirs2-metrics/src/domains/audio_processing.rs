@@ -1108,8 +1108,30 @@ impl SpeechRecognitionMetrics {
         hypothesis: &[String],
         confidence: &[f64],
     ) -> Result<f64> {
-        // Simplified correlation calculation
-        Ok(0.5) // Placeholder
+        // Calculate correlation between word confidence and recognition accuracy
+        if reference.len() != hypothesis.len() || hypothesis.len() != confidence.len() {
+            return Err(MetricsError::InvalidInput("Mismatched array lengths".to_string()));
+        }
+        
+        let mut correct_scores = Vec::new();
+        let mut incorrect_scores = Vec::new();
+        
+        for ((r, h), &c) in reference.iter().zip(hypothesis.iter()).zip(confidence.iter()) {
+            if r == h {
+                correct_scores.push(c);
+            } else {
+                incorrect_scores.push(c);
+            }
+        }
+        
+        if correct_scores.is_empty() || incorrect_scores.is_empty() {
+            return Ok(0.0);
+        }
+        
+        let correct_mean = correct_scores.iter().sum::<f64>() / correct_scores.len() as f64;
+        let incorrect_mean = incorrect_scores.iter().sum::<f64>() / incorrect_scores.len() as f64;
+        
+        Ok((correct_mean - incorrect_mean).abs())
     }
 }
 
@@ -1303,8 +1325,55 @@ impl PerCalculator {
     }
 
     fn calculate(&mut self, reference: &[Vec<String>], hypothesis: &[Vec<String>]) -> Result<f64> {
-        // Simplified phone error rate calculation
-        Ok(0.1) // Placeholder
+        if reference.len() != hypothesis.len() {
+            return Err(MetricsError::InvalidInput("Mismatched sequence lengths".to_string()));
+        }
+        
+        let mut total_phones = 0;
+        let mut total_errors = 0;
+        
+        for (ref_seq, hyp_seq) in reference.iter().zip(hypothesis.iter()) {
+            total_phones += ref_seq.len();
+            
+            // Use edit distance to calculate phone-level errors
+            let errors = self.calculate_edit_distance(ref_seq, hyp_seq);
+            total_errors += errors;
+        }
+        
+        if total_phones == 0 {
+            return Ok(0.0);
+        }
+        
+        Ok(total_errors as f64 / total_phones as f64)
+    }
+    
+    fn calculate_edit_distance(&self, reference: &[String], hypothesis: &[String]) -> usize {
+        let ref_len = reference.len();
+        let hyp_len = hypothesis.len();
+        
+        // Dynamic programming matrix for edit distance
+        let mut dp = vec![vec![0; hyp_len + 1]; ref_len + 1];
+        
+        // Initialize first row and column
+        for i in 0..=ref_len {
+            dp[i][0] = i;
+        }
+        for j in 0..=hyp_len {
+            dp[0][j] = j;
+        }
+        
+        // Fill the matrix
+        for i in 1..=ref_len {
+            for j in 1..=hyp_len {
+                let cost = if reference[i-1] == hypothesis[j-1] { 0 } else { 1 };
+                dp[i][j] = std::cmp::min(
+                    std::cmp::min(dp[i-1][j] + 1, dp[i][j-1] + 1),
+                    dp[i-1][j-1] + cost
+                );
+            }
+        }
+        
+        dp[ref_len][hyp_len]
     }
 }
 
@@ -1348,8 +1417,45 @@ impl AudioClassificationMetrics {
     where
         F: Float,
     {
-        // Simplified EER calculation
-        Ok(0.05) // Placeholder
+        if y_true.len() != y_scores.len() {
+            return Err(MetricsError::InvalidInput("Mismatched array lengths".to_string()));
+        }
+        
+        // Sort by scores in descending order
+        let mut data: Vec<(F, i32)> = y_scores.iter().zip(y_true.iter()).map(|(&s, &t)| (s, t)).collect();
+        data.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
+        
+        let total_positives = y_true.iter().filter(|&&x| x == 1).count() as f64;
+        let total_negatives = y_true.iter().filter(|&&x| x == 0).count() as f64;
+        
+        if total_positives == 0.0 || total_negatives == 0.0 {
+            return Ok(0.0);
+        }
+        
+        let mut tp = 0.0;
+        let mut fp = 0.0;
+        let mut min_diff = f64::INFINITY;
+        let mut eer = 0.0;
+        
+        for (_, label) in data.iter() {
+            if *label == 1 {
+                tp += 1.0;
+            } else {
+                fp += 1.0;
+            }
+            
+            let tpr = tp / total_positives;  // True Positive Rate
+            let fpr = fp / total_negatives;  // False Positive Rate
+            let fnr = 1.0 - tpr;             // False Negative Rate
+            
+            let diff = (fpr - fnr).abs();
+            if diff < min_diff {
+                min_diff = diff;
+                eer = (fpr + fnr) / 2.0;
+            }
+        }
+        
+        Ok(eer)
     }
 
     fn calculate_frame_accuracy(

@@ -1,6 +1,6 @@
 //! Linear equation solvers
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2, ScalarOperand};
 use num_traits::{Float, NumAssign, One};
 use std::iter::Sum;
 
@@ -42,7 +42,7 @@ pub struct LstsqResult<F: Float> {
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ndarray::{array, ScalarOperand};
 /// use scirs2_linalg::solve;
 ///
 /// let a = array![[1.0_f64, 0.0], [0.0, 1.0]];
@@ -57,7 +57,7 @@ pub fn solve<F>(
     workers: Option<usize>,
 ) -> LinalgResult<Array1<F>>
 where
-    F: Float + NumAssign + One + Sum,
+    F: Float + NumAssign + One + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     // Parameter validation using helper function
     validate_linear_system(a, b, "Linear system solve")?;
@@ -126,7 +126,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ndarray::{array, ScalarOperand};
 /// use scirs2_linalg::solve_triangular;
 ///
 /// // Lower triangular system
@@ -143,7 +143,7 @@ pub fn solve_triangular<F>(
     unit_diagonal: bool,
 ) -> LinalgResult<Array1<F>>
 where
-    F: Float + NumAssign + Sum,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     // Parameter validation using helper functions
     validate_not_empty_matrix(a, "Triangular system solve")?;
@@ -223,7 +223,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ndarray::{array, ScalarOperand};
 /// use scirs2_linalg::lstsq;
 ///
 /// let a = array![[1.0_f64, 1.0], [1.0, 2.0], [1.0, 3.0]];
@@ -237,7 +237,7 @@ pub fn lstsq<F>(
     workers: Option<usize>,
 ) -> LinalgResult<LstsqResult<F>>
 where
-    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand,
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     // Parameter validation using helper function
     validate_least_squares(a, b, "Least squares solve")?;
@@ -361,7 +361,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ndarray::{array, ScalarOperand};
 /// use scirs2_linalg::solve_multiple;
 ///
 /// let a = array![[1.0_f64, 0.0], [0.0, 1.0]];
@@ -376,7 +376,7 @@ pub fn solve_multiple<F>(
     workers: Option<usize>,
 ) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + One + Sum,
+    F: Float + NumAssign + One + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     // Parameter validation using helper function
     validate_multiple_linear_systems(a, b, "Multiple linear systems solve")?;
@@ -435,7 +435,7 @@ where
 /// Solve linear system using default thread count
 pub fn solve_default<F>(a: &ArrayView2<F>, b: &ArrayView1<F>) -> LinalgResult<Array1<F>>
 where
-    F: Float + NumAssign + One + Sum,
+    F: Float + NumAssign + One + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     solve(a, b, None)
 }
@@ -443,7 +443,7 @@ where
 /// Compute least-squares solution using default thread count
 pub fn lstsq_default<F>(a: &ArrayView2<F>, b: &ArrayView1<F>) -> LinalgResult<LstsqResult<F>>
 where
-    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand,
+    F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     lstsq(a, b, None)
 }
@@ -451,7 +451,7 @@ where
 /// Solve multiple linear systems using default thread count
 pub fn solve_multiple_default<F>(a: &ArrayView2<F>, b: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + One + Sum,
+    F: Float + NumAssign + One + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     solve_multiple(a, b, None)
 }

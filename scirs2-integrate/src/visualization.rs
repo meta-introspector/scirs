@@ -3576,7 +3576,7 @@ pub mod specialized_visualizations {
             use num_complex::Complex64;
 
             let x = Array1::linspace(-5.0, 5.0, 100);
-            let psi = x.mapv(|xi| Complex64::new((-xi * xi / 2.0).exp(), 0.0));
+            let psi = x.mapv(|xi| Complex64::new((-xi * xi / 2.0_f64).exp(), 0.0));
 
             let state = QuantumState::new(psi, x, 0.0, 1.0);
             let plot = QuantumVisualizer::visualize_wavefunction(&state);
@@ -4793,7 +4793,7 @@ impl ConvergenceVisualizer {
         }
 
         // Normalize density
-        let max_density = density_grid.iter().fold(0.0, |a, &b| a.max(b));
+        let max_density = density_grid.iter().fold(0.0_f64, |a, &b| a.max(b));
         if max_density > 0.0 {
             density_grid /= max_density;
         }
@@ -5339,12 +5339,13 @@ impl ConvergenceVisualizationEngine {
         metadata.ylabel = metric_name.to_string();
 
         Ok(ConvergencePlot {
-            x_data,
-            y_data,
-            error_bars: None,
-            smoothed_curve,
+            iterations: x_data,
+            residuals: y_data,
+            convergence_iteration: None,
+            convergence_rate: 0.0,
             theoretical_line,
-            metadata,
+            algorithm_name: metric_name.to_string(),
+            tolerance_line: 1e-6,
         })
     }
 
@@ -5392,10 +5393,9 @@ impl ConvergenceVisualizationEngine {
 
                 curves.push(ConvergenceCurve {
                     name: metric_name.to_string(),
-                    y_data,
-                    color: colors[i],
-                    line_style: LineStyle::Solid,
-                    marker_style: MarkerStyle::Circle,
+                    data: y_data,
+                    convergence_rate: 0.0,
+                    color: [colors[i].0, colors[i].1, colors[i].2],
                 });
             }
         }
@@ -5406,9 +5406,10 @@ impl ConvergenceVisualizationEngine {
         metadata.ylabel = "Metric Values".to_string();
 
         Ok(MultiMetricConvergencePlot {
+            iterations: x_data,
             curves,
-            x_data,
-            metadata,
+            convergence_rates: vec![],
+            tolerance_line: 1e-6,
         })
     }
 
@@ -5428,7 +5429,7 @@ impl ConvergenceVisualizationEngine {
         let error_array = Array1::from_vec(errors.to_vec());
 
         // Estimate order of convergence using linear regression
-        let (estimated_order, r_squared) =
+        let (estimated_order, _r_squared) =
             self.estimate_convergence_order(&step_size_array, &error_array)?;
 
         // Compute theoretical scaling
@@ -7407,7 +7408,7 @@ pub mod advanced_interactive_3d {
         }
 
         /// Setup frame capture for video recording
-        fn setup_frame_capture(&mut self, encoder: VideoEncoder) -> Result<()> {
+        fn setup_frame_capture(&mut self, _encoder: VideoEncoder) -> Result<()> {
             // Implementation would setup frame capture pipeline
             Ok(())
         }
@@ -7660,8 +7661,8 @@ pub mod advanced_interactive_3d {
 
         pub fn generate_interactive_visualization(
             &self,
-            engine: &Interactive3DEngine,
-            output_path: &str,
+            _engine: &Interactive3DEngine,
+            _output_path: &str,
         ) -> Result<()> {
             // Implementation would generate interactive HTML/WebGL export
             Ok(())
@@ -8466,25 +8467,25 @@ pub mod advanced_interactive_3d {
     impl Camera3DControls {
         /// Update camera controls
         pub fn update(&mut self, input: CameraInput) -> Result<()> {
-            if let Some((dx, dy)) = input.mouse_delta {
+            if let Some((_dx, _dy)) = input.mouse_delta {
                 // Handle mouse rotation
-                let sensitivity = self.rotation_sensitivity * 0.005;
+                let _sensitivity = self.rotation_sensitivity * 0.005;
                 // Implementation would update camera orientation
             }
 
-            if let Some(zoom) = input.zoom_delta {
+            if let Some(_zoom) = input.zoom_delta {
                 // Handle zoom
-                let sensitivity = self.zoom_sensitivity * 0.1;
+                let _sensitivity = self.zoom_sensitivity * 0.1;
                 // Implementation would update camera position or FOV
             }
 
-            if let Some(keyboard) = input.keyboard_input {
+            if let Some(_keyboard) = input.keyboard_input {
                 // Handle keyboard movement
-                let sensitivity = self.movement_sensitivity * 0.1;
+                let _sensitivity = self.movement_sensitivity * 0.1;
                 // Implementation would update camera position
             }
 
-            if let Some(preset) = input.preset_position {
+            if let Some(_preset) = input.preset_position {
                 // Apply preset camera position
                 // Implementation would load preset configuration
             }
@@ -8610,7 +8611,7 @@ pub mod advanced_interactive_3d {
         pub fn execute(
             &self,
             frame: &StreamingFrame3D,
-            controls: &Interactive3DControls,
+            _controls: &Interactive3DControls,
         ) -> Result<RenderingOutput> {
             let mut render_stats = RenderingStatistics {
                 vertices_processed: frame.points.len(),

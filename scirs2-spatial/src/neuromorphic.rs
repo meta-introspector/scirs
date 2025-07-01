@@ -50,10 +50,10 @@
 //! let processed_events = processor.process_events(&events)?;
 //! ```
 
-use crate::error::{SpatialError, SpatialResult};
-use ndarray::{Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
+use crate::error::SpatialResult;
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use std::collections::{HashMap, VecDeque};
-use std::f64::consts::{E, PI};
+// Constants removed - not used in this module
 
 /// Neuromorphic spike event
 #[derive(Debug, Clone)]
@@ -270,8 +270,8 @@ impl SpikingNeuralClusterer {
     }
     
     /// Fit clustering to spatial data
-    pub fn fit(&mut self, points: &ArrayView2<f64>) -> SpatialResult<(Array1<usize>, Vec<SpikeEvent>)> {
-        let (_n_points, _n_dims) = points.dim();
+    pub fn fit(&mut self, points: &ArrayView2<'_, f64>) -> SpatialResult<(Array1<usize>, Vec<SpikeEvent>)> {
+        let (n_points, n_dims) = points.dim();
         
         // Initialize neural network
         self.initialize_network(n_dims)?;
@@ -319,7 +319,7 @@ impl SpikingNeuralClusterer {
         }
         
         // Create output neurons (cluster centers)
-        for i in 0..self.num_clusters {
+        for _i in 0..self.num_clusters {
             let position = (0..input_dims).map(|_| rand::random::<f64>()).collect();
             let mut neuron = SpikingNeuron::new(position);
             neuron.threshold = self.spike_threshold;
@@ -451,18 +451,19 @@ impl SpikingNeuralClusterer {
         // Create spike timing map
         let mut spike_times: HashMap<usize, Vec<f64>> = HashMap::new();
         for spike in spike_train {
-            spike_times.entry(spike.neuron_id).or_insert_with(Vec::new).push(spike.timestamp);
+            spike_times.entry(spike.neuron_id).or_default().push(spike.timestamp);
         }
         
         // Add output neuron spikes from history
         for spike in &self.spike_history {
-            spike_times.entry(spike.neuron_id).or_insert_with(Vec::new).push(spike.timestamp);
+            spike_times.entry(spike.neuron_id).or_default().push(spike.timestamp);
         }
         
         // Update synaptic weights using STDP
+        let empty_spikes = Vec::new();
         for synapse in &mut self.synapses {
-            let pre_spikes = spike_times.get(&synapse.pre_neuron).unwrap_or(&Vec::new());
-            let post_spikes = spike_times.get(&synapse.post_neuron).unwrap_or(&Vec::new());
+            let pre_spikes = spike_times.get(&synapse.pre_neuron).unwrap_or(&empty_spikes);
+            let post_spikes = spike_times.get(&synapse.post_neuron).unwrap_or(&empty_spikes);
             
             // Check for coincident spikes
             for &pre_time in pre_spikes {
@@ -534,6 +535,12 @@ pub struct NeuromorphicProcessor {
     event_pipeline: VecDeque<SpikeEvent>,
 }
 
+impl Default for NeuromorphicProcessor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl NeuromorphicProcessor {
     /// Create new neuromorphic processor
     pub fn new() -> Self {
@@ -569,8 +576,8 @@ impl NeuromorphicProcessor {
     }
     
     /// Encode spatial data as neuromorphic events
-    pub fn encode_spatial_events(&self, points: &ArrayView2<f64>) -> SpatialResult<Vec<SpikeEvent>> {
-        let (_n_points, _n_dims) = points.dim();
+    pub fn encode_spatial_events(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<Vec<SpikeEvent>> {
+        let (_n_points, n_dims) = points.dim();
         let mut events = Vec::new();
         
         for (point_idx, point) in points.outer_iter().enumerate() {
@@ -746,8 +753,8 @@ impl NeuromorphicProcessor {
         if self.memristive_crossbar {
             let total_conductance: f64 = self.conductances.sum();
             let avg_conductance = total_conductance / (self.crossbar_size.0 * self.crossbar_size.1) as f64;
-            let max_conductance = self.conductances.fold(0.0, |acc, &x| acc.max(x));
-            let min_conductance = self.conductances.fold(1.0, |acc, &x| acc.min(x));
+            let max_conductance = self.conductances.fold(0.0f64, |acc, &x| acc.max(x));
+            let min_conductance = self.conductances.fold(1.0f64, |acc, &x| acc.min(x));
             
             stats.insert("total_conductance".to_string(), total_conductance);
             stats.insert("avg_conductance".to_string(), avg_conductance);
@@ -770,6 +777,7 @@ pub struct CompetitiveNeuralClusterer {
     /// Lateral inhibition strengths
     inhibition_strengths: Array2<f64>,
     /// Winner-take-all threshold
+    #[allow(dead_code)]
     wta_threshold: f64,
     /// Neighborhood function parameters
     neighborhood_sigma: f64,
@@ -803,7 +811,7 @@ impl CompetitiveNeuralClusterer {
     }
     
     /// Train competitive network on spatial data
-    pub fn fit(&mut self, points: &ArrayView2<f64>, epochs: usize) -> SpatialResult<Array1<usize>> {
+    pub fn fit(&mut self, points: &ArrayView2<'_, f64>, epochs: usize) -> SpatialResult<Array1<usize>> {
         let (n_points, _) = points.dim();
         let mut assignments = Array1::zeros(n_points);
         
@@ -925,6 +933,7 @@ pub struct AdvancedMemristiveLearning {
     /// Learning history
     learning_history: LearningHistory,
     /// Enable online learning
+    #[allow(dead_code)]
     online_learning: bool,
     /// Enable catastrophic forgetting protection
     forgetting_protection: bool,
@@ -1343,7 +1352,7 @@ impl AdvancedMemristiveLearning {
         epochs: usize,
     ) -> SpatialResult<TrainingResult> {
         let mut training_metrics = Vec::new();
-        let mut final_weights = self.crossbar_array.conductances.clone();
+        let mut _final_weights = self.crossbar_array.conductances.clone();
         
         for epoch in 0..epochs {
             // Process each spatial pattern
@@ -1369,7 +1378,7 @@ impl AdvancedMemristiveLearning {
             }
         }
         
-        final_weights = self.crossbar_array.conductances.clone();
+        let final_weights = self.crossbar_array.conductances.clone();
         
         Ok(TrainingResult {
             final_weights,
@@ -1486,7 +1495,8 @@ impl AdvancedMemristiveLearning {
         target: f64,
         error: f64,
     ) -> SpatialResult<()> {
-        for mechanism in &self.plasticity_mechanisms {
+        let mechanisms = self.plasticity_mechanisms.clone();
+        for mechanism in &mechanisms {
             if mechanism.enabled {
                 match mechanism.mechanism_type {
                     PlasticityType::STDP => {
@@ -1557,7 +1567,7 @@ impl AdvancedMemristiveLearning {
     /// Apply homeostatic scaling
     async fn apply_homeostatic_scaling(
         &mut self,
-        input: &ArrayView1<'_, f64>,
+        _input: &ArrayView1<'_, f64>,
         output: f64,
         mechanism: &PlasticityMechanism,
     ) -> SpatialResult<()> {
@@ -1680,7 +1690,7 @@ impl AdvancedMemristiveLearning {
     async fn update_memristive_devices(
         &mut self,
         input: &ArrayView1<'_, f64>,
-        error: f64,
+        _error: f64,
     ) -> SpatialResult<()> {
         for (i, &input_val) in input.iter().enumerate() {
             if i < self.crossbar_array.dimensions.0 {
@@ -1739,7 +1749,8 @@ impl AdvancedMemristiveLearning {
         }
         
         // Apply homeostatic mechanisms
-        for mechanism in &self.homeostatic_system.mechanisms {
+        let mechanisms = self.homeostatic_system.mechanisms.clone();
+        for mechanism in &mechanisms {
             match mechanism {
                 HomeostaticMechanism::SynapticScaling => {
                     self.apply_synaptic_scaling().await?;
@@ -1865,7 +1876,7 @@ impl AdvancedMemristiveLearning {
     }
     
     /// Adapt learning rates based on performance
-    async fn adapt_learning_rates(&mut self, metrics: &PerformanceMetrics) -> SpatialResult<()> {
+    async fn adapt_learning_rates(&mut self, _metrics: &PerformanceMetrics) -> SpatialResult<()> {
         let performance_trend = self.compute_performance_trend();
         
         for mechanism in &mut self.plasticity_mechanisms {
@@ -1966,7 +1977,7 @@ impl AdvancedMemristiveLearning {
     }
     
     /// Record learning history
-    async fn record_learning_history(&mut self, metrics: &PerformanceMetrics, timestamp: f64) -> SpatialResult<()> {
+    async fn record_learning_history(&mut self, metrics: &PerformanceMetrics, _timestamp: f64) -> SpatialResult<()> {
         // Record performance metrics
         self.learning_history.performance_metrics.push_back(metrics.clone());
         
@@ -2175,6 +2186,12 @@ impl HomeostaticSystem {
     }
 }
 
+impl Default for MetaplasticityRules {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MetaplasticityRules {
     /// Create new metaplasticity rules
     pub fn new() -> Self {
@@ -2232,6 +2249,12 @@ impl NeuromodulationSystem {
                 stress_noradrenaline: 0.3,
             },
         }
+    }
+}
+
+impl Default for LearningHistory {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -2508,7 +2531,7 @@ mod tests {
         assert!(aged_conductance <= initial_conductance);
         
         // Apply variability
-        let pre_variability = learning_system.crossbar_array.conductances[[0, 0]];
+        let _pre_variability = learning_system.crossbar_array.conductances[[0, 0]];
         learning_system.apply_device_variability(0, 0);
         let post_variability = learning_system.crossbar_array.conductances[[0, 0]];
         

@@ -112,7 +112,7 @@ impl NaturalNeighborInterpolator {
     /// * If points are not 2D
     /// * If fewer than 3 points are provided
     /// * If the Delaunay triangulation fails
-    pub fn new(points: &ArrayView2<f64>, values: &ArrayView1<f64>) -> SpatialResult<Self> {
+    pub fn new(points: &ArrayView2<'_, f64>, values: &ArrayView1<f64>) -> SpatialResult<Self> {
         // Check input dimensions
         let n_points = points.nrows();
         let dim = points.ncols();
@@ -212,7 +212,7 @@ impl NaturalNeighborInterpolator {
     /// # Errors
     ///
     /// * If the points dimensions don't match the interpolator
-    pub fn interpolate_many(&self, points: &ArrayView2<f64>) -> SpatialResult<Array1<f64>> {
+    pub fn interpolate_many(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<Array1<f64>> {
         // Check dimensions
         if points.ncols() != self.dim {
             return Err(SpatialError::DimensionError(format!(

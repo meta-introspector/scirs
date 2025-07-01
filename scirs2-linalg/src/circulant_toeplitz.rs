@@ -68,7 +68,7 @@ pub struct CirculantMatrix<F> {
 
 impl<F> CirculantMatrix<F>
 where
-    F: Float + NumAssign + Sum + Clone + Into<f64> + 'static,
+    F: Float + NumAssign + Sum + Clone + Into<f64> + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     /// Create a new circulant matrix from its first row
     ///
@@ -366,7 +366,7 @@ pub struct ToeplitzMatrix<F> {
 
 impl<F> ToeplitzMatrix<F>
 where
-    F: Float + NumAssign + Sum + Clone + Into<f64> + 'static,
+    F: Float + NumAssign + Sum + Clone + Into<f64> + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     /// Create a new Toeplitz matrix from its first row and first column
     ///

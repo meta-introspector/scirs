@@ -3,12 +3,11 @@
 //! Implements various multi-objective optimization algorithms including NSGA-II, NSGA-III,
 //! MOEA/D, and other state-of-the-art algorithms for finding Pareto-optimal optimizer architectures.
 
-use ndarray::{Array1, Array2};
+use ndarray::Array1;
 use num_traits::Float;
-use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 
 use super::{
     ConstraintHandlingMethod, DiversityStrategy, EvaluationMetric, MultiObjectiveAlgorithm,
@@ -321,7 +320,7 @@ pub struct WeightedSum<T: Float> {
 }
 
 /// SMS-EMOA implementation
-pub struct SMS_EMOA<T: Float> {
+pub struct SmsEmoa<T: Float> {
     /// Base population
     population: Vec<Individual<T>>,
 

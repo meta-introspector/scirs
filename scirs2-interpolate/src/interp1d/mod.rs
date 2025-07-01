@@ -110,9 +110,7 @@ impl<F: Float + FromPrimitive + Debug> Interp1d<F> {
         }
 
         if x.len() < 2 {
-            return Err(InterpolateError::invalid_input(
-                "at least 2 points are required for interpolation".to_string(),
-            ));
+            return Err(InterpolateError::insufficient_points(2, x.len(), "interpolation"));
         }
 
         // Check that x is sorted
@@ -126,9 +124,7 @@ impl<F: Float + FromPrimitive + Debug> Interp1d<F> {
 
         // For cubic interpolation, need at least 4 points
         if method == InterpolationMethod::Cubic && x.len() < 4 {
-            return Err(InterpolateError::invalid_input(
-                "at least 4 points are required for cubic interpolation".to_string(),
-            ));
+            return Err(InterpolateError::insufficient_points(4, x.len(), "cubic interpolation"));
         }
 
         Ok(Interp1d {
@@ -155,8 +151,13 @@ impl<F: Float + FromPrimitive + Debug> Interp1d<F> {
         if is_extrapolating {
             match self.extrapolate {
                 ExtrapolateMode::Error => {
-                    return Err(InterpolateError::OutOfBounds(
-                        "x_new is outside the interpolation range".to_string(),
+                    return Err(InterpolateError::out_of_domain_with_suggestion(
+                        x_new,
+                        self.x[0],
+                        self.x[self.x.len() - 1],
+                        "1D interpolation evaluation",
+                        format!("Use ExtrapolateMode::Extrapolate for linear extrapolation, ExtrapolateMode::Nearest for constant extrapolation, or ensure query points are within the data range [{}, {}]", 
+                               self.x[0], self.x[self.x.len() - 1])
                     ));
                 }
                 ExtrapolateMode::Nearest => {

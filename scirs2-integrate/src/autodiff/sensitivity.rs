@@ -107,7 +107,7 @@ pub fn compute_sensitivities<F, SysFunc, ParamFunc>(
     options: Option<ODEOptions<F>>,
 ) -> IntegrateResult<SensitivityAnalysis<F>>
 where
-    F: IntegrateFloat,
+    F: IntegrateFloat + std::default::Default,
     SysFunc: Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F> + Clone,
     ParamFunc: Fn(usize) -> Array1<F>,
 {
@@ -620,7 +620,7 @@ pub struct SobolSensitivity<F: IntegrateFloat> {
     param_bounds: Vec<(F, F)>,
 }
 
-impl<F: IntegrateFloat> SobolSensitivity<F> {
+impl<F: IntegrateFloat + std::default::Default> SobolSensitivity<F> {
     /// Create a new Sobol sensitivity analyzer
     pub fn new(param_bounds: Vec<(F, F)>, n_samples: usize) -> Self {
         SobolSensitivity {

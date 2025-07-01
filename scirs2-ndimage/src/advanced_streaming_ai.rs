@@ -16,8 +16,8 @@
 //! - **Error Recovery AI**: Intelligent fault tolerance and recovery strategies
 
 use ndarray::{Array, Array1, Array2, Array3, ArrayView, ArrayViewMut, Dimension, Ix2, Ix3, IxDyn};
-use num_traits::{Float, FromPrimitive, Zero, One};
-use std::collections::{HashMap, VecDeque, BTreeMap};
+use num_traits::{Float, FromPrimitive, One, Zero};
+use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant};
 
@@ -227,25 +227,25 @@ where
 {
     // Analyze current system conditions
     let system_conditions = analyze_system_conditions()?;
-    
+
     // Extract content features
     let content_features = extract_content_features(content_analysis, config)?;
-    
+
     // Prepare input for AI model
     let model_input = prepare_model_input(&content_features, &system_conditions, config)?;
-    
+
     // Predict optimal chunk configuration
     let chunk_predictions = predict_chunk_configuration(&model_input, ai_model, config)?;
-    
+
     // Validate and adjust predictions
     let validated_chunks = validate_chunk_predictions(&chunk_predictions, data_shape, config)?;
-    
+
     // Generate chunk specifications
     let chunk_specs = generate_chunk_specifications(&validated_chunks, data_shape, config)?;
-    
+
     // Update AI model with feedback
     update_ai_model_with_feedback(ai_model, &chunk_specs, config)?;
-    
+
     Ok(chunk_specs)
 }
 
@@ -262,34 +262,39 @@ where
     T: Float + FromPrimitive + Copy + Send + Sync,
 {
     let (height, width) = image.dim();
-    
+
     // Analyze image content
     let content_analysis = analyze_image_content(&image, config)?;
-    
+
     // Detect optimal chunk boundaries
-    let chunk_boundaries = detect_optimal_chunk_boundaries(&content_analysis, target_chunk_size, config)?;
-    
+    let chunk_boundaries =
+        detect_optimal_chunk_boundaries(&content_analysis, target_chunk_size, config)?;
+
     // Create content-aware chunks
     let mut chunks = Vec::new();
-    
+
     for boundary in chunk_boundaries {
         let chunk_data = extract_chunk_with_overlap(&image, &boundary, config)?;
         let chunk_metadata = compute_chunk_metadata(&chunk_data, &boundary, &content_analysis)?;
-        
+
         let content_chunk = ContentAwareChunk {
             data: chunk_data,
-            boundary: boundary,
+            boundary,
             metadata: chunk_metadata,
             processing_priority: compute_processing_priority(&chunk_metadata)?,
             overlap_strategy: determine_overlap_strategy(&chunk_metadata, config)?,
         };
-        
+
         chunks.push(content_chunk);
     }
-    
+
     // Sort chunks by processing priority
-    chunks.sort_by(|a, b| b.processing_priority.partial_cmp(&a.processing_priority).unwrap());
-    
+    chunks.sort_by(|a, b| {
+        b.processing_priority
+            .partial_cmp(&a.processing_priority)
+            .unwrap()
+    });
+
     Ok(chunks)
 }
 
@@ -304,10 +309,10 @@ pub fn intelligent_memory_management(
 ) -> NdimageResult<MemoryManagementStrategy> {
     // Predict future memory usage
     let memory_forecast = predict_memory_usage(current_usage, prediction_model, config)?;
-    
+
     // Assess memory pressure risk
     let pressure_risk = assess_memory_pressure_risk(&memory_forecast, config)?;
-    
+
     // Determine optimal strategy
     let strategy = if pressure_risk > config.memory_pressure_threshold {
         // High pressure: aggressive memory management
@@ -332,10 +337,10 @@ pub fn intelligent_memory_management(
             prefetch_increase: 0.3,
         }
     };
-    
+
     // Update prediction model
     update_memory_prediction_model(prediction_model, current_usage, &memory_forecast, config)?;
-    
+
     Ok(strategy)
 }
 
@@ -353,15 +358,15 @@ where
 {
     let num_workers = num_cpus::get();
     let mut worker_assignments: HashMap<usize, Vec<ProcessingTask<T>>> = HashMap::new();
-    
+
     // Initialize worker assignments
     for i in 0..num_workers {
         worker_assignments.insert(i, Vec::new());
     }
-    
+
     // Analyze task characteristics
     let task_analysis = analyze_task_characteristics(tasks, config)?;
-    
+
     // Predict worker performance for each task type
     let performance_predictions = predict_worker_performance(
         &task_analysis,
@@ -369,26 +374,48 @@ where
         &load_balancer.load_prediction_model,
         config,
     )?;
-    
+
     // Optimize task assignment using AI strategy
     match load_balancer.adaptation_strategy {
         LoadBalanceStrategy::GradientBased => {
-            assign_tasks_gradient_based(tasks, &performance_predictions, &mut worker_assignments, config)?;
+            assign_tasks_gradient_based(
+                tasks,
+                &performance_predictions,
+                &mut worker_assignments,
+                config,
+            )?;
         }
         LoadBalanceStrategy::ReinforcementLearning => {
-            assign_tasks_reinforcement_learning(tasks, &performance_predictions, &mut worker_assignments, load_balancer, config)?;
+            assign_tasks_reinforcement_learning(
+                tasks,
+                &performance_predictions,
+                &mut worker_assignments,
+                load_balancer,
+                config,
+            )?;
         }
         LoadBalanceStrategy::GeneticAlgorithm => {
-            assign_tasks_genetic_algorithm(tasks, &performance_predictions, &mut worker_assignments, config)?;
+            assign_tasks_genetic_algorithm(
+                tasks,
+                &performance_predictions,
+                &mut worker_assignments,
+                config,
+            )?;
         }
         LoadBalanceStrategy::Hybrid => {
-            assign_tasks_hybrid_approach(tasks, &performance_predictions, &mut worker_assignments, load_balancer, config)?;
+            assign_tasks_hybrid_approach(
+                tasks,
+                &performance_predictions,
+                &mut worker_assignments,
+                load_balancer,
+                config,
+            )?;
         }
     }
-    
+
     // Update load balancer with new assignments
     update_load_balancer_state(load_balancer, &worker_assignments, config)?;
-    
+
     Ok(worker_assignments)
 }
 
@@ -406,17 +433,17 @@ where
 {
     // Update access patterns
     update_access_patterns(cache_manager, access_pattern)?;
-    
+
     // Predict future access patterns
     let access_predictions = predict_future_accesses(
         &cache_manager.usage_patterns,
         &cache_manager.prefetch_model,
         config,
     )?;
-    
+
     // Determine prefetch candidates
     let prefetch_candidates = determine_prefetch_candidates(&access_predictions, config)?;
-    
+
     // Evaluate cache replacement needs
     let replacement_decisions = evaluate_cache_replacement(
         &cache_manager.cache_state,
@@ -424,7 +451,7 @@ where
         &access_predictions,
         config,
     )?;
-    
+
     // Generate cache management decision
     let decision = CacheManagementDecision {
         prefetch_items: prefetch_candidates,
@@ -432,10 +459,10 @@ where
         cache_size_adjustment: replacement_decisions.size_adjustment,
         priority_adjustments: replacement_decisions.priority_adjustments,
     };
-    
+
     // Update prediction model
     update_cache_prediction_model(cache_manager, &decision, config)?;
-    
+
     Ok(decision)
 }
 
@@ -456,17 +483,14 @@ pub fn adaptive_bandwidth_management(
         bandwidth_history,
         config,
     )?;
-    
+
     // Analyze network stability
     let stability_analysis = analyze_network_stability(bandwidth_history, config)?;
-    
+
     // Determine optimal streaming parameters
-    let streaming_params = optimize_streaming_parameters(
-        &bandwidth_forecast,
-        &stability_analysis,
-        config,
-    )?;
-    
+    let streaming_params =
+        optimize_streaming_parameters(&bandwidth_forecast, &stability_analysis, config)?;
+
     // Create adaptation strategy
     let strategy = BandwidthAdaptationStrategy {
         chunk_size_adjustment: streaming_params.chunk_size_multiplier,
@@ -476,7 +500,7 @@ pub fn adaptive_bandwidth_management(
         timeout_adjustment: streaming_params.timeout_multiplier,
         retry_strategy: streaming_params.retry_strategy,
     };
-    
+
     Ok(strategy)
 }
 
@@ -997,13 +1021,13 @@ pub struct StreamingParameters {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::Array2;
     use approx::assert_abs_diff_eq;
+    use ndarray::Array2;
 
     #[test]
     fn test_ai_stream_config_default() {
         let config = AIStreamConfig::default();
-        
+
         assert_eq!(config.ai_model_complexity, 64);
         assert_eq!(config.prediction_window, 10);
         assert_eq!(config.learning_rate, 0.01);
@@ -1020,7 +1044,7 @@ mod tests {
             prediction_accuracy: 0.0,
             adaptation_rate: 0.01,
         };
-        
+
         assert_eq!(ai.chunk_size_weights.dim(), (10, 10));
         assert_eq!(ai.content_features.len(), 20);
         assert_eq!(ai.prediction_accuracy, 0.0);
@@ -1035,7 +1059,7 @@ mod tests {
             compression_ratio: 0.5,
             complexity_estimate: 0.7,
         };
-        
+
         assert_eq!(analysis.variance_map.dim(), (5, 5));
         assert_eq!(analysis.compression_ratio, 0.5);
         assert_eq!(analysis.complexity_estimate, 0.7);
@@ -1051,7 +1075,7 @@ mod tests {
             compression_ratio: 0.6,
             complexity_estimate: 0.8,
         };
-        
+
         let mut ai_model = PredictiveChunkingAI {
             chunk_size_weights: Array2::zeros((10, 10)),
             content_features: Array1::zeros(20),
@@ -1060,28 +1084,27 @@ mod tests {
             prediction_accuracy: 0.0,
             adaptation_rate: 0.01,
         };
-        
+
         let config = AIStreamConfig::default();
-        
-        let result = ai_predictive_chunking::<f64>(
-            &data_shape,
-            &content_analysis,
-            &mut ai_model,
-            &config,
-        ).unwrap();
-        
+
+        let result =
+            ai_predictive_chunking::<f64>(&data_shape, &content_analysis, &mut ai_model, &config)
+                .unwrap();
+
         assert!(!result.is_empty());
         assert!(result[0].size.len() > 0);
     }
 
     #[test]
     fn test_content_aware_adaptive_chunking() {
-        let image = Array2::from_shape_vec((10, 10), (0..100).map(|x| x as f64 / 100.0).collect()).unwrap();
+        let image =
+            Array2::from_shape_vec((10, 10), (0..100).map(|x| x as f64 / 100.0).collect()).unwrap();
         let target_chunk_size = 25;
         let config = AIStreamConfig::default();
-        
-        let result = content_aware_adaptive_chunking(image.view(), target_chunk_size, &config).unwrap();
-        
+
+        let result =
+            content_aware_adaptive_chunking(image.view(), target_chunk_size, &config).unwrap();
+
         assert!(!result.is_empty());
         assert!(result[0].processing_priority >= 0.0);
     }
@@ -1096,12 +1119,13 @@ mod tests {
             pressure_level: 0.3,
             timestamp: Instant::now(),
         };
-        
+
         let mut prediction_model = Array2::zeros((5, 5));
         let config = AIStreamConfig::default();
-        
-        let result = intelligent_memory_management(&current_usage, &mut prediction_model, &config).unwrap();
-        
+
+        let result =
+            intelligent_memory_management(&current_usage, &mut prediction_model, &config).unwrap();
+
         // Should return some valid strategy
         match result {
             MemoryManagementStrategy::Optimistic { .. } => {

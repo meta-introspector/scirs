@@ -74,7 +74,7 @@ impl Default for CLIPTextConfig {
 
 /// Text encoder for CLIP model
 #[derive(Debug, Clone)]
-pub struct CLIPTextEncoder<F: Float + Debug + ScalarOperand + Send + Sync + 'static> {
+pub struct CLIPTextEncoder<F: Float + Debug + ScalarOperand + Send + Sync + 'static + scirs2_core::simd_ops::SimdUnifiedOps> {
     /// Token embedding
     pub token_embedding: Sequential<F>,
     /// Position embedding
@@ -278,14 +278,14 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for CLIP
 
 /// Vision encoder for CLIP model (uses Vision Transformer)
 #[derive(Debug, Clone)]
-pub struct CLIPVisionEncoder<F: Float + Debug + ScalarOperand + Send + Sync + 'static> {
+pub struct CLIPVisionEncoder<F: Float + Debug + ScalarOperand + Send + Sync + 'static + scirs2_core::simd_ops::SimdUnifiedOps> {
     /// Vision Transformer
     pub vision_transformer: VisionTransformer<F>,
     /// Final projection layer
     pub projection: Dense<F>,
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> CLIPVisionEncoder<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static + scirs2_core::simd_ops::SimdUnifiedOps> CLIPVisionEncoder<F> {
     /// Create a new CLIPVisionEncoder
     pub fn new(config: ViTConfig, projection_dim: usize) -> Result<Self> {
         // Create ViT with a clone of the config to avoid ownership issues

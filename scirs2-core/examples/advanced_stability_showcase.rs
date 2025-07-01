@@ -168,7 +168,7 @@ fn demonstrate_runtime_validation(
     for i in 0..10 {
         let call_context = ApiCallContext {
             execution_time: Duration::from_millis(50 + (i * 10)), // Increasing time
-            memory_usage: 1024 * 1024 * (1 + i),                  // Increasing memory
+            memory_usage: 1024 * 1024 * (1 + i as usize),         // Increasing memory
             input_hash: format!("input_{}", i),
             output_hash: format!("output_{}", i),
             thread_id: format!("thread_{}", i % 4),

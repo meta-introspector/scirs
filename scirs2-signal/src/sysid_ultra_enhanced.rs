@@ -100,6 +100,214 @@ pub struct DiversityMetrics {
     pub ensemble_strength: f64,
 }
 
+/// Advanced real-world robustness enhancements for system identification
+#[derive(Debug, Clone)]
+pub struct RobustnessEnhancements {
+    /// Outlier detection and handling
+    pub outlier_handling: OutlierHandling,
+    /// Time-varying system adaptation
+    pub adaptation_strategy: AdaptationStrategy,
+    /// Noise characterization and mitigation
+    pub noise_mitigation: NoiseMitigation,
+    /// Model validation under different conditions
+    pub cross_validation: CrossValidationResults,
+}
+
+/// Outlier detection and handling methods
+#[derive(Debug, Clone)]
+pub struct OutlierHandling {
+    /// Detected outlier indices
+    pub outlier_indices: Vec<usize>,
+    /// Outlier detection method used
+    pub detection_method: OutlierDetectionMethod,
+    /// Handling strategy applied
+    pub handling_strategy: OutlierHandlingStrategy,
+    /// Impact assessment on model quality
+    pub impact_assessment: f64,
+}
+
+/// Methods for detecting outliers in system identification data
+#[derive(Debug, Clone, PartialEq)]
+pub enum OutlierDetectionMethod {
+    /// Statistical z-score based detection
+    ZScore { threshold: f64 },
+    /// Interquartile range based detection
+    IQR { factor: f64 },
+    /// Robust regression based detection
+    RobustRegression,
+    /// Innovation-based detection for time series
+    Innovation { window_size: usize },
+    /// Machine learning based anomaly detection
+    MLAnomaly,
+}
+
+/// Strategies for handling detected outliers
+#[derive(Debug, Clone, PartialEq)]
+pub enum OutlierHandlingStrategy {
+    /// Remove outliers from dataset
+    Remove,
+    /// Replace with interpolated values
+    Interpolate,
+    /// Robust weighting (lower weights for outliers)
+    RobustWeight,
+    /// Keep outliers but mark for special handling
+    Mark,
+    /// Use robust estimation methods
+    RobustEstimation,
+}
+
+/// Adaptation strategies for time-varying systems
+#[derive(Debug, Clone)]
+pub struct AdaptationStrategy {
+    /// Adaptation method used
+    pub method: AdaptationMethod,
+    /// Adaptation rate
+    pub adaptation_rate: f64,
+    /// Forgetting factor for recursive methods
+    pub forgetting_factor: Option<f64>,
+    /// Change detection results
+    pub change_detection: ChangeDetectionResults,
+}
+
+/// Methods for adaptive system identification
+#[derive(Debug, Clone, PartialEq)]
+pub enum AdaptationMethod {
+    /// Recursive least squares with forgetting
+    RecursiveLeastSquares { forgetting_factor: f64 },
+    /// Kalman filter based adaptation
+    KalmanFilter,
+    /// Exponential forgetting
+    ExponentialForgetting { alpha: f64 },
+    /// Sliding window approach
+    SlidingWindow { window_size: usize },
+    /// Change point detection with model switching
+    ChangePointDetection,
+}
+
+/// Results of change detection analysis
+#[derive(Debug, Clone)]
+pub struct ChangeDetectionResults {
+    /// Detected change points
+    pub change_points: Vec<usize>,
+    /// Confidence levels for each change point
+    pub confidence_levels: Vec<f64>,
+    /// Type of changes detected
+    pub change_types: Vec<ChangeType>,
+}
+
+/// Types of changes in system behavior
+#[derive(Debug, Clone, PartialEq)]
+pub enum ChangeType {
+    /// Gradual parameter drift
+    ParameterDrift,
+    /// Sudden parameter jump
+    ParameterJump,
+    /// Change in system structure
+    StructuralChange,
+    /// Change in noise characteristics
+    NoiseChange,
+    /// Change in operating regime
+    RegimeChange,
+}
+
+/// Noise characterization and mitigation strategies
+#[derive(Debug, Clone)]
+pub struct NoiseMitigation {
+    /// Characterized noise properties
+    pub noise_properties: NoiseProperties,
+    /// Mitigation strategies applied
+    pub mitigation_strategies: Vec<NoiseMitigationStrategy>,
+    /// Effectiveness assessment
+    pub effectiveness: f64,
+}
+
+/// Characterized properties of noise in the system
+#[derive(Debug, Clone)]
+pub struct NoiseProperties {
+    /// Estimated noise variance
+    pub variance: f64,
+    /// Noise distribution type
+    pub distribution: NoiseDistribution,
+    /// Temporal correlation structure
+    pub correlation_structure: CorrelationStructure,
+    /// Frequency characteristics
+    pub frequency_characteristics: FrequencyCharacteristics,
+}
+
+/// Types of noise distributions
+#[derive(Debug, Clone, PartialEq)]
+pub enum NoiseDistribution {
+    Gaussian,
+    Uniform,
+    Laplacian,
+    StudentT { dof: f64 },
+    Mixed,
+    Unknown,
+}
+
+/// Temporal correlation structure of noise
+#[derive(Debug, Clone)]
+pub struct CorrelationStructure {
+    /// Autocorrelation function
+    pub autocorrelation: Array1<f64>,
+    /// Correlation time constant
+    pub time_constant: Option<f64>,
+    /// Long-range dependence parameter
+    pub hurst_exponent: Option<f64>,
+}
+
+/// Frequency characteristics of noise
+#[derive(Debug, Clone)]
+pub struct FrequencyCharacteristics {
+    /// Power spectral density
+    pub psd: Array1<f64>,
+    /// Frequencies corresponding to PSD
+    pub frequencies: Array1<f64>,
+    /// Dominant noise frequencies
+    pub dominant_frequencies: Vec<f64>,
+    /// Noise coloring classification
+    pub noise_color: NoiseColor,
+}
+
+/// Classification of noise by frequency characteristics
+#[derive(Debug, Clone, PartialEq)]
+pub enum NoiseColor {
+    White,
+    Pink,
+    Brown,
+    Blue,
+    Violet,
+    Grey,
+}
+
+/// Strategies for noise mitigation
+#[derive(Debug, Clone, PartialEq)]
+pub enum NoiseMitigationStrategy {
+    /// Prefiltering of input/output data
+    Prefiltering { filter_type: String },
+    /// Robust estimation methods
+    RobustEstimation,
+    /// Instrumental variable methods
+    InstrumentalVariable,
+    /// Bias compensation
+    BiasCompensation,
+    /// Regularization techniques
+    Regularization { parameter: f64 },
+}
+
+/// Cross-validation results for model robustness assessment
+#[derive(Debug, Clone)]
+pub struct CrossValidationResults {
+    /// K-fold cross-validation scores
+    pub kfold_scores: Vec<f64>,
+    /// Time-series cross-validation scores
+    pub time_series_scores: Vec<f64>,
+    /// Bootstrap validation scores
+    pub bootstrap_scores: Vec<f64>,
+    /// Out-of-sample prediction accuracy
+    pub out_of_sample_accuracy: f64,
+}
+
 /// Real-time parameter tracking
 #[derive(Debug, Clone)]
 pub struct RealTimeTracker {

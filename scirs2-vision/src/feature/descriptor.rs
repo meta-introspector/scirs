@@ -10,7 +10,7 @@ use ndarray::Array2;
 use std::f32::consts::PI;
 
 /// Feature point with position, scale, and orientation
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct KeyPoint {
     /// X-coordinate
     pub x: f32,

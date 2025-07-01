@@ -563,7 +563,7 @@ impl<N: Node> EmbeddingModel<N> {
     where
         N: Clone,
     {
-        let target_embedding = self.embeddings.get(node).ok_or(GraphError::NodeNotFound)?;
+        let target_embedding = self.embeddings.get(node).ok_or(GraphError::node_not_found("node"))?;
 
         let mut similarities = Vec::new();
 
@@ -594,12 +594,12 @@ impl<N: Node> EmbeddingModel<N> {
             let target_emb = self
                 .embeddings
                 .get(&pair.target)
-                .ok_or(GraphError::NodeNotFound)?
+                .ok_or(GraphError::node_not_found("node"))?
                 .clone();
             let context_emb = self
                 .context_embeddings
                 .get(&pair.context)
-                .ok_or(GraphError::NodeNotFound)?
+                .ok_or(GraphError::node_not_found("node"))?
                 .clone();
 
             // Positive sample: maximize probability of context given target
@@ -685,11 +685,11 @@ impl<N: Node> EmbeddingModel<N> {
                     // Get embeddings (read-only access)
                     let target_emb = self.embeddings
                         .get(&pair.target)
-                        .ok_or(GraphError::NodeNotFound)?
+                        .ok_or(GraphError::node_not_found("node"))?
                         .clone();
                     let context_emb = self.context_embeddings
                         .get(&pair.context)
-                        .ok_or(GraphError::NodeNotFound)?
+                        .ok_or(GraphError::node_not_found("node"))?
                         .clone();
 
                     // Compute gradients (SIMD optimized)
@@ -815,7 +815,7 @@ impl<N: Node> EmbeddingModel<N> {
                 let target_emb = self
                     .embeddings
                     .get(target_node)
-                    .ok_or(GraphError::NodeNotFound)?
+                    .ok_or(GraphError::node_not_found("node"))?
                     .clone();
 
                 if let Some(node_pairs) = pairs_by_target.get(target_node) {
@@ -823,7 +823,7 @@ impl<N: Node> EmbeddingModel<N> {
                         let context_emb = self
                             .context_embeddings
                             .get(&pair.context)
-                            .ok_or(GraphError::NodeNotFound)?
+                            .ok_or(GraphError::node_not_found("node"))?
                             .clone();
 
                         // Compute positive gradient
@@ -1311,7 +1311,7 @@ impl<N: Node> RandomWalkGenerator<N> {
         Ix: petgraph::graph::IndexType,
     {
         if !graph.contains_node(start) {
-            return Err(GraphError::NodeNotFound);
+            return Err(GraphError::node_not_found("node"));
         }
 
         let mut walk = vec![start.clone()];
@@ -1350,7 +1350,7 @@ impl<N: Node> RandomWalkGenerator<N> {
         Ix: petgraph::graph::IndexType,
     {
         if !graph.contains_node(start) {
-            return Err(GraphError::NodeNotFound);
+            return Err(GraphError::node_not_found("node"));
         }
 
         let mut walk = vec![start.clone()];
@@ -1412,7 +1412,7 @@ impl<N: Node> RandomWalkGenerator<N> {
             let next_node = current_neighbors[selected_index].clone();
             walk.push(next_node.clone());
             // Update current for next iteration
-            let current = next_node;
+            let _current = next_node;
         }
 
         Ok(RandomWalk { nodes: walk })
@@ -2025,7 +2025,7 @@ impl<N: Node + Clone + Hash + Eq> FastGraphEmbedding<N> {
 
     fn hash_node(&self, node: &N) -> u64 {
         use std::collections::hash_map::DefaultHasher;
-        use std::hash::{Hash, Hasher};
+        use std::hash::Hasher;
 
         let mut hasher = DefaultHasher::new();
         node.hash(&mut hasher);
@@ -2116,7 +2116,7 @@ impl<N: Node + Clone + Hash + Eq> Graph2Vec<N> {
     pub fn extract_wl_features<E, Ix>(
         &mut self,
         graph: &Graph<N, E, Ix>,
-        graph_id: &str,
+        _graph_id: &str,
     ) -> Result<Vec<String>>
     where
         E: EdgeWeight,

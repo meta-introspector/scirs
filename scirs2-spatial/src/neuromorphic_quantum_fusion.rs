@@ -52,17 +52,15 @@
 //! ```
 
 use crate::error::{SpatialError, SpatialResult};
-use crate::quantum_inspired::{QuantumState, QuantumAmplitude};
-use crate::neuromorphic::{SpikingNeuron, SpikeEvent};
-use ndarray::{Array1, Array2, Array3, ArrayView1, ArrayView2, Axis, s};
+use crate::quantum_inspired::QuantumState;
+use crate::neuromorphic::SpikingNeuron;
+use ndarray::{Array1, Array2, ArrayView2};
 use num_complex::Complex64;
-use std::collections::{HashMap, VecDeque, BTreeMap};
-use std::f64::consts::{PI, E, SQRT_2};
-use std::time::{Duration, Instant};
-use std::sync::{Arc, Mutex};
-use tokio::time::{sleep, timeout};
+use std::f64::consts::PI;
+use std::time::Instant;
 
 /// Quantum-enhanced spiking neural clusterer
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct QuantumSpikingClusterer {
     /// Number of clusters
@@ -240,7 +238,7 @@ impl QuantumSpikingClusterer {
     }
     
     /// Perform quantum-neural fusion clustering
-    pub async fn cluster(&mut self, points: &ArrayView2<f64>) -> SpatialResult<(Array2<f64>, Vec<QuantumSpikePattern>, FusionMetrics)> {
+    pub async fn cluster(&mut self, points: &ArrayView2<'_, f64>) -> SpatialResult<(Array2<f64>, Vec<QuantumSpikePattern>, FusionMetrics)> {
         let start_time = Instant::now();
         
         // Initialize quantum-neural network
@@ -268,7 +266,7 @@ impl QuantumSpikingClusterer {
     }
     
     /// Initialize quantum-neural network
-    async fn initialize_quantum_neural_network(&mut self, points: &ArrayView2<f64>) -> SpatialResult<()> {
+    async fn initialize_quantum_neural_network(&mut self, points: &ArrayView2<'_, f64>) -> SpatialResult<()> {
         let (n_points, n_dims) = points.dim();
         
         // Create quantum-enhanced spiking neurons
@@ -401,8 +399,8 @@ impl QuantumSpikingClusterer {
     }
     
     /// Quantum exploration phase using superposition
-    async fn quantum_exploration_phase(&mut self, points: &ArrayView2<f64>) -> SpatialResult<Array2<f64>> {
-        let (n_points, n_dims) = points.dim();
+    async fn quantum_exploration_phase(&mut self, points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
+        let (_n_points, n_dims) = points.dim();
         let mut quantum_centroids = Array2::zeros((self.num_clusters, n_dims));
         
         // Use quantum superposition to explore multiple centroid configurations
@@ -432,7 +430,7 @@ impl QuantumSpikingClusterer {
     }
     
     /// Calculate coordinate range for a dimension
-    fn calculate_coordinate_range(&self, points: &ArrayView2<f64>, dim: usize) -> (f64, f64) {
+    fn calculate_coordinate_range(&self, points: &ArrayView2<'_, f64>, dim: usize) -> (f64, f64) {
         let mut min_coord = f64::INFINITY;
         let mut max_coord = f64::NEG_INFINITY;
         
@@ -447,8 +445,8 @@ impl QuantumSpikingClusterer {
     }
     
     /// Neural competitive learning with quantum enhancement
-    async fn neural_competitive_learning(&mut self, points: &ArrayView2<f64>, initial_centroids: &Array2<f64>) -> SpatialResult<(Array2<f64>, Vec<QuantumSpikePattern>)> {
-        let (n_points, n_dims) = points.dim();
+    async fn neural_competitive_learning(&mut self, points: &ArrayView2<'_, f64>, initial_centroids: &Array2<f64>) -> SpatialResult<(Array2<f64>, Vec<QuantumSpikePattern>)> {
+        let (_n_points, _n_dims) = points.dim();
         let mut centroids = initial_centroids.clone();
         let mut spike_patterns = Vec::new();
         
@@ -585,10 +583,10 @@ impl QuantumSpikingClusterer {
             let learning_rate = 0.1 * (1.0 / (1.0 + iteration as f64 * 0.01)); // Decreasing learning rate
             
             // Update classical neuron position
+            let quantum_enhancement = self.quantum_neurons[winner_idx].coherence * 0.1;
             let neuron_position = &mut self.quantum_neurons[winner_idx].classical_neuron.position;
             for (i, &coord) in point.iter().enumerate() {
                 if i < neuron_position.len() {
-                    let quantum_enhancement = self.quantum_neurons[winner_idx].coherence * 0.1;
                     neuron_position[i] += learning_rate * (coord - neuron_position[i]) * (1.0 + quantum_enhancement);
                 }
             }
@@ -708,7 +706,8 @@ impl QuantumSpikingClusterer {
                 self.quantum_synapses[synapse_idx].quantum_entanglement += entanglement_change;
                 
                 // Apply coherence decay
-                self.quantum_synapses[synapse_idx].quantum_entanglement *= self.quantum_synapses[synapse_idx].coherence_decay;
+                let coherence_decay = self.quantum_synapses[synapse_idx].coherence_decay;
+                self.quantum_synapses[synapse_idx].quantum_entanglement *= coherence_decay;
                 
                 // Update timing
                 self.quantum_synapses[synapse_idx].last_spike_delta = current_time;
@@ -779,11 +778,11 @@ impl QuantumSpikingClusterer {
     }
     
     /// Bio-quantum fusion refinement
-    async fn bio_quantum_refinement(&mut self, points: &ArrayView2<f64>, centroids: &Array2<f64>) -> SpatialResult<Array2<f64>> {
+    async fn bio_quantum_refinement(&mut self, points: &ArrayView2<'_, f64>, centroids: &Array2<f64>) -> SpatialResult<Array2<f64>> {
         let mut refined_centroids = centroids.clone();
         
         // Apply biological optimization principles
-        for iteration in 0..10 {
+        for _iteration in 0..10 {
             // Evolutionary selection pressure
             self.apply_evolutionary_selection(points, &mut refined_centroids).await?;
             
@@ -798,7 +797,7 @@ impl QuantumSpikingClusterer {
     }
     
     /// Apply evolutionary selection pressure
-    async fn apply_evolutionary_selection(&mut self, points: &ArrayView2<f64>, centroids: &mut Array2<f64>) -> SpatialResult<()> {
+    async fn apply_evolutionary_selection(&mut self, points: &ArrayView2<'_, f64>, centroids: &mut Array2<f64>) -> SpatialResult<()> {
         // Evaluate fitness of each centroid (inverse of total distance to assigned points)
         let mut fitness_scores = Vec::new();
         
@@ -880,7 +879,7 @@ impl QuantumSpikingClusterer {
                 if distance < min_distance {
                     // Apply diversity pressure
                     let repulsion_force = 0.05;
-                    let direction_vector = centroids.row(i) - &centroids.row(j);
+                    let direction_vector = &centroids.row(i).to_owned() - &centroids.row(j).to_owned();
                     let direction_norm = direction_vector.iter().map(|x| x * x).sum::<f64>().sqrt();
                     
                     if direction_norm > 0.0 {
@@ -919,7 +918,7 @@ impl QuantumSpikingClusterer {
     }
     
     /// Calculate fusion performance metrics
-    fn calculate_fusion_metrics(&mut self, centroids: &Array2<f64>, points: &ArrayView2<f64>) {
+    fn calculate_fusion_metrics(&mut self, centroids: &Array2<f64>, points: &ArrayView2<'_, f64>) {
         // Calculate speedup factor
         let pure_classical_time = self.fusion_metrics.classical_time_ms * 3.0; // Estimated
         let fusion_time = self.fusion_metrics.total_time_ms;
@@ -944,7 +943,7 @@ impl QuantumSpikingClusterer {
     }
     
     /// Calculate clustering quality (silhouette-like score)
-    fn calculate_clustering_quality(&self, centroids: &Array2<f64>, points: &ArrayView2<f64>) -> f64 {
+    fn calculate_clustering_quality(&self, centroids: &Array2<f64>, points: &ArrayView2<'_, f64>) -> f64 {
         let mut total_score = 0.0;
         let mut point_count = 0;
         
@@ -1101,6 +1100,12 @@ pub struct OptimizationStep {
     pub quantum_contribution: f64,
 }
 
+impl Default for NeuralQuantumOptimizer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl NeuralQuantumOptimizer {
     /// Create new neural-quantum optimizer
     pub fn new() -> Self {
@@ -1216,7 +1221,7 @@ impl NeuralQuantumOptimizer {
     }
     
     /// Compute neural guidance for optimization direction
-    async fn compute_neural_guidance(&mut self, current_params: &Array1<f64>, step: usize) -> SpatialResult<Array1<f64>> {
+    async fn compute_neural_guidance(&mut self, current_params: &Array1<f64>, _step: usize) -> SpatialResult<Array1<f64>> {
         let mut guidance = Array1::zeros(current_params.len());
         
         for neuron in &mut self.neural_network {
@@ -1302,7 +1307,7 @@ impl NeuralQuantumOptimizer {
     }
     
     /// Adapt neural network based on optimization results
-    async fn adapt_neural_network(&mut self, objective_value: f64, step: usize) -> SpatialResult<()> {
+    async fn adapt_neural_network(&mut self, objective_value: f64, _step: usize) -> SpatialResult<()> {
         // Calculate reward signal (lower objective value = higher reward)
         let reward = 1.0 / (1.0 + objective_value.abs());
         

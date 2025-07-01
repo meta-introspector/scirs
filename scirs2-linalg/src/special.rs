@@ -6,7 +6,7 @@
 //! - Matrix exponential, logarithm, and square root functions
 //! - Matrix sign function and other matrix decompositions
 
-use ndarray::{Array2, ArrayView2};
+use ndarray::{Array2, ArrayView2, ScalarOperand};
 use num_traits::{Float, NumAssign, One};
 use std::iter::Sum;
 
@@ -37,7 +37,7 @@ use crate::solve::solve_multiple;
 /// ```
 pub fn block_diag<F>(arrays: &[&ArrayView2<F>]) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     if arrays.is_empty() {
         return Err(LinalgError::ShapeError(
@@ -101,7 +101,7 @@ where
 /// ```
 pub fn expm<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + ndarray::ScalarOperand,
+    F: Float + NumAssign + Sum + ndarray::ScalarOperand + Send + Sync,
 {
     // Redirect to the implementation in matrix_functions module
     matrix_functions::expm(a, workers)
@@ -129,7 +129,7 @@ where
 /// ```
 pub fn logm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     // Redirect to the implementation in matrix_functions module
     matrix_functions::logm(a)
@@ -157,7 +157,7 @@ where
 /// ```
 pub fn sqrtm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + One,
+    F: Float + NumAssign + Sum + One + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     // Redirect to the implementation in matrix_functions module with default parameters
     matrix_functions::sqrtm(a, 20, F::from(1e-10).unwrap())
@@ -197,7 +197,7 @@ where
 /// ```
 pub fn signm<F>(a: &ArrayView2<F>, max_iter: usize, tol: F) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + One,
+    F: Float + NumAssign + Sum + One + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     if a.nrows() != a.ncols() {
         return Err(LinalgError::ShapeError(format!(

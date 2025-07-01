@@ -95,6 +95,10 @@ pub enum TimeSeriesError {
     #[error("I/O error: {0}")]
     IOError(String),
 
+    /// Invalid operation
+    #[error("Invalid operation: {0}")]
+    InvalidOperation(String),
+
     /// Other error
     #[error("Error: {0}")]
     Other(String),

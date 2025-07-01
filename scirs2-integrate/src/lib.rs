@@ -155,6 +155,7 @@ pub mod performance_monitor;
 
 // Ultra-performance optimization modules (ultrathink mode)
 pub mod gpu_ultra_acceleration;
+pub mod neural_rl_step_control;
 pub mod realtime_performance_adaptation;
 pub mod ultra_memory_optimization;
 pub mod ultra_simd_acceleration;
@@ -475,6 +476,12 @@ pub use ultra_simd_acceleration::{
 pub use ultrathink_mode_coordinator::{
     PerformanceTargets, UltrathinkModeConfig, UltrathinkModeCoordinator, UltrathinkModeMetrics,
     UltrathinkModePerformanceReport, UltrathinkModeResult,
+};
+// Neural Reinforcement Learning Step Control exports
+pub use neural_rl_step_control::{
+    DeepQNetwork, Experience, NeuralRLStepController, NetworkWeights, PrioritizedExperienceReplay,
+    RLEvaluationResults, StateFeatureExtractor, StepSizePrediction, TrainingConfiguration,
+    TrainingResult,
 };
 // Implicit solvers for PDEs
 pub use pde::implicit::{

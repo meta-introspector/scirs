@@ -507,7 +507,7 @@ impl LatentDirichletAllocation {
                 .map(|i| (i, format!("word_{}", i)))
                 .collect()
         });
-        self.bound.get_or_insert_with(|| Vec::new());
+        self.bound.get_or_insert_with(Vec::new);
 
         // Initialize topic-word distribution if not already done
         if self.components.is_none() {
@@ -527,7 +527,7 @@ impl LatentDirichletAllocation {
         }
 
         let batch_size = self.config.batch_size.min(n_samples);
-        let n_batches = (n_samples + batch_size - 1) / batch_size;
+        let n_batches = n_samples.div_ceil(batch_size);
 
         for epoch in 0..self.config.max_iter {
             let mut total_bound = 0.0;

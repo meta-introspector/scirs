@@ -4,7 +4,7 @@
 
 use crate::result::OptimizeResults;
 use ndarray::{Array1, ArrayView1};
-use scirs2_core::error::Result;
+use scirs2_core::error::CoreResult;
 
 /// Evolutionary strategy optimizer
 #[derive(Debug, Clone)]

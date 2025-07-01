@@ -192,7 +192,7 @@ where
 }
 
 /// Apply N-dimensional Gaussian filter in Fourier domain
-/// 
+///
 /// This implementation uses separable 1D FFTs along each axis for efficiency
 fn fourier_gaussian_nd<T, D>(input: &Array<T, D>, sigma: &[T]) -> NdimageResult<Array<T, D>>
 where
@@ -210,24 +210,25 @@ where
     if input.ndim() == 3 {
         return fourier_gaussian_3d(input, sigma);
     }
-    
+
     // For higher dimensions, fall back to a general but simpler approach
     // Convert to 1D, apply filter, and reshape back
     let shape = input.shape().to_vec();
     let flat_input = input.view().into_shape(input.len())?;
-    
+
     // Create equivalent 1D sigma (use geometric mean of all dimensions)
     let sigma_1d = {
-        let product: f64 = sigma.iter()
+        let product: f64 = sigma
+            .iter()
             .map(|&s| NumCast::from(s).unwrap_or(1.0))
             .fold(1.0, |acc, x| acc * x);
         let geometric_mean = product.powf(1.0 / sigma.len() as f64);
         T::from(geometric_mean).unwrap_or(T::one())
     };
-    
+
     // Apply 1D filter
     let filtered_1d = fourier_gaussian_1d(&flat_input, sigma_1d)?;
-    
+
     // Reshape back to original dimensions
     let result = filtered_1d.into_shape(shape)?;
     Ok(result)
@@ -240,17 +241,18 @@ where
     D: Dimension,
 {
     // Convert to 3D for processing
-    let input_3d = input.view()
+    let input_3d = input
+        .view()
         .into_dimensionality::<ndarray::Ix3>()
         .map_err(|_| NdimageError::DimensionError("Failed to convert to 3D".into()))?;
-    
+
     let (nz, ny, nx) = input_3d.dim();
-    
+
     // Convert sigma values
     let sigma_z: f64 = NumCast::from(sigma[0]).unwrap_or(1.0);
     let sigma_y: f64 = NumCast::from(sigma[1]).unwrap_or(1.0);
     let sigma_x: f64 = NumCast::from(sigma[2]).unwrap_or(1.0);
-    
+
     // Convert input to f64 for FFT processing
     let mut input_f64 = Array::zeros((nz, ny, nx));
     for i in 0..nz {
@@ -260,67 +262,67 @@ where
             }
         }
     }
-    
+
     // Apply separable filtering along each axis
     let two_pi = 2.0 * PI;
-    
+
     // Filter along z-axis (axis 0)
     let freqs_z = fftfreq(nz, 1.0)?;
     for j in 0..ny {
         for k in 0..nx {
             let mut slice: Vec<f64> = (0..nz).map(|i| input_f64[[i, j, k]]).collect();
             let mut spectrum = fft(&slice, None)?;
-            
+
             for (i, &freq) in freqs_z.iter().enumerate() {
                 let factor = (-0.5 * (two_pi * freq * sigma_z).powi(2)).exp();
                 spectrum[i] *= factor;
             }
-            
+
             let filtered = ifft(&spectrum, None)?;
             for (i, &complex_val) in filtered.iter().enumerate() {
                 input_f64[[i, j, k]] = complex_val.re;
             }
         }
     }
-    
-    // Filter along y-axis (axis 1)  
+
+    // Filter along y-axis (axis 1)
     let freqs_y = fftfreq(ny, 1.0)?;
     for i in 0..nz {
         for k in 0..nx {
             let mut slice: Vec<f64> = (0..ny).map(|j| input_f64[[i, j, k]]).collect();
             let mut spectrum = fft(&slice, None)?;
-            
+
             for (j, &freq) in freqs_y.iter().enumerate() {
                 let factor = (-0.5 * (two_pi * freq * sigma_y).powi(2)).exp();
                 spectrum[j] *= factor;
             }
-            
+
             let filtered = ifft(&spectrum, None)?;
             for (j, &complex_val) in filtered.iter().enumerate() {
                 input_f64[[i, j, k]] = complex_val.re;
             }
         }
     }
-    
+
     // Filter along x-axis (axis 2)
     let freqs_x = fftfreq(nx, 1.0)?;
     for i in 0..nz {
         for j in 0..ny {
             let mut slice: Vec<f64> = (0..nx).map(|k| input_f64[[i, j, k]]).collect();
             let mut spectrum = fft(&slice, None)?;
-            
+
             for (k, &freq) in freqs_x.iter().enumerate() {
                 let factor = (-0.5 * (two_pi * freq * sigma_x).powi(2)).exp();
                 spectrum[k] *= factor;
             }
-            
+
             let filtered = ifft(&spectrum, None)?;
             for (k, &complex_val) in filtered.iter().enumerate() {
                 input_f64[[i, j, k]] = complex_val.re;
             }
         }
     }
-    
+
     // Convert back to T
     let mut output_3d = Array::zeros((nz, ny, nx));
     for i in 0..nz {
@@ -330,12 +332,12 @@ where
             }
         }
     }
-    
+
     // Convert back to original dimension type
     let result = output_3d
         .into_dimensionality::<D>()
         .map_err(|_| NdimageError::DimensionError("Failed to convert back from 3D".into()))?;
-    
+
     Ok(result)
 }
 
@@ -526,23 +528,21 @@ where
     if input.ndim() == 3 {
         return fourier_uniform_3d(input, size);
     }
-    
+
     // For higher dimensions, use simplified approach
     let shape = input.shape().to_vec();
     let flat_input = input.view().into_shape(input.len())?;
-    
+
     // Create equivalent 1D size (use geometric mean)
     let size_1d = {
-        let product: f64 = size.iter()
-            .map(|&s| s as f64)
-            .fold(1.0, |acc, x| acc * x);
+        let product: f64 = size.iter().map(|&s| s as f64).fold(1.0, |acc, x| acc * x);
         let geometric_mean = product.powf(1.0 / size.len() as f64);
         geometric_mean.round() as usize
     };
-    
+
     // Apply 1D filter
     let filtered_1d = fourier_uniform_1d(&flat_input, size_1d)?;
-    
+
     // Reshape back to original dimensions
     let result = filtered_1d.into_shape(shape)?;
     Ok(result)
@@ -555,12 +555,13 @@ where
     D: Dimension,
 {
     // Convert to 3D for processing
-    let input_3d = input.view()
+    let input_3d = input
+        .view()
         .into_dimensionality::<ndarray::Ix3>()
         .map_err(|_| NdimageError::DimensionError("Failed to convert to 3D".into()))?;
-    
+
     let (nz, ny, nx) = input_3d.dim();
-    
+
     // Convert input to f64 for FFT processing
     let mut input_f64 = Array::zeros((nz, ny, nx));
     for i in 0..nz {
@@ -570,82 +571,70 @@ where
             }
         }
     }
-    
+
     // Apply separable uniform filtering along each axis
     let two_pi = 2.0 * PI;
-    
+
     // Filter along z-axis (axis 0)
     let freqs_z = fftfreq(nz, 1.0)?;
     for j in 0..ny {
         for k in 0..nx {
             let mut slice: Vec<f64> = (0..nz).map(|i| input_f64[[i, j, k]]).collect();
             let mut spectrum = fft(&slice, None)?;
-            
+
             for (i, &freq) in freqs_z.iter().enumerate() {
                 let x = size[0] as f64 * freq * two_pi;
-                let sinc_factor = if x.abs() < 1e-10 {
-                    1.0
-                } else {
-                    x.sin() / x
-                };
+                let sinc_factor = if x.abs() < 1e-10 { 1.0 } else { x.sin() / x };
                 spectrum[i] *= sinc_factor;
             }
-            
+
             let filtered = ifft(&spectrum, None)?;
             for (i, &complex_val) in filtered.iter().enumerate() {
                 input_f64[[i, j, k]] = complex_val.re;
             }
         }
     }
-    
+
     // Filter along y-axis (axis 1)
     let freqs_y = fftfreq(ny, 1.0)?;
     for i in 0..nz {
         for k in 0..nx {
             let mut slice: Vec<f64> = (0..ny).map(|j| input_f64[[i, j, k]]).collect();
             let mut spectrum = fft(&slice, None)?;
-            
+
             for (j, &freq) in freqs_y.iter().enumerate() {
                 let x = size[1] as f64 * freq * two_pi;
-                let sinc_factor = if x.abs() < 1e-10 {
-                    1.0
-                } else {
-                    x.sin() / x
-                };
+                let sinc_factor = if x.abs() < 1e-10 { 1.0 } else { x.sin() / x };
                 spectrum[j] *= sinc_factor;
             }
-            
+
             let filtered = ifft(&spectrum, None)?;
             for (j, &complex_val) in filtered.iter().enumerate() {
                 input_f64[[i, j, k]] = complex_val.re;
             }
         }
     }
-    
+
     // Filter along x-axis (axis 2)
     let freqs_x = fftfreq(nx, 1.0)?;
     for i in 0..nz {
         for j in 0..ny {
             let mut slice: Vec<f64> = (0..nx).map(|k| input_f64[[i, j, k]]).collect();
             let mut spectrum = fft(&slice, None)?;
-            
+
             for (k, &freq) in freqs_x.iter().enumerate() {
                 let x = size[2] as f64 * freq * two_pi;
-                let sinc_factor = if x.abs() < 1e-10 {
-                    1.0
-                } else {
-                    x.sin() / x
-                };
+                let sinc_factor = if x.abs() < 1e-10 { 1.0 } else { x.sin() / x };
                 spectrum[k] *= sinc_factor;
             }
-            
+
             let filtered = ifft(&spectrum, None)?;
             for (k, &complex_val) in filtered.iter().enumerate() {
                 input_f64[[i, j, k]] = complex_val.re;
             }
         }
     }
-    
+
     // Convert back to T
     let mut output_3d = Array::zeros((nz, ny, nx));
     for i in 0..nz {
@@ -655,12 +644,12 @@ where
             }
         }
     }
-    
+
     // Convert back to original dimension type
     let result = output_3d
         .into_dimensionality::<D>()
         .map_err(|_| NdimageError::DimensionError("Failed to convert back from 3D".into()))?;
-    
+
     Ok(result)
 }
 
@@ -805,7 +794,11 @@ where
 }
 
 /// Apply N-dimensional ellipsoid filter in Fourier domain
-fn fourier_ellipsoid_nd<T, D>(input: &Array<T, D>, size: &[T], is_lowpass: bool) -> NdimageResult<Array<T, D>>
+fn fourier_ellipsoid_nd<T, D>(
+    input: &Array<T, D>,
+    size: &[T],
+    is_lowpass: bool,
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
     D: Dimension,
@@ -820,49 +813,57 @@ where
     if input.ndim() == 3 {
         return fourier_ellipsoid_3d(input, size, is_lowpass);
     }
-    
+
     // For higher dimensions, use simplified approach with radial symmetry
     let shape = input.shape().to_vec();
     let flat_input = input.view().into_shape(input.len())?;
-    
+
     // Create equivalent 1D size (use geometric mean)
     let size_1d = {
-        let product: f64 = size.iter()
+        let product: f64 = size
+            .iter()
             .map(|&s| NumCast::from(s).unwrap_or(1.0))
             .fold(1.0, |acc, x| acc * x);
         let geometric_mean = product.powf(1.0 / size.len() as f64);
         T::from(geometric_mean).unwrap_or(T::one())
     };
-    
+
     // Apply 2D ellipsoid filter as approximation
     let side_len = (flat_input.len() as f64).sqrt() as usize;
-    let temp_2d = flat_input.view().into_shape((side_len, flat_input.len() / side_len))?;
+    let temp_2d = flat_input
+        .view()
+        .into_shape((side_len, flat_input.len() / side_len))?;
     let filtered_2d = fourier_ellipsoid_2d(&temp_2d, size_1d, size_1d, is_lowpass)?;
     let filtered_1d = filtered_2d.into_shape(input.len())?;
-    
+
     // Reshape back to original dimensions
     let result = filtered_1d.into_shape(shape)?;
     Ok(result)
 }
 
 /// Apply 3D ellipsoid filter in Fourier domain
-fn fourier_ellipsoid_3d<T, D>(input: &Array<T, D>, size: &[T], is_lowpass: bool) -> NdimageResult<Array<T, D>>
+fn fourier_ellipsoid_3d<T, D>(
+    input: &Array<T, D>,
+    size: &[T],
+    is_lowpass: bool,
+) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
     D: Dimension,
 {
     // Convert to 3D for processing
-    let input_3d = input.view()
+    let input_3d = input
+        .view()
         .into_dimensionality::<ndarray::Ix3>()
         .map_err(|_| NdimageError::DimensionError("Failed to convert to 3D".into()))?;
-    
+
     let (nz, ny, nx) = input_3d.dim();
-    
+
     // Convert size values
     let size_z: f64 = NumCast::from(size[0]).unwrap_or(1.0);
     let size_y: f64 = NumCast::from(size[1]).unwrap_or(1.0);
     let size_x: f64 = NumCast::from(size[2]).unwrap_or(1.0);
-    
+
     // Convert input to f64 for FFT processing
     let mut input_f64 = Array::zeros((nz, ny, nx));
     for i in 0..nz {
@@ -872,95 +873,95 @@ where
             }
         }
     }
-    
+
     // Get frequency arrays for each dimension
     let freqs_z = fftfreq(nz, 1.0)?;
     let freqs_y = fftfreq(ny, 1.0)?;
     let freqs_x = fftfreq(nx, 1.0)?;
-    
+
     // Apply FFT along each axis and filter in frequency domain
     // This is a simplified approach - for full 3D FFT, we'd need scirs2-fft to support 3D FFT
-    
+
     // Filter along z-axis first
     for j in 0..ny {
         for k in 0..nx {
             let mut slice: Vec<f64> = (0..nz).map(|i| input_f64[[i, j, k]]).collect();
             let mut spectrum = fft(&slice, None)?;
-            
+
             // Apply ellipsoid filter for this frequency component
             for (i, &freq_z) in freqs_z.iter().enumerate() {
                 // For ellipsoid, check if frequency is within ellipsoid bounds
                 let normalized_freq_z = freq_z * size_z;
                 let freq_magnitude = normalized_freq_z.abs();
-                
+
                 let within_ellipsoid = freq_magnitude <= 1.0;
-                
+
                 if (is_lowpass && within_ellipsoid) || (!is_lowpass && !within_ellipsoid) {
                     // Keep the frequency component
                 } else {
                     spectrum[i] *= 0.0; // Zero out the frequency component
                 }
             }
-            
+
             let filtered = ifft(&spectrum, None)?;
             for (i, &complex_val) in filtered.iter().enumerate() {
                 input_f64[[i, j, k]] = complex_val.re;
             }
         }
     }
-    
+
     // Filter along y-axis
     for i in 0..nz {
         for k in 0..nx {
             let mut slice: Vec<f64> = (0..ny).map(|j| input_f64[[i, j, k]]).collect();
             let mut spectrum = fft(&slice, None)?;
-            
+
             for (j, &freq_y) in freqs_y.iter().enumerate() {
                 let normalized_freq_y = freq_y * size_y;
                 let freq_magnitude = normalized_freq_y.abs();
-                
+
                 let within_ellipsoid = freq_magnitude <= 1.0;
-                
+
                 if (is_lowpass && within_ellipsoid) || (!is_lowpass && !within_ellipsoid) {
                     // Keep the frequency component
                 } else {
                     spectrum[j] *= 0.0; // Zero out the frequency component
                 }
             }
-            
+
             let filtered = ifft(&spectrum, None)?;
             for (j, &complex_val) in filtered.iter().enumerate() {
                 input_f64[[i, j, k]] = complex_val.re;
             }
         }
     }
-    
+
     // Filter along x-axis
     for i in 0..nz {
         for j in 0..ny {
             let mut slice: Vec<f64> = (0..nx).map(|k| input_f64[[i, j, k]]).collect();
             let mut spectrum = fft(&slice, None)?;
-            
+
             for (k, &freq_x) in freqs_x.iter().enumerate() {
                 let normalized_freq_x = freq_x * size_x;
                 let freq_magnitude = normalized_freq_x.abs();
-                
+
                 let within_ellipsoid = freq_magnitude <= 1.0;
-                
+
                 if (is_lowpass && within_ellipsoid) || (!is_lowpass && !within_ellipsoid) {
                     // Keep the frequency component
                 } else {
                     spectrum[k] *= 0.0; // Zero out the frequency component
                 }
             }
-            
+
             let filtered = ifft(&spectrum, None)?;
             for (k, &complex_val) in filtered.iter().enumerate() {
                 input_f64[[i, j, k]] = complex_val.re;
             }
         }
     }
-    
+
     // Convert back to T
     let mut output_3d = Array::zeros((nz, ny, nx));
     for i in 0..nz {
@@ -970,12 +971,12 @@ where
             }
         }
     }
-    
+
     // Convert back to original dimension type
     let result = output_3d
         .into_dimensionality::<D>()
         .map_err(|_| NdimageError::DimensionError("Failed to convert back from 3D".into()))?;
-    
+
     Ok(result)
 }
 
@@ -1153,23 +1154,21 @@ where
     if input.ndim() == 3 {
         return fourier_shift_3d(input, shift);
     }
-    
+
     // For higher dimensions, use simplified approach
     let shape = input.shape().to_vec();
     let flat_input = input.view().into_shape(input.len())?;
-    
+
     // Create equivalent 1D shift (use mean of all shifts)
     let shift_1d = {
-        let sum: f64 = shift.iter()
-            .map(|&s| NumCast::from(s).unwrap_or(0.0))
-            .sum();
+        let sum: f64 = shift.iter().map(|&s| NumCast::from(s).unwrap_or(0.0)).sum();
         let mean = sum / shift.len() as f64;
         T::from(mean).unwrap_or(T::zero())
     };
-    
+
     // Apply 1D shift
     let shifted_1d = fourier_shift_1d(&flat_input, shift_1d)?;
-    
+
     // Reshape back to original dimensions
     let result = shifted_1d.into_shape(shape)?;
     Ok(result)
@@ -1182,17 +1181,18 @@ where
     D: Dimension,
 {
     // Convert to 3D for processing
-    let input_3d = input.view()
+    let input_3d = input
+        .view()
         .into_dimensionality::<ndarray::Ix3>()
         .map_err(|_| NdimageError::DimensionError("Failed to convert to 3D".into()))?;
-    
+
     let (nz, ny, nx) = input_3d.dim();
-    
+
     // Convert shift values
     let shift_z: f64 = NumCast::from(shift[0]).unwrap_or(0.0);
     let shift_y: f64 = NumCast::from(shift[1]).unwrap_or(0.0);
     let shift_x: f64 = NumCast::from(shift[2]).unwrap_or(0.0);
-    
+
     // Convert input to f64 for FFT processing
     let mut input_f64 = Array::zeros((nz, ny, nx));
     for i in 0..nz {
@@ -1202,72 +1202,72 @@ where
             }
         }
     }
-    
+
     let two_pi = 2.0 * PI;
-    
+
     // Apply separable shifting along each axis
-    
+
     // Shift along z-axis (axis 0)
     let freqs_z = fftfreq(nz, 1.0)?;
     for j in 0..ny {
         for k in 0..nx {
             let mut slice: Vec<f64> = (0..nz).map(|i| input_f64[[i, j, k]]).collect();
             let mut spectrum = fft(&slice, None)?;
-            
+
             // Apply phase shift
             for (i, &freq) in freqs_z.iter().enumerate() {
                 let phase = -two_pi * freq * shift_z;
                 let shift_factor = Complex64::new(phase.cos(), phase.sin());
                 spectrum[i] *= shift_factor;
             }
-            
+
             let shifted = ifft(&spectrum, None)?;
             for (i, &complex_val) in shifted.iter().enumerate() {
                 input_f64[[i, j, k]] = complex_val.re;
             }
         }
     }
-    
+
     // Shift along y-axis (axis 1)
     let freqs_y = fftfreq(ny, 1.0)?;
     for i in 0..nz {
         for k in 0..nx {
             let mut slice: Vec<f64> = (0..ny).map(|j| input_f64[[i, j, k]]).collect();
             let mut spectrum = fft(&slice, None)?;
-            
+
             for (j, &freq) in freqs_y.iter().enumerate() {
                 let phase = -two_pi * freq * shift_y;
                 let shift_factor = Complex64::new(phase.cos(), phase.sin());
                 spectrum[j] *= shift_factor;
             }
-            
+
             let shifted = ifft(&spectrum, None)?;
             for (j, &complex_val) in shifted.iter().enumerate() {
                 input_f64[[i, j, k]] = complex_val.re;
             }
         }
     }
-    
+
     // Shift along x-axis (axis 2)
     let freqs_x = fftfreq(nx, 1.0)?;
     for i in 0..nz {
         for j in 0..ny {
             let mut slice: Vec<f64> = (0..nx).map(|k| input_f64[[i, j, k]]).collect();
             let mut spectrum = fft(&slice, None)?;
-            
+
             for (k, &freq) in freqs_x.iter().enumerate() {
                 let phase = -two_pi * freq * shift_x;
                 let shift_factor = Complex64::new(phase.cos(), phase.sin());
                 spectrum[k] *= shift_factor;
             }
-            
+
             let shifted = ifft(&spectrum, None)?;
             for (k, &complex_val) in shifted.iter().enumerate() {
                 input_f64[[i, j, k]] = complex_val.re;
             }
         }
     }
-    
+
     // Convert back to T
     let mut output_3d = Array::zeros((nz, ny, nx));
     for i in 0..nz {
@@ -1277,12 +1277,12 @@ where
             }
         }
     }
-    
+
     // Convert back to original dimension type
     let result = output_3d
         .into_dimensionality::<D>()
         .map_err(|_| NdimageError::DimensionError("Failed to convert back from 3D".into()))?;
-    
+
     Ok(result)
 }
 

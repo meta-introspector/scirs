@@ -124,7 +124,7 @@ pub struct ParameterRange {
 }
 
 /// Sampling strategies for parameter space exploration
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SamplingStrategy {
     /// Linear sampling
     Linear,
@@ -146,7 +146,7 @@ pub enum SamplingStrategy {
 }
 
 /// Utility metrics for evaluation
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum UtilityMetric {
     /// Model accuracy
     Accuracy,
@@ -195,7 +195,7 @@ pub enum UtilityMetric {
 }
 
 /// Analysis granularity levels
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AnalysisGranularity {
     /// Coarse-grained analysis
     Coarse,
@@ -214,7 +214,7 @@ pub enum AnalysisGranularity {
 }
 
 /// Budget optimization methods
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum BudgetOptimizationMethod {
     /// Grid search optimization
     GridSearch,
@@ -345,7 +345,7 @@ pub struct PrivacyConfiguration<T: Float> {
 }
 
 /// Optimization objectives
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum OptimizationObjective {
     /// Maximize utility for given privacy budget
     MaximizeUtility,
@@ -459,7 +459,7 @@ pub struct ConvergenceProperties<T: Float> {
 }
 
 /// Asymptotic behavior types
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AsymptoticBehavior {
     /// Exponential convergence
     Exponential,
@@ -510,7 +510,7 @@ pub struct PerturbationEffect<T: Float> {
 }
 
 /// Types of perturbations
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PerturbationType {
     /// Parameter perturbation
     Parameter,
@@ -548,7 +548,7 @@ pub struct FailureMode<T: Float> {
 }
 
 /// Types of failures
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum FailureType {
     /// Privacy breach
     PrivacyBreach,
@@ -602,7 +602,7 @@ pub struct BudgetAllocation<T: Float> {
 }
 
 /// Budget allocation strategies
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AllocationStrategy {
     /// Uniform allocation
     Uniform,
@@ -659,7 +659,7 @@ pub struct AdaptiveBudgetStrategy<T: Float> {
 }
 
 /// Adaptation triggers
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AdaptationTrigger {
     /// Utility threshold
     UtilityThreshold,
@@ -694,7 +694,7 @@ pub struct BudgetAdjustmentRule<T: Float> {
 }
 
 /// Adjustment types
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AdjustmentType {
     /// Multiplicative adjustment
     Multiplicative,
@@ -710,7 +710,7 @@ pub enum AdjustmentType {
 }
 
 /// Adjustment frequency
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AdjustmentFrequency {
     /// Every iteration
     EveryIteration,
@@ -780,7 +780,7 @@ pub struct DegradationPrediction<T: Float> {
 }
 
 /// Prediction models
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum PredictionModel {
     /// Linear regression
     LinearRegression,
@@ -843,7 +843,7 @@ pub enum RiskCategory {
 }
 
 /// Compliance status
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ComplianceStatus {
     /// Fully compliant
     Compliant,
@@ -875,7 +875,7 @@ pub struct RiskEvolution<T: Float> {
 }
 
 /// Risk trends
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum RiskTrend {
     /// Risk increasing
     Increasing,
@@ -964,7 +964,7 @@ pub struct MultipleComparisonCorrection<T: Float> {
 }
 
 /// Multiple comparison correction methods
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CorrectionMethod {
     /// Bonferroni correction
     Bonferroni,

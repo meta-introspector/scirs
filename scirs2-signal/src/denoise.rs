@@ -6,7 +6,7 @@
 use crate::dwt::{wavedec, waverec, Wavelet};
 use crate::error::{SignalError, SignalResult};
 use num_traits::{Float, NumCast};
-use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
+use scirs2_core::simd_ops::PlatformCapabilities;
 use scirs2_core::validation::check_finite;
 use std::fmt::Debug;
 

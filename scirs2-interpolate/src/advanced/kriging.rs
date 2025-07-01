@@ -136,14 +136,20 @@ impl<F: Float + FromPrimitive + Debug> KrigingInterpolator<F> {
         }
 
         if sigma_sq <= F::zero() {
-            return Err(InterpolateError::invalid_input(
-                "sigma_sq must be positive".to_string(),
+            return Err(InterpolateError::invalid_parameter_with_suggestion(
+                "sigma_sq",
+                sigma_sq,
+                "Kriging interpolation",
+                "must be positive (signal variance: try sample variance of your data or 1.0 as default)"
             ));
         }
 
         if length_scale <= F::zero() {
-            return Err(InterpolateError::invalid_input(
-                "length_scale must be positive".to_string(),
+            return Err(InterpolateError::invalid_parameter_with_suggestion(
+                "length_scale",
+                length_scale,
+                "Kriging interpolation",
+                "must be positive (correlation length: try mean distance between points or use cross-validation)"
             ));
         }
 
@@ -154,8 +160,11 @@ impl<F: Float + FromPrimitive + Debug> KrigingInterpolator<F> {
         }
 
         if cov_fn == CovarianceFunction::RationalQuadratic && alpha <= F::zero() {
-            return Err(InterpolateError::invalid_input(
-                "alpha must be positive for rational quadratic covariance".to_string(),
+            return Err(InterpolateError::invalid_parameter_with_suggestion(
+                "alpha",
+                alpha,
+                "rational quadratic Kriging",
+                "must be positive (shape parameter: typical values 0.5-2.0, try 1.0 as default)"
             ));
         }
 

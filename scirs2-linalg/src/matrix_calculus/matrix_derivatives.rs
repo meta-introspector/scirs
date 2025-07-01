@@ -47,7 +47,10 @@ where
         + Debug
         + ndarray::ScalarOperand
         + num_traits::NumAssign
-        + std::iter::Sum,
+        + std::iter::Sum
+        + Send
+        + Sync
+        + 'static,
 {
     if x.nrows() != x.ncols() {
         return Err(LinalgError::ShapeError(format!(
@@ -165,7 +168,10 @@ where
         + Debug
         + ndarray::ScalarOperand
         + num_traits::NumAssign
-        + std::iter::Sum,
+        + std::iter::Sum
+        + Send
+        + Sync
+        + 'static,
 {
     if x.nrows() != x.ncols() {
         return Err(LinalgError::ShapeError(format!(
@@ -231,7 +237,10 @@ where
         + Debug
         + ndarray::ScalarOperand
         + num_traits::NumAssign
-        + std::iter::Sum,
+        + std::iter::Sum
+        + Send
+        + Sync
+        + 'static,
 {
     if x.nrows() != x.ncols() {
         return Err(LinalgError::ShapeError(format!(
@@ -325,7 +334,10 @@ where
         + Debug
         + ndarray::ScalarOperand
         + num_traits::NumAssign
-        + std::iter::Sum,
+        + std::iter::Sum
+        + Send
+        + Sync
+        + 'static,
 {
     if x.nrows() != x.ncols() {
         return Err(LinalgError::ShapeError(format!(
@@ -408,7 +420,10 @@ where
         + Debug
         + ndarray::ScalarOperand
         + num_traits::NumAssign
-        + std::iter::Sum,
+        + std::iter::Sum
+        + Send
+        + Sync
+        + 'static,
 {
     match norm_type {
         "fro" | "frobenius" => {
@@ -498,7 +513,10 @@ where
         + Debug
         + ndarray::ScalarOperand
         + num_traits::NumAssign
-        + std::iter::Sum,
+        + std::iter::Sum
+        + Send
+        + Sync
+        + 'static,
 {
     if a.ncols() != b.nrows() {
         return Err(LinalgError::ShapeError(format!(
@@ -548,7 +566,10 @@ where
         + Debug
         + ndarray::ScalarOperand
         + num_traits::NumAssign
-        + std::iter::Sum,
+        + std::iter::Sum
+        + Send
+        + Sync
+        + 'static,
 {
     // For now, return the diagonal elements as a rough approximation
     // In practice, you'd use a proper eigenvalue solver

@@ -29,8 +29,8 @@ pub use ultra_simd_optimized::{
 // Ultra SIMD enhanced exports
 #[cfg(feature = "simd")]
 pub use ultra_simd_enhanced::{
-    ultra_simd_convolution_2d, ultra_simd_separable_convolution_2d as ultra_simd_separable,
-    ultra_simd_median_filter,
+    ultra_simd_convolution_2d, ultra_simd_median_filter,
+    ultra_simd_separable_convolution_2d as ultra_simd_separable,
 };
 
 // Advanced SIMD extensions exports
@@ -65,14 +65,14 @@ mod memory_efficient;
 mod memory_efficient_v2;
 mod rank;
 #[cfg(feature = "simd")]
-mod simd_specialized;
-#[cfg(feature = "simd")]
 mod simd_enhanced_optimizations;
+#[cfg(feature = "simd")]
+mod simd_specialized;
 mod tests;
 #[cfg(feature = "simd")]
-mod ultra_simd_optimized;
-#[cfg(feature = "simd")]
 mod ultra_simd_enhanced;
+#[cfg(feature = "simd")]
+mod ultra_simd_optimized;
 mod uniform;
 mod utils;
 mod vectorized;

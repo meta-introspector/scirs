@@ -1,6 +1,6 @@
 //! API Compatibility Verification with SciPy ndimage
 //!
-//! This module provides comprehensive testing utilities to verify that 
+//! This module provides comprehensive testing utilities to verify that
 //! scirs2-ndimage maintains API compatibility with SciPy's ndimage module.
 //! It includes parameter validation, behavior verification, and migration
 //! guidance for any incompatibilities.
@@ -107,19 +107,19 @@ impl ApiCompatibilityTester {
     pub fn test_filter_apis(&mut self) -> Result<()> {
         // Test gaussian_filter API compatibility
         self.test_gaussian_filter_api()?;
-        
+
         // Test median_filter API compatibility
         self.test_median_filter_api()?;
-        
+
         // Test uniform_filter API compatibility
         self.test_uniform_filter_api()?;
-        
+
         // Test sobel filter API compatibility
         self.test_sobel_filter_api()?;
-        
+
         // Test rank filters API compatibility
         self.test_rank_filter_apis()?;
-        
+
         Ok(())
     }
 
@@ -130,7 +130,7 @@ impl ApiCompatibilityTester {
 
         // Test 1: Basic parameter compatibility
         let input = Array2::zeros((10, 10));
-        
+
         // Test sigma parameter - should accept scalar and array
         let test1_success = gaussian_filter(&input, 1.0, None, None).is_ok();
         if !test1_success {
@@ -324,7 +324,7 @@ impl ApiCompatibilityTester {
             error_messages.push("minimum_filter API differs".to_string());
         }
 
-        // Test maximum_filter  
+        // Test maximum_filter
         let max_test = maximum_filter(&input, &[3, 3], None, None).is_ok();
         if !max_test {
             incompatible_params.push("maximum_filter".to_string());
@@ -458,7 +458,15 @@ impl ApiCompatibilityTester {
         }
 
         // Test zoom with interpolation order
-        let order_test = zoom(&input, &[2.0, 2.0], Some(InterpolationOrder::Linear), None, None, None).is_ok();
+        let order_test = zoom(
+            &input,
+            &[2.0, 2.0],
+            Some(InterpolationOrder::Linear),
+            None,
+            None,
+            None,
+        )
+        .is_ok();
         if !order_test {
             incompatible_params.push("interpolation_order".to_string());
             error_messages.push("Interpolation order specification differs".to_string());
@@ -519,7 +527,8 @@ impl ApiCompatibilityTester {
         let matrix = Array2::eye(2);
 
         // Test affine transform
-        let affine_test = affine_transform(&input, &matrix, None, None, None, None, None, None).is_ok();
+        let affine_test =
+            affine_transform(&input, &matrix, None, None, None, None, None, None).is_ok();
         if !affine_test {
             incompatible_params.push("matrix".to_string());
             error_messages.push("Affine matrix parameter handling differs".to_string());
@@ -612,19 +621,22 @@ impl ApiCompatibilityTester {
     /// Run all API compatibility tests
     pub fn run_all_tests(&mut self) -> Result<()> {
         println!("Running comprehensive API compatibility tests...");
-        
+
         self.test_filter_apis()?;
         self.test_morphology_apis()?;
         self.test_interpolation_apis()?;
         self.test_measurement_apis()?;
-        
+
         // Calculate overall score
         if !self.results.is_empty() {
-            self.overall_score = self.results.iter()
+            self.overall_score = self
+                .results
+                .iter()
                 .map(|r| r.compatibility_score)
-                .sum::<f64>() / self.results.len() as f64;
+                .sum::<f64>()
+                / self.results.len() as f64;
         }
-        
+
         println!("API compatibility tests completed!");
         Ok(())
     }
@@ -633,29 +645,44 @@ impl ApiCompatibilityTester {
     pub fn generate_report(&self) -> String {
         let mut report = String::new();
         report.push_str("# API Compatibility Report\n\n");
-        
-        report.push_str(&format!("Overall Compatibility Score: {:.2}%\n\n", 
-                                self.overall_score * 100.0));
-        
+
+        report.push_str(&format!(
+            "Overall Compatibility Score: {:.2}%\n\n",
+            self.overall_score * 100.0
+        ));
+
         // Summary statistics
         let total_tests = self.results.len();
         let compatible_tests = self.results.iter().filter(|r| r.compatible).count();
-        
-        report.push_str(&format!("Compatible Functions: {}/{} ({:.1}%)\n",
-                                compatible_tests, total_tests,
-                                (compatible_tests as f64 / total_tests as f64) * 100.0));
-        
-        report.push_str(&format!("Incompatible Functions: {}\n\n",
-                                total_tests - compatible_tests));
-        
+
+        report.push_str(&format!(
+            "Compatible Functions: {}/{} ({:.1}%)\n",
+            compatible_tests,
+            total_tests,
+            (compatible_tests as f64 / total_tests as f64) * 100.0
+        ));
+
+        report.push_str(&format!(
+            "Incompatible Functions: {}\n\n",
+            total_tests - compatible_tests
+        ));
+
         // Detailed results
         for result in &self.results {
             report.push_str(&format!("## {}\n", result.function_name));
-            report.push_str(&format!("**Compatibility Score:** {:.2}%\n", 
-                                    result.compatibility_score * 100.0));
-            report.push_str(&format!("**Compatible:** {}\n\n", 
-                                    if result.compatible { "✓ Yes" } else { "✗ No" }));
-            
+            report.push_str(&format!(
+                "**Compatibility Score:** {:.2}%\n",
+                result.compatibility_score * 100.0
+            ));
+            report.push_str(&format!(
+                "**Compatible:** {}\n\n",
+                if result.compatible {
+                    "✓ Yes"
+                } else {
+                    "✗ No"
+                }
+            ));
+
             if !result.incompatible_parameters.is_empty() {
                 report.push_str("**Incompatible Parameters:**\n");
                 for param in &result.incompatible_parameters {
@@ -663,7 +690,7 @@ impl ApiCompatibilityTester {
                 }
                 report.push('\n');
             }
-            
+
             if !result.error_messages.is_empty() {
                 report.push_str("**Issues:**\n");
                 for msg in &result.error_messages {
@@ -671,7 +698,7 @@ impl ApiCompatibilityTester {
                 }
                 report.push('\n');
             }
-            
+
             if !result.suggestions.is_empty() {
                 report.push_str("**Suggestions:**\n");
                 for suggestion in &result.suggestions {
@@ -679,13 +706,16 @@ impl ApiCompatibilityTester {
                 }
                 report.push('\n');
             }
-            
+
             report.push_str(&format!("**SciPy Behavior:** {}\n", result.scipy_behavior));
-            report.push_str(&format!("**scirs2 Behavior:** {}\n\n", result.scirs2_behavior));
-            
+            report.push_str(&format!(
+                "**scirs2 Behavior:** {}\n\n",
+                result.scirs2_behavior
+            ));
+
             report.push_str("---\n\n");
         }
-        
+
         report
     }
 
@@ -719,7 +749,7 @@ mod tests {
         assert!(!config.test_performance);
     }
 
-    #[test] 
+    #[test]
     fn test_api_result_creation() {
         let result = ApiCompatibilityResult {
             function_name: "test_function".to_string(),
@@ -732,7 +762,7 @@ mod tests {
             scipy_behavior: "Expected behavior".to_string(),
             scirs2_behavior: "Actual behavior".to_string(),
         };
-        
+
         assert!(result.compatible);
         assert_eq!(result.compatibility_score, 1.0);
         assert_eq!(result.function_name, "test_function");

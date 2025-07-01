@@ -53,7 +53,7 @@ use crate::norm::matrix_norm;
 /// ```
 pub fn kron<F>(a: &ArrayView2<F>, b: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     let (m, n) = a.dim();
     let (p, q) = b.dim();
@@ -111,7 +111,7 @@ pub fn kron_matvec<F>(
     x: &ndarray::ArrayView1<F>,
 ) -> LinalgResult<ndarray::Array1<F>>
 where
-    F: Float + NumAssign + Sum + ScalarOperand,
+    F: Float + NumAssign + Sum + ScalarOperand + Send + Sync,
 {
     let (m, n) = a.dim();
     let (p, q) = b.dim();
@@ -191,7 +191,7 @@ pub fn kron_matmul<F>(
     x: &ArrayView2<F>,
 ) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + ScalarOperand,
+    F: Float + NumAssign + Sum + ScalarOperand + Send + Sync,
 {
     let (m, n) = a.dim();
     let (p, q) = b.dim();
@@ -273,7 +273,7 @@ pub fn kron_factorize<F>(
     n_cols: usize,
 ) -> LinalgResult<(Array2<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Sum + ScalarOperand,
+    F: Float + NumAssign + Sum + ScalarOperand + Send + Sync,
 {
     let (total_rows, total_cols) = m.dim();
 
@@ -413,7 +413,7 @@ pub fn kfac_factorization<F>(
     damping: Option<F>,
 ) -> LinalgResult<(Array2<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Sum + ScalarOperand,
+    F: Float + NumAssign + Sum + ScalarOperand + Send + Sync,
 {
     let (batch_size1, input_dim) = input_acts.dim();
     let (batch_size2, output_dim) = output_grads.dim();
@@ -540,7 +540,7 @@ pub fn kfac_update<F>(
     learning_rate: F,
 ) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + ScalarOperand,
+    F: Float + NumAssign + Sum + ScalarOperand + Send + Sync,
 {
     let (input_dim, output_dim) = weights.dim();
     let (grad_rows, grad_cols) = gradients.dim();
@@ -621,7 +621,7 @@ pub struct KFACOptimizer<F> {
 
 impl<F> KFACOptimizer<F>
 where
-    F: Float + NumAssign + Sum + ScalarOperand,
+    F: Float + NumAssign + Sum + ScalarOperand + Send + Sync,
 {
     /// Create a new K-FAC optimizer with default parameters
     ///
@@ -814,7 +814,7 @@ pub struct BlockDiagonalFisher<F> {
 
 impl<F> BlockDiagonalFisher<F>
 where
-    F: Float + NumAssign + Sum + ScalarOperand,
+    F: Float + NumAssign + Sum + ScalarOperand + Send + Sync,
 {
     /// Create a new block-diagonal Fisher approximation
     ///
@@ -1105,7 +1105,7 @@ pub fn advanced_kfac_step<F>(
     gradient_clip: Option<F>,
 ) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + ScalarOperand,
+    F: Float + NumAssign + Sum + ScalarOperand + Send + Sync,
 {
     // Update covariance estimates with moving averages
     let (input_cov, output_cov) = kfac_optimizer.update_covariances(input_acts, output_grads)?;
@@ -1146,7 +1146,7 @@ where
 /// Compute stable matrix inverse with enhanced regularization
 fn stable_matrix_inverse<F>(matrix: &ArrayView2<F>, damping: F) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + ScalarOperand,
+    F: Float + NumAssign + Sum + ScalarOperand + Send + Sync,
 {
     let n = matrix.nrows();
 

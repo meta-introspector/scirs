@@ -161,8 +161,11 @@ where
 
     /// Set an element (unchecked for performance)
     pub fn set_unchecked(&mut self, row: usize, col: usize, value: T) {
-        let band_idx = (self.ku as isize + col as isize - row as isize) as usize;
-        self.data[[band_idx, row]] = value;
+        if let Some(band_idx) = self.ku.checked_add(row).and_then(|sum| sum.checked_sub(col)) {
+            if band_idx < self.data.nrows() {
+                self.data[[band_idx, col]] = value;
+            }
+        }
     }
 
     /// Set an element with bounds and band checking
@@ -396,9 +399,12 @@ where
             return T::zero();
         }
 
-        let band_idx = (self.ku as isize + col as isize - row as isize) as usize;
-        if band_idx < self.kl + self.ku + 1 && row < self.shape.0 {
-            self.data[[band_idx, row]]
+        if let Some(band_idx) = self.ku.checked_add(row).and_then(|sum| sum.checked_sub(col)) {
+            if band_idx < self.kl + self.ku + 1 && col < self.shape.1 {
+                self.data[[band_idx, col]]
+            } else {
+                T::zero()
+            }
         } else {
             T::zero()
         }

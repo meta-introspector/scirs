@@ -71,6 +71,18 @@ pub struct NodeClassificationMetrics {
     pub calibration_metrics: CalibrationMetrics,
 }
 
+impl NodeClassificationMetrics {
+    pub fn new() -> Self {
+        Self {
+            structure_aware_accuracy: 0.0,
+            macro_f1: 0.0,
+            micro_f1: 0.0,
+            per_class_metrics: HashMap::new(),
+            calibration_metrics: CalibrationMetrics::new(),
+        }
+    }
+}
+
 /// Individual class metrics
 #[derive(Debug, Clone)]
 pub struct ClassMetrics {
@@ -84,6 +96,17 @@ pub struct ClassMetrics {
     pub support: usize,
 }
 
+impl ClassMetrics {
+    pub fn new() -> Self {
+        Self {
+            precision: 0.0,
+            recall: 0.0,
+            f1_score: 0.0,
+            support: 0,
+        }
+    }
+}
+
 /// Calibration metrics for node predictions
 #[derive(Debug, Clone)]
 pub struct CalibrationMetrics {
@@ -95,6 +118,17 @@ pub struct CalibrationMetrics {
     pub brier_score: f64,
     /// Reliability diagram data
     pub reliability_diagram: Vec<(f64, f64, usize)>, // (confidence, accuracy, count)
+}
+
+impl CalibrationMetrics {
+    pub fn new() -> Self {
+        Self {
+            ece: 0.0,
+            mce: 0.0,
+            brier_score: 0.0,
+            reliability_diagram: Vec::new(),
+        }
+    }
 }
 
 /// Node embedding quality metrics
@@ -112,6 +146,18 @@ pub struct NodeEmbeddingMetrics {
     pub neighborhood_preservation: f64,
 }
 
+impl NodeEmbeddingMetrics {
+    pub fn new() -> Self {
+        Self {
+            silhouette_score: 0.0,
+            intra_cluster_cohesion: 0.0,
+            inter_cluster_separation: 0.0,
+            structure_alignment: 0.0,
+            neighborhood_preservation: 0.0,
+        }
+    }
+}
+
 /// Homophily-aware evaluation metrics
 #[derive(Debug, Clone)]
 pub struct HomophilyAwareMetrics {
@@ -127,6 +173,18 @@ pub struct HomophilyAwareMetrics {
     pub local_homophily: HashMap<usize, f64>, // node_id -> local homophily
 }
 
+impl HomophilyAwareMetrics {
+    pub fn new() -> Self {
+        Self {
+            homophily_ratio: 0.0,
+            homophilic_performance: 0.0,
+            heterophilic_performance: 0.0,
+            performance_gap: 0.0,
+            local_homophily: HashMap::new(),
+        }
+    }
+}
+
 /// Fairness metrics for node-level predictions
 #[derive(Debug, Clone)]
 pub struct NodeFairnessMetrics {
@@ -140,6 +198,17 @@ pub struct NodeFairnessMetrics {
     pub group_fairness: HashMap<String, GroupFairnessMetrics>,
 }
 
+impl NodeFairnessMetrics {
+    pub fn new() -> Self {
+        Self {
+            demographic_parity: 0.0,
+            equalized_odds: 0.0,
+            individual_fairness: 0.0,
+            group_fairness: HashMap::new(),
+        }
+    }
+}
+
 /// Group-specific fairness metrics
 #[derive(Debug, Clone)]
 pub struct GroupFairnessMetrics {
@@ -151,6 +220,17 @@ pub struct GroupFairnessMetrics {
     pub precision: f64,
     /// Selection rate for this group
     pub selection_rate: f64,
+}
+
+impl GroupFairnessMetrics {
+    pub fn new() -> Self {
+        Self {
+            tpr: 0.0,
+            fpr: 0.0,
+            precision: 0.0,
+            selection_rate: 0.0,
+        }
+    }
 }
 
 /// Edge-level task evaluation metrics
@@ -185,6 +265,20 @@ pub struct LinkPredictionMetrics {
     pub recall_at_k: HashMap<usize, f64>,
 }
 
+impl LinkPredictionMetrics {
+    pub fn new() -> Self {
+        Self {
+            auc_roc: 0.0,
+            auc_pr: 0.0,
+            average_precision: 0.0,
+            hits_at_k: HashMap::new(),
+            mrr: 0.0,
+            precision_at_k: HashMap::new(),
+            recall_at_k: HashMap::new(),
+        }
+    }
+}
+
 /// Edge classification metrics
 #[derive(Debug, Clone)]
 pub struct EdgeClassificationMetrics {
@@ -196,6 +290,17 @@ pub struct EdgeClassificationMetrics {
     pub micro_f1: f64,
     /// Per-edge-type metrics
     pub per_type_metrics: HashMap<String, ClassMetrics>,
+}
+
+impl EdgeClassificationMetrics {
+    pub fn new() -> Self {
+        Self {
+            accuracy: 0.0,
+            macro_f1: 0.0,
+            micro_f1: 0.0,
+            per_type_metrics: HashMap::new(),
+        }
+    }
 }
 
 /// Edge weight/attribute regression metrics
@@ -213,6 +318,18 @@ pub struct EdgeRegressionMetrics {
     pub pearson_correlation: f64,
 }
 
+impl EdgeRegressionMetrics {
+    pub fn new() -> Self {
+        Self {
+            mse: 0.0,
+            mae: 0.0,
+            r2_score: 0.0,
+            spearman_correlation: 0.0,
+            pearson_correlation: 0.0,
+        }
+    }
+}
+
 /// Temporal edge prediction metrics
 #[derive(Debug, Clone)]
 pub struct TemporalEdgeMetrics {
@@ -224,6 +341,17 @@ pub struct TemporalEdgeMetrics {
     pub persistence_accuracy: f64,
     /// New link prediction accuracy
     pub new_link_accuracy: f64,
+}
+
+impl TemporalEdgeMetrics {
+    pub fn new() -> Self {
+        Self {
+            temporal_auc: 0.0,
+            temporal_precision_at_k: HashMap::new(),
+            persistence_accuracy: 0.0,
+            new_link_accuracy: 0.0,
+        }
+    }
 }
 
 /// Graph-level task evaluation metrics
@@ -256,6 +384,19 @@ pub struct GraphClassificationMetrics {
     pub cv_scores: Vec<f64>,
 }
 
+impl GraphClassificationMetrics {
+    pub fn new() -> Self {
+        Self {
+            accuracy: 0.0,
+            macro_f1: 0.0,
+            micro_f1: 0.0,
+            per_class_metrics: HashMap::new(),
+            roc_auc: None,
+            cv_scores: Vec::new(),
+        }
+    }
+}
+
 /// Graph regression evaluation metrics
 #[derive(Debug, Clone)]
 pub struct GraphRegressionMetrics {
@@ -273,6 +414,19 @@ pub struct GraphRegressionMetrics {
     pub explained_variance: f64,
 }
 
+impl GraphRegressionMetrics {
+    pub fn new() -> Self {
+        Self {
+            mse: 0.0,
+            rmse: 0.0,
+            mae: 0.0,
+            r2_score: 0.0,
+            mape: 0.0,
+            explained_variance: 0.0,
+        }
+    }
+}
+
 /// Graph property prediction metrics
 #[derive(Debug, Clone)]
 pub struct GraphPropertyMetrics {
@@ -282,6 +436,16 @@ pub struct GraphPropertyMetrics {
     pub spectral_accuracy: HashMap<String, f64>,
     /// Topological property prediction accuracy
     pub topological_accuracy: HashMap<String, f64>,
+}
+
+impl GraphPropertyMetrics {
+    pub fn new() -> Self {
+        Self {
+            structural_accuracy: HashMap::new(),
+            spectral_accuracy: HashMap::new(),
+            topological_accuracy: HashMap::new(),
+        }
+    }
 }
 
 /// Graph similarity evaluation metrics
@@ -295,6 +459,17 @@ pub struct GraphSimilarityMetrics {
     pub spectral_similarity: f64,
     /// Structural similarity correlation
     pub structural_similarity: f64,
+}
+
+impl GraphSimilarityMetrics {
+    pub fn new() -> Self {
+        Self {
+            ged_correlation: 0.0,
+            isomorphism_accuracy: 0.0,
+            spectral_similarity: 0.0,
+            structural_similarity: 0.0,
+        }
+    }
 }
 
 /// Community detection evaluation metrics
@@ -338,6 +513,35 @@ pub struct GraphGenerationMetrics {
     pub spectral_metrics: SpectralSimilarityMetrics,
     /// Diversity metrics
     pub diversity_metrics: GenerationDiversityMetrics,
+}
+
+impl GraphGenerationMetrics {
+    pub fn new() -> Self {
+        Self {
+            structural_metrics: StructuralSimilarityMetrics {
+                degree_kl_divergence: 0.0,
+                clustering_similarity: 0.0,
+                path_length_similarity: 0.0,
+                motif_similarity: 0.0,
+            },
+            statistical_metrics: StatisticalSimilarityMetrics {
+                mmd_scores: HashMap::new(),
+                wasserstein_distance: 0.0,
+                energy_distance: 0.0,
+            },
+            spectral_metrics: SpectralSimilarityMetrics {
+                eigenvalue_similarity: 0.0,
+                spectral_density_similarity: 0.0,
+                laplacian_similarity: 0.0,
+            },
+            diversity_metrics: GenerationDiversityMetrics {
+                intra_diversity: 0.0,
+                inter_diversity: 0.0,
+                coverage: 0.0,
+                novelty: 0.0,
+            },
+        }
+    }
 }
 
 /// Structural similarity for generated graphs
@@ -401,6 +605,17 @@ pub struct KnowledgeGraphMetrics {
     pub relation_extraction: RelationExtractionMetrics,
 }
 
+impl KnowledgeGraphMetrics {
+    pub fn new() -> Self {
+        Self {
+            triple_classification: TripleClassificationMetrics::new(),
+            kg_link_prediction: KgLinkPredictionMetrics::new(),
+            entity_alignment: EntityAlignmentMetrics::new(),
+            relation_extraction: RelationExtractionMetrics::new(),
+        }
+    }
+}
+
 /// Triple classification for knowledge graphs
 #[derive(Debug, Clone)]
 pub struct TripleClassificationMetrics {
@@ -416,6 +631,18 @@ pub struct TripleClassificationMetrics {
     pub roc_auc: f64,
 }
 
+impl TripleClassificationMetrics {
+    pub fn new() -> Self {
+        Self {
+            accuracy: 0.0,
+            precision: 0.0,
+            recall: 0.0,
+            f1_score: 0.0,
+            roc_auc: 0.0,
+        }
+    }
+}
+
 /// Knowledge graph link prediction metrics
 #[derive(Debug, Clone)]
 pub struct KgLinkPredictionMetrics {
@@ -426,7 +653,18 @@ pub struct KgLinkPredictionMetrics {
     /// Hits@K for various K
     pub hits_at_k: HashMap<usize, f64>,
     /// Filtered metrics (excluding known triples)
-    pub filtered_metrics: Box<KgLinkPredictionMetrics>,
+    pub filtered_metrics: Option<Box<KgLinkPredictionMetrics>>,
+}
+
+impl KgLinkPredictionMetrics {
+    pub fn new() -> Self {
+        Self {
+            mean_rank: 0.0,
+            mrr: 0.0,
+            hits_at_k: HashMap::new(),
+            filtered_metrics: None, // Avoid infinite recursion
+        }
+    }
 }
 
 /// Entity alignment evaluation metrics
@@ -444,6 +682,18 @@ pub struct EntityAlignmentMetrics {
     pub precision: f64,
 }
 
+impl EntityAlignmentMetrics {
+    pub fn new() -> Self {
+        Self {
+            hits_at_1: 0.0,
+            hits_at_5: 0.0,
+            hits_at_10: 0.0,
+            mrr: 0.0,
+            precision: 0.0,
+        }
+    }
+}
+
 /// Relation extraction metrics
 #[derive(Debug, Clone)]
 pub struct RelationExtractionMetrics {
@@ -455,6 +705,17 @@ pub struct RelationExtractionMetrics {
     pub f1_score: f64,
     /// Per-relation metrics
     pub per_relation_metrics: HashMap<String, ClassMetrics>,
+}
+
+impl RelationExtractionMetrics {
+    pub fn new() -> Self {
+        Self {
+            precision: 0.0,
+            recall: 0.0,
+            f1_score: 0.0,
+            per_relation_metrics: HashMap::new(),
+        }
+    }
 }
 
 /// Social network analysis metrics
@@ -470,6 +731,17 @@ pub struct SocialNetworkMetrics {
     pub diffusion_metrics: InformationDiffusionMetrics,
 }
 
+impl SocialNetworkMetrics {
+    pub fn new() -> Self {
+        Self {
+            influence_prediction: InfluencePredictionMetrics::new(),
+            role_classification: SocialRoleMetrics::new(),
+            recommendation: SocialRecommendationMetrics::new(),
+            diffusion_metrics: InformationDiffusionMetrics::new(),
+        }
+    }
+}
+
 /// Influence prediction in social networks
 #[derive(Debug, Clone)]
 pub struct InfluencePredictionMetrics {
@@ -483,6 +755,17 @@ pub struct InfluencePredictionMetrics {
     pub spread_accuracy: f64,
 }
 
+impl InfluencePredictionMetrics {
+    pub fn new() -> Self {
+        Self {
+            kendall_tau: 0.0,
+            spearman_correlation: 0.0,
+            top_k_accuracy: HashMap::new(),
+            spread_accuracy: 0.0,
+        }
+    }
+}
+
 /// Social role classification metrics
 #[derive(Debug, Clone)]
 pub struct SocialRoleMetrics {
@@ -492,6 +775,16 @@ pub struct SocialRoleMetrics {
     pub per_role_metrics: HashMap<String, ClassMetrics>,
     /// Role transition accuracy
     pub transition_accuracy: f64,
+}
+
+impl SocialRoleMetrics {
+    pub fn new() -> Self {
+        Self {
+            role_accuracy: 0.0,
+            per_role_metrics: HashMap::new(),
+            transition_accuracy: 0.0,
+        }
+    }
 }
 
 /// Social recommendation evaluation metrics
@@ -509,6 +802,18 @@ pub struct SocialRecommendationMetrics {
     pub social_novelty: f64,
 }
 
+impl SocialRecommendationMetrics {
+    pub fn new() -> Self {
+        Self {
+            precision_at_k: HashMap::new(),
+            recall_at_k: HashMap::new(),
+            ndcg_at_k: HashMap::new(),
+            social_diversity: 0.0,
+            social_novelty: 0.0,
+        }
+    }
+}
+
 /// Information diffusion prediction metrics
 #[derive(Debug, Clone)]
 pub struct InformationDiffusionMetrics {
@@ -520,6 +825,17 @@ pub struct InformationDiffusionMetrics {
     pub time_prediction_mae: f64,
     /// Path prediction accuracy
     pub path_accuracy: f64,
+}
+
+impl InformationDiffusionMetrics {
+    pub fn new() -> Self {
+        Self {
+            cascade_accuracy: 0.0,
+            size_prediction_mae: 0.0,
+            time_prediction_mae: 0.0,
+            path_accuracy: 0.0,
+        }
+    }
 }
 
 /// Molecular graph evaluation metrics
@@ -550,6 +866,18 @@ pub struct MolecularPropertyMetrics {
     pub chemical_validity: f64,
 }
 
+impl MolecularPropertyMetrics {
+    pub fn new() -> Self {
+        Self {
+            rmse: 0.0,
+            mae: 0.0,
+            roc_auc: None,
+            per_property_metrics: HashMap::new(),
+            chemical_validity: 0.0,
+        }
+    }
+}
+
 /// Individual molecular property metrics
 #[derive(Debug, Clone)]
 pub struct PropertyMetrics {
@@ -559,6 +887,16 @@ pub struct PropertyMetrics {
     pub r2_score: f64,
     /// Pearson correlation
     pub pearson_correlation: f64,
+}
+
+impl PropertyMetrics {
+    pub fn new() -> Self {
+        Self {
+            mse: 0.0,
+            r2_score: 0.0,
+            pearson_correlation: 0.0,
+        }
+    }
 }
 
 /// Drug discovery evaluation metrics
@@ -574,6 +912,17 @@ pub struct DrugDiscoveryMetrics {
     pub synthetic_accessibility: f64,
 }
 
+impl DrugDiscoveryMetrics {
+    pub fn new() -> Self {
+        Self {
+            admet_accuracy: HashMap::new(),
+            toxicity_metrics: ToxicityMetrics::new(),
+            dti_prediction: DtiPredictionMetrics::new(),
+            synthetic_accessibility: 0.0,
+        }
+    }
+}
+
 /// Toxicity prediction metrics
 #[derive(Debug, Clone)]
 pub struct ToxicityMetrics {
@@ -587,6 +936,17 @@ pub struct ToxicityMetrics {
     pub overall_toxicity_f1: f64,
 }
 
+impl ToxicityMetrics {
+    pub fn new() -> Self {
+        Self {
+            acute_toxicity_acc: 0.0,
+            chronic_toxicity_acc: 0.0,
+            mutagenicity_acc: 0.0,
+            overall_toxicity_f1: 0.0,
+        }
+    }
+}
+
 /// Drug-target interaction prediction metrics
 #[derive(Debug, Clone)]
 pub struct DtiPredictionMetrics {
@@ -596,6 +956,16 @@ pub struct DtiPredictionMetrics {
     pub dti_precision_at_k: HashMap<usize, f64>,
     /// Binding affinity prediction RMSE
     pub affinity_rmse: f64,
+}
+
+impl DtiPredictionMetrics {
+    pub fn new() -> Self {
+        Self {
+            dti_auc: 0.0,
+            dti_precision_at_k: HashMap::new(),
+            affinity_rmse: 0.0,
+        }
+    }
 }
 
 /// Chemical similarity evaluation metrics
@@ -611,6 +981,17 @@ pub struct ChemicalSimilarityMetrics {
     pub pharmacophore_similarity: f64,
 }
 
+impl ChemicalSimilarityMetrics {
+    pub fn new() -> Self {
+        Self {
+            tanimoto_correlation: 0.0,
+            fingerprint_similarity: 0.0,
+            structure_3d_similarity: 0.0,
+            pharmacophore_similarity: 0.0,
+        }
+    }
+}
+
 /// Reaction prediction evaluation metrics
 #[derive(Debug, Clone)]
 pub struct ReactionPredictionMetrics {
@@ -622,6 +1003,17 @@ pub struct ReactionPredictionMetrics {
     pub yield_prediction_rmse: f64,
     /// Reaction feasibility accuracy
     pub feasibility_accuracy: f64,
+}
+
+impl ReactionPredictionMetrics {
+    pub fn new() -> Self {
+        Self {
+            reaction_classification_acc: 0.0,
+            product_prediction_acc: 0.0,
+            yield_prediction_rmse: 0.0,
+            feasibility_accuracy: 0.0,
+        }
+    }
 }
 
 /// Comprehensive GNN evaluation results

@@ -29,7 +29,7 @@ pub struct DAEStructure<
         + std::ops::DivAssign
         + Display
         + LowerExp
-        + std::iter::Sum,
+        + std::iter::Sum + crate::common::IntegrateFloat,
 > {
     /// Number of differential variables
     pub n_differential: usize,
@@ -76,7 +76,7 @@ impl<
             + std::ops::DivAssign
             + Display
             + LowerExp
-            + std::iter::Sum,
+            + std::iter::Sum + crate::common::IntegrateFloat,
     > Default for DAEStructure<F>
 {
     fn default() -> Self {
@@ -107,7 +107,7 @@ impl<
             + std::ops::DivAssign
             + Display
             + LowerExp
-            + std::iter::Sum,
+            + std::iter::Sum + crate::common::IntegrateFloat,
     > DAEStructure<F>
 {
     /// Create a new DAE structure for a semi-explicit system
@@ -239,7 +239,7 @@ pub struct PantelidesReducer<
         + std::ops::DivAssign
         + Display
         + LowerExp
-        + std::iter::Sum,
+        + std::iter::Sum + crate::common::IntegrateFloat,
 > {
     /// DAE structure information
     pub structure: DAEStructure<F>,
@@ -262,7 +262,7 @@ impl<
             + std::ops::DivAssign
             + Display
             + LowerExp
-            + std::iter::Sum,
+            + std::iter::Sum + crate::common::IntegrateFloat,
     > PantelidesReducer<F>
 {
     /// Create a new Pantelides reducer for index reduction
@@ -646,7 +646,7 @@ struct DummySelection<
         + std::ops::DivAssign
         + Display
         + LowerExp
-        + std::iter::Sum,
+        + std::iter::Sum + crate::common::IntegrateFloat,
 > {
     /// Variables selected to be dummy variables
     dummy_vars: Vec<usize>,
@@ -673,7 +673,7 @@ pub struct DummyDerivativeReducer<
         + std::ops::DivAssign
         + Display
         + LowerExp
-        + std::iter::Sum,
+        + std::iter::Sum + crate::common::IntegrateFloat,
 > {
     /// DAE structure information
     pub structure: DAEStructure<F>,
@@ -696,7 +696,7 @@ impl<
             + std::ops::DivAssign
             + Display
             + LowerExp
-            + std::iter::Sum,
+            + std::iter::Sum + crate::common::IntegrateFloat,
     > DummyDerivativeReducer<F>
 {
     /// Create a new dummy derivative reducer
@@ -1066,7 +1066,7 @@ pub struct ProjectionMethod<
         + std::ops::DivAssign
         + Display
         + LowerExp
-        + std::iter::Sum,
+        + std::iter::Sum + crate::common::IntegrateFloat,
 > {
     /// DAE structure information
     pub structure: DAEStructure<F>,
@@ -1092,7 +1092,7 @@ impl<
             + std::ops::DivAssign
             + Display
             + LowerExp
-            + std::iter::Sum,
+            + std::iter::Sum + crate::common::IntegrateFloat,
     > ProjectionMethod<F>
 {
     /// Create a new projection method for constraint satisfaction
@@ -1242,7 +1242,7 @@ where
         + std::ops::DivAssign
         + Display
         + LowerExp
-        + std::iter::Sum,
+        + std::iter::Sum + crate::common::IntegrateFloat,
     Func: Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F>,
 {
     // Evaluate the base function
@@ -1324,7 +1324,7 @@ where
         + std::ops::DivAssign
         + Display
         + LowerExp
-        + std::iter::Sum,
+        + std::iter::Sum + crate::common::IntegrateFloat,
 {
     use crate::dae::utils::linear_solvers::solve_linear_system;
 

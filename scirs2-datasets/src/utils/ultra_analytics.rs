@@ -147,10 +147,8 @@ impl UltraDatasetAnalyzer {
     /// Calculate dataset complexity using advanced entropy measures
     fn calculate_complexity_score(&self, data: ArrayView2<f64>) -> Result<f64> {
         let n_features = data.ncols();
-        let mut complexity_scores = Vec::new();
-
         // Calculate per-feature complexity using parallel processing
-        complexity_scores = (0..n_features)
+        let complexity_scores = (0..n_features)
             .into_par_iter()
             .map(|i| {
                 let feature = data.column(i);

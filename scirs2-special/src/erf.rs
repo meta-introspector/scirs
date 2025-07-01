@@ -761,6 +761,245 @@ pub mod complex {
     }
 }
 
+/// Dawson's integral function.
+///
+/// This function computes the Dawson's integral, also known as the Dawson function:
+/// 
+/// ```text
+/// D(x) = exp(-x²) ∫₀ˣ exp(t²) dt
+/// ```
+///
+/// **Mathematical Properties**:
+///
+/// 1. **Odd function**: D(-x) = -D(x)
+/// 2. **Relation to error function**: D(x) = (√π/2) exp(-x²) Im[erf(ix)]
+/// 3. **Asymptotic behavior**:
+///    - For small x: D(x) ≈ x
+///    - For large x: D(x) ≈ 1/(2x)
+///
+/// **Physical Applications**:
+/// - Plasma physics (Landau damping)
+/// - Quantum mechanics (harmonic oscillator)
+/// - Statistical mechanics (Maxwell-Boltzmann distribution)
+///
+/// # Arguments
+///
+/// * `x` - Input value
+///
+/// # Returns
+///
+/// * D(x) Dawson's integral value
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::erf::dawsn;
+///
+/// // D(0) = 0
+/// assert!((dawsn(0.0f64)).abs() < 1e-10);
+///
+/// // D(1) ≈ 0.53807950691276841
+/// let d1 = dawsn(1.0f64);
+/// assert!((d1 - 0.53807950691276841).abs() < 1e-10);
+/// ```
+pub fn dawsn<F: Float + FromPrimitive>(x: F) -> F {
+    // Special cases
+    if x == F::zero() {
+        return F::zero();
+    }
+
+    // Use odd symmetry: D(-x) = -D(x)
+    let abs_x = x.abs();
+    let sign = if x.is_sign_positive() { F::one() } else { -F::one() };
+
+    let result = if abs_x < F::from(0.1).unwrap() {
+        // For small x, use series expansion: D(x) = x - (2/3)x³ + (4/15)x⁵ - ...
+        let x2 = abs_x * abs_x;
+        let x4 = x2 * x2;
+        abs_x * (F::one() - F::from(2.0/3.0).unwrap() * x2 + F::from(4.0/15.0).unwrap() * x4)
+    } else if abs_x < F::from(6.0).unwrap() {
+        // For moderate x, use the relation with continued fractions
+        // or series expansion. Here we use a rational approximation.
+        
+        // Use the relation: D(x) = (1/2) * [exp(-x²) * (√π * erf(x) * exp(x²) - 2x)]
+        // Simplified: D(x) = (√π/2) * erf(x) * exp(-x²) - x * exp(-x²) * (something)
+        
+        // Alternative: Use the series in terms of Hermite polynomials
+        // For computational efficiency, we use a rational approximation
+        
+        // Compute exp(-x²)
+        let exp_neg_x2 = (-abs_x * abs_x).exp();
+        
+        // Use series: D(x) = exp(-x²) * Σ[n=0..∞] (2ⁿ xⁿ⁺¹)/((2n+1)! * n!)
+        let mut sum = abs_x;
+        let mut term = abs_x;
+        let x2 = abs_x * abs_x;
+        
+        for n in 1..50 {
+            // term *= (2 * x²) / ((2n) * (2n+1))
+            let n_f = F::from(n).unwrap();
+            term = term * F::from(2.0).unwrap() * x2 / (F::from(2.0).unwrap() * n_f * (F::from(2.0).unwrap() * n_f + F::one()));
+            sum = sum + term;
+            
+            if term.abs() < F::from(1e-15).unwrap() * sum.abs() {
+                break;
+            }
+        }
+        
+        exp_neg_x2 * sum
+    } else {
+        // For large x, use asymptotic expansion: D(x) ≈ 1/(2x) + 1/(4x³) + 3/(8x⁵) + ...
+        let x_inv = abs_x.recip();
+        let x_inv2 = x_inv * x_inv;
+        
+        x_inv * (F::from(0.5).unwrap() + x_inv2 * (F::from(0.25).unwrap() + x_inv2 * F::from(0.375).unwrap()))
+    };
+
+    sign * result
+}
+
+/// Scaled complementary error function: erfcx(x) = exp(x²) * erfc(x)
+///
+/// The scaled complementary error function is defined as:
+/// erfcx(x) = exp(x²) * erfc(x)
+///
+/// This function is useful for avoiding overflow in erfc(x) for large x,
+/// since erfc(x) → 0 but exp(x²) → ∞ as x → ∞.
+///
+/// # Arguments
+///
+/// * `x` - Input value
+///
+/// # Returns
+///
+/// * `f64` - erfcx(x)
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::erfcx;
+///
+/// // For x = 0, erfcx(0) = erfc(0) = 1
+/// assert!((erfcx(0.0) - 1.0).abs() < 1e-10);
+///
+/// // For large x, erfcx(x) → 1/(√π * x)
+/// let large_x = 10.0;
+/// let asymptotic = 1.0 / (std::f64::consts::PI.sqrt() * large_x);
+/// assert!((erfcx(large_x) - asymptotic).abs() / asymptotic < 0.1);
+/// ```
+pub fn erfcx<F: Float + FromPrimitive>(x: F) -> F {
+    // For the real-valued version, we can use the complex implementation
+    // with zero imaginary part and take the real part
+    use crate::erf::complex::erfcx_complex;
+    use num_complex::Complex;
+    
+    let z = Complex::new(x.to_f64().unwrap(), 0.0);
+    let result = erfcx_complex(z);
+    F::from(result.re).unwrap()
+}
+
+/// Imaginary error function: erfi(x) = -i * erf(i*x)
+///
+/// The imaginary error function is defined as:
+/// erfi(x) = -i * erf(i*x) = (2/√π) * ∫₀ˣ exp(t²) dt
+///
+/// # Arguments
+///
+/// * `x` - Input value
+///
+/// # Returns
+///
+/// * `f64` - erfi(x)
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::erfi;
+///
+/// // erfi(0) = 0
+/// assert!((erfi(0.0) - 0.0).abs() < 1e-10);
+///
+/// // erfi(-x) = -erfi(x) (odd function)
+/// let x = 1.0;
+/// assert!((erfi(-x) + erfi(x)).abs() < 1e-10);
+/// ```
+pub fn erfi<F: Float + FromPrimitive>(x: F) -> F {
+    // erfi(x) = -i * erf(i*x) = (2/√π) * ∫₀ˣ exp(t²) dt
+    // For implementation, we can use series expansion or the relation to Dawson's function
+    // erfi(x) = (2/√π) * exp(x²) * D(x) where D(x) is Dawson's function
+    
+    if x == F::zero() {
+        return F::zero();
+    }
+    
+    // Use odd symmetry: erfi(-x) = -erfi(x)
+    let abs_x = x.abs();
+    let sign = if x.is_sign_positive() { F::one() } else { -F::one() };
+    
+    let result = if abs_x < F::from(0.5).unwrap() {
+        // For small x, use series expansion: erfi(x) = (2/√π) * Σ[n=0..∞] x^(2n+1) / (n! * (2n+1))
+        let two_over_sqrt_pi = F::from(2.0 / std::f64::consts::PI.sqrt()).unwrap();
+        let mut sum = abs_x;
+        let mut term = abs_x;
+        let x2 = abs_x * abs_x;
+        
+        for n in 1..50 {
+            let n_f = F::from(n).unwrap();
+            term = term * x2 / (n_f * (F::from(2.0).unwrap() * n_f + F::one()));
+            sum = sum + term;
+            
+            if term.abs() < F::from(1e-15).unwrap() * sum.abs() {
+                break;
+            }
+        }
+        
+        two_over_sqrt_pi * sum
+    } else {
+        // For larger x, use the relation with Dawson's function
+        // erfi(x) = (2/√π) * exp(x²) * D(x)
+        let two_over_sqrt_pi = F::from(2.0 / std::f64::consts::PI.sqrt()).unwrap();
+        let exp_x2 = (abs_x * abs_x).exp();
+        let dawson_x = dawsn(abs_x);
+        
+        two_over_sqrt_pi * exp_x2 * dawson_x
+    };
+    
+    sign * result
+}
+
+/// Faddeeva function: wofz(z) = exp(-z²) * erfc(-i*z)
+///
+/// The Faddeeva function is defined as:
+/// wofz(z) = exp(-z²) * erfc(-i*z)
+///
+/// For real arguments, this simplifies to a real-valued function.
+///
+/// # Arguments
+///
+/// * `x` - Input value (real)
+///
+/// # Returns
+///
+/// * `f64` - wofz(x) for real x
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::wofz;
+///
+/// // wofz(0) = 1
+/// assert!((wofz(0.0) - 1.0).abs() < 1e-10);
+/// ```
+pub fn wofz<F: Float + FromPrimitive>(x: F) -> F {
+    // For real arguments, use the complex implementation and take the real part
+    use crate::erf::complex::faddeeva_complex;
+    use num_complex::Complex;
+    
+    let z = Complex::new(x.to_f64().unwrap(), 0.0);
+    let result = faddeeva_complex(z);
+    F::from(result.re).unwrap()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

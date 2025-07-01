@@ -162,7 +162,7 @@ where
     U: Float + NumCast + Debug,
 {
     use num_complex::Complex64;
-    use rustfft::{num_complex::Complex, FftPlanner};
+    use rustfft::FftPlanner;
 
     if a.is_empty() || v.is_empty() {
         return Err(SignalError::ValueError(

@@ -5,14 +5,14 @@
 //! automated benchmarking, regression detection, and report generation.
 
 use crate::benchmarking::performance_regression_detector::{
-    CiCdReport, CiCdStatus, EnvironmentInfo, MetricType, MetricValue, PerformanceMeasurement,
+    EnvironmentInfo, MetricType, MetricValue, PerformanceMeasurement,
     PerformanceRegressionDetector, RegressionConfig, RegressionResult, TestConfiguration,
 };
 use crate::error::{OptimError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Output};
+use std::process::Command;
 use std::time::{Duration, SystemTime};
 
 /// Main CI/CD automation engine

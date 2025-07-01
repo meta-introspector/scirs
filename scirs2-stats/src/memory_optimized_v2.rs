@@ -13,6 +13,9 @@ use std::cell::RefCell;
 use std::collections::VecDeque;
 use std::rc::Rc;
 
+#[cfg(feature = "memmap")]
+use memmap2::Mmap;
+
 /// Memory usage configuration
 #[derive(Debug, Clone)]
 pub struct MemoryConfig {

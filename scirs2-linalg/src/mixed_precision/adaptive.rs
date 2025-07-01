@@ -196,7 +196,9 @@ where
         + 'static
         + std::iter::Sum
         + NumAssign
-        + ndarray::ScalarOperand,
+        + ndarray::ScalarOperand
+        + Send
+        + Sync,
 {
     // Convert to high precision
     let a_high = convert_2d::<A, H>(a);
@@ -289,8 +291,8 @@ where
     A: Float + NumAssign + Debug + 'static,
     B: Float + NumAssign + Debug + 'static,
     C: Float + NumAssign + Debug + 'static,
-    H: Float + NumAssign + Debug + 'static + std::iter::Sum + ndarray::ScalarOperand,
-    W: Float + NumAssign + Debug + 'static + std::iter::Sum + One,
+    H: Float + NumAssign + Debug + 'static + std::iter::Sum + ndarray::ScalarOperand + Send + Sync,
+    W: Float + NumAssign + Debug + 'static + std::iter::Sum + One + Send + Sync + ndarray::ScalarOperand,
     A: NumCast,
     B: NumCast,
     C: NumCast,
@@ -426,7 +428,7 @@ pub fn mixed_precision_qr<A, C, H>(a: &ArrayView2<A>) -> LinalgResult<(Array2<C>
 where
     A: Float + NumAssign + Debug + 'static,
     C: Float + NumAssign + Debug + 'static,
-    H: Float + NumAssign + Debug + 'static + std::iter::Sum + ndarray::ScalarOperand,
+    H: Float + NumAssign + Debug + 'static + std::iter::Sum + ndarray::ScalarOperand + Send + Sync,
     A: NumCast,
     C: NumCast,
     H: NumCast,
@@ -566,7 +568,7 @@ pub fn mixed_precision_svd<A, C, H>(
 where
     A: Float + NumAssign + Debug + 'static,
     C: Float + NumAssign + Debug + 'static,
-    H: Float + NumAssign + Debug + 'static + std::iter::Sum + ndarray::ScalarOperand,
+    H: Float + NumAssign + Debug + 'static + std::iter::Sum + ndarray::ScalarOperand + Send + Sync,
     A: NumCast,
     C: NumCast,
     H: NumCast,

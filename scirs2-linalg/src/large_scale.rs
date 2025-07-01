@@ -43,7 +43,7 @@ pub fn randomized_least_squares<A>(
     iterations: usize,
 ) -> LinalgResult<Array1<A>>
 where
-    A: Float + NumAssign + Debug + Display + ndarray::ScalarOperand + std::iter::Sum + 'static,
+    A: Float + NumAssign + Debug + Display + ndarray::ScalarOperand + std::iter::Sum + 'static + Send + Sync,
 {
     let (m, n) = (a.nrows(), a.ncols());
 
@@ -133,7 +133,7 @@ pub fn randomized_norm<A>(
     power_iterations: usize,
 ) -> LinalgResult<A>
 where
-    A: Float + NumAssign + Debug + Display + ndarray::ScalarOperand + std::iter::Sum + 'static,
+    A: Float + NumAssign + Debug + Display + ndarray::ScalarOperand + std::iter::Sum + 'static + Send + Sync,
 {
     let (m, n) = (a.nrows(), a.ncols());
 
@@ -233,7 +233,7 @@ pub fn incremental_svd<A>(
     rank: usize,
 ) -> LinalgResult<(Array2<A>, Array1<A>, Array2<A>)>
 where
-    A: Float + NumAssign + Debug + Display + ndarray::ScalarOperand + std::iter::Sum + 'static,
+    A: Float + NumAssign + Debug + Display + ndarray::ScalarOperand + std::iter::Sum + 'static + Send + Sync,
 {
     let m = current_u.shape()[0];
     let k = current_s.len();
@@ -335,7 +335,7 @@ pub fn block_krylov_solve<A>(
     tolerance: A,
 ) -> LinalgResult<Array2<A>>
 where
-    A: Float + NumAssign + Debug + Display + ndarray::ScalarOperand + std::iter::Sum + 'static,
+    A: Float + NumAssign + Debug + Display + ndarray::ScalarOperand + std::iter::Sum + 'static + Send + Sync,
 {
     let (n, _) = (a.nrows(), a.ncols());
     let (n_b, n_rhs) = (b.nrows(), b.ncols());
@@ -402,7 +402,7 @@ pub fn ca_gmres<A>(
     tolerance: A,
 ) -> LinalgResult<Array1<A>>
 where
-    A: Float + NumAssign + Debug + Display + ndarray::ScalarOperand + std::iter::Sum + 'static,
+    A: Float + NumAssign + Debug + Display + ndarray::ScalarOperand + std::iter::Sum + 'static + Send + Sync,
 {
     // For now, delegate to standard GMRES
     // A full implementation would compute s matrix powers at once
@@ -439,7 +439,7 @@ pub fn randomized_block_lanczos<A>(
     max_iterations: usize,
 ) -> LinalgResult<(Array1<A>, Array2<A>)>
 where
-    A: Float + NumAssign + Debug + Display + ndarray::ScalarOperand + std::iter::Sum + 'static,
+    A: Float + NumAssign + Debug + Display + ndarray::ScalarOperand + std::iter::Sum + 'static + Send + Sync,
 {
     let n = a.shape()[0];
 

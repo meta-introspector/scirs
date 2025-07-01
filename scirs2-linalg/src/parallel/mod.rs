@@ -32,9 +32,9 @@ pub use work_stealing::{
 // Re-export matrix operations
 pub use work_stealing::matrix_ops::{
     parallel_band_solve, parallel_block_gemm, parallel_cholesky_work_stealing,
-    parallel_gemm_work_stealing, parallel_hessenberg_reduction, parallel_lu_work_stealing,
-    parallel_matvec_work_stealing, parallel_power_iteration, parallel_qr_work_stealing,
-    parallel_svd_work_stealing,
+    parallel_eigvalsh_work_stealing, parallel_gemm_work_stealing, parallel_hessenberg_reduction,
+    parallel_lu_work_stealing, parallel_matvec_work_stealing, parallel_power_iteration,
+    parallel_qr_work_stealing, parallel_svd_work_stealing,
 };
 
 // Re-export cache-aware operations

@@ -771,7 +771,7 @@ where
     fn apply_single_pass(
         &self,
         computation: XLAComputationGraph<A>,
-        pass: &XLAOptimizationPass,
+        _pass: &XLAOptimizationPass,
     ) -> Result<XLAComputationGraph<A>, OptimizerError> {
         // Apply specific optimization pass
         // This is simplified - real implementation would transform the computation graph

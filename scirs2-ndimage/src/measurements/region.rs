@@ -268,21 +268,21 @@ where
             unique_labels.insert(label);
         }
     }
-    
+
     let mut region_props = Vec::new();
-    
+
     // Compute properties for each region
     for &label in unique_labels.iter() {
         let mut area = 0;
         let mut sum_coords = vec![T::zero(); input.ndim()];
         let mut min_coords = vec![usize::MAX; input.ndim()];
         let mut max_coords = vec![0; input.ndim()];
-        
+
         // Iterate through all pixels to compute properties
         for (coords, (&value, &pixel_label)) in input.indexed_iter().zip(labels.iter()) {
             if pixel_label == label {
                 area += 1;
-                
+
                 // Update sum for centroid calculation
                 for (i, &coord) in coords.into_iter().enumerate() {
                     sum_coords[i] += T::from_usize(coord).unwrap() * value;
@@ -291,7 +291,7 @@ where
                 }
             }
         }
-        
+
         // Calculate centroid (center of mass)
         let total_intensity = {
             let mut total = T::zero();
@@ -302,14 +302,17 @@ where
             }
             total
         };
-        
+
         let centroid = if total_intensity > T::zero() {
             sum_coords.iter().map(|&s| s / total_intensity).collect()
         } else {
             // Fallback to geometric centroid if intensity is zero
-            sum_coords.iter().map(|&s| s / T::from_usize(area).unwrap()).collect()
+            sum_coords
+                .iter()
+                .map(|&s| s / T::from_usize(area).unwrap())
+                .collect()
         };
-        
+
         // Create bounding box in the format [min1, min2, ..., max1, max2, ...]
         let mut bbox = Vec::new();
         for i in 0..input.ndim() {
@@ -318,20 +321,20 @@ where
         for i in 0..input.ndim() {
             bbox.push(max_coords[i] + 1); // Add 1 to make it exclusive end
         }
-        
+
         let props = RegionProperties {
             label,
             area,
             centroid,
             bbox,
         };
-        
+
         region_props.push(props);
     }
-    
+
     // Sort by label for consistent output
     region_props.sort_by_key(|p| p.label);
-    
+
     Ok(region_props)
 }
 
@@ -561,24 +564,24 @@ where
             unique_labels.insert(label);
         }
     }
-    
+
     if unique_labels.is_empty() {
         return Ok(vec![]);
     }
-    
+
     let mut bboxes = Vec::new();
-    
+
     // Calculate bounding box for each object
     for &label in unique_labels.iter() {
         let mut min_coords = vec![usize::MAX; input.ndim()];
         let mut max_coords = vec![0; input.ndim()];
         let mut found_object = false;
-        
+
         // Scan through all pixels to find object bounds
         for (coords, &pixel_label) in input.indexed_iter() {
             if pixel_label == label {
                 found_object = true;
-                
+
                 // Update bounding box coordinates
                 for (i, &coord) in coords.into_iter().enumerate() {
                     min_coords[i] = min_coords[i].min(coord);
@@ -586,7 +589,7 @@ where
                 }
             }
         }
-        
+
         if found_object {
             // Create bounding box in the format [min1, max1, min2, max2, ...]
             let mut bbox = Vec::new();
@@ -597,11 +600,11 @@ where
             bboxes.push(bbox);
         }
     }
-    
+
     // Sort bboxes by the label order for consistent output
     // Since we don't store labels, we sort by first coordinate for consistency
     bboxes.sort_by_key(|bbox| bbox[0]);
-    
+
     Ok(bboxes)
 }
 

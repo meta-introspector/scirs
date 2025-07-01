@@ -4,6 +4,7 @@
 //! including skewness and kurtosis, using scirs2-core's unified SIMD operations.
 
 use crate::error::{StatsError, StatsResult};
+use crate::error_standardization::{ErrorMessages, ErrorValidator};
 use ndarray::{Array1, ArrayBase, ArrayView1, Data, Ix1};
 use num_traits::{Float, NumCast, One, Zero};
 use scirs2_core::{
@@ -42,15 +43,11 @@ where
     check_array_finite(x, "x")?;
 
     if x.is_empty() {
-        return Err(StatsError::InvalidArgument(
-            "Empty array provided".to_string(),
-        ));
+        return Err(ErrorMessages::empty_array("x"));
     }
 
     if x.len() < 3 && !bias {
-        return Err(StatsError::DomainError(
-            "At least 3 data points required for unbiased skewness".to_string(),
-        ));
+        return Err(ErrorMessages::insufficient_data("unbiased skewness calculation", 3, x.len()));
     }
 
     let n = x.len();

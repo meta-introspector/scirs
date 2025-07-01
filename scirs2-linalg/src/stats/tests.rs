@@ -70,7 +70,10 @@ where
         + ndarray::ScalarOperand
         + num_traits::FromPrimitive
         + num_traits::NumAssign
-        + std::iter::Sum,
+        + std::iter::Sum
+        + Send
+        + Sync
+        + 'static,
 {
     if groups.len() < 2 {
         return Err(LinalgError::InvalidInputError(
@@ -215,7 +218,10 @@ where
         + ndarray::ScalarOperand
         + num_traits::FromPrimitive
         + num_traits::NumAssign
-        + std::iter::Sum,
+        + std::iter::Sum
+        + Send
+        + Sync
+        + 'static,
 {
     let n = data.nrows();
     let p = data.ncols();
@@ -286,7 +292,10 @@ where
         + ndarray::ScalarOperand
         + num_traits::FromPrimitive
         + num_traits::NumAssign
-        + std::iter::Sum,
+        + std::iter::Sum
+        + Send
+        + Sync
+        + 'static,
 {
     let n = data.nrows();
     let p = data.ncols();
@@ -396,7 +405,10 @@ where
         + ndarray::ScalarOperand
         + num_traits::FromPrimitive
         + num_traits::NumAssign
-        + std::iter::Sum,
+        + std::iter::Sum
+        + Send
+        + Sync
+        + 'static,
 {
     let n = data.nrows();
     let p = data.ncols();

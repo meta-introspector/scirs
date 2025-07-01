@@ -22,7 +22,7 @@
 //! - Memory-efficient iterative solvers
 //! - Parallel sparse matrix operations
 
-use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2, ScalarOperand};
 use num_complex::Complex;
 use num_traits::{Float, NumAssign};
 use rand::{prelude::*, rng};
@@ -837,7 +837,7 @@ pub fn eigs_gen<F, M1, M2>(
     _tol: F,
 ) -> SparseEigenResult<F>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
     M1: SparseMatrix<F>,
     M2: SparseMatrix<F>,
 {
@@ -884,7 +884,7 @@ pub fn svds<F, M>(
     _tol: F,
 ) -> LinalgResult<(Array1<F>, Array2<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
     M: SparseMatrix<F>,
 {
     Err(LinalgError::NotImplementedError(
@@ -926,7 +926,7 @@ pub fn dense_to_sparse<F>(
     _threshold: F,
 ) -> LinalgResult<Box<dyn SparseMatrix<F>>>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     Err(LinalgError::NotImplementedError(
         "Dense to sparse conversion not yet implemented".to_string(),
@@ -951,7 +951,7 @@ pub struct CsrMatrix<F> {
 
 impl<F> CsrMatrix<F>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     /// Create a new CSR matrix (placeholder implementation)
     pub fn new(
@@ -973,7 +973,7 @@ where
 
 impl<F> SparseMatrix<F> for CsrMatrix<F>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     fn nrows(&self) -> usize {
         self.nrows

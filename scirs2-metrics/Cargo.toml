@@ -29,6 +29,7 @@ rand = { workspace = true }
 rand_distr = { workspace = true }
 parking_lot = { workspace = true }
 num_cpus = { workspace = true }
+crossbeam-utils = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_yaml = { workspace = true }

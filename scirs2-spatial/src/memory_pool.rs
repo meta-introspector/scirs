@@ -490,8 +490,8 @@ impl DistancePool {
             for entry in entries.flatten() {
                 let name = entry.file_name();
                 if let Some(name_str) = name.to_str() {
-                    if name_str.starts_with("node") {
-                        if let Ok(node_num) = name_str[4..].parse::<i32>() {
+                    if let Some(stripped) = name_str.strip_prefix("node") {
+                        if let Ok(node_num) = stripped.parse::<i32>() {
                             // Simple heuristic: use first available node
                             return Some(node_num);
                         }
@@ -536,8 +536,8 @@ impl DistancePool {
             for entry in entries.flatten() {
                 let name = entry.file_name();
                 if let Some(name_str) = name.to_str() {
-                    if name_str.starts_with("node") {
-                        if let Ok(node_id) = name_str[4..].parse::<u32>() {
+                    if let Some(stripped) = name_str.strip_prefix("node") {
+                        if let Ok(node_id) = stripped.parse::<u32>() {
                             // Read memory info for this node
                             let meminfo_path =
                                 format!("/sys/devices/system/node/{}/meminfo", name_str);
@@ -802,7 +802,7 @@ impl<'a> DistanceBuffer<'a> {
     }
 }
 
-impl<'a> Drop for DistanceBuffer<'a> {
+impl Drop for DistanceBuffer<'_> {
     fn drop(&mut self) {
         if let Some(buffer) = self.buffer.take() {
             self.pool.return_distance_buffer(buffer);
@@ -845,7 +845,7 @@ impl<'a> IndexBuffer<'a> {
     }
 }
 
-impl<'a> Drop for IndexBuffer<'a> {
+impl Drop for IndexBuffer<'_> {
     fn drop(&mut self) {
         if let Some(buffer) = self.buffer.take() {
             self.pool.return_index_buffer(buffer);
@@ -883,7 +883,7 @@ impl<'a> MatrixBuffer<'a> {
     }
 }
 
-impl<'a> Drop for MatrixBuffer<'a> {
+impl Drop for MatrixBuffer<'_> {
     fn drop(&mut self) {
         if let Some(matrix) = self.matrix.take() {
             self.pool.return_matrix_buffer(matrix);
@@ -1318,15 +1318,17 @@ pub fn global_distance_pool() -> &'static DistancePool {
 
 /// Get the global clustering arena instance
 pub fn global_clustering_arena() -> &'static ClusteringArena {
-    GLOBAL_CLUSTERING_ARENA.get_or_init(|| ClusteringArena::new())
+    GLOBAL_CLUSTERING_ARENA.get_or_init(ClusteringArena::new)
 }
 
 /// Create a NUMA-optimized distance pool for the current thread
 pub fn create_numa_optimized_pool(capacity: usize) -> DistancePool {
-    let mut config = MemoryPoolConfig::default();
-    config.numa_aware = true;
-    config.auto_numa_discovery = true;
-    config.enable_thread_affinity = true;
+    let config = MemoryPoolConfig {
+        numa_aware: true,
+        auto_numa_discovery: true,
+        enable_thread_affinity: true,
+        ..Default::default()
+    };
 
     DistancePool::with_config(capacity, config)
 }

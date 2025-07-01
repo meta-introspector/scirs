@@ -530,10 +530,7 @@ where
 }
 
 /// Global GPU acceleration instance for convenience
-lazy_static::lazy_static! {
-    static ref GLOBAL_GPU_FRAMEWORK: Arc<Mutex<Option<GpuAccelerationFramework<f64>>>> =
-        Arc::new(Mutex::new(None));
-}
+static GLOBAL_GPU_FRAMEWORK: std::sync::OnceLock<Arc<Mutex<Option<GpuAccelerationFramework<f64>>>>> = std::sync::OnceLock::new();
 
 /// Initialize global GPU acceleration (call once at startup)
 pub fn initialize_global_gpu_acceleration() -> LinalgResult<()> {
@@ -541,8 +538,10 @@ pub fn initialize_global_gpu_acceleration() -> LinalgResult<()> {
     framework.initialize_contexts()?;
     framework.warmup()?;
 
-    let mut global = GLOBAL_GPU_FRAMEWORK.lock().unwrap();
-    *global = Some(framework);
+    let arc_mutex = Arc::new(Mutex::new(Some(framework)));
+    GLOBAL_GPU_FRAMEWORK.set(arc_mutex).map_err(|_| {
+        LinalgError::ComputationError("Global GPU framework already initialized".to_string())
+    })?;
 
     Ok(())
 }
@@ -1176,9 +1175,9 @@ impl<T> MockGpuBuffer<T> {
 
 impl<T> super::GpuBuffer<T> for MockGpuBuffer<T>
 where
-    T: Clone,
+    T: Clone + Send + Sync,
 {
-    fn size(&self) -> usize {
+    fn len(&self) -> usize {
         self.size
     }
 
@@ -1198,7 +1197,7 @@ where
 /// Get reference to global GPU acceleration framework
 pub fn get_global_gpu_framework(
 ) -> Option<std::sync::MutexGuard<'static, Option<GpuAccelerationFramework<f64>>>> {
-    GLOBAL_GPU_FRAMEWORK.try_lock().ok()
+    GLOBAL_GPU_FRAMEWORK.get()?.try_lock().ok()
 }
 
 #[cfg(test)]

@@ -1539,8 +1539,13 @@ impl BayesianModelAveraging {
             model_uncertainty[i] = weighted_variance;
         }
 
-        // Calculate within-model variance (simplified)
-        let within_model_variance = Array1::from_elem(n_obs, 0.1); // Placeholder
+        // Calculate within-model variance using residual variance from each model
+        let mut within_model_variance = Array1::<f64>::zeros(n_obs);
+        for i in 0..n_models {
+            let prediction_row = predictions.row(i);
+            let residual_sq = (&prediction_row - &averaged_prediction).mapv(|x| x * x);
+            within_model_variance = within_model_variance + residual_sq * model_weights[i];
+        }
         let total_variance = &model_uncertainty + &within_model_variance;
 
         Ok(BayesianModelAveragingResults {

@@ -7,7 +7,8 @@
 use crate::error::{OptimError, Result};
 use crate::optimizers::*;
 use crate::schedulers::*;
-use ndarray::{Array, Array1, Array2, Dimension};
+use ndarray::{Array, Array1, Array2, Dimension, ScalarOperand};
+use std::fmt::Debug;
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
@@ -127,7 +128,7 @@ pub struct SelfTuningOptimizer<A: Float, D: Dimension> {
     search_state: HyperparameterSearchState,
 
     /// Learning rate scheduler
-    lr_scheduler: Option<Box<dyn LearningRateScheduler>>,
+    lr_scheduler: Option<Box<dyn LearningRateScheduler<A>>>,
 
     /// Optimizer selection strategy
     selection_strategy: OptimizerSelectionStrategy,
@@ -487,7 +488,7 @@ impl<A: Float + 'static, D: Dimension + 'static> SelfTuningOptimizer<A, D> {
     }
 
     /// Determine if optimizer should be adapted
-    fn should_adapt_optimizer(&self, stats: &PerformanceStats) -> bool {
+    fn should_adapt_optimizer(&self, _stats: &PerformanceStats) -> bool {
         if self.performance_history.len() < self.config.evaluation_window / 2 {
             return false;
         }
@@ -587,7 +588,7 @@ impl<A: Float + 'static, D: Dimension + 'static> SelfTuningOptimizer<A, D> {
         let mut best_score = f64::NEG_INFINITY;
         let mut best_idx = 0;
 
-        for (i, candidate) in self.optimizer_candidates.iter().enumerate() {
+        for (i, _candidate) in self.optimizer_candidates.iter().enumerate() {
             let ucb_score = if self.bandit_state.selection_counts[i] == 0 {
                 f64::INFINITY
             } else {
@@ -805,11 +806,11 @@ pub struct SelfTuningStatistics {
 }
 
 // Wrapper implementations for existing optimizers
-struct AdamOptimizerWrapper<A: Float, D: Dimension> {
-    inner: crate::optimizers::Adam<A, D>,
+struct AdamOptimizerWrapper<A: Float + ScalarOperand + Debug, D: Dimension> {
+    inner: crate::optimizers::Adam<A>,
 }
 
-impl<A: Float, D: Dimension> AdamOptimizerWrapper<A, D> {
+impl<A: Float + ScalarOperand + Debug, D: Dimension> AdamOptimizerWrapper<A, D> {
     fn new(lr: f64, beta1: f64, beta2: f64, eps: f64, weight_decay: f64) -> Self {
         Self {
             inner: crate::optimizers::Adam::new(
@@ -857,11 +858,11 @@ impl<A: Float + 'static, D: Dimension + 'static> OptimizerTrait<A, D>
     }
 }
 
-struct SGDOptimizerWrapper<A: Float, D: Dimension> {
-    inner: crate::optimizers::SGD<A, D>,
+struct SGDOptimizerWrapper<A: Float + ScalarOperand + Debug, D: Dimension> {
+    inner: crate::optimizers::SGD<A>,
 }
 
-impl<A: Float, D: Dimension> SGDOptimizerWrapper<A, D> {
+impl<A: Float + ScalarOperand + Debug, D: Dimension> SGDOptimizerWrapper<A, D> {
     fn new(lr: f64, momentum: f64, weight_decay: f64, nesterov: bool) -> Self {
         Self {
             inner: crate::optimizers::SGD::new(
@@ -908,11 +909,11 @@ impl<A: Float + 'static, D: Dimension + 'static> OptimizerTrait<A, D>
     }
 }
 
-struct AdamWOptimizerWrapper<A: Float, D: Dimension> {
-    inner: crate::optimizers::AdamW<A, D>,
+struct AdamWOptimizerWrapper<A: Float + ScalarOperand + Debug, D: Dimension> {
+    inner: crate::optimizers::AdamW<A>,
 }
 
-impl<A: Float, D: Dimension> AdamWOptimizerWrapper<A, D> {
+impl<A: Float + ScalarOperand + Debug, D: Dimension> AdamWOptimizerWrapper<A, D> {
     fn new(lr: f64, beta1: f64, beta2: f64, eps: f64, weight_decay: f64) -> Self {
         Self {
             inner: crate::optimizers::AdamW::new(

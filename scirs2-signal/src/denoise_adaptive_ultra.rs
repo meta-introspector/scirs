@@ -7,20 +7,13 @@
 //! - Provide real-time denoising capability with SIMD acceleration
 //! - Preserve signal features while maximally reducing noise
 
-use crate::denoise::ThresholdSelect;
 use crate::dwt::{dwt_decompose, dwt_reconstruct, Wavelet};
 use crate::error::{SignalError, SignalResult};
-use crate::median::MedianConfig;
-use crate::nlm::nlm_denoise_1d;
-use crate::tv::tv_denoise_1d;
 use crate::wiener::wiener_filter;
-use crate::window::get_window;
 
-use ndarray::{s, Array1, Array2, ArrayView1, Axis};
-use num_complex::Complex64;
+use ndarray::{s, Array1};
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::{check_finite, check_positive, check_shape};
 use std::collections::HashMap;
 use std::sync::Arc;

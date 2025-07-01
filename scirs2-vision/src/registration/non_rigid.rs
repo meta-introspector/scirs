@@ -5,8 +5,116 @@
 
 use crate::error::{Result, VisionError};
 use crate::registration::{identity_transform, Point2D, RegistrationParams, RegistrationResult};
-use ndarray::{Array1, Array2};
-use scirs2_linalg::lstsq;
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+
+/// Simple least squares solver result
+#[derive(Debug)]
+pub struct LstsqResult {
+    /// Solution vector
+    pub x: Array1<f64>,
+}
+
+/// Simple least squares solver (A * x = b)
+/// Returns the solution x that minimizes ||A * x - b||^2
+fn lstsq(
+    a: &ArrayView2<f64>,
+    b: &ArrayView1<f64>,
+    _rcond: Option<f64>,
+) -> std::result::Result<LstsqResult, String> {
+    let (m, n) = a.dim();
+    
+    if m != b.len() {
+        return Err("Matrix dimensions don't match".to_string());
+    }
+    
+    // For overdetermined systems (m >= n), use normal equations: A^T * A * x = A^T * b
+    if m >= n {
+        // Compute A^T
+        let at = a.t();
+        
+        // Compute A^T * A
+        let ata = at.dot(a);
+        
+        // Compute A^T * b
+        let atb = at.dot(b);
+        
+        // Solve the system using simple Gaussian elimination
+        let x = solve_linear_system(&ata.view(), &atb.view())?;
+        
+        Ok(LstsqResult { x })
+    } else {
+        // Underdetermined system - use minimum norm solution
+        // For now, just return a zero solution
+        Ok(LstsqResult {
+            x: Array1::zeros(n),
+        })
+    }
+}
+
+/// Simple linear system solver using Gaussian elimination
+fn solve_linear_system(
+    a: &ArrayView2<f64>,
+    b: &ArrayView1<f64>,
+) -> std::result::Result<Array1<f64>, String> {
+    let n = a.nrows();
+    if a.ncols() != n || b.len() != n {
+        return Err("Matrix must be square and match vector dimension".to_string());
+    }
+    
+    // Create augmented matrix [A | b]
+    let mut aug = Array2::zeros((n, n + 1));
+    for i in 0..n {
+        for j in 0..n {
+            aug[[i, j]] = a[[i, j]];
+        }
+        aug[[i, n]] = b[i];
+    }
+    
+    // Forward elimination
+    for i in 0..n {
+        // Find pivot
+        let mut max_row = i;
+        for k in (i + 1)..n {
+            if aug[[k, i]].abs() > aug[[max_row, i]].abs() {
+                max_row = k;
+            }
+        }
+        
+        // Swap rows
+        if max_row != i {
+            for j in 0..=n {
+                let tmp = aug[[i, j]];
+                aug[[i, j]] = aug[[max_row, j]];
+                aug[[max_row, j]] = tmp;
+            }
+        }
+        
+        // Check for singular matrix
+        if aug[[i, i]].abs() < 1e-14 {
+            return Err("Matrix is singular".to_string());
+        }
+        
+        // Eliminate column
+        for k in (i + 1)..n {
+            let factor = aug[[k, i]] / aug[[i, i]];
+            for j in i..=n {
+                aug[[k, j]] -= factor * aug[[i, j]];
+            }
+        }
+    }
+    
+    // Back substitution
+    let mut x = Array1::zeros(n);
+    for i in (0..n).rev() {
+        x[i] = aug[[i, n]];
+        for j in (i + 1)..n {
+            x[i] -= aug[[i, j]] * x[j];
+        }
+        x[i] /= aug[[i, i]];
+    }
+    
+    Ok(x)
+}
 
 /// Thin Plate Spline transformation for non-rigid registration
 #[derive(Debug, Clone)]

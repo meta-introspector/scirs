@@ -1,6 +1,6 @@
 //! Matrix decomposition functions
 
-use ndarray::{Array1, Array2, ArrayView2};
+use ndarray::{Array1, Array2, ArrayView2, ScalarOperand};
 use num_traits::{Float, NumAssign, One};
 use std::iter::Sum;
 
@@ -34,7 +34,7 @@ type CODResult<F> = LinalgResult<(Array2<F>, Array2<F>, Array2<F>)>;
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ndarray::{array, ScalarOperand};
 /// use scirs2_linalg::cholesky;
 ///
 /// let a = array![[4.0, 2.0], [2.0, 5.0]];
@@ -43,38 +43,52 @@ type CODResult<F> = LinalgResult<(Array2<F>, Array2<F>, Array2<F>)>;
 /// ```
 pub fn cholesky<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     // Parameter validation using helper function
     validate_decomposition(a, "Cholesky decomposition", true)?;
 
-    // Configure OpenMP thread count if workers specified
-    // Note: This affects BLAS/LAPACK operations that use OpenMP
-    if let Some(num_workers) = workers {
-        std::env::set_var("OMP_NUM_THREADS", num_workers.to_string());
-    }
+    // Choose parallel implementation based on matrix size and worker count
+    let use_work_stealing = if let Some(num_workers) = workers {
+        // For larger matrices and multiple workers, consider work-stealing
+        num_workers > 1 && a.nrows() > 100
+    } else {
+        false
+    };
 
-    // Use the LAPACK implementation with enhanced error handling
-    match lapack_cholesky(a) {
-        Ok(result) => Ok(result),
-        Err(e) => {
-            // Enhanced error handling for common Cholesky failures
-            match e {
-                LinalgError::NonPositiveDefiniteError(_) => {
-                    Err(LinalgError::non_positive_definite_with_suggestions(
-                        "Cholesky decomposition",
-                        a.dim(),
-                        None,
-                    ))
+    if use_work_stealing {
+        // Use work-stealing scheduler for large matrices
+        use crate::parallel::parallel_cholesky_work_stealing;
+        return parallel_cholesky_work_stealing(a, workers.unwrap());
+    } else {
+        // Configure OpenMP thread count if workers specified
+        // Note: This affects BLAS/LAPACK operations that use OpenMP
+        if let Some(num_workers) = workers {
+            std::env::set_var("OMP_NUM_THREADS", num_workers.to_string());
+        }
+
+        // Use the LAPACK implementation with enhanced error handling
+        match lapack_cholesky(a) {
+            Ok(result) => Ok(result),
+            Err(e) => {
+                // Enhanced error handling for common Cholesky failures
+                match e {
+                    LinalgError::NonPositiveDefiniteError(_) => {
+                        Err(LinalgError::non_positive_definite_with_suggestions(
+                            "Cholesky decomposition",
+                            a.dim(),
+                            None,
+                        ))
+                    }
+                    LinalgError::SingularMatrixError(_) => {
+                        Err(LinalgError::singular_matrix_with_suggestions(
+                            "Cholesky decomposition",
+                            a.dim(),
+                            None,
+                        ))
+                    }
+                    _ => Err(e),
                 }
-                LinalgError::SingularMatrixError(_) => {
-                    Err(LinalgError::singular_matrix_with_suggestions(
-                        "Cholesky decomposition",
-                        a.dim(),
-                        None,
-                    ))
-                }
-                _ => Err(e),
             }
         }
     }
@@ -97,7 +111,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ndarray::{array, ScalarOperand};
 /// use scirs2_linalg::lu;
 ///
 /// // Non-singular matrix example
@@ -110,7 +124,7 @@ pub fn lu<F>(
     workers: Option<usize>,
 ) -> LinalgResult<(Array2<F>, Array2<F>, Array2<F>)>
 where
-    F: Float + NumAssign + One + Sum,
+    F: Float + NumAssign + One + Sum + Send + Sync + ScalarOperand + 'static,
 {
     // Parameter validation
     if a.is_empty() {
@@ -126,6 +140,29 @@ where
                 "LU decomposition failed: Matrix contains non-finite values".to_string(),
             ));
         }
+    }
+
+    // Choose parallel implementation based on matrix size and worker count
+    let use_work_stealing = if let Some(num_workers) = workers {
+        // For larger matrices and multiple workers, consider work-stealing
+        num_workers > 1 && a.nrows() > 100
+    } else {
+        false
+    };
+
+    if use_work_stealing && workers.is_some() {
+        // Use work-stealing scheduler for large matrices
+        use crate::parallel::parallel_lu_work_stealing;
+        let (l, u, piv) = parallel_lu_work_stealing(a, workers.unwrap())?;
+        
+        // Convert Array1<usize> permutation to Array2<F> permutation matrix
+        let n = a.nrows();
+        let mut p = Array2::<F>::zeros((n, n));
+        for (i, &piv_index) in piv.iter().enumerate() {
+            p[[i, piv_index]] = F::one();
+        }
+        
+        return Ok((p, l, u));
     }
 
     // Configure OpenMP thread count if workers specified
@@ -198,7 +235,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ndarray::{array, ScalarOperand};
 /// use scirs2_linalg::qr;
 ///
 /// let a = array![[1.0, 2.0], [3.0, 4.0]];
@@ -207,7 +244,7 @@ where
 /// ```
 pub fn qr<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<(Array2<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Sum,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     // Parameter validation
     if a.is_empty() {
@@ -223,6 +260,20 @@ where
                 "QR decomposition failed: Matrix contains non-finite values".to_string(),
             ));
         }
+    }
+
+    // Choose parallel implementation based on matrix size and worker count
+    let use_work_stealing = if let Some(num_workers) = workers {
+        // For larger matrices and multiple workers, consider work-stealing
+        num_workers > 1 && a.nrows() > 100
+    } else {
+        false
+    };
+
+    if use_work_stealing {
+        // Use work-stealing scheduler for large matrices
+        use crate::parallel::parallel_qr_work_stealing;
+        return parallel_qr_work_stealing(a, workers.unwrap());
     }
 
     // Configure OpenMP thread count if workers specified
@@ -268,7 +319,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ndarray::{array, ScalarOperand};
 /// use scirs2_linalg::svd;
 ///
 /// let a = array![[1.0, 0.0], [0.0, 1.0]];
@@ -281,7 +332,7 @@ pub fn svd<F>(
     workers: Option<usize>,
 ) -> LinalgResult<(Array2<F>, Array1<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Sum + ndarray::ScalarOperand,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     // Parameter validation
     if a.is_empty() {
@@ -297,6 +348,20 @@ where
                 "SVD computation failed: Matrix contains non-finite values".to_string(),
             ));
         }
+    }
+
+    // Choose parallel implementation based on matrix size and worker count
+    let use_work_stealing = if let Some(num_workers) = workers {
+        // For larger matrices and multiple workers, consider work-stealing
+        num_workers > 1 && a.nrows() > 100
+    } else {
+        false
+    };
+
+    if use_work_stealing {
+        // Use work-stealing scheduler for large matrices
+        use crate::parallel::parallel_svd_work_stealing;
+        return parallel_svd_work_stealing(a, workers.unwrap());
     }
 
     // Configure OpenMP thread count if workers specified
@@ -326,7 +391,7 @@ where
 /// Compute Cholesky decomposition using default thread count
 pub fn cholesky_default<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     cholesky(a, None)
 }
@@ -334,7 +399,7 @@ where
 /// Compute LU decomposition using default thread count
 pub fn lu_default<F>(a: &ArrayView2<F>) -> LinalgResult<(Array2<F>, Array2<F>, Array2<F>)>
 where
-    F: Float + NumAssign + One + Sum,
+    F: Float + NumAssign + One + Sum + Send + Sync + ScalarOperand + 'static,
 {
     lu(a, None)
 }
@@ -342,7 +407,7 @@ where
 /// Compute QR decomposition using default thread count
 pub fn qr_default<F>(a: &ArrayView2<F>) -> LinalgResult<(Array2<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Sum,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     qr(a, None)
 }
@@ -353,7 +418,7 @@ pub fn svd_default<F>(
     full_matrices: bool,
 ) -> LinalgResult<(Array2<F>, Array1<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Sum + ndarray::ScalarOperand,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     svd(a, full_matrices, None)
 }
@@ -374,7 +439,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ndarray::{array, ScalarOperand};
 /// use scirs2_linalg::schur;
 ///
 /// let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
@@ -383,7 +448,7 @@ where
 /// ```
 pub fn schur<F>(a: &ArrayView2<F>) -> LinalgResult<(Array2<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     if a.nrows() != a.ncols() {
         return Err(LinalgError::ShapeError(format!(
@@ -433,7 +498,7 @@ where
 /// # Examples
 ///
 /// ```ignore
-/// use ndarray::array;
+/// use ndarray::{array, ScalarOperand};
 /// use scirs2_linalg::qz;
 ///
 /// let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
@@ -444,7 +509,7 @@ where
 #[allow(dead_code)]
 pub fn qz<F>(a: &ArrayView2<F>, b: &ArrayView2<F>) -> QZResult<F>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     if a.nrows() != a.ncols() || b.nrows() != b.ncols() {
         return Err(LinalgError::ShapeError(format!(
@@ -534,7 +599,7 @@ where
 /// # Examples
 ///
 /// ```ignore
-/// use ndarray::array;
+/// use ndarray::{array, ScalarOperand};
 /// use scirs2_linalg::complete_orthogonal_decomposition;
 ///
 /// let a = array![[1.0_f64, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
@@ -545,7 +610,7 @@ where
 #[allow(dead_code)]
 pub fn complete_orthogonal_decomposition<F>(a: &ArrayView2<F>) -> CODResult<F>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     let n_rows = a.nrows();
     let n_cols = a.ncols();

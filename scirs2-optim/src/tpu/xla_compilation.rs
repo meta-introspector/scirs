@@ -3967,7 +3967,7 @@ impl<T: Float + Default + Clone> OptimizationPipeline<T> {
 
         // Apply folding
         for op_id in to_fold {
-            if let Some(folded_value) = self.fold_operation(&computation.operations[&op_id])? {
+            if let Some(_folded_value) = self.fold_operation(&computation.operations[&op_id])? {
                 computation.operations.remove(&op_id);
                 // Replace references to this operation with the constant
                 changed = true;
@@ -4079,7 +4079,7 @@ impl<T: Float + Default + Clone> OptimizationPipeline<T> {
 
     fn mark_live_operations(
         &self,
-        computation: &XLAComputation<T>,
+        _computation: &XLAComputation<T>,
         _operand_id: OperandId,
         _live_ops: &mut HashSet<OperationId>,
     ) {
@@ -4730,7 +4730,7 @@ impl<T: Float + Default + Clone> AnalysisManager<T> {
         // Analyze optimal layouts for tensors
         for operation in computation.operations.values() {
             for (i, operand) in operation.inputs.iter().enumerate() {
-                if let OperandType::Tensor { shape, layout, .. } = &operand.operand_type {
+                if let OperandType::Tensor { layout, .. } = &operand.operand_type {
                     let layout_key = format!("op_{}_{}_layout", operation.id.0, i);
                     let layout_info = if let Some(layout) = layout {
                         format!("explicit_layout_{}", layout.minor_to_major.len())

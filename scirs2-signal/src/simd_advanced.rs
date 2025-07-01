@@ -2603,8 +2603,8 @@ pub fn simd_weighted_average_spectra(
 
 /// SIMD-optimized window function application
 ///
-/// Applies window functions element-wise with SIMD acceleration
-pub fn simd_apply_window(
+/// Applies window functions element-wise with SIMD acceleration (alternative implementation)
+pub fn simd_apply_window_v2(
     signal: &[f64],
     window: &[f64],
     result: &mut [f64],
@@ -2627,9 +2627,9 @@ pub fn simd_apply_window(
     let caps = PlatformCapabilities::detect();
 
     if caps.has_avx2 && config.use_advanced {
-        unsafe { avx2_apply_window(signal, window, result) }
+        unsafe { avx2_apply_window_v2(signal, window, result) }
     } else if caps.has_sse41 {
-        unsafe { sse_apply_window(signal, window, result) }
+        unsafe { sse_apply_window_v2(signal, window, result) }
     } else {
         scalar_apply_window(signal, window, result)
     }
@@ -2804,7 +2804,7 @@ unsafe fn avx2_weighted_average_spectra(
 }
 
 #[target_feature(enable = "avx2")]
-unsafe fn avx2_apply_window(
+unsafe fn avx2_apply_window_v2(
     signal: &[f64],
     window: &[f64],
     result: &mut [f64],
@@ -2860,6 +2860,6 @@ unsafe fn sse_weighted_average_spectra(
 }
 
 #[target_feature(enable = "sse4.1")]
-unsafe fn sse_apply_window(signal: &[f64], window: &[f64], result: &mut [f64]) -> SignalResult<()> {
+unsafe fn sse_apply_window_v2(signal: &[f64], window: &[f64], result: &mut [f64]) -> SignalResult<()> {
     scalar_apply_window(signal, window, result)
 }

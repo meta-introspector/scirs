@@ -7,7 +7,7 @@
 //! - Power iteration for dominant eigenvalues
 //! - QR algorithm for general cases
 
-use ndarray::{Array1, Array2, ArrayView2};
+use ndarray::{Array1, Array2, ArrayView2, ScalarOperand};
 use num_complex::Complex;
 use num_traits::{Float, NumAssign};
 use rand::prelude::*;
@@ -53,7 +53,7 @@ pub type EigenResult<F> = LinalgResult<(Array1<Complex<F>>, Array2<Complex<F>>)>
 /// ```
 pub fn eig<F>(a: &ArrayView2<F>, workers: Option<usize>) -> EigenResult<F>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     use crate::parallel;
 
@@ -108,7 +108,7 @@ where
 /// ```
 pub fn eigvals<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<Array1<Complex<F>>>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     // For efficiency, we can compute just the eigenvalues
     // But for now, we'll use the full function and discard the eigenvectors
@@ -148,7 +148,7 @@ pub fn power_iteration<F>(
     tol: F,
 ) -> LinalgResult<(F, Array1<F>)>
 where
-    F: Float + NumAssign + Sum + Send + Sync,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     // Check if matrix is square
     if a.nrows() != a.ncols() {
@@ -239,7 +239,7 @@ where
 /// ```
 pub fn eigh<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<(Array1<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     use crate::parallel;
 
@@ -281,6 +281,18 @@ where
         return solve_4x4_symmetric_eigenvalue_problem(a);
     }
 
+    // Choose parallel implementation based on matrix size and worker count
+    let _use_work_stealing = if let Some(num_workers) = workers {
+        // For larger matrices and multiple workers, consider work-stealing
+        num_workers > 1 && n > 100
+    } else {
+        false
+    };
+
+    // Note: For now, skip work-stealing parallel implementation for eigh
+    // as it needs both eigenvalues and eigenvectors
+    // TODO: Implement proper parallel eigh with work-stealing
+
     // For larger matrices, use a simplified power iteration approach for now
     solve_symmetric_with_power_iteration(a)
 }
@@ -288,7 +300,7 @@ where
 /// Solve 2x2 general eigenvalue problem using analytical formula
 fn solve_2x2_eigenvalue_problem<F>(a: &ArrayView2<F>) -> EigenResult<F>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     // For 2x2 matrices, use the quadratic formula
     let a11 = a[[0, 0]];
@@ -400,7 +412,7 @@ fn solve_2x2_symmetric_eigenvalue_problem<F>(
     a: &ArrayView2<F>,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     // For 2x2 symmetric matrices
     let a11 = a[[0, 0]];
@@ -494,7 +506,7 @@ fn solve_3x3_symmetric_eigenvalue_problem<F>(
     a: &ArrayView2<F>,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     // For 3x3 symmetric matrices, use a specialized QR iteration
     // that converges quickly for small matrices
@@ -551,7 +563,7 @@ fn solve_4x4_symmetric_eigenvalue_problem<F>(
     a: &ArrayView2<F>,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     // For 4x4 symmetric matrices, use a specialized QR iteration
     // that converges quickly for small matrices
@@ -610,7 +622,7 @@ where
 /// QR algorithm for general eigenvalue decomposition
 fn solve_qr_algorithm<F>(a: &ArrayView2<F>) -> EigenResult<F>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     // For larger matrices, use the QR algorithm
     let mut a_k = a.to_owned();
@@ -673,7 +685,7 @@ fn solve_symmetric_with_power_iteration<F>(
     a: &ArrayView2<F>,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     use crate::decomposition::qr;
     use crate::norm::vector_norm;

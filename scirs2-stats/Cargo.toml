@@ -24,6 +24,7 @@ scirs2-linalg = { workspace = true }
 rand = { workspace = true }
 rand_distr = { workspace = true }
 rand_pcg = { workspace = true }
+rand_chacha = { workspace = true }
 statrs = { workspace = true }
 special-11 = { workspace = true }
 num_cpus = { workspace = true }

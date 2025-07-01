@@ -57,14 +57,12 @@
 //! ```
 
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{Array1, Array2, Array3, Array4, ArrayView1, ArrayView2, Axis, s};
-use std::collections::{HashMap, BTreeMap, VecDeque};
-use std::f64::consts::{PI, E};
-use std::time::{Duration, Instant};
-use std::sync::{Arc, Mutex};
-use tokio::time::{sleep, timeout};
+use ndarray::{Array1, Array2, ArrayView2, Axis};
+use std::collections::{HashMap, VecDeque};
+use std::time::Instant;
 
 /// AI-driven algorithm selector
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct AIAlgorithmSelector {
     /// Meta-learning enabled
@@ -581,6 +579,12 @@ pub struct TaskMetadata {
     pub performance: ActualPerformance,
 }
 
+impl Default for AIAlgorithmSelector {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl AIAlgorithmSelector {
     /// Create new AI algorithm selector
     pub fn new() -> Self {
@@ -624,7 +628,7 @@ impl AIAlgorithmSelector {
     /// Select optimal algorithm using AI
     pub async fn select_optimal_algorithm(
         &mut self,
-        data: &ArrayView2<f64>,
+        data: &ArrayView2<'_, f64>,
         task_type: &str,
     ) -> SpatialResult<(String, HashMap<String, f64>, PerformancePrediction)> {
         // Analyze data characteristics
@@ -656,7 +660,7 @@ impl AIAlgorithmSelector {
     }
     
     /// Analyze data characteristics using AI
-    async fn analyze_data_characteristics(&mut self, data: &ArrayView2<f64>) -> SpatialResult<DataCharacteristics> {
+    async fn analyze_data_characteristics(&mut self, data: &ArrayView2<'_, f64>) -> SpatialResult<DataCharacteristics> {
         let (num_points, dimensionality) = data.dim();
         
         // Basic statistics
@@ -682,7 +686,7 @@ impl AIAlgorithmSelector {
     }
     
     /// Calculate data density
-    fn calculate_data_density(&self, data: &ArrayView2<f64>) -> f64 {
+    fn calculate_data_density(&self, data: &ArrayView2<'_, f64>) -> f64 {
         let (n_points, n_dims) = data.dim();
         
         // Estimate volume using bounding box
@@ -705,7 +709,7 @@ impl AIAlgorithmSelector {
     }
     
     /// Estimate noise level
-    fn estimate_noise_level(&self, data: &ArrayView2<f64>) -> f64 {
+    fn estimate_noise_level(&self, data: &ArrayView2<'_, f64>) -> f64 {
         let (n_points, _) = data.dim();
         
         if n_points < 5 {
@@ -746,7 +750,7 @@ impl AIAlgorithmSelector {
     }
     
     /// Detect outlier ratio
-    fn detect_outlier_ratio(&self, data: &ArrayView2<f64>) -> f64 {
+    fn detect_outlier_ratio(&self, data: &ArrayView2<'_, f64>) -> f64 {
         let (n_points, _) = data.dim();
         
         if n_points < 10 {
@@ -804,7 +808,7 @@ impl AIAlgorithmSelector {
     }
     
     /// Analyze cluster structure using graph neural network
-    async fn analyze_cluster_structure(&mut self, data: &ArrayView2<f64>) -> SpatialResult<ClusterStructure> {
+    async fn analyze_cluster_structure(&mut self, data: &ArrayView2<'_, f64>) -> SpatialResult<ClusterStructure> {
         // Simplified cluster structure analysis
         // In a full implementation, this would use the graph neural network
         
@@ -836,7 +840,7 @@ impl AIAlgorithmSelector {
     }
     
     /// Calculate K-means score for cluster estimation
-    fn calculate_kmeans_score(&self, data: &ArrayView2<f64>, k: usize) -> f64 {
+    fn calculate_kmeans_score(&self, data: &ArrayView2<'_, f64>, k: usize) -> f64 {
         // Simplified K-means score calculation
         let (n_points, n_dims) = data.dim();
         
@@ -873,7 +877,7 @@ impl AIAlgorithmSelector {
     }
     
     /// Calculate cluster separation
-    fn calculate_cluster_separation(&self, data: &ArrayView2<f64>, k: usize) -> f64 {
+    fn calculate_cluster_separation(&self, data: &ArrayView2<'_, f64>, k: usize) -> f64 {
         // Simplified separation calculation
         if k <= 1 {
             return 1.0;
@@ -924,7 +928,7 @@ impl AIAlgorithmSelector {
     }
     
     /// Calculate cluster compactness
-    fn calculate_cluster_compactness(&self, data: &ArrayView2<f64>, k: usize) -> f64 {
+    fn calculate_cluster_compactness(&self, data: &ArrayView2<'_, f64>, k: usize) -> f64 {
         // Simplified compactness calculation
         let (n_points, _) = data.dim();
         let points_per_cluster = n_points / k;
@@ -962,9 +966,9 @@ impl AIAlgorithmSelector {
     }
     
     /// Calculate cluster regularity
-    fn calculate_cluster_regularity(&self, data: &ArrayView2<f64>) -> f64 {
+    fn calculate_cluster_regularity(&self, data: &ArrayView2<'_, f64>) -> f64 {
         // Simplified regularity calculation based on point distribution
-        let (n_points, n_dims) = data.dim();
+        let (n_points, _n_dims) = data.dim();
         
         if n_points < 4 {
             return 1.0;
@@ -1000,7 +1004,7 @@ impl AIAlgorithmSelector {
     }
     
     /// Compute correlation matrix
-    fn compute_correlation_matrix(&self, data: &ArrayView2<f64>) -> Array2<f64> {
+    fn compute_correlation_matrix(&self, data: &ArrayView2<'_, f64>) -> Array2<f64> {
         let (n_points, n_dims) = data.dim();
         let mut correlations = Array2::zeros((n_dims, n_dims));
         
@@ -1149,17 +1153,16 @@ impl AIAlgorithmSelector {
     
     /// Encode features for neural network input
     fn encode_features(&self, candidate: &AlgorithmCandidate, data_characteristics: &DataCharacteristics) -> Array1<f64> {
-        let mut features = Vec::new();
-        
-        // Data characteristics features
-        features.push((data_characteristics.num_points as f64).ln());
-        features.push(data_characteristics.dimensionality as f64);
-        features.push(data_characteristics.density);
-        features.push(data_characteristics.noise_level);
-        features.push(data_characteristics.outlier_ratio);
-        features.push(data_characteristics.cluster_structure.estimated_clusters as f64);
-        features.push(data_characteristics.cluster_structure.separation);
-        features.push(data_characteristics.cluster_structure.compactness);
+        let mut features = vec![
+            (data_characteristics.num_points as f64).ln(),
+            data_characteristics.dimensionality as f64,
+            data_characteristics.density,
+            data_characteristics.noise_level,
+            data_characteristics.outlier_ratio,
+            data_characteristics.cluster_structure.estimated_clusters as f64,
+            data_characteristics.cluster_structure.separation,
+            data_characteristics.cluster_structure.compactness,
+        ];
         
         // Algorithm features (simplified encoding)
         let algorithm_id = match candidate.algorithm.as_str() {
@@ -1294,6 +1297,7 @@ pub struct PerformancePrediction {
 }
 
 /// Meta-learning optimizer
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct MetaLearningOptimizer {
     /// Continual learning enabled
@@ -1319,6 +1323,12 @@ pub struct AdaptationRecord {
     pub improvement: f64,
     /// Adaptation time
     pub adaptation_time_ms: f64,
+}
+
+impl Default for MetaLearningOptimizer {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl MetaLearningOptimizer {
@@ -1352,7 +1362,7 @@ impl MetaLearningOptimizer {
     }
     
     /// Optimize spatial task using meta-learning
-    pub async fn optimize_spatial_task(&mut self, data: &ArrayView2<f64>) -> SpatialResult<MetaOptimizationResult> {
+    pub async fn optimize_spatial_task(&mut self, _data: &ArrayView2<'_, f64>) -> SpatialResult<MetaOptimizationResult> {
         // Implement meta-learning optimization
         // This is a simplified implementation
         
@@ -1418,7 +1428,7 @@ impl NeuralNetwork {
         }
     }
     
-    fn predict(&self, input: &Array1<f64>) -> SpatialResult<Array1<f64>> {
+    fn predict(&self, _input: &Array1<f64>) -> SpatialResult<Array1<f64>> {
         // Simplified neural network prediction
         Ok(Array1::from(vec![0.5, 100.0, 50.0, 1.0, 0.8])) // Dummy prediction
     }
@@ -1498,7 +1508,7 @@ mod tests {
         let result = selector.select_optimal_algorithm(&points.view(), "clustering").await;
         assert!(result.is_ok());
         
-        let (algorithm, parameters, prediction) = result.unwrap();
+        let (algorithm, _parameters, prediction) = result.unwrap();
         assert!(!algorithm.is_empty());
         assert!(prediction.expected_accuracy >= 0.0 && prediction.expected_accuracy <= 1.0);
         assert!(prediction.confidence >= 0.0 && prediction.confidence <= 1.0);

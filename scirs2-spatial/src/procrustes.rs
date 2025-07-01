@@ -11,7 +11,7 @@ use crate::error::{SpatialError, SpatialResult};
 use ndarray::{Array1, Array2, ArrayView2, Axis};
 
 /// Check if all values in an array are finite
-fn check_array_finite(array: &ArrayView2<f64>, name: &str) -> SpatialResult<()> {
+fn check_array_finite(array: &ArrayView2<'_, f64>, name: &str) -> SpatialResult<()> {
     for value in array.iter() {
         if !value.is_finite() {
             return Err(SpatialError::ValueError(format!(
@@ -44,7 +44,7 @@ impl ProcrustesParams {
     /// # Returns
     ///
     /// The transformed points.
-    pub fn transform(&self, points: &ArrayView2<f64>) -> Array2<f64> {
+    pub fn transform(&self, points: &ArrayView2<'_, f64>) -> Array2<f64> {
         // Apply scale and rotation
         let mut result = points.to_owned() * self.scale;
         result = result.dot(&self.rotation.t());
@@ -83,8 +83,8 @@ impl ProcrustesParams {
 /// * Returns error if arrays contain non-finite values
 /// * Returns error if SVD decomposition fails
 pub fn procrustes(
-    data1: &ArrayView2<f64>,
-    data2: &ArrayView2<f64>,
+    data1: &ArrayView2<'_, f64>,
+    data2: &ArrayView2<'_, f64>,
 ) -> SpatialResult<(Array2<f64>, Array2<f64>, f64)> {
     // Validate inputs
     check_array_finite(data1, "data1")?;
@@ -137,8 +137,8 @@ pub fn procrustes(
 
 /// Basic implementation of Procrustes analysis using available matrix operations
 fn procrustes_basic_impl(
-    centered1: &ArrayView2<f64>,
-    centered2: &ArrayView2<f64>,
+    centered1: &ArrayView2<'_, f64>,
+    centered2: &ArrayView2<'_, f64>,
     _mean1: &Array1<f64>,
     mean2: &Array1<f64>,
 ) -> SpatialResult<(Array2<f64>, Array2<f64>, f64)> {
@@ -204,8 +204,8 @@ fn procrustes_basic_impl(
 /// * Returns error if arrays contain non-finite values
 /// * Returns error if SVD decomposition fails
 pub fn procrustes_extended(
-    data1: &ArrayView2<f64>,
-    data2: &ArrayView2<f64>,
+    data1: &ArrayView2<'_, f64>,
+    data2: &ArrayView2<'_, f64>,
     scaling: bool,
     _reflection: bool,
     translation: bool,

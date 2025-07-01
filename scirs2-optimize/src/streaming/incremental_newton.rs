@@ -11,8 +11,8 @@ use super::{
 };
 use crate::error::OptimizeError;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use scirs2_core::error::Result;
-use scirs2_core::linalg::{compute_cholesky_decomposition, solve_linear_system, LinalgError};
+use scirs2_core::error::CoreResult;
+use scirs2_linalg::{cholesky, solve, LinalgError};
 
 /// Types of incremental Newton methods
 #[derive(Debug, Clone, Copy)]

@@ -11,6 +11,7 @@
 #![allow(dead_code)]
 
 use crate::error::{MetricsError, Result};
+use ndarray::{Array1, Array2};
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
@@ -1582,7 +1583,11 @@ impl<F: Float> PerformanceMonitor<F> {
             precision: F::zero(), // Would be calculated from confusion matrix
             recall: F::zero(),    // Would be calculated from confusion matrix
             f1_score: F::zero(),  // Would be calculated from confusion matrix
-            processing_time: Duration::from_nanos(1000), // Placeholder
+            processing_time: now.duration_since(
+                self.performance_history.back()
+                    .map(|p| p.timestamp)
+                    .unwrap_or_else(|| now - Duration::from_millis(1))
+            ),
             memory_usage: std::mem::size_of::<StreamingStatistics<F>>(),
             window_size: 1000, // Would come from actual window manager
             samples_processed: stats.total_samples,
@@ -2791,7 +2796,7 @@ pub struct OnlinePerformanceTracker<F: Float> {
     /// Performance trends
     trends: HashMap<String, TrendAnalysis<F>>,
     /// Anomaly detection for performance
-    performance_anomaly_detector: Box<dyn AnomalyDetector<F> + Send + Sync>,
+    performance_anomaly_detector: Box<AnomalyDetector<F>>,
 }
 
 /// Trend analysis for performance metrics

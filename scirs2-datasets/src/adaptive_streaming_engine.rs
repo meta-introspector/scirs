@@ -6,6 +6,7 @@
 use crate::error::{DatasetsError, Result};
 use crate::utils::Dataset;
 use ndarray::{Array1, Array2, Axis};
+use rand::{Rng, rng};
 // Use rayon directly for parallel operations to avoid feature flag issues
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
@@ -16,7 +17,7 @@ use std::time::{Duration, Instant};
 /// Ultra-advanced adaptive streaming processor
 pub struct AdaptiveStreamingEngine {
     /// Stream configuration
-    config: StreamConfig,
+    config: AdaptiveStreamConfig,
     /// Adaptive buffer manager
     buffer_manager: AdaptiveBufferManager,
     /// ML-based pattern detector
@@ -29,7 +30,7 @@ pub struct AdaptiveStreamingEngine {
 
 /// Stream processing configuration
 #[derive(Debug, Clone)]
-pub struct StreamConfig {
+pub struct AdaptiveAdaptiveStreamConfig {
     /// Maximum buffer size in bytes
     max_buffer_size: usize,
     /// Processing batch size
@@ -392,7 +393,7 @@ pub enum AlertSeverity {
     Emergency,
 }
 
-impl Default for StreamConfig {
+impl Default for AdaptiveStreamConfig {
     fn default() -> Self {
         Self {
             max_buffer_size: 100 * 1024 * 1024, // 100MB
@@ -406,7 +407,7 @@ impl Default for StreamConfig {
 
 impl AdaptiveStreamingEngine {
     /// Create a new adaptive streaming engine
-    pub fn new(config: StreamConfig) -> Self {
+    pub fn new(config: AdaptiveStreamConfig) -> Self {
         let buffer_manager = AdaptiveBufferManager::new(&config);
         let pattern_detector = PatternDetector::new();
         let performance_optimizer = StreamPerformanceOptimizer::new();
@@ -776,7 +777,7 @@ impl AdaptiveStreamingEngine {
 
 // Implementation stubs for the complex subsystems
 impl AdaptiveBufferManager {
-    fn new(_config: &StreamConfig) -> Self {
+    fn new(_config: &AdaptiveStreamConfig) -> Self {
         Self {
             primary_buffer: Arc::new(Mutex::new(VecDeque::new())),
             secondary_buffer: Arc::new(Mutex::new(VecDeque::new())),
@@ -937,11 +938,11 @@ impl StreamQualityMonitor {
 
 /// Convenience function to create a new adaptive streaming engine
 pub fn create_adaptive_engine() -> AdaptiveStreamingEngine {
-    AdaptiveStreamingEngine::new(StreamConfig::default())
+    AdaptiveStreamingEngine::new(AdaptiveStreamConfig::default())
 }
 
 /// Convenience function to create a streaming engine with custom config
-pub fn create_adaptive_engine_with_config(config: StreamConfig) -> AdaptiveStreamingEngine {
+pub fn create_adaptive_engine_with_config(config: AdaptiveStreamConfig) -> AdaptiveStreamingEngine {
     AdaptiveStreamingEngine::new(config)
 }
 
@@ -1074,18 +1075,18 @@ impl QuantumInspiredOptimizer {
     /// Apply quantum tunneling for exploration
     fn apply_quantum_tunneling(&mut self) {
         for state in &mut self.quantum_states {
-            if rand::random::<f64>() < self.annealing_params.tunneling_probability {
+            if rng().gen::<f64>() < self.annealing_params.tunneling_probability {
                 // Quantum tunneling: randomly perturb configuration
                 for config_amp in &mut state.config_superposition {
-                    if rand::random::<f64>() < 0.1 {
+                    if rng().gen::<f64>() < 0.1 {
                         // Tunnel to nearby configuration space
                         config_amp.config.optimal_batch_size = (config_amp.config.optimal_batch_size
                             as f64
-                            * (1.0 + (rand::random::<f64>() - 0.5) * 0.2))
+                            * (1.0 + (rng().gen::<f64>() - 0.5) * 0.2))
                             as usize;
                         config_amp.config.optimal_buffer_size =
                             (config_amp.config.optimal_buffer_size as f64
-                                * (1.0 + (rand::random::<f64>() - 0.5) * 0.2))
+                                * (1.0 + (rng().gen::<f64>() - 0.5) * 0.2))
                                 as usize;
                     }
                 }
@@ -1146,7 +1147,7 @@ impl QuantumInspiredOptimizer {
         }
 
         // Quantum measurement - probabilistic state selection
-        let random_value = rand::random::<f64>();
+        let random_value = rng().gen::<f64>();
         let mut cumulative_prob = 0.0;
 
         for (i, &prob) in self.measurement_probabilities.iter().enumerate() {
@@ -1184,26 +1185,26 @@ impl QuantumOptimizationState {
         let config_superposition = (0..4)
             .map(|_| ConfigurationAmplitude {
                 config: OptimizationConfig {
-                    optimal_batch_size: 500 + (rand::random::<usize>() % 1500),
-                    optimal_buffer_size: 5000 + (rand::random::<usize>() % 15000),
-                    num_workers: 1 + (rand::random::<usize>() % 8),
-                    memory_strategy: match rand::random::<usize>() % 4 {
+                    optimal_batch_size: rng().gen_range(500..2000),
+                    optimal_buffer_size: rng().gen_range(5000..20000),
+                    num_workers: rng().gen_range(1..9),
+                    memory_strategy: match rng().gen_range(0..4) {
                         0 => MemoryStrategy::Conservative,
                         1 => MemoryStrategy::Balanced,
                         2 => MemoryStrategy::Aggressive,
                         _ => MemoryStrategy::Adaptive,
                     },
                 },
-                amplitude: (rand::random::<f64>(), rand::random::<f64>()),
-                phase: rand::random::<f64>() * 2.0 * std::f64::consts::PI,
+                amplitude: (rng().gen::<f64>(), rng().gen::<f64>()),
+                phase: rng().gen::<f64>() * 2.0 * std::f64::consts::PI,
             })
             .collect();
 
         Self {
             config_superposition,
-            energy: rand::random::<f64>() * 10.0,
-            coherence_time: Duration::from_millis(100 + rand::random::<u64>() % 900),
-            entanglement_degree: rand::random::<f64>(),
+            energy: rng().gen::<f64>() * 10.0,
+            coherence_time: Duration::from_millis(rng().gen_range(100..1000)),
+            entanglement_degree: rng().gen::<f64>(),
         }
     }
 }
@@ -1518,7 +1519,7 @@ impl NeuralAdaptiveSystem {
             }
             ChangeType::ModifyLayerSize => {
                 if !self.neural_network.layers.is_empty() {
-                    let layer_idx = rand::random::<usize>() % self.neural_network.layers.len();
+                    let layer_idx = rng().gen_range(0..self.neural_network.layers.len());
                     self.neural_network.modify_layer_size(layer_idx, 32);
                 }
             }
@@ -1701,7 +1702,7 @@ impl AdaptiveNeuralNetwork {
 
         let insert_position = self.layers.len() - 1;
         let prev_layer_size = self.layers[insert_position - 1].weights.ncols();
-        let next_layer_size = self.layers[insert_position].weights.nrows();
+        let _next_layer_size = self.layers[insert_position].weights.nrows();
 
         // Create new layer
         let new_layer = NeuralLayer::new(prev_layer_size, size, activation, layer_type);
@@ -1721,7 +1722,7 @@ impl AdaptiveNeuralNetwork {
         }
 
         let input_size = self.layers[layer_idx - 1].weights.ncols();
-        let output_size = if layer_idx + 1 < self.layers.len() {
+        let _output_size = if layer_idx + 1 < self.layers.len() {
             self.layers[layer_idx + 1].weights.nrows()
         } else {
             new_size
@@ -1775,7 +1776,7 @@ impl NeuralLayer {
         layer_type: LayerType,
     ) -> Self {
         let weights = Array2::from_shape_fn((output_size, input_size), |_| {
-            rand::random::<f64>() * 0.01 - 0.005 // Small random initialization
+            rng().gen::<f64>() * 0.01 - 0.005 // Small random initialization
         });
 
         let bias = Array1::zeros(output_size);
@@ -1821,22 +1822,27 @@ impl NeuralLayer {
             ActivationFunction::Sigmoid => 1.0 / (1.0 + (-x).exp()),
             ActivationFunction::Tanh => x.tanh(),
             ActivationFunction::Swish => x / (1.0 + (-x).exp()),
-            ActivationFunction::GELU => 0.5 * x * (1.0 + (x / (2.0_f64).sqrt()).erf()),
+            ActivationFunction::GELU => {
+                // GELU approximation: 0.5 * x * (1 + tanh(sqrt(2/π) * (x + 0.044715 * x^3)))
+                let sqrt_2_pi = (2.0 / std::f64::consts::PI).sqrt();
+                let approx = sqrt_2_pi * (x + 0.044715 * x.powi(3));
+                0.5 * x * (1.0 + approx.tanh())
+            }
         })
     }
 
     /// Update layer weights
-    fn update_weights(&mut self, learning_rate: f64, momentum: f64) {
+    fn update_weights(&mut self, learning_rate: f64, _momentum: f64) {
         // Simplified weight update (in real implementation, this would use gradients)
         let weight_update = Array2::from_shape_fn(self.weights.dim(), |_| {
-            (rand::random::<f64>() - 0.5) * learning_rate * 0.001
+            (rng().gen::<f64>() - 0.5) * learning_rate * 0.001
         });
 
         self.weights = &self.weights - &weight_update;
 
         // Simple bias update
         let bias_update = Array1::from_shape_fn(self.bias.len(), |_| {
-            (rand::random::<f64>() - 0.5) * learning_rate * 0.001
+            (rng().gen::<f64>() - 0.5) * learning_rate * 0.001
         });
 
         self.bias = &self.bias - &bias_update;
@@ -1848,7 +1854,7 @@ impl NeuralLayer {
 
         // Create new weights matrix with different input size
         self.weights = Array2::from_shape_fn((output_size, new_input_size), |_| {
-            rand::random::<f64>() * 0.01 - 0.005
+            rng().gen::<f64>() * 0.01 - 0.005
         });
     }
 }
@@ -1933,8 +1939,8 @@ impl PerformancePredictionModel {
 /// Enhanced Adaptive Streaming Engine with Quantum and Neural Optimization
 impl AdaptiveStreamingEngine {
     /// Create ultra-advanced streaming engine with quantum and neural optimization
-    pub fn with_quantum_neural_optimization(config: StreamConfig) -> Self {
-        let mut engine = Self::new(config);
+    pub fn with_quantum_neural_optimization(config: AdaptiveStreamConfig) -> Self {
+        let engine = Self::new(config);
 
         // In a full implementation, this would integrate:
         // - QuantumInspiredOptimizer for parameter optimization

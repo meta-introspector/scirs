@@ -5,6 +5,7 @@
 #![allow(unused_mut)]
 
 use crate::error::{SparseError, SparseResult};
+use crate::sparray::SparseArray;
 use num_traits::{Float, NumAssign};
 use std::fmt::Debug;
 use std::iter::Sum;
@@ -297,7 +298,71 @@ impl<F: Float + NumAssign + Sum + 'static + Debug> LinearOperator<F>
     }
 }
 
+// Implementation of LinearOperator for CsrArray
+use crate::csr_array::CsrArray;
+
+impl<F: Float + NumAssign + Sum + 'static + Debug> LinearOperator<F>
+    for MatrixLinearOperator<F, CsrArray<F>>
+{
+    fn shape(&self) -> (usize, usize) {
+        self.matrix.shape()
+    }
+
+    fn matvec(&self, x: &[F]) -> SparseResult<Vec<F>> {
+        if x.len() != self.matrix.shape().1 {
+            return Err(SparseError::DimensionMismatch {
+                expected: self.matrix.shape().1,
+                found: x.len(),
+            });
+        }
+
+        use ndarray::Array1;
+        let x_array = Array1::from_vec(x.to_vec());
+        let result = self.matrix.dot_vector(&x_array.view())?;
+        Ok(result.to_vec())
+    }
+
+    fn rmatvec(&self, x: &[F]) -> SparseResult<Vec<F>> {
+        // For CSR A^T * x, we iterate through columns
+        if x.len() != self.matrix.shape().0 {
+            return Err(SparseError::DimensionMismatch {
+                expected: self.matrix.shape().0,
+                found: x.len(),
+            });
+        }
+
+        let mut result = vec![F::zero(); self.matrix.shape().1];
+        
+        // Iterate through each row of the matrix
+        for (row_idx, &x_val) in x.iter().enumerate() {
+            if x_val != F::zero() {
+                // Get row data for this row
+                let row_start = self.matrix.get_indptr()[row_idx];
+                let row_end = self.matrix.get_indptr()[row_idx + 1];
+                
+                for idx in row_start..row_end {
+                    let col_idx = self.matrix.get_indices()[idx];
+                    let data_val = self.matrix.get_data()[idx];
+                    result[col_idx] += data_val * x_val;
+                }
+            }
+        }
+        
+        Ok(result)
+    }
+
+    fn has_adjoint(&self) -> bool {
+        true
+    }
+}
+
 impl<F: Float + NumAssign + Sum + 'static + Debug> AsLinearOperator<F> for CsrMatrix<F> {
+    fn as_linear_operator(&self) -> Box<dyn LinearOperator<F>> {
+        Box::new(MatrixLinearOperator::new(self.clone()))
+    }
+}
+
+impl<F: Float + NumAssign + Sum + 'static + Debug> AsLinearOperator<F> for crate::csr_array::CsrArray<F> {
     fn as_linear_operator(&self) -> Box<dyn LinearOperator<F>> {
         Box::new(MatrixLinearOperator::new(self.clone()))
     }

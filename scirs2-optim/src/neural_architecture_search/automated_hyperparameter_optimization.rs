@@ -4,17 +4,13 @@
 //! for neural architecture search and optimizer design, including Bayesian optimization,
 //! population-based training, and multi-fidelity optimization.
 
-use ndarray::{Array1, Array2, ArrayBase, Data, Dimension};
+use ndarray::{Array1, Array2, Dimension};
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, HashMap, VecDeque};
-use std::sync::{Arc, Mutex};
+use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
 
-use super::{
-    EvaluationMetric, EvaluationResults, MultiObjectiveConfig, NASConfig, OptimizerArchitecture,
-    SearchResult, SearchSpaceConfig,
-};
+use super::EvaluationResults;
 use crate::error::OptimizerError;
 
 /// Main hyperparameter optimization coordinator
@@ -1119,7 +1115,7 @@ pub struct AcquisitionOptConfig<T: Float> {
 pub enum AcquisitionOptMethod {
     LBFGS,
     Adam,
-    CMA_ES,
+    CmaEs,
     DifferentialEvolution,
     RandomSearch,
 }

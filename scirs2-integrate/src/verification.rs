@@ -1364,7 +1364,7 @@ mod tests {
         let poly = polynomial_solution(vec![1.0, 2.0]);
         let trig = trigonometric_solution_2d(1.0, 1.0);
 
-        let system = SystemVerification::new(2);
+        let system = SystemVerification::<f64>::new(2);
         assert_eq!(system.system_size, 2);
 
         // Test verification at (0, 0) - handle solutions separately due to different types
@@ -1379,8 +1379,8 @@ mod tests {
         let trig_numerical = coords[0] * coords[1]; // approximate trigonometric
 
         // Calculate errors manually since we can't use mixed-type arrays
-        let poly_error = (poly_exact - poly_numerical).abs();
-        let trig_error = (trig_exact - trig_numerical).abs();
+        let poly_error = (poly_exact as f64 - poly_numerical).abs() as f64;
+        let trig_error = (trig_exact as f64 - trig_numerical).abs() as f64;
 
         // At (0,0): exact poly = 1, numerical = 1, error = 0
         assert_abs_diff_eq!(poly_error, 0.0);

@@ -122,7 +122,7 @@ impl RigidTransform {
     /// ];
     /// let transform = RigidTransform::from_matrix(&matrix.view()).unwrap();
     /// ```
-    pub fn from_matrix(matrix: &ArrayView2<f64>) -> SpatialResult<Self> {
+    pub fn from_matrix(matrix: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
         if matrix.shape() != [4, 4] {
             return Err(SpatialError::DimensionError(format!(
                 "Matrix must be 4x4, got {:?}",
@@ -307,7 +307,7 @@ impl RigidTransform {
     /// let points = array![[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]];
     /// let transformed = transform.apply_multiple(&points.view());
     /// ```
-    pub fn apply_multiple(&self, points: &ArrayView2<f64>) -> SpatialResult<Array2<f64>> {
+    pub fn apply_multiple(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
         if points.ncols() != 3 {
             return Err(SpatialError::DimensionError(
                 "Each point must have 3 elements".to_string(),

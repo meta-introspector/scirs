@@ -88,14 +88,14 @@ impl Default for BenchmarkConfig {
     fn default() -> Self {
         Self {
             array_sizes: vec![
-                vec![100, 100],          // Small 2D
-                vec![512, 512],          // Medium 2D
-                vec![1024, 1024],        // Large 2D
-                vec![50, 50, 50],        // Small 3D
-                vec![100, 100, 100],     // Medium 3D
-                vec![200, 200, 200],     // Large 3D
-                vec![10000],             // 1D array
-                vec![1000, 1000],        // Square 2D
+                vec![100, 100],      // Small 2D
+                vec![512, 512],      // Medium 2D
+                vec![1024, 1024],    // Large 2D
+                vec![50, 50, 50],    // Small 3D
+                vec![100, 100, 100], // Medium 3D
+                vec![200, 200, 200], // Large 3D
+                vec![10000],         // 1D array
+                vec![1000, 1000],    // Square 2D
             ],
             dtypes: vec!["f32".to_string(), "f64".to_string()],
             iterations: 10,
@@ -151,19 +151,19 @@ impl SciPyBenchmarkSuite {
 
     fn benchmark_filters_f32(&mut self, shape: &[usize]) -> Result<()> {
         let input = Array2::zeros((shape[0], shape[1]));
-        
+
         // Benchmark Gaussian filter
         let start = Instant::now();
         for _ in 0..self.config.warmup_iterations {
             let _ = gaussian_filter(&input, 1.0, None, None)?;
         }
-        
+
         let start = Instant::now();
         for _ in 0..self.config.iterations {
             let _ = gaussian_filter(&input, 1.0, None, None)?;
         }
         let duration = start.elapsed();
-        
+
         self.results.push(PerformanceResult {
             operation: "gaussian_filter".to_string(),
             shape: shape.to_vec(),
@@ -171,7 +171,10 @@ impl SciPyBenchmarkSuite {
             execution_time_ms: duration.as_millis() as f64 / self.config.iterations as f64,
             memory_usage_bytes: estimate_memory_usage(shape, 4), // 4 bytes for f32
             success: true,
-            parameters: [("sigma".to_string(), "1.0".to_string())].iter().cloned().collect(),
+            parameters: [("sigma".to_string(), "1.0".to_string())]
+                .iter()
+                .cloned()
+                .collect(),
         });
 
         // Benchmark median filter
@@ -179,13 +182,13 @@ impl SciPyBenchmarkSuite {
         for _ in 0..self.config.warmup_iterations {
             let _ = median_filter(&input, &[3, 3], None)?;
         }
-        
+
         let start = Instant::now();
         for _ in 0..self.config.iterations {
             let _ = median_filter(&input, &[3, 3], None)?;
         }
         let duration = start.elapsed();
-        
+
         self.results.push(PerformanceResult {
             operation: "median_filter".to_string(),
             shape: shape.to_vec(),
@@ -193,7 +196,10 @@ impl SciPyBenchmarkSuite {
             execution_time_ms: duration.as_millis() as f64 / self.config.iterations as f64,
             memory_usage_bytes: estimate_memory_usage(shape, 4),
             success: true,
-            parameters: [("size".to_string(), "[3,3]".to_string())].iter().cloned().collect(),
+            parameters: [("size".to_string(), "[3,3]".to_string())]
+                .iter()
+                .cloned()
+                .collect(),
         });
 
         // Benchmark uniform filter
@@ -201,13 +207,13 @@ impl SciPyBenchmarkSuite {
         for _ in 0..self.config.warmup_iterations {
             let _ = uniform_filter(&input, &[3, 3], None, None)?;
         }
-        
+
         let start = Instant::now();
         for _ in 0..self.config.iterations {
             let _ = uniform_filter(&input, &[3, 3], None, None)?;
         }
         let duration = start.elapsed();
-        
+
         self.results.push(PerformanceResult {
             operation: "uniform_filter".to_string(),
             shape: shape.to_vec(),
@@ -215,7 +221,10 @@ impl SciPyBenchmarkSuite {
             execution_time_ms: duration.as_millis() as f64 / self.config.iterations as f64,
             memory_usage_bytes: estimate_memory_usage(shape, 4),
             success: true,
-            parameters: [("size".to_string(), "[3,3]".to_string())].iter().cloned().collect(),
+            parameters: [("size".to_string(), "[3,3]".to_string())]
+                .iter()
+                .cloned()
+                .collect(),
         });
 
         // Benchmark Sobel filter
@@ -223,13 +232,13 @@ impl SciPyBenchmarkSuite {
         for _ in 0..self.config.warmup_iterations {
             let _ = sobel(&input, Some(0), None, None)?;
         }
-        
+
         let start = Instant::now();
         for _ in 0..self.config.iterations {
             let _ = sobel(&input, Some(0), None, None)?;
         }
         let duration = start.elapsed();
-        
+
         self.results.push(PerformanceResult {
             operation: "sobel_filter".to_string(),
             shape: shape.to_vec(),
@@ -237,7 +246,10 @@ impl SciPyBenchmarkSuite {
             execution_time_ms: duration.as_millis() as f64 / self.config.iterations as f64,
             memory_usage_bytes: estimate_memory_usage(shape, 4),
             success: true,
-            parameters: [("axis".to_string(), "0".to_string())].iter().cloned().collect(),
+            parameters: [("axis".to_string(), "0".to_string())]
+                .iter()
+                .cloned()
+                .collect(),
         });
 
         Ok(())
@@ -245,20 +257,20 @@ impl SciPyBenchmarkSuite {
 
     fn benchmark_filters_f64(&mut self, shape: &[usize]) -> Result<()> {
         let input = Array2::<f64>::zeros((shape[0], shape[1]));
-        
+
         // Similar benchmarks for f64 - implementation mirrors f32 version
         // For brevity, showing one example
         let start = Instant::now();
         for _ in 0..self.config.warmup_iterations {
             let _ = gaussian_filter(&input, 1.0, None, None)?;
         }
-        
+
         let start = Instant::now();
         for _ in 0..self.config.iterations {
             let _ = gaussian_filter(&input, 1.0, None, None)?;
         }
         let duration = start.elapsed();
-        
+
         self.results.push(PerformanceResult {
             operation: "gaussian_filter".to_string(),
             shape: shape.to_vec(),
@@ -266,7 +278,10 @@ impl SciPyBenchmarkSuite {
             execution_time_ms: duration.as_millis() as f64 / self.config.iterations as f64,
             memory_usage_bytes: estimate_memory_usage(shape, 8), // 8 bytes for f64
             success: true,
-            parameters: [("sigma".to_string(), "1.0".to_string())].iter().cloned().collect(),
+            parameters: [("sigma".to_string(), "1.0".to_string())]
+                .iter()
+                .cloned()
+                .collect(),
         });
 
         Ok(())
@@ -281,18 +296,18 @@ impl SciPyBenchmarkSuite {
 
             // Binary morphology
             let binary_input = Array2::from_elem((shape[0], shape[1]), true);
-            
+
             let start = Instant::now();
             for _ in 0..self.config.warmup_iterations {
                 let _ = binary_erosion(&binary_input, None, None, None, None, None, None)?;
             }
-            
+
             let start = Instant::now();
             for _ in 0..self.config.iterations {
                 let _ = binary_erosion(&binary_input, None, None, None, None, None, None)?;
             }
             let duration = start.elapsed();
-            
+
             self.results.push(PerformanceResult {
                 operation: "binary_erosion".to_string(),
                 shape: shape.to_vec(),
@@ -305,18 +320,18 @@ impl SciPyBenchmarkSuite {
 
             // Grayscale morphology
             let grayscale_input = Array2::<f64>::zeros((shape[0], shape[1]));
-            
+
             let start = Instant::now();
             for _ in 0..self.config.warmup_iterations {
                 let _ = grey_erosion(&grayscale_input, None, None, None, None, None)?;
             }
-            
+
             let start = Instant::now();
             for _ in 0..self.config.iterations {
                 let _ = grey_erosion(&grayscale_input, None, None, None, None, None)?;
             }
             let duration = start.elapsed();
-            
+
             self.results.push(PerformanceResult {
                 operation: "grey_erosion".to_string(),
                 shape: shape.to_vec(),
@@ -339,19 +354,19 @@ impl SciPyBenchmarkSuite {
             }
 
             let input = Array2::<f64>::zeros((shape[0], shape[1]));
-            
+
             // Benchmark zoom operation
             let start = Instant::now();
             for _ in 0..self.config.warmup_iterations {
                 let _ = zoom(&input, &[2.0, 2.0], None, None, None, None)?;
             }
-            
+
             let start = Instant::now();
             for _ in 0..self.config.iterations {
                 let _ = zoom(&input, &[2.0, 2.0], None, None, None, None)?;
             }
             let duration = start.elapsed();
-            
+
             self.results.push(PerformanceResult {
                 operation: "zoom".to_string(),
                 shape: shape.to_vec(),
@@ -359,7 +374,10 @@ impl SciPyBenchmarkSuite {
                 execution_time_ms: duration.as_millis() as f64 / self.config.iterations as f64,
                 memory_usage_bytes: estimate_memory_usage(shape, 8) * 4, // Output is larger
                 success: true,
-                parameters: [("zoom".to_string(), "[2.0,2.0]".to_string())].iter().cloned().collect(),
+                parameters: [("zoom".to_string(), "[2.0,2.0]".to_string())]
+                    .iter()
+                    .cloned()
+                    .collect(),
             });
 
             // Benchmark rotation
@@ -367,13 +385,13 @@ impl SciPyBenchmarkSuite {
             for _ in 0..self.config.warmup_iterations {
                 let _ = rotate(&input, 45.0, None, None, None, None, None, None)?;
             }
-            
+
             let start = Instant::now();
             for _ in 0..self.config.iterations {
                 let _ = rotate(&input, 45.0, None, None, None, None, None, None)?;
             }
             let duration = start.elapsed();
-            
+
             self.results.push(PerformanceResult {
                 operation: "rotate".to_string(),
                 shape: shape.to_vec(),
@@ -381,7 +399,10 @@ impl SciPyBenchmarkSuite {
                 execution_time_ms: duration.as_millis() as f64 / self.config.iterations as f64,
                 memory_usage_bytes: estimate_memory_usage(shape, 8),
                 success: true,
-                parameters: [("angle".to_string(), "45.0".to_string())].iter().cloned().collect(),
+                parameters: [("angle".to_string(), "45.0".to_string())]
+                    .iter()
+                    .cloned()
+                    .collect(),
             });
         }
 
@@ -396,19 +417,19 @@ impl SciPyBenchmarkSuite {
             }
 
             let input = Array2::<f64>::ones((shape[0], shape[1]));
-            
+
             // Benchmark center of mass
             let start = Instant::now();
             for _ in 0..self.config.warmup_iterations {
                 let _ = center_of_mass(&input)?;
             }
-            
+
             let start = Instant::now();
             for _ in 0..self.config.iterations {
                 let _ = center_of_mass(&input)?;
             }
             let duration = start.elapsed();
-            
+
             self.results.push(PerformanceResult {
                 operation: "center_of_mass".to_string(),
                 shape: shape.to_vec(),
@@ -424,13 +445,13 @@ impl SciPyBenchmarkSuite {
             for _ in 0..self.config.warmup_iterations {
                 let _ = moments(&input)?;
             }
-            
+
             let start = Instant::now();
             for _ in 0..self.config.iterations {
                 let _ = moments(&input)?;
             }
             let duration = start.elapsed();
-            
+
             self.results.push(PerformanceResult {
                 operation: "moments".to_string(),
                 shape: shape.to_vec(),
@@ -448,19 +469,19 @@ impl SciPyBenchmarkSuite {
     /// Run all benchmarks
     pub fn run_all_benchmarks(&mut self) -> Result<()> {
         println!("Running comprehensive SciPy ndimage performance comparison...");
-        
+
         println!("Benchmarking filters...");
         self.benchmark_filters()?;
-        
+
         println!("Benchmarking morphology...");
         self.benchmark_morphology()?;
-        
+
         println!("Benchmarking interpolation...");
         self.benchmark_interpolation()?;
-        
+
         println!("Benchmarking measurements...");
         self.benchmark_measurements()?;
-        
+
         println!("Benchmark suite completed!");
         Ok(())
     }
@@ -469,20 +490,28 @@ impl SciPyBenchmarkSuite {
     pub fn generate_report(&self) -> String {
         let mut report = String::new();
         report.push_str("# SciPy ndimage Performance Comparison Report\n\n");
-        
-        report.push_str(&format!("Total operations benchmarked: {}\n", self.results.len()));
-        report.push_str(&format!("Configuration: {} iterations, {} warmup\n\n", 
-                                self.config.iterations, self.config.warmup_iterations));
-        
+
+        report.push_str(&format!(
+            "Total operations benchmarked: {}\n",
+            self.results.len()
+        ));
+        report.push_str(&format!(
+            "Configuration: {} iterations, {} warmup\n\n",
+            self.config.iterations, self.config.warmup_iterations
+        ));
+
         // Group results by operation
         let mut operations: HashMap<String, Vec<&PerformanceResult>> = HashMap::new();
         for result in &self.results {
-            operations.entry(result.operation.clone()).or_insert_with(Vec::new).push(result);
+            operations
+                .entry(result.operation.clone())
+                .or_insert_with(Vec::new)
+                .push(result);
         }
-        
+
         for (operation, results) in operations {
             report.push_str(&format!("## {}\n", operation));
-            
+
             for result in results {
                 report.push_str(&format!(
                     "- Shape: {:?}, Type: {}, Time: {:.2}ms, Memory: {:.2}MB\n",
@@ -494,28 +523,36 @@ impl SciPyBenchmarkSuite {
             }
             report.push('\n');
         }
-        
+
         // Add accuracy results if available
         if !self.accuracy_results.is_empty() {
             report.push_str("## Numerical Accuracy Validation\n\n");
             for result in &self.accuracy_results {
                 report.push_str(&format!(
                     "- {}: Max diff: {:.2e}, Mean diff: {:.2e}, RMSE: {:.2e}, Compatible: {}\n",
-                    result.operation, result.max_abs_diff, result.mean_abs_diff, 
-                    result.rmse, result.numerically_equivalent
+                    result.operation,
+                    result.max_abs_diff,
+                    result.mean_abs_diff,
+                    result.rmse,
+                    result.numerically_equivalent
                 ));
             }
             report.push('\n');
         }
-        
+
         // Add compatibility results if available
         if !self.compatibility_results.is_empty() {
             report.push_str("## API Compatibility Results\n\n");
             for result in &self.compatibility_results {
                 report.push_str(&format!(
                     "- {}.{}: {}\n",
-                    result.function, result.parameter,
-                    if result.compatible { "✓ Compatible" } else { "✗ Incompatible" }
+                    result.function,
+                    result.parameter,
+                    if result.compatible {
+                        "✓ Compatible"
+                    } else {
+                        "✗ Incompatible"
+                    }
                 ));
                 if let Some(msg) = &result.error_message {
                     report.push_str(&format!("  Error: {}\n", msg));
@@ -525,7 +562,7 @@ impl SciPyBenchmarkSuite {
                 }
             }
         }
-        
+
         report
     }
 
@@ -569,7 +606,7 @@ where
     for (r, c) in reference.iter().zip(computed.iter()) {
         let ref_val: f64 = (*r).into();
         let comp_val: f64 = (*c).into();
-        
+
         let abs_diff = (ref_val - comp_val).abs();
         max_abs_diff = f64::max(max_abs_diff, abs_diff);
         sum_abs_diff += abs_diff;
@@ -614,7 +651,11 @@ pub fn validate_api_compatibility(
             function: function_name.to_string(),
             parameter: param_name.clone(),
             compatible,
-            error_message: if compatible { None } else { Some("Parameter validation failed".to_string()) },
+            error_message: if compatible {
+                None
+            } else {
+                Some("Parameter validation failed".to_string())
+            },
             suggestion: suggestion.clone(),
         });
     }
@@ -645,13 +686,9 @@ mod tests {
     fn test_accuracy_calculation() {
         let ref_array = Array2::from_elem((3, 3), 1.0);
         let comp_array = Array2::from_elem((3, 3), 1.1);
-        
-        let accuracy = calculate_accuracy_metrics(
-            &ref_array.view(),
-            &comp_array.view(),
-            0.2
-        );
-        
+
+        let accuracy = calculate_accuracy_metrics(&ref_array.view(), &comp_array.view(), 0.2);
+
         assert!(accuracy.max_abs_diff > 0.0);
         assert!(accuracy.mean_abs_diff > 0.0);
         assert!(accuracy.numerically_equivalent); // Within tolerance
@@ -668,7 +705,7 @@ mod tests {
             success: true,
             parameters: HashMap::new(),
         };
-        
+
         assert_eq!(result.operation, "test_op");
         assert_eq!(result.shape, vec![100, 100]);
         assert!(result.success);

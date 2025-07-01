@@ -702,12 +702,12 @@ fn test_irregular_sampling(
     tolerance: f64,
 ) -> SignalResult<IrregularSamplingResults> {
     // Create irregularly sampled signal
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
     let mut t_irregular = vec![0.0];
 
     // Generate irregular time points
     for i in 1..100 {
-        t_irregular.push(t_irregular[i - 1] + 0.05 + 0.1 * rng.random_range(0.0..1.0));
+        t_irregular.push(t_irregular[i - 1] + 0.05 + 0.1 * rng.gen_range(0.0..1.0));
     }
 
     let f_true = 2.0; // True frequency
@@ -871,10 +871,10 @@ fn test_noise_robustness(
             let noise_power = signal_power / 10.0_f64.powf(snr_db / 10.0);
             let noise_std = noise_power.sqrt();
 
-            let mut rng = rand::rng();
+            let mut rng = rand::thread_rng();
             let signal: Vec<f64> = t
                 .iter()
-                .map(|&ti| (2.0 * PI * f_true * ti).sin() + noise_std * rng.random_range(-1.0..1.0))
+                .map(|&ti| (2.0 * PI * f_true * ti).sin() + noise_std * rng.gen_range(-1.0..1.0))
                 .collect();
 
             // Compute periodogram
@@ -1372,8 +1372,8 @@ fn test_statistical_significance(
     let t: Vec<f64> = (0..n).map(|i| i as f64 * 0.01).collect();
 
     // Pure noise signal
-    let mut rng = rand::rng();
-    let noise_signal: Vec<f64> = (0..n).map(|_| rng.random_range(-1.0..1.0)).collect();
+    let mut rng = rand::thread_rng();
+    let noise_signal: Vec<f64> = (0..n).map(|_| rng.gen_range(-1.0..1.0)).collect();
 
     let (freqs, power) = run_lombscargle(implementation, &t, &noise_signal)?;
 
@@ -1798,11 +1798,11 @@ fn test_enhanced_statistical_significance(
 
     let mut max_powers = Vec::new();
     let mut p_values = Vec::new();
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     // Multiple noise realizations for statistical validation
     for _ in 0..n_trials {
-        let noise_signal: Vec<f64> = (0..n).map(|_| rng.random_range(-1.0..1.0)).collect();
+        let noise_signal: Vec<f64> = (0..n).map(|_| rng.gen_range(-1.0..1.0)).collect();
 
         let (freqs, power) = run_lombscargle(implementation, &t, &noise_signal)?;
         let max_power = power.iter().cloned().fold(0.0, f64::max);
@@ -1877,7 +1877,7 @@ fn kolmogorov_smirnov_uniformity_test(p_values: &[f64]) -> f64 {
 fn estimate_statistical_power(implementation: &str, times: &[f64]) -> SignalResult<f64> {
     let mut detections = 0;
     let n_trials = 50; // Reduced for performance
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     for _ in 0..n_trials {
         // Inject known signal with noise
@@ -1890,7 +1890,7 @@ fn estimate_statistical_power(implementation: &str, times: &[f64]) -> SignalResu
             .iter()
             .map(|&ti| {
                 (2.0 * std::f64::consts::PI * f_signal * ti).sin()
-                    + noise_power.sqrt() * rng.random_range(-1.0..1.0)
+                    + noise_power.sqrt() * rng.gen_range(-1.0..1.0)
             })
             .collect();
 
@@ -1926,11 +1926,11 @@ fn test_significance_calibration(implementation: &str, times: &[f64]) -> SignalR
     for &alpha in &significance_levels {
         let n_trials = 100; // Reduced for performance
         let mut false_positives = 0;
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         for _ in 0..n_trials {
             // Pure noise
-            let noise: Vec<f64> = times.iter().map(|_| rng.random_range(-1.0..1.0)).collect();
+            let noise: Vec<f64> = times.iter().map(|_| rng.gen_range(-1.0..1.0)).collect();
 
             let (_, power) = run_lombscargle(implementation, times, &noise)?;
             let max_power = power.iter().cloned().fold(0.0, f64::max);
@@ -1957,15 +1957,15 @@ fn test_significance_calibration(implementation: &str, times: &[f64]) -> SignalR
 fn test_enhanced_bootstrap_coverage(times: &[f64]) -> SignalResult<f64> {
     let n_tests = 20; // Reduced for performance
     let mut coverage_scores = Vec::new();
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     for _ in 0..n_tests {
         // Generate known signal with noise
-        let f_true = 5.0 + rng.random_range(0.0..10.0);
+        let f_true = 5.0 + rng.gen_range(0.0..10.0);
         let signal: Vec<f64> = times
             .iter()
             .map(|&ti| {
-                (2.0 * std::f64::consts::PI * f_true * ti).sin() + 0.1 * rng.random_range(-1.0..1.0)
+                (2.0 * std::f64::consts::PI * f_true * ti).sin() + 0.1 * rng.gen_range(-1.0..1.0)
             })
             .collect();
 
@@ -2426,7 +2426,7 @@ fn test_cross_validation(
     let f_true = 8.0;
     let signal: Vec<f64> = t
         .iter()
-        .map(|&ti| (2.0 * PI * f_true * ti).sin() + 0.1 * rand::rng().random_range(-1.0..1.0))
+        .map(|&ti| (2.0 * PI * f_true * ti).sin() + 0.1 * rand::thread_rng().random_range(-1.0..1.0))
         .collect();
 
     // K-fold cross-validation (k=5)
@@ -2535,7 +2535,7 @@ fn perform_bootstrap_validation(
         let mut boot_signal = Vec::new();
 
         for _ in 0..n {
-            let idx = rand::rng().random_range(0..n);
+            let idx = rand::thread_rng().random_range(0..n);
             boot_t.push(t[idx]);
             boot_signal.push(signal[idx]);
         }
@@ -3226,9 +3226,9 @@ pub fn validate_against_scipy_reference() -> SignalResult<SciPyValidationResult>
     }
 
     // Test case 3: Irregular sampling
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
     let irregular_t: Vec<f64> = (0..50)
-        .map(|i| i as f64 * 0.2 + rng.random_range(-0.05..0.05))
+        .map(|i| i as f64 * 0.2 + rng.gen_range(-0.05..0.05))
         .collect();
     let irregular_y: Vec<f64> = irregular_t
         .iter()
@@ -3252,7 +3252,7 @@ pub fn validate_against_scipy_reference() -> SignalResult<SciPyValidationResult>
     // Test case 4: Noise robustness
     let noisy_y: Vec<f64> = y
         .iter()
-        .map(|&yi| yi + 0.1 * rng.random_range(-1.0..1.0))
+        .map(|&yi| yi + 0.1 * rng.gen_range(-1.0..1.0))
         .collect();
 
     let (noisy_freqs, noisy_power, _) = lombscargle_enhanced(&t, &noisy_y, &config)?;
@@ -3632,12 +3632,12 @@ fn test_cross_validation_extended(
     let n = 200;
     let fs = 100.0;
     let f0 = 5.0;
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
     let clean_signal: Vec<f64> = t.iter().map(|&ti| (2.0 * PI * f0 * ti).sin()).collect();
 
-    let noise: Vec<f64> = (0..n).map(|_| 0.1 * rng.random_range(-1.0..1.0)).collect();
+    let noise: Vec<f64> = (0..n).map(|_| 0.1 * rng.gen_range(-1.0..1.0)).collect();
 
     let y: Vec<f64> = clean_signal
         .iter()
@@ -3805,7 +3805,7 @@ fn test_cross_validation_extended(
 
     for _ in 0..n_realizations {
         let realization_noise: Vec<f64> =
-            (0..n).map(|_| 0.1 * rng.random_range(-1.0..1.0)).collect();
+            (0..n).map(|_| 0.1 * rng.gen_range(-1.0..1.0)).collect();
 
         let realization_y: Vec<f64> = clean_signal
             .iter()
@@ -4087,12 +4087,12 @@ fn validate_aliasing_effects(config: &EnhancedValidationConfig) -> SignalResult<
     let signal: Vec<f64> = t.iter().map(|&ti| (2.0 * PI * f_high * ti).sin()).collect();
 
     // Add irregular sampling to test aliasing effects
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
     let mut t_irregular = Vec::new();
     let mut signal_irregular = Vec::new();
 
     for i in 0..n {
-        if rng.random_range(0.0..1.0) > 0.3 {
+        if rng.gen_range(0.0..1.0) > 0.3 {
             // Keep 70% of samples
             t_irregular.push(t[i]);
             signal_irregular.push(signal[i]);
@@ -4453,7 +4453,7 @@ pub fn validate_statistical_significance(
     let mut result = StatisticalSignificanceResult::default();
     let mut false_positives = 0;
     let mut true_positives = 0;
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     for trial in 0..num_trials {
         // Generate pure noise signal

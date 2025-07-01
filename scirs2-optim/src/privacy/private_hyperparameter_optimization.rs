@@ -16,7 +16,7 @@ use std::collections::HashMap;
 /// Privacy-preserving hyperparameter optimizer
 pub struct PrivateHyperparameterOptimizer<T: Float> {
     /// Configuration for privacy-preserving hyperparameter optimization
-    config: PrivateHPOConfig,
+    config: PrivateHPOConfig<T>,
 
     /// Privacy budget manager
     budget_manager: HPOBudgetManager,
@@ -942,7 +942,7 @@ pub enum EvaluationStatus {
 impl<T: Float> PrivateHyperparameterOptimizer<T> {
     /// Create new private hyperparameter optimizer
     pub fn new(
-        config: PrivateHPOConfig,
+        config: PrivateHPOConfig<T>,
         parameter_space: ParameterSpace<T>,
     ) -> Result<Self, OptimizerError> {
         let budget_manager = HPOBudgetManager::new(
@@ -1233,7 +1233,7 @@ pub struct OptimizationStats<T: Float> {
 /// Private Random Search implementation
 pub struct PrivateRandomSearch<T: Float> {
     /// Configuration
-    config: PrivateHPOConfig,
+    config: PrivateHPOConfig<T>,
 
     /// Random number generator
     rng: ChaCha20Rng,
@@ -1243,7 +1243,7 @@ pub struct PrivateRandomSearch<T: Float> {
 }
 
 impl<T: Float> PrivateRandomSearch<T> {
-    pub fn new(config: PrivateHPOConfig) -> Result<Self, OptimizerError> {
+    pub fn new(config: PrivateHPOConfig<T>) -> Result<Self, OptimizerError> {
         Ok(Self {
             config,
             rng: ChaCha20Rng::from_entropy(),
@@ -1323,7 +1323,7 @@ impl<T: Float> NoisyOptimizer<T> for PrivateRandomSearch<T> {
 /// Private Bayesian Optimization implementation
 pub struct PrivateBayesianOptimization<T: Float> {
     /// Configuration
-    config: PrivateHPOConfig,
+    config: PrivateHPOConfig<T>,
 
     /// Gaussian process surrogate model
     gp_model: Option<GaussianProcessModel<T>>,
@@ -1336,7 +1336,7 @@ pub struct PrivateBayesianOptimization<T: Float> {
 }
 
 impl<T: Float> PrivateBayesianOptimization<T> {
-    pub fn new(config: PrivateHPOConfig) -> Result<Self, OptimizerError> {
+    pub fn new(config: PrivateHPOConfig<T>) -> Result<Self, OptimizerError> {
         Ok(Self {
             config,
             gp_model: None,

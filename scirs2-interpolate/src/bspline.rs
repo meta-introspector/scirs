@@ -1310,11 +1310,11 @@ where
     }
 
     if x.len() < k + 1 {
-        return Err(InterpolateError::invalid_input(format!(
-            "at least {} points are required for degree {} spline",
+        return Err(InterpolateError::insufficient_points(
             k + 1,
-            k
-        )));
+            x.len(),
+            &format!("degree {} B-spline", k)
+        ));
     }
 
     // Check that x is sorted

@@ -198,11 +198,11 @@ impl<
         }
 
         if epsilon <= F::zero() {
-            return Err(InterpolateError::invalid_parameter(
+            return Err(InterpolateError::invalid_parameter_with_suggestion(
                 "epsilon",
-                "positive value",
-                format!("{:?}", epsilon),
+                epsilon,
                 "RBF interpolation",
+                "must be positive (typical range: 0.1 to 10.0 based on data scale, try computing mean distance between data points or start with 1.0)"
             ));
         }
 

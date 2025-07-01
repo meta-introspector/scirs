@@ -12,6 +12,7 @@
 #![allow(dead_code)]
 
 use crate::error::{MetricsError, Result};
+use crate::optimization::distributed::CircuitBreakerState;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
@@ -52,7 +53,7 @@ pub enum RecoveryActionType {
 }
 
 /// Node health status
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum NodeHealthStatus {
     Healthy,
     Degraded,
@@ -77,6 +78,20 @@ pub struct ClusterMetrics {
     pub task_queue_length: usize,
     #[serde(with = "duration_serde")]
     pub response_time: Duration,
+}
+
+impl ClusterMetrics {
+    pub fn total_nodes(&self) -> usize {
+        self.node_metrics.len()
+    }
+    
+    pub fn total_cpu_usage(&self) -> f64 {
+        self.node_metrics.values().map(|m| m.cpu_usage).sum()
+    }
+    
+    pub fn total_memory_usage(&self) -> f64 {
+        self.node_metrics.values().map(|m| m.memory_usage).sum()
+    }
 }
 
 /// Scaling operation
@@ -302,6 +317,75 @@ pub struct AutoScalingConfig {
     pub scale_down_cooldown: Duration,
     /// Custom scaling policies
     pub custom_policies: Vec<ScalingPolicy>,
+}
+
+/// Auto-scaling controller
+#[derive(Debug, Clone)]
+pub struct AutoScalingController {
+    config: AutoScalingConfig,
+    last_scale_action: std::time::Instant,
+}
+
+impl AutoScalingController {
+    pub fn new() -> Self {
+        Self {
+            config: AutoScalingConfig {
+                enabled: false,
+                min_nodes: 1,
+                max_nodes: 10,
+                cpu_scale_up_threshold: 80.0,
+                cpu_scale_down_threshold: 30.0,
+                memory_scale_up_threshold: 80.0,
+                memory_scale_down_threshold: 30.0,
+                scale_up_cooldown: std::time::Duration::from_secs(300),
+                scale_down_cooldown: std::time::Duration::from_secs(300),
+                custom_policies: Vec::new(),
+            },
+            last_scale_action: std::time::Instant::now(),
+        }
+    }
+
+    pub fn make_scaling_decision(&mut self, metrics: &ClusterMetrics) -> Result<ScalingDecision> {
+        if !self.config.enabled {
+            return Ok(ScalingDecision {
+                action: ScalingAction::NoAction,
+                target_nodes: metrics.total_nodes(),
+                reason: "Auto-scaling disabled".to_string(),
+                confidence: 1.0,
+            });
+        }
+
+        // Simple scaling logic based on CPU and memory usage
+        let avg_cpu = metrics.total_cpu_usage() / metrics.total_nodes() as f64;
+        let avg_memory = metrics.total_memory_usage() / metrics.total_nodes() as f64;
+
+        if avg_cpu > self.config.cpu_scale_up_threshold || avg_memory > self.config.memory_scale_up_threshold {
+            if metrics.total_nodes() < self.config.max_nodes {
+                return Ok(ScalingDecision {
+                    action: ScalingAction::ScaleUp(1),
+                    target_nodes: metrics.total_nodes() + 1,
+                    reason: format!("High resource usage: CPU {:.1}%, Memory {:.1}%", avg_cpu, avg_memory),
+                    confidence: 0.8,
+                });
+            }
+        } else if avg_cpu < self.config.cpu_scale_down_threshold && avg_memory < self.config.memory_scale_down_threshold {
+            if metrics.total_nodes() > self.config.min_nodes {
+                return Ok(ScalingDecision {
+                    action: ScalingAction::ScaleDown(1),
+                    target_nodes: metrics.total_nodes() - 1,
+                    reason: format!("Low resource usage: CPU {:.1}%, Memory {:.1}%", avg_cpu, avg_memory),
+                    confidence: 0.8,
+                });
+            }
+        }
+
+        Ok(ScalingDecision {
+            action: ScalingAction::NoAction,
+            target_nodes: metrics.total_nodes(),
+            reason: "No scaling action needed".to_string(),
+            confidence: 1.0,
+        })
+    }
 }
 
 /// Custom scaling policy
@@ -818,6 +902,28 @@ pub enum TaskType {
         task_name: String,
         parameters: HashMap<String, String>,
     },
+}
+
+impl std::fmt::Display for TaskType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TaskType::MetricsComputation { metric_names, .. } => {
+                write!(f, "MetricsComputation({})", metric_names.join(","))
+            }
+            TaskType::DataMigration { source_shard, target_shard } => {
+                write!(f, "DataMigration({} -> {})", source_shard, target_shard)
+            }
+            TaskType::HealthCheck { node_id } => {
+                write!(f, "HealthCheck({})", node_id)
+            }
+            TaskType::Rebalancing { strategy } => {
+                write!(f, "Rebalancing({})", strategy)
+            }
+            TaskType::Custom { task_name, .. } => {
+                write!(f, "Custom({})", task_name)
+            }
+        }
+    }
 }
 
 /// Task priorities
@@ -4314,7 +4420,7 @@ impl DistributedClusterOrchestrator {
             ScalingAction::ScaleDown(nodes) => {
                 self.decommission_nodes(nodes)?;
             }
-            ScalingAction::Maintain => {
+            ScalingAction::NoAction => {
                 // No action needed
             }
         }
@@ -4426,7 +4532,7 @@ impl DistributedClusterOrchestrator {
             let task = ExecutionTask {
                 task_id: format!("task_{}_{}", job.job_id, partition.partition_id),
                 job_id: job.job_id.clone(),
-                node_id: partition.node_id,
+                node_id: partition.node_id.clone(),
                 partition,
                 status: TaskStatus::Pending,
                 start_time: None,

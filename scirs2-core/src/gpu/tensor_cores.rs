@@ -460,9 +460,9 @@ pub enum SparsePattern {
 /// Tensor core optimized matrix multiplication
 pub fn tensor_core_gemm<T>(
     manager: &TensorCoreManager,
-    _a: &GpuBuffer<T>,
-    _b: &GpuBuffer<T>,
-    _c: &mut GpuBuffer<T>,
+    a: &GpuBuffer<T>,
+    b: &GpuBuffer<T>,
+    c: &mut GpuBuffer<T>,
     m: usize,
     n: usize,
     k: usize,
@@ -485,13 +485,321 @@ where
         ));
     }
 
-    // In a real implementation, we would:
-    // 1. Convert data types if needed
-    // 2. Set up tensor core kernels
-    // 3. Launch optimized GEMM operation
-    // 4. Handle mixed precision accumulation
+    // Validate buffer sizes
+    if a.len() < m * k {
+        return Err(TensorCoreError::InvalidDimensions { m, n, k });
+    }
+    if b.len() < k * n {
+        return Err(TensorCoreError::InvalidDimensions { m, n, k });
+    }
+    if c.len() < m * n {
+        return Err(TensorCoreError::InvalidDimensions { m, n, k });
+    }
 
-    // For now, this is a placeholder
+    // Generate optimized kernel for this configuration
+    let kernel_source = generate_tensor_core_gemm_kernel(manager, m, n, k)?;
+    
+    // Execute tensor core GEMM
+    execute_tensor_core_operation(manager, &kernel_source, a, b, c, m, n, k)?;
+
+    Ok(())
+}
+
+/// Generate optimized tensor core GEMM kernel source
+fn generate_tensor_core_gemm_kernel(
+    manager: &TensorCoreManager,
+    m: usize,
+    n: usize,
+    k: usize,
+) -> Result<String, TensorCoreError> {
+    let tile_size = manager.config().tile_size;
+    let data_type = &manager.config().data_type;
+    let use_mixed_precision = manager.config().use_mixed_precision;
+
+    match manager.backend {
+        GpuBackend::Cuda => generate_cuda_tensor_core_kernel(data_type, tile_size, m, n, k, use_mixed_precision),
+        GpuBackend::Rocm => generate_rocm_matrix_core_kernel(data_type, tile_size, m, n, k, use_mixed_precision),
+        GpuBackend::Metal => generate_metal_mps_kernel(data_type, tile_size, m, n, k),
+        _ => Err(TensorCoreError::UnsupportedOperation(TensorCoreOp::MatrixMultiply)),
+    }
+}
+
+/// Generate CUDA tensor core kernel
+fn generate_cuda_tensor_core_kernel(
+    data_type: &TensorDataType,
+    tile_size: (usize, usize),
+    _m: usize,
+    _n: usize,
+    _k: usize,
+    use_mixed_precision: bool,
+) -> Result<String, TensorCoreError> {
+    let (tile_m, tile_n) = tile_size;
+    let dtype_str = match data_type {
+        TensorDataType::Float16 => "__half",
+        TensorDataType::BFloat16 => "__nv_bfloat16",
+        TensorDataType::Float32 => "float",
+        TensorDataType::Int8 => "int8_t",
+        _ => return Err(TensorCoreError::UnsupportedDataType(data_type.clone())),
+    };
+
+    let accumulator_type = if use_mixed_precision { "float" } else { dtype_str };
+
+    Ok(format!(r#"
+#include <cuda_fp16.h>
+#include <cuda_bf16.h>
+#include <mma.h>
+
+using namespace nvcuda;
+
+__global__ void tensor_core_gemm(
+    const {dtype_str}* __restrict__ A,
+    const {dtype_str}* __restrict__ B,
+    {accumulator_type}* __restrict__ C,
+    int M, int N, int K
+) {{
+    // Tensor core fragment declarations
+    wmma::fragment<wmma::matrix_a, {tile_m}, {tile_n}, 16, {dtype_str}, wmma::row_major> a_frag;
+    wmma::fragment<wmma::matrix_b, {tile_m}, {tile_n}, 16, {dtype_str}, wmma::col_major> b_frag;
+    wmma::fragment<wmma::accumulator, {tile_m}, {tile_n}, 16, {accumulator_type}> acc_frag;
+    wmma::fragment<wmma::accumulator, {tile_m}, {tile_n}, 16, {accumulator_type}> c_frag;
+
+    // Thread block and warp coordinates
+    int warp_row = (blockIdx.y * blockDim.y + threadIdx.y) / 32;
+    int warp_col = (blockIdx.x * blockDim.x + threadIdx.x) / 32;
+
+    // Bounds checking
+    if (warp_row * {tile_m} >= M || warp_col * {tile_n} >= N) return;
+
+    // Initialize accumulator
+    wmma::fill_fragment(acc_frag, 0.0f);
+
+    // Main computation loop
+    for (int i = 0; i < K; i += 16) {{
+        int a_row = warp_row * {tile_m};
+        int a_col = i;
+        int b_row = i;
+        int b_col = warp_col * {tile_n};
+
+        // Bounds checking for partial tiles
+        if (a_col + 16 <= K && b_row + 16 <= K) {{
+            // Load matrix fragments
+            wmma::load_matrix_sync(a_frag, A + a_row * K + a_col, K);
+            wmma::load_matrix_sync(b_frag, B + b_row * N + b_col, N);
+
+            // Perform matrix multiplication
+            wmma::mma_sync(acc_frag, a_frag, b_frag, acc_frag);
+        }}
+    }}
+
+    // Load existing C matrix values for accumulation
+    int c_row = warp_row * {tile_m};
+    int c_col = warp_col * {tile_n};
+    
+    if (c_row + {tile_m} <= M && c_col + {tile_n} <= N) {{
+        wmma::load_matrix_sync(c_frag, C + c_row * N + c_col, N, wmma::mem_row_major);
+        
+        // Add to accumulator
+        for (int i = 0; i < c_frag.num_elements; i++) {{
+            c_frag.x[i] += acc_frag.x[i];
+        }}
+
+        // Store result
+        wmma::store_matrix_sync(C + c_row * N + c_col, c_frag, N, wmma::mem_row_major);
+    }}
+}}
+"#,
+        dtype_str = dtype_str,
+        accumulator_type = accumulator_type,
+        tile_m = tile_m,
+        tile_n = tile_n,
+    ))
+}
+
+/// Generate ROCm matrix core kernel
+fn generate_rocm_matrix_core_kernel(
+    data_type: &TensorDataType,
+    tile_size: (usize, usize),
+    _m: usize,
+    _n: usize,
+    _k: usize,
+    use_mixed_precision: bool,
+) -> Result<String, TensorCoreError> {
+    let (tile_m, tile_n) = tile_size;
+    let dtype_str = match data_type {
+        TensorDataType::Float16 => "_Float16",
+        TensorDataType::BFloat16 => "__bf16",
+        TensorDataType::Float32 => "float",
+        TensorDataType::Int8 => "int8_t",
+        _ => return Err(TensorCoreError::UnsupportedDataType(data_type.clone())),
+    };
+
+    let accumulator_type = if use_mixed_precision { "float" } else { dtype_str };
+
+    Ok(format!(r#"
+#include <hip/hip_runtime.h>
+#include <hip/hip_fp16.h>
+
+__global__ void matrix_core_gemm(
+    const {dtype_str}* __restrict__ A,
+    const {dtype_str}* __restrict__ B,
+    {accumulator_type}* __restrict__ C,
+    int M, int N, int K
+) {{
+    // AMD MFMA intrinsics for matrix core operations
+    const int tid = threadIdx.x;
+    const int warp_id = tid / 64;  // AMD wavefront size is 64
+    const int lane_id = tid % 64;
+    
+    const int block_row = blockIdx.y * {tile_m};
+    const int block_col = blockIdx.x * {tile_n};
+    
+    // Bounds checking
+    if (block_row >= M || block_col >= N) return;
+    
+    // Shared memory for tile loading
+    __shared__ {dtype_str} A_shared[{tile_m} * 32];
+    __shared__ {dtype_str} B_shared[32 * {tile_n}];
+    
+    {accumulator_type} accumulator[{acc_size}] = {{0}};
+    
+    // Main computation loop
+    for (int k_block = 0; k_block < K; k_block += 32) {{
+        // Cooperative loading to shared memory
+        if (tid < {tile_m} * 32 / 64) {{
+            int load_idx = tid * 64 + lane_id;
+            if (load_idx < {tile_m} * 32 && (block_row + load_idx / 32) < M && (k_block + load_idx % 32) < K) {{
+                A_shared[load_idx] = A[(block_row + load_idx / 32) * K + (k_block + load_idx % 32)];
+            }}
+        }}
+        
+        if (tid < 32 * {tile_n} / 64) {{
+            int load_idx = tid * 64 + lane_id;
+            if (load_idx < 32 * {tile_n} && (k_block + load_idx / {tile_n}) < K && (block_col + load_idx % {tile_n}) < N) {{
+                B_shared[load_idx] = B[(k_block + load_idx / {tile_n}) * N + (block_col + load_idx % {tile_n})];
+            }}
+        }}
+        
+        __syncthreads();
+        
+        // MFMA matrix multiplication (simplified)
+        // In practice, would use __builtin_amdgcn_mfma_* intrinsics
+        for (int i = 0; i < {tile_m}; i += 4) {{
+            for (int j = 0; j < {tile_n}; j += 4) {{
+                for (int k_inner = 0; k_inner < 32; k_inner++) {{
+                    accumulator[(i * {tile_n} + j) / 16] += 
+                        A_shared[i * 32 + k_inner] * B_shared[k_inner * {tile_n} + j];
+                }}
+            }}
+        }}
+        
+        __syncthreads();
+    }}
+    
+    // Store results
+    for (int i = 0; i < {tile_m}; i++) {{
+        for (int j = 0; j < {tile_n}; j++) {{
+            int global_row = block_row + i;
+            int global_col = block_col + j;
+            if (global_row < M && global_col < N) {{
+                C[global_row * N + global_col] += accumulator[(i * {tile_n} + j) / 16];
+            }}
+        }}
+    }}
+}}
+"#,
+        dtype_str = dtype_str,
+        accumulator_type = accumulator_type,
+        tile_m = tile_m,
+        tile_n = tile_n,
+        acc_size = (tile_m * tile_n) / 16,
+    ))
+}
+
+/// Generate Metal Performance Shaders kernel
+fn generate_metal_mps_kernel(
+    data_type: &TensorDataType,
+    tile_size: (usize, usize),
+    _m: usize,
+    _n: usize,
+    _k: usize,
+) -> Result<String, TensorCoreError> {
+    let (tile_m, tile_n) = tile_size;
+    let dtype_str = match data_type {
+        TensorDataType::Float16 => "half",
+        TensorDataType::Float32 => "float",
+        TensorDataType::Int8 => "char",
+        _ => return Err(TensorCoreError::UnsupportedDataType(data_type.clone())),
+    };
+
+    Ok(format!(r#"
+#include <metal_stdlib>
+using namespace metal;
+
+kernel void neural_engine_gemm(
+    device const {dtype_str}* A [[buffer(0)]],
+    device const {dtype_str}* B [[buffer(1)]],
+    device {dtype_str}* C [[buffer(2)]],
+    constant uint& M [[buffer(3)]],
+    constant uint& N [[buffer(4)]],
+    constant uint& K [[buffer(5)]],
+    uint2 gid [[thread_position_in_grid]],
+    uint2 tid [[thread_position_in_threadgroup]]
+) {{
+    const uint row = gid.y * {tile_m} + tid.y;
+    const uint col = gid.x * {tile_n} + tid.x;
+    
+    if (row >= M || col >= N) return;
+    
+    {dtype_str} sum = 0.0;
+    
+    // Use SIMD group matrix operations when available
+    for (uint k = 0; k < K; k++) {{
+        sum += A[row * K + k] * B[k * N + col];
+    }}
+    
+    C[row * N + col] = sum;
+}}
+"#,
+        dtype_str = dtype_str,
+        tile_m = tile_m,
+        tile_n = tile_n,
+    ))
+}
+
+/// Execute tensor core operation
+fn execute_tensor_core_operation<T>(
+    manager: &TensorCoreManager,
+    kernel_source: &str,
+    _a: &GpuBuffer<T>,
+    _b: &GpuBuffer<T>,
+    _c: &mut GpuBuffer<T>,
+    m: usize,
+    n: usize,
+    k: usize,
+) -> Result<(), TensorCoreError>
+where
+    T: crate::gpu::GpuDataType,
+{
+    // In a real implementation, this would:
+    // 1. Compile the kernel source for the target backend
+    // 2. Set kernel arguments (buffers A, B, C and dimensions)
+    // 3. Calculate optimal grid and block dimensions
+    // 4. Launch the kernel with tensor core support
+    // 5. Synchronize and check for errors
+
+    let tile_size = manager.config().tile_size;
+    let grid_dim_x = n.div_ceil(tile_size.1);
+    let grid_dim_y = m.div_ceil(tile_size.0);
+    
+    eprintln!("Executing tensor core GEMM:");
+    eprintln!("  Kernel source length: {} characters", kernel_source.len());
+    eprintln!("  Dimensions: {}x{}x{}", m, n, k);
+    eprintln!("  Grid dimensions: {}x{}", grid_dim_x, grid_dim_y);
+    eprintln!("  Tile size: {:?}", tile_size);
+    eprintln!("  Backend: {:?}", manager.backend);
+    eprintln!("  Data type: {}", manager.config().data_type);
+    
+    // Placeholder for actual kernel execution
     Ok(())
 }
 

@@ -4,6 +4,7 @@
 //! that minimize allocations and use streaming/chunked processing for large datasets.
 
 use crate::error::{StatsError, StatsResult};
+use crate::error_standardization::{ErrorMessages, ErrorValidator};
 #[cfg(feature = "memmap")]
 use memmap2::Mmap;
 use ndarray::{s, ArrayBase, ArrayViewMut1, Data, Ix1, Ix2};
@@ -35,9 +36,7 @@ where
     I: Iterator<Item = F>,
 {
     if total_count == 0 {
-        return Err(StatsError::InvalidArgument(
-            "Cannot compute mean of empty dataset".to_string(),
-        ));
+        return Err(ErrorMessages::empty_array("dataset"));
     }
 
     let mut sum = F::zero();

@@ -715,6 +715,112 @@ where
     x.mapv(round)
 }
 
+/// Expit function (logistic function)
+///
+/// Computes the logistic function: expit(x) = 1 / (1 + exp(-x))
+/// This is equivalent to the logistic function but follows SciPy naming convention.
+///
+/// # Arguments
+/// * `x` - Input value
+///
+/// # Examples
+/// ```
+/// use scirs2_special::expit;
+/// assert_eq!(expit(0.0), 0.5);
+/// assert!(expit(10.0) > 0.99);
+/// assert!(expit(-10.0) < 0.01);
+/// ```
+pub fn expit<T>(x: T) -> T
+where
+    T: Float + FromPrimitive + Copy,
+{
+    let one = T::one();
+    let neg_x = -x;
+    one / (one + neg_x.exp())
+}
+
+/// Logit function (inverse of expit)
+///
+/// Computes the logit function: logit(p) = log(p / (1 - p))
+/// This is the inverse of the expit function.
+///
+/// # Arguments
+/// * `p` - Probability value in (0, 1)
+///
+/// # Returns
+/// * `SpecialResult<T>` - The logit of p, or error if p is outside (0, 1)
+///
+/// # Examples
+/// ```
+/// use scirs2_special::logit;
+/// assert!((logit(0.5).unwrap() - 0.0).abs() < 1e-10);
+/// assert!(logit(0.0).is_err());
+/// assert!(logit(1.0).is_err());
+/// ```
+pub fn logit<T>(p: T) -> SpecialResult<T>
+where
+    T: Float + FromPrimitive + Copy + Debug,
+{
+    let zero = T::zero();
+    let one = T::one();
+    
+    if p <= zero || p >= one {
+        return Err(SpecialError::ValueError(format!(
+            "logit requires p in (0, 1), got {:?}",
+            p
+        )));
+    }
+    
+    Ok((p / (one - p)).ln())
+}
+
+
+/// Array version of expit function
+///
+/// Applies the expit function element-wise to an array.
+///
+/// # Arguments
+/// * `x` - Input array view
+///
+/// # Examples
+/// ```
+/// use ndarray::array;
+/// use scirs2_special::expit_array;
+/// let input = array![0.0, 1.0, -1.0];
+/// let result = expit_array(&input.view());
+/// assert!((result[0] - 0.5).abs() < 1e-10);
+/// ```
+pub fn expit_array<T>(x: &ArrayView1<T>) -> Array1<T>
+where
+    T: Float + FromPrimitive + Copy,
+{
+    x.mapv(|val| expit(val))
+}
+
+/// Array version of logit function
+///
+/// Applies the logit function element-wise to an array.
+/// Invalid values (outside (0, 1)) are set to NaN.
+///
+/// # Arguments
+/// * `x` - Input array view
+///
+/// # Examples
+/// ```
+/// use ndarray::array;
+/// use scirs2_special::logit_array;
+/// let input = array![0.1, 0.5, 0.9];
+/// let result = logit_array(&input.view());
+/// assert!((result[1] - 0.0).abs() < 1e-10);
+/// ```
+pub fn logit_array<T>(x: &ArrayView1<T>) -> Array1<T>
+where
+    T: Float + FromPrimitive + Copy + Debug,
+{
+    x.mapv(|val| logit(val).unwrap_or(T::nan()))
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -789,5 +895,59 @@ mod tests {
     fn test_diric() {
         assert_relative_eq!(diric(0.0, 5), 5.0, epsilon = 1e-10);
         assert_eq!(diric(0.0, 0), 0.0);
+    }
+
+    #[test]
+    fn test_expit() {
+        assert_relative_eq!(expit(0.0), 0.5, epsilon = 1e-10);
+        assert!(expit(10.0) > 0.99);
+        assert!(expit(-10.0) < 0.01);
+        
+        // Test numerical stability
+        assert!(!expit(1000.0).is_infinite());
+        assert!(!expit(-1000.0).is_nan());
+    }
+
+    #[test]
+    fn test_logit() {
+        assert_relative_eq!(logit(0.5).unwrap(), 0.0, epsilon = 1e-10);
+        assert!(logit(0.9).unwrap() > 0.0);
+        assert!(logit(0.1).unwrap() < 0.0);
+        
+        // Test edge cases
+        assert!(logit(0.0).is_err());
+        assert!(logit(1.0).is_err());
+        assert!(logit(-0.1).is_err());
+        assert!(logit(1.1).is_err());
+    }
+
+    #[test]
+    fn test_expit_logit_inverse() {
+        let values = [0.1, 0.3, 0.5, 0.7, 0.9];
+        for &val in &values {
+            let logit_val = logit(val).unwrap();
+            let back = expit(logit_val);
+            assert_relative_eq!(back, val, epsilon = 1e-10);
+        }
+    }
+
+
+    #[test]
+    fn test_array_functions() {
+        use ndarray::array;
+        
+        // Test expit_array
+        let input = array![0.0, 1.0, -1.0];
+        let result = expit_array(&input.view());
+        assert_relative_eq!(result[0], 0.5, epsilon = 1e-10);
+        assert!(result[1] > 0.7);
+        assert!(result[2] < 0.3);
+        
+        // Test logit_array
+        let prob_input = array![0.1, 0.5, 0.9];
+        let logit_result = logit_array(&prob_input.view());
+        assert_relative_eq!(logit_result[1], 0.0, epsilon = 1e-10);
+        assert!(logit_result[0] < 0.0);
+        assert!(logit_result[2] > 0.0);
     }
 }

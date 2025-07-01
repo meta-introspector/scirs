@@ -1011,7 +1011,7 @@ where
     for (level, image) in pyramid.iter().enumerate() {
         let spatial_sigma = safe_f64_to_float(config.spatial_sigmas[level])?;
         let color_sigma = safe_f64_to_float(config.color_sigmas[level])?;
-        
+
         let filtered = bilateral_filter(image, spatial_sigma, color_sigma, Some(config.mode))?;
         filtered_pyramid.push(filtered);
     }
@@ -1020,7 +1020,7 @@ where
     let mut result = filtered_pyramid.pop().unwrap();
     for level in (0..config.levels - 1).rev() {
         result = upsample_image(&result, &filtered_pyramid[level])?;
-        
+
         // Blend with original level
         let alpha = safe_f64_to_float(0.7)?; // Blend factor
         result = blend_arrays(&result, &filtered_pyramid[level], alpha)?;
@@ -1067,13 +1067,13 @@ where
     D: Dimension,
 {
     let border_mode = mode.unwrap_or(BorderMode::Reflect);
-    
+
     // Validate inputs
     scirs2_core::validation::check_positive(base_spatial_sigma, "base_spatial_sigma")
         .map_err(NdimageError::from)?;
     scirs2_core::validation::check_positive(base_color_sigma, "base_color_sigma")
         .map_err(NdimageError::from)?;
-    
+
     if adaptation_factor < T::zero() || adaptation_factor > T::one() {
         return Err(NdimageError::InvalidInput(
             "Adaptation factor must be between 0.0 and 1.0".into(),
@@ -1098,7 +1098,12 @@ where
     }
 
     // For other dimensions, fall back to regular bilateral filter
-    bilateral_filter(input, base_spatial_sigma, base_color_sigma, Some(border_mode))
+    bilateral_filter(
+        input,
+        base_spatial_sigma,
+        base_color_sigma,
+        Some(border_mode),
+    )
 }
 
 /// Specialized adaptive bilateral filter for 2D arrays
@@ -1124,11 +1129,11 @@ where
     // Compute local variance for adaptation
     let variance_map = compute_local_variance(&input_2d, 3)?;
     let max_variance = variance_map.iter().fold(T::zero(), |acc, &x| acc.max(x));
-    
+
     // Parameters for adaptive filtering
     let window_size = 5;
     let radius = window_size / 2;
-    
+
     let pad_width = vec![(radius, radius), (radius, radius)];
     let padded_input = super::pad_array(&input_2d, &pad_width, mode, None)?;
 
@@ -1138,7 +1143,7 @@ where
             let center_y = i + radius;
             let center_x = j + radius;
             let center_value = padded_input[[center_y, center_x]];
-            
+
             // Adapt parameters based on local variance
             let local_variance = variance_map[[i, j]];
             let variance_ratio = if max_variance > T::zero() {
@@ -1146,11 +1151,13 @@ where
             } else {
                 T::zero()
             };
-            
+
             // Higher variance -> larger spatial sigma, smaller color sigma
-            let adaptive_spatial = base_spatial_sigma * (T::one() + adaptation_factor * variance_ratio);
-            let adaptive_color = base_color_sigma * (T::one() - adaptation_factor * variance_ratio * safe_f64_to_float(0.5)?);
-            
+            let adaptive_spatial =
+                base_spatial_sigma * (T::one() + adaptation_factor * variance_ratio);
+            let adaptive_color = base_color_sigma
+                * (T::one() - adaptation_factor * variance_ratio * safe_f64_to_float(0.5)?);
+
             // Apply bilateral filtering with adaptive parameters
             let filtered_value = apply_bilateral_window(
                 &padded_input.view(),
@@ -1161,7 +1168,7 @@ where
                 adaptive_color,
                 window_size,
             )?;
-            
+
             output[[i, j]] = filtered_value;
         }
     }
@@ -1179,38 +1186,38 @@ where
     let (rows, cols) = input.dim();
     let mut variance = Array2::zeros((rows, cols));
     let radius = window_size / 2;
-    
+
     let pad_width = vec![(radius, radius), (radius, radius)];
     let padded = super::pad_array(input, &pad_width, &BorderMode::Reflect, None)?;
-    
+
     for i in 0..rows {
         for j in 0..cols {
             let center_y = i + radius;
             let center_x = j + radius;
-            
+
             // Compute mean and variance in local window
             let mut sum = T::zero();
             let mut sum_sq = T::zero();
             let mut count = T::zero();
-            
+
             for dy in 0..window_size {
                 for dx in 0..window_size {
                     let y = center_y - radius + dy;
                     let x = center_x - radius + dx;
                     let value = padded[[y, x]];
-                    
+
                     sum = sum + value;
                     sum_sq = sum_sq + value * value;
                     count = count + T::one();
                 }
             }
-            
+
             let mean = sum / count;
             let variance_val = (sum_sq / count) - (mean * mean);
             variance[[i, j]] = variance_val.max(T::zero());
         }
     }
-    
+
     Ok(variance)
 }
 
@@ -1231,32 +1238,32 @@ where
     let two = safe_f64_to_float(2.0)?;
     let two_sigma_spatial_sq = two * spatial_sigma * spatial_sigma;
     let two_sigma_color_sq = two * color_sigma * color_sigma;
-    
+
     let mut weighted_sum = T::zero();
     let mut weight_sum = T::zero();
-    
+
     for dy in 0..window_size {
         for dx in 0..window_size {
             let y = center_y - radius + dy;
             let x = center_x - radius + dx;
             let neighbor_value = padded_input[[y, x]];
-            
+
             // Spatial weight
             let y_dist = safe_i32_to_float((dy as i32) - (radius as i32))?;
             let x_dist = safe_i32_to_float((dx as i32) - (radius as i32))?;
             let spatial_dist_sq = y_dist * y_dist + x_dist * x_dist;
             let spatial_weight = (-spatial_dist_sq / two_sigma_spatial_sq).exp();
-            
+
             // Color weight
             let color_diff = neighbor_value - center_value;
             let color_weight = (-color_diff * color_diff / two_sigma_color_sq).exp();
-            
+
             let total_weight = spatial_weight * color_weight;
             weighted_sum = weighted_sum + neighbor_value * total_weight;
             weight_sum = weight_sum + total_weight;
         }
     }
-    
+
     Ok(if weight_sum > T::zero() {
         weighted_sum / weight_sum
     } else {
@@ -1280,21 +1287,23 @@ where
     // In a production implementation, you might want to use proper anti-aliasing
     let old_shape = input.shape();
     let mut new_shape = Vec::with_capacity(old_shape.len());
-    
+
     for &dim_size in old_shape {
         let new_size = ((dim_size as f64) * factor).max(1.0) as usize;
         new_shape.push(new_size);
     }
-    
+
     // Simple nearest-neighbor downsampling
     let mut output = Array::zeros(new_shape.clone());
-    
+
     // For 2D case (most common)
     if input.ndim() == 2 && new_shape.len() == 2 {
-        let input_2d = input.to_owned().into_dimensionality::<ndarray::Ix2>()
+        let input_2d = input
+            .to_owned()
+            .into_dimensionality::<ndarray::Ix2>()
             .map_err(|_| NdimageError::DimensionError("Failed to convert to 2D".into()))?;
         let mut output_2d = Array2::zeros((new_shape[0], new_shape[1]));
-        
+
         for i in 0..new_shape[0] {
             for j in 0..new_shape[1] {
                 let src_i = ((i as f64) / factor).min((old_shape[0] - 1) as f64) as usize;
@@ -1302,11 +1311,12 @@ where
                 output_2d[[i, j]] = input_2d[[src_i, src_j]];
             }
         }
-        
-        return output_2d.into_dimensionality::<D>()
+
+        return output_2d
+            .into_dimensionality::<D>()
             .map_err(|_| NdimageError::DimensionError("Failed to convert back from 2D".into()));
     }
-    
+
     // Fallback: return a copy for unsupported dimensions
     Ok(input.clone())
 }
@@ -1319,22 +1329,24 @@ where
 {
     let input_shape = input.shape();
     let target_shape = target.shape();
-    
+
     if input_shape.len() != target_shape.len() {
         return Err(NdimageError::DimensionError(
             "Input and target must have same number of dimensions".into(),
         ));
     }
-    
+
     // For 2D case
     if input.ndim() == 2 {
-        let input_2d = input.to_owned().into_dimensionality::<ndarray::Ix2>()
+        let input_2d = input
+            .to_owned()
+            .into_dimensionality::<ndarray::Ix2>()
             .map_err(|_| NdimageError::DimensionError("Failed to convert to 2D".into()))?;
         let mut output = Array2::zeros((target_shape[0], target_shape[1]));
-        
+
         let scale_y = (input_shape[0] as f64) / (target_shape[0] as f64);
         let scale_x = (input_shape[1] as f64) / (target_shape[1] as f64);
-        
+
         for i in 0..target_shape[0] {
             for j in 0..target_shape[1] {
                 let src_i = ((i as f64) * scale_y).min((input_shape[0] - 1) as f64) as usize;
@@ -1342,11 +1354,12 @@ where
                 output[[i, j]] = input_2d[[src_i, src_j]];
             }
         }
-        
-        return output.into_dimensionality::<D>()
+
+        return output
+            .into_dimensionality::<D>()
             .map_err(|_| NdimageError::DimensionError("Failed to convert back from 2D".into()));
     }
-    
+
     // Fallback: return target shape with input values
     Ok(target.clone())
 }
@@ -1362,13 +1375,13 @@ where
             "Arrays must have same shape for blending".into(),
         ));
     }
-    
+
     let one_minus_alpha = T::one() - alpha;
     let mut result = Array::zeros(a.raw_dim());
-    
+
     for (((aa, bb), rr)) in a.iter().zip(b.iter()).zip(result.iter_mut()) {
         *rr = *aa * alpha + *bb * one_minus_alpha;
     }
-    
+
     Ok(result)
 }

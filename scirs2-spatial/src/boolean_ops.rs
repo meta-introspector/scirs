@@ -105,7 +105,7 @@ struct LabeledPolygon {
 }
 
 impl LabeledPolygon {
-    fn from_array(vertices: &ArrayView2<f64>) -> SpatialResult<Self> {
+    fn from_array(vertices: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
         if vertices.ncols() != 2 {
             return Err(SpatialError::ValueError(
                 "Polygon vertices must be 2D".to_string(),
@@ -241,8 +241,8 @@ impl LabeledPolygon {
 /// let union = polygon_union(&poly1.view(), &poly2.view()).unwrap();
 /// ```
 pub fn polygon_union(
-    poly1: &ArrayView2<f64>,
-    poly2: &ArrayView2<f64>,
+    poly1: &ArrayView2<'_, f64>,
+    poly2: &ArrayView2<'_, f64>,
 ) -> SpatialResult<Array2<f64>> {
     let mut p1 = LabeledPolygon::from_array(poly1)?;
     let mut p2 = LabeledPolygon::from_array(poly2)?;
@@ -285,8 +285,8 @@ pub fn polygon_union(
 ///
 /// * Array of intersection polygon vertices
 pub fn polygon_intersection(
-    poly1: &ArrayView2<f64>,
-    poly2: &ArrayView2<f64>,
+    poly1: &ArrayView2<'_, f64>,
+    poly2: &ArrayView2<'_, f64>,
 ) -> SpatialResult<Array2<f64>> {
     let mut p1 = LabeledPolygon::from_array(poly1)?;
     let mut p2 = LabeledPolygon::from_array(poly2)?;
@@ -319,8 +319,8 @@ pub fn polygon_intersection(
 ///
 /// * Array of difference polygon vertices
 pub fn polygon_difference(
-    poly1: &ArrayView2<f64>,
-    poly2: &ArrayView2<f64>,
+    poly1: &ArrayView2<'_, f64>,
+    poly2: &ArrayView2<'_, f64>,
 ) -> SpatialResult<Array2<f64>> {
     let mut p1 = LabeledPolygon::from_array(poly1)?;
     let mut p2 = LabeledPolygon::from_array(poly2)?;
@@ -358,8 +358,8 @@ pub fn polygon_difference(
 ///
 /// * Array of symmetric difference polygon vertices
 pub fn polygon_symmetric_difference(
-    poly1: &ArrayView2<f64>,
-    poly2: &ArrayView2<f64>,
+    poly1: &ArrayView2<'_, f64>,
+    poly2: &ArrayView2<'_, f64>,
 ) -> SpatialResult<Array2<f64>> {
     // Symmetric difference = (A ∪ B) - (A ∩ B) = (A - B) ∪ (B - A)
     let diff1 = polygon_difference(poly1, poly2)?;
@@ -626,7 +626,7 @@ fn trace_difference_boundary(
 }
 
 /// Check if a polygon is convex
-pub fn is_convex_polygon(vertices: &ArrayView2<f64>) -> SpatialResult<bool> {
+pub fn is_convex_polygon(vertices: &ArrayView2<'_, f64>) -> SpatialResult<bool> {
     if vertices.ncols() != 2 {
         return Err(SpatialError::ValueError("Vertices must be 2D".to_string()));
     }
@@ -663,13 +663,13 @@ pub fn is_convex_polygon(vertices: &ArrayView2<f64>) -> SpatialResult<bool> {
 }
 
 /// Compute the area of a polygon
-pub fn compute_polygon_area(vertices: &ArrayView2<f64>) -> SpatialResult<f64> {
+pub fn compute_polygon_area(vertices: &ArrayView2<'_, f64>) -> SpatialResult<f64> {
     let polygon = LabeledPolygon::from_array(vertices)?;
     Ok(polygon.compute_area())
 }
 
 /// Check if a polygon is self-intersecting
-pub fn is_self_intersecting(vertices: &ArrayView2<f64>) -> SpatialResult<bool> {
+pub fn is_self_intersecting(vertices: &ArrayView2<'_, f64>) -> SpatialResult<bool> {
     let polygon = LabeledPolygon::from_array(vertices)?;
     let n = polygon.vertices.len();
 

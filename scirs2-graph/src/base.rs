@@ -174,7 +174,7 @@ impl<N: Node, E: EdgeWeight, Ix: IndexType> Graph<N, E, Ix> {
                 .collect();
             Ok(neighbors)
         } else {
-            Err(GraphError::NodeNotFound)
+            Err(GraphError::node_not_found_with_context(format!("{:?}", node), self.node_count(), "neighbors"))
         }
     }
 
@@ -203,7 +203,7 @@ impl<N: Node, E: EdgeWeight, Ix: IndexType> Graph<N, E, Ix> {
                 Err(GraphError::EdgeNotFound)
             }
         } else {
-            Err(GraphError::NodeNotFound)
+            Err(GraphError::node_not_found("unknown node"))
         }
     }
 
@@ -374,7 +374,7 @@ impl<N: Node, E: EdgeWeight, Ix: IndexType> DiGraph<N, E, Ix> {
                 .collect();
             Ok(successors)
         } else {
-            Err(GraphError::NodeNotFound)
+            Err(GraphError::node_not_found("unknown node"))
         }
     }
 
@@ -391,7 +391,7 @@ impl<N: Node, E: EdgeWeight, Ix: IndexType> DiGraph<N, E, Ix> {
                 .collect();
             Ok(predecessors)
         } else {
-            Err(GraphError::NodeNotFound)
+            Err(GraphError::node_not_found("unknown node"))
         }
     }
 
@@ -420,7 +420,7 @@ impl<N: Node, E: EdgeWeight, Ix: IndexType> DiGraph<N, E, Ix> {
                 Err(GraphError::EdgeNotFound)
             }
         } else {
-            Err(GraphError::NodeNotFound)
+            Err(GraphError::node_not_found("unknown node"))
         }
     }
 
@@ -916,7 +916,7 @@ impl<N: Node, E: EdgeWeight, Ix: IndexType> BipartiteGraph<N, E, Ix> {
 
         // Check if both nodes exist in the graph
         if (!source_in_a && !source_in_b) || (!target_in_a && !target_in_b) {
-            return Err(GraphError::NodeNotFound);
+            return Err(GraphError::node_not_found("unknown node"));
         }
 
         // Check bipartite constraint: nodes must be in different sets

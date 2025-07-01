@@ -70,15 +70,57 @@
 //! let feedback_sys = feedback(&g1, None, 1).unwrap(); // Unity feedback
 //! ```
 //!
+//! ## Robust Analysis
+//!
+//! ```rust
+//! use scirs2_signal::lti::{design::ss, robust_analysis::{robust_control_observability_analysis, RobustAnalysisConfig}};
+//!
+//! // Create a multi-input, multi-output system
+//! let sys = ss(
+//!     vec![-1.0, 0.0, 1.0, -2.0], // A matrix (2x2)
+//!     vec![1.0, 0.0],             // B matrix (2x1)  
+//!     vec![1.0, 0.0],             // C matrix (1x2)
+//!     vec![0.0],                  // D matrix (1x1)
+//!     None,
+//! ).unwrap();
+//!
+//! // Perform comprehensive robust analysis
+//! let config = RobustAnalysisConfig {
+//!     enable_sensitivity_analysis: true,
+//!     enable_structured_analysis: true,
+//!     enable_monte_carlo: true,
+//!     monte_carlo_samples: 1000,
+//!     ..Default::default()
+//! };
+//!
+//! let robust_analysis = robust_control_observability_analysis(&sys, &config).unwrap();
+//!
+//! // Check robustness metrics
+//! println!("Robustness Score: {:.1}/100", robust_analysis.robustness_score);
+//! println!("Controllable: {}", robust_analysis.enhanced_controllability.basic_analysis.is_controllable);
+//! println!("Observable: {}", robust_analysis.enhanced_observability.basic_analysis.is_observable);
+//! println!("Condition Number: {:.2e}", robust_analysis.enhanced_controllability.conditioning.condition_number_2);
+//! 
+//! // Check for critical issues
+//! if !robust_analysis.robustness_issues.is_empty() {
+//!     println!("Critical Issues:");
+//!     for issue in &robust_analysis.robustness_issues {
+//!         println!("  - {}", issue);
+//!     }
+//! }
+//! ```
+//!
 //! # Module Organization
 //!
 //! - [`systems`] - Core system types and trait definitions
 //! - [`analysis`] - System analysis functions (Bode plots, controllability, etc.)
+//! - [`robust_analysis`] - Enhanced robust controllability/observability analysis
 //! - [`design`] - System creation and interconnection functions
 
 // Re-export all public modules
 pub mod analysis;
 pub mod design;
+pub mod robust_analysis;
 pub mod systems;
 
 // Re-export core system types for convenience
@@ -90,6 +132,18 @@ pub use analysis::{
     complete_kalman_decomposition, compute_lyapunov_gramians, matrix_condition_number,
     systems_equivalent, ControlObservabilityAnalysis, ControllabilityAnalysis, GramianPair,
     KalmanDecomposition, KalmanStructure, ObservabilityAnalysis,
+};
+
+// Re-export robust analysis functions and types
+pub use robust_analysis::{
+    robust_control_observability_analysis, AdditiveRobustness, ConfidenceIntervals, 
+    ControlEffortAnalysis, EnhancedControllabilityAnalysis, EnhancedObservabilityAnalysis,
+    EstimationAccuracyAnalysis, FrequencyDomainAnalysis, MinimumEnergyAnalysis,
+    MinimumVarianceAnalysis, MonteCarloRobustnessResults, MultiplcativeRobustness,
+    NumericalConditioning, ParametricUncertaintyAnalysis, PerformanceOrientedMetrics,
+    RealPerturbationBounds, RobustAnalysisConfig, RobustControlObservabilityAnalysis,
+    SensitivityAnalysisResults, StructuredPerturbationAnalysis, SvdControllabilityAnalysis,
+    SvdObservabilityAnalysis,
 };
 
 // Re-export design functions for convenience

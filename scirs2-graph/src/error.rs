@@ -502,7 +502,7 @@ mod tests {
 
     #[test]
     fn test_error_context() {
-        let ctx = ErrorContext::new("PageRank computation").with_graph_info(100, 250);
+        let _ctx = ErrorContext::new("PageRank computation").with_graph_info(100, 250);
         let err = GraphError::convergence_error("pagerank", 100, 1e-3, 1e-6);
         let suggestions = err.recovery_suggestions();
         assert!(!suggestions.is_empty());

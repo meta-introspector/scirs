@@ -5,15 +5,13 @@
 //! and intelligent alert generation for production environments.
 
 use crate::benchmarking::memory_leak_detector::{
-    AllocationEvent, AllocationType, AnomalyDetector, LeakDetector, MemoryAnomaly,
-    MemoryDetectionConfig, MemoryLeakDetector, MemoryLeakResult, MemoryPattern,
-    MemoryUsageSnapshot, OptimizationRecommendation, PatternDetector,
+    AnomalyDetector, LeakDetector, MemoryLeakDetector, MemoryUsageSnapshot, PatternDetector,
 };
 use crate::error::{OptimError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
@@ -225,7 +223,7 @@ pub struct MachineLearningDetector {
     /// Historical data for training
     training_data: VecDeque<MLTrainingPoint>,
     /// Trained models
-    models: HashMap<String, MLModel>,
+    models: HashMap<String, Box<dyn MLModel>>,
     /// Feature extractors
     feature_extractors: Vec<Box<dyn FeatureExtractor>>,
     /// Prediction cache

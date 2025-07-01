@@ -163,7 +163,7 @@ where
     Ix: IndexType,
 {
     if !hypergraph.has_node(source) || !hypergraph.has_node(target) {
-        return Err(GraphError::NodeNotFound);
+        return Err(GraphError::node_not_found("node"));
     }
 
     if source == target {
@@ -243,7 +243,7 @@ where
     Ix: IndexType,
 {
     if !hypergraph.has_node(source) || !hypergraph.has_node(target) {
-        return Err(GraphError::NodeNotFound);
+        return Err(GraphError::node_not_found("node"));
     }
 
     if source == target {

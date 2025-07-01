@@ -849,7 +849,7 @@ pub struct BitPackedSparseVector {
 impl BitPackedSparseVector {
     /// Create from a boolean sparse vector
     pub fn from_bool_indices(indices: &[usize], size: usize) -> Self {
-        let num_words = (size + 63) / 64; // Round up to nearest 64
+        let num_words = size.div_ceil(64); // Round up to nearest 64
         let mut bit_data = vec![0u64; num_words];
 
         for &idx in indices {
@@ -1043,7 +1043,7 @@ impl AdaptiveSparseMatrix {
             Self::Hierarchical(hierarchical)
         } else if sparsity < 0.01 && nnz > 1000 {
             // Sparse with some structure - use block format
-            let block_size = ((nnz as f64).sqrt() as usize).max(8).min(64);
+            let block_size = ((nnz as f64).sqrt() as usize).clamp(8, 64);
             Self::Block(BlockSparseMatrix::new(n_rows, n_cols, block_size))
         } else if n_rows > n_cols * 2 {
             // Tall matrix - CSC might be better for column operations

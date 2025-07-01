@@ -7,18 +7,18 @@
 
 pub mod concrete_gpu_backends;
 pub mod device_detection;
-pub mod kernels;
 pub mod gpu_acceleration_framework;
+pub mod kernels;
 
 #[cfg(feature = "cuda")]
 pub mod cuda;
 
 pub use device_detection::{DeviceCapability, DeviceManager, MemoryManager};
-pub use kernels::{GpuBuffer, GpuKernelExecutor, KernelInfo};
 pub use gpu_acceleration_framework::{
-    GpuAccelerationManager, GpuMemoryPool, GpuKernelCache, GpuPerformanceReport,
-    MemoryPoolConfig, MemoryPoolStatistics, CompiledKernel, KernelPerformanceStats,
+    CompiledKernel, GpuAccelerationManager, GpuKernelCache, GpuMemoryPool, GpuPerformanceReport,
+    KernelPerformanceStats, MemoryPoolConfig, MemoryPoolStatistics,
 };
+pub use kernels::{GpuBuffer, GpuKernelExecutor, KernelInfo};
 
 use ndarray::{Array, ArrayView, Dimension};
 use num_traits::{Float, FromPrimitive};

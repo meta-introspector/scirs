@@ -51,19 +51,13 @@
 //! let optimal_solution = optimizer.optimize_spatial_function(&objective_function).await?;
 //! ```
 
-use crate::error::{SpatialError, SpatialResult};
-use crate::quantum_inspired::{QuantumState, QuantumClusterer, QuantumNearestNeighbor, VariationalQuantumEigensolver};
-use ndarray::{Array1, Array2, Array3, ArrayView1, ArrayView2, Axis, s};
-use num_complex::Complex64;
-use std::collections::{HashMap, VecDeque};
-use std::f64::consts::{PI, E, SQRT_2};
-use std::future::Future;
-use std::pin::Pin;
-use std::time::{Duration, Instant};
-use std::sync::{Arc, Mutex};
-use tokio::time::{sleep, timeout};
+use crate::error::SpatialResult;
+use crate::quantum_inspired::{QuantumState, QuantumClusterer, VariationalQuantumEigensolver};
+use ndarray::{Array1, Array2, ArrayView2};
+use std::time::Instant;
 
 /// Quantum-classical hybrid spatial optimizer
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct HybridSpatialOptimizer {
     /// Quantum component weight (0.0 = pure classical, 1.0 = pure quantum)
@@ -158,6 +152,12 @@ pub struct HybridPerformanceMetrics {
     pub classical_advantage_episodes: usize,
 }
 
+impl Default for HybridSpatialOptimizer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl HybridSpatialOptimizer {
     /// Create new hybrid spatial optimizer
     pub fn new() -> Self {
@@ -245,7 +245,7 @@ impl HybridSpatialOptimizer {
         
         // Hybrid optimization loop
         while iteration < max_iterations {
-            let iteration_start = Instant::now();
+            let _iteration_start = Instant::now();
             
             // Determine optimal paradigm for this iteration
             let use_quantum = self.select_optimal_paradigm(iteration, &objective_function).await?;
@@ -258,7 +258,7 @@ impl HybridSpatialOptimizer {
                 
                 if quantum_result.value < best_value {
                     best_value = quantum_result.value;
-                    best_solution = quantum_result.parameters;
+                    best_solution = quantum_result.parameters.clone();
                     self.performance_metrics.quantum_advantage_episodes += 1;
                 }
                 
@@ -273,7 +273,7 @@ impl HybridSpatialOptimizer {
                 
                 if classical_result.value < best_value {
                     best_value = classical_result.value;
-                    best_solution = classical_result.parameters;
+                    best_solution = classical_result.parameters.clone();
                     self.performance_metrics.classical_advantage_episodes += 1;
                 }
                 
@@ -348,9 +348,11 @@ impl HybridSpatialOptimizer {
     where
         F: Fn(&Array1<f64>) -> f64 + Send + Sync,
     {
-        if let Some(ref mut vqe) = self.vqe {
+        // First encode the spatial data
+        let spatial_data = self.encode_optimization_problem_as_spatial_data();
+        
+        if let Some(vqe) = self.vqe.as_mut() {
             // Convert optimization problem to quantum Hamiltonian
-            let spatial_data = self.encode_optimization_problem_as_spatial_data();
             let vqe_result = vqe.solve_spatial_hamiltonian(&spatial_data.view()).await?;
             
             // Extract parameters from quantum ground state
@@ -523,7 +525,7 @@ impl HybridSpatialOptimizer {
     async fn transfer_classical_information(&mut self, classical_result: &OptimizationStepResult) -> SpatialResult<()> {
         if self.coupling_parameters.classical_bias {
             // Use classical gradients to inform quantum parameter updates
-            if let Some(ref vqe) = self.vqe {
+            if let Some(ref _vqe) = self.vqe {
                 // Encode classical gradient information into quantum parameter updates
                 // This would require modifying the VQE's parameter update strategy
                 // For now, we adjust the coupling parameters
@@ -718,7 +720,7 @@ impl HybridClusterer {
     }
     
     /// Perform hybrid clustering
-    pub async fn fit(&mut self, points: &ArrayView2<f64>) -> SpatialResult<(Array2<f64>, Array1<usize>, HybridClusteringMetrics)> {
+    pub async fn fit(&mut self, points: &ArrayView2<'_, f64>) -> SpatialResult<(Array2<f64>, Array1<usize>, HybridClusteringMetrics)> {
         let start_time = Instant::now();
         
         // Phase 1: Quantum exploration for initial centroids
@@ -745,7 +747,7 @@ impl HybridClusterer {
     }
     
     /// Classical refinement step using Lloyd's algorithm
-    async fn classical_refinement_step(&self, points: &ArrayView2<f64>, initial_centroids: &Array2<f64>) -> SpatialResult<(Array2<f64>, Array1<usize>)> {
+    async fn classical_refinement_step(&self, points: &ArrayView2<'_, f64>, initial_centroids: &Array2<f64>) -> SpatialResult<(Array2<f64>, Array1<usize>)> {
         let (n_points, n_dims) = points.dim();
         let mut centroids = initial_centroids.clone();
         let mut assignments = Array1::zeros(n_points);
@@ -824,7 +826,7 @@ impl HybridClusterer {
     }
     
     /// Calculate silhouette score for clustering quality
-    fn calculate_silhouette_score(&self, points: &ArrayView2<f64>, _centroids: &Array2<f64>, assignments: &Array1<usize>) -> f64 {
+    fn calculate_silhouette_score(&self, points: &ArrayView2<'_, f64>, _centroids: &Array2<f64>, assignments: &Array1<usize>) -> f64 {
         let n_points = points.nrows();
         let mut silhouette_scores = Vec::new();
         

@@ -16,6 +16,9 @@ use crate::tpu::{TPUDevice, TPUOperation, TPURuntime};
 use ndarray::ArrayD;
 use num_traits::Float;
 use std::collections::HashMap;
+use std::fmt::Debug;
+use std::iter::Sum;
+use std::ops::{Add, Div};
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
 
@@ -364,6 +367,74 @@ impl UnifiedPerformanceManager {
         _context: &OperationContext,
     ) -> Result<Vec<ArrayD<F>>> {
         match strategy {
+            OptimizationChoice::CPUSimd => {
+                #[cfg(feature = "simd")]
+                {
+                    use crate::performance::SIMDOperations;
+                    match operation_type {
+                        "matmul" => {
+                            if inputs.len() >= 2 {
+                                let a_f32 = inputs[0].mapv(|x| x.to_f32().unwrap_or(0.0));
+                                let b_f32 = inputs[1].mapv(|x| x.to_f32().unwrap_or(0.0));
+                                let result = SIMDOperations::simd_matmul_f32(&a_f32.view(), &b_f32.view())?;
+                                let result_f = result.mapv(|x| F::from(x).unwrap_or(F::zero()));
+                                Ok(vec![result_f])
+                            } else {
+                                Err(NeuralError::InvalidInput("MatMul requires 2 inputs".to_string()))
+                            }
+                        }
+                        "elementwise_add" => {
+                            if inputs.len() >= 2 {
+                                let a_f32 = inputs[0].mapv(|x| x.to_f32().unwrap_or(0.0));
+                                let b_f32 = inputs[1].mapv(|x| x.to_f32().unwrap_or(0.0));
+                                let result = SIMDOperations::simd_add_f32(&a_f32.view(), &b_f32.view())?;
+                                let result_f = result.mapv(|x| F::from(x).unwrap_or(F::zero()));
+                                Ok(vec![result_f])
+                            } else {
+                                Err(NeuralError::InvalidInput("ElementwiseAdd requires 2 inputs".to_string()))
+                            }
+                        }
+                        "relu" => {
+                            if !inputs.is_empty() {
+                                let input_f32 = inputs[0].mapv(|x| x.to_f32().unwrap_or(0.0));
+                                let result = SIMDOperations::simd_relu_f32(&input_f32.view());
+                                let result_f = result.mapv(|x| F::from(x).unwrap_or(F::zero()));
+                                Ok(vec![result_f])
+                            } else {
+                                Err(NeuralError::InvalidInput("ReLU requires 1 input".to_string()))
+                            }
+                        }
+                        "conv2d" => {
+                            if inputs.len() >= 2 {
+                                let input_f32 = inputs[0].mapv(|x| x.to_f32().unwrap_or(0.0));
+                                let kernel_f32 = inputs[1].mapv(|x| x.to_f32().unwrap_or(0.0));
+                                // Use default stride and padding for now
+                                let result = SIMDOperations::simd_conv2d_f32(
+                                    &input_f32.view(), 
+                                    &kernel_f32.view(), 
+                                    None, 
+                                    (1, 1), 
+                                    (0, 0)
+                                )?;
+                                let result_f = result.mapv(|x| F::from(x).unwrap_or(F::zero()));
+                                Ok(vec![result_f])
+                            } else {
+                                Err(NeuralError::InvalidInput("Conv2D requires 2 inputs".to_string()))
+                            }
+                        }
+                        _ => Err(NeuralError::NotImplemented(format!(
+                            "Operation {} not implemented for CPU SIMD",
+                            operation_type
+                        ))),
+                    }
+                }
+                #[cfg(not(feature = "simd"))]
+                {
+                    Err(NeuralError::FeatureNotEnabled(
+                        "SIMD feature not enabled".to_string(),
+                    ))
+                }
+            }
             OptimizationChoice::CPUParallel => {
                 match operation_type {
                     "matmul" => {
@@ -379,6 +450,19 @@ impl UnifiedPerformanceManager {
                             Err(NeuralError::InvalidInput(
                                 "MatMul requires 2 inputs".to_string(),
                             ))
+                        }
+                    }
+                    "conv2d" => {
+                        if inputs.len() >= 2 {
+                            let input_f32 = inputs[0].mapv(|x| x.to_f32().unwrap_or(0.0));
+                            let kernel_f32 = inputs[1].mapv(|x| x.to_f32().unwrap_or(0.0));
+                            let result = self.cpu_optimizer.optimized_conv2d(
+                                &input_f32, &kernel_f32, None, (1, 1), (0, 0)
+                            )?;
+                            let result_f = result.mapv(|x| F::from(x).unwrap_or(F::zero()));
+                            Ok(vec![result_f])
+                        } else {
+                            Err(NeuralError::InvalidInput("Conv2D requires 2 inputs".to_string()))
                         }
                     }
                     _ => Err(NeuralError::NotImplemented(format!(
@@ -429,10 +513,24 @@ impl UnifiedPerformanceManager {
                 // Fallback to simple implementation
                 self.execute_cpu_serial(operation_type, inputs)
             }
-            _ => Err(NeuralError::NotImplemented(format!(
-                "Strategy {:?} not implemented",
-                strategy
-            ))),
+            OptimizationChoice::Hybrid(strategies) => {
+                // Try strategies in order until one succeeds
+                let mut last_error = None;
+                for strategy in strategies {
+                    match self.execute_with_strategy(strategy, operation_type, inputs, _context) {
+                        Ok(result) => return Ok(result),
+                        Err(err) => last_error = Some(err),
+                    }
+                }
+                Err(last_error.unwrap_or_else(|| {
+                    NeuralError::NotImplemented("No hybrid strategies provided".to_string())
+                }))
+            }
+            OptimizationChoice::GPU => {
+                Err(NeuralError::NotImplemented(
+                    "GPU acceleration not yet implemented".to_string(),
+                ))
+            }
         }
     }
 
@@ -564,6 +662,66 @@ impl UnifiedPerformanceManager {
                     ))
                 }
             }
+            "elementwise_add" => {
+                if inputs.len() >= 2 {
+                    Ok(JITOperation::ElementwiseAdd {
+                        shape: inputs[0].shape().to_vec(),
+                    })
+                } else {
+                    Err(NeuralError::InvalidInput(
+                        "ElementwiseAdd requires 2 inputs".to_string(),
+                    ))
+                }
+            }
+            "relu" => {
+                if !inputs.is_empty() {
+                    Ok(JITOperation::ReLU {
+                        shape: inputs[0].shape().to_vec(),
+                    })
+                } else {
+                    Err(NeuralError::InvalidInput(
+                        "ReLU requires 1 input".to_string(),
+                    ))
+                }
+            }
+            "conv2d" => {
+                if inputs.len() >= 2 {
+                    Ok(JITOperation::Conv2D {
+                        input_shape: inputs[0].shape().to_vec(),
+                        kernel_shape: inputs[1].shape().to_vec(),
+                        stride: (1, 1),
+                        padding: (0, 0),
+                    })
+                } else {
+                    Err(NeuralError::InvalidInput(
+                        "Conv2D requires 2 inputs".to_string(),
+                    ))
+                }
+            }
+            "batch_norm" => {
+                if !inputs.is_empty() {
+                    Ok(JITOperation::BatchNorm {
+                        shape: inputs[0].shape().to_vec(),
+                        eps: 1e-5,
+                    })
+                } else {
+                    Err(NeuralError::InvalidInput(
+                        "BatchNorm requires 1 input".to_string(),
+                    ))
+                }
+            }
+            "softmax" => {
+                if !inputs.is_empty() {
+                    Ok(JITOperation::Softmax {
+                        shape: inputs[0].shape().to_vec(),
+                        axis: -1,
+                    })
+                } else {
+                    Err(NeuralError::InvalidInput(
+                        "Softmax requires 1 input".to_string(),
+                    ))
+                }
+            }
             _ => Err(NeuralError::NotImplemented(format!(
                 "JIT operation {} not supported",
                 operation_type
@@ -581,6 +739,32 @@ impl UnifiedPerformanceManager {
                 transpose_a: false,
                 transpose_b: false,
             }),
+            "elementwise_add" => Ok(TPUOperation::ElementwiseAdd),
+            "relu" => Ok(TPUOperation::ReLU),
+            "conv2d" => Ok(TPUOperation::Conv2D {
+                stride: (1, 1),
+                padding: (0, 0),
+                dilation: (1, 1),
+            }),
+            "batch_norm" => Ok(TPUOperation::BatchNorm {
+                eps: 1e-5,
+                momentum: 0.1,
+            }),
+            "softmax" => Ok(TPUOperation::Softmax {
+                axis: -1,
+            }),
+            "reduce_sum" => Ok(TPUOperation::ReduceSum {
+                axis: None,
+                keepdims: false,
+            }),
+            "reduce_mean" => Ok(TPUOperation::ReduceMean {
+                axis: None,
+                keepdims: false,
+            }),
+            "transpose" => Ok(TPUOperation::Transpose {
+                axes: None,
+            }),
+            "reshape" => Ok(TPUOperation::Reshape),
             _ => Err(NeuralError::NotImplemented(format!(
                 "TPU operation {} not supported",
                 operation_type
@@ -627,6 +811,46 @@ impl UnifiedPerformanceManager {
                     ))
                 }
             }
+            "elementwise_add" => {
+                if inputs.len() >= 2 {
+                    let result = self.serial_elementwise_add(inputs[0], inputs[1])?;
+                    Ok(vec![result])
+                } else {
+                    Err(NeuralError::InvalidInput(
+                        "ElementwiseAdd requires 2 inputs".to_string(),
+                    ))
+                }
+            }
+            "relu" => {
+                if !inputs.is_empty() {
+                    let result = self.serial_relu(inputs[0]);
+                    Ok(vec![result])
+                } else {
+                    Err(NeuralError::InvalidInput(
+                        "ReLU requires 1 input".to_string(),
+                    ))
+                }
+            }
+            "reduce_sum" => {
+                if !inputs.is_empty() {
+                    let result = self.serial_reduce_sum(inputs[0]);
+                    Ok(vec![result])
+                } else {
+                    Err(NeuralError::InvalidInput(
+                        "ReduceSum requires 1 input".to_string(),
+                    ))
+                }
+            }
+            "reduce_mean" => {
+                if !inputs.is_empty() {
+                    let result = self.serial_reduce_mean(inputs[0]);
+                    Ok(vec![result])
+                } else {
+                    Err(NeuralError::InvalidInput(
+                        "ReduceMean requires 1 input".to_string(),
+                    ))
+                }
+            }
             _ => Err(NeuralError::NotImplemented(format!(
                 "Serial operation {} not supported",
                 operation_type
@@ -664,6 +888,41 @@ impl UnifiedPerformanceManager {
         }
 
         Ok(result.into_dyn())
+    }
+
+    /// Simple serial elementwise addition
+    fn serial_elementwise_add<F: Float + Debug>(&self, a: &ArrayD<F>, b: &ArrayD<F>) -> Result<ArrayD<F>> {
+        if a.shape() != b.shape() {
+            return Err(NeuralError::DimensionMismatch(
+                "Arrays must have the same shape for elementwise addition".to_string(),
+            ));
+        }
+
+        let mut result = a.clone();
+        for (r, b_val) in result.iter_mut().zip(b.iter()) {
+            *r = *r + *b_val;
+        }
+
+        Ok(result)
+    }
+
+    /// Simple serial ReLU activation
+    fn serial_relu<F: Float + Debug>(&self, input: &ArrayD<F>) -> ArrayD<F> {
+        input.mapv(|x| if x > F::zero() { x } else { F::zero() })
+    }
+
+    /// Simple serial reduction sum
+    fn serial_reduce_sum<F: Float + Debug + Sum>(&self, input: &ArrayD<F>) -> ArrayD<F> {
+        let sum_value = input.iter().copied().sum();
+        ndarray::arr0(sum_value).into_dyn()
+    }
+
+    /// Simple serial reduction mean
+    fn serial_reduce_mean<F: Float + Debug + Sum + Div<Output = F>>(&self, input: &ArrayD<F>) -> ArrayD<F> {
+        let sum_value: F = input.iter().copied().sum();
+        let count = F::from(input.len()).unwrap_or_else(|| F::one());
+        let mean_value = sum_value / count;
+        ndarray::arr0(mean_value).into_dyn()
     }
 
     /// Helper functions for caching and monitoring
@@ -737,8 +996,50 @@ impl UnifiedPerformanceManager {
 
     /// Detect GPU availability (placeholder)
     fn detect_gpu_availability() -> bool {
-        // In a real implementation, this would check for CUDA/OpenCL/Metal
-        false
+        // Check for NVIDIA CUDA
+        if std::env::var("CUDA_VISIBLE_DEVICES").is_ok()
+            || std::path::Path::new("/usr/local/cuda").exists()
+            || std::env::var("CUDA_HOME").is_ok()
+        {
+            return true;
+        }
+
+        // Check for AMD ROCm
+        if std::env::var("HIP_VISIBLE_DEVICES").is_ok()
+            || std::path::Path::new("/opt/rocm").exists()
+            || std::env::var("ROCM_PATH").is_ok()
+        {
+            return true;
+        }
+
+        // Check for Intel GPU
+        if std::env::var("ZE_AFFINITY_MASK").is_ok() {
+            return true;
+        }
+
+        // Check for Apple Metal
+        #[cfg(target_os = "macos")]
+        {
+            // On macOS, Metal is available on most systems
+            return true;
+        }
+
+        // Check for OpenCL devices
+        Self::detect_opencl_devices()
+    }
+
+    /// Detect OpenCL devices
+    fn detect_opencl_devices() -> bool {
+        // Check for OpenCL installation
+        if std::path::Path::new("/usr/lib/libOpenCL.so").exists()
+            || std::path::Path::new("/usr/lib64/libOpenCL.so").exists()
+            || std::path::Path::new("/System/Library/Frameworks/OpenCL.framework").exists()
+        {
+            return true;
+        }
+
+        // Check environment variables
+        std::env::var("OPENCL_VENDOR_PATH").is_ok()
     }
 
     /// Get comprehensive performance statistics
@@ -798,6 +1099,53 @@ impl UnifiedPerformanceManager {
     /// Set auto-optimization strategy
     pub fn set_auto_optimization_strategy(&mut self, strategy: AutoOptimizationStrategy) {
         self.auto_optimization = strategy;
+    }
+
+    /// Create a hybrid strategy that tries multiple optimization approaches
+    pub fn create_hybrid_strategy(&self, primary: OptimizationChoice) -> OptimizationChoice {
+        let fallback_strategies = match primary {
+            OptimizationChoice::TPU => vec![
+                OptimizationChoice::TPU,
+                OptimizationChoice::JIT,
+                OptimizationChoice::CPUSimd,
+                OptimizationChoice::CPUParallel,
+                OptimizationChoice::CPUSerial,
+            ],
+            OptimizationChoice::JIT => vec![
+                OptimizationChoice::JIT,
+                OptimizationChoice::CPUSimd,
+                OptimizationChoice::CPUParallel,
+                OptimizationChoice::CPUSerial,
+            ],
+            OptimizationChoice::CPUSimd => vec![
+                OptimizationChoice::CPUSimd,
+                OptimizationChoice::CPUParallel,
+                OptimizationChoice::CPUSerial,
+            ],
+            OptimizationChoice::CPUParallel => vec![
+                OptimizationChoice::CPUParallel,
+                OptimizationChoice::CPUSerial,
+            ],
+            _ => vec![primary.clone(), OptimizationChoice::CPUSerial],
+        };
+
+        OptimizationChoice::Hybrid(fallback_strategies)
+    }
+
+    /// Execute with automatic fallback on failure
+    pub fn execute_with_fallback<F: Float + Debug>(
+        &mut self,
+        operation_type: &str,
+        inputs: &[&ArrayD<F>],
+        context: OperationContext,
+        preferred_strategy: OptimizationChoice,
+    ) -> Result<Vec<ArrayD<F>>> {
+        let hybrid_strategy = self.create_hybrid_strategy(preferred_strategy);
+        self.execute_optimized(operation_type, inputs, context.clone())
+            .or_else(|_| {
+                // If auto optimization fails, try the hybrid approach
+                self.execute_with_strategy(&hybrid_strategy, operation_type, inputs, &context)
+            })
     }
 }
 

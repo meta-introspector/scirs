@@ -11,7 +11,7 @@ use super::{
 use crate::error::OptimizeError;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, Array3, ArrayView1};
-use scirs2_core::error::Result;
+use scirs2_core::error::CoreResult;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::collections::{HashMap, VecDeque};
 

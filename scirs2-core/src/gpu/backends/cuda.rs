@@ -10,9 +10,9 @@ use std::sync::{Arc, Mutex};
 use crate::gpu::{GpuBufferImpl, GpuCompilerImpl, GpuContextImpl, GpuError, GpuKernelImpl};
 
 #[cfg(feature = "cuda")]
-use cudarc::driver::{CudaDevice, DevicePtr, LaunchAsync, LaunchConfig};
+use cudarc::driver::{CudaDevice, DevicePtr};
 #[cfg(feature = "cuda")]
-use cudarc::driver::sys::{CUdevice, CUcontext, CUdeviceptr, CUmodule, CUfunction};
+use cudarc::driver::sys::{CUdevice, CUcontext, CUdeviceptr};
 #[cfg(feature = "cuda")]
 use cudarc::nvrtc::Ptx;
 
@@ -322,7 +322,7 @@ impl CudaContext {
 
     /// Load PTX module into CUDA context
     #[cfg(feature = "cuda")]
-    fn load_ptx_module(device: &CudaDevice, ptx: &str) -> Result<Arc<cudarc::driver::CudaModule>, GpuError> {
+    fn load_ptx_module(device: &CudaDevice, ptx: &str) -> Result<Arc<impl std::any::Any>, GpuError> {
         device
             .load_ptx(Ptx::from_src(ptx), "module", &[])
             .map_err(|e| GpuError::Other(format!("Failed to load PTX module: {}", e)))
@@ -479,7 +479,7 @@ impl Drop for CudaBuffer {
 /// CUDA kernel wrapper
 struct CudaKernel {
     #[cfg(feature = "cuda")]
-    module: Arc<cudarc::driver::CudaModule>,
+    module: Arc<dyn std::any::Any>,
     #[cfg(not(feature = "cuda"))]
     module: CUmodule,
     #[cfg(not(feature = "cuda"))]

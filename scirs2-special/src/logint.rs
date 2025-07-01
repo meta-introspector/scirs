@@ -794,6 +794,152 @@ fn zeta_function(s: f64) -> f64 {
     sum
 }
 
+/// Computes both sine and cosine integrals simultaneously: (Si(x), Ci(x))
+///
+/// This function efficiently computes both Si(x) and Ci(x) functions at once,
+/// which is more efficient than calling them separately and is the same as SciPy's sici.
+///
+/// # Arguments
+///
+/// * `x` - Input value
+///
+/// # Returns
+///
+/// * `SpecialResult<(f64, f64)>` - Tuple of (Si(x), Ci(x))
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::sici;
+///
+/// let (si_val, ci_val) = sici(1.0).unwrap();
+/// assert!((si_val - 0.946083).abs() < 1e-5);
+/// assert!((ci_val - 0.337404).abs() < 1e-5);
+/// ```
+pub fn sici(x: f64) -> SpecialResult<(f64, f64)> {
+    Ok((si(x)?, ci(x)?))
+}
+
+/// Computes both hyperbolic sine and cosine integrals simultaneously: (Shi(x), Chi(x))
+///
+/// This function efficiently computes both Shi(x) and Chi(x) functions at once,
+/// which is more efficient than calling them separately and is the same as SciPy's shichi.
+///
+/// # Arguments
+///
+/// * `x` - Input value
+///
+/// # Returns
+///
+/// * `SpecialResult<(f64, f64)>` - Tuple of (Shi(x), Chi(x))
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::shichi;
+///
+/// let (shi_val, chi_val) = shichi(1.0).unwrap();
+/// assert!((shi_val - 1.057251).abs() < 1e-5);
+/// assert!((chi_val - 0.837866).abs() < 1e-5);
+/// ```
+pub fn shichi(x: f64) -> SpecialResult<(f64, f64)> {
+    Ok((shi(x)?, chi(x)?))
+}
+
+/// Spence's function (dilogarithm): Li₂(x) = -∫₀ˣ ln(1-t)/t dt
+///
+/// Spence's function is defined as the dilogarithm Li₂(x) = -∫₀ˣ ln(1-t)/t dt.
+/// This is equivalent to polylog(2, x) with a sign change for certain ranges.
+///
+/// # Arguments
+///
+/// * `x` - Input value
+///
+/// # Returns
+///
+/// * `SpecialResult<f64>` - Spence's function value
+///
+/// # Mathematical Properties
+///
+/// * spence(0) = π²/6
+/// * spence(1) = 0
+/// * spence(-1) = -π²/12
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::spence;
+/// use std::f64::consts::PI;
+///
+/// // Test spence(0) = π²/6
+/// let result = spence(0.0).unwrap();
+/// let expected = PI * PI / 6.0;
+/// assert!((result - expected).abs() < 1e-10);
+///
+/// // Test spence(1) = 0
+/// let result = spence(1.0).unwrap();
+/// assert!(result.abs() < 1e-10);
+/// ```
+pub fn spence(x: f64) -> SpecialResult<f64> {
+    // Spence's function is related to the dilogarithm Li₂(x)
+    // spence(x) = Li₂(1-x) for x <= 1
+    // For other ranges, we use functional equations
+    
+    if x.is_nan() {
+        return Err(SpecialError::DomainError("Input is NaN".to_string()));
+    }
+    
+    if x.is_infinite() {
+        if x > 0.0 {
+            return Ok(f64::NEG_INFINITY);
+        } else {
+            return Ok(f64::INFINITY);
+        }
+    }
+
+    // Special values
+    if x == 0.0 {
+        // spence(0) = π²/6
+        return Ok(std::f64::consts::PI.powi(2) / 6.0);
+    }
+    
+    if x == 1.0 {
+        // spence(1) = 0
+        return Ok(0.0);
+    }
+    
+    if x == -1.0 {
+        // spence(-1) = -π²/12
+        return Ok(-std::f64::consts::PI.powi(2) / 12.0);
+    }
+
+    // Use the relation spence(x) = Li₂(1-x)
+    // But handle different ranges to ensure numerical stability
+    
+    if x <= 1.0 {
+        // Direct computation: spence(x) = Li₂(1-x)
+        polylog(2.0, 1.0 - x)
+    } else if x <= 2.0 {
+        // Use functional equation: Li₂(x) + Li₂(1-x) = π²/6 - ln(x)ln(1-x)
+        let pi_sq_6 = std::f64::consts::PI.powi(2) / 6.0;
+        let li2_x = polylog(2.0, x)?;
+        let ln_x = x.ln();
+        let ln_1_minus_x = (1.0 - x).ln();
+        
+        Ok(pi_sq_6 - li2_x - ln_x * ln_1_minus_x)
+    } else {
+        // For x > 2, use the inversion formula
+        // Li₂(x) = -Li₂(1/x) - (ln(-x))²/2 for x < 0
+        // For x > 1, use Li₂(x) = -Li₂(1/x) - π²/6 - (ln(x))²/2
+        let inv_x = 1.0 / x;
+        let li2_inv = polylog(2.0, inv_x)?;
+        let ln_x = x.ln();
+        let pi_sq_6 = std::f64::consts::PI.powi(2) / 6.0;
+        
+        Ok(-li2_inv - pi_sq_6 - ln_x * ln_x / 2.0)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -12,7 +12,7 @@ categories = ["science", "mathematics", "algorithms"]
 [dependencies]
 # Core dependencies
 scirs2-core = { workspace = true, features = ["parallel", "gpu"] }
-scirs2-linalg = { workspace = true }
+# scirs2-linalg = { workspace = true, default-features = false }
 # Temporarily commented out for publishing
 # scirs2-ndimage = { workspace = true }
 ndarray = { workspace = true }

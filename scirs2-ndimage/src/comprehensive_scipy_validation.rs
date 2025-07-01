@@ -103,11 +103,7 @@ impl SciPyValidationSuite {
     pub fn validate_gaussian_filter(&mut self) -> Result<()> {
         // Test case 1: Simple 3x3 array with sigma=1.0
         // Reference values computed with SciPy 1.11.0
-        let input = ndarray::array![
-            [1.0, 2.0, 3.0],
-            [4.0, 5.0, 6.0],
-            [7.0, 8.0, 9.0]
-        ];
+        let input = ndarray::array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
 
         let reference = ndarray::array![
             [2.9347, 3.9745, 4.5966],
@@ -116,13 +112,16 @@ impl SciPyValidationSuite {
         ];
 
         let result = gaussian_filter(&input, 1.0, None, None)?;
-        
+
         let validation = self.calculate_validation_metrics(
             &reference.view(),
             &result.view(),
             "gaussian_filter_3x3_sigma1".to_string(),
             "gaussian_filter".to_string(),
-            [("sigma".to_string(), "1.0".to_string())].iter().cloned().collect(),
+            [("sigma".to_string(), "1.0".to_string())]
+                .iter()
+                .cloned()
+                .collect(),
             "SciPy 1.11.0 reference values".to_string(),
         );
 
@@ -130,21 +129,24 @@ impl SciPyValidationSuite {
 
         // Test case 2: Larger array with different sigma
         let large_input = Array2::from_shape_fn((10, 10), |(i, j)| (i + j) as f64);
-        
+
         // Reference center values (approximate, computed with SciPy)
         let result_large = gaussian_filter(&large_input, 2.0, None, None)?;
-        
+
         // Check that center value is reasonable (should be close to smoothed value)
         let center_val = result_large[[5, 5]];
         let expected_center = 10.0; // i=5, j=5 -> 5+5 = 10
-        
+
         let center_diff = (center_val - expected_center).abs();
         let passed = center_diff < 2.0; // Allow some smoothing deviation
-        
+
         let validation = ValidationResult {
             test_name: "gaussian_filter_10x10_sigma2".to_string(),
             function_name: "gaussian_filter".to_string(),
-            parameters: [("sigma".to_string(), "2.0".to_string())].iter().cloned().collect(),
+            parameters: [("sigma".to_string(), "2.0".to_string())]
+                .iter()
+                .cloned()
+                .collect(),
             passed,
             max_abs_diff: center_diff,
             mean_abs_diff: center_diff,
@@ -161,12 +163,16 @@ impl SciPyValidationSuite {
 
         // Test case 3: Edge case - very small sigma
         let small_sigma_result = gaussian_filter(&input, 0.1, None, None)?;
-        let small_sigma_passed = self.arrays_approximately_equal(&input.view(), &small_sigma_result.view(), 0.1);
-        
+        let small_sigma_passed =
+            self.arrays_approximately_equal(&input.view(), &small_sigma_result.view(), 0.1);
+
         let validation = ValidationResult {
             test_name: "gaussian_filter_small_sigma".to_string(),
             function_name: "gaussian_filter".to_string(),
-            parameters: [("sigma".to_string(), "0.1".to_string())].iter().cloned().collect(),
+            parameters: [("sigma".to_string(), "0.1".to_string())]
+                .iter()
+                .cloned()
+                .collect(),
             passed: small_sigma_passed,
             max_abs_diff: if small_sigma_passed { 0.05 } else { 1.0 },
             mean_abs_diff: if small_sigma_passed { 0.02 } else { 0.5 },
@@ -196,18 +202,21 @@ impl SciPyValidationSuite {
         ];
 
         let result = median_filter(&input, &[3, 3], None)?;
-        
+
         // The outlier at (1,1) should be replaced by neighborhood median
         // Neighborhood: [1,2,3,6,100,8,11,12,13] -> sorted: [1,2,3,6,8,11,12,13,100] -> median = 8
         let filtered_outlier = result[[1, 1]];
         let expected_median = 8.0;
-        
+
         let passed = (filtered_outlier - expected_median).abs() < self.config.tolerance;
-        
+
         let validation = ValidationResult {
             test_name: "median_filter_outlier_removal".to_string(),
             function_name: "median_filter".to_string(),
-            parameters: [("size".to_string(), "[3,3]".to_string())].iter().cloned().collect(),
+            parameters: [("size".to_string(), "[3,3]".to_string())]
+                .iter()
+                .cloned()
+                .collect(),
             passed,
             max_abs_diff: (filtered_outlier - expected_median).abs(),
             mean_abs_diff: (filtered_outlier - expected_median).abs(),
@@ -225,17 +234,20 @@ impl SciPyValidationSuite {
         // Test case 2: Constant array (median should preserve values)
         let constant_input = Array2::from_elem((5, 5), 42.0);
         let constant_result = median_filter(&constant_input, &[3, 3], None)?;
-        
+
         let constant_passed = self.arrays_approximately_equal(
-            &constant_input.view(), 
-            &constant_result.view(), 
-            self.config.tolerance
+            &constant_input.view(),
+            &constant_result.view(),
+            self.config.tolerance,
         );
-        
+
         let validation = ValidationResult {
             test_name: "median_filter_constant_array".to_string(),
             function_name: "median_filter".to_string(),
-            parameters: [("size".to_string(), "[3,3]".to_string())].iter().cloned().collect(),
+            parameters: [("size".to_string(), "[3,3]".to_string())]
+                .iter()
+                .cloned()
+                .collect(),
             passed: constant_passed,
             max_abs_diff: if constant_passed { 0.0 } else { 1.0 },
             mean_abs_diff: if constant_passed { 0.0 } else { 0.5 },
@@ -267,12 +279,12 @@ impl SciPyValidationSuite {
         // Test: Erosion followed by dilation (opening) should result in smaller or equal region
         let eroded = binary_erosion(&input, None, None, None, None, None, None)?;
         let opened = binary_dilation(&eroded, None, None, None, None, None, None)?;
-        
+
         let input_count: usize = input.iter().map(|&x| if x { 1 } else { 0 }).sum();
         let opened_count: usize = opened.iter().map(|&x| if x { 1 } else { 0 }).sum();
-        
+
         let opening_property_holds = opened_count <= input_count;
-        
+
         let validation = ValidationResult {
             test_name: "morphology_opening_property".to_string(),
             function_name: "binary_erosion_dilation".to_string(),
@@ -294,10 +306,10 @@ impl SciPyValidationSuite {
         // Test: Dilation followed by erosion (closing) should result in larger or equal region
         let dilated = binary_dilation(&input, None, None, None, None, None, None)?;
         let closed = binary_erosion(&dilated, None, None, None, None, None, None)?;
-        
+
         let closed_count: usize = closed.iter().map(|&x| if x { 1 } else { 0 }).sum();
         let closing_property_holds = closed_count >= input_count;
-        
+
         let validation = ValidationResult {
             test_name: "morphology_closing_property".to_string(),
             function_name: "binary_dilation_erosion".to_string(),
@@ -322,21 +334,21 @@ impl SciPyValidationSuite {
     /// Validate interpolation operations against analytical results
     pub fn validate_interpolation_operations(&mut self) -> Result<()> {
         // Test 1: Identity transformation should preserve array
-        let input = ndarray::array![
-            [1.0, 2.0, 3.0],
-            [4.0, 5.0, 6.0],
-            [7.0, 8.0, 9.0]
-        ];
+        let input = ndarray::array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
 
         let identity_matrix = ndarray::array![[1.0, 0.0], [0.0, 1.0]];
-        let result = affine_transform(&input, &identity_matrix, None, None, None, None, None, None)?;
-        
+        let result =
+            affine_transform(&input, &identity_matrix, None, None, None, None, None, None)?;
+
         let identity_passed = self.arrays_approximately_equal(&input.view(), &result.view(), 1e-6);
-        
+
         let validation = ValidationResult {
             test_name: "affine_transform_identity".to_string(),
             function_name: "affine_transform".to_string(),
-            parameters: [("matrix".to_string(), "identity".to_string())].iter().cloned().collect(),
+            parameters: [("matrix".to_string(), "identity".to_string())]
+                .iter()
+                .cloned()
+                .collect(),
             passed: identity_passed,
             max_abs_diff: if identity_passed { 1e-6 } else { 1.0 },
             mean_abs_diff: if identity_passed { 1e-7 } else { 0.5 },
@@ -354,11 +366,14 @@ impl SciPyValidationSuite {
         // Test 2: Zoom by factor 1.0 should preserve array
         let zoom_result = zoom(&input, &[1.0, 1.0], None, None, None, None)?;
         let zoom_passed = self.arrays_approximately_equal(&input.view(), &zoom_result.view(), 1e-6);
-        
+
         let validation = ValidationResult {
             test_name: "zoom_factor_one".to_string(),
             function_name: "zoom".to_string(),
-            parameters: [("zoom".to_string(), "[1.0, 1.0]".to_string())].iter().cloned().collect(),
+            parameters: [("zoom".to_string(), "[1.0, 1.0]".to_string())]
+                .iter()
+                .cloned()
+                .collect(),
             passed: zoom_passed,
             max_abs_diff: if zoom_passed { 1e-6 } else { 1.0 },
             mean_abs_diff: if zoom_passed { 1e-7 } else { 0.5 },
@@ -382,15 +397,19 @@ impl SciPyValidationSuite {
         let symmetric = Array2::from_shape_fn((11, 11), |(i, j)| {
             let di = (i as f64 - 5.0).abs();
             let dj = (j as f64 - 5.0).abs();
-            if di <= 2.0 && dj <= 2.0 { 1.0 } else { 0.0 }
+            if di <= 2.0 && dj <= 2.0 {
+                1.0
+            } else {
+                0.0
+            }
         });
 
         let centroid = center_of_mass(&symmetric)?;
         let expected_center = vec![5.0, 5.0];
-        
+
         let centroid_error = (centroid[0] - 5.0).abs() + (centroid[1] - 5.0).abs();
         let centroid_passed = centroid_error < 0.1;
-        
+
         let validation = ValidationResult {
             test_name: "center_of_mass_symmetric".to_string(),
             function_name: "center_of_mass".to_string(),
@@ -404,7 +423,9 @@ impl SciPyValidationSuite {
             reference_sample: expected_center.clone(),
             computed_sample: centroid.clone(),
             tolerance: 0.1,
-            notes: vec!["Symmetric object should have center of mass at geometric center".to_string()],
+            notes: vec![
+                "Symmetric object should have center of mass at geometric center".to_string(),
+            ],
         };
 
         self.add_result(validation);
@@ -413,14 +434,14 @@ impl SciPyValidationSuite {
         let single_pixel = Array2::zeros((5, 5));
         let mut single_pixel = single_pixel;
         single_pixel[[2, 3]] = 1.0; // Single pixel at (2,3)
-        
+
         let moments_result = moments(&single_pixel)?;
-        
+
         // For single pixel at (2,3), centroid should be exactly (2,3)
         let single_centroid = center_of_mass(&single_pixel)?;
         let single_error = (single_centroid[0] - 2.0).abs() + (single_centroid[1] - 3.0).abs();
         let single_passed = single_error < 1e-10;
-        
+
         let validation = ValidationResult {
             test_name: "center_of_mass_single_pixel".to_string(),
             function_name: "center_of_mass".to_string(),
@@ -445,13 +466,13 @@ impl SciPyValidationSuite {
     /// Run all validation tests
     pub fn run_all_validations(&mut self) -> Result<()> {
         println!("Running comprehensive SciPy numerical validation...");
-        
+
         self.validate_gaussian_filter()?;
         self.validate_median_filter()?;
         self.validate_morphological_operations()?;
         self.validate_interpolation_operations()?;
         self.validate_measurement_operations()?;
-        
+
         println!("Numerical validation completed!");
         Ok(())
     }
@@ -514,7 +535,12 @@ impl SciPyValidationSuite {
     }
 
     /// Check if two arrays are approximately equal within tolerance
-    fn arrays_approximately_equal(&self, a: &ArrayView2<f64>, b: &ArrayView2<f64>, tolerance: f64) -> bool {
+    fn arrays_approximately_equal(
+        &self,
+        a: &ArrayView2<f64>,
+        b: &ArrayView2<f64>,
+        tolerance: f64,
+    ) -> bool {
         if a.shape() != b.shape() {
             return false;
         }
@@ -541,38 +567,64 @@ impl SciPyValidationSuite {
     pub fn generate_report(&self) -> String {
         let mut report = String::new();
         report.push_str("# Comprehensive SciPy Numerical Validation Report\n\n");
-        
+
         let total_tests = self.passed_tests + self.failed_tests;
         let pass_rate = if total_tests > 0 {
             (self.passed_tests as f64 / total_tests as f64) * 100.0
         } else {
             0.0
         };
-        
+
         report.push_str(&format!("## Summary\n"));
         report.push_str(&format!("- Total tests: {}\n", total_tests));
-        report.push_str(&format!("- Passed: {} ({:.1}%)\n", self.passed_tests, pass_rate));
-        report.push_str(&format!("- Failed: {} ({:.1}%)\n", self.failed_tests, 100.0 - pass_rate));
+        report.push_str(&format!(
+            "- Passed: {} ({:.1}%)\n",
+            self.passed_tests, pass_rate
+        ));
+        report.push_str(&format!(
+            "- Failed: {} ({:.1}%)\n",
+            self.failed_tests,
+            100.0 - pass_rate
+        ));
         report.push_str(&format!("- Tolerance: {:.2e}\n\n", self.config.tolerance));
 
         // Group results by function
         let mut by_function: HashMap<String, Vec<&ValidationResult>> = HashMap::new();
         for result in &self.results {
-            by_function.entry(result.function_name.clone()).or_insert_with(Vec::new).push(result);
+            by_function
+                .entry(result.function_name.clone())
+                .or_insert_with(Vec::new)
+                .push(result);
         }
 
         for (function, results) in by_function {
             report.push_str(&format!("## {}\n\n", function));
-            
+
             for result in results {
-                let status = if result.passed { "✓ PASS" } else { "✗ FAIL" };
+                let status = if result.passed {
+                    "✓ PASS"
+                } else {
+                    "✗ FAIL"
+                };
                 report.push_str(&format!("### {} - {}\n", result.test_name, status));
-                report.push_str(&format!("- Max absolute difference: {:.2e}\n", result.max_abs_diff));
-                report.push_str(&format!("- Mean absolute difference: {:.2e}\n", result.mean_abs_diff));
+                report.push_str(&format!(
+                    "- Max absolute difference: {:.2e}\n",
+                    result.max_abs_diff
+                ));
+                report.push_str(&format!(
+                    "- Mean absolute difference: {:.2e}\n",
+                    result.mean_abs_diff
+                ));
                 report.push_str(&format!("- Root mean square error: {:.2e}\n", result.rmse));
-                report.push_str(&format!("- Relative error: {:.2e}\n", result.relative_error));
-                report.push_str(&format!("- Reference source: {}\n", result.reference_source));
-                
+                report.push_str(&format!(
+                    "- Relative error: {:.2e}\n",
+                    result.relative_error
+                ));
+                report.push_str(&format!(
+                    "- Reference source: {}\n",
+                    result.reference_source
+                ));
+
                 if !result.parameters.is_empty() {
                     report.push_str("- Parameters: ");
                     for (key, value) in &result.parameters {
@@ -580,14 +632,14 @@ impl SciPyValidationSuite {
                     }
                     report.push_str("\n");
                 }
-                
+
                 if !result.notes.is_empty() {
                     report.push_str("- Notes:\n");
                     for note in &result.notes {
                         report.push_str(&format!("  - {}\n", note));
                     }
                 }
-                
+
                 report.push_str("\n");
             }
         }
@@ -628,7 +680,7 @@ mod tests {
         let suite = SciPyValidationSuite::new();
         let a = ndarray::array![[1.0, 2.0], [3.0, 4.0]];
         let b = ndarray::array![[1.0001, 2.0001], [3.0001, 4.0001]];
-        
+
         assert!(suite.arrays_approximately_equal(&a.view(), &b.view(), 1e-3));
         assert!(!suite.arrays_approximately_equal(&a.view(), &b.view(), 1e-5));
     }
@@ -650,7 +702,7 @@ mod tests {
             tolerance: 1e-9,
             notes: vec![],
         };
-        
+
         assert!(result.passed);
         assert_eq!(result.test_name, "test");
     }

@@ -80,7 +80,7 @@ impl IDWInterpolator {
     /// * If power is negative
     /// * If n_neighbors is 0 or greater than n_points
     pub fn new(
-        points: &ArrayView2<f64>,
+        points: &ArrayView2<'_, f64>,
         values: &ArrayView1<f64>,
         power: f64,
         n_neighbors: Option<usize>,
@@ -227,7 +227,7 @@ impl IDWInterpolator {
     /// # Errors
     ///
     /// * If the points dimensions don't match the interpolator
-    pub fn interpolate_many(&self, points: &ArrayView2<f64>) -> SpatialResult<Array1<f64>> {
+    pub fn interpolate_many(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<Array1<f64>> {
         // Check dimensions
         if points.ncols() != self.dim {
             return Err(SpatialError::DimensionError(format!(

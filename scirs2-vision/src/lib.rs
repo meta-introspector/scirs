@@ -43,6 +43,12 @@ pub mod neuromorphic_streaming;
 pub mod quantum_inspired_streaming;
 pub mod transform;
 
+// Advanced ultrathink-mode modules - future development features
+pub mod scene_understanding;
+pub mod visual_reasoning;
+pub mod activity_recognition;
+pub mod visual_slam;
+
 // Comment out problematic modules during tests to focus on fixing other issues
 #[cfg(not(test))]
 /// Private transform module for compatibility
@@ -154,4 +160,27 @@ pub use ai_optimization::{
     ArchitecturePerformance, GeneticPipelineOptimizer, NeuralArchitectureSearch, PerformanceMetric,
     PipelineGenome, PredictiveScaler, ProcessingArchitecture, RLParameterOptimizer,
     ScalingRecommendation, SearchStrategy,
+};
+
+// Re-export advanced ultrathink-mode features
+pub use scene_understanding::{
+    analyze_scene_with_reasoning, ContextualReasoningEngine, DetectedObject as SceneObject,
+    SceneAnalysisResult, SceneGraph, SceneUnderstandingEngine, SpatialRelation, SpatialRelationType,
+    TemporalInfo,
+};
+
+pub use visual_reasoning::{
+    perform_advanced_visual_reasoning, QueryType, ReasoningAnswer, ReasoningStep, VisualReasoningEngine,
+    VisualReasoningQuery, VisualReasoningResult, UncertaintyQuantification,
+};
+
+pub use activity_recognition::{
+    monitor_activities_realtime, recognize_activities_comprehensive, ActivityRecognitionEngine,
+    ActivityRecognitionResult, ActivitySequence, ActivitySummary as ActivitySceneSummary, DetectedActivity,
+    MotionCharacteristics, PersonInteraction, TemporalActivityModeler,
+};
+
+pub use visual_slam::{
+    process_visual_slam, process_visual_slam_realtime, CameraPose, CameraTrajectory, LoopClosure,
+    Map3D, SLAMResult, SLAMSystemState, SemanticMap, VisualSLAMSystem,
 };

@@ -12,7 +12,8 @@
 //! - Predictive scaling based on workload patterns
 //! - Multi-objective optimization (speed, accuracy, energy)
 
-use crate::error::Result;
+#![allow(dead_code)]
+
 use rand::prelude::*;
 use rand::rng;
 use std::collections::{HashMap, VecDeque};
@@ -232,7 +233,7 @@ impl RLParameterOptimizer {
     pub fn select_action(&mut self, state: &StateDiscrete) -> ActionDiscrete {
         let mut rng = rng();
 
-        if rng.gen::<f64>() < self.learning_params.epsilon {
+        if rng.random::<f64>() < self.learning_params.epsilon {
             // Explore: random action
             self.action_space.choose(&mut rng).unwrap().clone()
         } else {
@@ -341,7 +342,7 @@ impl RLParameterOptimizer {
 
         let mut rng = rng();
         let sample_indices: Vec<usize> = (0..batch_size)
-            .map(|_| rng.gen_range(0..self.experience_buffer.len()))
+            .map(|_| rng.random_range(0..self.experience_buffer.len()))
             .collect();
 
         for &idx in &sample_indices {
@@ -458,7 +459,7 @@ impl GeneticPipelineOptimizer {
             let mut genes = HashMap::new();
 
             for (param_name, &(min_val, max_val)) in parameter_ranges {
-                let value = rng.gen_range(min_val..=max_val);
+                let value = rng.random_range(min_val..=max_val);
                 genes.insert(param_name.clone(), value);
             }
 
@@ -562,14 +563,14 @@ impl GeneticPipelineOptimizer {
             let parent2 = self.tournament_selection();
 
             // Crossover
-            let mut offspring = if rng.gen::<f64>() < self.ga_params.crossover_rate {
+            let mut offspring = if rng.random::<f64>() < self.ga_params.crossover_rate {
                 self.crossover(&parent1, &parent2)
             } else {
                 parent1.clone()
             };
 
             // Mutation
-            if rng.gen::<f64>() < self.ga_params.mutation_rate {
+            if rng.random::<f64>() < self.ga_params.mutation_rate {
                 self.mutate(&mut offspring);
             }
 
@@ -592,7 +593,7 @@ impl GeneticPipelineOptimizer {
         let mut best_genome = &self.population[0];
 
         for _ in 0..tournament_size {
-            let candidate_idx = rng.gen_range(0..self.population.len());
+            let candidate_idx = rng.random_range(0..self.population.len());
             let candidate = &self.population[candidate_idx];
 
             if candidate.fitness > best_genome.fitness {
@@ -610,7 +611,7 @@ impl GeneticPipelineOptimizer {
 
         for (param_name, &value1) in &parent1.genes {
             if let Some(&value2) = parent2.genes.get(param_name) {
-                let offspring_value = if rng.gen::<f64>() < 0.5 {
+                let offspring_value = if rng.random::<f64>() < 0.5 {
                     value1
                 } else {
                     value2
@@ -634,7 +635,7 @@ impl GeneticPipelineOptimizer {
         let mutation_strength = 0.1;
 
         for (_param_name, value) in &mut genome.genes {
-            let mutation = rng.gen_range(-mutation_strength..=mutation_strength);
+            let mutation = rng.random_range(-mutation_strength..=mutation_strength);
             *value += mutation;
             *value = value.clamp(0.0, 1.0); // Keep in valid range
         }
@@ -849,7 +850,7 @@ impl NeuralArchitectureSearch {
 
         for i in 0..num_candidates {
             let depth =
-                rng.gen_range(self.search_space.depth_range.0..=self.search_space.depth_range.1);
+                rng.random_range(self.search_space.depth_range.0..=self.search_space.depth_range.1);
             let mut layers = Vec::new();
             let mut connections = Vec::new();
 
@@ -871,12 +872,14 @@ impl NeuralArchitectureSearch {
                 connections.push(connection);
             }
 
+            let complexity = self.calculate_complexity(&layers);
+            let parameter_count = self.estimate_parameters(&layers);
             let architecture = ProcessingArchitecture {
                 id: format!("arch_{}", i),
                 layers,
                 connections,
-                complexity: self.calculate_complexity(&layers),
-                parameter_count: self.estimate_parameters(&layers),
+                complexity,
+                parameter_count,
             };
 
             candidates.push(architecture);
@@ -989,7 +992,7 @@ impl NeuralArchitectureSearch {
     ) -> ProcessingArchitecture {
         let mut rng = rng();
         let min_depth = parent1.layers.len().min(parent2.layers.len());
-        let crossover_point = rng.gen_range(1..min_depth);
+        let crossover_point = rng.random_range(1..min_depth);
 
         let mut new_layers = Vec::new();
         let mut new_connections = Vec::new();
@@ -1004,12 +1007,14 @@ impl NeuralArchitectureSearch {
             new_connections.extend_from_slice(&parent2.connections[crossover_point..]);
         }
 
+        let complexity = self.calculate_complexity(&new_layers);
+        let parameter_count = self.estimate_parameters(&new_layers);
         ProcessingArchitecture {
             id: format!("crossover_{}", self.current_iteration),
             layers: new_layers,
             connections: new_connections,
-            complexity: self.calculate_complexity(&new_layers),
-            parameter_count: self.estimate_parameters(&new_layers),
+            complexity,
+            parameter_count,
         }
     }
 
@@ -1022,7 +1027,7 @@ impl NeuralArchitectureSearch {
 
         // Randomly mutate some layers
         for layer in &mut architecture.layers {
-            if rng.gen::<f64>() < 0.1 {
+            if rng.random::<f64>() < 0.1 {
                 // 10% mutation rate
                 *layer = self
                     .search_space

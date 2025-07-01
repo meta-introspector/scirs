@@ -54,15 +54,11 @@
 //! ```
 
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{s, Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
+use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
 use std::collections::{BTreeMap, HashMap, VecDeque};
-use std::future::Future;
-use std::pin::Pin;
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::Arc;
 use std::time::{Duration, Instant};
-use tokio::sync::{mpsc, RwLock as TokioRwLock, Semaphore};
-use tokio::time::{sleep, timeout};
+use tokio::sync::{mpsc, RwLock as TokioRwLock};
 
 /// Node configuration for distributed cluster
 #[derive(Debug, Clone)]
@@ -83,6 +79,12 @@ pub struct NodeConfig {
     pub max_retries: usize,
     /// Replication factor for fault tolerance
     pub replication_factor: usize,
+}
+
+impl Default for NodeConfig {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl NodeConfig {
@@ -136,12 +138,14 @@ pub struct DistributedSpatialCluster {
     /// Node instances
     nodes: Vec<Arc<TokioRwLock<NodeInstance>>>,
     /// Master node ID
+    #[allow(dead_code)]
     master_node_id: usize,
     /// Data partitions
     partitions: Arc<TokioRwLock<HashMap<usize, DataPartition>>>,
     /// Load balancer
     load_balancer: Arc<TokioRwLock<LoadBalancer>>,
     /// Fault detector
+    #[allow(dead_code)]
     fault_detector: Arc<TokioRwLock<FaultDetector>>,
     /// Communication layer
     communication: Arc<TokioRwLock<CommunicationLayer>>,
@@ -231,12 +235,16 @@ impl SpatialBounds {
 #[derive(Debug)]
 pub struct LoadBalancer {
     /// Node load information
+    #[allow(dead_code)]
     node_loads: HashMap<usize, LoadMetrics>,
     /// Load balancing strategy
+    #[allow(dead_code)]
     strategy: LoadBalancingStrategy,
     /// Last rebalancing time
+    #[allow(dead_code)]
     last_rebalance: Instant,
     /// Rebalancing threshold
+    #[allow(dead_code)]
     load_threshold: f64,
 }
 
@@ -280,10 +288,13 @@ impl LoadMetrics {
 #[derive(Debug)]
 pub struct FaultDetector {
     /// Node health status
+    #[allow(dead_code)]
     node_health: HashMap<usize, NodeHealth>,
     /// Failure detection threshold
+    #[allow(dead_code)]
     failure_threshold: Duration,
     /// Recovery strategies
+    #[allow(dead_code)]
     recovery_strategies: HashMap<FailureType, RecoveryStrategy>,
 }
 
@@ -324,8 +335,10 @@ pub enum RecoveryStrategy {
 #[derive(Debug)]
 pub struct CommunicationLayer {
     /// Communication channels
+    #[allow(dead_code)]
     channels: HashMap<usize, mpsc::Sender<DistributedMessage>>,
     /// Message compression enabled
+    #[allow(dead_code)]
     compression_enabled: bool,
     /// Communication statistics
     stats: CommunicationStats,
@@ -516,7 +529,7 @@ pub struct DistributedSpatialIndex {
 #[derive(Debug)]
 pub struct LocalSpatialIndex {
     /// Local KD-tree
-    pub kdtree: Option<crate::KDTree>,
+    pub kdtree: Option<crate::KDTree<f64, crate::EuclideanDistance<f64>>>,
     /// Local data bounds
     pub bounds: SpatialBounds,
     /// Index statistics
@@ -658,8 +671,8 @@ impl DistributedSpatialCluster {
     }
 
     /// Distribute data across cluster nodes
-    pub async fn distribute_data(&mut self, data: &ArrayView2<f64>) -> SpatialResult<()> {
-        let (n_points, n_dims) = data.dim();
+    pub async fn distribute_data(&mut self, data: &ArrayView2<'_, f64>) -> SpatialResult<()> {
+        let (n_points, _n_dims) = data.dim();
 
         // Create spatial partitions
         let partitions = self.create_spatial_partitions(data).await?;
@@ -683,7 +696,7 @@ impl DistributedSpatialCluster {
     /// Create spatial partitions using space-filling curves
     async fn create_spatial_partitions(
         &self,
-        data: &ArrayView2<f64>,
+        data: &ArrayView2<'_, f64>,
     ) -> SpatialResult<Vec<DataPartition>> {
         let (n_points, n_dims) = data.dim();
         let target_partitions = self.config.node_count * 2; // 2 partitions per node
@@ -715,7 +728,7 @@ impl DistributedSpatialCluster {
         point_z_orders.sort_by_key(|(_, z_order, _)| *z_order);
 
         // Create partitions
-        let points_per_partition = (n_points + target_partitions - 1) / target_partitions;
+        let points_per_partition = n_points.div_ceil(target_partitions);
         let mut partitions = Vec::new();
 
         for partition_id in 0..target_partitions {
@@ -732,7 +745,7 @@ impl DistributedSpatialCluster {
             let mut partition_min = Array1::from_elem(n_dims, f64::INFINITY);
             let mut partition_max = Array1::from_elem(n_dims, f64::NEG_INFINITY);
 
-            for (i, &(_, _, ref point)) in point_z_orders[start_idx..end_idx].iter().enumerate() {
+            for (i, (_, _, point)) in point_z_orders[start_idx..end_idx].iter().enumerate() {
                 partition_data.row_mut(i).assign(point);
 
                 for (j, &coord) in point.iter().enumerate() {
@@ -776,7 +789,7 @@ impl DistributedSpatialCluster {
         let mut z_order = 0u64;
 
         for bit in 0..resolution {
-            for (dim, (&coord, &min_coord, &max_coord)) in point
+            for (dim, ((&coord, &min_coord), &max_coord)) in point
                 .iter()
                 .zip(bounds.min_coords.iter())
                 .zip(bounds.max_coords.iter())
@@ -873,7 +886,7 @@ impl DistributedSpatialCluster {
 
                 let local_index = LocalSpatialIndex {
                     kdtree: Some(kdtree),
-                    bounds: local_bounds,
+                    bounds: local_bounds.clone(),
                     stats: IndexStatistics {
                         build_time_ms: 0.0,                        // Would measure actual build time
                         memory_usage_bytes: n_points * n_dims * 8, // Rough estimate
@@ -918,7 +931,7 @@ impl DistributedSpatialCluster {
         let initial_centroids = self.initialize_distributed_centroids(k).await?;
         let mut centroids = initial_centroids;
 
-        for iteration in 0..max_iterations {
+        for _iteration in 0..max_iterations {
             // Assign points to clusters on each node
             let local_assignments = self.distributed_assignment_step(&centroids).await?;
 
@@ -983,7 +996,7 @@ impl DistributedSpatialCluster {
     /// Compute distances to current centroids across all nodes
     async fn compute_distributed_distances(
         &self,
-        centroids: &ArrayView2<f64>,
+        centroids: &ArrayView2<'_, f64>,
     ) -> SpatialResult<Vec<f64>> {
         let mut all_distances = Vec::new();
 
@@ -1094,8 +1107,8 @@ impl DistributedSpatialCluster {
         k: usize,
     ) -> SpatialResult<Array2<f64>> {
         // Collect cluster statistics from all nodes
-        let mut cluster_sums = HashMap::new();
-        let mut cluster_counts = HashMap::new();
+        let mut cluster_sums: HashMap<usize, Array1<f64>> = HashMap::new();
+        let mut cluster_counts: HashMap<usize, usize> = HashMap::new();
 
         for (node_id, assignments) in local_assignments {
             let node = self.nodes[*node_id].read().await;
@@ -1202,7 +1215,7 @@ impl DistributedSpatialCluster {
     /// Perform distributed k-nearest neighbors search
     pub async fn distributed_knn_search(
         &self,
-        query_point: &ArrayView1<f64>,
+        query_point: &ArrayView1<'_, f64>,
         k: usize,
     ) -> SpatialResult<Vec<(usize, f64)>> {
         let mut all_neighbors = Vec::new();
@@ -1214,7 +1227,7 @@ impl DistributedSpatialCluster {
                 if let Some(ref kdtree) = local_index.local_index.kdtree {
                     // Check if query point is within local bounds
                     if local_index.local_index.bounds.contains(query_point) {
-                        let (indices, distances) = kdtree.query(query_point, k)?;
+                        let (indices, distances) = kdtree.query(query_point.as_slice().unwrap(), k)?;
 
                         for (idx, dist) in indices.iter().zip(distances.iter()) {
                             all_neighbors.push((*idx, *dist));
@@ -1234,7 +1247,7 @@ impl DistributedSpatialCluster {
     /// Get cluster statistics
     pub async fn get_cluster_statistics(&self) -> SpatialResult<ClusterStatistics> {
         let state = self.cluster_state.read().await;
-        let load_balancer = self.load_balancer.read().await;
+        let _load_balancer = self.load_balancer.read().await;
         let communication = self.communication.read().await;
 
         let active_node_count = state.active_nodes.len();

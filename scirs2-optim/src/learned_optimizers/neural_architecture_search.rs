@@ -4024,7 +4024,7 @@ impl ArchitectureGenerator {
 
 /// Search history tracker
 pub struct SearchHistory<T: Float> {
-    entries: Vec<ArchitectureCandidate<T>>,
+    entries: Vec<ArchitectureCandidate>,
 }
 
 impl<T: Float + Default + Clone> SearchHistory<T> {

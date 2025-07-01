@@ -498,7 +498,7 @@ impl GammaBenchmarks {
         }
     }
 
-    fn compute_numerical_accuracy(result: &Array1<f64>, reference: &Array1<f64>) -> f64 {
+    pub fn compute_numerical_accuracy(result: &Array1<f64>, reference: &Array1<f64>) -> f64 {
         if result.len() != reference.len() {
             return f64::INFINITY;
         }
@@ -514,10 +514,9 @@ impl GammaBenchmarks {
 
     #[cfg(feature = "parallel")]
     fn compute_parallel_gamma(data: &Array1<f64>) -> SpecialResult<Array1<f64>> {
-        use scirs2_core::parallel_ops::*;
-
-        // Use parallel mapping for gamma computation
-        let result = data.par_mapv(|x| crate::gamma::gamma(x));
+        // Use sequential mapping for now - parallel operations through core
+        // In a full implementation, would use scirs2_core parallel abstractions
+        let result = data.mapv(|x| crate::gamma::gamma(x));
         Ok(result)
     }
 

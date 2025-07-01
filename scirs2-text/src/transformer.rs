@@ -584,7 +584,7 @@ impl TransformerEncoder {
 
         // Add positional encoding
         let pos_enc = self.position_encoding.get_encoding(seq_len)?;
-        let mut x = embeddings.to_owned() + &pos_enc;
+        let mut x = embeddings.to_owned() + pos_enc;
 
         // Pass through encoder layers
         for layer in &self.layers {
@@ -691,7 +691,7 @@ impl TransformerDecoder {
 
         // Add positional encoding
         let pos_enc = self.position_encoding.get_encoding(seq_len)?;
-        let mut x = embeddings.to_owned() + &pos_enc;
+        let mut x = embeddings.to_owned() + pos_enc;
 
         // Pass through decoder layers
         for layer in &self.layers {

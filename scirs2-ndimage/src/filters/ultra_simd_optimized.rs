@@ -368,10 +368,10 @@ where
 {
     let (img_h, img_w) = image.dim();
     let (tmpl_h, tmpl_w) = template.dim();
-    
+
     if tmpl_h > img_h || tmpl_w > img_w {
         return Err(crate::error::NdimageError::InvalidInput(
-            "Template larger than image".into()
+            "Template larger than image".into(),
         ));
     }
 
@@ -382,7 +382,7 @@ where
     // Pre-compute template statistics for normalization
     let template_mean = ultra_simd_compute_mean(&template)?;
     let template_norm = ultra_simd_compute_norm(&template, template_mean)?;
-    
+
     // Use SIMD width for vectorization
     let simd_width = T::simd_width();
 
@@ -399,10 +399,17 @@ where
                 if y >= out_h {
                     break;
                 }
-                
+
                 ultra_simd_template_match_row(
-                    &image, &template, &mut row, y, template_mean, 
-                    template_norm, simd_width, tmpl_h, tmpl_w
+                    &image,
+                    &template,
+                    &mut row,
+                    y,
+                    template_mean,
+                    template_norm,
+                    simd_width,
+                    tmpl_h,
+                    tmpl_w,
                 );
             }
         });
@@ -439,9 +446,10 @@ fn ultra_simd_template_match_row<T>(
         for i in 0..simd_width {
             let x = x_start + i;
             if x < out_w {
-                let patch = image.slice(s![y..y+tmpl_h, x..x+tmpl_w]);
+                let patch = image.slice(s![y..y + tmpl_h, x..x + tmpl_w]);
                 image_means[i] = ultra_simd_compute_mean(&patch).unwrap_or(T::zero());
-                image_norms[i] = ultra_simd_compute_norm(&patch, image_means[i]).unwrap_or(T::zero());
+                image_norms[i] =
+                    ultra_simd_compute_norm(&patch, image_means[i]).unwrap_or(T::zero());
             }
         }
 
@@ -450,7 +458,7 @@ fn ultra_simd_template_match_row<T>(
             for tx in 0..tmpl_w {
                 let template_val = template[(ty, tx)];
                 let mut image_vals = vec![T::zero(); simd_width];
-                
+
                 for i in 0..simd_width {
                     let x = x_start + i;
                     if x < out_w {
@@ -460,7 +468,8 @@ fn ultra_simd_template_match_row<T>(
 
                 // SIMD multiply and accumulate
                 let template_centered = template_val - template_mean;
-                let image_centered: Vec<T> = image_vals.iter()
+                let image_centered: Vec<T> = image_vals
+                    .iter()
                     .zip(image_means.iter())
                     .map(|(&img_val, &mean)| img_val - mean)
                     .collect();
@@ -487,7 +496,7 @@ fn ultra_simd_template_match_row<T>(
 
     // Handle remaining elements
     for x in (num_chunks * simd_width)..out_w {
-        let patch = image.slice(s![y..y+tmpl_h, x..x+tmpl_w]);
+        let patch = image.slice(s![y..y + tmpl_h, x..x + tmpl_w]);
         let image_mean = ultra_simd_compute_mean(&patch).unwrap_or(T::zero());
         let image_norm = ultra_simd_compute_norm(&patch, image_mean).unwrap_or(T::zero());
 
@@ -526,7 +535,7 @@ where
 {
     let mut pyramid = Vec::with_capacity(levels);
     let mut current = input.to_owned();
-    
+
     // Add original image as level 0
     pyramid.push(current.clone());
 
@@ -542,15 +551,11 @@ where
         let kernel = ultra_simd_generate_gaussian_kernel(kernel_sigma)?;
 
         // Apply Gaussian filter with SIMD optimization
-        let filtered = ultra_simd_separable_convolution_2d(
-            current.view(), 
-            &kernel, 
-            &kernel
-        )?;
+        let filtered = ultra_simd_separable_convolution_2d(current.view(), &kernel, &kernel)?;
 
         // Downsample by factor of 2 with SIMD
         let downsampled = ultra_simd_downsample_2x(&filtered.view())?;
-        
+
         pyramid.push(downsampled.clone());
         current = downsampled;
     }

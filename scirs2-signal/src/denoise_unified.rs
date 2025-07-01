@@ -40,6 +40,18 @@ pub enum DenoisingMethod {
     UltraAdvanced {
         config: UltraAdvancedDenoisingConfig,
     },
+    /// Adaptive hybrid denoising with automatic method selection
+    AdaptiveHybrid {
+        fallback_methods: Vec<DenoisingMethod>,
+        quality_threshold: f64,
+        max_iterations: usize,
+    },
+    /// Non-local means denoising
+    NonLocalMeans {
+        search_window: usize,
+        patch_size: usize,
+        filtering_strength: f64,
+    },
 }
 
 impl Default for DenoisingMethod {
@@ -236,6 +248,36 @@ pub fn denoise_unified(
                 result.denoised_signal,
                 estimate_noise_level(&result.noise_estimate),
             )
+        }
+        DenoisingMethod::AdaptiveHybrid {
+            fallback_methods,
+            quality_threshold,
+            max_iterations,
+        } => {
+            let result = denoise_adaptive_hybrid(
+                &preprocessed,
+                fallback_methods,
+                *quality_threshold,
+                *max_iterations,
+                config.noise_level,
+            )?;
+            (result.denoised, result.estimated_noise_level)
+        }
+        DenoisingMethod::NonLocalMeans {
+            search_window,
+            patch_size,
+            filtering_strength,
+        } => {
+            let denoised = denoise_non_local_means(
+                &preprocessed,
+                *search_window,
+                *patch_size,
+                *filtering_strength,
+            )?;
+            let noise_level = config
+                .noise_level
+                .unwrap_or_else(|| estimate_noise_level(&preprocessed));
+            (denoised, noise_level)
         }
     };
 
@@ -477,6 +519,341 @@ fn calculate_snr_improvement(original: &Array1<f64>, denoised: &Array1<f64>) -> 
         Some(10.0 * (signal_power / noise_power).log10())
     } else {
         None
+    }
+}
+
+/// Adaptive hybrid denoising result
+#[derive(Debug, Clone)]
+pub struct AdaptiveHybridResult {
+    /// Denoised signal
+    pub denoised: Array1<f64>,
+    /// Estimated noise level
+    pub estimated_noise_level: f64,
+    /// Method that achieved the best result
+    pub best_method: DenoisingMethod,
+    /// Quality score of the best result
+    pub best_quality_score: f64,
+}
+
+/// Advanced adaptive hybrid denoising with automatic method selection and validation
+///
+/// This function tries multiple denoising methods and automatically selects the best one
+/// based on quality metrics and signal characteristics.
+///
+/// # Arguments
+///
+/// * `signal` - Input noisy signal
+/// * `fallback_methods` - List of denoising methods to try
+/// * `quality_threshold` - Minimum quality score required
+/// * `max_iterations` - Maximum number of method attempts
+/// * `known_noise_level` - Optional known noise level
+///
+/// # Returns
+///
+/// * Best denoising result found
+pub fn denoise_adaptive_hybrid(
+    signal: &Array1<f64>,
+    fallback_methods: &[DenoisingMethod],
+    quality_threshold: f64,
+    max_iterations: usize,
+    known_noise_level: Option<f64>,
+) -> SignalResult<AdaptiveHybridResult> {
+    if signal.is_empty() {
+        return Err(SignalError::ValueError("Input signal is empty".to_string()));
+    }
+
+    if fallback_methods.is_empty() {
+        return Err(SignalError::ValueError(
+            "No fallback methods provided".to_string(),
+        ));
+    }
+
+    let mut best_result: Option<AdaptiveHybridResult> = None;
+    let mut best_score = f64::NEG_INFINITY;
+
+    // Try each method up to max_iterations
+    for (iteration, method) in fallback_methods
+        .iter()
+        .cycle()
+        .take(max_iterations)
+        .enumerate()
+    {
+        // Create configuration for this method
+        let config = UnifiedDenoisingConfig {
+            method: method.clone(),
+            noise_level: known_noise_level,
+            enable_preprocessing: true,
+            enable_postprocessing: true,
+            benchmark: false,
+        };
+
+        // Try denoising with this method
+        match denoise_unified(signal, &config, None) {
+            Ok(result) => {
+                // Calculate quality score based on multiple metrics
+                let quality_score = calculate_adaptive_quality_score(
+                    signal,
+                    &result.denoised,
+                    result.estimated_noise_level,
+                    &result.quality_metrics,
+                );
+
+                // Check if this is the best result so far
+                if quality_score > best_score {
+                    best_score = quality_score;
+                    best_result = Some(AdaptiveHybridResult {
+                        denoised: result.denoised,
+                        estimated_noise_level: result.estimated_noise_level,
+                        best_method: method.clone(),
+                        best_quality_score: quality_score,
+                    });
+
+                    // Early termination if quality threshold is met
+                    if quality_score >= quality_threshold {
+                        break;
+                    }
+                }
+            }
+            Err(e) => {
+                eprintln!(
+                    "Warning: Method {:?} failed in iteration {}: {}",
+                    method, iteration, e
+                );
+                continue;
+            }
+        }
+    }
+
+    match best_result {
+        Some(result) => Ok(result),
+        None => Err(SignalError::ComputationError(
+            "All denoising methods failed".to_string(),
+        )),
+    }
+}
+
+/// Calculate adaptive quality score for method selection
+fn calculate_adaptive_quality_score(
+    original: &Array1<f64>,
+    denoised: &Array1<f64>,
+    estimated_noise_level: f64,
+    quality_metrics: &QualityMetrics,
+) -> f64 {
+    // Weighted combination of multiple quality factors
+    let mut score = 0.0;
+
+    // Signal preservation (30% weight)
+    score += 0.3 * quality_metrics.signal_preservation;
+
+    // Noise reduction (25% weight)
+    score += 0.25 * quality_metrics.noise_reduction;
+
+    // Edge preservation (20% weight)
+    score += 0.2 * quality_metrics.edge_preservation;
+
+    // Smoothness preservation (15% weight)
+    score += 0.15 * quality_metrics.smoothness_index;
+
+    // Artifact detection (10% weight) - penalty for artifacts
+    let artifact_penalty = detect_artifacts(original, denoised);
+    score += 0.1 * (1.0 - artifact_penalty);
+
+    // Bonus for reasonable noise level estimation
+    if estimated_noise_level > 0.0 && estimated_noise_level < 10.0 {
+        score += 0.05; // Small bonus
+    }
+
+    score.max(0.0).min(1.0)
+}
+
+/// Detect artifacts in denoised signal
+fn detect_artifacts(original: &Array1<f64>, denoised: &Array1<f64>) -> f64 {
+    if original.len() != denoised.len() {
+        return 1.0; // Maximum penalty for length mismatch
+    }
+
+    let n = original.len();
+    if n < 3 {
+        return 0.0; // Cannot detect artifacts in very short signals
+    }
+
+    let mut artifact_score = 0.0;
+    let mut checks = 0;
+
+    // Check for excessive smoothing (loss of high-frequency content)
+    let mut orig_hf_energy = 0.0;
+    let mut denoised_hf_energy = 0.0;
+
+    for i in 1..n {
+        let orig_diff = (original[i] - original[i - 1]).abs();
+        let denoised_diff = (denoised[i] - denoised[i - 1]).abs();
+
+        orig_hf_energy += orig_diff;
+        denoised_hf_energy += denoised_diff;
+    }
+
+    if orig_hf_energy > 1e-10 {
+        let hf_reduction = 1.0 - (denoised_hf_energy / orig_hf_energy);
+        if hf_reduction > 0.8 {
+            // More than 80% high-frequency reduction might indicate over-smoothing
+            artifact_score += 0.3 * (hf_reduction - 0.8) / 0.2;
+        }
+        checks += 1;
+    }
+
+    // Check for ringing artifacts (oscillations around edges)
+    let mut ringing_score = 0.0;
+    for i in 2..n - 2 {
+        // Look for significant changes in original signal
+        let orig_change = (original[i + 1] - original[i - 1]).abs();
+        if orig_change > 0.1 {
+            // Check for oscillations in denoised signal around this point
+            let denoised_oscillation = ((denoised[i - 2] - denoised[i]) +
+                                        (denoised[i + 2] - denoised[i])).abs();
+            let orig_smoothness = ((original[i - 2] - original[i]) +
+                                   (original[i + 2] - original[i])).abs();
+
+            if orig_smoothness > 1e-10 && denoised_oscillation > orig_smoothness * 2.0 {
+                ringing_score += 1.0;
+            }
+        }
+    }
+    
+    if n > 4 {
+        ringing_score /= (n - 4) as f64;
+        artifact_score += 0.2 * ringing_score.min(1.0);
+        checks += 1;
+    }
+
+    // Check for unrealistic values
+    let orig_max = original.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+    let orig_min = original.iter().cloned().fold(f64::INFINITY, f64::min);
+    let denoised_max = denoised.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+    let denoised_min = denoised.iter().cloned().fold(f64::INFINITY, f64::min);
+
+    if denoised_max > orig_max * 1.2 || denoised_min < orig_min * 1.2 {
+        artifact_score += 0.2; // Penalty for values outside expected range
+    }
+    checks += 1;
+
+    if checks > 0 {
+        artifact_score / checks as f64
+    } else {
+        0.0
+    }
+}
+
+/// Non-local means denoising for 1D signals
+///
+/// Implements the non-local means algorithm adapted for 1D signals.
+/// This method preserves repetitive patterns and textures better than local methods.
+///
+/// # Arguments
+///
+/// * `signal` - Input noisy signal
+/// * `search_window` - Size of the search window for finding similar patches
+/// * `patch_size` - Size of patches to compare
+/// * `filtering_strength` - Filtering parameter (higher = more denoising)
+///
+/// # Returns
+///
+/// * Denoised signal
+pub fn denoise_non_local_means(
+    signal: &Array1<f64>,
+    search_window: usize,
+    patch_size: usize,
+    filtering_strength: f64,
+) -> SignalResult<Array1<f64>> {
+    let n = signal.len();
+    
+    if n == 0 {
+        return Err(SignalError::ValueError("Input signal is empty".to_string()));
+    }
+    
+    if patch_size >= n {
+        return Err(SignalError::ValueError(
+            "Patch size must be smaller than signal length".to_string(),
+        ));
+    }
+    
+    if search_window > n {
+        return Err(SignalError::ValueError(
+            "Search window must not exceed signal length".to_string(),
+        ));
+    }
+
+    let mut denoised = Array1::zeros(n);
+    let h_sq = filtering_strength * filtering_strength;
+
+    for i in 0..n {
+        let mut weighted_sum = 0.0;
+        let mut weight_sum = 0.0;
+
+        // Define search range around current position
+        let search_start = if i >= search_window / 2 {
+            i - search_window / 2
+        } else {
+            0
+        };
+        let search_end = (i + search_window / 2 + 1).min(n);
+
+        // Search for similar patches
+        for j in search_start..search_end {
+            // Calculate patch distance
+            let distance = calculate_patch_distance(signal, i, j, patch_size);
+            
+            // Calculate weight using Gaussian kernel
+            let weight = (-distance / h_sq).exp();
+            
+            weighted_sum += weight * signal[j];
+            weight_sum += weight;
+        }
+
+        // Normalize
+        if weight_sum > 1e-10 {
+            denoised[i] = weighted_sum / weight_sum;
+        } else {
+            denoised[i] = signal[i]; // Fallback to original value
+        }
+    }
+
+    Ok(denoised)
+}
+
+/// Calculate distance between patches centered at positions i and j
+fn calculate_patch_distance(
+    signal: &Array1<f64>,
+    i: usize,
+    j: usize,
+    patch_size: usize,
+) -> f64 {
+    let n = signal.len();
+    let half_patch = patch_size / 2;
+    
+    let i_start = if i >= half_patch { i - half_patch } else { 0 };
+    let i_end = (i + half_patch + 1).min(n);
+    let j_start = if j >= half_patch { j - half_patch } else { 0 };
+    let j_end = (j + half_patch + 1).min(n);
+    
+    let mut distance = 0.0;
+    let mut count = 0;
+    
+    // Compare overlapping parts of patches
+    let start_offset = (i_start as i32 - j_start as i32).abs() as usize;
+    let min_len = (i_end - i_start).min(j_end - j_start);
+    
+    for k in start_offset..min_len {
+        if i_start + k < n && j_start + k < n {
+            let diff = signal[i_start + k] - signal[j_start + k];
+            distance += diff * diff;
+            count += 1;
+        }
+    }
+    
+    if count > 0 {
+        distance / count as f64
+    } else {
+        0.0
     }
 }
 

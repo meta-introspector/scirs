@@ -1,16 +1,16 @@
 //! Comprehensive Examples and Documentation for scirs2-ndimage
 //!
 //! This module provides extensive examples, tutorials, and documentation
-//! for all major functionality in scirs2-ndimage. It serves as both 
+//! for all major functionality in scirs2-ndimage. It serves as both
 //! educational material and validation of the API usability.
 
 use crate::error::Result;
+use crate::features::*;
 use crate::filters::*;
 use crate::interpolation::*;
 use crate::measurements::*;
 use crate::morphology::*;
 use crate::segmentation::*;
-use crate::features::*;
 use ndarray::{Array1, Array2, Array3, ArrayD, Axis};
 use std::collections::HashMap;
 
@@ -70,7 +70,9 @@ impl ExampleTutorial {
         // Gaussian Filter Tutorial
         self.add_step(TutorialStep {
             title: "Gaussian Smoothing for Noise Reduction".to_string(),
-            description: "Learn how to apply Gaussian filters to reduce noise while preserving edges".to_string(),
+            description:
+                "Learn how to apply Gaussian filters to reduce noise while preserving edges"
+                    .to_string(),
             code_example: r#"
 use scirs2_ndimage::filters::{gaussian_filter, BorderMode};
 use ndarray::Array2;
@@ -102,8 +104,10 @@ let constant = gaussian_filter(&noisy_image, 2.0, Some(BorderMode::Constant), So
 
 println!("Applied Gaussian filters with sigma: 1.0, 2.0, 4.0");
 println!("Border modes: Reflect, Wrap, Constant");
-"#.to_string(),
-            expected_output: "Progressively smoother images with different boundary handling".to_string(),
+"#
+            .to_string(),
+            expected_output: "Progressively smoother images with different boundary handling"
+                .to_string(),
             concepts: vec![
                 "Gaussian smoothing".to_string(),
                 "Noise reduction".to_string(),
@@ -120,7 +124,9 @@ println!("Border modes: Reflect, Wrap, Constant");
         // Median Filter Tutorial
         self.add_step(TutorialStep {
             title: "Median Filtering for Impulse Noise Removal".to_string(),
-            description: "Use median filters to remove salt-and-pepper noise while preserving edges".to_string(),
+            description:
+                "Use median filters to remove salt-and-pepper noise while preserving edges"
+                    .to_string(),
             code_example: r#"
 use scirs2_ndimage::filters::{median_filter, BorderMode};
 use ndarray::Array2;
@@ -151,8 +157,10 @@ let gaussian_cleaned = gaussian_filter(&image_with_impulses, 1.0, None, None)?;
 
 println!("Median filter effectively removes impulse noise");
 println!("Larger kernels remove more noise but may blur edges");
-"#.to_string(),
-            expected_output: "Clean images with impulse noise removed, edge preservation comparison".to_string(),
+"#
+            .to_string(),
+            expected_output:
+                "Clean images with impulse noise removed, edge preservation comparison".to_string(),
             concepts: vec![
                 "Impulse noise removal".to_string(),
                 "Edge preservation".to_string(),
@@ -206,7 +214,8 @@ let combined_edges = Array2::from_shape_fn(image.dim(), |(i, j)| {
 
 println!("Detected edges using Sobel (gradient) and Laplacian (second derivative)");
 println!("Combined approach provides comprehensive edge information");
-"#.to_string(),
+"#
+            .to_string(),
             expected_output: "Edge maps showing different types of edge information".to_string(),
             concepts: vec![
                 "Gradient-based edge detection".to_string(),
@@ -298,7 +307,8 @@ println!("- Closing: fills holes, connects nearby objects");
 
         self.add_step(TutorialStep {
             title: "Grayscale Morphology for Contrast Enhancement".to_string(),
-            description: "Apply morphological operations to grayscale images for various effects".to_string(),
+            description: "Apply morphological operations to grayscale images for various effects"
+                .to_string(),
             code_example: r#"
 use scirs2_ndimage::morphology::{
     grey_erosion, grey_dilation, grey_opening, grey_closing,
@@ -347,8 +357,10 @@ println!("- Noise removal (opening/closing)");
 println!("- Feature enhancement (top-hat transforms)");  
 println!("- Edge detection (morphological gradient)");
 println!("- Contrast enhancement (combination of operations)");
-"#.to_string(),
-            expected_output: "Enhanced grayscale images with improved contrast and features".to_string(),
+"#
+            .to_string(),
+            expected_output: "Enhanced grayscale images with improved contrast and features"
+                .to_string(),
             concepts: vec![
                 "Grayscale morphology".to_string(),
                 "Feature enhancement".to_string(),
@@ -460,7 +472,8 @@ println!("- Custom coordinate mapping for complex distortions");
     fn add_measurement_examples(&mut self) -> Result<()> {
         self.add_step(TutorialStep {
             title: "Image Measurements and Region Analysis".to_string(),
-            description: "Extract quantitative information from images using measurement functions".to_string(),
+            description: "Extract quantitative information from images using measurement functions"
+                .to_string(),
             code_example: r#"
 use scirs2_ndimage::measurements::{
     center_of_mass, find_objects, moments, label, 
@@ -545,7 +558,8 @@ for (i, prop) in properties.iter().enumerate() {
     println!("  Minor axis length: {:.2}", prop.minor_axis_length);
     println!("  Orientation: {:.2} degrees", prop.orientation.to_degrees());
 }
-"#.to_string(),
+"#
+            .to_string(),
             expected_output: "Quantitative measurements for each object in the image".to_string(),
             concepts: vec![
                 "Region analysis".to_string(),
@@ -567,7 +581,8 @@ for (i, prop) in properties.iter().enumerate() {
     fn add_segmentation_examples(&mut self) -> Result<()> {
         self.add_step(TutorialStep {
             title: "Image Segmentation Techniques".to_string(),
-            description: "Segment images into regions using thresholding and watershed algorithms".to_string(),
+            description: "Segment images into regions using thresholding and watershed algorithms"
+                .to_string(),
             code_example: r#"
 use scirs2_ndimage::segmentation::{
     threshold_binary, otsu_threshold, adaptive_threshold,
@@ -655,8 +670,10 @@ let combined_segmentation = Array2::from_shape_fn(image.dim(), |(i, j)| {
 });
 
 println!("Created combined segmentation using multiple methods");
-"#.to_string(),
-            expected_output: "Segmented images showing different region separation techniques".to_string(),
+"#
+            .to_string(),
+            expected_output: "Segmented images showing different region separation techniques"
+                .to_string(),
             concepts: vec![
                 "Image thresholding".to_string(),
                 "Adaptive segmentation".to_string(),
@@ -936,8 +953,10 @@ println!("   - Original image data");
 println!("   - Detected object boundaries");
 println!("   - Edge features");
 println!("   - Object labels with distinct intensities");
-"#.to_string(),
-            expected_output: "Complete quantitative analysis of image features and objects".to_string(),
+"#
+            .to_string(),
+            expected_output: "Complete quantitative analysis of image features and objects"
+                .to_string(),
             concepts: vec![
                 "Complete analysis workflow".to_string(),
                 "Multi-step processing pipeline".to_string(),
@@ -958,37 +977,42 @@ println!("   - Object labels with distinct intensities");
     /// Generate complete tutorial as markdown
     pub fn export_markdown(&self) -> String {
         let mut markdown = String::new();
-        
+
         markdown.push_str("# Comprehensive scirs2-ndimage Tutorial\n\n");
         markdown.push_str("This tutorial provides comprehensive examples of all major functionality in scirs2-ndimage, ");
         markdown.push_str("demonstrating real-world usage patterns and best practices.\n\n");
-        
+
         markdown.push_str("## Table of Contents\n\n");
         for (i, step) in self.steps.iter().enumerate() {
-            markdown.push_str(&format!("{}. [{}](#{})\n", 
-                                     i + 1, 
-                                     step.title, 
-                                     step.title.to_lowercase().replace(" ", "-")));
+            markdown.push_str(&format!(
+                "{}. [{}](#{})\n",
+                i + 1,
+                step.title,
+                step.title.to_lowercase().replace(" ", "-")
+            ));
         }
         markdown.push_str("\n");
-        
+
         for (i, step) in self.steps.iter().enumerate() {
             markdown.push_str(&format!("## {}. {}\n\n", i + 1, step.title));
             markdown.push_str(&format!("{}\n\n", step.description));
-            
+
             markdown.push_str("### Key Concepts\n");
             for concept in &step.concepts {
                 markdown.push_str(&format!("- {}\n", concept));
             }
             markdown.push_str("\n");
-            
+
             markdown.push_str("### Code Example\n\n");
             markdown.push_str("```rust\n");
             markdown.push_str(&step.code_example);
             markdown.push_str("\n```\n\n");
-            
-            markdown.push_str(&format!("### Expected Output\n{}\n\n", step.expected_output));
-            
+
+            markdown.push_str(&format!(
+                "### Expected Output\n{}\n\n",
+                step.expected_output
+            ));
+
             if !step.related_functions.is_empty() {
                 markdown.push_str("### Related Functions\n");
                 for func in &step.related_functions {
@@ -996,15 +1020,15 @@ println!("   - Object labels with distinct intensities");
                 }
                 markdown.push_str("\n");
             }
-            
+
             markdown.push_str("---\n\n");
         }
-        
+
         markdown.push_str("## Additional Resources\n\n");
         markdown.push_str("- [API Documentation](https://docs.rs/scirs2-ndimage)\n");
         markdown.push_str("- [GitHub Repository](https://github.com/cool-japan/scirs)\n");
         markdown.push_str("- [SciPy ndimage Documentation](https://docs.scipy.org/doc/scipy/reference/ndimage.html) (for reference)\n");
-        
+
         markdown
     }
 
@@ -1022,13 +1046,13 @@ println!("   - Object labels with distinct intensities");
 /// Utility function to run all examples and validate they work
 pub fn validate_all_examples() -> Result<()> {
     println!("Validating all comprehensive examples...");
-    
+
     let mut tutorial = ExampleTutorial::new();
     tutorial.generate_complete_tutorial()?;
-    
+
     println!("Generated {} tutorial steps", tutorial.step_count());
     println!("All examples validated successfully!");
-    
+
     Ok(())
 }
 
@@ -1052,7 +1076,7 @@ mod tests {
             concepts: vec!["testing".to_string()],
             related_functions: vec!["test_func".to_string()],
         };
-        
+
         assert_eq!(step.title, "Test Step");
         assert_eq!(step.concepts.len(), 1);
     }
@@ -1061,10 +1085,10 @@ mod tests {
     fn test_tutorial_generation() -> Result<()> {
         let mut tutorial = ExampleTutorial::new();
         tutorial.generate_complete_tutorial()?;
-        
+
         assert!(tutorial.step_count() > 0);
         assert!(tutorial.export_markdown().len() > 1000);
-        
+
         Ok(())
     }
 }

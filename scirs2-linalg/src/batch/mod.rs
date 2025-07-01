@@ -4,7 +4,7 @@
 //! which is especially useful for machine learning applications such as mini-batch
 //! gradient descent, convolutional neural networks, and transformer models.
 
-use ndarray::{Array, Array2, Array3, ArrayView1, ArrayView2, ArrayView3, Axis};
+use ndarray::{Array, Array2, Array3, ArrayView1, ArrayView2, ArrayView3, Axis, ScalarOperand};
 use num_traits::{Float, NumAssign};
 use std::iter::Sum;
 
@@ -61,7 +61,7 @@ pub use attention::{
 /// ```
 pub fn batch_matmul<F>(batch_a: &ArrayView3<F>, b: &ArrayView2<F>) -> LinalgResult<Array3<F>>
 where
-    F: Float + NumAssign + Sum,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     // Check dimensions compatibility
     let (batch_size, m, k1) = batch_a.dim();
@@ -138,7 +138,7 @@ where
 /// ```
 pub fn batch_matvec<F>(batch_a: &ArrayView3<F>, x: &ArrayView1<F>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     // Check dimensions compatibility
     let (batch_size, m, n) = batch_a.dim();
@@ -223,7 +223,7 @@ pub fn batch_add<F>(
     axis: usize,
 ) -> LinalgResult<Array3<F>>
 where
-    F: Float + NumAssign + Sum,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     // Check dimensions compatibility
     let (batch_size, m, n) = batch_a.dim();
@@ -325,7 +325,7 @@ where
 /// ```
 pub fn batch_sum<F>(batch_a: &ArrayView3<F>) -> Array2<F>
 where
-    F: Float + NumAssign + Sum,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     batch_a.sum_axis(Axis(0))
 }

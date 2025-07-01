@@ -23,7 +23,7 @@
 use crate::error::OptimizeError;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use scirs2_core::error::Result;
+use scirs2_core::error::CoreResult;
 
 pub mod incremental_newton;
 pub mod online_gradient_descent;

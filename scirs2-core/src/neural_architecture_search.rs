@@ -14,7 +14,7 @@
 //! - Hardware-aware optimization
 //! - Automated hyperparameter tuning
 
-use crate::error::{CoreError, CoreResult};
+use crate::error::CoreResult;
 use crate::quantum_optimization::{QuantumOptimizer, QuantumStrategy};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, RwLock};
@@ -129,6 +129,7 @@ pub enum ConnectionType {
     MobileNet,
     EfficientNet,
     Transformer,
+    Skip,
 }
 
 /// Neural architecture representation
@@ -1402,7 +1403,7 @@ impl NeuralArchitectureSearch {
         let new_arch = self.generate_random_architecture()?;
         
         let mut population = {
-            let mut pop = self.population.write().unwrap();
+            let pop = self.population.write().unwrap();
             pop.clone()
         };
         
@@ -1423,62 +1424,114 @@ impl NeuralArchitectureSearch {
         Ok(())
     }
 
-    /// Quantum-enhanced search step
+    /// Quantum-enhanced search step with advanced quantum operations
     fn quantum_enhanced_step(&mut self, iteration: usize) -> CoreResult<()> {
         // Check if we have quantum optimizer
         let has_quantum_opt = self.quantum_optimizer.is_some();
         
         if has_quantum_opt {
             // Capture needed data outside the quantum optimization
-            let search_space = self.search_space.clone();
-            let objectives = self.objectives.clone();
+            let _search_space = self.search_space.clone();
+            let _objectives = self.objectives.clone();
+            let _population = {
+                let pop = self.population.read().unwrap();
+                pop.clone()
+            };
             
-            // Create objective function using captured data
+            // Enhanced objective function with quantum-inspired evaluation
             let objective_fn = move |params: &[f64]| -> f64 {
-                // Simplified parameter decoding without self
-                if params.len() < 10 {
-                    return 1.0; // Return poor fitness for invalid params
+                if params.len() < 20 {
+                    return 1000.0; // Return poor fitness for invalid params
                 }
                 
-                // Use parameters to estimate fitness
-                let depth_param = params[0];
-                let complexity_param = params[1];
-                let accuracy_estimate = 0.5 + 0.3 * depth_param + 0.2 * complexity_param;
+                // Multi-objective quantum-inspired fitness evaluation
                 
-                // Return negative fitness (since quantum optimizer minimizes)
-                -accuracy_estimate
+                // Architecture complexity assessment
+                let depth_param = params[0];
+                let width_param = params[1];
+                let complexity_penalty = depth_param * width_param * 0.1;
+                
+                // Quantum entanglement-inspired parameter correlation
+                let mut correlation_bonus = 0.0;
+                for i in 0..params.len()-1 {
+                    let correlation = (params[i] - params[i+1]).abs();
+                    correlation_bonus += if correlation < 0.3 { 0.1 } else { -0.05 };
+                }
+                
+                // Quantum superposition-inspired diversity measure
+                let param_variance = {
+                    let mean = params.iter().sum::<f64>() / params.len() as f64;
+                    let variance = params.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / params.len() as f64;
+                    variance.sqrt()
+                };
+                let diversity_bonus = param_variance * 0.2;
+                
+                // Quantum tunneling-inspired exploration factor
+                let exploration_factor = if iteration < 10 { 0.3 } else { 0.1 };
+                let exploration_bonus = params.iter().map(|x| if *x > 0.8 || *x < 0.2 { exploration_factor } else { 0.0 }).sum::<f64>();
+                
+                // Combined fitness with quantum-inspired components
+                -(0.7 + 0.2 * depth_param + 0.1 * width_param 
+                         - complexity_penalty + correlation_bonus + diversity_bonus + exploration_bonus)
             };
             
             let bounds = vec![(0.0, 1.0); 20]; // 20 parameters between 0 and 1
             
             // Now we can safely access quantum_optimizer
-            if let Some(ref mut quantum_opt) = self.quantum_optimizer {
-                let result = quantum_opt.optimize(objective_fn, &bounds, 10)?;
-            
-            // Decode best solution to architecture
-            let best_arch = self.decode_quantum_parameters(&result.best_solution)?;
-            
-            // Add to population
-            let mut population = {
-                let mut pop = self.population.write().unwrap();
-                pop.clone()
+            let (result, selection_prob) = if let Some(ref mut quantum_opt) = self.quantum_optimizer {
+                let result = quantum_opt.optimize(objective_fn, &bounds, 15)?;
+                
+                // Extract quantum selection probability
+                let measurement_probs = quantum_opt.get_measurement_probabilities();
+                let selection_prob = if !measurement_probs.is_empty() {
+                    measurement_probs[0]
+                } else {
+                    0.5
+                };
+                
+                (Some(result), selection_prob)
+            } else {
+                (None, 0.5)
             };
             
-            if population.len() < 50 {
-                population.push(best_arch);
-            } else {
-                // Replace worst architecture
-                let last_idx = population.len() - 1;
-                population[last_idx] = best_arch;
-            }
-            
-            {
-                let mut pop = self.population.write().unwrap();
-                *pop = population;
+            if let Some(result) = result {
+                // Decode best solution to architecture with quantum entanglement
+                let best_arch = self.decode_quantum_parameters_with_entanglement(&result.best_solution, iteration)?;
+                
+                // Quantum-inspired population update
+                let mut new_population = {
+                    let pop = self.population.read().unwrap();
+                    pop.clone()
+                };
+                
+                if new_population.len() < 50 {
+                    new_population.push(best_arch.clone());
+                } else {
+                    // Quantum selection: replace architecture with quantum probability
+                    let replace_idx = if selection_prob > 0.5 {
+                        new_population.len() - 1 // Replace worst
+                    } else {
+                        (selection_prob * new_population.len() as f64) as usize % new_population.len()
+                    };
+                    new_population[replace_idx] = best_arch.clone();
+                }
+                
+                // Apply quantum crossover with existing population
+                if new_population.len() > 2 {
+                    let crossover_arch = self.quantum_crossover(&new_population[0], &new_population[1])?;
+                    if new_population.len() < 50 {
+                        new_population.push(crossover_arch);
+                    }
+                }
+                
+                {
+                    let mut pop = self.population.write().unwrap();
+                    *pop = new_population;
+                }
             }
         }
         
-        // Also run evolutionary step
+        // Also run evolutionary step for hybrid approach
         self.evolutionary_step(iteration)
     }
 
@@ -1544,6 +1597,211 @@ impl NeuralArchitectureSearch {
                 estimated_latency: Duration::new(0, 0),
             },
         })
+    }
+
+    /// Enhanced quantum parameter decoding with entanglement considerations
+    fn decode_quantum_parameters_with_entanglement(&self, params: &[f64], iteration: usize) -> CoreResult<Architecture> {
+        if params.len() < 20 {
+            return self.generate_random_architecture();
+        }
+        
+        // Calculate quantum entanglement between parameters for better architecture coherence
+        let mut entangled_params = params.to_vec();
+        for i in 0..params.len()-1 {
+            let entanglement_strength = 0.3 * (1.0 - iteration as f64 / 100.0).max(0.1);
+            entangled_params[i] = params[i] * (1.0 - entanglement_strength) + 
+                                 params[i+1] * entanglement_strength;
+        }
+        
+        // Use entangled parameters for architecture decisions
+        let depth = self.search_space.depth_range.0 + 
+            (entangled_params[0] * (self.search_space.depth_range.1 - self.search_space.depth_range.0) as f64) as usize;
+        
+        let mut layers = Vec::new();
+        
+        for i in 0..depth {
+            let param_idx = (i * 3) % entangled_params.len();
+            
+            // Enhanced parameter mapping with quantum-inspired correlations
+            let layer_type_idx = (entangled_params[param_idx] * self.search_space.layer_types.len() as f64) as usize;
+            let layer_type = self.search_space.layer_types[layer_type_idx.min(self.search_space.layer_types.len() - 1)];
+            
+            let activation_idx = (entangled_params[(param_idx + 1) % entangled_params.len()] * self.search_space.activations.len() as f64) as usize;
+            let activation = Some(self.search_space.activations[activation_idx.min(self.search_space.activations.len() - 1)]);
+            
+            // Quantum-inspired unit selection with coherence
+            let base_units = self.search_space.width_range.0;
+            let unit_range = self.search_space.width_range.1 - self.search_space.width_range.0;
+            let unit_multiplier = entangled_params[(param_idx + 2) % entangled_params.len()];
+            let units = base_units + (unit_multiplier * unit_range as f64) as usize;
+            
+            layers.push(LayerConfig {
+                layer_type,
+                parameters: LayerParameters {
+                    units: Some(units),
+                    kernel_size: self.quantum_derive_kernel_size(&entangled_params, param_idx),
+                    stride: self.quantum_derive_stride(&entangled_params, param_idx),
+                    padding: None,
+                    dropout_rate: self.quantum_derive_dropout(&entangled_params, param_idx),
+                    num_heads: self.quantum_derive_attention_heads(&entangled_params, param_idx),
+                    hidden_dim: None,
+                    custom: HashMap::new(),
+                },
+                activation,
+                skippable: entangled_params[(param_idx + 3) % entangled_params.len()] > 0.7, // Quantum skip connection probability
+            });
+        }
+        
+        Ok(Architecture {
+            id: format!("quantum_entangled_{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()),
+            layers,
+            global_config: GlobalConfig {
+                input_shape: vec![224, 224, 3],
+                output_size: 1000,
+                learning_rate: 0.001 * (1.0 + entangled_params[19] * 0.01), // Quantum-enhanced learning rate
+                batch_size: 32,
+                optimizer: OptimizerType::Adam,
+                loss_function: "categorical_crossentropy".to_string(),
+                epochs: 100,
+            },
+            connections: self.quantum_derive_connections(&entangled_params)?,
+            metadata: ArchitectureMetadata {
+                generation: iteration,
+                parents: Vec::new(),
+                created_at: Instant::now(),
+                search_strategy: NASStrategy::QuantumEnhanced,
+                estimated_flops: 0,
+                estimated_memory: 0,
+                estimated_latency: Duration::new(0, 0),
+            },
+        })
+    }
+
+    /// Quantum-inspired crossover operation between two architectures
+    fn quantum_crossover(&self, arch1: &Architecture, arch2: &Architecture) -> CoreResult<Architecture> {
+        let mut new_layers = Vec::new();
+        let max_layers = arch1.layers.len().max(arch2.layers.len());
+        
+        // Define quantum probability for global config selection
+        let quantum_prob = 0.5 + 0.3 * ((max_layers as f64 * std::f64::consts::PI / 10.0).sin());
+        
+        for i in 0..max_layers {
+            // Quantum superposition-inspired layer selection
+            let layer_quantum_prob = 0.5 + 0.3 * ((i as f64 * std::f64::consts::PI / max_layers as f64).sin());
+            
+            let selected_layer = if layer_quantum_prob > 0.5 {
+                if i < arch1.layers.len() {
+                    &arch1.layers[i]
+                } else {
+                    &arch2.layers[i % arch2.layers.len()]
+                }
+            } else if i < arch2.layers.len() {
+                &arch2.layers[i]
+            } else {
+                &arch1.layers[i % arch1.layers.len()]
+            };
+            
+            // Apply quantum interference to layer parameters
+            let mut new_layer = selected_layer.clone();
+            if let (Some(units1), Some(units2)) = (
+                arch1.layers.get(i).and_then(|l| l.parameters.units),
+                arch2.layers.get(i).and_then(|l| l.parameters.units)
+            ) {
+                // Quantum interference between unit counts
+                let interference = ((units1 as f64 + units2 as f64) / 2.0) * (1.0 + 0.1 * layer_quantum_prob);
+                new_layer.parameters.units = Some(interference as usize);
+            }
+            
+            new_layers.push(new_layer);
+        }
+        
+        // Quantum entangled global configuration
+        let quantum_lr_factor = 0.5 + 0.5 * ((arch1.global_config.learning_rate + arch2.global_config.learning_rate) / 2.0);
+        
+        Ok(Architecture {
+            id: format!("quantum_crossover_{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()),
+            layers: new_layers,
+            global_config: GlobalConfig {
+                input_shape: arch1.global_config.input_shape.clone(),
+                output_size: arch1.global_config.output_size,
+                learning_rate: quantum_lr_factor,
+                batch_size: ((arch1.global_config.batch_size + arch2.global_config.batch_size) / 2).max(1),
+                optimizer: if quantum_prob > 0.5 { arch1.global_config.optimizer } else { arch2.global_config.optimizer },
+                loss_function: arch1.global_config.loss_function.clone(),
+                epochs: (arch1.global_config.epochs + arch2.global_config.epochs) / 2,
+            },
+            connections: Vec::new(),
+            metadata: ArchitectureMetadata {
+                generation: arch1.metadata.generation.max(arch2.metadata.generation) + 1,
+                parents: vec![arch1.id.clone(), arch2.id.clone()],
+                created_at: Instant::now(),
+                search_strategy: NASStrategy::QuantumEnhanced,
+                estimated_flops: 0,
+                estimated_memory: 0,
+                estimated_latency: Duration::new(0, 0),
+            },
+        })
+    }
+
+    /// Quantum-inspired kernel size derivation
+    fn quantum_derive_kernel_size(&self, params: &[f64], base_idx: usize) -> Option<(usize, usize)> {
+        if base_idx + 4 < params.len() {
+            let kernel_param = params[base_idx + 4];
+            let size = 1 + (kernel_param * 6.0) as usize; // Kernel sizes 1-7
+            Some((size, size))
+        } else {
+            None
+        }
+    }
+
+    /// Quantum-inspired stride derivation
+    fn quantum_derive_stride(&self, params: &[f64], base_idx: usize) -> Option<(usize, usize)> {
+        if base_idx + 5 < params.len() {
+            let stride_param = params[base_idx + 5];
+            let stride = 1 + (stride_param * 2.0) as usize; // Strides 1-3
+            Some((stride, stride))
+        } else {
+            None
+        }
+    }
+
+    /// Quantum-inspired dropout rate derivation
+    fn quantum_derive_dropout(&self, params: &[f64], base_idx: usize) -> Option<f64> {
+        if base_idx + 6 < params.len() {
+            let dropout_param = params[base_idx + 6];
+            Some(dropout_param * 0.5) // Dropout 0.0-0.5
+        } else {
+            None
+        }
+    }
+
+    /// Quantum-inspired attention heads derivation
+    fn quantum_derive_attention_heads(&self, params: &[f64], base_idx: usize) -> Option<usize> {
+        if base_idx + 7 < params.len() {
+            let heads_param = params[base_idx + 7];
+            Some(1 + (heads_param * 15.0) as usize) // 1-16 attention heads
+        } else {
+            None
+        }
+    }
+
+    /// Quantum-inspired connection derivation
+    fn quantum_derive_connections(&self, params: &[f64]) -> CoreResult<Vec<Connection>> {
+        let mut connections = Vec::new();
+        
+        // Use quantum parameters to determine skip connections
+        for i in 0..params.len().min(10) {
+            if params[i] > 0.8 { // High quantum probability for skip connection
+                connections.push(Connection {
+                    from: i,
+                    to: (i + 1 + (params[i] * 3.0) as usize) % params.len().min(10),
+                    connection_type: ConnectionType::Skip,
+                    weight: params[i],
+                });
+            }
+        }
+        
+        Ok(connections)
     }
 
     /// Hybrid search step combining multiple strategies

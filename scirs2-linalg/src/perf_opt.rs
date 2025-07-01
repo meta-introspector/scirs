@@ -5,7 +5,7 @@
 //! parallelization, and memory layout optimizations.
 
 use crate::error::{LinalgError, LinalgResult};
-use ndarray::{Array2, ArrayView2, Axis};
+use ndarray::{Array2, ArrayView2, Axis, ScalarOperand};
 use num_traits::{Float, NumAssign};
 use scirs2_core::parallel_ops::*;
 use std::cmp;
@@ -81,7 +81,7 @@ pub fn blocked_matmul<F>(
     config: &OptConfig,
 ) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + Send + Sync + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     let (m, k) = (a.nrows(), a.ncols());
     let (k2, n) = (b.nrows(), b.ncols());
@@ -128,7 +128,7 @@ fn serial_blocked_matmul<F>(
     block_size: usize,
 ) -> LinalgResult<()>
 where
-    F: Float + NumAssign + Sum,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     let (m, k) = (a.nrows(), a.ncols());
     let n = b.ncols();
@@ -226,7 +226,7 @@ pub fn blocked_matmul_with_workers<F>(
     workers: Option<usize>,
 ) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + Send + Sync + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     use crate::parallel;
 
@@ -422,7 +422,7 @@ pub mod inplace {
 /// Adaptive algorithm selection based on matrix properties
 pub fn adaptive_matmul<F>(a: &ArrayView2<F>, b: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + Send + Sync + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     adaptive_matmul_with_workers(a, b, None)
 }
@@ -434,7 +434,7 @@ pub fn adaptive_matmul_with_workers<F>(
     workers: Option<usize>,
 ) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + Send + Sync + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     use crate::parallel;
 
@@ -494,7 +494,7 @@ pub fn matmul_benchmark<F>(
     config: &OptConfig,
 ) -> LinalgResult<String>
 where
-    F: Float + NumAssign + Sum + Send + Sync + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     use std::time::Instant;
 

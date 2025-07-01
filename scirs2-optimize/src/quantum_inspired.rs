@@ -11,7 +11,7 @@
 use crate::error::OptimizeError;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1, Axis};
-use scirs2_core::error::Result;
+use scirs2_core::error::CoreResult;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::collections::VecDeque;
 use std::f64::consts::PI;

@@ -9,11 +9,10 @@ use crate::gpu::{GpuBufferImpl, GpuCompilerImpl, GpuContextImpl, GpuError, GpuKe
 
 #[cfg(feature = "wgpu_backend")]
 use wgpu::{
-    Adapter, Backends, Buffer, BufferUsages, CommandEncoder, ComputePipeline, 
+    Backends, Buffer, BufferUsages, ComputePipeline, 
     Device, DeviceDescriptor, Features, Instance, InstanceDescriptor, 
-    Limits, Queue, RequestAdapterOptions, ShaderModule, ShaderModuleDescriptor, 
+    Limits, Queue, RequestAdapterOptions, ShaderModuleDescriptor, 
     ShaderSource, PowerPreference, BufferDescriptor, util::DeviceExt,
-    util::BufferInitDescriptor,
 };
 
 // Fallback types for when WebGPU is not available
@@ -547,129 +546,6 @@ impl GpuKernelImpl for WebGPUKernelHandle {
         }
     }
 
-    #[cfg(feature = "wgpu_backend")]
-    fn create_bind_group(&self, shader: &WebGPUShader, params: &HashMap<String, KernelParam>) -> Result<wgpu::BindGroup, String> {
-        use wgpu::{BindGroupDescriptor, BindGroupEntry, BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingType, BufferBindingType, ShaderStages};
-        
-        // Collect binding entries
-        let mut layout_entries = Vec::new();
-        let mut bind_group_entries = Vec::new();
-        let mut binding_index = 0u32;
-        
-        // Create uniform buffer for scalar parameters if any exist
-        let scalar_params: Vec<_> = params.iter()
-            .filter(|(_, param)| matches!(param, KernelParam::U32(_) | KernelParam::I32(_) | KernelParam::F32(_) | KernelParam::F64(_)))
-            .collect();
-        
-        let uniform_buffer = if !scalar_params.is_empty() {
-            // Calculate uniform buffer size (assuming standard layout with 4-byte alignment)
-            let uniform_size = scalar_params.len() * 4; // Each param takes 4 bytes
-            let aligned_size = ((uniform_size + 15) / 16) * 16; // Align to 16 bytes for uniforms
-            
-            // Create uniform data
-            let mut uniform_data = vec![0u8; aligned_size];
-            let mut offset = 0;
-            
-            for (_, param) in &scalar_params {
-                match param {
-                    KernelParam::U32(val) => {
-                        uniform_data[offset..offset+4].copy_from_slice(&val.to_le_bytes());
-                    }
-                    KernelParam::I32(val) => {
-                        uniform_data[offset..offset+4].copy_from_slice(&val.to_le_bytes());
-                    }
-                    KernelParam::F32(val) => {
-                        uniform_data[offset..offset+4].copy_from_slice(&val.to_le_bytes());
-                    }
-                    KernelParam::F64(val) => {
-                        // For F64, we'll convert to F32 for shader compatibility
-                        let val_f32 = *val as f32;
-                        uniform_data[offset..offset+4].copy_from_slice(&val_f32.to_le_bytes());
-                    }
-                    _ => {}
-                }
-                offset += 4;
-            }
-            
-            // Create uniform buffer
-            let buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Uniform Buffer"),
-                contents: &uniform_data,
-                usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-            });
-            
-            // Add uniform buffer to layout and bind group
-            layout_entries.push(BindGroupLayoutEntry {
-                binding: binding_index,
-                visibility: ShaderStages::COMPUTE,
-                ty: BindingType::Buffer {
-                    ty: BufferBindingType::Uniform,
-                    has_dynamic_offset: false,
-                    min_binding_size: None,
-                },
-                count: None,
-            });
-            
-            bind_group_entries.push(BindGroupEntry {
-                binding: binding_index,
-                resource: buffer.as_entire_binding(),
-            });
-            
-            binding_index += 1;
-            Some(buffer)
-        } else {
-            None
-        };
-        
-        // Add storage buffers
-        for (name, param) in params {
-            if let KernelParam::Buffer(buffer_impl) = param {
-                // Cast to WebGPUBuffer to get the actual wgpu::Buffer
-                let webgpu_buffer = buffer_impl.as_any()
-                    .downcast_ref::<WebGPUBuffer>()
-                    .ok_or_else(|| format!("Buffer {} is not a WebGPU buffer", name))?;
-                
-                layout_entries.push(BindGroupLayoutEntry {
-                    binding: binding_index,
-                    visibility: ShaderStages::COMPUTE,
-                    ty: BindingType::Buffer {
-                        ty: BufferBindingType::Storage { read_only: false },
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
-                    },
-                    count: None,
-                });
-                
-                bind_group_entries.push(BindGroupEntry {
-                    binding: binding_index,
-                    resource: webgpu_buffer.device_buffer.as_entire_binding(),
-                });
-                
-                binding_index += 1;
-            }
-        }
-        
-        // Create bind group layout
-        let bind_group_layout = self.device.create_bind_group_layout(&BindGroupLayoutDescriptor {
-            label: Some("Compute Bind Group Layout"),
-            entries: &layout_entries,
-        });
-        
-        // Create bind group
-        let bind_group = self.device.create_bind_group(&BindGroupDescriptor {
-            label: Some("Compute Bind Group"),
-            layout: &bind_group_layout,
-            entries: &bind_group_entries,
-        });
-        
-        Ok(bind_group)
-    }
-    
-    #[cfg(not(feature = "wgpu_backend"))]
-    fn create_bind_group(&self, _shader: &WebGPUShader, _params: &HashMap<String, KernelParam>) -> Result<(), String> {
-        // Fallback for when WebGPU is not available
-        Ok(())
-    }
 }
 
 /// WebGPU buffer implementation
@@ -778,7 +654,7 @@ impl Drop for WebGPUBuffer {
             #[cfg(feature = "wgpu_backend")]
             {
                 // In real implementation, would return buffer to pool
-                // pool.deallocate(std::mem::take(&mut self.device_buffer));
+                pool.deallocate(std::mem::take(&mut self.device_buffer));
             }
             #[cfg(not(feature = "wgpu_backend"))]
             {
@@ -808,7 +684,7 @@ impl GpuBufferImpl for WebGPUCpuFallbackBuffer {
         }
         
         // Since this is a CPU fallback, we can use safe Rust internally
-        let data_slice = std::slice::from_raw_parts(data, size);
+        let _data_slice = std::slice::from_raw_parts(data, size);
         // We can't mutate self.data directly since &self is immutable
         // In a real implementation, this would require interior mutability
         eprintln!("Warning: CPU fallback buffer copy_from_host called (size: {})", size);

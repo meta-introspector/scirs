@@ -7,17 +7,12 @@ use std::fmt::Debug;
 use crate::error::{NdimageError, NdimageResult};
 
 /// Helper function to generate n-dimensional neighborhood offsets
-fn generate_offsets(
-    offsets: &mut Vec<Vec<isize>>,
-    sizes: &[usize],
-    current: &[isize],
-    dim: usize,
-) {
+fn generate_offsets(offsets: &mut Vec<Vec<isize>>, sizes: &[usize], current: &[isize], dim: usize) {
     if dim == sizes.len() {
         offsets.push(current.to_vec());
         return;
     }
-    
+
     let radius = (sizes[dim] / 2) as isize;
     for offset in -radius..=radius {
         let mut next = current.to_vec();
@@ -299,33 +294,35 @@ where
     // Default neighborhood size: 3 for each dimension
     let default_size: Vec<usize> = vec![3; input.ndim()];
     let neighborhood_size = size.unwrap_or(&default_size);
-    
+
     // Initialize result arrays
     let mut minima = Array::<bool, _>::from_elem(input.raw_dim(), false);
     let mut maxima = Array::<bool, _>::from_elem(input.raw_dim(), false);
-    
+
     // Create neighborhood offsets for n-dimensional case
     let mut offsets = Vec::new();
     generate_offsets(&mut offsets, neighborhood_size, &vec![0; input.ndim()], 0);
-    
+
     // Process each point in the array
     for (idx, &center_value) in input.indexed_iter() {
         let mut is_min = true;
         let mut is_max = true;
         let mut has_neighbors = false;
-        
+
         // Check all neighbors in the neighborhood
         for offset in &offsets {
             // Skip the center point itself
             if offset.iter().all(|&x| x == 0) {
                 continue;
             }
-            
+
             // Calculate neighbor index
             let mut neighbor_idx = Vec::new();
             let mut valid_neighbor = true;
-            
-            for (i, (&center_coord, &offset_val)) in idx.clone().into_iter().zip(offset.iter()).enumerate() {
+
+            for (i, (&center_coord, &offset_val)) in
+                idx.clone().into_iter().zip(offset.iter()).enumerate()
+            {
                 let coord = center_coord as isize + offset_val;
                 if coord < 0 || coord >= input.shape()[i] as isize {
                     valid_neighbor = false;
@@ -333,15 +330,15 @@ where
                 }
                 neighbor_idx.push(coord as usize);
             }
-            
+
             if !valid_neighbor {
                 continue;
             }
-            
+
             // Get neighbor value
             let neighbor_value = input[&*neighbor_idx];
             has_neighbors = true;
-            
+
             // Check min/max conditions
             if neighbor_value <= center_value {
                 is_min = false;
@@ -349,13 +346,13 @@ where
             if neighbor_value >= center_value {
                 is_max = false;
             }
-            
+
             // Early exit if neither min nor max
             if !is_min && !is_max {
                 break;
             }
         }
-        
+
         // Only mark as extrema if we found valid neighbors
         if has_neighbors {
             match m {

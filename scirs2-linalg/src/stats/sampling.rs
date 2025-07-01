@@ -39,7 +39,10 @@ where
         + ndarray::ScalarOperand
         + num_traits::FromPrimitive
         + num_traits::NumAssign
-        + std::iter::Sum,
+        + std::iter::Sum
+        + Send
+        + Sync
+        + 'static,
 {
     let p = mean.len();
 
@@ -96,7 +99,10 @@ where
         + ndarray::ScalarOperand
         + num_traits::FromPrimitive
         + num_traits::NumAssign
-        + std::iter::Sum,
+        + std::iter::Sum
+        + Send
+        + Sync
+        + 'static,
 {
     let mut samples = Vec::with_capacity(n_samples);
 
@@ -134,7 +140,10 @@ where
         + ndarray::ScalarOperand
         + num_traits::FromPrimitive
         + num_traits::NumAssign
-        + std::iter::Sum,
+        + std::iter::Sum
+        + Send
+        + Sync
+        + 'static,
 {
     let mut samples = Vec::with_capacity(n_samples);
 
@@ -175,7 +184,9 @@ where
         + ndarray::ScalarOperand
         + num_traits::FromPrimitive
         + num_traits::NumAssign
-        + std::iter::Sum,
+        + std::iter::Sum
+        + Send
+        + Sync,
 {
     let _p = scale.nrows();
 
@@ -233,7 +244,9 @@ where
         + ndarray::ScalarOperand
         + num_traits::FromPrimitive
         + num_traits::NumAssign
-        + std::iter::Sum,
+        + std::iter::Sum
+        + Send
+        + Sync,
 {
     let (m, n) = mean.dim();
 
@@ -397,7 +410,9 @@ where
         + ndarray::ScalarOperand
         + num_traits::FromPrimitive
         + num_traits::NumAssign
-        + std::iter::Sum,
+        + std::iter::Sum
+        + Send
+        + Sync,
 {
     let (m, n) = initial_value.dim();
     let total_samples = n_samples + burn_in;

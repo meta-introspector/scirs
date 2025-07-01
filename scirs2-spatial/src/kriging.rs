@@ -306,7 +306,7 @@ impl OrdinaryKriging {
     /// let kriging = OrdinaryKriging::new(&points.view(), &values.view(), variogram).unwrap();
     /// ```
     pub fn new(
-        points: &ArrayView2<f64>,
+        points: &ArrayView2<'_, f64>,
         values: &ArrayView1<f64>,
         variogram: VariogramModel,
     ) -> SpatialResult<Self> {
@@ -425,7 +425,7 @@ impl OrdinaryKriging {
     /// * Vector of KrigingPrediction results
     pub fn predict_batch(
         &self,
-        locations: &ArrayView2<f64>,
+        locations: &ArrayView2<'_, f64>,
     ) -> SpatialResult<Vec<KrigingPrediction>> {
         if locations.ncols() != self.ndim {
             return Err(SpatialError::ValueError(
@@ -674,7 +674,7 @@ impl SimpleKriging {
     /// * `mean` - Known mean value
     /// * `variogram` - Variogram model
     pub fn new(
-        points: &ArrayView2<f64>,
+        points: &ArrayView2<'_, f64>,
         values: &ArrayView1<f64>,
         mean: f64,
         variogram: VariogramModel,

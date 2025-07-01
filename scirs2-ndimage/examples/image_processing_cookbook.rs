@@ -4,7 +4,7 @@
 //! Each recipe is self-contained and can be copied directly into your code.
 //!
 //! ## Recipe Categories:
-//! 
+//!
 //! ### 🧹 Image Cleanup
 //! - Remove noise from images
 //! - Fix broken/missing pixels  
@@ -42,15 +42,10 @@
 //! - Common variations
 //! - Troubleshooting tips
 
-use ndarray::{Array2, Array3, ArrayView2, s};
+use ndarray::{s, Array2, Array3, ArrayView2};
 use scirs2_ndimage::{
-    error::NdimageResult,
-    features::*,
-    filters::*,
-    interpolation::*,
-    measurements::*,
-    morphology::*,
-    segmentation::*,
+    error::NdimageResult, features::*, filters::*, interpolation::*, measurements::*,
+    morphology::*, segmentation::*,
 };
 
 fn main() -> NdimageResult<()> {
@@ -62,7 +57,7 @@ fn main() -> NdimageResult<()> {
     image_cleanup_recipes()?;
 
     // Object Detection Recipes
-    println!("\n🔍 OBJECT DETECTION RECIPES");  
+    println!("\n🔍 OBJECT DETECTION RECIPES");
     object_detection_recipes()?;
 
     // Measurement Recipes
@@ -91,14 +86,14 @@ fn image_cleanup_recipes() -> NdimageResult<()> {
     println!("Problem: Image has random black and white pixels (salt & pepper noise)");
     println!("Solution: Use median filter to replace each pixel with neighborhood median");
     println!();
-    
+
     println!("```rust");
     println!("use scirs2_ndimage::filters::median_filter;");
     println!();
     println!("// Quick fix for light noise");
     println!("let cleaned = median_filter(&noisy_image.view(), Some(&[3, 3]), None, None)?;");
     println!();
-    println!("// Stronger cleaning for heavy noise");  
+    println!("// Stronger cleaning for heavy noise");
     println!("let cleaned = median_filter(&noisy_image.view(), Some(&[5, 5]), None, None)?;");
     println!("```");
     println!();
@@ -113,7 +108,7 @@ fn image_cleanup_recipes() -> NdimageResult<()> {
     println!("Problem: Image is grainy/fuzzy due to sensor noise");
     println!("Solution: Use Gaussian filter for smooth noise reduction");
     println!();
-    
+
     println!("```rust");
     println!("use scirs2_ndimage::filters::gaussian_filter;");
     println!();
@@ -138,7 +133,7 @@ fn image_cleanup_recipes() -> NdimageResult<()> {
     println!("Problem: Need to reduce noise while keeping edges sharp");
     println!("Solution: Use bilateral filter that considers both space and intensity");
     println!();
-    
+
     println!("```rust");
     println!("use scirs2_ndimage::filters::bilateral_filter;");
     println!();
@@ -168,7 +163,7 @@ fn image_cleanup_recipes() -> NdimageResult<()> {
     println!("Problem: Image has dead pixels or missing data");
     println!("Solution: Use morphological operations to fill gaps");
     println!();
-    
+
     println!("```rust");
     println!("use scirs2_ndimage::morphology::{{binary_closing, generate_binary_structure}};");
     println!();
@@ -192,7 +187,7 @@ fn image_cleanup_recipes() -> NdimageResult<()> {
     println!("Problem: Image looks flat/washed out");
     println!("Solution: Stretch histogram or apply adaptive enhancement");
     println!();
-    
+
     println!("```rust");
     println!("// Simple contrast stretching");
     println!("fn enhance_contrast(image: &Array2<f64>, factor: f64) -> Array2<f64> {{");
@@ -204,7 +199,9 @@ fn image_cleanup_recipes() -> NdimageResult<()> {
     println!();
     println!("// Histogram equalization using rank operations");
     println!("use scirs2_ndimage::filters::rank_filter;");
-    println!("let local_rank = rank_filter(&image.view(), None, 0.5, None, None)?;  // Local median");
+    println!(
+        "let local_rank = rank_filter(&image.view(), None, 0.5, None, None)?;  // Local median"
+    );
     println!("```");
     println!();
     println!("💡 Tips:");
@@ -223,7 +220,7 @@ fn object_detection_recipes() -> NdimageResult<()> {
     println!("Problem: Detect circular objects in an image");
     println!("Solution: Use edge detection + template matching or Hough transform");
     println!();
-    
+
     println!("```rust");
     println!("use scirs2_ndimage::{{features::canny, measurements::region_properties}};");
     println!();
@@ -253,14 +250,14 @@ fn object_detection_recipes() -> NdimageResult<()> {
     println!("Problem: Count how many objects are in the image");
     println!("Solution: Threshold + connected component labeling + filtering");
     println!();
-    
+
     println!("```rust");
     println!("use scirs2_ndimage::{{segmentation::{{threshold_binary, otsu_threshold}}, morphology::label}};");
     println!();
     println!("// Automatic thresholding");
     println!("let binary = otsu_threshold(&image.view())?;");
     println!();
-    println!("// Manual thresholding"); 
+    println!("// Manual thresholding");
     println!("// let binary = threshold_binary(&image.view(), 0.5)?;");
     println!();
     println!("// Label connected components");
@@ -286,9 +283,11 @@ fn object_detection_recipes() -> NdimageResult<()> {
     println!("Problem: Objects are connected and counted as one");
     println!("Solution: Use watershed segmentation with distance transform");
     println!();
-    
+
     println!("```rust");
-    println!("use scirs2_ndimage::{{morphology::distance_transform_edt, segmentation::watershed}};");
+    println!(
+        "use scirs2_ndimage::{{morphology::distance_transform_edt, segmentation::watershed}};"
+    );
     println!("use ndarray::IxDyn;");
     println!();
     println!("// Step 1: Create binary mask");
@@ -317,7 +316,7 @@ fn object_detection_recipes() -> NdimageResult<()> {
     println!("Problem: Detect rectangular or square objects");
     println!("Solution: Use corner detection + geometric constraints");
     println!();
-    
+
     println!("```rust");
     println!("use scirs2_ndimage::features::harris_corners;");
     println!();
@@ -356,7 +355,7 @@ fn object_detection_recipes() -> NdimageResult<()> {
     println!("Problem: Find objects with specific shape/pattern");
     println!("Solution: Use template matching or hit-or-miss transform");
     println!();
-    
+
     println!("```rust");
     println!("use scirs2_ndimage::morphology::binary_hit_or_miss;");
     println!();
@@ -367,10 +366,12 @@ fn object_detection_recipes() -> NdimageResult<()> {
     println!("    1, 1, 0, 1, 1,  // Shape with hole in center");
     println!("    1, 1, 1, 1, 1,");
     println!("    0, 1, 1, 1, 0,");
-    println!"])?;");
+    println!("    ])?;");
     println!();
     println!("// Find matches using hit-or-miss");
-    println!("let matches = binary_hit_or_miss(&binary_image.view(), &template.view(), None, None)?;");
+    println!(
+        "let matches = binary_hit_or_miss(&binary_image.view(), &template.view(), None, None)?;"
+    );
     println!();
     println!("// Count matches");
     println!("let num_matches = matches.iter().filter(|&&x| x > 0).count();");
@@ -393,7 +394,7 @@ fn measurement_recipes() -> NdimageResult<()> {
     println!("Problem: Calculate area of objects in pixels or real units");
     println!("Solution: Use region properties after object labeling");
     println!();
-    
+
     println!("```rust");
     println!("use scirs2_ndimage::{{morphology::label, measurements::region_properties}};");
     println!();
@@ -407,7 +408,9 @@ fn measurement_recipes() -> NdimageResult<()> {
     println!("for (i, prop) in props.iter().enumerate() {{");
     println!("    let area_pixels = prop.area;");
     println!("    let area_mm2 = area_pixels * pixel_size_mm * pixel_size_mm;");
-    println!("    println!(\"Object {{}}: {{:.1}} pixels ({{:.2}} mm²)\", i+1, area_pixels, area_mm2);");
+    println!(
+        "    println!(\"Object {{}}: {{:.1}} pixels ({{:.2}} mm²)\", i+1, area_pixels, area_mm2);"
+    );
     println!("}}");
     println!();
     println!("// Statistics");
@@ -427,13 +430,15 @@ fn measurement_recipes() -> NdimageResult<()> {
     println!("Problem: Measure distances between points or object centers");
     println!("Solution: Use centroids and Euclidean distance formula");
     println!();
-    
+
     println!("```rust");
     println!("// Get object centroids");
     println!("let props = region_properties(&labeled.view(), Some(&image.view()))?;");
     println!();
     println!("// Distance between two specific objects");
-    println!("fn distance_between_objects(obj1: &RegionProperties, obj2: &RegionProperties) -> f64 {{");
+    println!(
+        "fn distance_between_objects(obj1: &RegionProperties, obj2: &RegionProperties) -> f64 {{"
+    );
     println!("    let dx = obj1.centroid[0] - obj2.centroid[0];");
     println!("    let dy = obj1.centroid[1] - obj2.centroid[1];");
     println!("    (dx * dx + dy * dy).sqrt()");
@@ -453,7 +458,9 @@ fn measurement_recipes() -> NdimageResult<()> {
     println!("        .filter(|(j, _)| *j != i)");
     println!("        .map(|(_, other)| distance_between_objects(obj, other))");
     println!("        .fold(f64::INFINITY, f64::min);");
-    println!("    println!(\"Object {{}}: nearest neighbor at {{:.1}} pixels\", i+1, nearest_dist);");
+    println!(
+        "    println!(\"Object {{}}: nearest neighbor at {{:.1}} pixels\", i+1, nearest_dist);"
+    );
     println!("}}");
     println!("```");
     println!();
@@ -468,7 +475,7 @@ fn measurement_recipes() -> NdimageResult<()> {
     println!("Problem: Characterize object shapes (roundness, elongation, etc.)");
     println!("Solution: Calculate geometric descriptors from region properties");
     println!();
-    
+
     println!("```rust");
     println!("// Extended shape analysis");
     println!("for (i, prop) in props.iter().enumerate() {{");
@@ -484,11 +491,15 @@ fn measurement_recipes() -> NdimageResult<()> {
     println!("        width.max(height) / width.min(height)");
     println!("    }};");
     println!("    let solidity = {{");
-    println!("        let bbox_area = (prop.bbox[2] - prop.bbox[0]) * (prop.bbox[3] - prop.bbox[1]);");
+    println!(
+        "        let bbox_area = (prop.bbox[2] - prop.bbox[0]) * (prop.bbox[3] - prop.bbox[1]);"
+    );
     println!("        area / bbox_area as f64");
     println!("    }};");
     println!("    let extent = {{");
-    println!("        let bbox_area = (prop.bbox[2] - prop.bbox[0]) * (prop.bbox[3] - prop.bbox[1]);");
+    println!(
+        "        let bbox_area = (prop.bbox[2] - prop.bbox[0]) * (prop.bbox[3] - prop.bbox[1]);"
+    );
     println!("        area / bbox_area as f64");
     println!("    }};");
     println!("    ");
@@ -522,7 +533,7 @@ fn measurement_recipes() -> NdimageResult<()> {
     println!("Problem: Quantify surface texture or pattern roughness");
     println!("Solution: Use local variance and edge density measures");
     println!();
-    
+
     println!("```rust");
     println!("use scirs2_ndimage::filters::{{generic_filter, sobel}};");
     println!();
@@ -563,7 +574,7 @@ fn measurement_recipes() -> NdimageResult<()> {
     println!("Problem: Quantify similarity/difference between two images");
     println!("Solution: Use statistical measures and correlation metrics");
     println!();
-    
+
     println!("```rust");
     println!("// Statistical comparison");
     println!("fn compare_images(img1: &Array2<f64>, img2: &Array2<f64>) -> ImageComparison {{");
@@ -618,7 +629,7 @@ fn transformation_recipes() -> NdimageResult<()> {
     println!("Problem: Rotate image by specific angle while maintaining quality");
     println!("Solution: Use rotation with appropriate interpolation");
     println!();
-    
+
     println!("```rust");
     println!("use scirs2_ndimage::interpolation::{{rotate, InterpolationOrder, BoundaryMode}};");
     println!();
@@ -668,7 +679,7 @@ fn transformation_recipes() -> NdimageResult<()> {
     println!("Problem: Change image size while preserving aspect ratio or specific dimensions");
     println!("Solution: Use zoom function with scale factors");
     println!();
-    
+
     println!("```rust");
     println!("use scirs2_ndimage::interpolation::{{zoom, InterpolationOrder, BoundaryMode}};");
     println!();
@@ -712,7 +723,7 @@ fn transformation_recipes() -> NdimageResult<()> {
     println!("Problem: Fix perspective distortion (e.g., photo of document taken at angle)");
     println!("Solution: Use affine or perspective transformation matrix");
     println!();
-    
+
     println!("```rust");
     println!("use scirs2_ndimage::interpolation::{{affine_transform, InterpolationOrder, BoundaryMode}};");
     println!();
@@ -751,7 +762,7 @@ fn transformation_recipes() -> NdimageResult<()> {
     println!("Problem: Align images taken at different times or with slight movements");
     println!("Solution: Find optimal translation/rotation to maximize overlap");
     println!();
-    
+
     println!("```rust");
     println!("// Method 1: Translation-only registration");
     println!("fn find_translation(reference: &Array2<f64>, moving: &Array2<f64>) -> (f64, f64) {{");
@@ -778,7 +789,9 @@ fn transformation_recipes() -> NdimageResult<()> {
     println!("// Apply registration");
     println!("let (shift_y, shift_x) = find_translation(&reference_image, &moving_image);");
     println!("let registered = shift(&moving_image.view(), &[shift_y, shift_x], ");
-    println!("                      InterpolationOrder::Linear, BoundaryMode::Constant, Some(0.0))?;");
+    println!(
+        "                      InterpolationOrder::Linear, BoundaryMode::Constant, Some(0.0))?;"
+    );
     println!();
     println!("println!(\"Best alignment at shift: ({{:.1}}, {{:.1}})\", shift_y, shift_x);");
     println!("```");
@@ -795,7 +808,7 @@ fn transformation_recipes() -> NdimageResult<()> {
     println!("Problem: Analyze image at multiple resolutions for hierarchical processing");
     println!("Solution: Create pyramid by iterative smoothing and downsampling");
     println!();
-    
+
     println!("```rust");
     println!("use scirs2_ndimage::filters::gaussian_filter;");
     println!();
@@ -809,7 +822,9 @@ fn transformation_recipes() -> NdimageResult<()> {
     println!("        ");
     println!("        // Downsample by 2x");
     println!("        let downsampled = zoom(&smoothed, &[0.5, 0.5], ");
-    println!("                              InterpolationOrder::Linear, BoundaryMode::Reflect, None)?;");
+    println!(
+        "                              InterpolationOrder::Linear, BoundaryMode::Reflect, None)?;"
+    );
     println!("        ");
     println!("        pyramid.push(downsampled.clone());");
     println!("        current = downsampled;");
@@ -850,7 +865,7 @@ fn enhancement_recipes() -> NdimageResult<()> {
     println!("Problem: Image is blurry and needs edge enhancement");
     println!("Solution: Use unsharp masking or Laplacian sharpening");
     println!();
-    
+
     println!("```rust");
     println!("use scirs2_ndimage::filters::{{gaussian_filter, laplace}};");
     println!();
@@ -870,7 +885,9 @@ fn enhancement_recipes() -> NdimageResult<()> {
     println!("}}");
     println!();
     println!("let sharpened = unsharp_mask(&blurry_image, 1.0, 0.5)?;  // Moderate sharpening");
-    println!("let sharp_aggressive = unsharp_mask(&blurry_image, 0.5, 1.0)?;  // Strong sharpening");
+    println!(
+        "let sharp_aggressive = unsharp_mask(&blurry_image, 0.5, 1.0)?;  // Strong sharpening"
+    );
     println!();
     println!("// Method 2: Laplacian sharpening");
     println!("let laplacian = laplace(&blurry_image.view(), None, None)?;");
@@ -890,7 +907,7 @@ fn enhancement_recipes() -> NdimageResult<()> {
     println!("Problem: Image has unwanted background pattern or uneven illumination");
     println!("Solution: Use background subtraction with large-scale smoothing");
     println!();
-    
+
     println!("```rust");
     println!("// Method 1: Rolling ball background subtraction");
     println!("fn remove_background(image: &Array2<f64>, background_size: f64) -> NdimageResult<Array2<f64>> {{");
@@ -929,7 +946,7 @@ fn enhancement_recipes() -> NdimageResult<()> {
     println!("Problem: Enhance visualization of scientific data with color mapping");
     println!("Solution: Map intensity values to color lookup table");
     println!();
-    
+
     println!("```rust");
     println!("// Create false color image from grayscale");
     println!("fn apply_colormap(image: &Array2<f64>, colormap: &str) -> Array3<f64> {{");
@@ -983,7 +1000,7 @@ fn enhancement_recipes() -> NdimageResult<()> {
     println!("Problem: Image has both dark and bright regions that need different enhancement");
     println!("Solution: Use adaptive histogram equalization or CLAHE");
     println!();
-    
+
     println!("```rust");
     println!("// Simplified adaptive contrast enhancement");
     println!("fn adaptive_contrast_enhancement(image: &Array2<f64>, window_size: usize) -> NdimageResult<Array2<f64>> {{");
@@ -1033,7 +1050,7 @@ fn enhancement_recipes() -> NdimageResult<()> {
     println!("Problem: Transform regular photo into artistic rendition");
     println!("Solution: Combine multiple filters for creative effects");
     println!();
-    
+
     println!("```rust");
     println!("// Effect 1: Oil painting effect");
     println!("fn oil_painting_effect(image: &Array2<f64>) -> NdimageResult<Array2<f64>> {{");
@@ -1102,7 +1119,10 @@ struct ImageComparison {
     correlation: f64,
 }
 
-fn interpolate_missing_pixels(image: &Array2<f64>, mask: &Array2<u8>) -> NdimageResult<Array2<f64>> {
+fn interpolate_missing_pixels(
+    image: &Array2<f64>,
+    mask: &Array2<u8>,
+) -> NdimageResult<Array2<f64>> {
     // Simplified missing pixel interpolation
     Ok(image.clone())
 }
@@ -1115,28 +1135,29 @@ fn estimate_perimeter(prop: &crate::measurements::RegionProperties) -> f64 {
 fn find_local_maxima(image: &Array2<f64>, threshold: f64) -> Array2<u32> {
     let mut markers = Array2::zeros(image.dim());
     let mut label = 1u32;
-    
+
     let (height, width) = image.dim();
-    for i in 1..height-1 {
-        for j in 1..width-1 {
-            if image[[i, j]] > threshold &&
-               image[[i, j]] > image[[i-1, j]] &&
-               image[[i, j]] > image[[i+1, j]] &&
-               image[[i, j]] > image[[i, j-1]] &&
-               image[[i, j]] > image[[i, j+1]] {
+    for i in 1..height - 1 {
+        for j in 1..width - 1 {
+            if image[[i, j]] > threshold
+                && image[[i, j]] > image[[i - 1, j]]
+                && image[[i, j]] > image[[i + 1, j]]
+                && image[[i, j]] > image[[i, j - 1]]
+                && image[[i, j]] > image[[i, j + 1]]
+            {
                 markers[[i, j]] = label;
                 label += 1;
             }
         }
     }
-    
+
     markers
 }
 
 fn apply_perspective_correction(
-    image: &Array2<f64>, 
-    _src_corners: &[(f64, f64)], 
-    _dst_corners: &[(f64, f64)]
+    image: &Array2<f64>,
+    _src_corners: &[(f64, f64)],
+    _dst_corners: &[(f64, f64)],
 ) -> NdimageResult<Array2<f64>> {
     // Simplified perspective correction
     Ok(image.clone())
@@ -1145,25 +1166,27 @@ fn apply_perspective_correction(
 fn calculate_correlation(img1: &Array2<f64>, img2: &Array2<f64>) -> f64 {
     let mean1 = img1.sum() / img1.len() as f64;
     let mean2 = img2.sum() / img2.len() as f64;
-    
-    let numerator: f64 = img1.iter().zip(img2.iter())
+
+    let numerator: f64 = img1
+        .iter()
+        .zip(img2.iter())
         .map(|(&a, &b)| (a - mean1) * (b - mean2))
         .sum();
-    
+
     let var1: f64 = img1.iter().map(|&x| (x - mean1).powi(2)).sum();
     let var2: f64 = img2.iter().map(|&x| (x - mean2).powi(2)).sum();
-    
+
     numerator / (var1 * var2).sqrt()
 }
 
 fn hot_colormap(value: f64) -> (f64, f64, f64) {
     let v = value.clamp(0.0, 1.0);
-    if v < 1.0/3.0 {
+    if v < 1.0 / 3.0 {
         (3.0 * v, 0.0, 0.0)
-    } else if v < 2.0/3.0 {
-        (1.0, 3.0 * (v - 1.0/3.0), 0.0)
+    } else if v < 2.0 / 3.0 {
+        (1.0, 3.0 * (v - 1.0 / 3.0), 0.0)
     } else {
-        (1.0, 1.0, 3.0 * (v - 2.0/3.0))
+        (1.0, 1.0, 3.0 * (v - 2.0 / 3.0))
     }
 }
 

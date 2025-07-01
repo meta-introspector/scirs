@@ -645,7 +645,9 @@ pub mod advanced {
             + PartialOrd
             + std::iter::Sum
             + ndarray::ScalarOperand
-            + NumAssign,
+            + NumAssign
+            + Send
+            + Sync,
     {
         // Analyze sparsity pattern to choose optimal algorithm
         let sparsity_ratio = sparse.nnz() as f64 / (sparse.nrows() * sparse.ncols()) as f64;
@@ -978,7 +980,9 @@ where
         + PartialOrd
         + std::iter::Sum
         + ndarray::ScalarOperand
-        + NumAssign,
+        + NumAssign
+        + Send
+        + Sync,
 {
     fn shape(&self) -> (usize, usize) {
         (self.rows, self.cols)
@@ -1033,7 +1037,9 @@ pub mod utils {
             + NumCast
             + NumAssign
             + std::iter::Sum
-            + ndarray::ScalarOperand,
+            + ndarray::ScalarOperand
+            + Send
+            + Sync,
     {
         // Analyze matrix sparsity
         let total_elements = matrix.len();

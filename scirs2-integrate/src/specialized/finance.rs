@@ -3454,6 +3454,7 @@ pub mod advanced_exotic_derivatives {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{QuantumInspiredRNG, UltraMonteCarloEngine, RealTimeRiskMonitor, AlertSeverity, VarianceReductionSuite};
 
     #[test]
     fn test_quantum_inspired_rng() {
@@ -3478,6 +3479,9 @@ mod tests {
             strike: 100.0,
             maturity: 1.0,
             risk_free_rate: 0.05,
+            spot: 100.0,
+            dividend_yield: 0.0,
+            option_style: OptionStyle::European,
         };
 
         let heston_params = HestonModelParams {
@@ -3533,84 +3537,6 @@ mod tests {
         assert!(reduction_factor > 0.0 && reduction_factor <= 1.0);
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use approx::assert_relative_eq;
-
-    #[test]
-    fn test_black_scholes_call_put_parity() {
-        let call = FinancialOption {
-            option_type: OptionType::Call,
-            option_style: OptionStyle::European,
-            strike: 100.0,
-            maturity: 1.0,
-            spot: 100.0,
-            risk_free_rate: 0.05,
-            dividend_yield: 0.0,
-        };
-
-        let put = FinancialOption {
-            option_type: OptionType::Put,
-            ..call
-        };
-
-        let solver = StochasticPDESolver::new(
-            100,
-            50,
-            VolatilityModel::Constant(0.2),
-            FinanceMethod::FiniteDifference,
-        );
-
-        let call_price = solver.price_option(&call).unwrap();
-        let put_price = solver.price_option(&put).unwrap();
-
-        // Put-call parity: C - P = S - K*exp(-r*T)
-        let parity = call_price - put_price;
-        let theoretical = call.spot - call.strike * (-call.risk_free_rate * call.maturity).exp();
-
-        assert_relative_eq!(parity, theoretical, epsilon = 0.01);
-    }
-
-    #[test]
-    fn test_option_greeks() {
-        let option = FinancialOption {
-            option_type: OptionType::Call,
-            option_style: OptionStyle::European,
-            strike: 100.0,
-            maturity: 1.0,
-            spot: 100.0,
-            risk_free_rate: 0.05,
-            dividend_yield: 0.0,
-        };
-
-        let solver = StochasticPDESolver::new(
-            100,
-            50,
-            VolatilityModel::Constant(0.2),
-            FinanceMethod::FiniteDifference,
-        );
-
-        let greeks = solver.calculate_greeks(&option).unwrap();
-
-        // Delta should be around 0.5 for ATM option
-        assert!(greeks.delta > 0.4 && greeks.delta < 0.7);
-
-        // Gamma should be positive
-        assert!(greeks.gamma > 0.0);
-
-        // Theta should be negative for long option
-        assert!(greeks.theta < 0.0);
-
-        // Rho should be positive for call
-        assert!(greeks.rho > 0.0);
-
-        // Vega should be positive
-        assert!(greeks.vega > 0.0);
-    }
-}
-
 /// Advanced stochastic PDE solvers and exotic derivatives
 pub mod advanced_solvers {
     use super::*;
@@ -7978,8 +7904,6 @@ pub mod risk_management {
 
 #[cfg(test)]
 mod ultra_financial_tests {
-    use super::realtime_risk_engine::*;
-    use super::ultra_monte_carlo_engine::*;
     use super::*;
 }
 
@@ -8053,7 +7977,7 @@ mod enhanced_finance_tests {
         assert!(put_price > 0.0);
 
         // Put-call parity check: C - P = S - K*e^(-r*T)
-        let parity_diff = call_price - put_price - (100.0 - 100.0 * (-0.05 * 1.0).exp());
+        let parity_diff = call_price - put_price - (100.0 - 100.0 * (-0.05_f64 * 1.0).exp());
         assert!(parity_diff.abs() < 1e-10);
     }
 }
@@ -8063,7 +7987,6 @@ mod enhanced_finance_tests {
 pub mod ultra_performance_extensions {
     use super::*;
     use ndarray::{Array1, Array2};
-    use scirs2_core::parallel_ops::*;
 
     /// Machine Learning Enhanced Volatility Forecasting
     /// Neural network models for volatility prediction

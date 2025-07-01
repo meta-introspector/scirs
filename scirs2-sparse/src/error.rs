@@ -75,6 +75,10 @@ pub enum SparseError {
         value: usize,
         target_type: &'static str,
     },
+
+    /// Invalid format error
+    #[error("Invalid format: {0}")]
+    InvalidFormat(String),
 }
 
 /// Result type for sparse matrix/array operations
@@ -126,6 +130,10 @@ impl SparseError {
                 "Index values are too large for the target type. \
                  Consider using a larger index type (e.g., usize instead of u32)."
             },
+            SparseError::InvalidFormat(_) => {
+                "The sparse matrix format is invalid or unsupported for this operation. \
+                 Check that the matrix format matches the expected format for the operation."
+            },
             _ => "Refer to the documentation for more information about this error."
         }
     }
@@ -155,12 +163,17 @@ impl SparseError {
                 "Validate data with .check_format() if available",
                 "Ensure indices are sorted when required",
             ],
+            SparseError::InvalidFormat(_) => vec![
+                "Convert matrix to the required format",
+                "Use .to_csr() or .to_csc() for format conversion",
+                "Check if the operation supports the current format",
+            ],
             _ => vec!["Check the documentation for this operation"],
         }
     }
 
     /// Create a dimension mismatch error with helpful context
-    pub fn dimension_mismatch_with_context(expected: usize, found: usize, operation: &str) -> Self {
+    pub fn dimension_mismatch_with_context(expected: usize, found: usize, _operation: &str) -> Self {
         SparseError::DimensionMismatch { expected, found }
     }
 
@@ -168,7 +181,7 @@ impl SparseError {
     pub fn shape_mismatch_with_context(
         expected: (usize, usize),
         found: (usize, usize),
-        operation: &str,
+        _operation: &str,
     ) -> Self {
         SparseError::ShapeMismatch { expected, found }
     }

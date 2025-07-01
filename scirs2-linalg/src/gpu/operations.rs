@@ -1,6 +1,6 @@
 //! GPU-accelerated linear algebra operations
 
-use super::{AutoGpuSelector, GpuContext, GpuLinalgOps};
+use super::{AutoGpuSelector, GpuBuffer, GpuContext, GpuLinalgOps};
 use crate::error::{LinalgError, LinalgResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, NumAssign, Zero};
@@ -2157,72 +2157,7 @@ where
     }
 }
 
-/// Advanced GPU operations implementation with ULTRATHINK optimizations
-pub struct AdvancedGpuOperations<T>
-where
-    T: Float + NumAssign + Zero + Send + Sync + Debug + 'static,
-{
-    _phantom: std::marker::PhantomData<T>,
-}
 
-impl<T> AdvancedGpuOperations<T>
-where
-    T: Float + NumAssign + Zero + Send + Sync + Debug + 'static,
-{
-    /// Create new advanced GPU operations
-    pub fn new() -> Self {
-        Self {
-            _phantom: std::marker::PhantomData,
-        }
-    }
-
-    /// Batched matrix multiplication with adaptive optimization
-    pub fn batched_matmul_optimized(
-        &self,
-        matrices_a: &[ArrayView2<T>],
-        matrices_b: &[ArrayView2<T>],
-    ) -> LinalgResult<Vec<Array2<T>>> {
-        if matrices_a.len() != matrices_b.len() {
-            return Err(LinalgError::ShapeError(
-                "Batch sizes must match".to_string(),
-            ));
-        }
-
-        // Advanced batching strategy would be implemented here
-        // For now, process sequentially with basic optimization
-        let mut results = Vec::with_capacity(matrices_a.len());
-
-        for (a, b) in matrices_a.iter().zip(matrices_b.iter()) {
-            // Would use optimized batched GEMM kernels in production
-            let (m, k) = a.dim();
-            let (_, n) = b.dim();
-            let mut result = Array2::zeros((m, n));
-
-            // Simple CPU implementation for now
-            for i in 0..m {
-                for j in 0..n {
-                    let mut sum = T::zero();
-                    for l in 0..k {
-                        sum += a[[i, l]] * b[[l, j]];
-                    }
-                    result[[i, j]] = sum;
-                }
-            }
-            results.push(result);
-        }
-
-        Ok(results)
-    }
-}
-
-impl<T> Default for AdvancedGpuOperations<T>
-where
-    T: Float + NumAssign + Zero + Send + Sync + Debug + 'static,
-{
-    fn default() -> Self {
-        Self::new()
-    }
-}
 
 #[cfg(test)]
 mod tests {

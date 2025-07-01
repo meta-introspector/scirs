@@ -49,7 +49,7 @@ pub fn largest_k_eigh<F>(
     tol: F,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     // Check if matrix is square
     if a.nrows() != a.ncols() {
@@ -159,7 +159,7 @@ pub fn smallest_k_eigh<F>(
     tol: F,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     // Check if matrix is square
     if a.nrows() != a.ncols() {
@@ -255,7 +255,7 @@ fn power_iteration_with_convergence<F>(
     tol: F,
 ) -> LinalgResult<(F, Array1<F>)>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     let n = a.nrows();
 

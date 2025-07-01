@@ -524,7 +524,7 @@ impl SentenceEmbeddingSimilarity {
             PoolingStrategy::Mean => {
                 let mut result = Array1::zeros(embed_dim);
                 for embedding in &valid_embeddings {
-                    result = result + *embedding;
+                    result += *embedding;
                 }
                 Ok(result / valid_embeddings.len() as f64)
             }
@@ -1156,6 +1156,7 @@ impl DistributionalSimilarity {
             let start = i.saturating_sub(window_size);
             let end = (i + window_size + 1).min(tokens.len());
 
+            #[allow(clippy::needless_range_loop)]
             for j in start..end {
                 if i != j {
                     let context = &tokens[j];

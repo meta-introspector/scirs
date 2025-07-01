@@ -8,7 +8,7 @@
 //! - Principal component analysis with metric
 //! - Modal analysis in structural engineering
 
-use ndarray::{Array1, Array2, ArrayView2};
+use ndarray::{Array1, Array2, ArrayView2, ScalarOperand};
 use num_complex::Complex;
 use num_traits::{Float, NumAssign};
 use std::iter::Sum;
@@ -56,7 +56,7 @@ use super::standard::{eig, eigh, EigenResult};
 /// numerical properties.
 pub fn eig_gen<F>(a: &ArrayView2<F>, b: &ArrayView2<F>, workers: Option<usize>) -> EigenResult<F>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     // Configure workers for parallel operations
     parallel::configure_workers(workers);
@@ -174,7 +174,7 @@ pub fn eigh_gen<F>(
     workers: Option<usize>,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     // Configure workers for parallel operations
     parallel::configure_workers(workers);
@@ -299,7 +299,7 @@ pub fn eigvals_gen<F>(
     workers: Option<usize>,
 ) -> LinalgResult<Array1<Complex<F>>>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     let (eigenvalues, _) = eig_gen(a, b, workers)?;
     Ok(eigenvalues)
@@ -335,7 +335,7 @@ pub fn eigvalsh_gen<F>(
     workers: Option<usize>,
 ) -> LinalgResult<Array1<F>>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     let (eigenvalues, _) = eigh_gen(a, b, workers)?;
     Ok(eigenvalues)

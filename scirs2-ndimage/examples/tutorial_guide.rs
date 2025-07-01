@@ -17,13 +17,8 @@
 
 use ndarray::{Array2, Array3, ArrayView2, Axis};
 use scirs2_ndimage::{
-    error::NdimageResult, 
-    filters::*, 
-    features::*, 
-    measurements::*, 
-    morphology::*, 
-    segmentation::*,
-    interpolation::*,
+    error::NdimageResult, features::*, filters::*, interpolation::*, measurements::*,
+    morphology::*, segmentation::*,
 };
 
 fn main() -> NdimageResult<()> {
@@ -87,7 +82,11 @@ fn tutorial_1_getting_started() -> NdimageResult<()> {
     println!("Let's create a simple 8x8 grayscale image:");
     let simple_image = Array2::from_shape_fn((8, 8), |(i, j)| {
         // Create a checkerboard pattern
-        if (i + j) % 2 == 0 { 1.0 } else { 0.0 }
+        if (i + j) % 2 == 0 {
+            1.0
+        } else {
+            0.0
+        }
     });
 
     println!("Image shape: {:?}", simple_image.dim());
@@ -109,16 +108,34 @@ fn tutorial_1_getting_started() -> NdimageResult<()> {
     println!("🌈 CONCEPT: Color images");
     println!("Color images have multiple channels (typically RGB).");
     println!("They are represented as 3D arrays: (height, width, channels)");
-    
+
     let color_image = Array3::from_shape_fn((4, 4, 3), |(i, j, c)| {
         match c {
-            0 => if i < 2 { 1.0 } else { 0.0 }, // Red channel
-            1 => if j < 2 { 1.0 } else { 0.0 }, // Green channel  
-            2 => if (i + j) % 2 == 0 { 1.0 } else { 0.0 }, // Blue channel
+            0 => {
+                if i < 2 {
+                    1.0
+                } else {
+                    0.0
+                }
+            } // Red channel
+            1 => {
+                if j < 2 {
+                    1.0
+                } else {
+                    0.0
+                }
+            } // Green channel
+            2 => {
+                if (i + j) % 2 == 0 {
+                    1.0
+                } else {
+                    0.0
+                }
+            } // Blue channel
             _ => 0.0,
         }
     });
-    
+
     println!("Color image shape: {:?}", color_image.dim());
     println!("(height, width, channels) = (4, 4, 3)");
     println!();
@@ -146,13 +163,16 @@ fn tutorial_2_working_with_images() -> NdimageResult<()> {
     // Example 1: Solid color image
     println!("1. Creating a solid gray image:");
     let gray_image = Array2::from_elem((50, 50), 0.5);
-    println!("   Shape: {:?}, all pixels = 0.5 (middle gray)", gray_image.dim());
+    println!(
+        "   Shape: {:?}, all pixels = 0.5 (middle gray)",
+        gray_image.dim()
+    );
     println!();
 
     // Example 2: Gradient image
     println!("2. Creating a gradient image:");
     let gradient = Array2::from_shape_fn((50, 50), |(i, j)| {
-        i as f64 / 49.0  // Vertical gradient from 0 to 1
+        i as f64 / 49.0 // Vertical gradient from 0 to 1
     });
     println!("   Vertical gradient from black (top) to white (bottom)");
     println!();
@@ -161,7 +181,7 @@ fn tutorial_2_working_with_images() -> NdimageResult<()> {
     println!("3. Creating geometric shapes:");
     let circle_image = create_circle_image(100, 100, 30.0);
     println!("   Circle image: 100x100 with radius 30");
-    
+
     let square_image = create_square_image(80, 80, 20);
     println!("   Square image: 80x80 with 20x20 square in center");
     println!();
@@ -172,7 +192,10 @@ fn tutorial_2_working_with_images() -> NdimageResult<()> {
 
     println!("Image statistics for circle:");
     let stats = compute_image_stats(&circle_image);
-    println!("   Min: {:.3}, Max: {:.3}, Mean: {:.3}", stats.0, stats.1, stats.2);
+    println!(
+        "   Min: {:.3}, Max: {:.3}, Mean: {:.3}",
+        stats.0, stats.1, stats.2
+    );
     println!();
 
     // Modifying images
@@ -215,7 +238,7 @@ fn tutorial_3_image_enhancement() -> NdimageResult<()> {
     // Create a noisy test image
     let clean_image = create_circle_image(64, 64, 20.0);
     let noisy_image = add_realistic_noise(&clean_image, 0.1);
-    
+
     println!("🎭 NOISE AND WHY WE NEED FILTERS");
     println!("Real images often contain noise from sensors, transmission, etc.");
     let clean_stats = compute_image_stats(&clean_image);
@@ -231,14 +254,22 @@ fn tutorial_3_image_enhancement() -> NdimageResult<()> {
     println!();
 
     let sigma_small = 1.0;
-    let gaussian_light = gaussian_filter(&noisy_image, &[sigma_small, sigma_small], None, None, None)?;
+    let gaussian_light =
+        gaussian_filter(&noisy_image, &[sigma_small, sigma_small], None, None, None)?;
     let stats_light = compute_image_stats(&gaussian_light);
-    println!("   Light smoothing (sigma={}): mean={:.3}", sigma_small, stats_light.2);
+    println!(
+        "   Light smoothing (sigma={}): mean={:.3}",
+        sigma_small, stats_light.2
+    );
 
     let sigma_large = 3.0;
-    let gaussian_heavy = gaussian_filter(&noisy_image, &[sigma_large, sigma_large], None, None, None)?;
+    let gaussian_heavy =
+        gaussian_filter(&noisy_image, &[sigma_large, sigma_large], None, None, None)?;
     let stats_heavy = compute_image_stats(&gaussian_heavy);
-    println!("   Heavy smoothing (sigma={}): mean={:.3}", sigma_large, stats_heavy.2);
+    println!(
+        "   Heavy smoothing (sigma={}): mean={:.3}",
+        sigma_large, stats_heavy.2
+    );
     println!();
 
     // Median filter for salt-and-pepper noise
@@ -294,7 +325,7 @@ fn tutorial_4_edge_detection() -> NdimageResult<()> {
 
     // Create an image with clear edges
     let edge_test_image = create_edge_test_image(80, 80);
-    
+
     println!("🔍 WHAT ARE EDGES?");
     println!("Edges are locations where image intensity changes rapidly.");
     println!("They correspond to object boundaries, texture changes, or lighting changes.");
@@ -308,8 +339,11 @@ fn tutorial_4_edge_detection() -> NdimageResult<()> {
 
     let sobel_edges = sobel(&edge_test_image.view(), None, None, None)?;
     let sobel_stats = compute_image_stats(&sobel_edges);
-    println!("   Sobel result: {} edges detected (mean gradient: {:.3})", 
-             count_edge_pixels(&sobel_edges, 0.1), sobel_stats.2);
+    println!(
+        "   Sobel result: {} edges detected (mean gradient: {:.3})",
+        count_edge_pixels(&sobel_edges, 0.1),
+        sobel_stats.2
+    );
     println!("   Good for general edge detection");
     println!();
 
@@ -329,7 +363,7 @@ fn tutorial_4_edge_detection() -> NdimageResult<()> {
     println!("3️⃣  CANNY EDGE DETECTION - The Gold Standard");
     println!("Canny is a multi-step algorithm that produces clean, thin edges:");
     println!("   1. Gaussian smoothing (noise reduction)");
-    println!("   2. Gradient computation");  
+    println!("   2. Gradient computation");
     println!("   3. Non-maximum suppression (thin edges)");
     println!("   4. Double thresholding (strong/weak edges)");
     println!("   5. Edge tracking by hysteresis");
@@ -337,8 +371,10 @@ fn tutorial_4_edge_detection() -> NdimageResult<()> {
 
     let canny_edges = canny(edge_test_image.view(), 1.0, 0.1, 0.3, None)?;
     let canny_stats = compute_image_stats(&canny_edges);
-    println!("   Canny result: {} strong edges detected", 
-             count_edge_pixels(&canny_edges, 0.5));
+    println!(
+        "   Canny result: {} strong edges detected",
+        count_edge_pixels(&canny_edges, 0.5)
+    );
     println!("   Produces clean, connected edge contours");
     println!();
 
@@ -360,12 +396,12 @@ fn tutorial_4_edge_detection() -> NdimageResult<()> {
     println!();
     println!("Canny Parameters:");
     println!("• sigma (smoothing): 0.5-2.0 (higher = less noise, fewer edges)");
-    println!("• low_threshold: 0.05-0.2 (lower = more weak edges)");  
+    println!("• low_threshold: 0.05-0.2 (lower = more weak edges)");
     println!("• high_threshold: 0.2-0.5 (lower = more strong edges)");
     println!();
 
     println!("General Guidelines:");
-    println!("• Start with Canny for best results"); 
+    println!("• Start with Canny for best results");
     println!("• Use Sobel for speed when quality is less critical");
     println!("• Adjust thresholds based on your image contrast");
     println!("• Pre-filter noisy images before edge detection");
@@ -375,7 +411,7 @@ fn tutorial_4_edge_detection() -> NdimageResult<()> {
     println!("🔧 PRACTICAL APPLICATIONS:");
     println!("• Object detection and recognition");
     println!("• Medical image analysis (organ boundaries)");
-    println!("• Manufacturing quality control"); 
+    println!("• Manufacturing quality control");
     println!("• Autonomous vehicle navigation");
     println!("• Document processing (text detection)");
 
@@ -389,7 +425,7 @@ fn tutorial_5_shape_analysis() -> NdimageResult<()> {
 
     // Create test images with different shapes
     let binary_image = create_binary_shapes_image(80, 80);
-    
+
     println!("🔬 WHAT IS MATHEMATICAL MORPHOLOGY?");
     println!("Morphology studies shapes using set theory operations.");
     println!("It uses a 'structuring element' (small shape) to probe the image.");
@@ -413,13 +449,19 @@ fn tutorial_5_shape_analysis() -> NdimageResult<()> {
     let eroded = binary_erosion(
         &binary_image.view(),
         Some(&cross_3x3.view()),
-        None, None, None, None
+        None,
+        None,
+        None,
+        None,
     )?;
     let original_pixels = count_white_pixels(&binary_image);
     let eroded_pixels = count_white_pixels(&eroded);
     println!("   Original: {} white pixels", original_pixels);
     println!("   After erosion: {} white pixels", eroded_pixels);
-    println!("   Effect: Removed {} pixels from boundaries", original_pixels - eroded_pixels);
+    println!(
+        "   Effect: Removed {} pixels from boundaries",
+        original_pixels - eroded_pixels
+    );
     println!();
 
     println!("2️⃣  DILATION - Growing shapes");
@@ -430,11 +472,17 @@ fn tutorial_5_shape_analysis() -> NdimageResult<()> {
     let dilated = binary_dilation(
         &binary_image.view(),
         Some(&cross_3x3.view()),
-        None, None, None, None
+        None,
+        None,
+        None,
+        None,
     )?;
     let dilated_pixels = count_white_pixels(&dilated);
     println!("   After dilation: {} white pixels", dilated_pixels);
-    println!("   Effect: Added {} pixels to boundaries", dilated_pixels - original_pixels);
+    println!(
+        "   Effect: Added {} pixels to boundaries",
+        dilated_pixels - original_pixels
+    );
     println!();
 
     // Compound operations
@@ -446,7 +494,9 @@ fn tutorial_5_shape_analysis() -> NdimageResult<()> {
     let opened = binary_opening(
         &binary_image.view(),
         Some(&cross_3x3.view()),
-        None, None, None
+        None,
+        None,
+        None,
     )?;
     let opened_pixels = count_white_pixels(&opened);
     println!("   After opening: {} white pixels", opened_pixels);
@@ -461,7 +511,9 @@ fn tutorial_5_shape_analysis() -> NdimageResult<()> {
     let closed = binary_closing(
         &binary_image.view(),
         Some(&cross_3x3.view()),
-        None, None, None
+        None,
+        None,
+        None,
     )?;
     let closed_pixels = count_white_pixels(&closed);
     println!("   After closing: {} white pixels", closed_pixels);
@@ -494,7 +546,8 @@ fn tutorial_5_shape_analysis() -> NdimageResult<()> {
 
     use ndarray::IxDyn;
     let binary_dyn = binary_image.clone().into_dimensionality::<IxDyn>().unwrap();
-    let (distances, _) = distance_transform_edt(&binary_dyn, None, true, false).expect("Distance transform failed")?;
+    let (distances, _) = distance_transform_edt(&binary_dyn, None, true, false)
+        .expect("Distance transform failed")?;
     let max_distance = distances.fold(0.0, |acc, &x| acc.max(x));
     println!("   Maximum distance: {:.1} pixels", max_distance);
     println!("   Creates 'skeleton' representation of shapes");
@@ -523,7 +576,7 @@ fn tutorial_6_object_detection() -> NdimageResult<()> {
 
     // Create test image with multiple objects
     let test_image = create_multi_object_image(100, 100);
-    
+
     println!("🎯 OBJECT DETECTION PIPELINE");
     println!("1. Threshold image to create binary mask");
     println!("2. Clean up binary image with morphology");
@@ -538,7 +591,10 @@ fn tutorial_6_object_detection() -> NdimageResult<()> {
 
     let binary_mask = threshold_binary(&test_image.view(), 0.5)?;
     let object_pixels = count_white_pixels(&binary_mask);
-    println!("   Binary threshold at 0.5: {} object pixels", object_pixels);
+    println!(
+        "   Binary threshold at 0.5: {} object pixels",
+        object_pixels
+    );
 
     // Otsu thresholding for automatic threshold selection
     let otsu_result = otsu_threshold(&test_image.view())?;
@@ -552,7 +608,13 @@ fn tutorial_6_object_detection() -> NdimageResult<()> {
     println!();
 
     let structure = generate_binary_structure(2, 1)?;
-    let cleaned = binary_opening(&binary_mask.view(), Some(&structure.view()), None, None, None)?;
+    let cleaned = binary_opening(
+        &binary_mask.view(),
+        Some(&structure.view()),
+        None,
+        None,
+        None,
+    )?;
     let cleaned_pixels = count_white_pixels(&cleaned);
     println!("   After morphological opening: {} pixels", cleaned_pixels);
     println!("   Removed {} noise pixels", object_pixels - cleaned_pixels);
@@ -580,13 +642,19 @@ fn tutorial_6_object_detection() -> NdimageResult<()> {
     println!("   ┌─────────┬──────────┬─────────────────┬─────────────────┐");
     println!("   │ Label   │ Area     │ Centroid        │ Bounding Box    │");
     println!("   ├─────────┼──────────┼─────────────────┼─────────────────┤");
-    
+
     for (i, prop) in properties.iter().take(5).enumerate() {
-        println!("   │ {:7} │ {:8.0} │ ({:5.1}, {:5.1}) │ ({:2}, {:2}) to ({:2}, {:2}) │",
-                i + 1, 
-                prop.area,
-                prop.centroid[0], prop.centroid[1],
-                prop.bbox[0], prop.bbox[1], prop.bbox[2], prop.bbox[3]);
+        println!(
+            "   │ {:7} │ {:8.0} │ ({:5.1}, {:5.1}) │ ({:2}, {:2}) to ({:2}, {:2}) │",
+            i + 1,
+            prop.area,
+            prop.centroid[0],
+            prop.centroid[1],
+            prop.bbox[0],
+            prop.bbox[1],
+            prop.bbox[2],
+            prop.bbox[3]
+        );
     }
     println!("   └─────────┴──────────┴─────────────────┴─────────────────┘");
     println!();
@@ -595,15 +663,18 @@ fn tutorial_6_object_detection() -> NdimageResult<()> {
     println!("5️⃣  OBJECT FILTERING AND ANALYSIS");
     println!();
 
-    let large_objects = properties.iter()
+    let large_objects = properties
+        .iter()
         .filter(|prop| prop.area > 50.0)
         .collect::<Vec<_>>();
     println!("   Large objects (area > 50): {}", large_objects.len());
 
-    let round_objects = properties.iter()
+    let round_objects = properties
+        .iter()
         .filter(|prop| {
-            let extent = prop.area / ((prop.bbox[2] - prop.bbox[0]) * (prop.bbox[3] - prop.bbox[1])) as f64;
-            extent > 0.6  // Roughly round objects
+            let extent =
+                prop.area / ((prop.bbox[2] - prop.bbox[0]) * (prop.bbox[3] - prop.bbox[1])) as f64;
+            extent > 0.6 // Roughly round objects
         })
         .collect::<Vec<_>>();
     println!("   Round objects (extent > 0.6): {}", round_objects.len());
@@ -656,7 +727,13 @@ fn tutorial_7_transformations() -> NdimageResult<()> {
 
     // Translation (shift)
     println!("Translation (shifting):");
-    let shifted = shift(&test_image.view(), &[5.0, -3.0], InterpolationOrder::Linear, BoundaryMode::Reflect, None)?;
+    let shifted = shift(
+        &test_image.view(),
+        &[5.0, -3.0],
+        InterpolationOrder::Linear,
+        BoundaryMode::Reflect,
+        None,
+    )?;
     println!("   Shifted by (5, -3) pixels");
     println!("   Use case: Image alignment, correcting camera shake");
     println!();
@@ -671,11 +748,27 @@ fn tutorial_7_transformations() -> NdimageResult<()> {
 
     // Scaling (zoom)
     println!("Scaling (zooming):");
-    let zoomed_in = zoom(&test_image, &[2.0, 2.0], InterpolationOrder::Linear, BoundaryMode::Reflect, None)?;
-    let zoomed_out = zoom(&test_image, &[0.5, 0.5], InterpolationOrder::Linear, BoundaryMode::Reflect, None)?;
+    let zoomed_in = zoom(
+        &test_image,
+        &[2.0, 2.0],
+        InterpolationOrder::Linear,
+        BoundaryMode::Reflect,
+        None,
+    )?;
+    let zoomed_out = zoom(
+        &test_image,
+        &[0.5, 0.5],
+        InterpolationOrder::Linear,
+        BoundaryMode::Reflect,
+        None,
+    )?;
     println!("   Zoomed in 2x and out 0.5x");
-    println!("   Original: {:?}, Zoomed in: {:?}, Zoomed out: {:?}",
-             test_image.dim(), zoomed_in.dim(), zoomed_out.dim());
+    println!(
+        "   Original: {:?}, Zoomed in: {:?}, Zoomed out: {:?}",
+        test_image.dim(),
+        zoomed_in.dim(),
+        zoomed_out.dim()
+    );
     println!("   Use case: Multi-resolution analysis, image pyramids");
     println!();
 
@@ -688,11 +781,11 @@ fn tutorial_7_transformations() -> NdimageResult<()> {
     let affine_matrix = Array2::from_shape_vec(
         (2, 3),
         vec![
-            1.4, 0.3, 5.0,   // Scale + shear + translation in X
+            1.4, 0.3, 5.0, // Scale + shear + translation in X
             -0.2, 1.2, -2.0, // Shear + scale + translation in Y
         ],
     )?;
-    
+
     let affine_result = affine_transform(
         &test_image.view(),
         &affine_matrix.view(),
@@ -711,9 +804,33 @@ fn tutorial_7_transformations() -> NdimageResult<()> {
     println!();
 
     let angle = 15.0;
-    let nearest = rotate(&test_image.view(), angle, None, Some(InterpolationOrder::Nearest), None, None, None)?;
-    let linear = rotate(&test_image.view(), angle, None, Some(InterpolationOrder::Linear), None, None, None)?;
-    let cubic = rotate(&test_image.view(), angle, None, Some(InterpolationOrder::Cubic), None, None, None)?;
+    let nearest = rotate(
+        &test_image.view(),
+        angle,
+        None,
+        Some(InterpolationOrder::Nearest),
+        None,
+        None,
+        None,
+    )?;
+    let linear = rotate(
+        &test_image.view(),
+        angle,
+        None,
+        Some(InterpolationOrder::Linear),
+        None,
+        None,
+        None,
+    )?;
+    let cubic = rotate(
+        &test_image.view(),
+        angle,
+        None,
+        Some(InterpolationOrder::Cubic),
+        None,
+        None,
+        None,
+    )?;
 
     println!("   Interpolation Quality Comparison (15° rotation):");
     println!("   • Nearest neighbor: Fast, blocky artifacts");
@@ -727,13 +844,37 @@ fn tutorial_7_transformations() -> NdimageResult<()> {
     println!();
 
     let boundary_test_angle = 45.0;
-    let constant = rotate(&test_image.view(), boundary_test_angle, None, None, Some(BoundaryMode::Constant), Some(0.0), None)?;
-    let reflect = rotate(&test_image.view(), boundary_test_angle, None, None, Some(BoundaryMode::Reflect), None, None)?;
-    let wrap = rotate(&test_image.view(), boundary_test_angle, None, None, Some(BoundaryMode::Wrap), None, None)?;
+    let constant = rotate(
+        &test_image.view(),
+        boundary_test_angle,
+        None,
+        None,
+        Some(BoundaryMode::Constant),
+        Some(0.0),
+        None,
+    )?;
+    let reflect = rotate(
+        &test_image.view(),
+        boundary_test_angle,
+        None,
+        None,
+        Some(BoundaryMode::Reflect),
+        None,
+        None,
+    )?;
+    let wrap = rotate(
+        &test_image.view(),
+        boundary_test_angle,
+        None,
+        None,
+        Some(BoundaryMode::Wrap),
+        None,
+        None,
+    )?;
 
     println!("   Boundary Mode Effects (45° rotation):");
     println!("   • Constant: Fill with specified value (often 0)");
-    println!("   • Reflect: Mirror image at boundaries");  
+    println!("   • Reflect: Mirror image at boundaries");
     println!("   • Wrap: Treat image as periodic/tiled");
     println!("   • Nearest: Extend edge pixels");
     println!();
@@ -741,30 +882,30 @@ fn tutorial_7_transformations() -> NdimageResult<()> {
     // Coordinate mapping
     println!("5️⃣  COORDINATE MAPPING");
     println!("For complex transformations, specify exact coordinate mappings.");
-    println!());
+    println!();
 
     // Create a custom coordinate mapping (barrel distortion correction)
     let (height, width) = test_image.dim();
     let center_y = height as f64 / 2.0;
     let center_x = width as f64 / 2.0;
-    
+
     let coords = Array2::from_shape_fn((2, height * width), |(axis, idx)| {
         let i = (idx / width) as f64;
         let j = (idx % width) as f64;
-        
+
         // Simple barrel distortion correction
         let dy = i - center_y;
         let dx = j - center_x;
         let r = (dx * dx + dy * dy).sqrt();
         let distortion_factor = 1.0 + 0.0001 * r * r;
-        
+
         if axis == 0 {
             center_y + dy / distortion_factor
         } else {
             center_x + dx / distortion_factor
         }
     });
-    
+
     let corrected = map_coordinates(
         &test_image.view(),
         &coords.view(),
@@ -773,7 +914,7 @@ fn tutorial_7_transformations() -> NdimageResult<()> {
         None,
     )?;
     let corrected_2d = corrected.into_shape((height, width))?;
-    
+
     println!("   Applied barrel distortion correction using coordinate mapping");
     println!("   Use case: Lens distortion correction, complex warping");
     println!();
@@ -818,14 +959,15 @@ fn tutorial_8_advanced_techniques() -> NdimageResult<()> {
     let distance_map = {
         use ndarray::IxDyn;
         let binary_dyn = binary_image.clone().into_dimensionality::<IxDyn>().unwrap();
-        let (distances, _) = distance_transform_edt(&binary_dyn, None, true, false).expect("Distance transform failed")?;
+        let (distances, _) = distance_transform_edt(&binary_dyn, None, true, false)
+            .expect("Distance transform failed")?;
         distances.into_dimensionality::<ndarray::Ix2>().unwrap()
     };
-    
+
     // Find local maxima as seeds
     let markers = create_watershed_markers(&distance_map, 3.0);
     let watershed_result = watershed(&test_image.view(), &markers.view(), None, None)?;
-    
+
     let num_regions = watershed_result.fold(0u32, |acc, &x| acc.max(x));
     println!("   Watershed segmentation created {} regions", num_regions);
     println!("   Use case: Separate touching objects, cell counting");
@@ -838,12 +980,17 @@ fn tutorial_8_advanced_techniques() -> NdimageResult<()> {
 
     let scales = vec![1.0, 2.0, 4.0];
     println!("   Analyzing at scales: {:?}", scales);
-    
+
     for (i, &sigma) in scales.iter().enumerate() {
         let filtered = gaussian_filter(&test_image, &[sigma, sigma], None, None, None)?;
         let edges = sobel(&filtered.view(), None, None, None)?;
         let edge_count = count_edge_pixels(&edges, 0.1);
-        println!("   Scale {} (σ={}): {} edge pixels", i+1, sigma, edge_count);
+        println!(
+            "   Scale {} (σ={}): {} edge pixels",
+            i + 1,
+            sigma,
+            edge_count
+        );
     }
     println!("   Different scales reveal different levels of detail");
     println!();
@@ -861,14 +1008,20 @@ fn tutorial_8_advanced_techniques() -> NdimageResult<()> {
     };
 
     let texture_map = generic_filter(
-        &test_image.view(), 
-        Some(&Array2::ones((5, 5))), 
+        &test_image.view(),
+        Some(&Array2::ones((5, 5))),
         texture_filter,
-        None, None, None, None
+        None,
+        None,
+        None,
+        None,
     )?;
-    
+
     let texture_stats = compute_image_stats(&texture_map);
-    println!("   Local variance texture: mean={:.4}, max={:.4}", texture_stats.2, texture_stats.1);
+    println!(
+        "   Local variance texture: mean={:.4}, max={:.4}",
+        texture_stats.2, texture_stats.1
+    );
     println!("   High values indicate textured regions");
     println!();
 
@@ -896,7 +1049,7 @@ fn tutorial_8_advanced_techniques() -> NdimageResult<()> {
     let sharpness = estimate_sharpness(&test_image);
     let contrast = estimate_contrast(&test_image);
     let noise_level = estimate_noise_level(&test_image);
-    
+
     println!("   Image quality metrics:");
     println!("   • Sharpness: {:.3} (higher = sharper)", sharpness);
     println!("   • Contrast: {:.3} (higher = more contrast)", contrast);
@@ -910,31 +1063,34 @@ fn tutorial_8_advanced_techniques() -> NdimageResult<()> {
 
     println!("   Image enhancement pipeline:");
     println!("   1. Noise reduction → 2. Contrast enhancement → 3. Edge detection");
-    
+
     let denoised = gaussian_filter(&test_image, &[0.8, 0.8], None, None, None)?;
     let enhanced = enhance_contrast(&denoised, 1.2)?;
     let final_edges = canny(enhanced.view(), 1.0, 0.15, 0.3, None)?;
     let final_edge_count = count_edge_pixels(&final_edges, 0.5);
-    
-    println!("   Pipeline result: {} high-quality edges detected", final_edge_count);
+
+    println!(
+        "   Pipeline result: {} high-quality edges detected",
+        final_edge_count
+    );
     println!();
 
     // Domain-specific applications preview
     println!("🏥 DOMAIN-SPECIFIC APPLICATIONS");
     println!();
-    
+
     println!("   Medical Imaging:");
     println!("   • Vessel enhancement for angiography");
     println!("   • Tumor detection and segmentation");
     println!("   • Bone structure analysis");
     println!();
-    
+
     println!("   Remote Sensing:");
     println!("   • Vegetation index calculation (NDVI)");
     println!("   • Water body detection");
     println!("   • Cloud detection and removal");
     println!();
-    
+
     println!("   Industrial Inspection:");
     println!("   • Defect detection on surfaces");
     println!("   • Dimensional measurement");
@@ -956,12 +1112,12 @@ fn tutorial_8_advanced_techniques() -> NdimageResult<()> {
 fn create_circle_image(height: usize, width: usize, radius: f64) -> Array2<f64> {
     let center_y = height as f64 / 2.0;
     let center_x = width as f64 / 2.0;
-    
+
     Array2::from_shape_fn((height, width), |(i, j)| {
         let dy = i as f64 - center_y;
         let dx = j as f64 - center_x;
         let distance = (dx * dx + dy * dy).sqrt();
-        
+
         if distance <= radius {
             1.0
         } else {
@@ -973,7 +1129,7 @@ fn create_circle_image(height: usize, width: usize, radius: f64) -> Array2<f64> 
 fn create_square_image(height: usize, width: usize, size: usize) -> Array2<f64> {
     let start_y = (height - size) / 2;
     let start_x = (width - size) / 2;
-    
+
     Array2::from_shape_fn((height, width), |(i, j)| {
         if i >= start_y && i < start_y + size && j >= start_x && j < start_x + size {
             1.0
@@ -992,24 +1148,28 @@ fn compute_image_stats(image: &Array2<f64>) -> (f64, f64, f64) {
 
 fn add_realistic_noise(image: &Array2<f64>, noise_level: f64) -> Array2<f64> {
     // Simple deterministic noise for reproducible examples
-    image + &Array2::from_shape_fn(image.dim(), |(i, j)| {
-        let hash = ((i * 7 + j * 11) % 17) as f64 / 17.0;
-        noise_level * (hash - 0.5) * 2.0
-    })
+    image
+        + &Array2::from_shape_fn(image.dim(), |(i, j)| {
+            let hash = ((i * 7 + j * 11) % 17) as f64 / 17.0;
+            noise_level * (hash - 0.5) * 2.0
+        })
 }
 
 fn create_edge_test_image(height: usize, width: usize) -> Array2<f64> {
     Array2::from_shape_fn((height, width), |(i, j)| {
         // Create various edge patterns
         if i > height / 2 && i < height / 2 + 3 {
-            1.0  // Horizontal line
+            1.0 // Horizontal line
         } else if j > width / 2 && j < width / 2 + 3 {
-            1.0  // Vertical line
-        } else if ((i as f64 - height as f64 / 4.0).powi(2) + 
-                   (j as f64 - width as f64 / 4.0).powi(2)).sqrt() < 10.0 {
-            0.8  // Circle
+            1.0 // Vertical line
+        } else if ((i as f64 - height as f64 / 4.0).powi(2)
+            + (j as f64 - width as f64 / 4.0).powi(2))
+        .sqrt()
+            < 10.0
+        {
+            0.8 // Circle
         } else {
-            0.1  // Background
+            0.1 // Background
         }
     })
 }
@@ -1022,15 +1182,15 @@ fn roberts_cross_gradient(image: &ArrayView2<f64>) -> NdimageResult<Array2<f64>>
     // Simple Roberts cross gradient implementation
     let (height, width) = image.dim();
     let mut result = Array2::zeros((height, width));
-    
-    for i in 0..height-1 {
-        for j in 0..width-1 {
-            let gx = image[[i, j]] - image[[i+1, j+1]];
-            let gy = image[[i, j+1]] - image[[i+1, j]];
+
+    for i in 0..height - 1 {
+        for j in 0..width - 1 {
+            let gx = image[[i, j]] - image[[i + 1, j + 1]];
+            let gy = image[[i, j + 1]] - image[[i + 1, j]];
             result[[i, j]] = (gx * gx + gy * gy).sqrt();
         }
     }
-    
+
     Ok(result)
 }
 
@@ -1041,14 +1201,16 @@ fn create_binary_shapes_image(height: usize, width: usize) -> Array2<u8> {
         let center1_x = width / 4;
         let center2_y = 3 * height / 4;
         let center2_x = 3 * width / 4;
-        
-        let dist1 = ((i as f64 - center1_y as f64).powi(2) + 
-                     (j as f64 - center1_x as f64).powi(2)).sqrt();
-        let dist2 = ((i as f64 - center2_y as f64).powi(2) + 
-                     (j as f64 - center2_x as f64).powi(2)).sqrt();
-        
-        if dist1 < 12.0 || dist2 < 8.0 || 
-           (i > height/2-5 && i < height/2+5 && j > width/3 && j < 2*width/3) {
+
+        let dist1 =
+            ((i as f64 - center1_y as f64).powi(2) + (j as f64 - center1_x as f64).powi(2)).sqrt();
+        let dist2 =
+            ((i as f64 - center2_y as f64).powi(2) + (j as f64 - center2_x as f64).powi(2)).sqrt();
+
+        if dist1 < 12.0
+            || dist2 < 8.0
+            || (i > height / 2 - 5 && i < height / 2 + 5 && j > width / 3 && j < 2 * width / 3)
+        {
             1u8
         } else {
             0u8
@@ -1056,9 +1218,9 @@ fn create_binary_shapes_image(height: usize, width: usize) -> Array2<u8> {
     })
 }
 
-fn count_white_pixels<T>(image: &Array2<T>) -> usize 
-where 
-    T: PartialOrd + From<u8>
+fn count_white_pixels<T>(image: &Array2<T>) -> usize
+where
+    T: PartialOrd + From<u8>,
 {
     image.iter().filter(|&&x| x > T::from(0u8)).count()
 }
@@ -1067,21 +1229,20 @@ fn create_multi_object_image(height: usize, width: usize) -> Array2<f64> {
     Array2::from_shape_fn((height, width), |(i, j)| {
         // Create multiple objects of different sizes and intensities
         let objects = [
-            ((20, 20), 8.0, 0.8),   // (center, radius, intensity)
+            ((20, 20), 8.0, 0.8), // (center, radius, intensity)
             ((30, 60), 6.0, 0.9),
             ((60, 30), 10.0, 0.7),
             ((70, 70), 5.0, 0.85),
             ((80, 20), 4.0, 0.6),
         ];
-        
+
         for &((cy, cx), radius, intensity) in &objects {
-            let dist = ((i as f64 - cy as f64).powi(2) + 
-                       (j as f64 - cx as f64).powi(2)).sqrt();
+            let dist = ((i as f64 - cy as f64).powi(2) + (j as f64 - cx as f64).powi(2)).sqrt();
             if dist <= radius {
                 return intensity;
             }
         }
-        
+
         0.1 // Background
     })
 }
@@ -1090,12 +1251,12 @@ fn create_test_pattern_image(height: usize, width: usize) -> Array2<f64> {
     Array2::from_shape_fn((height, width), |(i, j)| {
         let x = i as f64 / height as f64;
         let y = j as f64 / width as f64;
-        
+
         // Create a test pattern with various frequencies
         let pattern1 = (x * std::f64::consts::PI * 4.0).sin();
         let pattern2 = (y * std::f64::consts::PI * 6.0).cos();
         let radial = ((x - 0.5).powi(2) + (y - 0.5).powi(2)).sqrt();
-        
+
         0.5 + 0.3 * pattern1 * pattern2 + 0.2 * (1.0 - radial * 2.0).max(0.0)
     })
 }
@@ -1104,18 +1265,18 @@ fn create_complex_test_image(height: usize, width: usize) -> Array2<f64> {
     Array2::from_shape_fn((height, width), |(i, j)| {
         let x = i as f64 / height as f64;
         let y = j as f64 / width as f64;
-        
+
         // Complex pattern with multiple features
-        let waves = (x * std::f64::consts::PI * 8.0).sin() * 
-                   (y * std::f64::consts::PI * 6.0).cos();
-        let spots = if ((x - 0.3).powi(2) + (y - 0.3).powi(2)).sqrt() < 0.1 ||
-                      ((x - 0.7).powi(2) + (y - 0.7).powi(2)).sqrt() < 0.15 {
+        let waves = (x * std::f64::consts::PI * 8.0).sin() * (y * std::f64::consts::PI * 6.0).cos();
+        let spots = if ((x - 0.3).powi(2) + (y - 0.3).powi(2)).sqrt() < 0.1
+            || ((x - 0.7).powi(2) + (y - 0.7).powi(2)).sqrt() < 0.15
+        {
             0.8
         } else {
             0.0
         };
         let texture = (x * 50.0).sin() * (y * 40.0).cos() * 0.1;
-        
+
         (0.4 + 0.2 * waves + spots + texture).clamp(0.0, 1.0)
     })
 }
@@ -1123,56 +1284,58 @@ fn create_complex_test_image(height: usize, width: usize) -> Array2<f64> {
 fn create_watershed_markers(distance_map: &Array2<f64>, threshold: f64) -> Array2<u32> {
     let mut markers = Array2::zeros(distance_map.dim());
     let mut label = 1u32;
-    
+
     // Simple peak finding for watershed markers
     let (height, width) = distance_map.dim();
-    for i in 1..height-1 {
-        for j in 1..width-1 {
-            if distance_map[[i, j]] > threshold &&
-               distance_map[[i, j]] > distance_map[[i-1, j]] &&
-               distance_map[[i, j]] > distance_map[[i+1, j]] &&
-               distance_map[[i, j]] > distance_map[[i, j-1]] &&
-               distance_map[[i, j]] > distance_map[[i, j+1]] {
+    for i in 1..height - 1 {
+        for j in 1..width - 1 {
+            if distance_map[[i, j]] > threshold
+                && distance_map[[i, j]] > distance_map[[i - 1, j]]
+                && distance_map[[i, j]] > distance_map[[i + 1, j]]
+                && distance_map[[i, j]] > distance_map[[i, j - 1]]
+                && distance_map[[i, j]] > distance_map[[i, j + 1]]
+            {
                 markers[[i, j]] = label;
                 label += 1;
             }
         }
     }
-    
+
     markers
 }
 
 fn estimate_sharpness(image: &Array2<f64>) -> f64 {
     // Simple sharpness estimate using Laplacian variance
     let laplacian_kernel = Array2::from_shape_vec(
-        (3, 3), 
-        vec![0.0, -1.0, 0.0, -1.0, 4.0, -1.0, 0.0, -1.0, 0.0]
-    ).unwrap();
-    
+        (3, 3),
+        vec![0.0, -1.0, 0.0, -1.0, 4.0, -1.0, 0.0, -1.0, 0.0],
+    )
+    .unwrap();
+
     // Simple convolution for demonstration
     let mut sum_squares = 0.0;
     let mut count = 0;
     let (height, width) = image.dim();
-    
-    for i in 1..height-1 {
-        for j in 1..width-1 {
+
+    for i in 1..height - 1 {
+        for j in 1..width - 1 {
             let mut laplacian = 0.0;
             for ki in 0..3 {
                 for kj in 0..3 {
-                    laplacian += image[[i+ki-1, j+kj-1]] * laplacian_kernel[[ki, kj]];
+                    laplacian += image[[i + ki - 1, j + kj - 1]] * laplacian_kernel[[ki, kj]];
                 }
             }
             sum_squares += laplacian * laplacian;
             count += 1;
         }
     }
-    
+
     sum_squares / count as f64
 }
 
 fn estimate_contrast(image: &Array2<f64>) -> f64 {
     let stats = compute_image_stats(image);
-    stats.1 - stats.0  // max - min
+    stats.1 - stats.0 // max - min
 }
 
 fn estimate_noise_level(image: &Array2<f64>) -> f64 {
@@ -1180,23 +1343,23 @@ fn estimate_noise_level(image: &Array2<f64>) -> f64 {
     let (height, width) = image.dim();
     let mut noise_sum = 0.0;
     let mut count = 0;
-    
-    for i in 1..height-1 {
-        for j in 1..width-1 {
+
+    for i in 1..height - 1 {
+        for j in 1..width - 1 {
             // Simple gradient magnitude as noise indicator
-            let gx = image[[i, j+1]] - image[[i, j-1]];
-            let gy = image[[i+1, j]] - image[[i-1, j]];
+            let gx = image[[i, j + 1]] - image[[i, j - 1]];
+            let gy = image[[i + 1, j]] - image[[i - 1, j]];
             noise_sum += (gx * gx + gy * gy).sqrt();
             count += 1;
         }
     }
-    
+
     noise_sum / count as f64
 }
 
 fn enhance_contrast(image: &Array2<f64>, factor: f64) -> NdimageResult<Array2<f64>> {
     let stats = compute_image_stats(image);
     let mean = stats.2;
-    
+
     Ok(image.mapv(|x| ((x - mean) * factor + mean).clamp(0.0, 1.0)))
 }

@@ -2293,7 +2293,7 @@ mod tests {
             let v = &state.velocity[1];
             let (ny, nx) = u.dim();
 
-            let mut max_div = 0.0;
+            let mut max_div: f64 = 0.0;
             for j in 1..ny - 1 {
                 for i in 1..nx - 1 {
                     let div = (u[[j, i + 1]] - u[[j, i - 1]]) / (2.0 * state.dx)
@@ -5477,6 +5477,13 @@ pub mod ultra_gpu_acceleration {
         in_use: bool,
     }
 
+    impl GPUBuffer {
+        /// Get the size of the buffer
+        pub fn size(&self) -> usize {
+            self.size
+        }
+    }
+
     impl GPUMemoryPool {
         /// Create new GPU memory pool
         pub fn new() -> Self {
@@ -6582,7 +6589,7 @@ mod ultra_performance_tests {
     fn test_gpu_memory_pool() {
         let pool = GPUMemoryPool::new();
         let buffer = pool.allocate_buffer(1024).unwrap();
-        assert_eq!(buffer.size, 1024);
+        assert_eq!(buffer.size(), 1024);
 
         pool.deallocate_buffer(buffer);
         let (current, peak) = pool.get_usage_stats();
@@ -7103,7 +7110,6 @@ pub mod advanced_cfd_enhancements {
     use ndarray::{Array1, Array2, Array3};
     use num_complex::Complex64;
     use scirs2_core::constants::PI;
-    use scirs2_core::parallel_ops::*;
 
     /// Direct Numerical Simulation (DNS) Solver
     /// High-fidelity simulation resolving all turbulent scales

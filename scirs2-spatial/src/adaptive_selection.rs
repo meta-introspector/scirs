@@ -59,11 +59,9 @@
 //! ```
 
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
-use std::collections::{BTreeMap, HashMap, VecDeque};
-use std::future::Future;
-use std::pin::Pin;
-use std::sync::{Arc, Mutex};
+use ndarray::{Array1, Array2, ArrayView2};
+use std::collections::{HashMap, VecDeque};
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
 
@@ -83,6 +81,7 @@ pub struct AdaptiveAlgorithmSelector {
     /// Algorithm performance history
     performance_history: Arc<RwLock<PerformanceHistory>>,
     /// Data pattern analyzer
+    #[allow(dead_code)]
     pattern_analyzer: PatternAnalyzer,
     /// Resource monitor
     resource_monitor: ResourceMonitor,
@@ -165,7 +164,7 @@ pub struct AlgorithmSelection {
 }
 
 /// Selected algorithm enumeration
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum SelectedAlgorithm {
     /// K-means clustering
     KMeans,
@@ -255,8 +254,10 @@ pub struct PerformanceHistory {
     /// Algorithm performance records
     records: HashMap<SelectedAlgorithm, VecDeque<PerformanceRecord>>,
     /// Data pattern performance mapping
+    #[allow(dead_code)]
     pattern_performance: HashMap<DataPattern, Vec<(SelectedAlgorithm, f64)>>,
     /// Performance trends
+    #[allow(dead_code)]
     trends: HashMap<SelectedAlgorithm, PerformanceTrend>,
 }
 
@@ -381,10 +382,13 @@ pub enum TrendDirection {
 #[derive(Debug)]
 pub struct PatternAnalyzer {
     /// Pattern recognition models
+    #[allow(dead_code)]
     pattern_models: HashMap<String, PatternModel>,
     /// Feature extractors
+    #[allow(dead_code)]
     feature_extractors: Vec<FeatureExtractor>,
     /// Pattern cache
+    #[allow(dead_code)]
     pattern_cache: HashMap<u64, DataCharacteristics>,
 }
 
@@ -415,7 +419,7 @@ pub struct FeatureExtractor {
     /// Extractor name
     pub name: String,
     /// Feature computation function
-    pub compute_features: fn(&ArrayView2<f64>) -> Vec<f64>,
+    pub compute_features: fn(&ArrayView2<'_, f64>) -> Vec<f64>,
 }
 
 /// Resource monitor for system awareness
@@ -426,14 +430,19 @@ pub struct ResourceMonitor {
     /// Current memory usage
     memory_usage: usize,
     /// GPU availability and usage
+    #[allow(dead_code)]
     gpu_status: GpuStatus,
     /// Network status
+    #[allow(dead_code)]
     network_status: NetworkStatus,
     /// Power consumption
+    #[allow(dead_code)]
     power_consumption: f64,
     /// Temperature readings
+    #[allow(dead_code)]
     temperature: f64,
     /// Update interval
+    #[allow(dead_code)]
     update_interval: Duration,
     /// Last update time
     last_update: Instant,
@@ -467,8 +476,10 @@ pub struct NetworkStatus {
 #[derive(Debug)]
 pub struct QualityPredictor {
     /// Quality models
+    #[allow(dead_code)]
     quality_models: HashMap<SelectedAlgorithm, QualityModel>,
     /// Cross-validation results
+    #[allow(dead_code)]
     cv_results: HashMap<SelectedAlgorithm, Vec<f64>>,
     /// Quality history
     quality_history: VecDeque<QualityMeasurement>,
@@ -510,8 +521,10 @@ pub struct SelectionCache {
     /// Cached selections
     cache: HashMap<CacheKey, CachedSelection>,
     /// Cache hit statistics
+    #[allow(dead_code)]
     hit_count: u64,
     /// Cache miss statistics
+    #[allow(dead_code)]
     miss_count: u64,
     /// Maximum cache size
     max_size: usize,
@@ -539,6 +552,12 @@ pub struct CachedSelection {
     pub use_count: u64,
     /// Success rate
     pub success_rate: f64,
+}
+
+impl Default for SelectionContext {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl SelectionContext {
@@ -585,6 +604,12 @@ impl SelectionContext {
     pub fn with_real_time_requirement(mut self, required: bool) -> Self {
         self.real_time_requirement = required;
         self
+    }
+}
+
+impl Default for AdaptiveAlgorithmSelector {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -683,7 +708,7 @@ impl AdaptiveAlgorithmSelector {
     /// Select optimal algorithm for given data and context
     pub async fn select_optimal_algorithm(
         &mut self,
-        data: &ArrayView2<f64>,
+        data: &ArrayView2<'_, f64>,
         context: &SelectionContext,
     ) -> SpatialResult<AlgorithmSelection> {
         // Check cache first
@@ -724,7 +749,7 @@ impl AdaptiveAlgorithmSelector {
     pub async fn execute_with_feedback(
         &mut self,
         selection: &AlgorithmSelection,
-        data: &ArrayView2<f64>,
+        data: &ArrayView2<'_, f64>,
     ) -> SpatialResult<ExecutionResult> {
         let start_time = Instant::now();
 
@@ -755,7 +780,7 @@ impl AdaptiveAlgorithmSelector {
 
         Ok(ExecutionResult {
             algorithm_result,
-            actual_performance,
+            actual_performance: actual_performance.clone(),
             selection_accuracy: self.calculate_selection_accuracy(selection, &actual_performance),
         })
     }
@@ -794,7 +819,7 @@ impl AdaptiveAlgorithmSelector {
     /// Check cache for existing selection
     async fn check_cache(
         &self,
-        data: &ArrayView2<f64>,
+        data: &ArrayView2<'_, f64>,
         context: &SelectionContext,
     ) -> SpatialResult<Option<CachedSelection>> {
         let cache_key = self.compute_cache_key(data, context);
@@ -812,7 +837,7 @@ impl AdaptiveAlgorithmSelector {
     }
 
     /// Compute cache key for data and context
-    fn compute_cache_key(&self, data: &ArrayView2<f64>, context: &SelectionContext) -> CacheKey {
+    fn compute_cache_key(&self, data: &ArrayView2<'_, f64>, context: &SelectionContext) -> CacheKey {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
 
@@ -856,7 +881,7 @@ impl AdaptiveAlgorithmSelector {
     /// Analyze data characteristics for pattern matching
     fn analyze_data_characteristics(
         &mut self,
-        data: &ArrayView2<f64>,
+        data: &ArrayView2<'_, f64>,
     ) -> SpatialResult<DataCharacteristics> {
         let (n_points, n_dims) = data.dim();
 
@@ -921,7 +946,7 @@ impl AdaptiveAlgorithmSelector {
     }
 
     /// Estimate data density
-    fn estimate_data_density(&self, data: &ArrayView2<f64>) -> SpatialResult<f64> {
+    fn estimate_data_density(&self, data: &ArrayView2<'_, f64>) -> SpatialResult<f64> {
         let (n_points, _) = data.dim();
 
         if n_points < 2 {
@@ -965,7 +990,7 @@ impl AdaptiveAlgorithmSelector {
     }
 
     /// Estimate clustering tendency (Hopkins-like statistic)
-    fn estimate_clustering_tendency(&self, data: &ArrayView2<f64>) -> SpatialResult<f64> {
+    fn estimate_clustering_tendency(&self, data: &ArrayView2<'_, f64>) -> SpatialResult<f64> {
         let (n_points, n_dims) = data.dim();
 
         if n_points < 10 {
@@ -1022,8 +1047,8 @@ impl AdaptiveAlgorithmSelector {
     }
 
     /// Estimate noise level in data
-    fn estimate_noise_level(&self, data: &ArrayView2<f64>) -> SpatialResult<f64> {
-        let (n_points, n_dims) = data.dim();
+    fn estimate_noise_level(&self, data: &ArrayView2<'_, f64>) -> SpatialResult<f64> {
+        let (n_points, _n_dims) = data.dim();
 
         if n_points < 10 {
             return Ok(0.0);
@@ -1070,14 +1095,14 @@ impl AdaptiveAlgorithmSelector {
                 .sum::<f64>()
                 / outlier_scores.len() as f64;
 
-            (variance.sqrt() / mean_score).min(1.0).into()
+            Ok((variance.sqrt() / mean_score).min(1.0))
         }
     }
 
     /// Estimate distribution type
     fn estimate_distribution_type(
         &self,
-        data: &ArrayView2<f64>,
+        data: &ArrayView2<'_, f64>,
     ) -> SpatialResult<DistributionType> {
         let (n_points, n_dims) = data.dim();
 
@@ -1131,7 +1156,7 @@ impl AdaptiveAlgorithmSelector {
     }
 
     /// Get data bounds for each dimension
-    fn get_data_bounds(&self, data: &ArrayView2<f64>) -> Vec<(f64, f64)> {
+    fn get_data_bounds(&self, data: &ArrayView2<'_, f64>) -> Vec<(f64, f64)> {
         let (_, n_dims) = data.dim();
         let mut bounds = Vec::new();
 
@@ -1231,7 +1256,7 @@ impl AdaptiveAlgorithmSelector {
         &self,
         algorithm: &SelectedAlgorithm,
         characteristics: &DataCharacteristics,
-        context: &SelectionContext,
+        _context: &SelectionContext,
     ) -> SpatialResult<PerformancePrediction> {
         // Base predictions (would use machine learning models in practice)
         let (base_time, base_memory, base_accuracy) = match algorithm {
@@ -1374,7 +1399,7 @@ impl AdaptiveAlgorithmSelector {
     fn select_best_candidate(
         &self,
         evaluations: Vec<AlgorithmEvaluation>,
-        context: &SelectionContext,
+        _context: &SelectionContext,
     ) -> SpatialResult<AlgorithmSelection> {
         let best_evaluation = evaluations
             .into_iter()
@@ -1399,7 +1424,7 @@ impl AdaptiveAlgorithmSelector {
     /// Cache selection result
     async fn cache_selection(
         &self,
-        data: &ArrayView2<f64>,
+        data: &ArrayView2<'_, f64>,
         context: &SelectionContext,
         selection: &AlgorithmSelection,
     ) -> SpatialResult<()> {
@@ -1434,8 +1459,8 @@ impl AdaptiveAlgorithmSelector {
     /// Execute selected algorithm
     async fn execute_algorithm(
         &self,
-        selection: &AlgorithmSelection,
-        data: &ArrayView2<f64>,
+        _selection: &AlgorithmSelection,
+        data: &ArrayView2<'_, f64>,
     ) -> SpatialResult<AlgorithmResult> {
         // Simulate algorithm execution
         tokio::time::sleep(Duration::from_millis(100)).await;
@@ -1452,7 +1477,7 @@ impl AdaptiveAlgorithmSelector {
     async fn update_performance_history(
         &mut self,
         selection: &AlgorithmSelection,
-        data: &ArrayView2<f64>,
+        data: &ArrayView2<'_, f64>,
         actual_performance: &ActualPerformance,
     ) -> SpatialResult<()> {
         let data_characteristics = self.analyze_data_characteristics(data)?;

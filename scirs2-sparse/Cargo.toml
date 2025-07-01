@@ -27,6 +27,7 @@ thiserror = { workspace = true }
 # Sparse matrix specific dependencies
 sprs = { workspace = true }
 rand = { workspace = true }
+num_cpus = { workspace = true }
 
 # For IO operations
 byteorder = { workspace = true }

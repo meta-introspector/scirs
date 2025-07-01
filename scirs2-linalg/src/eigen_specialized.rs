@@ -5,7 +5,7 @@
 //! algorithms can be significantly faster than general-purpose eigenvalue solvers.
 
 use crate::error::{LinalgError, LinalgResult};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2, ScalarOperand};
 use num_traits::{Float, NumAssign, One, Zero};
 use rand::Rng;
 use std::iter::Sum;
@@ -17,7 +17,7 @@ pub fn banded_eigh<F>(
     bandwidth: usize,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Zero + One + Sum + 'static,
+    F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
 {
     let (eigenvals, eigenvecs_opt) = banded_eigen(matrix, bandwidth, true)?;
     let eigenvecs = eigenvecs_opt.ok_or_else(|| {
@@ -29,7 +29,7 @@ where
 /// Wrapper for banded matrix eigenvalues only (SciPy-style)
 pub fn banded_eigvalsh<F>(matrix: &ArrayView2<F>, bandwidth: usize) -> LinalgResult<Array1<F>>
 where
-    F: Float + NumAssign + Zero + One + Sum + 'static,
+    F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
 {
     let (eigenvals, _) = banded_eigen(matrix, bandwidth, false)?;
     Ok(eigenvals)
@@ -41,7 +41,7 @@ pub fn tridiagonal_eigh<F>(
     sub_diagonal: &ArrayView1<F>,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Zero + One + Sum + 'static,
+    F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
 {
     let (eigenvals, eigenvecs_opt) = tridiagonal_eigen(diagonal, sub_diagonal, true)?;
     let eigenvecs = eigenvecs_opt.ok_or_else(|| {
@@ -56,7 +56,7 @@ pub fn tridiagonal_eigvalsh<F>(
     sub_diagonal: &ArrayView1<F>,
 ) -> LinalgResult<Array1<F>>
 where
-    F: Float + NumAssign + Zero + One + Sum + 'static,
+    F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
 {
     let (eigenvals, _) = tridiagonal_eigen(diagonal, sub_diagonal, false)?;
     Ok(eigenvals)
@@ -83,7 +83,7 @@ pub fn largest_k_eigh<F>(
     tol: F,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Zero + One + Sum + 'static,
+    F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
 {
     if k == 0 {
         let n = matrix.nrows();
@@ -114,7 +114,7 @@ pub fn smallest_k_eigh<F>(
     tol: F,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Zero + One + Sum + 'static,
+    F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
 {
     if k == 0 {
         let n = matrix.nrows();
@@ -156,7 +156,7 @@ pub fn tridiagonal_eigen<F>(
     compute_eigenvectors: bool,
 ) -> LinalgResult<(Array1<F>, Option<Array2<F>>)>
 where
-    F: Float + NumAssign + Zero + One + Sum + 'static,
+    F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
 {
     let n = diagonal.len();
 
@@ -322,7 +322,7 @@ pub fn banded_eigen<F>(
     compute_eigenvectors: bool,
 ) -> LinalgResult<(Array1<F>, Option<Array2<F>>)>
 where
-    F: Float + NumAssign + Zero + One + Sum + 'static,
+    F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
 {
     let n = matrix.nrows();
 
@@ -374,7 +374,7 @@ pub fn circulant_eigenvalues<F>(
     first_column: &ArrayView1<F>,
 ) -> LinalgResult<Array1<num_complex::Complex<F>>>
 where
-    F: Float + NumAssign + Zero + One + Sum + 'static,
+    F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
 {
     let n = first_column.len();
 
@@ -426,7 +426,7 @@ pub fn partial_eigen<F>(
     tol: Option<F>,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Zero + One + Sum + 'static,
+    F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
 {
     let n = matrix.nrows();
 
@@ -618,7 +618,7 @@ fn reduce_banded_to_tridiagonal<F>(
     bandwidth: usize,
 ) -> TridiagonalReduction<F>
 where
-    F: Float + NumAssign + Zero + One + Sum + 'static,
+    F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
 {
     let n = matrix.nrows();
     let mut a = matrix.to_owned();

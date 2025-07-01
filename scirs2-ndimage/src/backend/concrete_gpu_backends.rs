@@ -5,7 +5,7 @@
 //! functional GPU compute capabilities.
 
 use std::collections::HashMap;
-use std::ffi::{CString, CStr};
+use std::ffi::{CStr, CString};
 use std::ptr;
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
@@ -13,11 +13,11 @@ use std::time::Instant;
 use ndarray::{Array, ArrayView, Dimension, Ix2};
 use num_traits::{Float, FromPrimitive};
 
-use crate::error::{NdimageError, NdimageResult};
 use crate::backend::gpu_acceleration_framework::{
-    GpuBuffer, GpuBufferHandle, CudaBufferHandle, OpenCLBufferHandle,
-    CompiledKernel, KernelHandle, CudaKernelHandle, OpenCLKernelHandle,
+    CompiledKernel, CudaBufferHandle, CudaKernelHandle, GpuBuffer, GpuBufferHandle, KernelHandle,
+    OpenCLBufferHandle, OpenCLKernelHandle,
 };
+use crate::error::{NdimageError, NdimageResult};
 
 /// CUDA backend implementation
 #[cfg(feature = "cuda")]
@@ -113,12 +113,12 @@ impl CudaBackend {
         if device_count == 0 {
             return Err(NdimageError::GpuNotAvailable);
         }
-        
+
         // Use device 0 by default
         let device_id = 0;
         let context = Self::create_context(device_id)?;
         let device_properties = Self::get_device_properties(device_id)?;
-        
+
         Ok(Self {
             context,
             device_properties,
@@ -126,57 +126,77 @@ impl CudaBackend {
             allocations: Arc::new(Mutex::new(HashMap::new())),
         })
     }
-    
+
     /// Allocate GPU memory
     pub fn allocate_memory(&self, size: usize) -> NdimageResult<CudaBufferHandle> {
         let device_ptr = self.cuda_malloc(size)?;
-        
+
         // Track allocation
         {
             let mut allocations = self.allocations.lock().unwrap();
             allocations.insert(device_ptr, size);
         }
-        
+
         Ok(CudaBufferHandle {
             device_ptr,
             device_id: self.context.device_id,
             stream: Some(self.context.stream),
         })
     }
-    
+
     /// Deallocate GPU memory
     pub fn deallocate_memory(&self, handle: &CudaBufferHandle) -> NdimageResult<()> {
         self.cuda_free(handle.device_ptr)?;
-        
+
         // Remove from tracking
         {
             let mut allocations = self.allocations.lock().unwrap();
             allocations.remove(&handle.device_ptr);
         }
-        
+
         Ok(())
     }
-    
+
     /// Copy data from host to device
-    pub fn copy_to_device<T>(&self, host_data: &[T], device_handle: &CudaBufferHandle) -> NdimageResult<()>
+    pub fn copy_to_device<T>(
+        &self,
+        host_data: &[T],
+        device_handle: &CudaBufferHandle,
+    ) -> NdimageResult<()>
     where
         T: Clone,
     {
         let size_bytes = host_data.len() * std::mem::size_of::<T>();
-        self.cuda_memcpy_htod(device_handle.device_ptr, host_data.as_ptr() as *const u8, size_bytes)
+        self.cuda_memcpy_htod(
+            device_handle.device_ptr,
+            host_data.as_ptr() as *const u8,
+            size_bytes,
+        )
     }
-    
+
     /// Copy data from device to host
-    pub fn copy_from_device<T>(&self, device_handle: &CudaBufferHandle, host_data: &mut [T]) -> NdimageResult<()>
+    pub fn copy_from_device<T>(
+        &self,
+        device_handle: &CudaBufferHandle,
+        host_data: &mut [T],
+    ) -> NdimageResult<()>
     where
         T: Clone,
     {
         let size_bytes = host_data.len() * std::mem::size_of::<T>();
-        self.cuda_memcpy_dtoh(host_data.as_mut_ptr() as *mut u8, device_handle.device_ptr, size_bytes)
+        self.cuda_memcpy_dtoh(
+            host_data.as_mut_ptr() as *mut u8,
+            device_handle.device_ptr,
+            size_bytes,
+        )
     }
-    
+
     /// Compile CUDA kernel
-    pub fn compile_kernel(&self, source: &str, kernel_name: &str) -> NdimageResult<CudaKernelHandle> {
+    pub fn compile_kernel(
+        &self,
+        source: &str,
+        kernel_name: &str,
+    ) -> NdimageResult<CudaKernelHandle> {
         // Check cache first
         {
             let cache = self.kernel_cache.lock().unwrap();
@@ -184,25 +204,22 @@ impl CudaBackend {
                 return Ok(handle.clone());
             }
         }
-        
+
         // Compile kernel
         let module = self.compile_ptx_from_source(source)?;
         let function = self.get_function(module, kernel_name)?;
-        
-        let handle = CudaKernelHandle {
-            function,
-            module,
-        };
-        
+
+        let handle = CudaKernelHandle { function, module };
+
         // Cache the compiled kernel
         {
             let mut cache = self.kernel_cache.lock().unwrap();
             cache.insert(format!("{}:{}", source.len(), kernel_name), handle.clone());
         }
-        
+
         Ok(handle)
     }
-    
+
     /// Launch CUDA kernel
     pub fn launch_kernel<T>(
         &self,
@@ -220,7 +237,7 @@ impl CudaBackend {
         for arg in args {
             kernel_args.push(&arg.device_ptr as *const usize as *mut std::ffi::c_void);
         }
-        
+
         // Launch kernel
         self.cuda_launch_kernel(
             kernel.function,
@@ -230,13 +247,13 @@ impl CudaBackend {
             shared_memory,
             self.context.stream,
         )?;
-        
+
         // Synchronize stream
         self.cuda_stream_synchronize(self.context.stream)?;
-        
+
         Ok(())
     }
-    
+
     /// Execute 2D convolution on GPU
     pub fn execute_convolution_2d<T>(
         &self,
@@ -248,33 +265,34 @@ impl CudaBackend {
     {
         let (input_height, input_width) = input.dim();
         let (kernel_height, kernel_width) = kernel.dim();
-        
+
         // Allocate GPU memory
         let input_size = input_height * input_width;
         let kernel_size = kernel_height * kernel_width;
         let output_size = input_height * input_width;
-        
+
         let input_gpu = self.allocate_memory(input_size * std::mem::size_of::<T>())?;
         let kernel_gpu = self.allocate_memory(kernel_size * std::mem::size_of::<T>())?;
         let output_gpu = self.allocate_memory(output_size * std::mem::size_of::<T>())?;
-        
+
         // Copy data to GPU
         let input_flat: Vec<T> = input.iter().cloned().collect();
         let kernel_flat: Vec<T> = kernel.iter().cloned().collect();
-        
+
         self.copy_to_device(&input_flat, &input_gpu)?;
         self.copy_to_device(&kernel_flat, &kernel_gpu)?;
-        
+
         // Compile and launch convolution kernel
-        let conv_kernel = self.compile_kernel(&self.get_convolution_kernel_source(), "convolution_2d")?;
-        
+        let conv_kernel =
+            self.compile_kernel(&self.get_convolution_kernel_source(), "convolution_2d")?;
+
         // Calculate grid and block dimensions
         let block_size = 16;
         let grid_x = (input_width + block_size - 1) / block_size;
         let grid_y = (input_height + block_size - 1) / block_size;
-        
+
         let args = [&input_gpu, &kernel_gpu, &output_gpu];
-        
+
         self.launch_kernel::<T>(
             &conv_kernel,
             (grid_x as u32, grid_y as u32, 1),
@@ -282,28 +300,31 @@ impl CudaBackend {
             &args,
             0, // No shared memory
         )?;
-        
+
         // Copy result back to host
         let mut output_flat = vec![T::zero(); output_size];
         self.copy_from_device(&output_gpu, &mut output_flat)?;
-        
+
         // Clean up GPU memory
         self.deallocate_memory(&input_gpu)?;
         self.deallocate_memory(&kernel_gpu)?;
         self.deallocate_memory(&output_gpu)?;
-        
+
         // Reshape result
-        Ok(Array::from_shape_vec((input_height, input_width), output_flat)
-           .map_err(|e| NdimageError::InvalidInput(format!("Failed to reshape result: {}", e)))?)
+        Ok(
+            Array::from_shape_vec((input_height, input_width), output_flat).map_err(|e| {
+                NdimageError::InvalidInput(format!("Failed to reshape result: {}", e))
+            })?,
+        )
     }
-    
+
     // Low-level CUDA API wrappers (these would call actual CUDA runtime/driver API)
-    
+
     fn get_device_count() -> NdimageResult<i32> {
         // Placeholder: would call cudaGetDeviceCount
         Ok(1) // Assume 1 device for testing
     }
-    
+
     fn create_context(device_id: i32) -> NdimageResult<CudaContext> {
         // Placeholder: would initialize CUDA context and stream
         Ok(CudaContext {
@@ -312,7 +333,7 @@ impl CudaBackend {
             stream: 0x2000, // Dummy stream handle
         })
     }
-    
+
     fn get_device_properties(device_id: i32) -> NdimageResult<CudaDeviceProperties> {
         // Placeholder: would query actual device properties
         Ok(CudaDeviceProperties {
@@ -324,38 +345,48 @@ impl CudaBackend {
             compute_capability_minor: 9,
         })
     }
-    
+
     fn cuda_malloc(&self, size: usize) -> NdimageResult<usize> {
         // Placeholder: would call cudaMalloc
         // For testing, return a dummy pointer
         Ok(0x10000000 + size) // Dummy device pointer
     }
-    
+
     fn cuda_free(&self, device_ptr: usize) -> NdimageResult<()> {
         // Placeholder: would call cudaFree
         Ok(())
     }
-    
-    fn cuda_memcpy_htod(&self, device_ptr: usize, host_ptr: *const u8, size: usize) -> NdimageResult<()> {
+
+    fn cuda_memcpy_htod(
+        &self,
+        device_ptr: usize,
+        host_ptr: *const u8,
+        size: usize,
+    ) -> NdimageResult<()> {
         // Placeholder: would call cudaMemcpy with cudaMemcpyHostToDevice
         Ok(())
     }
-    
-    fn cuda_memcpy_dtoh(&self, host_ptr: *mut u8, device_ptr: usize, size: usize) -> NdimageResult<()> {
+
+    fn cuda_memcpy_dtoh(
+        &self,
+        host_ptr: *mut u8,
+        device_ptr: usize,
+        size: usize,
+    ) -> NdimageResult<()> {
         // Placeholder: would call cudaMemcpy with cudaMemcpyDeviceToHost
         Ok(())
     }
-    
+
     fn compile_ptx_from_source(&self, source: &str) -> NdimageResult<usize> {
         // Placeholder: would compile CUDA source to PTX and load module
         Ok(0x3000) // Dummy module handle
     }
-    
+
     fn get_function(&self, module: usize, name: &str) -> NdimageResult<usize> {
         // Placeholder: would get function from module
         Ok(0x4000) // Dummy function handle
     }
-    
+
     fn cuda_launch_kernel(
         &self,
         function: usize,
@@ -368,12 +399,12 @@ impl CudaBackend {
         // Placeholder: would call cudaLaunchKernel
         Ok(())
     }
-    
+
     fn cuda_stream_synchronize(&self, stream: usize) -> NdimageResult<()> {
         // Placeholder: would call cudaStreamSynchronize
         Ok(())
     }
-    
+
     fn get_convolution_kernel_source(&self) -> String {
         // CUDA kernel source for 2D convolution
         r#"
@@ -410,7 +441,8 @@ extern "C" __global__ void convolution_2d(
     
     output[y * input_width + x] = sum;
 }
-"#.to_string()
+"#
+        .to_string()
     }
 }
 
@@ -421,7 +453,7 @@ impl OpenCLBackend {
     pub fn new() -> NdimageResult<Self> {
         let context = Self::create_opencl_context()?;
         let device_properties = Self::get_device_properties(&context)?;
-        
+
         Ok(Self {
             context,
             device_properties,
@@ -429,37 +461,37 @@ impl OpenCLBackend {
             allocations: Arc::new(Mutex::new(HashMap::new())),
         })
     }
-    
+
     /// Allocate OpenCL buffer
     pub fn allocate_buffer(&self, size: usize) -> NdimageResult<OpenCLBufferHandle> {
         let buffer = self.cl_create_buffer(size)?;
-        
+
         // Track allocation
         {
             let mut allocations = self.allocations.lock().unwrap();
             allocations.insert(buffer, size);
         }
-        
+
         Ok(OpenCLBufferHandle {
             buffer,
             context: self.context.context,
             queue: self.context.queue,
         })
     }
-    
+
     /// Deallocate OpenCL buffer
     pub fn deallocate_buffer(&self, handle: &OpenCLBufferHandle) -> NdimageResult<()> {
         self.cl_release_buffer(handle.buffer)?;
-        
+
         // Remove from tracking
         {
             let mut allocations = self.allocations.lock().unwrap();
             allocations.remove(&handle.buffer);
         }
-        
+
         Ok(())
     }
-    
+
     /// Write data to OpenCL buffer
     pub fn write_buffer<T>(&self, buffer: &OpenCLBufferHandle, data: &[T]) -> NdimageResult<()>
     where
@@ -468,7 +500,7 @@ impl OpenCLBackend {
         let size_bytes = data.len() * std::mem::size_of::<T>();
         self.cl_enqueue_write_buffer(buffer.buffer, data.as_ptr() as *const u8, size_bytes)
     }
-    
+
     /// Read data from OpenCL buffer
     pub fn read_buffer<T>(&self, buffer: &OpenCLBufferHandle, data: &mut [T]) -> NdimageResult<()>
     where
@@ -477,9 +509,13 @@ impl OpenCLBackend {
         let size_bytes = data.len() * std::mem::size_of::<T>();
         self.cl_enqueue_read_buffer(buffer.buffer, data.as_mut_ptr() as *mut u8, size_bytes)
     }
-    
+
     /// Compile OpenCL kernel
-    pub fn compile_kernel(&self, source: &str, kernel_name: &str) -> NdimageResult<OpenCLKernelHandle> {
+    pub fn compile_kernel(
+        &self,
+        source: &str,
+        kernel_name: &str,
+    ) -> NdimageResult<OpenCLKernelHandle> {
         // Check cache first
         let cache_key = format!("{}:{}", source.len(), kernel_name);
         {
@@ -488,26 +524,23 @@ impl OpenCLBackend {
                 return Ok(handle.clone());
             }
         }
-        
+
         // Compile kernel
         let program = self.cl_create_program_with_source(source)?;
         self.cl_build_program(program)?;
         let kernel = self.cl_create_kernel(program, kernel_name)?;
-        
-        let handle = OpenCLKernelHandle {
-            kernel,
-            program,
-        };
-        
+
+        let handle = OpenCLKernelHandle { kernel, program };
+
         // Cache the compiled kernel
         {
             let mut cache = self.kernel_cache.lock().unwrap();
             cache.insert(cache_key, handle.clone());
         }
-        
+
         Ok(handle)
     }
-    
+
     /// Execute OpenCL kernel
     pub fn execute_kernel(
         &self,
@@ -520,20 +553,16 @@ impl OpenCLBackend {
         for (i, arg) in args.iter().enumerate() {
             self.cl_set_kernel_arg(kernel.kernel, i, &arg.buffer)?;
         }
-        
+
         // Enqueue kernel execution
-        self.cl_enqueue_nd_range_kernel(
-            kernel.kernel,
-            global_work_size,
-            local_work_size,
-        )?;
-        
+        self.cl_enqueue_nd_range_kernel(kernel.kernel, global_work_size, local_work_size)?;
+
         // Wait for completion
         self.cl_finish()?;
-        
+
         Ok(())
     }
-    
+
     /// Execute 2D convolution using OpenCL
     pub fn execute_convolution_2d<T>(
         &self,
@@ -545,53 +574,57 @@ impl OpenCLBackend {
     {
         let (input_height, input_width) = input.dim();
         let (kernel_height, kernel_width) = kernel.dim();
-        
+
         // Allocate OpenCL buffers
         let input_size = input_height * input_width;
         let kernel_size = kernel_height * kernel_width;
-        
+
         let input_buffer = self.allocate_buffer(input_size * std::mem::size_of::<T>())?;
         let kernel_buffer = self.allocate_buffer(kernel_size * std::mem::size_of::<T>())?;
         let output_buffer = self.allocate_buffer(input_size * std::mem::size_of::<T>())?;
-        
+
         // Copy data to GPU
         let input_flat: Vec<T> = input.iter().cloned().collect();
         let kernel_flat: Vec<T> = kernel.iter().cloned().collect();
-        
+
         self.write_buffer(&input_buffer, &input_flat)?;
         self.write_buffer(&kernel_buffer, &kernel_flat)?;
-        
+
         // Compile and execute convolution kernel
-        let conv_kernel = self.compile_kernel(&self.get_convolution_kernel_source(), "convolution_2d")?;
-        
+        let conv_kernel =
+            self.compile_kernel(&self.get_convolution_kernel_source(), "convolution_2d")?;
+
         let global_work_size = [input_width, input_height];
         let local_work_size = [16, 16];
-        
+
         let args = [&input_buffer, &kernel_buffer, &output_buffer];
-        
+
         self.execute_kernel(
             &conv_kernel,
             &global_work_size,
             Some(&local_work_size),
             &args,
         )?;
-        
+
         // Copy result back
         let mut output_flat = vec![T::zero(); input_size];
         self.read_buffer(&output_buffer, &mut output_flat)?;
-        
+
         // Clean up
         self.deallocate_buffer(&input_buffer)?;
         self.deallocate_buffer(&kernel_buffer)?;
         self.deallocate_buffer(&output_buffer)?;
-        
+
         // Reshape result
-        Ok(Array::from_shape_vec((input_height, input_width), output_flat)
-           .map_err(|e| NdimageError::InvalidInput(format!("Failed to reshape result: {}", e)))?)
+        Ok(
+            Array::from_shape_vec((input_height, input_width), output_flat).map_err(|e| {
+                NdimageError::InvalidInput(format!("Failed to reshape result: {}", e))
+            })?,
+        )
     }
-    
+
     // Low-level OpenCL API wrappers (these would call actual OpenCL API)
-    
+
     fn create_opencl_context() -> NdimageResult<OpenCLContext> {
         // Placeholder: would initialize OpenCL context, device, and queue
         Ok(OpenCLContext {
@@ -601,59 +634,74 @@ impl OpenCLBackend {
             platform: 0x4000,
         })
     }
-    
+
     fn get_device_properties(context: &OpenCLContext) -> NdimageResult<OpenCLDeviceProperties> {
         // Placeholder: would query actual OpenCL device properties
         Ok(OpenCLDeviceProperties {
             name: "AMD Radeon RX 7900 XTX".to_string(),
             global_memory_size: 24 * 1024 * 1024 * 1024, // 24GB
-            local_memory_size: 64 * 1024, // 64KB
+            local_memory_size: 64 * 1024,                // 64KB
             max_compute_units: 96,
             max_work_group_size: 1024,
             device_type: "GPU".to_string(),
         })
     }
-    
+
     fn cl_create_buffer(&self, size: usize) -> NdimageResult<usize> {
         // Placeholder: would call clCreateBuffer
         Ok(0x10000000 + size) // Dummy buffer handle
     }
-    
+
     fn cl_release_buffer(&self, buffer: usize) -> NdimageResult<()> {
         // Placeholder: would call clReleaseMemObject
         Ok(())
     }
-    
-    fn cl_enqueue_write_buffer(&self, buffer: usize, data: *const u8, size: usize) -> NdimageResult<()> {
+
+    fn cl_enqueue_write_buffer(
+        &self,
+        buffer: usize,
+        data: *const u8,
+        size: usize,
+    ) -> NdimageResult<()> {
         // Placeholder: would call clEnqueueWriteBuffer
         Ok(())
     }
-    
-    fn cl_enqueue_read_buffer(&self, buffer: usize, data: *mut u8, size: usize) -> NdimageResult<()> {
+
+    fn cl_enqueue_read_buffer(
+        &self,
+        buffer: usize,
+        data: *mut u8,
+        size: usize,
+    ) -> NdimageResult<()> {
         // Placeholder: would call clEnqueueReadBuffer
         Ok(())
     }
-    
+
     fn cl_create_program_with_source(&self, source: &str) -> NdimageResult<usize> {
         // Placeholder: would call clCreateProgramWithSource
         Ok(0x5000) // Dummy program handle
     }
-    
+
     fn cl_build_program(&self, program: usize) -> NdimageResult<()> {
         // Placeholder: would call clBuildProgram
         Ok(())
     }
-    
+
     fn cl_create_kernel(&self, program: usize, name: &str) -> NdimageResult<usize> {
         // Placeholder: would call clCreateKernel
         Ok(0x6000) // Dummy kernel handle
     }
-    
-    fn cl_set_kernel_arg(&self, kernel: usize, arg_index: usize, buffer: &usize) -> NdimageResult<()> {
+
+    fn cl_set_kernel_arg(
+        &self,
+        kernel: usize,
+        arg_index: usize,
+        buffer: &usize,
+    ) -> NdimageResult<()> {
         // Placeholder: would call clSetKernelArg
         Ok(())
     }
-    
+
     fn cl_enqueue_nd_range_kernel(
         &self,
         kernel: usize,
@@ -663,12 +711,12 @@ impl OpenCLBackend {
         // Placeholder: would call clEnqueueNDRangeKernel
         Ok(())
     }
-    
+
     fn cl_finish(&self) -> NdimageResult<()> {
         // Placeholder: would call clFinish
         Ok(())
     }
-    
+
     fn get_convolution_kernel_source(&self) -> String {
         // OpenCL kernel source for 2D convolution
         r#"
@@ -705,7 +753,8 @@ __kernel void convolution_2d(
     
     output[y * input_width + x] = sum;
 }
-"#.to_string()
+"#
+        .to_string()
     }
 }
 
@@ -717,14 +766,14 @@ pub fn create_gpu_backend() -> NdimageResult<Box<dyn GpuBackend>> {
             return Ok(Box::new(cuda_backend));
         }
     }
-    
+
     #[cfg(feature = "opencl")]
     {
         if let Ok(opencl_backend) = OpenCLBackend::new() {
             return Ok(Box::new(opencl_backend));
         }
     }
-    
+
     Err(NdimageError::GpuNotAvailable)
 }
 
@@ -732,20 +781,20 @@ pub fn create_gpu_backend() -> NdimageResult<Box<dyn GpuBackend>> {
 pub trait GpuBackend: Send + Sync {
     /// Get backend name
     fn get_name(&self) -> &str;
-    
+
     /// Check if backend is available
     fn is_available(&self) -> bool;
-    
+
     /// Get memory info
     fn get_memory_info(&self) -> (usize, usize); // (free, total)
-    
+
     /// Execute 2D convolution
     fn execute_convolution_2d_f32(
         &self,
         input: ArrayView2<f32>,
         kernel: ArrayView2<f32>,
     ) -> NdimageResult<Array<f32, Ix2>>;
-    
+
     /// Execute 2D convolution for f64
     fn execute_convolution_2d_f64(
         &self,
@@ -759,16 +808,16 @@ impl GpuBackend for CudaBackend {
     fn get_name(&self) -> &str {
         "CUDA"
     }
-    
+
     fn is_available(&self) -> bool {
         true // If we got here, CUDA is available
     }
-    
+
     fn get_memory_info(&self) -> (usize, usize) {
         // Would query actual CUDA memory info
         (16 * 1024 * 1024 * 1024, 24 * 1024 * 1024 * 1024) // 16GB free, 24GB total
     }
-    
+
     fn execute_convolution_2d_f32(
         &self,
         input: ArrayView2<f32>,
@@ -776,7 +825,7 @@ impl GpuBackend for CudaBackend {
     ) -> NdimageResult<Array<f32, Ix2>> {
         self.execute_convolution_2d(input, kernel)
     }
-    
+
     fn execute_convolution_2d_f64(
         &self,
         input: ArrayView2<f64>,
@@ -791,16 +840,16 @@ impl GpuBackend for OpenCLBackend {
     fn get_name(&self) -> &str {
         "OpenCL"
     }
-    
+
     fn is_available(&self) -> bool {
         true // If we got here, OpenCL is available
     }
-    
+
     fn get_memory_info(&self) -> (usize, usize) {
         // Would query actual OpenCL memory info
         (16 * 1024 * 1024 * 1024, 24 * 1024 * 1024 * 1024) // 16GB free, 24GB total
     }
-    
+
     fn execute_convolution_2d_f32(
         &self,
         input: ArrayView2<f32>,
@@ -808,7 +857,7 @@ impl GpuBackend for OpenCLBackend {
     ) -> NdimageResult<Array<f32, Ix2>> {
         self.execute_convolution_2d(input, kernel)
     }
-    
+
     fn execute_convolution_2d_f64(
         &self,
         input: ArrayView2<f64>,
@@ -822,14 +871,14 @@ impl GpuBackend for OpenCLBackend {
 mod tests {
     use super::*;
     use ndarray::array;
-    
+
     #[test]
     fn test_gpu_backend_creation() {
         let result = create_gpu_backend();
         // This test may fail on systems without GPU support, which is expected
         assert!(result.is_ok() || result.is_err());
     }
-    
+
     #[cfg(feature = "cuda")]
     #[test]
     fn test_cuda_backend_creation() {
@@ -837,7 +886,7 @@ mod tests {
         // This may fail without actual CUDA drivers
         assert!(result.is_ok() || result.is_err());
     }
-    
+
     #[cfg(feature = "opencl")]
     #[test]
     fn test_opencl_backend_creation() {
@@ -845,22 +894,14 @@ mod tests {
         // This may fail without actual OpenCL drivers
         assert!(result.is_ok() || result.is_err());
     }
-    
+
     #[test]
     fn test_convolution_execution() {
         // Test with small arrays
-        let input = array![
-            [1.0, 2.0, 3.0],
-            [4.0, 5.0, 6.0],
-            [7.0, 8.0, 9.0]
-        ];
-        
-        let kernel = array![
-            [1.0, 0.0, -1.0],
-            [2.0, 0.0, -2.0],
-            [1.0, 0.0, -1.0]
-        ];
-        
+        let input = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
+
+        let kernel = array![[1.0, 0.0, -1.0], [2.0, 0.0, -2.0], [1.0, 0.0, -1.0]];
+
         if let Ok(backend) = create_gpu_backend() {
             let result = backend.execute_convolution_2d_f64(input.view(), kernel.view());
             // Should either succeed or fail gracefully

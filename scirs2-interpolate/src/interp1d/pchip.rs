@@ -79,9 +79,7 @@ impl<F: Float + FromPrimitive + Debug> PchipInterpolator<F> {
         }
 
         if x.len() < 2 {
-            return Err(InterpolateError::invalid_input(
-                "at least 2 points are required for interpolation".to_string(),
-            ));
+            return Err(InterpolateError::insufficient_points(2, x.len(), "PCHIP interpolation"));
         }
 
         // Check that x is sorted

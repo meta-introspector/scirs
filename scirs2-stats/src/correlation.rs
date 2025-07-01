@@ -7,6 +7,7 @@
 pub mod intraclass;
 
 use crate::error::{StatsError, StatsResult};
+use crate::error_standardization::{ErrorMessages, ErrorValidator};
 use crate::{mean, std};
 use ndarray::{s, Array1, Array2, ArrayBase, Data, Dimension, Ix1, Ix2};
 use num_traits::{Float, NumCast};
@@ -47,18 +48,17 @@ where
     D: Data<Elem = F>,
     Ix1: Dimension,
 {
-    // Check that arrays have the same length
-    if x.len() != y.len() {
-        return Err(StatsError::DimensionMismatch(
-            "Arrays must have the same length".to_string(),
-        ));
+    // Use standardized validation
+    if x.is_empty() {
+        return Err(ErrorMessages::empty_array("x"));
+    }
+    
+    if y.is_empty() {
+        return Err(ErrorMessages::empty_array("y"));
     }
 
-    // Check that arrays are not empty
-    if x.is_empty() {
-        return Err(StatsError::InvalidArgument(
-            "Arrays cannot be empty".to_string(),
-        ));
+    if x.len() != y.len() {
+        return Err(ErrorMessages::length_mismatch("x", x.len(), "y", y.len()));
     }
 
     // Calculate means
@@ -81,8 +81,9 @@ where
 
     // Check for zero variances
     if sum_x2 <= F::epsilon() || sum_y2 <= F::epsilon() {
-        return Err(StatsError::InvalidArgument(
-            "Cannot compute correlation when one or both variables have zero variance".to_string(),
+        return Err(ErrorMessages::numerical_instability(
+            "correlation calculation", 
+            "Cannot compute correlation when one or both variables have zero variance. Check that your data has sufficient variation."
         ));
     }
 
@@ -137,18 +138,17 @@ where
     D: Data<Elem = F>,
     Ix1: Dimension,
 {
-    // Check that arrays have the same length
-    if x.len() != y.len() {
-        return Err(StatsError::DimensionMismatch(
-            "Arrays must have the same length".to_string(),
-        ));
+    // Use standardized validation
+    if x.is_empty() {
+        return Err(ErrorMessages::empty_array("x"));
+    }
+    
+    if y.is_empty() {
+        return Err(ErrorMessages::empty_array("y"));
     }
 
-    // Check that arrays are not empty
-    if x.is_empty() {
-        return Err(StatsError::InvalidArgument(
-            "Arrays cannot be empty".to_string(),
-        ));
+    if x.len() != y.len() {
+        return Err(ErrorMessages::length_mismatch("x", x.len(), "y", y.len()));
     }
 
     // Create vectors of (value, original index) pairs for ranking
@@ -250,24 +250,23 @@ where
 {
     // Validate method parameter
     if method != "b" && method != "c" {
-        return Err(StatsError::InvalidArgument(format!(
-            "Method must be 'b' or 'c', got {}",
+        return Err(crate::error::StatsError::InvalidArgument(format!(
+            "Method must be 'b' or 'c', got '{}'. Use 'b' for Kendall tau-b or 'c' for Kendall tau-c.",
             method
         )));
     }
 
-    // Check that arrays have the same length
-    if x.len() != y.len() {
-        return Err(StatsError::DimensionMismatch(
-            "Arrays must have the same length".to_string(),
-        ));
+    // Use standardized validation
+    if x.is_empty() {
+        return Err(ErrorMessages::empty_array("x"));
+    }
+    
+    if y.is_empty() {
+        return Err(ErrorMessages::empty_array("y"));
     }
 
-    // Check that arrays are not empty
-    if x.is_empty() {
-        return Err(StatsError::InvalidArgument(
-            "Arrays cannot be empty".to_string(),
-        ));
+    if x.len() != y.len() {
+        return Err(ErrorMessages::length_mismatch("x", x.len(), "y", y.len()));
     }
 
     // Compute concordant and discordant pairs
@@ -309,9 +308,8 @@ where
             let n2 = F::from(concordant + discordant + ties_y).unwrap();
 
             if n1 == F::zero() || n2 == F::zero() {
-                return Err(StatsError::InvalidArgument(
-                    "Cannot compute Kendall's tau-b for case with all values tied in one variable"
-                        .to_string(),
+                return Err(crate::error::StatsError::InvalidArgument(
+                    "Cannot compute Kendall's tau-b when all values are tied in one variable. Ensure both variables have some variation.".to_string(),
                 ));
             }
 
@@ -374,18 +372,21 @@ where
     Ix1: Dimension,
     Ix2: Dimension,
 {
-    // Check that arrays have the same length
-    if x.len() != y.len() || x.len() != z.shape()[0] {
-        return Err(StatsError::DimensionMismatch(
-            "All arrays must have the same length".to_string(),
-        ));
+    // Use standardized validation
+    if x.is_empty() {
+        return Err(ErrorMessages::empty_array("x"));
+    }
+    
+    if y.is_empty() {
+        return Err(ErrorMessages::empty_array("y"));
     }
 
-    // Check that arrays are not empty
-    if x.is_empty() {
-        return Err(StatsError::InvalidArgument(
-            "Arrays cannot be empty".to_string(),
-        ));
+    if x.len() != y.len() {
+        return Err(ErrorMessages::length_mismatch("x", x.len(), "y", y.len()));
+    }
+    
+    if x.len() != z.shape()[0] {
+        return Err(ErrorMessages::length_mismatch("x/y", x.len(), "z rows", z.shape()[0]));
     }
 
     // First, compute residuals by regressing out the control variables
@@ -467,8 +468,8 @@ where
     match alternative {
         "two-sided" | "less" | "greater" => {}
         _ => {
-            return Err(StatsError::InvalidArgument(format!(
-                "Invalid alternative parameter: {}. Use 'two-sided', 'less', or 'greater'",
+            return Err(crate::error::StatsError::InvalidArgument(format!(
+                "Invalid alternative parameter: '{}'. Use 'two-sided', 'less', or 'greater'.",
                 alternative
             )));
         }
@@ -587,15 +588,16 @@ where
 
     // Basic check for square matrix
     if a.shape()[0] != a.shape()[1] {
-        return Err(StatsError::InvalidArgument(
-            "Coefficient matrix must be square".to_string(),
+        return Err(crate::error::StatsError::InvalidArgument(
+            "Coefficient matrix must be square for linear system solving.".to_string(),
         ));
     }
 
     // Basic check for dimensions
     if a.shape()[0] != b.len() {
-        return Err(StatsError::DimensionMismatch(
-            "Coefficient matrix and RHS vector dimensions must match".to_string(),
+        return Err(ErrorMessages::dimension_mismatch(
+            &format!("{}x{} matrix", a.shape()[0], a.shape()[1]),
+            &format!("vector of length {}", b.len()),
         ));
     }
 
@@ -629,8 +631,8 @@ where
 
         // Check for singularity
         if aug[[i, i]].abs() <= F::epsilon() {
-            return Err(StatsError::InvalidArgument(
-                "Coefficient matrix is singular".to_string(),
+            return Err(crate::error::StatsError::InvalidArgument(
+                "Coefficient matrix is singular and cannot be solved. Try regularization or check for linear dependencies.".to_string(),
             ));
         }
 
@@ -692,23 +694,19 @@ where
 {
     // Check that arrays have the same length
     if binary.len() != continuous.len() {
-        return Err(StatsError::DimensionMismatch(
-            "Arrays must have the same length".to_string(),
-        ));
+        return Err(ErrorMessages::length_mismatch("binary", binary.len(), "continuous", continuous.len()));
     }
 
     // Check that arrays are not empty
     if binary.is_empty() {
-        return Err(StatsError::InvalidArgument(
-            "Arrays cannot be empty".to_string(),
-        ));
+        return Err(ErrorMessages::empty_array("binary"));
     }
 
     // Verify that binary variable contains only 0 and 1
     for &val in binary.iter() {
         if val != F::zero() && val != F::one() {
-            return Err(StatsError::InvalidArgument(
-                "Binary variable must contain only 0 and 1".to_string(),
+            return Err(crate::error::StatsError::InvalidArgument(
+                "Binary variable must contain only 0 and 1 values for point-biserial correlation.".to_string(),
             ));
         }
     }
@@ -727,8 +725,8 @@ where
 
     // Handle case where all values are the same
     if n1 == 0 || n0 == 0 {
-        return Err(StatsError::InvalidArgument(
-            "Binary variable must have at least one 0 and one 1".to_string(),
+        return Err(crate::error::StatsError::InvalidArgument(
+            "Binary variable must have at least one 0 and one 1 for meaningful correlation.".to_string(),
         ));
     }
 
@@ -821,8 +819,8 @@ where
     match alternative {
         "two-sided" | "less" | "greater" => {}
         _ => {
-            return Err(StatsError::InvalidArgument(format!(
-                "Invalid alternative parameter: {}. Use 'two-sided', 'less', or 'greater'",
+            return Err(crate::error::StatsError::InvalidArgument(format!(
+                "Invalid alternative parameter: '{}'. Use 'two-sided', 'less', or 'greater'.",
                 alternative
             )));
         }
@@ -909,8 +907,8 @@ where
     match method {
         "pearson" | "spearman" | "kendall" => {}
         _ => {
-            return Err(StatsError::InvalidArgument(format!(
-                "Method must be 'pearson', 'spearman', or 'kendall', got {}",
+            return Err(crate::error::StatsError::InvalidArgument(format!(
+                "Method must be 'pearson', 'spearman', or 'kendall', got '{}'.",
                 method
             )))
         }
@@ -921,9 +919,7 @@ where
 
     // Check that data is not empty
     if n == 0 || p == 0 {
-        return Err(StatsError::InvalidArgument(
-            "Data array cannot be empty".to_string(),
-        ));
+        return Err(ErrorMessages::empty_array("data"));
     }
 
     // Initialize correlation matrix
@@ -1155,28 +1151,32 @@ where
     F: Float + std::fmt::Debug + NumCast + std::iter::Sum<F>,
     D: Data<Elem = F>,
 {
-    // Validate input dimensions
+    // Use standardized validation
+    if x.is_empty() {
+        return Err(ErrorMessages::empty_array("x"));
+    }
+    
+    if y.is_empty() {
+        return Err(ErrorMessages::empty_array("y"));
+    }
+
     if x.len() != y.len() {
-        return Err(StatsError::DimensionMismatch(
-            "Input arrays must have the same length".to_string(),
-        ));
+        return Err(ErrorMessages::length_mismatch("x", x.len(), "y", y.len()));
     }
 
     let n = x.len();
 
     // Need at least 2 observations
     if n < 2 {
-        return Err(StatsError::InvalidArgument(
-            "At least 2 observations are required".to_string(),
-        ));
+        return Err(ErrorMessages::insufficient_data("correlation analysis", 2, n));
     }
 
     // Validate alternative parameter
     match alternative {
         "two-sided" | "less" | "greater" => {}
         _ => {
-            return Err(StatsError::InvalidArgument(format!(
-                "Invalid alternative parameter: {}. Use 'two-sided', 'less', or 'greater'",
+            return Err(crate::error::StatsError::InvalidArgument(format!(
+                "Invalid alternative parameter: '{}'. Use 'two-sided', 'less', or 'greater'.",
                 alternative
             )));
         }
@@ -1447,8 +1447,8 @@ where
     match alternative {
         "two-sided" | "less" | "greater" => {}
         _ => {
-            return Err(StatsError::InvalidArgument(format!(
-                "Invalid alternative parameter: {}. Use 'two-sided', 'less', or 'greater'",
+            return Err(crate::error::StatsError::InvalidArgument(format!(
+                "Invalid alternative parameter: '{}'. Use 'two-sided', 'less', or 'greater'.",
                 alternative
             )));
         }
@@ -1559,8 +1559,8 @@ where
     match alternative {
         "two-sided" | "less" | "greater" => {}
         _ => {
-            return Err(StatsError::InvalidArgument(format!(
-                "Invalid alternative parameter: {}. Use 'two-sided', 'less', or 'greater'",
+            return Err(crate::error::StatsError::InvalidArgument(format!(
+                "Invalid alternative parameter: '{}'. Use 'two-sided', 'less', or 'greater'.",
                 alternative
             )));
         }

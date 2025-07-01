@@ -40,11 +40,11 @@ use std::fmt::Debug;
 ///
 /// // Generate unevenly sampled data with a 1 Hz sinusoid
 /// let n = 100;
-/// let mut rng = rand::rng();
+/// let mut rng = rand::thread_rng();
 /// let mut t = Array1::linspace(0.0, 10.0, n);
 /// // Add some random noise to make sampling uneven
 /// for i in 0..n {
-///     t[i] += 0.1 * rng.random_range(0.0..1.0);
+///     t[i] += 0.1 * rng.gen_range(0.0..1.0);
 /// }
 /// let y: Vec<f64> = t.iter().map(|&ti| (2.0 * PI * 1.0 * ti).sin()).collect();
 ///

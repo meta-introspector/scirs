@@ -2522,7 +2522,7 @@ mod tests {
                 assert_eq!(dense[[0, 4]], 1.0); // category 1 in feature 1
                 assert_eq!(dense[[0, 1]], 0.0); // not category 1 in feature 0
             }
-            EncodedOutput::Dense(_) => panic!("Expected sparse output"),
+            EncodedOutput::Dense(_) => assert!(false, "Expected sparse output, got dense"),
         }
 
         // Test dense output for comparison
@@ -2544,7 +2544,7 @@ mod tests {
                     }
                 }
             }
-            EncodedOutput::Sparse(_) => panic!("Expected dense output"),
+            EncodedOutput::Sparse(_) => assert!(false, "Expected dense output, got sparse"),
         }
     }
 
@@ -2566,7 +2566,7 @@ mod tests {
                 assert_eq!(dense[[1, 0]], 1.0); // Category 1 maps to first output
                 assert_eq!(dense[[2, 1]], 1.0); // Category 2 maps to second output
             }
-            EncodedOutput::Dense(_) => panic!("Expected sparse output"),
+            EncodedOutput::Dense(_) => assert!(false, "Expected sparse output, got dense"),
         }
     }
 

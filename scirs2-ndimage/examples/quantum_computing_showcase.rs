@@ -105,7 +105,7 @@ fn create_test_images() -> TestImages {
     // Add geometric patterns
     for y in 0..size {
         for x in 0..size {
-            let value = 
+            let value =
                 // Circle in center
                 if ((y as f64 - 7.5).powi(2) + (x as f64 - 7.5).powi(2)).sqrt() < 3.0 {
                     0.8

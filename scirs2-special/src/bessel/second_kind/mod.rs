@@ -330,6 +330,100 @@ fn enhanced_asymptotic_yn<F: Float + FromPrimitive>(n: i32, x: F) -> F {
     one_over_sqrt_pi_x * F::from(constants::f64::SQRT_2).unwrap() * ampl * theta.sin()
 }
 
+/// Exponentially scaled Bessel function of the second kind of order 0.
+///
+/// This function computes y0e(x) = y0(x) * exp(-abs(x.imag)) for complex x,
+/// which prevents overflow for large arguments while preserving relative accuracy.
+///
+/// For real arguments, this is simply y0(x) since exp(-0) = 1.
+///
+/// # Arguments
+///
+/// * `x` - Input value (must be positive)
+///
+/// # Returns
+///
+/// * Y₀ₑ(x) Exponentially scaled Bessel function value
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::bessel::second_kind::y0e;
+///
+/// // For real arguments, y0e(x) = y0(x)
+/// let x = 2.0f64;
+/// let result = y0e(x);
+/// assert!(result.is_finite());
+/// ```
+pub fn y0e<F: Float + FromPrimitive + Debug>(x: F) -> F {
+    // For real arguments, the imaginary part is zero, so exp(-abs(0)) = 1
+    // Therefore y0e(x) = y0(x) for real x
+    y0(x)
+}
+
+/// Exponentially scaled Bessel function of the second kind of order 1.
+///
+/// This function computes y1e(x) = y1(x) * exp(-abs(x.imag)) for complex x,
+/// which prevents overflow for large arguments while preserving relative accuracy.
+///
+/// For real arguments, this is simply y1(x) since exp(-0) = 1.
+///
+/// # Arguments
+///
+/// * `x` - Input value (must be positive)
+///
+/// # Returns
+///
+/// * Y₁ₑ(x) Exponentially scaled Bessel function value
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::bessel::second_kind::y1e;
+///
+/// // For real arguments, y1e(x) = y1(x)
+/// let x = 2.0f64;
+/// let result = y1e(x);
+/// assert!(result.is_finite());
+/// ```
+pub fn y1e<F: Float + FromPrimitive + Debug>(x: F) -> F {
+    // For real arguments, the imaginary part is zero, so exp(-abs(0)) = 1
+    // Therefore y1e(x) = y1(x) for real x
+    y1(x)
+}
+
+/// Exponentially scaled Bessel function of the second kind of integer order n.
+///
+/// This function computes yne(n, x) = yn(n, x) * exp(-abs(x.imag)) for complex x,
+/// which prevents overflow for large arguments while preserving relative accuracy.
+///
+/// For real arguments, this is simply yn(n, x) since exp(-0) = 1.
+///
+/// # Arguments
+///
+/// * `n` - Order (integer)
+/// * `x` - Input value (must be positive)
+///
+/// # Returns
+///
+/// * Yₙₑ(x) Exponentially scaled Bessel function value
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::bessel::second_kind::yne;
+///
+/// // For real arguments, yne(n, x) = yn(n, x)
+/// let x = 2.0f64;
+/// let result = yne(3, x);
+/// assert!(result.is_finite());
+/// ```
+pub fn yne<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
+    // For real arguments, the imaginary part is zero, so exp(-abs(0)) = 1
+    // Therefore yne(n, x) = yn(n, x) for real x
+    yn(n, x)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

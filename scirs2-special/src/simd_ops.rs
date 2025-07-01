@@ -77,46 +77,175 @@ pub fn gamma_f64_simd(input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
     Ok(output)
 }
 
-/// SIMD approximation of gamma function for f32
+/// SIMD approximation of gamma function for f32 with enhanced accuracy
 #[cfg(feature = "simd")]
 fn simd_gamma_approx_f32(x: &[f32]) -> Vec<f32> {
-    // Simplified Stirling's approximation: gamma(x) ≈ sqrt(2π/x) * (x/e)^x
-    // For better precision, this should use more sophisticated algorithms
+    // Enhanced gamma function using Lanczos approximation for better accuracy
+    // Coefficients for Lanczos approximation (g=7, n=9)
+    const G: f32 = 7.0;
+    const LANCZOS_COEFFS: [f32; 9] = [
+        0.99999999999980993,
+        676.5203681218851,
+        -1259.1392167224028,
+        771.32342877765313,
+        -176.61502916214059,
+        12.507343278686905,
+        -0.13857109526572012,
+        9.9843695780195716e-6,
+        1.5056327351493116e-7,
+    ];
 
     let mut result = vec![0.0f32; x.len()];
 
     for i in 0..x.len() {
         let xi = x[i];
+        
         if xi <= 0.0 {
             result[i] = f32::NAN;
-        } else if xi < 1.0 {
-            // Use recurrence relation: gamma(x) = gamma(x+1) / x
-            result[i] = crate::gamma::gamma(xi as f64) as f32;
+        } else if xi < 0.5 {
+            // Use reflection formula: Γ(z)Γ(1-z) = π/sin(πz)
+            let pi_sin_pi_z = std::f32::consts::PI / (std::f32::consts::PI * xi).sin();
+            result[i] = pi_sin_pi_z / lanczos_gamma_f32(1.0 - xi);
+        } else if xi < 1.5 {
+            // Direct Lanczos evaluation
+            result[i] = lanczos_gamma_f32(xi);
         } else {
-            // Stirling's approximation
-            let sqrt_2pi = (2.0 * std::f32::consts::PI).sqrt();
-            let term1 = sqrt_2pi / xi.sqrt();
-            let term2 = (xi / std::f32::consts::E).powf(xi);
-            result[i] = term1 * term2;
+            // Use recurrence relation if xi is large to bring it into optimal range
+            let mut z = xi;
+            let mut result_mult = 1.0;
+            
+            while z > 1.5 {
+                z -= 1.0;
+                result_mult *= z;
+            }
+            
+            result[i] = lanczos_gamma_f32(z) * result_mult;
         }
     }
 
     result
 }
 
-/// SIMD approximation of gamma function for f64
+/// Lanczos approximation for gamma function (f32)
+#[cfg(feature = "simd")]
+fn lanczos_gamma_f32(z: f32) -> f32 {
+    const G: f32 = 7.0;
+    const LANCZOS_COEFFS: [f32; 9] = [
+        0.99999999999980993,
+        676.5203681218851,
+        -1259.1392167224028,
+        771.32342877765313,
+        -176.61502916214059,
+        12.507343278686905,
+        -0.13857109526572012,
+        9.9843695780195716e-6,
+        1.5056327351493116e-7,
+    ];
+
+    let sqrt_2pi = (2.0 * std::f32::consts::PI).sqrt();
+    
+    let mut ag = LANCZOS_COEFFS[0];
+    for i in 1..LANCZOS_COEFFS.len() {
+        ag += LANCZOS_COEFFS[i] / (z + i as f32 - 1.0);
+    }
+    
+    let term1 = sqrt_2pi * ag / z;
+    let term2 = ((z + G - 0.5) / std::f32::consts::E).powf(z - 0.5);
+    
+    term1 * term2
+}
+
+/// SIMD approximation of gamma function for f64 with enhanced accuracy
 #[cfg(feature = "simd")]
 fn simd_gamma_approx_f64(x: &[f64]) -> Vec<f64> {
+    // Enhanced gamma function using higher precision Lanczos approximation
+    // Coefficients for Lanczos approximation (g=7, n=15) for better f64 precision
+    const LANCZOS_COEFFS: [f64; 15] = [
+        0.99999999999999709182,
+        57.156235665862923517,
+        -59.597960355475491248,
+        14.136097974741747174,
+        -0.49191381609762019978,
+        0.000033994649984811888699,
+        0.00004652362892704858047,
+        -0.0000098374475304879564677,
+        0.00000015808870322491248884,
+        -0.00000002103937310653993906,
+        0.0000000016125516516672222819,
+        -0.00000000006050073988424023865,
+        0.000000000013525146073944673582,
+        -0.000000000000020085822498639073869,
+        0.0000000000000010773925999973567529,
+    ];
+
     let mut result = vec![0.0f64; x.len()];
 
     for i in 0..x.len() {
         let xi = x[i];
-        // For now, just use the accurate scalar implementation
-        // In a real SIMD implementation, you'd want vectorized approximations
-        result[i] = crate::gamma::gamma(xi);
+        
+        if xi <= 0.0 {
+            result[i] = f64::NAN;
+        } else if xi < 0.5 {
+            // Use reflection formula: Γ(z)Γ(1-z) = π/sin(πz)
+            let pi_sin_pi_z = std::f64::consts::PI / (std::f64::consts::PI * xi).sin();
+            result[i] = pi_sin_pi_z / lanczos_gamma_f64(1.0 - xi);
+        } else if xi < 1.5 {
+            // Direct Lanczos evaluation
+            result[i] = lanczos_gamma_f64(xi);
+        } else if xi < 15.0 {
+            // Use recurrence relation for moderate values
+            let mut z = xi;
+            let mut result_mult = 1.0;
+            
+            while z > 1.5 {
+                z -= 1.0;
+                result_mult *= z;
+            }
+            
+            result[i] = lanczos_gamma_f64(z) * result_mult;
+        } else {
+            // For very large values, use asymptotic expansion or fall back to scalar
+            // to avoid numerical issues with the Lanczos approximation
+            result[i] = crate::gamma::gamma(xi);
+        }
     }
 
     result
+}
+
+/// Enhanced Lanczos approximation for gamma function (f64)
+#[cfg(feature = "simd")]
+fn lanczos_gamma_f64(z: f64) -> f64 {
+    const G: f64 = 7.0;
+    const LANCZOS_COEFFS: [f64; 15] = [
+        0.99999999999999709182,
+        57.156235665862923517,
+        -59.597960355475491248,
+        14.136097974741747174,
+        -0.49191381609762019978,
+        0.000033994649984811888699,
+        0.00004652362892704858047,
+        -0.0000098374475304879564677,
+        0.00000015808870322491248884,
+        -0.00000002103937310653993906,
+        0.0000000016125516516672222819,
+        -0.00000000006050073988424023865,
+        0.000000000013525146073944673582,
+        -0.000000000000020085822498639073869,
+        0.0000000000000010773925999973567529,
+    ];
+
+    let sqrt_2pi = (2.0 * std::f64::consts::PI).sqrt();
+    
+    let mut ag = LANCZOS_COEFFS[0];
+    for i in 1..LANCZOS_COEFFS.len() {
+        ag += LANCZOS_COEFFS[i] / (z + i as f64 - 1.0);
+    }
+    
+    let term1 = sqrt_2pi * ag / z;
+    let term2 = ((z + G - 0.5) / std::f64::consts::E).powf(z - 0.5);
+    
+    term1 * term2
 }
 
 /// SIMD-optimized exponential function
@@ -663,6 +792,25 @@ fn simd_cos_approx_f32(x: &[f32]) -> Vec<f32> {
 }
 
 #[cfg(feature = "simd")]
+fn simd_j0_approx_f32(x: &[f32]) -> Vec<f32> {
+    x.iter()
+        .map(|&val| {
+            // Simplified J0 approximation for demonstration
+            // In practice would use optimized SIMD polynomial approximation
+            if val.abs() < 1e-6 {
+                1.0 - val * val * 0.25
+            } else {
+                // Use rational approximation for small/medium values
+                let x2 = val * val;
+                let num = 1.0 - 0.25 * x2 + 0.015625 * x2 * x2 - 0.000434028 * x2 * x2 * x2;
+                let den = 1.0 + 0.0625 * x2;
+                num / den
+            }
+        })
+        .collect()
+}
+
+#[cfg(feature = "simd")]
 fn simd_j1_approx_f32(x: &[f32]) -> Vec<f32> {
     x.iter()
         .map(|&val| {
@@ -677,6 +825,27 @@ fn simd_j1_approx_f32(x: &[f32]) -> Vec<f32> {
                 let den = 1.0 + 0.25 * x2;
                 num / den
             }
+        })
+        .collect()
+}
+
+#[cfg(feature = "simd")]
+fn simd_erf_approx_f32(x: &[f32]) -> Vec<f32> {
+    x.iter()
+        .map(|&val| {
+            // Simplified erf approximation using erfc: erf(x) = 1 - erfc(x)
+            let t = 1.0 / (1.0 + 0.3275911 * val.abs());
+            let poly = t
+                * (0.254829592
+                    + t * (-0.284496736
+                        + t * (1.421413741 + t * (-1.453152027 + t * 1.061405429))));
+            let erfc_result = poly * (-val * val).exp();
+            let erf_result = if val >= 0.0 {
+                1.0 - erfc_result
+            } else {
+                erfc_result - 1.0
+            };
+            erf_result
         })
         .collect()
 }

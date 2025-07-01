@@ -71,6 +71,9 @@
 //! * `random`: Enable random number generation utilities
 //! * `types`: Enable type conversion utilities
 //! * `linalg`: Enable linear algebra with BLAS/LAPACK bindings
+//! * `cloud`: Enable cloud storage integration (S3, GCS, Azure)
+//! * `jit`: Enable just-in-time compilation with LLVM
+//! * `ml_pipeline`: Enable ML pipeline integration and real-time processing
 //! * `all`: Enable all features except backend-specific ones
 
 // Re-export modules
@@ -83,6 +86,8 @@ pub mod array_protocol;
 pub mod batch_conversions;
 #[cfg(feature = "cache")]
 pub mod cache;
+#[cfg(feature = "cloud")]
+pub mod cloud;
 pub mod config;
 pub mod constants;
 pub mod distributed;
@@ -93,6 +98,8 @@ pub mod gpu;
 #[cfg(feature = "gpu")]
 pub mod gpu_registry;
 pub mod io;
+#[cfg(feature = "jit")]
+pub mod jit;
 #[cfg(feature = "logging")]
 pub mod logging;
 #[cfg(feature = "memory_management")]
@@ -100,6 +107,8 @@ pub mod memory;
 #[cfg(feature = "memory_efficient")]
 pub mod memory_efficient;
 pub mod metrics;
+#[cfg(feature = "ml_pipeline")]
+pub mod ml_pipeline;
 pub mod ndarray_ext;
 pub mod numeric;
 #[cfg(feature = "parallel")]
@@ -145,6 +154,12 @@ pub mod benchmarking;
 // Re-exports
 #[cfg(feature = "cache")]
 pub use crate::cache::*;
+#[cfg(feature = "cloud")]
+pub use crate::cloud::{
+    CloudConfig, CloudCredentials, CloudError, CloudObjectMetadata, CloudProvider,
+    CloudStorageClient, EncryptionConfig, EncryptionMethod, HttpMethod, ListResult,
+    TransferOptions,
+};
 pub use crate::config::production as config_production;
 pub use crate::config::{
     get_config, get_config_value, set_config_value, set_global_config, Config, ConfigValue,
@@ -154,6 +169,11 @@ pub use crate::error::*;
 #[cfg(feature = "gpu")]
 pub use crate::gpu::*;
 pub use crate::io::*;
+#[cfg(feature = "jit")]
+pub use crate::jit::{
+    JitBackend, JitCompiler, JitConfig, JitError, KernelSource, CompiledKernel, 
+    OptimizationLevel, ExecutionProfile, TargetArchitecture, DataType, KernelLanguage,
+};
 #[cfg(feature = "logging")]
 pub use crate::logging::*;
 #[cfg(feature = "memory_management")]
@@ -232,6 +252,12 @@ pub use crate::memory::metrics::{setup_gpu_memory_tracking, TrackedGpuBuffer, Tr
 pub use crate::metrics::{
     global_health_monitor, global_metrics_registry, Counter, Gauge, HealthCheck, HealthMonitor,
     HealthStatus, Histogram, MetricPoint, MetricType, MetricValue, Timer,
+};
+#[cfg(feature = "ml_pipeline")]
+pub use crate::ml_pipeline::{
+    DataBatch, DataSample, DataType, FeatureConstraint, FeatureSchema, FeatureTransformer,
+    FeatureValue, MLPipeline, MLPipelineError, ModelPredictor, ModelType, PipelineConfig,
+    PipelineMetrics, PipelineNode, TransformType,
 };
 pub use crate::numeric::*;
 #[cfg(feature = "parallel")]

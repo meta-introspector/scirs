@@ -17,9 +17,9 @@
 
 use ndarray::{Array, Array1, Array2, Array3, Array4, ArrayView2, ArrayViewMut2, Axis, Zip};
 use num_complex::Complex;
-use num_traits::{Float, FromPrimitive, Zero, One};
-use std::collections::{HashMap, VecDeque, BTreeMap};
-use std::sync::{Arc, RwLock, Mutex};
+use num_traits::{Float, FromPrimitive, One, Zero};
+use std::collections::{BTreeMap, HashMap, VecDeque};
+use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant};
 
 use crate::error::{NdimageError, NdimageResult};
@@ -571,13 +571,13 @@ where
     T: Float + FromPrimitive + Copy + Send + Sync,
 {
     let (height, width) = image.dim();
-    
+
     // Create quantum-GPU task
     let task = create_quantum_image_processing_task(&image, &processing_type, config)?;
-    
+
     // Schedule task execution
     schedule_quantum_gpu_task(context, task.clone())?;
-    
+
     // Execute quantum-enhanced processing
     let result = match processing_type {
         QuantumImageProcessingType::QuantumFourier => {
@@ -596,13 +596,13 @@ where
             quantum_sensing_image_processing(&image, context, config)?
         }
     };
-    
+
     // Apply quantum error correction if needed
     let corrected_result = apply_quantum_error_correction(&result, context, config)?;
-    
+
     // Update performance metrics
     update_performance_metrics(context, &task, &corrected_result)?;
-    
+
     Ok(corrected_result)
 }
 
@@ -633,27 +633,29 @@ pub fn quantum_circuit_simulation_gpu(
 ) -> NdimageResult<Array1<Complex<f64>>> {
     let num_qubits = circuit.num_qubits;
     let state_size = 2_usize.pow(num_qubits as u32);
-    
+
     if initial_state.len() != state_size {
-        return Err(NdimageError::InvalidInput("State size mismatch".to_string()));
+        return Err(NdimageError::InvalidInput(
+            "State size mismatch".to_string(),
+        ));
     }
-    
+
     // Allocate quantum state on GPU
     let mut current_state = initial_state.clone();
-    
+
     // Execute quantum gates on GPU
     for gate in &circuit.gates {
         current_state = execute_quantum_gate_gpu(gate, current_state, context, config)?;
-        
+
         // Apply error correction if needed
         if config.error_correction_level != QuantumErrorCorrectionLevel::None {
             current_state = apply_gate_level_error_correction(&current_state, gate, context)?;
         }
     }
-    
+
     // Validate final state
     validate_quantum_state(&current_state)?;
-    
+
     Ok(current_state)
 }
 
@@ -673,28 +675,20 @@ where
 {
     // Create quantum feature maps
     let quantum_feature_maps = create_quantum_feature_maps(training_data, context, config)?;
-    
+
     // Train quantum classifier
-    let quantum_classifier = train_quantum_classifier_gpu(
-        &quantum_feature_maps,
-        labels,
-        context,
-        config,
-    )?;
-    
+    let quantum_classifier =
+        train_quantum_classifier_gpu(&quantum_feature_maps, labels, context, config)?;
+
     // Classify test data
     let mut results = Vec::new();
     for test_sample in test_data {
         let test_features = create_quantum_feature_map(test_sample, context, config)?;
-        let (predicted_class, confidence) = classify_quantum_sample_gpu(
-            &test_features,
-            &quantum_classifier,
-            context,
-            config,
-        )?;
+        let (predicted_class, confidence) =
+            classify_quantum_sample_gpu(&test_features, &quantum_classifier, context, config)?;
         results.push((predicted_class, confidence));
     }
-    
+
     Ok(results)
 }
 
@@ -708,24 +702,20 @@ pub fn adaptive_quantum_classical_management(
 ) -> NdimageResult<ResourceAllocationDecision> {
     // Analyze current workload
     let workload_analysis = analyze_current_workload(context)?;
-    
+
     // Predict resource requirements
     let resource_prediction = predict_resource_requirements(&workload_analysis, context)?;
-    
+
     // Optimize resource allocation
-    let allocation_decision = optimize_resource_allocation(
-        &workload_analysis,
-        &resource_prediction,
-        context,
-        config,
-    )?;
-    
+    let allocation_decision =
+        optimize_resource_allocation(&workload_analysis, &resource_prediction, context, config)?;
+
     // Apply resource allocation
     apply_resource_allocation(&allocation_decision, context)?;
-    
+
     // Update performance predictions
     update_performance_predictions(context, &allocation_decision)?;
-    
+
     Ok(allocation_decision)
 }
 
@@ -905,9 +895,7 @@ fn apply_gate_level_error_correction(
     Ok(current_state.clone())
 }
 
-fn validate_quantum_state(
-    _state: &Array1<Complex<f64>>,
-) -> NdimageResult<()> {
+fn validate_quantum_state(_state: &Array1<Complex<f64>>) -> NdimageResult<()> {
     // Implementation would validate quantum state normalization
     Ok(())
 }
@@ -967,9 +955,7 @@ fn classify_quantum_sample_gpu(
     Ok((0, 0.8))
 }
 
-fn analyze_current_workload(
-    _context: &QuantumGPUContext,
-) -> NdimageResult<WorkloadAnalysis> {
+fn analyze_current_workload(_context: &QuantumGPUContext) -> NdimageResult<WorkloadAnalysis> {
     Ok(WorkloadAnalysis {
         quantum_task_ratio: 0.3,
         classical_task_ratio: 0.5,
@@ -1026,13 +1012,13 @@ fn update_performance_predictions(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::Array2;
     use approx::assert_abs_diff_eq;
+    use ndarray::Array2;
 
     #[test]
     fn test_quantum_gpu_config_default() {
         let config = QuantumGPUConfig::default();
-        
+
         assert_eq!(config.max_circuit_depth, 100);
         assert_eq!(config.hybrid_threshold, 0.5);
         assert_eq!(config.kernel_optimization_level, 3);
@@ -1042,20 +1028,18 @@ mod tests {
     fn test_quantum_circuit_creation() {
         let circuit = QuantumCircuit {
             num_qubits: 4,
-            gates: vec![
-                QuantumGate {
-                    gate_type: QuantumGateType::Hadamard,
-                    target_qubits: vec![0],
-                    control_qubits: vec![],
-                    parameters: vec![],
-                    gpu_execution_hint: GPUExecutionHint::PreferGPU,
-                }
-            ],
+            gates: vec![QuantumGate {
+                gate_type: QuantumGateType::Hadamard,
+                target_qubits: vec![0],
+                control_qubits: vec![],
+                parameters: vec![],
+                gpu_execution_hint: GPUExecutionHint::PreferGPU,
+            }],
             depth: 1,
             estimated_execution_time: Duration::from_millis(1),
             gpu_kernel_mapping: HashMap::new(),
         };
-        
+
         assert_eq!(circuit.num_qubits, 4);
         assert_eq!(circuit.gates.len(), 1);
         assert_eq!(circuit.depth, 1);
@@ -1073,7 +1057,7 @@ mod tests {
             dependencies: vec![],
             quantum_classical_ratio: 0.8,
         };
-        
+
         assert_eq!(task.task_id, "test_task");
         assert_eq!(task.priority, TaskPriority::High);
         assert_eq!(task.quantum_classical_ratio, 0.8);
@@ -1089,7 +1073,7 @@ mod tests {
             last_accessed: Instant::now(),
             priority: AllocationPriority::High,
         };
-        
+
         assert_eq!(allocation.allocation_id, "qalloc_1");
         assert_eq!(allocation.size, 1024);
         assert_eq!(allocation.priority, AllocationPriority::High);
@@ -1106,8 +1090,14 @@ mod tests {
             cpu_utilization: 0.7,
             quantum_fidelity_requirements: 0.9,
         };
-        
-        assert_abs_diff_eq!(analysis.quantum_task_ratio + analysis.classical_task_ratio + analysis.hybrid_task_ratio, 1.0, epsilon = 1e-10);
+
+        assert_abs_diff_eq!(
+            analysis.quantum_task_ratio
+                + analysis.classical_task_ratio
+                + analysis.hybrid_task_ratio,
+            1.0,
+            epsilon = 1e-10
+        );
         assert!(analysis.quantum_fidelity_requirements > 0.8);
     }
 
@@ -1120,8 +1110,12 @@ mod tests {
             scheduling_adjustments: vec![],
             expected_performance_improvement: 1.2,
         };
-        
-        assert_abs_diff_eq!(decision.quantum_resource_allocation + decision.classical_resource_allocation, 1.0, epsilon = 1e-10);
+
+        assert_abs_diff_eq!(
+            decision.quantum_resource_allocation + decision.classical_resource_allocation,
+            1.0,
+            epsilon = 1e-10
+        );
         assert!(decision.expected_performance_improvement > 1.0);
     }
 }

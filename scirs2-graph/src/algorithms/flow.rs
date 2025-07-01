@@ -162,10 +162,10 @@ where
     Ix: IndexType,
 {
     if !graph.contains_node(source) {
-        return Err(GraphError::NodeNotFound);
+        return Err(GraphError::node_not_found("node"));
     }
     if !graph.contains_node(sink) {
-        return Err(GraphError::NodeNotFound);
+        return Err(GraphError::node_not_found("node"));
     }
     if source == sink {
         return Err(GraphError::InvalidGraph(
@@ -355,10 +355,10 @@ where
     Ix: IndexType,
 {
     if !graph.contains_node(source) {
-        return Err(GraphError::NodeNotFound);
+        return Err(GraphError::node_not_found("node"));
     }
     if !graph.contains_node(sink) {
-        return Err(GraphError::NodeNotFound);
+        return Err(GraphError::node_not_found("node"));
     }
     if source == sink {
         return Err(GraphError::InvalidGraph(
@@ -489,10 +489,10 @@ where
     Ix: IndexType,
 {
     if !graph.contains_node(source) {
-        return Err(GraphError::NodeNotFound);
+        return Err(GraphError::node_not_found("node"));
     }
     if !graph.contains_node(sink) {
-        return Err(GraphError::NodeNotFound);
+        return Err(GraphError::node_not_found("node"));
     }
     if source == sink {
         return Err(GraphError::InvalidGraph(
@@ -534,10 +534,10 @@ where
     Ix: IndexType,
 {
     if !graph.contains_node(source) {
-        return Err(GraphError::NodeNotFound);
+        return Err(GraphError::node_not_found("node"));
     }
     if !graph.contains_node(sink) {
-        return Err(GraphError::NodeNotFound);
+        return Err(GraphError::node_not_found("node"));
     }
     if source == sink {
         return Err(GraphError::InvalidGraph(
@@ -574,10 +574,10 @@ where
     Ix: IndexType,
 {
     if !graph.contains_node(source) {
-        return Err(GraphError::NodeNotFound);
+        return Err(GraphError::node_not_found("node"));
     }
     if !graph.contains_node(sink) {
-        return Err(GraphError::NodeNotFound);
+        return Err(GraphError::node_not_found("node"));
     }
     if source == sink {
         return Err(GraphError::InvalidGraph(
@@ -610,10 +610,10 @@ where
     Ix: IndexType,
 {
     if !graph.contains_node(source) {
-        return Err(GraphError::NodeNotFound);
+        return Err(GraphError::node_not_found("node"));
     }
     if !graph.contains_node(sink) {
-        return Err(GraphError::NodeNotFound);
+        return Err(GraphError::node_not_found("node"));
     }
     if source == sink {
         return Err(GraphError::InvalidGraph(
@@ -654,10 +654,10 @@ where
     F: Fn(&E) -> f64,
 {
     if !graph.contains_node(source) {
-        return Err(GraphError::NodeNotFound);
+        return Err(GraphError::node_not_found("node"));
     }
     if !graph.contains_node(sink) {
-        return Err(GraphError::NodeNotFound);
+        return Err(GraphError::node_not_found("node"));
     }
     if source == sink {
         return Err(GraphError::InvalidGraph(
@@ -698,10 +698,10 @@ where
     Ix: IndexType + Send + Sync,
 {
     if !graph.contains_node(source) {
-        return Err(GraphError::NodeNotFound);
+        return Err(GraphError::node_not_found("node"));
     }
     if !graph.contains_node(sink) {
-        return Err(GraphError::NodeNotFound);
+        return Err(GraphError::node_not_found("node"));
     }
     if source == sink {
         return Err(GraphError::InvalidGraph(
@@ -749,12 +749,12 @@ where
     // Check if all sources and sinks exist
     for source in sources {
         if !graph.contains_node(source) {
-            return Err(GraphError::NodeNotFound);
+            return Err(GraphError::node_not_found("node"));
         }
     }
     for sink in sinks {
         if !graph.contains_node(sink) {
-            return Err(GraphError::NodeNotFound);
+            return Err(GraphError::node_not_found("node"));
         }
     }
 
@@ -1156,7 +1156,7 @@ impl<N: Node + Clone + Hash + Eq> ISAPGraph<N> {
         // Simple hash-based index - in a real implementation,
         // you'd maintain a proper node-to-index mapping
         use std::collections::hash_map::DefaultHasher;
-        use std::hash::{Hash, Hasher};
+        use std::hash::Hasher;
 
         let mut hasher = DefaultHasher::new();
         node.hash(&mut hasher);

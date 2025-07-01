@@ -204,11 +204,11 @@ impl WordCloud {
 
         // Position words (simplified grid layout)
         let cols = (top_words.len() as f64).sqrt().ceil() as usize;
-        let rows = (top_words.len() + cols - 1) / cols;
+        let rows = top_words.len().div_ceil(cols);
         let cell_width = self.config.width / cols;
         let cell_height = self.config.height / rows;
 
-        for (i, (&ref word, &freq)) in top_words.iter().enumerate() {
+        for (i, (word, &freq)) in top_words.iter().enumerate() {
             let row = i / cols;
             let col = i % cols;
 
@@ -791,9 +791,7 @@ impl SentimentVisualizer {
         }
 
         // Add legend
-        svg.push_str(&format!(
-            r#"<text x="20" y="30" font-family="Arial, sans-serif" font-size="16" font-weight="bold">Sentiment Distribution</text>"#
-        ));
+        svg.push_str(r#"<text x="20" y="30" font-family="Arial, sans-serif" font-size="16" font-weight="bold">Sentiment Distribution</text>"#);
 
         let legend_y = 60;
         svg.push_str(&format!(

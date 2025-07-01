@@ -154,8 +154,8 @@ pub fn simd_chebyshev_distance(a: &[f64], b: &[f64]) -> SpatialResult<f64> {
 /// # Returns
 /// * Array of distances, shape (n,)
 pub fn simd_euclidean_distance_batch(
-    points1: &ArrayView2<f64>,
-    points2: &ArrayView2<f64>,
+    points1: &ArrayView2<'_, f64>,
+    points2: &ArrayView2<'_, f64>,
 ) -> SpatialResult<Array1<f64>> {
     if points1.shape() != points2.shape() {
         return Err(SpatialError::ValueError(
@@ -189,7 +189,7 @@ pub fn simd_euclidean_distance_batch(
 ///
 /// # Returns
 /// * Condensed distance matrix, shape (n*(n-1)/2,)
-pub fn parallel_pdist(points: &ArrayView2<f64>, metric: &str) -> SpatialResult<Array1<f64>> {
+pub fn parallel_pdist(points: &ArrayView2<'_, f64>, metric: &str) -> SpatialResult<Array1<f64>> {
     let n_points = points.nrows();
     if n_points < 2 {
         return Err(SpatialError::ValueError(
@@ -261,8 +261,8 @@ pub fn parallel_pdist(points: &ArrayView2<f64>, metric: &str) -> SpatialResult<A
 /// # Returns
 /// * Distance matrix, shape (n, m)
 pub fn parallel_cdist(
-    points1: &ArrayView2<f64>,
-    points2: &ArrayView2<f64>,
+    points1: &ArrayView2<'_, f64>,
+    points2: &ArrayView2<'_, f64>,
     metric: &str,
 ) -> SpatialResult<Array2<f64>> {
     if points1.ncols() != points2.ncols() {
@@ -340,8 +340,8 @@ pub fn parallel_cdist(
 /// # Returns
 /// * (indices, distances) where both have shape (n_queries, k)
 pub fn simd_knn_search(
-    query_points: &ArrayView2<f64>,
-    data_points: &ArrayView2<f64>,
+    query_points: &ArrayView2<'_, f64>,
+    data_points: &ArrayView2<'_, f64>,
     k: usize,
     metric: &str,
 ) -> SpatialResult<(Array2<usize>, Array2<f64>)> {
@@ -489,7 +489,7 @@ pub mod ultra_simd_clustering {
         }
 
         /// Ultra-optimized SIMD K-means clustering
-        pub fn fit(&self, points: &ArrayView2<f64>) -> SpatialResult<(Array2<f64>, Array1<usize>)> {
+        pub fn fit(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<(Array2<f64>, Array1<usize>)> {
             let n_points = points.nrows();
             let n_dims = points.ncols();
 
@@ -556,7 +556,7 @@ pub mod ultra_simd_clustering {
         /// SIMD-accelerated k-means++ initialization
         fn initialize_centroids_simd(
             &self,
-            points: &ArrayView2<f64>,
+            points: &ArrayView2<'_, f64>,
         ) -> SpatialResult<Array2<f64>> {
             let n_points = points.nrows();
             let n_dims = points.ncols();
@@ -608,8 +608,8 @@ pub mod ultra_simd_clustering {
         /// Ultra-optimized vectorized point assignment with block processing
         fn assign_points_vectorized(
             &self,
-            points: &ArrayView2<f64>,
-            centroids: &ArrayView2<f64>,
+            points: &ArrayView2<'_, f64>,
+            centroids: &ArrayView2<'_, f64>,
             assignments: &mut ndarray::ArrayViewMut1<usize>,
             distance_buffer: &mut ndarray::ArrayViewMut2<f64>,
         ) -> SpatialResult<()> {
@@ -655,7 +655,7 @@ pub mod ultra_simd_clustering {
         /// Ultra-optimized vectorized centroid updates with FMA
         fn update_centroids_vectorized(
             &self,
-            points: &ArrayView2<f64>,
+            points: &ArrayView2<'_, f64>,
             assignments: &ndarray::ArrayView1<usize>,
             centroids: &mut ndarray::ArrayViewMut2<f64>,
             centroid_sums: &mut ndarray::ArrayViewMut2<f64>,
@@ -745,8 +745,8 @@ pub mod ultra_simd_clustering {
         /// Ultra-fast SIMD k-nearest neighbors with vectorized heap operations
         pub fn simd_knn_ultra_fast(
             &self,
-            query_points: &ArrayView2<f64>,
-            data_points: &ArrayView2<f64>,
+            query_points: &ArrayView2<'_, f64>,
+            data_points: &ArrayView2<'_, f64>,
             k: usize,
         ) -> SpatialResult<(Array2<usize>, Array2<f64>)> {
             let n_queries = query_points.nrows();
@@ -979,7 +979,7 @@ pub mod hardware_specific_simd {
         /// Ultra-fast batch processing with cache-optimized memory access
         pub fn batch_distance_matrix_optimized(
             &self,
-            points: &ArrayView2<f64>,
+            points: &ArrayView2<'_, f64>,
         ) -> SpatialResult<Array2<f64>> {
             let n_points = points.nrows();
             let mut result = Array2::zeros((n_points, n_points));
@@ -1017,7 +1017,7 @@ pub mod hardware_specific_simd {
         /// Compute distance block with hardware-specific optimizations
         fn compute_distance_block(
             &self,
-            points: &ArrayView2<f64>,
+            points: &ArrayView2<'_, f64>,
             result: &mut ndarray::ArrayViewMut2<f64>,
             i_range: std::ops::Range<usize>,
             j_range: std::ops::Range<usize>,
@@ -1043,8 +1043,8 @@ pub mod hardware_specific_simd {
         /// Vectorized k-nearest neighbors with hardware optimizations
         pub fn knn_search_vectorized(
             &self,
-            query_points: &ArrayView2<f64>,
-            data_points: &ArrayView2<f64>,
+            query_points: &ArrayView2<'_, f64>,
+            data_points: &ArrayView2<'_, f64>,
             k: usize,
         ) -> SpatialResult<(Array2<usize>, Array2<f64>)> {
             let n_queries = query_points.nrows();
@@ -1102,7 +1102,7 @@ pub mod hardware_specific_simd {
         fn compute_distances_to_all(
             &self,
             query: &ArrayView1<f64>,
-            data_points: &ArrayView2<f64>,
+            data_points: &ArrayView2<'_, f64>,
         ) -> SpatialResult<Array1<f64>> {
             let n_data = data_points.nrows();
             let mut distances = Array1::zeros(n_data);
@@ -1199,7 +1199,7 @@ pub mod mixed_precision_simd {
 
     /// Ultra-fast mixed precision distance matrix with adaptive precision
     pub fn adaptive_precision_distance_matrix(
-        points: &ArrayView2<f64>,
+        points: &ArrayView2<'_, f64>,
         precision_threshold: f64,
     ) -> SpatialResult<Array2<f64>> {
         let n_points = points.nrows();
@@ -1243,8 +1243,8 @@ pub mod bench {
 
     /// Comprehensive SIMD performance benchmarking
     pub fn benchmark_distance_computation(
-        points1: &ArrayView2<f64>,
-        points2: &ArrayView2<f64>,
+        points1: &ArrayView2<'_, f64>,
+        points2: &ArrayView2<'_, f64>,
         iterations: usize,
     ) -> BenchmarkResults {
         let mut results = BenchmarkResults::default();
@@ -1347,9 +1347,7 @@ pub mod bench {
         // Estimate theoretical performance
         let theoretical_speedup = if caps.avx512_available {
             8.0
-        } else if caps.avx2_available {
-            4.0
-        } else if caps.neon_available {
+        } else if caps.avx2_available || caps.neon_available {
             4.0
         } else {
             2.0

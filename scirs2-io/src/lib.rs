@@ -151,7 +151,17 @@ pub mod metadata;
 /// - Dataset utilities for ML pipelines
 /// - Seamless integration with ndarray
 pub mod ml_framework;
-/// Memory-mapped file I/O module
+/// Neural-adaptive I/O optimization with ultrathink-level intelligence
+///
+/// Provides AI-driven adaptive optimization for I/O operations:
+/// - Machine learning-based performance optimization
+/// - Dynamic parameter adaptation based on system metrics
+/// - Neural network-driven decision making for resource allocation
+/// - Real-time performance feedback and learning
+/// - Ultra-high performance processing with adaptive algorithms
+/// - SIMD-accelerated neural inference for low-latency decisions
+pub mod neural_adaptive_io;
+/// Data pipeline APIs
 ///
 /// Provides memory-mapped file operations for efficient handling of large arrays:
 /// - Memory-mapped arrays for minimal memory usage
@@ -233,6 +243,16 @@ pub mod out_of_core;
 /// - Progress tracking and monitoring
 /// - Caching and checkpointing for long-running pipelines
 pub mod pipeline;
+/// Quantum-inspired I/O processing algorithms with ultrathink capabilities
+///
+/// Provides quantum-inspired algorithms for ultra-high performance I/O:
+/// - Quantum superposition for parallel processing paths
+/// - Quantum entanglement for correlated data operations
+/// - Quantum annealing for parameter optimization
+/// - Quantum interference patterns for data compression
+/// - Quantum tunneling for barrier-free processing
+/// - Quantum measurement for adaptive decision making
+pub mod quantum_inspired_io;
 /// Data serialization utilities
 ///
 /// Provides functionality for serializing and deserializing scientific data:

@@ -544,13 +544,13 @@ pub struct RuntimeContractValidator {
 #[derive(Debug, Clone)]
 pub struct ValidationStatistics {
     /// Total validations performed
-    total_validations: u64,
+    pub total_validations: u64,
     /// Contract violations detected
-    violations_detected: u64,
+    pub violations_detected: u64,
     /// Average validation time
-    avg_validation_time: Duration,
+    pub avg_validation_time: Duration,
     /// Validation success rate
-    success_rate: f64,
+    pub success_rate: f64,
 }
 
 /// Chaos engineering controller

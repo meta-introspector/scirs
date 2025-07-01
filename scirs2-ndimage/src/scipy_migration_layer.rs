@@ -11,9 +11,13 @@ use ndarray::{Array, ArrayView, ArrayView1, ArrayView2, Dimension, Ix1, Ix2, Ix3
 use num_traits::{Float, FromPrimitive};
 
 use crate::error::{NdimageError, NdimageResult};
-use crate::filters::{BoundaryMode, gaussian_filter as internal_gaussian_filter};
-use crate::morphology::{binary_erosion as internal_binary_erosion, binary_dilation as internal_binary_dilation};
-use crate::measurements::{center_of_mass as internal_center_of_mass, label_objects as internal_label_objects};
+use crate::filters::{gaussian_filter as internal_gaussian_filter, BoundaryMode};
+use crate::measurements::{
+    center_of_mass as internal_center_of_mass, label_objects as internal_label_objects,
+};
+use crate::morphology::{
+    binary_dilation as internal_binary_dilation, binary_erosion as internal_binary_erosion,
+};
 
 /// SciPy ndimage compatibility layer
 pub struct SciPyCompatLayer {
@@ -67,17 +71,17 @@ impl SciPyCompatLayer {
             warnings: Vec::new(),
         }
     }
-    
+
     /// Create with default configuration
     pub fn default() -> Self {
         Self::new(CompatibilityConfig::default())
     }
-    
+
     /// Get migration warnings
     pub fn get_warnings(&self) -> &[MigrationWarning] {
         &self.warnings
     }
-    
+
     /// Clear warnings
     pub fn clear_warnings(&mut self) {
         self.warnings.clear();
@@ -90,7 +94,7 @@ impl SciPyCompatLayer {
     ///
     /// ```python
     /// # SciPy usage:
-    /// scipy.ndimage.gaussian_filter(input, sigma, order=0, output=None, 
+    /// scipy.ndimage.gaussian_filter(input, sigma, order=0, output=None,
     ///                               mode='reflect', cval=0.0, truncate=4.0)
     /// ```
     pub fn gaussian_filter<T>(
@@ -108,27 +112,33 @@ impl SciPyCompatLayer {
         // Handle parameter conversion
         let sigma_tuple = self.convert_sigma_param(sigma)?;
         let boundary_mode = self.convert_mode_param(mode)?;
-        
+
         // Check for unsupported parameters
         if order.is_some() && order != Some(OrderParam::Single(0)) {
-            self.add_warning("gaussian_filter", 
-                "Non-zero order parameter not yet supported, using order=0");
+            self.add_warning(
+                "gaussian_filter",
+                "Non-zero order parameter not yet supported, using order=0",
+            );
         }
-        
+
         if cval.is_some() && cval != Some(0.0) {
-            self.add_warning("gaussian_filter", 
-                "Custom cval not fully supported, using default boundary handling");
+            self.add_warning(
+                "gaussian_filter",
+                "Custom cval not fully supported, using default boundary handling",
+            );
         }
-        
+
         if truncate.is_some() && truncate != Some(4.0) {
-            self.add_warning("gaussian_filter", 
-                "Custom truncate parameter not supported, using default value");
+            self.add_warning(
+                "gaussian_filter",
+                "Custom truncate parameter not supported, using default value",
+            );
         }
-        
+
         // Call internal implementation
         internal_gaussian_filter(input, sigma_tuple, boundary_mode)
     }
-    
+
     /// Median filter with SciPy-compatible interface
     ///
     /// ```python
@@ -150,20 +160,24 @@ impl SciPyCompatLayer {
     {
         let filter_size = self.convert_size_param(size, (3, 3))?;
         let boundary_mode = self.convert_mode_param(mode)?;
-        
+
         if footprint.is_some() {
-            self.add_warning("median_filter", 
-                "Custom footprint not yet supported, using rectangular window");
+            self.add_warning(
+                "median_filter",
+                "Custom footprint not yet supported, using rectangular window",
+            );
         }
-        
+
         if origin.is_some() {
-            self.add_warning("median_filter", 
-                "Origin parameter not supported, using center origin");
+            self.add_warning(
+                "median_filter",
+                "Origin parameter not supported, using center origin",
+            );
         }
-        
+
         crate::filters::median_filter(input, filter_size, boundary_mode)
     }
-    
+
     /// Uniform filter with SciPy-compatible interface
     ///
     /// ```python
@@ -184,12 +198,14 @@ impl SciPyCompatLayer {
     {
         let filter_size = self.convert_size_param(size, (3, 3))?;
         let boundary_mode = self.convert_mode_param(mode)?;
-        
+
         if origin.is_some() {
-            self.add_warning("uniform_filter", 
-                "Origin parameter not supported, using center origin");
+            self.add_warning(
+                "uniform_filter",
+                "Origin parameter not supported, using center origin",
+            );
         }
-        
+
         crate::filters::uniform_filter(input, filter_size, boundary_mode)
     }
 }
@@ -219,46 +235,50 @@ impl SciPyCompatLayer {
     {
         // Convert input to binary
         let binary_input = self.convert_to_binary(input);
-        
+
         // Use default 3x3 cross structure if none provided
-        let default_structure = Array::from_shape_vec((3, 3), vec![
-            false, true, false,
-            true, true, true,
-            false, true, false,
-        ]).unwrap();
-        
+        let default_structure = Array::from_shape_vec(
+            (3, 3),
+            vec![false, true, false, true, true, true, false, true, false],
+        )
+        .unwrap();
+
         let structure_elem = structure.unwrap_or(default_structure.view());
-        
+
         if iterations.is_some() && iterations != Some(1) {
-            self.add_warning("binary_erosion", 
-                "Multiple iterations not yet optimized, using single iteration");
+            self.add_warning(
+                "binary_erosion",
+                "Multiple iterations not yet optimized, using single iteration",
+            );
         }
-        
+
         if mask.is_some() {
-            self.add_warning("binary_erosion", 
-                "Mask parameter not yet supported");
+            self.add_warning("binary_erosion", "Mask parameter not yet supported");
         }
-        
+
         if origin.is_some() {
-            self.add_warning("binary_erosion", 
-                "Origin parameter not supported");
+            self.add_warning("binary_erosion", "Origin parameter not supported");
         }
-        
+
         if brute_force.is_some() {
-            self.add_warning("binary_erosion", 
-                "brute_force parameter not supported, using optimized algorithm");
+            self.add_warning(
+                "binary_erosion",
+                "brute_force parameter not supported, using optimized algorithm",
+            );
         }
-        
+
         // Apply multiple iterations if requested
-        let mut result = internal_binary_erosion(binary_input.view(), structure_elem, BoundaryMode::Constant)?;
-        
+        let mut result =
+            internal_binary_erosion(binary_input.view(), structure_elem, BoundaryMode::Constant)?;
+
         for _ in 1..iterations.unwrap_or(1) {
-            result = internal_binary_erosion(result.view(), structure_elem, BoundaryMode::Constant)?;
+            result =
+                internal_binary_erosion(result.view(), structure_elem, BoundaryMode::Constant)?;
         }
-        
+
         Ok(result)
     }
-    
+
     /// Binary dilation with SciPy-compatible interface
     ///
     /// ```python
@@ -281,35 +301,38 @@ impl SciPyCompatLayer {
         T: Float + FromPrimitive + Clone + Send + Sync + PartialOrd,
     {
         let binary_input = self.convert_to_binary(input);
-        
-        let default_structure = Array::from_shape_vec((3, 3), vec![
-            false, true, false,
-            true, true, true,
-            false, true, false,
-        ]).unwrap();
-        
+
+        let default_structure = Array::from_shape_vec(
+            (3, 3),
+            vec![false, true, false, true, true, true, false, true, false],
+        )
+        .unwrap();
+
         let structure_elem = structure.unwrap_or(default_structure.view());
-        
+
         if iterations.is_some() && iterations != Some(1) {
-            self.add_warning("binary_dilation", 
-                "Multiple iterations not yet optimized, using single iteration");
+            self.add_warning(
+                "binary_dilation",
+                "Multiple iterations not yet optimized, using single iteration",
+            );
         }
-        
+
         if mask.is_some() {
-            self.add_warning("binary_dilation", 
-                "Mask parameter not yet supported");
+            self.add_warning("binary_dilation", "Mask parameter not yet supported");
         }
-        
+
         // Apply multiple iterations if requested
-        let mut result = internal_binary_dilation(binary_input.view(), structure_elem, BoundaryMode::Constant)?;
-        
+        let mut result =
+            internal_binary_dilation(binary_input.view(), structure_elem, BoundaryMode::Constant)?;
+
         for _ in 1..iterations.unwrap_or(1) {
-            result = internal_binary_dilation(result.view(), structure_elem, BoundaryMode::Constant)?;
+            result =
+                internal_binary_dilation(result.view(), structure_elem, BoundaryMode::Constant)?;
         }
-        
+
         Ok(result)
     }
-    
+
     /// Distance transform with SciPy-compatible interface
     ///
     /// ```python
@@ -328,22 +351,26 @@ impl SciPyCompatLayer {
         T: Float + FromPrimitive + Clone + Send + Sync + PartialOrd,
     {
         let binary_input = self.convert_to_binary(input);
-        
+
         if sampling.is_some() {
-            self.add_warning("distance_transform_edt", 
-                "Sampling parameter not yet supported, using unit sampling");
+            self.add_warning(
+                "distance_transform_edt",
+                "Sampling parameter not yet supported, using unit sampling",
+            );
         }
-        
+
         if return_indices == Some(true) {
-            self.add_warning("distance_transform_edt", 
-                "Returning indices not yet supported");
+            self.add_warning(
+                "distance_transform_edt",
+                "Returning indices not yet supported",
+            );
         }
-        
+
         let distances = crate::morphology::distance_transform_edt(binary_input.view())?;
-        
+
         // Convert back to original type
         let result_array = distances.mapv(|v| T::from_f64(v).unwrap_or(T::zero()));
-        
+
         Ok(DistanceTransformResult {
             distances: Some(result_array),
             indices: None,
@@ -369,19 +396,17 @@ impl SciPyCompatLayer {
         T: Float + FromPrimitive + Clone + Send + Sync,
     {
         if labels.is_some() {
-            self.add_warning("center_of_mass", 
-                "Labels parameter not yet fully supported");
+            self.add_warning("center_of_mass", "Labels parameter not yet fully supported");
         }
-        
+
         if index.is_some() {
-            self.add_warning("center_of_mass", 
-                "Index parameter not yet supported");
+            self.add_warning("center_of_mass", "Index parameter not yet supported");
         }
-        
+
         let com = internal_center_of_mass(input)?;
         Ok(CenterOfMassResult::Single(com))
     }
-    
+
     /// Label connected components with SciPy-compatible interface
     ///
     /// ```python
@@ -397,14 +422,16 @@ impl SciPyCompatLayer {
         T: Float + FromPrimitive + Clone + Send + Sync + PartialOrd,
     {
         let binary_input = self.convert_to_binary(input);
-        
+
         if structure.is_some() {
-            self.add_warning("label", 
-                "Custom structure not yet supported, using default connectivity");
+            self.add_warning(
+                "label",
+                "Custom structure not yet supported, using default connectivity",
+            );
         }
-        
+
         let (labeled, num_labels) = internal_label_objects(binary_input.view())?;
-        
+
         Ok(LabelResult {
             labeled_array: labeled,
             num_features: num_labels,
@@ -424,13 +451,19 @@ impl SciPyCompatLayer {
                 } else if arr.len() == 2 {
                     Ok((arr[0], arr[1]))
                 } else {
-                    Err(NdimageError::InvalidInput("Sigma must be scalar or 2-element array".to_string()))
+                    Err(NdimageError::InvalidInput(
+                        "Sigma must be scalar or 2-element array".to_string(),
+                    ))
                 }
             }
         }
     }
-    
-    fn convert_size_param(&self, size: Option<SizeParam>, default: (usize, usize)) -> NdimageResult<(usize, usize)> {
+
+    fn convert_size_param(
+        &self,
+        size: Option<SizeParam>,
+        default: (usize, usize),
+    ) -> NdimageResult<(usize, usize)> {
         match size {
             None => Ok(default),
             Some(SizeParam::Single(s)) => Ok((s, s)),
@@ -441,12 +474,14 @@ impl SciPyCompatLayer {
                 } else if arr.len() == 2 {
                     Ok((arr[0], arr[1]))
                 } else {
-                    Err(NdimageError::InvalidInput("Size must be scalar or 2-element array".to_string()))
+                    Err(NdimageError::InvalidInput(
+                        "Size must be scalar or 2-element array".to_string(),
+                    ))
                 }
             }
         }
     }
-    
+
     fn convert_mode_param(&self, mode: Option<&str>) -> NdimageResult<BoundaryMode> {
         let mode_str = mode.unwrap_or(&self.config.default_mode);
         match mode_str {
@@ -456,20 +491,22 @@ impl SciPyCompatLayer {
             "mirror" => Ok(BoundaryMode::Mirror),
             "wrap" => Ok(BoundaryMode::Wrap),
             _ => {
-                self.add_warning_const("parameter_conversion", 
-                    &format!("Unknown mode '{}', using default 'reflect'", mode_str));
+                self.add_warning_const(
+                    "parameter_conversion",
+                    &format!("Unknown mode '{}', using default 'reflect'", mode_str),
+                );
                 Ok(BoundaryMode::Reflect)
             }
         }
     }
-    
+
     fn convert_to_binary<T>(&self, input: ArrayView2<T>) -> Array<bool, Ix2>
     where
         T: Float + FromPrimitive + PartialOrd,
     {
         input.mapv(|x| x > T::zero())
     }
-    
+
     fn add_warning(&mut self, function: &str, message: &str) {
         if self.config.show_warnings {
             self.warnings.push(MigrationWarning {
@@ -479,7 +516,7 @@ impl SciPyCompatLayer {
             });
         }
     }
-    
+
     fn add_warning_const(&self, function: &str, message: &str) {
         if self.config.show_warnings {
             eprintln!("Warning in {}: {}", function, message);
@@ -556,10 +593,8 @@ static INIT: std::sync::Once = std::sync::Once::new();
 
 /// Initialize global SciPy compatibility layer
 pub fn init_scipy_compat() {
-    INIT.call_once(|| {
-        unsafe {
-            SCIPY_COMPAT = Some(SciPyCompatLayer::default());
-        }
+    INIT.call_once(|| unsafe {
+        SCIPY_COMPAT = Some(SciPyCompatLayer::default());
     });
 }
 
@@ -614,7 +649,15 @@ pub fn binary_erosion<T>(
 where
     T: Float + FromPrimitive + Clone + Send + Sync + PartialOrd,
 {
-    get_scipy_compat().binary_erosion(input, structure, iterations, mask, border_value, origin, brute_force)
+    get_scipy_compat().binary_erosion(
+        input,
+        structure,
+        iterations,
+        mask,
+        border_value,
+        origin,
+        brute_force,
+    )
 }
 
 /// Distance transform EDT (global function matching SciPy API)
@@ -665,7 +708,8 @@ pub fn clear_migration_warnings() {
 
 /// Display migration guide
 pub fn display_migration_guide() {
-    println!(r#"
+    println!(
+        r#"
 === SciRS2 NDImage Migration Guide ===
 
 This compatibility layer provides SciPy-compatible APIs for easy migration.
@@ -688,28 +732,25 @@ Migration Steps:
 4. Test thoroughly and report any compatibility issues
 
 For full scirs2 performance, consider using the native APIs in other modules.
-"#);
+"#
+    );
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use ndarray::array;
-    
+
     #[test]
     fn test_scipy_compat_creation() {
         let compat = SciPyCompatLayer::default();
         assert!(compat.warnings.is_empty());
     }
-    
+
     #[test]
     fn test_gaussian_filter_compat() {
-        let input = array![
-            [1.0, 2.0, 3.0],
-            [4.0, 5.0, 6.0],
-            [7.0, 8.0, 9.0]
-        ];
-        
+        let input = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
+
         let result = gaussian_filter(
             input.view(),
             SigmaParam::Single(1.0),
@@ -718,10 +759,10 @@ mod tests {
             None,
             None,
         );
-        
+
         assert!(result.is_ok());
     }
-    
+
     #[test]
     fn test_binary_erosion_compat() {
         let input = array![
@@ -729,46 +770,42 @@ mod tests {
             [false, true, false],
             [true, false, true]
         ];
-        
-        let result = binary_erosion(
-            input.view(),
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-        );
-        
+
+        let result = binary_erosion(input.view(), None, None, None, None, None, None);
+
         assert!(result.is_ok());
     }
-    
+
     #[test]
     fn test_parameter_conversion() {
         let compat = SciPyCompatLayer::default();
-        
+
         // Test sigma parameter conversion
         let sigma1 = compat.convert_sigma_param(SigmaParam::Single(2.0)).unwrap();
         assert_eq!(sigma1, (2.0, 2.0));
-        
-        let sigma2 = compat.convert_sigma_param(SigmaParam::Tuple(1.0, 2.0)).unwrap();
+
+        let sigma2 = compat
+            .convert_sigma_param(SigmaParam::Tuple(1.0, 2.0))
+            .unwrap();
         assert_eq!(sigma2, (1.0, 2.0));
-        
+
         // Test size parameter conversion
-        let size1 = compat.convert_size_param(Some(SizeParam::Single(5)), (3, 3)).unwrap();
+        let size1 = compat
+            .convert_size_param(Some(SizeParam::Single(5)), (3, 3))
+            .unwrap();
         assert_eq!(size1, (5, 5));
-        
+
         let size2 = compat.convert_size_param(None, (3, 3)).unwrap();
         assert_eq!(size2, (3, 3));
     }
-    
+
     #[test]
     fn test_migration_warnings() {
         init_scipy_compat();
         clear_migration_warnings();
-        
+
         let input = array![[1.0, 2.0], [3.0, 4.0]];
-        
+
         // This should generate a warning for unsupported parameter
         let _ = gaussian_filter(
             input.view(),
@@ -778,7 +815,7 @@ mod tests {
             None,
             None,
         );
-        
+
         let warnings = get_migration_warnings();
         assert!(!warnings.is_empty());
     }

@@ -38,7 +38,7 @@ pub fn enhanced_bdf_method<F, Func>(
     opts: ODEOptions<F>,
 ) -> IntegrateResult<ODEResult<F>>
 where
-    F: IntegrateFloat,
+    F: IntegrateFloat + std::default::Default,
     Func: Fn(F, ArrayView1<F>) -> Array1<F>,
 {
     // Check BDF order is valid (1-5 supported)

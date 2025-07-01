@@ -12,10 +12,10 @@ use std::time::Instant;
 use ndarray::{Array, ArrayView, ArrayView2, Dimension, Ix2};
 use num_traits::{Float, FromPrimitive};
 
-use crate::backend::{Backend, BackendConfig, DeviceManager};
 use crate::backend::gpu_acceleration_framework::{
-    GpuAccelerationManager, MemoryPoolConfig, GpuPerformanceReport,
+    GpuAccelerationManager, GpuPerformanceReport, MemoryPoolConfig,
 };
+use crate::backend::{Backend, BackendConfig, DeviceManager};
 use crate::error::{NdimageError, NdimageResult};
 use crate::filters::BoundaryMode;
 
@@ -74,22 +74,24 @@ struct OperationInfo {
 impl GpuOperations {
     /// Create a new GPU operations manager
     pub fn new(config: GpuOperationsConfig) -> NdimageResult<Self> {
-        let acceleration_manager = Arc::new(GpuAccelerationManager::new(config.memory_pool_config.clone())?);
+        let acceleration_manager = Arc::new(GpuAccelerationManager::new(
+            config.memory_pool_config.clone(),
+        )?);
         let device_manager = DeviceManager::new()?;
-        
+
         let mut gpu_ops = Self {
             acceleration_manager,
             device_manager,
             config,
             operation_registry: HashMap::new(),
         };
-        
+
         // Register built-in GPU operations
         gpu_ops.register_builtin_operations()?;
-        
+
         Ok(gpu_ops)
     }
-    
+
     /// GPU-accelerated 2D convolution
     pub fn gpu_convolution_2d<T>(
         &self,
@@ -101,18 +103,18 @@ impl GpuOperations {
         T: Float + FromPrimitive + Clone + Send + Sync,
     {
         let operation_name = "convolution_2d";
-        
+
         // Check if GPU acceleration is beneficial
         if !self.should_use_gpu(&input, operation_name) {
             return self.fallback_convolution_2d(input, kernel, mode);
         }
-        
+
         // Get GPU kernel source
         let kernel_source = self.get_convolution_kernel_source();
-        
+
         // Select best available backend
         let backend = self.select_backend_for_operation(operation_name)?;
-        
+
         // Execute on GPU with error handling
         match self.execute_gpu_convolution(input, kernel, &kernel_source, backend, mode) {
             Ok(result) => Ok(result),
@@ -123,7 +125,7 @@ impl GpuOperations {
             Err(e) => Err(e),
         }
     }
-    
+
     /// GPU-accelerated morphological erosion
     pub fn gpu_morphological_erosion<T>(
         &self,
@@ -135,15 +137,22 @@ impl GpuOperations {
         T: Float + FromPrimitive + Clone + Send + Sync + PartialOrd,
     {
         let operation_name = "morphological_erosion";
-        
+
         if !self.should_use_gpu(&input, operation_name) {
             return self.fallback_morphological_erosion(input, structuring_element, mode);
         }
-        
+
         let kernel_source = self.get_morphology_kernel_source();
         let backend = self.select_backend_for_operation(operation_name)?;
-        
-        match self.execute_gpu_morphology(input, structuring_element, &kernel_source, backend, mode, MorphologyOperation::Erosion) {
+
+        match self.execute_gpu_morphology(
+            input,
+            structuring_element,
+            &kernel_source,
+            backend,
+            mode,
+            MorphologyOperation::Erosion,
+        ) {
             Ok(result) => Ok(result),
             Err(e) if self.config.auto_fallback => {
                 eprintln!("GPU erosion failed: {:?}, falling back to CPU", e);
@@ -152,7 +161,7 @@ impl GpuOperations {
             Err(e) => Err(e),
         }
     }
-    
+
     /// GPU-accelerated morphological dilation
     pub fn gpu_morphological_dilation<T>(
         &self,
@@ -164,15 +173,22 @@ impl GpuOperations {
         T: Float + FromPrimitive + Clone + Send + Sync + PartialOrd,
     {
         let operation_name = "morphological_dilation";
-        
+
         if !self.should_use_gpu(&input, operation_name) {
             return self.fallback_morphological_dilation(input, structuring_element, mode);
         }
-        
+
         let kernel_source = self.get_morphology_kernel_source();
         let backend = self.select_backend_for_operation(operation_name)?;
-        
-        match self.execute_gpu_morphology(input, structuring_element, &kernel_source, backend, mode, MorphologyOperation::Dilation) {
+
+        match self.execute_gpu_morphology(
+            input,
+            structuring_element,
+            &kernel_source,
+            backend,
+            mode,
+            MorphologyOperation::Dilation,
+        ) {
             Ok(result) => Ok(result),
             Err(e) if self.config.auto_fallback => {
                 eprintln!("GPU dilation failed: {:?}, falling back to CPU", e);
@@ -181,7 +197,7 @@ impl GpuOperations {
             Err(e) => Err(e),
         }
     }
-    
+
     /// GPU-accelerated Gaussian filter
     pub fn gpu_gaussian_filter<T>(
         &self,
@@ -193,14 +209,14 @@ impl GpuOperations {
         T: Float + FromPrimitive + Clone + Send + Sync,
     {
         let operation_name = "gaussian_filter";
-        
+
         if !self.should_use_gpu(&input, operation_name) {
             return self.fallback_gaussian_filter(input, sigma, mode);
         }
-        
+
         let kernel_source = self.get_gaussian_kernel_source();
         let backend = self.select_backend_for_operation(operation_name)?;
-        
+
         match self.execute_gpu_gaussian(input, sigma, &kernel_source, backend, mode) {
             Ok(result) => Ok(result),
             Err(e) if self.config.auto_fallback => {
@@ -210,7 +226,7 @@ impl GpuOperations {
             Err(e) => Err(e),
         }
     }
-    
+
     /// GPU-accelerated distance transform
     pub fn gpu_distance_transform<T>(
         &self,
@@ -221,33 +237,36 @@ impl GpuOperations {
         T: Float + FromPrimitive + Clone + Send + Sync + PartialOrd,
     {
         let operation_name = "distance_transform";
-        
+
         if !self.should_use_gpu(&input, operation_name) {
             return self.fallback_distance_transform(input, metric);
         }
-        
+
         let kernel_source = self.get_distance_transform_kernel_source();
         let backend = self.select_backend_for_operation(operation_name)?;
-        
+
         match self.execute_gpu_distance_transform(input, metric, &kernel_source, backend) {
             Ok(result) => Ok(result),
             Err(e) if self.config.auto_fallback => {
-                eprintln!("GPU distance transform failed: {:?}, falling back to CPU", e);
+                eprintln!(
+                    "GPU distance transform failed: {:?}, falling back to CPU",
+                    e
+                );
                 self.fallback_distance_transform(input, metric)
             }
             Err(e) => Err(e),
         }
     }
-    
+
     /// Get comprehensive performance report
     pub fn get_performance_report(&self) -> GpuPerformanceReport {
         self.acceleration_manager.get_performance_report()
     }
-    
+
     /// Check GPU availability and capabilities
     pub fn get_gpu_info(&self) -> GpuInfo {
         let capabilities = self.device_manager.get_capabilities();
-        
+
         GpuInfo {
             cuda_available: capabilities.cuda_available,
             opencl_available: capabilities.opencl_available,
@@ -257,9 +276,9 @@ impl GpuOperations {
             preferred_backend: self.select_preferred_backend(),
         }
     }
-    
+
     // Private implementation methods
-    
+
     fn register_builtin_operations(&mut self) -> NdimageResult<()> {
         // Register convolution operation
         self.operation_registry.insert(
@@ -268,11 +287,11 @@ impl GpuOperations {
                 name: "convolution_2d".to_string(),
                 kernel_source: self.get_convolution_kernel_source(),
                 preferred_backend: Backend::OpenCL,
-                memory_complexity: 2.0, // Input + output
+                memory_complexity: 2.0,  // Input + output
                 compute_complexity: 9.0, // Assume 3x3 kernel average
             },
         );
-        
+
         // Register morphological operations
         self.operation_registry.insert(
             "morphological_erosion".to_string(),
@@ -284,7 +303,7 @@ impl GpuOperations {
                 compute_complexity: 9.0,
             },
         );
-        
+
         // Register Gaussian filter
         self.operation_registry.insert(
             "gaussian_filter".to_string(),
@@ -292,11 +311,11 @@ impl GpuOperations {
                 name: "gaussian_filter".to_string(),
                 kernel_source: self.get_gaussian_kernel_source(),
                 preferred_backend: Backend::OpenCL,
-                memory_complexity: 3.0, // Separable: input + temp + output
+                memory_complexity: 3.0,  // Separable: input + temp + output
                 compute_complexity: 6.0, // Two 1D passes
             },
         );
-        
+
         // Register distance transform
         self.operation_registry.insert(
             "distance_transform".to_string(),
@@ -308,10 +327,10 @@ impl GpuOperations {
                 compute_complexity: 10.0, // Multiple passes
             },
         );
-        
+
         Ok(())
     }
-    
+
     fn should_use_gpu<T, D>(&self, input: &ArrayView<T, D>, operation_name: &str) -> bool
     where
         T: Float + FromPrimitive,
@@ -321,29 +340,30 @@ impl GpuOperations {
         if input.len() < self.config.min_gpu_size {
             return false;
         }
-        
+
         // Check if GPU is available
         let capabilities = self.device_manager.get_capabilities();
         if !capabilities.gpu_available {
             return false;
         }
-        
+
         // Check memory requirements
         if let Some(op_info) = self.operation_registry.get(operation_name) {
-            let required_memory = input.len() * std::mem::size_of::<T>() * op_info.memory_complexity as usize;
+            let required_memory =
+                input.len() * std::mem::size_of::<T>() * op_info.memory_complexity as usize;
             let available_memory = capabilities.gpu_memory_mb * 1024 * 1024;
-            
+
             if required_memory > available_memory {
                 return false;
             }
         }
-        
+
         true
     }
-    
+
     fn select_backend_for_operation(&self, operation_name: &str) -> NdimageResult<Backend> {
         let capabilities = self.device_manager.get_capabilities();
-        
+
         // Check operation preference
         if let Some(op_info) = self.operation_registry.get(operation_name) {
             match op_info.preferred_backend {
@@ -353,7 +373,7 @@ impl GpuOperations {
                 _ => {}
             }
         }
-        
+
         // Fallback to best available backend
         if capabilities.cuda_available {
             Ok(Backend::Cuda)
@@ -365,10 +385,10 @@ impl GpuOperations {
             Err(NdimageError::GpuNotAvailable)
         }
     }
-    
+
     fn select_preferred_backend(&self) -> Backend {
         let capabilities = self.device_manager.get_capabilities();
-        
+
         if capabilities.cuda_available {
             Backend::Cuda
         } else if capabilities.opencl_available {
@@ -379,9 +399,9 @@ impl GpuOperations {
             Backend::Cpu
         }
     }
-    
+
     // GPU operation execution methods
-    
+
     fn execute_gpu_convolution<T>(
         &self,
         input: ArrayView2<T>,
@@ -395,14 +415,11 @@ impl GpuOperations {
     {
         // This would contain the actual GPU execution logic
         // For now, we'll use the acceleration manager framework
-        self.acceleration_manager.execute_operation(
-            "convolution_2d",
-            input.into_dyn(),
-            kernel_source,
-            backend,
-        ).map(|result| result.into_dimensionality::<Ix2>().unwrap())
+        self.acceleration_manager
+            .execute_operation("convolution_2d", input.into_dyn(), kernel_source, backend)
+            .map(|result| result.into_dimensionality::<Ix2>().unwrap())
     }
-    
+
     fn execute_gpu_morphology<T>(
         &self,
         input: ArrayView2<T>,
@@ -416,14 +433,16 @@ impl GpuOperations {
         T: Float + FromPrimitive + Clone + Send + Sync + PartialOrd,
     {
         // Execute morphological operation on GPU
-        self.acceleration_manager.execute_operation(
-            "morphological_operation",
-            input.into_dyn(),
-            kernel_source,
-            backend,
-        ).map(|result| result.into_dimensionality::<Ix2>().unwrap())
+        self.acceleration_manager
+            .execute_operation(
+                "morphological_operation",
+                input.into_dyn(),
+                kernel_source,
+                backend,
+            )
+            .map(|result| result.into_dimensionality::<Ix2>().unwrap())
     }
-    
+
     fn execute_gpu_gaussian<T>(
         &self,
         input: ArrayView2<T>,
@@ -436,14 +455,11 @@ impl GpuOperations {
         T: Float + FromPrimitive + Clone + Send + Sync,
     {
         // Execute Gaussian filter on GPU
-        self.acceleration_manager.execute_operation(
-            "gaussian_filter",
-            input.into_dyn(),
-            kernel_source,
-            backend,
-        ).map(|result| result.into_dimensionality::<Ix2>().unwrap())
+        self.acceleration_manager
+            .execute_operation("gaussian_filter", input.into_dyn(), kernel_source, backend)
+            .map(|result| result.into_dimensionality::<Ix2>().unwrap())
     }
-    
+
     fn execute_gpu_distance_transform<T>(
         &self,
         input: ArrayView2<T>,
@@ -455,16 +471,18 @@ impl GpuOperations {
         T: Float + FromPrimitive + Clone + Send + Sync + PartialOrd,
     {
         // Execute distance transform on GPU
-        self.acceleration_manager.execute_operation(
-            "distance_transform",
-            input.into_dyn(),
-            kernel_source,
-            backend,
-        ).map(|result| result.into_dimensionality::<Ix2>().unwrap())
+        self.acceleration_manager
+            .execute_operation(
+                "distance_transform",
+                input.into_dyn(),
+                kernel_source,
+                backend,
+            )
+            .map(|result| result.into_dimensionality::<Ix2>().unwrap())
     }
-    
+
     // Fallback CPU implementations
-    
+
     fn fallback_convolution_2d<T>(
         &self,
         input: ArrayView2<T>,
@@ -477,7 +495,7 @@ impl GpuOperations {
         // Use existing CPU implementation
         crate::filters::convolve::convolve(input, kernel, mode)
     }
-    
+
     fn fallback_morphological_erosion<T>(
         &self,
         input: ArrayView2<T>,
@@ -490,7 +508,7 @@ impl GpuOperations {
         // Use existing CPU implementation
         crate::morphology::grayscale::grayscale_erosion(input, structuring_element, mode)
     }
-    
+
     fn fallback_morphological_dilation<T>(
         &self,
         input: ArrayView2<T>,
@@ -503,7 +521,7 @@ impl GpuOperations {
         // Use existing CPU implementation
         crate::morphology::grayscale::grayscale_dilation(input, structuring_element, mode)
     }
-    
+
     fn fallback_gaussian_filter<T>(
         &self,
         input: ArrayView2<T>,
@@ -516,7 +534,7 @@ impl GpuOperations {
         // Use existing CPU implementation
         crate::filters::gaussian::gaussian_filter(input, sigma, mode)
     }
-    
+
     fn fallback_distance_transform<T>(
         &self,
         input: ArrayView2<T>,
@@ -528,21 +546,21 @@ impl GpuOperations {
         // Use existing CPU implementation
         crate::morphology::distance_transform::distance_transform_edt(input)
     }
-    
+
     // GPU kernel source code methods
-    
+
     fn get_convolution_kernel_source(&self) -> String {
         include_str!("backend/kernels/convolution.kernel").to_string()
     }
-    
+
     fn get_morphology_kernel_source(&self) -> String {
         include_str!("backend/kernels/morphology.kernel").to_string()
     }
-    
+
     fn get_gaussian_kernel_source(&self) -> String {
         include_str!("backend/kernels/gaussian_blur.kernel").to_string()
     }
-    
+
     fn get_distance_transform_kernel_source(&self) -> String {
         // For now, use a placeholder - would need a dedicated distance transform kernel
         include_str!("backend/kernels/morphology.kernel").to_string()
@@ -599,7 +617,9 @@ pub fn create_gpu_operations() -> NdimageResult<GpuOperations> {
 }
 
 /// Convenience function to create GPU operations with custom configuration
-pub fn create_gpu_operations_with_config(config: GpuOperationsConfig) -> NdimageResult<GpuOperations> {
+pub fn create_gpu_operations_with_config(
+    config: GpuOperationsConfig,
+) -> NdimageResult<GpuOperations> {
     GpuOperations::new(config)
 }
 
@@ -607,14 +627,14 @@ pub fn create_gpu_operations_with_config(config: GpuOperationsConfig) -> Ndimage
 mod tests {
     use super::*;
     use ndarray::array;
-    
+
     #[test]
     fn test_gpu_operations_creation() {
         let result = create_gpu_operations();
         // This might fail in environments without GPU support, which is expected
         assert!(result.is_ok() || result.is_err());
     }
-    
+
     #[test]
     fn test_gpu_info_display() {
         let gpu_info = GpuInfo {
@@ -625,34 +645,23 @@ mod tests {
             compute_units: 16,
             preferred_backend: Backend::OpenCL,
         };
-        
+
         // Test that display doesn't panic
         gpu_info.display();
     }
-    
+
     #[test]
     fn test_gpu_convolution_fallback() {
         // Test small array that should fallback to CPU
-        let input = array![
-            [1.0, 2.0, 3.0],
-            [4.0, 5.0, 6.0],
-            [7.0, 8.0, 9.0]
-        ];
-        
-        let kernel = array![
-            [1.0, 0.0, -1.0],
-            [2.0, 0.0, -2.0],
-            [1.0, 0.0, -1.0]
-        ];
-        
+        let input = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
+
+        let kernel = array![[1.0, 0.0, -1.0], [2.0, 0.0, -2.0], [1.0, 0.0, -1.0]];
+
         // This should work even without GPU support
         if let Ok(gpu_ops) = create_gpu_operations() {
-            let result = gpu_ops.gpu_convolution_2d(
-                input.view(),
-                kernel.view(),
-                BoundaryMode::Constant,
-            );
-            
+            let result =
+                gpu_ops.gpu_convolution_2d(input.view(), kernel.view(), BoundaryMode::Constant);
+
             // Should either succeed or fail gracefully
             assert!(result.is_ok() || result.is_err());
         }

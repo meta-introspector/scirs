@@ -129,7 +129,7 @@ pub mod adaptive_streaming_engine;
 pub use adaptive_streaming_engine::{
     create_adaptive_engine, create_adaptive_engine_with_config, AdaptiveStreamingEngine,
     AlertSeverity, AlertType, DataCharacteristics, MemoryStrategy, PatternType, PerformanceMetrics,
-    QualityAlert, QualityMetrics, StreamChunk, StreamConfig, TrendDirection, TrendIndicators,
+    QualityAlert, QualityMetrics, StreamChunk, AdaptiveStreamConfig, TrendDirection, TrendIndicators,
 };
 pub use advanced_generators::{
     make_adversarial_examples, make_anomaly_dataset, make_continual_learning_dataset,

@@ -7,8 +7,7 @@
 #![allow(dead_code)]
 #![cfg(test)]
 
-use crate::common::IntegrateFloat;
-use crate::error::{IntegrateError, IntegrateResult};
+use crate::error::IntegrateResult;
 use crate::gpu_ultra_acceleration::UltraGPUAccelerator;
 use crate::realtime_performance_adaptation::{
     AdaptationStrategy, AdaptationTriggers, OptimizationObjectives, PerformanceConstraints,
@@ -24,7 +23,7 @@ mod gpu_acceleration_tests {
     use super::*;
 
     #[test]
-    fn test_ultra_gpu_accelerator_creation() {
+    pub fn test_ultra_gpu_accelerator_creation() {
         let result = UltraGPUAccelerator::<f64>::new();
         assert!(
             result.is_ok(),
@@ -100,7 +99,7 @@ mod gpu_acceleration_tests {
         };
 
         // Multiple steps to test memory pool reuse
-        let mut current_y = y;
+        let mut current_y = y.clone();
         let mut current_t = t;
 
         for _ in 0..10 {
@@ -124,7 +123,7 @@ mod memory_optimization_tests {
     use super::*;
 
     #[test]
-    fn test_ultra_memory_optimizer_creation() {
+    pub fn test_ultra_memory_optimizer_creation() {
         let result = UltraMemoryOptimizer::<f64>::new();
         assert!(
             result.is_ok(),
@@ -203,7 +202,7 @@ mod simd_acceleration_tests {
     use super::*;
 
     #[test]
-    fn test_ultra_simd_accelerator_creation() {
+    pub fn test_ultra_simd_accelerator_creation() {
         let result = UltraSimdAccelerator::<f64>::new();
         assert!(
             result.is_ok(),
@@ -358,7 +357,7 @@ mod performance_adaptation_tests {
     use super::*;
 
     #[test]
-    fn test_real_time_adaptive_optimizer_creation() {
+    pub fn test_real_time_adaptive_optimizer_creation() {
         let result = RealTimeAdaptiveOptimizer::<f64>::new();
         assert!(
             result.is_ok(),
@@ -443,7 +442,7 @@ mod integration_tests {
     use super::*;
 
     #[test]
-    fn test_full_ultrathink_mode_integration() {
+    pub fn test_full_ultrathink_mode_integration() {
         // Create all ultrathink mode components
         let gpu_accelerator = UltraGPUAccelerator::<f64>::new().unwrap();
         let memory_optimizer = UltraMemoryOptimizer::<f64>::new().unwrap();

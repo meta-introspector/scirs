@@ -297,8 +297,15 @@ pub mod simd_ops {
     pub fn simd_vector_add(a: &[f64], b: &[f64]) -> Vec<f64> {
         assert_eq!(a.len(), b.len());
 
+        // Convert slices to ArrayView1 for SIMD operations
+        let a_view = ndarray::ArrayView1::from(a);
+        let b_view = ndarray::ArrayView1::from(b);
+        
         // Use scirs2-core SIMD operations for optimal performance
-        f64::simd_add(a, b)
+        let result = f64::simd_add(&a_view, &b_view);
+        
+        // Convert back to Vec<f64>
+        result.to_vec()
     }
 
     /// SIMD-optimized dot product for similarity computations

@@ -46,6 +46,9 @@ use crate::memory_pool::DistancePool;
 use ndarray::{Array1, Array2, ArrayView2};
 use std::sync::Arc;
 
+// Type alias for complex return types
+type GpuDeviceInfoResult = Result<(Vec<String>, Vec<(usize, usize)>), Box<dyn std::error::Error>>;
+
 /// GPU device capabilities and information
 #[derive(Debug, Clone)]
 pub struct GpuCapabilities {
@@ -440,7 +443,7 @@ impl GpuDevice {
     /// Get detailed CUDA device information
     #[cfg(feature = "cuda")]
     fn get_cuda_device_info(
-    ) -> Result<(Vec<String>, Vec<(usize, usize)>), Box<dyn std::error::Error>> {
+    ) -> GpuDeviceInfoResult {
         use std::process::Command;
 
         let mut device_names = Vec::new();
@@ -518,7 +521,7 @@ impl GpuDevice {
     /// Get detailed ROCm device information
     #[cfg(feature = "rocm")]
     fn get_rocm_device_info(
-    ) -> Result<(Vec<String>, Vec<(usize, usize)>), Box<dyn std::error::Error>> {
+    ) -> GpuDeviceInfoResult {
         use std::process::Command;
 
         let mut device_names = Vec::new();
@@ -583,7 +586,7 @@ impl GpuDevice {
     /// Get detailed Vulkan device information
     #[cfg(feature = "vulkan")]
     fn get_vulkan_device_info(
-    ) -> Result<(Vec<String>, Vec<(usize, usize)>), Box<dyn std::error::Error>> {
+    ) -> GpuDeviceInfoResult {
         use std::process::Command;
 
         let mut device_names = Vec::new();
@@ -620,7 +623,7 @@ impl GpuDevice {
     #[cfg(not(feature = "cuda"))]
     #[allow(dead_code)]
     fn get_cuda_device_info(
-    ) -> Result<(Vec<String>, Vec<(usize, usize)>), Box<dyn std::error::Error>> {
+    ) -> GpuDeviceInfoResult {
         Ok((Vec::new(), Vec::new()))
     }
 
@@ -633,14 +636,14 @@ impl GpuDevice {
     #[cfg(not(feature = "rocm"))]
     #[allow(dead_code)]
     fn get_rocm_device_info(
-    ) -> Result<(Vec<String>, Vec<(usize, usize)>), Box<dyn std::error::Error>> {
+    ) -> GpuDeviceInfoResult {
         Ok((Vec::new(), Vec::new()))
     }
 
     #[cfg(not(feature = "vulkan"))]
     #[allow(dead_code)]
     fn get_vulkan_device_info(
-    ) -> Result<(Vec<String>, Vec<(usize, usize)>), Box<dyn std::error::Error>> {
+    ) -> GpuDeviceInfoResult {
         Ok((Vec::new(), Vec::new()))
     }
 }
@@ -1042,7 +1045,7 @@ static GLOBAL_GPU_DEVICE: std::sync::OnceLock<GpuDevice> = std::sync::OnceLock::
 
 /// Get the global GPU device instance
 pub fn global_gpu_device() -> &'static GpuDevice {
-    GLOBAL_GPU_DEVICE.get_or_init(|| GpuDevice::default())
+    GLOBAL_GPU_DEVICE.get_or_init(GpuDevice::default)
 }
 
 /// Check if GPU acceleration is available globally

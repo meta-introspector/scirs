@@ -1712,10 +1712,11 @@ impl SocialMediaTextProcessor {
             }
 
             // If more than 2 consecutive, add one more (keeping 2 total)
-            if count > 2 {
-                result.push(current_char);
-            } else if count == 2 {
-                result.push(current_char);
+            match count.cmp(&2) {
+                std::cmp::Ordering::Greater | std::cmp::Ordering::Equal => {
+                    result.push(current_char);
+                }
+                _ => {}
             }
 
             i += count;

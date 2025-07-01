@@ -10,7 +10,7 @@
 use crate::error::{NeuralError, Result};
 use crate::models::sequential::Sequential;
 use crate::models::Model;
-use crate::serialization::{save_model, SerializationFormat};
+// use crate::serialization::{save_model, SerializationFormat};
 use ndarray::ArrayD;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};

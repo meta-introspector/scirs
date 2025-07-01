@@ -1814,7 +1814,7 @@ impl<A: Float + Default + Clone> MetaLearner<A> {
         performance: &PerformanceSnapshot<A>,
     ) -> Result<Option<Adaptation<A>>, OptimizerError> {
         // Use meta-model to predict optimal learning rate
-        let current_performance = match performance.primary_metric {
+        let _current_performance = match performance.primary_metric {
             PerformanceMetric::Loss(l) => l,
             PerformanceMetric::Accuracy(a) => a,
             _ => A::zero(),

@@ -187,7 +187,7 @@ impl Rotation {
     /// ];
     /// let rot = Rotation::from_matrix(&matrix.view()).unwrap();
     /// ```
-    pub fn from_matrix(matrix: &ArrayView2<f64>) -> SpatialResult<Self> {
+    pub fn from_matrix(matrix: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
         if matrix.shape() != [3, 3] {
             return Err(SpatialError::DimensionError(format!(
                 "Matrix must be 3x3, got {:?}",
@@ -783,7 +783,7 @@ impl Rotation {
     /// // First row should be approximately [0, 1, 0]
     /// // Second row should be approximately [-1, 0, 0]
     /// ```
-    pub fn apply_multiple(&self, vecs: &ArrayView2<f64>) -> SpatialResult<Array2<f64>> {
+    pub fn apply_multiple(&self, vecs: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
         if vecs.ncols() != 3 {
             return Err(SpatialError::DimensionError(
                 "Each vector must have 3 elements".to_string(),

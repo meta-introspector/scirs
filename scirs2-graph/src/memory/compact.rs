@@ -42,8 +42,11 @@ impl CSRGraph {
 
         // First pass: count degrees and validate nodes
         for &(src, dst, _) in &edges {
-            if src >= n_nodes || dst >= n_nodes {
-                return Err(GraphError::NodeNotFound);
+            if src >= n_nodes {
+                return Err(GraphError::node_not_found_with_context(src, n_nodes, "CSR graph construction"));
+            }
+            if dst >= n_nodes {
+                return Err(GraphError::node_not_found_with_context(dst, n_nodes, "CSR graph construction"));
             }
             degree[src] += 1;
         }
@@ -203,7 +206,7 @@ impl BitPackedGraph {
     pub fn add_edge(&mut self, from: usize, to: usize) -> Result<(), GraphError> {
         let bit_pos = self
             .bit_position(from, to)
-            .ok_or(GraphError::NodeNotFound)?;
+            .ok_or_else(|| GraphError::node_not_found_with_context(from, self.n_nodes, "add_edge operation"))?;
 
         let word_idx = bit_pos / 64;
         let bit_idx = bit_pos % 64;

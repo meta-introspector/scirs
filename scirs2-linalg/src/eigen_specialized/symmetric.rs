@@ -23,7 +23,7 @@ use crate::error::{LinalgError, LinalgResult};
 /// * Tuple containing eigenvalues and eigenvectors
 pub fn symmetric_eigh<F>(a: &ArrayView2<F>) -> LinalgResult<(Array1<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     let n = a.nrows();
 
@@ -66,7 +66,7 @@ where
 /// * Vector of eigenvalues
 pub fn symmetric_eigvalsh<F>(a: &ArrayView2<F>) -> LinalgResult<Array1<F>>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     let n = a.nrows();
 
@@ -110,7 +110,7 @@ where
 /// * Diagonal and off-diagonal elements of the tridiagonal matrix
 fn tridiagonalize<F>(a: &ArrayView2<F>) -> LinalgResult<(Array1<F>, Array1<F>)>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     let n = a.nrows();
     let mut working_matrix = a.to_owned();

@@ -1089,10 +1089,7 @@ where
     let mut curve = Vec::with_capacity(scales.len());
 
     // Compute sum of original image
-    let original_sum: f64 = input
-        .iter()
-        .map(|&x| x.to_f64().unwrap_or(0.0))
-        .sum();
+    let original_sum: f64 = input.iter().map(|&x| x.to_f64().unwrap_or(0.0)).sum();
 
     for &scale in scales {
         // Create structuring element
@@ -1103,10 +1100,7 @@ where
         let opened = grey_dilation_2d_optimized(&eroded, Some(&structure), Some(1), None, None)?;
 
         // Compute sum of opened image
-        let opened_sum: f64 = opened
-            .iter()
-            .map(|&x| x.to_f64().unwrap_or(0.0))
-            .sum();
+        let opened_sum: f64 = opened.iter().map(|&x| x.to_f64().unwrap_or(0.0)).sum();
 
         // Compute granulometry value (normalized)
         let granulo_value = if original_sum > 0.0 {
@@ -1241,17 +1235,14 @@ where
 }
 
 /// Helper function to compute threshold for area opening
-fn compute_threshold_for_area<T>(
-    input: &Array2<T>,
-    _area_threshold: usize,
-) -> NdimageResult<T>
+fn compute_threshold_for_area<T>(input: &Array2<T>, _area_threshold: usize) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Debug + 'static,
 {
     // Simplified implementation - use median as threshold
     let mut values: Vec<T> = input.iter().copied().collect();
     values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-    
+
     let median_idx = values.len() / 2;
     Ok(values[median_idx])
 }

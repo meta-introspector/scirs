@@ -10,7 +10,7 @@ use super::{
 };
 use crate::error::OptimizeError;
 use ndarray::{Array1, Array2, ArrayView1};
-use scirs2_core::error::Result;
+use scirs2_core::error::CoreResult;
 use std::time::{Duration, Instant};
 
 /// Real-time estimation methods
@@ -234,11 +234,11 @@ impl<T: StreamingObjective> RealTimeEstimator<T> {
         }
 
         // Solve normal equations
-        match scirs2_core::linalg::solve_linear_system(&xtx, &xty) {
+        match scirs2_linalg::solve_linear_system(&xtx, &xty) {
             Ok(solution) => {
                 self.parameters = solution;
                 // Update covariance as pseudo-inverse of X^T X
-                match scirs2_core::linalg::compute_pseudo_inverse(&xtx) {
+                match scirs2_linalg::compute_pseudo_inverse(&xtx) {
                     Ok(pinv) => self.covariance = pinv,
                     Err(_) => {} // Keep old covariance if inversion fails
                 }

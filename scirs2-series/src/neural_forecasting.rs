@@ -1558,7 +1558,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MambaBlock<F> {
 
     /// Forward pass through Mamba block
     pub fn forward(&self, input: &Array2<F>) -> crate::error::Result<Array2<F>> {
-        let (seq_len, _) = input.dim();
+        let (_seq_len, _) = input.dim();
         let inner_dim = self.expand * self.input_dim;
 
         // Input projection
@@ -1618,7 +1618,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> MambaBlock<F> {
 
         // Discretization (simplified)
         let mut a_discrete = Array2::zeros((seq_len, self.state_dim));
-        let mut b_discrete = b.clone();
+        let b_discrete = b.clone();
 
         for t in 0..seq_len {
             for i in 0..self.state_dim {
@@ -1854,7 +1854,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> FlashAttention<F> {
                         let old_max = block_max[ii];
                         let new_max = row_max.max(old_max);
                         let exp_diff_old = (old_max - new_max).exp();
-                        let exp_diff_new = (row_max - new_max).exp();
+                        let _exp_diff_new = (row_max - new_max).exp();
 
                         block_max[ii] = new_max;
 
@@ -2525,10 +2525,10 @@ impl<F: Float + Debug + Clone + FromPrimitive> ALiBiAttention<F> {
 
     /// Forward pass with ALiBi position bias
     pub fn forward(&self, input: &Array2<F>) -> crate::error::Result<Array2<F>> {
-        let (seq_len, model_dim) = input.dim();
+        let (seq_len, _model_dim) = input.dim();
 
         // Get base attention computation (we'll modify the scores)
-        let qkv = self
+        let _qkv = self
             .attention
             .linear_transform(input, &self.attention.w_query);
         let queries = self

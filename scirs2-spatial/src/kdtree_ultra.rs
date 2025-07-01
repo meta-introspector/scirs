@@ -245,7 +245,7 @@ pub struct TreeStatistics {
 
 impl UltraKDTree {
     /// Create a new ultra-optimized KD-Tree
-    pub fn new(points: &ArrayView2<f64>, config: KDTreeConfig) -> SpatialResult<Self> {
+    pub fn new(points: &ArrayView2<'_, f64>, config: KDTreeConfig) -> SpatialResult<Self> {
         let start_time = std::time::Instant::now();
 
         if points.is_empty() {
@@ -554,7 +554,7 @@ impl UltraKDTree {
             let should_search_other = heap.len() < k
                 || heap
                     .peek()
-                    .map_or(true, |top| dimension_distance < top.distance);
+                    .is_none_or(|top| dimension_distance < top.distance);
 
             if should_search_other && second_child != 0 {
                 self.search_knn_ultra(second_child as usize, query, k, heap);
@@ -586,7 +586,7 @@ impl UltraKDTree {
     /// Batch k-nearest neighbors search for multiple queries
     pub fn batch_knn_search(
         &self,
-        queries: &ArrayView2<f64>,
+        queries: &ArrayView2<'_, f64>,
         k: usize,
     ) -> SpatialResult<(Array2<usize>, Array2<f64>)> {
         let n_queries = queries.nrows();
@@ -749,9 +749,9 @@ impl UltraKDTree {
     }
 
     fn calculate_memory_usage(nodes: &[UltraKDNode], points: &Array2<f64>) -> usize {
-        let node_size = std::mem::size_of::<UltraKDNode>();
+        let _node_size = std::mem::size_of::<UltraKDNode>();
         let point_size = points.len() * std::mem::size_of::<f64>();
-        nodes.len() * node_size + point_size
+        std::mem::size_of_val(nodes) + point_size
     }
 
     fn estimate_cache_misses(nodes: &[UltraKDNode], config: &KDTreeConfig) -> usize {

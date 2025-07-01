@@ -326,6 +326,11 @@ pub mod cuda {
         performance_stats: CudaPerformanceStats,
     }
 
+    // SAFETY: CUDA handles are thread-safe and can be shared across threads
+    // These are opaque handles managed by the CUDA runtime
+    unsafe impl Send for CudaContext {}
+    unsafe impl Sync for CudaContext {}
+
     impl CudaContext {
         fn new(device_info: CudaDeviceInfo) -> LinalgResult<Self> {
             let device_id = device_info.device_id;
@@ -525,6 +530,11 @@ pub mod cuda {
         _phantom: std::marker::PhantomData<T>,
     }
 
+    // SAFETY: CUDA device pointers are thread-safe and can be shared across threads
+    // The CUDA runtime handles thread synchronization for device memory
+    unsafe impl<T> Send for CudaBuffer<T> {}
+    unsafe impl<T> Sync for CudaBuffer<T> {}
+
     impl<T: Clone + Send + Sync + Copy> CudaBuffer<T> {
         fn new(size: usize, device_id: i32) -> LinalgResult<Self> {
             let byte_size = size * std::mem::size_of::<T>();
@@ -678,14 +688,34 @@ pub mod opencl {
     type ClUInt = u32;
     type ClULong = u64;
     type ClBool = u32;
-    type ClPlatformId = *mut std::ffi::c_void;
-    type ClDeviceId = *mut std::ffi::c_void;
-    type ClContext = *mut std::ffi::c_void;
-    type ClCommandQueue = *mut std::ffi::c_void;
-    type ClProgram = *mut std::ffi::c_void;
-    type ClKernel = *mut std::ffi::c_void;
-    type ClMem = *mut std::ffi::c_void;
-    type ClEvent = *mut std::ffi::c_void;
+    
+    // Thread-safe wrapper for OpenCL raw pointers
+    #[derive(Debug, Clone, Copy)]
+    struct SafeClPtr(*mut std::ffi::c_void);
+    
+    // SAFETY: In a real implementation, OpenCL handles are thread-safe
+    // These are mock implementations for testing purposes
+    unsafe impl Send for SafeClPtr {}
+    unsafe impl Sync for SafeClPtr {}
+    
+    impl SafeClPtr {
+        fn new(ptr: *mut std::ffi::c_void) -> Self {
+            Self(ptr)
+        }
+        
+        fn as_ptr(self) -> *mut std::ffi::c_void {
+            self.0
+        }
+    }
+    
+    type ClPlatformId = SafeClPtr;
+    type ClDeviceId = SafeClPtr;
+    type ClContext = SafeClPtr;
+    type ClCommandQueue = SafeClPtr;
+    type ClProgram = SafeClPtr;
+    type ClKernel = SafeClPtr;
+    type ClMem = SafeClPtr;
+    type ClEvent = SafeClPtr;
 
     const CL_SUCCESS: ClInt = 0;
     const CL_DEVICE_NOT_FOUND: ClInt = -1;
@@ -716,18 +746,18 @@ pub mod opencl {
     }
 
     fn cl_create_context(_devices: &[ClDeviceId]) -> (ClInt, ClContext) {
-        (CL_SUCCESS, ptr::null_mut())
+        (CL_SUCCESS, SafeClPtr::new(ptr::null_mut()))
     }
 
     fn cl_create_command_queue(
         _context: ClContext,
         _device: ClDeviceId,
     ) -> (ClInt, ClCommandQueue) {
-        (CL_SUCCESS, ptr::null_mut())
+        (CL_SUCCESS, SafeClPtr::new(ptr::null_mut()))
     }
 
     fn cl_create_buffer(_context: ClContext, _flags: ClULong, _size: usize) -> (ClInt, ClMem) {
-        (CL_SUCCESS, ptr::null_mut())
+        (CL_SUCCESS, SafeClPtr::new(ptr::null_mut()))
     }
 
     fn cl_enqueue_write_buffer(
@@ -1368,7 +1398,7 @@ pub mod opencl {
         }
 
         fn device_ptr(&self) -> *mut std::ffi::c_void {
-            self.buffer
+            self.buffer.as_ptr()
         }
     }
 

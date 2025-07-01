@@ -443,14 +443,14 @@ impl RealTimeMemoryProfiler {
 
         let handle = thread::spawn(move || {
             let mut last_memory = 0u64;
-            let start_time = Instant::now();
+            let _start_time = Instant::now();
 
             while *is_monitoring.lock().unwrap() {
                 {
                     let mut sys = system.lock().unwrap();
-                    sys.refresh_process(pid.into());
+                    sys.refresh_process((pid as usize).into());
 
-                    if let Some(process) = sys.process(pid.into()) {
+                    if let Some(process) = sys.process((pid as usize).into()) {
                         let physical_memory = process.memory() * 1024; // Convert KB to bytes
                         let virtual_memory = process.virtual_memory() * 1024;
                         let growth_rate = physical_memory as i64 - last_memory as i64;
@@ -684,7 +684,7 @@ impl AdvancedMemoryAnalyzer {
         algorithm_name: &str,
     ) -> Vec<(usize, MemoryMetrics)>
     where
-        F: Fn(usize) -> Box<dyn FnOnce() -> ()>,
+        F: Fn(usize) -> Box<dyn FnOnce()>,
     {
         let mut results = Vec::new();
 
@@ -816,7 +816,7 @@ mod tests {
 
     #[test]
     fn test_memory_leak_detection() {
-        let mut profiler = RealTimeMemoryProfiler::new();
+        let profiler = RealTimeMemoryProfiler::new();
 
         // Should not detect leaks for stable memory usage
         let has_leak = profiler.detect_memory_leaks(1024.0 * 1024.0); // 1MB/s threshold

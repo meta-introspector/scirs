@@ -17,7 +17,6 @@
 //! by our compatibility guarantee. Experimental features are clearly marked.
 
 #![warn(missing_docs)]
-#![cfg_attr(feature = "unstable", feature(stability))]
 
 // Temporarily commenting out OpenBLAS to fix build issues
 // extern crate blas;
@@ -138,7 +137,18 @@ pub use algorithms::{
 
 // Parallel algorithms - stable for 1.0 when parallel feature is enabled
 #[cfg(feature = "parallel")]
-pub use algorithms::parallel_louvain_communities_result;
+pub use algorithms::{
+    parallel_louvain_communities_result,
+    parallel_label_propagation_result,
+    parallel_modularity,
+};
+
+// Parallel spectral operations - stable for 1.0 when parallel feature is enabled
+#[cfg(feature = "parallel")]
+pub use spectral::{
+    parallel_spectral_clustering,
+    parallel_laplacian,
+};
 
 // Experimental algorithms - unstable, may change in future versions
 pub use algorithms::{

@@ -85,7 +85,7 @@ impl BoundingBox {
     /// # Errors
     ///
     /// Returns an error if the points array is empty or if points don't have 3 dimensions
-    pub fn from_points(points: &ArrayView2<f64>) -> SpatialResult<Self> {
+    pub fn from_points(points: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
         if points.is_empty() {
             return Err(SpatialError::ValueError(
                 "Cannot create bounding box from empty point set".into(),
@@ -399,7 +399,7 @@ impl Octree {
     /// # Errors
     ///
     /// Returns an error if the points array is empty or if points don't have 3 dimensions
-    pub fn new(points: &ArrayView2<f64>) -> SpatialResult<Self> {
+    pub fn new(points: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
         if points.is_empty() {
             return Err(SpatialError::ValueError(
                 "Cannot create octree from empty point set".into(),
@@ -733,7 +733,7 @@ impl Octree {
     /// Returns an error if other_points doesn't have 3 dimensions or if collision_threshold is negative
     pub fn check_collision(
         &self,
-        other_points: &ArrayView2<f64>,
+        other_points: &ArrayView2<'_, f64>,
         collision_threshold: f64,
     ) -> SpatialResult<bool> {
         if other_points.ncols() != 3 {

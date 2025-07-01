@@ -1,6 +1,6 @@
 //! Iterative solvers for linear systems
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2, ScalarOperand};
 use num_traits::{Float, NumAssign, One};
 use std::iter::Sum;
 
@@ -50,7 +50,7 @@ pub fn conjugate_gradient<F>(
     workers: Option<usize>,
 ) -> LinalgResult<Array1<F>>
 where
-    F: Float + NumAssign + Sum + One,
+    F: Float + NumAssign + Sum + One + ScalarOperand + Send + Sync,
 {
     use crate::parallel;
 
@@ -209,7 +209,7 @@ pub fn jacobi_method<F>(
     workers: Option<usize>,
 ) -> LinalgResult<Array1<F>>
 where
-    F: Float + NumAssign + Sum + One,
+    F: Float + NumAssign + Sum + One + ScalarOperand + Send + Sync,
 {
     use crate::parallel;
 
@@ -325,7 +325,7 @@ pub fn gauss_seidel<F>(
     workers: Option<usize>,
 ) -> LinalgResult<Array1<F>>
 where
-    F: Float + NumAssign + Sum + One,
+    F: Float + NumAssign + Sum + One + ScalarOperand + Send + Sync,
 {
     use crate::parallel;
 
@@ -447,7 +447,7 @@ pub fn successive_over_relaxation<F>(
     workers: Option<usize>,
 ) -> LinalgResult<Array1<F>>
 where
-    F: Float + NumAssign + Sum + One,
+    F: Float + NumAssign + Sum + One + ScalarOperand + Send + Sync,
 {
     use crate::parallel;
 
@@ -584,7 +584,7 @@ pub fn geometric_multigrid<F>(
     workers: Option<usize>,
 ) -> LinalgResult<Array1<F>>
 where
-    F: Float + NumAssign + Sum + One + 'static,
+    F: Float + NumAssign + Sum + One + 'static + ScalarOperand + Send + Sync,
 {
     use crate::parallel;
 
@@ -743,7 +743,7 @@ fn v_cycle<F>(
     post_smooth: usize,
 ) -> LinalgResult<Array1<F>>
 where
-    F: Float + NumAssign + Sum + One + 'static,
+    F: Float + NumAssign + Sum + One + 'static + ScalarOperand + Send + Sync,
 {
     // V-cycle solves Ax = b starting from initial guess x
     // At each level, we solve for the error: A*e = r where r = b - A*x
@@ -876,7 +876,7 @@ pub fn bicgstab<F>(
     workers: Option<usize>,
 ) -> LinalgResult<Array1<F>>
 where
-    F: Float + NumAssign + Sum + One + 'static,
+    F: Float + NumAssign + Sum + One + 'static + ScalarOperand + Send + Sync,
 {
     use crate::parallel;
 
@@ -1076,7 +1076,7 @@ pub fn minres<F>(
     workers: Option<usize>,
 ) -> LinalgResult<Array1<F>>
 where
-    F: Float + NumAssign + Sum + One + 'static,
+    F: Float + NumAssign + Sum + One + 'static + ScalarOperand + Send + Sync,
 {
     use crate::parallel;
 
@@ -1246,7 +1246,7 @@ where
 /// Compute residual r = b - Ax
 fn compute_residual<F>(a: &ArrayView2<F>, x: &ArrayView1<F>, b: &ArrayView1<F>) -> Array1<F>
 where
-    F: Float + NumAssign + Sum + One + 'static,
+    F: Float + NumAssign + Sum + One + 'static + ScalarOperand + Send + Sync,
 {
     let ax = a.dot(x);
     let mut r = Array1::zeros(b.len());
@@ -1265,7 +1265,7 @@ fn gauss_seidel_step<F>(
     x: &ArrayView1<F>,
 ) -> LinalgResult<Array1<F>>
 where
-    F: Float + NumAssign + Sum + One + 'static,
+    F: Float + NumAssign + Sum + One + 'static + ScalarOperand + Send + Sync,
 {
     let n = a.nrows();
     let mut x_new = x.to_owned();
@@ -1307,7 +1307,7 @@ pub fn conjugate_gradient_default<F>(
     tol: F,
 ) -> LinalgResult<Array1<F>>
 where
-    F: Float + NumAssign + Sum + One,
+    F: Float + NumAssign + Sum + One + ScalarOperand + Send + Sync,
 {
     conjugate_gradient(a, b, max_iter, tol, None)
 }
@@ -1322,7 +1322,7 @@ mod tests {
     // Helper function to check solution
     fn check_solution<F>(a: &ArrayView2<F>, x: &ArrayView1<F>, b: &ArrayView1<F>, tol: F) -> bool
     where
-        F: Float + NumAssign + Sum + One,
+        F: Float + NumAssign + Sum + One + Send + Sync + ndarray::ScalarOperand,
     {
         let n = a.nrows();
         let mut ax = Array1::<F>::zeros(n);

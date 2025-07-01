@@ -105,7 +105,7 @@ impl LiquidStateMachine {
         states: &Array2<f64>,
     ) -> Result<()> {
         // Simplified training - use pseudoinverse
-        if let Ok(pinv) = scirs2_core::linalg::compute_pseudo_inverse(states) {
+        if let Ok(pinv) = scirs2_linalg::compute_pseudo_inverse(states) {
             self.output_weights = targets.dot(&pinv);
         }
         Ok(())

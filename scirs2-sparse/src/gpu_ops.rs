@@ -3090,9 +3090,8 @@ impl OptimizedGpuOps {
 
                 // Apply previous Givens rotations
                 for i in 0..j {
-                    let temp = h[i][j];
                     // Apply Givens rotation (simplified)
-                    h[i][j] = temp;
+                    // Note: This is a placeholder - proper Givens rotation implementation needed
                     h[i + 1][j] = T::zero();
                 }
 

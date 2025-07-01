@@ -1247,7 +1247,10 @@ pub fn simd_non_maximum_suppression_ultra(
         // SIMD threshold filtering
         let threshold_vec = vec![threshold; width];
         let threshold_arr = ndarray::arr1(&threshold_vec);
-        let above_threshold_mask = f32::simd_gt(&current_row, &threshold_arr.view());
+        let above_threshold_mask: Vec<bool> = current_row.iter()
+            .zip(threshold_arr.iter())
+            .map(|(&val, &thresh)| val > thresh)
+            .collect();
 
         for x in radius..(width - radius) {
             if above_threshold_mask[x] {
@@ -1323,7 +1326,7 @@ pub fn simd_convolve_adaptive_ultra(
     image: &ArrayView2<f32>,
     kernel: &ArrayView2<f32>,
 ) -> Result<Array2<f32>> {
-    let (height, width) = image.dim();
+    let (_height, _width) = image.dim();
     let (k_height, k_width) = kernel.dim();
 
     // Ensure kernel is odd-sized

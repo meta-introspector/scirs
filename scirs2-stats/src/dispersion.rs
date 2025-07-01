@@ -5,9 +5,11 @@
 //! interquartile range, and range.
 
 use crate::error::{StatsError, StatsResult};
+use crate::error_standardization::{ErrorMessages, ErrorValidator};
 use crate::{mean, median};
 use ndarray::{Array1, ArrayView1};
-use num_traits::Float;
+use num_traits::{Float, NumCast};
+use scirs2_core::simd_ops::{AutoOptimizer, SimdUnifiedOps};
 use std::cmp::Ordering;
 
 /// Compute the mean absolute deviation (MAD) of a dataset.
@@ -43,13 +45,11 @@ use std::cmp::Ordering;
 /// ```
 pub fn mean_abs_deviation<F>(x: &ArrayView1<F>, center: Option<F>) -> StatsResult<F>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,
+    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + SimdUnifiedOps,
 {
-    // Check for empty array
+    // Use standardized validation
     if x.is_empty() {
-        return Err(StatsError::InvalidArgument(
-            "Empty array provided".to_string(),
-        ));
+        return Err(ErrorMessages::empty_array("x"));
     }
 
     // Get the central point (use mean if not provided)
@@ -58,14 +58,20 @@ where
         None => mean(x)?,
     };
 
-    // Calculate absolute deviations from the center
-    let abs_deviations: Vec<F> = x.iter().map(|&v| (v - center_val).abs()).collect();
+    let n = x.len();
+    let optimizer = AutoOptimizer::new();
 
-    // Calculate the mean of the absolute deviations
-    let sum_abs_dev = abs_deviations.iter().cloned().sum::<F>();
-    let n = F::from(x.len()).unwrap();
+    // Calculate sum of absolute deviations using SIMD when beneficial
+    let sum_abs_dev = if optimizer.should_use_simd(n) {
+        // Use SIMD operations for better performance
+        F::simd_sum_abs_diff(&x.view(), center_val)
+    } else {
+        // Fallback to scalar operations for small arrays
+        x.iter().map(|&v| (v - center_val).abs()).sum::<F>()
+    };
 
-    Ok(sum_abs_dev / n)
+    let n_f = F::from(n).unwrap();
+    Ok(sum_abs_dev / n_f)
 }
 
 /// Compute the median absolute deviation (MAD) of a dataset.
@@ -107,11 +113,9 @@ pub fn median_abs_deviation<F>(
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,
 {
-    // Check for empty array
+    // Use standardized validation
     if x.is_empty() {
-        return Err(StatsError::InvalidArgument(
-            "Empty array provided".to_string(),
-        ));
+        return Err(ErrorMessages::empty_array("x"));
     }
 
     // Get the central point (use median if not provided)
@@ -206,18 +210,26 @@ where
 /// ```
 pub fn data_range<F>(x: &ArrayView1<F>) -> StatsResult<F>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,
+    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + SimdUnifiedOps,
 {
-    // Check for empty array
+    // Use standardized validation
     if x.is_empty() {
-        return Err(StatsError::InvalidArgument(
-            "Empty array provided".to_string(),
-        ));
+        return Err(ErrorMessages::empty_array("x"));
     }
 
-    // Find the minimum and maximum values
-    let min_val = x.iter().cloned().fold(F::infinity(), F::min);
-    let max_val = x.iter().cloned().fold(F::neg_infinity(), F::max);
+    let n = x.len();
+    let optimizer = AutoOptimizer::new();
+
+    // Find min and max using SIMD when beneficial
+    let (min_val, max_val) = if optimizer.should_use_simd(n) {
+        // Use SIMD operations for better performance
+        (F::simd_min(&x.view()), F::simd_max(&x.view()))
+    } else {
+        // Fallback to scalar operations for small arrays
+        let min_val = x.iter().cloned().fold(F::infinity(), F::min);
+        let max_val = x.iter().cloned().fold(F::neg_infinity(), F::max);
+        (min_val, max_val)
+    };
 
     // Return the difference
     Ok(max_val - min_val)

@@ -3,9 +3,10 @@
 //! This module provides differential privacy mechanisms for machine learning
 //! optimization, including DP-SGD with moment accountant for privacy budget tracking.
 
-use ndarray::{Array, ArrayBase, Data, DataMut, Dimension};
+use ndarray::{Array, ArrayBase, Data, DataMut, Dimension, ScalarOperand};
 use num_traits::Float;
 use std::collections::VecDeque;
+use std::fmt::Debug;
 
 pub mod byzantine_tolerance;
 pub mod dp_sgd;
@@ -141,7 +142,7 @@ pub enum AccountingMethod {
 /// Differentially private optimizer wrapper
 pub struct DifferentiallyPrivateOptimizer<O, A>
 where
-    A: Float,
+    A: Float + ScalarOperand + Debug,
     O: Optimizer<A>,
 {
     /// Base optimizer

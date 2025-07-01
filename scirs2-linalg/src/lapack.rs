@@ -7,7 +7,7 @@
 //! problems, and singular value decomposition.
 
 use crate::error::{LinalgError, LinalgResult};
-use ndarray::{array, Array1, Array2, ArrayView2};
+use ndarray::{array, Array1, Array2, ArrayView2, ScalarOperand};
 use num_traits::{Float, NumAssign};
 use std::iter::Sum;
 
@@ -60,7 +60,7 @@ pub struct EigDecomposition<F: Float> {
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ndarray::{array, ScalarOperand};
 /// use scirs2_linalg::lapack::lu_factor;
 ///
 /// let a = array![[2.0, 1.0, 1.0], [4.0, 3.0, 3.0], [8.0, 7.0, 9.0]];
@@ -159,7 +159,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ndarray::{array, ScalarOperand};
 /// use scirs2_linalg::lapack::qr_factor;
 ///
 /// let a = array![[2.0, 1.0], [4.0, 3.0], [8.0, 7.0]];
@@ -170,7 +170,7 @@ where
 /// ```
 pub fn qr_factor<F>(a: &ArrayView2<F>) -> LinalgResult<QRDecomposition<F>>
 where
-    F: Float + NumAssign + Sum,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     let n = a.nrows();
     let m = a.ncols();
@@ -266,7 +266,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ndarray::{array, ScalarOperand};
 /// use scirs2_linalg::lapack::svd;
 ///
 /// let a = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]];
@@ -277,7 +277,7 @@ where
 /// ```
 pub fn svd<F>(a: &ArrayView2<F>, full_matrices: bool) -> LinalgResult<SVDDecomposition<F>>
 where
-    F: Float + NumAssign + ndarray::ScalarOperand + std::iter::Sum,
+    F: Float + NumAssign + ndarray::ScalarOperand + std::iter::Sum + Send + Sync + 'static,
 {
     let n = a.nrows();
     let m = a.ncols();
@@ -472,7 +472,7 @@ where
 /// Modified Gram-Schmidt orthogonalization for better numerical stability
 fn modified_gram_schmidt<F>(matrix: &mut Array2<F>)
 where
-    F: Float + NumAssign + ndarray::ScalarOperand + std::iter::Sum,
+    F: Float + NumAssign + ndarray::ScalarOperand + std::iter::Sum + Send + Sync + 'static,
 {
     let n_cols = matrix.ncols();
 
@@ -499,7 +499,7 @@ where
 /// Extend a matrix to form a complete orthogonal basis
 fn extend_to_orthogonal_basis<F>(matrix: Array2<F>, target_size: usize) -> Array2<F>
 where
-    F: Float + NumAssign + ndarray::ScalarOperand + std::iter::Sum,
+    F: Float + NumAssign + ndarray::ScalarOperand + std::iter::Sum + Send + Sync + 'static,
 {
     let current_cols = matrix.ncols();
     if current_cols >= target_size {
@@ -558,7 +558,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ndarray::{array, ScalarOperand};
 /// use scirs2_linalg::lapack::eig;
 ///
 /// let a = array![[1.0, 2.0], [3.0, 4.0]];
@@ -620,7 +620,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ndarray::{array, ScalarOperand};
 /// use scirs2_linalg::lapack::cholesky;
 ///
 /// let a = array![[4.0, 2.0], [2.0, 5.0]];

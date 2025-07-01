@@ -63,7 +63,7 @@ pub fn random_matrix<F, R>(
     rng: &mut R,
 ) -> LinalgResult<Array2<F>>
 where
-    F: Float + Debug + NumAssign + Sum + 'static,
+    F: Float + Debug + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
     R: Rng + ?Sized,
 {
     match matrix_type {
@@ -160,7 +160,7 @@ fn random_positive_definite<F, R>(
     rng: &mut R,
 ) -> LinalgResult<Array2<F>>
 where
-    F: Float + Debug + NumAssign + Sum + 'static,
+    F: Float + Debug + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
     R: Rng + ?Sized,
 {
     if eigenvalue_min <= 0.0 {
@@ -199,7 +199,7 @@ where
 /// Generate a random orthogonal matrix using QR decomposition
 fn random_orthogonal<F, R>(size: usize, rng: &mut R) -> LinalgResult<Array2<F>>
 where
-    F: Float + Debug + NumAssign + Sum + 'static,
+    F: Float + Debug + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
     R: Rng + ?Sized,
 {
     // Generate random matrix with normal distribution
@@ -216,7 +216,7 @@ where
 /// Generate a random correlation matrix
 fn random_correlation<F, R>(size: usize, rng: &mut R) -> LinalgResult<Array2<F>>
 where
-    F: Float + Debug + NumAssign + Sum + 'static,
+    F: Float + Debug + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
     R: Rng + ?Sized,
 {
     // Start with a positive definite matrix

@@ -77,7 +77,7 @@ pub fn randomized_svd<F>(
     workers: Option<usize>,
 ) -> LinalgResult<(Array2<F>, Array1<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Sum + ndarray::ScalarOperand + 'static,
+    F: Float + NumAssign + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     let (m, n) = a.dim();
     let oversampling = oversampling.unwrap_or(10);
@@ -172,7 +172,7 @@ pub fn truncated_svd<F>(
     workers: Option<usize>,
 ) -> LinalgResult<(Array2<F>, Array1<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Sum + ndarray::ScalarOperand,
+    F: Float + NumAssign + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     let (m, n) = a.dim();
 
@@ -225,7 +225,7 @@ pub fn pca<F>(
     workers: Option<usize>,
 ) -> LinalgResult<(Array2<F>, Array1<F>, Array1<F>)>
 where
-    F: Float + NumAssign + Sum + ndarray::ScalarOperand + 'static,
+    F: Float + NumAssign + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     let (n_samples, n_features) = data.dim();
 
@@ -306,7 +306,7 @@ pub fn nmf<F>(
     workers: Option<usize>,
 ) -> LinalgResult<(Array2<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Sum + ndarray::ScalarOperand + 'static,
+    F: Float + NumAssign + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     let (m, n) = a.dim();
     let max_iter = max_iter.unwrap_or(100);
@@ -467,7 +467,7 @@ pub fn cur_decomposition<F>(
     workers: Option<usize>,
 ) -> CURResult<F>
 where
-    F: Float + NumAssign + Sum + ndarray::ScalarOperand + 'static,
+    F: Float + NumAssign + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     let (m, n) = a.dim();
     let oversampling = oversampling.unwrap_or(5);

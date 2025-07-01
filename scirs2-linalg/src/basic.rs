@@ -1,7 +1,7 @@
 //! Basic matrix operations
 
 use crate::error::{LinalgError, LinalgResult};
-use ndarray::{Array2, ArrayView2};
+use ndarray::{Array2, ArrayView2, ScalarOperand};
 use num_traits::{Float, NumAssign};
 use std::iter::Sum;
 
@@ -28,7 +28,7 @@ use std::iter::Sum;
 /// ```
 pub fn det<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<F>
 where
-    F: Float + NumAssign + Sum,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     use crate::parallel;
 
@@ -116,7 +116,7 @@ where
 /// ```
 pub fn inv<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     use crate::parallel;
 
@@ -214,7 +214,7 @@ where
 /// ```
 pub fn matrix_power<F>(a: &ArrayView2<F>, n: i32, workers: Option<usize>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     use crate::parallel;
 
@@ -290,7 +290,7 @@ where
 #[allow(dead_code)]
 pub fn trace<F>(a: &ArrayView2<F>) -> LinalgResult<F>
 where
-    F: Float + NumAssign + Sum,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     if a.nrows() != a.ncols() {
         return Err(LinalgError::ShapeError(format!(
@@ -317,7 +317,7 @@ where
 /// For new code, prefer using `det` directly with explicit workers parameter.
 pub fn det_default<F>(a: &ArrayView2<F>) -> LinalgResult<F>
 where
-    F: Float + NumAssign + Sum,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     det(a, None)
 }
@@ -328,7 +328,7 @@ where
 /// For new code, prefer using `inv` directly with explicit workers parameter.
 pub fn inv_default<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     inv(a, None)
 }
@@ -339,7 +339,7 @@ where
 /// For new code, prefer using `matrix_power` directly with explicit workers parameter.
 pub fn matrix_power_default<F>(a: &ArrayView2<F>, n: i32) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     matrix_power(a, n, None)
 }

@@ -144,6 +144,7 @@ pub mod arima_models;
 pub mod biomedical;
 pub mod causality;
 pub mod change_point;
+#[cfg(feature = "wasm")]
 pub mod cloud_deployment;
 pub mod clustering;
 pub mod correlation;

@@ -115,6 +115,7 @@ pub mod lti_response;
 pub mod median;
 pub mod memory_efficient;
 pub mod memory_optimized;
+pub mod memory_optimized_advanced;
 pub mod multirate;
 pub mod multitaper;
 pub mod nlm;

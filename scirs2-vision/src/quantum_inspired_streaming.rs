@@ -8,11 +8,14 @@
 //!
 //! - Quantum-inspired optimization algorithms for pipeline scheduling
 //! - Superposition-based parallel processing architectures
+
+#![allow(dead_code)]
 //! - Quantum interference algorithms for noise reduction
 //! - Entanglement-inspired feature correlation analysis
 //! - Quantum annealing for adaptive parameter optimization
 
 use crate::error::Result;
+use crate::FrameMetadata;
 use crate::streaming::{Frame, ProcessingStage};
 use ndarray::{Array1, Array2};
 use rand::prelude::*;
@@ -154,7 +157,7 @@ impl QuantumHamiltonian {
         // Initialize with random energies representing computational costs
         let mut rng = rng();
         for stage_name in stage_names {
-            stage_energies.insert(stage_name.clone(), rng.gen_range(0.1..2.0));
+            stage_energies.insert(stage_name.clone(), rng.random_range(0.1..2.0));
             external_fields.insert(stage_name.clone(), 0.0);
         }
 
@@ -352,8 +355,8 @@ impl QuantumAnnealingStage {
         let mut neighbor_params = self.parameters.clone();
         let mut rng = rng();
 
-        if let Some((param_name, param_value)) = neighbor_params.iter_mut().choose(&mut rng) {
-            let perturbation = rng.gen_range(-0.1..0.1) * self.temperature / 100.0;
+        if let Some((_param_name, param_value)) = neighbor_params.iter_mut().choose(&mut rng) {
+            let perturbation = rng.random_range(-0.1..0.1) * self.temperature / 100.0;
             *param_value += perturbation;
             *param_value = param_value.clamp(0.0, 1.0); // Keep in valid range
         }
@@ -368,7 +371,7 @@ impl QuantumAnnealingStage {
             (-delta_cost / self.temperature).exp()
         };
 
-        if rng.gen::<f64>() < acceptance_probability {
+        if rng.random::<f64>() < acceptance_probability {
             self.parameters = neighbor_params;
 
             if neighbor_cost < self.best_cost {
@@ -657,9 +660,9 @@ impl QuantumSuperpositionStage {
         for i in 0..num_variants {
             let variant = ProcessingVariant {
                 name: format!("Variant_{}", i),
-                sigma: rng.gen_range(0.5..2.0),
-                threshold: rng.gen_range(0.05..0.3),
-                enhancement_factor: rng.gen_range(0.8..1.2),
+                sigma: rng.random_range(0.5..2.0),
+                threshold: rng.random_range(0.05..0.3),
+                enhancement_factor: rng.random_range(0.8..1.2),
             };
 
             processing_variants.push(variant);

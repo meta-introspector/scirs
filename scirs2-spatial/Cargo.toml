@@ -70,3 +70,11 @@ harness = false
 [[bench]]
 name = "simd_bench"
 harness = false
+
+[[bench]]
+name = "advanced_modules_performance"
+harness = false
+
+# [[test]]
+# name = "integration_tests"
+# path = "tests/integration_tests.rs"

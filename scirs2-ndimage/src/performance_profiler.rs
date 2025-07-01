@@ -5,9 +5,9 @@
 //! and intelligent performance optimization suggestions.
 
 use std::collections::{HashMap, VecDeque};
-use std::time::{Duration, Instant};
 use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
+use std::time::{Duration, Instant};
 
 use ndarray::{Array, ArrayView, Dimension};
 use num_traits::{Float, FromPrimitive};
@@ -252,7 +252,7 @@ impl PerformanceProfiler {
             config,
         }
     }
-    
+
     /// Start real-time performance monitoring
     pub fn start_monitoring(&self) -> NdimageResult<()> {
         let mut active = self.monitoring_active.lock().unwrap();
@@ -260,29 +260,29 @@ impl PerformanceProfiler {
             return Ok(()); // Already monitoring
         }
         *active = true;
-        
+
         // Start memory monitoring thread
         let memory_tracker = Arc::clone(&self.memory_tracker);
         let sampling_interval = self.config.memory_sampling_interval;
         let monitoring_active = Arc::clone(&self.monitoring_active);
-        
+
         thread::spawn(move || {
             while *monitoring_active.lock().unwrap() {
                 let current_memory = get_current_memory_usage();
                 let mut tracker = memory_tracker.lock().unwrap();
                 tracker.update_memory_usage(current_memory);
                 drop(tracker);
-                
+
                 thread::sleep(sampling_interval);
             }
         });
-        
+
         // Start metrics aggregation thread
         let metrics_aggregator = Arc::clone(&self.metrics_aggregator);
         let timing_records = Arc::clone(&self.timing_records);
         let reporting_interval = self.config.reporting_interval;
         let monitoring_active = Arc::clone(&self.monitoring_active);
-        
+
         thread::spawn(move || {
             while *monitoring_active.lock().unwrap() {
                 {
@@ -290,20 +290,20 @@ impl PerformanceProfiler {
                     let mut aggregator = metrics_aggregator.lock().unwrap();
                     aggregator.update_metrics(&records);
                 }
-                
+
                 thread::sleep(reporting_interval);
             }
         });
-        
+
         Ok(())
     }
-    
+
     /// Stop performance monitoring
     pub fn stop_monitoring(&self) {
         let mut active = self.monitoring_active.lock().unwrap();
         *active = false;
     }
-    
+
     /// Record operation timing and performance data
     pub fn record_operation<T, D>(
         &self,
@@ -329,26 +329,28 @@ impl PerformanceProfiler {
             timestamp: Instant::now(),
             metadata,
         };
-        
+
         let mut records = self.timing_records.write().unwrap();
-        let operation_records = records.entry(operation_name.to_string()).or_insert_with(Vec::new);
+        let operation_records = records
+            .entry(operation_name.to_string())
+            .or_insert_with(Vec::new);
         operation_records.push(timing);
-        
+
         // Limit number of records to prevent memory bloat
         if operation_records.len() > self.config.max_records_per_operation {
             operation_records.remove(0);
         }
-        
+
         Ok(())
     }
-    
+
     /// Generate comprehensive performance report
     pub fn generate_performance_report(&self) -> PerformanceReport {
         let records = self.timing_records.read().unwrap();
         let aggregator = self.metrics_aggregator.lock().unwrap();
         let optimizer = self.optimizer.lock().unwrap();
         let memory_tracker = self.memory_tracker.lock().unwrap();
-        
+
         PerformanceReport {
             operation_metrics: aggregator.operation_metrics.clone(),
             system_metrics: aggregator.system_metrics.clone(),
@@ -359,17 +361,21 @@ impl PerformanceProfiler {
             timestamp: Instant::now(),
         }
     }
-    
+
     /// Get optimization recommendations for specific operation
-    pub fn get_optimization_recommendations(&self, operation_name: &str) -> Vec<OptimizationRecommendation> {
+    pub fn get_optimization_recommendations(
+        &self,
+        operation_name: &str,
+    ) -> Vec<OptimizationRecommendation> {
         let optimizer = self.optimizer.lock().unwrap();
-        optimizer.recommendations
+        optimizer
+            .recommendations
             .iter()
             .filter(|rec| rec.operation == operation_name)
             .cloned()
             .collect()
     }
-    
+
     /// Benchmark specific operation with various array sizes
     pub fn benchmark_operation<F, T, D>(
         &self,
@@ -384,33 +390,33 @@ impl PerformanceProfiler {
         D: Dimension,
     {
         let mut results = Vec::new();
-        
+
         for size in test_sizes {
             let input = Array::default(size.as_slice());
             let input_view = input.view();
-            
+
             let mut timings = Vec::new();
             let mut memory_usages = Vec::new();
-            
+
             for _ in 0..iterations {
                 let start_memory = get_current_memory_usage();
                 let start_time = Instant::now();
-                
+
                 let _result = operation(&input_view)?;
-                
+
                 let execution_time = start_time.elapsed();
                 let end_memory = get_current_memory_usage();
                 let memory_used = end_memory.saturating_sub(start_memory);
-                
+
                 timings.push(execution_time);
                 memory_usages.push(memory_used);
             }
-            
+
             let avg_time = timings.iter().sum::<Duration>() / timings.len() as u32;
             let min_time = timings.iter().min().unwrap().clone();
             let max_time = timings.iter().max().unwrap().clone();
             let avg_memory = memory_usages.iter().sum::<usize>() / memory_usages.len();
-            
+
             results.push(BenchmarkResult {
                 array_size: size.clone(),
                 average_time: avg_time,
@@ -420,16 +426,16 @@ impl PerformanceProfiler {
                 throughput: calculate_throughput(size, avg_time),
             });
         }
-        
+
         Ok(BenchmarkResults {
             operation_name: operation_name.to_string(),
             results,
             timestamp: Instant::now(),
         })
     }
-    
+
     // Helper methods
-    
+
     fn estimate_simd_utilization(&self, operation_name: &str, array_size: usize) -> f64 {
         // This would integrate with actual SIMD performance counters in a real implementation
         // For now, provide estimates based on operation characteristics
@@ -440,12 +446,14 @@ impl PerformanceProfiler {
             _ => 0.30,
         }
     }
-    
+
     fn estimate_cache_hit_ratio(&self, array_size: usize) -> f64 {
         // Simple heuristic: smaller arrays have better cache hit ratios
-        if array_size < 1024 * 1024 {  // < 1MB for f64
+        if array_size < 1024 * 1024 {
+            // < 1MB for f64
             0.95
-        } else if array_size < 16 * 1024 * 1024 {  // < 16MB
+        } else if array_size < 16 * 1024 * 1024 {
+            // < 16MB
             0.80
         } else {
             0.60
@@ -472,17 +480,18 @@ impl MetricsAggregator {
             },
         }
     }
-    
+
     fn update_metrics(&mut self, records: &HashMap<String, Vec<OperationTiming>>) {
         for (operation_name, timings) in records {
             let metrics = self.calculate_aggregated_metrics(timings);
-            self.operation_metrics.insert(operation_name.clone(), metrics);
+            self.operation_metrics
+                .insert(operation_name.clone(), metrics);
         }
-        
+
         self.update_system_metrics(records);
         self.update_trends(records);
     }
-    
+
     fn calculate_aggregated_metrics(&self, timings: &[OperationTiming]) -> AggregatedMetrics {
         if timings.is_empty() {
             return AggregatedMetrics {
@@ -497,29 +506,35 @@ impl MetricsAggregator {
                 efficiency_score: 0.0,
             };
         }
-        
+
         let execution_times: Vec<Duration> = timings.iter().map(|t| t.execution_time).collect();
-        let avg_execution_time = execution_times.iter().sum::<Duration>() / execution_times.len() as u32;
+        let avg_execution_time =
+            execution_times.iter().sum::<Duration>() / execution_times.len() as u32;
         let min_execution_time = execution_times.iter().min().unwrap().clone();
         let max_execution_time = execution_times.iter().max().unwrap().clone();
-        
-        let avg_memory_usage = timings.iter().map(|t| t.memory_allocated).sum::<usize>() / timings.len();
-        let avg_simd_utilization = timings.iter().map(|t| t.simd_utilization).sum::<f64>() / timings.len() as f64;
-        let avg_cache_hit_ratio = timings.iter().map(|t| t.cache_hit_ratio).sum::<f64>() / timings.len() as f64;
-        
+
+        let avg_memory_usage =
+            timings.iter().map(|t| t.memory_allocated).sum::<usize>() / timings.len();
+        let avg_simd_utilization =
+            timings.iter().map(|t| t.simd_utilization).sum::<f64>() / timings.len() as f64;
+        let avg_cache_hit_ratio =
+            timings.iter().map(|t| t.cache_hit_ratio).sum::<f64>() / timings.len() as f64;
+
         // Calculate standard deviation
-        let variance = execution_times.iter()
+        let variance = execution_times
+            .iter()
             .map(|t| {
                 let diff = t.as_nanos() as f64 - avg_execution_time.as_nanos() as f64;
                 diff * diff
             })
-            .sum::<f64>() / execution_times.len() as f64;
+            .sum::<f64>()
+            / execution_times.len() as f64;
         let std_dev_nanos = variance.sqrt() as u64;
         let std_dev_execution_time = Duration::from_nanos(std_dev_nanos);
-        
+
         // Calculate efficiency score (combination of SIMD utilization and cache hit ratio)
         let efficiency_score = (avg_simd_utilization + avg_cache_hit_ratio) / 2.0;
-        
+
         AggregatedMetrics {
             operation_count: timings.len(),
             avg_execution_time,
@@ -532,30 +547,26 @@ impl MetricsAggregator {
             efficiency_score,
         }
     }
-    
+
     fn update_system_metrics(&mut self, records: &HashMap<String, Vec<OperationTiming>>) {
         let total_operations: usize = records.values().map(|v| v.len()).sum();
-        let total_execution_time: Duration = records.values()
-            .flatten()
-            .map(|t| t.execution_time)
-            .sum();
-        let total_memory_allocated: usize = records.values()
-            .flatten()
-            .map(|t| t.memory_allocated)
-            .sum();
-        
+        let total_execution_time: Duration =
+            records.values().flatten().map(|t| t.execution_time).sum();
+        let total_memory_allocated: usize =
+            records.values().flatten().map(|t| t.memory_allocated).sum();
+
         self.system_metrics.total_operations = total_operations;
         self.system_metrics.total_execution_time = total_execution_time;
         self.system_metrics.total_memory_allocated = total_memory_allocated;
     }
-    
+
     fn update_trends(&mut self, records: &HashMap<String, Vec<OperationTiming>>) {
         // Simple trend analysis based on recent vs. older measurements
         // In a full implementation, this would use more sophisticated time series analysis
         self.trends.execution_time_trend = 0.0; // Placeholder
-        self.trends.memory_usage_trend = 0.0;    // Placeholder
-        self.trends.efficiency_trend = 0.0;      // Placeholder
-        self.trends.trend_confidence = 0.5;      // Placeholder
+        self.trends.memory_usage_trend = 0.0; // Placeholder
+        self.trends.efficiency_trend = 0.0; // Placeholder
+        self.trends.trend_confidence = 0.5; // Placeholder
     }
 }
 
@@ -573,25 +584,30 @@ impl MemoryTracker {
     fn update_memory_usage(&mut self, usage: usize) {
         self.current_usage = usage;
         self.peak_usage = self.peak_usage.max(usage);
-        
+
         let now = Instant::now();
         self.usage_history.push_back((now, usage));
-        
+
         // Keep only recent history (last hour)
         let cutoff = now - Duration::from_secs(3600);
-        while self.usage_history.front().map_or(false, |&(time, _)| time < cutoff) {
+        while self
+            .usage_history
+            .front()
+            .map_or(false, |&(time, _)| time < cutoff)
+        {
             self.usage_history.pop_front();
         }
     }
-    
+
     fn get_statistics(&self) -> MemoryStatistics {
-        let recent_usages: Vec<usize> = self.usage_history.iter().map(|(_, usage)| *usage).collect();
+        let recent_usages: Vec<usize> =
+            self.usage_history.iter().map(|(_, usage)| *usage).collect();
         let avg_usage = if recent_usages.is_empty() {
             0
         } else {
             recent_usages.iter().sum::<usize>() / recent_usages.len()
         };
-        
+
         MemoryStatistics {
             current_usage: self.current_usage,
             peak_usage: self.peak_usage,
@@ -664,34 +680,51 @@ impl PerformanceReport {
     pub fn display(&self) {
         println!("\n=== Performance Analysis Report ===");
         println!("Generated at: {:?}", self.timestamp);
-        
+
         println!("\n--- System Metrics ---");
         println!("Total Operations: {}", self.system_metrics.total_operations);
-        println!("Total Execution Time: {:.3}s", self.system_metrics.total_execution_time.as_secs_f64());
-        println!("Total Memory Allocated: {:.2} MB", self.system_metrics.total_memory_allocated as f64 / (1024.0 * 1024.0));
-        
+        println!(
+            "Total Execution Time: {:.3}s",
+            self.system_metrics.total_execution_time.as_secs_f64()
+        );
+        println!(
+            "Total Memory Allocated: {:.2} MB",
+            self.system_metrics.total_memory_allocated as f64 / (1024.0 * 1024.0)
+        );
+
         println!("\n--- Memory Statistics ---");
-        println!("Current Usage: {:.2} MB", self.memory_statistics.current_usage as f64 / (1024.0 * 1024.0));
-        println!("Peak Usage: {:.2} MB", self.memory_statistics.peak_usage as f64 / (1024.0 * 1024.0));
-        println!("Average Usage: {:.2} MB", self.memory_statistics.average_usage as f64 / (1024.0 * 1024.0));
-        
+        println!(
+            "Current Usage: {:.2} MB",
+            self.memory_statistics.current_usage as f64 / (1024.0 * 1024.0)
+        );
+        println!(
+            "Peak Usage: {:.2} MB",
+            self.memory_statistics.peak_usage as f64 / (1024.0 * 1024.0)
+        );
+        println!(
+            "Average Usage: {:.2} MB",
+            self.memory_statistics.average_usage as f64 / (1024.0 * 1024.0)
+        );
+
         println!("\n--- Top Operations by Time ---");
         let mut operations: Vec<_> = self.operation_metrics.iter().collect();
         operations.sort_by(|a, b| b.1.avg_execution_time.cmp(&a.1.avg_execution_time));
-        
+
         for (name, metrics) in operations.iter().take(5) {
-            println!("{}: {:.3}ms avg, {:.1}% SIMD, {:.1}% cache hits", 
+            println!(
+                "{}: {:.3}ms avg, {:.1}% SIMD, {:.1}% cache hits",
                 name,
                 metrics.avg_execution_time.as_secs_f64() * 1000.0,
                 metrics.avg_simd_utilization * 100.0,
                 metrics.avg_cache_hit_ratio * 100.0
             );
         }
-        
+
         if !self.recommendations.is_empty() {
             println!("\n--- Optimization Recommendations ---");
             for (i, rec) in self.recommendations.iter().take(3).enumerate() {
-                println!("{}. {} for '{}' (Priority: {:.1}, Est. improvement: {:.1}%)",
+                println!(
+                    "{}. {} for '{}' (Priority: {:.1}, Est. improvement: {:.1}%)",
                     i + 1,
                     format!("{:?}", rec.recommendation_type),
                     rec.operation,
@@ -700,11 +733,12 @@ impl PerformanceReport {
                 );
             }
         }
-        
+
         if !self.bottlenecks.is_empty() {
             println!("\n--- Performance Bottlenecks ---");
             for bottleneck in &self.bottlenecks {
-                println!("- {:?} in '{}': {} (Severity: {:.1}%)",
+                println!(
+                    "- {:?} in '{}': {} (Severity: {:.1}%)",
                     bottleneck.bottleneck_type,
                     bottleneck.operation,
                     bottleneck.description,
@@ -713,11 +747,14 @@ impl PerformanceReport {
             }
         }
     }
-    
+
     /// Export report to JSON format
     pub fn to_json(&self) -> serde_json::Result<String> {
         // This would require serde serialization in a real implementation
-        Ok(format!("{{\"timestamp\": \"{:?}\", \"summary\": \"Performance report generated\"}}", self.timestamp))
+        Ok(format!(
+            "{{\"timestamp\": \"{:?}\", \"summary\": \"Performance report generated\"}}",
+            self.timestamp
+        ))
     }
 }
 
@@ -734,7 +771,7 @@ fn get_current_memory_usage() -> usize {
 fn calculate_throughput(array_size: &[usize], execution_time: Duration) -> f64 {
     let total_elements: usize = array_size.iter().product();
     let time_seconds = execution_time.as_secs_f64();
-    
+
     if time_seconds > 0.0 {
         total_elements as f64 / time_seconds
     } else {
@@ -746,22 +783,22 @@ fn calculate_throughput(array_size: &[usize], execution_time: Duration) -> f64 {
 mod tests {
     use super::*;
     use ndarray::Array2;
-    
+
     #[test]
     fn test_profiler_creation() {
         let config = ProfilerConfig::default();
         let profiler = PerformanceProfiler::new(config);
-        
+
         // Test that profiler can be created without errors
         assert!(!(*profiler.monitoring_active.lock().unwrap()));
     }
-    
+
     #[test]
     fn test_operation_recording() {
         let profiler = PerformanceProfiler::new(ProfilerConfig::default());
         let input = Array2::<f64>::zeros((100, 100));
         let metadata = HashMap::new();
-        
+
         let result = profiler.record_operation(
             "test_operation",
             &input.view(),
@@ -769,19 +806,19 @@ mod tests {
             1024,
             metadata,
         );
-        
+
         assert!(result.is_ok());
-        
+
         let records = profiler.timing_records.read().unwrap();
         assert!(records.contains_key("test_operation"));
         assert_eq!(records["test_operation"].len(), 1);
     }
-    
+
     #[test]
     fn test_performance_report_generation() {
         let profiler = PerformanceProfiler::new(ProfilerConfig::default());
         let report = profiler.generate_performance_report();
-        
+
         assert!(report.operation_metrics.is_empty()); // No operations recorded yet
         assert_eq!(report.system_metrics.total_operations, 0);
     }

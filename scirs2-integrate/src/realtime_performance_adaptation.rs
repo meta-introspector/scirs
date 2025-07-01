@@ -18,7 +18,6 @@
 
 use crate::common::IntegrateFloat;
 use crate::error::{IntegrateError, IntegrateResult};
-use ndarray::{Array1, ArrayView1};
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
@@ -174,16 +173,16 @@ pub struct AlgorithmCharacteristics<F: IntegrateFloat> {
 #[derive(Debug, Clone)]
 pub struct AdaptationStrategy<F: IntegrateFloat> {
     /// Target performance metrics
-    target_metrics: TargetMetrics,
+    pub target_metrics: TargetMetrics,
     /// Adaptation triggers
-    triggers: AdaptationTriggers,
+    pub triggers: AdaptationTriggers,
     /// Optimization objectives
-    objectives: OptimizationObjectives<F>,
+    pub objectives: OptimizationObjectives<F>,
     /// Constraint specifications
-    constraints: PerformanceConstraints,
+    pub constraints: PerformanceConstraints,
 }
 
-impl<F: IntegrateFloat> RealTimeAdaptiveOptimizer<F> {
+impl<F: IntegrateFloat + Default> RealTimeAdaptiveOptimizer<F> {
     /// Create a new real-time adaptive optimizer
     pub fn new() -> IntegrateResult<Self> {
         let performance_monitor = Arc::new(Mutex::new(PerformanceMonitoringEngine::new()?));
@@ -400,7 +399,8 @@ impl<F: IntegrateFloat> RealTimeAdaptiveOptimizer<F> {
             let recovery_plan = anomaly_detector.generate_recovery_plan(&anomaly_analysis)?;
 
             // Execute automatic recovery if enabled
-            if anomaly_analysis.severity > AnomalySeverity::Medium {
+            let recovery_executed = anomaly_analysis.severity > AnomalySeverity::Medium;
+            if recovery_executed {
                 anomaly_detector.execute_automatic_recovery(&recovery_plan)?;
             }
 
@@ -408,7 +408,7 @@ impl<F: IntegrateFloat> RealTimeAdaptiveOptimizer<F> {
                 anomalies_detected: anomalies,
                 analysis: anomaly_analysis,
                 recovery_plan: Some(recovery_plan),
-                recovery_executed: anomaly_analysis.severity > AnomalySeverity::Medium,
+                recovery_executed,
             })
         } else {
             Ok(AnomalyAnalysisResult {
@@ -733,6 +733,12 @@ pub enum AnomalySeverity {
     Critical,
 }
 
+impl Default for AnomalySeverity {
+    fn default() -> Self {
+        Self::Low
+    }
+}
+
 // Supporting type definitions
 
 /// Metrics collection engine
@@ -983,11 +989,21 @@ pub struct RecoveryStrategy {
     pub timeout: Duration,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct RecoveryEvent {
     pub timestamp: Instant,
     pub event_type: String,
     pub success: bool,
+}
+
+impl Default for RecoveryEvent {
+    fn default() -> Self {
+        Self {
+            timestamp: Instant::now(),
+            event_type: String::new(),
+            success: false,
+        }
+    }
 }
 
 // Implement new() methods for all types
@@ -1147,7 +1163,7 @@ impl<F: IntegrateFloat> AdaptiveAlgorithmSelector<F> {
     }
 }
 
-impl<F: IntegrateFloat> PerformancePredictor<F> {
+impl<F: IntegrateFloat + Default> PerformancePredictor<F> {
     fn new() -> IntegrateResult<Self> {
         Ok(PerformancePredictor {
             model_registry: ModelRegistry::default(),
@@ -1163,7 +1179,12 @@ impl<F: IntegrateFloat> PerformancePredictor<F> {
         _method: &str,
         _performance: &PerformanceAnalysis,
     ) -> IntegrateResult<OptimalConfiguration<F>> {
-        Ok(OptimalConfiguration::default())
+        Ok(OptimalConfiguration {
+            algorithm: String::new(),
+            parameters: HashMap::new(),
+            expected_performance: 0.0,
+            confidence: 0.0,
+        })
     }
 }
 
@@ -1192,7 +1213,7 @@ impl<F: IntegrateFloat> MachineLearningOptimizer<F> {
     }
 }
 
-impl<F: IntegrateFloat> ConfigurationAdapter<F> {
+impl<F: IntegrateFloat + Default> ConfigurationAdapter<F> {
     fn new() -> IntegrateResult<Self> {
         Ok(ConfigurationAdapter {
             adaptation_rules: AdaptationRules::default(),
@@ -1357,12 +1378,23 @@ impl<F: IntegrateFloat> Default for FeatureEngineering<F> {
 }
 
 /// Model trainer for performance prediction
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct ModelTrainer<F: IntegrateFloat> {
     pub training_algorithm: String,
     pub hyperparameters: HashMap<String, f64>,
     pub cross_validation_folds: usize,
     pub _phantom: std::marker::PhantomData<F>,
+}
+
+impl<F: IntegrateFloat> Default for ModelTrainer<F> {
+    fn default() -> Self {
+        Self {
+            training_algorithm: String::from("gradient_descent"),
+            hyperparameters: HashMap::new(),
+            cross_validation_folds: 5,
+            _phantom: std::marker::PhantomData,
+        }
+    }
 }
 
 /// Prediction accuracy tracker
@@ -1375,7 +1407,7 @@ pub struct PredictionAccuracyTracker {
 }
 
 /// Reinforcement learning agent
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct ReinforcementLearningAgent<F: IntegrateFloat> {
     pub agent_type: String,
     pub learning_rate: f64,
@@ -1383,8 +1415,19 @@ pub struct ReinforcementLearningAgent<F: IntegrateFloat> {
     pub _phantom: std::marker::PhantomData<F>,
 }
 
+impl<F: IntegrateFloat> Default for ReinforcementLearningAgent<F> {
+    fn default() -> Self {
+        Self {
+            agent_type: String::from("q_learning"),
+            learning_rate: 0.01,
+            exploration_rate: 0.1,
+            _phantom: std::marker::PhantomData,
+        }
+    }
+}
+
 /// Bayesian optimization engine
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct BayesianOptimizer<F: IntegrateFloat> {
     pub acquisition_function: String,
     pub kernel_type: String,
@@ -1392,8 +1435,19 @@ pub struct BayesianOptimizer<F: IntegrateFloat> {
     pub _phantom: std::marker::PhantomData<F>,
 }
 
+impl<F: IntegrateFloat> Default for BayesianOptimizer<F> {
+    fn default() -> Self {
+        Self {
+            acquisition_function: String::from("expected_improvement"),
+            kernel_type: String::from("rbf"),
+            num_iterations: 100,
+            _phantom: std::marker::PhantomData,
+        }
+    }
+}
+
 /// Neural architecture search engine
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct NeuralArchitectureSearch<F: IntegrateFloat> {
     pub search_strategy: String,
     pub architecture_space: String,
@@ -1401,8 +1455,19 @@ pub struct NeuralArchitectureSearch<F: IntegrateFloat> {
     pub _phantom: std::marker::PhantomData<F>,
 }
 
+impl<F: IntegrateFloat> Default for NeuralArchitectureSearch<F> {
+    fn default() -> Self {
+        Self {
+            search_strategy: String::from("evolutionary"),
+            architecture_space: String::from("feedforward"),
+            evaluation_budget: 1000,
+            _phantom: std::marker::PhantomData,
+        }
+    }
+}
+
 /// Hyperparameter optimizer
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct HyperparameterOptimizer<F: IntegrateFloat> {
     pub optimization_algorithm: String,
     pub search_space: HashMap<String, (f64, f64)>,
@@ -1410,16 +1475,37 @@ pub struct HyperparameterOptimizer<F: IntegrateFloat> {
     pub _phantom: std::marker::PhantomData<F>,
 }
 
+impl<F: IntegrateFloat> Default for HyperparameterOptimizer<F> {
+    fn default() -> Self {
+        Self {
+            optimization_algorithm: String::from("random_search"),
+            search_space: HashMap::new(),
+            max_evaluations: 100,
+            _phantom: std::marker::PhantomData,
+        }
+    }
+}
+
 /// Adaptation rules for configuration
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct AdaptationRules<F: IntegrateFloat> {
     pub rules: Vec<String>,
     pub rule_weights: HashMap<String, F>,
     pub activation_thresholds: HashMap<String, f64>,
 }
 
+impl<F: IntegrateFloat + Default> Default for AdaptationRules<F> {
+    fn default() -> Self {
+        Self {
+            rules: Vec::new(),
+            rule_weights: HashMap::new(),
+            activation_thresholds: HashMap::new(),
+        }
+    }
+}
+
 /// Configuration space explorer
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct ConfigurationSpaceExplorer<F: IntegrateFloat> {
     pub exploration_strategy: String,
     pub space_dimensions: usize,
@@ -1427,21 +1513,53 @@ pub struct ConfigurationSpaceExplorer<F: IntegrateFloat> {
     pub _phantom: std::marker::PhantomData<F>,
 }
 
+impl<F: IntegrateFloat> Default for ConfigurationSpaceExplorer<F> {
+    fn default() -> Self {
+        Self {
+            exploration_strategy: String::from("grid_search"),
+            space_dimensions: 10,
+            explored_configurations: Vec::new(),
+            _phantom: std::marker::PhantomData,
+        }
+    }
+}
+
 /// Constraint satisfaction engine
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct ConstraintSatisfactionEngine<F: IntegrateFloat> {
     pub constraint_solver: String,
     pub constraints: Vec<String>,
     pub satisfaction_tolerance: F,
 }
 
+impl<F: IntegrateFloat + Default> Default for ConstraintSatisfactionEngine<F> {
+    fn default() -> Self {
+        Self {
+            constraint_solver: String::from("backtracking"),
+            constraints: Vec::new(),
+            satisfaction_tolerance: F::default(),
+        }
+    }
+}
+
 /// Multi-objective optimizer
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct MultiObjectiveOptimizer<F: IntegrateFloat> {
     pub algorithm: String,
     pub pareto_front_size: usize,
     pub objectives: Vec<String>,
     pub _phantom: std::marker::PhantomData<F>,
+}
+
+impl<F: IntegrateFloat> Default for MultiObjectiveOptimizer<F> {
+    fn default() -> Self {
+        Self {
+            algorithm: String::from("nsga2"),
+            pareto_front_size: 100,
+            objectives: Vec::new(),
+            _phantom: std::marker::PhantomData,
+        }
+    }
 }
 
 /// Problem characteristics
@@ -1500,11 +1618,21 @@ pub struct PredictiveOptimizationPlan<F: IntegrateFloat> {
 }
 
 /// Parameter space definition
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct ParameterSpace<F: IntegrateFloat> {
     pub continuous_params: HashMap<String, (F, F)>,
     pub discrete_params: HashMap<String, Vec<String>>,
     pub categorical_params: HashMap<String, Vec<String>>,
+}
+
+impl<F: IntegrateFloat> Default for ParameterSpace<F> {
+    fn default() -> Self {
+        Self {
+            continuous_params: HashMap::new(),
+            discrete_params: HashMap::new(),
+            categorical_params: HashMap::new(),
+        }
+    }
 }
 
 /// Objective function for optimization
@@ -1528,12 +1656,23 @@ impl<F: IntegrateFloat> Default for ObjectiveFunction<F> {
 }
 
 /// Optimal parameters result
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct OptimalParameters<F: IntegrateFloat> {
     pub parameters: HashMap<String, F>,
     pub objective_value: f64,
     pub constraint_violations: Vec<String>,
     pub optimization_time: Duration,
+}
+
+impl<F: IntegrateFloat> Default for OptimalParameters<F> {
+    fn default() -> Self {
+        Self {
+            parameters: HashMap::new(),
+            objective_value: 0.0,
+            constraint_violations: Vec::new(),
+            optimization_time: Duration::from_secs(0),
+        }
+    }
 }
 
 /// Anomaly analysis result
@@ -1555,7 +1694,7 @@ pub struct RecoveryPlan {
 }
 
 /// Optimal configuration result
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct OptimalConfiguration<F: IntegrateFloat> {
     pub algorithm: String,
     pub parameters: HashMap<String, F>,
@@ -1563,8 +1702,19 @@ pub struct OptimalConfiguration<F: IntegrateFloat> {
     pub confidence: f64,
 }
 
+impl<F: IntegrateFloat> Default for OptimalConfiguration<F> {
+    fn default() -> Self {
+        Self {
+            algorithm: String::new(),
+            parameters: HashMap::new(),
+            expected_performance: 0.0,
+            confidence: 0.0,
+        }
+    }
+}
+
 /// Algorithm recommendation
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct AlgorithmRecommendation<F: IntegrateFloat> {
     pub algorithm: String,
     pub reason: String,
@@ -1572,13 +1722,35 @@ pub struct AlgorithmRecommendation<F: IntegrateFloat> {
     pub parameters: HashMap<String, F>,
 }
 
+impl<F: IntegrateFloat> Default for AlgorithmRecommendation<F> {
+    fn default() -> Self {
+        Self {
+            algorithm: String::new(),
+            reason: String::new(),
+            expected_improvement: 0.0,
+            parameters: HashMap::new(),
+        }
+    }
+}
+
 /// Parameter adjustment recommendation
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct ParameterAdjustment<F: IntegrateFloat> {
     pub parameter_name: String,
     pub current_value: F,
     pub recommended_value: F,
     pub adjustment_reason: String,
+}
+
+impl<F: IntegrateFloat + Default> Default for ParameterAdjustment<F> {
+    fn default() -> Self {
+        Self {
+            parameter_name: String::new(),
+            current_value: F::default(),
+            recommended_value: F::default(),
+            adjustment_reason: String::new(),
+        }
+    }
 }
 
 /// Resource reallocation recommendation
@@ -1711,7 +1883,7 @@ impl PerformanceAnomalyDetector {
     }
 }
 
-impl<F: IntegrateFloat> PerformancePredictor<F> {
+impl<F: IntegrateFloat + Default> PerformancePredictor<F> {
     fn predict_performance(
         &self,
         _characteristics: &ProblemCharacteristics,

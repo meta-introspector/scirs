@@ -3,11 +3,11 @@
 //! This module provides functions for applying uniform filters (also known as box filters)
 //! to n-dimensional arrays.
 
-use ndarray::{Array, Array1, Array2, Dimension, ArrayView1, ArrayView2, s};
+use ndarray::{s, Array, Array1, Array2, ArrayView1, ArrayView2, Dimension};
 use num_traits::{Float, FromPrimitive};
-use scirs2_core::validation::{check_1d, check_2d, check_positive};
-use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::parallel_ops;
+use scirs2_core::simd_ops::SimdUnifiedOps;
+use scirs2_core::validation::{check_1d, check_2d, check_positive};
 use std::fmt::Debug;
 
 use super::{pad_array, BorderMode};
@@ -164,12 +164,12 @@ where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign,
 {
     // Check if we can use SIMD optimizations for f32 type
-    if std::any::TypeId::of::<T>() == std::any::TypeId::of::<f32>() && input.len() > 64 && size >= 3 {
-        return uniform_filter_1d_simd_f32(input, size, mode, origin)
-            .map(|result| {
-                // Convert the f32 result back to T
-                result.mapv(|x| T::from_f32(x).unwrap_or_else(T::zero))
-            });
+    if std::any::TypeId::of::<T>() == std::any::TypeId::of::<f32>() && input.len() > 64 && size >= 3
+    {
+        return uniform_filter_1d_simd_f32(input, size, mode, origin).map(|result| {
+            // Convert the f32 result back to T
+            result.mapv(|x| T::from_f32(x).unwrap_or_else(T::zero))
+        });
     }
 
     // Calculate padding required
@@ -214,10 +214,7 @@ where
     T: Float + FromPrimitive + Debug,
 {
     // Convert input to f32 for SIMD processing
-    let input_f32: Vec<f32> = input
-        .iter()
-        .map(|&x| x.to_f32().unwrap_or(0.0))
-        .collect();
+    let input_f32: Vec<f32> = input.iter().map(|&x| x.to_f32().unwrap_or(0.0)).collect();
     let input_f32_array = Array1::from_vec(input_f32);
 
     // Calculate padding required
@@ -243,7 +240,7 @@ where
     for i in 0..input.len() {
         let window_start = i;
         let window_end = i + size;
-        
+
         if window_end <= padded_data.len() {
             // Use SIMD sum operation for the window
             let window_slice = &padded_data[window_start..window_end];
@@ -276,10 +273,7 @@ where
     T: Float + FromPrimitive + Debug,
 {
     // Convert to f32 and use standard implementation
-    let input_f32: Vec<f32> = input
-        .iter()
-        .map(|&x| x.to_f32().unwrap_or(0.0))
-        .collect();
+    let input_f32: Vec<f32> = input.iter().map(|&x| x.to_f32().unwrap_or(0.0)).collect();
     let input_f32_array = Array1::from_vec(input_f32);
 
     // Calculate padding required
@@ -326,14 +320,15 @@ where
     let cols = input.shape()[1];
 
     // Check if we can use SIMD optimizations for f32 type
-    if std::any::TypeId::of::<T>() == std::any::TypeId::of::<f32>() 
-        && rows * cols > 1024 
-        && size[0] >= 3 && size[1] >= 3 {
-        return uniform_filter_2d_simd_f32(input, size, mode, origin)
-            .map(|result| {
-                // Convert the f32 result back to T
-                result.mapv(|x| T::from_f32(x).unwrap_or_else(T::zero))
-            });
+    if std::any::TypeId::of::<T>() == std::any::TypeId::of::<f32>()
+        && rows * cols > 1024
+        && size[0] >= 3
+        && size[1] >= 3
+    {
+        return uniform_filter_2d_simd_f32(input, size, mode, origin).map(|result| {
+            // Convert the f32 result back to T
+            result.mapv(|x| T::from_f32(x).unwrap_or_else(T::zero))
+        });
     }
 
     // Calculate padding required
@@ -416,11 +411,11 @@ where
             for ki in 0..size[0] {
                 let row_start = j;
                 let row_end = j + size[1];
-                
+
                 // Get the row slice for SIMD processing
                 let padded_row = padded_input.row(i + ki);
                 let window_slice = &padded_row.as_slice().unwrap()[row_start..row_end];
-                
+
                 // Use SIMD sum for the row segment
                 sum += f32::simd_sum(window_slice);
             }
@@ -1078,7 +1073,15 @@ pub fn uniform_filter_chunked<T>(
     origin: Option<&[isize]>,
 ) -> NdimageResult<Array2<T>>
 where
-    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + Send + Sync + Clone + 'static,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + Send
+        + Sync
+        + Clone
+        + 'static,
 {
     let border_mode = mode.unwrap_or(BorderMode::Reflect);
     let (rows, cols) = input.dim();
@@ -1177,7 +1180,15 @@ pub fn uniform_filter_chunked<T>(
     origin: Option<&[isize]>,
 ) -> NdimageResult<Array2<T>>
 where
-    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + Send + Sync + Clone + 'static,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + Send
+        + Sync
+        + Clone
+        + 'static,
 {
     // For non-parallel version, just call the regular uniform filter
     // This ensures the API is consistent even when parallel feature is disabled

@@ -46,7 +46,7 @@
 //! ### Utilities
 //! - `block_diag()` - Block diagonal matrix construction
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis, ScalarOperand};
 use num_traits::{Float, NumAssign, Zero};
 use std::iter::Sum;
 
@@ -70,7 +70,7 @@ pub type LstsqResult<F> = (Array2<F>, Option<Array1<F>>, usize, Array1<F>);
 /// * Determinant of the matrix
 pub fn det<F>(a: &ArrayView2<F>, _overwrite_a: bool, check_finite: bool) -> LinalgResult<F>
 where
-    F: Float + NumAssign + Sum,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     if check_finite {
         for &elem in a.iter() {
@@ -96,7 +96,7 @@ where
 /// * Inverse of the matrix
 pub fn inv<F>(a: &ArrayView2<F>, _overwrite_a: bool, check_finite: bool) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     if check_finite {
         for &elem in a.iter() {
@@ -137,7 +137,7 @@ pub fn eig<F>(
     homogeneous_eigvals: bool,
 ) -> LinalgResult<(Array2<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     if check_finite {
         for &elem in a.iter() {
@@ -216,7 +216,7 @@ pub fn eigh<F>(
     _type_param: u32,
 ) -> LinalgResult<(Array1<F>, Option<Array2<F>>)>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     if check_finite {
         for &elem in a.iter() {
@@ -278,7 +278,7 @@ pub fn lu<F>(
     p_indices: bool,
 ) -> LinalgResult<(Array2<F>, Array2<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Sum,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     if check_finite {
         for &elem in a.iter() {
@@ -321,7 +321,7 @@ pub fn qr<F>(
     check_finite: bool,
 ) -> LinalgResult<(Option<Array2<F>>, Array2<F>)>
 where
-    F: Float + NumAssign + Sum,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     if check_finite {
         for &elem in a.iter() {
@@ -380,7 +380,7 @@ pub fn svd<F>(
     _lapack_driver: &str,
 ) -> LinalgResult<SvdResult<F>>
 where
-    F: Float + NumAssign + Sum + ndarray::ScalarOperand,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     if check_finite {
         for &elem in a.iter() {
@@ -420,7 +420,7 @@ pub fn cholesky<F>(
     check_finite: bool,
 ) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     if check_finite {
         for &elem in a.iter() {
@@ -469,7 +469,7 @@ pub fn compat_solve<F>(
     transposed: bool,
 ) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     if check_finite {
         for &elem in a.iter() {
@@ -523,7 +523,7 @@ pub use crate::matrix_functions::logm;
 /// * Matrix square root of a
 pub fn sqrtm<F>(a: &ArrayView2<F>, check_finite: Option<bool>) -> LinalgResult<Array2<F>>
 where
-    F: Float + Sum + NumAssign + ndarray::ScalarOperand,
+    F: Float + Sum + NumAssign + Send + Sync + ScalarOperand + 'static,
 {
     let check = check_finite.unwrap_or(true);
     if check {
@@ -559,7 +559,7 @@ pub fn norm<F>(
     check_finite: bool,
 ) -> LinalgResult<F>
 where
-    F: Float + Sum + NumAssign + ndarray::ScalarOperand,
+    F: Float + Sum + NumAssign + Send + Sync + ScalarOperand + 'static,
 {
     if check_finite {
         for &elem in a.iter() {
@@ -599,7 +599,7 @@ where
 /// * Norm of the vector
 pub fn vector_norm<F>(a: &ArrayView1<F>, ord: Option<f64>, check_finite: bool) -> LinalgResult<F>
 where
-    F: Float + Sum + NumAssign + Send + Sync,
+    F: Float + Sum + NumAssign + Send + Sync + ScalarOperand,
 {
     if check_finite {
         for &elem in a.iter() {
@@ -657,7 +657,7 @@ pub fn pinv<F>(
     check_finite: bool,
 ) -> LinalgResult<Array2<F>>
 where
-    F: Float + Sum + NumAssign + ndarray::ScalarOperand,
+    F: Float + Sum + NumAssign + Send + Sync + ScalarOperand + 'static,
 {
     if check_finite {
         for &elem in a.iter() {
@@ -702,7 +702,7 @@ where
 /// * Condition number of the matrix
 pub fn cond<F>(a: &ArrayView2<F>, p: Option<&str>) -> LinalgResult<F>
 where
-    F: Float + Sum + NumAssign + ndarray::ScalarOperand,
+    F: Float + Sum + NumAssign + Send + Sync + ScalarOperand + 'static,
 {
     match p {
         None | Some("2") => norm_mod::cond(a, p, None),
@@ -748,7 +748,7 @@ pub fn matrix_rank<F>(
     check_finite: bool,
 ) -> LinalgResult<usize>
 where
-    F: Float + Sum + NumAssign + ndarray::ScalarOperand,
+    F: Float + Sum + NumAssign + Send + Sync + ScalarOperand + 'static,
 {
     if check_finite {
         for &elem in a.iter() {
@@ -787,7 +787,7 @@ pub fn lstsq<F>(
     _lapack_driver: Option<&str>,
 ) -> LinalgResult<LstsqResult<F>>
 where
-    F: Float + Sum + NumAssign + ndarray::ScalarOperand,
+    F: Float + Sum + NumAssign + Send + Sync + ScalarOperand + 'static,
 {
     if check_finite {
         for &elem in a.iter() {
@@ -871,7 +871,7 @@ pub fn solve_triangular<F>(
     check_finite: bool,
 ) -> LinalgResult<Array2<F>>
 where
-    F: Float + Sum + NumAssign,
+    F: Float + Sum + NumAssign + Send + Sync + ScalarOperand + 'static,
 {
     if check_finite {
         for &elem in a.iter() {
@@ -928,7 +928,7 @@ pub fn rq<F>(
     check_finite: bool,
 ) -> LinalgResult<(Array2<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Sum,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     if check_finite {
         for &elem in a.iter() {
@@ -974,7 +974,7 @@ where
 /// * Tuple of (U, P) for right polar or (P, U) for left polar
 pub fn polar<F>(a: &ArrayView2<F>, side: &str) -> LinalgResult<(Array2<F>, Array2<F>)>
 where
-    F: Float + Sum + NumAssign + ndarray::ScalarOperand,
+    F: Float + Sum + NumAssign + Send + Sync + ScalarOperand + 'static,
 {
     match side {
         "right" => {
@@ -1009,7 +1009,7 @@ where
 /// * Matrix function result
 pub fn funm<F>(a: &ArrayView2<F>, func: &str, _disp: bool) -> LinalgResult<Array2<F>>
 where
-    F: Float + Sum + NumAssign + ndarray::ScalarOperand,
+    F: Float + Sum + NumAssign + Send + Sync + ScalarOperand + 'static,
 {
     match func {
         "exp" => matrix_functions::expm(a, None),
@@ -1028,7 +1028,7 @@ where
 /// Matrix cosine (SciPy-compatible interface)
 pub fn cosm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
-    F: Float + Sum + NumAssign + ndarray::ScalarOperand,
+    F: Float + Sum + NumAssign + Send + Sync + ScalarOperand + 'static,
 {
     matrix_functions::cosm(a)
 }
@@ -1036,7 +1036,7 @@ where
 /// Matrix sine (SciPy-compatible interface)
 pub fn sinm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
-    F: Float + Sum + NumAssign + ndarray::ScalarOperand,
+    F: Float + Sum + NumAssign + Send + Sync + ScalarOperand + 'static,
 {
     matrix_functions::sinm(a)
 }
@@ -1044,7 +1044,7 @@ where
 /// Matrix tangent (SciPy-compatible interface)
 pub fn tanm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
-    F: Float + Sum + NumAssign + ndarray::ScalarOperand,
+    F: Float + Sum + NumAssign + Send + Sync + ScalarOperand + 'static,
 {
     matrix_functions::tanm(a)
 }
@@ -1071,7 +1071,7 @@ pub fn schur<F>(
     check_finite: bool,
 ) -> LinalgResult<(Array2<F>, Array2<F>)>
 where
-    F: Float + Sum + NumAssign + 'static,
+    F: Float + Sum + NumAssign + Send + Sync + ScalarOperand + 'static,
 {
     if check_finite {
         for &elem in a.iter() {
@@ -1155,7 +1155,7 @@ pub fn solve_banded<F>(
     check_finite: bool,
 ) -> LinalgResult<Array2<F>>
 where
-    F: Float + Sum + NumAssign,
+    F: Float + Sum + NumAssign + Send + Sync + ScalarOperand + 'static,
 {
     if check_finite {
         // Check would go here

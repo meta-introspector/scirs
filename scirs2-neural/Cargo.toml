@@ -51,6 +51,7 @@ serde_cbor = { workspace = true }
 rmp-serde = { workspace = true }
 chrono = { workspace = true }
 tempfile = { workspace = true }
+regex = { workspace = true }
 
 # Future dependency for PandRS and NumRS with appropriate abstractions
 # pandrs_wrapper = { path = "../wrappers/pandrs_wrapper", optional = true }

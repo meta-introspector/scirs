@@ -404,8 +404,8 @@ mod tests {
 
         // Test sin/cos derivatives
         let sin_x = x.sin();
-        assert!((sin_x.val - 0.0).abs() < 1e-10);
-        assert!((sin_x.der - 1.0).abs() < 1e-10); // cos(0) = 1
+        assert!((sin_x.val - 0.0_f64).abs() < 1e-10_f64);
+        assert!((sin_x.der - 1.0_f64).abs() < 1e-10_f64); // cos(0) = 1
 
         let cos_x = x.cos();
         assert!((cos_x.val - 1.0).abs() < 1e-10);

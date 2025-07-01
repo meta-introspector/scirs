@@ -203,6 +203,7 @@ impl NumaTopology {
         }
     }
 
+    #[allow(clippy::needless_range_loop)]
     fn create_default_distance_matrix(num_nodes: usize) -> Vec<Vec<u32>> {
         let mut matrix = vec![vec![0; num_nodes]; num_nodes];
         for i in 0..num_nodes {
@@ -222,7 +223,7 @@ impl NumaTopology {
         if node < self.cores_per_node.len() {
             self.cores_per_node[node]
         } else {
-            self.cores_per_node.get(0).copied().unwrap_or(1)
+            self.cores_per_node.first().copied().unwrap_or(1)
         }
     }
 
@@ -1058,16 +1059,14 @@ impl UltraParallelDistanceMatrix {
     }
 
     /// Compute distance matrix using ultra-parallel processing
-    pub fn compute_parallel(&self, points: &ArrayView2<f64>) -> SpatialResult<Array2<f64>> {
+    pub fn compute_parallel(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
         let n_points = points.nrows();
         let n_pairs = n_points * (n_points - 1) / 2;
         let mut result_matrix = Array2::zeros((n_points, n_points));
 
         // Create channel for collecting results
-        let (result_sender, result_receiver): (
-            Sender<(usize, usize, f64)>,
-            Receiver<(usize, usize, f64)>,
-        ) = channel();
+        type DistanceResult = (usize, usize, f64);
+        let (result_sender, result_receiver): (Sender<DistanceResult>, Receiver<DistanceResult>) = channel();
 
         // Create distance matrix context
         let _distance_context = DistanceMatrixContext {
@@ -1164,7 +1163,7 @@ impl UltraParallelKMeans {
     /// Perform K-means clustering using ultra-parallel processing
     pub fn fit_parallel(
         &self,
-        points: &ArrayView2<f64>,
+        points: &ArrayView2<'_, f64>,
     ) -> SpatialResult<(Array2<f64>, Array1<usize>)> {
         let n_points = points.nrows();
         let n_dims = points.ncols();

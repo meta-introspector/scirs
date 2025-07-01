@@ -240,7 +240,7 @@ impl RBFInterpolator {
     /// * If fewer than d+1 points are provided (where d is the dimensionality)
     /// * If the system of equations is singular
     pub fn new(
-        points: &ArrayView2<f64>,
+        points: &ArrayView2<'_, f64>,
         values: &ArrayView1<f64>,
         kernel: RBFKernel,
         epsilon: Option<f64>,
@@ -299,7 +299,7 @@ impl RBFInterpolator {
     /// # Returns
     ///
     /// A reasonable default value for epsilon
-    fn default_epsilon(kernel: RBFKernel, points: &ArrayView2<f64>) -> f64 {
+    fn default_epsilon(kernel: RBFKernel, points: &ArrayView2<'_, f64>) -> f64 {
         match kernel {
             RBFKernel::Gaussian => {
                 // For Gaussian, a typical choice is 1 / (2 * average distance^2)
@@ -333,7 +333,7 @@ impl RBFInterpolator {
     /// # Returns
     ///
     /// The average distance between points
-    fn average_distance(points: &ArrayView2<f64>) -> f64 {
+    fn average_distance(points: &ArrayView2<'_, f64>) -> f64 {
         let n_points = points.nrows();
 
         if n_points <= 1 {
@@ -403,7 +403,7 @@ impl RBFInterpolator {
     ///
     /// * If the system of equations is singular
     fn solve_rbf_system(
-        points: &ArrayView2<f64>,
+        points: &ArrayView2<'_, f64>,
         values: &ArrayView1<f64>,
         kernel: RBFKernel,
         epsilon: f64,
@@ -559,7 +559,7 @@ impl RBFInterpolator {
     /// # Errors
     ///
     /// * If the points dimensions don't match the interpolator
-    pub fn interpolate_many(&self, points: &ArrayView2<f64>) -> SpatialResult<Array1<f64>> {
+    pub fn interpolate_many(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<Array1<f64>> {
         // Check dimensions
         if points.ncols() != self.dim {
             return Err(SpatialError::DimensionError(format!(

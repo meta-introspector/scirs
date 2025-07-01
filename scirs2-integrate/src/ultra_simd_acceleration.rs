@@ -14,12 +14,10 @@
 
 use crate::common::IntegrateFloat;
 use crate::error::{IntegrateError, IntegrateResult};
-use ndarray::{s, Array1, Array2, ArrayView1, ArrayViewMut1, Zip};
+use ndarray::{s, Array1, Array2, ArrayView1, Zip};
 use scirs2_core::simd_ops::SimdUnifiedOps;
-#[cfg(target_arch = "x86_64")]
-use std::arch::x86_64::*;
 use std::collections::HashMap;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 /// Ultra-fast SIMD acceleration engine
 pub struct UltraSimdAccelerator<F: IntegrateFloat> {
@@ -306,7 +304,7 @@ impl<F: IntegrateFloat + SimdUnifiedOps> UltraSimdAccelerator<F> {
 
         // Use multiple accumulators to reduce dependency chains
         if self.simd_capabilities.avx512_support.foundation {
-            self.avx512_dot_product_multi_accumulator(a, b)
+            self.simd_dot_product_multi_accumulator(a, b)
         } else if F::simd_available() {
             self.simd_dot_product_multi_accumulator(a, b)
         } else {
@@ -510,7 +508,7 @@ impl<F: IntegrateFloat + SimdUnifiedOps> UltraSimdAccelerator<F> {
                             // Use SIMD for inner loop
                             let matrix_slice = matrix.slice(s![i, j..j_end_simd]);
                             let vector_slice = vector.slice(s![j..j_end_simd]);
-                            sum += F::simd_dot_product(&matrix_slice, &vector_slice);
+                            sum += F::simd_dot(&matrix_slice, &vector_slice);
                         } else {
                             // Scalar fallback
                             for k in j..j_end_simd {
@@ -537,7 +535,7 @@ impl<F: IntegrateFloat + SimdUnifiedOps> UltraSimdAccelerator<F> {
 
         if n < simd_width * num_accumulators {
             // Too small for multi-accumulator, use simple dot product
-            return Ok(F::simd_dot_product(a, b));
+            return Ok(F::simd_dot(a, b));
         }
 
         let mut accumulators = vec![F::zero(); num_accumulators];
@@ -552,7 +550,7 @@ impl<F: IntegrateFloat + SimdUnifiedOps> UltraSimdAccelerator<F> {
                 if end > start && end - start >= 4 {
                     let a_slice = a.slice(s![start..end]);
                     let b_slice = b.slice(s![start..end]);
-                    accumulators[acc_idx] += F::simd_dot_product(&a_slice, &b_slice);
+                    accumulators[acc_idx] += F::simd_dot(&a_slice, &b_slice);
                 }
             }
         }

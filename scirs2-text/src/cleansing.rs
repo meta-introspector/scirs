@@ -78,7 +78,7 @@ lazy_static! {
 
     // Percentage pattern
     static ref PERCENTAGE_PATTERN: Regex = Regex::new(
-        r"(?i)\b[-+]?(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d+)?%"
+        r"(?i)[-+]?(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d+)?%"
     ).unwrap();
 
     // Ordinal pattern
@@ -125,7 +125,7 @@ lazy_static! {
 
     // Enhanced currency pattern with more currencies and formats
     static ref ENHANCED_CURRENCY_PATTERN: Regex = Regex::new(
-        r"(?i)(?:[$€£¥₹₽₩¢₪₨₦₴₵₡₲₱₫₭₦₨])\s*(?:[\d,]+\.?\d*)|(?:[\d,]+\.?\d*)\s*(?:USD|EUR|GBP|JPY|INR|RUB|KRW|CNY|CAD|AUD|CHF|SGD|dollars?|euros?|pounds?|yen|rupees?|yuan|won|rubles?)"
+        r"(?i)(?:[$€£¥₹₽₩¢₪₨₦₴₵₡₲₱₫₭₦₨]\s*\d+(?:,\d{3})*(?:\.\d{1,2})?|\d+(?:,\d{3})*(?:\.\d{1,2})?\s*(?:USD|EUR|GBP|JPY|INR|RUB|KRW|CNY|CAD|AUD|CHF|SGD|dollars?|euros?|pounds?|yen|rupees?|yuan|won|rubles?))\b"
     ).unwrap();
 
     // Version numbers

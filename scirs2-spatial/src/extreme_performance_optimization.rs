@@ -61,18 +61,15 @@
 //! ```
 
 use crate::error::{SpatialError, SpatialResult};
-use ndarray::{Array1, Array2, Array3, Array4, ArrayView1, ArrayView2, Axis, s};
-use std::collections::{HashMap, BTreeMap, VecDeque};
-use std::f64::consts::{PI, E, SQRT_2};
-use std::time::{Duration, Instant};
-use std::sync::{Arc, Mutex, RwLock};
-use std::sync::atomic::{AtomicUsize, AtomicBool, Ordering};
-use std::ptr::{NonNull, null_mut};
-use std::alloc::{Layout, alloc, dealloc};
-use std::mem::{size_of, align_of, transmute};
-use tokio::time::{sleep, timeout};
+use ndarray::{Array1, Array2, ArrayView2};
+use std::collections::{HashMap, VecDeque};
+use std::time::Instant;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::ptr::NonNull;
+use std::alloc::{Layout, alloc};
 
 /// Extreme performance optimization coordinator
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct ExtremeOptimizer {
     /// Extreme SIMD vectorization enabled
@@ -167,6 +164,7 @@ pub struct CacheHierarchyInfo {
 }
 
 /// Just-in-time compiler for spatial algorithms
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct JitCompiler {
     /// Generated machine code cache
@@ -180,7 +178,7 @@ pub struct JitCompiler {
 }
 
 /// Compiled machine code representation
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CompiledCode {
     /// Machine code bytes
     pub code: Vec<u8>,
@@ -193,6 +191,7 @@ pub struct CompiledCode {
 }
 
 /// Extreme memory allocator for spatial operations
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct ExtremeMemoryAllocator {
     /// NUMA-aware memory pools
@@ -236,6 +235,7 @@ pub struct MemoryBlock {
 }
 
 /// Ultra-fast distance matrix with extreme optimizations
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct UltrafastDistanceMatrix {
     /// Optimizer configuration
@@ -277,6 +277,7 @@ pub struct VectorKernel {
 }
 
 /// Self-optimizing spatial algorithm
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct SelfOptimizingAlgorithm {
     /// Algorithm type
@@ -360,14 +361,14 @@ pub struct OptimizationRecord {
 }
 
 /// Implementation supporting structures
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PerformanceProfile {
     pub cycles_per_operation: f64,
     pub memory_accesses_per_operation: f64,
     pub cache_misses_per_operation: f64,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MemoryLayout {
     pub alignment: usize,
     pub stride: usize,
@@ -533,6 +534,12 @@ pub struct PerformancePrediction {
     pub confidence: f64,
 }
 
+impl Default for ExtremeOptimizer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ExtremeOptimizer {
     /// Create a new extreme performance optimizer
     pub fn new() -> Self {
@@ -663,6 +670,12 @@ impl ExtremeOptimizer {
     }
 }
 
+impl Default for HardwarePerformanceCounters {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl HardwarePerformanceCounters {
     /// Create new performance counters
     pub fn new() -> Self {
@@ -717,6 +730,12 @@ impl CacheHierarchyInfo {
             memory_latency: 300,
             prefetch_distance: 4,
         }
+    }
+}
+
+impl Default for JitCompiler {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -782,6 +801,12 @@ impl JitCompiler {
         
         self.code_cache.insert(cache_key, compiled_code.clone());
         Ok(compiled_code)
+    }
+}
+
+impl Default for ExtremeMemoryAllocator {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -885,11 +910,11 @@ impl UltrafastDistanceMatrix {
     }
     
     /// Compute distance matrix with extreme performance optimizations
-    pub async fn compute_extreme_performance(&self, points: &ArrayView2<f64>) -> SpatialResult<Array2<f64>> {
+    pub async fn compute_extreme_performance(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
         let (n_points, n_dims) = points.dim();
         
         // Initialize performance counters
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
         let start_cycles = self.optimizer.performance_counters.cpu_cycles.load(Ordering::Relaxed);
         
         // Allocate result matrix with optimal memory layout
@@ -939,7 +964,7 @@ impl UltrafastDistanceMatrix {
     }
     
     /// Apply extreme vectorization
-    async fn compute_vectorized_distances(&self, points: &ArrayView2<f64>, result: &mut Array2<f64>) -> SpatialResult<()> {
+    async fn compute_vectorized_distances(&self, points: &ArrayView2<'_, f64>, result: &mut Array2<f64>) -> SpatialResult<()> {
         // Simulate extreme SIMD vectorization
         let (n_points, _) = points.dim();
         
@@ -963,7 +988,7 @@ impl UltrafastDistanceMatrix {
     }
     
     /// Apply branch-free optimization
-    async fn apply_branch_free_optimization(&self, points: &ArrayView2<f64>, result: &mut Array2<f64>) -> SpatialResult<()> {
+    async fn apply_branch_free_optimization(&self, points: &ArrayView2<'_, f64>, result: &mut Array2<f64>) -> SpatialResult<()> {
         // Simulate branch-free implementations
         let _ = (points, result); // Placeholder
         Ok(())
@@ -1018,7 +1043,7 @@ impl SelfOptimizingAlgorithm {
     }
     
     /// Auto-optimize and execute algorithm
-    pub async fn auto_optimize_and_execute(&mut self, data: &ArrayView2<f64>) -> SpatialResult<Array1<usize>> {
+    pub async fn auto_optimize_and_execute(&mut self, data: &ArrayView2<'_, f64>) -> SpatialResult<Array1<usize>> {
         let initial_metrics = self.measure_baseline_performance(data).await?;
         
         // Apply optimizations based on hardware feedback
@@ -1047,13 +1072,13 @@ impl SelfOptimizingAlgorithm {
     }
     
     /// Measure baseline performance
-    async fn measure_baseline_performance(&self, data: &ArrayView2<f64>) -> SpatialResult<ExtremePerformanceMetrics> {
+    async fn measure_baseline_performance(&self, data: &ArrayView2<'_, f64>) -> SpatialResult<ExtremePerformanceMetrics> {
         let start_time = Instant::now();
         
         // Simulate baseline measurement
         let _ = data;
         
-        let elapsed = start_time.elapsed();
+        let _elapsed = start_time.elapsed();
         Ok(ExtremePerformanceMetrics {
             ops_per_second: 1e6,
             memory_bandwidth_utilization: 60.0,
@@ -1102,19 +1127,19 @@ impl SelfOptimizingAlgorithm {
     }
     
     /// Generate optimized code
-    async fn generate_optimized_code(&mut self, data: &ArrayView2<f64>) -> SpatialResult<()> {
+    async fn generate_optimized_code(&mut self, data: &ArrayView2<'_, f64>) -> SpatialResult<()> {
         let _ = data; // Placeholder
         Ok(())
     }
     
     /// Optimize memory patterns
-    async fn optimize_memory_patterns(&mut self, data: &ArrayView2<f64>) -> SpatialResult<()> {
+    async fn optimize_memory_patterns(&mut self, data: &ArrayView2<'_, f64>) -> SpatialResult<()> {
         let _ = data; // Placeholder
         Ok(())
     }
     
     /// Execute optimized algorithm
-    async fn execute_optimized_algorithm(&self, data: &ArrayView2<f64>) -> SpatialResult<Array1<usize>> {
+    async fn execute_optimized_algorithm(&self, data: &ArrayView2<'_, f64>) -> SpatialResult<Array1<usize>> {
         let (n_points, _) = data.dim();
         
         // Simulate clustering with extreme optimizations
@@ -1127,7 +1152,7 @@ impl SelfOptimizingAlgorithm {
     }
     
     /// Measure final performance
-    async fn measure_final_performance(&self, data: &ArrayView2<f64>) -> SpatialResult<ExtremePerformanceMetrics> {
+    async fn measure_final_performance(&self, data: &ArrayView2<'_, f64>) -> SpatialResult<ExtremePerformanceMetrics> {
         let _ = data;
         
         Ok(ExtremePerformanceMetrics {
@@ -1146,7 +1171,7 @@ impl SelfOptimizingAlgorithm {
     /// Update performance model
     async fn update_performance_model(
         &mut self, 
-        before: ExtremePerformanceMetrics, 
+        _before: ExtremePerformanceMetrics, 
         after: ExtremePerformanceMetrics
     ) -> SpatialResult<()> {
         self.performance_model.accuracy = 0.95;
@@ -1175,7 +1200,7 @@ pub fn create_ultimate_optimizer() -> ExtremeOptimizer {
 }
 
 /// Benchmark extreme performance optimizations
-pub async fn benchmark_extreme_optimizations(data: &ArrayView2<f64>) -> SpatialResult<ExtremePerformanceMetrics> {
+pub async fn benchmark_extreme_optimizations(data: &ArrayView2<'_, f64>) -> SpatialResult<ExtremePerformanceMetrics> {
     let optimizer = create_ultimate_optimizer();
     let ultrafast_matrix = UltrafastDistanceMatrix::new(optimizer);
     

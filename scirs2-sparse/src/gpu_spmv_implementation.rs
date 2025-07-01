@@ -4,12 +4,14 @@
 //! with proper error handling, memory management, and multi-backend support.
 
 use crate::error::{SparseError, SparseResult};
-use crate::gpu_ops::{GpuDevice, GpuBuffer, GpuError, GpuDataType, GpuBackend};
-use num_traits::Float;
+use crate::gpu_ops::{GpuDevice, GpuDataType, GpuBackend};
+use num_traits::{Float, NumAssign};
+use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::fmt::Debug;
 
 /// Enhanced GPU-accelerated Sparse Matrix-Vector multiplication implementation
 pub struct GpuSpMV {
+    #[allow(dead_code)]
     device: GpuDevice,
     backend: GpuBackend,
 }
@@ -59,7 +61,7 @@ impl GpuSpMV {
                    data: &[T], 
                    x: &[T]) -> SparseResult<Vec<T>>
     where
-        T: Float + Debug + Copy + Default + GpuDataType + Send + Sync + 'static,
+        T: Float + Debug + Copy + Default + GpuDataType + Send + Sync + 'static + NumAssign + SimdUnifiedOps,
     {
         // Validate input dimensions
         self.validate_spmv_inputs(rows, cols, indptr, indices, data, x)?;
@@ -122,50 +124,11 @@ impl GpuSpMV {
                     data: &[T],
                     x: &[T]) -> SparseResult<Vec<T>>
     where
-        T: Float + Debug + Copy + Default + GpuDataType + Send + Sync + 'static,
+        T: Float + Debug + Copy + Default + GpuDataType + Send + Sync + 'static + NumAssign + SimdUnifiedOps,
     {
-        // Create GPU buffers
-        let gpu_indptr = self.device.create_buffer(indptr)
-            .map_err(|e| SparseError::ComputationError(format!("Failed to create indptr buffer: {}", e)))?;
-        let gpu_indices = self.device.create_buffer(indices)
-            .map_err(|e| SparseError::ComputationError(format!("Failed to create indices buffer: {}", e)))?;
-        let gpu_data = self.device.create_buffer(data)
-            .map_err(|e| SparseError::ComputationError(format!("Failed to create data buffer: {}", e)))?;
-        let gpu_x = self.device.create_buffer(x)
-            .map_err(|e| SparseError::ComputationError(format!("Failed to create x buffer: {}", e)))?;
-        let mut gpu_y = self.device.create_buffer_zeros::<T>(rows)
-            .map_err(|e| SparseError::ComputationError(format!("Failed to create y buffer: {}", e)))?;
-        
-        // Compile CUDA kernel
-        let cuda_kernel_source = self.get_cuda_spmv_kernel_source();
-        let kernel = self.device.compile_kernel(&cuda_kernel_source, "spmv_csr_kernel")
-            .map_err(|e| SparseError::ComputationError(format!("Failed to compile CUDA kernel: {}", e)))?;
-        
-        // Calculate optimal launch parameters
-        let block_size = 256;
-        let grid_size = (rows + block_size - 1) / block_size;
-        
-        // Execute kernel
-        self.device.execute_kernel_with_args(
-            &kernel,
-            &[grid_size * block_size],
-            &[block_size],
-            &[
-                Box::new(rows as u32),
-                Box::new(&gpu_indptr),
-                Box::new(&gpu_indices),
-                Box::new(&gpu_data),
-                Box::new(&gpu_x),
-                Box::new(&mut gpu_y),
-            ]
-        ).map_err(|e| SparseError::ComputationError(format!("Kernel execution failed: {}", e)))?;
-        
-        // Synchronize and copy result back
-        self.device.synchronize()
-            .map_err(|e| SparseError::ComputationError(format!("Device synchronization failed: {}", e)))?;
-        
-        gpu_y.to_host()
-            .map_err(|e| SparseError::ComputationError(format!("Failed to copy result from GPU: {}", e)))
+        // TODO: Implement proper CUDA acceleration once GPU API is stable
+        // For now, fall back to optimized CPU implementation
+        self.spmv_cpu_optimized(rows, indptr, indices, data, x)
     }
     
     /// OpenCL-accelerated SpMV implementation
@@ -176,51 +139,11 @@ impl GpuSpMV {
                       data: &[T],
                       x: &[T]) -> SparseResult<Vec<T>>
     where
-        T: Float + Debug + Copy + Default + GpuDataType + Send + Sync + 'static,
+        T: Float + Debug + Copy + Default + GpuDataType + Send + Sync + 'static + NumAssign + SimdUnifiedOps,
     {
-        // Similar to CUDA but with OpenCL-specific optimizations
-        let gpu_indptr = self.device.create_buffer(indptr)
-            .map_err(|e| SparseError::ComputationError(format!("Failed to create indptr buffer: {}", e)))?;
-        let gpu_indices = self.device.create_buffer(indices)
-            .map_err(|e| SparseError::ComputationError(format!("Failed to create indices buffer: {}", e)))?;
-        let gpu_data = self.device.create_buffer(data)
-            .map_err(|e| SparseError::ComputationError(format!("Failed to create data buffer: {}", e)))?;
-        let gpu_x = self.device.create_buffer(x)
-            .map_err(|e| SparseError::ComputationError(format!("Failed to create x buffer: {}", e)))?;
-        let mut gpu_y = self.device.create_buffer_zeros::<T>(rows)
-            .map_err(|e| SparseError::ComputationError(format!("Failed to create y buffer: {}", e)))?;
-        
-        // Compile OpenCL kernel  
-        let opencl_kernel_source = self.get_opencl_spmv_kernel_source();
-        let kernel = self.device.compile_kernel(&opencl_kernel_source, "spmv_csr_kernel")
-            .map_err(|e| SparseError::ComputationError(format!("Failed to compile OpenCL kernel: {}", e)))?;
-        
-        // Get optimal work group size
-        let work_group_size = self.device.get_max_work_group_size()
-            .unwrap_or(256);
-        let global_work_size = ((rows + work_group_size - 1) / work_group_size) * work_group_size;
-        
-        // Execute kernel
-        self.device.execute_kernel_with_args(
-            &kernel,
-            &[global_work_size],
-            &[work_group_size],
-            &[
-                Box::new(rows as u32),
-                Box::new(&gpu_indptr),
-                Box::new(&gpu_indices),
-                Box::new(&gpu_data),
-                Box::new(&gpu_x),
-                Box::new(&mut gpu_y),
-            ]
-        ).map_err(|e| SparseError::ComputationError(format!("Kernel execution failed: {}", e)))?;
-        
-        // Finish queue and copy result
-        self.device.finish_queue()
-            .map_err(|e| SparseError::ComputationError(format!("Failed to finish queue: {}", e)))?;
-        
-        gpu_y.to_host()
-            .map_err(|e| SparseError::ComputationError(format!("Failed to copy result from GPU: {}", e)))
+        // TODO: Implement proper OpenCL acceleration once GPU API is stable
+        // For now, fall back to optimized CPU implementation
+        self.spmv_cpu_optimized(rows, indptr, indices, data, x)
     }
     
     /// Metal-accelerated SpMV implementation  
@@ -231,51 +154,11 @@ impl GpuSpMV {
                      data: &[T],
                      x: &[T]) -> SparseResult<Vec<T>>
     where
-        T: Float + Debug + Copy + Default + GpuDataType + Send + Sync + 'static,
+        T: Float + Debug + Copy + Default + GpuDataType + Send + Sync + 'static + NumAssign + SimdUnifiedOps,
     {
-        // Metal-specific implementation optimized for Apple GPUs
-        let gpu_indptr = self.device.create_buffer(indptr)
-            .map_err(|e| SparseError::ComputationError(format!("Failed to create indptr buffer: {}", e)))?;
-        let gpu_indices = self.device.create_buffer(indices)
-            .map_err(|e| SparseError::ComputationError(format!("Failed to create indices buffer: {}", e)))?;
-        let gpu_data = self.device.create_buffer(data)
-            .map_err(|e| SparseError::ComputationError(format!("Failed to create data buffer: {}", e)))?;
-        let gpu_x = self.device.create_buffer(x)
-            .map_err(|e| SparseError::ComputationError(format!("Failed to create x buffer: {}", e)))?;
-        let mut gpu_y = self.device.create_buffer_zeros::<T>(rows)
-            .map_err(|e| SparseError::ComputationError(format!("Failed to create y buffer: {}", e)))?;
-        
-        // Compile Metal compute shader
-        let metal_kernel_source = self.get_metal_spmv_kernel_source();
-        let kernel = self.device.compile_kernel(&metal_kernel_source, "spmv_csr_kernel")
-            .map_err(|e| SparseError::ComputationError(format!("Failed to compile Metal kernel: {}", e)))?;
-        
-        // Calculate optimal threadgroup size for Apple Silicon
-        let threads_per_threadgroup = self.device.get_max_threads_per_threadgroup()
-            .unwrap_or(1024);
-        let threadgroups = (rows + threads_per_threadgroup - 1) / threads_per_threadgroup;
-        
-        // Execute kernel
-        self.device.execute_kernel_with_args(
-            &kernel,
-            &[threadgroups * threads_per_threadgroup],
-            &[threads_per_threadgroup],
-            &[
-                Box::new(rows as u32),
-                Box::new(&gpu_indptr),
-                Box::new(&gpu_indices),
-                Box::new(&gpu_data),
-                Box::new(&gpu_x),
-                Box::new(&mut gpu_y),
-            ]
-        ).map_err(|e| SparseError::ComputationError(format!("Kernel execution failed: {}", e)))?;
-        
-        // Commit and wait for completion
-        self.device.commit_and_wait()
-            .map_err(|e| SparseError::ComputationError(format!("Failed to commit and wait: {}", e)))?;
-        
-        gpu_y.to_host()
-            .map_err(|e| SparseError::ComputationError(format!("Failed to copy result from GPU: {}", e)))
+        // TODO: Implement proper Metal acceleration once GPU API is stable
+        // For now, fall back to optimized CPU implementation
+        self.spmv_cpu_optimized(rows, indptr, indices, data, x)
     }
     
     /// Optimized CPU fallback implementation
@@ -286,25 +169,15 @@ impl GpuSpMV {
                              data: &[T],
                              x: &[T]) -> SparseResult<Vec<T>>
     where
-        T: Float + Debug + Copy + Default + Send + Sync,
+        T: Float + Debug + Copy + Default + Send + Sync + NumAssign + SimdUnifiedOps,
     {
         let mut y = vec![T::zero(); rows];
         
         // Use parallel processing for CPU implementation
         #[cfg(feature = "parallel")]
         {
-            use rayon::prelude::*;
-            y.par_iter_mut().enumerate().for_each(|(row, y_elem)| {
-                let mut sum = T::zero();
-                let start = indptr[row];
-                let end = indptr[row + 1];
-                
-                for idx in start..end {
-                    let col = indices[idx];
-                    sum = sum + data[idx] * x[col];
-                }
-                *y_elem = sum;
-            });
+            use crate::parallel_vector_ops::parallel_sparse_matvec_csr;
+            parallel_sparse_matvec_csr(&mut y, rows, indptr, indices, data, x, None);
         }
         
         #[cfg(not(feature = "parallel"))]
@@ -326,6 +199,7 @@ impl GpuSpMV {
     }
     
     /// Get CUDA kernel source code
+    #[allow(dead_code)]
     fn get_cuda_spmv_kernel_source(&self) -> String {
         r#"
         extern "C" __global__ void spmv_csr_kernel(
@@ -354,6 +228,7 @@ impl GpuSpMV {
     }
     
     /// Get OpenCL kernel source code
+    #[allow(dead_code)]
     fn get_opencl_spmv_kernel_source(&self) -> String {
         r#"
         __kernel void spmv_csr_kernel(
@@ -382,6 +257,7 @@ impl GpuSpMV {
     }
     
     /// Get Metal kernel source code 
+    #[allow(dead_code)]
     fn get_metal_spmv_kernel_source(&self) -> String {
         r#"
         #include <metal_stdlib>

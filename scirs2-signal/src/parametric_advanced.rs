@@ -759,7 +759,7 @@ fn solve_least_squares(a: &Array2<f64>, b: &Array2<f64>) -> SignalResult<Array2<
 }
 
 /// Compute eigendecomposition (simplified)
-fn compute_eigendecomposition(matrix: &Array2<f64>) -> SignalResult<(Array1<f64>, Array2<f64>)> {
+pub fn compute_eigendecomposition(matrix: &Array2<f64>) -> SignalResult<(Array1<f64>, Array2<f64>)> {
     let n = matrix.nrows();
 
     // Placeholder implementation

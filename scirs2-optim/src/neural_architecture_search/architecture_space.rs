@@ -34,7 +34,7 @@ pub struct OptimizerComponent<T: Float> {
 }
 
 /// Types of optimizer components
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ComponentType {
     // Basic optimizers
     SGD,
@@ -109,7 +109,7 @@ pub struct ComponentConnection {
 }
 
 /// Types of connections between components
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ConnectionType {
     /// Sequential connection (output of one feeds into next)
     Sequential,
@@ -137,7 +137,7 @@ pub enum ConnectionType {
 }
 
 /// Connection pattern for entire architecture
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ConnectionPattern {
     /// Simple sequential chain
     Sequential,
@@ -292,7 +292,7 @@ pub struct CompatibilityConstraint {
 }
 
 /// Types of compatibility between components
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum CompatibilityType {
     /// Components are fully compatible
     Compatible,
@@ -371,7 +371,7 @@ pub struct SearchSpaceMetadata {
 }
 
 /// Optimization domains
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum OptimizationDomain {
     ComputerVision,
     NaturalLanguageProcessing,
@@ -386,7 +386,7 @@ pub enum OptimizationDomain {
 }
 
 /// Complexity levels
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ComplexityLevel {
     Simple,
     Moderate,

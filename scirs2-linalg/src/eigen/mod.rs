@@ -54,7 +54,7 @@ use crate::error::{LinalgError, LinalgResult};
 pub use standard::EigenResult;
 
 // Import all the main functions from submodules
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2, ScalarOperand};
 use num_traits::{Float, NumAssign};
 use std::iter::Sum;
 
@@ -90,7 +90,7 @@ pub use sparse::{arnoldi, eigs_gen, lanczos, svds};
 /// ```
 pub fn eigvalsh<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<Array1<F>>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     let (eigenvalues, _) = eigh(a, workers)?;
     Ok(eigenvalues)
@@ -134,7 +134,7 @@ pub fn ultra_precision_eig<F>(
     tolerance: F,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Sum + ndarray::ScalarOperand + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     // Implement ultra-precision algorithms using extended precision and iterative refinement
 
@@ -244,7 +244,7 @@ fn ultra_precision_symmetric_eigensolver<F>(
     tolerance: F,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Sum + ndarray::ScalarOperand + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     let n = a.nrows();
 
@@ -354,7 +354,7 @@ fn ultra_precision_general_eigensolver<F>(
     tolerance: F,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Sum + ndarray::ScalarOperand + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     // For non-symmetric matrices, this is a simplified implementation
     // In a full implementation, this would use advanced QR algorithm with shifts
@@ -453,7 +453,7 @@ where
 /// Newton's method for eigenvalue correction to achieve ultra-high precision
 fn newton_eigenvalue_correction<F>(a: &ArrayView2<F>, v: &Array1<F>, lambda: F, tolerance: F) -> F
 where
-    F: Float + NumAssign + Sum + ndarray::ScalarOperand,
+    F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     let max_newton_iterations = 5;
     let mut correction = F::zero();
@@ -493,7 +493,7 @@ fn enhanced_inverse_iteration<F>(
     tolerance: F,
 ) -> LinalgResult<Array1<F>>
 where
-    F: Float + NumAssign + Sum + ndarray::ScalarOperand + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     let n = a.nrows();
     let mut refined_v = v.clone();
@@ -525,7 +525,7 @@ where
 /// Enhanced Gram-Schmidt orthogonalization with multiple passes
 fn enhanced_gram_schmidt_orthogonalization<F>(vectors: &mut Array2<F>, tolerance: F)
 where
-    F: Float + NumAssign + Sum,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     let n = vectors.ncols();
     let num_passes = 3; // Multiple passes for better orthogonality
@@ -564,7 +564,7 @@ fn verify_eigenvalue_accuracy<F>(
     tolerance: F,
 ) -> bool
 where
-    F: Float + NumAssign + Sum + ndarray::ScalarOperand,
+    F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     let n = eigenvalues.len();
 
@@ -642,7 +642,7 @@ where
 /// ```
 pub fn estimate_condition_number<F>(a: &ArrayView2<F>) -> F
 where
-    F: Float + NumAssign + Sum + ndarray::ScalarOperand + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     let n = a.nrows();
     if n == 0 {

@@ -51,14 +51,11 @@
 //! println!("Photonic clusters: {:?}", optical_clusters);
 //! ```
 
-use crate::error::{SpatialError, SpatialResult};
-use ndarray::{Array1, Array2, Array3, Array4, ArrayView1, ArrayView2, Axis, s};
+use crate::error::SpatialResult;
+use ndarray::{Array1, Array2, Array3, ArrayView2};
 use num_complex::Complex64;
-use std::collections::{HashMap, BTreeMap, VecDeque};
-use std::f64::consts::{PI, E, SQRT_2};
-use std::time::{Duration, Instant};
-use std::sync::{Arc, Mutex};
-use tokio::time::{sleep, timeout};
+use std::collections::VecDeque;
+use std::f64::consts::PI;
 
 /// Next-generation GPU architecture types
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -82,6 +79,7 @@ pub enum NextGenGpuArchitecture {
 }
 
 /// Quantum-enhanced GPU processor
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct QuantumGpuProcessor {
     /// Architecture type
@@ -256,6 +254,12 @@ pub struct NextGenPerformanceMetrics {
     pub speedup_factor: f64,
 }
 
+impl Default for QuantumGpuProcessor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl QuantumGpuProcessor {
     /// Create new quantum-GPU processor
     pub fn new() -> Self {
@@ -363,8 +367,8 @@ impl QuantumGpuProcessor {
     }
     
     /// Compute quantum-enhanced distance matrix
-    pub async fn compute_quantum_distance_matrix(&mut self, points: &ArrayView2<f64>) -> SpatialResult<Array2<Complex64>> {
-        let (n_points, n_dims) = points.dim();
+    pub async fn compute_quantum_distance_matrix(&mut self, points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<Complex64>> {
+        let (n_points, _n_dims) = points.dim();
         let mut quantum_distances = Array2::zeros((n_points, n_points));
         
         // Initialize quantum processing if not done
@@ -392,8 +396,8 @@ impl QuantumGpuProcessor {
     }
     
     /// Encode spatial points into quantum states
-    async fn encode_points_quantum(&self, points: &ArrayView2<f64>) -> SpatialResult<Vec<Array1<Complex64>>> {
-        let (n_points, n_dims) = points.dim();
+    async fn encode_points_quantum(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<Vec<Array1<Complex64>>> {
+        let (_n_points, n_dims) = points.dim();
         let mut encoded_points = Vec::new();
         
         for point in points.outer_iter() {
@@ -424,7 +428,7 @@ impl QuantumGpuProcessor {
             // Normalize quantum state
             let state_norm = quantum_state.iter().map(|a| a.norm_sqr()).sum::<f64>().sqrt();
             if state_norm > 0.0 {
-                quantum_state /= state_norm;
+                quantum_state.mapv_inplace(|x| x / Complex64::new(state_norm, 0.0));
             } else {
                 quantum_state[0] = Complex64::new(1.0, 0.0); // Default state
             }
@@ -468,8 +472,8 @@ impl QuantumGpuProcessor {
     }
     
     /// Quantum-enhanced clustering
-    pub async fn quantum_clustering(&mut self, points: &ArrayView2<f64>, num_clusters: usize) -> SpatialResult<(Array2<f64>, Array1<usize>)> {
-        let (n_points, n_dims) = points.dim();
+    pub async fn quantum_clustering(&mut self, points: &ArrayView2<'_, f64>, num_clusters: usize) -> SpatialResult<(Array2<f64>, Array1<usize>)> {
+        let (n_points, _n_dims) = points.dim();
         
         // Initialize quantum system if needed
         if self.quantum_units.is_empty() {
@@ -505,7 +509,7 @@ impl QuantumGpuProcessor {
     }
     
     /// Quantum superposition-based centroid initialization
-    async fn quantum_initialize_centroids(&mut self, points: &ArrayView2<f64>, num_clusters: usize) -> SpatialResult<Array2<f64>> {
+    async fn quantum_initialize_centroids(&mut self, points: &ArrayView2<'_, f64>, num_clusters: usize) -> SpatialResult<Array2<f64>> {
         let (n_points, n_dims) = points.dim();
         let mut centroids = Array2::zeros((num_clusters, n_dims));
         
@@ -562,7 +566,7 @@ impl QuantumGpuProcessor {
     }
     
     /// Quantum assignment step
-    async fn quantum_assignment_step(&self, points: &ArrayView2<f64>, centroids: &Array2<f64>) -> SpatialResult<Array1<usize>> {
+    async fn quantum_assignment_step(&self, points: &ArrayView2<'_, f64>, centroids: &Array2<f64>) -> SpatialResult<Array1<usize>> {
         let (n_points, _) = points.dim();
         let mut assignments = Array1::zeros(n_points);
         
@@ -597,7 +601,7 @@ impl QuantumGpuProcessor {
     }
     
     /// Quantum centroid update
-    async fn quantum_centroid_update(&self, points: &ArrayView2<f64>, assignments: &Array1<usize>, num_clusters: usize) -> SpatialResult<Array2<f64>> {
+    async fn quantum_centroid_update(&self, points: &ArrayView2<'_, f64>, assignments: &Array1<usize>, num_clusters: usize) -> SpatialResult<Array2<f64>> {
         let (n_points, n_dims) = points.dim();
         let mut centroids = Array2::zeros((num_clusters, n_dims));
         let mut cluster_counts = vec![0; num_clusters];
@@ -650,7 +654,7 @@ impl QuantumGpuProcessor {
     }
     
     /// Apply quantum decoherence simulation
-    async fn apply_quantum_decoherence(&mut self, iteration: usize) -> SpatialResult<()> {
+    async fn apply_quantum_decoherence(&mut self, _iteration: usize) -> SpatialResult<()> {
         // Simulate quantum decoherence effects
         let decoherence_rate = 0.99; // 1% decoherence per iteration
         
@@ -669,6 +673,7 @@ impl QuantumGpuProcessor {
 }
 
 /// Photonic computing accelerator
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct PhotonicAccelerator {
     /// Optical neural networks enabled
@@ -728,6 +733,12 @@ pub struct PhotonicPerformanceMetrics {
     pub bandwidth_utilization: f64,
 }
 
+impl Default for PhotonicAccelerator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PhotonicAccelerator {
     /// Create new photonic accelerator
     pub fn new() -> Self {
@@ -765,7 +776,7 @@ impl PhotonicAccelerator {
     }
     
     /// Optical clustering using light-speed computation
-    pub async fn optical_clustering(&mut self, points: &ArrayView2<f64>, num_clusters: usize) -> SpatialResult<(Array2<f64>, Array1<usize>)> {
+    pub async fn optical_clustering(&mut self, points: &ArrayView2<'_, f64>, num_clusters: usize) -> SpatialResult<(Array2<f64>, Array1<usize>)> {
         // Initialize photonic units if needed
         if self.photonic_units.is_empty() {
             self.initialize_photonic_system(num_clusters).await?;
@@ -813,7 +824,7 @@ impl PhotonicAccelerator {
     }
     
     /// Encode spatial data as optical waveforms
-    async fn encode_optical_waveforms(&self, points: &ArrayView2<f64>) -> SpatialResult<Vec<Array1<Complex64>>> {
+    async fn encode_optical_waveforms(&self, points: &ArrayView2<'_, f64>) -> SpatialResult<Vec<Array1<Complex64>>> {
         let mut optical_waveforms = Vec::new();
         
         for point in points.outer_iter() {
@@ -836,6 +847,7 @@ impl PhotonicAccelerator {
     }
     
     /// Optical interference-based clustering
+    #[allow(clippy::needless_range_loop)]
     async fn optical_interference_clustering(&self, waveforms: &[Array1<Complex64>], num_clusters: usize) -> SpatialResult<(Array2<f64>, Array1<usize>)> {
         let n_points = waveforms.len();
         let n_dims = 2; // Simplified for demonstration

@@ -19,6 +19,8 @@
 //! - ConvNext: Modern ConvNet architecture rivaling transformers
 //! - MaxViT: Multi-axis vision transformer for efficiency
 
+#![allow(dead_code)]
+
 use crate::error::{Result, VisionError};
 use crate::feature::KeyPoint;
 use crate::gpu_ops::GpuVisionContext;
@@ -287,7 +289,7 @@ impl VisionTransformer {
         // Skip class token (index 0) and reshape patch tokens
         let patch_features = features.slice(s![1.., ..]);
         let dense_features =
-            patch_features.into_shape((num_patches_h, num_patches_w, self.config.hidden_dim))?;
+            patch_features.to_shape((num_patches_h, num_patches_w, self.config.hidden_dim))?.to_owned();
 
         Ok(dense_features)
     }
@@ -365,7 +367,7 @@ impl PatchEmbedding {
     /// GPU forward pass for patch embedding
     fn gpu_forward(
         &self,
-        gpu_ctx: &GpuVisionContext,
+        _gpu_ctx: &GpuVisionContext,
         image: &ArrayView2<f32>,
     ) -> Result<Array2<f32>> {
         // For GPU implementation, we'd use optimized convolution kernels
@@ -398,7 +400,7 @@ impl PatchEmbedding {
                 ]);
 
                 // Apply convolution (simplified - just compute dot product with each filter)
-                for (out_ch, mut emb) in embeddings
+                for (out_ch, emb) in embeddings
                     .slice_mut(s![patch_idx, ..])
                     .iter_mut()
                     .enumerate()
@@ -448,7 +450,7 @@ impl TransformerLayer {
     }
 
     /// GPU forward pass
-    fn gpu_forward(&self, gpu_ctx: &GpuVisionContext, input: &Array2<f32>) -> Result<Array2<f32>> {
+    fn gpu_forward(&self, _gpu_ctx: &GpuVisionContext, input: &Array2<f32>) -> Result<Array2<f32>> {
         // For GPU implementation, we'd use optimized attention kernels
         // For now, fall back to CPU implementation
         self.cpu_forward(input)
@@ -512,7 +514,7 @@ impl MultiHeadAttention {
 
     /// Forward pass through multi-head attention
     fn forward(&self, input: &Array2<f32>) -> Result<Array2<f32>> {
-        let (seq_len, hidden_dim) = input.dim();
+        let (seq_len, _hidden_dim) = input.dim();
 
         // Compute Q, K, V projections
         let q = input.dot(&self.q_proj);
@@ -547,8 +549,8 @@ impl MultiHeadAttention {
     /// Reshape input for multi-head attention
     fn reshape_for_heads(&self, input: &Array2<f32>, seq_len: usize) -> Result<Array3<f32>> {
         let reshaped = input
-            .clone()
-            .into_shape((seq_len, self.num_heads, self.head_dim))?;
+            .to_shape((seq_len, self.num_heads, self.head_dim))?
+            .to_owned();
         // Transpose to (num_heads, seq_len, head_dim)
         Ok(reshaped.permuted_axes([1, 0, 2]))
     }
@@ -904,7 +906,7 @@ impl SwinTransformerBlock {
         let (h, w, c) = input.dim();
 
         // Reshape to sequence format for attention
-        let input_seq = input.clone().into_shape((h * w, c))?;
+        let input_seq = input.to_shape((h * w, c))?.to_owned();
 
         // Layer norm + window attention + residual
         let norm1_output = self.norm1.apply(&input_seq.view())?;
@@ -917,7 +919,7 @@ impl SwinTransformerBlock {
         let residual2 = &residual1 + &mlp_output;
 
         // Reshape back to spatial format
-        let output = residual2.into_shape((h, w, c))?;
+        let output = residual2.to_shape((h, w, c))?.to_owned();
         Ok(output)
     }
 }
@@ -973,12 +975,12 @@ impl PatchMerging {
         }
 
         // Reshape for linear projection
-        let merged_seq = merged.into_shape((new_h * new_w, 4 * c))?;
+        let merged_seq = merged.to_shape((new_h * new_w, 4 * c))?.to_owned();
         let normalized = self.norm.apply(&merged_seq.view())?;
         let projected = normalized.dot(&self.reduction);
 
         // Reshape back to spatial format
-        let output = projected.into_shape((new_h, new_w, 2 * c))?;
+        let output = projected.to_shape((new_h, new_w, 2 * c))?.to_owned();
         Ok(output)
     }
 }
@@ -1215,12 +1217,13 @@ impl CrossAttentionLayer {
         &self,
         q_input: &Array2<f32>,
         k_input: &Array2<f32>,
-        v_input: &Array2<f32>,
+        _v_input: &Array2<f32>,
     ) -> Result<Array2<f32>> {
         // Simplified cross-attention - reuse self-attention but with different inputs
         // In a full implementation, we'd have separate Q, K, V projections
         let combined = ndarray::stack![Axis(0), q_input.view(), k_input.view()];
-        let output = self.cross_attention.forward(&combined)?;
+        let combined_2d = combined.to_shape((combined.shape()[0] * combined.shape()[1], combined.shape()[2]))?.to_owned();
+        let output = self.cross_attention.forward(&combined_2d)?;
         let q_output = output.slice(s![..q_input.shape()[0], ..]);
         Ok(q_output.to_owned())
     }

@@ -4,7 +4,7 @@
 //! efficient for row operations, matrix-vector multiplication, and more.
 
 use crate::error::{SparseError, SparseResult};
-use num_traits::Zero;
+use num_traits::{Float, Zero};
 use std::cmp::PartialEq;
 
 /// Compressed Sparse Row (CSR) matrix
@@ -575,11 +575,31 @@ where
     ///
     /// * Result of matrix-vector multiplication
     #[allow(dead_code)]
-    pub fn gpu_dot_generic(&self, _vec: &[T]) -> SparseResult<Vec<T>> {
-        // Temporarily disabled until gpu_spmv_implementation module is re-enabled
-        Err(SparseError::OperationNotSupported(
-            "GPU operations temporarily disabled".to_string(),
-        ))
+    pub fn gpu_dot_generic(&self, vec: &[T]) -> SparseResult<Vec<T>>
+    where
+        T: Float + std::ops::AddAssign + Copy + Default + std::iter::Sum,
+    {
+        // GPU operations fall back to CPU for stability
+        if vec.len() != self.cols {
+            return Err(SparseError::DimensionMismatch {
+                expected: self.cols,
+                found: vec.len(),
+            });
+        }
+
+        let mut result = vec![T::zero(); self.rows];
+
+        for (row_idx, result_val) in result.iter_mut().enumerate() {
+            let start = self.indptr[row_idx];
+            let end = self.indptr[row_idx + 1];
+            
+            for idx in start..end {
+                let col = self.indices[idx];
+                *result_val += self.data[idx] * vec[col];
+            }
+        }
+
+        Ok(result)
     }
 
     /// Check if this matrix should benefit from GPU acceleration
@@ -603,10 +623,8 @@ where
     /// * Information about available GPU backends
     #[allow(dead_code)]
     pub fn gpu_backend_info() -> SparseResult<(crate::gpu_ops::GpuBackend, String)> {
-        // Temporarily disabled until gpu_spmv_implementation module is re-enabled
-        Err(SparseError::OperationNotSupported(
-            "GPU operations temporarily disabled".to_string(),
-        ))
+        // GPU operations fall back to CPU for stability
+        Ok((crate::gpu_ops::GpuBackend::Cpu, "CPU Fallback".to_string()))
     }
 }
 

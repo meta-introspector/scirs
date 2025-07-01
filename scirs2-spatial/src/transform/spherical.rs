@@ -185,7 +185,7 @@ pub fn spherical_to_cart(spherical: &ArrayView1<f64>) -> SpatialResult<Array1<f6
 /// # Errors
 ///
 /// Returns an error if any row of the input array doesn't have exactly 3 elements
-pub fn cart_to_spherical_batch(cart: &ArrayView2<f64>) -> SpatialResult<Array2<f64>> {
+pub fn cart_to_spherical_batch(cart: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
     if cart.ncols() != 3 {
         return Err(SpatialError::DimensionError(format!(
             "Cartesian coordinates must have 3 columns, got {}",
@@ -232,7 +232,7 @@ pub fn cart_to_spherical_batch(cart: &ArrayView2<f64>) -> SpatialResult<Array2<f
 /// # Errors
 ///
 /// Returns an error if any row of the input array doesn't have exactly 3 elements
-pub fn spherical_to_cart_batch(spherical: &ArrayView2<f64>) -> SpatialResult<Array2<f64>> {
+pub fn spherical_to_cart_batch(spherical: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
     if spherical.ncols() != 3 {
         return Err(SpatialError::DimensionError(format!(
             "Spherical coordinates must have 3 columns, got {}",

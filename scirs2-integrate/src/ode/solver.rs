@@ -98,7 +98,7 @@ pub fn solve_ivp<F, Func>(
     options: Option<ODEOptions<F>>,
 ) -> IntegrateResult<ODEResult<F>>
 where
-    F: IntegrateFloat + std::iter::Sum,
+    F: IntegrateFloat + std::iter::Sum + std::default::Default,
     Func: Fn(F, ArrayView1<F>) -> Array1<F> + Clone,
 {
     // Use default options if none provided
@@ -211,7 +211,7 @@ fn solve_ivp_with_mass_internal<F, Func>(
     opts: ODEOptions<F>,
 ) -> IntegrateResult<ODEResult<F>>
 where
-    F: IntegrateFloat + std::iter::Sum,
+    F: IntegrateFloat + std::iter::Sum + std::default::Default,
     Func: Fn(F, ArrayView1<F>) -> Array1<F> + Clone,
 {
     // Check if mass matrix is compatible with the initial state
@@ -455,7 +455,7 @@ pub fn solve_ivp_with_events<F, Func, EventFunc>(
     options: ODEOptionsWithEvents<F>,
 ) -> IntegrateResult<ODEResultWithEvents<F>>
 where
-    F: IntegrateFloat,
+    F: IntegrateFloat + std::default::Default,
     Func: Fn(F, ArrayView1<F>) -> Array1<F> + Clone + 'static,
     EventFunc: Fn(F, ArrayView1<F>) -> F,
 {
@@ -593,7 +593,7 @@ fn solve_ivp_with_events_and_mass<F, Func, EventFunc>(
     mass_matrix: MassMatrix<F>,
 ) -> IntegrateResult<ODEResultWithEvents<F>>
 where
-    F: IntegrateFloat + std::iter::Sum,
+    F: IntegrateFloat + std::iter::Sum + std::default::Default,
     Func: Fn(F, ArrayView1<F>) -> Array1<F> + Clone + 'static,
     EventFunc: Fn(F, ArrayView1<F>) -> F,
 {
@@ -677,7 +677,7 @@ fn solve_ivp_with_events_radau_mass<F, Func, EventFunc>(
     mass_matrix: MassMatrix<F>,
 ) -> IntegrateResult<ODEResultWithEvents<F>>
 where
-    F: IntegrateFloat + std::iter::Sum,
+    F: IntegrateFloat + std::iter::Sum + std::default::Default,
     Func: Fn(F, ArrayView1<F>) -> Array1<F> + Clone + 'static,
     EventFunc: Fn(F, ArrayView1<F>) -> F,
 {
@@ -806,7 +806,7 @@ fn solve_bdf_with_mass_matrix<F, FFunc>(
     mut opts: ODEOptions<F>,
 ) -> IntegrateResult<ODEResult<F>>
 where
-    F: IntegrateFloat,
+    F: IntegrateFloat + std::default::Default,
     FFunc: Fn(F, ArrayView1<F>) -> Array1<F> + Clone,
 {
     use crate::ode::methods::enhanced_bdf_method;
@@ -856,7 +856,7 @@ fn solve_bdf_with_state_dependent_mass_matrix<F, FFunc>(
     mut opts: ODEOptions<F>,
 ) -> IntegrateResult<ODEResult<F>>
 where
-    F: IntegrateFloat,
+    F: IntegrateFloat + std::default::Default,
     FFunc: Fn(F, ArrayView1<F>) -> Array1<F> + Clone,
 {
     use crate::ode::methods::enhanced_bdf_method;

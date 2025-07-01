@@ -141,7 +141,7 @@ impl ClusterNode {
 
 impl<F> HMatrix<F>
 where
-    F: Float + NumAssign + Sum + ndarray::ScalarOperand + 'static,
+    F: Float + NumAssign + Sum + ndarray::ScalarOperand + 'static + Send + Sync,
 {
     /// Create H-matrix from dense matrix using adaptive rank compression
     ///
@@ -475,7 +475,7 @@ pub struct HMatrixMemoryInfo {
 
 impl<F> HSSMatrix<F>
 where
-    F: Float + NumAssign + Sum + ndarray::ScalarOperand + 'static,
+    F: Float + NumAssign + Sum + ndarray::ScalarOperand + 'static + Send + Sync,
 {
     /// Create HSS matrix from dense matrix
     ///
@@ -687,7 +687,7 @@ pub fn adaptive_block_lowrank<F>(
     max_rank: usize,
 ) -> LinalgResult<Option<(Array2<F>, Array2<F>)>>
 where
-    F: Float + NumAssign + Sum + ndarray::ScalarOperand + 'static,
+    F: Float + NumAssign + Sum + ndarray::ScalarOperand + 'static + Send + Sync,
 {
     let (m, n) = matrix.dim();
     let target_rank = max_rank.min(m.min(n));

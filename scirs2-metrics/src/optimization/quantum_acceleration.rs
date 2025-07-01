@@ -754,11 +754,11 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
 
     fn initialize_vqe_parameters(&self, matrix_size: usize) -> Result<Vec<f64>> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let num_parameters = self.config.vqe_parameters.ansatz_depth * matrix_size;
 
         let parameters = (0..num_parameters)
-            .map(|_| rng.gen_range(-PI..PI))
+            .map(|_| rng.random_range(-PI..PI))
             .collect();
 
         Ok(parameters)
@@ -947,7 +947,7 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> QuantumMetricsCom
         num_variables: usize,
     ) -> Result<Vec<F>> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         // Compute probability distribution
         let probabilities: Vec<f64> = state.iter().map(|amp| amp.norm_sqr()).collect();

@@ -1263,7 +1263,7 @@ where
 
     for level in 0..levels {
         let (height, width) = current.dim();
-        
+
         // Check minimum size constraint
         if height < 4 || width < 4 {
             break;
@@ -1271,11 +1271,11 @@ where
 
         // Perform 2D DWT
         let (ll, lh, hl, hh) = dwt_2d(&current.view(), wavelet, mode)?;
-        
+
         // Store detail coefficients
         decomposition.add_level(WaveletLevel {
             lh: lh.clone(),
-            hl: hl.clone(), 
+            hl: hl.clone(),
             hh: hh.clone(),
         });
 
@@ -1285,7 +1285,7 @@ where
 
     // Store final approximation
     decomposition.approximation = Some(current);
-    
+
     Ok(decomposition)
 }
 
@@ -1301,15 +1301,23 @@ where
 {
     let mut result = match &decomposition.approximation {
         Some(approx) => approx.clone(),
-        None => return Err(NdimageError::InvalidInput(
-            "Decomposition must contain approximation coefficients".into()
-        )),
+        None => {
+            return Err(NdimageError::InvalidInput(
+                "Decomposition must contain approximation coefficients".into(),
+            ))
+        }
     };
 
     // Reconstruct from coarsest to finest level
     for level in decomposition.levels.iter().rev() {
         let ll = result.view();
-        result = idwt_2d(&ll, &level.lh.view(), &level.hl.view(), &level.hh.view(), wavelet)?;
+        result = idwt_2d(
+            &ll,
+            &level.lh.view(),
+            &level.hl.view(),
+            &level.hh.view(),
+            wavelet,
+        )?;
     }
 
     Ok(result)
@@ -1388,7 +1396,11 @@ where
         if abs_val <= threshold {
             *elem = T::zero();
         } else {
-            let sign = if *elem >= T::zero() { T::one() } else { -T::one() };
+            let sign = if *elem >= T::zero() {
+                T::one()
+            } else {
+                -T::one()
+            };
             *elem = sign * (abs_val - threshold);
         }
     }
@@ -1418,8 +1430,9 @@ where
         let high_upsampled = upsample_filter(&wavelet.high_dec, upsample_factor);
 
         // Apply separable filtering without downsampling
-        let (ll, lh, hl, hh) = stationary_dwt_2d(&current.view(), &low_upsampled, &high_upsampled, mode)?;
-        
+        let (ll, lh, hl, hh) =
+            stationary_dwt_2d(&current.view(), &low_upsampled, &high_upsampled, mode)?;
+
         decomposition.add_level(StationaryWaveletLevel {
             lh: lh.clone(),
             hl: hl.clone(),
@@ -1468,14 +1481,14 @@ where
     T: Float + FromPrimitive + Clone,
 {
     let mut upsampled = Vec::with_capacity(filter.len() * factor);
-    
+
     for &coeff in filter {
         upsampled.push(coeff);
         for _ in 1..factor {
             upsampled.push(T::zero());
         }
     }
-    
+
     upsampled
 }
 
@@ -1498,10 +1511,10 @@ where
     for i in 0..height {
         let row = image.row(i);
         let padded = pad_signal_1d(&row, low_filter, mode)?;
-        
+
         let low_filtered = convolve_1d(&padded.view(), low_filter)?;
         let high_filtered = convolve_1d(&padded.view(), high_filter)?;
-        
+
         // Extract relevant portion (accounting for padding)
         let start_idx = (padded.len() - width) / 2;
         for j in 0..width {
@@ -1519,15 +1532,15 @@ where
     for j in 0..width {
         let ll_col = ll_rows.column(j);
         let lh_col = lh_rows.column(j);
-        
+
         let ll_padded = pad_signal_1d(&ll_col, low_filter, mode)?;
         let lh_padded = pad_signal_1d(&lh_col, low_filter, mode)?;
-        
+
         let ll_low = convolve_1d(&ll_padded.view(), low_filter)?;
         let ll_high = convolve_1d(&ll_padded.view(), high_filter)?;
         let lh_low = convolve_1d(&lh_padded.view(), low_filter)?;
         let lh_high = convolve_1d(&lh_padded.view(), high_filter)?;
-        
+
         let start_idx = (ll_padded.len() - height) / 2;
         for i in 0..height {
             ll[[i, j]] = ll_low[start_idx + i];
@@ -1547,10 +1560,10 @@ where
 {
     let signal_len = signal.len();
     let filter_len = filter.len();
-    
+
     if signal_len < filter_len {
         return Err(NdimageError::InvalidInput(
-            "Signal must be at least as long as filter".into()
+            "Signal must be at least as long as filter".into(),
         ));
     }
 

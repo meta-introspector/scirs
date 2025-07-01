@@ -22,7 +22,7 @@ use crate::error::{LinalgError, LinalgResult};
 /// * Covariance matrix with shape (n_features, n_features)
 pub fn covariance_matrix<F>(data: &ArrayView2<F>, ddof: Option<usize>) -> LinalgResult<Array2<F>>
 where
-    F: Float + Zero + num_traits::FromPrimitive,
+    F: Float + Zero + num_traits::FromPrimitive + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     let n_samples = data.nrows();
     let n_features = data.ncols();
@@ -83,7 +83,7 @@ where
 /// * Correlation matrix with shape (n_features, n_features)
 pub fn correlation_matrix<F>(data: &ArrayView2<F>, ddof: Option<usize>) -> LinalgResult<Array2<F>>
 where
-    F: Float + Zero + num_traits::FromPrimitive,
+    F: Float + Zero + num_traits::FromPrimitive + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     // Compute covariance matrix
     let cov = covariance_matrix(data, ddof)?;
@@ -138,7 +138,7 @@ pub fn mahalanobis_distance<F>(
     cov: &ArrayView2<F>,
 ) -> LinalgResult<F>
 where
-    F: Float + Zero + num_traits::One + num_traits::NumAssign + std::iter::Sum + 'static,
+    F: Float + Zero + num_traits::One + num_traits::NumAssign + std::iter::Sum + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     if x.len() != mean.len() || x.len() != cov.nrows() || x.len() != cov.ncols() {
         return Err(LinalgError::ShapeError(format!(

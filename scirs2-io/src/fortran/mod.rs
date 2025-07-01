@@ -705,7 +705,7 @@ pub fn detect_fortran_format<P: AsRef<Path>>(path: P) -> Result<(EndianMode, Rec
 
     // Check which interpretation makes sense
     // A valid record size should be less than the file size
-    if little_4 > 0 && little_4 < file_size - 8 {
+    if little_4 > 0 && file_size > 8 && little_4 <= file_size - 8 {
         // Try to read the end marker
         file.seek(SeekFrom::Start((4 + little_4) as u64))
             .map_err(|e| IoError::ParseError(format!("Failed to seek: {}", e)))?;
@@ -718,7 +718,7 @@ pub fn detect_fortran_format<P: AsRef<Path>>(path: P) -> Result<(EndianMode, Rec
         }
     }
 
-    if big_4 > 0 && big_4 < file_size - 8 {
+    if big_4 > 0 && file_size > 8 && big_4 <= file_size - 8 {
         file.seek(SeekFrom::Start((4 + big_4) as u64))
             .map_err(|e| IoError::ParseError(format!("Failed to seek: {}", e)))?;
         let mut end_marker = [0u8; 4];
@@ -731,7 +731,7 @@ pub fn detect_fortran_format<P: AsRef<Path>>(path: P) -> Result<(EndianMode, Rec
     }
 
     // Try 8-byte markers
-    if little_8 > 0 && little_8 < file_size - 16 {
+    if little_8 > 0 && file_size > 16 && little_8 <= file_size - 16 {
         file.seek(SeekFrom::Start((8 + little_8) as u64))
             .map_err(|e| IoError::ParseError(format!("Failed to seek: {}", e)))?;
         let mut end_marker = [0u8; 8];
@@ -743,7 +743,7 @@ pub fn detect_fortran_format<P: AsRef<Path>>(path: P) -> Result<(EndianMode, Rec
         }
     }
 
-    if big_8 > 0 && big_8 < file_size - 16 {
+    if big_8 > 0 && file_size > 16 && big_8 <= file_size - 16 {
         file.seek(SeekFrom::Start((8 + big_8) as u64))
             .map_err(|e| IoError::ParseError(format!("Failed to seek: {}", e)))?;
         let mut end_marker = [0u8; 8];

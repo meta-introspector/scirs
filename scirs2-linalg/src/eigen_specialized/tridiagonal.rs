@@ -27,7 +27,7 @@ pub fn tridiagonal_eigvalsh<F>(
     off_diagonal: &ArrayView1<F>,
 ) -> LinalgResult<Array1<F>>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     let n = diagonal.len();
 
@@ -172,7 +172,7 @@ pub fn tridiagonal_eigh<F>(
     off_diagonal: &ArrayView1<F>,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     let n = diagonal.len();
 

@@ -67,7 +67,7 @@ pub enum ConvexHullAlgorithm {
 /// // The hull vertices should be the corners, not the interior point
 /// assert!(hull_vertices.nrows() >= 3);
 /// ```
-pub fn convex_hull(points: &ArrayView2<f64>) -> SpatialResult<Array2<f64>> {
+pub fn convex_hull(points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
     let hull = ConvexHull::new(points)?;
     Ok(hull.vertices_array())
 }
@@ -95,7 +95,7 @@ pub fn convex_hull(points: &ArrayView2<f64>) -> SpatialResult<Array2<f64>> {
 /// assert!(hull_vertices.nrows() >= 3);
 /// ```
 pub fn convex_hull_with_algorithm(
-    points: &ArrayView2<f64>,
+    points: &ArrayView2<'_, f64>,
     algorithm: ConvexHullAlgorithm,
 ) -> SpatialResult<Array2<f64>> {
     let hull = ConvexHull::new_with_algorithm(points, algorithm)?;
@@ -144,7 +144,7 @@ impl ConvexHull {
     /// let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.5, 0.5]];
     /// let hull = ConvexHull::new(&points.view()).unwrap();
     /// ```
-    pub fn new(points: &ArrayView2<f64>) -> SpatialResult<Self> {
+    pub fn new(points: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
         Self::new_with_algorithm(points, ConvexHullAlgorithm::default())
     }
 
@@ -174,7 +174,7 @@ impl ConvexHull {
     /// let hull = ConvexHull::new_with_algorithm(&points.view(), ConvexHullAlgorithm::GrahamScan).unwrap();
     /// ```
     pub fn new_with_algorithm(
-        points: &ArrayView2<f64>,
+        points: &ArrayView2<'_, f64>,
         algorithm: ConvexHullAlgorithm,
     ) -> SpatialResult<Self> {
         let npoints = points.nrows();
@@ -211,7 +211,7 @@ impl ConvexHull {
     }
 
     /// Create a ConvexHull using QHull algorithm (original implementation)
-    fn new_qhull(points: &ArrayView2<f64>) -> SpatialResult<Self> {
+    fn new_qhull(points: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
         let npoints = points.nrows();
         let ndim = points.ncols();
 
@@ -351,7 +351,7 @@ impl ConvexHull {
     }
 
     /// Create a ConvexHull using Graham scan algorithm (2D only)
-    fn new_graham_scan(points: &ArrayView2<f64>) -> SpatialResult<Self> {
+    fn new_graham_scan(points: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
         let npoints = points.nrows();
 
         if npoints < 3 {
@@ -456,7 +456,7 @@ impl ConvexHull {
     }
 
     /// Create a ConvexHull using Jarvis march (gift wrapping) algorithm (2D only)
-    fn new_jarvis_march(points: &ArrayView2<f64>) -> SpatialResult<Self> {
+    fn new_jarvis_march(points: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
         let npoints = points.nrows();
 
         if npoints < 3 {
@@ -549,7 +549,7 @@ impl ConvexHull {
 
     /// Compute facet equations for a 2D convex hull
     fn compute_2d_hull_equations(
-        points: &ArrayView2<f64>,
+        points: &ArrayView2<'_, f64>,
         vertex_indices: &[usize],
     ) -> Array2<f64> {
         let n = vertex_indices.len();
@@ -580,7 +580,7 @@ impl ConvexHull {
     }
 
     /// Handle special case for 2D hulls with 3 or 4 points
-    fn handle_special_case_2d(points: &ArrayView2<f64>) -> SpatialResult<Self> {
+    fn handle_special_case_2d(points: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
         let npoints = points.nrows();
         let _ndim = 2;
 
@@ -673,7 +673,7 @@ impl ConvexHull {
     }
 
     /// Handle special case for 3D hulls with 4 points (tetrahedron)
-    fn handle_special_case_3d(points: &ArrayView2<f64>) -> SpatialResult<Self> {
+    fn handle_special_case_3d(points: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
         let npoints = points.nrows();
         let _ndim = 3;
 

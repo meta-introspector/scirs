@@ -38,7 +38,7 @@ pub fn jacobi_svd<A>(
     tolerance: A,
 ) -> LinalgResult<(Array2<A>, Array1<A>, Array2<A>)>
 where
-    A: Float + NumAssign + Debug + Display + ndarray::ScalarOperand + std::iter::Sum + 'static,
+    A: Float + NumAssign + Debug + Display + ndarray::ScalarOperand + std::iter::Sum + Send + Sync + 'static,
 {
     let (m, n) = (a.nrows(), a.ncols());
 
@@ -186,7 +186,7 @@ pub fn polar_decomposition<A>(
     compute_p: bool,
 ) -> LinalgResult<(Array2<A>, Option<Array2<A>>)>
 where
-    A: Float + NumAssign + Debug + Display + ndarray::ScalarOperand + std::iter::Sum + 'static,
+    A: Float + NumAssign + Debug + Display + ndarray::ScalarOperand + std::iter::Sum + Send + Sync + 'static,
 {
     let (m, n) = (a.nrows(), a.ncols());
 
@@ -232,7 +232,7 @@ pub fn polar_decomposition_newton<A>(
     tolerance: A,
 ) -> LinalgResult<(Array2<A>, Array2<A>)>
 where
-    A: Float + NumAssign + Debug + Display + ndarray::ScalarOperand + std::iter::Sum + 'static,
+    A: Float + NumAssign + Debug + Display + ndarray::ScalarOperand + std::iter::Sum + Send + Sync + 'static,
 {
     let (m, n) = (a.nrows(), a.ncols());
 
@@ -317,7 +317,7 @@ pub fn qr_with_column_pivoting<A>(
     tolerance: A,
 ) -> LinalgResult<QRPivotingResult<A>>
 where
-    A: Float + NumAssign + Debug + Display + ndarray::ScalarOperand + std::iter::Sum + 'static,
+    A: Float + NumAssign + Debug + Display + ndarray::ScalarOperand + std::iter::Sum + Send + Sync + 'static,
 {
     // This is already implemented as complete_orthogonal_decomposition in decomposition.rs
     // We'll provide a wrapper that extracts the rank information

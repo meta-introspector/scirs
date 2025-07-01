@@ -258,7 +258,8 @@ impl<F: Float + Debug + Clone + std::iter::Sum + num_traits::FromPrimitive> Risk
             return Ok(var);
         }
 
-        let cvar = tail_losses.into_iter().sum::<F>() / F::from(tail_losses.len()).unwrap();
+        let sum = tail_losses.iter().fold(F::zero(), |acc, &x| acc + x);
+        let cvar = sum / F::from(tail_losses.len()).unwrap();
         Ok(-cvar) // Report as positive loss
     }
 
@@ -343,7 +344,7 @@ impl<F: Float + Debug + Clone + std::iter::Sum + num_traits::FromPrimitive> Risk
             .collect();
 
         let downside_variance =
-            negative_returns.into_iter().sum::<F>() / F::from(negative_returns.len()).unwrap();
+            negative_returns.iter().fold(F::zero(), |acc, &x| acc + x) / F::from(negative_returns.len()).unwrap();
         let downside_deviation = downside_variance.sqrt();
 
         if downside_deviation == F::zero() {
@@ -492,7 +493,8 @@ impl HFTIndicators {
             }
 
             // Calculate variance of first differences
-            let mean_diff = diffs.into_iter().sum::<F>() / F::from(diffs.len()).unwrap();
+            let sum_diff = diffs.iter().fold(F::zero(), |acc, &x| acc + x);
+            let mean_diff = sum_diff / F::from(diffs.len()).unwrap();
             let variance = diffs
                 .iter()
                 .map(|&d| (d - mean_diff) * (d - mean_diff))
@@ -696,7 +698,7 @@ pub struct RegimeParameters<F: Float> {
     pub persistence: F,
 }
 
-impl<F: Float + Debug + Clone + FromPrimitive> RegimeSwitchingModel<F> {
+impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> RegimeSwitchingModel<F> {
     /// Create new regime-switching model
     pub fn new(
         num_regimes: usize,

@@ -44,9 +44,9 @@ impl Default for MemoryPoolConfig {
         Self {
             max_pool_size: 2 * 1024 * 1024 * 1024, // 2GB default
             initial_buffer_sizes: vec![
-                1024 * 1024,      // 1MB
-                16 * 1024 * 1024, // 16MB
-                64 * 1024 * 1024, // 64MB
+                1024 * 1024,       // 1MB
+                16 * 1024 * 1024,  // 16MB
+                64 * 1024 * 1024,  // 64MB
                 256 * 1024 * 1024, // 256MB
             ],
             enable_pooling: true,
@@ -95,9 +95,9 @@ pub struct CudaBufferHandle {
 #[cfg(feature = "opencl")]
 #[derive(Debug, Clone)]
 pub struct OpenCLBufferHandle {
-    pub buffer: usize, // OpenCL buffer object
+    pub buffer: usize,  // OpenCL buffer object
     pub context: usize, // OpenCL context
-    pub queue: usize,  // OpenCL command queue
+    pub queue: usize,   // OpenCL command queue
 }
 
 #[cfg(all(target_os = "macos", feature = "metal"))]
@@ -116,27 +116,30 @@ impl GpuMemoryPool {
             peak_usage: Arc::new(Mutex::new(0)),
             config,
         };
-        
+
         // Pre-allocate initial buffers if pooling is enabled
         if pool.config.enable_pooling {
             for &size in &pool.config.initial_buffer_sizes {
                 if let Err(e) = pool.pre_allocate_buffer(size) {
-                    eprintln!("Warning: Failed to pre-allocate buffer of size {}: {:?}", size, e);
+                    eprintln!(
+                        "Warning: Failed to pre-allocate buffer of size {}: {:?}",
+                        size, e
+                    );
                 }
             }
         }
-        
+
         pool
     }
-    
+
     /// Allocate a GPU buffer of the specified size
     pub fn allocate(&self, size: usize, backend: Backend) -> NdimageResult<GpuBuffer> {
         if !self.config.enable_pooling || size < self.config.min_buffer_size {
             return self.allocate_new_buffer(size, backend);
         }
-        
+
         let mut buffers = self.buffers.lock().unwrap();
-        
+
         // Find an available buffer of sufficient size
         for buffer in buffers.iter_mut() {
             if !buffer.in_use && buffer.size >= size {
@@ -145,27 +148,27 @@ impl GpuMemoryPool {
                 return Ok(buffer.clone());
             }
         }
-        
+
         // No suitable buffer found, allocate new one
         drop(buffers);
         let new_buffer = self.allocate_new_buffer(size, backend)?;
-        
+
         // Add to pool if within limits
         let mut buffers = self.buffers.lock().unwrap();
         let current_total = *self.total_allocated.lock().unwrap();
         if current_total + size <= self.config.max_pool_size {
             buffers.push(new_buffer.clone());
         }
-        
+
         Ok(new_buffer)
     }
-    
+
     /// Deallocate a GPU buffer (return to pool)
     pub fn deallocate(&self, buffer: &GpuBuffer) -> NdimageResult<()> {
         if !self.config.enable_pooling {
             return self.deallocate_immediate(buffer);
         }
-        
+
         let mut buffers = self.buffers.lock().unwrap();
         for pool_buffer in buffers.iter_mut() {
             if pool_buffer.id == buffer.id {
@@ -173,21 +176,21 @@ impl GpuMemoryPool {
                 return Ok(());
             }
         }
-        
+
         // Buffer not in pool, deallocate immediately
         self.deallocate_immediate(buffer)
     }
-    
+
     /// Get memory pool statistics
     pub fn get_statistics(&self) -> MemoryPoolStatistics {
         let buffers = self.buffers.lock().unwrap();
         let total_allocated = *self.total_allocated.lock().unwrap();
         let peak_usage = *self.peak_usage.lock().unwrap();
-        
+
         let active_buffers = buffers.iter().filter(|b| b.in_use).count();
         let total_buffers = buffers.len();
         let total_pool_memory: usize = buffers.iter().map(|b| b.size).sum();
-        
+
         MemoryPoolStatistics {
             total_allocated,
             peak_usage,
@@ -197,23 +200,23 @@ impl GpuMemoryPool {
             fragmentation_ratio: Self::calculate_fragmentation(&buffers),
         }
     }
-    
+
     fn pre_allocate_buffer(&self, size: usize) -> NdimageResult<()> {
         // This would pre-allocate buffers based on the backend
         // Implementation depends on specific GPU backend
         Ok(())
     }
-    
+
     fn allocate_new_buffer(&self, size: usize, backend: Backend) -> NdimageResult<GpuBuffer> {
         let buffer_id = self.generate_buffer_id();
         let handle = self.create_buffer_handle(size, backend)?;
-        
+
         let mut total_allocated = self.total_allocated.lock().unwrap();
         *total_allocated += size;
-        
+
         let mut peak_usage = self.peak_usage.lock().unwrap();
         *peak_usage = (*peak_usage).max(*total_allocated);
-        
+
         Ok(GpuBuffer {
             id: buffer_id,
             size,
@@ -223,7 +226,7 @@ impl GpuMemoryPool {
             last_used: Instant::now(),
         })
     }
-    
+
     fn deallocate_immediate(&self, buffer: &GpuBuffer) -> NdimageResult<()> {
         // Backend-specific deallocation
         match &buffer.handle {
@@ -241,14 +244,18 @@ impl GpuMemoryPool {
             }
             GpuBufferHandle::Placeholder => {}
         }
-        
+
         let mut total_allocated = self.total_allocated.lock().unwrap();
         *total_allocated = total_allocated.saturating_sub(buffer.size);
-        
+
         Ok(())
     }
-    
-    fn create_buffer_handle(&self, size: usize, backend: Backend) -> NdimageResult<GpuBufferHandle> {
+
+    fn create_buffer_handle(
+        &self,
+        size: usize,
+        backend: Backend,
+    ) -> NdimageResult<GpuBufferHandle> {
         match backend {
             #[cfg(feature = "cuda")]
             Backend::Cuda => {
@@ -268,7 +275,7 @@ impl GpuMemoryPool {
             _ => Ok(GpuBufferHandle::Placeholder),
         }
     }
-    
+
     #[cfg(feature = "cuda")]
     fn create_cuda_buffer(&self, size: usize) -> NdimageResult<CudaBufferHandle> {
         // CUDA buffer allocation would go here
@@ -279,13 +286,13 @@ impl GpuMemoryPool {
             stream: None,
         })
     }
-    
+
     #[cfg(feature = "cuda")]
     fn deallocate_cuda_buffer(&self, handle: &CudaBufferHandle) -> NdimageResult<()> {
         // CUDA buffer deallocation would go here
         Ok(())
     }
-    
+
     #[cfg(feature = "opencl")]
     fn create_opencl_buffer(&self, size: usize) -> NdimageResult<OpenCLBufferHandle> {
         // OpenCL buffer allocation would go here
@@ -295,13 +302,13 @@ impl GpuMemoryPool {
             queue: 0,
         })
     }
-    
+
     #[cfg(feature = "opencl")]
     fn deallocate_opencl_buffer(&self, handle: &OpenCLBufferHandle) -> NdimageResult<()> {
         // OpenCL buffer deallocation would go here
         Ok(())
     }
-    
+
     #[cfg(all(target_os = "macos", feature = "metal"))]
     fn create_metal_buffer(&self, size: usize) -> NdimageResult<MetalBufferHandle> {
         // Metal buffer allocation would go here
@@ -310,27 +317,27 @@ impl GpuMemoryPool {
             device: 0,
         })
     }
-    
+
     #[cfg(all(target_os = "macos", feature = "metal"))]
     fn deallocate_metal_buffer(&self, handle: &MetalBufferHandle) -> NdimageResult<()> {
         // Metal buffer deallocation would go here
         Ok(())
     }
-    
+
     fn generate_buffer_id(&self) -> u64 {
         use std::sync::atomic::{AtomicU64, Ordering};
         static BUFFER_ID_COUNTER: AtomicU64 = AtomicU64::new(1);
         BUFFER_ID_COUNTER.fetch_add(1, Ordering::Relaxed)
     }
-    
+
     fn calculate_fragmentation(buffers: &[GpuBuffer]) -> f64 {
         if buffers.is_empty() {
             return 0.0;
         }
-        
+
         let total_size: usize = buffers.iter().map(|b| b.size).sum();
         let used_size: usize = buffers.iter().filter(|b| b.in_use).map(|b| b.size).sum();
-        
+
         if total_size == 0 {
             0.0
         } else {
@@ -473,7 +480,7 @@ impl GpuKernelCache {
             stats: Arc::new(Mutex::new(KernelCacheStats::default())),
         }
     }
-    
+
     /// Get or compile a kernel
     pub fn get_or_compile_kernel(
         &self,
@@ -488,28 +495,28 @@ impl GpuKernelCache {
             if let Some(kernel) = kernels.get(kernel_id) {
                 let mut stats = self.stats.lock().unwrap();
                 stats.cache_hits += 1;
-                
+
                 // Update usage statistics
                 let mut updated_kernel = kernel.clone();
                 updated_kernel.last_used = Instant::now();
                 updated_kernel.use_count += 1;
-                
+
                 return Ok(updated_kernel);
             }
         }
-        
+
         // Cache miss, compile kernel
         let mut stats = self.stats.lock().unwrap();
         stats.cache_misses += 1;
         let compilation_start = Instant::now();
-        
+
         let kernel_handle = self.compile_kernel(kernel_source, backend, compile_options)?;
-        
+
         let compilation_time = compilation_start.elapsed();
         stats.kernels_compiled += 1;
         stats.total_compilation_time += compilation_time;
         drop(stats);
-        
+
         let compiled_kernel = CompiledKernel {
             id: kernel_id.to_string(),
             handle: kernel_handle,
@@ -518,16 +525,16 @@ impl GpuKernelCache {
             use_count: 1,
             performance_stats: KernelPerformanceStats::default(),
         };
-        
+
         // Store in cache
         {
             let mut kernels = self.kernels.write().unwrap();
             kernels.insert(kernel_id.to_string(), compiled_kernel.clone());
         }
-        
+
         Ok(compiled_kernel)
     }
-    
+
     /// Update kernel performance statistics
     pub fn update_kernel_stats(
         &self,
@@ -539,36 +546,38 @@ impl GpuKernelCache {
         let mut kernels = self.kernels.write().unwrap();
         if let Some(kernel) = kernels.get_mut(kernel_id) {
             let stats = &mut kernel.performance_stats;
-            
+
             // Update timing statistics
             stats.total_execution_time += execution_time;
             stats.min_execution_time = stats.min_execution_time.min(execution_time);
             stats.max_execution_time = stats.max_execution_time.max(execution_time);
             stats.avg_execution_time = stats.total_execution_time / kernel.use_count as u32;
-            
+
             // Update performance metrics (using exponential moving average)
             let alpha = 0.1; // Smoothing factor
-            stats.memory_bandwidth = alpha * memory_bandwidth + (1.0 - alpha) * stats.memory_bandwidth;
-            stats.compute_utilization = alpha * compute_utilization + (1.0 - alpha) * stats.compute_utilization;
+            stats.memory_bandwidth =
+                alpha * memory_bandwidth + (1.0 - alpha) * stats.memory_bandwidth;
+            stats.compute_utilization =
+                alpha * compute_utilization + (1.0 - alpha) * stats.compute_utilization;
         }
-        
+
         Ok(())
     }
-    
+
     /// Get cache statistics
     pub fn get_cache_stats(&self) -> KernelCacheStats {
         self.stats.lock().unwrap().clone()
     }
-    
+
     /// Clear the kernel cache
     pub fn clear_cache(&self) {
         let mut kernels = self.kernels.write().unwrap();
         kernels.clear();
-        
+
         let mut stats = self.stats.lock().unwrap();
         *stats = KernelCacheStats::default();
     }
-    
+
     fn compile_kernel(
         &self,
         source: &str,
@@ -594,27 +603,39 @@ impl GpuKernelCache {
             _ => Ok(KernelHandle::Placeholder),
         }
     }
-    
+
     #[cfg(feature = "cuda")]
-    fn compile_cuda_kernel(&self, source: &str, options: &[String]) -> NdimageResult<CudaKernelHandle> {
+    fn compile_cuda_kernel(
+        &self,
+        source: &str,
+        options: &[String],
+    ) -> NdimageResult<CudaKernelHandle> {
         // CUDA kernel compilation would go here
         Ok(CudaKernelHandle {
             function: 0,
             module: 0,
         })
     }
-    
+
     #[cfg(feature = "opencl")]
-    fn compile_opencl_kernel(&self, source: &str, options: &[String]) -> NdimageResult<OpenCLKernelHandle> {
+    fn compile_opencl_kernel(
+        &self,
+        source: &str,
+        options: &[String],
+    ) -> NdimageResult<OpenCLKernelHandle> {
         // OpenCL kernel compilation would go here
         Ok(OpenCLKernelHandle {
             kernel: 0,
             program: 0,
         })
     }
-    
+
     #[cfg(all(target_os = "macos", feature = "metal"))]
-    fn compile_metal_kernel(&self, source: &str, options: &[String]) -> NdimageResult<MetalKernelHandle> {
+    fn compile_metal_kernel(
+        &self,
+        source: &str,
+        options: &[String],
+    ) -> NdimageResult<MetalKernelHandle> {
         // Metal kernel compilation would go here
         Ok(MetalKernelHandle {
             function: 0,
@@ -685,7 +706,7 @@ impl GpuAccelerationManager {
             })),
         })
     }
-    
+
     /// Execute an operation on the GPU with automatic memory management
     pub fn execute_operation<T, D>(
         &self,
@@ -699,16 +720,16 @@ impl GpuAccelerationManager {
         D: Dimension,
     {
         let start_time = Instant::now();
-        
+
         // Calculate memory requirements
         let input_size = input.len() * std::mem::size_of::<T>();
         let output_size = input_size; // Assume same size output for simplicity
         let total_memory_needed = input_size + output_size;
-        
+
         // Allocate GPU buffers
         let input_buffer = self.memory_pool.allocate(input_size, backend)?;
         let output_buffer = self.memory_pool.allocate(output_size, backend)?;
-        
+
         // Get or compile kernel
         let kernel = self.kernel_cache.get_or_compile_kernel(
             operation_name,
@@ -716,27 +737,28 @@ impl GpuAccelerationManager {
             backend,
             &[], // Default compile options
         )?;
-        
+
         // Execute operation (placeholder - would be backend-specific)
-        let result = self.execute_kernel_operation(&kernel, &input, &input_buffer, &output_buffer)?;
-        
+        let result =
+            self.execute_kernel_operation(&kernel, &input, &input_buffer, &output_buffer)?;
+
         // Clean up buffers
         self.memory_pool.deallocate(&input_buffer)?;
         self.memory_pool.deallocate(&output_buffer)?;
-        
+
         // Update profiling statistics
         let execution_time = start_time.elapsed();
         self.update_profiling_stats(operation_name, execution_time, total_memory_needed)?;
-        
+
         Ok(result)
     }
-    
+
     /// Get comprehensive performance report
     pub fn get_performance_report(&self) -> GpuPerformanceReport {
         let memory_stats = self.memory_pool.get_statistics();
         let cache_stats = self.kernel_cache.get_cache_stats();
         let profiler = self.profiler.lock().unwrap();
-        
+
         GpuPerformanceReport {
             memory_statistics: memory_stats,
             cache_statistics: cache_stats,
@@ -744,7 +766,7 @@ impl GpuAccelerationManager {
             recommendations: self.generate_performance_recommendations(),
         }
     }
-    
+
     fn execute_kernel_operation<T, D>(
         &self,
         kernel: &CompiledKernel,
@@ -760,7 +782,7 @@ impl GpuAccelerationManager {
         // For now, return a placeholder result
         Ok(Array::zeros(input.raw_dim()))
     }
-    
+
     fn update_profiling_stats(
         &self,
         operation_name: &str,
@@ -768,49 +790,61 @@ impl GpuAccelerationManager {
         memory_used: usize,
     ) -> NdimageResult<()> {
         let mut profiler = self.profiler.lock().unwrap();
-        
-        profiler.timing_history.push((operation_name.to_string(), execution_time));
+
+        profiler
+            .timing_history
+            .push((operation_name.to_string(), execution_time));
         profiler.memory_history.push((Instant::now(), memory_used));
-        
+
         // Update metrics
         profiler.metrics.total_operations += 1;
         profiler.metrics.total_gpu_time += execution_time;
-        
+
         // Calculate moving averages
         if profiler.timing_history.len() > 1 {
-            let avg_time = profiler.metrics.total_gpu_time / profiler.metrics.total_operations as u32;
+            let avg_time =
+                profiler.metrics.total_gpu_time / profiler.metrics.total_operations as u32;
             // Update other metrics based on timing and memory history
         }
-        
+
         Ok(())
     }
-    
+
     fn generate_performance_recommendations(&self) -> Vec<String> {
         let mut recommendations = Vec::new();
-        
+
         let memory_stats = self.memory_pool.get_statistics();
         let cache_stats = self.kernel_cache.get_cache_stats();
-        
+
         // Memory recommendations
         if memory_stats.fragmentation_ratio > 0.3 {
-            recommendations.push("High memory fragmentation detected. Consider defragmenting GPU memory pool.".to_string());
+            recommendations.push(
+                "High memory fragmentation detected. Consider defragmenting GPU memory pool."
+                    .to_string(),
+            );
         }
-        
+
         if memory_stats.peak_usage > memory_stats.total_pool_memory {
-            recommendations.push("Memory usage exceeded pool size. Consider increasing pool size.".to_string());
+            recommendations.push(
+                "Memory usage exceeded pool size. Consider increasing pool size.".to_string(),
+            );
         }
-        
+
         // Cache recommendations
-        let cache_hit_ratio = cache_stats.cache_hits as f64 / (cache_stats.cache_hits + cache_stats.cache_misses) as f64;
+        let cache_hit_ratio = cache_stats.cache_hits as f64
+            / (cache_stats.cache_hits + cache_stats.cache_misses) as f64;
         if cache_hit_ratio < 0.7 {
-            recommendations.push("Low kernel cache hit ratio. Consider pre-compiling frequently used kernels.".to_string());
+            recommendations.push(
+                "Low kernel cache hit ratio. Consider pre-compiling frequently used kernels."
+                    .to_string(),
+            );
         }
-        
+
         // Performance recommendations
         if recommendations.is_empty() {
             recommendations.push("GPU acceleration is performing optimally.".to_string());
         }
-        
+
         recommendations
     }
 }
@@ -832,25 +866,50 @@ impl GpuPerformanceReport {
     /// Display the performance report
     pub fn display(&self) {
         println!("\n=== GPU Performance Report ===\n");
-        
+
         println!("Memory Statistics:");
-        println!("  Total Allocated: {} MB", self.memory_statistics.total_allocated / (1024 * 1024));
-        println!("  Peak Usage: {} MB", self.memory_statistics.peak_usage / (1024 * 1024));
-        println!("  Active Buffers: {}", self.memory_statistics.active_buffers);
-        println!("  Fragmentation: {:.2}%", self.memory_statistics.fragmentation_ratio * 100.0);
-        
+        println!(
+            "  Total Allocated: {} MB",
+            self.memory_statistics.total_allocated / (1024 * 1024)
+        );
+        println!(
+            "  Peak Usage: {} MB",
+            self.memory_statistics.peak_usage / (1024 * 1024)
+        );
+        println!(
+            "  Active Buffers: {}",
+            self.memory_statistics.active_buffers
+        );
+        println!(
+            "  Fragmentation: {:.2}%",
+            self.memory_statistics.fragmentation_ratio * 100.0
+        );
+
         println!("\nKernel Cache Statistics:");
         println!("  Cache Hits: {}", self.cache_statistics.cache_hits);
         println!("  Cache Misses: {}", self.cache_statistics.cache_misses);
-        println!("  Hit Ratio: {:.2}%", 
-            (self.cache_statistics.cache_hits as f64 / 
-             (self.cache_statistics.cache_hits + self.cache_statistics.cache_misses).max(1) as f64) * 100.0);
-        
+        println!(
+            "  Hit Ratio: {:.2}%",
+            (self.cache_statistics.cache_hits as f64
+                / (self.cache_statistics.cache_hits + self.cache_statistics.cache_misses).max(1)
+                    as f64)
+                * 100.0
+        );
+
         println!("\nPerformance Metrics:");
-        println!("  Total Operations: {}", self.performance_metrics.total_operations);
-        println!("  Total GPU Time: {:.3}ms", self.performance_metrics.total_gpu_time.as_secs_f64() * 1000.0);
-        println!("  GPU Utilization: {:.2}%", self.performance_metrics.gpu_utilization * 100.0);
-        
+        println!(
+            "  Total Operations: {}",
+            self.performance_metrics.total_operations
+        );
+        println!(
+            "  Total GPU Time: {:.3}ms",
+            self.performance_metrics.total_gpu_time.as_secs_f64() * 1000.0
+        );
+        println!(
+            "  GPU Utilization: {:.2}%",
+            self.performance_metrics.gpu_utilization * 100.0
+        );
+
         if !self.recommendations.is_empty() {
             println!("\nRecommendations:");
             for (i, rec) in self.recommendations.iter().enumerate() {
@@ -863,30 +922,30 @@ impl GpuPerformanceReport {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_memory_pool_creation() {
         let config = MemoryPoolConfig::default();
         let pool = GpuMemoryPool::new(config);
-        
+
         let stats = pool.get_statistics();
         assert_eq!(stats.active_buffers, 0);
     }
-    
+
     #[test]
     fn test_kernel_cache_creation() {
         let cache = GpuKernelCache::new();
         let stats = cache.get_cache_stats();
-        
+
         assert_eq!(stats.cache_hits, 0);
         assert_eq!(stats.cache_misses, 0);
     }
-    
+
     #[test]
     fn test_gpu_acceleration_manager_creation() {
         let config = MemoryPoolConfig::default();
         let result = GpuAccelerationManager::new(config);
-        
+
         // This test might fail in environments without GPU support
         // but it verifies the basic structure
         assert!(result.is_ok() || result.is_err());

@@ -462,31 +462,33 @@ where
     ) -> NdimageResult<()> {
         let dim = overlap_info.dimension;
         let overlap_size = overlap_info.overlap_size;
-        
+
         // Only merge if there's actually an overlap
         if overlap_size == 0 {
             output.assign(new_chunk);
             return Ok(());
         }
-        
+
         // For Gaussian filtering, we use weighted averaging in the overlap region
         // Weight decreases towards the edges of each chunk to provide smooth blending
-        
+
         // Get the shapes for calculations
         let output_shape = output.shape();
         let chunk_shape = new_chunk.shape();
-        
+
         // Ensure shapes are compatible
         if output_shape != chunk_shape {
             return Err(NdimageError::DimensionError(
                 "Output and chunk shapes must match for overlap merging".to_string(),
             ));
         }
-        
+
         // Iterate through all pixels and apply weighted blending in overlap regions
-        for (coords, (output_pixel, &chunk_pixel)) in output.indexed_iter_mut().zip(new_chunk.iter()) {
+        for (coords, (output_pixel, &chunk_pixel)) in
+            output.indexed_iter_mut().zip(new_chunk.iter())
+        {
             let coord_in_dim = coords[dim];
-            
+
             if coord_in_dim < overlap_size {
                 // We're in the overlap region at the beginning
                 let distance_from_edge = coord_in_dim;
@@ -502,7 +504,7 @@ where
                 *output_pixel = chunk_pixel;
             }
         }
-        
+
         Ok(())
     }
 }
@@ -632,9 +634,12 @@ where
 
             // Adaptive adjustment every 10 chunks
             if chunk_idx > 0 && chunk_idx % 10 == 0 {
-                let avg_time = chunk_times.iter().sum::<std::time::Duration>() / chunk_times.len() as u32;
-                let new_config = self.performance_monitor.adjust_config(&current_config, avg_time);
-                
+                let avg_time =
+                    chunk_times.iter().sum::<std::time::Duration>() / chunk_times.len() as u32;
+                let new_config = self
+                    .performance_monitor
+                    .adjust_config(&current_config, avg_time);
+
                 if new_config.chunk_size != current_config.chunk_size {
                     current_config = new_config;
                     chunk_times.clear(); // Reset for new configuration
@@ -680,7 +685,8 @@ where
         }
 
         // Create slice - this is a simplified version; real implementation would be more complex
-        let chunk_view = input.slice_each_axis(|ax| Slice::from(chunk_info.ranges[ax.axis.index()].clone()));
+        let chunk_view =
+            input.slice_each_axis(|ax| Slice::from(chunk_info.ranges[ax.axis.index()].clone()));
         Ok(chunk_view.to_owned())
     }
 
@@ -696,31 +702,31 @@ where
     {
         // Extract the portion of the result that should go to the output
         // using the output_ranges which exclude overlap regions
-        
+
         // Calculate the slice in the result array that corresponds to the output region
         let mut result_slice_info = Vec::new();
-        
+
         for (i, output_range) in chunk_info.output_ranges.iter().enumerate() {
             let input_range = &chunk_info.ranges[i];
-            
+
             // Calculate offset in the result array
             let offset_start = output_range.start - input_range.start;
             let offset_end = offset_start + (output_range.end - output_range.start);
-            
+
             result_slice_info.push(offset_start..offset_end);
         }
-        
+
         // Create slices for both the result (source) and output (destination)
         let result_slice = result.slice_each_axis(|ax| {
             let range = &result_slice_info[ax.axis.index()];
             Slice::from(range.start..range.end)
         });
-        
+
         let mut output_slice = output.slice_each_axis_mut(|ax| {
             let range = &chunk_info.output_ranges[ax.axis.index()];
             Slice::from(range.start..range.end)
         });
-        
+
         // Check if shapes match
         if result_slice.shape() != output_slice.shape() {
             return Err(NdimageError::DimensionError(format!(
@@ -729,16 +735,20 @@ where
                 output_slice.shape()
             )));
         }
-        
+
         // For adaptive streaming, we use simple assignment since the overlap
         // handling is done at the chunk level, and output_ranges already exclude overlaps
         output_slice.assign(&result_slice);
-        
+
         Ok(())
     }
 
     /// Create optimized chunk iterator based on current configuration
-    fn chunk_iterator(&self, shape: &[usize], config: &StreamConfig) -> impl Iterator<Item = ChunkInfo> {
+    fn chunk_iterator(
+        &self,
+        shape: &[usize],
+        config: &StreamConfig,
+    ) -> impl Iterator<Item = ChunkInfo> {
         let element_size = std::mem::size_of::<T>();
         let chunk_dims = self.calculate_optimal_chunk_dimensions(shape, element_size, config);
         ChunkIterator::new(shape, &chunk_dims, &config.overlap)
@@ -753,13 +763,14 @@ where
     ) -> Vec<usize> {
         let target_elements = config.chunk_size / element_size;
         let ndim = shape.len();
-        
+
         // Start with cubic chunks and adjust based on shape
         let base_size = (target_elements as f64).powf(1.0 / ndim as f64) as usize;
-        
-        shape.iter().map(|&dim_size| {
-            base_size.min(dim_size)
-        }).collect()
+
+        shape
+            .iter()
+            .map(|&dim_size| base_size.min(dim_size))
+            .collect()
     }
 
     #[cfg(feature = "gpu")]
@@ -774,10 +785,10 @@ where
         Op: GpuStreamableOp<T, D>,
     {
         use crate::backend::GpuContext;
-        
+
         // Initialize GPU context
         let gpu_context = GpuContext::new()?;
-        
+
         // Get required overlap
         let required_overlap = op.required_overlap();
         let overlap = if required_overlap.is_empty() {
@@ -785,20 +796,20 @@ where
         } else {
             required_overlap
         };
-        
+
         // Calculate chunk dimensions
         let chunk_dims = self.calculate_optimal_chunk_dimensions(
             input.shape(),
             std::mem::size_of::<T>(),
-            &self.config
+            &self.config,
         );
-        
+
         // Initialize output array
         let mut output = Array::<T, D>::zeros(input.raw_dim());
-        
+
         // Create chunk iterator
         let chunk_iter = ChunkIterator::new(input.shape(), &chunk_dims, &overlap);
-        
+
         // Process chunks on GPU
         for chunk_info in chunk_iter {
             // Extract chunk from input using ranges (includes overlap)
@@ -806,18 +817,18 @@ where
                 let range = &chunk_info.ranges[ax.axis.index()];
                 Slice::from(range.start..range.end)
             });
-            
+
             // Check if chunk is suitable for GPU processing
             if !op.is_gpu_suitable(chunk_view.shape()) {
                 // Fallback to CPU processing for small chunks
                 let chunk_result = op.apply_chunk(&chunk_view)?;
-                
+
                 // Copy result to output using output_ranges (excludes overlap)
                 let mut output_slice = output.slice_each_axis_mut(|ax| {
                     let range = &chunk_info.output_ranges[ax.axis.index()];
                     Slice::from(range.start..range.end)
                 });
-                
+
                 // Extract the non-overlapping portion of the result
                 let result_slice = chunk_result.slice_each_axis(|ax| {
                     let input_range = &chunk_info.ranges[ax.axis.index()];
@@ -826,14 +837,14 @@ where
                     let size = output_range.end - output_range.start;
                     Slice::from(offset..offset + size)
                 });
-                
+
                 output_slice.assign(&result_slice);
                 continue;
             }
-            
+
             // Process chunk on GPU
             let chunk_result = op.apply_chunk_gpu(&chunk_view, &gpu_context)?;
-            
+
             // Handle overlapping regions using proper overlap merging
             if overlap.iter().any(|&x| x > 0) {
                 let overlap_info = OverlapInfo {
@@ -842,12 +853,12 @@ where
                     output_end: chunk_info.output_ranges[0].end,
                     overlap_size: overlap[0],
                 };
-                
+
                 let mut output_slice = output.slice_each_axis_mut(|ax| {
                     let range = &chunk_info.output_ranges[ax.axis.index()];
                     Slice::from(range.start..range.end)
                 });
-                
+
                 // Extract the non-overlapping portion of the result
                 let result_slice = chunk_result.slice_each_axis(|ax| {
                     let input_range = &chunk_info.ranges[ax.axis.index()];
@@ -856,7 +867,7 @@ where
                     let size = output_range.end - output_range.start;
                     Slice::from(offset..offset + size)
                 });
-                
+
                 op.merge_overlap(&mut output_slice, &result_slice, &overlap_info)?;
             } else {
                 // No overlap - direct assignment using output_ranges
@@ -864,12 +875,12 @@ where
                     let range = &chunk_info.output_ranges[ax.axis.index()];
                     Slice::from(range.start..range.end)
                 });
-                
+
                 // For no overlap case, ranges and output_ranges should be the same
                 output_slice.assign(&chunk_result);
             }
         }
-        
+
         Ok(output)
     }
 }
@@ -886,7 +897,11 @@ impl PerformanceMonitor {
         }
     }
 
-    fn adjust_config(&mut self, current: &StreamConfig, avg_time: std::time::Duration) -> StreamConfig {
+    fn adjust_config(
+        &mut self,
+        current: &StreamConfig,
+        avg_time: std::time::Duration,
+    ) -> StreamConfig {
         let mut new_config = current.clone();
 
         // Simple adaptive strategy - increase chunk size if processing is fast
@@ -949,13 +964,14 @@ impl MemoryManager {
         };
 
         let target_size = (self.available_memory as f64 * memory_fraction) as usize;
-        
+
         // Ensure we don't exceed L3 cache for small operations
         if complexity == OperationComplexity::Low {
             target_size.min(self.cache_sizes[2])
         } else {
             target_size
-        }.max(64 * 1024) // Minimum 64KB chunks
+        }
+        .max(64 * 1024) // Minimum 64KB chunks
     }
 
     fn detect_available_memory() -> usize {
@@ -979,7 +995,7 @@ pub enum OperationComplexity {
 }
 
 /// Extended trait for operations that can adapt to streaming
-pub trait AdaptiveOperation<T, D>: StreamableOp<T, D> 
+pub trait AdaptiveOperation<T, D>: StreamableOp<T, D>
 where
     T: Float + FromPrimitive + Debug + Clone,
     D: Dimension,
@@ -1006,7 +1022,11 @@ where
     D: Dimension,
 {
     /// Apply operation on GPU
-    fn apply_chunk_gpu(&self, chunk: &ArrayView<T, D>, gpu_context: &GpuContext) -> NdimageResult<Array<T, D>>;
+    fn apply_chunk_gpu(
+        &self,
+        chunk: &ArrayView<T, D>,
+        gpu_context: &GpuContext,
+    ) -> NdimageResult<Array<T, D>>;
 
     /// Check if chunk size is suitable for GPU processing
     fn is_gpu_suitable(&self, chunk_shape: &[usize]) -> bool;
@@ -1033,17 +1053,17 @@ impl GpuContext {
             memory_pool: None,
         })
     }
-    
+
     pub fn device_id(&self) -> u32 {
         self.device_id
     }
-    
+
     pub fn allocate_memory(&mut self, size: usize) -> NdimageResult<*mut u8> {
         // GPU memory allocation
         // This is a placeholder - would use actual GPU allocation APIs
         Ok(std::ptr::null_mut())
     }
-    
+
     pub fn free_memory(&mut self, ptr: *mut u8) -> NdimageResult<()> {
         // GPU memory deallocation
         // This is a placeholder - would use actual GPU deallocation APIs
@@ -1063,10 +1083,9 @@ where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
 {
     // Open input file with appropriate compression decompression
-    let input_file = File::open(input_path).map_err(|e| {
-        NdimageError::IOError(format!("Failed to open input file: {}", e))
-    })?;
-    
+    let input_file = File::open(input_path)
+        .map_err(|e| NdimageError::IOError(format!("Failed to open input file: {}", e)))?;
+
     let mut input_reader: Box<dyn Read> = match compression {
         CompressionType::None => Box::new(BufReader::new(input_file)),
         CompressionType::Gzip => {
@@ -1109,10 +1128,9 @@ where
     };
 
     // Create output file with appropriate compression
-    let output_file = File::create(output_path).map_err(|e| {
-        NdimageError::IOError(format!("Failed to create output file: {}", e))
-    })?;
-    
+    let output_file = File::create(output_path)
+        .map_err(|e| NdimageError::IOError(format!("Failed to create output file: {}", e)))?;
+
     let mut output_writer: Box<dyn Write> = match compression {
         CompressionType::None => Box::new(BufWriter::new(output_file)),
         CompressionType::Gzip => {
@@ -1120,7 +1138,10 @@ where
             {
                 use flate2::write::GzEncoder;
                 use flate2::Compression;
-                Box::new(BufWriter::new(GzEncoder::new(output_file, Compression::default())))
+                Box::new(BufWriter::new(GzEncoder::new(
+                    output_file,
+                    Compression::default(),
+                )))
             }
             #[cfg(not(feature = "compression"))]
             return Err(NdimageError::InvalidInput(
@@ -1131,9 +1152,11 @@ where
             #[cfg(feature = "compression")]
             {
                 use lz4::EncoderBuilder;
-                Box::new(BufWriter::new(EncoderBuilder::new().build(output_file).map_err(|e| {
-                    NdimageError::IOError(format!("Failed to create LZ4 encoder: {}", e))
-                })?))
+                Box::new(BufWriter::new(
+                    EncoderBuilder::new().build(output_file).map_err(|e| {
+                        NdimageError::IOError(format!("Failed to create LZ4 encoder: {}", e))
+                    })?,
+                ))
             }
             #[cfg(not(feature = "compression"))]
             return Err(NdimageError::InvalidInput(
@@ -1144,9 +1167,9 @@ where
             #[cfg(feature = "compression")]
             {
                 use zstd::stream::write::Encoder;
-                Box::new(BufWriter::new(Encoder::new(output_file, 0).map_err(|e| {
-                    NdimageError::IOError(format!("Failed to create Zstd encoder: {}", e))
-                })?))
+                Box::new(BufWriter::new(Encoder::new(output_file, 0).map_err(
+                    |e| NdimageError::IOError(format!("Failed to create Zstd encoder: {}", e)),
+                )?))
             }
             #[cfg(not(feature = "compression"))]
             return Err(NdimageError::InvalidInput(
@@ -1159,37 +1182,37 @@ where
     let element_size = std::mem::size_of::<T>();
     let total_elements: usize = shape.iter().product();
     let chunk_elements = config.chunk_size / element_size;
-    
+
     // Process data in chunks
     let mut elements_processed = 0;
     while elements_processed < total_elements {
         let chunk_size = (total_elements - elements_processed).min(chunk_elements);
-        
+
         // Read chunk from compressed input
         let mut chunk_data = vec![0u8; chunk_size * element_size];
-        input_reader.read_exact(&mut chunk_data).map_err(|e| {
-            NdimageError::IOError(format!("Failed to read chunk: {}", e))
-        })?;
-        
+        input_reader
+            .read_exact(&mut chunk_data)
+            .map_err(|e| NdimageError::IOError(format!("Failed to read chunk: {}", e)))?;
+
         // Convert bytes to typed data (this is a simplified approach)
         // In a real implementation, you would:
         // 1. Convert bytes to array chunk
         // 2. Apply the processing operation
         // 3. Convert result back to bytes
-        
+
         // For now, just pass through the data (placeholder for actual processing)
-        output_writer.write_all(&chunk_data).map_err(|e| {
-            NdimageError::IOError(format!("Failed to write chunk: {}", e))
-        })?;
-        
+        output_writer
+            .write_all(&chunk_data)
+            .map_err(|e| NdimageError::IOError(format!("Failed to write chunk: {}", e)))?;
+
         elements_processed += chunk_size;
     }
-    
+
     // Ensure all data is written
-    output_writer.flush().map_err(|e| {
-        NdimageError::IOError(format!("Failed to flush output: {}", e))
-    })?;
-    
+    output_writer
+        .flush()
+        .map_err(|e| NdimageError::IOError(format!("Failed to flush output: {}", e)))?;
+
     Ok(())
 }
 

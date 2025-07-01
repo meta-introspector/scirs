@@ -852,38 +852,34 @@ pub use ultra_parallel::{
 mod utils;
 
 // Quantum-inspired spatial algorithms for cutting-edge optimization
-// Temporarily disabled due to compilation issues
-// pub mod quantum_inspired;
-// pub use quantum_inspired::{
-//     QuantumClusterer, QuantumNearestNeighbor, QuantumSpatialOptimizer, QuantumState,
-//     QuantumAmplitude,
-// };
+pub mod quantum_inspired;
+pub use quantum_inspired::{
+    QuantumClusterer, QuantumNearestNeighbor, QuantumSpatialOptimizer, QuantumState,
+    QuantumAmplitude,
+};
 
 // Neuromorphic computing acceleration for brain-inspired spatial processing
-// Temporarily disabled due to compilation issues
-// pub mod neuromorphic;
-// pub use neuromorphic::{
-//     SpikingNeuralClusterer, NeuromorphicProcessor, CompetitiveNeuralClusterer,
-//     SpikeEvent, SpikingNeuron, Synapse,
-// };
+pub mod neuromorphic;
+pub use neuromorphic::{
+    SpikingNeuralClusterer, NeuromorphicProcessor, CompetitiveNeuralClusterer,
+    SpikeEvent, SpikingNeuron, Synapse,
+};
 
 // Advanced GPU tensor core utilization for maximum performance
-// Temporarily disabled due to compilation issues
-// pub mod tensor_cores;
-// pub use tensor_cores::{
-//     TensorCoreDistanceMatrix, TensorCoreClustering, TensorCoreCapabilities,
-//     PrecisionMode, TensorLayout, GpuArchitecture, TensorCoreType,
-//     detect_tensor_core_capabilities,
-// };
+pub mod tensor_cores;
+pub use tensor_cores::{
+    TensorCoreDistanceMatrix, TensorCoreClustering, TensorCoreCapabilities,
+    PrecisionMode, TensorLayout, GpuArchitecture, TensorCoreType,
+    detect_tensor_core_capabilities,
+};
 
 // Machine learning-based spatial optimization and adaptive algorithms
-// Temporarily disabled due to compilation issues
-// pub mod ml_optimization;
-// pub use ml_optimization::{
-//     NeuralSpatialOptimizer, ReinforcementLearningSelector, ClusteringParameters,
-//     ActivationFunction, DistanceMetric, SpatialAlgorithm, DataState,
-//     Experience, ClusteringResult,
-// };
+pub mod ml_optimization;
+pub use ml_optimization::{
+    NeuralSpatialOptimizer, ReinforcementLearningSelector, ClusteringParameters,
+    ActivationFunction, DistanceMetric, SpatialAlgorithm, DataState,
+    Experience, ClusteringResult,
+};
 
 // Distributed spatial computing framework for massive scale processing
 pub mod distributed;
@@ -901,28 +897,25 @@ pub use adaptive_selection::{
 };
 
 // Quantum-classical hybrid algorithms for unprecedented performance breakthroughs
-// Temporarily disabled due to compilation issues
-// pub mod quantum_classical_hybrid;
-// pub use quantum_classical_hybrid::{
-//     HybridSpatialOptimizer, HybridClusterer, HybridOptimizationResult,
-//     HybridClusteringMetrics, HybridPerformanceMetrics, OptimizationStepResult,
-// };
+pub mod quantum_classical_hybrid;
+pub use quantum_classical_hybrid::{
+    HybridSpatialOptimizer, HybridClusterer, HybridOptimizationResult,
+    HybridClusteringMetrics, HybridPerformanceMetrics, OptimizationStepResult,
+};
 
 // Neuromorphic-quantum fusion algorithms for revolutionary bio-quantum computing
-// Temporarily disabled due to compilation issues
-// pub mod neuromorphic_quantum_fusion;
-// pub use neuromorphic_quantum_fusion::{
-//     QuantumSpikingClusterer, NeuralQuantumOptimizer, QuantumSpikingNeuron,
-//     QuantumSpikeEvent, QuantumSpikePattern, FusionMetrics, NeuralQuantumOptimizationResult,
-// };
+pub mod neuromorphic_quantum_fusion;
+pub use neuromorphic_quantum_fusion::{
+    QuantumSpikingClusterer, NeuralQuantumOptimizer, QuantumSpikingNeuron,
+    QuantumSpikeEvent, QuantumSpikePattern, FusionMetrics, NeuralQuantumOptimizationResult,
+};
 
 // Next-generation GPU architecture support for future computing paradigms
-// Temporarily disabled due to compilation issues
-// pub mod next_gen_gpu_architecture;
-// pub use next_gen_gpu_architecture::{
-//     QuantumGpuProcessor, PhotonicAccelerator, NextGenGpuArchitecture,
-//     QuantumProcessingUnit, PhotonicProcessingUnit, NextGenPerformanceMetrics,
-// };
+pub mod next_gen_gpu_architecture;
+pub use next_gen_gpu_architecture::{
+    QuantumGpuProcessor, PhotonicAccelerator, NextGenGpuArchitecture,
+    QuantumProcessingUnit, PhotonicProcessingUnit, NextGenPerformanceMetrics,
+};
 
 // Generic traits and algorithms for flexible spatial computing
 pub mod generic_traits;
@@ -938,24 +931,22 @@ pub use generic_algorithms::{
 };
 
 // AI-driven algorithm selection and optimization for intelligent spatial computing
-// Temporarily disabled due to compilation issues
-// pub mod ai_driven_optimization;
-// pub use ai_driven_optimization::{
-//     AIAlgorithmSelector, MetaLearningOptimizer, AlgorithmEmbedding, PerformancePredictor,
-//     AdaptiveResourceAllocator, MultiObjectiveOptimizer, ContinualLearner, TransformerEmbedding,
-//     GraphNeuralDataAnalyzer, BayesianHyperparameterOptimizer, AutoMLPipeline,
-//     NeuralODEOptimizer, AttentionMechanism, FederatedSpatialLearner,
-// };
+pub mod ai_driven_optimization;
+pub use ai_driven_optimization::{
+    AIAlgorithmSelector, MetaLearningOptimizer, AlgorithmKnowledgeBase, AlgorithmMetadata,
+    PerformanceModel, ComplexityModel, PredictionNetworks, ReinforcementLearningAgent,
+    PerformanceRecord, MetaLearningModel, TaskMetadata, AlgorithmCandidate, 
+    AdaptationRecord, MetaOptimizationResult,
+};
 
 // Extreme performance optimization pushing spatial computing beyond current limits
-// Temporarily disabled due to compilation issues
-// pub mod extreme_performance_optimization;
-// pub use extreme_performance_optimization::{
-//     ExtremeOptimizer, UltrafastDistanceMatrix, SelfOptimizingAlgorithm, ExtremePerformanceMetrics,
-//     HardwarePerformanceCounters, NumaTopologyInfo, CacheHierarchyInfo, JitCompiler,
-//     ExtremeMemoryAllocator, OptimizationRecord, LockFreeSpatialStructures,
-//     CacheObliviousSpatialAlgorithms, create_ultimate_optimizer, benchmark_extreme_optimizations,
-// };
+pub mod extreme_performance_optimization;
+pub use extreme_performance_optimization::{
+    ExtremeOptimizer, UltrafastDistanceMatrix, SelfOptimizingAlgorithm, ExtremePerformanceMetrics,
+    HardwarePerformanceCounters, NumaTopologyInfo, CacheHierarchyInfo, JitCompiler,
+    ExtremeMemoryAllocator, OptimizationRecord, LockFreeSpatialStructures,
+    CacheObliviousSpatialAlgorithms, create_ultimate_optimizer, benchmark_extreme_optimizations,
+};
 
 #[cfg(test)]
 mod tests {

@@ -559,6 +559,177 @@ pub fn kv<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) ->
         * (F::one() + (F::from(4.0).unwrap() * v * v - F::one()) / (F::from(8.0).unwrap() * x))
 }
 
+/// Exponentially scaled modified Bessel function of the first kind of order 0.
+///
+/// This function computes i0e(x) = i0(x) * exp(-abs(x)) for real x,
+/// which prevents overflow for large positive arguments while preserving relative accuracy.
+///
+/// # Arguments
+///
+/// * `x` - Input value
+///
+/// # Returns
+///
+/// * I₀ₑ(x) Exponentially scaled modified Bessel function value
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::bessel::modified::i0e;
+///
+/// let x = 10.0f64;
+/// let result = i0e(x);
+/// assert!(result.is_finite());
+/// ```
+pub fn i0e<F: Float + FromPrimitive + Debug>(x: F) -> F {
+    let abs_x = x.abs();
+    i0(x) * (-abs_x).exp()
+}
+
+/// Exponentially scaled modified Bessel function of the first kind of order 1.
+///
+/// This function computes i1e(x) = i1(x) * exp(-abs(x)) for real x,
+/// which prevents overflow for large positive arguments while preserving relative accuracy.
+///
+/// # Arguments
+///
+/// * `x` - Input value
+///
+/// # Returns
+///
+/// * I₁ₑ(x) Exponentially scaled modified Bessel function value
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::bessel::modified::i1e;
+///
+/// let x = 10.0f64;
+/// let result = i1e(x);
+/// assert!(result.is_finite());
+/// ```
+pub fn i1e<F: Float + FromPrimitive + Debug>(x: F) -> F {
+    let abs_x = x.abs();
+    let sign = if x.is_sign_positive() { F::one() } else { -F::one() };
+    sign * i1(abs_x) * (-abs_x).exp()
+}
+
+/// Exponentially scaled modified Bessel function of the first kind of arbitrary order.
+///
+/// This function computes ive(v, x) = iv(v, x) * exp(-abs(x)) for real x,
+/// which prevents overflow for large positive arguments while preserving relative accuracy.
+///
+/// # Arguments
+///
+/// * `v` - Order (any real number)
+/// * `x` - Input value
+///
+/// # Returns
+///
+/// * Iᵥₑ(x) Exponentially scaled modified Bessel function value
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::bessel::modified::ive;
+///
+/// let x = 10.0f64;
+/// let result = ive(2.5, x);
+/// assert!(result.is_finite());
+/// ```
+pub fn ive<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) -> F {
+    let abs_x = x.abs();
+    iv(v, x) * (-abs_x).exp()
+}
+
+/// Exponentially scaled modified Bessel function of the second kind of order 0.
+///
+/// This function computes k0e(x) = k0(x) * exp(x) for real x,
+/// which prevents underflow for large positive arguments while preserving relative accuracy.
+///
+/// # Arguments
+///
+/// * `x` - Input value (must be positive)
+///
+/// # Returns
+///
+/// * K₀ₑ(x) Exponentially scaled modified Bessel function value
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::bessel::modified::k0e;
+///
+/// let x = 10.0f64;
+/// let result = k0e(x);
+/// assert!(result.is_finite());
+/// ```
+pub fn k0e<F: Float + FromPrimitive + Debug>(x: F) -> F {
+    if x <= F::zero() {
+        return F::infinity();
+    }
+    k0(x) * x.exp()
+}
+
+/// Exponentially scaled modified Bessel function of the second kind of order 1.
+///
+/// This function computes k1e(x) = k1(x) * exp(x) for real x,
+/// which prevents underflow for large positive arguments while preserving relative accuracy.
+///
+/// # Arguments
+///
+/// * `x` - Input value (must be positive)
+///
+/// # Returns
+///
+/// * K₁ₑ(x) Exponentially scaled modified Bessel function value
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::bessel::modified::k1e;
+///
+/// let x = 10.0f64;
+/// let result = k1e(x);
+/// assert!(result.is_finite());
+/// ```
+pub fn k1e<F: Float + FromPrimitive + Debug>(x: F) -> F {
+    if x <= F::zero() {
+        return F::infinity();
+    }
+    k1(x) * x.exp()
+}
+
+/// Exponentially scaled modified Bessel function of the second kind of arbitrary order.
+///
+/// This function computes kve(v, x) = kv(v, x) * exp(x) for real x,
+/// which prevents underflow for large positive arguments while preserving relative accuracy.
+///
+/// # Arguments
+///
+/// * `v` - Order (any real number)
+/// * `x` - Input value (must be positive)
+///
+/// # Returns
+///
+/// * Kᵥₑ(x) Exponentially scaled modified Bessel function value
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::bessel::modified::kve;
+///
+/// let x = 10.0f64;
+/// let result = kve(2.5, x);
+/// assert!(result.is_finite());
+/// ```
+pub fn kve<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) -> F {
+    if x <= F::zero() {
+        return F::infinity();
+    }
+    kv(v, x) * x.exp()
+}
+
 /// Helper function to return maximum of two values.
 fn max<T: PartialOrd>(a: T, b: T) -> T {
     if a > b {

@@ -64,6 +64,7 @@ pub mod common;
 pub mod fir;
 pub mod iir;
 pub mod parallel;
+pub mod parallel_enhanced;
 pub mod specialized;
 pub mod transform;
 
@@ -111,6 +112,11 @@ pub use parallel::{
     parallel_iir_filter_bank, parallel_median_filter, parallel_morphological_filter,
     parallel_rank_order_filter, parallel_savgol_filter, MorphologicalOperation,
     ParallelFilterConfig, ParallelFilterType,
+};
+
+// Re-export enhanced parallel filter functions
+pub use parallel_enhanced::{
+    enhanced_parallel_filtfilt, ParallelFilterConfig as EnhancedParallelFilterConfig,
 };
 
 #[cfg(test)]

@@ -98,14 +98,16 @@ pub mod array_conversion {
     use super::*;
 
     /// Convert array metadata to Python-compatible format
-    pub fn array_to_py_info<T, D>(array: &ndarray::ArrayBase<ndarray::OwnedRepr<T>, D>) -> PyArrayInfo 
+    pub fn array_to_py_info<T, D>(
+        array: &ndarray::ArrayBase<ndarray::OwnedRepr<T>, D>,
+    ) -> PyArrayInfo
     where
         T: 'static,
         D: Dimension,
     {
         let shape = array.shape().to_vec();
         let strides = array.strides().iter().map(|&s| s as isize).collect();
-        
+
         let dtype = if std::any::TypeId::of::<T>() == std::any::TypeId::of::<f32>() {
             "float32".to_string()
         } else if std::any::TypeId::of::<T>() == std::any::TypeId::of::<f64>() {
@@ -127,7 +129,7 @@ pub mod array_conversion {
     }
 
     /// Validate array compatibility for Python interop
-    pub fn validate_array_compatibility<T>(info: &PyArrayInfo) -> Result<(), PyError> 
+    pub fn validate_array_compatibility<T>(info: &PyArrayInfo) -> Result<(), PyError>
     where
         T: 'static,
     {
@@ -199,7 +201,9 @@ pub mod api_spec {
                         name: "mode".to_string(),
                         param_type: "str".to_string(),
                         default: Some("'reflect'".to_string()),
-                        description: "Boundary mode ('reflect', 'constant', 'nearest', 'mirror', 'wrap')".to_string(),
+                        description:
+                            "Boundary mode ('reflect', 'constant', 'nearest', 'mirror', 'wrap')"
+                                .to_string(),
                         required: false,
                     },
                 ],
@@ -229,69 +233,70 @@ pub mod api_spec {
                     },
                 ],
                 return_type: "ndarray".to_string(),
-                examples: vec![
-                    ">>> result = ndi.median_filter(image, size=3)".to_string(),
-                ],
+                examples: vec![">>> result = ndi.median_filter(image, size=3)".to_string()],
             },
         ]
     }
 
     /// Generate Python API specifications for morphology functions
     pub fn generate_morphology_api_specs() -> Vec<PyFunction> {
-        vec![
-            PyFunction {
-                name: "binary_erosion".to_string(),
-                description: "Multidimensional binary erosion with given structuring element.".to_string(),
-                parameters: vec![
-                    PyParameter {
-                        name: "input".to_string(),
-                        param_type: "array_like".to_string(),
-                        default: None,
-                        description: "Binary array to be eroded".to_string(),
-                        required: true,
-                    },
-                    PyParameter {
-                        name: "structure".to_string(),
-                        param_type: "array_like, optional".to_string(),
-                        default: Some("None".to_string()),
-                        description: "Structuring element for erosion".to_string(),
-                        required: false,
-                    },
-                ],
-                return_type: "ndarray".to_string(),
-                examples: vec![
-                    ">>> result = ndi.binary_erosion(binary_image)".to_string(),
-                ],
-            },
-        ]
+        vec![PyFunction {
+            name: "binary_erosion".to_string(),
+            description: "Multidimensional binary erosion with given structuring element."
+                .to_string(),
+            parameters: vec![
+                PyParameter {
+                    name: "input".to_string(),
+                    param_type: "array_like".to_string(),
+                    default: None,
+                    description: "Binary array to be eroded".to_string(),
+                    required: true,
+                },
+                PyParameter {
+                    name: "structure".to_string(),
+                    param_type: "array_like, optional".to_string(),
+                    default: Some("None".to_string()),
+                    description: "Structuring element for erosion".to_string(),
+                    required: false,
+                },
+            ],
+            return_type: "ndarray".to_string(),
+            examples: vec![">>> result = ndi.binary_erosion(binary_image)".to_string()],
+        }]
     }
 
     /// Generate comprehensive API documentation
     pub fn generate_python_docs() -> String {
         let mut docs = String::new();
-        
+
         docs.push_str("# SciRS2 NDImage Python API\n\n");
         docs.push_str("## Filters\n\n");
-        
+
         for func in generate_filter_api_specs() {
             docs.push_str(&format!("### {}\n\n", func.name));
             docs.push_str(&format!("{}\n\n", func.description));
             docs.push_str("**Parameters:**\n\n");
-            
+
             for param in &func.parameters {
-                let req_str = if param.required { " (required)" } else { " (optional)" };
-                let default_str = param.default.as_ref()
+                let req_str = if param.required {
+                    " (required)"
+                } else {
+                    " (optional)"
+                };
+                let default_str = param
+                    .default
+                    .as_ref()
                     .map(|d| format!(", default: {}", d))
                     .unwrap_or_default();
-                    
+
                 docs.push_str(&format!(
                     "- `{}` (*{}*{}{}) - {}\n",
                     param.name, param.param_type, req_str, default_str, param.description
                 ));
             }
-            
+
             docs.push_str(&format!("\n**Returns:** {}\n\n", func.return_type));
-            
+
             if !func.examples.is_empty() {
                 docs.push_str("**Examples:**\n\n```python\n");
                 for example in &func.examples {
@@ -300,15 +305,15 @@ pub mod api_spec {
                 docs.push_str("```\n\n");
             }
         }
-        
+
         docs.push_str("## Morphology\n\n");
-        
+
         for func in generate_morphology_api_specs() {
             docs.push_str(&format!("### {}\n\n", func.name));
             docs.push_str(&format!("{}\n\n", func.description));
             // ... similar formatting as above
         }
-        
+
         docs
     }
 }
@@ -346,7 +351,8 @@ fn gaussian_filter(
     
     Ok(result.to_pyarray(py).to_owned())
 }
-"#.to_string()
+"#
+        .to_string()
     }
 
     /// Example binding signature for median filter
@@ -366,7 +372,8 @@ fn median_filter(
     
     Ok(result.to_pyarray(py).to_owned())
 }
-"#.to_string()
+"#
+        .to_string()
     }
 
     /// Generate module definition for PyO3
@@ -394,7 +401,8 @@ fn scirs2_ndimage(_py: Python, m: &PyModule) -> PyResult<()> {
     
     Ok(())
 }
-"#.to_string()
+"#
+        .to_string()
     }
 }
 
@@ -446,7 +454,8 @@ setup(
     ],
     cmdclass={"build_rust": build_rust},
 )
-"#.to_string()
+"#
+        .to_string()
     }
 
     /// Generate __init__.py for Python package
@@ -504,7 +513,8 @@ __all__ = [
     "canny",
     "sobel_edges",
 ]
-"#.to_string()
+"#
+        .to_string()
     }
 
     /// Generate installation instructions
@@ -570,7 +580,8 @@ edges = ndi.canny(image, sigma=1.0, low_threshold=0.1, high_threshold=0.2)
 
 This package provides a SciPy-compatible API, making it a drop-in replacement
 for many `scipy.ndimage` functions with improved performance.
-"#.to_string()
+"#
+        .to_string()
     }
 }
 
@@ -583,7 +594,7 @@ mod tests {
     fn test_array_to_py_info() {
         let arr = array![[1.0f64, 2.0], [3.0, 4.0]];
         let info = array_conversion::array_to_py_info(&arr);
-        
+
         assert_eq!(info.shape, vec![2, 2]);
         assert_eq!(info.dtype, "float64");
         assert!(info.contiguous);
@@ -597,7 +608,7 @@ mod tests {
             strides: vec![8, 80],
             contiguous: true,
         };
-        
+
         let result = array_conversion::validate_array_compatibility::<f64>(&info);
         assert!(result.is_ok());
     }
@@ -610,7 +621,7 @@ mod tests {
             strides: vec![4, 40],
             contiguous: true,
         };
-        
+
         let result = array_conversion::validate_array_compatibility::<f64>(&info);
         assert!(result.is_err());
     }
@@ -619,7 +630,7 @@ mod tests {
     fn test_error_conversion() {
         let ndimage_error = NdimageError::InvalidInput("Test error".to_string());
         let py_error: PyError = ndimage_error.into();
-        
+
         assert_eq!(py_error.error_type, "ValueError");
         assert_eq!(py_error.message, "Test error");
     }
@@ -628,10 +639,10 @@ mod tests {
     fn test_api_spec_generation() {
         let specs = api_spec::generate_filter_api_specs();
         assert!(!specs.is_empty());
-        
+
         let gaussian_spec = specs.iter().find(|s| s.name == "gaussian_filter");
         assert!(gaussian_spec.is_some());
-        
+
         let spec = gaussian_spec.unwrap();
         assert!(!spec.parameters.is_empty());
         assert!(spec.parameters.iter().any(|p| p.name == "input"));

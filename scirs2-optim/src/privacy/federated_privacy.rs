@@ -52,7 +52,7 @@ pub struct FederatedPrivacyCoordinator<T: Float> {
     personalization_manager: PersonalizationManager<T>,
 
     /// Adaptive privacy budget manager
-    adaptive_budget_manager: AdaptiveBudgetManager,
+    adaptive_budget_manager: AdaptiveBudgetManager<T>,
 
     /// Communication efficiency optimizer
     communication_optimizer: CommunicationOptimizer<T>,
@@ -976,7 +976,7 @@ pub enum ByzantineRobustMethod {
 }
 
 /// Personalization strategies for federated learning
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub enum PersonalizationStrategy {
     /// No personalization (standard federated learning)
     None,
@@ -4109,7 +4109,7 @@ pub mod secure_aggregation_protocols {
             &mut self,
             round_number: usize,
             participants: Vec<String>,
-        ) -> Result<AggregationSetup, OptimizerError> {
+        ) -> Result<AggregationSetup<T>, OptimizerError> {
             self.round_state = AggregationRoundState::new();
             self.round_state.round_number = round_number;
             self.round_state.participants = participants.clone();
@@ -4214,7 +4214,7 @@ pub mod secure_aggregation_protocols {
         fn setup_shamir_secret_sharing(
             &mut self,
             participants: &[String],
-        ) -> Result<AggregationSetup, OptimizerError> {
+        ) -> Result<AggregationSetup<T>, OptimizerError> {
             let n = participants.len();
             let t = self.config.reconstruction_threshold;
 
@@ -4247,7 +4247,7 @@ pub mod secure_aggregation_protocols {
         fn setup_verifiable_secret_sharing(
             &mut self,
             participants: &[String],
-        ) -> Result<AggregationSetup, OptimizerError> {
+        ) -> Result<AggregationSetup<T>, OptimizerError> {
             // Similar to Shamir but with additional verification
             self.setup_shamir_secret_sharing(participants)
         }
@@ -4383,9 +4383,9 @@ pub mod secure_aggregation_protocols {
     // Helper types and implementations
 
     #[derive(Debug, Clone)]
-    pub struct AggregationSetup {
+    pub struct AggregationSetup<T> {
         pub protocol: SecureAggregationProtocol,
-        pub client_setups: HashMap<String, ClientSetupInfo>,
+        pub client_setups: HashMap<String, ClientSetupInfo<T>>,
         pub threshold: usize,
         pub total_participants: usize,
         pub round_number: usize,

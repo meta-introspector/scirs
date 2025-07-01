@@ -103,7 +103,7 @@ impl Voronoi {
     ///
     /// let vor = Voronoi::new(&points.view(), false).unwrap();
     /// ```
-    pub fn new(points: &ArrayView2<f64>, furthest_site: bool) -> SpatialResult<Self> {
+    pub fn new(points: &ArrayView2<'_, f64>, furthest_site: bool) -> SpatialResult<Self> {
         let npoints = points.nrows();
         let ndim = points.ncols();
 
@@ -184,7 +184,7 @@ impl Voronoi {
     }
 
     /// Special case handler for a triangle (3 points in 2D)
-    fn special_case_triangle(points: &ArrayView2<f64>, furthest_site: bool) -> SpatialResult<Self> {
+    fn special_case_triangle(points: &ArrayView2<'_, f64>, furthest_site: bool) -> SpatialResult<Self> {
         let _npoints = 3;
         let _ndim = 2;
 
@@ -259,7 +259,7 @@ impl Voronoi {
     }
 
     /// Special case handler for a square/rectangle (4 points in 2D)
-    fn special_case_square(points: &ArrayView2<f64>, furthest_site: bool) -> SpatialResult<Self> {
+    fn special_case_square(points: &ArrayView2<'_, f64>, furthest_site: bool) -> SpatialResult<Self> {
         // For a square, there's a single Voronoi vertex at the center
         let mut center_x = 0.0;
         let mut center_y = 0.0;
@@ -637,7 +637,7 @@ impl Voronoi {
 ///
 /// let vor = voronoi(&points.view(), false).unwrap();
 /// ```
-pub fn voronoi(points: &ArrayView2<f64>, furthest_site: bool) -> SpatialResult<Voronoi> {
+pub fn voronoi(points: &ArrayView2<'_, f64>, furthest_site: bool) -> SpatialResult<Voronoi> {
     Voronoi::new(points, furthest_site)
 }
 

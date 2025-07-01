@@ -516,7 +516,7 @@ where
     H: Fn(&N) -> E,
 {
     if !graph.contains_node(source) || !graph.contains_node(target) {
-        return Err(GraphError::NodeNotFound);
+        return Err(GraphError::node_not_found("node"));
     }
 
     let mut open_set = BinaryHeap::new();
@@ -586,7 +586,7 @@ where
     H: Fn(&N) -> E,
 {
     if !graph.contains_node(source) || !graph.contains_node(target) {
-        return Err(GraphError::NodeNotFound);
+        return Err(GraphError::node_not_found("node"));
     }
 
     let mut open_set = BinaryHeap::new();
@@ -672,7 +672,7 @@ where
 
     // Check if nodes exist
     if !graph.contains_node(source) || !graph.contains_node(target) {
-        return Err(GraphError::NodeNotFound);
+        return Err(GraphError::node_not_found("node"));
     }
 
     let mut paths = Vec::new();

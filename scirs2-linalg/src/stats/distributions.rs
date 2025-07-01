@@ -131,7 +131,10 @@ where
         + ndarray::ScalarOperand
         + num_traits::FromPrimitive
         + num_traits::NumAssign
-        + std::iter::Sum,
+        + std::iter::Sum
+        + Send
+        + Sync
+        + 'static,
 {
     let (m, n) = x.dim();
 
@@ -189,7 +192,10 @@ where
         + ndarray::ScalarOperand
         + num_traits::FromPrimitive
         + num_traits::NumAssign
-        + std::iter::Sum,
+        + std::iter::Sum
+        + Send
+        + Sync
+        + 'static,
 {
     let p = x.nrows();
 
@@ -255,7 +261,10 @@ where
         + ndarray::ScalarOperand
         + num_traits::FromPrimitive
         + num_traits::NumAssign
-        + std::iter::Sum,
+        + std::iter::Sum
+        + Send
+        + Sync
+        + 'static,
 {
     let (m, n) = params.mean.dim();
 
@@ -296,7 +305,10 @@ where
         + ndarray::ScalarOperand
         + num_traits::FromPrimitive
         + num_traits::NumAssign
-        + std::iter::Sum,
+        + std::iter::Sum
+        + Send
+        + Sync
+        + 'static,
 {
     let p = params.scale.nrows();
 
@@ -482,7 +494,10 @@ where
         + std::fmt::Display
         + num_traits::NumAssign
         + std::iter::Sum
-        + 'static,
+        + 'static
+        + Send
+        + Sync
+        + ndarray::ScalarOperand,
 {
     let p = F::from(x.nrows()).unwrap();
     let nu = params.dof;
@@ -607,7 +622,10 @@ where
         + std::fmt::Display
         + num_traits::NumAssign
         + std::iter::Sum
-        + 'static,
+        + 'static
+        + Send
+        + Sync
+        + ndarray::ScalarOperand,
 {
     let (n, p) = (x.nrows(), x.ncols());
     let nu = params.dof;

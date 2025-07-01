@@ -4,6 +4,7 @@
 //! statistical functions using scirs2-core's unified SIMD operations.
 
 use crate::error::StatsResult;
+use crate::error_standardization::{ErrorMessages, ErrorValidator};
 use ndarray::{ArrayBase, Data, Ix1};
 use num_traits::{Float, NumCast};
 use scirs2_core::simd_ops::{AutoOptimizer, PlatformCapabilities, SimdUnifiedOps};
@@ -39,9 +40,7 @@ where
     D: Data<Elem = F>,
 {
     if x.is_empty() {
-        return Err(crate::error::StatsError::InvalidArgument(
-            "Cannot compute mean of empty array".to_string(),
-        ));
+        return Err(ErrorMessages::empty_array("x"));
     }
 
     let n = x.len();
@@ -79,9 +78,7 @@ where
 {
     let n = x.len();
     if n <= ddof {
-        return Err(crate::error::StatsError::InvalidArgument(
-            "Not enough data points for the given degrees of freedom".to_string(),
-        ));
+        return Err(ErrorMessages::insufficient_data("variance calculation", ddof + 1, n));
     }
 
     // First compute the mean

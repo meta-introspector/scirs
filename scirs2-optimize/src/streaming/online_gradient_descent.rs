@@ -14,7 +14,7 @@ use super::{
 };
 use crate::error::OptimizeError;
 use ndarray::{Array1, Array2, ArrayView1};
-use scirs2_core::error::Result;
+use scirs2_core::error::CoreResult;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::time::{Duration, Instant};

@@ -707,7 +707,7 @@ impl OptimizationVisualizer {
             dashboard.push_str("<div class='dashboard-container'>\n");
 
             let mut plot_id = 0;
-            for (name, _) in &self.metrics {
+            for (_name, _) in &self.metrics {
                 if plot_id >= 4 {
                     break;
                 } // Limit to 4 plots in 2x2 grid

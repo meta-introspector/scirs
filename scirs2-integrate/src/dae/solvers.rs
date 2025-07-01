@@ -39,7 +39,7 @@ pub fn solve_semi_explicit_dae<F, FFunc, GFunc>(
     options: Option<DAEOptions<F>>,
 ) -> IntegrateResult<DAEResult<F>>
 where
-    F: IntegrateFloat,
+    F: IntegrateFloat + std::default::Default,
     FFunc: Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F> + Clone,
     GFunc: Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F> + Clone,
 {
@@ -216,7 +216,7 @@ fn compute_jacobian_x<F, GFunc>(
     epsilon: F,
 ) -> Array2<F>
 where
-    F: IntegrateFloat,
+    F: IntegrateFloat + std::default::Default,
     GFunc: Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F>,
 {
     let n_x = x.len();
@@ -258,7 +258,7 @@ where
 /// This is a helper function for the semi-explicit DAE solver
 fn solve_matrix_system<F>(matrix: ArrayView2<F>, b: ArrayView1<F>) -> IntegrateResult<Array1<F>>
 where
-    F: IntegrateFloat,
+    F: IntegrateFloat + std::default::Default,
 {
     use crate::dae::utils::linear_solvers::solve_linear_system;
 
@@ -295,7 +295,7 @@ pub fn solve_implicit_dae<F, FFunc>(
     options: Option<DAEOptions<F>>,
 ) -> IntegrateResult<DAEResult<F>>
 where
-    F: IntegrateFloat,
+    F: IntegrateFloat + std::default::Default,
     FFunc: Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F> + Clone,
 {
     // Use default options if none provided
@@ -787,7 +787,7 @@ pub fn solve_higher_index_dae<F, FFunc, GFunc>(
     options: Option<DAEOptions<F>>,
 ) -> IntegrateResult<DAEResult<F>>
 where
-    F: IntegrateFloat,
+    F: IntegrateFloat + std::default::Default,
     FFunc: Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F> + Clone,
     GFunc: Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F> + Clone,
 {
@@ -953,7 +953,7 @@ fn solve_semi_explicit_dae_with_projection<F, FFunc, GFunc>(
     options: Option<DAEOptions<F>>,
 ) -> IntegrateResult<DAEResult<F>>
 where
-    F: IntegrateFloat,
+    F: IntegrateFloat + std::default::Default,
     FFunc: Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F> + Clone,
     GFunc: Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F> + Clone,
 {
@@ -1049,7 +1049,7 @@ pub fn solve_ivp_dae<F, FFunc>(
     options: Option<DAEOptions<F>>,
 ) -> IntegrateResult<DAEResult<F>>
 where
-    F: IntegrateFloat,
+    F: IntegrateFloat + std::default::Default,
     FFunc: Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F> + Clone,
 {
     // Use default options if none provided
@@ -1094,7 +1094,7 @@ fn solve_index1_dae_with_reduced_structure<F, FFunc, GFunc>(
     _structure: crate::dae::index_reduction::DAEStructure<F>,
 ) -> IntegrateResult<DAEResult<F>>
 where
-    F: IntegrateFloat,
+    F: IntegrateFloat + std::default::Default,
     FFunc: Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F>,
     GFunc: Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F>,
 {
@@ -1115,7 +1115,7 @@ fn solve_index2_dae_specialized<F, FFunc, GFunc>(
     options: DAEOptions<F>,
 ) -> IntegrateResult<DAEResult<F>>
 where
-    F: IntegrateFloat,
+    F: IntegrateFloat + std::default::Default,
     FFunc: Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F>,
     GFunc: Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F>,
 {
@@ -1145,7 +1145,7 @@ fn solve_index3_dae_specialized<F, FFunc, GFunc>(
     options: DAEOptions<F>,
 ) -> IntegrateResult<DAEResult<F>>
 where
-    F: IntegrateFloat,
+    F: IntegrateFloat + std::default::Default,
     FFunc: Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F>,
     GFunc: Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F>,
 {
@@ -1179,7 +1179,7 @@ fn apply_dummy_derivative_method<F, FFunc, GFunc>(
     impl Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F>,
 )>
 where
-    F: IntegrateFloat,
+    F: IntegrateFloat + std::default::Default,
     FFunc: Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F> + Clone,
     GFunc: Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F> + Clone,
 {
@@ -1228,7 +1228,7 @@ fn compute_time_jacobian<F, FFunc>(
     y_prime: &Array1<F>,
 ) -> IntegrateResult<Array1<F>>
 where
-    F: IntegrateFloat,
+    F: IntegrateFloat + std::default::Default,
     FFunc: Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F>,
 {
     // Use a small perturbation for finite difference approximation
@@ -1269,7 +1269,7 @@ fn compute_adaptive_time_jacobian<F, FFunc>(
     tolerance: F,
 ) -> IntegrateResult<Array1<F>>
 where
-    F: IntegrateFloat,
+    F: IntegrateFloat + std::default::Default,
     FFunc: Fn(F, ArrayView1<F>, ArrayView1<F>) -> Array1<F>,
 {
     // Start with a reasonable step size

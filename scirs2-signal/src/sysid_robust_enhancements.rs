@@ -745,10 +745,10 @@ fn bootstrap_resample(data: &[f64]) -> Vec<f64> {
     let n = data.len();
     let mut result = Vec::with_capacity(n);
     use rand::Rng;
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     for _ in 0..n {
-        let idx = rng.random_range(0..n);
+        let idx = rng.gen_range(0..n);
         result.push(data[idx]);
     }
     result

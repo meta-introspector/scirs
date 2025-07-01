@@ -5,7 +5,7 @@
 use super::{utils, OptimizationAction, OptimizationState, RLOptimizationConfig, RLOptimizer};
 use crate::result::OptimizeResults;
 use ndarray::{Array1, ArrayView1};
-use scirs2_core::error::Result;
+use scirs2_core::error::CoreResult;
 use std::collections::HashMap;
 
 /// Q-Learning optimizer for optimization problems

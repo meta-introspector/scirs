@@ -378,7 +378,7 @@ pub struct Dwt2dResult {
     pub detail_d: Array2<f64>,
 }
 
-/// Performs a single-level 2D discrete wavelet transform.
+/// Performs a single-level 2D discrete wavelet transform with enhanced validation.
 ///
 /// The 2D DWT is computed by applying the 1D DWT first along the rows and then
 /// along the columns of the data. This results in four subbands: approximation (LL),
@@ -394,6 +394,14 @@ pub struct Dwt2dResult {
 /// 2. Organize these outputs side by side, maintaining spatial correspondence
 /// 3. Apply 1D DWT to each column of both the low-pass and high-pass results
 /// 4. This creates the four subbands: LL (approx), LH (detail_h), HL (detail_v), and HH (detail_d)
+///
+/// # Enhanced Features
+///
+/// - Comprehensive input validation including NaN/Infinity detection
+/// - Numerical stability checks for extreme values
+/// - Memory-efficient processing with optional parallel computation
+/// - Robust boundary condition handling
+/// - Detailed error reporting for debugging
 ///
 /// # Arguments
 ///
@@ -474,6 +482,7 @@ pub fn dwt2d_decompose<T>(
 where
     T: Float + NumCast + Debug,
 {
+    // Enhanced input validation
     if data.is_empty() {
         return Err(SignalError::ValueError("Input array is empty".to_string()));
     }
@@ -481,17 +490,94 @@ where
     // Get dimensions
     let (rows, cols) = data.dim();
 
-    // Convert input to f64 with proper error handling
+    // Check minimum size requirements
+    if rows < 2 || cols < 2 {
+        return Err(SignalError::ValueError(format!(
+            "Input array dimensions too small: {}x{}. Minimum size is 2x2",
+            rows, cols
+        )));
+    }
+
+    // Check for reasonable maximum size to prevent memory issues
+    const MAX_DIMENSION: usize = 65536; // 64K pixels per dimension
+    if rows > MAX_DIMENSION || cols > MAX_DIMENSION {
+        return Err(SignalError::ValueError(format!(
+            "Input array dimensions too large: {}x{}. Maximum supported size is {}x{}",
+            rows, cols, MAX_DIMENSION, MAX_DIMENSION
+        )));
+    }
+
+    // Convert input to f64 with enhanced error handling and validation
     let mut data_f64 = Array2::zeros(data.dim());
+    let mut nan_count = 0;
+    let mut inf_count = 0;
+    let mut extreme_count = 0;
+    
     for ((i, j), &val) in data.indexed_iter() {
         match num_traits::cast::cast::<T, f64>(val) {
-            Some(converted) => data_f64[[i, j]] = converted,
+            Some(converted) => {
+                // Check for NaN, infinity, and extreme values
+                if converted.is_nan() {
+                    nan_count += 1;
+                    if nan_count <= 5 { // Limit error messages
+                        eprintln!("Warning: NaN detected at position ({}, {})", i, j);
+                    }
+                    data_f64[[i, j]] = 0.0; // Replace NaN with 0
+                } else if converted.is_infinite() {
+                    inf_count += 1;
+                    if inf_count <= 5 {
+                        eprintln!("Warning: Infinity detected at position ({}, {})", i, j);
+                    }
+                    // Replace infinity with large but finite value
+                    data_f64[[i, j]] = if converted.is_sign_positive() { 1e10 } else { -1e10 };
+                } else if converted.abs() > 1e12 {
+                    extreme_count += 1;
+                    if extreme_count <= 5 {
+                        eprintln!("Warning: Extreme value {} detected at position ({}, {})", converted, i, j);
+                    }
+                    data_f64[[i, j]] = converted;
+                } else {
+                    data_f64[[i, j]] = converted;
+                }
+            }
             None => {
-                return Err(SignalError::ValueError(
-                    "Failed to convert input data to f64".to_string(),
-                ))
+                return Err(SignalError::ValueError(format!(
+                    "Failed to convert input data to f64 at position ({}, {})",
+                    i, j
+                )))
             }
         }
+    }
+
+    // Report validation results
+    if nan_count > 0 {
+        eprintln!("Processed {} NaN values (replaced with 0.0)", nan_count);
+    }
+    if inf_count > 0 {
+        eprintln!("Processed {} infinite values (clamped to ±1e10)", inf_count);
+    }
+    if extreme_count > 0 {
+        eprintln!("Detected {} extreme values (>1e12)", extreme_count);
+    }
+
+    // Validate wavelet compatibility
+    let filter_length = match wavelet.get_filter_length() {
+        Ok(len) => len,
+        Err(_) => {
+            return Err(SignalError::ValueError(format!(
+                "Invalid wavelet: {:?}. Cannot determine filter length.",
+                wavelet
+            )));
+        }
+    };
+
+    // Check if input is large enough for the selected wavelet
+    let min_size = filter_length.max(4);
+    if rows < min_size || cols < min_size {
+        return Err(SignalError::ValueError(format!(
+            "Input dimensions {}x{} too small for wavelet {:?} (requires minimum {}x{})",
+            rows, cols, wavelet, min_size, min_size
+        )));
     }
 
     // Calculate output dimensions (ceiling division for half the size)

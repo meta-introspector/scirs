@@ -967,7 +967,6 @@ impl Default for PerformanceThresholds {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
 
     #[test]
     fn test_gpu_memory_pool_allocation() {

@@ -85,7 +85,7 @@ impl BoundingBox2D {
     /// # Errors
     ///
     /// Returns an error if the points array is empty or if points don't have 2 dimensions
-    pub fn from_points(points: &ArrayView2<f64>) -> SpatialResult<Self> {
+    pub fn from_points(points: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
         if points.is_empty() {
             return Err(SpatialError::ValueError(
                 "Cannot create bounding box from empty point set".into(),
@@ -371,7 +371,7 @@ impl Quadtree {
     /// # Errors
     ///
     /// Returns an error if the points array is empty or if points don't have 2 dimensions
-    pub fn new(points: &ArrayView2<f64>) -> SpatialResult<Self> {
+    pub fn new(points: &ArrayView2<'_, f64>) -> SpatialResult<Self> {
         if points.is_empty() {
             return Err(SpatialError::ValueError(
                 "Cannot create quadtree from empty point set".into(),

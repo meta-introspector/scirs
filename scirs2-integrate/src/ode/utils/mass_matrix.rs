@@ -168,7 +168,8 @@ impl<F: IntegrateFloat> LUDecomposition<F> {
                 lu[[i, k]] = factor; // Store the multiplier
 
                 for j in (k + 1)..n {
-                    lu[[i, j]] -= factor * lu[[k, j]];
+                    let temp = lu[[k, j]];
+                    lu[[i, j]] -= factor * temp;
                 }
             }
         }

@@ -5,14 +5,14 @@
 
 use crate::error::LinalgResult;
 use crate::{decomposition, solve};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2, ScalarOperand};
 use num_traits::{Float, NumAssign};
 use std::iter::Sum;
 
 /// Backward compatibility wrapper for cholesky decomposition
 pub fn cholesky_compat<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     decomposition::cholesky(a, None)
 }
@@ -20,7 +20,7 @@ where
 /// Backward compatibility wrapper for LU decomposition  
 pub fn lu_compat<F>(a: &ArrayView2<F>) -> LinalgResult<(Array2<F>, Array2<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     decomposition::lu(a, None)
 }
@@ -28,7 +28,7 @@ where
 /// Backward compatibility wrapper for QR decomposition
 pub fn qr_compat<F>(a: &ArrayView2<F>) -> LinalgResult<(Array2<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     decomposition::qr(a, None)
 }
@@ -39,7 +39,7 @@ pub fn svd_compat<F>(
     full_matrices: bool,
 ) -> LinalgResult<(Array2<F>, Array1<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Sum + 'static + ndarray::ScalarOperand,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     decomposition::svd(a, full_matrices, None)
 }
@@ -47,7 +47,7 @@ where
 /// Backward compatibility wrapper for solve
 pub fn solve_compat<F>(a: &ArrayView2<F>, b: &ArrayView1<F>) -> LinalgResult<Array1<F>>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     solve::solve(a, b, None)
 }
@@ -55,7 +55,7 @@ where
 /// Backward compatibility wrapper for lstsq
 pub fn lstsq_compat<F>(a: &ArrayView2<F>, b: &ArrayView1<F>) -> LinalgResult<solve::LstsqResult<F>>
 where
-    F: Float + NumAssign + Sum + 'static + ndarray::ScalarOperand,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     solve::lstsq(a, b, None)
 }
@@ -63,7 +63,7 @@ where
 /// Backward compatibility wrapper for solve_multiple
 pub fn solve_multiple_compat<F>(a: &ArrayView2<F>, b: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     solve::solve_multiple(a, b, None)
 }

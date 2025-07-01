@@ -1,6 +1,6 @@
 //! Matrix and vector norms
 
-use ndarray::{ArrayView1, ArrayView2};
+use ndarray::{ArrayView1, ArrayView2, ScalarOperand};
 use num_traits::{Float, NumAssign};
 use std::iter::Sum;
 
@@ -30,7 +30,7 @@ use crate::validation::{
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ndarray::{array, ScalarOperand};
 /// use scirs2_linalg::matrix_norm;
 ///
 /// let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
@@ -39,7 +39,7 @@ use crate::validation::{
 /// ```
 pub fn matrix_norm<F>(a: &ArrayView2<F>, ord: &str, workers: Option<usize>) -> LinalgResult<F>
 where
-    F: Float + NumAssign + Sum + ndarray::ScalarOperand,
+    F: Float + NumAssign + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     // Parameter validation using validation helpers
     validate_not_empty_matrix(a, "Matrix norm computation")?;
@@ -114,7 +114,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ndarray::{array, ScalarOperand};
 /// use scirs2_linalg::vector_norm;
 ///
 /// let x = array![3.0_f64, 4.0];
@@ -123,7 +123,7 @@ where
 /// ```
 pub fn vector_norm<F>(x: &ArrayView1<F>, ord: usize) -> LinalgResult<F>
 where
-    F: Float + NumAssign + Sum,
+    F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     // Parameter validation using validation helpers
     validate_not_empty_vector(x, "Vector norm computation")?;
@@ -178,7 +178,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ndarray::array;
+/// use ndarray::{array, ScalarOperand};
 /// use scirs2_linalg::vector_norm_parallel;
 ///
 /// let x = array![3.0_f64, 4.0];
@@ -191,7 +191,7 @@ pub fn vector_norm_parallel<F>(
     workers: Option<usize>,
 ) -> LinalgResult<F>
 where
-    F: Float + NumAssign + Sum + Send + Sync,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand,
 {
     use crate::parallel;
     use scirs2_core::parallel_ops::*;
@@ -259,7 +259,7 @@ where
 /// # Examples
 ///
 /// ```no_run
-/// use ndarray::array;
+/// use ndarray::{array, ScalarOperand};
 /// use scirs2_linalg::cond;
 ///
 /// let a = array![[1.0_f64, 0.0], [0.0, 2.0]];
@@ -268,7 +268,7 @@ where
 /// ```
 pub fn cond<F>(a: &ArrayView2<F>, p: Option<&str>, workers: Option<usize>) -> LinalgResult<F>
 where
-    F: Float + NumAssign + Sum + ndarray::ScalarOperand,
+    F: Float + NumAssign + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     // Parameter validation using validation helpers
     use crate::validation::validate_square_matrix;
@@ -353,7 +353,7 @@ where
 /// # Examples
 ///
 /// ```no_run
-/// use ndarray::array;
+/// use ndarray::{array, ScalarOperand};
 /// use scirs2_linalg::matrix_rank;
 ///
 /// let a = array![[1.0_f64, 0.0], [0.0, 1.0]];
@@ -366,7 +366,7 @@ pub fn matrix_rank<F>(
     workers: Option<usize>,
 ) -> LinalgResult<usize>
 where
-    F: Float + NumAssign + Sum + ndarray::ScalarOperand,
+    F: Float + NumAssign + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     // Parameter validation using validation helpers
     if a.is_empty() {
@@ -416,7 +416,7 @@ where
 )]
 pub fn matrix_norm_default<F>(a: &ArrayView2<F>, ord: &str) -> LinalgResult<F>
 where
-    F: Float + NumAssign + Sum + ndarray::ScalarOperand,
+    F: Float + NumAssign + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     matrix_norm(a, ord, None)
 }
@@ -425,7 +425,7 @@ where
 #[deprecated(since = "0.1.0", note = "Use cond with workers parameter instead")]
 pub fn cond_default<F>(a: &ArrayView2<F>, p: Option<&str>) -> LinalgResult<F>
 where
-    F: Float + NumAssign + Sum + ndarray::ScalarOperand,
+    F: Float + NumAssign + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     cond(a, p, None)
 }
@@ -437,7 +437,7 @@ where
 )]
 pub fn matrix_rank_default<F>(a: &ArrayView2<F>, tol: Option<F>) -> LinalgResult<usize>
 where
-    F: Float + NumAssign + Sum + ndarray::ScalarOperand,
+    F: Float + NumAssign + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     matrix_rank(a, tol, None)
 }

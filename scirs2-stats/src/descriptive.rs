@@ -4,6 +4,7 @@
 //! following SciPy's stats module.
 
 use crate::error::{StatsError, StatsResult};
+use crate::error_standardization::{ErrorMessages, ErrorValidator};
 use ndarray::ArrayView1;
 use num_traits::{Float, NumCast, Signed};
 use scirs2_core::{
@@ -35,9 +36,10 @@ pub fn mean<F>(x: &ArrayView1<F>) -> StatsResult<F>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,
 {
-    // Use scirs2-core validation
-    check_not_empty(x.as_slice().unwrap(), "x")
-        .map_err(|_| StatsError::InvalidArgument("Empty array provided".to_string()))?;
+    // Use standardized validation
+    if x.is_empty() {
+        return Err(ErrorMessages::empty_array("x"));
+    }
 
     let n = x.len();
     let optimizer = AutoOptimizer::new();
@@ -81,19 +83,17 @@ pub fn weighted_mean<F>(x: &ArrayView1<F>, weights: &ArrayView1<F>) -> StatsResu
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + Signed,
 {
-    // Use scirs2-core validation
-    check_not_empty(x.as_slice().unwrap(), "x")
-        .map_err(|_| StatsError::InvalidArgument("Empty array provided".to_string()))?;
-
-    check_not_empty(weights.as_slice().unwrap(), "weights")
-        .map_err(|_| StatsError::InvalidArgument("Empty weights array provided".to_string()))?;
+    // Use standardized validation
+    if x.is_empty() {
+        return Err(ErrorMessages::empty_array("x"));
+    }
+    
+    if weights.is_empty() {
+        return Err(ErrorMessages::empty_array("weights"));
+    }
 
     if x.len() != weights.len() {
-        return Err(StatsError::DimensionMismatch(format!(
-            "Length of data ({}) and weights ({}) do not match",
-            x.len(),
-            weights.len()
-        )));
+        return Err(ErrorMessages::length_mismatch("x", x.len(), "weights", weights.len()));
     }
 
     // Calculate weighted sum
@@ -102,9 +102,7 @@ where
 
     for (val, weight) in x.iter().zip(weights.iter()) {
         if weight.is_negative() {
-            return Err(StatsError::InvalidArgument(
-                "Negative weights not allowed".to_string(),
-            ));
+            return Err(ErrorMessages::non_positive_value("weight", weight.to_f64().unwrap_or(0.0)));
         }
 
         weighted_sum = weighted_sum + (*val * *weight);
@@ -112,9 +110,7 @@ where
     }
 
     if sum_of_weights == F::zero() {
-        return Err(StatsError::DomainError(
-            "Sum of weights is zero".to_string(),
-        ));
+        return Err(ErrorMessages::non_positive_value("sum of weights", 0.0));
     }
 
     Ok(weighted_sum / sum_of_weights)
@@ -149,9 +145,7 @@ where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,
 {
     if x.is_empty() {
-        return Err(StatsError::InvalidArgument(
-            "Empty array provided".to_string(),
-        ));
+        return Err(ErrorMessages::empty_array("x"));
     }
 
     // Create a clone of the array to sort (the original array is unchanged)
@@ -212,17 +206,11 @@ where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,
 {
     if x.is_empty() {
-        return Err(StatsError::InvalidArgument(
-            "Empty array provided".to_string(),
-        ));
+        return Err(ErrorMessages::empty_array("x"));
     }
 
     if x.len() <= ddof {
-        return Err(StatsError::DomainError(format!(
-            "Array length ({}) must be greater than ddof ({})",
-            x.len(),
-            ddof
-        )));
+        return Err(ErrorMessages::insufficient_data("variance calculation", ddof + 1, x.len()));
     }
 
     // Calculate the mean
@@ -235,7 +223,7 @@ where
     let sum_squared_diff = if n > 10000 && workers.unwrap_or(1) > 1 {
         // Use parallel computation for large arrays when workers specified
         use scirs2_core::parallel_ops::*;
-        let chunk_size = n / workers.unwrap_or(num_cpus::get()).max(1);
+        let chunk_size = n / workers.unwrap_or(4).max(1);
         x.to_vec()
             .par_chunks(chunk_size.max(1))
             .map(|chunk| {
@@ -356,7 +344,7 @@ where
     let n = x.len();
     let (sum_sq_dev, sum_cubed_dev) = if n > 10000 && workers.unwrap_or(1) > 1 {
         // Use parallel computation for large arrays when workers specified
-        use scirs2_core::parallel_ops::ParallelOps;
+        use scirs2_core::parallel_ops::*;
         let results: Vec<(F, F)> = x
             .chunks_parallel(workers)
             .map(|chunk| {

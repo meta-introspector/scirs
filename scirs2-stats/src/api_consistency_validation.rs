@@ -11,10 +11,9 @@
 //! - Cross-module API compatibility checks
 //! - SciPy compatibility verification
 
-use crate::error::{StatsError, StatsResult};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use num_traits::{Float, FromPrimitive, One, Zero};
-use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
+use crate::error::StatsResult;
+use num_traits::Float;
+use scirs2_core::parallel_ops::*;
 use serde_json;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;

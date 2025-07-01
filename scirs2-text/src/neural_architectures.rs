@@ -609,11 +609,35 @@ impl ResidualBlock1D {
 
         // Skip connection
         let skip_out = if let Some(ref projection) = self.skip_projection {
-            // Project input to match output dimensions
-            input.t().dot(projection).t().to_owned()
+            // Project input to match output channels: (seq_len, input_channels) -> (seq_len, output_channels)
+            let projected = input.dot(&projection.t());
+            
+            // Handle sequence length mismatch due to convolutions
+            // Each convolution reduces length by (kernel_size - 1), so total reduction is 2 * (kernel_size - 1)
+            let conv_output_len = bn2_out.shape()[0];
+            let skip_len = projected.shape()[0];
+            
+            if conv_output_len < skip_len {
+                // Take center slice of skip connection to match conv output length
+                let start = (skip_len - conv_output_len) / 2;
+                let end = start + conv_output_len;
+                projected.slice(s![start..end, ..]).to_owned()
+            } else {
+                projected
+            }
         } else {
-            // Direct skip connection (dimensions must match)
-            input.to_owned()
+            // Direct skip connection - handle sequence length mismatch
+            let conv_output_len = bn2_out.shape()[0];
+            let skip_len = input.shape()[0];
+            
+            if conv_output_len < skip_len {
+                // Take center slice of input to match conv output length  
+                let start = (skip_len - conv_output_len) / 2;
+                let end = start + conv_output_len;
+                input.slice(s![start..end, ..]).to_owned()
+            } else {
+                input.to_owned()
+            }
         };
 
         // Add skip connection and apply ReLU
@@ -1662,7 +1686,8 @@ mod tests {
         let input = Array2::ones((10, 4)); // 10 sequence length, 4 channels
 
         let output = block.forward(input.view()).unwrap();
-        assert_eq!(output.shape(), &[8, 8]); // Adjusted for convolution output
+        // Two conv layers with kernel_size=3 reduce sequence: 10 -> 8 -> 6
+        assert_eq!(output.shape(), &[6, 8]); // Correct convolution output shape
     }
 
     #[test]

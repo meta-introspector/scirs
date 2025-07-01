@@ -980,10 +980,10 @@ where
     for i in 0..=bins {
         edges[i] = min + T::from_usize(i).unwrap() * bin_width;
     }
-    
+
     // Initialize histogram
     let mut hist = Array1::<usize>::zeros(bins);
-    
+
     // Compute histogram
     match labels {
         None => {

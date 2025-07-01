@@ -4,7 +4,7 @@
 //! operations for improved performance on multi-core systems.
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{Array2, ArrayView2};
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use std::fmt::Debug;

@@ -666,6 +666,7 @@ impl VectorizedStringOps {
             let _chunk_size = chunk_end - chunk_start;
 
             let mut all_match = true;
+            #[allow(clippy::needless_range_loop)]
             for pos in chunk_start..chunk_end {
                 let first_byte = first_bytes[pos];
 
@@ -950,8 +951,8 @@ impl SimdPatternMatcher {
         let wildcard_byte = wildcard as u8;
 
         // Vectorizable comparison
-        for (_i, (&text_byte, &pattern_byte)) in
-            text_bytes.iter().zip(pattern_bytes.iter()).enumerate()
+        for (&text_byte, &pattern_byte) in
+            text_bytes.iter().zip(pattern_bytes.iter())
         {
             if pattern_byte != wildcard_byte && text_byte != pattern_byte {
                 return false;
@@ -1311,10 +1312,7 @@ impl SimdTextNormalizer {
 
         // Then apply byte-level SIMD processing for other normalizations
         VectorizedStringOps::transform_bytes_vectorized(&normalized_chars, |byte| {
-            match byte {
-                // Additional ASCII punctuation normalizations can go here
-                _ => byte,
-            }
+            byte
         })
     }
 
@@ -1326,12 +1324,9 @@ impl SimdTextNormalizer {
         result = result.split_whitespace().collect::<Vec<_>>().join(" ");
 
         // Basic punctuation normalization
-        result = result.replace('\u{2019}', "'")  // Right single quotation mark
-                      .replace('\u{2018}', "'")  // Left single quotation mark
-                      .replace('\u{201C}', "\"") // Left double quotation mark
-                      .replace('\u{201D}', "\"") // Right double quotation mark
-                      .replace('\u{2013}', "-")  // En dash
-                      .replace('\u{2014}', "-"); // Em dash
+        result = result.replace(['\u{2019}', '\u{2018}'], "'")  // Left single quotation mark
+                      .replace(['\u{201C}', '\u{201D}'], "\"") // Right double quotation mark
+                      .replace(['\u{2013}', '\u{2014}'], "-"); // Em dash
 
         result
     }
@@ -1371,15 +1366,7 @@ impl SimdTextNormalizer {
     /// Scalar fallback for number normalization
     fn normalize_numbers_scalar(text: &str) -> String {
         // Basic number normalization
-        text.chars()
-            .map(|c| {
-                if c.is_numeric() || matches!(c, '.' | ',' | '-' | '+' | '%') {
-                    c
-                } else {
-                    c
-                }
-            })
-            .collect()
+        text.chars().collect()
     }
 }
 
@@ -1434,6 +1421,7 @@ impl SimdParallelProcessor {
             }
 
             // Set diagonal elements
+            #[allow(clippy::needless_range_loop)]
             for i in 0..n {
                 matrix[i][i] = 1.0;
             }

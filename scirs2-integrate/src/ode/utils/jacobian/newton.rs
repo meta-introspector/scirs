@@ -78,7 +78,7 @@ pub fn newton_solve<F, Func>(
     params: NewtonParameters<F>,
 ) -> IntegrateResult<NewtonResult<F>>
 where
-    F: IntegrateFloat,
+    F: IntegrateFloat + std::default::Default,
     Func: Fn(&Array1<F>) -> Array1<F>,
 {
     let _n = x0.len();
@@ -199,7 +199,7 @@ pub fn modified_newton_solve<F, Func>(
     params: NewtonParameters<F>,
 ) -> IntegrateResult<NewtonResult<F>>
 where
-    F: IntegrateFloat,
+    F: IntegrateFloat + std::default::Default,
     Func: Fn(&Array1<F>) -> Array1<F>,
 {
     // Set large Jacobian update frequency

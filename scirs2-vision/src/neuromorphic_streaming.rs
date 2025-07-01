@@ -8,10 +8,13 @@
 //! - Spiking neural network processing stages
 //! - Event-driven computation for sparse data
 //! - Synaptic plasticity for adaptive learning
+
+#![allow(dead_code)]
 //! - Neuronal membrane dynamics modeling
 //! - Energy-efficient processing inspired by biological neurons
 
 use crate::error::Result;
+use crate::FrameMetadata;
 use crate::streaming::{Frame, ProcessingStage};
 use ndarray::{Array1, Array2, ArrayView2};
 use rand::prelude::*;
@@ -277,11 +280,11 @@ impl SpikingNeuralNetwork {
         for i in 0..num_neurons {
             let mut connections = Vec::new();
             for j in 0..num_neurons {
-                if i != j && rng.gen::<f64>() < connectivity_probability {
+                if i != j && rng.random::<f64>() < connectivity_probability {
                     connections.push(j);
 
                     // Create synapse
-                    let weight = rng.gen_range(0.1..0.8);
+                    let weight = rng.random_range(0.1..0.8);
                     synapses.push(PlasticSynapse::new(i, j, weight));
                 }
             }
@@ -543,10 +546,10 @@ impl NeuromorphicEdgeDetector {
         // Calculate performance trend
         if self.processing_history.len() >= 2 {
             let recent_avg = self.processing_history.iter().rev().take(5).sum::<f64>()
-                / 5.0.min(self.processing_history.len() as f64);
+                / 5.0_f64.min(self.processing_history.len() as f64);
 
             let older_avg = self.processing_history.iter().take(5).sum::<f64>()
-                / 5.0.min(self.processing_history.len() as f64);
+                / 5.0_f64.min(self.processing_history.len() as f64);
 
             let trend = recent_avg - older_avg;
 
@@ -1240,7 +1243,7 @@ mod tests {
         };
 
         let frame2 = Frame {
-            data: Array2::from_shape_fn((10, 10), |(y, x)| if y == 5 { 1.0 } else { 0.0 }),
+            data: Array2::from_shape_fn((10, 10), |(y, _x)| if y == 5 { 1.0 } else { 0.0 }),
             timestamp: Instant::now(),
             index: 1,
             metadata: None,

@@ -1025,7 +1025,7 @@ impl RegistrableModel for crate::transformer::TransformerModel {
         shapes.insert("output_projection".to_string(), output_shape);
 
         // Serialize vocabulary
-        let _vocabulary = Some(self.vocabulary().clone());
+        let _vocabulary = Some(self.vocabulary());
 
         Ok(SerializableModelData {
             weights,
@@ -1141,7 +1141,7 @@ impl RegistrableModel for crate::transformer::TransformerModel {
                 data.shapes.get(&format!("encoder_{}_attention", i)),
             ) {
                 let _attn_array = ndarray::Array::from_shape_vec(
-                    ndarray::IxDyn(&attn_shape),
+                    ndarray::IxDyn(attn_shape),
                     attn_weights.clone(),
                 )
                 .map_err(|e| TextError::InvalidInput(format!("Invalid attention shape: {}", e)))?;
@@ -1155,7 +1155,7 @@ impl RegistrableModel for crate::transformer::TransformerModel {
                 data.shapes.get(&format!("encoder_{}_feedforward", i)),
             ) {
                 let _ff_array =
-                    ndarray::Array::from_shape_vec(ndarray::IxDyn(&ff_shape), ff_weights.clone())
+                    ndarray::Array::from_shape_vec(ndarray::IxDyn(ff_shape), ff_weights.clone())
                         .map_err(|e| {
                         TextError::InvalidInput(format!("Invalid feedforward shape: {}", e))
                     })?;
@@ -1175,7 +1175,7 @@ impl RegistrableModel for crate::transformer::TransformerModel {
                         .get(&format!("encoder_{}_{}", i, layer_norm_name)),
                 ) {
                     let _ln_array = ndarray::Array::from_shape_vec(
-                        ndarray::IxDyn(&ln_shape),
+                        ndarray::IxDyn(ln_shape),
                         ln_weights.clone(),
                     )
                     .map_err(|e| {
@@ -1199,7 +1199,7 @@ impl RegistrableModel for crate::transformer::TransformerModel {
             data.shapes.get("output_projection"),
         ) {
             let _output_array = ndarray::Array::from_shape_vec(
-                ndarray::IxDyn(&output_shape),
+                ndarray::IxDyn(output_shape),
                 output_weights.clone(),
             )
             .map_err(|e| {

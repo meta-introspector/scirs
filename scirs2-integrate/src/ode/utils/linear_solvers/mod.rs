@@ -175,7 +175,7 @@ where
         + Debug
         + std::ops::AddAssign
         + std::ops::SubAssign
-        + std::ops::MulAssign,
+        + std::ops::MulAssign + std::default::Default + std::iter::Sum + ndarray::ScalarOperand + std::ops::DivAssign,
 {
     match solver_type {
         LinearSolverType::Direct => solve_linear_system(a, b),
@@ -237,7 +237,7 @@ where
         + std::ops::SubAssign
         + std::ops::MulAssign
         + Default
-        + std::iter::Sum,
+        + std::iter::Sum + ndarray::ScalarOperand + std::ops::DivAssign,
 {
     let n = a.nrows();
     if n != a.ncols() {
@@ -360,11 +360,11 @@ where
         // Solve upper triangular system H*y = g
         let mut y = vec![F::zero(); j];
         for i in (0..j).rev() {
-            y[i] = g[i];
+            let mut sum = g[i];
             for k in (i + 1)..j {
-                y[i] -= h[i][k] * y[k];
+                sum -= h[i][k] * y[k];
             }
-            y[i] /= h[i][i];
+            y[i] = sum / h[i][i];
         }
 
         // Update solution: x = x + V*y

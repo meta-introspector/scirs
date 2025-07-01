@@ -266,7 +266,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for BertEmbeddings
 }
 
 /// BERT self-attention layer
-struct BertSelfAttention<F: Float + Debug + ScalarOperand + Send + Sync> {
+struct BertSelfAttention<F: Float + Debug + ScalarOperand + Send + Sync + scirs2_core::simd_ops::SimdUnifiedOps> {
     /// Number of attention heads
     #[allow(dead_code)]
     num_attention_heads: usize,
@@ -279,7 +279,7 @@ struct BertSelfAttention<F: Float + Debug + ScalarOperand + Send + Sync> {
     dropout: Dropout<F>,
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync> BertSelfAttention<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + scirs2_core::simd_ops::SimdUnifiedOps> BertSelfAttention<F> {
     /// Create BERT self-attention layer
     pub fn new(config: &BertConfig) -> Result<Self> {
         let attention_head_size = config.hidden_size / config.num_attention_heads;
@@ -314,7 +314,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> BertSelfAttention<F> {
     }
 }
 
-impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for BertSelfAttention<F> {
+impl<F: Float + Debug + ScalarOperand + Send + Sync + scirs2_core::simd_ops::SimdUnifiedOps> Layer<F> for BertSelfAttention<F> {
     fn forward(&self, input: &Array<F, IxDyn>) -> Result<Array<F, IxDyn>> {
         // Use multi-head attention component
         let attention_output = self.attention.forward(input)?;
@@ -505,7 +505,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for BertOutput<F> 
 }
 
 /// BERT attention block
-struct BertAttention<F: Float + Debug + ScalarOperand + Send + Sync> {
+struct BertAttention<F: Float + Debug + ScalarOperand + Send + Sync + scirs2_core::simd_ops::SimdUnifiedOps> {
     /// Self attention
     self_attention: BertSelfAttention<F>,
     /// Output layer

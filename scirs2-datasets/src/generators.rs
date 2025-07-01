@@ -1661,7 +1661,7 @@ fn generate_classification_chunk_gpu(
     n_clusters_per_class: usize,
     n_informative: usize,
     random_seed: Option<u64>,
-    use_single_precision: bool,
+    _use_single_precision: bool,
 ) -> Result<(Vec<f64>, Vec<f64>)> {
     // For now, implement using GPU matrix operations
     // In a real implementation, this would use custom GPU kernels

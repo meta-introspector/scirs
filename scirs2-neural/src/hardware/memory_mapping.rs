@@ -485,7 +485,7 @@ impl MemoryMigration {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::hardware::CPUAccelerator;
+    use crate::hardware::accelerator::CPUAccelerator;
 
     #[test]
     fn test_memory_layout() {

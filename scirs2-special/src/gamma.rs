@@ -2882,6 +2882,126 @@ pub mod complex {
     }
 }
 
+/// Polygamma function - the nth derivative of the digamma function.
+///
+/// This function computes the polygamma function ψ^(n)(x), which is defined as:
+/// 
+/// ```text
+/// ψ^(n)(x) = d^(n+1)/dx^(n+1) ln Γ(x) = d^n/dx^n ψ(x)
+/// ```
+///
+/// where ψ(x) = digamma(x) is the digamma function (ψ^(0)(x)).
+///
+/// **Mathematical Properties**:
+///
+/// 1. **Special cases**:
+///    - ψ^(0)(x) = digamma(x)
+///    - ψ^(1)(x) = trigamma(x) = π²/6 - Σ[k=0..∞] 1/(x+k)²
+///    - ψ^(2)(x) = tetragamma(x) = 2 Σ[k=0..∞] 1/(x+k)³
+///
+/// 2. **Recurrence relation**: ψ^(n)(x+1) = ψ^(n)(x) + (-1)^n n!/x^(n+1)
+///
+/// 3. **Asymptotic behavior**: For large x, ψ^(n)(x) ~ (-1)^(n+1) n!/x^(n+1)
+///
+/// **Physical Applications**:
+/// - Statistical mechanics (correlation functions)
+/// - Quantum field theory (loop calculations)
+/// - Number theory (special values of zeta functions)
+///
+/// # Arguments
+///
+/// * `n` - Order of the derivative (non-negative integer)
+/// * `x` - Input value (must be positive for real result)
+///
+/// # Returns
+///
+/// * ψ^(n)(x) Polygamma function value
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_special::gamma::polygamma;
+///
+/// // ψ^(0)(1) = digamma(1) = -γ ≈ -0.5772156649
+/// let psi0_1 = polygamma(0, 1.0f64);
+/// assert!((psi0_1 + 0.5772156649).abs() < 1e-8);
+///
+/// // ψ^(1)(1) = trigamma(1) = π²/6 ≈ 1.6449340668
+/// let psi1_1 = polygamma(1, 1.0f64);
+/// assert!((psi1_1 - 1.6449340668).abs() < 1e-8);
+/// ```
+pub fn polygamma<F: Float + FromPrimitive + std::fmt::Debug + std::ops::AddAssign + std::ops::SubAssign + std::ops::MulAssign + std::ops::DivAssign>(n: u32, x: F) -> F {
+    // Handle special cases
+    if x <= F::zero() {
+        return F::nan();
+    }
+
+    // For n = 0, return digamma
+    if n == 0 {
+        return digamma(x);
+    }
+
+    // For large x, use asymptotic expansion
+    if x > F::from(20.0).unwrap() {
+        // Asymptotic series: ψ^(n)(x) ~ (-1)^(n+1) n!/x^(n+1) * [1 + (n+1)/(2x) + ...]
+        let sign = if n % 2 == 0 { F::one() } else { -F::one() };
+        let n_factorial = factorial_f(n);
+        let x_power = x.powi(n as i32 + 1);
+        
+        let leading_term = sign * F::from(n_factorial).unwrap() / x_power;
+        
+        // Add first correction term
+        let correction = F::from(n + 1).unwrap() / (F::from(2.0).unwrap() * x);
+        
+        return leading_term * (F::one() + correction);
+    }
+
+    // For moderate x, use the series representation
+    // ψ^(n)(x) = (-1)^(n+1) n! Σ[k=0..∞] 1/(x+k)^(n+1)
+    let sign = if n % 2 == 0 { F::one() } else { -F::one() };
+    let n_factorial = factorial_f(n);
+    
+    let mut sum = F::zero();
+    let n_plus_1 = n + 1;
+    
+    // Sum the series
+    for k in 0..1000 {
+        let term = (x + F::from(k).unwrap()).powi(-(n_plus_1 as i32));
+        sum = sum + term;
+        
+        // Check for convergence
+        if term < F::from(1e-15).unwrap() * sum.abs() {
+            break;
+        }
+    }
+    
+    sign * F::from(n_factorial).unwrap() * sum
+}
+
+/// Helper function to compute factorial as f64
+fn factorial_f(n: u32) -> f64 {
+    match n {
+        0 | 1 => 1.0,
+        2 => 2.0,
+        3 => 6.0,
+        4 => 24.0,
+        5 => 120.0,
+        6 => 720.0,
+        7 => 5040.0,
+        8 => 40320.0,
+        9 => 362880.0,
+        10 => 3628800.0,
+        _ => {
+            // For larger n, compute iteratively
+            let mut result = 1.0f64;
+            for i in 1..=n {
+                result *= i as f64;
+            }
+            result
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

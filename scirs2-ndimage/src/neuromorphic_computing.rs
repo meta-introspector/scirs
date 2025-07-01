@@ -16,7 +16,7 @@
 //! - **Address-Event Representation** for efficient sparse image encoding
 
 use ndarray::{Array, Array1, Array2, Array3, ArrayView2, ArrayViewMut2, Axis, Zip};
-use num_traits::{Float, FromPrimitive, Zero, One};
+use num_traits::{Float, FromPrimitive, One, Zero};
 use std::collections::{HashMap, VecDeque};
 use std::f64::consts::PI;
 
@@ -139,33 +139,33 @@ where
     T: Float + FromPrimitive + Copy + Send + Sync,
 {
     let (height, width) = image.dim();
-    
+
     // Initialize spiking neural network
     let mut network = initialize_snn(network_layers, height, width)?;
-    
+
     // Convert image to temporal spike patterns
     let spike_trains = image_to_spike_trains(&image, time_steps, config)?;
-    
+
     // Process through network over time
     let mut output_spikes = Array3::zeros((time_steps, height, width));
-    
+
     for t in 0..time_steps {
         // Extract input spikes for current time step
         let input_spikes = spike_trains.slice(s![t, .., ..]);
-        
+
         // Forward propagation through network
         let layer_output = forward_propagate_snn(&mut network, &input_spikes, config, t)?;
-        
+
         // Store output spikes
         output_spikes.slice_mut(s![t, .., ..]).assign(&layer_output);
-        
+
         // Apply synaptic plasticity
         apply_stdp_learning(&mut network, config, t)?;
     }
-    
+
     // Convert spike trains back to image
     let result = spike_trains_to_image(output_spikes.view(), config)?;
-    
+
     Ok(result)
 }
 
@@ -182,18 +182,18 @@ where
     T: Float + FromPrimitive + Copy + Send + Sync,
 {
     let (height, width) = current_frame.dim();
-    
+
     // Generate events based on temporal differences
     let events = if let Some(prev) = previous_frame {
         generate_events(&current_frame, &prev, config)?
     } else {
         generate_initial_events(&current_frame, config)?
     };
-    
+
     // Process events through neuromorphic filters
     let mut processed_image = Array2::zeros((height, width));
     let mut event_accumulator = Array2::zeros((height, width));
-    
+
     // Event-driven convolution using integrate-and-fire neurons
     for event in &events {
         if event.x < width && event.y < height {
@@ -201,17 +201,18 @@ where
             apply_event_kernel(&mut event_accumulator, event, config)?;
         }
     }
-    
+
     // Convert accumulated events to image representation
     for y in 0..height {
         for x in 0..width {
             let accumulated = event_accumulator[(y, x)];
-            let normalized = T::from_f64(accumulated.tanh())
-                .ok_or_else(|| NdimageError::ComputationError("Type conversion failed".to_string()))?;
+            let normalized = T::from_f64(accumulated.tanh()).ok_or_else(|| {
+                NdimageError::ComputationError("Type conversion failed".to_string())
+            })?;
             processed_image[(y, x)] = normalized;
         }
     }
-    
+
     Ok((processed_image, events))
 }
 
@@ -228,32 +229,34 @@ where
     T: Float + FromPrimitive + Copy + Send + Sync,
 {
     if image_sequence.is_empty() {
-        return Err(NdimageError::InvalidInput("Empty image sequence".to_string()));
+        return Err(NdimageError::InvalidInput(
+            "Empty image sequence".to_string(),
+        ));
     }
-    
+
     let (height, width) = image_sequence[0].dim();
-    
+
     // Initialize liquid (reservoir) neurons
     let mut reservoir = initialize_reservoir(reservoir_size, height, width, config)?;
-    
+
     // Process sequence through liquid state machine
     let mut liquid_states = Vec::new();
-    
+
     for (t, image) in image_sequence.iter().enumerate() {
         // Convert image to input currents
         let input_currents = image_to_currents(image)?;
-        
+
         // Update reservoir dynamics
         update_reservoir_dynamics(&mut reservoir, &input_currents, config)?;
-        
+
         // Capture liquid state
         let state = capture_reservoir_state(&reservoir)?;
         liquid_states.push(state);
     }
-    
+
     // Read out final processed image from liquid states
     let processed_image = readout_from_liquid_states(&liquid_states, (height, width), config)?;
-    
+
     Ok(processed_image)
 }
 
@@ -270,21 +273,21 @@ where
     T: Float + FromPrimitive + Copy + Send + Sync,
 {
     let (height, width) = image.dim();
-    
+
     // Initialize adaptive filter network
     let mut neurons = Array2::from_elem((height, width), SpikingNeuron::default());
     let mut synaptic_weights = Array3::from_elem((height, width, 9), 0.5); // 3x3 neighborhood
-    
+
     let mut processed_image = Array2::zeros((height, width));
-    
+
     // Adaptive processing with homeostatic regulation
     for step in 0..adaptation_steps {
         // Apply current filter state
-        for y in 1..height-1 {
-            for x in 1..width-1 {
+        for y in 1..height - 1 {
+            for x in 1..width - 1 {
                 let mut weighted_sum = 0.0;
                 let mut weight_index = 0;
-                
+
                 // Process 3x3 neighborhood
                 for dy in -1i32..=1 {
                     for dx in -1i32..=1 {
@@ -292,20 +295,21 @@ where
                         let nx = (x as i32 + dx) as usize;
                         let pixel_val = image[(ny, nx)].to_f64().unwrap_or(0.0);
                         let weight = synaptic_weights[(y, x, weight_index)];
-                        
+
                         weighted_sum += pixel_val * weight;
                         weight_index += 1;
                     }
                 }
-                
+
                 // Update neuron with leaky integration
                 let neuron = &mut neurons[(y, x)];
                 neuron.synaptic_current = weighted_sum;
-                
+
                 // Leaky integration
                 let decay = (-1.0 / config.tau_membrane).exp();
-                neuron.membrane_potential = neuron.membrane_potential * decay + neuron.synaptic_current;
-                
+                neuron.membrane_potential =
+                    neuron.membrane_potential * decay + neuron.synaptic_current;
+
                 // Spike generation
                 let output_value = if neuron.membrane_potential > config.spike_threshold {
                     neuron.membrane_potential = 0.0; // Reset
@@ -316,16 +320,17 @@ where
                     neuron.time_since_spike += 1;
                     0.0
                 };
-                
-                processed_image[(y, x)] = T::from_f64(output_value)
-                    .ok_or_else(|| NdimageError::ComputationError("Type conversion failed".to_string()))?;
-                
+
+                processed_image[(y, x)] = T::from_f64(output_value).ok_or_else(|| {
+                    NdimageError::ComputationError("Type conversion failed".to_string())
+                })?;
+
                 // Homeostatic adaptation
                 update_homeostatic_weights(&mut synaptic_weights, (y, x), neuron, config, step)?;
             }
         }
     }
-    
+
     Ok(processed_image)
 }
 
@@ -344,25 +349,25 @@ where
 {
     let (height, width) = image.dim();
     let num_features = feature_detectors.len();
-    
+
     // Initialize feature maps
     let mut feature_maps = Array3::zeros((num_features, height, width));
-    
+
     // Convert image to temporal patterns
     let temporal_image = create_temporal_patterns(&image, time_window, config)?;
-    
+
     for (feature_idx, detector) in feature_detectors.iter().enumerate() {
         let (det_h, det_w) = detector.dim();
-        
+
         // Sliding window feature detection with temporal coding
         for y in 0..height.saturating_sub(det_h) {
             for x in 0..width.saturating_sub(det_w) {
                 let mut temporal_correlation = 0.0;
-                
+
                 // Temporal correlation computation
                 for t in 0..time_window {
                     let mut spatial_correlation = 0.0;
-                    
+
                     for dy in 0..det_h {
                         for dx in 0..det_w {
                             let img_val = temporal_image[(t, y + dy, x + dx)];
@@ -370,20 +375,22 @@ where
                             spatial_correlation += img_val * det_val;
                         }
                     }
-                    
+
                     // Temporal weighting (earlier spikes have higher precedence)
                     let temporal_weight = (-t as f64 / config.tau_synaptic).exp();
                     temporal_correlation += spatial_correlation * temporal_weight;
                 }
-                
-                let feature_strength = T::from_f64(temporal_correlation.tanh())
-                    .ok_or_else(|| NdimageError::ComputationError("Type conversion failed".to_string()))?;
-                
+
+                let feature_strength =
+                    T::from_f64(temporal_correlation.tanh()).ok_or_else(|| {
+                        NdimageError::ComputationError("Type conversion failed".to_string())
+                    })?;
+
                 feature_maps[(feature_idx, y, x)] = feature_strength;
             }
         }
     }
-    
+
     Ok(feature_maps)
 }
 
@@ -401,55 +408,57 @@ where
     T: Float + FromPrimitive + Copy + Send + Sync,
 {
     let (filter_h, filter_w) = filter_size;
-    
+
     // Initialize synaptic weights randomly
-    let mut learned_filter = Array2::from_shape_fn(filter_size, |_| {
-        (rand::random::<f64>() - 0.5) * 0.2
-    });
-    
+    let mut learned_filter =
+        Array2::from_shape_fn(filter_size, |_| (rand::random::<f64>() - 0.5) * 0.2);
+
     let mut pre_synaptic_traces = Array2::zeros(filter_size);
     let mut post_synaptic_trace = 0.0;
-    
+
     // STDP learning over multiple epochs
     for epoch in 0..epochs {
         for (img_idx, image) in training_images.iter().enumerate() {
             let (height, width) = image.dim();
-            
+
             // Random location for unsupervised patch learning
             let y_start = rand::random::<usize>() % height.saturating_sub(filter_h);
             let x_start = rand::random::<usize>() % width.saturating_sub(filter_w);
-            
+
             // Extract patch
-            let patch = image.slice(s![y_start..y_start+filter_h, x_start..x_start+filter_w]);
-            
+            let patch = image.slice(s![y_start..y_start + filter_h, x_start..x_start + filter_w]);
+
             // Convert patch to spike times
             let mut pre_spike_times = Array2::zeros(filter_size);
             let mut post_spike_time = 0;
-            
+
             for y in 0..filter_h {
                 for x in 0..filter_w {
                     let intensity = patch[(y, x)].to_f64().unwrap_or(0.0);
                     // Convert intensity to spike timing (higher intensity = earlier spike)
-                    let spike_time = (config.stdp_window as f64 * (1.0 - intensity)).max(1.0) as usize;
+                    let spike_time =
+                        (config.stdp_window as f64 * (1.0 - intensity)).max(1.0) as usize;
                     pre_spike_times[(y, x)] = spike_time as f64;
                 }
             }
-            
+
             // Compute post-synaptic response
-            let response: f64 = patch.iter().zip(learned_filter.iter())
+            let response: f64 = patch
+                .iter()
+                .zip(learned_filter.iter())
                 .map(|(&p, &w)| p.to_f64().unwrap_or(0.0) * w)
                 .sum();
-            
+
             if response > config.spike_threshold {
                 post_spike_time = config.stdp_window / 2; // Spike in middle of window
             }
-            
+
             // Apply STDP learning rule
             for y in 0..filter_h {
                 for x in 0..filter_w {
                     let pre_time = pre_spike_times[(y, x)] as usize;
                     let dt = post_spike_time as i32 - pre_time as i32;
-                    
+
                     let stdp_update = if dt > 0 {
                         // Post-before-pre: potentiation
                         config.learning_rate * (-dt.abs() as f64 / config.stdp_window as f64).exp()
@@ -459,25 +468,27 @@ where
                     } else {
                         0.0
                     };
-                    
+
                     learned_filter[(y, x)] += stdp_update;
-                    
+
                     // Weight bounds
-                    learned_filter[(y, x)] = learned_filter[(y, x)].clamp(-config.max_weight, config.max_weight);
+                    learned_filter[(y, x)] =
+                        learned_filter[(y, x)].clamp(-config.max_weight, config.max_weight);
                 }
             }
-            
+
             // Homeostatic weight normalization
             let weight_sum: f64 = learned_filter.iter().map(|&w| w.abs()).sum();
             if weight_sum > 0.0 {
-                learned_filter.mapv_inplace(|w| w / weight_sum * filter_size.0 as f64 * filter_size.1 as f64);
+                learned_filter
+                    .mapv_inplace(|w| w / weight_sum * filter_size.0 as f64 * filter_size.1 as f64);
             }
         }
-        
+
         // Decay learning rate
         // config.learning_rate *= 0.99; // Can't modify config, handled externally
     }
-    
+
     Ok(learned_filter)
 }
 
@@ -489,12 +500,12 @@ fn initialize_snn(
     width: usize,
 ) -> NdimageResult<Vec<Array2<SpikingNeuron>>> {
     let mut network = Vec::new();
-    
+
     for &layer_size in layers {
         let neurons = Array2::from_elem((height, width), SpikingNeuron::default());
         network.push(neurons);
     }
-    
+
     Ok(network)
 }
 
@@ -508,13 +519,13 @@ where
 {
     let (height, width) = image.dim();
     let mut spike_trains = Array3::zeros((time_steps, height, width));
-    
+
     // Convert pixel intensities to Poisson spike trains
     for y in 0..height {
         for x in 0..width {
             let intensity = image[(y, x)].to_f64().unwrap_or(0.0);
             let spike_rate = intensity.max(0.0).min(1.0); // Normalized rate
-            
+
             for t in 0..time_steps {
                 if rand::random::<f64>() < spike_rate * config.learning_rate {
                     spike_trains[(t, y, x)] = 1.0;
@@ -522,7 +533,7 @@ where
             }
         }
     }
-    
+
     Ok(spike_trains)
 }
 
@@ -534,35 +545,38 @@ fn forward_propagate_snn(
 ) -> NdimageResult<Array2<f64>> {
     let (height, width) = input_spikes.dim();
     let mut output_spikes = Array2::zeros((height, width));
-    
+
     // Simple feedforward propagation (first layer only for demonstration)
     if !network.is_empty() {
         let layer = &mut network[0];
-        
+
         for y in 0..height {
             for x in 0..width {
                 let neuron = &mut layer[(y, x)];
                 let input_current = input_spikes[(y, x)];
-                
+
                 // Update synaptic current
                 let decay = (-1.0 / config.tau_synaptic).exp();
                 neuron.synaptic_current = neuron.synaptic_current * decay + input_current;
-                
+
                 // Update membrane potential
                 let membrane_decay = (-1.0 / config.tau_membrane).exp();
-                neuron.membrane_potential = neuron.membrane_potential * membrane_decay + neuron.synaptic_current;
-                
+                neuron.membrane_potential =
+                    neuron.membrane_potential * membrane_decay + neuron.synaptic_current;
+
                 // Check for spike
-                if neuron.membrane_potential > config.spike_threshold && neuron.time_since_spike > config.refractory_period {
+                if neuron.membrane_potential > config.spike_threshold
+                    && neuron.time_since_spike > config.refractory_period
+                {
                     neuron.membrane_potential = 0.0; // Reset
                     neuron.time_since_spike = 0;
                     neuron.spike_times.push_back(current_time);
-                    
+
                     // Limit spike history
                     if neuron.spike_times.len() > config.stdp_window {
                         neuron.spike_times.pop_front();
                     }
-                    
+
                     output_spikes[(y, x)] = 1.0;
                 } else {
                     neuron.time_since_spike += 1;
@@ -571,7 +585,7 @@ fn forward_propagate_snn(
             }
         }
     }
-    
+
     Ok(output_spikes)
 }
 
@@ -582,14 +596,14 @@ fn apply_stdp_learning(
 ) -> NdimageResult<()> {
     // Simplified STDP implementation for demonstration
     // In practice, this would involve complex connectivity patterns
-    
+
     for layer in network {
         for neuron in layer.iter_mut() {
             // Update spike traces
             let trace_decay = (-1.0 / config.tau_synaptic).exp();
             neuron.pre_spike_trace *= trace_decay;
             neuron.post_spike_trace *= trace_decay;
-            
+
             // Check if neuron spiked recently
             if let Some(&last_spike_time) = neuron.spike_times.back() {
                 if current_time == last_spike_time {
@@ -598,7 +612,7 @@ fn apply_stdp_learning(
             }
         }
     }
-    
+
     Ok(())
 }
 
@@ -611,13 +625,13 @@ where
 {
     let (time_steps, height, width) = spike_trains.dim();
     let mut image = Array2::zeros((height, width));
-    
+
     // Convert spike trains back to continuous values
     for y in 0..height {
         for x in 0..width {
             let mut spike_count = 0.0;
             let mut weighted_sum = 0.0;
-            
+
             for t in 0..time_steps {
                 let spike = spike_trains[(t, y, x)];
                 if spike > 0.0 {
@@ -627,13 +641,14 @@ where
                     weighted_sum += spike * temporal_weight;
                 }
             }
-            
+
             let intensity = weighted_sum / time_steps as f64;
-            image[(y, x)] = T::from_f64(intensity)
-                .ok_or_else(|| NdimageError::ComputationError("Type conversion failed".to_string()))?;
+            image[(y, x)] = T::from_f64(intensity).ok_or_else(|| {
+                NdimageError::ComputationError("Type conversion failed".to_string())
+            })?;
         }
     }
-    
+
     Ok(image)
 }
 
@@ -647,13 +662,13 @@ where
 {
     let (height, width) = current.dim();
     let mut events = Vec::new();
-    
+
     for y in 0..height {
         for x in 0..width {
             let curr_val = current[(y, x)].to_f64().unwrap_or(0.0);
             let prev_val = previous[(y, x)].to_f64().unwrap_or(0.0);
             let diff = curr_val - prev_val;
-            
+
             if diff.abs() > config.event_threshold {
                 events.push(Event {
                     x,
@@ -665,7 +680,7 @@ where
             }
         }
     }
-    
+
     Ok(events)
 }
 
@@ -678,11 +693,11 @@ where
 {
     let (height, width) = image.dim();
     let mut events = Vec::new();
-    
+
     for y in 0..height {
         for x in 0..width {
             let intensity = image[(y, x)].to_f64().unwrap_or(0.0);
-            
+
             if intensity > config.event_threshold {
                 events.push(Event {
                     x,
@@ -694,7 +709,7 @@ where
             }
         }
     }
-    
+
     Ok(events)
 }
 
@@ -706,29 +721,34 @@ fn apply_event_kernel(
     let (height, width) = accumulator.dim();
     let kernel_size = 3;
     let half_kernel = kernel_size / 2;
-    
+
     // Apply spatial-temporal kernel around event location
     for dy in -(half_kernel as i32)..=(half_kernel as i32) {
         for dx in -(half_kernel as i32)..=(half_kernel as i32) {
             let ny = event.y as i32 + dy;
             let nx = event.x as i32 + dx;
-            
+
             if ny >= 0 && ny < height as i32 && nx >= 0 && nx < width as i32 {
                 let uy = ny as usize;
                 let ux = nx as usize;
-                
+
                 // Gaussian-like spatial kernel
-                let spatial_weight = (-((dy*dy + dx*dx) as f64) / (2.0 * config.tau_synaptic)).exp();
-                
+                let spatial_weight =
+                    (-((dy * dy + dx * dx) as f64) / (2.0 * config.tau_synaptic)).exp();
+
                 // Temporal decay based on event properties
                 let temporal_weight = (-event.timestamp as f64 / config.tau_membrane).exp();
-                
+
                 let contribution = event.value * spatial_weight * temporal_weight;
-                accumulator[(uy, ux)] += if event.polarity { contribution } else { -contribution };
+                accumulator[(uy, ux)] += if event.polarity {
+                    contribution
+                } else {
+                    -contribution
+                };
             }
         }
     }
-    
+
     Ok(())
 }
 
@@ -739,13 +759,13 @@ fn initialize_reservoir(
     config: &NeuromorphicConfig,
 ) -> NdimageResult<Array1<SpikingNeuron>> {
     let mut reservoir = Array1::from_elem(reservoir_size, SpikingNeuron::default());
-    
+
     // Initialize reservoir with diverse properties
     for (i, neuron) in reservoir.iter_mut().enumerate() {
         neuron.target_rate = 0.05 + 0.1 * (i as f64 / reservoir_size as f64);
         neuron.membrane_potential = (rand::random::<f64>() - 0.5) * 0.1;
     }
-    
+
     Ok(reservoir)
 }
 
@@ -755,13 +775,13 @@ where
 {
     let (height, width) = image.dim();
     let mut currents = Array2::zeros((height, width));
-    
+
     for y in 0..height {
         for x in 0..width {
             currents[(y, x)] = image[(y, x)].to_f64().unwrap_or(0.0);
         }
     }
-    
+
     Ok(currents)
 }
 
@@ -771,18 +791,18 @@ fn update_reservoir_dynamics(
     config: &NeuromorphicConfig,
 ) -> NdimageResult<()> {
     let (height, width) = input_currents.dim();
-    
+
     // Update each reservoir neuron
     for (i, neuron) in reservoir.iter_mut().enumerate() {
         // Connect to random input locations (simplified connectivity)
         let input_y = i % height;
         let input_x = (i / height) % width;
         let input_current = input_currents.get((input_y, input_x)).unwrap_or(&0.0);
-        
+
         // Update neuron dynamics
         let decay = (-1.0 / config.tau_membrane).exp();
         neuron.membrane_potential = neuron.membrane_potential * decay + input_current;
-        
+
         // Spike generation
         if neuron.membrane_potential > config.spike_threshold {
             neuron.membrane_potential = 0.0;
@@ -791,17 +811,17 @@ fn update_reservoir_dynamics(
             neuron.time_since_spike += 1;
         }
     }
-    
+
     Ok(())
 }
 
 fn capture_reservoir_state(reservoir: &Array1<SpikingNeuron>) -> NdimageResult<Array1<f64>> {
     let mut state = Array1::zeros(reservoir.len());
-    
+
     for (i, neuron) in reservoir.iter().enumerate() {
         state[i] = neuron.membrane_potential;
     }
-    
+
     Ok(state)
 }
 
@@ -812,29 +832,31 @@ fn readout_from_liquid_states(
 ) -> NdimageResult<Array2<f64>> {
     let (height, width) = output_shape;
     let mut output = Array2::zeros((height, width));
-    
+
     if liquid_states.is_empty() {
         return Ok(output);
     }
-    
+
     let reservoir_size = liquid_states[0].len();
-    
+
     // Simple linear readout (in practice would use trained weights)
     for y in 0..height {
         for x in 0..width {
             let mut sum = 0.0;
-            
+
             for state in liquid_states {
                 for i in 0..reservoir_size {
-                    let weight = ((y * width + x + i) as f64 / (height * width * reservoir_size) as f64).sin();
+                    let weight = ((y * width + x + i) as f64
+                        / (height * width * reservoir_size) as f64)
+                        .sin();
                     sum += state[i] * weight;
                 }
             }
-            
+
             output[(y, x)] = sum.tanh(); // Nonlinear readout
         }
     }
-    
+
     Ok(output)
 }
 
@@ -846,23 +868,25 @@ fn update_homeostatic_weights(
     step: usize,
 ) -> NdimageResult<()> {
     let (y, x) = pos;
-    
+
     // Estimate current firing rate
-    let recent_spikes = neuron.spike_times.iter()
+    let recent_spikes = neuron
+        .spike_times
+        .iter()
         .filter(|&&spike_time| step.saturating_sub(spike_time) < 100)
         .count() as f64;
     let current_rate = recent_spikes / 100.0;
-    
+
     // Homeostatic scaling
     let rate_error = neuron.target_rate - current_rate;
     let scaling_factor = 1.0 + config.learning_rate * rate_error / config.tau_homeostatic;
-    
+
     // Apply scaling to all synaptic weights
     for i in 0..9 {
         weights[(y, x, i)] *= scaling_factor;
         weights[(y, x, i)] = weights[(y, x, i)].clamp(0.0, config.max_weight);
     }
-    
+
     Ok(())
 }
 
@@ -876,11 +900,11 @@ where
 {
     let (height, width) = image.dim();
     let mut temporal_patterns = Array3::zeros((time_window, height, width));
-    
+
     // Create temporal patterns with different time constants
     for t in 0..time_window {
         let temporal_weight = (-t as f64 / config.tau_synaptic).exp();
-        
+
         for y in 0..height {
             for x in 0..width {
                 let intensity = image[(y, x)].to_f64().unwrap_or(0.0);
@@ -888,20 +912,20 @@ where
             }
         }
     }
-    
+
     Ok(temporal_patterns)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::Array2;
     use approx::assert_abs_diff_eq;
+    use ndarray::Array2;
 
     #[test]
     fn test_neuromorphic_config_default() {
         let config = NeuromorphicConfig::default();
-        
+
         assert_eq!(config.tau_membrane, 20.0);
         assert_eq!(config.tau_synaptic, 5.0);
         assert_eq!(config.spike_threshold, 1.0);
@@ -912,7 +936,7 @@ mod tests {
     #[test]
     fn test_spiking_neuron_default() {
         let neuron = SpikingNeuron::default();
-        
+
         assert_eq!(neuron.membrane_potential, 0.0);
         assert_eq!(neuron.synaptic_current, 0.0);
         assert_eq!(neuron.time_since_spike, 0);
@@ -921,63 +945,65 @@ mod tests {
 
     #[test]
     fn test_event_driven_processing() {
-        let current = Array2::from_shape_vec((3, 3), vec![
-            0.0, 1.0, 0.0,
-            1.0, 0.5, 1.0,
-            0.0, 1.0, 0.0
-        ]).unwrap();
-        
-        let previous = Array2::from_shape_vec((3, 3), vec![
-            0.0, 0.5, 0.0,
-            0.5, 0.5, 0.5,
-            0.0, 0.5, 0.0
-        ]).unwrap();
-        
+        let current =
+            Array2::from_shape_vec((3, 3), vec![0.0, 1.0, 0.0, 1.0, 0.5, 1.0, 0.0, 1.0, 0.0])
+                .unwrap();
+
+        let previous =
+            Array2::from_shape_vec((3, 3), vec![0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 0.0, 0.5, 0.0])
+                .unwrap();
+
         let config = NeuromorphicConfig::default();
-        let result = event_driven_processing(current.view(), Some(previous.view()), &config).unwrap();
-        
+        let result =
+            event_driven_processing(current.view(), Some(previous.view()), &config).unwrap();
+
         assert_eq!(result.0.dim(), (3, 3));
         assert!(!result.1.is_empty()); // Should generate events
     }
 
     #[test]
     fn test_homeostatic_adaptive_filter() {
-        let image = Array2::from_shape_vec((5, 5), (0..25).map(|x| x as f64 / 25.0).collect()).unwrap();
-        
+        let image =
+            Array2::from_shape_vec((5, 5), (0..25).map(|x| x as f64 / 25.0).collect()).unwrap();
+
         let config = NeuromorphicConfig::default();
         let result = homeostatic_adaptive_filter(image.view(), &config, 5).unwrap();
-        
+
         assert_eq!(result.dim(), (5, 5));
         assert!(result.iter().all(|&x| x.is_finite()));
     }
 
     #[test]
     fn test_temporal_coding_feature_extraction() {
-        let image = Array2::from_shape_vec((4, 4), (0..16).map(|x| x as f64 / 16.0).collect()).unwrap();
-        
-        let edge_detector = Array2::from_shape_vec((3, 3), vec![
-            -1.0, -1.0, -1.0,
-            -1.0,  8.0, -1.0,
-            -1.0, -1.0, -1.0
-        ]).unwrap();
-        
+        let image =
+            Array2::from_shape_vec((4, 4), (0..16).map(|x| x as f64 / 16.0).collect()).unwrap();
+
+        let edge_detector = Array2::from_shape_vec(
+            (3, 3),
+            vec![-1.0, -1.0, -1.0, -1.0, 8.0, -1.0, -1.0, -1.0, -1.0],
+        )
+        .unwrap();
+
         let detectors = vec![edge_detector];
         let config = NeuromorphicConfig::default();
-        
-        let result = temporal_coding_feature_extraction(image.view(), &detectors, &config, 10).unwrap();
-        
+
+        let result =
+            temporal_coding_feature_extraction(image.view(), &detectors, &config, 10).unwrap();
+
         assert_eq!(result.dim(), (1, 4, 4));
         assert!(result.iter().all(|&x| x.is_finite()));
     }
 
     #[test]
     fn test_stdp_unsupervised_learning() {
-        let training_image = Array2::from_shape_vec((6, 6), (0..36).map(|x| x as f64 / 36.0).collect()).unwrap();
+        let training_image =
+            Array2::from_shape_vec((6, 6), (0..36).map(|x| x as f64 / 36.0).collect()).unwrap();
         let training_images = vec![training_image.view()];
-        
+
         let config = NeuromorphicConfig::default();
-        let learned_filter = stdp_unsupervised_learning(&training_images, (3, 3), &config, 2).unwrap();
-        
+        let learned_filter =
+            stdp_unsupervised_learning(&training_images, (3, 3), &config, 2).unwrap();
+
         assert_eq!(learned_filter.dim(), (3, 3));
         assert!(learned_filter.iter().all(|&x| x.is_finite()));
     }

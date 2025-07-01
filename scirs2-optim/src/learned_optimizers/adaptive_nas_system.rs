@@ -12,8 +12,7 @@ use std::time::{Duration, Instant};
 use crate::error::OptimizerError;
 use crate::learned_optimizers::neural_architecture_search::ArchitectureSearchSpace;
 use crate::neural_architecture_search::{
-    ArchitectureController, MultiObjectiveOptimizer, NASConfig, OptimizerArchitecture,
-    PerformanceEvaluator, SearchStrategy,
+    ArchitectureController, MultiObjectiveOptimizer, NASConfig, SearchStrategy,
 };
 
 /// Adaptive NAS System that learns from optimization performance
@@ -53,7 +52,7 @@ pub struct AdaptiveNASSystem<T: Float> {
 #[derive(Debug, Clone)]
 pub struct AdaptiveNASConfig<T: Float> {
     /// Base NAS configuration
-    pub base_config: NASConfig,
+    pub base_config: NASConfig<T>,
 
     /// Performance tracking window
     pub performance_window: usize,
@@ -688,7 +687,7 @@ pub struct LearningBasedGenerator<T: Float> {
     learning_algorithm: GenerativeLearningAlgorithm,
 
     /// Generation strategy
-    generation_strategy: GenerationStrategy<T>,
+    generation_strategy: GenerationStrategy,
 
     /// Quality filter
     quality_filter: GeneratedArchitectureFilter<T>,
@@ -2107,7 +2106,7 @@ pub struct TrendMetadata {
 #[derive(Debug)]
 pub struct SearchStrategySelector<T: Float> {
     /// Available strategies
-    strategies: Vec<SearchStrategy<T>>,
+    strategies: Vec<Box<dyn SearchStrategy<T>>>,
 
     /// Strategy performance history
     strategy_performance: HashMap<String, Vec<T>>,
@@ -4359,17 +4358,8 @@ pub enum GenerativeLearningAlgorithm {
     DiffusionModel,
 }
 
-impl<T: Float> GenerationStrategy<T> {
-    fn new() -> Self {
-        Self {
-            strategy_type: GenerationStrategyType::Learned,
-            exploration_rate: T::from(0.3).unwrap(),
-            exploitation_rate: T::from(0.7).unwrap(),
-            diversity_weight: T::from(0.2).unwrap(),
-            quality_weight: T::from(0.8).unwrap(),
-        }
-    }
-}
+// Note: GenerationStrategy is an enum, not a struct with fields
+// This impl block was incorrectly trying to implement struct-like behavior
 
 impl<T: Float> GeneratedArchitectureFilter<T> {
     fn new() -> Self {
@@ -4496,24 +4486,7 @@ pub enum AdaptationState {
     Diverged,
 }
 
-impl Default for NASConfig {
-    fn default() -> Self {
-        Self {
-            population_size: 50,
-            generations: 100,
-            mutation_rate: 0.1,
-            crossover_rate: 0.8,
-            elite_size: 5,
-            search_budget: 1000,
-            early_stopping_patience: 20,
-            validation_split: 0.2,
-            random_seed: Some(42),
-            parallel_evaluations: true,
-            max_concurrent_evaluations: 4,
-            timeout_per_evaluation: std::time::Duration::from_secs(3600),
-        }
-    }
-}
+// Duplicate Default implementation removed - using generic version at line 5209
 
 // Supporting types for DynamicSearchSpaceManager
 #[derive(Debug, Clone, Copy)]
@@ -5215,26 +5188,7 @@ impl<T: Float> QualityAssessmentCache<T> {
 
 // Duplicate implementation removed - using the first complete one
 
-impl<T: Float> Default for NASConfig<T> {
-    fn default() -> Self {
-        Self {
-            search_strategy: SearchStrategyType::Evolutionary,
-            search_space: SearchSpaceConfig::default(),
-            evaluation_config: EvaluationConfig::default(),
-            multi_objective_config: MultiObjectiveConfig::default(),
-            search_budget: 1000,
-            early_stopping: EarlyStoppingConfig::default(),
-            progressive_search: false,
-            population_size: 50,
-            enable_transfer_learning: false,
-            encoding_strategy: ArchitectureEncodingStrategy::Graph,
-            enable_performance_prediction: true,
-            parallelization_factor: 4,
-            auto_hyperparameter_tuning: false,
-            resource_constraints: ResourceConstraints::default(),
-        }
-    }
-}
+// Duplicate Default implementation for NASConfig removed - using implementation in neural_architecture_search/mod.rs
 
 impl Default for SearchSpaceConfig {
     fn default() -> Self {
@@ -5281,37 +5235,18 @@ impl<T: Float> Default for EarlyStoppingConfig<T> {
     }
 }
 
-impl<T: Float> Default for ResourceConstraints<T> {
+impl Default for ResourceConstraints {
     fn default() -> Self {
         Self {
-            max_memory_gb: T::from(16.0).unwrap(),
-            max_training_time_hours: T::from(24.0).unwrap(),
-            max_flops_per_epoch: T::from(1e12).unwrap(),
-            energy_budget_kwh: Some(T::from(10.0).unwrap()),
+            max_memory: Some(16 * 1024 * 1024 * 1024), // 16 GB in bytes
+            max_training_time: Some(Duration::from_secs(24 * 3600)), // 24 hours
+            max_flops: Some(1_000_000_000_000), // 1 trillion FLOPS
+            energy_budget: Some(10.0), // 10 kWh
         }
     }
 }
 
-impl Default for ArchitectureSpecification {
-    fn default() -> Self {
-        Self {
-            layers: vec![],
-            connections: ConnectionTopology {
-                adjacency_matrix: Array2::zeros((0, 0)),
-                connection_types: HashMap::new(),
-                skip_connections: vec![],
-            },
-            parameter_count: 0,
-            flops: 0,
-            memory_requirements: MemoryRequirements {
-                parameters: 0,
-                activations: 0,
-                gradients: 0,
-                total: 0,
-            },
-        }
-    }
-}
+// Duplicate Default implementation removed - using first implementation at line 296
 
 // Missing enum and struct definitions
 #[derive(Debug, Clone)]
@@ -5390,7 +5325,7 @@ pub struct NASSearchParameters<T: Float> {
     pub diversity_threshold: T,
 }
 
-impl<T: Float> Default for SearchParameters<T> {
+impl<T: Float> Default for NASSearchParameters<T> {
     fn default() -> Self {
         Self {
             mutation_rate: T::from(0.1).unwrap(),

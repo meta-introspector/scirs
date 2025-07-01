@@ -79,7 +79,10 @@ pub mod convenience;
 mod coulomb;
 pub mod cross_validation;
 mod distributions;
+pub mod edge_case_tests;
 mod elliptic;
+pub mod extended_scipy_validation;
+mod ellipsoidal;
 mod erf;
 #[cfg(test)]
 mod extended_property_tests;
@@ -131,28 +134,41 @@ pub use airy::complex::{ai_complex, aip_complex, bi_complex, bip_complex};
 pub use bessel::{
     // Regular Bessel functions
     i0,
+    i0e,
     i1,
+    i1e,
     iv,
+    ive,
     j0,
+    j0e,
     // Derivatives of Bessel functions
     j0_prime,
     j1,
+    j1e,
     j1_prime,
     jn,
+    jne,
     jn_prime,
     jv,
+    jve,
     jv_prime,
     k0,
+    k0e,
     k1,
+    k1e,
     kv,
+    kve,
     // Spherical Bessel functions
     spherical_jn,
     spherical_yn,
     y0,
+    y0e,
     y0_prime,
     y1,
+    y1e,
     y1_prime,
     yn,
+    yne,
     yn_prime,
 };
 pub use bessel_zeros::{
@@ -209,6 +225,10 @@ pub use elliptic::{
     elliptic_e, elliptic_e_inc, elliptic_f, elliptic_k, elliptic_pi, jacobi_cn, jacobi_dn,
     jacobi_sn,
 };
+pub use ellipsoidal::{
+    ellip_harm, ellip_harm_2, ellip_harm_array, ellip_harm_coefficients, ellip_harm_complex,
+    ellip_normal,
+};
 pub use fresnel::{
     fresnel, fresnel_complex, fresnelc, fresnels, mod_fresnel_minus, mod_fresnel_plus,
 };
@@ -226,6 +246,7 @@ pub use gamma::{
     gamma_safe,
     gammaln,
     loggamma,
+    polygamma,
 };
 pub use incomplete_gamma::{
     gammainc, gammainc_lower, gammainc_upper, gammaincc, gammainccinv, gammaincinv, gammasgn,
@@ -244,7 +265,7 @@ pub use information_theory::{
 };
 pub use kelvin::{bei, beip, ber, berp, kei, keip, kelvin, ker, kerp};
 pub use lambert::{lambert_w, lambert_w_real};
-pub use logint::{chi, ci, e1, expint, li, li_complex, polylog, shi, si};
+pub use logint::{chi, ci, e1, expint, li, li_complex, polylog, shi, shichi, si, sici, spence};
 pub use mathieu::{
     mathieu_a, mathieu_b, mathieu_cem, mathieu_even_coef, mathieu_odd_coef, mathieu_sem,
 };
@@ -279,7 +300,12 @@ pub use utility::{
     exp10_array,
     exp2,
     exprel,
+    // Statistical functions (SciPy compatibility)
+    expit,
+    expit_array,
     log_expit,
+    logit,
+    logit_array,
     owens_t,
     powm1,
     // Trigonometric in degrees
@@ -315,7 +341,7 @@ pub use simd_ops::{
 pub use simd_ops::gamma_f32_simd_parallel;
 
 // Error function and related functions
-pub use erf::{erf, erfc, erfcinv, erfinv};
+pub use erf::{dawsn, erf, erfc, erfcinv, erfcx, erfi, erfinv, wofz};
 
 // Arbitrary precision functions (when enabled)
 #[cfg(feature = "high-precision")]

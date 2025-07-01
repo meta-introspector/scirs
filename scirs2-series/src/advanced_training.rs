@@ -1286,8 +1286,8 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> TimeSeri
         for i in 0..seq_len {
             for j in 0..seq_len {
                 let mut dot_product = F::zero();
-                for k in 0..head_dim {
-                    dot_product = dot_product + q[[i, k]] * k[[j, k]];
+                for dim in 0..head_dim {
+                    dot_product = dot_product + q[[i, dim]] * k[[j, dim]];
                 }
                 scores[[i, j]] = dot_product * scale;
             }
@@ -1683,7 +1683,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> Hyperpar
             return Ok(F::zero());
         }
 
-        let sum: F = self.history.iter().map(|step| step.score).sum();
+        let sum: F = self.history.iter().map(|step| step.score).fold(F::zero(), |acc, x| acc + x);
         Ok(sum / F::from(self.history.len()).unwrap())
     }
 
@@ -1797,6 +1797,7 @@ pub struct OptimizationResults<F: Float + Debug> {
 }
 
 // Additional imports for slice notation
+#[allow(unused_imports)]
 use ndarray::s;
 
 // Additional test cases for new functionality

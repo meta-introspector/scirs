@@ -728,7 +728,7 @@ impl<T: Tokenizer + Send + Sync> AdvancedStreamingProcessor<T> {
         use scirs2_core::parallel_ops::*;
 
         let num_docs = corpus.num_documents();
-        let chunk_size = (num_docs + self.parallel_chunks - 1) / self.parallel_chunks;
+        let chunk_size = num_docs.div_ceil(self.parallel_chunks);
 
         // Track memory usage
         let estimated_memory = num_docs * 100; // Rough estimate
@@ -767,7 +767,7 @@ impl<T: Tokenizer + Send + Sync> AdvancedStreamingProcessor<T> {
         // Clone tokenizer to avoid borrow conflict
         let tokenizer = self.tokenizer.clone_box();
 
-        let _doc_stats = self
+        self
             .process_corpus_parallel(corpus, move |doc, _idx| {
                 let tokens = tokenizer.tokenize(doc)?;
                 let char_count = doc.chars().count();

@@ -1627,6 +1627,7 @@ impl<T: SpatialScalar> GenericGMM<T> {
     }
 
     /// Fit the GMM to data (simplified implementation)
+    #[allow(clippy::needless_range_loop)]
     pub fn fit<P>(&self, points: &[P]) -> SpatialResult<GMMResult<T>>
     where
         P: SpatialPoint<T> + Clone,
@@ -1877,8 +1878,8 @@ impl<T: SpatialScalar> GenericGMM<T> {
     ) -> T {
         // Compute (x - μ)
         let mut diff = vec![T::zero(); n_features];
-        for i in 0..n_features {
-            diff[i] =
+        for (i, item) in diff.iter_mut().enumerate().take(n_features) {
+            *item =
                 point.coordinate(i).unwrap_or(T::zero()) - mean.coordinate(i).unwrap_or(T::zero());
         }
 

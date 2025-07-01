@@ -527,7 +527,7 @@ where
     // Input validation
     if !return_distances && !return_indices {
         return Err(NdimageError::InvalidInput(
-            "At least one of return_distances or return_indices must be true".to_string()
+            "At least one of return_distances or return_indices must be true".to_string(),
         ));
     }
 
@@ -546,7 +546,12 @@ where
     };
 
     // Use optimized separable algorithm for better performance
-    Ok(distance_transform_edt_optimized(input, &sampling_vec, return_distances, return_indices))
+    Ok(distance_transform_edt_optimized(
+        input,
+        &sampling_vec,
+        return_distances,
+        return_indices,
+    ))
 }
 
 /// Calculate the city block (Manhattan) distance transform of a binary image.
@@ -602,16 +607,19 @@ where
     // Input validation
     if !return_distances && !return_indices {
         return Err(NdimageError::InvalidInput(
-            "At least one of return_distances or return_indices must be true".to_string()
+            "At least one of return_distances or return_indices must be true".to_string(),
         ));
     }
 
     let metric = match metric {
         "cityblock" => DistanceMetric::CityBlock,
         "chessboard" => DistanceMetric::Chessboard,
-        _ => return Err(NdimageError::InvalidInput(
-            format!("Metric must be one of 'cityblock' or 'chessboard', got '{}'", metric)
-        )),
+        _ => {
+            return Err(NdimageError::InvalidInput(format!(
+                "Metric must be one of 'cityblock' or 'chessboard', got '{}'",
+                metric
+            )))
+        }
     };
 
     // Initialize output arrays
@@ -763,7 +771,7 @@ where
     // Input validation
     if !return_distances && !return_indices {
         return Err(NdimageError::InvalidInput(
-            "At least one of return_distances or return_indices must be true".to_string()
+            "At least one of return_distances or return_indices must be true".to_string(),
         ));
     }
 
@@ -771,9 +779,12 @@ where
         "euclidean" => DistanceMetric::Euclidean,
         "cityblock" => DistanceMetric::CityBlock,
         "chessboard" => DistanceMetric::Chessboard,
-        _ => return Err(NdimageError::InvalidInput(
-            format!("Metric must be one of 'euclidean', 'cityblock', or 'chessboard', got '{}'", metric)
-        )),
+        _ => {
+            return Err(NdimageError::InvalidInput(format!(
+                "Metric must be one of 'euclidean', 'cityblock', or 'chessboard', got '{}'",
+                metric
+            )))
+        }
     };
 
     // Handle sampling

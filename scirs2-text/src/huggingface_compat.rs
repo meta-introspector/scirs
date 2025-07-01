@@ -164,11 +164,9 @@ impl HfTokenizer {
         let mut reverse_vocab = HashMap::new();
 
         // Add special tokens
-        let mut token_id = 0;
-        for (token, _) in &config.special_tokens {
+        for (token_id, token) in config.special_tokens.keys().enumerate() {
             vocab.insert(token.clone(), token_id);
             reverse_vocab.insert(token_id, token.clone());
-            token_id += 1;
         }
 
         Self {
@@ -475,7 +473,7 @@ impl HfModelAdapter {
         buffer.extend_from_slice(&model.config.dropout.to_le_bytes());
 
         // Serialize token embeddings
-        self.serialize_array2(&model.token_embedding.get_embeddings(), &mut buffer);
+        self.serialize_array2(model.token_embedding.get_embeddings(), &mut buffer);
 
         // Serialize encoder layers (placeholder - would need access to internal weights)
         let num_layers = model.config.n_encoder_layers as u32;
@@ -646,6 +644,12 @@ pub struct TextClassificationPipeline {
     labels: Vec<String>,
 }
 
+impl Default for TextClassificationPipeline {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TextClassificationPipeline {
     /// Create new text classification pipeline
     pub fn new() -> Self {
@@ -706,6 +710,12 @@ impl TextClassificationPipeline {
 #[derive(Debug)]
 pub struct FeatureExtractionPipeline;
 
+impl Default for FeatureExtractionPipeline {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl FeatureExtractionPipeline {
     /// Create new feature extraction pipeline
     pub fn new() -> Self {
@@ -721,7 +731,7 @@ impl FeatureExtractionPipeline {
 
         // Create TF-IDF vectorizer for feature extraction
         let mut vectorizer = TfidfVectorizer::new(false, true, Some("l2".to_string()));
-        let documents = vec![text.to_string()];
+        let documents = [text.to_string()];
         let doc_refs: Vec<&str> = documents.iter().map(|s| s.as_str()).collect();
         let tfidf_matrix = vectorizer.fit_transform(&doc_refs)?;
 
@@ -736,7 +746,7 @@ impl FeatureExtractionPipeline {
             } else {
                 0.0
             };
-            let is_title = if word.chars().next().map_or(false, |c| c.is_uppercase()) {
+            let is_title = if word.chars().next().is_some_and(|c| c.is_uppercase()) {
                 1.0
             } else {
                 0.0
@@ -786,6 +796,12 @@ impl FeatureExtractionPipeline {
 #[derive(Debug)]
 pub struct FillMaskPipeline;
 
+impl Default for FillMaskPipeline {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl FillMaskPipeline {
     /// Create new fill mask pipeline
     pub fn new() -> Self {
@@ -808,15 +824,14 @@ impl FillMaskPipeline {
             words[..mask_index]
                 .iter()
                 .rev()
-                .take(3)
-                .map(|&s| s)
+                .take(3).copied()
                 .collect()
         } else {
             vec![]
         };
 
         let right_context: Vec<&str> = if mask_index < words.len() - 1 {
-            words[mask_index + 1..].iter().take(3).map(|&s| s).collect()
+            words[mask_index + 1..].iter().take(3).copied().collect()
         } else {
             vec![]
         };
@@ -913,6 +928,12 @@ pub struct ZeroShotClassificationPipeline {
     hypothesis_template: String,
 }
 
+impl Default for ZeroShotClassificationPipeline {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ZeroShotClassificationPipeline {
     /// Create new zero-shot classification pipeline
     pub fn new() -> Self {
@@ -964,7 +985,7 @@ impl ZeroShotClassificationPipeline {
                     0.0
                 };
 
-                let score = (similarity + keyword_bonus).min(1.0).max(0.0);
+                let score = (similarity + keyword_bonus).clamp(0.0, 1.0);
 
                 results.push(ClassificationResult {
                     label: label.to_string(),
@@ -1018,6 +1039,12 @@ impl ZeroShotClassificationPipeline {
 #[derive(Debug)]
 pub struct QuestionAnsweringPipeline;
 
+impl Default for QuestionAnsweringPipeline {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl QuestionAnsweringPipeline {
     /// Create new question answering pipeline
     pub fn new() -> Self {
@@ -1068,7 +1095,7 @@ impl QuestionAnsweringPipeline {
 
                 // Normalize by span length and keyword count
                 if !question_keywords.is_empty() {
-                    score = score / (question_keywords.len() as f64).sqrt();
+                    score /= (question_keywords.len() as f64).sqrt();
                 }
 
                 // Adjust score based on question type
@@ -1076,7 +1103,7 @@ impl QuestionAnsweringPipeline {
                     // Prefer spans with capitalized words (names)
                     if context_words[start..end]
                         .iter()
-                        .any(|w| w.chars().next().map_or(false, |c| c.is_uppercase()))
+                        .any(|w| w.chars().next().is_some_and(|c| c.is_uppercase()))
                     {
                         score *= 1.5;
                     }
@@ -1244,7 +1271,7 @@ impl HfHub {
 
         // Try curl first, then wget as fallback
         let curl_result = Command::new("curl")
-            .args(&["-L", "-s", "-o", temp_path.to_str().unwrap(), url])
+            .args(["-L", "-s", "-o", temp_path.to_str().unwrap(), url])
             .output();
 
         let download_success = match curl_result {
@@ -1252,7 +1279,7 @@ impl HfHub {
             Err(_) => {
                 // Try wget as fallback
                 match Command::new("wget")
-                    .args(&["-q", "-O", temp_path.to_str().unwrap(), url])
+                    .args(["-q", "-O", temp_path.to_str().unwrap(), url])
                     .output()
                 {
                     Ok(output) => output.status.success(),
@@ -1344,8 +1371,7 @@ impl HfHub {
                 #[cfg(not(feature = "serde-support"))]
                 {
                     // Fallback JSON without serde
-                    format!(
-                        r#"{{
+                    r#"{
     "architectures": ["BertModel"],
     "model_type": "bert",
     "num_attention_heads": 12,
@@ -1354,8 +1380,7 @@ impl HfHub {
     "num_hidden_layers": 12,
     "vocab_size": 30522,
     "max_position_embeddings": 512
-}}"#
-                    )
+}"#.to_string()
                     .into_bytes()
                 }
             }
@@ -1370,16 +1395,14 @@ impl HfHub {
                 #[cfg(not(feature = "serde-support"))]
                 {
                     // Fallback JSON without serde
-                    format!(
-                        r#"{{
+                    r#"{
     "tokenizer_type": "WordPiece",
     "max_len": 512,
     "pad_token": "[PAD]",
     "unk_token": "[UNK]",
     "bos_token": "[CLS]",
     "eos_token": "[SEP]"
-}}"#
-                    )
+}"#.to_string()
                     .into_bytes()
                 }
             }
@@ -1455,7 +1478,7 @@ impl HfHub {
                 model
                     .pipeline_tag
                     .as_ref()
-                    .map_or(false, |tag| tag.contains(task))
+                    .is_some_and(|tag| tag.contains(task))
             });
         }
 
@@ -1582,6 +1605,12 @@ pub struct TextGenerationPipeline {
     temperature: f64,
 }
 
+impl Default for TextGenerationPipeline {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TextGenerationPipeline {
     /// Create new text generation pipeline
     pub fn new() -> Self {
@@ -1674,7 +1703,7 @@ impl TextGenerationPipeline {
             "results",
         ];
 
-        let max_new_tokens = (self.max_length as usize)
+        let max_new_tokens = self.max_length
             .saturating_sub(prompt_words.len())
             .min(20);
 
@@ -1692,7 +1721,7 @@ impl TextGenerationPipeline {
             let mut found_context = false;
             for (triggers, continuations) in &common_continuations {
                 if triggers.contains(&&*last_word) {
-                    candidates.extend(continuations.iter().map(|&s| s));
+                    candidates.extend(continuations.iter().copied());
                     found_context = true;
                     break;
                 }
@@ -1717,7 +1746,7 @@ impl TextGenerationPipeline {
             }
 
             if let Some(&next_word) = candidates.get(rng.random_range(0..candidates.len())) {
-                generated.push_str(" ");
+                generated.push(' ');
                 generated.push_str(next_word);
             }
 
@@ -1767,6 +1796,12 @@ pub struct SummarizationPipeline {
     min_length: usize,
 }
 
+impl Default for SummarizationPipeline {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SummarizationPipeline {
     /// Create new summarization pipeline
     pub fn new() -> Self {
@@ -1807,6 +1842,12 @@ pub struct SummarizationResult {
 pub struct TranslationPipeline {
     source_lang: String,
     target_lang: String,
+}
+
+impl Default for TranslationPipeline {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl TranslationPipeline {
@@ -1944,7 +1985,7 @@ impl TranslationPipeline {
             for (source, target) in &translations {
                 if clean_word == *source {
                     // Preserve capitalization
-                    let translated = if word.chars().next().map_or(false, |c| c.is_uppercase()) {
+                    let translated = if word.chars().next().is_some_and(|c| c.is_uppercase()) {
                         let mut chars: Vec<char> = target.chars().collect();
                         if !chars.is_empty() {
                             chars[0] = chars[0].to_uppercase().next().unwrap_or(chars[0]);
@@ -1977,7 +2018,7 @@ impl TranslationPipeline {
             if !found_translation {
                 let mut partial_match = false;
                 for (source, target) in &translations {
-                    if clean_word.contains(source) || source.contains(&clean_word) {
+                    if clean_word.contains(source) || source.contains(clean_word) {
                         translated_words.push(target.to_string());
                         partial_match = true;
                         break;
@@ -2033,6 +2074,12 @@ pub struct TranslationResult {
 pub struct TokenClassificationPipeline {
     #[allow(dead_code)]
     aggregation_strategy: String,
+}
+
+impl Default for TokenClassificationPipeline {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl TokenClassificationPipeline {
@@ -2212,7 +2259,7 @@ impl TokenClassificationPipeline {
         }
 
         // Person name detection using multiple heuristics
-        if word.chars().next().map_or(false, |c| c.is_uppercase()) {
+        if word.chars().next().is_some_and(|c| c.is_uppercase()) {
             let mut person_score: f64 = 0.0;
 
             // Common name patterns
@@ -2253,9 +2300,9 @@ impl TokenClassificationPipeline {
                 "thomas",
             ];
 
-            if common_first_names.contains(&&*word_lower) {
+            if common_first_names.contains(&word_lower) {
                 person_score += 0.8;
-            } else if common_last_names.contains(&&*word_lower) {
+            } else if common_last_names.contains(&word_lower) {
                 person_score += 0.7;
             }
 

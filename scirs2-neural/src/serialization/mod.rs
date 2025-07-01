@@ -698,3 +698,6 @@ impl ActivationFactory {
         names
     }
 }
+
+#[cfg(test)]
+mod tests;

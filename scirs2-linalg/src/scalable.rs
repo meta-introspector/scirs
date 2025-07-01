@@ -174,7 +174,7 @@ pub fn tsqr<F>(
     config: &ScalableConfig,
 ) -> LinalgResult<(Array2<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Zero + One + Sum + ndarray::ScalarOperand + 'static,
+    F: Float + NumAssign + Zero + One + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     let (_m, _n) = matrix.dim();
 
@@ -210,7 +210,7 @@ pub fn randomized_svd<F>(
     config: &ScalableConfig,
 ) -> LinalgResult<(Array2<F>, Array1<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Zero + One + Sum + ndarray::ScalarOperand + 'static,
+    F: Float + NumAssign + Zero + One + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     let (m, n) = matrix.dim();
     let effective_rank = rank.min(m.min(n));
@@ -273,7 +273,7 @@ pub fn lq_decomposition<F>(
     config: &ScalableConfig,
 ) -> LinalgResult<(Array2<F>, Array2<F>)>
 where
-    F: Float + NumAssign + Zero + One + Sum + ndarray::ScalarOperand + 'static,
+    F: Float + NumAssign + Zero + One + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     let (m, _n) = matrix.dim();
 
@@ -334,7 +334,7 @@ pub fn adaptive_decomposition<F>(
     config: &ScalableConfig,
 ) -> LinalgResult<AdaptiveResult<F>>
 where
-    F: Float + NumAssign + Zero + One + Sum + ndarray::ScalarOperand + 'static,
+    F: Float + NumAssign + Zero + One + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     let (m, n) = matrix.dim();
     let aspect = classify_aspect_ratio(matrix, config.aspect_threshold);
@@ -441,7 +441,7 @@ pub fn blocked_matmul<F>(
     config: &ScalableConfig,
 ) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Zero + One + Sum + ndarray::ScalarOperand + 'static,
+    F: Float + NumAssign + Zero + One + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
 {
     let (m, k) = a.dim();
     let (k2, n) = b.dim();

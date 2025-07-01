@@ -5,7 +5,7 @@
 use crate::base::{EdgeWeight, Graph, IndexType, Node};
 use petgraph::visit::EdgeRef;
 use rand::seq::SliceRandom;
-// use scirs2_core::parallel_ops::*;  // TODO: Add parallel implementations
+use scirs2_core::parallel_ops::*;
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 
@@ -1774,6 +1774,154 @@ where
         .into_iter()
         .map(CommunityResult::from_community_structure)
         .collect()
+}
+
+
+/// Parallel implementation of label propagation community detection
+///
+/// Uses parallel processing to speed up the label propagation algorithm
+/// for large graphs.
+///
+/// # Arguments
+/// * `graph` - The graph to analyze
+/// * `max_iterations` - Maximum number of iterations to run
+///
+/// # Returns
+/// * A `CommunityResult` containing the detected communities
+#[cfg(feature = "parallel")]
+pub fn parallel_label_propagation_result<N, E, Ix>(
+    graph: &Graph<N, E, Ix>,
+    max_iterations: Option<usize>,
+) -> CommunityResult<N>
+where
+    N: Node + Clone + Hash + Eq + Send + Sync,
+    E: EdgeWeight + Into<f64> + Copy + Send + Sync,
+    Ix: petgraph::graph::IndexType + Send + Sync,
+{
+    let max_iter = max_iterations.unwrap_or(100);
+    let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
+    let mut labels: HashMap<N, usize> = HashMap::new();
+
+    // Initialize labels (parallel)
+    nodes.par_iter()
+        .enumerate()
+        .map(|(i, node)| (node.clone(), i))
+        .collect_into_vec(&mut labels.into_par_iter().collect());
+
+    let mut rng = rand::rng();
+
+    for _ in 0..max_iter {
+        // Create a shuffled order for processing nodes
+        let mut shuffled_nodes = nodes.clone();
+        shuffled_nodes.shuffle(&mut rng);
+
+        // Parallel label updates
+        let updates: Vec<(N, usize)> = shuffled_nodes.par_iter()
+            .filter_map(|node| {
+                if let Ok(neighbors) = graph.neighbors(node) {
+                    // Count neighbor labels in parallel
+                    let mut label_counts: HashMap<usize, usize> = HashMap::new();
+                    
+                    for neighbor in neighbors {
+                        if let Some(&label) = labels.get(&neighbor) {
+                            *label_counts.entry(label).or_insert(0) += 1;
+                        }
+                    }
+
+                    // Find most frequent label
+                    if let Some((&most_frequent_label, _)) = label_counts
+                        .iter()
+                        .max_by_key(|&(_, count)| count)
+                    {
+                        let current_label = labels.get(node).copied().unwrap_or(0);
+                        if most_frequent_label != current_label {
+                            return Some((node.clone(), most_frequent_label));
+                        }
+                    }
+                }
+                None
+            })
+            .collect();
+
+        // Apply updates
+        if updates.is_empty() {
+            break; // Converged
+        }
+
+        for (node, new_label) in updates {
+            labels.insert(node, new_label);
+        }
+    }
+
+    // Convert to communities
+    let mut communities: HashMap<usize, HashSet<N>> = HashMap::new();
+    for (node, label) in &labels {
+        communities.entry(*label).or_insert_with(HashSet::new).insert(node.clone());
+    }
+
+    let communities_vec: Vec<HashSet<N>> = communities.into_values().collect();
+    let num_communities = communities_vec.len();
+
+    CommunityResult {
+        node_communities: labels,
+        communities: communities_vec,
+        num_communities,
+        quality_score: None, // Could compute modularity here
+        metadata: HashMap::new(),
+    }
+}
+
+/// Parallel implementation of modularity computation
+///
+/// Computes graph modularity using parallel processing for better performance
+/// on large graphs.
+///
+/// # Arguments
+/// * `graph` - The graph to analyze
+/// * `communities` - Node-to-community mapping
+///
+/// # Returns
+/// * The modularity score
+#[cfg(feature = "parallel")]
+pub fn parallel_modularity<N, E, Ix>(
+    graph: &Graph<N, E, Ix>,
+    communities: &HashMap<N, usize>,
+) -> f64
+where
+    N: Node + Clone + Hash + Eq + Send + Sync,
+    E: EdgeWeight + Into<f64> + Copy + Send + Sync,
+    Ix: petgraph::graph::IndexType + Send + Sync,
+{
+    let total_edges = graph.edge_count() as f64;
+    if total_edges == 0.0 {
+        return 0.0;
+    }
+
+    let two_m = 2.0 * total_edges;
+    let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
+
+    // Parallel computation of modularity
+    let modularity_sum: f64 = nodes.par_iter()
+        .flat_map(|node_i| {
+            nodes.par_iter().map(move |node_j| {
+                let comm_i = communities.get(node_i).copied().unwrap_or(0);
+                let comm_j = communities.get(node_j).copied().unwrap_or(0);
+
+                if comm_i == comm_j {
+                    let a_ij = if graph.has_edge(node_i, node_j) { 1.0 } else { 0.0 };
+                    let degree_i = graph.degree(node_i).unwrap_or(0) as f64;
+                    let degree_j = graph.degree(node_j).unwrap_or(0) as f64;
+                    let expected = (degree_i * degree_j) / two_m;
+                    
+                    a_ij - expected
+                } else {
+                    0.0
+                }
+            })
+        })
+        .sum();
+
+    modularity_sum / two_m
 }
 
 #[cfg(test)]

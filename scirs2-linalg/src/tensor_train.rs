@@ -58,7 +58,7 @@ pub struct TTTensor<F> {
 
 impl<F> TTTensor<F>
 where
-    F: Float + NumAssign + Sum + ndarray::ScalarOperand + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     /// Create a new TT tensor with specified cores
     ///
@@ -412,7 +412,7 @@ pub fn tt_decomposition<F, D>(
     max_rank: Option<usize>,
 ) -> LinalgResult<TTTensor<F>>
 where
-    F: Float + NumAssign + Sum + ndarray::ScalarOperand + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
     D: Dimension,
 {
     let shape = tensor.shape();
@@ -553,7 +553,7 @@ where
 /// * Sum of TT tensors in TT format
 pub fn tt_add<F>(a: &TTTensor<F>, b: &TTTensor<F>) -> LinalgResult<TTTensor<F>>
 where
-    F: Float + NumAssign + Sum + ndarray::ScalarOperand + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     if a.mode_sizes != b.mode_sizes {
         return Err(LinalgError::ShapeError(
@@ -586,7 +586,7 @@ where
 /// Create a rank-1 TT tensor from a dense tensor (simplified implementation)
 fn tt_from_dense_simple<F>(dense: &ndarray::ArrayViewD<F>) -> LinalgResult<TTTensor<F>>
 where
-    F: Float + NumAssign + Sum + ndarray::ScalarOperand + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     let shape = dense.shape();
     let d = shape.len();
@@ -625,7 +625,7 @@ where
 /// * Element-wise product in TT format
 pub fn tt_hadamard<F>(a: &TTTensor<F>, b: &TTTensor<F>) -> LinalgResult<TTTensor<F>>
 where
-    F: Float + NumAssign + Sum + ndarray::ScalarOperand + 'static,
+    F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     if a.mode_sizes != b.mode_sizes {
         return Err(LinalgError::ShapeError(

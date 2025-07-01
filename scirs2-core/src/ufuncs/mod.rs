@@ -6,7 +6,7 @@
 
 use ndarray::{Array, ArrayView, Ix1, Ix2};
 use std::ops;
-use crate::error::{CoreError, CoreResult, ErrorContext, ErrorLocation};
+use crate::error::{CoreError, CoreResult, ErrorLocation};
 
 /// Common mathematical operations for numerical arrays (1D)
 pub mod math {

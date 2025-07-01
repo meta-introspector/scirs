@@ -1635,3 +1635,58 @@ mod tests {
         }
     }
 }
+
+// Additional acceleration types for compatibility
+#[derive(Debug, Clone)]
+pub struct AccelerationConfig {
+    pub strategy: AccelerationStrategy,
+    pub gpu_config: GpuOptimizationConfig,
+}
+
+impl Default for AccelerationConfig {
+    fn default() -> Self {
+        Self {
+            strategy: AccelerationStrategy::Auto,
+            gpu_config: GpuOptimizationConfig::default(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum AccelerationStrategy {
+    Auto,
+    GPU,
+    CPU,
+}
+
+#[derive(Debug)]
+pub struct AccelerationManager {
+    config: AccelerationConfig,
+}
+
+impl AccelerationManager {
+    pub fn new(config: AccelerationConfig) -> Self {
+        Self { config }
+    }
+    
+    pub fn default() -> Self {
+        Self::new(AccelerationConfig::default())
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct PerformanceStats {
+    pub gpu_utilization: f64,
+    pub memory_usage: f64,
+    pub throughput: f64,
+}
+
+impl Default for PerformanceStats {
+    fn default() -> Self {
+        Self {
+            gpu_utilization: 0.0,
+            memory_usage: 0.0,
+            throughput: 0.0,
+        }
+    }
+}

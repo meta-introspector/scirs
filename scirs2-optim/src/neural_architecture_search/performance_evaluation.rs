@@ -144,7 +144,7 @@ pub struct TestFunction<T: Float> {
 }
 
 /// Types of test functions
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TestFunctionType {
     /// Quadratic bowl
     Quadratic,
@@ -245,7 +245,7 @@ pub struct ProblemDefinition<T: Float> {
 }
 
 /// Problem types
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ProblemType {
     Regression,
     Classification,
@@ -277,7 +277,7 @@ pub struct DataCharacteristics<T: Float> {
 }
 
 /// Correlation structures
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CorrelationStructure {
     Independent,
     Linear,
@@ -288,7 +288,7 @@ pub enum CorrelationStructure {
 }
 
 /// Distribution types
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DistributionType {
     Gaussian,
     Uniform,
@@ -318,7 +318,7 @@ pub struct EvaluationCriterion<T: Float> {
 }
 
 /// Metric types
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum MetricType {
     Accuracy,
     Loss,
@@ -399,7 +399,7 @@ pub struct CustomEvaluator<T: Float> {
 }
 
 /// Evaluator types
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum EvaluatorType {
     MLModel,
     OptimizationFunction,
@@ -425,7 +425,7 @@ pub struct IOSpecification {
 }
 
 /// Data formats
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DataFormat {
     Dense,
     Sparse,
@@ -492,7 +492,7 @@ pub struct PredictorModel<T: Float> {
 }
 
 /// Predictor model types
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PredictorModelType {
     LinearRegression,
     RandomForest,
@@ -536,7 +536,7 @@ pub struct ModelArchitecture {
 }
 
 /// Activation functions
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ActivationFunction {
     ReLU,
     Sigmoid,
@@ -599,7 +599,7 @@ pub struct LearningRateSchedule<T: Float> {
 }
 
 /// Schedule types
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ScheduleType {
     Constant,
     Exponential,
@@ -642,7 +642,7 @@ pub struct FeatureExtractor<T: Float> {
 }
 
 /// Feature extraction methods
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FeatureExtractionMethod {
     ArchitectureEmbedding,
     HyperparameterEncoding,
@@ -669,7 +669,7 @@ pub struct FeatureEngineeringPipeline<T: Float> {
 }
 
 /// Normalization methods
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum NormalizationMethod {
     MinMax,
     ZScore,
@@ -692,7 +692,7 @@ pub struct FeatureScaling<T: Float> {
 }
 
 /// Scaling methods
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ScalingMethod {
     Standard,
     MinMax,
@@ -744,7 +744,7 @@ pub struct FeatureSelection<T: Float> {
 }
 
 /// Feature selection methods
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FeatureSelectionMethod {
     VarianceThreshold,
     UnivariateSelection,
@@ -771,7 +771,7 @@ pub struct FeatureCache<T: Float> {
 }
 
 /// Cache eviction policies
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CacheEvictionPolicy {
     LRU,
     LFU,
@@ -927,7 +927,7 @@ pub struct UncertaintyEstimator<T: Float> {
 }
 
 /// Uncertainty estimation methods
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum UncertaintyEstimationMethod {
     MonteCarloDropout,
     DeepEnsemble,
@@ -1057,7 +1057,7 @@ pub struct TemporalPattern {
 }
 
 /// Temporal pattern types
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TemporalPatternType {
     Burst,
     Steady,
@@ -1105,7 +1105,7 @@ pub struct StatisticalTest<T: Float> {
 }
 
 /// Statistical test types
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum StatisticalTestType {
     TTest,
     WilcoxonSignedRank,
@@ -1118,7 +1118,7 @@ pub enum StatisticalTestType {
 }
 
 /// Analysis methods
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AnalysisMethod {
     DescriptiveStatistics,
     CorrelationAnalysis,
@@ -1130,7 +1130,7 @@ pub enum AnalysisMethod {
 }
 
 /// Multiple comparison correction methods
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum MultipleComparisonCorrection {
     None,
     Bonferroni,

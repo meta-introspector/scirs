@@ -12,8 +12,8 @@
 #![allow(clippy::too_many_arguments)]
 
 use crate::common::IntegrateFloat;
-use crate::error::{IntegrateError, IntegrateResult};
-use ndarray::{Array1, Array2, ArrayView1, ArrayViewMut1};
+use crate::error::IntegrateResult;
+use ndarray::Array2;
 use std::collections::{HashMap, VecDeque};
 use std::marker::PhantomData;
 use std::sync::{Arc, Mutex, RwLock};
@@ -685,6 +685,7 @@ impl<F: IntegrateFloat> UltraMemoryOptimizer<F> {
                     .as_nanos()
             ),
             device_id: 0, // Default to first GPU
+            _phantom: PhantomData,
             memory_type: self.select_optimal_gpu_memory_type(size)?,
             size,
             coherency_state: CoherencyState::Coherent,

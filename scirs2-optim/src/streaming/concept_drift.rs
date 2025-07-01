@@ -993,7 +993,7 @@ pub mod advanced_drift_analysis {
 
     impl<A: Float + Default + Clone + std::fmt::Debug> AdvancedDriftDetector<A> {
         /// Create new advanced drift detector
-        pub fn new(config: DriftDetectorConfig) -> Self {
+        pub fn new(_config: DriftDetectorConfig) -> Self {
             let base_detectors: Vec<Box<dyn DriftDetectorTrait<A>>> = vec![
                 // Add base detectors here
             ];

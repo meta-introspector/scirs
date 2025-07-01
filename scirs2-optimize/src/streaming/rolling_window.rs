@@ -10,7 +10,7 @@ use super::{
 };
 use crate::error::OptimizeError;
 use ndarray::{Array1, Array2, ArrayView1};
-use scirs2_core::error::Result;
+use scirs2_core::error::CoreResult;
 use std::collections::VecDeque;
 
 /// Rolling window optimizer that maintains a sliding window of recent data
@@ -195,7 +195,7 @@ impl<T: StreamingObjective> RollingWindowOptimizer<T> {
         }
 
         // Solve normal equations
-        match scirs2_core::linalg::solve_linear_system(xtx, xty) {
+        match scirs2_linalg::solve_linear_system(xtx, xty) {
             Ok(solution) => {
                 self.parameters = solution;
                 Ok(())
@@ -247,7 +247,7 @@ impl<T: StreamingObjective> RollingWindowOptimizer<T> {
         }
 
         // Solve weighted normal equations
-        match scirs2_core::linalg::solve_linear_system(weighted_xtx, weighted_xty) {
+        match scirs2_linalg::solve_linear_system(weighted_xtx, weighted_xty) {
             Ok(solution) => {
                 self.parameters = solution;
                 Ok(())

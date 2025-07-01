@@ -2038,21 +2038,7 @@ pub mod advanced_kfac {
         pub memory_budgets: HashMap<String, usize>,
     }
 
-    impl<T: Float> Default for natural_gradients::NaturalGradientConfig<T> {
-        fn default() -> Self {
-            Self {
-                learning_rate: T::from(0.01).unwrap(),
-                fisher_damping: T::from(0.001).unwrap(),
-                fisher_update_freq: 10,
-                use_empirical_fisher: true,
-                max_rank: Some(100),
-                adaptive_damping: true,
-                use_conjugate_gradient: true,
-                max_cg_iterations: 50,
-                cg_tolerance: T::from(1e-6).unwrap(),
-            }
-        }
-    }
+    // Duplicate Default implementation removed - using implementation at line 1007
 
     /// Natural gradient optimizer using Fisher information matrix
     #[derive(Debug)]
@@ -2244,7 +2230,7 @@ pub mod advanced_kfac {
                     ref mut s,
                 } => {
                     // Low-rank approximation using randomized SVD
-                    self.update_low_rank_fisher(gradient_samples, u, s)?;
+                    Self::update_low_rank_fisher(gradient_samples, u, s)?;
                 }
 
                 _ => {
@@ -2274,7 +2260,6 @@ pub mod advanced_kfac {
         }
 
         fn update_low_rank_fisher(
-            &mut self,
             gradient_samples: &[Array1<T>],
             u: &mut Array2<T>,
             s: &mut Array1<T>,

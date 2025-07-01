@@ -42,6 +42,10 @@ pub enum VisionError {
     #[error("Linear algebra error: {0}")]
     LinAlgError(String),
 
+    /// GPU computation error
+    #[error("GPU error: {0}")]
+    GpuError(String),
+
     /// Dimension mismatch error
     #[error("Dimension mismatch: {0}")]
     DimensionMismatch(String),
@@ -67,10 +71,18 @@ impl Clone for VisionError {
             VisionError::TypeConversionError(s) => VisionError::TypeConversionError(s.clone()),
             VisionError::ShapeError(e) => VisionError::Other(format!("Shape error: {}", e)),
             VisionError::LinAlgError(s) => VisionError::LinAlgError(s.clone()),
+            VisionError::GpuError(s) => VisionError::GpuError(s.clone()),
             VisionError::DimensionMismatch(s) => VisionError::DimensionMismatch(s.clone()),
             VisionError::InvalidInput(s) => VisionError::InvalidInput(s.clone()),
             VisionError::Other(s) => VisionError::Other(s.clone()),
         }
+    }
+}
+
+/// Convert GPU errors to vision errors
+impl From<scirs2_core::gpu::GpuError> for VisionError {
+    fn from(err: scirs2_core::gpu::GpuError) -> Self {
+        VisionError::GpuError(err.to_string())
     }
 }
 

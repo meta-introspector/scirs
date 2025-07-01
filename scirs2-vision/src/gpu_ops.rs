@@ -1920,7 +1920,7 @@ pub fn gpu_batch_matmul_transformer(
     match ctx.context.execute_kernel(
         &matmul_kernel,
         &[&a_buffer, &b_buffer, &c_buffer],
-        ((m + 15) / 16 * 16, (n + 15) / 16 * 16, 1),
+        (((m + 15) / 16 * 16) as u32, ((n + 15) / 16 * 16) as u32, 1),
         &[m as u32, n as u32, k as u32],
         &[],
     ) {
@@ -2059,7 +2059,7 @@ pub fn gpu_feature_matching_ultra(
             &matches_buffer,
             &distances_buffer,
         ],
-        ((n1 + 255) / 256 * 256, 1, 1),
+        (((n1 + 255) / 256 * 256) as u32, 1, 1),
         &[n1 as u32, n2 as u32, dim1 as u32],
         &[threshold],
     ) {
@@ -2121,7 +2121,7 @@ pub fn gpu_neural_feature_extraction(
     let mut current_shape = (height, width);
 
     // Process through neural network layers
-    for (layer_idx, (layer_config, layer_weights)) in
+    for (_layer_idx, (layer_config, layer_weights)) in
         layer_configs.iter().zip(weights.iter()).enumerate()
     {
         match layer_config.layer_type {
@@ -2189,11 +2189,11 @@ pub enum LayerType {
 /// Helper functions for GPU neural layers (simplified implementations)
 fn gpu_conv_layer(
     ctx: &GpuVisionContext,
-    input: &scirs2_core::gpu::GpuBuffer,
-    weights: &Array2<f32>,
+    _input: &scirs2_core::gpu::GpuBuffer<f32>,
+    _weights: &Array2<f32>,
     config: &LayerConfig,
     input_shape: (usize, usize),
-) -> Result<scirs2_core::gpu::GpuBuffer> {
+) -> Result<scirs2_core::gpu::GpuBuffer<f32>> {
     // Simplified GPU convolution implementation
     // In a full implementation, this would use optimized convolution kernels
     let output_size = compute_conv_output_shape(input_shape, config);
@@ -2207,10 +2207,10 @@ fn gpu_conv_layer(
 
 fn gpu_maxpool_layer(
     ctx: &GpuVisionContext,
-    input: &scirs2_core::gpu::GpuBuffer,
+    _input: &scirs2_core::gpu::GpuBuffer<f32>,
     config: &LayerConfig,
     input_shape: (usize, usize),
-) -> Result<scirs2_core::gpu::GpuBuffer> {
+) -> Result<scirs2_core::gpu::GpuBuffer<f32>> {
     let output_size = compute_pool_output_shape(input_shape, config);
     let output_buffer = ctx
         .context
@@ -2220,19 +2220,19 @@ fn gpu_maxpool_layer(
 
 fn gpu_dense_layer(
     ctx: &GpuVisionContext,
-    input: &scirs2_core::gpu::GpuBuffer,
-    weights: &Array2<f32>,
+    _input: &scirs2_core::gpu::GpuBuffer<f32>,
+    _weights: &Array2<f32>,
     config: &LayerConfig,
-) -> Result<scirs2_core::gpu::GpuBuffer> {
+) -> Result<scirs2_core::gpu::GpuBuffer<f32>> {
     let output_buffer = ctx.context.create_buffer::<f32>(config.output_channels);
     Ok(output_buffer)
 }
 
 fn gpu_relu_layer(
     ctx: &GpuVisionContext,
-    input: &scirs2_core::gpu::GpuBuffer,
+    _input: &scirs2_core::gpu::GpuBuffer<f32>,
     shape: (usize, usize),
-) -> Result<scirs2_core::gpu::GpuBuffer> {
+) -> Result<scirs2_core::gpu::GpuBuffer<f32>> {
     // ReLU can be applied in-place, but for simplicity we create a new buffer
     let output_buffer = ctx.context.create_buffer::<f32>(shape.0 * shape.1);
     Ok(output_buffer)
@@ -2283,19 +2283,21 @@ fn fallback_multi_head_attention(
 
         // Softmax
         let mut attention_weights = Array2::zeros(scaled_scores.dim());
-        for (mut row, score_row) in attention_weights.rows_mut().zip(scaled_scores.rows()) {
-            let max_val = score_row.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
-            let exp_scores: Vec<f32> = score_row.iter().map(|&x| (x - max_val).exp()).collect();
-            let sum_exp: f32 = exp_scores.iter().sum();
+        ndarray::Zip::from(attention_weights.rows_mut())
+            .and(scaled_scores.rows())
+            .for_each(|mut row, score_row| {
+                let max_val = score_row.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
+                let exp_scores: Vec<f32> = score_row.iter().map(|&x| (x - max_val).exp()).collect();
+                let sum_exp: f32 = exp_scores.iter().sum();
 
-            for (i, &exp_score) in exp_scores.iter().enumerate() {
-                row[i] = exp_score / sum_exp;
-            }
-        }
+                for (i, &exp_score) in exp_scores.iter().enumerate() {
+                    row[i] = exp_score / sum_exp;
+                }
+            });
 
         // Apply attention to values: attention_weights @ V
         let head_output =
-            crate::simd_ops::simd_matmul_attention_ultra(&attention_weights, &v_head)?;
+            crate::simd_ops::simd_matmul_attention_ultra(&attention_weights.view(), &v_head.view())?;
 
         // Copy head output to final output
         output

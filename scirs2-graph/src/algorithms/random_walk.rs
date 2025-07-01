@@ -24,7 +24,7 @@ where
     Ix: IndexType,
 {
     if !graph.contains_node(start) {
-        return Err(GraphError::NodeNotFound);
+        return Err(GraphError::node_not_found("node"));
     }
 
     let mut walk = vec![start.clone()];
@@ -130,7 +130,7 @@ where
     let n = nodes.len();
 
     if n == 0 || !graph.contains_node(source) {
-        return Err(GraphError::NodeNotFound);
+        return Err(GraphError::node_not_found("node"));
     }
 
     // Find source index
@@ -386,7 +386,7 @@ impl<N: Node + Clone + Hash + Eq> BatchRandomWalker<N> {
         let mut current_idx = *self
             .node_to_idx
             .get(start)
-            .ok_or(GraphError::NodeNotFound)?;
+            .ok_or(GraphError::node_not_found("node"))?;
 
         for _ in 0..walk_length {
             if let Ok(neighbors) = graph.neighbors(&self.idx_to_node[current_idx]) {

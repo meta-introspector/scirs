@@ -2235,8 +2235,8 @@ pub mod quantum_algorithms {
                 optimal_parameters: parameters,
                 optimal_state,
                 final_cost,
-                cost_history,
                 iterations: cost_history.len(),
+                cost_history,
                 converged: true,
             })
         }
@@ -2296,8 +2296,8 @@ pub mod quantum_algorithms {
                 optimal_parameters: best_params,
                 optimal_state,
                 final_cost: best_cost,
-                cost_history,
                 iterations: cost_history.len(),
+                cost_history,
                 converged: true,
             })
         }
@@ -2384,8 +2384,8 @@ pub mod quantum_algorithms {
                 optimal_parameters: best_params,
                 optimal_state,
                 final_cost: best_cost,
-                cost_history,
                 iterations: cost_history.len(),
+                cost_history,
                 converged: true,
             })
         }
@@ -5486,7 +5486,7 @@ impl QuantumAnnealingSolver {
         let mut state = Array1::from_elem(self.n_qubits, 0.5); // Start in superposition
         let dt = self.annealing_time / self.temperature_schedule.len() as f64;
 
-        for (step, (&temperature, &h_field)) in self
+        for (_step, (&temperature, &h_field)) in self
             .temperature_schedule
             .iter()
             .zip(self.transverse_field_schedule.iter())
@@ -5877,7 +5877,7 @@ impl VariationalQuantumEigensolver {
 
     /// Compute expectation value with given parameters
     fn compute_expectation_value_with_params(&self, params: &Array1<f64>) -> Result<f64> {
-        let old_params = self.parameters.clone();
+        let _old_params = self.parameters.clone();
 
         // Temporarily update parameters
         let mut temp_vqe = self.clone();
@@ -6344,7 +6344,7 @@ pub mod gpu_acceleration {
 
             // Gaussian wave packet
             let psi = x.mapv(|xi| {
-                let gaussian = (-0.5 * xi * xi).exp();
+                let gaussian = (-0.5f64 * xi * xi).exp();
                 Complex64::new(gaussian, 0.0)
             });
 
@@ -6375,8 +6375,8 @@ pub mod gpu_acceleration {
             let x = Array1::linspace(-2.0, 2.0, n_points);
             let dx = x[1] - x[0];
 
-            let psi1 = x.mapv(|xi| Complex64::new((-0.5 * (xi - 0.5).powi(2)).exp(), 0.0));
-            let psi2 = x.mapv(|xi| Complex64::new((-0.5 * (xi + 0.5).powi(2)).exp(), 0.0));
+            let psi1 = x.mapv(|xi| Complex64::new((-0.5f64 * (xi - 0.5f64).powi(2)).exp(), 0.0));
+            let psi2 = x.mapv(|xi| Complex64::new((-0.5f64 * (xi + 0.5f64).powi(2)).exp(), 0.0));
 
             let state1 = QuantumState {
                 psi: psi1,

@@ -49,6 +49,8 @@ pub use community::{
     modularity,
     modularity_optimization_result,
     parallel_louvain_communities_result,
+    parallel_label_propagation_result,
+    parallel_modularity,
     // Standardized result types - stable for 1.0
     CommunityResult,
     CommunityStructure,

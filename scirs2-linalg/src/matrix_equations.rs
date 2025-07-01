@@ -42,7 +42,7 @@ pub fn solve_generalized_sylvester<A>(
     e: &ArrayView2<A>,
 ) -> LinalgResult<Array2<A>>
 where
-    A: Float + NumAssign + Debug + Display + ndarray::ScalarOperand + std::iter::Sum + 'static,
+    A: Float + NumAssign + Debug + Display + ndarray::ScalarOperand + std::iter::Sum + 'static + Send + Sync,
 {
     let (m, n) = (a.shape()[0], b.shape()[0]);
 
@@ -142,7 +142,7 @@ pub fn solve_sylvester<A>(
     c: &ArrayView2<A>,
 ) -> LinalgResult<Array2<A>>
 where
-    A: Float + NumAssign + Debug + Display + ndarray::ScalarOperand + std::iter::Sum + 'static,
+    A: Float + NumAssign + Debug + Display + ndarray::ScalarOperand + std::iter::Sum + 'static + Send + Sync,
 {
     let (m, n) = (a.shape()[0], b.shape()[0]);
 
@@ -245,7 +245,7 @@ pub fn solve_continuous_riccati<A>(
     r: &ArrayView2<A>,
 ) -> LinalgResult<Array2<A>>
 where
-    A: Float + NumAssign + Debug + Display + ndarray::ScalarOperand + std::iter::Sum + 'static,
+    A: Float + NumAssign + Debug + Display + ndarray::ScalarOperand + std::iter::Sum + 'static + Send + Sync,
 {
     let n = a.shape()[0];
     let m = b.shape()[1];
@@ -351,7 +351,7 @@ pub fn solve_discrete_riccati<A>(
     r: &ArrayView2<A>,
 ) -> LinalgResult<Array2<A>>
 where
-    A: Float + NumAssign + Debug + Display + ndarray::ScalarOperand + std::iter::Sum + 'static,
+    A: Float + NumAssign + Debug + Display + ndarray::ScalarOperand + std::iter::Sum + 'static + Send + Sync,
 {
     let n = a.shape()[0];
     let m = b.shape()[1];
@@ -436,7 +436,7 @@ where
 /// * Solution matrix X (n × n)
 pub fn solve_stein<A>(a: &ArrayView2<A>, q: &ArrayView2<A>) -> LinalgResult<Array2<A>>
 where
-    A: Float + NumAssign + Debug + Display + ndarray::ScalarOperand + std::iter::Sum + 'static,
+    A: Float + NumAssign + Debug + Display + ndarray::ScalarOperand + std::iter::Sum + 'static + Send + Sync,
 {
     let n = a.shape()[0];
 

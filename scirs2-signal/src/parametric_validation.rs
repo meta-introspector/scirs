@@ -432,8 +432,8 @@ fn test_numerical_stability(config: &ValidationConfig) -> SignalResult<Stability
     let mut rng = rand::rng();
 
     for _ in 0..n_outliers {
-        let idx = rng.random_range(0..n);
-        contaminated[idx] += rng.random_range(-10.0..10.0)
+        let idx = rng.gen_range(0..n);
+        contaminated[idx] += rng.gen_range(-10.0..10.0)
             * contaminated.iter().map(|x| x.abs()).fold(0.0, f64::max);
     }
 
@@ -522,7 +522,7 @@ fn generate_ar_process(
 
     // Initialize with random values
     for i in 0..order {
-        signal[i] = rng.random_range(-1.0..1.0);
+        signal[i] = rng.gen_range(-1.0..1.0);
     }
 
     // Generate AR process
@@ -531,7 +531,7 @@ fn generate_ar_process(
         for j in 1..=order {
             val -= ar_coeffs[j] * signal[i - j];
         }
-        val += rng.random_range(-1.0..1.0); // Innovation
+        val += rng.gen_range(-1.0..1.0); // Innovation
         signal[i] = val;
     }
 
@@ -573,7 +573,7 @@ fn generate_arma_process(
 
     // Generate innovations
     for i in 0..n {
-        innovations[i] = rng.random_range(-1.0..1.0) * variance.sqrt();
+        innovations[i] = rng.gen_range(-1.0..1.0) * variance.sqrt();
     }
 
     // Generate ARMA process
@@ -606,7 +606,7 @@ fn add_noise(signal: &Array1<f64>, snr_db: f64) -> SignalResult<Array1<f64>> {
     let mut rng = rand::rng();
 
     for val in noisy.iter_mut() {
-        *val += rng.random_range(-1.0..1.0) * noise_std;
+        *val += rng.gen_range(-1.0..1.0) * noise_std;
     }
 
     Ok(noisy)

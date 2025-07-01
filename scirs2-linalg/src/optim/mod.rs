@@ -52,7 +52,7 @@ pub fn block_matmul<F>(
     block_size: Option<usize>,
 ) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + ScalarOperand,
+    F: Float + NumAssign + Sum + ScalarOperand + Send + Sync + 'static,
 {
     // Check dimensions compatibility
     let (m, k1) = a.dim();
@@ -157,7 +157,7 @@ pub fn strassen_matmul<F>(
     cutoff: Option<usize>,
 ) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + ScalarOperand,
+    F: Float + NumAssign + Sum + ScalarOperand + Send + Sync + 'static,
 {
     // Check dimensions compatibility
     let (m, k1) = a.dim();
@@ -197,7 +197,7 @@ where
 /// Pad a matrix to the specified dimensions
 fn pad_matrix<F>(a: &ArrayView2<F>, new_rows: usize, new_cols: usize) -> Array2<F>
 where
-    F: Float + NumAssign + Sum,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     let (rows, cols) = a.dim();
     let mut result = Array2::zeros((new_rows, new_cols));
@@ -215,7 +215,7 @@ where
 /// Internal recursive implementation of the Strassen algorithm
 fn strassen_recursive<F>(a: &ArrayView2<F>, b: &ArrayView2<F>, cutoff: usize) -> Array2<F>
 where
-    F: Float + NumAssign + Sum + ScalarOperand,
+    F: Float + NumAssign + Sum + Send + Sync + ScalarOperand,
 {
     let n = a.dim().0; // Assume square matrices after padding
 
@@ -269,7 +269,7 @@ where
 /// Standard matrix multiplication implementation
 fn standard_matmul<F>(a: &ArrayView2<F>, b: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + ScalarOperand,
+    F: Float + NumAssign + Sum + ScalarOperand + Send + Sync + 'static,
 {
     // Check dimensions compatibility
     let (m, k1) = a.dim();
@@ -338,7 +338,7 @@ pub fn tiled_matmul<F>(
     tile_size: Option<usize>,
 ) -> LinalgResult<Array2<F>>
 where
-    F: Float + NumAssign + Sum + ScalarOperand,
+    F: Float + NumAssign + Sum + ScalarOperand + Send + Sync + 'static,
 {
     // Check dimensions compatibility
     let (m, k1) = a.dim();

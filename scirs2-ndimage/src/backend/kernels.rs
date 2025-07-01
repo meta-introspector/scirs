@@ -824,7 +824,7 @@ where
         // that GPU kernel execution on CPU is not fully implemented.
         // A full implementation would need to emulate each GPU kernel
         // with equivalent CPU operations.
-        
+
         Err(NdimageError::NotImplementedError(format!(
             "CPU fallback execution for GPU kernel '{}' is not fully implemented. Work size: {:?}, {} inputs, {} outputs",
             kernel.name,

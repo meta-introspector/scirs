@@ -1578,7 +1578,7 @@ fn compute_spectrum_confidence_bands(
     Ok((lower, upper))
 }
 
-fn detect_spectral_peaks(
+pub fn detect_spectral_peaks(
     spectrum: &Array1<f64>,
     freqs: &Array1<f64>,
     opts: &SpectrumOptions,
@@ -2880,7 +2880,7 @@ fn robust_scale_estimation(residuals: &Array1<f64>, method: RobustScaleMethod) -
     }
 }
 
-fn update_robust_weights(
+pub fn update_robust_weights(
     weights: &mut Array1<f64>,
     residuals: &Array1<f64>,
     scale: f64,
@@ -2924,7 +2924,7 @@ fn weighted_ar_estimation(
     Ok((result.coefficients, result.variance))
 }
 
-fn compute_parameter_change(old_params: &Array1<f64>, new_params: &Array1<f64>) -> f64 {
+pub fn compute_parameter_change(old_params: &Array1<f64>, new_params: &Array1<f64>) -> f64 {
     (old_params - new_params).mapv(|x| x.abs()).sum()
 }
 

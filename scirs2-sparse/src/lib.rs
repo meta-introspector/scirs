@@ -260,7 +260,7 @@ pub use sym_ops::{
 // GPU-accelerated operations
 pub mod gpu_kernel_execution;
 pub mod gpu_ops;
-//pub mod gpu_spmv_implementation; // Temporarily disabled for build fixes
+pub mod gpu_spmv_implementation;
 pub use gpu_kernel_execution::{
     calculate_adaptive_workgroup_size, execute_spmv_kernel, execute_symmetric_spmv_kernel,
     execute_triangular_solve_kernel, GpuKernelConfig, GpuMemoryManager as GpuKernelMemoryManager,
@@ -270,7 +270,7 @@ pub use gpu_ops::{
     gpu_sparse_matvec, gpu_sym_sparse_matvec, AdvancedGpuOps, GpuKernelScheduler, GpuMemoryManager,
     GpuOptions, GpuProfiler, OptimizedGpuOps,
 };
-//pub use gpu_spmv_implementation::GpuSpMV; // Temporarily disabled for build fixes
+pub use gpu_spmv_implementation::GpuSpMV;
 
 // Memory-efficient algorithms and patterns
 pub mod memory_efficient;
@@ -288,8 +288,21 @@ pub use simd_ops::{
 // Parallel vector operations for iterative solvers
 pub mod parallel_vector_ops;
 pub use parallel_vector_ops::{
-    parallel_axpy, parallel_dot, parallel_linear_combination, parallel_norm2, parallel_vector_add,
-    parallel_vector_copy, parallel_vector_scale, parallel_vector_sub, ParallelVectorOptions,
+    parallel_axpy, parallel_dot, parallel_linear_combination, parallel_norm2, parallel_sparse_matvec_csr,
+    parallel_vector_add, parallel_vector_copy, parallel_vector_scale, parallel_vector_sub, 
+    ultrathink_sparse_matvec_csr, ParallelVectorOptions,
+};
+
+// Quantum-inspired sparse matrix operations (ultrathink mode)
+pub mod quantum_inspired_sparse;
+pub use quantum_inspired_sparse::{
+    QuantumSparseConfig, QuantumSparseProcessor, QuantumProcessorStats, QuantumStrategy,
+};
+
+// Neural-adaptive sparse matrix operations (ultrathink mode)
+pub mod neural_adaptive_sparse;
+pub use neural_adaptive_sparse::{
+    NeuralAdaptiveConfig, NeuralAdaptiveSparseProcessor, NeuralProcessorStats, OptimizationStrategy,
 };
 
 // Compressed sparse graph algorithms

@@ -5,7 +5,7 @@
 
 use crate::analysis::advanced_analysis::LyapunovCalculator;
 use crate::error::{IntegrateError, IntegrateResult as Result};
-use ndarray::{Array1, Array2};
+use ndarray::{s, Array1, Array2};
 use num_complex::Complex64;
 use rand::Rng;
 use std::collections::HashMap;
@@ -24,7 +24,7 @@ pub struct BifurcationPoint {
 }
 
 /// Types of bifurcations
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum BifurcationType {
     /// Fold/saddle-node bifurcation
     Fold,
@@ -112,6 +112,8 @@ pub enum StabilityType {
     NodeStable,
     /// Node unstable
     NodeUnstable,
+    /// Marginally stable
+    Marginally,
 }
 
 /// Basin of attraction analysis
@@ -1494,6 +1496,113 @@ impl BifurcationAnalyzer {
         }
 
         Ok(x)
+    }
+    /// Compute tangent vector for continuation
+    fn compute_tangent_vector<F>(
+        &self,
+        system: &F,
+        point: &Array1<f64>,
+        parameter: f64,
+    ) -> Result<Array1<f64>>
+    where
+        F: Fn(&Array1<f64>, f64) -> Array1<f64>,
+    {
+        // Simplified tangent vector computation
+        let mut tangent = Array1::zeros(point.len() + 1);
+        tangent[0] = 1.0; // Parameter direction
+        Ok(tangent.slice(s![0..point.len()]).to_owned())
+    }
+
+    /// Check if point is a bifurcation point based on eigenvalues
+    fn is_bifurcation_point(&self, eigenvalues: &[Complex64]) -> bool {
+        // Check for eigenvalues crossing the imaginary axis
+        eigenvalues.iter().any(|&eig| eig.re.abs() < 1e-8)
+    }
+
+    /// Compute parameter interaction effects
+    fn compute_parameter_interaction<F>(
+        &self,
+        _system: &F,
+        _nominal_parameters: &std::collections::HashMap<String, f64>,
+        _nominal_state: &Array1<f64>,
+        _param1: &str,
+        _param2: &str,
+        _pert1: f64,
+        _pert2: f64,
+    ) -> Result<Array1<f64>>
+    where
+        F: Fn(&Array1<f64>, &std::collections::HashMap<String, f64>) -> Array1<f64>,
+    {
+        // Simplified implementation - return zero interaction effect
+        Ok(Array1::zeros(self.dimension))
+    }
+
+    /// Hopf normal form analysis
+    fn hopf_normal_form<F>(
+        &self,
+        _system: &F,
+        _bifurcation_point: &BifurcationPoint,
+    ) -> Result<NormalFormResult>
+    where
+        F: Fn(&Array1<f64>, f64) -> Array1<f64>,
+    {
+        Ok(NormalFormResult {
+            normal_form_coefficients: Array1::zeros(1),
+            transformation_matrix: Array2::eye(self.dimension),
+            normal_form_type: BifurcationType::Hopf,
+            stability_analysis: "Hopf bifurcation analysis".to_string(),
+        })
+    }
+
+    /// Fold normal form analysis
+    fn fold_normal_form<F>(
+        &self,
+        _system: &F,
+        _bifurcation_point: &BifurcationPoint,
+    ) -> Result<NormalFormResult>
+    where
+        F: Fn(&Array1<f64>, f64) -> Array1<f64>,
+    {
+        Ok(NormalFormResult {
+            normal_form_coefficients: Array1::zeros(1),
+            transformation_matrix: Array2::eye(self.dimension),
+            normal_form_type: BifurcationType::Fold,
+            stability_analysis: "Fold bifurcation analysis".to_string(),
+        })
+    }
+
+    /// Pitchfork normal form analysis
+    fn pitchfork_normal_form<F>(
+        &self,
+        _system: &F,
+        _bifurcation_point: &BifurcationPoint,
+    ) -> Result<NormalFormResult>
+    where
+        F: Fn(&Array1<f64>, f64) -> Array1<f64>,
+    {
+        Ok(NormalFormResult {
+            normal_form_coefficients: Array1::zeros(1),
+            transformation_matrix: Array2::eye(self.dimension),
+            normal_form_type: BifurcationType::Pitchfork,
+            stability_analysis: "Pitchfork bifurcation analysis".to_string(),
+        })
+    }
+
+    /// Transcritical normal form analysis
+    fn transcritical_normal_form<F>(
+        &self,
+        _system: &F,
+        _bifurcation_point: &BifurcationPoint,
+    ) -> Result<NormalFormResult>
+    where
+        F: Fn(&Array1<f64>, f64) -> Array1<f64>,
+    {
+        Ok(NormalFormResult {
+            normal_form_coefficients: Array1::zeros(1),
+            transformation_matrix: Array2::eye(self.dimension),
+            normal_form_type: BifurcationType::Transcritical,
+            stability_analysis: "Transcritical bifurcation analysis".to_string(),
+        })
     }
 }
 
@@ -5922,7 +6031,7 @@ pub mod ml_bifurcation_prediction {
 
             let mut rng = rand::rng();
             let mask: Array1<f64> = Array1::from_shape_fn(x.len(), |_| {
-                if rng.gen::<f64>() < dropout_rate {
+                if rng.random::<f64>() < dropout_rate {
                     0.0
                 } else {
                     1.0 / (1.0 - dropout_rate)

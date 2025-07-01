@@ -443,7 +443,9 @@ where
         + crate::gpu_ops::GpuDataType
         + Send
         + Sync
-        + 'static,
+        + 'static
+        + std::ops::AddAssign
+        + std::iter::Sum,
 {
     /// GPU-accelerated matrix-vector multiplication for generic floating-point types
     ///
@@ -479,8 +481,8 @@ where
     ///
     /// * Information about available GPU backends
     pub fn gpu_backend_info() -> SparseResult<(crate::gpu_ops::GpuBackend, String)> {
-        // Delegate to CSR implementation
-        crate::csr::CsrMatrix::<T>::gpu_backend_info()
+        // GPU operations fall back to CPU for stability
+        Ok((crate::gpu_ops::GpuBackend::Cpu, "CPU Fallback".to_string()))
     }
 }
 

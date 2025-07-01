@@ -90,6 +90,12 @@ pub mod distributed;
 /// Automated feature engineering with meta-learning
 pub mod auto_feature_engineering;
 
+/// Quantum-inspired optimization for data transformations
+pub mod quantum_optimization;
+
+/// Neuromorphic computing integration for real-time adaptation
+pub mod neuromorphic_adaptation;
+
 /// Production monitoring with drift detection
 #[cfg(feature = "monitoring")]
 pub mod monitoring;
@@ -180,6 +186,18 @@ pub use distributed::{
 pub use auto_feature_engineering::{
     AdvancedMetaLearningSystem, AutoFeatureEngineer, DatasetMetaFeatures, EnhancedMetaFeatures,
     MultiObjectiveRecommendation, TransformationConfig, TransformationType,
+};
+
+// Quantum optimization exports
+pub use quantum_optimization::{
+    QuantumInspiredOptimizer, QuantumTransformationOptimizer, QuantumHyperparameterTuner,
+    QuantumParticle,
+};
+
+// Neuromorphic computing exports
+pub use neuromorphic_adaptation::{
+    NeuromorphicTransformationSystem, NeuromorphicAdaptationNetwork, NeuromorphicMemorySystem,
+    SpikingNeuron, TransformationEpisode, SystemState,
 };
 
 // Production monitoring exports

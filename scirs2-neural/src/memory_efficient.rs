@@ -675,10 +675,8 @@ impl MemoryEfficientLayer {
         let output_size = self.bias.len();
         let weights_2d = ndarray::Array2::<f32>::zeros((input_size, output_size));
 
-        // Use scirs2-linalg for matrix multiplication
-        let result = scirs2_linalg::matmul(&input_2d.view(), &weights_2d.view()).map_err(|e| {
-            NeuralError::RuntimeError(format!("Matrix multiplication failed: {}", e))
-        })?;
+        // Use ndarray's built-in dot operation for matrix multiplication
+        let mut result = input_2d.dot(&weights_2d);
 
         // Add bias
         for mut row in result.rows_mut() {

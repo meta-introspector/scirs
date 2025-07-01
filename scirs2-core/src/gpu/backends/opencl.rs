@@ -4,6 +4,7 @@
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
 
 use crate::gpu::{GpuBufferImpl, GpuCompilerImpl, GpuContextImpl, GpuError, GpuKernelImpl};
 
@@ -22,7 +23,7 @@ use opencl3::platform::get_platforms;
 #[cfg(feature = "opencl")]
 use opencl3::program::Program;
 #[cfg(feature = "opencl")]
-use opencl3::types::{cl_event, cl_uint, CL_BLOCKING, CL_NON_BLOCKING};
+use opencl3::types::{CL_BLOCKING};
 
 // Fallback types for when OpenCL is not available
 #[cfg(not(feature = "opencl"))]
@@ -242,8 +243,10 @@ impl OpenCLContext {
     /// Allocate device memory
     #[cfg(feature = "opencl")]
     pub fn allocate_device_memory(&self, size: usize) -> Result<Buffer<u8>, GpuError> {
-        Buffer::<u8>::create(&self.context, CL_MEM_READ_WRITE, size, std::ptr::null_mut())
-            .map_err(|e| GpuError::Other(format!("OpenCL memory allocation failed: {}", e)))
+        unsafe {
+            Buffer::<u8>::create(&self.context, CL_MEM_READ_WRITE, size, std::ptr::null_mut())
+                .map_err(|e| GpuError::Other(format!("OpenCL memory allocation failed: {}", e)))
+        }
     }
 
     /// Allocate device memory (fallback)
@@ -545,8 +548,10 @@ impl GpuBufferImpl for OpenCLBuffer {
             }
             
             // Real OpenCL implementation - read data from buffer
-            self.queue.enqueue_read_buffer(&self.device_buffer, CL_BLOCKING, 0, data, &[])
-                .map_err(|e| GpuError::Other(format!("OpenCL buffer read failed: {}", e)))?;
+            unsafe {
+                self.queue.enqueue_read_buffer(&self.device_buffer, CL_BLOCKING, 0, data, &[])
+                    .map_err(|e| GpuError::Other(format!("OpenCL buffer read failed: {}", e)))?;
+            }
             Ok(())
         }
         #[cfg(not(feature = "opencl"))]
@@ -567,7 +572,7 @@ impl Drop for OpenCLBuffer {
             #[cfg(feature = "opencl")]
             {
                 // In real implementation, would return buffer to pool
-                // pool.deallocate(std::mem::take(&mut self.device_buffer));
+                pool.deallocate(std::mem::take(&mut self.device_buffer));
             }
             #[cfg(not(feature = "opencl"))]
             {
@@ -597,7 +602,7 @@ impl GpuBufferImpl for OpenCLCpuFallbackBuffer {
         }
         
         // Since this is a CPU fallback, we can use safe Rust internally
-        let data_slice = std::slice::from_raw_parts(data, size);
+        let _data_slice = std::slice::from_raw_parts(data, size);
         // We can't mutate self.data directly since &self is immutable
         // In a real implementation, this would require interior mutability
         eprintln!("Warning: CPU fallback buffer copy_from_host called (size: {})", size);
@@ -815,7 +820,6 @@ impl OpenCLMemoryPool {
             allocation_stats: self.allocation_stats.clone(),
         }
     }
-}
 
     #[cfg(feature = "opencl")]
     fn allocate(&mut self, size: usize) -> Option<Buffer<u8>> {

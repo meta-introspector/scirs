@@ -18,7 +18,7 @@ where
     Ix: IndexType,
 {
     if !graph.contains_node(node1) || !graph.contains_node(node2) {
-        return Err(GraphError::NodeNotFound);
+        return Err(GraphError::node_not_found("node"));
     }
 
     let neighbors1: HashSet<N> = graph
@@ -50,7 +50,7 @@ where
     Ix: IndexType,
 {
     if !graph.contains_node(node1) || !graph.contains_node(node2) {
-        return Err(GraphError::NodeNotFound);
+        return Err(GraphError::node_not_found("node"));
     }
 
     let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
